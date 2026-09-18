@@ -1,0 +1,62 @@
+schema: spec-driven
+
+context: |
+  Product: geoprims.com — geospatial and aerospace primitives.
+  A static, client-side catalog of geodesy, navigation, aviation, drone,
+  surveying, spatial-indexing, and raster math tools, plus a local MCP
+  server and library packages that run the exact same compute core.
+
+  Ethos (non-negotiable):
+    - Zero ads, zero accounts, zero tracking, zero server-side compute.
+    - User inputs never leave the device. Only static assets are fetched.
+    - Instant: the shell loads fast, tools compute in milliseconds.
+    - Every result is reproducible, cited, and states its accuracy.
+    - Humans get a tactical "retro-HUD" web app; agents get MCP + packages.
+
+  Stack direction (decided in establish-platform-foundation/design.md):
+    - Compute core: Rust compiled to WebAssembly (wasm32-unknown-unknown),
+      one crate per domain, lazy-loaded per domain in the browser.
+    - Same Wasm artifacts power the web app, the npm package, the CLI,
+      and the local MCP server (Node.js runtime).
+    - Tool manifest is the single source of truth: it generates the web
+      forms, MCP schemas, CLI flags, docs pages, and search index.
+    - Web: statically pre-rendered pages, progressive enhancement,
+      installable PWA, WebGL2 canvas (WebGPU opportunistic).
+
+  Domain vocabulary:
+    - "Operation": one distinct mathematical function with its own
+      contract and test vectors (e.g. geodesic inverse).
+    - "Endpoint": one addressable route/tool id. Conversion pairs are
+      endpoints generated from operations (e.g. dms-to-utm).
+    - Angles in degrees at the boundary, radians internally.
+    - Canonical internal units are SI; the boundary accepts tagged units.
+    - Coordinate order: explicit field names (lat, lon) in tool inputs;
+      GeoJSON I/O follows RFC 7946 [lon, lat] order.
+    - "WGS84" alone is ambiguous; tools name the realization or state the
+      accuracy consequence of treating realizations as equal.
+
+  Conventions:
+    - Conventional Commits; American English; ISO 8601 dates in data.
+    - Tool ids: `<domain>.<group>.<operation>` in lowercase kebab segments.
+
+rules:
+  proposal:
+    - Include a Non-goals list.
+    - Lead with the user value, then the mechanism.
+  specs:
+    - Every numeric requirement names its unit and tolerance.
+    - Every tool family names its reference source and at least one
+      authoritative test vector source.
+    - Cover edge cases explicitly (poles, antimeridian, antipodes,
+      degenerate geometry, out-of-domain inputs).
+  design:
+    - Record alternatives considered for each decision.
+    - Include a tool inventory table with endpoint counts per family.
+  tasks:
+    - Each task states how it is verified.
+
+operations:
+  apply:
+    guidance:
+      - Implement the platform foundation change before any domain change.
+      - A tool is not done until its golden vectors pass in browser and Node.

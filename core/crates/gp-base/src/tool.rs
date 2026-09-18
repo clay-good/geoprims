@@ -290,6 +290,8 @@ pub struct Ctx<'a> {
     preset: Vec<(&'static str, Value)>,
     pub options: Options,
     pub warnings: Vec<Warning>,
+    /// Overrides `meta.model` for this call (e.g. to name a custom ellipsoid).
+    pub model: Option<String>,
 }
 
 fn pointer(name: &str) -> String {
@@ -655,12 +657,12 @@ impl Registry {
 
     fn run(&self, def: &'static ToolDef, input: &Value) -> String {
         match execute(def, input) {
-            Ok((result, summary, display, warnings)) => {
+            Ok((result, summary, display, warnings, model)) => {
                 let meta = Meta {
                     tool: def.id.to_owned(),
                     tool_version: def.version.to_owned(),
                     assets: vec![],
-                    model: def.model.to_owned(),
+                    model: model.unwrap_or_else(|| def.model.to_owned()),
                     accuracy: def.accuracy.to_owned(),
                     warnings,
                 };
@@ -676,7 +678,7 @@ fn limit(def: &ToolDef, name: &str) -> Option<u64> {
 }
 
 /// Result, rendered sentence, display strings per output, and warnings.
-type Executed = (Json, Option<String>, Json, Vec<Warning>);
+type Executed = (Json, Option<String>, Json, Vec<Warning>, Option<String>);
 
 fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> {
     let Value::Object(map) = input else {
@@ -707,6 +709,7 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         preset,
         options,
         warnings: Vec::new(),
+        model: None,
     };
     for f in def.inputs {
         if f.required && !ctx.is_set(f.name) {
@@ -731,7 +734,7 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         ));
     }
     let (summary, display) = render_summary(&mut ctx, &result);
-    Ok((result, Some(summary), display, ctx.warnings))
+    Ok((result, Some(summary), display, ctx.warnings, ctx.model))
 }
 
 /// Display precision for input values echoed in sentences.

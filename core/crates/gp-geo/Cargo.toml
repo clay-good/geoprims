@@ -1,0 +1,12 @@
+[package]
+name = "gp-geo"
+description = "Shared geodesy math (ellipsoids, geodesics) linked into the geodesy, navigation, geometry, survey, and drone modules. Library only: not a Wasm module."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+gp-base.workspace = true
+geographiclib-rs = "0.2.7"

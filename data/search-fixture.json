@@ -128,6 +128,26 @@
     {
       "query": "find the wind",
       "expect": "aviation.wind.find-wind"
+    },
+    {
+      "query": "distance between two points",
+      "expect": "navigation.geodesic.inverse"
+    },
+    {
+      "query": "haversine",
+      "expect": "navigation.geodesic.haversine"
+    },
+    {
+      "query": "vincenty",
+      "expect": "navigation.geodesic.vincenty-inverse"
+    },
+    {
+      "query": "destination point",
+      "expect": "navigation.geodesic.direct"
+    },
+    {
+      "query": "midpoint",
+      "expect": "navigation.geodesic.midpoint"
     }
   ]
 }

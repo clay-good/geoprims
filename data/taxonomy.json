@@ -8,7 +8,12 @@
     },
     "navigation": {
       "title": "Navigation",
-      "groups": []
+      "groups": [
+        "geodesic",
+        "route",
+        "los",
+        "vector"
+      ]
     },
     "geometry": {
       "title": "Geometry",

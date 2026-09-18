@@ -1,12 +1,12 @@
 ## 1. Geodesics
 
-- [ ] 1.1 Wrap `geographiclib-rs` inverse and direct with the tool contract (including m12, M12, S12); verify the JFK-LHR, nearly-antipodal, antipodal, coincident, and direct scenarios and the GeodTest short set (690 KB) in CI
-- [ ] 1.2 Implement Vincenty direct and inverse with iteration limits and Karney delta; verify the non-convergence and comparison scenarios
-- [ ] 1.3 Implement spherical methods with radius handling and ellipsoidal delta; verify the haversine-error scenario
+- [ ] 1.1 Wrap `geographiclib-rs` inverse and direct with the tool contract (including m12, M12, S12); verify the JFK-LHR, nearly-antipodal, antipodal, coincident, and direct scenarios and the GeodTest short set (690 KB) in CI (built: inverse and direct with m12, M12, M21, S12 and all five scenarios; pending: the GeodTest short set in CI, which needs a download)
+- [x] 1.2 Implement Vincenty direct and inverse with iteration limits and Karney delta; verify the non-convergence and comparison scenarios
+- [ ] 1.3 Implement spherical methods with radius handling and ellipsoidal delta; verify the haversine-error scenario (built: haversine with the error scenario; pending: spherical direct, inverse, and intermediate point)
 - [ ] 1.4 Port GeographicLib Rhumb (direct, inverse, pole handling); verify the rhumb scenarios and a `RhumbSolve` differential test
-- [ ] 1.5 Implement waypoints, densification, midpoint, and intermediate points with GPX/GeoJSON output; verify the equal-intervals scenario
+- [ ] 1.5 Implement waypoints, densification, midpoint, and intermediate points with GPX/GeoJSON output; verify the equal-intervals scenario (built: midpoint; pending: waypoints, densification, GPX/GeoJSON)
 - [ ] 1.6 Port GeographicLib Intersect and implement the vertex tool; verify the non-intersecting scenario and an `IntersectTool` differential test
-- [ ] 1.7 Support custom ellipsoids with GeodesicExact above |f| > 0.02; verify the Mars and high-flattening scenarios
+- [ ] 1.7 Support custom ellipsoids with GeodesicExact above |f| > 0.02; verify the Mars and high-flattening scenarios (built: custom ellipsoids with the Mars scenario; the exact method is pending, so |f| > 0.02 returns UNSUPPORTED)
 - [ ] 1.8 Implement the comparison overlay (geodesic, rhumb, great circle); verify the visual fixture
 
 ## 2. Route geometry

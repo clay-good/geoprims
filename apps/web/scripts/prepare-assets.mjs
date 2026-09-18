@@ -12,4 +12,8 @@ rmSync(join(web, 'public/wasm'), { recursive: true, force: true });
 mkdirSync(join(web, 'public/catalog'), { recursive: true });
 cpSync(join(root, 'dist/wasm'), join(web, 'public/wasm'), { recursive: true, filter: (p) => !p.endsWith('.json') });
 cpSync(join(root, 'dist/catalog/v1.json'), join(web, 'public/catalog/v1.json'));
-console.log('prepared public/wasm and public/catalog/v1.json');
+// On-demand data assets, served same-origin at /assets/<id>/<version>/<file>.
+rmSync(join(web, 'public/assets'), { recursive: true, force: true });
+cpSync(join(root, 'assets/data'), join(web, 'public/assets'), { recursive: true });
+cpSync(join(root, 'assets/registry.json'), join(web, 'public/assets/registry.json'));
+console.log('prepared public/wasm, public/catalog/v1.json, and public/assets');

@@ -1,6 +1,19 @@
 // Browser compute worker (compute-core "Execution off the main thread"). Loads
 // the same Wasm modules as the MCP server through packages/runtime.
+import { assetProvider } from '../../../../packages/runtime/src/assets.mjs';
 import { loadModule } from '../../../../packages/runtime/src/module.mjs';
+
+// Data assets come from the same origin, whole files only, checked against the
+// registry's SHA-256 before use (data-assets "Integrity verification").
+let registry = null;
+const assets = async (want) => {
+  registry ??= fetch('/assets/registry.json').then((r) => (r.ok ? r.json() : { assets: [] }));
+  const get = assetProvider(await registry, async (id, version, key) => {
+    const r = await fetch(`/assets/${id}/${version}/${key}`);
+    return r.ok ? r.arrayBuffer() : null;
+  });
+  return get(want);
+};
 
 const modules = new Map();
 const moduleFor = (id) => (id.startsWith('units.') ? 'base' : id.split('.')[0]);
@@ -13,7 +26,7 @@ const get = (name) => {
           if (!r.ok) throw new Error(`${name}.wasm: HTTP ${r.status}`);
           return r.arrayBuffer();
         })
-        .then((b) => loadModule(b, name, { maxBytes: 50_000_000 })),
+        .then((b) => loadModule(b, name, { maxBytes: 50_000_000, assets })),
     );
   }
   return modules.get(name);

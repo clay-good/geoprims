@@ -10,7 +10,7 @@ const dec = new TextDecoder();
  * it becomes an INTERNAL error envelope, and the instance is recreated so
  * later calls keep working (compute-core "Trap is contained").
  */
-export async function loadModule(bytes, name, { maxBytes } = {}) {
+export async function loadModule(bytes, name, { maxBytes, assets } = {}) {
   const compiled = await WebAssembly.compile(bytes);
   let inst = await WebAssembly.instantiate(compiled, {});
 
@@ -21,11 +21,25 @@ export async function loadModule(bytes, name, { maxBytes } = {}) {
     new Uint8Array(inst.exports.memory.buffer, p, b.length).set(b);
     return [p, b.length];
   };
+  // Assets supplied so far, re-supplied if a trap forces a fresh instance.
+  const supplied = new Map();
+  const supply = (key, data) => {
+    const [kp, kl] = put(key);
+    const dp = inst.exports.gp_alloc(data.length);
+    new Uint8Array(inst.exports.memory.buffer, dp, data.length).set(data);
+    try {
+      inst.exports.gp_asset_put(kp, kl, dp, data.length);
+    } finally {
+      inst.exports.gp_free(kp, kl);
+      inst.exports.gp_free(dp, data.length);
+    }
+  };
   const guarded = async (id, fn) => {
     try {
       return fn();
     } catch (e) {
       inst = await WebAssembly.instantiate(compiled, {});
+      for (const [k, d] of supplied) supply(k, d);
       return JSON.stringify({
         ok: false,
         error: {
@@ -58,6 +72,29 @@ export async function loadModule(bytes, name, { maxBytes } = {}) {
       }
     });
 
+  /**
+   * Runs a call; when the core reports ASSET_UNAVAILABLE for a named asset and
+   * a provider is configured, fetches and verifies it, supplies it, and retries.
+   */
+  const withAssets = async (run) => {
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const out = await run();
+      if (!assets || !out.includes('"ASSET_UNAVAILABLE"')) return out;
+      const parsed = JSON.parse(out);
+      const missing = (Array.isArray(parsed) ? parsed.map((r) => r.error) : [parsed.error]).find(
+        (e) => e?.code === 'ASSET_UNAVAILABLE' && e.asset,
+      );
+      if (!missing) return out;
+      const key = `${missing.asset.id}@${missing.asset.version}/${missing.asset.key}`;
+      if (supplied.has(key)) return out;
+      const got = await assets(missing.asset);
+      if (got.error) return Array.isArray(parsed) ? out : JSON.stringify({ ok: false, error: { ...got.error, asset: missing.asset } });
+      supply(key, got.bytes);
+      supplied.set(key, got.bytes);
+    }
+    return run();
+  };
+
   return {
     name,
     callString,
@@ -67,12 +104,12 @@ export async function loadModule(bytes, name, { maxBytes } = {}) {
     async invoke(id, inputJson) {
       const bad = checkJson(inputJson, maxBytes);
       if (bad) return JSON.stringify(bad);
-      return call('gp_invoke', id, inputJson);
+      return withAssets(() => call('gp_invoke', id, inputJson));
     },
     async invokeBatch(id, inputsJson) {
       const bad = checkJson(inputsJson, maxBytes);
       if (bad) return JSON.stringify(bad);
-      return call('gp_invoke_batch', id, inputsJson);
+      return withAssets(() => call('gp_invoke_batch', id, inputsJson));
     },
   };
 }

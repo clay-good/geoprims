@@ -84,6 +84,33 @@ macro_rules! export_module {
                 $crate::abi::out_len()
             }
 
+            /// Supplies an asset: `key` is `id@version/file`, `data` its bytes.
+            ///
+            /// # Safety
+            /// Both ranges must be readable buffers from `gp_alloc`.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_asset_put(
+                key: *const u8,
+                key_len: usize,
+                data: *const u8,
+                data_len: usize,
+            ) -> i32 {
+                match unsafe { $crate::abi::read_str(key, key_len) } {
+                    Ok(k) => {
+                        // SAFETY: the host passes a buffer it allocated with gp_alloc.
+                        let bytes = unsafe { core::slice::from_raw_parts(data, data_len) };
+                        $crate::assets::put(k, bytes);
+                        0
+                    }
+                    Err(_) => 1,
+                }
+            }
+
+            #[unsafe(no_mangle)]
+            pub extern "C" fn gp_asset_clear() {
+                $crate::assets::clear()
+            }
+
             #[unsafe(no_mangle)]
             pub extern "C" fn gp_version() -> *const u8 {
                 $crate::abi::set_out(concat!($name, "@", env!("CARGO_PKG_VERSION")))

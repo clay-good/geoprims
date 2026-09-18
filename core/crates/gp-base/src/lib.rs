@@ -3,6 +3,7 @@
 
 pub mod abi;
 pub mod angle;
+pub mod assets;
 pub mod display;
 pub mod envelope;
 pub mod error;

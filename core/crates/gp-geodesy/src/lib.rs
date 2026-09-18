@@ -1,6 +1,7 @@
 //! Geodesy: coordinate parsing and formatting, UTM, UPS, and MGRS
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
+pub mod geoid;
 pub mod magnetic;
 pub mod spcs;
 
@@ -1300,6 +1301,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::FORWARD,
     &spcs::INVERSE,
     &spcs::LOOKUP,
+    &geoid::GEOID_HEIGHT,
+    &geoid::HEIGHT_CONVERT,
 ];
 
 pub static REGISTRY: Registry = Registry {

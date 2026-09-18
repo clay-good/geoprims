@@ -28,15 +28,15 @@
 ## 4. Compute core runtime
 
 - [x] 4.1 Implement the uniform `invoke`, `invokeBatch`, `manifest`, `version` exports per module; verify the unknown-tool and batch-order scenarios
-- [ ] 4.2 Implement the host asset-provider interface and `ASSET_UNAVAILABLE` flow; verify with a mock provider that supplies, withholds, and corrupts an asset
+- [x] 4.2 Implement the host asset-provider interface and `ASSET_UNAVAILABLE` flow; verify with a mock provider that supplies, withholds, and corrupts an asset
 - [ ] 4.3 Implement per-invocation memory caps and `LIMIT_EXCEEDED` pre-checks; verify with an over-limit fixture that no allocation beyond the cap occurs
 - [ ] 4.4 Implement progress reporting and cooperative cancellation for long tools; verify cancellation returns within 100 ms in a benchmark fixture
 - [ ] 4.5 Implement the browser worker host and trap containment; verify a trapping fixture restarts the worker and other tools keep working
-- [ ] 4.6 Implement the internal `packages/runtime` loader (done: shared module loader, input hardening, Node host) with browser and Node hosts (same Wasm, cache and filesystem asset providers); verify the cross-surface digest scenario
+- [ ] 4.6 Implement the internal `packages/runtime` loader (done: shared module loader, input hardening, Node host) with browser and Node hosts (same Wasm, cache and filesystem asset providers); verify the cross-surface digest scenario (asset providers built: filesystem for Node and MCP, same-origin fetch in the browser worker, both checking SHA-256 with WebCrypto)
 
 ## 5. Data assets
 
-- [ ] 5.1 Implement the asset registry format and validator; verify every initial-dataset row is present with license, attribution, digest, and load policy
+- [ ] 5.1 Implement the asset registry format and validator; verify every initial-dataset row is present with license, attribution, digest, and load policy (built: assets/registry.json with egm96-15, wmm2025, and igrf14, validated for fields, sizes, and digests; pending: the remaining initial datasets)
 - [ ] 5.2 Build asset pipelines for WMM2025, WMMHR2025, and IGRF-14 (coefficient files, public domain); verify digests and the NCEI test values load
 - [ ] 5.3 Build geoid tilers for EGM96-15, EGM2008-2.5, EGM2008-1, and GEOID18 (tiles ≥ 1° × 1°, per-tile digests, signed index); verify tile-size floor and digest checks
 - [ ] 5.4 Build NADCON5 grid packaging from NGS sources; verify against PROJ-data digests and NGS sample points

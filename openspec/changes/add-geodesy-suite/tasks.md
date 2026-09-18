@@ -46,8 +46,8 @@
 
 ## 6. Heights
 
-- [ ] 6.1 Port the GeographicLib geoid evaluator for tiled PGM grids (cubic and bilinear); verify the differential check against GeoidEval
-- [ ] 6.2 Integrate EGM96, EGM2008 (5′, 2.5′, 1′), and GEOID18 assets with coverage checks; verify the GEOID18-coverage scenario
+- [ ] 6.1 Port the GeographicLib geoid evaluator for tiled PGM grids (cubic and bilinear); verify the differential check against GeoidEval (built: the evaluator for whole PGM grids, matching GeoidEval at its printed 0.1 mm on 2,010 points including both poles, cubic and bilinear; pending: tiled grids)
+- [ ] 6.2 Integrate EGM96, EGM2008 (5′, 2.5′, 1′), and GEOID18 assets with coverage checks; verify the GEOID18-coverage scenario (built: EGM96 15′ as an on-demand asset with the geoid-height and height-conversion tools; pending: EGM2008 and GEOID18)
 - [ ] 6.3 Implement h ↔ H with frame-consistency checks; verify the NAVD 88 and frame-mismatch scenarios
 - [ ] 6.4 Implement the height reference converter with the vertical diagram; verify the drone-altitude scenario
 - [ ] 6.5 Implement geoid model comparison (point and profile); verify the EGM96 vs EGM2008 scenario

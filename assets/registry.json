@@ -1,0 +1,66 @@
+{
+  "note": "The asset registry (platform/data-assets). Tools reference assets by id and version only. Hosts check every file against its sha256 before supplying it to the core. Files with loadPolicy on-demand live under assets/data/<id>/<version>/ in a clone and are served from /assets/<id>/<version>/ on the web.",
+  "assets": [
+    {
+      "id": "egm96-15",
+      "version": "2009-08-29",
+      "title": "EGM96 geoid, 15-minute grid",
+      "issuer": "National Geospatial-Intelligence Agency (EGM96); grid packaged by GeographicLib",
+      "license": "Public domain (US Government work); GeographicLib packaging MIT",
+      "attribution": "EGM96 geoid model by NGA and NASA; 15-minute grid from GeographicLib (C. F. F. Karney).",
+      "sourceUrl": "https://sourceforge.net/projects/geographiclib/files/geoids-distrib/egm96-15.tar.bz2",
+      "retrievedAt": "2026-09-18",
+      "files": {
+        "egm96-15.pgm": {
+          "sha256": "2a12f13b6df65cdea52432c7fa1b43f34b007148eb817bf032af5af710905caa",
+          "bytes": 2076888
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "interpolation": "GeographicLib 12-point cubic fit (default) or bilinear; samples quantized to 3 mm"
+    },
+    {
+      "id": "wmm2025",
+      "version": "WMM2025 (2024-11-13)",
+      "title": "World Magnetic Model 2025",
+      "issuer": "NOAA NCEI and British Geological Survey",
+      "license": "Public domain (US Government work)",
+      "attribution": "World Magnetic Model 2025, NOAA NCEI and BGS.",
+      "sourceUrl": "https://www.ncei.noaa.gov/sites/default/files/2024-12/WMM2025COF.zip",
+      "retrievedAt": "2026-09-18",
+      "validFrom": "2025.0",
+      "validTo": "2030.0",
+      "files": {
+        "WMM2025.COF": {
+          "sha256": "dfa8597825af4e0b87ff4198a5b4fb661b3c49f4cd090cd0164e0259b075582f",
+          "bytes": 4554
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "bundled",
+      "bundledIn": "core/crates/gp-geo/data/WMM2025.COF"
+    },
+    {
+      "id": "igrf14",
+      "version": "IGRF-14 (2024-12)",
+      "title": "International Geomagnetic Reference Field, 14th generation",
+      "issuer": "IAGA Working Group V-MOD",
+      "license": "Free to use with attribution (IAGA)",
+      "attribution": "IGRF-14, International Association of Geomagnetism and Aeronomy.",
+      "sourceUrl": "https://www.ngdc.noaa.gov/IAGA/vmod/coeffs/igrf14coeffs.txt",
+      "retrievedAt": "2026-09-18",
+      "validFrom": "1900.0",
+      "validTo": "2030.0",
+      "files": {
+        "igrf14coeffs.txt": {
+          "sha256": "8f8d88403028fc4ee92c4f38d97b46e0a87e2cfc496045b43c9e26c1d6b0903c",
+          "bytes": 42411
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "bundled",
+      "bundledIn": "core/crates/gp-geo/data/igrf14coeffs.txt"
+    }
+  ]
+}

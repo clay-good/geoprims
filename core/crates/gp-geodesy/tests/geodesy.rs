@@ -35,6 +35,11 @@ fn codes(r: &Value) -> Vec<String> {
 
 #[test]
 fn catalog_lint_examples_vectors() {
+    // The host supplies data assets; the test plays the host.
+    gp_base::assets::put(
+        "egm96-15@2009-08-29/egm96-15.pgm",
+        include_bytes!("../../../../assets/data/egm96-15/2009-08-29/egm96-15.pgm"),
+    );
     let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
     let owned: Vec<(String, Vec<String>)> = tax["domains"]
         .as_object()

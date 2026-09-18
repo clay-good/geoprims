@@ -58,6 +58,8 @@ pub struct ToolError {
     pub message: String,
     pub field: Option<String>,
     pub hint: Option<String>,
+    /// For `ASSET_UNAVAILABLE` and `ASSET_INTEGRITY`: the asset `id`, `version`, and `key` (file or tile).
+    pub asset: Option<Box<(String, String, String)>>,
 }
 
 impl ToolError {
@@ -67,7 +69,22 @@ impl ToolError {
             message: message.into(),
             field: None,
             hint: None,
+            asset: None,
         }
+    }
+
+    /// `ASSET_UNAVAILABLE` for one asset file or tile the host must supply.
+    pub fn asset_unavailable(id: &str, version: &str, key: &str) -> Self {
+        let mut e = Self::new(
+            ErrorCode::AssetUnavailable,
+            format!("This needs the {id} data ({version}, {key}), which is not loaded yet."),
+        );
+        e.asset = Some(Box::new((
+            id.to_owned(),
+            version.to_owned(),
+            key.to_owned(),
+        )));
+        e
     }
 
     pub fn invalid(field: &str, message: impl Into<String>) -> Self {
@@ -94,6 +111,17 @@ impl ToolError {
         }
         if let Some(h) = &self.hint {
             obj.push(("hint".to_owned(), Json::Str(h.clone())));
+        }
+        if let Some(a) = &self.asset {
+            let (id, version, key) = &**a;
+            obj.push((
+                "asset".to_owned(),
+                Json::obj([
+                    ("id", Json::Str(id.clone())),
+                    ("version", Json::Str(version.clone())),
+                    ("key", Json::Str(key.clone())),
+                ]),
+            ));
         }
         Json::Obj(obj)
     }

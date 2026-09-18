@@ -515,6 +515,34 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    /// An asset file or tile the host supplied, recorded in `meta.assets`.
+    /// Returns `ASSET_UNAVAILABLE` naming `id`, `version`, and `file` when the
+    /// host has not supplied it yet. The tool must declare `id` in `assets`.
+    pub fn asset(
+        &mut self,
+        id: &str,
+        version: &str,
+        file: &str,
+    ) -> Result<std::rc::Rc<[u8]>, ToolError> {
+        assert!(
+            self.def.assets.contains(&id),
+            "{} reads undeclared asset {id}",
+            self.def.id
+        );
+        if !self
+            .assets
+            .iter()
+            .any(|a| a.id == id && a.version == version)
+        {
+            self.assets.push(AssetRef {
+                id: id.to_owned(),
+                version: version.to_owned(),
+            });
+        }
+        crate::assets::get(&crate::assets::key(id, version, file))
+            .ok_or_else(|| ToolError::asset_unavailable(id, version, file))
+    }
+
     pub fn req_quantity(&mut self, name: &str) -> Result<Q, ToolError> {
         self.quantity(name)?.ok_or_else(|| self.missing(name))
     }

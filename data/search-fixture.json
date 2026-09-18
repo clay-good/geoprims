@@ -536,6 +536,22 @@
     {
       "query": "what state plane zone",
       "expect": "geodesy.spcs.zone-lookup"
+    },
+    {
+      "query": "geoid height",
+      "expect": "geodesy.geoid.geoid-height"
+    },
+    {
+      "query": "EGM96",
+      "expect": "geodesy.geoid.geoid-height"
+    },
+    {
+      "query": "ellipsoid height to MSL",
+      "expect": "geodesy.height.convert"
+    },
+    {
+      "query": "orthometric height",
+      "expect": "geodesy.height.convert"
     }
   ]
 }

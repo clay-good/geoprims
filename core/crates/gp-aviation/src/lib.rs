@@ -4,8 +4,10 @@
 
 pub mod airspeed;
 pub mod atmosphere;
+pub mod ifr;
 pub mod loading;
 pub mod performance;
+pub mod weather;
 pub mod wind;
 
 use atmosphere as isa;
@@ -1784,6 +1786,11 @@ pub static TOOLS: &[&ToolDef] = &[
     &performance::PIVOTAL_ALTITUDE,
     &loading::FUEL_WEIGHT,
     &loading::WEIGHT_BALANCE,
+    &weather::METAR,
+    &weather::FB_WINDS,
+    &ifr::HOLD_ENTRY,
+    &ifr::HOLD_WIND,
+    &ifr::HOLD_SPEED,
 ];
 
 pub static REGISTRY: Registry = Registry {

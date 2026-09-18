@@ -452,6 +452,34 @@
     {
       "query": "true to magnetic",
       "expect": "geodesy.magnetic.true-to-magnetic"
+    },
+    {
+      "query": "metar decoder",
+      "expect": "aviation.weather.metar-decode"
+    },
+    {
+      "query": "decode metar",
+      "expect": "aviation.weather.metar-decode"
+    },
+    {
+      "query": "winds aloft",
+      "expect": "aviation.weather.fb-winds-decode"
+    },
+    {
+      "query": "hold entry",
+      "expect": "aviation.ifr.hold-entry"
+    },
+    {
+      "query": "teardrop parallel direct",
+      "expect": "aviation.ifr.hold-entry"
+    },
+    {
+      "query": "holding speed",
+      "expect": "aviation.ifr.hold-speed-limit"
+    },
+    {
+      "query": "triple the drift",
+      "expect": "aviation.ifr.hold-wind-timing"
     }
   ]
 }

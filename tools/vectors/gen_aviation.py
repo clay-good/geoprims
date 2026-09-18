@@ -326,6 +326,87 @@ def wb_vectors():
     return out
 
 
+# ---------------------------------------------------------------- slice 3
+
+WX_SRC = "Hand-decoded per FAA Order JO 7900.5E Change 1 (METAR body and remarks) and the FAA Aviation Weather Handbook (flight categories)"
+WX_VER = "JO 7900.5E Chg 1 (2022)"
+FB_SRC = "Hand-decoded per the FAA Aviation Weather Handbook FB coding rules (FAA-H-8083-28)"
+FB_VER = "FAA-H-8083-28 (2022)"
+HOLD_SRC = "AIM 5-3-8 figure 5-3-2 sectors and table 5-3-1 speeds, applied by hand"
+HOLD_VER = "AIM (2026)"
+
+
+def svec(i, inp, exp, src, ver):
+    tol = {k: {"abs": 1e-9} for k, v in exp.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    e = dict(exp)
+    e.setdefault("ok", True)
+    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver, "tolerance": tol}
+
+
+def metar_vectors():
+    cases = [
+        ("KDEN 181753Z 30015G25KT 10SM FEW080 SCT200 30/08 A2980 RMK AO2 SLP052 T03000083",
+         {"result.wind_direction.value": 300, "result.wind_gust.value": 25, "result.sea_level_pressure.value": 1005.2,
+          "result.dew_point.value": 8.3, "result.flight_category": "VFR"}),
+        ("KSFO 010856Z AUTO 00000KT 1 1/2SM -RA BR VV004 12/12 A3001 RMK AO2 SLP163 T01170117",
+         {"result.visibility.value": 1.5, "result.ceiling.value": 400, "result.flight_category": "LIFR",
+          "result.weather": "light rain; mist", "result.sea_level_pressure.value": 1016.3}),
+        ("PAFA 152253Z 22012G22KT 180V250 M1/4SM +FZRA BKN008 OVC015 M05/M07 A2992 RMK AO2 SLP987 T10501072",
+         {"result.visibility.value": 0.25, "result.ceiling.value": 800, "result.temperature.value": -5.0,
+          "result.dew_point.value": -7.2, "result.sea_level_pressure.value": 998.7, "result.flight_category": "LIFR"}),
+        ("KJFK 181751Z 04008KT 3SM TSRA BKN015CB 22/20 A2990",
+         {"result.flight_category": "MVFR", "result.weather": "thunderstorm rain", "result.ceiling.value": 1500}),
+        ("KBOS 181754Z 09010KT 2SM BR OVC007 18/17 A2998",
+         {"result.flight_category": "IFR", "result.altimeter.value": 29.98}),
+        ("EGLL 181750Z 24012KT 9999 FEW035 17/09 Q1013 NOSIG",
+         {"result.altimeter.value": 1013, "result.visibility_text": "10 km or more", "result.flight_category": "VFR"}),
+    ]
+    return [svec(i, {"report": r}, e, WX_SRC, WX_VER) for i, (r, e) in enumerate(cases, 1)]
+
+
+def fb_vectors():
+    cases = [
+        ({"report": "731960", "level": "34000 ft"}, {"result.winds.0.direction.value": 230, "result.winds.0.speed.value": 119, "result.winds.0.temperature.value": -60}),
+        ({"report": "9900+05", "level": "9000 ft"}, {"result.winds.0.speed.value": 0, "result.winds.0.temperature.value": 5}),
+        ({"report": "2714", "level": "3000 ft"}, {"result.winds.0.direction.value": 270, "result.winds.0.speed.value": 14}),
+        ({"report": "2635-08", "level": "12000 ft"}, {"result.winds.0.direction.value": 260, "result.winds.0.speed.value": 35, "result.winds.0.temperature.value": -8}),
+        ({"report": "DEN 2321-04 2532-14 2540-26 2447-38 245152 245657 245358"},
+         {"result.winds.0.level.value": 9000, "result.winds.4.temperature.value": -52, "result.winds.6.direction.value": 240, "result.winds.6.speed.value": 53}),
+        ({"report": "861558", "level": "39000 ft"}, {"result.winds.0.direction.value": 360, "result.winds.0.speed.value": 115, "result.winds.0.temperature.value": -58}),
+    ]
+    return [svec(i, inp, e, FB_SRC, FB_VER) for i, (inp, e) in enumerate(cases, 1)]
+
+
+def hold_entry_vectors():
+    cases = [(360, 90, "right", "direct"), (360, 150, "right", "teardrop"), (360, 240, "right", "parallel"),
+             (360, 210, "left", "teardrop"), (360, 120, "left", "parallel"), (90, 90, "left", "direct"), (270, 30, "right", "teardrop")]
+    return [svec(i, {"inbound_course": f"{ic} deg", "heading": f"{h} deg", "turns": t}, {"result.entry": e}, HOLD_SRC, HOLD_VER)
+            for i, (ic, h, t, e) in enumerate(cases, 1)]
+
+
+def hold_speed_vectors():
+    cases = [(3000, 200), (6000, 200), (6001, 230), (14000, 230), (14001, 265), (35000, 265)]
+    return [svec(i, {"altitude": f"{a} ft"}, {"result.max_ias.value": v}, HOLD_SRC, HOLD_VER) for i, (a, v) in enumerate(cases, 1)]
+
+
+def hold_wind_vectors():
+    out = []
+    cases = [(360, 120, 300, 20), (90, 150, 180, 30), (270, 100, 270, 25), (180, 140, 45, 15), (45, 90, 90, 10)]
+    for i, (ic, tas, wd, ws) in enumerate(cases, 1):
+        def leg(c):
+            a = math.radians(wd - c)
+            w = math.asin(ws / tas * math.sin(a))
+            return math.degrees(w), tas * math.cos(w) - ws * math.cos(a)
+        oc = (ic + 180) % 360
+        w_in, gs_in = leg(ic)
+        _, gs_out = leg(oc)
+        v = vec(i, {"inbound_course": f"{ic} deg", "tas": f"{tas} kt", "wind_direction": f"{wd} deg", "wind_speed": f"{ws} kt"},
+                {"result.inbound_wca.value": w_in, "result.outbound_heading.value": (oc - 3 * w_in) % 360,
+                 "result.outbound_time.value": gs_in * 60 / gs_out}, 1e-9, PERF_SRC.replace("turn, gradient, glide, and pivotal-altitude relations in FAA-H-8083-3C and FAA-H-8083-16B", "holding wind triangle and triple-the-drift rule in FAA-H-8083-15B"), "FAA-H-8083-15B (2012)")
+        out.append(v)
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     out.mkdir(parents=True, exist_ok=True)
@@ -348,6 +429,11 @@ def main():
         "aviation.performance.pivotal-altitude": pivotal_vectors(),
         "aviation.loading.fuel-weight": fuel_vectors(),
         "aviation.loading.weight-balance": wb_vectors(),
+        "aviation.weather.metar-decode": metar_vectors(),
+        "aviation.weather.fb-winds-decode": fb_vectors(),
+        "aviation.ifr.hold-entry": hold_entry_vectors(),
+        "aviation.ifr.hold-speed-limit": hold_speed_vectors(),
+        "aviation.ifr.hold-wind-timing": hold_wind_vectors(),
     }
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))

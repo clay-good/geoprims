@@ -22,13 +22,13 @@
 
 ## 4. Aviation weather and IFR
 
-- [ ] 4.1 Implement the METAR/SPECI grammar with US remarks and undecoded listing; verify the full-METAR and undecoded scenarios and a corpus of at least 300 hand-verified reports
+- [ ] 4.1 Implement the METAR/SPECI grammar with US remarks and undecoded listing; verify the full-METAR and undecoded scenarios and a corpus of at least 300 hand-verified reports (built: header, wind with gusts and variable range, SM fractions, M/P, metric visibility, CAVOK, RVR, weather, clouds and ceiling, temperatures, A and Q groups, AO1/AO2, SLP, T group, PK WND, WSHFT/FROPA, PRESRR/PRESFR, $, flight category, and the not-decoded list with positions; both scenarios pass; pending: the 300-report corpus)
 - [ ] 4.2 Implement TAF decoding with timeline; verify the across-midnight scenario and month-end cases
-- [ ] 4.3 Implement the FB winds decoder; verify the high-speed and light-and-variable scenarios
-- [ ] 4.4 Implement true-referenced hand-off to wind tools and the old-observation flag; verify the hand-off and old-observation scenarios
-- [ ] 4.5 Implement hold entry, wind timing, and speed limits; verify the hold scenarios and obtain CFII review
+- [x] 4.3 Implement the FB winds decoder; verify the high-speed and light-and-variable scenarios
+- [ ] 4.4 Implement true-referenced hand-off to wind tools and the old-observation flag; verify the hand-off and old-observation scenarios (built: winds labeled true and the OBSERVATION_OLD check against a user-supplied time, with month wrap; pending: the web hand-off carrying reference: true)
+- [ ] 4.5 Implement hold entry, wind timing, and speed limits; verify the hold scenarios and obtain CFII review (built: AIM 5-3-8 entry sectors with the 5° boundary rule and left-turn mirroring, wind correction with triple-the-drift and outbound timing, and the table 5-3-1 speed limits with ABOVE_MAX_HOLDING_SPEED; pending: the hold diagram and CFII review)
 - [ ] 4.6 Implement DME, arc, time-to-station, and intercept tools; verify the slant-range and overhead scenarios
-- [ ] 4.7 Extend the existing descent-gradient and VDP tools (no duplicates) and implement TCH and VASI/PAPI geometry; verify both descent scenarios
+- [ ] 4.7 Extend the existing descent-gradient and VDP tools (no duplicates) and implement TCH and VASI/PAPI geometry; verify both descent scenarios (built: VDP with the HAT/300 and HAT/318 rules and TCH, and the 3° glidepath vertical-speed scenario; pending: VASI/PAPI geometry)
 - [ ] 4.8 Implement the station-variation warning and NOTAM/TFR geometry; verify the variation and TFR scenarios
 
 ## 5. Survey land descriptions and GNSS

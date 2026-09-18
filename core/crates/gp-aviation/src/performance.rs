@@ -835,6 +835,14 @@ pub static VDP: ToolDef = ToolDef {
             2,
         ),
         out(
+            "rule_hat_318",
+            "HAT / 318 rule",
+            "HAT in feet / 318 (feet per NM on a 3° path), in NM",
+            QT::Distance,
+            "NM",
+            2,
+        ),
+        out(
             "vertical_speed",
             "Descent rate",
             "Groundspeed × tan(angle)",
@@ -905,6 +913,10 @@ fn run_vdp(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("distance", ctx.out("distance", nm_dist(dist))),
         ("rule_hat_300", ctx.out("rule_hat_300", nm_dist(rule))),
         ("rule_error", ctx.out("rule_error", nm_dist(rule - dist))),
+        (
+            "rule_hat_318",
+            ctx.out("rule_hat_318", nm_dist(hat / FT / 318.0 * NM)),
+        ),
     ];
     if let Some(gs) = ctx.quantity("groundspeed")? {
         let gs = gs.base();

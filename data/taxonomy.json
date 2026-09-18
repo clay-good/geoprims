@@ -42,7 +42,9 @@
         "altimetry",
         "wind",
         "performance",
-        "loading"
+        "loading",
+        "weather",
+        "ifr"
       ]
     },
     "drone": {
@@ -58,11 +60,26 @@
     },
     "survey": {
       "title": "Survey",
-      "groups": ["cogo", "reduction", "earthwork", "curves", "land", "gnss"]
+      "groups": [
+        "cogo",
+        "reduction",
+        "earthwork",
+        "curves",
+        "land",
+        "gnss"
+      ]
     },
     "indexing": {
       "title": "Spatial indexing",
-      "groups": ["h3", "s2", "a5", "geohash", "tile", "plus-code", "convert"]
+      "groups": [
+        "h3",
+        "s2",
+        "a5",
+        "geohash",
+        "tile",
+        "plus-code",
+        "convert"
+      ]
     },
     "raster": {
       "title": "Raster",
@@ -70,7 +87,10 @@
     },
     "time": {
       "title": "Time",
-      "groups": ["sun", "scale"]
+      "groups": [
+        "sun",
+        "scale"
+      ]
     },
     "units": {
       "title": "Units",

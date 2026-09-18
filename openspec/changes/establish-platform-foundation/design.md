@@ -105,7 +105,7 @@ docs/research/        Research briefs backing the specs
 - The site works without cross-origin isolation (threads are optional, per `compute-core`), so a header regression degrades speed, not correctness.
 
 ### D8. Honest counting: operations vs endpoints
-Per `tool-catalog`, the public count reports both numbers. The target is about **460 operations** and about **800 endpoints**; the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding. Public counts include only stable tools, so the claim is made only once the stable count supports it.
+Per `tool-catalog`, the public count reports both numbers. The target is about **517 operations** and about **877 tool ids** (restated in `plan-launch-and-value-proof`); the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding. Public counts include only stable tools, so the claim is made only once the stable count supports it.
 
 ### D9. Verification harness
 - Golden vectors live beside each tool as JSON Lines with `source`, `sourceVersion`, and per-field tolerances.
@@ -126,18 +126,23 @@ All content is published openly without restriction, which places it outside the
 
 ## Endpoint rollup (targets; details in each domain change's design)
 
-| Domain | Operations | Endpoints | Defined in |
+Restated by `plan-launch-and-value-proof` (design L6) after the practitioner review.
+
+| Domain | Operations | Tool ids | Defined in |
 |---|---|---|---|
 | geodesy | 89 | 173 | `add-geodesy-suite` |
 | navigation | 46 | 58 | `add-navigation-and-geometry` |
 | geometry | 38 | 44 | `add-navigation-and-geometry` |
-| aviation | 84 | 112 | `add-aviation-suite` |
-| drone | 42 | 52 | `add-drone-suite` |
-| survey | 58 | 68 | `add-survey-suite` |
+| aviation | 99 | 132 | `add-aviation-suite`, `add-practitioner-essentials` |
+| drone | 50 | 61 | `add-drone-suite`, `add-practitioner-essentials` |
+| survey | 72 | 84 | `add-survey-suite`, `add-practitioner-essentials` |
 | indexing | 52 | 92 | `add-spatial-indexing-and-raster` |
 | raster | 30 | 40 | `add-spatial-indexing-and-raster` |
+| time | 19 | 23 | `add-practitioner-essentials` |
 | units | 22 | 170 | this change (`units` domain; pair pages such as `kt-to-mph`) |
-| **Total** | **461** | **809** | |
+| **Total** | **517** | **877** | |
+
+Tool ids are not all indexable pages. About 300 tool pages are indexable. Other generated ids resolve as presets canonicalized to their parent tool (per `discovery/search-pages`).
 
 ## Risks / Trade-offs
 

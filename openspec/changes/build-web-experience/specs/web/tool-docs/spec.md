@@ -19,11 +19,11 @@ Formulas SHALL be rendered to static MathML (with an accessible text fallback) a
 - **THEN** the formula is visible and readable by screen readers
 
 ### Requirement: Search-engine metadata
-Every tool page SHALL have a unique title (`<Tool title> — geoprims`), a meta description from the manifest summary, a canonical URL, Open Graph and Twitter card tags with a pre-rendered preview image of the tool's visualization, and schema.org `SoftwareApplication` (or `WebApplication`) structured data. A sitemap SHALL list all stable and experimental endpoints.
+Every tool page SHALL have a unique title (`<Tool title> — geoprims`), a meta description from the manifest summary, a canonical URL, Open Graph and Twitter card tags with a pre-rendered preview image of the tool's visualization, and schema.org `SoftwareApplication` (or `WebApplication`) structured data. Sitemaps SHALL list only indexable pages, as defined by `discovery/search-pages` (non-indexable generated endpoints canonicalize to their parent tool).
 
 #### Scenario: Unique titles
 - **WHEN** the SEO lint checks all pages
-- **THEN** no two pages share a title or canonical URL
+- **THEN** no two indexable pages share a title or canonical URL (non-indexable presets deliberately canonicalize to their parent)
 
 ### Requirement: Domain and group index pages
 Each domain and group SHALL have an index page listing its tools with one-line summaries, grouped by task ("I want to…"), and linking to learning guides.

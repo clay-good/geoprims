@@ -10,6 +10,11 @@ context: |
   Ethos (non-negotiable):
     - Zero ads, zero accounts, zero tracking, zero server-side compute.
     - User inputs never leave the device. Only static assets are fetched.
+      Sole exception: a problem report the user reviews and sends (a small
+      Cloudflare Worker + D1 on /api/reports*; it computes nothing).
+    - Glanceable: answer first, in a plain sentence, with example values
+      prefilled; every result shows its work, sources, and last-verified date.
+    - Prove value before breadth: hero tools first (plan-launch-and-value-proof).
     - Instant: the shell loads fast, tools compute in milliseconds.
     - Every result is reproducible, cited, and states its accuracy.
     - Humans get a tactical "retro-HUD" web app; agents get the local MCP server.
@@ -21,8 +26,13 @@ context: |
       (Node.js runtime). No separate CLI or public library package.
     - Tool manifest is the single source of truth: it generates the web
       forms, MCP schemas, docs pages, and search index.
-    - Web: statically pre-rendered pages, progressive enhancement,
-      installable PWA, WebGL2 canvas (WebGPU opportunistic).
+    - Web: statically pre-rendered pages (answer in the HTML), progressive
+      enhancement, installable PWA, WebGL2 canvas (WebGPU opportunistic),
+      hosted on Cloudflare Workers static assets.
+    - MCP: zero-dependency server.mjs; release tags run from a git clone
+      with Node alone.
+    - Pattern source for reporting, citations, freshness, SEO shells, and
+      mobile gates: roughlogic.com (docs/research/06-roughlogic-patterns.md).
 
   Domain vocabulary:
     - "Operation": one distinct mathematical function with its own

@@ -12,7 +12,7 @@ The catalog SHALL organize tools into these top-level domains: `geodesy` (coordi
 - **THEN** every tool id's second segment names an existing group in its domain, and no id appears in two groups
 
 ### Requirement: Operations versus endpoints counting rule
-The catalog SHALL distinguish **operations** (distinct mathematical functions with their own contract and vectors) from **endpoints** (addressable tool ids, including generated conversion pairs such as `geodesy.convert.dms-to-mgrs`). Generated endpoints SHALL be produced from a conversion graph over operations and SHALL NOT carry separate mathematics. Operations and generated endpoints share one naming scheme (conversions are named `a-to-b` either way); they are distinguished by the manifest's `composedOf` field, never by name. Public tool counts SHALL report both numbers.
+The catalog SHALL distinguish **operations** (distinct mathematical functions with their own contract and vectors) from **endpoints** (addressable tool ids, including generated conversion pairs such as `geodesy.convert.dms-to-mgrs`). Generated endpoints SHALL be produced from a conversion graph over operations and SHALL NOT carry separate mathematics. Operations and generated endpoints share one naming scheme (conversions are named `a-to-b` either way); they are distinguished by the manifest's `composedOf` field, never by name. Public tool counts SHALL report both numbers, counting stable tools only, and SHALL also report the number of indexable tool pages.
 
 #### Scenario: Generated pair shares math
 - **WHEN** `geodesy.convert.dms-to-mgrs` is invoked

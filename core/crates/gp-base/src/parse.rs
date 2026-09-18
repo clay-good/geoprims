@@ -163,7 +163,7 @@ fn ambiguous_separator(text: &str, format: NumberFormat, field: &str) -> ToolErr
 
 /// Splits "145 kts" into ("145", "kts"). The number ends at the first character
 /// that cannot belong to it; a space ends it unless it groups thousands.
-fn split_number_unit(s: &str, format: NumberFormat) -> (&str, &str) {
+pub fn split_number_unit(s: &str, format: NumberFormat) -> (&str, &str) {
     let b: Vec<(usize, char)> = s.char_indices().collect();
     let mut end = 0;
     let mut i = 0;

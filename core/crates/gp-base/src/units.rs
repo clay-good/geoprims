@@ -31,6 +31,7 @@ pub enum Quantity {
     Energy,
     Power,
     ElectricCharge,
+    ElectricPotential,
     Density,
     Frequency,
     DataRate,
@@ -39,7 +40,7 @@ pub enum Quantity {
 }
 
 impl Quantity {
-    pub const ALL: [Quantity; 22] = [
+    pub const ALL: [Quantity; 23] = [
         Self::Length,
         Self::Distance,
         Self::Area,
@@ -57,6 +58,7 @@ impl Quantity {
         Self::Energy,
         Self::Power,
         Self::ElectricCharge,
+        Self::ElectricPotential,
         Self::Density,
         Self::Frequency,
         Self::DataRate,
@@ -84,6 +86,7 @@ impl Quantity {
             Self::Energy => "energy",
             Self::Power => "power",
             Self::ElectricCharge => "electric-charge",
+            Self::ElectricPotential => "electric-potential",
             Self::Density => "density",
             Self::Frequency => "frequency",
             Self::DataRate => "data-rate",
@@ -116,6 +119,7 @@ impl Quantity {
             Self::Energy => "an energy",
             Self::Power => "a power",
             Self::ElectricCharge => "an electric charge",
+            Self::ElectricPotential => "a voltage",
             Self::Density => "a density",
             Self::Frequency => "a frequency",
             Self::DataRate => "a data rate",
@@ -507,6 +511,10 @@ pub static UNITS: &[Unit] = &[
     u("C", Q::ElectricCharge, ex(1, 1), &["coulomb", "coulombs"]),
     u("mAh", Q::ElectricCharge, ex(36, 10), &[]),
     u("Ah", Q::ElectricCharge, ex(3600, 1), &[]),
+    // Electric potential (base V)
+    u("V", Q::ElectricPotential, ex(1, 1), &["volt", "volts"]),
+    u("mV", Q::ElectricPotential, ex(1, 1000), &[]),
+    u("kV", Q::ElectricPotential, ex(1000, 1), &[]),
     // Density (base kg/m³)
     u("kg/m3", Q::Density, ex(1, 1), &["kg/m³"]),
     u("g/cm3", Q::Density, ex(1000, 1), &["g/cm³", "g/cc", "kg/L"]),

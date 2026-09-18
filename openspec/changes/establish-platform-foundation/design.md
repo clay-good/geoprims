@@ -72,7 +72,7 @@ The CRS registry (`crs-registry` asset) is a curated EPSG-derived subset: every 
 PROJ 9.x runs in CI as the differential oracle for every projection and datum transformation.
 
 ### D5. Manifest-first tool definition
-Each tool is a Rust function with a declarative definition (inputs, outputs, units, ranges, errors, references, vectors, visualization) written in a Rust macro DSL. The build emits:
+Each tool is a Rust function with a declarative definition (inputs, outputs, units, ranges, errors, references, vectors, visualization): a `static ToolDef` built from plain const data, with small `macro_rules!` helpers only where a family repeats (for example `convert_op!` and `pair!` in the units domain). Plain data needs no procedural macro, and the compiler checks every field. Each module's `gp_manifest()` export serializes its definitions, so the catalog is built from the exact bytes that ship. The build emits:
 
 1. `catalog/v1.json` (all manifests, JSON Schema 2020-12 with `x-` extensions).
 2. TypeScript types for the web app and the MCP server.

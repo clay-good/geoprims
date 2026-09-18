@@ -6,10 +6,13 @@ pub mod angle;
 pub mod envelope;
 pub mod error;
 pub mod json;
+pub mod manifest;
 pub mod num;
 pub mod parse;
 pub mod profile;
+pub mod tool;
 pub mod units;
+pub mod vectors;
 
 pub use error::{ErrorCode, ToolError, Warning};
 pub use json::Json;

@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install pinned Rust (rust-toolchain.toml)
         run: rustup show active-toolchain || rustup toolchain install
       - name: Install pinned wasm-opt
@@ -31,9 +33,13 @@ jobs:
         run: cargo test --manifest-path core/Cargo.toml
       - name: Build Wasm modules (prints and enforces pinned versions, import lint, size budgets)
         run: node tools/wasm/build.mjs
-      - name: JS tests (module smoke tests, lint and budget fixtures)
-        run: node --test 'tools/**/*.test.mjs'
+      - name: Catalog (dist/catalog/v1.json with honest counts)
+        run: node tools/codegen/catalog.mjs
+      - name: JS tests (gates, runtime, vectors through Wasm, vector integrity)
+        run: node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs'
+        env:
+          VECTOR_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
       - uses: actions/upload-artifact@v4
         with:
           name: wasm
-          path: dist/wasm
+          path: dist

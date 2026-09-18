@@ -81,7 +81,7 @@ openspec validate --all --strict
 
 | Change | Built so far |
 |---|---|
-| `establish-platform-foundation` | Monorepo layout; pinned toolchain; Cargo workspace compiling one `.wasm` per domain; import-section lint and Brotli size budgets, each proven against a bad fixture crate; `gp-base` with the exact unit registry, unit-tagged parsing, angle normalization, the error and warning model, ECMAScript-format number serialization (byte-checked against `JSON.stringify` on about 12,000 doubles), unit profiles, and the result envelope (tasks 1.1–2.7) |
+| `establish-platform-foundation` | Monorepo layout and pinned toolchain; one import-free `.wasm` per domain behind a raw C ABI, with an import lint and Brotli budgets, each proven against a bad fixture; `gp-base` (exact unit registry, unit-tagged parsing, angle normalization, error and warning model, ECMAScript-format numbers, unit profiles, result envelope); the tool runtime (`invoke`, `invokeBatch`, `manifest`) and manifest lint; `packages/runtime` (shared loader, input hardening, Node host); `catalog/v1.json` generation; golden vectors with a provenance lint and a silent-edit guard; **the units domain: 22 operations and 35 allow-listed pair endpoints (57 tool ids), all experimental, with 230 golden vectors** |
 | Everything else | Not started |
 
 ## Building it
@@ -97,10 +97,14 @@ node tools/wasm/build.mjs
 ```
 
 ```bash
-node --test 'tools/**/*.test.mjs'
+node tools/codegen/catalog.mjs
 ```
 
-The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests). It fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).
+```bash
+node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs'
+```
+
+The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests), and the catalog step writes `dist/catalog/v1.json`. It fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).
 
 [AGENTS.md](AGENTS.md) holds the working rules for anyone, human or AI, implementing the specs: the three doors (web, MCP, report), how to add a tool, and the non-negotiables.
 

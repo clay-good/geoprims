@@ -19,20 +19,20 @@
 ## 3. Manifest DSL and code generation
 
 - [ ] 3.1 Define the manifest meta-schema (JSON Schema 2020-12 plus every extension listed in `contracts/manifest-extensions`, closed to unknown `x-` fields); verify it validates a hand-written sample manifest and rejects each missing required field
-- [ ] 3.2 Implement the Rust tool-definition macro that emits manifests at build time; verify a sample tool produces a manifest identical to a checked-in snapshot
-- [ ] 3.3 Implement the id-pattern, alias-uniqueness, inverse-symmetry, visualization-mapping, and reference checks; verify each fails on a targeted bad fixture
-- [ ] 3.4 Generate `catalog/v1.json`, TypeScript types, MCP schemas, and search documents from manifests; verify a snapshot test over the sample tool for each output
-- [ ] 3.5 Implement the conversion-graph generator with pair allow-list and `composedOf`; verify that a non-allow-listed pair produces no endpoint
-- [ ] 3.6 Emit operation and endpoint counts from the build; verify the counts match the manifests
+- [x] 3.2 Implement the Rust tool definition (a static `ToolDef` per tool, per design D5) that emits manifests; verify a sample tool produces a manifest identical to a checked-in snapshot
+- [x] 3.3 Implement the id-pattern, alias-uniqueness, inverse-symmetry, visualization-mapping, and reference checks; verify each fails on a targeted bad fixture
+- [ ] 3.4 Generate `catalog/v1.json` (done: `tools/codegen/catalog.mjs`), TypeScript types, MCP schemas, and search documents from manifests; verify a snapshot test over the sample tool for each output
+- [x] 3.5 Implement the conversion-graph generator with pair allow-list and `composedOf`; verify that a non-allow-listed pair produces no endpoint
+- [x] 3.6 Emit operation and endpoint counts from the build; verify the counts match the manifests
 
 ## 4. Compute core runtime
 
-- [ ] 4.1 Implement the uniform `invoke`, `invokeBatch`, `manifest`, `version` exports per module; verify the unknown-tool and batch-order scenarios
+- [x] 4.1 Implement the uniform `invoke`, `invokeBatch`, `manifest`, `version` exports per module; verify the unknown-tool and batch-order scenarios
 - [ ] 4.2 Implement the host asset-provider interface and `ASSET_UNAVAILABLE` flow; verify with a mock provider that supplies, withholds, and corrupts an asset
 - [ ] 4.3 Implement per-invocation memory caps and `LIMIT_EXCEEDED` pre-checks; verify with an over-limit fixture that no allocation beyond the cap occurs
 - [ ] 4.4 Implement progress reporting and cooperative cancellation for long tools; verify cancellation returns within 100 ms in a benchmark fixture
 - [ ] 4.5 Implement the browser worker host and trap containment; verify a trapping fixture restarts the worker and other tools keep working
-- [ ] 4.6 Implement the internal `packages/runtime` loader with browser and Node hosts (same Wasm, cache and filesystem asset providers); verify the cross-surface digest scenario
+- [ ] 4.6 Implement the internal `packages/runtime` loader (done: shared module loader, input hardening, Node host) with browser and Node hosts (same Wasm, cache and filesystem asset providers); verify the cross-surface digest scenario
 
 ## 5. Data assets
 
@@ -50,7 +50,7 @@
 
 ## 6. Verification infrastructure
 
-- [ ] 6.1 Define the golden-vector file format (JSON Lines, source, version, tolerances, supersession); verify the lint rejects missing provenance and silent edits
+- [x] 6.1 Define the golden-vector file format (JSON Lines, source, version, tolerances, supersession); verify the lint rejects missing provenance and silent edits
 - [ ] 6.2 Build the differential-reference container (GeographicLib C++, PROJ 9.x, H3 C 4.5, S2 C++, WMM C, HTDP); verify each reference binary runs a smoke case in CI
 - [ ] 6.3 Implement the differential runner (10,000 random and edge-biased cases per family, tolerance comparison, failing-case report); verify with a deliberately perturbed tool that it fails
 - [ ] 6.4 Implement the cross-host determinism suite (Playwright Chromium/Firefox/WebKit plus Node, byte comparison); verify it passes on the sample tool and fails on an injected host-Math fixture
@@ -71,7 +71,7 @@
 - [ ] 8.1 Implement the domain/group taxonomy file and validation; verify every id maps to exactly one group
 - [ ] 8.2 Implement lifecycle states and the stable-promotion gate (≥ 20 vectors, differential tests passing); verify promotion fails for a tool with 19 vectors
 - [ ] 8.3 Implement deprecation redirects and deprecation notices in results; verify the deprecated-id scenario
-- [ ] 8.4 Implement the `units` domain operations and allow-listed pair endpoints; verify the kt-to-mph and fuel-density scenarios
+- [x] 8.4 Implement the `units` domain operations and allow-listed pair endpoints; verify the kt-to-mph and fuel-density scenarios
 
 ## 9. Release readiness
 

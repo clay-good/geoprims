@@ -1,6 +1,8 @@
 //! The raw WebAssembly ABI every module exports (compute-core "Stable host call
 //! interface"). Strings cross the boundary as UTF-8 in linear memory:
 //!
+//! - `gp_invoke(id, idLen, input, inputLen)`, `gp_invoke_batch(…)`, `gp_manifest()`,
+//!   and `gp_version()` return JSON (or the version string).
 //! - `gp_alloc(len) -> ptr` / `gp_free(ptr, len)`: host-owned input buffers.
 //! - Calls that return a string return a pointer to a core-owned buffer and set
 //!   its length, read with `gp_out_len()`. The buffer lives until the next call.
@@ -49,12 +51,22 @@ pub unsafe fn read_str<'a>(ptr: *const u8, len: usize) -> Result<&'a str, std::s
     std::str::from_utf8(unsafe { std::slice::from_raw_parts(ptr, len) })
 }
 
+pub fn bad_utf8() -> String {
+    crate::envelope::failure(&crate::error::ToolError::new(
+        crate::error::ErrorCode::InvalidInput,
+        "The tool id and input must be UTF-8.",
+    ))
+}
+
 /// Declares a module's Wasm exports. `$name` is the module id (`base`, `geodesy`, …).
 #[macro_export]
 macro_rules! export_module {
-    ($name:literal) => {
+    ($name:literal, $registry:expr) => {
         #[cfg(target_arch = "wasm32")]
         mod __gp_exports {
+            #[allow(unused_imports)]
+            use super::*;
+
             #[unsafe(no_mangle)]
             pub extern "C" fn gp_alloc(len: usize) -> *mut u8 {
                 $crate::abi::alloc(len)
@@ -75,6 +87,53 @@ macro_rules! export_module {
             #[unsafe(no_mangle)]
             pub extern "C" fn gp_version() -> *const u8 {
                 $crate::abi::set_out(concat!($name, "@", env!("CARGO_PKG_VERSION")))
+            }
+
+            #[unsafe(no_mangle)]
+            pub extern "C" fn gp_manifest() -> *const u8 {
+                $crate::abi::set_out(&$registry.manifest())
+            }
+
+            /// # Safety
+            /// Both ranges must be readable UTF-8 buffers from `gp_alloc`.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_invoke(
+                id: *const u8,
+                id_len: usize,
+                input: *const u8,
+                input_len: usize,
+            ) -> *const u8 {
+                let out = match unsafe {
+                    (
+                        $crate::abi::read_str(id, id_len),
+                        $crate::abi::read_str(input, input_len),
+                    )
+                } {
+                    (Ok(id), Ok(input)) => $registry.invoke(id, input),
+                    _ => $crate::abi::bad_utf8(),
+                };
+                $crate::abi::set_out(&out)
+            }
+
+            /// # Safety
+            /// Both ranges must be readable UTF-8 buffers from `gp_alloc`.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_invoke_batch(
+                id: *const u8,
+                id_len: usize,
+                input: *const u8,
+                input_len: usize,
+            ) -> *const u8 {
+                let out = match unsafe {
+                    (
+                        $crate::abi::read_str(id, id_len),
+                        $crate::abi::read_str(input, input_len),
+                    )
+                } {
+                    (Ok(id), Ok(input)) => $registry.invoke_batch(id, input),
+                    _ => $crate::abi::bad_utf8(),
+                };
+                $crate::abi::set_out(&out)
             }
         }
     };

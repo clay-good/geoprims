@@ -1,3 +1,10 @@
 //! Raster: spectral indices and terrain analysis.
 
-gp_base::export_module!("raster");
+use gp_base::tool::Registry;
+
+pub static REGISTRY: Registry = Registry {
+    module: "raster",
+    tools: &[],
+};
+
+gp_base::export_module!("raster", REGISTRY);

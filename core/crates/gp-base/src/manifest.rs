@@ -1,0 +1,804 @@
+//! Manifest generation (JSON Schema 2020-12 plus the closed `x-` extensions of
+//! `contracts/manifest-extensions`) and the catalog lint that fails the build on
+//! malformed definitions.
+
+use crate::json::Json;
+use crate::profile::Profile;
+use crate::tool::{Field, Kind, Precision, Stability, ToolDef};
+use crate::units;
+
+const SCHEMA: &str = "https://json-schema.org/draft/2020-12/schema";
+
+fn strs(items: &[&str]) -> Json {
+    Json::Arr(items.iter().map(|s| Json::str(*s)).collect())
+}
+
+fn field_schema(f: &Field, is_input: bool) -> Json {
+    let mut o: Vec<(String, Json)> = Vec::new();
+    let mut put = |k: &str, v: Json| o.push((k.to_owned(), v));
+    match f.kind {
+        Kind::Quantity { q, unit } => {
+            if is_input {
+                put("type", strs(&["number", "string"]));
+            } else {
+                put("type", Json::str("object"));
+                put(
+                    "properties",
+                    Json::obj([
+                        ("value", Json::obj([("type", Json::str("number"))])),
+                        ("unit", Json::obj([("type", Json::str("string"))])),
+                    ]),
+                );
+                put("required", strs(&["value", "unit"]));
+                put("additionalProperties", Json::Bool(false));
+            }
+            put("title", Json::str(f.title));
+            put("description", Json::str(f.help));
+            put("x-quantity", Json::str(q.id()));
+            put("x-unit", Json::str(unit));
+        }
+        Kind::Unit(q) => {
+            put("type", Json::str("string"));
+            put("title", Json::str(f.title));
+            put("description", Json::str(f.help));
+            put(
+                "enum",
+                Json::Arr(units::units_of(q).map(|u| Json::str(u.symbol)).collect()),
+            );
+        }
+        Kind::Choice(options) => {
+            put("type", Json::str("string"));
+            put("title", Json::str(f.title));
+            put("description", Json::str(f.help));
+            put("enum", strs(options));
+        }
+        Kind::AnyQuantity => {
+            if is_input {
+                put("type", Json::str("string"));
+            } else {
+                put("type", Json::str("object"));
+                put(
+                    "properties",
+                    Json::obj([
+                        ("value", Json::obj([("type", Json::str("number"))])),
+                        ("unit", Json::obj([("type", Json::str("string"))])),
+                    ]),
+                );
+                put("required", strs(&["value", "unit"]));
+                put("additionalProperties", Json::Bool(false));
+            }
+            put("title", Json::str(f.title));
+            put("description", Json::str(f.help));
+            put("x-quantity", Json::str("any"));
+        }
+        Kind::Number { min, max } => {
+            put("type", Json::str("number"));
+            put("title", Json::str(f.title));
+            put("description", Json::str(f.help));
+            put("minimum", Json::Num(min));
+            put("maximum", Json::Num(max));
+            put("x-quantity", Json::str("dimensionless"));
+            put("x-unit", Json::str("1"));
+        }
+    }
+    if let Some(r) = f.angle_range {
+        put("x-angle-range", Json::str(r));
+    }
+    if let Some(p) = f.precision {
+        put(
+            "x-display-precision",
+            match p {
+                Precision::Decimals(n) => Json::obj([("decimals", Json::Num(n.into()))]),
+                Precision::Significant(n) => Json::obj([("significant", Json::Num(n.into()))]),
+            },
+        );
+    }
+    if is_input {
+        put("x-help", Json::str(f.help));
+        if f.core {
+            put("x-core", Json::Bool(true));
+        }
+    }
+    Json::Obj(o)
+}
+
+fn options_schema(def: &ToolDef) -> Json {
+    let mut props = vec![(
+        "numberFormat".to_owned(),
+        Json::obj([
+            ("type", Json::str("string")),
+            ("enum", strs(&["decimal-point", "decimal-comma"])),
+            (
+                "description",
+                Json::str("How to read numbers written as strings. Default decimal-point."),
+            ),
+        ]),
+    )];
+    if def.has_quantity_outputs() {
+        props.push((
+            "profile".to_owned(),
+            Json::obj([
+                ("type", Json::str("string")),
+                ("enum", strs(&Profile::IDS)),
+                (
+                    "description",
+                    Json::str("Unit profile for quantity outputs."),
+                ),
+            ]),
+        ));
+        props.push((
+            "outputUnits".to_owned(),
+            Json::obj([
+                ("type", Json::str("object")),
+                (
+                    "additionalProperties",
+                    Json::obj([("type", Json::str("string"))]),
+                ),
+                (
+                    "description",
+                    Json::str("Unit per output field, overriding the profile."),
+                ),
+            ]),
+        ));
+    }
+    Json::obj([
+        ("type", Json::str("object")),
+        ("properties", Json::Obj(props)),
+        ("additionalProperties", Json::Bool(false)),
+    ])
+}
+
+fn object_schema(fields: &[Field], is_input: bool, def: &ToolDef) -> Json {
+    let mut props: Vec<(String, Json)> = fields
+        .iter()
+        .map(|f| (f.name.to_owned(), field_schema(f, is_input)))
+        .collect();
+    if is_input {
+        props.push(("options".to_owned(), options_schema(def)));
+    }
+    let required: Vec<&str> = fields
+        .iter()
+        .filter(|f| if is_input { f.required } else { !f.optional })
+        .map(|f| f.name)
+        .collect();
+    Json::obj([
+        ("$schema", Json::str(SCHEMA)),
+        ("type", Json::str("object")),
+        ("properties", Json::Obj(props)),
+        ("required", strs(&required)),
+        ("additionalProperties", Json::Bool(false)),
+    ])
+}
+
+/// The manifest for one tool, with a fixed key order.
+pub fn manifest(def: &ToolDef) -> Json {
+    let mut o: Vec<(String, Json)> = Vec::new();
+    let mut put = |k: &str, v: Json| o.push((k.to_owned(), v));
+    put("id", Json::str(def.id));
+    put("version", Json::str(def.version));
+    put("title", Json::str(def.title));
+    put("summary", Json::str(def.summary));
+    put("domain", Json::str(def.domain()));
+    put("group", Json::str(def.group()));
+    put("aliases", strs(def.aliases));
+    put("keywords", strs(def.keywords));
+    put("inputs", object_schema(def.inputs, true, def));
+    put("outputs", object_schema(def.outputs, false, def));
+    put(
+        "errors",
+        Json::Arr(def.errors.iter().map(|c| Json::str(c.as_str())).collect()),
+    );
+    put("warnings", strs(def.warnings));
+    put("model", Json::str(def.model));
+    put("accuracy", Json::str(def.accuracy));
+    put(
+        "references",
+        Json::Arr(
+            def.references
+                .iter()
+                .map(|r| {
+                    Json::obj([
+                        ("title", Json::str(r.title)),
+                        ("issuer", Json::str(r.issuer)),
+                        ("year", Json::Num(r.year.into())),
+                        ("edition", Json::str(r.edition)),
+                        ("locator", Json::str(r.locator)),
+                        ("url", Json::str(r.url)),
+                    ])
+                })
+                .collect(),
+        ),
+    );
+    put(
+        "examples",
+        Json::Arr(
+            def.examples
+                .iter()
+                .map(|e| {
+                    let input: serde_json::Value =
+                        serde_json::from_str(e.input).expect("example input is JSON");
+                    Json::obj([
+                        ("id", Json::str(e.id)),
+                        ("title", Json::str(e.title)),
+                        ("input", from_value(&input)),
+                        ("source", Json::str(e.source)),
+                    ])
+                })
+                .collect(),
+        ),
+    );
+    put(
+        "vectors",
+        Json::str(format!("core/vectors/{}.jsonl", def.id)),
+    );
+    put("assets", strs(def.assets));
+    put(
+        "visualization",
+        Json::Arr(
+            def.visualization
+                .iter()
+                .map(|l| {
+                    Json::obj([
+                        ("kind", Json::str(l.kind)),
+                        (
+                            "map",
+                            Json::Obj(
+                                l.map
+                                    .iter()
+                                    .map(|(k, v)| ((*k).to_owned(), Json::str(*v)))
+                                    .collect(),
+                            ),
+                        ),
+                    ])
+                })
+                .collect(),
+        ),
+    );
+    put(
+        "related",
+        Json::Arr(
+            def.related
+                .iter()
+                .map(|r| Json::obj([("id", Json::str(r.id)), ("reason", Json::str(r.reason))]))
+                .collect(),
+        ),
+    );
+    put("stability", Json::str(def.stability.id()));
+    if let Stability::Deprecated {
+        replacement,
+        removal,
+    } = def.stability
+    {
+        put(
+            "deprecation",
+            Json::obj([
+                ("replacement", Json::str(replacement)),
+                ("removal", Json::str(removal)),
+            ]),
+        );
+    }
+    put("since", Json::str(def.since));
+    put("composedOf", strs(def.composed_of));
+    if !def.preset.is_empty() {
+        let preset = def
+            .preset
+            .iter()
+            .map(|(k, v)| {
+                let v: serde_json::Value = serde_json::from_str(v).expect("preset is JSON");
+                ((*k).to_owned(), from_value(&v))
+            })
+            .collect();
+        put("preset", Json::Obj(preset));
+        put("justification", Json::str(def.justification));
+    }
+    put(
+        "limits",
+        Json::Obj(
+            def.limits
+                .iter()
+                .map(|(k, v)| ((*k).to_owned(), Json::Num(*v as f64)))
+                .collect(),
+        ),
+    );
+    put("x-sentence", Json::str(def.sentence));
+    put("x-comparison", Json::obj([("kind", Json::str("none"))]));
+    put("x-clock-default", Json::str("forbidden"));
+    put("x-primary-example", Json::str(def.primary_example));
+    Json::Obj(o)
+}
+
+/// Converts parsed JSON to the ordered output type, keeping object key order.
+pub fn from_value(v: &serde_json::Value) -> Json {
+    match v {
+        serde_json::Value::Null => Json::Null,
+        serde_json::Value::Bool(b) => Json::Bool(*b),
+        serde_json::Value::Number(n) => Json::Num(n.as_f64().unwrap_or(f64::NAN)),
+        serde_json::Value::String(s) => Json::str(s.clone()),
+        serde_json::Value::Array(a) => Json::Arr(a.iter().map(from_value).collect()),
+        serde_json::Value::Object(m) => {
+            Json::Obj(m.iter().map(|(k, v)| (k.clone(), from_value(v))).collect())
+        }
+    }
+}
+
+/// Visualization layer kinds (tool-contract "Each tool declares its visualization").
+pub const LAYER_KINDS: &[&str] = &[
+    "point",
+    "line-geodesic",
+    "line-rhumb",
+    "polygon",
+    "bbox",
+    "cell-set",
+    "vector-diagram",
+    "profile-chart",
+    "gauge",
+    "table-only",
+];
+
+const RELATED_REASONS: &[&str] = &["inverse", "next", "alternative", "parent"];
+
+fn valid_id(id: &str) -> bool {
+    let segs: Vec<&str> = id.split('.').collect();
+    segs.len() == 3
+        && segs.iter().all(|s| {
+            !s.is_empty()
+                && s.split('-').all(|p| {
+                    !p.is_empty()
+                        && p.bytes()
+                            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
+                })
+        })
+}
+
+fn valid_semver(v: &str) -> bool {
+    let p: Vec<&str> = v.split('.').collect();
+    p.len() == 3
+        && p.iter()
+            .all(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+}
+
+/// Taxonomy: (domain, groups).
+pub type Taxonomy<'a> = &'a [(&'a str, Vec<&'a str>)];
+
+/// Checks every rule a single build can check. Returns one message per problem,
+/// each naming the tool.
+pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<String> {
+    let mut errs = Vec::new();
+    let exists = |id: &str| tools.iter().any(|t| t.id == id) || known_ids.contains(&id);
+    for (i, t) in tools.iter().enumerate() {
+        let id = t.id;
+        let mut e = |m: String| errs.push(format!("{id}: {m}"));
+        if !valid_id(id) {
+            e("id must match ^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*){2}$ (<domain>.<group>.<operation>)".into());
+        }
+        match taxonomy.iter().find(|(d, _)| *d == t.domain()) {
+            None => e(format!("domain {} is not in the taxonomy", t.domain())),
+            Some((_, groups)) if !groups.contains(&t.group()) => e(format!(
+                "group {} is not in the {} taxonomy",
+                t.group(),
+                t.domain()
+            )),
+            _ => {}
+        }
+        if tools[..i].iter().any(|o| o.id == id) {
+            e("id is declared twice".into());
+        }
+        for (name, v) in [("version", t.version), ("since", t.since)] {
+            if !valid_semver(v) {
+                e(format!("{name} {v} is not semver"));
+            }
+        }
+        for (name, v) in [
+            ("title", t.title),
+            ("summary", t.summary),
+            ("model", t.model),
+            ("accuracy", t.accuracy),
+            ("sentence", t.sentence),
+        ] {
+            if v.trim().is_empty() {
+                e(format!("missing {name}"));
+            }
+        }
+        let fields = t
+            .inputs
+            .iter()
+            .chain(t.parent.into_iter().flat_map(|p| p.inputs));
+        for f in fields.clone() {
+            if f.title.is_empty() || f.help.is_empty() {
+                e(format!("input {} needs a title and help", f.name));
+            }
+            if let Kind::Quantity { q, unit } = f.kind
+                && units::by_symbol(q, unit).is_none()
+            {
+                e(format!(
+                    "input {} declares unknown unit {unit} for {}",
+                    f.name,
+                    q.id()
+                ));
+            }
+        }
+        if t.inputs.iter().filter(|f| f.core).count() > 5 {
+            e("more than 5 x-core inputs".into());
+        }
+        for f in t.outputs {
+            if let Kind::Quantity { q, unit } = f.kind
+                && units::by_symbol(q, unit).is_none()
+            {
+                e(format!(
+                    "output {} declares unknown unit {unit} for {}",
+                    f.name,
+                    q.id()
+                ));
+            }
+            if matches!(
+                f.kind,
+                Kind::Quantity { .. } | Kind::Number { .. } | Kind::AnyQuantity
+            ) && f.precision.is_none()
+            {
+                e(format!(
+                    "numeric output {} needs x-display-precision",
+                    f.name
+                ));
+            }
+        }
+        if t.references.is_empty() {
+            e("needs at least one reference".into());
+        }
+        for r in t.references {
+            if r.issuer.is_empty() || r.year < 1800 || r.title.is_empty() {
+                e(format!(
+                    "reference \"{}\" needs a title, issuing body, and year",
+                    r.title
+                ));
+            }
+        }
+        if t.examples.is_empty() {
+            e("needs at least one worked example".into());
+        }
+        if !t.examples.iter().any(|x| x.id == t.primary_example) {
+            e(format!(
+                "primary example {} is not among its examples",
+                t.primary_example
+            ));
+        }
+        for x in t.examples {
+            if !matches!(
+                serde_json::from_str::<serde_json::Value>(x.input),
+                Ok(serde_json::Value::Object(_))
+            ) {
+                e(format!("example {} input is not a JSON object", x.id));
+            }
+        }
+        if t.visualization.is_empty() {
+            e("needs a visualization descriptor".into());
+        }
+        for l in t.visualization {
+            if !LAYER_KINDS.contains(&l.kind) {
+                e(format!("unknown visualization layer kind {}", l.kind));
+            }
+            for (layer_input, out) in l.map {
+                if !t.outputs.iter().any(|f| f.name == *out) {
+                    e(format!(
+                        "visualization maps {layer_input} to missing output field {out}"
+                    ));
+                }
+            }
+        }
+        for r in t.related {
+            if !RELATED_REASONS.contains(&r.reason) {
+                e(format!("related {} has unknown reason {}", r.id, r.reason));
+            }
+            if !exists(r.id) {
+                e(format!("related tool {} does not exist", r.id));
+            } else if r.reason == "inverse" {
+                let back = tools.iter().find(|o| o.id == r.id);
+                if let Some(back) = back
+                    && !back
+                        .related
+                        .iter()
+                        .any(|b| b.id == id && b.reason == "inverse")
+                {
+                    e(format!(
+                        "declares {} as its inverse, but {} does not declare it back",
+                        r.id, r.id
+                    ));
+                }
+            }
+        }
+        for c in t.composed_of {
+            if !exists(c) {
+                e(format!("composedOf {c} does not exist"));
+            }
+        }
+        if !t.preset.is_empty() && t.justification.is_empty() {
+            e("generated endpoint needs an allow-list justification".into());
+        }
+        if !t.composed_of.is_empty() && t.parent.is_none() && t.preset.is_empty() {
+            e("generated endpoint needs a parent or preset".into());
+        }
+        for (k, v) in t.preset {
+            if serde_json::from_str::<serde_json::Value>(v).is_err() {
+                e(format!("preset {k} is not JSON"));
+            }
+        }
+        for a in t.aliases {
+            for o in tools.iter() {
+                if o.id != id && (o.aliases.contains(a) || o.id == *a) {
+                    e(format!("alias {a} is also used by {}", o.id));
+                }
+            }
+        }
+    }
+    errs
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tool::{Example, Layer, Reference, Related};
+    use crate::units::Quantity;
+
+    const IN: &[Field] = &[Field::new(
+        "x",
+        "X",
+        "12 ft",
+        Kind::Quantity {
+            q: Quantity::Length,
+            unit: "ft",
+        },
+    )
+    .required()];
+    const OUT: &[Field] = &[Field::new(
+        "y",
+        "Y",
+        "3.6576 m",
+        Kind::Quantity {
+            q: Quantity::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3))];
+    const REF: &[Reference] = &[Reference {
+        title: "NIST SP 811",
+        issuer: "NIST",
+        year: 2008,
+        edition: "2008",
+        locator: "App. B",
+        url: "https://www.nist.gov/pml/special-publication-811",
+    }];
+    const EX: &[Example] = &[Example {
+        id: "ex1",
+        title: "t",
+        input: r#"{"x":12}"#,
+        source: "s",
+    }];
+    const VIZ: &[Layer] = &[Layer {
+        kind: "table-only",
+        map: &[],
+    }];
+
+    const GOOD: ToolDef = ToolDef {
+        id: "units.length.sample",
+        title: "Sample",
+        summary: "A sample tool.",
+        inputs: IN,
+        outputs: OUT,
+        model: "exact",
+        accuracy: "exact",
+        references: REF,
+        examples: EX,
+        primary_example: "ex1",
+        visualization: VIZ,
+        sentence: "{x} is {y}.",
+        ..ToolDef::BLANK
+    };
+
+    fn tax() -> Vec<(&'static str, Vec<&'static str>)> {
+        vec![("units", vec!["length"])]
+    }
+
+    #[test]
+    fn good_tool_passes() {
+        assert_eq!(lint(&[&GOOD], &tax(), &[]), Vec::<String>::new());
+    }
+
+    fn fails(t: &ToolDef, needle: &str) {
+        let errs = lint(&[t], &tax(), &[]);
+        assert!(
+            errs.iter().any(|e| e.contains(needle)),
+            "expected {needle:?} in {errs:?}"
+        );
+    }
+
+    #[test]
+    fn invalid_id_rejected() {
+        fails(
+            &ToolDef {
+                id: "Geodesy.UTM_Forward",
+                ..GOOD
+            },
+            "id must match",
+        );
+        fails(
+            &ToolDef {
+                id: "units.length",
+                ..GOOD
+            },
+            "id must match",
+        );
+    }
+
+    #[test]
+    fn missing_reference_rejected() {
+        fails(
+            &ToolDef {
+                references: &[],
+                ..GOOD
+            },
+            "at least one reference",
+        );
+        const BAD: &[Reference] = &[Reference { year: 0, ..REF[0] }];
+        fails(
+            &ToolDef {
+                references: BAD,
+                ..GOOD
+            },
+            "issuing body, and year",
+        );
+    }
+
+    #[test]
+    fn visualization_mapping_validated() {
+        const V: &[Layer] = &[Layer {
+            kind: "line-geodesic",
+            map: &[("path", "route")],
+        }];
+        fails(
+            &ToolDef {
+                visualization: V,
+                ..GOOD
+            },
+            "missing output field route",
+        );
+        const K: &[Layer] = &[Layer {
+            kind: "sparkles",
+            map: &[],
+        }];
+        fails(
+            &ToolDef {
+                visualization: K,
+                ..GOOD
+            },
+            "unknown visualization layer kind",
+        );
+    }
+
+    #[test]
+    fn too_many_core_inputs() {
+        const F: Field = Field::new(
+            "a",
+            "A",
+            "1 m",
+            Kind::Quantity {
+                q: Quantity::Length,
+                unit: "m",
+            },
+        )
+        .core();
+        const SIX: &[Field] = &[F, F, F, F, F, F];
+        fails(
+            &ToolDef {
+                inputs: SIX,
+                ..GOOD
+            },
+            "more than 5 x-core",
+        );
+    }
+
+    #[test]
+    fn taxonomy_enforced() {
+        fails(
+            &ToolDef {
+                id: "units.mass.sample",
+                ..GOOD
+            },
+            "group mass is not in the units taxonomy",
+        );
+        fails(
+            &ToolDef {
+                id: "weather.x.y",
+                ..GOOD
+            },
+            "domain weather is not in the taxonomy",
+        );
+    }
+
+    #[test]
+    fn inverse_symmetry() {
+        const A_REL: &[Related] = &[Related {
+            id: "units.length.b",
+            reason: "inverse",
+        }];
+        let a = ToolDef {
+            id: "units.length.a",
+            related: A_REL,
+            ..GOOD
+        };
+        let b = ToolDef {
+            id: "units.length.b",
+            ..GOOD
+        };
+        let errs = lint(&[&a, &b], &tax(), &[]);
+        assert!(
+            errs.iter().any(|e| e.contains("does not declare it back")),
+            "{errs:?}"
+        );
+        const B_REL: &[Related] = &[Related {
+            id: "units.length.a",
+            reason: "inverse",
+        }];
+        let b = ToolDef {
+            id: "units.length.b",
+            related: B_REL,
+            ..GOOD
+        };
+        assert_eq!(lint(&[&a, &b], &tax(), &[]), Vec::<String>::new());
+    }
+
+    #[test]
+    fn alias_uniqueness() {
+        const AL: &[&str] = &["feet converter"];
+        let a = ToolDef {
+            id: "units.length.a",
+            aliases: AL,
+            ..GOOD
+        };
+        let b = ToolDef {
+            id: "units.length.b",
+            aliases: AL,
+            ..GOOD
+        };
+        let errs = lint(&[&a, &b], &tax(), &[]);
+        assert!(
+            errs.iter()
+                .any(|e| e.contains("alias feet converter is also used")),
+            "{errs:?}"
+        );
+    }
+
+    #[test]
+    fn missing_precision_and_primary_example() {
+        const O: &[Field] = &[Field::new(
+            "y",
+            "Y",
+            "1 m",
+            Kind::Quantity {
+                q: Quantity::Length,
+                unit: "m",
+            },
+        )];
+        fails(&ToolDef { outputs: O, ..GOOD }, "x-display-precision");
+        fails(
+            &ToolDef {
+                primary_example: "nope",
+                ..GOOD
+            },
+            "primary example nope",
+        );
+    }
+
+    #[test]
+    fn manifest_snapshot() {
+        let m = manifest(&GOOD).to_string().unwrap();
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/sample-manifest.json"
+        );
+        if std::env::var_os("UPDATE_SNAPSHOTS").is_some() {
+            std::fs::write(path, format!("{m}\n")).unwrap();
+        }
+        let want = std::fs::read_to_string(path).unwrap();
+        let want = want.trim();
+        assert_eq!(m, want);
+    }
+}

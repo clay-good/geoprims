@@ -8,6 +8,7 @@
     "build:wasm": "node tools/wasm/build.mjs",
     "test": "npm run test:rust && npm run test:js",
     "test:rust": "cargo test --manifest-path core/Cargo.toml",
-    "test:js": "node --test 'tools/**/*.test.mjs'"
+    "test:js": "node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs'",
+    "build:catalog": "node tools/codegen/catalog.mjs"
   }
 }

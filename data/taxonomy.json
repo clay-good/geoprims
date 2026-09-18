@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "note": "Every tool id is <domain>.<group>.<operation>; the group must be listed here. Groups are added as domains are built.",
+  "domains": {
+    "geodesy": { "title": "Geodesy", "groups": [] },
+    "navigation": { "title": "Navigation", "groups": [] },
+    "geometry": { "title": "Geometry", "groups": [] },
+    "aviation": { "title": "Aviation", "groups": [] },
+    "drone": { "title": "Drone", "groups": [] },
+    "survey": { "title": "Survey", "groups": [] },
+    "indexing": { "title": "Spatial indexing", "groups": [] },
+    "raster": { "title": "Raster", "groups": [] },
+    "time": { "title": "Time", "groups": [] },
+    "units": {
+      "title": "Units",
+      "groups": [
+        "length", "area", "volume", "mass", "speed", "vertical-speed", "acceleration",
+        "pressure", "temperature", "temperature-difference", "angle", "angular-rate", "time",
+        "energy", "power", "charge", "fuel", "density", "frequency", "data-rate", "slope", "quantity"
+      ]
+    }
+  }
+}

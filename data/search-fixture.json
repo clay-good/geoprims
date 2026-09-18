@@ -148,6 +148,34 @@
     {
       "query": "midpoint",
       "expect": "navigation.geodesic.midpoint"
+    },
+    {
+      "query": "lat long to utm",
+      "expect": "geodesy.utm.forward"
+    },
+    {
+      "query": "utm to lat long",
+      "expect": "geodesy.utm.inverse"
+    },
+    {
+      "query": "mgrs",
+      "expect": "geodesy.grid-ref.mgrs-forward"
+    },
+    {
+      "query": "decode mgrs",
+      "expect": "geodesy.grid-ref.mgrs-inverse"
+    },
+    {
+      "query": "dms to decimal",
+      "expect": "geodesy.parse.coordinates"
+    },
+    {
+      "query": "what utm zone am i in",
+      "expect": "geodesy.utm.zone"
+    },
+    {
+      "query": "polar stereographic",
+      "expect": "geodesy.ups.forward"
     }
   ]
 }

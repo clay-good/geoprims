@@ -10,3 +10,4 @@ rust-version.workspace = true
 [dependencies]
 gp-base.workspace = true
 geographiclib-rs = "0.2.7"
+libm.workspace = true

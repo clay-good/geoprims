@@ -1,0 +1,6 @@
+{"id":"v001","input":{"from":350,"to":10},"expect":{"result.difference.value":20.0,"ok":true},"source":"Exact arithmetic","sourceVersion":"definition","tolerance":{"result.difference.value":{"abs":1e-12}}}
+{"id":"v002","input":{"from":10,"to":350},"expect":{"result.difference.value":-20.0,"ok":true},"source":"Exact arithmetic","sourceVersion":"definition","tolerance":{"result.difference.value":{"abs":1e-12}}}
+{"id":"v003","input":{"from":90,"to":45},"expect":{"result.difference.value":-45.0,"ok":true},"source":"Exact arithmetic","sourceVersion":"definition","tolerance":{"result.difference.value":{"abs":1e-12}}}
+{"id":"v004","input":{"from":359,"to":1},"expect":{"result.difference.value":2.0,"ok":true},"source":"Exact arithmetic","sourceVersion":"definition","tolerance":{"result.difference.value":{"abs":1e-12}}}
+{"id":"v005","input":{"from":0,"to":179},"expect":{"result.difference.value":179.0,"ok":true},"source":"Exact arithmetic","sourceVersion":"definition","tolerance":{"result.difference.value":{"abs":1e-12}}}
+{"id":"v006","input":{"from":720,"to":30},"expect":{"result.difference.value":30.0,"ok":true},"source":"Exact arithmetic","sourceVersion":"definition","tolerance":{"result.difference.value":{"abs":1e-12}}}

@@ -4,7 +4,22 @@
   "domains": {
     "geodesy": {
       "title": "Geodesy",
-      "groups": []
+      "groups": [
+        "parse",
+        "ellipsoid",
+        "frame",
+        "datum",
+        "utm",
+        "ups",
+        "spcs",
+        "crs",
+        "projection",
+        "grid-ref",
+        "height",
+        "geoid",
+        "magnetic",
+        "convert"
+      ]
     },
     "navigation": {
       "title": "Navigation",

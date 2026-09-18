@@ -1,10 +1,10 @@
 ## 1. Parsing and formatting
 
-- [ ] 1.1 Implement the notation grammar (DD, DMS, DDM, packed, labeled, hemisphere forms, Unicode marks); verify every parsing scenario plus a 500-case fixture corpus
-- [ ] 1.2 Implement ambiguity detection with alternatives (order, exponent E, decimal comma, multi-grid strings); verify the ambiguity scenarios
-- [ ] 1.3 Implement strict component validation; verify the seconds-overflow, contradictory-sign, and negative-zero scenarios
-- [ ] 1.4 Implement the formatter with rounding carry and resolution reporting; verify the carry and resolution scenarios
-- [ ] 1.5 Implement angle arithmetic and bearing difference; verify across-north cases and a property test
+- [ ] 1.1 Implement the notation grammar (DD, DMS, DDM, packed, labeled, hemisphere forms, Unicode marks); verify every parsing scenario plus a 500-case fixture corpus (built: DD, DMS, DDM, Unicode marks, hemisphere prefix and suffix, colon forms, packed aviation, labeled pairs, MGRS and UTM routing, with every parsing scenario; pending: the 500-case corpus and the other grid notations)
+- [ ] 1.2 Implement ambiguity detection with alternatives (order, exponent E, decimal comma, multi-grid strings); verify the ambiguity scenarios (built: order inference, the unlabeled-pair alternative, and decimal commas; pending: exponent-E and multi-grid ambiguity)
+- [x] 1.3 Implement strict component validation; verify the seconds-overflow, contradictory-sign, and negative-zero scenarios
+- [x] 1.4 Implement the formatter with rounding carry and resolution reporting; verify the carry and resolution scenarios
+- [ ] 1.5 Implement angle arithmetic and bearing difference; verify across-north cases and a property test (built: bearing difference across north; pending: DMS add and subtract)
 
 ## 2. Ellipsoids and frames
 
@@ -27,18 +27,18 @@
 
 ## 4. Projections
 
-- [ ] 4.1 Port GeographicLib TransverseMercator and TransverseMercatorExact; verify the Pittsburgh scenario and GeographicLib's TM test set
-- [ ] 4.2 Implement UTM zone rules (Norway, Svalbard, boundary assignment) and forced zones; verify the exception and forced-zone scenarios
-- [ ] 4.3 Port PolarStereographic and UPS; verify the UPS scenario
+- [ ] 4.1 Port GeographicLib TransverseMercator and TransverseMercatorExact; verify the Pittsburgh scenario and GeographicLib's TM test set (built: the 6th-order Krüger series with the Pittsburgh scenario, round trips, and finite-difference checks of convergence and scale; pending: TransverseMercatorExact and the GeographicLib TM test set)
+- [x] 4.2 Implement UTM zone rules (Norway, Svalbard, boundary assignment) and forced zones; verify the exception and forced-zone scenarios
+- [x] 4.3 Port PolarStereographic and UPS; verify the UPS scenario
 - [ ] 4.4 Implement LCC, Albers, Hotine, Polar Stereographic variants, azimuthal equidistant, equidistant cylindrical, orthographic, gnomonic, and Web Mercator; verify domain-limit scenarios and PROJ differential tests (10,000 points each)
 - [ ] 4.5 Build SPCS83 and SPCS2022-beta support with zone lookup and legal units; verify the Pennsylvania South and outside-zone scenarios and NCAT agreement on 50 points per zone
 - [ ] 4.6 Implement CRS search by code, name, and location and composite CRS transform with step reporting; verify the Denver and composite-path scenarios
-- [ ] 4.7 Implement convergence, scale factor, and arc-to-chord correction; verify the UTM convergence scenario and PROJ factors agreement
+- [ ] 4.7 Implement convergence, scale factor, and arc-to-chord correction; verify the UTM convergence scenario and PROJ factors agreement (built: UTM and UPS convergence and point scale; pending: arc-to-chord and PROJ agreement)
 - [ ] 4.8 Run the round-trip property suite for every projection pair; verify 1e-9 m round trips
 
 ## 5. Grid references
 
-- [ ] 5.1 Port GeographicLib MGRS (truncation, polar bands, lettering schemes, band tolerance, invalid-square rejection); verify all MGRS scenarios and NGA/GEOTRANS test points
+- [ ] 5.1 Port GeographicLib MGRS (truncation, polar bands, lettering schemes, band tolerance, invalid-square rejection); verify all MGRS scenarios and NGA/GEOTRANS test points (built: truncation, polar bands, AA lettering, band tolerance, invalid-square rejection, and every MGRS scenario; pending: the AL scheme for legacy ellipsoids and NGA/GEOTRANS test points)
 - [ ] 5.2 Implement USNG encode/decode including local truncated references; verify the space-delimited scenario
 - [ ] 5.3 Implement Maidenhead with edge clamping; verify the six-character and edge scenarios
 - [ ] 5.4 Implement GARS and GEOREF; verify published examples and the keypad scenario

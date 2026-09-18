@@ -66,6 +66,7 @@ version = "0.1.0"
 dependencies = [
  "geographiclib-rs",
  "gp-base",
+ "libm",
 ]
 
 [[package]]
@@ -73,6 +74,8 @@ name = "gp-geodesy"
 version = "0.1.0"
 dependencies = [
  "gp-base",
+ "gp-geo",
+ "serde_json",
 ]
 
 [[package]]

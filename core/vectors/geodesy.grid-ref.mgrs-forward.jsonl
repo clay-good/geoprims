@@ -1,0 +1,5 @@
+{"id":"v001","input":{"lat":40.446111,"lon":-79.982222},"expect":{"result.mgrs":"17TNE8630977770","ok":true},"source":"add-geodesy-suite scenarios (GeographicLib values)","sourceVersion":"GeographicLib 2.x","tolerance":{}}
+{"id":"v002","input":{"lat":40.446111,"lon":-79.982222,"precision":"10m"},"expect":{"result.mgrs":"17TNE86307777","ok":true},"source":"add-geodesy-suite scenarios (GeographicLib values)","sourceVersion":"GeographicLib 2.x","tolerance":{}}
+{"id":"v003","input":{"lat":40.446111,"lon":-79.982222,"precision":"grid-zone"},"expect":{"result.mgrs":"17T","ok":true},"source":"add-geodesy-suite scenarios (GeographicLib values)","sourceVersion":"GeographicLib 2.x","tolerance":{}}
+{"id":"v004","input":{"lat":78,"lon":10,"precision":"grid-zone"},"expect":{"result.mgrs":"33X","ok":true},"source":"add-geodesy-suite scenarios (GeographicLib values)","sourceVersion":"GeographicLib 2.x","tolerance":{}}
+{"id":"v005","input":{"lat":-80.5,"lon":0,"precision":"grid-zone"},"expect":{"result.mgrs":"B","ok":true},"source":"add-geodesy-suite scenarios (GeographicLib values)","sourceVersion":"GeographicLib 2.x","tolerance":{}}

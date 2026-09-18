@@ -316,3 +316,46 @@ fn manifest_lists_every_tool_in_order() {
     assert_eq!(pair["composedOf"][0], "units.speed.convert");
     assert_eq!(pair["preset"]["to"], "mph");
 }
+
+#[test]
+fn every_example_has_a_readable_summary() {
+    let mut problems = Vec::new();
+    for t in TOOLS {
+        for ex in t.examples {
+            let r = call(t.id, ex.input);
+            let s = r["summary"].as_str().unwrap_or_default();
+            if s.is_empty()
+                || s.len() > gp_base::template::MAX_CHARS
+                || gp_base::template::grade(s) > 8.0
+            {
+                problems.push(format!(
+                    "{} {}: {s:?} (grade {:.1})",
+                    t.id,
+                    ex.id,
+                    gp_base::template::grade(s)
+                ));
+            }
+            if std::env::var_os("SHOW_SUMMARIES").is_some() {
+                println!("{:40} {s}", t.id);
+            }
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+#[test]
+fn summary_uses_profile_and_number_format() {
+    let r = call(
+        "units.fuel.convert",
+        r#"{"volume":"50 galUS","fuel":"avgas-100ll"}"#,
+    );
+    assert_eq!(
+        r["summary"],
+        "50 US gal of fuel weighs 300 lb at 6 lb/US gal."
+    );
+    let r = call(
+        "units.speed.convert",
+        r#"{"value":"12345,5 kt","to":"mph","options":{"numberFormat":"decimal-comma"}}"#,
+    );
+    assert_eq!(r["summary"], "12\u{202f}345,5 kt is 14\u{202f}206,948 mph.");
+}

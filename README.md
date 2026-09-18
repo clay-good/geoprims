@@ -83,6 +83,7 @@ openspec validate --all --strict
 |---|---|
 | `establish-platform-foundation` | Monorepo layout and pinned toolchain; one import-free `.wasm` per domain behind a raw C ABI, with an import lint and Brotli budgets, each proven against a bad fixture; `gp-base` (exact unit registry, unit-tagged parsing, angle normalization, error and warning model, ECMAScript-format numbers, unit profiles, result envelope); the tool runtime (`invoke`, `invokeBatch`, `manifest`) and manifest lint; `packages/runtime` (shared loader, input hardening, Node host); `catalog/v1.json` generation; golden vectors with a provenance lint and a silent-edit guard; **the units domain: 22 operations and 35 allow-listed pair endpoints (57 tool ids), all experimental, with 230 golden vectors** |
 | `add-local-mcp-server` | Zero-dependency stdio server with `geoprims_search` (core ranker in its own `search` module), `describe`, `run`, `pipeline`, and `convert_units`; catalog and tool resources; per-call timeouts in a worker thread; a golden surface file; 18 end-to-end tests ([mcp/README.md](mcp/README.md)) |
+| `add-glanceable-and-field-ux` | The sentence-template language rendered in the core (fields, forced units, `delta`/`abs`, `if`/`else`, `warn`, `plural`), deterministic display rounding and digit grouping, a template lint, and a grade-8 readability lint; every result carries its `summary` sentence |
 | Everything else | Not started |
 
 ## Building it

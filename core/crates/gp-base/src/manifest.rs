@@ -403,6 +403,19 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
             .inputs
             .iter()
             .chain(t.parent.into_iter().flat_map(|p| p.inputs));
+        let known: Vec<&str> = fields.clone().chain(t.outputs).map(|f| f.name).collect();
+        match crate::template::check(t.sentence, &known) {
+            Ok(codes) => {
+                for c in codes {
+                    if !t.warnings.contains(&c.as_str()) {
+                        e(format!(
+                            "sentence uses warning {c}, which the tool does not declare"
+                        ));
+                    }
+                }
+            }
+            Err(m) => e(format!("sentence template {m}")),
+        }
         for f in fields.clone() {
             if f.title.is_empty() || f.help.is_empty() {
                 e(format!("input {} needs a title and help", f.name));
@@ -763,6 +776,24 @@ mod tests {
             errs.iter()
                 .any(|e| e.contains("alias feet converter is also used")),
             "{errs:?}"
+        );
+    }
+
+    #[test]
+    fn bad_sentence_template() {
+        fails(
+            &ToolDef {
+                sentence: "{z} is {y}.",
+                ..GOOD
+            },
+            "sentence template names unknown field z",
+        );
+        fails(
+            &ToolDef {
+                sentence: "{if y < 1}x",
+                ..GOOD
+            },
+            "sentence template unclosed",
         );
     }
 

@@ -43,7 +43,7 @@ pub fn format_f64(x: f64) -> Option<String> {
 
 /// Returns the shortest round-trip decimal digits of a positive finite `x` and the
 /// exponent `n` such that `x = 0.d1d2…dk × 10^n`.
-fn shortest_digits(x: f64) -> (String, i32) {
+pub(crate) fn shortest_digits(x: f64) -> (String, i32) {
     let mut buf = ryu::Buffer::new();
     let s = buf.format_finite(x);
     let (mantissa, exp) = match s.split_once('e') {

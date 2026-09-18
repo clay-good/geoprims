@@ -56,7 +56,9 @@ const TABLE: &[Layer] = &[Layer {
     map: &[],
 }];
 const CONVERT_WARNINGS: &[&str] = &["UNIT_ASSUMED", "LEGACY_UNIT", "EXPERIMENTAL_TOOL"];
-const P6: Precision = Precision::Significant(6);
+/// Conversions are exact, so show enough digits to see small differences such
+/// as the 2 ppm survey-foot offset.
+const P8: Precision = Precision::Significant(8);
 
 /// Declares one `units.<group>.convert` operation.
 macro_rules! convert_op {
@@ -77,8 +79,8 @@ macro_rules! convert_op {
                 Field::new("to", "To unit", "The unit to convert to", Kind::Unit($q)).required().core(),
             ],
             outputs: &[
-                Field::new("input", "Input", "The value as read, in its unit", Kind::Quantity { q: $q, unit: $unit }).precision(P6),
-                Field::new("converted", "Converted", "The value in the target unit", Kind::Quantity { q: $q, unit: $unit }).precision(P6),
+                Field::new("input", "Input", "The value as read, in its unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
+                Field::new("converted", "Converted", "The value in the target unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
             ],
             warnings: CONVERT_WARNINGS,
             model: "Exact unit definitions",
@@ -250,7 +252,7 @@ pub static CHARGE: ToolDef = ToolDef {
                 unit: "mAh",
             },
         )
-        .precision(P6),
+        .precision(P8),
         Field::new(
             "converted",
             "Converted",
@@ -260,7 +262,7 @@ pub static CHARGE: ToolDef = ToolDef {
                 unit: "mAh",
             },
         )
-        .precision(P6),
+        .precision(P8),
         Field::new(
             "energy",
             "Energy",
@@ -626,7 +628,7 @@ pub static SLOPE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: TABLE,
-    sentence: "A {percent} grade is a slope of {degrees}.",
+    sentence: "A grade of {percent} is a slope of {degrees}.",
     limits: &[("batchRows", 10_000)],
     run: run_slope,
     ..ToolDef::BLANK
@@ -736,14 +738,14 @@ pub static NORMALIZE: ToolDef = ToolDef {
         .core(),
     ],
     outputs: &[
-        Field::new("input", "Input", "The value as read", Kind::AnyQuantity).precision(P6),
+        Field::new("input", "Input", "The value as read", Kind::AnyQuantity).precision(P8),
         Field::new(
             "normalized",
             "Canonical value",
             "The value in the canonical unit",
             Kind::AnyQuantity,
         )
-        .precision(P6),
+        .precision(P8),
     ],
     warnings: CONVERT_WARNINGS,
     model: "Exact unit definitions",

@@ -581,6 +581,11 @@ pub fn lookup(q: Quantity, text: &str) -> Option<&'static Unit> {
     units_of(q).find(|u| u.symbol == text || u.aliases.contains(&text))
 }
 
+/// Finds a unit by canonical symbol in any quantity (first match in registry order).
+pub fn any_by_symbol(symbol: &str) -> Option<&'static Unit> {
+    UNITS.iter().find(|u| u.symbol == symbol)
+}
+
 /// Finds a unit by its canonical symbol within quantity `q`.
 pub fn by_symbol(q: Quantity, symbol: &str) -> Option<&'static Unit> {
     units_of(q).find(|u| u.symbol == symbol)

@@ -2,7 +2,7 @@
 
 - [ ] 1.1 Build the fixed tool-page layout with the answer card above inputs and sticky on phones; verify the answer-first and anatomy scenarios
 - [ ] 1.2 Build the answer card (value, sentence, comparison, warnings, status phrase, copy actions); verify the density-altitude sentence scenario
-- [ ] 1.3 Add `x-sentence` templates and comparison types to every stable manifest, with the readability lint; verify the template-coverage and MCP-summary scenarios
+- [ ] 1.3 Add `x-sentence` templates and comparison types to every stable manifest, with the readability lint; verify the template-coverage and MCP-summary scenarios (done so far: the core renderer, the template lint, the grade-8 and 280-character lint over every example, and `summary` in every result; pending: comparison types)
 - [ ] 1.4 Implement status phrases with icons, cited thresholds, and a banned-word lint; verify the crosswind scenario
 - [ ] 1.5 Implement prefilled examples with the "Example values" chip, Clear, and Try the example; verify the first-load scenario
 - [ ] 1.6 Implement progressive disclosure with worded defaults; verify the dry-air scenario

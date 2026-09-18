@@ -10,6 +10,7 @@ use crate::error::{ErrorCode, ToolError, Warning};
 use crate::json::Json;
 use crate::parse::{self, NumberFormat};
 use crate::profile::Profile;
+use crate::template::{self, Scope, Val};
 use crate::units::{self, Quantity, Unit};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -623,7 +624,7 @@ impl Registry {
 
     fn run(&self, def: &'static ToolDef, input: &Value) -> String {
         match execute(def, input) {
-            Ok((result, warnings)) => {
+            Ok((result, summary, warnings)) => {
                 let meta = Meta {
                     tool: def.id.to_owned(),
                     tool_version: def.version.to_owned(),
@@ -632,7 +633,7 @@ impl Registry {
                     accuracy: def.accuracy.to_owned(),
                     warnings,
                 };
-                envelope::success(result, &meta)
+                envelope::success(result, summary.as_deref(), &meta)
             }
             Err(e) => envelope::failure(&e),
         }
@@ -643,7 +644,9 @@ fn limit(def: &ToolDef, name: &str) -> Option<u64> {
     def.limits.iter().find(|(k, _)| *k == name).map(|(_, v)| *v)
 }
 
-fn execute(def: &'static ToolDef, input: &Value) -> Result<(Json, Vec<Warning>), ToolError> {
+type Executed = (Json, Option<String>, Vec<Warning>);
+
+fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> {
     let Value::Object(map) = input else {
         return Err(ToolError::new(
             ErrorCode::InvalidInput,
@@ -679,14 +682,115 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<(Json, Vec<Warning>),
         }
     }
     let result = (def.run)(&mut ctx)?;
-    let mut warnings = ctx.warnings;
     if def.stability == Stability::Experimental {
-        warnings.push(Warning::new(
+        ctx.warnings.push(Warning::new(
             "EXPERIMENTAL_TOOL",
             "This tool is experimental: it has not yet met the stable verification bar.",
         ));
     }
-    Ok((result, warnings))
+    let summary = render_summary(&mut ctx, &result);
+    Ok((result, Some(summary), ctx.warnings))
+}
+
+/// Display precision for input values echoed in sentences.
+const INPUT_PRECISION: Precision = Precision::Significant(12);
+
+struct SentenceScope {
+    values: Vec<(&'static str, Val)>,
+    warnings: Vec<&'static str>,
+    format: NumberFormat,
+}
+
+impl Scope for SentenceScope {
+    fn get(&self, name: &str) -> Option<Val> {
+        self.values
+            .iter()
+            .find(|(k, _)| *k == name)
+            .map(|(_, v)| *v)
+    }
+    fn has_warning(&self, code: &str) -> bool {
+        self.warnings.contains(&code)
+    }
+    fn format(&self) -> NumberFormat {
+        self.format
+    }
+}
+
+/// Renders the tool's `x-sentence` from its outputs (first) and inputs.
+fn render_summary(ctx: &mut Ctx, result: &Json) -> String {
+    let def = ctx.def;
+    let get = |name: &str| match result {
+        Json::Obj(pairs) => pairs.iter().find(|(k, _)| k == name).map(|(_, v)| v),
+        _ => None,
+    };
+    let mut values: Vec<(&'static str, Val)> = Vec::new();
+    for f in def.outputs {
+        let precision = f.precision.unwrap_or(INPUT_PRECISION);
+        let val = match (f.kind, get(f.name)) {
+            (Kind::Quantity { .. } | Kind::AnyQuantity, Some(Json::Obj(q))) => {
+                let num = q.iter().find(|(k, _)| k == "value").map(|(_, v)| v);
+                let sym = q.iter().find(|(k, _)| k == "unit").map(|(_, v)| v);
+                match (num, sym, f.kind) {
+                    (Some(Json::Num(x)), Some(Json::Str(u)), Kind::Quantity { q, .. }) => {
+                        Some(Val {
+                            value: *x,
+                            unit: units::by_symbol(q, u),
+                            precision,
+                        })
+                    }
+                    (Some(Json::Num(x)), Some(Json::Str(u)), _) => Some(Val {
+                        value: *x,
+                        unit: units::any_by_symbol(u),
+                        precision,
+                    }),
+                    _ => None,
+                }
+            }
+            (Kind::Number { .. }, Some(Json::Num(x))) => Some(Val {
+                value: *x,
+                unit: None,
+                precision,
+            }),
+            _ => None,
+        };
+        if let Some(v) = val {
+            values.push((f.name, v));
+        }
+    }
+    let n = ctx.warnings.len();
+    let inputs: Vec<&'static Field> = def
+        .inputs
+        .iter()
+        .chain(def.parent.into_iter().flat_map(|p| p.inputs))
+        .collect();
+    for f in inputs {
+        if values.iter().any(|(k, _)| *k == f.name) {
+            continue;
+        }
+        let v = match f.kind {
+            Kind::Quantity { .. } => ctx.quantity(f.name).ok().flatten().map(|q| Val {
+                value: q.value,
+                unit: Some(q.unit),
+                precision: INPUT_PRECISION,
+            }),
+            Kind::Number { .. } => ctx.number(f.name).ok().flatten().map(|x| Val {
+                value: x,
+                unit: None,
+                precision: INPUT_PRECISION,
+            }),
+            _ => None,
+        };
+        if let Some(v) = v {
+            values.push((f.name, v));
+        }
+    }
+    ctx.warnings.truncate(n);
+    let scope = SentenceScope {
+        values,
+        warnings: ctx.warnings.iter().map(|w| w.code).collect(),
+        format: ctx.options.format,
+    };
+    template::render(def.sentence, &scope)
 }
 
 fn parse_options(def: &ToolDef, v: Option<&Value>) -> Result<Options, ToolError> {

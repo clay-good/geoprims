@@ -114,6 +114,7 @@ test('run returns byte-identical results to the runtime', async () => {
   assert.equal(r.content[0].text, direct);
   assert.equal(JSON.stringify(r.structuredContent), direct);
   assert.equal(r.structuredContent.result.converted.value, 115.07794480235425);
+  assert.equal(r.structuredContent.summary, '100 kt is 115.07794 mph.');
   assert.equal(r.isError, undefined);
 });
 

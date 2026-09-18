@@ -42,7 +42,7 @@ The `npx -y @geoprims/mcp` path works once the package is published (not yet).
 
 Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus its golden vectors).
 
-`structuredContent` is the core's result envelope byte for byte (`{"ok":true,"result":…,"meta":…}`), and errors come back with `isError: true` and a geoprims error code.
+`structuredContent` is the core's result envelope byte for byte (`{"ok":true,"result":…,"summary":…,"meta":…}`, where `summary` is the plain-language sentence the website shows), and errors come back with `isError: true` and a geoprims error code.
 
 ## Options
 
@@ -54,7 +54,7 @@ Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus it
 
 ## Not built yet
 
-`geoprims_report_problem` (it needs the core's permalink encoder), workflow prompts, direct toolsets (`--toolsets`, `--no-meta`), paginated collections, the `summary` sentence and `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
+`geoprims_report_problem` (it needs the core's permalink encoder), workflow prompts, direct toolsets (`--toolsets`, `--no-meta`), paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
 
 ## Tests
 

@@ -21,11 +21,11 @@ It SHALL compare the result with the farthest point of a planned mission. The re
 - **THEN** the result reads "Beyond VLOS guidance by 266 m"
 
 ### Requirement: Part 107 lighting window
-For a date and site, the tool SHALL compute the Part 107 civil-twilight periods (30 minutes before official sunrise and 30 minutes after official sunset outside Alaska; the Air Almanac period in Alaska), state that anti-collision lighting visible for 3 statute miles is required outside daylight, and link to the solar tool.
+This is the drone view of `time.sun.aviation-nights` (window d), not a separate operation. For a date and site, it SHALL show the Part 107 civil-twilight periods (30 minutes before official sunrise and 30 minutes after official sunset outside Alaska; the Air Almanac period in Alaska), state that anti-collision lighting visible for 3 statute miles is required outside daylight, and link to the solar tool.
 
 #### Scenario: Evening window
 - **WHEN** sunset is 19:12 local
-- **THEN** the civil-twilight period ends 19:42 local, and operations after that are "night" under §107.29 with the lighting requirement stated
+- **THEN** the evening §107.29(c) civil-twilight period ends at 19:42 local; the result also shows when §1.1 night begins, and states that anti-collision lighting visible for 3 statute miles is required during civil twilight and at night
 
 ### Requirement: Lidar mission planning
 Given sensor pulse rate, field of view, number of returns, flight height, speed, and side overlap, the tool SHALL compute:

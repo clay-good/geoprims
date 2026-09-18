@@ -52,7 +52,7 @@ The tool SHALL compute the minimum curve length for a stopping sight distance wi
 
 #### Scenario: Crest SSD
 - **WHEN** SSD = 400 ft with eye height 3.5 ft and object height 2.0 ft on the crest curve above
-- **THEN** the minimum curve length is computed using the S < L or S > L case as appropriate, and the case is stated
+- **THEN** the minimum curve length ≈ 368.3 ft (±0.1 ft) using the S > L case (L = 2S − 200(√h1 + √h2)² / A with A = 5%), and the case is stated
 
 ### Requirement: Alignment visualization
 Curve tools SHALL draw the plan view (tangents, PI, PC, PT, spirals, chords) and the profile view (grades, vertical curve, high/low point) with stations labeled.

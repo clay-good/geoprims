@@ -48,14 +48,14 @@ The per-state tile granularity (at least one township) satisfies the privacy til
 | time | `sun` | 10 | solar-position, rise-set-twilight, solar-noon, aviation-nights, night-currency, mapping-window, hotspot, shadow-length, slope-incidence, sun-path |
 | time | `scale` | 9 | local-to-utc, utc-to-local, zulu, decimal-hours, block-time, gps-week, gnss-offsets, julian-date, day-of-year |
 | aviation | `weather` | 4 | metar-decode, taf-decode, fb-winds-decode, weather-handoff |
-| aviation | `ifr` | 12 | hold-entry, hold-wind-timing, hold-speed-limit, dme-ground-distance, dme-arc-lead, time-distance-to-station, intercept-angle, glidepath-vs, vdp, tch-geometry, vasi-papi-height, notam-area |
+| aviation | `ifr` | 10 | hold-entry, hold-wind-timing, hold-speed-limit, dme-ground-distance, dme-arc-lead, time-distance-to-station, intercept-angle, tch-geometry, vasi-papi-height, notam-area (VDP and glidepath VS extend the existing `aviation.performance` descent tools) |
 | survey | `land` | 8 | deed-parse, deed-plot-closure, legacy-units, plss-parse, plss-aliquot-area, plss-lookup (v1.1), plss-reverse (v1.1), basis-rotation |
 | survey | `gnss` | 7 | dop-skyplot, rtk-budget, opus-plan, antenna-height, alta-rpp, localization-similarity, localization-affine |
-| drone | `sensors` | 8 | vlos, part107-twilight, lidar-plan, lidar-density, dataset-size, link-budget, thermal-footprint, thermal-max-distance |
-| **Added** | | **58** | plus 12 high-intent search forms (e.g. `zulu-time-converter`, `metar-decoder`, `sunset-civil-twilight`) |
+| drone | `sensors` | 7 | vlos, lidar-plan, lidar-density, dataset-size, link-budget, thermal-footprint, thermal-max-distance (the Part 107 twilight window is a drone view of `time.sun.aviation-nights`) |
+| **Added** | | **55** | search forms such as `zulu-time-converter` and `metar-decoder` are alias slugs, not tool ids |
 | **Removed** | | **−2** | koch-estimate, angle-of-repose-reference |
 
-Net effect on the rollup: +56 operations. Endpoint totals are restated in `plan-launch-and-value-proof`, which also applies the page-versus-endpoint rule.
+Net effect on the rollup: +53 operations. Endpoint totals are restated in `plan-launch-and-value-proof`, which also applies the page-versus-endpoint rule.
 
 ## Risks / Trade-offs
 

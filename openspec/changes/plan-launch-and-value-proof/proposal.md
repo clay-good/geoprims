@@ -1,6 +1,6 @@
 ## Why
 
-geoprims has to prove its value before it tries to be exhaustive. A launch with 877 half-verified tools would be worse than one with 30 excellent, reviewed, fast tools that practitioners bookmark and recommend.
+geoprims has to prove its value before it tries to be exhaustive. A launch with 834 half-verified tools would be worse than one with 30 excellent, reviewed, fast tools that practitioners bookmark and recommend.
 
 This change turns the full plan into a sequenced launch:
 - what ships first
@@ -23,7 +23,7 @@ Research: `docs/research/07` (hero tools, journeys, cuts), `docs/research/05` (S
   - npm and MCP registry installs
   - practitioner endorsements
   - usability test results
-- **A restated inventory:** about 517 operations, about 877 tool ids, and about 300 indexable tool pages, plus explainers, journeys, and trust pages.
+- **A restated inventory:** about 514 operations, about 834 tool ids, and about 300 indexable tool pages, plus explainers, journeys, and trust pages.
 - **The cut and defer list,** with reasons.
 
 ## Capabilities

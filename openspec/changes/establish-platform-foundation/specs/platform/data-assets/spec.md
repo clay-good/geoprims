@@ -34,6 +34,11 @@ The registry SHALL include at least the following at first release, with the loa
 | `geoid2022-beta` | NGS GEOID2022 / NAPGD2022 beta grids, added only when NGS publishes files | per-region | on-demand-tiled |
 | `deformation-zones` | Boundaries of crustal deformation regions where rigid-plate motion is inadequate, derived from the NGS HTDP 3.6 velocity-model regions (public domain) | small | bundled with geodesy module |
 | `basemap-osm` | Optional self-hosted vector basemap (Protomaps PMTiles extract of OpenStreetMap, zoom 0–7), ODbL with attribution | ≤ 60 MB | on-demand-tiled |
+| `leap-seconds` | IERS leap-second table (Bulletin C), public domain | < 5 KB | bundled with time module |
+| `tzdb` | IANA time zone database snapshot, public domain | ~400 KB | bundled with time module |
+| `tz-boundaries` | Time zone boundary polygons (timezone-boundary-builder), ODbL with attribution | tens of MB | on-demand |
+| `ngs-antinfo` | NGS antenna offsets (ANTINFO), public domain | small | on-demand |
+| `plss-cadnsdi` | BLM PLSS CadNSDI township and section polygons, per state, public domain (v1.1) | per state | on-demand-tiled (tile ≥ one state) |
 | `spcs2022-beta` | NGS SPCS2022 zone definitions (beta), versioned by NGS publication date | small | on-demand |
 | `ne-110m`, `ne-50m` | Natural Earth coastlines, borders, graticules (public domain) | ≤ 1 MB, ≤ 5 MB | bundled (110m), on-demand (50m) |
 | `dem-glo30` | Copernicus DEM GLO-30, re-tiled and self-hosted | global, tiled | on-demand-tiled |
@@ -93,7 +98,7 @@ The site SHALL publish a `/licenses` page generated from the registry and the so
 - **THEN** it appears on `/licenses` in the next build without manual edits
 
 ### Requirement: Reference-data files
-Small tables of dated standards and regulatory values (fuel reserves, transition altitudes, flight-level tables, drone rules, AASHTO K values, overlap guidance) SHALL live in versioned reference-data files in the repository, not in the asset registry. Each entry SHALL carry a citation, value, unit, effective date, review date, status (`in-force` or `proposed`), and authority link, and CI SHALL warn on entries whose review date is more than 12 months old.
+Small tables of dated standards and regulatory values (fuel reserves, transition altitudes, flight-level tables, drone rules, AASHTO K values, overlap guidance) SHALL live in versioned reference-data files in the repository, not in the asset registry. Each entry SHALL carry a citation, value, unit, effective date, review date, `legalStatus` (`in-force`, `proposed`, `withdrawn`) linked to its sources-ledger row, and authority link, and CI SHALL warn on entries whose review date is more than 12 months old.
 
 #### Scenario: Reference entry lacks a citation
 - **WHEN** a reference-data entry has no citation or review date

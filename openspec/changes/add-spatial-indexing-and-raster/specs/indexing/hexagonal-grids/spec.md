@@ -70,7 +70,7 @@ The domain SHALL provide A5 cell indexing, boundary, parent/children, and cell a
 
 #### Scenario: Experimental label
 - **WHEN** a user opens an A5 tool
-- **THEN** the page shows the EXPERIMENTAL badge and the pinned reference version
+- **THEN** the page shows the "Experimental" badge and the pinned reference version
 
 ### Requirement: Cell visualization
 Tools SHALL draw cells, rings, polyfills (with holes), compacted sets (mixed resolutions, visually distinguishable), and edges on the map and globe. They SHALL support up to 1,000,000 drawn cells through level-of-detail aggregation.

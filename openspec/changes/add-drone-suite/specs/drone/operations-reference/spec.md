@@ -13,7 +13,7 @@ Every regulatory value SHALL come from a reference-data file entry containing: j
 
 #### Scenario: Part 108 status
 - **WHEN** a user views any Part 108 value before a final rule is published
-- **THEN** it is labeled "PROPOSED" with the Federal Register citation, and no compliance check treats it as in force
+- **THEN** it is labeled "Proposed" with the Federal Register citation, and no compliance check treats it as in force
 
 #### Scenario: Stale review date
 - **WHEN** a reference entry's review date is more than 12 months old at build time

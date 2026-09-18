@@ -28,7 +28,7 @@
 - [ ] 4.4 Implement true-referenced hand-off to wind tools and the old-observation flag; verify the hand-off and old-observation scenarios
 - [ ] 4.5 Implement hold entry, wind timing, and speed limits; verify the hold scenarios and obtain CFII review
 - [ ] 4.6 Implement DME, arc, time-to-station, and intercept tools; verify the slant-range and overhead scenarios
-- [ ] 4.7 Implement glidepath VS, VDP, TCH, and VASI/PAPI geometry; verify both descent scenarios
+- [ ] 4.7 Extend the existing descent-gradient and VDP tools (no duplicates) and implement TCH and VASI/PAPI geometry; verify both descent scenarios
 - [ ] 4.8 Implement the station-variation warning and NOTAM/TFR geometry; verify the variation and TFR scenarios
 
 ## 5. Survey land descriptions and GNSS
@@ -47,7 +47,7 @@
 ## 6. Drone sensors and links
 
 - [ ] 6.1 Implement VLOS (verify EASA coefficients against current AMC/GM text) and mission comparison; verify both VLOS scenarios
-- [ ] 6.2 Implement the Part 107 twilight window; verify the evening scenario
+- [ ] 6.2 Present the Part 107 twilight window as a drone view of `time.sun.aviation-nights`; verify the evening scenario
 - [ ] 6.3 Implement lidar planning with USGS QL comparison; verify the density scenario
 - [ ] 6.4 Implement dataset size, link budget, and thermal footprint; verify the orthomosaic, FSPL, and thermal scenarios
 

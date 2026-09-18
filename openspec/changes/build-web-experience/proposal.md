@@ -9,7 +9,7 @@ Depends on: `establish-platform-foundation`.
 - An **app shell**: statically pre-rendered page per tool, schema-driven input forms, instant recompute on input, shareable permalinks (inputs in the URL fragment), recent and pinned tools, tool chaining.
 - A **command palette** (`/`) that fuzzy-searches the full catalog, aliases, and recent inputs in under 16 ms, plus global keyboard shortcuts.
 - A **HUD canvas** as the hero element: 2D map, 3D globe, and vector-diagram modes that render each tool's declared visualization in real time, with an optional offline basemap.
-- A **visual theme**: tactical wireframe HUD (slate, phosphor amber and green) with a high-contrast mode, a light "paper" mode for print, and WCAG 2.2 AA compliance in every mode.
+- A **visual theme**: five modes (`hud` signature dark mode, `daylight`, `sunlight` for outdoor field use, `night` for cockpit use, `high-contrast`), all WCAG 2.2 AA, with HUD effects opt-in.
 - **Audio feedback**: optional synthesized micro-clicks and tones, off by default, one-key mute.
 - **Import and export**: GeoJSON, KML, GPX, CSV, WKT/WKB, and clipboard formats, plus batch mode over CSV.
 - **Offline PWA**: installable, with per-domain offline packs for large datasets.

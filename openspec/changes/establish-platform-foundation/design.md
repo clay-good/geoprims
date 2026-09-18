@@ -83,7 +83,7 @@ Alternative: hand-written JSON manifests beside Rust code. Rejected because they
 ### D6. Repository layout
 ```
 core/                 Rust workspace (gp-base, gp-geodesy, gp-navigation, gp-geometry,
-                      gp-aviation, gp-drone, gp-survey, gp-indexing, gp-raster, gp-units)
+                      gp-aviation, gp-drone, gp-survey, gp-indexing, gp-raster, gp-time, gp-units)
 core/vectors/         Golden vectors (JSON Lines, one file per tool), immutable history
 tools/codegen/        Manifest → schema/TS/MCP/search/docs generators
 assets/               Asset registry, build scripts, tilers (outputs not committed)
@@ -92,6 +92,8 @@ packages/runtime/     Internal (unpublished) Wasm loader, validation, asset prov
 mcp/                  Local MCP server: zero-dependency server.mjs; release tags carry
                       prebuilt dist/ so a clone runs with Node alone (also published to npm)
 apps/web/             Static site + PWA
+worker/               The single Cloudflare Worker: static-asset config, /api/reports*
+                      handler, D1 migrations, cron (per define-build-contracts B1)
 verify/               Differential harness (GeographicLib C++, PROJ, H3 C, S2 C++, WMM C)
 openspec/             Specs and changes
 docs/research/        Research briefs backing the specs
@@ -105,7 +107,7 @@ docs/research/        Research briefs backing the specs
 - The site works without cross-origin isolation (threads are optional, per `compute-core`), so a header regression degrades speed, not correctness.
 
 ### D8. Honest counting: operations vs endpoints
-Per `tool-catalog`, the public count reports both numbers. The target is about **517 operations** and about **877 tool ids** (restated in `plan-launch-and-value-proof`); the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding. Public counts include only stable tools, so the claim is made only once the stable count supports it.
+Per `tool-catalog`, the public count reports both numbers. The target is about **514 operations** and about **834 tool ids** (restated in `plan-launch-and-value-proof`); the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding (alias slugs such as `crosswind-calculator` are search aliases, not tool ids, and are never counted). Public counts include only stable tools, so the claim is made only once the stable count supports it.
 
 ### D9. Verification harness
 - Golden vectors live beside each tool as JSON Lines with `source`, `sourceVersion`, and per-field tolerances.
@@ -119,7 +121,7 @@ Per `tool-catalog`, the public count reports both numbers. The target is about *
 - Assets are versioned independently by their issuer version (e.g. `wmm2025`) plus a geoprims packaging revision.
 
 ### D11. Aviation and operational safety posture
-Tools are planning and education aids, not certified navigation. Regulatory values (Part 107 limits, EASA classes, cold-temperature airport lists) are "reference data" with an effective date and a link to the authority. Where a rule is proposed but not final (FAA Part 108 as of September 2026), the tool labels it "PROPOSED" with the Federal Register citation.
+Tools are planning and education aids, not certified navigation. Regulatory values (Part 107 limits, EASA classes, cold-temperature airport lists) are "reference data" with an effective date and a link to the authority. Where a rule is proposed but not final (FAA Part 108 as of September 2026), the tool labels it "Proposed" with the Federal Register citation.
 
 ### D12. Export-control posture
 All content is published openly without restriction, which places it outside the EAR (15 CFR 734.3(b)(3), 734.7). The catalog excludes weapons-oriented functions (ballistic trajectories, fire control, targeting solutions, munitions guidance) and cryptography. Counsel reviews the catalog before launch (task 9.4).
@@ -133,14 +135,14 @@ Restated by `plan-launch-and-value-proof` (design L6) after the practitioner rev
 | geodesy | 89 | 173 | `add-geodesy-suite` |
 | navigation | 46 | 58 | `add-navigation-and-geometry` |
 | geometry | 38 | 44 | `add-navigation-and-geometry` |
-| aviation | 99 | 132 | `add-aviation-suite`, `add-practitioner-essentials` |
-| drone | 50 | 61 | `add-drone-suite`, `add-practitioner-essentials` |
-| survey | 72 | 84 | `add-survey-suite`, `add-practitioner-essentials` |
+| aviation | 97 | 117 | `add-aviation-suite`, `add-practitioner-essentials` |
+| drone | 49 | 49 | `add-drone-suite`, `add-practitioner-essentials` |
+| survey | 72 | 72 | `add-survey-suite`, `add-practitioner-essentials` |
 | indexing | 52 | 92 | `add-spatial-indexing-and-raster` |
 | raster | 30 | 40 | `add-spatial-indexing-and-raster` |
-| time | 19 | 23 | `add-practitioner-essentials` |
+| time | 19 | 19 | `add-practitioner-essentials` |
 | units | 22 | 170 | this change (`units` domain; pair pages such as `kt-to-mph`) |
-| **Total** | **517** | **877** | |
+| **Total** | **514** | **834** | |
 
 Tool ids are not all indexable pages. About 300 tool pages are indexable. Other generated ids resolve as presets canonicalized to their parent tool (per `discovery/search-pages`).
 
@@ -152,7 +154,7 @@ Tool ids are not all indexable pages. About 300 tool pages are indexable. Other 
 - **[Determinism break from a toolchain upgrade]** → Pinned toolchain. Upgrades go through a PR that must pass the cross-host byte-comparison suite.
 - **[Asset hosting cost (terrain egress)]** → Coarse tiles, long-lived immutable caching, offline packs, and R2 (no egress fees).
 - **[Datum modernization lands mid-build (NATRF2022 adoption)]** → Datum data is versioned in the registry. The beta label flips via a registry update, not a code change.
-- **[800 tools dilute quality]** → Tools ship as `experimental` until they meet the stable bar. Public counts include only stable tools.
+- **[Hundreds of tools dilute quality]** → Tools ship as `experimental` until they meet the stable bar. Public counts include only stable tools.
 - **[Manifest DSL becomes a bottleneck]** → Keep it declarative and small. Escape hatches are allowed for custom visualization only.
 
 ## Migration Plan

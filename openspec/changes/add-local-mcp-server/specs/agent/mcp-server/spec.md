@@ -74,7 +74,7 @@ Results that contain large collections (cells, vertices, rows) SHALL be paginate
 - **THEN** the result returns 1,000 cells, `total: 250000`, `truncated: true`, and the covered area and bounding box
 
 ### Requirement: Resources and prompts
-The server SHALL expose resources `geoprims://catalog` (compact index of all ids, titles, summaries) and `geoprims://tool/{id}` (full manifest with docs text and worked example), with `ttlMs` and `cacheScope: "public"` on list results. It SHALL expose workflow prompts at minimum: `preflight-performance`, `photogrammetry-mission`, `traverse-closure`, `coordinate-conversion-audit`, and `h3-resolution-choice`.
+The server SHALL expose resources `geoprims://catalog` (compact index of all ids, titles, summaries) and `geoprims://tool/{id}` (full manifest with docs text, worked example, citations, and golden test vectors), with `ttlMs` and `cacheScope: "public"` on list results. It SHALL expose workflow prompts at minimum: `preflight-performance`, `photogrammetry-mission`, `traverse-closure`, `coordinate-conversion-audit`, and `h3-resolution-choice`.
 
 #### Scenario: Read tool resource
 - **WHEN** a client reads `geoprims://tool/geodesy.utm.forward`
@@ -88,7 +88,7 @@ Tool descriptions and results for aviation, drone, navigation, magnetic, and dat
 - **THEN** the result `meta` includes the model (`WMM2025`), epoch used, validity window, uncertainty, and blackout/caution-zone status
 
 ### Requirement: Offline assets and opt-in fetching
-The server SHALL work fully offline with bundled small assets (`wmm2025`, `wmmhr2025`, `igrf14`, `egm96-15`, `crs-registry`, `ne-110m`, `deformation-zones`), at most 6 MB in total. Tools needing un-cached assets SHALL return `ASSET_UNAVAILABLE` naming the dataset, the tile, its download size, and how to enable downloads. On-demand fetching from the geoprims asset origin SHALL be enabled only with `--allow-asset-download`, SHALL use the same coarse tiles as the website, and SHALL verify integrity.
+The server SHALL work fully offline with bundled small assets (`wmm2025`, `wmmhr2025`, `igrf14`, `egm96-15`, `crs-registry`, `ne-110m`, `deformation-zones`, `leap-seconds`, `tzdb`), at most 6 MB in total. Tools needing un-cached assets SHALL return `ASSET_UNAVAILABLE` naming the dataset, the tile, its download size, and how to enable downloads. On-demand fetching from the geoprims asset origin SHALL be enabled only with `--allow-asset-download`, SHALL use the same coarse tiles as the website, and SHALL verify integrity.
 
 #### Scenario: Geoid tile missing
 - **WHEN** an agent requests an EGM2008-1 geoid height and the tile is not cached and downloads are not allowed

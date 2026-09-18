@@ -3,7 +3,7 @@
 Motivation is in `proposal.md`. This change builds on the manifest, compute core, and asset registry from `establish-platform-foundation`. Research: `docs/research/02-indexing-wasm-rendering-hosting.md` (rendering, PWA, search) and `docs/research/04-mcp-competitors-legal-a11y.md` (accessibility, competitors).
 
 Constraints:
-- About 800 endpoint pages must be pre-rendered, fast, and readable without JavaScript.
+- About 830 tool routes (about 300 of them indexable pages) must be pre-rendered, fast, and readable without JavaScript.
 - WebGPU is not universal in September 2026. Firefox on Linux, Intel Mac, and Android, plus many Linux Chrome GPUs, need WebGL2.
 - Safari evicts tab storage after 7 days without a visit. Home-screen installs are exempt.
 - No third-party requests (privacy spec), so every font, basemap tile, and library is self-hosted.
@@ -26,7 +26,7 @@ Astro renders every endpoint page to static HTML at build time and ships zero JS
 
 | Alternative | Why not |
 |---|---|
-| SvelteKit static adapter | Also viable. Astro's content collections and zero-JS default fit a docs-heavy site of 800 pages better. |
+| SvelteKit static adapter | Also viable. Astro's content collections and zero-JS default fit a docs-heavy site of hundreds of pages better. |
 | Next.js static export | Larger runtime; React hydration cost on every page. |
 | Eleventy + vanilla TS | Lightest, but reimplements the component model for forms and the palette. |
 
@@ -52,15 +52,15 @@ luma.gl 9.x gives one device API over WebGPU and WebGL2 with no map chrome and n
 - Optional: self-hosted vector tiles (Protomaps PMTiles extract, OpenStreetMap-derived, ODbL attribution) served from `assets.geoprims.com` with range requests.
 - Tile requests are capped at zoom ≤ 7, per the privacy spec's coarse-location rule (a z7 tile spans 2.8° of longitude). Higher zooms overzoom the z7 data. PMTiles range reads fetch whole-tile byte ranges only, so a request never identifies a sub-tile area.
 
-### W5. Command palette search: uFuzzy with custom ranking
-uFuzzy (~7.6 KB) indexes title, id, aliases, keywords, and group. The final score adds boosts for exact alias match, prefix match, pinned, and recency. At ~1,000 entries it searches well under 1 ms. Ranking quality is tested with a fixed query → expected-top-3 fixture set, which the command-palette scenarios seed.
+### W5. Command palette search: the core ranker
+Ranking uses the single deterministic ranker compiled into the core (per `discovery/natural-language-prefill`): weighted fields (title, id, aliases, keywords, group), prefix stemming, one-edit typo tolerance, and boosts for exact alias, prefix, pinned, and recency. The palette calls it on every keystroke (well under 1 ms for ~1,000 entries in Wasm). uFuzzy is used only to compute match highlighting. Ranking quality is tested with the shared query fixture.
 - Paste-to-detect runs a detector chain in Wasm (H3, S2 token, geohash, quadkey, XYZ, Maidenhead, MGRS, coordinate notations, altimeter group) and returns all plausible interpretations.
 
 ### W6. Permalink encoding
 Fragment = `#v1:` + base64url(deflate-raw(canonical JSON of inputs, units, view)). Compression uses the native `CompressionStream`, with a tiny fallback. The version prefix allows migrations; each tool's manifest can declare field renames for fragment migration.
 
 ### W7. PWA and caching: Workbox
-- Precache: shell with an offline route renderer, catalog, search index, and Wasm (≤ 12 MB compressed). Docs pages are cached when visited or via an optional Docs pack.
+- Precache: shell with an offline route renderer, catalog, search index, and Wasm (≤ 12 MB compressed), excluding the report dialog module. Docs pages are cached when visited or via an optional Docs pack.
 - Runtime cache-first for immutable, content-hashed assets.
 - Offline packs go to OPFS or the Cache API with integrity checks (data-assets spec).
 - Updates use a "waiting" service worker and a user prompt.
@@ -81,7 +81,7 @@ A ~5 KB module synthesizes the fixed sound set with oscillators, noise buffers, 
 ## Risks / Trade-offs
 
 - **[luma.gl and deck.gl still call WebGPU experimental; API churn]** → Keep the renderer behind our own thin interface. Pin versions. WebGL2 is the tested baseline.
-- **[800 pages × previews makes build time long]** → Incremental builds keyed on manifest hash. Preview images come from the headless Canvas2D renderer in parallel.
+- **[Hundreds of pages × previews makes build time long]** → Incremental builds keyed on manifest hash. Preview images come from the headless Canvas2D renderer in parallel.
 - **[HUD effects reduce contrast]** → Contrast is measured on rendered pixels, effects included (visual-theme spec). High-contrast mode disables effects.
 - **[Permalinks leak inputs when users paste them into chat or email]** → The fragment keeps them off our servers, not away from recipients. The share dialog says so.
 - **[Safari storage eviction breaks offline packs]** → Prompt to install. Show the eviction warning.

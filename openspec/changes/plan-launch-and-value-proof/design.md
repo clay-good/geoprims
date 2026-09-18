@@ -21,7 +21,7 @@ The full plan now spans 15 changes. Without sequencing, the risk is building bre
 | **1: Launch** | The ~30 hero tools (L2), the 8 journeys (L3), 25 explainers, and trust pages | Every hero tool is launch-ready (L4). Legal review is done. Search consoles are verified. |
 | **2: Complete domains** | The remaining operations in each domain move to stable, in order of search demand from the SEO log | Monthly: each promoted tool meets the stable bar. |
 | **3: v1.1 data** | PLSS lookup (BLM CadNSDI), EGM2008 1′ and GEOID18 full packs, tz-boundaries, optional basemap | Assets pass the integrity and privacy tile rules. |
-| **Post-launch** | Audio feedback, A5 promotion, least-squares marketing, MCP Apps canvas, Python wrapper | Driven by problem reports and demand. |
+| **Post-launch** | Audio feedback, A5 promotion, least-squares marketing, MCP Apps canvas | Driven by problem reports and demand. |
 
 ### L2. Hero tools at launch
 
@@ -81,14 +81,14 @@ No per-user data is collected to measure any of these.
 | geodesy | 89 | 173 | |
 | navigation | 46 | 58 | |
 | geometry | 38 | 44 | |
-| aviation | 99 | 132 | +weather, +IFR; −Koch |
-| drone | 50 | 61 | +sensors and links |
-| survey | 72 | 84 | +land descriptions, +GNSS; −angle of repose |
+| aviation | 97 | 117 | +weather, +IFR; −Koch; alias slugs not counted |
+| drone | 49 | 49 | +sensors and links; alias slugs not counted |
+| survey | 72 | 72 | +land descriptions, +GNSS; −angle of repose |
 | indexing | 52 | 92 | |
 | raster | 30 | 40 | |
-| time | 19 | 23 | new domain |
+| time | 19 | 19 | new domain |
 | units | 22 | 170 | |
-| **Total** | **517** | **877** | |
+| **Total** | **514** | **834** | |
 
 Indexable pages are about 300 tool pages (stable operations with full content, plus at most 60 high-intent conversion pages), plus at least 25 explainers, 8 journeys, domain and group hubs, and trust pages. The rest resolve as presets canonicalized to their parent (per `discovery/search-pages`).
 
@@ -103,7 +103,7 @@ Indexable pages are about 300 tool pages (stable operations with full content, p
 | Audio feedback | Post-launch | Does not prove value |
 | A5 grid | Experimental | Pre-1.0 upstream |
 | Least-squares adjustment | Experimental, unmarketed | Scope and liability |
-| GEOREF, orthographic, and equidistant-cylindrical pages | Engine only, no pages | Low demand |
+| GEOREF, orthographic, and equidistant-cylindrical pages | Tool ids and preset routes only (canonicalized, not indexed) | Low demand |
 | FAA cold-temperature airport list | Link only | Republished annually |
 | Terrain-following export | Gated by acknowledgment and margin | GLO-30 is a surface model |
 | PLSS lookup | v1.1 | Data size |

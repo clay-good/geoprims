@@ -44,8 +44,8 @@ Calibration tables, deviation cards, envelopes, and performance tables are user-
 | `performance` | 15 | turn-radius, turn-rate, bank-for-rate, load-factor, stall-in-turn, time-to-turn, climb-gradient, descent-gradient, top-of-descent, descent-angle, glide-range, glide-ring, pivotal-altitude, visual-descent-point, specific-range |
 | `loading` | 14 | fuel-required, endurance, fuel-weight, reserve-preset, fuel-per-leg, burn-rate, cg, percent-mac, envelope-check, weight-shift, ballast, table-1d, table-2d, table-3d |
 | **Operations** | **83** | |
-| Generated endpoints | 28 | composed airspeed pairs (e.g. `ias-to-mach`, `eas-to-tas`, `ias-to-tas`), altimeter unit forms (`qnh-hpa-to-pressure-altitude`), and common E6B aliases (`crosswind-calculator`, `headwind-calculator`) |
-| **Endpoints** | **111** | |
+| Generated endpoints | 20 | composed airspeed pairs (e.g. `ias-to-mach`, `eas-to-tas`, `ias-to-tas`) and altimeter unit forms (`qnh-hpa-to-pressure-altitude`). Search slugs such as `crosswind-calculator` are aliases, not tool ids |
+| **Endpoints** | **103** | |
 
 ## Risks / Trade-offs
 

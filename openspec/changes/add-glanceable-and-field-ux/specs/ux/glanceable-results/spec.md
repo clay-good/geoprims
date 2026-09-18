@@ -12,9 +12,9 @@ Every tool page SHALL present, in this order:
 4. "More options" (collapsed)
 5. the canvas
 6. "How we got this" (per `trust/proof-display`)
-7. related tools, then the report button's footer duplicate
+7. related tools, then a footer link to the GitHub "Wrong answer" form (a plain link, not a second report button)
 
-On phones, the answer card SHALL be above the inputs and SHALL remain visible as a sticky bar while inputs are edited.
+On phones, the answer card SHALL be above the inputs and SHALL remain visible as a sticky bar while inputs are edited. For tools whose meaning is a diagram (wind triangle, runway components, holding entry, sun path), a compact inline diagram SHALL appear directly under the answer card, with the full canvas in its anatomy position.
 
 #### Scenario: Answer first on a phone
 - **WHEN** a tool page loads at 390 × 844 CSS px
@@ -36,7 +36,7 @@ Secondary outputs SHALL follow in a compact list.
 
 #### Scenario: Density altitude sentence
 - **WHEN** density altitude is computed for a 5,000 ft field at 30 °C and 29.80 inHg
-- **THEN** the card reads "7,932 ft" and "Density altitude is 7,932 ft, about 2,900 ft higher than the field. Expect a longer takeoff roll and weaker climb.", followed by "Rule of thumb gives 8,093 ft (161 ft high)."
+- **THEN** the card reads "7,932 ft" and "Density altitude is 7,932 ft, about 2,900 ft higher than the field. Expect a longer takeoff roll and weaker climb.", followed by "The 120 ft per °C rule of thumb gives 8,123 ft (191 ft high)." (the more exact 118.8 ft/°C rule appears in the details)
 
 ### Requirement: Sentence templates for every tool
 Every tool manifest SHALL define an `x-sentence` template in plain US English (reading grade 8 or below, checked by a readability lint) that states the result, its meaning, and any key caveat. The template SHALL use the user's units and display precision. MCP results SHALL include the same rendered sentence as `summary`.
@@ -50,7 +50,7 @@ Every tool manifest SHALL define an `x-sentence` template in plain US English (r
 - **THEN** `summary` equals the sentence the web page would show for the same inputs and units
 
 ### Requirement: Status phrases without false assurance
-Where a tool compares a result to a threshold (crosswind limit, Part 107 altitude, ASPRS class, closure standard), the card SHALL show one of three phrases: "Within <limit>", "Near <limit>" (within a declared margin), or "Beyond <limit>". Each SHALL have a distinct icon and text, and the threshold's source SHALL be cited. The words "safe", "unsafe", "legal", and "approved" SHALL NOT appear in any status phrase. Operational tools SHALL keep the planning-aid notice adjacent.
+Where a tool compares a result to a threshold (crosswind limit, Part 107 altitude, ASPRS class, closure standard), the card SHALL show one of three phrases: "Within <limit>", "Near <limit>" (within the manifest's `x-near-margin`, default 10% of the limit), or "Beyond <limit>". Where a published standard defines its own conformance test (e.g. ASPRS accuracy classes), the card SHALL use "Meets <class>" or "Does not meet <class>". Each SHALL have a distinct icon and text, and the threshold's source SHALL be cited. The words "safe", "unsafe", "legal", and "approved" SHALL NOT appear in any status phrase. Operational tools SHALL keep the planning-aid notice adjacent.
 
 #### Scenario: Crosswind beyond limit
 - **WHEN** the crosswind component exceeds the user's entered limit
@@ -89,7 +89,7 @@ Domain browsing SHALL be one tap away. The home page SHALL render its hero answe
 
 #### Scenario: Question on home
 - **WHEN** a visitor types "crosswind rwy 27 wind 300 at 15" on the home page
-- **THEN** the crosswind tool opens prefilled with the answer shown
+- **THEN** the crosswind tool opens prefilled (runway 27 and wind 300° at 15 kt, both marked "assumed magnetic" because runway numbers are magnetic) with the answer shown
 
 ### Requirement: Usability validation before launch
 Before launch, each hero tool SHALL pass:

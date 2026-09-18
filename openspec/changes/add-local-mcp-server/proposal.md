@@ -6,7 +6,7 @@ geoprims can give agents the exact calculators the website uses: deterministic, 
 
 The product has exactly two surfaces: the static website for humans and this local MCP server for agents. There is no separate CLI or public library. The server's `run` and `pipeline` tools cover scripted use, and the website covers CSV batch work.
 
-Exposing 800 tools directly would cost an estimated 120K–320K tokens of schemas and degrade tool selection. Some clients also cap tool counts (VS Code at 128 per request; Cursor reportedly lower). The server is therefore designed for discovery, not enumeration.
+Exposing about 830 tools directly would cost an estimated 120K–320K tokens of schemas and degrade tool selection. Some clients also cap tool counts (VS Code at 128 per request; Cursor reportedly lower). The server is therefore designed for discovery, not enumeration.
 
 Depends on: `establish-platform-foundation`. It serves whatever domain tools are built.
 

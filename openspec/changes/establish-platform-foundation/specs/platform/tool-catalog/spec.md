@@ -22,6 +22,13 @@ The catalog SHALL distinguish **operations** (distinct mathematical functions wi
 - **WHEN** the home page shows the tool count
 - **THEN** it displays both the operation count and the endpoint count of stable tools, computed from the build, with experimental tools counted separately
 
+### Requirement: Alias slugs are not tools
+Search-friendly slugs (for example `/aviation/crosswind-calculator` or `/drone/gsd-calculator`) SHALL be aliases that route to their parent tool's page. They SHALL NOT be tool ids, SHALL NOT appear in MCP tool lists, SHALL NOT be counted, and SHALL NOT be indexable pages (their route canonicalizes to the parent).
+
+#### Scenario: Alias route
+- **WHEN** a user opens `/aviation/crosswind-calculator`
+- **THEN** the runway-wind-components tool page is shown, with its canonical URL, and the alias is absent from counts and sitemaps
+
 ### Requirement: Generated endpoints must be meaningful
 A generated conversion-pair endpoint SHALL be published only if the pair is a real user task (listed in the catalog's pair allow-list with a justification) and SHALL NOT be generated for every permutation automatically.
 
@@ -41,7 +48,7 @@ Every tool SHALL have one of the states `experimental`, `stable`, or `deprecated
 
 #### Scenario: Experimental label
 - **WHEN** a user opens an experimental tool
-- **THEN** the page shows an "EXPERIMENTAL" badge and explains what that means
+- **THEN** the page shows an "Experimental" badge and explains what that means
 
 ### Requirement: Related tools graph
 Every tool SHALL list related tools (inverse operation, next logical step, alternative method), and the catalog SHALL verify that every inverse relation is declared symmetrically.

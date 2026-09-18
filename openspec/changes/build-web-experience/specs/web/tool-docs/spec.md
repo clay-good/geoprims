@@ -5,7 +5,7 @@ Gives every geoprims endpoint a pre-rendered documentation page that teaches the
 ## ADDED Requirements
 
 ### Requirement: Standard documentation sections
-Every tool page SHALL include, in order: summary (one sentence), when to use it, inputs and outputs table (name, unit, range, meaning), formula or algorithm description with rendered math, a worked example with real numbers that matches a golden vector, edge cases and limitations, accuracy statement, references with links, related tools, and changelog for the tool.
+Every tool page SHALL include these documentation sections, placed per the canonical anatomy in `contracts/page-chrome`: summary (one sentence), when to use it, inputs and outputs table (name, unit, range, meaning), formula or algorithm description with rendered math, the primary worked example (matching a golden vector), edge cases and limitations, accuracy statement, references with links, related tools, and the tool's changelog.
 
 #### Scenario: Worked example matches vector
 - **WHEN** the docs build renders a tool's worked example
@@ -19,7 +19,7 @@ Formulas SHALL be rendered to static MathML (with an accessible text fallback) a
 - **THEN** the formula is visible and readable by screen readers
 
 ### Requirement: Search-engine metadata
-Every tool page SHALL have a unique title (`<Tool title> — geoprims`), a meta description from the manifest summary, a canonical URL, Open Graph and Twitter card tags with a pre-rendered preview image of the tool's visualization, and schema.org `SoftwareApplication` (or `WebApplication`) structured data. Sitemaps SHALL list only indexable pages, as defined by `discovery/search-pages` (non-indexable generated endpoints canonicalize to their parent tool).
+Titles, descriptions, canonical URLs, Open Graph images, structured data, and sitemaps SHALL follow `discovery/search-pages`, which is authoritative (titles from the shared head module, JSON-LD limited to the allowlist, OG images showing the tool name, domain, and example answer, sitemaps listing only indexable pages).
 
 #### Scenario: Unique titles
 - **WHEN** the SEO lint checks all pages
@@ -33,15 +33,15 @@ Each domain and group SHALL have an index page listing its tools with one-line s
 - **THEN** the page lists every airspeed tool with its summary and a short guide to IAS → CAS → EAS → TAS → Mach
 
 ### Requirement: Learning guides
-The site SHALL include task-oriented guides that chain tools end to end, at minimum: "Preflight performance check" (pressure altitude → density altitude → wind components), "Plan a photogrammetry mission" (GSD → footprint → overlap → flight lines → endurance), "Close a traverse" (traverse → adjustment → area), "Convert survey coordinates to GPS" (State Plane → geographic → datum → geoid height), and "Pick an H3 resolution" (area table → polyfill → k-ring).
+The site SHALL publish the practitioner journeys listed in `plan-launch-and-value-proof` (design L3) as learning guides that chain tools end to end with prefilled steps. That list is the single source; home-page journey rows and hub links SHALL draw from it.
 
 #### Scenario: Guide chain works
-- **WHEN** a user follows "Plan a photogrammetry mission" and clicks each step
+- **WHEN** a user follows "Drone mapping day" and clicks each step
 - **THEN** each tool opens pre-filled with the previous step's outputs
 
 ### Requirement: Disclaimers in docs
-Aviation, drone, and navigation tool docs SHALL include the operational disclaimer and SHALL date any regulatory values ("rules as of <date>", with the authority's link). Proposed rules SHALL be labeled "PROPOSED".
+Aviation, drone, and navigation tool docs SHALL include the operational disclaimer and SHALL date any regulatory values ("rules as of <date>", with the authority's link). Proposed rules SHALL be labeled "Proposed".
 
 #### Scenario: Part 108 labeled
 - **WHEN** any page references FAA Part 108 before a final rule is published
-- **THEN** it is labeled "PROPOSED" with the Federal Register citation
+- **THEN** it is labeled "Proposed" with the Federal Register citation

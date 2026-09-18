@@ -9,7 +9,7 @@ The solar-position tool SHALL compute topocentric solar azimuth, zenith/elevatio
 
 #### Scenario: NREL test point
 - **WHEN** the NREL SPA publication's example input is computed
-- **THEN** zenith and azimuth match the published values within 1e-6°
+- **THEN** zenith and azimuth match the published example values within 1e-5° (their printed precision) and NREL's reference C implementation within 1e-9°
 
 #### Scenario: Survey azimuth note
 - **WHEN** solar azimuth is requested with survey precision and no DUT1
@@ -36,11 +36,11 @@ Events SHALL be tied to the requested local date and shown in both local time an
 - **THEN** sunrise and sunset agree with the NOAA algorithm within 1 minute
 
 ### Requirement: The four US aviation "nights"
-The night tool SHALL compute all four definitions for a date and place and label each with its regulation:
+The night tool SHALL compute all four time windows for a date and place and label each with its regulation:
 - **(a) Logging night (14 CFR 1.1):** end of evening civil twilight to beginning of morning civil twilight, as published in the Air Almanac. Implemented as solar −6°, with the approximation disclosed.
 - **(b) Passenger-carrying currency (14 CFR 61.57(b)):** 1 hour after sunset to 1 hour before sunrise.
 - **(c) Position lights required (14 CFR 91.209):** sunset to sunrise.
-- **(d) Small UAS civil twilight (14 CFR 107.29):** outside Alaska, 30 minutes before official sunrise and 30 minutes after official sunset; in Alaska, the Air Almanac period.
+- **(d) Small UAS civil-twilight periods (14 CFR 107.29(c)):** outside Alaska, the 30 minutes before official sunrise and after official sunset; in Alaska, the Air Almanac period. These are twilight periods (during which lighting is required), not a separate night; §1.1 night still applies to Part 107 night operations.
 
 It SHALL never present a single undifferentiated "night". The rule text SHALL come from dated reference data.
 
@@ -53,11 +53,11 @@ It SHALL never present a single undifferentiated "night". The rule text SHALL co
 - **THEN** the tool states it is loggable night (§1.1) but does not count toward §61.57(b) currency
 
 ### Requirement: Night currency counter
-Given a list of dated night takeoffs and full-stop landings with times and places (entered by the user), the tool SHALL determine which count toward §61.57(b), count those within the preceding 90 days of a chosen date, and report whether 3 takeoffs and 3 full-stop landings are met, and the date currency lapses.
+Given a list of dated night takeoffs and full-stop landings with times, places, and aircraft category, class, and type (when a type rating is required), entered by the user, the tool SHALL determine, per category/class/type, which count toward §61.57(b), count those within the preceding 90 days of a chosen date, and report whether 3 takeoffs and 3 full-stop landings are met, and the date currency lapses.
 
 #### Scenario: Currency lapse date
 - **WHEN** the three qualifying landings are on May 1, May 10, and June 2
-- **THEN** the tool reports currency through the 90th day after May 1 as stated by the rule's counting convention, labeled with the citation
+- **THEN** for that category and class the tool reports passenger-carrying night currency through July 30, 2026 (the 90th day after the oldest qualifying landing, per the counting convention in the dated reference data, CFI-reviewed), labeled with the citation
 
 ### Requirement: Photogrammetry and field lighting
 Tools SHALL compute:

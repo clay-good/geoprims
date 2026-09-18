@@ -38,7 +38,7 @@ Tool `inputs` and `outputs` SHALL be expressed as JSON Schema draft 2020-12 obje
 - **THEN** the returned value is exactly `0`
 
 ### Requirement: Tool invocation is a pure function of declared inputs and declared assets
-A tool invocation SHALL depend only on its validated inputs, the versions of the data assets it declares in `assets`, and the core version. Tools SHALL NOT read the clock, locale, time zone, random sources, or network, except that a tool MAY accept a date/epoch as an explicit input with a documented default, and the default SHALL be echoed back in the result.
+A tool invocation SHALL depend only on its validated inputs, the versions of the data assets it declares in `assets`, and the core version. Tools SHALL NOT read the clock, locale, time zone, random sources, or network, except that a tool whose manifest sets `x-clock-default: allowed` MAY accept a date/epoch as an explicit input with the host-supplied current date as its default, echoed back in the result. Tools with `x-clock-default: forbidden` (the default; e.g. weather decoding, night currency) SHALL require the date or time as an explicit input.
 
 #### Scenario: Implicit date is echoed
 - **WHEN** a magnetic declination tool is called without an `epoch` input

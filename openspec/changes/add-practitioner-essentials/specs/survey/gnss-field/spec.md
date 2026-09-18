@@ -23,7 +23,7 @@ Given the receiver's published horizontal and vertical specifications (a mm + b 
 - **THEN** the expected horizontal precision is 23 mm (a + b·d, as manufacturers state it)
 
 ### Requirement: OPUS session planning
-A tool SHALL recommend the NGS OPUS service and minimum session length for a goal: OPUS-RS for sessions of 15 minutes to 2 hours, and OPUS-S for 2 hours or more (NGS guidance, cited and dated). It SHALL generate the expected RINEX file naming for the day of year.
+A tool SHALL recommend the NGS OPUS service and minimum session length for a goal: OPUS-RS for sessions of 15 minutes to 4 hours, and OPUS-S for 2 to 48 hours (NGS guidance, cited and dated; both accept 2 to 4 hours, where the tool explains the trade-off). It SHALL generate the expected RINEX file naming for the day of year.
 
 #### Scenario: One-hour session
 - **WHEN** the planned session is 60 minutes

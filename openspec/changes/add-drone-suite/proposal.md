@@ -13,12 +13,12 @@ Depends on: `establish-platform-foundation`, `add-geodesy-suite`, `add-navigatio
 
 ## What Changes
 
-Adds the `drone` domain: about 42 operations and 52 endpoints (inventory in `design.md`).
+Adds the `drone` domain: about 42 operations and 42 tool ids (inventory in `design.md`).
 
 - **Photogrammetry:** GSD and its inverse (altitude for a target GSD), image footprint, overlap to trigger distance and interval, flight-line spacing, motion blur and maximum shutter time, oblique GSD, terrain-aware overlap, image count, and the ASPRS Edition 2 accuracy calculator.
 - **Mission patterns:** survey grid (lawnmower) over a polygon, crosshatch, corridor, orbit/point of interest, facade scan, geofence generation with buffers, and export to KML, CSV, and GeoJSON waypoints.
 - **Endurance and power:** momentum-theory hover power with figure of merit and efficiencies, battery energy and usable capacity, reserves, density-altitude and temperature derating, payload impact, return-to-home energy budget against wind, and C-rate.
-- **Operations reference:** FAA Part 107 limits (dated), Remote ID, FAA Part 108 (PROPOSED), and EASA open-category subcategories and class marks (dated). Also kinetic-energy checks, the structure-radius altitude rule, and AGL/MSL conversion for limits.
+- **Operations reference:** FAA Part 107 limits (dated), Remote ID, FAA Part 108 (labeled "Proposed"), and EASA open-category subcategories and class marks (dated). Also kinetic-energy checks, the structure-radius altitude rule, and AGL/MSL conversion for limits.
 
 ## Capabilities
 

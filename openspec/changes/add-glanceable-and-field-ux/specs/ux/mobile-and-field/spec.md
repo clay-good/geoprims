@@ -5,7 +5,7 @@ Makes geoprims work well on phones and tablets in real conditions: bright sun, g
 ## ADDED Requirements
 
 ### Requirement: Numeric input contract
-Numeric inputs SHALL use `type="text"` with `inputmode="decimal"`, `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, and an `enterkeyhint` of `next`, or `done` on the last field. They SHALL NOT use `type="number"`. Signed quantities (longitude, temperature, offsets) SHALL provide a ± toggle, because some mobile decimal keypads lack a minus key. Both `.` and `,` SHALL be accepted as the decimal separator, per `platform/units-and-quantities`. Input font size SHALL be at least 16 px, so iOS does not zoom on focus, and pinch-zoom SHALL never be disabled.
+Numeric inputs SHALL use `type="text"` with `inputmode="decimal"`, `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, and an `enterkeyhint` of `next`, or `done` on the last field. They SHALL NOT use `type="number"`. Signed quantities (longitude, temperature, offsets) SHALL provide a ± toggle, because some mobile decimal keypads lack a minus key. The decimal separator SHALL follow the number-format setting (US default: decimal point; decimal comma selectable), per `platform/units-and-quantities`: in decimal-point mode `1,250` means 1250 and `1,25` is rejected with a hint to switch modes. Input font size SHALL be at least 16 px, so iOS does not zoom on focus, and pinch-zoom SHALL never be disabled.
 
 #### Scenario: Negative temperature on iOS
 - **WHEN** a user on an iPhone enters −12 °C
@@ -16,7 +16,7 @@ Numeric inputs SHALL use `type="text"` with `inputmode="decimal"`, `autocomplete
 - **THEN** no numeric field uses `type="number"`, and every numeric field has `inputmode="decimal"` and a font size of at least 16 px
 
 ### Requirement: Targets and spacing
-All interactive targets SHALL be at least 48 × 48 CSS px with 8 px spacing. An optional "Field mode" setting SHALL raise targets to 56 px, raise result text by 25%, and turn on per-field ±1 and ±10 step buttons, for gloved or moving-vehicle use.
+All interactive targets SHALL be at least 48 × 48 CSS px with 8 px spacing. An optional "Field mode" setting SHALL raise targets to 56 px, raise result text by 25%, and turn on per-field step buttons using each field's `x-step` (small and large steps, e.g. 0.01 and 0.10 inHg, 1 and 10 kt), for gloved or moving-vehicle use.
 
 #### Scenario: Touch target measurement
 - **WHEN** the touch-target test measures every control at 390 px width

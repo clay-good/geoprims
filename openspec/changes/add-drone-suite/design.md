@@ -42,8 +42,8 @@ Regulatory values live in `reference/regulatory.json`, with jurisdiction, citati
 | `power` | 11 | battery-energy, usable-energy, c-rate, disk-area, hover-power, endurance, range, payload-impact, max-payload, rth-budget, temperature-derating |
 | `ops` | 7 | part107-altitude, structure-altitude, speed-check, kinetic-energy, easa-subcategory, remote-id-reference, part108-proposed-reference |
 | **Operations** | **42** | |
-| Generated endpoints | 10 | common search forms (e.g. `gsd-calculator`, `flight-time-calculator`, `mah-to-wh`, `overlap-calculator`) composed from operations |
-| **Endpoints** | **52** | |
+| Generated endpoints | 0 | search forms such as `gsd-calculator`, `flight-time-calculator`, `overlap-calculator` are alias slugs of their parent tools, not tool ids |
+| **Endpoints** | **42** | |
 
 ## Risks / Trade-offs
 

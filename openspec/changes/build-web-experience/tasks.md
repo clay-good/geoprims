@@ -3,14 +3,14 @@
 - [ ] 1.1 Scaffold the Astro site with Svelte islands in `apps/web`; verify `build` produces static HTML for a sample tool route
 - [ ] 1.2 Generate one route per endpoint from `catalog/v1.json`; verify route count equals the catalog endpoint count
 - [ ] 1.3 Configure static-host headers (CSP, security headers, immutable caching for hashed assets); verify with the header smoke test
-- [ ] 1.4 Add Lighthouse CI budgets (LCP 1.5 s, interactive 2.5 s, shell JS ≤ 90 KB); verify on 50 sampled routes
+- [ ] 1.4 Add performance budgets from `contracts/reference-profiles` (LCP ≤ 2.0 s hard / 1.5 s target, interactive ≤ 2.5 s, INP ≤ 200 ms, shell JS ≤ 90 KB), measured with Playwright traces rather than the Lighthouse CLI; verify on 50 sampled routes
 
 ## 2. Design system
 
 - [ ] 2.1 Define design tokens and the five theme modes (hud, daylight, sunlight, night, high-contrast); verify the no-color-literal lint passes and each mode renders the component gallery
 - [ ] 2.2 Self-host and subset fonts and icons (≤ 80 KB); verify font budget and zero third-party requests
 - [ ] 2.3 Build base components (field, unit selector, result value, warning, badge, table, tabs, toast, dialog) with focus and target-size rules; verify axe-core passes in every mode
-- [ ] 2.4 Build the print stylesheet (`paper` palette, canvas snapshot); verify a print-to-PDF snapshot test
+- [ ] 2.4 Build the print stylesheet (`daylight` palette, canvas snapshot); verify a print-to-PDF snapshot test
 - [ ] 2.5 Add the contrast audit on rendered pixels (effects on) and color-vision-deficiency simulations; verify all states meet 4.5:1 / 3:1
 - [ ] 2.6 Externalize strings into a message catalog and use logical CSS properties; verify the i18n lint passes
 
@@ -71,8 +71,8 @@
 - [ ] 9.1 Implement the standard docs template with build-time MathML and vector-generated worked examples; verify the build fails when an example disagrees with the tool
 - [ ] 9.2 Implement SEO metadata, structured data, preview images, and sitemap; verify the unique-title lint
 - [ ] 9.3 Build domain and group index pages; verify the airspeed index scenario
-- [ ] 9.4 Write the five learning guides with pre-filled chains; verify each guide end to end
-- [ ] 9.5 Add dated regulatory references and PROPOSED labels; verify the Part 108 scenario
+- [ ] 9.4 Write the learning guides from the journey list in `plan-launch-and-value-proof` (L3) with pre-filled chains; verify each guide end to end
+- [ ] 9.5 Add dated regulatory references and "Proposed" labels; verify the Part 108 scenario
 
 ## 10. Launch checks
 

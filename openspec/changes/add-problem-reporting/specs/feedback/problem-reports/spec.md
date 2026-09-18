@@ -13,7 +13,7 @@ Every tool page SHALL show exactly one "Report a problem" button in the tool hea
 
 #### Scenario: Nothing loads before the click
 - **WHEN** a user opens a tool and does not click the report button
-- **THEN** the network log contains no request to the report module, the bot-check origin, or `/api/reports`
+- **THEN** the page makes no request to the report dialog module, the bot-check origin, or `/api/reports` (the service worker's precache of the app shell excludes the dialog module; a tiny "copy report as text" fallback lives in the shell so offline copy still works)
 
 ### Requirement: The dialog shows exactly what will be sent
 The report dialog SHALL be a native modal dialog that states in plain language what will be attached. It SHALL show the full payload in a readable preview before sending. Preview rows SHALL let the user exclude inputs and outputs. It SHALL include an optional "What did you expect instead?" note of at most 280 characters with a live remaining-count, and a line reading "Please don't include names, addresses, or other personal information."
@@ -24,7 +24,7 @@ The report dialog SHALL be a native modal dialog that states in plain language w
 
 #### Scenario: Exclude inputs
 - **WHEN** a user unticks "Include my inputs and results"
-- **THEN** the preview removes them and the sent payload contains only the tool id, versions, and note
+- **THEN** the preview removes them, `pagePath` is sent without its fragment, `inputs`, `outputs`, and `warnings` are empty arrays, and the payload keeps only the tool id, versions, kind, display class, note, and bot-check token
 
 ### Requirement: Report payload
 A report SHALL contain only these fields:
@@ -48,11 +48,11 @@ It SHALL NOT contain a user-agent string, screen dimensions, language, time zone
 - **THEN** that input is omitted from the payload and preview, and outputs derived from it are replaced by a placeholder
 
 ### Requirement: Endpoint validation
-The report endpoint SHALL accept only `POST` with content type `application/json` and no content encoding. It SHALL accept only an `Origin` in the allowlist, and SHALL cancel reading any body over 24 KB. It SHALL validate the body strictly:
+The report endpoint SHALL accept only `POST` with content type `application/json` and no content encoding. It SHALL accept only an `Origin` in the allowlist, and SHALL cancel reading any body over 32 KB. It SHALL validate the body strictly:
 - the exact key set is enforced
 - `toolId` must exist in the catalog bundled with the Worker, and the tool name is re-derived on the server
 - `pagePath` must belong to that tool
-- at most 200 input or output rows; labels ≤ 120 characters; values ≤ 500 characters; note ≤ 280 characters
+- at most 32 input rows and 32 output rows; field names ≤ 40 characters; labels ≤ 80 characters; values ≤ 160 characters; note ≤ 280 characters; `pagePath` ≤ 2,048 characters (the single limits table in `contracts/report-api` is authoritative)
 - control characters and bidirectional override characters are rejected
 - URLs in the note are flagged for review
 
@@ -61,12 +61,12 @@ The report endpoint SHALL accept only `POST` with content type `application/json
 - **THEN** the report is not stored, and the response is identical to a successful submission
 
 #### Scenario: Oversized body
-- **WHEN** a request body exceeds 24 KB
+- **WHEN** a request body exceeds 32 KB
 - **THEN** the Worker stops reading and does not store anything
 
 ### Requirement: Abuse controls without tracking
 The endpoint SHALL layer these controls:
-1. An edge rate-limit rule of at most 10 requests per 10 s per client, enforced by the host and never stored.
+1. An edge rate-limit rule of at most 10 requests per 10 s per client, enforced by the host. geoprims stores nothing from it; Cloudflare records blocked requests in its security event log under its own retention policy, which the privacy page states.
 2. Bot-check verification on the server, with action name `problem-report` and hostname checks. The widget loads only inside the dialog and uses no pre-clearance cookie.
 3. Attempt caps per reporter per day (10) and globally per day (500).
 4. Accepted-report caps per reporter per day (5) and globally per day (250), which configuration cannot raise above hard-coded ceilings.
@@ -116,3 +116,10 @@ The report Worker SHALL be the only server-side code in the product. It SHALL be
 #### Scenario: Logging disabled
 - **WHEN** the Worker configuration is linted in CI
 - **THEN** invocation logs and observability sampling are disabled, or the build fails
+
+### Requirement: No host-injected cookies or challenges
+The Cloudflare zone SHALL keep Bot Fight Mode, Super Bot Fight Mode, and any challenge or cookie-setting bot features disabled, so no `__cf_bm` or `cf_clearance` cookie is ever set on site pages. The deployment smoke test SHALL fail if any response sets a cookie.
+
+#### Scenario: Cookie check
+- **WHEN** the smoke test loads the home page, a tool page, and submits a test report
+- **THEN** no response contains a `Set-Cookie` header

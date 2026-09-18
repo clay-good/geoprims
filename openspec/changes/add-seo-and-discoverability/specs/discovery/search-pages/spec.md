@@ -15,7 +15,7 @@ Every indexable tool page SHALL contain, in the pre-rendered HTML:
 - 3–6 related tools, each with a reason
 - the last-verified date
 
-The build SHALL fail if two indexable pages share a purpose statement or worked example, or if a page's unique text (excluding template chrome) is under 150 words.
+The build SHALL fail if two indexable pages share a purpose statement or worked example, or if a page's unique text is under 150 words, counting only the manifest and docs prose fields (purpose, when to use, example narrative, limitations, related reasons), never template text.
 
 #### Scenario: Thin page blocked
 - **WHEN** a generated page has only template text and a form
@@ -29,8 +29,8 @@ The build SHALL fail if two indexable pages share a purpose statement or worked 
 Generated conversion-pair endpoints SHALL remain tool ids, search aliases, and MCP endpoints. They SHALL get an indexable page only when listed in `data/seo/high-intent-pages.json` (at most 60 entries site-wide, each with a query-demand justification) and when they carry distinct content under the content minimums. Every other generated endpoint route SHALL render the parent tool with the pair's preset and SHALL declare `rel="canonical"` to the parent tool page. They SHALL be excluded from sitemaps.
 
 #### Scenario: Non-listed pair
-- **WHEN** a crawler requests `/geodesy/convert/utm-to-georef`
-- **THEN** the page renders the coordinate converter preset to UTM → GEOREF, canonicalizes to the converter page, and is absent from the sitemap
+- **WHEN** a crawler requests `/geodesy/convert/utm-to-ecef`
+- **THEN** the page renders the coordinate converter preset to UTM → ECEF, canonicalizes to the converter page, and is absent from the sitemap
 
 #### Scenario: High-intent pair
 - **WHEN** `dms-to-decimal-degrees` is on the high-intent list
@@ -107,7 +107,7 @@ The build SHALL emit a sitemap index with one sitemap per domain plus one for ex
 - **THEN** no tool page's `lastmod` changes
 
 ### Requirement: Performance budgets for ranking and use
-Indexable pages SHALL meet, on the reference mobile profile: LCP ≤ 2.5 s (target 1.5 s), INP ≤ 200 ms (target 100 ms), and CLS ≤ 0.1 (target 0.05). The pre-rendered answer SHALL be the LCP element or appear before it. Wasm SHALL compile in the background after first paint, and calculation SHALL run in a worker. Pages SHALL reserve space for the canvas, so it causes no layout shift.
+Indexable pages SHALL meet the budgets in `web/app-shell` on the reference profile in `contracts/reference-profiles` (hard: LCP ≤ 2.0 s, INP ≤ 200 ms, CLS ≤ 0.1; targets: 1.5 s, 100 ms, 0.05). The pre-rendered answer SHALL be the LCP element or appear before it. Wasm SHALL compile in the background after first paint, and calculation SHALL run in a worker. Pages SHALL reserve space for the canvas, so it causes no layout shift.
 
 #### Scenario: CLS from canvas
 - **WHEN** the HUD canvas initializes after load

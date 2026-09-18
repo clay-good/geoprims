@@ -18,7 +18,7 @@
 
 ## 3. Manifest DSL and code generation
 
-- [ ] 3.1 Define the manifest meta-schema (JSON Schema 2020-12 plus `x-quantity`, `x-unit`, `x-angle-range`, `x-display-precision`); verify it validates a hand-written sample manifest and rejects each missing required field
+- [ ] 3.1 Define the manifest meta-schema (JSON Schema 2020-12 plus every extension listed in `contracts/manifest-extensions`, closed to unknown `x-` fields); verify it validates a hand-written sample manifest and rejects each missing required field
 - [ ] 3.2 Implement the Rust tool-definition macro that emits manifests at build time; verify a sample tool produces a manifest identical to a checked-in snapshot
 - [ ] 3.3 Implement the id-pattern, alias-uniqueness, inverse-symmetry, visualization-mapping, and reference checks; verify each fails on a targeted bad fixture
 - [ ] 3.4 Generate `catalog/v1.json`, TypeScript types, MCP schemas, and search documents from manifests; verify a snapshot test over the sample tool for each output

@@ -16,11 +16,11 @@ Every catalog endpoint SHALL have a stable route `/<domain>/<group>/<operation>`
 - **THEN** the page shows the documentation, formula, worked example, and a notice that computation requires JavaScript and WebAssembly
 
 ### Requirement: Load performance budgets
-On the reference mid-tier mobile profile over a simulated connection of 9 Mbps down, 1.5 Mbps up, and 150 ms round-trip time, with a cold cache, a tool page SHALL reach Largest Contentful Paint within 1.5 s and become interactive (tool computes on input) within 2.5 s. On a warm cache, a tool SHALL be interactive within 500 ms. The initial JavaScript for the shell SHALL be at most 90 KB compressed, excluding Wasm and canvas code, which SHALL load after first paint.
+Tool pages SHALL meet the load budgets and use the reference device and network profile defined once in `contracts/reference-profiles`: hard limits of LCP ≤ 2.0 s, interactive (tool computes on input) ≤ 2.5 s cold and ≤ 500 ms warm, INP ≤ 200 ms, and CLS ≤ 0.1, with targets of LCP 1.5 s, INP 100 ms, and CLS 0.05. The initial JavaScript for the shell SHALL be at most 90 KB compressed, excluding Wasm and canvas code, which SHALL load after first paint.
 
 #### Scenario: Budget enforced in CI
-- **WHEN** the Lighthouse-style performance job measures a sampled set of 50 routes
-- **THEN** every route meets the LCP, interactivity, and bundle budgets, else CI fails
+- **WHEN** the performance job measures a sampled set of 50 routes on the reference profile
+- **THEN** every route meets the hard limits and the shell bundle budget, else CI fails
 
 ### Requirement: Schema-driven input forms
 Tool input forms SHALL be generated from the manifest's input schema: each field shows its label, unit selector (with the declared default unit), range hint, and help text. Coordinate fields SHALL accept any supported coordinate notation (DD, DMS, DDM, MGRS, UTM, Maidenhead, geohash, Plus Code) and display the parsed interpretation next to the field before computing.
@@ -34,11 +34,11 @@ Tool input forms SHALL be generated from the manifest's input schema: each field
 - **THEN** the field interprets it as latitude, longitude and shows a notice "Read as lat, lon" with a one-click swap control
 
 ### Requirement: Live recompute
-Tools SHALL recompute automatically as inputs change, debounced to at most one computation per animation frame for closed-form tools and per 150 ms for iterative or data-proportional tools. Invalid intermediate input SHALL show a field-level message without clearing the previous valid result, and the previous result SHALL be visibly marked stale.
+Tools SHALL recompute automatically as inputs change, debounced to at most one computation per animation frame for closed-form tools and per 150 ms for iterative or data-proportional tools. Invalid intermediate input SHALL show a field-level message without clearing the previous valid result, and the previous result SHALL be visibly marked "Result out of date".
 
 #### Scenario: Stale result marking
 - **WHEN** a user deletes a digit making an input invalid
-- **THEN** the field shows the validation message and the last result remains visible with a "STALE" marker until input is valid again
+- **THEN** the field shows the validation message and the last result remains visible with a "Result out of date" marker until input is valid again
 
 ### Requirement: Permalinks in the URL fragment
 The current inputs, selected units, and canvas view SHALL be encoded in the URL fragment so that copying the address bar reproduces the calculation. Fragment encoding SHALL be versioned (`#v1:...`) and backward-compatible across releases.
@@ -52,7 +52,7 @@ The current inputs, selected units, and canvas view SHALL be encoded in the URL 
 - **THEN** the app migrates the fields and computes, or shows which fields could not be migrated
 
 ### Requirement: Result panel
-The result panel SHALL show every output with its unit, a unit switcher, a copy button per value and for the whole result (as JSON, as plain text, and as an MCP `geoprims_run` call), the provenance (`meta`) in an expandable section, and any warnings prominently above the values.
+The result panel is the answer card defined in `ux/glanceable-results`; together with its expandable details it SHALL show every output with its unit, a unit switcher, a copy button per value and for the whole result (as JSON, as plain text, and as an MCP `geoprims_run` call), the provenance (`meta`) in an expandable section, and any warnings prominently above the values.
 
 #### Scenario: Copy as MCP call
 - **WHEN** a user chooses "Copy as agent call"

@@ -5,7 +5,7 @@ Defines the geoprims design system (a calm, glanceable interface with a signatur
 ## ADDED Requirements
 
 ### Requirement: Design tokens
-All colors, type sizes, spacing, radii, and motion durations SHALL be defined as design tokens and used by every component. The default HUD palette SHALL be monochrome slate backgrounds with phosphor amber as the primary accent and phosphor green as the secondary accent, with a distinct non-red-green-dependent warning and error treatment.
+All colors, type sizes, spacing, radii, and motion durations SHALL be defined as design tokens and used by every component. Each mode SHALL use one accent color: in `hud`, phosphor amber on slate (a phosphor-green variant is a user option, not a second accent). Warnings and errors SHALL use a distinct treatment (icon and text plus color) that does not depend on red/green discrimination. Badges and status words SHALL use sentence case ("Experimental", "Result out of date"), never all caps.
 
 #### Scenario: No hard-coded colors
 - **WHEN** the style lint scans component styles
@@ -15,19 +15,19 @@ All colors, type sizes, spacing, radii, and motion durations SHALL be defined as
 The app SHALL provide five modes:
 - `hud` (dark slate with amber accent; green accent as a sub-option): the product's signature look
 - `daylight` (light, calm, print-like)
-- `sunlight` (maximum contrast for outdoor field use: black on white, heavier weights, no effects, results at ≥ 28 px)
+- `sunlight` (maximum contrast for outdoor field use: black on white, heavier weights, no effects, primary results at ≥ 40 px)
 - `night` (for cockpit and dark-adapted use: amber or red on black at very low luminance, with an extra dimming slider, and meaning never carried by color)
 - `high-contrast` (per `prefers-contrast: more`)
 
-The initial mode SHALL follow OS preferences: dark → `hud`, light → `daylight`, more contrast → `high-contrast`. It SHALL persist the user's explicit choice locally. Switching modes SHALL never flash a bright frame. HUD visual effects (glow, scanlines, persistence) SHALL apply only in `hud` mode, SHALL be subtle and off by default for the result value itself, and SHALL be switchable off. Clarity always wins over style.
+The initial mode SHALL follow OS preferences: dark → `hud`, light → `daylight`, more contrast → `high-contrast`. It SHALL persist the user's explicit choice locally. Switching modes SHALL never flash a bright frame. HUD visual effects (glow, scanlines, persistence) SHALL be off by default, SHALL be opt-in from settings, SHALL apply only in `hud` mode, and SHALL never apply to text or result values. Clarity always wins over style. `night` mode text tokens SHALL have relative luminance between 0.175 and 0.25 (meeting 4.5:1 on its background), background tokens at most 0.005, and no navigation or transition frame SHALL render a background above 0.01.
 
 #### Scenario: Light-preference user
 - **WHEN** a first-time visitor's OS prefers a light scheme
 - **THEN** the app starts in `daylight` mode
 
 #### Scenario: Night mode transition
-- **WHEN** a pilot switches from `night` to another page in `night` mode
-- **THEN** no frame renders with luminance above the night-mode ceiling during navigation
+- **WHEN** a pilot navigates between pages in `night` mode
+- **THEN** no frame renders a background with relative luminance above 0.01 during navigation
 
 #### Scenario: Print
 - **WHEN** a user prints a tool page from any mode

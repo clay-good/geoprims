@@ -30,7 +30,7 @@ Wind direction SHALL be the direction the wind blows FROM. All angles SHALL be d
 - **THEN** the tool returns `INVALID_INPUT` asking for the variation or a consistent reference, and explains that METAR/TAF/winds aloft are true while ATIS/tower winds are magnetic in US practice
 
 ### Requirement: Runway wind components and limits
-Given runway heading (from a runway designator such as `27`, `09L`, or `36T`, or a precise magnetic or true heading), wind direction, speed, and optional gust, the tool SHALL return headwind/tailwind and left/right crosswind components (steady and gust). It SHALL compare them against user-entered limits (maximum crosswind, maximum tailwind) and report pass/fail with text labels.
+Given runway heading (from a runway designator such as `27`, `09L`, or `36T`, or a precise magnetic or true heading), wind direction, speed, and optional gust, the tool SHALL return headwind/tailwind and left/right crosswind components (steady and gust). It SHALL compare them against user-entered limits (maximum crosswind, maximum tailwind) and report "Within / Near / Beyond your <limit>" with text and icon (per `ux/glanceable-results`).
 
 #### Scenario: Runway 27 with a right crosswind
 - **WHEN** runway 27 (270° magnetic), wind 300° magnetic at 15 kt

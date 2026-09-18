@@ -29,7 +29,7 @@ Depends on: `build-web-experience`, `add-trust-and-proof`.
 - **A home page built for glancing.** One search box that understands questions, hero tools as large cards, "Start a journey" rows, and recent tools.
 - **Mobile input contract:**
   - `type=text` with `inputmode=decimal`, and a ± key for signed values
-  - both decimal separators accepted
+  - decimal separator per the number-format setting (decimal point by default)
   - inputs at 16 px or larger (no iOS zoom); targets at least 48 px
   - `enterkeyhint`
   - a sticky answer bar that stays above the keyboard

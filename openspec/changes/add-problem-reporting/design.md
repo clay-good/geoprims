@@ -61,13 +61,13 @@ CREATE TABLE problem_reports (
   build_hash TEXT NOT NULL,
   asset_versions_json TEXT NOT NULL CHECK (length(asset_versions_json) <= 2000),
   kind TEXT NOT NULL CHECK (kind IN ('wrong-result','broken','confusing','other')),
-  page_path TEXT NOT NULL CHECK (length(page_path) <= 8192),
+  page_path TEXT NOT NULL CHECK (length(page_path) <= 2048),
   note TEXT CHECK (note IS NULL OR length(note) <= 280),
   note_has_url INTEGER NOT NULL DEFAULT 0 CHECK (note_has_url IN (0,1)),
-  inputs_json TEXT NOT NULL CHECK (length(inputs_json) <= 60000),
-  outputs_json TEXT NOT NULL CHECK (length(outputs_json) <= 60000),
-  warnings_json TEXT NOT NULL CHECK (length(warnings_json) <= 4000),
-  display_json TEXT NOT NULL CHECK (length(display_json) <= 500),
+  inputs_json TEXT NOT NULL CHECK (length(inputs_json) <= 12000),
+  outputs_json TEXT NOT NULL CHECK (length(outputs_json) <= 12000),
+  warnings_json TEXT NOT NULL CHECK (length(warnings_json) <= 2000),
+  display_json TEXT NOT NULL CHECK (length(display_json) <= 300),
   dedupe_key TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL DEFAULT 'open' CHECK (status IN
     ('open','triaged','confirmed','fixed','wont_fix','duplicate','not_a_bug')),
@@ -86,7 +86,7 @@ CREATE TABLE report_limits (
 ```
 
 ### R7. Bot check
-Turnstile in managed ("interaction-only") mode, loaded only when the dialog opens, with no pre-clearance cookie. The privacy page names Turnstile, links Cloudflare's Turnstile privacy addendum, and explains when it loads.
+Turnstile with widget mode **Managed** and `appearance: interaction-only`, `refresh-expired: auto`, rendered only when the dialog opens, with no pre-clearance cookie. The token is requested at submit time; the client checks that it is fresh (under 300 s) before posting, so a slow note cannot silently expire into a hidden drop. The privacy page names Turnstile, links Cloudflare's Turnstile privacy addendum, and explains when it loads.
 
 Alternative considered: a proof-of-work challenge with no third party. Deferred: it is weaker against targeted spam. It stays as the fallback if Turnstile terms change.
 

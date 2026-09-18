@@ -1,6 +1,6 @@
 ## Purpose
 
-Lets a user reach any of the roughly 800 geoprims endpoints, or act on a value they paste, in a few keystrokes through a fuzzy command palette and a consistent keyboard model.
+Lets a user reach any of the roughly 830 geoprims tools, or act on a value they paste, in a few keystrokes through a fuzzy command palette and a consistent keyboard model.
 
 ## ADDED Requirements
 
@@ -49,7 +49,7 @@ Every action in the app SHALL be reachable by keyboard. The palette SHALL suppor
 - **THEN** an overlay lists all global and page shortcuts
 
 ### Requirement: Global shortcuts
-The app SHALL provide at least these shortcuts outside text fields: `/` palette, `g h` home, `m` toggle audio mute, `c` cycle canvas mode (2D map, 3D globe, vector), `u` cycle unit profile, `y` copy result JSON, `l` copy permalink, `s` swap the two primary inputs where the tool declares them swappable, `[` and `]` previous/next tool in group. Shortcuts SHALL be listed in the shortcut sheet and SHALL NOT override browser or screen-reader reserved keys.
+The app SHALL provide at least these shortcuts outside text fields: `/` palette, `g h` home, `m` toggle audio mute, `c` cycle canvas mode (2D map, 3D globe, vector), `u` cycle unit profile, `y` copy result JSON, `l` copy permalink, `s` swap the two primary inputs where the tool declares them swappable, `[` and `]` previous/next tool in group. Shortcuts SHALL be listed in the shortcut sheet, SHALL NOT override browser or screen-reader reserved keys, and single-character shortcuts SHALL be switchable off or remappable in settings (WCAG 2.1.4). `m` (mute) SHALL act only when audio has been enabled.
 
 #### Scenario: Mute toggle
 - **WHEN** audio is on and the user presses `m`

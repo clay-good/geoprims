@@ -33,7 +33,7 @@ Sounds SHALL be rate limited so that no more than 8 sounds play per second and l
 - **THEN** at most 2 computed sounds play per second
 
 ### Requirement: Mute and volume
-A mute toggle SHALL be reachable in one action from every page (header control and `m` shortcut), and a volume slider SHALL be available in settings. Muting SHALL silence sound within 50 ms.
+Once audio is enabled, a mute toggle SHALL be reachable in one action from every page (header control and `m` shortcut); while audio is off, no audio control SHALL appear in the header, and a volume slider SHALL be available in settings. Muting SHALL silence sound within 50 ms.
 
 #### Scenario: Mute during playback
 - **WHEN** a user presses `m` while a tone is playing

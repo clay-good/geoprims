@@ -16,7 +16,7 @@ The website and the local MCP server SHALL execute tools through the same compil
 - **THEN** every vector produces the same serialized result on all four hosts
 
 ### Requirement: Domain-split, lazily loaded modules
-The core SHALL be split into independently loadable modules by domain (at minimum: `base` (which also serves the `units` domain), `geodesy`, `navigation`, `geometry`, `aviation`, `drone`, `survey`, `indexing`, `raster`). A tool page SHALL load only `base` plus the modules its tool declares. Each domain module SHALL be at most 400 KB compressed (Brotli), and `base` SHALL be at most 120 KB compressed.
+The core SHALL be split into independently loadable modules by domain (at minimum: `base` (which also serves the `units` domain), `geodesy`, `navigation`, `geometry`, `aviation`, `drone`, `survey`, `indexing`, `raster`, `time`). A tool page SHALL load only `base` plus the modules its tool declares. Each domain module SHALL be at most 400 KB compressed (Brotli), and `base` SHALL be at most 120 KB compressed.
 
 #### Scenario: Aviation page does not load indexing
 - **WHEN** a user opens `aviation.airspeed.cas-to-tas` directly

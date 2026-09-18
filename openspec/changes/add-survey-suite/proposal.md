@@ -13,7 +13,7 @@ Depends on: `establish-platform-foundation`, `add-geodesy-suite` (State Plane, s
 
 ## What Changes
 
-Adds the `survey` domain: about 57 operations and 67 endpoints (inventory in `design.md`).
+Adds the `survey` domain: about 57 operations and 57 tool ids (inventory in `design.md`).
 
 - **COGO and traverse:** inverse and forward (bearing/azimuth and distance), quadrant bearing parsing, traverse closure (angular and linear misclosure, precision ratio), compass (Bowditch), transit, and Crandall adjustments, a small least-squares adjustment (experimental), area by coordinates, intersections (bearing-bearing, bearing-distance, distance-distance), three-point resection, and offsets.
 - **Instrument reductions:** slope to horizontal and vertical from zenith or vertical angle, HI/HR elevation, curvature and refraction, EDM atmospheric (ppm) correction, sea-level/elevation factor, grid-ground combined factor, trigonometric leveling, differential level-loop closure and adjustment, stadia, and total-station offset shots.

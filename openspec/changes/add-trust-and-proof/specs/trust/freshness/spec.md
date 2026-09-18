@@ -14,7 +14,8 @@ The repository SHALL maintain a sources ledger with one row per tracked standard
 - `lastVerified` (date a maintainer confirmed the current edition at the issuer)
 - `verificationNote`, `freeAccessUrl`
 - `matchTerms` (strings that identify citations of this source)
-- `status` (`current`, `disclosed-lag`, `acknowledged-stale`)
+- `editionStatus` (`current`, `disclosed-lag`, `acknowledged-stale`)
+- `legalStatus` for regulations (`in-force`, `proposed`, `withdrawn`), null otherwise
 
 The initial ledger SHALL cover at least: WMM, WMMHR, IGRF, EGM96, EGM2008, GEOID18, the NSRS 2022 products (beta), NADCON5, SPCS83/SPCS2022, EPSG dataset version, ICAO Doc 7488, US Standard Atmosphere 1976, ICAO Doc 8168, AIM, 14 CFR Parts 61/91/107/89 and the Part 108 NPRM, EASA 2019/947 and 2019/945, ASPRS Positional Accuracy Standards, ALTA/NSPS standards, USGS Lidar Base Specification, H3, S2, Open Location Code, A5, Copernicus DEM, and the IERS leap-second bulletin.
 
@@ -23,7 +24,7 @@ The initial ledger SHALL cover at least: WMM, WMMHR, IGRF, EGM96, EGM2008, GEOID
 - **THEN** the build fails asking for a ledger row
 
 ### Requirement: Superseded editions fail the build
-The build SHALL fail when any citation names an edition of a tracked source other than `currentEdition`, unless the ledger row has status `disclosed-lag` and the tool page shows a disclosure naming the newer edition and the reason for lagging.
+The build SHALL fail when any citation names an edition of a tracked source other than `currentEdition`, unless the ledger row has `editionStatus` `disclosed-lag` and the tool page shows a disclosure naming the newer edition and the reason for lagging.
 
 #### Scenario: New edition published
 - **WHEN** a maintainer updates the ASPRS row to a new edition and a tool still cites the previous one
@@ -58,8 +59,8 @@ A scheduled monthly job SHALL request every `freeAccessUrl` and citation URL. It
 - **THEN** the monthly probe opens an issue naming the citation, tools, and HTTP status
 
 ### Requirement: Regulatory values carry review dates
-Every regulatory reference entry (per `platform/data-assets` reference-data files) SHALL be linked to a ledger row, and its page display SHALL read "Rules as of <lastVerified>". Proposed rules SHALL show "PROPOSED" until the ledger status changes.
+Every regulatory reference entry (per `platform/data-assets` reference-data files) SHALL be linked to a ledger row, and its page display SHALL read "Rules as of <lastVerified>". Proposed rules SHALL show "Proposed" until the ledger's `legalStatus` changes to `in-force`.
 
 #### Scenario: Part 108 finalized
-- **WHEN** the FAA publishes a Part 108 final rule and the ledger row is updated to `in-force`
-- **THEN** the PROPOSED labels disappear in the next build, and the tools citing it are listed for review
+- **WHEN** the FAA publishes a Part 108 final rule and the ledger row's `legalStatus` is updated to `in-force`
+- **THEN** the "Proposed" labels disappear in the next build, and the tools citing it are listed for review

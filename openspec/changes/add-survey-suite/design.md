@@ -40,8 +40,8 @@ Delaunay triangulation comes from `geometry/computational`. Volume is the sum of
 | `earthwork` | 13 | average-end-area, prismoidal, section-area, borrow-pit, four-point-average, shrink-swell, haul-loads, grade-convert, rise-run, slope-staking, stockpile-tin, solid-volumes, profile-slope |
 | `curves` | 10 | circular-curve, degree-of-curve, curve-stationing, curve-layout, spiral, spiral-curve-spiral, vertical-curve, vertical-curve-turning-point, vertical-curve-elevations, sight-distance-length |
 | **Operations** | **57** | |
-| Generated endpoints | 10 | common search forms: `cubic-yards-calculator`, `percent-grade-to-degrees`, `slope-ratio-to-percent`, `bearing-to-azimuth`, `station-format`, and similar |
-| **Endpoints** | **67** | |
+| Generated endpoints | 0 | search forms such as `cubic-yards-calculator` and `percent-grade-to-degrees` are alias slugs of their parent tools, not tool ids |
+| **Endpoints** | **57** | |
 
 ## Risks / Trade-offs
 

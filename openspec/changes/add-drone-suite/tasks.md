@@ -39,6 +39,6 @@
 
 ## 5. Catalog and docs
 
-- [ ] 5.1 Register all 42 operations and 10 generated endpoints with aliases (GSD calculator, overlap calculator, drone flight time); verify catalog counts
+- [ ] 5.1 Register all 42 operations with alias slugs and aliases (GSD calculator, overlap calculator, drone flight time); verify catalog counts
 - [ ] 5.2 Write docs per tool and the "Plan a photogrammetry mission" guide; verify the guide chain end to end
 - [ ] 5.3 Promote tools meeting the stable bar; verify the verification report

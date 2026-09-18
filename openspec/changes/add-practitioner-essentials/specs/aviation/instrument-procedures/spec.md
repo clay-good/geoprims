@@ -16,10 +16,10 @@ Given the holding course (inbound, magnetic), turn direction (standard right or 
 - **THEN** the teardrop and parallel sectors are mirrored about the inbound course
 
 ### Requirement: Holding timing and wind correction
-Given TAS, altitude, wind, and leg time or length, the tool SHALL compute:
+Given indicated airspeed (or TAS with OAT and pressure altitude, converted via the airspeed tools), altitude, wind, and leg time or length, the tool SHALL compute:
 - the outbound heading with the wind correction applied (with the "triple the drift" rule shown and labeled as a rule of thumb)
 - outbound leg timing adjusted to achieve the target inbound leg time
-- the applicable maximum holding airspeed from dated reference data (AIM table), flagging when TAS-derived IAS exceeds it
+- the applicable maximum holding airspeed (IAS) from dated reference data (AIM table), flagging when the planned IAS exceeds it
 
 #### Scenario: Speed limit flag
 - **WHEN** the planned holding IAS exceeds the maximum for the altitude
@@ -41,7 +41,7 @@ Tools SHALL compute:
 - **THEN** the result is `NO_SOLUTION` with the explanation that the aircraft is essentially overhead
 
 ### Requirement: Descent, VDP, and approach geometry
-Tools SHALL compute:
+The existing `aviation.performance` descent tools (descent gradient and visual descent point) SHALL be extended, not duplicated, to compute:
 - the glidepath vertical speed for a path angle and groundspeed: GS × 101.27 × tan θ fpm (showing the ×5 rule)
 - VDP distance from the threshold for a height above threshold and path angle: HAT ÷ tan θ (showing HAT/300 and HAT/318 rules)
 - TCH-based path geometry

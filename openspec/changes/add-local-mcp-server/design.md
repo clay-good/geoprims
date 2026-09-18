@@ -12,7 +12,7 @@ Motivation is in `proposal.md`. Research is in `docs/research/04-mcp-competitors
 ## Goals / Non-Goals
 
 **Goals:**
-- An agent can find, understand, and correctly call any of about 800 endpoints in 2–3 tool calls with under 6K tokens of fixed tool schemas.
+- An agent can find, understand, and correctly call any of about 830 tools in 2–3 tool calls with under 6K tokens of fixed tool schemas.
 - Zero network by default. Results are byte-identical to the website.
 
 **Non-Goals:**
@@ -31,15 +31,15 @@ The website and the MCP server are the whole product. Both load Wasm through one
 | WebMCP | Experimental browser API in origin trial; a third surface. |
 
 ### A2. Meta-tools by default, direct toolsets opt-in
-Five meta-tools (`search`, `describe`, `run`, `pipeline`, `convert_units`) are the default surface. Curated toolsets of ≤ 40 tools serve clients with native deferred tool search, or users who want first-class tools for one workflow.
+Six meta-tools (`search`, `describe`, `run`, `pipeline`, `convert_units`, `report_problem`) are the default surface. Curated toolsets of ≤ 40 tools serve clients with native deferred tool search, or users who want first-class tools for one workflow.
 
 | Alternative | Why not |
 |---|---|
-| Expose all ~800 tools | ~120K–320K tokens; exceeds client caps; lower selection accuracy. |
+| Expose all ~830 tools | ~120K–320K tokens; exceeds client caps; lower selection accuracy. |
 | Grow the tool list dynamically with `list_changed` | Uneven client support; breaks prompt caching; the stateless spec needs a `subscriptions/listen` stream. |
 | One `run` tool with free-text arguments | Loses schema validation and discoverability. |
 
-`geoprims_search` uses BM25 plus the alias table, the same index as the web command palette, so agent and human search behave alike. If the SEP-1821 `tools/list` query filter lands in a future spec, `search` maps onto it.
+`geoprims_search` uses the single core ranker (weighted fields, aliases, prefix stemming, one-edit typo tolerance, quantity extraction), the same one the web palette uses, so agent and human search rank identically. If the SEP-1821 `tools/list` query filter lands in a future spec, `search` maps onto it.
 
 ### A3. Runtime: Node.js, zero dependencies, clone-and-run
 Node is bundled with major desktop hosts. The server is a zero-dependency ES module (`mcp/server.mjs`). It implements the stdio JSON-RPC subset MCP needs: newline-delimited framing, version negotiation across `2026-07-28`, `2025-11-25`, and `2025-06-18`, and a message size cap. This follows roughlogic.com's `mcp/server.mjs`, which runs from a clone with `node` alone (`docs/research/06` §6).
@@ -72,7 +72,7 @@ A fixed set of 100+ tasks, each with an expected tool id and answer tolerance, r
 
 ## Risks / Trade-offs
 
-- **[MCP spec churn (the stateless model is new; clients lag)]** → Support three protocol versions through the SDK. Run the conformance suite against recorded client handshakes.
+- **[MCP spec churn (the stateless model is new; clients lag)]** → Support three protocol versions through the hand-rolled negotiation layer. Run the conformance suite against recorded client handshakes.
 - **[MCP Registry is preview; data may reset]** → npm and MCPB work without it.
 - **[Meta-tool indirection costs an extra round trip]** → `describe` accepts up to 20 ids. `search` summaries often suffice to run simple tools. `pipeline` removes round trips for chains.
 - **[Agents drop caveats]** → Caveats live in `meta` (model, epoch, accuracy, not-for-navigation), which travels with every result.

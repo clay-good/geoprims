@@ -28,12 +28,12 @@ Research: `docs/research/05` §2 and `docs/research/06` §2, §5, §6. Key facts
 ## Decisions
 
 ### S1. Indexable pages are curated, not enumerated
-The catalog can hold about 800 tool ids. Indexable pages are only:
+The catalog holds about 834 tool ids. Indexable pages are only:
 - stable operations with full content
 - up to 60 high-intent conversion pages
 - explainers, hubs, journeys, and trust pages
 
-Target at launch: about 250–350 indexable pages. The public "tools" count reports tool ids and indexable pages separately (tool-catalog amendment).
+Target at launch: about 300 indexable tool pages, plus explainers, journeys, hubs, and trust pages. The public "tools" count reports tool ids and indexable pages separately (tool-catalog amendment).
 
 Alternative considered: one page per endpoint. Rejected because of the scaled-content risk and maintenance cost.
 
@@ -43,8 +43,8 @@ Astro renders each page with the worked-example result, computed at build time b
 ### S3. OG images at build
 Rendered with Satori + resvg in the build (both MIT). A template shows the tool name, domain, and example answer. They are cached by content hash, so only changed pages re-render.
 
-### S4. Parser in the core
-The query parser moves into the Rust core so the palette and MCP share it byte-for-byte. The web palette still uses uFuzzy for instant keystroke ranking of names, then calls the core parser for quantity extraction when digits appear. Ranking parity is tested on the fixture.
+### S4. One ranker in the core
+The query parser and ranker live in the Rust core, so the palette and MCP rank byte-for-byte identically. The web uses uFuzzy only for highlighting matched characters. Ranking parity is tested on the fixture.
 
 ### S5. Measurement loop
 - **Monthly:** the Search Console and Bing log (queries, pages, coverage).

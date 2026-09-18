@@ -33,11 +33,11 @@
 
 ## 5. Survey land descriptions and GNSS
 
-- [ ] 5.1 Implement the deed parser with the editable confirmation table, curve and monument flags; verify both parsing scenarios on a corpus of 50 real deed texts
-- [ ] 5.2 Implement plot, closure, and implied-closing-line area without silent adjustment; verify the unclosed-deed scenario
-- [ ] 5.3 Implement legacy land units with jurisdictions; verify the vara and chains scenarios
-- [ ] 5.4 Implement the PLSS parser and nominal aliquot areas; verify the aliquot and meridian scenarios
-- [ ] 5.5 Implement basis-of-bearing rotation and the professional-use notice; verify the rotation scenario
+- [ ] 5.1 Implement the deed parser with the editable confirmation table, curve and monument flags; verify both parsing scenarios on a corpus of 50 real deed texts (built: symbol, word, dash, and compact bearings, due north, feet, chains and links, rods, varas, meters, tangent and non-tangent curves, monuments kept as text, CURVE_CALL_INCOMPLETE and NON_METRIC_CALL; both scenarios pass; pending: the 50-deed corpus and source-phrase highlighting in the web table)
+- [x] 5.2 Implement plot, closure, and implied-closing-line area without silent adjustment; verify the unclosed-deed scenario
+- [x] 5.3 Implement legacy land units with jurisdictions; verify the vara and chains scenarios
+- [x] 5.4 Implement the PLSS parser and nominal aliquot areas; verify the aliquot and meridian scenarios (built: aliquot parts, lots, township and range validation, BLM meridian names and codes, and nominal area; both scenarios pass)
+- [x] 5.5 Implement basis-of-bearing rotation and the professional-use notice; verify the rotation scenario
 - [ ] 5.6 Implement almanac parsing, DOP, sky plot, and terrain mask; verify both DOP scenarios against a reference planning tool
 - [ ] 5.7 Implement the RTK budget, OPUS planning, and antenna height; verify the corresponding scenarios
 - [ ] 5.8 Implement the ALTA RPP check tied to error ellipses; verify both RPP scenarios and obtain PLS review

@@ -220,6 +220,77 @@ def combined():
     return out
 
 
+# ---------------------------------------------------------------- land descriptions
+
+LAND_SRC = "Independent Python arithmetic on the BLM Manual unit definitions and latitudes and departures (tools/vectors/gen_survey.py)"
+LAND_VER = "BLM Manual of Surveying Instructions (2009)"
+
+
+def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
+    e = dict(exp)
+    e.setdefault("ok", True)
+    tol = {k: {"rel": 1e-12, "abs": 1e-9} for k, v in e.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver, "tolerance": tol}
+
+
+def legacy_units():
+    cases = [("12 chains 34 links", None, 12 * 66 + 34 * 0.66), ("40 rods", None, 660.0), ("1 furlong", None, 660.0),
+             ("1,000 varas", "texas", 1000 * 100 / 36), ("10 arpents", "louisiana", 1919.94), ("80 chains", None, 5280.0),
+             ("5 varas", "california", 5 * 33.372 / 12)]
+    return [lvec(i, {"length": t, **({"jurisdiction": j} if j else {})}, {"result.us_survey_feet.value": float(v)}) for i, (t, j, v) in enumerate(cases, 1)]
+
+
+def deed_plot():
+    import math
+    out = []
+    cases = [[("N 0 E", 500), ("N 90 E", 425), ("S 0 E", 500), ("S 89°56'36\" W", 425)],
+             [("N 45 E", 300), ("S 45 E", 300), ("S 45 W", 300.5), ("N 45 W", 300)],
+             [("N 10 E", 250), ("S 80 E", 180), ("S 10 W", 250), ("S 80 W", 180.1)],
+             [("N 30 E", 120), ("S 60 E", 200), ("S 30 W", 120), ("N 60 W", 199.9)],
+             [("N 0 E", 1000), ("S 89 E", 1000), ("S 1 E", 1000), ("N 88°59'00\" W", 1000)]]
+    for i, legs in enumerate(cases, 1):
+        n = e = 0.0
+        pts = [(0.0, 0.0)]
+        total = 0.0
+        for b, d in legs:
+            ns, rest = b[0], b[1:-1].strip()
+            ew = b[-1]
+            parts = rest.replace("°", " ").replace("'", " ").replace('"', " ").split()
+            ang = sum(float(x) / 60 ** k for k, x in enumerate(parts))
+            az = {("N", "E"): ang, ("S", "E"): 180 - ang, ("S", "W"): 180 + ang, ("N", "W"): 360 - ang}[(ns, ew)]
+            n += d * math.cos(math.radians(az))
+            e += d * math.sin(math.radians(az))
+            pts.append((n, e))
+            total += d
+        twice = sum(pts[k][1] * pts[(k + 1) % len(pts)][0] - pts[(k + 1) % len(pts)][1] * pts[k][0] for k in range(len(pts)))
+        rows = [{"direction": b, "distance": f"{d} ftUS"} for b, d in legs]
+        out.append(lvec(i, {"calls": rows}, {"result.misclosure.value": math.hypot(n, e), "result.area.value": abs(twice) / 2,
+                                             "result.total_length.value": float(total)}, ver="Ghilani and Wolf, 15th ed. (2018)"))
+    return out
+
+
+def plss():
+    cases = [("NE¼ SW¼ Sec 12, T3N R4W, 6th PM", 40.0), ("N1/2 NE1/4 Section 5 T12S R3E Willamette Meridian", 80.0),
+             ("SW¼ Sec 36 T1N R1E Mount Diablo", 160.0), ("NW¼ NE¼ SE¼ Sec 8 T20N R5W Salt Lake", 10.0), ("E½ Sec 1 T4S R68W 6th PM", 320.0)]
+    return [lvec(i, {"description": d}, {"result.nominal_area.value": a}) for i, (d, a) in enumerate(cases, 1)]
+
+
+def rotation():
+    cases = [("N 10°00'00\" E", "N 10°02'30\" E", 2.5 / 60), ("S 45 E", "S 44 E", 1.0), ("N 89 W", "S 89 W", -2.0),
+             ("N 0 E", "N 0°00'30\" W", -0.5 / 60), ("S 30 W", "S 30°15' W", 0.25)]
+    return [lvec(i, {"record_bearing": a, "new_bearing": b}, {"result.rotation.value": float(r)}) for i, (a, b, r) in enumerate(cases, 1)]
+
+
+def deed_parse():
+    cases = [("Beginning; thence N 45°30'15\" E 200.00 feet; thence S 44-29-45E 100 feet", 2, "N 45°30'15\" E"),
+             ("Beginning; thence North 10 degrees East 5 chains 20 links; thence due south 343.2 feet", 2, "N 10°00'00\" E"),
+             ("Beginning; thence S0-15-00E 150 ft; thence along the creek to a stone", 2, "S 0°15'00\" E"),
+             ("Beginning; thence N 1 W 10 feet; thence N 2 W 10 feet; thence N 3 W 10 feet", 3, "N 1°00'00\" W"),
+             ("Beginning at a stake; thence S 89°59'59\" W 1,320.00 feet to a pipe", 1, "S 89°59'59\" W")]
+    return [lvec(i, {"text": t}, {"result.count": float(n), "result.calls.0.direction": d}, src="Hand-parsed call forms (Brown's Boundary Control, ch. 5)", ver="7th edition (2014)")
+            for i, (t, n, d) in enumerate(cases, 1)]
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {
@@ -227,6 +298,8 @@ def main():
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),
         "survey.reduction.combined-factor": combined(),
+        "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
+        "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))

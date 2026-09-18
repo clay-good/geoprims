@@ -552,6 +552,30 @@
     {
       "query": "orthometric height",
       "expect": "geodesy.height.convert"
+    },
+    {
+      "query": "deed plotter",
+      "expect": "survey.land.deed-plot"
+    },
+    {
+      "query": "metes and bounds",
+      "expect": "survey.land.deed-parse"
+    },
+    {
+      "query": "chains to feet",
+      "expect": "survey.land.legacy-units"
+    },
+    {
+      "query": "vara",
+      "expect": "survey.land.legacy-units"
+    },
+    {
+      "query": "township range section",
+      "expect": "survey.land.plss-parse"
+    },
+    {
+      "query": "basis of bearing rotation",
+      "expect": "survey.land.basis-rotation"
     }
   ]
 }

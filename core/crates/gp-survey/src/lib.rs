@@ -3,6 +3,7 @@
 //! factor (add-survey-suite). Results keep the linear unit the surveyor entered.
 
 pub mod direction;
+pub mod land;
 
 use gp_base::ErrorCode;
 use gp_base::display;
@@ -1943,6 +1944,11 @@ pub static TOOLS: &[&ToolDef] = &[
     &PRISMOIDAL,
     &SHRINK_SWELL,
     &COMBINED_FACTOR,
+    &land::LEGACY_UNITS,
+    &land::DEED_PARSE,
+    &land::DEED_PLOT,
+    &land::PLSS_PARSE,
+    &land::BASIS_ROTATION,
 ];
 
 pub static REGISTRY: Registry = Registry {

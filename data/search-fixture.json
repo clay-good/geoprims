@@ -388,6 +388,54 @@
     {
       "query": "polygonToCells",
       "expect": "indexing.h3.polygon-to-cells"
+    },
+    {
+      "query": "true airspeed",
+      "expect": "aviation.airspeed.cas-to-tas"
+    },
+    {
+      "query": "mach to cas",
+      "expect": "aviation.airspeed.tas-to-cas"
+    },
+    {
+      "query": "TAT to SAT",
+      "expect": "aviation.airspeed.tat-sat"
+    },
+    {
+      "query": "standard rate turn bank",
+      "expect": "aviation.performance.turn"
+    },
+    {
+      "query": "top of descent",
+      "expect": "aviation.performance.top-of-descent"
+    },
+    {
+      "query": "climb gradient ft per nm",
+      "expect": "aviation.performance.climb-gradient"
+    },
+    {
+      "query": "visual descent point",
+      "expect": "aviation.performance.vdp"
+    },
+    {
+      "query": "glide range",
+      "expect": "aviation.performance.glide"
+    },
+    {
+      "query": "pivotal altitude",
+      "expect": "aviation.performance.pivotal-altitude"
+    },
+    {
+      "query": "avgas weight",
+      "expect": "aviation.loading.fuel-weight"
+    },
+    {
+      "query": "weight and balance",
+      "expect": "aviation.loading.weight-balance"
+    },
+    {
+      "query": "W&B",
+      "expect": "aviation.loading.weight-balance"
     }
   ]
 }

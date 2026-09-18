@@ -2,7 +2,10 @@
 //! slice is the preflight hero set: ISA, pressure and density altitude, ISA
 //! temperature, runway wind components, and the wind triangle.
 
+pub mod airspeed;
 pub mod atmosphere;
+pub mod loading;
+pub mod performance;
 pub mod wind;
 
 use atmosphere as isa;
@@ -73,6 +76,38 @@ pub mod refs {
         locator: "Chapter 4 (tower and ATIS winds, magnetic) and Chapter 7 (METAR and TAF winds, true)",
         url: "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/",
     };
+    pub const GRACEY: Reference = Reference {
+        title: "Measurement of Aircraft Speed and Altitude, NASA Reference Publication 1046",
+        issuer: "William Gracey, NASA Langley Research Center",
+        year: 1980,
+        edition: "NASA RP-1046",
+        locator: "Chapter 2 (airspeed equations: subsonic and Rayleigh supersonic pitot relations) and Chapter 16 (temperature)",
+        url: "https://ntrs.nasa.gov/citations/19800015804",
+    };
+    pub const AFH: Reference = Reference {
+        title: "Airplane Flying Handbook, FAA-H-8083-3C",
+        issuer: "Federal Aviation Administration",
+        year: 2021,
+        edition: "FAA-H-8083-3C",
+        locator: "Chapter 3 (turns and load factor), Chapter 6 (ground reference maneuvers, pivotal altitude), and Chapter 18 (emergency glides)",
+        url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/airplane_handbook",
+    };
+    pub const IPH: Reference = Reference {
+        title: "Instrument Procedures Handbook, FAA-H-8083-16B",
+        issuer: "Federal Aviation Administration",
+        year: 2017,
+        edition: "FAA-H-8083-16B",
+        locator: "Chapter 2 (descent planning) and Chapter 4 (visual descent point, vertical descent angle)",
+        url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_procedures_handbook",
+    };
+    pub const WB_HANDBOOK: Reference = Reference {
+        title: "Aircraft Weight and Balance Handbook, FAA-H-8083-1B",
+        issuer: "Federal Aviation Administration",
+        year: 2016,
+        edition: "FAA-H-8083-1B",
+        locator: "Chapter 2 (weight and balance theory, fuel weights) and Chapter 4 (CG envelope, percent MAC)",
+        url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/faa-h-8083-1",
+    };
 }
 
 use refs::*;
@@ -82,46 +117,46 @@ const TABLE: &[Layer] = &[Layer {
     map: &[],
 }];
 
-fn unit(q: QT, s: &str) -> &'static Unit {
+pub(crate) fn unit(q: QT, s: &str) -> &'static Unit {
     units::by_symbol(q, s).expect("registered unit")
 }
 
-fn m(v: f64) -> Q {
+pub(crate) fn m(v: f64) -> Q {
     Q {
         value: v,
         unit: unit(QT::Length, "m"),
     }
 }
 
-fn kelvin(v: f64) -> Q {
+pub(crate) fn kelvin(v: f64) -> Q {
     Q {
         value: v,
         unit: unit(QT::Temperature, "K"),
     }
 }
 
-fn pa(v: f64) -> Q {
+pub(crate) fn pa(v: f64) -> Q {
     Q {
         value: v,
         unit: unit(QT::Pressure, "Pa"),
     }
 }
 
-fn knots(v: f64) -> Q {
+pub(crate) fn knots(v: f64) -> Q {
     Q {
         value: v,
         unit: unit(QT::Speed, "kt"),
     }
 }
 
-fn deg(v: f64) -> Q {
+pub(crate) fn deg(v: f64) -> Q {
     Q {
         value: v,
         unit: unit(QT::Angle, "deg"),
     }
 }
 
-fn obj(pairs: Vec<(&str, Json)>) -> Json {
+pub(crate) fn obj(pairs: Vec<(&str, Json)>) -> Json {
     Json::obj(pairs)
 }
 
@@ -1738,6 +1773,17 @@ pub static TOOLS: &[&ToolDef] = &[
     &RUNWAY_COMPONENTS,
     &HEADING_GROUNDSPEED,
     &FIND_WIND,
+    &airspeed::CAS_TO_TAS,
+    &airspeed::TAS_TO_CAS,
+    &airspeed::TAT_SAT,
+    &performance::TURN,
+    &performance::DESCENT,
+    &performance::CLIMB_GRADIENT,
+    &performance::VDP,
+    &performance::GLIDE,
+    &performance::PIVOTAL_ALTITUDE,
+    &loading::FUEL_WEIGHT,
+    &loading::WEIGHT_BALANCE,
 ];
 
 pub static REGISTRY: Registry = Registry {

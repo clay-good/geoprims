@@ -45,10 +45,10 @@ Tools SHALL convert between total (indicated) air temperature and static air tem
 - **THEN** SAT ≈ -48.73 °C and ram rise ≈ 28.73 K
 
 ### Requirement: EAS and dynamic pressure
-Tools SHALL compute equivalent airspeed (EAS = TAS·√σ), dynamic pressure q = ½ρV², and the compressibility correction (CAS − EAS), which SHALL never be negative.
+Tools SHALL compute equivalent airspeed (EAS = TAS·√σ), dynamic pressure q = ½ρV², and the compressibility correction (CAS − EAS), which SHALL never be negative at or above sea-level pressure altitude. (Below it, static pressure exceeds P0 and EAS slightly exceeds CAS; the tool reports that value as is.)
 
 #### Scenario: Compressibility correction sign
-- **WHEN** any subsonic CAS and altitude are converted
+- **WHEN** any subsonic CAS at a pressure altitude of 0 ft or higher is converted
 - **THEN** CAS − EAS ≥ 0
 
 ### Requirement: Rules of thumb shown and labeled

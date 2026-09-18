@@ -9,10 +9,10 @@
 
 ## 2. Airspeed
 
-- [ ] 2.1 Implement impact-pressure-based CAS ↔ Mach ↔ TAS ↔ EAS (subsonic and Rayleigh); verify the FL100, high-altitude, and supersonic scenarios and a round-trip property test
-- [ ] 2.2 Implement calibration-table IAS ↔ CAS with no default correction; verify the no-table and beyond-table scenarios
-- [ ] 2.3 Implement OAT-required TAS with the ISA-assumed warning; verify the standard-temperature scenario
-- [ ] 2.4 Implement TAT ↔ SAT with recovery factor and dynamic pressure; verify the ram-rise and compressibility-sign scenarios
+- [x] 2.1 Implement impact-pressure-based CAS ↔ Mach ↔ TAS ↔ EAS (subsonic and Rayleigh); verify the FL100, high-altitude, and supersonic scenarios and a round-trip property test
+- [x] 2.2 Implement calibration-table IAS ↔ CAS with no default correction; verify the no-table and beyond-table scenarios
+- [x] 2.3 Implement OAT-required TAS with the ISA-assumed warning; verify the standard-temperature scenario
+- [x] 2.4 Implement TAT ↔ SAT with recovery factor and dynamic pressure; verify the ram-rise and compressibility-sign scenarios
 - [ ] 2.5 Implement the airspeed tape gauge with labeled V-speed arcs; verify the visual fixture and the not-color-alone check
 
 ## 3. Altimetry
@@ -36,16 +36,16 @@
 
 ## 5. Performance
 
-- [ ] 5.1 Implement turn relations, stall in turn, and load-limit checks; verify the standard-rate, 60°-bank, and load-limit scenarios
-- [ ] 5.2 Implement climb/descent gradients, top of descent, and VDP; verify the FL350 and climb-gradient scenarios
-- [ ] 5.3 Implement glide range with wind and the glide ring on the map; verify the headwind scenario
-- [ ] 5.4 Implement pivotal altitude and specific range, and the no-POH refusal; verify the pivotal-altitude and no-POH scenarios
+- [x] 5.1 Implement turn relations, stall in turn, and load-limit checks; verify the standard-rate, 60°-bank, and load-limit scenarios
+- [x] 5.2 Implement climb/descent gradients, top of descent, and VDP; verify the FL350 and climb-gradient scenarios
+- [ ] 5.3 Implement glide range with wind and the glide ring on the map; verify the headwind scenario (built: glide range with wind and the headwind scenario; pending: the glide ring on the map)
+- [ ] 5.4 Implement pivotal altitude and specific range, and the no-POH refusal; verify the pivotal-altitude and no-POH scenarios (built: pivotal altitude and its scenario; pending: specific range and the no-POH refusal)
 
 ## 6. Fuel and loading
 
-- [ ] 6.1 Implement fuel planning and weights with nominal presets; verify the fuel-weight scenario
+- [ ] 6.1 Implement fuel planning and weights with nominal presets; verify the fuel-weight scenario (built: fuel weight and volume with nominal 100LL and Jet A densities, and the scenario; pending: fuel planning by leg)
 - [ ] 6.2 Implement dated reserve presets from reference data; verify the VFR-night scenario and the citation display
-- [ ] 6.3 Implement weight and balance (CG, % MAC, envelope check, burn path, weight shift, ballast); verify the CG, out-of-envelope, and landing-shift scenarios
+- [ ] 6.3 Implement weight and balance (CG, % MAC, envelope check, burn path, weight shift, ballast); verify the CG, out-of-envelope, and landing-shift scenarios (built: CG, % MAC, envelope check with the CG shift and weight change to the edge, and the landing state, with all three scenarios; pending: the envelope diagram, weight shift, and ballast)
 - [ ] 6.4 Implement 1D/2D/3D table interpolation with correction steps and no extrapolation; verify the bilinear and extrapolation scenarios
 - [ ] 6.5 Implement local aircraft profiles with JSON export/import; verify the export round trip
 

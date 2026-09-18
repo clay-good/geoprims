@@ -41,7 +41,7 @@ test('unknown tool ids', async () => {
   assert.equal((await run('units.speed.warp', '{}')).error.code, 'UNSUPPORTED');
   assert.equal((await run('nosuch.domain.tool', '{}')).error.code, 'UNSUPPORTED');
   // A known domain whose module is loaded but has no such tool yet.
-  assert.equal((await run('aviation.airspeed.cas-to-tas', '{}')).error.code, 'UNSUPPORTED');
+  assert.equal((await run('aviation.airspeed.no-such-tool', '{}')).error.code, 'UNSUPPORTED');
 });
 
 test('batch keeps order and isolates failures', async () => {

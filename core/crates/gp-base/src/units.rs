@@ -581,6 +581,13 @@ pub static UNITS: &[Unit] = &[
     u("ratio", Q::Slope, ex(1, 1), &["rise/run"]),
     u("%", Q::Slope, ex(1, 100), &["percent", "pct"]),
     u("‰", Q::Slope, ex(1, 1000), &["permille", "per-mille"]),
+    // Climb and descent gradients: feet per nautical mile (0.3048 m / 1852 m)
+    u(
+        "ft/NM",
+        Q::Slope,
+        ex(3048, 18_520_000),
+        &["ft/nm", "ft per NM"],
+    ),
     // Dimensionless
     u("1", Q::Dimensionless, ex(1, 1), &[]),
 ];

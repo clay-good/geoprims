@@ -160,6 +160,172 @@ def findwind_vectors():
     return out
 
 
+# ---------------------------------------------------------------- slice 2
+
+KT = 1852 / 3600
+NMI = 1852.0
+A0 = math.sqrt(1.4 * R * T0)
+AS_SRC = "Independent Python implementation of the Gracey (NASA RP-1046) airspeed relations, with supersonic Mach by bisection (tools/vectors/gen_aviation.py)"
+AS_VER = "NASA RP-1046 (1980)"
+PERF_SRC = "Independent Python implementation of the turn, gradient, glide, and pivotal-altitude relations in FAA-H-8083-3C and FAA-H-8083-16B (tools/vectors/gen_aviation.py)"
+PERF_VER = "FAA-H-8083-3C (2021)"
+WB_SRC = "Independent Python weight-and-balance arithmetic per FAA-H-8083-1B chapter 2 (tools/vectors/gen_aviation.py)"
+WB_VER = "FAA-H-8083-1B (2016)"
+
+
+def qc_ratio(m):
+    if m <= 1:
+        return (1 + 0.2 * m * m) ** 3.5 - 1
+    return 1.2 ** 3.5 * 6 ** 2.5 * m ** 7 / (7 * m * m - 1) ** 2.5 - 1
+
+
+def mach_for(r):
+    """Bisection on the monotonic qc/p(M): independent of the core's fixed point."""
+    lo, hi = 0.0, 20.0
+    for _ in range(300):
+        mid = (lo + hi) / 2
+        if qc_ratio(mid) < r:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def airspeed_vectors():
+    out = []
+    cases = [(250, 10000, -5), (300, 35000, -54.3), (120, 5000, 20), (65, 0, 15), (450, 20000, -30), (600, 40000, -56.5), (350, 28000, -40)]
+    for i, (cas, ft, oat) in enumerate(cases, 1):
+        p = isa(ft * FT)[1]
+        qc = P0 * qc_ratio(cas * KT / A0)
+        m = mach_for(qc / p)
+        tas = m * math.sqrt(1.4 * R * (oat + 273.15)) / KT
+        eas = m * A0 * math.sqrt(p / P0) / KT
+        out.append(vec(i, {"airspeed": f"{cas} kt", "pressure_altitude": f"{ft} ft", "temperature": f"{oat} degC"},
+                       {"result.mach": m, "result.tas.value": tas, "result.eas.value": eas}, 1e-9, AS_SRC, AS_VER))
+    return out
+
+
+def cas_from_mach(m, p):
+    return A0 * mach_for(p * qc_ratio(m) / P0) / KT
+
+
+def tas_to_cas_vectors():
+    out = []
+    cases = [(0.78, 35000, -54.3), (0.5, 20000, -25), (0.25, 3000, 10), (0.85, 41000, -56.5), (1.6, 45000, -56.5), (0.65, 30000, -44)]
+    for i, (m, ft, oat) in enumerate(cases, 1):
+        p = isa(ft * FT)[1]
+        out.append(vec(i, {"mach": m, "pressure_altitude": f"{ft} ft", "temperature": f"{oat} degC"},
+                       {"result.cas.value": cas_from_mach(m, p),
+                        "result.tas.value": m * math.sqrt(1.4 * R * (oat + 273.15)) / KT}, 1e-9, AS_SRC, AS_VER))
+    return out
+
+
+def tat_vectors():
+    out = []
+    for i, (t, m, r) in enumerate([(-20, 0.8, 1.0), (-35, 0.78, 1.0), (10, 0.3, 0.95), (-10, 0.6, 0.9), (0, 0.0, 1.0)], 1):
+        tk = t + 273.15
+        sat = tk / (1 + 0.2 * r * m * m) - 273.15
+        inp = {"temperature": f"{t} degC", "mach": m}
+        if r != 1.0:
+            inp["recovery_factor"] = r
+        out.append(vec(i, inp, {"result.sat.value": sat, "result.ram_rise.value": t - sat}, 1e-9, AS_SRC, AS_VER))
+    return out
+
+
+def turn_vectors():
+    out = []
+    cases = [(100, None), (150, 30), (90, 45), (250, 25), (60, 60), (120, None)]
+    for i, (tas, bank) in enumerate(cases, 1):
+        v = tas * KT
+        if bank is None:
+            phi = math.atan(v * math.radians(3) / G0)
+            inp = {"tas": f"{tas} kt"}
+        else:
+            phi = math.radians(bank)
+            inp = {"tas": f"{tas} kt", "bank": f"{bank} deg"}
+        r = v * v / (G0 * math.tan(phi)) / FT
+        out.append(vec(i, inp, {"result.bank.value": math.degrees(phi), "result.radius.value": r,
+                                "result.load_factor": 1 / math.cos(phi)}, 1e-9, PERF_SRC, PERF_VER))
+    return out
+
+
+def tod_vectors():
+    out = []
+    cases = [(35000, 3000, 420, 3), (12500, 2000, 250, 3), (8500, 3000, 140, 4), (41000, 10000, 460, 2.5), (6000, 1500, 110, 3)]
+    for i, (a, b, gs, ang) in enumerate(cases, 1):
+        th = math.radians(ang)
+        d = (a - b) * FT / math.tan(th) / NMI
+        v = gs * KT * math.tan(th) / FT * 60
+        out.append(vec(i, {"from_altitude": f"{a} ft", "to_altitude": f"{b} ft", "groundspeed": f"{gs} kt", "descent_angle": f"{ang} deg"},
+                       {"result.distance.value": d, "result.vertical_speed.value": v}, 1e-9, PERF_SRC, "FAA-H-8083-16B (2017)"))
+    return out
+
+
+def gradient_vectors():
+    out = []
+    for i, (g, gs) in enumerate([(200, 120), (300, 90), (425, 160), (152, 200), (500, 75)], 1):
+        out.append(vec(i, {"gradient": f"{g} ft/NM", "groundspeed": f"{gs} kt"},
+                       {"result.vertical_speed.value": g * gs / 60,
+                        "result.angle.value": math.degrees(math.atan(g * FT / NMI))}, 1e-9, PERF_SRC, "FAA-H-8083-16B (2017)"))
+    return out
+
+
+def vdp_vectors():
+    out = []
+    for i, (hat, ang, tch) in enumerate([(400, 3, 0), (520, 3, 50), (300, 2.75, 0), (700, 3.2, 55), (450, 3.5, 40)], 1):
+        d = (hat - tch) * FT / math.tan(math.radians(ang)) / NMI
+        inp = {"height_above_touchdown": f"{hat} ft", "descent_angle": f"{ang} deg"}
+        if tch:
+            inp["threshold_crossing_height"] = f"{tch} ft"
+        out.append(vec(i, inp, {"result.distance.value": d, "result.rule_hat_300.value": hat / 300}, 1e-9, PERF_SRC, "FAA-H-8083-16B (2017)"))
+    return out
+
+
+def glide_vectors():
+    out = []
+    for i, (h, ld, tas, hw) in enumerate([(5000, 9, 70, 20), (3000, 10, 65, 0), (8000, 12, 80, -15), (10000, 25, 55, 10), (1500, 8, 68, 5)], 1):
+        still = h * FT * ld / NMI
+        out.append(vec(i, {"height": f"{h} ft", "glide_ratio": ld, "tas": f"{tas} kt", "headwind": f"{hw} kt"},
+                       {"result.still_air_range.value": still, "result.wind_range.value": still * (tas - hw) / tas,
+                        "result.sink_rate.value": tas * KT / ld / FT * 60}, 1e-9, PERF_SRC, PERF_VER))
+    return out
+
+
+def pivotal_vectors():
+    out = []
+    for i, gs in enumerate([100, 80, 120, 95, 110], 1):
+        out.append(vec(i, {"groundspeed": f"{gs} kt"}, {"result.pivotal_altitude.value": (gs * KT) ** 2 / G0 / FT}, 1e-12, PERF_SRC, PERF_VER))
+    return out
+
+
+def fuel_vectors():
+    out = []
+    cases = [({"volume": "40 gal", "fuel": "100ll"}, 240.0), ({"volume": "100 gal", "fuel": "jet-a"}, 670.0),
+             ({"volume": "56 gal", "fuel": "100ll"}, 336.0), ({"volume": "30 gal", "density": "5.9 lb/gal"}, 177.0),
+             ({"weight": "300 lb", "fuel": "100ll"}, None)]
+    for i, (inp, w) in enumerate(cases, 1):
+        exp = {"result.weight.value": w} if w is not None else {"result.volume.value": 50.0}
+        out.append(vec(i, inp, exp, 1e-12, WB_SRC, WB_VER))
+    return out
+
+
+def wb_vectors():
+    out = []
+    cases = [
+        [(1500, 85), (340, 90), (170, 118), (240, 48)],
+        [(1650, 39.0), (380, 37.0), (0, 73.0), (50, 95.0), (240, 48.0)],
+        [(2100, 101.2), (400, 104.0), (300, 140.0), (100, 160.0), (480, 110.0)],
+        [(1200, 32.5), (170, 34.0), (60, 50.0)],
+        [(900, 12.0), (180, -10.0), (90, 25.0)],
+    ]
+    for i, st in enumerate(cases, 1):
+        w = sum(a for a, _ in st)
+        m = sum(a * b for a, b in st)
+        rows = [{"name": f"S{k}", "weight": f"{a} lb", "arm": f"{b} in"} for k, (a, b) in enumerate(st, 1)]
+        out.append(vec(i, {"stations": rows}, {"result.total_weight.value": w, "result.cg.value": m / w}, 1e-12, WB_SRC, WB_VER))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     out.mkdir(parents=True, exist_ok=True)
@@ -171,6 +337,17 @@ def main():
         "aviation.wind.runway-components": runway_vectors(),
         "aviation.wind.heading-groundspeed": triangle_vectors(),
         "aviation.wind.find-wind": findwind_vectors(),
+        "aviation.airspeed.cas-to-tas": airspeed_vectors(),
+        "aviation.airspeed.tas-to-cas": tas_to_cas_vectors(),
+        "aviation.airspeed.tat-sat": tat_vectors(),
+        "aviation.performance.turn": turn_vectors(),
+        "aviation.performance.top-of-descent": tod_vectors(),
+        "aviation.performance.climb-gradient": gradient_vectors(),
+        "aviation.performance.vdp": vdp_vectors(),
+        "aviation.performance.glide": glide_vectors(),
+        "aviation.performance.pivotal-altitude": pivotal_vectors(),
+        "aviation.loading.fuel-weight": fuel_vectors(),
+        "aviation.loading.weight-balance": wb_vectors(),
     }
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))

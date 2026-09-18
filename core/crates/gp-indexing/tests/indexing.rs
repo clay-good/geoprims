@@ -314,3 +314,52 @@ fn h3_input_guards() {
     );
     assert!(big["result"].get("cells").is_none() && num(&big, "result.count") > 1e10);
 }
+
+#[test]
+fn polygon_fill_scenarios() {
+    let square = r#""points":[{"lat":51.40,"lon":-0.30},{"lat":51.60,"lon":-0.30},{"lat":51.60,"lon":0.10},{"lat":51.40,"lon":0.10}],"resolution":8"#;
+    let cells = |r: &Value| -> Vec<String> {
+        r["result"]["cells"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["cell"].as_str().unwrap().to_owned())
+            .collect()
+    };
+    let center = call("indexing.h3.polygon-to-cells", &format!("{{{square}}}"));
+    assert_eq!(
+        center["result"]["containment"], "center",
+        "the default is echoed"
+    );
+    let over = call(
+        "indexing.h3.polygon-to-cells",
+        &format!(r#"{{{square},"containment":"overlapping"}}"#),
+    );
+    let full = call(
+        "indexing.h3.polygon-to-cells",
+        &format!(r#"{{{square},"containment":"full"}}"#),
+    );
+    let (c, o, f) = (cells(&center), cells(&over), cells(&full));
+    assert!(
+        c.iter().all(|x| o.contains(x)) && o.len() > c.len(),
+        "overlapping is a superset of center"
+    );
+    assert!(
+        f.iter().all(|x| c.contains(x)) && f.len() < c.len(),
+        "full is a subset of center"
+    );
+    // A continent at resolution 12 is refused from the estimate, quickly.
+    let t = std::time::Instant::now();
+    let big = call(
+        "indexing.h3.polygon-to-cells",
+        r#"{"points":[{"lat":-35,"lon":110},{"lat":-35,"lon":155},{"lat":-10,"lon":155},{"lat":-10,"lon":110}],"resolution":12}"#,
+    );
+    assert_eq!(big["error"]["code"], "LIMIT_EXCEEDED");
+    assert!(big["error"]["hint"].as_str().unwrap().contains("coarser"));
+    assert!(t.elapsed().as_millis() < 50, "{:?}", t.elapsed());
+    let both = call(
+        "indexing.h3.polygon-to-cells",
+        r#"{"points":[{"lat":0,"lon":0},{"lat":1,"lon":0},{"lat":1,"lon":1}],"geojson":"{}","resolution":3}"#,
+    );
+    assert_eq!(both["error"]["code"], "INVALID_INPUT");
+}

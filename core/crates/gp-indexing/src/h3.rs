@@ -1227,3 +1227,221 @@ fn run_chooser(ctx: &mut Ctx) -> Result<Json, ToolError> {
     out.push(("table", Json::Arr(table)));
     Ok(Json::obj(out))
 }
+
+// ---------------------------------------------------------------- polygon fill
+
+const POINT_ROW: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Decimal degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required()
+    .angle_range("[-90,90]"),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Decimal degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required()
+    .angle_range("[-180,180]"),
+];
+
+/// Most cells a fill computes; the web app's estimate gate is 5,000,000.
+const FILL_LIMIT: usize = 1_000_000;
+const ESTIMATE_LIMIT: f64 = 5_000_000.0;
+
+pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
+    id: "indexing.h3.polygon-to-cells",
+    title: "H3 polygon fill (polygonToCells)",
+    summary: "The H3 cells that fill a polygon (with holes, across the antimeridian) at a resolution, by an explicit containment mode: cell centers inside, whole cells inside, or any overlap.",
+    aliases: &["polygonToCells", "polyfill", "H3 polygon to cells", "h3shape_to_cells"],
+    keywords: &["H3", "polyfill", "polygonToCells", "polygon", "containment", "coverage", "GeoJSON"],
+    inputs: &[
+        Field::new("points", "Polygon", "Corners in order, one per row (lat, lon)", Kind::List { items: POINT_ROW, min: 3, max: 10_000 }).core(),
+        Field::new("geojson", "GeoJSON", "Instead of points: a Polygon or MultiPolygon (holes allowed)", Kind::Text { max_len: 1_000_000 }),
+        RES_IN,
+        Field::new("containment", "Containment", "center (default: cell centers inside), full (whole cells inside), or overlapping (any overlap)", Kind::Choice(&["center", "full", "overlapping"])).core(),
+    ],
+    outputs: &[
+        count("count", "Cells", "Number of cells"),
+        text("containment", "Containment used", "Echoes the mode"),
+        count("estimate", "Estimate", "Bounding-box estimate made before filling"),
+        cell_list("cells", "Cells", "Listed when 10,000 or fewer").optional(),
+        count("compacted_count", "Compacted cells", "After compaction").optional(),
+        cell_list("compacted", "Compacted set", "Mixed resolutions, when the full list is too long").optional(),
+    ],
+    errors: &[ErrorCode::LimitExceeded],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "H3 C polygonToCells containment tests (point in polygon on latitude and longitude, boundary crossings), breadth-first fill from cells along every edge",
+    accuracy: "Identical cell sets to H3 C 4.4.1 in center, full, and overlapping modes on 1,000 random polygons with holes and antimeridian crossings",
+    references: &[H3_DOCS, H3O],
+    examples: &[Example {
+        id: "primary",
+        title: "A block in downtown Pittsburgh at resolution 9",
+        input: r#"{"points":[{"lat":40.4406,"lon":-80.0020},{"lat":40.4406,"lon":-79.9900},{"lat":40.4480,"lon":-79.9900},{"lat":40.4480,"lon":-80.0020}],"resolution":9,"containment":"center"}"#,
+        source: "H3 polygonToCells",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer { kind: "table-only", map: &[] }],
+    related: &[Related { id: "indexing.h3.compact", reason: "next" }],
+    sentence: "The polygon fills with {count} {plural count \"cell\" \"cells\"} by {containment} containment.",
+    limits: &[("batchRows", 10)],
+    run: run_polygon_to_cells,
+    ..ToolDef::BLANK
+};
+
+/// Rings of (lat, lon) degrees: outer ring first, then holes.
+type Rings = Vec<Vec<(f64, f64)>>;
+
+fn geojson_rings(text: &str) -> Result<Vec<Rings>, String> {
+    let v: Value =
+        serde_json::from_str(text).map_err(|_| "The GeoJSON is not valid JSON.".to_owned())?;
+    let geom = if v["type"] == "Feature" {
+        &v["geometry"]
+    } else {
+        &v
+    };
+    let ring = |r: &Value| -> Result<Vec<(f64, f64)>, String> {
+        r.as_array()
+            .ok_or("A ring must be an array of [longitude, latitude] positions.")?
+            .iter()
+            .map(|p| {
+                match (
+                    p.get(0).and_then(Value::as_f64),
+                    p.get(1).and_then(Value::as_f64),
+                ) {
+                    (Some(lng), Some(lat))
+                        if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lng) =>
+                    {
+                        Ok((lat, lng))
+                    }
+                    _ => Err("Each position is [longitude, latitude] within range.".to_owned()),
+                }
+            })
+            .collect()
+    };
+    let polygon = |p: &Value| -> Result<Rings, String> {
+        p.as_array()
+            .ok_or("A polygon is an array of rings.")?
+            .iter()
+            .map(ring)
+            .collect()
+    };
+    match geom["type"].as_str() {
+        Some("Polygon") => Ok(vec![polygon(&geom["coordinates"])?]),
+        Some("MultiPolygon") => geom["coordinates"]
+            .as_array()
+            .ok_or("Bad MultiPolygon.")?
+            .iter()
+            .map(polygon)
+            .collect(),
+        _ => Err("Give a GeoJSON Polygon or MultiPolygon (or a Feature holding one).".to_owned()),
+    }
+}
+
+fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    use crate::h3fill::{Mode, Polygon, estimate, fill};
+    let res = resolution(ctx)?;
+    let mode = match ctx.choice("containment")?.unwrap_or("center") {
+        "full" => Mode::Full,
+        "overlapping" => Mode::Overlap,
+        _ => Mode::Center,
+    };
+    let polys: Vec<Rings> = match (ctx.is_set("points"), ctx.is_set("geojson")) {
+        (true, false) => {
+            let rows = ctx.rows("points")?;
+            let mut ring = Vec::with_capacity(rows.len());
+            for (i, r) in rows.iter().enumerate() {
+                let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
+                let la = ctx
+                    .row_quantity("points", i, r, "lat")?
+                    .expect("required")
+                    .to(deg);
+                let lo = ctx
+                    .row_quantity("points", i, r, "lon")?
+                    .expect("required")
+                    .to(deg);
+                if !(-90.0..=90.0).contains(&la) || !(-180.0..=180.0).contains(&lo) {
+                    return Err(ToolError::invalid(
+                        &format!("/points/{i}"),
+                        "Latitude is −90 to 90 and longitude −180 to 180.",
+                    ));
+                }
+                ring.push((la, lo));
+            }
+            vec![vec![ring]]
+        }
+        (false, true) => geojson_rings(&ctx.text("geojson")?.expect("set"))
+            .map_err(|m| ToolError::invalid("/geojson", m))?,
+        _ => {
+            return Err(ToolError::invalid(
+                "/points",
+                "Give the polygon as points or as GeoJSON, not both.",
+            ));
+        }
+    };
+    let mut total_estimate = 0.0;
+    let mut built = Vec::new();
+    for rings in &polys {
+        if rings.is_empty() || rings.iter().any(|r| r.len() < 3) {
+            return Err(ToolError::invalid(
+                "/geojson",
+                "Every ring needs at least 3 corners.",
+            ));
+        }
+        let p = Polygon::new(rings);
+        total_estimate += estimate(&p, res);
+        built.push(p);
+    }
+    if total_estimate > ESTIMATE_LIMIT {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            format!(
+                "About {} cells would result, over the 5,000,000 limit.",
+                total_estimate.round() as u64
+            ),
+        )
+        .at("/resolution")
+        .hint("Choose a coarser resolution, or fill in pieces and compact the result."));
+    }
+    let mut cells = std::collections::BTreeSet::new();
+    for p in &built {
+        let got = fill(p, res, mode, FILL_LIMIT).map_err(|n| {
+            ToolError::new(
+                ErrorCode::LimitExceeded,
+                format!("More than {n} cells, over the {FILL_LIMIT} limit for one call."),
+            )
+            .at("/resolution")
+        })?;
+        cells.extend(got);
+    }
+    let cells: Vec<CellIndex> = cells.into_iter().collect();
+    let name = match mode {
+        Mode::Center => "center",
+        Mode::Full => "full",
+        Mode::Overlap => "overlapping",
+    };
+    let mut out = vec![
+        ("count", Json::Num(cells.len() as f64)),
+        ("containment", Json::str(name)),
+        ("estimate", Json::Num(total_estimate.round())),
+    ];
+    if cells.len() <= LIST_LIMIT {
+        out.push(("cells", list(cells)));
+    } else if let Ok(small) = compact(cells) {
+        out.push(("compacted_count", Json::Num(small.len() as f64)));
+        if small.len() <= LIST_LIMIT {
+            out.push(("compacted", list(small)));
+        }
+    }
+    Ok(Json::obj(out))
+}

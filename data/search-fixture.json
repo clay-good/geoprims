@@ -380,6 +380,14 @@
     {
       "query": "time zone offset",
       "expect": "time.scale.zone-info"
+    },
+    {
+      "query": "polyfill",
+      "expect": "indexing.h3.polygon-to-cells"
+    },
+    {
+      "query": "polygonToCells",
+      "expect": "indexing.h3.polygon-to-cells"
     }
   ]
 }

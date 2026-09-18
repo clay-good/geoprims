@@ -4,6 +4,7 @@
 
 pub mod codes;
 pub mod h3;
+pub mod h3fill;
 
 use codes::Bounds;
 use gp_base::error::{ToolError, Warning};
@@ -1131,6 +1132,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &h3::UNCOMPACT,
     &h3::EDGES,
     &h3::RESOLUTION_CHOOSER,
+    &h3::POLYGON_TO_CELLS,
 ];
 
 pub static REGISTRY: Registry = Registry {

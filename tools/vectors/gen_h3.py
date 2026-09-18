@@ -77,9 +77,26 @@ def main():
                            SPEC if i == 1 else "H3 average hexagon areas (h3.average_hexagon_area)", VER))
     chooser.append(vec(6, {"target_edge": "150 m"}, {"result.resolution": float(nearest(lambda r: h3.average_hexagon_edge_length(r, "km"), 0.15))},
                        "H3 average hexagon edge lengths (h3.average_hexagon_edge_length)", VER))
+    fillv = []
+    shapes = [
+        ([(40.4406, -80.0020), (40.4406, -79.9900), (40.4480, -79.9900), (40.4480, -80.0020)], [], 9, "center"),
+        ([(40.4406, -80.0020), (40.4406, -79.9900), (40.4480, -79.9900), (40.4480, -80.0020)], [], 9, "overlapping"),
+        ([(-33.80, 151.10), (-33.80, 151.30), (-33.95, 151.30), (-33.95, 151.10)], [[(-33.85, 151.15), (-33.85, 151.25), (-33.90, 151.20)]], 7, "full"),
+        ([(10.0, 179.0), (10.0, -179.0), (12.0, -179.0), (12.0, 179.0)], [], 5, "center"),
+        ([(51.40, -0.30), (51.60, -0.30), (51.60, 0.10), (51.40, 0.10)], [], 8, "overlapping"),
+    ]
+    for i, (outer, holes, res, mode) in enumerate(shapes, 1):
+        cells_ = sorted(h3.polygon_to_cells_experimental(h3.LatLngPoly(outer, *holes), res, contain={"overlapping": "overlap"}.get(mode, mode)))
+        if holes or i == 4:
+            inp = {"geojson": json.dumps({"type": "Polygon", "coordinates": [[[lo, la] for la, lo in r + [r[0]]] for r in [outer] + holes]}), "resolution": res, "containment": mode}
+        else:
+            inp = {"points": [{"lat": la, "lon": lo} for la, lo in outer], "resolution": res, "containment": mode}
+        fillv.append(vec(i, inp, {"result.count": float(len(cells_)), "result.cells.0.cell": cells_[0], "result.containment": mode}))
+    fillv.append(vec(6, {"points": [{"lat": -35, "lon": 110}, {"lat": -35, "lon": 155}, {"lat": -10, "lon": 155}, {"lat": -10, "lon": 110}], "resolution": 12},
+                     {"ok": False, "error.code": "LIMIT_EXCEEDED"}, SPEC, "2026"))
     f = {"indexing.h3.lat-lng-to-cell": to_cell, "indexing.h3.cell-info": info, "indexing.h3.grid-disk": disk, "indexing.h3.grid-ring": ring,
          "indexing.h3.grid-path": path, "indexing.h3.parent": parent, "indexing.h3.children": children, "indexing.h3.compact": compact,
-         "indexing.h3.uncompact": uncompact, "indexing.h3.edges": edges, "indexing.h3.resolution-chooser": chooser}
+         "indexing.h3.uncompact": uncompact, "indexing.h3.edges": edges, "indexing.h3.resolution-chooser": chooser, "indexing.h3.polygon-to-cells": fillv}
     for tool, vs in f.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

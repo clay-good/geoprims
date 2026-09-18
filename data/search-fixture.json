@@ -480,6 +480,46 @@
     {
       "query": "triple the drift",
       "expect": "aviation.ifr.hold-wind-timing"
+    },
+    {
+      "query": "mAh to Wh",
+      "expect": "drone.power.battery-energy"
+    },
+    {
+      "query": "drone flight time",
+      "expect": "drone.power.endurance"
+    },
+    {
+      "query": "hover power",
+      "expect": "drone.power.hover-power"
+    },
+    {
+      "query": "drone payload",
+      "expect": "drone.power.max-payload"
+    },
+    {
+      "query": "return to home battery",
+      "expect": "drone.power.rth-budget"
+    },
+    {
+      "query": "part 107 altitude",
+      "expect": "drone.ops.part107-altitude"
+    },
+    {
+      "query": "drone speed limit",
+      "expect": "drone.ops.speed-check"
+    },
+    {
+      "query": "kinetic energy drone",
+      "expect": "drone.ops.kinetic-energy"
+    },
+    {
+      "query": "EASA A1 A2 A3",
+      "expect": "drone.ops.easa-subcategory"
+    },
+    {
+      "query": "VLOS distance",
+      "expect": "drone.sensors.vlos"
     }
   ]
 }

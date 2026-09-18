@@ -46,7 +46,7 @@
 
 ## 6. Drone sensors and links
 
-- [ ] 6.1 Implement VLOS (verify EASA coefficients against current AMC/GM text) and mission comparison; verify both VLOS scenarios
+- [x] 6.1 Implement VLOS (verify EASA coefficients against current AMC/GM text) and mission comparison; verify both VLOS scenarios (coefficients checked against the EASA guidelines for UAS operations in the open and specific category on 2026-09-18)
 - [ ] 6.2 Present the Part 107 twilight window as a drone view of `time.sun.aviation-nights`; verify the evening scenario
 - [ ] 6.3 Implement lidar planning with USGS QL comparison; verify the density scenario
 - [ ] 6.4 Implement dataset size, link budget, and thermal footprint; verify the orthomosaic, FSPL, and thermal scenarios

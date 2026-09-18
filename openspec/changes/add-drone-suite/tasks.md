@@ -22,20 +22,20 @@
 
 ## 3. Endurance and power
 
-- [ ] 3.1 Implement battery energy, usable energy, and C-rate; verify the 90.4 Wh and C-rate scenarios
-- [ ] 3.2 Implement momentum-theory hover power with FM, efficiency, and density; verify the 1.4 kg and density-altitude scenarios
-- [ ] 3.3 Implement endurance, range, and heuristic derating; verify the reserve and cold-battery scenarios
-- [ ] 3.4 Implement payload impact and maximum payload; verify the maximum-payload scenario
-- [ ] 3.5 Implement the return-to-home energy budget; verify the headwind and cannot-return scenarios
+- [x] 3.1 Implement battery energy, usable energy, and C-rate; verify the 90.4 Wh and C-rate scenarios
+- [ ] 3.2 Implement momentum-theory hover power with FM, efficiency, and density; verify the 1.4 kg and density-altitude scenarios (built: momentum theory with FM, efficiency, avionics power, and ISA troposphere density from altitude and temperature or density altitude; both scenarios pass; pending: the coaxial-overlap option)
+- [ ] 3.3 Implement endurance, range, and heuristic derating; verify the reserve and cold-battery scenarios (built: endurance with reserve, cruise power, range, and the labeled cold derating; both scenarios pass; pending: wind-aware range through the aviation wind tools)
+- [ ] 3.4 Implement payload impact and maximum payload; verify the maximum-payload scenario (built: maximum payload for a target time with NO_SOLUTION; pending: the payload-impact comparison)
+- [x] 3.5 Implement the return-to-home energy budget; verify the headwind and cannot-return scenarios
 - [ ] 3.6 Implement optional Peukert (off by default) and test-flight calibration (back-solve FM·η); verify the default-off scenario and a calibration fixture
 
 ## 4. Operations reference
 
-- [ ] 4.1 Create the dated regulatory reference-data file with Part 107, Part 89, the Part 108 NPRM, and EASA entries, plus the stale-review CI warning; verify the Part 108 and stale-entry scenarios
-- [ ] 4.2 Implement the altitude limit calculator with structure exception and height conversions; verify the tower and MSL scenarios
-- [ ] 4.3 Implement speed and kinetic-energy checks; verify the C1 energy scenario
-- [ ] 4.4 Implement the EASA subcategory helper; verify the legacy 2 kg scenario
-- [ ] 4.5 Render the not-legal-advice disclaimer with review date; verify on every operations page
+- [ ] 4.1 Create the dated regulatory reference-data file with Part 107, Part 89, the Part 108 NPRM, and EASA entries, plus the stale-review CI warning; verify the Part 108 and stale-entry scenarios (built: data/regulations.json with Part 107, Part 89, the Part 108 NPRM (90 FR 38212, labeled proposed), and EASA entries, and tools/data/regulations.test.mjs listing entries reviewed more than 12 months ago)
+- [ ] 4.2 Implement the altitude limit calculator with structure exception and height conversions; verify the tower and MSL scenarios (built: structure exception and MSL, and HAE from a user-entered geoid height; both scenarios pass; pending: DEM ground elevation and the geoid tool hand-off)
+- [x] 4.3 Implement speed and kinetic-energy checks; verify the C1 energy scenario
+- [x] 4.4 Implement the EASA subcategory helper; verify the legacy 2 kg scenario
+- [x] 4.5 Render the not-legal-advice disclaimer with review date; verify on every operations page
 
 ## 5. Catalog and docs
 

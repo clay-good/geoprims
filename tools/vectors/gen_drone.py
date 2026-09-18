@@ -86,10 +86,133 @@ def asprs():
     return out
 
 
+# ---------------------------------------------------------------- slice 2
+
+PW_SRC = "Momentum theory (Leishman 2006, ch. 2) and battery arithmetic evaluated in Python (tools/vectors/gen_drone.py)"
+PW_VER = "2nd edition (2006)"
+OPS_SRC = "data/regulations.json values (14 CFR 107.51, Regulation (EU) 2019/945 and 2019/947, EASA VLOS guidance) applied in Python (tools/vectors/gen_drone.py)"
+OPS_VER = "Rules as of 2026-09-18"
+G0, R_AIR, T0, P0 = 9.80665, 287.05287, 288.15, 101325.0
+
+
+def fvec(i, inp, exp, src, ver, rel=1e-9):
+    e = dict(exp)
+    e.setdefault("ok", True)
+    tol = {k: {"rel": rel, "abs": 1e-9} for k, v in e.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver, "tolerance": tol}
+
+
+def rho_at(h_m, t_k=None):
+    t = T0 - 0.0065 * h_m
+    p = P0 * (t / T0) ** (G0 / (R_AIR * 0.0065))
+    return p / (R_AIR * (t_k if t_k else t))
+
+
+def battery_vectors():
+    cases = [(5870, 15.4), (5000, 14.8), (2200, 11.1), (10000, 22.2), (3850, 15.4), (1500, 7.4)]
+    return [fvec(i, {"capacity": f"{c} mAh", "voltage": f"{v} V"}, {"result.energy.value": c / 1000 * v}, PW_SRC, PW_VER)
+            for i, (c, v) in enumerate(cases, 1)]
+
+
+def hover_vectors():
+    out = []
+    cases = [(1.4, 4, 9.4, None), (0.9, 4, 7.0, None), (6.5, 6, 22.0, None), (2.5, 4, 13.0, 1500), (25.0, 8, 30.0, 500)]
+    for i, (m, n, d_in, alt_ft) in enumerate(cases, 1):
+        d = d_in * 0.0254
+        a = n * math.pi * d * d / 4
+        rho = rho_at((alt_ft or 0) * 0.3048)
+        ideal = (m * G0) ** 1.5 / math.sqrt(2 * rho * a)
+        inp = {"mass": f"{m} kg", "rotors": n, "rotor_diameter": f"{d_in} in"}
+        if alt_ft is not None:
+            inp["altitude"] = f"{alt_ft} ft"
+        out.append(fvec(i, inp, {"result.ideal_power.value": ideal, "result.electrical_power.value": ideal / 0.51,
+                                  "result.disk_area.value": a}, PW_SRC, PW_VER))
+    return out
+
+
+def endurance_vectors():
+    cases = [(90.4, 80, 150.6, 0), (100, 100, 100, 20), (77, 90, 220, 15), (274, 85, 900, 25), (45, 100, 60, 0)]
+    out = []
+    for i, (e, u, p, r) in enumerate(cases, 1):
+        t = e * u / 100 * (1 - r / 100) / p * 60
+        out.append(fvec(i, {"energy": f"{e} Wh", "usable": u, "power": f"{p} W", "reserve": r}, {"result.hover_time.value": t}, PW_SRC, PW_VER))
+    return out
+
+
+def payload_vectors():
+    out = []
+    cases = [(1.4, 4, 9.4, 72, 20), (0.9, 4, 7.0, 45, 25), (6.5, 6, 22.0, 400, 25), (2.5, 4, 13.0, 90, 30), (4.0, 4, 15.0, 160, 20)]
+    for i, (m, n, d_in, e, t) in enumerate(cases, 1):
+        d = d_in * 0.0254
+        a = n * math.pi * d * d / 4
+        budget = e * 60 / t
+        # ISA sea-level density exactly as defined, not 1.225
+        mmax = (budget * 0.51 * math.sqrt(2 * (P0 / (R_AIR * T0)) * a)) ** (2 / 3) / G0
+        exp = {"result.max_payload.value": mmax - m} if mmax > m else {"ok": False, "error.code": "NO_SOLUTION"}
+        out.append(fvec(i, {"mass": f"{m} kg", "rotors": n, "rotor_diameter": f"{d_in} in", "usable_energy": f"{e} Wh", "target_time": f"{t} min"},
+                        exp, PW_SRC, PW_VER))
+    return out
+
+
+def rth_vectors():
+    out = []
+    cases = [(1.5, 15, 10, 180, 40, 10), (2.0, 12, 0, 150, 50, 5), (0.8, 18, -5, 300, 30, 10), (3.0, 20, 8, 250, 80, 15), (1.0, 10, 6, 120, 25, 0)]
+    for i, (dk, v, w, p, e, r) in enumerate(cases, 1):
+        t = dk * 1000 / (v - w)
+        need = p * t / 3600
+        out.append(fvec(i, {"distance": f"{dk} km", "airspeed": f"{v} m/s", "headwind": f"{w} m/s", "power": f"{p} W",
+                            "remaining_energy": f"{e} Wh", "reserve_energy": f"{r} Wh"},
+                        {"result.return_energy.value": need, "result.margin.value": e - r - need}, PW_SRC, PW_VER))
+    return out
+
+
+def altitude_vectors():
+    cases = [({}, 400), ({"structure_height": "300 ft", "structure_distance": "200 ft"}, 700), ({"structure_height": "300 ft", "structure_distance": "401 ft"}, 400),
+             ({"structure_height": "120 ft", "structure_distance": "400 ft"}, 520), ({"structure_height": "90 m", "structure_distance": "100 m"}, 90 / 0.3048 + 400)]
+    return [fvec(i, inp, {"result.max_agl.value": v}, OPS_SRC, OPS_VER) for i, (inp, v) in enumerate(cases, 1)]
+
+
+def speed_vectors():
+    lim = 87 * 1852 / 1609.344
+    cases = [(90, 15), (60, 20), (100, 0), (80, -10), (95, 6)]
+    return [fvec(i, {"airspeed": f"{a} mph", "tailwind": f"{w} mph"}, {"result.margin.value": lim - (a + w),
+                                                                         "result.status": "over the limit" if a + w > lim else "within the limit"}, OPS_SRC, OPS_VER)
+            for i, (a, w) in enumerate(cases, 1)]
+
+
+def ke_vectors():
+    cases = [(0.9, 19), (0.249, 16), (2.0, 20), (0.5, 12), (25.0, 23)]
+    return [fvec(i, {"mass": f"{m} kg", "speed": f"{v} m/s"}, {"result.energy.value": 0.5 * m * v * v,
+                                                                "result.energy_ft_lbf.value": 0.5 * m * v * v / (0.3048 * 4.4482216152605)}, OPS_SRC, OPS_VER)
+            for i, (m, v) in enumerate(cases, 1)]
+
+
+def easa_vectors():
+    cases = [("2 kg", "none", "A3"), ("0.2 kg", "none", "A1 and A3"), ("0.8 kg", "c1", "A1 and A3"), ("3.5 kg", "c2", "A2 and A3"), ("12 kg", "c3", "A3"), ("0.24 kg", "c0", "A1 and A3")]
+    return [fvec(i, {"mass": m, "class_mark": c}, {"result.available": a}, OPS_SRC, OPS_VER) for i, (m, c, a) in enumerate(cases, 1)]
+
+
+def vlos_vectors():
+    cases = [(0.35, "multirotor", None, 327 * 0.35 + 20), (0.9, "multirotor", 5, 327 * 0.9 + 20), (2.0, "fixed-wing", None, 490 * 2 + 30),
+             (1.0, "multirotor", 1, 300.0), (3.0, "fixed-wing", 3, 900.0)]
+    out = []
+    for i, (cd, kind, gv, want) in enumerate(cases, 1):
+        inp = {"characteristic_dimension": f"{cd} m", "aircraft_type": kind}
+        if gv:
+            inp["ground_visibility"] = f"{gv} km"
+        out.append(fvec(i, inp, {"result.vlos.value": want}, OPS_SRC, OPS_VER))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
-             "drone.photogrammetry.motion-blur": blur(), "drone.photogrammetry.asprs-accuracy": asprs()}
+             "drone.photogrammetry.motion-blur": blur(), "drone.photogrammetry.asprs-accuracy": asprs(),
+             "drone.power.battery-energy": battery_vectors(), "drone.power.hover-power": hover_vectors(),
+             "drone.power.endurance": endurance_vectors(), "drone.power.max-payload": payload_vectors(),
+             "drone.power.rth-budget": rth_vectors(), "drone.ops.part107-altitude": altitude_vectors(),
+             "drone.ops.speed-check": speed_vectors(), "drone.ops.kinetic-energy": ke_vectors(),
+             "drone.ops.easa-subcategory": easa_vectors(), "drone.sensors.vlos": vlos_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

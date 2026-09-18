@@ -519,6 +519,13 @@ pub static UNITS: &[Unit] = &[
     u("MJ", Q::Energy, ex(1_000_000, 1), &[]),
     u("Wh", Q::Energy, ex(3600, 1), &[]),
     u("kWh", Q::Energy, ex(3_600_000, 1), &[]),
+    // Foot-pound force: 0.3048 m × 4.4482216152605 N, exact (NIST SP 811 B.8)
+    u(
+        "ft*lbf",
+        Q::Energy,
+        ex(3048 * 44_482_216_152_605, 100_000_000_000_000_000),
+        &["ft-lbf", "ft·lbf", "ft-lb", "ft*lb"],
+    ),
     // Power (base W); mechanical horsepower = 550 ft·lbf/s exactly
     u("W", Q::Power, ex(1, 1), &["watt", "watts"]),
     u("kW", Q::Power, ex(1000, 1), &[]),

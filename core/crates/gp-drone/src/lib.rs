@@ -2,6 +2,9 @@
 //! vendor-neutral: GSD, altitude for a target GSD, footprint and trigger
 //! timing, motion blur, and the ASPRS Edition 2 accuracy calculator.
 
+pub mod ops;
+pub mod power;
+
 use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
@@ -1053,6 +1056,16 @@ pub static TOOLS: &[&ToolDef] = &[
     &TRIGGER,
     &MOTION_BLUR,
     &ASPRS_ACCURACY,
+    &power::BATTERY_ENERGY,
+    &power::HOVER_POWER,
+    &power::ENDURANCE,
+    &power::MAX_PAYLOAD,
+    &power::RTH_BUDGET,
+    &ops::PART107_ALTITUDE,
+    &ops::SPEED_CHECK,
+    &ops::KINETIC_ENERGY,
+    &ops::EASA_SUBCATEGORY,
+    &ops::VLOS,
 ];
 
 pub static REGISTRY: Registry = Registry {

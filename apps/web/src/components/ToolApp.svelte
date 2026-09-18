@@ -9,7 +9,33 @@
   const required = new Set(tool.inputs.required);
   const outputOrder = Object.keys(tool.outputs.properties);
 
-  let values = $state(Object.fromEntries(fields.map(([k]) => [k, example[k] === undefined ? '' : String(example[k])])));
+  // List inputs (traverse courses, polygon corners) edit as one row per line,
+  // columns in schema order, separated by commas or tabs (a spreadsheet paste).
+  const columns = (schema) => Object.keys(schema.items?.properties ?? {});
+  const isList = (schema) => schema.type === 'array';
+  const NUMBER = /^[-+]?[\d.]+(e[-+]?\d+)?$/i;
+  function toText(k, v) {
+    if (v === undefined) return '';
+    const schema = tool.inputs.properties[k];
+    if (!isList(schema) || !Array.isArray(v)) return String(v);
+    return v.map((row) => columns(schema).map((c) => row[c] ?? '').join(', ')).join('\n');
+  }
+  function fromList(schema, text) {
+    return text
+      .split('\n')
+      .filter((line) => line.trim() !== '')
+      .map((line) => {
+        const cells = line.split(line.includes('\t') ? '\t' : ',').map((c) => c.trim());
+        return Object.fromEntries(
+          columns(schema)
+            .map((c, i) => [c, cells[i]])
+            .filter(([, v]) => v !== undefined && v !== '')
+            .map(([c, v]) => [c, NUMBER.test(v) ? Number(v) : v]),
+        );
+      });
+  }
+
+  let values = $state(Object.fromEntries(fields.map(([k]) => [k, toText(k, example[k])])));
   let result = $state(initial);
   let isExample = $state(true);
   let stale = $state(false);
@@ -35,7 +61,7 @@
     for (const [k, schema] of fields) {
       const v = values[k].trim();
       if (v === '') continue;
-      a[k] = schema.type === 'number' && !Number.isNaN(Number(v)) && /^[-+]?[\d.]+(e[-+]?\d+)?$/i.test(v) ? Number(v) : v;
+      a[k] = isList(schema) ? fromList(schema, v) : schema.type === 'number' && NUMBER.test(v) ? Number(v) : v;
     }
     return a;
   }
@@ -63,7 +89,7 @@
   }
 
   function tryExample() {
-    for (const [k] of fields) values[k] = example[k] === undefined ? '' : String(example[k]);
+    for (const [k] of fields) values[k] = toText(k, example[k]);
     isExample = true;
     history.replaceState(null, '', '#example');
     run();
@@ -87,7 +113,7 @@
     if (hash && hash !== 'example') {
       const d = await compute.decodeLink(hash);
       if (d.ok && d.result.kind === 'state') {
-        for (const [k] of fields) values[k] = d.result.state.i?.[k] === undefined ? '' : String(d.result.state.i[k]);
+        for (const [k] of fields) values[k] = toText(k, d.result.state.i?.[k]);
         isExample = false;
         run();
       } else if (!d.ok) {
@@ -137,10 +163,12 @@
             {#if !required.has(name)}<option value="">—</option>{/if}
             {#each schema.enum as option}<option value={option}>{option}</option>{/each}
           </select>
+        {:else if isList(schema)}
+          <textarea bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" spellcheck="false"></textarea>
         {:else}
           <input bind:value={values[name]} oninput={edited} autocomplete="off" spellcheck="false" />
         {/if}
-        <span class="help">{schema.description}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · a bare number is in ${schema['x-unit']}` : ''}</span>
+        <span class="help">{schema.description}{isList(schema) ? ` · one per line: ${columns(schema).map((c) => schema.items.properties[c].title.toLowerCase()).join(', ')}` : ''}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · a bare number is in ${schema['x-unit']}` : ''}</span>
       </label>
     {/each}
   </div>

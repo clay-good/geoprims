@@ -106,6 +106,8 @@ pub fn unit_label(symbol: &str) -> (&str, bool) {
         "m2" => ("m²", false),
         "km2" => ("km²", false),
         "ft2" => ("ft²", false),
+        "ftUS2" => ("US survey ft²", false),
+        "acUS" => ("US survey ac", false),
         "mi2" => ("mi²", false),
         "NM2" => ("NM²", false),
         "m3" => ("m³", false),

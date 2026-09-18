@@ -196,6 +196,50 @@
     {
       "query": "asprs accuracy",
       "expect": "drone.photogrammetry.asprs-accuracy"
+    },
+    {
+      "query": "bearing and distance between points",
+      "expect": "survey.cogo.inverse"
+    },
+    {
+      "query": "radial sideshot",
+      "expect": "survey.cogo.forward"
+    },
+    {
+      "query": "traverse closure",
+      "expect": "survey.cogo.traverse-closure"
+    },
+    {
+      "query": "bowditch adjustment",
+      "expect": "survey.cogo.traverse-closure"
+    },
+    {
+      "query": "acreage calculator",
+      "expect": "survey.cogo.area-by-coordinates"
+    },
+    {
+      "query": "horizontal curve",
+      "expect": "survey.curves.circular-curve"
+    },
+    {
+      "query": "vertical curve high point",
+      "expect": "survey.curves.vertical-curve"
+    },
+    {
+      "query": "average end area",
+      "expect": "survey.earthwork.average-end-area"
+    },
+    {
+      "query": "prismoidal formula",
+      "expect": "survey.earthwork.prismoidal"
+    },
+    {
+      "query": "truck loads",
+      "expect": "survey.earthwork.shrink-swell"
+    },
+    {
+      "query": "grid to ground",
+      "expect": "survey.reduction.combined-factor"
     }
   ]
 }

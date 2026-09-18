@@ -188,6 +188,17 @@ pub fn parse_angle(s: &str, axis: Axis) -> Result<f64, String> {
     Ok(v)
 }
 
+/// Parses a plain angle in DD, DDM, or DMS with no hemisphere letter and no
+/// latitude/longitude range check (for azimuths and bearing angles).
+pub fn parse_plain(s: &str) -> Result<f64, String> {
+    let n = normalize_marks(s);
+    let w = written(&n)?;
+    if w.hemi.is_some() {
+        return Err(format!("\"{s}\" has a hemisphere letter"));
+    }
+    Ok(value(&w, Axis::Lon, s)?.0)
+}
+
 fn check_range(v: f64, axis: Axis, notation: &str, src: &str) -> Result<(), String> {
     match axis {
         Axis::Lat if v.abs() > 90.0 => {

@@ -72,3 +72,19 @@ pub fn read(ctx: &mut Ctx, lat: &str, lon: &str) -> Result<(f64, f64), ToolError
     ctx.warnings.extend(w);
     Ok((la, lo))
 }
+
+/// Reads an angle field that may be a number, a unit-tagged angle, or plain
+/// DMS/DDM like `30°00'00"` (no hemisphere): for deflections and azimuths.
+pub fn plain_angle(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
+    if !ctx.is_set(name) {
+        return Ok(None);
+    }
+    let deg = units::by_symbol(Quantity::Angle, "deg").expect("deg");
+    match ctx.quantity(name) {
+        Ok(q) => Ok(q.map(|q| q.to(deg))),
+        Err(unit_err) => match ctx.raw(name).and_then(|v| v.as_str()).map(str::to_owned) {
+            Some(s) => dms::parse_plain(&s).map(Some).map_err(|_| unit_err),
+            None => Err(unit_err),
+        },
+    }
+}

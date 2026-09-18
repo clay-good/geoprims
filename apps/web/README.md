@@ -23,7 +23,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | Path | What |
 |---|---|
 | `src/pages/` | Home, domain hubs, group hubs, and one page per tool id (route map in `contracts/routes-and-urls`) |
-| `src/components/ToolApp.svelte` | The tool island: schema-driven form, live answer card (core-rendered `display` and `summary`), warnings ordered by severity, copy actions, permalinks (`#v1:` via the core `link` module), Clear and Try the example |
+| `src/components/ToolApp.svelte` | The tool island: schema-driven form (list inputs edit as one row per line, comma- or tab-separated), live answer card (core-rendered `display` and `summary`), warnings ordered by severity, copy actions, permalinks (`#v1:` via the core `link` module), Clear and Try the example |
 | `src/lib/compute.worker.js` | Runs the Wasm modules off the main thread; stale results are dropped |
 | `src/styles/global.css` | Design tokens: the `hud` theme (default) and `daylight` (light-scheme users) |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |

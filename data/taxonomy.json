@@ -58,7 +58,7 @@
     },
     "survey": {
       "title": "Survey",
-      "groups": []
+      "groups": ["cogo", "reduction", "earthwork", "curves", "land", "gnss"]
     },
     "indexing": {
       "title": "Spatial indexing",

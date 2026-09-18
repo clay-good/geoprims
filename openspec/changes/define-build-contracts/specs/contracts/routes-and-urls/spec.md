@@ -52,7 +52,7 @@ flags = *( ";" flag )
 flag = "report" / "nofx"
 ```
 
-`payload` is `base64url(deflate-raw(canonical-json))`. The JSON object has exactly these keys: `i` (inputs, keyed by manifest field name, values as unit-tagged strings), `u` (unit overrides), `v` (canvas view), and `e` (pinned epoch for `x-clock-default: allowed` tools). Keys are sorted, and numbers are serialized by the core serializer. `report` opens the report dialog after load. `nofx` disables HUD effects for the view. The core SHALL provide the encoder and decoder, used by both the web app and the MCP server (`geoprims_report_problem` links). A shared vector file SHALL pin byte-exact encodings.
+`payload` is `base64url(deflate-raw(canonical-json))`. The JSON object has exactly these keys: `i` (inputs, keyed by manifest field name, values as unit-tagged strings, or for list fields an array of rows of them), `u` (unit overrides), `v` (canvas view), and `e` (pinned epoch for `x-clock-default: allowed` tools). Keys are sorted, and numbers are serialized by the core serializer. `report` opens the report dialog after load. `nofx` disables HUD effects for the view. The core SHALL provide the encoder and decoder, used by both the web app and the MCP server (`geoprims_report_problem` links). A shared vector file SHALL pin byte-exact encodings.
 
 #### Scenario: Shared encoding
 - **WHEN** the web app and the MCP server encode the same inputs

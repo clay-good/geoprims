@@ -71,6 +71,31 @@ fn field_schema(f: &Field, is_input: bool) -> Json {
             put("description", Json::str(f.help));
             put("x-quantity", Json::str("any"));
         }
+        Kind::List { items, min, max } => {
+            let props: Vec<(String, Json)> = items
+                .iter()
+                .map(|it| (it.name.to_owned(), field_schema(it, is_input)))
+                .collect();
+            let required: Vec<&str> = items
+                .iter()
+                .filter(|it| if is_input { it.required } else { !it.optional })
+                .map(|it| it.name)
+                .collect();
+            put("type", Json::str("array"));
+            put("title", Json::str(f.title));
+            put("description", Json::str(f.help));
+            put(
+                "items",
+                Json::obj([
+                    ("type", Json::str("object")),
+                    ("properties", Json::Obj(props)),
+                    ("required", strs(&required)),
+                    ("additionalProperties", Json::Bool(false)),
+                ]),
+            );
+            put("minItems", Json::Num(min as f64));
+            put("maxItems", Json::Num(max as f64));
+        }
         Kind::Text { max_len } => {
             put("type", Json::str("string"));
             put("title", Json::str(f.title));

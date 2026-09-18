@@ -336,6 +336,19 @@ pub static UNITS: &[Unit] = &[
         &["mi²", "sq-mi"],
     ),
     u("NM2", Q::Area, ex(1852 * 1852, 1), &["NM²"]),
+    // US survey foot areas (legacy records; ftUS = 1200/3937 m).
+    u(
+        "ftUS2",
+        Q::Area,
+        ex(1_440_000, 15_499_969),
+        &["usft2", "sq-ftUS"],
+    ),
+    u(
+        "acUS",
+        Q::Area,
+        ex(62_726_400_000, 15_499_969),
+        &["us-acre", "survey-acre"],
+    ),
     // Volume (base m³)
     u("m3", Q::Volume, ex(1, 1), &["m³", "cu-m"]),
     u(

@@ -54,6 +54,13 @@ pub enum Kind {
     AnyQuantity,
     /// A short string: a designator or coded group in, a status phrase out.
     Text { max_len: usize },
+    /// A list of rows, each an object with the given fields (traverse courses,
+    /// polygon vertices). Outputs use the same kind for tables.
+    List {
+        items: &'static [Field],
+        min: usize,
+        max: usize,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -348,20 +355,30 @@ impl<'a> Ctx<'a> {
         default: Option<&'static Unit>,
     ) -> Result<Option<Q>, ToolError> {
         let f = self.field(name);
+        let v = self.raw(name).cloned();
+        self.parse_quantity(f, v.as_ref(), &pointer(name), default)
+    }
+
+    fn parse_quantity(
+        &mut self,
+        f: &'static Field,
+        v: Option<&Value>,
+        at: &str,
+        default: Option<&'static Unit>,
+    ) -> Result<Option<Q>, ToolError> {
         let Kind::Quantity { q, unit } = f.kind else {
-            panic!("{name} is not a quantity field")
+            panic!("{} is not a quantity field", f.name)
         };
         let default = default.unwrap_or_else(|| {
             units::by_symbol(q, unit).expect("declared default unit is registered")
         });
-        let at = pointer(name);
-        let Some(v) = self.raw(name) else {
+        let Some(v) = v.filter(|v| !v.is_null()) else {
             return Ok(None);
         };
         match v {
             Value::Number(n) => {
                 let x = n.as_f64().filter(|x| x.is_finite()).ok_or_else(|| {
-                    ToolError::invalid(&at, format!("{} must be a finite number.", f.title))
+                    ToolError::invalid(at, format!("{} must be a finite number.", f.title))
                 })?;
                 Ok(Some(Q {
                     value: x,
@@ -369,7 +386,7 @@ impl<'a> Ctx<'a> {
                 }))
             }
             Value::String(s) => {
-                let t = parse::parse_tagged(s, q, default, self.options.format, &at)?;
+                let t = parse::parse_tagged(s, q, default, self.options.format, at)?;
                 self.warnings.extend(t.warnings);
                 Ok(Some(Q {
                     value: t.value,
@@ -377,11 +394,119 @@ impl<'a> Ctx<'a> {
                 }))
             }
             _ => Err(ToolError::invalid(
-                &at,
+                at,
                 format!(
                     "{} must be a number or a number with a unit, like {}.",
                     f.title, f.help
                 ),
+            )),
+        }
+    }
+
+    /// The rows of a list input, validated: an array within its size limits,
+    /// each row an object with only declared keys and every required key.
+    pub fn rows(&self, name: &str) -> Result<Vec<Map<String, Value>>, ToolError> {
+        let f = self.field(name);
+        let Kind::List { items, min, max } = f.kind else {
+            panic!("{name} is not a list field")
+        };
+        let at = pointer(name);
+        let arr = match self.raw(name) {
+            None => return Ok(Vec::new()),
+            Some(Value::Array(a)) => a,
+            Some(_) => {
+                return Err(ToolError::invalid(
+                    &at,
+                    format!("{} must be a list.", f.title),
+                ));
+            }
+        };
+        if arr.len() > max {
+            return Err(ToolError::new(
+                ErrorCode::LimitExceeded,
+                format!("{} has {} rows; the limit is {max}.", f.title, arr.len()),
+            )
+            .at(&at));
+        }
+        if arr.len() < min {
+            return Err(ToolError::invalid(
+                &at,
+                format!("{} needs at least {min} rows.", f.title),
+            ));
+        }
+        let mut out = Vec::with_capacity(arr.len());
+        for (i, row) in arr.iter().enumerate() {
+            let row_at = format!("{at}/{i}");
+            let Value::Object(m) = row else {
+                return Err(ToolError::invalid(
+                    &row_at,
+                    format!("Each row of {} must be an object.", f.title),
+                ));
+            };
+            if let Some(k) = m
+                .keys()
+                .find(|k| !items.iter().any(|it| it.name == k.as_str()))
+            {
+                let names: Vec<&str> = items.iter().map(|it| it.name).collect();
+                return Err(ToolError::invalid(
+                    &format!("{row_at}/{k}"),
+                    format!("{k} is not a column of {}.", f.title),
+                )
+                .hint(format!("Columns: {}", names.join(", "))));
+            }
+            if let Some(it) = items
+                .iter()
+                .find(|it| it.required && m.get(it.name).is_none_or(Value::is_null))
+            {
+                return Err(ToolError::invalid(
+                    &format!("{row_at}/{}", it.name),
+                    format!("Row {} needs {}.", i + 1, it.title),
+                ));
+            }
+            out.push(m.clone());
+        }
+        Ok(out)
+    }
+
+    fn item(&self, list: &str, name: &str) -> &'static Field {
+        let Kind::List { items, .. } = self.field(list).kind else {
+            panic!("{list} is not a list field")
+        };
+        items
+            .iter()
+            .find(|f| f.name == name)
+            .unwrap_or_else(|| panic!("{list} has no column {name}"))
+    }
+
+    /// Reads a quantity from row `i` of list `list`.
+    pub fn row_quantity(
+        &mut self,
+        list: &str,
+        i: usize,
+        row: &Map<String, Value>,
+        name: &str,
+    ) -> Result<Option<Q>, ToolError> {
+        let f = self.item(list, name);
+        self.parse_quantity(f, row.get(name), &format!("/{list}/{i}/{name}"), None)
+    }
+
+    /// Reads text from row `i` of list `list`.
+    pub fn row_text(
+        &self,
+        list: &str,
+        i: usize,
+        row: &Map<String, Value>,
+        name: &str,
+    ) -> Result<Option<String>, ToolError> {
+        let f = self.item(list, name);
+        let at = format!("/{list}/{i}/{name}");
+        match row.get(name).filter(|v| !v.is_null()) {
+            None => Ok(None),
+            Some(Value::String(s)) => Ok(Some(s.trim().to_owned())),
+            Some(Value::Number(n)) => Ok(Some(n.to_string())),
+            Some(_) => Err(ToolError::invalid(
+                &at,
+                format!("{} must be text.", f.title),
             )),
         }
     }

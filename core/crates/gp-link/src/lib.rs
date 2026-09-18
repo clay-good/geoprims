@@ -108,11 +108,16 @@ fn check_state(state: &Value) -> Result<(), ToolError> {
                 let Value::Object(fields) = v else {
                     return Err(ToolError::invalid(&at, format!("{k} must be an object.")));
                 };
+                // A value is a string or number, or a list of flat rows
+                // (list inputs such as traverse courses).
+                let scalar = |x: &Value| x.is_string() || x.is_number();
+                let row = |x: &Value| x.as_object().is_some_and(|r| r.values().all(scalar));
                 for (f, x) in fields {
-                    if !(x.is_string() || x.is_number()) {
+                    let ok = scalar(x) || x.as_array().is_some_and(|rows| rows.iter().all(row));
+                    if !ok {
                         return Err(ToolError::invalid(
                             &format!("{at}/{f}"),
-                            "Values must be strings or numbers.",
+                            "Values must be strings, numbers, or lists of rows of them.",
                         ));
                     }
                 }
@@ -337,6 +342,22 @@ mod tests {
             v(&encode(r#"{"state":{"i":{"a":[1]}}}"#))["error"]["field"],
             "/state/i/a"
         );
+        assert_eq!(
+            v(&encode(r#"{"state":{"i":{"a":[{"b":{"c":1}}]}}}"#))["error"]["field"],
+            "/state/i/a"
+        );
+    }
+
+    #[test]
+    fn list_inputs_round_trip() {
+        let e = v(&encode(
+            r#"{"state":{"i":{"courses":[{"distance":300,"direction":"N 45°30'15\" E"},{"direction":"90","distance":"400.02 ft"}]}}}"#,
+        ));
+        let frag = e["result"]["fragment"].as_str().unwrap();
+        let d = v(&decode(frag));
+        let rows = &d["result"]["state"]["i"]["courses"];
+        assert_eq!(rows[0]["direction"], "N 45°30'15\" E");
+        assert_eq!(rows[1]["distance"], "400.02 ft");
     }
 
     #[test]

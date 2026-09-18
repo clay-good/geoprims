@@ -79,6 +79,8 @@ test('every golden vector passes through Wasm in Node', async () => {
 test('worker host: a runaway call times out and the host keeps serving', async () => {
   const { workerHost } = await import('./worker-host.mjs');
   const h = workerHost(join(root, 'dist/wasm'), { timeoutMs: 300 });
+  // Warm the worker first so the bound measures the timeout, not module loading.
+  await h.invoke('units.speed.kt-to-mph', '{"value":1}');
   const t0 = Date.now();
   const stuck = JSON.parse(await h._call('spin'));
   assert.equal(stuck.error.code, 'LIMIT_EXCEEDED');

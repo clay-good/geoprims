@@ -24,7 +24,7 @@ Conversions SHALL follow the exact path CAS → impact pressure qc (sea-level re
 
 #### Scenario: High altitude
 - **WHEN** CAS = 300 kt, pressure altitude = 35,000 ft, OAT = -54.3 °C
-- **THEN** Mach ≈ 0.8736 and TAS ≈ 503.6 kt
+- **THEN** Mach ≈ 0.8736 (±0.0005) and TAS ≈ 503.6 kt (±0.1 kt)
 
 #### Scenario: Supersonic branch
 - **WHEN** a CAS corresponds to Mach > 1 at the given altitude
@@ -62,5 +62,5 @@ Airspeed results SHALL show the common approximation (TAS ≈ CAS + 2% per 1,000
 Airspeed tools SHALL render a gauge showing IAS/CAS/EAS/TAS/Mach together, with user-entered V-speeds (e.g. VS0, VS1, VFE, VNO, VNE, MMO) as colored arcs whose meanings are also conveyed by labels (not color alone).
 
 #### Scenario: V-speed arcs
-- **WHEN** a user enters VS0, VFE, VNO, and VNE
+- **WHEN** a user enters VS0, VS1, VFE, VNO, and VNE
 - **THEN** the gauge draws the white, green, and yellow arcs and the red line, each labeled

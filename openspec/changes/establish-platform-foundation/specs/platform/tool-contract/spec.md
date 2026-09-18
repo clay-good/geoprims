@@ -16,7 +16,7 @@ Every tool SHALL publish a machine-readable manifest containing at minimum: `id`
 - **THEN** the web form label, MCP input schema description, and docs page all reflect the change in the same build with no other edit
 
 ### Requirement: Tool identifiers are stable and namespaced
-A tool `id` SHALL match the pattern `^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*){2,3}$` (for example `geodesy.utm.forward`, `aviation.airspeed.cas-to-tas`). Once a tool reaches `stable`, its `id` SHALL NOT be reused for a different operation and SHALL NOT be removed without passing through `deprecated` for at least one minor release, with a redirect to its replacement.
+A tool `id` SHALL match the pattern `^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*){2}$` (exactly `<domain>.<group>.<operation>`) (for example `geodesy.utm.forward`, `aviation.airspeed.cas-to-tas`). Once a tool reaches `stable`, its `id` SHALL NOT be reused for a different operation and SHALL NOT be removed without passing through `deprecated` for at least one minor release, with a redirect to its replacement.
 
 #### Scenario: Invalid id rejected
 - **WHEN** a manifest declares id `Geodesy.UTM_Forward`
@@ -60,7 +60,7 @@ Every successful result SHALL include a `meta` object containing: `tool` (id), `
 - **THEN** `meta.warnings` contains an entry with code `ACCURACY_DEGRADED` and a human-readable message
 
 ### Requirement: Structured error model
-A failed invocation SHALL return a structured error with `code` (from a closed, documented enumeration), `message` (plain-language, actionable), `field` (JSON Pointer to the offending input when applicable), and `hint` (optional corrective suggestion). The enumeration SHALL include at least: `INVALID_INPUT`, `OUT_OF_DOMAIN`, `UNIT_MISMATCH`, `DID_NOT_CONVERGE`, `DEGENERATE_GEOMETRY`, `ASSET_UNAVAILABLE`, `ASSET_INTEGRITY`, `LIMIT_EXCEEDED`, `UNSUPPORTED`, and `INTERNAL`. Tools SHALL NOT return `NaN`, `Infinity`, or partial results in place of an error.
+A failed invocation SHALL return a structured error with `code` (from a closed, documented enumeration), `message` (plain-language, actionable), `field` (JSON Pointer to the offending input when applicable), and `hint` (optional corrective suggestion). The enumeration SHALL include at least: `INVALID_INPUT`, `OUT_OF_DOMAIN`, `UNIT_MISMATCH`, `DID_NOT_CONVERGE`, `DEGENERATE_GEOMETRY`, `ASSET_UNAVAILABLE`, `ASSET_INTEGRITY`, `LIMIT_EXCEEDED`, `NO_SOLUTION` (the problem is well-formed but has no answer, e.g. wind stronger than airspeed), `UNSUPPORTED` (unknown or unavailable tool), and `INTERNAL`. Tools SHALL NOT return `NaN`, `Infinity`, or partial results in place of an error.
 
 #### Scenario: Out-of-domain input
 - **WHEN** a UTM forward conversion is requested for latitude 85° N
@@ -97,3 +97,21 @@ Every tool SHALL declare numeric limits on input size (for example maximum polyg
 #### Scenario: Polyfill limit
 - **WHEN** a polygon-to-H3 request would produce an estimated 50,000,000 cells and the declared limit is 5,000,000
 - **THEN** the tool returns `LIMIT_EXCEEDED` citing the estimate and the limit, within 50 ms, without attempting the fill
+
+### Requirement: Warning code registry
+Every warning code SHALL be defined once in a warning registry with its meaning, severity (`info`, `caution`, `accuracy`), and the tools that may emit it. The build SHALL fail if a tool emits or documents a warning code that is not registered, and the registry SHALL be published on the site.
+
+#### Scenario: Unregistered warning
+- **WHEN** a tool emits `SOME_NEW_WARNING` that is not in the registry
+- **THEN** the build fails naming the tool and code
+
+### Requirement: Epoch and date conventions
+Dates SHALL be accepted as ISO 8601 (UTC) or decimal years. Decimal year SHALL be defined as `year + (dayOfYear − 1 + secondsOfDay/86400) / daysInYear` in UTC, with `daysInYear` 366 in leap years. When a tool defaults its epoch to "now", the echoed epoch SHALL be pinned into permalinks, exported calculation sheets, and "copy as agent call" output, so that re-running them later reproduces the original result.
+
+#### Scenario: Decimal year
+- **WHEN** the date 2026-07-02T12:00:00Z is converted
+- **THEN** the decimal year is 2026 + 182.5/365 ≈ 2026.5
+
+#### Scenario: Pinned default epoch
+- **WHEN** a user copies a permalink to a declination computed with the default epoch
+- **THEN** the permalink contains the explicit epoch used, and opening it a year later gives the same result

@@ -64,6 +64,6 @@
 
 ## 8. Catalog, docs, and promotion
 
-- [ ] 8.1 Register all 78 operations and the 84 allow-listed pairs with aliases (e.g. "lat long to UTM", "grid ref", "mag var"); verify catalog counts
+- [ ] 8.1 Register all 89 operations and the 84 allow-listed pairs with aliases (e.g. "lat long to UTM", "grid ref", "mag var"); verify catalog counts
 - [ ] 8.2 Write docs for every geodesy tool per the tool-docs template and the "Convert survey coordinates to GPS" guide; verify the docs build passes
 - [ ] 8.3 Promote tools meeting the stable bar; verify the verification report lists each tool's vectors and max error

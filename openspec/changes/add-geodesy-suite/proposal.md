@@ -13,7 +13,7 @@ Depends on: `establish-platform-foundation`.
 
 ## What Changes
 
-Adds the `geodesy` domain: about 78 operations and 162 endpoints (inventory in `design.md`).
+Adds the `geodesy` domain: about 89 operations and 173 endpoints (inventory in `design.md`).
 
 - **Coordinate parsing and formatting:** DD, DMS, DDM, signed and hemisphere forms, packed forms, and auto-detection with ambiguity reporting.
 - **Reference frames and ellipsoids:** geodetic ↔ ECEF ↔ ENU/NED/AER, ellipsoid parameters, radii of curvature, auxiliary latitudes, meridian arc length.

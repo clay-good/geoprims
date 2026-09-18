@@ -6,7 +6,7 @@
 - [ ] 1.4 Port GeographicLib Rhumb (direct, inverse, pole handling); verify the rhumb scenarios and a `RhumbSolve` differential test
 - [ ] 1.5 Implement waypoints, densification, midpoint, and intermediate points with GPX/GeoJSON output; verify the equal-intervals scenario
 - [ ] 1.6 Port GeographicLib Intersect and implement the vertex tool; verify the non-intersecting scenario and an `IntersectTool` differential test
-- [ ] 1.7 Support custom ellipsoids with GeodesicExact above |f| > 0.02; verify the Mars scenario
+- [ ] 1.7 Support custom ellipsoids with GeodesicExact above |f| > 0.02; verify the Mars and high-flattening scenarios
 - [ ] 1.8 Implement the comparison overlay (geodesic, rhumb, great circle); verify the visual fixture
 
 ## 2. Route geometry

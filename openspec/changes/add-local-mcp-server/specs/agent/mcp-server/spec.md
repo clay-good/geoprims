@@ -24,7 +24,7 @@ The server SHALL implement MCP specification `2026-07-28` (stateless requests wi
 
 ### Requirement: Default meta-tool surface
 By default the server SHALL expose exactly these tools, in this deterministic order:
-1. `geoprims_search` — input `{query, domain?, limit? (default 10, max 50)}`; returns ranked `{id, title, summary, domain, stability}` entries.
+1. `geoprims_search` — input `{query, domain?, limit? (default 10, max 50), includeExperimental? (default false)}`; returns ranked `{id, title, summary, domain, stability}` entries. `geoprims_run` accepts experimental ids but attaches warning `EXPERIMENTAL_TOOL`.
 2. `geoprims_describe` — input `{ids: string[] (max 20), detail: "summary" | "schema" | "examples"}`; returns manifests at the requested detail, including input/output JSON Schemas, units, accuracy, and references for `schema`.
 3. `geoprims_run` — input `{id, args, units?, output?: {maxItems?, offset?}}`; validates `args` against the tool's input schema, executes, and returns the result.
 4. `geoprims_pipeline` — input `{steps: [{id, args, bind?: {<inputPointer>: "<stepIndex>:<outputPointer>"}}] (max 20 steps)}`; runs a chain without model round trips.
@@ -48,7 +48,7 @@ Every tool the server exposes SHALL declare `title` and annotations `readOnlyHin
 - **THEN** every tool includes the four annotations with the specified values and an `outputSchema`
 
 ### Requirement: Optional direct toolsets
-The server SHALL support opt-in direct toolsets selected by a server launch flag or bundle configuration (`--toolsets=<name,...>`), where each toolset exposes up to 40 stable catalog tools as first-class MCP tools, named by replacing dots with underscores and prefixing `gp_` (e.g. `gp_aviation_altimetry_density-altitude`, truncated to 128 characters). Predefined toolsets SHALL include at least: `geodesy-core`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`. The meta-tools SHALL remain available alongside toolsets unless `--no-meta` is given.
+The server SHALL support opt-in direct toolsets selected by a server launch flag or bundle configuration (`--toolsets=<name,...>`), where each toolset exposes up to 40 stable catalog tools as first-class MCP tools, named by replacing dots with underscores and prefixing `gp_` (e.g. `gp_aviation_altimetry_density-altitude`, subject to the 64-character name rule below). Predefined toolsets SHALL include at least: `geodesy-core`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`. The meta-tools SHALL remain available alongside toolsets unless `--no-meta` is given.
 
 #### Scenario: E6B toolset
 - **WHEN** the server starts with `--toolsets=e6b`
@@ -87,7 +87,7 @@ Tool descriptions and results for aviation, drone, navigation, magnetic, and dat
 - **THEN** the result `meta` includes the model (`WMM2025`), epoch used, validity window, uncertainty, and blackout/caution-zone status
 
 ### Requirement: Offline assets and opt-in fetching
-The server SHALL work fully offline with bundled small assets (magnetic models, Natural Earth, CRS registry, EGM96-15). Tools needing un-cached assets SHALL return `ASSET_UNAVAILABLE` naming the dataset, the tile, its download size, and how to enable downloads. On-demand fetching from the geoprims asset origin SHALL be enabled only with `--allow-asset-download`, SHALL use the same coarse tiles as the website, and SHALL verify integrity.
+The server SHALL work fully offline with bundled small assets (`wmm2025`, `wmmhr2025`, `igrf14`, `egm96-15`, `crs-registry`, `ne-110m`, `deformation-zones`), at most 6 MB in total. Tools needing un-cached assets SHALL return `ASSET_UNAVAILABLE` naming the dataset, the tile, its download size, and how to enable downloads. On-demand fetching from the geoprims asset origin SHALL be enabled only with `--allow-asset-download`, SHALL use the same coarse tiles as the website, and SHALL verify integrity.
 
 #### Scenario: Geoid tile missing
 - **WHEN** an agent requests an EGM2008-1 geoid height and the tile is not cached and downloads are not allowed
@@ -124,3 +124,24 @@ The project SHALL maintain an evaluation set of at least 100 natural-language ta
 #### Scenario: Eval report
 - **WHEN** the release pipeline runs the agent evaluation
 - **THEN** it publishes selection accuracy, answer accuracy, and mean tokens per task
+
+### Requirement: Deterministic, version-bound pagination
+Paginated collections SHALL be ordered deterministically (for H3 and S2, ascending cell id; for vertices, input order), and page requests SHALL carry an opaque cursor that binds the tool id, toolVersion, coreVersion, asset versions, and a hash of the arguments. A cursor used with different arguments or versions SHALL return `INVALID_INPUT`. The total size of any paginated result SHALL respect the tool's declared limit (e.g. 5,000,000 H3 cells).
+
+#### Scenario: Stale cursor
+- **WHEN** a cursor from one server version is used after an upgrade
+- **THEN** the call returns `INVALID_INPUT` stating that the cursor is stale and must be regenerated
+
+### Requirement: Tool names portable across clients
+Direct toolset tool names SHALL be at most 64 characters matching `^[a-zA-Z0-9_-]{1,64}$` (the strictest common LLM API rule). Longer names SHALL be shortened deterministically with a hash suffix, and the build SHALL fail if two names collide.
+
+#### Scenario: Long id shortened
+- **WHEN** a toolset tool's derived name exceeds 64 characters
+- **THEN** it is shortened with a stable hash suffix and remains unique
+
+### Requirement: Server launch options are a stable, documented interface
+The launch options (`--toolsets`, `--no-meta`, `--allow-asset-download`, `--timeout`, `--debug`) are server configuration, not a CLI product. They SHALL be documented on the "Use with agents" page, mirrored as MCPB `user_config` fields, and changed only with a deprecation period of at least one minor release.
+
+#### Scenario: Deprecated option
+- **WHEN** a renamed option is passed during its deprecation period
+- **THEN** the server starts, honors it, and logs a deprecation notice to stderr

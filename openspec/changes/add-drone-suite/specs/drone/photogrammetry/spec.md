@@ -12,7 +12,7 @@ The GSD tool SHALL compute GSD = (sensor width × height above ground) / (focal 
 - **THEN** GSD ≈ 2.741 cm/px and the footprint is 150.0 m across track
 
 #### Scenario: Equivalent focal length suspected
-- **WHEN** focal length = 24 mm is entered with a 13.2 × 8.8 mm sensor (diagonal 15.86 mm; threshold 23.79 mm)
+- **WHEN** focal length = 24 mm is entered with a 13.2 × 8.8 mm sensor (diagonal 15.86 mm; threshold 23.80 mm)
 - **THEN** the result includes `EQUIVALENT_FOCAL_LENGTH` and asks the user to confirm or convert
 
 ### Requirement: Inverse GSD (altitude for a target GSD)

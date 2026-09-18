@@ -33,7 +33,7 @@ Tools SHALL convert geodetic (lat, lon, ellipsoidal height) to ECEF (X, Y, Z) an
 - **THEN** X ≈ 845,580.010 m, Y ≈ -4,786,836.717 m, Z ≈ 4,116,002.385 m (±1 mm)
 
 #### Scenario: Pole
-- **WHEN** ECEF (0, 0, 6,356,752.314245 m) is converted to geodetic
+- **WHEN** ECEF (0, 0, b) is converted to geodetic, with b = 6,356,752.314245179… m (the exact WGS 84 semi-minor axis, computed in binary64)
 - **THEN** latitude is 90°, height is 0 m (±1e-9 m), and longitude is returned as 0 with warning `LONGITUDE_UNDEFINED`
 
 ### Requirement: Local tangent plane frames
@@ -53,3 +53,10 @@ Frame tools SHALL visualize the ellipsoid, the origin, and the ENU/NED axes on t
 #### Scenario: Sky plot
 - **WHEN** an AER result is shown
 - **THEN** the vector diagram shows a polar sky plot with the target's azimuth and elevation
+
+### Requirement: Earth's center is degenerate
+The ECEF → geodetic inverse SHALL return `DEGENERATE_GEOMETRY` for points within 1 m of the Earth's center, where latitude and longitude are undefined.
+
+#### Scenario: Origin
+- **WHEN** ECEF (0, 0, 0) is converted to geodetic
+- **THEN** the tool returns `DEGENERATE_GEOMETRY`

@@ -13,7 +13,7 @@ No ads, no accounts, no tracking, no server-side compute. Inputs never leave the
 
 | Domain | Operations | Endpoints | Examples |
 |---|---|---|---|
-| Geodesy | 78 | 162 | DMS/MGRS/UTM/State Plane conversion, datums with epochs, geoid heights, WMM2025 declination |
+| Geodesy | 89 | 173 | DMS/MGRS/UTM/State Plane conversion, datums with epochs, geoid heights, WMM2025 declination |
 | Navigation | 46 | 58 | Karney geodesics, rhumb lines, cross-track, fly-by turns, horizon and line of sight, 3D slant range |
 | Geometry | 38 | 44 | Geodesic area, buffers, hulls, simplification, point-in-polygon, boolean operations |
 | Aviation | 84 | 112 | ISA, CAS/TAS/Mach, pressure and density altitude, cold-temperature correction, E6B wind, W&B |
@@ -22,9 +22,9 @@ No ads, no accounts, no tracking, no server-side compute. Inputs never leave the
 | Indexing | 52 | 92 | H3 (full v4 API), S2, geohash, XYZ/TMS/quadkey tiles, Plus Codes, A5 |
 | Raster | 30 | 40 | NDVI and other indices on local GeoTIFFs, elevation profiles, slope, terrain line of sight, viewshed |
 | Units | 22 | 170 | Exact unit conversions (knots, nautical miles, inHg, US survey foot as legacy) |
-| **Total** | **450** | **798** | |
+| **Total** | **461** | **809** | |
 
-An *operation* is a distinct calculation with its own test vectors. An *endpoint* is an addressable tool, including allow-listed conversion pairs built from operations (for example `dms-to-mgrs`). Both numbers are reported, so the count is not padded.
+An *operation* is a distinct calculation with its own test vectors. An *endpoint* is an addressable tool, including allow-listed conversion pairs built from operations (for example `dms-to-mgrs`). Both numbers are reported, and public counts include only tools that have passed the stable verification bar, so the count is not padded.
 
 ## Principles the specs enforce
 

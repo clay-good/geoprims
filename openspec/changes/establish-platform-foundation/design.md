@@ -39,11 +39,13 @@ Key crates (MIT/Apache/BSD only): `geographiclib-rs` (Karney geodesics), `geo` (
 - All transcendental math goes through the `libm` crate compiled into the module. Imports of JS `Math` are forbidden by a lint that inspects the Wasm import section.
 - Build with a pinned Rust toolchain and `-C target-feature=+simd128` only (no relaxed-SIMD). FMA contraction is never implicit in Wasm; explicit `mul_add` uses the software path.
 - Canonicalize NaN (reject it) and negative zero at the serialization boundary.
-- Serialize floats with shortest round-trip (`ryu`).
+- Serialize numbers with the ECMAScript Number-to-String algorithm (the format of `JSON.stringify` and RFC 8785 JCS): shortest round-trip digits, integers without a trailing `.0`, exponent notation only at magnitude ≥ 1e21 or < 1e-6. Implemented in Rust so the core, not the host, produces the bytes.
 - The cross-host suite (verification spec) compares bytes across Chromium, Firefox, WebKit, and Node.
 
 ### D3. Module split and loading
 One Cargo workspace, one crate per domain, compiled into **separate Wasm modules** that share no memory. Shared helpers (units, angles, ellipsoid constants, error model, JSON I/O) live in a `gp-base` crate statically linked into each. The duplicated bytes (~40 KB) cost less than dynamic linking, which Wasm tooling does not support well.
+
+Cross-domain dependencies (for example navigation, survey, drone, and indexing reuse geodesy parsing, frames, and heights; drone reuses the aviation atmosphere) are **statically linked** into each dependent module and count toward that module's 400 KB budget. Endpoints that compose operations from different modules (for example `mgrs-distance`) are composed by the host runtime, which loads each module and chains the calls. The `units` domain (`gp-units`) is linked into `base`, so unit tools run from the base module.
 
 Alternative: one monolithic module (~2–3 MB). Rejected: it breaks the per-page budget in `compute-core`.
 
@@ -101,7 +103,7 @@ docs/research/        Research briefs backing the specs
 - The site works without cross-origin isolation (threads are optional, per `compute-core`), so a header regression degrades speed, not correctness.
 
 ### D8. Honest counting: operations vs endpoints
-Per `tool-catalog`, the public count reports both numbers. The target is about **450 operations** and about **800 endpoints**; the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding.
+Per `tool-catalog`, the public count reports both numbers. The target is about **460 operations** and about **800 endpoints**; the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding. Public counts include only stable tools, so the claim is made only once the stable count supports it.
 
 ### D9. Verification harness
 - Golden vectors live beside each tool as JSON Lines with `source`, `sourceVersion`, and per-field tolerances.
@@ -124,7 +126,7 @@ All content is published openly without restriction, which places it outside the
 
 | Domain | Operations | Endpoints | Defined in |
 |---|---|---|---|
-| geodesy | 78 | 162 | `add-geodesy-suite` |
+| geodesy | 89 | 173 | `add-geodesy-suite` |
 | navigation | 46 | 58 | `add-navigation-and-geometry` |
 | geometry | 38 | 44 | `add-navigation-and-geometry` |
 | aviation | 84 | 112 | `add-aviation-suite` |
@@ -133,7 +135,7 @@ All content is published openly without restriction, which places it outside the
 | indexing | 52 | 92 | `add-spatial-indexing-and-raster` |
 | raster | 30 | 40 | `add-spatial-indexing-and-raster` |
 | units | 22 | 170 | this change (`units` domain; pair pages such as `kt-to-mph`) |
-| **Total** | **450** | **798** | |
+| **Total** | **461** | **809** | |
 
 ## Risks / Trade-offs
 

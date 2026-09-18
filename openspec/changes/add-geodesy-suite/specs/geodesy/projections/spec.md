@@ -78,7 +78,7 @@ Tools SHALL compute grid convergence (the angle from true north to grid north, w
 - **THEN** convergence ≈ 0.66031° (grid north east of true north, since the point is east of the central meridian) and scale factor ≈ 0.99969170 (±1e-8)
 
 ### Requirement: Round-trip and differential accuracy
-Every forward/inverse projection pair SHALL round-trip within 1 nm (1e-9 m) inside its declared domain, and SHALL agree with PROJ 9.x (and GeographicLib for TM/UPS) within 1 mm on 10,000 random points per projection.
+Every forward/inverse projection pair SHALL round-trip within 1 nm (1e-9 m) inside its declared domain, excluding a conditioning margin of 1° (or 0.1% of the domain extent) from each singular limit (orthographic and gnomonic horizons, Web Mercator latitude limit, Transverse Mercator far from the central meridian), where the tolerance SHALL be stated per projection, and SHALL agree with PROJ 9.x (and GeographicLib for TM/UPS) within 1 mm on 10,000 random points per projection.
 
 #### Scenario: Differential test
 - **WHEN** the differential suite runs LCC 2SP against PROJ on 10,000 points

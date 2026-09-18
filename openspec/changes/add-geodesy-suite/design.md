@@ -42,7 +42,7 @@ Coordinates in tool I/O carry an optional `frame` (e.g. `NAD83(2011)`) and `epoc
 - **Path selection:** a shortest path over a frame graph weighted by stated accuracy. Every step is reported in the result.
 
 ### G5. Geoid grids: GeographicLib PGM format, tiled
-PGM grids (16-bit, 3 mm quantization) are re-tiled into 1° × 1° or coarser tiles, each carrying its digest. Cubic interpolation needs a 4 × 4 neighborhood, so tiles carry a 2-cell overlap margin, which keeps edge evaluation within a single tile fetch. GEOID18 is converted from NGS binary grids to the same tile format.
+EGM grids use GeographicLib's PGM format (16-bit, 3 mm quantization, matching GeoidEval). They are re-tiled into 1° × 1° or coarser tiles, each carrying its digest. Cubic interpolation needs a 4 × 4 neighborhood, so tiles carry a 2-cell overlap margin, which keeps edge evaluation within a single tile fetch. GEOID18 and NADCON5 are kept as float32 tiles and evaluated with the biquadratic interpolation NGS specifies, so millimeter agreement with NGS tools is achievable.
 
 ### G6. Magnetic engine
 A spherical-harmonic evaluator (Schmidt semi-normalized, geodetic → geocentric conversion, secular variation) is shared by WMM, WMMHR (degree 133), and IGRF. Isogonic overlays are computed on the device by evaluating a coarse grid (e.g. 1°) and contouring with marching squares in a worker.
@@ -58,13 +58,14 @@ Encode by truncation; decode to the square's south-west corner and center; allow
 | `ellipsoid` | 5 | parameters, radii-of-curvature, auxiliary-latitude, meridian-arc, degree-lengths |
 | `frames` | 8 | geodetic↔ecef (2), ecef↔enu (2), enu↔ned, aer↔enu (2), local-rotation-matrix |
 | `datum` | 7 | helmert-7, helmert-14, frame-transform (path), nadcon5, plate-motion, wgs84-vs-nad83, legacy-shift |
-| `utm`/`ups`/`spcs`/`crs` + methods | 26 | utm f/i/zone, ups f/i, spcs83 f/i, spcs2022 f/i, spc-zone-lookup, tm f/i, lcc f/i, albers f/i, hotine f/i, web-mercator f/i, azimuthal-equidistant f/i, crs-search, crs-transform, convergence, scale-factor |
+| `utm`/`ups`/`spcs`/`crs` + methods | 37 | utm f/i/zone, ups f/i, spcs83 f/i, spcs2022 f/i, spc-zone-lookup, tm f/i, tm-exact f/i, lcc f/i, albers f/i, hotine f/i, polar-stereographic f/i, web-mercator f/i, azimuthal-equidistant f/i, equidistant-cylindrical f/i, orthographic f/i, gnomonic f/i, crs-search, crs-transform, convergence, scale-factor, arc-to-chord |
 | `grid-ref` | 12 | mgrs f/i, usng f/i, mgrs-precision, grid-zone-lookup, maidenhead f/i, gars f/i, georef f/i |
 | `height` | 5 | geoid-undulation, h-to-H, H-to-h, height-reference-convert, geoid-compare |
 | `magnetic` | 7 | field-elements, true-to-magnetic, magnetic-to-true, grivation, model-compare, uncertainty-zone, isogonic-map |
-| **Operations** | **78** | |
+| **Operations** | **89** | |
+| `convert` (group for generated pairs) | 0 | holds only generated endpoints |
 | Generated conversion pairs | 84 | allow-listed pairs among DD, DMS, DDM, UTM, UPS, MGRS, USNG, Maidenhead, GARS, GEOREF, ECEF, Web Mercator, SPCS83 (e.g. `dms-to-mgrs`, `mgrs-to-dd`, `utm-to-mgrs`, `dd-to-maidenhead`, `ecef-to-dms`) |
-| **Endpoints** | **162** | |
+| **Endpoints** | **173** | |
 
 ## Risks / Trade-offs
 

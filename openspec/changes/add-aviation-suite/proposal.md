@@ -15,7 +15,7 @@ Depends on: `establish-platform-foundation`, `add-geodesy-suite` (magnetic varia
 
 Adds the `aviation` domain: about 84 operations and 112 endpoints (inventory in `design.md`).
 
-- **Atmosphere:** ICAO Standard Atmosphere 0–80 km with geopotential/geometric altitude handling; US Standard Atmosphere 1976 to 86 km; non-standard days (ISA deviation); speed of sound; viscosity; humidity and dew point; cloud-base estimate.
+- **Atmosphere:** ICAO Standard Atmosphere −5 to 80 km with geopotential/geometric altitude handling; US Standard Atmosphere 1976 to 86 km; non-standard days (ISA deviation); speed of sound; viscosity; humidity and dew point; cloud-base estimate.
 - **Airspeed:** IAS↔CAS (user calibration table), CAS↔EAS↔TAS↔Mach (subsonic and supersonic pitot), impact pressure, TAT↔SAT with probe recovery factor.
 - **Altimetry:** pressure altitude from QNH, QFE/QNH/QNE conversions, density altitude (exact and rule of thumb), flight levels, altimeter setting from station pressure, ICAO/FAA cold-temperature corrections, true altitude.
 - **Wind and navigation (E6B):** every wind-triangle variant, runway wind components and limits, best-runway selection, heading chain (true → magnetic → compass with deviation card), and the 1-in-60 off-course correction.
@@ -47,5 +47,5 @@ None.
 ## Impact
 
 - `core/gp-aviation` crate.
-- Reference data: ICAO Doc 7488/3 tables, US Standard Atmosphere 1976 tables, ICAO Doc 8168 Vol I (2020 edition) cold-temperature method, AIM chapter 7-3, and 14 CFR 91.151/91.167 (dated references).
+- Reference data: ICAO Doc 7488/3 tables, US Standard Atmosphere 1976 tables, ICAO Doc 8168 Vol II, 7th edition (2020) cold-temperature method as cited in Transport Canada AC 500-020 §4.8, AIM chapter 7-3, and 14 CFR 91.151/91.167 (dated references).
 - Vector-diagram and instrument (gauge) canvas layers are exercised heavily.

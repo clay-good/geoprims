@@ -9,14 +9,14 @@ The product SHALL NOT offer or require accounts, SHALL NOT set cookies, and SHAL
 
 #### Scenario: Fresh visit sets nothing
 - **WHEN** a new visitor loads any page
-- **THEN** no cookie is set and no storage key is written until the user changes a preference or runs a tool
+- **THEN** no cookie is set and no local-storage or IndexedDB key is written until the user changes a preference or runs a tool; service-worker caches of the app's own public code, docs, and catalog are permitted because they contain no user data and no identifier
 
 #### Scenario: Erase all local data
 - **WHEN** the user chooses "Erase all local data" and confirms
 - **THEN** local storage, IndexedDB, cache storage (except the app shell), and service-worker-held data created by the app are removed, and a reload shows default settings
 
 ### Requirement: User inputs never leave the device
-User-entered values, uploaded files, and results SHALL NOT be transmitted over the network. Network requests SHALL be limited to same-origin static assets (code, docs, data assets, tiles) whose URLs are independent of user input except for spatial tile addresses at zoom levels at most 12 or dataset tile indices at a granularity no finer than 1° × 1°.
+User-entered values, uploaded files, and results SHALL NOT be transmitted over the network. Network requests SHALL be limited to same-origin static assets (code, docs, data assets, tiles) whose URLs are independent of user input except for tile addresses. Every location-bearing request, including any HTTP byte range within a file, SHALL resolve to data covering no less than a 1° × 1° cell (or, for Web Mercator map tiles, zoom level 7 or lower). Range requests that address sub-tile byte offsets of a location-bearing file SHALL NOT be used.
 
 #### Scenario: Automated egress test
 - **WHEN** the end-to-end privacy test runs every tool with sentinel input values
@@ -48,7 +48,7 @@ If usage metrics are collected, they SHALL be limited to server-side aggregate c
 - **THEN** it contains no analytics or telemetry script
 
 ### Requirement: Strict Content Security Policy
-Every page SHALL be served with a Content Security Policy that at minimum sets `default-src 'self'`, `script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'` (plus any geoprims asset origin), `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'none'`, and no `unsafe-inline` for scripts. Pages SHALL also send `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, and a `Permissions-Policy` that disables camera, microphone, geolocation (except on explicit user action for "use my location"), payment, and USB.
+Every page SHALL be served with a Content Security Policy that at minimum sets `default-src 'self'`, `script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'` (plus any geoprims asset origin), `style-src 'self'` (no inline styles; the build extracts CSS to files), `img-src 'self' blob: data:`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'none'`, and no `unsafe-inline` for scripts. Pages SHALL also send `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, and a `Permissions-Policy` that disables camera, microphone, payment, and USB and sets `geolocation=(self)`; the UI SHALL call the Geolocation API only from an explicit "use my location" action.
 
 #### Scenario: Header check
 - **WHEN** the deployment smoke test fetches any route

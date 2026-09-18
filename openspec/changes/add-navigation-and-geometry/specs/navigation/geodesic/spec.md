@@ -9,11 +9,11 @@ The inverse tool SHALL compute, for two points on a chosen ellipsoid (default WG
 
 #### Scenario: JFK to LHR
 - **WHEN** the inverse is computed from (40.6413°, -73.7781°) to (51.4700°, -0.4543°) on WGS 84
-- **THEN** s12 ≈ 5,554,908.791 m (2,999.411 NM), azi1 ≈ 51.38165°, azi2 ≈ 107.98283° (±1 mm, ±1e-7°)
+- **THEN** s12 ≈ 5,554,908.791 m (2,999.411 NM), azi1 ≈ 51.3816479°, azi2 ≈ 107.9828291° (±1 mm, ±1e-7°)
 
 #### Scenario: Nearly antipodal
 - **WHEN** the inverse is computed from (0°, 0°) to (0.5°, 179.7°)
-- **THEN** s12 ≈ 19,944,127.421 m and azi1 ≈ 15.55688°, with no convergence warning
+- **THEN** s12 ≈ 19,944,127.421 m (±1 mm) and azi1 ≈ 15.556883° (±1e-6°), with no convergence warning
 
 #### Scenario: Exactly antipodal
 - **WHEN** the inverse is computed between (0°, 0°) and (0°, 180°)
@@ -28,7 +28,7 @@ The direct tool SHALL compute the destination point and final azimuth from a sta
 
 #### Scenario: Direct 1,000 km
 - **WHEN** the direct problem is solved from (40.6413°, -73.7781°) with azimuth 51° for 1,000,000 m
-- **THEN** the destination is ≈ (45.892081°, -63.754956°) and the final azimuth ≈ 57.88637°
+- **THEN** the destination is ≈ (45.8920808°, -63.7549563°) (±1e-7°) and the final azimuth ≈ 57.886373° (±1e-6°)
 
 ### Requirement: Vincenty methods are available and honest
 Vincenty direct and inverse SHALL be available as separate tools, labeled as legacy methods, with a declared convergence tolerance (1e-12 rad) and iteration limit (200). On non-convergence the inverse SHALL return `DID_NOT_CONVERGE` with a hint to the default method. Each Vincenty result SHALL also report the difference from the Karney result for the same inputs.
@@ -53,7 +53,7 @@ Rhumb-line (loxodrome) direct and inverse SHALL be computed on the ellipsoid (Ka
 
 #### Scenario: Rhumb vs geodesic
 - **WHEN** the rhumb inverse is computed for JFK to LHR
-- **THEN** the constant course ≈ 77.968°, distance ≈ 5,774,190 m (3,117.8 NM), and the result reports ≈ 219.3 km (3.9%) longer than the geodesic
+- **THEN** the constant course ≈ 77.968° (±0.001°), distance ≈ 5,774,190 m (3,117.8 NM, ±1 m), and the result reports ≈ 219.3 km (3.9%) longer than the geodesic
 
 #### Scenario: Rhumb to the pole
 - **WHEN** the rhumb direct problem would pass a pole
@@ -78,7 +78,11 @@ All geodesic tools SHALL accept any catalog ellipsoid or a custom (a, f) and SHA
 
 #### Scenario: Mars ellipsoid
 - **WHEN** a user supplies a = 3,396,190 m and f = 1/169.894 (Mars)
-- **THEN** the inverse runs and `meta.model` names the ellipsoid parameters
+- **THEN** the inverse runs with the series method and `meta.model` names the ellipsoid parameters
+
+#### Scenario: High flattening uses the exact method
+- **WHEN** a user supplies a = 6,378,137 m and f = 1/10
+- **THEN** `meta.model` names GeodesicExact, and the distance agrees with GeographicLib `GeodSolve -E` within 1e-9 relative
 
 ### Requirement: Visualization
 Geodesic tools SHALL render the geodesic (solid), the rhumb line (dashed) and, on request, the spherical great circle for comparison. They SHALL label distance, initial and final courses, and the vertex, on both the 3D globe and the 2D map.

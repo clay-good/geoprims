@@ -5,7 +5,7 @@ Proves that every geoprims tool is correct against authoritative references, sta
 ## ADDED Requirements
 
 ### Requirement: Golden vectors from authoritative sources
-Every tool SHALL ship at least 5 golden test vectors, and every stable tool SHALL ship at least 20, drawn from authoritative sources where they exist (for example: GeographicLib `GeodTest.dat` for geodesics, NGS NCAT/VDatum outputs for datum and State Plane, NOAA/NCEI WMM test values for magnetics, NGA MGRS test points, ICAO Doc 7488 atmosphere tables, H3 and S2 reference-implementation outputs, published textbook examples for surveying). Each vector SHALL record its source, the source's version or date, and its tolerance per output field with unit.
+Every operation SHALL ship at least 5 golden test vectors, and every stable operation SHALL ship at least 20; every generated endpoint SHALL ship at least 3 composition vectors that exercise its chain end to end. Vectors SHALL be drawn from authoritative sources where they exist (for example: GeographicLib `GeodTest.dat` for geodesics, NGS NCAT/VDatum outputs for datum and State Plane, NOAA/NCEI WMM test values for magnetics, NGA MGRS test points, ICAO Doc 7488 atmosphere tables, H3 and S2 reference-implementation outputs, published textbook examples for surveying). Each vector SHALL record its source, the source's version or date, and its tolerance per output field with unit.
 
 #### Scenario: Vector provenance required
 - **WHEN** a vector lacks a `source` or `tolerance`
@@ -27,7 +27,7 @@ For every tool family where an independent reference implementation exists (e.g.
 
 #### Scenario: Geodesic differential test
 - **WHEN** 10,000 random point pairs are run through `navigation.geodesic.inverse` and GeographicLib C++ `GeodSolve -i`
-- **THEN** all distances agree within 1e-9 m relative plus 15 nm absolute and all azimuths within 1e-9 degrees, else CI fails with the failing pairs
+- **THEN** all distances agree within |Δs| ≤ 1e-9·s + 15 nm and all azimuths within 1e-9 degrees, else CI fails with the failing pairs
 
 ### Requirement: Property-based invariants
 Every invertible tool pair SHALL have round-trip property tests (for example forward then inverse projection returns the original point within declared tolerance). Tool families SHALL test documented invariants (e.g. triangle inequality for geodesic distances, polygon area sign reversal under reversed winding, H3 parent contains child center, unit conversion A→B→A identity).

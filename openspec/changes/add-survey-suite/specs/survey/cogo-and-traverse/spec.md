@@ -88,3 +88,10 @@ COGO tools SHALL export a calculation sheet (per io-formats) and SHALL draw a tr
 #### Scenario: Misclosure exaggeration
 - **WHEN** the misclosure is drawn
 - **THEN** the vector is exaggerated with the factor labeled
+
+### Requirement: Perfect closure is represented explicitly
+When the linear misclosure is zero to within 1e-12 of the traverse length, the precision ratio SHALL be reported as `null` with note `PERFECT_CLOSURE` (never infinity), and adjustment SHALL leave the courses unchanged.
+
+#### Scenario: Zero misclosure
+- **WHEN** a computed traverse closes exactly
+- **THEN** the precision ratio is `null` with `PERFECT_CLOSURE`, and adjusted coordinates equal the input

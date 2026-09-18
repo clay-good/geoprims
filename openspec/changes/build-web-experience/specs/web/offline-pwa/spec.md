@@ -12,7 +12,7 @@ The site SHALL provide a valid web app manifest (name, icons including maskable,
 - **THEN** the site passes installability checks in Chromium and is addable to the iOS home screen with correct icon and name
 
 ### Requirement: Offline core after first visit
-After the first complete visit, the app shell, the catalog, all docs pages, the search index, and all Wasm modules SHALL be cached so that every tool not requiring an un-downloaded data asset works offline. The shell precache SHALL be at most 12 MB.
+Once the service worker has finished installing after the first visit, the app shell (including an offline route renderer), the catalog, the search index, and all Wasm modules SHALL be cached so that every tool not requiring an un-downloaded data asset works offline. Tool routes not yet visited SHALL be rendered offline by the app shell from the catalog, with documentation from visited pages or the optional "Docs" offline pack. The precache SHALL be at most 12 MB of compressed transfer.
 
 #### Scenario: Airplane mode
 - **WHEN** a user who has visited once enables airplane mode and opens the density-altitude tool

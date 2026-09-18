@@ -9,7 +9,7 @@ Every regulatory value SHALL come from a reference-data file entry containing: j
 - FAA 14 CFR Part 107: 400 ft AGL, or within 400 ft of a structure and no higher than 400 ft above its top; 87 kt (100 mph) groundspeed; 3 statute mile visibility; cloud clearance of 500 ft below and 2,000 ft horizontal; VLOS; under 55 lb.
 - FAA Part 89 Remote ID: compliance required since March 16, 2024.
 - The FAA Part 108 BVLOS NPRM (August 7, 2025), status `proposed`.
-- EASA open category (A1, A2, A3 subcategories; C0–C6 class marks; 120 m height limit; 25 kg MTOM).
+- EASA open category (A1, A2, A3 subcategories; C0–C4 class marks, with C5/C6 belonging to the specific category's standard scenarios; 120 m height limit; 25 kg MTOM).
 
 #### Scenario: Part 108 status
 - **WHEN** a user views any Part 108 value before a final rule is published
@@ -35,7 +35,7 @@ Tools SHALL check groundspeed against the 87 kt limit, including wind (airspeed 
 
 #### Scenario: EASA C1 energy
 - **WHEN** a 0.9 kg drone at 19 m/s is checked against C1
-- **THEN** KE ≈ 162.5 J, which exceeds 80 J; the result explains that C1 compliance is based on mass under 900 g or impact energy under 80 J per the class definition, and cites the regulation
+- **THEN** KE ≈ 162.5 J (±0.1 J), which exceeds 80 J; the result explains that C1 compliance is based on mass under 900 g or impact energy under 80 J per the class definition, and cites the regulation
 
 ### Requirement: EASA class and subcategory helper
 Given drone mass, class mark (or legacy/no mark), and intended proximity to people, a tool SHALL list the open subcategories available (A1/A2/A3) and their distance rules, citing Regulation (EU) 2019/947 and 2019/945 as amended. It SHALL state that national standard scenarios expired on December 31, 2025, and that STS operations require C5/C6.

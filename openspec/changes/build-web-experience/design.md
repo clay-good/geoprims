@@ -50,7 +50,7 @@ luma.gl 9.x gives one device API over WebGPU and WebGL2 with no map chrome and n
 ### W4. Basemap
 - Default: bundled Natural Earth 110m (public domain) plus graticule, rendered as vector lines in the HUD style.
 - Optional: self-hosted vector tiles (Protomaps PMTiles extract, OpenStreetMap-derived, ODbL attribution) served from `assets.geoprims.com` with range requests.
-- Tile requests are capped at zoom ≤ 12, per the privacy spec's coarse-location rule. Higher zooms overzoom the z12 data.
+- Tile requests are capped at zoom ≤ 7, per the privacy spec's coarse-location rule (a z7 tile spans 2.8° of longitude). Higher zooms overzoom the z7 data. PMTiles range reads fetch whole-tile byte ranges only, so a request never identifies a sub-tile area.
 
 ### W5. Command palette search: uFuzzy with custom ranking
 uFuzzy (~7.6 KB) indexes title, id, aliases, keywords, and group. The final score adds boosts for exact alias match, prefix match, pinned, and recency. At ~1,000 entries it searches well under 1 ms. Ranking quality is tested with a fixed query → expected-top-3 fixture set, which the command-palette scenarios seed.
@@ -60,7 +60,7 @@ uFuzzy (~7.6 KB) indexes title, id, aliases, keywords, and group. The final scor
 Fragment = `#v1:` + base64url(deflate-raw(canonical JSON of inputs, units, view)). Compression uses the native `CompressionStream`, with a tiny fallback. The version prefix allows migrations; each tool's manifest can declare field renames for fragment migration.
 
 ### W7. PWA and caching: Workbox
-- Precache: shell, catalog, search index, docs, and Wasm (≤ 12 MB).
+- Precache: shell with an offline route renderer, catalog, search index, and Wasm (≤ 12 MB compressed). Docs pages are cached when visited or via an optional Docs pack.
 - Runtime cache-first for immutable, content-hashed assets.
 - Offline packs go to OPFS or the Cache API with integrity checks (data-assets spec).
 - Updates use a "waiting" service worker and a user prompt.

@@ -5,7 +5,7 @@ Moves coordinates between datums and reference frames correctly, which means wit
 ## ADDED Requirements
 
 ### Requirement: Frames are named precisely
-Transformation tools SHALL identify source and target frames by realization, not family name. Supported frames SHALL include at least: WGS 84 (G730, G873, G1150, G1674, G1762, G2139, G2296), ITRF2008, ITRF2014, ITRF2020, IGS20, NAD83(2011), NAD83(CSRS) v8, NAD83(HARN), NAD83(1986), NAD27, ETRS89 (ETRF2000 and ETRF2020 realizations), GDA94, GDA2020, and NATRF2022 (beta, per data-assets). When a user selects "WGS 84" without a realization, the tool SHALL use G2296 and add warning `REALIZATION_ASSUMED`.
+Transformation tools SHALL identify source and target frames by realization, not family name. Supported frames SHALL include at least: WGS 84 (G730, G873, G1150, G1674, G1762, G2139, G2296), ITRF2008, ITRF2014, ITRF2020, IGS20, NAD83(2011), NAD83(CSRS) v8, NAD83(HARN), NAD83(FBN), NAD83(2007), NAD83(PA11), NAD83(MA11), NAD83(1986), NAD27, ETRS89 (ETRF2000 and ETRF2020 realizations), GDA94, GDA2020, and NATRF2022 (beta, per data-assets). When a user selects "WGS 84" without a realization, the tool SHALL use G2296 and add warning `REALIZATION_ASSUMED`.
 
 #### Scenario: Unqualified WGS 84
 - **WHEN** a user transforms from "WGS 84" to NAD83(2011) without choosing a realization
@@ -30,14 +30,14 @@ The domain SHALL implement 7-parameter and 14-parameter (time-dependent) Helmert
 - **THEN** results agree with HTDP within 1 mm per component
 
 ### Requirement: Plate motion and velocity propagation
-The domain SHALL propagate coordinates between epochs within a frame using the ITRF2020 plate motion model (rigid-plate velocities) and SHALL state that deformation zones (e.g. western US plate boundary) are not modeled, adding warning `DEFORMATION_ZONE` when the point lies in a zone flagged by the model. A user-supplied site velocity SHALL override the model.
+The domain SHALL propagate coordinates between epochs within a frame using the ITRF2020 plate motion model (rigid-plate velocities) and SHALL state that deformation zones (e.g. western US plate boundary) are not modeled, adding warning `DEFORMATION_ZONE` when the point lies in a region of the `deformation-zones` asset. A user-supplied site velocity SHALL override the model.
 
 #### Scenario: Propagation in a deformation zone
 - **WHEN** a point near the San Andreas fault is propagated from epoch 2010.0 to 2026.7 in ITRF2020
 - **THEN** the result includes `DEFORMATION_ZONE` and recommends a site velocity from NGS
 
 ### Requirement: Grid-based datum transformations
-The domain SHALL implement NADCON5 grid transformations (NAD27 ↔ NAD83(1986) ↔ NAD83(HARN) ↔ NAD83(FBN) ↔ NAD83(2007) ↔ NAD83(2011) across CONUS, Alaska, Hawaii, Puerto Rico/Virgin Islands, and other published regions), including the chained path where required, with NGS-published accuracy estimates per point. Points outside grid coverage SHALL return `OUT_OF_DOMAIN`.
+The domain SHALL implement NADCON5 grid transformations (NAD27 ↔ NAD83(1986) ↔ NAD83(HARN) ↔ NAD83(FBN) ↔ NAD83(2007) ↔ NAD83(2011) across CONUS, Alaska, Hawaii, Puerto Rico/Virgin Islands, and other published regions, with each region's own terminal frame: NAD83(2011) for CONUS, Alaska, and Puerto Rico/Virgin Islands, NAD83(PA11) for Hawaii and other Pacific-plate regions, and NAD83(MA11) for Guam and the Northern Mariana Islands), including the chained path where required, using the biquadratic interpolation NGS specifies, with NGS-published accuracy estimates per point. Points outside grid coverage SHALL return `OUT_OF_DOMAIN`.
 
 #### Scenario: NAD27 to NAD83(2011)
 - **WHEN** a CONUS NAD27 point is converted to NAD83(2011)

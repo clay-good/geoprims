@@ -34,11 +34,11 @@ Given the inbound course, outbound course, groundspeed or true airspeed, and ban
 
 #### Scenario: 90° fly-by turn
 - **WHEN** V = 120 kt, bank = 25°, and the course changes by 90°
-- **THEN** turn radius ≈ 833.4 m (0.450 NM) and lead distance ≈ 833.4 m
+- **THEN** turn radius ≈ 833.4 m (0.450 NM) and lead distance ≈ 833.4 m (each ±0.1 m)
 
 #### Scenario: Standard-rate radius
 - **WHEN** a standard-rate turn (3°/s) is requested at 120 kt
-- **THEN** the bank angle ≈ 18.24° and turn radius ≈ 1,179.0 m
+- **THEN** the bank angle ≈ 18.24° (±0.01°) and turn radius ≈ 1,179.0 m (±0.1 m)
 
 ### Requirement: Range rings and circles
 A tool SHALL generate a geodesic circle (all points at distance r from a center), densified to the canvas accuracy rule, correctly handling circles that cross the antimeridian or enclose a pole, and SHALL output multiple rings at given radii.
@@ -62,7 +62,7 @@ Tools SHALL solve any one of time, speed, or distance from the other two with un
 - **THEN** time = 2 h 00 min
 
 ### Requirement: Closest point of approach between moving objects
-Given two objects with positions, courses, and speeds (in a local tangent plane, valid for separations under 500 km), a tool SHALL compute the time of closest point of approach (CPA), the separation at CPA, and the bearing and range at CPA. It SHALL report `DIVERGING` if CPA is in the past.
+Given two objects with positions, courses, and speeds (in a local tangent plane, valid for separations under 500 km), a tool SHALL compute the time of closest point of approach (CPA), the separation at CPA, and the bearing and range at CPA. If CPA is in the past, it SHALL return the current separation with warning `DIVERGING` (not an error).
 
 #### Scenario: CPA in local plane
 - **WHEN** object A at the origin moves east at 10 m/s and object B at (1,000 m E, 1,200 m N) moves south at 10 m/s

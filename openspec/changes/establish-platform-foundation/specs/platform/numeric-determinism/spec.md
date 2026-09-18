@@ -41,7 +41,7 @@ Longitudes SHALL be returned in `[-180, 180)` degrees. Azimuths and headings SHA
 - **THEN** the normalized longitude is exactly -179.75
 
 ### Requirement: Output serialization is shortest round-trip
-Numeric outputs SHALL be serialized as the shortest decimal string that round-trips to the same binary64 value. Display rounding for humans SHALL be a presentation concern applied after serialization and SHALL never alter the machine-readable value returned to agents or exported to files.
+Numeric outputs SHALL be serialized by the core using the ECMAScript Number-to-String algorithm (identical to `JSON.stringify` and RFC 8785 number formatting): the shortest decimal string that round-trips to the same binary64 value, with no trailing `.0` on integers. Result objects SHALL be serialized with a fixed key order defined by the output schema. Display rounding for humans SHALL be a presentation concern applied after serialization and SHALL never alter the machine-readable value returned to agents or exported to files.
 
 #### Scenario: Display vs machine value
 - **WHEN** a distance of 12345.678901234567 m is computed

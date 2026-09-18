@@ -12,7 +12,7 @@ context: |
     - User inputs never leave the device. Only static assets are fetched.
     - Instant: the shell loads fast, tools compute in milliseconds.
     - Every result is reproducible, cited, and states its accuracy.
-    - Humans get a tactical "retro-HUD" web app; agents get MCP + packages.
+    - Humans get a tactical "retro-HUD" web app; agents get the local MCP server.
 
   Stack direction (decided in establish-platform-foundation/design.md):
     - Compute core: Rust compiled to WebAssembly (wasm32-unknown-unknown),

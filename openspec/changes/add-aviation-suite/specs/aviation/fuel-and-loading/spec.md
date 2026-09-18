@@ -12,11 +12,15 @@ Tools SHALL compute fuel required (burn rate × time plus taxi, climb increments
 - **THEN** the result is 240 lb, labeled nominal
 
 ### Requirement: Reserve requirements as dated reference data
-Fuel reserve presets SHALL cite their regulation and "rules as of" date. At minimum they SHALL include 14 CFR 91.151 (VFR day 30 min, VFR night 45 min) and 14 CFR 91.167 (IFR: to the destination, then the alternate, then 45 min at normal cruise). The tool SHALL show that operators may have stricter rules, and SHALL allow a custom reserve.
+Fuel reserve presets SHALL cite their regulation and "rules as of" date and SHALL depend on an aircraft-category input (airplane or rotorcraft): for rotorcraft, 14 CFR 91.151 requires 20 min VFR and 91.167 requires 30 min after the alternate. For airplanes they SHALL include at minimum 14 CFR 91.151 (VFR day 30 min, VFR night 45 min) and 14 CFR 91.167 (IFR: to the destination, then the alternate, then 45 min at normal cruise). The tool SHALL show that operators may have stricter rules, and SHALL allow a custom reserve.
 
 #### Scenario: VFR night reserve
 - **WHEN** a user selects "VFR night (14 CFR 91.151)"
 - **THEN** a 45-minute reserve at the entered cruise burn is added, and the citation with its date is shown
+
+#### Scenario: Rotorcraft reserve
+- **WHEN** a user selects aircraft category rotorcraft and "VFR (14 CFR 91.151)"
+- **THEN** a 20-minute reserve is applied and cited
 
 ### Requirement: Weight and balance
 Given station weights and arms (user-defined stations: empty weight, seats, baggage, fuel), the tool SHALL compute total weight, total moment, and CG, and optionally CG in % MAC (from LEMAC and MAC length). It SHALL check the result against a user-entered CG envelope polygon (weight versus CG), for the takeoff and landing states, with fuel burn between them.

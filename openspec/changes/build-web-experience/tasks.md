@@ -41,7 +41,7 @@
 - [ ] 5.4 Implement vector-diagram mode (wind triangle, airspeed gauge, traverse sketch, cross-section, profile chart); verify fixtures for each
 - [ ] 5.5 Implement canvas input (click to set, drag points) with form sync and keyboard equivalents; verify the drag-waypoint scenario
 - [ ] 5.6 Implement the HUD overlay (cursor readout in chosen format, scale bar, true and magnetic north, projection name); verify the MGRS readout scenario
-- [ ] 5.7 Implement the bundled Natural Earth basemap and the optional self-hosted vector basemap with attribution and zoom ≤ 12 fetch cap; verify offline rendering and the tile-zoom cap
+- [ ] 5.7 Implement the bundled Natural Earth basemap and the optional self-hosted vector basemap with attribution and zoom ≤ 7 whole-tile fetch cap; verify offline rendering and the tile-zoom cap
 - [ ] 5.8 Implement HUD post-processing effects with reduced-motion and settings gates; verify the reduced-motion scenario and the flash-rate check
 - [ ] 5.9 Implement canvas export (PNG with attribution, SVG, GeoJSON); verify the attribution-footer scenario
 - [ ] 5.10 Implement the canvas accessible description; verify the screen-reader summary scenario

@@ -34,11 +34,11 @@ Tools SHALL compute the convex hull (planar and spherical), the axis-aligned bou
 - **THEN** the result is west = 170, east = -170 (a 20° span), flagged `CROSSES_ANTIMERIDIAN`, not a 340° span
 
 ### Requirement: Geodesic buffers
-The buffer tool SHALL buffer points, lines, and polygons by a distance on the ellipsoid (positive or negative) with selectable join style (round, mitre, bevel) and cap style (round, flat, square). The offset boundary SHALL be within 0.1% of the requested distance, or 0.5 m, whichever is larger, at every vertex. Buffers across the antimeridian and around poles SHALL produce valid geometry.
+The buffer tool SHALL buffer points, lines, and polygons by a distance on the ellipsoid (positive or negative) with selectable join style (round, mitre, bevel) and cap style (round, flat, square). For round joins and caps, the Hausdorff distance between the output boundary and the ideal geodesic offset curve SHALL be at most 0.1% of the requested distance or 0.5 m, whichever is larger, checked at vertices and segment midpoints; mitre and square corner vertices are exempt (they lie at d / cos(θ/2) by construction) and SHALL respect the mitre limit. Buffers across the antimeridian and around poles SHALL produce valid geometry.
 
 #### Scenario: Geofence buffer
 - **WHEN** a polygon is buffered outward by 500 m
-- **THEN** every output vertex is 500 m ± 0.5 m from the input boundary (geodesic distance), and the output is valid
+- **THEN** with round joins, every output vertex and segment midpoint is 500 m ± 0.5 m from the input boundary (geodesic distance), and the output is valid
 
 #### Scenario: Negative buffer collapses
 - **WHEN** a 100 m wide polygon is buffered by -60 m
@@ -52,7 +52,7 @@ Tools SHALL simplify polylines and polygons by Ramer-Douglas-Peucker (tolerance 
 - **THEN** the output has no self-intersections, and the maximum deviation is reported
 
 ### Requirement: Predicates
-Tools SHALL test point-in-polygon (with holes) by both winding-number and even-odd rules, reporting `inside`, `outside`, or `on-boundary` (within a stated tolerance), and SHALL test intersects, contains, within, touches, crosses, overlaps, and disjoint for pairs of geometries using robust (exact) orientation predicates. For geographic input, edges SHALL be treated as geodesics unless the user selects planar.
+Tools SHALL test point-in-polygon (with holes) by both winding-number and even-odd rules, reporting `inside`, `outside`, or `on-boundary` (within a stated tolerance), and SHALL test intersects, contains, within, touches, crosses, overlaps, and disjoint for pairs of geometries using robust (exact, Shewchuk) orientation predicates for planar input. For geographic input, edges SHALL be treated as geodesics unless the user selects planar; the geodesic side-of-edge test SHALL use the ellipsoidal geodesic through the edge endpoints, with `on-boundary` reported within 1 mm of the edge.
 
 #### Scenario: Point on boundary
 - **WHEN** a point lies exactly on a polygon edge
@@ -84,8 +84,19 @@ Tools SHALL densify lines to a maximum segment length, compute Delaunay triangul
 - **THEN** the result gives the distance in meters and the index pair where it occurs
 
 ### Requirement: Input size limits
-Geometry tools SHALL accept up to 1,000,000 vertices per request in the web app (500,000 via MCP by default) and return `LIMIT_EXCEEDED` above that.
+Geometry tools SHALL accept up to 1,000,000 vertices per request in the web app (200,000 via MCP by default, which fits the MCP 10 MB request limit) and return `LIMIT_EXCEEDED` above that.
 
 #### Scenario: Oversized input
 - **WHEN** a 2,000,000-vertex polygon is submitted
 - **THEN** the tool returns `LIMIT_EXCEEDED` before processing
+
+### Requirement: Polygon interior rule and invalid rings
+For geographic polygons the interior SHALL follow ring orientation (counterclockwise exterior rings per RFC 7946), so a ring can enclose more than a hemisphere. The area tool SHALL offer an explicit "smaller area" interpretation for rings of unknown orientation and state which rule it used. Self-intersecting rings SHALL be rejected by measurement tools with `DEGENERATE_GEOMETRY`, pointing to the repair tool.
+
+#### Scenario: Hemisphere-plus polygon
+- **WHEN** a clockwise ring around a small area is measured with the orientation rule
+- **THEN** the area returned is the Earth's area minus the small area, and the result states the rule used
+
+#### Scenario: Self-intersecting ring
+- **WHEN** a bow-tie ring is passed to the area tool
+- **THEN** the tool returns `DEGENERATE_GEOMETRY` with the crossing location and a hint to `geometry.validity.make-valid`

@@ -71,3 +71,14 @@ Wind tools SHALL draw the wind triangle (air vector, wind vector, ground vector)
 #### Scenario: Runway diagram
 - **WHEN** runway components are computed
 - **THEN** the diagram shows the runway, the wind arrow, and the headwind and crosswind component arrows with values
+
+### Requirement: Wind edge cases
+Wind inputs SHALL accept calm (`00000KT`, 0 kt) and variable direction (`VRB05KT`, or a variation range such as `280V340`). With calm wind the triangle SHALL return WCA 0 and groundspeed equal to TAS. With variable direction the runway tool SHALL report the worst-case crosswind and tailwind over the range (or over all directions for `VRB`). TAS of 0 SHALL be rejected with `INVALID_INPUT`. Deviation-card and wind-direction interpolation SHALL wrap across 360°/000°.
+
+#### Scenario: Variable wind worst case
+- **WHEN** runway 27 is evaluated with wind `VRB08KT`
+- **THEN** the worst-case crosswind is 8 kt and the worst-case tailwind is 8 kt, both labeled worst case
+
+#### Scenario: Deviation card across north
+- **WHEN** a deviation card lists −1° at 330° and +1° at 030° and the heading is 000°
+- **THEN** the interpolated deviation is 0°

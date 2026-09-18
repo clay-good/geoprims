@@ -53,7 +53,7 @@ Rejected: a single compiled binary (50–100 MB per platform, code-signing burde
 Large collections are capped per call, with `total`, `offset`, and `truncated`, plus summaries (count, bounding box, area). Agents rarely need 250,000 H3 cells in context. They need the count, the extent, and a way to page.
 
 ### A6. Assets for agents
-- **Bundled:** the small assets (WMM2025, IGRF-14, Natural Earth 110m, the CRS registry, EGM96-15), about 3 MB.
+- **Bundled:** the small assets (WMM2025, WMMHR2025, IGRF-14, EGM96-15, the CRS registry, Natural Earth 110m, deformation zones), at most 6 MB.
 - **Large packs:** fetched tile-by-tile only when the server is launched with `--allow-asset-download`. Tiles are the same verified, coarse tiles as the website, cached under the OS cache directory.
 - **Default:** fully offline, which keeps the "no network" promise literal.
 

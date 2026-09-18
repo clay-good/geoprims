@@ -16,7 +16,7 @@ Every catalog endpoint SHALL have a stable route `/<domain>/<group>/<operation>`
 - **THEN** the page shows the documentation, formula, worked example, and a notice that computation requires JavaScript and WebAssembly
 
 ### Requirement: Load performance budgets
-On the reference mid-tier mobile profile over a simulated 4G connection with a cold cache, a tool page SHALL reach Largest Contentful Paint within 1.5 s and become interactive (tool computes on input) within 2.5 s. On a warm cache, a tool SHALL be interactive within 500 ms. The initial JavaScript for the shell SHALL be at most 90 KB compressed, excluding Wasm and canvas code, which SHALL load after first paint.
+On the reference mid-tier mobile profile over a simulated connection of 9 Mbps down, 1.5 Mbps up, and 150 ms round-trip time, with a cold cache, a tool page SHALL reach Largest Contentful Paint within 1.5 s and become interactive (tool computes on input) within 2.5 s. On a warm cache, a tool SHALL be interactive within 500 ms. The initial JavaScript for the shell SHALL be at most 90 KB compressed, excluding Wasm and canvas code, which SHALL load after first paint.
 
 #### Scenario: Budget enforced in CI
 - **WHEN** the Lighthouse-style performance job measures a sampled set of 50 routes
@@ -80,7 +80,7 @@ A settings screen SHALL provide: unit profile, coordinate display format, number
 - **THEN** every tool opened afterwards defaults distance to NM, speed to kt, and altitude to ft
 
 ### Requirement: Safety notice on operational tools
-Every tool in the `aviation` and `drone` domains, and every navigation tool, SHALL display a persistent, non-dismissable-per-page notice "Planning and education aid. Not for primary navigation." with a link to the full disclaimer. The notice SHALL NOT be a modal and SHALL NOT block use.
+Every tool in the `aviation` and `drone` domains, and every navigation tool, SHALL display a persistent notice that cannot be dismissed "Planning and education aid. Not for primary navigation." with a link to the full disclaimer. The notice SHALL NOT be a modal and SHALL NOT block use.
 
 #### Scenario: Notice visible
 - **WHEN** a user opens any aviation tool

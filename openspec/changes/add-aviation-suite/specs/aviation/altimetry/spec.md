@@ -5,7 +5,7 @@ Computes pressure altitude, density altitude, flight levels, altimeter settings,
 ## ADDED Requirements
 
 ### Requirement: Pressure altitude from altimeter setting
-Given field (or indicated) elevation and altimeter setting (QNH, in inHg or hPa), the tool SHALL compute station pressure via the ISA relation and pressure altitude PA = (T0/L)·(1 − (p/P0)^(R·L/g0)). It SHALL use the ISA-derived constants 145,442.16 ft and exponent 0.190263 (documented), and SHALL also show the rule of thumb PA ≈ elevation + (29.92 − setting) × 1,000 ft.
+Given field (or indicated) elevation and altimeter setting (QNH, in inHg or hPa), the tool SHALL compute station pressure via the ISA relation and pressure altitude PA = (T0/L)·(1 − (p/P0)^(R·L/g0)). This closed form applies below 36,089 ft; above it the tool SHALL invert the layered ISA model (isothermal tropopause and higher layers). It SHALL use the ISA-derived constants 145,442.16 ft and exponent 0.190263 (documented), and SHALL also show the rule of thumb PA ≈ elevation + (29.92 − setting) × 1,000 ft.
 
 #### Scenario: 5,000 ft field, 29.80 inHg
 - **WHEN** elevation = 5,000 ft and altimeter = 29.80 inHg
@@ -55,7 +55,7 @@ Tools SHALL convert between flight level and altitude for a given QNH, and SHALL
 - **THEN** the lowest usable flight level is FL185, and the FAA table is cited as reference
 
 ### Requirement: Cold-temperature altitude correction
-The correction tool SHALL implement the ICAO Doc 8168 (2020 edition) equation ΔH = (−ΔT_std / L0) · ln(1 + L0·H_p / (T0 + L0·H_aerodrome)). Here L0 = −0.0019812 K/ft, ΔT_std is the aerodrome temperature minus ISA temperature at the aerodrome, and heights are relative to the altimeter-setting source. It SHALL NOT use the erroneous 2018 Vol III formulation. It SHALL also show the ICAO table method and the 4%-per-10 °C rule as labeled approximations. It SHALL support correcting multiple procedure altitudes at once (FAA "All Segments" or "Individual Segments" methods), and SHALL link to the live FAA Cold Temperature Airports list rather than hard-code it.
+The correction tool SHALL implement the ICAO Doc 8168 Vol II, 7th edition (2020) equation (as cited in Transport Canada AC 500-020 §4.8) ΔH = (−ΔT_std / L0) · ln(1 + L0·H_p / (T0 + L0·H_aerodrome)). Here L0 = −0.0019812 K/ft, ΔT_std is the aerodrome temperature minus ISA temperature at the aerodrome, and heights are relative to the altimeter-setting source. It SHALL NOT use the erroneous 2018 Vol III formulation. It SHALL also show the ICAO table method and the 4%-per-10 °C rule as labeled approximations. It SHALL support correcting multiple procedure altitudes at once (FAA "All Segments" or "Individual Segments" methods), and SHALL link to the live FAA Cold Temperature Airports list rather than hard-code it.
 
 #### Scenario: Correction at -30 °C
 - **WHEN** aerodrome elevation = 2,000 ft, aerodrome temperature = -30 °C, height above aerodrome = 1,500 ft

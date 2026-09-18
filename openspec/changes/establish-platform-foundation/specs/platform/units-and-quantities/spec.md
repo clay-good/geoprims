@@ -36,7 +36,7 @@ The unit registry SHALL use these exact definitions and SHALL cite their source 
 
 #### Scenario: Survey foot distinct
 - **WHEN** 1,000,000 ftUS and 1,000,000 ft are converted to meters
-- **THEN** the results differ by 0.6096012 m (±1e-9 m), the 2 ppm difference
+- **THEN** the results differ by 0.609601219 m (±1e-9 m), the 2 ppm difference
 
 ### Requirement: US survey foot handled as legacy
 The US survey foot SHALL be available for reading and writing legacy data but SHALL NOT be the default for any tool. Any tool whose output is in `ftUS` SHALL attach warning `LEGACY_UNIT` noting its deprecation by NIST/NOAA effective January 1, 2023. State Plane tools SHALL expose the unit per zone definition explicitly.
@@ -53,7 +53,7 @@ Supported angle units SHALL include degrees, radians, gradians (gon), arcminutes
 - **THEN** the tool returns `UNIT_MISMATCH` listing `mil-nato`, `mil-warsaw`, `mil-sweden`, `mrad`
 
 ### Requirement: Unit-tagged value parsing
-Any numeric input SHALL accept either a bare number (interpreted in the field's declared default unit, which the UI always displays) or a string with a unit suffix from the registry, including common aliases (`kts`, `knots`, `nm`, `NM`, `nmi`, `'` for feet only where unambiguous, `°`, `deg`, `°C`, `degC`, `C`, `"Hg`, `inhg`, `mb`, `hPa`). Parsing SHALL be case-sensitive where case distinguishes units (`mm` vs `Mm`, `mbar` vs `Mbar` rejected). Thousands separators `,` and `_` SHALL be accepted; a decimal comma SHALL be accepted only when the UI's number-format setting is set to decimal comma.
+Any numeric input SHALL accept either a bare number (interpreted in the field's declared default unit, which the UI always displays) or a string with a unit suffix from the registry, including common aliases (`kts`, `knots`, `nm`, `NM`, `nmi`, `'` for feet only where unambiguous, `°`, `deg`, `°C`, `degC`, `C`, `"Hg`, `inhg`, `mb`, `hPa`). Parsing SHALL be case-sensitive where case distinguishes units (`mm` vs `Mm`, `mbar` vs `Mbar` rejected). Aliases SHALL be resolved against the field's quantity (e.g. `C` is degrees Celsius in a temperature field and coulomb in a charge field; `mb` is millibar in a pressure field and megabit in a data-rate field); an alias ambiguous within one quantity SHALL be rejected. In decimal-point mode, `,` SHALL be accepted as a thousands separator only in valid 3-digit groups (`12,345.6`); any other comma SHALL be routed to the ambiguity handling of the coordinate parser or rejected. `_` SHALL be accepted as a digit separator. A decimal comma SHALL be accepted only when the number-format setting is decimal comma.
 
 #### Scenario: Aliased unit
 - **WHEN** a speed input is `145 kts`

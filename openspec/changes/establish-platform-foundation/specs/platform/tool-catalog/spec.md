@@ -12,7 +12,7 @@ The catalog SHALL organize tools into these top-level domains: `geodesy` (coordi
 - **THEN** every tool id's second segment names an existing group in its domain, and no id appears in two groups
 
 ### Requirement: Operations versus endpoints counting rule
-The catalog SHALL distinguish **operations** (distinct mathematical functions with their own contract and vectors) from **endpoints** (addressable tool ids, including generated conversion pairs such as `geodesy.convert.dms-to-mgrs`). Generated endpoints SHALL be produced from a conversion graph over operations and SHALL NOT carry separate mathematics. Public tool counts SHALL report both numbers.
+The catalog SHALL distinguish **operations** (distinct mathematical functions with their own contract and vectors) from **endpoints** (addressable tool ids, including generated conversion pairs such as `geodesy.convert.dms-to-mgrs`). Generated endpoints SHALL be produced from a conversion graph over operations and SHALL NOT carry separate mathematics. Operations and generated endpoints share one naming scheme (conversions are named `a-to-b` either way); they are distinguished by the manifest's `composedOf` field, never by name. Public tool counts SHALL report both numbers.
 
 #### Scenario: Generated pair shares math
 - **WHEN** `geodesy.convert.dms-to-mgrs` is invoked
@@ -20,7 +20,7 @@ The catalog SHALL distinguish **operations** (distinct mathematical functions wi
 
 #### Scenario: Honest public count
 - **WHEN** the home page shows the tool count
-- **THEN** it displays both the operation count and the endpoint count, computed from the build
+- **THEN** it displays both the operation count and the endpoint count of stable tools, computed from the build, with experimental tools counted separately
 
 ### Requirement: Generated endpoints must be meaningful
 A generated conversion-pair endpoint SHALL be published only if the pair is a real user task (listed in the catalog's pair allow-list with a justification) and SHALL NOT be generated for every permutation automatically.
@@ -37,7 +37,7 @@ Every tool SHALL declare aliases and keywords that practitioners use (for exampl
 - **THEN** the wind-correction-angle tool is in the top 3 results
 
 ### Requirement: Lifecycle states
-Every tool SHALL have one of the states `experimental`, `stable`, or `deprecated`. Experimental tools SHALL be visibly labeled in the web UI, SHALL be excluded from the MCP server's default profile, and SHALL NOT be promoted to stable until they meet the stable-vector count and differential-test requirements.
+Every tool SHALL have one of the states `experimental`, `stable`, or `deprecated`. Experimental tools SHALL be visibly labeled in the web UI, SHALL be excluded from MCP search results and toolsets unless explicitly requested, and SHALL NOT be promoted to stable until they meet the stable-vector count and differential-test requirements.
 
 #### Scenario: Experimental label
 - **WHEN** a user opens an experimental tool
@@ -51,7 +51,7 @@ Every tool SHALL list related tools (inverse operation, next logical step, alter
 - **THEN** the build fails unless `geodesy.utm.inverse` declares `geodesy.utm.forward` as its inverse
 
 ### Requirement: Catalog export
-The build SHALL publish the full catalog as a versioned JSON file at a stable URL (`/catalog/v1.json`) containing every manifest, for use by the MCP server, third-party tools, and search engines.
+The build SHALL publish the full catalog as a versioned JSON file at a stable URL (`/catalog/v1.json`) containing every manifest, for use by the MCP server and search engines. Within `v1`, fields MAY be added but SHALL NOT be removed or renamed; breaking changes publish `/catalog/v2.json` alongside `v1` for at least 12 months.
 
 #### Scenario: Catalog available offline
 - **WHEN** the PWA is installed and the device is offline

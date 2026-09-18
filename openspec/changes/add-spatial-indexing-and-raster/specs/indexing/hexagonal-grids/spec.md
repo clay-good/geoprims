@@ -38,7 +38,7 @@ Tools SHALL handle the 12 pentagons at each resolution correctly: k-rings around
 
 #### Scenario: Path across a pentagon
 - **WHEN** `gridPathCells` cannot be computed because the line crosses pentagon distortion
-- **THEN** the tool returns an error with code `UNSUPPORTED` naming the H3 failure reason
+- **THEN** the tool returns an error with code `DEGENERATE_GEOMETRY` naming the H3 failure reason
 
 ### Requirement: Polyfill with explicit containment and limits
 `polygonToCells` SHALL require an explicit containment mode (default "center", with the mode echoed). It SHALL estimate output size before computing and return `LIMIT_EXCEEDED` above the declared limit (default 5,000,000 cells in the web app, and a paginated 1,000 per call via MCP). It SHALL correctly handle polygons with holes, across the antimeridian, and around poles.

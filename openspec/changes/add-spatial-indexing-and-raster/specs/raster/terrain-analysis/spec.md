@@ -34,7 +34,7 @@ Given a path (two points or a polyline, geodesic edges), the profile tool SHALL 
 
 #### Scenario: Sampling density
 - **WHEN** a 10 km profile is computed on GLO-30
-- **THEN** at least 334 samples are returned (≤ 30 m spacing)
+- **THEN** at least 335 samples are returned (334 intervals of ≤ 30 m)
 
 ### Requirement: Slope, aspect, hillshade, and contours
 Tools SHALL compute slope (degrees and percent), aspect (degrees from north, with flat areas flagged), and hillshade (sun azimuth and altitude inputs) using Horn's method. They SHALL account for geographic DEM cell sizes varying with latitude, and SHALL generate contours at an interval as vector lines. Derivatives SHALL match GDAL `gdaldem` within 0.01° for slope and aspect on projected test DEMs.

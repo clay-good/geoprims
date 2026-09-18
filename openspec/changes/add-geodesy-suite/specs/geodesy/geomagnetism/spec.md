@@ -57,3 +57,10 @@ Magnetic tools SHALL be able to draw isogonic lines (lines of equal declination)
 #### Scenario: Isogonic overlay
 - **WHEN** a user enables the isogonic overlay for 2026-09-18
 - **THEN** the canvas draws declination contours at a user-selected interval (default 2°) and shades the blackout and caution zones
+
+### Requirement: Behavior at the geographic poles and where H approaches zero
+At latitude ±90° declination SHALL be reported using a stated convention (declination measured from the direction of the Greenwich meridian) with warning `DECLINATION_POLE_CONVENTION` and a hint to grid variation. Where H < 1 nT the declination SHALL be returned as undefined (`DEGENERATE_GEOMETRY`), and the WMM declination-uncertainty term SHALL be capped at 180°.
+
+#### Scenario: Geographic pole
+- **WHEN** declination is requested at 90° N
+- **THEN** the result states the Greenwich convention, includes `DECLINATION_POLE_CONVENTION`, and suggests grivation

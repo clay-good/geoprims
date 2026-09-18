@@ -9,7 +9,7 @@ Given observer height above the surface, the tool SHALL compute horizon distance
 
 #### Scenario: 100 m observer
 - **WHEN** horizon distance is requested for h = 100 m with R = 6,371,000 m
-- **THEN** the geometric distance ≈ 35.70 km, the optical (k = 0.13) ≈ 38.27 km, and the radio (4/3) ≈ 41.22 km
+- **THEN** the geometric distance ≈ 35.70 km, the optical (k = 0.13) ≈ 38.27 km, and the radio (4/3) ≈ 41.22 km (each ±0.01 km)
 
 #### Scenario: Rule-of-thumb comparison
 - **WHEN** the result is displayed
@@ -20,7 +20,7 @@ Given two heights, the tool SHALL compute the maximum distance at which they are
 
 #### Scenario: Hidden height
 - **WHEN** an observer at 2 m looks at a target 30 km away with k = 0.13
-- **THEN** the observer's horizon is ≈ 5.41 km and the hidden height of the target (the part below the horizon) is ≈ 41.3 m
+- **THEN** the observer's horizon is ≈ 5.41 km and the hidden height of the target (the part below the horizon) is ≈ 41.3 m (±0.1 m)
 
 ### Requirement: Dip of the horizon and geographic range
 A tool SHALL compute the dip of the visible horizon for an observer height (with refraction), and the geographic range of a light or object of given height (nautical use).
@@ -34,7 +34,7 @@ A tool SHALL compute the first Fresnel zone radius at any point along a link (fr
 
 #### Scenario: 5.8 GHz drone link
 - **WHEN** a 5.8 GHz link of 10 km is evaluated at the midpoint
-- **THEN** the first Fresnel radius and Earth bulge (k = 4/3) are reported and summed as required clearance
+- **THEN** the first Fresnel radius and Earth bulge (effective Earth radius factor K = 4/3, i.e. k = 0.25) are reported and summed as required clearance
 
 ### Requirement: Terrain is out of scope here and says so
 Line-of-sight results SHALL state that terrain and obstacles are not considered and link to the terrain line-of-sight tool.

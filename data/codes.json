@@ -289,6 +289,14 @@
     "PERFECT_CLOSURE": {
       "severity": "info",
       "message": "The traverse closes perfectly, which is unusual for field data."
+    },
+    "SUN_BELOW_HORIZON": {
+      "severity": "info",
+      "message": "The sun is below the horizon."
+    },
+    "CIVIL_TWILIGHT_APPROXIMATED": {
+      "severity": "accuracy",
+      "message": "Civil twilight was computed as the sun 6° below the horizon, not read from the Air Almanac."
     }
   }
 }

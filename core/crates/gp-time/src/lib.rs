@@ -4,6 +4,8 @@
 //! leap-second table is embedded and echoed in `meta.assets`.
 
 pub mod civil;
+pub mod solar;
+pub mod sun;
 
 use civil::{Stamp, TAI_MINUS_GPS};
 use gp_base::ErrorCode;
@@ -78,7 +80,7 @@ const fn plain(name: &'static str, title: &'static str, help: &'static str, deci
     .precision(Precision::Plain(decimals))
 }
 
-const fn text(name: &'static str, title: &'static str, help: &'static str) -> Field {
+pub(crate) const fn text(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(name, title, help, Kind::Text { max_len: 40 })
 }
 
@@ -88,7 +90,7 @@ fn stamp(ctx: &Ctx, name: &str) -> Result<Stamp, ToolError> {
 }
 
 /// A stamp in UTC: applies its offset (none means it is already UTC).
-fn to_utc(s: Stamp) -> (i64, f64) {
+pub(crate) fn to_utc(s: Stamp) -> (i64, f64) {
     match s.offset {
         None | Some(0) => (s.days, s.secs),
         Some(off) => {
@@ -955,6 +957,10 @@ pub static TOOLS: &[&ToolDef] = &[
     &DECIMAL_HOURS,
     &BLOCK_TIME,
     &UTC_OFFSET,
+    &solar::POSITION,
+    &solar::EVENTS,
+    &solar::AVIATION_NIGHTS,
+    &solar::MAPPING_WINDOW,
 ];
 
 pub static REGISTRY: Registry = Registry {

@@ -216,3 +216,126 @@ fn zulu_scenarios() {
     );
     assert_eq!(clash["error"]["code"], "INVALID_INPUT");
 }
+
+/// USNO rise, set, and civil twilight (aa.usno.navy.mil, retrieved
+/// 2026-09-18), local clock minutes; the core agrees within 1 minute.
+#[test]
+fn sun_events_agree_with_usno() {
+    let cases = [
+        (
+            (39.7392, -104.9903, "2026-06-21", "-06:00"),
+            ["05:00", "05:32", "20:31", "21:04"],
+        ),
+        (
+            (-33.8688, 151.2093, "2026-12-21", "+11:00"),
+            ["05:11", "05:41", "20:05", "20:35"],
+        ),
+        (
+            (51.5074, -0.1278, "2026-01-15", "+00:00"),
+            ["07:21", "07:59", "16:21", "16:59"],
+        ),
+        (
+            (40.4406, -79.9959, "2026-09-18", "-04:00"),
+            ["06:36", "07:04", "19:24", "19:51"],
+        ),
+    ];
+    let minutes = |s: &str| -> i64 {
+        let hm = s.split(' ').nth(1).unwrap();
+        hm[..2].parse::<i64>().unwrap() * 60 + hm[3..5].parse::<i64>().unwrap()
+    };
+    for ((lat, lon, date, off), usno) in cases {
+        let r = call(
+            "time.sun.events",
+            &format!(r#"{{"lat":{lat},"lon":{lon},"date":"{date}","offset":"{off}"}}"#),
+        );
+        for (k, want) in ["civil_dawn", "sunrise", "sunset", "civil_dusk"]
+            .iter()
+            .zip(usno)
+        {
+            let got = minutes(r["result"][k].as_str().unwrap());
+            let want = minutes(&format!("x {want}"));
+            assert!((got - want).abs() <= 1, "{lat} {k}: {r}");
+        }
+    }
+}
+
+#[test]
+fn polar_night_and_evening_after_zulu_midnight() {
+    let r = call(
+        "time.sun.events",
+        r#"{"lat":71.29,"lon":-156.79,"date":"2026-12-21","offset":"-09:00"}"#,
+    );
+    assert_eq!(r["result"]["state"], "polar-night");
+    assert!(
+        r["result"]["civil_dawn"]
+            .as_str()
+            .unwrap()
+            .contains("local"),
+        "civil twilight still occurs"
+    );
+    let d = call(
+        "time.sun.events",
+        r#"{"lat":39.7392,"lon":-104.9903,"date":"2026-06-21","offset":"-06:00"}"#,
+    );
+    let dusk = d["result"]["civil_dusk"].as_str().unwrap();
+    assert!(
+        dusk.starts_with("2026-06-21 21:04 local") && dusk.contains("2026-06-22 0304Z"),
+        "{dusk}"
+    );
+}
+
+#[test]
+fn four_nights_are_labeled_and_distinct() {
+    let r = call(
+        "time.sun.aviation-nights",
+        r#"{"lat":39.7392,"lon":-104.9903,"date":"2026-06-21","offset":"-06:00","landing_time":"21:20"}"#,
+    );
+    let res = &r["result"];
+    for k in [
+        "logging_night",
+        "passenger_currency",
+        "position_lights",
+        "part107_evening",
+        "part107_morning",
+    ] {
+        assert!(res[k].as_str().unwrap().contains(" to "), "{k}");
+    }
+    assert_eq!(res["landing_logs_night"], "yes");
+    assert_eq!(res["landing_counts_currency"], "no");
+    let s = r["summary"].as_str().unwrap();
+    assert!(s.contains("21:31") && s.contains("does not count"), "{s}");
+    let ak = call(
+        "time.sun.aviation-nights",
+        r#"{"lat":61.2181,"lon":-149.9003,"date":"2026-06-21","offset":"-08:00","alaska":"yes"}"#,
+    );
+    // Near the solstice in Anchorage civil twilight lasts all night.
+    assert!(
+        ak["result"]["part107_evening"]
+            .as_str()
+            .unwrap()
+            .starts_with("none"),
+        "{ak}"
+    );
+}
+
+#[test]
+fn sun_position_extras() {
+    let r = call(
+        "time.sun.position",
+        r#"{"lat":39.7392,"lon":-104.9903,"time":"2026-06-21T13:02-06:00","slope":"30 deg","aspect":"180 deg"}"#,
+    );
+    // Near solar noon the sun is due south at about 90 − 39.74 + 23.44.
+    assert!((num(&r, "result.azimuth.value") - 180.0).abs() < 1.0, "{r}");
+    assert!((num(&r, "result.elevation.value") - 73.7).abs() < 0.1);
+    assert!((num(&r, "result.incidence.value") - (90.0 - 73.7 - 30.0_f64).abs()).abs() < 0.5);
+    let night = call(
+        "time.sun.position",
+        r#"{"lat":39.7392,"lon":-104.9903,"time":"2026-06-21T08:00Z"}"#,
+    );
+    assert!(codes(&night).contains(&"SUN_BELOW_HORIZON".to_owned()));
+    let half = call(
+        "time.sun.position",
+        r#"{"lat":0,"lon":0,"time":"2026-03-20T12:00Z","slope":"10 deg"}"#,
+    );
+    assert_eq!(half["error"]["field"], "/aspect");
+}

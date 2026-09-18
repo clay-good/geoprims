@@ -1,13 +1,13 @@
 ## 1. Photogrammetry
 
-- [ ] 1.1 Implement GSD (across and along track), inverse GSD, crop-factor conversion, and the equivalent-focal-length warning; verify the 1-inch, suspected-equivalent, and 2 cm scenarios
-- [ ] 1.2 Implement footprint, trigger distance and interval, line spacing, and camera-interval checks; verify the 75/65 and camera-too-slow scenarios
-- [ ] 1.3 Implement cited overlap presets; verify the forest scenario
+- [x] 1.1 Implement GSD (across and along track), inverse GSD, crop-factor conversion, and the equivalent-focal-length warning; verify the 1-inch, suspected-equivalent, and 2 cm scenarios
+- [x] 1.2 Implement footprint, trigger distance and interval, line spacing, and camera-interval checks; verify the 75/65 and camera-too-slow scenarios
+- [x] 1.3 Implement cited overlap presets; verify the forest scenario
 - [ ] 1.4 Implement terrain-aware overlap using a highest-terrain value or DEM profile; verify the hill scenario
-- [ ] 1.5 Implement motion blur and maximum shutter; verify the 1/1000 s scenario
+- [x] 1.5 Implement motion blur and maximum shutter; verify the 1/1000 s scenario
 - [ ] 1.6 Implement oblique GSD and trapezoid footprint; verify the 45° scenario against a hand-computed fixture
 - [ ] 1.7 Implement image-count estimation; verify the 2% agreement scenario against generated grids for 20 polygons
-- [ ] 1.8 Implement the ASPRS Edition 2 calculator (RMSE_H, NVA/VVA, checkpoint error, 30-point minimum, blunders, mean error); verify all three ASPRS scenarios and the worked examples in the standard
+- [ ] 1.8 Implement the ASPRS Edition 2 calculator (RMSE_H, NVA/VVA, checkpoint error, 30-point minimum, blunders, mean error); verify all three ASPRS scenarios and the worked examples in the standard (built: product accuracy with checkpoint error, RMSE_H, and the 30-checkpoint minimum with two of the three scenarios; pending: per-checkpoint lists for blunder and mean-error checks, NVA/VVA)
 
 ## 2. Mission patterns
 

@@ -78,6 +78,10 @@
       "severity": "caution",
       "message": "The resection geometry is weak or unstable."
     },
+    "ABOVE_ALTITUDE_CEILING": {
+      "severity": "caution",
+      "message": "The height is above the altitude ceiling you set (default 400 ft AGL)."
+    },
     "ACCURACY_DEGRADED": {
       "severity": "accuracy",
       "message": "Accuracy is lower than usual for this input."

@@ -47,7 +47,14 @@
     },
     "drone": {
       "title": "Drone",
-      "groups": []
+      "groups": [
+        "photogrammetry",
+        "mission",
+        "power",
+        "ops",
+        "sensors",
+        "links"
+      ]
     },
     "survey": {
       "title": "Survey",

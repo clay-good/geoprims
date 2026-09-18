@@ -176,6 +176,26 @@
     {
       "query": "polar stereographic",
       "expect": "geodesy.ups.forward"
+    },
+    {
+      "query": "gsd calculator",
+      "expect": "drone.photogrammetry.gsd"
+    },
+    {
+      "query": "altitude for gsd",
+      "expect": "drone.photogrammetry.altitude-for-gsd"
+    },
+    {
+      "query": "overlap calculator",
+      "expect": "drone.photogrammetry.trigger"
+    },
+    {
+      "query": "motion blur",
+      "expect": "drone.photogrammetry.motion-blur"
+    },
+    {
+      "query": "asprs accuracy",
+      "expect": "drone.photogrammetry.asprs-accuracy"
     }
   ]
 }

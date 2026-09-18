@@ -7,7 +7,7 @@
 
   const fields = Object.entries(tool.inputs.properties).filter(([k]) => k !== 'options');
   const required = new Set(tool.inputs.required);
-  const primary = Object.keys(tool.outputs.properties)[0];
+  const outputOrder = Object.keys(tool.outputs.properties);
 
   let values = $state(Object.fromEntries(fields.map(([k]) => [k, example[k] === undefined ? '' : String(example[k])])));
   let result = $state(initial);
@@ -19,7 +19,9 @@
   let timer;
 
   // Display text comes from the core (display precision, grouping, unit labels).
-  const answer = $derived(result?.ok ? result.display?.[primary] ?? '' : '');
+  // The primary result is the first declared output present (optional outputs may be absent).
+  const primary = $derived(result?.ok ? outputOrder.find((k) => result.display?.[k] !== undefined) : undefined);
+  const answer = $derived(result?.ok && primary ? result.display[primary] : '');
   // Cautions first, then accuracy notes, then info (codes registry severities).
   const RANK = { caution: 0, accuracy: 1, info: 2 };
   const severityOf = (code) => tool.severity[code] ?? 'info';

@@ -1,0 +1,185 @@
+//! Drone photogrammetry: catalog lint, examples, vectors, and spec scenarios.
+
+use std::path::Path;
+
+use gp_base::{manifest, template, vectors};
+use gp_drone::{REGISTRY, TOOLS};
+use serde_json::Value;
+
+fn repo(path: &str) -> String {
+    let p = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .join(path);
+    std::fs::read_to_string(&p).unwrap_or_else(|e| panic!("read {}: {e}", p.display()))
+}
+
+fn call(id: &str, input: &str) -> Value {
+    serde_json::from_str(&REGISTRY.invoke(id, input)).expect("envelope is JSON")
+}
+
+fn num(r: &Value, path: &str) -> f64 {
+    path.split('.')
+        .fold(r, |v, k| &v[k])
+        .as_f64()
+        .unwrap_or_else(|| panic!("{path} missing in {r}"))
+}
+
+fn codes(r: &Value) -> Vec<String> {
+    r["meta"]["warnings"].as_array().map_or(vec![], |a| {
+        a.iter()
+            .map(|w| w["code"].as_str().unwrap().to_owned())
+            .collect()
+    })
+}
+
+const CAM: &str = r#""sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","image_width":5472,"image_height":3648"#;
+
+#[test]
+fn catalog_examples_vectors() {
+    let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
+    let owned: Vec<(String, Vec<String>)> = tax["domains"]
+        .as_object()
+        .unwrap()
+        .iter()
+        .map(|(d, v)| {
+            (
+                d.clone(),
+                v["groups"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|g| g.as_str().unwrap().to_owned())
+                    .collect(),
+            )
+        })
+        .collect();
+    let taxonomy: Vec<(&str, Vec<&str>)> = owned
+        .iter()
+        .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
+        .collect();
+    let mut failures = manifest::lint(TOOLS, &taxonomy, &[]);
+    let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
+    for t in TOOLS {
+        failures.extend(
+            t.warnings
+                .iter()
+                .filter(|w| reg["warnings"].get(**w).is_none())
+                .map(|w| format!("{} unregistered {w}", t.id)),
+        );
+        for ex in t.examples {
+            let r = call(t.id, ex.input);
+            let s = r["summary"].as_str().unwrap_or_default();
+            if r["ok"] != true || template::grade(s) > 8.0 || s.len() > template::MAX_CHARS {
+                failures.push(format!(
+                    "{} example (grade {:.1}): {r}",
+                    t.id,
+                    template::grade(s)
+                ));
+            }
+        }
+        let text = repo(&format!("core/vectors/{}.jsonl", t.id));
+        failures.extend(vectors::lint(t.id, &text));
+        failures.extend(vectors::run(&REGISTRY, t.id, &text));
+        if vectors::count(&text) < 5 {
+            failures.push(format!("{} has fewer than 5 vectors", t.id));
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn one_inch_at_100_m() {
+    let r = call(
+        "drone.photogrammetry.gsd",
+        &format!(r#"{{"height":"100 m",{CAM}}}"#),
+    );
+    assert!((num(&r, "result.gsd.value") - 2.741).abs() < 5e-4);
+    assert!((num(&r, "result.footprint_across.value") - 150.0).abs() < 1e-9);
+    assert!(codes(&r).iter().all(|c| c != "EQUIVALENT_FOCAL_LENGTH"));
+}
+
+#[test]
+fn equivalent_focal_length_suspected() {
+    let r = call(
+        "drone.photogrammetry.gsd",
+        r#"{"height":"100 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"24 mm","image_width":5472}"#,
+    );
+    assert!(codes(&r).contains(&"EQUIVALENT_FOCAL_LENGTH".to_owned()));
+    let fixed = call(
+        "drone.photogrammetry.gsd",
+        r#"{"height":"100 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"24 mm","focal_length_type":"equivalent-35mm","image_width":5472}"#,
+    );
+    assert!(
+        (num(&fixed, "result.focal_length_used.value") - 24.0 * 15.864_425_6 / 43.266_615_3).abs()
+            < 1e-3
+    );
+}
+
+#[test]
+fn two_cm_target() {
+    let r = call(
+        "drone.photogrammetry.altitude-for-gsd",
+        &format!(r#"{{"target_gsd":"2 cm",{CAM}}}"#),
+    );
+    assert!((num(&r, "result.height.value") - 72.96).abs() < 1e-9);
+    let high = call(
+        "drone.photogrammetry.altitude-for-gsd",
+        &format!(r#"{{"target_gsd":"8 cm",{CAM}}}"#),
+    );
+    assert!(codes(&high).contains(&"ABOVE_ALTITUDE_CEILING".to_owned()));
+}
+
+#[test]
+fn overlap_75_65_and_camera_too_slow() {
+    let base = r#""height":"100 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","image_width":5472,"groundspeed":"10 m/s","front_overlap":75,"side_overlap":65"#;
+    let r = call("drone.photogrammetry.trigger", &format!("{{{base}}}"));
+    assert!((num(&r, "result.trigger_distance.value") - 25.0).abs() < 1e-9);
+    assert!((num(&r, "result.trigger_interval.value") - 2.5).abs() < 1e-9);
+    assert!((num(&r, "result.line_spacing.value") - 52.5).abs() < 1e-9);
+    let slow = call(
+        "drone.photogrammetry.trigger",
+        &format!(r#"{{{base},"min_interval":"3 s"}}"#),
+    );
+    assert!(codes(&slow).contains(&"TRIGGER_TOO_FAST".to_owned()));
+    assert!((num(&slow, "result.max_groundspeed.value") - 8.333_333).abs() < 1e-5);
+}
+
+#[test]
+fn forest_preset() {
+    let r = call(
+        "drone.photogrammetry.trigger",
+        r#"{"height":"100 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","image_width":5472,"groundspeed":"10 m/s","preset":"forest"}"#,
+    );
+    assert!((num(&r, "result.trigger_distance.value") - 15.0).abs() < 1e-9);
+    assert!((num(&r, "result.line_spacing.value") - 45.0).abs() < 1e-9);
+}
+
+#[test]
+fn blur_at_one_thousandth() {
+    let r = call(
+        "drone.photogrammetry.motion-blur",
+        r#"{"groundspeed":"10 m/s","exposure":"0.001 s","gsd":"2.741 cm"}"#,
+    );
+    assert!((num(&r, "result.blur") - 0.365).abs() < 5e-4);
+    assert_eq!(r["result"]["max_exposure_fraction"], "1/730 s");
+}
+
+#[test]
+fn asprs_scenarios() {
+    let r = call(
+        "drone.photogrammetry.asprs-accuracy",
+        r#"{"rmse_z":"1.00 cm","checkpoint_rmse":"2.0 cm","checkpoints":30}"#,
+    );
+    assert!((num(&r, "result.vertical.value") - 2.24).abs() < 0.005);
+    let few = call(
+        "drone.photogrammetry.asprs-accuracy",
+        r#"{"rmse_z":"1 cm","checkpoint_rmse":"1 cm","checkpoints":20}"#,
+    );
+    assert!(codes(&few).contains(&"INSUFFICIENT_CHECKPOINTS".to_owned()));
+    assert!(
+        few["result"]["checkpoint_status"]
+            .as_str()
+            .unwrap()
+            .contains("30")
+    );
+}

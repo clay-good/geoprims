@@ -57,7 +57,11 @@ pub fn encode(g: &Grid, lat: f64, p: i32) -> Result<String, String> {
             return Err("easting is outside the 100 km columns of this zone".into());
         }
         out.push(set[col as usize] as char);
-        let shift = if g.zone.is_multiple_of(2) { EVEN_ROW_SHIFT } else { 0 };
+        let shift = if g.zone.is_multiple_of(2) {
+            EVEN_ROW_SHIFT
+        } else {
+            0
+        };
         out.push(UTMROW[(iy + shift).rem_euclid(20) as usize] as char);
     } else {
         let east = g.easting >= (UPS_EASTING as f64) * TILE;
@@ -199,7 +203,11 @@ pub fn decode(s: &str, a: f64, f: f64) -> Result<Decoded, String> {
     let north = bi >= 10;
     let col = pos(UTMCOLS[(usize::from(zone) - 1) % 3], sq[0]).ok_or_else(not_here)?;
     let row = pos(UTMROW, sq[1]).ok_or_else(not_here)?;
-    let shift = if zone.is_multiple_of(2) { EVEN_ROW_SHIFT } else { 0 };
+    let shift = if zone.is_multiple_of(2) {
+        EVEN_ROW_SHIFT
+    } else {
+        0
+    };
     let iy = (row - shift).rem_euclid(20);
     let e = (col + 1) as f64 * TILE + ex;
     let (lo, hi) = (

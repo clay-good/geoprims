@@ -7,7 +7,7 @@
 
 ## 2. Design system
 
-- [ ] 2.1 Define design tokens and the four theme modes; verify the no-color-literal lint passes and each mode renders the component gallery
+- [ ] 2.1 Define design tokens and the five theme modes (hud, daylight, sunlight, night, high-contrast); verify the no-color-literal lint passes and each mode renders the component gallery
 - [ ] 2.2 Self-host and subset fonts and icons (≤ 80 KB); verify font budget and zero third-party requests
 - [ ] 2.3 Build base components (field, unit selector, result value, warning, badge, table, tabs, toast, dialog) with focus and target-size rules; verify axe-core passes in every mode
 - [ ] 2.4 Build the print stylesheet (`paper` palette, canvas snapshot); verify a print-to-PDF snapshot test

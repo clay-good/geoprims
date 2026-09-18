@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the geoprims tactical "retro-HUD" design system (color, type, layout, motion) and guarantees it stays accessible, legible, and printable in every mode.
+Defines the geoprims design system (a calm, glanceable interface with a signature tactical HUD mode) (color, type, layout, motion) and guarantees it stays accessible, legible, and printable in every mode.
 
 ## ADDED Requirements
 
@@ -12,18 +12,29 @@ All colors, type sizes, spacing, radii, and motion durations SHALL be defined as
 - **THEN** it finds no color literal outside the token definitions
 
 ### Requirement: Theme modes
-The app SHALL provide at least four modes: `hud-amber` (default), `hud-green`, `high-contrast` (pure black and white plus one accent, no effects), and `paper` (light, print-optimized). The initial mode SHALL follow `prefers-color-scheme` and `prefers-contrast` (dark → `hud-amber`, light → `paper`, more contrast → `high-contrast`) until the user chooses explicitly.
+The app SHALL provide five modes:
+- `hud` (dark slate with amber accent; green accent as a sub-option): the product's signature look
+- `daylight` (light, calm, print-like)
+- `sunlight` (maximum contrast for outdoor field use: black on white, heavier weights, no effects, results at ≥ 28 px)
+- `night` (for cockpit and dark-adapted use: amber or red on black at very low luminance, with an extra dimming slider, and meaning never carried by color)
+- `high-contrast` (per `prefers-contrast: more`)
+
+The initial mode SHALL follow OS preferences: dark → `hud`, light → `daylight`, more contrast → `high-contrast`. It SHALL persist the user's explicit choice locally. Switching modes SHALL never flash a bright frame. HUD visual effects (glow, scanlines, persistence) SHALL apply only in `hud` mode, SHALL be subtle and off by default for the result value itself, and SHALL be switchable off. Clarity always wins over style.
 
 #### Scenario: Light-preference user
 - **WHEN** a first-time visitor's OS prefers a light scheme
-- **THEN** the app starts in `paper` mode
+- **THEN** the app starts in `daylight` mode
+
+#### Scenario: Night mode transition
+- **WHEN** a pilot switches from `night` to another page in `night` mode
+- **THEN** no frame renders with luminance above the night-mode ceiling during navigation
 
 #### Scenario: Print
 - **WHEN** a user prints a tool page from any mode
-- **THEN** the print stylesheet renders the `paper` palette with inputs, results, formula, references, and a canvas snapshot
+- **THEN** the print stylesheet renders the `daylight` palette with inputs, results, formula, references, and a canvas snapshot
 
 ### Requirement: WCAG 2.2 AA conformance
-Every mode SHALL meet WCAG 2.2 Level AA. Text SHALL have a contrast ratio of at least 4.5:1 (3:1 for large text) against its actual rendered background, including glow and scanline effects. Non-text UI and data marks that convey meaning SHALL have at least 3:1 contrast. Secondary "dim" text tokens SHALL still meet 4.5:1.
+Every mode SHALL meet WCAG 2.2 Level AA (for `night` mode, measured at the dimming slider's maximum; lowering the slider is an explicit, disclosed user choice). Text SHALL have a contrast ratio of at least 4.5:1 (3:1 for large text) against its actual rendered background, including glow and scanline effects. Non-text UI and data marks that convey meaning SHALL have at least 3:1 contrast. Secondary "dim" text tokens SHALL still meet 4.5:1.
 
 #### Scenario: Contrast audit
 - **WHEN** the automated accessibility job renders every component state in every mode
@@ -44,7 +55,7 @@ Numeric values SHALL be set in a monospace or tabular-figure typeface so digits 
 - **THEN** the form, results, and docs reflow into one column with no horizontal page scroll
 
 ### Requirement: Focus and targets
-Every interactive element SHALL have a visible focus indicator of at least 2 CSS px with 3:1 contrast, SHALL not be obscured by sticky HUD bars when focused (WCAG 2.4.11), and SHALL have a target size of at least 24 × 24 CSS px (WCAG 2.5.8).
+Every interactive element SHALL have a visible focus indicator of at least 2 CSS px with 3:1 contrast, SHALL not be obscured by sticky HUD bars when focused (WCAG 2.4.11), and SHALL have a target size of at least 48 × 48 CSS px with at least 8 px spacing (exceeding WCAG 2.5.8's 24 px minimum, for field and gloved use).
 
 #### Scenario: Sticky header does not hide focus
 - **WHEN** a keyboard user tabs to a field near the top under the sticky header

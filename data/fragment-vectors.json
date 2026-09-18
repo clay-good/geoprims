@@ -1,0 +1,87 @@
+{
+  "vectors": [
+    {
+      "flags": [],
+      "fragment": "v1:q1bKVLKqVirJV7JSyi3IUNJRKkvMKU0F8gwNDBSyS5RqawE",
+      "state": {
+        "i": {
+          "to": "mph",
+          "value": "100 kt"
+        }
+      }
+    },
+    {
+      "flags": [
+        "report"
+      ],
+      "fragment": "v1:q1bKVLKqVirJV7JSyi3IUNJRKkvMKU0F8gwNDBSyS5RqawE;report",
+      "state": {
+        "i": {
+          "to": "mph",
+          "value": "100 kt"
+        }
+      }
+    },
+    {
+      "flags": [
+        "nofx"
+      ],
+      "fragment": "v1:q1bKVLKqVkorTc1RslJKLEtPLNY1NDDIyVHSUSrLzynNTQUKmxoopCfmhAYr1eoolYKU5yYWFwPFs9OVamsB;nofx",
+      "state": {
+        "i": {
+          "fuel": "avgas-100ll",
+          "volume": "50 galUS"
+        },
+        "u": {
+          "mass": "kg"
+        }
+      }
+    },
+    {
+      "flags": [
+        "report",
+        "nofx"
+      ],
+      "fragment": "v1:q1bKVLKqVkorys9VslIqSC1KTs0rUdJRKkvMKU1VsrLQM0YBJrW1AA;report;nofx",
+      "state": {
+        "i": {
+          "from": "percent",
+          "value": 8.333333333333334
+        }
+      }
+    },
+    {
+      "flags": [],
+      "fragment": "v1:q1ZKVbIyMjAy0zPVUcpUsqpWykksUbJSMjHQMzc0slDSUcrJzwPydc1N9AwMzAyUanWUykDKklPzSlKLlKyioTI6UB2xOkpV-fm5SlaWtbUA",
+      "state": {
+        "e": 2026.5,
+        "i": {
+          "lat": "40.7128",
+          "lon": "-74.0060"
+        },
+        "v": {
+          "center": [
+            -74.006,
+            40.7128
+          ],
+          "zoom": 9
+        }
+      }
+    },
+    {
+      "flags": [],
+      "fragment": "v1:q1bKVLKqVkrNLSipVLJSUtJRyssvSQWyDs_JO7w--fC2lMMrFR7N6VAwNlA4tMFZqbYWAA",
+      "state": {
+        "i": {
+          "empty": "",
+          "note": "Ünïcödé ✈ 30 °C"
+        }
+      }
+    },
+    {
+      "flags": [],
+      "fragment": "v1:q64FAA",
+      "state": {}
+    }
+  ]
+}

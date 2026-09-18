@@ -39,6 +39,7 @@ The `npx -y @geoprims/mcp` path works once the package is published (not yet).
 | `geoprims_run` | Runs a tool. With no `args` it runs the worked example. `units` picks an output unit profile. |
 | `geoprims_pipeline` | Runs up to 20 steps. A bound `{value, unit}` carries its unit, so conversions happen automatically. |
 | `geoprims_convert_units` | Exact unit conversion, finding the quantity from the units |
+| `geoprims_report_problem` | Prepares (never sends) a problem report: the payload, a geoprims.com link that reopens the tool with the inputs and the report form filled in, and a GitHub issue link |
 
 Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus its golden vectors).
 
@@ -54,7 +55,7 @@ Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus it
 
 ## Not built yet
 
-`geoprims_report_problem` (it needs the core's permalink encoder), workflow prompts, direct toolsets (`--toolsets`, `--no-meta`), paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
+Workflow prompts, direct toolsets (`--toolsets`, `--no-meta`), paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
 
 ## Tests
 

@@ -54,7 +54,9 @@ export async function createServer(opts = {}) {
   const { workerHost } = await loadRuntime();
   const host = workerHost(join(dist, 'wasm'), { timeoutMs: opts.timeoutMs ?? 10_000, maxBytes: MAX_MESSAGE_BYTES });
   await host.searchLoad(JSON.stringify(catalog.tools));
-  const handlers = metaHandlers({ host, catalog });
+  const modules = JSON.parse(readFileSync(join(dist, 'wasm', 'modules.json'), 'utf8')).modules;
+  const limits = JSON.parse(readFileSync(findData(dist, 'report-limits.json'), 'utf8'));
+  const handlers = metaHandlers({ host, catalog, modules, limits });
   const byName = new Map(TOOLS.map((t) => [t.name, t]));
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
 
@@ -139,6 +141,12 @@ export async function createServer(opts = {}) {
   }
 
   return { handle, close: () => host.close() };
+}
+
+/** Shared data files: bundled in mcp/dist/data, or read from the repo's data/. */
+function findData(dist, name) {
+  const bundled = join(dist, 'data', name);
+  return existsSync(bundled) ? bundled : join(here, '..', 'data', name);
 }
 
 function vectorsFor(dist, m) {

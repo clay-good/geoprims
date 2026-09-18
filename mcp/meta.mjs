@@ -107,7 +107,35 @@ export const TOOLS = [
     },
     outputSchema: envelopeSchema,
   },
+  {
+    name: 'geoprims_report_problem',
+    title: 'Prepare a problem report',
+    description:
+      'Prepare, but never send, a report about a geoprims result that looks wrong. Returns the payload, a geoprims.com link that reopens the tool with these inputs and the report form filled in, and a GitHub issue link. Nothing leaves this machine: show the link to the user so they can review and send it themselves.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        toolId: { type: 'string' },
+        args: { type: 'object', description: 'The inputs that produced the result.' },
+        observed: { type: 'string', description: 'The result that looks wrong.' },
+        expected: { type: 'string', description: 'What you expected instead.' },
+        source: { type: 'string', description: 'A published source for the expected value.' },
+        note: { type: 'string' },
+      },
+      required: ['toolId', 'args', 'observed'],
+      additionalProperties: false,
+    },
+    outputSchema: envelopeSchema,
+  },
 ].map((t) => ({ ...t, annotations: { title: t.title, ...ANNOTATIONS } }));
+
+const SITE = 'https://geoprims.com';
+const ISSUE_URL = 'https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml';
+
+const cut = (s, n) => {
+  const t = String(s ?? '');
+  return t.length <= n ? t : t.slice(0, n - 1) + '…';
+};
 
 const fail = (code, message, extra = {}) => ({ ok: false, error: { code, message, ...extra } });
 
@@ -140,7 +168,7 @@ function setPointer(obj, ptr, value) {
 const bindValue = (v) =>
   v && typeof v === 'object' && typeof v.value === 'number' && typeof v.unit === 'string' ? `${v.value} ${v.unit}` : v;
 
-export function metaHandlers({ host, catalog }) {
+export function metaHandlers({ host, catalog, modules = [], limits }) {
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
   const run = async (id, args) => JSON.parse(await host.invoke(id, JSON.stringify(args)));
   const searchRaw = async (req) => JSON.parse(await host.search(JSON.stringify(req)));
@@ -224,6 +252,78 @@ export function metaHandlers({ host, catalog }) {
         if (!out.ok) return { ok: false, error: { ...out.error, step: i }, result: { steps: results } };
       }
       return { ok: true, result: { steps: results } };
+    },
+
+    geoprims_report_problem: async ({ toolId, args, observed, expected, source, note }) => {
+      const m = byId.get(toolId);
+      if (!m) {
+        return fail('UNSUPPORTED', `There is no tool with id "${toolId}".`, { field: '/toolId', suggestions: await suggest(toolId) });
+      }
+      const L = limits;
+      const { options = {}, ...inputs } = args;
+      const run = JSON.parse(await host.invoke(toolId, JSON.stringify(args)));
+      const row = (field, label, value, unit) => ({
+        field: cut(field, L.fieldChars),
+        label: cut(label, L.labelChars),
+        value: cut(typeof value === 'string' ? value : JSON.stringify(value), L.valueChars),
+        unit: cut(unit ?? '', L.unitChars),
+      });
+      const props = m.inputs.properties;
+      const inputRows = Object.entries(inputs)
+        .slice(0, L.inputRows)
+        .map(([k, v]) => row(k, props[k]?.title ?? k, v, typeof v === 'number' ? props[k]?.['x-unit'] : ''));
+      const outputRows = run.ok
+        ? Object.entries(run.result)
+            .slice(0, L.outputRows)
+            .map(([k, v]) =>
+              v && typeof v === 'object' && 'value' in v ? row(k, m.outputs.properties[k]?.title ?? k, v.value, v.unit) : row(k, m.outputs.properties[k]?.title ?? k, v, ''),
+            )
+        : [];
+      const warnings = run.ok ? run.meta.warnings.map((w) => w.code).slice(0, L.warningCodes) : [];
+      const noteText = [
+        `Observed: ${observed}`,
+        expected && `Expected: ${expected}`,
+        source && `Source: ${source}`,
+        !run.ok && `Run error: ${run.error.code}`,
+        note,
+      ]
+        .filter(Boolean)
+        .join('; ');
+      const [domain, group, op] = toolId.split('.');
+      const pagePath = `/${domain}/${group}/${op}/`;
+      const moduleName = domain === 'units' ? 'base' : domain;
+      const state = { i: Object.fromEntries(Object.entries(inputs).filter(([, v]) => typeof v === 'string' || typeof v === 'number')) };
+      if (options.outputUnits) state.u = options.outputUnits;
+      const enc = JSON.parse(await host.callExport('link', 'gp_link_encode', JSON.stringify({ state, flags: ['report'] })));
+      if (!enc.ok) return enc;
+      const payload = {
+        apiVersion: L.apiVersion,
+        toolId,
+        toolVersion: m.version,
+        coreVersion: catalog.coreVersion,
+        buildHash: (modules.find((x) => x.module === moduleName)?.sha256 ?? '').slice(0, 16),
+        assetVersions: {},
+        kind: 'wrong-result',
+        pagePath,
+        inputs: inputRows,
+        outputs: outputRows,
+        warnings,
+        display: { theme: 'none', unitProfile: options.profile ?? 'default', viewportClass: 'agent' },
+        note: cut(noteText, L.noteChars),
+        token: null,
+      };
+      const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+      if (bytes > L.bodyBytes) return fail('LIMIT_EXCEEDED', `The report is ${bytes} bytes; the limit is ${L.bodyBytes}.`);
+      return {
+        ok: true,
+        result: {
+          link: `${SITE}${pagePath}#${enc.result.fragment}`,
+          issueUrl: ISSUE_URL,
+          payload,
+          instructions:
+            'Show the link to the user. Opening it restores these inputs and the report form; the user reviews and sends it. Nothing was sent.',
+        },
+      };
     },
 
     geoprims_convert_units: async ({ value, from, to }) => {

@@ -9,6 +9,7 @@ const methods = {
   invokeBatch: (id, inputs) => host.invokeBatch(id, inputs),
   searchLoad: async (index) => (await host.module('search')).callString('gp_search_load', index),
   search: async (request) => (await host.module('search')).callString('gp_search', request),
+  callExport: async (module, exportName, input) => (await host.module(module)).callString(exportName, input),
   // Test hook: a call that never returns, to exercise the timeout.
   spin: () => {
     for (;;);

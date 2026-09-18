@@ -54,7 +54,7 @@ The repository SHALL provide an issue form labeled `correctness` with required f
 - **THEN** GitHub's form validation blocks submission
 
 ### Requirement: Agents can prepare, not send, reports
-The MCP server SHALL provide `geoprims_report_problem` with input `{toolId, args, observed, expected?, source?, note?}`. It SHALL return the payload a human would send, a `https://geoprims.com/<route>#…&report=1` link that opens the tool with the inputs restored and the report dialog pre-filled, and the GitHub issue-form link. The server SHALL make no network request, and the tool description SHALL tell the agent to show the link to the user.
+The MCP server SHALL provide `geoprims_report_problem` with input `{toolId, args, observed, expected?, source?, note?}`. It SHALL return the payload a human would send, a `https://geoprims.com/<route>#v1:…;report` link (fragment grammar per `contracts/routes-and-urls`) that opens the tool with the inputs restored and the report dialog pre-filled, and the GitHub issue-form link. The server SHALL make no network request, and the tool description SHALL tell the agent to show the link to the user.
 
 #### Scenario: Agent-prepared report
 - **WHEN** an agent calls `geoprims_report_problem` after a suspicious result

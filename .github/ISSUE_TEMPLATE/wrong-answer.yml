@@ -1,0 +1,42 @@
+name: Wrong answer
+description: A geoprims tool gave a result you believe is wrong.
+title: "Wrong answer: "
+labels: ["correctness"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for checking our math. Please give enough detail to reproduce the result, and the published source that settles it. Don't include anything private.
+  - type: input
+    id: tool
+    attributes:
+      label: Tool or URL
+      description: The tool id (like units.speed.kt-to-mph) or the page URL, including the part after #.
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs
+      description: Every value you entered, with units.
+    validations:
+      required: true
+  - type: textarea
+    id: received
+    attributes:
+      label: Answer received
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Answer expected
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: The published source that settles it
+      description: Title, edition, and page or section (a standard, handbook, agency tool, or textbook).
+    validations:
+      required: true

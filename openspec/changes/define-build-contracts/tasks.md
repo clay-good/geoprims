@@ -1,7 +1,7 @@
 ## 1. Routes and permalinks
 
 - [ ] 1.1 Implement the route-map gate and the redirects file; verify the out-of-map and alias-canonical scenarios
-- [ ] 1.2 Implement the fragment encoder/decoder in the core with the shared vector file used by web and MCP tests; verify the shared-encoding and unknown-version scenarios
+- [x] 1.2 Implement the fragment encoder/decoder in the core with the shared vector file used by web and MCP tests; verify the shared-encoding and unknown-version scenarios
 
 ## 2. Platform topology
 
@@ -20,14 +20,14 @@
 ## 4. Manifest extensions
 
 - [ ] 4.1 Add every extension to the meta-schema, closed to unknown fields; verify the unknown-extension and too-many-core-inputs scenarios
-- [ ] 4.2 Implement the sentence-template renderer in the core with readability lint; verify the conditional and unit-profile scenarios
+- [x] 4.2 Implement the sentence-template renderer in the core with readability lint; verify the conditional and unit-profile scenarios
 - [ ] 4.3 Create the glossary schema and missing-term gate; verify the RPP scenario
 - [ ] 4.4 Implement primary-example designation and the parity gate across page, button, OG, hero card, MCP, and explainer; verify the example-parity scenario
-- [ ] 4.5 Implement the decimal-separator rule in the core parser shared by all surfaces; verify both scenarios
+- [x] 4.5 Implement the decimal-separator rule in the core parser shared by all surfaces; verify both scenarios
 
 ## 5. Codes, profiles, and report API
 
-- [ ] 5.1 Create `data/codes.json` from the seed registry with message templates and the completeness gate; verify the caution-first and completeness scenarios
+- [x] 5.1 Create `data/codes.json` from the seed registry with message templates and the completeness gate; verify the caution-first and completeness scenarios
 - [ ] 5.2 Encode the reference profile and viewports in the shared test configuration and `docs/performance.md`; verify every performance and mobile gate names the profile version
-- [ ] 5.3 Create the shared limits constants file imported by client, Worker, migration generator, and MCP; verify the worst-case payload scenario
+- [x] 5.3 Create the shared limits constants file (`data/report-limits.json`) imported by client, Worker, migration generator, and MCP; verify the worst-case payload scenario (MCP imports it now; client, Worker, and migration generator pending)
 - [ ] 5.4 Implement the config and submit endpoints and client submission behavior per the contract; verify the disabled, wrong-method, and slow-note scenarios

@@ -47,6 +47,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "gp-link"
+version = "0.1.0"
+dependencies = [
+ "gp-base",
+ "serde_json",
+]
+
+[[package]]
 name = "gp-navigation"
 version = "0.1.0"
 dependencies = [

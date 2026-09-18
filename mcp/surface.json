@@ -250,6 +250,62 @@
         "idempotentHint": true,
         "openWorldHint": false
       }
+    },
+    {
+      "name": "geoprims_report_problem",
+      "title": "Prepare a problem report",
+      "description": "Prepare, but never send, a report about a geoprims result that looks wrong. Returns the payload, a geoprims.com link that reopens the tool with these inputs and the report form filled in, and a GitHub issue link. Nothing leaves this machine: show the link to the user so they can review and send it themselves.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "toolId": {
+            "type": "string"
+          },
+          "args": {
+            "type": "object",
+            "description": "The inputs that produced the result."
+          },
+          "observed": {
+            "type": "string",
+            "description": "The result that looks wrong."
+          },
+          "expected": {
+            "type": "string",
+            "description": "What you expected instead."
+          },
+          "source": {
+            "type": "string",
+            "description": "A published source for the expected value."
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "toolId",
+          "args",
+          "observed"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "annotations": {
+        "title": "Prepare a problem report",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
     }
   ],
   "resources": [

@@ -1,0 +1,12 @@
+{
+  "note": "Inputs for the shared fragment vectors (contracts/routes-and-urls). data/fragment-vectors.json pins each encoding byte for byte; regenerate with UPDATE_FRAGMENTS=1 only on a deliberate format change.",
+  "cases": [
+    { "state": { "i": { "value": "100 kt", "to": "mph" } }, "flags": [] },
+    { "state": { "i": { "value": "100 kt", "to": "mph" } }, "flags": ["report"] },
+    { "state": { "i": { "volume": "50 galUS", "fuel": "avgas-100ll" }, "u": { "mass": "kg" } }, "flags": ["nofx"] },
+    { "state": { "i": { "value": 8.333333333333334, "from": "percent" } }, "flags": ["report", "nofx"] },
+    { "state": { "i": { "lat": "40.7128", "lon": "-74.0060" }, "v": { "zoom": 9, "center": [-74.006, 40.7128] }, "e": 2026.5 }, "flags": [] },
+    { "state": { "i": { "note": "Ünïcödé ✈ 30 °C", "empty": "" } }, "flags": [] },
+    { "state": {}, "flags": [] }
+  ]
+}

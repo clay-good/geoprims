@@ -72,7 +72,7 @@ test('lists the meta-tools in order, annotated, within the token budget', async 
   const r = await c.request('tools/list', {});
   assert.deepEqual(
     r.result.tools.map((t) => t.name),
-    ['geoprims_search', 'geoprims_describe', 'geoprims_run', 'geoprims_pipeline', 'geoprims_convert_units'],
+    ['geoprims_search', 'geoprims_describe', 'geoprims_run', 'geoprims_pipeline', 'geoprims_convert_units', 'geoprims_report_problem'],
   );
   for (const t of r.result.tools) {
     assert.deepEqual(
@@ -250,4 +250,43 @@ test('convert_units agrees with every units golden vector', async () => {
     }
   }
   assert.ok(n > 80, `${n} vectors`);
+});
+
+test('report_problem prepares a payload and link without sending anything', async () => {
+  const r = await c.call('geoprims_report_problem', {
+    toolId: 'units.fuel.convert',
+    args: { volume: 50, fuel: 'avgas-100ll', options: { outputUnits: { mass: 'kg' } } },
+    observed: '136.08 kg',
+    expected: '136.08 kg is right; testing',
+    source: 'FAA-H-8083-25C',
+  });
+  assert.equal(r.structuredContent.ok, true, JSON.stringify(r.structuredContent));
+  const { link, issueUrl, payload } = r.structuredContent.result;
+  assert.match(link, /^https:\/\/geoprims\.com\/units\/fuel\/convert\/#v1:[A-Za-z0-9_-]+;report$/);
+  assert.match(issueUrl, /template=wrong-answer\.yml$/);
+  const limits = JSON.parse(readFileSync(join(root, 'data/report-limits.json'), 'utf8'));
+  assert.deepEqual(Object.keys(payload), ['apiVersion', 'toolId', 'toolVersion', 'coreVersion', 'buildHash', 'assetVersions', 'kind', 'pagePath', 'inputs', 'outputs', 'warnings', 'display', 'note', 'token']);
+  assert.equal(payload.kind, 'wrong-result');
+  assert.equal(payload.token, null);
+  assert.deepEqual(payload.inputs, [
+    { field: 'volume', label: 'Volume', value: '50', unit: 'galUS' },
+    { field: 'fuel', label: 'Fuel type', value: 'avgas-100ll', unit: '' },
+  ]);
+  assert.equal(payload.outputs.find((o) => o.field === 'mass').unit, 'kg');
+  assert.ok(payload.warnings.includes('NOMINAL_VALUE_USED'));
+  assert.ok(payload.note.length <= limits.noteChars && payload.note.startsWith('Observed: 136.08 kg'));
+  // The link's fragment decodes back to the inputs.
+  const frag = link.split('#')[1];
+  const { nodeHost: nh } = await import('../packages/runtime/src/node.mjs');
+  const link2 = await nh(join(root, 'dist/wasm')).module('link');
+  const back = JSON.parse(await link2.callString('gp_link_decode', frag));
+  assert.deepEqual(back.result.state, { i: { fuel: 'avgas-100ll', volume: 50 }, u: { mass: 'kg' } });
+  assert.deepEqual(back.result.flags, ['report']);
+});
+
+test('report_problem truncates long notes to the shared limit', async () => {
+  const r = await c.call('geoprims_report_problem', { toolId: 'units.speed.convert', args: { value: 1, to: 'mph' }, observed: 'x'.repeat(1000) });
+  assert.equal(r.structuredContent.result.payload.note.length, 280);
+  const bad = await c.call('geoprims_report_problem', { toolId: 'nope.x.y', args: {}, observed: 'x' });
+  assert.equal(bad.structuredContent.error.code, 'UNSUPPORTED');
 });

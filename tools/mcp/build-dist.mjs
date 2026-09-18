@@ -17,4 +17,5 @@ cpSync(join(root, 'dist/wasm'), join(dist, 'wasm'), { recursive: true });
 cpSync(join(root, 'dist/catalog'), join(dist, 'catalog'), { recursive: true });
 cpSync(join(root, 'packages/runtime/src'), join(dist, 'runtime'), { recursive: true, filter: (p) => !p.endsWith('.test.mjs') });
 cpSync(join(root, 'core/vectors'), join(dist, 'vectors'), { recursive: true });
+cpSync(join(root, 'data/report-limits.json'), join(dist, 'data/report-limits.json'));
 console.log(`wrote ${dist}`);

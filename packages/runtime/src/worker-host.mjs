@@ -66,6 +66,8 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
       return call('searchLoad', index);
     },
     search: (request) => call('search', request),
+    /** Calls a one-string export of any module, e.g. ('link', 'gp_link_encode', json). */
+    callExport: (module, exportName, input) => call('callExport', module, exportName, input),
     close: () => worker.terminate(),
     /** For tests: call any worker method by name. */
     _call: call,

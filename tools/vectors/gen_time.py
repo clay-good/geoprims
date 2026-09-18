@@ -122,14 +122,36 @@ def utc_offset():
                        {"result.zulu": u.strftime("%H%MZ"), "result.utc": u.strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "result.local": local.strftime("%Y-%m-%dT%H:%M:%S") + off, "result.day_shift": float((u.date() - local.date()).days)},
                        SPEC if i == 1 else "Python datetime with fixed offsets (tools/vectors/gen_time.py)", "2026"))
-    out.append(vec(6, {"time": "2026-07-01T14:05", "offset": "America/Chicago"}, {"ok": False, "error.code": "UNSUPPORTED"}, SPEC, "2026"))
+    tzsrc = "IANA tzdb 2026d (US DST: second Sunday in March to first Sunday in November, 2:00 local)"
+    out.append(vec(6, {"time": "2026-07-01T14:05", "offset": "America/Chicago"}, {"result.zulu": "1905Z", "result.abbr": "CDT", "meta.assets.0.version": "2026d"}, SPEC, "2026"))
+    out.append(vec(7, {"time": "2026-03-08T02:30", "offset": "America/Denver"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    out.append(vec(8, {"time": "2026-11-01T01:30", "offset": "America/Denver"}, {"result.utc": "2026-11-01T07:30:00Z", "meta.warnings.0.code": "AMBIGUOUS_INPUT"}, tzsrc, "2026d"))
+    out.append(vec(9, {"time": "2026-01-15T12:00", "offset": "Europe/London"}, {"result.zulu": "1200Z", "result.abbr": "GMT"}, tzsrc, "2026d"))
+    out.append(vec(10, {"time": "2026-07-01T12:00Z", "offset": "Australia/Adelaide", "direction": "utc-to-local"}, {"result.local": "2026-07-01T21:30:00+09:30"}, tzsrc, "2026d"))
+    return out
+
+
+def zone_info():
+    src = "IANA tzdb 2026d (checked with Python zoneinfo on tzdata 2026d)"
+    cases = [("America/Denver", "2026-09-18T00:00Z", "-06:00", "MDT", "yes", "2026-11-01T08:00:00Z"),
+             ("Europe/London", "2026-01-15T12:00Z", "+00:00", "GMT", "no", "2026-03-29T01:00:00Z"),
+             ("Australia/Sydney", "2026-07-01T00:00Z", "+10:00", "AEST", "no", "2026-10-03T16:00:00Z"),
+             ("Asia/Kolkata", "2026-07-01T00:00Z", "+05:30", "IST", "no", None),
+             ("America/Phoenix", "2026-07-01T00:00Z", "-07:00", "MST", "no", None)]
+    out = []
+    for i, (z, t, off, ab, dst, nxt) in enumerate(cases, 1):
+        e = {"result.offset": off, "result.abbr": ab, "result.dst": dst}
+        if nxt:
+            e["result.next_change"] = nxt
+        out.append(vec(i, {"zone": z, "time": t}, e, src, "2026d"))
+    out.append(vec(6, {"zone": "Mars/Olympus", "time": "2026-01-01T00:00Z"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
     return out
 
 
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"time.scale.gps-week": gps_week(), "time.scale.gps-to-utc": gps_to_utc(), "time.scale.julian-date": julian(),
-             "time.scale.decimal-hours": decimal_hours(), "time.scale.block-time": block_time(), "time.scale.utc-offset": utc_offset()}
+             "time.scale.decimal-hours": decimal_hours(), "time.scale.block-time": block_time(), "time.scale.utc-offset": utc_offset(), "time.scale.zone-info": zone_info()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

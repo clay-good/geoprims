@@ -3,7 +3,6 @@
 //! window. Events are tied to the requested local date and shown in local
 //! time and Zulu, each dated.
 
-use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
@@ -12,7 +11,7 @@ use gp_geo::point;
 use libm::{cos, sin, tan};
 
 use crate::sun::{self, Crossing, SUNRISE_ALTITUDE};
-use crate::{civil, text};
+use crate::{ZoneSpec, civil, text};
 
 const NOAA: Reference = Reference {
     title: "NOAA Solar Calculator: General Solar Position Calculations",
@@ -70,8 +69,8 @@ const DATE: Field = text("date", "Local date", "Like 2026-06-21")
     .core();
 const OFFSET: Field = text(
     "offset",
-    "UTC offset",
-    "In effect that day, like -06:00 for MDT",
+    "Time zone or UTC offset",
+    "Like America/Denver, or -06:00 for MDT",
 )
 .required()
 .core();
@@ -81,22 +80,6 @@ fn deg(v: f64) -> Q {
         value: v,
         unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
     }
-}
-
-/// The offset input in minutes (named zones are refused with a hint).
-pub(crate) fn offset_input(ctx: &Ctx) -> Result<i32, ToolError> {
-    let s = ctx.text("offset")?.expect("required");
-    if s.contains('/') {
-        return Err(ToolError::new(
-            ErrorCode::Unsupported,
-            "Named time zones need the time-zone database, which is not bundled yet.",
-        )
-        .at("/offset")
-        .hint(
-            "Enter the UTC offset in effect on that date, like -05:00 for CDT or -06:00 for CST.",
-        ));
-    }
-    civil::parse_offset(&s).map_err(|m| ToolError::invalid("/offset", m))
 }
 
 /// The local date as a day number.
@@ -127,9 +110,9 @@ fn split(jd: f64) -> (i64, i64) {
 }
 
 /// `2026-06-21 21:14 local (2026-06-22 0314Z)`.
-fn event_text(jd: f64, offset: i32) -> String {
+fn event_text(jd: f64, zone: &ZoneSpec) -> String {
     let (ud, um) = split(jd);
-    let local = ud * 1440 + um + i64::from(offset);
+    let local = ud * 1440 + um + i64::from(zone.minutes_at((ud * 1440 + um) * 60));
     let (ld, lm) = (local.div_euclid(1440), local.rem_euclid(1440));
     format!(
         "{} {:02}:{:02} local ({} {:02}{:02}Z)",
@@ -143,9 +126,9 @@ fn event_text(jd: f64, offset: i32) -> String {
 }
 
 /// Local clock `HH:MM` for an event.
-fn local_clock(jd: f64, offset: i32) -> String {
+fn local_clock(jd: f64, zone: &ZoneSpec) -> String {
     let (ud, um) = split(jd);
-    let m = (ud * 1440 + um + i64::from(offset)).rem_euclid(1440);
+    let m = (ud * 1440 + um + i64::from(zone.minutes_at((ud * 1440 + um) * 60))).rem_euclid(1440);
     format!("{:02}:{:02}", m / 60, m % 60)
 }
 
@@ -155,7 +138,8 @@ fn duration(minutes: f64) -> String {
 }
 
 /// The transit nearest local noon of the local date.
-fn local_noon(lon: f64, day: i64, offset: i32) -> f64 {
+fn local_noon(lon: f64, day: i64, zone: &ZoneSpec) -> f64 {
+    let offset = zone.minutes_at(day * 86_400 + 43_200);
     sun::transit(lon, jd(day, 720.0 - f64::from(offset)))
 }
 
@@ -686,7 +670,7 @@ pub static EVENTS: ToolDef = ToolDef {
         ),
     ],
     outputs: &EVENT_OUT,
-    errors: &[ErrorCode::Unsupported],
+    errors: &[],
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "NOAA solar equations with each event refined at its own time; sunrise and sunset at −0.833° (minus horizon dip when a height is given)",
     accuracy: "Within about 1 minute of NOAA and USNO below 72° latitude; less certain near polar-day and polar-night boundaries",
@@ -715,7 +699,8 @@ pub static EVENTS: ToolDef = ToolDef {
 fn run_events(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let day = local_date(ctx)?;
-    let off = offset_input(ctx)?;
+    let off = crate::ZoneSpec::parse(ctx, "offset")?;
+    let off = &off;
     let dip = match ctx.quantity("height")? {
         Some(h) => sun::horizon_dip(h.to(units::by_symbol(QT::Length, "m").expect("m"))),
         None => 0.0,
@@ -865,7 +850,7 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
         .precision(Precision::Decimals(0))
         .optional(),
     ],
-    errors: &[ErrorCode::Unsupported],
+    errors: &[],
     warnings: &[
         "CIVIL_TWILIGHT_APPROXIMATED",
         "INPUT_NORMALIZED",
@@ -896,14 +881,15 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
 };
 
 /// A window from `a` to `b` as local and Zulu text.
-fn window(a: f64, b: f64, off: i32) -> String {
+fn window(a: f64, b: f64, off: &ZoneSpec) -> String {
     format!("{} to {}", event_text(a, off), event_text(b, off))
 }
 
 fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let day = local_date(ctx)?;
-    let off = offset_input(ctx)?;
+    let off = crate::ZoneSpec::parse(ctx, "offset")?;
+    let off = &off;
     let alaska = ctx.choice("alaska")?.unwrap_or("no") == "yes";
     let today = local_noon(lon, day, off);
     let tomorrow = local_noon(lon, day + 1, off);
@@ -1018,7 +1004,8 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         // Before local noon means the next morning.
         let local_min = h * 60 + m + if h < 12 { 1440 } else { 0 };
-        let at = jd(day, (local_min - i64::from(off)) as f64);
+        let guess = i64::from(off.minutes_at(day * 86_400 + local_min * 60));
+        let at = jd(day, (local_min - guess) as f64);
         let logs = match (twilight_end, twilight_begin) {
             (Some(e), Some(b)) => at >= e && at <= b,
             _ => matches!(dusk, Crossing::AlwaysBelow),
@@ -1098,7 +1085,7 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
         .precision(Precision::Decimals(1))
         .angle_range("[-90,90]"),
     ],
-    errors: &[ErrorCode::Unsupported],
+    errors: &[],
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "NOAA solar equations: times the geometric sun crosses the threshold, refined at each crossing",
     accuracy: "About 1 minute",
@@ -1127,7 +1114,8 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
 fn run_mapping(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let day = local_date(ctx)?;
-    let off = offset_input(ctx)?;
+    let off = crate::ZoneSpec::parse(ctx, "offset")?;
+    let off = &off;
     let threshold = point::plain_angle(ctx, "threshold")?.unwrap_or(30.0);
     let noon = local_noon(lon, day, off);
     let top = sun::position(lat, lon, noon);

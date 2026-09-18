@@ -372,6 +372,14 @@
     {
       "query": "which h3 resolution",
       "expect": "indexing.h3.resolution-chooser"
+    },
+    {
+      "query": "daylight saving time change",
+      "expect": "time.scale.zone-info"
+    },
+    {
+      "query": "time zone offset",
+      "expect": "time.scale.zone-info"
     }
   ]
 }

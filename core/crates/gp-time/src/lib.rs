@@ -8,6 +8,7 @@ pub mod solar;
 pub mod spa;
 mod spa_tables;
 pub mod sun;
+pub mod tz;
 
 use civil::{Stamp, TAI_MINUS_GPS};
 use gp_base::ErrorCode;
@@ -50,6 +51,14 @@ const RFC_3339: Reference = Reference {
     edition: "Proposed standard",
     locator: "Section 5.6 (timestamp format with a numeric UTC offset or Z)",
     url: "https://www.rfc-editor.org/rfc/rfc3339",
+};
+const IANA_TZ: Reference = Reference {
+    title: "Time Zone Database (tzdb)",
+    issuer: "Internet Assigned Numbers Authority",
+    year: 2026,
+    edition: "Release 2026d, compiled with zic -b slim",
+    locator: "Zone and Link entries for every region; TZif per RFC 8536",
+    url: "https://www.iana.org/time-zones",
 };
 const CFR_1_1: Reference = Reference {
     title: "14 CFR 1.1, General definitions (flight time)",
@@ -113,6 +122,60 @@ fn leap_asset(ctx: &mut Ctx, days: i64) {
             "LEAP_SECOND_TABLE_EXPIRED",
             "This date is past the leap-second table (IERS Bulletin C 72 covers through 2027-06-30). A leap second added later would shift the result by 1 s.",
         ));
+    }
+}
+
+/// A time zone input: a fixed UTC offset, or an IANA zone from the embedded
+/// tzdb (echoed in `meta.assets`).
+pub(crate) enum ZoneSpec {
+    Fixed(i32),
+    Named(tz::Zone),
+}
+
+impl ZoneSpec {
+    pub(crate) fn parse(ctx: &mut Ctx, name: &str) -> Result<ZoneSpec, ToolError> {
+        let s = ctx.text(name)?.expect("required");
+        let at = format!("/{name}");
+        let t = s.trim();
+        let looks_named = t.contains('/')
+            || (t.len() > 3 && t.bytes().all(|b| b.is_ascii_alphabetic() || b == b'_'));
+        if looks_named {
+            let z = tz::zone(t).ok_or_else(|| {
+                ToolError::invalid(
+                    &at,
+                    format!(
+                        "\"{t}\" is not an IANA time zone in tzdb {}.",
+                        tz::version()
+                    ),
+                )
+                .hint(
+                    "Use a name like America/Denver or Europe/London, or a UTC offset like -06:00.",
+                )
+            })?;
+            ctx.assets.push(AssetRef {
+                id: "tzdb".into(),
+                version: tz::version().into(),
+            });
+            return Ok(ZoneSpec::Named(z));
+        }
+        civil::parse_offset(t)
+            .map(ZoneSpec::Fixed)
+            .map_err(|m| ToolError::invalid(&at, m))
+    }
+
+    /// Offset in minutes at a UTC instant (Unix seconds).
+    pub(crate) fn minutes_at(&self, unix: i64) -> i32 {
+        match self {
+            ZoneSpec::Fixed(m) => *m,
+            ZoneSpec::Named(z) => z.at(unix).utoff / 60,
+        }
+    }
+
+    pub(crate) fn abbr_at(&self, unix: i64) -> Option<&'static str> {
+        match self {
+            ZoneSpec::Fixed(_) => None,
+            ZoneSpec::Named(z) => Some(z.at(unix).abbr),
+        }
     }
 }
 
@@ -813,7 +876,7 @@ fn run_block_time(ctx: &mut Ctx) -> Result<Json, ToolError> {
 pub static UTC_OFFSET: ToolDef = ToolDef {
     id: "time.scale.utc-offset",
     title: "Local time to UTC (Zulu)",
-    summary: "Converts a local time to UTC and Zulu time with an explicit UTC offset, or UTC to local, with the date change shown.",
+    summary: "Converts a local time to UTC and Zulu time with an IANA time zone or a UTC offset, or UTC to local, handling daylight saving gaps and overlaps and showing the date change.",
     aliases: &["Zulu time converter", "local to UTC", "UTC to local time"],
     keywords: &["Zulu", "UTC", "local time", "time zone", "offset", "Z time"],
     inputs: &[
@@ -822,8 +885,8 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
             .core(),
         text(
             "offset",
-            "UTC offset",
-            "The offset in effect, like -05:00 for CDT or +05:30",
+            "Time zone or UTC offset",
+            "Like America/Chicago, or an offset like -05:00",
         )
         .required()
         .core(),
@@ -839,6 +902,7 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
         text("zulu", "Zulu", "HHMMZ"),
         text("utc", "UTC", "ISO 8601 UTC time"),
         text("local", "Local", "ISO 8601 with the offset"),
+        text("abbr", "Zone abbreviation", "Like CDT, for named zones").optional(),
         text(
             "date_change",
             "Date change",
@@ -856,15 +920,15 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(0)),
     ],
-    errors: &[ErrorCode::Unsupported],
-    warnings: &["EXPERIMENTAL_TOOL"],
-    model: "UTC = local − offset",
-    accuracy: "Exact; you supply the offset in effect (named zones need the time-zone database, not yet bundled)",
-    references: &[RFC_3339],
+    errors: &[],
+    warnings: &["AMBIGUOUS_INPUT", "EXPERIMENTAL_TOOL"],
+    model: "UTC = local − offset; named zones from the embedded IANA tzdb (TZif with POSIX rules)",
+    accuracy: "Exact for the tzdb release echoed in meta.assets",
+    references: &[RFC_3339, IANA_TZ],
     examples: &[Example {
         id: "primary",
-        title: "14:05 CDT (UTC−5)",
-        input: r#"{"time":"2026-07-01T14:05","offset":"-05:00"}"#,
+        title: "14:05 in Chicago on a summer date",
+        input: r#"{"time":"2026-07-01T14:05","offset":"America/Chicago"}"#,
         source: "add-practitioner-essentials Zulu scenario: 1905Z",
     }],
     primary_example: "primary",
@@ -883,45 +947,83 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
 };
 
 fn run_utc_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let off_s = ctx.text("offset")?.expect("required");
-    if off_s.contains('/') {
-        return Err(ToolError::new(
-            ErrorCode::Unsupported,
-            "Named time zones need the time-zone database, which is not bundled yet.",
-        )
-        .at("/offset")
-        .hint(
-            "Enter the UTC offset in effect on that date, like -05:00 for CDT or -06:00 for CST.",
-        ));
-    }
-    let off = civil::parse_offset(&off_s).map_err(|m| ToolError::invalid("/offset", m))?;
+    let zone = ZoneSpec::parse(ctx, "offset")?;
     let to_utc_dir = ctx.choice("direction")?.unwrap_or("local-to-utc") == "local-to-utc";
     let s = stamp(ctx, "time")?;
-    let implied = if to_utc_dir { off } else { 0 };
-    if let Some(given) = s.offset
-        && given != implied
-    {
-        return Err(ToolError::invalid(
-            "/time",
-            format!(
-                "The time already carries offset {}; remove it or make it match.",
-                civil::offset_text(given, true)
-            ),
-        ));
-    }
-    let (ud, us) = if to_utc_dir {
-        to_utc(Stamp {
-            offset: Some(off),
-            ..s
-        })
-    } else {
-        (s.days, s.secs)
+    let (ud, us, off) = match (&zone, to_utc_dir) {
+        (ZoneSpec::Fixed(off), true) => {
+            if let Some(given) = s.offset
+                && given != *off
+            {
+                return Err(ToolError::invalid(
+                    "/time",
+                    format!(
+                        "The time already carries offset {}; remove it or make it match.",
+                        civil::offset_text(given, true)
+                    ),
+                ));
+            }
+            let (d, sec) = to_utc(Stamp {
+                offset: Some(*off),
+                ..s
+            });
+            (d, sec, *off)
+        }
+        (ZoneSpec::Named(z), true) => {
+            if s.offset.is_some() {
+                return Err(ToolError::invalid(
+                    "/time",
+                    "Remove the offset from the time; the zone supplies it.",
+                ));
+            }
+            let whole = s.secs.floor();
+            let local = s.days * 86_400 + whole as i64;
+            let found = z.from_local(local);
+            let Some(&first) = found.first() else {
+                return Err(ToolError::invalid(
+                    "/time",
+                    format!(
+                        "{} does not exist in {}: the clocks jump forward past it that day.",
+                        civil::iso(s.days, s.secs, "").replace('T', " "),
+                        z.name
+                    ),
+                ));
+            };
+            if found.len() > 1 {
+                let z1 =
+                    |t: i64| civil::iso(t.div_euclid(86_400), t.rem_euclid(86_400) as f64, "Z");
+                ctx.warnings.push(Warning::new(
+                    "AMBIGUOUS_INPUT",
+                    format!("This local time happens twice as the clocks fall back: {} and {}. The first is used.", z1(found[0]), z1(found[1])),
+                ));
+            }
+            let off = ((local - first) / 60) as i32;
+            (
+                first.div_euclid(86_400),
+                first.rem_euclid(86_400) as f64 + (s.secs - whole),
+                off,
+            )
+        }
+        (_, false) => {
+            if s.offset.is_some_and(|o| o != 0) {
+                return Err(ToolError::invalid(
+                    "/time",
+                    "For utc-to-local, give the time in UTC (Z or no offset).",
+                ));
+            }
+            (
+                s.days,
+                s.secs,
+                zone.minutes_at(s.days * 86_400 + s.secs as i64),
+            )
+        }
     };
     let (ld, ls) = to_utc(Stamp {
         days: ud,
         secs: us,
         offset: Some(-off),
     });
+    let unix = ud * 86_400 + us as i64;
     let mut out = vec![
         (
             "zulu",
@@ -937,6 +1039,9 @@ fn run_utc_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
             Json::str(civil::iso(ld, ls, &civil::offset_text(off, false))),
         ),
     ];
+    if let Some(a) = zone.abbr_at(unix) {
+        out.push(("abbr", Json::str(a)));
+    }
     if ud != ld {
         let which = if ud > ld {
             "the next day"
@@ -952,6 +1057,112 @@ fn run_utc_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
     Ok(Json::obj(out))
 }
 
+pub static ZONE_INFO: ToolDef = ToolDef {
+    id: "time.scale.zone-info",
+    title: "Time zone rules at a date",
+    summary: "The UTC offset, abbreviation, and daylight saving state of an IANA time zone at a moment, and when it next changes.",
+    aliases: &[
+        "what time zone offset",
+        "when does daylight saving time change",
+        "DST dates",
+    ],
+    keywords: &[
+        "time zone",
+        "IANA",
+        "tzdb",
+        "daylight saving",
+        "DST",
+        "offset",
+        "abbreviation",
+    ],
+    inputs: &[
+        text("zone", "Time zone", "IANA name, like America/Denver")
+            .required()
+            .core(),
+        text("time", "At (UTC)", "Like 2026-09-18T00:00Z")
+            .required()
+            .core(),
+    ],
+    outputs: &[
+        text("offset", "UTC offset", "Like -06:00"),
+        text("abbr", "Abbreviation", "Like MDT"),
+        text("dst", "Daylight saving", "yes or no"),
+        text(
+            "next_change",
+            "Next change (UTC)",
+            "When the offset or DST state next changes",
+        )
+        .optional(),
+        text("next_offset", "Offset after the change", "Like -07:00").optional(),
+        text("zone_name", "Zone", "Canonical spelling"),
+    ],
+    errors: &[],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Embedded IANA tzdb (TZif with POSIX rules past the last listed transition)",
+    accuracy: "Exact for the tzdb release echoed in meta.assets; checked against Python zoneinfo at 238,800 instants",
+    references: &[IANA_TZ],
+    examples: &[Example {
+        id: "primary",
+        title: "Denver in September 2026",
+        input: r#"{"zone":"America/Denver","time":"2026-09-18T00:00Z"}"#,
+        source: "IANA tzdb 2026d: MDT (-06:00) until 2026-11-01 08:00 UTC",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[Related {
+        id: "time.scale.utc-offset",
+        reason: "next",
+    }],
+    sentence: "Clocks there read {abbr}, which is {offset} from UTC.",
+    limits: &[("batchRows", 10_000)],
+    run: run_zone_info,
+    ..ToolDef::BLANK
+};
+
+fn run_zone_info(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let name = ctx.text("zone")?.expect("required");
+    let z = tz::zone(name.trim()).ok_or_else(|| {
+        ToolError::invalid(
+            "/zone",
+            format!(
+                "\"{}\" is not an IANA time zone in tzdb {}.",
+                name.trim(),
+                tz::version()
+            ),
+        )
+        .hint("Use a name like America/Denver, Europe/London, or Asia/Kolkata.")
+    })?;
+    ctx.assets.push(AssetRef {
+        id: "tzdb".into(),
+        version: tz::version().into(),
+    });
+    let (d, s) = to_utc(stamp(ctx, "time")?);
+    let t = d * 86_400 + s as i64;
+    let now = z.at(t);
+    let off = |secs: i32| civil::offset_text(secs / 60, false);
+    let mut out = vec![
+        ("offset", Json::str(off(now.utoff))),
+        ("abbr", Json::str(now.abbr)),
+        ("dst", Json::str(if now.dst { "yes" } else { "no" })),
+    ];
+    if let Some(next) = z.next_change(t) {
+        out.push((
+            "next_change",
+            Json::str(civil::iso(
+                next.div_euclid(86_400),
+                next.rem_euclid(86_400) as f64,
+                "Z",
+            )),
+        ));
+        out.push(("next_offset", Json::str(off(z.at(next).utoff))));
+    }
+    out.push(("zone_name", Json::str(z.name)));
+    Ok(Json::obj(out))
+}
+
 pub static TOOLS: &[&ToolDef] = &[
     &GPS_WEEK,
     &GPS_TO_UTC,
@@ -959,6 +1170,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &DECIMAL_HOURS,
     &BLOCK_TIME,
     &UTC_OFFSET,
+    &ZONE_INFO,
     &solar::POSITION,
     &solar::EVENTS,
     &solar::AVIATION_NIGHTS,

@@ -107,7 +107,8 @@ def events():
         vec(6, {"lat": 51.5074, "lon": -0.1278, "date": "2026-01-15", "offset": "+00:00"},
             {"result.solar_noon": ev("2026-01-15", "12:10", "2026-01-15", "1210"), "result.sunset": ev("2026-01-15", "16:21", "2026-01-15", "1621"),
              "result.civil_dusk": ev("2026-01-15", "16:59", "2026-01-15", "1659")}, USNO, USNO_VER),
-        vec(7, dict(den, offset="America/Denver"), {"ok": False, "error.code": "UNSUPPORTED"}, SPEC, "2026"),
+        vec(7, dict(den, offset="America/Denver"), {"result.sunset": ev("2026-06-21", "20:31", "2026-06-22", "0231")}, USNO, USNO_VER),
+        vec(8, dict(den, offset="Mars/Olympus"), {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"),
     ]
 
 

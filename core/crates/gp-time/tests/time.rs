@@ -209,7 +209,8 @@ fn zulu_scenarios() {
         "time.scale.utc-offset",
         r#"{"time":"2026-07-01T14:05","offset":"America/Chicago"}"#,
     );
-    assert_eq!(named["error"]["code"], "UNSUPPORTED");
+    assert_eq!(named["result"]["zulu"], "1905Z");
+    assert_eq!(named["result"]["abbr"], "CDT");
     let clash = call(
         "time.scale.utc-offset",
         r#"{"time":"2026-07-01T14:05-04:00","offset":"-05:00"}"#,
@@ -338,4 +339,65 @@ fn sun_position_extras() {
         r#"{"lat":0,"lon":0,"time":"2026-03-20T12:00Z","slope":"10 deg"}"#,
     );
     assert_eq!(half["error"]["field"], "/aspect");
+}
+
+#[test]
+fn dst_gap_and_overlap() {
+    let gap = call(
+        "time.scale.utc-offset",
+        r#"{"time":"2026-03-08T02:30","offset":"America/Denver"}"#,
+    );
+    assert_eq!(gap["error"]["code"], "INVALID_INPUT");
+    assert!(
+        gap["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("does not exist"),
+        "{gap}"
+    );
+    let twice = call(
+        "time.scale.utc-offset",
+        r#"{"time":"2026-11-01T01:30","offset":"America/Denver"}"#,
+    );
+    assert_eq!(twice["result"]["utc"], "2026-11-01T07:30:00Z");
+    assert!(codes(&twice).contains(&"AMBIGUOUS_INPUT".to_owned()));
+    let unknown = call(
+        "time.scale.utc-offset",
+        r#"{"time":"2026-07-01T14:05","offset":"Mars/Olympus"}"#,
+    );
+    assert_eq!(unknown["error"]["code"], "INVALID_INPUT");
+    // Sun events on the spring-forward date use each event's own offset.
+    let e = call(
+        "time.sun.events",
+        r#"{"lat":39.7392,"lon":-104.9903,"date":"2026-03-08","offset":"America/Denver"}"#,
+    );
+    let rise = e["result"]["sunrise"].as_str().unwrap();
+    let set = e["result"]["sunset"].as_str().unwrap();
+    assert!(
+        rise.starts_with("2026-03-08 07:") && set.starts_with("2026-03-08 19:"),
+        "{rise} / {set}"
+    );
+}
+
+/// The embedded leap-second table matches IANA's leap-seconds.list
+/// (tzdata 2026d, which expires 28 June 2027).
+#[test]
+fn leap_table_matches_iana_list() {
+    let text = repo("core/crates/gp-time/tests/data/leap-seconds.list");
+    for line in text
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+    {
+        let mut f = line.split_whitespace();
+        let ntp: i64 = f.next().unwrap().parse().unwrap();
+        let tai: i32 = f.next().unwrap().parse().unwrap();
+        // NTP epoch 1900-01-01 is 2,208,988,800 s before Unix time.
+        let day = (ntp - 2_208_988_800) / 86_400;
+        assert_eq!(gp_time::civil::tai_minus_utc(day), Some(tai), "{line}");
+        assert_eq!(
+            gp_time::civil::tai_minus_utc(day - 1),
+            (tai > 10).then_some(tai - 1),
+            "{line}"
+        );
+    }
 }

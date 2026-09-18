@@ -1,7 +1,7 @@
 ## 1. Time domain and assets
 
 - [x] 1.1 Add the `time` domain to the catalog taxonomy; verify catalog validation accepts `time.sun.*` and `time.scale.*`
-- [ ] 1.2 Package `leap-seconds` (IERS Bulletin C) and `tzdb` (IANA) as ledger-tracked assets; verify digests and freshness rows (done so far: the leap-second table from IERS Bulletin C 72, embedded in the time module, echoed in `meta.assets`, with an expiry warning after 2027-06-30; pending: tzdb and the asset ledger)
+- [ ] 1.2 Package `leap-seconds` (IERS Bulletin C) and `tzdb` (IANA) as ledger-tracked assets; verify digests and freshness rows (done so far: the leap-second table from IERS Bulletin C 72, embedded in the time module, echoed in `meta.assets`, with an expiry warning after 2027-06-30; also tzdb 2026d, embedded in the time module and echoed in meta.assets, with the table cross-checked against IANA leap-seconds.list; pending: the asset ledger, with on-demand loading)
 - [ ] 1.3 Package optional `tz-boundaries` (ODbL, with attribution) and `ngs-antinfo`; verify sizes are shown before download
 
 ## 2. Solar and twilight
@@ -15,7 +15,7 @@
 
 ## 3. Time scales
 
-- [ ] 3.1 Implement tzdb-based local↔UTC with DST gap/overlap handling and Zulu formatting; verify the DST and Zulu scenarios (done so far: local↔UTC and Zulu with an explicit UTC offset, dated day changes, and named zones refused with a hint; pending: the tzdb snapshot and DST gap/overlap)
+- [x] 3.1 Implement tzdb-based local↔UTC with DST gap/overlap and Zulu formatting; verify the DST and Zulu scenarios (IANA tzdb 2026d embedded as slim TZif with POSIX rules; 238,800 instants across 597 zones match Python zoneinfo on the same release; gaps are INVALID_INPUT and overlaps warn AMBIGUOUS_INPUT with both candidates; a new time.scale.zone-info tool; the sun tools accept zone names and use each event's own offset)
 - [x] 3.2 Implement decimal hours and block time across midnight; verify the 1.3 h scenario
 - [x] 3.3 Implement GPS week/rollover, GNSS offsets, JD/MJD, and day of year; verify the GPS-week, Julian-date, and stale-table scenarios
 - [ ] 3.4 Implement the optional zone-from-location lookup; verify the no-boundary-data scenario

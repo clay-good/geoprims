@@ -62,7 +62,7 @@
     },
     "indexing": {
       "title": "Spatial indexing",
-      "groups": []
+      "groups": ["h3", "s2", "a5", "geohash", "tile", "plus-code", "convert"]
     },
     "raster": {
       "title": "Raster",

@@ -62,7 +62,7 @@ Tools SHALL encode Plus Codes at code lengths 2–15, decode them to area bounds
 - **THEN** every case passes
 
 #### Scenario: Short code needs a reference
-- **WHEN** a short code (e.g. `5FYX+XX`) is decoded without a reference location
+- **WHEN** a short code (e.g. `9G8F+6X`) is decoded without a reference location
 - **THEN** the tool asks for a reference location and explains that short codes are ambiguous without one
 
 ### Requirement: Cross-index conversion

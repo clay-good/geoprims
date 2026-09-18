@@ -1,0 +1,6 @@
+{"id":"v001","input":{"geohash":"dppn5f"},"expect":{"result.n":"dppn5g","result.e":"dppnh4","ok":true},"source":"Geohash algorithm implemented in Python (tools/vectors/gen_indexing.py)","sourceVersion":"2026","tolerance":{}}
+{"id":"v002","input":{"geohash":"r3gx2f"},"expect":{"result.n":"r3gx2g","result.e":"r3gx34","ok":true},"source":"Geohash algorithm implemented in Python (tools/vectors/gen_indexing.py)","sourceVersion":"2026","tolerance":{}}
+{"id":"v003","input":{"geohash":"gcpvj0"},"expect":{"result.n":"gcpvj1","result.e":"gcpvj2","ok":true},"source":"Geohash algorithm implemented in Python (tools/vectors/gen_indexing.py)","sourceVersion":"2026","tolerance":{}}
+{"id":"v004","input":{"geohash":"bewbye"},"expect":{"result.n":"bewbys","result.e":"bewbyg","ok":true},"source":"Geohash algorithm implemented in Python (tools/vectors/gen_indexing.py)","sourceVersion":"2026","tolerance":{}}
+{"id":"v005","input":{"geohash":"rzzvpu"},"expect":{"result.n":"rzzvpv","result.e":"2pbj0h","ok":true},"source":"add-spatial-indexing-and-raster scenarios","sourceVersion":"2026","tolerance":{}}
+{"id":"v006","input":{"geohash":"upb"},"expect":{"result.n":"none (past the pole)","ok":true},"source":"add-spatial-indexing-and-raster scenarios","sourceVersion":"2026","tolerance":{}}

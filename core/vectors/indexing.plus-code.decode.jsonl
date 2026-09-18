@@ -1,0 +1,7 @@
+{"id":"v001","input":{"code":"7FG49Q00+"},"expect":{"result.full_code":"7FG49Q00+","ok":true},"source":"Open Location Code test data, encoding.csv","sourceVersion":"open-location-code main","tolerance":{}}
+{"id":"v002","input":{"code":"7FG49QCJ+2V"},"expect":{"result.full_code":"7FG49QCJ+2V","ok":true},"source":"Open Location Code test data, encoding.csv","sourceVersion":"open-location-code main","tolerance":{}}
+{"id":"v003","input":{"code":"7FG49QCJ+2VX"},"expect":{"result.full_code":"7FG49QCJ+2VX","ok":true},"source":"Open Location Code test data, encoding.csv","sourceVersion":"open-location-code main","tolerance":{}}
+{"id":"v004","input":{"code":"8FVC2222+22"},"expect":{"result.full_code":"8FVC2222+22","ok":true},"source":"Open Location Code test data, encoding.csv","sourceVersion":"open-location-code main","tolerance":{}}
+{"id":"v005","input":{"code":"4VCPPQGP+Q9"},"expect":{"result.full_code":"4VCPPQGP+Q9","ok":true},"source":"Open Location Code test data, encoding.csv","sourceVersion":"open-location-code main","tolerance":{}}
+{"id":"v006","input":{"code":"9G8F+6X"},"expect":{"ok":false,"error.code":"INVALID_INPUT","error.field":"/ref_lat"},"source":"add-spatial-indexing-and-raster scenarios","sourceVersion":"2026","tolerance":{}}
+{"id":"v007","input":{"code":"9G8F+6X","ref_lat":47.4,"ref_lon":8.6},"expect":{"result.full_code":"8FVC9G8F+6X","ok":true},"source":"Open Location Code specification (recover nearest)","sourceVersion":"open-location-code main","tolerance":{}}

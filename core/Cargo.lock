@@ -92,6 +92,9 @@ name = "gp-indexing"
 version = "0.1.0"
 dependencies = [
  "gp-base",
+ "gp-geo",
+ "libm",
+ "serde_json",
 ]
 
 [[package]]

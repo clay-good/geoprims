@@ -292,6 +292,38 @@
     {
       "query": "mapping window",
       "expect": "time.sun.mapping-window"
+    },
+    {
+      "query": "geohash",
+      "expect": "indexing.geohash.encode"
+    },
+    {
+      "query": "decode geohash",
+      "expect": "indexing.geohash.decode"
+    },
+    {
+      "query": "geohash neighbors",
+      "expect": "indexing.geohash.neighbors"
+    },
+    {
+      "query": "quadkey",
+      "expect": "indexing.tile.from-point"
+    },
+    {
+      "query": "tile bounds",
+      "expect": "indexing.tile.bounds"
+    },
+    {
+      "query": "meters per pixel",
+      "expect": "indexing.tile.ground-resolution"
+    },
+    {
+      "query": "plus code",
+      "expect": "indexing.plus-code.encode"
+    },
+    {
+      "query": "short plus code",
+      "expect": "indexing.plus-code.shorten"
     }
   ]
 }

@@ -5,7 +5,7 @@
 
 use serde_json::{Map, Value};
 
-use crate::envelope::{self, Meta};
+use crate::envelope::{self, AssetRef, Meta};
 use crate::error::{ErrorCode, ToolError, Warning};
 use crate::json::Json;
 use crate::parse::{self, NumberFormat};
@@ -38,6 +38,8 @@ impl Stability {
 pub enum Precision {
     Decimals(u8),
     Significant(u8),
+    /// Decimals without digit grouping, for identifiers (GPS week 2436, JD 2461301.5).
+    Plain(u8),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -299,6 +301,8 @@ pub struct Ctx<'a> {
     pub warnings: Vec<Warning>,
     /// Overrides `meta.model` for this call (e.g. to name a custom ellipsoid).
     pub model: Option<String>,
+    /// Reference data this call used, echoed in `meta.assets` (id and version).
+    pub assets: Vec<AssetRef>,
 }
 
 fn pointer(name: &str) -> String {
@@ -782,11 +786,11 @@ impl Registry {
 
     fn run(&self, def: &'static ToolDef, input: &Value) -> String {
         match execute(def, input) {
-            Ok((result, summary, display, warnings, model)) => {
+            Ok((result, summary, display, warnings, model, assets)) => {
                 let meta = Meta {
                     tool: def.id.to_owned(),
                     tool_version: def.version.to_owned(),
-                    assets: vec![],
+                    assets,
                     model: model.unwrap_or_else(|| def.model.to_owned()),
                     accuracy: def.accuracy.to_owned(),
                     warnings,
@@ -803,7 +807,14 @@ fn limit(def: &ToolDef, name: &str) -> Option<u64> {
 }
 
 /// Result, rendered sentence, display strings per output, and warnings.
-type Executed = (Json, Option<String>, Json, Vec<Warning>, Option<String>);
+type Executed = (
+    Json,
+    Option<String>,
+    Json,
+    Vec<Warning>,
+    Option<String>,
+    Vec<AssetRef>,
+);
 
 fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> {
     let Value::Object(map) = input else {
@@ -835,6 +846,7 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         options,
         warnings: Vec::new(),
         model: None,
+        assets: Vec::new(),
     };
     for f in def.inputs {
         if f.required && !ctx.is_set(f.name) {
@@ -859,7 +871,14 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         ));
     }
     let (summary, display) = render_summary(&mut ctx, &result);
-    Ok((result, Some(summary), display, ctx.warnings, ctx.model))
+    Ok((
+        result,
+        Some(summary),
+        display,
+        ctx.warnings,
+        ctx.model,
+        ctx.assets,
+    ))
 }
 
 /// Display precision for input values echoed in sentences.

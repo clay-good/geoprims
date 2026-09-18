@@ -240,6 +240,34 @@
     {
       "query": "grid to ground",
       "expect": "survey.reduction.combined-factor"
+    },
+    {
+      "query": "gps week",
+      "expect": "time.scale.gps-week"
+    },
+    {
+      "query": "gps week to date",
+      "expect": "time.scale.gps-to-utc"
+    },
+    {
+      "query": "julian date",
+      "expect": "time.scale.julian-date"
+    },
+    {
+      "query": "day of year",
+      "expect": "time.scale.julian-date"
+    },
+    {
+      "query": "decimal hours",
+      "expect": "time.scale.decimal-hours"
+    },
+    {
+      "query": "block time",
+      "expect": "time.scale.block-time"
+    },
+    {
+      "query": "zulu time",
+      "expect": "time.scale.utc-offset"
     }
   ]
 }

@@ -121,6 +121,10 @@ fn field_schema(f: &Field, is_input: bool) -> Json {
             match p {
                 Precision::Decimals(n) => Json::obj([("decimals", Json::Num(n.into()))]),
                 Precision::Significant(n) => Json::obj([("significant", Json::Num(n.into()))]),
+                Precision::Plain(n) => Json::obj([
+                    ("decimals", Json::Num(n.into())),
+                    ("grouping", Json::Bool(false)),
+                ]),
             },
         );
     }

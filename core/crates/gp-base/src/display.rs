@@ -20,7 +20,7 @@ pub fn number(x: f64, precision: Precision, format: NumberFormat) -> String {
     let (digits, mut n) = shortest_digits(x.abs());
     let mut d: Vec<u8> = digits.bytes().map(|b| b - b'0').collect();
     let keep = match precision {
-        Precision::Decimals(p) => n + i32::from(p),
+        Precision::Decimals(p) | Precision::Plain(p) => n + i32::from(p),
         Precision::Significant(s) => i32::from(s),
     };
     if keep < 0 {
@@ -74,7 +74,7 @@ pub fn number(x: f64, precision: Precision, format: NumberFormat) -> String {
         out.push('-');
     }
     for (i, c) in int.chars().enumerate() {
-        if i > 0 && (int.len() - i).is_multiple_of(3) {
+        if i > 0 && (int.len() - i).is_multiple_of(3) && !matches!(precision, Precision::Plain(_)) {
             out.push_str(group);
         }
         out.push(c);

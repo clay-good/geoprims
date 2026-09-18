@@ -70,7 +70,7 @@
     },
     "time": {
       "title": "Time",
-      "groups": []
+      "groups": ["sun", "scale"]
     },
     "units": {
       "title": "Units",

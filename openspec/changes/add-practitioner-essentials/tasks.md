@@ -1,7 +1,7 @@
 ## 1. Time domain and assets
 
-- [ ] 1.1 Add the `time` domain to the catalog taxonomy; verify catalog validation accepts `time.sun.*` and `time.scale.*`
-- [ ] 1.2 Package `leap-seconds` (IERS Bulletin C) and `tzdb` (IANA) as ledger-tracked assets; verify digests and freshness rows
+- [x] 1.1 Add the `time` domain to the catalog taxonomy; verify catalog validation accepts `time.sun.*` and `time.scale.*`
+- [ ] 1.2 Package `leap-seconds` (IERS Bulletin C) and `tzdb` (IANA) as ledger-tracked assets; verify digests and freshness rows (done so far: the leap-second table from IERS Bulletin C 72, embedded in the time module, echoed in `meta.assets`, with an expiry warning after 2027-06-30; pending: tzdb and the asset ledger)
 - [ ] 1.3 Package optional `tz-boundaries` (ODbL, with attribution) and `ngs-antinfo`; verify sizes are shown before download
 
 ## 2. Solar and twilight
@@ -15,9 +15,9 @@
 
 ## 3. Time scales
 
-- [ ] 3.1 Implement tzdb-based local↔UTC with DST gap/overlap handling and Zulu formatting; verify the DST and Zulu scenarios
-- [ ] 3.2 Implement decimal hours and block time across midnight; verify the 1.3 h scenario
-- [ ] 3.3 Implement GPS week/rollover, GNSS offsets, JD/MJD, and day of year; verify the GPS-week, Julian-date, and stale-table scenarios
+- [ ] 3.1 Implement tzdb-based local↔UTC with DST gap/overlap handling and Zulu formatting; verify the DST and Zulu scenarios (done so far: local↔UTC and Zulu with an explicit UTC offset, dated day changes, and named zones refused with a hint; pending: the tzdb snapshot and DST gap/overlap)
+- [x] 3.2 Implement decimal hours and block time across midnight; verify the 1.3 h scenario
+- [x] 3.3 Implement GPS week/rollover, GNSS offsets, JD/MJD, and day of year; verify the GPS-week, Julian-date, and stale-table scenarios
 - [ ] 3.4 Implement the optional zone-from-location lookup; verify the no-boundary-data scenario
 
 ## 4. Aviation weather and IFR

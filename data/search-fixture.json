@@ -520,6 +520,22 @@
     {
       "query": "VLOS distance",
       "expect": "drone.sensors.vlos"
+    },
+    {
+      "query": "state plane converter",
+      "expect": "geodesy.spcs.spcs83-forward"
+    },
+    {
+      "query": "lat long to state plane",
+      "expect": "geodesy.spcs.spcs83-forward"
+    },
+    {
+      "query": "state plane to lat long",
+      "expect": "geodesy.spcs.spcs83-inverse"
+    },
+    {
+      "query": "what state plane zone",
+      "expect": "geodesy.spcs.zone-lookup"
     }
   ]
 }

@@ -10,6 +10,7 @@ Build tooling. No npm dependencies.
 | `codegen/catalog.mjs` | Builds `dist/catalog/v1.json` from the manifests the built modules report, with vector counts and operation and endpoint counts |
 | `vectors/gen_units.py` | Generates the units golden vectors from the published definitions, using exact rational arithmetic |
 | `vectors/gen_*.py` | One generator per domain (aviation, navigation, geodesy, drone, survey, time, sun, indexing, H3). `gen_sun.py` and `gen_h3.py` need `pvlib` and `h3` in a scratch virtualenv |
+| `codegen/spcs83.py`, `vectors/gen_spcs_diff.py` | Generate the SPCS83 zone table from the EPSG dataset and the PROJ differential fixture and vectors (need `pyproj`) |
 | `vectors/gen_magnetic.py` | Geomagnetism vectors: WMM2025 from the NCEI test values, IGRF-14 from `ppigrf` (scratch virtualenv) at coefficient epochs |
 | `vectors/gen_h3_diff.py`, `vectors/gen_tz_diff.py` | Differential fixtures from H3 C (via h3-py) and Python zoneinfo; a small committed fixture runs in CI and a full local run is behind `--ignored` |
 | `vectors/supersede.py` | Run after regenerating a published vector file: `supersede.py origin/main FILE "reason"` keeps each published line, marks changed ones `supersededBy`, and moves the new expectation to a fresh id. `supersede.py BASE --check` lists silent edits |

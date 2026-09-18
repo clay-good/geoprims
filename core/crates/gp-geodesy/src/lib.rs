@@ -2,6 +2,7 @@
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
 pub mod magnetic;
+pub mod spcs;
 
 use gp_base::ErrorCode;
 use gp_base::angle::wrap_lon;
@@ -1296,6 +1297,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &MGRS_INVERSE,
     &magnetic::DECLINATION,
     &magnetic::TRUE_TO_MAGNETIC,
+    &spcs::FORWARD,
+    &spcs::INVERSE,
+    &spcs::LOOKUP,
 ];
 
 pub static REGISTRY: Registry = Registry {

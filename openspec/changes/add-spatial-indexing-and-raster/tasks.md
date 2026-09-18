@@ -15,7 +15,7 @@
 - [ ] 2.2 Port S2 cell math, neighbors, and RegionCoverer; verify the token and coverer scenarios and S2 C++ differential tests
 - [ ] 2.3 Implement geohash encode/decode/neighbors/cover; verify the encode, invalid-character, and antimeridian scenarios (done so far: encode, decode with error margins, and the 8 neighbors across the antimeridian and past the poles; the encode and invalid-character scenarios; pending: bounding-box and polygon cover)
 - [ ] 2.4 Implement tile, TMS, quadkey, bbox cover, and ground resolution; verify the tile, resolution, and convention scenarios (done so far: point to XYZ tile, TMS, and quadkey, tile or quadkey to bounds with a detect-convention reading, and ground resolution and scale for 256 or 512 px tiles, with WEB_MERCATOR_CLAMPED; pending: parent and children tiles and bounding-box cover)
-- [ ] 2.5 Integrate Open Location Code; verify all official OLC test files and the short-code scenario (done so far: encode (2 to 15 digits), decode, shorten, and recover a short code from a reference point, with nine cases from the project's encoding test data; pending: the full official test files)
+- [x] 2.5 Integrate Open Location Code; verify all official OLC test files and the short-code scenario (all four official test files pass: encoding, decoding, validity, and shortening/recovery)
 - [ ] 2.6 Implement cross-index conversion with matched sizes; verify the 150 m scenario
 - [ ] 2.7 Add the what3words explanation entry; verify the search scenario
 

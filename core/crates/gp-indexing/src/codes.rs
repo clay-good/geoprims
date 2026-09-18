@@ -148,6 +148,7 @@ fn olc_lat_precision(len: usize) -> f64 {
 
 /// Encodes a Plus Code. `len` is 2, 4, 6, 8, or 10–15.
 pub fn olc_encode(lat: f64, lon: f64, len: usize) -> String {
+    let len = len.min(15);
     let mut lat = lat.clamp(-90.0, 90.0);
     if lat == 90.0 {
         lat -= olc_lat_precision(len);
@@ -187,6 +188,9 @@ pub fn olc_encode(lat: f64, lon: f64, len: usize) -> String {
 /// Checks a code's structure; the message says what is wrong.
 pub fn olc_check(code: &str) -> Result<(), String> {
     let c = code.to_ascii_uppercase();
+    if c == "+" {
+        return Err("A Plus Code needs digits around the + sign.".into());
+    }
     let sep: Vec<usize> = c.match_indices('+').map(|(i, _)| i).collect();
     if sep.len() != 1 {
         return Err("A Plus Code has exactly one + sign.".into());

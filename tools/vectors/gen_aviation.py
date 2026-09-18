@@ -407,6 +407,17 @@ def hold_wind_vectors():
     return out
 
 
+def taf_vectors():
+    cases = [
+        ("TAF KDEN 181720Z 1818/1918 30012KT P6SM SCT080 FM190200 32008KT P6SM FEW100", {"result.valid_hours": 24.0, "result.count": 2.0, "result.periods.1.from": "day 19 at 0200Z"}),
+        ("TAF AMD KORD 302330Z 3100/0106 27015KT P6SM BKN025 FM010300 VRB03KT 1/2SM FG VV002", {"result.valid_hours": 30.0, "result.periods.1.flight_category": "LIFR"}),
+        ("TAF KSEA 181130Z 1812/1912 18005KT 5SM BR OVC008 TEMPO 1812/1816 2SM BR OVC004", {"result.periods.0.flight_category": "IFR", "result.periods.1.flight_category": "LIFR"}),
+        ("TAF KPHX 181730Z 1818/1924 VRB05KT P6SM SKC PROB40 1822/1902 VRB25G40KT 1SM TSRA", {"result.count": 2.0, "result.periods.1.change": "40% probability"}),
+        ("TAF EGLL 181700Z 1818/1924 24012KT 9999 FEW035 BECMG 1822/1901 20008KT", {"result.periods.0.visibility": "10 km or more", "result.periods.1.change": "becoming"}),
+    ]
+    return [svec(i, {"report": r}, e, "Hand-decoded per the FAA Aviation Weather Handbook (TAF chapter)", "FAA-H-8083-28 (2022)") for i, (r, e) in enumerate(cases, 1)]
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     out.mkdir(parents=True, exist_ok=True)
@@ -431,6 +442,7 @@ def main():
         "aviation.loading.weight-balance": wb_vectors(),
         "aviation.weather.metar-decode": metar_vectors(),
         "aviation.weather.fb-winds-decode": fb_vectors(),
+        "aviation.weather.taf-decode": taf_vectors(),
         "aviation.ifr.hold-entry": hold_entry_vectors(),
         "aviation.ifr.hold-speed-limit": hold_speed_vectors(),
         "aviation.ifr.hold-wind-timing": hold_wind_vectors(),

@@ -1443,3 +1443,516 @@ fn run_fb(ctx: &mut Ctx) -> Result<Json, ToolError> {
     o.push(("notice", Json::str(SAFETY)));
     Ok(obj(o))
 }
+
+// ---------------------------------------------------------------- TAF
+
+/// A TAF time `DDHH` (or `DDHHMM` for FM), in hours after the validity start.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct TafTime {
+    day: u32,
+    hour: u32,
+    minute: u32,
+}
+
+fn taf_time(s: &str) -> Option<TafTime> {
+    if !(s.len() == 4 || s.len() == 6) || !s.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let day: u32 = s[..2].parse().ok()?;
+    let hour: u32 = s[2..4].parse().ok()?;
+    let minute: u32 = if s.len() == 6 {
+        s[4..].parse().ok()?
+    } else {
+        0
+    };
+    ((1..=31).contains(&day) && hour <= 24 && minute < 60).then_some(TafTime { day, hour, minute })
+}
+
+fn taf_range(s: &str) -> Option<(TafTime, TafTime)> {
+    let (a, b) = s.split_once('/')?;
+    Some((taf_time(a)?, taf_time(b)?))
+}
+
+impl TafTime {
+    fn text(self) -> String {
+        format!("day {} at {:02}{:02}Z", self.day, self.hour, self.minute)
+    }
+
+    /// Hours from `start`, with a day number below the start's meaning the next month.
+    fn hours_from(self, start: TafTime, month_len: u32) -> i64 {
+        let day = if self.day < start.day {
+            self.day + month_len
+        } else {
+            self.day
+        };
+        (day as i64 - start.day as i64) * 24 + self.hour as i64 - start.hour as i64
+    }
+
+    /// Local time of day for a UTC offset in minutes, and the day relative to UTC.
+    fn local(self, offset_min: i32) -> String {
+        let mins = (self.hour * 60 + self.minute) as i32 + offset_min;
+        let day = mins.div_euclid(1440);
+        let m = mins.rem_euclid(1440);
+        format!(
+            "{:02}:{:02} local{}",
+            m / 60,
+            m % 60,
+            match day {
+                0 => "",
+                d if d > 0 => ", next day",
+                _ => ", previous day",
+            }
+        )
+    }
+}
+
+fn parse_offset(s: &str) -> Option<i32> {
+    let s = s.trim().trim_start_matches("UTC").trim_start_matches("utc");
+    let (sign, rest) = match s.chars().next()? {
+        '+' => (1, &s[1..]),
+        '-' | '−' => (-1, &s[s.char_indices().nth(1)?.0..]),
+        _ => return None,
+    };
+    let (h, m) = match rest.split_once(':') {
+        Some((h, m)) => (h.parse::<i32>().ok()?, m.parse::<i32>().ok()?),
+        None => (rest.parse::<i32>().ok()?, 0),
+    };
+    (h <= 14 && m < 60).then_some(sign * (h * 60 + m))
+}
+
+/// Conditions of one TAF period, decoded from its groups.
+#[derive(Default)]
+struct Conditions {
+    wind: Option<String>,
+    vis: Option<f64>,
+    vis_text: Option<String>,
+    weather: Vec<String>,
+    clouds: Vec<String>,
+    ceiling: Option<f64>,
+    other: Vec<String>,
+    undecoded: Vec<String>,
+}
+
+fn decode_conditions(groups: &[&str], fmt: gp_base::parse::NumberFormat) -> Conditions {
+    let mut c = Conditions::default();
+    let mut i = 0;
+    while i < groups.len() {
+        let g = groups[i];
+        if let Some(w) = parse_wind(g) {
+            let mut t = match w.dir {
+                _ if w.speed == 0.0 => "calm".to_owned(),
+                None => format!(
+                    "variable at {} kt",
+                    display::number(w.speed, Precision::Decimals(0), fmt)
+                ),
+                Some(d) => format!(
+                    "{:03}° true at {} kt",
+                    d as i64,
+                    display::number(w.speed, Precision::Decimals(0), fmt)
+                ),
+            };
+            if let Some(gu) = w.gust {
+                t.push_str(&format!(
+                    ", gusting {} kt",
+                    display::number(gu, Precision::Decimals(0), fmt)
+                ));
+            }
+            c.wind = Some(t);
+        } else if let Some((frac, qual)) = groups
+            .get(i + 1)
+            .filter(|n| is_whole(g) && n.contains('/'))
+            .and_then(|n| parse_sm(n))
+        {
+            c.vis = Some(g.parse::<f64>().unwrap_or(0.0) + frac);
+            c.vis_text = Some(format!(
+                "{qual}{} {} SM",
+                g,
+                &groups[i + 1][..groups[i + 1].len() - 2]
+            ));
+            i += 1;
+        } else if let Some((v, qual)) = parse_sm(g) {
+            c.vis = Some(v);
+            c.vis_text = Some(format!(
+                "{qual}{} SM",
+                &g[if qual.is_empty() { 0 } else { 1 }..g.len() - 2]
+            ));
+        } else if g.len() == 4 && g.bytes().all(|b| b.is_ascii_digit()) {
+            let m: f64 = g.parse().unwrap_or(0.0);
+            c.vis = Some(if g == "9999" { 10_000.0 } else { m } / 1609.344);
+            c.vis_text = Some(if g == "9999" {
+                "10 km or more".into()
+            } else {
+                format!("{} m", display::number(m, Precision::Decimals(0), fmt))
+            });
+        } else if g == "CAVOK" {
+            c.vis = Some(10_000.0 / 1609.344);
+            c.vis_text = Some("10 km or more (CAVOK)".into());
+        } else if g == "NSW" {
+            c.other.push("no significant weather".into());
+        } else if let Some(w) = parse_weather(g) {
+            c.weather.push(w);
+        } else if let Some(cl) = parse_cloud(g) {
+            let mut t = cl.cover.to_owned();
+            if let Some(b) = cl.base_ft {
+                t.push_str(&format!(
+                    " at {} ft",
+                    display::number(b, Precision::Decimals(0), fmt)
+                ));
+            }
+            if let Some(k) = cl.kind {
+                t.push_str(&format!(", {k}"));
+            }
+            if matches!(cl.code, "BKN" | "OVC" | "VV") && c.ceiling.is_none() {
+                c.ceiling = cl.base_ft;
+            }
+            c.clouds.push(t);
+        } else if let Some(ws) = g.strip_prefix("WS").and_then(|r| r.split_once('/')) {
+            match (ws.0.parse::<f64>(), parse_wind(ws.1)) {
+                (Ok(h), Some(w)) => c.other.push(format!(
+                    "low-level wind shear at {} ft: {} kt from {}°",
+                    display::number(h * 100.0, Precision::Decimals(0), fmt),
+                    display::number(w.speed, Precision::Decimals(0), fmt),
+                    w.dir
+                        .map_or("variable".into(), |d| format!("{:03}", d as i64))
+                )),
+                _ => c.undecoded.push(g.into()),
+            }
+        } else {
+            c.undecoded.push(g.into());
+        }
+        i += 1;
+    }
+    c
+}
+
+const PERIOD_ROW: &[Field] = &[
+    text(
+        "change",
+        "Change",
+        "base, from, temporary, becoming, or probability",
+        40,
+    ),
+    text("from", "From", "UTC", 24),
+    text("to", "To", "UTC", 24),
+    text("from_local", "From (local)", "With the offset you gave", 40).optional(),
+    Field::new(
+        "start_hour",
+        "Start",
+        "Hours after the forecast starts",
+        Kind::Number {
+            min: 0.0,
+            max: 999.0,
+        },
+    )
+    .precision(Precision::Decimals(1)),
+    text("wind", "Wind", "True-referenced", 80).optional(),
+    text("visibility", "Visibility", "Prevailing", 40).optional(),
+    text("weather", "Weather", "Plain words", 200).optional(),
+    text("clouds", "Clouds", "Layers", 200).optional(),
+    qty(
+        "ceiling",
+        "Ceiling",
+        "Lowest broken, overcast, or vertical visibility",
+        QT::Length,
+        "ft",
+    )
+    .precision(Precision::Decimals(0))
+    .optional(),
+    text(
+        "flight_category",
+        "Flight category",
+        "VFR, MVFR, IFR, or LIFR when visibility or ceiling is forecast",
+        8,
+    )
+    .optional(),
+    text("other", "Other", "Wind shear and remarks", 200).optional(),
+    text(
+        "not_decoded",
+        "Not decoded",
+        "Groups this decoder does not read",
+        200,
+    )
+    .optional(),
+];
+
+pub static TAF: ToolDef = ToolDef {
+    id: "aviation.weather.taf-decode",
+    title: "TAF decoder",
+    summary: "Turns a pasted TAF into a timeline of forecast periods (FM, TEMPO, BECMG, PROB30/40) in plain language, with UTC and local times, winds (true), visibility, weather, clouds and ceilings, and flight categories.",
+    aliases: &[
+        "TAF decoder",
+        "decode TAF",
+        "terminal aerodrome forecast decoder",
+        "TAF translator",
+    ],
+    keywords: &[
+        "TAF",
+        "forecast",
+        "FM",
+        "TEMPO",
+        "BECMG",
+        "PROB30",
+        "PROB40",
+        "ceiling",
+        "visibility",
+        "wind shear",
+    ],
+    inputs: &[
+        text(
+            "report",
+            "TAF",
+            "Paste a TAF, like TAF KDEN 181720Z 1818/1918 30012KT P6SM SCT080 FM190200 ...",
+            4000,
+        )
+        .required()
+        .core(),
+        text(
+            "utc_offset",
+            "Local UTC offset",
+            "Optional, like -06:00, for local times",
+            10,
+        )
+        .core(),
+    ],
+    outputs: &[
+        text("station", "Station", "ICAO identifier", 8),
+        text("issued", "Issued", "Day and time, UTC", 24),
+        text("valid_from", "Valid from", "UTC", 24),
+        text("valid_to", "Valid to", "UTC", 24),
+        Field::new(
+            "valid_hours",
+            "Valid for",
+            "Hours",
+            Kind::Number {
+                min: 0.0,
+                max: 999.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        text("amendment", "Amendment", "AMD or COR", 12).optional(),
+        Field::new(
+            "periods",
+            "Periods",
+            "The forecast timeline",
+            Kind::List {
+                items: PERIOD_ROW,
+                min: 0,
+                max: 60,
+            },
+        ),
+        Field::new(
+            "count",
+            "Periods",
+            "Number of periods",
+            Kind::Number {
+                min: 0.0,
+                max: 60.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        text("notice", "Notice", "Safety framing", 120),
+    ],
+    warnings: &["SUSPECT_VALUE", "EXPERIMENTAL_TOOL"],
+    model: "TAF coding as in the FAA Aviation Weather Handbook and FAA Order JO 7900.5E groups; day numbers below the start day belong to the next month",
+    accuracy: "Decodes the text as written. It does not check the forecast against the station or fetch anything.",
+    references: &[WEATHER_HANDBOOK, JO_7900_5],
+    examples: &[Example {
+        id: "primary",
+        title: "A Denver TAF valid across midnight",
+        input: r#"{"report":"TAF KDEN 181720Z 1818/1918 30012G22KT P6SM SCT080 BKN200 TEMPO 1820/1824 VRB25G35KT 3SM TSRA BKN060CB FM190200 32008KT P6SM FEW100 BECMG 1910/1912 18010KT PROB30 1914/1918 3SM -SHRA BKN030","utc_offset":"-06:00"}"#,
+        source: "add-practitioner-essentials TAF scenario: valid 18:00Z on the 18th to 18:00Z on the 19th, each change group placed in order",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.weather.metar-decode",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.wind.runway-components",
+            reason: "next",
+        },
+    ],
+    sentence: "{station} forecast from {valid_from} to {valid_to}, {count} {plural count \"period\" \"periods\"}. Get a current official briefing before flight.",
+    limits: &[("batchRows", 1_000)],
+    run: run_taf,
+    ..ToolDef::BLANK
+};
+
+fn run_taf(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let raw = ctx.text("report")?.unwrap_or_default().to_ascii_uppercase();
+    let raw = raw.trim_end_matches('=').to_owned();
+    let mut toks: Vec<&str> = raw.split_whitespace().collect();
+    let fmt = ctx.options.format;
+    let offset = match ctx.text("utc_offset")? {
+        Some(s) => Some(parse_offset(&s).ok_or_else(|| {
+            ToolError::invalid("/utc_offset", "Use an offset like -06:00 or +05:30.")
+        })?),
+        None => None,
+    };
+    if toks.first() == Some(&"TAF") {
+        toks.remove(0);
+    }
+    let amendment = toks
+        .first()
+        .filter(|t| matches!(**t, "AMD" | "COR"))
+        .map(|s| s.to_string());
+    if amendment.is_some() {
+        toks.remove(0);
+    }
+    let bad = || {
+        ToolError::invalid(
+            "/report",
+            "A TAF starts with the station, the issue time, and the valid period, like KDEN 181720Z 1818/1918.",
+        )
+    };
+    let station = toks
+        .first()
+        .copied()
+        .filter(|s| s.len() == 4 && s.as_bytes()[0].is_ascii_alphabetic())
+        .ok_or_else(bad)?;
+    let issued = toks.get(1).and_then(|s| ddhhmm(s)).ok_or_else(bad)?;
+    let (vs, ve) = toks.get(2).and_then(|s| taf_range(s)).ok_or_else(bad)?;
+    // Without the month, a wrap past the start day is taken as a 31-day month;
+    // it affects only the hour counts, never the printed day numbers.
+    let month_len = 31;
+    let valid_hours = ve.hours_from(vs, month_len);
+    if !(1..=48).contains(&valid_hours) {
+        ctx.warnings.push(
+            Warning::new(
+                "SUSPECT_VALUE",
+                format!("The valid period is {valid_hours} hours; TAFs cover up to 30 hours."),
+            )
+            .at("/report"),
+        );
+    }
+    // Split the rest into periods at FM, TEMPO, BECMG, and PROBnn.
+    let mut periods: Vec<(String, TafTime, TafTime, Vec<&str>)> =
+        vec![("base".into(), vs, ve, Vec::new())];
+    let mut i = 3;
+    while i < toks.len() {
+        let g = toks[i];
+        if let Some(t) = g.strip_prefix("FM").and_then(taf_time) {
+            // An FM period runs to the next FM, or the end of the forecast.
+            periods.push(("from".into(), t, ve, Vec::new()));
+        } else if matches!(g, "TEMPO" | "BECMG") {
+            let r = toks.get(i + 1).and_then(|s| taf_range(s));
+            if let Some((a, b)) = r {
+                periods.push((
+                    if g == "TEMPO" {
+                        "temporary".into()
+                    } else {
+                        "becoming".into()
+                    },
+                    a,
+                    b,
+                    Vec::new(),
+                ));
+                i += 1;
+            } else {
+                periods.last_mut().expect("base").3.push(g);
+            }
+        } else if let Some(p) = g.strip_prefix("PROB").filter(|p| p == &"30" || p == &"40") {
+            let tempo = toks.get(i + 1) == Some(&"TEMPO");
+            let r = toks.get(i + 1 + tempo as usize).and_then(|s| taf_range(s));
+            if let Some((a, b)) = r {
+                periods.push((
+                    format!("{p}% probability{}", if tempo { ", temporary" } else { "" }),
+                    a,
+                    b,
+                    Vec::new(),
+                ));
+                i += 1 + tempo as usize;
+            } else {
+                periods.last_mut().expect("base").3.push(g);
+            }
+        } else if g == "RMK" {
+            break;
+        } else {
+            periods.last_mut().expect("base").3.push(g);
+        }
+        i += 1;
+    }
+    // Close each FM period at the next FM (the base ends at the first FM too).
+    let fm_starts: Vec<(usize, TafTime)> = periods
+        .iter()
+        .enumerate()
+        .filter(|(k, p)| *k == 0 || p.0 == "from")
+        .map(|(k, p)| (k, p.1))
+        .collect();
+    for w in fm_starts.windows(2) {
+        periods[w[0].0].2 = w[1].1;
+    }
+    let mut rows = Vec::new();
+    for (kind, from, to, groups) in &periods {
+        let c = decode_conditions(groups, fmt);
+        let mut row = vec![
+            ("change", Json::str(kind.as_str())),
+            ("from", Json::str(from.text())),
+            ("to", Json::str(to.text())),
+        ];
+        if let Some(off) = offset {
+            row.push(("from_local", Json::str(from.local(off))));
+        }
+        row.push((
+            "start_hour",
+            Json::Num(from.hours_from(vs, month_len) as f64 + from.minute as f64 / 60.0),
+        ));
+        if let Some(w) = c.wind {
+            row.push(("wind", Json::str(w)));
+        }
+        if let Some(v) = c.vis_text {
+            row.push(("visibility", Json::str(v)));
+        }
+        if !c.weather.is_empty() {
+            row.push(("weather", Json::str(c.weather.join("; "))));
+        }
+        if !c.clouds.is_empty() {
+            row.push(("clouds", Json::str(c.clouds.join("; "))));
+        }
+        if let Some(ce) = c.ceiling {
+            row.push((
+                "ceiling",
+                ctx.emit("ceiling", q(ce, QT::Length, "ft"), unit(QT::Length, "ft")),
+            ));
+        }
+        if c.vis.is_some() || c.ceiling.is_some() {
+            row.push((
+                "flight_category",
+                Json::str(flight_category(c.ceiling, c.vis)),
+            ));
+        }
+        if !c.other.is_empty() {
+            row.push(("other", Json::str(c.other.join("; "))));
+        }
+        if !c.undecoded.is_empty() {
+            row.push(("not_decoded", Json::str(c.undecoded.join(" "))));
+        }
+        rows.push(Json::obj(row));
+    }
+    let mut o = vec![
+        ("station", Json::str(station)),
+        (
+            "issued",
+            Json::str(format!(
+                "day {} at {:02}{:02}Z",
+                issued.0, issued.1, issued.2
+            )),
+        ),
+        ("valid_from", Json::str(vs.text())),
+        ("valid_to", Json::str(ve.text())),
+        ("valid_hours", Json::Num(valid_hours as f64)),
+    ];
+    if let Some(a) = amendment {
+        o.push(("amendment", Json::str(a)));
+    }
+    let n = rows.len();
+    o.push(("periods", Json::Arr(rows)));
+    o.push(("count", Json::Num(n as f64)));
+    o.push(("notice", Json::str(SAFETY)));
+    Ok(obj(o))
+}

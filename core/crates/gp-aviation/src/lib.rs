@@ -1788,6 +1788,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &loading::WEIGHT_BALANCE,
     &weather::METAR,
     &weather::FB_WINDS,
+    &weather::TAF,
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,
     &ifr::HOLD_SPEED,

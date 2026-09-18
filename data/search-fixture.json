@@ -576,6 +576,14 @@
     {
       "query": "basis of bearing rotation",
       "expect": "survey.land.basis-rotation"
+    },
+    {
+      "query": "taf decoder",
+      "expect": "aviation.weather.taf-decode"
+    },
+    {
+      "query": "decode taf",
+      "expect": "aviation.weather.taf-decode"
     }
   ]
 }

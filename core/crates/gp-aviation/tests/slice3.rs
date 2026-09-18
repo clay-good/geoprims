@@ -362,3 +362,64 @@ fn glidepath_vertical_speed() {
         "{r}"
     );
 }
+
+const T: &str = "aviation.weather.taf-decode";
+
+#[test]
+fn taf_validity_across_midnight() {
+    let r = call(
+        T,
+        r#"{"report":"TAF KDEN 181720Z 1818/1918 30012G22KT P6SM SCT080 BKN200 TEMPO 1820/1824 VRB25G35KT 3SM TSRA BKN060CB FM190200 32008KT P6SM FEW100 BECMG 1910/1912 18010KT PROB30 1914/1918 3SM -SHRA BKN030","utc_offset":"-06:00"}"#,
+    );
+    assert_eq!(r["result"]["valid_from"], "day 18 at 1800Z", "{r}");
+    assert_eq!(r["result"]["valid_to"], "day 19 at 1800Z");
+    assert_eq!(num(&r, "result.valid_hours"), 24.0);
+    let p = r["result"]["periods"].as_array().unwrap();
+    let kinds: Vec<&str> = p.iter().map(|x| x["change"].as_str().unwrap()).collect();
+    assert_eq!(
+        kinds,
+        ["base", "temporary", "from", "becoming", "30% probability"]
+    );
+    // The base ends where FM starts; FM runs to the end.
+    assert_eq!(p[0]["to"], "day 19 at 0200Z");
+    assert_eq!(p[2]["from"], "day 19 at 0200Z");
+    assert_eq!(p[2]["to"], "day 19 at 1800Z");
+    let starts: Vec<f64> = p
+        .iter()
+        .map(|x| x["start_hour"].as_f64().unwrap())
+        .collect();
+    assert_eq!(starts, [0.0, 2.0, 8.0, 16.0, 20.0]);
+    assert_eq!(p[0]["from_local"], "12:00 local");
+    assert_eq!(p[2]["from_local"], "20:00 local, previous day");
+    assert_eq!(p[1]["weather"], "thunderstorm rain");
+    assert_eq!(p[1]["flight_category"], "MVFR");
+    assert_eq!(p[4]["ceiling"]["value"], 3000.0);
+    assert!(p.iter().all(|x| x.get("not_decoded").is_none()), "{r}");
+    assert!(r["summary"].as_str().unwrap().contains("official briefing"));
+}
+
+#[test]
+fn taf_month_end_and_wind_shear() {
+    let r = call(
+        T,
+        r#"{"report":"TAF AMD KORD 302330Z 3100/0106 27015KT P6SM BKN025 WS020/30045KT FM010300 VRB03KT 1/2SM FG VV002"}"#,
+    );
+    assert_eq!(r["result"]["amendment"], "AMD", "{r}");
+    assert_eq!(r["result"]["valid_to"], "day 1 at 0600Z");
+    assert_eq!(num(&r, "result.valid_hours"), 30.0);
+    let p = r["result"]["periods"].as_array().unwrap();
+    assert_eq!(p[1]["start_hour"], 27.0);
+    assert!(
+        p[0]["other"]
+            .as_str()
+            .unwrap()
+            .contains("wind shear at 2,000 ft")
+    );
+    assert_eq!(p[1]["flight_category"], "LIFR");
+}
+
+#[test]
+fn taf_bad_header() {
+    let r = call(T, r#"{"report":"TAF hello"}"#);
+    assert_eq!(r["error"]["code"], "INVALID_INPUT");
+}

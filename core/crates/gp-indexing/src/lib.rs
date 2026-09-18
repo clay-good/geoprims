@@ -3,6 +3,7 @@
 //! follow.
 
 pub mod codes;
+pub mod h3;
 
 use codes::Bounds;
 use gp_base::error::{ToolError, Warning};
@@ -1119,6 +1120,17 @@ pub static TOOLS: &[&ToolDef] = &[
     &OLC_ENCODE,
     &OLC_DECODE,
     &OLC_SHORTEN,
+    &h3::LAT_LNG_TO_CELL,
+    &h3::CELL_INFO,
+    &h3::GRID_DISK,
+    &h3::GRID_RING,
+    &h3::GRID_PATH,
+    &h3::PARENT,
+    &h3::CHILDREN,
+    &h3::COMPACT,
+    &h3::UNCOMPACT,
+    &h3::EDGES,
+    &h3::RESOLUTION_CHOOSER,
 ];
 
 pub static REGISTRY: Registry = Registry {

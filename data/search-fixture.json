@@ -324,6 +324,54 @@
     {
       "query": "short plus code",
       "expect": "indexing.plus-code.shorten"
+    },
+    {
+      "query": "latLngToCell",
+      "expect": "indexing.h3.lat-lng-to-cell"
+    },
+    {
+      "query": "h3 index",
+      "expect": "indexing.h3.lat-lng-to-cell"
+    },
+    {
+      "query": "cellToBoundary",
+      "expect": "indexing.h3.cell-info"
+    },
+    {
+      "query": "k-ring",
+      "expect": "indexing.h3.grid-disk"
+    },
+    {
+      "query": "gridRing",
+      "expect": "indexing.h3.grid-ring"
+    },
+    {
+      "query": "gridPathCells",
+      "expect": "indexing.h3.grid-path"
+    },
+    {
+      "query": "h3 parent",
+      "expect": "indexing.h3.parent"
+    },
+    {
+      "query": "h3 children",
+      "expect": "indexing.h3.children"
+    },
+    {
+      "query": "compactCells",
+      "expect": "indexing.h3.compact"
+    },
+    {
+      "query": "uncompactCells",
+      "expect": "indexing.h3.uncompact"
+    },
+    {
+      "query": "h3 edge length",
+      "expect": "indexing.h3.edges"
+    },
+    {
+      "query": "which h3 resolution",
+      "expect": "indexing.h3.resolution-chooser"
     }
   ]
 }

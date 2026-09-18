@@ -1,0 +1,6 @@
+{"id":"v001","input":{"cell":"892a8471487ffff","k":1},"expect":{"result.count":6.0,"ok":true},"source":"H3 C 4.4.1 via h3-py 4.4.2","sourceVersion":"H3 4.4.1","tolerance":{"result.count":{"rel":1e-11,"abs":5e-11}}}
+{"id":"v002","input":{"cell":"87be0e35cffffff","k":2},"expect":{"result.count":12.0,"ok":true},"source":"H3 C 4.4.1 via h3-py 4.4.2","sourceVersion":"H3 4.4.1","tolerance":{"result.count":{"rel":1e-11,"abs":5e-11}}}
+{"id":"v003","input":{"cell":"8c195da49a2d9ff","k":1},"expect":{"result.count":6.0,"ok":true},"source":"H3 C 4.4.1 via h3-py 4.4.2","sourceVersion":"H3 4.4.1","tolerance":{"result.count":{"rel":1e-11,"abs":5e-11}}}
+{"id":"v004","input":{"cell":"850d5a93fffffff","k":3},"expect":{"result.count":18.0,"ok":true},"source":"H3 C 4.4.1 via h3-py 4.4.2","sourceVersion":"H3 4.4.1","tolerance":{"result.count":{"rel":1e-11,"abs":5e-11}}}
+{"id":"v005","input":{"cell":"837eb5fffffffff","k":1},"expect":{"result.count":6.0,"ok":true},"source":"H3 C 4.4.1 via h3-py 4.4.2","sourceVersion":"H3 4.4.1","tolerance":{"result.count":{"rel":1e-11,"abs":5e-11}}}
+{"id":"v006","input":{"cell":"86032630fffffff","k":2},"expect":{"result.count":12.0,"ok":true},"source":"H3 C 4.4.1 via h3-py 4.4.2","sourceVersion":"H3 4.4.1","tolerance":{"result.count":{"rel":1e-11,"abs":5e-11}}}

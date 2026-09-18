@@ -1,12 +1,12 @@
 ## 1. H3
 
-- [ ] 1.1 Integrate `h3o` and implement indexing and inspection tools; verify the point-to-cell and parent/children scenarios
-- [ ] 1.2 Implement traversal, hierarchy, compaction, edges, vertexes, and measurement; verify each against H3 C 4.5 fixtures
+- [x] 1.1 Integrate `h3o` and implement indexing and inspection tools; verify the point-to-cell and parent/children scenarios (h3o 0.11: point to cell and a cell inspector with center, boundary, base cell, pentagon and Class III checks, area, and decimal form)
+- [ ] 1.2 Implement traversal, hierarchy, compaction, edges, vertexes, and measurement; verify each against H3 C 4.5 fixtures (done so far: gridDisk, gridRing, gridPathCells and gridDistance, parent with child position, children with center child, compact (our own level-by-level version, because h3o's overflows on 32-bit wasm) and uncompact, directed edges with lengths, and vertexes, each checked against H3 C 4.4.1 vectors; pending: local IJ, great-circle distance, and cellsToMultiPolygon)
 - [ ] 1.3 Implement polyfill with all containment modes, pre-fill size estimation, holes, antimeridian, and poles; verify the containment and estimate scenarios
-- [ ] 1.4 Implement pentagon handling and warnings; verify the pentagon-ring and path scenarios
-- [ ] 1.5 Implement index input parsing with the 2⁵³ guard; verify the precision-loss scenario
-- [ ] 1.6 Implement the resolution chooser and table; verify the 1 km² scenario
-- [ ] 1.7 Run the H3 C differential suite (100,000 points × 16 resolutions plus API fixtures); add per-function C fallbacks for any gaps; verify full parity
+- [ ] 1.4 Implement pentagon handling and warnings; verify the pentagon-ring and path scenarios (done so far: PENTAGON_DISTORTION on disks, rings, children, and edges, and DEGENERATE_GEOMETRY naming H3's failure reason for paths; pending: pentagon-ring visual fixtures)
+- [x] 1.5 Implement index input parsing with the 2⁵³ guard; verify the precision-loss scenario (hex with or without 0x in any case, or decimal strings; JSON numbers are refused with a hint)
+- [x] 1.6 Implement the resolution chooser and table; verify the 1 km² scenario (the nearest resolution by area or edge length on a log scale, plus the full 16-row table)
+- [x] 1.7 Run the H3 C differential suite (100,000 points × 16 resolutions plus API fixtures); add per-function C fallbacks for any gaps; verify full parity (100,000 random points × 16 resolutions against H3 C 4.4.1 (the newest available through h3-py): 0 index mismatches; centers within 4.5e-13° below 88° latitude and 1.8e-11° near the poles. A 250-point fixture runs in CI, and the full run is H3_DIFF=… cargo test -- --ignored)
 - [ ] 1.8 Implement cell rendering with level of detail and compacted-set styling; verify the compacted-set fixture and a 1,000,000-cell render benchmark
 
 ## 2. A5, S2, geohash, tiles, Plus Codes

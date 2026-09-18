@@ -240,3 +240,77 @@ fn hardening() {
         );
     }
 }
+
+#[test]
+fn h3_scenarios() {
+    let c = call(
+        "indexing.h3.lat-lng-to-cell",
+        r#"{"lat":40.446111,"lon":-79.982222,"resolution":9}"#,
+    );
+    assert_eq!(c["result"]["cell"], "892a8471487ffff");
+    assert!((num(&c, "result.center_lat.value") - 40.444_866).abs() < 5e-7);
+    assert!((num(&c, "result.center_lon.value") + 79.981_847).abs() < 5e-7);
+    let p = call(
+        "indexing.h3.parent",
+        r#"{"cell":"892a8471487ffff","resolution":5}"#,
+    );
+    assert_eq!(p["result"]["parent"], "852a8473fffffff");
+    let k = call(
+        "indexing.h3.children",
+        r#"{"cell":"892a8471487ffff","resolution":10}"#,
+    );
+    assert_eq!(num(&k, "result.count"), 7.0);
+    let d = call(
+        "indexing.h3.grid-disk",
+        r#"{"cell":"85080003fffffff","k":1}"#,
+    );
+    assert_eq!(num(&d, "result.count"), 6.0);
+    assert!(codes(&d).contains(&"PENTAGON_DISTORTION".to_owned()));
+    let r = call(
+        "indexing.h3.resolution-chooser",
+        r#"{"target_area":"1 km2"}"#,
+    );
+    assert_eq!(num(&r, "result.resolution"), 8.0);
+    assert_eq!(r["display"]["coarser_area"], "5.161 km²");
+    let squeeze = call(
+        "indexing.h3.compact",
+        r#"{"cells":[{"cell":"8a2a84714847fff"},{"cell":"8a2a8471484ffff"},{"cell":"8a2a84714857fff"},{"cell":"8a2a8471485ffff"},{"cell":"8a2a84714867fff"},{"cell":"8a2a8471486ffff"},{"cell":"8a2a84714877fff"}]}"#,
+    );
+    assert_eq!(squeeze["result"]["cells"][0]["cell"], "892a8471487ffff");
+}
+
+#[test]
+fn h3_input_guards() {
+    let n = call("indexing.h3.cell-info", r#"{"cell":617741122143780863}"#);
+    assert_eq!(n["error"]["code"], "INVALID_INPUT");
+    assert!(n["error"]["message"].as_str().unwrap().contains("string"));
+    for ok in ["892a8471487ffff", "0x892A8471487FFFF", "617741122143780863"] {
+        let r = call("indexing.h3.cell-info", &format!(r#"{{"cell":"{ok}"}}"#));
+        assert_eq!(r["result"]["decimal"], "617741122143780863", "{ok}");
+    }
+    for bad in ["892a8471487fff", "zz", "0x0", ""] {
+        let r = call("indexing.h3.cell-info", &format!(r#"{{"cell":"{bad}"}}"#));
+        assert_eq!(r["error"]["code"], "INVALID_INPUT", "{bad}");
+    }
+    let mixed = call(
+        "indexing.h3.grid-path",
+        r#"{"from":"892a8471487ffff","to":"852a8473fffffff"}"#,
+    );
+    assert_eq!(mixed["error"]["code"], "INVALID_INPUT");
+    // Opposite sides of the world: H3's local grid cannot reach.
+    let far = call(
+        "indexing.h3.grid-path",
+        r#"{"from":"8009fffffffffff","to":"80f3fffffffffff"}"#,
+    );
+    assert_eq!(far["error"]["code"], "DEGENERATE_GEOMETRY", "{far}");
+    let up = call(
+        "indexing.h3.parent",
+        r#"{"cell":"892a8471487ffff","resolution":10}"#,
+    );
+    assert_eq!(up["error"]["field"], "/resolution");
+    let big = call(
+        "indexing.h3.uncompact",
+        r#"{"cells":[{"cell":"8009fffffffffff"}],"resolution":15}"#,
+    );
+    assert!(big["result"].get("cells").is_none() && num(&big, "result.count") > 1e10);
+}

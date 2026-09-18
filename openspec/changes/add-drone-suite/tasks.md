@@ -6,14 +6,14 @@
 - [ ] 1.4 Implement terrain-aware overlap using a highest-terrain value or DEM profile; verify the hill scenario
 - [x] 1.5 Implement motion blur and maximum shutter; verify the 1/1000 s scenario
 - [ ] 1.6 Implement oblique GSD and trapezoid footprint; verify the 45° scenario against a hand-computed fixture
-- [ ] 1.7 Implement image-count estimation; verify the 2% agreement scenario against generated grids for 20 polygons
+- [x] 1.7 Implement image-count estimation; verify the 2% agreement scenario against generated grids for 20 polygons
 - [ ] 1.8 Implement the ASPRS Edition 2 calculator (RMSE_H, NVA/VVA, checkpoint error, 30-point minimum, blunders, mean error); verify all three ASPRS scenarios and the worked examples in the standard (built: product accuracy with checkpoint error, RMSE_H, and the 30-checkpoint minimum with two of the three scenarios; pending: per-checkpoint lists for blunder and mean-error checks, NVA/VVA)
 
 ## 2. Mission patterns
 
-- [ ] 2.1 Implement the survey grid (auto direction, overshoot, holes, crosshatch) with geodesic spacing verification; verify the thin-rectangle and hole scenarios
-- [ ] 2.2 Implement corridor patterns; verify the pipeline scenario
-- [ ] 2.3 Implement orbits with heading and gimbal pitch; verify the tower scenario
+- [ ] 2.1 Implement the survey grid (auto direction, overshoot, holes, crosshatch) with geodesic spacing verification; verify the thin-rectangle and hole scenarios (built: serpentine sweep on a local TM plane, auto direction by minimum hull width, overshoot, crosshatch, and transits routed around buffered holes; both scenarios pass and line spacing checks geodesically to 1 mm)
+- [x] 2.2 Implement corridor patterns; verify the pipeline scenario
+- [x] 2.3 Implement orbits with heading and gimbal pitch; verify the tower scenario
 - [ ] 2.4 Implement facade scans; verify the facade GSD scenario
 - [ ] 2.5 Implement geofence generation and waypoint checks; verify the outside-fence scenario
 - [ ] 2.6 Implement typed waypoint heights and terrain following; verify the terrain-following scenario

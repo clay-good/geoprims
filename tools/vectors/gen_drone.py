@@ -204,6 +204,49 @@ def vlos_vectors():
     return out
 
 
+MIS_SRC = "Flight-line arithmetic (Wolf, Dewitt & Wilkinson 2014, ch. 18) evaluated in Python (tools/vectors/gen_drone.py)"
+
+
+def rect(lat0, lon0, dlat, dlon):
+    return [{"lat": lat0, "lon": lon0}, {"lat": lat0, "lon": lon0 + dlon}, {"lat": lat0 + dlat, "lon": lon0 + dlon}, {"lat": lat0 + dlat, "lon": lon0}]
+
+
+def meters_per_deg_lat(lat):
+    # WGS 84 meridional radius of curvature × π/180
+    a, f = 6378137.0, 1 / 298.257223563
+    e2 = f * (2 - f)
+    s = math.sin(math.radians(lat))
+    return a * (1 - e2) / (1 - e2 * s * s) ** 1.5 * math.pi / 180
+
+
+def grid_vectors(tool):
+    out = []
+    cases = [(40.0, -105.0, 0.00135, 0.00705, 52.5), (35.0, -100.0, 0.009, 0.002, 40.0), (51.0, 0.1, 0.004, 0.012, 60.0),
+             (-33.0, 151.0, 0.0022, 0.0022, 25.0), (60.0, 25.0, 0.02, 0.005, 100.0)]
+    for i, (la, lo, dla, dlo, sp) in enumerate(cases, 1):
+        mid = la + dla / 2
+        w_ns = dla * meters_per_deg_lat(mid)
+        a, f = 6378137.0, 1 / 298.257223563
+        e2 = f * (2 - f)
+        n_rad = a / math.sqrt(1 - e2 * math.sin(math.radians(mid)) ** 2)
+        w_ew = dlo * math.pi / 180 * n_rad * math.cos(math.radians(mid))
+        lines = math.ceil(min(w_ns, w_ew) / sp - 1e-6)
+        out.append(vec(i, {"area": rect(la, lo, dla, dlo), "line_spacing": f"{sp} m", "photo_spacing": "30 m"}, {"result.lines": float(lines)}, MIS_SRC))
+    return out
+
+
+def corridor_vectors():
+    cases = [(120, 52.5, 3), (100, 50, 2), (300, 60, 5), (30, 40, 1), (250, 45, 6)]
+    return [vec(i, {"centerline": [{"lat": 40.0, "lon": -105.0}, {"lat": 40.01, "lon": -104.99}], "width": f"{w} m", "line_spacing": f"{s} m"},
+                {"result.line_count": float(n)}, MIS_SRC) for i, (w, s, n) in enumerate(cases, 1)]
+
+
+def orbit_vectors():
+    cases = [(50, 80, 60), (30, 40, 0), (100, 120, 100), (20, 25, 10), (75, 60, 0)]
+    return [vec(i, {"lat": 40.0, "lon": -105.0, "radius": f"{r} m", "height": f"{h} m", "target_height": f"{t} m", "photos": 24},
+                {"result.gimbal_pitch.value": -math.degrees(math.atan((h - t) / r))}, MIS_SRC) for i, (r, h, t) in enumerate(cases, 1)]
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
@@ -212,7 +255,9 @@ def main():
              "drone.power.endurance": endurance_vectors(), "drone.power.max-payload": payload_vectors(),
              "drone.power.rth-budget": rth_vectors(), "drone.ops.part107-altitude": altitude_vectors(),
              "drone.ops.speed-check": speed_vectors(), "drone.ops.kinetic-energy": ke_vectors(),
-             "drone.ops.easa-subcategory": easa_vectors(), "drone.sensors.vlos": vlos_vectors()}
+             "drone.ops.easa-subcategory": easa_vectors(), "drone.sensors.vlos": vlos_vectors(),
+             "drone.mission.survey-grid": grid_vectors("grid"), "drone.photogrammetry.image-count": grid_vectors("count"),
+             "drone.mission.corridor": corridor_vectors(), "drone.mission.orbit": orbit_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

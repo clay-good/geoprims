@@ -2,6 +2,7 @@
 //! vendor-neutral: GSD, altitude for a target GSD, footprint and trigger
 //! timing, motion blur, and the ASPRS Edition 2 accuracy calculator.
 
+pub mod mission;
 pub mod ops;
 pub mod power;
 
@@ -1066,6 +1067,10 @@ pub static TOOLS: &[&ToolDef] = &[
     &ops::KINETIC_ENERGY,
     &ops::EASA_SUBCATEGORY,
     &ops::VLOS,
+    &mission::SURVEY_GRID,
+    &mission::IMAGE_COUNT,
+    &mission::CORRIDOR,
+    &mission::ORBIT,
 ];
 
 pub static REGISTRY: Registry = Registry {

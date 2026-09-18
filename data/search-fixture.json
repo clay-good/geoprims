@@ -584,6 +584,26 @@
     {
       "query": "decode taf",
       "expect": "aviation.weather.taf-decode"
+    },
+    {
+      "query": "survey grid",
+      "expect": "drone.mission.survey-grid"
+    },
+    {
+      "query": "lawnmower pattern",
+      "expect": "drone.mission.survey-grid"
+    },
+    {
+      "query": "how many photos",
+      "expect": "drone.photogrammetry.image-count"
+    },
+    {
+      "query": "corridor mapping",
+      "expect": "drone.mission.corridor"
+    },
+    {
+      "query": "orbit",
+      "expect": "drone.mission.orbit"
     }
   ]
 }

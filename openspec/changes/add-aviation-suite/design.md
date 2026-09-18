@@ -41,11 +41,11 @@ Calibration tables, deviation cards, envelopes, and performance tables are user-
 | `airspeed` | 12 | ias-to-cas (table), cas-to-eas, eas-to-cas, cas-to-tas, tas-to-cas, tas-to-mach, mach-to-tas, cas-to-mach, mach-to-cas, impact-pressure, tat-sat, dynamic-pressure |
 | `altimetry` | 14 | pressure-altitude, station-pressure, altimeter-setting, density-altitude, isa-temperature, isa-deviation, qnh-qfe, qfe-qnh, flight-level, lowest-usable-fl, cold-temp-correction, cold-temp-segments, true-altitude, pressure-per-height |
 | `wind` | 14 | heading-groundspeed, find-wind, tas-from-groundspeed, course-from-heading, runway-components, gust-components, best-runway, crosswind-limit-check, heading-chain, deviation-card, one-in-sixty, drift-angle, uv-to-direction-speed, winds-aloft-interpolation |
-| `performance` | 16 | turn-radius, turn-rate, bank-for-rate, load-factor, stall-in-turn, time-to-turn, climb-gradient, descent-gradient, top-of-descent, descent-angle, glide-range, glide-ring, pivotal-altitude, visual-descent-point, specific-range, koch-estimate |
+| `performance` | 15 | turn-radius, turn-rate, bank-for-rate, load-factor, stall-in-turn, time-to-turn, climb-gradient, descent-gradient, top-of-descent, descent-angle, glide-range, glide-ring, pivotal-altitude, visual-descent-point, specific-range |
 | `loading` | 14 | fuel-required, endurance, fuel-weight, reserve-preset, fuel-per-leg, burn-rate, cg, percent-mac, envelope-check, weight-shift, ballast, table-1d, table-2d, table-3d |
-| **Operations** | **84** | |
+| **Operations** | **83** | |
 | Generated endpoints | 28 | composed airspeed pairs (e.g. `ias-to-mach`, `eas-to-tas`, `ias-to-tas`), altimeter unit forms (`qnh-hpa-to-pressure-altitude`), and common E6B aliases (`crosswind-calculator`, `headwind-calculator`) |
-| **Endpoints** | **112** | |
+| **Endpoints** | **111** | |
 
 ## Risks / Trade-offs
 

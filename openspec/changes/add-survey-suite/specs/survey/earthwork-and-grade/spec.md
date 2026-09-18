@@ -55,7 +55,7 @@ Given a design template (subgrade width, side slopes for cut and fill) and exist
 - **THEN** the catch point offset and cut/fill converge within 0.01 ft (or m) and are reported in stake notation
 
 ### Requirement: Stockpile and simple solid volumes
-Tools SHALL compute stockpile volume from a base polygon and surface points (TIN between base and surface), and simple solids (cone, frustum, prism) with a labeled angle-of-repose reference table (reference values only, not design values).
+Tools SHALL compute stockpile volume from a base polygon and surface points (TIN between base and surface), and simple solids (cone, frustum, prism) from user-entered dimensions or side-slope angles. No material angle-of-repose table SHALL be provided, because published values vary widely and are not design values; the user enters the angle and its source.
 
 #### Scenario: TIN stockpile
 - **WHEN** a base polygon and 500 surface points are provided

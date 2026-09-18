@@ -49,7 +49,7 @@ Regulatory values live in `reference/regulatory.json`, with jurisdiction, citati
 
 - **[Regulations change (Part 108 finalization likely within months)]** → Data-only update path, review-date CI warnings, and `proposed` status gating.
 - **[Endurance estimates still differ from reality]** → Conservative defaults, visible assumptions, and a "calibrate from a test flight" option: the user enters a measured hover time and the tool back-solves the effective FM·η.
-- **[Terrain-following depends on DEM quality]** → The DEM name and accuracy are shown per mission, and the user can add a margin.
+- **[Terrain-following depends on DEM quality]** → Export requires acknowledging that GLO-30 is a surface model, plus a clearance margin (default 15 m). The DEM name and accuracy are shown per mission.
 
 ## Migration Plan
 

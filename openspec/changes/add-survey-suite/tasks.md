@@ -26,7 +26,7 @@
 - [ ] 3.4 Implement shrink/swell and haul loads; verify the truck-load scenario
 - [ ] 3.5 Implement grade conversions with ratio disambiguation; verify the ambiguous-ratio scenario
 - [ ] 3.6 Implement slope staking with Brent iteration; verify the catch-point scenario
-- [ ] 3.7 Implement TIN stockpile and solid volumes with the angle-of-repose reference; verify the TIN scenario against an analytic cone
+- [ ] 3.7 Implement TIN stockpile and solid volumes; verify the TIN scenario against an analytic cone
 - [ ] 3.8 Implement profile slope analysis; verify the grade-threshold scenario
 
 ## 4. Alignment curves
@@ -35,11 +35,11 @@
 - [ ] 4.2 Implement stationing and layout tables with coordinates; verify the layout scenario
 - [ ] 4.3 Implement spirals and spiral-curve-spiral stations; verify the spiral scenario against a textbook example
 - [ ] 4.4 Implement vertical curves (equal and unequal tangents, turning point, K); verify the crest and no-turning-point scenarios
-- [ ] 4.5 Implement sight-distance curve lengths with dated AASHTO references; verify the crest SSD scenario
+- [ ] 4.5 Implement sight-distance curve lengths with the design K and heights as cited user inputs (no reproduced AASHTO tables); verify the crest SSD scenario
 - [ ] 4.6 Implement plan and profile visualization; verify visual fixtures
 
 ## 5. Catalog and docs
 
-- [ ] 5.1 Register all 58 operations and 10 generated endpoints with surveyor aliases (COGO, Bowditch, compass rule, lat/dep, cut and fill, AEA); verify catalog counts
+- [ ] 5.1 Register all 57 operations and 10 generated endpoints with surveyor aliases (COGO, Bowditch, compass rule, lat/dep, cut and fill, AEA); verify catalog counts
 - [ ] 5.2 Write docs per tool and the "Close a traverse" guide; verify the guide chain end to end
 - [ ] 5.3 Promote tools meeting the stable bar; verify the verification report

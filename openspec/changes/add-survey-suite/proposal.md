@@ -13,7 +13,7 @@ Depends on: `establish-platform-foundation`, `add-geodesy-suite` (State Plane, s
 
 ## What Changes
 
-Adds the `survey` domain: about 58 operations and 68 endpoints (inventory in `design.md`).
+Adds the `survey` domain: about 57 operations and 67 endpoints (inventory in `design.md`).
 
 - **COGO and traverse:** inverse and forward (bearing/azimuth and distance), quadrant bearing parsing, traverse closure (angular and linear misclosure, precision ratio), compass (Bowditch), transit, and Crandall adjustments, a small least-squares adjustment (experimental), area by coordinates, intersections (bearing-bearing, bearing-distance, distance-distance), three-point resection, and offsets.
 - **Instrument reductions:** slope to horizontal and vertical from zenith or vertical angle, HI/HR elevation, curvature and refraction, EDM atmospheric (ppm) correction, sea-level/elevation factor, grid-ground combined factor, trigonometric leveling, differential level-loop closure and adjustment, stadia, and total-station offset shots.
@@ -38,9 +38,9 @@ None.
 - Legal boundary determination, deed interpretation, or plat preparation.
 - Full network least-squares adjustment software (e.g. STAR*NET-class). Only a small experimental adjustment is included.
 - Instrument data-collector file formats beyond CSV/JSON import in v1.
-- Structural or geotechnical design (angle-of-repose values are reference only).
+- Structural or geotechnical design (no angle-of-repose or other material tables are provided).
 
 ## Impact
 
 - `core/gp-survey` crate.
-- References: standard surveying texts (Ghilani & Wolf, *Elementary Surveying*), NGS publications for scale factors, NIST/NGS for survey-foot policy, and AASHTO for vertical curve K-value references (reference only).
+- References: standard surveying texts (Ghilani & Wolf, *Elementary Surveying*), NGS publications for scale factors, NIST/NGS for survey-foot policy, and AASHTO for vertical curve design values, cited as user-entered inputs, for vertical curve K-value references (reference only).

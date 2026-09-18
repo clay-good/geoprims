@@ -37,11 +37,11 @@ Delaunay triangulation comes from `geometry/computational`. Volume is the sum of
 |---|---|---|
 | `cogo` | 20 | direction-parse, inverse, forward, radial-sideshots, traverse-closure, angular-closure, bowditch, transit, crandall, least-squares-2d (experimental), area-by-coordinates, bearing-bearing, bearing-distance, distance-distance, resection, station-offset, point-from-station-offset, perpendicular-foot, azimuth-bearing, deflection-angle |
 | `reduction` | 14 | slope-reduction, two-face-mean, curvature-refraction, edm-atmospheric, elevation-factor, combined-factor, grid-to-ground, ground-to-grid, level-run, level-adjust, stadia, inaccessible-height, distance-offset, angle-offset |
-| `earthwork` | 14 | average-end-area, prismoidal, section-area, borrow-pit, four-point-average, shrink-swell, haul-loads, grade-convert, rise-run, slope-staking, stockpile-tin, solid-volumes, angle-of-repose-reference, profile-slope |
+| `earthwork` | 13 | average-end-area, prismoidal, section-area, borrow-pit, four-point-average, shrink-swell, haul-loads, grade-convert, rise-run, slope-staking, stockpile-tin, solid-volumes, profile-slope |
 | `curves` | 10 | circular-curve, degree-of-curve, curve-stationing, curve-layout, spiral, spiral-curve-spiral, vertical-curve, vertical-curve-turning-point, vertical-curve-elevations, sight-distance-length |
-| **Operations** | **58** | |
+| **Operations** | **57** | |
 | Generated endpoints | 10 | common search forms: `cubic-yards-calculator`, `percent-grade-to-degrees`, `slope-ratio-to-percent`, `bearing-to-azimuth`, `station-format`, and similar |
-| **Endpoints** | **68** | |
+| **Endpoints** | **67** | |
 
 ## Risks / Trade-offs
 

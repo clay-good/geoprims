@@ -13,7 +13,7 @@ Depends on: `establish-platform-foundation`, `add-geodesy-suite` (magnetic varia
 
 ## What Changes
 
-Adds the `aviation` domain: about 84 operations and 112 endpoints (inventory in `design.md`).
+Adds the `aviation` domain: about 83 operations and 111 endpoints (inventory in `design.md`).
 
 - **Atmosphere:** ICAO Standard Atmosphere −5 to 80 km with geopotential/geometric altitude handling; US Standard Atmosphere 1976 to 86 km; non-standard days (ISA deviation); speed of sound; viscosity; humidity and dew point; cloud-base estimate.
 - **Airspeed:** IAS↔CAS (user calibration table), CAS↔EAS↔TAS↔Mach (subsonic and supersonic pitot), impact pressure, TAT↔SAT with probe recovery factor.

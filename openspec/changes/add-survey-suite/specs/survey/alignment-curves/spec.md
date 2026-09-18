@@ -48,7 +48,7 @@ It SHALL support unequal-tangent curves.
 - **THEN** the result states that no high or low point exists within the curve
 
 ### Requirement: Sight distance references
-The tool SHALL compute the minimum curve length for a stopping sight distance with user-entered eye and object heights, using the standard crest and sag formulas. Design K values from AASHTO SHALL be shown as dated reference data only.
+The tool SHALL compute the minimum curve length for a stopping sight distance with user-entered eye and object heights, using the standard crest and sag formulas. Design K values and design sight distances SHALL be user inputs citing the governing design manual's table by title, edition, and table number (e.g. AASHTO Green Book); no design table SHALL be reproduced.
 
 #### Scenario: Crest SSD
 - **WHEN** SSD = 400 ft with eye height 3.5 ft and object height 2.0 ft on the crest curve above

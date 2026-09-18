@@ -41,10 +41,20 @@ Five meta-tools (`search`, `describe`, `run`, `pipeline`, `convert_units`) are t
 
 `geoprims_search` uses BM25 plus the alias table, the same index as the web command palette, so agent and human search behave alike. If the SEP-1821 `tools/list` query filter lands in a future spec, `search` maps onto it.
 
-### A3. Runtime: Node.js with SDK v2 packages
-Node is bundled with major desktop hosts, which makes it the lowest-friction runtime. The server uses `@modelcontextprotocol/server` + `@modelcontextprotocol/node` (v2). If v2 proves unstable during implementation, fall back to `@modelcontextprotocol/sdk` 1.30.x; the choice is internal and does not affect the spec.
+### A3. Runtime: Node.js, zero dependencies, clone-and-run
+Node is bundled with major desktop hosts. The server is a zero-dependency ES module (`mcp/server.mjs`). It implements the stdio JSON-RPC subset MCP needs: newline-delimited framing, version negotiation across `2026-07-28`, `2025-11-25`, and `2025-06-18`, and a message size cap. This follows roughlogic.com's `mcp/server.mjs`, which runs from a clone with `node` alone (`docs/research/06` §6).
 
-Rejected: a single compiled binary (50–100 MB per platform, code-signing burden) and a Wasm component host (no mainstream MCP host supports one).
+Why not the official SDK:
+- A clone must run with no `npm install`, and the server must be auditable by reading one directory.
+- No dependency supply chain for a tool that promises no network access.
+
+Conformance comes from the MCP Inspector CLI in CI, plus recorded handshakes from real clients.
+
+Release tags carry CI-built artifacts (`mcp/dist/`: Wasm modules, catalog, bundled assets), so clone users need no Rust toolchain. The npm package and MCPB bundle are built from the same tag.
+
+Fallback: if protocol churn makes the hand-rolled layer costly, adopt the SDK behind the same surface. The golden surface file keeps it identical.
+
+Also rejected: a single compiled binary (50–100 MB per platform, code-signing burden) and a Wasm component host (no mainstream MCP host supports one).
 
 ### A4. Pipeline binding syntax
 `bind` maps a target input JSON Pointer to `"<stepIndex>:<outputPointer>"`. The server type-checks each binding: the quantity type and unit must be compatible, or a unit conversion is inserted. It rejects cycles and forward references. This mirrors web tool chaining, so an agent can express "MGRS → lat/lon → geoid height → orthometric height" in one call.

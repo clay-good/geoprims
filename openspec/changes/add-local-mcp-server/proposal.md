@@ -13,7 +13,8 @@ Depends on: `establish-platform-foundation`. It serves whatever domain tools are
 ## What Changes
 
 - **A local MCP server** (`@geoprims/mcp`, stdio, Node.js). It loads the same Wasm modules as the website through the internal runtime package and targets MCP spec `2026-07-28`, while staying compatible with `2025-11-25` and `2025-06-18` clients.
-- **Five meta-tools by default:** `geoprims_search`, `geoprims_describe`, `geoprims_run`, `geoprims_pipeline`, and `geoprims_convert_units`.
+- **Six meta-tools by default:** `geoprims_search` (with natural-language prefill), `geoprims_describe`, `geoprims_run` (with plain-language summary, citations, and optional step-by-step trace), `geoprims_pipeline`, `geoprims_convert_units`, and `geoprims_report_problem` (prepares a report for the human to send).
+- **Clone-and-run from GitHub:** release tags carry prebuilt artifacts, so `git clone` plus `node mcp/server.mjs` works with Node alone and zero dependencies.
 - **Opt-in direct toolsets** (≤ 40 tools each) for clients with native tool search or focused workflows.
 - **Catalog resources and workflow prompts.**
 - **Offline by default.** A single opt-in flag allows verified downloads of large data tiles.
@@ -39,6 +40,6 @@ None.
 
 ## Impact
 
-- New package: `packages/mcp` (published). It depends on the internal, unpublished `packages/runtime` from the foundation change.
+- New directory: `mcp/` (zero-dependency server, also published to npm). It uses the internal, unpublished `packages/runtime` from the foundation change.
 - New release artifacts: the npm package, a `.mcpb` bundle, and a `server.json` registry entry.
 - Adds MCP conformance and agent-evaluation jobs to CI.

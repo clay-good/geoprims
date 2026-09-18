@@ -2,7 +2,7 @@
 
 Greenfield repository. Motivation is in `proposal.md`. Research that informs these decisions is in `docs/research/01`–`04` (gathered 2026-09-18). Constraints that shape everything:
 
-- **No server compute, ever.** The only server is a static host. Anything heavy runs on the user's device.
+- **No server compute, ever.** The site is static. All calculation runs on the user's device. The single server component is the opt-in problem-report endpoint, which stores reports and computes nothing.
 - **Two surfaces, one math.** The static website and the local MCP server must return byte-identical results. There is deliberately no CLI or public library package: the MCP server's `run` and `pipeline` tools cover scripted use, and the website covers CSV batch work. Fewer surfaces means less to version, document, and support.
 - **Hostile numeric environment.** JavaScript engines do not agree on `Math.sin` (V8 and SpiderMonkey use fdlibm ports, JavaScriptCore uses the system libm). Relaxed-SIMD and compiler FMA contraction also vary by CPU.
 - **Large reference data.** Geoid grids reach 470 MB (EGM2008 1′), terrain is global, and the CRS registry is about 10 MB as PROJ ships it.
@@ -89,7 +89,8 @@ tools/codegen/        Manifest → schema/TS/MCP/search/docs generators
 assets/               Asset registry, build scripts, tilers (outputs not committed)
 packages/runtime/     Internal (unpublished) Wasm loader, validation, asset providers
                       (browser, Node); shared by the website and the MCP server
-packages/mcp/         Local MCP server (the only published npm package)
+mcp/                  Local MCP server: zero-dependency server.mjs; release tags carry
+                      prebuilt dist/ so a clone runs with Node alone (also published to npm)
 apps/web/             Static site + PWA
 verify/               Differential harness (GeographicLib C++, PROJ, H3 C, S2 C++, WMM C)
 openspec/             Specs and changes
@@ -97,7 +98,8 @@ docs/research/        Research briefs backing the specs
 ```
 
 ### D7. Hosting: Cloudflare static hosting plus an asset bucket
-- Site on Cloudflare (Workers static assets, or Pages) for custom headers (CSP, COOP/COEP where needed).
+- Site on Cloudflare Workers static assets (Cloudflare's recommended path for new projects) for custom headers (CSP, COOP/COEP where needed). Static requests never invoke code.
+- The only server code is the problem-report Worker on `/api/reports*` with its D1 database (per `add-problem-reporting`). It performs no calculation.
 - Large tiled assets on an R2 bucket behind `assets.geoprims.com`, with CORS for the site origin and `Range` support.
 - GitHub Pages was rejected: it cannot set CSP or COOP/COEP headers.
 - The site works without cross-origin isolation (threads are optional, per `compute-core`), so a header regression degrades speed, not correctness.

@@ -45,8 +45,8 @@ A tool SHALL compute pivotal altitude from groundspeed (h = V²/g0), showing the
 - **THEN** pivotal altitude ≈ 885 ft AGL
 
 ### Requirement: Density-altitude effects need aircraft data
-Takeoff and landing distance tools SHALL operate only on user-supplied POH/AFM tables (via fuel-and-loading table interpolation) and SHALL NOT provide generic aircraft performance estimates, except the Koch-chart-style estimate, which SHALL be labeled as a generic approximation for light aircraft.
+Takeoff and landing distance tools SHALL operate only on user-supplied POH/AFM tables (via fuel-and-loading table interpolation) and SHALL NOT provide generic aircraft performance estimates (the generic Koch-chart estimate is excluded because it would be mistaken for aircraft data).
 
 #### Scenario: No POH table
 - **WHEN** a user requests takeoff distance without a POH table
-- **THEN** the tool offers only the labeled generic approximation and explains that aircraft data is required for a real estimate
+- **THEN** the tool explains that aircraft data from the POH/AFM is required, offers the table-interpolation tool, and links the density-altitude explainer

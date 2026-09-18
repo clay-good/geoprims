@@ -46,8 +46,12 @@ Given a geometry (point, line, polygon) and a buffer distance, the tool SHALL ge
 ### Requirement: Altitude references on every waypoint
 Every generated waypoint SHALL carry height with an explicit reference: AGL (constant or terrain-following using the terrain asset), relative-to-takeoff, MSL, or HAE. Conversions SHALL use the geodesy height tools. Terrain-following heights SHALL state the DEM and its accuracy.
 
+#### Scenario: Terrain-following requires acknowledgment
+- **WHEN** a user enables terrain-following export over the GLO-30 surface model
+- **THEN** export is blocked until the user acknowledges that the model includes trees and buildings inconsistently and sets a clearance margin (default 15 m) that is added to every waypoint
+
 #### Scenario: Terrain-following
-- **WHEN** terrain-following at 80 m AGL is enabled over hilly terrain
+- **WHEN** terrain-following at 80 m AGL is enabled over hilly terrain and the user acknowledges the surface-model notice
 - **THEN** each waypoint's MSL height is computed from the DEM plus 80 m, and the DEM name and vertical accuracy are listed
 
 ### Requirement: Export

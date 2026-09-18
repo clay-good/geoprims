@@ -39,7 +39,7 @@
 - [ ] 5.1 Implement turn relations, stall in turn, and load-limit checks; verify the standard-rate, 60°-bank, and load-limit scenarios
 - [ ] 5.2 Implement climb/descent gradients, top of descent, and VDP; verify the FL350 and climb-gradient scenarios
 - [ ] 5.3 Implement glide range with wind and the glide ring on the map; verify the headwind scenario
-- [ ] 5.4 Implement pivotal altitude, specific range, and the labeled Koch-style estimate; verify the pivotal-altitude and no-POH scenarios
+- [ ] 5.4 Implement pivotal altitude and specific range, and the no-POH refusal; verify the pivotal-altitude and no-POH scenarios
 
 ## 6. Fuel and loading
 
@@ -51,7 +51,7 @@
 
 ## 7. Catalog, docs, and safety
 
-- [ ] 7.1 Register all 84 operations and 28 generated endpoints with pilot vocabulary aliases (E6B, WCA, DA, PA, TOD, W&B, "crosswind calculator"); verify catalog counts and alias fixtures
+- [ ] 7.1 Register all 83 operations and 28 generated endpoints with pilot vocabulary aliases (E6B, WCA, DA, PA, TOD, W&B, "crosswind calculator"); verify catalog counts and alias fixtures
 - [ ] 7.2 Write docs per tool, the "Preflight performance check" guide, and a "Two pressure-altitude constant sets" explainer; verify the docs build
 - [ ] 7.3 Verify the safety notice and dated regulatory references render on every aviation page
 - [ ] 7.4 Promote tools meeting the stable bar; verify the verification report

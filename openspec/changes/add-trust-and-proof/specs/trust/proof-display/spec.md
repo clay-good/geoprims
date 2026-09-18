@@ -24,7 +24,7 @@ The panel SHALL be closed by default on phones and open by default on desktop wi
 - **THEN** the panel content prints in full even if collapsed on screen
 
 ### Requirement: Limitation banners for simplified tools
-Tools that simplify a governing method (for example the generic Koch-style estimate, if kept, or dry-air density altitude) SHALL show a short banner above the result. The banner states the simplification (≤ 80 characters), what to use instead (≤ 240 characters), and who governs (≤ 120 characters). The same text SHALL appear in MCP results.
+Tools that simplify a governing method (for example dry-air density altitude, or the spherical haversine distance) SHALL show a short banner above the result. The banner states the simplification (≤ 80 characters), what to use instead (≤ 240 characters), and who governs (≤ 120 characters). The same text SHALL appear in MCP results.
 
 #### Scenario: Banner text shared
 - **WHEN** the MCP runs a simplified tool

@@ -1,6 +1,8 @@
 ## 1. Server scaffold
 
-- [ ] 1.1 Scaffold `packages/mcp` on the MCP TypeScript SDK with stdio transport, depending only on the internal `packages/runtime`; verify it starts and opens no sockets (no-listening-socket scenario)
+- [ ] 1.1 Scaffold `mcp/server.mjs` as a zero-dependency stdio JSON-RPC server using the internal `packages/runtime`; verify it starts, opens no sockets (no-listening-socket scenario), and has an empty `dependencies` list
+- [ ] 1.1a Build release artifacts into `mcp/dist/` on tags, with the untagged-checkout message; verify the clone-and-run, untagged-checkout, and verify-before-running scenarios on a clean machine image with only Node installed
+- [ ] 1.1b Add the golden surface file and MCP Inspector CLI job; verify the surface-drift scenario
 - [ ] 1.2 Implement protocol negotiation for `2026-07-28`, `2025-11-25`, and `2025-06-18`; verify handshakes from recorded clients of each version (older-client scenario)
 - [ ] 1.3 Verify cross-surface equality: run the golden-vector suite through the server and compare bytes to the website's results (same-result-as-website scenario)
 
@@ -11,6 +13,7 @@
 - [ ] 2.3 Implement `geoprims_run` with schema validation, unit handling, pagination, and summaries; verify the search-then-run and large-polyfill scenarios
 - [ ] 2.4 Implement `geoprims_pipeline` with binding type checks, unit insertion, and cycle and forward-reference rejection; verify a 4-step chain and a cyclic chain
 - [ ] 2.5 Implement `geoprims_convert_units`; verify against unit-registry vectors
+- [ ] 2.5a Add `prefill` to search, citations and limitations to describe, and `summary`, references, `explain` trace, and example-default to run; verify parity with the web page for 20 hero tools
 - [ ] 2.6 Add titles, annotations, output schemas, and structured content plus text blocks; verify the annotations scenario with a conformance checker
 - [ ] 2.7 Enforce the ≤ 6,000-token default `tools/list` budget in CI; verify with the 4-characters-per-token approximation
 
@@ -34,6 +37,7 @@
 - [ ] 5.2 Build the MCPB bundle (manifest v0.3, `server.type: node`, toolsets and asset-download option as `user_config`); verify it installs and lists tools in a desktop host
 - [ ] 5.3 Write `server.json` for `com.geoprims/mcp` with DNS verification, npm and MCPB packages, and `fileSha256`; verify with the registry publisher's validation
 - [ ] 5.4 Attach build provenance attestations and SHA-256 digests to release assets; verify attestation verification succeeds
+- [ ] 5.4a Write README and site setup snippets for Claude Code, Claude Desktop, VS Code (`servers` key), Cursor, and Windsurf for both clone and npx paths; verify the VS Code key scenario and CLI-testable snippets in CI
 - [ ] 5.5 Write the website's "Use with agents" page (setup snippets for major MCP clients, toolsets, offline assets); verify every snippet in CI smoke tests
 
 ## 6. Agent evaluation

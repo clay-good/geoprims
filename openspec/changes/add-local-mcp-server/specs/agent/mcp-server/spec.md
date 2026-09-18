@@ -24,17 +24,18 @@ The server SHALL implement MCP specification `2026-07-28` (stateless requests wi
 
 ### Requirement: Default meta-tool surface
 By default the server SHALL expose exactly these tools, in this deterministic order:
-1. `geoprims_search` — input `{query, domain?, limit? (default 10, max 50), includeExperimental? (default false)}`; returns ranked `{id, title, summary, domain, stability}` entries. `geoprims_run` accepts experimental ids but attaches warning `EXPERIMENTAL_TOOL`.
-2. `geoprims_describe` — input `{ids: string[] (max 20), detail: "summary" | "schema" | "examples"}`; returns manifests at the requested detail, including input/output JSON Schemas, units, accuracy, and references for `schema`.
-3. `geoprims_run` — input `{id, args, units?, output?: {maxItems?, offset?}}`; validates `args` against the tool's input schema, executes, and returns the result.
+1. `geoprims_search` — input `{query, domain?, limit? (default 10, max 50), includeExperimental? (default false)}`; returns ranked `{id, title, summary, domain, stability, prefill?}` entries, where `prefill` holds arguments extracted from a natural-language query (per `discovery/natural-language-prefill`). `geoprims_run` accepts experimental ids but attaches warning `EXPERIMENTAL_TOOL`.
+2. `geoprims_describe` — input `{ids: string[] (max 20), detail: "summary" | "schema" | "examples"}`; returns manifests at the requested detail, including input/output JSON Schemas, units, accuracy, citations, limitation text, and related tools for `schema`, and the worked example for `examples`.
+3. `geoprims_run` — input `{id, args?, units?, explain?, output?: {maxItems?, offset?}}`; validates `args` against the tool's input schema, executes, and returns the result with `summary` (the plain-language sentence), `meta.references`, and, when `explain` is true, the step-by-step `trace`. With no `args`, it runs the tool's worked example.
 4. `geoprims_pipeline` — input `{steps: [{id, args, bind?: {<inputPointer>: "<stepIndex>:<outputPointer>"}}] (max 20 steps)}`; runs a chain without model round trips.
 5. `geoprims_convert_units` — input `{value, from, to}`; converts using the unit registry.
+6. `geoprims_report_problem` — prepares, but never sends, a problem report (per `feedback/triage-and-corrections`).
 
 The total serialized size of the default `tools/list` result SHALL be at most 6,000 tokens (measured with a documented tokenizer approximation of 4 characters per token).
 
 #### Scenario: Default tool list
 - **WHEN** a client calls `tools/list` with default server options
-- **THEN** exactly the five meta-tools are returned in the specified order
+- **THEN** exactly the six meta-tools are returned in the specified order
 
 #### Scenario: Search then run
 - **WHEN** an agent searches "density altitude", describes the top id at `schema` detail, and runs it with valid args
@@ -52,7 +53,7 @@ The server SHALL support opt-in direct toolsets selected by a server launch flag
 
 #### Scenario: E6B toolset
 - **WHEN** the server starts with `--toolsets=e6b`
-- **THEN** `tools/list` returns the five meta-tools plus at most 40 E6B tools
+- **THEN** `tools/list` returns the six meta-tools plus at most 40 E6B tools
 
 #### Scenario: Unknown toolset
 - **WHEN** the server starts with `--toolsets=bogus`
@@ -111,12 +112,41 @@ The server SHALL NOT send telemetry, update checks, or any network traffic excep
 - **WHEN** the server runs the full agent-evaluation suite under a network sandbox with no allowed hosts
 - **THEN** every tool not requiring an un-cached asset succeeds
 
+### Requirement: Runs from a GitHub clone with nothing to install
+A developer SHALL be able to run the server from a clone of the public repository at any release tag with only Node.js (active LTS) installed: `git clone --depth 1 --branch vX.Y.Z https://github.com/clay-good/geoprims && node geoprims/mcp/server.mjs`. Release tags SHALL contain the prebuilt Wasm modules, the compiled internal runtime, the catalog, and bundled assets under `mcp/dist/`, so no Rust toolchain, `npm install`, or network access is needed. The server SHALL have zero runtime npm dependencies. A clone of an untagged commit without built artifacts SHALL print a one-line message explaining how to build or check out a tag, and exit non-zero.
+
+#### Scenario: Clone and run
+- **WHEN** a developer with only Node.js clones a release tag and adds `{"command": "node", "args": ["/abs/path/geoprims/mcp/server.mjs"]}` to their client
+- **THEN** the client lists the six meta-tools, with no install step and no network access
+
+#### Scenario: Untagged checkout
+- **WHEN** the server is started from a main-branch clone without built artifacts
+- **THEN** it prints "Built files missing: check out a release tag (git checkout vX.Y.Z) or run npm run build (requires Rust)" and exits with code 1
+
+#### Scenario: Verify before running
+- **WHEN** a developer runs the documented verification command on a release tag
+- **THEN** the SHA-256 digests of the Wasm modules match the release notes and the site's published digests
+
+### Requirement: Setup instructions for major clients
+The repository README and the site's "Use with agents" page SHALL give copy-paste setup for Claude Code (`claude mcp add`), Claude Desktop (JSON and MCPB), VS Code (`.vscode/mcp.json` with the `servers` key), Cursor, and Windsurf, for both the clone path and the npx path. Each SHALL be tested in CI where a CLI exists and verified manually per release otherwise.
+
+#### Scenario: VS Code key
+- **WHEN** a developer copies the VS Code snippet
+- **THEN** it uses the top-level `servers` key and a working command
+
+### Requirement: Golden surface file
+The server's full surface (tools, schemas, annotations, resources, prompts) SHALL be snapshotted in a committed golden file. CI SHALL fail on any unreviewed difference, and `/.well-known/mcp.json` SHALL be generated from it. CI SHALL also exercise the server through the MCP Inspector CLI.
+
+#### Scenario: Surface drift
+- **WHEN** a change alters a tool's input schema without updating the golden file
+- **THEN** CI fails showing the diff
+
 ### Requirement: Distribution
-The server SHALL be installable via `npx -y @geoprims/mcp`, as an MCPB bundle (`server.type: node`) for one-click desktop install, and listed in the MCP Registry as `com.geoprims/mcp` with a `server.json` referencing the npm package (`mcpName` in `package.json`) and the MCPB release with `fileSha256`. npm releases SHALL carry provenance attestations.
+The server SHALL also be installable via `npx -y @geoprims/mcp`, as an MCPB bundle (`server.type: node`) for one-click desktop install, and listed in the MCP Registry as `com.geoprims/mcp` with a `server.json` referencing the npm package (`mcpName` in `package.json`) and the MCPB release with `fileSha256`. npm releases SHALL carry provenance attestations.
 
 #### Scenario: npx install
 - **WHEN** a user adds `{"command": "npx", "args": ["-y", "@geoprims/mcp"]}` to a client configuration
-- **THEN** the client lists the five meta-tools
+- **THEN** the client lists the six meta-tools
 
 ### Requirement: Agent-evaluation benchmark
 The project SHALL maintain an evaluation set of at least 100 natural-language tasks spanning all domains, each with an expected tool id and expected numeric answer within tolerance, and SHALL report tool-selection accuracy and answer accuracy per release for at least one current frontier model. A release SHALL NOT regress answer accuracy by more than 3 percentage points without a recorded justification.

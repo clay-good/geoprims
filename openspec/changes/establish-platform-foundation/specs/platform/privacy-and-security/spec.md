@@ -16,7 +16,7 @@ The product SHALL NOT offer or require accounts, SHALL NOT set cookies, and SHAL
 - **THEN** local storage, IndexedDB, cache storage (except the app shell), and service-worker-held data created by the app are removed, and a reload shows default settings
 
 ### Requirement: User inputs never leave the device
-User-entered values, uploaded files, and results SHALL NOT be transmitted over the network. Network requests SHALL be limited to same-origin static assets (code, docs, data assets, tiles) whose URLs are independent of user input except for tile addresses. Every location-bearing request, including any HTTP byte range within a file, SHALL resolve to data covering no less than a 1° × 1° cell (or, for Web Mercator map tiles, zoom level 7 or lower). Range requests that address sub-tile byte offsets of a location-bearing file SHALL NOT be used.
+User-entered values, uploaded files, and results SHALL NOT be transmitted over the network, with one exception: a problem report the user explicitly opens, reviews in a full payload preview, and sends (per `feedback/problem-reports`). Network requests SHALL be limited to same-origin static assets (code, docs, data assets, tiles) whose URLs are independent of user input except for tile addresses. Every location-bearing request, including any HTTP byte range within a file, SHALL resolve to data covering no less than a 1° × 1° cell (or, for Web Mercator map tiles, zoom level 7 or lower). Range requests that address sub-tile byte offsets of a location-bearing file SHALL NOT be used.
 
 #### Scenario: Automated egress test
 - **WHEN** the end-to-end privacy test runs every tool with sentinel input values
@@ -34,7 +34,7 @@ Permalinks SHALL encode tool inputs in the URL fragment (after `#`), which brows
 - **THEN** the coordinates appear only after `#` in the URL
 
 ### Requirement: No third-party requests
-Pages SHALL make no requests to third-party origins: no analytics, fonts, CDNs, ads, error reporting, or embeds. All assets SHALL be served from the geoprims origin (or a geoprims-controlled asset subdomain listed in the CSP).
+Pages SHALL make no requests to third-party origins: no analytics, fonts, CDNs, ads, error reporting, or embeds. The single exception is the bot-check widget, loaded only after the user opens the report dialog. All assets SHALL be served from the geoprims origin (or a geoprims-controlled asset subdomain listed in the CSP).
 
 #### Scenario: Third-party audit
 - **WHEN** CI loads every route and records network requests
@@ -48,7 +48,7 @@ If usage metrics are collected, they SHALL be limited to server-side aggregate c
 - **THEN** it contains no analytics or telemetry script
 
 ### Requirement: Strict Content Security Policy
-Every page SHALL be served with a Content Security Policy that at minimum sets `default-src 'self'`, `script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'` (plus any geoprims asset origin), `style-src 'self'` (no inline styles; the build extracts CSS to files), `img-src 'self' blob: data:`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'none'`, and no `unsafe-inline` for scripts. Pages SHALL also send `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, and a `Permissions-Policy` that disables camera, microphone, payment, and USB and sets `geolocation=(self)`; the UI SHALL call the Geolocation API only from an explicit "use my location" action.
+Every page SHALL be served with a Content Security Policy that at minimum sets `default-src 'self'`, `script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com` (the bot-check origin, loaded only inside the report dialog), `frame-src https://challenges.cloudflare.com`, `connect-src 'self'` (plus any geoprims asset origin), `style-src 'self'` (no inline styles; the build extracts CSS to files), `img-src 'self' blob: data:`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'none'`, and no `unsafe-inline` for scripts. Pages SHALL also send `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, and a `Permissions-Policy` that disables camera, microphone, payment, and USB and sets `geolocation=(self)`; the UI SHALL call the Geolocation API only from an explicit "use my location" action.
 
 #### Scenario: Header check
 - **WHEN** the deployment smoke test fetches any route

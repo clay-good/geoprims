@@ -3,7 +3,7 @@
 **Geospatial and aerospace primitives.** Geodesy, navigation, aviation, drone, surveying, spatial-indexing, and terrain math, exact and cited, running entirely on your device.
 
 - **For humans:** a fast static website at geoprims.com with a tactical "retro-HUD" canvas that draws every result.
-- **For agents:** a local MCP server that runs the exact same calculators. Clone a release tag and run `node mcp/server.mjs`, with zero dependencies and no network; `npx -y @geoprims/mcp` also works.
+- **For agents:** a local MCP server that runs the exact same calculators. Clone a release tag and run `node mcp/server.mjs`, with zero dependencies and no network; `npx -y @geoprims/mcp` will also work once published. Setup: [mcp/README.md](mcp/README.md).
 
 No ads, no accounts, no tracking, no server-side compute. Inputs never leave the device.
 
@@ -82,6 +82,7 @@ openspec validate --all --strict
 | Change | Built so far |
 |---|---|
 | `establish-platform-foundation` | Monorepo layout and pinned toolchain; one import-free `.wasm` per domain behind a raw C ABI, with an import lint and Brotli budgets, each proven against a bad fixture; `gp-base` (exact unit registry, unit-tagged parsing, angle normalization, error and warning model, ECMAScript-format numbers, unit profiles, result envelope); the tool runtime (`invoke`, `invokeBatch`, `manifest`) and manifest lint; `packages/runtime` (shared loader, input hardening, Node host); `catalog/v1.json` generation; golden vectors with a provenance lint and a silent-edit guard; **the units domain: 22 operations and 35 allow-listed pair endpoints (57 tool ids), all experimental, with 230 golden vectors** |
+| `add-local-mcp-server` | Zero-dependency stdio server with `geoprims_search` (core ranker in its own `search` module), `describe`, `run`, `pipeline`, and `convert_units`; catalog and tool resources; per-call timeouts in a worker thread; a golden surface file; 18 end-to-end tests ([mcp/README.md](mcp/README.md)) |
 | Everything else | Not started |
 
 ## Building it
@@ -93,15 +94,15 @@ cargo test --manifest-path core/Cargo.toml
 ```
 
 ```bash
-node tools/wasm/build.mjs
+npm run build
 ```
 
 ```bash
-node tools/codegen/catalog.mjs
+node mcp/server.mjs
 ```
 
 ```bash
-node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs'
+npm run test:js
 ```
 
 The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests), and the catalog step writes `dist/catalog/v1.json`. It fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).

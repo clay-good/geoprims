@@ -1,0 +1,252 @@
+// End-to-end tests of the MCP server over stdio (run `npm run build` first).
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { copyFileSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { after, before, test } from 'node:test';
+import assert from 'node:assert/strict';
+import { nodeHost } from '../packages/runtime/src/node.mjs';
+
+const here = new URL('.', import.meta.url).pathname;
+const root = join(here, '..');
+
+class Client {
+  constructor(args = []) {
+    this.proc = spawn(process.execPath, [join(here, 'server.mjs'), ...args], { stdio: ['pipe', 'pipe', 'pipe'] });
+    this.seq = 0;
+    this.waiting = new Map();
+    this.stderr = '';
+    let buf = '';
+    this.proc.stdout.setEncoding('utf8');
+    this.proc.stdout.on('data', (d) => {
+      buf += d;
+      let nl;
+      while ((nl = buf.indexOf('\n')) >= 0) {
+        const msg = JSON.parse(buf.slice(0, nl));
+        buf = buf.slice(nl + 1);
+        this.waiting.get(msg.id)?.(msg);
+        this.waiting.delete(msg.id);
+      }
+    });
+    this.proc.stderr.on('data', (d) => (this.stderr += d));
+  }
+  raw(line, id) {
+    return new Promise((resolve) => {
+      this.waiting.set(id, resolve);
+      this.proc.stdin.write(line + '\n');
+    });
+  }
+  request(method, params) {
+    const id = ++this.seq;
+    return this.raw(JSON.stringify({ jsonrpc: '2.0', id, method, params }), id);
+  }
+  async call(name, args) {
+    const r = await this.request('tools/call', { name, arguments: args });
+    assert.ok(r.result, `tools/call ${name} failed: ${JSON.stringify(r)}`);
+    return r.result;
+  }
+  close() {
+    this.proc.stdin.end();
+  }
+}
+
+let c;
+before(() => {
+  c = new Client();
+});
+after(() => c.close());
+
+test('negotiates protocol versions', async () => {
+  for (const v of ['2025-06-18', '2025-11-25', '2026-07-28']) {
+    const r = await c.request('initialize', { protocolVersion: v, capabilities: {}, clientInfo: { name: 'test', version: '1' } });
+    assert.equal(r.result.protocolVersion, v);
+    assert.equal(r.result.serverInfo.name, 'geoprims');
+  }
+  const old = await c.request('initialize', { protocolVersion: '2024-11-05', capabilities: {} });
+  assert.equal(old.result.protocolVersion, '2025-11-25');
+  const d = await c.request('server/discover', {});
+  assert.deepEqual(d.result.supportedVersions, ['2026-07-28', '2025-11-25', '2025-06-18']);
+});
+
+test('lists the meta-tools in order, annotated, within the token budget', async () => {
+  const r = await c.request('tools/list', {});
+  assert.deepEqual(
+    r.result.tools.map((t) => t.name),
+    ['geoprims_search', 'geoprims_describe', 'geoprims_run', 'geoprims_pipeline', 'geoprims_convert_units'],
+  );
+  for (const t of r.result.tools) {
+    assert.deepEqual(
+      [t.annotations.readOnlyHint, t.annotations.destructiveHint, t.annotations.idempotentHint, t.annotations.openWorldHint],
+      [true, false, true, false],
+    );
+    assert.ok(t.title && t.outputSchema && t.inputSchema);
+  }
+  const chars = JSON.stringify(r.result).length;
+  assert.ok(chars / 4 <= 6000, `tools/list is ~${Math.ceil(chars / 4)} tokens`);
+});
+
+test('golden surface file matches (UPDATE_SURFACE=1 to regenerate)', async () => {
+  const surface = {
+    tools: (await c.request('tools/list', {})).result.tools,
+    resources: (await c.request('resources/list', {})).result.resources,
+    resourceTemplates: (await c.request('resources/templates/list', {})).result.resourceTemplates,
+    prompts: (await c.request('prompts/list', {})).result.prompts,
+  };
+  const file = join(here, 'surface.json');
+  const text = JSON.stringify(surface, null, 2) + '\n';
+  if (process.env.UPDATE_SURFACE) writeFileSync(file, text);
+  assert.equal(text, readFileSync(file, 'utf8'), 'the MCP surface changed; review and run with UPDATE_SURFACE=1');
+});
+
+test('search hides experimental tools unless asked', async () => {
+  const hidden = await c.call('geoprims_search', { query: 'knots to mph' });
+  assert.equal(hidden.structuredContent.result.results.length, 0);
+  assert.ok(hidden.structuredContent.result.hiddenExperimental > 0);
+  const shown = await c.call('geoprims_search', { query: 'knots to mph', includeExperimental: true });
+  assert.equal(shown.structuredContent.result.results[0].id, 'units.speed.kt-to-mph');
+  const typo = await c.call('geoprims_search', { query: 'fahrenhiet to celsius', includeExperimental: true });
+  assert.equal(typo.structuredContent.result.results[0].id, 'units.temperature.f-to-c');
+});
+
+test('run returns byte-identical results to the runtime', async () => {
+  const r = await c.call('geoprims_run', { id: 'units.speed.kt-to-mph', args: { value: 100 } });
+  const direct = await nodeHost(join(root, 'dist/wasm')).invoke('units.speed.kt-to-mph', '{"value":100}');
+  assert.equal(r.content[0].text, direct);
+  assert.equal(JSON.stringify(r.structuredContent), direct);
+  assert.equal(r.structuredContent.result.converted.value, 115.07794480235425);
+  assert.equal(r.isError, undefined);
+});
+
+test('run with no args runs the worked example; units selects a profile', async () => {
+  const r = await c.call('geoprims_run', { id: 'units.fuel.convert' });
+  assert.equal(r.structuredContent.result.mass.value, 300);
+  const si = await c.call('geoprims_run', { id: 'units.fuel.convert', units: 'si' });
+  assert.equal(si.structuredContent.result.mass.unit, 'kg');
+});
+
+test('wrong id is a recoverable error with suggestions', async () => {
+  const r = await c.call('geoprims_run', { id: 'units.kt-to-mph', args: { value: 1 } });
+  assert.equal(r.isError, true);
+  assert.equal(r.structuredContent.error.code, 'UNSUPPORTED');
+  assert.ok(r.structuredContent.error.suggestions.includes('units.speed.kt-to-mph'), JSON.stringify(r.structuredContent));
+  const bad = await c.call('geoprims_run', { id: 'units.speed.convert', args: { value: '1 ft', to: 'mph' } });
+  assert.equal(bad.isError, true);
+  assert.equal(bad.structuredContent.error.code, 'UNIT_MISMATCH');
+});
+
+test('describe at each detail level, with unknown ids flagged', async () => {
+  const s = await c.call('geoprims_describe', { ids: ['units.speed.convert'], detail: 'summary' });
+  assert.equal(s.structuredContent.result.tools[0].inputs, undefined);
+  const sc = await c.call('geoprims_describe', { ids: ['units.speed.convert', 'nope.x.y'], detail: 'schema' });
+  const [tool, missing] = sc.structuredContent.result.tools;
+  assert.equal(tool.inputs.properties.value['x-quantity'], 'speed');
+  assert.ok(tool.references.length > 0);
+  assert.equal(missing.error.code, 'UNSUPPORTED');
+  const ex = await c.call('geoprims_describe', { ids: ['units.speed.convert'], detail: 'examples' });
+  assert.ok(ex.structuredContent.result.tools[0].examples.length > 0);
+  const tooMany = await c.call('geoprims_describe', { ids: Array(21).fill('x') });
+  assert.equal(tooMany.isError, true);
+});
+
+test('pipeline chains with unit-carrying bindings and rejects forward references', async () => {
+  const r = await c.call('geoprims_pipeline', {
+    steps: [
+      { id: 'units.speed.convert', args: { value: 100, to: 'm/s' } },
+      { id: 'units.speed.convert', args: { to: 'mph' }, bind: { '/value': '0:/result/converted' } },
+    ],
+  });
+  assert.equal(r.structuredContent.ok, true);
+  const mph = r.structuredContent.result.steps[1].result.converted.value;
+  assert.ok(Math.abs(mph - 115.07794480235425) < 1e-12, String(mph));
+  const fwd = await c.call('geoprims_pipeline', {
+    steps: [{ id: 'units.speed.convert', args: { to: 'mph' }, bind: { '/value': '1:/result/converted' } }, { id: 'units.speed.convert', args: { value: 1, to: 'kt' } }],
+  });
+  assert.equal(fwd.isError, true);
+  assert.match(fwd.structuredContent.error.message, /has not run yet/);
+  const failing = await c.call('geoprims_pipeline', { steps: [{ id: 'units.speed.convert', args: { value: '1 ft', to: 'mph' } }] });
+  assert.equal(failing.structuredContent.error.step, 0);
+});
+
+test('convert_units finds the quantity from the units', async () => {
+  const a = await c.call('geoprims_convert_units', { value: 100, from: 'kt', to: 'mph' });
+  assert.equal(a.structuredContent.result.converted.value, 115.07794480235425);
+  const b = await c.call('geoprims_convert_units', { value: '29.92 inHg', to: 'hPa' });
+  assert.equal(b.structuredContent.result.converted.unit, 'hPa');
+  const t = await c.call('geoprims_convert_units', { value: 15, from: 'degC', to: 'degF' });
+  assert.equal(t.structuredContent.result.converted.value, 59);
+  const bad = await c.call('geoprims_convert_units', { value: 1, from: 'kt', to: 'ft' });
+  assert.equal(bad.structuredContent.error.code, 'UNIT_MISMATCH');
+});
+
+test('protocol errors', async () => {
+  assert.equal((await c.request('tools/call', { name: 'geoprims_nope', arguments: {} })).error.code, -32602);
+  assert.equal((await c.request('bogus/method', {})).error.code, -32601);
+  assert.equal((await c.raw('{not json', null)).error.code, -32700);
+  const extra = await c.call('geoprims_search', { query: 'x', color: 'red' });
+  assert.equal(extra.isError, true);
+});
+
+test('resources: catalog index and a tool manifest with vectors', async () => {
+  const cat = await c.request('resources/read', { uri: 'geoprims://catalog' });
+  const body = JSON.parse(cat.result.contents[0].text);
+  assert.ok(body.tools.some((t) => t.id === 'units.speed.kt-to-mph'));
+  const tool = JSON.parse((await c.request('resources/read', { uri: 'geoprims://tool/units.speed.kt-to-mph' })).result.contents[0].text);
+  assert.ok(tool.accuracy && tool.references.length && tool.examples.length && tool.vectors.length >= 3);
+  assert.equal((await c.request('resources/read', { uri: 'geoprims://tool/nope' })).error.code, -32002);
+});
+
+test('opens no listening socket', { skip: spawnSync('lsof', ['-v']).error ? 'lsof not available' : false }, async () => {
+  await c.request('ping', {});
+  const out = spawnSync('lsof', ['-a', '-p', String(c.proc.pid), '-i']).stdout.toString();
+  assert.equal(out.trim(), '', out);
+});
+
+test('an untagged checkout without built files explains itself and exits 1', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gp-mcp-'));
+  for (const f of ['server.mjs', 'meta.mjs', 'package.json']) copyFileSync(join(here, f), join(dir, f));
+  const r = spawnSync(process.execPath, [join(dir, 'server.mjs')], { input: '' });
+  assert.equal(r.status, 1);
+  assert.equal(r.stderr.toString().trim(), 'Built files missing: check out a release tag (git checkout vX.Y.Z) or run npm run build (requires Rust)');
+});
+
+test('unknown options fail fast', () => {
+  const r = spawnSync(process.execPath, [join(here, 'server.mjs'), '--toolsets=bogus'], { input: '' });
+  assert.equal(r.status, 2);
+});
+
+test('has zero runtime dependencies', () => {
+  const pkg = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8'));
+  assert.deepEqual(pkg.dependencies, {});
+  assert.equal(execFileSync('git', ['ls-files', 'mcp/node_modules'], { cwd: root, encoding: 'utf8' }), '');
+});
+
+test('a 4-step pipeline carries units end to end', async () => {
+  const r = await c.call('geoprims_pipeline', {
+    steps: [
+      { id: 'units.length.convert', args: { value: '1 NM', to: 'm' } },
+      { id: 'units.length.convert', args: { to: 'ft' }, bind: { '/value': '0:/result/converted' } },
+      { id: 'units.length.convert', args: { to: 'mi' }, bind: { '/value': '1:/result/converted' } },
+      { id: 'units.length.convert', args: { to: 'NM' }, bind: { '/value': '2:/result/converted' } },
+    ],
+  });
+  assert.equal(r.structuredContent.ok, true);
+  const nm = r.structuredContent.result.steps[3].result.converted.value;
+  assert.ok(Math.abs(nm - 1) < 1e-15, String(nm));
+});
+
+test('convert_units agrees with every units golden vector', async () => {
+  const dir = join(root, 'core/vectors');
+  let n = 0;
+  for (const f of readdirSync(dir).filter((x) => /^units\.[a-z-]+\.convert\.jsonl$/.test(x) && !x.includes('temperature-difference'))) {
+    for (const line of readFileSync(join(dir, f), 'utf8').split('\n').filter(Boolean)) {
+      const v = JSON.parse(line);
+      if (!('to' in v.input) || !('result.converted.value' in v.expect)) continue;
+      const r = await c.call('geoprims_convert_units', { value: v.input.value, to: v.input.to });
+      const want = v.expect['result.converted.value'];
+      const got = r.structuredContent.result?.converted?.value;
+      assert.ok(Math.abs(got - want) <= v.tolerance['result.converted.value'].rel * Math.abs(want), `${f} ${v.id}: ${JSON.stringify(r.structuredContent)}`);
+      n++;
+    }
+  }
+  assert.ok(n > 80, `${n} vectors`);
+});

@@ -1,0 +1,18 @@
+[package]
+name = "gp-search"
+description = "The single catalog ranker shared by the web command palette and the MCP server."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[package.metadata.geoprims]
+module = "search"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gp-base.workspace = true
+serde_json.workspace = true

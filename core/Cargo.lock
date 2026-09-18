@@ -61,6 +61,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "gp-search"
+version = "0.1.0"
+dependencies = [
+ "gp-base",
+ "serde_json",
+]
+
+[[package]]
 name = "gp-survey"
 version = "0.1.0"
 dependencies = [

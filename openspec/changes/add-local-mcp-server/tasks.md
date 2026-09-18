@@ -1,6 +1,6 @@
 ## 1. Server scaffold
 
-- [ ] 1.1 Scaffold `mcp/server.mjs` as a zero-dependency stdio JSON-RPC server using the internal `packages/runtime`; verify it starts, opens no sockets (no-listening-socket scenario), and has an empty `dependencies` list
+- [x] 1.1 Scaffold `mcp/server.mjs` as a zero-dependency stdio JSON-RPC server using the internal `packages/runtime`; verify it starts, opens no sockets (no-listening-socket scenario), and has an empty `dependencies` list
 - [ ] 1.1a Build release artifacts into `mcp/dist/` on tags, with the untagged-checkout message; verify the clone-and-run, untagged-checkout, and verify-before-running scenarios on a clean machine image with only Node installed
 - [ ] 1.1b Add the golden surface file and MCP Inspector CLI job; verify the surface-drift scenario
 - [ ] 1.2 Implement protocol negotiation for `2026-07-28`, `2025-11-25`, and `2025-06-18`; verify handshakes from recorded clients of each version (older-client scenario)
@@ -8,20 +8,20 @@
 
 ## 2. Meta-tools
 
-- [ ] 2.1 Implement `geoprims_search` using the shared BM25 and alias index; verify top-3 accuracy on the search fixture set
-- [ ] 2.2 Implement `geoprims_describe` with `summary`/`schema`/`examples` detail levels and the 20-id limit; verify output sizes per level
+- [x] 2.1 Implement `geoprims_search` using the shared core ranker (weighted fields and aliases, `search` module); verify top-3 accuracy on the search fixture set
+- [x] 2.2 Implement `geoprims_describe` with `summary`/`schema`/`examples` detail levels and the 20-id limit; verify output sizes per level
 - [ ] 2.3 Implement `geoprims_run` with schema validation, unit handling, pagination, and summaries; verify the search-then-run and large-polyfill scenarios
-- [ ] 2.4 Implement `geoprims_pipeline` with binding type checks, unit insertion, and cycle and forward-reference rejection; verify a 4-step chain and a cyclic chain
-- [ ] 2.5 Implement `geoprims_convert_units`; verify against unit-registry vectors
+- [x] 2.4 Implement `geoprims_pipeline` with binding type checks, unit insertion, and cycle and forward-reference rejection; verify a 4-step chain and a cyclic chain
+- [x] 2.5 Implement `geoprims_convert_units`; verify against unit-registry vectors
 - [ ] 2.5a Add `prefill` to search, citations and limitations to describe, and `summary`, references, `explain` trace, and example-default to run; verify parity with the web page for 20 hero tools
-- [ ] 2.6 Add titles, annotations, output schemas, and structured content plus text blocks; verify the annotations scenario with a conformance checker
-- [ ] 2.7 Enforce the ≤ 6,000-token default `tools/list` budget in CI; verify with the 4-characters-per-token approximation
+- [x] 2.6 Add titles, annotations, output schemas, and structured content plus text blocks; verify the annotations scenario with a conformance checker
+- [x] 2.7 Enforce the ≤ 6,000-token default `tools/list` budget in CI; verify with the 4-characters-per-token approximation
 
 ## 3. Toolsets, errors, resources, prompts
 
 - [ ] 3.1 Implement toolsets (`geodesy-core`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`) and `--no-meta`; verify the e6b and unknown-toolset scenarios
-- [ ] 3.2 Implement recoverable `isError` results and closest-id suggestions; verify the wrong-id scenario
-- [ ] 3.3 Implement resources `geoprims://catalog` and `geoprims://tool/{id}` with `ttlMs`/`cacheScope`; verify the resource-read scenario
+- [x] 3.2 Implement recoverable `isError` results and closest-id suggestions; verify the wrong-id scenario
+- [x] 3.3 Implement resources `geoprims://catalog` and `geoprims://tool/{id}` with `ttlMs`/`cacheScope`; verify the resource-read scenario
 - [ ] 3.4 Implement the five workflow prompts; verify each prompt's tool chain runs end to end
 - [ ] 3.5 Put model, epoch, accuracy, and not-for-navigation caveats in result `meta` for operational domains; verify the magnetic-caveat scenario
 

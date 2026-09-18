@@ -75,3 +75,32 @@ test('every golden vector passes through Wasm in Node', async () => {
   }
   assert.ok(n > 200, `${n} vectors`);
 });
+
+test('worker host: a runaway call times out and the host keeps serving', async () => {
+  const { workerHost } = await import('./worker-host.mjs');
+  const h = workerHost(join(root, 'dist/wasm'), { timeoutMs: 300 });
+  const t0 = Date.now();
+  const stuck = JSON.parse(await h._call('spin'));
+  assert.equal(stuck.error.code, 'LIMIT_EXCEEDED');
+  assert.match(stuck.error.message, /300 ms timeout/);
+  assert.ok(Date.now() - t0 < 2000);
+  const ok = JSON.parse(await h.invoke('units.speed.kt-to-mph', '{"value":100}'));
+  assert.equal(ok.result.converted.value, 115.07794480235425);
+  await h.close();
+});
+
+test('search fixture: every expected tool ranks in the top 3', async () => {
+  const { workerHost } = await import('./worker-host.mjs');
+  const h = workerHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  await h.searchLoad(JSON.stringify(catalog.tools));
+  const { cases } = JSON.parse(readFileSync(join(root, 'data/search-fixture.json'), 'utf8'));
+  const misses = [];
+  for (const { query, expect } of cases) {
+    const out = JSON.parse(await h.search(JSON.stringify({ query, limit: 3, includeExperimental: true })));
+    const ids = out.result.results.map((r) => r.id);
+    if (!ids.includes(expect)) misses.push(`${query} → ${ids.join(', ')} (want ${expect})`);
+  }
+  await h.close();
+  assert.deepEqual(misses, []);
+});

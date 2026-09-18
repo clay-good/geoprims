@@ -1,0 +1,28 @@
+{
+  "note": "Queries practitioners type, with the tool that must rank in the top 3 (includeExperimental). Shared by the web palette and geoprims_search. Grows with every domain.",
+  "cases": [
+    { "query": "knots to mph", "expect": "units.speed.kt-to-mph" },
+    { "query": "kts mph", "expect": "units.speed.kt-to-mph" },
+    { "query": "mph to knots", "expect": "units.speed.mph-to-kt" },
+    { "query": "fahrenhiet to celsius", "expect": "units.temperature.f-to-c" },
+    { "query": "celsius to fahrenheit", "expect": "units.temperature.c-to-f" },
+    { "query": "inhg to hpa", "expect": "units.pressure.inhg-to-hpa" },
+    { "query": "altimeter setting conversion", "expect": "units.pressure.convert" },
+    { "query": "feet to meters", "expect": "units.length.ft-to-m" },
+    { "query": "survey feet", "expect": "units.length.ftus-to-m" },
+    { "query": "nautical miles to km", "expect": "units.length.nm-to-km" },
+    { "query": "gallons to pounds", "expect": "units.fuel.convert" },
+    { "query": "fuel weight", "expect": "units.fuel.convert" },
+    { "query": "mah to wh", "expect": "units.charge.convert" },
+    { "query": "battery capacity", "expect": "units.charge.convert" },
+    { "query": "percent grade to degrees", "expect": "units.slope.convert" },
+    { "query": "ramp slope", "expect": "units.slope.convert" },
+    { "query": "square feet to acres", "expect": "units.area.ft2-to-ac" },
+    { "query": "isa deviation", "expect": "units.temperature-difference.convert" },
+    { "query": "degrees to radians", "expect": "units.angle.deg-to-rad" },
+    { "query": "nato mils", "expect": "units.angle.convert" },
+    { "query": "climb rate fpm", "expect": "units.vertical-speed.convert" },
+    { "query": "horsepower to kw", "expect": "units.power.convert" },
+    { "query": "units.speed.convert", "expect": "units.speed.convert" }
+  ]
+}

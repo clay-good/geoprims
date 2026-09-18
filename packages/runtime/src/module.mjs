@@ -47,8 +47,20 @@ export async function loadModule(bytes, name, { maxBytes } = {}) {
       }
     });
 
+  /** Calls an export that takes one string and returns one string (e.g. gp_search). */
+  const callString = (exportName, input) =>
+    guarded(exportName, () => {
+      const [p, l] = put(input);
+      try {
+        return text(inst.exports[exportName](p, l));
+      } finally {
+        inst.exports.gp_free(p, l);
+      }
+    });
+
   return {
     name,
+    callString,
     version: () => text(inst.exports.gp_version()),
     manifest: () => JSON.parse(text(inst.exports.gp_manifest())),
     /** Returns the result envelope as a JSON string (the exact core bytes). */

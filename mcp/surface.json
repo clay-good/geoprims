@@ -1,0 +1,274 @@
+{
+  "tools": [
+    {
+      "name": "geoprims_search",
+      "title": "Search geoprims tools",
+      "description": "Find geoprims calculators (geodesy, navigation, aviation, drone, survey, indexing, time, units) by plain words, abbreviations, or tool id. Returns ranked ids with summaries. Experimental tools are hidden unless includeExperimental is true; hiddenExperimental counts them.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "What to calculate, e.g. \"density altitude\" or \"knots to mph\"."
+          },
+          "domain": {
+            "type": "string",
+            "description": "Limit to one domain, e.g. \"aviation\"."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10
+          },
+          "includeExperimental": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "annotations": {
+        "title": "Search geoprims tools",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "geoprims_describe",
+      "title": "Describe geoprims tools",
+      "description": "Get manifests for up to 20 tool ids. detail \"summary\" gives title and summary; \"schema\" adds input and output JSON Schemas, units, accuracy, model, references, warnings, and related tools; \"examples\" adds the worked example.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "schema",
+              "examples"
+            ],
+            "default": "schema"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "annotations": {
+        "title": "Describe geoprims tools",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "geoprims_run",
+      "title": "Run a geoprims tool",
+      "description": "Run one tool by id. args follow the tool's input schema (see geoprims_describe); numbers may carry units as strings, like \"145 kts\". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. Results are planning aids, not certified for navigation; relay meta.warnings to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "args": {
+            "type": "object"
+          },
+          "units": {
+            "type": "string",
+            "enum": [
+              "si",
+              "aviation",
+              "aviation-hpa",
+              "us-customary",
+              "survey-metric",
+              "survey-us"
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "annotations": {
+        "title": "Run a geoprims tool",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "geoprims_pipeline",
+      "title": "Run a chain of geoprims tools",
+      "description": "Run up to 20 tools in order without round trips. Each step is {id, args, bind}; bind maps an input JSON Pointer to \"<earlierStepIndex>:<pointer into that step's result>\", e.g. {\"/value\": \"0:/result/converted\"}. A bound {value, unit} is passed with its unit, so units convert automatically. Stops at the first failing step.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object"
+                },
+                "bind": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "annotations": {
+        "title": "Run a chain of geoprims tools",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "geoprims_convert_units",
+      "title": "Convert units",
+      "description": "Convert a value between units with exact definitions, e.g. {value: 100, from: \"kt\", to: \"mph\"}. value may carry its unit instead of from, like \"29.92 inHg\". Absolute temperatures are assumed; for differences such as ISA deviation, run units.temperature-difference.convert.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "to"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "annotations": {
+        "title": "Convert units",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "geoprims://catalog",
+      "name": "catalog",
+      "title": "geoprims catalog",
+      "description": "Every tool id with title, summary, domain, and stability.",
+      "mimeType": "application/json"
+    }
+  ],
+  "resourceTemplates": [
+    {
+      "uriTemplate": "geoprims://tool/{id}",
+      "name": "tool",
+      "title": "geoprims tool manifest",
+      "description": "Full manifest with accuracy, references, worked example, and golden vectors.",
+      "mimeType": "application/json"
+    }
+  ],
+  "prompts": []
+}

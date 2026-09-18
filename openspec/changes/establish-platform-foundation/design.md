@@ -101,7 +101,7 @@ docs/research/        Research briefs backing the specs
 - The site works without cross-origin isolation (threads are optional, per `compute-core`), so a header regression degrades speed, not correctness.
 
 ### D8. Honest counting: operations vs endpoints
-Per `tool-catalog`, the public count reports both numbers. The target is about **430 operations** and about **800 endpoints**; the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding.
+Per `tool-catalog`, the public count reports both numbers. The target is about **450 operations** and about **800 endpoints**; the per-domain rollup is below. Endpoint expansion comes from an allow-listed conversion graph (for example `dms-to-utm`, `kt-to-mph`), never blind permutation. This keeps the "800+ tools" claim true without padding.
 
 ### D9. Verification harness
 - Golden vectors live beside each tool as JSON Lines with `source`, `sourceVersion`, and per-field tolerances.

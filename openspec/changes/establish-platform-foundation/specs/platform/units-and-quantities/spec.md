@@ -82,7 +82,7 @@ Every tool with quantity outputs SHALL allow the caller to request output units 
 - **THEN** distance is returned in NM and the result states `"unit": "NM"`
 
 ### Requirement: Standalone unit conversion tools
-The `units` domain SHALL expose the unit registry as tools: one operation per quantity family (length, area, volume, mass, speed, vertical speed, acceleration, pressure, temperature, temperature difference, angle, angular rate, time, energy, power, electric charge (mAh↔Ah↔C, and to Wh with a stated voltage), fuel volume↔mass (with a stated density), density, frequency, data rate, and slope/grade (percent, ratio, degrees, per mille)). Allow-listed pair endpoints (for example `units.speed.kt-to-mph`, `units.pressure.inhg-to-hpa`, `units.length.ftus-to-m`) SHALL be generated from these operations per the tool-catalog counting rule.
+The `units` domain SHALL expose the unit registry as tools: one operation per quantity family (length, area, volume, mass, speed, vertical speed, acceleration, pressure, temperature, temperature difference, angle, angular rate, time, energy, power, electric charge (mAh↔Ah↔C, and to Wh with a stated voltage), fuel volume↔mass (with a stated density), density, frequency, data rate, and slope/grade (percent, ratio, degrees, per mille)), plus a general tool that normalizes any unit-tagged value to canonical units. Allow-listed pair endpoints (for example `units.speed.kt-to-mph`, `units.pressure.inhg-to-hpa`, `units.length.ftus-to-m`) SHALL be generated from these operations per the tool-catalog counting rule.
 
 #### Scenario: Pair endpoint uses exact constant
 - **WHEN** `units.speed.kt-to-mph` converts 100 kt

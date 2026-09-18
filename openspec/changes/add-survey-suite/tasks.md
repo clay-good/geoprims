@@ -1,0 +1,45 @@
+## 1. COGO and traverse
+
+- [ ] 1.1 Implement direction parsing and formatting (quadrant bearings, azimuths, gons); verify the quadrant parse and invalid-bearing scenarios
+- [ ] 1.2 Implement inverse, forward, and radial sideshots; verify the inverse scenario
+- [ ] 1.3 Implement traverse closure (angular and linear misclosure, precision ratio, standards comparison); verify the loop-closure and angular-misclosure scenarios
+- [ ] 1.4 Implement compass, transit, and Crandall adjustments; verify the Bowditch and transit scenarios and exact closure to 1e-9
+- [ ] 1.5 Implement the experimental 2D least-squares adjustment with error ellipses and chi-square test; verify against Ghilani's published examples and the chi-square-failure scenario
+- [ ] 1.6 Implement intersections and resection with danger-circle detection; verify the two-solution and danger-circle scenarios
+- [ ] 1.7 Implement area by coordinates, station/offset tools, and unit context enforcement; verify the rectangle and mixed-feet scenarios
+- [ ] 1.8 Implement traverse sketches and calculation sheets; verify the exaggeration label and sheet contents
+
+## 2. Instrument reductions
+
+- [ ] 2.1 Implement slope reduction and two-face means; verify the 500 m and two-face scenarios
+- [ ] 2.2 Implement curvature and refraction with labeled coefficients; verify the 1 km scenario
+- [ ] 2.3 Implement EDM atmospheric and prism corrections; verify the ppm scenario and a manufacturer-formula fixture
+- [ ] 2.4 Implement elevation factor, combined factor, and grid/ground conversions with the orthometric guard; verify the combined-factor and guard scenarios
+- [ ] 2.5 Implement level runs, arithmetic check, closure, and adjustment; verify the arithmetic-check scenario and a textbook loop
+- [ ] 2.6 Implement stadia, inaccessible heights, and offset shots; verify the tower and tree-center scenarios
+
+## 3. Earthwork and grade
+
+- [ ] 3.1 Implement average end area and prismoidal with the averaged-middle guard; verify the three volume scenarios
+- [ ] 3.2 Implement cross-section areas with daylight points; verify the mixed-section scenario
+- [ ] 3.3 Implement borrow-pit and four-point methods with balance-line rendering; verify the corner-weights scenario
+- [ ] 3.4 Implement shrink/swell and haul loads; verify the truck-load scenario
+- [ ] 3.5 Implement grade conversions with ratio disambiguation; verify the ambiguous-ratio scenario
+- [ ] 3.6 Implement slope staking with Brent iteration; verify the catch-point scenario
+- [ ] 3.7 Implement TIN stockpile and solid volumes with the angle-of-repose reference; verify the TIN scenario against an analytic cone
+- [ ] 3.8 Implement profile slope analysis; verify the grade-threshold scenario
+
+## 4. Alignment curves
+
+- [ ] 4.1 Implement circular curve element solving from any two inputs with arc and chord definitions; verify the R = 500 ft and inconsistent-input scenarios
+- [ ] 4.2 Implement stationing and layout tables with coordinates; verify the layout scenario
+- [ ] 4.3 Implement spirals and spiral-curve-spiral stations; verify the spiral scenario against a textbook example
+- [ ] 4.4 Implement vertical curves (equal and unequal tangents, turning point, K); verify the crest and no-turning-point scenarios
+- [ ] 4.5 Implement sight-distance curve lengths with dated AASHTO references; verify the crest SSD scenario
+- [ ] 4.6 Implement plan and profile visualization; verify visual fixtures
+
+## 5. Catalog and docs
+
+- [ ] 5.1 Register all 58 operations and 10 generated endpoints with surveyor aliases (COGO, Bowditch, compass rule, lat/dep, cut and fill, AEA); verify catalog counts
+- [ ] 5.2 Write docs per tool and the "Close a traverse" guide; verify the guide chain end to end
+- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report

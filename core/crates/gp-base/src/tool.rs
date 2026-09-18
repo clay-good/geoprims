@@ -52,6 +52,8 @@ pub enum Kind {
     Number { min: f64, max: f64 },
     /// A value of any quantity: a unit-tagged string in, `{value, unit}` out.
     AnyQuantity,
+    /// A short string: a designator or coded group in, a status phrase out.
+    Text { max_len: usize },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -304,6 +306,15 @@ impl<'a> Ctx<'a> {
             .unwrap_or_else(|| panic!("{} reads undeclared input {name}", self.def.id))
     }
 
+    /// True when this tool (or its parent) declares input `name`.
+    pub fn declares(&self, name: &str) -> bool {
+        self.def
+            .inputs
+            .iter()
+            .chain(self.def.parent.into_iter().flat_map(|p| p.inputs))
+            .any(|f| f.name == name)
+    }
+
     /// The raw JSON for an input: a preset wins, then the caller's value.
     pub fn raw(&self, name: &str) -> Option<&Value> {
         self.preset
@@ -457,6 +468,26 @@ impl<'a> Ctx<'a> {
             ));
         }
         Ok(Some(x))
+    }
+
+    /// Reads a text input, trimmed, within its declared length.
+    pub fn text(&self, name: &str) -> Result<Option<String>, ToolError> {
+        let f = self.field(name);
+        let Kind::Text { max_len } = f.kind else {
+            panic!("{name} is not a text field")
+        };
+        match self.raw(name) {
+            None => Ok(None),
+            Some(Value::String(s)) if s.trim().len() <= max_len => Ok(Some(s.trim().to_owned())),
+            Some(Value::String(_)) => Err(ToolError::invalid(
+                &pointer(name),
+                format!("{} is longer than {max_len} characters.", f.title),
+            )),
+            Some(_) => Err(ToolError::invalid(
+                &pointer(name),
+                format!("{} must be text.", f.title),
+            )),
+        }
     }
 
     /// The unit an output quantity field is reported in: `options.outputUnits`,
@@ -717,7 +748,7 @@ impl Scope for SentenceScope {
         self.values
             .iter()
             .find(|(k, _)| *k == name)
-            .map(|(_, v)| *v)
+            .map(|(_, v)| v.clone())
     }
     fn has_warning(&self, code: &str) -> bool {
         self.warnings.contains(&code)
@@ -744,25 +775,16 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, Json) {
                 let sym = q.iter().find(|(k, _)| k == "unit").map(|(_, v)| v);
                 match (num, sym, f.kind) {
                     (Some(Json::Num(x)), Some(Json::Str(u)), Kind::Quantity { q, .. }) => {
-                        Some(Val {
-                            value: *x,
-                            unit: units::by_symbol(q, u),
-                            precision,
-                        })
+                        Some(Val::num(*x, units::by_symbol(q, u), precision))
                     }
-                    (Some(Json::Num(x)), Some(Json::Str(u)), _) => Some(Val {
-                        value: *x,
-                        unit: units::any_by_symbol(u),
-                        precision,
-                    }),
+                    (Some(Json::Num(x)), Some(Json::Str(u)), _) => {
+                        Some(Val::num(*x, units::any_by_symbol(u), precision))
+                    }
                     _ => None,
                 }
             }
-            (Kind::Number { .. }, Some(Json::Num(x))) => Some(Val {
-                value: *x,
-                unit: None,
-                precision,
-            }),
+            (Kind::Number { .. }, Some(Json::Num(x))) => Some(Val::num(*x, None, precision)),
+            (Kind::Text { .. }, Some(Json::Str(t))) => Some(Val::text(t.clone())),
             _ => None,
         };
         if let Some(v) = val {
@@ -780,16 +802,17 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, Json) {
             continue;
         }
         let v = match f.kind {
-            Kind::Quantity { .. } => ctx.quantity(f.name).ok().flatten().map(|q| Val {
-                value: q.value,
-                unit: Some(q.unit),
-                precision: INPUT_PRECISION,
-            }),
-            Kind::Number { .. } => ctx.number(f.name).ok().flatten().map(|x| Val {
-                value: x,
-                unit: None,
-                precision: INPUT_PRECISION,
-            }),
+            Kind::Quantity { .. } => ctx
+                .quantity(f.name)
+                .ok()
+                .flatten()
+                .map(|q| Val::num(q.value, Some(q.unit), INPUT_PRECISION)),
+            Kind::Number { .. } => ctx
+                .number(f.name)
+                .ok()
+                .flatten()
+                .map(|x| Val::num(x, None, INPUT_PRECISION)),
+            Kind::Text { .. } => ctx.text(f.name).ok().flatten().map(Val::text),
             _ => None,
         };
         if let Some(v) = v {
@@ -802,11 +825,14 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, Json) {
             .iter()
             .filter(|(k, _)| def.outputs.iter().any(|f| f.name == *k))
             .map(|(k, v)| {
-                let text = match v.unit {
-                    Some(u) => {
+                let text = match (&v.text, v.unit) {
+                    (Some(t), _) => t.clone(),
+                    (None, Some(u)) => {
                         crate::display::quantity(v.value, u.symbol, v.precision, ctx.options.format)
                     }
-                    None => crate::display::number(v.value, v.precision, ctx.options.format),
+                    (None, None) => {
+                        crate::display::number(v.value, v.precision, ctx.options.format)
+                    }
                 };
                 ((*k).to_owned(), Json::str(text))
             })

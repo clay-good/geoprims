@@ -122,6 +122,10 @@
       "severity": "accuracy",
       "message": "Standard (ISA) temperature was assumed."
     },
+    "DRY_AIR_ASSUMED": {
+      "severity": "accuracy",
+      "message": "Dry air was assumed; humidity would raise density altitude."
+    },
     "HEURISTIC_DERATING": {
       "severity": "accuracy",
       "message": "A rule-of-thumb derating was applied."
@@ -233,6 +237,10 @@
     "CROSSES_ANTIMERIDIAN": {
       "severity": "info",
       "message": "The geometry crosses the antimeridian."
+    },
+    "VARIABLE_WIND": {
+      "severity": "info",
+      "message": "The wind direction varies; components are the worst case over its range."
     },
     "AZIMUTH_UNDEFINED": {
       "severity": "info",

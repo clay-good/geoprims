@@ -7,6 +7,8 @@ name = "gp-aviation"
 version = "0.1.0"
 dependencies = [
  "gp-base",
+ "libm",
+ "serde_json",
 ]
 
 [[package]]

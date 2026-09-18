@@ -18,6 +18,11 @@ const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outp
   <p><a href={route(t.domain)}>{DOMAIN_TITLES[t.domain] ?? t.domain}</a> › <a href={route(`${t.domain}.${t.group}`)}>{t.group.replaceAll('-', ' ')}</a></p>
   <h1>{t.title} {t.stability === 'experimental' && <span class="badge" title="Not yet fully verified">Experimental</span>}</h1>
   <p class="purpose">{t.summary}</p>
+  {['aviation', 'drone', 'navigation'].includes(t.domain) && (
+    <p class="card notice safety" role="note">
+      Planning aid only. Not certified for navigation or flight operations. Check official sources, your aircraft's POH/AFM, and current regulations.
+    </p>
+  )}
   <ToolApp client:load tool={client} example={ex.input} initial={initial} />
   <details class="card">
     <summary>How we got this</summary>

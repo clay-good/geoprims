@@ -71,6 +71,12 @@ fn field_schema(f: &Field, is_input: bool) -> Json {
             put("description", Json::str(f.help));
             put("x-quantity", Json::str("any"));
         }
+        Kind::Text { max_len } => {
+            put("type", Json::str("string"));
+            put("title", Json::str(f.title));
+            put("description", Json::str(f.help));
+            put("maxLength", Json::Num(max_len as f64));
+        }
         Kind::Number { min, max } => {
             put("type", Json::str("number"));
             put("title", Json::str(f.title));

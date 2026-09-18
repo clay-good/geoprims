@@ -33,6 +33,8 @@ pub enum Quantity {
     ElectricCharge,
     ElectricPotential,
     Density,
+    DynamicViscosity,
+    KinematicViscosity,
     Frequency,
     DataRate,
     Slope,
@@ -40,7 +42,7 @@ pub enum Quantity {
 }
 
 impl Quantity {
-    pub const ALL: [Quantity; 23] = [
+    pub const ALL: [Quantity; 25] = [
         Self::Length,
         Self::Distance,
         Self::Area,
@@ -60,6 +62,8 @@ impl Quantity {
         Self::ElectricCharge,
         Self::ElectricPotential,
         Self::Density,
+        Self::DynamicViscosity,
+        Self::KinematicViscosity,
         Self::Frequency,
         Self::DataRate,
         Self::Slope,
@@ -88,6 +92,8 @@ impl Quantity {
             Self::ElectricCharge => "electric-charge",
             Self::ElectricPotential => "electric-potential",
             Self::Density => "density",
+            Self::DynamicViscosity => "dynamic-viscosity",
+            Self::KinematicViscosity => "kinematic-viscosity",
             Self::Frequency => "frequency",
             Self::DataRate => "data-rate",
             Self::Slope => "slope",
@@ -121,6 +127,8 @@ impl Quantity {
             Self::ElectricCharge => "an electric charge",
             Self::ElectricPotential => "a voltage",
             Self::Density => "a density",
+            Self::DynamicViscosity => "a dynamic viscosity",
+            Self::KinematicViscosity => "a kinematic viscosity",
             Self::Frequency => "a frequency",
             Self::DataRate => "a data rate",
             Self::Slope => "a slope",
@@ -533,6 +541,9 @@ pub static UNITS: &[Unit] = &[
         ),
         &["lb/ft³", "pcf"],
     ),
+    // Viscosity (base Pa·s and m²/s)
+    u("Pa*s", Q::DynamicViscosity, ex(1, 1), &["Pa·s", "Pa s"]),
+    u("m2/s", Q::KinematicViscosity, ex(1, 1), &["m²/s"]),
     // Frequency (base Hz)
     u("Hz", Q::Frequency, ex(1, 1), &["hertz"]),
     u("kHz", Q::Frequency, ex(1000, 1), &[]),

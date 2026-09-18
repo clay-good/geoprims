@@ -56,3 +56,9 @@ test('ships the Wasm modules and the catalog at their contract routes', () => {
   assert.ok(existsSync(join(dist, 'catalog/v1.json')));
   for (const m of ['base', 'link']) assert.ok(existsSync(join(dist, 'wasm', `${m}.wasm`)), m);
 });
+
+test('every aviation, drone, and navigation page shows the safety notice', () => {
+  for (const t of catalog.tools.filter((x) => ['aviation', 'drone', 'navigation'].includes(x.domain))) {
+    assert.match(page(route(t.id)), /Not certified for navigation/, t.id);
+  }
+});

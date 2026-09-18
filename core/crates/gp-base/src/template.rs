@@ -14,11 +14,33 @@ use crate::tool::Precision;
 use crate::units::{self, Unit};
 
 /// A value the template can show.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Val {
     pub value: f64,
     pub unit: Option<&'static Unit>,
     pub precision: Precision,
+    /// Text outputs (e.g. a status phrase) render as-is; their `value` is NaN.
+    pub text: Option<String>,
+}
+
+impl Val {
+    pub fn num(value: f64, unit: Option<&'static Unit>, precision: Precision) -> Val {
+        Val {
+            value,
+            unit,
+            precision,
+            text: None,
+        }
+    }
+
+    pub fn text(text: impl Into<String>) -> Val {
+        Val {
+            value: f64::NAN,
+            unit: None,
+            precision: Precision::Significant(1),
+            text: Some(text.into()),
+        }
+    }
 }
 
 /// Where a template reads values and warnings from.
@@ -241,6 +263,9 @@ fn eval(e: &Expr, s: &dyn Scope) -> Option<Val> {
 }
 
 fn show(v: Val, forced: Option<&str>, fmt: NumberFormat) -> String {
+    if let Some(t) = v.text {
+        return t;
+    }
     let (value, unit) = match (v.unit, forced) {
         (Some(u), Some(sym)) => match units::by_symbol(u.quantity, sym) {
             Some(to) => (units::convert(v.value, u, to), Some(to)),
@@ -420,7 +445,10 @@ mod tests {
     struct S(Vec<(&'static str, Val)>, Vec<&'static str>);
     impl Scope for S {
         fn get(&self, name: &str) -> Option<Val> {
-            self.0.iter().find(|(k, _)| *k == name).map(|(_, v)| *v)
+            self.0
+                .iter()
+                .find(|(k, _)| *k == name)
+                .map(|(_, v)| v.clone())
         }
         fn has_warning(&self, code: &str) -> bool {
             self.1.contains(&code)
@@ -431,11 +459,7 @@ mod tests {
     }
 
     fn ft(x: f64) -> Val {
-        Val {
-            value: x,
-            unit: by_symbol(Quantity::Length, "ft"),
-            precision: Precision::Decimals(0),
-        }
+        Val::num(x, by_symbol(Quantity::Length, "ft"), Precision::Decimals(0))
     }
 
     fn scope(da: f64) -> S {
@@ -443,14 +467,7 @@ mod tests {
             vec![
                 ("da", ft(da)),
                 ("elevation", ft(5000.0)),
-                (
-                    "n",
-                    Val {
-                        value: 1.0,
-                        unit: None,
-                        precision: Precision::Decimals(0),
-                    },
-                ),
+                ("n", Val::num(1.0, None, Precision::Decimals(0))),
             ],
             vec![],
         )
@@ -475,14 +492,7 @@ mod tests {
         let s = S(
             vec![
                 ("da", ft(1000.0)),
-                (
-                    "n",
-                    Val {
-                        value: 1.0,
-                        unit: None,
-                        precision: Precision::Decimals(0),
-                    },
-                ),
+                ("n", Val::num(1.0, None, Precision::Decimals(0))),
             ],
             vec!["ISA_TEMPERATURE_ASSUMED"],
         );
@@ -493,6 +503,19 @@ mod tests {
         );
         assert_eq!(render("A{warn OTHER} x{/warn}.", &s), "A.");
         assert_eq!(render("{n} {plural n \"image\" \"images\"}", &s), "1 image");
+    }
+
+    #[test]
+    fn text_values_render_as_is() {
+        let s = S(
+            vec![("status", Val::text("Beyond your 15 kt crosswind limit"))],
+            vec![],
+        );
+        assert_eq!(
+            render("{status}.", &s),
+            "Beyond your 15 kt crosswind limit."
+        );
+        assert_eq!(render("{if status > 1}x{else}y{/if}", &s), "y");
     }
 
     #[test]

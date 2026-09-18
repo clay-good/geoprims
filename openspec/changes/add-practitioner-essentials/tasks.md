@@ -6,7 +6,7 @@
 
 ## 2. Solar and twilight
 
-- [ ] 2.1 Implement NREL SPA with ΔT table and DUT1 input, plus the NOAA cross-check; verify the NREL test point and the UT1 warning scenario (done so far: the NOAA position equations (azimuth, elevation with refraction, declination, equation of time, hour angle); pending: NREL SPA with ΔT and DUT1, the NREL test point, and UT1_APPROXIMATED)
+- [x] 2.1 Implement NREL SPA with ΔT table and DUT1 input, plus the NOAA cross-check; verify the NREL test point and the UT1 warning scenario (NREL Table A5.1 to 1e-5°, and 25 random points against pvlib's SPA to 1e-8°; ΔT from the Espenak and Meeus polynomials with an override)
 - [ ] 2.2 Implement rise/set/twilight with polar states and dated local/UTC output; verify the polar-night, after-00:00Z, and NOAA-agreement scenarios (done so far: rise, set, noon, day length, and civil, nautical, and astronomical twilight with polar states, dated local and Zulu; verified against USNO at six sites (within 1 minute) and the polar-night and after-00:00Z scenarios; pending: the 1,000-point NOAA sweep)
 - [ ] 2.3 Implement the four aviation nights from dated reference data; verify both night scenarios and obtain CFI review (done so far: all four windows with their regulations and a landing check (loggable versus currency); pending: rule text as dated reference data and CFI review)
 - [ ] 2.4 Implement the night-currency counter; verify the lapse-date scenario against the regulation's counting convention

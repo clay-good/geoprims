@@ -5,6 +5,8 @@
 
 pub mod civil;
 pub mod solar;
+pub mod spa;
+mod spa_tables;
 pub mod sun;
 
 use civil::{Stamp, TAI_MINUS_GPS};

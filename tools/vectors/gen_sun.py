@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Golden vectors for time.sun.*.
+"""Golden vectors for time.sun.* (needs pvlib for the SPA vectors).
 
 Rise, set, transit, and civil twilight times are USNO Astronomical Applications
 API values (aa.usno.navy.mil/api/rstt/oneday, retrieved 2026-09-18), which the
@@ -59,16 +59,28 @@ def noaa(lat, lon, dt):
 
 
 def position():
-    cases = [(39.7392, -104.9903, "2026-06-21T18:00:00+00:00"), (40.4406, -79.9959, "2026-09-18T16:00:00+00:00"), (-33.8688, 151.2093, "2026-12-21T02:00:00+00:00"),
-             (51.5074, -0.1278, "2026-01-15T12:10:00+00:00"), (64.8378, -147.7164, "2026-03-20T22:00:00+00:00")]
+    """SPA vectors from pvlib's port of NREL SPA (run with a Python that has
+    pvlib, e.g. a scratch virtualenv), plus the NREL published example."""
+    import random
+    import pandas as pd
+    from pvlib.solarposition import spa_python
+    rng = random.Random(20260918)
     out = []
-    for i, (la, lo, t) in enumerate(cases, 1):
-        el, az, dec = noaa(la, lo, datetime.fromisoformat(t))
-        out.append(vec(i, {"lat": la, "lon": lo, "time": t}, {"result.elevation.value": el, "result.azimuth.value": az, "result.declination.value": dec}, NOAA, NOAA_VER))
-    el, az, _ = noaa(39.7392, -104.9903, datetime.fromisoformat("2026-06-21T18:00:00+00:00"))
-    out.append(vec(6, {"lat": 39.7392, "lon": -104.9903, "time": "2026-06-21T12:00-06:00", "object_height": "10 m"},
-                   {"result.shadow_length.value": 10 / math.tan(el * R), "result.shadow_azimuth.value": (az + 180) % 360}, NOAA, NOAA_VER))
-    out.append(vec(7, {"lat": 39.7392, "lon": -104.9903, "time": "2026-06-21T12:00"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    nrel = {"lat": 39.742476, "lon": -105.1786, "time": "2003-10-17T12:30:30-07:00", "height": "1830.14 m", "pressure": "820 hPa",
+            "temperature": "11 degC", "delta_t": "67 s"}
+    out.append(vec(1, nrel, {"result.zenith.value": 50.11162, "result.azimuth.value": 194.34024, "result.equation_of_time.value": 14.641503},
+                   "NREL/TP-560-34302 Table A5.1 (published to 1e-5)", "2008", tol=1e-5))
+    for i in range(2, 27):
+        la, lo = rng.uniform(-66, 66), rng.uniform(-180, 180)
+        stamp = f"{rng.randint(1950, 2080)}-{rng.randint(1, 12):02d}-{rng.randint(1, 28):02d}T{rng.randint(0, 23):02d}:{rng.randint(0, 59):02d}:{rng.randint(0, 59):02d}Z"
+        h, pr, tc, dt = round(rng.uniform(0, 3000), 1), round(rng.uniform(700, 1030), 1), round(rng.uniform(-20, 35), 1), round(rng.uniform(30, 90), 2)
+        inp = {"lat": round(la, 6), "lon": round(lo, 6), "time": stamp, "height": f"{h} m", "pressure": f"{pr} hPa", "temperature": f"{tc} degC", "delta_t": f"{dt} s"}
+        r = spa_python(pd.DatetimeIndex([stamp]), inp["lat"], inp["lon"], altitude=h, pressure=pr * 100, temperature=tc, delta_t=dt, atmos_refract=0.5667, how="numpy").iloc[0]
+        out.append(vec(i, inp, {"result.zenith.value": float(r["apparent_zenith"]), "result.azimuth.value": float(r["azimuth"]),
+                                "result.elevation_true.value": float(r["elevation"]), "result.equation_of_time.value": float(r["equation_of_time"])},
+                       "pvlib.solarposition.spa_python (NREL SPA port)", "pvlib 0.13.0", tol=1e-8))
+    out.append(vec(27, {"lat": 39.7392, "lon": -104.9903, "time": "2026-06-21T12:00"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    out.append(vec(28, {"lat": 39.7392, "lon": -104.9903, "time": "2026-06-21T12:00Z", "precision": "survey"}, {"meta.warnings.1.code": "UT1_APPROXIMATED"}, SPEC, "2026"))
     return out
 
 

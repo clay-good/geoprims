@@ -161,15 +161,43 @@ fn local_noon(lon: f64, day: i64, offset: i32) -> f64 {
 
 // ---------------------------------------------------------------- position
 
+const NREL_SPA: Reference = Reference {
+    title: "Solar Position Algorithm for Solar Radiation Applications (NREL/TP-560-34302)",
+    issuer: "Reda, I., and Andreas, A., National Renewable Energy Laboratory",
+    year: 2008,
+    edition: "Revised January 2008",
+    locator: "Sections 3.1 to 3.15 and Tables A4.2, A4.3; worked example in Table A5.1",
+    url: "https://www.nrel.gov/docs/fy08osti/34302.pdf",
+};
+const ESPENAK_MEEUS: Reference = Reference {
+    title: "Polynomial Expressions for Delta T",
+    issuer: "Espenak, F., and Meeus, J., NASA Goddard Space Flight Center",
+    year: 2006,
+    edition: "Five Millennium Canon of Solar Eclipses",
+    locator: "ΔT polynomials, −1999 to +3000",
+    url: "https://eclipse.gsfc.nasa.gov/SEcat5/deltatpoly.html",
+};
+
+const fn opt_q(
+    name: &'static str,
+    title: &'static str,
+    help: &'static str,
+    q: QT,
+    unit: &'static str,
+) -> Field {
+    Field::new(name, title, help, Kind::Quantity { q, unit })
+}
+
 pub static POSITION: ToolDef = ToolDef {
     id: "time.sun.position",
     title: "Sun position (azimuth and elevation)",
-    summary: "The sun's azimuth, elevation, declination, and hour angle for a place and time, with shadow length and incidence on a slope.",
+    summary: "The sun's azimuth, elevation, declination, and hour angle for a place and time by the NREL Solar Position Algorithm, with the NOAA result as a cross-check, shadow length, and incidence on a slope.",
     aliases: &[
         "sun position calculator",
         "solar azimuth",
         "sun angle calculator",
         "shadow length",
+        "solar position algorithm",
     ],
     keywords: &[
         "sun",
@@ -181,6 +209,8 @@ pub static POSITION: ToolDef = ToolDef {
         "shadow",
         "slope",
         "incidence",
+        "SPA",
+        "NREL",
     ],
     inputs: &[
         LAT,
@@ -222,6 +252,47 @@ pub static POSITION: ToolDef = ToolDef {
             },
         )
         .angle_range("[0,360)"),
+        opt_q(
+            "height",
+            "Observer height",
+            "Above the ellipsoid, for parallax (default 0)",
+            QT::Length,
+            "m",
+        ),
+        opt_q(
+            "pressure",
+            "Air pressure",
+            "Average local pressure for refraction (default 1013.25 hPa)",
+            QT::Pressure,
+            "hPa",
+        ),
+        opt_q(
+            "temperature",
+            "Air temperature",
+            "Average local temperature for refraction (default 12 °C)",
+            QT::Temperature,
+            "degC",
+        ),
+        opt_q(
+            "delta_t",
+            "ΔT (TT − UT1)",
+            "Override the dated ΔT estimate, like 69.2 s",
+            QT::Time,
+            "s",
+        ),
+        opt_q(
+            "dut1",
+            "DUT1 (UT1 − UTC)",
+            "From IERS Bulletin A, like -0.03 s (survey azimuths)",
+            QT::Time,
+            "s",
+        ),
+        Field::new(
+            "precision",
+            "Purpose",
+            "standard (default) or survey (asks for DUT1)",
+            Kind::Choice(&["standard", "survey"]),
+        ),
     ],
     outputs: &[
         Field::new(
@@ -233,7 +304,7 @@ pub static POSITION: ToolDef = ToolDef {
                 unit: "deg",
             },
         )
-        .precision(Precision::Decimals(2))
+        .precision(Precision::Decimals(4))
         .angle_range("[-90,90]"),
         Field::new(
             "azimuth",
@@ -244,7 +315,7 @@ pub static POSITION: ToolDef = ToolDef {
                 unit: "deg",
             },
         )
-        .precision(Precision::Decimals(2))
+        .precision(Precision::Decimals(4))
         .angle_range("[0,360)"),
         Field::new(
             "zenith",
@@ -255,7 +326,7 @@ pub static POSITION: ToolDef = ToolDef {
                 unit: "deg",
             },
         )
-        .precision(Precision::Decimals(2))
+        .precision(Precision::Decimals(4))
         .angle_range("[0,180]"),
         Field::new(
             "elevation_true",
@@ -266,18 +337,18 @@ pub static POSITION: ToolDef = ToolDef {
                 unit: "deg",
             },
         )
-        .precision(Precision::Decimals(2))
+        .precision(Precision::Decimals(4))
         .angle_range("[-90,90]"),
         Field::new(
             "declination",
             "Declination",
-            "Of the sun",
+            "Topocentric",
             Kind::Quantity {
                 q: QT::Angle,
                 unit: "deg",
             },
         )
-        .precision(Precision::Decimals(3))
+        .precision(Precision::Decimals(4))
         .angle_range("[-90,90]"),
         Field::new(
             "equation_of_time",
@@ -292,14 +363,46 @@ pub static POSITION: ToolDef = ToolDef {
         Field::new(
             "hour_angle",
             "Hour angle",
-            "Negative before solar noon",
+            "Topocentric, negative before solar noon",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(4))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "delta_t_used",
+            "ΔT used",
+            "TT − UT1",
+            Kind::Quantity {
+                q: QT::Time,
+                unit: "s",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "noaa_elevation",
+            "NOAA cross-check elevation",
+            "Low-accuracy NOAA equations",
             Kind::Quantity {
                 q: QT::Angle,
                 unit: "deg",
             },
         )
         .precision(Precision::Decimals(2))
-        .angle_range("[-180,180)"),
+        .angle_range("[-90,90]"),
+        Field::new(
+            "noaa_azimuth",
+            "NOAA cross-check azimuth",
+            "Low-accuracy NOAA equations",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("[0,360)"),
         Field::new(
             "shadow_length",
             "Shadow length",
@@ -339,18 +442,19 @@ pub static POSITION: ToolDef = ToolDef {
     errors: &[],
     warnings: &[
         "SUN_BELOW_HORIZON",
+        "UT1_APPROXIMATED",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
-    model: "NOAA solar position (Meeus-based) with NOAA refraction; UT1 taken as UTC",
-    accuracy: "About 0.01° between −2000 and 3000 CE (the NREL SPA, ±0.0003°, is planned)",
-    references: &[NOAA, MEEUS],
+    model: "NREL Solar Position Algorithm (topocentric, with refraction from pressure and temperature); ΔT from Espenak and Meeus unless given; NOAA equations as a cross-check",
+    accuracy: "±0.0003° (SPA, −2000 to 6000) with UT1; taking UT1 as UTC adds up to about 0.004° of azimuth",
+    references: &[NREL_SPA, ESPENAK_MEEUS, NOAA],
     examples: &[Example {
         id: "primary",
         title: "Denver at 12:00 MDT on the June solstice",
         input: r#"{"lat":39.7392,"lon":-104.9903,"time":"2026-06-21T12:00-06:00","object_height":"10 m"}"#,
-        source: "NOAA solar calculator equations",
+        source: "NREL SPA",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -378,21 +482,64 @@ fn run_position(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let (d, s) = crate::to_utc(st);
-    let p = sun::position(lat, lon, jd(d, s.min(86_400.0) / 60.0));
-    let apparent = p.elevation + p.refraction;
+    let secs = |q: Option<Q>| q.map(|q| q.to(units::by_symbol(QT::Time, "s").expect("s")));
+    let dut1 = secs(ctx.quantity("dut1")?);
+    if let Some(v) = dut1
+        && v.abs() > 0.9
+    {
+        return Err(ToolError::invalid(
+            "/dut1",
+            "DUT1 stays within ±0.9 s by definition.",
+        ));
+    }
+    if ctx.choice("precision")? == Some("survey") && dut1.is_none() {
+        ctx.warnings.push(Warning::new(
+            "UT1_APPROXIMATED",
+            "UT1 was taken as UTC. That can shift the azimuth by up to about 0.004°; give DUT1 from IERS Bulletin A for survey work.",
+        ));
+    }
+    let jd_utc = jd(d, s.min(86_400.0) / 60.0);
+    let jd_ut1 = jd_utc + dut1.unwrap_or(0.0) / 86_400.0;
+    let (y, mo, _) = civil::civil_from_days(d);
+    let dt = secs(ctx.quantity("delta_t")?)
+        .unwrap_or_else(|| crate::spa::delta_t(y as f64, f64::from(mo)));
+    let height = ctx
+        .quantity("height")?
+        .map_or(0.0, |h| h.to(units::by_symbol(QT::Length, "m").expect("m")));
+    let pressure = ctx.quantity("pressure")?.map_or(1013.25, |p| {
+        p.to(units::by_symbol(QT::Pressure, "hPa").expect("hPa"))
+    });
+    let temperature = ctx.quantity("temperature")?.map_or(12.0, |t| {
+        t.to(units::by_symbol(QT::Temperature, "degC").expect("degC"))
+    });
+    let p = crate::spa::position(
+        jd_ut1,
+        dt,
+        crate::spa::Observer {
+            lat,
+            lon,
+            elevation: height,
+            pressure,
+            temperature,
+            atmos_refract: 0.5667,
+        },
+    );
+    let apparent = 90.0 - p.zenith;
     if apparent < 0.0 {
         ctx.warnings.push(Warning::new(
             "SUN_BELOW_HORIZON",
             "The sun is below the horizon at this time.",
         ));
     }
+    let noaa = sun::position(lat, lon, jd_utc);
+    let ha = (p.hour_angle + 180.0).rem_euclid(360.0) - 180.0;
     let mut out = vec![
         ("elevation", ctx.out("elevation", deg(apparent))),
         ("azimuth", ctx.out("azimuth", deg(p.azimuth))),
-        ("zenith", ctx.out("zenith", deg(90.0 - apparent))),
+        ("zenith", ctx.out("zenith", deg(p.zenith))),
         (
             "elevation_true",
-            ctx.out("elevation_true", deg(p.elevation)),
+            ctx.out("elevation_true", deg(p.elevation_true)),
         ),
         ("declination", ctx.out("declination", deg(p.declination))),
         (
@@ -405,7 +552,22 @@ fn run_position(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 },
             ),
         ),
-        ("hour_angle", ctx.out("hour_angle", deg(p.hour_angle))),
+        ("hour_angle", ctx.out("hour_angle", deg(ha))),
+        (
+            "delta_t_used",
+            ctx.out(
+                "delta_t_used",
+                Q {
+                    value: dt,
+                    unit: units::by_symbol(QT::Time, "s").expect("s"),
+                },
+            ),
+        ),
+        (
+            "noaa_elevation",
+            ctx.out("noaa_elevation", deg(noaa.elevation + noaa.refraction)),
+        ),
+        ("noaa_azimuth", ctx.out("noaa_azimuth", deg(noaa.azimuth))),
     ];
     if let Some(h) = ctx.quantity("object_height")?
         && apparent > 0.0
@@ -438,7 +600,7 @@ fn run_position(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 "Give the direction the slope faces with its tilt.",
             )
         })?;
-        let z = (90.0 - apparent).to_radians();
+        let z = p.zenith.to_radians();
         let c = cos(z) * cos(sl.to_radians())
             + sin(z) * sin(sl.to_radians()) * cos((p.azimuth - asp).to_radians());
         out.push((

@@ -1,0 +1,18 @@
+{
+  "name": "@geoprims/web",
+  "private": true,
+  "type": "module",
+  "description": "The geoprims static website (Astro + Svelte islands).",
+  "scripts": {
+    "prepare-assets": "node scripts/prepare-assets.mjs",
+    "build": "npm run prepare-assets && astro build",
+    "dev": "npm run prepare-assets && astro dev",
+    "preview": "astro preview",
+    "test": "node --test 'test/**/*.test.mjs'"
+  },
+  "devDependencies": {
+    "@astrojs/svelte": "9.0.1",
+    "astro": "7.3.3",
+    "svelte": "5.57.0"
+  }
+}

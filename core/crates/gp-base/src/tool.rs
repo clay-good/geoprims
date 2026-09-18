@@ -624,7 +624,7 @@ impl Registry {
 
     fn run(&self, def: &'static ToolDef, input: &Value) -> String {
         match execute(def, input) {
-            Ok((result, summary, warnings)) => {
+            Ok((result, summary, display, warnings)) => {
                 let meta = Meta {
                     tool: def.id.to_owned(),
                     tool_version: def.version.to_owned(),
@@ -633,7 +633,7 @@ impl Registry {
                     accuracy: def.accuracy.to_owned(),
                     warnings,
                 };
-                envelope::success(result, summary.as_deref(), &meta)
+                envelope::success(result, summary.as_deref(), display, &meta)
             }
             Err(e) => envelope::failure(&e),
         }
@@ -644,7 +644,8 @@ fn limit(def: &ToolDef, name: &str) -> Option<u64> {
     def.limits.iter().find(|(k, _)| *k == name).map(|(_, v)| *v)
 }
 
-type Executed = (Json, Option<String>, Vec<Warning>);
+/// Result, rendered sentence, display strings per output, and warnings.
+type Executed = (Json, Option<String>, Json, Vec<Warning>);
 
 fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> {
     let Value::Object(map) = input else {
@@ -681,15 +682,25 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
             return Err(ctx.missing(f.name));
         }
     }
-    let result = (def.run)(&mut ctx)?;
+    let mut result = (def.run)(&mut ctx)?;
+    // Results list outputs in schema order (the first is the primary result).
+    if let Json::Obj(pairs) = &mut result {
+        let rank = |k: &str| {
+            def.outputs
+                .iter()
+                .position(|f| f.name == k)
+                .unwrap_or(usize::MAX)
+        };
+        pairs.sort_by_key(|(k, _)| rank(k));
+    }
     if def.stability == Stability::Experimental {
         ctx.warnings.push(Warning::new(
             "EXPERIMENTAL_TOOL",
             "This tool is experimental: it has not yet met the stable verification bar.",
         ));
     }
-    let summary = render_summary(&mut ctx, &result);
-    Ok((result, Some(summary), ctx.warnings))
+    let (summary, display) = render_summary(&mut ctx, &result);
+    Ok((result, Some(summary), display, ctx.warnings))
 }
 
 /// Display precision for input values echoed in sentences.
@@ -716,8 +727,9 @@ impl Scope for SentenceScope {
     }
 }
 
-/// Renders the tool's `x-sentence` from its outputs (first) and inputs.
-fn render_summary(ctx: &mut Ctx, result: &Json) -> String {
+/// Renders the tool's `x-sentence` from its outputs (first) and inputs, and
+/// each output as display text (rounded to its display precision, with its unit).
+fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, Json) {
     let def = ctx.def;
     let get = |name: &str| match result {
         Json::Obj(pairs) => pairs.iter().find(|(k, _)| k == name).map(|(_, v)| v),
@@ -785,12 +797,27 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> String {
         }
     }
     ctx.warnings.truncate(n);
+    let display = Json::Obj(
+        values
+            .iter()
+            .filter(|(k, _)| def.outputs.iter().any(|f| f.name == *k))
+            .map(|(k, v)| {
+                let text = match v.unit {
+                    Some(u) => {
+                        crate::display::quantity(v.value, u.symbol, v.precision, ctx.options.format)
+                    }
+                    None => crate::display::number(v.value, v.precision, ctx.options.format),
+                };
+                ((*k).to_owned(), Json::str(text))
+            })
+            .collect(),
+    );
     let scope = SentenceScope {
         values,
         warnings: ctx.warnings.iter().map(|w| w.code).collect(),
         format: ctx.options.format,
     };
-    template::render(def.sentence, &scope)
+    (template::render(def.sentence, &scope), display)
 }
 
 fn parse_options(def: &ToolDef, v: Option<&Value>) -> Result<Options, ToolError> {

@@ -79,8 +79,8 @@ macro_rules! convert_op {
                 Field::new("to", "To unit", "The unit to convert to", Kind::Unit($q)).required().core(),
             ],
             outputs: &[
-                Field::new("input", "Input", "The value as read, in its unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
                 Field::new("converted", "Converted", "The value in the target unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
+                Field::new("input", "Input", "The value as read, in its unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
             ],
             warnings: CONVERT_WARNINGS,
             model: "Exact unit definitions",
@@ -244,9 +244,9 @@ pub static CHARGE: ToolDef = ToolDef {
     ],
     outputs: &[
         Field::new(
-            "input",
-            "Input",
-            "The charge as read",
+            "converted",
+            "Converted",
+            "The charge in the target unit",
             Kind::Quantity {
                 q: QT::ElectricCharge,
                 unit: "mAh",
@@ -254,9 +254,9 @@ pub static CHARGE: ToolDef = ToolDef {
         )
         .precision(P8),
         Field::new(
-            "converted",
-            "Converted",
-            "The charge in the target unit",
+            "input",
+            "Input",
+            "The charge as read",
             Kind::Quantity {
                 q: QT::ElectricCharge,
                 unit: "mAh",
@@ -381,22 +381,22 @@ pub static FUEL: ToolDef = ToolDef {
     ],
     outputs: &[
         Field::new(
-            "volume",
-            "Volume",
-            "Fuel volume",
-            Kind::Quantity {
-                q: QT::Volume,
-                unit: "galUS",
-            },
-        )
-        .precision(Precision::Decimals(1)),
-        Field::new(
             "mass",
             "Weight",
             "Fuel weight",
             Kind::Quantity {
                 q: QT::Mass,
                 unit: "lb",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "volume",
+            "Volume",
+            "Fuel volume",
+            Kind::Quantity {
+                q: QT::Volume,
+                unit: "galUS",
             },
         )
         .precision(Precision::Decimals(1)),
@@ -535,8 +535,8 @@ fn run_fuel(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     Ok(Json::obj([
-        ("volume", ctx.out("volume", v)),
         ("mass", ctx.out("mass", m)),
+        ("volume", ctx.out("volume", v)),
         ("density", ctx.out("density", density)),
     ]))
 }
@@ -574,6 +574,17 @@ pub static SLOPE: ToolDef = ToolDef {
     ],
     outputs: &[
         Field::new(
+            "degrees",
+            "Angle",
+            "The angle above horizontal",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("unbounded"),
+        Field::new(
             "ratio",
             "Rise/run",
             "Rise over run",
@@ -603,17 +614,6 @@ pub static SLOPE: ToolDef = ToolDef {
             },
         )
         .precision(Precision::Decimals(1)),
-        Field::new(
-            "degrees",
-            "Angle",
-            "The angle above horizontal",
-            Kind::Quantity {
-                q: QT::Angle,
-                unit: "deg",
-            },
-        )
-        .precision(Precision::Decimals(2))
-        .angle_range("unbounded"),
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &["EXPERIMENTAL_TOOL"],
@@ -622,9 +622,9 @@ pub static SLOPE: ToolDef = ToolDef {
     references: &[NIST_811],
     examples: &[Example {
         id: "primary",
-        title: "A 1:12 wheelchair ramp (8.33%) in degrees",
-        input: r#"{"value":8.333333333333334,"from":"percent"}"#,
-        source: "ratio = 1/12; angle = atan(1/12) = 4.7636°",
+        title: "A 1:12 wheelchair ramp (about 8.33%) in degrees",
+        input: r#"{"value":8.33,"from":"percent"}"#,
+        source: "Definition of grade: angle = atan(0.0833) = 4.76°; a 1:12 ramp is 8.33%",
     }],
     primary_example: "primary",
     visualization: TABLE,
@@ -738,7 +738,6 @@ pub static NORMALIZE: ToolDef = ToolDef {
         .core(),
     ],
     outputs: &[
-        Field::new("input", "Input", "The value as read", Kind::AnyQuantity).precision(P8),
         Field::new(
             "normalized",
             "Canonical value",
@@ -746,6 +745,7 @@ pub static NORMALIZE: ToolDef = ToolDef {
             Kind::AnyQuantity,
         )
         .precision(P8),
+        Field::new("input", "Input", "The value as read", Kind::AnyQuantity).precision(P8),
     ],
     warnings: CONVERT_WARNINGS,
     model: "Exact unit definitions",

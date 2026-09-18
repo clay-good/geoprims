@@ -1,0 +1,149 @@
+<script>
+  // The interactive tool: schema-driven form, live answer card, permalinks.
+  // Server-rendered with the worked example, so the answer is in the HTML.
+  import { onMount } from 'svelte';
+
+  let { tool, example, initial } = $props();
+
+  const fields = Object.entries(tool.inputs.properties).filter(([k]) => k !== 'options');
+  const required = new Set(tool.inputs.required);
+  const primary = Object.keys(tool.outputs.properties)[0];
+
+  let values = $state(Object.fromEntries(fields.map(([k]) => [k, example[k] === undefined ? '' : String(example[k])])));
+  let result = $state(initial);
+  let isExample = $state(true);
+  let stale = $state(false);
+  let copied = $state('');
+  let linkNote = $state('');
+  let compute;
+  let timer;
+
+  // Display text comes from the core (display precision, grouping, unit labels).
+  const answer = $derived(result?.ok ? result.display?.[primary] ?? '' : '');
+  // Cautions first, then accuracy notes, then info (codes registry severities).
+  const RANK = { caution: 0, accuracy: 1, info: 2 };
+  const severityOf = (code) => tool.severity[code] ?? 'info';
+  const warnings = $derived(
+    result?.ok ? [...result.meta.warnings].sort((a, b) => RANK[severityOf(a.code)] - RANK[severityOf(b.code)]) : [],
+  );
+  const secondary = $derived(result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary) : []);
+
+  function args() {
+    const a = {};
+    for (const [k, schema] of fields) {
+      const v = values[k].trim();
+      if (v === '') continue;
+      a[k] = schema.type === 'number' && !Number.isNaN(Number(v)) && /^[-+]?[\d.]+(e[-+]?\d+)?$/i.test(v) ? Number(v) : v;
+    }
+    return a;
+  }
+
+  async function run() {
+    stale = true;
+    const a = args();
+    const out = await compute.invoke(tool.id, a);
+    if (!out) return; // superseded by a newer edit
+    result = out;
+    stale = false;
+    const enc = await compute.encodeLink({ i: a });
+    if (enc?.ok) history.replaceState(null, '', `#${enc.result.fragment}`);
+  }
+
+  function edited() {
+    isExample = false;
+    clearTimeout(timer);
+    timer = setTimeout(run, 150);
+  }
+
+  function clearAll() {
+    for (const [k] of fields) values[k] = '';
+    edited();
+  }
+
+  function tryExample() {
+    for (const [k] of fields) values[k] = example[k] === undefined ? '' : String(example[k]);
+    isExample = true;
+    history.replaceState(null, '', '#example');
+    run();
+  }
+
+  async function copy(kind) {
+    const text =
+      kind === 'value'
+        ? answer
+        : kind === 'sentence'
+          ? `${result.summary} (geoprims ${tool.id} ${tool.version})`
+          : JSON.stringify({ tool: 'geoprims_run', arguments: { id: tool.id, args: args() } });
+    await navigator.clipboard.writeText(text);
+    copied = kind;
+    setTimeout(() => (copied = ''), 1500);
+  }
+
+  onMount(async () => {
+    compute = await import('../lib/compute.js');
+    const hash = location.hash.slice(1);
+    if (hash && hash !== 'example') {
+      const d = await compute.decodeLink(hash);
+      if (d.ok && d.result.kind === 'state') {
+        for (const [k] of fields) values[k] = d.result.state.i?.[k] === undefined ? '' : String(d.result.state.i[k]);
+        isExample = false;
+        run();
+      } else if (!d.ok) {
+        linkNote = d.error.code === 'UNSUPPORTED' ? d.error.message : 'This link could not be read, so the example is shown.';
+      }
+    }
+  });
+</script>
+
+<section class="card answer sticky" aria-live="polite" class:stale>
+  {#if result?.ok}
+    {#if warnings.length}
+      <ul class="warnings">
+        {#each warnings as w}
+          <li class={severityOf(w.code)}>{#if severityOf(w.code) === 'caution'}<span aria-hidden="true">⚠ </span><span class="sr-only">Caution: </span>{/if}{w.message}</li>
+        {/each}
+      </ul>
+    {/if}
+    <div class="value">{answer}</div>
+    <p class="sentence">{result.summary}</p>
+    {#if secondary.length}
+      <ul class="secondary">
+        {#each secondary as [k, v]}<li>{tool.outputs.properties[k]?.title ?? k}: {v}</li>{/each}
+      </ul>
+    {/if}
+    <div class="actions">
+      <button type="button" onclick={() => copy('value')}>{copied === 'value' ? 'Copied' : 'Copy value'}</button>
+      <button type="button" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied' : 'Copy sentence'}</button>
+      <button type="button" onclick={() => copy('agent')}>{copied === 'agent' ? 'Copied' : 'Copy as agent call'}</button>
+    </div>
+  {:else if result}
+    <p class="error">{result.error.message}</p>
+    {#if result.error.hint}<p>{result.error.hint}</p>{/if}
+  {/if}
+</section>
+
+{#if linkNote}<p class="notice">{linkNote}</p>{/if}
+
+<form class="card" onsubmit={(e) => e.preventDefault()}>
+  {#if isExample}<p class="chip">Example values</p>{/if}
+  <div class="fields">
+    {#each fields as [name, schema]}
+      <label>
+        {schema.title}{required.has(name) ? '' : ' (optional)'}
+        {#if schema.enum}
+          <select bind:value={values[name]} onchange={edited}>
+            {#if !required.has(name)}<option value="">—</option>{/if}
+            {#each schema.enum as option}<option value={option}>{option}</option>{/each}
+          </select>
+        {:else}
+          <input bind:value={values[name]} oninput={edited} autocomplete="off" spellcheck="false" />
+        {/if}
+        <span class="help">{schema.description}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · a bare number is in ${schema['x-unit']}` : ''}</span>
+      </label>
+    {/each}
+  </div>
+  <div class="actions">
+    <button type="button" onclick={clearAll}>Clear</button>
+    <button type="button" onclick={tryExample}>Try the example</button>
+  </div>
+</form>

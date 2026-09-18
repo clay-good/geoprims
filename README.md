@@ -83,13 +83,14 @@ openspec validate --all --strict
 |---|---|
 | `establish-platform-foundation` | Monorepo layout and pinned toolchain; one import-free `.wasm` per domain behind a raw C ABI, with an import lint and Brotli budgets, each proven against a bad fixture; `gp-base` (exact unit registry, unit-tagged parsing, angle normalization, error and warning model, ECMAScript-format numbers, unit profiles, result envelope); the tool runtime (`invoke`, `invokeBatch`, `manifest`) and manifest lint; `packages/runtime` (shared loader, input hardening, Node host); `catalog/v1.json` generation; golden vectors with a provenance lint and a silent-edit guard; **the units domain: 22 operations and 35 allow-listed pair endpoints (57 tool ids), all experimental, with 230 golden vectors** |
 | `add-local-mcp-server` | Zero-dependency stdio server with all six meta-tools: `geoprims_search` (core ranker in its own `search` module), `describe`, `run`, `pipeline`, `convert_units`, and `report_problem`; catalog and tool resources; per-call timeouts in a worker thread; a golden surface file; 20 end-to-end tests ([mcp/README.md](mcp/README.md)) |
+| `build-web-experience` | Astro static site ([apps/web](apps/web/README.md)): home, domain and group hubs, and one page per tool id with the worked-example answer pre-rendered in the HTML; a Svelte island with a schema-driven form, live recompute in a Web Worker, core-rendered answers and sentences, severity-ordered warnings, copy actions, and `#v1:` permalinks |
 | `define-build-contracts` | Permalink fragment codec in the core (`link` module: deterministic DEFLATE, base64url, the fragment grammar) with a pinned vector file that Node's zlib cross-checks; `data/codes.json`; the shared report limits; the "Wrong answer" issue form |
 | `add-glanceable-and-field-ux` | The sentence-template language rendered in the core (fields, forced units, `delta`/`abs`, `if`/`else`, `warn`, `plural`), deterministic display rounding and digit grouping, a template lint, and a grade-8 readability lint; every result carries its `summary` sentence |
 | Everything else | Not started |
 
 ## Building it
 
-Requirements: [rustup](https://rustup.rs) (it installs the pinned toolchain from `rust-toolchain.toml`, including the wasm target), binaryen's `wasm-opt` at the version in `tools/toolchain.json`, and Node 22 or newer. There are no npm dependencies.
+Requirements: [rustup](https://rustup.rs) (it installs the pinned toolchain from `rust-toolchain.toml`, including the wasm target), binaryen's `wasm-opt` at the version in `tools/toolchain.json`, and Node 22 or newer. The core, runtime, and MCP server have no npm dependencies; only the website (`apps/web`) installs build tools (Astro and Svelte).
 
 ```bash
 cargo test --manifest-path core/Cargo.toml

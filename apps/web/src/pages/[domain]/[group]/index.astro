@@ -1,0 +1,20 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { catalog, DOMAIN_TITLES, route } from '../../../lib/catalog.mjs';
+export function getStaticPaths() {
+  const seen = new Set();
+  return catalog.tools
+    .filter((t) => !seen.has(`${t.domain}.${t.group}`) && seen.add(`${t.domain}.${t.group}`))
+    .map((t) => ({ params: { domain: t.domain, group: t.group } }));
+}
+const { domain, group } = Astro.params;
+const tools = catalog.tools.filter((t) => t.domain === domain && t.group === group);
+const name = group.replaceAll('-', ' ');
+---
+<Base title={`${name} · ${DOMAIN_TITLES[domain] ?? domain} · geoprims`} description={`geoprims ${name} tools.`} canonical={route(`${domain}.${group}`)}>
+  <p><a href={route(domain)}>{DOMAIN_TITLES[domain] ?? domain}</a></p>
+  <h1>{name[0].toUpperCase() + name.slice(1)}</h1>
+  <ul class="tools">
+    {tools.map((t) => <li><a href={route(t.id)}>{t.title}</a><p>{t.summary}</p></li>)}
+  </ul>
+</Base>

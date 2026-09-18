@@ -5,3 +5,8 @@ node_modules/
 .DS_Store
 /core/fixtures/*/target/
 /mcp/dist/
+/apps/web/public/wasm/
+/apps/web/public/catalog/
+/apps/web/.astro/
+/.claude/
+/apps/web/dist/

@@ -250,7 +250,6 @@ pub fn decode(fragment: &str) -> String {
     }
 }
 
-
 #[cfg(target_arch = "wasm32")]
 mod exports {
     /// # Safety

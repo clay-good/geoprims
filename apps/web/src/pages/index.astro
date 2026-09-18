@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import { catalog, DOMAIN_TITLES, route } from '../lib/catalog.mjs';
+const domains = [...new Set(catalog.tools.map((t) => t.domain))];
+const ops = catalog.counts.all.operations;
+---
+<Base title="geoprims: geospatial and aerospace calculators" description="Exact, cited geodesy, aviation, drone, survey, and unit calculations that run on your device. Free, no ads, no tracking." canonical="/">
+  <h1>Geospatial and aerospace calculators</h1>
+  <p class="purpose">Exact, cited math that runs on your device. Free, no ads, no tracking, works offline.</p>
+  <div class="card">
+    <p>
+      geoprims is in early development. {ops} operations are built so far, all marked experimental until they pass the full
+      verification bar. The same calculators run in the <a href="https://github.com/clay-good/geoprims/tree/main/mcp">local MCP server</a> for AI agents.
+    </p>
+  </div>
+  <h2>Domains</h2>
+  <ul class="tools">
+    {domains.map((d) => (
+      <li><a href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a> <p>{catalog.tools.filter((t) => t.domain === d).length} tools</p></li>
+    ))}
+  </ul>
+</Base>

@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog, DOMAIN_TITLES, groups, route } from '../../lib/catalog.mjs';
+export function getStaticPaths() {
+  return [...new Set(catalog.tools.map((t) => t.domain))].map((domain) => ({ params: { domain } }));
+}
+const { domain } = Astro.params;
+const title = DOMAIN_TITLES[domain] ?? domain;
+const byGroup = groups(domain);
+---
+<Base title={`${title} calculators · geoprims`} description={`Every geoprims ${title.toLowerCase()} tool, with exact, cited math.`} canonical={route(domain)}>
+  <h1>{title}</h1>
+  {[...byGroup].map(([group, tools]) => (
+    <section>
+      <h2><a href={route(`${domain}.${group}`)}>{group.replaceAll('-', ' ')}</a></h2>
+      <ul class="tools">
+        {tools.filter((t) => t.composedOf.length === 0).map((t) => <li><a href={route(t.id)}>{t.title}</a><p>{t.summary}</p></li>)}
+      </ul>
+    </section>
+  ))}
+</Base>

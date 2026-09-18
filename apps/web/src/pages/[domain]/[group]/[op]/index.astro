@@ -1,0 +1,46 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import ToolApp from '../../../../components/ToolApp.svelte';
+import { catalog, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, route, severities, tool as find } from '../../../../lib/catalog.mjs';
+
+export function getStaticPaths() {
+  return catalog.tools.map((t) => {
+    const [domain, group, op] = t.id.split('.');
+    return { params: { domain, group, op }, props: { id: t.id } };
+  });
+}
+const t = find(Astro.props.id);
+const ex = primaryExample(t);
+const initial = await exampleResult(t);
+const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outputs, severity: severities(t) };
+---
+<Base title={`${t.title} · geoprims`} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)}>
+  <p><a href={route(t.domain)}>{DOMAIN_TITLES[t.domain] ?? t.domain}</a> › <a href={route(`${t.domain}.${t.group}`)}>{t.group.replaceAll('-', ' ')}</a></p>
+  <h1>{t.title} {t.stability === 'experimental' && <span class="badge" title="Not yet fully verified">Experimental</span>}</h1>
+  <p class="purpose">{t.summary}</p>
+  <ToolApp client:load tool={client} example={ex.input} initial={initial} />
+  <details class="card">
+    <summary>How we got this</summary>
+    <p><strong>Model:</strong> {t.model}</p>
+    <p><strong>Accuracy:</strong> {t.accuracy}</p>
+    <p><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
+    <p><strong>Checked against:</strong> {t.vectorCount} golden test vectors.</p>
+    <h3>Sources</h3>
+    <ul>
+      {t.references.map((r) => (
+        <li><a href={r.url}>{r.title}</a>, {r.issuer}, {r.edition}. {r.locator}.</li>
+      ))}
+    </ul>
+    {t.stability === 'experimental' && (
+      <p class="notice">Experimental means this tool has not yet met the stable bar: at least 20 golden vectors, differential tests, and an independent worked example.</p>
+    )}
+  </details>
+  {t.related.length > 0 && (
+    <section>
+      <h2>Related tools</h2>
+      <ul class="tools">
+        {t.related.filter((r) => find(r.id)).map((r) => <li><a href={route(r.id)}>{find(r.id).title}</a> <p>{r.reason}</p></li>)}
+      </ul>
+    </section>
+  )}
+</Base>

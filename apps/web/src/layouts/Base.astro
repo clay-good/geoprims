@@ -1,0 +1,42 @@
+---
+import '../styles/global.css';
+interface Props { title: string; description: string; canonical: string; noindex?: boolean }
+const { title, description, canonical, noindex = false } = Astro.props;
+const canonicalUrl = new URL(canonical, Astro.site).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="referrer" content="no-referrer" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="wrap">
+        <a class="brand" href="/">geoprims</a>
+        <nav aria-label="Main">
+          <a href="/units/">Units</a>
+          <a href="https://github.com/clay-good/geoprims">Source</a>
+        </nav>
+      </div>
+    </header>
+    <main class="wrap"><slot /></main>
+    <footer class="site">
+      <div class="wrap">
+        <p>
+          geoprims tools are planning, engineering, and education aids. They are not certified for navigation and are not legal
+          survey determinations. Verify operational values against official sources.
+        </p>
+        <p>
+          Free, no ads, no tracking. Your inputs never leave your device.
+          <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">Wrong answer?</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -359,3 +359,25 @@ fn summary_uses_profile_and_number_format() {
     );
     assert_eq!(r["summary"], "12\u{202f}345,5 kt is 14\u{202f}206,948 mph.");
 }
+
+#[test]
+fn results_list_outputs_in_schema_order() {
+    // serde_json maps sort keys, so check the raw bytes.
+    for t in TOOLS {
+        for ex in t.examples {
+            let raw = REGISTRY.invoke(t.id, ex.input);
+            let r: Value = serde_json::from_str(&raw).unwrap();
+            let body = &raw[raw.find("\"result\":").unwrap()..];
+            let mut positions: Vec<(usize, &str)> = t
+                .outputs
+                .iter()
+                .filter(|f| r["result"].get(f.name).is_some())
+                .map(|f| (body.find(&format!("\"{}\":", f.name)).unwrap(), f.name))
+                .collect();
+            let schema: Vec<&str> = positions.iter().map(|p| p.1).collect();
+            positions.sort();
+            let order: Vec<&str> = positions.iter().map(|p| p.1).collect();
+            assert_eq!(order, schema, "{}", t.id);
+        }
+    }
+}

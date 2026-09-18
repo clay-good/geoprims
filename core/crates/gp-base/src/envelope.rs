@@ -60,13 +60,18 @@ impl Meta {
     }
 }
 
-/// Serializes a success envelope: `{"ok":true,"result":…,"summary"?:…,"meta":…}`.
-/// `summary` is the rendered sentence. A non-finite number anywhere becomes an
+/// Serializes a success envelope:
+/// `{"ok":true,"result":…,"summary"?:…,"display"?:{…},"meta":…}`.
+/// `summary` is the rendered sentence and `display` holds each output as
+/// rounded text with its unit. A non-finite number anywhere becomes an
 /// `INTERNAL` error envelope instead, so NaN never escapes.
-pub fn success(result: Json, summary: Option<&str>, meta: &Meta) -> String {
+pub fn success(result: Json, summary: Option<&str>, display: Json, meta: &Meta) -> String {
     let mut pairs = vec![("ok", Json::Bool(true)), ("result", result)];
     if let Some(s) = summary.filter(|s| !s.is_empty()) {
         pairs.push(("summary", Json::str(s)));
+    }
+    if matches!(&display, Json::Obj(p) if !p.is_empty()) {
+        pairs.push(("display", display));
     }
     pairs.push(("meta", meta.to_json()));
     let env = Json::obj(pairs);
@@ -109,11 +114,12 @@ mod tests {
                 ("unit", Json::str("mph")),
             ]),
             Some("100 kt is 115.078 mph."),
+            Json::obj([("value", Json::str("115.078 mph"))]),
             &meta(),
         );
         let want = format!(
             concat!(
-                r#"{{"ok":true,"result":{{"value":115.07794480235425,"unit":"mph"}},"summary":"100 kt is 115.078 mph.","#,
+                r#"{{"ok":true,"result":{{"value":115.07794480235425,"unit":"mph"}},"summary":"100 kt is 115.078 mph.","display":{{"value":"115.078 mph"}},"#,
                 r#""meta":{{"tool":"units.speed.convert","toolVersion":"1.0.0","coreVersion":"{}","assets":[],"#,
                 r#""model":"Exact unit definitions (NIST SP 811)","accuracy":"exact to double precision","#,
                 r#""warnings":[{{"code":"INPUT_NORMALIZED","message":"a","field":"/lon"}},"#,
@@ -126,7 +132,12 @@ mod tests {
 
     #[test]
     fn nan_result_becomes_internal_error() {
-        let got = success(Json::obj([("value", Json::Num(f64::NAN))]), None, &meta());
+        let got = success(
+            Json::obj([("value", Json::Num(f64::NAN))]),
+            None,
+            Json::Obj(vec![]),
+            &meta(),
+        );
         assert!(
             got.starts_with(r#"{"ok":false,"error":{"code":"INTERNAL""#),
             "{got}"

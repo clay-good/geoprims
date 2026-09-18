@@ -1,0 +1,5 @@
+{
+  "rustc": "1.98.0",
+  "wasmOpt": "132",
+  "budgets": { "base": 122880, "domain": 409600 }
+}

@@ -1,0 +1,17 @@
+[package]
+name = "gp-survey"
+description = "Survey: COGO, traverse, reductions, earthwork, curves."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[package.metadata.geoprims]
+module = "survey"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gp-base.workspace = true

@@ -1,0 +1,17 @@
+[package]
+name = "gp-geodesy"
+description = "Geodesy: parsing, frames, datums, projections, grid references, heights, geomagnetism."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[package.metadata.geoprims]
+module = "geodesy"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gp-base.workspace = true

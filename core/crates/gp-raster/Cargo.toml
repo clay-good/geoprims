@@ -1,0 +1,17 @@
+[package]
+name = "gp-raster"
+description = "Raster: spectral indices and terrain analysis."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[package.metadata.geoprims]
+module = "raster"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gp-base.workspace = true

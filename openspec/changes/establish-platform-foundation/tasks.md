@@ -1,20 +1,20 @@
 ## 1. Repository and toolchain
 
-- [ ] 1.1 Create the monorepo layout from design D6 (core/, tools/codegen/, assets/, packages/, apps/web/, verify/) and verify `ls` shows each directory with a README stating its purpose
-- [ ] 1.2 Pin the Rust toolchain (`rust-toolchain.toml`), wasm-bindgen-cli, and wasm-opt versions; verify CI prints the pinned versions and fails if they differ
-- [ ] 1.3 Create the Cargo workspace with `gp-base` and empty domain crates; verify `cargo build --target wasm32-unknown-unknown` produces one `.wasm` per domain
-- [ ] 1.4 Add the Wasm import-section lint that fails if any module imports JS `Math` or anything outside the allow-list; verify with a deliberately bad fixture crate
-- [ ] 1.5 Add compressed size budgets per module (base ≤ 120 KB, domain ≤ 400 KB Brotli); verify CI fails on an oversized fixture
+- [x] 1.1 Create the monorepo layout from design D6 (core/, tools/codegen/, assets/, packages/, apps/web/, verify/) and verify `ls` shows each directory with a README stating its purpose
+- [x] 1.2 Pin the Rust toolchain (`rust-toolchain.toml`) and wasm-opt version (`tools/toolchain.json`; no wasm-bindgen per design D1); verify CI prints the pinned versions and fails if they differ
+- [x] 1.3 Create the Cargo workspace with `gp-base` and empty domain crates; verify `cargo build --target wasm32-unknown-unknown` produces one `.wasm` per domain
+- [x] 1.4 Add the Wasm import-section lint that fails if any module imports JS `Math` or anything outside the allow-list; verify with a deliberately bad fixture crate
+- [x] 1.5 Add compressed size budgets per module (base ≤ 120 KB, domain ≤ 400 KB Brotli); verify CI fails on an oversized fixture
 
 ## 2. Base crate: units, angles, errors, serialization
 
-- [ ] 2.1 Implement the unit registry with the exact constants table and aliases; verify unit tests for every row of the constants table and the NM, survey-foot, and inHg scenarios
-- [ ] 2.2 Implement unit-tagged value parsing (aliases, case rules, separators, decimal-comma mode, bare `mil` rejection, `nm` assumption warning); verify table-driven parser tests including every scenario in the units spec
-- [ ] 2.3 Implement temperature vs temperature-difference quantities; verify the +18 °F → +10 K scenario
-- [ ] 2.4 Implement angle normalization (longitude `[-180,180)`, azimuth `[0,360)`, latitude validation) using exact remainders; verify the 180, 540.25, and 90.0000001 scenarios and a 1,000,000-case property test
-- [ ] 2.5 Implement the structured error model and warning codes; verify every code serializes with `code`, `message`, `field`, `hint`
-- [ ] 2.6 Implement result serialization (shortest round-trip, negative-zero normalization, NaN rejection, `meta` provenance block); verify byte-exact snapshot tests
-- [ ] 2.7 Implement output unit profiles (`si`, `aviation`, `us-customary`, `survey-metric`, `survey-us`); verify the aviation-profile scenario
+- [x] 2.1 Implement the unit registry with the exact constants table and aliases; verify unit tests for every row of the constants table and the NM, survey-foot, and inHg scenarios
+- [x] 2.2 Implement unit-tagged value parsing (aliases, case rules, separators, decimal-comma mode, bare `mil` rejection, `nm` assumption warning); verify table-driven parser tests including every scenario in the units spec
+- [x] 2.3 Implement temperature vs temperature-difference quantities; verify the +18 °F → +10 K scenario
+- [x] 2.4 Implement angle normalization (longitude `[-180,180)`, azimuth `[0,360)`, latitude validation) using exact remainders; verify the 180, 540.25, and 90.0000001 scenarios and a 1,000,000-case property test
+- [x] 2.5 Implement the structured error model and warning codes; verify every code serializes with `code`, `message`, `field`, `hint`
+- [x] 2.6 Implement result serialization (shortest round-trip, negative-zero normalization, NaN rejection, `meta` provenance block); verify byte-exact snapshot tests
+- [x] 2.7 Implement output unit profiles (`si`, `aviation`, `us-customary`, `survey-metric`, `survey-us`); verify the aviation-profile scenario
 
 ## 3. Manifest DSL and code generation
 

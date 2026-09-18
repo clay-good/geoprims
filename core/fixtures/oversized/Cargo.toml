@@ -1,0 +1,15 @@
+# Deliberately oversized module: ~512 KiB of incompressible data. The size gate must reject it.
+[package]
+name = "fixture-oversized"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[workspace]
+
+[profile.release]
+opt-level = "z"
+panic = "abort"

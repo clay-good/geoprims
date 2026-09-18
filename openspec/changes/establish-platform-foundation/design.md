@@ -24,7 +24,9 @@ Greenfield repository. Motivation is in `proposal.md`. Research that informs the
 ## Decisions
 
 ### D1. Rust → WebAssembly for the compute core
-Rust compiled to `wasm32-unknown-unknown`, built with `cargo` + `wasm-bindgen-cli` + `wasm-opt`. wasm-pack was sunset in July 2025, so the pipeline calls the three tools directly.
+Rust compiled to `wasm32-unknown-unknown`, built with `cargo` + `wasm-opt` (binaryen, pinned in `tools/toolchain.json`). wasm-pack was sunset in July 2025, so the pipeline calls the tools directly.
+
+Modules expose a **raw C ABI** rather than wasm-bindgen glue (decided while building task 1.3): `gp_alloc`/`gp_free` for host-owned input buffers, string-returning exports that return a pointer to a core-owned output buffer whose length is read with `gp_out_len()`, plus `gp_version`, and later `gp_invoke`, `gp_invoke_batch`, and `gp_manifest`. Every call crosses the boundary as UTF-8 JSON, so no generated glue is needed. The import section is empty, which makes the import lint trivial, and one small loader in `packages/runtime` serves the browser and Node alike. wasm-bindgen was rejected because its generated JS differs by target (web vs Node), adds a pinned CLI whose version must match the crate, and would put generated code in the zero-dependency MCP server.
 
 | Alternative | Why not |
 |---|---|
@@ -37,7 +39,7 @@ Key crates (MIT/Apache/BSD only): `geographiclib-rs` (Karney geodesics), `geo` (
 
 ### D2. Determinism by construction
 - All transcendental math goes through the `libm` crate compiled into the module. Imports of JS `Math` are forbidden by a lint that inspects the Wasm import section.
-- Build with a pinned Rust toolchain and `-C target-feature=+simd128` only (no relaxed-SIMD). FMA contraction is never implicit in Wasm; explicit `mul_add` uses the software path.
+- Build with a pinned Rust toolchain and the target's default feature set (bulk memory, sign extension, nontrapping float-to-int, multivalue, reference types). SIMD (`+simd128`) may be enabled per module later if a benchmark justifies it; relaxed-SIMD never. FMA contraction is never implicit in Wasm; explicit `mul_add` uses the software path.
 - Canonicalize NaN (reject it) and negative zero at the serialization boundary.
 - Serialize numbers with the ECMAScript Number-to-String algorithm (the format of `JSON.stringify` and RFC 8785 JCS): shortest round-trip digits, integers without a trailing `.0`, exponent notation only at magnitude ≥ 1e21 or < 1e-6. Implemented in Rust so the core, not the host, produces the bytes.
 - The cross-host suite (verification spec) compares bytes across Chromium, Firefox, WebKit, and Node.

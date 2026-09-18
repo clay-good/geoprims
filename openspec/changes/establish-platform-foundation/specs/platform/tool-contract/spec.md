@@ -27,7 +27,7 @@ A tool `id` SHALL match the pattern `^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-
 - **THEN** the tool still executes, the response includes a `deprecation` notice naming the replacement id and removal version, and the web route redirects with an HTTP-equivalent client redirect to the replacement page
 
 ### Requirement: Inputs and outputs are typed with JSON Schema 2020-12 plus unit annotations
-Tool `inputs` and `outputs` SHALL be expressed as JSON Schema draft 2020-12 objects. Every numeric field that represents a physical quantity SHALL carry an `x-quantity` annotation (e.g. `length`, `angle`, `speed`, `pressure`, `temperature`, `mass`, `energy`, `power`, `time`, `area`, `volume`, `dimensionless`) and an `x-unit` annotation naming the canonical unit of the value as returned. Every angular field SHALL declare its range convention (`x-angle-range`: `[-180,180)`, `[0,360)`, `[-90,90]`, or `unbounded`).
+Tool `inputs` and `outputs` SHALL be expressed as JSON Schema draft 2020-12 objects. Every numeric field that represents a physical quantity SHALL carry an `x-quantity` annotation (e.g. `length`, `distance`, `angle`, `speed`, `pressure`, `temperature`, `mass`, `energy`, `power`, `time`, `area`, `volume`, `dimensionless`) and an `x-unit` annotation naming the canonical unit of the value as returned. Every angular field SHALL declare its range convention (`x-angle-range`: `[-180,180)`, `[0,360)`, `[-90,90]`, or `unbounded`).
 
 #### Scenario: Quantity annotation required
 - **WHEN** a manifest declares numeric input `height` without `x-quantity`

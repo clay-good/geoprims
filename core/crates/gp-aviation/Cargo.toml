@@ -1,0 +1,17 @@
+[package]
+name = "gp-aviation"
+description = "Aviation: atmosphere, airspeed, altimetry, wind, performance, loading."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[package.metadata.geoprims]
+module = "aviation"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gp-base.workspace = true

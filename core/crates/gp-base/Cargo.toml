@@ -1,0 +1,13 @@
+[package]
+name = "gp-base"
+description = "Shared geoprims core: units, angles, errors, deterministic JSON, tool runtime."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+libm.workspace = true
+ryu.workspace = true
+serde_json.workspace = true

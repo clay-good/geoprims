@@ -7,7 +7,7 @@
 
 No ads, no accounts, no tracking, no server-side compute. Inputs never leave the device.
 
-> **Status:** specification only. No code has been written yet. This repository holds the product specs in [OpenSpec](https://github.com/Fission-AI/OpenSpec) format and the research behind them.
+> **Status:** Phase 0 (platform) in progress. No tools are usable yet. The specs are in [OpenSpec](https://github.com/Fission-AI/OpenSpec) format, and the research behind them is in `docs/research/`. See [Progress](#progress) for what is built.
 
 ## What's specified
 
@@ -77,7 +77,30 @@ openspec list
 openspec validate --all --strict
 ```
 
+## Progress
+
+| Change | Built so far |
+|---|---|
+| `establish-platform-foundation` | Monorepo layout; pinned toolchain; Cargo workspace compiling one `.wasm` per domain; import-section lint and Brotli size budgets, each proven against a bad fixture crate; `gp-base` with the exact unit registry, unit-tagged parsing, angle normalization, the error and warning model, ECMAScript-format number serialization (byte-checked against `JSON.stringify` on about 12,000 doubles), unit profiles, and the result envelope (tasks 1.1–2.7) |
+| Everything else | Not started |
+
 ## Building it
+
+Requirements: [rustup](https://rustup.rs) (it installs the pinned toolchain from `rust-toolchain.toml`, including the wasm target), binaryen's `wasm-opt` at the version in `tools/toolchain.json`, and Node 22 or newer. There are no npm dependencies.
+
+```bash
+cargo test --manifest-path core/Cargo.toml
+```
+
+```bash
+node tools/wasm/build.mjs
+```
+
+```bash
+node --test 'tools/**/*.test.mjs'
+```
+
+The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests). It fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).
 
 [AGENTS.md](AGENTS.md) holds the working rules for anyone, human or AI, implementing the specs: the three doors (web, MCP, report), how to add a tool, and the non-negotiables.
 

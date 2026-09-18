@@ -25,7 +25,7 @@ The unit registry SHALL use these exact definitions and SHALL cite their source 
 | US gallon `galUS` | 3.785411784 L exactly |
 | inch of mercury `inHg` | 3386.389 Pa (conventional, 0 °C, standard gravity; cited) |
 | hectopascal `hPa` / millibar `mbar` | 100 Pa exactly |
-| pound per square inch `psi` | 6894.757293168361 Pa (derived exactly from lb, ft, g0) |
+| pound per square inch `psi` | 8896443230521/1290320000 Pa = 6894.75729316836134… Pa (derived exactly from lb, in, g0) |
 | standard gravity `g0` | 9.80665 m/s² exactly |
 | degree Fahrenheit | T[K] = (T[°F] + 459.67) × 5/9 exactly |
 | degree Celsius | T[K] = T[°C] + 273.15 exactly |
@@ -75,11 +75,15 @@ The unit system SHALL distinguish absolute temperatures from temperature differe
 - **THEN** it converts to +10 K
 
 ### Requirement: Output unit selection
-Every tool with quantity outputs SHALL allow the caller to request output units per field or via a unit profile (`si`, `aviation` [ft, kt, NM, inHg or hPa selectable, °C], `us-customary`, `survey-metric`, `survey-us`). The machine-readable result SHALL always state the unit alongside each numeric value.
+Every tool with quantity outputs SHALL allow the caller to request output units per field or via a unit profile (`si`, `aviation` [ft, kt, NM, inHg or hPa selectable as `aviation-hpa`, °C], `us-customary`, `survey-metric`, `survey-us`). Horizontal ranges SHALL use the quantity `distance`, which accepts every length unit but lets a profile choose a range unit (NM, mi) separately from heights and short lengths (`length`: ft, m). The machine-readable result SHALL always state the unit alongside each numeric value.
 
 #### Scenario: Aviation profile
 - **WHEN** a geodesic inverse is requested with profile `aviation`
 - **THEN** distance is returned in NM and the result states `"unit": "NM"`
+
+#### Scenario: Heights stay in feet
+- **WHEN** a tool with a `length` output (an altitude) is requested with profile `aviation`
+- **THEN** the altitude is returned in ft, not NM
 
 ### Requirement: Standalone unit conversion tools
 The `units` domain SHALL expose the unit registry as tools: one operation per quantity family (length, area, volume, mass, speed, vertical speed, acceleration, pressure, temperature, temperature difference, angle, angular rate, time, energy, power, electric charge (mAh↔Ah↔C, and to Wh with a stated voltage), fuel volume↔mass (with a stated density), density, frequency, data rate, and slope/grade (percent, ratio, degrees, per mille)), plus a general tool that normalizes any unit-tagged value to canonical units. Allow-listed pair endpoints (for example `units.speed.kt-to-mph`, `units.pressure.inhg-to-hpa`, `units.length.ftus-to-m`) SHALL be generated from these operations per the tool-catalog counting rule.

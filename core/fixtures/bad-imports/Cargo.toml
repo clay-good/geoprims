@@ -1,0 +1,15 @@
+# Deliberately bad module: imports JS Math.sin. The import lint must reject it.
+[package]
+name = "fixture-bad-imports"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[workspace]
+
+[profile.release]
+opt-level = "z"
+panic = "abort"

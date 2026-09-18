@@ -3,7 +3,7 @@
 Greenfield repository. Motivation is in `proposal.md`. Research that informs these decisions is in `docs/research/01`–`04` (gathered 2026-09-18). Constraints that shape everything:
 
 - **No server compute, ever.** The only server is a static host. Anything heavy runs on the user's device.
-- **Four surfaces, one math.** Web app, npm library, CLI, and local MCP server must return byte-identical results.
+- **Two surfaces, one math.** The static website and the local MCP server must return byte-identical results. There is deliberately no CLI or public library package: the MCP server's `run` and `pipeline` tools cover scripted use, and the website covers CSV batch work. Fewer surfaces means less to version, document, and support.
 - **Hostile numeric environment.** JavaScript engines do not agree on `Math.sin` (V8 and SpiderMonkey use fdlibm ports, JavaScriptCore uses the system libm). Relaxed-SIMD and compiler FMA contraction also vary by CPU.
 - **Large reference data.** Geoid grids reach 470 MB (EGM2008 1′), terrain is global, and the CRS registry is about 10 MB as PROJ ships it.
 - **Time-varying truth.** Magnetic models expire (WMM2025 valid 2025.0–2030.0). US datums are mid-modernization (NATRF2022, NAPGD2022, GEOID2022, and SPCS2022 are still beta, with adoption expected late 2026 to early 2027). WGS 84 is on realization G2296 (since January 2024).
@@ -11,8 +11,8 @@ Greenfield repository. Motivation is in `proposal.md`. Research that informs the
 ## Goals / Non-Goals
 
 **Goals:**
-- A single Rust source tree compiled to WebAssembly that every surface loads.
-- A manifest format rich enough to generate every UI form, MCP schema, CLI flag, doc page, and search entry.
+- A single Rust source tree compiled to WebAssembly that both surfaces load.
+- A manifest format rich enough to generate every UI form, MCP schema, doc page, and search entry.
 - Verification infrastructure that makes "matches GeographicLib to 15 nm" a CI fact, not a marketing claim.
 - A data-asset pipeline that respects privacy (coarse tiles, same origin) and licenses.
 
@@ -71,11 +71,10 @@ PROJ 9.x runs in CI as the differential oracle for every projection and datum tr
 Each tool is a Rust function with a declarative definition (inputs, outputs, units, ranges, errors, references, vectors, visualization) written in a Rust macro DSL. The build emits:
 
 1. `catalog/v1.json` (all manifests, JSON Schema 2020-12 with `x-` extensions).
-2. TypeScript types for the web app and the npm library.
+2. TypeScript types for the web app and the MCP server.
 3. MCP tool schemas and descriptions.
-4. CLI argument definitions.
-5. Search-index documents.
-6. Docs page scaffolds (humans add the prose: formula explanation, worked example).
+4. Search-index documents.
+5. Docs page scaffolds (humans add the prose: formula explanation, worked example).
 
 Alternative: hand-written JSON manifests beside Rust code. Rejected because they drift from the code.
 
@@ -84,11 +83,11 @@ Alternative: hand-written JSON manifests beside Rust code. Rejected because they
 core/                 Rust workspace (gp-base, gp-geodesy, gp-navigation, gp-geometry,
                       gp-aviation, gp-drone, gp-survey, gp-indexing, gp-raster, gp-units)
 core/vectors/         Golden vectors (JSON Lines, one file per tool), immutable history
-tools/codegen/        Manifest → schema/TS/MCP/CLI/search/docs generators
+tools/codegen/        Manifest → schema/TS/MCP/search/docs generators
 assets/               Asset registry, build scripts, tilers (outputs not committed)
-packages/geoprims/    npm library: ESM, Wasm loader, asset providers (browser, Node)
-packages/cli/         `geoprims` CLI
-packages/mcp/         Local MCP server
+packages/runtime/     Internal (unpublished) Wasm loader, validation, asset providers
+                      (browser, Node); shared by the website and the MCP server
+packages/mcp/         Local MCP server (the only published npm package)
 apps/web/             Static site + PWA
 verify/               Differential harness (GeographicLib C++, PROJ, H3 C, S2 C++, WMM C)
 openspec/             Specs and changes
@@ -149,7 +148,7 @@ All content is published openly without restriction, which places it outside the
 
 ## Migration Plan
 
-Not applicable (greenfield). Release process: tag → reproducible CI build → verification report → deploy static site and assets → publish npm packages with provenance → publish MCPB bundle and registry entry.
+Not applicable (greenfield). Release process: tag → reproducible CI build → verification report → deploy static site and assets → publish the MCP server to npm with provenance → publish MCPB bundle and registry entry.
 
 ## Open Questions
 

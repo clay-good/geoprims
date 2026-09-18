@@ -52,7 +52,7 @@ The current inputs, selected units, and canvas view SHALL be encoded in the URL 
 - **THEN** the app migrates the fields and computes, or shows which fields could not be migrated
 
 ### Requirement: Result panel
-The result panel SHALL show every output with its unit, a unit switcher, a copy button per value and for the whole result (as JSON, as plain text, and as a CLI/MCP invocation), the provenance (`meta`) in an expandable section, and any warnings prominently above the values.
+The result panel SHALL show every output with its unit, a unit switcher, a copy button per value and for the whole result (as JSON, as plain text, and as an MCP `geoprims_run` call), the provenance (`meta`) in an expandable section, and any warnings prominently above the values.
 
 #### Scenario: Copy as MCP call
 - **WHEN** a user chooses "Copy as agent call"

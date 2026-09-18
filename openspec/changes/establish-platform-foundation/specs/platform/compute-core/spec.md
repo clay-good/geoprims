@@ -1,15 +1,15 @@
 ## Purpose
 
-Defines the WebAssembly compute core that executes every geoprims tool identically in the browser, in Node.js for the MCP server and CLI, and in any JavaScript host that loads the library package.
+Defines the WebAssembly compute core that executes every geoprims tool identically in the browser for the website and in Node.js for the local MCP server.
 
 ## ADDED Requirements
 
 ### Requirement: One compute core for every surface
-The web app, the npm library, the CLI, and the local MCP server SHALL execute tools through the same compiled WebAssembly modules built from the same source revision. No surface SHALL contain a second implementation of a tool's mathematics.
+The website and the local MCP server SHALL execute tools through the same compiled WebAssembly modules built from the same source revision. No surface SHALL contain a second implementation of a tool's mathematics.
 
 #### Scenario: Same artifact hashes
 - **WHEN** a release is built
-- **THEN** the SHA-256 digest of each domain Wasm module shipped to the website equals the digest of the corresponding module in the published npm package
+- **THEN** the SHA-256 digest of each domain Wasm module shipped to the website equals the digest of the corresponding module in the published MCP server package
 
 #### Scenario: Cross-surface equality
 - **WHEN** the golden-vector suite runs in the web app (headless Chromium, WebKit, Gecko) and in Node.js

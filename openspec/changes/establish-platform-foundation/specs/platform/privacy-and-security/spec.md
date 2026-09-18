@@ -69,7 +69,7 @@ Imported files (GeoJSON, KML, GPX, CSV, GeoTIFF, WKT) SHALL be parsed locally wi
 - **THEN** the link is not fetched and the import report lists it as ignored
 
 ### Requirement: Supply-chain integrity
-Releases SHALL be built reproducibly in CI from a tagged commit, SHALL publish SHA-256 digests of every shipped artifact, SHALL publish npm packages with provenance attestations, SHALL pin all build dependencies by lockfile and hash, and SHALL run dependency license and vulnerability audits that block release on critical findings.
+Releases SHALL be built reproducibly in CI from a tagged commit, SHALL publish SHA-256 digests of every shipped artifact, SHALL publish the MCP server npm package with provenance attestations, SHALL pin all build dependencies by lockfile and hash, and SHALL run dependency license and vulnerability audits that block release on critical findings.
 
 #### Scenario: Reproducible build
 - **WHEN** two independent CI runs build the same tag

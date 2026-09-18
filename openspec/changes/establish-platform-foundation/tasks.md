@@ -21,7 +21,7 @@
 - [ ] 3.1 Define the manifest meta-schema (JSON Schema 2020-12 plus `x-quantity`, `x-unit`, `x-angle-range`, `x-display-precision`); verify it validates a hand-written sample manifest and rejects each missing required field
 - [ ] 3.2 Implement the Rust tool-definition macro that emits manifests at build time; verify a sample tool produces a manifest identical to a checked-in snapshot
 - [ ] 3.3 Implement the id-pattern, alias-uniqueness, inverse-symmetry, visualization-mapping, and reference checks; verify each fails on a targeted bad fixture
-- [ ] 3.4 Generate `catalog/v1.json`, TypeScript types, MCP schemas, CLI argument specs, and search documents from manifests; verify a snapshot test over the sample tool for each output
+- [ ] 3.4 Generate `catalog/v1.json`, TypeScript types, MCP schemas, and search documents from manifests; verify a snapshot test over the sample tool for each output
 - [ ] 3.5 Implement the conversion-graph generator with pair allow-list and `composedOf`; verify that a non-allow-listed pair produces no endpoint
 - [ ] 3.6 Emit operation and endpoint counts from the build; verify the counts match the manifests
 
@@ -32,7 +32,7 @@
 - [ ] 4.3 Implement per-invocation memory caps and `LIMIT_EXCEEDED` pre-checks; verify with an over-limit fixture that no allocation beyond the cap occurs
 - [ ] 4.4 Implement progress reporting and cooperative cancellation for long tools; verify cancellation returns within 100 ms in a benchmark fixture
 - [ ] 4.5 Implement the browser worker host and trap containment; verify a trapping fixture restarts the worker and other tools keep working
-- [ ] 4.6 Implement the Node host (same Wasm, filesystem and bundled asset provider); verify the cross-surface digest scenario
+- [ ] 4.6 Implement the internal `packages/runtime` loader with browser and Node hosts (same Wasm, cache and filesystem asset providers); verify the cross-surface digest scenario
 
 ## 5. Data assets
 
@@ -75,7 +75,7 @@
 
 ## 9. Release readiness
 
-- [ ] 9.1 Write the release pipeline (tag → build → verify → deploy site and assets → publish packages); verify on a release-candidate tag in a staging environment
+- [ ] 9.1 Write the release pipeline (tag → build → verify → deploy site and assets → publish MCP server); verify on a release-candidate tag in a staging environment
 - [ ] 9.2 Publish the `/licenses` page generated from the registry and SBOM; verify every dependency and dataset appears
 - [ ] 9.3 Write the site-wide disclaimer, privacy page, and accuracy policy; verify each is linked from every page footer
 - [ ] 9.4 Obtain export-control and liability review of the catalog and disclaimers; verify written sign-off is recorded before public launch

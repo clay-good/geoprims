@@ -37,7 +37,7 @@ Every tool that supports batch invocation SHALL offer a batch mode: import a CSV
 - **THEN** 9,988 rows produce results, the 12 errors are listed with row numbers and messages, and the export includes an `error` column
 
 ### Requirement: Clipboard integration
-Copying a result SHALL offer formats: value only, value with unit, JSON, and a CLI or MCP invocation. Pasting into a coordinate field SHALL detect notation (per command-palette paste-to-detect).
+Copying a result SHALL offer formats: value only, value with unit, JSON, and an MCP `geoprims_run` call. Pasting into a coordinate field SHALL detect notation (per command-palette paste-to-detect).
 
 #### Scenario: Copy value with unit
 - **WHEN** a user copies a distance result as "value with unit"

@@ -6,9 +6,9 @@ This change is phase 1. Every other change in `openspec/changes/` depends on it.
 
 ## What Changes
 
-- Define the **tool contract**: the manifest every tool publishes (id, inputs, outputs, units, accuracy, references, test vectors, visualization hints, stability). The manifest is the single source of truth for the web UI, MCP server, CLI, docs, and search.
+- Define the **tool contract**: the manifest every tool publishes (id, inputs, outputs, units, accuracy, references, test vectors, visualization hints, stability). The manifest is the single source of truth for the web UI, MCP server, docs, and search.
 - Define the **compute core**: a WebAssembly core split by domain, with a stable call interface, a structured error model, and hard performance budgets.
-- Define **numeric determinism**: bit-identical or tolerance-bounded results across Chromium, WebKit, Gecko, and Node; explicit handling of NaN, infinities, signed zero, and angle wrapping.
+- Define **numeric determinism**: bit-identical results across Chromium, WebKit, Gecko, and the Node.js runtime of the MCP server; explicit handling of NaN, infinities, signed zero, and angle wrapping.
 - Define the **units and quantities** system: exact conversion constants (international foot, nautical mile, US survey foot kept only for legacy data), tagged inputs, canonical SI internals.
 - Define **data assets**: how large models (geoid grids, magnetic coefficients, EPSG registry, terrain) are versioned, integrity-checked, lazy-loaded, cached offline, and licensed.
 - Define **verification**: golden vectors from authoritative sources, cross-implementation checks, property-based tests, and published accuracy claims.

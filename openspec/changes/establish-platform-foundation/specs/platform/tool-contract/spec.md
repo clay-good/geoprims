@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the manifest and behavioral contract that every geoprims tool publishes, so that the web UI, MCP server, CLI, library, documentation, and search index are all generated from one authoritative description and cannot drift apart.
+Defines the manifest and behavioral contract that every geoprims tool publishes, so that the web UI, MCP server, documentation, and search index are all generated from one authoritative description and cannot drift apart.
 
 ## ADDED Requirements
 
@@ -13,7 +13,7 @@ Every tool SHALL publish a machine-readable manifest containing at minimum: `id`
 
 #### Scenario: Manifest is the single source for all surfaces
 - **WHEN** a tool's input description changes in the manifest
-- **THEN** the web form label, MCP input schema description, CLI `--help` text, and docs page all reflect the change in the same build with no other edit
+- **THEN** the web form label, MCP input schema description, and docs page all reflect the change in the same build with no other edit
 
 ### Requirement: Tool identifiers are stable and namespaced
 A tool `id` SHALL match the pattern `^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*){2,3}$` (for example `geodesy.utm.forward`, `aviation.airspeed.cas-to-tas`). Once a tool reaches `stable`, its `id` SHALL NOT be reused for a different operation and SHALL NOT be removed without passing through `deprecated` for at least one minor release, with a redirect to its replacement.

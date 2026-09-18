@@ -1,0 +1,126 @@
+## Purpose
+
+Gives LLM agents local, offline, deterministic access to the full geoprims catalog through the Model Context Protocol, using a small discovery-first tool surface that fits within client tool limits and context budgets.
+
+## ADDED Requirements
+
+### Requirement: Local stdio server using the shared core
+The MCP server SHALL run locally over the stdio transport, SHALL execute tools through the same Wasm modules as the website (per compute-core), and SHALL NOT offer a network-listening transport by default.
+
+#### Scenario: Same result as website
+- **WHEN** an agent runs `navigation.geodesic.inverse` with the same inputs as a website permalink
+- **THEN** the `structuredContent` values are byte-identical to the website's copied JSON result
+
+#### Scenario: No listening socket
+- **WHEN** the server starts with default options
+- **THEN** it opens no TCP or UDP socket
+
+### Requirement: Protocol version support
+The server SHALL implement MCP specification `2026-07-28` (stateless requests with per-request `_meta` protocol version and capabilities, `server/discover`) and SHALL remain interoperable with clients using `2025-11-25` and `2025-06-18` via version negotiation.
+
+#### Scenario: Older client
+- **WHEN** a client initializes with protocol version `2025-06-18`
+- **THEN** the server completes the legacy handshake and serves the same tools and results
+
+### Requirement: Default meta-tool surface
+By default the server SHALL expose exactly these tools, in this deterministic order:
+1. `geoprims_search` — input `{query, domain?, limit? (default 10, max 50)}`; returns ranked `{id, title, summary, domain, stability}` entries.
+2. `geoprims_describe` — input `{ids: string[] (max 20), detail: "summary" | "schema" | "examples"}`; returns manifests at the requested detail, including input/output JSON Schemas, units, accuracy, and references for `schema`.
+3. `geoprims_run` — input `{id, args, units?, output?: {maxItems?, offset?}}`; validates `args` against the tool's input schema, executes, and returns the result.
+4. `geoprims_pipeline` — input `{steps: [{id, args, bind?: {<inputPointer>: "<stepIndex>:<outputPointer>"}}] (max 20 steps)}`; runs a chain without model round trips.
+5. `geoprims_convert_units` — input `{value, from, to}`; converts using the unit registry.
+
+The total serialized size of the default `tools/list` result SHALL be at most 6,000 tokens (measured with a documented tokenizer approximation of 4 characters per token).
+
+#### Scenario: Default tool list
+- **WHEN** a client calls `tools/list` with default server options
+- **THEN** exactly the five meta-tools are returned in the specified order
+
+#### Scenario: Search then run
+- **WHEN** an agent searches "density altitude", describes the top id at `schema` detail, and runs it with valid args
+- **THEN** each call succeeds and the run result contains `meta.model` and `meta.accuracy`
+
+### Requirement: Tool annotations
+Every tool the server exposes SHALL declare `title` and annotations `readOnlyHint: true`, `destructiveHint: false`, `idempotentHint: true`, and `openWorldHint: false`, and SHALL declare an `outputSchema` with results returned as `structuredContent` plus an equivalent JSON text content block.
+
+#### Scenario: Annotations present
+- **WHEN** a client lists tools
+- **THEN** every tool includes the four annotations with the specified values and an `outputSchema`
+
+### Requirement: Optional direct toolsets
+The server SHALL support opt-in direct toolsets selected by a server launch flag or bundle configuration (`--toolsets=<name,...>`), where each toolset exposes up to 40 stable catalog tools as first-class MCP tools, named by replacing dots with underscores and prefixing `gp_` (e.g. `gp_aviation_altimetry_density-altitude`, truncated to 128 characters). Predefined toolsets SHALL include at least: `geodesy-core`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`. The meta-tools SHALL remain available alongside toolsets unless `--no-meta` is given.
+
+#### Scenario: E6B toolset
+- **WHEN** the server starts with `--toolsets=e6b`
+- **THEN** `tools/list` returns the five meta-tools plus at most 40 E6B tools
+
+#### Scenario: Unknown toolset
+- **WHEN** the server starts with `--toolsets=bogus`
+- **THEN** it exits with a non-zero code and a message listing valid toolset names
+
+### Requirement: Errors are recoverable by the model
+Input validation failures and tool errors SHALL be returned as tool results with `isError: true` and a structured body containing the geoprims error `code`, `message`, `field`, and `hint` (per tool-contract), so the model can correct and retry. Unknown meta-tool names SHALL be JSON-RPC errors. For an unknown catalog id in `geoprims_run`, the error SHALL include up to 3 closest ids from search.
+
+#### Scenario: Wrong id suggestion
+- **WHEN** an agent runs id `aviation.density-altitude`
+- **THEN** the result has `isError: true`, code `UNSUPPORTED`, and suggests `aviation.altimetry.density-altitude`
+
+### Requirement: Output size control
+Results that contain large collections (cells, vertices, rows) SHALL be paginated: `geoprims_run` SHALL return at most `output.maxItems` (default 1,000, maximum 10,000) items per collection with `total`, `offset`, and `truncated` fields, plus summary statistics (count, bounding box, area where meaningful) so the agent can reason without the full list.
+
+#### Scenario: Large polyfill
+- **WHEN** an agent polyfills a county at H3 resolution 10 producing 250,000 cells
+- **THEN** the result returns 1,000 cells, `total: 250000`, `truncated: true`, and the covered area and bounding box
+
+### Requirement: Resources and prompts
+The server SHALL expose resources `geoprims://catalog` (compact index of all ids, titles, summaries) and `geoprims://tool/{id}` (full manifest with docs text and worked example), with `ttlMs` and `cacheScope: "public"` on list results. It SHALL expose workflow prompts at minimum: `preflight-performance`, `photogrammetry-mission`, `traverse-closure`, `coordinate-conversion-audit`, and `h3-resolution-choice`.
+
+#### Scenario: Read tool resource
+- **WHEN** a client reads `geoprims://tool/geodesy.utm.forward`
+- **THEN** it receives the manifest, accuracy statement, references, and worked example
+
+### Requirement: Descriptions carry caveats
+Tool descriptions and results for aviation, drone, navigation, magnetic, and datum tools SHALL carry the model/epoch and the "not for navigation" caveat in the result `meta` so agents can relay it, and descriptions SHALL be static text that never interpolates user input.
+
+#### Scenario: Magnetic caveat
+- **WHEN** an agent runs magnetic declination
+- **THEN** the result `meta` includes the model (`WMM2025`), epoch used, validity window, uncertainty, and blackout/caution-zone status
+
+### Requirement: Offline assets and opt-in fetching
+The server SHALL work fully offline with bundled small assets (magnetic models, Natural Earth, CRS registry, EGM96-15). Tools needing un-cached assets SHALL return `ASSET_UNAVAILABLE` naming the dataset, the tile, its download size, and how to enable downloads. On-demand fetching from the geoprims asset origin SHALL be enabled only with `--allow-asset-download`, SHALL use the same coarse tiles as the website, and SHALL verify integrity.
+
+#### Scenario: Geoid tile missing
+- **WHEN** an agent requests an EGM2008-1 geoid height and the tile is not cached and downloads are not allowed
+- **THEN** the result has `isError: true`, code `ASSET_UNAVAILABLE`, the tile id and size, and a hint to restart the server with `--allow-asset-download`, and suggests the EGM96-15 result with its lower accuracy stated
+
+#### Scenario: Download allowed
+- **WHEN** the server was started with `--allow-asset-download` and the same request is made
+- **THEN** the server fetches the single verified tile from the geoprims asset origin, caches it under the OS cache directory, and returns the EGM2008-1 result
+
+### Requirement: Resource limits and robustness
+The server SHALL enforce per-call wall-clock timeouts (default 10 s, configurable), the tool-declared input limits, a maximum request size of 10 MB, and SHALL survive any single tool failure (Wasm trap) without exiting. It SHALL write logs only to stderr and SHALL NOT log argument values unless `--debug` is set.
+
+#### Scenario: Timeout
+- **WHEN** a call exceeds the timeout
+- **THEN** it is canceled and returns `isError: true` with code `LIMIT_EXCEEDED` naming the timeout, and the server keeps serving
+
+### Requirement: No telemetry
+The server SHALL NOT send telemetry, update checks, or any network traffic except opt-in asset downloads.
+
+#### Scenario: Network audit
+- **WHEN** the server runs the full agent-evaluation suite under a network sandbox with no allowed hosts
+- **THEN** every tool not requiring an un-cached asset succeeds
+
+### Requirement: Distribution
+The server SHALL be installable via `npx -y @geoprims/mcp`, as an MCPB bundle (`server.type: node`) for one-click desktop install, and listed in the MCP Registry as `com.geoprims/mcp` with a `server.json` referencing the npm package (`mcpName` in `package.json`) and the MCPB release with `fileSha256`. npm releases SHALL carry provenance attestations.
+
+#### Scenario: npx install
+- **WHEN** a user adds `{"command": "npx", "args": ["-y", "@geoprims/mcp"]}` to a client configuration
+- **THEN** the client lists the five meta-tools
+
+### Requirement: Agent-evaluation benchmark
+The project SHALL maintain an evaluation set of at least 100 natural-language tasks spanning all domains, each with an expected tool id and expected numeric answer within tolerance, and SHALL report tool-selection accuracy and answer accuracy per release for at least one current frontier model. A release SHALL NOT regress answer accuracy by more than 3 percentage points without a recorded justification.
+
+#### Scenario: Eval report
+- **WHEN** the release pipeline runs the agent evaluation
+- **THEN** it publishes selection accuracy, answer accuracy, and mean tokens per task

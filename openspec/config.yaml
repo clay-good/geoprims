@@ -4,7 +4,8 @@ context: |
   Product: geoprims.com — geospatial and aerospace primitives.
   A static, client-side catalog of geodesy, navigation, aviation, drone,
   surveying, spatial-indexing, and raster math tools, plus a local MCP
-  server and library packages that run the exact same compute core.
+  server that runs the exact same compute core. Two surfaces only:
+  the static website (humans) and the local MCP server (agents).
 
   Ethos (non-negotiable):
     - Zero ads, zero accounts, zero tracking, zero server-side compute.
@@ -16,10 +17,10 @@ context: |
   Stack direction (decided in establish-platform-foundation/design.md):
     - Compute core: Rust compiled to WebAssembly (wasm32-unknown-unknown),
       one crate per domain, lazy-loaded per domain in the browser.
-    - Same Wasm artifacts power the web app, the npm package, the CLI,
-      and the local MCP server (Node.js runtime).
+    - Same Wasm artifacts power the web app and the local MCP server
+      (Node.js runtime). No separate CLI or public library package.
     - Tool manifest is the single source of truth: it generates the web
-      forms, MCP schemas, CLI flags, docs pages, and search index.
+      forms, MCP schemas, docs pages, and search index.
     - Web: statically pre-rendered pages, progressive enhancement,
       installable PWA, WebGL2 canvas (WebGPU opportunistic).
 

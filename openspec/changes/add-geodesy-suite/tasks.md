@@ -55,10 +55,10 @@
 
 ## 7. Geomagnetism
 
-- [ ] 7.1 Implement the spherical-harmonic evaluator with secular variation; verify all WMM2025 official test values
-- [ ] 7.2 Add WMMHR2025 and IGRF-14 models with validity windows; verify the model-selection and historical scenarios
-- [ ] 7.3 Implement uncertainty and blackout/caution zones; verify both zone scenarios
-- [ ] 7.4 Implement true ↔ magnetic conversion with chart variation parsing and model comparison; verify the chart-variation scenarios
+- [x] 7.1 Implement the spherical-harmonic evaluator with secular variation; verify all WMM2025 official test values
+- [ ] 7.2 Add WMMHR2025 and IGRF-14 models with validity windows; verify the model-selection and historical scenarios (built: IGRF-14 with DGRF/provisional/predictive labels, matching ppigrf within 0.001 nT, and the historical scenario; pending: WMMHR2025)
+- [x] 7.3 Implement uncertainty and blackout/caution zones; verify both zone scenarios
+- [x] 7.4 Implement true ↔ magnetic conversion with chart variation parsing and model comparison; verify the chart-variation scenarios
 - [ ] 7.5 Implement grivation; verify the UPS scenario
 - [ ] 7.6 Implement isogonic overlays in a worker; verify the overlay visual fixture
 

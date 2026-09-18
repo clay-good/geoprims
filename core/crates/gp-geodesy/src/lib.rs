@@ -1,6 +1,8 @@
 //! Geodesy: coordinate parsing and formatting, UTM, UPS, and MGRS
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
+pub mod magnetic;
+
 use gp_base::ErrorCode;
 use gp_base::angle::wrap_lon;
 use gp_base::error::{ToolError, Warning};
@@ -1292,6 +1294,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &UPS_INVERSE,
     &MGRS_FORWARD,
     &MGRS_INVERSE,
+    &magnetic::DECLINATION,
+    &magnetic::TRUE_TO_MAGNETIC,
 ];
 
 pub static REGISTRY: Registry = Registry {

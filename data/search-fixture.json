@@ -436,6 +436,22 @@
     {
       "query": "W&B",
       "expect": "aviation.loading.weight-balance"
+    },
+    {
+      "query": "magnetic declination",
+      "expect": "geodesy.magnetic.declination"
+    },
+    {
+      "query": "magnetic variation",
+      "expect": "geodesy.magnetic.declination"
+    },
+    {
+      "query": "WMM",
+      "expect": "geodesy.magnetic.declination"
+    },
+    {
+      "query": "true to magnetic",
+      "expect": "geodesy.magnetic.true-to-magnetic"
     }
   ]
 }

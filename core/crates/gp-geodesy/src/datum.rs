@@ -1435,3 +1435,227 @@ fn run_legacy(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("accuracy", ctx.out("accuracy", m(d.accuracy))),
     ]))
 }
+
+// ---------------------------------------------------------------- NADCON5
+
+const NADCON5_REF: Reference = Reference {
+    title: "NADCON5: a new transformation tool for converting between the North American Datums, NOAA Technical Memorandum NOS NGS 84",
+    issuer: "Smith, D. A., Pearson, C., and others, National Geodetic Survey",
+    year: 2017,
+    edition: "NOAA TM NOS NGS 84; grids release 20160901",
+    locator: "Grid transformations and biquadratic interpolation",
+    url: "https://geodesy.noaa.gov/library/pdfs/NOAA_TM_NOS_NGS_0084.pdf",
+};
+pub const NADCON5_ID: &str = "nadcon5-nad27-nad83-1986-conus";
+pub const NADCON5_VERSION: &str = "20160901";
+const NADCON5_FILE: &str = "nad27_nad83_1986_conus.grid";
+
+pub static NADCON5: ToolDef = ToolDef {
+    id: "geodesy.datum.nadcon5",
+    title: "NAD 27 to NAD 83 (NADCON5)",
+    summary: "Converts a latitude and longitude between NAD 27 and NAD 83 (1986) in the conterminous United States with the NGS NADCON5 grid, the official replacement for NADCON.",
+    aliases: &[
+        "NAD27 to NAD83",
+        "NADCON",
+        "NAD83 to NAD27",
+        "old survey coordinates to NAD83",
+    ],
+    keywords: &[
+        "NADCON5",
+        "NADCON",
+        "NAD 27",
+        "NAD 83",
+        "datum shift",
+        "grid",
+        "NGS",
+        "survey",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "Decimal degrees, like 39.5",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "Decimal degrees, like -98.25",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-180,180)"),
+        Field::new(
+            "direction",
+            "Direction",
+            "nad27-to-nad83 (default) or nad83-to-nad27",
+            Kind::Choice(&["nad27-to-nad83", "nad83-to-nad27"]),
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On the target datum",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On the target datum",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        mm_out(
+            "shift",
+            "Horizontal shift",
+            "Between the NAD 27 and NAD 83 coordinates of the point",
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "azimuth",
+            "Shift direction",
+            "Degrees from true north",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("[0,360)"),
+        qty(
+            "dlat",
+            "Latitude shift",
+            "NAD 83 minus NAD 27",
+            QT::Angle,
+            "arcsec",
+        )
+        .precision(Precision::Decimals(5)),
+        qty(
+            "dlon",
+            "Longitude shift",
+            "NAD 83 minus NAD 27, east positive",
+            QT::Angle,
+            "arcsec",
+        )
+        .precision(Precision::Decimals(5)),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::AssetUnavailable,
+    ],
+    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: "NADCON5 grid nad27.nad83_1986.conus (0.25°), biquadratic interpolation (NGS qterp); the reverse by iteration",
+    accuracy: "Matches PROJ's NADCON5 transformation to 1e-9°; NGS states the NAD 27 to NAD 83 (1986) step itself is good to about 0.15 m (1σ) in CONUS",
+    references: &[NADCON5_REF],
+    examples: &[Example {
+        id: "primary",
+        title: "Central Kansas (Meades Ranch, the NAD 27 origin)",
+        input: r#"{"lat":39.224,"lon":-98.542}"#,
+        source: "PROJ with the NADCON5 grid us_noaa_nadcon5_nad27_nad83_1986_conus.tif, through pyproj",
+    }],
+    primary_example: "primary",
+    assets: &[NADCON5_ID],
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.legacy",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.nad83",
+            reason: "next",
+        },
+    ],
+    sentence: "The point moves {shift} toward {azimuth} between NAD 27 and NAD 83.",
+    limits: &[("batchRows", 10_000)],
+    run: run_nadcon5,
+    ..ToolDef::BLANK
+};
+
+fn run_nadcon5(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let to83 = ctx.choice("direction")? != Some("nad83-to-nad27");
+    let bytes = ctx.asset(NADCON5_ID, NADCON5_VERSION, NADCON5_FILE)?;
+    let grid = gp_geo::nadcon5::Grid::parse(&bytes).map_err(|e| {
+        ToolError::new(
+            ErrorCode::AssetIntegrity,
+            format!("The NADCON5 grid could not be read: {e}."),
+        )
+    })?;
+    let got = if to83 {
+        grid.forward(lat, lon)
+    } else {
+        grid.reverse(lat, lon)
+    };
+    let Some((lat2, lon2)) = got else {
+        let [w, s, e, n] = grid.bounds();
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!("The point is outside the NADCON5 conterminous-US grid ({s}° to {n}° N, {}° to {}° W).", -w, -e),
+        )
+        .at("/lat")
+        .hint("Alaska, Hawaii, Puerto Rico, and the other regions have their own NADCON5 grids, not built yet; the legacy EPSG shift covers NAD 27 outside the grid at meter accuracy."));
+    };
+    let (n27, n83) = if to83 {
+        ((lat, lon), (lat2, lon2))
+    } else {
+        ((lat2, lon2), (lat, lon))
+    };
+    let (dlat, dlon) = ((n83.0 - n27.0) * 3600.0, (n83.1 - n27.1) * 3600.0);
+    // On the ground: the east-north offset on GRS 80 (sub-kilometer shifts).
+    let grs80 = CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .expect("GRS 80");
+    let (p1, p2) = (
+        (n27.0.to_radians(), n27.1.to_radians()),
+        (n83.0.to_radians(), n83.1.to_radians()),
+    );
+    let a = fr::to_ecef(&grs80, p1.0, p1.1, 0.0);
+    let b = fr::to_ecef(&grs80, p2.0, p2.1, 0.0);
+    let enu = fr::ecef_to_enu(a, p1.0, p1.1, b);
+    let shift = enu[0].hypot(enu[1]);
+    let az = gp_base::angle::wrap_azimuth(enu[0].atan2(enu[1]).to_degrees());
+    ctx.context.push((
+        "grids",
+        Json::Arr(vec![Json::str("nad27.nad83_1986.conus")]),
+    ));
+    let arcsec = |v: f64| Q {
+        value: v,
+        unit: units::by_symbol(QT::Angle, "arcsec").expect("arcsec"),
+    };
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat2))),
+        ("lon", ctx.out("lon", deg(lon2))),
+        ("shift", ctx.out("shift", m(shift))),
+        ("azimuth", ctx.out("azimuth", deg(az))),
+        ("dlat", ctx.out("dlat", arcsec(dlat))),
+        ("dlon", ctx.out("dlon", arcsec(dlon))),
+    ]))
+}

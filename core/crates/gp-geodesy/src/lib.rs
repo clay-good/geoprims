@@ -1342,6 +1342,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &datum::PLATE_MOTION,
     &datum::NAD83,
     &datum::LEGACY_SHIFT,
+    &datum::NADCON5,
 ];
 
 pub static REGISTRY: Registry = Registry {

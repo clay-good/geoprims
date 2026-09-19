@@ -61,6 +61,25 @@
       "tiling": "none",
       "loadPolicy": "bundled",
       "bundledIn": "core/crates/gp-geo/data/igrf14coeffs.txt"
+    },
+    {
+      "id": "nadcon5-nad27-nad83-1986-conus",
+      "version": "20160901",
+      "title": "NADCON5 NAD 27 to NAD 83 (1986), conterminous United States",
+      "issuer": "National Geodetic Survey, NOAA; GeoTIFF packaging by the PROJ project",
+      "license": "Public domain (US Government work)",
+      "attribution": "NADCON5 by the National Geodetic Survey (NOAA); grid from PROJ-data.",
+      "sourceUrl": "https://cdn.proj.org/us_noaa_nadcon5_nad27_nad83_1986_conus.tif",
+      "retrievedAt": "2026-09-19",
+      "files": {
+        "nad27_nad83_1986_conus.grid": {
+          "sha256": "72d6b0bc3d12eb6091d0a49fcd899e6ddf4541e695fe3d53c9b695b2f8c4ee3f",
+          "bytes": 199113
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "interpolation": "NADCON5 biquadratic (NOAA TM NOS NGS 84), as PROJ implements it"
     }
   ]
 }

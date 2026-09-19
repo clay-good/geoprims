@@ -55,7 +55,7 @@
 - [ ] 6.3 Implement the differential runner (10,000 random and edge-biased cases per family, tolerance comparison, failing-case report); verify with a deliberately perturbed tool that it fails
 - [ ] 6.4 Implement the cross-host determinism suite (Playwright Chromium/Firefox/WebKit plus Node, byte comparison); verify it passes on the sample tool and fails on an injected host-Math fixture
 - [ ] 6.5 Implement the benchmark harness (reference profile, p50/p95, diff against previous release); verify output table and regression failure on a slowed fixture
-- [ ] 6.6 Implement verification report generation (`/verification/<version>`); verify it lists vector counts, sources, max error, and tolerances
+- [x] 6.6 Implement verification report generation (`/verification/<version>`); verify it lists vector counts, sources, max error, and tolerances (tools/trust/verification.mjs reruns every live vector through the built modules, 1,014 vectors and 3,262 checks in about 150 ms; the page and a JSON download list each tool's worst check with its tolerance and share used)
 
 ## 7. Privacy and security
 

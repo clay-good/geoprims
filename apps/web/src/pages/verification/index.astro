@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog } from '../../lib/catalog.mjs';
+---
+<Base title="Verification reports · geoprims" description="One verification report per geoprims release, listing every tool's test vectors, sources, largest observed error, and tolerance." canonical="/verification/">
+  <h1>Verification reports</h1>
+  <p class="purpose">One report per release. Each lists every tool's golden test vectors, their sources, the largest observed error against the reference, and the declared tolerance.</p>
+  <ul>
+    <li><a href={`/verification/${catalog.coreVersion}/`}>Release {catalog.coreVersion}</a> (current)</li>
+  </ul>
+</Base>

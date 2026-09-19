@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../../../packages/runtime/src/node.mjs';
 import { readSignoffs, reviewSentence } from '../../../../tools/trust/signoffs.mjs';
+import { entriesFor, KINDS, readChangelog } from '../../../../tools/trust/changelog.mjs';
+import { verificationReport } from '../../../../tools/trust/verification.mjs';
 
 const root = join(process.cwd(), '../..');
 export const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -16,6 +18,21 @@ export const reviewLine = (domain, id = null) => reviewSentence(signoffs, domain
 /** Severity of each warning a tool may emit (codes registry), for ordering and styling. */
 export const severities = (t) => Object.fromEntries(t.warnings.map((c) => [c, codes.warnings[c]?.severity ?? 'info']));
 const host = nodeHost(join(root, 'dist/wasm'));
+
+export const changelog = readChangelog(root);
+export const CHANGE_KINDS = KINDS;
+/** Changelog entries that name a tool. */
+export const changesFor = (id) => entriesFor(changelog, id);
+let report = null;
+/** This release's verification report, computed once per build from the vectors. */
+export const verification = () => (report ??= verificationReport({ root, catalog, host }));
+/** Plain display of an observed error and its share of the declared tolerance. */
+export function errorShare(worst) {
+  if (!worst) return { error: 'no numeric checks', share: '' };
+  const tol = [worst.abs && `±${worst.abs}`, worst.rel && `±${worst.rel} relative`].filter(Boolean).join(' + ') || 'exact';
+  const share = Number.isFinite(worst.used) ? `${Math.round(worst.used * 100)}%` : 'over';
+  return { error: worst.error === 0 ? '0' : worst.error.toPrecision(2), tol, share, path: worst.path.replace(/^result\./, '').replace(/\.value$/, '') };
+}
 const modules = JSON.parse(readFileSync(join(root, 'dist/wasm/modules.json'), 'utf8')).modules;
 
 /** The first 16 hex digits of the SHA-256 of the tool's Wasm module: which build made the answer. */

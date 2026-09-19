@@ -2,7 +2,7 @@
 import Base from '../../../../layouts/Base.astro';
 import ToolApp from '../../../../components/ToolApp.svelte';
 import { openIssue } from '../../../../lib/known-issues.mjs';
-import { breadcrumbs, buildHashOf, catalog, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, severities, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, buildHashOf, catalog, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, severities, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -39,6 +39,13 @@ const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outp
     <p><strong>Accuracy:</strong> {t.accuracy}</p>
     <p><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
     <p><strong>Review:</strong> {reviewLine(t.domain, t.id)}</p>
+    <p><strong>Status:</strong> version {t.version}, core {catalog.coreVersion}. See this tool in the <a href={`/verification/${catalog.coreVersion}/#${t.id}`}>verification report</a>.</p>
+    {changesFor(t.id).length > 0 && (
+      <>
+        <h3>Changes</h3>
+        <ul>{changesFor(t.id).map((e) => <li>{e.date}, {CHANGE_KINDS[e.kind].toLowerCase()}: {e.summary} <a href="/changelog/">Changelog</a></li>)}</ul>
+      </>
+    )}
     <p><strong>Checked against:</strong> {t.vectorCount} golden test vectors (<a href={`/vectors/${t.id}.jsonl`} download>download the test vectors</a>, each with its source and tolerance). See <a href="/methodology/">how results are checked</a> and <a href="/sources/">every source</a>.</p>
     <h3>Sources</h3>
     <ul>

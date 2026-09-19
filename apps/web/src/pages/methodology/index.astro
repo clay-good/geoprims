@@ -22,6 +22,7 @@ const route = (id) => '/' + id.split('.').join('/') + '/';
     <li><strong>Golden vectors.</strong> {vectors.toLocaleString('en-US')} test cases across {counts.all.endpoints} tool ids, each with its source (a published table, a worked example, or an independent implementation) and a tolerance. A test fails if any vector changes silently; changed expectations are kept and marked superseded.</li>
     <li><strong>Differential tests against reference implementations</strong>, for example: Karney geodesics against GeographicLib; UTM, UPS, and MGRS against GeographicLib; all 124 SPCS83 zones against PROJ; H3 against the H3 C library; sun position against NREL SPA in pvlib; time zones against Python zoneinfo; magnetic declination against the NCEI WMM2025 test values and ppigrf; and the EGM96 geoid against GeographicLib GeoidEval.</li>
     <li><strong>Every spec scenario is a test.</strong> The behaviors written in the specifications, including refusals and warnings, run on every build.</li>
+    <li><strong>A report for every release.</strong> The <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> lists every tool's vectors, sources, largest observed error, and tolerance, and the <a href="/changelog/">changelog</a> labels every change to a published result.</li>
     <li><strong>Sources stay current.</strong> The <a href="/sources/">sources ledger</a> fails the build on a superseded edition, an expired model, or an overdue check.</li>
     <li><strong>Assumptions are stated.</strong> When a result depends on an assumption (dry air, ISA temperature, a nominal fuel density), the result carries a named warning, and the MCP server returns it to agents too.</li>
   </ul>
@@ -42,7 +43,6 @@ const route = (id) => '/' + id.split('.').join('/') + '/';
     <li>{counts.experimental.endpoints} of {counts.all.endpoints} tools are still marked <strong>experimental</strong>: they have not met the stable bar yet, and their results say so.</li>
     <li>No practitioner (pilot, CFI, surveyor, or drone operator) has signed off on any tool yet. Each domain page says so, and reviewed tools will be listed with the reviewer's name, qualification, and date.</li>
     <li>A build gate checks this site's claims (counts, what is stable, what results are checked against, and reviews) against the build itself.</li>
-    <li>There is no per-release verification report yet.</li>
   </ul>
 
   <h2>If you find a wrong answer</h2>

@@ -1,0 +1,41 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { catalog, errorShare, route, verification } from '../../../lib/catalog.mjs';
+export function getStaticPaths() {
+  return [{ params: { version: catalog.coreVersion } }];
+}
+const { version } = Astro.params;
+const r = await verification();
+---
+<Base title={`Verification report ${version} · geoprims`} description={`Every geoprims tool in release ${version}: golden vector counts, sources, the largest observed error against the reference, and the declared tolerance.`} canonical={`/verification/${version}/`}>
+  <h1>Verification report {version}</h1>
+  <p class="purpose">
+    Every golden test vector in this release, run through the same modules this site and the MCP server use: {r.counts.vectors.toLocaleString('en-US')} vectors and {r.counts.checks.toLocaleString('en-US')} checks across {r.counts.tools} tools,
+    with {r.counts.failures === 0 ? 'no failures' : `${r.counts.failures} failures`}.
+  </p>
+  <p>
+    "Largest error" is the observed difference from the reference value at the check that used the most of its tolerance,
+    shown with that tolerance and the share used. <a href={`/verification/${version}.json`} download>Download this report as JSON</a>.
+    See the <a href="/methodology/">methodology</a> and the <a href="/changelog/">changelog</a>.
+  </p>
+  <div class="table-scroll">
+    <table class="report">
+      <thead><tr><th scope="col">Tool</th><th scope="col">Vectors</th><th scope="col">Largest error</th><th scope="col">Tolerance</th><th scope="col">Used</th><th scope="col">Sources</th></tr></thead>
+      <tbody>
+        {r.tools.map((t) => {
+          const e = errorShare(t.worst);
+          return (
+            <tr id={t.id}>
+              <th scope="row"><a href={route(t.id)}>{t.title}</a>{t.stability === 'stable' ? ' (stable)' : ''}</th>
+              <td>{t.vectors}</td>
+              <td>{e.error}{e.path && <> <span class="notice">({e.path})</span></>}</td>
+              <td>{e.tol}</td>
+              <td>{e.share}</td>
+              <td>{t.sources.map((s) => `${s.source} (${s.count})`).join('; ')}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+</Base>

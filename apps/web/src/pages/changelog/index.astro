@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import { changelog, CHANGE_KINDS, route, tool } from '../../lib/catalog.mjs';
+const dates = [...new Set(changelog.entries.map((e) => e.date))];
+---
+<Base title="Changelog · geoprims" description="What changed in geoprims, newest first. Result changes, where a published answer moved, are labeled and name the test vectors they replaced." canonical="/changelog/">
+  <h1>Changelog</h1>
+  <p class="purpose">What changed, newest first. A <strong>result change</strong> means a published answer moved; it names the test vectors it replaced, which stay in each tool's downloadable test vectors, marked superseded. Every release also has a <a href="/verification/">verification report</a>.</p>
+  {dates.map((d) => (
+    <section>
+      <h2>{d}</h2>
+      <ul class="issues">
+        {changelog.entries.filter((e) => e.date === d).map((e) => (
+          <li class={`card change ${e.kind}`}>
+            <p><span class={e.kind === 'result-change' ? 'badge' : 'label'}>{CHANGE_KINDS[e.kind]}</span> {e.summary}</p>
+            {e.tools.length > 0 && <p class="notice">Tools: {e.tools.map((id, i) => <>{i > 0 && ', '}<a href={route(id)}>{tool(id)?.title ?? id}</a></>)}</p>}
+            {e.vectors.length > 0 && <p class="notice">Replaced vectors: {e.vectors.join(', ')}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>

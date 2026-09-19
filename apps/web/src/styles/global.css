@@ -128,3 +128,9 @@ dialog.palette li[aria-selected='true'] { background: var(--bg); outline: 2px so
 .palette-title { font-weight: 600; }
 .palette-summary { display: block; color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .palette-keys { margin: 0; padding: 0.5rem 1rem; border-block-start: 1px solid var(--line); color: var(--muted); font-size: 0.8rem; }
+/* Wide tables scroll inside their box, never the page. */
+.table-scroll { overflow-x: auto; max-inline-size: 100%; }
+table.report { border-collapse: collapse; font-size: 0.85rem; min-inline-size: 48rem; }
+table.report th, table.report td { text-align: start; vertical-align: top; padding: 0.4rem 0.6rem; border-block-end: 1px solid var(--line); }
+table.report thead th { color: var(--muted); font-weight: 600; }
+.label { display: inline-block; font: 600 0.75rem var(--mono); padding: 0.1rem 0.5rem; border: 1px solid var(--line); color: var(--muted); border-radius: 4px; vertical-align: middle; }

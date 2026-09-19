@@ -31,7 +31,7 @@
 - [ ] 4.2 Build the "How we got this" panel with substituted formulas, responsive default state, and print expansion; verify the substituted-formula and printed-proof scenarios
 - [ ] 4.3 Implement limitation banners shared with MCP; verify the banner-text scenario
 - [ ] 4.4 Implement context bands with cited bases; verify the GSD scenario
-- [ ] 4.5 Build `/sources`, `/methodology`, `/changelog` with result-change labels, and vector downloads; verify the sources-page and vector-download scenarios (built: /sources from the ledger with citing tools, /methodology stating what is and is not verified, and per-tool /vectors/<id>.jsonl downloads; pending: /changelog)
+- [x] 4.5 Build `/sources`, `/methodology`, `/changelog` with result-change labels, and vector downloads; verify the sources-page and vector-download scenarios (/sources from the ledger with citing tools, /methodology, per-tool /vectors/<id>.jsonl downloads, and /changelog from data/changelog.json with result changes labeled; tools/trust/changelog.mjs fails the build when a superseded vector has no result-change entry)
 
 ## 5. Reviewer recruitment
 

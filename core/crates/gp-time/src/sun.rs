@@ -160,6 +160,40 @@ pub fn crossing(lat: f64, lon: f64, noon_jd: f64, altitude: f64, sign: f64) -> S
     let e = |jd: f64| spa_elevation(lat, lon, jd) - altitude;
     let noon = transit(lon, noon_jd);
     let low = noon + sign * 0.5;
+    // Fast path: the NOAA series (good to about 0.01°) settles every case
+    // that is not within 0.05° of grazing, and seeds a 20-minute bracket.
+    let culmination = |jd: f64, upper: bool| {
+        let (d, _) = declination_eot(jd);
+        if upper { 90.0 - (lat - d).abs() } else { (lat + d).abs() - 90.0 }
+    };
+    let (hi, lo) = (culmination(noon, true), culmination(low, false));
+    if hi < altitude - 0.05 {
+        return Side::Below;
+    }
+    if lo > altitude + 0.05 {
+        return Side::Above;
+    }
+    if hi > altitude + 0.05 && lo < altitude - 0.05 {
+        let (phi, mut t) = (lat * RAD, noon);
+        for _ in 0..4 {
+            let d = declination_eot(t).0 * RAD;
+            let x = ((sin(altitude * RAD) - sin(phi) * sin(d)) / (cos(phi) * cos(d))).clamp(-1.0, 1.0);
+            t = noon + sign * acos(x) / RAD * 4.0 / 1440.0;
+        }
+        let span = 10.0 / 1440.0;
+        let (mut below, mut above) = if sign < 0.0 { (t - span, t + span) } else { (t + span, t - span) };
+        if e(below) < 0.0 && e(above) > 0.0 {
+            for _ in 0..16 {
+                let mid = (below + above) / 2.0;
+                if e(mid) < 0.0 {
+                    below = mid;
+                } else {
+                    above = mid;
+                }
+            }
+            return Side::At((below + above) / 2.0);
+        }
+    }
     let window = 0.1;
     if extreme(e, noon - window, noon + window, true) < 0.0 {
         return Side::Below;

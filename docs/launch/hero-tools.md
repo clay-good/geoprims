@@ -14,12 +14,12 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Pressure altitude | `aviation.altimetry.pressure-altitude` | [x] | [ ] | [ ] |
 | Pilots | E6B wind triangle | `aviation.wind.heading-groundspeed` | [x] | [ ] | [ ] |
 | Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] |
-| Pilots | The four nights | `time.sun.aviation-nights` | [ ] | [ ] | [ ] |
+| Pilots | The four nights | `time.sun.aviation-nights` | [x] | [ ] | [ ] |
 | Pilots | METAR decoder | `aviation.weather.metar-decode` | [ ] | [ ] | [ ] |
 | Pilots | TAF decoder | `aviation.weather.taf-decode` | [ ] | [ ] | [ ] |
 | Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [ ] | [ ] | [ ] |
 | Pilots | Holding entry | `aviation.ifr.hold-entry` | [ ] | [ ] | [ ] |
-| Pilots | Zulu time | `time.scale.utc-offset` | [ ] | [ ] | [ ] |
+| Pilots | Zulu time | `time.scale.utc-offset` | [x] | [ ] | [ ] |
 | Pilots | Weight and balance | `aviation.loading.weight-balance` | [x] | [ ] | [ ] |
 | Pilots | Top of descent | `aviation.performance.top-of-descent` | [ ] | [ ] | [ ] |
 | Pilots | Visual descent point | `aviation.performance.vdp` | [ ] | [ ] | [ ] |
@@ -52,4 +52,4 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 22 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 24 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.

@@ -5,6 +5,28 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "time.sun.aviation-nights",
+        "time.scale.utc-offset"
+      ],
+      "vectors": [],
+      "summary": "The four aviation nights and local time to Zulu are now stable. The nights match 491 regulatory windows built from US Naval Observatory times at 100 places; Zulu matches Python zoneinfo on 2,388 instants and the Python documentation's Los Angeles examples. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "time.scale.utc-offset",
+        "time.sun.events",
+        "time.sun.aviation-nights",
+        "time.sun.mapping-window"
+      ],
+      "vectors": [],
+      "summary": "Short and legacy tzdb zone names such as CET, EET, and EST5EDT are now accepted wherever a time zone is asked for; before, they were refused as malformed UTC offsets."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "time.sun.events"
       ],
       "vectors": [],

@@ -158,9 +158,20 @@ impl ZoneSpec {
             });
             return Ok(ZoneSpec::Named(z));
         }
-        civil::parse_offset(t)
-            .map(ZoneSpec::Fixed)
-            .map_err(|m| ToolError::invalid(&at, m))
+        match civil::parse_offset(t) {
+            Ok(m) => Ok(ZoneSpec::Fixed(m)),
+            // Short and legacy tzdb names such as CET, EET, or EST5EDT.
+            Err(m) => match tz::zone(t) {
+                Some(z) => {
+                    ctx.assets.push(AssetRef {
+                        id: "tzdb".into(),
+                        version: tz::version().into(),
+                    });
+                    Ok(ZoneSpec::Named(z))
+                }
+                None => Err(ToolError::invalid(&at, m)),
+            },
+        }
     }
 
     /// Offset in minutes at a UTC instant (Unix seconds).
@@ -875,6 +886,7 @@ fn run_block_time(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static UTC_OFFSET: ToolDef = ToolDef {
     id: "time.scale.utc-offset",
+    stability: gp_base::tool::Stability::Stable,
     title: "Local time to UTC (Zulu)",
     summary: "Converts a local time to UTC and Zulu time with an IANA time zone or a UTC offset, or UTC to local, handling daylight saving gaps and overlaps and showing the date change.",
     aliases: &["Zulu time converter", "local to UTC", "UTC to local time"],

@@ -104,6 +104,39 @@ def block_time():
     return out
 
 
+PYDOC = "Python zoneinfo documentation, America/Los_Angeles examples (docs.python.org/3/library/zoneinfo.html)"
+TZDIFF = "Python zoneinfo on tzdata 2026d (core/crates/gp-time/tests/data/tz_diff.csv)"
+# Rows of tz_diff.csv: zone, Unix seconds, UTC offset (s), abbreviation.
+TZ_ROWS = [("Asia/Kathmandu", 3663664280, 20700, "+0545"), ("America/St_Johns", 3979810963, -12600, "NST"),
+           ("America/St_Johns", 3580212819, -9000, "NDT"), ("Asia/Tehran", 1605743461, 12600, "+0330"),
+           ("CET", 3428237823, 7200, "CEST"), ("CST6CDT", 1856469019, -18000, "CDT"), ("EET", 674726412, 10800, "EEST")]
+
+
+def utc_offset_more():
+    """Vectors v012 on: the Python documentation's Los Angeles examples and unusual offsets from the zoneinfo fixture."""
+    out = [
+        vec(12, {"time": "2020-10-31T12:00", "offset": "America/Los_Angeles"},
+            {"result.utc": "2020-10-31T19:00:00Z", "result.local": "2020-10-31T12:00:00-07:00", "result.abbr": "PDT"}, PYDOC, "retrieved 2026-09-19"),
+        vec(13, {"time": "2020-11-01T12:00", "offset": "America/Los_Angeles"},
+            {"result.utc": "2020-11-01T20:00:00Z", "result.local": "2020-11-01T12:00:00-08:00", "result.abbr": "PST"}, PYDOC, "retrieved 2026-09-19"),
+        vec(14, {"time": "2020-11-01T01:00", "offset": "America/Los_Angeles"},
+            {"result.utc": "2020-11-01T08:00:00Z", "result.local": "2020-11-01T01:00:00-07:00", "meta.warnings.0.code": "AMBIGUOUS_INPUT"}, PYDOC, "retrieved 2026-09-19"),
+        vec(15, {"time": "2020-11-01T08:00Z", "offset": "America/Los_Angeles", "direction": "utc-to-local"},
+            {"result.local": "2020-11-01T01:00:00-07:00", "result.abbr": "PDT"}, PYDOC, "retrieved 2026-09-19"),
+        vec(16, {"time": "2020-11-01T09:00Z", "offset": "America/Los_Angeles", "direction": "utc-to-local"},
+            {"result.local": "2020-11-01T01:00:00-08:00", "result.abbr": "PST"}, PYDOC, "retrieved 2026-09-19"),
+    ]
+    for zone, t, off, abbr in TZ_ROWS:
+        t -= t % 60
+        u = datetime.fromtimestamp(t, timezone.utc)
+        local = u.astimezone(timezone(timedelta(seconds=off)))
+        sign = "-" if off < 0 else "+"
+        suffix = f"{sign}{abs(off) // 3600:02d}:{abs(off) % 3600 // 60:02d}"
+        out.append(vec(12 + len(out), {"time": u.strftime("%Y-%m-%dT%H:%MZ"), "offset": zone, "direction": "utc-to-local"},
+                       {"result.local": local.strftime("%Y-%m-%dT%H:%M:%S") + suffix, "result.abbr": abbr}, TZDIFF, "2026d"))
+    return out
+
+
 def utc_offset():
     cases = [("2026-07-01T14:05", "-05:00", "local-to-utc"), ("2026-07-01T20:30", "-06:00", "local-to-utc"), ("2026-01-15T03:00", "+05:30", "local-to-utc"),
              ("2026-07-01T01:30", "-06:00", "utc-to-local"), ("2026-12-31T23:30", "+13:45", "utc-to-local")]
@@ -151,7 +184,7 @@ def zone_info():
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"time.scale.gps-week": gps_week(), "time.scale.gps-to-utc": gps_to_utc(), "time.scale.julian-date": julian(),
-             "time.scale.decimal-hours": decimal_hours(), "time.scale.block-time": block_time(), "time.scale.utc-offset": utc_offset(), "time.scale.zone-info": zone_info()}
+             "time.scale.decimal-hours": decimal_hours(), "time.scale.block-time": block_time(), "time.scale.utc-offset": utc_offset() + utc_offset_more(), "time.scale.zone-info": zone_info()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

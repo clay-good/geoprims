@@ -151,7 +151,30 @@ def nights():
         vec(4, dict(lon_, landing_time="17:30"), {"result.currency_from": "17:21", "result.landing_counts_currency": "yes"}, src, USNO_VER),
         vec(5, dict(den), {"result.part107_evening": ev("2026-06-21", "20:31", "2026-06-22", "0231") + " to " + ev("2026-06-21", "21:01", "2026-06-22", "0301")}, src, USNO_VER),
         vec(6, {"lat": 71.29, "lon": -156.79, "date": "2026-12-21", "offset": "-09:00", "landing_time": "18:00"}, {"result.landing_counts_currency": "yes", "result.landing_logs_night": "yes"}, SPEC, "2026"),
-    ]
+    ] + night_landings()
+
+
+# Rows of core/crates/gp-time/tests/data/usno_nights.csv (USNO sunset and end of civil twilight on the date).
+NIGHT_ROWS = [
+    (34.1445, -110.8490, "2026-03-13", -7, "18:30", "18:55"), (38.8705, -84.6624, "2026-09-09", -6, "17:56", "18:23"),
+    (34.2051, -82.2974, "2026-10-01", -5, "18:13", "18:38"), (37.0270, 58.1692, "2026-01-15", 4, "17:14", "17:42"),
+    (29.0203, -86.6847, "2026-10-19", -6, "17:12", "17:36"), (26.4280, -79.2941, "2026-01-14", -5, "17:46", "18:11"),
+    (45.8054, -76.0604, "2026-04-03", -5, "18:35", "19:06"), (31.2550, 83.6424, "2026-03-18", 6, "18:35", "19:00"),
+]
+
+
+def night_landings():
+    """Landings 15 minutes either side of the currency start (sunset + 1 h), both after the end of civil twilight."""
+    out = []
+    src = "USNO sunset and civil twilight (retrieved 2026-09-19, tools/vectors/gen_usno_sun.py --nights) with 14 CFR 61.57(b) and 1.1"
+    for la, lo, d, tz, set_, dusk in NIGHT_ROWS:
+        place = {"lat": la, "lon": lo, "date": d, "offset": f"{'-' if tz < 0 else '+'}{abs(tz):02d}:00"}
+        for after, counts in [(75, "yes"), (45, "no")]:
+            m = mins(set_) + after
+            assert m - mins(dusk) >= 10, "the landing must be clearly after civil twilight"
+            out.append(vec(7 + len(out), dict(place, landing_time=f"{m // 60:02d}:{m % 60:02d}"),
+                           {"result.landing_logs_night": "yes", "result.landing_counts_currency": counts}, src, USNO_VER))
+    return out
 
 
 def mapping():

@@ -763,6 +763,7 @@ fn run_events(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static AVIATION_NIGHTS: ToolDef = ToolDef {
     id: "time.sun.aviation-nights",
+    stability: gp_base::tool::Stability::Stable,
     title: "The four aviation nights",
     summary: "All four US aviation night periods for a place and date, each with its regulation: logging night, passenger-currency night, position lights, and Part 107 civil twilight.",
     aliases: &[
@@ -860,7 +861,7 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
         "EXPERIMENTAL_TOOL",
     ],
     model: "Sunrise and sunset (−0.833°) and civil twilight (−6°) from the NREL SPA geometric sun, for the evening of the date and the next morning",
-    accuracy: "Within about 1 minute of published times; the Air Almanac tabulates twilight to the minute",
+    accuracy: "Within 1 minute of the windows built from USNO times at 100 places (491 windows); the Air Almanac, the legal source for twilight, tabulates to the minute",
     references: &[CFR_1_1_NIGHT, CFR_61_57, CFR_91_209, CFR_107_29],
     examples: &[Example {
         id: "primary",
@@ -897,10 +898,16 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let today = local_noon(lon, day, off);
     let tomorrow = local_noon(lon, day + 1, off);
     let hour = 1.0 / 24.0;
-    let set = sun::crossings(lat, lon, today, SUNRISE_ALTITUDE);
-    let rise = sun::crossings(lat, lon, tomorrow, SUNRISE_ALTITUDE);
-    let dusk = sun::crossings(lat, lon, today, -6.0);
-    let dawn = sun::crossings(lat, lon, tomorrow, -6.0);
+    // Only this evening's side and tomorrow morning's side matter, each on its own.
+    let side = |noon: f64, alt: f64, sign: f64| match sun::crossing(lat, lon, noon, alt, sign) {
+        sun::Side::At(t) => Crossing::Times(t, t),
+        sun::Side::Above => Crossing::AlwaysAbove,
+        sun::Side::Below => Crossing::AlwaysBelow,
+    };
+    let set = side(today, SUNRISE_ALTITUDE, 1.0);
+    let rise = side(tomorrow, SUNRISE_ALTITUDE, -1.0);
+    let dusk = side(today, -6.0, 1.0);
+    let dawn = side(tomorrow, -6.0, -1.0);
     ctx.warnings.push(Warning::new(
         "CIVIL_TWILIGHT_APPROXIMATED",
         "Logging night uses the sun at 6° below the horizon; the Air Almanac is the legal source and can differ by a minute.",

@@ -445,3 +445,70 @@ fn cross_track_spec_scenarios() {
     );
     assert_eq!(same["error"]["code"], "INVALID_INPUT");
 }
+
+#[test]
+fn fly_by_tsd_and_cpa_scenarios() {
+    // 90° fly-by at 120 kt and 25° of bank: radius and lead 833.4 m (±0.1 m).
+    let r = call(
+        "navigation.route.fly-by",
+        r#"{"inbound":"360 deg","outbound":"090 deg","speed":"120 kt","bank":"25 deg"}"#,
+    );
+    assert!((num(&r, "result.radius.value") - 833.4).abs() < 0.1, "{r}");
+    assert!((num(&r, "result.lead_distance.value") - 833.4).abs() < 0.1);
+    assert_eq!(r["result"]["direction"], "right");
+    // Standard rate by default: 18.24° of bank at 120 kt.
+    let s = call(
+        "navigation.route.fly-by",
+        r#"{"inbound":"090 deg","outbound":"045 deg","speed":"120 kt"}"#,
+    );
+    assert!(
+        (num(&s, "result.bank_used.value") - 18.24).abs() < 0.01,
+        "{s}"
+    );
+    assert_eq!(s["result"]["direction"], "left");
+    let sharp = call(
+        "navigation.route.fly-by",
+        r#"{"inbound":"000 deg","outbound":"150 deg","speed":"120 kt"}"#,
+    );
+    assert!(codes(&sharp).contains(&"FLY_OVER_RECOMMENDED".to_owned()));
+    // 250 NM at 125 kt is 2 h 00 min; departing 14:30 at UTC-6 arrives 16:30, 22:30Z.
+    let t = call(
+        "navigation.route.time-speed-distance",
+        r#"{"distance":"250 NM","speed":"125 kt","departure":"14:30","utc_offset":"-06:00"}"#,
+    );
+    assert_eq!(t["result"]["ete"], "2 h 00 min", "{t}");
+    assert_eq!(t["result"]["eta"], "16:30");
+    assert_eq!(t["result"]["eta_utc"], "22:30Z");
+    let late = call(
+        "navigation.route.time-speed-distance",
+        r#"{"distance":"250 NM","speed":"125 kt","departure":"23:30","utc_offset":"+05:30"}"#,
+    );
+    assert_eq!(late["result"]["eta"], "01:30 (next day)", "{late}");
+    assert_eq!(late["result"]["eta_utc"], "20:00Z");
+    let speed = call(
+        "navigation.route.time-speed-distance",
+        r#"{"distance":"300 NM","time":"2.5 h"}"#,
+    );
+    assert!(
+        (num(&speed, "result.speed.value") - 120.0).abs() < 1e-9,
+        "{speed}"
+    );
+    let one = call(
+        "navigation.route.time-speed-distance",
+        r#"{"distance":"300 NM"}"#,
+    );
+    assert_eq!(one["error"]["code"], "INVALID_INPUT");
+    // CPA: t = 110 s, separation 141.42 m.
+    let c = call(
+        "navigation.route.cpa",
+        r#"{"a_course":"090 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"1200 m","b_course":"180 deg","b_speed":"10 m/s"}"#,
+    );
+    assert!((num(&c, "result.time.value") - 110.0).abs() < 1e-9, "{c}");
+    assert!((num(&c, "result.separation.value") - 141.421_356).abs() < 1e-5);
+    let away = call(
+        "navigation.route.cpa",
+        r#"{"a_course":"270 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"0 m","b_course":"090 deg","b_speed":"10 m/s"}"#,
+    );
+    assert!(codes(&away).contains(&"DIVERGING".to_owned()), "{away}");
+    assert!((num(&away, "result.separation.value") - 1000.0).abs() < 1e-9);
+}

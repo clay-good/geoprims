@@ -4,7 +4,8 @@ Python geographiclib (pip install geographiclib): the closest point on the
 geodesic A→B is where the course to P is perpendicular to the line, found by
 bisection after a coarse scan; independent of the core's gnomonic method.
 
-Writes core/vectors/navigation.route.cross-track.jsonl.
+Also fly-by turns, time-speed-distance, and CPA, evaluated here from the
+spec's formulas. Writes core/vectors/navigation.route.*.jsonl.
 """
 import json
 import math
@@ -14,7 +15,10 @@ from pathlib import Path
 from geographiclib.geodesic import Geodesic
 
 G = Geodesic.WGS84
-OUT = Path(__file__).resolve().parents[2] / "core/vectors/navigation.route.cross-track.jsonl"
+VECTORS = Path(__file__).resolve().parents[2] / "core/vectors"
+OUT = VECTORS / "navigation.route.cross-track.jsonl"
+KT = 1852 / 3600
+G0 = 9.80665
 SRC = "Karney's geographiclib (Python): perpendicularity bisection along the geodesic"
 VER = "geographiclib 2.1"
 
@@ -73,6 +77,68 @@ def main():
                     "expect": exp, "source": SRC, "sourceVersion": VER, "tolerance": tol})
     OUT.write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in out))
     print(len(out), "vectors ->", OUT.name)
+    formulas(rnd)
+
+
+def write(tool, rows):
+    (VECTORS / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in rows))
+    print(len(rows), "vectors ->", tool)
+
+
+def vec(i, inp, exp, tol, src):
+    e = dict(exp)
+    e["ok"] = True
+    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": "2026", "tolerance": tol}
+
+
+def formulas(rnd):
+    turn_src = "Coordinated turn: R = V^2/(g tan bank), lead = R tan(dpsi/2), evaluated in Python"
+    rows = []
+    cases = [(360, 90, 120, 25), (90, 45, 120, None)] + [(rnd.uniform(0, 360), rnd.uniform(0, 360), rnd.uniform(60, 480), rnd.choice([None, rnd.uniform(10, 35)])) for _ in range(20)]
+    for i, (a, b, kt, bank) in enumerate(cases, 1):
+        v = kt * KT
+        phi = bank if bank is not None else math.degrees(math.atan(v * math.radians(3) / G0))
+        r = v * v / (G0 * math.tan(math.radians(phi)))
+        d = (b - a + 180) % 360 - 180
+        lead = r * math.tan(math.radians(abs(d) / 2))
+        inp = {"inbound": f"{a!r} deg", "outbound": f"{b!r} deg", "speed": f"{kt!r} kt"}
+        if bank is not None:
+            inp["bank"] = f"{bank!r} deg"
+        rows.append(vec(i, inp, {"result.radius.value": r, "result.lead_distance.value": lead, "result.arc_length.value": r * math.radians(abs(d)),
+                                 "result.direction": "right" if d >= 0 else "left"},
+                        {k: {"rel": 1e-12, "abs": 1e-9} for k in ("result.radius.value", "result.lead_distance.value", "result.arc_length.value")}, turn_src))
+    write("navigation.route.fly-by", rows)
+
+    tsd_src = "distance = speed x time, evaluated in Python"
+    rows = []
+    for i in range(1, 23):
+        nm, kt = rnd.uniform(5, 3000), rnd.uniform(40, 550)
+        h = nm / kt
+        total = round(h * 60)
+        ete = f"{total // 60} h {total % 60:02d} min" if total >= 60 else f"{total} min"
+        which = i % 3
+        if which == 0:
+            inp, exp = {"distance": f"{nm!r} NM", "speed": f"{kt!r} kt"}, {"result.time.value": h, "result.ete": ete}
+        elif which == 1:
+            inp, exp = {"distance": f"{nm!r} NM", "time": f"{h!r} h"}, {"result.speed.value": kt}
+        else:
+            inp, exp = {"speed": f"{kt!r} kt", "time": f"{h!r} h"}, {"result.distance.value": nm}
+        rows.append(vec(i, inp, exp, {k: {"rel": 1e-12, "abs": 1e-9} for k, v in exp.items() if isinstance(v, float)}, tsd_src))
+    write("navigation.route.time-speed-distance", rows)
+
+    cpa_src = "Relative motion in a flat plane: t = -(r.v)/|v|^2, evaluated in Python"
+    rows = []
+    cases = [(90, 10, 1000, 1200, 180, 10)] + [(rnd.uniform(0, 360), rnd.uniform(1, 60), rnd.uniform(-2e4, 2e4), rnd.uniform(-2e4, 2e4), rnd.uniform(0, 360), rnd.uniform(1, 60)) for _ in range(21)]
+    for i, (ac, asp, bx, by, bc, bsp) in enumerate(cases, 1):
+        va = (asp * math.sin(math.radians(ac)), asp * math.cos(math.radians(ac)))
+        vb = (bsp * math.sin(math.radians(bc)), bsp * math.cos(math.radians(bc)))
+        vx, vy = vb[0] - va[0], vb[1] - va[1]
+        t = max(0.0, -(bx * vx + by * vy) / (vx * vx + vy * vy))
+        rx, ry = bx + vx * t, by + vy * t
+        inp = {"a_course": f"{ac!r} deg", "a_speed": f"{asp!r} m/s", "b_east": f"{bx!r} m", "b_north": f"{by!r} m", "b_course": f"{bc!r} deg", "b_speed": f"{bsp!r} m/s"}
+        exp = {"result.time.value": t, "result.separation.value": math.hypot(rx, ry)}
+        rows.append(vec(i, inp, exp, {k: {"rel": 1e-9, "abs": 1e-9} for k in exp}, cpa_src))
+    write("navigation.route.cpa", rows)
 
 
 if __name__ == "__main__":

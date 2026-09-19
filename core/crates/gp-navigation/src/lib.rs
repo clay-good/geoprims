@@ -875,6 +875,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &rhumb::RHUMB_INVERSE,
     &rhumb::RHUMB_DIRECT,
     &route::CROSS_TRACK,
+    &route::FLY_BY,
+    &route::TSD,
+    &route::CPA,
 ];
 
 pub static REGISTRY: Registry = Registry {

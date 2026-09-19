@@ -334,3 +334,660 @@ fn spherical_cross_track(
     };
     (dxt * R1, dat * R1, (pf, lf), dat / d12)
 }
+
+// ---------------------------------------------------------------- fly-by turns
+
+const G0: f64 = 9.806_65;
+
+const fn qty_field(
+    name: &'static str,
+    title: &'static str,
+    help: &'static str,
+    q: QT,
+    unit: &'static str,
+) -> Field {
+    Field::new(name, title, help, Kind::Quantity { q, unit })
+}
+
+pub static FLY_BY: ToolDef = ToolDef {
+    id: "navigation.route.fly-by",
+    title: "Fly-by turn anticipation",
+    summary: "How early to start a fly-by turn at a waypoint: turn radius, lead distance, arc length, and time in the turn, from the inbound and outbound courses, speed, and bank angle or turn rate.",
+    aliases: &[
+        "turn anticipation",
+        "lead distance",
+        "fly-by waypoint",
+        "turn lead",
+        "when to start the turn",
+    ],
+    keywords: &[
+        "fly-by",
+        "turn",
+        "lead",
+        "anticipation",
+        "radius",
+        "waypoint",
+        "bank",
+    ],
+    inputs: &[
+        qty_field(
+            "inbound",
+            "Inbound course",
+            "Degrees, like 360",
+            QT::Angle,
+            "deg",
+        )
+        .required()
+        .core()
+        .angle_range("unbounded"),
+        qty_field(
+            "outbound",
+            "Outbound course",
+            "Degrees, like 090",
+            QT::Angle,
+            "deg",
+        )
+        .required()
+        .core()
+        .angle_range("unbounded"),
+        qty_field(
+            "speed",
+            "Speed",
+            "Groundspeed or true airspeed, like 120 kt",
+            QT::Speed,
+            "kt",
+        )
+        .required()
+        .core(),
+        qty_field(
+            "bank",
+            "Bank angle",
+            "Like 25°; or give a turn rate",
+            QT::Angle,
+            "deg",
+        )
+        .core(),
+        qty_field(
+            "turn_rate",
+            "Turn rate",
+            "Like 3 °/s (standard rate, the default)",
+            QT::AngularRate,
+            "deg/s",
+        ),
+    ],
+    outputs: &[
+        qty_field(
+            "lead_distance",
+            "Lead distance",
+            "Start the turn this far before the waypoint",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(1)),
+        qty_field(
+            "radius",
+            "Turn radius",
+            "R = V² / (g tan φ)",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(1)),
+        qty_field("turn_angle", "Course change", "0 to 180°", QT::Angle, "deg")
+            .precision(Precision::Decimals(1)),
+        Field::new(
+            "direction",
+            "Turn direction",
+            "left or right",
+            Kind::Text { max_len: 5 },
+        ),
+        qty_field(
+            "arc_length",
+            "Arc length",
+            "Distance flown in the turn",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(1)),
+        qty_field(
+            "turn_time",
+            "Time in the turn",
+            "Arc length / speed",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(1)),
+        qty_field(
+            "bank_used",
+            "Bank angle",
+            "Given, or from the turn rate",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(2)),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "FLY_OVER_RECOMMENDED",
+        "INPUT_NORMALIZED",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Coordinated level turn at constant speed: R = V²/(g tan φ), lead = R tan(Δψ/2)",
+    accuracy: "Exact for a steady coordinated turn in still air; wind changes the ground track",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "A 90° fly-by at 120 kt and 25° of bank",
+        input: r#"{"inbound":"360 deg","outbound":"090 deg","speed":"120 kt","bank":"25 deg"}"#,
+        source: "navigation route-geometry scenario: radius 833.4 m (0.450 NM), lead 833.4 m",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "vector-diagram",
+        map: &[],
+    }],
+    related: &[Related {
+        id: "navigation.route.cross-track",
+        reason: "next",
+    }],
+    sentence: "Start the {direction} turn {lead_distance} before the waypoint; the radius is {radius}.{warn FLY_OVER_RECOMMENDED} A course change this large is better flown as a fly-over.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_fly_by,
+    ..ToolDef::BLANK
+};
+
+fn run_fly_by(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let d = crate::unit(QT::Angle, "deg");
+    let inbound = ctx.req_quantity("inbound")?.to(d);
+    let outbound = ctx.req_quantity("outbound")?.to(d);
+    let v = ctx.req_quantity("speed")?.base();
+    if v <= 0.0 {
+        return Err(
+            ToolError::new(ErrorCode::OutOfDomain, "Speed must be more than zero.").at("/speed"),
+        );
+    }
+    let bank = ctx.quantity("bank")?.map(|b| b.to(d));
+    let rate = ctx
+        .quantity("turn_rate")?
+        .map(|r| r.to(crate::unit(QT::AngularRate, "deg/s")));
+    let bank = match (bank, rate) {
+        (Some(_), Some(_)) => {
+            return Err(ToolError::invalid(
+                "/turn_rate",
+                "Give a bank angle or a turn rate, not both.",
+            ));
+        }
+        (Some(b), None) => b,
+        (None, r) => {
+            let w = r.unwrap_or(3.0).to_radians();
+            if w <= 0.0 {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    "The turn rate must be more than zero.",
+                )
+                .at("/turn_rate"));
+            }
+            libm::atan(v * w / G0).to_degrees()
+        }
+    };
+    if !(bank > 0.0 && bank < 89.0) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The bank angle must be more than 0° and less than 89°.",
+        )
+        .at("/bank"));
+    }
+    let radius = v * v / (G0 * libm::tan(bank.to_radians()));
+    let dpsi = (outbound - inbound + 180.0).rem_euclid(360.0) - 180.0;
+    let turn = dpsi.abs();
+    let lead = radius * libm::tan((turn / 2.0).to_radians());
+    let arc = radius * turn.to_radians();
+    if turn > 120.0 {
+        ctx.warnings.push(Warning::new(
+            "FLY_OVER_RECOMMENDED",
+            format!("A {turn:.0}° course change needs a lead of {:.0} m; above 120° fly over the waypoint instead.", lead),
+        ));
+    }
+    let m = crate::unit(QT::Length, "m");
+    let q = |value: f64, unit| gp_base::tool::Q { value, unit };
+    Ok(Json::obj([
+        ("lead_distance", ctx.out("lead_distance", q(lead, m))),
+        ("radius", ctx.out("radius", q(radius, m))),
+        ("turn_angle", ctx.out("turn_angle", deg(turn))),
+        (
+            "direction",
+            Json::str(if dpsi >= 0.0 { "right" } else { "left" }),
+        ),
+        ("arc_length", ctx.out("arc_length", q(arc, m))),
+        (
+            "turn_time",
+            ctx.out("turn_time", q(arc / v, crate::unit(QT::Time, "s"))),
+        ),
+        ("bank_used", ctx.out("bank_used", deg(bank))),
+    ]))
+}
+
+// ---------------------------------------------------------------- time, speed, distance
+
+pub static TSD: ToolDef = ToolDef {
+    id: "navigation.route.time-speed-distance",
+    title: "Time, speed, and distance",
+    summary: "Solves for time, speed, or distance from the other two, and the arrival time from a departure time and UTC offset.",
+    aliases: &[
+        "time speed distance",
+        "ete",
+        "eta calculator",
+        "how long will it take",
+        "groundspeed calculator",
+    ],
+    keywords: &[
+        "time",
+        "speed",
+        "distance",
+        "ETE",
+        "ETA",
+        "groundspeed",
+        "flight time",
+    ],
+    inputs: &[
+        qty_field("distance", "Distance", "Like 250 NM", QT::Distance, "NM").core(),
+        qty_field("speed", "Speed", "Like 125 kt", QT::Speed, "kt").core(),
+        qty_field("time", "Time", "Like 2 h or 90 min", QT::Time, "h").core(),
+        Field::new(
+            "departure",
+            "Departure time",
+            "Local clock time, like 14:30",
+            Kind::Text { max_len: 5 },
+        )
+        .core(),
+        Field::new(
+            "utc_offset",
+            "UTC offset",
+            "Of the departure time, like -06:00 or Z",
+            Kind::Text { max_len: 6 },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "ete",
+            "Time en route",
+            "Hours and minutes",
+            Kind::Text { max_len: 20 },
+        ),
+        qty_field("time", "Time", "Decimal", QT::Time, "h").precision(Precision::Decimals(3)),
+        qty_field(
+            "distance",
+            "Distance",
+            "Given or solved",
+            QT::Distance,
+            "NM",
+        )
+        .precision(Precision::Decimals(1)),
+        qty_field("speed", "Speed", "Given or solved", QT::Speed, "kt")
+            .precision(Precision::Decimals(1)),
+        Field::new(
+            "eta",
+            "Arrival time",
+            "Local, same offset as departure",
+            Kind::Text { max_len: 20 },
+        )
+        .optional(),
+        Field::new(
+            "eta_utc",
+            "Arrival time (UTC)",
+            "Zulu",
+            Kind::Text { max_len: 20 },
+        )
+        .optional(),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "distance = speed × time",
+    accuracy: "Exact arithmetic; arrival times round to the minute",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "250 NM at 125 kt, departing 14:30 at UTC−6",
+        input: r#"{"distance":"250 NM","speed":"125 kt","departure":"14:30","utc_offset":"-06:00"}"#,
+        source: "navigation route-geometry scenario: 250 NM at 125 kt is 2 h 00 min",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[Related {
+        id: "navigation.geodesic.inverse",
+        reason: "alternative",
+    }],
+    sentence: "At {speed}, {distance} takes {ete}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_tsd,
+    ..ToolDef::BLANK
+};
+
+/// "2 h 05 min", or "45 min" under an hour.
+fn hm(hours: f64) -> String {
+    let total = (hours * 60.0).round() as i64;
+    let (h, m) = (total / 60, total % 60);
+    if h == 0 {
+        format!("{m} min")
+    } else {
+        format!("{h} h {m:02} min")
+    }
+}
+
+/// Minutes from a "±hh:mm", "±hhmm", "±hh", or "Z" offset.
+fn parse_offset(s: &str) -> Option<i64> {
+    let s = s.trim();
+    if s.eq_ignore_ascii_case("z") || s == "0" {
+        return Some(0);
+    }
+    let sign = match s.as_bytes().first()? {
+        b'+' => 1,
+        b'-' | 0xE2 => -1, // also the Unicode minus (U+2212, starts with 0xE2)
+        _ => return None,
+    };
+    let body: String = s
+        .trim_start_matches(['+', '-', '\u{2212}'])
+        .chars()
+        .filter(|c| *c != ':')
+        .collect();
+    let (h, m) = match body.len() {
+        1 | 2 => (body.parse::<i64>().ok()?, 0),
+        4 => (
+            body[..2].parse::<i64>().ok()?,
+            body[2..].parse::<i64>().ok()?,
+        ),
+        _ => return None,
+    };
+    (h <= 14 && m < 60).then_some(sign * (h * 60 + m))
+}
+
+/// "hh:mm" plus a day note for an arrival `minutes` after midnight.
+fn clock(minutes: i64) -> String {
+    let day = minutes.div_euclid(1440);
+    let m = minutes.rem_euclid(1440);
+    let note = match day {
+        0 => String::new(),
+        1 => " (next day)".to_owned(),
+        -1 => " (previous day)".to_owned(),
+        d => format!(" ({d:+} days)"),
+    };
+    format!("{:02}:{:02}{note}", m / 60, m % 60)
+}
+
+fn run_tsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let d = ctx.quantity("distance")?.map(|q| q.base());
+    let v = ctx.quantity("speed")?.map(|q| q.base());
+    let t = ctx.quantity("time")?.map(|q| q.base());
+    let (dist, speed, time) = match (d, v, t) {
+        (Some(d), Some(v), None) => {
+            if v <= 0.0 {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    "Speed must be more than zero.",
+                )
+                .at("/speed"));
+            }
+            (d, v, d / v)
+        }
+        (Some(d), None, Some(t)) => {
+            if t <= 0.0 {
+                return Err(
+                    ToolError::new(ErrorCode::OutOfDomain, "Time must be more than zero.")
+                        .at("/time"),
+                );
+            }
+            (d, d / t, t)
+        }
+        (None, Some(v), Some(t)) => (v * t, v, t),
+        _ => {
+            return Err(ToolError::invalid(
+                "/distance",
+                "Give exactly two of distance, speed, and time.",
+            ));
+        }
+    };
+    if dist < 0.0 || speed < 0.0 || time < 0.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Distance, speed, and time cannot be negative.",
+        )
+        .at("/distance"));
+    }
+    let hours = time / 3600.0;
+    let mut out = vec![
+        ("ete", Json::str(hm(hours))),
+        (
+            "time",
+            ctx.out(
+                "time",
+                gp_base::tool::Q {
+                    value: time,
+                    unit: crate::unit(QT::Time, "s"),
+                },
+            ),
+        ),
+        ("distance", ctx.out("distance", meters(dist))),
+        (
+            "speed",
+            ctx.out(
+                "speed",
+                gp_base::tool::Q {
+                    value: speed,
+                    unit: crate::unit(QT::Speed, "m/s"),
+                },
+            ),
+        ),
+    ];
+    if let Some(dep) = ctx.text("departure")? {
+        let parts: Vec<&str> = dep.trim().split(':').collect();
+        let parsed = match parts.as_slice() {
+            [h, m] => h
+                .parse::<i64>()
+                .ok()
+                .zip(m.parse::<i64>().ok())
+                .filter(|(h, m)| *h < 24 && *m < 60),
+            _ => None,
+        };
+        let Some((h, m)) = parsed else {
+            return Err(ToolError::invalid(
+                "/departure",
+                "Use a 24-hour clock time like 14:30.",
+            ));
+        };
+        let arrive = h * 60 + m + (hours * 60.0).round() as i64;
+        out.push(("eta", Json::str(clock(arrive))));
+        if let Some(off) = ctx.text("utc_offset")? {
+            let Some(off) = parse_offset(&off) else {
+                return Err(ToolError::invalid(
+                    "/utc_offset",
+                    "Use an offset like -06:00, +05:30, or Z.",
+                ));
+            };
+            out.push(("eta_utc", Json::str(format!("{}Z", clock(arrive - off)))));
+        }
+    }
+    Ok(Json::obj(out))
+}
+
+// ---------------------------------------------------------------- closest point of approach
+
+pub static CPA: ToolDef = ToolDef {
+    id: "navigation.route.cpa",
+    title: "Closest point of approach",
+    summary: "When two moving objects come closest, how close, and the bearing and range then, in a local flat plane (for separations under 500 km).",
+    aliases: &[
+        "closest point of approach",
+        "CPA TCPA",
+        "collision course",
+        "miss distance",
+    ],
+    keywords: &[
+        "CPA",
+        "TCPA",
+        "traffic",
+        "collision",
+        "separation",
+        "miss distance",
+        "intercept",
+    ],
+    inputs: &[
+        qty_field("a_course", "A course", "Degrees true", QT::Angle, "deg")
+            .required()
+            .core()
+            .angle_range("unbounded"),
+        qty_field(
+            "a_speed",
+            "A speed",
+            "Like 10 m/s or 120 kt",
+            QT::Speed,
+            "kt",
+        )
+        .required()
+        .core(),
+        qty_field("b_east", "B east of A", "Now, like 1000 m", QT::Length, "m")
+            .required()
+            .core(),
+        qty_field(
+            "b_north",
+            "B north of A",
+            "Now, like 1200 m",
+            QT::Length,
+            "m",
+        )
+        .required()
+        .core(),
+        qty_field("b_course", "B course", "Degrees true", QT::Angle, "deg")
+            .required()
+            .angle_range("unbounded"),
+        qty_field("b_speed", "B speed", "Like 10 m/s", QT::Speed, "kt").required(),
+    ],
+    outputs: &[
+        qty_field(
+            "separation",
+            "Separation at CPA",
+            "Closest distance",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(2)),
+        qty_field(
+            "time",
+            "Time to CPA",
+            "From now; zero when already diverging",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(1)),
+        qty_field(
+            "bearing",
+            "Bearing of B at CPA",
+            "From A, degrees true",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("[0,360)"),
+        qty_field(
+            "current_separation",
+            "Separation now",
+            "Straight-line",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(2)),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "DIVERGING",
+        "INPUT_NORMALIZED",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Constant velocities in a local east-north plane",
+    accuracy: "Exact in the plane; the flat-plane approximation is good to about 0.1% under 500 km",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "A heading east, B crossing southbound",
+        input: r#"{"a_course":"090 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"1200 m","b_course":"180 deg","b_speed":"10 m/s"}"#,
+        source: "navigation route-geometry scenario: CPA at t = 110 s with separation 141.42 m",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "vector-diagram",
+        map: &[],
+    }],
+    related: &[Related {
+        id: "navigation.route.cross-track",
+        reason: "alternative",
+    }],
+    sentence: "Closest approach is {separation} in {time}.{warn DIVERGING} They are already moving apart.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_cpa,
+    ..ToolDef::BLANK
+};
+
+fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let d = crate::unit(QT::Angle, "deg");
+    let vel = |course: f64, speed: f64| {
+        (
+            speed * course.to_radians().sin(),
+            speed * course.to_radians().cos(),
+        )
+    };
+    let (ac, asp) = (
+        ctx.req_quantity("a_course")?.to(d),
+        ctx.req_quantity("a_speed")?.base(),
+    );
+    let (bc, bsp) = (
+        ctx.req_quantity("b_course")?.to(d),
+        ctx.req_quantity("b_speed")?.base(),
+    );
+    let (bx, by) = (
+        ctx.req_quantity("b_east")?.base(),
+        ctx.req_quantity("b_north")?.base(),
+    );
+    if asp < 0.0 || bsp < 0.0 {
+        return Err(
+            ToolError::new(ErrorCode::OutOfDomain, "Speeds cannot be negative.").at("/a_speed"),
+        );
+    }
+    let now = hypot(bx, by);
+    if now > 500_000.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The flat-plane method applies to separations under 500 km.",
+        )
+        .at("/b_east"));
+    }
+    let (va, vb) = (vel(ac, asp), vel(bc, bsp));
+    let (vx, vy) = (vb.0 - va.0, vb.1 - va.1);
+    let v2 = vx * vx + vy * vy;
+    let mut t = if v2 == 0.0 {
+        0.0
+    } else {
+        -(bx * vx + by * vy) / v2
+    };
+    if t < 0.0 || v2 == 0.0 {
+        if v2 != 0.0 {
+            ctx.warnings.push(Warning::new("DIVERGING", "The closest approach was in the past; they are moving apart, so the current separation is shown."));
+        }
+        t = 0.0;
+    }
+    let (rx, ry) = (bx + vx * t, by + vy * t);
+    let bearing = (atan2(rx, ry).to_degrees() + 360.0) % 360.0;
+    let m = crate::unit(QT::Length, "m");
+    let q = |value: f64, unit| gp_base::tool::Q { value, unit };
+    Ok(Json::obj([
+        ("separation", ctx.out("separation", q(hypot(rx, ry), m))),
+        ("time", ctx.out("time", q(t, crate::unit(QT::Time, "s")))),
+        ("bearing", ctx.out("bearing", deg(bearing))),
+        (
+            "current_separation",
+            ctx.out("current_separation", q(now, m)),
+        ),
+    ]))
+}

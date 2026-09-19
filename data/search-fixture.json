@@ -640,6 +640,30 @@
     {
       "query": "how far off course",
       "expect": "navigation.route.cross-track"
+    },
+    {
+      "query": "turn anticipation",
+      "expect": "navigation.route.fly-by"
+    },
+    {
+      "query": "lead distance fly-by",
+      "expect": "navigation.route.fly-by"
+    },
+    {
+      "query": "time speed distance",
+      "expect": "navigation.route.time-speed-distance"
+    },
+    {
+      "query": "eta calculator",
+      "expect": "navigation.route.time-speed-distance"
+    },
+    {
+      "query": "closest point of approach",
+      "expect": "navigation.route.cpa"
+    },
+    {
+      "query": "cpa",
+      "expect": "navigation.route.cpa"
     }
   ]
 }

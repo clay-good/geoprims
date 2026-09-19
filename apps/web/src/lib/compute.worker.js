@@ -3,6 +3,7 @@
 import { assetProvider } from '../../../../packages/runtime/src/assets.mjs';
 import { loadModule } from '../../../../packages/runtime/src/module.mjs';
 import { detectValues } from './detect.js';
+import { NO_WASM } from './messages.js';
 
 // Data assets come from the same origin, whole files only, checked against the
 // registry's SHA-256 before use (data-assets "Integrity verification").
@@ -56,7 +57,11 @@ const detect = async (query) => {
   return JSON.stringify(out);
 };
 
+// app-shell "Error resilience": say why nothing computes, and what does work.
+const failure = (message, code = 'UNSUPPORTED') => JSON.stringify({ ok: false, error: { code, message } });
+
 self.onmessage = async ({ data: { seq, method, args } }) => {
+  if (typeof WebAssembly !== 'object') return self.postMessage({ seq, out: failure(NO_WASM) });
   try {
     let out;
     if (method === 'invoke') out = await (await get(moduleFor(args[0]))).invoke(args[0], args[1]);
@@ -67,6 +72,8 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
   } catch (e) {
     modules.clear();
     searchIndex = null;
-    self.postMessage({ seq, out: JSON.stringify({ ok: false, error: { code: 'INTERNAL', message: `The calculator could not load: ${e.message}` } }) });
+    // A policy can leave WebAssembly defined but refuse to compile it.
+    const blocked = e instanceof WebAssembly.CompileError || /WebAssembly|wasm-unsafe-eval/i.test(String(e?.message));
+    self.postMessage({ seq, out: blocked ? failure(NO_WASM) : failure(`The calculator could not load: ${e.message}`, 'INTERNAL') });
   }
 };

@@ -57,12 +57,6 @@ test('ships the Wasm modules and the catalog at their contract routes', () => {
   for (const m of ['base', 'link']) assert.ok(existsSync(join(dist, 'wasm', `${m}.wasm`)), m);
 });
 
-test('every aviation, drone, and navigation page shows the safety notice', () => {
-  for (const t of catalog.tools.filter((x) => ['aviation', 'drone', 'navigation'].includes(x.domain))) {
-    assert.match(page(route(t.id)), /Not certified for navigation/, t.id);
-  }
-});
-
 test('every tool page has one report button and no bot-check script in its HTML', () => {
   for (const t of catalog.tools) {
     const html = page(route(t.id));
@@ -150,4 +144,16 @@ test('sources and methodology pages, and per-tool vector downloads', () => {
     assert.ok(existsSync(join(dist, 'vectors', `${t.id}.jsonl`)), `${t.id} vectors not shipped`);
   }
   assert.match(readFileSync(join(dist, 'llms.txt'), 'utf8'), /\/methodology\//);
+});
+
+test('every aviation, drone, and navigation tool shows the safety notice in its header', () => {
+  const notice = '<strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a>';
+  for (const t of catalog.tools) {
+    const html = page(route(t.id));
+    const operational = ['aviation', 'drone', 'navigation'].includes(t.domain);
+    assert.equal(html.includes(notice), operational, t.id);
+    // In the header: before the calculator, not in a dialog.
+    if (operational) assert.ok(html.indexOf(notice) < html.indexOf('<astro-island'), `${t.id}: notice after the calculator`);
+  }
+  assert.match(page('/disclaimer/'), /Not for primary navigation\./);
 });

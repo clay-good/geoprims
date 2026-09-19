@@ -23,8 +23,8 @@
 - [ ] 3.5 Implement permalinks (`#v1:` deflate/base64url) with migration hooks; verify the round-trip and old-version scenarios
 - [ ] 3.6 Implement tool chaining ("send to") with quantity-type matching and chained permalinks; verify the geodesic-to-wind scenario
 - [ ] 3.7 Implement recent and pinned tools, settings screen, and erase-all-local-data; verify the recent-list and erase scenarios
-- [ ] 3.8 Implement the safety notice for aviation, drone, and navigation tools; verify it is visible on every such route
-- [ ] 3.9 Implement no-JS and no-Wasm fallbacks; verify the JavaScript-disabled and Wasm-blocked scenarios
+- [x] 3.8 Implement the safety notice for aviation, drone, and navigation tools; verify it is visible on every such route (the spec's wording in the tool header with a link to /disclaimer/; a build test checks every tool: present before the calculator on operational routes, absent elsewhere)
+- [x] 3.9 Implement no-JS and no-Wasm fallbacks; verify the JavaScript-disabled and Wasm-blocked scenarios (a noscript notice above the pre-rendered worked example; with WebAssembly missing or refused by policy, the tool area says "This tool needs WebAssembly, which is disabled in this browser" with minimum browsers, tested by running the worker with WebAssembly removed)
 
 ## 4. Command palette and keyboard
 

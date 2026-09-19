@@ -20,7 +20,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "fedc51fcec2beb91",
+    "hash": "dfbeb0a0f662742f",
     "lastmod": "2026-09-19"
   },
   "/aviation/ifr/": {
@@ -45,6 +45,10 @@
   },
   "/changelog/": {
     "hash": "a2e4fbcefa1d9ab7",
+    "lastmod": "2026-09-19"
+  },
+  "/disclaimer/": {
+    "hash": "2eb1df89444cbb22",
     "lastmod": "2026-09-19"
   },
   "/drone/": {
@@ -80,7 +84,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/geoid/geoid-height/": {
-    "hash": "28234bcf669e2e63",
+    "hash": "2754ebeba4b5365c",
     "lastmod": "2026-09-19"
   },
   "/geodesy/grid-ref/": {
@@ -96,7 +100,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "61a41cad7aaa7507",
+    "hash": "6926ba002ce09305",
     "lastmod": "2026-09-19"
   },
   "/geodesy/parse/": {
@@ -108,11 +112,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "9bdea7189046af51",
+    "hash": "3023fd07532d9e80",
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "022e3cd1e8023738",
+    "hash": "d7c2bcf7b3d7e991",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ups/": {
@@ -124,11 +128,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/forward/": {
-    "hash": "439f47cdb3dd0fc2",
+    "hash": "03f06ba974ce55b2",
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/inverse/": {
-    "hash": "cc0046276b1d9cf5",
+    "hash": "9f4857c7fd948749",
     "lastmod": "2026-09-19"
   },
   "/indexing/": {
@@ -144,7 +148,7 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "c4a06dab3e579e46",
+    "hash": "81a828da6d29b853",
     "lastmod": "2026-09-19"
   },
   "/indexing/plus-code/": {
@@ -172,11 +176,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "67d15dd23801eb5a",
+    "hash": "d07fb8ad35f7a825",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "16310ec51cb786f2",
+    "hash": "08aaac0d05519d0a",
     "lastmod": "2026-09-19"
   },
   "/sources/": {
@@ -220,7 +224,7 @@
     "lastmod": "2026-09-19"
   },
   "/time/sun/position/": {
-    "hash": "1765a34e6883ae41",
+    "hash": "fb98d8ec75b353eb",
     "lastmod": "2026-09-19"
   },
   "/units/": {

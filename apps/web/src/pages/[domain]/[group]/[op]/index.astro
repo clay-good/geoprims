@@ -24,7 +24,7 @@ const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outp
   <p class="purpose">{t.summary}</p>
   {['aviation', 'drone', 'navigation'].includes(t.domain) && (
     <p class="card notice safety" role="note">
-      Planning aid only. Not certified for navigation or flight operations. Check official sources, your aircraft's POH/AFM, and current regulations.
+      <strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a>
     </p>
   )}
   {issue && (
@@ -32,6 +32,7 @@ const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outp
       <a href={`/known-issues/#${issue.id}`}>Known issue: {issue.summary}.</a> Workaround: {issue.workaround}
     </p>
   )}
+  <noscript><p class="card notice" role="note">Computing your own values needs JavaScript and WebAssembly. The worked example below was computed when this page was built, and the documentation under "How we got this" applies.</p></noscript>
   <ToolApp client:load tool={client} example={ex.input} initial={initial} />
   <details class="card">
     <summary>How we got this</summary>

@@ -116,6 +116,10 @@
   }
 
   onMount(async () => {
+    if (typeof WebAssembly !== 'object') {
+      const { NO_WASM } = await import('../lib/messages.js');
+      result = { ok: false, error: { code: 'UNSUPPORTED', message: NO_WASM } };
+    }
     compute = await import('../lib/compute.js');
     const hash = location.hash.slice(1);
     if (hash && hash !== 'example') {

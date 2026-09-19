@@ -8,6 +8,7 @@
 //! matches. Ties break by id.
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 
 use gp_base::envelope;
 use gp_base::error::{ErrorCode, ToolError};
@@ -29,10 +30,11 @@ pub struct Entry {
     pub summary: String,
     pub domain: String,
     pub stability: String,
-    fields: Vec<(u32, Vec<String>)>,
+    /// Weighted fields as vocabulary token ids.
+    fields: Vec<(u32, Vec<u32>)>,
     /// Alias and keyword phrases, tokenized.
-    phrases: Vec<Vec<String>>,
-    title_tokens: Vec<String>,
+    phrases: Vec<Vec<u32>>,
+    title_tokens: Vec<u32>,
 }
 
 const W_ID: u32 = 3;
@@ -120,9 +122,34 @@ fn strs(v: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
+/// Interns tokens so each distinct word is matched against a query once per
+/// search, not once per entry (the palette's 16 ms budget at 1,000 entries).
+#[derive(Default)]
+struct Vocab {
+    words: Vec<String>,
+    ids: HashMap<String, u32>,
+}
+
+impl Vocab {
+    fn intern(&mut self, words: Vec<String>) -> Vec<u32> {
+        words
+            .into_iter()
+            .map(|w| {
+                if let Some(&i) = self.ids.get(&w) {
+                    return i;
+                }
+                let i = self.words.len() as u32;
+                self.words.push(w.clone());
+                self.ids.insert(w, i);
+                i
+            })
+            .collect()
+    }
+}
+
 impl Entry {
     /// Builds an entry from a catalog manifest (or any object with the same keys).
-    pub fn from_manifest(m: &Value) -> Option<Entry> {
+    fn from_manifest(m: &Value, vocab: &mut Vocab) -> Option<Entry> {
         let s = |k: &str| m[k].as_str().unwrap_or_default().to_owned();
         let id = s("id");
         if id.is_empty() {
@@ -130,18 +157,25 @@ impl Entry {
         }
         let aliases = strs(&m["aliases"]);
         let keywords = strs(&m["keywords"]);
-        let alias_tokens: Vec<String> = aliases.iter().flat_map(|a| tokens(a)).collect();
+        let mut t = |words: Vec<String>| vocab.intern(words);
         let fields = vec![
-            (W_ID, tokens(&id)),
-            (W_TITLE, tokens(&s("title"))),
-            (W_ALIAS, alias_tokens),
-            (W_KEYWORD, keywords.iter().flat_map(|k| tokens(k)).collect()),
-            (W_GROUP, tokens(&s("group"))),
-            (W_SUMMARY, tokens(&s("summary"))),
+            (W_ID, t(tokens(&id))),
+            (W_TITLE, t(tokens(&s("title")))),
+            (W_ALIAS, t(aliases.iter().flat_map(|a| tokens(a)).collect())),
+            (
+                W_KEYWORD,
+                t(keywords.iter().flat_map(|k| tokens(k)).collect()),
+            ),
+            (W_GROUP, t(tokens(&s("group")))),
+            (W_SUMMARY, t(tokens(&s("summary")))),
         ];
         Some(Entry {
-            title_tokens: tokens(&s("title")),
-            phrases: aliases.iter().chain(&keywords).map(|a| tokens(a)).collect(),
+            title_tokens: t(tokens(&s("title"))),
+            phrases: aliases
+                .iter()
+                .chain(&keywords)
+                .map(|a| t(tokens(a)))
+                .collect(),
             id,
             title: s("title"),
             summary: s("summary"),
@@ -151,21 +185,23 @@ impl Entry {
         })
     }
 
-    /// The entry's score for a tokenized query; 0 means no match.
-    pub fn score(&self, q: &[String], raw: &str) -> u32 {
-        if raw.trim().to_lowercase() == self.id {
+    /// The entry's score for a query whose tokens were matched against the
+    /// vocabulary: `table[i][v]` is `match_score` of query token `i` and word
+    /// `v`. `connector[i]` marks words that never make a match alone. 0 means no match.
+    fn score(&self, table: &[Vec<u8>], connector: &[bool], raw_id: &str) -> u32 {
+        if raw_id == self.id {
             return 1_000_000;
         }
         let mut total = 0;
         let mut matched = 0;
-        for qt in q {
+        for (row, &conn) in table.iter().zip(connector) {
             let best = self
                 .fields
                 .iter()
-                .flat_map(|(w, ts)| ts.iter().map(move |t| w * match_score(qt, t)))
+                .flat_map(|(w, ts)| ts.iter().map(move |&t| w * row[t as usize] as u32))
                 .max()
                 .unwrap_or(0);
-            if best > 0 && !CONNECTORS.contains(&qt.as_str()) {
+            if best > 0 && !conn {
                 matched += 1;
             }
             total += best;
@@ -173,14 +209,14 @@ impl Entry {
         if matched == 0 {
             return 0;
         }
-        let mut score = total * matched / q.len() as u32;
+        let mut score = total * matched / table.len() as u32;
         score += self
             .phrases
             .iter()
-            .map(|p| phrase_boost(q, p, 1000))
+            .map(|p| phrase_boost(table, p, 1000))
             .max()
             .unwrap_or(0);
-        score += phrase_boost(q, &self.title_tokens, 800);
+        score += phrase_boost(table, &self.title_tokens, 800);
         score
     }
 }
@@ -188,13 +224,20 @@ impl Entry {
 /// Boost when the query matches a phrase word for word, in order: `full` for an
 /// exact match, 60% of it when every word matches with typos or stems, and a
 /// quarter of it when the query is a word-for-word prefix of the phrase.
-fn phrase_boost(q: &[String], phrase: &[String], full: u32) -> u32 {
-    if q.is_empty() || q.len() > phrase.len() {
+fn phrase_boost(table: &[Vec<u8>], phrase: &[u32], full: u32) -> u32 {
+    if table.is_empty() || table.len() > phrase.len() {
         return 0;
     }
-    let exact = q.iter().zip(phrase).all(|(a, b)| a == b);
-    let fuzzy = q.iter().zip(phrase).all(|(a, b)| match_score(a, b) >= 50);
-    match (q.len() == phrase.len(), exact, fuzzy) {
+    // match_score is 100 only for identical words.
+    let exact = table
+        .iter()
+        .zip(phrase)
+        .all(|(row, &b)| row[b as usize] == 100);
+    let fuzzy = table
+        .iter()
+        .zip(phrase)
+        .all(|(row, &b)| row[b as usize] >= 50);
+    match (table.len() == phrase.len(), exact, fuzzy) {
         (true, true, _) => full,
         (true, false, true) => full * 6 / 10,
         (false, true, _) => full / 4,
@@ -203,7 +246,7 @@ fn phrase_boost(q: &[String], phrase: &[String], full: u32) -> u32 {
 }
 
 thread_local! {
-    static INDEX: RefCell<Vec<Entry>> = const { RefCell::new(Vec::new()) };
+    static INDEX: RefCell<(Vocab, Vec<Entry>)> = RefCell::new((Vocab::default(), Vec::new()));
 }
 
 /// Loads the index from a JSON array of manifests (or `{tools: [...]}`).
@@ -218,14 +261,15 @@ pub fn load(json: &str) -> String {
         }
     };
     let list = if v.is_array() { &v } else { &v["tools"] };
+    let mut vocab = Vocab::default();
     let entries: Vec<Entry> = list
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(Entry::from_manifest)
+        .filter_map(|m| Entry::from_manifest(m, &mut vocab))
         .collect();
     let n = entries.len();
-    INDEX.with(|i| *i.borrow_mut() = entries);
+    INDEX.with(|i| *i.borrow_mut() = (vocab, entries));
     Json::obj([("ok", Json::Bool(true)), ("entries", Json::Num(n as f64))])
         .to_string()
         .expect("finite")
@@ -270,12 +314,25 @@ pub fn search(json: &str) -> String {
         .filter(|t| !STOPWORDS.contains(&t.as_str()))
         .collect();
     let q = if q.is_empty() { tokens(query) } else { q };
+    let raw_id = query.trim().to_lowercase();
     INDEX.with(|index| {
         let index = index.borrow();
-        let mut hits: Vec<(u32, &Entry)> = index
+        let (vocab, entries) = &*index;
+        let table: Vec<Vec<u8>> = q
+            .iter()
+            .map(|qt| {
+                vocab
+                    .words
+                    .iter()
+                    .map(|w| match_score(qt, w) as u8)
+                    .collect()
+            })
+            .collect();
+        let connector: Vec<bool> = q.iter().map(|t| CONNECTORS.contains(&t.as_str())).collect();
+        let mut hits: Vec<(u32, &Entry)> = entries
             .iter()
             .filter(|e| domain.is_none_or(|d| e.domain == d))
-            .map(|e| (e.score(&q, query), e))
+            .map(|e| (e.score(&table, &connector, &raw_id), e))
             .filter(|(s, _)| *s > 0)
             .collect();
         hits.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.id.cmp(&b.1.id)));

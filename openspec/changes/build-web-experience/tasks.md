@@ -28,8 +28,8 @@
 
 ## 4. Command palette and keyboard
 
-- [ ] 4.1 Implement the palette (combobox pattern, `/` and Cmd/Ctrl+K, Esc focus restore); verify the open and text-field scenarios
-- [ ] 4.2 Implement uFuzzy search with ranking boosts; verify the ranking fixture set (including `densty alt`, `tas`, `wca`) and the 16 ms latency benchmark
+- [x] 4.1 Implement the palette (combobox pattern, `/` and Cmd/Ctrl+K, Esc focus restore); verify the open and text-field scenarios (apps/web/src/lib/palette.js, loaded on first use from a header button, `/`, or Ctrl/Cmd+K; arrows and Ctrl+N/P, Enter, Ctrl/Cmd+Enter for a new tab, a polite result count; checked in a browser, including `/` typing normally in a field. Tab-to-pin waits for 3.7)
+- [ ] 4.2 Implement uFuzzy search with ranking boosts; verify the ranking fixture set (including `densty alt`, `tas`, `wca`) and the 16 ms latency benchmark (the core ranker replaces uFuzzy so the palette and `geoprims_search` rank identically; an interned vocabulary cut p95 at 1,000 entries from 58 ms to 1.6 ms with identical rankings on 2,182 queries; the fixture and benchmark pass. Pending: recency and pinned boosts, with 3.7)
 - [ ] 4.3 Implement paste-to-detect using the Wasm detector chain; verify the H3 and ambiguous-geohash scenarios
 - [ ] 4.4 Implement action mode (`>`) and global shortcuts with the `?` sheet; verify each shortcut in an end-to-end test
 

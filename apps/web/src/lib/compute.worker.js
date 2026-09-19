@@ -32,14 +32,25 @@ const get = (name) => {
   return modules.get(name);
 };
 
+// The command palette ranks with the same core search as geoprims_search,
+// indexed once from the catalog on first use.
+let searchIndex = null;
+const searcher = () =>
+  (searchIndex ??= Promise.all([get('search'), fetch('/catalog/v1.json').then((r) => r.json())]).then(async ([m, catalog]) => {
+    await m.callString('gp_search_load', JSON.stringify(catalog.tools));
+    return m;
+  }));
+
 self.onmessage = async ({ data: { seq, method, args } }) => {
   try {
     let out;
     if (method === 'invoke') out = await (await get(moduleFor(args[0]))).invoke(args[0], args[1]);
+    else if (method === 'search') out = await (await searcher()).callString('gp_search', args[0]);
     else out = await (await get(args[0])).callString(args[1], args[2]);
     self.postMessage({ seq, out });
   } catch (e) {
     modules.clear();
+    searchIndex = null;
     self.postMessage({ seq, out: JSON.stringify({ ok: false, error: { code: 'INTERNAL', message: `The calculator could not load: ${e.message}` } }) });
   }
 };

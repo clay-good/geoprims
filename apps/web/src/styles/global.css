@@ -115,3 +115,16 @@ dialog.report pre.payload { max-height: 16rem; overflow: auto; font-size: 0.8rem
 .update[hidden] { display: none; }
 .update p { margin: 0; }
 .update button { min-block-size: var(--target); }
+/* Command palette. */
+.palette-open { min-block-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding-inline: 0.75rem; font: inherit; cursor: pointer; }
+.palette-open kbd, .palette-keys kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding-inline: 0.3em; color: var(--muted); }
+dialog.palette { inline-size: min(40rem, calc(100vw - 2rem)); max-block-size: min(32rem, calc(100vh - 4rem)); margin-block-start: 10vh; padding: 0; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 10px; }
+dialog.palette::backdrop { background: rgb(0 0 0 / 0.5); }
+dialog.palette input { box-sizing: border-box; inline-size: 100%; min-block-size: var(--target); padding: 0.75rem 1rem; font: inherit; font-size: 1.1rem; background: transparent; color: var(--text); border: 0; border-block-end: 1px solid var(--line); }
+dialog.palette input:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+dialog.palette ul { list-style: none; margin: 0; padding: 0.25rem; overflow-y: auto; max-block-size: 22rem; }
+dialog.palette li { padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; min-block-size: var(--target); box-sizing: border-box; }
+dialog.palette li[aria-selected='true'] { background: var(--bg); outline: 2px solid var(--focus); outline-offset: -2px; }
+.palette-title { font-weight: 600; }
+.palette-summary { display: block; color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-keys { margin: 0; padding: 0.5rem 1rem; border-block-start: 1px solid var(--line); color: var(--muted); font-size: 0.8rem; }

@@ -1,0 +1,58 @@
+// Command palette (web/command-palette): the ranking scenarios, the latency
+// budget at 1,000 entries, and the palette's wiring on every page.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { nodeHost } from '../../../packages/runtime/src/node.mjs';
+
+const web = new URL('..', import.meta.url).pathname;
+const root = join(web, '../..');
+const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+
+async function searcher(tools) {
+  const m = await nodeHost(join(root, 'dist/wasm')).module('search');
+  await m.callString('gp_search_load', JSON.stringify(tools));
+  return async (query) => JSON.parse(await m.callString('gp_search', JSON.stringify({ query, limit: 8, includeExperimental: true }))).result.results.map((r) => r.id);
+}
+
+test('palette scenarios: typos and abbreviations', async () => {
+  const top = await searcher(catalog.tools);
+  assert.equal((await top('densty alt'))[0], 'aviation.altimetry.density-altitude');
+  const tas = await top('tas');
+  assert.ok(tas.slice(0, 2).every((id) => id.startsWith('aviation.airspeed.')), tas.join(', '));
+});
+
+test('p95 search time for 20 queries against 1,000 entries is within 16 ms', async () => {
+  const tools = [];
+  for (let i = 0; tools.length < 1000; i++) {
+    const t = catalog.tools[i % catalog.tools.length];
+    tools.push(i < catalog.tools.length ? t : { ...t, id: `${t.id}-copy${i}` });
+  }
+  const top = await searcher(tools);
+  const queries = ['d', 'de', 'den', 'dens', 'densi', 'densty alt', 'tas', 'wca', 'magnetic declination', 'utm to lat lon', 'h3',
+    'sun position at noon', 'knots to mph', 'ground sample distance', 'traverse closure compass rule', 'x', 'geoid',
+    'state plane pennsylvania south', 'crosswind component runway 27', 'battery flight time'];
+  const times = [];
+  for (let round = 0; round < 3; round++) {
+    for (const q of queries) {
+      const t0 = performance.now();
+      await top(q);
+      times.push(performance.now() - t0);
+    }
+  }
+  times.sort((a, b) => a - b);
+  const p95 = times[Math.floor(times.length * 0.95)];
+  assert.ok(p95 <= 16, `p95 ${p95.toFixed(2)} ms`);
+});
+
+test('every page offers the palette by button, / and Ctrl/Cmd+K', () => {
+  for (const path of ['index.html', 'aviation/index.html', 'aviation/altimetry/density-altitude/index.html']) {
+    const html = readFileSync(join(web, 'dist', path), 'utf8');
+    assert.match(html, /<button type="button" class="palette-open" aria-keyshortcuts="\/ Control\+K Meta\+K">/, path);
+  }
+  const src = readFileSync(join(web, 'src/lib/palette.js'), 'utf8');
+  for (const need of ['role="combobox"', 'role="listbox"', 'aria-activedescendant', 'aria-live="polite"', "restore?.focus?.()"]) {
+    assert.ok(src.includes(need), need);
+  }
+});

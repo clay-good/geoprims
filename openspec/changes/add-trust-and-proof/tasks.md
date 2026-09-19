@@ -23,7 +23,7 @@
 - [ ] 3.5 Implement example parity (page example = button example = MCP example); verify with a deliberately divergent fixture
 - [x] 3.6 Create `docs/review-signoffs.md` and the pending-review disclosure; verify the unreviewed-domain scenario (tools/trust/signoffs.mjs parses the record, with 12-month expiry; each domain page and each tool's "How we got this" panel says "Not yet independently reviewed by a <practitioner>" until a signed row exists)
 - [x] 3.7 Implement the claims-honesty gate; verify the overclaim scenario (tools/trust/claims.mjs checks every built page, llms.txt, AGENTS.md, and the READMEs for counts, "all experimental" statements, "checked against" statements without a differential suite, unrecorded reviews, and offline claims without a service worker; it caught the home page still saying everything was experimental and claiming offline use)
-- [ ] 3.8 Implement the both-surfaces gate; verify the unreachable-tool scenario (every stable tool's title ranks it in the top 5 of the shared core search, its example runs, and describe advertises its inputs; pending: the web palette, which will use the same search)
+- [x] 3.8 Implement the both-surfaces gate; verify the unreachable-tool scenario (every stable tool's title ranks it in the top 5 of the core search that both the web palette and `geoprims_search` use, its example runs, and describe advertises its inputs)
 
 ## 4. Proof display
 

@@ -842,8 +842,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the handbook page links faa-h-8083-25c.pdf. Worked examples for pressure altitude, density altitude, runway wind components, and the wind triangle taken from it.",
       "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
       "matchTerms": [
         "Pilot's Handbook of Aeronautical Knowledge"

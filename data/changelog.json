@@ -3,6 +3,18 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
+        "aviation.altimetry.pressure-altitude",
+        "aviation.altimetry.density-altitude",
+        "aviation.wind.runway-components",
+        "aviation.wind.heading-groundspeed"
+      ],
+      "vectors": [],
+      "summary": "Pressure altitude, density altitude, runway crosswind and headwind, and the wind triangle are now stable. Each matches the worked examples in the FAA Pilot's Handbook of Aeronautical Knowledge (FAA-H-8083-25C) and at least 20 vectors from a separate implementation. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "fixed",
       "tools": [
         "survey.curves.circular-curve"

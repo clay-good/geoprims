@@ -434,3 +434,99 @@ fn isa_invariants() {
         h += 1_237.0;
     }
 }
+
+#[test]
+fn altimetry_invariants() {
+    // At the standard setting (1013.25 hPa) pressure altitude equals the field
+    // elevation; it falls monotonically as the setting rises; and dry air at
+    // exactly ISA temperature has a density altitude equal to its pressure
+    // altitude, rising monotonically with temperature.
+    for e in [-1000.0, 0.0, 2500.0, 7000.0, 14000.0] {
+        let std = call(
+            "aviation.altimetry.pressure-altitude",
+            &format!(r#"{{"elevation":"{e} ft","altimeter":"1013.25 hPa"}}"#),
+        );
+        assert!(
+            (num(&std, "result.pressure_altitude.value") - e).abs() < 1e-6,
+            "{std}"
+        );
+        let mut prev = f64::INFINITY;
+        for a in [28.0, 28.9, 29.5, 29.92, 30.4, 31.0] {
+            let r = call(
+                "aviation.altimetry.pressure-altitude",
+                &format!(r#"{{"elevation":"{e} ft","altimeter":"{a} inHg"}}"#),
+            );
+            let pa = num(&r, "result.pressure_altitude.value");
+            assert!(pa < prev, "pressure altitude must fall as the setting rises");
+            prev = pa;
+            let isa = num(&call(
+                "aviation.altimetry.isa-temperature",
+                &format!(r#"{{"pressure_altitude":"{pa} ft"}}"#),
+            ), "result.isa_temperature.value");
+            let mut prev_da = f64::NEG_INFINITY;
+            for dt in [-20.0, -5.0, 0.0, 5.0, 20.0] {
+                let r = call(
+                    "aviation.altimetry.density-altitude",
+                    &format!(
+                        r#"{{"elevation":"{e} ft","altimeter":"{a} inHg","temperature":"{} degC"}}"#,
+                        isa + dt
+                    ),
+                );
+                let da = num(&r, "result.density_altitude.value");
+                if dt == 0.0 {
+                    assert!((da - pa).abs() < 1e-3, "ISA day: DA {da} vs PA {pa}");
+                }
+                assert!(da > prev_da, "density altitude must rise with temperature");
+                prev_da = da;
+            }
+        }
+    }
+}
+
+#[test]
+fn wind_invariants() {
+    // Runway components are the wind vector resolved on the runway axis, so
+    // head² + cross² = speed², and a wind mirrored about the runway gives the
+    // same components from the other side. The wind triangle closes: the air
+    // vector (TAS along heading) plus the wind vector equals the ground
+    // vector (groundspeed along course) with no cross-course residue.
+    for rwy in [1, 9, 17, 27, 36] {
+        let hdg = f64::from(rwy * 10);
+        for off in [0.0, 25.0, 60.0, 90.0, 135.0, 180.0] {
+            let comp = |wd: f64| {
+                call(
+                    "aviation.wind.runway-components",
+                    &format!(r#"{{"runway":"{rwy:02}","wind_direction":{wd},"wind_speed":20}}"#),
+                )
+            };
+            let r = comp((hdg + off).rem_euclid(360.0));
+            let (h, x) = (num(&r, "result.headwind.value"), num(&r, "result.crosswind.value"));
+            assert!((h * h + x * x - 400.0).abs() < 1e-9, "{r}");
+            let m = comp((hdg - off).rem_euclid(360.0));
+            assert!((num(&m, "result.headwind.value") - h).abs() < 1e-9);
+            assert!((num(&m, "result.crosswind.value") - x).abs() < 1e-9);
+            if off > 0.0 && off < 180.0 {
+                assert_ne!(r["result"]["crosswind_from"], m["result"]["crosswind_from"]);
+            }
+        }
+    }
+    let rad = f64::to_radians;
+    for (tc, tas, wd, ws) in [
+        (90.0, 120.0, 30.0, 20.0),
+        (225.0, 150.0, 180.0, 40.0),
+        (0.0, 100.0, 270.0, 15.0),
+        (310.0, 95.0, 10.0, 25.0),
+        (160.0, 250.0, 270.0, 60.0),
+    ] {
+        let r = call(
+            "aviation.wind.heading-groundspeed",
+            &format!(r#"{{"course":{tc},"tas":{tas},"wind_direction":{wd},"wind_speed":{ws}}}"#),
+        );
+        let (hd, gs) = (num(&r, "result.heading.value"), num(&r, "result.groundspeed.value"));
+        // The wind blows toward wd + 180.
+        let e = tas * rad(hd).sin() - ws * rad(wd).sin();
+        let n = tas * rad(hd).cos() - ws * rad(wd).cos();
+        assert!((e - gs * rad(tc).sin()).abs() < 1e-9, "{r}");
+        assert!((n - gs * rad(tc).cos()).abs() < 1e-9, "{r}");
+    }
+}

@@ -80,6 +80,8 @@ AMBIANCE = [
     (78000, 202.54097785374015, 1.467355125656059, 2.5238319718083196e-05, 285.29976617538887, 1.3429642205650092e-05, 9.570345319920676),
 ]
 KT = 1852 / 3600
+PHAK = "FAA Pilot's Handbook of Aeronautical Knowledge (FAA-H-8083-25C), worked example read from the published chart or table"
+PHAK_VER = "FAA-H-8083-25C (2023)"
 
 
 def isa_ambiance(start):
@@ -119,11 +121,22 @@ def station(qnh_pa, elev_m):
 
 
 def pa_vectors():
-    cases = [(5000, 29.80), (0, 29.92126), (0, 30.50), (8000, 29.42), (1200, 28.95), (-200, 30.10)]
+    cases = [(5000, 29.80), (0, 29.92126), (0, 30.50), (8000, 29.42), (1200, 28.95), (-200, 30.10),
+             (2500, 30.25), (6500, 29.65), (10000, 29.92), (14000, 30.02), (330, 29.55), (4300, 28.70),
+             (7200, 31.00), (900, 30.79), (12500, 28.40), (-1200, 29.98)]
     out = []
     for i, (e, a) in enumerate(cases, 1):
         pa = alt_for(station(a * INHG, e * FT), "p") / FT
         out.append(vec(i, {"elevation": f"{e} ft", "altimeter": f"{a} inHg"}, {"result.pressure_altitude.value": pa}, 1e-9))
+    # hPa settings through the same independent path
+    for i, (e, q) in enumerate([(0, 1009), (1500, 1030), (3000, 995)], len(out) + 1):
+        pa = alt_for(station(q * 100.0, e * FT), "p") / FT
+        out.append(vec(i, {"elevation": f"{e} ft", "altimeter": f"{q} hPa"}, {"result.pressure_altitude.value": pa}, 1e-9))
+    # FAA-H-8083-25C figure 11-3: the printed altitude corrections at a sea-level field
+    for i, (a, corr) in enumerate([(29.7, 205), (28.2, 1630), (31.0, -983)], len(out) + 1):
+        out.append(vec(i, {"elevation": "0 ft", "altimeter": f"{a} inHg"}, {"result.pressure_altitude.value": corr},
+                       0, PHAK, PHAK_VER))
+        out[-1]["tolerance"] = {"result.pressure_altitude.value": {"abs": 1.0}}
     return out
 
 
@@ -132,7 +145,11 @@ def es(tc):
 
 
 def da_vectors():
-    cases = [(5000, 29.80, 30, None), (5000, 29.80, 30, 20), (0, 29.92, 15, None), (6000, 30.10, 35, 10), (100, 29.70, -10, None), (4000, 29.95, 25, 24)]
+    cases = [(5000, 29.80, 30, None), (5000, 29.80, 30, 20), (0, 29.92, 15, None), (6000, 30.10, 35, 10), (100, 29.70, -10, None), (4000, 29.95, 25, 24),
+             (5431, 30.02, 32, None), (7000, 29.90, 28, 5), (0, 30.40, -30, None), (2000, 29.50, 40, 28),
+             (8900, 30.15, 18, None), (1100, 30.00, 0, -5), (3500, 29.35, 22, None), (9900, 29.70, 10, -2),
+             (500, 29.92, 45, 30), (6200, 30.30, -15, None), (12000, 29.85, 5, None), (-200, 30.05, 38, 26),
+             (4500, 29.60, 33, 15), (2600, 30.20, 12, None)]
     out = []
     for i, (e, a, t, dp) in enumerate(cases, 1):
         p = station(a * INHG, e * FT)
@@ -144,6 +161,10 @@ def da_vectors():
         if dp is not None:
             inp["dew_point"] = f"{dp} degC"
         out.append(vec(i, inp, {"result.density_altitude.value": da}, 1e-9))
+    # FAA-H-8083-25C sample problem 1 (figure 11-22): read from the chart as about 7,700 ft
+    out.append(vec(len(out) + 1, {"elevation": "5883 ft", "altimeter": "30.10 inHg", "temperature": "70 degF"},
+                   {"result.density_altitude.value": 7700}, 0, PHAK, PHAK_VER))
+    out[-1]["tolerance"] = {"result.density_altitude.value": {"abs": 100.0}}
     return out
 
 
@@ -161,17 +182,28 @@ def comps(rwy, wd, ws):
 
 
 def runway_vectors():
-    cases = [(27, 300, 15), (9, 30, 20), (18, 200, 12), (36, 350, 25), (13, 250, 10), (4, 40, 8)]
+    cases = [(27, 300, 15), (9, 30, 20), (18, 200, 12), (36, 350, 25), (13, 250, 10), (4, 40, 8),
+             (1, 190, 12), (22, 110, 18), (31, 310, 20), (6, 150, 9), (15, 330, 14), (33, 60, 22),
+             (8, 260, 11), (27, 90, 7), (11, 200, 30), (35, 20, 16), (2, 290, 13), (24, 180, 40),
+             (27, 270, 20), (18, 360, 15)]
     out = []
     for i, (r, wd, ws) in enumerate(cases, 1):
         h, x = comps((r * 10) % 360, wd, ws)
         out.append(vec(i, {"runway": f"{r:02d}", "wind_direction": wd, "wind_speed": ws},
                        {"result.headwind.value": h, "result.crosswind.value": abs(x)}, 1e-12))
+    # FAA-H-8083-25C sample problem 10 (figure 11-31): read from the chart to the nearest knot as 22 kt and 13 kt
+    out.append(vec(len(out) + 1, {"runway": "17", "wind_direction": 140, "wind_speed": 25},
+                   {"result.headwind.value": 22, "result.crosswind.value": 13}, 0, PHAK, PHAK_VER))
+    out[-1]["tolerance"] = {"result.headwind.value": {"abs": 1.0}, "result.crosswind.value": {"abs": 1.0}}
     return out
 
 
 def triangle_vectors():
-    cases = [(90, 120, 30, 20), (0, 100, 270, 15), (225, 150, 180, 40), (310, 95, 10, 25), (45, 200, 45, 30), (180, 80, 0, 20)]
+    cases = [(90, 120, 30, 20), (0, 100, 270, 15), (225, 150, 180, 40), (310, 95, 10, 25), (45, 200, 45, 30), (180, 80, 0, 20),
+             (135, 110, 200, 18), (270, 140, 300, 35), (20, 90, 100, 12), (355, 105, 10, 28), (160, 250, 270, 60),
+             (75, 65, 330, 20), (200, 180, 20, 45), (240, 120, 240, 25), (5, 130, 185, 30), (110, 85, 60, 15),
+             (290, 300, 250, 80), (60, 75, 150, 30),
+             (90, 120, 270, 30), (330, 160, 330, 50)]
     out = []
     for i, (tc, tas, wd, ws) in enumerate(cases, 1):
         d = math.radians(wd - tc)
@@ -180,6 +212,10 @@ def triangle_vectors():
         hd = (tc + math.degrees(wca)) % 360
         out.append(vec(i, {"course": tc, "tas": tas, "wind_direction": wd, "wind_speed": ws},
                        {"result.groundspeed.value": gs, "result.heading.value": hd}, 1e-12))
+    # FAA-H-8083-25C chapter 16 (figures 16-19 to 16-22): drawn to scale as GS 88 kt, TH 076
+    out.append(vec(len(out) + 1, {"course": 90, "tas": 120, "wind_direction": 45, "wind_speed": 40},
+                   {"result.groundspeed.value": 88, "result.heading.value": 76}, 0, PHAK, PHAK_VER))
+    out[-1]["tolerance"] = {"result.groundspeed.value": {"abs": 1.0}, "result.heading.value": {"abs": 1.0}}
     return out
 
 

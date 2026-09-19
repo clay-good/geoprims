@@ -16,7 +16,7 @@
 
 ## 3. Correctness program
 
-- [ ] 3.1 Write the derivation template and one derivation per hero tool first; verify the missing-derivation gate (template and gate done in tools/trust/promotion.mjs; notes written for the eleven stable tools in docs/derivations/; pending: the remaining hero tools)
+- [ ] 3.1 Write the derivation template and one derivation per hero tool first; verify the missing-derivation gate (template and gate done in tools/trust/promotion.mjs; notes written for the fifteen stable tools in docs/derivations/, including the pilot hero tools pressure altitude, density altitude, runway components, and the wind triangle; pending: the remaining hero tools, tracked in docs/launch/hero-tools.md)
 - [ ] 3.2 Extend golden vectors into worked-example fixtures with source fields and tolerance ceilings; verify the independent-example gate (independent-example gate done: each derivation's worked example records publisher, title, edition, locator, tolerance, and verifier; pending: per-domain tolerance ceilings)
 - [x] 3.3 Implement the dimension lint over manifests and core annotations; verify it catches a deliberate unit-name mismatch (tools/trust/dimensions.mjs; it found nT, A, minute, and hour outputs marked dimensionless, now annotated with fixed units)
 - [x] 3.4 Implement the bounds fuzzer with minimization; verify it finds a seeded trap (tools/fuzz/fuzz.test.mjs: seeded mutations of every tool's example through Wasm in a timed worker, with minimization; it found 16 real defects (non-finite results, a trap, and two hangs), each fixed and pinned as a regression; 1,000 cases per tool pass)

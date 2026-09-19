@@ -612,6 +612,7 @@ const ALTIMETER: Field = Field::new(
 
 pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.altimetry.pressure-altitude",
+    stability: gp_base::tool::Stability::Stable,
     title: "Pressure altitude",
     summary: "Pressure altitude from field elevation and the altimeter setting, exact from the standard atmosphere, with the 1,000 ft per inch rule of thumb beside it.",
     aliases: &["PA calculator", "pressure altitude calculator"],
@@ -726,6 +727,7 @@ fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.altimetry.density-altitude",
+    stability: gp_base::tool::Stability::Stable,
     title: "Density altitude",
     summary: "How high the airplane feels: density altitude from field elevation, altimeter setting, and temperature, with optional dew point, and the rules of thumb beside it.",
     aliases: &["DA calculator", "density altitude calculator"],
@@ -1276,6 +1278,7 @@ const WIND_FIELDS: [Field; 6] = [
 
 pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
     id: "aviation.wind.runway-components",
+    stability: gp_base::tool::Stability::Stable,
     title: "Runway wind components",
     summary: "Crosswind and headwind or tailwind on a runway, with gusts, variable winds, and your personal limits.",
     aliases: &[
@@ -1558,6 +1561,7 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HEADING_GROUNDSPEED: ToolDef = ToolDef {
     id: "aviation.wind.heading-groundspeed",
+    stability: gp_base::tool::Stability::Stable,
     title: "Wind triangle: heading and groundspeed",
     summary: "The heading to fly and the groundspeed you will get for a course, true airspeed, and wind: the E6B wind side, exact.",
     aliases: &["E6B", "wind triangle", "WCA", "wind correction angle"],

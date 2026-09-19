@@ -98,7 +98,10 @@ dependencies = [
 name = "gp-geometry"
 version = "0.1.0"
 dependencies = [
+ "geographiclib-rs",
  "gp-base",
+ "gp-geo",
+ "serde_json",
 ]
 
 [[package]]

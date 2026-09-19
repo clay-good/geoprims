@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "edc320b900fd55b4",
+    "hash": "ad0a4a1497a22e8a",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -135,6 +135,14 @@
     "hash": "597e11690562e6e4",
     "lastmod": "2026-09-19"
   },
+  "/geometry/": {
+    "hash": "d2cb026383cb7a69",
+    "lastmod": "2026-09-19"
+  },
+  "/geometry/area/": {
+    "hash": "f9749f6b9df3c130",
+    "lastmod": "2026-09-19"
+  },
   "/indexing/": {
     "hash": "7faee4e428b8e0d1",
     "lastmod": "2026-09-19"
@@ -164,7 +172,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "c44f1705cb3e24ee",
+    "hash": "4dfd5a3704eaf2e5",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -188,7 +196,7 @@
     "lastmod": "2026-09-19"
   },
   "/sources/": {
-    "hash": "f0a1ad54cb3e2c60",
+    "hash": "c6e5e40c75f9b08a",
     "lastmod": "2026-09-19"
   },
   "/survey/": {
@@ -328,7 +336,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "af88652e91b15012",
+    "hash": "f7aeabdf42a8c353",
     "lastmod": "2026-09-19"
   }
 }

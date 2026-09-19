@@ -30,7 +30,7 @@
 
 ## 4. Computational geometry
 
-- [ ] 4.1 Implement geodesic and planar area/perimeter with orientation and pole handling; verify the Colorado, polar-cap, and shoelace-warning scenarios and a `Planimeter` differential test
+- [ ] 4.1 Implement geodesic and planar area/perimeter with orientation and pole handling; verify the Colorado, polar-cap, and shoelace-warning scenarios and a `Planimeter` differential test (built: geometry.area.polygon with geodesic edges, holes, orientation, antimeridian and pole handling; 500 Planimeter polygons agree within 3e-9 relative; Colorado and polar-cap scenarios. Pending: rhumb edges and the planar mode with its warning)
 - [ ] 4.2 Implement centroids and representative point; verify the C-shape scenario
 - [ ] 4.3 Implement hulls, antimeridian-aware bbox, MBR, and minimum enclosing circle; verify the antimeridian scenario
 - [ ] 4.4 Implement geodesic buffers with join/cap styles and measured validation; verify the geofence and collapse scenarios

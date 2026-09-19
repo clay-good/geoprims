@@ -620,6 +620,14 @@
     {
       "query": "constant course destination",
       "expect": "navigation.rhumb.direct"
+    },
+    {
+      "query": "polygon area",
+      "expect": "geometry.area.polygon"
+    },
+    {
+      "query": "area of a field from coordinates",
+      "expect": "geometry.area.polygon"
     }
   ]
 }

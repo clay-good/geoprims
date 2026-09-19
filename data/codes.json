@@ -262,6 +262,10 @@
       "severity": "info",
       "message": "Declination at the pole follows a convention."
     },
+    "POLE_ENCLOSED": {
+      "severity": "info",
+      "message": "The polygon circles a pole."
+    },
     "RHUMB_REACHES_POLE": {
       "severity": "info",
       "message": "The rhumb line reaches a pole."

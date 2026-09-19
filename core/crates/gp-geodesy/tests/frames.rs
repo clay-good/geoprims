@@ -286,3 +286,70 @@ fn local_frames() {
     assert!((num(&back, "result.elevation.value") - 5.0).abs() < 1e-9);
     assert!((num(&back, "result.range.value") - 10_000.0).abs() < 1e-6);
 }
+
+#[test]
+fn frame_tool_invariants() {
+    // Through the four tools, on three ellipsoids: geodetic → ECEF → geodetic
+    // returns the input; raising a point by h moves it exactly h along the
+    // normal; the origin is at (0, 0, 0) in its own local frame; range is the
+    // length of (east, north, up); and to-local then from-local returns the
+    // target.
+    let mut rng = Rng(99);
+    for ell in ["wgs84", "grs80", "clarke1866"] {
+        for _ in 0..200 {
+            let (lat, lon, h) = (rng.range(-89.0, 89.0), rng.range(-180.0, 180.0), rng.range(-500.0, 2e5));
+            let ecef = |h: f64| {
+                call(
+                    "geodesy.frame.geodetic-to-ecef",
+                    &serde_json::json!({"lat": lat, "lon": lon, "height": h, "ellipsoid": ell}).to_string(),
+                )
+            };
+            let p = ecef(h);
+            let (x, y, z) = (num(&p, "result.x.value"), num(&p, "result.y.value"), num(&p, "result.z.value"));
+            let g = call(
+                "geodesy.frame.ecef-to-geodetic",
+                &serde_json::json!({"x": x, "y": y, "z": z, "ellipsoid": ell}).to_string(),
+            );
+            assert!((num(&g, "result.lat.value") - lat).abs() < 1e-11);
+            assert!((num(&g, "result.lon.value") - lon).abs() < 1e-11);
+            assert!((num(&g, "result.height.value") - h).abs() < 1e-8);
+            let s = ecef(0.0);
+            let d = ((x - num(&s, "result.x.value")).powi(2)
+                + (y - num(&s, "result.y.value")).powi(2)
+                + (z - num(&s, "result.z.value")).powi(2))
+            .sqrt();
+            assert!((d - h.abs()).abs() < 1e-8, "{d} vs {h}");
+
+            let o = serde_json::json!({"lat0": lat, "lon0": lon, "h0": h, "ellipsoid": ell});
+            let local = |t: (f64, f64, f64)| {
+                let mut q = o.clone();
+                q["lat"] = t.0.into();
+                q["lon"] = t.1.into();
+                q["height"] = t.2.into();
+                call("geodesy.frame.to-local", &q.to_string())
+            };
+            let at = local((lat, lon, h));
+            for k in ["east", "north", "up", "range"] {
+                assert!(num(&at, &format!("result.{k}.value")).abs() < 1e-8, "{at}");
+            }
+            let t = (
+                (lat + rng.range(-3.0, 3.0)).clamp(-89.9, 89.9),
+                lon + rng.range(-3.0, 3.0),
+                rng.range(-100.0, 3e4),
+            );
+            let r = local(t);
+            let (e, n, u) = (num(&r, "result.east.value"), num(&r, "result.north.value"), num(&r, "result.up.value"));
+            assert!((num(&r, "result.range.value") - (e * e + n * n + u * u).sqrt()).abs() < 1e-8);
+            let mut q = o.clone();
+            q["frame"] = "enu".into();
+            q["east"] = e.into();
+            q["north"] = n.into();
+            q["up"] = u.into();
+            let b = call("geodesy.frame.from-local", &q.to_string());
+            assert!((num(&b, "result.lat.value") - t.0).abs() < 1e-11, "{b}");
+            let dl = (num(&b, "result.lon.value") - t.1 + 540.0).rem_euclid(360.0) - 180.0;
+            assert!(dl.abs() < 1e-11, "{b}");
+            assert!((num(&b, "result.height.value") - t.2).abs() < 1e-8, "{b}");
+        }
+    }
+}

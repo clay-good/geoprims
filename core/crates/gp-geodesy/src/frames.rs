@@ -567,6 +567,7 @@ const HEIGHT: Field = Field::new(
 
 pub static TO_ECEF: ToolDef = ToolDef {
     id: "geodesy.frame.geodetic-to-ecef",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude, longitude, and height to ECEF",
     summary: "Converts geodetic latitude, longitude, and ellipsoidal height to Earth-centered, Earth-fixed X, Y, Z.",
     aliases: &[
@@ -670,6 +671,7 @@ const fn xyz_in(name: &'static str, title: &'static str) -> Field {
 
 pub static FROM_ECEF: ToolDef = ToolDef {
     id: "geodesy.frame.ecef-to-geodetic",
+    stability: gp_base::tool::Stability::Stable,
     title: "ECEF to latitude, longitude, and height",
     summary: "Converts Earth-centered, Earth-fixed X, Y, Z to geodetic latitude, longitude, and ellipsoidal height, in closed form at any height.",
     aliases: &["ECEF to LLA", "geocentric to geodetic", "XYZ to lat lon"],
@@ -817,6 +819,7 @@ const ROW: &[Field] = &[
 
 pub static TO_LOCAL: ToolDef = ToolDef {
     id: "geodesy.frame.to-local",
+    stability: gp_base::tool::Stability::Stable,
     title: "Point to local ENU, NED, and AER",
     summary: "Expresses a target point in a local tangent plane at an origin: east-north-up, north-east-down, and azimuth-elevation-range, with the rotation matrix on request.",
     aliases: &[
@@ -987,6 +990,7 @@ const fn local_len(name: &'static str, title: &'static str) -> Field {
 
 pub static FROM_LOCAL: ToolDef = ToolDef {
     id: "geodesy.frame.from-local",
+    stability: gp_base::tool::Stability::Stable,
     title: "Local ENU, NED, or AER to point",
     summary: "Finds the latitude, longitude, height, and ECEF position of a point given in a local tangent plane at an origin: east-north-up, north-east-down, or azimuth-elevation-range.",
     aliases: &[

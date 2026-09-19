@@ -5,6 +5,18 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "geodesy.frame.geodetic-to-ecef",
+        "geodesy.frame.ecef-to-geodetic",
+        "geodesy.frame.to-local",
+        "geodesy.frame.from-local"
+      ],
+      "vectors": [],
+      "summary": "The four frame conversions are stable: geodetic to ECEF and back, and to and from a local east-north-up frame. They reproduce the IOGP Guidance Note 7-2 worked examples and agree with GeographicLib's CartConvert within 15 nm on 1,000 ECEF points (poles to beyond geostationary orbit) and 500 local targets. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "indexing.geohash.decode",
         "indexing.geohash.neighbors",
         "indexing.plus-code.encode",

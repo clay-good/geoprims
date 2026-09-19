@@ -30,6 +30,9 @@ CATALOG = {
 }
 MP40 = ("mpmath 40-digit evaluation of the defining relations (tools/vectors/gen_frames.py)", "mpmath 1.3")
 CART = ("GeographicLib CartConvert", "GeographicLib 2.7")
+GN72 = ("IOGP Geomatics Guidance Note 7-2, sections 4.1.1 to 4.1.3 (EPSG methods 9602, 9836, 9837), worked examples", "IOGP 373-7-2, September 2019")
+# The guidance note's North Sea point, 53°48'33.820"N 2°07'46.380"E 73.0 m, and its topocentric origin 55°N 5°E 200 m.
+GN_LAT, GN_LON = 53 + 48 / 60 + 33.820 / 3600, 2 + 7 / 60 + 46.380 / 3600
 GEOD = ("GeographicLib geodesic along the meridian (Karney 2013)", "geographiclib 2.x (Python)")
 
 
@@ -230,6 +233,9 @@ def ecef():
         tol = {k: {"abs": 2e-6, "rel": 1e-15} for k in ["result.x.value", "result.y.value", "result.z.value"]}
         vs.append(vec(i, {"lat": la, "lon": lo, "height": h}, {"result.x.value": x, "result.y.value": y, "result.z.value": z}, CART, tol))
     vs.append(vec(len(vs) + 1, {"lat": 40, "lon": -105, "height": -20000}, {"error.code": "OUT_OF_DOMAIN"}, ("add-geodesy-suite input rules", "2026-09"), ok=False))
+    xyz_tol = {k: {"abs": 5e-4} for k in ["result.x.value", "result.y.value", "result.z.value"]}
+    vs.append(vec(len(vs) + 1, {"lat": GN_LAT, "lon": GN_LON, "height": 73.0},
+                  {"result.x.value": 3771793.968, "result.y.value": 140253.342, "result.z.value": 5124304.349}, GN72, xyz_tol))
     write("geodesy.frame.geodetic-to-ecef", vs)
 
     # Inverse: CartConvert -r on the same XYZ (rounded to the mm the forward vectors print).
@@ -247,6 +253,9 @@ def ecef():
             tol["result.lon.value"] = {"abs": 0}
         vs.append(vec(i, {"x": x, "y": y, "z": z}, exp, CART, tol))
     vs.append(vec(len(vs) + 1, {"x": 0, "y": 0, "z": 0}, {"error.code": "DEGENERATE_GEOMETRY"}, ("add-geodesy-suite scenario: the Earth's center", "2026-09"), ok=False))
+    # The guidance note prints the answer to 0.001" (3e-7°) and 0.1 m.
+    vs.append(vec(len(vs) + 1, {"x": 3771793.968, "y": 140253.342, "z": 5124304.349}, {"result.lat.value": GN_LAT, "result.lon.value": GN_LON,
+                  "result.height.value": 73.0}, GN72, {"result.lat.value": {"abs": 3e-7}, "result.lon.value": {"abs": 3e-7}, "result.height.value": {"abs": 0.05}}))
     write("geodesy.frame.ecef-to-geodetic", vs)
 
 
@@ -278,6 +287,9 @@ def local():
             exp["result.azimuth.value"] = math.degrees(math.atan2(e_, n_)) % 360
             tol["result.azimuth.value"] = {"abs": 1e-9}
         vs_to.append(vec(i, {"lat0": o[0], "lon0": o[1], "h0": o[2], "lat": t[0], "lon": t[1], "height": t[2]}, exp, CART, tol))
+    enu_tol = {k: {"abs": 5e-4} for k in ["result.east.value", "result.north.value", "result.up.value"]}
+    vs_to.append(vec(len(vs_to) + 1, {"lat0": 55, "lon0": 5, "h0": 200, "lat": GN_LAT, "lon": GN_LON, "height": 73.0},
+                     {"result.east.value": -189013.869, "result.north.value": -128642.040, "result.up.value": -4220.171}, GN72, enu_tol))
     write("geodesy.frame.to-local", vs_to)
 
     # From local: random offsets in each frame, geodetic answers from CartConvert -l -r.
@@ -301,6 +313,9 @@ def local():
         vs_from.append(vec(i, inp, {"result.lat.value": la, "result.lon.value": lo if lo < 180 else lo - 360, "result.height.value": h}, CART, tol)); i += 1
     vs_from.append(vec(i, {"lat0": 40, "lon0": -105, "frame": "aer", "azimuth": 10, "range": 100}, {"error.code": "INVALID_INPUT"},
                        ("add-geodesy-suite input rules", "2026-09"), ok=False))
+    vs_from.append(vec(i + 1, {"lat0": 55, "lon0": 5, "h0": 200, "frame": "enu", "east": -189013.869, "north": -128642.040, "up": -4220.171},
+                       {"result.lat.value": GN_LAT, "result.lon.value": GN_LON, "result.height.value": 73.0}, GN72,
+                       {"result.lat.value": {"abs": 3e-7}, "result.lon.value": {"abs": 3e-7}, "result.height.value": {"abs": 0.05}}))
     write("geodesy.frame.from-local", vs_from)
 
 

@@ -583,7 +583,31 @@ def taf_vectors():
         ("TAF KPHX 181730Z 1818/1924 VRB05KT P6SM SKC PROB40 1822/1902 VRB25G40KT 1SM TSRA", {"result.count": 2.0, "result.periods.1.change": "40% probability"}),
         ("TAF EGLL 181700Z 1818/1924 24012KT 9999 FEW035 BECMG 1822/1901 20008KT", {"result.periods.0.visibility": "10 km or more", "result.periods.1.change": "becoming"}),
     ]
-    return [svec(i, {"report": r}, e, "Hand-decoded per the FAA Aviation Weather Handbook (TAF chapter)", "FAA-H-8083-28 (2022)") for i, (r, e) in enumerate(cases, 1)]
+    out = [svec(i, {"report": r}, e, "Hand-decoded per the FAA Aviation Weather Handbook (TAF chapter)", "FAA-H-8083-28 (2022)") for i, (r, e) in enumerate(cases, 1)]
+    # FAA-H-8083-28A section 27.3.3 decodes this Pierre, SD TAF line by line.
+    kpir = ("TAF KPIR 111140Z 1112/1212 13012KT P6SM BKN100 WS020/35035KT TEMPO 1112/1114 5SM BR FM111500 16015G25KT P6SM SCT040 BKN250 "
+            "FM120000 14012KT P6SM BKN080 OVC150 PROB30 1200/1204 3SM TSRA BKN030CB FM120400 14008KT P6SM SCT040 OVC080 TEMPO 1204/1208 3SM TSRA OVC030CB")
+    out.append(svec(len(out) + 1, {"report": kpir},
+                    {"result.station": "KPIR", "result.count": 7, "result.periods.0.wind": "130° true at 12 kt", "result.periods.0.visibility": "more than 6 SM",
+                     "result.periods.0.other": "low-level wind shear at 2,000 ft: 35 kt from 350°", "result.periods.1.change": "temporary",
+                     "result.periods.1.to": "day 11 at 1400Z", "result.periods.2.wind": "160° true at 15 kt, gusting 25 kt",
+                     "result.periods.4.change": "30% probability", "result.periods.4.clouds": "broken at 3,000 ft, cumulonimbus",
+                     "result.periods.6.clouds": "overcast at 3,000 ft, cumulonimbus"}, AWH_A, AWH_A_VER))
+    # Every 40th live TAF of the differential fixture: pytaf's period count and first-period wind.
+    def wind_text(w):
+        d, spd, g = w[0], int(w[1]), w[2]
+        if spd == 0:
+            return "calm"
+        t = f"variable at {spd} kt" if d == "VRB" else f"{int(d):03d}° true at {spd} kt"
+        return t + (f", gusting {int(g)} kt" if g else "")
+    rows = [json.loads(l) for l in Path("core/crates/gp-aviation/tests/data/taf_diff.jsonl").read_text().splitlines()[1:]]
+    for row in rows[::40]:
+        e = {"result.count": len(row["groups"])}
+        w = row["groups"][0].get("wind")
+        if w and w[3] == "KT":
+            e["result.periods.0.wind"] = wind_text(w)
+        out.append(svec(len(out) + 1, {"report": row["report"]}, e, "Live Aviation Weather Center TAFs (2026-09-19), as parsed by pytaf 1.2.1", "pytaf 1.2.1"))
+    return out
 
 
 def main():

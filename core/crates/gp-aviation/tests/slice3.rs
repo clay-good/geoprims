@@ -535,3 +535,59 @@ fn fb_invariants() {
         }
     }
 }
+
+#[test]
+fn taf_invariants() {
+    // On every live TAF of the differential fixture: the prevailing periods
+    // (base and FM) tile the validity window in order with no gap or overlap,
+    // every TEMPO, BECMG, and PROB period starts inside it, and the period
+    // count is one plus the change groups in the text.
+    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/taf_diff.jsonl")).unwrap();
+    for line in text.lines().skip(1) {
+        let report = serde_json::from_str::<Value>(line).unwrap()["report"].as_str().unwrap().to_owned();
+        let r = call("aviation.weather.taf-decode", &serde_json::json!({"report": report}).to_string());
+        let res = &r["result"];
+        let periods = res["periods"].as_array().unwrap();
+        let hours = res["valid_hours"].as_f64().unwrap();
+        let prevailing: Vec<&Value> = periods.iter().filter(|p| matches!(p["change"].as_str(), Some("base" | "from"))).collect();
+        assert_eq!(prevailing[0]["change"], "base", "{report}");
+        assert_eq!(prevailing[0]["from"], res["valid_from"], "{report}");
+        for w in prevailing.windows(2) {
+            assert_eq!(w[0]["to"], w[1]["from"], "{report}: a gap or overlap between prevailing periods");
+            assert!(w[0]["start_hour"].as_f64() <= w[1]["start_hour"].as_f64(), "{report}");
+        }
+        assert_eq!(prevailing.last().unwrap()["to"], res["valid_to"], "{report}");
+        // A period outside the validity (a forecaster's slip) must be flagged, never passed silently.
+        let flagged = r["meta"]["warnings"].as_array().unwrap().iter().any(|w| w["code"] == "SUSPECT_VALUE");
+        for p in periods {
+            let h = p["start_hour"].as_f64().unwrap();
+            assert!((0.0..=hours).contains(&h) || flagged, "{report}: a period starts outside the validity");
+        }
+        let body = report.split(" RMK ").next().unwrap();
+        let changes = body
+            .split_whitespace()
+            .enumerate()
+            .filter(|(i, t)| {
+                t.starts_with("FM") && t.len() == 8
+                    || *t == "BECMG"
+                    || (*t == "TEMPO" && !body.split_whitespace().nth(i - 1).unwrap_or("").starts_with("PROB"))
+                    || t.starts_with("PROB")
+            })
+            .count();
+        assert_eq!(periods.len(), changes + 1, "{report}");
+    }
+}
+
+#[test]
+fn taf_temperature_extremes_and_stray_periods() {
+    // From a live TAF (LSGG, 2026-09-19): TX/TN groups decode, and a BECMG
+    // group before the valid period is flagged.
+    let r = call(
+        "aviation.weather.taf-decode",
+        r#"{"report":"TAF LSGG 191725Z 1918/2024 06007KT CAVOK TX25/2015Z TNM03/2005Z BECMG 1916/1918 VRB02KT"}"#,
+    );
+    let base = &r["result"]["periods"][0];
+    assert!(base["not_decoded"].is_null(), "{r}");
+    assert_eq!(base["other"], "maximum temperature 25 °C on day 20 at 1500Z; minimum temperature -3 °C on day 20 at 0500Z");
+    assert!(r["meta"]["warnings"].as_array().unwrap().iter().any(|w| w["code"] == "SUSPECT_VALUE"), "{r}");
+}

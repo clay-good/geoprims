@@ -21,3 +21,13 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+
+# H3 fills walk hundreds of thousands of cells. Size-optimized Wasm made a
+# 250,000-cell fill take 12.5 s; speed-optimizing these two crates brings it
+# to about 3 s for 13 KB (compressed) more. Rust never reorders or fuses
+# floating-point operations, so results stay bit-identical.
+[profile.release.package.h3o]
+opt-level = 3
+
+[profile.release.package.gp-indexing]
+opt-level = 3

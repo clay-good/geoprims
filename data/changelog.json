@@ -3,6 +3,24 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
+        "indexing.h3.polygon-to-cells"
+      ],
+      "vectors": [],
+      "summary": "Large H3 polygon fills run about four times faster on the web and in the MCP server (a 250,000-cell county-sized fill: 12.5 s to about 3 s), because the H3 code is now compiled for speed instead of size. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "aviation.weather.taf-decode"
+      ],
+      "vectors": [],
+      "summary": "The TAF decoder now reads the ICAO TX and TN maximum and minimum temperature groups (they were listed as not decoded) and flags a change group that falls outside the forecast's valid period instead of placing it silently (found in a live Geneva TAF). Tool version 1.2.0. It is now stable, agreeing with pytaf on 588 live TAFs and with the FAA Aviation Weather Handbook's example."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "result-change",
       "tools": [
         "aviation.weather.metar-decode",

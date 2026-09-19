@@ -308,6 +308,28 @@ pub fn parse_weather(s: &str) -> Option<String> {
     Some(if vicinity { format!("{phrase} in the vicinity") } else { phrase })
 }
 
+/// A TAF maximum or minimum temperature group, like `TX25/2015Z` or `TNM03/2106Z`.
+fn temperature_extreme(g: &str) -> Option<String> {
+    let (kind, rest) = if let Some(r) = g.strip_prefix("TX") {
+        ("maximum", r)
+    } else {
+        ("minimum", g.strip_prefix("TN")?)
+    };
+    let (t, when) = rest.split_once('/')?;
+    let (neg, t) = t.strip_prefix('M').map_or((false, t), |t| (true, t));
+    let when = when.strip_suffix('Z')?;
+    if t.len() != 2 || when.len() != 4 || !t.bytes().chain(when.bytes()).all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let deg: i32 = t.parse().ok()?;
+    Some(format!(
+        "{kind} temperature {} °C on day {} at {}00Z",
+        if neg { -deg } else { deg },
+        when[..2].trim_start_matches('0'),
+        &when[2..]
+    ))
+}
+
 /// A cloud layer: cover, base (ft AGL), and convective type.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CloudLayer {
@@ -1654,6 +1676,8 @@ fn decode_conditions(groups: &[&str], fmt: gp_base::parse::NumberFormat) -> Cond
                 c.ceiling = cl.base_ft;
             }
             c.clouds.push(t);
+        } else if let Some(t) = temperature_extreme(g) {
+            c.other.push(t);
         } else if let Some(ws) = g.strip_prefix("WS").and_then(|r| r.split_once('/')) {
             match (ws.0.parse::<f64>(), parse_wind(ws.1)) {
                 (Ok(h), Some(w)) => c.other.push(format!(
@@ -1725,7 +1749,8 @@ const PERIOD_ROW: &[Field] = &[
 
 pub static TAF: ToolDef = ToolDef {
     id: "aviation.weather.taf-decode",
-    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
+    version: "1.2.0",
     title: "TAF decoder",
     summary: "Turns a pasted TAF into a timeline of forecast periods (FM, TEMPO, BECMG, PROB30/40) in plain language, with UTC and local times, winds (true), visibility, weather, clouds and ceilings, and flight categories.",
     aliases: &[
@@ -1938,7 +1963,22 @@ fn run_taf(ctx: &mut Ctx) -> Result<Json, ToolError> {
         periods[w[0].0].2 = w[1].1;
     }
     let mut rows = Vec::new();
+    let mut outside = false;
     for (kind, from, to, groups) in &periods {
+        let start = from.hours_from(vs, month_len);
+        if !outside && !(0..=valid_hours).contains(&start) {
+            outside = true;
+            ctx.warnings.push(Warning::new(
+                "SUSPECT_VALUE",
+                format!(
+                    "The {} group starting {} begins outside the forecast's valid period ({} to {}). Check the TAF as issued.",
+                    kind,
+                    from.text(),
+                    vs.text(),
+                    ve.text()
+                ),
+            ));
+        }
         let c = decode_conditions(groups, fmt);
         let mut row = vec![
             ("change", Json::str(kind.as_str())),

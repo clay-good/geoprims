@@ -389,6 +389,48 @@
       "editionCheck": true
     },
     {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "nga-wgs84",
+      "name": "Department of Defense World Geodetic System 1984",
+      "issuer": "NGA",
+      "currentEdition": "NGA.STND.0036_1.0.0_WGS84",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the NGA download serves NGA.STND.0036_1.0.0_WGS84.pdf.",
+      "freeAccessUrl": "https://earth-info.nga.mil/php/download.php?file=coord-wgs84",
+      "matchTerms": [
+        "NGA.STND.0036",
+        "World Geodetic System 1984"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "snyder-pp1395",
+      "name": "Map Projections: A Working Manual",
+      "issuer": "USGS",
+      "currentEdition": "Professional Paper 1395",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: USGS Publications Warehouse lists Professional Paper 1395.",
+      "freeAccessUrl": "https://pubs.usgs.gov/publication/pp1395",
+      "matchTerms": [
+        "Map Projections: A Working Manual",
+        "Professional Paper 1395"
+      ]
+    },
+    {
       "id": "h3",
       "name": "H3 hexagonal index",
       "issuer": "Uber and H3 contributors",

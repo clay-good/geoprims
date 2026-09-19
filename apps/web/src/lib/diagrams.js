@@ -175,7 +175,39 @@ function flyBy(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Sky plot: the target's azimuth and elevation seen from the origin (zenith at the center). */
+function skyPlot(args, result) {
+  const az = val(result, 'azimuth');
+  const el = val(result, 'elevation');
+  if (![az, el].every(Number.isFinite)) return null;
+  const [cx, cy, R0] = [160, 122, 96];
+  const below = el < 0;
+  // Radius grows from the zenith (0) to the horizon (R0); below the horizon the dot sits on the rim.
+  const r = below ? R0 : (R0 * (90 - el)) / 90;
+  const [dx, dy] = vec(az, r);
+  const rings = [0, 30, 60].map((e) => `<circle class="${e === 0 ? 'dg-muted' : 'dg-grid'}" cx="${cx}" cy="${cy}" r="${((R0 * (90 - e)) / 90).toFixed(1)}" fill="none"/>`).join('');
+  const ticks = [['N', 0], ['E', 90], ['S', 180], ['W', 270]]
+    .map(([t, b]) => {
+      const [tx, ty] = vec(b, R0 + 12);
+      return `<text class="dg-muted-text" text-anchor="middle" x="${(cx + tx).toFixed(1)}" y="${(cy + ty + 4).toFixed(1)}">${t}</text>`;
+    })
+    .join('');
+  const ringLabels = [30, 60].map((e) => `<text class="dg-muted-text" x="${(cx + 3).toFixed(1)}" y="${(cy - (R0 * (90 - e)) / 90 - 3).toFixed(1)}">${e}°</text>`).join('');
+  const label = `Az ${disp(result, 'azimuth')}, El ${disp(result, 'elevation')}${below ? ' (below the horizon)' : ''}`;
+  const body = [
+    rings,
+    ringLabels,
+    ticks,
+    r > 1 ? arrow(cx, cy, cx + dx, cy + dy, 'dg-accent', '', 0.5) : '',
+    `<circle class="dg-dot" cx="${(cx + dx).toFixed(1)}" cy="${(cy + dy).toFixed(1)}" r="5"/>`,
+    `<text class="dg-label" text-anchor="middle" x="160" y="236">${esc(label)}</text>`,
+  ].join('');
+  const title = `Sky plot: the target is at azimuth ${disp(result, 'azimuth')} and elevation ${disp(result, 'elevation')}${below ? ', below the horizon' : ''}, ${disp(result, 'range')} away.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
+  'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
   'aviation.wind.runway-components': runwayComponents,
   'navigation.route.cpa': cpa,

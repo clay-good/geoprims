@@ -215,10 +215,11 @@ impl Entry {
                 .flat_map(|(w, ts)| ts.iter().map(move |&t| w * row[t as usize] as u32))
                 .max()
                 .unwrap_or(0);
+            // A connector ("to", "from") only counts inside a phrase match.
             if best > 0 && !conn {
                 matched += 1;
+                total += best;
             }
-            total += best;
         }
         if matched == 0 {
             return 0;

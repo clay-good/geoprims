@@ -56,6 +56,12 @@ pub const CATALOG: &[Ellipsoid] = &[
         a: 6_377_397.155,
         f: 1.0 / 299.152_812_8,
     },
+    Ellipsoid {
+        id: "krassovsky1940",
+        name: "Krassovsky 1940",
+        a: 6_378_245.0,
+        f: 1.0 / 298.3,
+    },
 ];
 
 pub const IDS: &[&str] = &[
@@ -65,6 +71,7 @@ pub const IDS: &[&str] = &[
     "intl1924",
     "airy1830",
     "bessel1841",
+    "krassovsky1940",
 ];
 
 /// Above this |f| the series method loses accuracy and GeodesicExact is required.
@@ -75,7 +82,7 @@ pub const FIELDS: [Field; 3] = [
     Field::new(
         "ellipsoid",
         "Ellipsoid",
-        "wgs84 (default), grs80, clarke1866, intl1924, airy1830, or bessel1841",
+        "wgs84 (default), grs80, clarke1866, intl1924, airy1830, bessel1841, or krassovsky1940",
         Kind::Choice(IDS),
     ),
     Field::new(

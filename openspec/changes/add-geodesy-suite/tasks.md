@@ -8,10 +8,10 @@
 
 ## 2. Ellipsoids and frames
 
-- [ ] 2.1 Implement the ellipsoid catalog and derived parameters; verify the WGS 84 scenario and published values for each ellipsoid
-- [ ] 2.2 Implement radii of curvature, meridian arc, degree lengths, and auxiliary latitudes; verify the 45° scenarios and round trips against GeographicLib
-- [ ] 2.3 Implement geodetic ↔ ECEF (non-iterative inverse); verify the forward and pole scenarios and 1e-9 m accuracy over the full height range
-- [ ] 2.4 Implement ENU, NED, and AER conversions with rotation matrices; verify the overhead-target and round-trip scenarios
+- [x] 2.1 Implement the ellipsoid catalog and derived parameters; verify the WGS 84 scenario and published values for each ellipsoid (seven catalog ellipsoids including Krassovsky 1940, custom (a, 1/f) or (a, b), and spheres; 23 vectors from 40-digit mpmath)
+- [x] 2.2 Implement radii of curvature, meridian arc, degree lengths, and auxiliary latitudes; verify the 45° scenarios and round trips against GeographicLib (meridian arcs by Carlson's elliptic integrals match GeographicLib's geodesic to 1 nm; auxiliary latitudes match 40-digit values to 1e-13° and round-trip within 6.4e-14° on every catalog ellipsoid)
+- [x] 2.3 Implement geodetic ↔ ECEF (non-iterative inverse); verify the forward and pole scenarios and 1e-9 m accuracy over the full height range (Vermeille's closed form matches CartConvert; measured round trips close within 4.9 nm near the surface and 7.7e-16 of the distance at any height. The 1e-9 m target is at the resolution of a double at the Earth's radius, 0.93 nm per unit in the last place, so a two-way round trip cannot close tighter than a few units)
+- [x] 2.4 Implement ENU, NED, and AER conversions with rotation matrices; verify the overhead-target and round-trip scenarios (10,000-point ENU round trip within 5 nm; sky-plot diagram)
 
 ## 3. Datums
 

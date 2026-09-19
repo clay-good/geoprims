@@ -297,6 +297,7 @@ figure.diagram svg { display: block; inline-size: 100%; block-size: auto; max-bl
 .dg-accent { stroke: var(--accent); stroke-width: 2.5; fill: none; stroke-linecap: round; }
 .dg-muted { stroke: var(--muted); stroke-width: 1.75; fill: none; stroke-linecap: round; }
 .dg-dash { stroke-dasharray: 6 5; }
+.dg-grid { stroke: var(--graticule); stroke-width: 1; fill: none; }
 .dg-head-accent { fill: var(--accent); }
 .dg-head-muted { fill: var(--muted); }
 .dg-runway { stroke: var(--line); stroke-width: 14; }

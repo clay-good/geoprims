@@ -1,6 +1,7 @@
 //! Geodesy: coordinate parsing and formatting, UTM, UPS, and MGRS
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
+pub mod frames;
 pub mod geoid;
 pub mod magnetic;
 pub mod spcs;
@@ -17,7 +18,7 @@ use gp_geo::dms::{self, Axis, Style};
 use gp_geo::ellipsoid::{self, Ellipsoid};
 use gp_geo::{mgrs, point, utmups};
 
-const KARNEY_TM: Reference = Reference {
+pub(crate) const KARNEY_TM: Reference = Reference {
     title: "Transverse Mercator with an accuracy of a few nanometers",
     issuer: "Karney, C. F. F., Journal of Geodesy",
     year: 2011,
@@ -1319,6 +1320,13 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::LOOKUP,
     &geoid::GEOID_HEIGHT,
     &geoid::HEIGHT_CONVERT,
+    &frames::PARAMETERS,
+    &frames::RADII,
+    &frames::AUXILIARY,
+    &frames::TO_ECEF,
+    &frames::FROM_ECEF,
+    &frames::TO_LOCAL,
+    &frames::FROM_LOCAL,
 ];
 
 pub static REGISTRY: Registry = Registry {

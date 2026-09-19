@@ -358,9 +358,11 @@ pub fn parse(q: &str) -> Parsed {
         })
         .collect();
     // A conversion ("32 f to c") ranks on its units too.
-    let conversion = toks.iter().any(
-        |t| matches!(t, Tok::Word(w) if matches!(w.to_lowercase().as_str(), "to" | "into" | "in")),
-    );
+    // ...but only when a unit follows "to": "grid to ground ... ft" is not one.
+    let conversion = toks.windows(2).any(|w| {
+        matches!(&w[0], Tok::Word(c) if matches!(c.to_lowercase().as_str(), "to" | "into" | "in"))
+            && matches!(&w[1], Tok::Word(u) if unit_word(u).is_some())
+    });
     let words = toks
         .iter()
         .zip(&used)
@@ -522,13 +524,11 @@ fn fit(s: &SlotDef, v: &Val, named: bool) -> Option<Json> {
     }
 }
 
-/// How many values some input of the tool could take: a ranking tiebreak, so
-/// "utm 40.4461, -79.9822" prefers the tool that takes a latitude.
+/// How many inputs the question fills unambiguously in this tool: a ranking
+/// tiebreak, so "utm 40.4461, -79.9822" prefers the tool that takes a
+/// latitude, and two coordinate pairs prefer the tool with two points.
 pub fn fits(slots: &[SlotDef], values: &[Val]) -> u32 {
-    values
-        .iter()
-        .filter(|v| slots.iter().any(|s| fit(s, v, names(s, v)).is_some()))
-        .count() as u32
+    map(slots, values).0.len() as u32
 }
 
 fn names(s: &SlotDef, v: &Val) -> bool {

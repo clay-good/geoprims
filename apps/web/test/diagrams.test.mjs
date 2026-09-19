@@ -52,3 +52,19 @@ test('the CPA scene draws both positions at the playhead from the core', async (
   const cpa = catalog.tools.find((t) => t.id === 'navigation.route.cpa');
   assert.deepEqual(cpa.timeline, { input: 'at_time', end: 'scene_end', key: 'time' });
 });
+
+test('the sky plot shows the target by azimuth and elevation', async () => {
+  // reference-frames "Sky plot".
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const host = nodeHost(new URL('../../../dist/wasm', import.meta.url).pathname);
+  const args = { lat0: 40, lon0: -105, h0: 1600, lat: 40.05, lon: -104.95, height: 3000 };
+  const r = JSON.parse(await host.invoke('geodesy.frame.to-local', JSON.stringify(args)));
+  const d = diagram('geodesy.frame.to-local', args, r);
+  assert.match(d.desc, new RegExp(`azimuth ${r.display.azimuth.replace('.', '\\.')} and elevation`));
+  // The dot is north-east of the center, and nearer the rim than the zenith at a low elevation.
+  const [, x, y] = /<circle class="dg-dot" cx="([\d.]+)" cy="([\d.]+)"/.exec(d.markup).map(Number);
+  assert.ok(x > 160 && y < 122, `${x}, ${y}`);
+  assert.ok(Math.hypot(x - 160, y - 122) > 48);
+  const under = JSON.parse(await host.invoke('geodesy.frame.to-local', JSON.stringify({ ...args, height: -500, lat: 45 })));
+  assert.match(diagram('geodesy.frame.to-local', args, under).desc, /below the horizon/);
+});

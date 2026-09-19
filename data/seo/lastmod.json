@@ -1,10 +1,10 @@
 {
   "/": {
-    "hash": "ac0d79c297f0bda5",
+    "hash": "2411762da8d34456",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
-    "hash": "797ea402e73257a2",
+    "hash": "85fc73f92d503623",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "883a1c97d97edd24",
+    "hash": "396a102e1ed14268",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -236,19 +236,51 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/geohash/encode/": {
-    "hash": "77a4c45cded2c607",
+    "hash": "1ebebd1aa9a20f28",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/": {
     "hash": "46136127efee4ee5",
     "lastmod": "2026-09-19"
   },
+  "/indexing/h3/cell-info/": {
+    "hash": "72e2e7ae887374f6",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/children/": {
+    "hash": "1dfbe3f9fc1880e8",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/compact/": {
+    "hash": "5840261f52d84018",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/edges/": {
+    "hash": "3d639822ca4b46f8",
+    "lastmod": "2026-09-19"
+  },
   "/indexing/h3/grid-disk/": {
-    "hash": "542e654433e91573",
+    "hash": "17094d9418499c1e",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/grid-path/": {
+    "hash": "d8c7923170dda8f2",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/grid-ring/": {
+    "hash": "ec5863d3acf87168",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "68e6fe4c97fcef3b",
+    "hash": "782bbd55061b1879",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/parent/": {
+    "hash": "029e750a29db484a",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/uncompact/": {
+    "hash": "2b4d95b07b86a04c",
     "lastmod": "2026-09-19"
   },
   "/indexing/plus-code/": {
@@ -260,11 +292,11 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/tile/bounds/": {
-    "hash": "53d2b1f847983c0a",
+    "hash": "1f7dc415ee2d3fad",
     "lastmod": "2026-09-19"
   },
   "/indexing/tile/from-point/": {
-    "hash": "519854535dad0076",
+    "hash": "87a388597b2048f4",
     "lastmod": "2026-09-19"
   },
   "/known-issues/": {
@@ -272,7 +304,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "378104dc4e2b7323",
+    "hash": "1c81607ac76b4787",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -484,7 +516,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a7645e330c9a2399",
+    "hash": "04f6231a0f303c5c",
     "lastmod": "2026-09-19"
   }
 }

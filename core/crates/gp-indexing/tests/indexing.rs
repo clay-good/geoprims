@@ -559,3 +559,66 @@ fn grid_disk_invariants() {
     // A pentagon has five neighbors, not six.
     assert_eq!(cells("8009fffffffffff", 1).len(), 6);
 }
+
+#[test]
+fn h3_family_invariants() {
+    let list = |r: &Value, k: &str, f: &str| -> Vec<String> {
+        let mut v: Vec<String> = r["result"][k].as_array().unwrap().iter().map(|x| x[f].as_str().unwrap().to_owned()).collect();
+        v.sort();
+        v
+    };
+    let disk = |c: &str, k: u32| list(&call("indexing.h3.grid-disk", &serde_json::json!({"cell": c, "k": k}).to_string()), "cells", "cell");
+    for c in ["892a8471487ffff", "87be0e35cffffff", "8c195da49a2d9ff", "85283473fffffff", "8009fffffffffff", "836200fffffffff"] {
+        let info = call("indexing.h3.cell-info", &serde_json::json!({"cell": c}).to_string());
+        let res = num(&info, "result.resolution") as u32;
+        let pent = info["result"]["pentagon"] == "yes";
+        // Children: 7^d cells (a pentagon has 1 + 5(7^d - 1)/6), each with this cell as parent.
+        for d in 1..=2u32 {
+            let cr = (res + d).min(15);
+            if cr == res {
+                continue;
+            }
+            let dd = cr - res;
+            let kids = call("indexing.h3.children", &serde_json::json!({"cell": c, "resolution": cr}).to_string());
+            let want = if pent { 1 + 5 * (7u64.pow(dd) - 1) / 6 } else { 7u64.pow(dd) };
+            assert_eq!(num(&kids, "result.count") as u64, want, "{c} at {cr}");
+            for k in list(&kids, "cells", "cell").iter().take(20) {
+                let p = call("indexing.h3.parent", &serde_json::json!({"cell": k, "resolution": res}).to_string());
+                assert_eq!(p["result"]["parent"], c);
+            }
+            // Compact of all children is the cell; uncompacting gives them back.
+            let rows: Vec<Value> = list(&kids, "cells", "cell").into_iter().map(|x| serde_json::json!({"cell": x})).collect();
+            let packed = call("indexing.h3.compact", &serde_json::json!({"cells": rows}).to_string());
+            assert_eq!(list(&packed, "cells", "cell"), vec![c.to_owned()]);
+            let back = call("indexing.h3.uncompact", &serde_json::json!({"cells": [{"cell": c}], "resolution": cr}).to_string());
+            assert_eq!(list(&back, "cells", "cell"), list(&kids, "cells", "cell"));
+        }
+        // Edges and vertexes: six each, five for a pentagon; every edge leads to a neighbor.
+        let e = call("indexing.h3.edges", &serde_json::json!({"cell": c}).to_string());
+        let n = if pent { 5 } else { 6 };
+        assert_eq!(num(&e, "result.edge_count") as usize, n);
+        assert_eq!(e["result"]["vertexes"].as_array().unwrap().len(), n);
+        let near = disk(c, 1);
+        for x in e["result"]["edges"].as_array().unwrap() {
+            assert!(near.contains(&x["to"].as_str().unwrap().to_owned()));
+        }
+        if !pent {
+            // A ring is the disk less the smaller disk; a path steps between neighbors.
+            for k in 1..=3u32 {
+                let ring = list(&call("indexing.h3.grid-ring", &serde_json::json!({"cell": c, "k": k}).to_string()), "cells", "cell");
+                let inner = disk(c, k - 1);
+                let want: Vec<String> = disk(c, k).into_iter().filter(|x| !inner.contains(x)).collect();
+                assert_eq!(ring, want, "{c} ring {k}");
+            }
+            let far = disk(c, 3).last().unwrap().clone();
+            let p = call("indexing.h3.grid-path", &serde_json::json!({"from": c, "to": far}).to_string());
+            let cells: Vec<String> = p["result"]["cells"].as_array().unwrap().iter().map(|x| x["cell"].as_str().unwrap().to_owned()).collect();
+            assert_eq!(cells.first().unwrap(), c);
+            assert_eq!(cells.last().unwrap(), &far);
+            assert_eq!(cells.len() as f64, num(&p, "result.distance") + 1.0);
+            for w in cells.windows(2) {
+                assert!(disk(&w[0], 1).contains(&w[1]), "{} and {} are not neighbors", w[0], w[1]);
+            }
+        }
+    }
+}

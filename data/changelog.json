@@ -3,6 +3,22 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
+        "indexing.h3.cell-info",
+        "indexing.h3.grid-ring",
+        "indexing.h3.grid-path",
+        "indexing.h3.parent",
+        "indexing.h3.children",
+        "indexing.h3.compact",
+        "indexing.h3.uncompact",
+        "indexing.h3.edges"
+      ],
+      "vectors": [],
+      "summary": "Eight more H3 tools are stable: the cell inspector, grid ring, grid path, parent, children, compact, uncompact, and edges. On 300 cells at every resolution, one in eight a pentagon, they match H3 C exactly, including every path H3 C refuses; cell areas agree to 2e-8 relative even at resolution 15. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "added",
       "tools": [],
       "vectors": [],

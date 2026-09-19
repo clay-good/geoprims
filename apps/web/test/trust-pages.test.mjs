@@ -31,7 +31,9 @@ test('the release verification report lists every tool with counts, sources, err
 
 test('the changelog shows every entry, labels result changes, and tool pages link their entries', () => {
   const html = page('changelog');
-  for (const e of changelog.entries) assert.ok(html.includes(e.summary.slice(0, 60)), e.summary.slice(0, 40));
+  // The page escapes quotes and ampersands, so compare escaped text.
+  const esc = (s) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+  for (const e of changelog.entries) assert.ok(html.includes(esc(e.summary.slice(0, 60))), e.summary.slice(0, 40));
   const results = changelog.entries.filter((e) => e.kind === 'result-change').length;
   assert.equal((html.match(/<span class="badge"[^>]*>Result change<\/span>/g) ?? []).length, results);
   const sun = page('time/sun/position');

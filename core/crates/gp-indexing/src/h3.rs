@@ -285,6 +285,7 @@ const VERTEX_ITEM: &[Field] = &[
 
 pub static CELL_INFO: ToolDef = ToolDef {
     id: "indexing.h3.cell-info",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 cell inspector",
     summary: "Everything about an H3 cell: center (cellToLatLng), boundary (cellToBoundary), resolution, base cell, pentagon and Class III checks, area, and decimal form.",
     aliases: &[
@@ -339,7 +340,7 @@ pub static CELL_INFO: ToolDef = ToolDef {
     errors: &[],
     warnings: &["PENTAGON_DISTORTION", "EXPERIMENTAL_TOOL"],
     model: "H3 v4 (h3o 0.11)",
-    accuracy: "Identical to H3 C; coordinates within 1e-12° below 88° latitude, 5e-11° nearer the poles",
+    accuracy: "Identical to H3 C; coordinates within 1e-12° below 88° latitude, 5e-11° nearer the poles; areas within 6e-15 relative at resolution 0 and 2e-8 at resolution 15, where the 1 m² cell's spherical excess runs out of digits",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -472,6 +473,7 @@ fn run_grid_disk(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static GRID_RING: ToolDef = ToolDef {
     id: "indexing.h3.grid-ring",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 grid ring",
     summary: "The H3 cells exactly k steps from a cell (gridRing), the hollow ring.",
     aliases: &["gridRing", "hexRing"],
@@ -523,6 +525,7 @@ fn run_grid_ring(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static GRID_PATH: ToolDef = ToolDef {
     id: "indexing.h3.grid-path",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 grid path and distance",
     summary: "The grid distance between two H3 cells (gridDistance) and the line of cells joining them (gridPathCells).",
     aliases: &["gridPathCells", "gridDistance", "H3 line"],
@@ -593,6 +596,7 @@ fn run_grid_path(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static PARENT: ToolDef = ToolDef {
     id: "indexing.h3.parent",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 parent cell",
     summary: "The coarser H3 cell that contains a cell (cellToParent), and the cell's position among that parent's children.",
     aliases: &["cellToParent", "H3 parent"],
@@ -661,6 +665,7 @@ fn run_parent(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CHILDREN: ToolDef = ToolDef {
     id: "indexing.h3.children",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 children cells",
     summary: "The finer H3 cells inside a cell (cellToChildren), their count, and the center child.",
     aliases: &["cellToChildren", "cellToCenterChild", "H3 children"],
@@ -746,6 +751,7 @@ fn cells_input(ctx: &Ctx) -> Result<Vec<CellIndex>, ToolError> {
 
 pub static COMPACT: ToolDef = ToolDef {
     id: "indexing.h3.compact",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 compact",
     summary: "Replaces every complete group of 7 sibling cells with their parent, repeatedly, for the smallest set covering the same area (compactCells).",
     aliases: &["compactCells", "H3 compaction"],
@@ -841,6 +847,7 @@ fn run_compact(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static UNCOMPACT: ToolDef = ToolDef {
     id: "indexing.h3.uncompact",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 uncompact",
     summary: "Expands a mixed-resolution set of H3 cells to one resolution (uncompactCells).",
     aliases: &["uncompactCells"],
@@ -917,6 +924,7 @@ const VERTEX_OUT_ITEM: &[Field] = &[
 
 pub static EDGES: ToolDef = ToolDef {
     id: "indexing.h3.edges",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 edges and vertexes",
     summary: "The directed edges (with lengths and neighbors) and vertexes of an H3 cell (originToDirectedEdges, cellToVertexes).",
     aliases: &["originToDirectedEdges", "cellToVertexes", "H3 edge length"],

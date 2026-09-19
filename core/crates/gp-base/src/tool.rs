@@ -421,9 +421,12 @@ impl<'a> Ctx<'a> {
             }
         };
         // No physical input needs magnitudes past 1e50 (or below 1e-50) in SI
-        // units; such values only overflow or underflow the arithmetic.
+        // units; such values only overflow or underflow the arithmetic. A
+        // nonzero value that underflows to zero in base units ("5e-324 ft")
+        // counts as below the range, not as zero.
         let base = q.base().abs();
-        if !base.is_finite() || (base != 0.0 && !(MIN_MAGNITUDE..=MAX_MAGNITUDE).contains(&base)) {
+        if !base.is_finite() || (q.value != 0.0 && !(MIN_MAGNITUDE..=MAX_MAGNITUDE).contains(&base))
+        {
             return Err(ToolError::new(
                 ErrorCode::OutOfDomain,
                 format!("{} is far outside any meaningful range.", f.title),

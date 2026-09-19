@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "90ad28df4f08a194",
+    "hash": "8138c88c35e5e16b",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -20,7 +20,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "36a7a21e0d823c80",
+    "hash": "55a8213fd258206c",
     "lastmod": "2026-09-19"
   },
   "/aviation/ifr/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "a2e4fbcefa1d9ab7",
+    "hash": "8adc6f3932b3fee2",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -84,7 +84,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/geoid/geoid-height/": {
-    "hash": "5f7746f1d06fdd38",
+    "hash": "be9e4396f66b507f",
     "lastmod": "2026-09-19"
   },
   "/geodesy/grid-ref/": {
@@ -100,7 +100,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "9ecceba633f76523",
+    "hash": "6369fa9443dba9e6",
     "lastmod": "2026-09-19"
   },
   "/geodesy/parse/": {
@@ -112,11 +112,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "88ac2097cc053b9c",
+    "hash": "ec584c38cf9ed0b2",
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "e9738a004f65d948",
+    "hash": "bedf89becd37cbd8",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ups/": {
@@ -128,11 +128,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/forward/": {
-    "hash": "c859284b9d525d8b",
+    "hash": "7a0f981e18602b9b",
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/inverse/": {
-    "hash": "597e11690562e6e4",
+    "hash": "b1565f24582fb2df",
     "lastmod": "2026-09-19"
   },
   "/geometry/": {
@@ -156,7 +156,7 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "287e175a94a127ff",
+    "hash": "9d9b4ead5a759729",
     "lastmod": "2026-09-19"
   },
   "/indexing/plus-code/": {
@@ -172,11 +172,11 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "9a149a582374be0b",
+    "hash": "201d50282bbaa02f",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
-    "hash": "44b45f037ea1ac6d",
+    "hash": "6d19daa5e48d39fa",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/": {
@@ -184,11 +184,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "0e2270e6d17d06c6",
+    "hash": "3ede1d61d6d7b551",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "5e66b98359471abc",
+    "hash": "b1219824aa85302a",
     "lastmod": "2026-09-19"
   },
   "/navigation/rhumb/": {
@@ -196,11 +196,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/route/": {
-    "hash": "e774217d6e22a5ac",
+    "hash": "0da6b62bf4e56fc5",
     "lastmod": "2026-09-19"
   },
   "/sources/": {
-    "hash": "fc1ee6f93a91dc05",
+    "hash": "91fd0777e5653b4d",
     "lastmod": "2026-09-19"
   },
   "/survey/": {
@@ -240,7 +240,7 @@
     "lastmod": "2026-09-19"
   },
   "/time/sun/position/": {
-    "hash": "cc895118307c58c9",
+    "hash": "1440d1f433c66bbe",
     "lastmod": "2026-09-19"
   },
   "/units/": {
@@ -340,7 +340,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "d6902e859425c33a",
+    "hash": "99a9fd716ffeb444",
     "lastmod": "2026-09-19"
   }
 }

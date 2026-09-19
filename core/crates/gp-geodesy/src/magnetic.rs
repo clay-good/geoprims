@@ -101,27 +101,7 @@ const MODEL: Field = Field::new(
 
 /// Parses `YYYY-MM-DD` or a decimal year.
 pub fn parse_date(s: &str) -> Result<f64, String> {
-    let s = s.trim();
-    let parts: Vec<&str> = s.split('-').collect();
-    if parts.len() == 3
-        && parts[0].len() == 4
-        && parts
-            .iter()
-            .all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()))
-    {
-        let (y, m, d) = (
-            parts[0].parse::<i32>().map_err(|e| e.to_string())?,
-            parts[1].parse::<u32>().map_err(|e| e.to_string())?,
-            parts[2].parse::<u32>().map_err(|e| e.to_string())?,
-        );
-        return mag::decimal_year(y, m, d).ok_or_else(|| format!("{s} is not a calendar date."));
-    }
-    match s.parse::<f64>() {
-        Ok(t) if t.is_finite() && s.bytes().all(|b| b.is_ascii_digit() || b == b'.') => Ok(t),
-        _ => Err(format!(
-            "Use a date like 2026-09-18 or a decimal year like 2026.71; got {s}."
-        )),
-    }
+    mag::parse_date(s)
 }
 
 /// The evaluated model at the caller's point and date.

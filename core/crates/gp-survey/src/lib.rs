@@ -1063,9 +1063,15 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .filter(|(k, _)| *k != "radius")
         .map(|(k, q)| (*k, q.to(u)))
         .collect();
-    if others.iter().any(|(_, v)| *v <= 0.0) || r.is_some_and(|r| r <= 0.0) {
+    // Point at the element that is not positive.
+    let bad = others
+        .iter()
+        .find(|(_, v)| *v <= 0.0)
+        .map(|(k, _)| *k)
+        .or(r.filter(|r| *r <= 0.0).map(|_| "radius"));
+    if let Some(bad) = bad {
         return Err(ToolError::invalid(
-            "/radius",
+            &format!("/{bad}"),
             "Curve elements must be positive.",
         ));
     }

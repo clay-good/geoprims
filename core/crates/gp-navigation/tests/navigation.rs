@@ -512,3 +512,64 @@ fn fly_by_tsd_and_cpa_scenarios() {
     assert!(codes(&away).contains(&"DIVERGING".to_owned()), "{away}");
     assert!((num(&away, "result.separation.value") - 1000.0).abs() < 1e-9);
 }
+
+#[test]
+fn route_legs_scenario() {
+    // Four waypoints with a date: every leg has true and magnetic courses and
+    // the declination; totals and times add up.
+    let r = call(
+        "navigation.route.legs",
+        r#"{"waypoints":[{"name":"KDEN","lat":39.8617,"lon":-104.6731},{"name":"KASE","lat":39.2232,"lon":-106.8688},{"name":"KGJT","lat":39.1224,"lon":-108.5267},{"name":"KDEN","lat":39.8617,"lon":-104.6731}],"date":"2026-09-18","groundspeed":"120 kt","departure":"09:00","utc_offset":"-06:00"}"#,
+    );
+    let legs = r["result"]["legs"]
+        .as_array()
+        .unwrap_or_else(|| panic!("{r}"));
+    assert_eq!(legs.len(), 3);
+    let mut sum = 0.0;
+    for leg in legs {
+        let tc = leg["true_course"]["value"].as_f64().unwrap();
+        let d = leg["declination"]["value"].as_f64().unwrap();
+        let mc = leg["magnetic_course"]["value"].as_f64().unwrap();
+        assert!(
+            ((tc - d - mc).rem_euclid(360.0)).min((mc - tc + d).rem_euclid(360.0)) < 1e-9,
+            "{leg}"
+        );
+        assert!(
+            (5.0..10.0).contains(&d),
+            "Colorado declination is about 7-8° east: {d}"
+        );
+        sum += leg["distance"]["value"].as_f64().unwrap();
+        assert_eq!(leg["distance"]["unit"], "NM");
+    }
+    assert!((num(&r, "result.total_distance.value") - sum).abs() < 1e-9);
+    assert_eq!(r["meta"]["assets"][0]["id"], "wmm2025");
+    assert!(r["result"]["arrival_utc"].as_str().unwrap().ends_with('Z'));
+    // The first leg matches the geodesic tool.
+    let g = call(
+        "navigation.geodesic.inverse",
+        r#"{"lat1":39.8617,"lon1":-104.6731,"lat2":39.2232,"lon2":-106.8688}"#,
+    );
+    assert!(
+        (legs[0]["distance"]["value"].as_f64().unwrap() * 1.852 - num(&g, "result.distance.value"))
+            .abs()
+            < 1e-9
+    );
+    // Without a date: true courses only.
+    let t = call(
+        "navigation.route.legs",
+        r#"{"waypoints":[{"lat":0,"lon":0},{"lat":0,"lon":1}],"path":"rhumb"}"#,
+    );
+    assert!(
+        t["result"]["legs"][0].get("magnetic_course").is_none(),
+        "{t}"
+    );
+    assert_eq!(t["result"]["legs"][0]["from"], "WP1");
+    assert!(
+        (t["result"]["legs"][0]["true_course"]["value"]
+            .as_f64()
+            .unwrap()
+            - 90.0)
+            .abs()
+            < 1e-9
+    );
+}

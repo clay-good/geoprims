@@ -165,6 +165,7 @@ const REGRESSIONS = [
   ['geodesy.utm.inverse', { easting: '586309.953 m', hemisphere: 'N', northing: '4477770.428 m', zone: 17, inverse_flattening: 180, a: '180 m' }, 'OUT_OF_DOMAIN'],
   ['time.sun.position', { lat: 39.7392, lon: -104.9903, time: '2026-06-21T12:00-06:00', delta_t: '-1e+300 s' }, 'OUT_OF_DOMAIN'],
   ['survey.reduction.combined-factor', { ellipsoid_height: '90 ft', grid_scale: 0.99991, radius: -90 }, 'OUT_OF_DOMAIN'],
+  ['survey.curves.circular-curve', { delta: '30 deg', tangent: '5e-324 ft' }, 'OUT_OF_DOMAIN'],
 ];
 
 test('fuzzer regressions return structured errors', async () => {

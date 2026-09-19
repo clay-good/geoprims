@@ -16,7 +16,7 @@
 - [ ] 2.3 Implement course intersection and intercept; verify the unreachable-target scenario
 - [x] 2.4 Implement fly-by turn anticipation and standard-rate turns; verify the 90° and standard-rate scenarios (navigation.route.fly-by: radius, lead distance, arc, time, and FLY_OVER_RECOMMENDED above 120°; standard rate by default; 833.4 m and 18.24° scenarios; 22 vectors)
 - [ ] 2.5 Implement geodesic range rings with pole and antimeridian handling; verify the pole-enclosing scenario with a GeoJSON validator
-- [ ] 2.6 Implement multi-leg route totals with magnetic courses, times, and ETAs; verify the magnetic-course scenario
+- [x] 2.6 Implement multi-leg route totals with magnetic courses, times, and ETAs; verify the magnetic-course scenario (navigation.route.legs: per-leg distance, initial and final true course, WMM2025 declination and magnetic course at each leg's start, cumulative and total distance, leg times and arrival times; geodesic or rhumb legs; 22 vectors from Python geographiclib)
 - [x] 2.7 Implement time-speed-distance and 2D CPA; verify the solve-for-time and CPA scenarios (navigation.route.time-speed-distance solves any one of three with ETA from a clock time and explicit UTC offset; navigation.route.cpa in a local plane with DIVERGING; the 2 h 00 min and 110 s / 141.42 m scenarios; 22 vectors each)
 - [ ] 2.8 Implement route visualization (legs, turn arcs, offsets, rings); verify the turn-arc fixture
 

@@ -664,6 +664,18 @@
     {
       "query": "cpa",
       "expect": "navigation.route.cpa"
+    },
+    {
+      "query": "nav log",
+      "expect": "navigation.route.legs"
+    },
+    {
+      "query": "route legs magnetic course",
+      "expect": "navigation.route.legs"
+    },
+    {
+      "query": "flight plan legs",
+      "expect": "navigation.route.legs"
     }
   ]
 }

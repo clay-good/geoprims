@@ -991,3 +991,434 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// ---------------------------------------------------------------- multi-leg routes
+
+const WAYPOINT: &[Field] = &[
+    Field::new(
+        "name",
+        "Name",
+        "Like KDEN; optional",
+        Kind::Text { max_len: 24 },
+    ),
+    Field::new(
+        "lat",
+        "Latitude",
+        "Decimal degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Decimal degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+];
+
+const LEG_ROW: &[Field] = &[
+    Field::new("from", "From", "Waypoint", Kind::Text { max_len: 24 }),
+    Field::new("to", "To", "Waypoint", Kind::Text { max_len: 24 }),
+    qty_field("distance", "Distance", "This leg", QT::Distance, "NM")
+        .precision(Precision::Decimals(1)),
+    qty_field(
+        "true_course",
+        "True course",
+        "Initial, at the leg's start",
+        QT::Angle,
+        "deg",
+    )
+    .precision(Precision::Decimals(0))
+    .angle_range("[0,360)"),
+    qty_field(
+        "final_course",
+        "Final true course",
+        "At the leg's end",
+        QT::Angle,
+        "deg",
+    )
+    .precision(Precision::Decimals(0))
+    .angle_range("[0,360)"),
+    qty_field(
+        "declination",
+        "Declination",
+        "At the leg's start, east positive",
+        QT::Angle,
+        "deg",
+    )
+    .precision(Precision::Decimals(1))
+    .optional(),
+    qty_field(
+        "magnetic_course",
+        "Magnetic course",
+        "True course minus east declination",
+        QT::Angle,
+        "deg",
+    )
+    .precision(Precision::Decimals(0))
+    .angle_range("[0,360)")
+    .optional(),
+    qty_field(
+        "cumulative",
+        "Cumulative distance",
+        "From the first waypoint",
+        QT::Distance,
+        "NM",
+    )
+    .precision(Precision::Decimals(1)),
+    Field::new(
+        "time",
+        "Leg time",
+        "At the groundspeed",
+        Kind::Text { max_len: 20 },
+    )
+    .optional(),
+    Field::new(
+        "eta",
+        "Arrival time",
+        "At the leg's end",
+        Kind::Text { max_len: 24 },
+    )
+    .optional(),
+];
+
+pub static LEGS: ToolDef = ToolDef {
+    id: "navigation.route.legs",
+    title: "Route legs, courses, and totals",
+    summary: "Each leg's distance, true and magnetic course, and cumulative distance for a route of waypoints, with leg times and arrival times from a groundspeed and departure time.",
+    aliases: &[
+        "flight plan legs",
+        "nav log",
+        "route planner",
+        "magnetic course calculator",
+        "leg distances",
+    ],
+    keywords: &[
+        "route",
+        "legs",
+        "waypoints",
+        "nav log",
+        "true course",
+        "magnetic course",
+        "ETA",
+        "total distance",
+    ],
+    inputs: &[
+        Field::new(
+            "waypoints",
+            "Waypoints",
+            "In order: name (optional), latitude, longitude",
+            Kind::List {
+                items: WAYPOINT,
+                min: 2,
+                max: 100,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "path",
+            "Legs flown as",
+            "geodesic (shortest, default) or rhumb (constant course)",
+            Kind::Choice(&["geodesic", "rhumb"]),
+        )
+        .core(),
+        Field::new(
+            "date",
+            "Date for magnetic courses",
+            "Like 2026-09-18; leave empty for true courses only",
+            Kind::Text { max_len: 12 },
+        )
+        .core(),
+        qty_field(
+            "groundspeed",
+            "Groundspeed",
+            "Like 120 kt, for leg times",
+            QT::Speed,
+            "kt",
+        )
+        .core(),
+        Field::new(
+            "departure",
+            "Departure time",
+            "Local clock time, like 14:30",
+            Kind::Text { max_len: 5 },
+        ),
+        Field::new(
+            "utc_offset",
+            "UTC offset",
+            "Of the departure time, like -06:00 or Z",
+            Kind::Text { max_len: 6 },
+        ),
+        E[0],
+        E[1],
+        E[2],
+    ],
+    outputs: &[
+        qty_field(
+            "total_distance",
+            "Total distance",
+            "All legs",
+            QT::Distance,
+            "NM",
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "total_time",
+            "Total time",
+            "At the groundspeed",
+            Kind::Text { max_len: 20 },
+        )
+        .optional(),
+        Field::new(
+            "arrival",
+            "Arrival time",
+            "At the last waypoint",
+            Kind::Text { max_len: 24 },
+        )
+        .optional(),
+        Field::new(
+            "arrival_utc",
+            "Arrival time (UTC)",
+            "Zulu",
+            Kind::Text { max_len: 24 },
+        )
+        .optional(),
+        Field::new(
+            "legs_count",
+            "Legs",
+            "Number of legs",
+            Kind::Number {
+                min: 1.0,
+                max: 99.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "legs",
+            "Legs",
+            "One row per leg",
+            Kind::List {
+                items: LEG_ROW,
+                min: 1,
+                max: 99,
+            },
+        ),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::Unsupported,
+    ],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Geodesic legs (Karney 2013) on WGS 84; magnetic declination from WMM2025",
+    accuracy: "Distances and courses to nanometers; declination per WMM2025 (about ±0.5° typical)",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "Denver to Aspen to Grand Junction to Denver at 120 kt",
+        input: r#"{"waypoints":[{"name":"KDEN","lat":39.8617,"lon":-104.6731},{"name":"KASE","lat":39.2232,"lon":-106.8688},{"name":"KGJT","lat":39.1224,"lon":-108.5267},{"name":"KDEN","lat":39.8617,"lon":-104.6731}],"date":"2026-09-18","groundspeed":"120 kt","departure":"09:00","utc_offset":"-06:00"}"#,
+        source: "navigation route-geometry scenario: a 4-waypoint route shows true and magnetic courses per leg, with the declination and model",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[Related {
+        id: "navigation.route.time-speed-distance",
+        reason: "alternative",
+    }],
+    sentence: "The route is {total_distance} in {legs_count} legs.",
+    limits: &[("batchRows", 1_000)],
+    run: run_legs,
+    ..ToolDef::BLANK
+};
+
+fn run_legs(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    use gp_geo::magnetic as mag;
+    let rows = ctx.rows("waypoints")?;
+    let dunit = crate::unit(QT::Angle, "deg");
+    let mut pts: Vec<(String, f64, f64)> = Vec::new();
+    for (i, r) in rows.iter().enumerate() {
+        let lat = ctx
+            .row_quantity("waypoints", i, r, "lat")?
+            .expect("required")
+            .to(dunit);
+        let lon = ctx
+            .row_quantity("waypoints", i, r, "lon")?
+            .expect("required")
+            .to(dunit);
+        if !(-90.0..=90.0).contains(&lat) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "Latitude must be between -90° and 90°.",
+            )
+            .at(&format!("/waypoints/{i}/lat")));
+        }
+        let name = r
+            .get("name")
+            .and_then(|v| v.as_str())
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        pts.push((
+            name.map_or_else(|| format!("WP{}", i + 1), str::to_owned),
+            lat,
+            lon,
+        ));
+    }
+    let rhumb = ctx.choice("path")? == Some("rhumb");
+    let (e, g) = setup(ctx)?;
+    let rh = gp_geo::rhumb::Rhumb::new(e.a, e.f);
+    // Magnetic declination at each leg's start, when a date is given.
+    let mag_t = match ctx.text("date")? {
+        None => None,
+        Some(raw) => {
+            let t = mag::parse_date(&raw).map_err(|m| ToolError::invalid("/date", m))?;
+            let (lo, hi) = mag::Model::Wmm2025.window();
+            if !(lo..=hi).contains(&t) {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    format!(
+                        "WMM2025 is valid from 2025.0 to 2030.0; {} is outside it.",
+                        raw.trim()
+                    ),
+                )
+                .at("/date"));
+            }
+            ctx.assets.push(gp_base::envelope::AssetRef {
+                id: mag::Model::Wmm2025.id().into(),
+                version: mag::Model::Wmm2025.version().into(),
+            });
+            Some(mag::coeffs_at(mag::Model::Wmm2025, t))
+        }
+    };
+    let gs = ctx.quantity("groundspeed")?.map(|q| q.base());
+    if gs.is_some_and(|v| v <= 0.0) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Groundspeed must be more than zero.",
+        )
+        .at("/groundspeed"));
+    }
+    let depart = match ctx.text("departure")? {
+        None => None,
+        Some(d) => {
+            let parts: Vec<&str> = d.trim().split(':').collect();
+            let hm = match parts.as_slice() {
+                [h, m] => h
+                    .parse::<i64>()
+                    .ok()
+                    .zip(m.parse::<i64>().ok())
+                    .filter(|(h, m)| *h < 24 && *m < 60),
+                _ => None,
+            };
+            let Some((h, m)) = hm else {
+                return Err(ToolError::invalid(
+                    "/departure",
+                    "Use a 24-hour clock time like 14:30.",
+                ));
+            };
+            Some(h * 60 + m)
+        }
+    };
+    let offset = match ctx.text("utc_offset")? {
+        None => None,
+        Some(o) => Some(parse_offset(&o).ok_or_else(|| {
+            ToolError::invalid("/utc_offset", "Use an offset like -06:00, +05:30, or Z.")
+        })?),
+    };
+    let total_unit = ctx.output_unit("total_distance");
+    let (mut cum, mut hours) = (0.0, 0.0);
+    let mut legs = Vec::new();
+    for w in pts.windows(2) {
+        let ((n1, la1, lo1), (n2, la2, lo2)) = (&w[0], &w[1]);
+        let (s, tc, fc) = if rhumb {
+            let (s, c) = rh.inverse(*la1, *lo1, *la2, *lo2);
+            (s, c, c)
+        } else {
+            let (s, a1, a2, _): (f64, f64, f64, f64) = g.inverse(*la1, *lo1, *la2, *lo2);
+            (s, a1, a2)
+        };
+        cum += s;
+        let wrap = |a: f64| a.rem_euclid(360.0);
+        let len = |ctx: &mut Ctx, v: f64| ctx.emit("total_distance", meters(v), total_unit);
+        let mut row = vec![
+            ("from", Json::str(n1)),
+            ("to", Json::str(n2)),
+            ("distance", len(ctx, s)),
+            (
+                "true_course",
+                Json::obj([("value", Json::Num(wrap(tc))), ("unit", Json::str("deg"))]),
+            ),
+            (
+                "final_course",
+                Json::obj([("value", Json::Num(wrap(fc))), ("unit", Json::str("deg"))]),
+            ),
+        ];
+        if let Some(c) = &mag_t {
+            let (b, sv) = mag::field(c, *la1, *lo1, 0.0);
+            let d = mag::elements(b, sv).d;
+            row.push((
+                "declination",
+                Json::obj([("value", Json::Num(d)), ("unit", Json::str("deg"))]),
+            ));
+            row.push((
+                "magnetic_course",
+                Json::obj([
+                    ("value", Json::Num(wrap(tc - d))),
+                    ("unit", Json::str("deg")),
+                ]),
+            ));
+        }
+        row.push(("cumulative", len(ctx, cum)));
+        if let Some(v) = gs {
+            let h = s / v / 3600.0;
+            hours += h;
+            row.push(("time", Json::str(hm(h))));
+            if let Some(dep) = depart {
+                row.push(("eta", Json::str(clock(dep + (hours * 60.0).round() as i64))));
+            }
+        }
+        legs.push(Json::obj(row));
+    }
+    let n = legs.len();
+    let mut out = vec![("total_distance", ctx.out("total_distance", meters(cum)))];
+    if gs.is_some() {
+        out.push(("total_time", Json::str(hm(hours))));
+        if let Some(dep) = depart {
+            let arrive = dep + (hours * 60.0).round() as i64;
+            out.push(("arrival", Json::str(clock(arrive))));
+            if let Some(off) = offset {
+                out.push((
+                    "arrival_utc",
+                    Json::str(format!("{}Z", clock(arrive - off))),
+                ));
+            }
+        }
+    }
+    out.push(("legs", Json::Arr(legs)));
+    out.push(("legs_count", Json::Num(n as f64)));
+    ctx.model = Some(format!(
+        "{} legs on {}{}",
+        if rhumb {
+            "Rhumb"
+        } else {
+            "Geodesic (Karney 2013)"
+        },
+        e.describe(),
+        if mag_t.is_some() {
+            "; magnetic declination from WMM2025 at each leg's start"
+        } else {
+            ""
+        }
+    ));
+    Ok(Json::obj(out))
+}

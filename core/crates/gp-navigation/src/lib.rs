@@ -878,6 +878,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &route::FLY_BY,
     &route::TSD,
     &route::CPA,
+    &route::LEGS,
 ];
 
 pub static REGISTRY: Registry = Registry {

@@ -140,6 +140,27 @@ def formulas(rnd):
         rows.append(vec(i, inp, exp, {k: {"rel": 1e-9, "abs": 1e-9} for k in exp}, cpa_src))
     write("navigation.route.cpa", rows)
 
+    legs_src = "Karney's geographiclib (Python) geodesic inverse per leg"
+    rows = []
+    for i in range(1, 23):
+        n = rnd.randint(2, 6)
+        wps = [(rnd.uniform(-60, 60), rnd.uniform(-180, 180))]
+        for _ in range(n - 1):
+            d = G.Direct(wps[-1][0], wps[-1][1], rnd.uniform(0, 360), rnd.uniform(20e3, 800e3))
+            wps.append((d["lat2"], d["lon2"]))
+        exp, tol, cum = {}, {}, 0.0
+        for k in range(n - 1):
+            inv = G.Inverse(wps[k][0], wps[k][1], wps[k + 1][0], wps[k + 1][1])
+            cum += inv["s12"]
+            exp[f"result.legs.{k}.distance.value"] = inv["s12"] / 1852
+            exp[f"result.legs.{k}.true_course.value"] = inv["azi1"] % 360
+            tol[f"result.legs.{k}.distance.value"] = {"abs": 1e-9}
+            tol[f"result.legs.{k}.true_course.value"] = {"abs": 1e-9}
+        exp["result.total_distance.value"] = cum / 1852
+        tol["result.total_distance.value"] = {"abs": 1e-9}
+        rows.append(vec(i, {"waypoints": [{"lat": a, "lon": b} for a, b in wps]}, exp, tol, legs_src))
+    write("navigation.route.legs", rows)
+
 
 if __name__ == "__main__":
     main()

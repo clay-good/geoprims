@@ -3,6 +3,31 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "survey.curves.circular-curve"
+      ],
+      "vectors": [],
+      "summary": "An input so small that it rounds to zero in meters (like 5e-324 ft) is now refused as out of range for every tool, instead of being treated as zero; bounds fuzzing found it through the circular-curve tool. A non-positive curve element is now reported on the field that holds it."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "added",
+      "tools": [
+        "navigation.rhumb.inverse",
+        "navigation.rhumb.direct",
+        "navigation.route.cross-track",
+        "navigation.route.fly-by",
+        "navigation.route.time-speed-distance",
+        "navigation.route.cpa",
+        "navigation.route.legs",
+        "geometry.area.polygon"
+      ],
+      "vectors": [],
+      "summary": "New navigation tools: rhumb lines, cross-track and along-track distance, fly-by turn anticipation, time-speed-distance with arrival times, closest point of approach, and route legs with true and magnetic courses; and the first geometry tool, polygon area on the ellipsoid."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "changed",
       "tools": [
         "navigation.geodesic.inverse",

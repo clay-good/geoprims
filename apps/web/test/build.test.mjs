@@ -139,3 +139,15 @@ test('sitemaps list only indexable, self-canonical pages', () => {
   }
   assert.ok(urls > 0);
 });
+
+test('sources and methodology pages, and per-tool vector downloads', () => {
+  const src = page('/sources/');
+  assert.match(src, /Manual of the ICAO Standard Atmosphere/);
+  assert.match(src, /Density altitude/, 'lists the tools citing ICAO Doc 7488');
+  assert.match(page('/methodology/'), /experimental/);
+  for (const t of catalog.tools) {
+    assert.ok(page(route(t.id)).includes(`/vectors/${t.id}.jsonl`), t.id);
+    assert.ok(existsSync(join(dist, 'vectors', `${t.id}.jsonl`)), `${t.id} vectors not shipped`);
+  }
+  assert.match(readFileSync(join(dist, 'llms.txt'), 'utf8'), /\/methodology\//);
+});

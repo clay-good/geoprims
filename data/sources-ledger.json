@@ -1,0 +1,1496 @@
+{
+  "note": "The sources ledger (trust/freshness). One row per tracked standard, model, dataset, or regulation. lastVerified is when a maintainer confirmed the current edition at the issuer (null when never checked); verificationNote says how. The build gates in tools/trust/ledger.test.mjs enforce coverage, editions, overdue checks, model validity, and stamps that only move forward.",
+  "sources": [
+    {
+      "id": "wmm",
+      "name": "World Magnetic Model",
+      "issuer": "NOAA NCEI and BGS",
+      "currentEdition": "WMM2025",
+      "currentReleaseDate": "2024-12-17",
+      "cycleMonths": 60,
+      "nextExpected": "2029-12-17",
+      "validFrom": "2025-01-01",
+      "validTo": "2029-12-31",
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. WMM2025 coefficients and test values from NCEI.",
+      "freeAccessUrl": "https://www.ncei.noaa.gov/products/world-magnetic-model",
+      "matchTerms": [
+        "World Magnetic Model"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "wmmhr",
+      "name": "World Magnetic Model High Resolution",
+      "issuer": "NOAA NCEI and BGS",
+      "currentEdition": "WMMHR2025",
+      "currentReleaseDate": "2024-12-17",
+      "cycleMonths": 60,
+      "nextExpected": "2029-12-17",
+      "validFrom": "2025-01-01",
+      "validTo": "2029-12-31",
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://www.ncei.noaa.gov/products/world-magnetic-model-high-resolution",
+      "matchTerms": [
+        "WMMHR"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "igrf",
+      "name": "International Geomagnetic Reference Field",
+      "issuer": "IAGA V-MOD",
+      "currentEdition": "IGRF-14",
+      "currentReleaseDate": "2024-12-01",
+      "cycleMonths": 60,
+      "nextExpected": "2029-12-31",
+      "validFrom": "1900-01-01",
+      "validTo": "2029-12-31",
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. igrf14coeffs.txt from NOAA NGDC.",
+      "freeAccessUrl": "https://www.ncei.noaa.gov/products/international-geomagnetic-reference-field",
+      "matchTerms": [
+        "International Geomagnetic Reference Field"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "egm96",
+      "name": "EGM96 geopotential model and geoid",
+      "issuer": "NASA GSFC and NIMA (NGA)",
+      "currentEdition": "NASA/TP-1998-206861",
+      "currentReleaseDate": "1998-07-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Grid from GeographicLib egm96-15 (2009-08-29).",
+      "freeAccessUrl": "https://ntrs.nasa.gov/citations/19980218814",
+      "matchTerms": [
+        "EGM96"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "geographiclib",
+      "name": "GeographicLib",
+      "issuer": "C. F. F. Karney",
+      "currentEdition": "GeographicLib 2.x",
+      "currentReleaseDate": null,
+      "cycleMonths": 12,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. GeographicLib 2.7 installed for GeoidEval parity.",
+      "freeAccessUrl": "https://geographiclib.sourceforge.io/",
+      "matchTerms": [
+        "GeographicLib"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "egm2008",
+      "name": "EGM2008 geoid",
+      "issuer": "NGA",
+      "currentEdition": "EGM2008",
+      "currentReleaseDate": "2008-04-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://earth-info.nga.mil/",
+      "matchTerms": [
+        "EGM2008"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "geoid18",
+      "name": "GEOID18 hybrid geoid",
+      "issuer": "NOAA NGS",
+      "currentEdition": "GEOID18",
+      "currentReleaseDate": "2019-10-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/GEOID/GEOID18/",
+      "matchTerms": [
+        "GEOID18"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nsrs2022",
+      "name": "NSRS 2022 products (NATRF2022, NAPGD2022, GEOID2022, SPCS2022)",
+      "issuer": "NOAA NGS",
+      "currentEdition": "beta",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet; beta until NGS adoption.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/datums/newdatums/",
+      "matchTerms": [
+        "NATRF2022",
+        "NAPGD2022",
+        "GEOID2022",
+        "SPCS2022"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nadcon5",
+      "name": "NADCON5 datum transformations",
+      "issuer": "NOAA NGS",
+      "currentEdition": "NADCON 5.0",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/NADCON5/",
+      "matchTerms": [
+        "NADCON5",
+        "NADCON 5"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "spcs83",
+      "name": "State Plane Coordinate System of 1983 (NOAA Manual NOS NGS 5)",
+      "issuer": "NOAA NGS",
+      "currentEdition": "NOAA Manual NOS NGS 5",
+      "currentReleaseDate": "1990-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/library/pdfs/NOAA_Manual_NOS_NGS_0005.pdf",
+      "matchTerms": [
+        "State Plane Coordinate System of 1983"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "epsg",
+      "name": "EPSG Geodetic Parameter Dataset",
+      "issuer": "IOGP",
+      "currentEdition": "as shipped in PROJ 9.3.0",
+      "currentReleaseDate": null,
+      "cycleMonths": 3,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. SPCS83 zones generated from the EPSG dataset in PROJ 9.3.0 via pyproj 3.6.1.",
+      "freeAccessUrl": "https://epsg.org/",
+      "matchTerms": [
+        "EPSG Geodetic Parameter",
+        "EPSG dataset"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "iogp-g7-2",
+      "name": "IOGP Guidance Note 7-2: Coordinate Conversions and Transformations",
+      "issuer": "IOGP",
+      "currentEdition": "Revised September 2019",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.iogp.org/bookstore/product/coordinate-conversions-and-transformation-including-formulas/",
+      "matchTerms": [
+        "IOGP Publication 373-7-2"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nga-utmups",
+      "name": "NGA.SIG.0012 UTM and UPS",
+      "issuer": "NGA",
+      "currentEdition": "NGA.SIG.0012_2.0.0_UTMUPS",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://earth-info.nga.mil/",
+      "matchTerms": [
+        "NGA.SIG.0012",
+        "The Universal Grids and the Transverse Mercator"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nga-mgrs",
+      "name": "NGA.STND.0037 MGRS",
+      "issuer": "NGA",
+      "currentEdition": "NGA.STND.0037_2.0.0_GRIDS",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://earth-info.nga.mil/",
+      "matchTerms": [
+        "NGA.STND.0037",
+        "Military Grid Reference System"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "iso6709",
+      "name": "ISO 6709 Geographic point location",
+      "issuer": "ISO",
+      "currentEdition": "ISO 6709:2022",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.iso.org/standard/75147.html",
+      "matchTerms": [
+        "ISO 6709"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "karney-tm",
+      "name": "Karney (2011) Transverse Mercator",
+      "issuer": "Journal of Geodesy",
+      "currentEdition": "Vol. 85, No. 8",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://doi.org/10.1007/s00190-011-0445-3",
+      "matchTerms": [
+        "Transverse Mercator with an accuracy of a few nanometers"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "karney-geod",
+      "name": "Karney (2013) Algorithms for geodesics",
+      "issuer": "Journal of Geodesy",
+      "currentEdition": "Vol. 87, No. 1",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://doi.org/10.1007/s00190-012-0578-z",
+      "matchTerms": [
+        "Algorithms for geodesics"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "vincenty",
+      "name": "Vincenty (1975) geodesics",
+      "issuer": "Survey Review",
+      "currentEdition": "Vol. 23, No. 176",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://doi.org/10.1179/sre.1975.23.176.88",
+      "matchTerms": [
+        "Direct and inverse solutions of geodesics"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "grs80",
+      "name": "Geodetic Reference System 1980",
+      "issuer": "IAG",
+      "currentEdition": "Journal of Geodesy 74(1)",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://doi.org/10.1007/s001900050278",
+      "matchTerms": [
+        "Geodetic Reference System 1980"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "h3",
+      "name": "H3 hexagonal index",
+      "issuer": "Uber and H3 contributors",
+      "currentEdition": "H3 4.x",
+      "currentReleaseDate": null,
+      "cycleMonths": 12,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://h3geo.org/",
+      "matchTerms": [
+        "H3: A Hexagonal"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "h3o",
+      "name": "h3o (Rust H3)",
+      "issuer": "Hydronium Labs",
+      "currentEdition": "0.11.0",
+      "currentReleaseDate": null,
+      "cycleMonths": 6,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://github.com/HydroniumLabs/h3o",
+      "matchTerms": [
+        "h3o"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "s2",
+      "name": "S2 Geometry",
+      "issuer": "Google",
+      "currentEdition": "S2 Geometry library",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://s2geometry.io/",
+      "matchTerms": [
+        "S2 Geometry"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "olc",
+      "name": "Open Location Code",
+      "issuer": "Google",
+      "currentEdition": "Specification in the project repository",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://github.com/google/open-location-code",
+      "matchTerms": [
+        "Open Location Code"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "a5",
+      "name": "A5 pentagonal index",
+      "issuer": "A5 project",
+      "currentEdition": "pre-1.0",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet (experimental per the launch plan).",
+      "freeAccessUrl": "https://a5geo.org/",
+      "matchTerms": [
+        "A5 pentagonal"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "geohash",
+      "name": "Geohash",
+      "issuer": "G. Niemeyer",
+      "currentEdition": "Original description",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "http://geohash.org/",
+      "matchTerms": [
+        "Geohash"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "osm-tiles",
+      "name": "Slippy map tilenames",
+      "issuer": "OpenStreetMap Wiki",
+      "currentEdition": "Current wiki page",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames",
+      "matchTerms": [
+        "Slippy map tilenames"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "bing-tiles",
+      "name": "Bing Maps Tile System",
+      "issuer": "Microsoft",
+      "currentEdition": "Online documentation",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://learn.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system",
+      "matchTerms": [
+        "Bing Maps Tile System"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "icao-7488",
+      "name": "Manual of the ICAO Standard Atmosphere (Doc 7488)",
+      "issuer": "ICAO",
+      "currentEdition": "3rd edition",
+      "currentReleaseDate": "1993-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://store.icao.int/en/manual-of-the-icao-standard-atmosphere-extended-to-80-kilometres-262500-feet-doc-7488",
+      "matchTerms": [
+        "Manual of the ICAO Standard Atmosphere"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "us76",
+      "name": "U.S. Standard Atmosphere, 1976",
+      "issuer": "NOAA, NASA, USAF",
+      "currentEdition": "NOAA-S/T 76-1562",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://ntrs.nasa.gov/citations/19770009539",
+      "matchTerms": [
+        "U.S. Standard Atmosphere, 1976"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "icao-8168",
+      "name": "ICAO Doc 8168 PANS-OPS",
+      "issuer": "ICAO",
+      "currentEdition": "Doc 8168",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://store.icao.int/",
+      "matchTerms": [
+        "Doc 8168",
+        "PANS-OPS"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "icao-annex5",
+      "name": "ICAO Annex 5 Units of Measurement",
+      "issuer": "ICAO",
+      "currentEdition": "5th edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://store.icao.int/",
+      "matchTerms": [
+        "Annex 5 to the Convention"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "aim",
+      "name": "Aeronautical Information Manual",
+      "issuer": "FAA",
+      "currentEdition": "current",
+      "currentReleaseDate": null,
+      "cycleMonths": 6,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Holding paragraph 5-3-8.",
+      "freeAccessUrl": "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/",
+      "matchTerms": [
+        "Aeronautical Information Manual"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "faa-phak",
+      "name": "Pilot's Handbook of Aeronautical Knowledge",
+      "issuer": "FAA",
+      "currentEdition": "FAA-H-8083-25C",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
+      "matchTerms": [
+        "Pilot's Handbook of Aeronautical Knowledge"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "faa-afh",
+      "name": "Airplane Flying Handbook",
+      "issuer": "FAA",
+      "currentEdition": "FAA-H-8083-3C",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/airplane_handbook",
+      "matchTerms": [
+        "Airplane Flying Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "faa-ifh",
+      "name": "Instrument Flying Handbook",
+      "issuer": "FAA",
+      "currentEdition": "FAA-H-8083-15B",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_flying_handbook",
+      "matchTerms": [
+        "Instrument Flying Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "faa-iph",
+      "name": "Instrument Procedures Handbook",
+      "issuer": "FAA",
+      "currentEdition": "FAA-H-8083-16B",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_procedures_handbook",
+      "matchTerms": [
+        "Instrument Procedures Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "faa-wbh",
+      "name": "Aircraft Weight and Balance Handbook",
+      "issuer": "FAA",
+      "currentEdition": "FAA-H-8083-1B",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/faa-h-8083-1",
+      "matchTerms": [
+        "Aircraft Weight and Balance Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "faa-awh",
+      "name": "Aviation Weather Handbook",
+      "issuer": "FAA",
+      "currentEdition": "FAA-H-8083-28",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/faa-h-8083-28-aviation-weather-handbook",
+      "matchTerms": [
+        "Aviation Weather Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "faa-7900-5",
+      "name": "FAA Order JO 7900.5 Surface Weather Observing",
+      "issuer": "FAA",
+      "currentEdition": "JO 7900.5E",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/documentLibrary/media/Order/JO_7900.5E_CHANGE_1.pdf",
+      "matchTerms": [
+        "JO 7900.5"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "faa-ac-150-5340-1",
+      "name": "AC 150/5340-1 Standards for Airport Markings",
+      "issuer": "FAA",
+      "currentEdition": "AC 150/5340-1M",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.faa.gov/airports/resources/advisory_circulars/",
+      "matchTerms": [
+        "AC 150/5340-1"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "gracey",
+      "name": "Gracey, NASA RP-1046",
+      "issuer": "NASA",
+      "currentEdition": "NASA RP-1046",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://ntrs.nasa.gov/citations/19800015804",
+      "matchTerms": [
+        "NASA Reference Publication 1046"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "alduchov",
+      "name": "Alduchov and Eskridge (1996) Magnus form",
+      "issuer": "Journal of Applied Meteorology",
+      "currentEdition": "Vol. 35, No. 4",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://doi.org/10.1175/1520-0450(1996)035%3C0601:IMFAOS%3E2.0.CO;2",
+      "matchTerms": [
+        "Improved Magnus form"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "cfr-14-1",
+      "name": "14 CFR Part 1 definitions",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Night and flight-time definitions.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-A/part-1",
+      "matchTerms": [
+        "14 CFR 1.1"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "cfr-14-61",
+      "name": "14 CFR Part 61",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61",
+      "matchTerms": [
+        "14 CFR 61"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "cfr-14-91",
+      "name": "14 CFR Part 91",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91",
+      "matchTerms": [
+        "14 CFR 91"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "cfr-14-107",
+      "name": "14 CFR Part 107",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-107",
+      "matchTerms": [
+        "14 CFR Part 107",
+        "14 CFR 107"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "cfr-14-89",
+      "name": "14 CFR Part 89 Remote ID",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-89",
+      "matchTerms": [
+        "14 CFR Part 89",
+        "Part 89"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "part-108",
+      "name": "Part 108 BVLOS NPRM",
+      "issuer": "FAA and TSA",
+      "currentEdition": "90 FR 38212",
+      "currentReleaseDate": "2025-08-07",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Still at OIRA; no final rule published.",
+      "freeAccessUrl": "https://www.federalregister.gov/documents/2025/08/07/2025-14992/normalizing-unmanned-aircraft-systems-beyond-visual-line-of-sight-operations",
+      "matchTerms": [
+        "Part 108",
+        "Normalizing Unmanned Aircraft Systems Beyond Visual Line of Sight"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "proposed",
+      "editionCheck": true
+    },
+    {
+      "id": "eu-2019-947",
+      "name": "Regulation (EU) 2019/947",
+      "issuer": "European Commission",
+      "currentEdition": "as amended",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://eur-lex.europa.eu/eli/reg_impl/2019/947/oj",
+      "matchTerms": [
+        "2019/947"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "eu-2019-945",
+      "name": "Regulation (EU) 2019/945",
+      "issuer": "European Commission",
+      "currentEdition": "as amended",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://eur-lex.europa.eu/eli/reg_del/2019/945/oj",
+      "matchTerms": [
+        "2019/945"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "easa-guidelines",
+      "name": "EASA Guidelines for UAS operations in the open and specific category",
+      "issuer": "EASA",
+      "currentEdition": "EASA guidelines",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. VLOS coefficients confirmed.",
+      "freeAccessUrl": "https://www.easa.europa.eu/en/downloads/139435/en",
+      "matchTerms": [
+        "Guidelines for UAS operations"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "asprs-pas",
+      "name": "ASPRS Positional Accuracy Standards for Digital Geospatial Data",
+      "issuer": "ASPRS",
+      "currentEdition": "Edition 2",
+      "currentReleaseDate": "2024-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.asprs.org/news-resources/asprs-positional-accuracy-standards-for-digital-geospatial-data",
+      "matchTerms": [
+        "ASPRS Positional Accuracy Standards"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "wolf-photogrammetry",
+      "name": "Elements of Photogrammetry with Applications in GIS",
+      "issuer": "McGraw-Hill",
+      "currentEdition": "4th edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.mheducation.com/",
+      "matchTerms": [
+        "Elements of Photogrammetry"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "pix4d-overlap",
+      "name": "Pix4D overlap guidance",
+      "issuer": "Pix4D",
+      "currentEdition": "Vendor guidance",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://support.pix4d.com/",
+      "matchTerms": [
+        "Selecting the image acquisition plan type"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "leishman",
+      "name": "Principles of Helicopter Aerodynamics",
+      "issuer": "Cambridge University Press",
+      "currentEdition": "2nd edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://doi.org/10.1017/CBO9780511809569",
+      "matchTerms": [
+        "Principles of Helicopter Aerodynamics"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "usgs-lbs",
+      "name": "USGS Lidar Base Specification",
+      "issuer": "USGS",
+      "currentEdition": "current",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-online",
+      "matchTerms": [
+        "Lidar Base Specification"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "alta-nsps",
+      "name": "ALTA/NSPS Minimum Standard Detail Requirements",
+      "issuer": "ALTA and NSPS",
+      "currentEdition": "current",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://www.nsps.us.com/",
+      "matchTerms": [
+        "ALTA/NSPS"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "copernicus-dem",
+      "name": "Copernicus DEM GLO-30",
+      "issuer": "ESA and European Commission",
+      "currentEdition": "GLO-30",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Not cited yet.",
+      "freeAccessUrl": "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM",
+      "matchTerms": [
+        "Copernicus DEM"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "ghilani",
+      "name": "Elementary Surveying: An Introduction to Geomatics",
+      "issuer": "Pearson",
+      "currentEdition": "15th edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.pearson.com/",
+      "matchTerms": [
+        "Elementary Surveying"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "brown",
+      "name": "Brown's Boundary Control and Legal Principles",
+      "issuer": "Wiley",
+      "currentEdition": "7th edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.wiley.com/",
+      "matchTerms": [
+        "Brown's Boundary Control"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "blm-manual",
+      "name": "Manual of Surveying Instructions (BLM)",
+      "issuer": "Bureau of Land Management",
+      "currentEdition": "2009 Manual",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.blm.gov/sites/default/files/documents/files/Manual_of_Surveying_Instructions_2009.pdf",
+      "matchTerms": [
+        "Manual of Surveying Instructions"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "vara-arpent",
+      "name": "Vara and arpent definitions",
+      "issuer": "Texas GLO and compiled references",
+      "currentEdition": "Compiled definitions",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Definitions cross-checked in two references.",
+      "freeAccessUrl": "https://www.landsource.com/resources/units/",
+      "matchTerms": [
+        "Units of Measure: land measurements"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "iers-bulletin-c",
+      "name": "IERS Bulletin C (leap seconds)",
+      "issuer": "IERS",
+      "currentEdition": "Bulletin C 72",
+      "currentReleaseDate": "2026-07-06",
+      "cycleMonths": 6,
+      "nextExpected": "2027-01-15",
+      "validFrom": null,
+      "validTo": "2027-06-30",
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Bulletin C 72: no leap second through 2027-06-30.",
+      "freeAccessUrl": "https://datacenter.iers.org/",
+      "matchTerms": [
+        "IERS Bulletin C"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "tzdb",
+      "name": "IANA Time Zone Database",
+      "issuer": "IANA",
+      "currentEdition": "2026d",
+      "currentReleaseDate": null,
+      "cycleMonths": 3,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Checked at the issuer on 2026-09-18. Release 2026d embedded.",
+      "freeAccessUrl": "https://www.iana.org/time-zones",
+      "matchTerms": [
+        "Time Zone Database"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "is-gps-200",
+      "name": "IS-GPS-200 GPS interface specification",
+      "issuer": "U.S. Space Force",
+      "currentEdition": "IS-GPS-200N",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.gps.gov/technical/icwg/",
+      "matchTerms": [
+        "IS-GPS-200"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nrel-spa",
+      "name": "NREL Solar Position Algorithm",
+      "issuer": "NREL",
+      "currentEdition": "NREL/TP-560-34302",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://doi.org/10.2172/15003974",
+      "matchTerms": [
+        "Solar Position Algorithm"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "noaa-solar",
+      "name": "NOAA Solar Calculator",
+      "issuer": "NOAA GML",
+      "currentEdition": "Spreadsheet and equations",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://gml.noaa.gov/grad/solcalc/",
+      "matchTerms": [
+        "NOAA Solar Calculator"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "meeus",
+      "name": "Astronomical Algorithms",
+      "issuer": "Willmann-Bell",
+      "currentEdition": "2nd edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.willbell.com/",
+      "matchTerms": [
+        "Astronomical Algorithms"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "espenak-meeus",
+      "name": "Espenak and Meeus Delta T polynomials",
+      "issuer": "NASA GSFC",
+      "currentEdition": "Five Millennium Canon",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html",
+      "matchTerms": [
+        "Polynomial Expressions for Delta T"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "usno-jd",
+      "name": "USNO Julian Date Converter",
+      "issuer": "U.S. Naval Observatory",
+      "currentEdition": "Online data service",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://aa.usno.navy.mil/data/JulianDate",
+      "matchTerms": [
+        "Julian Date Converter"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "rfc3339",
+      "name": "RFC 3339",
+      "issuer": "IETF",
+      "currentEdition": "Proposed standard",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.rfc-editor.org/rfc/rfc3339",
+      "matchTerms": [
+        "RFC 3339"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nist-sp-811",
+      "name": "NIST SP 811 Guide for the Use of the SI",
+      "issuer": "NIST",
+      "currentEdition": "2008 edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.nist.gov/pml/special-publication-811",
+      "matchTerms": [
+        "NIST Special Publication 811"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nist-hb-44",
+      "name": "NIST Handbook 44",
+      "issuer": "NIST",
+      "currentEdition": "2026 edition",
+      "currentReleaseDate": null,
+      "cycleMonths": 12,
+      "nextExpected": "2027-01-31",
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.nist.gov/pml/owm/publications/nist-handbooks/handbook-44",
+      "matchTerms": [
+        "Specifications, Tolerances, and Other Technical Requirements"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "ussf-deprecation",
+      "name": "Deprecation of the U.S. survey foot",
+      "issuer": "NIST, NOAA",
+      "currentEdition": "85 FR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-18",
+      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "freeAccessUrl": "https://www.federalregister.gov/documents/2020/10/05/2020-21902/deprecation-of-the-united-states-us-survey-foot",
+      "matchTerms": [
+        "Deprecation of the United States (U.S.) Survey Foot"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    }
+  ]
+}

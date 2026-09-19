@@ -16,4 +16,7 @@ cpSync(join(root, 'dist/catalog/v1.json'), join(web, 'public/catalog/v1.json'));
 rmSync(join(web, 'public/assets'), { recursive: true, force: true });
 cpSync(join(root, 'assets/data'), join(web, 'public/assets'), { recursive: true });
 cpSync(join(root, 'assets/registry.json'), join(web, 'public/assets/registry.json'));
-console.log('prepared public/wasm, public/catalog/v1.json, and public/assets');
+// Golden vectors, downloadable per tool at /vectors/<tool id>.jsonl (proof-display).
+rmSync(join(web, 'public/vectors'), { recursive: true, force: true });
+cpSync(join(root, 'core/vectors'), join(web, 'public/vectors'), { recursive: true });
+console.log('prepared public/wasm, public/catalog/v1.json, public/assets, and public/vectors');

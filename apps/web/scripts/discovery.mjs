@@ -43,6 +43,8 @@ This build has ${counts.all.operations} operations and ${counts.all.endpoints} t
 - [Tool catalog](${SITE}/catalog/v1.json): every tool id with its input and output schemas, units, accuracy, references, and worked example
 - [MCP discovery document](${SITE}/.well-known/mcp.json)
 - [AGENTS.md](${SITE}/AGENTS.md): how to run tools, relay caveats, and prepare problem reports
+- [Methodology](${SITE}/methodology/): how results are checked, and what is not verified yet
+- [Sources](${SITE}/sources/): every cited standard, model, and regulation with its edition and last check
 - [Known issues](${SITE}/known-issues/)
 
 ## Domains

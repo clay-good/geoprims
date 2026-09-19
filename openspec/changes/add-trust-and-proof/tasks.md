@@ -4,13 +4,13 @@
 - [ ] 1.2 Write citation records for every tool, including sourced assumptions; verify the coverage gate passes with zero exemptions
 - [ ] 1.3 Implement the shared citation renderer (page, print, copy-with-reference, calculation sheet, MCP `meta.references`); verify the copy-with-reference scenario
 - [ ] 1.4 Replace any reproduced copyrighted table with a cited input field; verify the sight-distance scenario and a lint for table-shaped constants in the flagged tools
-- [ ] 1.5 Build the inverse source map; verify the edition-rollover scenario
+- [x] 1.5 Build the inverse source map; verify the edition-rollover scenario (tools/trust/ledger.mjs maps every citation to its ledger row; rolling a row to a new edition fails the build and names the citing tools)
 
 ## 2. Freshness
 
-- [ ] 2.1 Create `data/sources-ledger.json` with every required row; verify the ledger-completeness gate
-- [ ] 2.2 Implement the superseded-edition, overdue-verification, and model-expiry gates; verify each scenario with fixture ledgers
-- [ ] 2.3 Implement monotonic provenance stamps against the base branch; verify the stale-revert scenario
+- [x] 2.1 Create `data/sources-ledger.json` with every required row; verify the ledger-completeness gate
+- [x] 2.2 Implement the superseded-edition, overdue-verification, and model-expiry gates; verify each scenario with fixture ledgers
+- [x] 2.3 Implement monotonic provenance stamps against the base branch; verify the stale-revert scenario
 - [ ] 2.4 Add the monthly free-access probe workflow that opens issues; verify against a fixture with a dead link
 - [ ] 2.5 Link regulatory reference entries to ledger rows with "Rules as of" rendering; verify the Part 108 status-change scenario
 
@@ -31,7 +31,7 @@
 - [ ] 4.2 Build the "How we got this" panel with substituted formulas, responsive default state, and print expansion; verify the substituted-formula and printed-proof scenarios
 - [ ] 4.3 Implement limitation banners shared with MCP; verify the banner-text scenario
 - [ ] 4.4 Implement context bands with cited bases; verify the GSD scenario
-- [ ] 4.5 Build `/sources`, `/methodology`, `/changelog` with result-change labels, and vector downloads; verify the sources-page and vector-download scenarios
+- [ ] 4.5 Build `/sources`, `/methodology`, `/changelog` with result-change labels, and vector downloads; verify the sources-page and vector-download scenarios (built: /sources from the ledger with citing tools, /methodology stating what is and is not verified, and per-tool /vectors/<id>.jsonl downloads; pending: /changelog)
 
 ## 5. Reviewer recruitment
 

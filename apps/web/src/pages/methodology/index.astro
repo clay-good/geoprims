@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog } from '../../lib/catalog.mjs';
+const { counts } = catalog;
+const vectors = catalog.tools.reduce((n, t) => n + (t.vectorCount ?? 0), 0);
+---
+<Base title="Methodology · geoprims" description="How geoprims checks its answers: golden vectors with sources, differential tests against reference implementations, deterministic numbers, and what is not verified yet." canonical="/methodology/">
+  <h1>Methodology</h1>
+  <p class="purpose">How geoprims checks its answers, and what is not checked yet.</p>
+
+  <h2>Where the numbers come from</h2>
+  <p>
+    Every calculator is written once, in Rust compiled to WebAssembly. This website and the local MCP server load the same
+    modules and return byte-identical results. Numbers are formatted by the core (shortest round-trip form), and no tool
+    reads the clock, your locale, or your time zone: dates and times are always inputs.
+  </p>
+
+  <h2>How results are checked</h2>
+  <ul>
+    <li><strong>Golden vectors.</strong> {vectors.toLocaleString('en-US')} test cases across {counts.all.endpoints} tool ids, each with its source (a published table, a worked example, or an independent implementation) and a tolerance. A test fails if any vector changes silently; changed expectations are kept and marked superseded.</li>
+    <li><strong>Differential tests against reference implementations</strong>, for example: Karney geodesics against GeographicLib; UTM, UPS, and MGRS against GeographicLib; all 124 SPCS83 zones against PROJ; H3 against the H3 C library; sun position against NREL SPA in pvlib; time zones against Python zoneinfo; magnetic declination against the NCEI WMM2025 test values and ppigrf; and the EGM96 geoid against GeographicLib GeoidEval.</li>
+    <li><strong>Every spec scenario is a test.</strong> The behaviors written in the specifications, including refusals and warnings, run on every build.</li>
+    <li><strong>Sources stay current.</strong> The <a href="/sources/">sources ledger</a> fails the build on a superseded edition, an expired model, or an overdue check.</li>
+    <li><strong>Assumptions are stated.</strong> When a result depends on an assumption (dry air, ISA temperature, a nominal fuel density), the result carries a named warning, and the MCP server returns it to agents too.</li>
+  </ul>
+
+  <h2>What is not done yet</h2>
+  <ul>
+    <li>All {counts.all.endpoints} tools are marked <strong>experimental</strong>: none has met the stable bar yet (at least 20 golden vectors, differential tests, and an independent worked example, with every layer passing).</li>
+    <li>No practitioner (pilot, CFI, surveyor, or drone operator) has signed off on any tool yet. Reviewed tools will be listed with the reviewer's name and date.</li>
+    <li>There is no per-release verification report yet.</li>
+  </ul>
+
+  <h2>If you find a wrong answer</h2>
+  <p>
+    Use "Report a problem" on the tool: it shows exactly what will be sent before you send it. Confirmed problems are listed on
+    the <a href="/known-issues/">known-issues page</a> with a workaround, and every fix adds a test vector so it cannot come back.
+  </p>
+</Base>

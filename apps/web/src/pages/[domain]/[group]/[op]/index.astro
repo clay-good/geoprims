@@ -38,7 +38,7 @@ const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outp
     <p><strong>Model:</strong> {t.model}</p>
     <p><strong>Accuracy:</strong> {t.accuracy}</p>
     <p><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
-    <p><strong>Checked against:</strong> {t.vectorCount} golden test vectors.</p>
+    <p><strong>Checked against:</strong> {t.vectorCount} golden test vectors (<a href={`/vectors/${t.id}.jsonl`} download>download the test vectors</a>, each with its source and tolerance). See <a href="/methodology/">how results are checked</a> and <a href="/sources/">every source</a>.</p>
     <h3>Sources</h3>
     <ul>
       {t.references.map((r) => (

@@ -6,7 +6,7 @@
 - [ ] 1.4 Implement status phrases with icons, cited thresholds, and a banned-word lint; verify the crosswind scenario
 - [ ] 1.5 Implement prefilled examples with the "Example values" chip, Clear, and Try the example; verify the first-load scenario
 - [ ] 1.6 Implement progressive disclosure with worded defaults; verify the dry-air scenario
-- [ ] 1.7 Build the glossary file and tap-to-define popovers, plus the help-text gate; verify the HAE scenario
+- [ ] 1.7 Build the glossary file and tap-to-define popovers, plus the help-text gate; verify the HAE scenario (done so far: the glossary file and its gate, and a "Terms on this page" section on every tool page listing its abbreviations with expansions and definitions; pending: tap-to-define popovers on labels and the help-text gate)
 
 ## 2. Home page
 

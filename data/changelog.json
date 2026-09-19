@@ -3,6 +3,13 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "added",
+      "tools": [],
+      "vectors": [],
+      "summary": "Every tool page now explains its abbreviations under \"Terms on this page\": 92 plain-language definitions (METAR, GSD, HAE, PLSS, and more), each with its expansion and a cited source. A build gate stops any new label from using an undefined abbreviation. Two labels were reworded to plain language (motor and speed-controller efficiency; the station part of the daily file name)."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "fixed",
       "tools": [
         "drone.sensors.vlos"

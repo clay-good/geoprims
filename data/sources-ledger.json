@@ -732,6 +732,46 @@
       "editionCheck": false
     },
     {
+      "id": "gpx",
+      "name": "GPX: the GPS Exchange Format",
+      "issuer": "TopoGrafix",
+      "currentEdition": "GPX 1.1",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-19",
+      "verificationNote": "GPX 1.1 schema (2004) is the current version at topografix.com.",
+      "freeAccessUrl": "https://www.topografix.com/gpx.asp",
+      "matchTerms": [
+        "GPX"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "rinex",
+      "name": "RINEX: the Receiver Independent Exchange Format",
+      "issuer": "IGS and RTCM-SC104",
+      "currentEdition": "RINEX 4.01",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer (igs.org/wg/rinex) on 2026-09-19: RINEX 4.01 (2022) is the latest version listed.",
+      "freeAccessUrl": "https://igs.org/wg/rinex/",
+      "matchTerms": [
+        "RINEX"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "icao-7488",
       "name": "Manual of the ICAO Standard Atmosphere (Doc 7488)",
       "issuer": "ICAO",

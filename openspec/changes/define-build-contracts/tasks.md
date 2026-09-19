@@ -21,7 +21,7 @@
 
 - [ ] 4.1 Add every extension to the meta-schema, closed to unknown fields; verify the unknown-extension and too-many-core-inputs scenarios
 - [x] 4.2 Implement the sentence-template renderer in the core with readability lint; verify the conditional and unit-profile scenarios
-- [ ] 4.3 Create the glossary schema and missing-term gate; verify the RPP scenario
+- [x] 4.3 Create the glossary schema and missing-term gate; verify the RPP scenario (data/glossary.json with 92 entries, each a plain definition of at most 40 words citing a sources-ledger row, plus reasoned exclusions for symbols and example values; tools/trust/glossary.mjs fails the build naming the tool and term, keeps relatedTools in step with the catalog, and is tested with the RPP fixture)
 - [ ] 4.4 Implement primary-example designation and the parity gate across page, button, OG, hero card, MCP, and explainer; verify the example-parity scenario
 - [x] 4.5 Implement the decimal-separator rule in the core parser shared by all surfaces; verify both scenarios
 

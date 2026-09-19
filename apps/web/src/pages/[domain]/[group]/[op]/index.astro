@@ -3,7 +3,7 @@ import Base from '../../../../layouts/Base.astro';
 import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
-import { breadcrumbs, buildHashOf, catalog, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, severities, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, buildHashOf, catalog, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, severities, termsFor, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -69,6 +69,19 @@ const client = { id: t.id, title: t.title, route: route(t.id), visualization: t.
       <p class="notice">Experimental means this tool has not yet met the stable bar: at least 20 golden vectors, differential tests, and an independent worked example.</p>
     )}
   </details>
+  {termsFor(t.id).length > 0 && (
+    <details class="card terms">
+      <summary>Terms on this page</summary>
+      <dl>
+        {termsFor(t.id).map((e) => (
+          <>
+            <dt id={`term-${e.id}`}><abbr title={e.expansion}>{e.term}</abbr>: {e.expansion}</dt>
+            <dd>{e.definition}</dd>
+          </>
+        ))}
+      </dl>
+    </details>
+  )}
   <details class="card dev">
     <summary>For developers and agents</summary>
     <p>Tool id <code>{t.id}</code>, version {t.version}. Run it from the <a href="https://github.com/clay-good/geoprims/tree/main/mcp#readme">local MCP server</a>; the result matches this page byte for byte.</p>

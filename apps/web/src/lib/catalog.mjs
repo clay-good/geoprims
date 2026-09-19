@@ -23,6 +23,10 @@ export const changelog = readChangelog(root);
 export const CHANGE_KINDS = KINDS;
 /** Changelog entries that name a tool. */
 export const changesFor = (id) => entriesFor(changelog, id);
+const glossary = JSON.parse(readFileSync(join(root, 'data/glossary.json'), 'utf8'));
+/** Glossary entries for the abbreviations a tool shows (data/glossary.json), alphabetical. */
+export const termsFor = (id) =>
+  glossary.entries.filter((e) => e.relatedTools.includes(id)).sort((a, b) => a.term.localeCompare(b.term));
 let report = null;
 /** This release's verification report, computed once per build from the vectors. */
 export const verification = () => (report ??= verificationReport({ root, catalog, host }));

@@ -430,7 +430,7 @@ const HOVER_INPUTS: [Field; 5] = [
     .core(),
     num(
         "efficiency",
-        "Motor and ESC efficiency",
+        "Motor and speed-controller efficiency",
         "0.5 to 1, default 0.85",
         0.5,
         1.0,

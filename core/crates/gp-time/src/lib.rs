@@ -520,7 +520,7 @@ pub static JULIAN_DATE: ToolDef = ToolDef {
         Field::new(
             "station",
             "Station ID",
-            "Four characters for the RINEX name, like PIT1 (default ssss)",
+            "Four characters naming the station in the daily file name, like PIT1 (default ssss)",
             Kind::Text { max_len: 4 },
         ),
     ],

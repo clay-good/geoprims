@@ -61,9 +61,9 @@
 
 ## 8. Offline PWA
 
-- [ ] 8.1 Add the web app manifest and Workbox service worker with a ≤ 12 MB precache; verify installability and the airplane-mode scenario
+- [x] 8.1 Add the web app manifest and Workbox service worker with a ≤ 12 MB precache; verify installability and the airplane-mode scenario (a hand-written worker instead of Workbox, to keep zero runtime dependencies: apps/web/sw/sw.js with a build-generated precache of every page, module, the catalog, and on-demand assets, 4.3 MB compressed; the build fails over 12 MB; test/pwa.test.mjs runs the worker in a simulated scope, and a manual check with the server stopped loaded and recomputed density altitude and EGM96 geoid height)
 - [ ] 8.2 Implement the offline pack manager (sizes, resumable verified downloads, delete, usage and quota, persist request, Safari warning); verify the pack-size and Safari scenarios
-- [ ] 8.3 Implement update prompts, version display, and cache hygiene; verify the update-prompt and superseded-pack scenarios
+- [ ] 8.3 Implement update prompts, version display, and cache hygiene; verify the update-prompt and superseded-pack scenarios (done: a waiting release, the "Reload to update" prompt, the footer version, and old-release deletion that keeps `gp-pack-*` caches; pending: the pack manager's "update available" marking, the changelog link, and asset versions in settings)
 - [ ] 8.4 Implement the missing-asset-offline fallback messaging; verify the EGM2008-offline scenario
 
 ## 9. Documentation pages

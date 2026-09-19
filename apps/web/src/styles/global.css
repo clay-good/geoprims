@@ -110,3 +110,8 @@ dialog.report label { display: block; margin: 0.75rem 0; }
 dialog.report textarea, dialog.report select { width: 100%; }
 dialog.report .check { display: flex; gap: 0.5rem; align-items: center; }
 dialog.report pre.payload { max-height: 16rem; overflow: auto; font-size: 0.8rem; white-space: pre-wrap; word-break: break-word; }
+/* The "Update available" prompt: non-blocking, above the footer. */
+.update { position: fixed; inset-inline: 1rem; inset-block-end: 1rem; max-inline-size: 32rem; margin-inline: auto; display: flex; gap: 1rem; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgb(0 0 0 / 0.4); z-index: 10; }
+.update[hidden] { display: none; }
+.update p { margin: 0; }
+.update button { min-block-size: var(--target); }

@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { catalog } from '../lib/catalog.mjs';
 interface Props { title: string; description: string; canonical: string; noindex?: boolean; jsonld?: object[] }
 const { title, description, canonical, noindex = false, jsonld = [] } = Astro.props;
 // JSON-LD with < escaped so no string can close the script element (search-pages "Structured data allowlist").
@@ -16,6 +17,11 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="referrer" content="no-referrer" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#07110d" />
+    <meta name="apple-mobile-web-app-title" content="geoprims" />
     {ld.map((j) => <script type="application/ld+json" set:html={j} />)}
   </head>
   <body>
@@ -39,7 +45,16 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
           Free, no ads, no tracking. Your inputs never leave your device.
           <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">Wrong answer?</a>
         </p>
+        <p class="version">Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/methodology/">how results are checked</a></p>
       </div>
     </footer>
+    <div class="update card" role="status" hidden>
+      <p>Update available. Results on screen stay as they are until you reload.</p>
+      <button type="button">Reload to update</button>
+    </div>
+    <script>
+      import { registerOffline } from '../lib/pwa.js';
+      registerOffline(document.querySelector('.update'));
+    </script>
   </body>
 </html>

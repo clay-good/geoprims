@@ -143,7 +143,8 @@ def formulas(rnd):
     for minutes, knots, miles in [(60, 12.0, 12.0), (30, 20.0, 10.0), (45, 8.5, 6.4), (12, 32.0, 6.4), (7, 40.0, 4.7), (23, 15.5, 5.9), (50, 0.5, 0.4)]:
         rows.append({"id": f"v{len(rows) + 1:03d}", "input": {"speed": f"{knots} kt", "time": f"{minutes} min", "options": {"outputUnits": {"distance": "NM"}}},
                      "expect": {"result.distance.value": miles, "ok": True}, "source": bow[0], "sourceVersion": bow[1],
-                     "tolerance": {"result.distance.value": {"abs": 0.05}}})
+                     # Half a tenth, plus slack for a cell that lands exactly on the half.
+                     "tolerance": {"result.distance.value": {"abs": 0.051}}})
     write("navigation.route.time-speed-distance", rows)
 
     cpa_src = "Relative motion in a flat plane: t = -(r.v)/|v|^2, evaluated in Python"

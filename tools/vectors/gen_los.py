@@ -36,6 +36,16 @@ def main():
         re = R / (1 - k)
         rows.append(vec(i, {"height": f"{h!r} m"}, {"result.optical.value": arc(re, h) / 1000, "result.geometric.value": arc(R, h) / 1000,
                                                     "result.radio.value": arc(R / 0.75, h) / 1000, "result.optical_slant.value": math.sqrt(2 * re * h + h * h) / 1000}, 1e-11))
+    # Bowditch's printed Table 12 (NGA Pub. 9, Volume II, 2024 edition): heights of eye
+    # across the table, each against the navigator's rule the table tabulates, D = 1.17 sqrt(h).
+    # The 640 ft row misprints 29.5 for 29.6 and is left out; tests/horizon_parity.rs pins it.
+    bow = ("Bowditch, The American Practical Navigator (NGA Pub. 9), Volume II, Table 12, Distance of the Horizon", "2024 edition")
+    for feet, nm, statute in [(1, 1.2, 1.3), (9, 3.5, 4.0), (25, 5.9, 6.7), (100, 11.7, 13.5), (250, 18.5, 21.3), (500, 26.2, 30.1), (820, 33.5, 38.6)]:
+        rows.append({"id": f"v{len(rows) + 1:03d}",
+                     "input": {"height": f"{feet} ft", "options": {"outputUnits": {"rule_visual": "NM"}}},
+                     "expect": {"result.rule_visual.value": nm, "ok": True}, "source": bow[0], "sourceVersion": bow[1],
+                     # Half a tenth, plus slack: 1.17 sqrt(25) is exactly 5.85 against a printed 5.9.
+                     "tolerance": {"result.rule_visual.value": {"abs": 0.051}}})
     write("navigation.los.horizon", rows)
 
     rows = []

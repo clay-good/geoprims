@@ -5,6 +5,15 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "navigation.los.horizon"
+      ],
+      "vectors": [],
+      "summary": "Distance to the horizon is stable. Its rule-of-thumb figure reproduces all 126 heights of Bowditch's printed Distance of the Horizon table (NGA Pub. 9, Volume II, 2024 edition), in both the nautical and statute columns, to the tenth of a mile the table shows. One row is a misprint: the table gives 29.5 nautical miles at 640 feet where 1.17 times the square root of 640 is 29.6, and that row's own statute figure follows the rule. The tool gives 29.6, and a test pins the difference. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "navigation.route.time-speed-distance"
       ],
       "vectors": [],

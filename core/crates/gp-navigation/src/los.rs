@@ -107,6 +107,7 @@ fn horizon(re: f64, h: f64) -> (f64, f64) {
 
 pub static HORIZON: ToolDef = ToolDef {
     id: "navigation.los.horizon",
+    stability: gp_base::tool::Stability::Stable,
     title: "Distance to the horizon",
     summary: "How far you can see from a height: the horizon distance with no refraction, with optical refraction, and for radio (4/3 Earth), with the rules of thumb and their errors.",
     aliases: &[

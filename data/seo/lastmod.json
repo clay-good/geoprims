@@ -1,10 +1,10 @@
 {
   "/": {
-    "hash": "2a4e01c136adfe66",
+    "hash": "fbb8ad71e00657ef",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
-    "hash": "4cf823be4a8897e8",
+    "hash": "bcb2ba3248155ef4",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "090423241ee304f0",
+    "hash": "77a745d229459a15",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -384,7 +384,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "030bc9603e2cbe79",
+    "hash": "21ca69ffa5cce091",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -396,19 +396,23 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "ea862dc7798774c3",
+    "hash": "e0876ef164b8a76d",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/haversine/": {
-    "hash": "853747922f7caf8b",
+    "hash": "86812df327732d93",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "1356db7a18981365",
+    "hash": "27fbf01116ffcf26",
     "lastmod": "2026-09-19"
   },
   "/navigation/los/": {
     "hash": "00435bc19caf83e3",
+    "lastmod": "2026-09-19"
+  },
+  "/navigation/los/horizon/": {
+    "hash": "0a1479727e8c7ea8",
     "lastmod": "2026-09-19"
   },
   "/navigation/rhumb/": {
@@ -416,11 +420,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/rhumb/direct/": {
-    "hash": "b187b6ee99154322",
+    "hash": "9c825988445aac21",
     "lastmod": "2026-09-19"
   },
   "/navigation/rhumb/inverse/": {
-    "hash": "f6c9464591786773",
+    "hash": "752829aa5de9daf8",
     "lastmod": "2026-09-19"
   },
   "/navigation/route/": {
@@ -428,11 +432,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/route/cross-track/": {
-    "hash": "6f1c8019ad4460dc",
+    "hash": "92f9897a74b19850",
     "lastmod": "2026-09-19"
   },
   "/navigation/route/time-speed-distance/": {
-    "hash": "3257ff0c90c17b31",
+    "hash": "f5c21acf7e47fd0e",
     "lastmod": "2026-09-19"
   },
   "/sources/": {
@@ -516,7 +520,7 @@
     "lastmod": "2026-09-19"
   },
   "/tools/": {
-    "hash": "8a5c8e24d8ce0d7a",
+    "hash": "52d1b033466be6d4",
     "lastmod": "2026-09-19"
   },
   "/units/": {
@@ -616,7 +620,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bb90376613576542",
+    "hash": "b4467cc1f5305d9e",
     "lastmod": "2026-09-19"
   }
 }

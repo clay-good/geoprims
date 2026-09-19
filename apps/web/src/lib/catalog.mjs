@@ -43,6 +43,20 @@ export const DOMAIN_TITLES = {
   survey: 'Survey', indexing: 'Spatial indexing', raster: 'Raster', time: 'Time', units: 'Units',
 };
 
+/** One friendly line per domain for the home page. */
+export const DOMAIN_BLURBS = {
+  geodesy: 'Coordinates, datums, projections, grid references, and the shape of the Earth.',
+  navigation: 'Distances, bearings, routes, and what you can see from where.',
+  geometry: 'Areas and shapes on the curved Earth.',
+  aviation: 'Density altitude, winds, airspeeds, performance, and weather codes.',
+  drone: 'Ground sample distance, flight plans, batteries, and the rules.',
+  survey: 'Traverses, curves, earthwork, and legal land descriptions.',
+  indexing: 'H3 cells, geohashes, map tiles, and Plus Codes.',
+  raster: 'Elevation and terrain from grids.',
+  time: 'Time scales, time zones, sunrise, sunset, and the sun’s position.',
+  units: 'Exact conversions for every unit these tools use.',
+};
+
 export const route = (id) => '/' + id.split('.').join('/') + '/';
 export const tool = (id) => catalog.tools.find((t) => t.id === id);
 

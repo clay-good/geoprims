@@ -1,18 +1,40 @@
 ---
 import Base from '../layouts/Base.astro';
-import { catalog, DOMAIN_TITLES, route } from '../lib/catalog.mjs';
+import { catalog, DOMAIN_BLURBS, DOMAIN_TITLES, exampleResult, route, tool } from '../lib/catalog.mjs';
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 const ops = catalog.counts.all.operations;
 const stable = catalog.counts.stable.operations;
+// Popular tools, each with its worked example computed at build time.
+const HEROES = [
+  'aviation.altimetry.density-altitude',
+  'aviation.wind.runway-components',
+  'navigation.geodesic.inverse',
+  'geodesy.utm.forward',
+  'geodesy.magnetic.declination',
+  'drone.photogrammetry.gsd',
+  'time.sun.position',
+  'indexing.h3.lat-lng-to-cell',
+];
+const heroes = await Promise.all(
+  HEROES.map(tool)
+    .filter(Boolean)
+    .map(async (t) => {
+      const r = await exampleResult(t);
+      const key = r?.ok ? Object.keys(t.outputs.properties).find((k) => r.display?.[k] !== undefined) : undefined;
+      return { t, value: key ? r.display[key] : '', label: key ? t.outputs.properties[key].title : '', sentence: r?.ok ? r.summary : '' };
+    }),
+);
 ---
 <Base title="geoprims: geospatial and aerospace calculators" description="Exact, cited geodesy, aviation, drone, survey, and unit calculations that run on your device. Free, no ads, no tracking." canonical="/">
-  <h1>Geospatial and aerospace calculators</h1>
-  <p class="purpose">Exact, cited math that runs on your device. Free, no ads, no tracking, and it works offline after your first visit.</p>
-  <div class="card">
-    <p>
-      geoprims is in early development. {ops} operations are built so far. {stable} {stable === 1 ? 'has' : 'have'} passed the full <a href="/methodology/">verification bar</a>; the rest are marked experimental until they do. The same calculators run in the <a href="https://github.com/clay-good/geoprims/tree/main/mcp">local MCP server</a> for AI agents.
-    </p>
-  </div>
+  <section class="hero">
+    <h1>The math behind maps, flights, and surveys.</h1>
+    <p class="purpose">Exact, cited calculators for geodesy, aviation, drones, surveying, and units. They run on your device: free, private, and offline after your first visit.</p>
+    <button type="button" class="hero-search" data-palette>
+      <span class="hero-search-text">Try “density altitude 5000 ft 30C 29.92” or paste a coordinate</span>
+      <kbd aria-hidden="true">/</kbd>
+    </button>
+  </section>
+
   <section class="pinned" hidden aria-labelledby="pinned-title">
     <h2 id="pinned-title">Pinned</h2>
     <ul class="tools"></ul>
@@ -20,16 +42,35 @@ const stable = catalog.counts.stable.operations;
   <section class="recent" hidden aria-labelledby="recent-title">
     <h2 id="recent-title">Recent</h2>
     <ul class="tools"></ul>
-    <p><button type="button" class="link">Clear recent tools</button> (kept only in this browser)</p>
+    <p class="notice"><button type="button" class="link">Clear recent tools</button> (kept only in this browser)</p>
   </section>
   <script>
     import { mountLists } from '../lib/lists.js';
     mountLists(document);
+    document.querySelector('[data-palette]')?.addEventListener('click', () => import('../lib/palette.js').then((m) => m.openPalette()));
   </script>
-  <h2>Domains</h2>
-  <ul class="tools">
-    {domains.map((d) => (
-      <li><a href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a> <p>{catalog.tools.filter((t) => t.domain === d).length} tools</p></li>
+
+  <h2>Popular</h2>
+  <ul class="tools heroes">
+    {heroes.map(({ t, value, label, sentence }) => (
+      <li>
+        <a href={route(t.id)}>{t.title}</a>
+        {value && <p class="hero-value" aria-label={`${label}: ${value}`}>{value}</p>}
+        <p class="clamp">{sentence}</p>
+      </li>
     ))}
   </ul>
+
+  <h2>Browse by topic</h2>
+  <ul class="tools domains">
+    {domains.map((d) => (
+      <li>
+        <a href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a>
+        <p>{DOMAIN_BLURBS[d] ?? ''}</p>
+        <p class="count">{catalog.tools.filter((t) => t.domain === d).length} tools</p>
+      </li>
+    ))}
+  </ul>
+
+  <p class="status">Early release: {ops} operations are built so far, and {stable} {stable === 1 ? 'has' : 'have'} passed the full <a href="/methodology/">verification bar</a>. The rest are marked experimental until they do. The same calculators work <a href="/agents/">with AI agents</a>.</p>
 </Base>

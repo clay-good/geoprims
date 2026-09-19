@@ -10,6 +10,10 @@
 
   const fields = Object.entries(tool.inputs.properties).filter(([k]) => k !== 'options');
   const required = new Set(tool.inputs.required);
+  // Everyday inputs first; the rest (ellipsoid, rarely changed options) under "More options".
+  const isCore = ([k, schema]) => schema['x-core'] || required.has(k);
+  const coreFields = fields.filter(isCore);
+  const moreFields = fields.filter((f) => !isCore(f));
   const outputOrder = Object.keys(tool.outputs.properties);
 
   // List inputs (traverse courses, polygon corners) edit as one row per line,
@@ -38,7 +42,14 @@
       });
   }
 
-  let values = $state(Object.fromEntries(fields.map(([k]) => [k, toText(k, example[k])])));
+  // Unit symbols people read (the core accepts all of these spellings).
+  const FRIENDLY = { degC: '°C', degF: '°F', deg: 'degrees', arcsec: 'arc-seconds', arcmin: 'arc-minutes', m2: 'm²', km2: 'km²', ft2: 'ft²', ppm: 'parts per million' };
+  const friendly = (u) => FRIENDLY[u] ?? u;
+  /** Example text as a person would type it: "30 degC" becomes "30 °C". */
+  const readable = (text) => text.replace(/(\d)\s*deg([CF])\b/g, '$1 °$2');
+  const exampleText = (k) => readable(toText(k, example[k]));
+
+  let values = $state(Object.fromEntries(fields.map(([k]) => [k, exampleText(k)])));
   let result = $state(initial);
   let isExample = $state(true);
   let stale = $state(false);
@@ -65,9 +76,14 @@
   const RANK = { caution: 0, accuracy: 1, info: 2 };
   const severityOf = (code) => tool.severity[code] ?? 'info';
   const warnings = $derived(
-    result?.ok ? [...result.meta.warnings].sort((a, b) => RANK[severityOf(a.code)] - RANK[severityOf(b.code)]) : [],
+    result?.ok
+      ? result.meta.warnings.filter((w) => w.code !== 'EXPERIMENTAL_TOOL').sort((a, b) => RANK[severityOf(a.code)] - RANK[severityOf(b.code)])
+      : [],
   );
   const secondary = $derived(result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary) : []);
+  const FACTS = 6;
+  let allFacts = $state(false);
+  const facts = $derived(allFacts ? secondary : secondary.slice(0, FACTS));
 
   // The canvas draws geographic tools: lines, points, polygons, or a lat/lon input.
   const GEO = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon']);
@@ -156,7 +172,7 @@
   }
 
   function tryExample() {
-    for (const [k] of fields) values[k] = toText(k, example[k]);
+    for (const [k] of fields) values[k] = exampleText(k);
     isExample = true;
     history.replaceState(null, '', '#example');
     run();
@@ -168,11 +184,24 @@
         ? answer
         : kind === 'sentence'
           ? `${result.summary} (geoprims ${tool.id} ${tool.version})`
-          : JSON.stringify({ tool: 'geoprims_run', arguments: { id: tool.id, args: args() } });
+          : kind === 'link'
+            ? location.href
+            : JSON.stringify({ tool: 'geoprims_run', arguments: { id: tool.id, args: args() } });
     await navigator.clipboard.writeText(text);
     copied = kind;
     setTimeout(() => (copied = ''), 1500);
   }
+
+  // On phones, a slim bar keeps the answer in view once the big number scrolls away.
+  let answerCard = $state(null);
+  let answerHidden = $state(false);
+  function checkAnswer() {
+    answerHidden = !!answerCard && answerCard.getBoundingClientRect().bottom < 0;
+  }
+  onMount(() => {
+    addEventListener('scroll', checkAnswer, { passive: true });
+    return () => removeEventListener('scroll', checkAnswer);
+  });
 
   let pinned = $state(false);
   function pin() {
@@ -207,8 +236,11 @@
   });
 </script>
 
-<section class="card answer sticky" aria-live="polite" class:stale>
+<div class="tool-grid">
+<section class="card answer" aria-live="polite" class:stale aria-label="Answer">
   {#if result?.ok}
+    <div class="value" bind:this={answerCard}>{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
+    <p class="sentence">{result.summary}</p>
     {#if warnings.length}
       <ul class="warnings">
         {#each warnings as w}
@@ -216,24 +248,72 @@
         {/each}
       </ul>
     {/if}
-    <div class="value">{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
-    <p class="sentence">{result.summary}</p>
     {#if secondary.length}
-      <ul class="secondary">
-        {#each secondary as [k, v]}<li>{tool.outputs.properties[k]?.title ?? k}: {v}</li>{/each}
-      </ul>
+      <dl class="facts">
+        {#each facts as [k, v]}<div><dt>{tool.outputs.properties[k]?.title ?? k}</dt><dd class:words={!/\d/.test(v)}>{v}</dd></div>{/each}
+      </dl>
+      {#if secondary.length > FACTS}
+        <button type="button" class="quiet more" onclick={() => (allFacts = !allFacts)}>{allFacts ? 'Show fewer' : `Show all ${secondary.length} results`}</button>
+      {/if}
     {/if}
     <div class="actions">
-      <button type="button" onclick={() => copy('value')}>{copied === 'value' ? 'Copied' : 'Copy value'}</button>
-      <button type="button" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied' : 'Copy sentence'}</button>
-      <button type="button" onclick={() => copy('agent')}>{copied === 'agent' ? 'Copied' : 'Copy as agent call'}</button>
-      <button type="button" aria-pressed={pinned} onclick={pin}>{pinned ? 'Pinned' : 'Pin tool'}</button>
+      <button type="button" class="quiet" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
+      <button type="button" class="quiet" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied ✓' : 'Copy sentence'}</button>
+      <button type="button" class="quiet" onclick={() => copy('link')}>{copied === 'link' ? 'Link copied ✓' : 'Share link'}</button>
+      <button type="button" class="quiet star" aria-pressed={pinned} aria-label={pinned ? 'Unpin tool' : 'Pin tool'} title={pinned ? 'Pinned to your home page' : 'Pin to your home page'} onclick={pin}>{pinned ? '★' : '☆'}</button>
     </div>
   {:else if result}
     <p class="error">{result.error.message}</p>
-    {#if result.error.hint}<p>{result.error.hint}</p>{/if}
+    {#if result.error.hint}<p class="hint">{result.error.hint}</p>{/if}
   {/if}
+  <p class="report-line">{#if linkNote}<span class="notice">{linkNote} </span>{/if}Something look off? <button type="button" class="link" onclick={openReport}>Report a problem</button></p>
 </section>
+
+{#if result?.ok && answerHidden}
+  <button type="button" class="answer-bar" onclick={() => answerCard?.scrollIntoView({ behavior: 'smooth', block: 'start' })} aria-label={`Answer: ${answer}. Show the full answer.`}>
+    <span class="answer-bar-value">{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</span>
+    <span class="answer-bar-go" aria-hidden="true">↑</span>
+  </button>
+{/if}
+
+<form class="card inputs" onsubmit={(e) => e.preventDefault()}>
+  <div class="inputs-head">
+    <h2>Your values</h2>
+    {#if isExample}<span class="chip">Showing an example. Change anything.</span>{/if}
+  </div>
+  {#snippet field([name, schema])}
+    <label>
+      <span class="label-text">{schema.title}{#if !required.has(name)}<span class="optional"> optional</span>{/if}</span>
+      {#if schema.enum}
+        <select bind:value={values[name]} onchange={edited}>
+          {#if !required.has(name)}<option value="">—</option>{/if}
+          {#each schema.enum as option}<option value={option}>{option}</option>{/each}
+        </select>
+      {:else if isList(schema)}
+        <textarea bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" spellcheck="false"></textarea>
+      {:else}
+        <input bind:value={values[name]} oninput={edited} autocomplete="off" spellcheck="false" />
+      {/if}
+      <span class="help">{readable(schema.description ?? '')}{isList(schema) ? ` · one per line: ${columns(schema).map((c) => schema.items.properties[c].title.toLowerCase()).join(', ')}` : ''}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · plain numbers mean ${friendly(schema['x-unit'])}` : ''}</span>
+    </label>
+  {/snippet}
+  <div class="fields">
+    {#each coreFields as f}{@render field(f)}{/each}
+  </div>
+  {#if moreFields.length}
+    <details class="more-options" open={moreFields.some(([k]) => values[k] !== '')}>
+      <summary>More options <span class="count">{moreFields.length}</span></summary>
+      <div class="fields">
+        {#each moreFields as f}{@render field(f)}{/each}
+      </div>
+    </details>
+  {/if}
+  <div class="actions">
+    <button type="button" class="quiet" onclick={tryExample}>Use the example</button>
+    <button type="button" class="quiet" onclick={clearAll}>Clear</button>
+  </div>
+</form>
+</div>
 
 {#if dg}
   <figure class="diagram card">
@@ -269,36 +349,6 @@
 {#if showMap && compute && result?.ok}
   <MapCanvas {tool} args={drawnArgs} {result} {compute} />
 {/if}
-
-{#if linkNote}<p class="notice">{linkNote}</p>{/if}
-
-<p class="report-line"><button type="button" class="link" onclick={openReport}>Report a problem</button> with this result.</p>
 {#if reporting && ReportDialog}
   <ReportDialog {tool} args={args()} {result} onclose={() => (reporting = false)} />
 {/if}
-
-<form class="card" onsubmit={(e) => e.preventDefault()}>
-  {#if isExample}<p class="chip">Example values</p>{/if}
-  <div class="fields">
-    {#each fields as [name, schema]}
-      <label>
-        {schema.title}{required.has(name) ? '' : ' (optional)'}
-        {#if schema.enum}
-          <select bind:value={values[name]} onchange={edited}>
-            {#if !required.has(name)}<option value="">—</option>{/if}
-            {#each schema.enum as option}<option value={option}>{option}</option>{/each}
-          </select>
-        {:else if isList(schema)}
-          <textarea bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" spellcheck="false"></textarea>
-        {:else}
-          <input bind:value={values[name]} oninput={edited} autocomplete="off" spellcheck="false" />
-        {/if}
-        <span class="help">{schema.description}{isList(schema) ? ` · one per line: ${columns(schema).map((c) => schema.items.properties[c].title.toLowerCase()).join(', ')}` : ''}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · a bare number is in ${schema['x-unit']}` : ''}</span>
-      </label>
-    {/each}
-  </div>
-  <div class="actions">
-    <button type="button" onclick={clearAll}>Clear</button>
-    <button type="button" onclick={tryExample}>Try the example</button>
-  </div>
-</form>

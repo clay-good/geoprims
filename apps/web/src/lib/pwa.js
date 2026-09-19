@@ -7,10 +7,12 @@ export function registerOffline(prompt) {
   const offer = (worker) => {
     if (!worker || !navigator.serviceWorker.controller) return; // the first install needs no prompt
     prompt.hidden = false;
-    prompt.querySelector('button').onclick = () => {
+    prompt.querySelector('button.reload').onclick = () => {
       accepted = true;
       worker.postMessage({ type: 'SKIP_WAITING' });
     };
+    // "Later" hides it for this page; the new release waits until the next visit.
+    prompt.querySelector('button.later').onclick = () => (prompt.hidden = true);
   };
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (accepted) location.reload();

@@ -13,9 +13,9 @@ const name = group.replaceAll('-', ' ');
 const jsonld = [collection(name, route(`${domain}.${group}`), tools.filter((t) => t.composedOf.length === 0)), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[domain] ?? domain, route(domain)], [name, route(`${domain}.${group}`)]])];
 ---
 <Base title={`${name} · ${DOMAIN_TITLES[domain] ?? domain} · geoprims`} description={`geoprims ${name} tools.`} canonical={route(`${domain}.${group}`)} jsonld={jsonld}>
-  <p><a href={route(domain)}>{DOMAIN_TITLES[domain] ?? domain}</a></p>
+  <p class="crumbs"><a href={route(domain)}>{DOMAIN_TITLES[domain] ?? domain}</a></p>
   <h1>{name[0].toUpperCase() + name.slice(1)}</h1>
   <ul class="tools">
-    {tools.map((t) => <li><a href={route(t.id)}>{t.title}</a><p>{t.summary}</p></li>)}
+    {tools.map((t) => <li><a href={route(t.id)}>{t.title}</a><p class="clamp3">{t.summary}</p></li>)}
   </ul>
 </Base>

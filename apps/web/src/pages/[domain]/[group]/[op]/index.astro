@@ -19,12 +19,12 @@ const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLE
 const client = { id: t.id, title: t.title, route: route(t.id), visualization: t.visualization, timeline: t.timeline ?? null, version: t.version, inputs: t.inputs, outputs: t.outputs, severity: severities(t), coreVersion: catalog.coreVersion, buildHash: buildHashOf(t) };
 ---
 <Base title={`${t.title} · geoprims`} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
-  <p><a href={route(t.domain)}>{DOMAIN_TITLES[t.domain] ?? t.domain}</a> › <a href={route(`${t.domain}.${t.group}`)}>{t.group.replaceAll('-', ' ')}</a></p>
+  <p class="crumbs"><a href={route(t.domain)}>{DOMAIN_TITLES[t.domain] ?? t.domain}</a> <span aria-hidden="true">/</span> <a href={route(`${t.domain}.${t.group}`)}>{t.group.replaceAll('-', ' ')}</a></p>
   <h1>{t.title} {t.stability === 'experimental' && <span class="badge" title="Not yet fully verified">Experimental</span>}</h1>
   <p class="purpose">{t.summary}</p>
   {['aviation', 'drone', 'navigation'].includes(t.domain) && (
-    <p class="card notice safety" role="note">
-      <strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a>
+    <p class="safety" role="note">
+      <span><strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a></span>
     </p>
   )}
   {issue && (

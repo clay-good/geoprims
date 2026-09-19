@@ -31,8 +31,8 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <header class="site">
       <div class="wrap">
         <a class="brand" href="/">geoprims</a>
+        <button type="button" class="palette-open" aria-keyshortcuts="/ Control+K Meta+K"><span class="long">Search tools or paste a value</span><span class="short">Search</span> <kbd aria-hidden="true">/</kbd></button>
         <nav aria-label="Main">
-          <button type="button" class="palette-open" aria-keyshortcuts="/ Control+K Meta+K">Search <kbd aria-hidden="true">/</kbd></button>
           <a href="/units/">Units</a>
           <a href="/agents/">Agents</a>
           <a href="/settings/">Settings</a>
@@ -67,8 +67,8 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
       </div>
     </footer>
     <div class="update card" role="status" hidden>
-      <p>Update available. Results on screen stay as they are until you reload.</p>
-      <button type="button">Reload to update</button>
+      <p>A new version is ready. Your results stay as they are until you reload.</p>
+      <span class="update-actions"><button type="button" class="later">Later</button> <button type="button" class="reload">Reload</button></span>
     </div>
     <script>
       import { wireDisplay } from '../lib/display.js';

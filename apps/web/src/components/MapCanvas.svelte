@@ -18,6 +18,24 @@
   let target = null;
   let desc = $state('');
   let readout = $state('');
+  let scaleBar = $state({ px: 0, label: '' });
+  let legend = $state([]);
+  const R_EARTH = 6371008.8;
+  // Sets an element's width through the CSSOM (the CSP allows no style attributes).
+  function width(node, px) {
+    const set = (v) => (node.style.inlineSize = `${Math.round(v)}px`);
+    set(px);
+    return { update: set };
+  }
+  /** A round distance (1, 2, or 5 × 10^n meters) about 100 px long at the view's center. */
+  function measure(v) {
+    const perPx = (v.mode === 'globe' ? R_EARTH : R_EARTH * Math.cos((v.lat * Math.PI) / 180)) / v.scale;
+    const target = perPx * 100;
+    const p10 = 10 ** Math.floor(Math.log10(target));
+    const nice = [5, 2, 1].map((k) => k * p10).find((d) => d <= target) ?? p10;
+    const label = nice >= 1000 ? `${(nice / 1000).toLocaleString('en-US')} km` : `${nice.toLocaleString('en-US')} m`;
+    return { px: nice / perPx, label };
+  }
   let reduced = false;
 
   const size = () => {
@@ -34,6 +52,7 @@
     const g = canvas.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw(g, { ...view, width: w, height: h }, base, layers, colors(canvas));
+    scaleBar = measure(view);
   }
 
   // Eases the camera to `target` in at most 500 ms (instantly with reduced motion).
@@ -73,6 +92,14 @@
     );
     const what = layers.map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     desc = `${mode === 'globe' ? 'Globe' : 'Map'} showing ${what.join(', ') || 'the world'}. ${result.summary ?? ''}`;
+    // What the lines mean: the result path, and the other kind of line for comparison.
+    const rhumb = kinds.has('line-rhumb');
+    const named = (r) => (r ? 'Rhumb line: constant heading' : 'Geodesic: the shortest path');
+    legend = [
+      layers.some((l) => l.kind === 'line' && l.role === 'result') && { cls: 'solid', text: named(rhumb) },
+      layers.some((l) => l.kind === 'line' && l.role === 'comparison') && { cls: 'dashed', text: `${named(!rhumb)}, for comparison` },
+      layers.some((l) => l.kind === 'polygon') && { cls: 'area', text: 'The area' },
+    ].filter(Boolean);
     reframe();
   }
 
@@ -160,10 +187,16 @@
 </script>
 
 <figure class="map card">
-  <div class="map-bar" role="group" aria-label="View">
-    <button type="button" aria-pressed={mode === 'map'} onclick={() => setMode('map')}>Map</button>
-    <button type="button" aria-pressed={mode === 'globe'} onclick={() => setMode('globe')}>Globe</button>
-    <button type="button" onclick={reframe} aria-label="Fit the result in view">Fit</button>
+  <div class="map-bar">
+    <div class="segmented" role="group" aria-label="View">
+      <button type="button" aria-pressed={mode === 'map'} onclick={() => setMode('map')}>Map</button>
+      <button type="button" aria-pressed={mode === 'globe'} onclick={() => setMode('globe')}>Globe</button>
+    </div>
+    <div class="map-tools" role="group" aria-label="Zoom">
+      <button type="button" onclick={() => zoom(1 / 1.5)} aria-label="Zoom out">−</button>
+      <button type="button" onclick={() => zoom(1.5)} aria-label="Zoom in">+</button>
+      <button type="button" onclick={reframe} aria-label="Fit the result in view">Fit</button>
+    </div>
   </div>
   <canvas
     bind:this={canvas}
@@ -176,8 +209,14 @@
     onpointercancel={up}
     onkeydown={key}
   ></canvas>
+  {#if legend.length}
+    <ul class="map-legend">
+      {#each legend as l}<li><span class={`swatch ${l.cls}`} aria-hidden="true"></span>{l.text}</li>{/each}
+    </ul>
+  {/if}
   <p class="map-readout" aria-hidden="true">
-    <span>{readout}</span>
-    <span>{mode === 'globe' ? 'Orthographic globe' : 'Web Mercator'} · Natural Earth{generalized ? ' · Base map generalized at this zoom' : ''}</span>
+    <span class="scale">{#if scaleBar.px > 0}<span class="scale-bar" use:width={scaleBar.px}></span>{scaleBar.label}{/if}</span>
+    <span>{readout || (mode === 'globe' ? 'Drag to turn the globe' : 'Drag to pan, scroll to zoom')}</span>
+    <span>{mode === 'globe' ? 'Globe' : 'Web Mercator'} · Natural Earth{generalized ? ' (generalized at this zoom)' : ''}</span>
   </p>
 </figure>

@@ -135,7 +135,9 @@ The `explain` trace in run results, npm and MCPB packaging, and the MCP Inspecto
 ## Tests
 
 ```bash
-node --test mcp/server.test.mjs
+node --test mcp/server.test.mjs mcp/network.test.mjs
 ```
+
+The network audit runs every tool's worked example with networking denied by the OS (skipped where no sandbox is available) and fails on any connection or DNS attempt.
 
 `mcp/surface.json` is the golden surface: tools, resources, templates, and prompts. The test fails on any change. Regenerate it with `UPDATE_SURFACE=1` after reviewing the diff.

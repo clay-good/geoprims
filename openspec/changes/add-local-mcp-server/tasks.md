@@ -29,7 +29,7 @@
 
 - [x] 4.1 Implement timeouts, request-size limits, trap survival, and stderr-only logging without argument values; verify the timeout scenario and a trapping fixture
 - [ ] 4.2 Bundle the small offline assets (≤ 6 MB) and implement `--allow-asset-download` with verified, cached tiles; verify the geoid-tile-missing and download-allowed scenarios
-- [ ] 4.3 Run the network-sandbox audit (no allowed hosts); verify all offline-capable tools succeed and no connection attempts occur
+- [x] 4.3 Run the network-sandbox audit (no allowed hosts); verify all offline-capable tools succeed and no connection attempts occur
 
 ## 5. Distribution
 

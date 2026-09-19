@@ -213,6 +213,13 @@ fn check_range(v: f64, axis: Axis, notation: &str, src: &str) -> Result<(), Stri
 
 /// Packed aviation forms: `402646N0795856W` (DMS) and `4026.767N07958.933W` (DDM).
 fn packed(s: &str) -> Option<Result<(f64, f64), String>> {
+    // Packed notation has no spaces inside either coordinate, only (at most)
+    // between them; "30 34 14.3 N 1 25 23.9 E" is spaced DMS, not packed.
+    let up = s.trim().to_ascii_uppercase();
+    let (lat_part, lon_part) = up.split_at(up.find(['N', 'S'])?);
+    if lat_part.trim().contains(char::is_whitespace) || lon_part[1..].trim().contains(char::is_whitespace) {
+        return None;
+    }
     let t: String = s
         .chars()
         .filter(|c| !c.is_whitespace())
@@ -233,7 +240,8 @@ fn packed(s: &str) -> Option<Result<(f64, f64), String>> {
             return None;
         }
         let d: f64 = p.get(..dw)?.parse().ok()?;
-        match int_len - dw {
+        // Fewer integer digits than the degree width is not packed notation.
+        match int_len.checked_sub(dw)? {
             2 => {
                 let m: f64 = p.get(dw..)?.parse().ok()?;
                 (m < 60.0).then_some(d + m / 60.0)
@@ -322,18 +330,20 @@ fn split_pair(s: &str) -> Result<(String, String), String> {
         .map(|(i, _)| *i)
         .collect();
     if degs.len() == 2 {
-        let second = t[degs[0] + 1..]
+        // Byte offsets: the degree sign and the primes are multi-byte in UTF-8.
+        let after = degs[0] + '°'.len_utf8();
+        let second = t[after..]
             .find(|c: char| c.is_ascii_digit() || c == '-' || c == '+')
-            .map(|i| degs[0] + 1 + i);
+            .map(|i| after + i);
         let mut cut = second.ok_or("could not find the second coordinate")?;
         // Walk forward past the first angle's trailing minutes/seconds.
         let rest_marks: Vec<usize> = t[..degs[1]]
             .char_indices()
-            .filter(|(_, c)| matches!(c, '\'' | '"'))
-            .map(|(i, _)| i)
+            .filter(|(_, c)| matches!(c, '\'' | '"' | '′' | '″'))
+            .map(|(i, c)| i + c.len_utf8())
             .collect();
-        if let Some(&last) = rest_marks.iter().rfind(|&&i| i < degs[1]) {
-            cut = last + 1;
+        if let Some(&end) = rest_marks.last() {
+            cut = end;
         }
         return Ok((t[..cut].trim().to_owned(), t[cut..].trim().to_owned()));
     }

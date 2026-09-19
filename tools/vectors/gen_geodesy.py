@@ -88,7 +88,29 @@ def parse():
         vec(6, {"text": "-40.5N, 79.9W"}, {"ok": False, "error.code": "INVALID_INPUT"}, {}, SPEC),
         vec(7, {"text": "40 26.767N 79 58.933W"}, {"result.lat.value": float(F(40) + F(26767, 60000)), "result.notation": "DDM"},
             {"result.lat.value": {"abs": 1e-12}}, EXACT, "definition"),
+    ] + parse_more()
+
+
+def parse_more():
+    """v008 on: the Wikipedia worked example, the regressions found by the notation fixture, and every 150th fixture row."""
+    tol = {"result.lat.value": {"abs": 1e-9}, "result.lon.value": {"abs": 1e-9}}
+    dms = lambda d, m, s: float(F(d) + F(m, 60) + F(s) / 3600)
+    out = [
+        # Wikipedia, Decimal degrees: the US Capitol, 38°53′23″N 77°00′32″W is 38.8897°, −77.0089°.
+        vec(8, {"text": "38° 53′ 23″ N, 77° 00′ 32″ W"}, {"result.lat.value": 38.8897, "result.lon.value": -77.0089},
+            {"result.lat.value": {"abs": 5e-5}, "result.lon.value": {"abs": 5e-5}}, "Wikipedia, Decimal degrees (worked example)", "retrieved 2026-09-19"),
     ]
+    reg = "Regressions found by core/crates/gp-geodesy/tests/parse_parity.rs (tools/vectors/gen_parse_diff.py)"
+    for text, la, lo in [("21°4'34.13\" -139°35'55.91\"", dms(21, 4, F(3413, 100)), -dms(139, 35, F(5591, 100))),
+                         ("30 34 14.3 N 1 25 23.9 E", dms(30, 34, F(143, 10)), dms(1, 25, F(239, 10))),
+                         ("3 41 7.5 S 151 22 45.1 W", -dms(3, 41, F(75, 10)), -dms(151, 22, F(451, 10))),
+                         ("5.12345N 7.54321E", 5.12345, 7.54321)]:
+        out.append(vec(len(out) + 8, {"text": text}, {"result.lat.value": la, "result.lon.value": lo}, tol, reg, "2026-09-19"))
+    rows = [json.loads(l) for l in Path("core/crates/gp-geodesy/tests/data/parse_diff.jsonl").read_text().splitlines()]
+    for row in rows[::150]:
+        out.append(vec(len(out) + 8, {"text": row["text"]}, {"result.lat.value": row["lat"], "result.lon.value": row["lon"]}, tol,
+                       "Strings written by tools/vectors/gen_parse_diff.py from integer degrees, minutes, and seconds", "seed 44"))
+    return out
 
 
 def fmt():

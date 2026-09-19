@@ -32,7 +32,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Drone | Mapping sun window | `time.sun.mapping-window` | [ ] | [ ] | [ ] |
 | Drone | VLOS guidance | `drone.sensors.vlos` | [ ] | [ ] | [ ] |
 | Drone | Part 107 altitude | `drone.ops.part107-altitude` | [ ] | [ ] | [ ] |
-| Surveyors | Coordinate converter (DMS ↔ decimal) | `geodesy.parse.coordinates` | [ ] | [ ] | [ ] |
+| Surveyors | Coordinate converter (DMS ↔ decimal) | `geodesy.parse.coordinates` | [x] | [ ] | [ ] |
 | Surveyors | UTM | `geodesy.utm.forward`, `geodesy.utm.inverse` | [x] | [ ] | [ ] |
 | Surveyors | MGRS | `geodesy.grid-ref.mgrs-forward`, `geodesy.grid-ref.mgrs-inverse` | [x] | [ ] | [ ] |
 | Surveyors | State plane | `geodesy.spcs.spcs83-forward`, `geodesy.spcs.spcs83-inverse` | [x] | [ ] | [ ] |
@@ -52,7 +52,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 33 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 34 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
 
 ## Waiting on a published worked example
 

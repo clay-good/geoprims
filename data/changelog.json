@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "geodesy.parse.coordinates"
+      ],
+      "vectors": [],
+      "summary": "The coordinate reader had three defects, found by 1,500 independently written strings in ten notations and now fixed: spaced DMS with a one- or two-digit longitude (like 30 34 14.3 N 1 25 23.9 E) was misread as packed aviation notation, so 1°25′ became 125°; signed DMS with degree signs and no hemisphere letters crashed; and one-digit decimal degrees with a hemisphere letter could fail. Tool version 1.1.0. It is now stable."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "changed",
       "tools": [
         "drone.power.battery-energy"

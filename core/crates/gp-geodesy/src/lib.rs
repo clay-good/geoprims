@@ -117,6 +117,8 @@ const fn lon_out(name: &'static str, title: &'static str) -> Field {
 
 pub static PARSE: ToolDef = ToolDef {
     id: "geodesy.parse.coordinates",
+    stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Read any coordinate",
     summary: "Reads a coordinate in almost any notation (decimal, DMS, DDM, packed aviation, labeled, MGRS, or UTM) and reports what it assumed.",
     aliases: &[

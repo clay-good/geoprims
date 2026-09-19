@@ -15,9 +15,9 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | E6B wind triangle | `aviation.wind.heading-groundspeed` | [x] | [ ] | [ ] |
 | Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] |
 | Pilots | The four nights | `time.sun.aviation-nights` | [x] | [ ] | [ ] |
-| Pilots | METAR decoder | `aviation.weather.metar-decode` | [ ] | [ ] | [ ] |
+| Pilots | METAR decoder | `aviation.weather.metar-decode` | [x] | [ ] | [ ] |
 | Pilots | TAF decoder | `aviation.weather.taf-decode` | [ ] | [ ] | [ ] |
-| Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [ ] | [ ] | [ ] |
+| Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [x] | [ ] | [ ] |
 | Pilots | Holding entry | `aviation.ifr.hold-entry` | [ ] | [ ] | [ ] |
 | Pilots | Zulu time | `time.scale.utc-offset` | [x] | [ ] | [ ] |
 | Pilots | Weight and balance | `aviation.loading.weight-balance` | [x] | [ ] | [ ] |
@@ -52,4 +52,4 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 29 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 31 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.

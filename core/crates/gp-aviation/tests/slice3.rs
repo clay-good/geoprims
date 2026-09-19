@@ -134,7 +134,7 @@ fn international_metar() {
     let r = metar("KJFK 181751Z 04008KT 3SM TSRA BKN015CB 22/20 A2990 RMK R04R/2400FT");
     assert_eq!(r["result"]["flight_category"], "MVFR");
     assert_eq!(r["result"]["clouds"][0]["type"], "cumulonimbus");
-    assert_eq!(r["result"]["weather"], "thunderstorm rain");
+    assert_eq!(r["result"]["weather"], "thunderstorm with rain");
 }
 
 #[test]
@@ -391,7 +391,7 @@ fn taf_validity_across_midnight() {
     assert_eq!(starts, [0.0, 2.0, 8.0, 16.0, 20.0]);
     assert_eq!(p[0]["from_local"], "12:00 local");
     assert_eq!(p[2]["from_local"], "20:00 local, previous day");
-    assert_eq!(p[1]["weather"], "thunderstorm rain");
+    assert_eq!(p[1]["weather"], "thunderstorm with rain");
     assert_eq!(p[1]["flight_category"], "MVFR");
     assert_eq!(p[4]["ceiling"]["value"], 3000.0);
     assert!(p.iter().all(|x| x.get("not_decoded").is_none()), "{r}");
@@ -422,4 +422,116 @@ fn taf_month_end_and_wind_shear() {
 fn taf_bad_header() {
     let r = call(T, r#"{"report":"TAF hello"}"#);
     assert_eq!(r["error"]["code"], "INVALID_INPUT");
+}
+
+#[test]
+fn present_weather_reads_like_the_handbook() {
+    // FAA-H-8083-28A table 24-3 and its notes: intensity qualifies the
+    // precipitation ("heavy rain shower(s) is coded as +SHRA"), VC places the
+    // phenomenon near the station, and +FC is a tornado or waterspout.
+    for (code, words) in [
+        ("+SHRA", "heavy rain showers"),
+        ("+TSRA", "thunderstorm with heavy rain"),
+        ("-TSRA", "thunderstorm with light rain"),
+        ("TSRA", "thunderstorm with rain"),
+        ("+TSRAGR", "thunderstorm with heavy rain and hail"),
+        ("TS", "thunderstorm"),
+        ("VCTS", "thunderstorm in the vicinity"),
+        ("VCSH", "showers in the vicinity"),
+        ("VCFG", "fog in the vicinity"),
+        ("-SHRASN", "light rain and snow showers"),
+        ("-FZDZ", "light freezing drizzle"),
+        ("FZFG", "freezing fog"),
+        ("BLSN", "blowing snow"),
+        ("MIFG", "shallow fog"),
+        ("-DZ", "light drizzle"),
+        ("BR", "mist"),
+        ("+FC", "tornado or waterspout"),
+    ] {
+        assert_eq!(gp_aviation::weather::parse_weather(code).as_deref(), Some(words), "{code}");
+    }
+    for bad in ["+", "-", "VC", "XX", "RAXX"] {
+        assert_eq!(gp_aviation::weather::parse_weather(bad), None, "{bad}");
+    }
+}
+
+#[test]
+fn metar_regressions_from_live_reports() {
+    // Found by the python-metar differential on live reports (tests/metar_parity.rs).
+    let decode = |r: &str| call("aviation.weather.metar-decode", &serde_json::json!({"report": r}).to_string());
+    // Automated stations write /// when they cannot tell the cloud type.
+    let r = decode("METAR EKBI 191850Z AUTO 24012KT 9999 FEW015/// SCT057/// BKN200/// 16/13 Q1009");
+    assert_eq!(r["result"]["clouds"].as_array().unwrap().len(), 3, "{r}");
+    assert_eq!(r["result"]["ceiling"]["value"], 20000.0);
+    // A trend is a forecast: it must not replace the observed wind or add layers.
+    let r = decode("METAR LFBL 191900Z AUTO 30005KT CAVOK 18/10 Q1025 BECMG 36010KT");
+    assert_eq!(r["result"]["wind_direction"]["value"], 300.0, "{r}");
+    assert_eq!(r["result"]["wind_speed"]["value"], 5.0);
+    let r = decode("METAR EKCH 191850Z 23016KT 9999 BKN009 17/17 Q1010 TEMPO BKN012");
+    assert_eq!(r["result"]["clouds"].as_array().unwrap().len(), 1, "{r}");
+    // NDV: the sensor cannot report directional variation.
+    let r = decode("METAR LSME 191850Z AUTO 00000KT 9999NDV NCD 17/13 Q1024 RMK");
+    assert_eq!(r["result"]["visibility_text"], "10 km or more", "{r}");
+    assert!(r["result"]["not_decoded"].as_array().is_none_or(|a| a.is_empty()), "{r}");
+}
+
+#[test]
+fn metar_invariants() {
+    // On every live report of the differential fixture: each group is either
+    // explained or listed as not decoded, the flight category follows the
+    // FAA thresholds from the decoded ceiling and visibility, and cutting the
+    // remarks leaves the body's values unchanged.
+    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/metar_diff.jsonl")).unwrap();
+    for line in text.lines().skip(1) {
+        let report = serde_json::from_str::<Value>(line).unwrap()["report"].as_str().unwrap().to_owned();
+        let r = call("aviation.weather.metar-decode", &serde_json::json!({"report": report}).to_string());
+        let res = &r["result"];
+        // Groups can span tokens ("1 3/4SM"), so every token must sit inside one.
+        let mut seen: Vec<String> = res["groups"].as_array().into_iter().flatten().map(|g| g["group"].as_str().unwrap().to_owned()).collect();
+        seen.extend(res["not_decoded"].as_array().into_iter().flatten().map(|g| g["group"].as_str().unwrap_or("").to_owned()));
+        for t in report.split_whitespace().filter(|t| *t != "METAR" && *t != "SPECI") {
+            assert!(seen.iter().any(|g| g.split_whitespace().any(|w| w == t)), "{report}: {t} is not accounted for");
+        }
+        if let (Some(vis), cat) = (res["visibility"]["value"].as_f64(), res["flight_category"].as_str().unwrap_or("")) {
+            let ceil = res["ceiling"]["value"].as_f64().unwrap_or(f64::INFINITY);
+            let want = if ceil < 500.0 || vis < 1.0 {
+                "LIFR"
+            } else if ceil < 1000.0 || vis < 3.0 {
+                "IFR"
+            } else if ceil <= 3000.0 || vis <= 5.0 {
+                "MVFR"
+            } else {
+                "VFR"
+            };
+            assert_eq!(cat, want, "{report}");
+        }
+        if let Some((body, _)) = report.split_once(" RMK") {
+            let b = call("aviation.weather.metar-decode", &serde_json::json!({"report": body}).to_string());
+            for k in ["wind_direction", "wind_speed", "wind_gust", "visibility", "clouds", "ceiling", "altimeter", "weather"] {
+                assert_eq!(b["result"][k], res[k], "{report}: {k} changed without remarks");
+            }
+        }
+    }
+}
+
+#[test]
+fn fb_invariants() {
+    // Every wind from 010° to 360° at 5 to 199 kt, with any temperature,
+    // round-trips through its FB code at a level with and above 24,000 ft.
+    for d in (10..=360).step_by(10) {
+        for spd in [5, 37, 99, 100, 150, 199] {
+            for (level, t) in [(18_000, -12_i32), (18_000, 7), (34_000, -48)] {
+                let mut code = format!("{:02}{:02}", (d / 10 + if spd >= 100 { 50 } else { 0 }) % 100, spd % 100);
+                code += &if level > 24_000 { format!("{:02}", -t) } else { format!("{}{:02}", if t < 0 { '-' } else { '+' }, t.abs()) };
+                let r = call(
+                    "aviation.weather.fb-winds-decode",
+                    &serde_json::json!({"report": code, "level": format!("{level} ft")}).to_string(),
+                );
+                let w = &r["result"]["winds"][0];
+                assert_eq!(w["direction"]["value"], d, "{code}");
+                assert_eq!(w["speed"]["value"], spd, "{code}");
+                assert_eq!(w["temperature"]["value"], t, "{code}");
+            }
+        }
+    }
 }

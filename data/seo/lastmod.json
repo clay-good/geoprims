@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c5e157faf910144f",
+    "hash": "f5d1d464534ac7c5",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
@@ -20,11 +20,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "5b7cc88ad700f581",
+    "hash": "d6cc39c0de723b0a",
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "f4e57227c76a87d7",
+    "hash": "12b786289a31a51e",
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/": {
@@ -32,7 +32,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "78bd043039ae7ebd",
+    "hash": "f72349aef0fdde6b",
     "lastmod": "2026-09-19"
   },
   "/aviation/ifr/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/loading/weight-balance/": {
-    "hash": "4492a10fd07e8997",
+    "hash": "0498ac5f40b8baa9",
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/": {
@@ -52,15 +52,23 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/top-of-descent/": {
-    "hash": "286d45937818f335",
+    "hash": "1ba1eccd0fab360b",
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/vdp/": {
-    "hash": "719403217510348a",
+    "hash": "a258ec3e010f5214",
     "lastmod": "2026-09-19"
   },
   "/aviation/weather/": {
     "hash": "b308965038c7f651",
+    "lastmod": "2026-09-19"
+  },
+  "/aviation/weather/fb-winds-decode/": {
+    "hash": "732ee5db2ee47a7a",
+    "lastmod": "2026-09-19"
+  },
+  "/aviation/weather/metar-decode/": {
+    "hash": "cea28dbac2c8480f",
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/": {
@@ -68,15 +76,15 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "f60b1b27abdd00fc",
+    "hash": "43a79e68b5315f01",
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "17a12c0b20373e6b",
+    "hash": "f112f33e0cc39ba9",
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "2a4149e39db04dfb",
+    "hash": "5092ff4b3f7e41a8",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -248,7 +256,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "797666ec27d95c1d",
+    "hash": "f80244279d81ea52",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -284,7 +292,7 @@
     "lastmod": "2026-09-19"
   },
   "/sources/": {
-    "hash": "b881180ea0d26e01",
+    "hash": "d2de7fd6dd3488b2",
     "lastmod": "2026-09-19"
   },
   "/survey/": {
@@ -456,7 +464,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bd164ce50dd63797",
+    "hash": "819bc064daee3b9c",
     "lastmod": "2026-09-19"
   }
 }

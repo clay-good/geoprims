@@ -604,3 +604,21 @@ fn descent_invariants() {
         }
     }
 }
+
+#[test]
+fn fb_pasted_block_uses_its_header() {
+    // FAA-H-8083-28A section 27.2.1.1.2: a whole FB product pasted at once.
+    let block = "DATA BASED ON 010000Z\nVALID 010600Z FOR USE 0500-0900Z. TEMPS NEG ABV 24000\nFT 3000 6000 9000 12000 18000 24000 30000 34000 39000\nMKC 9900 1709+06 2018+00 2130-06 2242-18 2361-30 247242 258848 750252";
+    let r = call("aviation.weather.fb-winds-decode", &serde_json::json!({"report": block}).to_string());
+    let alone = call(
+        "aviation.weather.fb-winds-decode",
+        r#"{"report":"MKC 9900 1709+06 2018+00 2130-06 2242-18 2361-30 247242 258848 750252","levels":"3000 6000 9000 12000 18000 24000 30000 34000 39000"}"#,
+    );
+    assert_eq!(r["result"], alone["result"], "{r}");
+    // A header with fewer levels (the Alaska or high-altitude products) lines the groups up with it.
+    let r = call(
+        "aviation.weather.fb-winds-decode",
+        &serde_json::json!({"report": "FT 24000 30000 34000 39000\nANC 2361-30 247242 258848 750252"}).to_string(),
+    );
+    assert_eq!(r["result"]["winds"][0]["level"]["value"], 24000.0, "{r}");
+}

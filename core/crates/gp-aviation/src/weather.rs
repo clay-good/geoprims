@@ -226,14 +226,13 @@ fn is_whole(s: &str) -> bool {
     (1..=2).contains(&s.len()) && s.bytes().all(|b| b.is_ascii_digit())
 }
 
-const INTENSITY: &[(&str, &str)] = &[("-", "light"), ("+", "heavy"), ("VC", "in the vicinity:")];
 const DESCRIPTORS: &[(&str, &str)] = &[
     ("MI", "shallow"),
     ("PR", "partial"),
     ("BC", "patches of"),
     ("DR", "low drifting"),
     ("BL", "blowing"),
-    ("SH", "showers of"),
+    ("SH", "showers"),
     ("TS", "thunderstorm"),
     ("FZ", "freezing"),
 ];
@@ -262,34 +261,51 @@ const PHENOMENA: &[(&str, &str)] = &[
     ("DS", "duststorm"),
 ];
 
-/// A present-weather group in plain words, like `-TSRA` → "light thunderstorm rain".
+/// A present-weather group in plain words, following the FAA Aviation
+/// Weather Handbook's reading: intensity qualifies the precipitation, so
+/// `+TSRA` is "thunderstorm with heavy rain", `+SHRA` is "heavy rain
+/// showers", and `VCSH` is "showers in the vicinity".
 pub fn parse_weather(s: &str) -> Option<String> {
-    let mut rest = s;
-    let mut words: Vec<&str> = Vec::new();
-    if rest == "+FC" {
+    if s == "+FC" {
         return Some("tornado or waterspout".into());
     }
-    for (code, w) in INTENSITY {
-        if let Some(r) = rest.strip_prefix(code) {
-            words.push(w);
-            rest = r;
-            break;
-        }
-    }
-    let mut any = false;
-    if let Some((_, w)) = DESCRIPTORS.iter().find(|(c, _)| rest.starts_with(c)) {
-        words.push(w);
+    let (intensity, vicinity, mut rest) = if let Some(r) = s.strip_prefix('-') {
+        (Some("light"), false, r)
+    } else if let Some(r) = s.strip_prefix('+') {
+        (Some("heavy"), false, r)
+    } else if let Some(r) = s.strip_prefix("VC") {
+        (None, true, r)
+    } else {
+        (None, false, s)
+    };
+    let descriptor = DESCRIPTORS.iter().find(|(c, _)| rest.starts_with(c)).map(|(c, w)| (*c, *w));
+    if descriptor.is_some() {
         rest = &rest[2..];
-        any = true;
     }
+    let mut phenomena: Vec<&str> = Vec::new();
     while !rest.is_empty() {
         let (_, w) = PHENOMENA.iter().find(|(c, _)| rest.starts_with(c))?;
-        words.push(w);
+        phenomena.push(w);
         rest = &rest[2..];
-        any = true;
     }
-    (any && !(words.len() == 1 && INTENSITY.iter().any(|(_, w)| *w == words[0])))
-        .then(|| words.join(" "))
+    if descriptor.is_none() && phenomena.is_empty() {
+        return None;
+    }
+    let what = phenomena.join(" and ");
+    let lead = |text: &str| match intensity {
+        Some(i) if !text.is_empty() => format!("{i} {text}"),
+        _ => text.to_owned(),
+    };
+    let phrase = match descriptor {
+        Some(("TS", _)) if what.is_empty() => lead("thunderstorm"),
+        Some(("TS", _)) => format!("thunderstorm with {}", lead(&what)),
+        Some(("SH", _)) if what.is_empty() => lead("showers"),
+        Some(("SH", _)) => lead(&format!("{what} showers")),
+        Some((_, d)) if what.is_empty() => lead(d),
+        Some((_, d)) => lead(&format!("{d} {what}")),
+        None => lead(&what),
+    };
+    Some(if vicinity { format!("{phrase} in the vicinity") } else { phrase })
 }
 
 /// A cloud layer: cover, base (ft AGL), and convective type.
@@ -325,6 +341,8 @@ fn parse_cloud(s: &str) -> Option<CloudLayer> {
         ("VV", "vertical visibility"),
     ] {
         if let Some(r) = s.strip_prefix(code) {
+            // Automated stations append /// when they cannot tell the cloud type.
+            let r = r.strip_suffix("///").filter(|h| h.len() == 3).unwrap_or(r);
             let (h, kind) = if let Some(h) = r.strip_suffix("TCU") {
                 (h, Some("towering cumulus"))
             } else if let Some(h) = r.strip_suffix("CB") {
@@ -495,6 +513,8 @@ const UNDECODED_ROW: &[Field] = &[
 
 pub static METAR: ToolDef = ToolDef {
     id: "aviation.weather.metar-decode",
+    stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "METAR decoder",
     summary: "Turns a pasted METAR or SPECI into plain language: wind (true), visibility, weather, clouds and ceiling, temperature, altimeter, US remarks, and the flight category. Groups it cannot read are listed, never dropped.",
     aliases: &[
@@ -753,6 +773,7 @@ fn run_metar(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let mut ceiling: Option<f64> = None;
     let mut temps: Option<(f64, Option<f64>)> = None;
     let mut remarks = false;
+    let mut trend = false;
     let mut cavok = false;
     while i < tokens.len() {
         let g = tokens[i];
@@ -760,6 +781,12 @@ fn run_metar(ctx: &mut Ctx) -> Result<Json, ToolError> {
         if g == "RMK" {
             remarks = true;
             note(g, "remarks follow".into(), &mut groups);
+            i += 1;
+            continue;
+        }
+        // A BECMG or TEMPO trend describes the next two hours, not the observation.
+        if trend && !remarks {
+            note(g, "part of the trend forecast, not current conditions".into(), &mut groups);
             i += 1;
             continue;
         }
@@ -866,14 +893,16 @@ fn run_metar(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 i += 1;
                 continue;
             }
-            if g.len() == 4 && g.bytes().all(|b| b.is_ascii_digit()) && vis_sm.is_none() {
-                let m: f64 = g.parse().unwrap_or(0.0);
-                let txt = if g == "9999" {
+            // "NDV" marks a sensor that cannot report directional variation.
+            let metric = g.strip_suffix("NDV").unwrap_or(g);
+            if metric.len() == 4 && metric.bytes().all(|b| b.is_ascii_digit()) && vis_sm.is_none() {
+                let m: f64 = metric.parse().unwrap_or(0.0);
+                let txt = if metric == "9999" {
                     "10 km or more".to_owned()
                 } else {
                     format!("{} m", display::number(m, Precision::Decimals(0), fmt))
                 };
-                vis_sm = Some(if g == "9999" { 10_000.0 } else { m } / 1609.344);
+                vis_sm = Some(if metric == "9999" { 10_000.0 } else { m } / 1609.344);
                 note(g, format!("visibility {txt}"), &mut groups);
                 o.push(("visibility_text", Json::str(txt)));
                 i += 1;
@@ -974,6 +1003,7 @@ fn run_metar(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 continue;
             }
             if matches!(g, "NOSIG" | "BECMG" | "TEMPO") {
+                trend = g != "NOSIG";
                 note(
                     g,
                     match g {
@@ -1255,6 +1285,7 @@ const FB_ROW: &[Field] = &[
 
 pub static FB_WINDS: ToolDef = ToolDef {
     id: "aviation.weather.fb-winds-decode",
+    stability: gp_base::tool::Stability::Stable,
     title: "Winds aloft (FB) decoder",
     summary: "Decodes FB winds and temperatures aloft: one group at a level, or a whole station line, with light-and-variable winds, speeds over 100 kt, and the implied minus sign above 24,000 ft.",
     aliases: &[
@@ -1342,7 +1373,18 @@ pub static FB_WINDS: ToolDef = ToolDef {
 };
 
 fn run_fb(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let raw = ctx.text("report")?.unwrap_or_default().to_ascii_uppercase();
+    let pasted = ctx.text("report")?.unwrap_or_default().to_ascii_uppercase();
+    // A pasted product block: take the levels from its FT header, skip the
+    // DATA BASED ON and VALID lines, and decode the first station line.
+    let mut header: Option<String> = None;
+    let mut raw = String::new();
+    for line in pasted.lines().map(str::trim).filter(|l| !l.is_empty()) {
+        if let Some(rest) = line.strip_prefix("FT ") {
+            header.get_or_insert_with(|| rest.to_owned());
+        } else if !(line.starts_with("DATA ") || line.starts_with("VALID ")) && raw.is_empty() {
+            raw = line.to_owned();
+        }
+    }
     let mut toks: Vec<&str> = raw.split_whitespace().collect();
     let fmt = ctx.options.format;
     let mut o: Vec<(&str, Json)> = Vec::new();
@@ -1359,7 +1401,7 @@ fn run_fb(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "Paste an FB station line or one group.",
         ));
     }
-    let levels: Vec<f64> = match (ctx.text("levels")?, ctx.quantity("level")?) {
+    let levels: Vec<f64> = match (ctx.text("levels")?.or(header), ctx.quantity("level")?) {
         (Some(l), _) => l
             .split_whitespace()
             .filter(|t| *t != "FT")
@@ -1683,6 +1725,7 @@ const PERIOD_ROW: &[Field] = &[
 
 pub static TAF: ToolDef = ToolDef {
     id: "aviation.weather.taf-decode",
+    version: "1.1.0",
     title: "TAF decoder",
     summary: "Turns a pasted TAF into a timeline of forecast periods (FM, TEMPO, BECMG, PROB30/40) in plain language, with UTC and local times, winds (true), visibility, weather, clouds and ceilings, and flight categories.",
     aliases: &[

@@ -49,11 +49,11 @@ pub mod refs {
         url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
     };
     pub const WEATHER_HANDBOOK: Reference = Reference {
-        title: "Aviation Weather Handbook, FAA-H-8083-28",
+        title: "Aviation Weather Handbook, FAA-H-8083-28A",
         issuer: "Federal Aviation Administration",
-        year: 2022,
-        edition: "FAA-H-8083-28",
-        locator: "Altimetry chapter (altimeter setting, pressure and density altitude)",
+        year: 2024,
+        edition: "FAA-H-8083-28A",
+        locator: "Section 8.4 (altimetry), chapter 24 (METAR and SPECI, flight categories in tables 3-15 to 3-18), and section 27.2 (FB winds and temperatures aloft)",
         url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/faa-h-8083-28-aviation-weather-handbook",
     };
     pub const ALDUCHOV: Reference = Reference {

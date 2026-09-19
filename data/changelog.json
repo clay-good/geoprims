@@ -3,6 +3,35 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "result-change",
+      "tools": [
+        "aviation.weather.metar-decode",
+        "aviation.weather.taf-decode"
+      ],
+      "vectors": [
+        "aviation.weather.metar-decode v004"
+      ],
+      "summary": "Present weather now reads as the FAA Aviation Weather Handbook does, with intensity on the precipitation: +TSRA is \"thunderstorm with heavy rain\" (was \"heavy thunderstorm rain\"), +SHRA is \"heavy rain showers\", and VCSH is \"showers in the vicinity\". Tool versions 1.1.0. The METAR and winds-aloft decoders are now stable."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "aviation.weather.metar-decode",
+        "aviation.weather.fb-winds-decode"
+      ],
+      "vectors": [],
+      "summary": "A differential against python-metar on 612 live reports found three METAR defects, now fixed: cloud layers with /// (type not determined by an automated station) were dropped, BECMG and TEMPO trend groups were applied to the current observation (a forecast wind could replace the observed one), and 9999NDV visibility was not read. The winds-aloft decoder now accepts a whole pasted FB product and takes its levels from the FT header."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [],
+      "vectors": [],
+      "summary": "The Aviation Weather Handbook is now cited at its current edition, FAA-H-8083-28A (2024), which cancels and supersedes FAA-H-8083-28 (2022). Its altimetry, flight-category, METAR, and FB rules used here are unchanged."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "changed",
       "tools": [
         "aviation.performance.top-of-descent",

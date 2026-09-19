@@ -469,13 +469,32 @@ def metar_vectors():
          {"result.visibility.value": 0.25, "result.ceiling.value": 800, "result.temperature.value": -5.0,
           "result.dew_point.value": -7.2, "result.sea_level_pressure.value": 998.7, "result.flight_category": "LIFR"}),
         ("KJFK 181751Z 04008KT 3SM TSRA BKN015CB 22/20 A2990",
-         {"result.flight_category": "MVFR", "result.weather": "thunderstorm rain", "result.ceiling.value": 1500}),
+         {"result.flight_category": "MVFR", "result.weather": "thunderstorm with rain", "result.ceiling.value": 1500}),
         ("KBOS 181754Z 09010KT 2SM BR OVC007 18/17 A2998",
          {"result.flight_category": "IFR", "result.altimeter.value": 29.98}),
         ("EGLL 181750Z 24012KT 9999 FEW035 17/09 Q1013 NOSIG",
          {"result.altimeter.value": 1013, "result.visibility_text": "10 km or more", "result.flight_category": "VFR"}),
     ]
-    return [svec(i, {"report": r}, e, WX_SRC, WX_VER) for i, (r, e) in enumerate(cases, 1)]
+    out = [svec(i, {"report": r}, e, WX_SRC, WX_VER) for i, (r, e) in enumerate(cases, 1)]
+    # FAA-H-8083-28A chapter 24 decodes this report group by group; intensity qualifies the precipitation
+    # (table 24-3: heavy rain shower(s) is +SHRA), so +TSRA is a thunderstorm with heavy rain.
+    out.append(svec(len(out) + 1, {"report": "METAR KOKC 011955Z AUTO 22015G25KT 180V250 3/4SM R17L/2600FT +TSRA BR OVC010CB 18/16 A2992 RMK AO2 TSB25 TS OHD MOV E SLP132"},
+                    {"result.station": "KOKC", "result.modifier": "AUTO", "result.wind_direction.value": 220, "result.wind_speed.value": 15,
+                     "result.wind_gust.value": 25, "result.visibility.value": 0.75, "result.weather": "thunderstorm with heavy rain; mist",
+                     "result.ceiling.value": 1000, "result.temperature.value": 18, "result.dew_point.value": 16,
+                     "result.altimeter.value": 29.92, "result.sea_level_pressure.value": 1013.2, "result.flight_category": "LIFR"}, AWH_A, AWH_A_VER))
+    # Found by the python-metar differential on live reports: /// cloud types, trend groups, and NDV visibility.
+    reg = "Live Aviation Weather Center reports (2026-09-19), as decoded by python-metar 1.11.0"
+    for r, e in [("METAR EKBI 191850Z AUTO 24012KT 9999 FEW015/// SCT057/// BKN200/// 16/13 Q1009", {"result.ceiling.value": 20000, "result.clouds.2.base.value": 20000}),
+                 ("METAR LFBL 191900Z AUTO 30005KT CAVOK 18/10 Q1025 BECMG 36010KT", {"result.wind_direction.value": 300, "result.wind_speed.value": 5}),
+                 ("METAR LSME 191850Z AUTO 00000KT 9999NDV NCD 17/13 Q1024 RMK", {"result.visibility_text": "10 km or more"})]:
+        out.append(svec(len(out) + 1, {"report": r}, e, reg, "metar 1.11.0"))
+    # Every 60th knots report of the committed differential fixture, with python-metar's values.
+    rows = [json.loads(l) for l in Path("core/crates/gp-aviation/tests/data/metar_diff.jsonl").read_text().splitlines()[1:]]
+    for row in [r for r in rows if "KT " in r["report"]][::60]:
+        e = {f"result.{k}.value": row[k] for k in ("wind_speed", "wind_direction", "wind_gust", "temperature", "dew_point", "sea_level_pressure") if k in row}
+        out.append(svec(len(out) + 1, {"report": row["report"]}, e, reg, "metar 1.11.0"))
+    return out
 
 
 def fb_vectors():
@@ -488,7 +507,42 @@ def fb_vectors():
          {"result.winds.0.level.value": 9000, "result.winds.4.temperature.value": -52, "result.winds.6.direction.value": 240, "result.winds.6.speed.value": 53}),
         ({"report": "861558", "level": "39000 ft"}, {"result.winds.0.direction.value": 360, "result.winds.0.speed.value": 115, "result.winds.0.temperature.value": -58}),
     ]
-    return [svec(i, inp, e, FB_SRC, FB_VER) for i, (inp, e) in enumerate(cases, 1)]
+    out = [svec(i, inp, e, FB_SRC, FB_VER) for i, (inp, e) in enumerate(cases, 1)]
+    # An independent encoder: pick the wind and temperature, code the group by the FB rules, and expect them back.
+    rnd = random.Random(27)
+    for _ in range(8):
+        level = rnd.choice([6000, 9000, 12000, 18000, 24000, 30000, 34000, 39000])
+        d, spd = rnd.randint(1, 36) * 10, rnd.randint(5, 199)
+        t = rnd.randint(-65, -1) if level > 24000 else rnd.randint(-40, 20)
+        code = f"{(d // 10 + (50 if spd >= 100 else 0)) % 100:02d}{spd % 100:02d}"
+        code += f"{abs(t):02d}" if level > 24000 else f"{'-' if t < 0 else '+'}{abs(t):02d}"
+        out.append(svec(len(out) + 1, {"report": code, "level": f"{level} ft"},
+                        {"result.winds.0.direction.value": d, "result.winds.0.speed.value": spd, "result.winds.0.temperature.value": t},
+                        "Winds encoded by an independent Python implementation of the FB coding rules (tools/vectors/gen_aviation.py)", "FAA-H-8083-28A (2024)"))
+    # FAA-H-8083-28A section 27.2.1.1.2 and table 27-1 (Kansas City). The coded message ends 550252, but the table
+    # decodes that level as 750252 = 250 deg at 102 kt, -52 C; the table's group is used.
+    table = [(3000, "9900", None, 0, None), (6000, "1709+06", 170, 9, 6), (9000, "2018+00", 200, 18, 0), (12000, "2130-06", 210, 30, -6),
+             (18000, "2242-18", 220, 42, -18), (24000, "2361-30", 230, 61, -30), (30000, "247242", 240, 72, -42),
+             (34000, "258848", 250, 88, -48), (39000, "750252", 250, 102, -52)]
+    block = ("DATA BASED ON 010000Z\nVALID 010600Z FOR USE 0500-0900Z. TEMPS NEG ABV 24000\n"
+             "FT 3000 6000 9000 12000 18000 24000 30000 34000 39000\nMKC " + " ".join(g for _, g, *_ in table))
+    exp = {}
+    for k, (lv, _, d, spd, t) in enumerate(table):
+        exp[f"result.winds.{k}.level.value"] = lv
+        exp[f"result.winds.{k}.speed.value"] = spd
+        if d is not None:
+            exp[f"result.winds.{k}.direction.value"] = d
+        if t is not None:
+            exp[f"result.winds.{k}.temperature.value"] = t
+    out.append(svec(len(out) + 1, {"report": block}, dict(exp, **{"result.station": "MKC"}), AWH_A, AWH_A_VER))
+    for lv, g, d, spd, t in table[1:]:
+        e = {"result.winds.0.speed.value": spd, "result.winds.0.direction.value": d, "result.winds.0.temperature.value": t}
+        out.append(svec(len(out) + 1, {"report": g, "level": f"{lv} ft"}, e, AWH_A, AWH_A_VER))
+    return out
+
+
+AWH_A = "FAA Aviation Weather Handbook (FAA-H-8083-28A), decoded example"
+AWH_A_VER = "FAA-H-8083-28A (2024)"
 
 
 def hold_entry_vectors():

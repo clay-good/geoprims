@@ -2,6 +2,7 @@
   // The interactive tool: schema-driven form, live answer card, permalinks.
   // Server-rendered with the worked example, so the answer is in the HTML.
   import { onMount } from 'svelte';
+  import { isPinned, recordUse, togglePin, toolOptions } from '../lib/prefs.js';
 
   let { tool, example, initial } = $props();
 
@@ -71,16 +72,21 @@
       if (v === '') continue;
       a[k] = isList(schema) ? fromList(schema, v) : schema.type === 'number' && NUMBER.test(v) ? Number(v) : v;
     }
+    // The unit profile and number format from settings (and in the permalink).
+    const o = toolOptions();
+    if (o && tool.inputs.properties.options) a.options = o;
     return a;
   }
 
-  async function run() {
+  /** Recomputes; `settingsOnly` re-runs for new settings without touching the URL. */
+  async function run(settingsOnly = false) {
     stale = true;
     const a = args();
     const out = await compute.invoke(tool.id, a);
     if (!out) return; // superseded by a newer edit
     result = out;
     stale = false;
+    if (settingsOnly) return;
     const enc = await compute.encodeLink({ i: a });
     if (enc?.ok) history.replaceState(null, '', `#${enc.result.fragment}`);
   }
@@ -115,7 +121,16 @@
     setTimeout(() => (copied = ''), 1500);
   }
 
+  let pinned = $state(false);
+  function pin() {
+    togglePin(tool);
+    pinned = isPinned(tool.id);
+  }
+
   onMount(async () => {
+    pinned = isPinned(tool.id);
+    recordUse(tool);
+    addEventListener('gp-prefs', () => compute && run(true));
     if (typeof WebAssembly !== 'object') {
       const { NO_WASM } = await import('../lib/messages.js');
       result = { ok: false, error: { code: 'UNSUPPORTED', message: NO_WASM } };
@@ -131,6 +146,10 @@
       } else if (!d.ok) {
         linkNote = d.error.code === 'UNSUPPORTED' ? d.error.message : 'This link could not be read, so the example is shown.';
       }
+    }
+    // The page was rendered in each tool's own units; show the user's settings.
+    if (!hash || hash === 'example') {
+      if (toolOptions()) run(true);
     }
   });
 </script>
@@ -155,6 +174,7 @@
       <button type="button" onclick={() => copy('value')}>{copied === 'value' ? 'Copied' : 'Copy value'}</button>
       <button type="button" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied' : 'Copy sentence'}</button>
       <button type="button" onclick={() => copy('agent')}>{copied === 'agent' ? 'Copied' : 'Copy as agent call'}</button>
+      <button type="button" aria-pressed={pinned} onclick={pin}>{pinned ? 'Pinned' : 'Pin tool'}</button>
     </div>
   {:else if result}
     <p class="error">{result.error.message}</p>

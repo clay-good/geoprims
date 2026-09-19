@@ -7,6 +7,7 @@
 // the query with ">" lists actions instead of tools.
 import { detect, search } from './compute.js';
 import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
+import { clearRecents, eraseLocalData, pins, PROFILES, recents, setProfile } from './prefs.js';
 
 const LIMIT = 8;
 
@@ -26,18 +27,6 @@ function setDisplay(name, value) {
   control.dispatchEvent(new Event(name === 'dim' ? 'input' : 'change'));
 }
 
-async function eraseAll() {
-  if (!confirm('Erase display settings and offline copies saved on this device? Nothing is stored anywhere else.')) return;
-  try {
-    for (const k of Object.keys(localStorage)) if (k.startsWith('gp-')) localStorage.removeItem(k);
-  } catch {
-    /* storage blocked: nothing saved */
-  }
-  for (const k of (await caches?.keys?.()) ?? []) if (k.startsWith('gp-')) await caches.delete(k);
-  for (const r of (await navigator.serviceWorker?.getRegistrations?.()) ?? []) await r.unregister();
-  location.reload();
-}
-
 const page = (title, href, words) => ({ title, summary: href, words, run: () => (location.href = href) });
 
 /** The palette's actions, rebuilt each time so their labels reflect current settings. */
@@ -49,7 +38,10 @@ function actions() {
     { title: 'Accent: green', summary: 'HUD accent color', words: 'theme hud accent color colour phosphor', run: () => setDisplay('accent', 'green') },
     { title: 'Show keyboard shortcuts', summary: 'Or press ?', words: 'help keys keyboard shortcuts', run: openSheet },
     { title: on ? 'Turn single-key shortcuts off' : 'Turn single-key shortcuts on', summary: '/, ?, and g h; Ctrl+K always works', words: 'keys keyboard shortcuts single', run: () => setSingleKeys(!on) },
-    { title: 'Erase all local data', summary: 'Display settings and offline copies on this device', words: 'erase clear reset delete storage offline cache privacy data', run: eraseAll },
+    { title: 'Erase all local data', summary: 'Settings, recent and pinned tools, and offline copies on this device', words: 'erase clear reset delete storage offline cache privacy data', run: eraseLocalData },
+    ...PROFILES.map(([id, label]) => ({ title: `Units: ${label}`, summary: 'Unit profile for every tool', words: `units unit profile ${id}`, run: () => setProfile(id) })),
+    { title: 'Clear recent tools', summary: 'Pinned tools stay', words: 'clear recent history', run: clearRecents },
+    page('Open settings', '/settings/', 'settings preferences options units'),
     page('Go to methodology', '/methodology/', 'how checked verification'),
     page('Go to changelog', '/changelog/', 'changes history results'),
     page('Go to sources', '/sources/', 'references standards citations'),
@@ -139,9 +131,16 @@ function render() {
 async function update() {
   const query = input.value.trim();
   if (!query) {
-    results = [];
-    active = -1;
-    status.textContent = '';
+    // Pinned tools first, then recent ones.
+    const pinned = pins();
+    const seen = new Set(pinned.map((p) => p.id));
+    const recent = recents().filter((r) => !seen.has(r.id)).slice(0, LIMIT);
+    results = [
+      ...pinned.map((p, k) => ({ ...p, summary: 'Pinned', head: k === 0 ? 'Pinned tools.' : null, headDetail: '' })),
+      ...recent.map((r, k) => ({ ...r, summary: 'Recent', head: k === 0 ? 'Recent tools.' : null, headDetail: '' })),
+    ];
+    active = results.length ? 0 : -1;
+    status.textContent = results.length ? `${pinned.length} pinned and ${recent.length} recent tools` : '';
     return render();
   }
   if (query.startsWith('>')) {
@@ -217,4 +216,5 @@ export function openPalette() {
   dialog.showModal();
   input.select();
   input.focus();
+  update();
 }

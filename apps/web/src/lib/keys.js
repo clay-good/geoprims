@@ -6,6 +6,7 @@ export const SHORTCUTS = [
   ['Ctrl+K or ⌘K', 'Open the command palette, even in a text field'],
   ['?', 'Show these shortcuts'],
   ['g then h', 'Go to the home page'],
+  ['u', 'Switch to the next unit profile'],
   ['Esc', 'Close the palette or this list'],
   ['↑ ↓ or Ctrl+N Ctrl+P', 'Move through palette results'],
   ['Enter', 'Open the selected result'],
@@ -46,6 +47,7 @@ export function shortcutFor(e, { singleKeys = true, pending = false } = {}) {
   if (e.key === '?') return 'sheet';
   if (pending && e.key === 'h') return 'home';
   if (e.key === 'g') return 'pending';
+  if (e.key === 'u') return 'units';
   return null;
 }
 
@@ -79,6 +81,24 @@ export function openSheet() {
   sheet.showModal();
 }
 
+/** Switches to the next unit profile and says which, in a polite live region. */
+async function cycleUnits() {
+  const { nextProfile, PROFILES, setProfile } = await import('./prefs.js');
+  const next = nextProfile();
+  setProfile(next);
+  let toast = document.querySelector('.toast');
+  if (!toast) {
+    toast = document.createElement('p');
+    toast.className = 'toast card';
+    toast.setAttribute('role', 'status');
+    document.body.append(toast);
+  }
+  toast.textContent = `Units: ${PROFILES.find(([id]) => id === next)[1]}`;
+  toast.hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => (toast.hidden = true), 2500);
+}
+
 export function wireKeys(palette) {
   let pendingUntil = 0;
   document.addEventListener('keydown', (e) => {
@@ -93,5 +113,6 @@ export function wireKeys(palette) {
     if (what === 'palette') palette();
     else if (what === 'sheet') openSheet();
     else if (what === 'home') location.href = '/';
+    else if (what === 'units') cycleUnits();
   });
 }

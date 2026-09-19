@@ -246,3 +246,10 @@ dialog.shortcuts dl { display: grid; grid-template-columns: max-content 1fr; gap
 dialog.shortcuts dt { font-family: var(--mono); color: var(--accent); }
 dialog.shortcuts dd { margin: 0; }
 dialog.shortcuts button { min-block-size: var(--target); padding-inline: 1rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+form.settings { display: grid; gap: 0.5rem; max-inline-size: 32rem; }
+form.settings label { display: grid; gap: 0.25rem; font-weight: 600; }
+form.settings select, .settings-actions button { min-block-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.settings-actions button { padding-inline: 1rem; }
+.toast { position: fixed; inset-block-end: 1rem; inset-inline-start: 50%; transform: translateX(-50%); margin: 0; z-index: 11; }
+.toast[hidden] { display: none; }

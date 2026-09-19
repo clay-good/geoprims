@@ -29,7 +29,8 @@ function call(method, args, key) {
   });
 }
 
-export const invoke = (id, args) => call('invoke', [id, JSON.stringify(args)], 'invoke');
+// `key` groups requests: only the latest per key resolves (the map uses its own).
+export const invoke = (id, args, key = 'invoke') => call('invoke', [id, JSON.stringify(args)], key);
 export const encodeLink = (state, flags = []) => call('callString', ['link', 'gp_link_encode', JSON.stringify({ state, flags })], 'encode');
 export const decodeLink = (fragment) => call('callString', ['link', 'gp_link_decode', fragment]);
 export const search = (request) => call('search', [JSON.stringify(request)], 'search');

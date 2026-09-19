@@ -76,6 +76,14 @@ test('every mode meets WCAG AA contrast for text and focus', () => {
     const f = contrast(t['--focus'], t['--bg']);
     assert.ok(f >= 3, `${mode} focus ${f.toFixed(2)}:1`);
   }
+  // The map: the result path keeps 3:1 over land and water (map-canvas "Result stands out").
+  for (const mode of MODES) {
+    const t = tokens(mode);
+    for (const fill of ['--land', '--bg']) {
+      const c = contrast(t['--accent'], t[fill]);
+      assert.ok(c >= 3, `${mode} accent over ${fill}: ${c.toFixed(2)}:1`);
+    }
+  }
   // One signal accent per mode, used for focus too (Atlas, design W9).
   for (const mode of ['paper', 'ink']) assert.equal(tokens(mode)['--focus'], tokens(mode)['--accent'], mode);
 });

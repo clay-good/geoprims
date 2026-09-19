@@ -3,6 +3,7 @@
   // Server-rendered with the worked example, so the answer is in the HTML.
   import { onMount } from 'svelte';
   import { isPinned, recordUse, togglePin, toolOptions } from '../lib/prefs.js';
+  import MapCanvas from './MapCanvas.svelte';
 
   let { tool, example, initial } = $props();
 
@@ -42,7 +43,7 @@
   let stale = $state(false);
   let copied = $state('');
   let linkNote = $state('');
-  let compute;
+  let compute = $state.raw(null);
   let timer;
   // The report dialog is imported on first click, so nothing loads before then.
   let ReportDialog = $state(null);
@@ -67,6 +68,11 @@
   );
   const secondary = $derived(result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary) : []);
 
+  // The canvas draws geographic tools: lines, points, polygons, or a lat/lon input.
+  const GEO = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon']);
+  const showMap = (tool.visualization ?? []).some((v) => GEO.has(v.kind)) || ('lat' in tool.inputs.properties && 'lon' in tool.inputs.properties);
+  let drawnArgs = $state(example);
+
   function args() {
     const a = {};
     for (const [k, schema] of fields) {
@@ -87,6 +93,7 @@
     const out = await compute.invoke(tool.id, a);
     if (!out) return; // superseded by a newer edit
     result = out;
+    drawnArgs = a;
     stale = false;
     if (settingsOnly) return;
     const enc = await compute.encodeLink({ i: a });
@@ -183,6 +190,10 @@
     {#if result.error.hint}<p>{result.error.hint}</p>{/if}
   {/if}
 </section>
+
+{#if showMap && compute && result?.ok}
+  <MapCanvas {tool} args={drawnArgs} {result} {compute} />
+{/if}
 
 {#if linkNote}<p class="notice">{linkNote}</p>{/if}
 

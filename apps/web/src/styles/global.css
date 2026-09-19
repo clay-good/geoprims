@@ -38,6 +38,8 @@
   --caution: #8a5300;
   --danger: #b42318;
   --focus: #c2410c;
+  --land: #ebe8e1;
+  --graticule: #dedbd3;
   --shadow: #15171c;
   --backdrop: #15171c;
   color-scheme: light;
@@ -52,6 +54,8 @@
   --caution: #f5c451;
   --danger: #ff8b85;
   --focus: #ff8a4c;
+  --land: #1b1f27;
+  --graticule: #22262f;
   --shadow: #000000;
   --backdrop: #000000;
   color-scheme: dark;
@@ -66,6 +70,8 @@
   --caution: #5c3900;
   --danger: #8a0000;
   --focus: #000000;
+  --land: #e6e6e6;
+  --graticule: #c8c8c8;
   --shadow: #000000;
   --backdrop: #000000;
   --weight: 600;
@@ -84,6 +90,8 @@
   --caution: color-mix(in srgb, #c66d00 calc(var(--dim) * 100%), #000000);
   --danger: color-mix(in srgb, #ff0000 calc(var(--dim) * 100%), #000000);
   --focus: color-mix(in srgb, #bf6300 calc(var(--dim) * 100%), #000000);
+  --land: #0f0700;
+  --graticule: #1a0d00;
   --shadow: #000000;
   --backdrop: #000000;
   color-scheme: dark;
@@ -98,6 +106,8 @@
   --caution: #ffff00;
   --danger: #ff9e9e;
   --focus: #ffa057;
+  --land: #262626;
+  --graticule: #3a3a3a;
   --shadow: #000000;
   --backdrop: #000000;
   --weight: 600;
@@ -111,6 +121,8 @@
     --line: #262a33;
     --text: #eceef2;
     --muted: #9aa1ae;
+    --land: #1b1f27;
+    --graticule: #22262f;
     --accent: #ff8a4c;
     --caution: #f5c451;
     --danger: #ff8b85;
@@ -127,6 +139,8 @@
     --line: #ffffff;
     --text: #ffffff;
     --muted: #ffffff;
+    --land: #262626;
+    --graticule: #3a3a3a;
     --accent: #ffa057;
     --caution: #ffff00;
     --danger: #ff9e9e;
@@ -144,6 +158,8 @@
     --line: #e2e0da;
     --text: #15171c;
     --muted: #5b616e;
+    --land: #ebe8e1;
+    --graticule: #dedbd3;
     --accent: #c2410c;
     --caution: #8a5300;
     --danger: #b42318;
@@ -265,3 +281,12 @@ form.settings select, .settings-actions button { min-block-size: var(--target); 
 .settings-actions button { padding-inline: 1rem; }
 .toast { position: fixed; inset-block-end: 1rem; inset-inline-start: 50%; transform: translateX(-50%); margin: 0; z-index: 11; }
 .toast[hidden] { display: none; }
+/* Map canvas. */
+figure.map { margin-inline: 0; padding: 0; overflow: hidden; }
+figure.map canvas { display: block; inline-size: 100%; block-size: min(56vh, 420px); touch-action: none; cursor: grab; }
+figure.map canvas:active { cursor: grabbing; }
+figure.map canvas:focus-visible { outline-offset: -3px; }
+.map-bar { display: flex; gap: 0.25rem; padding: 0.5rem; border-block-end: 1px solid var(--line); }
+.map-bar button { min-block-size: var(--target); min-inline-size: var(--target); padding-inline: 0.75rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.map-bar button[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }
+.map-readout { display: flex; justify-content: space-between; gap: 1rem; margin: 0; padding: 0.4rem 0.75rem; font: 0.75rem var(--mono); color: var(--muted); border-block-start: 1px solid var(--line); }

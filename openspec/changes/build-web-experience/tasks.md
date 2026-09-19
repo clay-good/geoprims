@@ -35,16 +35,16 @@
 
 ## 5. Map canvas
 
-- [ ] 5.1 Implement the renderer abstraction on luma.gl (WebGPU → WebGL2) and the Canvas2D fallback; verify identical layer output in snapshot tests across backends
-- [ ] 5.2 Implement 2D map projections (Web Mercator, equirectangular, polar azimuthal) and the 3D orthographic globe; verify the antimeridian and polar-cap scenarios
-- [ ] 5.3 Implement layer kinds from the tool contract, with densification from Wasm; verify each kind with a visual regression fixture
+- [ ] 5.1 Implement the renderer abstraction on luma.gl (WebGPU → WebGL2) and the Canvas2D fallback; verify identical layer output in snapshot tests across backends (started: the 2D-canvas renderer the spec requires as the fallback, drawing every current layer; WebGPU and WebGL2 paths pending)
+- [ ] 5.2 Implement 2D map projections (Web Mercator, equirectangular, polar azimuthal) and the 3D orthographic globe; verify the antimeridian and polar-cap scenarios (Web Mercator and the orthographic globe, with pan, zoom, and rotate by pointer and keyboard; antimeridian-contiguous paths and limb-clipped fills; polar azimuthal pending)
+- [ ] 5.3 Implement layer kinds from the tool contract, with densification from Wasm; verify each kind with a visual regression fixture (point, geodesic and rhumb lines densified through the core, and polygons with geodesic edges; other kinds pending)
 - [ ] 5.4 Implement vector-diagram mode (wind triangle, airspeed gauge, traverse sketch, cross-section, profile chart); verify fixtures for each
 - [ ] 5.5 Implement canvas input (click to set, drag points) with form sync and keyboard equivalents; verify the drag-waypoint scenario
 - [ ] 5.6 Implement the readout overlay (cursor readout in chosen format, scale bar, true and magnetic north, projection name); verify the MGRS readout scenario
-- [ ] 5.7 Implement the Natural Earth base layer (bundled 110m, on-demand 50m file) in the Atlas cartographic style; verify offline rendering, the no-tile-requests scenario, and the result-stands-out contrast scenario
+- [ ] 5.7 Implement the Natural Earth base layer (bundled 110m, on-demand 50m file) in the Atlas cartographic style; verify offline rendering, the no-tile-requests scenario, and the result-stands-out contrast scenario (started: Natural Earth 110m land, lakes, and borders as one 22 KB file from tools/codegen/basemap.py, in the Atlas style with land and graticule tokens, precached for offline use; the 50m file pending)
 - [ ] 5.8 Implement animated scenes (timeline descriptor, play/pause, scrubber, speed, loop, playhead in the permalink, camera easing, path draw-in) for CPA, fly-by and holding turns, sun position, survey patterns, and route legs; verify the CPA, permalink-scrub, and reduced-motion scenarios
 - [ ] 5.9 Implement canvas export (PNG with attribution, SVG, GeoJSON); verify the attribution-footer scenario
-- [ ] 5.10 Implement the canvas accessible description; verify the screen-reader summary scenario
+- [x] 5.10 Implement the canvas accessible description; verify the screen-reader summary scenario (done: the canvas carries a description of what is drawn plus the result sentence, updated with each result)
 - [ ] 5.11 Benchmark 100,000-vertex scenes; verify p95 frame time ≤ 16.7 ms on the reference profile
 
 ## 6. Audio

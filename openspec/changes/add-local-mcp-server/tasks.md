@@ -10,7 +10,7 @@
 
 - [x] 2.1 Implement `geoprims_search` using the shared core ranker (weighted fields and aliases, `search` module); verify top-3 accuracy on the search fixture set
 - [x] 2.2 Implement `geoprims_describe` with `summary`/`schema`/`examples` detail levels and the 20-id limit; verify output sizes per level
-- [ ] 2.3 Implement `geoprims_run` with schema validation, unit handling, pagination, and summaries; verify the search-then-run and large-polyfill scenarios
+- [x] 2.3 Implement `geoprims_run` with schema validation, unit handling, pagination, and summaries; verify the search-then-run and large-polyfill scenarios
 - [x] 2.4 Implement `geoprims_pipeline` with binding type checks, unit insertion, and cycle and forward-reference rejection; verify a 4-step chain and a cyclic chain
 - [x] 2.5 Implement `geoprims_convert_units`; verify against unit-registry vectors
 - [ ] 2.5a Add `prefill` to search, citations and limitations to describe, and `summary`, references, `explain` trace, and example-default to run; verify parity with the web page for 20 hero tools

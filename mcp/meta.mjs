@@ -48,13 +48,18 @@ export const TOOLS = [
     name: 'geoprims_run',
     title: 'Run a geoprims tool',
     description:
-      'Run one tool by id. args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
+      'Run one tool by id. args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
     inputSchema: {
       type: 'object',
       properties: {
         id: { type: 'string' },
         args: { type: 'object' },
         units: { type: 'string', enum: ['si', 'aviation', 'aviation-hpa', 'us-customary', 'survey-metric', 'survey-us'] },
+        output: {
+          type: 'object',
+          properties: { maxItems: { type: 'integer', minimum: 1, maximum: 10000, default: 1000 }, offset: { type: 'integer', minimum: 0, default: 0 } },
+          additionalProperties: false,
+        },
       },
       required: ['id'],
       additionalProperties: false,
@@ -164,6 +169,16 @@ function setPointer(obj, ptr, value) {
   o[parts.at(-1)] = value;
 }
 
+/** The bounding box of list items that carry lat and lon (plain or {value, unit}), before slicing. */
+function bounds(list) {
+  const num = (v) => (typeof v === 'number' ? v : typeof v?.value === 'number' ? v.value : NaN);
+  const pts = list.map((r) => [num(r?.lat), num(r?.lon)]).filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b));
+  if (pts.length !== list.length || !pts.length) return {};
+  const lats = pts.map((p) => p[0]);
+  const lons = pts.map((p) => p[1]);
+  return { bbox: { south: Math.min(...lats), west: Math.min(...lons), north: Math.max(...lats), east: Math.max(...lons) } };
+}
+
 /** A bound quantity {value, unit} travels as a unit-tagged string, so the core converts it. */
 const bindValue = (v) =>
   v && typeof v === 'object' && typeof v.value === 'number' && typeof v.unit === 'string' ? `${v.value} ${v.unit}` : v;
@@ -171,6 +186,28 @@ const bindValue = (v) =>
 export function metaHandlers({ host, catalog, modules = [], limits }) {
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
   const run = async (id, args) => JSON.parse(await host.invoke(id, JSON.stringify(args)));
+
+  // Output size control: a tool with offset and limit inputs pages at the
+  // source (its count is the total); any other list is sliced here. Results
+  // that fit come back unchanged.
+  const paged = async (m, input, maxItems, offset) => {
+    const props = m.inputs.properties ?? {};
+    const atSource = 'offset' in props && 'limit' in props && !('offset' in input) && !('limit' in input);
+    const out = await run(m.id, atSource ? { ...input, offset, limit: maxItems } : input);
+    if (!out.ok || !out.result || typeof out.result !== 'object') return out;
+    const page = {};
+    for (const [k, list] of Object.entries(out.result)) {
+      if (!Array.isArray(list)) continue;
+      const total = atSource && typeof out.result.count === 'number' ? out.result.count : list.length;
+      const shown = atSource ? list : list.slice(offset, offset + maxItems);
+      const from = Math.min(offset, total);
+      if (total <= maxItems && from === 0) continue;
+      out.result[k] = shown;
+      page[k] = { total, offset: from, returned: shown.length, truncated: from + shown.length < total, ...bounds(list) };
+    }
+    if (Object.keys(page).length) out.page = page;
+    return out;
+  };
   const searchRaw = async (req) => JSON.parse(await host.search(JSON.stringify(req)));
   const suggest = async (id) => {
     const out = await searchRaw({ query: id.replaceAll('.', ' ').replaceAll('-', ' '), limit: 3, includeExperimental: true });
@@ -214,7 +251,7 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       return { ok: true, result: { tools } };
     },
 
-    geoprims_run: async ({ id, args, units }) => {
+    geoprims_run: async ({ id, args, units, output }) => {
       const m = byId.get(id);
       if (!m) {
         return fail('UNSUPPORTED', `There is no tool with id "${id}".`, {
@@ -229,7 +266,11 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
         input = structuredClone(ex.input);
       }
       if (units) input = { ...input, options: { ...(input.options ?? {}), profile: units } };
-      return run(id, input);
+      const maxItems = output?.maxItems ?? 1000;
+      const offset = output?.offset ?? 0;
+      if (!Number.isInteger(maxItems) || maxItems < 1 || maxItems > 10000) return fail('INVALID_INPUT', 'output.maxItems is a whole number from 1 to 10,000.', { field: '/output/maxItems' });
+      if (!Number.isInteger(offset) || offset < 0) return fail('INVALID_INPUT', 'output.offset is a whole number, 0 or more.', { field: '/output/offset' });
+      return paged(m, input, maxItems, offset);
     },
 
     geoprims_pipeline: async ({ steps }) => {

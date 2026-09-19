@@ -343,7 +343,7 @@ test('every golden vector gives the same bytes through the server as the runtime
     for (const line of readFileSync(join(dir, file), 'utf8').split('\n').filter(Boolean)) {
       const v = JSON.parse(line);
       if (v.supersededBy) continue;
-      const r = await c.call('geoprims_run', { id, args: v.input });
+      const r = await c.call('geoprims_run', { id, args: v.input, output: { maxItems: 10000 } });
       assert.equal(r.content[0].text, await host.invoke(id, JSON.stringify(v.input)), `${id} ${v.id}`);
       n++;
     }
@@ -386,4 +386,42 @@ test('each workflow prompt produces a pipeline that runs end to end', async () =
   assert.ok(Math.abs(audit.result.steps[2].result.lat.value - 40.446111) < 1e-6);
   assert.equal((await c.request('prompts/get', { name: 'h3-resolution-choice', arguments: { lat: '1' } })).error.code, -32602);
   assert.equal((await c.request('prompts/get', { name: 'nope', arguments: {} })).error.code, -32602);
+});
+
+test('large polyfill: one page of cells with the total, covered area, and bounds', async () => {
+  // mcp "Large polyfill": a county-sized square at resolution 10.
+  const points = [{ lat: 40.0, lon: -80.35 }, { lat: 40.0, lon: -79.55 }, { lat: 40.5, lon: -79.55 }, { lat: 40.5, lon: -80.35 }];
+  const r = (await c.call('geoprims_run', { id: 'indexing.h3.polygon-to-cells', args: { points, resolution: 10 } })).structuredContent;
+  assert.equal(r.ok, true, JSON.stringify(r.error));
+  assert.equal(r.result.cells.length, 1000);
+  assert.ok(r.result.count > 240000, String(r.result.count));
+  assert.deepEqual(r.page.cells, { total: r.result.count, offset: 0, returned: 1000, truncated: true });
+  assert.ok(r.result.area.value > 3700 && r.result.area.value < 3800, String(r.result.area.value));
+  assert.ok(r.result.south.value < 40 && r.result.north.value > 40.5 && r.result.west.value < -80.35 && r.result.east.value > -79.55);
+  const last = (await c.call('geoprims_run', { id: 'indexing.h3.polygon-to-cells', args: { points, resolution: 10 }, output: { maxItems: 10000, offset: r.result.count - 5 } })).structuredContent;
+  assert.deepEqual(last.page.cells, { total: r.result.count, offset: r.result.count - 5, returned: 5, truncated: false });
+});
+
+test('other long lists are sliced by the server with the same page fields', async () => {
+  const args = { cell: '892a8471487ffff', resolution: 13 };
+  const all = (await c.call('geoprims_run', { id: 'indexing.h3.children', args, output: { maxItems: 10000 } })).structuredContent;
+  assert.equal(all.page, undefined);
+  const n = all.result.cells.length;
+  const tail = (await c.call('geoprims_run', { id: 'indexing.h3.children', args, output: { offset: 2000 } })).structuredContent;
+  assert.deepEqual(tail.page.cells, { total: n, offset: 2000, returned: n - 2000, truncated: false });
+  assert.deepEqual(tail.result.cells, all.result.cells.slice(2000));
+  const bad = (await c.call('geoprims_run', { id: 'indexing.h3.children', args, output: { maxItems: 0 } })).structuredContent;
+  assert.equal(bad.error.field, '/output/maxItems');
+});
+
+test('search then describe then run', async () => {
+  // mcp "Search then run": each call succeeds and the run carries model and accuracy.
+  const s = (await c.call('geoprims_search', { query: 'density altitude', includeExperimental: true })).structuredContent;
+  const id = s.result.results[0].id;
+  assert.equal(id, 'aviation.altimetry.density-altitude');
+  const d = (await c.call('geoprims_describe', { ids: [id], detail: 'schema' })).structuredContent;
+  assert.ok(d.result.tools[0].inputs.required.includes('elevation'));
+  const r = (await c.call('geoprims_run', { id, args: { elevation: '5000 ft', altimeter: '29.80 inHg', temperature: '30 degC' } })).structuredContent;
+  assert.equal(r.ok, true);
+  assert.ok(r.meta.model && r.meta.accuracy);
 });

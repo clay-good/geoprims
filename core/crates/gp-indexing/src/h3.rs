@@ -1271,12 +1271,19 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
         Field::new("geojson", "GeoJSON", "Instead of points: a Polygon or MultiPolygon (holes allowed)", Kind::Text { max_len: 1_000_000 }),
         RES_IN,
         Field::new("containment", "Containment", "center (default: cell centers inside), full (whole cells inside), or overlapping (any overlap)", Kind::Choice(&["center", "full", "overlapping"])).core(),
+        Field::new("offset", "List from", "For paging: position of the first cell to list, in index order", Kind::Number { min: 0.0, max: FILL_LIMIT as f64 }),
+        Field::new("limit", "List at most", "For paging: most cells to list (up to 10,000)", Kind::Number { min: 1.0, max: LIST_LIMIT as f64 }),
     ],
     outputs: &[
         count("count", "Cells", "Number of cells"),
         text("containment", "Containment used", "Echoes the mode"),
         count("estimate", "Estimate", "Bounding-box estimate made before filling"),
-        cell_list("cells", "Cells", "Listed when 10,000 or fewer").optional(),
+        Field::new("area", "Covered area", "Sum of the cells' exact areas", Kind::Quantity { q: QT::Area, unit: "km2" }).precision(Precision::Significant(6)),
+        angle("south", "South", "[-90,90]").optional(),
+        angle("west", "West", "[-180,180]").optional(),
+        angle("north", "North", "[-90,90]").optional(),
+        angle("east", "East", "[-180,180]").optional(),
+        cell_list("cells", "Cells", "Listed when 10,000 or fewer, or the page asked for with offset and limit").optional(),
         count("compacted_count", "Compacted cells", "After compaction").optional(),
         cell_list("compacted", "Compacted set", "Mixed resolutions, when the full list is too long").optional(),
     ],
@@ -1299,6 +1306,40 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     run: run_polygon_to_cells,
     ..ToolDef::BLANK
 };
+
+/// South, west, north, east over every cell's boundary. West is greater than
+/// east when the cells cross the antimeridian.
+fn cells_bbox(cells: &[CellIndex]) -> Option<[f64; 4]> {
+    let (mut s, mut n) = (f64::INFINITY, f64::NEG_INFINITY);
+    // Longitudes as given and shifted to [0, 360); the narrower span wins.
+    let (mut w1, mut e1, mut w2, mut e2) = (
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+    );
+    for c in cells {
+        for v in c.boundary().iter() {
+            let (la, lo) = (v.lat(), v.lng());
+            s = s.min(la);
+            n = n.max(la);
+            w1 = w1.min(lo);
+            e1 = e1.max(lo);
+            let lo2 = if lo < 0.0 { lo + 360.0 } else { lo };
+            w2 = w2.min(lo2);
+            e2 = e2.max(lo2);
+        }
+    }
+    if !s.is_finite() {
+        return None;
+    }
+    let wrap = |x: f64| if x > 180.0 { x - 360.0 } else { x };
+    Some(if e2 - w2 < e1 - w1 {
+        [s, wrap(w2), n, wrap(e2)]
+    } else {
+        [s, w1, n, e1]
+    })
+}
 
 /// Rings of (lat, lon) degrees: outer ring first, then holes.
 type Rings = Vec<Vec<(f64, f64)>>;
@@ -1390,6 +1431,20 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         }
     };
+    // Paging, checked before the fill so a bad page costs nothing.
+    let whole = |ctx: &Ctx, name: &str| -> Result<Option<usize>, ToolError> {
+        match ctx.number(name)? {
+            Some(x) if x.fract() != 0.0 => Err(ToolError::invalid(
+                &format!("/{name}"),
+                "Give a whole number.",
+            )),
+            Some(x) => Ok(Some(x as usize)),
+            None => Ok(None),
+        }
+    };
+    let (offset, limit) = (whole(ctx, "offset")?, whole(ctx, "limit")?);
+    let page = (offset.is_some() || limit.is_some())
+        .then(|| (offset.unwrap_or(0), limit.unwrap_or(LIST_LIMIT)));
     let mut total_estimate = 0.0;
     let mut total_samples = 0.0;
     let mut built = Vec::new();
@@ -1438,6 +1493,8 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         cells.extend(got);
     }
     let cells: Vec<CellIndex> = cells.into_iter().collect();
+    let area: f64 = cells.iter().map(|c| c.area_km2()).sum();
+    let bbox = cells_bbox(&cells);
     let name = match mode {
         Mode::Center => "center",
         Mode::Full => "full",
@@ -1447,8 +1504,27 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("count", Json::Num(cells.len() as f64)),
         ("containment", Json::str(name)),
         ("estimate", Json::Num(total_estimate.round())),
+        (
+            "area",
+            ctx.out(
+                "area",
+                Q {
+                    value: area,
+                    unit: units::by_symbol(QT::Area, "km2").expect("km2"),
+                },
+            ),
+        ),
     ];
-    if cells.len() <= LIST_LIMIT {
+    if let Some([s, w, n, e]) = bbox {
+        out.push(("south", ctx.out("south", deg(s))));
+        out.push(("west", ctx.out("west", deg(w))));
+        out.push(("north", ctx.out("north", deg(n))));
+        out.push(("east", ctx.out("east", deg(e))));
+    }
+    if let Some((from, take)) = page {
+        let from = from.min(cells.len());
+        out.push(("cells", list(cells[from..].iter().take(take).copied())));
+    } else if cells.len() <= LIST_LIMIT {
         out.push(("cells", list(cells)));
     } else if let Ok(small) = compact(cells) {
         out.push(("compacted_count", Json::Num(small.len() as f64)));

@@ -404,3 +404,56 @@ fn lat_lng_to_cell_invariants() {
         }
     }
 }
+
+#[test]
+fn polyfill_pages_and_reports_area_and_bounds() {
+    // A county-sized square at resolution 9 (about 31,000 cells) lists one
+    // page, with the total, covered area, and bounds. The MCP suite runs the
+    // "Large polyfill" scenario itself at resolution 10.
+    let county = r#""points":[{"lat":40.0,"lon":-80.3},{"lat":40.0,"lon":-79.6},{"lat":40.5,"lon":-79.6},{"lat":40.5,"lon":-80.3}],"resolution":9"#;
+    let t = std::time::Instant::now();
+    let r = call(
+        "indexing.h3.polygon-to-cells",
+        &format!(r#"{{{county},"limit":1000}}"#),
+    );
+    let took = t.elapsed();
+    let n = num(&r, "result.count");
+    assert!((25_000.0..40_000.0).contains(&n), "{n}");
+    assert_eq!(r["result"]["cells"].as_array().unwrap().len(), 1000);
+    // The square is about 55.6 km by 59.6 km; cells cover it to within their size.
+    let area = num(&r, "result.area.value");
+    assert!((area - 3_308.0).abs() < 40.0, "{area}");
+    assert!(num(&r, "result.south.value") < 40.0 && num(&r, "result.north.value") > 40.5);
+    assert!(num(&r, "result.west.value") < -80.3 && num(&r, "result.east.value") > -79.6);
+    assert!(num(&r, "result.north.value") < 40.51);
+    assert!(took.as_secs_f64() < 20.0, "{took:?}");
+    // The next page starts where the first ended, and pages are disjoint.
+    let next = call(
+        "indexing.h3.polygon-to-cells",
+        &format!(r#"{{{county},"offset":1000,"limit":1000}}"#),
+    );
+    assert_ne!(r["result"]["cells"][999], next["result"]["cells"][0]);
+    let whole = call(
+        "indexing.h3.polygon-to-cells",
+        &format!(r#"{{{county},"offset":1.5}}"#),
+    );
+    assert_eq!(whole["error"]["field"], "/offset");
+    // Past the end lists nothing; unpaged calls keep the compacted form.
+    let end = call(
+        "indexing.h3.polygon-to-cells",
+        &format!(r#"{{{county},"offset":1000000}}"#),
+    );
+    assert_eq!(end["result"]["cells"].as_array().unwrap().len(), 0);
+    let plain = call("indexing.h3.polygon-to-cells", &format!("{{{county}}}"));
+    assert!(plain["result"]["cells"].is_null() && plain["result"]["compacted_count"].is_number());
+}
+
+#[test]
+fn polyfill_bounds_across_the_antimeridian() {
+    let r = call(
+        "indexing.h3.polygon-to-cells",
+        r#"{"points":[{"lat":-17,"lon":179.5},{"lat":-17,"lon":-179.5},{"lat":-16,"lon":-179.5},{"lat":-16,"lon":179.5}],"resolution":5}"#,
+    );
+    let (w, e) = (num(&r, "result.west.value"), num(&r, "result.east.value"));
+    assert!(w > 179.0 && e < -179.0, "{w} {e}");
+}

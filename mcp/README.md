@@ -43,7 +43,7 @@ The `npx -y @geoprims/mcp` path works once the package is published (not yet).
 
 Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus its golden vectors).
 
-`structuredContent` is the core's result envelope byte for byte (`{"ok":true,"result":…,"summary":…,"meta":…}`, where `summary` is the plain-language sentence the website shows), and errors come back with `isError: true` and a geoprims error code. Results from aviation, drone, navigation, and magnetic tools carry `meta.notice` ("Planning and education aid. Not for primary navigation."), and tools with operating context an agent should relay put it in `meta.context`. For example, magnetic declination reports the model, epoch used, validity window, declination uncertainty, and whether the point is in a compass blackout or caution zone.
+`structuredContent` is the core's result envelope byte for byte (`{"ok":true,"result":…,"summary":…,"meta":…}`, where `summary` is the plain-language sentence the website shows), and errors come back with `isError: true` and a geoprims error code. Lists longer than `output.maxItems` (default 1,000, up to 10,000) come back one page at a time from `output.offset`, with `page.<list>` giving `total`, `offset`, `returned`, and `truncated` (and a bounding box when the items carry latitude and longitude). The H3 polygon fill pages in the core and reports the covered area and bounds of every cell, so an agent can reason about a 250,000-cell fill from one page. Results from aviation, drone, navigation, and magnetic tools carry `meta.notice` ("Planning and education aid. Not for primary navigation."), and tools with operating context an agent should relay put it in `meta.context`. For example, magnetic declination reports the model, epoch used, validity window, declination uncertainty, and whether the point is in a compass blackout or caution zone.
 
 ## Prompts
 
@@ -61,7 +61,7 @@ Five workflow prompts turn a few arguments into one `geoprims_pipeline` call, wi
 
 ## Not built yet
 
-Paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
+The `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
 
 ## Tests
 

@@ -28,11 +28,11 @@ def vec(i, inp, exp, tol, src, ver):
     return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver, "tolerance": t}
 
 
-def wmm_vectors():
+def wmm_vectors(offset=0, start=1):
     out = []
     rows = [l.split() for l in TEST_VALUES.read_text().splitlines() if l.strip() and not l.startswith("#")]
     # Every tenth official point keeps the file small; the Rust test runs all 100.
-    for i, r in enumerate(rows[::10], 1):
+    for i, r in enumerate(rows[offset::10], start):
         v = list(map(float, r))
         inp = {"lat": v[2], "lon": v[3], "height": f"{r[1]} km", "date": r[0]}
         exp = {"result.declination.value": v[4], "result.inclination.value": v[5],
@@ -81,6 +81,7 @@ def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "core/vectors")
     decl = wmm_vectors()
     decl += igrf_vectors(len(decl) + 1)
+    decl += wmm_vectors(offset=5, start=len(decl) + 1)
     files = {"geodesy.magnetic.declination": decl, "geodesy.magnetic.true-to-magnetic": variation_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))

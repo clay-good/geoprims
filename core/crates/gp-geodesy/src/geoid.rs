@@ -87,6 +87,7 @@ fn msl_note(ctx: &mut Ctx) {
 
 pub static GEOID_HEIGHT: ToolDef = ToolDef {
     id: "geodesy.geoid.geoid-height",
+    stability: gp_base::tool::Stability::Stable,
     title: "Geoid height (EGM96)",
     summary: "The geoid height N (geoid undulation) above the WGS 84 ellipsoid at any point from the EGM96 global geoid, the number that turns GPS ellipsoidal heights into heights above mean sea level.",
     aliases: &[

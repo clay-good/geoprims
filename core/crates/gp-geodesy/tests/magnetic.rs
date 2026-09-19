@@ -192,3 +192,50 @@ fn model_only_and_nothing() {
     let r = call(T, r#"{"bearing":0}"#);
     assert_eq!(r["error"]["code"], "INVALID_INPUT");
 }
+
+#[test]
+fn field_element_invariants() {
+    // H² = X² + Y², F² = H² + Z², D = atan2(Y, X), I = atan2(Z, H), for both
+    // models, at the surface and aloft, and the ±180° meridian agrees.
+    for (model, date) in [("wmm2025", "2027.5"), ("igrf14", "1965.0")] {
+        for lat in (-85..=85).step_by(17) {
+            for lon in (-180..=180).step_by(45) {
+                for h in [0, 100_000] {
+                    let r = call(
+                        D,
+                        &format!(
+                            r#"{{"lat":{lat},"lon":{lon},"height":{h},"date":"{date}","model":"{model}"}}"#
+                        ),
+                    );
+                    let (x, y, z) = (
+                        num(&r, "result.north"),
+                        num(&r, "result.east"),
+                        num(&r, "result.down"),
+                    );
+                    let hh = num(&r, "result.horizontal_intensity");
+                    let f = num(&r, "result.total_intensity");
+                    assert!((hh - x.hypot(y)).abs() < 1e-9 * f, "{r}");
+                    assert!((f - hh.hypot(z)).abs() < 1e-9 * f, "{r}");
+                    let d = num(&r, "result.declination.value");
+                    assert!((d - y.atan2(x).to_degrees()).abs() < 1e-9, "{r}");
+                    let i = num(&r, "result.inclination.value");
+                    assert!((i - z.atan2(hh).to_degrees()).abs() < 1e-9, "{r}");
+                    assert!(d > -180.0 && d <= 180.0);
+                }
+            }
+            let west = call(
+                D,
+                &format!(r#"{{"lat":{lat},"lon":-180,"date":"{date}","model":"{model}"}}"#),
+            );
+            let east = call(
+                D,
+                &format!(r#"{{"lat":{lat},"lon":180,"date":"{date}","model":"{model}"}}"#),
+            );
+            assert!(
+                (num(&west, "result.declination.value") - num(&east, "result.declination.value"))
+                    .abs()
+                    < 1e-9
+            );
+        }
+    }
+}

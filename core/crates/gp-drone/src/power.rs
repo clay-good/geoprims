@@ -269,6 +269,7 @@ pub static BATTERY_ENERGY: ToolDef = ToolDef {
             1e9,
         )
         .precision(Precision::Decimals(1))
+        .measure("electric_current", "A")
         .optional(),
         num("c_rate", "C-rate", "Current / capacity in Ah", 0.0, 1e9)
             .precision(Precision::Decimals(2))

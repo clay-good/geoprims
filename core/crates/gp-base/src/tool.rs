@@ -80,6 +80,9 @@ pub struct Field {
     pub precision: Option<Precision>,
     /// `x-angle-range` for angular fields.
     pub angle_range: Option<&'static str>,
+    /// For a `Number` in a fixed unit the unit system does not convert (nT,
+    /// A): its dimension and unit, emitted as `x-quantity` and `x-unit`.
+    pub measure: Option<(&'static str, &'static str)>,
 }
 
 impl Field {
@@ -99,6 +102,7 @@ impl Field {
             core: false,
             precision: None,
             angle_range: None,
+            measure: None,
         }
     }
 
@@ -124,6 +128,11 @@ impl Field {
 
     pub const fn angle_range(mut self, r: &'static str) -> Field {
         self.angle_range = Some(r);
+        self
+    }
+
+    pub const fn measure(mut self, dimension: &'static str, unit: &'static str) -> Field {
+        self.measure = Some((dimension, unit));
         self
     }
 }

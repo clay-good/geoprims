@@ -26,6 +26,7 @@ def main():
     src = "GeographicLib GeoidEval 2.7 with the egm96-15 grid (tools/vectors/gen_geoid_diff.py)"
     ver = "egm96-15 (2009-08-29)"
     sel = [(pts[i], cub[i], lin[i]) for i in (0, 1, 6, 9, 20, 400, 900, 1500)]
+    extra = [(pts[i], cub[i], lin[i]) for i in (100, 250, 600, 750, 1000, 1100, 1250, 1400, 1650, 1800, 1900, 2005)]
     gh, hc = [], []
     for k, ((la, lo), c, b) in enumerate(sel, 1):
         gh.append({"id": f"v{k:03d}", "input": {"lat": la, "lon": lo}, "expect": {"ok": True, "result.geoid_height.value": float(c)},
@@ -35,6 +36,9 @@ def main():
     k = len(sel) + 1
     gh.append({"id": f"v{k:03d}", "input": {"lat": pts[400][0], "lon": pts[400][1], "interpolation": "bilinear"}, "expect": {"ok": True, "result.geoid_height.value": float(lin[400])},
                "source": src + ", bilinear (-l)", "sourceVersion": ver, "tolerance": {"result.geoid_height.value": {"abs": 5e-5}}})
+    for k, ((la, lo), c, _b) in enumerate(extra, len(gh) + 1):
+        gh.append({"id": f"v{k:03d}", "input": {"lat": la, "lon": lo}, "expect": {"ok": True, "result.geoid_height.value": float(c)},
+                   "source": src, "sourceVersion": ver, "tolerance": {"result.geoid_height.value": {"abs": 5e-5}}})
     for name, vs in [("geodesy.geoid.geoid-height", gh), ("geodesy.height.convert", hc)]:
         (ROOT / "core/vectors" / f"{name}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

@@ -401,3 +401,38 @@ fn leap_table_matches_iana_list() {
         );
     }
 }
+
+#[test]
+fn sun_position_invariants() {
+    // Zenith and elevation are complements, refraction only raises the sun,
+    // azimuth stays in [0, 360), and at one instant the equation of time is
+    // the same everywhere while declination moves only by parallax (twice 8.8″, under 0.005°).
+    for time in [
+        "2026-03-20T15:00Z",
+        "2026-06-21T03:30Z",
+        "2026-12-21T22:10Z",
+    ] {
+        let mut eot = None;
+        let mut dec = None;
+        for lat in (-80..=80).step_by(20) {
+            for lon in (-180..180).step_by(40) {
+                let r = call(
+                    "time.sun.position",
+                    &format!(r#"{{"lat":{lat},"lon":{lon},"time":"{time}"}}"#),
+                );
+                let el = num(&r, "result.elevation.value");
+                assert!(
+                    (num(&r, "result.zenith.value") + el - 90.0).abs() < 1e-9,
+                    "{r}"
+                );
+                assert!(el >= num(&r, "result.elevation_true.value") - 1e-12, "{r}");
+                let az = num(&r, "result.azimuth.value");
+                assert!((0.0..360.0).contains(&az), "{r}");
+                let e = num(&r, "result.equation_of_time.value");
+                assert!((e - *eot.get_or_insert(e)).abs() < 1e-9, "{r}");
+                let d = num(&r, "result.declination.value");
+                assert!((d - *dec.get_or_insert(d)).abs() < 0.005, "{r}");
+            }
+        }
+    }
+}

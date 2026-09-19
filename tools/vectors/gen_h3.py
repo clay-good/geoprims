@@ -94,6 +94,15 @@ def main():
         fillv.append(vec(i, inp, {"result.count": float(len(cells_)), "result.cells.0.cell": cells_[0], "result.containment": mode}))
     fillv.append(vec(6, {"points": [{"lat": -35, "lon": 110}, {"lat": -35, "lon": 155}, {"lat": -10, "lon": 155}, {"lat": -10, "lon": 110}], "resolution": 12},
                      {"ok": False, "error.code": "LIMIT_EXCEEDED"}, SPEC, "2026"))
+    # More points for the stable bar (20+): seeded, every resolution, both hemispheres.
+    import random
+    rnd = random.Random(3)
+    for _ in range(18):
+        la, lo, r = rnd.uniform(-89, 89), rnd.uniform(-180, 180), rnd.randint(0, 15)
+        c = h3.latlng_to_cell(la, lo, r)
+        clat, clng = h3.cell_to_latlng(c)
+        to_cell.append(vec(len(to_cell) + 1, {"lat": la, "lon": lo, "resolution": r}, {"result.cell": c, "result.center_lat.value": clat,
+                                                                                       "result.center_lon.value": clng, "result.area.value": h3.cell_area(c, "km^2")}, tol=1e-9))
     f = {"indexing.h3.lat-lng-to-cell": to_cell, "indexing.h3.cell-info": info, "indexing.h3.grid-disk": disk, "indexing.h3.grid-ring": ring,
          "indexing.h3.grid-path": path, "indexing.h3.parent": parent, "indexing.h3.children": children, "indexing.h3.compact": compact,
          "indexing.h3.uncompact": uncompact, "indexing.h3.edges": edges, "indexing.h3.resolution-chooser": chooser, "indexing.h3.polygon-to-cells": fillv}

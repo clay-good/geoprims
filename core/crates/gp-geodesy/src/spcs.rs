@@ -160,6 +160,7 @@ const SPCS_OUTPUTS: &[Field] = &[
 
 pub static FORWARD: ToolDef = ToolDef {
     id: "geodesy.spcs.spcs83-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to state plane (SPCS83)",
     summary: "Converts NAD83 latitude and longitude to State Plane Coordinate System of 1983 easting and northing in any of the 124 zones, in meters, international feet, or US survey feet, with convergence and scale factor.",
     aliases: &[
@@ -286,6 +287,7 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static INVERSE: ToolDef = ToolDef {
     id: "geodesy.spcs.spcs83-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "State plane (SPCS83) to latitude and longitude",
     summary: "Converts SPCS83 easting and northing in any of the 124 zones back to NAD83 latitude and longitude, with convergence and scale factor.",
     aliases: &[

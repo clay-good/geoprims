@@ -363,3 +363,44 @@ fn polygon_fill_scenarios() {
     );
     assert_eq!(both["error"]["code"], "INVALID_INPUT");
 }
+
+#[test]
+fn lat_lng_to_cell_invariants() {
+    // A cell's center maps back to the cell, the resolution is encoded in the
+    // index, and each finer resolution divides the area by about 7.
+    for lat in (-85..=85).step_by(17) {
+        for lon in (-180..180).step_by(29) {
+            let (lat, lon) = (lat as f64 + 0.271, lon as f64 + 0.314);
+            let mut prev_area = f64::INFINITY;
+            for res in 0..=15 {
+                let r = call(
+                    "indexing.h3.lat-lng-to-cell",
+                    &format!(r#"{{"lat":{lat},"lon":{lon},"resolution":{res}}}"#),
+                );
+                let cell = r["result"]["cell"]
+                    .as_str()
+                    .unwrap_or_else(|| panic!("{r}"));
+                assert_eq!(
+                    u64::from_str_radix(cell, 16).unwrap() >> 52 & 0xf,
+                    res,
+                    "{cell}"
+                );
+                let c = call(
+                    "indexing.h3.lat-lng-to-cell",
+                    &format!(
+                        r#"{{"lat":{},"lon":{},"resolution":{res}}}"#,
+                        num(&r, "result.center_lat.value"),
+                        num(&r, "result.center_lon.value")
+                    ),
+                );
+                assert_eq!(c["result"]["cell"], cell);
+                let area = num(&r, "result.area.value");
+                // Base cells vary most in size, so the first step gets a wider band.
+                let band = if res <= 1 { 4.0..11.0 } else { 5.0..9.0 };
+                assert!(area > 0.0, "{r}");
+                assert!(res == 0 || band.contains(&(prev_area / area)), "{r}");
+                prev_area = area;
+            }
+        }
+    }
+}

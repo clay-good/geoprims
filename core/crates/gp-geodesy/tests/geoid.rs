@@ -84,3 +84,39 @@ fn geoid_height_and_conversion() {
     );
     assert_eq!(r["result"]["converted"]["unit"], "ft");
 }
+
+#[test]
+fn geoid_height_invariants() {
+    // One value at each pole whatever the longitude, the ±180° meridian
+    // agrees, heights stay in EGM96's range, and cubic and bilinear agree
+    // within the grid header's stated interpolation errors (0.17 m + 1.15 m).
+    supply();
+    let at = |lat: f64, lon: f64, how: &str| {
+        let r = call(
+            "geodesy.geoid.geoid-height",
+            &format!(r#"{{"lat":{lat},"lon":{lon},"interpolation":"{how}"}}"#),
+        );
+        r["result"]["geoid_height"]["value"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("{r}"))
+    };
+    for pole in [90.0, -90.0] {
+        let n0 = at(pole, 0.0, "cubic");
+        for lon in (-180..=180).step_by(30) {
+            assert!(
+                (at(pole, lon as f64, "cubic") - n0).abs() < 1e-9,
+                "{pole} {lon}"
+            );
+        }
+    }
+    for lat in (-89..=89).step_by(7) {
+        let lat = lat as f64 + 0.37;
+        assert!((at(lat, -180.0, "cubic") - at(lat, 180.0, "cubic")).abs() < 1e-9);
+        for lon in (-180..180).step_by(11) {
+            let lon = lon as f64 + 0.61;
+            let (c, b) = (at(lat, lon, "cubic"), at(lat, lon, "bilinear"));
+            assert!((-107.0..=86.0).contains(&c), "{lat} {lon} {c}");
+            assert!((c - b).abs() < 1.32, "{lat} {lon} {c} {b}");
+        }
+    }
+}

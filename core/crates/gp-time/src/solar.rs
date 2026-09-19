@@ -174,6 +174,7 @@ const fn opt_q(
 
 pub static POSITION: ToolDef = ToolDef {
     id: "time.sun.position",
+    stability: gp_base::tool::Stability::Stable,
     title: "Sun position (azimuth and elevation)",
     summary: "The sun's azimuth, elevation, declination, and hour angle for a place and time by the NREL Solar Position Algorithm, with the NOAA result as a cross-check, shadow length, and incidence on a slope.",
     aliases: &[
@@ -630,7 +631,8 @@ const EVENT_OUT: [Field; 12] = [
             max: 1440.0,
         },
     )
-    .precision(Precision::Decimals(0)),
+    .precision(Precision::Decimals(0))
+    .measure("time", "min"),
 ];
 
 pub static EVENTS: ToolDef = ToolDef {

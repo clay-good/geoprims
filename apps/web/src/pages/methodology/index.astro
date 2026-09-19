@@ -3,6 +3,8 @@ import Base from '../../layouts/Base.astro';
 import { catalog } from '../../lib/catalog.mjs';
 const { counts } = catalog;
 const vectors = catalog.tools.reduce((n, t) => n + (t.vectorCount ?? 0), 0);
+const stable = catalog.tools.filter((t) => t.stability === 'stable');
+const route = (id) => '/' + id.split('.').join('/') + '/';
 ---
 <Base title="Methodology · geoprims" description="How geoprims checks its answers: golden vectors with sources, differential tests against reference implementations, deterministic numbers, and what is not verified yet." canonical="/methodology/">
   <h1>Methodology</h1>
@@ -24,9 +26,20 @@ const vectors = catalog.tools.reduce((n, t) => n + (t.vectorCount ?? 0), 0);
     <li><strong>Assumptions are stated.</strong> When a result depends on an assumption (dry air, ISA temperature, a nominal fuel density), the result carries a named warning, and the MCP server returns it to agents too.</li>
   </ul>
 
+  <h2>The stable bar</h2>
+  <p>
+    A tool is marked stable only when a build gate confirms every layer: a written derivation (method, equations, symbols,
+    domain, and approximations), a worked example from a source independent of geoprims, unit annotations on every number,
+    bounds fuzzing, invariant tests, differential tests against a reference implementation, one example shared by the page and
+    the MCP server, at least 20 golden vectors, and a search for the tool's own name that finds it.
+  </p>
+  {stable.length > 0 && (
+    <p>Stable now ({stable.length}): {stable.map((t, i) => (<>{i > 0 && ', '}<a href={route(t.id)}>{t.title}</a></>))}.</p>
+  )}
+
   <h2>What is not done yet</h2>
   <ul>
-    <li>All {counts.all.endpoints} tools are marked <strong>experimental</strong>: none has met the stable bar yet (at least 20 golden vectors, differential tests, and an independent worked example, with every layer passing).</li>
+    <li>{counts.experimental.endpoints} of {counts.all.endpoints} tools are still marked <strong>experimental</strong>: they have not met the stable bar yet, and their results say so.</li>
     <li>No practitioner (pilot, CFI, surveyor, or drone operator) has signed off on any tool yet. Reviewed tools will be listed with the reviewer's name and date.</li>
     <li>There is no per-release verification report yet.</li>
   </ul>

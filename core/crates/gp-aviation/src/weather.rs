@@ -1734,7 +1734,8 @@ pub static TAF: ToolDef = ToolDef {
                 max: 999.0,
             },
         )
-        .precision(Precision::Decimals(0)),
+        .precision(Precision::Decimals(0))
+        .measure("time", "h"),
         text("amendment", "Amendment", "AMD or COR", 12).optional(),
         Field::new(
             "periods",

@@ -212,22 +212,32 @@ impl OmercA {
 
     fn forward(&self, lat: f64, lon: f64) -> Grid {
         let (x, y) = self.en(lat, lon);
-        // Convergence and scale by central differences (1e-6° steps; error < 1e-9).
-        let d = 1e-6;
-        let (xn, yn) = self.en(lat + d, lon);
-        let (xs, ys) = self.en(lat - d, lon);
-        let (xe, ye) = self.en(lat, lon + d);
-        let (xw, yw) = self.en(lat, lon - d);
+        // Convergence and scale from derivatives by Richardson-extrapolated
+        // central differences: steps of 1e-3° keep cancellation and the O(h⁴)
+        // truncation near 1e-9° (1e-6° steps lost 1e-7° to cancellation).
+        let h = 1e-3;
+        let diff = |dlat: f64, dlon: f64| {
+            let at = |s: f64| {
+                let (xp, yp) = self.en(lat + s * dlat, lon + s * dlon);
+                let (xm, ym) = self.en(lat - s * dlat, lon - s * dlon);
+                ((xp - xm) / (2.0 * s), (yp - ym) / (2.0 * s))
+            };
+            let (x1, y1) = at(h);
+            let (x2, y2) = at(h / 2.0);
+            ((4.0 * x2 - x1) / 3.0, (4.0 * y2 - y1) / 3.0)
+        };
+        let (xn, yn) = diff(1.0, 0.0);
+        let (xe, ye) = diff(0.0, 1.0);
         let e2 = e2();
         let phi = lat.to_radians();
         let w = sqrt(1.0 - e2 * sin(phi) * sin(phi));
-        // Length of 2d degrees along the parallel on the ellipsoid.
-        let par = 2.0 * d.to_radians() * GRS80_A * cos(phi) / w;
+        // Length of one degree along the parallel on the ellipsoid.
+        let par = 1f64.to_radians() * GRS80_A * cos(phi) / w;
         Grid {
             e: x,
             n: y,
-            convergence: -atan2(xn - xs, yn - ys).to_degrees(),
-            k: ((xe - xw).powi(2) + (ye - yw).powi(2)).sqrt() / par,
+            convergence: -atan2(xn, yn).to_degrees(),
+            k: xe.hypot(ye) / par,
         }
     }
 

@@ -52,7 +52,8 @@ def vec(i, inp, exp, tol):
 
 def vectors(rows):
     import json
-    picks = [r.split(",") for r in rows[::400]]  # one point from every 20th zone
+    # One point from every 20th zone, then more at other offsets (appended, so ids stay put).
+    picks = [r.split(",") for off in (0, 200, 100, 300) for r in rows[off::400]]
     fwd, inv = [], []
     for i, f in enumerate(picks, 1):
         fips, lat, lon, x, y = f[0], float(f[1]), float(f[2]), float(f[3]), float(f[4])

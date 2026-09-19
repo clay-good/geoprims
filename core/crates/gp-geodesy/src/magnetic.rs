@@ -62,6 +62,7 @@ const fn nt(name: &'static str, title: &'static str, help: &'static str) -> Fiel
         },
     )
     .precision(Precision::Decimals(1))
+    .measure("magnetic_flux_density", "nT")
 }
 
 const fn rate(name: &'static str, title: &'static str, help: &'static str) -> Field {
@@ -75,6 +76,7 @@ const fn rate(name: &'static str, title: &'static str, help: &'static str) -> Fi
         },
     )
     .precision(Precision::Decimals(2))
+    .measure("magnetic_flux_density_rate", "nT/yr")
 }
 
 const HEIGHT: Field = qty(
@@ -235,6 +237,7 @@ fn east_west(v: f64, ctx: &Ctx) -> String {
 
 pub static DECLINATION: ToolDef = ToolDef {
     id: "geodesy.magnetic.declination",
+    stability: gp_base::tool::Stability::Stable,
     title: "Magnetic declination",
     summary: "Magnetic declination (variation), inclination, and field strength at any place and date from the World Magnetic Model 2025 or IGRF-14, with the model's uncertainty and compass warning zones.",
     aliases: &[
@@ -321,7 +324,8 @@ pub static DECLINATION: ToolDef = ToolDef {
             "inclination_rate",
             "Inclination rate (°/year)",
             "Secular variation of I",
-        ),
+        )
+        .measure("angular_rate", "deg/yr"),
         rate(
             "horizontal_rate",
             "H rate (nT/year)",

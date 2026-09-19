@@ -151,3 +151,51 @@ fn every_zone_by_code_and_international_feet() {
     );
     assert_eq!(r["result"]["easting"]["unit"], "ft", "{r}");
 }
+
+#[test]
+fn tools_round_trip_in_every_zone() {
+    // Forward then inverse through the tools returns the point, and both
+    // directions report the same convergence and scale factor.
+    let text = include_str!("data/spcs83_diff.csv");
+    for l in text.lines().skip(1).step_by(4) {
+        let f: Vec<&str> = l.split(',').collect();
+        let (zone, lat, lon) = (f[0], f[1], f[2]);
+        let fw = call(
+            "geodesy.spcs.spcs83-forward",
+            &format!(r#"{{"lat":{lat},"lon":{lon},"zone":"{zone}","unit":"m"}}"#),
+        );
+        let e = fw["result"]["easting"]["value"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("{fw}"));
+        let n = fw["result"]["northing"]["value"].as_f64().unwrap();
+        let back = call(
+            "geodesy.spcs.spcs83-inverse",
+            &format!(r#"{{"zone":"{zone}","easting":"{e} m","northing":"{n} m"}}"#),
+        );
+        let lat2 = back["result"]["lat"]["value"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("{back}"));
+        let lon2 = back["result"]["lon"]["value"].as_f64().unwrap();
+        assert!(
+            (lat2 - lat.parse::<f64>().unwrap()).abs() < 1e-9,
+            "{zone} {back}"
+        );
+        assert!(
+            (lon2 - lon.parse::<f64>().unwrap()).abs() < 1e-9,
+            "{zone} {back}"
+        );
+        for k in ["convergence", "scale_factor"] {
+            let a = fw["result"][k]
+                .get("value")
+                .unwrap_or(&fw["result"][k])
+                .as_f64()
+                .unwrap();
+            let b = back["result"][k]
+                .get("value")
+                .unwrap_or(&back["result"][k])
+                .as_f64()
+                .unwrap();
+            assert!((a - b).abs() < 1e-8, "{zone} {k} {a} {b}");
+        }
+    }
+}

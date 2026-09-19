@@ -177,6 +177,7 @@ fn local_ij_error(e: h3o::error::LocalIjError) -> ToolError {
 
 pub static LAT_LNG_TO_CELL: ToolDef = ToolDef {
     id: "indexing.h3.lat-lng-to-cell",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 cell for a point",
     summary: "The H3 cell containing a latitude and longitude at resolution 0 to 15 (latLngToCell), with the cell's center and area.",
     aliases: &["latLngToCell", "H3 index calculator", "lat long to H3"],

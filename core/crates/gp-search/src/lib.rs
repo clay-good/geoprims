@@ -44,7 +44,11 @@ const W_SUMMARY: u32 = 1;
 
 const STOPWORDS: &[&str] = &[
     "a", "an", "the", "of", "for", "and", "in", "on", "at", "is", "what", "how", "my", "me", "i",
+    "with", "by",
 ];
+
+/// Words kept for phrase matching ("knots to mph") that never make a match alone.
+const CONNECTORS: &[&str] = &["to", "from"];
 
 /// Lowercase alphanumeric tokens.
 pub fn tokens(s: &str) -> Vec<String> {
@@ -161,7 +165,7 @@ impl Entry {
                 .flat_map(|(w, ts)| ts.iter().map(move |t| w * match_score(qt, t)))
                 .max()
                 .unwrap_or(0);
-            if best > 0 {
+            if best > 0 && !CONNECTORS.contains(&qt.as_str()) {
                 matched += 1;
             }
             total += best;

@@ -108,8 +108,9 @@ fn field_schema(f: &Field, is_input: bool) -> Json {
             put("description", Json::str(f.help));
             put("minimum", Json::Num(min));
             put("maximum", Json::Num(max));
-            put("x-quantity", Json::str("dimensionless"));
-            put("x-unit", Json::str("1"));
+            let (dim, unit) = f.measure.unwrap_or(("dimensionless", "1"));
+            put("x-quantity", Json::str(dim));
+            put("x-unit", Json::str(unit));
         }
     }
     if let Some(r) = f.angle_range {

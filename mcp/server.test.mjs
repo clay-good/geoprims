@@ -100,7 +100,8 @@ test('golden surface file matches (UPDATE_SURFACE=1 to regenerate)', async () =>
 
 test('search hides experimental tools unless asked', async () => {
   const hidden = await c.call('geoprims_search', { query: 'knots to mph' });
-  assert.equal(hidden.structuredContent.result.results.length, 0);
+  assert.ok(hidden.structuredContent.result.results.every((r) => r.stability === 'stable'));
+  assert.ok(!hidden.structuredContent.result.results.some((r) => r.id === 'units.speed.kt-to-mph'));
   assert.ok(hidden.structuredContent.result.hiddenExperimental > 0);
   const shown = await c.call('geoprims_search', { query: 'knots to mph', includeExperimental: true });
   assert.equal(shown.structuredContent.result.results[0].id, 'units.speed.kt-to-mph');

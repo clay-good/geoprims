@@ -326,3 +326,122 @@ fn geodesic_invariants() {
         }
     }
 }
+
+#[test]
+fn cross_track_matches_a_brute_force_search() {
+    // Independent reference: golden-section search along the geodesic from A
+    // (via the direct problem) for the point nearest P.
+    use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
+    let g = Geodesic::wgs84();
+    let mut seed = 12345u64;
+    let mut rnd = || {
+        seed = seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let (mut worst_foot, mut worst_xt, mut worst_at) = (0.0f64, 0.0f64, 0.0f64);
+    for _ in 0..200 {
+        let (la1, lo1) = (rnd() * 140.0 - 70.0, rnd() * 360.0 - 180.0);
+        let (az, len) = (rnd() * 360.0, 50e3 + rnd() * 2_000e3);
+        let (la2, lo2): (f64, f64) = g.direct(la1, lo1, az, len);
+        // P: somewhere along (or past) the line, then off to one side.
+        let (fa, fo, faz): (f64, f64, f64) = g.direct(la1, lo1, az, len * (rnd() * 1.6 - 0.3));
+        let (lat, lon): (f64, f64) = g.direct(
+            fa,
+            fo,
+            faz + if rnd() < 0.5 { 90.0 } else { -90.0 },
+            rnd() * 300e3,
+        );
+        let dist = |s: f64| -> f64 {
+            let (x, y): (f64, f64) = g.direct(la1, lo1, az, s);
+            g.inverse(x, y, lat, lon)
+        };
+        let (mut lo, mut hi) = (-0.5 * len, 1.5 * len);
+        // A coarse bracket by golden-section search on distance...
+        let phi = (5f64.sqrt() - 1.0) / 2.0;
+        for _ in 0..200 {
+            let (m1, m2) = (hi - phi * (hi - lo), lo + phi * (hi - lo));
+            if dist(m1) < dist(m2) {
+                hi = m2
+            } else {
+                lo = m1
+            }
+        }
+        // Distance is flat at the minimum, so refine by bisecting on the
+        // perpendicularity condition: the course to P is 90° off the line there.
+        let ahead = |s: f64| -> f64 {
+            let (x, y, line_az): (f64, f64, f64) = g.direct(la1, lo1, az, s);
+            let (to_p, _, _): (f64, f64, f64) = g.inverse(x, y, lat, lon); // (azi1, azi2, a12)
+            (to_p - line_az).to_radians().cos()
+        };
+        let mid = (lo + hi) / 2.0;
+        let (mut a, mut b) = (mid - 1000.0, mid + 1000.0);
+        for _ in 0..100 {
+            let c = (a + b) / 2.0;
+            if ahead(c) > 0.0 { a = c } else { b = c }
+        }
+        let s_best = (a + b) / 2.0;
+        let (bx, by): (f64, f64) = g.direct(la1, lo1, az, s_best);
+        let r = call(
+            "navigation.route.cross-track",
+            &format!(
+                r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2},"lat":{lat},"lon":{lon}}}"#
+            ),
+        );
+        let (fx, fy) = (
+            num(&r, "result.foot_lat.value"),
+            num(&r, "result.foot_lon.value"),
+        );
+        let d_foot: f64 = g.inverse(fx, fy, bx, by);
+        worst_foot = worst_foot.max(d_foot);
+        worst_xt =
+            worst_xt.max((num(&r, "result.cross_track.value").abs() * 1000.0 - dist(s_best)).abs());
+        worst_at = worst_at.max((num(&r, "result.along_track.value") * 1000.0 - s_best).abs());
+    }
+    assert!(worst_foot < 1e-3, "foot {worst_foot} m");
+    assert!(worst_xt < 1e-3, "cross-track {worst_xt} m");
+    assert!(worst_at < 1e-3, "along-track {worst_at} m");
+}
+
+#[test]
+fn cross_track_spec_scenarios() {
+    // South-east of JFK-LHR near the start: right of course, within the segment.
+    let r = call(
+        "navigation.route.cross-track",
+        r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543,"lat":44,"lon":-60}"#,
+    );
+    assert!(num(&r, "result.cross_track.value") > 0.0, "{r}");
+    assert_eq!(r["result"]["within"], "yes");
+    // Past the end: flagged, with the distance to B.
+    let past = call(
+        "navigation.route.cross-track",
+        r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543,"lat":52,"lon":5}"#,
+    );
+    assert!(
+        codes(&past).contains(&"FOOT_OUTSIDE_SEGMENT".to_owned()),
+        "{past}"
+    );
+    assert!(num(&past, "result.along_track.value") > num(&past, "result.segment.value"));
+    assert!(num(&past, "result.end_distance.value") > 0.0);
+    // Left of course is negative; the spherical method stays within 1% here.
+    let left = call(
+        "navigation.route.cross-track",
+        r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543,"lat":50,"lon":-60}"#,
+    );
+    let sph = call(
+        "navigation.route.cross-track",
+        r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543,"lat":50,"lon":-60,"method":"spherical"}"#,
+    );
+    let (e, s) = (
+        num(&left, "result.cross_track.value"),
+        num(&sph, "result.cross_track.value"),
+    );
+    assert!(e < 0.0 && s < 0.0, "{left} {sph}");
+    assert!(((e - s) / e).abs() < 0.01, "{e} {s}");
+    let same = call(
+        "navigation.route.cross-track",
+        r#"{"lat1":10,"lon1":10,"lat2":10,"lon2":10,"lat":11,"lon":11}"#,
+    );
+    assert_eq!(same["error"]["code"], "INVALID_INPUT");
+}

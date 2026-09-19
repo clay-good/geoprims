@@ -11,7 +11,7 @@
 
 ## 2. Route geometry
 
-- [ ] 2.1 Implement ellipsoidal cross-track/along-track with foot-point iteration and the spherical mode; verify both cross-track scenarios and 1 mm agreement with a brute-force reference
+- [x] 2.1 Implement ellipsoidal cross-track/along-track with foot-point iteration and the spherical mode; verify both cross-track scenarios and 1 mm agreement with a brute-force reference (navigation.route.cross-track by Karney's gnomonic interception method; 200 random cases within 1 mm of a perpendicularity search along the geodesic; 22 vectors from Karney's Python geographiclib; right-of-course and past-the-end scenarios; rhumb segments pending)
 - [ ] 2.2 Implement closest point on multi-leg routes; verify the leg-identification scenario
 - [ ] 2.3 Implement course intersection and intercept; verify the unreachable-target scenario
 - [ ] 2.4 Implement fly-by turn anticipation and standard-rate turns; verify the 90° and standard-rate scenarios

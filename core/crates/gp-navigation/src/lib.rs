@@ -3,6 +3,7 @@
 //! always report their difference from Karney.
 
 pub mod rhumb;
+pub mod route;
 pub mod vincenty;
 
 use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
@@ -873,6 +874,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &MIDPOINT,
     &rhumb::RHUMB_INVERSE,
     &rhumb::RHUMB_DIRECT,
+    &route::CROSS_TRACK,
 ];
 
 pub static REGISTRY: Registry = Registry {

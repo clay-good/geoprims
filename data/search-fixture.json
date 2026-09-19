@@ -628,6 +628,18 @@
     {
       "query": "area of a field from coordinates",
       "expect": "geometry.area.polygon"
+    },
+    {
+      "query": "cross track error",
+      "expect": "navigation.route.cross-track"
+    },
+    {
+      "query": "xte",
+      "expect": "navigation.route.cross-track"
+    },
+    {
+      "query": "how far off course",
+      "expect": "navigation.route.cross-track"
     }
   ]
 }

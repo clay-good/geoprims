@@ -86,6 +86,7 @@ pub fn foot(
 
 pub static CROSS_TRACK: ToolDef = ToolDef {
     id: "navigation.route.cross-track",
+    stability: gp_base::tool::Stability::Stable,
     title: "Cross-track and along-track distance",
     summary: "How far a point is off the course line from A to B (right of course positive), how far along the course its closest point lies, and that point, on the ellipsoid to the millimeter.",
     aliases: &[

@@ -75,6 +75,17 @@ def main():
         tol.update({k: {"abs": 1e-9} for k in ("result.foot_lat.value", "result.foot_lon.value")})
         out.append({"id": f"v{i:03d}", "input": {"lat1": a[0], "lon1": a[1], "lat2": b[0], "lon2": b[1], "lat": p[0], "lon": p[1]},
                     "expect": exp, "source": SRC, "sourceVersion": VER, "tolerance": tol})
+    # Ed Williams' Aviation Formulary, "Cross track error": LAX to JFK with the aircraft at N34:30 W116:30 gives
+    # 7.4512 nm right of course and 99.588 nm along it. The formulary is spherical with a nautical mile per minute
+    # of arc (R = 6,366.7 km), 0.07% smaller than the mean radius the tool's spherical method uses.
+    av = ("Ed Williams, Aviation Formulary, Cross track error worked example (LAX to JFK)", "version 1.47")
+    out.append({"id": f"v{len(out) + 1:03d}",
+                "input": {"lat1": 33 + 57 / 60, "lon1": -(118 + 24 / 60), "lat2": 40 + 38 / 60, "lon2": -(73 + 47 / 60),
+                          "lat": 34.5, "lon": -116.5, "method": "spherical",
+                          "options": {"outputUnits": {"cross_track": "NM", "along_track": "NM"}}},
+                "expect": {"result.cross_track.value": 7.4512, "result.along_track.value": 99.588, "ok": True},
+                "source": av[0], "sourceVersion": av[1],
+                "tolerance": {"result.cross_track.value": {"abs": 0.01}, "result.along_track.value": {"abs": 0.08}}})
     OUT.write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in out))
     print(len(out), "vectors ->", OUT.name)
     formulas(rnd)

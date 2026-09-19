@@ -861,3 +861,45 @@ fn rhumb_invariants() {
         assert!((num(&rest, "result.distance.value") - s / 2.0).abs() < 1e-5);
     }
 }
+
+#[test]
+fn cross_track_invariants() {
+    // A point on the line is not off it; the foot point is on the line and
+    // the same distance along it; mirroring the point across the line flips
+    // the sign and keeps the distance; and "within" says whether the foot
+    // lies between the ends.
+    let mut seed: u64 = 41;
+    let mut rnd = || {
+        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    for _ in 0..200 {
+        let (a1, o1) = (rnd() * 140.0 - 70.0, rnd() * 360.0 - 180.0);
+        let (a2, o2) = ((a1 + rnd() * 20.0 - 10.0).clamp(-85.0, 85.0), o1 + rnd() * 20.0 - 10.0);
+        let (lat, lon) = ((a1 + rnd() * 24.0 - 12.0).clamp(-88.0, 88.0), o1 + rnd() * 24.0 - 12.0);
+        let xt = |lat: f64, lon: f64| {
+            call(
+                "navigation.route.cross-track",
+                &serde_json::json!({"lat1": a1, "lon1": o1, "lat2": a2, "lon2": o2, "lat": lat, "lon": lon,
+                                    "options": {"outputUnits": {"cross_track": "m", "along_track": "m", "segment": "m"}}}).to_string(),
+            )
+        };
+        let r = xt(lat, lon);
+        let (d, along, seg) = (
+            num(&r, "result.cross_track.value"),
+            num(&r, "result.along_track.value"),
+            num(&r, "result.segment.value"),
+        );
+        assert_eq!(r["result"]["within"], if (0.0..=seg).contains(&along) { "yes" } else { "no" });
+        // The foot point is on the line: no cross-track distance, same along-track.
+        let foot = xt(num(&r, "result.foot_lat.value"), num(&r, "result.foot_lon.value"));
+        assert!(num(&foot, "result.cross_track.value").abs() < 1e-3, "{foot}");
+        assert!((num(&foot, "result.along_track.value") - along).abs() < 1e-3, "{foot}");
+        // Both ends are on the line, at 0 and the segment length.
+        for (la, lo, want) in [(a1, o1, 0.0), (a2, o2, seg)] {
+            let e = xt(la, lo);
+            assert!(num(&e, "result.cross_track.value").abs() < 1e-3);
+            assert!((num(&e, "result.along_track.value") - want).abs() < 1e-3);
+        }
+    }
+}

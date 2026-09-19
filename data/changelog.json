@@ -5,6 +5,15 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "navigation.route.cross-track"
+      ],
+      "vectors": [],
+      "summary": "Cross-track distance is stable. Its spherical method reproduces the Aviation Formulary's LAX to JFK example (7.4512 nm off course, 99.588 nm along it) once the formulary's minute-of-arc radius is accounted for, and the ellipsoidal foot point matches a brute-force search along the geodesic within a millimeter. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "navigation.rhumb.inverse",
         "navigation.rhumb.direct"
       ],

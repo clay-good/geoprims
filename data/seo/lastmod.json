@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c8cd004ea0cd84a2",
+    "hash": "c35416d0e414397b",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
@@ -80,11 +80,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/": {
-    "hash": "363d652d74e1c85f",
+    "hash": "4bf7f31dff2b9c00",
     "lastmod": "2026-09-19"
   },
   "/geodesy/datum/": {
-    "hash": "79a057bf0b997ac6",
+    "hash": "192b909858f78fbf",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ellipsoid/": {
@@ -100,7 +100,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/geoid/geoid-height/": {
-    "hash": "8f6dc0b6568519a8",
+    "hash": "d82142c0ec0edc9e",
     "lastmod": "2026-09-19"
   },
   "/geodesy/grid-ref/": {
@@ -116,7 +116,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "857e32d609503eb2",
+    "hash": "2122854cfd9954a0",
     "lastmod": "2026-09-19"
   },
   "/geodesy/parse/": {
@@ -128,11 +128,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "bf7371a3cf3f9fc6",
+    "hash": "5951d7d476774d4c",
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "5944cec36cd25f9e",
+    "hash": "e8cb2a9583f6d346",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ups/": {
@@ -144,11 +144,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/forward/": {
-    "hash": "846c27c7209a4a80",
+    "hash": "a5a714f16c9757b7",
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/inverse/": {
-    "hash": "c66dcbf526f1aaf9",
+    "hash": "69c86bac7c621d48",
     "lastmod": "2026-09-19"
   },
   "/geometry/": {
@@ -188,7 +188,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "dda378d822c2f7ea",
+    "hash": "08e3ab782b7a0c60",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -220,7 +220,7 @@
     "lastmod": "2026-09-19"
   },
   "/sources/": {
-    "hash": "018402d48e71804f",
+    "hash": "e7024c7a8bcd56b4",
     "lastmod": "2026-09-19"
   },
   "/survey/": {
@@ -360,7 +360,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e7fce869b1bc4331",
+    "hash": "818e793a7042a63e",
     "lastmod": "2026-09-19"
   }
 }

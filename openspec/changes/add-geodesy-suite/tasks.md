@@ -16,12 +16,12 @@
 ## 3. Datums
 
 - [x] 3.1 Implement 7- and 14-parameter Helmert in both conventions; verify the convention-required scenario and IERS published examples (generic Helmert with an exact reverse, matching both IOGP GN 7-2 worked examples and PROJ's +proj=helmert; ITRF2020 to ITRF88 and the WGS 84 realizations G2296, G2139, and G1762 with the IERS parameters, matching PROJ's data/ITRF2020; the coordinate epoch is required because the core never reads the clock, so the host supplies today's date)
-- [ ] 3.2 Load NGS, IERS, NGA, and EPSG parameter sets with citations; verify each set against its source document example (IERS ITRF2020 sets and the NGS HTDP 3.6.0 sets for NAD 83 (2011, PA11, MA11), ITRF2000–2020, and WGS 84 (G1150, G1674) loaded and verified; NGA legacy-datum and EPSG sets pending)
+- [ ] 3.2 Load NGS, IERS, NGA, and EPSG parameter sets with citations; verify each set against its source document example (IERS ITRF2020 sets and the NGS HTDP 3.6.0 sets for NAD 83 (2011, PA11, MA11), ITRF2000–2020, and WGS 84 (G1150, G1674) loaded and verified; EPSG legacy-datum sets for eight datums added; NGA's own local-datum table pending)
 - [ ] 3.3 Implement the frame graph and path selection with accuracy accumulation; verify the realization-assumed and coincidence scenarios
 - [x] 3.4 Implement ITRF2020 plate-motion propagation, site-velocity override, and deformation-zone flag; verify the San Andreas scenario (the 13 ITRF2020-PMM plates with the origin rate bias, matching PROJ; zones from Bird's PB2002 orogens compiled into the core; the plate is chosen by the user, since automatic plate lookup needs the plate polygons)
 - [ ] 3.5 Implement NADCON5 grid transformations with chaining; verify against NCAT outputs for 200 points per region and the outside-grid scenario
 - [ ] 3.6 Implement the WGS 84 vs NAD83 displacement explainer with canvas arrow; verify the Kansas scenario
-- [ ] 3.7 Implement legacy shifts with `LOW_ACCURACY_TRANSFORM`; verify the ED50 scenario
+- [x] 3.7 Implement legacy shifts with `LOW_ACCURACY_TRANSFORM`; verify the ED50 scenario (ED50, NAD27, OSGB36, Tokyo, AGD66, Pulkovo 1942, SAD69, and Arc 1960 to and from WGS 84 with their EPSG operations and stated accuracies, plus OUTSIDE_AREA_OF_USE; 20 vectors match PROJ within 1 mm)
 - [ ] 3.8 Implement NATRF2022 beta transformations with labeling; verify the beta scenario
 - [x] 3.9 Run HTDP differential tests (ITRF2020 ↔ NAD83(2011)); verify ≤ 1 mm agreement (tools/vectors/gen_htdp.py downloads, compiles, and runs HTDP 3.6.0; 23 positions across NAD 83, ITRF, and WGS 84 frames agree within 1e-8° and 1.5 mm, the precision HTDP prints)
 

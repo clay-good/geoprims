@@ -106,6 +106,10 @@
       "severity": "accuracy",
       "message": "The chosen transformation has low accuracy."
     },
+    "OUTSIDE_AREA_OF_USE": {
+      "severity": "accuracy",
+      "message": "The point is outside the area the transformation was derived for."
+    },
     "DEFORMATION_ZONE": {
       "severity": "accuracy",
       "message": "The point is in a zone of active crustal deformation."

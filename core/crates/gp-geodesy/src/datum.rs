@@ -1062,3 +1062,376 @@ fn run_nad83(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("height", ctx.out("height", m(h2))),
     ]))
 }
+
+// ---------------------------------------------------------------- legacy datums
+
+const EPSG_DATASET: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset",
+    issuer: "IOGP Geomatics Committee",
+    year: 2025,
+    edition: "v10.094, as shipped in PROJ 9.3.0",
+    locator: "Transformations 1108, 1122, 1133, 1173, 1267, 1305, 1314, 1864 to WGS 84",
+    url: "https://epsg.org/",
+};
+
+/// A published transformation from a legacy datum to WGS 84.
+struct Legacy {
+    id: &'static str,
+    name: &'static str,
+    epsg: u32,
+    /// Semi-major axis and inverse flattening of the datum's ellipsoid.
+    a: f64,
+    rf: f64,
+    params: Params,
+    convention: Convention,
+    /// Stated accuracy (m).
+    accuracy: f64,
+    /// Area of use: west, south, east, north (degrees; east < west crosses 180°).
+    area: [f64; 4],
+    area_name: &'static str,
+}
+
+const fn t3(tx: f64, ty: f64, tz: f64) -> Params {
+    Params {
+        t: [tx, ty, tz],
+        r: [0.0; 3],
+        ds: 0.0,
+    }
+}
+
+const LEGACY: &[Legacy] = &[
+    Legacy {
+        id: "ED50",
+        name: "ED50",
+        epsg: 1133,
+        a: 6_378_388.0,
+        rf: 297.0,
+        params: t3(-87.0, -98.0, -121.0),
+        convention: Convention::PositionVector,
+        accuracy: 10.0,
+        area: [-9.56, 34.88, 31.59, 71.24],
+        area_name: "western Europe",
+    },
+    Legacy {
+        id: "NAD27",
+        name: "NAD27",
+        epsg: 1173,
+        a: 6_378_206.4,
+        rf: 294.978_698_213_898_2,
+        params: t3(-8.0, 160.0, 176.0),
+        convention: Convention::PositionVector,
+        accuracy: 10.0,
+        area: [-124.79, 24.41, -66.91, 49.38],
+        area_name: "the conterminous United States",
+    },
+    Legacy {
+        id: "OSGB36",
+        name: "OSGB36",
+        epsg: 1314,
+        a: 6_377_563.396,
+        rf: 299.324_964_6,
+        params: Params {
+            t: [446.448, -125.157, 542.06],
+            r: [0.15, 0.247, 0.842],
+            ds: -20.489,
+        },
+        convention: Convention::PositionVector,
+        accuracy: 2.0,
+        area: [-8.82, 49.79, 1.92, 60.94],
+        area_name: "Great Britain",
+    },
+    Legacy {
+        id: "Tokyo",
+        name: "Tokyo (South Korea)",
+        epsg: 1305,
+        a: 6_377_397.155,
+        rf: 299.152_812_8,
+        params: t3(-147.0, 506.0, 687.0),
+        convention: Convention::PositionVector,
+        accuracy: 4.0,
+        area: [124.53, 33.14, 131.01, 38.64],
+        area_name: "South Korea",
+    },
+    Legacy {
+        id: "AGD66",
+        name: "AGD66",
+        epsg: 1108,
+        a: 6_378_160.0,
+        rf: 298.25,
+        params: t3(-133.0, -48.0, 148.0),
+        convention: Convention::PositionVector,
+        accuracy: 6.0,
+        area: [112.85, -43.7, 153.69, -9.86],
+        area_name: "Australia",
+    },
+    Legacy {
+        id: "Pulkovo1942",
+        name: "Pulkovo 1942",
+        epsg: 1267,
+        a: 6_378_245.0,
+        rf: 298.3,
+        params: Params {
+            t: [23.92, -141.27, -80.9],
+            r: [0.0, -0.35, -0.82],
+            ds: -0.12,
+        },
+        convention: Convention::CoordinateFrame,
+        accuracy: 4.0,
+        area: [19.58, 41.19, -168.97, 81.91],
+        area_name: "Russia",
+    },
+    Legacy {
+        id: "SAD69",
+        name: "SAD69",
+        epsg: 1864,
+        a: 6_378_160.0,
+        rf: 298.25,
+        params: t3(-57.0, 1.0, -41.0),
+        convention: Convention::PositionVector,
+        accuracy: 19.0,
+        area: [-81.41, -45.0, -34.74, 12.52],
+        area_name: "South America north of 45° S",
+    },
+    Legacy {
+        id: "Arc1960",
+        name: "Arc 1960",
+        epsg: 1122,
+        a: 6_378_249.145,
+        rf: 293.465,
+        params: t3(-160.0, -6.0, -302.0),
+        convention: Convention::PositionVector,
+        accuracy: 35.0,
+        area: [29.34, -11.75, 41.91, 4.63],
+        area_name: "Kenya and Tanzania",
+    },
+];
+
+const LEGACY_IDS: &[&str] = &[
+    "ED50",
+    "NAD27",
+    "OSGB36",
+    "Tokyo",
+    "AGD66",
+    "Pulkovo1942",
+    "SAD69",
+    "Arc1960",
+];
+
+pub static LEGACY_SHIFT: ToolDef = ToolDef {
+    id: "geodesy.datum.legacy",
+    title: "Legacy datum to or from WGS 84",
+    summary: "Converts a latitude and longitude between a legacy datum (ED50, NAD27, OSGB36, Tokyo, AGD66, Pulkovo 1942, SAD69, or Arc 1960) and WGS 84 with the published EPSG transformation, and states its accuracy, which is meters, not centimeters.",
+    aliases: &[
+        "ED50 to WGS84",
+        "NAD27 to WGS84",
+        "OSGB36 to WGS84",
+        "old datum conversion",
+        "Molodensky shift",
+    ],
+    keywords: &[
+        "datum", "ED50", "NAD27", "OSGB36", "Pulkovo", "Tokyo", "AGD66", "SAD69", "Arc 1960",
+        "WGS 84", "EPSG", "shift",
+    ],
+    inputs: &[
+        Field::new(
+            "datum",
+            "Legacy datum",
+            "ED50, NAD27, OSGB36, Tokyo, AGD66, Pulkovo1942, SAD69, or Arc1960",
+            Kind::Choice(LEGACY_IDS),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "direction",
+            "Direction",
+            "to-wgs84 (default) or from-wgs84",
+            Kind::Choice(&["to-wgs84", "from-wgs84"]),
+        )
+        .core(),
+        Field::new(
+            "lat",
+            "Latitude",
+            "Decimal degrees on the source datum, like 48.85",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "Decimal degrees on the source datum, like 2.35",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-180,180)"),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On the target datum",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On the target datum",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[-180,180)"),
+        mm_out(
+            "shift",
+            "Horizontal shift",
+            "Between the two datums' coordinates of the point",
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "azimuth",
+            "Shift direction",
+            "Degrees from true north",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(0))
+        .angle_range("[0,360)"),
+        mm_out(
+            "accuracy",
+            "Stated accuracy",
+            "The EPSG accuracy of this transformation",
+        )
+        .precision(Precision::Decimals(0)),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &[
+        "LOW_ACCURACY_TRANSFORM",
+        "OUTSIDE_AREA_OF_USE",
+        "INPUT_NORMALIZED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "EPSG geocentric translation or 7-parameter Helmert (geog2D domain): geographic → ECEF on the datum's ellipsoid → Helmert → WGS 84",
+    accuracy: "As stated by EPSG for each transformation: 2 m (OSGB36) to 35 m (Arc 1960); matches PROJ's implementation of the same EPSG operation to 1e-9°",
+    references: &[EPSG_DATASET, IOGP_7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "Paris on ED50 to WGS 84",
+        input: r#"{"datum":"ED50","lat":48.8566,"lon":2.3522}"#,
+        source: "PROJ EPSG:1133 (ED50 to WGS 84 (1)) through pyproj",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
+    }],
+    related: &[Related {
+        id: "geodesy.datum.helmert",
+        reason: "alternative",
+    }],
+    sentence: "The point shifts {shift} toward {azimuth}.{warn LOW_ACCURACY_TRANSFORM} This shift is good only to about {accuracy}.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_legacy,
+    ..ToolDef::BLANK
+};
+
+fn in_area(area: [f64; 4], lat: f64, lon: f64) -> bool {
+    let [w, s, e, n] = area;
+    let lon_ok = if w <= e {
+        (w..=e).contains(&lon)
+    } else {
+        lon >= w || lon <= e
+    };
+    lon_ok && (s..=n).contains(&lat)
+}
+
+fn run_legacy(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let id = ctx.choice("datum")?.expect("required");
+    let d = LEGACY
+        .iter()
+        .find(|d| d.id == id)
+        .expect("choice lists the table");
+    let to_wgs = ctx.choice("direction")? != Some("from-wgs84");
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let legacy = Ellipsoid {
+        id: "legacy",
+        name: d.name,
+        a: d.a,
+        f: 1.0 / d.rf,
+    };
+    let wgs = CATALOG[0];
+    let h = Helmert {
+        p: d.params,
+        rate: Params::default(),
+        t0: 0.0,
+        convention: d.convention,
+    };
+    let (src, dst) = if to_wgs {
+        (&legacy, &wgs)
+    } else {
+        (&wgs, &legacy)
+    };
+    let (phi, lam) = (lat.to_radians(), lon.to_radians());
+    let p = fr::to_ecef(src, phi, lam, 0.0);
+    let q = if to_wgs {
+        h.forward([p.0, p.1, p.2], 0.0)
+    } else {
+        h.reverse([p.0, p.1, p.2], 0.0)
+    };
+    let (phi2, lam2, _) = fr::from_ecef(dst, q[0], q[1], q[2]).expect("not the center");
+    let (lat2, lon2) = (
+        phi2.to_degrees(),
+        gp_base::angle::wrap_lon(lam2.to_degrees()),
+    );
+    // The horizontal shift on the ground: the east-north offset between the two
+    // coordinates on WGS 84 (under 1 km, the chord equals the arc to 1e-7 m).
+    let a = fr::to_ecef(&wgs, phi, lam, 0.0);
+    let b = fr::to_ecef(&wgs, phi2, lam2, 0.0);
+    let enu = fr::ecef_to_enu(a, phi, lam, b);
+    let s12 = enu[0].hypot(enu[1]);
+    let az = if s12 == 0.0 {
+        0.0
+    } else {
+        gp_base::angle::wrap_azimuth(enu[0].atan2(enu[1]).to_degrees())
+    };
+    ctx.accuracy = Some(format!(
+        "EPSG {} ({} to WGS 84): about {} m, for {}.",
+        d.epsg, d.name, d.accuracy, d.area_name
+    ));
+    ctx.context.push(("epsg", Json::Num(f64::from(d.epsg))));
+    if d.accuracy >= 1.0 {
+        ctx.warnings.push(Warning::new("LOW_ACCURACY_TRANSFORM", format!("{} to WGS 84 by EPSG {} is good to about {} m, not the centimeters of a modern frame.", d.name, d.epsg, d.accuracy)));
+    }
+    if !in_area(d.area, lat, lon) {
+        ctx.warnings.push(Warning::new(
+            "OUTSIDE_AREA_OF_USE",
+            format!(
+                "EPSG {} was derived for {}; outside it the error can be far larger than {} m.",
+                d.epsg, d.area_name, d.accuracy
+            ),
+        ));
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat2))),
+        ("lon", ctx.out("lon", deg(lon2))),
+        ("shift", ctx.out("shift", m(s12))),
+        ("azimuth", ctx.out("azimuth", deg(az))),
+        ("accuracy", ctx.out("accuracy", m(d.accuracy))),
+    ]))
+}

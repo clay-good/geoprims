@@ -7,6 +7,11 @@ Independent sources:
   with the meridian arc M integrated numerically here (Simpson's rule).
 - UPS by rotational symmetry from the spec's 85° N value.
 - Exact fractions for DMS parsing and bearing arithmetic.
+- Karney's TMcoords.dat (GeographicLib test data, 2009): exact transverse
+  Mercator values computed with 80-digit arithmetic, k0 = 0.9996. A
+  1,000-point sample within 3.5° of the central meridian and below 84° N is
+  committed at core/crates/gp-geodesy/tests/data/TMcoords-sample.dat; the
+  points are placed in zone 31 (central meridian 3° E).
 """
 import json
 import math
@@ -38,6 +43,33 @@ def vec(i, inp, exp, tol, src, ver="GeographicLib 2.x"):
         if isinstance(v, (int, float)) and not isinstance(v, bool):
             tol.setdefault(k, {"abs": 0})  # integers such as zone numbers match exactly
     return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver, "tolerance": tol}
+
+
+TMCOORDS = Path(__file__).resolve().parents[2] / "core/crates/gp-geodesy/tests/data/TMcoords-sample.dat"
+TM_SRC = "GeographicLib TMcoords.dat, point sample (Karney, exact transverse Mercator)"
+
+
+def tmcoords(n, offset):
+    """Evenly spaced TMcoords points: (lat, lon from the central meridian, x, y, convergence, scale)."""
+    rows = [list(map(float, l.split())) for l in TMCOORDS.read_text().splitlines()]
+    step = len(rows) // n
+    return [rows[offset + i * step] for i in range(n)]
+
+
+def utm_forward_tm(start, n=12):
+    return [vec(i, {"lat": lat, "lon": 3 + dlon, "zone": 31},
+                {"result.easting.value": 500000 + x, "result.northing.value": y, "result.convergence.value": g, "result.scale": k},
+                {"result.easting.value": {"abs": 1e-8}, "result.northing.value": {"abs": 1e-8},
+                 "result.convergence.value": {"abs": 1e-12}, "result.scale": {"abs": 1e-13}}, TM_SRC, "TMcoords 2009")
+            for i, (lat, dlon, x, y, g, k) in enumerate(tmcoords(n, 0), start)]
+
+
+def utm_inverse_tm(start, n=15):
+    return [vec(i, {"zone": 31, "hemisphere": "N", "easting": f"{500000 + x!r} m", "northing": f"{y!r} m"},
+                {"result.lat.value": lat, "result.lon.value": 3 + dlon, "result.convergence.value": g, "result.scale": k},
+                {"result.lat.value": {"abs": 1e-12}, "result.lon.value": {"abs": 1e-12},
+                 "result.convergence.value": {"abs": 1e-12}, "result.scale": {"abs": 1e-13}}, TM_SRC, "TMcoords 2009")
+            for i, (lat, dlon, x, y, g, k) in enumerate(tmcoords(n, 7), start)]
 
 
 def dms(d, m, s):
@@ -163,7 +195,8 @@ def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {
         "geodesy.parse.coordinates": parse(), "geodesy.parse.format": fmt(), "geodesy.parse.bearing-difference": bearing(),
-        "geodesy.utm.forward": utm_forward(), "geodesy.utm.inverse": utm_inverse(), "geodesy.utm.zone": utm_zone(),
+        "geodesy.utm.forward": (uf := utm_forward()) + utm_forward_tm(len(uf) + 1),
+        "geodesy.utm.inverse": (ui := utm_inverse()) + utm_inverse_tm(len(ui) + 1), "geodesy.utm.zone": utm_zone(),
         "geodesy.ups.forward": ups(), "geodesy.ups.inverse": ups_inverse(),
         "geodesy.grid-ref.mgrs-forward": mgrs_forward(), "geodesy.grid-ref.mgrs-inverse": mgrs_inverse(),
     }

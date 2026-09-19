@@ -226,3 +226,103 @@ fn karney_vs_vincenty_differential() {
     }
     assert!(worst < 1e-3, "worst Karney-Vincenty difference {worst} m");
 }
+
+#[test]
+fn geodtest_sample_matches_karney() {
+    // 1,000 lines of GeographicLib's GeodTest-short.dat (high-precision
+    // reference, 0.1 nm). Distances and direct positions must be within the
+    // stated 15 nm everywhere. Azimuths, reduced length, and area are checked
+    // away from nearly antipodal lines, where they are ill-conditioned in the
+    // 12-decimal endpoints (GeographicLib's own C library differs there too).
+    let text = include_str!("data/GeodTest-sample.dat");
+    let adiff = |a: f64, b: f64| {
+        let d = (a - b).rem_euclid(360.0);
+        d.min(360.0 - d)
+    };
+    let (mut ds, mut dpos, mut daz, mut dm12, mut ds12) = (0.0f64, 0.0f64, 0.0f64, 0.0f64, 0.0f64);
+    for l in text.lines() {
+        let f: Vec<f64> = l.split_whitespace().map(|x| x.parse().unwrap()).collect();
+        let (lat1, lon1, azi1, lat2, lon2, azi2, s12, m12, area) =
+            (f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[8], f[9]);
+        let r = call(
+            "navigation.geodesic.inverse",
+            &format!(r#"{{"lat1":{lat1},"lon1":{lon1},"lat2":{lat2},"lon2":{lon2}}}"#),
+        );
+        ds = ds.max((num(&r, "result.distance.value") * 1000.0 - s12).abs());
+        if s12 < 1.9e7 {
+            daz = daz
+                .max(adiff(num(&r, "result.azimuth1.value"), azi1))
+                .max(adiff(num(&r, "result.azimuth2.value"), azi2));
+            dm12 = dm12.max((num(&r, "result.reduced_length.value") - m12).abs());
+            ds12 = ds12.max((num(&r, "result.area.value") - area).abs());
+        }
+        let d = call(
+            "navigation.geodesic.direct",
+            &format!(r#"{{"lat1":{lat1},"lon1":{lon1},"azimuth":{azi1},"distance":"{s12} m"}}"#),
+        );
+        let m_per_deg = 6_371_000.0f64.to_radians();
+        let pos = ((num(&d, "result.lat2.value") - lat2) * m_per_deg)
+            .hypot(adiff(num(&d, "result.lon2.value"), lon2) * m_per_deg * lat2.to_radians().cos());
+        dpos = dpos.max(pos);
+    }
+    assert!(ds <= 15e-9, "distance {ds} m");
+    assert!(dpos <= 15e-9, "direct position {dpos} m");
+    assert!(daz <= 1e-8, "azimuth {daz}°");
+    assert!(dm12 <= 1e-8, "reduced length {dm12} m");
+    assert!(ds12 <= 0.1, "area {ds12} m²");
+}
+
+#[test]
+fn geodesic_invariants() {
+    // Symmetry, the direct problem inverting the inverse, and the triangle
+    // inequality, over a spread of pairs including poles and the antimeridian.
+    let pts: Vec<(f64, f64)> = (-90..=90)
+        .step_by(30)
+        .flat_map(|lat| {
+            (-180..180)
+                .step_by(75)
+                .map(move |lon| (lat as f64 * 0.99 + 0.1, lon as f64 + 0.3))
+        })
+        .collect();
+    let inv = |a: (f64, f64), b: (f64, f64)| {
+        call(
+            "navigation.geodesic.inverse",
+            &format!(
+                r#"{{"lat1":{},"lon1":{},"lat2":{},"lon2":{}}}"#,
+                a.0, a.1, b.0, b.1
+            ),
+        )
+    };
+    for (i, &a) in pts.iter().enumerate() {
+        for &b in &pts[i + 1..] {
+            let ab = inv(a, b);
+            let s = num(&ab, "result.distance.value");
+            assert!(
+                (s - num(&inv(b, a), "result.distance.value")).abs() < 1e-12,
+                "{a:?} {b:?}"
+            );
+            let d = call(
+                "navigation.geodesic.direct",
+                &format!(
+                    r#"{{"lat1":{},"lon1":{},"azimuth":{},"distance":"{} km"}}"#,
+                    a.0,
+                    a.1,
+                    num(&ab, "result.azimuth1.value"),
+                    s
+                ),
+            );
+            let back = inv(
+                b,
+                (num(&d, "result.lat2.value"), num(&d, "result.lon2.value")),
+            );
+            assert!(
+                num(&back, "result.distance.value") < 1e-9,
+                "{a:?} {b:?} {back}"
+            );
+            let c = pts[(i * 7 + 3) % pts.len()];
+            let via =
+                num(&inv(a, c), "result.distance.value") + num(&inv(c, b), "result.distance.value");
+            assert!(s <= via + 1e-9, "triangle {a:?} {b:?} {c:?}");
+        }
+    }
+}

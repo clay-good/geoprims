@@ -62,6 +62,42 @@ def vec(i, inp, exp, rel, src=SRC, ver=VER):
     return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver, "tolerance": tol}
 
 
+# The ICAO standard atmosphere from ambiance 1.3.1 (airinnova), a separately
+# written Python implementation, at geometric altitudes. Produced with:
+#   from ambiance import Atmosphere; a = Atmosphere(zs)
+# (z m, T K, p Pa, rho kg/m3, a m/s, mu Pa s, g m/s2). Pressure and density
+# agree to about 2e-6 relative above 20 km, where the two implementations
+# carry layer base pressures differently; both are within the standard's
+# printed precision.
+AMBIANCE = [
+    (-2000, 301.1540914173708, 127782.8213566623, 1.4781612452746862, 347.8879198176305, 1.8514575204715214e-05, 9.812823755695224),
+    (1500, 278.4023001554197, 84559.66592781676, 1.0581044626479077, 334.4886410386764, 1.7419589925374498e-05, 9.802023505965284),
+    (7500, 239.45744967290807, 38299.66798370353, 0.5571918597280658, 310.2123908551758, 1.5442191260974684e-05, 9.783550230946561),
+    (15000, 216.65, 12111.786132143703, 0.19475454731505212, 295.0694935090715, 1.4216130796413357e-05, 9.760531983853626),
+    (25000, 221.55206472628424, 2549.2129278435896, 0.04008375667736631, 298.38903875267926, 1.4484244667793332e-05, 9.729967137756537),
+    (40000, 250.34964610242113, 287.1421821481316, 0.003995656276775823, 317.18924664001145, 1.6009290415301384e-05, 9.684388360600034),
+    (60000, 247.02088477279673, 21.958493710186964, 0.00030967559388573, 315.07344460230036, 1.5837189300043246e-05, 9.62411316252706),
+    (78000, 202.54097785374015, 1.467355125656059, 2.5238319718083196e-05, 285.29976617538887, 1.3429642205650092e-05, 9.570345319920676),
+]
+KT = 1852 / 3600
+
+
+def isa_ambiance(start):
+    out = []
+    for i, (z, t, p, rho, a, mu, g) in enumerate(AMBIANCE, start):
+        tol = {"result.temperature.value": {"abs": 1e-9}, "result.pressure.value": {"rel": 3e-6},
+               "result.density.value": {"rel": 3e-6}, "result.speed_of_sound.value": {"rel": 1e-9},
+               "result.dynamic_viscosity.value": {"rel": 1e-9}, "result.gravity.value": {"abs": 1e-12}}
+        out.append({"id": f"v{i:03d}", "input": {"altitude": f"{z} m", "altitude_type": "geometric",
+                                                 "options": {"outputUnits": {"temperature": "K", "pressure": "Pa"}}},
+                    "expect": {"result.temperature.value": t, "result.pressure.value": p, "result.density.value": rho,
+                               "result.speed_of_sound.value": a / KT, "result.dynamic_viscosity.value": mu,
+                               "result.gravity.value": g, "ok": True},
+                    "source": "ambiance (independent Python implementation of the ICAO standard atmosphere 1993)",
+                    "sourceVersion": "ambiance 1.3.1", "tolerance": tol})
+    return out
+
+
 def isa_vectors():
     out = []
     for i, ft in enumerate([0, 5000, 10000, 20000, 36089, 40000, 65000, 100000, 150000, -1000], 1):
@@ -75,7 +111,7 @@ def isa_vectors():
         out.append(vec(k, {"altitude": f"{z} m", "altitude_type": "geometric", "model": "us76",
                            "options": {"outputUnits": {"temperature": "K", "pressure": "Pa"}}},
                        {"result.temperature.value": t, "result.pressure.value": p}, 1e-4, TABLE, "NOAA-S/T 76-1562 (1976)"))
-    return out
+    return out + isa_ambiance(len(out) + 1)
 
 
 def station(qnh_pa, elev_m):

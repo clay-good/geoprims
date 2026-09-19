@@ -394,3 +394,43 @@ fn mixed_references_rejected() {
     assert_eq!(r["error"]["code"], "INVALID_INPUT");
     assert!(r["error"]["hint"].as_str().unwrap().contains("ATIS"));
 }
+
+#[test]
+fn isa_invariants() {
+    // The ideal gas law p = ρRT at every level, hydrostatic balance
+    // dp/dH = -ρg0 in geopotential altitude, and pressure and density falling
+    // monotonically across the ICAO range (-5 km to 80 km geopotential).
+    const R: f64 = 287.052_87;
+    const G0: f64 = 9.806_65;
+    let at = |h_m: f64| {
+        call(
+            "aviation.atmosphere.isa",
+            &format!(
+                r#"{{"altitude":"{h_m} m","options":{{"outputUnits":{{"temperature":"K","pressure":"Pa"}}}}}}"#
+            ),
+        )
+    };
+    let (mut prev_p, mut prev_rho) = (f64::INFINITY, f64::INFINITY);
+    let mut h = -4999.0;
+    while h <= 79_000.0 {
+        let r = at(h);
+        let (t, p, rho) = (
+            num(&r, "result.temperature.value"),
+            num(&r, "result.pressure.value"),
+            num(&r, "result.density.value"),
+        );
+        assert!((p - rho * R * t).abs() <= 1e-12 * p, "gas law at {h} m");
+        assert!(p < prev_p && rho < prev_rho, "monotonic at {h} m");
+        (prev_p, prev_rho) = (p, rho);
+        let d = 0.5;
+        let dpdh = (num(&at(h + d), "result.pressure.value")
+            - num(&at(h - d), "result.pressure.value"))
+            / (2.0 * d);
+        assert!(
+            (dpdh + rho * G0).abs() <= 1e-6 * rho * G0,
+            "hydrostatic at {h} m: {dpdh} vs {}",
+            -rho * G0
+        );
+        h += 1_237.0;
+    }
+}

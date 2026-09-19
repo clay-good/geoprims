@@ -122,6 +122,7 @@ fn karney(
 
 pub static INVERSE: ToolDef = ToolDef {
     id: "navigation.geodesic.inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Distance between two points (geodesic)",
     summary: "The shortest distance and the start and end courses between two points on the WGS 84 ellipsoid (or any ellipsoid), exact to nanometers with Karney's algorithm.",
     aliases: &[
@@ -329,6 +330,7 @@ const DEST_OUTPUTS: &[Field] = &[
 
 pub static DIRECT: ToolDef = ToolDef {
     id: "navigation.geodesic.direct",
+    stability: gp_base::tool::Stability::Stable,
     title: "Destination from a start, course, and distance (geodesic)",
     summary: "Where you end up after traveling a distance on an initial course along the ellipsoid, any length, with Karney's algorithm.",
     aliases: &[

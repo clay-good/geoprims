@@ -8,6 +8,13 @@ Sources, all independent of the Rust core:
   (s = a * dlon for |dlon| <= (1 - f) * 180 deg), and pole to pole is twice
   the WGS 84 meridian quadrant 10,001,965.729313 m (Karney 2011, GeodTest).
 - Haversine by direct evaluation in Python.
+- Karney's GeodTest-short.dat (GeographicLib test data, 2010): geodesics
+  computed with high-precision arithmetic, accurate to 0.1 nm. A 1,000-line
+  sample (every 10th line) is committed at
+  core/crates/gp-navigation/tests/data/GeodTest-sample.dat; vectors v007+
+  (inverse) and v006+ (direct) are drawn from it. Inverse vectors skip nearly
+  antipodal lines, whose azimuths are ill-conditioned in the 12-decimal
+  endpoints.
 """
 import json
 import math
@@ -25,6 +32,39 @@ def vec(i, inp, exp, tol, src, ver="GeographicLib 2.x"):
     e.setdefault("ok", True)
     return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver,
             "tolerance": {k: t for k, t in tol.items()}}
+
+
+GEODTEST = Path(__file__).resolve().parents[2] / "core/crates/gp-navigation/tests/data/GeodTest-sample.dat"
+GEODTEST_SRC = "GeographicLib GeodTest-short.dat, line sample (Karney, high-precision reference)"
+
+
+def geodtest(n=18):
+    """Evenly spaced GeodTest lines: (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)."""
+    rows = [list(map(float, l.split())) for l in GEODTEST.read_text().splitlines()]
+    well = [r for r in rows if r[6] < 1.9e7 and abs(r[3]) < 89]
+    return [well[i * len(well) // n] for i in range(n)]
+
+
+def inverse_geodtest(start):
+    out = []
+    for i, (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12) in enumerate(geodtest(), start):
+        out.append(vec(i, {"lat1": lat1, "lon1": lon1, "lat2": lat2, "lon2": lon2},
+                       {"result.distance.value": km(s12), "result.azimuth1.value": azi1, "result.azimuth2.value": azi2,
+                        "result.reduced_length.value": m12, "result.area.value": S12},
+                       {"result.distance.value": {"abs": 2e-11}, "result.azimuth1.value": {"abs": 1e-8},
+                        "result.azimuth2.value": {"abs": 1e-8}, "result.reduced_length.value": {"abs": 1e-7},
+                        "result.area.value": {"abs": 0.5}}, GEODTEST_SRC, "GeodTest 2010"))
+    return out
+
+
+def direct_geodtest(start):
+    out = []
+    for i, (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12) in enumerate(geodtest(), start):
+        out.append(vec(i, {"lat1": lat1, "lon1": lon1, "azimuth": azi1, "distance": f"{s12!r} m"},
+                       {"result.lat2.value": lat2, "result.lon2.value": lon2, "result.azimuth2.value": azi2},
+                       {"result.lat2.value": {"abs": 1e-10}, "result.lon2.value": {"abs": 1e-10},
+                        "result.azimuth2.value": {"abs": 1e-8}}, GEODTEST_SRC, "GeodTest 2010"))
+    return out
 
 
 def km(m):
@@ -117,7 +157,9 @@ def midpoint():
 
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
-    files = {"navigation.geodesic.inverse": inverse(), "navigation.geodesic.direct": direct(),
+    inv, dirs = inverse(), direct()
+    files = {"navigation.geodesic.inverse": inv + inverse_geodtest(len(inv) + 1),
+             "navigation.geodesic.direct": dirs + direct_geodtest(len(dirs) + 1),
              "navigation.geodesic.haversine": haversine(), "navigation.geodesic.vincenty-inverse": vincenty_inverse(),
              "navigation.geodesic.vincenty-direct": vincenty_direct(), "navigation.geodesic.midpoint": midpoint()}
     for tool, vs in files.items():

@@ -221,3 +221,106 @@ fn round_trip_properties() {
     }
     assert!(worst < 1e-10, "worst UTM round trip {worst}°");
 }
+
+#[test]
+fn utm_matches_exact_transverse_mercator() {
+    // 1,000 points of GeographicLib's TMcoords.dat (exact transverse Mercator
+    // with 80-digit arithmetic), within 3.5° of the central meridian, placed
+    // in zone 31. Forward and inverse must agree to 5 nm and 1e-12°.
+    let text = include_str!("data/TMcoords-sample.dat");
+    let (mut dxy, mut dll, mut dg, mut dk) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
+    for l in text.lines() {
+        let f: Vec<f64> = l.split_whitespace().map(|x| x.parse().unwrap()).collect();
+        let (lat, dlon, x, y, g, k) = (f[0], f[1], f[2], f[3], f[4], f[5]);
+        let r = call(
+            "geodesy.utm.forward",
+            &format!(r#"{{"lat":{lat},"lon":{},"zone":31}}"#, 3.0 + dlon),
+        );
+        dxy = dxy.max(
+            (num(&r, "result.easting.value") - 500_000.0 - x)
+                .hypot(num(&r, "result.northing.value") - y),
+        );
+        dg = dg.max((num(&r, "result.convergence.value") - g).abs());
+        dk = dk.max((num(&r, "result.scale") - k).abs());
+        let i = call(
+            "geodesy.utm.inverse",
+            &format!(
+                r#"{{"zone":31,"hemisphere":"N","easting":"{} m","northing":"{y} m"}}"#,
+                500_000.0 + x
+            ),
+        );
+        dll = dll.max(
+            (num(&i, "result.lat.value") - lat)
+                .abs()
+                .max((num(&i, "result.lon.value") - 3.0 - dlon).abs()),
+        );
+        dg = dg.max((num(&i, "result.convergence.value") - g).abs());
+        dk = dk.max((num(&i, "result.scale") - k).abs());
+    }
+    assert!(dxy <= 5e-9, "position {dxy} m");
+    assert!(dll <= 1e-12, "lat/lon {dll}°");
+    assert!(dg <= 1e-12, "convergence {dg}°");
+    assert!(dk <= 1e-13, "scale {dk}");
+}
+
+#[test]
+fn utm_invariants() {
+    // Mirror symmetry about the central meridian and the equator, and
+    // forward then inverse returning the point, in every zone.
+    for zone in (1..=60).step_by(7) {
+        let cm = 6.0 * zone as f64 - 183.0;
+        for lat in [-79.5, -41.2, -0.3, 0.3, 23.4, 61.7, 79.4] {
+            for d in [0.4, 1.7, 2.9] {
+                let at = |lat: f64, lon: f64| {
+                    call(
+                        "geodesy.utm.forward",
+                        &format!(r#"{{"lat":{lat},"lon":{lon},"zone":{zone}}}"#),
+                    )
+                };
+                let (e, w) = (at(lat, cm + d), at(lat, cm - d));
+                let de = num(&e, "result.easting.value") - 500_000.0;
+                assert!(
+                    (de + num(&w, "result.easting.value") - 500_000.0).abs() < 1e-8,
+                    "E {zone} {lat} {d}"
+                );
+                assert!(
+                    (num(&e, "result.northing.value") - num(&w, "result.northing.value")).abs()
+                        < 1e-8
+                );
+                let s = at(-lat, cm + d);
+                let (n_n, n_s) = if lat >= 0.0 {
+                    (
+                        num(&e, "result.northing.value"),
+                        num(&s, "result.northing.value"),
+                    )
+                } else {
+                    (
+                        num(&s, "result.northing.value"),
+                        num(&e, "result.northing.value"),
+                    )
+                };
+                assert!(
+                    (n_n + n_s - 10_000_000.0).abs() < 1e-8,
+                    "N {zone} {lat} {d}"
+                );
+                let back = call(
+                    "geodesy.utm.inverse",
+                    &format!(
+                        r#"{{"zone":{zone},"hemisphere":"{}","easting":"{} m","northing":"{} m"}}"#,
+                        e["result"]["hemisphere"].as_str().unwrap(),
+                        num(&e, "result.easting.value"),
+                        num(&e, "result.northing.value")
+                    ),
+                );
+                assert!(
+                    (num(&back, "result.lat.value") - lat).abs() < 1e-11,
+                    "{back}"
+                );
+                assert!(
+                    (num(&back, "result.lon.value") - cm - d).abs() < 1e-11,
+                    "{back}"
+                );
+            }
+        }
+    }
+}

@@ -166,6 +166,7 @@ pub(crate) fn obj(pairs: Vec<(&str, Json)>) -> Json {
 
 pub static ISA: ToolDef = ToolDef {
     id: "aviation.atmosphere.isa",
+    stability: gp_base::tool::Stability::Stable,
     title: "Standard atmosphere",
     summary: "Temperature, pressure, density, speed of sound, and viscosity of the ICAO or US 1976 standard atmosphere at any altitude, on a standard or non-standard day.",
     aliases: &[

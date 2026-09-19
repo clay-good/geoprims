@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0045dc5e59b644ec",
+    "hash": "970959ac65f12058",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -17,6 +17,10 @@
   },
   "/aviation/atmosphere/": {
     "hash": "f4ed1b87078a56f7",
+    "lastmod": "2026-09-19"
+  },
+  "/aviation/atmosphere/isa/": {
+    "hash": "04b97f4ee1d0cb1e",
     "lastmod": "2026-09-19"
   },
   "/aviation/ifr/": {
@@ -40,7 +44,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "629947e09416ec36",
+    "hash": "a2e4fbcefa1d9ab7",
     "lastmod": "2026-09-19"
   },
   "/drone/": {
@@ -76,7 +80,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/geoid/geoid-height/": {
-    "hash": "0de788b168cce50f",
+    "hash": "9be2f7bf68d1d21a",
     "lastmod": "2026-09-19"
   },
   "/geodesy/grid-ref/": {
@@ -92,7 +96,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "e389bdfb6b8675cf",
+    "hash": "50c41eb7e29c7a17",
     "lastmod": "2026-09-19"
   },
   "/geodesy/parse/": {
@@ -104,11 +108,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "901c8aae443c2e48",
+    "hash": "674c755181e95e68",
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "e6490f552439b71f",
+    "hash": "88df451f76b74861",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ups/": {
@@ -117,6 +121,14 @@
   },
   "/geodesy/utm/": {
     "hash": "8c5a5ea1e5007ee6",
+    "lastmod": "2026-09-19"
+  },
+  "/geodesy/utm/forward/": {
+    "hash": "57caffdd402aef2d",
+    "lastmod": "2026-09-19"
+  },
+  "/geodesy/utm/inverse/": {
+    "hash": "7cc51642b0fd0cbe",
     "lastmod": "2026-09-19"
   },
   "/indexing/": {
@@ -148,7 +160,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "76894f4f65f62a6e",
+    "hash": "aadbc937120d5222",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -157,6 +169,14 @@
   },
   "/navigation/geodesic/": {
     "hash": "9b3c67bb0ad2aa70",
+    "lastmod": "2026-09-19"
+  },
+  "/navigation/geodesic/direct/": {
+    "hash": "fcb65c45beffbbfd",
+    "lastmod": "2026-09-19"
+  },
+  "/navigation/geodesic/inverse/": {
+    "hash": "d42c578b80a3673c",
     "lastmod": "2026-09-19"
   },
   "/sources/": {
@@ -300,7 +320,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "efb7353cdc8ea997",
+    "hash": "f5bfb04cbc298d4c",
     "lastmod": "2026-09-19"
   }
 }

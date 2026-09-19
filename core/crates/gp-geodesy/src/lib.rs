@@ -571,6 +571,7 @@ const UTM_OUTPUTS: &[Field] = &[
 
 pub static UTM_FORWARD: ToolDef = ToolDef {
     id: "geodesy.utm.forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to UTM",
     summary: "Converts a latitude and longitude to UTM zone, easting, and northing, with the Norway and Svalbard zone exceptions, an optional forced zone, and the grid convergence and scale factor.",
     aliases: &["lat long to UTM", "UTM converter", "geographic to UTM"],
@@ -708,6 +709,7 @@ fn run_utm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static UTM_INVERSE: ToolDef = ToolDef {
     id: "geodesy.utm.inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "UTM to latitude and longitude",
     summary: "Converts a UTM zone, hemisphere, easting, and northing back to latitude and longitude, with the grid convergence and scale factor.",
     aliases: &["UTM to lat long", "UTM to geographic"],

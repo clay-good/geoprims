@@ -22,6 +22,9 @@ export const REFERENCES = {
   zoneinfo: ['tools/vectors/gen_tz_diff.py'],
   'WMM2025 test values': ['core/crates/gp-geodesy/tests/data/WMM2025_TestValues.txt'],
   ppigrf: ['tools/vectors/gen_magnetic.py'],
+  GeodTest: ['core/crates/gp-navigation/tests/data/GeodTest-sample.dat'],
+  TMcoords: ['core/crates/gp-geodesy/tests/data/TMcoords-sample.dat'],
+  ambiance: ['tools/vectors/gen_aviation.py'],
 };
 
 const NEGATION = /\b(not yet|no practitioner|no one|pending|until|will be|only when|unless)\b/i;

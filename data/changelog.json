@@ -3,16 +3,46 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
+        "navigation.geodesic.inverse",
+        "navigation.geodesic.direct",
+        "geodesy.utm.forward",
+        "geodesy.utm.inverse",
+        "aviation.atmosphere.isa"
+      ],
+      "vectors": [],
+      "summary": "Five more tools passed the stable verification bar: geodesic distance and destination (checked against GeographicLib's GeodTest), UTM forward and inverse (checked against exact transverse Mercator values), and the standard atmosphere (checked against a separately written implementation)."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "result-change",
-      "tools": ["geodesy.spcs.spcs83-forward"],
+      "tools": [
+        "geodesy.utm.forward"
+      ],
+      "vectors": [
+        "geodesy.utm.forward v009"
+      ],
+      "summary": "UTM forward is now stable, so its results no longer carry the EXPERIMENTAL_TOOL warning. The nonstandard-zone warning moved to the first position; no numbers changed."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "result-change",
+      "tools": [
+        "geodesy.spcs.spcs83-forward"
+      ],
       "vectors": [],
       "summary": "State plane convergence and scale factor in the Hotine oblique Mercator zone (Alaska zone 1) are now computed with Richardson-extrapolated differences. They moved by up to 0.0000001°, well inside the published tolerance, and now agree between the forward and inverse tools."
     },
     {
       "date": "2026-09-19",
       "kind": "result-change",
-      "tools": ["time.sun.position"],
-      "vectors": ["time.sun.position v028"],
+      "tools": [
+        "time.sun.position"
+      ],
+      "vectors": [
+        "time.sun.position v028"
+      ],
       "summary": "Sun position is now stable, so its results no longer carry the EXPERIMENTAL_TOOL warning. The UT1 warning moved to the first position; no numbers changed."
     },
     {
@@ -25,22 +55,45 @@
     {
       "date": "2026-09-18",
       "kind": "changed",
-      "tools": ["geodesy.magnetic.declination", "geodesy.spcs.spcs83-forward", "geodesy.spcs.spcs83-inverse", "geodesy.geoid.geoid-height", "indexing.h3.lat-lng-to-cell", "time.sun.position"],
+      "tools": [
+        "geodesy.magnetic.declination",
+        "geodesy.spcs.spcs83-forward",
+        "geodesy.spcs.spcs83-inverse",
+        "geodesy.geoid.geoid-height",
+        "indexing.h3.lat-lng-to-cell",
+        "time.sun.position"
+      ],
       "vectors": [],
       "summary": "The first six tools passed the stable verification bar: a derivation, an independent worked example, invariant and differential tests, and at least 20 golden vectors each."
     },
     {
       "date": "2026-09-18",
       "kind": "result-change",
-      "tools": ["time.scale.utc-offset", "time.sun.events"],
-      "vectors": ["time.scale.utc-offset v006", "time.sun.events v007"],
+      "tools": [
+        "time.scale.utc-offset",
+        "time.sun.events"
+      ],
+      "vectors": [
+        "time.scale.utc-offset v006",
+        "time.sun.events v007"
+      ],
       "summary": "Named IANA time zones like America/Denver are supported, so inputs that returned UNSUPPORTED now resolve to local times."
     },
     {
       "date": "2026-09-18",
       "kind": "result-change",
-      "tools": ["time.sun.position"],
-      "vectors": ["time.sun.position v001", "time.sun.position v002", "time.sun.position v003", "time.sun.position v004", "time.sun.position v005", "time.sun.position v006", "time.sun.position v007"],
+      "tools": [
+        "time.sun.position"
+      ],
+      "vectors": [
+        "time.sun.position v001",
+        "time.sun.position v002",
+        "time.sun.position v003",
+        "time.sun.position v004",
+        "time.sun.position v005",
+        "time.sun.position v006",
+        "time.sun.position v007"
+      ],
       "summary": "Sun position uses the NREL Solar Position Algorithm (±0.0003°) instead of the NOAA equations (about ±0.01°). Elevation and azimuth changed by up to a few hundredths of a degree."
     },
     {

@@ -156,6 +156,7 @@ fn whole(ctx: &Ctx, name: &str, default: f64) -> Result<f64, ToolError> {
 
 pub static GEOHASH_ENCODE: ToolDef = ToolDef {
     id: "indexing.geohash.encode",
+    stability: gp_base::tool::Stability::Stable,
     title: "Geohash encoder",
     summary: "The geohash for a latitude and longitude at precision 1 to 12, with the cell's size and bounds.",
     aliases: &["geohash calculator", "lat long to geohash"],
@@ -416,6 +417,7 @@ fn tile_px(ctx: &Ctx) -> Result<f64, ToolError> {
 
 pub static TILE_FROM_POINT: ToolDef = ToolDef {
     id: "indexing.tile.from-point",
+    stability: gp_base::tool::Stability::Stable,
     title: "Map tile for a point (XYZ, TMS, quadkey)",
     summary: "The web map tile containing a point at a zoom: XYZ, TMS, and quadkey, with the ground resolution.",
     aliases: &[
@@ -526,6 +528,7 @@ fn run_tile_from_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TILE_BOUNDS: ToolDef = ToolDef {
     id: "indexing.tile.bounds",
+    stability: gp_base::tool::Stability::Stable,
     title: "Map tile bounds",
     summary: "The latitude and longitude bounds of a z/x/y tile or quadkey, with its XYZ, TMS, and quadkey forms; detect mode shows both y conventions.",
     aliases: &["tile to lat long", "quadkey to bounds", "TMS to XYZ"],

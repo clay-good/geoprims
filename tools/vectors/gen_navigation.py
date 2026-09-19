@@ -116,7 +116,11 @@ def hav(lat1, lon1, lat2, lon2, r=6371008.771):
 
 
 def haversine():
-    cases = [(40.6413, -73.7781, 51.47, -0.4543), (0, 0, 0, 90), (-33.9, 151.2, 51.5, -0.1), (10, 20, 10.001, 20.001), (89, 0, -89, 180)]
+    cases = [(40.6413, -73.7781, 51.47, -0.4543), (0, 0, 0, 90), (-33.9, 151.2, 51.5, -0.1), (10, 20, 10.001, 20.001), (89, 0, -89, 180),
+             (0, 0, 0, 180), (90, 0, -90, 0), (35.6762, 139.6503, 37.7749, -122.4194), (-22.9068, -43.1729, 38.7223, -9.1393),
+             (1.3521, 103.8198, -33.8688, 151.2093), (64.1466, -21.9426, 55.7558, 37.6173), (0, 179.9, 0, -179.9),
+             (-89.9, 45, -89.9, -135), (30.0444, 31.2357, 30.0444, 31.2358), (51.5, -0.1, 51.5, -0.1),
+             (-45.0312, 168.6626, 45.0312, -11.3374), (19.4326, -99.1332, 19.4326, 80.8668), (70, 20, 70, 30), (-10, -60, 10, -50)]
     out = []
     for i, c in enumerate(cases, 1):
         inp = dict(zip(["lat1", "lon1", "lat2", "lon2"], c))
@@ -124,6 +128,10 @@ def haversine():
                        "Haversine evaluated in Python with R1 = 6,371,008.771 m", "Moritz 2000"))
     out[0]["expect"]["result.difference.value"] = 14890.0
     out[0]["tolerance"]["result.difference.value"] = {"abs": 1.0}
+    # Rosetta Code "Haversine formula" task: BNA to LAX on a 6,372.8 km sphere, about 2,887.26 km
+    out.append(vec(len(out) + 1, {"lat1": 36.12, "lon1": -86.67, "lat2": 33.94, "lon2": -118.40, "radius": "6372.8 km"},
+                   {"result.distance.value": 2887.26}, {"result.distance.value": {"abs": 0.005}},
+                   "Rosetta Code, Haversine formula (task description)", "retrieved 2026-09-19"))
     return out
 
 

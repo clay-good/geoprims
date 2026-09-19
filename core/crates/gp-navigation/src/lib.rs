@@ -423,6 +423,7 @@ fn run_direct(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HAVERSINE: ToolDef = ToolDef {
     id: "navigation.geodesic.haversine",
+    stability: gp_base::tool::Stability::Stable,
     title: "Haversine distance (spherical)",
     summary: "The great-circle distance on a sphere by the haversine formula, with its error against the ellipsoidal geodesic shown.",
     aliases: &["haversine calculator", "great circle distance on a sphere"],

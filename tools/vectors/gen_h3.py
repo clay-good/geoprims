@@ -63,7 +63,7 @@ def main():
         edges.append(vec(i, {"cell": c}, {"result.edge_count": float(len(es)), "result.edges.0.edge": es[0],
                                           "result.edges.0.length.value": h3.edge_length(es[0], "m")}, tol=1e-6))
     pent = "85080003fffffff"
-    disk.append(vec(7, {"cell": pent, "k": 1}, {"result.count": 6.0, "meta.warnings.1.code": "PENTAGON_DISTORTION"}, SPEC, "2026"))
+    disk.append(vec(7, {"cell": pent, "k": 1}, {"result.count": 6.0, "meta.warnings.0.code": "PENTAGON_DISTORTION"}, SPEC, "2026"))
     to_cell.append(vec(7, {"lat": 0, "lon": 0, "resolution": 16}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
     info.append(vec(7, {"cell": 617741122143780863}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
     info.append(vec(8, {"cell": "617741122143780863"}, {"result.decimal": "617741122143780863", "result.resolution": 9.0}, SPEC, "2026"))
@@ -103,6 +103,14 @@ def main():
         clat, clng = h3.cell_to_latlng(c)
         to_cell.append(vec(len(to_cell) + 1, {"lat": la, "lon": lo, "resolution": r}, {"result.cell": c, "result.center_lat.value": clat,
                                                                                        "result.center_lon.value": clng, "result.area.value": h3.cell_area(c, "km^2")}, tol=1e-9))
+    # Grid disks for the stable bar: seeded cells at every resolution, and pentagons, where the disk has fewer cells.
+    for _ in range(10):
+        c = h3.latlng_to_cell(rnd.uniform(-89, 89), rnd.uniform(-180, 180), rnd.randint(0, 15))
+        k = rnd.randint(0, 5)
+        disk.append(vec(len(disk) + 1, {"cell": c, "k": k}, {"result.count": float(len(h3.grid_disk(c, k))), "result.cells.0.cell": c}))
+    for r, k in [(0, 1), (3, 2), (7, 1), (10, 3), (15, 2)]:
+        c = h3.get_pentagons(r)[r % 12]
+        disk.append(vec(len(disk) + 1, {"cell": c, "k": k}, {"result.count": float(len(h3.grid_disk(c, k))), "result.cells.0.cell": c}))
     f = {"indexing.h3.lat-lng-to-cell": to_cell, "indexing.h3.cell-info": info, "indexing.h3.grid-disk": disk, "indexing.h3.grid-ring": ring,
          "indexing.h3.grid-path": path, "indexing.h3.parent": parent, "indexing.h3.children": children, "indexing.h3.compact": compact,
          "indexing.h3.uncompact": uncompact, "indexing.h3.edges": edges, "indexing.h3.resolution-chooser": chooser, "indexing.h3.polygon-to-cells": fillv}

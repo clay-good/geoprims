@@ -741,3 +741,51 @@ fn cpa_scene_positions_come_from_the_core() {
     let m = gp_navigation::route::CPA.timeline.expect("a timeline");
     assert_eq!((m.input, m.end, m.key), ("at_time", "scene_end", "time"));
 }
+
+#[test]
+fn haversine_matches_independent_implementations() {
+    // tests/data/haversine_diff.csv (tools/vectors/gen_dev_diff.py): 1,000
+    // short, regional, and global lines with the haversine distance from a
+    // separate Python implementation and the ellipsoidal distance from
+    // GeographicLib (Python) 2.1.
+    let text = repo("core/crates/gp-navigation/tests/data/haversine_diff.csv");
+    let mut n = 0;
+    for line in text.lines().filter(|l| !l.starts_with('#')) {
+        let c: Vec<f64> = line.split(',').map(|x| x.parse().unwrap()).collect();
+        let input = serde_json::json!({"lat1": c[0], "lon1": c[1], "lat2": c[2], "lon2": c[3]});
+        let r = call("navigation.geodesic.haversine", &input.to_string());
+        let hav = num(&r, "result.distance.value") * 1000.0;
+        let karney = num(&r, "result.ellipsoidal_distance.value") * 1000.0;
+        assert!((hav - c[4]).abs() <= 1e-6 + 1e-12 * c[4], "{line}: haversine {hav}");
+        assert!((karney - c[5]).abs() <= 1e-6, "{line}: ellipsoidal {karney}");
+        n += 1;
+    }
+    assert_eq!(n, 1000);
+}
+
+#[test]
+fn haversine_invariants() {
+    // Distance is symmetric, zero from a point to itself, obeys the triangle
+    // inequality, never exceeds half the circumference, and scales with the radius.
+    let d = |a: (f64, f64), b: (f64, f64), r: Option<f64>| {
+        let mut v = serde_json::json!({"lat1": a.0, "lon1": a.1, "lat2": b.0, "lon2": b.1});
+        if let Some(r) = r {
+            v["radius"] = serde_json::json!(format!("{r} km"));
+        }
+        num(&call("navigation.geodesic.haversine", &v.to_string()), "result.distance.value")
+    };
+    let pts = [(40.6413, -73.7781), (51.47, -0.4543), (-33.9, 151.2), (0.0, 0.0), (89.0, 10.0), (-60.0, -170.0), (12.5, 179.9)];
+    let half = std::f64::consts::PI * 6371.008771;
+    for &a in &pts {
+        assert_eq!(d(a, a, None), 0.0);
+        for &b in &pts {
+            let ab = d(a, b, None);
+            assert!((ab - d(b, a, None)).abs() < 1e-9);
+            assert!(ab <= half + 1e-9);
+            assert!((d(a, b, Some(2.0 * 6371.008771)) - 2.0 * ab).abs() < 1e-8);
+            for &c in &pts {
+                assert!(ab <= d(a, c, None) + d(c, b, None) + 1e-9);
+            }
+        }
+    }
+}

@@ -1,10 +1,10 @@
 {
   "/": {
-    "hash": "6b6c407976a093ce",
+    "hash": "21b27e82f3c2eb2b",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
-    "hash": "f08e25c204670711",
+    "hash": "047eae06b5ddf7bf",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -64,7 +64,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "0cc63e9db1c88ad4",
+    "hash": "5e82abb5c938c53c",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -183,12 +183,20 @@
     "hash": "563910b66f4bfa7f",
     "lastmod": "2026-09-19"
   },
+  "/indexing/geohash/encode/": {
+    "hash": "63e8802a6c6f3517",
+    "lastmod": "2026-09-19"
+  },
   "/indexing/h3/": {
     "hash": "46136127efee4ee5",
     "lastmod": "2026-09-19"
   },
+  "/indexing/h3/grid-disk/": {
+    "hash": "11412a620a66ed44",
+    "lastmod": "2026-09-19"
+  },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "e417708f78093439",
+    "hash": "881597d43b8e8892",
     "lastmod": "2026-09-19"
   },
   "/indexing/plus-code/": {
@@ -199,12 +207,20 @@
     "hash": "44e30afd422e8849",
     "lastmod": "2026-09-19"
   },
+  "/indexing/tile/bounds/": {
+    "hash": "bdc14907407112c6",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/tile/from-point/": {
+    "hash": "1a5e3dcab456dc77",
+    "lastmod": "2026-09-19"
+  },
   "/known-issues/": {
     "hash": "ec03a40c42e7b3ab",
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "61ef7f4d9edec386",
+    "hash": "c2e19fb2b5ce3460",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -216,11 +232,15 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "9aeaab6e668cf7b0",
+    "hash": "ec1f1dc3df0ae818",
+    "lastmod": "2026-09-19"
+  },
+  "/navigation/geodesic/haversine/": {
+    "hash": "c66694325b072caa",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "c5312f8b0a421c6b",
+    "hash": "7d23914232e400df",
     "lastmod": "2026-09-19"
   },
   "/navigation/los/": {
@@ -376,7 +396,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "db1b38697c99f29f",
+    "hash": "1f225c4eab06b18c",
     "lastmod": "2026-09-19"
   }
 }

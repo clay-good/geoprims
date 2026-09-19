@@ -38,6 +38,12 @@ def gh_encode(lat, lon, p):
     return out, (la[0], lo[0], la[1], lo[1])
 
 
+EXTRA_GH = [(0.0, 0.0, 1), (89.9999, 179.9999, 8), (-89.9999, -179.9999, 8), (35.6762, 139.6503, 10), (-22.9068, -43.1729, 4),
+            (19.4326, -99.1332, 2), (-1.2921, 36.8219, 3), (55.7558, 37.6173, 11), (37.7749, -122.4194, 12), (-45.0312, 168.6626, 9),
+            (1.3521, 103.8198, 7), (64.1466, -21.9426, 6), (-77.85, 166.6667, 5), (30.0444, 31.2357, 8), (0.0000001, -0.0000001, 12),
+            (45.0, -90.0, 1), (-60.0, 120.0, 3)]
+
+
 def geohash():
     enc, dec = [], []
     for i, ((la, lo), p) in enumerate(zip(PTS, [9, 7, 12, 5, 6]), 1):
@@ -47,6 +53,12 @@ def geohash():
         dec.append(vec(i, {"geohash": g}, {"result.lat.value": (b[0] + b[2]) / 2, "result.lon.value": (b[1] + b[3]) / 2,
                                            "result.lat_error.value": (b[2] - b[0]) / 2}, GH_SRC))
     dec.append(vec(6, {"geohash": "dpan"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC))
+    for i, (la, lo, p) in enumerate(EXTRA_GH, len(enc) + 1):
+        g, b = gh_encode(la, lo, p)
+        enc.append(vec(i, {"lat": la, "lon": lo, "precision": p}, {"result.geohash": g, "result.south.value": b[0], "result.north.value": b[2]}, GH_SRC))
+    # The worked example in the Wikipedia article (after Niemeyer's geohash.org)
+    enc.append(vec(len(enc) + 1, {"lat": 57.64911, "lon": 10.40744, "precision": 11}, {"result.geohash": "u4pruydqqvj"},
+                   "Wikipedia, Geohash (worked example)", "retrieved 2026-09-19"))
     nb = []
     for i, (la, lo) in enumerate(PTS, 1):
         g, b = gh_encode(la, lo, 6)
@@ -86,11 +98,37 @@ def tiles():
         bd.append(vec(i, {"tile": f"{z}/{x}/{y}"}, {"result.north.value": lat_n, "result.south.value": lat_s, "result.west.value": x / n * 360 - 180,
                                                   "result.quadkey": quadkey(z, x, y)}, TILE_SRC))
         gr.append(vec(i, {"lat": la, "zoom": z, "tile_size": "512" if i == 3 else "256"}, {"result.resolution.value": res(la, z, 512 if i == 3 else 256)}, SPEC if i == 1 else TILE_SRC))
-    fp.append(vec(6, {"lat": 89, "lon": 0, "zoom": 3}, {"result.tile": "3/4/0", "meta.warnings.1.code": "WEB_MERCATOR_CLAMPED"}, SPEC))
+    fp.append(vec(6, {"lat": 89, "lon": 0, "zoom": 3}, {"result.tile": "3/4/0", "meta.warnings.0.code": "WEB_MERCATOR_CLAMPED"}, SPEC))
     bd.append(vec(6, {"tile": "12/1137/2551", "convention": "tms"}, {"result.xyz": "12/1137/1544", "result.quadkey": "032001112001"}, SPEC))
     bd.append(vec(7, {"tile": "032001112001"}, {"result.xyz": "12/1137/1544"}, SPEC))
     bd.append(vec(8, {"tile": "3/8/0"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC))
+    for la, lo, z in EXTRA_TILE:
+        x, y = tile(la, lo, z)
+        n = 2 ** z
+        fp.append(vec(len(fp) + 1, {"lat": la, "lon": lo, "zoom": z}, {"result.tile": f"{z}/{x}/{y}", "result.tms_y": float(n - 1 - y),
+                                                                     "result.quadkey": quadkey(z, x, y), "result.ground_resolution.value": res(la, z)}, TILE_SRC))
+        lat_n = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y / n))))
+        lat_s = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / n))))
+        bd.append(vec(len(bd) + 1, {"tile": f"{z}/{x}/{y}"}, {"result.north.value": lat_n, "result.south.value": lat_s, "result.west.value": x / n * 360 - 180,
+                                                            "result.east.value": (x + 1) / n * 360 - 180, "result.quadkey": quadkey(z, x, y)}, TILE_SRC))
+    # Published examples: the mercantile README (10/486/332) and the Bing Maps Tile System article
+    # (quadkey 213 for tile (3, 5) at level 3; ground resolution 78,271.5170 m/px at level 1 on the equator)
+    fp.append(vec(len(fp) + 1, {"lat": 53.33087298301705, "lon": -9.140625, "zoom": 10}, {"result.tile": "10/486/332"}, MERC, MERC_VER))
+    fp.append(vec(len(fp) + 1, {"lat": 0, "lon": 0, "zoom": 1}, {"result.ground_resolution.value": 78271.5170}, BING, BING_VER, tol=0))
+    fp[-1]["tolerance"] = {"result.ground_resolution.value": {"abs": 5e-5}}
+    bd.append(vec(len(bd) + 1, {"tile": "10/486/332"}, {"result.west.value": -9.140625, "result.south.value": 53.12040528310657,
+                                                      "result.east.value": -8.7890625, "result.north.value": 53.33087298301705}, MERC, MERC_VER))
+    bd.append(vec(len(bd) + 1, {"tile": "3/3/5"}, {"result.quadkey": "213"}, BING, BING_VER))
     return fp, bd, gr
+
+
+EXTRA_TILE = [(0.0001, 0.0001, 0), (0.0001, 0.0001, 1), (-0.0001, -0.0001, 1), (85.0, 179.99, 4), (-85.0, -179.99, 4), (35.6762, 139.6503, 14),
+              (-22.9068, -43.1729, 8), (19.4326, -99.1332, 11), (55.7558, 37.6173, 16), (37.7749, -122.4194, 18), (-45.0312, 168.6626, 13),
+              (1.3521, 103.8198, 22), (64.1466, -21.9426, 7), (30.0444, 31.2357, 10), (-77.85, 166.6667, 6), (47.6062, -122.3321, 21)]
+MERC = "mercantile README (Mapbox), worked examples"
+MERC_VER = "mercantile 1.2.1"
+BING = "Microsoft, Bing Maps Tile System (worked quadkey example and ground-resolution table)"
+BING_VER = "2018-02-28"
 
 
 OLC_CASES = [  # lat, lng, length, code (OLC encoding.csv)

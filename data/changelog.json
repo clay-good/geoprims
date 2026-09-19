@@ -3,6 +3,22 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "result-change",
+      "tools": [
+        "indexing.geohash.encode",
+        "indexing.tile.from-point",
+        "indexing.tile.bounds",
+        "indexing.h3.grid-disk",
+        "navigation.geodesic.haversine"
+      ],
+      "vectors": [
+        "indexing.tile.from-point v006",
+        "indexing.h3.grid-disk v007"
+      ],
+      "summary": "The geohash encoder, map tile for a point, tile bounds, H3 grid disk, and haversine distance are now stable, so their results no longer carry the EXPERIMENTAL_TOOL warning; the Web Mercator clamp and pentagon warnings moved to the first position. Each matches published worked examples (Wikipedia, the mercantile README, the Bing Maps Tile System, H3 C, and Rosetta Code) and agrees with a separately written library on 250 to 1,000 cases. No numbers changed."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "changed",
       "tools": [
         "aviation.altimetry.pressure-altitude",

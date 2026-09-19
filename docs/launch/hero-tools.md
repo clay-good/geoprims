@@ -44,12 +44,12 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Surveyors | Vertical curve | `survey.curves.vertical-curve` | [ ] | [ ] | [ ] |
 | Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [ ] | [ ] | [ ] |
 | Developers | H3 cell | `indexing.h3.lat-lng-to-cell` | [x] | [ ] | [ ] |
-| Developers | H3 k-ring | `indexing.h3.grid-disk` | [ ] | [ ] | [ ] |
-| Developers | Tile and quadkey | `indexing.tile.from-point` | [ ] | [ ] | [ ] |
-| Developers | Tile bounds | `indexing.tile.bounds` | [ ] | [ ] | [ ] |
-| Developers | Geohash | `indexing.geohash.encode` | [ ] | [ ] | [ ] |
+| Developers | H3 k-ring | `indexing.h3.grid-disk` | [x] | [ ] | [ ] |
+| Developers | Tile and quadkey | `indexing.tile.from-point` | [x] | [ ] | [ ] |
+| Developers | Tile bounds | `indexing.tile.bounds` | [x] | [ ] | [ ] |
+| Developers | Geohash | `indexing.geohash.encode` | [x] | [ ] | [ ] |
 | Developers | Geodesic distance | `navigation.geodesic.inverse` | [x] | [ ] | [ ] |
-| Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [ ] | [ ] | [ ] |
+| Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 10 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 15 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.

@@ -457,3 +457,105 @@ fn polyfill_bounds_across_the_antimeridian() {
     let (w, e) = (num(&r, "result.west.value"), num(&r, "result.east.value"));
     assert!(w > 179.0 && e < -179.0, "{w} {e}");
 }
+
+fn lcg(seed: &mut u64) -> f64 {
+    *seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+    (*seed >> 11) as f64 / (1u64 << 53) as f64
+}
+
+#[test]
+fn geohash_encode_invariants() {
+    // The point lies in its cell, a shorter geohash is a prefix of a longer
+    // one (the cells nest), and each added character splits the cell into 32.
+    let mut seed = 7;
+    for _ in 0..200 {
+        let (lat, lon) = (lcg(&mut seed) * 180.0 - 90.0, lcg(&mut seed) * 360.0 - 180.0);
+        let enc = |p: u32| {
+            call(
+                "indexing.geohash.encode",
+                &serde_json::json!({"lat": lat, "lon": lon, "precision": p}).to_string(),
+            )
+        };
+        let mut prev: Option<(String, f64)> = None;
+        for p in 1..=12 {
+            let r = enc(p);
+            let g = r["result"]["geohash"].as_str().unwrap().to_owned();
+            let (s, w, n, e) = (
+                num(&r, "result.south.value"),
+                num(&r, "result.west.value"),
+                num(&r, "result.north.value"),
+                num(&r, "result.east.value"),
+            );
+            assert!(s <= lat && lat <= n && w <= lon && lon <= e, "{g} does not hold {lat},{lon}");
+            let area = (n - s) * (e - w);
+            if let Some((pg, pa)) = &prev {
+                assert!(g.starts_with(pg.as_str()), "{g} does not extend {pg}");
+                assert!((pa / area - 32.0).abs() < 1e-9);
+            }
+            prev = Some((g, area));
+        }
+    }
+}
+
+#[test]
+fn tile_invariants() {
+    // The point lies in its tile's bounds, the quadkey has one digit per zoom
+    // and extends its parent's, TMS y mirrors XYZ y, and the tile's center
+    // maps back to the same tile.
+    let mut seed = 11;
+    for _ in 0..200 {
+        let (lat, lon) = (lcg(&mut seed) * 170.0 - 85.0, lcg(&mut seed) * 359.99 - 180.0);
+        let mut parent_qk = String::new();
+        for z in 0..=22u32 {
+            let p = call(
+                "indexing.tile.from-point",
+                &serde_json::json!({"lat": lat, "lon": lon, "zoom": z}).to_string(),
+            );
+            let tile = p["result"]["tile"].as_str().unwrap();
+            let qk = p["result"]["quadkey"].as_str().unwrap();
+            assert_eq!(qk.len(), z as usize);
+            assert!(qk.starts_with(&parent_qk));
+            parent_qk = qk.to_owned();
+            let y = num(&p, "result.y");
+            assert_eq!(num(&p, "result.tms_y"), f64::from(2u32.pow(z)) - 1.0 - y);
+            let b = call("indexing.tile.bounds", &serde_json::json!({"tile": tile}).to_string());
+            let (s, w, n, e) = (
+                num(&b, "result.south.value"),
+                num(&b, "result.west.value"),
+                num(&b, "result.north.value"),
+                num(&b, "result.east.value"),
+            );
+            assert!(s <= lat && lat <= n && w <= lon && lon <= e, "{tile} does not hold {lat},{lon}");
+            let c = call(
+                "indexing.tile.from-point",
+                &serde_json::json!({"lat": (s + n) / 2.0, "lon": (w + e) / 2.0, "zoom": z}).to_string(),
+            );
+            assert_eq!(c["result"]["tile"], tile);
+        }
+    }
+}
+
+#[test]
+fn grid_disk_invariants() {
+    // Away from pentagons a disk of radius k holds 1 + 3k(k + 1) cells, the
+    // disks nest (k - 1 inside k), and the center comes first.
+    let cells = |cell: &str, k: u32| -> Vec<String> {
+        let r = call(
+            "indexing.h3.grid-disk",
+            &serde_json::json!({"cell": cell, "k": k}).to_string(),
+        );
+        r["result"]["cells"].as_array().unwrap().iter().map(|c| c["cell"].as_str().unwrap().to_owned()).collect()
+    };
+    for cell in ["892a8471487ffff", "87be0e35cffffff", "8c195da49a2d9ff", "85283473fffffff"] {
+        let mut inner: Vec<String> = Vec::new();
+        for k in 0..=5u32 {
+            let d = cells(cell, k);
+            assert_eq!(d.len() as u32, 1 + 3 * k * (k + 1), "{cell} k={k}");
+            assert_eq!(d[0], cell);
+            assert!(inner.iter().all(|c| d.contains(c)), "{cell}: disk {k} misses cells of disk {}", k.saturating_sub(1));
+            inner = d;
+        }
+    }
+    // A pentagon has five neighbors, not six.
+    assert_eq!(cells("8009fffffffffff", 1).len(), 6);
+}

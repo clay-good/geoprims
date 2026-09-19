@@ -420,6 +420,7 @@ fn k_input(ctx: &Ctx) -> Result<u32, ToolError> {
 
 pub static GRID_DISK: ToolDef = ToolDef {
     id: "indexing.h3.grid-disk",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 grid disk (k-ring)",
     summary: "All H3 cells within k steps of a cell (gridDisk); fewer than 3k(k+1)+1 when a pentagon is nearby.",
     aliases: &["gridDisk", "kRing", "H3 neighbors"],

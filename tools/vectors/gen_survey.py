@@ -97,8 +97,48 @@ def traverse():
             exp["result.precision"] = "1:11,525"
         out.append(vec(i, inp, exp, src, ver, rel=1e-9))
     out.append(vec(6, {"courses": [{"direction": "0", "distance": 100}, {"direction": "180", "distance": 100}]},
-                   {"meta.warnings.1.code": "PERFECT_CLOSURE", "result.precision": "perfect"}, SPEC, "2026"))
+                   {"meta.warnings.0.code": "PERFECT_CLOSURE", "result.precision": "perfect"}, SPEC, "2026"))
+    for k, loop in enumerate(MORE_LOOPS):
+        method = ["compass", "transit"][k % 2]
+        out.append(vec(len(out) + 1, {"courses": [{"direction": str(a), "distance": d} for a, d in loop], "adjustment": method},
+                       traverse_case(loop, method), SRC, VER, rel=1e-9))
+    # University of Memphis CIVL 1112, Surveying - Traverse Calculations: two published closures and the compass-rule balanced table.
+    memphis = [("S 6-15 W", 189.53), ("S 29-38 E", 175.18), ("N 81-18 W", 197.78), ("N 12-24 W", 142.39), ("N 42-59 E", 234.58)]
+    exp = {"result.precision": "1:5,175", "result.misclosure.value": 0.182, "result.sum_latitudes.value": -0.079,
+           "result.sum_departures.value": -0.163, "result.total_length.value": 939.46}
+    # Balanced latitudes and departures accumulated from (0, 0): B, C, D, E.
+    for n, (lat, dep) in enumerate([(-188.388, -20.601), (-340.641, 66.047), (-310.708, -129.423), (-171.628, -159.974)], 1):
+        exp[f"result.adjusted.{n}.northing.value"] = lat
+        exp[f"result.adjusted.{n}.easting.value"] = dep
+    out.append(vec(len(out) + 1, {"courses": [{"direction": b, "distance": d} for b, d in memphis], "adjustment": "compass",
+                                  "start_northing": 0, "start_easting": 0}, exp, MEMPHIS, MEMPHIS_VER))
+    out[-1]["tolerance"] = {k: {"abs": 0.0015} for k in exp if isinstance(exp[k], float)}
+    group = [("S 77-10 E", 651.2), ("S 38-43 W", 826.7), ("N 64-09 W", 491.0), ("N 29-16 E", 660.5)]
+    out.append(vec(len(out) + 1, {"courses": [{"direction": b, "distance": d} for b, d in group]},
+                   {"result.precision": "1:2,083", "result.misclosure.value": 1.262, "result.sum_latitudes.value": 0.601,
+                    "result.sum_departures.value": -1.110}, MEMPHIS, MEMPHIS_VER))
+    out[-1]["tolerance"] = {k: {"abs": 0.0005} for k in out[-1]["expect"] if isinstance(out[-1]["expect"][k], float)}
     return out
+
+
+MORE_LOOPS = [
+    [(12.25, 250.0), (95.5, 310.2), (170.75, 260.4), (281.0, 290.1)],
+    [(0.0, 1500.0), (120.0, 1500.3), (240.01, 1499.8)],
+    [(33.3, 88.8), (123.3, 77.7), (213.31, 88.79), (303.3, 77.72)],
+    [(5.0, 2640.0), (95.0, 5280.1), (185.0, 2639.7), (275.02, 5280.0)],
+    [(60.0, 45.5), (140.0, 60.2), (230.0, 70.1), (320.0, 50.3), (355.0, 20.0)],
+    [(18.0, 400.0), (90.0, 250.0), (162.0, 400.2), (234.0, 250.1), (306.0, 330.0)],
+    [(270.0, 800.0), (0.0, 600.0), (90.0, 800.1), (180.01, 599.9)],
+    [(44.9, 150.0), (134.9, 150.02), (224.9, 149.98), (314.91, 150.0)],
+    [(200.0, 333.3), (320.0, 333.4), (80.0, 333.2)],
+    [(1.0, 999.99), (89.0, 500.0), (181.0, 1000.03), (269.0, 499.97)],
+    [(15.0, 120.0), (75.0, 95.0), (130.0, 140.0), (200.0, 180.0), (260.0, 90.0), (320.0, 110.0)],
+    [(350.0, 60.0), (80.0, 60.01), (170.0, 59.99), (260.02, 60.0)],
+    [(100.0, 1234.56), (220.0, 1234.5), (340.01, 1234.6)],
+    [(7.5, 700.0), (97.5, 350.0), (187.5, 700.05), (277.5, 349.9)],
+]
+MEMPHIS = "University of Memphis CIVL 1112, Surveying - Traverse Calculations (latitudes and departures example, group example 1)"
+MEMPHIS_VER = "course notes, retrieved 2026-09-19"
 
 
 def area():
@@ -216,7 +256,27 @@ def combined():
         ef = r / (r + h * FT)
         out.append(vec(i, {"grid_scale": k, "ellipsoid_height": f"{h} ft", "ground_distance": f"{g} ft"},
                        {"result.elevation_factor": ef, "result.combined_factor": k * ef, "result.grid_distance.value": g * k * ef}, src, "1990", rel=1e-12))
-    out.append(vec(6, {"grid_scale": 0.99991, "elevation": "1500 ft"}, {"meta.warnings.1.code": "ORTHOMETRIC_AS_ELLIPSOIDAL"}, SPEC, "2026"))
+    out.append(vec(6, {"grid_scale": 0.99991, "elevation": "1500 ft"}, {"meta.warnings.0.code": "ORTHOMETRIC_AS_ELLIPSOIDAL"}, SPEC, "2026"))
+    more = [(0.9999, 0, 10), (1.0001, 9000, 5000), (0.99996, 3200.5, 1320), (1.00002, 750, 66), (0.999925, 14000, 8000),
+            (1.0000076, 420, 300.25), (0.99987, 2100, 12345.678), (1.00003, -200, 45.6)]
+    for k, h, g in more:
+        ef = r / (r + h * FT)
+        out.append(vec(len(out) + 1, {"grid_scale": k, "ellipsoid_height": f"{h} ft", "ground_distance": f"{g} ft"},
+                       {"result.elevation_factor": ef, "result.combined_factor": k * ef, "result.grid_distance.value": g * k * ef}, src, "1990"))
+    # Orthometric height plus geoid height (h = H + N), in meters.
+    for k, h_m, n_m, g in [(0.99995, 250.0, -30.5, 1000.0), (1.00001, 1609.3, -18.2, 2500.0), (0.99992, 12.0, 34.1, 400.0)]:
+        ef = r / (r + h_m + n_m)
+        out.append(vec(len(out) + 1, {"grid_scale": k, "elevation": f"{h_m} m", "geoid_height": f"{n_m} m", "ground_distance": f"{g} m"},
+                       {"result.elevation_factor": ef, "result.combined_factor": k * ef, "result.grid_distance.value": g * k * ef}, src, "1990"))
+    # NOAA Manual NOS NGS 5 section 4.4 worked example (Wisconsin south): mean grid scale 1.0000450, H 865 ft,
+    # N -100 ft, R 20,906,000 ft; elevation factor 0.9999634, combined factor 1.0000084, and the step 5 grid lengths.
+    for ground, grid in [(4805.468, 4805.508), (3963.694, 3963.727), (4966.083, 4966.125), (3501.223, 3501.252), (4466.935, 4466.973)]:
+        out.append(vec(len(out) + 1, {"grid_scale": 1.0000450, "elevation": "865 ft", "geoid_height": "-100 ft", "radius": "20906000 ft",
+                                      "ground_distance": f"{ground} ft"},
+                       {"result.elevation_factor": 0.9999634, "result.combined_factor": 1.0000084, "result.grid_distance.value": grid},
+                       "NOAA Manual NOS NGS 5, State Plane Coordinate System of 1983 (Stem), section 4.4 example, steps 4 and 5", "1990"))
+        out[-1]["tolerance"] = {"result.elevation_factor": {"abs": 5e-8}, "result.combined_factor": {"abs": 5e-8},
+                                "result.grid_distance.value": {"abs": 0.0005}}
     return out
 
 

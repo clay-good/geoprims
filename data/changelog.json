@@ -3,6 +3,19 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "result-change",
+      "tools": [
+        "survey.cogo.traverse-closure",
+        "survey.reduction.combined-factor"
+      ],
+      "vectors": [
+        "survey.cogo.traverse-closure v006",
+        "survey.reduction.combined-factor v006"
+      ],
+      "summary": "Traverse closure and the combined grid-to-ground factor are now stable, so their results no longer carry the EXPERIMENTAL_TOOL warning; the perfect-closure and elevation-as-ellipsoid-height warnings moved to the first position. Both match published worked examples (University of Memphis traverse notes and NOAA Manual NOS NGS 5) to every printed digit. No numbers changed."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "changed",
       "tools": [
         "drone.photogrammetry.gsd",

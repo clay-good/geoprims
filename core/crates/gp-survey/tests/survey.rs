@@ -358,3 +358,81 @@ fn combined_factor() {
     );
     assert_eq!(both["error"]["code"], "INVALID_INPUT");
 }
+
+#[test]
+fn traverse_closure_invariants() {
+    // Misclosure is the length of (Σlat, Σdep); rotating every course by the
+    // same angle leaves misclosure and precision unchanged; reversing the
+    // loop negates the sums; and after a compass or transit adjustment the
+    // loop returns exactly to its start.
+    let loops: [&[(f64, f64)]; 3] = [
+        &[(0.0, 300.0), (90.0, 400.02), (180.0, 299.95), (270.01, 400.0)],
+        &[(12.25, 250.0), (95.5, 310.2), (170.75, 260.4), (281.0, 290.1)],
+        &[(60.0, 45.5), (140.0, 60.2), (230.0, 70.1), (320.0, 50.3), (355.0, 20.0)],
+    ];
+    let run = |courses: &[(f64, f64)], method: &str| {
+        let c: Vec<Value> = courses
+            .iter()
+            .map(|(a, d)| serde_json::json!({"direction": a.rem_euclid(360.0).to_string(), "distance": d}))
+            .collect();
+        call(
+            "survey.cogo.traverse-closure",
+            &serde_json::json!({"courses": c, "adjustment": method}).to_string(),
+        )
+    };
+    for courses in loops {
+        let base = run(courses, "compass");
+        let (sl, sd) = (num(&base, "result.sum_latitudes.value"), num(&base, "result.sum_departures.value"));
+        let mis = num(&base, "result.misclosure.value");
+        assert!((mis - sl.hypot(sd)).abs() < 1e-12);
+        for rot in [17.0, 123.5, 271.25] {
+            let turned: Vec<(f64, f64)> = courses.iter().map(|(a, d)| (a + rot, *d)).collect();
+            let r = run(&turned, "compass");
+            assert!((num(&r, "result.misclosure.value") - mis).abs() < 1e-9);
+            assert!((num(&r, "result.precision_ratio") - num(&base, "result.precision_ratio")).abs() < 1e-6);
+        }
+        let back: Vec<(f64, f64)> = courses.iter().rev().map(|(a, d)| (a + 180.0, *d)).collect();
+        let r = run(&back, "compass");
+        assert!((num(&r, "result.sum_latitudes.value") + sl).abs() < 1e-9);
+        assert!((num(&r, "result.sum_departures.value") + sd).abs() < 1e-9);
+        for method in ["compass", "transit"] {
+            let r = run(courses, method);
+            let pts = r["result"]["adjusted"].as_array().unwrap();
+            let (first, last) = (&pts[0], &pts[pts.len() - 1]);
+            for k in ["northing", "easting"] {
+                let gap = first[k]["value"].as_f64().unwrap() - last[k]["value"].as_f64().unwrap();
+                assert!(gap.abs() < 1e-9, "{method} {k} gap {gap}");
+            }
+        }
+    }
+}
+
+#[test]
+fn combined_factor_invariants() {
+    // Combined = grid scale × elevation factor; grid and ground distances
+    // invert each other; h = H + N gives the same factor as the ellipsoid
+    // height; and the elevation factor falls as the height rises.
+    let mut prev = f64::INFINITY;
+    for h in [-100.0, 0.0, 250.0, 1000.0, 3000.0, 4500.0] {
+        let e = call(
+            "survey.reduction.combined-factor",
+            &format!(r#"{{"grid_scale":0.99993,"ellipsoid_height":"{h} m","ground_distance":"1000 m"}}"#),
+        );
+        let ef = num(&e, "result.elevation_factor");
+        assert!(ef < prev);
+        prev = ef;
+        let cf = num(&e, "result.combined_factor");
+        assert!((cf - 0.99993 * ef).abs() < 1e-15);
+        let grid = num(&e, "result.grid_distance.value");
+        let back = call(
+            "survey.reduction.combined-factor",
+            &format!(r#"{{"grid_scale":0.99993,"ellipsoid_height":"{h} m","grid_distance":"{grid} m"}}"#),
+        );
+        assert!((num(&back, "result.ground_distance.value") - 1000.0).abs() < 1e-9);
+        let split = call(
+            "survey.reduction.combined-factor",
+            &format!(r#"{{"grid_scale":0.99993,"elevation":"{} m","geoid_height":"-30 m","ground_distance":"1000 m"}}"#, h + 30.0),
+        );
+        assert!((num(&split, "result.combined_factor") - cf).abs() < 1e-15);
+    }
+}

@@ -307,6 +307,7 @@ const ADJUSTED: &[Field] = &[
 
 pub static TRAVERSE: ToolDef = ToolDef {
     id: "survey.cogo.traverse-closure",
+    stability: gp_base::tool::Stability::Stable,
     title: "Traverse closure and adjustment",
     summary: "Latitudes, departures, linear misclosure, and precision ratio for a closed loop traverse, adjusted by the compass (Bowditch) or transit rule.",
     aliases: &[
@@ -1767,6 +1768,7 @@ fn run_shrink_swell(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static COMBINED_FACTOR: ToolDef = ToolDef {
     id: "survey.reduction.combined-factor",
+    stability: gp_base::tool::Stability::Stable,
     title: "Combined scale factor (grid and ground)",
     summary: "The elevation factor and combined factor from a grid scale factor and height, and conversion of a distance between grid and ground.",
     aliases: &[

@@ -2,6 +2,7 @@
 // the same Wasm modules as the MCP server through packages/runtime.
 import { assetProvider } from '../../../../packages/runtime/src/assets.mjs';
 import { loadModule } from '../../../../packages/runtime/src/module.mjs';
+import { detectValues } from './detect.js';
 
 // Data assets come from the same origin, whole files only, checked against the
 // registry's SHA-256 before use (data-assets "Integrity verification").
@@ -35,17 +36,32 @@ const get = (name) => {
 // The command palette ranks with the same core search as geoprims_search,
 // indexed once from the catalog on first use.
 let searchIndex = null;
+let tools = new Map();
 const searcher = () =>
   (searchIndex ??= Promise.all([get('search'), fetch('/catalog/v1.json').then((r) => r.json())]).then(async ([m, catalog]) => {
     await m.callString('gp_search_load', JSON.stringify(catalog.tools));
+    tools = new Map(catalog.tools.map((t) => [t.id, t]));
     return m;
   }));
+
+const run = async (id, input) => JSON.parse(await (await get(moduleFor(id))).invoke(id, JSON.stringify(input)));
+const detect = async (query) => {
+  const m = await searcher();
+  const out = await detectValues(query, {
+    candidates: async (q) => JSON.parse(await m.callString('gp_detect', JSON.stringify({ query: q }))).result.candidates,
+    run,
+    encode: async (state) => JSON.parse(await (await get('link')).callString('gp_link_encode', JSON.stringify(state))),
+    tools,
+  });
+  return JSON.stringify(out);
+};
 
 self.onmessage = async ({ data: { seq, method, args } }) => {
   try {
     let out;
     if (method === 'invoke') out = await (await get(moduleFor(args[0]))).invoke(args[0], args[1]);
     else if (method === 'search') out = await (await searcher()).callString('gp_search', args[0]);
+    else if (method === 'detect') out = await detect(args[0]);
     else out = await (await get(args[0])).callString(args[1], args[2]);
     self.postMessage({ seq, out });
   } catch (e) {

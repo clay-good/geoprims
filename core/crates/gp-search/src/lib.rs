@@ -7,6 +7,8 @@
 //! factor for multi-word queries, and boosts for exact id, alias, and title
 //! matches. Ties break by id.
 
+mod detect;
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -364,6 +366,29 @@ pub fn search(json: &str) -> String {
     })
 }
 
+/// Paste-to-detect. Input: `{query}`; output: `{ok, result: {candidates}}`.
+pub fn detect(json: &str) -> String {
+    let v: Value = match serde_json::from_str(json) {
+        Ok(v) => v,
+        Err(e) => {
+            return envelope::failure(&ToolError::new(
+                ErrorCode::InvalidInput,
+                format!("The request is not JSON: {e}."),
+            ));
+        }
+    };
+    let query = v["query"].as_str().unwrap_or_default();
+    Json::obj([
+        ("ok", Json::Bool(true)),
+        (
+            "result",
+            Json::obj([("candidates", detect::candidates(query))]),
+        ),
+    ])
+    .to_string()
+    .expect("finite")
+}
+
 #[cfg(target_arch = "wasm32")]
 mod exports {
     /// # Safety
@@ -383,6 +408,17 @@ mod exports {
     pub unsafe extern "C" fn gp_search(ptr: *const u8, len: usize) -> *const u8 {
         let out = match unsafe { gp_base::abi::read_str(ptr, len) } {
             Ok(s) => super::search(s),
+            Err(_) => gp_base::abi::bad_utf8(),
+        };
+        gp_base::abi::set_out(&out)
+    }
+
+    /// # Safety
+    /// The range must be a readable UTF-8 buffer from `gp_alloc`.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn gp_detect(ptr: *const u8, len: usize) -> *const u8 {
+        let out = match unsafe { gp_base::abi::read_str(ptr, len) } {
+            Ok(s) => super::detect(s),
             Err(_) => gp_base::abi::bad_utf8(),
         };
         gp_base::abi::set_out(&out)

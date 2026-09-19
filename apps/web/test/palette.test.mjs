@@ -56,3 +56,43 @@ test('every page offers the palette by button, / and Ctrl/Cmd+K', () => {
     assert.ok(src.includes(need), need);
   }
 });
+
+test('paste-to-detect: H3, ambiguous geohash, coordinates, MGRS, and altimeter groups', async () => {
+  const { detectValues } = await import('../src/lib/detect.js');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const search = await host.module('search');
+  const link = await host.module('link');
+  const tools = new Map(catalog.tools.map((t) => [t.id, t]));
+  const ctx = {
+    candidates: async (q) => JSON.parse(await search.callString('gp_detect', JSON.stringify({ query: q }))).result.candidates,
+    run: async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input))),
+    encode: async (state) => JSON.parse(await link.callString('gp_link_encode', JSON.stringify(state))),
+    tools,
+  };
+  const found = async (q) => (await detectValues(q, ctx)).result.found;
+
+  const [h3] = await found('8928308280fffff');
+  assert.equal(h3.label, 'H3 cell');
+  assert.match(h3.summary, /resolution 9/);
+  assert.deepEqual(h3.actions.map((a) => a.id).slice(0, 3), ['indexing.h3.cell-info', 'indexing.h3.grid-disk', 'indexing.h3.parent']);
+  assert.equal(h3.actions[0].input.cell, '8928308280fffff');
+
+  const ambiguous = await found('9q8yy');
+  assert.equal(ambiguous[0].kind, 'geohash', 'geohash first');
+
+  const [coords] = await found('40.4461, -79.9822');
+  assert.equal(coords.kind, 'coordinates');
+  const utm = coords.actions.find((a) => a.id === 'geodesy.utm.forward');
+  assert.ok(Math.abs(utm.input.lat - 40.4461) < 1e-9 && Math.abs(utm.input.lon + 79.9822) < 1e-9);
+  // The link opens the tool with those inputs.
+  const fragment = utm.href.split('#')[1];
+  const decoded = JSON.parse(await link.callString('gp_link_decode', fragment));
+  assert.equal(decoded.result.state.i.lat, utm.input.lat);
+
+  assert.equal((await found('18T WL 80669 23543'))[0]?.kind, 'coordinates', 'MGRS parses as coordinates');
+  const [alt] = await found('A2992');
+  assert.match(alt.summary, /1,013/);
+  assert.equal(alt.actions[0].input.altimeter, 'A2992');
+  assert.equal((await found('12/1137/2551')).map((f) => f.kind).join(), 'xyz', 'the coordinate reading of a tile path is dropped');
+  assert.deepEqual(await found('density altitude'), []);
+});

@@ -33,3 +33,4 @@ export const invoke = (id, args) => call('invoke', [id, JSON.stringify(args)], '
 export const encodeLink = (state, flags = []) => call('callString', ['link', 'gp_link_encode', JSON.stringify({ state, flags })], 'encode');
 export const decodeLink = (fragment) => call('callString', ['link', 'gp_link_decode', fragment]);
 export const search = (request) => call('search', [JSON.stringify(request)], 'search');
+export const detect = (query) => call('detect', [query], 'detect');

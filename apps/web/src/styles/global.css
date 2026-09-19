@@ -134,3 +134,5 @@ table.report { border-collapse: collapse; font-size: 0.85rem; min-inline-size: 4
 table.report th, table.report td { text-align: start; vertical-align: top; padding: 0.4rem 0.6rem; border-block-end: 1px solid var(--line); }
 table.report thead th { color: var(--muted); font-weight: 600; }
 .label { display: inline-block; font: 600 0.75rem var(--mono); padding: 0.1rem 0.5rem; border: 1px solid var(--line); color: var(--muted); border-radius: 4px; vertical-align: middle; }
+dialog.palette li.palette-detected { cursor: default; min-block-size: 0; padding-block: 0.5rem 0.25rem; color: var(--muted); font-size: 0.85rem; }
+dialog.palette li.palette-detected strong { color: var(--accent); }

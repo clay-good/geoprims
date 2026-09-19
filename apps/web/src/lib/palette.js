@@ -1,8 +1,10 @@
 // The command palette (web/command-palette): a WAI-ARIA combobox over the core
 // search, loaded on first use. `/` or Ctrl/Cmd+K opens it, arrows or
 // Ctrl+N/Ctrl+P move, Enter opens, Ctrl/Cmd+Enter opens in a new tab, and Esc
-// closes it and returns focus to where it was.
-import { search } from './compute.js';
+// closes it and returns focus to where it was. A pasted value (an H3 cell,
+// geohash, tile, Plus Code, MGRS, coordinates, METAR, or altimeter group) is
+// detected first, with the tools worth opening pre-filled with it.
+import { detect, search } from './compute.js';
 
 const LIMIT = 8;
 const route = (id) => '/' + id.split('.').join('/') + '/';
@@ -43,7 +45,17 @@ function build() {
 
 function render() {
   list.replaceChildren(
-    ...results.map((r, i) => {
+    ...results.flatMap((r, i) => {
+      const rows = [];
+      if (r.head) {
+        const head = document.createElement('li');
+        head.setAttribute('role', 'presentation');
+        head.className = 'palette-detected';
+        const strong = document.createElement('strong');
+        strong.textContent = r.head;
+        head.append(strong, ` ${r.headDetail}`);
+        rows.push(head);
+      }
       const li = document.createElement('li');
       li.id = `palette-opt-${i}`;
       li.setAttribute('role', 'option');
@@ -63,13 +75,14 @@ function render() {
       summary.className = 'palette-summary';
       summary.textContent = r.summary;
       li.append(summary);
-      return li;
+      rows.push(li);
+      return rows;
     }),
   );
   input.setAttribute('aria-expanded', String(results.length > 0));
   if (active >= 0) {
     input.setAttribute('aria-activedescendant', `palette-opt-${active}`);
-    list.children[active]?.scrollIntoView({ block: 'nearest' });
+    document.getElementById(`palette-opt-${active}`)?.scrollIntoView({ block: 'nearest' });
   } else input.removeAttribute('aria-activedescendant');
 }
 
@@ -81,12 +94,30 @@ async function update() {
     status.textContent = '';
     return render();
   }
-  const out = await search({ query, limit: LIMIT, includeExperimental: true });
+  // Values contain digits, "+", or "/"; plain words only search.
+  const [out, det] = await Promise.all([
+    search({ query, limit: LIMIT, includeExperimental: true }),
+    /[\d+/]/.test(query) ? detect(query) : null,
+  ]);
   if (!out || query !== input.value.trim()) return; // superseded by a newer keystroke
-  results = out.ok ? out.result.results : [];
+  const found = det?.ok ? det.result.found : [];
+  const detected = found.flatMap((f) =>
+    f.actions.map((a, k) => ({
+      title: a.title,
+      summary: `Opens with ${f.value}`,
+      href: a.href,
+      head: k === 0 ? `Detected: ${f.label}.` : null,
+      headDetail: f.summary,
+    })),
+  );
+  const tools = out.ok ? out.result.results : [];
+  results = [...detected, ...tools];
   active = results.length ? 0 : -1;
   render();
-  status.textContent = results.length ? `${results.length} ${results.length === 1 ? 'tool' : 'tools'} found` : 'No tools found';
+  const parts = [];
+  if (found.length) parts.push(`Detected ${found.map((f) => f.label).join(', ')}`);
+  parts.push(tools.length ? `${tools.length} ${tools.length === 1 ? 'tool' : 'tools'} found` : 'No tools found');
+  status.textContent = parts.join('. ');
 }
 
 function move(by) {
@@ -98,10 +129,13 @@ function move(by) {
 function go(i, newTab) {
   const r = results[i];
   if (!r) return;
-  if (newTab) window.open(route(r.id), '_blank', 'noopener');
+  const href = r.href ?? route(r.id);
+  if (newTab) window.open(href, '_blank', 'noopener');
   else {
     dialog.close();
-    location.href = route(r.id);
+    location.href = href;
+    // Same page, new inputs: only the hash changed, so reload to read it.
+    if (href.startsWith(`${location.pathname}#`)) location.reload();
   }
 }
 

@@ -1,10 +1,10 @@
 {
   "/": {
-    "hash": "f56ca0ca8865c5df",
+    "hash": "4c6b2b3afa6bedee",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
-    "hash": "30a2e7e7b9fa4e8f",
+    "hash": "4386139f6a0609a2",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "b427cce63aa33593",
+    "hash": "bb2e5c60bec141ad",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "e6fb61e72cc17996",
+    "hash": "aad13fad64e87fc1",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -316,11 +316,11 @@
     "lastmod": "2026-09-19"
   },
   "/survey/cogo/area-by-coordinates/": {
-    "hash": "63b5cf2d9476d5f5",
+    "hash": "ff64c94f7008586d",
     "lastmod": "2026-09-19"
   },
   "/survey/cogo/traverse-closure/": {
-    "hash": "3e62c9f9c32ba78c",
+    "hash": "25ba6234f7dec0ae",
     "lastmod": "2026-09-19"
   },
   "/survey/curves/": {
@@ -328,11 +328,11 @@
     "lastmod": "2026-09-19"
   },
   "/survey/curves/circular-curve/": {
-    "hash": "d36ac7149bb53185",
+    "hash": "efdd75b2b3b5c8ce",
     "lastmod": "2026-09-19"
   },
   "/survey/curves/vertical-curve/": {
-    "hash": "0dda9965dbc84da5",
+    "hash": "9c97e1dbaca6191c",
     "lastmod": "2026-09-19"
   },
   "/survey/earthwork/": {
@@ -343,12 +343,16 @@
     "hash": "4bc07ddd4f2378c9",
     "lastmod": "2026-09-19"
   },
+  "/survey/land/deed-plot/": {
+    "hash": "9359c3ff069ae04e",
+    "lastmod": "2026-09-19"
+  },
   "/survey/reduction/": {
     "hash": "6c046b15808d5964",
     "lastmod": "2026-09-19"
   },
   "/survey/reduction/combined-factor/": {
-    "hash": "6d30baa6ea9b8568",
+    "hash": "6ab93e8817609724",
     "lastmod": "2026-09-19"
   },
   "/time/": {
@@ -476,7 +480,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "6cbde5aeda9208b2",
+    "hash": "c17a36f95b8a9c48",
     "lastmod": "2026-09-19"
   }
 }

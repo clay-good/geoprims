@@ -220,3 +220,32 @@ fn rotate_deed_to_grid() {
     assert_eq!(r["result"]["rotated"][0]["rotated"], "S 79°57'30.0\" E");
     assert_eq!(r["result"]["rotated"][1]["rotated"], "N 45°27'30.0\" W");
 }
+
+#[test]
+fn deed_plot_invariants() {
+    // Rotating every bearing (a new basis of bearing) keeps the misclosure
+    // and area; the same calls in meters give the same shape scaled by
+    // 0.3048; and the misclosure agrees with the traverse-closure tool.
+    let calls = |rot: f64, unit: &str| -> Vec<Value> {
+        [(10.0, 250.0), (100.5, 180.0), (190.0, 250.3), (280.2, 179.6), (300.0, 12.0)]
+            .iter()
+            .map(|(az, d)| serde_json::json!({"direction": format!("{}", (az + rot) % 360.0), "distance": format!("{d} {unit}")}))
+            .collect()
+    };
+    let plot = |c: Vec<Value>| call("survey.land.deed-plot", &serde_json::json!({"calls": c}).to_string());
+    let base = plot(calls(0.0, "ft"));
+    let (mis, area) = (base["result"]["misclosure"]["value"].as_f64().unwrap(), base["result"]["area"]["value"].as_f64().unwrap());
+    for rot in [13.5, 90.0, 211.25] {
+        let r = plot(calls(rot, "ft"));
+        assert!((r["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9);
+        assert!((r["result"]["area"]["value"].as_f64().unwrap() - area).abs() < 1e-6);
+    }
+    let m = plot(calls(0.0, "m"));
+    assert_eq!(m["result"]["area"]["unit"], "m2");
+    assert!((m["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9, "same numbers, other unit");
+    let t = call(
+        "survey.cogo.traverse-closure",
+        &serde_json::json!({"courses": calls(0.0, "ft").iter().map(|c| serde_json::json!({"direction": c["direction"], "distance": c["distance"]})).collect::<Vec<_>>()}).to_string(),
+    );
+    assert!((t["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9, "{t}");
+}

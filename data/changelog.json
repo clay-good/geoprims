@@ -5,6 +5,15 @@
       "date": "2026-09-19",
       "kind": "fixed",
       "tools": [
+        "survey.land.deed-plot"
+      ],
+      "vectors": [],
+      "summary": "The deed plotter now reports in the unit the calls use. It converted every call to US survey feet, so a deed in meters came back in US survey square feet, international feet were shifted by 2 parts per million, and each result carried the legacy-unit warning three times. Mixing US survey and international feet is now refused, as in the traverse tool. Tool version 1.1.0. It is now stable, matching the University of Memphis worked traverse (0.182 ft misclosure, 36,320 sq ft)."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
         "geodesy.parse.coordinates"
       ],
       "vectors": [],

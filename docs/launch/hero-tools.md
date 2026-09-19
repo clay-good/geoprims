@@ -39,7 +39,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Surveyors | Geoid and orthometric height | `geodesy.geoid.geoid-height` | [x] | [ ] | [ ] |
 | Surveyors | Grid ↔ ground combined factor | `survey.reduction.combined-factor` | [x] | [ ] | [ ] |
 | Surveyors | Traverse closure | `survey.cogo.traverse-closure` | [x] | [ ] | [ ] |
-| Surveyors | Deed plotter | `survey.land.deed-plot` | [ ] | [ ] | [ ] |
+| Surveyors | Deed plotter | `survey.land.deed-plot` | [x] | [ ] | [ ] |
 | Surveyors | Horizontal curve | `survey.curves.circular-curve` | [x] | [ ] | [ ] |
 | Surveyors | Vertical curve | `survey.curves.vertical-curve` | [x] | [ ] | [ ] |
 | Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [x] | [ ] | [ ] |
@@ -52,7 +52,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 34 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 35 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
 
 ## Waiting on a published worked example
 

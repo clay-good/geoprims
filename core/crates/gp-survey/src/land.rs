@@ -958,6 +958,8 @@ const POINT_ROW: &[Field] = &[
 
 pub static DEED_PLOT: ToolDef = ToolDef {
     id: "survey.land.deed-plot",
+    stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Deed plot, closure, and area",
     summary: "Plots confirmed deed calls (lines and curves), then reports the misclosure, its direction, the precision ratio, and the area closed by the implied closing line. Courses are never adjusted unless you choose to.",
     aliases: &[
@@ -1124,6 +1126,9 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let mut total = 0.0;
     let mut legs: Vec<(f64, f64, f64)> = Vec::new(); // (dN, dE, length) for adjustment
     let mut tangent_out: Option<f64> = None;
+    // Every length as entered, to report in the calls' own unit (and refuse
+    // a mix of US survey and international feet).
+    let mut entered: Vec<(String, gp_base::tool::Q)> = Vec::new();
     for (i, r) in rows.iter().enumerate() {
         let at = |f: &str| format!("/calls/{i}/{f}");
         let text = |k: &str| {
@@ -1133,8 +1138,12 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 .filter(|s| !s.is_empty())
                 .map(str::to_owned)
         };
-        let q = |ctx: &mut Ctx, k: &str| -> Result<Option<f64>, ToolError> {
-            Ok(ctx.row_quantity("calls", i, r, k)?.map(|x| x.to(fu)))
+        let mut q = |ctx: &mut Ctx, k: &str| -> Result<Option<f64>, ToolError> {
+            let x = ctx.row_quantity("calls", i, r, k)?;
+            if let Some(x) = x {
+                entered.push((format!("/calls/{i}/{k}"), x));
+            }
+            Ok(x.map(|x| x.to(fu)))
         };
         let kind = text("kind")
             .unwrap_or_else(|| "line".into())
@@ -1224,6 +1233,8 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
         legs.push((dn, de, arc));
         total += arc;
     }
+    let u = crate::common_unit(&entered.iter().map(|(p, q)| (p.as_str(), *q)).collect::<Vec<_>>())?;
+    let len_u = |v: f64| gp_base::tool::Q { value: ftus(v).to(u), unit: u };
     let (n_end, e_end) = *pts.last().expect("points");
     let mis = hypot(n_end, e_end);
     let perfect = mis <= 1e-9 * total;
@@ -1239,7 +1250,7 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
     } else {
         format!(
             "computed with an implied closing line of {}",
-            display::quantity(mis, "ftUS", Precision::Decimals(2), ctx.options.format)
+            display::quantity(ftus(mis).to(u), u.symbol, Precision::Decimals(2), ctx.options.format)
         )
     };
     let corners: Vec<(f64, f64)> = if compass && !perfect {
@@ -1271,10 +1282,16 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 .at("/calls"),
         );
     }
-    let ftus2 = gp_base::units::by_symbol(gp_base::units::Quantity::Area, "ftUS2").expect("ftUS2");
+    let area_of = |s: &str| gp_base::units::by_symbol(gp_base::units::Quantity::Area, s).expect("area unit");
     let aq = gp_base::tool::Q {
         value: area,
-        unit: ftus2,
+        unit: area_of("ftUS2"),
+    };
+    // US survey feet report US survey acres; other units report international acres.
+    let (area_unit, acre_unit) = match u.symbol {
+        "ft" => ("ft2", "ac"),
+        "ftUS" => ("ftUS2", "acUS"),
+        _ => ("m2", "ac"),
     };
     let points = corners
         .iter()
@@ -1287,13 +1304,13 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .map(|(k, (n, e))| {
             Json::obj([
                 ("point", Json::Num((k + 1) as f64)),
-                ("northing", ftus(*n).to_json()),
-                ("easting", ftus(*e).to_json()),
+                ("northing", len_u(*n).to_json()),
+                ("easting", len_u(*e).to_json()),
             ])
         })
         .collect();
     Ok(Json::obj(vec![
-        ("misclosure", ctx.out("misclosure", ftus(mis))),
+        ("misclosure", ctx.emit("misclosure", ftus(mis), u)),
         (
             "misclosure_direction",
             Json::str(if perfect {
@@ -1313,9 +1330,9 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 )
             }),
         ),
-        ("total_length", ctx.out("total_length", ftus(total))),
-        ("area", ctx.out("area", aq)),
-        ("acres", ctx.out("acres", aq)),
+        ("total_length", ctx.emit("total_length", ftus(total), u)),
+        ("area", ctx.emit("area", aq, area_of(area_unit))),
+        ("acres", ctx.emit("acres", aq, area_of(acre_unit))),
         ("area_basis", Json::str(basis)),
         ("points", Json::Arr(points)),
         ("notice", Json::str(NOTICE)),

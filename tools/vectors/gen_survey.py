@@ -4,6 +4,7 @@
 NGS 5), plus the add-survey-suite spec scenarios."""
 import json
 import math
+import random
 import sys
 from pathlib import Path
 
@@ -377,6 +378,17 @@ def deed_plot():
              [("N 10 E", 250), ("S 80 E", 180), ("S 10 W", 250), ("S 80 W", 180.1)],
              [("N 30 E", 120), ("S 60 E", 200), ("S 30 W", 120), ("N 60 W", 199.9)],
              [("N 0 E", 1000), ("S 89 E", 1000), ("S 1 E", 1000), ("N 88°59'00\" W", 1000)]]
+    rnd = random.Random(19)
+    for _ in range(12):  # random quadrilaterals to hexagons, closing roughly as surveyed parcels do
+        k = rnd.randint(4, 6)
+        legs = []
+        for j in range(k):
+            az = (360 / k * j + rnd.uniform(-20, 20)) % 360
+            q = int(az // 90)
+            ang = [az, 180 - az, az - 180, 360 - az][q]
+            d, m, sec = int(ang), int(ang * 60 % 60), int(ang * 3600 % 60)
+            legs.append((f"{'NSSN'[q]} {d}°{m:02d}'{sec:02d}\" {'EEWW'[q]}", round(rnd.uniform(80, 900), 2)))
+        cases.append(legs)
     for i, legs in enumerate(cases, 1):
         n = e = 0.0
         pts = [(0.0, 0.0)]
@@ -395,6 +407,20 @@ def deed_plot():
         rows = [{"direction": b, "distance": f"{d} ftUS"} for b, d in legs]
         out.append(lvec(i, {"calls": rows}, {"result.misclosure.value": math.hypot(n, e), "result.area.value": abs(twice) / 2,
                                              "result.total_length.value": float(total)}, ver="Ghilani and Wolf, 15th ed. (2018)"))
+    # University of Memphis CIVL 1112 (traverse and area by DMD): the five courses in international feet, compass-balanced,
+    # close 0.182 ft (1:5,175, shown to two figures) and enclose 36,320 ft2 = 0.834 acre.
+    memphis = [("S 6-15 W", 189.53), ("S 29-38 E", 175.18), ("N 81-18 W", 197.78), ("N 12-24 W", 142.39), ("N 42-59 E", 234.58)]
+    v = lvec(len(out) + 1, {"calls": [{"direction": b, "distance": f"{d} ft"} for b, d in memphis], "adjustment": "compass"},
+             {"result.misclosure.value": 0.182, "result.misclosure.unit": "ft", "result.precision": "1:5,200",
+              "result.area.value": 36320.0, "result.area.unit": "ft2", "result.acres.value": 0.834}, MEMPHIS, MEMPHIS_VER)
+    v["tolerance"] = {"result.misclosure.value": {"abs": 0.0005}, "result.area.value": {"abs": 0.5}, "result.acres.value": {"abs": 0.0005}}
+    out.append(v)
+    # Calls in meters report in meters and international acres; mixed US survey and international feet are refused.
+    sq = [("N 0 E", 100), ("N 90 E", 100), ("S 0 E", 100), ("S 90 W", 100.1)]
+    out.append(lvec(len(out) + 1, {"calls": [{"direction": b, "distance": f"{d} m"} for b, d in sq]},
+                    {"result.misclosure.value": 0.1, "result.misclosure.unit": "m", "result.area.unit": "m2", "result.acres.unit": "ac"}))
+    mixed = [{"direction": b, "distance": f"{d} {'ftUS' if k == 2 else 'ft'}"} for k, (b, d) in enumerate(sq)]
+    out.append(lvec(len(out) + 1, {"calls": mixed}, {"ok": False, "error.code": "UNIT_MISMATCH", "error.field": "/calls/2/distance"}))
     return out
 
 

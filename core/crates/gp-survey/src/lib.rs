@@ -71,7 +71,7 @@ const fn len_out(name: &'static str, title: &'static str, help: &'static str) ->
 
 /// The common linear unit of several values. US survey feet and international
 /// feet may not be mixed (the 2 ppm trap); other units convert to the first.
-fn common_unit(values: &[(&str, Q)]) -> Result<&'static Unit, ToolError> {
+pub(crate) fn common_unit(values: &[(&str, Q)]) -> Result<&'static Unit, ToolError> {
     let first = values
         .first()
         .map(|(_, q)| q.unit)

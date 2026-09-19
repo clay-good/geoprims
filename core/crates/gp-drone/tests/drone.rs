@@ -183,3 +183,36 @@ fn asprs_scenarios() {
             .contains("30")
     );
 }
+
+#[test]
+fn gsd_invariants() {
+    // GSD is linear in height, the footprint is GSD × pixels, and the height
+    // for a target GSD inverts the GSD tool exactly.
+    let cams = [
+        (13.2, 8.8, 8.8, 5472, 3648),
+        (17.3, 13.0, 12.29, 5280, 3956),
+        (6.17, 4.55, 4.5, 4000, 3000),
+        (35.9, 24.0, 35.0, 8192, 5460),
+    ];
+    let v = |r: &Value, k: &str| num(r, &format!("result.{k}.value"));
+    for (w, h, f, iw, ih) in cams {
+        let cam = serde_json::json!({"sensor_width": format!("{w} mm"), "sensor_height": format!("{h} mm"),
+            "focal_length": format!("{f} mm"), "image_width": iw, "image_height": ih});
+        let gsd = |m: f64| {
+            let mut i = cam.clone();
+            i["height"] = serde_json::json!(format!("{m} m"));
+            call("drone.photogrammetry.gsd", &i.to_string())
+        };
+        for m in [10.0, 45.0, 100.0, 120.0, 400.0] {
+            let r = gsd(m);
+            let g = v(&r, "gsd");
+            assert!((v(&gsd(2.0 * m), "gsd") - 2.0 * g).abs() < 1e-12 * g.max(1.0));
+            assert!((v(&r, "footprint_across") - g / 100.0 * f64::from(iw)).abs() < 1e-9);
+            assert!((v(&r, "footprint_along") - v(&r, "gsd_along") / 100.0 * f64::from(ih)).abs() < 1e-9);
+            let mut i = cam.clone();
+            i["target_gsd"] = serde_json::json!(format!("{g} cm"));
+            let back = call("drone.photogrammetry.altitude-for-gsd", &i.to_string());
+            assert!((v(&back, "height") - m).abs() < 1e-9 * m, "{back}");
+        }
+    }
+}

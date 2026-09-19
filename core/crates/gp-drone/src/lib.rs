@@ -231,6 +231,7 @@ const HEIGHT: Field = Field::new(
 
 pub static GSD: ToolDef = ToolDef {
     id: "drone.photogrammetry.gsd",
+    stability: gp_base::tool::Stability::Stable,
     title: "Ground sampling distance (GSD)",
     summary: "How much ground each pixel covers, and the image footprint, from the camera and height above ground; catches 35 mm-equivalent focal lengths entered by mistake.",
     aliases: &["GSD calculator", "ground sample distance"],
@@ -368,6 +369,7 @@ fn run_gsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ALTITUDE_FOR_GSD: ToolDef = ToolDef {
     id: "drone.photogrammetry.altitude-for-gsd",
+    stability: gp_base::tool::Stability::Stable,
     title: "Height for a target GSD",
     summary: "The height above ground that gives a target ground sampling distance with your camera, checked against your altitude ceiling.",
     aliases: &["altitude for GSD", "flight height for GSD"],

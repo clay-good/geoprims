@@ -23,8 +23,8 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Weight and balance | `aviation.loading.weight-balance` | [ ] | [ ] | [ ] |
 | Pilots | Top of descent | `aviation.performance.top-of-descent` | [ ] | [ ] | [ ] |
 | Pilots | Visual descent point | `aviation.performance.vdp` | [ ] | [ ] | [ ] |
-| Drone | GSD | `drone.photogrammetry.gsd` | [ ] | [ ] | [ ] |
-| Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [ ] | [ ] | [ ] |
+| Drone | GSD | `drone.photogrammetry.gsd` | [x] | [ ] | [ ] |
+| Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] |
 | Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [ ] | [ ] | [ ] |
 | Drone | Image count | `drone.photogrammetry.image-count` | [ ] | [ ] | [ ] |
 | Drone | Flight time | `drone.power.endurance` | [ ] | [ ] | [ ] |
@@ -52,4 +52,4 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 15 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 17 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.

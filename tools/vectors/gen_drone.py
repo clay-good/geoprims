@@ -18,6 +18,16 @@ CAMS = [  # sensor w, h (mm), focal (mm), image w, h (px)
 ]
 
 
+# More camera and height pairs for the stable bar (20+ vectors per tool).
+MORE = [(CAMS[0], 40), (CAMS[0], 120), (CAMS[1], 30), (CAMS[1], 150), (CAMS[2], 20), (CAMS[2], 121.92), (CAMS[3], 500),
+        (CAMS[3], 60), (CAMS[4], 250), (CAMS[4], 15), ((7.6, 5.7, 6.72, 4000, 3000), 90), ((13.2, 8.8, 10.26, 5472, 3648), 75),
+        ((36.0, 24.0, 21.0, 8256, 5504), 200), ((23.5, 15.6, 25.0, 6000, 4000), 110), ((6.4, 4.8, 4.3, 8000, 6000), 60)]
+# Alshaibani et al. (2021), arXiv:2108.12811, equation 1: a 1-inch 20 MP camera (12.75 × 8.5 mm, 10.6 mm, 4608 × 3456 px).
+PAPER = (12.75, 8.5, 10.6, 4608, None)  # the paper gives no image height
+PAPER_SRC = "Alshaibani et al., Airplane Type Identification Based on Mask RCNN and Drone Images, arXiv:2108.12811, equation 1"
+PAPER_VER = "arXiv v1 (2021)"
+
+
 def vec(i, inp, exp, src=SRC, ver="4th edition (2014)"):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -26,7 +36,8 @@ def vec(i, inp, exp, src=SRC, ver="4th edition (2014)"):
 
 
 def cam_inp(c):
-    return {"sensor_width": f"{c[0]} mm", "sensor_height": f"{c[1]} mm", "focal_length": f"{c[2]} mm", "image_width": c[3], "image_height": c[4]}
+    out = {"sensor_width": f"{c[0]} mm", "sensor_height": f"{c[1]} mm", "focal_length": f"{c[2]} mm", "image_width": c[3], "image_height": c[4]}
+    return {k: v for k, v in out.items() if v is not None}
 
 
 def gsd():
@@ -36,6 +47,12 @@ def gsd():
         out.append(vec(i, dict(cam_inp(c), height=f"{h} m"),
                        {"result.gsd.value": g, "result.footprint_across.value": c[0] * h / c[2], "result.gsd_along.value": c[1] * h / (c[2] * c[4]) * 100}))
     out.append(vec(6, dict(cam_inp((13.2, 8.8, 24.0, 5472, 3648)), height="100 m"), {"meta.warnings.0.code": "EQUIVALENT_FOCAL_LENGTH"}, SPEC, "2026"))
+    for c, h in MORE:
+        g = c[0] * h / (c[2] * c[3]) * 100
+        out.append(vec(len(out) + 1, dict(cam_inp(c), height=f"{h} m"),
+                       {"result.gsd.value": g, "result.footprint_across.value": c[0] * h / c[2], "result.gsd_along.value": c[1] * h / (c[2] * c[4]) * 100}))
+    out.append(vec(len(out) + 1, dict(cam_inp(PAPER), height="120 m"), {"result.gsd.value": 3.13}, PAPER_SRC, PAPER_VER))
+    out[-1]["tolerance"] = {"result.gsd.value": {"abs": 0.005}}
     return out
 
 
@@ -45,6 +62,16 @@ def alt():
         inp = cam_inp(c)
         inp["target_gsd"] = f"{g} cm"
         out.append(vec(i, inp, {"result.height.value": g / 100 * c[2] * c[3] / c[0]}))
+    for c, h in MORE:
+        g = round(c[0] * h / (c[2] * c[3]) * 100, 2)
+        inp = cam_inp(c)
+        inp["target_gsd"] = f"{g} cm"
+        out.append(vec(len(out) + 1, inp, {"result.height.value": g / 100 * c[2] * c[3] / c[0], "result.footprint_across.value": g / 100 * c[3]}))
+    # The published example inverted: 3.13 cm/px (rounded from 3.1324) needs about 120 m.
+    inp = cam_inp(PAPER)
+    inp["target_gsd"] = "3.13 cm"
+    out.append(vec(len(out) + 1, inp, {"result.height.value": 120.0}, PAPER_SRC, PAPER_VER))
+    out[-1]["tolerance"] = {"result.height.value": {"abs": 0.2}}
     return out
 
 

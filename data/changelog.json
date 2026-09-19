@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
+        "drone.photogrammetry.gsd",
+        "drone.photogrammetry.altitude-for-gsd"
+      ],
+      "vectors": [],
+      "summary": "Ground sampling distance and height for a target GSD are now stable. Both match a published worked example (a 1-inch camera at 120 m gives 3.13 cm per pixel) and 20 vectors each from a separate implementation. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "result-change",
       "tools": [
         "indexing.geohash.encode",

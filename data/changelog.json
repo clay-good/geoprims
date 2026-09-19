@@ -5,6 +5,15 @@
       "date": "2026-09-19",
       "kind": "fixed",
       "tools": [
+        "drone.sensors.vlos"
+      ],
+      "vectors": [],
+      "summary": "VLOS guidance now takes ground visibility as at most 5 km, as EASA's procedure and the German LBA guidance assume, so VLOS never exceeds 1,500 m. Without a visibility it used only the aircraft's size, so a 10 m multirotor showed 3,290 m. It is now stable, matching the LBA's worked table, and cites EASA's guidelines at Issue 03 (17 July 2025). Tool version 1.1.0."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
         "survey.land.deed-plot"
       ],
       "vectors": [],

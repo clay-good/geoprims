@@ -332,3 +332,35 @@ fn battery_energy_invariants() {
         assert!((num(&r, "result.usable_energy.value") - full * (dod - res) / 100.0).abs() < 1e-9);
     }
 }
+
+#[test]
+fn vlos_invariants() {
+    // VLOS is the smaller of ALOS and DLOS; ALOS grows linearly with size at
+    // 327 (multirotor) or 490 (fixed wing) per meter; DLOS is 0.3 × ground
+    // visibility; and the margin is VLOS minus the farthest planned point.
+    let v = |cd: f64, kind: &str, gv: f64, far: Option<f64>| {
+        let mut inp = format!(r#"{{"characteristic_dimension":"{cd} m","aircraft_type":"{kind}","ground_visibility":"{gv} km""#);
+        if let Some(f) = far {
+            inp += &format!(r#","farthest_distance":"{f} m""#);
+        }
+        call("drone.sensors.vlos", &(inp + "}"))
+    };
+    for (kind, slope) in [("multirotor", 327.0), ("fixed-wing", 490.0)] {
+        for gv in [0.5, 2.0, 5.0] {
+            let (a, b) = (v(1.0, kind, gv, None), v(2.5, kind, gv, None));
+            let (a1, a2) = (num(&a, "result.alos.value"), num(&b, "result.alos.value"));
+            assert!((a2 - a1 - 1.5 * slope).abs() < 1e-9);
+            for r in [&a, &b] {
+                let (al, dl, vl) = (num(r, "result.alos.value"), num(r, "result.dlos.value"), num(r, "result.vlos.value"));
+                assert!((dl - 300.0 * gv).abs() < 1e-9);
+                assert_eq!(vl, al.min(dl));
+            }
+        }
+        let r = v(1.2, kind, 5.0, Some(250.0));
+        assert!((num(&r, "result.margin.value") - (num(&r, "result.vlos.value") - 250.0)).abs() < 1e-9);
+        // Visibility counts up to 5 km, so VLOS stops at 1,500 m however large the aircraft.
+        assert_eq!(num(&v(20.0, kind, 12.0, None), "result.vlos.value"), 1500.0);
+        let none = call("drone.sensors.vlos", &format!(r#"{{"characteristic_dimension":"20 m","aircraft_type":"{kind}"}}"#));
+        assert_eq!(num(&none, "result.vlos.value"), 1500.0);
+    }
+}

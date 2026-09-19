@@ -1199,14 +1199,14 @@
       "id": "easa-guidelines",
       "name": "EASA Guidelines for UAS operations in the open and specific category",
       "issuer": "EASA",
-      "currentEdition": "EASA guidelines",
-      "currentReleaseDate": null,
+      "currentEdition": "Issue 03, 17 July 2025",
+      "currentReleaseDate": "2025-07-17",
       "cycleMonths": null,
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Checked at the issuer on 2026-09-18. VLOS coefficients confirmed.",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the download is Issue 03 of 17 July 2025, with the VLOS procedure (ALOS 327 x CD + 20 m, 490 x CD + 30 m; DLOS 0.3 x GV) unchanged. Its footnote points to the LBA guidance, whose section 7.1 table is used as the worked example.",
       "freeAccessUrl": "https://www.easa.europa.eu/en/downloads/139435/en",
       "matchTerms": [
         "Guidelines for UAS operations"

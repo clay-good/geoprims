@@ -4,6 +4,7 @@ published formulas (Wolf, Dewitt & Wilkinson 2014, ch. 6; ASPRS Edition 2),
 plus the add-drone-suite spec scenarios."""
 import json
 import math
+import random
 import sys
 from pathlib import Path
 
@@ -247,7 +248,32 @@ def vlos_vectors():
         if gv:
             inp["ground_visibility"] = f"{gv} km"
         out.append(fvec(i, inp, {"result.vlos.value": want}, OPS_SRC, OPS_VER))
+    rnd = random.Random(8)
+    for _ in range(6):
+        cd, kind, gv = round(rnd.uniform(0.2, 5.0), 2), rnd.choice(["multirotor", "fixed-wing"]), round(rnd.uniform(0.5, 5.0), 1)
+        alos = (327 * cd + 20) if kind == "multirotor" else (490 * cd + 30)
+        out.append(fvec(len(out) + 1, {"characteristic_dimension": f"{cd} m", "aircraft_type": kind, "ground_visibility": f"{gv} km"},
+                        {"result.alos.value": alos, "result.dlos.value": 300 * gv, "result.vlos.value": min(alos, 300 * gv)}, OPS_SRC, OPS_VER))
+    # Luftfahrt-Bundesamt, Guidance for Dimensioning of Flight Geography, Contingency Volume and Ground Risk Buffer, section 7.1
+    # (ground visibility 5 km or more). Its 3 m rotary-wing row prints 1000 m where the formula gives 1001 m, so it is left out.
+    for cd, kind, want in [(1, "multirotor", 347), (1, "fixed-wing", 520), (2, "multirotor", 674), (2, "fixed-wing", 1010),
+                           (3, "fixed-wing", 1500), (3.5, "multirotor", 1164.5), (4, "multirotor", 1328), (4.53, "multirotor", 1500)]:
+        out.append(fvec(len(out) + 1, {"characteristic_dimension": f"{cd} m", "aircraft_type": kind, "ground_visibility": "5 km"},
+                        {"result.vlos.value": float(want)}, LBA, LBA_VER))
+    # Checked against a planned farthest point.
+    for far, status in [(300, "within"), (400, "beyond")]:
+        out.append(fvec(len(out) + 1, {"characteristic_dimension": "1 m", "aircraft_type": "multirotor", "farthest_distance": f"{far} m"},
+                        {"result.margin.value": 347.0 - far}, OPS_SRC, OPS_VER))
+    # Visibility is taken as at most 5 km (LBA section 7: GVmax = 5 km), so VLOS never exceeds 1,500 m.
+    out.append(fvec(len(out) + 1, {"characteristic_dimension": "10 m", "aircraft_type": "multirotor"},
+                    {"result.vlos.value": 1500.0, "meta.warnings.0.code": "NOMINAL_VALUE_USED"}, LBA, LBA_VER))
+    out.append(fvec(len(out) + 1, {"characteristic_dimension": "10 m", "aircraft_type": "fixed-wing", "ground_visibility": "8 km"},
+                    {"result.vlos.value": 1500.0, "meta.warnings.0.code": "INPUT_NORMALIZED"}, LBA, LBA_VER))
     return out
+
+
+LBA = "Luftfahrt-Bundesamt, Guidance for Dimensioning of Flight Geography, Contingency Volume and Ground Risk Buffer, section 7.1 (maximum VLOS distance table)"
+LBA_VER = "LBA guidance (English), retrieved 2026-09-19"
 
 
 MIS_SRC = "Flight-line arithmetic (Wolf, Dewitt & Wilkinson 2014, ch. 18) evaluated in Python (tools/vectors/gen_drone.py)"

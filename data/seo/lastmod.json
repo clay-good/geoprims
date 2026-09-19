@@ -1,10 +1,10 @@
 {
   "/": {
-    "hash": "4c6b2b3afa6bedee",
+    "hash": "ac0d79c297f0bda5",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
-    "hash": "4386139f6a0609a2",
+    "hash": "797ea402e73257a2",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "bb2e5c60bec141ad",
+    "hash": "883a1c97d97edd24",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -112,11 +112,11 @@
     "lastmod": "2026-09-19"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
-    "hash": "34a684b2f6e052be",
+    "hash": "e1d0d4f0fa279a77",
     "lastmod": "2026-09-19"
   },
   "/drone/photogrammetry/gsd/": {
-    "hash": "9bb3a9c72d01e9de",
+    "hash": "e3ba67e577956ba8",
     "lastmod": "2026-09-19"
   },
   "/drone/power/": {
@@ -124,11 +124,15 @@
     "lastmod": "2026-09-19"
   },
   "/drone/power/battery-energy/": {
-    "hash": "70ab74e1005235d8",
+    "hash": "39e0cf1cb2116d8c",
     "lastmod": "2026-09-19"
   },
   "/drone/sensors/": {
     "hash": "2d4dd47c2bfcd8fc",
+    "lastmod": "2026-09-19"
+  },
+  "/drone/sensors/vlos/": {
+    "hash": "62fb5c442a5ae5fa",
     "lastmod": "2026-09-19"
   },
   "/geodesy/": {
@@ -268,7 +272,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "aad13fad64e87fc1",
+    "hash": "378104dc4e2b7323",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -304,7 +308,7 @@
     "lastmod": "2026-09-19"
   },
   "/sources/": {
-    "hash": "d2de7fd6dd3488b2",
+    "hash": "4c94d0e9d6909f21",
     "lastmod": "2026-09-19"
   },
   "/survey/": {
@@ -480,7 +484,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c17a36f95b8a9c48",
+    "hash": "a7645e330c9a2399",
     "lastmod": "2026-09-19"
   }
 }

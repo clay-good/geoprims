@@ -30,7 +30,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Drone | Flight time | `drone.power.endurance` | [ ] | [ ] | [ ] |
 | Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] |
 | Drone | Mapping sun window | `time.sun.mapping-window` | [ ] | [ ] | [ ] |
-| Drone | VLOS guidance | `drone.sensors.vlos` | [ ] | [ ] | [ ] |
+| Drone | VLOS guidance | `drone.sensors.vlos` | [x] | [ ] | [ ] |
 | Drone | Part 107 altitude | `drone.ops.part107-altitude` | [ ] | [ ] | [ ] |
 | Surveyors | Coordinate converter (DMS ↔ decimal) | `geodesy.parse.coordinates` | [x] | [ ] | [ ] |
 | Surveyors | UTM | `geodesy.utm.forward`, `geodesy.utm.inverse` | [x] | [ ] | [ ] |
@@ -52,7 +52,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 35 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 36 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
 
 ## Waiting on a published worked example
 
@@ -63,3 +63,5 @@ The stable bar needs an independent, published worked example. These rows are he
 | Holding entry | AIM 5-3-8 and FAA-H-8083-15B define the sectors only by figure; the FAA instrument sample tests have no entry question |
 | Part 107 altitude | 14 CFR 107.51, AC 107-2A, FAA-G-8082-22, the UAG sample test, and the 2016 final rule preamble state the rule without a numeric case |
 | Flight time | No FAA or manufacturer source works the arithmetic |
+| Overlap and trigger, image count | Blog and vendor examples found in search did not contain the numbers when checked; the peer-reviewed footprint paper (AKJournals, 2024) is not freely retrievable |
+| Mapping sun window | No published worked example of a sun-elevation window; the threshold crossing shares the SPA solver that sunrise and twilight are verified with |

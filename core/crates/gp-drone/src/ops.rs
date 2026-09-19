@@ -5,7 +5,7 @@
 
 use gp_base::ErrorCode;
 use gp_base::display;
-use gp_base::error::ToolError;
+use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::{self, Quantity as QT};
@@ -74,9 +74,9 @@ const EU_945: Reference = Reference {
 const EASA_GUIDE: Reference = Reference {
     title: "Guidelines for UAS operations in the open and specific category",
     issuer: "European Union Aviation Safety Agency",
-    year: 2024,
-    edition: "EASA guidelines (downloads/139435)",
-    locator: "VLOS distance: ALOS = 327 × CD + 20 m (multirotor), 490 × CD + 30 m (fixed wing); DLOS = 0.3 × ground visibility",
+    year: 2025,
+    edition: "Issue 03, 17 July 2025",
+    locator: "Part A, chapter I, VLOS distance: ALOS = 327 × CD + 20 m (multirotor), 490 × CD + 30 m (fixed wing); DLOS = 0.3 × ground visibility",
     url: "https://www.easa.europa.eu/en/downloads/139435/en",
 };
 
@@ -695,6 +695,8 @@ fn run_easa(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static VLOS: ToolDef = ToolDef {
     id: "drone.sensors.vlos",
+    stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Visual line of sight distance",
     summary: "How far you can keep a drone in visual line of sight by EASA guidance: attitude line of sight from its size, detection line of sight from visibility, and the smaller of the two, checked against your farthest point.",
     aliases: &[
@@ -793,7 +795,7 @@ pub static VLOS: ToolDef = ToolDef {
             120,
         ),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["NOMINAL_VALUE_USED", "INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "ALOS = 327·CD + 20 m (multirotor) or 490·CD + 30 m (fixed wing); DLOS = 0.3·GV; VLOS = min(ALOS, DLOS)",
     accuracy: "Guidance values for planning, not a guarantee you will see the drone.",
     references: &[EASA_GUIDE],
@@ -831,13 +833,31 @@ fn run_vlos(ctx: &mut Ctx) -> Result<Json, ToolError> {
     } else {
         327.0 * cd + 20.0
     };
-    let dlos = ctx.quantity("ground_visibility")?.map(|v| 0.3 * v.base());
-    let vlos = dlos.map_or(alos, |d| d.min(alos));
+    // EASA and the LBA guidance take ground visibility as at most 5 km, so
+    // VLOS never exceeds 0.3 × 5 km = 1,500 m however large the aircraft.
+    const GV_MAX: f64 = 5_000.0;
+    let gv = match ctx.quantity("ground_visibility")? {
+        Some(v) if v.base() > GV_MAX => {
+            ctx.warnings.push(
+                Warning::new("INPUT_NORMALIZED", "The ground visibility was taken as 5 km, the most the EASA procedure assumes.")
+                    .at("/ground_visibility"),
+            );
+            GV_MAX
+        }
+        Some(v) => v.base(),
+        None => {
+            ctx.warnings.push(Warning::new(
+                "NOMINAL_VALUE_USED",
+                "No ground visibility was given, so it was taken as 5 km, the most the EASA procedure assumes. Enter the actual visibility if it is lower.",
+            ));
+            GV_MAX
+        }
+    };
+    let dlos = 0.3 * gv;
+    let vlos = dlos.min(alos);
     let m = |v: f64| q(v, QT::Distance, "m");
     let mut o = vec![("alos", ctx.out("alos", m(alos)))];
-    if let Some(d) = dlos {
-        o.push(("dlos", ctx.out("dlos", m(d))));
-    }
+    o.push(("dlos", ctx.out("dlos", m(dlos))));
     o.push(("vlos", ctx.out("vlos", m(vlos))));
     if let Some(f) = ctx.quantity("farthest_distance")? {
         let gap = f.base() - vlos;

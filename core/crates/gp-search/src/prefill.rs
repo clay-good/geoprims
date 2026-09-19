@@ -495,12 +495,18 @@ fn fit(s: &SlotDef, v: &Val, named: bool) -> Option<Json> {
                 (Some(u), Some(q)) => {
                     let from = units::lookup(q, u)?;
                     let to = units::by_symbol(q, &s.unit)?;
+                    // Kept as typed ("40 gal"): the core reads every registry spelling.
                     in_range(units::convert(*num, from, to))
-                        .then(|| Json::str(format!("{text} {}", from.symbol)))
+                        .then(|| Json::str(format!("{text} {u}")))
                 }
                 (Some(_), None) => None,
                 (None, q) => {
-                    let allowed = named || s.bare == "any" || (s.bare == "decimal" && *decimal);
+                    // A bare number enters a quantity input only through a slot the
+                    // tool declared: "temperature 0.8" is not 0.8 °C by default.
+                    let dimensionless = q.is_none_or(|q| q == Quantity::Dimensionless);
+                    let allowed = (named && (s.explicit || dimensionless))
+                        || s.bare == "any"
+                        || (s.bare == "decimal" && *decimal);
                     if !allowed || !in_range(*num) {
                         return None;
                     }

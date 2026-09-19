@@ -160,7 +160,32 @@ def area():
         out.append(vec(i, {"points": [{"northing": n, "easting": e} for n, e in p]}, exp, src, ver, rel=1e-11))
     # US survey feet report US survey acres.
     out.append(vec(6, {"points": [{"northing": f"{n} ftUS", "easting": f"{e} ftUS"} for n, e in polys[3]]},
-                   {"result.acres.value": 660 * 660 / 43560, "result.acres.unit": "acUS", "meta.warnings.1.code": "LEGACY_UNIT"}, SPEC, "2026", rel=1e-11))
+                   {"result.acres.value": 660 * 660 / 43560, "result.acres.unit": "acUS", "meta.warnings.0.code": "LEGACY_UNIT"}, SPEC, "2026", rel=1e-11))
+    more = [
+        [(0, 0), (0, 208.71), (208.71, 208.71), (208.71, 0)],
+        [(100, 100), (340, 180), (520, 90), (610, 400), (300, 520), (80, 330)],
+        [(0, 0), (1320, 0), (1320, 1320), (0, 1320)],
+        [(5000.25, 3000.5), (5100.75, 3150.25), (4980.5, 3300.0), (4870.0, 3120.75)],
+        [(0, 0), (10, 0), (10, 10), (5, 3), (0, 10)],
+        [(250000, 1500000), (250400, 1500900), (249700, 1501300), (249300, 1500500)],
+        [(0, 0), (2640, 0), (2640, 1320), (1320, 1320), (1320, 2640), (0, 2640)],
+        [(12.5, 7.25), (40.0, 3.5), (61.75, 22.0), (55.5, 48.25), (30.0, 60.0), (8.0, 41.5)],
+        [(0, 0), (-500, 300), (-200, 900), (400, 700), (600, 100)],
+        [(1000, 1000), (1000, 1001), (1001, 1001), (1001, 1000)],
+        [(0, 0), (3000, 250), (5200, 2900), (2600, 5400), (-300, 3100)],
+        [(33, 44), (133, 44), (133, 144)],
+        [(7000, 7000), (7600, 7050), (7650, 7700), (7040, 7640)],
+    ]
+    for p in more:
+        twice = sum(p[k][1] * p[(k + 1) % len(p)][0] - p[(k + 1) % len(p)][1] * p[k][0] for k in range(len(p)))
+        a = abs(twice) / 2
+        per = sum(math.hypot(p[(k + 1) % len(p)][0] - p[k][0], p[(k + 1) % len(p)][1] - p[k][1]) for k in range(len(p)))
+        exp = {"result.area.value": float(a), "result.acres.value": a / 43560, "result.hectares.value": a * FT * FT / 10000,
+               "result.perimeter.value": float(per), "result.orientation": "counterclockwise" if twice > 0 else "clockwise"}
+        out.append(vec(len(out) + 1, {"points": [{"northing": n, "easting": e} for n, e in p]}, exp, SRC, VER, rel=1e-11))
+    # Wikipedia's shoelace example: (1, 6), (3, 1), (7, 2), (4, 4), (8, 5) as (x, y) = (easting, northing) encloses 16.5.
+    out.append(vec(len(out) + 1, {"points": [{"easting": x, "northing": y} for x, y in [(1, 6), (3, 1), (7, 2), (4, 4), (8, 5)]]},
+                   {"result.area.value": 16.5}, WIKI_SHOELACE, "retrieved 2026-09-19", rel=1e-12))
     return out
 
 
@@ -188,6 +213,33 @@ def circular():
                    {"result.pc_station": station(5000 - e["tangent"]), "result.pt_station": station(5000 - e["tangent"] + e["length"])},
                    "Arc definition D = 18000/(πR) with stationing", VER))
     out.append(vec(7, {"radius": 500, "delta": "30 deg", "tangent": 100}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    more = [(2500, 12.0, ("tangent", "external")), (95.5, 110.0, ("chord", "length")), (4000, 3.5, ("middle_ordinate", "delta")),
+            (1432.39, 64.0, ("radius", "middle_ordinate")), (750, 150.0, ("external", "delta")), (210, 88.0, ("length", "radius")),
+            (5729.58, 1.0, ("tangent", "delta"))]
+    for r, d, (a, b) in more:
+        e = curve_elems(r, d)
+        vals = dict(e, radius=r, delta=d)
+        inp = {k: (f"{vals[k]} deg" if k == "delta" else vals[k]) for k in (a, b)}
+        exp = {f"result.{k}.value": float(v) for k, v in dict(e, radius=r).items()}
+        exp["result.delta.value"] = float(d)
+        out.append(vec(len(out) + 1, inp, exp, rel=1e-9))
+    # Chord definition: R = 50 / sin(D/2).
+    r = 50 / math.sin(math.radians(12) / 2)
+    e = curve_elems(r, 38.5)
+    out.append(vec(len(out) + 1, {"degree_chord": "12 deg", "delta": "38.5 deg"}, {f"result.{k}.value": v for k, v in dict(e, radius=r).items()}))
+    out.append(vec(len(out) + 1, {"degree_chord": "12 deg", "radius": 400}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    # FM 5-233 chapter 3: PI 18+00, I = 45 deg, D = 15 deg (chord definition), first stake 16+50 after an 8.67 ft subchord, so PC 16+41.33;
+    # I = 75 deg, D = 15 deg: T 293.11 and E 99.50 (arc, from its 5,730 ft tables) and T 293.94 and E 99.79 (chord);
+    # I = 42 deg 15', D = 5 deg 37': L = 752.23 ft.
+    fm = [
+        ({"delta": "45 deg", "degree_chord": "15 deg", "pi_station": "18+00"}, {"result.pc_station": "16+41.33"}, {}),
+        ({"delta": "75 deg", "degree": "15 deg"}, {"result.tangent.value": 293.11, "result.external.value": 99.50}, {"abs": 0.02}),
+        ({"delta": "75 deg", "degree_chord": "15 deg"}, {"result.tangent.value": 293.94, "result.external.value": 99.79}, {"abs": 0.015}),
+        ({"delta": "42°15'", "degree": "5°37'"}, {"result.length.value": 752.23}, {"abs": 0.005}),
+    ]
+    for inp, exp, tol in fm:
+        out.append(vec(len(out) + 1, inp, exp, FM5233, FM5233_VER))
+        out[-1]["tolerance"] = {k: tol for k in exp if not isinstance(exp[k], str)}
     return out
 
 
@@ -199,7 +251,7 @@ def station(v, per=100, dec=2):
 def vertical():
     cases = [(2, -3, 600, 1000, 100.0), (-4, 2, 400, 2500, 350.0), (1.5, -1.5, 300, 12000, 20.5), (-2, -0.5, 500, 800, 60.0), (3, 1, 200, 1500, 75.25)]
     out = []
-    for i, (g1, g2, l, s, y) in enumerate(cases, 1):
+    for i, (g1, g2, l, s, y) in enumerate(cases + MORE_VERTICAL, 1):
         a1, a2 = g1 / 100, g2 / 100
         pvc_s, y_pvc = s - l / 2, y - a1 * l / 2
         exp = {"result.pvc_station": station(pvc_s), "result.pvt_station": station(pvc_s + l), "result.pvc_elevation.value": y_pvc,
@@ -210,7 +262,24 @@ def vertical():
             exp["result.turning_elevation.value"] = y_pvc + a1 * x + (a2 - a1) * x * x / (2 * l)
         src, ver = (SPEC, "2026") if i == 1 else (SRC, VER)
         out.append(vec(i, {"g1": g1, "g2": g2, "length": f"{l} ft", "pvi_station": station(s), "pvi_elevation": f"{y} ft"}, exp, src, ver, rel=1e-11))
+    # Indiana DOT Design Manual chapter 44, example 44-3.1 (figure 44-3G). Its printed low-point elevation, 580.33,
+    # has an arithmetic slip (500 x 1.75^2 / 800 is 1.914, not 1.545), so only the correct values are pinned.
+    out.append(vec(len(out) + 1, {"g1": -1.75, "g2": 2.25, "length": "500 ft", "pvi_station": "13+80", "pvi_elevation": "577.50 ft"},
+                   {"result.pvc_station": "11+30.00", "result.pvc_elevation.value": 581.875, "result.pvt_station": "16+30.00",
+                    "result.pvt_elevation.value": 583.125, "result.turning_station": "13+48.75", "result.k": 125.0, "result.curve_type": "low"},
+                   INDOT, INDOT_VER, rel=1e-12))
     return out
+
+
+MORE_VERTICAL = [(-3.5, 1.25, 800, 3450, 912.4), (0.8, -2.2, 450, 6800, 1520.75), (-1.0, -3.0, 350, 910, 44.0), (4.5, 0.5, 1000, 22000, 5280.0),
+                 (-0.6, 0.9, 250, 125, 10.0), (2.75, -2.75, 900, 15050, 734.6), (-5.0, 3.0, 640, 4000, 250.5), (1.2, 3.4, 300, 700, 88.8),
+                 (-2.4, 0.3, 720, 9990, 1001.1), (6.0, -4.0, 1200, 30000, 3000.0), (-0.25, 0.75, 150, 555, 12.34), (3.3, -0.7, 520, 1234, 456.7),
+                 (-1.8, 2.6, 660, 7777, 640.0), (0.4, -0.4, 200, 300, 5.0), (-3.0, -0.2, 480, 16000, 2020.2)]
+INDOT = "Indiana Department of Transportation, Indiana Design Manual chapter 44, example 44-3.1 (figure 44-3G)"
+INDOT_VER = "Chapter 44 (current), retrieved 2026-09-19"
+FM5233 = "Headquarters, Department of the Army, FM 5-233 Construction Surveying, chapter 3 (simple curves)"
+FM5233_VER = "FM 5-233 (1985)"
+WIKI_SHOELACE = "Wikipedia, Shoelace formula (worked example)"
 
 
 def aea():

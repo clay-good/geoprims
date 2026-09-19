@@ -40,9 +40,9 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Surveyors | Grid ↔ ground combined factor | `survey.reduction.combined-factor` | [x] | [ ] | [ ] |
 | Surveyors | Traverse closure | `survey.cogo.traverse-closure` | [x] | [ ] | [ ] |
 | Surveyors | Deed plotter | `survey.land.deed-plot` | [ ] | [ ] | [ ] |
-| Surveyors | Horizontal curve | `survey.curves.circular-curve` | [ ] | [ ] | [ ] |
-| Surveyors | Vertical curve | `survey.curves.vertical-curve` | [ ] | [ ] | [ ] |
-| Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [ ] | [ ] | [ ] |
+| Surveyors | Horizontal curve | `survey.curves.circular-curve` | [x] | [ ] | [ ] |
+| Surveyors | Vertical curve | `survey.curves.vertical-curve` | [x] | [ ] | [ ] |
+| Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [x] | [ ] | [ ] |
 | Developers | H3 cell | `indexing.h3.lat-lng-to-cell` | [x] | [ ] | [ ] |
 | Developers | H3 k-ring | `indexing.h3.grid-disk` | [x] | [ ] | [ ] |
 | Developers | Tile and quadkey | `indexing.tile.from-point` | [x] | [ ] | [ ] |
@@ -52,4 +52,4 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 24 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 27 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.

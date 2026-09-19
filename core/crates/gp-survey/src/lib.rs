@@ -585,6 +585,7 @@ const VERTEX: &[Field] = &[
 
 pub static AREA: ToolDef = ToolDef {
     id: "survey.cogo.area-by-coordinates",
+    stability: gp_base::tool::Stability::Stable,
     title: "Area by coordinates (acreage)",
     summary: "The area enclosed by plane-survey coordinates by the coordinate (shoelace) method, in square units, acres, and hectares, with the perimeter.",
     aliases: &[
@@ -844,7 +845,7 @@ fn is_metric(u: &Unit) -> bool {
 
 // ---------------------------------------------------------------- circular curve
 
-const CURVE_ELEMENTS: [&str; 8] = [
+const CURVE_ELEMENTS: [&str; 9] = [
     "radius",
     "delta",
     "tangent",
@@ -853,10 +854,12 @@ const CURVE_ELEMENTS: [&str; 8] = [
     "external",
     "middle_ordinate",
     "degree",
+    "degree_chord",
 ];
 
 pub static CIRCULAR_CURVE: ToolDef = ToolDef {
     id: "survey.curves.circular-curve",
+    stability: gp_base::tool::Stability::Stable,
     title: "Horizontal circular curve",
     summary: "All elements of a simple circular curve (radius, deflection, tangent, length, chord, external, middle ordinate, degree of curve) from any two, with PC and PT stations.",
     aliases: &[
@@ -901,6 +904,16 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
             "degree",
             "Degree of curve (arc)",
             "Per 100 ft of arc, like 11.4592 deg",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("unbounded"),
+        Field::new(
+            "degree_chord",
+            "Degree of curve (chord)",
+            "Per 100 ft chord, like 15 deg (railroads and older highway plans)",
             Kind::Quantity {
                 q: QT::Angle,
                 unit: "deg",
@@ -976,8 +989,8 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "T = R·tan(Δ/2), L = R·Δ, C = 2R·sin(Δ/2), E = R(sec(Δ/2) − 1), M = R(1 − cos(Δ/2)); D(arc) = 5,729.578/R ft",
+    warnings: &["AMBIGUOUS_INPUT", "LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "T = R·tan(Δ/2), L = R·Δ, C = 2R·sin(Δ/2), E = R(sec(Δ/2) − 1), M = R(1 − cos(Δ/2)); D(arc) = 5,729.578/R ft, sin(D(chord)/2) = 50/R ft; PT station = PC + L along the arc",
     accuracy: "Exact; two given elements other than R and Δ are solved by bisection to 1e-15 relative",
     references: &[GHILANI],
     examples: &[Example {
@@ -1007,8 +1020,9 @@ fn element(name: &str, th: f64) -> f64 {
         "tangent" => tan(th),
         "length" => 2.0 * th,
         "chord" => 2.0 * sin(th),
-        "external" => 1.0 / cos(th) - 1.0,
-        _ => 1.0 - cos(th), // middle ordinate
+        // Written without cancellation, so tiny angles stay accurate.
+        "external" => 2.0 * sin(th / 2.0) * sin(th / 2.0) / cos(th),
+        _ => 2.0 * sin(th / 2.0) * sin(th / 2.0), // middle ordinate
     }
 }
 
@@ -1018,14 +1032,16 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .copied()
         .filter(|n| ctx.is_set(n))
         .collect();
-    if given.len() != 2 || (given.contains(&"radius") && given.contains(&"degree")) {
+    // R and each degree of curve fix the same element, the radius.
+    let radii = given.iter().filter(|n| matches!(**n, "radius" | "degree" | "degree_chord")).count();
+    if given.len() != 2 || radii > 1 {
         return Err(ToolError::invalid(
             "/radius",
             "Give exactly two independent elements, such as R and Δ, or T and L. More than two can be inconsistent.",
         ));
     }
     let mut lens: Vec<(&str, Q)> = Vec::new();
-    for n in given.iter().filter(|n| !matches!(**n, "delta" | "degree")) {
+    for n in given.iter().filter(|n| !matches!(**n, "delta" | "degree" | "degree_chord")) {
         lens.push((*n, ctx.req_quantity(n)?));
     }
     let u = if lens.is_empty() {
@@ -1049,6 +1065,15 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         }
         r = Some((18_000.0 / core::f64::consts::PI) / d / to_ft);
+    }
+    if let Some(d) = gp_geo::point::plain_angle(ctx, "degree_chord")? {
+        if d <= 0.0 || d >= 180.0 {
+            return Err(ToolError::invalid(
+                "/degree_chord",
+                "The degree of curve must be between 0° and 180°.",
+            ));
+        }
+        r = Some(50.0 / sin(d.to_radians() / 2.0) / to_ft);
     }
     let delta = gp_geo::point::plain_angle(ctx, "delta")?.map(f64::to_radians);
     if let Some(d) = delta
@@ -1103,23 +1128,45 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         (None, None) => {
             let ((ka, va), (kb, vb)) = (others[0], others[1]);
-            let target = va / vb;
-            let ratio = |th: f64| element(ka, th) / element(kb, th);
-            let (mut lo, mut hi) = (1e-9, core::f64::consts::FRAC_PI_2 - 1e-9);
-            let increasing = ratio(hi) > ratio(lo);
-            let (rlo, rhi) = (ratio(lo), ratio(hi));
-            if !((rlo.min(rhi))..=(rlo.max(rhi))).contains(&target) {
-                return Err(bad());
-            }
-            for _ in 0..200 {
-                let mid = (lo + hi) / 2.0;
-                if (ratio(mid) < target) == increasing {
-                    lo = mid;
-                } else {
-                    hi = mid;
+            // Solve element(a)/element(b) = va/vb for the half-angle. Most
+            // ratios are monotonic, but tangent over middle ordinate is not,
+            // so scan (0°, 90°) for every sign change and bisect each one.
+            let f = |th: f64| element(ka, th) / element(kb, th) - va / vb;
+            let n = 720;
+            let edge = 1e-7;
+            let at = |i: usize| {
+                (core::f64::consts::FRAC_PI_2 * i as f64 / n as f64).clamp(edge, core::f64::consts::FRAC_PI_2 - edge)
+            };
+            let mut roots = Vec::new();
+            for i in 0..n {
+                let (mut lo, mut hi) = (at(i), at(i + 1));
+                if (f(lo) < 0.0) == (f(hi) < 0.0) {
+                    continue;
                 }
+                let rising = f(hi) > f(lo);
+                for _ in 0..100 {
+                    let mid = (lo + hi) / 2.0;
+                    if (f(mid) < 0.0) == rising {
+                        lo = mid;
+                    } else {
+                        hi = mid;
+                    }
+                }
+                roots.push((lo + hi) / 2.0);
             }
-            let th = (lo + hi) / 2.0;
+            let Some(&th) = roots.first() else {
+                return Err(bad());
+            };
+            if let Some(&other) = roots.get(1) {
+                ctx.warnings.push(Warning::new(
+                    "AMBIGUOUS_INPUT",
+                    format!(
+                        "Two curves fit these elements; this is the one with Δ = {:.4}°. The other has Δ = {:.4}°.",
+                        (2.0 * th).to_degrees(),
+                        (2.0 * other).to_degrees()
+                    ),
+                ));
+            }
             (va / element(ka, th), th)
         }
     };
@@ -1166,6 +1213,7 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static VERTICAL_CURVE: ToolDef = ToolDef {
     id: "survey.curves.vertical-curve",
+    stability: gp_base::tool::Stability::Stable,
     title: "Vertical curve",
     summary: "PVC and PVT stations and elevations, the high or low point, and the K value of a symmetric parabolic vertical curve.",
     aliases: &[

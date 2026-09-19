@@ -3,6 +3,28 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "result-change",
+      "tools": [
+        "survey.curves.circular-curve",
+        "survey.curves.vertical-curve",
+        "survey.cogo.area-by-coordinates"
+      ],
+      "vectors": [
+        "survey.cogo.area-by-coordinates v006"
+      ],
+      "summary": "The horizontal curve, vertical curve, and area by coordinates are now stable, so their results no longer carry the EXPERIMENTAL_TOOL warning; the legacy-unit warning on area moved to the first position. They match FM 5-233 (Army Construction Surveying), the Indiana Design Manual vertical-curve example, and Wikipedia's shoelace example. No numbers changed."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "survey.curves.circular-curve"
+      ],
+      "vectors": [],
+      "summary": "The circular curve now solves from any two elements in every case: external with middle ordinate failed (the formulas lost all precision near zero), and a tangent with a middle ordinate, which fit two different curves, could fail or pick one silently. It now returns the flatter curve and names the other with AMBIGUOUS_INPUT. A chord-definition degree of curve (degree_chord) is accepted as an input, as the survey spec requires."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "changed",
       "tools": [
         "time.sun.aviation-nights",

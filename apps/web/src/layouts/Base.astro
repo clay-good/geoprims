@@ -12,6 +12,8 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The display mode is set before first paint, so no bright frame flashes (visual-theme). -->
+    <script is:inline>(()=>{const d=document.documentElement;try{const m=(q)=>matchMedia(q).matches;d.dataset.theme=localStorage.getItem('gp-theme')||(m('(prefers-contrast: more)')?'high-contrast':m('(prefers-color-scheme: light)')?'daylight':'hud');const a=localStorage.getItem('gp-accent');if(a)d.dataset.accent=a;const v=localStorage.getItem('gp-dim');if(v)d.style.setProperty('--dim',v)}catch{d.dataset.theme='hud'}})();</script>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -20,7 +22,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="theme-color" content="#07110d" />
+    <meta name="theme-color" content="#0f141a" />
     <meta name="apple-mobile-web-app-title" content="geoprims" />
     {ld.map((j) => <script type="application/ld+json" set:html={j} />)}
   </head>
@@ -46,6 +48,21 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
           Free, no ads, no tracking. Your inputs never leave your device.
           <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">Wrong answer?</a>
         </p>
+        <form class="display" aria-label="Display">
+          <label>Display
+            <select name="theme">
+              <option value="hud">HUD (dark)</option>
+              <option value="daylight">Daylight</option>
+              <option value="sunlight">Sunlight (outdoors)</option>
+              <option value="night">Night (dark-adapted)</option>
+              <option value="high-contrast">High contrast</option>
+            </select>
+          </label>
+          <label data-for="hud">Accent
+            <select name="accent"><option value="amber">Amber</option><option value="green">Green</option></select>
+          </label>
+          <label data-for="night">Brightness <input name="dim" type="range" min="0.3" max="1" step="0.05" /></label>
+        </form>
         <p class="version">Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/changelog/">changelog</a> · <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> · <a href="/methodology/">how results are checked</a></p>
       </div>
     </footer>
@@ -54,7 +71,9 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
       <button type="button">Reload to update</button>
     </div>
     <script>
+      import { wireDisplay } from '../lib/display.js';
       import { registerOffline } from '../lib/pwa.js';
+      wireDisplay(document.querySelector('form.display'));
       registerOffline(document.querySelector('.update'));
       // The palette loads on first use: `/` outside text fields, or Ctrl/Cmd+K anywhere.
       const palette = () => import('../lib/palette.js').then((m) => m.openPalette());

@@ -30,4 +30,4 @@ The first command runs at the repository root and builds the Wasm modules and ca
 
 Generated endpoints (like `/units/speed/kt-to-mph/`) canonicalize to their parent operation. Experimental tools are `noindex` until they have their full content.
 
-Not built yet: actions in the command palette, the HUD canvas, the other three theme modes, offline packs and the pack manager, import and export, docs pages, and Playwright end-to-end suites. `node scripts/serve.mjs` serves the build with its production headers and CSP.
+Not built yet: actions in the command palette, the HUD canvas, HUD visual effects, offline packs and the pack manager, import and export, docs pages, and Playwright end-to-end suites. `node scripts/serve.mjs` serves the build with its production headers and CSP.

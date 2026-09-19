@@ -1,33 +1,35 @@
-/* Design tokens. Two of the five theme modes exist so far: hud (dark, default)
-   and daylight. Components use tokens only, never color literals. */
+/* Design tokens (web/visual-theme). Five modes, chosen before first paint by
+   the inline script in Base.astro: hud (the default, dark slate with an amber
+   accent, green as an option), daylight, sunlight (outdoor maximum contrast),
+   night (low-luminance amber on black, with a dimming slider), and
+   high-contrast. Without JavaScript the OS preference picks hud, daylight, or
+   high-contrast. Components use tokens only; test/theme.test.mjs checks that
+   no color literal appears outside these blocks, and every mode's contrast. */
 :root {
-  --bg: #07110d;
-  --surface: #0d1c16;
-  --line: #1f3a2f;
-  --text: #d8f5e6;
-  --muted: #8fb5a2;
-  --accent: #4dffa6;
-  --caution: #ffcc4d;
-  --danger: #ff7a6b;
-  --focus: #9ad7ff;
   --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --target: 48px;
+  --weight: 400;
+  --value-size: 2.25rem;
+  --dim: 1;
+}
+:root,
+:root[data-theme='hud'] {
+  --bg: #0f141a;
+  --surface: #161d25;
+  --line: #2c3947;
+  --text: #e6edf3;
+  --muted: #a3b3c2;
+  --accent: #ffb020;
+  --caution: #ffd84d;
+  --danger: #ff8f85;
+  --focus: #7cc4ff;
+  --shadow: #000000;
+  --backdrop: #000000;
   color-scheme: dark;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='hud']) {
-    --bg: #fbfcfb;
-    --surface: #ffffff;
-    --line: #cfd8d3;
-    --text: #0f1f18;
-    --muted: #4a5d54;
-    --accent: #0a6b3f;
-    --caution: #7a5200;
-    --danger: #a3261a;
-    --focus: #0b5cad;
-    color-scheme: light;
-  }
+:root[data-theme='hud'][data-accent='green'] {
+  --accent: #4dffa6;
 }
 :root[data-theme='daylight'] {
   --bg: #fbfcfb;
@@ -39,7 +41,105 @@
   --caution: #7a5200;
   --danger: #a3261a;
   --focus: #0b5cad;
+  --shadow: #5a6b63;
+  --backdrop: #0f1f18;
   color-scheme: light;
+}
+:root[data-theme='sunlight'] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --line: #000000;
+  --text: #000000;
+  --muted: #1f1f1f;
+  --accent: #00337a;
+  --caution: #5c3900;
+  --danger: #8a0000;
+  --focus: #000000;
+  --shadow: #000000;
+  --backdrop: #000000;
+  --weight: 600;
+  --value-size: 2.75rem;
+  color-scheme: light;
+}
+/* Night: every text token sits at relative luminance 0.175-0.25 on black at
+   full brightness; --dim (the slider) lowers them together. */
+:root[data-theme='night'] {
+  --bg: #000000;
+  --surface: #0a0500;
+  --line: color-mix(in srgb, #4d2600 calc(var(--dim) * 100%), #000000);
+  --text: color-mix(in srgb, #bf6300 calc(var(--dim) * 100%), #000000);
+  --muted: color-mix(in srgb, #bd6100 calc(var(--dim) * 100%), #000000);
+  --accent: color-mix(in srgb, #c66d00 calc(var(--dim) * 100%), #000000);
+  --caution: color-mix(in srgb, #c66d00 calc(var(--dim) * 100%), #000000);
+  --danger: color-mix(in srgb, #ff0000 calc(var(--dim) * 100%), #000000);
+  --focus: color-mix(in srgb, #bf6300 calc(var(--dim) * 100%), #000000);
+  --shadow: #000000;
+  --backdrop: #000000;
+  color-scheme: dark;
+}
+:root[data-theme='high-contrast'] {
+  --bg: #000000;
+  --surface: #000000;
+  --line: #ffffff;
+  --text: #ffffff;
+  --muted: #ffffff;
+  --accent: #ffff00;
+  --caution: #ffff00;
+  --danger: #ff9e9e;
+  --focus: #00ffff;
+  --shadow: #000000;
+  --backdrop: #000000;
+  --weight: 600;
+  color-scheme: dark;
+}
+/* Without JavaScript (no data-theme), follow the OS preference. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #fbfcfb;
+    --surface: #ffffff;
+    --line: #cfd8d3;
+    --text: #0f1f18;
+    --muted: #4a5d54;
+    --accent: #0a6b3f;
+    --caution: #7a5200;
+    --danger: #a3261a;
+    --focus: #0b5cad;
+    --shadow: #5a6b63;
+    --backdrop: #0f1f18;
+    color-scheme: light;
+  }
+}
+@media (prefers-contrast: more) {
+  :root:not([data-theme]) {
+    --bg: #000000;
+    --surface: #000000;
+    --line: #ffffff;
+    --text: #ffffff;
+    --muted: #ffffff;
+    --accent: #ffff00;
+    --caution: #ffff00;
+    --danger: #ff9e9e;
+    --focus: #00ffff;
+    --weight: 600;
+    color-scheme: dark;
+  }
+}
+/* Print: the daylight palette in any mode. */
+@media print {
+  :root,
+  :root[data-theme] {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --line: #cfd8d3;
+    --text: #000000;
+    --muted: #4a5d54;
+    --accent: #0a6b3f;
+    --caution: #7a5200;
+    --danger: #a3261a;
+    --focus: #0b5cad;
+    --dim: 1;
+    color-scheme: light;
+  }
 }
 
 * { box-sizing: border-box; }
@@ -48,7 +148,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.5 var(--sans);
+  font: var(--weight) 16px/1.5 var(--sans);
 }
 a { color: var(--accent); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -62,7 +162,7 @@ h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 0.25rem; }
 .purpose { color: var(--muted); margin: 0 0 1rem; }
 .badge { display: inline-block; font: 600 0.75rem var(--mono); padding: 0.1rem 0.5rem; border: 1px solid var(--caution); color: var(--caution); border-radius: 4px; vertical-align: middle; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-block: 1rem; }
-.answer .value { font: 700 2.25rem/1.1 var(--mono); color: var(--accent); overflow-wrap: anywhere; }
+.answer .value { font: 700 var(--value-size)/1.1 var(--mono); color: var(--accent); overflow-wrap: anywhere; }
 .answer .sentence { font-size: 1.1rem; margin: 0.5rem 0 0; }
 .answer .secondary { font-family: var(--mono); color: var(--muted); margin: 0.5rem 0 0; padding: 0; list-style: none; }
 .warnings { margin: 0 0 0.5rem; padding: 0; list-style: none; }
@@ -111,7 +211,7 @@ dialog.report textarea, dialog.report select { width: 100%; }
 dialog.report .check { display: flex; gap: 0.5rem; align-items: center; }
 dialog.report pre.payload { max-height: 16rem; overflow: auto; font-size: 0.8rem; white-space: pre-wrap; word-break: break-word; }
 /* The "Update available" prompt: non-blocking, above the footer. */
-.update { position: fixed; inset-inline: 1rem; inset-block-end: 1rem; max-inline-size: 32rem; margin-inline: auto; display: flex; gap: 1rem; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgb(0 0 0 / 0.4); z-index: 10; }
+.update { position: fixed; inset-inline: 1rem; inset-block-end: 1rem; max-inline-size: 32rem; margin-inline: auto; display: flex; gap: 1rem; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px color-mix(in srgb, var(--shadow) 40%, transparent); z-index: 10; }
 .update[hidden] { display: none; }
 .update p { margin: 0; }
 .update button { min-block-size: var(--target); }
@@ -119,7 +219,7 @@ dialog.report pre.payload { max-height: 16rem; overflow: auto; font-size: 0.8rem
 .palette-open { min-block-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding-inline: 0.75rem; font: inherit; cursor: pointer; }
 .palette-open kbd, .palette-keys kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding-inline: 0.3em; color: var(--muted); }
 dialog.palette { inline-size: min(40rem, calc(100vw - 2rem)); max-block-size: min(32rem, calc(100vh - 4rem)); margin-block-start: 10vh; padding: 0; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 10px; }
-dialog.palette::backdrop { background: rgb(0 0 0 / 0.5); }
+dialog.palette::backdrop { background: color-mix(in srgb, var(--backdrop) 50%, transparent); }
 dialog.palette input { box-sizing: border-box; inline-size: 100%; min-block-size: var(--target); padding: 0.75rem 1rem; font: inherit; font-size: 1.1rem; background: transparent; color: var(--text); border: 0; border-block-end: 1px solid var(--line); }
 dialog.palette input:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 dialog.palette ul { list-style: none; margin: 0; padding: 0.25rem; overflow-y: auto; max-block-size: 22rem; }
@@ -136,3 +236,8 @@ table.report thead th { color: var(--muted); font-weight: 600; }
 .label { display: inline-block; font: 600 0.75rem var(--mono); padding: 0.1rem 0.5rem; border: 1px solid var(--line); color: var(--muted); border-radius: 4px; vertical-align: middle; }
 dialog.palette li.palette-detected { cursor: default; min-block-size: 0; padding-block: 0.5rem 0.25rem; color: var(--muted); font-size: 0.85rem; }
 dialog.palette li.palette-detected strong { color: var(--accent); }
+/* Display picker in the footer. */
+form.display { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; margin-block: 0.5rem; }
+form.display label { display: inline-flex; gap: 0.5rem; align-items: center; }
+form.display select, form.display input { min-block-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+form.display [hidden] { display: none; }

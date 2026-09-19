@@ -7,10 +7,10 @@
 
 ## 2. Design system
 
-- [ ] 2.1 Define design tokens and the five theme modes (hud, daylight, sunlight, night, high-contrast); verify the no-color-literal lint passes and each mode renders the component gallery
+- [ ] 2.1 Define design tokens and the five theme modes (hud, daylight, sunlight, night, high-contrast); verify the no-color-literal lint passes and each mode renders the component gallery (tokens and all five modes in global.css, HUD in amber with a green option, night with a brightness slider; the mode is set before first paint from a saved choice or the OS preference; test/theme.test.mjs lints color literals, checks AA contrast for every text token in every mode and night's luminance band; pending: the component gallery render)
 - [ ] 2.2 Self-host and subset fonts and icons (≤ 80 KB); verify font budget and zero third-party requests
 - [ ] 2.3 Build base components (field, unit selector, result value, warning, badge, table, tabs, toast, dialog) with focus and target-size rules; verify axe-core passes in every mode
-- [ ] 2.4 Build the print stylesheet (`daylight` palette, canvas snapshot); verify a print-to-PDF snapshot test
+- [ ] 2.4 Build the print stylesheet (`daylight` palette, canvas snapshot); verify a print-to-PDF snapshot test (the daylight palette applies in print from any mode; pending: expanded panels, the canvas snapshot, and the PDF test)
 - [ ] 2.5 Add the contrast audit on rendered pixels (effects on) and color-vision-deficiency simulations; verify all states meet 4.5:1 / 3:1
 - [ ] 2.6 Externalize strings into a message catalog and use logical CSS properties; verify the i18n lint passes
 

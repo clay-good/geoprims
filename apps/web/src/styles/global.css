@@ -101,3 +101,12 @@ footer.site { border-block-start: 1px solid var(--line); color: var(--muted); fo
   .answer.sticky { position: sticky; inset-block-start: 0; z-index: 1; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Problem-report button and dialog */
+.report-line { font-size: 0.95rem; }
+button.link { background: none; border: none; padding: 0; min-height: 48px; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+dialog.report { max-width: 40rem; width: calc(100% - 32px); border: 1px solid currentColor; border-radius: 8px; }
+dialog.report label { display: block; margin: 0.75rem 0; }
+dialog.report textarea, dialog.report select { width: 100%; }
+dialog.report .check { display: flex; gap: 0.5rem; align-items: center; }
+dialog.report pre.payload { max-height: 16rem; overflow: auto; font-size: 0.8rem; white-space: pre-wrap; word-break: break-word; }

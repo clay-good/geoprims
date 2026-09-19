@@ -1,7 +1,8 @@
 ---
 import Base from '../../../../layouts/Base.astro';
 import ToolApp from '../../../../components/ToolApp.svelte';
-import { catalog, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, route, severities, tool as find } from '../../../../lib/catalog.mjs';
+import { openIssue } from '../../../../lib/known-issues.mjs';
+import { buildHashOf, catalog, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, route, severities, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -12,7 +13,8 @@ export function getStaticPaths() {
 const t = find(Astro.props.id);
 const ex = primaryExample(t);
 const initial = await exampleResult(t);
-const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outputs, severity: severities(t) };
+const issue = openIssue(t.id);
+const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outputs, severity: severities(t), coreVersion: catalog.coreVersion, buildHash: buildHashOf(t) };
 ---
 <Base title={`${t.title} · geoprims`} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)}>
   <p><a href={route(t.domain)}>{DOMAIN_TITLES[t.domain] ?? t.domain}</a> › <a href={route(`${t.domain}.${t.group}`)}>{t.group.replaceAll('-', ' ')}</a></p>
@@ -21,6 +23,11 @@ const client = { id: t.id, version: t.version, inputs: t.inputs, outputs: t.outp
   {['aviation', 'drone', 'navigation'].includes(t.domain) && (
     <p class="card notice safety" role="note">
       Planning aid only. Not certified for navigation or flight operations. Check official sources, your aircraft's POH/AFM, and current regulations.
+    </p>
+  )}
+  {issue && (
+    <p class="card notice known-issue" role="note">
+      <a href={`/known-issues/#${issue.id}`}>Known issue: {issue.summary}.</a> Workaround: {issue.workaround}
     </p>
   )}
   <ToolApp client:load tool={client} example={ex.input} initial={initial} />

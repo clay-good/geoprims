@@ -43,6 +43,14 @@
   let linkNote = $state('');
   let compute;
   let timer;
+  // The report dialog is imported on first click, so nothing loads before then.
+  let ReportDialog = $state(null);
+  let reporting = $state(false);
+
+  async function openReport() {
+    ReportDialog ??= (await import('./ReportDialog.svelte')).default;
+    reporting = true;
+  }
 
   // Display text comes from the core (display precision, grouping, unit labels).
   // The primary result is the first declared output present (optional outputs may be absent).
@@ -151,6 +159,11 @@
 </section>
 
 {#if linkNote}<p class="notice">{linkNote}</p>{/if}
+
+<p class="report-line"><button type="button" class="link" onclick={openReport}>Report a problem</button> with this result.</p>
+{#if reporting && ReportDialog}
+  <ReportDialog {tool} args={args()} {result} onclose={() => (reporting = false)} />
+{/if}
 
 <form class="card" onsubmit={(e) => e.preventDefault()}>
   {#if isExample}<p class="chip">Example values</p>{/if}

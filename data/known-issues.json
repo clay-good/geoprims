@@ -1,0 +1,4 @@
+{
+  "note": "Curated known issues (feedback/triage-and-corrections \"Public known-issues page\"), reviewed in pull requests and rendered at build time; never read live from D1. status: investigating, confirmed, or fixed. A tool with a confirmed, unfixed entry shows a banner.",
+  "issues": []
+}

@@ -62,3 +62,15 @@ test('every aviation, drone, and navigation page shows the safety notice', () =>
     assert.match(page(route(t.id)), /Not certified for navigation/, t.id);
   }
 });
+
+test('every tool page has one report button and no bot-check script in its HTML', () => {
+  for (const t of catalog.tools) {
+    const html = page(route(t.id));
+    assert.equal((html.match(/>Report a problem</g) ?? []).length, 1, t.id);
+    assert.ok(!html.includes('challenges.cloudflare.com'), `${t.id} loads the bot check before a click`);
+  }
+});
+
+test('the known-issues page is published', () => {
+  assert.match(page('/known-issues/'), /<h1>Known issues<\/h1>/);
+});

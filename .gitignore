@@ -11,3 +11,4 @@ node_modules/
 /apps/web/.astro/
 /.claude/
 /apps/web/dist/
+/worker/src/catalog-tools.json

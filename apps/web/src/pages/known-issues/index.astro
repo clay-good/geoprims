@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import { issues } from '../../lib/known-issues.mjs';
+import { route, tool } from '../../lib/catalog.mjs';
+
+const order = { confirmed: 0, investigating: 1, fixed: 2 };
+const sorted = [...issues].sort((a, b) => order[a.status] - order[b.status] || b.since.localeCompare(a.since));
+---
+<Base title="Known issues · geoprims" description="Confirmed and investigated problems with geoprims results, their workarounds, and the version that fixes each." canonical="/known-issues/">
+  <h1>Known issues</h1>
+  <p class="purpose">
+    Problems we have confirmed or are investigating, with a workaround and the version that fixes each. Reports come from the
+    "Report a problem" button on every tool. This list is curated by hand; it never shows what anyone typed.
+  </p>
+  {sorted.length === 0 ? (
+    <p class="card">No known issues right now.</p>
+  ) : (
+    <ul class="issues">
+      {sorted.map((i) => (
+        <li class="card" id={i.id}>
+          <h2>{i.summary}</h2>
+          <p><strong>Status:</strong> {i.status}{i.status === 'fixed' && ` in ${i.fixedIn} on ${i.fixedOn}`}. <strong>Since:</strong> {i.since}.</p>
+          <p><strong>Tool:</strong> <a href={route(i.tool)}>{tool(i.tool)?.title ?? i.tool}</a>. <strong>Affected:</strong> {i.affected}.</p>
+          <p>{i.description}</p>
+          <p><strong>Workaround:</strong> {i.workaround}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>

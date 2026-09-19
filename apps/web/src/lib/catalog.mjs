@@ -11,6 +11,10 @@ const codes = JSON.parse(readFileSync(join(root, 'data/codes.json'), 'utf8'));
 /** Severity of each warning a tool may emit (codes registry), for ordering and styling. */
 export const severities = (t) => Object.fromEntries(t.warnings.map((c) => [c, codes.warnings[c]?.severity ?? 'info']));
 const host = nodeHost(join(root, 'dist/wasm'));
+const modules = JSON.parse(readFileSync(join(root, 'dist/wasm/modules.json'), 'utf8')).modules;
+
+/** The first 16 hex digits of the SHA-256 of the tool's Wasm module: which build made the answer. */
+export const buildHashOf = (t) => (modules.find((m) => m.module === (t.domain === 'units' ? 'base' : t.domain))?.sha256 ?? '').slice(0, 16);
 
 export const DOMAIN_TITLES = {
   geodesy: 'Geodesy', navigation: 'Navigation', geometry: 'Geometry', aviation: 'Aviation', drone: 'Drone',

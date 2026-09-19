@@ -13,7 +13,7 @@
     "build:mcp": "node tools/mcp/build-dist.mjs",
     "test": "npm run test:rust && npm run test:js",
     "test:rust": "cargo test --manifest-path core/Cargo.toml",
-    "test:js": "node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs' 'mcp/**/*.test.mjs'",
+    "test:js": "node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs' 'mcp/**/*.test.mjs' 'worker/**/*.test.mjs'",
     "mcp": "node mcp/server.mjs"
   }
 }

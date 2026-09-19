@@ -1422,3 +1422,217 @@ fn run_legs(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ));
     Ok(Json::obj(out))
 }
+
+// ---------------------------------------------------------------- closest point on a route
+
+const ROUTE_POINT: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Decimal degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Decimal degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+];
+
+pub static CLOSEST_POINT: ToolDef = ToolDef {
+    id: "navigation.route.closest-point",
+    title: "Closest point on a route",
+    summary: "The point on a multi-leg route closest to a position: which leg, how far along the route, and how far off it (right of course positive).",
+    aliases: &[
+        "closest point on route",
+        "distance from route",
+        "which leg am I on",
+        "position on track",
+    ],
+    keywords: &[
+        "route",
+        "closest point",
+        "leg",
+        "along route",
+        "cross-track",
+        "polyline",
+    ],
+    inputs: &[
+        Field::new(
+            "route",
+            "Route",
+            "Waypoints in order: latitude, longitude",
+            Kind::List {
+                items: ROUTE_POINT,
+                min: 2,
+                max: 1_000,
+            },
+        )
+        .required()
+        .core(),
+        point::lat_field("lat", "Position latitude"),
+        point::lon_field("lon", "Position longitude"),
+        E[0],
+        E[1],
+        E[2],
+    ],
+    outputs: &[
+        Field::new(
+            "leg",
+            "Leg",
+            "1 is the first leg",
+            Kind::Number { min: 1.0, max: 1e4 },
+        )
+        .precision(Precision::Decimals(0)),
+        qty_field(
+            "along_route",
+            "Along the route",
+            "From the first waypoint to the closest point",
+            QT::Distance,
+            "km",
+        )
+        .precision(Precision::Decimals(3)),
+        qty_field(
+            "cross_track",
+            "Off the route",
+            "Right of course positive, relative to that leg",
+            QT::Distance,
+            "km",
+        )
+        .precision(Precision::Decimals(3)),
+        qty_field(
+            "closest_lat",
+            "Closest point latitude",
+            "On the route",
+            QT::Angle,
+            "deg",
+        )
+        .precision(AZ_P)
+        .angle_range("[-90,90]"),
+        qty_field(
+            "closest_lon",
+            "Closest point longitude",
+            "On the route",
+            QT::Angle,
+            "deg",
+        )
+        .precision(AZ_P)
+        .angle_range("[-180,180)"),
+        qty_field(
+            "route_length",
+            "Route length",
+            "All legs",
+            QT::Distance,
+            "km",
+        )
+        .precision(Precision::Decimals(3)),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::Unsupported,
+    ],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Closest point on each geodesic leg by Karney's interception method, on WGS 84",
+    accuracy: "Within 1 mm, like the cross-track tool",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "A position beside the third leg of a five-leg route",
+        input: r#"{"route":[{"lat":40,"lon":-105},{"lat":40,"lon":-104},{"lat":41,"lon":-104},{"lat":41,"lon":-103},{"lat":40,"lon":-103},{"lat":40,"lon":-102}],"lat":40.5,"lon":-103.9}"#,
+        source: "navigation route-geometry scenario: closest to leg 3, with the along-route distance including the first two legs",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "closest_lat"), ("lon", "closest_lon")],
+    }],
+    related: &[Related {
+        id: "navigation.route.cross-track",
+        reason: "parent",
+    }],
+    sentence: "The closest point is on leg {leg}, {along_route} along the route and {cross_track} off it.",
+    limits: &[("batchRows", 1_000)],
+    run: run_closest_point,
+    ..ToolDef::BLANK
+};
+
+fn run_closest_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let rows = ctx.rows("route")?;
+    let dunit = crate::unit(QT::Angle, "deg");
+    let mut pts = Vec::new();
+    for (i, r) in rows.iter().enumerate() {
+        let lat = ctx
+            .row_quantity("route", i, r, "lat")?
+            .expect("required")
+            .to(dunit);
+        let lon = ctx
+            .row_quantity("route", i, r, "lon")?
+            .expect("required")
+            .to(dunit);
+        if !(-90.0..=90.0).contains(&lat) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "Latitude must be between -90° and 90°.",
+            )
+            .at(&format!("/route/{i}/lat")));
+        }
+        pts.push((lat, lon));
+    }
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let (e, g) = setup(ctx)?;
+    // (distance to P, leg index, along-route, signed cross-track, closest point)
+    let mut best: Option<(f64, usize, f64, f64, (f64, f64))> = None;
+    let mut before = 0.0;
+    for (k, w) in pts.windows(2).enumerate() {
+        let (a, b) = (w[0], w[1]);
+        let seg: f64 = g.inverse(a.0, a.1, b.0, b.1);
+        if seg == 0.0 {
+            continue; // a repeated waypoint adds no leg
+        }
+        let Some((f, t, cross)) = foot(&g, a, b, (lat, lon)) else {
+            return Err(ToolError::new(ErrorCode::OutOfDomain, "The position is too far from a leg (a quarter of the Earth or more) for the method.").at("/lat"));
+        };
+        // Clamp to the leg: past either end, the end itself is closest.
+        let (c, along) = if t < 0.0 {
+            (a, 0.0)
+        } else if t > 1.0 {
+            (b, seg)
+        } else {
+            (f, g.inverse(a.0, a.1, f.0, f.1))
+        };
+        let d: f64 = g.inverse(c.0, c.1, lat, lon);
+        let signed = if cross < 0.0 { d } else { -d };
+        if best.is_none_or(|b| d < b.0) {
+            best = Some((d, k + 1, before + along, signed, c));
+        }
+        before += seg;
+    }
+    let Some((_, leg, along, xt, c)) = best else {
+        return Err(ToolError::invalid(
+            "/route",
+            "The route needs two different waypoints.",
+        ));
+    };
+    ctx.model = Some(format!(
+        "Closest point on each geodesic leg by Karney's interception method, on {}",
+        e.describe()
+    ));
+    Ok(Json::obj([
+        ("leg", Json::Num(leg as f64)),
+        ("along_route", ctx.out("along_route", meters(along))),
+        ("cross_track", ctx.out("cross_track", meters(xt))),
+        ("closest_lat", ctx.out("closest_lat", deg(c.0))),
+        ("closest_lon", ctx.out("closest_lon", deg(wrap_lon(c.1)))),
+        ("route_length", ctx.out("route_length", meters(before))),
+    ]))
+}

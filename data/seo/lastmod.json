@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cf1b065318b6d8c4",
+    "hash": "b36db16e8d74bc01",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -172,23 +172,23 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "8fcf2dc9364e514b",
+    "hash": "0ffc28bab605a802",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
-    "hash": "2fe72a23151be9bb",
+    "hash": "c0b2d55b27ccd2cc",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/": {
-    "hash": "9b3c67bb0ad2aa70",
+    "hash": "cc09a2ab65a82d59",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "b0d78737e79bab6e",
+    "hash": "744da28289cfbe86",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "9645d38123754a98",
+    "hash": "5af3c6a268f406c0",
     "lastmod": "2026-09-19"
   },
   "/navigation/los/": {
@@ -200,11 +200,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/route/": {
-    "hash": "0da6b62bf4e56fc5",
+    "hash": "06d7206470d011f6",
     "lastmod": "2026-09-19"
   },
   "/sources/": {
-    "hash": "f0d08556e990c8db",
+    "hash": "36ba3fe3fd2a4dfa",
     "lastmod": "2026-09-19"
   },
   "/survey/": {
@@ -344,7 +344,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "97cbfd12d780af4b",
+    "hash": "3993b380cdd3c7a0",
     "lastmod": "2026-09-19"
   }
 }

@@ -4,7 +4,7 @@
 - [x] 1.2 Implement Vincenty direct and inverse with iteration limits and Karney delta; verify the non-convergence and comparison scenarios
 - [ ] 1.3 Implement spherical methods with radius handling and ellipsoidal delta; verify the haversine-error scenario (built: haversine with the error scenario; pending: spherical direct, inverse, and intermediate point)
 - [x] 1.4 Port GeographicLib Rhumb (direct, inverse, pole handling); verify the rhumb scenarios and a `RhumbSolve` differential test (gp-geo rhumb.rs with divided differences for nearly east-west rhumbs; 2,000 RhumbSolve pairs agree to 0.4 µm and 2e-11° inverse and 47 nm direct, 14 µm for starts within 0.01° of a pole; JFK-LHR and stop-at-the-pole scenarios)
-- [ ] 1.5 Implement waypoints, densification, midpoint, and intermediate points with GPX/GeoJSON output; verify the equal-intervals scenario (built: midpoint; pending: waypoints, densification, GPX/GeoJSON)
+- [x] 1.5 Implement waypoints, densification, midpoint, and intermediate points with GPX/GeoJSON output; verify the equal-intervals scenario (navigation.geodesic.waypoints: N intervals, a spacing, or fractions along a geodesic or rhumb line, with distance and course at each point, as a table, a GPX route, and GeoJSON; the 11-point JFK-LHR scenario; 22 vectors from Python geographiclib)
 - [ ] 1.6 Port GeographicLib Intersect and implement the vertex tool; verify the non-intersecting scenario and an `IntersectTool` differential test
 - [ ] 1.7 Support custom ellipsoids with GeodesicExact above |f| > 0.02; verify the Mars and high-flattening scenarios (built: custom ellipsoids with the Mars scenario; the exact method is pending, so |f| > 0.02 returns UNSUPPORTED)
 - [ ] 1.8 Implement the comparison overlay (geodesic, rhumb, great circle); verify the visual fixture
@@ -12,7 +12,7 @@
 ## 2. Route geometry
 
 - [x] 2.1 Implement ellipsoidal cross-track/along-track with foot-point iteration and the spherical mode; verify both cross-track scenarios and 1 mm agreement with a brute-force reference (navigation.route.cross-track by Karney's gnomonic interception method; 200 random cases within 1 mm of a perpendicularity search along the geodesic; 22 vectors from Karney's Python geographiclib; right-of-course and past-the-end scenarios; rhumb segments pending)
-- [ ] 2.2 Implement closest point on multi-leg routes; verify the leg-identification scenario
+- [x] 2.2 Implement closest point on multi-leg routes; verify the leg-identification scenario (navigation.route.closest-point: leg, along-route distance, signed cross-track, clamped at leg ends; 22 vectors from Python geographiclib)
 - [ ] 2.3 Implement course intersection and intercept; verify the unreachable-target scenario
 - [x] 2.4 Implement fly-by turn anticipation and standard-rate turns; verify the 90° and standard-rate scenarios (navigation.route.fly-by: radius, lead distance, arc, time, and FLY_OVER_RECOMMENDED above 120°; standard rate by default; 833.4 m and 18.24° scenarios; 22 vectors)
 - [ ] 2.5 Implement geodesic range rings with pole and antimeridian handling; verify the pole-enclosing scenario with a GeoJSON validator

@@ -6,6 +6,7 @@ pub mod los;
 pub mod rhumb;
 pub mod route;
 pub mod vincenty;
+pub mod waypoints;
 
 use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
 use gp_base::ErrorCode;
@@ -880,6 +881,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &route::TSD,
     &route::CPA,
     &route::LEGS,
+    &route::CLOSEST_POINT,
+    &waypoints::WAYPOINTS,
     &los::HORIZON,
     &los::VISIBILITY,
     &los::DIP,

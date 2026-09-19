@@ -696,6 +696,22 @@
     {
       "query": "fresnel zone",
       "expect": "navigation.los.fresnel"
+    },
+    {
+      "query": "great circle waypoints",
+      "expect": "navigation.geodesic.waypoints"
+    },
+    {
+      "query": "points along a line",
+      "expect": "navigation.geodesic.waypoints"
+    },
+    {
+      "query": "closest point on route",
+      "expect": "navigation.route.closest-point"
+    },
+    {
+      "query": "which leg am i on",
+      "expect": "navigation.route.closest-point"
     }
   ]
 }

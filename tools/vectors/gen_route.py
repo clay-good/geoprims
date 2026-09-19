@@ -161,6 +161,58 @@ def formulas(rnd):
         rows.append(vec(i, {"waypoints": [{"lat": a, "lon": b} for a, b in wps]}, exp, tol, legs_src))
     write("navigation.route.legs", rows)
 
+    wp_src = "Karney's geographiclib (Python): points along the geodesic by the direct problem"
+    rows = []
+    for i in range(1, 23):
+        a = (rnd.uniform(-70, 70), rnd.uniform(-180, 180))
+        d = G.Direct(a[0], a[1], rnd.uniform(0, 360), rnd.uniform(1e4, 1.5e7))
+        n = rnd.randint(1, 40)
+        line = G.InverseLine(a[0], a[1], d["lat2"], d["lon2"])
+        exp, tol = {"result.count": n + 1, "result.length.value": line.s13 / 1000}, {"result.count": {"abs": 0}, "result.length.value": {"abs": 1e-9}}
+        for k in sorted({0, n // 2, n}):
+            q = line.Position(line.s13 * k / n)
+            exp[f"result.points.{k}.lat.value"] = q["lat2"]
+            exp[f"result.points.{k}.lon.value"] = q["lon2"]
+            tol[f"result.points.{k}.lat.value"] = {"abs": 1e-9}
+            tol[f"result.points.{k}.lon.value"] = {"abs": 1e-9}
+        rows.append(vec(i, {"lat1": a[0], "lon1": a[1], "lat2": d["lat2"], "lon2": d["lon2"], "intervals": n}, exp, tol, wp_src))
+    write("navigation.geodesic.waypoints", rows)
+
+    cp_src = "Karney's geographiclib (Python): per-leg perpendicularity bisection, clamped to each leg"
+    rows = []
+    i = 0
+    while len(rows) < 22:
+        n = rnd.randint(2, 5)
+        wps = [(rnd.uniform(-60, 60), rnd.uniform(-180, 180))]
+        for _ in range(n):
+            d = G.Direct(wps[-1][0], wps[-1][1], rnd.uniform(0, 360), rnd.uniform(50e3, 500e3))
+            wps.append((d["lat2"], d["lon2"]))
+        k = rnd.randrange(n)
+        mid = G.InverseLine(wps[k][0], wps[k][1], wps[k + 1][0], wps[k + 1][1]).Position(rnd.uniform(0.1, 0.9) * G.Inverse(wps[k][0], wps[k][1], wps[k + 1][0], wps[k + 1][1])["s12"])
+        pp = G.Direct(mid["lat2"], mid["lon2"], mid["azi2"] + rnd.choice([90, -90]), rnd.uniform(0, 40e3))
+        p = (pp["lat2"], pp["lon2"])
+        best, before = None, 0.0
+        for j in range(n):
+            a, b = wps[j], wps[j + 1]
+            L = G.Inverse(a[0], a[1], b[0], b[1])["s12"]
+            try:
+                s_, xt, flat, flon, _ = closest(a, b, p)
+            except ValueError:
+                s_ = -1.0
+            if s_ < 0 or s_ > L:
+                c, along = (a, 0.0) if s_ < 0 else (b, L)
+                dd = G.Inverse(c[0], c[1], p[0], p[1])["s12"]
+            else:
+                c, along, dd = (flat, flon), s_, abs(xt)
+            if best is None or dd < best[0]:
+                best = (dd, j + 1, before + along)
+            before += L
+        i += 1
+        rows.append(vec(i, {"route": [{"lat": x, "lon": y} for x, y in wps], "lat": p[0], "lon": p[1]},
+                        {"result.leg": best[1], "result.along_route.value": best[2] / 1000, "result.route_length.value": before / 1000},
+                        {"result.leg": {"abs": 0}, "result.along_route.value": {"abs": 1e-6}, "result.route_length.value": {"abs": 1e-9}}, cp_src))
+    write("navigation.route.closest-point", rows)
+
 
 if __name__ == "__main__":
     main()

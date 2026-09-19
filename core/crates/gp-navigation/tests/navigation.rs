@@ -623,3 +623,94 @@ fn line_of_sight_scenarios() {
     let sum = 0.6 * num(&f, "result.fresnel_radius.value") + num(&f, "result.earth_bulge.value");
     assert!((num(&f, "result.required_clearance.value") - sum).abs() < 1e-9);
 }
+
+#[test]
+fn waypoints_and_closest_point_scenarios() {
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    let g = Geodesic::wgs84();
+    // JFK-LHR in 10 intervals: 11 points, each 555,490.879 m apart along the geodesic.
+    let r = call(
+        "navigation.geodesic.waypoints",
+        r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543,"intervals":10}"#,
+    );
+    let pts = r["result"]["points"]
+        .as_array()
+        .unwrap_or_else(|| panic!("{r}"));
+    assert_eq!(pts.len(), 11);
+    for w in pts.windows(2) {
+        let p = |x: &Value| {
+            (
+                x["lat"]["value"].as_f64().unwrap(),
+                x["lon"]["value"].as_f64().unwrap(),
+            )
+        };
+        let (a, b) = (p(&w[0]), p(&w[1]));
+        let d: f64 = g.inverse(a.0, a.1, b.0, b.1);
+        assert!((d - 555_490.879).abs() < 1e-3, "{d}");
+    }
+    let geo: Value = serde_json::from_str(r["result"]["geojson"].as_str().unwrap()).unwrap();
+    assert_eq!(geo["geometry"]["coordinates"].as_array().unwrap().len(), 11);
+    assert!(
+        r["result"]["gpx"]
+            .as_str()
+            .unwrap()
+            .matches("<rtept")
+            .count()
+            == 11
+    );
+    // Spacing: the last interval is shorter; fractions: exactly those points.
+    let s = call(
+        "navigation.geodesic.waypoints",
+        r#"{"lat1":0,"lon1":0,"lat2":0,"lon2":10,"spacing":"400 km"}"#,
+    );
+    assert_eq!(s["result"]["count"], 4, "{s}");
+    let f = call(
+        "navigation.geodesic.waypoints",
+        r#"{"lat1":0,"lon1":0,"lat2":0,"lon2":10,"fractions":"0.5"}"#,
+    );
+    assert!(
+        (f["result"]["points"][0]["lon"]["value"].as_f64().unwrap() - 5.0).abs() < 1e-9,
+        "{f}"
+    );
+    let two = call(
+        "navigation.geodesic.waypoints",
+        r#"{"lat1":0,"lon1":0,"lat2":0,"lon2":10,"intervals":5,"spacing":"1 km"}"#,
+    );
+    assert_eq!(two["error"]["code"], "INVALID_INPUT");
+    let huge = call(
+        "navigation.geodesic.waypoints",
+        r#"{"lat1":0,"lon1":0,"lat2":0,"lon2":10,"spacing":"1 m"}"#,
+    );
+    assert_eq!(huge["error"]["code"], "LIMIT_EXCEEDED");
+    // Beside leg 3 of a five-leg route: leg 3, along-route past the first two legs.
+    let route = r#"[{"lat":40,"lon":-105},{"lat":40,"lon":-104},{"lat":41,"lon":-104},{"lat":41,"lon":-103},{"lat":40,"lon":-103},{"lat":40,"lon":-102}]"#;
+    let c = call(
+        "navigation.route.closest-point",
+        &format!(r#"{{"route":{route},"lat":41.1,"lon":-103.5}}"#),
+    );
+    assert_eq!(c["result"]["leg"], 3, "{c}");
+    let first_two: f64 = {
+        let a: f64 = g.inverse(40.0, -105.0, 40.0, -104.0);
+        let b: f64 = g.inverse(40.0, -104.0, 41.0, -104.0);
+        a + b
+    };
+    let along = num(&c, "result.along_route.value") * 1000.0;
+    assert!(
+        along > first_two && along < first_two + 90_000.0,
+        "{along} {first_two}"
+    );
+    assert!(
+        num(&c, "result.cross_track.value") < 0.0,
+        "north of an eastbound leg is left: {c}"
+    );
+    // Past the end of the route, the last waypoint is closest.
+    let end = call(
+        "navigation.route.closest-point",
+        &format!(r#"{{"route":{route},"lat":40,"lon":-101}}"#),
+    );
+    assert_eq!(end["result"]["leg"], 5);
+    assert!(
+        (num(&end, "result.along_route.value") - num(&end, "result.route_length.value")).abs()
+            < 1e-9
+    );
+}

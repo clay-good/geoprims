@@ -676,6 +676,26 @@
     {
       "query": "flight plan legs",
       "expect": "navigation.route.legs"
+    },
+    {
+      "query": "horizon distance",
+      "expect": "navigation.los.horizon"
+    },
+    {
+      "query": "how far can i see",
+      "expect": "navigation.los.horizon"
+    },
+    {
+      "query": "hidden height",
+      "expect": "navigation.los.visibility"
+    },
+    {
+      "query": "dip of the horizon",
+      "expect": "navigation.los.dip"
+    },
+    {
+      "query": "fresnel zone",
+      "expect": "navigation.los.fresnel"
     }
   ]
 }

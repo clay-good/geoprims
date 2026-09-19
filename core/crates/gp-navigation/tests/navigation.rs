@@ -573,3 +573,53 @@ fn route_legs_scenario() {
             < 1e-9
     );
 }
+
+#[test]
+fn line_of_sight_scenarios() {
+    // 100 m: geometric 35.70 km, optical (k = 0.13) 38.27 km, radio 41.22 km (±0.01 km).
+    let h = call("navigation.los.horizon", r#"{"height":"100 m"}"#);
+    for (k, want) in [("geometric", 35.70), ("optical", 38.27), ("radio", 41.22)] {
+        assert!(
+            (num(&h, &format!("result.{k}.value")) - want).abs() < 0.01,
+            "{k} {h}"
+        );
+    }
+    assert!(codes(&h).contains(&"TERRAIN_NOT_CONSIDERED".to_owned()));
+    // From 2 m, 30 km away: horizon 5.41 km, 41.3 m of the target hidden (±0.1 m).
+    let v = call(
+        "navigation.los.visibility",
+        r#"{"observer_height":"2 m","target_height":"50 m","distance":"30 km"}"#,
+    );
+    assert!(
+        (num(&v, "result.observer_horizon.value") - 5.41).abs() < 0.01,
+        "{v}"
+    );
+    assert!(
+        (num(&v, "result.hidden_height.value") - 41.3).abs() < 0.1,
+        "{v}"
+    );
+    assert_eq!(v["result"]["visible"], "yes", "a 50 m target peeks over");
+    let far = call(
+        "navigation.los.visibility",
+        r#"{"observer_height":"2 m","target_height":"10 m","distance":"30 km"}"#,
+    );
+    assert_eq!(far["result"]["visible"], "no");
+    assert!(num(&far, "result.midpoint_clearance.value") < 0.0, "{far}");
+    // Dip at 10 m in arcminutes, with the 1.76′√h rule beside it.
+    let d = call("navigation.los.dip", r#"{"height":"10 m"}"#);
+    assert_eq!(d["result"]["dip"]["unit"], "arcmin");
+    assert!((num(&d, "result.dip.value") - 5.68).abs() < 0.01, "{d}");
+    assert!((num(&d, "result.rule.value") - 1.76 * 10f64.sqrt()).abs() < 1e-9);
+    // 5.8 GHz over 10 km at the midpoint: Fresnel 11.37 m, bulge 1.47 m (K = 4/3).
+    let f = call(
+        "navigation.los.fresnel",
+        r#"{"frequency":"5.8 GHz","distance":"10 km"}"#,
+    );
+    assert!(
+        (num(&f, "result.fresnel_radius.value") - 11.37).abs() < 0.01,
+        "{f}"
+    );
+    assert!((num(&f, "result.earth_bulge.value") - 1.47).abs() < 0.01);
+    let sum = 0.6 * num(&f, "result.fresnel_radius.value") + num(&f, "result.earth_bulge.value");
+    assert!((num(&f, "result.required_clearance.value") - sum).abs() < 1e-9);
+}

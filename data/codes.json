@@ -30,6 +30,10 @@
       "severity": "caution",
       "message": "The center of gravity is outside the envelope you entered."
     },
+    "TERRAIN_NOT_CONSIDERED": {
+      "severity": "info",
+      "message": "Terrain and obstacles are not considered."
+    },
     "BELOW_TERRAIN": {
       "severity": "caution",
       "message": "Part of the path is below the terrain surface."

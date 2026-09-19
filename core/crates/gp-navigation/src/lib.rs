@@ -2,6 +2,7 @@
 //! (2013) is the default; Vincenty and haversine are comparison tools that
 //! always report their difference from Karney.
 
+pub mod los;
 pub mod rhumb;
 pub mod route;
 pub mod vincenty;
@@ -879,6 +880,10 @@ pub static TOOLS: &[&ToolDef] = &[
     &route::TSD,
     &route::CPA,
     &route::LEGS,
+    &los::HORIZON,
+    &los::VISIBILITY,
+    &los::DIP,
+    &los::FRESNEL,
 ];
 
 pub static REGISTRY: Registry = Registry {

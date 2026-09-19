@@ -176,10 +176,16 @@ test('fuzzer regressions return structured errors', async () => {
     ['drone.mission.survey-grid', { ...count, area: count.area.map((p, i) => (i === 1 ? { ...p, ring: 1e300 } : p)) }, 'INVALID_INPUT'],
     ['drone.photogrammetry.image-count', { ...count, overshoot: '1000000000 m' }, 'OUT_OF_DOMAIN'],
   ];
+  // Found as non-finite results; these must now succeed with finite numbers.
+  const fixed = [['navigation.los.visibility', { distance: 0, observer_height: '2 m', target_height: '50 m' }]];
   try {
     for (const [id, input, code] of cases) {
       const r = JSON.parse(await quick.invoke(id, JSON.stringify(input)));
       assert.equal(r.error?.code, code, `${id} ${JSON.stringify(input)} → ${JSON.stringify(r.error ?? r.summary)}`);
+    }
+    for (const [id, input] of fixed) {
+      const r = JSON.parse(await quick.invoke(id, JSON.stringify(input)));
+      assert.ok(r.ok && badNumbers(r.result).length === 0, `${id} ${JSON.stringify(input)} → ${JSON.stringify(r.error ?? r.result)}`);
     }
   } finally {
     quick.close();

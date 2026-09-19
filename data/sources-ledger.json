@@ -289,6 +289,67 @@
       "editionCheck": true
     },
     {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "fgdc-usng",
+      "name": "United States National Grid",
+      "issuer": "FGDC",
+      "currentEdition": "FGDC-STD-011-2001",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: fgdc.gov serves FGDC-STD-011-2001 (PDF).",
+      "freeAccessUrl": "https://www.fgdc.gov/standards/projects/usng/fgdc_std_011_2001_usng.pdf",
+      "matchTerms": [
+        "FGDC-STD-011-2001",
+        "United States National Grid"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "nga-gars",
+      "name": "Global Area Reference System",
+      "issuer": "NGA",
+      "currentEdition": "NGA GARS web description",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the NGA coordinate systems page describes GARS.",
+      "freeAccessUrl": "https://earth-info.nga.mil/index.php?dir=coordsys&action=coordsys#tab_gars",
+      "matchTerms": [
+        "Global Area Reference System"
+      ]
+    },
+    {
+      "currentReleaseDate": "2026-02",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "iaru-vhf-handbook",
+      "name": "IARU Region 1 VHF Managers Handbook",
+      "issuer": "IARU Region 1",
+      "currentEdition": "IARU Region 1 VHF Managers Handbook, version 10.03",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the handbooks page links VHF_Handbook_V10_03_final.pdf (February 2026).",
+      "freeAccessUrl": "https://www.iaru-r1.org/wp-content/uploads/2026/02/VHF_Handbook_V10_03_final.pdf",
+      "matchTerms": [
+        "VHF Managers Handbook"
+      ]
+    },
+    {
       "id": "iso6709",
       "name": "ISO 6709 Geographic point location",
       "issuer": "ISO",

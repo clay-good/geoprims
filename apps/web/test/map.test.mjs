@@ -71,3 +71,35 @@ test('layers: a geodesic tool gets its line, a rhumb comparison, and both ends; 
   assert.equal(calls.length, 3, 'one densification per edge');
   assert.equal(p[0].kind, 'polygon');
 });
+
+test('layers: a grid cell (bbox) draws as its outline along parallels and meridians', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  // The catalog's shape: map is an object.
+  const tool = { inputs: { properties: {} }, visualization: [{ kind: 'bbox', map: { south: 'south', west: 'west', north: 'north', east: 'east' } }] };
+  const deg = (value) => ({ value, unit: 'deg' });
+  const result = { ok: true, result: { south: deg(40.4), west: deg(-80), north: deg(40.45), east: deg(-79.9) } };
+  const [cell] = await buildLayers(tool, {}, result, async () => null);
+  assert.equal(cell.kind, 'polygon');
+  const ring = cell.rings[0];
+  assert.equal(ring.length, 64);
+  assert.ok(ring.every(([lon, lat]) => lon >= -80 && lon <= -79.9 && lat >= 40.4 && lat <= 40.45));
+  // The MGRS bbox maps only a size: nothing to outline.
+  const mgrs = { inputs: { properties: {} }, visualization: [{ kind: 'bbox', map: { size: 'square_size' } }] };
+  assert.deepEqual(await buildLayers(mgrs, {}, { ok: true, result: { square_size: { value: 1 } } }, async () => null), []);
+});
+
+test('layers: every catalog tool builds its layers from its example without throwing', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const host = nodeHost(join(root, 'dist/wasm'));
+  let points = 0;
+  for (const t of catalog.tools) {
+    const ex = (t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0]).input;
+    const result = JSON.parse(await host.invoke(t.id, JSON.stringify(ex)));
+    const layers = await buildLayers(t, ex, result, async () => null);
+    points += layers.filter((l) => l.role === 'result').length;
+  }
+  assert.ok(points > 20, `${points} result layers`);
+});

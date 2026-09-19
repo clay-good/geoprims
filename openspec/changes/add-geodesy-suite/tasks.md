@@ -39,9 +39,9 @@
 ## 5. Grid references
 
 - [ ] 5.1 Port GeographicLib MGRS (truncation, polar bands, lettering schemes, band tolerance, invalid-square rejection); verify all MGRS scenarios and NGA/GEOTRANS test points (built: truncation, polar bands, AA lettering, band tolerance, invalid-square rejection, and every MGRS scenario; pending: the AL scheme for legacy ellipsoids and NGA/GEOTRANS test points)
-- [ ] 5.2 Implement USNG encode/decode including local truncated references; verify the space-delimited scenario
-- [ ] 5.3 Implement Maidenhead with edge clamping; verify the six-character and edge scenarios
-- [ ] 5.4 Implement GARS and GEOREF; verify published examples and the keypad scenario
+- [x] 5.2 Implement USNG encode/decode including local truncated references; verify the space-delimited scenario (USNG forward and inverse; a truncated reference like NE 863 777 decodes with its grid zone; vectors from GeoConvert)
+- [x] 5.3 Implement Maidenhead with edge clamping; verify the six-character and edge scenarios (2 to 10 characters, integer cell arithmetic, +90° and +180° clamp into the last cell)
+- [x] 5.4 Implement GARS and GEOREF; verify published examples and the keypad scenario (identical to GeographicLib's C++ GARS and Georef classes on 6,496 encodings and decodes at every precision; 180° E is written as 180° W, where GeographicLib indexes past its last tile)
 - [ ] 5.5 Implement grid overlays for UTM, MGRS, Maidenhead, and GARS; verify the MGRS overlay visual fixture
 
 ## 6. Heights

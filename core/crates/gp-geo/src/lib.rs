@@ -3,6 +3,7 @@ pub mod dms;
 pub mod ellipsoid;
 pub mod frames;
 pub mod geoid;
+pub mod gridref;
 pub mod magnetic;
 pub mod mgrs;
 pub mod point;

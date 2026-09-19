@@ -3,6 +3,7 @@
 
 pub mod frames;
 pub mod geoid;
+pub mod gridref;
 pub mod magnetic;
 pub mod spcs;
 
@@ -293,7 +294,7 @@ fn parse_utm_text(s: &str) -> Option<Result<(u8, bool, f64, f64), String>> {
     Some(Ok((zone, north, e, n)))
 }
 
-fn grid_center(d: &mgrs::Decoded, e: Ellipsoid) -> (f64, f64) {
+pub(crate) fn grid_center(d: &mgrs::Decoded, e: Ellipsoid) -> (f64, f64) {
     let h = d.size / 2.0;
     if d.zone == 0 {
         utmups::ups_inverse(e.a, e.f, d.north, d.easting + h, d.northing + h)
@@ -1085,7 +1086,7 @@ fn run_utm_zone(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- MGRS
 
-const PRECISIONS: &[&str] = &[
+pub(crate) const PRECISIONS: &[&str] = &[
     "grid-zone",
     "100km",
     "10km",
@@ -1102,7 +1103,7 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.mgrs-forward",
     title: "Latitude and longitude to MGRS",
     summary: "Encodes a WGS 84 latitude and longitude as an MGRS grid reference at any precision, truncating (never rounding) as the standard requires.",
-    aliases: &["lat long to MGRS", "MGRS converter", "USNG converter"],
+    aliases: &["lat long to MGRS", "MGRS converter"],
     keywords: &["MGRS", "USNG", "military grid", "grid reference"],
     inputs: &[
         LAT,
@@ -1172,7 +1173,7 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn spaced(s: &str) -> String {
+pub(crate) fn spaced(s: &str) -> String {
     let b = s.as_bytes();
     let nz = b.iter().take_while(|c| c.is_ascii_digit()).count();
     let gzd_end = (nz + 1).min(s.len());
@@ -1222,7 +1223,7 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.mgrs-inverse",
     title: "MGRS to latitude and longitude",
     summary: "Decodes an MGRS or USNG grid reference to the south-west corner and center of the square it names, with the square's size.",
-    aliases: &["MGRS to lat long", "decode MGRS", "USNG to lat long"],
+    aliases: &["MGRS to lat long", "decode MGRS"],
     keywords: &["MGRS", "USNG", "decode", "grid reference"],
     inputs: &[Field::new(
         "mgrs",
@@ -1327,6 +1328,14 @@ pub static TOOLS: &[&ToolDef] = &[
     &frames::FROM_ECEF,
     &frames::TO_LOCAL,
     &frames::FROM_LOCAL,
+    &gridref::USNG_FORWARD,
+    &gridref::USNG_INVERSE,
+    &gridref::MAIDENHEAD_FORWARD,
+    &gridref::MAIDENHEAD_INVERSE,
+    &gridref::GARS_FORWARD,
+    &gridref::GARS_INVERSE,
+    &gridref::GEOREF_FORWARD,
+    &gridref::GEOREF_INVERSE,
 ];
 
 pub static REGISTRY: Registry = Registry {

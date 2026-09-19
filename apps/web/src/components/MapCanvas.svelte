@@ -71,7 +71,7 @@
     layers = await buildLayers(tool, args, result, (input) =>
       compute.invoke('navigation.geodesic.waypoints', input, 'densify'),
     );
-    const what = layers.map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : `point ${l.label || 'the result'}`));
+    const what = layers.map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     desc = `${mode === 'globe' ? 'Globe' : 'Map'} showing ${what.join(', ') || 'the world'}. ${result.summary ?? ''}`;
     reframe();
   }

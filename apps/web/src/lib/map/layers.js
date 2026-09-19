@@ -11,6 +11,9 @@ export function numberOf(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+/** A layer's field mapping: an object in the catalog ({lat: "lat"}), or [key, field] pairs. */
+const mapOf = (m) => (Array.isArray(m) ? Object.fromEntries(m) : (m ?? {}));
+
 const at = (result, field) => {
   const v = result?.result?.[field];
   return typeof v === 'number' ? v : v?.value;
@@ -62,9 +65,24 @@ export async function buildLayers(tool, args, result, densify) {
   if (p.every((x) => x !== null)) layers.push({ kind: 'point', role: two ? 'result' : 'input', points: [p], label: two ? 'P' : '' });
   for (const v of tool.visualization ?? []) {
     if (v.kind !== 'point') continue;
-    const map = Object.fromEntries(v.map);
+    const map = mapOf(v.map);
     const q = [at(result, map.lon), at(result, map.lat)];
     if (q.every((x) => typeof x === 'number')) layers.push({ kind: 'point', role: 'result', points: [q], label: '' });
+  }
+  // A cell (bbox): its edges follow parallels and meridians, so they are
+  // sampled along latitude and longitude rather than drawn as geodesics.
+  for (const v of tool.visualization ?? []) {
+    if (v.kind !== 'bbox') continue;
+    const map = mapOf(v.map);
+    const [s, w, n, e] = [map.south, map.west, map.north, map.east].map((f) => (f ? at(result, f) : undefined));
+    if (![s, w, n, e].every((x) => typeof x === 'number')) continue;
+    const steps = 16;
+    const ring = [];
+    for (let i = 0; i <= steps; i++) ring.push([w + ((e - w) * i) / steps, s]);
+    for (let i = 1; i <= steps; i++) ring.push([e, s + ((n - s) * i) / steps]);
+    for (let i = 1; i <= steps; i++) ring.push([e - ((e - w) * i) / steps, n]);
+    for (let i = 1; i < steps; i++) ring.push([w, n - ((n - s) * i) / steps]);
+    layers.push({ kind: 'polygon', role: 'result', rings: [ring] });
   }
   if (kinds.has('polygon')) {
     const rs = rings(tool, args);

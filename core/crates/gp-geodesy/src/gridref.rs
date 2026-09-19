@@ -103,6 +103,8 @@ const fn code_in(name: &'static str, title: &'static str, help: &'static str) ->
 
 pub static MAIDENHEAD_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.maidenhead-forward",
+    stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Latitude and longitude to Maidenhead locator",
     summary: "Encodes a latitude and longitude as a Maidenhead (QTH) locator of 2 to 10 characters, as used in amateur radio, with the cell's bounds.",
     aliases: &[
@@ -146,7 +148,7 @@ pub static MAIDENHEAD_FORWARD: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::InvalidInput],
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
-    model: "IARU Maidenhead locator: 18×18 fields, 10×10 squares, 24×24 subsquares, and the extended pairs; +90° and +180° fall in the last cell",
+    model: "IARU Maidenhead locator: 18×18 fields, 10×10 squares, 24×24 subsquares, and the extended pairs; a point on a grid line falls in the cell east or north of it, and +90° and +180° in the last cell",
     accuracy: "Exact (integer cell arithmetic); matches an independent implementation of the definition",
     references: &[IARU_LOCATOR],
     examples: &[Example {
@@ -191,6 +193,7 @@ fn run_maidenhead_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MAIDENHEAD_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.maidenhead-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Maidenhead locator to latitude and longitude",
     summary: "Decodes a Maidenhead (QTH) locator of 2 to 10 characters, in any letter case, to the center and bounds of its cell.",
     aliases: &[
@@ -241,6 +244,7 @@ fn run_maidenhead_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static GARS_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.gars-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to GARS",
     summary: "Encodes a latitude and longitude as a Global Area Reference System cell: 30′ cell, 15′ quadrant, or 5′ keypad, with its bounds.",
     aliases: &[
@@ -325,6 +329,7 @@ fn run_gars_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static GARS_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.gars-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "GARS to latitude and longitude",
     summary: "Decodes a Global Area Reference System code (5 to 7 characters) to the center and bounds of its cell, quadrant, or keypad.",
     aliases: &["decode GARS", "GARS to lat long"],
@@ -375,6 +380,7 @@ const GEOREF_PRECISIONS: &[&str] = &[
 
 pub static GEOREF_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.georef-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to GEOREF",
     summary: "Encodes a latitude and longitude in the World Geographic Reference System (GEOREF) from a 15° tile down to thousandths of a minute, with the cell's bounds.",
     aliases: &[
@@ -462,6 +468,7 @@ fn run_georef_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static GEOREF_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.georef-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "GEOREF to latitude and longitude",
     summary: "Decodes a World Geographic Reference System (GEOREF) code to the center and bounds of its cell.",
     aliases: &["decode GEOREF", "GEOREF to lat long"],
@@ -509,6 +516,7 @@ fn meters(v: f64) -> Q {
 
 pub static USNG_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.usng-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to USNG",
     summary: "Encodes a latitude and longitude as a U.S. National Grid reference, written with spaces (17T NE 86309 77770), truncating to the precision chosen.",
     aliases: &["US National Grid", "USNG converter", "lat long to USNG"],
@@ -618,6 +626,7 @@ fn run_usng_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static USNG_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.usng-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "USNG to latitude and longitude",
     summary: "Decodes a U.S. National Grid reference, including a truncated local one like NE 863 777 when you give the grid zone, to the center and south-west corner of the square it names.",
     aliases: &["decode USNG", "USNG to lat long", "national grid to GPS"],

@@ -5,6 +5,31 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "geodesy.grid-ref.gars-forward",
+        "geodesy.grid-ref.gars-inverse",
+        "geodesy.grid-ref.georef-forward",
+        "geodesy.grid-ref.georef-inverse",
+        "geodesy.grid-ref.maidenhead-forward",
+        "geodesy.grid-ref.maidenhead-inverse",
+        "geodesy.grid-ref.usng-forward",
+        "geodesy.grid-ref.usng-inverse"
+      ],
+      "vectors": [],
+      "summary": "The GARS, GEOREF, Maidenhead, and USNG tools are stable, both directions. They reproduce NGA's GARS band definitions, the Wikipedia GEOREF (NAS Patuxent River) and Maidenhead (W1AW) examples, and the FGDC USNG Washington Monument, and match GeographicLib, pygeodesy, an exact Maidenhead reference, and NGA GEOTRANS on thousands of points. Results are unchanged apart from the fix below."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "geodesy.grid-ref.maidenhead-forward"
+      ],
+      "vectors": [],
+      "summary": "A longitude or latitude typed on a Maidenhead grid line in decimal degrees (like 145.83333333333334 for 145°50′) could land in the cell on either side of the line, depending on floating-point rounding. It now always falls in the cell east or north of the line. The tool is now version 1.1.0."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "geodesy.frame.geodetic-to-ecef",
         "geodesy.frame.ecef-to-geodetic",
         "geodesy.frame.to-local",

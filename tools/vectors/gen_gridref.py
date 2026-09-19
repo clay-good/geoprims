@@ -23,6 +23,12 @@ BIN = Path("/tmp") / "gp_gridref_ref"
 GLIB = ("GeographicLib GARS and Georef classes (tools/vectors/gridref_ref.cpp)", "GeographicLib 2.7")
 IARU = ("IARU Maidenhead locator definition, independent Python implementation (tools/vectors/gen_gridref.py)", "IARU Region 1 VHF Managers Handbook, version 10.03")
 GEOCONVERT = ("GeographicLib GeoConvert -m (MGRS, written with spaces as USNG)", "GeographicLib 2.7")
+# Published examples.
+WIKI_MH = ("Wikipedia, Maidenhead Locator System (W1AW, Newington, Connecticut, is in FN31pr)", "retrieved 2026-09-19")
+WIKI_GEOREF = ("Wikipedia, World Geographic Reference System (NAS Patuxent River, 38.286108, -76.4291704, is at GJPJ3417)", "retrieved 2026-09-19")
+NGA_GARS = ("NGA, Global Area Reference System description (180°E to 179°30'W is band 001, 179°30'W to 179°W band 002; 90°S to 89°30'S is band AA, 89°30'S to 89°S band AB)",
+            "earth-info.nga.mil, October 6, 2006")
+FGDC_USNG = ("FGDC-STD-011-2001, United States National Grid, section 5.2.2 and table 1 (the Washington Monument)", "December 2001")
 
 
 def build():
@@ -36,8 +42,11 @@ def ref(lines):
 
 
 def maidenhead(lat, lon, chars):
-    x = min(max(int((lon + 180) * 2880 // 1), 0), 360 * 2880 - 1)
-    y = min(max(int((lat + 90) * 5760 // 1), 0), 180 * 5760 - 1)
+    # A value within a millionth of a finest cell of a grid line is on the line.
+    def cell(v):
+        return round(v) if abs(v - round(v)) < 1e-6 else int(v // 1)
+    x = min(max(cell((lon + 180) * 2880), 0), 360 * 2880 - 1)
+    y = min(max(cell((lat + 90) * 5760), 0), 180 * 5760 - 1)
     divs = [18, 10, 24, 10, 24]
     out = ""
     for k in range(chars // 2):
@@ -97,6 +106,7 @@ def main():
         exp = {"result.locator": maidenhead(la, lo, chars)}
         vs.append(vec(i, {"lat": la, "lon": lo, "precision": str(chars)}, exp, IARU))
     vs.append(vec(len(vs) + 1, {"lat": 95, "lon": 0}, {"error.code": "INVALID_INPUT"}, ("add-geodesy-suite input rules", "2026-09"), ok=False))
+    vs.append(vec(len(vs) + 1, {"lat": 41.71463, "lon": -72.72713, "precision": "6"}, {"result.locator": "FN31pr"}, WIKI_MH))
     write("geodesy.grid-ref.maidenhead-forward", vs)
 
     vs = []
@@ -121,6 +131,9 @@ def main():
         vs.append(vec(i, {"locator": loc}, exp, IARU, tol))
     for j, bad in enumerate(["FN0", "SN00", "FN00zz"], len(vs) + 1):
         vs.append(vec(j, {"locator": bad}, {"error.code": "INVALID_INPUT"}, ("add-geodesy-suite input rules", "2026-09"), ok=False))
+    # The subsquare holds W1AW: its center is within half a subsquare (1/48° by 1/24°) of the station.
+    vs.append(vec(len(vs) + 1, {"locator": "FN31pr"}, {"result.lat.value": 41.71463, "result.lon.value": -72.72713}, WIKI_MH,
+                  {"result.lat.value": {"abs": 1 / 48}, "result.lon.value": {"abs": 1 / 24}}))
     write("geodesy.grid-ref.maidenhead-inverse", vs)
 
     names = {0: "30min", 1: "15min", 2: "5min"}
@@ -135,6 +148,10 @@ def main():
         vi.append(vec(i, {"gars": code.lower() if i % 4 == 0 else code}, exp, GLIB, {k: {"abs": 1e-12} for k in exp}))
     vi.append(vec(len(vi) + 1, {"gars": "721AA"}, {"error.code": "INVALID_INPUT"}, ("add-geodesy-suite input rules", "2026-09"), ok=False))
     vi.append(vec(len(vi) + 1, {"gars": "001RA"}, {"error.code": "INVALID_INPUT"}, ("add-geodesy-suite input rules", "2026-09"), ok=False))
+    for code, la, lo in [("001AA", -89.75, -179.75), ("002AB", -89.25, -179.25)]:
+        vs.append(vec(len(vs) + 1, {"lat": la, "lon": lo, "precision": "30min"}, {"result.gars": code}, NGA_GARS))
+        vi.append(vec(len(vi) + 1, {"gars": code}, {"result.south.value": la - 0.25, "result.west.value": lo - 0.25, "result.lat.value": la, "result.lon.value": lo},
+                      NGA_GARS, {k: {"abs": 1e-12} for k in ["result.south.value", "result.west.value", "result.lat.value", "result.lon.value"]}))
     write("geodesy.grid-ref.gars-forward", vs)
     write("geodesy.grid-ref.gars-inverse", vi)
 
@@ -151,6 +168,10 @@ def main():
         exp = {"result.lat.value": cl, "result.lon.value": cw, "result.south.value": s_, "result.west.value": w_}
         vi.append(vec(i, {"georef": code}, exp, GLIB, {k: {"abs": 1e-12} for k in exp}))
     vi.append(vec(len(vi) + 1, {"georef": "NKLN6099"}, {"error.code": "INVALID_INPUT"}, ("add-geodesy-suite input rules", "2026-09"), ok=False))
+    vs.append(vec(len(vs) + 1, {"lat": 38.286108, "lon": -76.4291704, "precision": "1min"}, {"result.georef": "GJPJ3417"}, WIKI_GEOREF))
+    # The 1-minute cell holds the station: its center is within half a minute of it.
+    vi.append(vec(len(vi) + 1, {"georef": "GJPJ3417"}, {"result.lat.value": 38.286108, "result.lon.value": -76.4291704}, WIKI_GEOREF,
+                  {"result.lat.value": {"abs": 1 / 120}, "result.lon.value": {"abs": 1 / 120}}))
     write("geodesy.grid-ref.georef-forward", vs)
     write("geodesy.grid-ref.georef-inverse", vi)
 
@@ -166,6 +187,10 @@ def main():
         h = len(digits) // 2
         return " ".join(x for x in (gzd, sq, digits[:h], digits[h:]) if x)
     vs = [vec(i, {"lat": la, "lon": lo}, {"result.usng": spaced(m)}, GEOCONVERT) for i, ((la, lo), m) in enumerate(zip(usamp, out), 1)]
+    # NAD 83 UTM 18 E 323,483.168 m, N 4,306,479.498 m; its latitude and longitude from PROJ 9.3.0.
+    monument = (38.889467309501576, -77.0352402156242)
+    for p, ref_ in [("1m", "18S UJ 23483 06479"), ("10m", "18S UJ 2348 0647"), ("100m", "18S UJ 234 064"), ("1km", "18S UJ 23 06")]:
+        vs.append(vec(len(vs) + 1, {"lat": monument[0], "lon": monument[1], "precision": p}, {"result.usng": ref_}, FGDC_USNG))
     write("geodesy.grid-ref.usng-forward", vs)
     vi = []
     for i, ((la, lo), m) in enumerate(zip(usamp, out), 1):
@@ -177,6 +202,9 @@ def main():
     vi.append(vec(len(vi) + 1, {"usng": "NE 863 777", "zone": "17T"}, {"result.lat.value": float(loc[0]), "result.lon.value": float(loc[1]), "result.square_size.value": 100},
                   GEOCONVERT, {"result.lat.value": {"abs": 1e-9}, "result.lon.value": {"abs": 1e-9}, "result.square_size.value": {"abs": 0}}))
     vi.append(vec(len(vi) + 1, {"usng": "NE 863 777"}, {"error.code": "INVALID_INPUT"}, ("add-geodesy-suite input rules", "2026-09"), ok=False))
+    vi.append(vec(len(vi) + 1, {"usng": "18S UJ 23483168 06479498"}, {"result.corner_lat.value": monument[0], "result.corner_lon.value": monument[1],
+                  "result.square_size.value": 0.001}, FGDC_USNG, {"result.corner_lat.value": {"abs": 1e-10}, "result.corner_lon.value": {"abs": 1e-10},
+                  "result.square_size.value": {"abs": 0}}))
     write("geodesy.grid-ref.usng-inverse", vi)
 
 

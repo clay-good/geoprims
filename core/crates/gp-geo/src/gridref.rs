@@ -35,12 +35,14 @@ const MH_DIV: [u32; 5] = [18, 10, 24, 10, 24];
 /// Encodes to a Maidenhead locator of `chars` (2, 4, 6, 8, or 10) characters.
 pub fn maidenhead_encode(lat: f64, lon: f64, chars: usize) -> String {
     // Integer cells at the finest precision, clamped so +90° and +180° fall in the last cell.
-    let x = ((lon + 180.0) * MH_LON)
-        .floor()
-        .clamp(0.0, 360.0 * MH_LON - 1.0) as u64;
-    let y = ((lat + 90.0) * MH_LAT)
-        .floor()
-        .clamp(0.0, 180.0 * MH_LAT - 1.0) as u64;
+    // A value within a millionth of a cell of a grid line (the double nearest 70°50′, which
+    // may land just below it) is on the line, so it goes to the cell east or north of it.
+    let cell = |v: f64| {
+        let r = v.round();
+        if (v - r).abs() < 1e-6 { r } else { v.floor() }
+    };
+    let x = cell((lon + 180.0) * MH_LON).clamp(0.0, 360.0 * MH_LON - 1.0) as u64;
+    let y = cell((lat + 90.0) * MH_LAT).clamp(0.0, 180.0 * MH_LAT - 1.0) as u64;
     let pairs = chars / 2;
     let mut out = String::with_capacity(chars);
     // The finest cell count below each pair.
@@ -318,6 +320,15 @@ pub fn georef_decode(s: &str) -> Result<(Cell, i32), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn maidenhead_grid_lines() {
+        // Decimal minutes typed on a line go east or north of it, whichever way
+        // the nearest double falls: 70°50′E and 145°50′W both start a subsquare.
+        assert_eq!(maidenhead_encode(57.7, 70.83333333333333, 6), "MO57kq");
+        assert_eq!(maidenhead_encode(41.35, -145.83333333333334, 6), "BN71ci");
+        assert_eq!(maidenhead_encode(87.83333333333333, 63.26, 6), "MR17pu");
+    }
 
     #[test]
     fn maidenhead_scenarios() {

@@ -1,9 +1,9 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
 ---
 <Base title="Disclaimer · geoprims" description="What geoprims results are for and what they are not: planning, engineering, and education aids, not certified navigation, flight, or legal survey tools." canonical="/disclaimer/">
-  <h1>Disclaimer</h1>
-  <p class="purpose">geoprims tools are planning, engineering, and education aids.</p>
+  <PageHeader title="Disclaimer" purpose={`geoprims tools are planning, engineering, and education aids.`} />
   <ul>
     <li><strong>Not for primary navigation.</strong> No geoprims tool is certified for navigation or flight operations. Aviation and drone results do not replace your aircraft's POH/AFM, official charts and publications, a flight briefing, or current regulations.</li>
     <li><strong>Not a legal survey.</strong> Survey tools are not legal survey determinations. Boundary and title questions need a licensed surveyor.</li>

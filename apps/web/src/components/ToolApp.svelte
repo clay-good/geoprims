@@ -2,7 +2,7 @@
   // The interactive tool: schema-driven form, live answer card, permalinks.
   // Server-rendered with the worked example, so the answer is in the HTML.
   import { onMount } from 'svelte';
-  import { isPinned, recordUse, togglePin, toolOptions } from '../lib/prefs.js';
+  import { isPinned, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
 
@@ -81,6 +81,18 @@
       : [],
   );
   const secondary = $derived(result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary) : []);
+  // An input error names its field as a JSON pointer ("/points/2/lat" is the points field): mark it, and let the answer card jump to it.
+  const errorField = $derived(result && !result.ok ? result.error.field?.split('/')[1] : undefined);
+  const badField = $derived(errorField && errorField in tool.inputs.properties ? errorField : undefined);
+  function goToField() {
+    const el = document.getElementById(`field-${badField}`);
+    el?.closest('details')?.setAttribute('open', '');
+    el?.focus();
+  }
+
+  // The unit profile switch: shown when a result has units a profile changes (angles never change).
+  const hasUnits = Object.values(tool.outputs.properties).some((o) => o['x-quantity'] && o['x-quantity'] !== 'angle');
+  let unitProfile = $state('');
   const FACTS = 6;
   let allFacts = $state(false);
   const facts = $derived(allFacts ? secondary : secondary.slice(0, FACTS));
@@ -178,6 +190,13 @@
     run();
   }
 
+  let copiedRow = $state('');
+  async function copyRow(k, v) {
+    await navigator.clipboard.writeText(v);
+    copiedRow = k;
+    setTimeout(() => (copiedRow = ''), 1500);
+  }
+
   async function copy(kind) {
     const text =
       kind === 'value'
@@ -211,8 +230,12 @@
 
   onMount(async () => {
     pinned = isPinned(tool.id);
+    unitProfile = profile();
     recordUse(tool);
-    addEventListener('gp-prefs', () => compute && run(true));
+    addEventListener('gp-prefs', () => {
+      unitProfile = profile();
+      if (compute) run(true);
+    });
     if (typeof WebAssembly !== 'object') {
       const { NO_WASM } = await import('../lib/messages.js');
       result = { ok: false, error: { code: 'UNSUPPORTED', message: NO_WASM } };
@@ -250,7 +273,12 @@
     {/if}
     {#if secondary.length}
       <dl class="facts">
-        {#each facts as [k, v]}<div><dt>{tool.outputs.properties[k]?.title ?? k}</dt><dd class:words={!/\d/.test(v)}>{v}</dd></div>{/each}
+        {#each facts as [k, v]}
+          <div>
+            <dt>{tool.outputs.properties[k]?.title ?? k}</dt>
+            <dd class:words={!/\d/.test(v)}><button type="button" class="copy-row" title="Copy this value" onclick={() => copyRow(k, v)}>{v}{#if copiedRow === k}<span class="copied" role="status"> Copied ✓</span>{/if}</button></dd>
+          </div>
+        {/each}
       </dl>
       {#if secondary.length > FACTS}
         <button type="button" class="quiet more" onclick={() => (allFacts = !allFacts)}>{allFacts ? 'Show fewer' : `Show all ${secondary.length} results`}</button>
@@ -260,11 +288,22 @@
       <button type="button" class="quiet" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
       <button type="button" class="quiet" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied ✓' : 'Copy sentence'}</button>
       <button type="button" class="quiet" onclick={() => copy('link')}>{copied === 'link' ? 'Link copied ✓' : 'Share link'}</button>
+      {#if hasUnits}
+        <label class="units-switch"><span class="sr-only">Units</span>
+          <select bind:value={unitProfile} onchange={() => setProfile(unitProfile)} title="Units for every tool (also in Settings)">
+            {#each PROFILES as [id, label]}<option value={id}>{id ? label : 'Units: each tool’s own'}</option>{/each}
+          </select>
+        </label>
+      {/if}
       <button type="button" class="quiet star" aria-pressed={pinned} aria-label={pinned ? 'Unpin tool' : 'Pin tool'} title={pinned ? 'Pinned to your home page' : 'Pin to your home page'} onclick={pin}>{pinned ? '★' : '☆'}</button>
     </div>
   {:else if result}
     <p class="error">{result.error.message}</p>
     {#if result.error.hint}<p class="hint">{result.error.hint}</p>{/if}
+    <div class="actions">
+      {#if badField}<button type="button" class="quiet" onclick={goToField}>Go to {tool.inputs.properties[badField].title.toLowerCase()}</button>{/if}
+      <button type="button" class="quiet" onclick={tryExample}>Use the example</button>
+    </div>
   {/if}
   <p class="report-line">{#if linkNote}<span class="notice">{linkNote} </span>{/if}Something look off? <button type="button" class="link" onclick={openReport}>Report a problem</button></p>
 </section>
@@ -282,18 +321,19 @@
     {#if isExample}<span class="chip">Showing an example. Change anything.</span>{/if}
   </div>
   {#snippet field([name, schema])}
-    <label>
+    <label class:invalid={badField === name}>
       <span class="label-text">{schema.title}{#if !required.has(name)}<span class="optional"> optional</span>{/if}</span>
       {#if schema.enum}
-        <select bind:value={values[name]} onchange={edited}>
+        <select id={`field-${name}`} aria-invalid={badField === name} aria-describedby={badField === name ? 'field-error' : undefined} bind:value={values[name]} onchange={edited}>
           {#if !required.has(name)}<option value="">—</option>{/if}
           {#each schema.enum as option}<option value={option}>{option}</option>{/each}
         </select>
       {:else if isList(schema)}
-        <textarea bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" spellcheck="false"></textarea>
+        <textarea id={`field-${name}`} aria-invalid={badField === name} aria-describedby={badField === name ? 'field-error' : undefined} bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" spellcheck="false"></textarea>
       {:else}
-        <input bind:value={values[name]} oninput={edited} autocomplete="off" spellcheck="false" />
+        <input id={`field-${name}`} aria-invalid={badField === name} aria-describedby={badField === name ? 'field-error' : undefined} bind:value={values[name]} oninput={edited} autocomplete="off" spellcheck="false" />
       {/if}
+      {#if badField === name}<span class="field-error" id="field-error">{result.error.message}</span>{/if}
       <span class="help">{readable(schema.description ?? '')}{isList(schema) ? ` · one per line: ${columns(schema).map((c) => schema.items.properties[c].title.toLowerCase()).join(', ')}` : ''}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · plain numbers mean ${friendly(schema['x-unit'])}` : ''}</span>
     </label>
   {/snippet}
@@ -301,7 +341,7 @@
     {#each coreFields as f}{@render field(f)}{/each}
   </div>
   {#if moreFields.length}
-    <details class="more-options" open={moreFields.some(([k]) => values[k] !== '')}>
+    <details class="more-options" open={moreFields.some(([k]) => values[k] !== '' || k === badField)}>
       <summary>More options <span class="count">{moreFields.length}</span></summary>
       <div class="fields">
         {#each moreFields as f}{@render field(f)}{/each}

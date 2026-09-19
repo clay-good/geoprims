@@ -1,11 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import { changelog, CHANGE_KINDS, route, tool } from '../../lib/catalog.mjs';
 const dates = [...new Set(changelog.entries.map((e) => e.date))];
 ---
 <Base title="Changelog · geoprims" description="What changed in geoprims, newest first. Result changes, where a published answer moved, are labeled and name the test vectors they replaced." canonical="/changelog/">
-  <h1>Changelog</h1>
-  <p class="purpose">What changed, newest first. A <strong>result change</strong> means a published answer moved; it names the test vectors it replaced, which stay in each tool's downloadable test vectors, marked superseded. Every release also has a <a href="/verification/">verification report</a>.</p>
+  <PageHeader title="Changelog" purpose={`What changed, newest first. A <strong>result change</strong> means a published answer moved; it names the test vectors it replaced, which stay in each tool's downloadable test vectors, marked superseded. Every release also has a <a href="/verification/">verification report</a>.`} />
   {dates.map((d) => (
     <section>
       <h2>{d}</h2>

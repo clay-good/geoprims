@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
 ---
 <Base title="Offline · geoprims" description="This page is not available offline yet." canonical="/offline/" noindex>
-  <h1>You're offline</h1>
-  <p class="purpose">This page isn't saved on this device yet. Every calculator that was saved on your first visit still works: go to the <a href="/">home page</a> or a <a href="/units/">tool list</a>.</p>
+  <PageHeader title="You're offline" purpose={`This page isn't saved on this device yet. Every calculator that was saved on your first visit still works: go to the <a href="/">home page</a> or a <a href="/units/">tool list</a>.`} />
 </Base>

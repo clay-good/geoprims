@@ -78,3 +78,11 @@
 
 - [ ] 10.1 Run the full end-to-end, accessibility, visual, performance, and privacy suites on a release candidate; verify all pass
 - [ ] 10.2 Conduct a manual screen-reader pass (VoiceOver and NVDA) on the palette, one tool per domain, and settings; verify issues are fixed or tracked before launch
+
+## 11. Page template
+
+- [x] 11.1 Record the page template (`specs/web/page-template`) and point `apps/web/README.md` at it; verify every page type in the anatomy table exists
+- [x] 11.2 Add the shared `PageHeader` component and use it on every page; verify each built page has exactly one `h1` (test/template.test.mjs; the home hero is its own header)
+- [x] 11.3 Tool page self-service: field-located errors, click-to-copy result rows, the unit profile switch, and "Go the other way"; verify the field-error and copy scenarios (the error's JSON-pointer `field` marks the input; checked in the browser with latitude 95; related-tool reasons now read as words)
+- [x] 11.4 Findable lists: filter with count and `?q=`, group jump chips, and the no-match search; verify the shareable-filter scenario (jump chips show for 2 to 12 groups; past that the filter does the job)
+- [x] 11.5 Home example chips and the not-found page; verify the unknown-URL scenario (`scripts/serve.mjs` serves 404.html with status 404, as static hosts do)

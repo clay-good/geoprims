@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import { catalog, DOMAIN_TITLES, route, tool } from '../lib/catalog.mjs';
+const POPULAR = ['aviation.altimetry.density-altitude', 'aviation.wind.runway-components', 'navigation.geodesic.inverse', 'geodesy.utm.forward', 'units.length.convert'].map(tool).filter(Boolean);
+const domains = [...new Set(catalog.tools.map((t) => t.domain))];
+---
+<Base title="Page not found · geoprims" description="This page does not exist." canonical="/404/" noindex>
+  <PageHeader title="We couldn’t find that page" purpose="The link may be old, or the address has a typo. Search for the tool you wanted:" />
+  <button type="button" class="hero-search" data-palette>
+    <span class="hero-search-text">Search tools or paste a value</span>
+    <kbd aria-hidden="true">/</kbd>
+  </button>
+  <h2>Popular</h2>
+  <ul class="tools">
+    {POPULAR.map((t) => <li><a href={route(t.id)}>{t.title}</a><p class="clamp3">{t.summary}</p></li>)}
+  </ul>
+  <h2>Browse by topic</h2>
+  <nav class="chips" aria-label="Topics">
+    {domains.map((d) => <a class="chip-button" href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a>)}
+  </nav>
+</Base>

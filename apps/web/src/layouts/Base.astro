@@ -77,8 +77,13 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
       wireDisplay(document.querySelector('form.display'));
       registerOffline(document.querySelector('.update'));
       // The palette loads on first use: `/` outside text fields, or Ctrl/Cmd+K anywhere.
-      const palette = () => import('../lib/palette.js').then((m) => m.openPalette());
-      document.querySelector('.palette-open').addEventListener('click', palette);
+      const palette = (query) => import('../lib/palette.js').then((m) => m.openPalette(query));
+      document.querySelector('.palette-open').addEventListener('click', () => palette());
+      // Any [data-palette] control opens the palette with its value as the query.
+      document.addEventListener('click', (e) => {
+        const el = e.target instanceof Element && e.target.closest('[data-palette]');
+        if (el) palette(el.getAttribute('data-palette') ?? '');
+      });
       wireKeys(palette);
     </script>
   </body>

@@ -38,9 +38,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     let file = normalize(join(dist, path));
     if (!file.startsWith(dist)) return res.writeHead(403).end();
     if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
-    if (!existsSync(file)) return res.writeHead(404).end('not found');
+    // Unknown URLs get the site's own not-found page, as static hosts serve 404.html.
+    let status = 200;
+    if (!existsSync(file)) {
+      if (!existsSync(join(dist, '404.html'))) return res.writeHead(404).end('not found');
+      file = join(dist, '404.html');
+      status = 404;
+    }
     for (const [pattern, headers] of rules) if (matches(pattern, path)) for (const [k, v] of Object.entries(headers)) res.setHeader(k, v);
     res.setHeader('Content-Type', TYPES[extname(file)] ?? 'application/octet-stream');
-    res.end(readFileSync(file));
+    res.writeHead(status).end(readFileSync(file));
   }).listen(port, () => console.log(`serving dist with _headers on http://localhost:${port}`));
 }

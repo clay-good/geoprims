@@ -1,0 +1,24 @@
+---
+// The page header every page uses (web/page-template "One page anatomy"):
+// breadcrumbs when the page has a parent, one h1, an optional badge, and a
+// one-line purpose. Extra header content (a "Go the other way" link) goes in the slot.
+interface Props {
+  title: string;
+  crumbs?: [string, string][];
+  badge?: { text: string; title?: string };
+  purpose?: string;
+}
+const { title, crumbs = [], badge, purpose } = Astro.props;
+---
+<header class="page-head">
+  {crumbs.length > 0 && (
+    <nav class="crumbs" aria-label="Breadcrumbs">
+      {crumbs.map(([label, href], i) => (
+        <>{i > 0 && <span aria-hidden="true"> / </span>}<a href={href}>{label}</a></>
+      ))}
+    </nav>
+  )}
+  <h1>{title}{badge && <> <span class="badge" title={badge.title}>{badge.text}</span></>}</h1>
+  {purpose && <p class="purpose"><Fragment set:html={purpose} /></p>}
+  <slot />
+</header>

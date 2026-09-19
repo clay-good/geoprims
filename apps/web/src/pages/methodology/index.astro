@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import { catalog } from '../../lib/catalog.mjs';
 const { counts } = catalog;
 const vectors = catalog.tools.reduce((n, t) => n + (t.vectorCount ?? 0), 0);
@@ -7,8 +8,7 @@ const stable = catalog.tools.filter((t) => t.stability === 'stable');
 const route = (id) => '/' + id.split('.').join('/') + '/';
 ---
 <Base title="Methodology · geoprims" description="How geoprims checks its answers: golden vectors with sources, differential tests against reference implementations, deterministic numbers, and what is not verified yet." canonical="/methodology/">
-  <h1>Methodology</h1>
-  <p class="purpose">How geoprims checks its answers, and what is not checked yet.</p>
+  <PageHeader title="Methodology" purpose={`How geoprims checks its answers, and what is not checked yet.`} />
 
   <h2>Where the numbers come from</h2>
   <p>

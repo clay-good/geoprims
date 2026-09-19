@@ -1,31 +1,37 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import ListFilter from '../../components/ListFilter.astro';
+import ToolCards from '../../components/ToolCards.astro';
 import { breadcrumbs, catalog, collection, DOMAIN_BLURBS, DOMAIN_TITLES, groups, reviewLine, route } from '../../lib/catalog.mjs';
 export function getStaticPaths() {
   return [...new Set(catalog.tools.map((t) => t.domain))].map((domain) => ({ params: { domain } }));
 }
 const { domain } = Astro.params;
 const title = DOMAIN_TITLES[domain] ?? domain;
-const byGroup = groups(domain);
-const listed = [...byGroup.values()].flat().filter((t) => t.composedOf.length === 0);
+const byGroup = [...groups(domain)].map(([group, tools]) => [group, tools.filter((t) => t.composedOf.length === 0)] as const).filter(([, tools]) => tools.length > 0);
+const listed = byGroup.flatMap(([, tools]) => tools);
+const sentence = (g: string) => g[0].toUpperCase() + g.slice(1).replaceAll('-', ' ');
 const jsonld = [collection(`${title} calculators`, route(domain), listed), breadcrumbs([['geoprims', '/'], [title, route(domain)]])];
 ---
 <Base title={`${title} calculators · geoprims`} description={`Every geoprims ${title.toLowerCase()} tool, with exact, cited math.`} canonical={route(domain)} jsonld={jsonld}>
-  <h1>{title}</h1>
-  {DOMAIN_BLURBS[domain] && <p class="purpose">{DOMAIN_BLURBS[domain]}</p>}
-  <p class="review notice">{reviewLine(domain)}</p>
-  {[...byGroup].map(([group, tools]) => {
-    const name = group.replaceAll('-', ' ');
-    return (
-      <section class="group">
-        <div class="group-head">
-          <h2>{name[0].toUpperCase() + name.slice(1)}</h2>
-          <a href={route(`${domain}.${group}`)}>See all</a>
-        </div>
-        <ul class="tools">
-          {tools.filter((t) => t.composedOf.length === 0).map((t) => <li><a href={route(t.id)}>{t.title}</a><p class="clamp3">{t.summary}</p></li>)}
-        </ul>
-      </section>
-    );
-  })}
+  <PageHeader title={title} purpose={DOMAIN_BLURBS[domain]}>
+    <p class="review notice">{reviewLine(domain)}</p>
+  </PageHeader>
+  {listed.length > 8 && <ListFilter total={listed.length} noun={title.toLowerCase()} />}
+  {/* Jump chips help when there are a few groups; past 12 the filter does the job. */}
+  {byGroup.length > 1 && byGroup.length <= 12 && (
+    <nav class="chips" aria-label="Jump to a group">
+      {byGroup.map(([group, tools]) => <a class="chip-button" href={`#${group}`}>{sentence(group)} <span class="count">{tools.length}</span></a>)}
+    </nav>
+  )}
+  {byGroup.map(([group, tools]) => (
+    <section class="group" id={group} data-group>
+      <div class="group-head">
+        <h2>{sentence(group)}</h2>
+        <a href={route(`${domain}.${group}`)}>See all</a>
+      </div>
+      <ToolCards tools={tools} />
+    </section>
+  ))}
 </Base>

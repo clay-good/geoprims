@@ -15,6 +15,14 @@ const HEROES = [
   'time.sun.position',
   'indexing.h3.lat-lng-to-cell',
 ];
+// Example searches under the hero search; each opens the palette with the query typed.
+const TRY = [
+  ['Density altitude', 'density altitude'],
+  ['A coordinate', '40.6892, -74.0445'],
+  ['Knots to mph', '120 kt to mph'],
+  ['Crosswind', 'crosswind'],
+  ['Sunrise', 'sunrise'],
+];
 const heroes = await Promise.all(
   HEROES.map(tool)
     .filter(Boolean)
@@ -33,6 +41,10 @@ const heroes = await Promise.all(
       <span class="hero-search-text">Try “density altitude 5000 ft 30C 29.92” or paste a coordinate</span>
       <kbd aria-hidden="true">/</kbd>
     </button>
+    <p class="chips" aria-label="Examples to try">
+      <span class="chips-label">Try</span>
+      {TRY.map(([label, query]) => <button type="button" class="chip-button" data-palette={query}>{label}</button>)}
+    </p>
   </section>
 
   <section class="pinned" hidden aria-labelledby="pinned-title">
@@ -47,7 +59,6 @@ const heroes = await Promise.all(
   <script>
     import { mountLists } from '../lib/lists.js';
     mountLists(document);
-    document.querySelector('[data-palette]')?.addEventListener('click', () => import('../lib/palette.js').then((m) => m.openPalette()));
   </script>
 
   <h2>Popular</h2>

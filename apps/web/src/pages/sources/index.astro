@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import { catalog, route, tool } from '../../lib/catalog.mjs';
 import { join } from 'node:path';
 import { readLedger, sourceMap } from '../../../../../tools/trust/ledger.mjs';
@@ -9,11 +10,12 @@ const cited = map.filter((s) => s.tools.size > 0);
 const tracked = map.filter((s) => s.tools.size === 0);
 ---
 <Base title="Sources · geoprims" description="Every standard, model, dataset, and regulation geoprims cites, with its current edition, when it was last checked, and the tools that use it." canonical="/sources/">
-  <h1>Sources</h1>
-  <p class="purpose">
+  <PageHeader title="Sources">
+    <p class="purpose">
     Every standard, model, dataset, and regulation behind a geoprims result, from the sources ledger. The build fails if a tool
     cites an edition other than the current one, if a model has expired, or if a source is overdue for a check.
   </p>
+  </PageHeader>
   <p>
     "Last checked" is the date someone confirmed the edition at the issuer. Where it says the edition comes from our research
     notes, the issuer's page has not been re-checked yet.

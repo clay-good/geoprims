@@ -414,3 +414,38 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .group-head h2 { margin: 0; }
 .group-head a { font-size: 0.88rem; color: var(--muted); text-decoration: none; }
 .group-head a:hover { color: var(--accent); }
+
+/* Page template (openspec web/page-template): page header, chips, list filter,
+   field-located errors, copyable result rows, and the unit switch. */
+.page-head { margin-block-end: 0.25rem; }
+.page-head .purpose a { color: inherit; }
+.other-way { margin: -0.5rem 0 1.25rem; font-size: 0.92rem; }
+.other-way a { color: var(--muted); text-decoration: none; }
+.other-way a:hover { color: var(--accent); text-decoration: underline; }
+
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.9rem 0 0; }
+.chips-label { font-size: 0.85rem; color: var(--muted); margin-inline-end: 0.2rem; }
+.chip-button { inline-size: auto; margin: 0; display: inline-flex; align-items: center; gap: 0.35rem; min-block-size: 36px; padding: 0 0.8rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.88rem; text-decoration: none; cursor: pointer; }
+.chip-button:hover { border-color: var(--accent); color: var(--accent); }
+.chip-button .count { font: 600 0.72rem var(--mono); color: var(--muted); }
+nav.chips { margin-block: 0 0.5rem; }
+
+.filter { display: flex; align-items: center; gap: 0.75rem; margin-block: 0 0.9rem; }
+.filter label { flex: 1; max-inline-size: 26rem; }
+.filter input { margin: 0; font-family: var(--sans); border-radius: 12px; background: var(--surface); }
+.filter-count { margin: 0; font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+.filter-empty { line-height: 2.2; }
+.filter-empty button.quiet { inline-size: auto; margin: 0 0.25rem; }
+.filter-empty button.link { inline-size: auto; min-block-size: 0; margin: 0; }
+.filter-empty[hidden], [data-group][hidden], .tools li[hidden], .chip-button[hidden] { display: none; }
+
+label.invalid input, label.invalid select, label.invalid textarea { border-color: var(--danger); }
+.field-error { display: block; color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-block-start: 0.3rem; }
+.answer .error + .hint + .actions, .answer .error + .actions { margin-block-start: 0.75rem; }
+
+.facts dd .copy-row { all: unset; cursor: copy; border-radius: 4px; padding: 0.05rem 0.25rem; margin-inline-end: -0.25rem; }
+.facts dd .copy-row:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.facts dd .copy-row:focus-visible { outline: 2px solid var(--focus); }
+.facts .copied { font: 500 0.8rem var(--sans); color: var(--accent); }
+
+.units-switch select { inline-size: auto; margin: 0; min-block-size: var(--target); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.9rem; padding-inline: 0.6rem; max-inline-size: 15rem; }

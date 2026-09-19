@@ -1,0 +1,13 @@
+---
+// A card grid of tools (`.tools`): the whole card is the link. Each card
+// carries its title, summary, and aliases as search text for ListFilter.
+import { route } from '../lib/catalog.mjs';
+interface Props {
+  tools: { id: string; title: string; summary: string; aliases?: string[]; keywords?: string[] }[];
+}
+const { tools } = Astro.props;
+const text = (t: Props['tools'][number]) => [t.title, t.summary, ...(t.aliases ?? []), ...(t.keywords ?? [])].join(' ').toLowerCase();
+---
+<ul class="tools">
+  {tools.map((t) => <li data-text={text(t)}><a href={route(t.id)}>{t.title}</a><p class="clamp3">{t.summary}</p></li>)}
+</ul>

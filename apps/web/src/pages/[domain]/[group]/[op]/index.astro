@@ -1,6 +1,7 @@
 ---
 import Base from '../../../../layouts/Base.astro';
 import ToolApp from '../../../../components/ToolApp.svelte';
+import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
 import { breadcrumbs, buildHashOf, catalog, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, severities, tool as find } from '../../../../lib/catalog.mjs';
 
@@ -16,12 +17,22 @@ const initial = await exampleResult(t);
 const issue = openIssue(t.id);
 const agentCall = JSON.stringify({ name: 'geoprims_run', arguments: { id: t.id, args: ex.input } }, null, 2);
 const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
+const groupName = t.group.replaceAll('-', ' ');
+const inverse = t.related.find((r) => r.reason === 'inverse' && find(r.id));
+const related = t.related.filter((r) => find(r.id) && r !== inverse);
+// Plain words for why a tool is related (tool.rs `Related`).
+const WHY = { inverse: 'Goes the other way', next: 'A common next step', alternative: 'Another way to get this', parent: 'The bigger calculation this is part of' };
 const client = { id: t.id, title: t.title, route: route(t.id), visualization: t.visualization, timeline: t.timeline ?? null, version: t.version, inputs: t.inputs, outputs: t.outputs, severity: severities(t), coreVersion: catalog.coreVersion, buildHash: buildHashOf(t) };
 ---
 <Base title={`${t.title} · geoprims`} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
-  <p class="crumbs"><a href={route(t.domain)}>{DOMAIN_TITLES[t.domain] ?? t.domain}</a> <span aria-hidden="true">/</span> <a href={route(`${t.domain}.${t.group}`)}>{t.group.replaceAll('-', ' ')}</a></p>
-  <h1>{t.title} {t.stability === 'experimental' && <span class="badge" title="Not yet fully verified">Experimental</span>}</h1>
-  <p class="purpose">{t.summary}</p>
+  <PageHeader
+    title={t.title}
+    crumbs={[[DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [groupName, route(`${t.domain}.${t.group}`)]]}
+    badge={t.stability === 'experimental' ? { text: 'Experimental', title: 'Not yet fully verified' } : undefined}
+    purpose={t.summary}
+  >
+    {inverse && <p class="other-way"><a href={route(inverse.id)}>Go the other way: {find(inverse.id).title} →</a></p>}
+  </PageHeader>
   {['aviation', 'drone', 'navigation'].includes(t.domain) && (
     <p class="safety" role="note">
       <span><strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a></span>
@@ -70,11 +81,11 @@ const client = { id: t.id, title: t.title, route: route(t.id), visualization: t.
     <p>This call reproduces the worked example:</p>
     <pre class="agent-call">{agentCall}</pre>
   </details>
-  {t.related.length > 0 && (
+  {related.length > 0 && (
     <section>
       <h2>Related tools</h2>
       <ul class="tools">
-        {t.related.filter((r) => find(r.id)).map((r) => <li><a href={route(r.id)}>{find(r.id).title}</a> <p>{r.reason}</p></li>)}
+        {related.map((r) => <li><a href={route(r.id)}>{find(r.id).title}</a> <p>{WHY[r.reason] ?? r.reason}</p></li>)}
       </ul>
     </section>
   )}

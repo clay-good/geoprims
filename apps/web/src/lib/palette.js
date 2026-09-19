@@ -210,12 +210,14 @@ function onKey(e) {
   e.preventDefault();
 }
 
-export function openPalette() {
+/** Opens the palette, optionally with a query already typed (example chips, "search all tools"). */
+export function openPalette(query = '') {
   if (!dialog) build();
-  if (dialog.open) return input.focus();
+  if (query) input.value = query;
+  if (dialog.open) return query ? update() : input.focus();
   restore = document.activeElement;
   dialog.showModal();
-  input.select();
+  if (!query) input.select();
   input.focus();
   update();
 }

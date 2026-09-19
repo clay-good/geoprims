@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import { catalog } from '../../lib/catalog.mjs';
 import { CLIENTS, snippet } from '../../../../../mcp/clients.mjs';
 import { ANNOTATIONS, TOOLS } from '../../../../../mcp/meta.mjs';
@@ -9,11 +10,12 @@ const route = (id) => '/' + id.split('.').join('/') + '/';
 const toolsets = Object.keys(TOOLSETS).map((name) => ({ name, tools: directTools(catalog, [name], ANNOTATIONS) }));
 ---
 <Base title="Use with agents · geoprims" description="Run geoprims as a local MCP server for Claude Code, Claude Desktop, VS Code, Cursor, and Windsurf: offline, zero dependencies, the same answers as this site." canonical="/agents/">
-  <h1>Use with agents</h1>
-  <p class="purpose">
+  <PageHeader title="Use with agents">
+    <p class="purpose">
     geoprims runs as a local MCP server, so an AI agent gets the same calculators and the same answers as this site. It runs on
     your machine over stdio, has no npm dependencies, and makes no network requests.
   </p>
+  </PageHeader>
 
   <h2>Get the server</h2>
   <p>

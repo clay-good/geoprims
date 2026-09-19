@@ -99,3 +99,69 @@ fn grid_disk_matches_h3_c() {
     }
     assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
 }
+
+#[test]
+fn geohash_decode_matches_pygeohash() {
+    let mut bad = Vec::new();
+    for c in &rows("geohash_diff.csv") {
+        let r = call("indexing.geohash.decode", &json!({"geohash": c[3]}));
+        let same = ["south", "west", "north", "east"]
+            .iter()
+            .zip(&c[4..8])
+            .all(|(k, v)| (deg(&r, k) - f(v)).abs() < 1e-12);
+        if !same {
+            bad.push(format!("{} -> {}", c[3], r["result"]));
+        }
+    }
+    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
+}
+
+#[test]
+fn geohash_neighbors_match_pygeohash() {
+    let rows = rows("geohash_nb_diff.csv");
+    assert_eq!(rows.len(), 500);
+    let mut bad = Vec::new();
+    for c in &rows {
+        let r = call("indexing.geohash.neighbors", &json!({"geohash": c[0]}));
+        for (k, want) in ["n", "e", "s", "w"].iter().zip(&c[1..5]) {
+            let got = r["result"][k].as_str().unwrap_or("");
+            if !(got == want || (want == "none" && got.starts_with("none"))) {
+                bad.push(format!("{} {k}: got {got}, want {want}", c[0]));
+            }
+        }
+    }
+    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
+}
+
+#[test]
+fn ground_resolution_matches_mercantile_tile_widths() {
+    // A tile's width from mercantile's bounds, in meters on the Web Mercator
+    // sphere at the tile's center latitude, spread over 256 pixels.
+    for c in &rows("tile_diff.csv") {
+        let (w, s, e, n) = (f(&c[6]), f(&c[7]), f(&c[8]), f(&c[9]));
+        let lat = (s + n) / 2.0;
+        let want = (e - w).to_radians() * 6_378_137.0 * lat.to_radians().cos() / 256.0;
+        let r = call(
+            "indexing.tile.ground-resolution",
+            &json!({"lat": lat, "zoom": f(&c[2]), "tile_size": "256"}),
+        );
+        let got = deg(&r, "resolution");
+        assert!((got / want - 1.0).abs() < 1e-9, "{}: {got} vs {want}", c.join(","));
+    }
+}
+
+#[test]
+fn resolution_table_matches_h3_c() {
+    let rows = rows("h3_res_diff.csv");
+    assert_eq!(rows.len(), 16);
+    let r = call("indexing.h3.resolution-chooser", &json!({"target_area": "1 km2"}));
+    let table = r["result"]["table"].as_array().unwrap();
+    for (row, c) in table.iter().zip(&rows) {
+        let area = row["area"]["value"].as_f64().unwrap();
+        let edge = row["edge"]["value"].as_f64().unwrap();
+        assert!((area / f(&c[1]) - 1.0).abs() < 1e-12, "area r{}", c[0]);
+        // H3 C tabulates the edges rounded to the millimeter or finer.
+        assert!((edge - f(&c[2])).abs() <= 5e-7, "edge r{}", c[0]);
+        assert_eq!(row["cells"].as_u64().unwrap().to_string(), c[3], "cells r{}", c[0]);
+    }
+}

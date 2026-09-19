@@ -1,10 +1,10 @@
 {
   "/": {
-    "hash": "2411762da8d34456",
+    "hash": "3fb76978780c44bb",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
-    "hash": "85fc73f92d503623",
+    "hash": "01a112c700d613b2",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "396a102e1ed14268",
+    "hash": "34bbe2302a1755db",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -235,8 +235,16 @@
     "hash": "563910b66f4bfa7f",
     "lastmod": "2026-09-19"
   },
+  "/indexing/geohash/decode/": {
+    "hash": "c8ee4bbe98d9fb1c",
+    "lastmod": "2026-09-19"
+  },
   "/indexing/geohash/encode/": {
-    "hash": "1ebebd1aa9a20f28",
+    "hash": "b169f2f4d4c4c571",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/geohash/neighbors/": {
+    "hash": "600c476cd18e1ebe",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/": {
@@ -244,47 +252,67 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/cell-info/": {
-    "hash": "72e2e7ae887374f6",
+    "hash": "5d5a428d26bb72ae",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/children/": {
-    "hash": "1dfbe3f9fc1880e8",
+    "hash": "aceea34b5338c24e",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/compact/": {
-    "hash": "5840261f52d84018",
+    "hash": "30b89d33a0b13295",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/edges/": {
-    "hash": "3d639822ca4b46f8",
+    "hash": "74a02687a043a891",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/grid-disk/": {
-    "hash": "17094d9418499c1e",
+    "hash": "8bd77eab1a1ad484",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/grid-path/": {
-    "hash": "d8c7923170dda8f2",
+    "hash": "86a6801438a7bebe",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/grid-ring/": {
-    "hash": "ec5863d3acf87168",
+    "hash": "7fac525444dcd216",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "782bbd55061b1879",
+    "hash": "72e1a554eb5726fd",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/parent/": {
-    "hash": "029e750a29db484a",
+    "hash": "1794a46decdb7a9b",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/polygon-to-cells/": {
+    "hash": "b070c00b1c5a60cd",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/h3/resolution-chooser/": {
+    "hash": "e66c8601cafae20e",
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/uncompact/": {
-    "hash": "2b4d95b07b86a04c",
+    "hash": "1caf39d654414a3d",
     "lastmod": "2026-09-19"
   },
   "/indexing/plus-code/": {
     "hash": "9532c722b95cf097",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/plus-code/decode/": {
+    "hash": "74adb73d5e670346",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/plus-code/encode/": {
+    "hash": "fa18006a6fd2bdd4",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/plus-code/shorten/": {
+    "hash": "8966bebdb34b9256",
     "lastmod": "2026-09-19"
   },
   "/indexing/tile/": {
@@ -292,11 +320,15 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/tile/bounds/": {
-    "hash": "1f7dc415ee2d3fad",
+    "hash": "d3d8bbdb2a945228",
     "lastmod": "2026-09-19"
   },
   "/indexing/tile/from-point/": {
-    "hash": "87a388597b2048f4",
+    "hash": "2023740101a84825",
+    "lastmod": "2026-09-19"
+  },
+  "/indexing/tile/ground-resolution/": {
+    "hash": "1fc7552c18b4a537",
     "lastmod": "2026-09-19"
   },
   "/known-issues/": {
@@ -304,7 +336,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "1c81607ac76b4787",
+    "hash": "2b07f5f094dad09f",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -516,7 +548,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "04f6231a0f303c5c",
+    "hash": "00446fe66a4416f0",
     "lastmod": "2026-09-19"
   }
 }

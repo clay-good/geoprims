@@ -12,6 +12,8 @@ SPEC = "add-spatial-indexing-and-raster scenarios"
 GH_SRC = "Geohash algorithm implemented in Python (tools/vectors/gen_indexing.py)"
 TILE_SRC = "OpenStreetMap slippy-map formulas and Bing quadkeys in Python (tools/vectors/gen_indexing.py)"
 OLC_SRC = "Open Location Code test data, encoding.csv"
+OLC_DEC_SRC = "Open Location Code test data, decoding.csv"
+OLC_SHORT_SRC = "Open Location Code test data, shortCodeTests.csv"
 B32 = "0123456789bcdefghjkmnpqrstuvwxyz"
 PTS = [(40.446111, -79.982222), (-33.8688, 151.2093), (51.5074, -0.1278), (64.8378, -147.7164), (-0.5, 179.999)]
 
@@ -56,6 +58,13 @@ def geohash():
     for i, (la, lo, p) in enumerate(EXTRA_GH, len(enc) + 1):
         g, b = gh_encode(la, lo, p)
         enc.append(vec(i, {"lat": la, "lon": lo, "precision": p}, {"result.geohash": g, "result.south.value": b[0], "result.north.value": b[2]}, GH_SRC))
+    for la, lo, p in EXTRA_GH:
+        g, b = gh_encode(la, lo, p)
+        dec.append(vec(len(dec) + 1, {"geohash": g}, {"result.lat.value": (b[0] + b[2]) / 2, "result.lon.value": (b[1] + b[3]) / 2,
+                                                     "result.lat_error.value": (b[2] - b[0]) / 2, "result.lon_error.value": (b[3] - b[1]) / 2}, GH_SRC))
+    # The decoding example in the Wikipedia article: ezs42 is 42.605 ± 0.022, -5.603 ± 0.022.
+    dec.append(vec(len(dec) + 1, {"geohash": "ezs42"}, {"result.lat.value": 42.605, "result.lon.value": -5.603}, "Wikipedia, Geohash (worked example)",
+                   "retrieved 2026-09-19", tol=5e-4))
     # The worked example in the Wikipedia article (after Niemeyer's geohash.org)
     enc.append(vec(len(enc) + 1, {"lat": 57.64911, "lon": 10.40744, "precision": 11}, {"result.geohash": "u4pruydqqvj"},
                    "Wikipedia, Geohash (worked example)", "retrieved 2026-09-19"))
@@ -67,6 +76,19 @@ def geohash():
         nb.append(vec(i, {"geohash": g}, {"result.n": gh_encode((b[0] + b[2]) / 2 + h, (b[1] + b[3]) / 2, 6)[0], "result.e": gh_encode((b[0] + b[2]) / 2, e_lon, 6)[0]},
                       SPEC if i == 5 else GH_SRC))
     nb.append(vec(6, {"geohash": gh_encode(89.99, 0, 3)[0]}, {"result.n": "none (past the pole)"}, SPEC))
+    for la, lo, p in EXTRA_GH:
+        g, b = gh_encode(la, lo, p)
+        h, w = b[2] - b[0], b[3] - b[1]
+        c_lat, c_lon = (b[0] + b[2]) / 2, (b[1] + b[3]) / 2
+        wrap = lambda x: (x + 180) % 360 - 180
+        exp = {"result.e": gh_encode(c_lat, wrap(c_lon + w), p)[0], "result.w": gh_encode(c_lat, wrap(c_lon - w), p)[0]}
+        exp["result.n"] = gh_encode(c_lat + h, c_lon, p)[0] if c_lat + h < 90 else "none (past the pole)"
+        if c_lat - h > -90:
+            exp["result.s"] = gh_encode(c_lat - h, c_lon, p)[0]
+        nb.append(vec(len(nb) + 1, {"geohash": g}, exp, GH_SRC))
+    # The neighbors example in latlon-geohash's test suite: ezzz touches four top-level cells.
+    nb.append(vec(len(nb) + 1, {"geohash": "ezzz"}, {"result.n": "gbpb", "result.ne": "u000", "result.e": "spbp", "result.se": "spbn", "result.s": "ezzy",
+                                                   "result.sw": "ezzw", "result.w": "ezzx", "result.nw": "gbp8"}, "Chris Veness, latlon-geohash test suite (test.js)", "2.0.0"))
     return enc, dec, nb
 
 
@@ -98,6 +120,12 @@ def tiles():
         bd.append(vec(i, {"tile": f"{z}/{x}/{y}"}, {"result.north.value": lat_n, "result.south.value": lat_s, "result.west.value": x / n * 360 - 180,
                                                   "result.quadkey": quadkey(z, x, y)}, TILE_SRC))
         gr.append(vec(i, {"lat": la, "zoom": z, "tile_size": "512" if i == 3 else "256"}, {"result.resolution.value": res(la, z, 512 if i == 3 else 256)}, SPEC if i == 1 else TILE_SRC))
+    for la, _, z in EXTRA_TILE:
+        gr.append(vec(len(gr) + 1, {"lat": la, "zoom": z, "tile_size": "256"}, {"result.resolution.value": res(la, z)}, TILE_SRC))
+    # The Bing Maps Tile System article's table: ground resolution on the equator, 256 px tiles, to 4 decimals.
+    for z, m in [(1, 78271.5170), (3, 19567.8792), (6, 2445.9849), (9, 305.7481), (12, 38.2185), (15, 4.7773), (18, 0.5972), (21, 0.0746), (23, 0.0187)]:
+        gr.append(vec(len(gr) + 1, {"lat": 0, "zoom": z, "tile_size": "256"}, {"result.resolution.value": m}, BING, BING_VER))
+        gr[-1]["tolerance"] = {"result.resolution.value": {"rel": 0, "abs": 5e-5}}
     fp.append(vec(6, {"lat": 89, "lon": 0, "zoom": 3}, {"result.tile": "3/4/0", "meta.warnings.0.code": "WEB_MERCATOR_CLAMPED"}, SPEC))
     bd.append(vec(6, {"tile": "12/1137/2551", "convention": "tms"}, {"result.xyz": "12/1137/1544", "result.quadkey": "032001112001"}, SPEC))
     bd.append(vec(7, {"tile": "032001112001"}, {"result.xyz": "12/1137/1544"}, SPEC))
@@ -151,6 +179,21 @@ def olc():
         vec(5, {"code": "4VCPPQGP+Q9", "ref_lat": -41.3, "ref_lon": 174.8}, {"result.short_code": "PQGP+Q9"}, "Open Location Code specification (shorten)", "open-location-code main"),
         vec(6, {"code": "8FVC0000+", "ref_lat": 47.4, "ref_lon": 8.6}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC),
     ]
+    # More official cases: every tenth row of the OLC test data (encoding.csv, decoding.csv, shortCodeTests.csv).
+    data = Path(__file__).resolve().parents[2] / "core/crates/gp-indexing/tests/data/olc"
+    def rows(name):
+        return [l.split(",") for l in (data / name).read_text().splitlines() if l.strip() and not l.startswith("#")]
+    for r in rows("encoding.csv")[5::10]:
+        la, lo, n, c = float(r[0]), float(r[1]), int(r[4]), r[5]
+        if abs(la) <= 90 and n <= 15:
+            enc.append(vec(len(enc) + 1, {"lat": la, "lon": lo, "length": n}, {"result.code": c}, OLC_SRC, "open-location-code main"))
+    for r in rows("decoding.csv")[::10]:
+        dec.append(vec(len(dec) + 1, {"code": r[0]}, {"result.south.value": float(r[2]), "result.west.value": float(r[3]), "result.north.value": float(r[4]),
+                                                     "result.east.value": float(r[5])}, OLC_DEC_SRC, "open-location-code main"))
+    for r in rows("shortCodeTests.csv"):
+        if r[4] in ("S", "B"):
+            sh.append(vec(len(sh) + 1, {"code": r[0], "ref_lat": float(r[1]), "ref_lon": float(r[2])}, {"result.short_code": r[3]}, OLC_SHORT_SRC,
+                          "open-location-code main"))
     return enc, dec, sh
 
 

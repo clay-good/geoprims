@@ -7,6 +7,8 @@ written reference libraries (run with them installed):
   core/crates/gp-indexing/tests/data/geohash_diff.csv  pygeohash encode, decode_exactly
   core/crates/gp-indexing/tests/data/tile_diff.csv     mercantile tile, quadkey, bounds
   core/crates/gp-indexing/tests/data/h3_disk_diff.csv  H3 C grid_disk via h3-py
+  core/crates/gp-indexing/tests/data/geohash_nb_diff.csv  pygeohash get_adjacent
+  core/crates/gp-indexing/tests/data/h3_res_diff.csv   H3 C average hexagon areas and edges via h3-py
   core/crates/gp-navigation/tests/data/haversine_diff.csv  haversine in Python, and geographiclib Inverse for the ellipsoidal distance
 
 Seeded, so rerunning reproduces the files.
@@ -60,6 +62,29 @@ def disks(rnd):
     return rows
 
 
+def neighbors(rnd):
+    rows = [f"# pygeohash {version('pygeohash')}; seed 15; geohash,n,e,s,w (none past a pole)"]
+    for i in range(N // 2):
+        # One in ten on the top or bottom row of cells, where a neighbor is missing.
+        la = rnd.choice([89.99999, -89.99999]) if i % 10 == 0 else rnd.uniform(-90, 90)
+        g = pygeohash.encode(la, rnd.uniform(-180, 180), precision=rnd.randint(1, 12))
+        out = []
+        for d in ["top", "right", "bottom", "left"]:
+            try:
+                out.append(pygeohash.get_adjacent(g, d))
+            except ValueError:
+                out.append("none")
+        rows.append(",".join([g] + out))
+    return rows
+
+
+def res_table(rnd):
+    rows = [f"# H3 C {h3.versions()['c']} via h3-py {h3.__version__}; resolution,average area km2,average edge km,cells"]
+    for r in range(16):
+        rows.append(f"{r},{h3.average_hexagon_area(r, 'km^2')!r},{h3.average_hexagon_edge_length(r, 'km')!r},{h3.get_num_cells(r)}")
+    return rows
+
+
 def haversine(rnd):
     g = Geodesic.WGS84
     rows = [f"# geographiclib {version('geographiclib')}; seed 14; lat1,lon1,lat2,lon2,haversine_m,karney_m"]
@@ -77,7 +102,8 @@ def haversine(rnd):
 
 def main():
     for path, fn, seed in [(IDX / "geohash_diff.csv", geohash, 11), (IDX / "tile_diff.csv", tiles, 12),
-                           (IDX / "h3_disk_diff.csv", disks, 13), (NAV / "haversine_diff.csv", haversine, 14)]:
+                           (IDX / "h3_disk_diff.csv", disks, 13), (NAV / "haversine_diff.csv", haversine, 14),
+                           (IDX / "geohash_nb_diff.csv", neighbors, 15), (IDX / "h3_res_diff.csv", res_table, 16)]:
         path.write_text("\n".join(fn(random.Random(seed))) + "\n")
 
 

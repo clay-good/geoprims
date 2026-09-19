@@ -287,7 +287,9 @@ pub fn olc_shorten(code: &str, lat: f64, lon: f64) -> String {
     let dlng = ((clng - lon + 180.0).rem_euclid(360.0) - 180.0).abs();
     let range = (clat - lat.clamp(-90.0, 90.0)).abs().max(dlng);
     for i in (1..=3).rev() {
-        if range < PAIR_RESOLUTIONS[i] * 0.3 {
+        // Removing every digit of an 8-digit code would leave "+", which is
+        // not a valid code (OLC validityTests.csv).
+        if range < PAIR_RESOLUTIONS[i] * 0.3 && c.len() - (i + 1) * 2 > 1 {
             return c[(i + 1) * 2..].to_owned();
         }
     }
@@ -375,6 +377,8 @@ mod tests {
         }
         assert_eq!(olc_shorten("8FVC9G8F+6X", 47.4, 8.6), "9G8F+6X");
         assert_eq!(olc_shorten("8FVC9G8F+6X", 47.37, 8.52), "8F+6X");
+        // An 8-digit code keeps at least one pair before the separator.
+        assert_eq!(olc_shorten("8FVC9G8F+", 47.3625, 8.5125), "8F+");
         assert_eq!(olc_recover("8F+6X", 47.37, 8.52), "8FVC9G8F+6X");
         assert_eq!(olc_recover("9G8F+6X", 47.4, 8.6), "8FVC9G8F+6X");
         assert!(olc_check("8FVC9G8F+6").is_err());

@@ -622,3 +622,164 @@ fn h3_family_invariants() {
         }
     }
 }
+
+fn bounds(r: &Value) -> (f64, f64, f64, f64) {
+    (
+        num(r, "result.south.value"),
+        num(r, "result.west.value"),
+        num(r, "result.north.value"),
+        num(r, "result.east.value"),
+    )
+}
+
+#[test]
+fn geohash_decode_and_neighbor_invariants() {
+    // The decoded center lies in the cell and encodes back to it, the errors
+    // are half the cell, and each neighbor shares an edge with the cell and
+    // names it as its own opposite neighbor.
+    let mut seed = 19;
+    for _ in 0..150 {
+        let (lat, lon) = (lcg(&mut seed) * 178.0 - 89.0, lcg(&mut seed) * 360.0 - 180.0);
+        let p = 1 + (lcg(&mut seed) * 10.0) as u32;
+        let g = call(
+            "indexing.geohash.encode",
+            &serde_json::json!({"lat": lat, "lon": lon, "precision": p}).to_string(),
+        )["result"]["geohash"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        let d = call("indexing.geohash.decode", &serde_json::json!({"geohash": g}).to_string());
+        let (s, w, n, e) = bounds(&d);
+        let (clat, clon) = (num(&d, "result.lat.value"), num(&d, "result.lon.value"));
+        assert!(s < clat && clat < n && w < clon && clon < e);
+        assert!((num(&d, "result.lat_error.value") - (n - s) / 2.0).abs() < 1e-12);
+        assert!((num(&d, "result.lon_error.value") - (e - w) / 2.0).abs() < 1e-12);
+        let back = call(
+            "indexing.geohash.encode",
+            &serde_json::json!({"lat": clat, "lon": clon, "precision": p}).to_string(),
+        );
+        assert_eq!(back["result"]["geohash"], g.as_str());
+        let nb = call("indexing.geohash.neighbors", &serde_json::json!({"geohash": g}).to_string());
+        for (dir, opposite) in [("n", "s"), ("e", "w"), ("s", "n"), ("w", "e")] {
+            let Some(h) = nb["result"][dir].as_str().filter(|h| !h.starts_with("none")) else {
+                continue;
+            };
+            let hb = bounds(&call("indexing.geohash.decode", &serde_json::json!({"geohash": h}).to_string()));
+            match dir {
+                "n" => assert_eq!(hb.0, n),
+                "s" => assert_eq!(hb.2, s),
+                "e" => assert!((hb.1 - e).abs() < 1e-9 || (hb.1 - e + 360.0).abs() < 1e-9),
+                _ => assert!((hb.3 - w).abs() < 1e-9 || (hb.3 - w - 360.0).abs() < 1e-9),
+            }
+            let back = call("indexing.geohash.neighbors", &serde_json::json!({"geohash": h}).to_string());
+            assert_eq!(back["result"][opposite], g.as_str(), "{g} {dir} {h}");
+        }
+    }
+}
+
+#[test]
+fn plus_code_invariants() {
+    // Encoding and decoding agree on the cell, the cell holds the point, and a
+    // code shortened against a nearby reference recovers to the full code.
+    let mut seed = 23;
+    for _ in 0..150 {
+        let (lat, lon) = (lcg(&mut seed) * 179.0 - 89.5, lcg(&mut seed) * 359.0 - 179.5);
+        for len in [2, 4, 6, 8, 10, 11, 12, 15] {
+            let enc = call(
+                "indexing.plus-code.encode",
+                &serde_json::json!({"lat": lat, "lon": lon, "length": len}).to_string(),
+            );
+            let code = enc["result"]["code"].as_str().unwrap().to_owned();
+            let dec = call("indexing.plus-code.decode", &serde_json::json!({"code": code}).to_string());
+            assert_eq!(dec["result"]["full_code"], code.as_str());
+            let (s, w, n, e) = bounds(&dec);
+            assert!(s <= lat && lat <= n && w <= lon && lon <= e, "{code} does not hold {lat},{lon}");
+            let eb = bounds(&enc);
+            assert!((eb.0 - s).abs() < 1e-9 && (eb.1 - w).abs() < 1e-9 && (eb.2 - n).abs() < 1e-9 && (eb.3 - e).abs() < 1e-9);
+            if len >= 8 {
+                let at = serde_json::json!({"code": code, "ref_lat": lat, "ref_lon": lon});
+                let short = call("indexing.plus-code.shorten", &at.to_string());
+                let short = short["result"]["short_code"].as_str().unwrap();
+                let full = call(
+                    "indexing.plus-code.decode",
+                    &serde_json::json!({"code": short, "ref_lat": lat, "ref_lon": lon}).to_string(),
+                );
+                assert_eq!(full["result"]["full_code"], code.as_str(), "{short}");
+            }
+        }
+    }
+}
+
+#[test]
+fn ground_resolution_invariants() {
+    // Each zoom level halves the resolution, it scales with cos φ, 512-pixel
+    // tiles halve it again, and the map scale is a fixed multiple of it.
+    let gr = |lat: f64, z: u32, size: &str| {
+        call(
+            "indexing.tile.ground-resolution",
+            &serde_json::json!({"lat": lat, "zoom": z, "tile_size": size}).to_string(),
+        )
+    };
+    let ratio = {
+        let r = gr(0.0, 0, "256");
+        num(&r, "result.scale") / num(&r, "result.resolution.value")
+    };
+    let mut seed = 29;
+    for _ in 0..100 {
+        let lat = lcg(&mut seed) * 170.0 - 85.0;
+        let z = (lcg(&mut seed) * 23.0) as u32;
+        let r = gr(lat, z, "256");
+        let m = num(&r, "result.resolution.value");
+        assert!((num(&gr(lat, z + 1, "256"), "result.resolution.value") * 2.0 / m - 1.0).abs() < 1e-12);
+        assert!((num(&gr(lat, z, "512"), "result.resolution.value") * 2.0 / m - 1.0).abs() < 1e-12);
+        let eq = num(&gr(0.0, z, "256"), "result.resolution.value");
+        assert!((m / (eq * lat.to_radians().cos()) - 1.0).abs() < 1e-12);
+        assert!((num(&r, "result.scale") / m / ratio - 1.0).abs() < 1e-12);
+    }
+}
+
+#[test]
+fn chooser_and_fill_invariants() {
+    // The chooser returns a resolution for its own average area and edge, and
+    // finer resolutions for smaller targets. Polygon fills nest: every fully
+    // contained cell has its center inside, and every such cell overlaps.
+    let table = call("indexing.h3.resolution-chooser", r#"{"target_area":"1 km2"}"#);
+    let mut last = 0;
+    for row in table["result"]["table"].as_array().unwrap() {
+        let r = row["resolution"].as_u64().unwrap();
+        for (key, unit, v) in [("target_area", "km2", &row["area"]), ("target_edge", "km", &row["edge"])] {
+            let q = format!("{} {unit}", v["value"].as_f64().unwrap());
+            let got = call("indexing.h3.resolution-chooser", &serde_json::json!({key: q}).to_string());
+            assert_eq!(got["result"]["resolution"].as_u64(), Some(r), "{key} {q}");
+        }
+        assert!(r >= last);
+        last = r;
+    }
+    let mut seed = 31;
+    for _ in 0..30 {
+        let (lat, lon) = (lcg(&mut seed) * 140.0 - 70.0, lcg(&mut seed) * 358.0 - 179.0);
+        let res = 4 + (lcg(&mut seed) * 6.0) as u32;
+        let span = 0.02 * 2f64.powi(9 - res as i32);
+        let pts = serde_json::json!([
+            {"lat": lat, "lon": lon}, {"lat": lat, "lon": lon + span * 1.5},
+            {"lat": lat + span, "lon": lon + span * 1.5}, {"lat": lat + span, "lon": lon}
+        ]);
+        let set = |mode: &str| -> std::collections::BTreeSet<String> {
+            let r = call(
+                "indexing.h3.polygon-to-cells",
+                &serde_json::json!({"points": pts, "resolution": res, "containment": mode}).to_string(),
+            );
+            let cells: std::collections::BTreeSet<String> = r["result"]["cells"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|c| c["cell"].as_str().unwrap().to_owned())
+                .collect();
+            assert_eq!(num(&r, "result.count") as usize, cells.len());
+            cells
+        };
+        let (full, center, overlap) = (set("full"), set("center"), set("overlapping"));
+        assert!(full.is_subset(&center) && center.is_subset(&overlap), "{lat},{lon} r{res}");
+        assert!(!overlap.is_empty());
+    }
+}

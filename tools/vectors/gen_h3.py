@@ -140,6 +140,38 @@ def main():
         uncompact.append(vec(len(uncompact) + 1, {"cells": cells(packed), "resolution": r}, {"result.count": float(len(group))}))
         es = sorted(h3.origin_to_directed_edges(c))
         edges.append(vec(len(edges) + 1, {"cell": c}, {"result.edge_count": float(len(es))}))
+    # The chooser and polygon fill to 20+ vectors: areas and edges across the range, and seeded boxes in every containment mode.
+    for area, km2 in [("10 km2", 10.0), ("1000 km2", 1e3), ("50 m2", 5e-5), ("1 ha", 0.01), ("0.5 mi2", 0.5 * 2.589988110336), ("250000 km2", 2.5e5),
+                      ("20000 km2", 2e4), ("3 km2", 3.0), ("1 ac", 0.0040468564224)]:
+        chooser.append(vec(len(chooser) + 1, {"target_area": area}, {"result.resolution": float(nearest(lambda r: h3.average_hexagon_area(r, "km^2"), km2))},
+                           "H3 average hexagon areas (h3.average_hexagon_area)", VER))
+    for edge, km in [("1 km", 1.0), ("10 m", 0.01), ("100 km", 100.0), ("2 mi", 3.218688), ("500 ft", 0.1524), ("1 m", 0.001)]:
+        chooser.append(vec(len(chooser) + 1, {"target_edge": edge}, {"result.resolution": float(nearest(lambda r: h3.average_hexagon_edge_length(r, "km"), km))},
+                           "H3 average hexagon edge lengths (h3.average_hexagon_edge_length)", VER))
+    rnd3 = random.Random(71)
+    for k in range(15):
+        r = rnd3.randint(3, 10)
+        la, lo = rnd3.uniform(-70, 70), rnd3.uniform(-179, 179)
+        span = 3.0 * h3.average_hexagon_edge_length(r, "km") / 111.0
+        outer = [(la, lo), (la, lo + span * 1.5), (la + span, lo + span * 1.5), (la + span, lo)]
+        mode = ["center", "full", "overlapping"][k % 3]
+        got = sorted(h3.polygon_to_cells_experimental(h3.LatLngPoly(outer), r, contain={"overlapping": "overlap"}.get(mode, mode)))
+        exp = {"result.count": float(len(got)), "result.containment": mode}
+        if got:
+            exp["result.cells.0.cell"] = got[0]
+        fillv.append(vec(len(fillv) + 1, {"points": [{"lat": a, "lon": b} for a, b in outer], "resolution": r, "containment": mode}, exp))
+    # Published examples: the H3 resolution table (res 9 averages 0.105332513 km2 over 4,842,432,842 cells), and the
+    # San Francisco polygon in H3 C's testPolygonToCells.c (1,253 cells at res 9, 1,214 with the triangular hole).
+    chooser.append(vec(len(chooser) + 1, {"target_area": "0.105332513 km2"}, {"result.resolution": 9.0, "result.average_area.value": 0.105332513,
+                       "result.table.9.cells": 4842432842.0}, "H3 documentation, Tables of cell statistics across resolutions", "h3geo.org, retrieved 2026-09-19", tol=5e-10))
+    sf = [(0.659966917655, -2.1364398519396), (0.6595011102219, -2.1359434279405), (0.6583348114025, -2.1354884206045),
+          (0.6581220034068, -2.1382437718946), (0.6594479998527, -2.1384597563896), (0.6599990002976, -2.1376771158464)]
+    hole = [(0.6595072188743, -2.1371053983433), (0.6591482046471, -2.1373141048153), (0.6592295020837, -2.1365222838402)]
+    deg = lambda ring: [[math.degrees(lo), math.degrees(la)] for la, lo in ring + [ring[0]]]
+    for rings, n in [([sf], 1253), ([sf, hole], 1214)]:
+        gj = json.dumps({"type": "Polygon", "coordinates": [deg(r_) for r_ in rings]})
+        fillv.append(vec(len(fillv) + 1, {"geojson": gj, "resolution": 9, "containment": "center"}, {"result.count": float(n)},
+                         "H3 C test suite, testPolygonToCells.c (sfGeoPolygon, holeGeoPolygon)", "H3 v4.4.1"))
     f = {"indexing.h3.lat-lng-to-cell": to_cell, "indexing.h3.cell-info": info, "indexing.h3.grid-disk": disk, "indexing.h3.grid-ring": ring,
          "indexing.h3.grid-path": path, "indexing.h3.parent": parent, "indexing.h3.children": children, "indexing.h3.compact": compact,
          "indexing.h3.uncompact": uncompact, "indexing.h3.edges": edges, "indexing.h3.resolution-chooser": chooser, "indexing.h3.polygon-to-cells": fillv}

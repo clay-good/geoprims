@@ -1044,6 +1044,7 @@ const RES_ROW: &[Field] = &[
 
 pub static RESOLUTION_CHOOSER: ToolDef = ToolDef {
     id: "indexing.h3.resolution-chooser",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 resolution chooser",
     summary: "The H3 resolution whose average cell is closest to a target area or edge length, with the full resolution table (122 base cells, 12 pentagons at each resolution).",
     aliases: &["which H3 resolution", "H3 resolution table", "H3 cell size"],
@@ -1277,6 +1278,7 @@ const ESTIMATE_LIMIT: f64 = 5_000_000.0;
 
 pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     id: "indexing.h3.polygon-to-cells",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 polygon fill (polygonToCells)",
     summary: "The H3 cells that fill a polygon (with holes, across the antimeridian) at a resolution, by an explicit containment mode: cell centers inside, whole cells inside, or any overlap.",
     aliases: &["polygonToCells", "polyfill", "H3 polygon to cells", "h3shape_to_cells"],

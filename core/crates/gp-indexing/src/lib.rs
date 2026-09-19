@@ -256,6 +256,7 @@ const GEOHASH_IN: Field = Field::new(
 
 pub static GEOHASH_DECODE: ToolDef = ToolDef {
     id: "indexing.geohash.decode",
+    stability: gp_base::tool::Stability::Stable,
     title: "Geohash decoder",
     summary: "The center, bounding box, and error margins of a geohash.",
     aliases: &["geohash to lat long", "decode geohash"],
@@ -344,6 +345,7 @@ const DIRS: [(&str, &str, i32, i32); 8] = [
 
 pub static GEOHASH_NEIGHBORS: ToolDef = ToolDef {
     id: "indexing.geohash.neighbors",
+    stability: gp_base::tool::Stability::Stable,
     title: "Geohash neighbors",
     summary: "The 8 geohash cells around a geohash, wrapping across the antimeridian; past a pole there is no neighbor.",
     aliases: &["adjacent geohashes", "geohash neighbours"],
@@ -680,6 +682,7 @@ fn run_tile_bounds(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static GROUND_RESOLUTION: ToolDef = ToolDef {
     id: "indexing.tile.ground-resolution",
+    stability: gp_base::tool::Stability::Stable,
     title: "Map ground resolution and scale",
     summary: "Meters per pixel and map scale for a Web Mercator zoom level at a latitude, for 256 or 512 pixel tiles.",
     aliases: &["meters per pixel at zoom", "map scale at zoom level"],
@@ -808,6 +811,7 @@ const fn opt_angle(
 
 pub static OLC_ENCODE: ToolDef = ToolDef {
     id: "indexing.plus-code.encode",
+    stability: gp_base::tool::Stability::Stable,
     title: "Plus Code encoder",
     summary: "The Plus Code (Open Location Code) for a latitude and longitude at code length 2 to 15, with the area it covers.",
     aliases: &[
@@ -894,6 +898,7 @@ fn run_olc_encode(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static OLC_DECODE: ToolDef = ToolDef {
     id: "indexing.plus-code.decode",
+    stability: gp_base::tool::Stability::Stable,
     title: "Plus Code decoder",
     summary: "The center and area of a Plus Code; a short code needs a nearby reference point to recover the full code.",
     aliases: &["plus code to lat long", "decode open location code"],
@@ -1036,6 +1041,8 @@ fn run_olc_decode(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static OLC_SHORTEN: ToolDef = ToolDef {
     id: "indexing.plus-code.shorten",
+    stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Shorten a Plus Code",
     summary: "The shortest form of a full Plus Code that still recovers uniquely near a reference point (such as the nearest town).",
     aliases: &["short plus code"],

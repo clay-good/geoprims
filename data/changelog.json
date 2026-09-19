@@ -5,6 +5,31 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "indexing.geohash.decode",
+        "indexing.geohash.neighbors",
+        "indexing.plus-code.encode",
+        "indexing.plus-code.decode",
+        "indexing.plus-code.shorten",
+        "indexing.tile.ground-resolution",
+        "indexing.h3.resolution-chooser",
+        "indexing.h3.polygon-to-cells"
+      ],
+      "vectors": [],
+      "summary": "Every indexing tool is now stable. Geohash decode and neighbors match pygeohash on 1,000 and 500 cases; the Plus Code tools pass every row of the Open Location Code test data; tile ground resolution matches the Bing Maps table; the H3 resolution chooser matches H3's resolution table; and H3 polygon fill gives H3 C's own test counts (1,253 cells, 1,214 with a hole). Results are unchanged apart from the fix below."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "indexing.plus-code.shorten"
+      ],
+      "vectors": [],
+      "summary": "Shortening an 8-digit Plus Code next to its own center returned a bare \"+\", which is not a valid code. It now keeps the last pair (for example 8F+), so the short code always recovers. The tool is now version 1.1.0."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "indexing.h3.cell-info",
         "indexing.h3.grid-ring",
         "indexing.h3.grid-path",

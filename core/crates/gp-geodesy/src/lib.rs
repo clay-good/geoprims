@@ -1339,6 +1339,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &gridref::GEOREF_INVERSE,
     &datum::HELMERT,
     &datum::ITRF,
+    &datum::PLATE_MOTION,
 ];
 
 pub static REGISTRY: Registry = Registry {

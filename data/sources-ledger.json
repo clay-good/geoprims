@@ -267,6 +267,46 @@
       ]
     },
     {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "itrf2020-pmm",
+      "name": "ITRF2020 Plate Motion Model",
+      "issuer": "Altamimi et al. (AGU, Geophysical Research Letters)",
+      "currentEdition": "e2023GL106373",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked on 2026-09-19: the DOI redirects to the AGU article at Wiley (which refuses scripted requests); rates match PROJ data/ITRF2020 (from IGN ITRF2020-PMM.dat).",
+      "freeAccessUrl": "https://doi.org/10.1029/2023GL106373",
+      "matchTerms": [
+        "ITRF2020 Plate Motion Model"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "pb2002",
+      "name": "PB2002 plate boundary model",
+      "issuer": "P. Bird (AGU, G3)",
+      "currentEdition": "PB2002, 1027 (orogens as GeoJSON by Ahlenius, ODC-BY 1.0)",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked on 2026-09-19: the DOI redirects to the AGU article at Wiley (which refuses scripted requests); the original FTP host is gone, so the orogens come from the fraxen/tectonicplates GeoJSON mirror (ODC-BY 1.0).",
+      "freeAccessUrl": "https://doi.org/10.1029/2001GC000252",
+      "matchTerms": [
+        "An updated digital model of plate boundaries"
+      ]
+    },
+    {
       "id": "nga-utmups",
       "name": "NGA.SIG.0012 UTM and UPS",
       "issuer": "NGA",

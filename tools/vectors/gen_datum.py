@@ -162,6 +162,49 @@ def itrf():
     write("geodesy.datum.itrf", vs)
 
 
+PMM = {  # PROJ data/ITRF2020 plate rotation rates (arcsec/yr)
+    "NOAM": (0.000045, -0.000666, -0.000098), "PCFC": (-0.000404, 0.001021, -0.002154), "EURA": (-0.000085, -0.000519, 0.000753),
+    "AUST": (0.001487, 0.001175, 0.001223), "SOAM": (-0.000261, -0.000282, -0.000157), "NUBI": (0.000090, -0.000585, 0.000717),
+    "INDI": (0.001137, 0.000013, 0.001444), "ANTA": (-0.000269, -0.000312, 0.000678), "ARAB": (0.001129, -0.000146, 0.001438),
+}
+PROJ_PMM = ("PROJ +proj=helmert with the ITRF2020 plate motion rates of its data/ITRF2020, through pyproj", "PROJ 9.3 (pyproj 3.6); data/ITRF2020")
+
+
+def plate_motion():
+    import math
+    cart = "+step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=cart +ellps=GRS80"
+    uncart = "+step +inv +proj=cart +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +xy_out=deg"
+    cases = [("NOAM", 38.5, -98.0, 500, 2010.0, 2026.7, True), ("PCFC", 21.3, -157.8, 10, 2015.0, 2026.0, True), ("EURA", 48.85, 2.35, 60, 2000.0, 2026.7, True),
+             ("AUST", -35.3, 149.1, 580, 1994.0, 2020.0, False), ("SOAM", -15.8, -47.9, 1100, 2010.0, 2030.0, True), ("NUBI", -26.2, 28.0, 1750, 2005.0, 2025.0, False),
+             ("INDI", 20.0, 78.0, 300, 2012.0, 2026.0, True), ("ANTA", -77.8, 166.7, 20, 2000.0, 2020.0, True), ("ARAB", 24.7, 46.7, 600, 2010.0, 2026.7, True)]
+    rnd = random.Random(3)
+    for _ in range(10):
+        pl = rnd.choice(list(PMM))
+        cases.append((pl, round(rnd.uniform(-60, 60), 5), round(rnd.uniform(-180, 179), 5), round(rnd.uniform(0, 3000), 1), round(rnd.uniform(1990, 2020), 2), round(rnd.uniform(2020, 2035), 2), rnd.random() < 0.5))
+    vs = []
+    for i, (pl, lat, lon, h, t1, t2, orb) in enumerate(cases, 1):
+        w = PMM[pl]
+        hel = f"+proj=helmert +drx={w[0]} +dry={w[1]} +drz={w[2]}" + (" +dx=0.00037 +dy=0.00035 +dz=0.00074" if orb else "") + f" +t_epoch={t1} +convention=position_vector"
+        geo = Transformer.from_pipeline(f"+proj=pipeline {cart} +step {hel} {uncart}").transform(lon, lat, h, t2)
+        exp = {"result.lat.value": geo[1], "result.lon.value": geo[0], "result.height.value": geo[2]}
+        tol = {"result.lat.value": {"abs": 1e-10}, "result.lon.value": {"abs": 1e-10}, "result.height.value": {"abs": 1e-5}}
+        inp = {"lat": lat, "lon": lon, "height": h, "from_epoch": str(t1), "to_epoch": str(t2), "plate": pl}
+        if not orb:
+            inp["origin_rate"] = "no"
+        vs.append(vec(i, inp, exp, PROJ_PMM, tol))
+    i = len(vs) + 1
+    # A site velocity replaces the model: 20 mm/yr east for 10 years is 0.2 m east.
+    vs.append(vec(i, {"lat": 40, "lon": -105, "from_epoch": "2016.0", "to_epoch": "2026.0", "v_east": "20 mm/yr", "v_north": "-5 mm/yr", "v_up": "1 mm/yr"},
+                  {"result.east.value": 0.2, "result.north.value": -0.05, "result.up.value": 0.01, "result.displacement.value": math.hypot(0.2, 0.05)},
+                  ("Site velocity times elapsed time (definition)", "2026-09"), {k: {"abs": 1e-9} for k in ("result.east.value", "result.north.value", "result.up.value", "result.displacement.value")})); i += 1
+    # "Propagation in a deformation zone": near the San Andreas fault.
+    vs.append(vec(i, {"lat": 35.0, "lon": -119.5, "from_epoch": "2010.0", "to_epoch": "2026.7", "plate": "NOAM"}, {"meta.warnings.*.code": "DEFORMATION_ZONE"},
+                  ("add-geodesy-suite scenario: propagation in a deformation zone", "2026-09"))); i += 1
+    vs.append(vec(i, {"lat": 40, "lon": -105, "from_epoch": "2010.0", "to_epoch": "2026.7"}, {"error.code": "INVALID_INPUT", "error.field": "/plate"}, RULES, ok=False))
+    write("geodesy.datum.plate-motion", vs)
+
+
 if __name__ == "__main__":
     helmert()
     itrf()
+    plate_motion()

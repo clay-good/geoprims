@@ -540,3 +540,292 @@ fn run_itrf(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("z", ctx.out("z", m(out[2]))),
     ]))
 }
+
+// ---------------------------------------------------------------- plate motion
+
+const ITRF2020_PMM: Reference = Reference {
+    title: "ITRF2020 Plate Motion Model, Geophysical Research Letters 50",
+    issuer: "Altamimi, Z., Métivier, L., Rebischung, P., Collilieux, X., Chanard, K., and Barnéoud, J., American Geophysical Union",
+    year: 2023,
+    edition: "e2023GL106373",
+    locator: "Table 1 (plate rotation poles) and Table 2 (origin rate bias)",
+    url: "https://doi.org/10.1029/2023GL106373",
+};
+const PB2002: Reference = Reference {
+    title: "An updated digital model of plate boundaries, Geochemistry, Geophysics, Geosystems 4(3)",
+    issuer: "Bird, P., American Geophysical Union",
+    year: 2003,
+    edition: "PB2002, 1027 (orogens as GeoJSON by Ahlenius, ODC-BY 1.0)",
+    locator: "PB2002_orogens: the 13 zones of distributed deformation",
+    url: "https://doi.org/10.1029/2001GC000252",
+};
+
+const PLATE_CODES: &[&str] = &[
+    "AMUR", "ANTA", "ARAB", "AUST", "CARB", "EURA", "INDI", "NAZC", "NOAM", "NUBI", "PCFC", "SOAM",
+    "SOMA",
+];
+
+pub static PLATE_MOTION: ToolDef = ToolDef {
+    id: "geodesy.datum.plate-motion",
+    title: "Move a position between epochs (ITRF2020 plate motion)",
+    summary: "Propagates an ITRF2020 position from one epoch to another with the rigid-plate velocity of its tectonic plate, or with a site velocity you give, and flags zones where plates deform and rigid motion does not apply.",
+    aliases: &[
+        "epoch propagation",
+        "plate motion model",
+        "tectonic plate velocity",
+        "coordinate epoch update",
+    ],
+    keywords: &[
+        "plate motion",
+        "ITRF2020",
+        "epoch",
+        "velocity",
+        "tectonic",
+        "propagation",
+        "PMM",
+        "site velocity",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "Decimal degrees, like 39",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "Decimal degrees, like -98",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-180,180)"),
+        qty(
+            "height",
+            "Ellipsoidal height",
+            "Height above the GRS 80 ellipsoid, like 300 m",
+            QT::Length,
+            "m",
+        ),
+        Field::new(
+            "from_epoch",
+            "From epoch",
+            "Epoch of the coordinates: 2010-01-01 or 2010.0",
+            Kind::Text { max_len: 40 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "to_epoch",
+            "To epoch",
+            "Epoch wanted: 2026-09-19 or 2026.72",
+            Kind::Text { max_len: 40 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "plate",
+            "Plate",
+            "NOAM (North American), PCFC (Pacific), EURA, AUST, SOAM, NUBI, and others; required unless you give a site velocity",
+            Kind::Choice(PLATE_CODES),
+        ),
+        Field::new(
+            "origin_rate",
+            "Origin rate bias",
+            "yes (default) adds the ITRF2020 origin rate bias to the plate velocity; no leaves it out",
+            Kind::Choice(&["yes", "no"]),
+        ),
+        qty(
+            "v_east",
+            "Site velocity east",
+            "Overrides the model, like 12.3 mm/yr",
+            QT::Speed,
+            "mm/yr",
+        ),
+        qty(
+            "v_north",
+            "Site velocity north",
+            "Like -4.1 mm/yr",
+            QT::Speed,
+            "mm/yr",
+        ),
+        qty(
+            "v_up",
+            "Site velocity up",
+            "Like 0.8 mm/yr",
+            QT::Speed,
+            "mm/yr",
+        ),
+    ],
+    outputs: &[
+        mm_out(
+            "displacement",
+            "Horizontal displacement",
+            "Between the two epochs",
+        ),
+        mm_out("east", "East displacement", "Between the two epochs"),
+        mm_out("north", "North displacement", "Between the two epochs"),
+        mm_out("up", "Up displacement", "Between the two epochs"),
+        qty(
+            "v_east",
+            "Velocity east",
+            "The velocity used",
+            QT::Speed,
+            "mm/yr",
+        )
+        .precision(Precision::Decimals(2)),
+        qty(
+            "v_north",
+            "Velocity north",
+            "The velocity used",
+            QT::Speed,
+            "mm/yr",
+        )
+        .precision(Precision::Decimals(2)),
+        qty(
+            "v_up",
+            "Velocity up",
+            "The velocity used",
+            QT::Speed,
+            "mm/yr",
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "lat",
+            "Latitude",
+            "At the new epoch",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(10))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "At the new epoch",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(10))
+        .angle_range("[-180,180)"),
+        mm_out("height", "Ellipsoidal height", "At the new epoch"),
+        mm_out("x", "X", "ECEF at the new epoch"),
+        mm_out("y", "Y", "ECEF at the new epoch"),
+        mm_out("z", "Z", "ECEF at the new epoch"),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["DEFORMATION_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: "ITRF2020 plate motion model: v = ω × X plus the origin rate bias, X(t2) = X(t1) + v (t2 − t1); a site velocity replaces the model",
+    accuracy: "About 0.2 mm/yr on stable plate interiors (the model's fit); rigid-plate velocities can be wrong by centimeters per year in deforming zones",
+    references: &[ITRF2020_PMM, PB2002],
+    examples: &[Example {
+        id: "primary",
+        title: "Kansas on the North American plate, 2010 to 2026.7",
+        input: r#"{"lat":38.5,"lon":-98,"height":500,"from_epoch":"2010.0","to_epoch":"2026.7","plate":"NOAM"}"#,
+        source: "PROJ +proj=helmert with the NOAM_T rates of its data/ITRF2020",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
+    }],
+    related: &[Related {
+        id: "geodesy.datum.itrf",
+        reason: "next",
+    }],
+    sentence: "The position moves {displacement} horizontally: {east} east and {north} north.{warn DEFORMATION_ZONE} It lies in a deforming zone, so use a site velocity from a nearby station.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_plate_motion,
+    ..ToolDef::BLANK
+};
+
+fn run_plate_motion(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let h = read(ctx, "height", QT::Length, "m")?.unwrap_or(0.0);
+    let t1 = epoch(ctx, "from_epoch")?.expect("required");
+    let t2 = epoch(ctx, "to_epoch")?.expect("required");
+    for (t, f) in [(t1, "/from_epoch"), (t2, "/to_epoch")] {
+        if !(1980.0..=2100.0).contains(&t) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "Epochs must be between 1980 and 2100.",
+            )
+            .at(f));
+        }
+    }
+    let grs80 = CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .expect("GRS 80 in the catalog");
+    let (phi, lam) = (lat.to_radians(), lon.to_radians());
+    let p = fr::to_ecef(&grs80, phi, lam, h);
+    let site = ["v_east", "v_north", "v_up"].map(|k| read(ctx, k, QT::Speed, "m/yr"));
+    let site: Vec<Option<f64>> = site.into_iter().collect::<Result<_, _>>()?;
+    let v_ecef = if site.iter().any(Option::is_some) {
+        let enu = [0, 1, 2].map(|i| site[i].unwrap_or(0.0));
+        let o = fr::enu_to_ecef((0.0, 0.0, 0.0), phi, lam, enu);
+        ctx.model = Some("Site velocity given by the user, X(t2) = X(t1) + v (t2 − t1)".into());
+        [o.0, o.1, o.2]
+    } else {
+        let plate = ctx
+            .choice("plate")?
+            .ok_or_else(|| ToolError::invalid("/plate", "Name the tectonic plate, or give a site velocity.").hint("Most of the United States and Canada is NOAM; coastal California west of the San Andreas fault is PCFC."))?;
+        let orb = ctx.choice("origin_rate")? != Some("no");
+        if let Some(zone) = gp_geo::plates::deformation_zone(lat, lon) {
+            ctx.warnings.push(Warning::new(
+                "DEFORMATION_ZONE",
+                format!("The point is in the {zone} deformation zone, where rigid-plate velocities do not apply. Use a site velocity from a nearby CORS station (NGS publishes them)."),
+            ));
+        }
+        ctx.context.push(("plate", Json::str(plate)));
+        gp_geo::plates::velocity(plate, [p.0, p.1, p.2], orb).expect("plate from the choice list")
+    };
+    let dt = t2 - t1;
+    let q = (
+        p.0 + v_ecef[0] * dt,
+        p.1 + v_ecef[1] * dt,
+        p.2 + v_ecef[2] * dt,
+    );
+    let v_enu = fr::ecef_to_enu((0.0, 0.0, 0.0), phi, lam, (v_ecef[0], v_ecef[1], v_ecef[2]));
+    let d = v_enu.map(|v| v * dt);
+    let (phi2, lam2, h2) = fr::from_ecef(&grs80, q.0, q.1, q.2).expect("not the center");
+    ctx.context.push(("fromEpoch", Json::Num(t1)));
+    ctx.context.push(("toEpoch", Json::Num(t2)));
+    let mmyr = |v: f64| Q {
+        value: v * 1000.0,
+        unit: units::by_symbol(QT::Speed, "mm/yr").expect("mm/yr"),
+    };
+    Ok(Json::obj([
+        ("displacement", ctx.out("displacement", m(d[0].hypot(d[1])))),
+        ("east", ctx.out("east", m(d[0]))),
+        ("north", ctx.out("north", m(d[1]))),
+        ("up", ctx.out("up", m(d[2]))),
+        ("v_east", ctx.out("v_east", mmyr(v_enu[0]))),
+        ("v_north", ctx.out("v_north", mmyr(v_enu[1]))),
+        ("v_up", ctx.out("v_up", mmyr(v_enu[2]))),
+        ("lat", ctx.out("lat", deg(phi2.to_degrees()))),
+        (
+            "lon",
+            ctx.out("lon", deg(gp_base::angle::wrap_lon(lam2.to_degrees()))),
+        ),
+        ("height", ctx.out("height", m(h2))),
+        ("x", ctx.out("x", m(q.0))),
+        ("y", ctx.out("y", m(q.1))),
+        ("z", ctx.out("z", m(q.2))),
+    ]))
+}

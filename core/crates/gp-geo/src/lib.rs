@@ -7,6 +7,7 @@ pub mod gridref;
 pub mod helmert;
 pub mod magnetic;
 pub mod mgrs;
+pub mod plates;
 pub mod point;
 pub mod rhumb;
 pub mod spcs;

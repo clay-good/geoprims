@@ -40,7 +40,8 @@ const route = (id) => '/' + id.split('.').join('/') + '/';
   <h2>What is not done yet</h2>
   <ul>
     <li>{counts.experimental.endpoints} of {counts.all.endpoints} tools are still marked <strong>experimental</strong>: they have not met the stable bar yet, and their results say so.</li>
-    <li>No practitioner (pilot, CFI, surveyor, or drone operator) has signed off on any tool yet. Reviewed tools will be listed with the reviewer's name and date.</li>
+    <li>No practitioner (pilot, CFI, surveyor, or drone operator) has signed off on any tool yet. Each domain page says so, and reviewed tools will be listed with the reviewer's name, qualification, and date.</li>
+    <li>A build gate checks this site's claims (counts, what is stable, what results are checked against, and reviews) against the build itself.</li>
     <li>There is no per-release verification report yet.</li>
   </ul>
 

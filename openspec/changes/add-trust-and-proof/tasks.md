@@ -21,8 +21,8 @@
 - [x] 3.3 Implement the dimension lint over manifests and core annotations; verify it catches a deliberate unit-name mismatch (tools/trust/dimensions.mjs; it found nT, A, minute, and hour outputs marked dimensionless, now annotated with fixed units)
 - [x] 3.4 Implement the bounds fuzzer with minimization; verify it finds a seeded trap (tools/fuzz/fuzz.test.mjs: seeded mutations of every tool's example through Wasm in a timed worker, with minimization; it found 16 real defects (non-finite results, a trap, and two hangs), each fixed and pinned as a regression; 1,000 cases per tool pass)
 - [ ] 3.5 Implement example parity (page example = button example = MCP example); verify with a deliberately divergent fixture
-- [ ] 3.6 Create `docs/review-signoffs.md` and the pending-review disclosure; verify the unreviewed-domain scenario
-- [ ] 3.7 Implement the claims-honesty gate; verify the overclaim scenario
+- [x] 3.6 Create `docs/review-signoffs.md` and the pending-review disclosure; verify the unreviewed-domain scenario (tools/trust/signoffs.mjs parses the record, with 12-month expiry; each domain page and each tool's "How we got this" panel says "Not yet independently reviewed by a <practitioner>" until a signed row exists)
+- [x] 3.7 Implement the claims-honesty gate; verify the overclaim scenario (tools/trust/claims.mjs checks every built page, llms.txt, AGENTS.md, and the READMEs for counts, "all experimental" statements, "checked against" statements without a differential suite, unrecorded reviews, and offline claims without a service worker; it caught the home page still saying everything was experimental and claiming offline use)
 - [ ] 3.8 Implement the both-surfaces gate; verify the unreachable-tool scenario (every stable tool's title ranks it in the top 5 of the shared core search, its example runs, and describe advertises its inputs; pending: the web palette, which will use the same search)
 
 ## 4. Proof display

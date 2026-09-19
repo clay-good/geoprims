@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { breadcrumbs, catalog, collection, DOMAIN_TITLES, groups, route } from '../../lib/catalog.mjs';
+import { breadcrumbs, catalog, collection, DOMAIN_TITLES, groups, reviewLine, route } from '../../lib/catalog.mjs';
 export function getStaticPaths() {
   return [...new Set(catalog.tools.map((t) => t.domain))].map((domain) => ({ params: { domain } }));
 }
@@ -12,6 +12,7 @@ const jsonld = [collection(`${title} calculators`, route(domain), listed), bread
 ---
 <Base title={`${title} calculators · geoprims`} description={`Every geoprims ${title.toLowerCase()} tool, with exact, cited math.`} canonical={route(domain)} jsonld={jsonld}>
   <h1>{title}</h1>
+  <p class="review">{reviewLine(domain)}</p>
   {[...byGroup].map(([group, tools]) => (
     <section>
       <h2><a href={route(`${domain}.${group}`)}>{group.replaceAll('-', ' ')}</a></h2>

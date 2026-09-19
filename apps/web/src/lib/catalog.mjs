@@ -3,10 +3,15 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../../../packages/runtime/src/node.mjs';
+import { readSignoffs, reviewSentence } from '../../../../tools/trust/signoffs.mjs';
 
 const root = join(process.cwd(), '../..');
 export const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
 const codes = JSON.parse(readFileSync(join(root, 'data/codes.json'), 'utf8'));
+const signoffs = readSignoffs(root);
+const buildDay = new Date().toISOString().slice(0, 10);
+/** The honest review line for a domain, or for one tool when `id` is given. */
+export const reviewLine = (domain, id = null) => reviewSentence(signoffs, domain, buildDay, id);
 
 /** Severity of each warning a tool may emit (codes registry), for ordering and styling. */
 export const severities = (t) => Object.fromEntries(t.warnings.map((c) => [c, codes.warnings[c]?.severity ?? 'info']));

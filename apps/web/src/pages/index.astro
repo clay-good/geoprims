@@ -3,14 +3,15 @@ import Base from '../layouts/Base.astro';
 import { catalog, DOMAIN_TITLES, route } from '../lib/catalog.mjs';
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 const ops = catalog.counts.all.operations;
+const stable = catalog.counts.stable.operations;
 ---
 <Base title="geoprims: geospatial and aerospace calculators" description="Exact, cited geodesy, aviation, drone, survey, and unit calculations that run on your device. Free, no ads, no tracking." canonical="/">
   <h1>Geospatial and aerospace calculators</h1>
-  <p class="purpose">Exact, cited math that runs on your device. Free, no ads, no tracking, works offline.</p>
+  <p class="purpose">Exact, cited math that runs on your device. Free, no ads, no tracking.</p>
   <div class="card">
     <p>
-      geoprims is in early development. {ops} operations are built so far, all marked experimental until they pass the full
-      verification bar. The same calculators run in the <a href="https://github.com/clay-good/geoprims/tree/main/mcp">local MCP server</a> for AI agents.
+      geoprims is in early development. {ops} operations are built so far. {stable} {stable === 1 ? 'has' : 'have'} passed the full
+      <a href="/methodology/">verification bar</a>; the rest are marked experimental until they do. The same calculators run in the <a href="https://github.com/clay-good/geoprims/tree/main/mcp">local MCP server</a> for AI agents.
     </p>
   </div>
   <h2>Domains</h2>

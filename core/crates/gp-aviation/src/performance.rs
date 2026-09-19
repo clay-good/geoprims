@@ -371,6 +371,7 @@ fn run_turn(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static DESCENT: ToolDef = ToolDef {
     id: "aviation.performance.top-of-descent",
+    stability: gp_base::tool::Stability::Stable,
     title: "Top of descent",
     summary: "Where to start down: descent distance, vertical speed, and time for an altitude change on a descent angle or at a vertical speed, with the 3-to-1 and 5 × groundspeed rules beside them.",
     aliases: &[
@@ -762,6 +763,7 @@ fn run_climb_gradient(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static VDP: ToolDef = ToolDef {
     id: "aviation.performance.vdp",
+    stability: gp_base::tool::Stability::Stable,
     title: "Visual descent point",
     summary: "The visual descent point for a non-precision approach: the distance from the threshold where a normal descent from the MDA begins, with the HAT/300 rule and the descent rate at your groundspeed.",
     aliases: &["VDP calculator", "visual descent point calculator"],

@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
+        "aviation.performance.top-of-descent",
+        "aviation.performance.vdp"
+      ],
+      "vectors": [],
+      "summary": "Top of descent and the visual descent point are now stable. Both match the FAA Instrument Procedures Handbook examples (FL 310 to 6,000 ft is 75 NM by the 3-to-1 rule; 300 ft per NM on a three-degree path) and 18 to 19 vectors each from a separate implementation. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "result-change",
       "tools": [
         "survey.curves.circular-curve",

@@ -83,6 +83,8 @@ AMBIANCE = [
 KT = 1852 / 3600
 PHAK = "FAA Pilot's Handbook of Aeronautical Knowledge (FAA-H-8083-25C), worked example read from the published chart or table"
 PHAK_VER = "FAA-H-8083-25C (2023)"
+IPH = "FAA Instrument Procedures Handbook (FAA-H-8083-16B), worked example"
+IPH_VER = "FAA-H-8083-16B"
 
 
 def isa_ambiance(start):
@@ -326,13 +328,19 @@ def turn_vectors():
 
 def tod_vectors():
     out = []
-    cases = [(35000, 3000, 420, 3), (12500, 2000, 250, 3), (8500, 3000, 140, 4), (41000, 10000, 460, 2.5), (6000, 1500, 110, 3)]
+    cases = [(35000, 3000, 420, 3), (12500, 2000, 250, 3), (8500, 3000, 140, 4), (41000, 10000, 460, 2.5), (6000, 1500, 110, 3),
+             (39000, 11000, 480, 3), (24000, 4000, 380, 2.8), (17500, 2500, 300, 3.5), (9500, 1200, 160, 3), (4500, 800, 95, 4.5),
+             (45000, 18000, 500, 2.2), (28000, 250, 400, 3), (14000, 6000, 220, 5), (7000, 2000, 120, 3), (33000, 9000, 440, 3.2),
+             (21000, 3000, 350, 3), (11000, 2000, 200, 2.5), (5500, 1500, 90, 3), (37000, 5000, 460, 3)]
     for i, (a, b, gs, ang) in enumerate(cases, 1):
         th = math.radians(ang)
         d = (a - b) * FT / math.tan(th) / NMI
         v = gs * KT * math.tan(th) / FT * 60
         out.append(vec(i, {"from_altitude": f"{a} ft", "to_altitude": f"{b} ft", "groundspeed": f"{gs} kt", "descent_angle": f"{ang} deg"},
                        {"result.distance.value": d, "result.vertical_speed.value": v}, 1e-9, PERF_SRC, "FAA-H-8083-16B (2017)"))
+    # FAA-H-8083-16B chapter 3 (descent planning): FL 310 to an approach gate at 6,000 ft is 25 x 3 = 75 NM by the 3-to-1 rule.
+    out.append(vec(len(out) + 1, {"from_altitude": "31000 ft", "to_altitude": "6000 ft", "groundspeed": "420 kt"},
+                   {"result.rule_3_to_1.value": 75.0}, 1e-12, IPH, IPH_VER))
     return out
 
 
@@ -347,12 +355,18 @@ def gradient_vectors():
 
 def vdp_vectors():
     out = []
-    for i, (hat, ang, tch) in enumerate([(400, 3, 0), (520, 3, 50), (300, 2.75, 0), (700, 3.2, 55), (450, 3.5, 40)], 1):
+    for i, (hat, ang, tch) in enumerate([(400, 3, 0), (520, 3, 50), (300, 2.75, 0), (700, 3.2, 55), (450, 3.5, 40),
+                                         (380, 3, 45), (610, 2.9, 50), (250, 3, 0), (820, 3.1, 60), (560, 3.3, 52), (340, 2.5, 38),
+                                         (475, 3, 47), (900, 3.5, 55), (295, 3, 42), (720, 2.8, 50),
+                                         (410, 3, 50), (530, 3.2, 0), (365, 2.75, 44)], 1):
         d = (hat - tch) * FT / math.tan(math.radians(ang)) / NMI
         inp = {"height_above_touchdown": f"{hat} ft", "descent_angle": f"{ang} deg"}
         if tch:
             inp["threshold_crossing_height"] = f"{tch} ft"
         out.append(vec(i, inp, {"result.distance.value": d, "result.rule_hat_300.value": hat / 300}, 1e-9, PERF_SRC, "FAA-H-8083-16B (2017)"))
+    # FAA-H-8083-16B chapter 4: on a three-degree path the height above the TDZE is 300 ft per NM (450 ft at 1.5 NM, 600 ft at 2 NM).
+    for hat, nm in [(450, 1.5), (600, 2.0)]:
+        out.append(vec(len(out) + 1, {"height_above_touchdown": f"{hat} ft"}, {"result.rule_hat_300.value": nm}, 1e-12, IPH, IPH_VER))
     return out
 
 

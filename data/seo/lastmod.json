@@ -1,10 +1,10 @@
 {
   "/": {
-    "hash": "417c35a8a10a9ab6",
+    "hash": "c5e157faf910144f",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
-    "hash": "5e5e1c8aa7d6d755",
+    "hash": "30955a921735f969",
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
@@ -20,11 +20,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "e9c98df362b0cba7",
+    "hash": "5b7cc88ad700f581",
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "831b6a6b2a1c2b63",
+    "hash": "f4e57227c76a87d7",
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/": {
@@ -32,7 +32,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "94f31ec7722e786a",
+    "hash": "78bd043039ae7ebd",
     "lastmod": "2026-09-19"
   },
   "/aviation/ifr/": {
@@ -44,11 +44,19 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/loading/weight-balance/": {
-    "hash": "dadf07550d67472b",
+    "hash": "4492a10fd07e8997",
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/": {
     "hash": "38addfd8d8cd4d73",
+    "lastmod": "2026-09-19"
+  },
+  "/aviation/performance/top-of-descent/": {
+    "hash": "286d45937818f335",
+    "lastmod": "2026-09-19"
+  },
+  "/aviation/performance/vdp/": {
+    "hash": "719403217510348a",
     "lastmod": "2026-09-19"
   },
   "/aviation/weather/": {
@@ -60,15 +68,15 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "d00082823b7c9387",
+    "hash": "f60b1b27abdd00fc",
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "35e7f2e32f8bafe9",
+    "hash": "17a12c0b20373e6b",
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "ac53fb64c0ecc399",
+    "hash": "2a4149e39db04dfb",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -240,7 +248,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "8ed50a0f94657b8f",
+    "hash": "797666ec27d95c1d",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -448,7 +456,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "9b76f760f2dc3d63",
+    "hash": "bd164ce50dd63797",
     "lastmod": "2026-09-19"
   }
 }

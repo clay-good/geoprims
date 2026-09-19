@@ -21,8 +21,8 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Holding entry | `aviation.ifr.hold-entry` | [ ] | [ ] | [ ] |
 | Pilots | Zulu time | `time.scale.utc-offset` | [x] | [ ] | [ ] |
 | Pilots | Weight and balance | `aviation.loading.weight-balance` | [x] | [ ] | [ ] |
-| Pilots | Top of descent | `aviation.performance.top-of-descent` | [ ] | [ ] | [ ] |
-| Pilots | Visual descent point | `aviation.performance.vdp` | [ ] | [ ] | [ ] |
+| Pilots | Top of descent | `aviation.performance.top-of-descent` | [x] | [ ] | [ ] |
+| Pilots | Visual descent point | `aviation.performance.vdp` | [x] | [ ] | [ ] |
 | Drone | GSD | `drone.photogrammetry.gsd` | [x] | [ ] | [ ] |
 | Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] |
 | Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [ ] | [ ] | [ ] |
@@ -52,4 +52,4 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 27 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 29 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.

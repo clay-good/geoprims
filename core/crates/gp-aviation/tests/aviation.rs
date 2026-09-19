@@ -567,3 +567,40 @@ fn weight_balance_invariants() {
         assert!((wb(&shifted).1 - (cg + base[i].0 * d / w)).abs() < 1e-9);
     }
 }
+
+#[test]
+fn descent_invariants() {
+    // Top of descent: distance × gradient is the altitude to lose, the vertical
+    // speed is groundspeed × tan(angle), and time is distance over groundspeed.
+    // VDP: distance × tan(angle) is the height above the threshold crossing height.
+    const NM_FT: f64 = 1852.0 / 0.3048;
+    for (from, to, gs, ang) in [(35000.0, 3000.0, 420.0, 3.0_f64), (9500.0, 1200.0, 160.0, 3.5), (45000.0, 18000.0, 500.0, 2.2)] {
+        let r = call(
+            "aviation.performance.top-of-descent",
+            &format!(r#"{{"from_altitude":"{from} ft","to_altitude":"{to} ft","groundspeed":"{gs} kt","descent_angle":"{ang} deg"}}"#),
+        );
+        let d = num(&r, "result.distance.value");
+        assert!((d * num(&r, "result.gradient.value") - (from - to)).abs() < 1e-6);
+        let vs = num(&r, "result.vertical_speed.value");
+        assert!((vs - gs * NM_FT / 60.0 * ang.to_radians().tan()).abs() < 1e-6);
+        assert!((num(&r, "result.time.value") - d / gs * 60.0).abs() < 1e-9);
+        // The rules of thumb describe a 3° path, so they are shown from 2.5° to 3.5°.
+        if (2.5..=3.5).contains(&ang) {
+            assert!((num(&r, "result.rule_3_to_1.value") - 3.0 * (from - to) / 1000.0).abs() < 1e-9);
+        } else {
+            assert!(r["result"]["rule_3_to_1"].is_null());
+        }
+    }
+    for (hat, ang, tch) in [(400.0, 3.0_f64, 0.0), (520.0, 3.0, 50.0), (900.0, 3.5, 55.0)] {
+        let mut input = format!(r#"{{"height_above_touchdown":"{hat} ft","descent_angle":"{ang} deg""#);
+        if tch > 0.0 {
+            input += &format!(r#","threshold_crossing_height":"{tch} ft""#);
+        }
+        let r = call("aviation.performance.vdp", &(input + "}"));
+        let d = num(&r, "result.distance.value");
+        assert!((d * NM_FT * ang.to_radians().tan() - (hat - tch)).abs() < 1e-6);
+        if ang == 3.0 {
+            assert!((num(&r, "result.rule_hat_300.value") - hat / 300.0).abs() < 1e-12);
+        }
+    }
+}

@@ -68,6 +68,16 @@ def vectors():
     out_d.append(vec(len(out_d) + 1, {"lat1": 80, "lon1": 0, "course": 0, "distance": "2000 km"},
                      {"result.lat2.value": 90.0, "result.beyond_pole.value": (2_000_000 - to_pole) / 1000, "meta.warnings.*.code": "RHUMB_REACHES_POLE"},
                      {"result.lat2.value": {"abs": 0}, "result.beyond_pole.value": {"abs": 1e-9}}))
+    # Bowditch (NGA Pub. 9, 2024 edition, Art. 910, Mercator sailing examples 1 and 2). Bowditch takes a minute of
+    # latitude as 1 nm; on WGS 84 a minute is 1,849 m at 35° and 1,861 m at 73°, so its distance and arrival
+    # latitude differ from the ellipsoidal rhumb by up to 0.5%: 1.4 nm in example 1 and 1.0' in example 2.
+    bow = ("Bowditch, The American Practical Navigator (NGA Pub. 9), Art. 910, Mercator sailing", "2024 edition")
+    out_i.append({"id": f"v{len(out_i) + 1:03d}", "input": {"lat1": 32 + 14.7 / 60, "lon1": -(66 + 28.9 / 60), "lat2": 36 + 58.7 / 60, "lon2": -(75 + 42.2 / 60)},
+                  "expect": {"result.course.value": 301.8, "result.distance.value": 538.7 * 1.852, "ok": True}, "source": bow[0], "sourceVersion": bow[1],
+                  "tolerance": {"result.course.value": {"abs": 0.1}, "result.distance.value": {"abs": 1.5 * 1.852}}})
+    out_d.append({"id": f"v{len(out_d) + 1:03d}", "input": {"lat1": 75 + 31.7 / 60, "lon1": -(79 + 8.7 / 60), "course": 155, "distance": "263.5 nmi"},
+                  "expect": {"result.lat2.value": 71 + 32.9 / 60, "result.lon2.value": -(72 + 34.1 / 60), "ok": True}, "source": bow[0], "sourceVersion": bow[1],
+                  "tolerance": {"result.lat2.value": {"abs": 1.2 / 60}, "result.lon2.value": {"abs": 1.8 / 60}}})
     for tool, vs in (("navigation.rhumb.inverse", out_i), ("navigation.rhumb.direct", out_d)):
         (VECTORS / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
     print(len(out_i), "inverse and", len(out_d), "direct vectors")

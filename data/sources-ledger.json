@@ -1719,14 +1719,14 @@
       "id": "bowditch",
       "name": "The American Practical Navigator (Bowditch), NGA Pub. No. 9",
       "issuer": "National Geospatial-Intelligence Agency",
-      "currentEdition": "2019 edition",
+      "currentEdition": "2024 edition",
       "currentReleaseDate": null,
       "cycleMonths": 60,
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": null,
-      "verificationNote": "Not yet verified at the issuer: the NGA page is rendered by script, and the Volume I PDF it serves was modified 2024-05-16 without a readable edition line. Check the edition before relying on the citation.",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: NGA's publications API serves Bowditch_Vol_1.pdf and Bowditch_Vol_2.pdf, both titled 2024 EDITION, © 2024 NGA.",
       "freeAccessUrl": "https://msi.nga.mil/Publications/APN",
       "matchTerms": [
         "American Practical Navigator"

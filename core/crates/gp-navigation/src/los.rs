@@ -16,9 +16,9 @@ use crate::unit;
 const BOWDITCH: Reference = Reference {
     title: "The American Practical Navigator (Bowditch)",
     issuer: "National Geospatial-Intelligence Agency, Pub. No. 9",
-    year: 2019,
-    edition: "2019 edition",
-    locator: "Distance of the horizon and dip of the sea horizon",
+    year: 2024,
+    edition: "2024 edition",
+    locator: "Volume II, Table 12 (Distance of the Horizon) and Table 14 (Dip of the Sea Short of the Horizon)",
     url: "https://msi.nga.mil/Publications/APN",
 };
 const ITU_P530: Reference = Reference {

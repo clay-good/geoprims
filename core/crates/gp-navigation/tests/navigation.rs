@@ -789,3 +789,75 @@ fn haversine_invariants() {
         }
     }
 }
+
+fn adiff(a: f64, b: f64) -> f64 {
+    let d = (a - b).rem_euclid(360.0);
+    d.min(360.0 - d)
+}
+
+#[test]
+fn rhumb_tools_match_rhumbsolve() {
+    // The 2,000 RhumbSolve pairs of gp-geo's differential, through the public
+    // tools: distance and course both ways, and the direct problem back to
+    // the end point (away from the 100 starts within 0.01° of a pole, where
+    // the end longitude is ill-conditioned).
+    let text = repo("core/crates/gp-geo/tests/data/rhumb_diff.csv");
+    let (mut ds, mut da, mut dp, mut n) = (0f64, 0f64, 0f64, 0);
+    for l in text.lines().skip(1) {
+        let f: Vec<f64> = l.split(',').map(|x| x.parse().unwrap()).collect();
+        let inv = call(
+            "navigation.rhumb.inverse",
+            &serde_json::json!({"lat1": f[0], "lon1": f[1], "lat2": f[2], "lon2": f[3], "options": {"outputUnits": {"distance": "m"}}}).to_string(),
+        );
+        ds = ds.max((num(&inv, "result.distance.value") - f[5]).abs());
+        da = da.max(adiff(num(&inv, "result.course.value"), f[4]));
+        if f[0].abs() < 89.99 {
+            let dir = call(
+                "navigation.rhumb.direct",
+                &serde_json::json!({"lat1": f[0], "lon1": f[1], "course": f[4].rem_euclid(360.0), "distance": format!("{} m", f[5])}).to_string(),
+            );
+            let m = 6_371_000.0f64.to_radians();
+            let d = ((num(&dir, "result.lat2.value") - f[2]) * m)
+                .hypot(adiff(num(&dir, "result.lon2.value"), f[3]) * m * f[2].to_radians().cos());
+            dp = dp.max(d);
+        }
+        n += 1;
+    }
+    eprintln!("rhumb tools vs RhumbSolve: {ds:e} m, {da:e}°, direct {dp:e} m");
+    assert_eq!(n, 2000);
+    assert!(ds <= 1e-6 && da <= 1e-9 && dp <= 1e-6, "{ds:e} m, {da:e}°, {dp:e} m");
+}
+
+#[test]
+fn rhumb_invariants() {
+    // A rhumb line is never shorter than the geodesic; reversing it keeps the
+    // distance and turns the course around; half the distance along it lands
+    // on the same line (the course from there to the end is unchanged).
+    let mut seed: u64 = 17;
+    let mut rnd = || {
+        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    for _ in 0..300 {
+        let (a, b, c, d) = (rnd() * 160.0 - 80.0, rnd() * 360.0 - 180.0, rnd() * 160.0 - 80.0, rnd() * 360.0 - 180.0);
+        let inv = |a: f64, b: f64, c: f64, d: f64| {
+            call(
+                "navigation.rhumb.inverse",
+                &serde_json::json!({"lat1": a, "lon1": b, "lat2": c, "lon2": d, "options": {"outputUnits": {"distance": "m", "geodesic_distance": "m"}}}).to_string(),
+            )
+        };
+        let f = inv(a, b, c, d);
+        let (s, course) = (num(&f, "result.distance.value"), num(&f, "result.course.value"));
+        assert!(s >= num(&f, "result.geodesic_distance.value") - 1e-6);
+        let r = inv(c, d, a, b);
+        assert!((num(&r, "result.distance.value") - s).abs() < 1e-6);
+        assert!(adiff(num(&r, "result.course.value"), course + 180.0) < 1e-9);
+        let mid = call(
+            "navigation.rhumb.direct",
+            &serde_json::json!({"lat1": a, "lon1": b, "course": course, "distance": format!("{} m", s / 2.0)}).to_string(),
+        );
+        let rest = inv(num(&mid, "result.lat2.value"), num(&mid, "result.lon2.value"), c, d);
+        assert!(adiff(num(&rest, "result.course.value"), course) < 1e-8, "{rest}");
+        assert!((num(&rest, "result.distance.value") - s / 2.0).abs() < 1e-5);
+    }
+}

@@ -5,6 +5,16 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "navigation.rhumb.inverse",
+        "navigation.rhumb.direct"
+      ],
+      "vectors": [],
+      "summary": "The rhumb-line tools are stable. They reproduce Bowditch's Mercator sailing examples (NGA Pub. 9, 2024 edition) to within its 1 minute = 1 nautical mile convention, and match GeographicLib's RhumbSolve within 0.4 µm on 2,000 pairs run through the tools, including nearly east-west, nearly meridional, and near-pole lines. The Bowditch citation is now the 2024 edition, verified at NGA. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "geodesy.grid-ref.gars-forward",
         "geodesy.grid-ref.gars-inverse",
         "geodesy.grid-ref.georef-forward",

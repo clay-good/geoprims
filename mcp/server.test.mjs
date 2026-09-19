@@ -207,7 +207,7 @@ test('opens no listening socket', { skip: spawnSync('lsof', ['-v']).error ? 'lso
 
 test('an untagged checkout without built files explains itself and exits 1', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gp-mcp-'));
-  for (const f of ['server.mjs', 'meta.mjs', 'toolsets.mjs', 'package.json']) copyFileSync(join(here, f), join(dir, f));
+  for (const f of ['server.mjs', 'meta.mjs', 'toolsets.mjs', 'prompts.mjs', 'package.json']) copyFileSync(join(here, f), join(dir, f));
   const r = spawnSync(process.execPath, [join(dir, 'server.mjs')], { input: '' });
   assert.equal(r.status, 1);
   assert.equal(r.stderr.toString().trim(), 'Built files missing: check out a release tag (git checkout vX.Y.Z) or run npm run build (requires Rust)');
@@ -362,4 +362,28 @@ test('operational results carry their caveats in meta', async () => {
   assert.equal(isa.structuredContent.meta.notice, m.notice);
   const kt = await c.call('geoprims_run', { id: 'units.speed.kt-to-mph', args: { value: 1 } });
   assert.equal(kt.structuredContent.meta.notice, undefined);
+});
+
+test('each workflow prompt produces a pipeline that runs end to end', async () => {
+  const examples = {
+    'preflight-performance': { elevation: '5000 ft', altimeter: '29.80 inHg', temperature: '30 degC', runway: '27', wind_direction: '300 deg', wind_speed: '15 kt', max_crosswind: '15 kt' },
+    'photogrammetry-mission': { target_gsd: '2 cm', sensor_width: '13.2 mm', sensor_height: '8.8 mm', focal_length: '8.8 mm', image_width: '5472', image_height: '3648', groundspeed: '10 m/s', front_overlap: '75', side_overlap: '65' },
+    'traverse-closure': { courses: JSON.stringify([{ direction: '0', distance: 300 }, { direction: '90', distance: 400.02 }, { direction: '180', distance: 299.95 }, { direction: '270.01', distance: 400 }]) },
+    'coordinate-conversion-audit': { coordinate: `40°26'46"N 79°58'56"W` },
+    'h3-resolution-choice': { target_area: '1 km2', lat: '40.4461', lon: '-79.9822' },
+  };
+  const list = (await c.request('prompts/list', {})).result.prompts;
+  assert.deepEqual(list.map((p) => p.name), Object.keys(examples));
+  for (const [name, args] of Object.entries(examples)) {
+    const got = (await c.request('prompts/get', { name, arguments: args })).result;
+    const text = got.messages[0].content.text;
+    const call = JSON.parse(/```json\n([\s\S]*?)\n```/.exec(text)[1]);
+    const r = await c.call('geoprims_pipeline', call);
+    assert.equal(r.structuredContent.ok, true, `${name}: ${r.content[0].text}`);
+    assert.equal(r.structuredContent.result.steps.length, call.steps.length);
+  }
+  const audit = (await c.call('geoprims_pipeline', JSON.parse(/```json\n([\s\S]*?)\n```/.exec((await c.request('prompts/get', { name: 'coordinate-conversion-audit', arguments: examples['coordinate-conversion-audit'] })).result.messages[0].content.text)[1]))).structuredContent;
+  assert.ok(Math.abs(audit.result.steps[2].result.lat.value - 40.446111) < 1e-6);
+  assert.equal((await c.request('prompts/get', { name: 'h3-resolution-choice', arguments: { lat: '1' } })).error.code, -32602);
+  assert.equal((await c.request('prompts/get', { name: 'nope', arguments: {} })).error.code, -32602);
 });

@@ -9,6 +9,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ANNOTATIONS, TOOLS, metaHandlers, schemaCheck } from './meta.mjs';
+import { getPrompt, promptList } from './prompts.mjs';
 import { directTools, parseToolsets } from './toolsets.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -129,7 +130,12 @@ export async function createServer(opts = {}) {
       if (!body) throw rpcError(-32002, `Resource not found: ${uri}`);
       return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(body) }] };
     },
-    'prompts/list': () => ({ prompts: [], ...LIST_CACHE }),
+    'prompts/list': () => ({ prompts: promptList(), ...LIST_CACHE }),
+    'prompts/get': (p) => {
+      const out = getPrompt(p?.name, p?.arguments ?? {});
+      if (out.error) throw rpcError(-32602, out.error);
+      return { description: out.description, messages: out.messages };
+    },
   };
 
   async function handle(msg) {

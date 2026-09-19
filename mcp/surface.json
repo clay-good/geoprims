@@ -326,5 +326,146 @@
       "mimeType": "application/json"
     }
   ],
-  "prompts": []
+  "prompts": [
+    {
+      "name": "preflight-performance",
+      "title": "Preflight performance check",
+      "description": "Pressure altitude, density altitude, and runway wind components for a departure, with the crosswind checked against a limit.",
+      "arguments": [
+        {
+          "name": "elevation",
+          "description": "Field elevation, like \"5000 ft\"",
+          "required": true
+        },
+        {
+          "name": "altimeter",
+          "description": "Altimeter setting, like \"29.80 inHg\"",
+          "required": true
+        },
+        {
+          "name": "temperature",
+          "description": "Outside air temperature, like \"30 degC\"",
+          "required": true
+        },
+        {
+          "name": "runway",
+          "description": "Runway number, like \"27\"",
+          "required": true
+        },
+        {
+          "name": "wind_direction",
+          "description": "Wind direction in degrees true or magnetic to match the runway, like \"300 deg\"",
+          "required": true
+        },
+        {
+          "name": "wind_speed",
+          "description": "Wind speed, like \"15 kt\"",
+          "required": true
+        },
+        {
+          "name": "max_crosswind",
+          "description": "Demonstrated or personal crosswind limit, like \"15 kt\"",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "photogrammetry-mission",
+      "title": "Photogrammetry mission plan",
+      "description": "Flight height for a target ground sample distance, then trigger interval and line spacing at the chosen overlaps, and the longest exposure that keeps motion blur under half a pixel.",
+      "arguments": [
+        {
+          "name": "target_gsd",
+          "description": "Ground sample distance wanted, like \"2 cm\"",
+          "required": true
+        },
+        {
+          "name": "sensor_width",
+          "description": "Sensor width, like \"13.2 mm\"",
+          "required": true
+        },
+        {
+          "name": "sensor_height",
+          "description": "Sensor height, like \"8.8 mm\"",
+          "required": true
+        },
+        {
+          "name": "focal_length",
+          "description": "Lens focal length, like \"8.8 mm\"",
+          "required": true
+        },
+        {
+          "name": "image_width",
+          "description": "Image width in pixels, like \"5472\"",
+          "required": true
+        },
+        {
+          "name": "image_height",
+          "description": "Image height in pixels, like \"3648\"",
+          "required": true
+        },
+        {
+          "name": "groundspeed",
+          "description": "Flight speed, like \"10 m/s\"",
+          "required": true
+        },
+        {
+          "name": "front_overlap",
+          "description": "Front overlap in percent, like \"75\"",
+          "required": true
+        },
+        {
+          "name": "side_overlap",
+          "description": "Side overlap in percent, like \"65\"",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "traverse-closure",
+      "title": "Traverse closure check",
+      "description": "Closes a traverse from its courses and reports misclosure, its bearing, and precision ratio.",
+      "arguments": [
+        {
+          "name": "courses",
+          "description": "The courses as JSON, like [{\"direction\":\"N 0 E\",\"distance\":300},...], directions as bearings or azimuths",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "coordinate-conversion-audit",
+      "title": "Coordinate conversion audit",
+      "description": "Parses a coordinate in any common notation, converts it to UTM, and converts back to show the round-trip error.",
+      "arguments": [
+        {
+          "name": "coordinate",
+          "description": "A coordinate as written, like 40°26'46\"N 79°58'56\"W or 40.4461, -79.9822",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "h3-resolution-choice",
+      "title": "H3 resolution choice",
+      "description": "Picks the H3 resolution whose average cell area is closest to a target, then shows the cell at a location and its real area there.",
+      "arguments": [
+        {
+          "name": "target_area",
+          "description": "Cell area wanted, like \"1 km2\"",
+          "required": true
+        },
+        {
+          "name": "lat",
+          "description": "Latitude of a representative point, like \"40.4461\"",
+          "required": true
+        },
+        {
+          "name": "lon",
+          "description": "Longitude of a representative point, like \"-79.9822\"",
+          "required": true
+        }
+      ]
+    }
+  ]
 }

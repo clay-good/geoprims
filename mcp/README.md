@@ -45,6 +45,10 @@ Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus it
 
 `structuredContent` is the core's result envelope byte for byte (`{"ok":true,"result":…,"summary":…,"meta":…}`, where `summary` is the plain-language sentence the website shows), and errors come back with `isError: true` and a geoprims error code. Results from aviation, drone, navigation, and magnetic tools carry `meta.notice` ("Planning and education aid. Not for primary navigation."), and tools with operating context an agent should relay put it in `meta.context`. For example, magnetic declination reports the model, epoch used, validity window, declination uncertainty, and whether the point is in a compass blackout or caution zone.
 
+## Prompts
+
+Five workflow prompts turn a few arguments into one `geoprims_pipeline` call, with what to check and relay: `preflight-performance` (pressure and density altitude, runway wind components against a crosswind limit), `photogrammetry-mission` (flight height for a target GSD, trigger interval and line spacing, blur-free exposure), `traverse-closure` (misclosure and precision ratio), `coordinate-conversion-audit` (parse any notation, convert to UTM and back), and `h3-resolution-choice` (resolution for a target area and the real cell area at a point). A test runs each prompt's chain end to end.
+
 ## Options
 
 | Option | Effect |
@@ -57,7 +61,7 @@ Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus it
 
 ## Not built yet
 
-Workflow prompts, paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
+Paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
 
 ## Tests
 

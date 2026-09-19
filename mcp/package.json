@@ -7,7 +7,7 @@
   "repository": { "type": "git", "url": "git+https://github.com/clay-good/geoprims.git", "directory": "mcp" },
   "mcpName": "com.geoprims/mcp",
   "bin": { "geoprims-mcp": "server.mjs" },
-  "files": ["server.mjs", "meta.mjs", "toolsets.mjs", "dist/"],
+  "files": ["server.mjs", "meta.mjs", "toolsets.mjs", "prompts.mjs", "dist/"],
   "engines": { "node": ">=22" },
   "dependencies": {}
 }

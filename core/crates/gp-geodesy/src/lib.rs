@@ -1102,6 +1102,7 @@ pub(crate) const PRECISIONS: &[&str] = &[
 
 pub static MGRS_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.mgrs-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to MGRS",
     summary: "Encodes a WGS 84 latitude and longitude as an MGRS grid reference at any precision, truncating (never rounding) as the standard requires.",
     aliases: &["lat long to MGRS", "MGRS converter"],
@@ -1222,6 +1223,7 @@ fn run_mgrs_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MGRS_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.mgrs-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "MGRS to latitude and longitude",
     summary: "Decodes an MGRS or USNG grid reference to the south-west corner and center of the square it names, with the square's size.",
     aliases: &["MGRS to lat long", "decode MGRS"],

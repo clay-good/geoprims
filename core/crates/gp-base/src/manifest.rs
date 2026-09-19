@@ -224,7 +224,14 @@ pub fn manifest(def: &ToolDef) -> Json {
         "errors",
         Json::Arr(def.errors.iter().map(|c| Json::str(c.as_str())).collect()),
     );
-    put("warnings", strs(def.warnings));
+    // A stable tool never emits EXPERIMENTAL_TOOL, so it does not advertise it.
+    let warnings: Vec<&str> = def
+        .warnings
+        .iter()
+        .copied()
+        .filter(|w| def.stability == Stability::Experimental || *w != "EXPERIMENTAL_TOOL")
+        .collect();
+    put("warnings", strs(&warnings));
     put("model", Json::str(def.model));
     put("accuracy", Json::str(def.accuracy));
     put(

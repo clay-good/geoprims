@@ -3,6 +3,23 @@
   "entries": [
     {
       "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
+        "geodesy.grid-ref.mgrs-forward",
+        "geodesy.grid-ref.mgrs-inverse"
+      ],
+      "vectors": [],
+      "summary": "MGRS encode and decode are now stable. They match the Washington Monument example in the FGDC US National Grid standard and 2,000 references from NGA GEOTRANS; where GEOTRANS's own projection is 1.5 cm off near the poles and in Svalbard, PROJ confirms geoprims. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [],
+      "vectors": [],
+      "summary": "Stable tools no longer list the EXPERIMENTAL_TOOL warning in geoprims_describe and the catalog; they never emit it. The stable-promotion gate now checks this."
+    },
+    {
+      "date": "2026-09-19",
       "kind": "result-change",
       "tools": [
         "survey.cogo.traverse-closure",

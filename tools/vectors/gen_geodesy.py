@@ -176,7 +176,10 @@ def mgrs_forward():
         vec(3, dict(p, precision="grid-zone"), {"result.mgrs": "17T"}, {}, SPEC),
         vec(4, {"lat": 78, "lon": 10, "precision": "grid-zone"}, {"result.mgrs": "33X"}, {}, SPEC),
         vec(5, {"lat": -80.5, "lon": 0, "precision": "grid-zone"}, {"result.mgrs": "B"}, {}, SPEC),
-    ]
+    ] + [vec(i, {"lat": la, "lon": lo, "precision": pr}, {"result.mgrs": g}, {}, GEOTRANS, GEOTRANS_VER)
+         for i, (la, lo, pr, g) in enumerate(GEOTRANS_FWD, 6)] + [
+        vec(22 + k, {"lat": FGDC_LAT, "lon": FGDC_LON, "precision": pr}, {"result.mgrs": g}, {}, FGDC, FGDC_VER)
+        for k, (pr, g) in enumerate([("1m", "18SUJ2348306479"), ("10m", "18SUJ23480647"), ("100m", "18SUJ234064"), ("1km", "18SUJ2306")])]
 
 
 def mgrs_inverse():
@@ -188,7 +191,53 @@ def mgrs_inverse():
         vec(3, {"mgrs": "17TNE86307777"}, {"result.square_size.value": 10.0}, {"result.square_size.value": {"abs": 0}}, SPEC),
         vec(4, {"mgrs": "17INE8630977770"}, {"ok": False, "error.code": "INVALID_INPUT"}, {}, SPEC),
         vec(5, {"mgrs": "17TNE863097777"}, {"ok": False, "error.code": "INVALID_INPUT"}, {}, SPEC),
+    ] + [
+        # GEOTRANS corners carry its own projection series error, up to 1.5 cm near the UPS edge and far out in
+        # Svalbard's widened zones (checked against PROJ below), so the tolerance is 2e-7 deg of arc.
+        vec(i, {"mgrs": g}, {"result.corner_lat.value": la, "result.corner_lon.value": lo},
+            {"result.corner_lat.value": {"abs": 2e-7}, "result.corner_lon.value": {"abs": 2e-7 / max(math.cos(math.radians(la)), 1e-3)}},
+            GEOTRANS, GEOTRANS_VER)
+        for i, (g, la, lo) in enumerate(GEOTRANS_INV, 6)
+    ] + [
+        vec(22, {"mgrs": "18SUJ2348316806479498"}, {"result.corner_lat.value": FGDC_LAT, "result.corner_lon.value": FGDC_LON,
+                                                   "result.square_size.value": 0.001},
+            {"result.corner_lat.value": {"abs": 1e-10}, "result.corner_lon.value": {"abs": 1e-10}, "result.square_size.value": {"abs": 0}}, FGDC, FGDC_VER),
+        # Exact corners from PROJ where GEOTRANS is 1.5 cm off: UPS South E 2,171,400 N 917,500 and UTM 33N E 300,000 N 8,800,000.
+        vec(23, {"mgrs": "BBB714175"}, {"result.corner_lat.value": -80.15171318134188, "result.corner_lon.value": 171.00264143458796},
+            {"result.corner_lat.value": {"abs": 1e-11}, "result.corner_lon.value": {"abs": 1e-10}}, PROJ, PROJ_VER),
+        vec(24, {"mgrs": "33XUJ"}, {"result.corner_lat.value": 79.12224928003458, "result.corner_lon.value": 5.465754262025851},
+            {"result.corner_lat.value": {"abs": 1e-11}, "result.corner_lon.value": {"abs": 1e-10}}, PROJ, PROJ_VER),
     ]
+
+
+GEOTRANS = "NGA GEOTRANS MGRS (C) via the mgrs Python package, toMGRS and toLatLon"
+GEOTRANS_VER = "mgrs 1.5.4"
+PROJ = "PROJ inverse of the square's corner grid coordinates (EPSG:32761 and EPSG:32633)"
+PROJ_VER = "PROJ 9.3.0 (pyproj 3.6.1)"
+# FGDC-STD-011-2001 (USNG), section 5.2.2 and table 1: the Washington Monument, NAD 83 UTM zone 18
+# E 323,483.168 N 4,306,479.498 = 18SUJ2348316806479498, truncated to 18SUJ2348306479 ... 18SUJ2306.
+# Its latitude and longitude, which the standard does not print, are PROJ's inverse of those coordinates.
+FGDC = "FGDC-STD-011-2001, United States National Grid, section 5.2.2 and table 1 (latitude and longitude by PROJ 9.3.0)"
+FGDC_VER = "December 2001"
+FGDC_LAT, FGDC_LON = 38.889467309501576, -77.0352402156242
+GEOTRANS_FWD = [
+    (60.5, 4.5, "1m", "32VKN5292815548"), (78.2, 15.0, "1m", "33XWG0000080689"), (72.0, 38.0, "10m", "37XDV65518921"),
+    (-33.8688, 151.2093, "1m", "56HLH3436850948"), (51.5074, -0.1278, "100m", "30UXC993101"), (0.0001, -0.0001, "1m", "30NZF3396700011"),
+    (-0.5, 179.999, "1m", "60MZE3385444658"), (84.3, 50.0, "1m", "ZGC8516492898"), (-80.3, -100.0, "10m", "AKL36991256"),
+    (89.9, 45.0, "1m", "ZAG0785092149"), (-89.9, -135.0, "1km", "AZM9292"), (35.6762, 139.6503, "10km", "54SUE74"),
+    (64.8378, -147.7164, "1m", "06WVS6601290570"), (-54.8, -68.3, "100km", "19FEV"), (19.4326, -99.1332, "1m", "14QMG8601748700"),
+    (56.1, 3.1, "1m", "32VJH3322632906"),
+]
+GEOTRANS_INV = [
+    ("32VKN5292815548", 60.49999758186767, 4.499990634126136), ("33XWG0000080689", 78.19999237442639, 14.999999999999998),
+    ("37XDV65518921", 71.99992137872505, 37.99997576145329), ("56HLH3436850948", -33.86880301401665, 151.209293087302),
+    ("30UXC993101", 51.50683315094585, -0.12806965127920034), ("30NZF3396700011", 9.938315099269379e-05, -0.00010371581453191634),
+    ("60MZE3385444658", -0.5000059896762069, 179.99899571892234), ("ZGC8516492898", 84.29999816238305, 49.99992608740089),
+    ("AKL36991256", -80.29997781542508, -100.00013885286724), ("ZAG0785092149", 89.90000090819285, 44.99635081972896),
+    ("AZM9292", -89.8980965893456, -135.0), ("54SUE74", 35.5952050275729, 139.56494782037865),
+    ("06WVS6601290570", 64.83779782814112, -147.71641729177824), ("19FEV", -55.046806304905665, -69.00000000000004),
+    ("14QMG8601748700", 19.432598010938186, -99.13320315074166), ("32VJH3322632906", 56.09999936447624, 3.099995852337401),
+]
 
 
 def main():

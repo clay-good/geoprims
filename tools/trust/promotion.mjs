@@ -63,6 +63,7 @@ export async function promotionProblems({ root, tool, host }) {
   const problems = derivationProblems(root, tool.id);
   for (const p of lintDimensions({ tools: [tool] })) problems.push(`(C) ${p}`);
   if (tool.vectorCount < MIN_VECTORS) problems.push(`needs at least ${MIN_VECTORS} golden vectors (has ${tool.vectorCount})`);
+  if (tool.warnings?.includes('EXPERIMENTAL_TOOL')) problems.push('geoprims_describe still advertises the EXPERIMENTAL_TOOL warning');
 
   // (G) The one example the page, its button, and geoprims_run all use runs cleanly.
   const example = tool.examples.find((e) => e.id === tool['x-primary-example']) ?? tool.examples[0];

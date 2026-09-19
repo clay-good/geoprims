@@ -168,7 +168,13 @@
     fetch('/basemap/ne-110m.json')
       .then((r) => r.json())
       .then((ne) => {
-        base = { land: ne.land.map(decode), lakes: ne.lakes.map(decode), borders: ne.borders.map(decode) };
+        base = {
+          land: ne.land.map(decode),
+          lakes: ne.lakes.map(decode),
+          borders: ne.borders.map(decode),
+          states: (ne.states ?? []).map(decode),
+          places: (ne.places ?? []).map(([name, lon, lat, minZoom]) => ({ name, lon: lon / 100, lat: lat / 100, minZoom })),
+        };
         paint();
       })
       .catch(() => {});

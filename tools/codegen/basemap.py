@@ -8,10 +8,14 @@ https://github.com/nvkelso/natural-earth-vector/tree/v5.1.2/geojson:
   ne_110m_land.geojson                       sha256 9e0729ee253ca7d7a5c4ae9395fb1902264c5377c52e224d13dd85010e2835d9
   ne_110m_admin_0_boundary_lines_land.geojson sha256 d42479fd79552cca4eec7f85fcdca717a790d29ff06be7676f1af0568c6d3f7c
   ne_110m_lakes.geojson                      sha256 eb02ecc86c82004fccbf979058bfabbbd6c2d07968c7844d38eb1c9152d2ffc9
+  ne_110m_admin_1_states_provinces_lines.geojson sha256 f204e94d5c4d16c6ce4b59ecb50e264bd95c22b9138d8a994c010c222e186aad
+  ne_110m_populated_places_simple.geojson    sha256 0dbd25c9ad8bd797ddf164b067f563be5c16be2c002254eb594862377963f9dc
 
 Format: each ring or line is a flat list of integers in hundredths of a
 degree, the first pair absolute and the rest as differences from the previous
-pair: [lon0, lat0, dlon1, dlat1, ...]. Usage: basemap.py <dir with the geojson>.
+pair: [lon0, lat0, dlon1, dlat1, ...]. Places are [name, lon, lat, minZoom]
+(hundredths of a degree), largest population first, so labels can thin out
+when zoomed out. Usage: basemap.py <dir with the geojson>.
 """
 import hashlib
 import json
@@ -23,7 +27,9 @@ SOURCES = {
     "land": ("ne_110m_land.geojson", "9e0729ee253ca7d7a5c4ae9395fb1902264c5377c52e224d13dd85010e2835d9"),
     "borders": ("ne_110m_admin_0_boundary_lines_land.geojson", "d42479fd79552cca4eec7f85fcdca717a790d29ff06be7676f1af0568c6d3f7c"),
     "lakes": ("ne_110m_lakes.geojson", "eb02ecc86c82004fccbf979058bfabbbd6c2d07968c7844d38eb1c9152d2ffc9"),
+    "states": ("ne_110m_admin_1_states_provinces_lines.geojson", "f204e94d5c4d16c6ce4b59ecb50e264bd95c22b9138d8a994c010c222e186aad"),
 }
+PLACES = ("ne_110m_populated_places_simple.geojson", "0dbd25c9ad8bd797ddf164b067f563be5c16be2c002254eb594862377963f9dc")
 
 
 def encode(coords):
@@ -61,6 +67,11 @@ def main():
         assert hashlib.sha256(data).hexdigest() == digest, f"{name} digest mismatch"
         feats = json.loads(data)["features"]
         out[key] = [encode(ring) for f in feats for ring in parts(f["geometry"])]
+    data = (src / PLACES[0]).read_bytes()
+    assert hashlib.sha256(data).hexdigest() == PLACES[1], f"{PLACES[0]} digest mismatch"
+    places = sorted(json.loads(data)["features"], key=lambda f: -(f["properties"]["pop_max"] or 0))
+    out["places"] = [[f["properties"]["name"], round(f["properties"]["longitude"] * 100), round(f["properties"]["latitude"] * 100),
+                      f["properties"]["min_zoom"]] for f in places]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, separators=(",", ":")))
     print(OUT, OUT.stat().st_size, "bytes")

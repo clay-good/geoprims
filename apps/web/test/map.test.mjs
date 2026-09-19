@@ -103,3 +103,11 @@ test('layers: every catalog tool builds its layers from its example without thro
   }
   assert.ok(points > 20, `${points} result layers`);
 });
+
+test('a single point is framed with context around it, not zoomed to meters', () => {
+  const v = frame('map', [[-105, 40]], 800, 400);
+  // Pixels per radian: 12° across fits in 60% of 800 px, so under 2,300.
+  assert.ok(v.scale < 2300 && v.scale > 1000, String(v.scale));
+  const g = frame('globe', [[-105, 40]], 800, 400);
+  assert.ok(g.scale <= (400 * 0.45) / 0.5 + 1e-9, String(g.scale));
+});

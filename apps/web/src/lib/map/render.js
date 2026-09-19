@@ -100,6 +100,37 @@ function graticule(step) {
   return lines;
 }
 
+/**
+ * City labels: shown from each place's Natural Earth minimum zoom, largest
+ * population first, skipping any that would overlap one already placed.
+ */
+function places(g, view, list, c) {
+  // Web-map zoom level of the view: 256 px spans the world at zoom 0.
+  const zoom = Math.log2((view.scale * 2 * Math.PI) / 256);
+  const taken = [];
+  g.font = `500 11px ${c.sans}`;
+  let shown = 0;
+  for (const p of list) {
+    if (p.minZoom > zoom + 1 || shown >= 40) continue;
+    const at = forward(view, p.lon, p.lat);
+    if (!at || at[0] < 0 || at[1] < 0 || at[0] > view.width || at[1] > view.height) continue;
+    const w = g.measureText(p.name).width;
+    const box = [at[0] - 3, at[1] - 14, at[0] + w + 10, at[1] + 4];
+    if (taken.some((b) => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
+    taken.push(box);
+    shown++;
+    g.beginPath();
+    g.arc(at[0], at[1], 2.2, 0, 2 * Math.PI);
+    g.fillStyle = c.muted;
+    g.fill();
+    g.lineWidth = 3;
+    g.strokeStyle = c.bg;
+    g.strokeText(p.name, at[0] + 5, at[1] - 3);
+    g.fillStyle = c.muted;
+    g.fillText(p.name, at[0] + 5, at[1] - 3);
+  }
+}
+
 /** Draws the whole scene. `layers`: [{ kind: 'line'|'point'|'polygon', role: 'result'|'input'|'comparison', points, rings, label }]. */
 export function draw(g, view, base, layers, c) {
   const { width, height } = view;
@@ -145,11 +176,22 @@ export function draw(g, view, base, layers, c) {
     for (const ring of base.lakes) trace(g, view, ring, true);
     g.fillStyle = c.bg;
     g.fill();
+    // State and province lines, fainter than the national borders.
+    if (base.states?.length) {
+      g.beginPath();
+      for (const l of base.states) trace(g, view, l, false);
+      g.strokeStyle = mix(c.line, c.muted, 0.25);
+      g.lineWidth = 0.7;
+      g.setLineDash([4, 3]);
+      g.stroke();
+      g.setLineDash([]);
+    }
     g.beginPath();
     for (const l of base.borders) trace(g, view, l, false);
-    g.strokeStyle = c.line;
-    g.lineWidth = 0.5;
+    g.strokeStyle = mix(c.line, c.muted, 0.35);
+    g.lineWidth = 0.8;
     g.stroke();
+    if (base.places?.length) places(g, view, base.places, c);
   }
   if (view.mode === 'globe') {
     g.beginPath();

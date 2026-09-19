@@ -76,10 +76,14 @@ export function frame(mode, points, width, height) {
       const p = forward({ ...view, scale: 1, width: 0, height: 0 }, pl, pp);
       return p ? Math.hypot(p[0], p[1]) : 1;
     }));
-    return { ...view, scale: Math.min(Math.min(width, height) * 0.45 / Math.max(far, 0.25), Math.min(width, height) * 8) };
+    // A point or a small area still shows a good part of the hemisphere around it.
+    const MIN_FAR = 0.5;
+    return { ...view, scale: Math.min(width, height) * 0.45 / Math.max(far, MIN_FAR) };
   }
-  const spanX = Math.max(1e-6, (Math.max(...lons) - Math.min(...lons)) * RAD);
-  const spanY = Math.max(1e-6, mercY(Math.max(...lats)) - mercY(Math.min(...lats)));
+  // At least about 12° across, so a single point sits among coastlines and borders.
+  const MIN_SPAN = 12 * RAD;
+  const spanX = Math.max(MIN_SPAN, (Math.max(...lons) - Math.min(...lons)) * RAD);
+  const spanY = Math.max(MIN_SPAN * 0.6, mercY(Math.max(...lats)) - mercY(Math.min(...lats)));
   const scale = Math.min((width * 0.6) / spanX, (height * 0.6) / spanY, width * 2000);
   return { mode, lon, lat, scale: Math.max(scale, width / (2 * Math.PI)), width, height };
 }

@@ -19,7 +19,7 @@
 - [ ] 3.1 Write the derivation template and one derivation per hero tool first; verify the missing-derivation gate
 - [ ] 3.2 Extend golden vectors into worked-example fixtures with source fields and tolerance ceilings; verify the independent-example gate
 - [ ] 3.3 Implement the dimension lint over manifests and core annotations; verify it catches a deliberate unit-name mismatch
-- [ ] 3.4 Implement the bounds fuzzer with minimization; verify it finds a seeded trap
+- [x] 3.4 Implement the bounds fuzzer with minimization; verify it finds a seeded trap (tools/fuzz/fuzz.test.mjs: seeded mutations of every tool's example through Wasm in a timed worker, with minimization; it found 16 real defects (non-finite results, a trap, and two hangs), each fixed and pinned as a regression; 1,000 cases per tool pass)
 - [ ] 3.5 Implement example parity (page example = button example = MCP example); verify with a deliberately divergent fixture
 - [ ] 3.6 Create `docs/review-signoffs.md` and the pending-review disclosure; verify the unreviewed-domain scenario
 - [ ] 3.7 Implement the claims-honesty gate; verify the overclaim scenario

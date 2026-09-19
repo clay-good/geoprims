@@ -409,7 +409,18 @@ fn read_polygon(ctx: &mut Ctx) -> Result<Polygon, ToolError> {
             )
             .at(&format!("/area/{i}/lat")));
         }
-        let ring = r.get("ring").and_then(|v| v.as_f64()).unwrap_or(0.0) as usize;
+        let ring = match r.get("ring") {
+            None | Some(serde_json::Value::Null) => 0,
+            Some(v) => match v.as_f64() {
+                Some(x) if x.fract() == 0.0 && (0.0..=100.0).contains(&x) => x as usize,
+                _ => {
+                    return Err(ToolError::invalid(
+                        &format!("/area/{i}/ring"),
+                        "Ring must be a whole number from 0 (the area) to 100.",
+                    ));
+                }
+            },
+        };
         if rings.len() <= ring {
             rings.resize(ring + 1, Vec::new());
         }
@@ -729,10 +740,23 @@ fn grid_paths(ctx: &mut Ctx) -> Result<(Plane, Vec<Path>, f64, f64), ToolError> 
     let (plane, outer, holes) = read_polygon(ctx)?;
     let s = positive(ctx, "line_spacing", "Line spacing")?;
     let p = positive(ctx, "photo_spacing", "Photo spacing")?;
+    if s < 0.5 || p < 0.1 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Line spacing must be at least 0.5 m and photo spacing at least 0.1 m.",
+        )
+        .at("/line_spacing"));
+    }
     let over = ctx
         .quantity("overshoot")?
         .map_or(0.0, |q| q.base())
         .max(0.0);
+    if over > 10_000.0 {
+        return Err(
+            ToolError::new(ErrorCode::OutOfDomain, "Overshoot must be at most 10 km.")
+                .at("/overshoot"),
+        );
+    }
     let buf = if ctx.declares("hole_buffer") {
         ctx.quantity("hole_buffer")?
             .map_or(10.0, |q| q.base())
@@ -1196,7 +1220,15 @@ fn run_corridor(ctx: &mut Ctx) -> Result<Json, ToolError> {
             d
         })
         .sum();
-    let n = (w / s - 1e-9).ceil().max(1.0) as usize;
+    let lines_needed = (w / s - 1e-9).ceil().max(1.0);
+    if lines_needed > 1_000.0 || lines_needed * pts.len() as f64 > 100_000.0 {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            "That corridor would need more than 1,000 lines or 100,000 waypoints. Use a wider spacing, a narrower corridor, or fewer centerline points.",
+        )
+        .at("/width"));
+    }
+    let n = lines_needed as usize;
     let mut lines = Vec::new();
     let mut flown: Vec<(P, &'static str)> = Vec::new();
     for k in 0..n {

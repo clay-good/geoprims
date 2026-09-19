@@ -421,6 +421,13 @@ fn run_isa(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let dt = ctx
         .quantity("temperature_deviation")?
         .map_or(0.0, |d| d.base());
+    if dt.abs() > 150.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The ISA deviation must be within ±150 °C.",
+        )
+        .at("/temperature_deviation"));
+    }
     let t = kinetic + dt;
     if t <= 0.0 {
         return Err(ToolError::invalid(
@@ -527,6 +534,15 @@ fn altimeter(ctx: &mut Ctx) -> Result<Q, ToolError> {
         _ => ctx.req_quantity("altimeter")?,
     };
     let in_hg = q.to(unit(QT::Pressure, "inHg"));
+    // Sea-level pressure has never been recorded below 25.7 or above 32.1 inHg;
+    // 10 to 40 inHg rejects only the impossible (a typo like 0.29 or 2980).
+    if !(10.0..=40.0).contains(&in_hg) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The altimeter setting must be between 10 and 40 inHg (339 to 1,355 hPa).",
+        )
+        .at("/altimeter"));
+    }
     if !(26.0..=32.0).contains(&in_hg) {
         ctx.warnings.push(
             Warning::new(
@@ -546,6 +562,20 @@ fn altimeter(ctx: &mut Ctx) -> Result<Q, ToolError> {
         ));
     }
     Ok(q)
+}
+
+/// The field elevation, within -1,000 m to 11,000 m (the lowest and highest
+/// airfields sit well inside; the ISA troposphere ends at 11 km).
+fn field_elevation(ctx: &mut Ctx) -> Result<Q, ToolError> {
+    let e = ctx.req_quantity("elevation")?;
+    if !(-1_000.0..=11_000.0).contains(&e.base()) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Field elevation must be between -3,281 ft and 36,089 ft (-1 km to 11 km).",
+        )
+        .at("/elevation"));
+    }
+    Ok(e)
 }
 
 /// Station pressure (Pa) from an altimeter setting and field elevation (m),
@@ -664,7 +694,7 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
 };
 
 fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let elev = ctx.req_quantity("elevation")?;
+    let elev = field_elevation(ctx)?;
     let qnh = altimeter(ctx)?;
     let p = station_pressure(qnh, elev.base());
     let pa_m = isa::altitude_for_pressure(p);
@@ -859,14 +889,26 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
 };
 
 fn run_density_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let elev = ctx.req_quantity("elevation")?;
+    let elev = field_elevation(ctx)?;
     let qnh = altimeter(ctx)?;
     let t = ctx.req_quantity("temperature")?.base();
-    if t <= 0.0 {
-        return Err(ToolError::invalid(
-            "/temperature",
-            "The temperature must be above absolute zero.",
-        ));
+    // Surface air ranges from about -90 °C to +60 °C; the Magnus fit holds within this span.
+    let met = |k: f64| (173.15..=353.15).contains(&k);
+    if !met(t) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The temperature must be between -100 °C and +80 °C.",
+        )
+        .at("/temperature"));
+    }
+    if let Some(dp) = ctx.quantity("dew_point")?
+        && !met(dp.base())
+    {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The dew point must be between -100 °C and +80 °C.",
+        )
+        .at("/dew_point"));
     }
     let p = station_pressure(qnh, elev.base());
     let pa_m = isa::altitude_for_pressure(p);
@@ -879,7 +921,15 @@ fn run_density_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     "The dew point cannot be higher than the air temperature.",
                 ));
             }
-            isa::virtual_temperature(t, isa::vapor_pressure(td - 273.15), p)
+            let e = isa::vapor_pressure(td - 273.15);
+            if e >= 0.5 * p {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    "That dew point is not possible at this pressure.",
+                )
+                .at("/dew_point"));
+            }
+            isa::virtual_temperature(t, e, p)
         }
         None => {
             ctx.warnings.push(Warning::new("DRY_AIR_ASSUMED", "Assumes dry air. Add a dew point to include humidity, which raises density altitude."));

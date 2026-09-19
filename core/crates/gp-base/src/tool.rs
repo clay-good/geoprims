@@ -305,6 +305,10 @@ pub struct Ctx<'a> {
     pub assets: Vec<AssetRef>,
 }
 
+/// The magnitude bounds for quantity inputs, in registry base units.
+pub const MAX_MAGNITUDE: f64 = 1e50;
+pub const MIN_MAGNITUDE: f64 = 1e-50;
+
 fn pointer(name: &str) -> String {
     format!("/{name}")
 }
@@ -379,32 +383,45 @@ impl<'a> Ctx<'a> {
         let Some(v) = v.filter(|v| !v.is_null()) else {
             return Ok(None);
         };
-        match v {
+        let q = match v {
             Value::Number(n) => {
                 let x = n.as_f64().filter(|x| x.is_finite()).ok_or_else(|| {
                     ToolError::invalid(at, format!("{} must be a finite number.", f.title))
                 })?;
-                Ok(Some(Q {
+                Q {
                     value: x,
                     unit: default,
-                }))
+                }
             }
             Value::String(s) => {
                 let t = parse::parse_tagged(s, q, default, self.options.format, at)?;
                 self.warnings.extend(t.warnings);
-                Ok(Some(Q {
+                Q {
                     value: t.value,
                     unit: t.unit,
-                }))
+                }
             }
-            _ => Err(ToolError::invalid(
-                at,
-                format!(
-                    "{} must be a number or a number with a unit, like {}.",
-                    f.title, f.help
-                ),
-            )),
+            _ => {
+                return Err(ToolError::invalid(
+                    at,
+                    format!(
+                        "{} must be a number or a number with a unit, like {}.",
+                        f.title, f.help
+                    ),
+                ));
+            }
+        };
+        // No physical input needs magnitudes past 1e50 (or below 1e-50) in SI
+        // units; such values only overflow or underflow the arithmetic.
+        let base = q.base().abs();
+        if !base.is_finite() || (base != 0.0 && !(MIN_MAGNITUDE..=MAX_MAGNITUDE).contains(&base)) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                format!("{} is far outside any meaningful range.", f.title),
+            )
+            .at(at));
         }
+        Ok(Some(q))
     }
 
     /// The rows of a list input, validated: an array within its size limits,

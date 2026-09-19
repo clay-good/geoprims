@@ -834,6 +834,13 @@ fn run_utm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let (lat, lon) = utmups::utm_inverse(ell.a, ell.f, z as u8, north, e_, n_);
+    if !lat.is_finite() || !lon.is_finite() {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "These coordinates are outside the projection's domain for this ellipsoid.",
+        )
+        .at("/easting"));
+    }
     let g = utmups::utm_forward(ell.a, ell.f, lat, lon, z as u8);
     Ok(Json::obj([
         ("lat", ctx.out("lat", deg(lat))),
@@ -975,6 +982,13 @@ fn run_ups_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let ell = Ellipsoid::from_ctx(ctx)?;
     ell.geodesic()?;
     let (lat, lon) = utmups::ups_inverse(ell.a, ell.f, north, e_, n_);
+    if !lat.is_finite() || !lon.is_finite() {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "These coordinates are outside the projection's domain for this ellipsoid.",
+        )
+        .at("/easting"));
+    }
     Ok(Json::obj([
         ("lat", ctx.out("lat", deg(lat))),
         ("lon", ctx.out("lon", deg(wrap_lon(lon)))),

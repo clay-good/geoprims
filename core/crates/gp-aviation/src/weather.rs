@@ -1364,9 +1364,15 @@ fn run_fb(ctx: &mut Ctx) -> Result<Json, ToolError> {
             .split_whitespace()
             .filter(|t| *t != "FT")
             .map(|t| {
-                t.parse::<f64>().map_err(|_| {
-                    ToolError::invalid("/levels", format!("{t} is not a level in feet."))
-                })
+                t.parse::<f64>()
+                    .ok()
+                    .filter(|v| (0.0..=70_000.0).contains(v))
+                    .ok_or_else(|| {
+                        ToolError::invalid(
+                            "/levels",
+                            format!("{t} is not a level between 0 and 70,000 ft."),
+                        )
+                    })
             })
             .collect::<Result<_, _>>()?,
         (None, Some(lv)) if toks.len() == 1 => vec![lv.to(unit(QT::Length, "ft"))],

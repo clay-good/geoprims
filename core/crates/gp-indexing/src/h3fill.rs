@@ -310,6 +310,18 @@ pub fn estimate(poly: &Polygon, res: Resolution) -> f64 {
     2.0 * area / res.area_km2() + 12.0
 }
 
+/// The number of edge samples the fill will seed from: its cost grows with the
+/// perimeter at this resolution, which the area estimate cannot see.
+pub fn edge_samples(poly: &Polygon, res: Resolution) -> f64 {
+    let step = res.edge_length_km() / 4.0 / 6_371.007_180_918_475;
+    poly.loops()
+        .flat_map(|l| l.edges())
+        .map(|((la, lo), (lb, lob))| {
+            ((lb - la).hypot((lob - lo) * libm::cos((la + lb) / 2.0)) / step).ceil() + 1.0
+        })
+        .sum()
+}
+
 /// Fills a polygon; `Err(n)` when more than `limit` cells would result.
 pub fn fill(
     poly: &Polygon,

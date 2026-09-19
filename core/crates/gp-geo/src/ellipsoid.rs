@@ -112,11 +112,13 @@ impl Ellipsoid {
                     ));
                 }
                 let a = a.to(units::by_symbol(Quantity::Length, "m").expect("m"));
-                if a <= 0.0 {
-                    return Err(ToolError::invalid(
-                        "/a",
-                        "The semi-major axis must be positive.",
-                    ));
+                // From small moons to the gas giants: 1 km to 100,000 km.
+                if !(1_000.0..=1e8).contains(&a) {
+                    return Err(ToolError::new(
+                        gp_base::ErrorCode::OutOfDomain,
+                        "The semi-major axis must be between 1 km and 100,000 km.",
+                    )
+                    .at("/a"));
                 }
                 if rf != 0.0 && rf < 1.0 {
                     return Err(ToolError::invalid(

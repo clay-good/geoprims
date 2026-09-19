@@ -1349,7 +1349,7 @@ fn geojson_rings(text: &str) -> Result<Vec<Rings>, String> {
 }
 
 fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    use crate::h3fill::{Mode, Polygon, estimate, fill};
+    use crate::h3fill::{Mode, Polygon, edge_samples, estimate, fill};
     let res = resolution(ctx)?;
     let mode = match ctx.choice("containment")?.unwrap_or("center") {
         "full" => Mode::Full,
@@ -1390,6 +1390,7 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
     };
     let mut total_estimate = 0.0;
+    let mut total_samples = 0.0;
     let mut built = Vec::new();
     for rings in &polys {
         if rings.is_empty() || rings.iter().any(|r| r.len() < 3) {
@@ -1400,6 +1401,7 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         let p = Polygon::new(rings);
         total_estimate += estimate(&p, res);
+        total_samples += edge_samples(&p, res);
         built.push(p);
     }
     if total_estimate > ESTIMATE_LIMIT {
@@ -1412,6 +1414,16 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/resolution")
         .hint("Choose a coarser resolution, or fill in pieces and compact the result."));
+    }
+    // Long edges at a fine resolution cost time even when the area is small
+    // (about 2 µs per sample); 2,000,000 samples keeps a call to a few seconds.
+    if total_samples > 2_000_000.0 {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            "The polygon's edges are too long for this resolution.",
+        )
+        .at("/resolution")
+        .hint("Choose a coarser resolution, or split the polygon into smaller pieces."));
     }
     let mut cells = std::collections::BTreeSet::new();
     for p in &built {

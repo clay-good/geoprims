@@ -1863,6 +1863,13 @@ fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let k = ctx.number("grid_scale")?.expect("required");
     let m = unit(QT::Length, "m");
     let r = ctx.quantity("radius")?.map_or(6_372_000.0, |q| q.to(m));
+    if !(1_000_000.0..=10_000_000.0).contains(&r) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The Earth radius must be between 1,000 km and 10,000 km.",
+        )
+        .at("/radius"));
+    }
     let h = match (
         ctx.quantity("ellipsoid_height")?,
         ctx.quantity("elevation")?,

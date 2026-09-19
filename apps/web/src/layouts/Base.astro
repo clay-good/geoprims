@@ -72,21 +72,14 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     </div>
     <script>
       import { wireDisplay } from '../lib/display.js';
+      import { wireKeys } from '../lib/keys.js';
       import { registerOffline } from '../lib/pwa.js';
       wireDisplay(document.querySelector('form.display'));
       registerOffline(document.querySelector('.update'));
       // The palette loads on first use: `/` outside text fields, or Ctrl/Cmd+K anywhere.
       const palette = () => import('../lib/palette.js').then((m) => m.openPalette());
       document.querySelector('.palette-open').addEventListener('click', palette);
-      document.addEventListener('keydown', (e) => {
-        const typing = e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]:not([contenteditable=false])');
-        const k = e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey;
-        const slash = e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey;
-        if (k || slash) {
-          e.preventDefault();
-          palette();
-        }
-      });
+      wireKeys(palette);
     </script>
   </body>
 </html>

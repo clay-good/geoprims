@@ -3,10 +3,60 @@
 // Ctrl+N/Ctrl+P move, Enter opens, Ctrl/Cmd+Enter opens in a new tab, and Esc
 // closes it and returns focus to where it was. A pasted value (an H3 cell,
 // geohash, tile, Plus Code, MGRS, coordinates, METAR, or altimeter group) is
-// detected first, with the tools worth opening pre-filled with it.
+// detected first, with the tools worth opening pre-filled with it. Starting
+// the query with ">" lists actions instead of tools.
 import { detect, search } from './compute.js';
+import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
 
 const LIMIT = 8;
+
+const MODES = [
+  ['hud', 'HUD (dark)'],
+  ['daylight', 'Daylight'],
+  ['sunlight', 'Sunlight (outdoors)'],
+  ['night', 'Night (dark-adapted)'],
+  ['high-contrast', 'High contrast'],
+];
+
+/** Sets a display control through its footer picker, which saves the choice. */
+function setDisplay(name, value) {
+  const control = document.querySelector(`form.display [name=${name}]`);
+  if (!control) return;
+  control.value = value;
+  control.dispatchEvent(new Event(name === 'dim' ? 'input' : 'change'));
+}
+
+async function eraseAll() {
+  if (!confirm('Erase display settings and offline copies saved on this device? Nothing is stored anywhere else.')) return;
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith('gp-')) localStorage.removeItem(k);
+  } catch {
+    /* storage blocked: nothing saved */
+  }
+  for (const k of (await caches?.keys?.()) ?? []) if (k.startsWith('gp-')) await caches.delete(k);
+  for (const r of (await navigator.serviceWorker?.getRegistrations?.()) ?? []) await r.unregister();
+  location.reload();
+}
+
+const page = (title, href, words) => ({ title, summary: href, words, run: () => (location.href = href) });
+
+/** The palette's actions, rebuilt each time so their labels reflect current settings. */
+function actions() {
+  const on = singleKeysOn();
+  return [
+    ...MODES.map(([mode, label]) => ({ title: `Display: ${label}`, summary: 'Change the display mode', words: `theme mode display color colour dark light ${mode}`, run: () => setDisplay('theme', mode) })),
+    { title: 'Accent: amber', summary: 'HUD accent color', words: 'theme hud accent color colour', run: () => setDisplay('accent', 'amber') },
+    { title: 'Accent: green', summary: 'HUD accent color', words: 'theme hud accent color colour phosphor', run: () => setDisplay('accent', 'green') },
+    { title: 'Show keyboard shortcuts', summary: 'Or press ?', words: 'help keys keyboard shortcuts', run: openSheet },
+    { title: on ? 'Turn single-key shortcuts off' : 'Turn single-key shortcuts on', summary: '/, ?, and g h; Ctrl+K always works', words: 'keys keyboard shortcuts single', run: () => setSingleKeys(!on) },
+    { title: 'Erase all local data', summary: 'Display settings and offline copies on this device', words: 'erase clear reset delete storage offline cache privacy data', run: eraseAll },
+    page('Go to methodology', '/methodology/', 'how checked verification'),
+    page('Go to changelog', '/changelog/', 'changes history results'),
+    page('Go to sources', '/sources/', 'references standards citations'),
+    page('Go to known issues', '/known-issues/', 'bugs problems'),
+    page('Go to disclaimer', '/disclaimer/', 'safety legal'),
+  ];
+}
 const route = (id) => '/' + id.split('.').join('/') + '/';
 let dialog, input, list, status;
 let results = [];
@@ -19,7 +69,7 @@ function build() {
   dialog.setAttribute('aria-label', 'Search tools');
   dialog.innerHTML = `
     <input type="search" role="combobox" aria-expanded="false" aria-controls="palette-list" aria-autocomplete="list"
-      aria-label="Search tools" placeholder="Search tools: density altitude, utm, knots…" autocomplete="off" spellcheck="false" enterkeyhint="go" />
+      aria-label="Search tools" placeholder="Search tools, paste a value, or type > for actions" autocomplete="off" spellcheck="false" enterkeyhint="go" />
     <ul id="palette-list" role="listbox" aria-label="Tools"></ul>
     <p class="palette-keys" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> move · <kbd>Enter</kbd> open · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> new tab · <kbd>Esc</kbd> close</p>
     <p class="sr-only" role="status" aria-live="polite"></p>`;
@@ -94,6 +144,14 @@ async function update() {
     status.textContent = '';
     return render();
   }
+  if (query.startsWith('>')) {
+    const words = query.slice(1).toLowerCase().split(/\s+/).filter(Boolean);
+    results = actions().filter((a) => words.every((w) => `${a.title} ${a.words}`.toLowerCase().includes(w)));
+    active = results.length ? 0 : -1;
+    render();
+    status.textContent = results.length ? `${results.length} ${results.length === 1 ? 'action' : 'actions'}` : 'No actions found';
+    return;
+  }
   // Values contain digits, "+", or "/"; plain words only search.
   const [out, det] = await Promise.all([
     search({ query, limit: LIMIT, includeExperimental: true }),
@@ -129,6 +187,10 @@ function move(by) {
 function go(i, newTab) {
   const r = results[i];
   if (!r) return;
+  if (r.run) {
+    dialog.close();
+    return r.run();
+  }
   const href = r.href ?? route(r.id);
   if (newTab) window.open(href, '_blank', 'noopener');
   else {

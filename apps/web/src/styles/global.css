@@ -241,3 +241,8 @@ form.display { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: ce
 form.display label { display: inline-flex; gap: 0.5rem; align-items: center; }
 form.display select, form.display input { min-block-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
 form.display [hidden] { display: none; }
+dialog.shortcuts { padding: 1rem 1.25rem; }
+dialog.shortcuts dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1rem; margin: 0 0 1rem; }
+dialog.shortcuts dt { font-family: var(--mono); color: var(--accent); }
+dialog.shortcuts dd { margin: 0; }
+dialog.shortcuts button { min-block-size: var(--target); padding-inline: 1rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }

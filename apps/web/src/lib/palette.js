@@ -12,8 +12,8 @@ import { clearRecents, eraseLocalData, pins, PROFILES, recents, setProfile } fro
 const LIMIT = 8;
 
 const MODES = [
-  ['hud', 'HUD (dark)'],
-  ['daylight', 'Daylight'],
+  ['paper', 'Paper (light)'],
+  ['ink', 'Ink (dark)'],
   ['sunlight', 'Sunlight (outdoors)'],
   ['night', 'Night (dark-adapted)'],
   ['high-contrast', 'High contrast'],
@@ -34,8 +34,6 @@ function actions() {
   const on = singleKeysOn();
   return [
     ...MODES.map(([mode, label]) => ({ title: `Display: ${label}`, summary: 'Change the display mode', words: `theme mode display color colour dark light ${mode}`, run: () => setDisplay('theme', mode) })),
-    { title: 'Accent: amber', summary: 'HUD accent color', words: 'theme hud accent color colour', run: () => setDisplay('accent', 'amber') },
-    { title: 'Accent: green', summary: 'HUD accent color', words: 'theme hud accent color colour phosphor', run: () => setDisplay('accent', 'green') },
     { title: 'Show keyboard shortcuts', summary: 'Or press ?', words: 'help keys keyboard shortcuts', run: openSheet },
     { title: on ? 'Turn single-key shortcuts off' : 'Turn single-key shortcuts on', summary: '/, ?, and g h; Ctrl+K always works', words: 'keys keyboard shortcuts single', run: () => setSingleKeys(!on) },
     { title: 'Erase all local data', summary: 'Settings, recent and pinned tools, and offline copies on this device', words: 'erase clear reset delete storage offline cache privacy data', run: eraseLocalData },

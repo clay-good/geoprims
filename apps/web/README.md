@@ -25,9 +25,9 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/pages/` | Home, domain hubs, group hubs, and one page per tool id (route map in `contracts/routes-and-urls`) |
 | `src/components/ToolApp.svelte` | The tool island: schema-driven form (list inputs edit as one row per line, comma- or tab-separated), live answer card (core-rendered `display` and `summary`), warnings ordered by severity, copy actions, permalinks (`#v1:` via the core `link` module), Clear and Try the example |
 | `src/lib/compute.worker.js` | Runs the Wasm modules off the main thread; stale results are dropped |
-| `src/styles/global.css` | Design tokens: the `hud` theme (default) and `daylight` (light-scheme users) |
+| `src/styles/global.css` | Atlas design tokens: paper (default), ink, sunlight, night, and high-contrast, and the Geist fonts |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |
 
 Generated endpoints (like `/units/speed/kt-to-mph/`) canonicalize to their parent operation. Experimental tools are `noindex` until they have their full content.
 
-Not built yet: the HUD canvas, HUD visual effects, offline packs and the pack manager, import and export, docs pages, and Playwright end-to-end suites. `node scripts/serve.mjs` serves the build with its production headers and CSP.
+Not built yet: the map canvas and animated scenes, offline packs and the pack manager, import and export, docs pages, and Playwright end-to-end suites. `node scripts/serve.mjs` serves the build with its production headers and CSP.

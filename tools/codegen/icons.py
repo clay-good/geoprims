@@ -1,14 +1,14 @@
 """Generates the PWA icons in apps/web/public/icons (committed; rerun only to change them).
 
-A crosshair reticle in the hud accent on the hud background. The maskable icon
-keeps the glyph inside the central 80% safe zone.
+A crosshair reticle in the Atlas signal orange on the ink background. The
+maskable icon keeps the glyph inside the central 80% safe zone.
 """
 from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-BG = (7, 17, 13)
-ACCENT = (77, 255, 166)
+BG = (14, 16, 21)
+ACCENT = (255, 138, 76)
 OUT = Path(__file__).resolve().parents[2] / "apps/web/public/icons"
 
 
@@ -37,9 +37,9 @@ draw(512, 0.56).save(OUT / "maskable-512.png", optimize=True)
 draw(180, 0.66).save(OUT / "apple-touch-icon.png", optimize=True)
 (OUT / "icon.svg").write_text(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-    '<rect width="64" height="64" rx="12" fill="#07110d"/>'
-    '<g stroke="#4dffa6" stroke-width="3" fill="none"><circle cx="32" cy="32" r="21"/>'
+    '<rect width="64" height="64" rx="12" fill="#0e1015"/>'
+    '<g stroke="#ff8a4c" stroke-width="3" fill="none"><circle cx="32" cy="32" r="21"/>'
     '<path d="M32 9v12M32 43v12M9 32h12M43 32h12"/></g>'
-    '<circle cx="32" cy="32" r="3" fill="#4dffa6"/></svg>\n'
+    '<circle cx="32" cy="32" r="3" fill="#ff8a4c"/></svg>\n'
 )
 print("icons written to", OUT)

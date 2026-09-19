@@ -12,10 +12,9 @@ const save = (k, v) => {
 export function wireDisplay(form) {
   if (!form) return;
   const d = document.documentElement;
-  const { theme, accent, dim } = form.elements;
+  const { theme, dim } = form.elements;
   const sync = () => {
-    theme.value = d.dataset.theme ?? 'hud';
-    accent.value = d.dataset.accent ?? 'amber';
+    theme.value = d.dataset.theme ?? 'paper';
     dim.value = getComputedStyle(d).getPropertyValue('--dim').trim() || '1';
     for (const label of form.querySelectorAll('[data-for]')) label.hidden = label.dataset.for !== theme.value;
   };
@@ -23,11 +22,6 @@ export function wireDisplay(form) {
     d.dataset.theme = theme.value;
     save('gp-theme', theme.value);
     sync();
-  });
-  accent.addEventListener('change', () => {
-    if (accent.value === 'amber') delete d.dataset.accent;
-    else d.dataset.accent = accent.value;
-    save('gp-accent', accent.value === 'amber' ? '' : accent.value);
   });
   dim.addEventListener('input', () => {
     d.style.setProperty('--dim', dim.value);

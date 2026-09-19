@@ -57,6 +57,8 @@
   // The primary result is the first declared output present (optional outputs may be absent).
   const primary = $derived(result?.ok ? outputOrder.find((k) => result.display?.[k] !== undefined) : undefined);
   const answer = $derived(result?.ok && primary ? result.display[primary] : '');
+  // Atlas: a big number with a small, muted unit ("7,932" and "ft").
+  const answerParts = $derived(/^(.*\d)\s+(\D.*)$/.exec(answer)?.slice(1) ?? [answer, '']);
   // Cautions first, then accuracy notes, then info (codes registry severities).
   const RANK = { caution: 0, accuracy: 1, info: 2 };
   const severityOf = (code) => tool.severity[code] ?? 'info';
@@ -163,7 +165,7 @@
         {/each}
       </ul>
     {/if}
-    <div class="value">{answer}</div>
+    <div class="value">{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
     <p class="sentence">{result.summary}</p>
     {#if secondary.length}
       <ul class="secondary">

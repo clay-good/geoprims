@@ -1,49 +1,60 @@
-/* Design tokens (web/visual-theme). Five modes, chosen before first paint by
-   the inline script in Base.astro: hud (the default, dark slate with an amber
-   accent, green as an option), daylight, sunlight (outdoor maximum contrast),
-   night (low-luminance amber on black, with a dimming slider), and
-   high-contrast. Without JavaScript the OS preference picks hud, daylight, or
-   high-contrast. Components use tokens only; test/theme.test.mjs checks that
-   no color literal appears outside these blocks, and every mode's contrast. */
+/* Atlas design tokens (web/visual-theme, design W9). Five modes, chosen
+   before first paint by the inline script in Base.astro: paper (the default,
+   warm off-white with ink text), ink (blue-graphite), sunlight (outdoor
+   maximum contrast), night (low-luminance amber on black, with a brightness
+   slider), and high-contrast. One signal-orange accent per mode, also used
+   for focus; everything else is neutral. Without JavaScript the OS
+   preference picks paper, ink, or high-contrast. Components use tokens only;
+   test/theme.test.mjs checks no color literal appears outside these blocks,
+   and every mode's contrast. */
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Variable-subset.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Variable-subset.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
 :root {
-  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --sans: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --target: 48px;
   --weight: 400;
-  --value-size: 2.25rem;
+  --value-size: 2.5rem;
   --dim: 1;
 }
 :root,
-:root[data-theme='hud'] {
-  --bg: #0f141a;
-  --surface: #161d25;
-  --line: #2c3947;
-  --text: #e6edf3;
-  --muted: #a3b3c2;
-  --accent: #ffb020;
-  --caution: #ffd84d;
-  --danger: #ff8f85;
-  --focus: #7cc4ff;
+:root[data-theme='paper'] {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --line: #e2e0da;
+  --text: #15171c;
+  --muted: #5b616e;
+  --accent: #c2410c;
+  --caution: #8a5300;
+  --danger: #b42318;
+  --focus: #c2410c;
+  --shadow: #15171c;
+  --backdrop: #15171c;
+  color-scheme: light;
+}
+:root[data-theme='ink'] {
+  --bg: #0e1015;
+  --surface: #161920;
+  --line: #262a33;
+  --text: #eceef2;
+  --muted: #9aa1ae;
+  --accent: #ff8a4c;
+  --caution: #f5c451;
+  --danger: #ff8b85;
+  --focus: #ff8a4c;
   --shadow: #000000;
   --backdrop: #000000;
   color-scheme: dark;
-}
-:root[data-theme='hud'][data-accent='green'] {
-  --accent: #4dffa6;
-}
-:root[data-theme='daylight'] {
-  --bg: #fbfcfb;
-  --surface: #ffffff;
-  --line: #cfd8d3;
-  --text: #0f1f18;
-  --muted: #4a5d54;
-  --accent: #0a6b3f;
-  --caution: #7a5200;
-  --danger: #a3261a;
-  --focus: #0b5cad;
-  --shadow: #5a6b63;
-  --backdrop: #0f1f18;
-  color-scheme: light;
 }
 :root[data-theme='sunlight'] {
   --bg: #ffffff;
@@ -51,7 +62,7 @@
   --line: #000000;
   --text: #000000;
   --muted: #1f1f1f;
-  --accent: #00337a;
+  --accent: #a33400;
   --caution: #5c3900;
   --danger: #8a0000;
   --focus: #000000;
@@ -83,30 +94,30 @@
   --line: #ffffff;
   --text: #ffffff;
   --muted: #ffffff;
-  --accent: #ffff00;
+  --accent: #ffa057;
   --caution: #ffff00;
   --danger: #ff9e9e;
-  --focus: #00ffff;
+  --focus: #ffa057;
   --shadow: #000000;
   --backdrop: #000000;
   --weight: 600;
   color-scheme: dark;
 }
 /* Without JavaScript (no data-theme), follow the OS preference. */
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --bg: #fbfcfb;
-    --surface: #ffffff;
-    --line: #cfd8d3;
-    --text: #0f1f18;
-    --muted: #4a5d54;
-    --accent: #0a6b3f;
-    --caution: #7a5200;
-    --danger: #a3261a;
-    --focus: #0b5cad;
-    --shadow: #5a6b63;
-    --backdrop: #0f1f18;
-    color-scheme: light;
+    --bg: #0e1015;
+    --surface: #161920;
+    --line: #262a33;
+    --text: #eceef2;
+    --muted: #9aa1ae;
+    --accent: #ff8a4c;
+    --caution: #f5c451;
+    --danger: #ff8b85;
+    --focus: #ff8a4c;
+    --shadow: #000000;
+    --backdrop: #000000;
+    color-scheme: dark;
   }
 }
 @media (prefers-contrast: more) {
@@ -116,27 +127,27 @@
     --line: #ffffff;
     --text: #ffffff;
     --muted: #ffffff;
-    --accent: #ffff00;
+    --accent: #ffa057;
     --caution: #ffff00;
     --danger: #ff9e9e;
-    --focus: #00ffff;
+    --focus: #ffa057;
     --weight: 600;
     color-scheme: dark;
   }
 }
-/* Print: the daylight palette in any mode. */
+/* Print: the paper palette in any mode. */
 @media print {
   :root,
   :root[data-theme] {
     --bg: #ffffff;
     --surface: #ffffff;
-    --line: #cfd8d3;
-    --text: #000000;
-    --muted: #4a5d54;
-    --accent: #0a6b3f;
-    --caution: #7a5200;
-    --danger: #a3261a;
-    --focus: #0b5cad;
+    --line: #e2e0da;
+    --text: #15171c;
+    --muted: #5b616e;
+    --accent: #c2410c;
+    --caution: #8a5300;
+    --danger: #b42318;
+    --focus: #c2410c;
     --dim: 1;
     color-scheme: light;
   }
@@ -163,6 +174,7 @@ h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 0.25rem; }
 .badge { display: inline-block; font: 600 0.75rem var(--mono); padding: 0.1rem 0.5rem; border: 1px solid var(--caution); color: var(--caution); border-radius: 4px; vertical-align: middle; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-block: 1rem; }
 .answer .value { font: 700 var(--value-size)/1.1 var(--mono); color: var(--accent); overflow-wrap: anywhere; }
+.answer .value .unit { font-size: 0.5em; font-weight: 500; color: var(--muted); margin-inline-start: 0.35em; }
 .answer .sentence { font-size: 1.1rem; margin: 0.5rem 0 0; }
 .answer .secondary { font-family: var(--mono); color: var(--muted); margin: 0.5rem 0 0; padding: 0; list-style: none; }
 .warnings { margin: 0 0 0.5rem; padding: 0; list-style: none; }

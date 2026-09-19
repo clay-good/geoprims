@@ -7,10 +7,10 @@
 
 ## 2. Design system
 
-- [ ] 2.1 Define design tokens and the five theme modes (paper, ink, sunlight, night, high-contrast) in the Atlas style (design W9); verify the no-color-literal lint passes and each mode renders the component gallery (tokens and all five modes in global.css, HUD in amber with a green option, night with a brightness slider; the mode is set before first paint from a saved choice or the OS preference; test/theme.test.mjs lints color literals, checks AA contrast for every text token in every mode and night's luminance band; pending: re-theme from the earlier hud/daylight modes to paper/ink, and the component gallery render)
-- [ ] 2.2 Self-host and subset Geist Sans, Geist Mono, and icons (≤ 80 KB); verify font budget and zero third-party requests
+- [ ] 2.1 Define design tokens and the five theme modes (paper, ink, sunlight, night, high-contrast) in the Atlas style (design W9); verify the no-color-literal lint passes and each mode renders the component gallery (Atlas tokens and all five modes in global.css: paper, ink, sunlight, night with a brightness slider, and high contrast, one signal-orange accent; the mode is set before first paint from a saved choice or the OS preference; test/theme.test.mjs lints color literals, checks AA contrast for every text token in every mode and night's luminance band; pending: re-theme from the earlier hud/daylight modes to paper/ink, and the component gallery render)
+- [ ] 2.2 Self-host and subset Geist Sans, Geist Mono, and icons (≤ 80 KB); verify font budget and zero third-party requests (done for fonts: Geist and Geist Mono 1.7.2 variable, subset to 52 KB with tools/codegen/subset-fonts.sh, OFL included, tested against the budget; the build test already forbids third-party requests. Pending: an icon set)
 - [ ] 2.3 Build base components (field, unit selector, result value, warning, badge, table, tabs, toast, dialog) with focus and target-size rules; verify axe-core passes in every mode
-- [ ] 2.4 Build the print stylesheet (`paper` palette, canvas snapshot); verify a print-to-PDF snapshot test (the daylight palette, to be renamed paper, applies in print from any mode; pending: expanded panels, the canvas snapshot, and the PDF test)
+- [ ] 2.4 Build the print stylesheet (`paper` palette, canvas snapshot); verify a print-to-PDF snapshot test (the paper palette applies in print from any mode; pending: expanded panels, the canvas snapshot, and the PDF test)
 - [ ] 2.5 Add the contrast audit on rendered pixels (over real map fills) and color-vision-deficiency simulations; verify all states meet 4.5:1 / 3:1
 - [ ] 2.6 Externalize strings into a message catalog and use logical CSS properties; verify the i18n lint passes
 

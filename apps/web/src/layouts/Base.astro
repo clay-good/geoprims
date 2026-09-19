@@ -13,7 +13,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- The display mode is set before first paint, so no bright frame flashes (visual-theme). -->
-    <script is:inline>(()=>{const d=document.documentElement;try{const m=(q)=>matchMedia(q).matches;d.dataset.theme=localStorage.getItem('gp-theme')||(m('(prefers-contrast: more)')?'high-contrast':m('(prefers-color-scheme: light)')?'daylight':'hud');const a=localStorage.getItem('gp-accent');if(a)d.dataset.accent=a;const v=localStorage.getItem('gp-dim');if(v)d.style.setProperty('--dim',v)}catch{d.dataset.theme='hud'}})();</script>
+    <script is:inline>(()=>{const d=document.documentElement,M=['paper','ink','sunlight','night','high-contrast'],old={hud:'ink',daylight:'paper'};try{const m=(q)=>matchMedia(q).matches;let t=localStorage.getItem('gp-theme');t=old[t]||t;d.dataset.theme=M.includes(t)?t:m('(prefers-contrast: more)')?'high-contrast':m('(prefers-color-scheme: dark)')?'ink':'paper';const v=localStorage.getItem('gp-dim');if(v)d.style.setProperty('--dim',v)}catch{d.dataset.theme='paper'}})();</script>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -22,7 +22,8 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="theme-color" content="#0f141a" />
+    <meta name="theme-color" content="#f7f6f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e1015" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-title" content="geoprims" />
     {ld.map((j) => <script type="application/ld+json" set:html={j} />)}
   </head>
@@ -52,15 +53,12 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
         <form class="display" aria-label="Display">
           <label>Display
             <select name="theme">
-              <option value="hud">HUD (dark)</option>
-              <option value="daylight">Daylight</option>
+              <option value="paper">Paper (light)</option>
+              <option value="ink">Ink (dark)</option>
               <option value="sunlight">Sunlight (outdoors)</option>
               <option value="night">Night (dark-adapted)</option>
               <option value="high-contrast">High contrast</option>
             </select>
-          </label>
-          <label data-for="hud">Accent
-            <select name="accent"><option value="amber">Amber</option><option value="green">Green</option></select>
           </label>
           <label data-for="night">Brightness <input name="dim" type="range" min="0.3" max="1" step="0.05" /></label>
         </form>

@@ -1,4 +1,4 @@
-// Visual theme (web/visual-theme): tokens only, five modes that each meet
+// Visual theme (web/visual-theme, Atlas): tokens only, five modes that each meet
 // WCAG AA contrast, night mode's luminance limits, and the pre-paint mode
 // choice that follows the OS preference.
 import { test } from 'node:test';
@@ -9,7 +9,7 @@ import vm from 'node:vm';
 
 const web = new URL('..', import.meta.url).pathname;
 const css = readFileSync(join(web, 'src/styles/global.css'), 'utf8');
-const MODES = ['hud', 'daylight', 'sunlight', 'night', 'high-contrast'];
+const MODES = ['paper', 'ink', 'sunlight', 'night', 'high-contrast'];
 const TEXT = ['text', 'muted', 'accent', 'caution', 'danger'];
 
 /** Top-level and @media rule blocks: [selector, {--token: value}]. */
@@ -76,8 +76,8 @@ test('every mode meets WCAG AA contrast for text and focus', () => {
     const f = contrast(t['--focus'], t['--bg']);
     assert.ok(f >= 3, `${mode} focus ${f.toFixed(2)}:1`);
   }
-  const green = { ...tokens('hud'), '--accent': blocks(css).find(([s]) => s.includes("data-accent='green'"))[1]['--accent'] };
-  assert.ok(contrast(green['--accent'], green['--surface']) >= 4.5, 'hud green accent');
+  // One signal accent per mode, used for focus too (Atlas, design W9).
+  for (const mode of ['paper', 'ink']) assert.equal(tokens(mode)['--focus'], tokens(mode)['--accent'], mode);
 });
 
 test('night mode stays dark-adapted: text luminance 0.175-0.25, backgrounds at most 0.005', () => {
@@ -91,23 +91,37 @@ test('night mode stays dark-adapted: text luminance 0.175-0.25, backgrounds at m
 
 test('the mode is chosen before first paint from the saved choice or the OS preference', () => {
   const html = readFileSync(join(web, 'dist/index.html'), 'utf8');
-  const script = /<script>(\(\(\)=>\{const d=document\.documentElement;[\s\S]*?)<\/script>/.exec(html)?.[1];
+  const script = /<script>(\(\(\)=>\{const d=document\.documentElement[\s\S]*?)<\/script>/.exec(html)?.[1];
   assert.ok(script, 'inline mode script');
   assert.ok(html.indexOf(script) < html.indexOf('rel="stylesheet"'), 'runs before the stylesheet');
-  const run = ({ light = false, more = false, saved = {} }) => {
+  const run = ({ light = false, dark = false, more = false, saved = {} }) => {
     const root = { dataset: {}, style: { setProperty: (k, v) => (root[k] = v) } };
     vm.runInNewContext(script, {
       document: { documentElement: root },
-      matchMedia: (q) => ({ matches: (q.includes('contrast') && more) || (q.includes('light') && light) }),
+      matchMedia: (q) => ({ matches: (q.includes('contrast') && more) || (q.includes('light') && light) || (q.includes('dark') && dark) }),
       localStorage: { getItem: (k) => saved[k] ?? null },
     });
     return root;
   };
-  assert.equal(run({}).dataset.theme, 'hud');
-  assert.equal(run({ light: true }).dataset.theme, 'daylight');
-  assert.equal(run({ more: true, light: true }).dataset.theme, 'high-contrast');
+  assert.equal(run({ light: true }).dataset.theme, 'paper');
+  assert.equal(run({ dark: true }).dataset.theme, 'ink');
+  assert.equal(run({}).dataset.theme, 'paper', 'no preference: the signature paper mode');
+  assert.equal(run({ more: true, dark: true }).dataset.theme, 'high-contrast');
   const night = run({ saved: { 'gp-theme': 'night', 'gp-dim': '0.5' } });
   assert.equal(night.dataset.theme, 'night');
   assert.equal(night['--dim'], '0.5');
-  assert.equal(run({ saved: { 'gp-accent': 'green' } }).dataset.accent, 'green');
+  // Choices saved under the retired mode names carry over.
+  assert.equal(run({ saved: { 'gp-theme': 'hud' } }).dataset.theme, 'ink');
+  assert.equal(run({ saved: { 'gp-theme': 'daylight' } }).dataset.theme, 'paper');
+  assert.equal(run({ saved: { 'gp-theme': 'bogus' }, dark: true }).dataset.theme, 'ink');
+});
+
+test('fonts are self-hosted Geist, subset within the 80 KB budget', () => {
+  const dir = join(web, 'dist/fonts');
+  const files = readdirSync(dir).filter((f) => f.endsWith('.woff2'));
+  assert.deepEqual(files.sort(), ['Geist-Variable-subset.woff2', 'GeistMono-Variable-subset.woff2']);
+  const bytes = files.reduce((n, f) => n + statSync(join(dir, f)).size, 0);
+  assert.ok(bytes <= 80 * 1024, `${bytes} bytes of fonts`);
+  assert.match(readFileSync(join(dir, 'OFL.txt'), 'utf8'), /SIL Open Font License/);
+  assert.match(css, /font-family: 'Geist';[\s\S]*?font-display: swap/);
 });

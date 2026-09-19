@@ -96,3 +96,35 @@ test('paste-to-detect: H3, ambiguous geohash, coordinates, MGRS, and altimeter g
   assert.equal((await found('12/1137/2551')).map((f) => f.kind).join(), 'xyz', 'the coordinate reading of a tile path is dropped');
   assert.deepEqual(await found('density altitude'), []);
 });
+
+test('a question with numbers opens the tool filled in; ambiguous values become choices', async () => {
+  const { placements, prefillActions } = await import('../src/lib/prefill.js');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const m = await host.module('search');
+  await m.callString('gp_search_load', JSON.stringify(catalog.tools));
+  const link = await host.module('link');
+  const encode = async (state) => JSON.parse(await link.callString('gp_link_encode', JSON.stringify(state)));
+  const decode = async (href) => JSON.parse(await link.callString('gp_link_decode', href.split('#')[1]));
+  const tools = new Map(catalog.tools.map((t) => [t.id, t]));
+  const top = async (query) => JSON.parse(await m.callString('gp_search', JSON.stringify({ query, limit: 8, includeExperimental: true }))).result.results[0];
+
+  // natural-language-prefill "Density altitude from text".
+  const da = await top('density altitude 5000 ft 30C 29.80');
+  const [open] = await prefillActions(da, tools.get(da.id), encode);
+  assert.equal(open.title, 'Open with these values');
+  assert.equal(open.summary, 'field elevation 5000 ft, altimeter setting 29.80 inHg, outside air temperature 30 °C');
+  assert.ok(open.href.startsWith('/aviation/altimetry/density-altitude/#'));
+  assert.deepEqual((await decode(open.href)).result.state.i, da.prefill);
+
+  // "Two temperatures": both placements are offered; nothing is guessed.
+  const two = await top('density altitude 30 20 29.92 5000');
+  const choices = await prefillActions(two, tools.get(two.id), encode);
+  assert.equal(choices.length, 2);
+  assert.match(choices[0].head, /^Which is which\? 30 and 20 could each be /);
+  const placed = await Promise.all(choices.map(async (c) => (await decode(c.href)).result.state.i));
+  assert.deepEqual(placed.map((i) => [i.temperature, i.dew_point]), [['30 degC', '20 degC'], ['20 degC', '30 degC']]);
+  assert.ok(placed.every((i) => i.elevation === '5000 ft' && i.altimeter === '29.92 inHg'));
+
+  assert.deepEqual(await prefillActions(await top('density altitude'), tools.get('aviation.altimetry.density-altitude'), encode), []);
+  assert.equal(placements([{ value: '1', candidates: ['a', 'b', 'c'] }, { value: '2', candidates: ['a', 'b', 'c'] }, { value: '3', candidates: ['a', 'b', 'c'] }]).length, 6);
+});

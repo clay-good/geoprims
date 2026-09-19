@@ -8,6 +8,7 @@
 //! matches. Ties break by id.
 
 mod detect;
+mod prefill;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -37,6 +38,8 @@ pub struct Entry {
     /// Alias and keyword phrases, tokenized.
     phrases: Vec<Vec<u32>>,
     title_tokens: Vec<u32>,
+    /// How a typed question fills this tool's inputs.
+    slots: Vec<prefill::SlotDef>,
 }
 
 const W_ID: u32 = 3;
@@ -45,6 +48,8 @@ const W_ALIAS: u32 = 5;
 const W_KEYWORD: u32 = 3;
 const W_GROUP: u32 = 2;
 const W_SUMMARY: u32 = 1;
+/// Added per question value a tool's inputs can take.
+const FIT_BONUS: u32 = 100;
 
 const STOPWORDS: &[&str] = &[
     "a", "an", "the", "of", "for", "and", "in", "on", "at", "is", "what", "how", "my", "me", "i",
@@ -171,13 +176,20 @@ impl Entry {
             (W_GROUP, t(tokens(&s("group")))),
             (W_SUMMARY, t(tokens(&s("summary")))),
         ];
+        // The operation segment reads as a phrase too ("f to c", "ft to m"),
+        // so a conversion ranks by its direction.
+        let op = tokens(id.rsplit('.').next().unwrap_or_default());
+        let phrases = aliases
+            .iter()
+            .chain(&keywords)
+            .map(|a| tokens(a))
+            .chain(std::iter::once(op))
+            .map(&mut t)
+            .collect();
         Some(Entry {
+            slots: prefill::slots(m),
             title_tokens: t(tokens(&s("title"))),
-            phrases: aliases
-                .iter()
-                .chain(&keywords)
-                .map(|a| t(tokens(a)))
-                .collect(),
+            phrases,
             id,
             title: s("title"),
             summary: s("summary"),
@@ -311,11 +323,19 @@ pub fn search(json: &str) -> String {
     };
     let domain = v["domain"].as_str();
     let include_experimental = v["includeExperimental"].as_bool().unwrap_or(false);
-    let q: Vec<String> = tokens(query)
+    // Quantities fill inputs; the words that remain rank the tools.
+    let parsed = prefill::parse(query);
+    let words = parsed.words.join(" ");
+    let ranked = if parsed.values.is_empty() || tokens(&words).is_empty() {
+        query
+    } else {
+        words.as_str()
+    };
+    let q: Vec<String> = tokens(ranked)
         .into_iter()
         .filter(|t| !STOPWORDS.contains(&t.as_str()))
         .collect();
-    let q = if q.is_empty() { tokens(query) } else { q };
+    let q = if q.is_empty() { tokens(ranked) } else { q };
     let raw_id = query.trim().to_lowercase();
     INDEX.with(|index| {
         let index = index.borrow();
@@ -334,7 +354,15 @@ pub fn search(json: &str) -> String {
         let mut hits: Vec<(u32, &Entry)> = entries
             .iter()
             .filter(|e| domain.is_none_or(|d| e.domain == d))
-            .map(|e| (e.score(&table, &connector, &raw_id), e))
+            .map(|e| {
+                let score = e.score(&table, &connector, &raw_id);
+                let bonus = if score > 0 {
+                    FIT_BONUS * prefill::fits(&e.slots, &parsed.values)
+                } else {
+                    0
+                };
+                (score + bonus, e)
+            })
             .filter(|(s, _)| *s > 0)
             .collect();
         hits.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.id.cmp(&b.1.id)));
@@ -346,14 +374,42 @@ pub fn search(json: &str) -> String {
             .iter()
             .filter(|(_, e)| include_experimental || e.stability != "experimental")
             .take(limit)
-            .map(|(_, e)| {
-                Json::obj([
+            .enumerate()
+            .map(|(rank, (_, e))| {
+                let mut o = vec![
                     ("id", Json::str(&e.id)),
                     ("title", Json::str(&e.title)),
                     ("summary", Json::str(&e.summary)),
                     ("domain", Json::str(&e.domain)),
                     ("stability", Json::str(&e.stability)),
-                ])
+                ];
+                // The top result carries what the question filled in.
+                if rank == 0 && !parsed.values.is_empty() {
+                    let (fields, ambiguous) = prefill::map(&e.slots, &parsed.values);
+                    if !fields.is_empty() {
+                        o.push(("prefill", Json::Obj(fields)));
+                    }
+                    if !ambiguous.is_empty() {
+                        o.push((
+                            "ambiguous",
+                            Json::Arr(
+                                ambiguous
+                                    .into_iter()
+                                    .map(|(v, c)| {
+                                        Json::obj([
+                                            ("value", Json::str(v)),
+                                            (
+                                                "candidates",
+                                                Json::Arr(c.into_iter().map(Json::str).collect()),
+                                            ),
+                                        ])
+                                    })
+                                    .collect(),
+                            ),
+                        ));
+                    }
+                }
+                Json::obj(o)
             })
             .collect();
         let mut out = vec![("results".to_owned(), Json::Arr(results))];

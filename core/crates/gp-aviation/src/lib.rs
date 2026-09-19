@@ -15,7 +15,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Registry, Related, ToolDef};
+use gp_base::tool::{
+    Bare, Ctx, Example, Field, Kind, Layer, Precision, Q, Registry, Related, Slot, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT, Unit};
 use serde_json::Value;
 
@@ -690,6 +692,14 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
     ],
     sentence: "Pressure altitude is {pressure_altitude}. The 1,000 ft per inch rule gives {rule_of_thumb}, off by {abs(rule_error)}.",
     limits: &[("batchRows", 10_000)],
+    slots: &[
+        Slot::new("elevation", &["elevation", "elev", "field", "airport"])
+            .range(-1500.0, 30_000.0)
+            .bare(Bare::Any),
+        Slot::new("altimeter", &["altimeter", "baro", "qnh", "setting"])
+            .range(26.0, 32.0)
+            .bare(Bare::Decimal),
+    ],
     run: run_pressure_altitude,
     ..ToolDef::BLANK
 };
@@ -885,6 +895,20 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
     ],
     sentence: "Density altitude is {density_altitude}, about {abs(above_field)} {if above_field < 0}lower{else}higher{/if} than the field.{if above_field > 1000} Expect a longer takeoff roll and weaker climb.{/if}{warn DRY_AIR_ASSUMED} Assumes dry air.{/warn}",
     limits: &[("batchRows", 10_000)],
+    slots: &[
+        Slot::new("elevation", &["elevation", "elev", "field", "airport"])
+            .range(-1500.0, 30_000.0)
+            .bare(Bare::Any),
+        Slot::new("altimeter", &["altimeter", "baro", "qnh", "setting"])
+            .range(26.0, 32.0)
+            .bare(Bare::Decimal),
+        Slot::new("temperature", &["oat", "temp", "temperature", "sat"])
+            .range(-80.0, 60.0)
+            .bare(Bare::Any),
+        Slot::new("dew_point", &["dew", "dewpoint", "td"])
+            .range(-80.0, 60.0)
+            .bare(Bare::Any),
+    ],
     run: run_density_altitude,
     ..ToolDef::BLANK
 };
@@ -1423,6 +1447,16 @@ pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
     }],
     sentence: "{if crosswind > 0}{crosswind} crosswind from the {crosswind_from}{else}No crosswind{/if} and {abs(headwind)} {if headwind < 0}tailwind{else}headwind{/if} on runway {runway}{if gust_crosswind > 0}, {gust_crosswind} crosswind in gusts{/if}.{warn VARIABLE_WIND} These are the worst case for the variable wind.{/warn}",
     limits: &[("batchRows", 10_000)],
+    slots: &[
+        Slot::new("runway", &["rwy", "runway"]),
+        Slot::new("wind_direction", &["wind", "winds", "from"]),
+        Slot::new("wind_speed", &["wind", "winds"]),
+        Slot::new("gust", &["gust", "gusts", "gusting", "peak"]),
+        Slot::new(
+            "max_crosswind",
+            &["limit", "max", "maximum", "demonstrated"],
+        ),
+    ],
     run: run_runway_components,
     ..ToolDef::BLANK
 };

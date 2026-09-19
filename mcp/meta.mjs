@@ -14,7 +14,7 @@ export const TOOLS = [
     name: 'geoprims_search',
     title: 'Search geoprims tools',
     description:
-      'Find geoprims calculators (geodesy, navigation, aviation, drone, survey, indexing, time, units) by plain words, abbreviations, or tool id. Returns ranked ids with summaries. Experimental tools are hidden unless includeExperimental is true; hiddenExperimental counts them.',
+      'Find geoprims calculators (geodesy, navigation, aviation, drone, survey, indexing, time, units) by plain words, abbreviations, or tool id. Returns ranked ids with summaries. Numbers in the query fill inputs: prefill on the top result holds args for geoprims_run ("density altitude 5000 ft 30C 29.80"), and ambiguous lists values it would not guess. Experimental tools are hidden unless includeExperimental is true; hiddenExperimental counts them.',
     inputSchema: {
       type: 'object',
       properties: {

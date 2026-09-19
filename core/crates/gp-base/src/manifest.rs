@@ -290,6 +290,44 @@ pub fn manifest(def: &ToolDef) -> Json {
                 .collect(),
         ),
     );
+    // One slot per input, in input order: explicit slots in full, the rest
+    // by name only (the parser derives their keywords from the input).
+    put(
+        "prefill",
+        Json::Arr(
+            def.inputs
+                .iter()
+                .map(|f| {
+                    let mut o = vec![("input", Json::str(f.name))];
+                    if let Some(sl) = def.slots.iter().find(|sl| sl.input == f.name) {
+                        o.push((
+                            "keywords",
+                            Json::Arr(sl.keywords.iter().map(|k| Json::str(*k)).collect()),
+                        ));
+                        if sl.range.0.is_finite() || sl.range.1.is_finite() {
+                            let end = |x: f64| {
+                                if x.is_finite() {
+                                    Json::Num(x)
+                                } else {
+                                    Json::Null
+                                }
+                            };
+                            o.push(("range", Json::Arr(vec![end(sl.range.0), end(sl.range.1)])));
+                        }
+                        o.push((
+                            "bare",
+                            Json::str(match sl.bare {
+                                crate::tool::Bare::Never => "never",
+                                crate::tool::Bare::Any => "any",
+                                crate::tool::Bare::Decimal => "decimal",
+                            }),
+                        ));
+                    }
+                    Json::obj(o)
+                })
+                .collect(),
+        ),
+    );
     if let Some(t) = def.timeline {
         put(
             "timeline",
@@ -531,6 +569,26 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
         if t.visualization.is_empty() {
             e("needs a visualization descriptor".into());
         }
+        for sl in t.slots {
+            if !t.inputs.iter().any(|f| f.name == sl.input) {
+                e(format!("prefill slot {} is not an input", sl.input));
+            }
+            for k in sl.keywords {
+                if k.is_empty()
+                    || !k
+                        .chars()
+                        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+                {
+                    e(format!(
+                        "prefill slot {} keyword {k:?} must be one lowercase word",
+                        sl.input
+                    ));
+                }
+            }
+            if !(sl.range.0 < sl.range.1) {
+                e(format!("prefill slot {} range is empty", sl.input));
+            }
+        }
         if let Some(tl) = t.timeline {
             if !t.inputs.iter().any(|f| f.name == tl.input) {
                 e(format!("timeline input {} is not an input", tl.input));
@@ -713,6 +771,25 @@ mod tests {
                 ..GOOD
             },
             "issuing body, and year",
+        );
+    }
+
+    #[test]
+    fn invalid_slot_rejected() {
+        // natural-language-prefill "Invalid slot": a slot must name a real input.
+        use crate::tool::Slot;
+        const BAD: &[Slot] = &[Slot::new("nonexistent", &["x"])];
+        fails(
+            &ToolDef { slots: BAD, ..GOOD },
+            "prefill slot nonexistent is not an input",
+        );
+        const CASE: &[Slot] = &[Slot::new(GOOD.inputs[0].name, &["OAT"])];
+        fails(
+            &ToolDef {
+                slots: CASE,
+                ..GOOD
+            },
+            "must be one lowercase word",
         );
     }
 

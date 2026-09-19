@@ -24,7 +24,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "61fea1a46340c3ac",
+    "hash": "e17bcff828799857",
     "lastmod": "2026-09-19"
   },
   "/aviation/ifr/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/geoid/geoid-height/": {
-    "hash": "1eb6f3774a8d2dd2",
+    "hash": "1ba7a40fc8e021c6",
     "lastmod": "2026-09-19"
   },
   "/geodesy/grid-ref/": {
@@ -104,7 +104,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "99af4c25be53b33e",
+    "hash": "fc653c9e7304f856",
     "lastmod": "2026-09-19"
   },
   "/geodesy/parse/": {
@@ -116,11 +116,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "a34a503bc9eb14f1",
+    "hash": "927dad639ad12068",
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "3f5bf2c3c5a7b63d",
+    "hash": "390c44b3437d5d38",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ups/": {
@@ -132,11 +132,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/forward/": {
-    "hash": "9947c841791f8332",
+    "hash": "eb4e07ccf46c8d51",
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/inverse/": {
-    "hash": "dfc61702de707416",
+    "hash": "71adaa74fad392e8",
     "lastmod": "2026-09-19"
   },
   "/geometry/": {
@@ -160,7 +160,7 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "305a4c7c9321282f",
+    "hash": "b4ee077436c5f966",
     "lastmod": "2026-09-19"
   },
   "/indexing/plus-code/": {
@@ -188,11 +188,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "7f2286e405ba5e8c",
+    "hash": "9a8418706d60c38b",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "84d0f157c940cdd6",
+    "hash": "a7f3b11cabb93f83",
     "lastmod": "2026-09-19"
   },
   "/navigation/los/": {
@@ -248,7 +248,7 @@
     "lastmod": "2026-09-19"
   },
   "/time/sun/position/": {
-    "hash": "7ca877ed2250db6b",
+    "hash": "277e905369273e2b",
     "lastmod": "2026-09-19"
   },
   "/units/": {

@@ -11,7 +11,7 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use libm::{hypot, sqrt};
@@ -330,6 +330,14 @@ pub static GSD: ToolDef = ToolDef {
     ],
     sentence: "Each pixel covers {gsd} of ground, and one image spans {footprint_across} across track.{warn EQUIVALENT_FOCAL_LENGTH} Check the focal length: it looks like a 35 mm-equivalent value.{/warn}",
     limits: &[("batchRows", 10_000)],
+    slots: &[
+        Slot::new("height", &["height", "agl", "altitude", "alt", "flying"]).range(1.0, 10_000.0),
+        Slot::new("sensor_width", &["sensor", "width"]).range(1.0, 100.0),
+        Slot::new("sensor_height", &["sensor", "height"]).range(1.0, 100.0),
+        Slot::new("focal_length", &["lens", "focal", "fl"]).range(1.0, 2000.0),
+        Slot::new("image_width", &["px", "pixels", "pixel", "width"]).range(100.0, 100_000.0),
+        Slot::new("image_height", &["px", "pixels", "pixel", "height"]).range(100.0, 100_000.0),
+    ],
     run: run_gsd,
     ..ToolDef::BLANK
 };

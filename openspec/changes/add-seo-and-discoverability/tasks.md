@@ -26,11 +26,11 @@
 
 ## 5. Natural-language prefill
 
-- [ ] 5.1 Implement the core query parser (normalize, rank, extract quantities, map slots); verify the density-altitude and parity scenarios
-- [ ] 5.2 Add slot definitions to manifests with a validation gate; verify the invalid-slot scenario
-- [ ] 5.3 Implement the ambiguity UI; verify the two-temperatures scenario
-- [ ] 5.4 Build the 500-query fixture and accuracy gate; verify the regression scenario
-- [ ] 5.5 Add `prefill` to MCP `geoprims_search` results; verify parity with the web palette
+- [x] 5.1 Implement the core query parser (normalize, rank, extract quantities, map slots); verify the density-altitude and parity scenarios
+- [x] 5.2 Add slot definitions to manifests with a validation gate; verify the invalid-slot scenario
+- [x] 5.3 Implement the ambiguity UI; verify the two-temperatures scenario
+- [ ] 5.4 Build the 500-query fixture and accuracy gate; verify the regression scenario (started: data/prefill-fixture.json has 19 questions, all required to pass)
+- [x] 5.5 Add `prefill` to MCP `geoprims_search` results; verify parity with the web palette
 
 ## 6. Measurement
 

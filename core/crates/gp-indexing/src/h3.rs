@@ -5,7 +5,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Slot, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::point;
 use h3o::{CellIndex, LatLng, Resolution};
@@ -237,6 +239,10 @@ pub static LAT_LNG_TO_CELL: ToolDef = ToolDef {
     }],
     sentence: "The H3 cell is {cell}, about {area}.",
     limits: &[("batchRows", 10_000)],
+    slots: &[Slot::new(
+        "resolution",
+        &["res", "resolution", "r", "level"],
+    )],
     run: run_to_cell,
     ..ToolDef::BLANK
 };

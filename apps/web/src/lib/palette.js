@@ -4,7 +4,8 @@
 // closes it and returns focus to where it was. A pasted value (an H3 cell,
 // geohash, tile, Plus Code, MGRS, coordinates, METAR, or altimeter group) is
 // detected first, with the tools worth opening pre-filled with it. Starting
-// the query with ">" lists actions instead of tools.
+// the query with ">" lists actions instead of tools. A question with numbers
+// ("density altitude 5000 ft 30C 29.80") offers the top tool filled in.
 import { detect, search } from './compute.js';
 import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
 import { clearRecents, eraseLocalData, pins, PROFILES, recents, setProfile } from './prefs.js';
@@ -166,10 +167,12 @@ async function update() {
     })),
   );
   const tools = out.ok ? out.result.results : [];
-  results = [...detected, ...tools];
+  const filled = tools[0]?.open ?? [];
+  results = [...filled, ...detected, ...tools];
   active = results.length ? 0 : -1;
   render();
   const parts = [];
+  if (filled.length) parts.push(filled[0].head);
   if (found.length) parts.push(`Detected ${found.map((f) => f.label).join(', ')}`);
   parts.push(tools.length ? `${tools.length} ${tools.length === 1 ? 'tool' : 'tools'} found` : 'No tools found');
   status.textContent = parts.join('. ');

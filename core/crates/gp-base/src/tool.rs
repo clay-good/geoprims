@@ -183,6 +183,48 @@ pub struct Timeline {
     pub key: &'static str,
 }
 
+/// Whether a bare number (no unit) can fill a prefill slot.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Bare {
+    Never,
+    /// Any bare number inside the slot's range.
+    Any,
+    /// Only a bare number written with a decimal point (29.92, not 30).
+    Decimal,
+}
+
+/// How a typed question fills one input (discovery/natural-language-prefill
+/// "Slot definitions per tool"). Inputs without a slot get defaults: their
+/// name and title words as keywords and no range.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Slot {
+    pub input: &'static str,
+    /// Lowercase words that name the input in a question ("oat", "rwy").
+    pub keywords: &'static [&'static str],
+    /// Plausible values in the input's unit; values outside do not fill it.
+    pub range: (f64, f64),
+    pub bare: Bare,
+}
+
+impl Slot {
+    pub const fn new(input: &'static str, keywords: &'static [&'static str]) -> Slot {
+        Slot {
+            input,
+            keywords,
+            range: (f64::NEG_INFINITY, f64::INFINITY),
+            bare: Bare::Never,
+        }
+    }
+    pub const fn range(mut self, lo: f64, hi: f64) -> Slot {
+        self.range = (lo, hi);
+        self
+    }
+    pub const fn bare(mut self, bare: Bare) -> Slot {
+        self.bare = bare;
+        self
+    }
+}
+
 pub type RunFn = fn(&mut Ctx) -> Result<Json, ToolError>;
 
 /// Everything about a tool. Construct with `ToolDef { id: …, ..ToolDef::BLANK }`.
@@ -224,6 +266,8 @@ pub struct ToolDef {
     pub sentence: &'static str,
     /// Declared limits, as (name, value).
     pub limits: &'static [(&'static str, u64)],
+    /// How free-text questions fill the inputs (natural-language prefill).
+    pub slots: &'static [Slot],
     pub run: RunFn,
 }
 
@@ -263,6 +307,7 @@ impl ToolDef {
         justification: "",
         sentence: "",
         limits: &[],
+        slots: &[],
         run: unimplemented_run,
     };
 

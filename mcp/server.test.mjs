@@ -465,3 +465,21 @@ test('logs go to stderr and never include argument values', async () => {
   assert.match(c.stderr, /<- tools\/call geoprims_run/);
   assert.ok(!c.stderr.includes(marker), 'argument value leaked into the log');
 });
+
+test('search prefill matches the web palette and runs as-is', async () => {
+  // natural-language-prefill "Surface parity": the same query gives the same
+  // top result and prefill on both surfaces (one Wasm search module).
+  const query = 'density altitude 5000 ft 30C 29.80';
+  const s = (await c.call('geoprims_search', { query, includeExperimental: true })).structuredContent;
+  const { workerHost } = await import('../packages/runtime/src/worker-host.mjs');
+  const web = workerHost(join(root, 'dist/wasm'));
+  await web.searchLoad(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const palette = JSON.parse(await web.search(JSON.stringify({ query, limit: 10, includeExperimental: true })));
+  web.close();
+  assert.deepEqual(s.result.results[0], palette.result.results[0]);
+  const top = s.result.results[0];
+  assert.deepEqual(top.prefill, { elevation: '5000 ft', altimeter: '29.80 inHg', temperature: '30 degC' });
+  const r = (await c.call('geoprims_run', { id: top.id, args: top.prefill })).structuredContent;
+  assert.equal(r.ok, true);
+  assert.ok(Math.abs(r.result.density_altitude.value - 7932) < 1, String(r.result.density_altitude.value));
+});

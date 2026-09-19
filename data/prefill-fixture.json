@@ -1,0 +1,24 @@
+{
+  "about": "Typed questions with the tool and inputs they should fill (discovery/natural-language-prefill). ambiguous lists values the parser must not guess.",
+  "cases": [
+    { "query": "density altitude 5000 ft 30C 29.80", "id": "aviation.altimetry.density-altitude", "prefill": { "elevation": "5000 ft", "altimeter": "29.80 inHg", "temperature": "30 degC" } },
+    { "query": "density altitude 30 20 29.92 5000", "id": "aviation.altimetry.density-altitude", "prefill": { "elevation": "5000 ft", "altimeter": "29.92 inHg" }, "ambiguous": [{ "value": "30", "candidates": ["temperature", "dew_point"] }, { "value": "20", "candidates": ["temperature", "dew_point"] }] },
+    { "query": "da elev 5,000 oat 30 A2992", "id": "aviation.altimetry.density-altitude", "prefill": { "elevation": "5000 ft", "altimeter": "29.92 inHg", "temperature": "30 degC" } },
+    { "query": "density altitude field 6500 temp 25 dew 10 Q1013", "id": "aviation.altimetry.density-altitude", "prefill": { "elevation": "6500 ft", "altimeter": "1013 hPa", "temperature": "25 degC", "dew_point": "10 degC" } },
+    { "query": "pressure altitude 5000 29.80", "id": "aviation.altimetry.pressure-altitude", "prefill": { "elevation": "5000 ft", "altimeter": "29.80 inHg" } },
+    { "query": "crosswind rwy 27 wind 300 at 15", "id": "aviation.wind.runway-components", "prefill": { "runway": "27", "wind_direction": "300 deg", "wind_speed": "15 kt" } },
+    { "query": "crosswind runway 09L wind 30015G25KT", "id": "aviation.wind.runway-components", "prefill": { "runway": "09L", "wind_direction": "300 deg", "wind_speed": "15 kt", "gust": "25 kt" } },
+    { "query": "crosswind rwy 36 wind 040@20 limit 15 kt", "id": "aviation.wind.runway-components", "prefill": { "runway": "36", "wind_direction": "040 deg", "wind_speed": "20 kt", "max_crosswind": "15 kt" } },
+    { "query": "gsd 13.2mm sensor 8.8mm lens 100 m 5472 px", "id": "drone.photogrammetry.gsd", "prefill": { "height": "100 m", "sensor_width": "13.2 mm", "focal_length": "8.8 mm", "image_width": 5472 } },
+    { "query": "cas to tas 250 kt 10000 ft 15C", "id": "aviation.airspeed.cas-to-tas", "prefill": { "airspeed": "250 kt", "pressure_altitude": "10000 ft", "temperature": "15 degC" } },
+    { "query": "isa 10000 ft", "id": "aviation.atmosphere.isa", "prefill": { "altitude": "10000 ft" } },
+    { "query": "utm 40.4461, -79.9822", "id": "geodesy.utm.forward", "prefill": { "lat": "40.4461 deg", "lon": "-79.9822 deg" } },
+    { "query": "geodesic 40.64, -73.78 to 51.47, -0.45", "id": "navigation.geodesic.inverse", "prefill": { "lat1": "40.64 deg", "lon1": "-73.78 deg", "lat2": "51.47 deg", "lon2": "-0.45 deg" } },
+    { "query": "magnetic declination 40, -105", "id": "geodesy.magnetic.declination", "prefill": { "lat": "40 deg", "lon": "-105 deg" } },
+    { "query": "h3 40.4461 -79.9822 res 9", "id": "indexing.h3.lat-lng-to-cell", "prefill": { "lat": "40.4461 deg", "lon": "-79.9822 deg", "resolution": 9 } },
+    { "query": "100 kt to mph", "id": "units.speed.kt-to-mph", "prefill": { "value": "100 kt" } },
+    { "query": "32 f to c", "id": "units.temperature.f-to-c", "prefill": { "value": "32 degF" } },
+    { "query": "5,000 ft to m", "id": "units.length.ft-to-m", "prefill": { "value": "5000 ft" } },
+    { "query": "density altitude", "id": "aviation.altimetry.density-altitude" }
+  ]
+}

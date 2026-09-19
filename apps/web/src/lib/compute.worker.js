@@ -3,6 +3,7 @@
 import { assetProvider } from '../../../../packages/runtime/src/assets.mjs';
 import { loadModule } from '../../../../packages/runtime/src/module.mjs';
 import { detectValues } from './detect.js';
+import { prefillActions } from './prefill.js';
 import { NO_WASM } from './messages.js';
 
 // Data assets come from the same origin, whole files only, checked against the
@@ -45,13 +46,21 @@ const searcher = () =>
     return m;
   }));
 
+const encode = async (state) => JSON.parse(await (await get('link')).callString('gp_link_encode', JSON.stringify(state)));
+// The core search, with "Open with these values" links for what the question filled in.
+const searchWithPrefill = async (request) => {
+  const out = JSON.parse(await (await searcher()).callString('gp_search', request));
+  const top = out.ok ? out.result.results[0] : null;
+  if (top) top.open = await prefillActions(top, tools.get(top.id), encode);
+  return JSON.stringify(out);
+};
 const run = async (id, input) => JSON.parse(await (await get(moduleFor(id))).invoke(id, JSON.stringify(input)));
 const detect = async (query) => {
   const m = await searcher();
   const out = await detectValues(query, {
     candidates: async (q) => JSON.parse(await m.callString('gp_detect', JSON.stringify({ query: q }))).result.candidates,
     run,
-    encode: async (state) => JSON.parse(await (await get('link')).callString('gp_link_encode', JSON.stringify(state))),
+    encode,
     tools,
   });
   return JSON.stringify(out);
@@ -65,7 +74,7 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
   try {
     let out;
     if (method === 'invoke') out = await (await get(moduleFor(args[0]))).invoke(args[0], args[1]);
-    else if (method === 'search') out = await (await searcher()).callString('gp_search', args[0]);
+    else if (method === 'search') out = await searchWithPrefill(args[0]);
     else if (method === 'detect') out = await detect(args[0]);
     else out = await (await get(args[0])).callString(args[1], args[2]);
     self.postMessage({ seq, out });

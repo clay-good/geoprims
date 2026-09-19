@@ -71,7 +71,7 @@ A failed invocation SHALL return a structured error with `code` (from a closed, 
 - **THEN** the tool returns error `INTERNAL` or a more specific code, never a result containing NaN
 
 ### Requirement: Each tool declares its visualization
-Every manifest SHALL declare a `visualization` descriptor selecting one or more canvas layer kinds (for example `point`, `line-geodesic`, `line-rhumb`, `polygon`, `bbox`, `cell-set`, `vector-diagram`, `profile-chart`, `gauge`, `table-only`) and a mapping from output fields to layer inputs. `table-only` SHALL be permitted only for tools with no spatial or vector meaning.
+Every manifest SHALL declare a `visualization` descriptor selecting one or more canvas layer kinds (for example `point`, `line-geodesic`, `line-rhumb`, `polygon`, `bbox`, `cell-set`, `vector-diagram`, `profile-chart`, `gauge`, `table-only`) and a mapping from output fields to layer inputs. `table-only` SHALL be permitted only for tools with no spatial or vector meaning. Tools whose results unfold over time or distance SHALL also declare a `timeline` (the driving input or output, its range, and the key moment the scene opens on) so the canvas can animate them (per `web/map-canvas`).
 
 #### Scenario: Visualization mapping validated
 - **WHEN** a manifest maps layer input `path` to output field `route` that does not exist in its output schema

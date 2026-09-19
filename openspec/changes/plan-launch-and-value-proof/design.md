@@ -20,7 +20,7 @@ The full plan now spans 15 changes. Without sequencing, the risk is building bre
 | **0: Platform** | `establish-platform-foundation`, `build-web-experience` (except audio), `add-trust-and-proof` infrastructure, `add-glanceable-and-field-ux`, `add-problem-reporting`, `add-seo-and-discoverability` infrastructure, `add-local-mcp-server` | A sample tool passes every gate end to end on web and MCP. The report round trip works in production. |
 | **1: Launch** | The ~30 hero tools (L2), the 8 journeys (L3), 25 explainers, and trust pages | Every hero tool is launch-ready (L4). Legal review is done. Search consoles are verified. |
 | **2: Complete domains** | The remaining operations in each domain move to stable, in order of search demand from the SEO log | Monthly: each promoted tool meets the stable bar. |
-| **3: v1.1 data** | PLSS lookup (BLM CadNSDI), EGM2008 1′ and GEOID18 full packs, tz-boundaries, optional basemap | Assets pass the integrity and privacy tile rules. |
+| **3: v1.1 data** | PLSS lookup (BLM CadNSDI), EGM2008 1′ and GEOID18 full packs, tz-boundaries | Assets pass the integrity and privacy tile rules. |
 | **Post-launch** | Audio feedback, A5 promotion, least-squares marketing, MCP Apps canvas | Driven by problem reports and demand. |
 
 ### L2. Hero tools at launch

@@ -1,6 +1,6 @@
 ## Purpose
 
-Renders every geoprims calculation on a live canvas (2D map, 3D globe, or engineering vector diagram) so users see the geometry of their inputs and results and can catch mistakes at a glance.
+Renders every geoprims calculation on a live canvas (2D map, 3D globe, or engineering vector diagram) so users see the geometry of their inputs and results and can catch mistakes at a glance. The canvas is the product's centerpiece: clean, cartographic, and in motion where motion explains the math.
 
 ## ADDED Requirements
 
@@ -47,19 +47,47 @@ Users SHALL be able to set point inputs by clicking or tapping the canvas and to
 - **WHEN** a user drags waypoint B on the map
 - **THEN** B's coordinate fields update continuously, the result recomputes, and the route redraws
 
-### Requirement: Measurement readouts in the HUD
-The canvas SHALL show a HUD overlay with cursor coordinates (in the user's chosen format), scale bar, north arrow (true north; magnetic north indicator when the tool involves magnetic values), and the current view's projection name.
+### Requirement: Measurement readouts
+The canvas SHALL show a quiet readout overlay with cursor coordinates (in the user's chosen format), scale bar, north arrow (true north; magnetic north indicator when the tool involves magnetic values), and the current view's projection name.
 
 #### Scenario: Cursor readout format
 - **WHEN** the coordinate display setting is MGRS
 - **THEN** the cursor readout shows MGRS for the location under the pointer
 
-### Requirement: Basemap is optional, keyless, and offline-capable
-The canvas SHALL render without any basemap by default using bundled Natural Earth coastlines and a graticule. An optional vector basemap (self-hosted tiles) MAY be enabled in settings and SHALL show required attribution when on. No basemap SHALL require an API key or third-party request.
+### Requirement: Natural Earth is the only basemap
+The canvas SHALL draw its base layer entirely from Natural Earth vector data shipped with the site: `ne-110m` (bundled) for world and regional views and `ne-50m` (loaded on demand as one static file) when zoomed in, with land, coastlines, country borders, lakes, and a graticule. There SHALL be no tiled basemap, no tile server, and no map service of any kind: the base layer is static files deployed with the website (`ne-110m` is the same file the MCP server bundles). No basemap SHALL require an API key or a third-party request. Beyond the zoom where Natural Earth detail runs out, the canvas SHALL keep drawing tool layers precisely over the generalized base and SHALL say so in the readout ("Base map generalized at this zoom").
 
 #### Scenario: Offline canvas
-- **WHEN** the device is offline and no offline basemap pack is installed
-- **THEN** the canvas still renders coastlines, graticule, and all tool layers
+- **WHEN** the device is offline after the site has been installed
+- **THEN** the canvas still renders land, coastlines, graticule, and all tool layers
+
+#### Scenario: No tile requests
+- **WHEN** a user pans and zooms the 2D map and spins the globe
+- **THEN** the network log shows no basemap tile requests
+
+### Requirement: Cartographic style
+The canvas SHALL follow `web/visual-theme`: in `paper` mode, water is the page surface, land is a slightly deeper neutral fill, coastlines and borders are hairlines, and the graticule is faint; `ink` mode inverts the same relationships. Tool layers SHALL be the only strongly colored marks: the signal accent for the primary result, neutrals for inputs and comparisons, and a light casing (halo) around lines and labels so they read over any fill. The globe SHALL have soft limb shading that gives it depth without obscuring data. Labels SHALL use the product sans and never overlap one another.
+
+#### Scenario: Result stands out
+- **WHEN** the geodesic inverse tool draws its path over land and sea
+- **THEN** the path is the only accent-colored mark and keeps at least 3:1 contrast against every fill it crosses
+
+### Requirement: Animated scenes and playback
+Tools whose results unfold over time or distance SHALL declare a timeline in their manifest `visualization` descriptor, and the canvas SHALL animate them: for example closest point of approach (both tracks moving to the CPA moment), fly-by and holding turns (the aircraft symbol flying the path), sun position and twilight (the terminator sweeping across the globe), drone survey patterns (the aircraft flying lines while footprints fill in), and route legs. Animated scenes SHALL provide play and pause, a scrubber, speed choices, and loop; the playhead SHALL be part of the view state saved in the permalink. Every value shown at the playhead SHALL come from the core, not from interpolation in the renderer. Scenes SHALL open paused on the result's key moment (for example the CPA), so the answer is visible without playing.
+
+When a result first appears or changes, the canvas SHALL ease the camera to frame it (at most 800 ms) and MAY draw new paths in along their length. Animation SHALL never carry information that is not also in the result panel and the canvas's accessible description, and SHALL meet WCAG 2.2.2 (pausable; nothing auto-plays for more than 5 seconds).
+
+#### Scenario: CPA playback
+- **WHEN** a user presses play on the closest-point-of-approach tool
+- **THEN** both tracks advance together, the separation readout updates from core values, and the scene pauses at the end with the CPA marked
+
+#### Scenario: Scrub from a permalink
+- **WHEN** a user opens a permalink saved with the sun-position scene scrubbed to 18:40 UTC
+- **THEN** the globe shows the terminator at 18:40 UTC, paused
+
+#### Scenario: Reduced motion
+- **WHEN** reduced motion is requested
+- **THEN** camera moves and path draw-ins are instant, nothing plays automatically, and the scrubber still works
 
 ### Requirement: GPU capability fallback
 The renderer SHALL use WebGPU when available and fall back to WebGL2 otherwise, with identical layer content. If neither is available, the canvas SHALL fall back to a 2D-canvas renderer supporting at least points, lines, polygons, and vector diagrams, and SHALL indicate reduced capability.
@@ -67,13 +95,6 @@ The renderer SHALL use WebGPU when available and fall back to WebGL2 otherwise, 
 #### Scenario: No WebGPU
 - **WHEN** the browser lacks WebGPU (for example Firefox on Linux)
 - **THEN** the canvas renders through WebGL2 with the same layers and the user sees no error
-
-### Requirement: Retro-HUD visual effects are optional and safe
-Phosphor glow, persistence trails, scanlines, and slight vignetting MAY be applied as post-processing. These effects SHALL be disabled when `prefers-reduced-motion` is set or the user turns them off, SHALL never reduce the contrast of text or data marks below the visual-theme minimums, and SHALL never flash more than 3 times per second.
-
-#### Scenario: Reduced motion
-- **WHEN** the operating system requests reduced motion
-- **THEN** persistence trails and animated scanlines are off, and view transitions are instant
 
 ### Requirement: Canvas export
 Users SHALL be able to export the current canvas as PNG (with attribution and a result caption), as SVG for the 2D and vector modes, and as GeoJSON of all geographic layers.

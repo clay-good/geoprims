@@ -6,7 +6,8 @@ Constraints:
 - About 830 tool routes (about 300 of them indexable pages) must be pre-rendered, fast, and readable without JavaScript.
 - WebGPU is not universal in September 2026. Firefox on Linux, Intel Mac, and Android, plus many Linux Chrome GPUs, need WebGL2.
 - Safari evicts tab storage after 7 days without a visit. Home-screen installs are exempt.
-- No third-party requests (privacy spec), so every font, basemap tile, and library is self-hosted.
+- No third-party requests (privacy spec), so every font, map layer, and library is served from the site itself.
+- One static website on Cloudflare plus the local MCP server. There is no map or tile service to run.
 
 ## Goals / Non-Goals
 
@@ -34,23 +35,24 @@ Astro renders every endpoint page to static HTML at build time and ships zero JS
 One `ToolForm` component renders any manifest input schema: coordinate fields (multi-notation parser from the geodesy core), quantity fields (value plus unit selector), enums, arrays (vertex lists with import), and nested objects. Validation runs twice: a cheap schema check in the UI thread for field messages, then the authoritative check in Wasm. The Wasm result wins on disagreement, and a test asserts they agree on all golden vectors.
 
 ### W3. Renderer: luma.gl device abstraction plus custom layers
-luma.gl 9.x gives one device API over WebGPU and WebGL2 with no map chrome and no API keys. geoprims writes its own small layer set (the layer kinds in `hud-canvas`).
+luma.gl 9.x gives one device API over WebGPU and WebGL2 with no map chrome and no API keys. geoprims writes its own small layer set (the layer kinds in `map-canvas`).
 
 | Alternative | Why not |
 |---|---|
 | deck.gl | Good layer catalog, but larger. Its geospatial layers assume Web Mercator tiles; we need ellipsoidal densification and a globe. It could back `cell-set` layers later. |
-| MapLibre GL JS 6 | WebGL2 only, map-first. Heavier than needed when the basemap is optional. |
+| MapLibre GL JS 6 | WebGL2 only, and built around tiled basemaps, which geoprims does not use. |
 | CesiumJS | Full 3D globe, but multiple MB. Overkill for vector overlays. |
 | three.js | General-purpose. Projection and globe math would be ours anyway. |
 
 - **Geometry comes from Wasm.** Densification, antimeridian splitting, and pole handling run in the core so the canvas draws exactly the math the tool computed. The renderer only projects to screen.
 - **Canvas2D fallback** supports points, lines, polygons, and vector diagrams with no GPU.
-- **Effects.** HUD post-processing (bloom from a blurred bright pass, persistence via previous-frame blend, scanlines) is a single optional pass, disabled by reduced motion or the settings toggle.
+- **Style.** Flat cartographic rendering (fills, hairlines, casings) plus one shading pass for the globe's limb. No post-processing effects.
+- **Animation.** A scene clock drives the playhead. Each frame asks the core for the state at that time (positions, separation, sun vector), so what plays is exactly what the tool computed. Camera moves use one ease-out curve.
 
-### W4. Basemap
-- Default: bundled Natural Earth 110m (public domain) plus graticule, rendered as vector lines in the HUD style.
-- Optional: self-hosted vector tiles (Protomaps PMTiles extract, OpenStreetMap-derived, ODbL attribution) served from `assets.geoprims.com` with range requests.
-- Tile requests are capped at zoom ≤ 7, per the privacy spec's coarse-location rule (a z7 tile spans 2.8° of longitude). Higher zooms overzoom the z7 data. PMTiles range reads fetch whole-tile byte ranges only, so a request never identifies a sub-tile area.
+### W4. Basemap: Natural Earth only
+- Natural Earth 110m (public domain) is bundled; 50m loads on demand as one static file from the site. Both are drawn as vector land fills, coastlines, borders, lakes, and a graticule in the Atlas style.
+- No tiled basemap. A vector-tile basemap (Protomaps PMTiles, OpenStreetMap) was considered and dropped: it would add hosting beyond the static site, ODbL attribution everywhere, and tile requests that hint at location. The tools' own geometry is the content; the base layer only gives it context.
+- Fetching the whole 50m file (never a region of it) means map use reveals nothing about location.
 
 ### W5. Command palette search: the core ranker
 Ranking uses the single deterministic ranker compiled into the core (per `discovery/natural-language-prefill`): weighted fields (title, id, aliases, keywords, group), prefix stemming, one-edit typo tolerance, and boosts for exact alias, prefix, pinned, and recency. The palette calls it on every keystroke (well under 1 ms for ~1,000 entries in Wasm). uFuzzy is used only to compute match highlighting. Ranking quality is tested with the shared query fixture.
@@ -68,21 +70,38 @@ Fragment = `#v1:` + base64url(deflate-raw(canonical JSON of inputs, units, view)
 ### W8. Build-time math: Temml (LaTeX → MathML)
 Formulas are authored in LaTeX in docs, rendered to MathML at build, and checked in the accessibility job. No runtime math library.
 
-### W9. Audio: raw Web Audio API
+### W9. Visual design: Atlas
+Minimal and modern, like the best product tools, and deliberately unlike the sister sites (roughlogic, sophiewell), which are near-black with system fonts and a blue or white accent.
+
+| Token | `paper` | `ink` |
+|---|---|---|
+| Background | `#F7F6F3` warm off-white | `#0E1015` blue-graphite |
+| Raised surface | `#FFFFFF` | `#161920` |
+| Text | `#15171C` (16.6:1) | `#ECEEF2` (16.4:1) |
+| Muted text | `#5B616E` (5.8:1) | `#9AA1AE` (6.8:1) |
+| Signal accent | `#C2410C` (4.8:1) | `#FF8A4C` (8.2:1) |
+
+- Type: Geist Sans for prose and Geist Mono for numbers (both SIL OFL 1.1, self-hosted, subset). Big answer numerals, small muted units.
+- Layout: generous whitespace, hairline dividers, 8 px radius, almost no shadow. The canvas gets the most space on the page.
+- Delight comes from the canvas (smooth camera, paths drawing in, scenes you can play and scrub), not from decoration on the chrome.
+- Exact values are a starting point for task 2.1. The spec fixes the structure (one accent, neutral surfaces, AA contrast), not the hex codes.
+
+### W10. Audio: raw Web Audio API
 A ~5 KB module synthesizes the fixed sound set with oscillators, noise buffers, and gain envelopes. It is lazy-loaded only when audio is enabled.
 
-### W10. Testing stack
+### W11. Testing stack
 - End-to-end and cross-browser: Playwright (Chromium, Firefox, WebKit).
 - Accessibility: axe-core, run in every theme mode.
 - Performance: Lighthouse CI budgets on a sampled route set.
-- Visual regression: canvas and HUD components, screenshot diffs per mode.
+- Visual regression: canvas and components, screenshot diffs per mode.
 - Egress privacy: proxy capture (from the foundation change).
 
 ## Risks / Trade-offs
 
 - **[luma.gl and deck.gl still call WebGPU experimental; API churn]** → Keep the renderer behind our own thin interface. Pin versions. WebGL2 is the tested baseline.
 - **[Hundreds of pages × previews makes build time long]** → Incremental builds keyed on manifest hash. Preview images come from the headless Canvas2D renderer in parallel.
-- **[HUD effects reduce contrast]** → Contrast is measured on rendered pixels, effects included (visual-theme spec). High-contrast mode disables effects.
+- **[Map fills reduce label and line contrast]** → Contrast is measured on rendered pixels over the real fills (visual-theme spec), and lines and labels carry a casing.
+- **[Natural Earth is coarse at street scale]** → The tools' own geometry stays exact at every zoom; the readout says when the base layer is generalized.
 - **[Permalinks leak inputs when users paste them into chat or email]** → The fragment keeps them off our servers, not away from recipients. The share dialog says so.
 - **[Safari storage eviction breaks offline packs]** → Prompt to install. Show the eviction warning.
 
@@ -92,4 +111,4 @@ Not applicable (greenfield). The site launches with the tools that reach `stable
 
 ## Open Questions
 
-- Which self-hosted font pairing (monospace for numbers plus a humanist sans for prose): a design exploration inside task 2.1. Does not affect specs.
+- None for the visual direction; exact token values are tuned in task 2.1.

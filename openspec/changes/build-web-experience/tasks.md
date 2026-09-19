@@ -7,11 +7,11 @@
 
 ## 2. Design system
 
-- [ ] 2.1 Define design tokens and the five theme modes (hud, daylight, sunlight, night, high-contrast); verify the no-color-literal lint passes and each mode renders the component gallery (tokens and all five modes in global.css, HUD in amber with a green option, night with a brightness slider; the mode is set before first paint from a saved choice or the OS preference; test/theme.test.mjs lints color literals, checks AA contrast for every text token in every mode and night's luminance band; pending: the component gallery render)
-- [ ] 2.2 Self-host and subset fonts and icons (≤ 80 KB); verify font budget and zero third-party requests
+- [ ] 2.1 Define design tokens and the five theme modes (paper, ink, sunlight, night, high-contrast) in the Atlas style (design W9); verify the no-color-literal lint passes and each mode renders the component gallery (tokens and all five modes in global.css, HUD in amber with a green option, night with a brightness slider; the mode is set before first paint from a saved choice or the OS preference; test/theme.test.mjs lints color literals, checks AA contrast for every text token in every mode and night's luminance band; pending: re-theme from the earlier hud/daylight modes to paper/ink, and the component gallery render)
+- [ ] 2.2 Self-host and subset Geist Sans, Geist Mono, and icons (≤ 80 KB); verify font budget and zero third-party requests
 - [ ] 2.3 Build base components (field, unit selector, result value, warning, badge, table, tabs, toast, dialog) with focus and target-size rules; verify axe-core passes in every mode
-- [ ] 2.4 Build the print stylesheet (`daylight` palette, canvas snapshot); verify a print-to-PDF snapshot test (the daylight palette applies in print from any mode; pending: expanded panels, the canvas snapshot, and the PDF test)
-- [ ] 2.5 Add the contrast audit on rendered pixels (effects on) and color-vision-deficiency simulations; verify all states meet 4.5:1 / 3:1
+- [ ] 2.4 Build the print stylesheet (`paper` palette, canvas snapshot); verify a print-to-PDF snapshot test (the daylight palette, to be renamed paper, applies in print from any mode; pending: expanded panels, the canvas snapshot, and the PDF test)
+- [ ] 2.5 Add the contrast audit on rendered pixels (over real map fills) and color-vision-deficiency simulations; verify all states meet 4.5:1 / 3:1
 - [ ] 2.6 Externalize strings into a message catalog and use logical CSS properties; verify the i18n lint passes
 
 ## 3. Tool page and form engine
@@ -22,7 +22,7 @@
 - [ ] 3.4 Implement the result panel (units, copy formats, provenance, warnings); verify the copy-as-agent-call scenario
 - [ ] 3.5 Implement permalinks (`#v1:` deflate/base64url) with migration hooks; verify the round-trip and old-version scenarios
 - [ ] 3.6 Implement tool chaining ("send to") with quantity-type matching and chained permalinks; verify the geodesic-to-wind scenario
-- [ ] 3.7 Implement recent and pinned tools, settings screen, and erase-all-local-data; verify the recent-list and erase scenarios (done: up to 50 recent tools and pins in local storage, on the home page and in the empty palette; /settings/ with unit profile and number format applied immediately to every tool, and erase-all; `u` cycles the unit profile. Checked in a browser: three tools listed most recent first, and the aviation profile shows NM. Pending: the settings that depend on unbuilt features: coordinate display format, reduced motion, audio, canvas, basemap, and offline packs)
+- [ ] 3.7 Implement recent and pinned tools, settings screen, and erase-all-local-data; verify the recent-list and erase scenarios (done: up to 50 recent tools and pins in local storage, on the home page and in the empty palette; /settings/ with unit profile and number format applied immediately to every tool, and erase-all; `u` cycles the unit profile. Checked in a browser: three tools listed most recent first, and the aviation profile shows NM. Pending: the settings that depend on unbuilt features: coordinate display format, reduced motion, audio, canvas, and offline packs)
 - [x] 3.8 Implement the safety notice for aviation, drone, and navigation tools; verify it is visible on every such route (the spec's wording in the tool header with a link to /disclaimer/; a build test checks every tool: present before the calculator on operational routes, absent elsewhere)
 - [x] 3.9 Implement no-JS and no-Wasm fallbacks; verify the JavaScript-disabled and Wasm-blocked scenarios (a noscript notice above the pre-rendered worked example; with WebAssembly missing or refused by policy, the tool area says "This tool needs WebAssembly, which is disabled in this browser" with minimum browsers, tested by running the worker with WebAssembly removed)
 
@@ -31,18 +31,18 @@
 - [x] 4.1 Implement the palette (combobox pattern, `/` and Cmd/Ctrl+K, Esc focus restore); verify the open and text-field scenarios (apps/web/src/lib/palette.js, loaded on first use from a header button, `/`, or Ctrl/Cmd+K; arrows and Ctrl+N/P, Enter, Ctrl/Cmd+Enter for a new tab, a polite result count; checked in a browser, including `/` typing normally in a field. Tab-to-pin waits for 3.7)
 - [ ] 4.2 Implement uFuzzy search with ranking boosts; verify the ranking fixture set (including `densty alt`, `tas`, `wca`) and the 16 ms latency benchmark (the core ranker replaces uFuzzy so the palette and `geoprims_search` rank identically; an interned vocabulary cut p95 at 1,000 entries from 58 ms to 1.6 ms with identical rankings on 2,182 queries; the fixture and benchmark pass. Pending: recency and pinned boosts, with 3.7)
 - [x] 4.3 Implement paste-to-detect using the Wasm detector chain; verify the H3 and ambiguous-geohash scenarios (gp_detect in the search module recognizes H3, geohash, quadkey, z/x/y, Plus Code, coordinates and MGRS, METAR, and altimeter groups by syntax; the worker confirms each by running its decoder and links the tools worth opening, pre-filled. S2 and Maidenhead wait for their tools. Verified in Node and in a browser under the production CSP)
-- [ ] 4.4 Implement action mode (`>`) and global shortcuts with the `?` sheet; verify each shortcut in an end-to-end test (done: `>` actions for display modes, accent, the shortcut toggle and sheet, erasing local data, and the trust pages; `/`, Ctrl/Cmd+K, `?`, and `g h`, with single-key shortcuts switchable off; unit tests for every shortcut and a browser check. Pending: `m`, `c`, `u`, `y`, `l`, `s`, `[`, `]` with the features they act on, and the end-to-end suite)
+- [ ] 4.4 Implement action mode (`>`) and global shortcuts with the `?` sheet; verify each shortcut in an end-to-end test (done: `>` actions for display modes, accent, the shortcut toggle and sheet, erasing local data, and the trust pages; `/`, Ctrl/Cmd+K, `?`, and `g h`, with single-key shortcuts switchable off; unit tests for every shortcut and a browser check. Pending: `m`, `c`, `u`, `y`, `l`, `s`, `p`, `[`, `]` with the features they act on, and the end-to-end suite)
 
-## 5. HUD canvas
+## 5. Map canvas
 
 - [ ] 5.1 Implement the renderer abstraction on luma.gl (WebGPU → WebGL2) and the Canvas2D fallback; verify identical layer output in snapshot tests across backends
 - [ ] 5.2 Implement 2D map projections (Web Mercator, equirectangular, polar azimuthal) and the 3D orthographic globe; verify the antimeridian and polar-cap scenarios
 - [ ] 5.3 Implement layer kinds from the tool contract, with densification from Wasm; verify each kind with a visual regression fixture
 - [ ] 5.4 Implement vector-diagram mode (wind triangle, airspeed gauge, traverse sketch, cross-section, profile chart); verify fixtures for each
 - [ ] 5.5 Implement canvas input (click to set, drag points) with form sync and keyboard equivalents; verify the drag-waypoint scenario
-- [ ] 5.6 Implement the HUD overlay (cursor readout in chosen format, scale bar, true and magnetic north, projection name); verify the MGRS readout scenario
-- [ ] 5.7 Implement the bundled Natural Earth basemap and the optional self-hosted vector basemap with attribution and zoom ≤ 7 whole-tile fetch cap; verify offline rendering and the tile-zoom cap
-- [ ] 5.8 Implement HUD post-processing effects with reduced-motion and settings gates; verify the reduced-motion scenario and the flash-rate check
+- [ ] 5.6 Implement the readout overlay (cursor readout in chosen format, scale bar, true and magnetic north, projection name); verify the MGRS readout scenario
+- [ ] 5.7 Implement the Natural Earth base layer (bundled 110m, on-demand 50m file) in the Atlas cartographic style; verify offline rendering, the no-tile-requests scenario, and the result-stands-out contrast scenario
+- [ ] 5.8 Implement animated scenes (timeline descriptor, play/pause, scrubber, speed, loop, playhead in the permalink, camera easing, path draw-in) for CPA, fly-by and holding turns, sun position, survey patterns, and route legs; verify the CPA, permalink-scrub, and reduced-motion scenarios
 - [ ] 5.9 Implement canvas export (PNG with attribution, SVG, GeoJSON); verify the attribution-footer scenario
 - [ ] 5.10 Implement the canvas accessible description; verify the screen-reader summary scenario
 - [ ] 5.11 Benchmark 100,000-vertex scenes; verify p95 frame time ≤ 16.7 ms on the reference profile

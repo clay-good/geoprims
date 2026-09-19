@@ -1,6 +1,6 @@
 ## Why
 
-geoprims must be something you can glance at and know what to do: a pilot at the fuel pump, a surveyor in the sun with gloves on, a drone operator on a phone, a developer in a hurry. The original specs define what each tool computes and how the HUD looks. They do not yet define the fixed, human-readable anatomy that makes 800 tools feel like one simple product.
+geoprims must be something you can glance at and know what to do: a pilot at the fuel pump, a surveyor in the sun with gloves on, a drone operator on a phone, a developer in a hurry. The original specs define what each tool computes and how the interface looks. They do not yet define the fixed, human-readable anatomy that makes 800 tools feel like one simple product.
 
 That anatomy needs:
 - the answer first, in a plain sentence

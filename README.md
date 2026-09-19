@@ -2,7 +2,7 @@
 
 **Geospatial and aerospace primitives.** Geodesy, navigation, aviation, drone, surveying, spatial-indexing, and terrain math, exact and cited, running entirely on your device.
 
-- **For humans:** a fast static website at geoprims.com with a tactical "retro-HUD" canvas that draws every result.
+- **For humans:** a fast static website at geoprims.com with a clean, minimal design and a live 2D map, 3D globe, and diagram canvas that draws, and where it helps animates, every result.
 - **For agents:** a local MCP server that runs the exact same calculators. Clone a release tag and run `node mcp/server.mjs`, with zero dependencies and no network; `npx -y @geoprims/mcp` will also work once published. Setup: [mcp/README.md](mcp/README.md).
 
 No ads, no accounts, no tracking, no server-side compute. Inputs never leave the device.
@@ -52,7 +52,7 @@ Each change in [`openspec/changes/`](openspec/changes/) has a proposal, a design
 |---|---|---|
 | 1 | [`establish-platform-foundation`](openspec/changes/establish-platform-foundation/) | Tool contract, Wasm core, determinism, units, data assets, verification, privacy, catalog |
 | 2 | [`define-build-contracts`](openspec/changes/define-build-contracts/) | Route map, page anatomy and notices, manifest fields, codes registry, reference profiles, report API, Cloudflare topology |
-| 3 | [`build-web-experience`](openspec/changes/build-web-experience/) | Static site, command palette, HUD canvas, themes, import/export, offline PWA, docs |
+| 3 | [`build-web-experience`](openspec/changes/build-web-experience/) | Static site, command palette, map canvas (2D map, 3D globe, animation), themes, import/export, offline PWA, docs |
 | 4 | [`add-trust-and-proof`](openspec/changes/add-trust-and-proof/) | Citations, standards freshness ledger, correctness program, proof panel |
 | 5 | [`add-glanceable-and-field-ux`](openspec/changes/add-glanceable-and-field-ux/) | Answer-first anatomy, plain-language sentences, mobile input contract, field and night modes |
 | 6 | [`add-problem-reporting`](openspec/changes/add-problem-reporting/) | Report button, Cloudflare Worker + D1, triage, known issues |

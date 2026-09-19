@@ -17,7 +17,8 @@ context: |
     - Prove value before breadth: hero tools first (plan-launch-and-value-proof).
     - Instant: the shell loads fast, tools compute in milliseconds.
     - Every result is reproducible, cited, and states its accuracy.
-    - Humans get a tactical "retro-HUD" web app; agents get the local MCP server.
+    - Humans get one static website (minimal "Atlas" design, 2D map and 3D globe
+      over Natural Earth, no tiled basemap); agents get the local MCP server.
 
   Stack direction (decided in establish-platform-foundation/design.md):
     - Compute core: Rust compiled to WebAssembly (wasm32-unknown-unknown),

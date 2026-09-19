@@ -101,10 +101,10 @@ openspec/             Specs and changes
 docs/research/        Research briefs backing the specs
 ```
 
-### D7. Hosting: Cloudflare static hosting plus an asset bucket
+### D7. Hosting: one static website on Cloudflare, plus a data bucket
 - Site on Cloudflare Workers static assets (Cloudflare's recommended path for new projects) for custom headers (CSP, COOP/COEP where needed). Static requests never invoke code.
 - The only server code is the problem-report Worker on `/api/reports*` with its D1 database (per `add-problem-reporting`). It performs no calculation.
-- Large tiled assets on an R2 bucket behind `assets.geoprims.com`, with CORS for the site origin and `Range` support.
+- Large reference data (terrain DEM, geoid, and datum-shift grids) that is too big for static assets lives in one R2 bucket behind `assets.geoprims.com`, deployed with the site in the same Cloudflare project, with CORS for the site origin and `Range` support. It is data only: there are no map tiles and no tile server; the map's base layer is Natural Earth, shipped as static files.
 - GitHub Pages was rejected: it cannot set CSP or COOP/COEP headers.
 - The site works without cross-origin isolation (threads are optional, per `compute-core`), so a header regression degrades speed, not correctness.
 

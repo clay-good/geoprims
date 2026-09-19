@@ -32,7 +32,7 @@ Each manifest names its comparison type:
 Tools without a meaningful comparison say nothing, rather than inventing one.
 
 ### U3. Visual language
-The signature HUD mode remains, but the layout is calm: generous spacing, one accent color, and big numerals in a tabular monospace. Effects stay off the numbers. `daylight` is the default for light-preference users. The HUD becomes an identity accent (canvas, header, icons) rather than a filter over everything, which answers the "delightful, simple" goal.
+The Atlas design (`web/visual-theme`) keeps the layout calm: generous spacing, one signal accent, and big numerals in a tabular monospace. `paper` is the signature mode and `ink` its dark counterpart. Delight comes from the map canvas (smooth camera moves and playable scenes) rather than decoration, which answers the "delightful, simple" goal.
 
 ### U4. Field mode as a setting, not a separate app
 Field mode is a CSS token override (targets, type scale, step buttons) plus behavior (step buttons, larger sticky bar). It is kept in local preferences.

@@ -49,7 +49,7 @@ Every action in the app SHALL be reachable by keyboard. The palette SHALL suppor
 - **THEN** an overlay lists all global and page shortcuts
 
 ### Requirement: Global shortcuts
-The app SHALL provide at least these shortcuts outside text fields: `/` palette, `g h` home, `m` toggle audio mute, `c` cycle canvas mode (2D map, 3D globe, vector), `u` cycle unit profile, `y` copy result JSON, `l` copy permalink, `s` swap the two primary inputs where the tool declares them swappable, `[` and `]` previous/next tool in group. Shortcuts SHALL be listed in the shortcut sheet, SHALL NOT override browser or screen-reader reserved keys, and single-character shortcuts SHALL be switchable off or remappable in settings (WCAG 2.1.4). `m` (mute) SHALL act only when audio has been enabled.
+The app SHALL provide at least these shortcuts outside text fields: `/` palette, `g h` home, `m` toggle audio mute, `c` cycle canvas mode (2D map, 3D globe, vector), `u` cycle unit profile, `y` copy result JSON, `l` copy permalink, `s` swap the two primary inputs where the tool declares them swappable, `p` play or pause an animated scene, `[` and `]` previous/next tool in group. Shortcuts SHALL be listed in the shortcut sheet, SHALL NOT override browser or screen-reader reserved keys, and single-character shortcuts SHALL be switchable off or remappable in settings (WCAG 2.1.4). `m` (mute) SHALL act only when audio has been enabled.
 
 #### Scenario: Mute toggle
 - **WHEN** audio is on and the user presses `m`

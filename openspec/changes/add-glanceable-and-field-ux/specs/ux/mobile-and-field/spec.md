@@ -51,7 +51,7 @@ CI SHALL check:
 The `sunlight` and `night` modes (per `web/visual-theme`) SHALL be reachable in one tap from every page's header. `night` mode:
 - shall render the canvas in the same low-luminance palette
 - shall invert white map backgrounds
-- shall never show a bright splash, and shall disable HUD glow
+- shall never show a bright splash
 - shall carry every state with text or icon, because red light distorts color
 
 #### Scenario: One-tap night

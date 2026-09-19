@@ -17,7 +17,7 @@ Motivation is in `proposal.md`. Research is in `docs/research/04-mcp-competitors
 
 **Non-Goals:**
 - Any second agent surface (CLI, library, WebMCP, remote server).
-- MCP Apps (server-provided UI rendered in the host). It is a candidate follow-up to show the HUD canvas inside agent hosts.
+- MCP Apps (server-provided UI rendered in the host). It is a candidate follow-up to show the map canvas inside agent hosts.
 
 ## Decisions
 

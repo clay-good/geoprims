@@ -110,7 +110,7 @@ The build SHALL emit a sitemap index with one sitemap per domain plus one for ex
 Indexable pages SHALL meet the budgets in `web/app-shell` on the reference profile in `contracts/reference-profiles` (hard: LCP ≤ 2.0 s, INP ≤ 200 ms, CLS ≤ 0.1; targets: 1.5 s, 100 ms, 0.05). The pre-rendered answer SHALL be the LCP element or appear before it. Wasm SHALL compile in the background after first paint, and calculation SHALL run in a worker. Pages SHALL reserve space for the canvas, so it causes no layout shift.
 
 #### Scenario: CLS from canvas
-- **WHEN** the HUD canvas initializes after load
+- **WHEN** the map canvas initializes after load
 - **THEN** measured CLS stays at or below 0.05
 
 ### Requirement: Manual search measurement, no analytics

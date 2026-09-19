@@ -73,7 +73,7 @@ The app SHALL remember up to 50 recently used tools and any user-pinned tools in
 - **THEN** the home screen lists them most recent first
 
 ### Requirement: Settings
-A settings screen SHALL provide: unit profile, coordinate display format, number format (decimal point or comma), theme mode, reduced motion, audio on/off and volume, canvas default mode, basemap on/off, offline pack management, and erase-all-local-data. Settings SHALL apply immediately and persist locally.
+A settings screen SHALL provide: unit profile, coordinate display format, number format (decimal point or comma), theme mode, reduced motion, audio on/off and volume, canvas default mode, offline pack management, and erase-all-local-data. Settings SHALL apply immediately and persist locally.
 
 #### Scenario: Unit profile applied globally
 - **WHEN** a user selects the `aviation` unit profile

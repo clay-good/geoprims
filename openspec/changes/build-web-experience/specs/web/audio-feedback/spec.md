@@ -1,6 +1,6 @@
 ## Purpose
 
-Adds optional, tasteful tactile sound (micro-clicks and clean tones for UI events) that reinforces the HUD feel without ever surprising, distracting, or excluding users.
+Adds optional, tasteful tactile sound (micro-clicks and clean tones for UI events) that makes the interface feel tactile without ever surprising, distracting, or excluding users.
 
 ## ADDED Requirements
 

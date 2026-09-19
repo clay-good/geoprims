@@ -8,8 +8,8 @@ Depends on: `establish-platform-foundation`.
 
 - An **app shell**: statically pre-rendered page per tool, schema-driven input forms, instant recompute on input, shareable permalinks (inputs in the URL fragment), recent and pinned tools, tool chaining.
 - A **command palette** (`/`) that fuzzy-searches the full catalog, aliases, and recent inputs in under 16 ms, plus global keyboard shortcuts.
-- A **HUD canvas** as the hero element: 2D map, 3D globe, and vector-diagram modes that render each tool's declared visualization in real time, with an optional offline basemap.
-- A **visual theme**: five modes (`hud` signature dark mode, `daylight`, `sunlight` for outdoor field use, `night` for cockpit use, `high-contrast`), all WCAG 2.2 AA, with HUD effects opt-in.
+- A **map canvas** as the hero element: 2D map, 3D globe, and vector-diagram modes that render each tool's declared visualization in real time over a Natural Earth base layer shipped with the site, with smooth camera moves and playable, scrubbable scenes for tools that unfold over time.
+- A **visual theme**, "Atlas": minimal and modern, with five modes (`paper` signature light mode, `ink` dark mode, `sunlight` for outdoor field use, `night` for cockpit use, `high-contrast`), all WCAG 2.2 AA.
 - **Audio feedback**: optional synthesized micro-clicks and tones, off by default, one-key mute.
 - **Import and export**: GeoJSON, KML, GPX, CSV, WKT/WKB, and clipboard formats, plus batch mode over CSV.
 - **Offline PWA**: installable, with per-domain offline packs for large datasets.
@@ -21,8 +21,8 @@ Depends on: `establish-platform-foundation`.
 
 - `web/app-shell`: Routing, tool pages, schema-driven forms, live recompute, permalinks, history, chaining, settings.
 - `web/command-palette`: Fuzzy finder and global keyboard model.
-- `web/hud-canvas`: Real-time 2D/3D/vector visualization of tool inputs and outputs.
-- `web/visual-theme`: HUD design system, color modes, typography, motion, and accessibility.
+- `web/map-canvas`: Real-time 2D/3D/vector visualization of tool inputs and outputs, with animation and playback.
+- `web/visual-theme`: The Atlas design system: color modes, typography, motion, and accessibility.
 - `web/audio-feedback`: Optional synthesized UI sounds.
 - `web/io-formats`: File and clipboard import/export and batch processing.
 - `web/offline-pwa`: Installation, caching, offline packs, and updates.
@@ -35,7 +35,7 @@ None.
 ## Non-goals
 
 - No full GIS editor (layer management, styling, attribute tables). The canvas visualizes tool inputs and outputs; it is not QGIS.
-- No proprietary basemaps or API-keyed services (Google, Mapbox, Esri).
+- No tiled basemaps of any kind, self-hosted or third-party, and no API-keyed services (Google, Mapbox, Esri). Natural Earth is the only base layer.
 - No native mobile apps in v1; the PWA covers mobile.
 - No collaborative or cloud-saved sessions.
 

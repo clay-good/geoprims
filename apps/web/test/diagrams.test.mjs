@@ -42,3 +42,13 @@ test('speeds and lengths normalize across units', () => {
   assert.equal(measure(5, { kt, 'm/s': 1 }, 'kt'), 5 * kt);
   assert.equal(measure('fast', { kt }, 'kt'), null);
 });
+
+test('the CPA scene draws both positions at the playhead from the core', async () => {
+  const args = { a_course: '090 deg', a_speed: '10 m/s', b_east: '1000 m', b_north: '1200 m', b_course: '180 deg', b_speed: '10 m/s', at_time: '60 s' };
+  const r = JSON.parse(await host.invoke('navigation.route.cpa', JSON.stringify(args)));
+  const d = diagram('navigation.route.cpa', args, r);
+  assert.equal((d.markup.match(/class="dg-dot-now"/g) ?? []).length, 2);
+  assert.ok(d.markup.includes(`t = 60 s · ${r.display.separation_at} apart`), d.markup);
+  const cpa = catalog.tools.find((t) => t.id === 'navigation.route.cpa');
+  assert.deepEqual(cpa.timeline, { input: 'at_time', end: 'scene_end', key: 'time' });
+});

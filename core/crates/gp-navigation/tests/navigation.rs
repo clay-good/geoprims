@@ -714,3 +714,30 @@ fn waypoints_and_closest_point_scenarios() {
             < 1e-9
     );
 }
+
+#[test]
+fn cpa_scene_positions_come_from_the_core() {
+    // At 110 s (the CPA), the separation at the scene time equals the CPA separation.
+    let r = call(
+        "navigation.route.cpa",
+        r#"{"a_course":"090 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"1200 m","b_course":"180 deg","b_speed":"10 m/s","at_time":"110 s"}"#,
+    );
+    assert!(
+        (num(&r, "result.separation_at.value") - num(&r, "result.separation.value")).abs() < 1e-9,
+        "{r}"
+    );
+    assert!((num(&r, "result.a_east_at.value") - 1100.0).abs() < 1e-9);
+    assert!((num(&r, "result.b_north_at.value") - 100.0).abs() < 1e-9);
+    assert!((num(&r, "result.scene_end.value") - 165.0).abs() < 1e-9);
+    // At time zero, the scene separation is the current separation.
+    let z = call(
+        "navigation.route.cpa",
+        r#"{"a_course":"090 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"1200 m","b_course":"180 deg","b_speed":"10 m/s","at_time":"0 s"}"#,
+    );
+    assert!(
+        (num(&z, "result.separation_at.value") - num(&z, "result.current_separation.value")).abs()
+            < 1e-9
+    );
+    let m = gp_navigation::route::CPA.timeline.expect("a timeline");
+    assert_eq!((m.input, m.end, m.key), ("at_time", "scene_end", "time"));
+}

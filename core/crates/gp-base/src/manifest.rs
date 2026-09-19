@@ -290,6 +290,16 @@ pub fn manifest(def: &ToolDef) -> Json {
                 .collect(),
         ),
     );
+    if let Some(t) = def.timeline {
+        put(
+            "timeline",
+            Json::obj([
+                ("input", Json::str(t.input)),
+                ("end", Json::str(t.end)),
+                ("key", Json::str(t.key)),
+            ]),
+        );
+    }
     put(
         "related",
         Json::Arr(
@@ -520,6 +530,16 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
         }
         if t.visualization.is_empty() {
             e("needs a visualization descriptor".into());
+        }
+        if let Some(tl) = t.timeline {
+            if !t.inputs.iter().any(|f| f.name == tl.input) {
+                e(format!("timeline input {} is not an input", tl.input));
+            }
+            for out in [tl.end, tl.key] {
+                if !t.outputs.iter().any(|f| f.name == out) {
+                    e(format!("timeline output {out} is not an output"));
+                }
+            }
         }
         for l in t.visualization {
             if !LAYER_KINDS.contains(&l.kind) {

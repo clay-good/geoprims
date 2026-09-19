@@ -172,6 +172,17 @@ pub struct Layer {
     pub map: &'static [(&'static str, &'static str)],
 }
 
+/// A scene the canvas can play (tool-contract "timeline"): the input that sets
+/// the playhead, the output that ends its range, and the output holding the
+/// key moment the scene opens on. Every value at the playhead comes from the
+/// core, because the playhead is an input.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Timeline {
+    pub input: &'static str,
+    pub end: &'static str,
+    pub key: &'static str,
+}
+
 pub type RunFn = fn(&mut Ctx) -> Result<Json, ToolError>;
 
 /// Everything about a tool. Construct with `ToolDef { id: …, ..ToolDef::BLANK }`.
@@ -195,6 +206,8 @@ pub struct ToolDef {
     pub primary_example: &'static str,
     pub assets: &'static [&'static str],
     pub visualization: &'static [Layer],
+    /// For results that unfold over time or distance: the scene's timeline.
+    pub timeline: Option<Timeline>,
     pub related: &'static [Related],
     pub stability: Stability,
     pub since: &'static str,
@@ -240,6 +253,7 @@ impl ToolDef {
         primary_example: "",
         assets: &[],
         visualization: &[],
+        timeline: None,
         related: &[],
         stability: Stability::Experimental,
         since: "0.1.0",

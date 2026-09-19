@@ -75,6 +75,48 @@
   let drawnArgs = $state(example);
   const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result) : null);
 
+  // Scene playback (map-canvas "Animated scenes"): the playhead is the tool's
+  // timeline input, so every frame is a core result and the permalink keeps it.
+  const tl = tool.timeline;
+  const seconds = (q) => (q ? q.value * ({ s: 1, min: 60, h: 3600 }[q.unit] ?? 1) : 0);
+  const sceneEnd = $derived(tl && result?.ok ? seconds(result.result[tl.end]) : 0);
+  const keyMoment = $derived(tl && result?.ok ? seconds(result.result[tl.key]) : 0);
+  let playing = $state(false);
+  let speed = $state(1);
+  let loop = $state(false);
+  const playhead = $derived.by(() => {
+    const v = tl ? String(values[tl.input] ?? '').trim() : '';
+    const n = Number.parseFloat(v);
+    return v === '' || !Number.isFinite(n) ? keyMoment : n;
+  });
+  function setPlayhead(t) {
+    values[tl.input] = `${Math.round(t * 10) / 10} s`;
+    isExample = false;
+    run();
+  }
+  function togglePlay() {
+    if (playing) return (playing = false);
+    playing = true;
+    let t = playhead >= sceneEnd - 1e-9 ? 0 : playhead;
+    let last = performance.now();
+    const step = (now) => {
+      if (!playing) return;
+      // The whole scene takes about 8 seconds at 1×.
+      t += ((now - last) / 1000) * speed * (sceneEnd / 8);
+      last = now;
+      if (t >= sceneEnd) {
+        if (loop) t = 0;
+        else {
+          t = sceneEnd;
+          playing = false;
+        }
+      }
+      setPlayhead(t);
+      if (playing) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
   function args() {
     const a = {};
     for (const [k, schema] of fields) {
@@ -194,7 +236,34 @@
 </section>
 
 {#if dg}
-  <figure class="diagram card">{@html dg.markup}</figure>
+  <figure class="diagram card">
+    {@html dg.markup}
+    {#if tl && sceneEnd > 0}
+      <div class="timeline" role="group" aria-label="Scene playback">
+        <button type="button" aria-pressed={playing} onclick={togglePlay}>{playing ? 'Pause' : 'Play'}</button>
+        <input
+          type="range"
+          min="0"
+          max={sceneEnd}
+          step={sceneEnd / 200}
+          value={playhead}
+          aria-label="Scene time"
+          aria-valuetext={`${Math.round(playhead)} seconds of ${Math.round(sceneEnd)}`}
+          oninput={(e) => {
+            playing = false;
+            setPlayhead(Number(e.currentTarget.value));
+          }}
+        />
+        <select aria-label="Speed" bind:value={speed}>
+          <option value={0.5}>0.5×</option>
+          <option value={1}>1×</option>
+          <option value={2}>2×</option>
+          <option value={4}>4×</option>
+        </select>
+        <label><input type="checkbox" bind:checked={loop} /> Loop</label>
+      </div>
+    {/if}
+  </figure>
 {/if}
 
 {#if showMap && compute && result?.ok}

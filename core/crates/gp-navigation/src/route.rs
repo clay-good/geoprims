@@ -863,6 +863,13 @@ pub static CPA: ToolDef = ToolDef {
             .required()
             .angle_range("unbounded"),
         qty_field("b_speed", "B speed", "Like 10 m/s", QT::Speed, "kt").required(),
+        qty_field(
+            "at_time",
+            "Scene time",
+            "Positions this long from now, like 60 s; drives the animation",
+            QT::Time,
+            "s",
+        ),
     ],
     outputs: &[
         qty_field(
@@ -898,6 +905,53 @@ pub static CPA: ToolDef = ToolDef {
             "m",
         )
         .precision(Precision::Decimals(2)),
+        qty_field(
+            "scene_end",
+            "Scene length",
+            "Past the CPA, for the animation",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(0)),
+        qty_field(
+            "separation_at",
+            "Separation at the scene time",
+            "When a scene time is given",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(2))
+        .optional(),
+        qty_field(
+            "a_east_at",
+            "A east",
+            "At the scene time, from A's start",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        qty_field(
+            "a_north_at",
+            "A north",
+            "At the scene time",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        qty_field("b_east_at", "B east", "At the scene time", QT::Length, "m")
+            .precision(Precision::Decimals(1))
+            .optional(),
+        qty_field(
+            "b_north_at",
+            "B north",
+            "At the scene time",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     warnings: &[
@@ -920,6 +974,11 @@ pub static CPA: ToolDef = ToolDef {
         kind: "vector-diagram",
         map: &[],
     }],
+    timeline: Some(gp_base::tool::Timeline {
+        input: "at_time",
+        end: "scene_end",
+        key: "time",
+    }),
     related: &[Related {
         id: "navigation.route.cross-track",
         reason: "alternative",
@@ -980,16 +1039,40 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (rx, ry) = (bx + vx * t, by + vy * t);
     let bearing = (atan2(rx, ry).to_degrees() + 360.0) % 360.0;
     let m = crate::unit(QT::Length, "m");
+    let sec = crate::unit(QT::Time, "s");
     let q = |value: f64, unit| gp_base::tool::Q { value, unit };
-    Ok(Json::obj([
+    // The scene runs past the CPA (at least a minute), so it can be seen passing.
+    let end = (t * 1.5).max(60.0);
+    let mut out = vec![
         ("separation", ctx.out("separation", q(hypot(rx, ry), m))),
-        ("time", ctx.out("time", q(t, crate::unit(QT::Time, "s")))),
+        ("time", ctx.out("time", q(t, sec))),
         ("bearing", ctx.out("bearing", deg(bearing))),
         (
             "current_separation",
             ctx.out("current_separation", q(now, m)),
         ),
-    ]))
+        ("scene_end", ctx.out("scene_end", q(end, sec))),
+    ];
+    if let Some(at) = ctx.quantity("at_time")?.map(|x| x.base()) {
+        if !(0.0..=1e7).contains(&at) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "The scene time must be between 0 and 10,000,000 s.",
+            )
+            .at("/at_time"));
+        }
+        let (ax, ay) = (va.0 * at, va.1 * at);
+        let (bxa, bya) = (bx + vb.0 * at, by + vb.1 * at);
+        out.push((
+            "separation_at",
+            ctx.out("separation_at", q(hypot(bxa - ax, bya - ay), m)),
+        ));
+        out.push(("a_east_at", ctx.out("a_east_at", q(ax, m))));
+        out.push(("a_north_at", ctx.out("a_north_at", q(ay, m))));
+        out.push(("b_east_at", ctx.out("b_east_at", q(bxa, m))));
+        out.push(("b_north_at", ctx.out("b_north_at", q(bya, m))));
+    }
+    Ok(Json::obj(out))
 }
 
 // ---------------------------------------------------------------- multi-leg routes

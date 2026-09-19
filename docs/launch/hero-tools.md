@@ -28,7 +28,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [ ] | [ ] | [ ] |
 | Drone | Image count | `drone.photogrammetry.image-count` | [ ] | [ ] | [ ] |
 | Drone | Flight time | `drone.power.endurance` | [ ] | [ ] | [ ] |
-| Drone | mAh to Wh | `drone.power.battery-energy` | [ ] | [ ] | [ ] |
+| Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] |
 | Drone | Mapping sun window | `time.sun.mapping-window` | [ ] | [ ] | [ ] |
 | Drone | VLOS guidance | `drone.sensors.vlos` | [ ] | [ ] | [ ] |
 | Drone | Part 107 altitude | `drone.ops.part107-altitude` | [ ] | [ ] | [ ] |
@@ -52,4 +52,14 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 32 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 33 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+
+## Waiting on a published worked example
+
+The stable bar needs an independent, published worked example. These rows are held back until one turns up, rather than citing an example we computed ourselves:
+
+| Tool | Searched (2026-09-19) |
+|---|---|
+| Holding entry | AIM 5-3-8 and FAA-H-8083-15B define the sectors only by figure; the FAA instrument sample tests have no entry question |
+| Part 107 altitude | 14 CFR 107.51, AC 107-2A, FAA-G-8082-22, the UAG sample test, and the 2016 final rule preamble state the rule without a numeric case |
+| Flight time | No FAA or manufacturer source works the arithmetic |

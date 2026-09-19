@@ -304,3 +304,31 @@ fn vlos_small_multirotor_and_mission() {
     );
     near(&r, "result.vlos.value", 300.0, 1e-9);
 }
+
+#[test]
+fn battery_energy_invariants() {
+    // Energy is linear in capacity and voltage, Ah and mAh agree, a cell
+    // count gives the same answer as its nominal voltage, and usable energy
+    // is the energy between the depth-of-discharge limit and the reserve.
+    let e = |inp: &str| num(&call("drone.power.battery-energy", inp), "result.energy.value");
+    for (c, v) in [(5870.0, 15.4), (2200.0, 11.1), (16000.0, 51.8)] {
+        let base = e(&format!(r#"{{"capacity":"{c} mAh","voltage":"{v} V"}}"#));
+        assert!((base - c / 1000.0 * v).abs() < 1e-9);
+        assert!((e(&format!(r#"{{"capacity":"{} mAh","voltage":"{v} V"}}"#, 2.0 * c)) - 2.0 * base).abs() < 1e-9);
+        assert!((e(&format!(r#"{{"capacity":"{c} mAh","voltage":"{} V"}}"#, 3.0 * v)) - 3.0 * base).abs() < 1e-9);
+        assert!((e(&format!(r#"{{"capacity":"{} Ah","voltage":"{v} V"}}"#, c / 1000.0)) - base).abs() < 1e-9);
+    }
+    for (n, chem, per) in [(4, "lipo", 3.7), (6, "li-ion", 3.6)] {
+        let by_cells = e(&format!(r#"{{"capacity":"5000 mAh","cells":{n},"chemistry":"{chem}"}}"#));
+        let by_volts = e(&format!(r#"{{"capacity":"5000 mAh","voltage":"{} V"}}"#, f64::from(n) * per));
+        assert!((by_cells - by_volts).abs() < 1e-9);
+    }
+    for (dod, res) in [(100.0, 0.0), (80.0, 20.0), (90.0, 45.0)] {
+        let r = call(
+            "drone.power.battery-energy",
+            &format!(r#"{{"capacity":"5000 mAh","voltage":"22.2 V","depth_of_discharge":{dod},"reserve":{res}}}"#),
+        );
+        let full = num(&r, "result.energy.value");
+        assert!((num(&r, "result.usable_energy.value") - full * (dod - res) / 100.0).abs() < 1e-9);
+    }
+}

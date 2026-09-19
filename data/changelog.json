@@ -5,6 +5,15 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "drone.power.battery-energy"
+      ],
+      "vectors": [],
+      "summary": "Battery energy (mAh to Wh) is now stable. It matches the FAA PackSafe worked example (12 V and 8 Ah is 96 Wh) and 19 vectors from a separate implementation. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "indexing.h3.polygon-to-cells"
       ],
       "vectors": [],

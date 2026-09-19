@@ -161,6 +161,7 @@ fn read_density(ctx: &mut Ctx) -> Result<f64, ToolError> {
 
 pub static BATTERY_ENERGY: ToolDef = ToolDef {
     id: "drone.power.battery-energy",
+    stability: gp_base::tool::Stability::Stable,
     title: "Battery energy (mAh to Wh)",
     summary: "Battery energy in watt-hours from capacity and voltage (or cell count), usable energy after a discharge limit and landing reserve, and the current and C-rate for a power draw.",
     aliases: &[

@@ -137,8 +137,27 @@ def rho_at(h_m, t_k=None):
 
 def battery_vectors():
     cases = [(5870, 15.4), (5000, 14.8), (2200, 11.1), (10000, 22.2), (3850, 15.4), (1500, 7.4)]
-    return [fvec(i, {"capacity": f"{c} mAh", "voltage": f"{v} V"}, {"result.energy.value": c / 1000 * v}, PW_SRC, PW_VER)
-            for i, (c, v) in enumerate(cases, 1)]
+    out = [fvec(i, {"capacity": f"{c} mAh", "voltage": f"{v} V"}, {"result.energy.value": c / 1000 * v}, PW_SRC, PW_VER)
+           for i, (c, v) in enumerate(cases, 1)]
+    for c, v in [(4500, 11.55), (7000, 44.4), (22000, 22.2), (1300, 14.8), (16000, 51.8)]:
+        out.append(fvec(len(out) + 1, {"capacity": f"{c} mAh", "voltage": f"{v} V"}, {"result.energy.value": c / 1000 * v}, PW_SRC, PW_VER))
+    # Nominal cell voltages: LiPo 3.7 V, Li-ion 3.6 V.
+    for c, n, chem, per in [(5870, 4, "lipo", 3.7), (3000, 6, "li-ion", 3.6), (10000, 12, "lipo", 3.7)]:
+        out.append(fvec(len(out) + 1, {"capacity": f"{c} mAh", "cells": n, "chemistry": chem},
+                        {"result.voltage.value": n * per, "result.energy.value": c / 1000 * n * per}, PW_SRC, PW_VER))
+    # Usable energy between the depth-of-discharge limit and the reserve.
+    for c, v, dod, res in [(5000, 22.2, 80, 20), (8000, 14.8, 90, 0), (12000, 44.4, 100, 30)]:
+        out.append(fvec(len(out) + 1, {"capacity": f"{c} mAh", "voltage": f"{v} V", "depth_of_discharge": dod, "reserve": res},
+                        {"result.usable_energy.value": c / 1000 * v * (dod - res) / 100}, PW_SRC, PW_VER))
+    # Current and C-rate for a steady draw: I = P / V, C = I / Ah.
+    for c, v, pw in [(5000, 22.2, 400), (2200, 11.1, 150)]:
+        i = pw / v
+        out.append(fvec(len(out) + 1, {"capacity": f"{c} mAh", "voltage": f"{v} V", "power": f"{pw} W"},
+                        {"result.current": i, "result.c_rate": i / (c / 1000)}, PW_SRC, PW_VER))
+    # FAA PackSafe, Batteries Carried by Airline Passengers, Q3: a 12-volt battery rated to 8 Ah is rated at 96 Wh.
+    out.append(fvec(len(out) + 1, {"capacity": "8 Ah", "voltage": "12 V"}, {"result.energy.value": 96.0},
+                    "FAA PackSafe, Batteries Carried by Airline Passengers (Q3 worked example)", "December 2024"))
+    return out
 
 
 def hover_vectors():

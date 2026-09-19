@@ -1340,6 +1340,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &datum::HELMERT,
     &datum::ITRF,
     &datum::PLATE_MOTION,
+    &datum::NAD83,
 ];
 
 pub static REGISTRY: Registry = Registry {

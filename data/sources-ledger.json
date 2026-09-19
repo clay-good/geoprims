@@ -165,6 +165,26 @@
       "editionCheck": true
     },
     {
+      "currentReleaseDate": "2025-04-07",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "ngs-htdp",
+      "name": "Horizontal Time-Dependent Positioning (HTDP)",
+      "issuer": "NGS",
+      "currentEdition": "HTDP 3.6.0 (2025-04-07)",
+      "lastVerified": "2026-09-19",
+      "verificationNote": "Checked at the issuer on 2026-09-19: HTDP-download.zip holds version 3.6.0 (April 7, 2025); compiled and run to generate the vectors.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/TOOLS/Htdp/Htdp.shtml",
+      "matchTerms": [
+        "Horizontal Time-Dependent Positioning"
+      ]
+    },
+    {
       "id": "nadcon5",
       "name": "NADCON5 datum transformations",
       "issuer": "NOAA NGS",

@@ -829,3 +829,236 @@ fn run_plate_motion(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("z", ctx.out("z", m(q.2))),
     ]))
 }
+
+// ---------------------------------------------------------------- NAD 83 (HTDP)
+
+const NGS_HTDP: Reference = Reference {
+    title: "Horizontal Time-Dependent Positioning (HTDP) software, version 3.6.0",
+    issuer: "National Geodetic Survey, NOAA",
+    year: 2025,
+    edition: "HTDP 3.6.0 (2025-04-07)",
+    locator: "Subroutine SETTP: transformation parameters from ITRF94 to NAD 83 and the ITRF and WGS 84 realizations",
+    url: "https://geodesy.noaa.gov/TOOLS/Htdp/Htdp.shtml",
+};
+
+const NAD83_FRAMES: &[&str] = &[
+    "NAD83(2011)",
+    "NAD83(PA11)",
+    "NAD83(MA11)",
+    "ITRF2020",
+    "ITRF2014",
+    "ITRF2008",
+    "ITRF2005",
+    "ITRF2000",
+    "WGS84",
+    "WGS84(G2296)",
+    "WGS84(G2139)",
+    "WGS84(G1762)",
+    "WGS84(G1674)",
+    "WGS84(G1150)",
+];
+
+pub static NAD83: ToolDef = ToolDef {
+    id: "geodesy.datum.nad83",
+    title: "Transform between NAD 83 and ITRF or WGS 84",
+    summary: "Transforms a position between NAD 83 (2011, PA11, or MA11) and ITRF2020, ITRF2014, ITRF2008, ITRF2005, ITRF2000, or WGS 84 at one epoch, with the NGS HTDP parameters, and shows the meter-level difference between them.",
+    aliases: &[
+        "NAD83 to WGS84",
+        "WGS84 to NAD83",
+        "NAD83(2011) to ITRF2020",
+        "HTDP transformation",
+    ],
+    keywords: &[
+        "NAD 83",
+        "NAD83(2011)",
+        "HTDP",
+        "ITRF",
+        "WGS 84",
+        "datum",
+        "PA11",
+        "MA11",
+        "NGS",
+    ],
+    inputs: &[
+        Field::new(
+            "from",
+            "From frame",
+            "Like WGS84(G2296) or NAD83(2011)",
+            Kind::Choice(NAD83_FRAMES),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "to",
+            "To frame",
+            "Like NAD83(2011)",
+            Kind::Choice(NAD83_FRAMES),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "epoch",
+            "Coordinate epoch",
+            "The date the coordinates refer to: 2026-09-19 or 2026.72",
+            Kind::Text { max_len: 40 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "lat",
+            "Latitude",
+            "Decimal degrees, like 38.5",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "Decimal degrees, like -98",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[-180,180)"),
+        qty(
+            "height",
+            "Ellipsoidal height",
+            "Height above the GRS 80 ellipsoid, like 500 m",
+            QT::Length,
+            "m",
+        ),
+    ],
+    outputs: &[
+        mm_out(
+            "shift",
+            "Horizontal shift",
+            "Between the positions in the two frames",
+        ),
+        mm_out("east", "East shift", "In the local east-north-up frame"),
+        mm_out("north", "North shift", "In the local east-north-up frame"),
+        mm_out("up", "Up shift", "In the local east-north-up frame"),
+        Field::new(
+            "azimuth",
+            "Shift direction",
+            "Degrees from true north",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("[0,360)"),
+        Field::new(
+            "lat",
+            "Latitude",
+            "In the target frame",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(10))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "In the target frame",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(10))
+        .angle_range("[-180,180)"),
+        mm_out("height", "Ellipsoidal height", "In the target frame"),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "INPUT_NORMALIZED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "NGS HTDP 3.6.0 14-parameter transformations through ITRF94, applied as HTDP does; WGS 84 (G2296, G2139, G1762) taken as ITRF2020, ITRF2014, and ITRF2008",
+    accuracy: "Matches NGS HTDP 3.6.0 within 1 mm; the transformation itself is good to about 1–2 cm in the conterminous United States",
+    references: &[NGS_HTDP],
+    examples: &[Example {
+        id: "primary",
+        title: "Kansas: WGS 84 (G2296) to NAD 83 (2011) in 2026.7",
+        input: r#"{"from":"WGS84(G2296)","to":"NAD83(2011)","epoch":"2026.7","lat":38.5,"lon":-98,"height":500}"#,
+        source: "NGS HTDP 3.6.0 (compiled from htdp.f), menu option 4",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.plate-motion",
+            reason: "next",
+        },
+    ],
+    sentence: "The frames differ here by {shift} horizontally, toward {azimuth}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_nad83,
+    ..ToolDef::BLANK
+};
+
+fn run_nad83(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let from_name = ctx.choice("from")?.expect("required");
+    let to_name = ctx.choice("to")?.expect("required");
+    let t = epoch(ctx, "epoch")?.expect("required");
+    if !(1980.0..=2100.0).contains(&t) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The epoch must be between 1980 and 2100.",
+        )
+        .at("/epoch"));
+    }
+    // WGS 84 realizations aligned with an ITRF use that ITRF's parameters.
+    let from = resolve(ctx, from_name, "the source frame");
+    let to = resolve(ctx, to_name, "the target frame");
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let h = read(ctx, "height", QT::Length, "m")?.unwrap_or(0.0);
+    let grs80 = CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .expect("GRS 80");
+    let (phi, lam) = (lat.to_radians(), lon.to_radians());
+    let p = fr::to_ecef(&grs80, phi, lam, h);
+    let q =
+        gp_geo::htdp::transform(from, to, [p.0, p.1, p.2], t).expect("frames from the choice list");
+    let enu = fr::ecef_to_enu(p, phi, lam, (q[0], q[1], q[2]));
+    let (phi2, lam2, h2) = fr::from_ecef(&grs80, q[0], q[1], q[2]).expect("not the center");
+    ctx.context.push(("epoch", Json::Num(t)));
+    if from.starts_with("NAD83") || to.starts_with("NAD83") {
+        ctx.context.push(("nad83ReferenceEpoch", Json::Num(2010.0)));
+    }
+    let az = gp_base::angle::wrap_azimuth(enu[0].atan2(enu[1]).to_degrees());
+    Ok(Json::obj([
+        ("shift", ctx.out("shift", m(enu[0].hypot(enu[1])))),
+        ("east", ctx.out("east", m(enu[0]))),
+        ("north", ctx.out("north", m(enu[1]))),
+        ("up", ctx.out("up", m(enu[2]))),
+        ("azimuth", ctx.out("azimuth", deg(az))),
+        ("lat", ctx.out("lat", deg(phi2.to_degrees()))),
+        (
+            "lon",
+            ctx.out("lon", deg(gp_base::angle::wrap_lon(lam2.to_degrees()))),
+        ),
+        ("height", ctx.out("height", m(h2))),
+    ]))
+}

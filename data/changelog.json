@@ -4,6 +4,15 @@
     {
       "date": "2026-09-19",
       "kind": "changed",
+      "tools": [
+        "navigation.route.time-speed-distance"
+      ],
+      "vectors": [],
+      "summary": "Time, speed, and distance is stable. It reproduces every one of the 4,800 cells of Bowditch's printed Speed, Time, and Distance table (NGA Pub. 9, Volume II, 2024 edition) to the tenth of a mile the table shows, with one exception: the table prints 6.8 nautical miles for 38 minutes at 10.5 knots, where the arithmetic gives 6.65 and every neighboring cell follows speed times time. The tool gives 6.65, and a test pins the difference. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
       "tools": [],
       "vectors": [],
       "summary": "The site has a simpler shell. The header now carries only the site title, a one-line description, and a light/dark control; Units, All tools, Agents, Settings, and Source moved to the footer. The display modes are down to two, paper and ink: sunlight, night, and high contrast are gone, and a saved choice of any of them now opens in its closest replacement. The home page explains what the site does, then offers one search field and the topic categories, and a new page at /tools/ lists every calculator by category."

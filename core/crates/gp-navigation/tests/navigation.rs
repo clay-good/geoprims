@@ -903,3 +903,43 @@ fn cross_track_invariants() {
         }
     }
 }
+
+#[test]
+fn time_speed_distance_invariants() {
+    // Whichever value is left out comes back consistent with the other two, in
+    // any units; the ETA is the departure plus the elapsed time, and the Zulu
+    // ETA is the local ETA less the UTC offset.
+    let mut seed: u64 = 53;
+    let mut rnd = || {
+        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let tsd = |input: serde_json::Value| call("navigation.route.time-speed-distance", &input.to_string());
+    for _ in 0..200 {
+        let (speed, hours) = (0.5 + rnd() * 600.0, 0.05 + rnd() * 20.0);
+        let distance = speed * hours;
+        // The same leg in nautical and statute units gives the same distance.
+        let a = tsd(serde_json::json!({"speed": format!("{speed} kt"), "time": format!("{hours} h"),
+                                       "options": {"outputUnits": {"distance": "NM"}}}));
+        let b = tsd(serde_json::json!({"speed": format!("{} mi/h", speed * 1.150_779_448_023_074_2), "time": format!("{} min", hours * 60.0),
+                                       "options": {"outputUnits": {"distance": "NM"}}}));
+        let (da, db) = (num(&a, "result.distance.value"), num(&b, "result.distance.value"));
+        assert!((da - distance).abs() < 1e-9 * distance.max(1.0), "{a}");
+        assert!((da - db).abs() < 1e-9 * distance.max(1.0), "{a} vs {b}");
+        // Solving for speed, then for time, returns what it started from.
+        let s = tsd(serde_json::json!({"distance": format!("{distance} NM"), "time": format!("{hours} h"),
+                                       "options": {"outputUnits": {"speed": "kt"}}}));
+        assert!((num(&s, "result.speed.value") - speed).abs() < 1e-9 * speed, "{s}");
+        let t = tsd(serde_json::json!({"distance": format!("{distance} NM"), "speed": format!("{speed} kt"),
+                                       "options": {"outputUnits": {"time": "h"}}}));
+        assert!((num(&t, "result.time.value") - hours).abs() < 1e-9 * hours, "{t}");
+    }
+    // The clock: 14:20 plus 1 h 30 min is 15:50 local, 20:50 Zulu five hours west.
+    let r = tsd(serde_json::json!({"speed": "120 kt", "time": "90 min", "departure": "14:20", "utc_offset": "-5"}));
+    assert_eq!(r["result"]["eta"], "15:50");
+    assert_eq!(r["result"]["eta_utc"], "20:50Z");
+    assert_eq!(r["result"]["ete"], "1 h 30 min");
+    // Past midnight the ETA wraps, and says so.
+    let late = tsd(serde_json::json!({"speed": "60 kt", "time": "4 h", "departure": "23:30", "utc_offset": "0"}));
+    assert_eq!(late["result"]["eta"], "03:30 (next day)");
+}

@@ -135,6 +135,15 @@ def formulas(rnd):
         else:
             inp, exp = {"speed": f"{kt!r} kt", "time": f"{h!r} h"}, {"result.distance.value": nm}
         rows.append(vec(i, inp, exp, {k: {"rel": 1e-12, "abs": 1e-9} for k, v in exp.items() if isinstance(v, float)}, tsd_src))
+    # Bowditch's printed Table 11 (NGA Pub. 9, Volume II, 2024 edition): published
+    # cells across the table, each to the tenth of a mile it is printed to. The cell
+    # at 38 minutes and 10.5 knots misprints 6.8 for 6.65 and is left out; the
+    # differential in tests/tsd_parity.rs pins it instead.
+    bow = ("Bowditch, The American Practical Navigator (NGA Pub. 9), Volume II, Table 11, Speed, Time, and Distance", "2024 edition")
+    for minutes, knots, miles in [(60, 12.0, 12.0), (30, 20.0, 10.0), (45, 8.5, 6.4), (12, 32.0, 6.4), (7, 40.0, 4.7), (23, 15.5, 5.9), (50, 0.5, 0.4)]:
+        rows.append({"id": f"v{len(rows) + 1:03d}", "input": {"speed": f"{knots} kt", "time": f"{minutes} min", "options": {"outputUnits": {"distance": "NM"}}},
+                     "expect": {"result.distance.value": miles, "ok": True}, "source": bow[0], "sourceVersion": bow[1],
+                     "tolerance": {"result.distance.value": {"abs": 0.05}}})
     write("navigation.route.time-speed-distance", rows)
 
     cpa_src = "Relative motion in a flat plane: t = -(r.v)/|v|^2, evaluated in Python"

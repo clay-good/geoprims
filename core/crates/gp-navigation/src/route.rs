@@ -572,6 +572,7 @@ fn run_fly_by(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TSD: ToolDef = ToolDef {
     id: "navigation.route.time-speed-distance",
+    stability: gp_base::tool::Stability::Stable,
     title: "Time, speed, and distance",
     summary: "Solves for time, speed, or distance from the other two, and the arrival time from a departure time and UTC offset.",
     aliases: &[

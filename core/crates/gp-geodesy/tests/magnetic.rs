@@ -239,3 +239,25 @@ fn field_element_invariants() {
         }
     }
 }
+
+#[test]
+fn meta_carries_the_magnetic_caveats() {
+    // mcp "Magnetic caveat": model, epoch, validity window, uncertainty, and
+    // the compass zone, plus the not-for-navigation notice, all in meta.
+    let r = call(D, r#"{"lat":40,"lon":-105,"date":"2026-09-19"}"#);
+    let c = &r["meta"]["context"];
+    assert_eq!(c["model"], "wmm2025", "{r}");
+    assert!((c["epoch"].as_f64().unwrap() - 2026.716).abs() < 0.01);
+    assert_eq!(
+        (c["validFrom"].as_f64(), c["validTo"].as_f64()),
+        (Some(2025.0), Some(2030.0))
+    );
+    assert!(c["declinationUncertaintyDeg"].as_f64().unwrap() > 0.2);
+    assert_eq!(c["compassZone"], "normal");
+    assert_eq!(
+        r["meta"]["notice"],
+        "Planning and education aid. Not for primary navigation."
+    );
+    let polar = call(D, r#"{"lat":86,"lon":150,"date":"2026-09-19"}"#);
+    assert_ne!(polar["meta"]["context"]["compassZone"], "normal", "{polar}");
+}

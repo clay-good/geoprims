@@ -326,6 +326,9 @@ pub struct Ctx<'a> {
     pub model: Option<String>,
     /// Reference data this call used, echoed in `meta.assets` (id and version).
     pub assets: Vec<AssetRef>,
+    /// Operating context agents should relay (model epoch, validity window,
+    /// uncertainty), echoed in `meta.context`.
+    pub context: Vec<(&'static str, Json)>,
 }
 
 /// The magnitude bounds for quantity inputs, in registry base units.
@@ -857,7 +860,7 @@ impl Registry {
 
     fn run(&self, def: &'static ToolDef, input: &Value) -> String {
         match execute(def, input) {
-            Ok((result, summary, display, warnings, model, assets)) => {
+            Ok((result, summary, display, warnings, model, assets, context)) => {
                 let meta = Meta {
                     tool: def.id.to_owned(),
                     tool_version: def.version.to_owned(),
@@ -865,6 +868,8 @@ impl Registry {
                     model: model.unwrap_or_else(|| def.model.to_owned()),
                     accuracy: def.accuracy.to_owned(),
                     warnings,
+                    context,
+                    notice: operational_notice(def),
                 };
                 envelope::success(result, summary.as_deref(), display, &meta)
             }
@@ -885,6 +890,7 @@ type Executed = (
     Vec<Warning>,
     Option<String>,
     Vec<AssetRef>,
+    Vec<(&'static str, Json)>,
 );
 
 fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> {
@@ -918,6 +924,7 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         warnings: Vec::new(),
         model: None,
         assets: Vec::new(),
+        context: Vec::new(),
     };
     for f in def.inputs {
         if f.required && !ctx.is_set(f.name) {
@@ -949,7 +956,18 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         ctx.warnings,
         ctx.model,
         ctx.assets,
+        ctx.context,
     ))
+}
+
+/// The notice aviation, drone, navigation, and magnetic results carry in
+/// `meta.notice`, the same words the website shows on those tools.
+pub const NOT_FOR_NAVIGATION: &str = "Planning and education aid. Not for primary navigation.";
+
+fn operational_notice(def: &ToolDef) -> Option<&'static str> {
+    let operational = matches!(def.domain(), "aviation" | "drone" | "navigation")
+        || def.id.starts_with("geodesy.magnetic.");
+    operational.then_some(NOT_FOR_NAVIGATION)
 }
 
 /// Display precision for input values echoed in sentences.

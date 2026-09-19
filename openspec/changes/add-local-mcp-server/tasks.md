@@ -4,7 +4,7 @@
 - [ ] 1.1a Build release artifacts into `mcp/dist/` on tags, with the untagged-checkout message; verify the clone-and-run, untagged-checkout, and verify-before-running scenarios on a clean machine image with only Node installed
 - [ ] 1.1b Add the golden surface file and MCP Inspector CLI job; verify the surface-drift scenario
 - [ ] 1.2 Implement protocol negotiation for `2026-07-28`, `2025-11-25`, and `2025-06-18`; verify handshakes from recorded clients of each version (older-client scenario)
-- [ ] 1.3 Verify cross-surface equality: run the golden-vector suite through the server and compare bytes to the website's results (same-result-as-website scenario)
+- [x] 1.3 Verify cross-surface equality: run the golden-vector suite through the server and compare bytes to the website's results (same-result-as-website scenario)
 
 ## 2. Meta-tools
 
@@ -23,7 +23,7 @@
 - [x] 3.2 Implement recoverable `isError` results and closest-id suggestions; verify the wrong-id scenario
 - [x] 3.3 Implement resources `geoprims://catalog` and `geoprims://tool/{id}` with `ttlMs`/`cacheScope`; verify the resource-read scenario
 - [ ] 3.4 Implement the five workflow prompts; verify each prompt's tool chain runs end to end
-- [ ] 3.5 Put model, epoch, accuracy, and not-for-navigation caveats in result `meta` for operational domains; verify the magnetic-caveat scenario
+- [x] 3.5 Put model, epoch, accuracy, and not-for-navigation caveats in result `meta` for operational domains; verify the magnetic-caveat scenario
 
 ## 4. Limits, assets, and security
 

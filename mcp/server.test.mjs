@@ -291,3 +291,34 @@ test('report_problem truncates long notes to the shared limit', async () => {
   const bad = await c.call('geoprims_report_problem', { toolId: 'nope.x.y', args: {}, observed: 'x' });
   assert.equal(bad.structuredContent.error.code, 'UNSUPPORTED');
 });
+
+test('every golden vector gives the same bytes through the server as the runtime', async () => {
+  // mcp "Same result as the website": the site and the server share one core.
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const dir = join(root, 'core/vectors');
+  let n = 0;
+  for (const file of readdirSync(dir).filter((f) => f.endsWith('.jsonl'))) {
+    const id = file.replace(/\.jsonl$/, '');
+    for (const line of readFileSync(join(dir, file), 'utf8').split('\n').filter(Boolean)) {
+      const v = JSON.parse(line);
+      if (v.supersededBy) continue;
+      const r = await c.call('geoprims_run', { id, args: v.input });
+      assert.equal(r.content[0].text, await host.invoke(id, JSON.stringify(v.input)), `${id} ${v.id}`);
+      n++;
+    }
+  }
+  assert.ok(n > 1000, `ran ${n} vectors`);
+});
+
+test('operational results carry their caveats in meta', async () => {
+  const r = await c.call('geoprims_run', { id: 'geodesy.magnetic.declination', args: { lat: 40, lon: -105, date: '2026-09-19' } });
+  const m = r.structuredContent.meta;
+  assert.equal(m.model, 'WMM2025 main field, degree 12');
+  assert.ok(m.accuracy);
+  assert.deepEqual(Object.keys(m.context), ['model', 'epoch', 'validFrom', 'validTo', 'declinationUncertaintyDeg', 'compassZone']);
+  assert.equal(m.notice, 'Planning and education aid. Not for primary navigation.');
+  const isa = await c.call('geoprims_run', { id: 'aviation.atmosphere.isa', args: { altitude: '5000 ft' } });
+  assert.equal(isa.structuredContent.meta.notice, m.notice);
+  const kt = await c.call('geoprims_run', { id: 'units.speed.kt-to-mph', args: { value: 1 } });
+  assert.equal(kt.structuredContent.meta.notice, undefined);
+});

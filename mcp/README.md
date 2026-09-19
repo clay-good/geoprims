@@ -43,7 +43,7 @@ The `npx -y @geoprims/mcp` path works once the package is published (not yet).
 
 Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus its golden vectors).
 
-`structuredContent` is the core's result envelope byte for byte (`{"ok":true,"result":…,"summary":…,"meta":…}`, where `summary` is the plain-language sentence the website shows), and errors come back with `isError: true` and a geoprims error code.
+`structuredContent` is the core's result envelope byte for byte (`{"ok":true,"result":…,"summary":…,"meta":…}`, where `summary` is the plain-language sentence the website shows), and errors come back with `isError: true` and a geoprims error code. Results from aviation, drone, navigation, and magnetic tools carry `meta.notice` ("Planning and education aid. Not for primary navigation."), and tools with operating context an agent should relay put it in `meta.context`. For example, magnetic declination reports the model, epoch used, validity window, declination uncertainty, and whether the point is in a compass blackout or caution zone.
 
 ## Options
 

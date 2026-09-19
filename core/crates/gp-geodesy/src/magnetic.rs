@@ -191,6 +191,25 @@ fn evaluate(ctx: &mut Ctx) -> Result<Eval, ToolError> {
         Model::Wmm2025 => "WMM2025 main field, degree 12".into(),
         Model::Igrf14 => format!("IGRF-14 main field, degree 13, {}", mag::igrf_span(t)),
     });
+    // What an agent should relay with the number (mcp "Descriptions carry caveats").
+    let zone = if e.h < 2000.0 {
+        "blackout"
+    } else if e.h < 6000.0 {
+        "caution"
+    } else {
+        "normal"
+    };
+    ctx.context.push(("model", Json::str(model.id())));
+    ctx.context.push(("epoch", Json::Num(t)));
+    ctx.context.push(("validFrom", Json::Num(lo)));
+    ctx.context.push(("validTo", Json::Num(hi)));
+    if model == Model::Wmm2025 {
+        ctx.context.push((
+            "declinationUncertaintyDeg",
+            Json::Num(mag::wmm_declination_uncertainty(e.h)),
+        ));
+    }
+    ctx.context.push(("compassZone", Json::str(zone)));
     Ok(Eval { model, t, e })
 }
 

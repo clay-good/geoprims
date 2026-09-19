@@ -24,6 +24,10 @@ pub struct Meta {
     pub model: String,
     pub accuracy: String,
     pub warnings: Vec<Warning>,
+    /// Operating context agents should relay (`meta.context`), when any.
+    pub context: Vec<(&'static str, Json)>,
+    /// A standing notice for operational tools (`meta.notice`), when any.
+    pub notice: Option<&'static str>,
 }
 
 impl Meta {
@@ -32,7 +36,7 @@ impl Meta {
         // regardless of the order a tool discovered them.
         let mut warnings = self.warnings.clone();
         warnings.sort_by(|a, b| (a.code, &a.field).cmp(&(b.code, &b.field)));
-        Json::obj([
+        let base = Json::obj([
             ("tool", Json::str(&self.tool)),
             ("toolVersion", Json::str(&self.tool_version)),
             ("coreVersion", Json::str(CORE_VERSION)),
@@ -56,7 +60,25 @@ impl Meta {
                 "warnings",
                 Json::Arr(warnings.iter().map(Warning::to_json).collect()),
             ),
-        ])
+        ]);
+        let Json::Obj(mut pairs) = base else {
+            unreachable!("an object")
+        };
+        if !self.context.is_empty() {
+            pairs.push((
+                "context".to_owned(),
+                Json::Obj(
+                    self.context
+                        .iter()
+                        .map(|(k, v)| ((*k).to_owned(), v.clone()))
+                        .collect(),
+                ),
+            ));
+        }
+        if let Some(n) = self.notice {
+            pairs.push(("notice".to_owned(), Json::str(n)));
+        }
+        Json::Obj(pairs)
     }
 }
 
@@ -103,6 +125,8 @@ mod tests {
                 Warning::new("UNIT_ASSUMED", "b").at("/value"),
                 Warning::new("INPUT_NORMALIZED", "a").at("/lon"),
             ],
+            context: vec![],
+            notice: None,
         }
     }
 

@@ -1,14 +1,16 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { catalog, DOMAIN_TITLES, groups, route } from '../../lib/catalog.mjs';
+import { breadcrumbs, catalog, collection, DOMAIN_TITLES, groups, route } from '../../lib/catalog.mjs';
 export function getStaticPaths() {
   return [...new Set(catalog.tools.map((t) => t.domain))].map((domain) => ({ params: { domain } }));
 }
 const { domain } = Astro.params;
 const title = DOMAIN_TITLES[domain] ?? domain;
 const byGroup = groups(domain);
+const listed = [...byGroup.values()].flat().filter((t) => t.composedOf.length === 0);
+const jsonld = [collection(`${title} calculators`, route(domain), listed), breadcrumbs([['geoprims', '/'], [title, route(domain)]])];
 ---
-<Base title={`${title} calculators · geoprims`} description={`Every geoprims ${title.toLowerCase()} tool, with exact, cited math.`} canonical={route(domain)}>
+<Base title={`${title} calculators · geoprims`} description={`Every geoprims ${title.toLowerCase()} tool, with exact, cited math.`} canonical={route(domain)} jsonld={jsonld}>
   <h1>{title}</h1>
   {[...byGroup].map(([group, tools]) => (
     <section>

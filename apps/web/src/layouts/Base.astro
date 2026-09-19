@@ -1,7 +1,9 @@
 ---
 import '../styles/global.css';
-interface Props { title: string; description: string; canonical: string; noindex?: boolean }
-const { title, description, canonical, noindex = false } = Astro.props;
+interface Props { title: string; description: string; canonical: string; noindex?: boolean; jsonld?: object[] }
+const { title, description, canonical, noindex = false, jsonld = [] } = Astro.props;
+// JSON-LD with < escaped so no string can close the script element (search-pages "Structured data allowlist").
+const ld = jsonld.map((o) => JSON.stringify(o).replaceAll('<', '\\u003c'));
 const canonicalUrl = new URL(canonical, Astro.site).href;
 ---
 <!doctype html>
@@ -14,6 +16,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="referrer" content="no-referrer" />
+    {ld.map((j) => <script type="application/ld+json" set:html={j} />)}
   </head>
   <body>
     <header class="site">

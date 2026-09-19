@@ -45,3 +45,48 @@ export function groups(domain) {
   }
   return byGroup;
 }
+
+const SITE = 'https://geoprims.com';
+
+/** BreadcrumbList JSON-LD for a trail of [name, route] pairs. */
+export const breadcrumbs = (trail) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: trail.map(([name, path], i) => ({ '@type': 'ListItem', position: i + 1, name, item: SITE + path })),
+});
+
+/** WebApplication JSON-LD for a tool page: free, no ratings or reviews. */
+export const webApplication = (t) => ({
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: t.title,
+  description: t.summary,
+  url: SITE + route(t.id),
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any (runs in the browser)',
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: 0, priceCurrency: 'USD' },
+});
+
+/** CollectionPage with an ItemList for a hub. */
+export const collection = (name, path, tools) => ({
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name,
+  url: SITE + path,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: tools.map((t, i) => ({ '@type': 'ListItem', position: i + 1, name: t.title, url: SITE + route(t.id) })),
+  },
+});
+
+/** The input table for the developer block: field, unit, and allowed values. */
+export const inputRows = (t) =>
+  Object.entries(t.inputs.properties)
+    .filter(([k]) => k !== 'options')
+    .map(([k, s]) => ({
+      name: k,
+      required: t.inputs.required.includes(k),
+      unit: s['x-unit'] && s['x-unit'] !== '1' ? s['x-unit'] : '',
+      range: s.enum ? s.enum.join(', ') : s['x-angle-range'] ?? (s.minimum !== undefined || s.maximum !== undefined ? `${s.minimum ?? ''} to ${s.maximum ?? ''}` : s.type === 'array' ? 'list of rows' : ''),
+    }));

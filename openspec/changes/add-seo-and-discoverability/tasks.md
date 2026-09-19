@@ -4,7 +4,7 @@
 - [ ] 1.2 Create `data/seo/high-intent-pages.json` (≤ 60, each justified) and the canonical-to-parent rendering for other pairs; verify both page-versus-endpoint scenarios
 - [ ] 1.3 Implement the shared title/description module with caps, a superlative lint, and SPA parity; verify the head-parity scenario
 - [ ] 1.4 Implement canonical rules and `#example` links; verify the shared-link scenario
-- [ ] 1.5 Implement the JSON-LD allowlist gate with escaping; verify the banned-type scenario
+- [x] 1.5 Implement the JSON-LD allowlist gate with escaping; verify the banned-type scenario
 
 ## 2. Content
 
@@ -15,10 +15,10 @@
 ## 3. Build outputs
 
 - [ ] 3.1 Render OG images at build with content-hash caching; verify the OG-image scenario
-- [ ] 3.2 Emit the sitemap index per domain with the lastmod content-hash ledger; verify the unchanged-page scenario
+- [ ] 3.2 Emit the sitemap index per domain with the lastmod content-hash ledger; verify the unchanged-page scenario (built: a sitemap index with one sitemap per domain plus one for site pages, only self-canonical indexable pages, and lastmod from the committed ledger data/seo/lastmod.json keyed by a hash of each page's <main>, stable across rebuilds)
 - [ ] 3.3 Add IndexNow submission of changed URLs after production deploys; verify on a staging key
-- [ ] 3.4 Generate `/llms.txt`, `/.well-known/mcp.json`, and `/AGENTS.md` from the catalog and MCP surface; verify the counts and surface-parity scenarios
-- [ ] 3.5 Add the "For developers and agents" block per tool; verify the copyable-call scenario
+- [ ] 3.4 Generate `/llms.txt`, `/.well-known/mcp.json`, and `/AGENTS.md` from the catalog and MCP surface; verify the counts and surface-parity scenarios (built: all three from the build catalog and mcp/surface.json by apps/web/scripts/discovery.mjs, plus robots.txt; pending: links to /methodology and /sources, which do not exist yet)
+- [x] 3.5 Add the "For developers and agents" block per tool; verify the copyable-call scenario
 
 ## 4. Performance
 

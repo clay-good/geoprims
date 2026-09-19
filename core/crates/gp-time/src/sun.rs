@@ -1,7 +1,7 @@
 //! The NOAA solar algorithm (after Meeus, Astronomical Algorithms, ch. 25 and
-//! 28): declination, equation of time, position, and the times the sun
-//! crosses an altitude. About 0.01° in position and well under a minute in
-//! rise and set times between ±72° latitude; UT1 is taken as UTC.
+//! 28): declination, equation of time, and position, about 0.01° in
+//! position; UT1 is taken as UTC. The times the sun crosses an altitude use
+//! the NREL SPA (see [`crossing`]), because 0.01° decides grazing twilights.
 
 use libm::{acos, asin, atan2, cos, sin, sqrt, tan};
 
@@ -106,35 +106,87 @@ pub fn transit(lon: f64, near_jd: f64) -> f64 {
     t
 }
 
-/// The rising and setting crossings of `altitude` around the transit at
-/// `noon_jd`, each refined by recomputing the sun at the event time.
-pub fn crossings(lat: f64, lon: f64, noon_jd: f64, altitude: f64) -> Crossing {
-    let ha_at = |jd: f64| {
-        let (decl, _) = declination_eot(jd);
-        let (phi, d) = (lat * RAD, decl * RAD);
-        let x = (sin(altitude * RAD) - sin(phi) * sin(d)) / (cos(phi) * cos(d));
-        if x < -1.0 {
-            Err(Crossing::AlwaysAbove)
-        } else if x > 1.0 {
-            Err(Crossing::AlwaysBelow)
+/// One side of a day's crossing of an altitude: the time it happens, or why
+/// it does not (the sun stays above, or never reaches, the altitude).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Side {
+    /// Julian date (UT) of the crossing.
+    At(f64),
+    Above,
+    Below,
+}
+
+/// Geometric (unrefracted) elevation from the NREL SPA, with ΔT for the date.
+fn spa_elevation(lat: f64, lon: f64, jd: f64) -> f64 {
+    let year = 2000.0 + (jd - 2_451_545.0) / 365.25;
+    let o = crate::spa::Observer {
+        lat,
+        lon,
+        elevation: 0.0,
+        pressure: 1013.25,
+        temperature: 12.0,
+        atmos_refract: 0.5667,
+    };
+    crate::spa::position(jd, crate::spa::delta_t(year, 0.5), o).elevation_true
+}
+
+/// Golden-section search for the extreme of `f` in [a, b] (the maximum when
+/// `max`), to about a second.
+fn extreme(f: impl Fn(f64) -> f64, mut a: f64, mut b: f64, max: bool) -> f64 {
+    let g = 0.618_033_988_749_894_9;
+    let key = |x: f64| if max { -f(x) } else { f(x) };
+    let (mut c, mut d) = (b - g * (b - a), a + g * (b - a));
+    let (mut fc, mut fd) = (key(c), key(d));
+    while b - a > 1e-5 {
+        if fc < fd {
+            (b, d, fd) = (d, c, fc);
+            c = b - g * (b - a);
+            fc = key(c);
         } else {
-            Ok(acos(x) / RAD)
+            (a, c, fc) = (c, d, fd);
+            d = a + g * (b - a);
+            fd = key(d);
         }
-    };
-    let event = |sign: f64| -> Result<f64, Crossing> {
-        let mut jd = noon_jd;
-        let mut ha = ha_at(jd)?;
-        for _ in 0..4 {
-            jd = noon_jd + sign * ha * 4.0 / 1440.0;
-            ha = ha_at(jd)?;
+    }
+    f((a + b) / 2.0)
+}
+
+/// The rising (`sign` −1) or setting (+1) crossing of `altitude` on one side
+/// of the transit near `noon_jd`, by the NREL SPA. The sun's highest and
+/// lowest points on that side decide whether it crosses at all (so a sun that
+/// grazes the altitude by hundredths of a degree is placed correctly), and
+/// bisection between them finds the time to about 0.1 s.
+pub fn crossing(lat: f64, lon: f64, noon_jd: f64, altitude: f64, sign: f64) -> Side {
+    let e = |jd: f64| spa_elevation(lat, lon, jd) - altitude;
+    let noon = transit(lon, noon_jd);
+    let low = noon + sign * 0.5;
+    let window = 0.1;
+    if extreme(e, noon - window, noon + window, true) < 0.0 {
+        return Side::Below;
+    }
+    if extreme(e, low - window, low + window, false) > 0.0 {
+        return Side::Above;
+    }
+    // Between the lowest and highest points the elevation is monotonic.
+    let (mut below, mut above) = (low, noon);
+    for _ in 0..40 {
+        let mid = (below + above) / 2.0;
+        if e(mid) < 0.0 {
+            below = mid;
+        } else {
+            above = mid;
         }
-        // Account for the transit drift between noon and the event.
-        let local_noon = transit(lon, jd);
-        Ok(local_noon + sign * ha * 4.0 / 1440.0)
-    };
-    match (event(-1.0), event(1.0)) {
-        (Ok(r), Ok(s)) => Crossing::Times(r, s),
-        (Err(c), _) | (_, Err(c)) => c,
+    }
+    Side::At((below + above) / 2.0)
+}
+
+/// The rising and setting crossings of `altitude` around the transit at
+/// `noon_jd` (see [`crossing`]).
+pub fn crossings(lat: f64, lon: f64, noon_jd: f64, altitude: f64) -> Crossing {
+    match (crossing(lat, lon, noon_jd, altitude, -1.0), crossing(lat, lon, noon_jd, altitude, 1.0)) {
+        (Side::At(r), Side::At(s)) => Crossing::Times(r, s),
+        (Side::Below, _) | (_, Side::Below) => Crossing::AlwaysBelow,
+        _ => Crossing::AlwaysAbove,
     }
 }
 

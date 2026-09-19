@@ -109,7 +109,34 @@ def events():
              "result.civil_dusk": ev("2026-01-15", "16:59", "2026-01-15", "1659")}, USNO, USNO_VER),
         vec(7, dict(den, offset="America/Denver"), {"result.sunset": ev("2026-06-21", "20:31", "2026-06-22", "0231")}, USNO, USNO_VER),
         vec(8, dict(den, offset="Mars/Olympus"), {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"),
+    ] + [
+        # Day length (sunset minus sunrise) from USNO rows of core/crates/gp-time/tests/data/usno_sun.csv;
+        # USNO prints both to the minute, so the length is good to 2 minutes.
+        vec(10 + k, {"lat": la, "lon": lo, "date": d, "offset": f"{'-' if tz < 0 else '+'}{abs(tz):02d}:00"},
+            {"result.day_minutes": float(mins(set_) - mins(rise))}, USNO_DIFF, USNO_VER, tol=2.0)
+        for k, (la, lo, d, tz, rise, set_) in enumerate(DAY_LENGTHS)
+    ] + [
+        # A grazing civil twilight: the sun dips below -6 deg just before local midnight, after a night when it did not.
+        vec(22, {"lat": -67.19, "lon": -88.2887, "date": "2026-02-01", "offset": "-06:00"},
+            {"result.civil_dawn": "no-civil-twilight-begin", "result.civil_dusk": ev("2026-02-01", "23:59", "2026-02-02", "0559"),
+             "result.sunset": ev("2026-02-01", "21:24", "2026-02-02", "0324")}, USNO_DIFF, USNO_VER),
     ]
+
+
+def mins(hm):
+    h, m = hm.split(":")
+    return int(h) * 60 + int(m)
+
+
+USNO_DIFF = "USNO Astronomical Applications API rstt/oneday, retrieved 2026-09-19 (tools/vectors/gen_usno_sun.py)"
+DAY_LENGTHS = [
+    (58.7834, 12.6764, "2026-12-25", 1, "09:02", "15:17"), (-42.5510, 173.4172, "2026-01-22", 12, "05:15", "19:59"),
+    (-52.4228, -96.7791, "2026-12-15", -6, "03:59", "20:46"), (5.7587, -106.2256, "2026-10-03", -7, "05:52", "17:55"),
+    (-45.2315, 97.2892, "2026-07-11", 6, "07:08", "16:05"), (-68.6969, 34.8684, "2026-04-07", 2, "06:45", "16:39"),
+    (30.4968, -30.1184, "2026-11-18", -2, "06:29", "17:02"), (-52.4934, -161.4371, "2026-03-12", -11, "05:34", "18:16"),
+    (-43.1574, -126.8550, "2026-07-01", -8, "08:00", "17:03"), (-49.2359, 11.2440, "2026-08-21", 1, "07:10", "17:27"),
+    (41.1093, -105.2134, "2026-07-24", -7, "04:49", "19:25"), (65.6747, -6.4461, "2026-05-11", 0, "03:08", "21:39"),
+]
 
 
 def nights():

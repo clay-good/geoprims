@@ -13,7 +13,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Density altitude | `aviation.altimetry.density-altitude` | [x] | [ ] | [ ] |
 | Pilots | Pressure altitude | `aviation.altimetry.pressure-altitude` | [x] | [ ] | [ ] |
 | Pilots | E6B wind triangle | `aviation.wind.heading-groundspeed` | [x] | [ ] | [ ] |
-| Pilots | Sunrise, sunset, twilight | `time.sun.events` | [ ] | [ ] | [ ] |
+| Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] |
 | Pilots | The four nights | `time.sun.aviation-nights` | [ ] | [ ] | [ ] |
 | Pilots | METAR decoder | `aviation.weather.metar-decode` | [ ] | [ ] | [ ] |
 | Pilots | TAF decoder | `aviation.weather.taf-decode` | [ ] | [ ] | [ ] |
@@ -52,4 +52,4 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] |
 
-Stable: 21 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.
+Stable: 22 of 42 rows. `tools/trust/hero.test.mjs` checks every id and Stable box against the catalog.

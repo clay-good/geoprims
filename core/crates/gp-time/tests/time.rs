@@ -436,3 +436,50 @@ fn sun_position_invariants() {
         }
     }
 }
+
+#[test]
+fn sun_events_invariants() {
+    // Events come in order (astronomical, nautical, civil dawn, sunrise,
+    // noon, sunset, and back), solar noon sits midway between sunrise and
+    // sunset to within a minute, and in June the day lengthens with latitude.
+    // UT minutes since 1970 from the "(YYYY-MM-DD HHMMZ)" part, by the days-from-civil algorithm.
+    let ut_minutes = |s: &str| -> i64 {
+        let z = s.split('(').nth(1).unwrap();
+        let n = |a: usize, b: usize| z[a..b].parse::<i64>().unwrap();
+        let (y, m, d) = (n(0, 4), n(5, 7), n(8, 10));
+        let y = if m <= 2 { y - 1 } else { y };
+        let era = y.div_euclid(400);
+        let yoe = y - era * 400;
+        let doy = (153 * ((m + 9) % 12) + 2) / 5 + d - 1;
+        let days = era * 146_097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719_468;
+        days * 1440 + n(11, 13) * 60 + n(13, 15)
+    };
+    let order = [
+        "astronomical_dawn", "nautical_dawn", "civil_dawn", "sunrise", "solar_noon", "sunset", "civil_dusk", "nautical_dusk", "astronomical_dusk",
+    ];
+    for (lat, lon, date, off) in [
+        (39.7392, -104.9903, "2026-06-21", "-06:00"),
+        (-33.8688, 151.2093, "2026-12-21", "+11:00"),
+        (0.0, 0.0, "2026-03-20", "+00:00"),
+        (51.5074, -0.1278, "2026-01-15", "+00:00"),
+        (35.6762, 139.6503, "2026-09-30", "+09:00"),
+    ] {
+        let r = call(
+            "time.sun.events",
+            &serde_json::json!({"lat": lat, "lon": lon, "date": date, "offset": off}).to_string(),
+        );
+        let t: Vec<i64> = order.iter().map(|k| ut_minutes(r["result"][k].as_str().unwrap())).collect();
+        assert!(t.windows(2).all(|w| w[0] < w[1]), "{lat}: out of order {:?}", order.iter().zip(&t).collect::<Vec<_>>());
+        assert!(((t[3] + t[5]) - 2 * t[4]).abs() <= 2, "{lat}: noon is not midway");
+    }
+    let mut prev = 0.0;
+    for lat in [-60.0, -30.0, 0.0, 30.0, 50.0, 60.0, 65.0] {
+        let r = call(
+            "time.sun.events",
+            &serde_json::json!({"lat": lat, "lon": 0.0, "date": "2026-06-21", "offset": "+00:00"}).to_string(),
+        );
+        let d = num(&r, "result.day_minutes");
+        assert!(d > prev, "June day length must grow with latitude ({lat}: {d})");
+        prev = d;
+    }
+}

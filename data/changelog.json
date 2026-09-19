@@ -5,6 +5,26 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "time.sun.events"
+      ],
+      "vectors": [],
+      "summary": "Sunrise, sunset, and twilight is now stable, checked against 1,200 US Naval Observatory events at 300 places and dates (all within a minute, 94% to the same minute)."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "fixed",
+      "tools": [
+        "time.sun.events",
+        "time.sun.aviation-nights",
+        "time.sun.mapping-window"
+      ],
+      "vectors": [],
+      "summary": "Sun event times now use the NREL SPA geometric sun instead of the low-precision NOAA series, and each side of the day is decided on its own. A twilight that grazes its altitude is now placed correctly: at 67.19°S on February 1, 2026, evening civil twilight ends at 23:59 local (matching USNO) instead of never. Across 1,200 USNO events every time is within a minute; published vectors are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "aviation.loading.weight-balance"
       ],
       "vectors": [],

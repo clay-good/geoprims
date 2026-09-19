@@ -8,6 +8,7 @@ table rows at their printed precision. Rerunning must reproduce the files.
 """
 import json
 import math
+import random
 import sys
 from pathlib import Path
 
@@ -243,6 +244,8 @@ PERF_SRC = "Independent Python implementation of the turn, gradient, glide, and 
 PERF_VER = "FAA-H-8083-3C (2021)"
 WB_SRC = "Independent Python weight-and-balance arithmetic per FAA-H-8083-1B chapter 2 (tools/vectors/gen_aviation.py)"
 WB_VER = "FAA-H-8083-1B (2016)"
+WBH = "FAA Aircraft Weight and Balance Handbook (FAA-H-8083-1B), worked example"
+WBH_VER = "FAA-H-8083-1B (2016)"
 
 
 def qc_ratio(m):
@@ -395,6 +398,31 @@ def wb_vectors():
         m = sum(a * b for a, b in st)
         rows = [{"name": f"S{k}", "weight": f"{a} lb", "arm": f"{b} in"} for k, (a, b) in enumerate(st, 1)]
         out.append(vec(i, {"stations": rows}, {"result.total_weight.value": w, "result.cg.value": m / w}, 1e-12, WB_SRC, WB_VER))
+    rnd = random.Random(5)
+    for _ in range(15):
+        st = [(rnd.choice([900, 1250, 1650, 2100, 3400]) + rnd.randint(0, 99), round(rnd.uniform(-20, 120), 1)) for _ in range(rnd.randint(1, 7))]
+        w = sum(a for a, _ in st)
+        m = sum(a * b for a, b in st)
+        rows = [{"name": f"S{k}", "weight": f"{a} lb", "arm": f"{b} in"} for k, (a, b) in enumerate(st, 1)]
+        out.append(vec(len(out) + 1, {"stations": rows}, {"result.total_weight.value": w, "result.cg.value": m / w}, 1e-12, WB_SRC, WB_VER))
+    # FAA-H-8083-1B figure 3-5: weighing points of a nosewheel airplane, datum at the firewall
+    out.append(vec(len(out) + 1, {"stations": [{"name": "Right main", "weight": "830 lb", "arm": "46 in"}, {"name": "Left main", "weight": "836 lb", "arm": "46 in"},
+                                               {"name": "Nose", "weight": "340 lb", "arm": "-32 in"}]},
+                   {"result.total_weight.value": 2006, "result.total_moment": 65756, "result.cg.value": 32.8}, 0, WBH, WBH_VER))
+    out[-1]["tolerance"] = {"result.total_weight.value": {"abs": 0}, "result.total_moment": {"abs": 1e-6}, "result.cg.value": {"abs": 0.05}}
+    # FAA-H-8083-1B figures 6-1 to 6-4: the loaded light twin, inside the CG range (envelope closed at the empty weight)
+    out.append(vec(len(out) + 1, {"stations": [
+        {"name": "Airplane", "weight": "3404 lb", "arm": "35.28 in"}, {"name": "Fuel", "weight": "840 lb", "arm": "61 in"},
+        {"name": "Front seat", "weight": "320 lb", "arm": "37 in"}, {"name": "Row 2 seats", "weight": "310 lb", "arm": "75 in"},
+        {"name": "Forward baggage", "weight": "100 lb", "arm": "-15 in"}, {"name": "Aft baggage", "weight": "90 lb", "arm": "113 in"}],
+        "envelope": [{"arm": "32 in", "weight": "3404 lb"}, {"arm": "32 in", "weight": "4300 lb"}, {"arm": "38 in", "weight": "5200 lb"},
+                     {"arm": "43.1 in", "weight": "5200 lb"}, {"arm": "43.6 in", "weight": "4800 lb"}, {"arm": "43.6 in", "weight": "3404 lb"}]},
+        {"result.total_weight.value": 5064, "result.total_moment": 215093, "result.cg.value": 42.47, "result.takeoff_status": "inside"}, 0, WBH, WBH_VER))
+    out[-1]["tolerance"] = {"result.total_weight.value": {"abs": 0}, "result.total_moment": {"abs": 0.5}, "result.cg.value": {"abs": 0.005}}
+    # FAA-H-8083-1B figure 3-19: MAC from station 144 to 206, CG at station 161, is 27.4% MAC
+    out.append(vec(len(out) + 1, {"stations": [{"name": "Loaded", "weight": "1000 lb", "arm": "161 in"}], "lemac": "144 in", "mac": "62 in"},
+                   {"result.cg_mac": 27.4}, 0, WBH, WBH_VER))
+    out[-1]["tolerance"] = {"result.cg_mac": {"abs": 0.05}}
     return out
 
 

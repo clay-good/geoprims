@@ -192,6 +192,7 @@ const ENVELOPE_POINT: &[Field] = &[
 
 pub static WEIGHT_BALANCE: ToolDef = ToolDef {
     id: "aviation.loading.weight-balance",
+    stability: gp_base::tool::Stability::Stable,
     title: "Weight and balance",
     summary: "Total weight, moment, and center of gravity from your stations, checked against your CG envelope at takeoff and after the fuel burn.",
     aliases: &[

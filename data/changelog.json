@@ -5,6 +5,15 @@
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [
+        "aviation.loading.weight-balance"
+      ],
+      "vectors": [],
+      "summary": "Weight and balance is now stable. It matches three worked examples in the FAA Aircraft Weight and Balance Handbook (FAA-H-8083-1B): a weighed airplane, a loaded light twin inside its CG range, and a CG in percent of MAC. Results are unchanged."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
+      "tools": [
         "geodesy.grid-ref.mgrs-forward",
         "geodesy.grid-ref.mgrs-inverse"
       ],

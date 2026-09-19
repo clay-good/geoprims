@@ -530,3 +530,40 @@ fn wind_invariants() {
         assert!((n - gs * rad(tc).cos()).abs() < 1e-9, "{r}");
     }
 }
+
+#[test]
+fn weight_balance_invariants() {
+    // The CG moves with the datum (FAA-H-8083-1B figures 3-5 and 3-9: 32.8 in
+    // from the firewall is 114.8 in from a datum 82 in ahead), station order
+    // does not matter, a station added at the CG leaves the CG alone, and
+    // shifting weight w by d moves the CG by w·d/W (the handbook's weight-shift formula).
+    let wb = |st: &[(f64, f64)]| {
+        let rows: Vec<Value> = st
+            .iter()
+            .enumerate()
+            .map(|(i, (w, a))| serde_json::json!({"name": format!("S{i}"), "weight": format!("{w} lb"), "arm": format!("{a} in")}))
+            .collect();
+        let r = call(
+            "aviation.loading.weight-balance",
+            &serde_json::json!({"stations": rows}).to_string(),
+        );
+        (num(&r, "result.total_weight.value"), num(&r, "result.cg.value"))
+    };
+    let base = [(1500.0, 85.0), (340.0, 90.0), (170.0, 118.0), (240.0, 48.0), (60.0, 142.0)];
+    let (w, cg) = wb(&base);
+    for d in [-100.0, -32.0, 82.0, 250.0] {
+        let moved: Vec<(f64, f64)> = base.iter().map(|(a, b)| (*a, b + d)).collect();
+        assert!((wb(&moved).1 - (cg + d)).abs() < 1e-9);
+    }
+    let mut rev = base;
+    rev.reverse();
+    assert!((wb(&rev).1 - cg).abs() < 1e-9);
+    let mut plus = base.to_vec();
+    plus.push((123.0, cg));
+    assert!((wb(&plus).1 - cg).abs() < 1e-9);
+    for (i, d) in [(1usize, 28.0), (2, -40.0), (4, -94.0)] {
+        let mut shifted = base;
+        shifted[i].1 += d;
+        assert!((wb(&shifted).1 - (cg + base[i].0 * d / w)).abs() < 1e-9);
+    }
+}

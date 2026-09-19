@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "96b39c92f26fb0e6",
+    "hash": "01e9aa1396764a0d",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
@@ -20,11 +20,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "47d75e570444c25d",
+    "hash": "e9c98df362b0cba7",
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "78c0475d2f2df06d",
+    "hash": "831b6a6b2a1c2b63",
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/": {
@@ -32,7 +32,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "17063edcb570914f",
+    "hash": "94f31ec7722e786a",
     "lastmod": "2026-09-19"
   },
   "/aviation/ifr/": {
@@ -41,6 +41,10 @@
   },
   "/aviation/loading/": {
     "hash": "439765f952473e42",
+    "lastmod": "2026-09-19"
+  },
+  "/aviation/loading/weight-balance/": {
+    "hash": "dadf07550d67472b",
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/": {
@@ -56,15 +60,15 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "ba0d86a15a8e5e62",
+    "hash": "d00082823b7c9387",
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "70aca29c5fccc8a2",
+    "hash": "35e7f2e32f8bafe9",
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "cb30ed54ede1a58d",
+    "hash": "d24f2242896fec66",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -236,7 +240,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "b89caad0d0255d2a",
+    "hash": "7b9f0e9e5f88baa5",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -420,7 +424,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "11e9343b04c20fa9",
+    "hash": "11549ff7c3ec2d42",
     "lastmod": "2026-09-19"
   }
 }

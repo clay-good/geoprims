@@ -67,7 +67,7 @@ test('every tool page has one report button and no bot-check script in its HTML'
   for (const t of catalog.tools) {
     const html = page(route(t.id));
     assert.equal((html.match(/>Report a problem</g) ?? []).length, 1, t.id);
-    assert.ok(!html.includes('challenges.cloudflare.com'), `${t.id} loads the bot check before a click`);
+    assert.ok(!/src="https:\/\/challenges\.cloudflare\.com/.test(html), `${t.id} loads the bot check before a click`);
   }
 });
 

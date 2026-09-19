@@ -7,7 +7,7 @@
 
 - [ ] 2.1 Configure the single Worker with static assets, `run_worker_first` for `/api/reports*`, D1 binding, secrets, cron, and observability off; verify that static requests never invoke the Worker and API requests do (fall back to a route-bound Worker if not)
 - [ ] 2.2 Configure R2 on `assets.geoprims.com` with CORS limited to the site origin; verify a cross-origin request from another origin is refused
-- [ ] 2.3 Configure the enumerated CSP with build-computed script hashes and `inlineStylesheets: 'never'`; verify the header smoke test and a zero-violation CSP report in end-to-end runs
+- [ ] 2.3 Configure the enumerated CSP with build-computed script hashes and `inlineStylesheets: 'never'`; verify the header smoke test and a zero-violation CSP report in end-to-end runs (done: the enumerated CSP with build-computed hashes for Astro's two island bootstrap scripts and its one island style, in _headers and a meta tag, and the smoke test; a manual run had zero violations. Pending: the automated end-to-end CSP report, with the Playwright suites)
 - [ ] 2.4 Disable Bot Fight Mode features and add the WAF rule; verify the no-cookie scenario
 
 ## 3. Page chrome

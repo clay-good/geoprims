@@ -5,7 +5,7 @@
   "description": "The geoprims static website (Astro + Svelte islands).",
   "scripts": {
     "prepare-assets": "node scripts/prepare-assets.mjs",
-    "build": "npm run prepare-assets && astro build && node scripts/discovery.mjs && node scripts/pwa.mjs",
+    "build": "npm run prepare-assets && astro build && node scripts/discovery.mjs && node scripts/headers.mjs && node scripts/pwa.mjs",
     "dev": "npm run prepare-assets && astro dev",
     "preview": "astro preview",
     "test": "node --test 'test/**/*.test.mjs'"

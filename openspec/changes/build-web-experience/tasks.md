@@ -2,7 +2,7 @@
 
 - [x] 1.1 Scaffold the Astro site with Svelte islands in `apps/web`; verify `build` produces static HTML for a sample tool route
 - [x] 1.2 Generate one route per endpoint from `catalog/v1.json`; verify route count equals the catalog endpoint count
-- [ ] 1.3 Configure static-host headers (CSP, security headers, immutable caching for hashed assets); verify with the header smoke test
+- [x] 1.3 Configure static-host headers (CSP, security headers, immutable caching for hashed assets); verify with the header smoke test (scripts/headers.mjs writes dist/_headers and a meta CSP; test/headers.test.mjs; scripts/serve.mjs serves the build under those headers, where recompute, the palette, and the report dialog ran with zero CSP violations)
 - [ ] 1.4 Add performance budgets from `contracts/reference-profiles` (LCP ≤ 2.0 s hard / 1.5 s target, interactive ≤ 2.5 s, INP ≤ 200 ms, shell JS ≤ 90 KB), measured with Playwright traces rather than the Lighthouse CLI; verify on 50 sampled routes
 
 ## 2. Design system

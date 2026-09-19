@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { isPinned, recordUse, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
+  import { diagram } from '../lib/diagrams.js';
 
   let { tool, example, initial } = $props();
 
@@ -72,6 +73,7 @@
   const GEO = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon']);
   const showMap = (tool.visualization ?? []).some((v) => GEO.has(v.kind)) || ('lat' in tool.inputs.properties && 'lon' in tool.inputs.properties);
   let drawnArgs = $state(example);
+  const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result) : null);
 
   function args() {
     const a = {};
@@ -190,6 +192,10 @@
     {#if result.error.hint}<p>{result.error.hint}</p>{/if}
   {/if}
 </section>
+
+{#if dg}
+  <figure class="diagram card">{@html dg.markup}</figure>
+{/if}
 
 {#if showMap && compute && result?.ok}
   <MapCanvas {tool} args={drawnArgs} {result} {compute} />

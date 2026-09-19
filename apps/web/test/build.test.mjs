@@ -157,3 +157,40 @@ test('every aviation, drone, and navigation tool shows the safety notice in its 
   }
   assert.match(page('/disclaimer/'), /Not for primary navigation\./);
 });
+
+test('the home page explains the product, then searches, then browses', () => {
+  // web/page-template "The home page explains the product": description, one
+  // search field, then the categories. Nothing personal or historical above them.
+  const html = page('');
+  const at = (re) => html.search(re);
+  const description = at(/<p class="purpose">/);
+  const search = at(/class="hero-search"/);
+  const categories = at(/<ul class="categories">/);
+  assert.ok(description > 0 && search > description, 'search follows the description');
+  assert.ok(categories > search, 'categories follow the search');
+  assert.ok(at(/class="pinned"/) > categories && at(/class="recent"/) > categories, 'recent and pinned come last');
+  // Every domain the description names is a domain the catalog has.
+  const NOUNS = { drones: 'drone', surveying: 'survey', 'spatial indexing': 'indexing', terrain: 'raster' };
+  const domains = new Set(catalog.tools.map((t) => t.domain));
+  const named = /Exact, cited calculators for ([^.]+)\./.exec(html.replace(/\s+/g, ' '))?.[1];
+  assert.ok(named, 'the description names its subjects');
+  for (const word of named.split(/,\s*/).map((w) => w.replace(/^and\s+/, '').trim()).filter(Boolean)) {
+    assert.ok(domains.has(NOUNS[word] ?? word), `the home page claims "${word}", which the catalog does not have`);
+  }
+});
+
+test('the catalog page lists every operation once', () => {
+  // web/app-shell "The catalog page".
+  const html = page('tools');
+  const listed = [...html.matchAll(/<li data-text="[^"]*"><a href="([^"]+)"/g)].map((m) => m[1]);
+  const wanted = catalog.tools.filter((t) => t.composedOf.length === 0).map((t) => route(t.id));
+  assert.deepEqual([...listed].sort(), [...wanted].sort());
+  assert.equal(new Set(listed).size, listed.length, 'no tool listed twice');
+  // The ItemList is real JSON-LD covering the same tools.
+  const ld = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1].replaceAll('\\u003c', '<')));
+  const items = ld.find((o) => o['@type'] === 'CollectionPage')?.mainEntity?.itemListElement ?? [];
+  assert.equal(items.length, wanted.length);
+  // It is in the sitemap and linked from the home page and every footer.
+  assert.ok(readdirSync(join(dist, 'sitemaps')).some((f) => readFileSync(join(dist, 'sitemaps', f), 'utf8').includes('https://geoprims.com/tools/')), 'in a sitemap');
+  assert.match(page(''), /href="\/tools\/"/);
+});

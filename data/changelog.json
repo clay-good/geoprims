@@ -4,6 +4,13 @@
     {
       "date": "2026-09-19",
       "kind": "changed",
+      "tools": [],
+      "vectors": [],
+      "summary": "The site has a simpler shell. The header now carries only the site title, a one-line description, and a light/dark control; Units, All tools, Agents, Settings, and Source moved to the footer. The display modes are down to two, paper and ink: sunlight, night, and high contrast are gone, and a saved choice of any of them now opens in its closest replacement. The home page explains what the site does, then offers one search field and the topic categories, and a new page at /tools/ lists every calculator by category."
+    },
+    {
+      "date": "2026-09-19",
+      "kind": "changed",
       "tools": [
         "navigation.route.cross-track"
       ],

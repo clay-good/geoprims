@@ -15,17 +15,13 @@ const LIMIT = 8;
 const MODES = [
   ['paper', 'Paper (light)'],
   ['ink', 'Ink (dark)'],
-  ['sunlight', 'Sunlight (outdoors)'],
-  ['night', 'Night (dark-adapted)'],
-  ['high-contrast', 'High contrast'],
 ];
 
-/** Sets a display control through its footer picker, which saves the choice. */
-function setDisplay(name, value) {
-  const control = document.querySelector(`form.display [name=${name}]`);
-  if (!control) return;
-  control.value = value;
-  control.dispatchEvent(new Event(name === 'dim' ? 'input' : 'change'));
+/** Switches display mode through the header toggle, which saves the choice. */
+function setDisplay(mode) {
+  const toggle = document.querySelector('[data-theme-toggle]');
+  if (!toggle || document.documentElement.dataset.theme === mode) return;
+  toggle.click();
 }
 
 const page = (title, href, words) => ({ title, summary: href, words, run: () => (location.href = href) });
@@ -34,7 +30,7 @@ const page = (title, href, words) => ({ title, summary: href, words, run: () => 
 function actions() {
   const on = singleKeysOn();
   return [
-    ...MODES.map(([mode, label]) => ({ title: `Display: ${label}`, summary: 'Change the display mode', words: `theme mode display color colour dark light ${mode}`, run: () => setDisplay('theme', mode) })),
+    ...MODES.map(([mode, label]) => ({ title: `Display: ${label}`, summary: 'Change the display mode', words: `theme mode display color colour dark light ${mode}`, run: () => setDisplay(mode) })),
     { title: 'Show keyboard shortcuts', summary: 'Or press ?', words: 'help keys keyboard shortcuts', run: openSheet },
     { title: on ? 'Turn single-key shortcuts off' : 'Turn single-key shortcuts on', summary: '/, ?, and g h; Ctrl+K always works', words: 'keys keyboard shortcuts single', run: () => setSingleKeys(!on) },
     { title: 'Erase all local data', summary: 'Settings, recent and pinned tools, and offline copies on this device', words: 'erase clear reset delete storage offline cache privacy data', run: eraseLocalData },

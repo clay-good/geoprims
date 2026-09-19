@@ -28,7 +28,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/components/ToolApp.svelte` | The tool island: schema-driven form (list inputs edit as one row per line, comma- or tab-separated), live answer card (core-rendered `display` and `summary`), warnings ordered by severity, copy actions, permalinks (`#v1:` via the core `link` module), Clear and Try the example |
 | `src/components/PageHeader.astro`, `ListFilter.astro`, `ToolCards.astro` | The page-template building blocks: breadcrumbs, `h1`, and purpose line; the list filter (`?q=`, count, no-match search); and the tool card grid |
 | `src/lib/compute.worker.js` | Runs the Wasm modules off the main thread; stale results are dropped |
-| `src/styles/global.css` | Atlas design tokens: paper (default), ink, sunlight, night, and high-contrast, and the Geist fonts |
+| `src/styles/global.css` | Atlas design tokens: paper (the default) and ink, and the Geist fonts |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |
 
 Generated endpoints (like `/units/speed/kt-to-mph/`) canonicalize to their parent operation. Experimental tools are `noindex` until they have their full content.

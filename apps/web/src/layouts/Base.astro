@@ -12,8 +12,10 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- The display mode is set before first paint, so no bright frame flashes (visual-theme). -->
-    <script is:inline>(()=>{const d=document.documentElement,M=['paper','ink','sunlight','night','high-contrast'],old={hud:'ink',daylight:'paper'};try{const m=(q)=>matchMedia(q).matches;let t=localStorage.getItem('gp-theme');t=old[t]||t;d.dataset.theme=M.includes(t)?t:m('(prefers-contrast: more)')?'high-contrast':m('(prefers-color-scheme: dark)')?'ink':'paper';const v=localStorage.getItem('gp-dim');if(v)d.style.setProperty('--dim',v)}catch{d.dataset.theme='paper'}})();</script>
+    <!-- The display mode is set before first paint, so no bright frame flashes (visual-theme).
+         Two modes: a saved choice wins, everything else is paper, whatever the OS prefers.
+         Modes that no longer exist (and the older hud/daylight names) map to their replacement. -->
+    <script is:inline>(()=>{const d=document.documentElement,old={hud:'ink',night:'ink',daylight:'paper',sunlight:'paper','high-contrast':'paper'};try{let t=localStorage.getItem('gp-theme');t=old[t]||t;d.dataset.theme=t==='ink'?'ink':'paper'}catch{d.dataset.theme='paper'}})();</script>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -30,19 +32,27 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
   <body>
     <header class="site">
       <div class="wrap">
-        <a class="brand" href="/">geoprims</a>
-        <button type="button" class="palette-open" aria-keyshortcuts="/ Control+K Meta+K"><span class="long">Search tools or paste a value</span><span class="short">Search</span> <kbd aria-hidden="true">/</kbd></button>
-        <nav aria-label="Main">
-          <a href="/units/">Units</a>
-          <a href="/agents/">Agents</a>
-          <a href="/settings/">Settings</a>
-          <a href="https://github.com/clay-good/geoprims">Source</a>
-        </nav>
+        <a class="brand" href="/">
+          <span class="name">geoprims</span>
+          <span class="what">Exact, cited geospatial and aerospace math</span>
+        </a>
+        <button type="button" class="theme-toggle" data-theme-toggle>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
+          <span class="label">Dark</span>
+        </button>
       </div>
     </header>
     <main class="wrap"><slot /></main>
     <footer class="site">
       <div class="wrap">
+        <nav aria-label="Site">
+          <button type="button" class="palette-open" aria-keyshortcuts="/ Control+K Meta+K">Search tools <kbd aria-hidden="true">/</kbd></button>
+          <a href="/tools/">All tools</a>
+          <a href="/units/">Units</a>
+          <a href="/agents/">Agents</a>
+          <a href="/settings/">Settings</a>
+          <a href="https://github.com/clay-good/geoprims">Source</a>
+        </nav>
         <p>
           geoprims tools are planning, engineering, and education aids. They are not certified for navigation and are not legal
           survey determinations. Verify operational values against official sources. <a href="/disclaimer/">Full disclaimer</a>
@@ -51,18 +61,6 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
           Free, no ads, no tracking. Your inputs never leave your device.
           <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">Wrong answer?</a>
         </p>
-        <form class="display" aria-label="Display">
-          <label>Display
-            <select name="theme">
-              <option value="paper">Paper (light)</option>
-              <option value="ink">Ink (dark)</option>
-              <option value="sunlight">Sunlight (outdoors)</option>
-              <option value="night">Night (dark-adapted)</option>
-              <option value="high-contrast">High contrast</option>
-            </select>
-          </label>
-          <label data-for="night">Brightness <input name="dim" type="range" min="0.3" max="1" step="0.05" /></label>
-        </form>
         <p class="version">Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/changelog/">changelog</a> · <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> · <a href="/methodology/">how results are checked</a> · <a href="/agents/">use with agents</a></p>
       </div>
     </footer>
@@ -71,10 +69,10 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
       <span class="update-actions"><button type="button" class="later">Later</button> <button type="button" class="reload">Reload</button></span>
     </div>
     <script>
-      import { wireDisplay } from '../lib/display.js';
+      import { wireTheme } from '../lib/display.js';
       import { wireKeys } from '../lib/keys.js';
       import { registerOffline } from '../lib/pwa.js';
-      wireDisplay(document.querySelector('form.display'));
+      wireTheme(document.querySelector('[data-theme-toggle]'));
       registerOffline(document.querySelector('.update'));
       // The palette loads on first use: `/` outside text fields, or Ctrl/Cmd+K anywhere.
       const palette = (query) => import('../lib/palette.js').then((m) => m.openPalette(query));

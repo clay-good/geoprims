@@ -6,11 +6,13 @@ interface Props {
   noun: string;
 }
 const { total, noun } = Astro.props;
+// "Filter 38 geodesy tools", or "Filter 195 tools" when the list has no one noun.
+const placeholder = ['Filter', total, noun, 'tools'].filter((p) => p !== '').join(' ');
 ---
 <div class="filter" role="search">
   <label>
     <span class="sr-only">Filter these tools</span>
-    <input type="search" placeholder={`Filter ${total} ${noun} tools`} autocomplete="off" spellcheck="false" />
+    <input type="search" placeholder={placeholder} autocomplete="off" spellcheck="false" />
   </label>
   <p class="filter-count" aria-live="polite"></p>
 </div>

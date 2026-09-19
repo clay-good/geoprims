@@ -61,6 +61,25 @@ export const DOMAIN_BLURBS = {
   units: 'Exact conversions for every unit these tools use.',
 };
 
+/** Group labels that are acronyms or need their own spelling. */
+const GROUP_TITLES = {
+  ifr: 'IFR', spcs: 'SPCS', ups: 'UPS', utm: 'UTM', h3: 'H3', 'grid-ref': 'Grid references',
+  los: 'Line of sight', cogo: 'COGO', 'plus-code': 'Plus Code',
+};
+
+/** A group's heading: its own spelling, else the slug in sentence case. */
+export const groupTitle = (group) => GROUP_TITLES[group] ?? group[0].toUpperCase() + group.slice(1).replaceAll('-', ' ');
+
+/** The plain word for each domain, for the home page's description sentence. */
+export const DOMAIN_NOUNS = {
+  geodesy: 'geodesy', navigation: 'navigation', geometry: 'geometry', aviation: 'aviation', drone: 'drones',
+  survey: 'surveying', indexing: 'spatial indexing', raster: 'terrain', time: 'time', units: 'units',
+};
+
+/** "a, b, and c" from a list of words. */
+export const sentenceList = (words) =>
+  words.length < 3 ? words.join(' and ') : `${words.slice(0, -1).join(', ')}, and ${words.at(-1)}`;
+
 export const route = (id) => '/' + id.split('.').join('/') + '/';
 export const tool = (id) => catalog.tools.find((t) => t.id === id);
 

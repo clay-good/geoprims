@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import ListFilter from '../../components/ListFilter.astro';
+import ToolCards from '../../components/ToolCards.astro';
+import { breadcrumbs, catalog, collection, DOMAIN_BLURBS, DOMAIN_TITLES, groups, groupTitle, route } from '../../lib/catalog.mjs';
+// Every operation, grouped by category then group (web/app-shell "The catalog page").
+// Conversion pairs composed of other tools are listed on their group pages, not here.
+const domains = [...new Set(catalog.tools.map((t) => t.domain))].map((domain) => ({
+  domain,
+  title: DOMAIN_TITLES[domain] ?? domain,
+  blurb: DOMAIN_BLURBS[domain] ?? '',
+  byGroup: [...groups(domain)]
+    .map(([group, tools]) => [group, tools.filter((t) => t.composedOf.length === 0)] as const)
+    .filter(([, tools]) => tools.length > 0),
+}));
+const listed = domains.flatMap((d) => d.byGroup.flatMap(([, tools]) => tools));
+const ops = catalog.counts.all.operations;
+const stable = catalog.counts.stable.operations;
+const jsonld = [collection('All geoprims tools', '/tools/', listed), breadcrumbs([['geoprims', '/'], ['All tools', '/tools/']])];
+---
+<Base
+  title="All tools · geoprims"
+  description={`Every geoprims calculator on one page: ${ops} operations across ${domains.length} topics, each with exact, cited math.`}
+  canonical="/tools/"
+  jsonld={jsonld}
+>
+  <PageHeader
+    title="All tools"
+    crumbs={[['geoprims', '/']]}
+    purpose={`Every calculator on one page, by topic. ${stable} of ${ops} have passed the full verification bar; the rest are marked experimental.`}
+  />
+  <ListFilter total={listed.length} noun="" />
+  {domains.map(({ domain, title, blurb, byGroup }) => (
+    <section class="catalog-section" data-group>
+      <h2 id={domain}>
+        <a href={route(domain)}>{title}</a>
+        <span class="catalog-count">{byGroup.reduce((n, [, tools]) => n + tools.length, 0)}</span>
+      </h2>
+      <p class="notice">{blurb}</p>
+      {byGroup.map(([group, tools]) => (
+        <div data-group id={`${domain}-${group}`}>
+          <h3>{groupTitle(group)}</h3>
+          <ToolCards tools={tools} />
+        </div>
+      ))}
+    </section>
+  ))}
+</Base>

@@ -1,6 +1,6 @@
-// Visual theme (web/visual-theme, Atlas): tokens only, five modes that each meet
-// WCAG AA contrast, night mode's luminance limits, and the pre-paint mode
-// choice that follows the OS preference.
+// Visual theme (web/visual-theme, Atlas): tokens only, two modes that each meet
+// WCAG AA contrast, radii that never read as a pill, and the pre-paint mode
+// choice, which is the saved one or paper.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -9,7 +9,7 @@ import vm from 'node:vm';
 
 const web = new URL('..', import.meta.url).pathname;
 const css = readFileSync(join(web, 'src/styles/global.css'), 'utf8');
-const MODES = ['paper', 'ink', 'sunlight', 'night', 'high-contrast'];
+const MODES = ['paper', 'ink'];
 const TEXT = ['text', 'muted', 'accent', 'caution', 'danger'];
 
 /** Top-level and @media rule blocks: [selector, {--token: value}]. */
@@ -23,15 +23,11 @@ function blocks(src) {
   return out;
 }
 
-/** A mode's tokens: :root defaults, then the mode's own block (night at full brightness). */
+/** A mode's tokens: :root defaults, then the mode's own block. */
 function tokens(mode) {
   const all = blocks(css);
   const pick = (sel) => Object.assign({}, ...all.filter(([s]) => sel(s)).map(([, v]) => v));
   const t = { ...pick((s) => s === ':root' || s.startsWith(':root,')), ...pick((s) => s.includes(`data-theme='${mode}']`) && !s.includes('data-accent') && !s.includes('@')) };
-  for (const [k, v] of Object.entries(t)) {
-    const hex = /#[0-9a-f]{6}/i.exec(v);
-    if (hex) t[k] = hex[0]; // color-mix at --dim = 1 is its first color
-  }
   return t;
 }
 
@@ -64,7 +60,7 @@ test('no color literal outside the token definitions', () => {
   }
 });
 
-test('every mode meets WCAG AA contrast for text and focus', () => {
+test('both modes meet WCAG AA contrast for text and focus', () => {
   for (const mode of MODES) {
     const t = tokens(mode);
     for (const k of TEXT) {
@@ -85,19 +81,25 @@ test('every mode meets WCAG AA contrast for text and focus', () => {
     }
   }
   // One signal accent per mode, used for focus too (Atlas, design W9).
-  for (const mode of ['paper', 'ink']) assert.equal(tokens(mode)['--focus'], tokens(mode)['--accent'], mode);
+  for (const mode of MODES) assert.equal(tokens(mode)['--focus'], tokens(mode)['--accent'], mode);
 });
 
-test('night mode stays dark-adapted: text luminance 0.175-0.25, backgrounds at most 0.005', () => {
-  const t = tokens('night');
-  for (const k of [...TEXT, 'focus']) {
-    const l = lum(t[`--${k}`]);
-    assert.ok(l >= 0.175 && l <= 0.25, `--${k} luminance ${l.toFixed(3)}`);
+test('no control reads as a pill: every radius is 8 px or less', () => {
+  // web/visual-theme "Design tokens": radii at most 8 px. The brand mark's
+  // 1 px diamond and percentage radii on decorative shapes are the only
+  // non-px values, and they are checked here too.
+  const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const m of clean.matchAll(/border-radius:\s*([^;}]+)/g)) {
+    for (const px of m[1].matchAll(/([\d.]+)px/g)) {
+      assert.ok(Number(px[1]) <= 8, `border-radius ${m[1].trim()}`);
+    }
+    assert.doesNotMatch(m[1], /%/, `border-radius ${m[1].trim()}`);
   }
-  for (const k of ['--bg', '--surface']) assert.ok(lum(t[k]) <= 0.005, `${k} luminance ${lum(t[k]).toFixed(4)}`);
+  const tokens = Object.fromEntries([...clean.matchAll(/(--radius[\w-]*):\s*([^;]+);/g)].map((t) => [t[1], t[2].trim()]));
+  assert.deepEqual(tokens, { '--radius': '6px', '--radius-lg': '8px' });
 });
 
-test('the mode is chosen before first paint from the saved choice or the OS preference', () => {
+test('the mode is chosen before first paint: the saved choice, else paper', () => {
   const html = readFileSync(join(web, 'dist/index.html'), 'utf8');
   const script = /<script>(\(\(\)=>\{const d=document\.documentElement[\s\S]*?)<\/script>/.exec(html)?.[1];
   assert.ok(script, 'inline mode script');
@@ -111,17 +113,19 @@ test('the mode is chosen before first paint from the saved choice or the OS pref
     });
     return root;
   };
+  // The OS preference no longer picks a mode: a first visit is paper either way.
   assert.equal(run({ light: true }).dataset.theme, 'paper');
-  assert.equal(run({ dark: true }).dataset.theme, 'ink');
-  assert.equal(run({}).dataset.theme, 'paper', 'no preference: the signature paper mode');
-  assert.equal(run({ more: true, dark: true }).dataset.theme, 'high-contrast');
-  const night = run({ saved: { 'gp-theme': 'night', 'gp-dim': '0.5' } });
-  assert.equal(night.dataset.theme, 'night');
-  assert.equal(night['--dim'], '0.5');
-  // Choices saved under the retired mode names carry over.
-  assert.equal(run({ saved: { 'gp-theme': 'hud' } }).dataset.theme, 'ink');
-  assert.equal(run({ saved: { 'gp-theme': 'daylight' } }).dataset.theme, 'paper');
-  assert.equal(run({ saved: { 'gp-theme': 'bogus' }, dark: true }).dataset.theme, 'ink');
+  assert.equal(run({ dark: true }).dataset.theme, 'paper', 'a dark-mode machine still opens in paper');
+  assert.equal(run({ more: true, dark: true }).dataset.theme, 'paper');
+  assert.equal(run({}).dataset.theme, 'paper');
+  // An explicit choice wins, and the retired mode names carry over to their replacement.
+  assert.equal(run({ saved: { 'gp-theme': 'ink' }, light: true }).dataset.theme, 'ink');
+  assert.equal(run({ saved: { 'gp-theme': 'paper' }, dark: true }).dataset.theme, 'paper');
+  for (const retired of ['night', 'hud']) assert.equal(run({ saved: { 'gp-theme': retired } }).dataset.theme, 'ink', retired);
+  for (const retired of ['sunlight', 'high-contrast', 'daylight']) {
+    assert.equal(run({ saved: { 'gp-theme': retired } }).dataset.theme, 'paper', retired);
+  }
+  assert.equal(run({ saved: { 'gp-theme': 'bogus' }, dark: true }).dataset.theme, 'paper');
 });
 
 test('fonts are self-hosted Geist, subset within the 80 KB budget', () => {
@@ -132,4 +136,51 @@ test('fonts are self-hosted Geist, subset within the 80 KB budget', () => {
   assert.ok(bytes <= 80 * 1024, `${bytes} bytes of fonts`);
   assert.match(readFileSync(join(dir, 'OFL.txt'), 'utf8'), /SIL Open Font License/);
   assert.match(css, /font-family: 'Geist';[\s\S]*?font-display: swap/);
+});
+
+test('the header toggle switches modes, saves the choice, and relabels itself', async () => {
+  // web/visual-theme "Theme modes": one control, stating the mode it switches to.
+  const el = (cls) => ({ className: cls, textContent: '', innerHTML: '' });
+  const label = el('label');
+  const svg = el('svg');
+  const button = {
+    attrs: {},
+    title: '',
+    listeners: {},
+    querySelector: (sel) => (sel === '.label' ? label : svg),
+    setAttribute(k, v) {
+      this.attrs[k] = v;
+    },
+    addEventListener(name, fn) {
+      this.listeners[name] = fn;
+    },
+    click() {
+      this.listeners.click();
+    },
+  };
+  const root = { dataset: { theme: 'paper' } };
+  const store = {};
+  globalThis.document = { documentElement: root };
+  globalThis.localStorage = { setItem: (k, v) => (store[k] = v) };
+  const { wireTheme } = await import('../src/lib/display.js');
+  wireTheme(button);
+
+  // In paper, it offers dark.
+  assert.equal(label.textContent, 'Dark');
+  assert.equal(button.attrs['aria-label'], 'Switch to dark mode');
+  assert.match(svg.innerHTML, /M21 12\.79/, 'the moon');
+
+  button.click();
+  assert.equal(root.dataset.theme, 'ink');
+  assert.equal(store['gp-theme'], 'ink');
+  assert.equal(label.textContent, 'Light');
+  assert.equal(button.attrs['aria-label'], 'Switch to light mode');
+  assert.match(svg.innerHTML, /<circle cx="12"/, 'the sun');
+
+  button.click();
+  assert.equal(root.dataset.theme, 'paper');
+  assert.equal(store['gp-theme'], 'paper');
+  assert.equal(label.textContent, 'Dark');
+  delete globalThis.document;
+  delete globalThis.localStorage;
 });

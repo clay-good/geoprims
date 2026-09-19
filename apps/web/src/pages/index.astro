@@ -1,21 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import { catalog, DOMAIN_BLURBS, DOMAIN_TITLES, exampleResult, route, tool } from '../lib/catalog.mjs';
+import { catalog, DOMAIN_BLURBS, DOMAIN_NOUNS, DOMAIN_TITLES, route, sentenceList } from '../lib/catalog.mjs';
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 const ops = catalog.counts.all.operations;
 const stable = catalog.counts.stable.operations;
-// Popular tools, each with its worked example computed at build time.
-const HEROES = [
-  'aviation.altimetry.density-altitude',
-  'aviation.wind.runway-components',
-  'navigation.geodesic.inverse',
-  'geodesy.utm.forward',
-  'geodesy.magnetic.declination',
-  'drone.photogrammetry.gsd',
-  'time.sun.position',
-  'indexing.h3.lat-lng-to-cell',
-];
-// Example searches under the hero search; each opens the palette with the query typed.
+// The description names the domains the catalog actually has, so the claim cannot drift.
+const subjects = sentenceList(domains.map((d) => DOMAIN_NOUNS[d] ?? d));
+// Example searches under the search field; each opens the palette with the query typed.
 const TRY = [
   ['Density altitude', 'density altitude'],
   ['A coordinate', '40.6892, -74.0445'],
@@ -23,22 +14,16 @@ const TRY = [
   ['Crosswind', 'crosswind'],
   ['Sunrise', 'sunrise'],
 ];
-const heroes = await Promise.all(
-  HEROES.map(tool)
-    .filter(Boolean)
-    .map(async (t) => {
-      const r = await exampleResult(t);
-      const key = r?.ok ? Object.keys(t.outputs.properties).find((k) => r.display?.[k] !== undefined) : undefined;
-      return { t, value: key ? r.display[key] : '', label: key ? t.outputs.properties[key].title : '', sentence: r?.ok ? r.summary : '' };
-    }),
-);
 ---
 <Base title="geoprims: geospatial and aerospace calculators" description="Exact, cited geodesy, aviation, drone, survey, and unit calculations that run on your device. Free, no ads, no tracking." canonical="/">
-  <section class="hero">
+  <section class="masthead">
     <h1>The math behind maps, flights, and surveys.</h1>
-    <p class="purpose">Exact, cited calculators for geodesy, aviation, drones, surveying, and units. They run on your device: free, private, and offline after your first visit.</p>
+    <p class="purpose">
+      Exact, cited calculators for {subjects}. Every answer shows its formula, its sources, and how far it can be
+      trusted. Everything runs on your device: no ads, no accounts, no tracking, and no network after your first visit.
+    </p>
     <button type="button" class="hero-search" data-palette>
-      <span class="hero-search-text">Try “density altitude 5000 ft 30C 29.92” or paste a coordinate</span>
+      <span class="hero-search-text">Search {ops} tools, or paste a coordinate</span>
       <kbd aria-hidden="true">/</kbd>
     </button>
     <p class="chips" aria-label="Examples to try">
@@ -46,6 +31,18 @@ const heroes = await Promise.all(
       {TRY.map(([label, query]) => <button type="button" class="chip-button" data-palette={query}>{label}</button>)}
     </p>
   </section>
+
+  <h2 class="sr-only">Browse by topic</h2>
+  <ul class="categories">
+    {domains.map((d) => (
+      <li>
+        <a href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a>
+        <p class="blurb">{DOMAIN_BLURBS[d] ?? ''}</p>
+        <span class="count">{catalog.tools.filter((t) => t.domain === d).length}</span>
+      </li>
+    ))}
+  </ul>
+  <p class="all-tools-line"><a href="/tools/">See all {ops} tools on one page</a></p>
 
   <section class="pinned" hidden aria-labelledby="pinned-title">
     <h2 id="pinned-title">Pinned</h2>
@@ -60,28 +57,6 @@ const heroes = await Promise.all(
     import { mountLists } from '../lib/lists.js';
     mountLists(document);
   </script>
-
-  <h2>Popular</h2>
-  <ul class="tools heroes">
-    {heroes.map(({ t, value, label, sentence }) => (
-      <li>
-        <a href={route(t.id)}>{t.title}</a>
-        {value && <p class="hero-value" aria-label={`${label}: ${value}`}>{value}</p>}
-        <p class="clamp">{sentence}</p>
-      </li>
-    ))}
-  </ul>
-
-  <h2>Browse by topic</h2>
-  <ul class="tools domains">
-    {domains.map((d) => (
-      <li>
-        <a href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a>
-        <p>{DOMAIN_BLURBS[d] ?? ''}</p>
-        <p class="count">{catalog.tools.filter((t) => t.domain === d).length} tools</p>
-      </li>
-    ))}
-  </ul>
 
   <p class="status">Early release: {ops} operations are built so far, and {stable} {stable === 1 ? 'has' : 'have'} passed the full <a href="/methodology/">verification bar</a>. The rest are marked experimental until they do. The same calculators work <a href="/agents/">with AI agents</a>.</p>
 </Base>

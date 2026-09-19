@@ -65,3 +65,33 @@ test('home offers example searches that open the palette', () => {
   const html = page('/');
   assert.ok([...html.matchAll(/class="chip-button" data-palette="[^"]+"/g)].length >= 4);
 });
+
+test('the site header holds the title, what the site is, and the light/dark control, and nothing else', () => {
+  // web/page-template "One page anatomy": exactly two things in the header.
+  for (const f of htmlFiles(dist)) {
+    const name = f.slice(dist.length);
+    const header = /<header class="site">([\s\S]*?)<\/header>/.exec(readFileSync(f, 'utf8'))?.[1];
+    assert.ok(header, `${name} has a site header`);
+    assert.match(header, /<span class="name">geoprims<\/span>/, name);
+    assert.match(header, /<span class="what">[^<]+<\/span>/, name);
+    assert.match(header, /<button type="button" class="theme-toggle" data-theme-toggle>/, name);
+    // One link (the brand, home) and one control (the toggle). Nothing else.
+    assert.equal(header.match(/<a\b/g)?.length, 1, `${name} header links`);
+    assert.equal(header.match(/<button\b/g)?.length, 1, `${name} header buttons`);
+    assert.doesNotMatch(header, /<input|<select|<nav/, `${name} header controls`);
+  }
+});
+
+test('the footer carries the site links and the palette', () => {
+  for (const f of htmlFiles(dist)) {
+    const name = f.slice(dist.length);
+    const footer = /<footer class="site">([\s\S]*?)<\/footer>/.exec(readFileSync(f, 'utf8'))?.[1];
+    assert.ok(footer, `${name} has a site footer`);
+    const nav = /<nav aria-label="Site">([\s\S]*?)<\/nav>/.exec(footer)?.[1];
+    assert.ok(nav, `${name} footer nav`);
+    for (const href of ['/tools/', '/units/', '/agents/', '/settings/', 'https://github.com/clay-good/geoprims']) {
+      assert.ok(nav.includes(`href="${href}"`), `${name} footer link ${href}`);
+    }
+    assert.match(nav, /class="palette-open"/, `${name} footer search`);
+  }
+});

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "e673703bfdbed278",
+    "hash": "4aa1b3908b836bea",
     "lastmod": "2026-09-19"
   },
   "/agents/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
-    "hash": "b27cac2cf1b717b2",
+    "hash": "41b7308f75b6ced1",
     "lastmod": "2026-09-19"
   },
   "/aviation/airspeed/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-09-19"
   },
   "/changelog/": {
-    "hash": "de8320bb5e4ca3ad",
+    "hash": "30ea7d4f3d3c4547",
     "lastmod": "2026-09-19"
   },
   "/disclaimer/": {
@@ -136,7 +136,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/": {
-    "hash": "2e0c71a4db398e7d",
+    "hash": "f95a33652d61a0c7",
     "lastmod": "2026-09-19"
   },
   "/geodesy/datum/": {
@@ -276,7 +276,7 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/": {
-    "hash": "4b70051db8272db0",
+    "hash": "c4f1990655ce3a42",
     "lastmod": "2026-09-19"
   },
   "/indexing/geohash/": {
@@ -388,7 +388,7 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
-    "hash": "69a3bc79a95851ab",
+    "hash": "e5c5c576951eb0b8",
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/": {
@@ -436,7 +436,7 @@
     "lastmod": "2026-09-19"
   },
   "/survey/": {
-    "hash": "daf4f2ff526b7793",
+    "hash": "4645a6185f5a6577",
     "lastmod": "2026-09-19"
   },
   "/survey/cogo/": {
@@ -509,6 +509,10 @@
   },
   "/time/sun/position/": {
     "hash": "432c095282900b9b",
+    "lastmod": "2026-09-19"
+  },
+  "/tools/": {
+    "hash": "c72bf41b8b195bb1",
     "lastmod": "2026-09-19"
   },
   "/units/": {

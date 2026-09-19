@@ -1,31 +1,30 @@
-// The display-mode picker (web/visual-theme). The mode itself is applied before
-// first paint by the inline script in Base.astro; this keeps the picker in
-// step and saves an explicit choice in this browser only.
-const save = (k, v) => {
-  try {
-    localStorage.setItem(k, v);
-  } catch {
-    /* private mode: the choice lasts for this page */
-  }
-};
+// The light/dark control in the site header (web/visual-theme "Theme modes").
+// The mode itself is applied before first paint by the inline script in
+// Base.astro; this labels the button with the mode it switches to and saves an
+// explicit choice in this browser only.
+const SUN = '<circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />';
+const MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />';
 
-export function wireDisplay(form) {
-  if (!form) return;
-  const d = document.documentElement;
-  const { theme, dim } = form.elements;
-  const sync = () => {
-    theme.value = d.dataset.theme ?? 'paper';
-    dim.value = getComputedStyle(d).getPropertyValue('--dim').trim() || '1';
-    for (const label of form.querySelectorAll('[data-for]')) label.hidden = label.dataset.for !== theme.value;
+export function wireTheme(button) {
+  if (!button) return;
+  const root = document.documentElement;
+  // The button offers the mode you are not in, and says so.
+  const paint = () => {
+    const next = root.dataset.theme === 'ink' ? 'paper' : 'ink';
+    const word = next === 'ink' ? 'Dark' : 'Light';
+    button.querySelector('.label').textContent = word;
+    button.querySelector('svg').innerHTML = next === 'ink' ? MOON : SUN;
+    button.setAttribute('aria-label', `Switch to ${word.toLowerCase()} mode`);
+    button.title = `Switch to ${word.toLowerCase()} mode`;
   };
-  theme.addEventListener('change', () => {
-    d.dataset.theme = theme.value;
-    save('gp-theme', theme.value);
-    sync();
+  button.addEventListener('click', () => {
+    root.dataset.theme = root.dataset.theme === 'ink' ? 'paper' : 'ink';
+    try {
+      localStorage.setItem('gp-theme', root.dataset.theme);
+    } catch {
+      /* private mode: the choice lasts for this page */
+    }
+    paint();
   });
-  dim.addEventListener('input', () => {
-    d.style.setProperty('--dim', dim.value);
-    save('gp-dim', dim.value);
-  });
-  sync();
+  paint();
 }

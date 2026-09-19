@@ -448,3 +448,20 @@ test('every setup snippet launches the server; README and package agree', async 
     assert.equal(JSON.parse(r.stdout.split('\n')[0]).result.serverInfo.name, 'geoprims', `${client.name}: ${r.stderr}`);
   }
 });
+
+test('an over-10 MB request is refused and the server keeps serving', async () => {
+  const big = JSON.stringify({ jsonrpc: '2.0', id: 999, method: 'tools/call', params: { name: 'geoprims_run', arguments: { id: 'x', args: { pad: 'x'.repeat(10_500_000) } } } });
+  const r = await c.raw(big, null);
+  assert.equal(r.error.code, -32600);
+  assert.match(r.error.message, /over 10000000 bytes/);
+  const ok = await c.call('geoprims_run', { id: 'units.speed.kt-to-mph', args: { value: 1 } });
+  assert.equal(ok.structuredContent.ok, true);
+});
+
+test('logs go to stderr and never include argument values', async () => {
+  const marker = 'secret-marker-4d1f';
+  await c.call('geoprims_run', { id: 'geodesy.parse.coordinates', args: { text: marker } });
+  await c.call('geoprims_search', { query: marker });
+  assert.match(c.stderr, /<- tools\/call geoprims_run/);
+  assert.ok(!c.stderr.includes(marker), 'argument value leaked into the log');
+});

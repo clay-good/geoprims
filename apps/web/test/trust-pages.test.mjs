@@ -40,3 +40,19 @@ test('the changelog shows every entry, labels result changes, and tool pages lin
   const footer = page('');
   assert.ok(footer.includes('href="/changelog/"') && footer.includes(`href="/verification/${v}/"`));
 });
+
+test('the "Use with agents" page shows every client snippet and the toolsets', async () => {
+  const { CLIENTS, snippet } = await import('../../../mcp/clients.mjs');
+  const { TOOLSETS } = await import('../../../mcp/toolsets.mjs');
+  const html = page('agents');
+  const esc = (s) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+  for (const c of CLIENTS) {
+    for (const how of ['clone', 'npx']) {
+      const text = snippet(c, how);
+      assert.ok(html.includes(text) || html.includes(esc(text)), `${c.name} ${how}`);
+    }
+  }
+  assert.match(html, /&quot;servers&quot;|"servers"/);
+  for (const name of Object.keys(TOOLSETS)) assert.ok(html.includes(`<code>${name}</code>`), name);
+  assert.ok(page('').includes('href="/agents/"'));
+});

@@ -1,0 +1,91 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog } from '../../lib/catalog.mjs';
+import { CLIENTS, snippet } from '../../../../../mcp/clients.mjs';
+import { ANNOTATIONS, TOOLS } from '../../../../../mcp/meta.mjs';
+import { PROMPTS } from '../../../../../mcp/prompts.mjs';
+import { TOOLSETS, directTools } from '../../../../../mcp/toolsets.mjs';
+const route = (id) => '/' + id.split('.').join('/') + '/';
+const toolsets = Object.keys(TOOLSETS).map((name) => ({ name, tools: directTools(catalog, [name], ANNOTATIONS) }));
+---
+<Base title="Use with agents · geoprims" description="Run geoprims as a local MCP server for Claude Code, Claude Desktop, VS Code, Cursor, and Windsurf: offline, zero dependencies, the same answers as this site." canonical="/agents/">
+  <h1>Use with agents</h1>
+  <p class="purpose">
+    geoprims runs as a local MCP server, so an AI agent gets the same calculators and the same answers as this site. It runs on
+    your machine over stdio, has no npm dependencies, and makes no network requests.
+  </p>
+
+  <h2>Get the server</h2>
+  <p>
+    No release is tagged yet, so build from a clone (Rust via rustup, binaryen <code>wasm-opt</code>, and Node 22 or newer), then
+    replace <code>/abs/path/geoprims</code> below with your clone's path.
+    The <code>npx</code> snippets work once <code>@geoprims/mcp</code> is published.
+  </p>
+  <pre class="snippet"><code>git clone https://github.com/clay-good/geoprims
+cd geoprims && npm run build</code></pre>
+
+  <h2>Add it to your client</h2>
+  {CLIENTS.map((c) => (
+    <section class="client" id={c.id}>
+      <h3>{c.name}</h3>
+      <p class="where">{c.where}</p>
+      <pre class="snippet" data-client={c.id} data-how="clone"><code>{snippet(c, 'clone')}</code></pre>
+      <details>
+        <summary>With npx (after publishing)</summary>
+        <pre class="snippet" data-client={c.id} data-how="npx"><code>{snippet(c, 'npx')}</code></pre>
+      </details>
+    </section>
+  ))}
+
+  <h2>What the agent sees</h2>
+  <p>Six tools that reach every calculator, so the tool list stays small:</p>
+  <ul>
+    {TOOLS.map((t) => (<li><code>{t.name}</code>: {t.title}</li>))}
+  </ul>
+  <p>
+    Results are the same envelope this site computes, byte for byte, with the plain-language summary, the model, accuracy,
+    and warnings. Aviation, drone, navigation, and magnetic results also carry the notice that they are planning aids and not
+    for primary navigation.
+  </p>
+
+  <h2>Workflow prompts</h2>
+  <ul>
+    {PROMPTS.map((p) => (<li><code>{p.name}</code>: {p.description}</li>))}
+  </ul>
+
+  <h2>Options</h2>
+  <div class="table-scroll">
+    <table class="report">
+      <thead><tr><th>Option</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td><code>--toolsets=&lt;name,...&gt;</code></td><td>Also lists each stable tool in the named toolsets as its own tool, named <code>gp_</code> plus the id with dots as underscores.</td></tr>
+        <tr><td><code>--no-meta</code></td><td>With <code>--toolsets</code>, lists only those tools.</td></tr>
+        <tr><td><code>--timeout=&lt;ms&gt;</code></td><td>Per-call time limit (default 10,000).</td></tr>
+        <tr><td><code>--debug</code></td><td>Logs argument values to stderr (off by default).</td></tr>
+        <tr><td><code>--allow-asset-download</code></td><td>Accepted. Every dataset the tools use today is built in, so there is nothing to download yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Toolsets</h2>
+  <p>Only stable tools join a toolset, so toolsets grow as tools are promoted.</p>
+  <div class="table-scroll">
+    <table class="report">
+      <thead><tr><th>Toolset</th><th>Tools now</th></tr></thead>
+      <tbody>
+        {toolsets.map((s) => (
+          <tr>
+            <td><code>{s.name}</code></td>
+            <td>{s.tools.length ? s.tools.map((t, i) => (<>{i > 0 && ', '}<a href={route(t.id)}>{t.title}</a></>)) : 'None stable yet'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Offline</h2>
+  <p>
+    The magnetic models (WMM2025 and IGRF-14), the EGM96 geoid, the leap-second table, and the time zone rules are built into
+    the modules, so every tool works with no connection.
+  </p>
+</Base>

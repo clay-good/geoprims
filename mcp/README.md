@@ -18,17 +18,86 @@ Without built files, the server prints how to get them and exits with code 1.
 
 ## Add it to a client
 
-Replace `/abs/path/geoprims` with your clone's path.
+Replace `/abs/path/geoprims` with your clone's path. The same snippets are on [geoprims.com/agents](https://geoprims.com/agents/), and a test launches the server exactly as each one says.
 
-| Client | Setup |
-|---|---|
-| Claude Code | `claude mcp add geoprims -- node /abs/path/geoprims/mcp/server.mjs` |
-| Claude Desktop | In `claude_desktop_config.json`: `{"mcpServers": {"geoprims": {"command": "node", "args": ["/abs/path/geoprims/mcp/server.mjs"]}}}` |
-| VS Code | In `.vscode/mcp.json`: `{"servers": {"geoprims": {"type": "stdio", "command": "node", "args": ["/abs/path/geoprims/mcp/server.mjs"]}}}` |
-| Cursor | In `.cursor/mcp.json`: `{"mcpServers": {"geoprims": {"command": "node", "args": ["/abs/path/geoprims/mcp/server.mjs"]}}}` |
-| Windsurf | In `~/.codeium/windsurf/mcp_config.json`: `{"mcpServers": {"geoprims": {"command": "node", "args": ["/abs/path/geoprims/mcp/server.mjs"]}}}` |
+### Claude Code
 
-The `npx -y @geoprims/mcp` path works once the package is published (not yet).
+Run in a terminal.
+
+```bash
+claude mcp add geoprims -- node /abs/path/geoprims/mcp/server.mjs
+```
+
+### Claude Desktop
+
+Settings, Developer, Edit Config: claude_desktop_config.json.
+
+```json
+{
+  "mcpServers": {
+    "geoprims": {
+      "command": "node",
+      "args": [
+        "/abs/path/geoprims/mcp/server.mjs"
+      ]
+    }
+  }
+}
+```
+
+### VS Code
+
+.vscode/mcp.json in your workspace.
+
+```json
+{
+  "servers": {
+    "geoprims": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/abs/path/geoprims/mcp/server.mjs"
+      ]
+    }
+  }
+}
+```
+
+### Cursor
+
+.cursor/mcp.json in your project, or ~/.cursor/mcp.json.
+
+```json
+{
+  "mcpServers": {
+    "geoprims": {
+      "command": "node",
+      "args": [
+        "/abs/path/geoprims/mcp/server.mjs"
+      ]
+    }
+  }
+}
+```
+
+### Windsurf
+
+~/.codeium/windsurf/mcp_config.json.
+
+```json
+{
+  "mcpServers": {
+    "geoprims": {
+      "command": "node",
+      "args": [
+        "/abs/path/geoprims/mcp/server.mjs"
+      ]
+    }
+  }
+}
+```
+
+For the `npx` path (once `@geoprims/mcp` is published), use `"command": "npx", "args": ["-y", "@geoprims/mcp"]` instead, or `claude mcp add geoprims -- npx -y @geoprims/mcp`.
 
 ## Tools
 

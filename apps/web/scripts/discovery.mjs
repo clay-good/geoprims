@@ -39,6 +39,7 @@ This build has ${counts.all.operations} operations and ${counts.all.endpoints} t
 
 ## For agents
 
+- [Use with agents](${SITE}/agents/): setup for Claude Code, Claude Desktop, VS Code, Cursor, and Windsurf
 - [MCP server setup](${REPO}/tree/main/mcp#readme): clone a release and run \`node mcp/server.mjs\` (stdio, no dependencies, no network)
 - [Tool catalog](${SITE}/catalog/v1.json): every tool id with its input and output schemas, units, accuracy, references, and worked example
 - [MCP discovery document](${SITE}/.well-known/mcp.json)

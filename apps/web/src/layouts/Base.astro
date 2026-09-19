@@ -34,6 +34,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
         <nav aria-label="Main">
           <button type="button" class="palette-open" aria-keyshortcuts="/ Control+K Meta+K">Search <kbd aria-hidden="true">/</kbd></button>
           <a href="/units/">Units</a>
+          <a href="/agents/">Agents</a>
           <a href="/settings/">Settings</a>
           <a href="https://github.com/clay-good/geoprims">Source</a>
         </nav>
@@ -62,7 +63,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
           </label>
           <label data-for="night">Brightness <input name="dim" type="range" min="0.3" max="1" step="0.05" /></label>
         </form>
-        <p class="version">Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/changelog/">changelog</a> · <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> · <a href="/methodology/">how results are checked</a></p>
+        <p class="version">Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/changelog/">changelog</a> · <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> · <a href="/methodology/">how results are checked</a> · <a href="/agents/">use with agents</a></p>
       </div>
     </footer>
     <div class="update card" role="status" hidden>

@@ -37,8 +37,8 @@
 - [ ] 5.2 Build the MCPB bundle (manifest v0.3, `server.type: node`, toolsets and asset-download option as `user_config`); verify it installs and lists tools in a desktop host
 - [ ] 5.3 Write `server.json` for `com.geoprims/mcp` with DNS verification, npm and MCPB packages, and `fileSha256`; verify with the registry publisher's validation
 - [ ] 5.4 Attach build provenance attestations and SHA-256 digests to release assets; verify attestation verification succeeds
-- [ ] 5.4a Write README and site setup snippets for Claude Code, Claude Desktop, VS Code (`servers` key), Cursor, and Windsurf for both clone and npx paths; verify the VS Code key scenario and CLI-testable snippets in CI
-- [ ] 5.5 Write the website's "Use with agents" page (setup snippets for major MCP clients, toolsets, offline assets); verify every snippet in CI smoke tests
+- [x] 5.4a Write README and site setup snippets for Claude Code, Claude Desktop, VS Code (`servers` key), Cursor, and Windsurf for both clone and npx paths; verify the VS Code key scenario and CLI-testable snippets in CI
+- [x] 5.5 Write the website's "Use with agents" page (setup snippets for major MCP clients, toolsets, offline assets); verify every snippet in CI smoke tests
 
 ## 6. Agent evaluation
 

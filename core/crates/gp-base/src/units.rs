@@ -409,6 +409,9 @@ pub static UNITS: &[Unit] = &[
     ),
     u("mph", Q::Speed, ex(1_609_344, 3_600_000), &["mi/h"]),
     u("ft/s", Q::Speed, ex(3048, 10_000), &["fps"]),
+    // Plate and frame velocities, per Julian year of 365.25 days (IERS).
+    u("mm/yr", Q::Speed, ex(1, 31_557_600_000), &["mm/a", "mm/y"]),
+    u("m/yr", Q::Speed, ex(1, 31_557_600), &["m/a", "m/y"]),
     // Vertical speed (base m/s)
     u("m/s", Q::VerticalSpeed, ex(1, 1), &["mps"]),
     u(
@@ -492,6 +495,12 @@ pub static UNITS: &[Unit] = &[
     u("gon", Q::Angle, ex(9, 10), &["grad", "gradian", "gradians"]),
     u("arcmin", Q::Angle, ex(1, 60), &["'", "′"]),
     u("arcsec", Q::Angle, ex(1, 3600), &["\"", "″"]),
+    u(
+        "mas",
+        Q::Angle,
+        ex(1, 3_600_000),
+        &["milliarcsec", "milliarcsecond"],
+    ),
     u("mil-nato", Q::Angle, ex(360, 6400), &[]),
     u("mil-warsaw", Q::Angle, ex(360, 6000), &[]),
     u("mil-sweden", Q::Angle, ex(360, 6300), &[]),
@@ -507,6 +516,18 @@ pub static UNITS: &[Unit] = &[
     u("deg/min", Q::AngularRate, ex(1, 60), &["°/min"]),
     u("rad/s", Q::AngularRate, Scale::Approx(DEG_PER_RAD), &[]),
     u("rpm", Q::AngularRate, ex(6, 1), &["rev/min"]),
+    u(
+        "arcsec/yr",
+        Q::AngularRate,
+        ex(1, 3600 * 31_557_600),
+        &["arcsec/a"],
+    ),
+    u(
+        "mas/yr",
+        Q::AngularRate,
+        ex(1, 3_600_000 * 31_557_600),
+        &["mas/a"],
+    ),
     // Time (base s)
     u("s", Q::Time, ex(1, 1), &["sec", "second", "seconds"]),
     u("ms", Q::Time, ex(1, 1000), &["millisecond", "milliseconds"]),
@@ -569,6 +590,19 @@ pub static UNITS: &[Unit] = &[
     u("kHz", Q::Frequency, ex(1000, 1), &[]),
     u("MHz", Q::Frequency, ex(1_000_000, 1), &[]),
     u("GHz", Q::Frequency, ex(1_000_000_000, 1), &[]),
+    // Rates of a dimensionless change (a Helmert scale rate), per Julian year.
+    u(
+        "ppm/yr",
+        Q::Frequency,
+        ex(1, 31_557_600_000_000),
+        &["ppm/a"],
+    ),
+    u(
+        "ppb/yr",
+        Q::Frequency,
+        ex(1, 31_557_600_000_000_000),
+        &["ppb/a"],
+    ),
     // Data rate (base bit/s)
     u("bit/s", Q::DataRate, ex(1, 1), &["bps"]),
     u("kbit/s", Q::DataRate, ex(1000, 1), &["kbps", "kb/s"]),
@@ -597,6 +631,8 @@ pub static UNITS: &[Unit] = &[
     ),
     // Dimensionless
     u("1", Q::Dimensionless, ex(1, 1), &[]),
+    u("ppm", Q::Dimensionless, ex(1, 1_000_000), &[]),
+    u("ppb", Q::Dimensionless, ex(1, 1_000_000_000), &[]),
 ];
 
 /// The registry base unit for a quantity.

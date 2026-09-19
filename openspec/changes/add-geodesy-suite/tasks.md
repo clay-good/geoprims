@@ -15,8 +15,8 @@
 
 ## 3. Datums
 
-- [ ] 3.1 Implement 7- and 14-parameter Helmert in both conventions; verify the convention-required scenario and IERS published examples
-- [ ] 3.2 Load NGS, IERS, NGA, and EPSG parameter sets with citations; verify each set against its source document example
+- [x] 3.1 Implement 7- and 14-parameter Helmert in both conventions; verify the convention-required scenario and IERS published examples (generic Helmert with an exact reverse, matching both IOGP GN 7-2 worked examples and PROJ's +proj=helmert; ITRF2020 to ITRF88 and the WGS 84 realizations G2296, G2139, and G1762 with the IERS parameters, matching PROJ's data/ITRF2020; the coordinate epoch is required because the core never reads the clock, so the host supplies today's date)
+- [ ] 3.2 Load NGS, IERS, NGA, and EPSG parameter sets with citations; verify each set against its source document example (IERS ITRF2020 sets loaded; NGS, NGA, and EPSG pending)
 - [ ] 3.3 Implement the frame graph and path selection with accuracy accumulation; verify the realization-assumed and coincidence scenarios
 - [ ] 3.4 Implement ITRF2020 plate-motion propagation, site-velocity override, and deformation-zone flag; verify the San Andreas scenario
 - [ ] 3.5 Implement NADCON5 grid transformations with chaining; verify against NCAT outputs for 200 points per region and the outside-grid scenario

@@ -1,6 +1,7 @@
 //! Geodesy: coordinate parsing and formatting, UTM, UPS, and MGRS
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
+pub mod datum;
 pub mod frames;
 pub mod geoid;
 pub mod gridref;
@@ -1336,6 +1337,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &gridref::GARS_INVERSE,
     &gridref::GEOREF_FORWARD,
     &gridref::GEOREF_INVERSE,
+    &datum::HELMERT,
+    &datum::ITRF,
 ];
 
 pub static REGISTRY: Registry = Registry {

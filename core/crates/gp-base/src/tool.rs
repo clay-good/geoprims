@@ -369,6 +369,9 @@ pub struct Ctx<'a> {
     pub warnings: Vec<Warning>,
     /// Overrides `meta.model` for this call (e.g. to name a custom ellipsoid).
     pub model: Option<String>,
+    /// Overrides `meta.accuracy` for this call (e.g. the accuracy of the
+    /// parameter set a transformation used).
+    pub accuracy: Option<String>,
     /// Reference data this call used, echoed in `meta.assets` (id and version).
     pub assets: Vec<AssetRef>,
     /// Operating context agents should relay (model epoch, validity window,
@@ -905,18 +908,18 @@ impl Registry {
 
     fn run(&self, def: &'static ToolDef, input: &Value) -> String {
         match execute(def, input) {
-            Ok((result, summary, display, warnings, model, assets, context)) => {
+            Ok(x) => {
                 let meta = Meta {
                     tool: def.id.to_owned(),
                     tool_version: def.version.to_owned(),
-                    assets,
-                    model: model.unwrap_or_else(|| def.model.to_owned()),
-                    accuracy: def.accuracy.to_owned(),
-                    warnings,
-                    context,
+                    assets: x.assets,
+                    model: x.model.unwrap_or_else(|| def.model.to_owned()),
+                    accuracy: x.accuracy.unwrap_or_else(|| def.accuracy.to_owned()),
+                    warnings: x.warnings,
+                    context: x.context,
                     notice: operational_notice(def),
                 };
-                envelope::success(result, summary.as_deref(), display, &meta)
+                envelope::success(x.result, Some(x.summary.as_str()), x.display, &meta)
             }
             Err(e) => envelope::failure(&e),
         }
@@ -927,16 +930,19 @@ fn limit(def: &ToolDef, name: &str) -> Option<u64> {
     def.limits.iter().find(|(k, _)| *k == name).map(|(_, v)| *v)
 }
 
-/// Result, rendered sentence, display strings per output, and warnings.
-type Executed = (
-    Json,
-    Option<String>,
-    Json,
-    Vec<Warning>,
-    Option<String>,
-    Vec<AssetRef>,
-    Vec<(&'static str, Json)>,
-);
+/// What a successful call produced, before it becomes an envelope.
+struct Executed {
+    result: Json,
+    /// The rendered sentence.
+    summary: String,
+    /// Display strings per output.
+    display: Json,
+    warnings: Vec<Warning>,
+    model: Option<String>,
+    accuracy: Option<String>,
+    assets: Vec<AssetRef>,
+    context: Vec<(&'static str, Json)>,
+}
 
 fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> {
     let Value::Object(map) = input else {
@@ -968,6 +974,7 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         options,
         warnings: Vec::new(),
         model: None,
+        accuracy: None,
         assets: Vec::new(),
         context: Vec::new(),
     };
@@ -994,15 +1001,16 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         ));
     }
     let (summary, display) = render_summary(&mut ctx, &result);
-    Ok((
+    Ok(Executed {
         result,
-        Some(summary),
+        summary,
         display,
-        ctx.warnings,
-        ctx.model,
-        ctx.assets,
-        ctx.context,
-    ))
+        warnings: ctx.warnings,
+        model: ctx.model,
+        accuracy: ctx.accuracy,
+        assets: ctx.assets,
+        context: ctx.context,
+    })
 }
 
 /// The notice aviation, drone, navigation, and magnetic results carry in

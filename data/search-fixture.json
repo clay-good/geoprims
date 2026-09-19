@@ -608,6 +608,18 @@
     {
       "query": "tas",
       "expect": "aviation.airspeed.cas-to-tas"
+    },
+    {
+      "query": "rhumb line",
+      "expect": "navigation.rhumb.inverse"
+    },
+    {
+      "query": "loxodrome",
+      "expect": "navigation.rhumb.inverse"
+    },
+    {
+      "query": "constant course destination",
+      "expect": "navigation.rhumb.direct"
     }
   ]
 }

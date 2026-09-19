@@ -25,6 +25,7 @@
       "title": "Navigation",
       "groups": [
         "geodesic",
+        "rhumb",
         "route",
         "los",
         "vector"

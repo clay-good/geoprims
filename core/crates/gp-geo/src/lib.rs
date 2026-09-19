@@ -5,6 +5,7 @@ pub mod geoid;
 pub mod magnetic;
 pub mod mgrs;
 pub mod point;
+pub mod rhumb;
 pub mod spcs;
 mod spcs83_zones;
 pub mod tm;

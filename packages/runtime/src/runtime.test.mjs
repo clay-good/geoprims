@@ -61,6 +61,13 @@ test('every golden vector passes through Wasm in Node', async () => {
       if (v.supersededBy) continue;
       const got = await run(id, JSON.stringify(v.input));
       for (const [path, want] of Object.entries(v.expect)) {
+        if (path.includes('.*.')) {
+          // "a.*.b": some element of the list at "a" has `want` at "b".
+          const [list, rest] = path.split('.*.');
+          const items = list.split('.').reduce((o, k) => o?.[k], got) ?? [];
+          assert.ok(items.some((x) => rest.split('.').reduce((o, k) => o?.[k], x) === want), `${id} ${v.id} ${path}`);
+          continue;
+        }
         const actual = path.split('.').reduce((o, k) => o?.[k], got);
         if (typeof want === 'number') {
           const t = v.tolerance[path];

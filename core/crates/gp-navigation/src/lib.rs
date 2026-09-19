@@ -2,6 +2,7 @@
 //! (2013) is the default; Vincenty and haversine are comparison tools that
 //! always report their difference from Karney.
 
+pub mod rhumb;
 pub mod vincenty;
 
 use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
@@ -870,6 +871,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &VINCENTY_INVERSE,
     &VINCENTY_DIRECT,
     &MIDPOINT,
+    &rhumb::RHUMB_INVERSE,
+    &rhumb::RHUMB_DIRECT,
 ];
 
 pub static REGISTRY: Registry = Registry {

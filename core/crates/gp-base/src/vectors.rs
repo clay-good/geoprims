@@ -89,6 +89,19 @@ pub fn run(reg: &Registry, tool: &str, text: &str) -> Vec<String> {
             }
         };
         for (path, want) in v["expect"].as_object().into_iter().flatten() {
+            // "a.*.b": some element of the list at "a" has `want` at "b"
+            // ("meta.warnings.*.code"), so warning order does not matter.
+            if let Some((list, rest)) = path.split_once(".*.") {
+                let found = lookup(&got, list)
+                    .and_then(Value::as_array)
+                    .is_some_and(|a| a.iter().any(|x| lookup(x, rest) == Some(want)));
+                if !found {
+                    fails.push(format!(
+                        "{tool} {id}: no {path} equal to {want}; full result {out}"
+                    ));
+                }
+                continue;
+            }
             let actual = lookup(&got, path);
             let ok = match (want, actual) {
                 (Value::Number(w), Some(Value::Number(a))) => {

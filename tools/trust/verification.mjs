@@ -23,6 +23,13 @@ async function toolRow(root, tool, host) {
     sources.set(key, (sources.get(key) ?? 0) + 1);
     const got = JSON.parse(await host.invoke(tool.id, JSON.stringify(v.input)));
     for (const [path, want] of Object.entries(v.expect)) {
+      if (path.includes('.*.')) {
+        // "a.*.b": some element of the list at "a" has `want` at "b".
+        const [list, rest] = path.split('.*.');
+        exact++;
+        if (!(at(got, list) ?? []).some((x) => at(x, rest) === want)) failures.push(`${v.id} ${path}`);
+        continue;
+      }
       const actual = at(got, path);
       if (typeof want !== 'number') {
         exact++;

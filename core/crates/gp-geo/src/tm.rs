@@ -141,6 +141,16 @@ impl Tm {
         (atan(tau).to_degrees(), lam.to_degrees())
     }
 
+    /// Rectifying radius A (the meridian quadrant is A π/2).
+    pub fn rectifying_radius(&self) -> f64 {
+        self.a * self.b1
+    }
+
+    /// Series coefficients: conformal to rectifying latitude (α) and back (β), 1-based.
+    pub fn series(&self) -> (&[f64; 7], &[f64; 7]) {
+        (&self.alp, &self.bet)
+    }
+
     pub fn es(&self) -> f64 {
         self.es
     }

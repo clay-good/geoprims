@@ -63,21 +63,45 @@
       "bundledIn": "core/crates/gp-geo/data/igrf14coeffs.txt"
     },
     {
-      "id": "nadcon5-nad27-nad83-1986-conus",
+      "id": "nadcon5",
       "version": "20160901",
-      "title": "NADCON5 NAD 27 to NAD 83 (1986), conterminous United States",
+      "title": "NADCON5 first-step grids: each region's old datum to NAD 83",
       "issuer": "National Geodetic Survey, NOAA; GeoTIFF packaging by the PROJ project",
       "license": "Public domain (US Government work)",
-      "attribution": "NADCON5 by the National Geodetic Survey (NOAA); grid from PROJ-data.",
-      "sourceUrl": "https://cdn.proj.org/us_noaa_nadcon5_nad27_nad83_1986_conus.tif",
+      "attribution": "NADCON5 by the National Geodetic Survey (NOAA); grids from PROJ-data.",
+      "sourceUrl": "https://cdn.proj.org/",
       "retrievedAt": "2026-09-19",
       "files": {
         "nad27_nad83_1986_conus.grid": {
-          "sha256": "72d6b0bc3d12eb6091d0a49fcd899e6ddf4541e695fe3d53c9b695b2f8c4ee3f",
-          "bytes": 199113
+          "sha256": "283ef0131a6e98dde25d167bde2f9d00ab4a5e93b6c0c1bea58f0e3752881464",
+          "bytes": 199118
+        },
+        "nad27_nad83_1986_alaska.grid": {
+          "sha256": "3787ce1915efae0aaa3776a34c1a5ee3ec2f0f8822cd5e7eea395d960236bbac",
+          "bytes": 45530
+        },
+        "ohd_nad83_1986_hawaii.grid": {
+          "sha256": "15bc6b69c113f8e983e8d3b1614a1c5efa23ca2407517c18d4b2230ab2afe8d9",
+          "bytes": 1013838
+        },
+        "pr40_nad83_1986_prvi.grid": {
+          "sha256": "aa20510d180a7a42756f995d5ec5f827c0aca46126ca0ce6251b14d00947bda0",
+          "bytes": 12265
+        },
+        "sp1952_nad83_1986_stpaul.grid": {
+          "sha256": "e271fc33e2ae44bb994f89dd9d90b93730842c2b98133ea55f899279267fc488",
+          "bytes": 16683
+        },
+        "as62_nad83_1993_as.grid": {
+          "sha256": "9698d5346645f42bbafdedf550d4d73736cd55b17ac9ba5aefade91ccf6e9994",
+          "bytes": 435919
+        },
+        "gu63_nad83_1993_guamcnmi.grid": {
+          "sha256": "36a7b6b4818f35036e423d868bfe5c262d7649cb36db07d1cb16b5b76f644037",
+          "bytes": 47498
         }
       },
-      "tiling": "none",
+      "tiling": "one file per region",
       "loadPolicy": "on-demand",
       "interpolation": "NADCON5 biquadratic (NOAA TM NOS NGS 84), as PROJ implements it"
     }

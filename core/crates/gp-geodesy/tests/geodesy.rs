@@ -40,12 +40,24 @@ fn catalog_lint_examples_vectors() {
         "egm96-15@2009-08-29/egm96-15.pgm",
         include_bytes!("../../../../assets/data/egm96-15/2009-08-29/egm96-15.pgm"),
     );
-    gp_base::assets::put(
-        "nadcon5-nad27-nad83-1986-conus@20160901/nad27_nad83_1986_conus.grid",
-        include_bytes!(
-            "../../../../assets/data/nadcon5-nad27-nad83-1986-conus/20160901/nad27_nad83_1986_conus.grid"
-        ),
-    );
+    for g in [
+        "nad27_nad83_1986_conus",
+        "nad27_nad83_1986_alaska",
+        "ohd_nad83_1986_hawaii",
+        "pr40_nad83_1986_prvi",
+        "sp1952_nad83_1986_stpaul",
+        "as62_nad83_1993_as",
+        "gu63_nad83_1993_guamcnmi",
+    ] {
+        let path = format!(
+            "{}/../../../assets/data/nadcon5/20160901/{g}.grid",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        gp_base::assets::put(
+            &format!("nadcon5@20160901/{g}.grid"),
+            &std::fs::read(&path).unwrap(),
+        );
+    }
     let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
     let owned: Vec<(String, Vec<String>)> = tax["domains"]
         .as_object()

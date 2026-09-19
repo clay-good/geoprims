@@ -41,6 +41,26 @@ def main():
     # "Outside grid": a NAD 27 point in Mexico beyond NADCON5 CONUS coverage.
     vs.append({"id": f"v{len(vs) + 1:03d}", "input": {"lat": 19.43, "lon": -99.13}, "expect": {"ok": False, "error.code": "OUT_OF_DOMAIN"},
                "source": "add-geodesy-suite scenario: outside grid", "sourceVersion": "2026-09"})
+    # The other regions (appended after the CONUS vectors, which came first).
+    regional = {"nad27_nad83_1986_alaska": [(61.2181, -149.9003), (64.84, -147.72), (58.3, -134.42), (52.0, 179.5)],
+                "ohd_nad83_1986_hawaii": [(21.3069, -157.8583), (19.7297, -155.09)], "pr40_nad83_1986_prvi": [(18.4655, -66.1057), (18.34, -64.93)],
+                "sp1952_nad83_1986_stpaul": [(57.15, -170.25)], "as62_nad83_1993_as": [(-14.28, -170.7)], "gu63_nad83_1993_guamcnmi": [(13.4443, 144.7937), (15.18, 145.75)]}
+    with tempfile.TemporaryDirectory() as d:
+        for g, pts in regional.items():
+            name = f"us_noaa_nadcon5_{g}.tif"
+            subprocess.run(["curl", "-sL", "-m", "120", "-o", str(Path(d) / name), "https://cdn.proj.org/" + name], check=True)
+        pyproj.datadir.append_data_dir(d)
+        for g, pts in regional.items():
+            name = f"us_noaa_nadcon5_{g}.tif"
+            t = Transformer.from_pipeline(f"+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=gridshift +grids={name} +step +proj=unitconvert +xy_in=rad +xy_out=deg")
+            for k, (lat, lon) in enumerate(pts):
+                fwd = k % 2 == 0
+                lo, la = t.transform(lon, lat) if fwd else t.transform(lon, lat, direction="INVERSE")
+                lo = (lo + 180) % 360 - 180
+                inp = {"lat": lat, "lon": lon} if fwd else {"lat": lat, "lon": lon, "direction": "from-nad83"}
+                vs.append({"id": f"v{len(vs) + 1:03d}", "input": inp, "expect": {"result.lat.value": la, "result.lon.value": lo, "ok": True},
+                           "source": f"PROJ +proj=gridshift with the NADCON5 grid {name}, through pyproj", "sourceVersion": SRC[1],
+                           "tolerance": {"result.lat.value": {"abs": 1e-9}, "result.lon.value": {"abs": 1e-9}}})
     OUT.write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
     print(OUT.name, len(vs))
 

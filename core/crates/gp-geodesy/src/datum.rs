@@ -1446,19 +1446,97 @@ const NADCON5_REF: Reference = Reference {
     locator: "Grid transformations and biquadratic interpolation",
     url: "https://geodesy.noaa.gov/library/pdfs/NOAA_TM_NOS_NGS_0084.pdf",
 };
-pub const NADCON5_ID: &str = "nadcon5-nad27-nad83-1986-conus";
+pub const NADCON5_ID: &str = "nadcon5";
 pub const NADCON5_VERSION: &str = "20160901";
-const NADCON5_FILE: &str = "nad27_nad83_1986_conus.grid";
+
+/// A NADCON5 first-step grid: region, old datum, target, file, and bounds
+/// (west, south, east, north, with east beyond 180 when it crosses it).
+struct Nc5Region {
+    id: &'static str,
+    name: &'static str,
+    datum: &'static str,
+    target: &'static str,
+    file: &'static str,
+    bounds: [f64; 4],
+}
+
+/// Checked in this order, so the small islands win over the big grids around them.
+const NC5_REGIONS: &[Nc5Region] = &[
+    Nc5Region {
+        id: "stpaul",
+        name: "St. Paul Island",
+        datum: "St. Paul 1952",
+        target: "NAD 83 (1986)",
+        file: "sp1952_nad83_1986_stpaul.grid",
+        bounds: [-170.7, 56.9, -169.6, 57.4],
+    },
+    Nc5Region {
+        id: "hawaii",
+        name: "Hawaii",
+        datum: "Old Hawaiian",
+        target: "NAD 83 (1986)",
+        file: "ohd_nad83_1986_hawaii.grid",
+        bounds: [-161.0, 18.0, -154.0, 23.0],
+    },
+    Nc5Region {
+        id: "prvi",
+        name: "Puerto Rico and the Virgin Islands",
+        datum: "Puerto Rico 1940",
+        target: "NAD 83 (1986)",
+        file: "pr40_nad83_1986_prvi.grid",
+        bounds: [-69.0, 17.0, -64.0, 19.0],
+    },
+    Nc5Region {
+        id: "samoa",
+        name: "American Samoa",
+        datum: "American Samoa 1962",
+        target: "NAD 83 (1993)",
+        file: "as62_nad83_1993_as.grid",
+        bounds: [-172.0, -16.0, -167.0, -13.0],
+    },
+    Nc5Region {
+        id: "guam",
+        name: "Guam and the Northern Mariana Islands",
+        datum: "Guam 1963",
+        target: "NAD 83 (1993)",
+        file: "gu63_nad83_1993_guamcnmi.grid",
+        bounds: [143.0, 12.0, 147.0, 22.0],
+    },
+    Nc5Region {
+        id: "conus",
+        name: "the conterminous United States",
+        datum: "NAD 27",
+        target: "NAD 83 (1986)",
+        file: "nad27_nad83_1986_conus.grid",
+        bounds: [-125.0, 24.0, -66.0, 50.0],
+    },
+    Nc5Region {
+        id: "alaska",
+        name: "Alaska",
+        datum: "NAD 27",
+        target: "NAD 83 (1986)",
+        file: "nad27_nad83_1986_alaska.grid",
+        bounds: [172.0, 50.0, 232.0, 73.0],
+    },
+];
+
+fn nc5_covers(r: &Nc5Region, lat: f64, lon: f64) -> bool {
+    let [w, s, e, n] = r.bounds;
+    let lon = if lon < w { lon + 360.0 } else { lon };
+    (s..=n).contains(&lat) && (w..=e).contains(&lon)
+}
 
 pub static NADCON5: ToolDef = ToolDef {
     id: "geodesy.datum.nadcon5",
-    title: "NAD 27 to NAD 83 (NADCON5)",
-    summary: "Converts a latitude and longitude between NAD 27 and NAD 83 (1986) in the conterminous United States with the NGS NADCON5 grid, the official replacement for NADCON.",
+    title: "Old US datums to NAD 83 (NADCON5)",
+    summary: "Converts a latitude and longitude from a region's old datum to NAD 83 with the NGS NADCON5 grids, or back: NAD 27 in the conterminous US and Alaska, Old Hawaiian, Puerto Rico 1940, St. Paul 1952, American Samoa 1962, and Guam 1963.",
     aliases: &[
         "NAD27 to NAD83",
         "NADCON",
         "NAD83 to NAD27",
         "old survey coordinates to NAD83",
+        "Old Hawaiian to NAD83",
+        "Puerto Rico 1940 to NAD83",
     ],
     keywords: &[
         "NADCON5",
@@ -1469,6 +1547,8 @@ pub static NADCON5: ToolDef = ToolDef {
         "grid",
         "NGS",
         "survey",
+        "Old Hawaiian",
+        "Alaska",
     ],
     inputs: &[
         Field::new(
@@ -1498,10 +1578,18 @@ pub static NADCON5: ToolDef = ToolDef {
         Field::new(
             "direction",
             "Direction",
-            "nad27-to-nad83 (default) or nad83-to-nad27",
-            Kind::Choice(&["nad27-to-nad83", "nad83-to-nad27"]),
+            "to-nad83 (default) or from-nad83 (nad27-to-nad83 and nad83-to-nad27 also work)",
+            Kind::Choice(&["to-nad83", "from-nad83", "nad27-to-nad83", "nad83-to-nad27"]),
         )
         .core(),
+        Field::new(
+            "region",
+            "Region",
+            "Chosen from the point unless set: conus, alaska, hawaii, prvi, stpaul, samoa, or guam",
+            Kind::Choice(&[
+                "conus", "alaska", "hawaii", "prvi", "stpaul", "samoa", "guam",
+            ]),
+        ),
     ],
     outputs: &[
         Field::new(
@@ -1529,7 +1617,7 @@ pub static NADCON5: ToolDef = ToolDef {
         mm_out(
             "shift",
             "Horizontal shift",
-            "Between the NAD 27 and NAD 83 coordinates of the point",
+            "Between the old-datum and NAD 83 coordinates of the point",
         )
         .precision(Precision::Decimals(3)),
         Field::new(
@@ -1546,7 +1634,7 @@ pub static NADCON5: ToolDef = ToolDef {
         qty(
             "dlat",
             "Latitude shift",
-            "NAD 83 minus NAD 27",
+            "NAD 83 minus the old datum",
             QT::Angle,
             "arcsec",
         )
@@ -1554,7 +1642,7 @@ pub static NADCON5: ToolDef = ToolDef {
         qty(
             "dlon",
             "Longitude shift",
-            "NAD 83 minus NAD 27, east positive",
+            "NAD 83 minus the old datum, east positive",
             QT::Angle,
             "arcsec",
         )
@@ -1566,8 +1654,8 @@ pub static NADCON5: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
     ],
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
-    model: "NADCON5 grid nad27.nad83_1986.conus (0.25°), biquadratic interpolation (NGS qterp); the reverse by iteration",
-    accuracy: "Matches PROJ's NADCON5 transformation to 1e-9°; NGS states the NAD 27 to NAD 83 (1986) step itself is good to about 0.15 m (1σ) in CONUS",
+    model: "NADCON5 first-step grid for the region, biquadratic interpolation (NGS qterp); the reverse by iteration",
+    accuracy: "Matches PROJ's NADCON5 transformations to 1e-9°; NGS states each first step itself at the decimeter level (about 0.15 m, 1σ, for NAD 27 in CONUS)",
     references: &[NADCON5_REF],
     examples: &[Example {
         id: "primary",
@@ -1591,7 +1679,7 @@ pub static NADCON5: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "The point moves {shift} toward {azimuth} between NAD 27 and NAD 83.",
+    sentence: "The point moves {shift} toward {azimuth} between the old datum and NAD 83.",
     limits: &[("batchRows", 10_000)],
     run: run_nadcon5,
     ..ToolDef::BLANK
@@ -1599,8 +1687,22 @@ pub static NADCON5: ToolDef = ToolDef {
 
 fn run_nadcon5(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
-    let to83 = ctx.choice("direction")? != Some("nad83-to-nad27");
-    let bytes = ctx.asset(NADCON5_ID, NADCON5_VERSION, NADCON5_FILE)?;
+    let to83 = !matches!(
+        ctx.choice("direction")?,
+        Some("from-nad83" | "nad83-to-nad27")
+    );
+    let region = match ctx.choice("region")? {
+        Some(id) => NC5_REGIONS.iter().find(|r| r.id == id).expect("choice lists the table"),
+        None => NC5_REGIONS.iter().find(|r| nc5_covers(r, lat, lon)).ok_or_else(|| {
+            ToolError::new(
+                ErrorCode::OutOfDomain,
+                "The point is outside every NADCON5 grid: the conterminous US, Alaska, Hawaii, Puerto Rico and the Virgin Islands, St. Paul Island, American Samoa, and Guam.",
+            )
+            .at("/lat")
+            .hint("For NAD 27 elsewhere, the legacy EPSG shift works at meter accuracy.")
+        })?,
+    };
+    let bytes = ctx.asset(NADCON5_ID, NADCON5_VERSION, region.file)?;
     let grid = gp_geo::nadcon5::Grid::parse(&bytes).map_err(|e| {
         ToolError::new(
             ErrorCode::AssetIntegrity,
@@ -1613,20 +1715,36 @@ fn run_nadcon5(ctx: &mut Ctx) -> Result<Json, ToolError> {
         grid.reverse(lat, lon)
     };
     let Some((lat2, lon2)) = got else {
-        let [w, s, e, n] = grid.bounds();
         return Err(ToolError::new(
             ErrorCode::OutOfDomain,
-            format!("The point is outside the NADCON5 conterminous-US grid ({s}° to {n}° N, {}° to {}° W).", -w, -e),
+            format!("The point is outside the NADCON5 grid for {}.", region.name),
         )
-        .at("/lat")
-        .hint("Alaska, Hawaii, Puerto Rico, and the other regions have their own NADCON5 grids, not built yet; the legacy EPSG shift covers NAD 27 outside the grid at meter accuracy."));
+        .at("/lat"));
     };
-    let (n27, n83) = if to83 {
+    ctx.model = Some(format!(
+        "NADCON5 {} to {} for {}, biquadratic interpolation (NGS qterp)",
+        region.datum, region.target, region.name
+    ));
+    ctx.context.push(("region", Json::str(region.id)));
+    ctx.context.push((
+        "from",
+        Json::str(if to83 { region.datum } else { region.target }),
+    ));
+    ctx.context.push((
+        "to",
+        Json::str(if to83 { region.target } else { region.datum }),
+    ));
+    ctx.context.push((
+        "grids",
+        Json::Arr(vec![Json::str(region.file.trim_end_matches(".grid"))]),
+    ));
+    let (old, new) = if to83 {
         ((lat, lon), (lat2, lon2))
     } else {
         ((lat2, lon2), (lat, lon))
     };
-    let (dlat, dlon) = ((n83.0 - n27.0) * 3600.0, (n83.1 - n27.1) * 3600.0);
+    let dlon = gp_base::angle::wrap_lon(new.1 - old.1);
+    let (dlat, dlon) = ((new.0 - old.0) * 3600.0, dlon * 3600.0);
     // On the ground: the east-north offset on GRS 80 (sub-kilometer shifts).
     let grs80 = CATALOG
         .iter()
@@ -1634,18 +1752,14 @@ fn run_nadcon5(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .copied()
         .expect("GRS 80");
     let (p1, p2) = (
-        (n27.0.to_radians(), n27.1.to_radians()),
-        (n83.0.to_radians(), n83.1.to_radians()),
+        (old.0.to_radians(), old.1.to_radians()),
+        (new.0.to_radians(), new.1.to_radians()),
     );
     let a = fr::to_ecef(&grs80, p1.0, p1.1, 0.0);
     let b = fr::to_ecef(&grs80, p2.0, p2.1, 0.0);
     let enu = fr::ecef_to_enu(a, p1.0, p1.1, b);
     let shift = enu[0].hypot(enu[1]);
     let az = gp_base::angle::wrap_azimuth(enu[0].atan2(enu[1]).to_degrees());
-    ctx.context.push((
-        "grids",
-        Json::Arr(vec![Json::str("nad27.nad83_1986.conus")]),
-    ));
     let arcsec = |v: f64| Q {
         value: v,
         unit: units::by_symbol(QT::Angle, "arcsec").expect("arcsec"),

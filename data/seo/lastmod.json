@@ -80,11 +80,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/": {
-    "hash": "ae5b797385bb6d7a",
+    "hash": "912f90afe72fd7da",
     "lastmod": "2026-09-19"
   },
   "/geodesy/datum/": {
-    "hash": "778fbd148747c005",
+    "hash": "d4be79a0c1d6dd83",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ellipsoid/": {
@@ -100,7 +100,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/geoid/geoid-height/": {
-    "hash": "5a8cd8a9439e0bbe",
+    "hash": "b1fe99a156a2301e",
     "lastmod": "2026-09-19"
   },
   "/geodesy/grid-ref/": {
@@ -116,7 +116,7 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "9778dfa4f6a93ba8",
+    "hash": "9427c51fa49c7c71",
     "lastmod": "2026-09-19"
   },
   "/geodesy/parse/": {
@@ -128,11 +128,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "f6527f79997d4b15",
+    "hash": "6752f3a7cb754efc",
     "lastmod": "2026-09-19"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "56284f0cb0027f42",
+    "hash": "5b9c1b5ed5bb37f7",
     "lastmod": "2026-09-19"
   },
   "/geodesy/ups/": {
@@ -144,11 +144,11 @@
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/forward/": {
-    "hash": "46bc05afd621b878",
+    "hash": "e64383ad648d5868",
     "lastmod": "2026-09-19"
   },
   "/geodesy/utm/inverse/": {
-    "hash": "ac672ea13b0dff23",
+    "hash": "a50cc1a1ecc7a76c",
     "lastmod": "2026-09-19"
   },
   "/geometry/": {
@@ -188,7 +188,7 @@
     "lastmod": "2026-09-19"
   },
   "/methodology/": {
-    "hash": "7af0bd128c5a3d5a",
+    "hash": "c6521fe1e4beaf65",
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
@@ -220,7 +220,7 @@
     "lastmod": "2026-09-19"
   },
   "/sources/": {
-    "hash": "beda70ea708b6ace",
+    "hash": "33bc009b56137ce6",
     "lastmod": "2026-09-19"
   },
   "/survey/": {
@@ -360,7 +360,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ab19e726517674a8",
+    "hash": "d7eaef0d7d745dda",
     "lastmod": "2026-09-19"
   }
 }

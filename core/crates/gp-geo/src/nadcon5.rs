@@ -7,11 +7,23 @@
 pub struct Grid {
     west: f64,
     south: f64,
-    step: f64,
+    xstep: f64,
+    ystep: f64,
     cols: usize,
     rows: usize,
     /// (latitude offset, longitude offset east-positive) per node.
     data: Vec<(f32, f32)>,
+}
+
+/// Longitude to [−180, 180).
+fn wrap(lon: f64) -> f64 {
+    if lon >= 180.0 {
+        lon - 360.0
+    } else if lon < -180.0 {
+        lon + 360.0
+    } else {
+        lon
+    }
 }
 
 impl Grid {
@@ -19,12 +31,12 @@ impl Grid {
         let nl = bytes.iter().position(|&b| b == b'\n').ok_or("no header")?;
         let head = std::str::from_utf8(&bytes[..nl]).map_err(|_| "bad header")?;
         let f: Vec<&str> = head.split_whitespace().collect();
-        if f.len() != 6 || f[0] != "NADCON5" {
+        if f.len() != 7 || f[0] != "NADCON5" {
             return Err("not a NADCON5 grid".into());
         }
         let num = |s: &str| s.parse::<f64>().map_err(|_| "bad header number".to_owned());
-        let (west, south, step) = (num(f[1])?, num(f[2])?, num(f[3])?);
-        let (cols, rows) = (num(f[4])? as usize, num(f[5])? as usize);
+        let (west, south, xstep, ystep) = (num(f[1])?, num(f[2])?, num(f[3])?, num(f[4])?);
+        let (cols, rows) = (num(f[5])? as usize, num(f[6])? as usize);
         let body = &bytes[nl + 1..];
         if body.len() != cols * rows * 8 || cols < 3 || rows < 3 {
             return Err("grid size does not match its header".into());
@@ -41,7 +53,8 @@ impl Grid {
         Ok(Grid {
             west,
             south,
-            step,
+            xstep,
+            ystep,
             cols,
             rows,
             data,
@@ -53,8 +66,8 @@ impl Grid {
         [
             self.west,
             self.south,
-            self.west + self.step * (self.cols - 1) as f64,
-            self.south + self.step * (self.rows - 1) as f64,
+            self.west + self.xstep * (self.cols - 1) as f64,
+            self.south + self.ystep * (self.rows - 1) as f64,
         ]
     }
 
@@ -66,8 +79,10 @@ impl Grid {
     /// The (latitude, longitude) offset in arc-seconds at (lat, lon) degrees, or None outside.
     pub fn shift(&self, lat: f64, lon: f64) -> Option<(f64, f64)> {
         const TOL: f64 = 1e-10;
-        let tx = (lon - self.west) / self.step;
-        let ty = (lat - self.south) / self.step;
+        // Grids that cross the antimeridian (Alaska) run past 180° east.
+        let lon = if lon < self.west { lon + 360.0 } else { lon };
+        let tx = (lon - self.west) / self.xstep;
+        let ty = (lat - self.south) / self.ystep;
         let (mut ix, mut iy) = (tx.floor() as i64, ty.floor() as i64);
         let (mut fx, mut fy) = (tx - ix as f64, ty - iy as f64);
         let (w, h) = (self.cols as i64, self.rows as i64);
@@ -122,7 +137,7 @@ impl Grid {
     /// Forward: (lat, lon) + shift at the point.
     pub fn forward(&self, lat: f64, lon: f64) -> Option<(f64, f64)> {
         let (dlat, dlon) = self.shift(lat, lon)?;
-        Some((lat + dlat / 3600.0, lon + dlon / 3600.0))
+        Some((lat + dlat / 3600.0, wrap(lon + dlon / 3600.0)))
     }
 
     /// Reverse by fixed-point iteration: find p with p + shift(p) = (lat, lon).
@@ -130,7 +145,7 @@ impl Grid {
         let (mut plat, mut plon) = (lat, lon);
         for _ in 0..20 {
             let (dlat, dlon) = self.shift(plat, plon)?;
-            let (nlat, nlon) = (lat - dlat / 3600.0, lon - dlon / 3600.0);
+            let (nlat, nlon) = (lat - dlat / 3600.0, wrap(lon - dlon / 3600.0));
             let done = (nlat - plat).abs() < 1e-12 && (nlon - plon).abs() < 1e-12;
             (plat, plon) = (nlat, nlon);
             if done {

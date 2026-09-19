@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Packs the NADCON5 NAD27 -> NAD83(1986) CONUS grid as a geoprims asset.
+"""Packs the first-step NADCON5 grids (each region's old datum to NAD 83) as
+the geoprims asset `nadcon5`, version 20160901.
 
 Source: NGS NADCON5 (20160901 release), as converted to GeoTIFF by PROJ
-(https://cdn.proj.org/us_noaa_nadcon5_nad27_nad83_1986_conus.tif, public
-domain). Output: assets/data/nadcon5-nad27-nad83-1986-conus/20160901/
-nad27_nad83_1986_conus.grid, a one-line ASCII header
-  "NADCON5 <west> <south> <step> <cols> <rows>\n"
+(https://cdn.proj.org/, public domain). Each output file has a one-line
+ASCII header
+  "NADCON5 <west> <south> <xstep> <ystep> <cols> <rows>\n"
 followed by cols*rows pairs of little-endian float32 (latitude offset,
-longitude offset east-positive), in arc-seconds, south row first.
+longitude offset east-positive), in arc-seconds, south row first. West may
+exceed 180 for grids that cross the antimeridian (Alaska).
 Requires tifffile and imagecodecs.
 """
 import hashlib
@@ -20,47 +21,54 @@ from pathlib import Path
 import tifffile
 
 ROOT = Path(__file__).resolve().parents[2]
-URL = "https://cdn.proj.org/us_noaa_nadcon5_nad27_nad83_1986_conus.tif"
-ID, VERSION, FILE = "nadcon5-nad27-nad83-1986-conus", "20160901", "nad27_nad83_1986_conus.grid"
+ID, VERSION = "nadcon5", "20160901"
+GRIDS = ["nad27_nad83_1986_conus", "nad27_nad83_1986_alaska", "ohd_nad83_1986_hawaii", "pr40_nad83_1986_prvi",
+         "sp1952_nad83_1986_stpaul", "as62_nad83_1993_as", "gu63_nad83_1993_guamcnmi"]
 
 
-def main():
-    with tempfile.TemporaryDirectory() as d:
-        tif = Path(d) / "g.tif"
-        subprocess.run(["curl", "-sL", "-m", "120", "-o", str(tif), URL], check=True)
-        t = tifffile.TiffFile(tif)
-        page = t.pages[0]
-        sx, sy, _ = page.tags["ModelPixelScaleTag"].value
-        _, _, _, west, north, _ = page.tags["ModelTiepointTag"].value
-        a = page.asarray()
+def pack(tif):
+    page = tifffile.TiffFile(tif).pages[0]
+    sx, sy, _ = page.tags["ModelPixelScaleTag"].value
+    _, _, _, west, north, _ = page.tags["ModelTiepointTag"].value
+    a = page.asarray()
     rows, cols, _ = a.shape
-    assert sx == sy
     south = north - sy * (rows - 1)
-    out = bytearray(f"NADCON5 {west} {south} {sx} {cols} {rows}\n".encode())
+    out = bytearray(f"NADCON5 {west!r} {south!r} {sx!r} {sy!r} {cols} {rows}\n".encode())
     for r in range(rows - 1, -1, -1):
         for c in range(cols):
             out += struct.pack("<ff", float(a[r, c, 0]), float(a[r, c, 1]))
-    dest = ROOT / "assets/data" / ID / VERSION / FILE
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_bytes(bytes(out))
+    return bytes(out)
+
+
+def main():
+    files = {}
+    dest = ROOT / "assets/data" / ID / VERSION
+    dest.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as d:
+        for g in GRIDS:
+            tif = Path(d) / f"{g}.tif"
+            subprocess.run(["curl", "-sL", "-m", "120", "-o", str(tif), f"https://cdn.proj.org/us_noaa_nadcon5_{g}.tif"], check=True)
+            data = pack(tif)
+            (dest / f"{g}.grid").write_bytes(data)
+            files[f"{g}.grid"] = {"sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
     reg_path = ROOT / "assets/registry.json"
     reg = json.loads(reg_path.read_text())
-    reg["assets"] = [x for x in reg["assets"] if x["id"] != ID] + [{
+    reg["assets"] = [x for x in reg["assets"] if not x["id"].startswith("nadcon5")] + [{
         "id": ID,
         "version": VERSION,
-        "title": "NADCON5 NAD 27 to NAD 83 (1986), conterminous United States",
+        "title": "NADCON5 first-step grids: each region's old datum to NAD 83",
         "issuer": "National Geodetic Survey, NOAA; GeoTIFF packaging by the PROJ project",
         "license": "Public domain (US Government work)",
-        "attribution": "NADCON5 by the National Geodetic Survey (NOAA); grid from PROJ-data.",
-        "sourceUrl": URL,
+        "attribution": "NADCON5 by the National Geodetic Survey (NOAA); grids from PROJ-data.",
+        "sourceUrl": "https://cdn.proj.org/",
         "retrievedAt": "2026-09-19",
-        "files": {FILE: {"sha256": hashlib.sha256(out).hexdigest(), "bytes": len(out)}},
-        "tiling": "none",
+        "files": files,
+        "tiling": "one file per region",
         "loadPolicy": "on-demand",
         "interpolation": "NADCON5 biquadratic (NOAA TM NOS NGS 84), as PROJ implements it",
     }]
     reg_path.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
-    print(dest, len(out), "bytes")
+    print(len(files), "grids,", sum(f["bytes"] for f in files.values()), "bytes")
 
 
 if __name__ == "__main__":

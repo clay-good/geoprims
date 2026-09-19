@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { nodeHost } from '../packages/runtime/src/node.mjs';
+import { TOOLS } from './meta.mjs';
+import { directName } from './toolsets.mjs';
 
 const here = new URL('.', import.meta.url).pathname;
 const root = join(here, '..');
@@ -205,15 +207,54 @@ test('opens no listening socket', { skip: spawnSync('lsof', ['-v']).error ? 'lso
 
 test('an untagged checkout without built files explains itself and exits 1', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gp-mcp-'));
-  for (const f of ['server.mjs', 'meta.mjs', 'package.json']) copyFileSync(join(here, f), join(dir, f));
+  for (const f of ['server.mjs', 'meta.mjs', 'toolsets.mjs', 'package.json']) copyFileSync(join(here, f), join(dir, f));
   const r = spawnSync(process.execPath, [join(dir, 'server.mjs')], { input: '' });
   assert.equal(r.status, 1);
   assert.equal(r.stderr.toString().trim(), 'Built files missing: check out a release tag (git checkout vX.Y.Z) or run npm run build (requires Rust)');
 });
 
-test('unknown options fail fast', () => {
+test('unknown options fail fast; an unknown toolset lists the valid ones', () => {
   const r = spawnSync(process.execPath, [join(here, 'server.mjs'), '--toolsets=bogus'], { input: '' });
   assert.equal(r.status, 2);
+  assert.match(String(r.stderr), /Unknown toolset bogus\. Valid toolsets: geodesy-core, navigation, e6b, atmosphere, drone-mapping, survey-cogo, indexing\./);
+  assert.equal(spawnSync(process.execPath, [join(here, 'server.mjs'), '--wat'], { input: '' }).status, 2);
+  assert.equal(spawnSync(process.execPath, [join(here, 'server.mjs'), '--no-meta'], { input: '' }).status, 2);
+});
+
+test('direct toolsets list stable tools beside the meta-tools, and run like geoprims_run', async () => {
+  const d = new Client(['--toolsets=geodesy-core,e6b']);
+  try {
+    const names = (await d.request('tools/list', {})).result.tools.map((t) => t.name);
+    assert.deepEqual(names.slice(0, 6), TOOLS.map((t) => t.name));
+    const direct = names.slice(6);
+    assert.ok(direct.includes('gp_geodesy_utm_forward') && direct.length <= 80, names.join());
+    assert.ok(direct.every((n) => /^gp_[a-zA-Z0-9_-]{1,61}$/.test(n)));
+    const args = { lat: 40, lon: -105 };
+    const r = await d.call('gp_geodesy_utm_forward', args);
+    const viaRun = await d.call('geoprims_run', { id: 'geodesy.utm.forward', args });
+    assert.equal(r.content[0].text, viaRun.content[0].text);
+    const bad = await d.call('gp_geodesy_utm_forward', { lat: 95, lon: 0 });
+    assert.equal(bad.isError, true);
+    assert.equal(bad.structuredContent.error.field, '/lat');
+  } finally {
+    d.close();
+  }
+  const only = new Client(['--toolsets=navigation', '--no-meta']);
+  try {
+    const names = (await only.request('tools/list', {})).result.tools.map((t) => t.name);
+    assert.ok(names.length > 0 && names.every((n) => n.startsWith('gp_navigation_') || n.startsWith('gp_geometry_')), names.join());
+    assert.equal((await only.request('tools/call', { name: 'geoprims_search', arguments: { query: 'x' } })).error.code, -32602);
+  } finally {
+    only.close();
+  }
+});
+
+test('long direct names shorten deterministically under 64 characters', () => {
+  const id = 'aviation.performance.a-very-long-operation-name-that-keeps-going-past-the-limit';
+  const n = directName(id);
+  assert.equal(n.length, 64);
+  assert.equal(n, directName(id));
+  assert.notEqual(n, directName(id + 'x'));
 });
 
 test('has zero runtime dependencies', () => {

@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // geoprims local MCP server: zero dependencies, stdio only, no network.
 //
-//   node mcp/server.mjs [--timeout=<ms>] [--debug]
+//   node mcp/server.mjs [--toolsets=<name,...>] [--no-meta] [--timeout=<ms>] [--debug]
 //
 // It runs the same Wasm modules as geoprims.com through packages/runtime.
 // Logs go to stderr only and never include argument values unless --debug.
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { TOOLS, metaHandlers, schemaCheck } from './meta.mjs';
+import { ANNOTATIONS, TOOLS, metaHandlers, schemaCheck } from './meta.mjs';
+import { directTools, parseToolsets } from './toolsets.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SERVER_VERSION = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8')).version;
@@ -24,12 +25,13 @@ function parseArgs(argv) {
     if (k === '--timeout' && /^\d+$/.test(v ?? '')) opts.timeoutMs = Number(v);
     else if (k === '--debug') opts.debug = true;
     else if (k === '--allow-asset-download') opts.allowAssetDownload = true; // no downloadable assets exist yet
-    else if (k === '--toolsets' || k === '--no-meta') {
-      throw new Error(`${k} is not available in this build: no stable toolsets exist yet.`);
-    } else {
-      throw new Error(`Unknown option ${a}. Options: --timeout=<ms>, --debug, --allow-asset-download.`);
+    else if (k === '--toolsets') opts.toolsets = parseToolsets(v);
+    else if (k === '--no-meta') opts.noMeta = true;
+    else {
+      throw new Error(`Unknown option ${a}. Options: --toolsets=<name,...>, --no-meta, --timeout=<ms>, --debug, --allow-asset-download.`);
     }
   }
+  if (opts.noMeta && !opts.toolsets) throw new Error('--no-meta needs --toolsets, or no tools would be listed.');
   return opts;
 }
 
@@ -57,7 +59,11 @@ export async function createServer(opts = {}) {
   const modules = JSON.parse(readFileSync(join(dist, 'wasm', 'modules.json'), 'utf8')).modules;
   const limits = JSON.parse(readFileSync(findData(dist, 'report-limits.json'), 'utf8'));
   const handlers = metaHandlers({ host, catalog, modules, limits });
-  const byName = new Map(TOOLS.map((t) => [t.name, t]));
+  const direct = opts.toolsets ? directTools(catalog, opts.toolsets, ANNOTATIONS) : [];
+  if (opts.toolsets && !direct.length) log(opts, `toolsets ${opts.toolsets.join(', ')} have no stable tools yet`);
+  const listed = [...(opts.noMeta ? [] : TOOLS), ...direct.map(({ id, ...t }) => t)];
+  const byName = new Map(opts.noMeta ? [] : TOOLS.map((t) => [t.name, t]));
+  const directByName = new Map(direct.map((t) => [t.name, t.id]));
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
 
   const capabilities = { tools: { listChanged: false }, resources: { listChanged: false }, prompts: { listChanged: false } };
@@ -84,10 +90,13 @@ export async function createServer(opts = {}) {
     }),
     'server/discover': () => ({ supportedVersions: PROTOCOL_VERSIONS, capabilities, serverInfo, instructions: INSTRUCTIONS }),
     ping: () => ({}),
-    'tools/list': () => ({ tools: TOOLS, ...LIST_CACHE }),
+    'tools/list': () => ({ tools: listed, ...LIST_CACHE }),
     'tools/call': async (p) => {
+      // A direct tool is geoprims_run with its id; the core validates the arguments.
+      const directId = directByName.get(p?.name);
+      if (directId) return toolResult(await handlers.geoprims_run({ id: directId, args: p.arguments ?? {} }));
       const tool = byName.get(p?.name);
-      if (!tool) throw rpcError(-32602, `Unknown tool ${p?.name}. Tools: ${TOOLS.map((t) => t.name).join(', ')}`);
+      if (!tool) throw rpcError(-32602, `Unknown tool ${p?.name}. Tools: ${listed.map((t) => t.name).join(', ')}`);
       const args = p.arguments ?? {};
       const bad = schemaCheck(tool, args);
       if (bad) return toolResult({ ok: false, error: { code: 'INVALID_INPUT', message: `${tool.name}: ${bad}.` } });

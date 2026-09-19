@@ -49,13 +49,15 @@ Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus it
 
 | Option | Effect |
 |---|---|
+| `--toolsets=<name,...>` | Also lists each stable tool in the named toolsets as its own MCP tool, named `gp_` plus the id with dots as underscores (`gp_geodesy_utm_forward`). Toolsets: `geodesy-core`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`. Only stable tools join, so `e6b`, `drone-mapping`, and `survey-cogo` are empty until tools there are promoted. |
+| `--no-meta` | With `--toolsets`, lists only the direct tools |
 | `--timeout=<ms>` | Per-call time limit (default 10,000). A call over it returns `LIMIT_EXCEEDED`, and the server keeps serving. |
 | `--debug` | Logs argument values to stderr (off by default) |
 | `--allow-asset-download` | Accepted. No downloadable assets exist yet. |
 
 ## Not built yet
 
-Workflow prompts, direct toolsets (`--toolsets`, `--no-meta`), paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
+Workflow prompts, paginated collections, the `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
 
 ## Tests
 

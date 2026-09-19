@@ -1,7 +1,7 @@
 // The geoprims meta-tools (add-local-mcp-server, "Default meta-tool surface").
 // Descriptions are static text: they never interpolate user input.
 
-const ANNOTATIONS = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
+export const ANNOTATIONS = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
 const envelopeSchema = {
   type: 'object',

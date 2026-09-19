@@ -19,7 +19,7 @@
 
 ## 3. Toolsets, errors, resources, prompts
 
-- [ ] 3.1 Implement toolsets (`geodesy-core`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`) and `--no-meta`; verify the e6b and unknown-toolset scenarios
+- [x] 3.1 Implement toolsets (`geodesy-core`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`) and `--no-meta`; verify the e6b and unknown-toolset scenarios
 - [x] 3.2 Implement recoverable `isError` results and closest-id suggestions; verify the wrong-id scenario
 - [x] 3.3 Implement resources `geoprims://catalog` and `geoprims://tool/{id}` with `ttlMs`/`cacheScope`; verify the resource-read scenario
 - [ ] 3.4 Implement the five workflow prompts; verify each prompt's tool chain runs end to end

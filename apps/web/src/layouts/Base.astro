@@ -1,8 +1,14 @@
 ---
 import '../styles/global.css';
 import { catalog } from '../lib/catalog.mjs';
+import { capTitle, description as capDescription } from '../lib/head.mjs';
 interface Props { title: string; description: string; canonical: string; noindex?: boolean; jsonld?: object[] }
-const { title, description, canonical, noindex = false, jsonld = [] } = Astro.props;
+const props = Astro.props;
+const { canonical, noindex = false, jsonld = [] } = props;
+// Every page's head goes through one module, so the caps and the wording
+// rules hold whatever a template passes (discovery/search-pages).
+const title = capTitle(props.title);
+const description = capDescription(props.description);
 // JSON-LD with < escaped so no string can close the script element (search-pages "Structured data allowlist").
 const ld = jsonld.map((o) => JSON.stringify(o).replaceAll('<', '\\u003c'));
 const canonicalUrl = new URL(canonical, Astro.site).href;

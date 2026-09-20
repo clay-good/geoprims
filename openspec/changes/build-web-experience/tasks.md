@@ -69,7 +69,7 @@
 ## 9. Documentation pages
 
 - [ ] 9.1 Implement the standard docs template with build-time MathML and vector-generated worked examples; verify the build fails when an example disagrees with the tool
-- [ ] 9.2 Implement SEO metadata, structured data, preview images, and sitemap; verify the unique-title lint
+- [ ] 9.2 Implement SEO metadata, structured data, preview images, and sitemap; verify the unique-title lint (done: metadata from the shared head module with its caps and lints, the unique-title lint over every built page, the allow-listed JSON-LD, and the sitemap index with its lastmod ledger; pending: preview images)
 - [ ] 9.3 Build domain and group index pages; verify the airspeed index scenario
 - [ ] 9.4 Write the learning guides from the journey list in `plan-launch-and-value-proof` (L3) with pre-filled chains; verify each guide end to end
 - [ ] 9.5 Add dated regulatory references and "Proposed" labels; verify the Part 108 scenario

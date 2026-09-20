@@ -851,6 +851,87 @@ mod tests {
         );
     }
 
+    /// Every field the sample manifest must carry, blanked one at a time. A
+    /// required field with nothing in it has to be refused, whichever one it
+    /// is (platform/tool-contract, "the meta-schema rejects each missing
+    /// required field").
+    #[test]
+    fn each_missing_required_field_is_rejected() {
+        let cases: Vec<(&str, ToolDef)> = vec![
+            ("id", ToolDef { id: "", ..GOOD }),
+            ("title", ToolDef { title: "", ..GOOD }),
+            (
+                "summary",
+                ToolDef {
+                    summary: "",
+                    ..GOOD
+                },
+            ),
+            ("model", ToolDef { model: "", ..GOOD }),
+            (
+                "accuracy",
+                ToolDef {
+                    accuracy: "",
+                    ..GOOD
+                },
+            ),
+            (
+                "references",
+                ToolDef {
+                    references: &[],
+                    ..GOOD
+                },
+            ),
+            (
+                "examples",
+                ToolDef {
+                    examples: &[],
+                    ..GOOD
+                },
+            ),
+            (
+                "primary_example",
+                ToolDef {
+                    primary_example: "",
+                    ..GOOD
+                },
+            ),
+            (
+                "sentence",
+                ToolDef {
+                    sentence: "",
+                    ..GOOD
+                },
+            ),
+            (
+                "outputs",
+                ToolDef {
+                    outputs: &[],
+                    ..GOOD
+                },
+            ),
+            (
+                "visualization",
+                ToolDef {
+                    visualization: &[],
+                    ..GOOD
+                },
+            ),
+        ];
+        let mut accepted = Vec::new();
+        for (field, def) in &cases {
+            if lint(&[def], &tax(), &[]).is_empty() {
+                accepted.push(*field);
+            }
+        }
+        assert!(
+            accepted.is_empty(),
+            "a manifest with no {accepted:?} was accepted"
+        );
+        // The sample itself, with everything present, passes.
+        assert_eq!(lint(&[&GOOD], &tax(), &[]), Vec::<String>::new());
+    }
+
     #[test]
     fn invalid_id_rejected() {
         fails(

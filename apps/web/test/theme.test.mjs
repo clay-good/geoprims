@@ -185,3 +185,38 @@ test('the header toggle switches modes, saves the choice, and relabels itself', 
   delete globalThis.document;
   delete globalThis.localStorage;
 });
+
+// Night use (ux/mobile-and-field, "Sunlight and night use"). The separate
+// `night` and `sunlight` modes were folded into ink and paper by
+// redesign-minimal-shell, which allows the header exactly one display
+// control. What that requirement asks of night is checked here against ink.
+test('ink shows no bright surface, so nothing flares in a dark cockpit', () => {
+  const t = tokens('ink');
+  // Every surface a page or a map paints at full size, in relative luminance.
+  for (const k of ['--bg', '--surface', '--line', '--land', '--graticule', '--backdrop']) {
+    const l = lum(t[k]);
+    assert.ok(l <= 0.05, `ink ${k} has luminance ${l.toFixed(3)}`);
+  }
+  // The canvas is the page, not a white sheet inside it.
+  assert.ok(lum(t['--land']) <= lum(t['--surface']) + 0.01, 'ink map land is brighter than the page');
+});
+
+test('ink never paints a bright frame while a page loads', () => {
+  const html = readFileSync(join(web, 'dist/index.html'), 'utf8');
+  // The mode is on the document before the stylesheet, and the body's
+  // background is a token, so the first paint is already in the right mode.
+  const body = /(?:^|\})\s*body\s*\{([^}]*)\}/.exec(css.replace(/\/\*[\s\S]*?\*\//g, ''))?.[1] ?? '';
+  assert.match(body, /background:\s*var\(--bg\)/);
+  assert.ok(html.includes("d.dataset.theme=t==='ink'?'ink':'paper'"), 'the mode is not set before first paint');
+});
+
+test('a state is readable without seeing its color', () => {
+  // Red light distorts color, so every status phrase carries a mark and words.
+  const app = readFileSync(join(web, 'src/components/ToolApp.svelte'), 'utf8');
+  const marks = /const STATUS_MARK = \{([^}]*)\}/.exec(app)?.[1] ?? '';
+  for (const word of ['Within', 'Near', 'Beyond', 'Meets']) {
+    assert.match(marks, new RegExp(`${word}:`), `no mark for a ${word} status`);
+  }
+  // The phrase itself is words, and the mark is decoration beside it.
+  assert.match(app, /class="mark" aria-hidden="true">\{st\.mark\}<\/span> <strong>\{st\.phrase\}/);
+});

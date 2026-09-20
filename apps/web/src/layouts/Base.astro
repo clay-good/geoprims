@@ -68,7 +68,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
           <a href="/privacy/">Privacy</a> · <a href="/licenses/">Licenses</a> ·
           <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">Wrong answer?</a>
         </p>
-        <p class="version">Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/changelog/">changelog</a> · <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> · <a href="/methodology/">how results are checked</a> · <a href="/agents/">use with agents</a></p>
+        <p class="version"><span class="chip offline" data-offline hidden></span>Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/changelog/">changelog</a> · <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> · <a href="/methodology/">how results are checked</a> · <a href="/agents/">use with agents</a></p>
       </div>
     </footer>
     <div class="update card" role="status" hidden>
@@ -80,7 +80,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
       import { wireKeys } from '../lib/keys.js';
       import { registerOffline } from '../lib/pwa.js';
       wireTheme(document.querySelector('[data-theme-toggle]'));
-      registerOffline(document.querySelector('.update'));
+      registerOffline(document.querySelector('.update'), document.querySelector('[data-offline]'));
       // The palette loads on first use: `/` outside text fields, or Ctrl/Cmd+K anywhere.
       const palette = (query) => import('../lib/palette.js').then((m) => m.openPalette(query));
       document.querySelector('.palette-open').addEventListener('click', () => palette());

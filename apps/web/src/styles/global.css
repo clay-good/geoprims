@@ -146,6 +146,10 @@ main { padding-block: 1.75rem 4rem; }
 
 /* Field mode (ux/mobile-and-field): bigger targets and bigger answers, for
    gloved hands and a moving vehicle. Everything else is unchanged. */
+/* Whether this browser holds the release, said plainly in the footer. */
+.chip.offline { display: inline-block; margin-inline-end: 0.6rem; padding: 0.05rem 0.45rem; border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.85em; color: var(--muted); }
+.chip.offline[data-state='ready'] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+
 /* A setting that is on or off, with the box beside its label, not under it. */
 label.switch { display: flex; gap: 0.6rem; align-items: center; }
 label.switch input { inline-size: var(--target); block-size: var(--target); min-block-size: 0; margin: 0; padding: 0; accent-color: var(--accent); }

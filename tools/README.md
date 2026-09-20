@@ -7,6 +7,8 @@ Build tooling. No npm dependencies.
 | `toolchain.json` | Pinned rustc and wasm-opt versions, and module size budgets |
 | `wasm/build.mjs` | Builds every module to `dist/wasm/`, enforces pins, the import lint, and Brotli budgets, and writes SHA-256 digests |
 | `wasm/*.test.mjs` | Gate tests against bad fixtures, and module smoke tests |
+| `wasm/integrity.test.mjs` | The recorded digests match the modules on disk, and the website and the MCP release ship those exact bytes |
+| `wasm/reproducible.mjs` | `npm run verify:reproducible`: builds twice from a cleared target directory and fails if any digest moves |
 | `trust/related.mjs` | The related-tools gate: lists resolve, give a recognised reason, agree about inverses, and stay within six; the count short of three is a ratchet |
 | `trust/status.mjs` | The status-phrase gate: every `x-status` output must read as Within/Near/Beyond or Meets/Does not meet, and may never say safe, unsafe, legal, or approved |
 | `repo/suites.test.mjs` | Holds the test scripts to every test file in the tree, and CI to those scripts, so a directory of tests cannot sit unrun |

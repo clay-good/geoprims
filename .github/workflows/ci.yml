@@ -36,6 +36,8 @@ jobs:
         run: node tools/wasm/build.mjs
       - name: Catalog (dist/catalog/v1.json with honest counts)
         run: node tools/codegen/catalog.mjs
+      - name: Build the MCP release directory (so the integrity gate checks it too)
+        run: node tools/mcp/build-dist.mjs
       - name: JS tests (gates, runtime, vectors through Wasm, vector integrity, MCP server and Worker end to end)
         run: npm run test:js
         env:

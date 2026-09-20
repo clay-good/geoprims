@@ -1,4 +1,5 @@
 // Checks the built site (run `npm run build` in apps/web first).
+import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -230,4 +231,20 @@ test('the answer card frames the answer against a rule of thumb where the tool h
   assert.equal(text, 'The 120 ft per °C rule of thumb gives 8,123 ft (191 ft high).');
   // It sits under the sentence, not among the values.
   assert.ok(html.indexOf('<p class="sentence">') < html.indexOf('<p class="comparison">'));
+});
+
+test('the site serves byte-identical Wasm modules, not a stale copy', () => {
+  const { modules } = JSON.parse(readFileSync(join(web, '../../dist/wasm/modules.json'), 'utf8'));
+  const problems = [];
+  for (const m of modules) {
+    const file = join(dist, 'wasm', `${m.module}.wasm`);
+    if (!existsSync(file)) {
+      problems.push(`the site is missing ${m.module}.wasm`);
+      continue;
+    }
+    const sha = createHash('sha256').update(readFileSync(file)).digest('hex');
+    if (sha !== m.sha256) problems.push(`the site's ${m.module}.wasm is ${sha}, the build made ${m.sha256}`);
+  }
+  assert.deepEqual(problems, []);
+  assert.ok(modules.length >= 10, `only ${modules.length} modules`);
 });

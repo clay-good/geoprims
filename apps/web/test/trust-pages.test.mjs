@@ -100,3 +100,13 @@ test('every page links privacy and licenses in its footer', () => {
     assert.match(html, /<a href="\/licenses\/">Licenses<\/a>/, `${route} does not link licenses`);
   }
 });
+
+test('the verification report publishes the digest of every module it ran', () => {
+  const html = page(`/verification/${v}`);
+  const { modules } = JSON.parse(readFileSync(join(root, 'dist/wasm/modules.json'), 'utf8'));
+  for (const m of modules) {
+    assert.ok(html.includes(m.sha256), `${m.module}.wasm's digest is not published`);
+    assert.ok(html.includes(`${m.module}.wasm`), `${m.module}.wasm is not listed`);
+  }
+  assert.match(html, /npm run verify:reproducible/, 'it says how to check the digests');
+});

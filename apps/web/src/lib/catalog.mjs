@@ -75,6 +75,15 @@ export function errorShare(worst) {
 }
 const modules = JSON.parse(readFileSync(join(root, 'dist/wasm/modules.json'), 'utf8')).modules;
 
+/**
+ * Every Wasm module in this release with its full SHA-256, so a reader can
+ * check the bytes this site served (platform/verification, "Reproducible
+ * builds"). The same source gives the same digests: `npm run
+ * verify:reproducible` builds twice and compares them.
+ */
+export const moduleDigests = () =>
+  modules.map(({ module, bytes, sha256 }) => ({ module, bytes, sha256 })).sort((a, b) => a.module.localeCompare(b.module));
+
 /** The first 16 hex digits of the SHA-256 of the tool's Wasm module: which build made the answer. */
 export const buildHashOf = (t) => (modules.find((m) => m.module === (t.domain === 'units' ? 'base' : t.domain))?.sha256 ?? '').slice(0, 16);
 

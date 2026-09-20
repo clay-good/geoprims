@@ -142,6 +142,8 @@ main { padding-block: 1.75rem 4rem; }
 .facts dt { color: var(--muted); font-size: 0.92rem; }
 .facts dd { margin: 0; font: 500 0.95rem var(--mono); font-variant-numeric: tabular-nums; text-align: end; overflow-wrap: anywhere; }
 .facts dd.words { font-family: var(--sans); }
+.report .digest code { font-size: 0.78rem; word-break: break-all; }
+
 /* Show your work: one numbered step per line, formulas in the mono face. */
 .trace { margin: 0.4rem 0 0; padding-left: 1.2rem; display: grid; gap: 0.6rem; }
 .trace p { margin: 0; }

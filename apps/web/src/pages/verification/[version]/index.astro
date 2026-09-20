@@ -1,12 +1,13 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import PageHeader from '../../../components/PageHeader.astro';
-import { catalog, errorShare, route, verification } from '../../../lib/catalog.mjs';
+import { catalog, errorShare, moduleDigests, route, verification } from '../../../lib/catalog.mjs';
 export function getStaticPaths() {
   return [{ params: { version: catalog.coreVersion } }];
 }
 const { version } = Astro.params;
 const r = await verification();
+const digests = moduleDigests();
 ---
 <Base title={`Verification report ${version} · geoprims`} description={`Every geoprims tool in release ${version}: golden vector counts, sources, the largest observed error against the reference, and the declared tolerance.`} canonical={`/verification/${version}/`}>
   <PageHeader title={`Verification report ${version}`}>
@@ -20,6 +21,23 @@ const r = await verification();
     shown with that tolerance and the share used. <a href={`/verification/${version}.json`} download>Download this report as JSON</a>.
     See the <a href="/methodology/">methodology</a> and the <a href="/changelog/">changelog</a>.
   </p>
+  <h2>What this release is made of</h2>
+  <p>
+    The SHA-256 of every WebAssembly module this site and the MCP server run. The same source gives the same bytes:
+    <code>npm run verify:reproducible</code> builds twice from a clean tree and compares these digests.
+  </p>
+  <div class="table-scroll">
+    <table class="report">
+      <thead><tr><th scope="col">Module</th><th scope="col">Bytes</th><th scope="col">SHA-256</th></tr></thead>
+      <tbody>
+        {digests.map((d) => (
+          <tr><td><code>{d.module}.wasm</code></td><td>{d.bytes.toLocaleString('en-US')}</td><td class="digest"><code>{d.sha256}</code></td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Every tool</h2>
   <div class="table-scroll">
     <table class="report">
       <thead><tr><th scope="col">Tool</th><th scope="col">Vectors</th><th scope="col">Largest error</th><th scope="col">Tolerance</th><th scope="col">Used</th><th scope="col">Sources</th></tr></thead>

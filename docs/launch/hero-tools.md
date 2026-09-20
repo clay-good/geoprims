@@ -13,7 +13,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Crosswind and headwind | `aviation.wind.runway-components` | [x] | [ ] | [ ] | [x] |
 | Pilots | Density altitude | `aviation.altimetry.density-altitude` | [x] | [ ] | [ ] | [x] |
 | Pilots | Pressure altitude | `aviation.altimetry.pressure-altitude` | [x] | [ ] | [ ] | [x] |
-| Pilots | E6B wind triangle | `aviation.wind.heading-groundspeed` | [x] | [ ] | [ ] | [ ] |
+| Pilots | E6B wind triangle | `aviation.wind.heading-groundspeed` | [x] | [ ] | [ ] | [x] |
 | Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] | [ ] |
 | Pilots | The four nights | `time.sun.aviation-nights` | [x] | [ ] | [ ] | [ ] |
 | Pilots | METAR decoder | `aviation.weather.metar-decode` | [x] | [ ] | [ ] | [ ] |
@@ -25,11 +25,11 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Top of descent | `aviation.performance.top-of-descent` | [x] | [ ] | [ ] | [ ] |
 | Pilots | Visual descent point | `aviation.performance.vdp` | [x] | [ ] | [ ] | [ ] |
 | Drone | GSD | `drone.photogrammetry.gsd` | [x] | [ ] | [ ] | [x] |
-| Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] | [ ] |
+| Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] | [x] |
 | Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [ ] | [ ] | [ ] | [ ] |
 | Drone | Image count | `drone.photogrammetry.image-count` | [ ] | [ ] | [ ] | [ ] |
 | Drone | Flight time | `drone.power.endurance` | [ ] | [ ] | [ ] | [ ] |
-| Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] | [ ] |
+| Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] | [x] |
 | Drone | Mapping sun window | `time.sun.mapping-window` | [ ] | [ ] | [ ] | [ ] |
 | Drone | VLOS guidance | `drone.sensors.vlos` | [x] | [ ] | [ ] | [ ] |
 | Drone | Part 107 altitude | `drone.ops.part107-altitude` | [ ] | [ ] | [ ] | [ ] |
@@ -38,7 +38,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Surveyors | MGRS | `geodesy.grid-ref.mgrs-forward`, `geodesy.grid-ref.mgrs-inverse` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | State plane | `geodesy.spcs.spcs83-forward`, `geodesy.spcs.spcs83-inverse` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | Geoid and orthometric height | `geodesy.geoid.geoid-height` | [x] | [ ] | [ ] | [ ] |
-| Surveyors | Grid ↔ ground combined factor | `survey.reduction.combined-factor` | [x] | [ ] | [ ] | [ ] |
+| Surveyors | Grid ↔ ground combined factor | `survey.reduction.combined-factor` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Traverse closure | `survey.cogo.traverse-closure` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | Deed plotter | `survey.land.deed-plot` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | Horizontal curve | `survey.curves.circular-curve` | [x] | [ ] | [ ] | [ ] |
@@ -53,7 +53,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [ ] |
 
-Stable: 36 of 42 rows. Shows its work: 5 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 36 of 42 rows. Shows its work: 9 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 

@@ -516,6 +516,27 @@ fn run_altitude_for_gsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
         );
     }
     let (fa, _) = cam.footprint(h);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Pixel pitch",
+            "pitch = sensor width / image width",
+            format!("{} mm / {} px", n(cam.sw * 1000.0, 2), n(cam.iw, 0)),
+            format!("{} µm", n(cam.sw / cam.iw * 1e6, 3)),
+        );
+        ctx.step(
+            "Height for that GSD",
+            "height = GSD × focal length / pitch",
+            format!(
+                "{} cm × {} mm / {} µm",
+                n(g * 100.0, 3),
+                n(cam.f * 1000.0, 2),
+                n(cam.sw / cam.iw * 1e6, 3)
+            ),
+            format!("{} m", n(h, 3)),
+        );
+    }
     Ok(Json::obj([
         ("height", ctx.out("height", m(h))),
         ("footprint_across", ctx.out("footprint_across", m(fa))),

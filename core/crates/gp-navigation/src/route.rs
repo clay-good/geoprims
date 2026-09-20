@@ -759,6 +759,38 @@ fn run_tsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .at("/distance"));
     }
     let hours = time / 3600.0;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let (nm, kt) = (dist / 1852.0, speed * 3600.0 / 1852.0);
+        // One step for the quantity that was missing, then the time en route.
+        match (d, v, t) {
+            (Some(_), Some(_), None) => ctx.step(
+                "Time",
+                "time = distance / speed",
+                format!("{} NM / {} kt", n(nm, 3), n(kt, 2)),
+                format!("{} h", n(hours, 4)),
+            ),
+            (Some(_), None, Some(_)) => ctx.step(
+                "Speed",
+                "speed = distance / time",
+                format!("{} NM / {} h", n(nm, 3), n(hours, 4)),
+                format!("{} kt", n(kt, 2)),
+            ),
+            _ => ctx.step(
+                "Distance",
+                "distance = speed × time",
+                format!("{} kt × {} h", n(kt, 2), n(hours, 4)),
+                format!("{} NM", n(nm, 3)),
+            ),
+        }
+        ctx.step(
+            "Time en route",
+            "ETE = the time written as hours and minutes",
+            format!("{} h", n(hours, 4)),
+            hm(hours),
+        );
+    }
     let mut out = vec![
         ("ete", Json::str(hm(hours))),
         (

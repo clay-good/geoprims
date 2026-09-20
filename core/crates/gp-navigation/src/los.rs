@@ -248,6 +248,28 @@ fn run_horizon(ctx: &mut Ctx) -> Result<Json, ToolError> {
         nm(1.23 * sqrt(ft)),
     );
     terrain_note(ctx);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let nn = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Effective Earth radius",
+            "Re = R / (1 − k), with k the refraction coefficient",
+            format!("{} km / (1 − {})", nn(r / 1000.0, 1), k),
+            format!("{} km", nn(re / 1000.0, 1)),
+        );
+        ctx.step(
+            "Distance to the horizon",
+            "d = Re × acos(Re / (Re + h))",
+            format!(
+                "{} km × acos({} / ({} + {} m))",
+                nn(re / 1000.0, 1),
+                nn(re, 0),
+                nn(re, 0),
+                nn(h, 1)
+            ),
+            format!("{} km", nn(arc / 1000.0, 3)),
+        );
+    }
     ctx.model = Some(format!(
         "Spherical Earth, R = {r:.0} m, refraction k = {k} (effective radius {re:.0} m)"
     ));

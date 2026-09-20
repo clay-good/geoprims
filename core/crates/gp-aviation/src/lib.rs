@@ -1829,6 +1829,40 @@ fn run_heading_groundspeed(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "The headwind is at least the airspeed, so the aircraft makes no progress along the course.",
         ));
     }
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        let off = gp_base::angle::wrap_lon(wd - course);
+        ctx.step(
+            "Wind correction angle",
+            "WCA = asin(wind speed × sin(wind direction − course) / TAS)",
+            format!(
+                "asin({} × sin {}° / {})",
+                n(w.speed, 0),
+                n(off, 0),
+                n(tas, 0)
+            ),
+            format!("{}°", n(wca, 1)),
+        );
+        ctx.step(
+            "Groundspeed",
+            "GS = TAS × cos WCA − wind speed × cos(wind direction − course)",
+            format!(
+                "{} × cos {}° − {} × cos {}°",
+                n(tas, 0),
+                n(wca, 1),
+                n(w.speed, 0),
+                n(off, 0)
+            ),
+            format!("{} kt", n(gs, 1)),
+        );
+        ctx.step(
+            "Heading to fly",
+            "heading = course + WCA",
+            format!("{}° + {}°", n(course, 0), n(wca, 1)),
+            format!("{}°", n(gp_base::angle::wrap_azimuth(course + wca), 1)),
+        );
+    }
     Ok(obj(vec![
         (
             "heading",

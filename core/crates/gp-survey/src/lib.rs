@@ -1961,6 +1961,22 @@ fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let ef = r / (r + h);
     let cf = k * ef;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Elevation factor",
+            "EF = R / (R + h)",
+            format!("{} m / ({} m + {} m)", n(r, 0), n(r, 0), n(h, 3)),
+            n(ef, 8),
+        );
+        ctx.step(
+            "Combined factor",
+            "CF = grid scale factor × elevation factor",
+            format!("{} × {}", n(k, 8), n(ef, 8)),
+            n(cf, 8),
+        );
+    }
     let mut out = vec![
         ("combined_factor", Json::Num(cf)),
         ("elevation_factor", Json::Num(ef)),

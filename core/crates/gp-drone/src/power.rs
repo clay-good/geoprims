@@ -360,6 +360,32 @@ fn run_battery(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let e = cap_c * v; // C·V = J
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let (mah, ah) = (cap_c / 3.6, cap_c / 3600.0);
+        // Only worth a line when the pack is not simply used in full.
+        if dod < 1.0 || reserve > 0.0 {
+            ctx.step(
+                "Usable share",
+                "usable = depth of discharge − reserve",
+                format!("{}% − {}%", n(dod * 100.0, 0), n(reserve * 100.0, 0)),
+                format!("{}%", n((dod - reserve) * 100.0, 0)),
+            );
+        }
+        ctx.step(
+            "Charge",
+            "Ah = mAh / 1000",
+            format!("{} mAh / 1000", n(mah, 0)),
+            format!("{} Ah", n(ah, 3)),
+        );
+        ctx.step(
+            "Energy in the pack",
+            "Wh = Ah × V",
+            format!("{} Ah × {} V", n(ah, 3), n(v, 2)),
+            format!("{} Wh", n(e / 3600.0, 2)),
+        );
+    }
     let mut o = vec![
         ("energy", ctx.out("energy", q(e, QT::Energy, "J"))),
         (

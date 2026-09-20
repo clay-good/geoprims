@@ -1,0 +1,6 @@
+{
+  "note": "Generated conversion endpoints are tool ids, search aliases, and MCP endpoints. An endpoint gets its own indexable page only when it is listed here (discovery/search-pages, 'Page-versus-endpoint rule'). Every other endpoint renders the parent tool with the pair's preset, canonicalizes to the parent, and stays out of the sitemaps. Checked by tools/seo/high-intent.test.mjs.",
+  "maxPages": 60,
+  "justificationRequired": "Recorded query demand: the source that measured it and the date it was read. Search Console is not connected yet (add-seo-and-discoverability 6.1), so nothing is promoted on a guess — the list is empty until there are numbers to point at.",
+  "pages": []
+}

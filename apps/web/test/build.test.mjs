@@ -221,3 +221,13 @@ test('a status output reads as a judgment with a mark and its source, not as ano
   const facts = /<dl class="facts">([\s\S]*?)<\/dl>/.exec(html)?.[1] ?? '';
   assert.doesNotMatch(facts, /Within your|Near your|Beyond your/, 'a status is not repeated as a fact');
 });
+
+test('the answer card frames the answer against a rule of thumb where the tool has one', () => {
+  const html = page('/aviation/altimetry/density-altitude/');
+  const line = /<p class="comparison">([\s\S]*?)<\/p>/.exec(html);
+  assert.ok(line, 'density altitude shows a comparison line');
+  const text = line[1].replace(/<!--.*?-->/g, '').replace(/<[^>]+>/g, '').trim();
+  assert.equal(text, 'The 120 ft per °C rule of thumb gives 8,123 ft (191 ft high).');
+  // It sits under the sentence, not among the values.
+  assert.ok(html.indexOf('<p class="sentence">') < html.indexOf('<p class="comparison">'));
+});

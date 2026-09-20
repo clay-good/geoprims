@@ -150,6 +150,8 @@ main { padding-block: 1.75rem 4rem; }
 .worked dt { color: var(--muted); }
 .worked dd { margin: 0; font-variant-numeric: tabular-nums; }
 
+.answer .comparison { margin: 0.35rem 0 0; font-size: 0.92rem; color: var(--muted); }
+
 /* A status phrase reads on its own: a mark, the words, and the threshold's
    source. Never colour alone: the mark and the wording both carry it. */
 .answer .status { margin: 0.6rem 0 0; font-size: 0.98rem; display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; }

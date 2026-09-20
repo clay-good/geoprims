@@ -99,6 +99,25 @@ pub struct Status {
     pub source: &'static str,
 }
 
+/// How a tool frames its answer against something familiar
+/// (`ux/glanceable-results`, "Answer card"). `text` is a sentence template
+/// rendered from the same scope as `x-sentence`; an empty one shows no line.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Comparison {
+    pub kind: &'static str,
+    pub text: &'static str,
+}
+
+impl Comparison {
+    pub const NONE: Comparison = Comparison {
+        kind: "none",
+        text: "",
+    };
+}
+
+/// The kinds an `x-comparison` may declare.
+pub const COMPARISON_KINDS: &[&str] = &["vs-input", "vs-rule-of-thumb", "vs-typical-range", "none"];
+
 /// The two kinds an `x-status` output may declare.
 pub const STATUS_KINDS: &[&str] = &["threshold", "conformance"];
 
@@ -289,6 +308,9 @@ pub struct ToolDef {
     pub justification: &'static str,
     /// Plain-language answer template (`x-sentence`).
     pub sentence: &'static str,
+    /// The line that frames the answer against something familiar
+    /// (`x-comparison`), rendered from the same template language.
+    pub comparison: Comparison,
     /// Declared limits, as (name, value).
     pub limits: &'static [(&'static str, u64)],
     /// How free-text questions fill the inputs (natural-language prefill).
@@ -331,6 +353,7 @@ impl ToolDef {
         preset: &[],
         justification: "",
         sentence: "",
+        comparison: Comparison::NONE,
         limits: &[],
         slots: &[],
         run: unimplemented_run,
@@ -944,7 +967,13 @@ impl Registry {
                     context: x.context,
                     notice: operational_notice(def),
                 };
-                envelope::success(x.result, Some(x.summary.as_str()), x.display, &meta)
+                envelope::success(
+                    x.result,
+                    Some(x.summary.as_str()),
+                    Some(x.comparison.as_str()),
+                    x.display,
+                    &meta,
+                )
             }
             Err(e) => envelope::failure(&e),
         }
@@ -960,6 +989,8 @@ struct Executed {
     result: Json,
     /// The rendered sentence.
     summary: String,
+    /// The rendered comparison line, empty when the tool declares none.
+    comparison: String,
     /// Display strings per output.
     display: Json,
     warnings: Vec<Warning>,
@@ -1025,10 +1056,11 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
             "This tool is experimental: it has not yet met the stable verification bar.",
         ));
     }
-    let (summary, display) = render_summary(&mut ctx, &result);
+    let (summary, comparison, display) = render_summary(&mut ctx, &result);
     Ok(Executed {
         result,
         summary,
+        comparison,
         display,
         warnings: ctx.warnings,
         model: ctx.model,
@@ -1072,9 +1104,10 @@ impl Scope for SentenceScope {
     }
 }
 
-/// Renders the tool's `x-sentence` from its outputs (first) and inputs, and
-/// each output as display text (rounded to its display precision, with its unit).
-fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, Json) {
+/// Renders the tool's `x-sentence` and `x-comparison` from its outputs (first)
+/// and inputs, and each output as display text (rounded to its display
+/// precision, with its unit).
+fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, String, Json) {
     let def = ctx.def;
     let get = |name: &str| match result {
         Json::Obj(pairs) => pairs.iter().find(|(k, _)| k == name).map(|(_, v)| v),
@@ -1157,7 +1190,12 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, Json) {
         warnings: ctx.warnings.iter().map(|w| w.code).collect(),
         format: ctx.options.format,
     };
-    (template::render(def.sentence, &scope), display)
+    let comparison = if def.comparison.text.is_empty() {
+        String::new()
+    } else {
+        template::render(def.comparison.text, &scope)
+    };
+    (template::render(def.sentence, &scope), comparison, display)
 }
 
 fn parse_options(def: &ToolDef, v: Option<&Value>) -> Result<Options, ToolError> {

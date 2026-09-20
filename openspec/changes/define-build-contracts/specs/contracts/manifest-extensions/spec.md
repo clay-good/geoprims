@@ -18,7 +18,7 @@ The manifest meta-schema SHALL define, and accept only, these extension fields.
 - `x-status` (outputs only: `{kind: "threshold" | "conformance", source}`, where `source` is a sources-ledger id or `user` when the reader enters the limit)
 
 **Per tool:**
-- `x-sentence` (template), `x-comparison` (`vs-input`, `vs-rule-of-thumb`, `vs-typical-range`, or `none`, plus its parameters)
+- `x-sentence` (template), `x-comparison` (`{kind, text}`: kind is `vs-input`, `vs-rule-of-thumb`, `vs-typical-range`, or `none`; `text` is a sentence template rendered from the same scope, and is present exactly when the kind is not `none`)
 - `x-near-margin` (fraction or absolute, default 0.10)
 - `x-clock-default` (`allowed` or `forbidden`, default `forbidden`)
 - `x-primary-example` (vector id)

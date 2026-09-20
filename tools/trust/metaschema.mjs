@@ -29,8 +29,13 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
     for (const k of Object.keys(t)) {
       if (k.startsWith('x-') && !TOOL_EXTENSIONS.has(k)) problems.push(`${t.id}: unknown extension ${k}`);
     }
-    const kind = t['x-comparison']?.kind;
-    if (t['x-comparison'] && !COMPARISONS.has(kind)) problems.push(`${t.id}: x-comparison kind ${kind} is not one of ${[...COMPARISONS].join(', ')}`);
+    const comparison = t['x-comparison'];
+    const kind = comparison?.kind;
+    if (comparison && !COMPARISONS.has(kind)) problems.push(`${t.id}: x-comparison kind ${kind} is not one of ${[...COMPARISONS].join(', ')}`);
+    // A comparison that is not "none" carries the line it renders, and "none" carries nothing.
+    if (comparison && (kind === 'none') !== (comparison.text === undefined)) {
+      problems.push(`${t.id}: x-comparison kind ${kind} ${kind === 'none' ? 'takes no text' : 'needs text'}`);
+    }
     if (t['x-clock-default'] && !['allowed', 'forbidden'].includes(t['x-clock-default'])) {
       problems.push(`${t.id}: x-clock-default must be allowed or forbidden`);
     }

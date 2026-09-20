@@ -397,7 +397,17 @@ pub fn manifest(def: &ToolDef) -> Json {
         ),
     );
     put("x-sentence", Json::str(def.sentence));
-    put("x-comparison", Json::obj([("kind", Json::str("none"))]));
+    put(
+        "x-comparison",
+        if def.comparison.text.is_empty() {
+            Json::obj([("kind", Json::str(def.comparison.kind))])
+        } else {
+            Json::obj([
+                ("kind", Json::str(def.comparison.kind)),
+                ("text", Json::str(def.comparison.text)),
+            ])
+        },
+    );
     put("x-clock-default", Json::str("forbidden"));
     put("x-primary-example", Json::str(def.primary_example));
     Json::Obj(o)
@@ -548,6 +558,30 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
                     "numeric output {} needs x-display-precision",
                     f.name
                 ));
+            }
+        }
+        if !crate::tool::COMPARISON_KINDS.contains(&t.comparison.kind) {
+            e(format!(
+                "x-comparison kind {} is not one of {}",
+                t.comparison.kind,
+                crate::tool::COMPARISON_KINDS.join(", ")
+            ));
+        }
+        if (t.comparison.kind == "none") != t.comparison.text.is_empty() {
+            e("x-comparison kind none takes no text, and any other kind needs it".into());
+        }
+        if !t.comparison.text.is_empty() {
+            match crate::template::check(t.comparison.text, &known) {
+                Ok(codes) => {
+                    for c in codes {
+                        if !t.warnings.iter().any(|w| *w == c) {
+                            e(format!(
+                                "comparison uses warning {c}, which the tool does not declare"
+                            ));
+                        }
+                    }
+                }
+                Err(m) => e(format!("comparison template {m}")),
             }
         }
         for f in t.outputs {

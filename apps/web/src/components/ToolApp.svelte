@@ -294,6 +294,7 @@
   {#if result?.ok}
     <div class="value" bind:this={answerCard}>{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
     <p class="sentence">{result.summary}</p>
+    {#if result.comparison}<p class="comparison">{result.comparison}</p>{/if}
     {#each statuses as st}
       <p class="status"><span class="mark" aria-hidden="true">{st.mark}</span> <strong>{st.phrase}</strong> <span class="against">Against {#if st.source.url}<a href={st.source.url}>{st.source.label}</a>{:else}{st.source.label}{/if}.</span></p>
     {/each}

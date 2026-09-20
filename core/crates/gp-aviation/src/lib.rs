@@ -16,7 +16,8 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Bare, Ctx, Example, Field, Kind, Layer, Precision, Q, Registry, Related, Slot, ToolDef,
+    Bare, Comparison, Ctx, Example, Field, Kind, Layer, Precision, Q, Registry, Related, Slot,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use serde_json::Value;
@@ -896,6 +897,10 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
         },
     ],
     sentence: "Density altitude is {density_altitude}, about {abs(above_field)} {if above_field < 0}lower{else}higher{/if} than the field.{if above_field > 1000} Expect a longer takeoff roll and weaker climb.{/if}{warn DRY_AIR_ASSUMED} Assumes dry air.{/warn}",
+    comparison: Comparison {
+        kind: "vs-rule-of-thumb",
+        text: "The 120 ft per °C rule of thumb gives {rule_120} ({abs(rule_120_error)} {if rule_120_error < 0}low{else}high{/if}).",
+    },
     limits: &[("batchRows", 10_000)],
     slots: &[
         Slot::new("elevation", &["elevation", "elev", "field", "airport"])

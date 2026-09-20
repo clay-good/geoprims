@@ -53,3 +53,18 @@ test('a status output must name a kind, a real source, and be text', () => {
   const onInput = { id: 'fixture.in', examples: [], inputs: { properties: { s: structuredClone(status) } }, outputs: { properties: {} } };
   assert.deepEqual(metaschemaProblems({ tools: [onInput] }, sourceIds), ['fixture.in: x-status is for outputs, not inputs.s']);
 });
+
+test('a comparison must declare its kind and carry the line it renders', () => {
+  const base = { id: 'fixture.c', examples: [], inputs: { properties: {} }, outputs: { properties: {} } };
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-comparison': { kind: 'none' } }] }, sourceIds), []);
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-comparison': { kind: 'vs-rule-of-thumb', text: 'The rule gives {x}.' } }] }, sourceIds), []);
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-comparison': { kind: 'vs-rule-of-thumb' } }] }, sourceIds), [
+    'fixture.c: x-comparison kind vs-rule-of-thumb needs text',
+  ]);
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-comparison': { kind: 'none', text: 'anything' } }] }, sourceIds), [
+    'fixture.c: x-comparison kind none takes no text',
+  ]);
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-comparison': { kind: 'vibes', text: 'x' } }] }, sourceIds), [
+    'fixture.c: x-comparison kind vibes is not one of vs-input, vs-rule-of-thumb, vs-typical-range, none',
+  ]);
+});

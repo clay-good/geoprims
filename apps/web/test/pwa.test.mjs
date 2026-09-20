@@ -86,6 +86,9 @@ function worker(source = readFileSync(join(dist, 'sw.js'), 'utf8'), shared = { c
       const r = await dispatch('fetch', { request: { url: request.url, method: 'GET', mode } });
       return r ?? scope.fetch(request);
     },
+    /** True when the worker answered the request instead of letting it through. */
+    handles: async (path, method = 'GET') =>
+      (await dispatch('fetch', { request: { url: `${ORIGIN}${path}`, method, mode: 'cors' } })) !== undefined,
   };
 }
 
@@ -169,4 +172,20 @@ test('pages show the release version and offer updates without blocking', () => 
   assert.ok(html.includes(`core ${catalog.coreVersion}`));
   assert.match(html, /<div class="update card" role="status" hidden>/);
   assert.ok(!html.includes('__GP_APP_VERSION__'));
+});
+
+test('the report API goes past the worker: never cached, never answered offline', async () => {
+  const sw = worker();
+  await sw.install();
+  await sw.activate();
+  for (const path of ['/api/reports/config', '/api/reports']) {
+    assert.equal(await sw.handles(path), false, `${path} must not be handled`);
+    assert.equal(await sw.handles(path, 'POST'), false, `POST ${path} must not be handled`);
+  }
+  assert.equal(await sw.handles('/aviation/altimetry/density-altitude/'), true, 'pages still are');
+  // Offline, a report fails in the open rather than being served or queued.
+  sw.net.online = false;
+  assert.equal(await sw.handles('/api/reports/config'), false);
+  const precache = vm.runInNewContext(`${readFileSync(join(dist, 'sw.js'), 'utf8').split('\n\n')[0]}; PRECACHE`);
+  assert.ok(!precache.some((u) => u.startsWith('/api/')), 'the API is not precached');
 });

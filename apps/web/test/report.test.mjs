@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPayload, reportText } from '../src/lib/report.js';
+import { buildPayload, openState, reportText, sendState } from '../src/lib/report.js';
 import { KEYS, validate } from '../../../worker/src/report.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
@@ -55,4 +55,18 @@ test('x-private inputs are never sent and outputs are withheld', async () => {
 test('copy-report text carries no token', async () => {
   const p = await payloadFor(catalog.tools[0], { token: 'secret-token' });
   assert.ok(!reportText(p).includes('secret-token'));
+});
+
+test('the dialog opens in the state the connection and the switch put it in', () => {
+  const on = { enabled: true, sitekey: 'x' };
+  assert.equal(openState({ online: true, config: on }), 'ready');
+  assert.equal(openState({ online: false, config: on }), 'offline', 'offline before anything is asked');
+  assert.equal(openState({ online: true, config: { enabled: false } }), 'paused', 'the kill switch');
+  assert.equal(openState({ online: true, config: null }), 'paused', 'config unreachable');
+  assert.equal(openState({ online: false, config: null }), 'offline');
+});
+
+test('only the uniform 202 counts as sent', () => {
+  assert.equal(sendState(202), 'sent');
+  for (const code of [200, 400, 405, 429, 500, 503]) assert.equal(sendState(code), 'failed', String(code));
 });

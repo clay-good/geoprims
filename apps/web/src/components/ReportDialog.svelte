@@ -3,7 +3,7 @@
   // user clicks "Report a problem". It shows exactly what will be sent, loads
   // the bot check only now, posts once, and never retries on its own.
   import { onMount } from 'svelte';
-  import { buildPayload, reportText, ISSUE_URL, LIMITS, viewportClass } from '../lib/report.js';
+  import { buildPayload, openState, reportText, sendState, ISSUE_URL, LIMITS, viewportClass } from '../lib/report.js';
 
   let { tool, args, result, onclose } = $props();
 
@@ -48,20 +48,19 @@
 
   onMount(async () => {
     dialog.showModal();
-    if (!navigator.onLine) {
-      status = 'offline';
-      return;
-    }
+    status = await open();
+  });
+
+  async function open() {
+    if (!navigator.onLine) return 'offline';
     try {
       const r = await fetch('/api/reports/config', { credentials: 'omit' });
-      const cfg = r.ok ? await r.json() : { enabled: false };
-      if (!cfg.enabled) {
-        status = 'paused';
-        return;
-      }
+      const config = r.ok ? await r.json() : null;
+      const next = openState({ online: navigator.onLine, config });
+      if (next !== 'ready') return next;
       await loadTurnstile();
       widget = window.turnstile.render('#report-check', {
-        sitekey: cfg.sitekey,
+        sitekey: config.sitekey,
         action: 'problem-report',
         appearance: 'interaction-only',
         'refresh-expired': 'auto',
@@ -71,11 +70,11 @@
           tokenWaiters.splice(0).forEach((w) => w(t));
         },
       });
-      status = 'ready';
+      return 'ready';
     } catch {
-      status = navigator.onLine ? 'paused' : 'offline';
+      return openState({ online: navigator.onLine, config: null });
     }
-  });
+  }
 
   /** A bot-check token no older than 240 s (contracts/report-api). */
   function freshToken() {
@@ -95,7 +94,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, token: t }),
       });
-      status = r.status === 202 ? 'sent' : 'failed';
+      status = sendState(r.status);
     } catch {
       status = 'failed';
     }

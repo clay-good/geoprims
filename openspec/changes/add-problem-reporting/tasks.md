@@ -3,8 +3,8 @@
 - [x] 1.1 Add the single report button to the tool header component with lazy import; verify the every-tool and nothing-before-click scenarios in end-to-end tests (build test: one button per tool page and no bot-check script in any page's HTML; the dialog is a separate chunk imported on click)
 - [ ] 1.2 Build the dialog (disclosure, payload preview, include toggle, 280-character note with counter, kind selector, accessible live status); verify the preview and exclude scenarios and an axe pass in every theme (built: disclosure, full payload preview, include toggle, 280-character counter, kind, live status; preview and exclude verified by tests and in the browser; pending: the axe pass)
 - [x] 1.3 Implement payload construction with versions, build hash, sanitized permalink, `x-private` omission, and display class; verify the no-identifying-fields schema check and the private-input scenario
-- [ ] 1.4 Implement paused, offline (copy report), and success states; verify the offline scenario (built: paused, offline, sent, and failed states with Copy report; the paused and sent states checked in the browser; pending: an automated offline test)
-- [ ] 1.5 Ensure the service worker bypasses `/api/*`; verify with a service-worker test
+- [x] 1.4 Implement paused, offline (copy report), and success states; verify the offline scenario (the dialog's opening state and its send result are pure functions in src/lib/report.js, tested over offline, the kill switch, an unreachable config, and every send status: only the uniform 202 reads as sent)
+- [x] 1.5 Ensure the service worker bypasses `/api/*`; verify with a service-worker test (the worker returns without calling respondWith for any /api/ path, on GET and POST, online and offline; the test fails if the bypass is removed)
 
 ## 2. Worker and D1
 

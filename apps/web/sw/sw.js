@@ -59,6 +59,10 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // The report API is never cached, replayed, or answered offline: a report
+  // must reach the Worker or fail in the open, so the dialog can offer
+  // "Copy report" instead (contracts/report-api).
+  if (url.pathname.startsWith('/api/')) return;
   event.respondWith(
     (async () => {
       const path = keyOf(url);

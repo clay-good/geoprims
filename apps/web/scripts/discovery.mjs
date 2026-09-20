@@ -5,9 +5,9 @@
 // index with one sitemap per domain plus one for hubs and trust pages. Only
 // indexable pages are listed. lastmod comes from a committed ledger keyed by a
 // hash of each page's <main> content, so it changes only when the content does.
-import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { contentHash } from './lastmod.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const root = join(web, '../..');
@@ -123,11 +123,10 @@ const pages = htmlFiles(dist)
     return canon === SITE + p.path; // self-canonical only
   });
 
-const substantive = (html) => (/<main[^>]*>([\s\S]*)<\/main>/.exec(html)?.[1] ?? html).replace(/\s+/g, ' ').replace(/astro-[a-z0-9]+/g, '');
 const ledger = existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, 'utf8')) : {};
 const nextLedger = {};
 for (const p of pages) {
-  const hash = createHash('sha256').update(substantive(p.html)).digest('hex').slice(0, 16);
+  const hash = contentHash(p.html);
   const prev = ledger[p.path];
   nextLedger[p.path] = prev && prev.hash === hash ? prev : { hash, lastmod: today };
 }

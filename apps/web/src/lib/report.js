@@ -71,6 +71,20 @@ export function buildPayload({ tool, args, result, includeInputs, note, kind, di
   };
 }
 
+/**
+ * The state the dialog opens in. Offline when the browser is offline, paused
+ * when reporting is switched off or the config could not be read (`config` is
+ * null), and otherwise ready for the bot check. Nothing is ever queued: an
+ * offline report is copied by hand or not sent at all.
+ */
+export function openState({ online, config }) {
+  if (!online) return 'offline';
+  return config?.enabled ? 'ready' : 'paused';
+}
+
+/** The state after a send. The Worker answers every accepted report with 202. */
+export const sendState = (status) => (status === 202 ? 'sent' : 'failed');
+
 /** Plain text for "Copy report" (offline or paused): the payload without the token. */
 export function reportText(payload) {
   const { token: _token, ...rest } = payload;

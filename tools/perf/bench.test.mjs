@@ -20,6 +20,7 @@ test('a slowed tool fails the baseline comparison and appears in the output tabl
   assert.match(table([row]), /navigation\.geodesic\.inverse \| 8\.000 \| 14\.000 \| 10\.000 \| \+40\.0%/);
   assert.equal(compare({ ...report, tools: [{ ...report.tools[0], p95Ms: 11 }] }, baseline)[0].regression, false);
   assert.throws(() => compare({ ...report, profile: '2.0.0' }, baseline), /different reference profile/);
+  assert.throws(() => compare({ ...report, cpuSlowdown: 4 }, baseline), /different CPU slowdown/);
   assert.throws(() => compare({ ...report, samples: 999 }, baseline), /1,000 measured calls/);
   const [newTool] = compare({ ...report, tools: [{ id: 'new.tool.id', p50Ms: 1, p95Ms: 2 }] }, baseline);
   assert.equal(newTool.changePercent, null);

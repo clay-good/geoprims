@@ -36,6 +36,7 @@ Text zoom is checked at 200% at 375 px wide.
 
 | Budget | Hard | Target |
 |---|---|---|
+| Cold Wasm module instantiation | 150 ms | |
 | Largest contentful paint | 2.0 s | 1.5 s |
 | Interactive | 2.5 s | |
 | Interaction to next paint | 200 ms | 100 ms |
@@ -50,10 +51,11 @@ calculation runs in a worker.
 
 ## What is measured today
 
-The Playwright suite now checks cancellation and cross-host result equality in
-CI. The browser performance budgets have no gate yet: the suite does not apply
-the profile's 4× CPU slowdown or network settings, or measure paint, interaction,
-and layout shift. The following checks run without a browser:
+The Playwright suite checks cancellation and cross-host result equality in CI.
+The Chromium calculator benchmark now applies the profile's 4× CPU setting and
+reports each tool's p50 and p95, but the browser performance budgets have no gate yet:
+the suite does not apply the profile's network settings or measure paint,
+interaction, and layout shift. The following checks run without a browser:
 
 | Check | Where | Today |
 |---|---|---|
@@ -74,6 +76,15 @@ invocations. Pass a prior report with `--baseline <path>` to show the p95 change
 and fail when it rises by more than 20%. Reports from different profile versions
 or hosts cannot be compared; new tools have no previous value. There is no published Node release baseline yet;
 local results vary with the machine and do not establish the browser budgets.
+
+The browser counterpart is `npm run bench:browser --prefix apps/web -- --output /tmp/geoprims-chromium.json`.
+It runs the same Wasm modules on Chromium's main thread with the profile's 4×
+CPU setting, 50 warm-up calls, and 1,000 timed calls per tool. CDP does not
+throttle a dedicated worker, so timing the site's worker would give a false
+reference-profile result. The report also records cold module initialization
+after download. CI uploads the table and JSON; a previous-release Chromium
+baseline and per-tool budget declarations are still needed for a release gate.
+Cold module instantiation already has a 150 ms gate in the Chromium benchmark.
 
 ## Changing the profile
 

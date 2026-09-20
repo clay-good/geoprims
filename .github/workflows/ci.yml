@@ -53,6 +53,14 @@ jobs:
         run: npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
       - name: Browser checks
         run: npm run test:browser --prefix apps/web
+      - name: Chromium reference benchmark
+        run: npm run bench:browser --prefix apps/web -- --output ../../chromium-benchmark.json > chromium-benchmark.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chromium-benchmark
+          path: |
+            chromium-benchmark.json
+            chromium-benchmark.md
       - name: Hash shipped artifacts
         run: node tools/wasm/artifact-digests.mjs > artifact-digests.txt
       - uses: actions/upload-artifact@v4

@@ -33,6 +33,7 @@ export function compare(report, baseline) {
   if (report.profile !== baseline.profile || report.host !== baseline.host) {
     throw new Error('baseline has a different reference profile or host');
   }
+  if (report.cpuSlowdown !== baseline.cpuSlowdown) throw new Error('baseline has a different CPU slowdown');
   if (report.samples < 1000 || baseline.samples < 1000) throw new Error('both reports need at least 1,000 measured calls per tool');
   const previous = new Map(baseline.tools.map((t) => [t.id, t]));
   return report.tools.map((row) => {

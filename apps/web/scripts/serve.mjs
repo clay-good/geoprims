@@ -9,7 +9,7 @@ import { extname, join, normalize } from 'node:path';
 const dist = join(new URL('..', import.meta.url).pathname, 'dist');
 const port = Number(process.argv[2] ?? 4322);
 const TYPES = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
   '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml', '.jsonl': 'application/jsonl', '.md': 'text/markdown',
 };

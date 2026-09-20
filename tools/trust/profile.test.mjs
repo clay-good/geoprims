@@ -48,8 +48,9 @@ test('the profile says how it is measured, so a report can name it', () => {
 });
 
 test('docs/performance.md is honest about what is measured today', () => {
-  // Functional browser checks exist, but the reference-profile performance gates do not.
-  assert.match(doc, /Playwright suite now checks cancellation and cross-host result equality/);
+  assert.match(doc, /Playwright suite checks cancellation and cross-host result equality/);
+  assert.match(doc, /Chromium calculator benchmark now applies the profile's 4× CPU setting/);
+  assert.equal(JSON.parse(readFileSync(join(root, 'apps/web/package.json'), 'utf8')).scripts['bench:browser'], 'node scripts/benchmark.mjs');
   assert.match(doc, /browser performance budgets have no gate yet/);
   assert.match(doc, /What is measured today/);
 });

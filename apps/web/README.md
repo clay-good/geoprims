@@ -27,6 +27,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/pages/` | Home, domain hubs, group hubs, and one page per tool id (route map in `contracts/routes-and-urls`) |
 | `src/components/ToolApp.svelte` | The tool island: status phrases with a mark and the cited threshold; schema-driven form (list inputs edit as one row per line, comma- or tab-separated), live answer card (core-rendered `display` and `summary`), warnings ordered by severity, copy actions, permalinks (`#v1:` via the core `link` module), Clear and Try the example |
 | `src/components/PageHeader.astro`, `ListFilter.astro`, `ToolCards.astro` | The page-template building blocks: breadcrumbs, `h1`, and purpose line; the list filter (`?q=`, count, no-match search); and the tool card grid |
+| `src/lib/prefs.js`, `src/pages/settings/` | What this browser remembers: the unit profile, the number format, Field mode (larger targets, larger answers, step buttons), and the recent and pinned lists — all in local storage, nothing sent anywhere |
 | `src/lib/compute.worker.js` | Runs the Wasm modules off the main thread; stale results are dropped |
 | `src/lib/report.js`, `sw/sw.js` | The problem-report payload and the dialog's opening and send states, shared with the Worker's validator; the service worker precaches the release and lets every `/api/` request past it, so a report is never cached, replayed, or queued |
 | `src/styles/global.css` | Atlas design tokens: paper (the default) and ink, and the Geist fonts |
@@ -40,10 +41,12 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/i18n.test.mjs` | No physical writing direction in any stylesheet, and a shared message lives in the catalog rather than being written out twice |
 | `test/compute.test.mjs` | Stale results: an out-of-order reply is dropped, the newest wins, and edits are debounced |
 | `test/worker.test.mjs` | The browser compute worker driven as the page drives it: every message gets exactly one envelope back |
+| `test/targets.test.mjs` | Touch targets: the 48 px token, 56 px in Field mode, one rule sizing every control from it, nothing sizing a control below it, 8 px between neighbours, and the step buttons shown only in Field mode |
+| `test/fields.test.mjs` | Stepping a typed value: the unit stays, the reader's decimal separator stays, no floating-point noise |
 | `test/input-contract.test.mjs` | The numeric input contract: no `type="number"`, `inputmode="decimal"` on every numeric field, autocomplete/autocorrect/spellcheck off, `enterkeyhint` of `next` or `done`, a ± toggle wherever a value can read below zero, input text at 16 px, and pinch-zoom left alone |
 | `test/form.test.mjs` | Every manifest renders: a control per input, labelled, lists naming their columns, and at most five inputs before "More options" |
 | `src/lib/rows.js`, `test/tables.test.mjs` | Which list outputs the answer card shows as a table: short and narrow ones, with quantities read as "119 kt" |
-| `src/lib/fields.mjs` | Which inputs are numeric, and which can read below zero and so get a ± toggle; shared by the form and its gate so the two cannot disagree |
+| `src/lib/fields.mjs` | Which inputs are numeric, which can read below zero and so get a ± toggle, and what a Field-mode step button moves a value by, unit and decimal separator kept; shared by the form and its gates |
 | `test/copy.test.mjs` | Each copy format against a real result, including running the copied agent call and comparing its answer |
 | `test/egress.test.mjs` | The privacy claim, checked: no network primitive but same-origin `fetch`, one POST, and sentinel values that reach only the report the user previewed |
 | `test/trace.test.mjs` | "Show your work": the page renders the core's trace or, for a decoder, every coded group beside its meaning; explaining moves no number on any tool |

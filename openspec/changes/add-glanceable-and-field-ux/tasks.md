@@ -15,7 +15,7 @@
 ## 3. Mobile and field
 
 - [x] 3.1 Implement the numeric input contract with ± toggle and decimal-comma support, plus the attribute gate; verify both input scenarios
-- [ ] 3.2 Implement 48 px targets and Field mode (56 px, larger results, step buttons); verify the touch-target scenario
+- [x] 3.2 Implement 48 px targets and Field mode (56 px, larger results, step buttons); verify the touch-target scenario
 - [ ] 3.3 Implement the sticky answer bar tracking the visual viewport; verify the keyboard-open scenario on iOS and Android emulation
 - [ ] 3.4 Implement responsive layouts (320 px up, side-by-side from 900 px and on landscape tablets, split-screen); verify the landscape-iPad scenario
 - [ ] 3.5 Build the mobile quality gates (full 320 px sweep, sampled landscape and 200% zoom, Chromium and WebKit, 2xx guard); verify the overflow scenario

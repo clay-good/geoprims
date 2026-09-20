@@ -80,6 +80,15 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
           // one group), and a coordinate's two fields count as one point.
           else if (!path.includes('[]')) core.add(coreGroup(path.split('.').pop()));
         }
+        const step = f['x-step'];
+        if (step) {
+          if (side === 'outputs') problems.push(`${t.id}: x-step is for inputs, not ${path}`);
+          const { small, large, ...rest } = step;
+          const positive = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+          if (!positive(small) || !positive(large)) problems.push(`${t.id}: x-step on ${path} needs positive small and large steps`);
+          else if (!(small < large)) problems.push(`${t.id}: x-step on ${path} has a small step of ${small} that is not smaller than ${large}`);
+          for (const k of Object.keys(rest)) problems.push(`${t.id}: x-step has no field ${k}`);
+        }
         const st = f['x-status'];
         if (st) {
           if (side === 'inputs') problems.push(`${t.id}: x-status is for outputs, not ${path}`);

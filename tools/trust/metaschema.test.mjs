@@ -99,3 +99,17 @@ test('a coordinate counts as one core input, the way a list of rows does', () =>
     'fixture.six: 6 x-core inputs (at most 5)',
   ]);
 });
+
+test('a step pair that is not a pair of positive, ordered numbers is rejected', () => {
+  const t = (step) => ({ id: 'fixture.step', examples: [], inputs: { properties: { v: { type: 'number', 'x-step': step } } }, outputs: { properties: {} } });
+  assert.deepEqual(metaschemaProblems({ tools: [t({ small: 0.01, large: 0.1 })] }), []);
+  assert.deepEqual(metaschemaProblems({ tools: [t({ small: 1, large: 1 })] }), [
+    'fixture.step: x-step on inputs.v has a small step of 1 that is not smaller than 1',
+  ]);
+  assert.deepEqual(metaschemaProblems({ tools: [t({ small: 0, large: 10 })] }), [
+    'fixture.step: x-step on inputs.v needs positive small and large steps',
+  ]);
+  assert.deepEqual(metaschemaProblems({ tools: [t({ small: 1, large: 10, medium: 5 })] }), [
+    'fixture.step: x-step has no field medium',
+  ]);
+});

@@ -13,6 +13,56 @@ fn strs(items: &[&str]) -> Json {
     Json::Arr(items.iter().map(|s| Json::str(*s)).collect())
 }
 
+/// The small and large steps the Field-mode buttons move an input by
+/// (`x-step`, `ux/mobile-and-field`). A field can override them; otherwise
+/// they come from what the input measures, so every numeric input has a pair.
+///
+/// These are typing conveniences, not tolerances: nothing in a result depends
+/// on them.
+pub fn steps(f: &Field) -> Option<(f64, f64)> {
+    if let Some(pair) = f.step {
+        return Some(pair);
+    }
+    match f.kind {
+        Kind::Quantity { unit, .. } => Some(match unit {
+            // A degree of latitude is 60 NM, so coordinates step finer.
+            "deg" if matches!(f.angle_range, Some("[-90,90]") | Some("[-180,180)")) => {
+                (0.001, 0.01)
+            }
+            "inHg" => (0.01, 0.1),
+            "rad" => (0.01, 0.1),
+            _ => (1.0, 10.0),
+        }),
+        // A bounded plain number: a hundredth and a tenth of its span, rounded
+        // down to 1, 2, or 5 times a power of ten.
+        Kind::Number { min, max } if min.is_finite() && max.is_finite() && max > min => {
+            let span = max - min;
+            let (small, large) = (nice(span / 100.0), nice(span / 10.0));
+            (small > 0.0 && large > small).then_some((small, large))
+        }
+        Kind::Number { .. } => Some((1.0, 10.0)),
+        _ => None,
+    }
+}
+
+/// Rounds down to 1, 2, or 5 times a power of ten, so a step reads as a round
+/// number however odd the span it came from.
+fn nice(x: f64) -> f64 {
+    if !x.is_finite() || x <= 0.0 {
+        return 0.0;
+    }
+    let decade = 10f64.powi(x.log10().floor() as i32);
+    let lead = x / decade;
+    decade
+        * if lead >= 5.0 {
+            5.0
+        } else if lead >= 2.0 {
+            2.0
+        } else {
+            1.0
+        }
+}
+
 fn field_schema(f: &Field, is_input: bool) -> Json {
     let mut o: Vec<(String, Json)> = Vec::new();
     let mut put = |k: &str, v: Json| o.push((k.to_owned(), v));
@@ -133,6 +183,12 @@ fn field_schema(f: &Field, is_input: bool) -> Json {
         put("x-help", Json::str(f.help));
         if f.core {
             put("x-core", Json::Bool(true));
+        }
+        if let Some((small, large)) = steps(f) {
+            put(
+                "x-step",
+                Json::obj([("small", Json::Num(small)), ("large", Json::Num(large))]),
+            );
         }
     } else if let Some(s) = f.status {
         put(
@@ -898,6 +954,56 @@ mod tests {
 
     /// Every field the sample manifest must carry, blanked one at a time. A
     /// required field with nothing in it has to be refused, whichever one it
+    /// Every numeric input carries a step pair for the Field-mode buttons, and
+    /// the pair suits what the input measures (ux/mobile-and-field).
+    #[test]
+    fn every_numeric_input_has_a_sensible_step_pair() {
+        let len = |unit| Kind::Quantity {
+            q: Quantity::Length,
+            unit,
+        };
+        let angle = Kind::Quantity {
+            q: Quantity::Angle,
+            unit: "deg",
+        };
+        let f = |k| Field::new("v", "V", "help", k);
+        assert_eq!(steps(&f(len("ft"))), Some((1.0, 10.0)));
+        // A degree of latitude is 60 NM, so a coordinate steps finer.
+        assert_eq!(
+            steps(&f(angle).angle_range("[-90,90]")),
+            Some((0.001, 0.01))
+        );
+        // A heading is not a coordinate, however, and steps by the degree.
+        assert_eq!(steps(&f(angle).angle_range("[0,360)")), Some((1.0, 10.0)));
+        assert_eq!(
+            steps(&f(Kind::Quantity {
+                q: Quantity::Pressure,
+                unit: "inHg"
+            })),
+            Some((0.01, 0.1))
+        );
+        // A bounded plain number steps by a hundredth and a tenth of its span.
+        assert_eq!(
+            steps(&f(Kind::Number { min: 0.0, max: 1.0 })),
+            Some((0.01, 0.1))
+        );
+        assert_eq!(
+            steps(&f(Kind::Number {
+                min: 0.0,
+                max: 30.0
+            })),
+            Some((0.2, 2.0))
+        );
+        // A field may say so itself.
+        assert_eq!(
+            steps(&f(len("ft")).step(100.0, 1000.0)),
+            Some((100.0, 1000.0))
+        );
+        // Nothing to step: a choice, a unit, a piece of text.
+        assert_eq!(steps(&f(Kind::Text { max_len: 8 })), None);
+        assert_eq!(steps(&f(Kind::Choice(&["a", "b"]))), None);
+    }
+
     /// is (platform/tool-contract, "the meta-schema rejects each missing
     /// required field").
     #[test]

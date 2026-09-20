@@ -144,8 +144,22 @@ main { padding-block: 1.75rem 4rem; }
 .facts dd.words { font-family: var(--sans); }
 .report .digest code { font-size: 0.78rem; word-break: break-all; }
 
+/* Field mode (ux/mobile-and-field): bigger targets and bigger answers, for
+   gloved hands and a moving vehicle. Everything else is unchanged. */
+/* A setting that is on or off, with the box beside its label, not under it. */
+label.switch { display: flex; gap: 0.6rem; align-items: center; }
+label.switch input { inline-size: var(--target); block-size: var(--target); min-block-size: 0; margin: 0; padding: 0; accent-color: var(--accent); }
+
+:root[data-field='on'] { --target: 56px; }
+:root[data-field='on'] .answer .value, :root[data-field='on'] .answer .sentence { font-size: 1.25em; }
+
+/* The step buttons, shown only in Field mode. */
+.steps { display: none; gap: 0.5rem; margin-block-start: 0.35rem; }
+:root[data-field='on'] .steps { display: flex; }
+.steps button { flex: 1; min-inline-size: var(--target); padding-inline: 0.4rem; font-family: var(--mono); font-size: 0.85rem; }
+
 /* An input and its ± toggle, which some decimal keypads make necessary. */
-.entry { display: flex; gap: 0.35rem; align-items: stretch; }
+.entry { display: flex; gap: 0.5rem; align-items: stretch; }
 .entry input { flex: 1; min-inline-size: 0; }
 .entry .sign { flex: 0 0 auto; min-inline-size: var(--target); font-family: var(--mono); }
 
@@ -315,7 +329,7 @@ figure.map canvas { display: block; inline-size: 100%; block-size: min(60vh, 460
 figure.map canvas:active { cursor: grabbing; }
 figure.map canvas:focus-visible { outline-offset: -3px; }
 .map-bar { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.6rem; border-block-end: 1px solid var(--line); }
-.map-bar button { margin: 0; min-block-size: 40px; min-inline-size: 40px; padding-inline: 0.8rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.88rem; cursor: pointer; }
+.map-bar button { margin: 0; min-block-size: var(--target); min-inline-size: var(--target); padding-inline: 0.8rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.88rem; cursor: pointer; }
 .map-bar button:hover { border-color: color-mix(in srgb, var(--muted) 45%, var(--line)); }
 .segmented, .map-tools { display: flex; gap: 0.35rem; }
 .segmented { padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg); gap: 2px; }

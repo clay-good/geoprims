@@ -37,9 +37,23 @@ const write = (k, v, event) => {
 };
 
 export const profile = () => read('gp-profile', '');
+/** Field mode: larger targets, larger result text, and per-field step buttons. */
+export const fieldMode = () => read('gp-field-mode', false) === true;
 export const numberFormat = () => read('gp-number-format', 'decimal-point');
 export const setProfile = (p) => write('gp-profile', p, 'gp-prefs');
 export const setNumberFormat = (f) => write('gp-number-format', f, 'gp-prefs');
+export function setFieldMode(on) {
+  write('gp-field-mode', on === true, 'gp-prefs');
+  applyFieldMode();
+}
+
+/** Puts the setting on the document, where the size tokens read it. */
+export function applyFieldMode() {
+  const root = globalThis.document?.documentElement;
+  if (!root) return;
+  if (fieldMode()) root.dataset.field = 'on';
+  else delete root.dataset.field;
+}
 
 /** The next profile in the list, for the `u` shortcut. */
 export const nextProfile = (p = profile()) => PROFILES[(PROFILES.findIndex(([id]) => id === p) + 1) % PROFILES.length][0];

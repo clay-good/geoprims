@@ -86,6 +86,9 @@ pub struct Field {
     /// For an output that judges the result against a threshold (`x-status`):
     /// the answer card shows it as a status line, not as another value.
     pub status: Option<Status>,
+    /// `x-step`: the small and large steps the Field-mode buttons move this
+    /// input by. Derived from the unit when a field does not set it.
+    pub step: Option<(f64, f64)>,
 }
 
 /// What an `x-status` output judges, and where its threshold comes from
@@ -156,7 +159,14 @@ impl Field {
             angle_range: None,
             measure: None,
             status: None,
+            step: None,
         }
+    }
+
+    /// Overrides the derived Field-mode steps (`x-step`), small then large.
+    pub const fn step(mut self, small: f64, large: f64) -> Field {
+        self.step = Some((small, large));
+        self
     }
 
     /// Marks an output as a status phrase judged against `source` (a

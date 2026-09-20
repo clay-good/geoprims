@@ -30,3 +30,45 @@ export function flipped(text) {
   if (v === '') return '-';
   return v.startsWith('-') ? v.slice(1).trim() : `-${v}`;
 }
+
+/** The number of decimals a written number shows, after `decimal`. */
+const decimalsOf = (text, decimal = '.') => String(text).split(decimal)[1]?.match(/^\d+/)?.[0].length ?? 0;
+
+/**
+ * Moves a typed value by `delta`, keeping the unit that came with it and
+ * writing the result in the reader's number format: "5000 ft" plus 100 is
+ * "5100 ft", and in decimal-comma "29,92 inHg" plus 0.01 is "29,93 inHg".
+ * An empty or unreadable field starts from the step itself.
+ *
+ * The result is rounded to the decimals the value or the step needs, so a
+ * 0.01 step does not leave 29.930000000000002 in the box, and it is written
+ * without thousands separators, which both formats read the same way.
+ */
+export function stepped(text, delta, format = 'decimal-point') {
+  const [decimal, group] = format === 'decimal-comma' ? [',', '.'] : ['.', ','];
+  const s = String(text ?? '').trim();
+  // The number at the front, however it is grouped; the rest is its unit.
+  const m = /^([+\u2212-]?[\d.,\s_]*\d)(.*)$/.exec(s);
+  const [written, rest] = m ? [m[1], m[2]] : ['', s];
+  const n = Number(
+    written
+      .replaceAll(group, '')
+      .replaceAll(' ', '')
+      .replaceAll('_', '')
+      .replace('\u2212', '-')
+      .replace(decimal, '.'),
+  );
+  const from = Number.isFinite(n) ? n : 0;
+  const places = Math.max(decimalsOf(written, decimal), decimalsOf(String(delta)));
+  const moved = (from + delta).toFixed(places).replace('.', decimal);
+  return (moved + (m ? rest : s && ` ${s}`)).trim();
+}
+
+/** The four Field-mode step buttons for a field, largest decrease first. */
+export const stepsOf = (schema) => {
+  const step = schema['x-step'];
+  return step ? [-step.large, -step.small, step.small, step.large] : [];
+};
+
+/** How a step button reads: "+10", "\u22120.01". */
+export const stepLabel = (delta) => (delta < 0 ? '\u2212' : '+') + String(Math.abs(delta));

@@ -13,6 +13,10 @@ import { NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
     <label>Number format
       <select name="numberFormat">{NUMBER_FORMATS.map(([id, label]) => <option value={id}>{label}</option>)}</select>
     </label>
+    <label class="switch">Field mode
+      <input type="checkbox" name="fieldMode" />
+    </label>
+    <p class="notice">Larger buttons, larger answers, and a step button under every number, for gloved hands or a moving vehicle.</p>
     <p class="notice">Light or dark is the control at the top right of every page.</p>
   </form>
   <h2>Data in this browser</h2>
@@ -22,12 +26,14 @@ import { NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
     <button type="button" data-action="erase">Erase all local data</button>
   </p>
   <script>
-    import { clearRecents, eraseLocalData, numberFormat, profile, setNumberFormat, setProfile } from '../../lib/prefs.js';
+    import { clearRecents, eraseLocalData, fieldMode, numberFormat, profile, setFieldMode, setNumberFormat, setProfile } from '../../lib/prefs.js';
     const form = document.querySelector('form.settings');
     form.profile.value = profile();
     form.numberFormat.value = numberFormat();
     form.profile.addEventListener('change', () => setProfile(form.profile.value));
     form.numberFormat.addEventListener('change', () => setNumberFormat(form.numberFormat.value));
+    form.fieldMode.checked = fieldMode();
+    form.fieldMode.addEventListener('change', () => setFieldMode(form.fieldMode.checked));
     addEventListener('gp-prefs', () => (form.profile.value = profile()));
     document.querySelector('[data-action=clear-recent]').addEventListener('click', clearRecents);
     document.querySelector('[data-action=erase]').addEventListener('click', eraseLocalData);

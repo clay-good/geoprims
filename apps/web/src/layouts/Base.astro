@@ -21,7 +21,7 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <!-- The display mode is set before first paint, so no bright frame flashes (visual-theme).
          Two modes: a saved choice wins, everything else is paper, whatever the OS prefers.
          Modes that no longer exist (and the older hud/daylight names) map to their replacement. -->
-    <script is:inline>(()=>{const d=document.documentElement,old={hud:'ink',night:'ink',daylight:'paper',sunlight:'paper','high-contrast':'paper'};try{let t=localStorage.getItem('gp-theme');t=old[t]||t;d.dataset.theme=t==='ink'?'ink':'paper'}catch{d.dataset.theme='paper'}})();</script>
+    <script is:inline>(()=>{const d=document.documentElement,old={hud:'ink',night:'ink',daylight:'paper',sunlight:'paper','high-contrast':'paper'};try{let t=localStorage.getItem('gp-theme');t=old[t]||t;d.dataset.theme=t==='ink'?'ink':'paper';if(localStorage.getItem('gp-field-mode')==='true')d.dataset.field='on'}catch{d.dataset.theme='paper'}})();</script>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />

@@ -2,13 +2,13 @@
   // The interactive tool: schema-driven form, live answer card, permalinks.
   // Server-rendered with the worked example, so the answer is in the HTML.
   import { onMount } from 'svelte';
-  import { isPinned, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
+  import { isPinned, numberFormat, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
   import { copyText } from '../lib/copy.js';
   import { cellText, rowTables } from '../lib/rows.js';
 
-  import { isNumeric, isSigned, flipped } from '../lib/fields.mjs';
+  import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
   let { tool, example, initial, embedded = false } = $props();
@@ -26,6 +26,11 @@
   // anything numeric; and a ± toggle where a value can be negative.
   function flipSign(name) {
     values[name] = flipped(values[name]);
+    edited();
+  }
+  /** A Field-mode step button: moves this field by `delta`, unit and all. */
+  function stepField(name, delta) {
+    values[name] = stepped(values[name], delta, numberFormat());
     edited();
   }
 
@@ -407,6 +412,14 @@
           {#if isSigned(name, schema)}
             <button type="button" class="sign" onclick={() => flipSign(name)} aria-label={`Change the sign of ${schema.title}`} title="Plus or minus">±</button>
           {/if}
+        </span>
+      {/if}
+      {#if stepsOf(schema).length}
+        <!-- Shown only in Field mode, where a gloved thumb beats a keypad. -->
+        <span class="steps">
+          {#each stepsOf(schema) as delta}
+            <button type="button" onclick={() => stepField(name, delta)} aria-label={`${delta < 0 ? 'Lower' : 'Raise'} ${schema.title} by ${Math.abs(delta)}`}>{stepLabel(delta)}</button>
+          {/each}
         </span>
       {/if}
       {#if badField === name}<span class="field-error" id="field-error">{result.error.message}</span>{/if}

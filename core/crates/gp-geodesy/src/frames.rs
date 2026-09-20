@@ -917,7 +917,11 @@ pub static TO_LOCAL: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn origin(ctx: &mut Ctx, ell: &Ellipsoid) -> Result<((f64, f64, f64), f64, f64), ToolError> {
+/// A local frame's origin: its ECEF position, and its latitude and longitude
+/// in radians.
+type Origin = ((f64, f64, f64), f64, f64);
+
+fn origin(ctx: &mut Ctx, ell: &Ellipsoid) -> Result<Origin, ToolError> {
     let (lat0, lon0) = point::read(ctx, "lat0", "lon0")?;
     let h0 = height(ctx, "h0")?;
     let (phi0, lam0) = (lat0.to_radians(), lon0.to_radians());

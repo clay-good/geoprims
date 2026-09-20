@@ -549,8 +549,13 @@ fn show(v: &Val) -> String {
     }
 }
 
+/// Fields filled, in slot order.
+pub type Filled = Vec<(String, Json)>;
+/// Values the parser would not guess at, each with the inputs it could fill.
+pub type Ambiguous = Vec<(String, Vec<String>)>;
+
 /// Maps values onto slots. Returns (fields in slot order, ambiguous values with candidates).
-pub fn map(slots: &[SlotDef], values: &[Val]) -> (Vec<(String, Json)>, Vec<(String, Vec<String>)>) {
+pub fn map(slots: &[SlotDef], values: &[Val]) -> (Filled, Ambiguous) {
     let mut filled: Vec<Option<Json>> = vec![None; slots.len()];
     let mut placed = vec![false; values.len()];
     // 1. A value next to a word that names a compatible input fills the first such input.

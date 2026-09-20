@@ -931,7 +931,7 @@ fn cross_track_invariants() {
             )
         };
         let r = xt(lat, lon);
-        let (d, along, seg) = (
+        let (_d, along, seg) = (
             num(&r, "result.cross_track.value"),
             num(&r, "result.along_track.value"),
             num(&r, "result.segment.value"),

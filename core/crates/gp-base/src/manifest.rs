@@ -592,7 +592,11 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
                     ));
                 }
             }
-            if !(sl.range.0 < sl.range.1) {
+            // Not `>=`: a NaN bound is an empty range too, and `>=` would pass it.
+            if !matches!(
+                sl.range.0.partial_cmp(&sl.range.1),
+                Some(core::cmp::Ordering::Less)
+            ) {
                 e(format!("prefill slot {} range is empty", sl.input));
             }
         }

@@ -186,9 +186,9 @@ fn ecef_round_trips_at_every_height() {
                 2 => rng.range(0.0, 1e8),
                 _ => 0.0,
             };
-            let p = fr::to_ecef(&ell, lat.to_radians(), lon.to_radians(), h);
-            let (phi, lam, hh) = fr::from_ecef(&ell, p.0, p.1, p.2).unwrap();
-            let q = fr::to_ecef(&ell, phi, lam, hh);
+            let p = fr::to_ecef(ell, lat.to_radians(), lon.to_radians(), h);
+            let (phi, lam, hh) = fr::from_ecef(ell, p.0, p.1, p.2).unwrap();
+            let q = fr::to_ecef(ell, phi, lam, hh);
             let err = ((p.0 - q.0).powi(2) + (p.1 - q.1).powi(2) + (p.2 - q.2).powi(2)).sqrt();
             let size = (p.0 * p.0 + p.1 * p.1 + p.2 * p.2).sqrt();
             if h.abs() <= 10_000.0 {

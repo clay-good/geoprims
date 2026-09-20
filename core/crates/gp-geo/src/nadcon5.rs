@@ -42,7 +42,9 @@ impl Grid {
             return Err("grid size does not match its header".into());
         }
         let data = body
-            .chunks_exact(8)
+            .as_chunks::<8>()
+            .0
+            .iter()
             .map(|c| {
                 (
                     f32::from_le_bytes([c[0], c[1], c[2], c[3]]),

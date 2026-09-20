@@ -216,7 +216,7 @@ impl Ellipsoid {
     }
 
     /// Geodetic latitude from authalic ξ by Newton's method on qp − q(φ).
-    fn from_authalic(&self, xi: f64) -> f64 {
+    fn geodetic_from_authalic(&self, xi: f64) -> f64 {
         let e2 = self.e2();
         if e2 == 0.0 {
             return xi;
@@ -244,7 +244,7 @@ impl Ellipsoid {
     }
 
     /// Geodetic latitude from rectifying μ by Newton's method on the meridian arc.
-    fn from_rectifying(&self, mu: f64) -> f64 {
+    fn geodetic_from_rectifying(&self, mu: f64) -> f64 {
         let target = mu / (90.0 * DEG) * self.quarter_meridian();
         let mut phi = mu;
         for _ in 0..8 {
@@ -285,12 +285,12 @@ impl Ellipsoid {
             Aux::Geodetic => x,
             Aux::Geocentric => atan2(sin(x), (1.0 - e2) * cos(x)),
             Aux::Parametric => atan2(sin(x), (1.0 - self.f) * cos(x)),
-            Aux::Rectifying => self.from_rectifying(x),
+            Aux::Rectifying => self.geodetic_from_rectifying(x),
             Aux::Conformal => {
                 let c = cos(x);
                 if c <= 0.0 { x } else { atan(tauf(tan(x), es)) }
             }
-            Aux::Authalic => self.from_authalic(x),
+            Aux::Authalic => self.geodetic_from_authalic(x),
             Aux::Isometric => atan(tauf(libm::sinh(x), es)),
         }
     }

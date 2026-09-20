@@ -29,7 +29,16 @@ const MAIDENHEAD: [&str; 4] = ["4", "6", "8", "10"];
 
 /// Each system: the forward tool and its code field, the inverse tool and
 /// its input field, the precisions, and the fixture key.
-const SYSTEMS: [(&str, &str, &str, &str, &[&str], &str); 3] = [
+type System = (
+    &'static str,
+    &'static str,
+    &'static str,
+    &'static str,
+    &'static [&'static str],
+    &'static str,
+);
+
+const SYSTEMS: [System; 3] = [
     (
         "geodesy.grid-ref.gars-forward",
         "gars",

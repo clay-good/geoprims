@@ -1651,6 +1651,10 @@ pub static CLOSEST_POINT: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+/// The closest approach found so far: distance to the point, leg index,
+/// along-route distance, signed cross-track, and the closest point itself.
+type Closest = (f64, usize, f64, f64, (f64, f64));
+
 fn run_closest_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let rows = ctx.rows("route")?;
     let dunit = crate::unit(QT::Angle, "deg");
@@ -1675,8 +1679,7 @@ fn run_closest_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let (e, g) = setup(ctx)?;
-    // (distance to P, leg index, along-route, signed cross-track, closest point)
-    let mut best: Option<(f64, usize, f64, f64, (f64, f64))> = None;
+    let mut best: Option<Closest> = None;
     let mut before = 0.0;
     for (k, w) in pts.windows(2).enumerate() {
         let (a, b) = (w[0], w[1]);

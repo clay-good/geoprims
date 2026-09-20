@@ -68,7 +68,7 @@ pub fn maidenhead_encode(lat: f64, lon: f64, chars: usize) -> String {
 /// Decodes a Maidenhead locator (case-insensitive) to its cell.
 pub fn maidenhead_decode(s: &str) -> Result<Cell, String> {
     let s: Vec<char> = s.trim().chars().collect();
-    if s.is_empty() || s.len() % 2 != 0 || s.len() > 10 {
+    if s.is_empty() || !s.len().is_multiple_of(2) || s.len() > 10 {
         return Err("a locator has 2, 4, 6, 8, or 10 characters".into());
     }
     let (mut west, mut south) = (-180.0, -90.0);
@@ -284,7 +284,7 @@ pub fn georef_decode(s: &str) -> Result<(Cell, i32), String> {
             if !digits.iter().all(u8::is_ascii_digit) {
                 return Err("only digits may follow the four letters".into());
             }
-            if len % 2 != 0 {
+            if !len.is_multiple_of(2) {
                 return Err(
                     "the minutes need the same number of digits for longitude and latitude".into(),
                 );

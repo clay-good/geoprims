@@ -252,6 +252,35 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let g = z.forward(lat, lon);
     let u = chosen_unit(ctx, z)?;
     let m = len_unit("m");
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Zone",
+            "the state plane zone, each with its own projection and origin",
+            format!("{}°, {}°", n(lat, 6), n(lon, 6)),
+            format!("{} ({})", z.short_name(), z.fips),
+        );
+        ctx.step(
+            "Scale factor",
+            "how much the zone's projection stretches distance here",
+            format!("at {}°, {}°", n(lat, 6), n(lon, 6)),
+            n(g.k, 8),
+        );
+        // In the unit the card shows, which is the zone's own by default.
+        let east = Q {
+            value: g.e,
+            unit: m,
+        }
+        .to(u);
+        ctx.step(
+            "Easting",
+            "x from that projection, plus the zone's false easting",
+            format!("{}° east in {}", n(lon, 6), z.short_name()),
+            // The same formatter the card uses, so the unit reads the same way.
+            gp_base::display::quantity(east, u.symbol, Precision::Decimals(3), fmt),
+        );
+    }
     Ok(Json::obj(vec![
         (
             "easting",
@@ -419,6 +448,28 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let lon = (lon + 180.0).rem_euclid(360.0) - 180.0;
     warn_outside(ctx, z, lat, lon);
     let g = z.forward(lat, lon);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let nn = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Zone",
+            "the zone whose projection and origin these coordinates belong to",
+            format!("{} m E, {} m N", nn(e.base(), 3), nn(n.base(), 3)),
+            format!("{} ({})", z.short_name(), z.fips),
+        );
+        ctx.step(
+            "Scale factor",
+            "how much that projection stretched distance where this lands",
+            format!("at {} m E, {} m N", nn(e.base(), 3), nn(n.base(), 3)),
+            nn(g.k, 8),
+        );
+        ctx.step(
+            "Latitude",
+            "φ from the zone's projection, run backwards",
+            format!("{} m N in {}", nn(n.base(), 3), z.short_name()),
+            format!("{}°", nn(lat, 7)),
+        );
+    }
     Ok(Json::obj(vec![
         ("lat", ctx.out("lat", deg(lat))),
         ("lon", ctx.out("lon", deg(lon))),

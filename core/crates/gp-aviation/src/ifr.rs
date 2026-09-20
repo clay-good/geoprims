@@ -276,6 +276,26 @@ fn run_hold_entry(ctx: &mut Ctx) -> Result<Json, ToolError> {
             " You are on the boundary: a {a} entry is also acceptable."
         ));
     }
+    if ctx.explaining() {
+        // The sectors are defined by a figure, so the work is the angle the
+        // figure is read at, and which sector it falls in.
+        ctx.step(
+            "Angle onto the inbound course",
+            "the heading measured against the inbound course",
+            format!("heading {} against inbound {}", show(h), show(ic)),
+            format!("{}{}", if rr < 0.0 { "−" } else { "" }, show(rr.abs())),
+        );
+        ctx.step(
+            "Sector",
+            format!("the entry sector that angle falls in, for a hold with turns to the {side}"),
+            format!(
+                "{}{} on a {side}-hand hold",
+                if rr < 0.0 { "−" } else { "" },
+                show(rr.abs())
+            ),
+            e.to_owned(),
+        );
+    }
     let mut o = vec![("entry", Json::str(e))];
     if let Some(a) = alt {
         o.push(("alternative", Json::str(a)));

@@ -962,6 +962,33 @@ fn run_count(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (_, paths, _, area_m2) = grid_paths(ctx)?;
     let p = &paths[0];
     let len = path_length(&p.points);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Area to cover",
+            "the polygon you gave, in the plane the grid is flown on",
+            format!("{} corners", p.points.len()),
+            format!("{} ha", n(area_m2 / 10_000.0, 3)),
+        );
+        ctx.step(
+            "Flight lines",
+            "the area's width divided by the spacing between lines",
+            format!("{} m of survey line", n(p.survey_length, 0)),
+            format!("{} lines", n(p.lines as f64, 0)),
+        );
+        ctx.step(
+            "Photos",
+            "the line length divided by the distance between photos, over every line",
+            format!(
+                "{} m along {} lines",
+                n(p.survey_length, 0),
+                n(p.lines as f64, 0)
+            ),
+            // The card prints the count bare; the last step reads the same.
+            n(p.photos as f64, 0),
+        );
+    }
     let mut o = vec![
         ("photos", Json::Num(p.photos as f64)),
         ("lines", Json::Num(p.lines as f64)),

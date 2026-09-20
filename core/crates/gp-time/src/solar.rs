@@ -1214,8 +1214,46 @@ fn run_mapping(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let threshold = point::plain_angle(ctx, "threshold")?.unwrap_or(30.0);
     let noon = local_noon(lon, day, off);
     let top = sun::position(lat, lon, noon);
+    let crossings = sun::crossings(lat, lon, noon, threshold);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Highest the sun gets",
+            "the sun's elevation at solar noon, the best it will be all day",
+            format!("at {}°, {}° on this date", n(lat, 6), n(lon, 6)),
+            format!("{}°", n(top.elevation, 2)),
+        );
+        ctx.step(
+            "Threshold",
+            "the elevation you asked for, below which shadows grow long",
+            format!(
+                "{}° wanted against {}° available",
+                n(threshold, 2),
+                n(top.elevation, 2)
+            ),
+            format!("{}°", n(threshold, 2)),
+        );
+        ctx.step(
+            "Window",
+            "the time between the sun rising past that elevation and falling back",
+            format!(
+                "above {}° at {}°, {}°",
+                n(threshold, 2),
+                n(lat, 6),
+                n(lon, 6)
+            ),
+            match crossings {
+                Crossing::Times(a, b) => {
+                    format!("from {} to {}", local_clock(a, off), local_clock(b, off))
+                }
+                Crossing::AlwaysAbove => "all day".to_owned(),
+                Crossing::AlwaysBelow => "none".to_owned(),
+            },
+        );
+    }
     let mut out = Vec::new();
-    match sun::crossings(lat, lon, noon, threshold) {
+    match crossings {
         Crossing::Times(a, b) => {
             out.push((
                 "window",

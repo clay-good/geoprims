@@ -130,7 +130,7 @@ Five workflow prompts turn a few arguments into one `geoprims_pipeline` call, wi
 
 ## Not built yet
 
-The `explain` trace in run results, npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
+npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
 
 ## Tests
 
@@ -141,3 +141,5 @@ node --test mcp/server.test.mjs mcp/network.test.mjs
 The network audit runs every tool's worked example with networking denied by the OS (skipped where no sandbox is available) and fails on any connection or DNS attempt.
 
 `mcp/surface.json` is the golden surface: tools, resources, templates, and prompts. The test fails on any change. Regenerate it with `UPDATE_SURFACE=1` after reviewing the diff.
+
+`tools/mcp/parity.test.mjs` sweeps every tool on the hero checklist and fails when this server and the website disagree on the sentence, the answer, the citations, or a line of the work.

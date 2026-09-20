@@ -38,3 +38,32 @@ test('we inflate zlib output, including dynamic Huffman blocks', async () => {
     assert.deepEqual(out.result.state, state, `level ${level}`);
   }
 });
+
+test('every pinned state survives the round trip, flags and all', async () => {
+  for (const v of vectors) {
+    const out = await decode(v.fragment);
+    assert.equal(out.ok, true, v.fragment);
+    assert.deepEqual(out.result.state, v.state, v.fragment);
+    assert.deepEqual(out.result.flags ?? [], v.flags, `flags of ${v.fragment}`);
+  }
+});
+
+test('the example fragment carries no state', async () => {
+  const out = await decode('example');
+  assert.equal(out.ok, true);
+  assert.deepEqual(out.result.state ?? {}, {});
+});
+
+test('a link from a newer version says so instead of guessing', async () => {
+  const newer = await decode('v9:q1bKVLKqVirJV7JSyi3IUNJRKkvMKU0F8gwNDBSyS5RqawE');
+  assert.equal(newer.ok, false, JSON.stringify(newer));
+  assert.equal(newer.error.code, 'UNSUPPORTED');
+  assert.match(newer.error.message, /newer version/i, newer.error.message);
+});
+
+test('a damaged fragment is refused rather than half-read', async () => {
+  for (const bad of ['v1:not-base64url!!', 'v1:', 'v1:AAAA', 'nonsense', 'v1:q1bKVLKqVirJV7JSyi3IUNJRKkvMKU0F8gwNDBSyS5RqawE;made-up']) {
+    const out = await decode(bad);
+    assert.equal(out.ok, false, `${bad} should not decode: ${JSON.stringify(out)}`);
+  }
+});

@@ -138,7 +138,7 @@ npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is te
 node --test mcp/server.test.mjs mcp/network.test.mjs
 ```
 
-The network audit runs every tool's worked example with networking denied by the OS (skipped where no sandbox is available) and fails on any connection or DNS attempt.
+The network audit runs every tool's worked example with networking denied by the OS and fails on any connection or DNS attempt. It skips when the host cannot apply the network-denying policy, including inside a restricted container. If the sandboxed server exits before replying, the test reports that exit immediately.
 
 `mcp/surface.json` is the golden surface: tools, resources, templates, and prompts. The test fails on any change. Regenerate it with `UPDATE_SURFACE=1` after reviewing the diff.
 

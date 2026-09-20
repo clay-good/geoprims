@@ -14,7 +14,9 @@ const hook = join(here, 'test', 'no-network.mjs');
 const node = [process.execPath, '--import', hook, server];
 
 function sandbox() {
-  if (process.platform === 'darwin' && !spawnSync('sandbox-exec', ['-p', '(version 1)(allow default)', 'true']).error) {
+  // A binary can exist while the host refuses to apply its policy (for
+  // example, inside another sandbox). Probe the policy this test actually uses.
+  if (process.platform === 'darwin' && spawnSync('sandbox-exec', ['-p', '(version 1)(allow default)(deny network*)', 'true']).status === 0) {
     return ['sandbox-exec', ['-p', '(version 1)(allow default)(deny network*)', ...node]];
   }
   if (process.platform === 'linux' && spawnSync('unshare', ['-rn', 'true']).status === 0) return ['unshare', ['-rn', ...node]];
@@ -28,20 +30,35 @@ test('every tool runs its worked example with no network and no connection attem
   let stderr = '';
   proc.stderr.on('data', (d) => (stderr += d));
   const waiting = new Map();
+  let stopped = null;
+  const stop = (reason) => {
+    if (stopped) return;
+    stopped = reason;
+    for (const { reject } of waiting.values()) reject(reason);
+    waiting.clear();
+  };
+  const closed = new Promise((resolve) => proc.once('close', (code) => {
+    stop(new Error(`Network audit server exited with status ${code}: ${stderr}`));
+    resolve();
+  }));
+  proc.once('error', stop);
+  proc.stdin.on('error', stop);
   let buf = '';
   proc.stdout.setEncoding('utf8');
   proc.stdout.on('data', (d) => {
     buf += d;
     for (let nl; (nl = buf.indexOf('\n')) >= 0; buf = buf.slice(nl + 1)) {
       const msg = JSON.parse(buf.slice(0, nl));
-      waiting.get(msg.id)?.(msg);
+      waiting.get(msg.id)?.resolve(msg);
+      waiting.delete(msg.id);
     }
   });
   let seq = 0;
   const request = (method, params) =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
+      if (stopped) return reject(stopped);
       const id = ++seq;
-      waiting.set(id, resolve);
+      waiting.set(id, { resolve, reject });
       proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
     });
   try {
@@ -57,7 +74,7 @@ test('every tool runs its worked example with no network and no connection attem
   } finally {
     proc.stdin.end();
   }
-  await new Promise((resolve) => proc.on('close', resolve));
+  await closed;
   assert.ok(!stderr.includes('NETWORK ATTEMPT'), stderr.split('\n').filter((l) => l.includes('NETWORK')).join('\n'));
 });
 

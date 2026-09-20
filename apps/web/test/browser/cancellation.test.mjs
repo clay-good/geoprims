@@ -1,22 +1,10 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
 import { test } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-
-const web = fileURLToPath(new URL('../..', import.meta.url));
+import { serveBuiltSite } from './site.mjs';
 
 test('a long H3 calculation stops within 100 ms of an edit', { timeout: 30_000 }, async (t) => {
-  const server = spawn(process.execPath, ['scripts/serve.mjs', '0'], { cwd: web });
-  t.after(() => server.kill());
-  const port = await new Promise((resolve, reject) => {
-    server.once('error', reject);
-    server.once('exit', (code) => reject(new Error(`Site server exited: ${code}`)));
-    server.stdout.on('data', (chunk) => {
-      const match = /localhost:(\d+)/.exec(chunk.toString());
-      if (match) resolve(Number(match[1]));
-    });
-  });
+  const origin = await serveBuiltSite(t);
 
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
@@ -29,7 +17,7 @@ test('a long H3 calculation stops within 100 ms of an edit', { timeout: 30_000 }
       return terminate.call(this);
     };
   });
-  await page.goto(`http://127.0.0.1:${port}/indexing/h3/polygon-to-cells/`);
+  await page.goto(`${origin}/indexing/h3/polygon-to-cells/`);
 
   const points = page.locator('#field-points');
   await page.locator('#field-resolution').fill('10');

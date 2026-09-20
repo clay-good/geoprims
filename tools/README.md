@@ -9,6 +9,7 @@ Build tooling. No npm dependencies.
 | `wasm/*.test.mjs` | Gate tests against bad fixtures, and module smoke tests |
 | `wasm/integrity.test.mjs` | The recorded digests match the modules on disk, and the website and the MCP release ship those exact bytes |
 | `wasm/reproducible.mjs` | `npm run verify:reproducible`: builds twice from a cleared target directory and fails if any digest moves |
+| `trust/profile.test.mjs` | The reference profile and docs/performance.md agree about the version, the viewports, and every budget |
 | `trust/related.mjs` | The related-tools gate: lists resolve, give a recognised reason, agree about inverses, and stay within six; the count short of three is a ratchet |
 | `trust/status.mjs` | The status-phrase gate: every `x-status` output must read as Within/Near/Beyond or Meets/Does not meet, and may never say safe, unsafe, legal, or approved |
 | `mcp/eval.mjs` | The agent evaluation: 637 tasks from the worked examples, measuring tool selection, answers end to end, and tokens per task, with a 3-point regression gate |

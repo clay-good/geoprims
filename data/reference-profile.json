@@ -1,0 +1,98 @@
+{
+  "note": "The single profile every performance, mobile, and layout budget is measured on (contracts/reference-profiles). Any gate that reports a budget must name this version. Changing it means bumping the version and recording the comparison in docs/performance.md.",
+  "version": "1.0.0",
+  "since": "2026-09-20",
+  "cpu": {
+    "engine": "Chromium on the CI runner",
+    "slowdown": 4,
+    "proxyFor": "a mid-tier 2024 Android phone",
+    "manualCheck": "quarterly on a real mid-tier Android device and a 3-year-old iPhone"
+  },
+  "network": {
+    "downKbps": 9000,
+    "upKbps": 1500,
+    "rttMs": 150,
+    "cache": "cold"
+  },
+  "engines": [
+    "chromium",
+    "webkit",
+    "firefox"
+  ],
+  "node": "active LTS",
+  "measurement": {
+    "runsPerRoute": 3,
+    "statistic": "median",
+    "source": "Playwright traces and web-vitals, in CI only"
+  },
+  "viewports": [
+    {
+      "name": "smallest phone",
+      "width": 320,
+      "height": 720
+    },
+    {
+      "name": "typical phone",
+      "width": 390,
+      "height": 844,
+      "aboveTheFold": true
+    },
+    {
+      "name": "phone landscape",
+      "width": 568,
+      "height": 320
+    },
+    {
+      "name": "tablet portrait",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "name": "tablet landscape",
+      "width": 1180,
+      "height": 820
+    },
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "textZoom": {
+    "percent": 200,
+    "width": 375
+  },
+  "budgets": {
+    "lcpMs": {
+      "hard": 2000,
+      "target": 1500,
+      "documentedAs": "Largest contentful paint"
+    },
+    "interactiveMs": {
+      "hard": 2500,
+      "documentedAs": "Interactive"
+    },
+    "inpMs": {
+      "hard": 200,
+      "target": 100,
+      "documentedAs": "Interaction to next paint"
+    },
+    "cls": {
+      "hard": 0.1,
+      "target": 0.05,
+      "documentedAs": "Cumulative layout shift"
+    },
+    "shellJsBytes": {
+      "hard": 92160,
+      "documentedAs": "Shell JavaScript"
+    },
+    "fontBytes": {
+      "hard": 81920,
+      "documentedAs": "Self-hosted fonts"
+    },
+    "precacheBytes": {
+      "hard": 12000000,
+      "documentedAs": "Offline precache"
+    }
+  }
+}

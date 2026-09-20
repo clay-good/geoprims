@@ -11,7 +11,10 @@ import { brotliCompressSync } from 'node:zlib';
 
 const web = new URL('..', import.meta.url).pathname;
 const dist = join(web, 'dist');
-export const PRECACHE_BUDGET = 12_000_000;
+// The budget lives in the reference profile, so one file holds every number
+// a gate reports against (contracts/reference-profiles).
+export const PROFILE = JSON.parse(readFileSync(join(web, '../../data/reference-profile.json'), 'utf8'));
+export const PRECACHE_BUDGET = PROFILE.budgets.precacheBytes.hard;
 export const VERSION_MARK = '__GP_APP_VERSION__';
 const SKIP_DIRS = new Set(['vectors', 'sitemaps', '.well-known']);
 const SKIP_FILES = new Set(['robots.txt', 'llms.txt', 'AGENTS.md', 'sitemap-index.xml', 'sw.js', '_headers', '_redirects']);

@@ -10,6 +10,7 @@ Reference data that is small enough to live in git and is read by the build. Eac
 | `glossary.json` | Plain-language definitions for every abbreviation a tool uses, with a source. The missing-term gate fails the build on an undefined term. |
 | `known-issues.json` | Curated known issues, reviewed in pull requests and rendered at `/known-issues/` and as tool-page banners. Never read live from D1. |
 | `prefill-fixture.json` | Typed questions with the tool and inputs they must fill, and the values the parser must not guess. |
+| `reference-profile.json` | The one profile every performance, mobile, and layout budget is measured on: CPU, network, engines, viewports, and the budgets themselves, versioned. Explained in [docs/performance.md](../docs/performance.md). |
 | `redirects.json` | `{from, to, since}` per renamed route. Written to `dist/_redirects` by the route gate, together with a redirect for every deprecated tool in the catalog, so a renamed or removed tool's old route keeps resolving for at least 24 months. |
 | `regulations.json` | Dated regulatory reference data: every value with its citation, effective date, and review date. |
 | `report-limits.json` | The authoritative problem-report limits, imported by the report dialog, the Worker, the D1 migration generator, and the MCP report tool. |

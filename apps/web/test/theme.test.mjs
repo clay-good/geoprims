@@ -128,12 +128,13 @@ test('the mode is chosen before first paint: the saved choice, else paper', () =
   assert.equal(run({ saved: { 'gp-theme': 'bogus' }, dark: true }).dataset.theme, 'paper');
 });
 
-test('fonts are self-hosted Geist, subset within the 80 KB budget', () => {
+test('fonts are self-hosted Geist, subset within the profile\'s budget', () => {
+  const budget = JSON.parse(readFileSync(join(web, '../../data/reference-profile.json'), 'utf8')).budgets.fontBytes.hard;
   const dir = join(web, 'dist/fonts');
   const files = readdirSync(dir).filter((f) => f.endsWith('.woff2'));
   assert.deepEqual(files.sort(), ['Geist-Variable-subset.woff2', 'GeistMono-Variable-subset.woff2']);
   const bytes = files.reduce((n, f) => n + statSync(join(dir, f)).size, 0);
-  assert.ok(bytes <= 80 * 1024, `${bytes} bytes of fonts`);
+  assert.ok(bytes <= budget, `${bytes} bytes of fonts, budget ${budget}`);
   assert.match(readFileSync(join(dir, 'OFL.txt'), 'utf8'), /SIL Open Font License/);
   assert.match(css, /font-family: 'Geist';[\s\S]*?font-display: swap/);
 });

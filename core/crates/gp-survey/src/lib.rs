@@ -24,6 +24,14 @@ const GHILANI: Reference = Reference {
     locator: "Chapters 10 (traverse computations), 12 (area), 24 (horizontal curves), 25 (vertical curves), 26 (volumes)",
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003237",
 };
+const AASHTO_GREEN_BOOK: Reference = Reference {
+    title: "A Policy on Geometric Design of Highways and Streets (the Green Book)",
+    issuer: "American Association of State Highway and Transportation Officials",
+    year: 2018,
+    edition: "7th edition",
+    locator: "Table 3-34 (design controls for crest vertical curves) and Table 3-36 (sag), by design speed",
+    url: "https://store.transportation.org/Item/CollectionDetail/180",
+};
 const STEM: Reference = Reference {
     title: "State Plane Coordinate System of 1983, NOAA Manual NOS NGS 5",
     issuer: "Stem, J. E., National Geodetic Survey",
@@ -1391,7 +1399,7 @@ pub static VERTICAL_CURVE: ToolDef = ToolDef {
         Field::new(
             "k",
             "K value",
-            "Instead of L: length per percent of grade change, like 40",
+            "Instead of L: length per percent of grade change, like 40 \u{2014} look your design speed up in AASHTO Green Book Table 3-34",
             Kind::Number { min: 0.0, max: 1e6 },
         ),
         Field::new(
@@ -1482,7 +1490,7 @@ pub static VERTICAL_CURVE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Symmetric parabola: y(x) = y_PVC + g1·x + (g2 − g1)·x² / (2L)",
     accuracy: "Exact",
-    references: &[GHILANI],
+    references: &[GHILANI, AASHTO_GREEN_BOOK],
     examples: &[Example {
         id: "primary",
         title: "A crest curve: +2% to −3% over 600 ft, PVI 10+00 at 100.00 ft",

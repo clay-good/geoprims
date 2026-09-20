@@ -50,17 +50,23 @@ calculation runs in a worker.
 
 ## What is measured today
 
-The budgets above need a browser, and the Playwright suites are not built yet,
-so no gate reports against this profile so far. What is measured today, in
-every test run and without a browser:
+The Playwright suite now checks cancellation and cross-host result equality in
+CI. The browser performance budgets have no gate yet: the suite does not apply
+the profile's 4× CPU slowdown or network settings, or measure paint, interaction,
+and layout shift. The following checks run without a browser:
 
 | Check | Where | Today |
 |---|---|---|
 | Wasm module size, Brotli | `tools/wasm/build.mjs` | Each module against its own budget |
-| Offline precache | `apps/web/scripts/pwa.mjs` | 6.35 MB compressed, against the profile's budget |
+| Offline precache | `apps/web/scripts/pwa.mjs` | Compressed release size against the profile's budget |
 | Self-hosted fonts | `apps/web/test/theme.test.mjs` | 52 KB, against the profile's budget |
 | Search ranking latency | `tools/search/accuracy.test.mjs` | p95 1.6 ms at 1,000 entries |
 | Agent round trip | `tools/mcp/eval.test.mjs` | 406 tokens per task |
+
+The browser suite separately checks that a long H3 calculation stops within
+100 ms of an edit and that all 2,705 live golden vectors serialize identically
+in Chromium, Firefox, WebKit, and Node. These are functional checks, not
+performance measurements against profile 1.0.0.
 
 ## Changing the profile
 

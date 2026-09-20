@@ -48,7 +48,8 @@ test('the profile says how it is measured, so a report can name it', () => {
 });
 
 test('docs/performance.md is honest about what is measured today', () => {
-  // The browser budgets have no gate yet; the page must say so rather than imply one.
-  assert.match(doc, /Playwright suites are not built yet/);
+  // Functional browser checks exist, but the reference-profile performance gates do not.
+  assert.match(doc, /Playwright suite now checks cancellation and cross-host result equality/);
+  assert.match(doc, /browser performance budgets have no gate yet/);
   assert.match(doc, /What is measured today/);
 });

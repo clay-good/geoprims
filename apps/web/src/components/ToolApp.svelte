@@ -11,6 +11,7 @@
   import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
+  import { degrees, pairOf } from '../lib/coordinate.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
   let { tool, example, initial, embedded = false } = $props();
@@ -251,6 +252,40 @@
    * The tools that can take this value, with the link that opens each of them
    * with the value already in it (web/app-shell, "Tool chaining").
    */
+  // A tool with a latitude and a longitude takes a coordinate in any notation
+  // the catalog can read (web/app-shell, "Schema-driven input forms").
+  const pair = pairOf(tool);
+  let pasted = $state('');
+  let read = $state(null);
+  let reading = false;
+
+  async function readPasted() {
+    const text = pasted;
+    if (!compute || reading) return;
+    reading = true;
+    try {
+      read = await compute.readCoordinate(text);
+    } finally {
+      reading = false;
+    }
+    if (read?.ok) applyRead(read.lat, read.lon);
+  }
+
+  /** Puts a read coordinate into the tool's own latitude and longitude. */
+  function applyRead(lat, lon) {
+    values[pair.lat] = degrees(lat);
+    values[pair.lon] = degrees(lon);
+    edited();
+  }
+
+  /** The other reading, when the text carried no hemisphere or label. */
+  function swapRead() {
+    if (!read?.ambiguous) return;
+    const { lat, lon } = read.ambiguous;
+    read = { ...read, lat, lon, ambiguous: { lat: lon, lon: lat }, message: `Read as lat, lon: ${degrees(lat)}°, ${degrees(lon)}°` };
+    applyRead(lat, lon);
+  }
+
   /** The catalog, fetched once and only when a reader asks to send a value. */
   let tools = null;
   const allTools = async () => (tools ??= (await (await fetch('/catalog/v1.json')).json()).tools);
@@ -511,6 +546,31 @@
       <span class="help">{readable(schema.description ?? '')}{isList(schema) ? ` · one per line: ${columns(schema).map((c) => schema.items.properties[c].title.toLowerCase()).join(', ')}` : ''}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · plain numbers mean ${friendly(schema['x-unit'])}` : ''}</span>
     </label>
   {/snippet}
+  {#if pair}
+    <div class="coordinate-field">
+      <label>
+        <span class="label-text">Paste a coordinate<span class="optional"> any notation</span></span>
+        <input
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="40°26'46&quot;N 79°58'56&quot;W, 9q8yyk8yuv, 849VCWC8+R9"
+          bind:value={pasted}
+          oninput={readPasted}
+        />
+      </label>
+      {#if read}
+        <p class="read" role="status" class:bad={!read.ok}>
+          {read.message}
+          {#if read.ambiguous}
+            <button type="button" class="quiet" onclick={swapRead}>Swap to {degrees(read.ambiguous.lat)}°, {degrees(read.ambiguous.lon)}°</button>
+          {/if}
+        </p>
+      {/if}
+    </div>
+  {/if}
   <div class="fields">
     {#each coreFields as f}{@render field(f)}{/each}
   </div>

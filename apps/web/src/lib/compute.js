@@ -35,3 +35,5 @@ export const encodeLink = (state, flags = []) => call('callString', ['link', 'gp
 export const decodeLink = (fragment) => call('callString', ['link', 'gp_link_decode', fragment]);
 export const search = (request) => call('search', [JSON.stringify(request)], 'search');
 export const detect = (query) => call('detect', [query], 'detect');
+/** Reads a pasted coordinate in any notation; only the latest read resolves. */
+export const readCoordinate = (text) => call('readCoordinate', [text], 'coordinate');

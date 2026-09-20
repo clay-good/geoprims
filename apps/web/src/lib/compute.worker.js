@@ -4,6 +4,7 @@ import { assetProvider } from '../../../../packages/runtime/src/assets.mjs';
 import { loadModule } from '../../../../packages/runtime/src/module.mjs';
 import { detectValues } from './detect.js';
 import { prefillActions } from './prefill.js';
+import { readCoordinate } from './coordinate.mjs';
 import { NO_WASM } from './messages.js';
 
 // Data assets come from the same origin, whole files only, checked against the
@@ -55,6 +56,17 @@ const searchWithPrefill = async (request) => {
   return JSON.stringify(out);
 };
 const run = async (id, input) => JSON.parse(await (await get(moduleFor(id))).invoke(id, JSON.stringify(input)));
+// The coordinate field: any notation the catalog can decode, read by the same
+// core code the palette uses.
+const readAnyCoordinate = async (text) => {
+  const m = await searcher();
+  const out = await readCoordinate(text, {
+    candidates: async (q) => JSON.parse(await m.callString('gp_detect', JSON.stringify({ query: q }))).result.candidates,
+    run,
+  });
+  return JSON.stringify(out);
+};
+
 const detect = async (query) => {
   const m = await searcher();
   const out = await detectValues(query, {
@@ -76,6 +88,7 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
     if (method === 'invoke') out = await (await get(moduleFor(args[0]))).invoke(args[0], args[1]);
     else if (method === 'search') out = await searchWithPrefill(args[0]);
     else if (method === 'detect') out = await detect(args[0]);
+    else if (method === 'readCoordinate') out = await readAnyCoordinate(args[0]);
     else out = await (await get(args[0])).callString(args[1], args[2]);
     self.postMessage({ seq, out });
   } catch (e) {

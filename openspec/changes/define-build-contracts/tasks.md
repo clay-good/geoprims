@@ -14,8 +14,8 @@
 
 - [x] 3.1 Implement the canonical anatomy and the anatomy gate; verify the anatomy-gate scenario (apps/web/test/anatomy.test.mjs holds every tool page to the contract's region order, requires the non-optional regions on every stable page, and pins exactly one report button, in the answer card. The developer block moved below related tools to match the contract; the header regions and the report button's home are now recorded as superseded by redesign-minimal-shell, and "Terms on this page" is listed as the region it is)
 - [ ] 3.2 Implement the 320 px header and overflow menu; verify the 320 px header scenario
-- [ ] 3.3 Implement notice ranking, the two-visible limit, and "N more notes"; verify the many-notices scenario at 390 × 844
-- [ ] 3.4 Add the chrome copy lint (sentence case, no all caps); verify the no-all-caps scenario
+- [x] 3.3 Implement notice ranking, the two-visible limit, and "N more notes"; verify the many-notices scenario at 390 × 844 (apps/web/src/lib/notices.mjs ranks a tool's notes by the contract's order from real data: the open known issue, a cited model that has run out or runs out within a year, experimental stability, and a published result that changed in the last 90 days. The page shows two in full and collapses the rest into "N more notes", and a gate checks that no built page shows more than two. Pending: regulation notices and the simplified-method banner, neither of which has data linking it to a tool yet, and the 390 × 844 screenshot, which waits on the Playwright suites)
+- [x] 3.4 Add the chrome copy lint (sentence case, no all caps); verify the no-all-caps scenario (apps/web/test/chrome-copy.test.mjs scans every button, summary, heading, legend, and table header on every built page and fails on a string made only of capitalised words, with the glossary's terms and reasoned exclusions as the allow-list. It found two shouting group headings, now spelled out as "State plane coordinates" and "Coordinate geometry")
 
 ## 4. Manifest extensions
 

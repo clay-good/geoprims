@@ -6,6 +6,7 @@ import { nodeHost } from '../../../../packages/runtime/src/node.mjs';
 import { readSignoffs, reviewSentence } from '../../../../tools/trust/signoffs.mjs';
 import { entriesFor, KINDS, readChangelog } from '../../../../tools/trust/changelog.mjs';
 import { verificationReport } from '../../../../tools/trust/verification.mjs';
+import { readLedger, rowFor } from '../../../../tools/trust/ledger.mjs';
 
 const root = join(process.cwd(), '../..');
 export const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -16,6 +17,10 @@ const signoffs = readSignoffs(root);
 const buildDay = new Date().toISOString().slice(0, 10);
 /** The honest review line for a domain, or for one tool when `id` is given. */
 export const reviewLine = (domain, id = null) => reviewSentence(signoffs, domain, buildDay, id);
+
+const ledger = readLedger(root);
+/** The ledger rows a tool cites, deduplicated (trust/freshness). */
+export const sourceRowsFor = (t) => [...new Map(t.references.map((r) => rowFor(ledger, r)).filter(Boolean).map((r) => [r.id, r])).values()];
 
 /** Severity of each warning a tool may emit (codes registry), for ordering and styling. */
 export const severities = (t) => Object.fromEntries(t.warnings.map((c) => [c, codes.warnings[c]?.severity ?? 'info']));
@@ -65,8 +70,8 @@ export const DOMAIN_BLURBS = {
 
 /** Group labels that are acronyms or need their own spelling. */
 const GROUP_TITLES = {
-  ifr: 'IFR', spcs: 'SPCS', ups: 'UPS', utm: 'UTM', h3: 'H3', 'grid-ref': 'Grid references',
-  los: 'Line of sight', cogo: 'COGO', 'plus-code': 'Plus Code',
+  ifr: 'IFR', spcs: 'State plane coordinates', ups: 'UPS', utm: 'UTM', h3: 'H3', 'grid-ref': 'Grid references',
+  los: 'Line of sight', cogo: 'Coordinate geometry', 'plus-code': 'Plus Code',
 };
 
 /** A group's heading: its own spelling, else the slug in sentence case. */

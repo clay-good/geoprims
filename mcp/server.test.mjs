@@ -506,3 +506,16 @@ test('search prefill matches the web palette and runs as-is', async () => {
   assert.equal(r.ok, true);
   assert.ok(Math.abs(r.result.density_altitude.value - 7932) < 1, String(r.result.density_altitude.value));
 });
+
+test('a simplified tool tells an agent the same thing the page shows', async () => {
+  const r = await c.call('geoprims_run', { id: 'navigation.geodesic.haversine' });
+  const l = r.structuredContent.meta.limitation;
+  assert.ok(l, 'haversine carries its limitation in meta');
+  assert.deepEqual(Object.keys(l).sort(), ['governs', 'instead', 'simplification']);
+  // The same words the manifest declares, so the page and an agent agree.
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const manifest = catalog.tools.find((t) => t.id === 'navigation.geodesic.haversine')['x-limitation'];
+  assert.deepEqual(l, manifest);
+  const plain = await c.call('geoprims_run', { id: 'units.speed.kt-to-mph', args: { value: 1 } });
+  assert.equal(plain.structuredContent.meta.limitation, undefined, 'a tool that simplifies nothing carries none');
+});

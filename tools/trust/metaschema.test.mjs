@@ -68,3 +68,18 @@ test('a comparison must declare its kind and carry the line it renders', () => {
     'fixture.c: x-comparison kind vibes is not one of vs-input, vs-rule-of-thumb, vs-typical-range, none',
   ]);
 });
+
+test('a limitation banner must carry all three lines, within their caps', () => {
+  const base = { id: 'fixture.l', examples: [], inputs: { properties: {} }, outputs: { properties: {} } };
+  const good = { simplification: 'Assumes dry air.', instead: 'Add a dew point.', governs: 'ICAO Doc 7488.' };
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-limitation': good }] }, sourceIds), []);
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-limitation': { ...good, instead: undefined } }] }, sourceIds), [
+    'fixture.l: x-limitation needs instead',
+  ]);
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-limitation': { ...good, simplification: 'x'.repeat(81) } }] }, sourceIds), [
+    'fixture.l: x-limitation simplification is 81 characters (at most 80)',
+  ]);
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-limitation': { ...good, colour: 'orange' } }] }, sourceIds), [
+    'fixture.l: x-limitation has no field colour',
+  ]);
+});

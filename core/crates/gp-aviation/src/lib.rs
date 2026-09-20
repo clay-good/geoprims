@@ -16,8 +16,8 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Bare, Comparison, Ctx, Example, Field, Kind, Layer, Precision, Q, Registry, Related, Slot,
-    ToolDef,
+    Bare, Comparison, Ctx, Example, Field, Kind, Layer, Limitation, Precision, Q, Registry,
+    Related, Slot, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use serde_json::Value;
@@ -904,6 +904,11 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    limitation: Some(Limitation {
+        simplification: "Assumes dry air unless you give a dew point.",
+        instead: "Add the dew point and the tool uses virtual temperature. On a humid day the dry-air answer reads a few hundred feet low, which matters most at a high field on a hot afternoon.",
+        governs: "ICAO Doc 7488, the standard atmosphere the altimetry is defined against.",
+    }),
     sentence: "Density altitude is {density_altitude}, about {abs(above_field)} {if above_field < 0}lower{else}higher{/if} than the field.{if above_field > 1000} Expect a longer takeoff roll and weaker climb.{/if}{warn DRY_AIR_ASSUMED} Assumes dry air.{/warn}",
     comparison: Comparison {
         kind: "vs-rule-of-thumb",

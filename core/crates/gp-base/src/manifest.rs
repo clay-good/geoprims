@@ -408,6 +408,16 @@ pub fn manifest(def: &ToolDef) -> Json {
             ])
         },
     );
+    if let Some(l) = def.limitation {
+        put(
+            "x-limitation",
+            Json::obj([
+                ("simplification", Json::str(l.simplification)),
+                ("instead", Json::str(l.instead)),
+                ("governs", Json::str(l.governs)),
+            ]),
+        );
+    }
     put("x-clock-default", Json::str("forbidden"));
     put("x-primary-example", Json::str(def.primary_example));
     Json::Obj(o)
@@ -558,6 +568,23 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
                     "numeric output {} needs x-display-precision",
                     f.name
                 ));
+            }
+        }
+        if let Some(l) = t.limitation {
+            let (a, b, c) = crate::tool::LIMITATION_CAPS;
+            for (what, text, cap) in [
+                ("simplification", l.simplification, a),
+                ("instead", l.instead, b),
+                ("governs", l.governs, c),
+            ] {
+                if text.is_empty() {
+                    e(format!("x-limitation needs {what}"));
+                } else if text.chars().count() > cap {
+                    e(format!(
+                        "x-limitation {what} is {} characters (at most {cap})",
+                        text.chars().count()
+                    ));
+                }
             }
         }
         if !crate::tool::COMPARISON_KINDS.contains(&t.comparison.kind) {

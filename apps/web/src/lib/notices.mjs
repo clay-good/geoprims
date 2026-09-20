@@ -55,6 +55,10 @@ export function noticesFor({ tool, issue, changes = [], sources = [], today }) {
   if (tool.stability === 'experimental') {
     out.push({ kind: 'experimental', text: 'Experimental: not yet fully verified.', href: '/methodology/', linkText: 'How results are checked' });
   }
+  if (tool['x-limitation']) {
+    const l = tool['x-limitation'];
+    out.push({ kind: 'limitation', text: `${l.simplification} ${l.instead}`, href: '/methodology/', linkText: l.governs });
+  }
   for (const c of changes) {
     if (c.kind !== 'result-change') continue;
     if (daysBetween(c.date, today) > RESULT_CHANGE_DAYS) continue;

@@ -28,6 +28,8 @@ pub struct Meta {
     pub context: Vec<(&'static str, Json)>,
     /// A standing notice for operational tools (`meta.notice`), when any.
     pub notice: Option<&'static str>,
+    /// The simplified-method banner (`meta.limitation`), when the tool has one.
+    pub limitation: Option<crate::tool::Limitation>,
 }
 
 impl Meta {
@@ -77,6 +79,16 @@ impl Meta {
         }
         if let Some(n) = self.notice {
             pairs.push(("notice".to_owned(), Json::str(n)));
+        }
+        if let Some(l) = self.limitation {
+            pairs.push((
+                "limitation".to_owned(),
+                Json::obj([
+                    ("simplification", Json::str(l.simplification)),
+                    ("instead", Json::str(l.instead)),
+                    ("governs", Json::str(l.governs)),
+                ]),
+            ));
         }
         Json::Obj(pairs)
     }
@@ -137,6 +149,7 @@ mod tests {
             ],
             context: vec![],
             notice: None,
+            limitation: None,
         }
     }
 

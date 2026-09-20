@@ -29,7 +29,7 @@
 
 - [ ] 4.1 Add the core `trace` output and MCP `explain: true`; verify byte-identical traces across web and MCP
 - [ ] 4.2 Build the "How we got this" panel with substituted formulas, responsive default state, and print expansion; verify the substituted-formula and printed-proof scenarios
-- [ ] 4.3 Implement limitation banners shared with MCP; verify the banner-text scenario
+- [x] 4.3 Implement limitation banners shared with MCP; verify the banner-text scenario (a tool declares `x-limitation` with the three lines the contract caps at 80, 240, and 120 characters; the core carries them in `meta.limitation`, the page shows them as a ranked notice, and an MCP test checks the words an agent gets are the words the manifest declares, character for character. Density altitude and the haversine distance, the two the spec names, declare theirs)
 - [ ] 4.4 Implement context bands with cited bases; verify the GSD scenario
 - [x] 4.5 Build `/sources`, `/methodology`, `/changelog` with result-change labels, and vector downloads; verify the sources-page and vector-download scenarios (/sources from the ledger with citing tools, /methodology, per-tool /vectors/<id>.jsonl downloads, and /changelog from data/changelog.json with result changes labeled; tools/trust/changelog.mjs fails the build when a superseded vector has no result-change entry)
 

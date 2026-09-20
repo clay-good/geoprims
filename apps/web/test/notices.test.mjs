@@ -29,12 +29,25 @@ test('the ranking is the contract\'s, highest priority first', () => {
 });
 
 test('the many-notices scenario: two in full, the rest behind "N more notes"', () => {
-  const notices = noticesFor({ tool: { stability: 'experimental' }, issue, changes: [change], sources: [expired], today: TODAY });
-  assert.equal(notices.length, 4);
+  // The contract's own case: a known issue, an experimental tool, a recent
+  // result change, and a simplified method.
+  const simplified = { stability: 'experimental', 'x-limitation': { simplification: 'Assumes dry air.', instead: 'Add a dew point.', governs: 'ICAO Doc 7488.' } };
+  const notices = noticesFor({ tool: simplified, issue, changes: [change], today: TODAY });
+  assert.deepEqual(notices.map((n) => n.kind), ['known-issue', 'experimental', 'result-change', 'limitation']);
   const { shown, rest } = split(notices);
-  assert.deepEqual(shown.map((n) => n.kind), ['known-issue', 'expired-model']);
+  assert.deepEqual(shown.map((n) => n.kind), ['known-issue', 'experimental'], 'the two the contract names show in full');
   assert.equal(rest.length, 2, 'the page reads "2 more notes"');
   assert.equal(shown.length, VISIBLE);
+});
+
+test('a simplified tool says so on the page, in the words its manifest carries', () => {
+  const html = readFileSync(join(dist, 'navigation/geodesic/haversine/index.html'), 'utf8');
+  const banner = /<p class="card notice limitation" role="note">([\s\S]*?)<\/p>/.exec(html);
+  assert.ok(banner, 'the haversine page shows its limitation banner');
+  const text = banner[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  assert.match(text, /^Measures on a sphere, not on the ellipsoid the Earth actually is\./);
+  assert.match(text, /Use the geodesic distance for anything you act on/);
+  assert.match(text, /Karney \(2013\)/, 'and who governs the full method');
 });
 
 test('a model is called out only once it is close to running out', () => {

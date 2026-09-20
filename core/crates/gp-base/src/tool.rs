@@ -99,6 +99,22 @@ pub struct Status {
     pub source: &'static str,
 }
 
+/// A tool that simplifies the governing method says so in one banner
+/// (`trust/proof-display`, "Limitation banners for simplified tools"). The
+/// same three lines appear on the page and in `meta.limitation`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Limitation {
+    /// What is simplified, at most 80 characters.
+    pub simplification: &'static str,
+    /// What to use instead, at most 240 characters.
+    pub instead: &'static str,
+    /// Who governs the full method, at most 120 characters.
+    pub governs: &'static str,
+}
+
+/// The caps the contract puts on each line of a limitation banner.
+pub const LIMITATION_CAPS: (usize, usize, usize) = (80, 240, 120);
+
 /// How a tool frames its answer against something familiar
 /// (`ux/glanceable-results`, "Answer card"). `text` is a sentence template
 /// rendered from the same scope as `x-sentence`; an empty one shows no line.
@@ -311,6 +327,9 @@ pub struct ToolDef {
     /// The line that frames the answer against something familiar
     /// (`x-comparison`), rendered from the same template language.
     pub comparison: Comparison,
+    /// The banner a simplified tool shows (`x-limitation`), when it simplifies
+    /// the governing method.
+    pub limitation: Option<Limitation>,
     /// Declared limits, as (name, value).
     pub limits: &'static [(&'static str, u64)],
     /// How free-text questions fill the inputs (natural-language prefill).
@@ -354,6 +373,7 @@ impl ToolDef {
         justification: "",
         sentence: "",
         comparison: Comparison::NONE,
+        limitation: None,
         limits: &[],
         slots: &[],
         run: unimplemented_run,
@@ -966,6 +986,7 @@ impl Registry {
                     warnings: x.warnings,
                     context: x.context,
                     notice: operational_notice(def),
+                    limitation: def.limitation,
                 };
                 envelope::success(
                     x.result,

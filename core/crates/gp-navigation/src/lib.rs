@@ -14,7 +14,8 @@ use gp_base::angle::wrap_azimuth;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Ctx, Example, Field, Kind, Layer, Limitation, Precision, Q, Reference, Registry, Related,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
@@ -504,6 +505,11 @@ pub static HAVERSINE: ToolDef = ToolDef {
         id: "navigation.geodesic.inverse",
         reason: "alternative",
     }],
+    limitation: Some(Limitation {
+        simplification: "Measures on a sphere, not on the ellipsoid the Earth actually is.",
+        instead: "Use the geodesic distance for anything you act on: it is exact on WGS 84, and this tool reports how far the sphere puts it wrong for your own two points.",
+        governs: "Karney (2013), the geodesic algorithm the geodesic tools use.",
+    }),
     sentence: "The haversine distance is {distance}, {abs(difference)} ({abs(difference_percent)}%) {if difference > 0}shorter{else}longer{/if} than the ellipsoidal geodesic.",
     limits: &[("batchRows", 10_000)],
     run: run_haversine,

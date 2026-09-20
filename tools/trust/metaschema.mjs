@@ -13,6 +13,8 @@ export const FIELD_EXTENSIONS = new Set([
 ]);
 const COMPARISONS = new Set(['vs-input', 'vs-rule-of-thumb', 'vs-typical-range', 'none']);
 const STATUS_KINDS = new Set(['threshold', 'conformance']);
+/** The caps the contract puts on each line of a limitation banner. */
+const LIMITATION_CAPS = { simplification: 80, instead: 240, governs: 120 };
 const MAX_CORE = 5;
 
 /** Every field schema in a section, with a path, descending into list rows. */
@@ -41,6 +43,17 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
     }
     if (t['x-primary-example'] && !t.examples.some((e) => e.id === t['x-primary-example'])) {
       problems.push(`${t.id}: x-primary-example ${t['x-primary-example']} is not one of its examples`);
+    }
+    const limitation = t['x-limitation'];
+    if (limitation) {
+      for (const [field, cap] of Object.entries(LIMITATION_CAPS)) {
+        const text = limitation[field];
+        if (!text) problems.push(`${t.id}: x-limitation needs ${field}`);
+        else if ([...text].length > cap) problems.push(`${t.id}: x-limitation ${field} is ${[...text].length} characters (at most ${cap})`);
+      }
+      for (const k of Object.keys(limitation)) {
+        if (!(k in LIMITATION_CAPS)) problems.push(`${t.id}: x-limitation has no field ${k}`);
+      }
     }
     let core = 0;
     for (const [side, section] of [['inputs', t.inputs], ['outputs', t.outputs]]) {

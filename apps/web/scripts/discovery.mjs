@@ -77,7 +77,7 @@ Ids are \`domain.group.operation\`, like \`aviation.altimetry.density-altitude\`
 
 ## Relay the caveats
 
-Every result has a \`summary\` sentence, sometimes a \`comparison\` line framing the answer against a rule of thumb or a typical range, and a \`meta\` object with \`warnings\`, \`model\`, \`accuracy\`, and the data \`assets\` used. Show the warnings to the user; they carry assumptions (for example dry air, ISA temperature, or a nominal fuel density) and limits. Results are planning and engineering aids, not certified for navigation, and not legal survey determinations.
+Every result has a \`summary\` sentence, sometimes a \`comparison\` line framing the answer against a rule of thumb or a typical range, and a \`meta\` object with \`warnings\`, \`model\`, \`accuracy\`, the data \`assets\` used, and \`limitation\` when the tool simplifies the governing method. Show the warnings to the user; they carry assumptions (for example dry air, ISA temperature, or a nominal fuel density) and limits. Results are planning and engineering aids, not certified for navigation, and not legal survey determinations.
 
 ## Report a wrong result
 

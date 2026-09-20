@@ -36,7 +36,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/lib/quality.mjs` | The monthly correctness summary behind `/quality/`, derived only from the known-issues file and the changelog |
 | `src/lib/licenses.mjs` | What `/licenses/` renders: the asset registry's rows with their attribution, the build dependencies, and the datasets left out with reasons |
 | `src/lib/head.mjs` | The one source for every page's title and description: the 60- and 155-character caps, the qualifier-drop rule, and the repeated-title and superlative lints |
-| `src/lib/notices.mjs` | Ranks a tool page's notes by the contract's priority and splits them into the two shown in full and the rest behind "N more notes" |
+| `src/lib/notices.mjs` | Ranks a tool page's notes, including the simplified-method banner a manifest declares as `x-limitation`, by the contract's priority and splits them into the two shown in full and the rest behind "N more notes" |
 | `test/content.test.mjs` | Content minimums: a unique purpose and worked example per indexable page, the "You enter / You get" block, the answer as plain text, and a last-verified date |
 | `test/notices.test.mjs`, `test/chrome-copy.test.mjs` | The ranking and the two-visible limit; and the copy lint that fails any chrome string made only of capitalised words |
 | `test/anatomy.test.mjs` | The canonical page anatomy: every tool page's regions in the contract's order, and one report button, in the answer card |

@@ -22,7 +22,7 @@ The manifest meta-schema SHALL define, and accept only, these extension fields.
 - `x-near-margin` (fraction or absolute, default 0.10)
 - `x-clock-default` (`allowed` or `forbidden`, default `forbidden`)
 - `x-primary-example` (vector id)
-- `x-limitation` (banner text keys), `x-glossary-terms` (term ids)
+- `x-limitation` (`{simplification, instead, governs}`, capped at 80, 240, and 120 characters), `x-glossary-terms` (term ids)
 - `x-related` (`[{id, reason}]`), `x-diagram-inline` (boolean)
 - `x-high-intent` (boolean, generated endpoints only)
 

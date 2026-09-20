@@ -17,6 +17,13 @@ test('a rebuilt island bundle does not change a page hash', () => {
   assert.equal(contentHash(rebuilt), contentHash(html));
 });
 
+test('a rebuilt core does not change a page hash', () => {
+  const html = page('/aviation/altimetry/density-altitude/');
+  assert.match(html, /buildHash&quot;:\[0,&quot;[0-9a-f]{8,}/, 'the island really does carry the build hash');
+  const rebuilt = html.replace(/(buildHash&quot;:\[0,&quot;)[0-9a-f]{8,}/g, '$1beefbeefbeefbeef');
+  assert.equal(contentHash(rebuilt), contentHash(html));
+});
+
 test('changed words do change the hash', () => {
   const html = page('/aviation/altimetry/density-altitude/');
   assert.notEqual(contentHash(html.replaceAll('Density altitude', 'Density height')), contentHash(html));

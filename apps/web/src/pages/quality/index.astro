@@ -1,0 +1,62 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { months, summary } from '../../lib/quality.mjs';
+const s = summary();
+const rows = months();
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+---
+<Base title="Quality · geoprims" description="How many geoprims results have been reported wrong, how many were confirmed, how long they took to fix, and every published answer that has moved. Built from the changelog and the known-issues file." canonical="/quality/">
+  <PageHeader title="Quality" purpose="What has been reported wrong, what was confirmed, and how long it took to fix." />
+
+  <p>
+    Everything here comes from two files reviewed in pull requests: the
+    <a href="/known-issues/">known issues</a> and the <a href="/changelog/">changelog</a>. No visitor is counted, no
+    page view is recorded, and nothing is estimated. Where a number cannot be derived yet, it says so.
+  </p>
+
+  <h2>Now</h2>
+  <dl class="worked">
+    <dt>Confirmed defects open</dt><dd>{s.confirmedOpen}</dd>
+    <dt>Under investigation</dt><dd>{s.investigating}</dd>
+    <dt>Confirmed defects fixed</dt><dd>{s.fixed}</dd>
+    <dt>Median time to fix</dt>
+    <dd>{s.medianDaysToFix === null ? 'no confirmed defects fixed yet' : plural(s.medianDaysToFix, 'day', 'days')}</dd>
+    <dt>Result changes published</dt><dd>{s.resultChanges}</dd>
+    <dt>Fixes published</dt><dd>{s.fixes}</dd>
+    <dt>Reports received</dt>
+    <dd>{s.reportsReceived === null ? 'not measured yet: reporting is switched off until launch' : s.reportsReceived}</dd>
+  </dl>
+
+  <h2>By month</h2>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Month</th>
+        <th scope="col">Defects reported</th>
+        <th scope="col">Fixes published</th>
+        <th scope="col">Result changes</th>
+        <th scope="col">Tools added</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr>
+          <th scope="row">{r.month}</th>
+          <td>{r.reported ?? 0}</td>
+          <td>{r.fixed}</td>
+          <td>{r.resultChanges}</td>
+          <td>{r.added}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <p>
+    A <strong>result change</strong> is a published answer that moved. Each one names the golden test vectors it
+    replaced and stays on the tool's page for 90 days. If a result here looks wrong to you, the report button on any
+    tool is the fastest way to tell us, and the
+    <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">"Wrong answer" form</a> works
+    too.
+  </p>
+</Base>

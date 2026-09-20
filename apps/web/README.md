@@ -33,6 +33,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `scripts/lastmod.mjs` | The content hash behind each sitemap `lastmod`: a page's words with Astro's scoped classes and bundle hashes taken out, so a JavaScript-only release moves no dates |
 | `scripts/routes.mjs` | The route-map gate: classifies every built page against `contracts/routes-and-urls` and fails naming anything outside the map, then writes `dist/_redirects` from `data/redirects.json` |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |
+| `src/lib/quality.mjs` | The monthly correctness summary behind `/quality/`, derived only from the known-issues file and the changelog |
 | `src/lib/licenses.mjs` | What `/licenses/` renders: the asset registry's rows with their attribution, the build dependencies, and the datasets left out with reasons |
 | `src/lib/head.mjs` | The one source for every page's title and description: the 60- and 155-character caps, the qualifier-drop rule, and the repeated-title and superlative lints |
 | `src/lib/notices.mjs` | Ranks a tool page's notes by the contract's priority and splits them into the two shown in full and the rest behind "N more notes" |

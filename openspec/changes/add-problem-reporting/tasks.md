@@ -30,7 +30,7 @@
 - [ ] 4.5 Add the "Result change" changelog label and the 90-day tool-page notice; verify the result-change scenario
 - [ ] 4.6 Add `.github/ISSUE_TEMPLATE/wrong-answer.yml` and `config.yml`; verify required-field validation
 - [ ] 4.7 Write the approval-gated GitHub mirror script with a fine-grained token; verify the structured-mirror scenario against a test repository
-- [ ] 4.8 Build the monthly `/quality` summary from statuses and the changelog; verify with seeded data
+- [x] 4.8 Build the monthly `/quality` summary from statuses and the changelog; verify with seeded data (/quality/ shows confirmed defects open, under investigation, and fixed, the median days to fix, result changes and fixes published, and a row per month, all derived from data/known-issues.json and data/changelog.json, both reviewed in pull requests. Reports received is reported as not measured yet rather than as a zero, because only the Worker can count it and reporting is off. Tests check the counts against the changelog, the month rows, the honest absences, and that the page adds no script of its own)
 
 ## 5. MCP
 

@@ -28,10 +28,10 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/components/ToolApp.svelte` | The tool island: status phrases with a mark and the cited threshold; the compact diagram under the answer for a tool that declares `x-diagram-inline`; schema-driven form (list inputs edit as one row per line, comma- or tab-separated), live answer card (core-rendered `display` and `summary`), warnings ordered by severity, copy actions, permalinks (`#v1:` via the core `link` module), Clear and Try the example |
 | `src/components/PageHeader.astro`, `ListFilter.astro`, `ToolCards.astro` | The page-template building blocks: breadcrumbs, `h1`, and purpose line; the list filter (`?q=`, count, no-match search); and the tool card grid |
 | `src/lib/prefs.js`, `src/pages/settings/` | What this browser remembers: the unit profile, the number format, Field mode (larger targets, larger answers, step buttons), and the recent and pinned lists — all in local storage, nothing sent anywhere |
-| `src/lib/compute.worker.js` | Runs the Wasm modules off the main thread; stale results are dropped |
+| `src/lib/compute.worker.js`, `src/lib/compute.js` | Run Wasm off the main thread; a new input interrupts a running calculation, discards its result, and replays unrelated pending calls. The answer card shows elapsed time while a call is still running |
 | `src/lib/report.js`, `sw/sw.js` | The problem-report payload and the dialog's opening and send states, shared with the Worker's validator; the service worker precaches the release and lets every `/api/` request past it, so a report is never cached, replayed, or queued |
 | `src/styles/global.css` | Atlas design tokens: paper (the default) and ink, and the Geist fonts |
-| `scripts/lastmod.mjs` | The content hash behind each sitemap `lastmod`: a page's words with Astro's scoped classes, island ids, and bundle hashes taken out, so a rebuild with unchanged content moves no dates |
+| `scripts/lastmod.mjs` | The content hash behind each sitemap `lastmod`: a page's words with Astro's scoped classes, island ids, hydration comments, and bundle hashes taken out, so a rebuild with unchanged content moves no dates |
 | `scripts/routes.mjs` | The route-map gate: classifies every built page against `contracts/routes-and-urls` and fails naming anything outside the map, then writes `dist/_redirects` from `data/redirects.json` and from every deprecated tool in the catalog |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |
 | `src/lib/quality.mjs` | The monthly correctness summary behind `/quality/`, derived only from the known-issues file and the changelog |
@@ -41,6 +41,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/i18n.test.mjs` | No physical writing direction in any stylesheet, and a shared message lives in the catalog rather than being written out twice |
 | `test/compute.test.mjs` | Stale results: an out-of-order reply is dropped, the newest wins, and edits are debounced |
 | `test/worker.test.mjs` | The browser compute worker driven as the page drives it: every message gets exactly one envelope back |
+| `test/compute-cancel.test.mjs` | A stuck calculation cancels within 100 ms, another request survives the worker restart, and elapsed-time updates stop after cancellation |
 | `src/lib/keyboard.mjs`, `test/keyboard.test.mjs` | Lifting the sticky answer above the on-screen keyboard: what the visual viewport says is covered becomes `--keyboard` on the document, re-read whenever it moves |
 | `test/responsive.test.mjs` | Layouts for every width: nothing declared wider than a 320 px screen, no column that refuses to narrow, wide tables inside a box that scrolls, and the side-by-side layout starting at a tablet |
 | `src/lib/offline.mjs`, `test/offline.test.mjs` | The footer's offline chip: what each service-worker state may honestly claim, and never "Works offline" before the release is cached |

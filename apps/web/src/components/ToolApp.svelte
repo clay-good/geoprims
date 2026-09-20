@@ -76,6 +76,7 @@
   let result = $state(initial);
   let isExample = $state(true);
   let stale = $state(false);
+  let elapsedMs = $state(null);
   let copied = $state('');
   let linkNote = $state('');
   // Embedded: the permalink rides on the "open the full tool" link instead of the URL.
@@ -211,12 +212,14 @@
   /** Recomputes; `settingsOnly` re-runs for new settings without touching the URL. */
   async function run(settingsOnly = false) {
     stale = true;
+    elapsedMs = null;
     const a = args();
-    const out = await compute.invoke(tool.id, a);
+    const out = await compute.invoke(tool.id, a, 'invoke', (elapsed) => { elapsedMs = elapsed; });
     if (!out) return; // superseded by a newer edit
     result = out;
     drawnArgs = a;
     stale = false;
+    elapsedMs = null;
     if (settingsOnly) return;
     const enc = await compute.encodeLink({ i: a });
     if (!enc?.ok) return;
@@ -226,6 +229,9 @@
 
   function edited() {
     isExample = false;
+    stale = true;
+    elapsedMs = null;
+    compute.cancel('invoke');
     clearTimeout(timer);
     timer = setTimeout(run, 150);
   }
@@ -430,6 +436,7 @@
 
 <div class="tool-grid">
 <section class="card answer" aria-live="polite" class:stale aria-label="Answer">
+  {#if stale && elapsedMs !== null}<p class="status">Calculating for {(elapsedMs / 1000).toFixed(1)} s…</p>{/if}
   {#if from}
     <p class="came-from">From <a href={from.href}>{from.title}</a></p>
   {/if}

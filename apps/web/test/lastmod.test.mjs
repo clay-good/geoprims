@@ -24,6 +24,13 @@ test('a rebuilt island id does not change a page hash', () => {
   assert.equal(contentHash(rebuilt), contentHash(html));
 });
 
+test('hydration markers do not change a page hash', () => {
+  const html = page('/aviation/altimetry/density-altitude/');
+  const rebuilt = html.replace('<div class="value"', '<!--[-1--><!--]--><div class="value"');
+  assert.notEqual(rebuilt, html);
+  assert.equal(contentHash(rebuilt), contentHash(html));
+});
+
 test('a rebuilt core does not change a page hash', () => {
   const html = page('/aviation/altimetry/density-altitude/');
   assert.match(html, /buildHash&quot;:\[0,&quot;[0-9a-f]{8,}/, 'the island really does carry the build hash');

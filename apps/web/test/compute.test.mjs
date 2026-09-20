@@ -16,6 +16,9 @@ class StubWorker {
   postMessage(msg) {
     this.sent.push(msg);
   }
+  terminate() {
+    this.terminated = true;
+  }
   /** Replies to the nth message sent, newest-last. */
   reply(index, out) {
     this.onmessage({ data: { seq: this.sent[index].seq, out: JSON.stringify(out) } });
@@ -27,24 +30,24 @@ const compute = await import('../src/lib/compute.js');
 
 test('an older reply arriving late is dropped, not shown', async () => {
   const first = compute.invoke('a.b.c', { v: 1 });
+  const old = StubWorker.last;
   const second = compute.invoke('a.b.c', { v: 2 });
-  const w = StubWorker.last;
-  assert.equal(w.sent.length, 2, 'both requests reached the worker');
-  // The late one comes back last, as it would on a slow first call.
-  w.reply(1, { ok: true, result: { v: 2 } });
-  w.reply(0, { ok: true, result: { v: 1 } });
+  const current = StubWorker.last;
+  assert.equal(old.terminated, true);
+  current.reply(0, { ok: true, result: { v: 2 } });
+  old.reply(0, { ok: true, result: { v: 1 } });
   assert.deepEqual(await second, { ok: true, result: { v: 2 } });
   assert.equal(await first, null, 'the superseded reply must not resolve to a result');
 });
 
-test('replies in order still give the newest answer', async () => {
-  const first = compute.invoke('a.b.c', { v: 3 });
-  const second = compute.invoke('a.b.c', { v: 4 });
+test('replies for different keys both reach their callers', async () => {
+  const first = compute.invoke('a.b.c', { v: 3 }, 'first');
+  const second = compute.invoke('a.b.c', { v: 4 }, 'second');
   const w = StubWorker.last;
   const [i, j] = [w.sent.length - 2, w.sent.length - 1];
   w.reply(i, { ok: true, result: { v: 3 } });
   w.reply(j, { ok: true, result: { v: 4 } });
-  assert.equal(await first, null);
+  assert.deepEqual(await first, { ok: true, result: { v: 3 } });
   assert.deepEqual(await second, { ok: true, result: { v: 4 } });
 });
 
@@ -62,10 +65,12 @@ test('different kinds of request do not supersede each other', async () => {
   assert.deepEqual(await found, { ok: true, result: { results: [] } });
 });
 
-test('one worker serves every request', () => {
+test('the worker is reused when no call needs interruption', async () => {
   const before = StubWorker.last;
-  compute.invoke('a.b.c', { v: 6 });
+  const answer = compute.invoke('a.b.c', { v: 6 });
   assert.equal(StubWorker.last, before, 'a second worker was started');
+  before.reply(before.sent.length - 1, { ok: true, result: { v: 6 } });
+  await answer;
 });
 
 test('the page waits before recomputing, so typing is not a request per keystroke', () => {

@@ -7,30 +7,57 @@ const latest = new Map();
 
 function ensure() {
   if (!worker) {
-    worker = new Worker(new URL('./compute.worker.js', import.meta.url), { type: 'module' });
-    worker.onmessage = ({ data: { seq: s, out } }) => {
+    const current = new Worker(new URL('./compute.worker.js', import.meta.url), { type: 'module' });
+    worker = current;
+    current.onmessage = ({ data: { seq: s, out } }) => {
+      if (worker !== current) return; // an interrupted worker may have queued a reply
       const w = waiting.get(s);
       waiting.delete(s);
-      w?.(out);
+      w?.resolve(out);
     };
   }
   return worker;
 }
 
-function call(method, args, key) {
+// Stop a synchronous Wasm call by ending its worker. Other pending calls are
+// replayed on the replacement, so a map or search request is not lost.
+export function cancel(key = 'invoke') {
+  if (![...waiting.values()].some((w) => w.key === key)) return;
+  worker?.terminate();
+  worker = undefined;
+  for (const [s, w] of waiting) {
+    if (w.key === key) {
+      waiting.delete(s);
+      w.resolve(null);
+    }
+  }
+  if (waiting.size) {
+    const replacement = ensure();
+    for (const [s, w] of waiting) replacement.postMessage({ seq: s, method: w.method, args: w.args });
+  }
+}
+
+function call(method, args, key, onProgress) {
+  if (method === 'invoke' && key) cancel(key);
   const s = ++seq;
   if (key) latest.set(key, s);
   return new Promise((resolve) => {
-    waiting.set(s, (out) => {
-      if (key && latest.get(key) !== s) return resolve(null); // superseded
-      resolve(JSON.parse(out));
+    const started = performance.now();
+    const timer = onProgress && setInterval(() => onProgress(performance.now() - started), 250);
+    waiting.set(s, {
+      method, args, key,
+      resolve: (out) => {
+        if (timer !== undefined) clearInterval(timer);
+        if (key && latest.get(key) !== s) return resolve(null); // superseded
+        resolve(out === null ? null : JSON.parse(out));
+      },
     });
     ensure().postMessage({ seq: s, method, args });
   });
 }
 
 // `key` groups requests: only the latest per key resolves (the map uses its own).
-export const invoke = (id, args, key = 'invoke') => call('invoke', [id, JSON.stringify(args)], key);
+export const invoke = (id, args, key = 'invoke', onProgress) => call('invoke', [id, JSON.stringify(args)], key, onProgress);
 export const encodeLink = (state, flags = []) => call('callString', ['link', 'gp_link_encode', JSON.stringify({ state, flags })], 'encode');
 export const decodeLink = (fragment) => call('callString', ['link', 'gp_link_decode', fragment]);
 export const search = (request) => call('search', [JSON.stringify(request)], 'search');

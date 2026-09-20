@@ -1,0 +1,8 @@
+# geoprims security contact (RFC 9116).
+# Renew Expires before it passes: test/security.test.mjs fails 30 days out.
+
+Contact: https://github.com/clay-good/geoprims/security/advisories/new
+Expires: 2027-09-19T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://geoprims.com/.well-known/security.txt
+Policy: https://github.com/clay-good/geoprims/blob/main/SECURITY.md

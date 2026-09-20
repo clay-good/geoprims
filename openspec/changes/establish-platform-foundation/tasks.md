@@ -61,10 +61,10 @@
 
 - [ ] 7.1 Write the CSP and security header configuration for the static host; verify the header smoke test on a preview deployment
 - [ ] 7.2 Implement the egress privacy test (sentinel inputs, proxy capture, zero sentinel matches); verify it catches a deliberately leaking fixture
-- [ ] 7.3 Implement the third-party request audit over all routes; verify it fails on an injected external font
+- [x] 7.3 Implement the third-party request audit over all routes; verify it fails on an injected external font (apps/web/test/security.test.mjs walks every built page and stylesheet for anything the browser would fetch from another origin: src, href, data, srcset, poster, CSS url() and @import. Links and the canonical are not requests, and only challenges.cloudflare.com and assets.geoprims.com are allowed. Injected Google Fonts, a CDN @font-face, and a tracking pixel are each caught)
 - [ ] 7.4 Set up reproducible builds and publish SHA-256 digests per artifact; verify two CI runs produce identical digests
 - [ ] 7.5 Configure npm trusted publishing (OIDC) with provenance and dependency license/vulnerability audits; verify a dry-run publish shows provenance
-- [ ] 7.6 Add `SECURITY.md` and `/.well-known/security.txt`; verify RFC 9116 validity
+- [x] 7.6 Add `SECURITY.md` and `/.well-known/security.txt`; verify RFC 9116 validity (SECURITY.md says where to report privately, what is in scope per component, what is not, and that a wrong answer goes to the report button instead; /.well-known/security.txt carries Contact, Expires, Preferred-Languages, Canonical, and Policy, and a test fails 30 days before it expires, or if it is dated more than a year out)
 
 ## 8. Catalog and lifecycle
 

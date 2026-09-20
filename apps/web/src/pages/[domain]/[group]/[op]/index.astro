@@ -82,6 +82,14 @@ const client = clientTool(t);
       </dl>
     </details>
   )}
+  {related.length > 0 && (
+    <section>
+      <h2>Related tools</h2>
+      <ul class="tools">
+        {related.map((r) => <li><a href={route(r.id)}>{find(r.id).title}</a> <p>{WHY[r.reason] ?? r.reason}</p></li>)}
+      </ul>
+    </section>
+  )}
   <details class="card dev">
     <summary>For developers and agents</summary>
     <p>Tool id <code>{t.id}</code>, version {t.version}. Run it from the <a href="https://github.com/clay-good/geoprims/tree/main/mcp#readme">local MCP server</a>; the result matches this page byte for byte.</p>
@@ -94,12 +102,4 @@ const client = clientTool(t);
     <p>This call reproduces the worked example:</p>
     <pre class="agent-call">{agentCall}</pre>
   </details>
-  {related.length > 0 && (
-    <section>
-      <h2>Related tools</h2>
-      <ul class="tools">
-        {related.map((r) => <li><a href={route(r.id)}>{find(r.id).title}</a> <p>{WHY[r.reason] ?? r.reason}</p></li>)}
-      </ul>
-    </section>
-  )}
 </Base>

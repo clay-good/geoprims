@@ -12,7 +12,7 @@
 
 ## 3. Page chrome
 
-- [ ] 3.1 Implement the canonical anatomy and the anatomy gate; verify the anatomy-gate scenario
+- [x] 3.1 Implement the canonical anatomy and the anatomy gate; verify the anatomy-gate scenario (apps/web/test/anatomy.test.mjs holds every tool page to the contract's region order, requires the non-optional regions on every stable page, and pins exactly one report button, in the answer card. The developer block moved below related tools to match the contract; the header regions and the report button's home are now recorded as superseded by redesign-minimal-shell, and "Terms on this page" is listed as the region it is)
 - [ ] 3.2 Implement the 320 px header and overflow menu; verify the 320 px header scenario
 - [ ] 3.3 Implement notice ranking, the two-visible limit, and "N more notes"; verify the many-notices scenario at 390 × 844
 - [ ] 3.4 Add the chrome copy lint (sentence case, no all caps); verify the no-all-caps scenario

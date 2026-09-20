@@ -7,33 +7,31 @@ Defines the one canonical layout of every tool page (what appears, in what order
 ### Requirement: Canonical tool-page anatomy
 Every tool page SHALL render these regions in order. This list is authoritative over `web/tool-docs`, `ux/glanceable-results`, and `discovery/search-pages`, which each contribute content to named regions.
 
-1. **Header bar:**
-   - left: logo and home link
-   - middle: search button
-   - right: theme toggle (sun/moon), "Report a problem", and the overflow menu (settings, units, audio when enabled, shortcuts)
-2. **Title block:** H1 tool name, one-line purpose, and, for aviation, drone, and navigation tools, the one-line planning-aid notice.
+1. **Header bar:** per `redesign-minimal-shell`, which supersedes this list for the header: the site title and description on the left, the light/dark toggle on the right, and nothing else. The site links live in the footer.
+2. **Title block:** breadcrumbs, H1 tool name, one-line purpose, the "Go the other way" link for a tool with an inverse, and, for aviation, drone, and navigation tools, the one-line planning-aid notice.
 3. **Notices:** at most two visible (see stacking).
-4. **Answer card:** value, sentence, comparison, status phrase, and copy actions. This is the result panel. Its "Details" expander holds the secondary outputs, provenance, copy JSON, and copy as agent call.
+4. **Answer card:** value, sentence, comparison, status phrase, warnings, copy actions, and the page's one "Report a problem" button. This is the result panel. Its "Details" expander holds the secondary outputs, provenance, copy JSON, and copy as agent call.
 5. **Inline diagram:** only for diagram-meaning tools.
 6. **Core inputs:** with the "Example values" chip, Clear, and Try the example.
 7. **More options:** collapsed, with worded defaults shown in the answer card.
 8. **Canvas.**
 9. **"How we got this":** show your work, worked example ("You enter / You get"), sources, assumptions, limitations, and status.
-10. **About this tool:** when to use it, inputs and outputs table, edge cases, and accuracy. This carries the documentation sections and SEO prose.
-11. **Related tools**, each with a reason.
-12. **For developers and agents:** tool id, field names, and an example call.
-13. **Footer:** GitHub "Wrong answer" link, changelog for this tool, last verified, version, and site links.
+10. **"Terms on this page":** the glossary entry for every abbreviation the page uses.
+11. **About this tool:** when to use it, inputs and outputs table, edge cases, and accuracy. This carries the documentation sections and SEO prose.
+12. **Related tools**, each with a reason. A tool whose only relation is its inverse shows it in the title block instead.
+13. **For developers and agents:** tool id, field names, and an example call.
+14. **Footer:** GitHub "Wrong answer" link, changelog for this tool, last verified, version, and site links.
 
 #### Scenario: Anatomy gate
 - **WHEN** the anatomy gate parses every stable tool page
-- **THEN** regions appear in this order, with exactly one report button (in the header)
+- **THEN** regions appear in this order, with exactly one report button (in the answer card)
 
 ### Requirement: Header at small widths
-At 320 px width, the header SHALL show only the logo, the search button, "Report a problem" (icon plus the visually hidden label "Report a problem"), and the overflow menu, all with targets of at least 48 px. The theme toggle SHALL move into the overflow menu below 360 px. The header SHALL NOT wrap to two lines.
+Superseded by `redesign-minimal-shell`: the header carries the site title, the description, and the light/dark toggle, with no search button, no report button, and no overflow menu. At 320 px it SHALL NOT scroll horizontally, and the toggle SHALL keep a target of at least 48 px.
 
 #### Scenario: 320 px header
 - **WHEN** a tool page renders at 320 px
-- **THEN** the header is one line, holds the four controls, and the report button's accessible name is "Report a problem"
+- **THEN** the header fits without horizontal scrolling and the light/dark toggle is still reachable
 
 ### Requirement: Notice stacking and priority
 Notices above the answer card SHALL be ranked:

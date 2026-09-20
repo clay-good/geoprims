@@ -1,0 +1,43 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+---
+<Base title="Accuracy policy · geoprims" description="What a geoprims accuracy statement means, how results are checked, and where the published limits apply." canonical="/accuracy/">
+  <PageHeader title="Accuracy policy" purpose="How to read each tool's accuracy claim and its limits." />
+
+  <h2>Check the tool, not just the number</h2>
+  <p>
+    Each tool names its model, accuracy, sources, and assumptions under “How we got this.” Its warnings may narrow where
+    a result applies. Check the input units and the source edition before using an answer. A displayed decimal is not a
+    promise that every digit is accurate.
+  </p>
+
+  <h2>What the test numbers mean</h2>
+  <p>
+    The <a href="/verification/">verification reports</a> give each tool's largest observed error against its published
+    test vectors and the tolerance used to judge those vectors. The observed error covers the tested inputs and sources;
+    it is not a guarantee for every possible input. The tool page links its downloadable vectors, with sources and
+    tolerances, so you can inspect the cases behind the report.
+  </p>
+
+  <h2>Stable and experimental</h2>
+  <p>
+    A <strong>Stable</strong> tool has passed the full <a href="/methodology/">verification bar</a>, including an
+    independent worked example, bounds checks, invariants, and comparison with a reference implementation. An
+    <strong>Experimental</strong> tool has not passed every part of that bar. Both statuses describe testing, not
+    certification or fitness for an operational decision. The current status appears on each tool page.
+  </p>
+
+  <h2>Limits and corrections</h2>
+  <p>
+    Models simplify reality, and reference data can age. A tool's stated assumptions, range, warnings, and source date
+    are part of its accuracy claim. Check the <a href="/sources/">sources ledger</a> for editions and review dates,
+    the <a href="/known-issues/">known issues</a> for confirmed problems, and the <a href="/changelog/">changelog</a>
+    for published result changes. If a result looks wrong, use “Report a problem” on that tool.
+  </p>
+
+  <p>
+    These results are planning, engineering, and education aids. Verify operational values against official sources;
+    see the <a href="/disclaimer/">full disclaimer</a>.
+  </p>
+</Base>

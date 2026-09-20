@@ -2,7 +2,7 @@
 // platform/verification "Verification report published").
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -98,6 +98,19 @@ test('every page links privacy and licenses in its footer', () => {
     const html = page(route);
     assert.match(html, /<a href="\/privacy\/">Privacy<\/a>/, `${route} does not link privacy`);
     assert.match(html, /<a href="\/licenses\/">Licenses<\/a>/, `${route} does not link licenses`);
+  }
+});
+
+test('the accuracy policy explains the limits and every built page links all three policies', () => {
+  const policy = page('/accuracy/');
+  for (const phrase of ['Experimental', 'Stable', 'tolerance', 'observed error', 'assumptions', 'not a guarantee', 'known issues']) {
+    assert.ok(policy.toLowerCase().includes(phrase.toLowerCase()), `accuracy policy omits ${phrase}`);
+  }
+  for (const file of readdirSync(dist, { recursive: true }).filter((name) => name.endsWith('.html'))) {
+    const html = readFileSync(join(dist, file), 'utf8');
+    for (const route of ['/disclaimer/', '/privacy/', '/accuracy/']) {
+      assert.ok(html.includes(`href="${route}"`), `${file} has no footer link to ${route}`);
+    }
   }
 });
 

@@ -24,6 +24,7 @@ export const FIXED = new Map([
   ['/404.html', 'not-found'],
   ['/sources/', 'trust'],
   ['/methodology/', 'trust'],
+  ['/accuracy/', 'trust'],
   ['/verification/', 'trust'],
   ['/changelog/', 'trust'],
   ['/known-issues/', 'trust'],

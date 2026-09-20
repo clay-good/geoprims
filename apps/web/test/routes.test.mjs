@@ -17,6 +17,7 @@ test('every route the contract allows classifies', () => {
   assert.equal(classify('/', idx), 'home');
   assert.equal(classify('/tools/', idx), 'catalog');
   assert.equal(classify('/methodology/', idx), 'trust');
+  assert.equal(classify('/accuracy/', idx), 'trust');
   assert.equal(classify('/verification/0.1.0/', idx), 'verification');
   assert.equal(classify('/settings/', idx), 'app');
   assert.equal(classify('/aviation/', idx), 'domain');

@@ -19,7 +19,7 @@ The site SHALL serve exactly these route classes:
 | Alias slug | `/<domain>/<alias>/` | no (canonical to parent) | none |
 | Explainer | `/learn/<slug>/` | yes | `learn` |
 | Journey | `/journeys/<slug>/` | yes | `learn` |
-| Trust pages | `/sources/`, `/methodology/`, `/verification/`, `/verification/<version>/`, `/changelog/`, `/known-issues/`, `/disclaimer/`, `/quality/`, `/licenses/`, `/privacy/` | yes | `pages` |
+| Trust pages | `/sources/`, `/methodology/`, `/accuracy/`, `/verification/`, `/verification/<version>/`, `/changelog/`, `/known-issues/`, `/disclaimer/`, `/quality/`, `/licenses/`, `/privacy/` | yes | `pages` |
 | Agents | `/agents/` (setup), `/llms.txt`, `/AGENTS.md`, `/.well-known/mcp.json`, `/catalog/v1.json` | `/agents/` only | `pages` |
 | App | `/settings/`, `/offline/`, `/404` | no | none |
 | API | `/api/reports`, `/api/reports/config` | no | none |

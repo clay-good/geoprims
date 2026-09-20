@@ -870,6 +870,38 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let avail = e * usable * (1.0 - derate);
     let flyable = avail * (1.0 - reserve);
     let wh = |v: f64| q(v, QT::Energy, "J");
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let mins = |j: f64| n(j / p / 60.0, 1);
+        ctx.step(
+            "Energy you may use",
+            "usable = pack energy × usable share × (1 − cold derating)",
+            format!(
+                "{} Wh × {}% × (1 − {}%)",
+                n(e / 3600.0, 1),
+                n(usable * 100.0, 0),
+                n(derate * 100.0, 0)
+            ),
+            format!("{} Wh", n(avail / 3600.0, 1)),
+        );
+        ctx.step(
+            "After the reserve",
+            "flyable = usable × (1 − reserve)",
+            format!(
+                "{} Wh × (1 − {}%)",
+                n(avail / 3600.0, 1),
+                n(reserve * 100.0, 0)
+            ),
+            format!("{} Wh", n(flyable / 3600.0, 1)),
+        );
+        ctx.step(
+            "Hover time",
+            "time = flyable energy / hover power",
+            format!("{} Wh / {} W", n(flyable / 3600.0, 1), n(p, 0)),
+            format!("{} min", mins(flyable)),
+        );
+    }
     let mut o = vec![
         (
             "hover_time",

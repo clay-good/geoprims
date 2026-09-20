@@ -25,6 +25,9 @@ const ENDS_ELSEWHERE = {
   // The card leads with total weight, the number against the aircraft's limit,
   // but the work ends at the centre of gravity it is used to find.
   'aviation.loading.weight-balance': 'cg',
+  // The card leads with the radius, which the two given elements fix; the work
+  // then derives the elements that follow from it, ending at the curve length.
+  'survey.curves.circular-curve': 'length',
 };
 const run = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
 

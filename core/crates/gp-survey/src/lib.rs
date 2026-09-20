@@ -1244,6 +1244,29 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let q = |v: f64| Q { value: v, unit: u };
     let r_ft = r * to_ft;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let delta_deg = (2.0 * th).to_degrees();
+        ctx.step(
+            "Radius",
+            "R = the radius the two given elements fix",
+            format!("from {}", given.join(" and ")),
+            format!("{} {}", n(r, 3), u.symbol),
+        );
+        ctx.step(
+            "Tangent",
+            "T = R × tan(Δ/2)",
+            format!("{} {} × tan({}° / 2)", n(r, 3), u.symbol, n(delta_deg, 4)),
+            format!("{} {}", n(r * tan(th), 3), u.symbol),
+        );
+        ctx.step(
+            "Curve length",
+            "L = R × Δ in radians",
+            format!("{} {} × {} rad", n(r, 3), u.symbol, n(2.0 * th, 6)),
+            format!("{} {}", n(2.0 * r * th, 3), u.symbol),
+        );
+    }
     let mut out = vec![
         ("radius", ctx.emit("radius", q(r), u)),
         ("delta", ctx.out("delta", deg((2.0 * th).to_degrees()))),

@@ -230,6 +230,28 @@ fn run_geohash_encode(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let g = codes::geohash_encode(lat, lon, p);
     let b = codes::geohash_decode(&g).expect("own output");
     let (h, w) = cell_size(b);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Bits of precision",
+            "bits = 5 per character, split between longitude and latitude",
+            format!("{p} characters × 5"),
+            format!("{} bits", n((p * 5) as f64, 0)),
+        );
+        ctx.step(
+            "Cell at that precision",
+            "the cell those bits narrow the world to",
+            format!("{} m tall by {} m wide", n(h, 2), n(w, 2)),
+            format!("{} m tall", n(h, 2)),
+        );
+        ctx.step(
+            "Geohash",
+            "the cell's bits written in base 32",
+            format!("{}°, {}° at {p} characters", n(lat, 6), n(lon, 6)),
+            g.clone(),
+        );
+    }
     let mut out = vec![
         ("geohash", Json::str(g)),
         ("cell_height", ctx.out("cell_height", m(h))),

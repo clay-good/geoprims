@@ -37,6 +37,8 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/lib/licenses.mjs` | What `/licenses/` renders: the asset registry's rows with their attribution, the build dependencies, and the datasets left out with reasons |
 | `src/lib/head.mjs` | The one source for every page's title and description: the 60- and 155-character caps, the qualifier-drop rule, and the repeated-title and superlative lints |
 | `src/lib/notices.mjs` | Ranks a tool page's notes, including the simplified-method banner a manifest declares as `x-limitation`, by the contract's priority and splits them into the two shown in full and the rest behind "N more notes" |
+| `test/compute.test.mjs` | Stale results: an out-of-order reply is dropped, the newest wins, and edits are debounced |
+| `test/worker.test.mjs` | The browser compute worker driven as the page drives it: every message gets exactly one envelope back |
 | `test/form.test.mjs` | Every manifest renders: a control per input, labelled, lists naming their columns, and at most five inputs before "More options" |
 | `test/copy.test.mjs` | Each copy format against a real result, including running the copied agent call and comparing its answer |
 | `test/egress.test.mjs` | The privacy claim, checked: no network primitive but same-origin `fetch`, one POST, and sentinel values that reach only the report the user previewed |

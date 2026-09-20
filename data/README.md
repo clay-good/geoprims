@@ -13,6 +13,7 @@ Reference data that is small enough to live in git and is read by the build. Eac
 | `redirects.json` | `{from, to, since}` per renamed route. Written to `dist/_redirects` by the route gate, together with a redirect for every deprecated tool in the catalog, so a renamed or removed tool's old route keeps resolving for at least 24 months. |
 | `regulations.json` | Dated regulatory reference data: every value with its citation, effective date, and review date. |
 | `report-limits.json` | The authoritative problem-report limits, imported by the report dialog, the Worker, the D1 migration generator, and the MCP report tool. |
+| `mcp-eval.json` | The agent evaluation baseline: how often the server surfaces the right tool, how often a task is answered end to end, and what a round trip costs in tokens. `npm run eval:mcp -- --write` records it. |
 | `search-accuracy.json`, `search-fixture.json` | The queries practitioners type with the tool that must rank, and the measured accuracy of the current build. |
 | `sources-ledger.json` | One row per tracked standard, model, dataset, or regulation, with the edition and when a maintainer last confirmed it at the issuer. |
 | `taxonomy.json` | Domains and their groups. Every tool id's group must be listed here, or the catalog lint fails. |

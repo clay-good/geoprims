@@ -1,0 +1,37 @@
+{
+  "tasks": 637,
+  "domains": 9,
+  "selection1": 95.4,
+  "selection3": 99.8,
+  "answered": 94.8,
+  "tokensPerTask": 406,
+  "misses": [
+    {
+      "query": "100 mph drone with 90 mph 15 mph",
+      "wanted": "drone.ops.speed-check",
+      "got": "time.sun.mapping-window"
+    }
+  ],
+  "wrong": [
+    {
+      "query": "True and magnetic bearings with 90 deg 12°W",
+      "id": "geodesy.magnetic.true-to-magnetic",
+      "note": "the filled arguments gave a different answer than the worked example"
+    },
+    {
+      "query": "true to magnetic with 90 deg 12°W",
+      "id": "geodesy.magnetic.true-to-magnetic",
+      "note": "the filled arguments gave a different answer than the worked example"
+    },
+    {
+      "query": "magnetic to true with 90 deg 12°W",
+      "id": "geodesy.magnetic.true-to-magnetic",
+      "note": "the filled arguments gave a different answer than the worked example"
+    },
+    {
+      "query": "true course to magnetic course with 90 deg 12°W",
+      "id": "geodesy.magnetic.true-to-magnetic",
+      "note": "the filled arguments gave a different answer than the worked example"
+    }
+  ]
+}

@@ -11,6 +11,7 @@ Build tooling. No npm dependencies.
 | `wasm/reproducible.mjs` | `npm run verify:reproducible`: builds twice from a cleared target directory and fails if any digest moves |
 | `trust/related.mjs` | The related-tools gate: lists resolve, give a recognised reason, agree about inverses, and stay within six; the count short of three is a ratchet |
 | `trust/status.mjs` | The status-phrase gate: every `x-status` output must read as Within/Near/Beyond or Meets/Does not meet, and may never say safe, unsafe, legal, or approved |
+| `mcp/eval.mjs` | The agent evaluation: 637 tasks from the worked examples, measuring tool selection, answers end to end, and tokens per task, with a 3-point regression gate |
 | `repo/suites.test.mjs` | Holds the test scripts to every test file in the tree, and CI to those scripts, so a directory of tests cannot sit unrun |
 | `codegen/catalog.mjs` | Builds `dist/catalog/v1.json` from the manifests the built modules report, with vector counts and operation and endpoint counts |
 | `vectors/gen_units.py` | Generates the units golden vectors from the published definitions, using exact rational arithmetic |

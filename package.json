@@ -15,6 +15,7 @@
     "test:rust": "cargo test --manifest-path core/Cargo.toml",
     "test:js": "node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs' 'mcp/**/*.test.mjs' 'worker/**/*.test.mjs'",
     "mcp": "node mcp/server.mjs",
-    "verify:reproducible": "node tools/wasm/reproducible.mjs"
+    "verify:reproducible": "node tools/wasm/reproducible.mjs",
+    "eval:mcp": "node tools/mcp/eval.mjs"
   }
 }

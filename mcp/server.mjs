@@ -66,6 +66,9 @@ export async function createServer(opts = {}) {
   const byName = new Map(opts.noMeta ? [] : TOOLS.map((t) => [t.name, t]));
   const directByName = new Map(direct.map((t) => [t.name, t.id]));
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
+  const active = new Map();
+  const queued = new Set();
+  const canceledQueued = new Set();
 
   const capabilities = { tools: { listChanged: false }, resources: { listChanged: false }, prompts: { listChanged: false } };
   const serverInfo = { name: 'geoprims', title: 'geoprims', version: SERVER_VERSION };
@@ -92,16 +95,20 @@ export async function createServer(opts = {}) {
     'server/discover': () => ({ supportedVersions: PROTOCOL_VERSIONS, capabilities, serverInfo, instructions: INSTRUCTIONS }),
     ping: () => ({}),
     'tools/list': () => ({ tools: listed, ...LIST_CACHE }),
-    'tools/call': async (p) => {
+    'tools/call': async (p, context) => {
       // A direct tool is geoprims_run with its id; the core validates the arguments.
       const directId = directByName.get(p?.name);
-      if (directId) return toolResult(await handlers.geoprims_run({ id: directId, args: p.arguments ?? {} }));
+      if (directId) {
+        const body = await handlers.geoprims_run({ id: directId, args: p.arguments ?? {} }, context);
+        return body === null ? null : toolResult(body);
+      }
       const tool = byName.get(p?.name);
       if (!tool) throw rpcError(-32602, `Unknown tool ${p?.name}. Tools: ${listed.map((t) => t.name).join(', ')}`);
       const args = p.arguments ?? {};
       const bad = schemaCheck(tool, args);
       if (bad) return toolResult({ ok: false, error: { code: 'INVALID_INPUT', message: `${tool.name}: ${bad}.` } });
-      return toolResult(await handlers[tool.name](args));
+      const body = await handlers[tool.name](args, context);
+      return body === null ? null : toolResult(body);
     },
     'resources/list': () => ({
       resources: [
@@ -144,18 +151,40 @@ export async function createServer(opts = {}) {
     }
     const isNotification = !('id' in msg);
     const fn = methods[msg.method];
-    if (isNotification) return null;
+    if (isNotification) {
+      if (msg.method === 'notifications/cancelled') {
+        const id = msg.params?.requestId;
+        if (active.has(id)) active.get(id).abort();
+        else if (queued.has(id)) canceledQueued.add(id);
+      }
+      return null;
+    }
+    queued.delete(msg.id);
+    if (canceledQueued.delete(msg.id)) return null;
     if (!fn) return { jsonrpc: '2.0', id: msg.id, error: { code: -32601, message: `Method not found: ${msg.method}` } };
+    const controller = msg.method === 'tools/call' ? new AbortController() : null;
+    if (controller) active.set(msg.id, controller);
+    const token = msg.params?._meta?.progressToken;
+    const validToken = typeof token === 'string' || (typeof token === 'number' && Number.isFinite(token));
+    const onProgress = controller && opts.emit && validToken
+      ? (elapsed) => {
+        if (!controller.signal.aborted) opts.emit({ jsonrpc: '2.0', method: 'notifications/progress', params: { progressToken: token, progress: Math.round(elapsed), message: 'Calculating' } });
+      }
+      : undefined;
     try {
-      return { jsonrpc: '2.0', id: msg.id, result: await fn(msg.params) };
+      const result = await fn(msg.params, { signal: controller?.signal, onProgress });
+      return controller?.signal.aborted || result === null ? null : { jsonrpc: '2.0', id: msg.id, result };
     } catch (e) {
+      if (controller?.signal.aborted) return null;
       if (e.rpc) return { jsonrpc: '2.0', id: msg.id, error: e.rpc };
       log(opts, `internal error in ${msg.method}: ${e.message}`);
       return { jsonrpc: '2.0', id: msg.id, error: { code: -32603, message: 'Internal error' } };
+    } finally {
+      if (active.get(msg.id) === controller) active.delete(msg.id);
     }
   }
 
-  return { handle, close: () => host.close() };
+  return { handle, reserve: (id) => queued.add(id), close: () => host.close() };
 }
 
 /** Shared data files: bundled in mcp/dist/data, or read from the repo's data/. */
@@ -190,14 +219,14 @@ async function main() {
     process.stderr.write(`geoprims-mcp: ${e.message}\n`);
     process.exit(2);
   }
-  const server = await createServer(opts);
+  const send = (obj) => obj && process.stdout.write(JSON.stringify(obj) + '\n');
+  const server = await createServer({ ...opts, emit: send });
   if (!server) {
     process.stderr.write('Built files missing: check out a release tag (git checkout vX.Y.Z) or run npm run build (requires Rust)\n');
     process.exit(1);
   }
   let buf = '';
   let chain = Promise.resolve();
-  const send = (obj) => obj && process.stdout.write(JSON.stringify(obj) + '\n');
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', (chunk) => {
     buf += chunk;
@@ -206,20 +235,25 @@ async function main() {
       const line = buf.slice(0, nl).trim();
       buf = buf.slice(nl + 1);
       if (!line) continue;
-      chain = chain.then(async () => {
-        if (Buffer.byteLength(line) > MAX_MESSAGE_BYTES) {
-          return send({ jsonrpc: '2.0', id: null, error: { code: -32600, message: `Message over ${MAX_MESSAGE_BYTES} bytes` } });
-        }
-        let msg;
-        try {
-          msg = JSON.parse(line);
-        } catch {
-          return send({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } });
-        }
-        if (opts.debug) log(opts, `<- ${line}`);
-        else log(opts, `<- ${msg.method ?? 'response'}${msg.params?.name ? ` ${msg.params.name}` : ''}`);
-        send(await server.handle(msg));
-      });
+      if (Buffer.byteLength(line) > MAX_MESSAGE_BYTES) {
+        send({ jsonrpc: '2.0', id: null, error: { code: -32600, message: `Message over ${MAX_MESSAGE_BYTES} bytes` } });
+        continue;
+      }
+      let msg;
+      try {
+        msg = JSON.parse(line);
+      } catch {
+        send({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } });
+        continue;
+      }
+      if (opts.debug) log(opts, `<- ${line}`);
+      else log(opts, `<- ${msg.method ?? 'response'}${msg.params?.name ? ` ${msg.params.name}` : ''}`);
+      // A cancellation notification must get past a call awaiting its worker.
+      if (msg.method === 'notifications/cancelled' && !('id' in msg)) server.handle(msg);
+      else {
+        if (msg.method === 'tools/call' && 'id' in msg) server.reserve(msg.id);
+        chain = chain.then(async () => send(await server.handle(msg)));
+      }
     }
     if (Buffer.byteLength(buf) > MAX_MESSAGE_BYTES) {
       buf = '';

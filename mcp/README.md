@@ -135,8 +135,10 @@ npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is te
 ## Tests
 
 ```bash
-node --test mcp/server.test.mjs mcp/network.test.mjs
+node --test mcp/server.test.mjs mcp/progress.test.mjs mcp/network.test.mjs
 ```
+
+For a long `tools/call`, include `_meta.progressToken` to receive `notifications/progress` with elapsed milliseconds. On stdio, `notifications/cancelled` with the call's `requestId` stops its worker; the canceled request sends no result or error, and later calls still run. `mcp/progress.test.mjs` checks both a running call and a call canceled before it starts.
 
 The network audit runs every tool's worked example with networking denied by the OS and fails on any connection or DNS attempt. It skips when the host cannot apply the network-denying policy, including inside a restricted container. If the sandboxed server exits before replying, the test reports that exit immediately.
 

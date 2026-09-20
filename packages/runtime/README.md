@@ -11,4 +11,4 @@ The internal, unpublished Wasm loader shared by the website and the MCP server. 
 | `src/assets.mjs` | Verifies dataset digests before providing bytes to a module; Node and browser hosts use the same integrity check |
 | `src/runtime.test.mjs` | Runs every golden vector through Wasm in Node, plus hardening, batch, and unknown-id tests |
 
-The browser worker host is in `apps/web/src/lib/compute.worker.js`. The web client and Node worker host can interrupt a running invocation by replacing its worker. Core-level cooperative cancellation and MCP progress delivery remain open under platform task 4.4.
+The browser worker host is in `apps/web/src/lib/compute.worker.js`. The web client and Node worker host can interrupt a running invocation by replacing its worker; the MCP stdio server forwards progress and cancellation. Core-level cooperative cancellation remains open under platform task 4.4.

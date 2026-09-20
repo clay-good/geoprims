@@ -186,15 +186,19 @@ const bindValue = (v) =>
 
 export function metaHandlers({ host, catalog, modules = [], limits }) {
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
-  const run = async (id, args) => JSON.parse(await host.invoke(id, JSON.stringify(args)));
+  const run = async (id, args, context) => {
+    const out = await host.invoke(id, JSON.stringify(args), context);
+    return out === null ? null : JSON.parse(out);
+  };
 
   // Output size control: a tool with offset and limit inputs pages at the
   // source (its count is the total); any other list is sliced here. Results
   // that fit come back unchanged.
-  const paged = async (m, input, maxItems, offset) => {
+  const paged = async (m, input, maxItems, offset, context) => {
     const props = m.inputs.properties ?? {};
     const atSource = 'offset' in props && 'limit' in props && !('offset' in input) && !('limit' in input);
-    const out = await run(m.id, atSource ? { ...input, offset, limit: maxItems } : input);
+    const out = await run(m.id, atSource ? { ...input, offset, limit: maxItems } : input, context);
+    if (out === null) return null;
     if (!out.ok || !out.result || typeof out.result !== 'object') return out;
     const page = {};
     for (const [k, list] of Object.entries(out.result)) {
@@ -256,7 +260,7 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       return { ok: true, result: { tools } };
     },
 
-    geoprims_run: async ({ id, args, units, output, explain }) => {
+    geoprims_run: async ({ id, args, units, output, explain }, context) => {
       const m = byId.get(id);
       if (!m) {
         return fail('UNSUPPORTED', `There is no tool with id "${id}".`, {
@@ -276,10 +280,10 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       const offset = output?.offset ?? 0;
       if (!Number.isInteger(maxItems) || maxItems < 1 || maxItems > 10000) return fail('INVALID_INPUT', 'output.maxItems is a whole number from 1 to 10,000.', { field: '/output/maxItems' });
       if (!Number.isInteger(offset) || offset < 0) return fail('INVALID_INPUT', 'output.offset is a whole number, 0 or more.', { field: '/output/offset' });
-      return paged(m, input, maxItems, offset);
+      return paged(m, input, maxItems, offset, context);
     },
 
-    geoprims_pipeline: async ({ steps }) => {
+    geoprims_pipeline: async ({ steps }, context) => {
       if (!Array.isArray(steps) || steps.length < 1 || steps.length > 20) return fail('INVALID_INPUT', 'steps must list 1 to 20 steps.', { field: '/steps' });
       const results = [];
       for (const [i, step] of steps.entries()) {
@@ -294,21 +298,23 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
           if (value === undefined) return fail('INVALID_INPUT', `Step ${from} has nothing at ${m[2]}.`, { field });
           setPointer(args, target, bindValue(value));
         }
-        const out = await run(step.id, args);
+        const out = await run(step.id, args, context);
+        if (out === null) return null;
         results.push(out);
         if (!out.ok) return { ok: false, error: { ...out.error, step: i }, result: { steps: results } };
       }
       return { ok: true, result: { steps: results } };
     },
 
-    geoprims_report_problem: async ({ toolId, args, observed, expected, source, note }) => {
+    geoprims_report_problem: async ({ toolId, args, observed, expected, source, note }, context) => {
       const m = byId.get(toolId);
       if (!m) {
         return fail('UNSUPPORTED', `There is no tool with id "${toolId}".`, { field: '/toolId', suggestions: await suggest(toolId) });
       }
       const L = limits;
       const { options = {}, ...inputs } = args;
-      const run = JSON.parse(await host.invoke(toolId, JSON.stringify(args)));
+      const computed = await run(toolId, args, context);
+      if (computed === null) return null;
       const row = (field, label, value, unit) => ({
         field: cut(field, L.fieldChars),
         label: cut(label, L.labelChars),
@@ -319,19 +325,19 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       const inputRows = Object.entries(inputs)
         .slice(0, L.inputRows)
         .map(([k, v]) => row(k, props[k]?.title ?? k, v, typeof v === 'number' ? props[k]?.['x-unit'] : ''));
-      const outputRows = run.ok
-        ? Object.entries(run.result)
+      const outputRows = computed.ok
+        ? Object.entries(computed.result)
             .slice(0, L.outputRows)
             .map(([k, v]) =>
               v && typeof v === 'object' && 'value' in v ? row(k, m.outputs.properties[k]?.title ?? k, v.value, v.unit) : row(k, m.outputs.properties[k]?.title ?? k, v, ''),
             )
         : [];
-      const warnings = run.ok ? run.meta.warnings.map((w) => w.code).slice(0, L.warningCodes) : [];
+      const warnings = computed.ok ? computed.meta.warnings.map((w) => w.code).slice(0, L.warningCodes) : [];
       const noteText = [
         `Observed: ${observed}`,
         expected && `Expected: ${expected}`,
         source && `Source: ${source}`,
-        !run.ok && `Run error: ${run.error.code}`,
+        !computed.ok && `Run error: ${computed.error.code}`,
         note,
       ]
         .filter(Boolean)
@@ -373,10 +379,11 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       };
     },
 
-    geoprims_convert_units: async ({ value, from, to }) => {
+    geoprims_convert_units: async ({ value, from, to }, context) => {
       const converters = catalog.tools.filter((t) => t.group !== 'temperature-difference' && /^units\.[a-z-]+\.convert$/.test(t.id) && t.inputs.properties.to);
       for (const t of converters) {
-        const out = await run(t.id, { value, to, ...(from === undefined ? {} : { from }) });
+        const out = await run(t.id, { value, to, ...(from === undefined ? {} : { from }) }, context);
+        if (out === null) return null;
         if (out.ok || out.error.code !== 'UNIT_MISMATCH') return out;
       }
       const named = [from ?? (typeof value === 'string' ? value : undefined), to].filter(Boolean).join(' and ');

@@ -6,7 +6,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 - **Reviewed:** a signed row in [review-signoffs.md](../review-signoffs.md). Until then, every page says "Not yet independently reviewed."
 - **Usable, mobile, findable:** the 5-second and task tests, the mobile sweep, and the content minimums with an OG image and explainer link. These gates are not built yet, so no tool is checked.
 - **MCP and report:** the both-surfaces gate and the report button. Every stable tool passes both-surfaces, and every tool has the report button.
-- **Shows its work:** the tool records a trace, so the page and `explain: true` both show the formula with this call's values in it. Checked against the build.
+- **Shows its work:** the tool records a trace, so the page and `explain: true` both show the formula with this call's values in it; a decoder shows every coded group beside what it says instead. Checked against the build.
 
 | Audience | Hero tool | Tool id | Stable | Reviewed | Usable / mobile / findable | Shows its work |
 |---|---|---|---|---|---|---|
@@ -16,7 +16,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | E6B wind triangle | `aviation.wind.heading-groundspeed` | [x] | [ ] | [ ] | [x] |
 | Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] | [x] |
 | Pilots | The four nights | `time.sun.aviation-nights` | [x] | [ ] | [ ] | [ ] |
-| Pilots | METAR decoder | `aviation.weather.metar-decode` | [x] | [ ] | [ ] | [ ] |
+| Pilots | METAR decoder | `aviation.weather.metar-decode` | [x] | [ ] | [ ] | [x] |
 | Pilots | TAF decoder | `aviation.weather.taf-decode` | [x] | [ ] | [ ] | [ ] |
 | Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [x] | [ ] | [ ] | [ ] |
 | Pilots | Holding entry | `aviation.ifr.hold-entry` | [ ] | [ ] | [ ] | [ ] |
@@ -53,7 +53,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [x] |
 
-Stable: 36 of 42 rows. Shows its work: 23 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 36 of 42 rows. Shows its work: 24 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 

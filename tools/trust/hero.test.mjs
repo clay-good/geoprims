@@ -1,6 +1,7 @@
 // docs/launch/hero-tools.md must match the build: every tool id exists, a
 // row's Stable box is checked exactly when all of its tools are stable, and its
-// "Shows its work" box exactly when all of them return a trace.
+// "Shows its work" box exactly when all of them show their work, as a
+// formula trace or, for a decoder, as its decoded groups.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -18,7 +19,8 @@ async function showWork() {
     const ex = t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
     const input = { ...ex.input, options: { ...(ex.input.options ?? {}), explain: true } };
     const r = JSON.parse(await host.invoke(t.id, JSON.stringify(input)));
-    if (r.ok && r.trace?.length) ids.add(t.id);
+    // A decoder's work is its decoded groups, not a formula trace.
+    if (r.ok && (r.trace?.length || r.result?.groups?.length)) ids.add(t.id);
   }
   return ids;
 }

@@ -147,13 +147,25 @@ export async function exampleResult(t) {
 
 /**
  * The tool's own work for its primary example, the same trace an agent gets
- * from `explain: true` (trust/proof-display, "Show your work"). Empty for a
- * tool that does not show its work yet.
+ * from `explain: true` (trust/proof-display, "Show your work").
+ *
+ * A decoder's work is not a formula but a reading, so it has none of these;
+ * `exampleGroups` gives that instead.
  */
 export async function exampleTrace(t) {
   const input = { ...primaryExample(t).input, options: { ...(primaryExample(t).input.options ?? {}), explain: true } };
   const r = JSON.parse(await host.invoke(t.id, JSON.stringify(input)));
   return r.ok ? (r.trace ?? []) : [];
+}
+
+/**
+ * A decoder's work: every coded group of the report beside what it means.
+ * Empty for a tool that decodes nothing.
+ */
+export async function exampleGroups(t) {
+  const r = await exampleResult(t);
+  const groups = r.ok ? r.result?.groups : null;
+  return Array.isArray(groups) ? groups.filter((g) => g?.group && g?.meaning) : [];
 }
 
 export function groups(domain) {

@@ -43,7 +43,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/form.test.mjs` | Every manifest renders: a control per input, labelled, lists naming their columns, and at most five inputs before "More options" |
 | `test/copy.test.mjs` | Each copy format against a real result, including running the copied agent call and comparing its answer |
 | `test/egress.test.mjs` | The privacy claim, checked: no network primitive but same-origin `fetch`, one POST, and sentinel values that reach only the report the user previewed |
-| `test/trace.test.mjs` | "Show your work": the page renders the core's trace, explaining moves no number on any tool, and a bad `explain` option is refused |
+| `test/trace.test.mjs` | "Show your work": the page renders the core's trace or, for a decoder, every coded group beside its meaning; explaining moves no number on any tool |
 | `test/content.test.mjs` | Content minimums: a unique purpose and worked example per indexable page, the "You enter / You get" block, the answer as plain text, and a last-verified date |
 | `test/notices.test.mjs`, `test/chrome-copy.test.mjs` | The ranking and the two-visible limit; and the copy lint that fails any chrome string made only of capitalised words |
 | `test/anatomy.test.mjs` | The canonical page anatomy: every tool page's regions in the contract's order, and one report button, in the answer card |

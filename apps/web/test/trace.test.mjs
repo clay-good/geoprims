@@ -94,3 +94,28 @@ test('a bad explain option is refused, not ignored', async () => {
   assert.equal(bad.ok, false);
   assert.equal(bad.error.field, '/options/explain');
 });
+
+test('a decoder shows every coded group beside what it says', () => {
+  const html = readFileSync(join(dist, 'aviation/weather/metar-decode/index.html'), 'utf8');
+  const block = /<dl class="groups">([\s\S]*?)<\/dl>/.exec(html);
+  assert.ok(block, 'the METAR decoder shows no decoded groups');
+  const text = block[1].replace(/<[^>]+>/g, ' ').replace(/&#39;/g, "'").replace(/\s+/g, ' ');
+  // Every group of the example report, and what each one says.
+  for (const [group, meaning] of [
+    ['30015G25KT', 'wind 300° true at 15 kt, gusting 25 kt'],
+    ['10SM', 'visibility 10 statute miles'],
+    ['A2980', 'altimeter 29.8 inHg'],
+    ['30/08', 'temperature 30 °C, dew point 8 °C'],
+  ]) {
+    assert.ok(text.includes(group), `the block does not show ${group}`);
+    assert.ok(text.includes(meaning), `${group} is not explained: expected "${meaning}"`);
+  }
+  // Every token of the report is accounted for, none quietly dropped.
+  const report = 'KDEN 181753Z 30015G25KT 10SM FEW080 SCT200 30/08 A2980 RMK AO2 SLP052 T03000083';
+  for (const token of report.split(' ')) assert.ok(text.includes(token), `${token} was not decoded`);
+});
+
+test('a tool with no decoder shows no groups block', () => {
+  const html = readFileSync(join(dist, 'aviation/altimetry/density-altitude/index.html'), 'utf8');
+  assert.doesNotMatch(html, /<dl class="groups">/);
+});

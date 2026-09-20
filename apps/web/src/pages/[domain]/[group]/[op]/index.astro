@@ -4,7 +4,7 @@ import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
-import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleTrace, lastVerifiedFor, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -21,6 +21,7 @@ const { shown: notices, rest: moreNotices } = split(
 );
 const worked = youEnterYouGet(t, initial);
 const trace = await exampleTrace(t);
+const groups = await exampleGroups(t);
 const lastVerified = lastVerifiedFor(t);
 const agentCall = JSON.stringify({ name: 'geoprims_run', arguments: { id: t.id, args: ex.input } }, null, 2);
 const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
@@ -58,6 +59,20 @@ const client = clientTool(t);
   <details class="card">
     <summary>How we got this</summary>
     <p><strong>Model:</strong> {t.model}</p>
+    {groups.length > 0 && (
+      <>
+        <h3>Show your work</h3>
+        <p class="help">Every coded group of the report, and what it says.</p>
+        <dl class="groups">
+          {groups.map((g) => (
+            <>
+              <dt><code>{g.group}</code></dt>
+              <dd>{g.meaning}</dd>
+            </>
+          ))}
+        </dl>
+      </>
+    )}
     {trace.length > 0 && (
       <>
         <h3>Show your work</h3>

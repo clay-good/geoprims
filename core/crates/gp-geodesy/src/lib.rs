@@ -250,6 +250,29 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         dms::format(lat, Axis::Lat, Style::Dms, 3, true),
         dms::format(lon, Axis::Lon, Style::Dms, 3, true)
     );
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        // A parser's work is what it took the text to be, and what it read.
+        ctx.step(
+            "Notation",
+            "which way the position was written",
+            text.trim().to_owned(),
+            notation.to_owned(),
+        );
+        ctx.step(
+            "Longitude",
+            "read from that notation, east positive",
+            text.trim().to_owned(),
+            format!("{}°", n(lon, 7)),
+        );
+        ctx.step(
+            "Latitude",
+            "read from that notation, north positive",
+            text.trim().to_owned(),
+            format!("{}°", n(lat, 7)),
+        );
+    }
     Ok(Json::obj([
         ("lat", ctx.out("lat", deg(lat))),
         ("lon", ctx.out("lon", deg(lon))),
@@ -709,6 +732,29 @@ fn run_utm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
         None => standard,
     };
     let g = utmups::utm_forward(e.a, e.f, lat, lon, zone);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let cm = 6.0 * f64::from(zone) - 183.0;
+        ctx.step(
+            "Zone",
+            "zone = ⌊(lon + 180) / 6⌋ + 1, unless one is given",
+            format!("{}° longitude", n(lon, 6)),
+            format!("zone {zone}"),
+        );
+        ctx.step(
+            "Central meridian",
+            "λ₀ = 6° × zone − 183°",
+            format!("6° × {zone} − 183°"),
+            format!("{}°", n(cm, 0)),
+        );
+        ctx.step(
+            "Easting",
+            "x from the transverse Mercator series, plus the 500,000 m false easting",
+            format!("{}° east of {}°", n(lon - cm, 6), n(cm, 0)),
+            format!("{} m", n(g.easting, 3)),
+        );
+    }
     ctx.model = Some(format!(
         "Transverse Mercator, 6th-order Krüger series (Karney 2011), k0 = 0.9996, on {}",
         e.describe()
@@ -1250,6 +1296,33 @@ fn run_mgrs_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/lat")
     })?;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Grid position",
+            "the UTM or UPS zone, easting, and northing the point falls at",
+            format!("{}°, {}°", n(lat, 6), n(lon, 6)),
+            format!(
+                "zone {}, {} m E, {} m N",
+                g.zone,
+                n(g.easting, 0),
+                n(g.northing, 0)
+            ),
+        );
+        ctx.step(
+            "Square",
+            "how much of the easting and northing the chosen precision keeps",
+            format!("precision {p}"),
+            format!("{} m across", n(mgrs::square_size(p), 0)),
+        );
+        ctx.step(
+            "Reference",
+            "zone, band, 100 km square, then the kept digits",
+            format!("zone {} at precision {p}", g.zone),
+            s.clone(),
+        );
+    }
     let mut out = vec![
         ("mgrs", Json::str(&s)),
         ("mgrs_spaced", Json::str(spaced(&s))),

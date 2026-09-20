@@ -986,6 +986,36 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
     } else {
         set
     };
+    if ctx.explaining()
+        && let (Some(s), Some(r)) = (sunset, sunrise)
+    {
+        // Four different rules, three different boundaries, one night. The work
+        // is which boundary each rule uses, not the solver behind them.
+        ctx.step(
+            "Sunset and sunrise",
+            "the sun's centre at −0.8333°, its radius and refraction allowed for",
+            format!("at {}°, {}°", lat, lon),
+            window(s, r, off),
+        );
+        if let (Some(te), Some(tb)) = (twilight_end, twilight_begin) {
+            ctx.step(
+                "Civil twilight",
+                "the sun 6° below the horizon, which is when logging night begins",
+                format!("−6° at {}°, {}°", lat, lon),
+                window(te, tb, off),
+            );
+        }
+        ctx.step(
+            "Passenger currency",
+            "one hour after sunset to one hour before sunrise",
+            format!("an hour inside {}", window(s, r, off)),
+            if r - s > 2.0 * hour {
+                window(s + hour, r - hour, off)
+            } else {
+                none("the night is shorter than 2 hours")
+            },
+        );
+    }
     let mut out = Vec::new();
     match (sunset, sunrise) {
         (Some(s), Some(r)) => {

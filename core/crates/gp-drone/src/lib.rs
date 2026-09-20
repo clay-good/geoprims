@@ -765,6 +765,28 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let dist = along * (1.0 - front);
     let interval = dist / v;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Footprint along the flight line",
+            "what one photo covers in the direction of travel",
+            format!("at {} m above the ground", n(h, 1)),
+            format!("{} m", n(along, 2)),
+        );
+        ctx.step(
+            "Distance between photos",
+            "spacing = footprint × (1 − front overlap)",
+            format!("{} m × (1 − {}%)", n(along, 2), n(front * 100.0, 0)),
+            format!("{} m", n(dist, 2)),
+        );
+        ctx.step(
+            "Trigger interval",
+            "interval = spacing / groundspeed",
+            format!("{} m / {} m/s", n(dist, 2), n(v, 2)),
+            format!("{} s", n(interval, 2)),
+        );
+    }
     let mut out = vec![
         (
             "trigger_interval",

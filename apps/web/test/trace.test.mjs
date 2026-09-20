@@ -31,6 +31,9 @@ const ENDS_ELSEWHERE = {
   // The card leads with the canonical tile id, which is the input written
   // back; the work ends at the centre the bounds are really asked for.
   'indexing.tile.bounds': 'lat',
+  // The card leads with the zone, which names the grid; the work ends at
+  // the easting, which is the position in it.
+  'geodesy.utm.forward': 'easting',
 };
 const run = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
 

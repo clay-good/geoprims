@@ -26,7 +26,7 @@ The browser regression tests need Chromium, Firefox, and WebKit (`npm exec --pre
 npm run test:browser --prefix apps/web
 ```
 
-It serves the built site with production headers, starts a long H3 polygon calculation, edits the input, and checks that the worker stops within 100 ms and the new answer appears. It also compares every live golden vector's exact serialized result in Chromium, Firefox, WebKit, and Node. CI installs all three browsers and runs these tests after the web build.
+It serves the built site with production headers, starts a long H3 polygon calculation, edits the input, and checks that the worker stops within 100 ms and the new answer appears. It also compares every live golden vector's exact serialized result in Chromium, Firefox, WebKit, and Node. A network capture checks that sentinel inputs entered on every tool page never reach a request URL, header, or body. CI installs all three browsers and runs these tests after the web build.
 
 The first command runs at the repository root and builds the Wasm modules and catalog into `dist/`. The web build copies them into `public/`.
 
@@ -51,6 +51,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/worker.test.mjs` | The browser compute worker driven as the page drives it: every message gets exactly one envelope back |
 | `test/compute-cancel.test.mjs`, `test/browser/cancellation.test.mjs` | A stuck calculation cancels within 100 ms, another request survives the worker restart, and elapsed-time updates stop after cancellation; Chromium checks cancellation during a real H3 calculation and the replacement answer |
 | `test/browser/determinism.test.mjs` | Every live golden vector returns byte-identical JSON in Chromium, Firefox, WebKit, and Node, including tools that load assets |
+| `test/browser/egress.test.mjs` | Chromium visits every tool page with a unique sentinel input and captures all requests, including compute-worker fetches; an injected leaking fetch proves the detector works |
 | `src/lib/keyboard.mjs`, `test/keyboard.test.mjs` | Lifting the sticky answer above the on-screen keyboard: what the visual viewport says is covered becomes `--keyboard` on the document, re-read whenever it moves |
 | `test/responsive.test.mjs` | Layouts for every width: nothing declared wider than a 320 px screen, no column that refuses to narrow, wide tables inside a box that scrolls, and the side-by-side layout starting at a tablet |
 | `src/lib/offline.mjs`, `test/offline.test.mjs` | The footer's offline chip: what each service-worker state may honestly claim, and never "Works offline" before the release is cached |

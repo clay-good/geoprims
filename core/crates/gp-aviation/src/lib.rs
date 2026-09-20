@@ -995,6 +995,38 @@ fn run_density_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .base()
     };
     let (r1, r2) = (rule(118.8), rule(120.0));
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Station pressure",
+            "p = ((QNH/1013.25)^0.190284 − elevation × 6.8756e-6)^(1/0.190284) × 1013.25",
+            format!(
+                "p from QNH {} hPa and elevation {} m",
+                n(qnh.to(unit(QT::Pressure, "hPa")), 2),
+                n(elev.base(), 1)
+            ),
+            format!("{} hPa", n(p / 100.0, 2)),
+        );
+        ctx.step(
+            "Pressure altitude",
+            "PA = the ISA altitude whose pressure is p",
+            format!("PA for p = {} hPa", n(p / 100.0, 2)),
+            format!("{} ft", n(pa_ft, 0)),
+        );
+        ctx.step(
+            "Air density",
+            "ρ = p / (R × Tv)",
+            format!("ρ = {} / (287.05287 × {})", n(p, 1), n(tv, 2)),
+            format!("{} kg/m³", n(rho, 4)),
+        );
+        ctx.step(
+            "Density altitude",
+            "DA = the ISA altitude whose density is ρ",
+            format!("DA for ρ = {} kg/m³", n(rho, 4)),
+            format!("{} ft", n(m(da_m).to(ft), 0)),
+        );
+    }
     Ok(obj(vec![
         ("density_altitude", ctx.out("density_altitude", m(da_m))),
         ("above_field", ctx.out("above_field", m(da_m - elev.base()))),

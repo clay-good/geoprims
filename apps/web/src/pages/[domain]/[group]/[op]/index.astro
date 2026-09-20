@@ -4,7 +4,7 @@ import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
-import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, lastVerifiedFor, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleTrace, lastVerifiedFor, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -20,6 +20,7 @@ const { shown: notices, rest: moreNotices } = split(
   noticesFor({ tool: t, issue, changes: changesFor(t.id), sources: sourceRowsFor(t), today: new Date().toISOString().slice(0, 10) }),
 );
 const worked = youEnterYouGet(t, initial);
+const trace = await exampleTrace(t);
 const lastVerified = lastVerifiedFor(t);
 const agentCall = JSON.stringify({ name: 'geoprims_run', arguments: { id: t.id, args: ex.input } }, null, 2);
 const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
@@ -57,6 +58,21 @@ const client = clientTool(t);
   <details class="card">
     <summary>How we got this</summary>
     <p><strong>Model:</strong> {t.model}</p>
+    {trace.length > 0 && (
+      <>
+        <h3>Show your work</h3>
+        <ol class="trace">
+          {trace.map((s) => (
+            <li>
+              <p class="trace-label">{s.label}</p>
+              <p class="trace-formula"><code>{s.formula}</code></p>
+              <p class="trace-sub"><code>{s.substituted}</code> = <strong>{s.value}</strong></p>
+            </li>
+          ))}
+        </ol>
+        <p class="help">The same steps an agent gets from the MCP server with <code>explain: true</code>.</p>
+      </>
+    )}
     <p><strong>Accuracy:</strong> {t.accuracy}</p>
     <p><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
     <div class="worked">

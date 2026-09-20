@@ -107,7 +107,7 @@ impl Meta {
 }
 
 /// Serializes a success envelope:
-/// `{"ok":true,"result":…,"summary"?:…,"comparison"?:…,"display"?:{…},"meta":…}`.
+/// `{"ok":true,"result":…,"summary"?:…,"comparison"?:…,"display"?:{…},"trace"?:[…],"meta":…}`.
 /// `summary` is the rendered sentence, `comparison` the line that frames the
 /// answer against something familiar, and `display` holds each output as
 /// rounded text with its unit. A non-finite number anywhere becomes an
@@ -119,6 +119,19 @@ pub fn success(
     display: Json,
     meta: &Meta,
 ) -> String {
+    success_with_trace(result, summary, comparison, display, &[], meta)
+}
+
+/// The same, with the work a tool showed when `options.explain` asked for it.
+/// `trace` is empty for an ordinary call, and then the envelope is unchanged.
+pub fn success_with_trace(
+    result: Json,
+    summary: Option<&str>,
+    comparison: Option<&str>,
+    display: Json,
+    trace: &[crate::tool::Step],
+    meta: &Meta,
+) -> String {
     let mut pairs = vec![("ok", Json::Bool(true)), ("result", result)];
     if let Some(s) = summary.filter(|s| !s.is_empty()) {
         pairs.push(("summary", Json::str(s)));
@@ -128,6 +141,24 @@ pub fn success(
     }
     if matches!(&display, Json::Obj(p) if !p.is_empty()) {
         pairs.push(("display", display));
+    }
+    if !trace.is_empty() {
+        pairs.push((
+            "trace",
+            Json::Arr(
+                trace
+                    .iter()
+                    .map(|s| {
+                        Json::obj([
+                            ("label", Json::str(&s.label)),
+                            ("formula", Json::str(&s.formula)),
+                            ("substituted", Json::str(&s.substituted)),
+                            ("value", Json::str(&s.value)),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ));
     }
     pairs.push(("meta", meta.to_json()));
     let env = Json::obj(pairs);

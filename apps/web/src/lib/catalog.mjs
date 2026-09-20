@@ -136,6 +136,17 @@ export async function exampleResult(t) {
   return JSON.parse(await host.invoke(t.id, JSON.stringify(primaryExample(t).input)));
 }
 
+/**
+ * The tool's own work for its primary example, the same trace an agent gets
+ * from `explain: true` (trust/proof-display, "Show your work"). Empty for a
+ * tool that does not show its work yet.
+ */
+export async function exampleTrace(t) {
+  const input = { ...primaryExample(t).input, options: { ...(primaryExample(t).input.options ?? {}), explain: true } };
+  const r = JSON.parse(await host.invoke(t.id, JSON.stringify(input)));
+  return r.ok ? (r.trace ?? []) : [];
+}
+
 export function groups(domain) {
   const byGroup = new Map();
   for (const t of catalog.tools.filter((x) => x.domain === domain)) {

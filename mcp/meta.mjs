@@ -48,13 +48,14 @@ export const TOOLS = [
     name: 'geoprims_run',
     title: 'Run a geoprims tool',
     description:
-      'Run one tool by id. args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
+      'Run one tool by id. args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call\'s values in it, and each intermediate result, exactly as the website shows it. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
     inputSchema: {
       type: 'object',
       properties: {
         id: { type: 'string' },
         args: { type: 'object' },
         units: { type: 'string', enum: ['si', 'aviation', 'aviation-hpa', 'us-customary', 'survey-metric', 'survey-us'] },
+        explain: { type: 'boolean', default: false },
         output: {
           type: 'object',
           properties: { maxItems: { type: 'integer', minimum: 1, maximum: 10000, default: 1000 }, offset: { type: 'integer', minimum: 0, default: 0 } },
@@ -253,7 +254,7 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       return { ok: true, result: { tools } };
     },
 
-    geoprims_run: async ({ id, args, units, output }) => {
+    geoprims_run: async ({ id, args, units, output, explain }) => {
       const m = byId.get(id);
       if (!m) {
         return fail('UNSUPPORTED', `There is no tool with id "${id}".`, {
@@ -268,6 +269,7 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
         input = structuredClone(ex.input);
       }
       if (units) input = { ...input, options: { ...(input.options ?? {}), profile: units } };
+      if (explain) input = { ...input, options: { ...(input.options ?? {}), explain: true } };
       const maxItems = output?.maxItems ?? 1000;
       const offset = output?.offset ?? 0;
       if (!Number.isInteger(maxItems) || maxItems < 1 || maxItems > 10000) return fail('INVALID_INPUT', 'output.maxItems is a whole number from 1 to 10,000.', { field: '/output/maxItems' });

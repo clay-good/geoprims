@@ -182,6 +182,18 @@ fn options_schema(def: &ToolDef) -> Json {
             ]),
         ));
     }
+    props.push((
+        "explain".to_owned(),
+        Json::obj([
+            ("type", Json::str("boolean")),
+            (
+                "description",
+                Json::str(
+                    "Show the tool's work: each step's formula, the formula with these values in it, and what it came to. Default false.",
+                ),
+            ),
+        ]),
+    ));
     Json::obj([
         ("type", Json::str("object")),
         ("properties", Json::Obj(props)),

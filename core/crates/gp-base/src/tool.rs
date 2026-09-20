@@ -401,6 +401,20 @@ pub struct Options {
     pub profile: Option<Profile>,
     pub output_units: Vec<(String, &'static Unit)>,
     pub format: NumberFormat,
+    /// Asks the tool to show its work (`options.explain`, MCP `explain: true`).
+    /// Off by default, so an ordinary result is byte-for-byte what it was.
+    pub explain: bool,
+}
+
+/// One line of a tool's work (`trust/proof-display`, "Show your work"): the
+/// formula in standard notation, the same formula with this call's values in
+/// it, and what it came to.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Step {
+    pub label: String,
+    pub formula: String,
+    pub substituted: String,
+    pub value: String,
 }
 
 /// A value with the unit it was given in. Convert exactly with [`Q::to`].
@@ -445,6 +459,8 @@ pub struct Ctx<'a> {
     /// Operating context agents should relay (model epoch, validity window,
     /// uncertainty), echoed in `meta.context`.
     pub context: Vec<(&'static str, Json)>,
+    /// The work the tool showed, when `options.explain` asked for it.
+    pub steps: Vec<Step>,
 }
 
 /// The magnitude bounds for quantity inputs, in registry base units.
@@ -456,6 +472,32 @@ fn pointer(name: &str) -> String {
 }
 
 impl<'a> Ctx<'a> {
+    /// True when the caller asked the tool to show its work. A tool checks
+    /// this before doing any formatting the ordinary path does not need.
+    pub fn explaining(&self) -> bool {
+        self.options.explain
+    }
+
+    /// Records one line of the tool's work. Does nothing unless the caller
+    /// asked for it, so an ordinary call pays nothing for it.
+    pub fn step(
+        &mut self,
+        label: impl Into<String>,
+        formula: impl Into<String>,
+        substituted: impl Into<String>,
+        value: impl Into<String>,
+    ) {
+        if !self.options.explain {
+            return;
+        }
+        self.steps.push(Step {
+            label: label.into(),
+            formula: formula.into(),
+            substituted: substituted.into(),
+            value: value.into(),
+        });
+    }
+
     fn field(&self, name: &str) -> &'static Field {
         self.def
             .inputs
@@ -995,11 +1037,12 @@ impl Registry {
                         _ => None,
                     },
                 };
-                envelope::success(
+                envelope::success_with_trace(
                     x.result,
                     Some(x.summary.as_str()),
                     Some(x.comparison.as_str()),
                     x.display,
+                    &x.steps,
                     &meta,
                 )
             }
@@ -1021,6 +1064,8 @@ struct Executed {
     comparison: String,
     /// Display strings per output.
     display: Json,
+    /// The work the tool showed, empty unless `options.explain` asked for it.
+    steps: Vec<Step>,
     warnings: Vec<Warning>,
     model: Option<String>,
     accuracy: Option<String>,
@@ -1061,6 +1106,7 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         accuracy: None,
         assets: Vec::new(),
         context: Vec::new(),
+        steps: Vec::new(),
     };
     for f in def.inputs {
         if f.required && !ctx.is_set(f.name) {
@@ -1090,6 +1136,7 @@ fn execute(def: &'static ToolDef, input: &Value) -> Result<Executed, ToolError> 
         summary,
         comparison,
         display,
+        steps: ctx.steps,
         warnings: ctx.warnings,
         model: ctx.model,
         accuracy: ctx.accuracy,
@@ -1275,12 +1322,19 @@ fn parse_options(def: &ToolDef, v: Option<&Value>) -> Result<Options, ToolError>
                     o.output_units.push((field.clone(), unit));
                 }
             }
+            ("explain", Value::Bool(b)) => o.explain = *b,
+            ("explain", _) => {
+                return Err(ToolError::invalid(
+                    "/options/explain",
+                    "explain must be true or false.",
+                ));
+            }
             _ => {
                 return Err(ToolError::invalid(
                     &format!("/options/{k}"),
                     format!("{k} is not a valid option."),
                 )
-                .hint("Options: profile, outputUnits, numberFormat"));
+                .hint("Options: profile, outputUnits, numberFormat, explain"));
             }
         }
     }

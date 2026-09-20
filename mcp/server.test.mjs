@@ -528,3 +528,22 @@ test('describe carries the limitation a simplified tool declares', async () => {
   assert.deepEqual(Object.keys(simplified.limitation).sort(), ['governs', 'instead', 'simplification']);
   assert.equal(plain.limitation, undefined, 'a tool that simplifies nothing carries none');
 });
+
+test('explain: true shows the work, and the result is the same either way', async () => {
+  const plain = await c.call('geoprims_run', { id: 'aviation.altimetry.density-altitude' });
+  const shown = await c.call('geoprims_run', { id: 'aviation.altimetry.density-altitude', explain: true });
+  assert.equal(plain.structuredContent.trace, undefined, 'an ordinary run carries no trace');
+  assert.deepEqual(plain.structuredContent.result, shown.structuredContent.result, 'explaining changes no number');
+  const trace = shown.structuredContent.trace;
+  assert.ok(Array.isArray(trace) && trace.length >= 3, JSON.stringify(trace));
+  for (const step of trace) assert.deepEqual(Object.keys(step), ['label', 'formula', 'substituted', 'value']);
+  // The scenario: the formula, this call's values in it, and the intermediates.
+  assert.deepEqual(trace.map((s) => s.label), ['Station pressure', 'Pressure altitude', 'Air density', 'Density altitude']);
+  assert.equal(trace.at(-1).value, shown.structuredContent.display.density_altitude, 'the last step is the answer');
+  // Byte-identical to the runtime, so the website shows exactly this.
+  const direct = await nodeHost(join(root, 'dist/wasm')).invoke(
+    'aviation.altimetry.density-altitude',
+    JSON.stringify({ ...JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8')).tools.find((t) => t.id === 'aviation.altimetry.density-altitude').examples[0].input, options: { explain: true } }),
+  );
+  assert.equal(JSON.stringify(shown.structuredContent.trace), JSON.stringify(JSON.parse(direct).trace));
+});

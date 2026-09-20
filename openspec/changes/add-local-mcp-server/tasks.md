@@ -13,7 +13,7 @@
 - [x] 2.3 Implement `geoprims_run` with schema validation, unit handling, pagination, and summaries; verify the search-then-run and large-polyfill scenarios
 - [x] 2.4 Implement `geoprims_pipeline` with binding type checks, unit insertion, and cycle and forward-reference rejection; verify a 4-step chain and a cyclic chain
 - [x] 2.5 Implement `geoprims_convert_units`; verify against unit-registry vectors
-- [ ] 2.5a Add `prefill` to search, citations and limitations to describe, and `summary`, references, `explain` trace, and example-default to run; verify parity with the web page for 20 hero tools (done: prefill in search, citations and the simplified-method limitation in describe, and summary and the example default in run, with the default run checked against the primary example for every tool id; pending: the explain trace, and the hero-tool parity sweep)
+- [ ] 2.5a Add `prefill` to search, citations and limitations to describe, and `summary`, references, `explain` trace, and example-default to run; verify parity with the web page for 20 hero tools (done: prefill in search, citations and the simplified-method limitation in describe, and summary, the example default, and the explain trace in run, with the default run checked against the primary example for every tool id; pending: the hero-tool parity sweep)
 - [x] 2.6 Add titles, annotations, output schemas, and structured content plus text blocks; verify the annotations scenario with a conformance checker
 - [x] 2.7 Enforce the ≤ 6,000-token default `tools/list` budget in CI; verify with the 4-characters-per-token approximation
 

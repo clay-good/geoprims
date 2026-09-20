@@ -3,7 +3,7 @@
   // user clicks "Report a problem". It shows exactly what will be sent, loads
   // the bot check only now, posts once, and never retries on its own.
   import { onMount } from 'svelte';
-  import { buildPayload, openState, reportText, sendState, ISSUE_URL, LIMITS, viewportClass } from '../lib/report.js';
+  import { buildPayload, openState, reportText, sendState, tokenIsFresh, ISSUE_URL, LIMITS, viewportClass } from '../lib/report.js';
 
   let { tool, args, result, onclose } = $props();
 
@@ -76,9 +76,9 @@
     }
   }
 
-  /** A bot-check token no older than 240 s (contracts/report-api). */
+  /** A bot-check token no older than the shared maximum (contracts/report-api). */
   function freshToken() {
-    if (token && Date.now() - tokenAt < 240_000) return Promise.resolve(token);
+    if (tokenIsFresh(token, tokenAt, Date.now())) return Promise.resolve(token);
     token = '';
     window.turnstile.reset(widget);
     return new Promise((resolve) => tokenWaiters.push(resolve));

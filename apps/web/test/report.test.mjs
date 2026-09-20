@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPayload, openState, reportText, sendState } from '../src/lib/report.js';
+import { buildPayload, openState, reportText, sendState, tokenIsFresh, TOKEN_MAX_AGE_MS } from '../src/lib/report.js';
 import { KEYS, validate } from '../../../worker/src/report.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
@@ -69,4 +69,13 @@ test('the dialog opens in the state the connection and the switch put it in', ()
 test('only the uniform 202 counts as sent', () => {
   assert.equal(sendState(202), 'sent');
   for (const code of [200, 400, 405, 429, 500, 503]) assert.equal(sendState(code), 'failed', String(code));
+});
+
+test('the slow note: a token older than the window is asked for again', () => {
+  const now = 1_800_000_000_000;
+  assert.equal(tokenIsFresh('t', now, now), true);
+  assert.equal(tokenIsFresh('t', now - TOKEN_MAX_AGE_MS + 1, now), true, 'just inside the window');
+  assert.equal(tokenIsFresh('t', now - TOKEN_MAX_AGE_MS, now), false, 'exactly at the window');
+  assert.equal(tokenIsFresh('t', now - 6 * 60_000, now), false, 'six minutes writing a note');
+  assert.equal(tokenIsFresh('', now, now), false, 'no token yet');
 });

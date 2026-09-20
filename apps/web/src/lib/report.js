@@ -72,6 +72,15 @@ export function buildPayload({ tool, args, result, includeInputs, note, kind, di
 }
 
 /**
+ * How long a bot-check token may be reused (contracts/report-api). Someone who
+ * spends six minutes writing a note posts with a fresh one.
+ */
+export const TOKEN_MAX_AGE_MS = 240_000;
+
+/** True when a token may be reused as it is, rather than asked for again. */
+export const tokenIsFresh = (token, issuedAt, now) => Boolean(token) && now - issuedAt < TOKEN_MAX_AGE_MS;
+
+/**
  * The state the dialog opens in. Offline when the browser is offline, paused
  * when reporting is switched off or the config could not be read (`config` is
  * null), and otherwise ready for the bot check. Nothing is ever queued: an

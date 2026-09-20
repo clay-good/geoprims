@@ -15,3 +15,16 @@ export async function serveBuiltSite(t) {
     });
   });
 }
+
+export async function captureCsp(context) {
+  const violations = [];
+  await context.exposeBinding('__recordCspViolation', (source, detail) => {
+    violations.push({ page: source.frame.url(), ...detail });
+  });
+  await context.addInitScript(() => {
+    document.addEventListener('securitypolicyviolation', (event) => {
+      window.__recordCspViolation({ directive: event.violatedDirective, blocked: event.blockedURI });
+    });
+  });
+  return violations;
+}

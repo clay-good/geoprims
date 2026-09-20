@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { serveBuiltSite } from './site.mjs';
+import { captureCsp, serveBuiltSite } from './site.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const tools = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8')).tools;
@@ -14,6 +14,7 @@ test('sentinel inputs from every tool stay out of browser requests', { timeout: 
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
   const context = await browser.newContext({ serviceWorkers: 'block' });
+  const violations = await captureCsp(context);
   const sentinels = new Set();
   const leaks = [];
   const external = [];
@@ -58,5 +59,6 @@ test('sentinel inputs from every tool stay out of browser requests', { timeout: 
   assert.ok(wasmRequests > 0, 'the proxy did not capture requests from the compute worker');
   assert.deepEqual(leaks, [], 'a user input reached a request URL, header, or body');
   assert.deepEqual(external, [], 'a tool page made a third-party request');
+  assert.deepEqual(violations, [], 'a tool page violated the production CSP');
   t.diagnostic(`${tools.length} tool pages checked with unique sentinel inputs`);
 });

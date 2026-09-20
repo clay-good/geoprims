@@ -126,26 +126,38 @@ fn shortening() {
 fn official_cases_through_the_tools() {
     use gp_indexing::REGISTRY;
     use serde_json::{Value, json};
-    let call = |id: &str, v: Value| -> Value { serde_json::from_str(&REGISTRY.invoke(id, &v.to_string())).unwrap() };
+    let call = |id: &str, v: Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke(id, &v.to_string())).unwrap()
+    };
     let mut bad = Vec::new();
     let mut n = 0;
     for r in rows("encoding.csv") {
         let len: u32 = r[4].parse().unwrap();
         let lat: f64 = r[0].parse().unwrap();
-        let out = call("indexing.plus-code.encode", json!({"lat": lat, "lon": r[1].parse::<f64>().unwrap(), "length": len}));
+        let out = call(
+            "indexing.plus-code.encode",
+            json!({"lat": lat, "lon": r[1].parse::<f64>().unwrap(), "length": len}),
+        );
         // The library clips an impossible latitude or length; the tool refuses it and says why.
         if lat.abs() > 90.0 || len > 15 {
             if out["ok"] != false {
-                bad.push(format!("encode {} {} {len}: should be refused, got {}", r[0], r[1], out["result"]["code"]));
+                bad.push(format!(
+                    "encode {} {} {len}: should be refused, got {}",
+                    r[0], r[1], out["result"]["code"]
+                ));
             }
         } else if out["result"]["code"] != r[5].as_str() {
-            bad.push(format!("encode {} {} {len}: {}", r[0], r[1], out["result"]["code"]));
+            bad.push(format!(
+                "encode {} {} {len}: {}",
+                r[0], r[1], out["result"]["code"]
+            ));
         }
         n += 1;
     }
     for r in rows("decoding.csv") {
         let out = call("indexing.plus-code.decode", json!({"code": r[0]}));
-        let got = ["south", "west", "north", "east"].map(|k| out["result"][k]["value"].as_f64().unwrap_or(f64::NAN));
+        let got = ["south", "west", "north", "east"]
+            .map(|k| out["result"][k]["value"].as_f64().unwrap_or(f64::NAN));
         let want: Vec<f64> = r[2..6].iter().map(|v| v.parse().unwrap()).collect();
         if got.iter().zip(&want).any(|(a, b)| (a - b).abs() > 1e-10) {
             bad.push(format!("decode {}: {got:?} vs {want:?}", r[0]));
@@ -153,21 +165,44 @@ fn official_cases_through_the_tools() {
         n += 1;
     }
     for r in rows("shortCodeTests.csv") {
-        let (full, lat, lon, short, kind) = (&r[0], r[1].parse::<f64>().unwrap(), r[2].parse::<f64>().unwrap(), &r[3], r[4].as_str());
+        let (full, lat, lon, short, kind) = (
+            &r[0],
+            r[1].parse::<f64>().unwrap(),
+            r[2].parse::<f64>().unwrap(),
+            &r[3],
+            r[4].as_str(),
+        );
         if kind == "S" || kind == "B" {
-            let out = call("indexing.plus-code.shorten", json!({"code": full, "ref_lat": lat, "ref_lon": lon}));
+            let out = call(
+                "indexing.plus-code.shorten",
+                json!({"code": full, "ref_lat": lat, "ref_lon": lon}),
+            );
             if out["result"]["short_code"] != short.as_str() {
-                bad.push(format!("shorten {full} near {lat},{lon}: {}", out["result"]["short_code"]));
+                bad.push(format!(
+                    "shorten {full} near {lat},{lon}: {}",
+                    out["result"]["short_code"]
+                ));
             }
         }
         if kind == "R" || kind == "B" {
-            let out = call("indexing.plus-code.decode", json!({"code": short, "ref_lat": lat, "ref_lon": lon}));
+            let out = call(
+                "indexing.plus-code.decode",
+                json!({"code": short, "ref_lat": lat, "ref_lon": lon}),
+            );
             if out["result"]["full_code"] != full.as_str() {
-                bad.push(format!("recover {short} near {lat},{lon}: {}", out["result"]["full_code"]));
+                bad.push(format!(
+                    "recover {short} near {lat},{lon}: {}",
+                    out["result"]["full_code"]
+                ));
             }
         }
         n += 1;
     }
     assert!(n >= 700, "{n} cases");
-    assert!(bad.is_empty(), "{} failures:\n{}", bad.len(), bad[..bad.len().min(30)].join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} failures:\n{}",
+        bad.len(),
+        bad[..bad.len().min(30)].join("\n")
+    );
 }

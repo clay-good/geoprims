@@ -366,9 +366,25 @@ fn traverse_closure_invariants() {
     // loop negates the sums; and after a compass or transit adjustment the
     // loop returns exactly to its start.
     let loops: [&[(f64, f64)]; 3] = [
-        &[(0.0, 300.0), (90.0, 400.02), (180.0, 299.95), (270.01, 400.0)],
-        &[(12.25, 250.0), (95.5, 310.2), (170.75, 260.4), (281.0, 290.1)],
-        &[(60.0, 45.5), (140.0, 60.2), (230.0, 70.1), (320.0, 50.3), (355.0, 20.0)],
+        &[
+            (0.0, 300.0),
+            (90.0, 400.02),
+            (180.0, 299.95),
+            (270.01, 400.0),
+        ],
+        &[
+            (12.25, 250.0),
+            (95.5, 310.2),
+            (170.75, 260.4),
+            (281.0, 290.1),
+        ],
+        &[
+            (60.0, 45.5),
+            (140.0, 60.2),
+            (230.0, 70.1),
+            (320.0, 50.3),
+            (355.0, 20.0),
+        ],
     ];
     let run = |courses: &[(f64, f64)], method: &str| {
         let c: Vec<Value> = courses
@@ -382,14 +398,20 @@ fn traverse_closure_invariants() {
     };
     for courses in loops {
         let base = run(courses, "compass");
-        let (sl, sd) = (num(&base, "result.sum_latitudes.value"), num(&base, "result.sum_departures.value"));
+        let (sl, sd) = (
+            num(&base, "result.sum_latitudes.value"),
+            num(&base, "result.sum_departures.value"),
+        );
         let mis = num(&base, "result.misclosure.value");
         assert!((mis - sl.hypot(sd)).abs() < 1e-12);
         for rot in [17.0, 123.5, 271.25] {
             let turned: Vec<(f64, f64)> = courses.iter().map(|(a, d)| (a + rot, *d)).collect();
             let r = run(&turned, "compass");
             assert!((num(&r, "result.misclosure.value") - mis).abs() < 1e-9);
-            assert!((num(&r, "result.precision_ratio") - num(&base, "result.precision_ratio")).abs() < 1e-6);
+            assert!(
+                (num(&r, "result.precision_ratio") - num(&base, "result.precision_ratio")).abs()
+                    < 1e-6
+            );
         }
         let back: Vec<(f64, f64)> = courses.iter().rev().map(|(a, d)| (a + 180.0, *d)).collect();
         let r = run(&back, "compass");
@@ -416,7 +438,9 @@ fn combined_factor_invariants() {
     for h in [-100.0, 0.0, 250.0, 1000.0, 3000.0, 4500.0] {
         let e = call(
             "survey.reduction.combined-factor",
-            &format!(r#"{{"grid_scale":0.99993,"ellipsoid_height":"{h} m","ground_distance":"1000 m"}}"#),
+            &format!(
+                r#"{{"grid_scale":0.99993,"ellipsoid_height":"{h} m","ground_distance":"1000 m"}}"#
+            ),
         );
         let ef = num(&e, "result.elevation_factor");
         assert!(ef < prev);
@@ -426,12 +450,17 @@ fn combined_factor_invariants() {
         let grid = num(&e, "result.grid_distance.value");
         let back = call(
             "survey.reduction.combined-factor",
-            &format!(r#"{{"grid_scale":0.99993,"ellipsoid_height":"{h} m","grid_distance":"{grid} m"}}"#),
+            &format!(
+                r#"{{"grid_scale":0.99993,"ellipsoid_height":"{h} m","grid_distance":"{grid} m"}}"#
+            ),
         );
         assert!((num(&back, "result.ground_distance.value") - 1000.0).abs() < 1e-9);
         let split = call(
             "survey.reduction.combined-factor",
-            &format!(r#"{{"grid_scale":0.99993,"elevation":"{} m","geoid_height":"-30 m","ground_distance":"1000 m"}}"#, h + 30.0),
+            &format!(
+                r#"{{"grid_scale":0.99993,"elevation":"{} m","geoid_height":"-30 m","ground_distance":"1000 m"}}"#,
+                h + 30.0
+            ),
         );
         assert!((num(&split, "result.combined_factor") - cf).abs() < 1e-15);
     }
@@ -441,26 +470,48 @@ fn combined_factor_invariants() {
 fn circular_curve_invariants() {
     // Any two independent elements give back the same curve, and the arc and
     // chord degrees of curve fix R = 5,729.578/D and R = 50/sin(D/2).
-    let base = call("survey.curves.circular-curve", r#"{"radius":"850 ft","delta":"37.5 deg"}"#);
+    let base = call(
+        "survey.curves.circular-curve",
+        r#"{"radius":"850 ft","delta":"37.5 deg"}"#,
+    );
     let names = ["tangent", "length", "chord", "external", "middle_ordinate"];
     for (i, a) in names.iter().enumerate() {
         for b in &names[i + 1..] {
             let r = call(
                 "survey.curves.circular-curve",
                 &serde_json::json!({*a: format!("{} ft", num(&base, &format!("result.{a}.value"))),
-                                    *b: format!("{} ft", num(&base, &format!("result.{b}.value")))}).to_string(),
+                                    *b: format!("{} ft", num(&base, &format!("result.{b}.value")))})
+                .to_string(),
             );
-            assert!((num(&r, "result.radius.value") - 850.0).abs() < 1e-6, "{a}+{b}: {r}");
-            assert!((num(&r, "result.delta.value") - 37.5).abs() < 1e-9, "{a}+{b}");
+            assert!(
+                (num(&r, "result.radius.value") - 850.0).abs() < 1e-6,
+                "{a}+{b}: {r}"
+            );
+            assert!(
+                (num(&r, "result.delta.value") - 37.5).abs() < 1e-9,
+                "{a}+{b}"
+            );
             // T and M fit a second, sharper curve too (their ratio has a minimum near Δ = 104°).
             let ambiguous = codes(&r).contains(&"AMBIGUOUS_INPUT".to_owned());
-            assert_eq!(ambiguous, (*a, *b) == ("tangent", "middle_ordinate"), "{a}+{b}");
+            assert_eq!(
+                ambiguous,
+                (*a, *b) == ("tangent", "middle_ordinate"),
+                "{a}+{b}"
+            );
         }
     }
     for d in [1.0, 4.5, 15.0, 30.0] {
-        let arc = call("survey.curves.circular-curve", &format!(r#"{{"degree":"{d} deg","delta":"20 deg"}}"#));
-        assert!((num(&arc, "result.radius.value") - 18_000.0 / std::f64::consts::PI / d).abs() < 1e-9);
-        let chord = call("survey.curves.circular-curve", &format!(r#"{{"degree_chord":"{d} deg","delta":"20 deg"}}"#));
+        let arc = call(
+            "survey.curves.circular-curve",
+            &format!(r#"{{"degree":"{d} deg","delta":"20 deg"}}"#),
+        );
+        assert!(
+            (num(&arc, "result.radius.value") - 18_000.0 / std::f64::consts::PI / d).abs() < 1e-9
+        );
+        let chord = call(
+            "survey.curves.circular-curve",
+            &format!(r#"{{"degree_chord":"{d} deg","delta":"20 deg"}}"#),
+        );
         let r = num(&chord, "result.radius.value");
         assert!((r - 50.0 / (d / 2.0).to_radians().sin()).abs() < 1e-9);
         assert!((num(&chord, "result.degree_chord.value") - d).abs() < 1e-9);
@@ -472,14 +523,23 @@ fn vertical_curve_invariants() {
     // The PVC and PVT lie on the tangents, K = L/|g2 − g1|, and the turning
     // point is the extreme: the curve is no lower (sag) or higher (crest) at
     // points 1 ft either side.
-    for (g1, g2, l) in [(-1.75, 2.25, 500.0), (3.0, -2.0, 800.0), (-4.0, 1.0, 350.0), (0.5, -3.5, 1000.0)] {
+    for (g1, g2, l) in [
+        (-1.75, 2.25, 500.0),
+        (3.0, -2.0, 800.0),
+        (-4.0, 1.0, 350.0),
+        (0.5, -3.5, 1000.0),
+    ] {
         let r = call(
             "survey.curves.vertical-curve",
-            &format!(r#"{{"g1":{g1},"g2":{g2},"length":"{l} ft","pvi_station":"50+00","pvi_elevation":"1000 ft"}}"#),
+            &format!(
+                r#"{{"g1":{g1},"g2":{g2},"length":"{l} ft","pvi_station":"50+00","pvi_elevation":"1000 ft"}}"#
+            ),
         );
         let pvc = num(&r, "result.pvc_elevation.value");
         assert!((pvc - (1000.0 - g1 / 100.0 * l / 2.0)).abs() < 1e-9);
-        assert!((num(&r, "result.pvt_elevation.value") - (1000.0 + g2 / 100.0 * l / 2.0)).abs() < 1e-9);
+        assert!(
+            (num(&r, "result.pvt_elevation.value") - (1000.0 + g2 / 100.0 * l / 2.0)).abs() < 1e-9
+        );
         assert!((num(&r, "result.k") - l / (g2 - g1).abs()).abs() < 1e-9);
         let y = |x: f64| pvc + g1 / 100.0 * x + (g2 - g1) / 100.0 * x * x / (2.0 * l);
         let x = -g1 / 100.0 * l / ((g2 - g1) / 100.0);
@@ -487,7 +547,11 @@ fn vertical_curve_invariants() {
         assert!((turn - y(x)).abs() < 1e-9);
         let sag = g2 > g1;
         for dx in [-1.0, 1.0] {
-            assert!(if sag { y(x + dx) >= turn } else { y(x + dx) <= turn });
+            assert!(if sag {
+                y(x + dx) >= turn
+            } else {
+                y(x + dx) <= turn
+            });
         }
     }
 }
@@ -496,17 +560,39 @@ fn vertical_curve_invariants() {
 fn area_by_coordinates_invariants() {
     // Area does not change when the parcel is shifted, rotated, or started
     // at another corner; reversing the order flips only the orientation.
-    let p = [(100.0, 100.0), (340.0, 180.0), (520.0, 90.0), (610.0, 400.0), (300.0, 520.0), (80.0, 330.0)];
+    let p = [
+        (100.0, 100.0),
+        (340.0, 180.0),
+        (520.0, 90.0),
+        (610.0, 400.0),
+        (300.0, 520.0),
+        (80.0, 330.0),
+    ];
     let area = |pts: &[(f64, f64)]| {
-        let v: Vec<Value> = pts.iter().map(|(n, e)| serde_json::json!({"northing": n, "easting": e})).collect();
-        let r = call("survey.cogo.area-by-coordinates", &serde_json::json!({"points": v}).to_string());
-        (num(&r, "result.area.value"), r["result"]["orientation"].as_str().unwrap().to_owned())
+        let v: Vec<Value> = pts
+            .iter()
+            .map(|(n, e)| serde_json::json!({"northing": n, "easting": e}))
+            .collect();
+        let r = call(
+            "survey.cogo.area-by-coordinates",
+            &serde_json::json!({"points": v}).to_string(),
+        );
+        (
+            num(&r, "result.area.value"),
+            r["result"]["orientation"].as_str().unwrap().to_owned(),
+        )
     };
     let (a, o) = area(&p);
-    let shifted: Vec<_> = p.iter().map(|(n, e)| (n + 1_234_567.0, e - 765_432.0)).collect();
+    let shifted: Vec<_> = p
+        .iter()
+        .map(|(n, e)| (n + 1_234_567.0, e - 765_432.0))
+        .collect();
     assert!((area(&shifted).0 - a).abs() < 1e-6 * a);
     let (s, c) = (0.6_f64.sin(), 0.6_f64.cos());
-    let turned: Vec<_> = p.iter().map(|(n, e)| (n * c - e * s, n * s + e * c)).collect();
+    let turned: Vec<_> = p
+        .iter()
+        .map(|(n, e)| (n * c - e * s, n * s + e * c))
+        .collect();
     assert!((area(&turned).0 - a).abs() < 1e-9 * a);
     let mut rolled = p.to_vec();
     rolled.rotate_left(2);
@@ -521,9 +607,21 @@ fn area_by_coordinates_invariants() {
 fn circular_curve_extreme_angles() {
     // Pairs other than R and Δ still solve at very flat and very sharp curves.
     for delta in [0.1, 0.2, 179.8, 179.9] {
-        let base = call("survey.curves.circular-curve", &format!(r#"{{"radius":"1000 ft","delta":"{delta} deg"}}"#));
-        let (t, c) = (num(&base, "result.tangent.value"), num(&base, "result.chord.value"));
-        let r = call("survey.curves.circular-curve", &format!(r#"{{"tangent":"{t} ft","chord":"{c} ft"}}"#));
-        assert!((num(&r, "result.delta.value") - delta).abs() < 1e-6, "{delta}: {r}");
+        let base = call(
+            "survey.curves.circular-curve",
+            &format!(r#"{{"radius":"1000 ft","delta":"{delta} deg"}}"#),
+        );
+        let (t, c) = (
+            num(&base, "result.tangent.value"),
+            num(&base, "result.chord.value"),
+        );
+        let r = call(
+            "survey.curves.circular-curve",
+            &format!(r#"{{"tangent":"{t} ft","chord":"{c} ft"}}"#),
+        );
+        assert!(
+            (num(&r, "result.delta.value") - delta).abs() < 1e-6,
+            "{delta}: {r}"
+        );
     }
 }

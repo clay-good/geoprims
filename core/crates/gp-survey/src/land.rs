@@ -1233,8 +1233,16 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
         legs.push((dn, de, arc));
         total += arc;
     }
-    let u = crate::common_unit(&entered.iter().map(|(p, q)| (p.as_str(), *q)).collect::<Vec<_>>())?;
-    let len_u = |v: f64| gp_base::tool::Q { value: ftus(v).to(u), unit: u };
+    let u = crate::common_unit(
+        &entered
+            .iter()
+            .map(|(p, q)| (p.as_str(), *q))
+            .collect::<Vec<_>>(),
+    )?;
+    let len_u = |v: f64| gp_base::tool::Q {
+        value: ftus(v).to(u),
+        unit: u,
+    };
     let (n_end, e_end) = *pts.last().expect("points");
     let mis = hypot(n_end, e_end);
     let perfect = mis <= 1e-9 * total;
@@ -1250,7 +1258,12 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
     } else {
         format!(
             "computed with an implied closing line of {}",
-            display::quantity(ftus(mis).to(u), u.symbol, Precision::Decimals(2), ctx.options.format)
+            display::quantity(
+                ftus(mis).to(u),
+                u.symbol,
+                Precision::Decimals(2),
+                ctx.options.format
+            )
         )
     };
     let corners: Vec<(f64, f64)> = if compass && !perfect {
@@ -1282,7 +1295,8 @@ fn run_plot(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 .at("/calls"),
         );
     }
-    let area_of = |s: &str| gp_base::units::by_symbol(gp_base::units::Quantity::Area, s).expect("area unit");
+    let area_of =
+        |s: &str| gp_base::units::by_symbol(gp_base::units::Quantity::Area, s).expect("area unit");
     let aq = gp_base::tool::Q {
         value: area,
         unit: area_of("ftUS2"),

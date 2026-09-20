@@ -795,7 +795,12 @@ pub static VLOS: ToolDef = ToolDef {
             120,
         ),
     ],
-    warnings: &["NOMINAL_VALUE_USED", "INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &[
+        "NOMINAL_VALUE_USED",
+        "INPUT_NORMALIZED",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
     model: "ALOS = 327·CD + 20 m (multirotor) or 490·CD + 30 m (fixed wing); DLOS = 0.3·GV; VLOS = min(ALOS, DLOS)",
     accuracy: "Guidance values for planning, not a guarantee you will see the drone.",
     references: &[EASA_GUIDE],
@@ -839,8 +844,11 @@ fn run_vlos(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let gv = match ctx.quantity("ground_visibility")? {
         Some(v) if v.base() > GV_MAX => {
             ctx.warnings.push(
-                Warning::new("INPUT_NORMALIZED", "The ground visibility was taken as 5 km, the most the EASA procedure assumes.")
-                    .at("/ground_visibility"),
+                Warning::new(
+                    "INPUT_NORMALIZED",
+                    "The ground visibility was taken as 5 km, the most the EASA procedure assumes.",
+                )
+                .at("/ground_visibility"),
             );
             GV_MAX
         }

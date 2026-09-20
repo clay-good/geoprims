@@ -457,12 +457,18 @@ fn altimetry_invariants() {
                 &format!(r#"{{"elevation":"{e} ft","altimeter":"{a} inHg"}}"#),
             );
             let pa = num(&r, "result.pressure_altitude.value");
-            assert!(pa < prev, "pressure altitude must fall as the setting rises");
+            assert!(
+                pa < prev,
+                "pressure altitude must fall as the setting rises"
+            );
             prev = pa;
-            let isa = num(&call(
-                "aviation.altimetry.isa-temperature",
-                &format!(r#"{{"pressure_altitude":"{pa} ft"}}"#),
-            ), "result.isa_temperature.value");
+            let isa = num(
+                &call(
+                    "aviation.altimetry.isa-temperature",
+                    &format!(r#"{{"pressure_altitude":"{pa} ft"}}"#),
+                ),
+                "result.isa_temperature.value",
+            );
             let mut prev_da = f64::NEG_INFINITY;
             for dt in [-20.0, -5.0, 0.0, 5.0, 20.0] {
                 let r = call(
@@ -500,7 +506,10 @@ fn wind_invariants() {
                 )
             };
             let r = comp((hdg + off).rem_euclid(360.0));
-            let (h, x) = (num(&r, "result.headwind.value"), num(&r, "result.crosswind.value"));
+            let (h, x) = (
+                num(&r, "result.headwind.value"),
+                num(&r, "result.crosswind.value"),
+            );
             assert!((h * h + x * x - 400.0).abs() < 1e-9, "{r}");
             let m = comp((hdg - off).rem_euclid(360.0));
             assert!((num(&m, "result.headwind.value") - h).abs() < 1e-9);
@@ -522,7 +531,10 @@ fn wind_invariants() {
             "aviation.wind.heading-groundspeed",
             &format!(r#"{{"course":{tc},"tas":{tas},"wind_direction":{wd},"wind_speed":{ws}}}"#),
         );
-        let (hd, gs) = (num(&r, "result.heading.value"), num(&r, "result.groundspeed.value"));
+        let (hd, gs) = (
+            num(&r, "result.heading.value"),
+            num(&r, "result.groundspeed.value"),
+        );
         // The wind blows toward wd + 180.
         let e = tas * rad(hd).sin() - ws * rad(wd).sin();
         let n = tas * rad(hd).cos() - ws * rad(wd).cos();
@@ -547,9 +559,18 @@ fn weight_balance_invariants() {
             "aviation.loading.weight-balance",
             &serde_json::json!({"stations": rows}).to_string(),
         );
-        (num(&r, "result.total_weight.value"), num(&r, "result.cg.value"))
+        (
+            num(&r, "result.total_weight.value"),
+            num(&r, "result.cg.value"),
+        )
     };
-    let base = [(1500.0, 85.0), (340.0, 90.0), (170.0, 118.0), (240.0, 48.0), (60.0, 142.0)];
+    let base = [
+        (1500.0, 85.0),
+        (340.0, 90.0),
+        (170.0, 118.0),
+        (240.0, 48.0),
+        (60.0, 142.0),
+    ];
     let (w, cg) = wb(&base);
     for d in [-100.0, -32.0, 82.0, 250.0] {
         let moved: Vec<(f64, f64)> = base.iter().map(|(a, b)| (*a, b + d)).collect();
@@ -574,10 +595,16 @@ fn descent_invariants() {
     // speed is groundspeed × tan(angle), and time is distance over groundspeed.
     // VDP: distance × tan(angle) is the height above the threshold crossing height.
     const NM_FT: f64 = 1852.0 / 0.3048;
-    for (from, to, gs, ang) in [(35000.0, 3000.0, 420.0, 3.0_f64), (9500.0, 1200.0, 160.0, 3.5), (45000.0, 18000.0, 500.0, 2.2)] {
+    for (from, to, gs, ang) in [
+        (35000.0, 3000.0, 420.0, 3.0_f64),
+        (9500.0, 1200.0, 160.0, 3.5),
+        (45000.0, 18000.0, 500.0, 2.2),
+    ] {
         let r = call(
             "aviation.performance.top-of-descent",
-            &format!(r#"{{"from_altitude":"{from} ft","to_altitude":"{to} ft","groundspeed":"{gs} kt","descent_angle":"{ang} deg"}}"#),
+            &format!(
+                r#"{{"from_altitude":"{from} ft","to_altitude":"{to} ft","groundspeed":"{gs} kt","descent_angle":"{ang} deg"}}"#
+            ),
         );
         let d = num(&r, "result.distance.value");
         assert!((d * num(&r, "result.gradient.value") - (from - to)).abs() < 1e-6);
@@ -586,13 +613,20 @@ fn descent_invariants() {
         assert!((num(&r, "result.time.value") - d / gs * 60.0).abs() < 1e-9);
         // The rules of thumb describe a 3° path, so they are shown from 2.5° to 3.5°.
         if (2.5..=3.5).contains(&ang) {
-            assert!((num(&r, "result.rule_3_to_1.value") - 3.0 * (from - to) / 1000.0).abs() < 1e-9);
+            assert!(
+                (num(&r, "result.rule_3_to_1.value") - 3.0 * (from - to) / 1000.0).abs() < 1e-9
+            );
         } else {
             assert!(r["result"]["rule_3_to_1"].is_null());
         }
     }
-    for (hat, ang, tch) in [(400.0, 3.0_f64, 0.0), (520.0, 3.0, 50.0), (900.0, 3.5, 55.0)] {
-        let mut input = format!(r#"{{"height_above_touchdown":"{hat} ft","descent_angle":"{ang} deg""#);
+    for (hat, ang, tch) in [
+        (400.0, 3.0_f64, 0.0),
+        (520.0, 3.0, 50.0),
+        (900.0, 3.5, 55.0),
+    ] {
+        let mut input =
+            format!(r#"{{"height_above_touchdown":"{hat} ft","descent_angle":"{ang} deg""#);
         if tch > 0.0 {
             input += &format!(r#","threshold_crossing_height":"{tch} ft""#);
         }
@@ -609,7 +643,10 @@ fn descent_invariants() {
 fn fb_pasted_block_uses_its_header() {
     // FAA-H-8083-28A section 27.2.1.1.2: a whole FB product pasted at once.
     let block = "DATA BASED ON 010000Z\nVALID 010600Z FOR USE 0500-0900Z. TEMPS NEG ABV 24000\nFT 3000 6000 9000 12000 18000 24000 30000 34000 39000\nMKC 9900 1709+06 2018+00 2130-06 2242-18 2361-30 247242 258848 750252";
-    let r = call("aviation.weather.fb-winds-decode", &serde_json::json!({"report": block}).to_string());
+    let r = call(
+        "aviation.weather.fb-winds-decode",
+        &serde_json::json!({"report": block}).to_string(),
+    );
     let alone = call(
         "aviation.weather.fb-winds-decode",
         r#"{"report":"MKC 9900 1709+06 2018+00 2130-06 2242-18 2361-30 247242 258848 750252","levels":"3000 6000 9000 12000 18000 24000 30000 34000 39000"}"#,

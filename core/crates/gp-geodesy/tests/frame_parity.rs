@@ -20,7 +20,9 @@ fn rows(name: &str) -> Vec<Vec<f64>> {
 }
 
 fn v(r: &Value, k: &str) -> f64 {
-    r["result"][k]["value"].as_f64().unwrap_or_else(|| panic!("{k} missing in {r}"))
+    r["result"][k]["value"]
+        .as_f64()
+        .unwrap_or_else(|| panic!("{k} missing in {r}"))
 }
 
 /// Longitude difference in degrees, across the antimeridian.
@@ -34,16 +36,29 @@ fn ecef_matches_cartconvert() {
     assert_eq!(rows.len(), 1000);
     let (mut worst_xyz, mut worst_h, mut worst_deg) = (0f64, 0f64, 0f64);
     for c in &rows {
-        let f = call("geodesy.frame.geodetic-to-ecef", &json!({"lat": c[0], "lon": c[1], "height": c[2]}));
+        let f = call(
+            "geodesy.frame.geodetic-to-ecef",
+            &json!({"lat": c[0], "lon": c[1], "height": c[2]}),
+        );
         for (k, want) in ["x", "y", "z"].iter().zip(&c[3..6]) {
             // CartConvert prints 9 decimals; allow that plus 1e-15 of the radius.
             let err = (v(&f, k) - want).abs();
             worst_xyz = worst_xyz.max(err);
-            assert!(err < 1e-8 + 1e-15 * want.abs().max(6.4e6), "{c:?} {k}: {err:e} m");
+            assert!(
+                err < 1e-8 + 1e-15 * want.abs().max(6.4e6),
+                "{c:?} {k}: {err:e} m"
+            );
         }
-        let r = call("geodesy.frame.ecef-to-geodetic", &json!({"x": c[3], "y": c[4], "z": c[5]}));
+        let r = call(
+            "geodesy.frame.ecef-to-geodetic",
+            &json!({"x": c[3], "y": c[4], "z": c[5]}),
+        );
         let dlat = (v(&r, "lat") - c[6]).abs();
-        let dl = if c[6].abs() == 90.0 { 0.0 } else { dlon(v(&r, "lon"), c[7]) };
+        let dl = if c[6].abs() == 90.0 {
+            0.0
+        } else {
+            dlon(v(&r, "lon"), c[7])
+        };
         let dh = (v(&r, "height") - c[8]).abs();
         worst_deg = worst_deg.max(dlat.max(dl));
         worst_h = worst_h.max(dh);
@@ -75,7 +90,10 @@ fn local_frames_match_cartconvert() {
         );
         assert!((v(&b, "lat") - t[0]).abs() < 1e-11, "{c:?}: {b}");
         // At a pole the longitude is arbitrary.
-        assert!(t[0].abs() == 90.0 || dlon(v(&b, "lon"), t[1]) < 1e-11, "{c:?}: {b}");
+        assert!(
+            t[0].abs() == 90.0 || dlon(v(&b, "lon"), t[1]) < 1e-11,
+            "{c:?}: {b}"
+        );
         assert!((v(&b, "height") - t[2]).abs() < 1e-8, "{c:?}: {b}");
     }
     eprintln!("ENU vs CartConvert: {worst:e} m");

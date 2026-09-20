@@ -297,15 +297,24 @@ fn frame_tool_invariants() {
     let mut rng = Rng(99);
     for ell in ["wgs84", "grs80", "clarke1866"] {
         for _ in 0..200 {
-            let (lat, lon, h) = (rng.range(-89.0, 89.0), rng.range(-180.0, 180.0), rng.range(-500.0, 2e5));
+            let (lat, lon, h) = (
+                rng.range(-89.0, 89.0),
+                rng.range(-180.0, 180.0),
+                rng.range(-500.0, 2e5),
+            );
             let ecef = |h: f64| {
                 call(
                     "geodesy.frame.geodetic-to-ecef",
-                    &serde_json::json!({"lat": lat, "lon": lon, "height": h, "ellipsoid": ell}).to_string(),
+                    &serde_json::json!({"lat": lat, "lon": lon, "height": h, "ellipsoid": ell})
+                        .to_string(),
                 )
             };
             let p = ecef(h);
-            let (x, y, z) = (num(&p, "result.x.value"), num(&p, "result.y.value"), num(&p, "result.z.value"));
+            let (x, y, z) = (
+                num(&p, "result.x.value"),
+                num(&p, "result.y.value"),
+                num(&p, "result.z.value"),
+            );
             let g = call(
                 "geodesy.frame.ecef-to-geodetic",
                 &serde_json::json!({"x": x, "y": y, "z": z, "ellipsoid": ell}).to_string(),
@@ -338,7 +347,11 @@ fn frame_tool_invariants() {
                 rng.range(-100.0, 3e4),
             );
             let r = local(t);
-            let (e, n, u) = (num(&r, "result.east.value"), num(&r, "result.north.value"), num(&r, "result.up.value"));
+            let (e, n, u) = (
+                num(&r, "result.east.value"),
+                num(&r, "result.north.value"),
+                num(&r, "result.up.value"),
+            );
             assert!((num(&r, "result.range.value") - (e * e + n * n + u * u).sqrt()).abs() < 1e-8);
             let mut q = o.clone();
             q["frame"] = "enu".into();

@@ -23,7 +23,11 @@ fn local_minutes(s: &str, date: &str) -> Option<i64> {
 
 #[test]
 fn sun_events_match_usno() {
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/usno_sun.csv")).unwrap();
+    let text = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/data/usno_sun.csv"
+    ))
+    .unwrap();
     let (mut n, mut worst, mut exact) = (0, 0i64, 0);
     let mut bad = Vec::new();
     for line in text.lines().filter(|l| !l.starts_with('#')) {
@@ -35,7 +39,12 @@ fn sun_events_match_usno() {
             &json!({"lat": c[0].parse::<f64>().unwrap(), "lon": c[1].parse::<f64>().unwrap(), "date": c[2], "offset": offset}),
         );
         assert_eq!(r["ok"], true, "{line}: {r}");
-        for (key, usno) in [("sunrise", c[4]), ("sunset", c[5]), ("civil_dawn", c[6]), ("civil_dusk", c[7])] {
+        for (key, usno) in [
+            ("sunrise", c[4]),
+            ("sunset", c[5]),
+            ("civil_dawn", c[6]),
+            ("civil_dusk", c[7]),
+        ] {
             let ours = r["result"][key].as_str().unwrap_or("");
             let got = local_minutes(ours, c[2]);
             match (usno, got) {
@@ -56,7 +65,12 @@ fn sun_events_match_usno() {
         }
     }
     assert_eq!(n, 1200);
-    assert!(bad.is_empty(), "{} disagreements (worst {worst} min):\n{}", bad.len(), bad.join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} disagreements (worst {worst} min):\n{}",
+        bad.len(),
+        bad.join("\n")
+    );
     assert!(worst <= 1);
     println!("{n} events, {exact} to the same minute as USNO, worst {worst} min");
 }

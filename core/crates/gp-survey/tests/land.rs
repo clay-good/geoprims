@@ -232,9 +232,17 @@ fn deed_plot_invariants() {
             .map(|(az, d)| serde_json::json!({"direction": format!("{}", (az + rot) % 360.0), "distance": format!("{d} {unit}")}))
             .collect()
     };
-    let plot = |c: Vec<Value>| call("survey.land.deed-plot", &serde_json::json!({"calls": c}).to_string());
+    let plot = |c: Vec<Value>| {
+        call(
+            "survey.land.deed-plot",
+            &serde_json::json!({"calls": c}).to_string(),
+        )
+    };
     let base = plot(calls(0.0, "ft"));
-    let (mis, area) = (base["result"]["misclosure"]["value"].as_f64().unwrap(), base["result"]["area"]["value"].as_f64().unwrap());
+    let (mis, area) = (
+        base["result"]["misclosure"]["value"].as_f64().unwrap(),
+        base["result"]["area"]["value"].as_f64().unwrap(),
+    );
     for rot in [13.5, 90.0, 211.25] {
         let r = plot(calls(rot, "ft"));
         assert!((r["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9);
@@ -242,10 +250,16 @@ fn deed_plot_invariants() {
     }
     let m = plot(calls(0.0, "m"));
     assert_eq!(m["result"]["area"]["unit"], "m2");
-    assert!((m["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9, "same numbers, other unit");
+    assert!(
+        (m["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9,
+        "same numbers, other unit"
+    );
     let t = call(
         "survey.cogo.traverse-closure",
         &serde_json::json!({"courses": calls(0.0, "ft").iter().map(|c| serde_json::json!({"direction": c["direction"], "distance": c["distance"]})).collect::<Vec<_>>()}).to_string(),
     );
-    assert!((t["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9, "{t}");
+    assert!(
+        (t["result"]["misclosure"]["value"].as_f64().unwrap() - mis).abs() < 1e-9,
+        "{t}"
+    );
 }

@@ -310,23 +310,56 @@ fn battery_energy_invariants() {
     // Energy is linear in capacity and voltage, Ah and mAh agree, a cell
     // count gives the same answer as its nominal voltage, and usable energy
     // is the energy between the depth-of-discharge limit and the reserve.
-    let e = |inp: &str| num(&call("drone.power.battery-energy", inp), "result.energy.value");
+    let e = |inp: &str| {
+        num(
+            &call("drone.power.battery-energy", inp),
+            "result.energy.value",
+        )
+    };
     for (c, v) in [(5870.0, 15.4), (2200.0, 11.1), (16000.0, 51.8)] {
         let base = e(&format!(r#"{{"capacity":"{c} mAh","voltage":"{v} V"}}"#));
         assert!((base - c / 1000.0 * v).abs() < 1e-9);
-        assert!((e(&format!(r#"{{"capacity":"{} mAh","voltage":"{v} V"}}"#, 2.0 * c)) - 2.0 * base).abs() < 1e-9);
-        assert!((e(&format!(r#"{{"capacity":"{c} mAh","voltage":"{} V"}}"#, 3.0 * v)) - 3.0 * base).abs() < 1e-9);
-        assert!((e(&format!(r#"{{"capacity":"{} Ah","voltage":"{v} V"}}"#, c / 1000.0)) - base).abs() < 1e-9);
+        assert!(
+            (e(&format!(
+                r#"{{"capacity":"{} mAh","voltage":"{v} V"}}"#,
+                2.0 * c
+            )) - 2.0 * base)
+                .abs()
+                < 1e-9
+        );
+        assert!(
+            (e(&format!(
+                r#"{{"capacity":"{c} mAh","voltage":"{} V"}}"#,
+                3.0 * v
+            )) - 3.0 * base)
+                .abs()
+                < 1e-9
+        );
+        assert!(
+            (e(&format!(
+                r#"{{"capacity":"{} Ah","voltage":"{v} V"}}"#,
+                c / 1000.0
+            )) - base)
+                .abs()
+                < 1e-9
+        );
     }
     for (n, chem, per) in [(4, "lipo", 3.7), (6, "li-ion", 3.6)] {
-        let by_cells = e(&format!(r#"{{"capacity":"5000 mAh","cells":{n},"chemistry":"{chem}"}}"#));
-        let by_volts = e(&format!(r#"{{"capacity":"5000 mAh","voltage":"{} V"}}"#, f64::from(n) * per));
+        let by_cells = e(&format!(
+            r#"{{"capacity":"5000 mAh","cells":{n},"chemistry":"{chem}"}}"#
+        ));
+        let by_volts = e(&format!(
+            r#"{{"capacity":"5000 mAh","voltage":"{} V"}}"#,
+            f64::from(n) * per
+        ));
         assert!((by_cells - by_volts).abs() < 1e-9);
     }
     for (dod, res) in [(100.0, 0.0), (80.0, 20.0), (90.0, 45.0)] {
         let r = call(
             "drone.power.battery-energy",
-            &format!(r#"{{"capacity":"5000 mAh","voltage":"22.2 V","depth_of_discharge":{dod},"reserve":{res}}}"#),
+            &format!(
+                r#"{{"capacity":"5000 mAh","voltage":"22.2 V","depth_of_discharge":{dod},"reserve":{res}}}"#
+            ),
         );
         let full = num(&r, "result.energy.value");
         assert!((num(&r, "result.usable_energy.value") - full * (dod - res) / 100.0).abs() < 1e-9);
@@ -339,7 +372,9 @@ fn vlos_invariants() {
     // 327 (multirotor) or 490 (fixed wing) per meter; DLOS is 0.3 × ground
     // visibility; and the margin is VLOS minus the farthest planned point.
     let v = |cd: f64, kind: &str, gv: f64, far: Option<f64>| {
-        let mut inp = format!(r#"{{"characteristic_dimension":"{cd} m","aircraft_type":"{kind}","ground_visibility":"{gv} km""#);
+        let mut inp = format!(
+            r#"{{"characteristic_dimension":"{cd} m","aircraft_type":"{kind}","ground_visibility":"{gv} km""#
+        );
         if let Some(f) = far {
             inp += &format!(r#","farthest_distance":"{f} m""#);
         }
@@ -351,16 +386,25 @@ fn vlos_invariants() {
             let (a1, a2) = (num(&a, "result.alos.value"), num(&b, "result.alos.value"));
             assert!((a2 - a1 - 1.5 * slope).abs() < 1e-9);
             for r in [&a, &b] {
-                let (al, dl, vl) = (num(r, "result.alos.value"), num(r, "result.dlos.value"), num(r, "result.vlos.value"));
+                let (al, dl, vl) = (
+                    num(r, "result.alos.value"),
+                    num(r, "result.dlos.value"),
+                    num(r, "result.vlos.value"),
+                );
                 assert!((dl - 300.0 * gv).abs() < 1e-9);
                 assert_eq!(vl, al.min(dl));
             }
         }
         let r = v(1.2, kind, 5.0, Some(250.0));
-        assert!((num(&r, "result.margin.value") - (num(&r, "result.vlos.value") - 250.0)).abs() < 1e-9);
+        assert!(
+            (num(&r, "result.margin.value") - (num(&r, "result.vlos.value") - 250.0)).abs() < 1e-9
+        );
         // Visibility counts up to 5 km, so VLOS stops at 1,500 m however large the aircraft.
         assert_eq!(num(&v(20.0, kind, 12.0, None), "result.vlos.value"), 1500.0);
-        let none = call("drone.sensors.vlos", &format!(r#"{{"characteristic_dimension":"20 m","aircraft_type":"{kind}"}}"#));
+        let none = call(
+            "drone.sensors.vlos",
+            &format!(r#"{{"characteristic_dimension":"20 m","aircraft_type":"{kind}"}}"#),
+        );
         assert_eq!(num(&none, "result.vlos.value"), 1500.0);
     }
 }

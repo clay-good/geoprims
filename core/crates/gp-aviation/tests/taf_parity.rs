@@ -31,7 +31,11 @@ fn wind(s: &str) -> Option<(Option<u32>, u32, Option<u32>)> {
         return Some((None, v.strip_suffix(" kt")?.parse().ok()?, gust));
     }
     let (d, sp) = main.split_once("° true at ")?;
-    Some((Some(d.parse().ok()?), sp.strip_suffix(" kt")?.parse().ok()?, gust))
+    Some((
+        Some(d.parse().ok()?),
+        sp.strip_suffix(" kt")?.parse().ok()?,
+        gust,
+    ))
 }
 
 fn cover(word: &str) -> &str {
@@ -47,13 +51,24 @@ fn cover(word: &str) -> &str {
 
 #[test]
 fn taf_matches_pytaf() {
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/taf_diff.jsonl")).unwrap();
+    let text = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/data/taf_diff.jsonl"
+    ))
+    .unwrap();
     let (mut n, mut bad) = (0, Vec::new());
     for line in text.lines().skip(1) {
         let want: Value = serde_json::from_str(line).unwrap();
         let report = want["report"].as_str().unwrap();
-        let r: Value = serde_json::from_str(&REGISTRY.invoke("aviation.weather.taf-decode", &json!({"report": report}).to_string())).unwrap();
-        let ours = r["result"]["periods"].as_array().cloned().unwrap_or_default();
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "aviation.weather.taf-decode",
+            &json!({"report": report}).to_string(),
+        ))
+        .unwrap();
+        let ours = r["result"]["periods"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
         let theirs = want["groups"].as_array().unwrap();
         let mut miss = |what: String| bad.push(format!("{report}\n    {what}"));
         if ours.len() != theirs.len() {
@@ -71,7 +86,10 @@ fn taf_matches_pytaf() {
                 p => format!("{}% probability", &p[4..]),
             };
             if !o["change"].as_str().unwrap_or("").starts_with(&kind) {
-                miss(format!("period {k}: change {} vs pytaf {}", o["change"], t["type"]));
+                miss(format!(
+                    "period {k}: change {} vs pytaf {}",
+                    o["change"], t["type"]
+                ));
             }
             if let Some(f) = pair(&t["from"])
                 && o["from"].as_str().and_then(day_hour) != Some(f)
@@ -93,7 +111,11 @@ fn taf_matches_pytaf() {
                     w[2].as_str().and_then(|g| g.parse().ok()),
                 );
                 let got = o["wind"].as_str().and_then(wind);
-                let want_w = if want_w.1 == 0 { (Some(0), 0, None) } else { want_w };
+                let want_w = if want_w.1 == 0 {
+                    (Some(0), 0, None)
+                } else {
+                    want_w
+                };
                 if got != Some(want_w) {
                     miss(format!("period {k}: wind {} vs pytaf {w:?}", o["wind"]));
                 }
@@ -111,7 +133,10 @@ fn taf_matches_pytaf() {
                     },
                 };
                 if o["visibility"].as_str() != Some(want_v.as_str()) {
-                    miss(format!("period {k}: visibility {} vs pytaf {v:?}", o["visibility"]));
+                    miss(format!(
+                        "period {k}: visibility {} vs pytaf {v:?}",
+                        o["visibility"]
+                    ));
                 }
             }
             let got_clouds: Vec<(String, Option<u32>)> = o["clouds"]
@@ -129,14 +154,27 @@ fn taf_matches_pytaf() {
                 .unwrap()
                 .iter()
                 .filter(|c| matches!(c[0].as_str(), Some("FEW" | "SCT" | "BKN" | "OVC" | "VV")))
-                .map(|c| (c[0].as_str().unwrap().to_owned(), c[1].as_str().and_then(|h| h.parse().ok())))
+                .map(|c| {
+                    (
+                        c[0].as_str().unwrap().to_owned(),
+                        c[1].as_str().and_then(|h| h.parse().ok()),
+                    )
+                })
                 .collect();
             if got_clouds != want_clouds {
-                miss(format!("period {k}: clouds {} vs pytaf {want_clouds:?}", o["clouds"]));
+                miss(format!(
+                    "period {k}: clouds {} vs pytaf {want_clouds:?}",
+                    o["clouds"]
+                ));
             }
         }
         n += 1;
     }
     assert!(n >= 500, "only {n} TAFs");
-    assert!(bad.is_empty(), "{} disagreements:\n{}", bad.len(), bad[..bad.len().min(40)].join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} disagreements:\n{}",
+        bad.len(),
+        bad[..bad.len().min(40)].join("\n")
+    );
 }

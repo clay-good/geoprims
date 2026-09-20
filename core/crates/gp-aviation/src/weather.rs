@@ -278,7 +278,10 @@ pub fn parse_weather(s: &str) -> Option<String> {
     } else {
         (None, false, s)
     };
-    let descriptor = DESCRIPTORS.iter().find(|(c, _)| rest.starts_with(c)).map(|(c, w)| (*c, *w));
+    let descriptor = DESCRIPTORS
+        .iter()
+        .find(|(c, _)| rest.starts_with(c))
+        .map(|(c, w)| (*c, *w));
     if descriptor.is_some() {
         rest = &rest[2..];
     }
@@ -305,7 +308,11 @@ pub fn parse_weather(s: &str) -> Option<String> {
         Some((_, d)) => lead(&format!("{d} {what}")),
         None => lead(&what),
     };
-    Some(if vicinity { format!("{phrase} in the vicinity") } else { phrase })
+    Some(if vicinity {
+        format!("{phrase} in the vicinity")
+    } else {
+        phrase
+    })
 }
 
 /// A TAF maximum or minimum temperature group, like `TX25/2015Z` or `TNM03/2106Z`.
@@ -318,7 +325,8 @@ fn temperature_extreme(g: &str) -> Option<String> {
     let (t, when) = rest.split_once('/')?;
     let (neg, t) = t.strip_prefix('M').map_or((false, t), |t| (true, t));
     let when = when.strip_suffix('Z')?;
-    if t.len() != 2 || when.len() != 4 || !t.bytes().chain(when.bytes()).all(|b| b.is_ascii_digit()) {
+    if t.len() != 2 || when.len() != 4 || !t.bytes().chain(when.bytes()).all(|b| b.is_ascii_digit())
+    {
         return None;
     }
     let deg: i32 = t.parse().ok()?;
@@ -808,7 +816,11 @@ fn run_metar(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         // A BECMG or TEMPO trend describes the next two hours, not the observation.
         if trend && !remarks {
-            note(g, "part of the trend forecast, not current conditions".into(), &mut groups);
+            note(
+                g,
+                "part of the trend forecast, not current conditions".into(),
+                &mut groups,
+            );
             i += 1;
             continue;
         }

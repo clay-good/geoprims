@@ -208,7 +208,10 @@ fn gsd_invariants() {
             let g = v(&r, "gsd");
             assert!((v(&gsd(2.0 * m), "gsd") - 2.0 * g).abs() < 1e-12 * g.max(1.0));
             assert!((v(&r, "footprint_across") - g / 100.0 * f64::from(iw)).abs() < 1e-9);
-            assert!((v(&r, "footprint_along") - v(&r, "gsd_along") / 100.0 * f64::from(ih)).abs() < 1e-9);
+            assert!(
+                (v(&r, "footprint_along") - v(&r, "gsd_along") / 100.0 * f64::from(ih)).abs()
+                    < 1e-9
+            );
             let mut i = cam.clone();
             i["target_gsd"] = serde_json::json!(format!("{g} cm"));
             let back = call("drone.photogrammetry.altitude-for-gsd", &i.to_string());

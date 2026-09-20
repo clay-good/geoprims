@@ -756,8 +756,14 @@ fn haversine_matches_independent_implementations() {
         let r = call("navigation.geodesic.haversine", &input.to_string());
         let hav = num(&r, "result.distance.value") * 1000.0;
         let karney = num(&r, "result.ellipsoidal_distance.value") * 1000.0;
-        assert!((hav - c[4]).abs() <= 1e-6 + 1e-12 * c[4], "{line}: haversine {hav}");
-        assert!((karney - c[5]).abs() <= 1e-6, "{line}: ellipsoidal {karney}");
+        assert!(
+            (hav - c[4]).abs() <= 1e-6 + 1e-12 * c[4],
+            "{line}: haversine {hav}"
+        );
+        assert!(
+            (karney - c[5]).abs() <= 1e-6,
+            "{line}: ellipsoidal {karney}"
+        );
         n += 1;
     }
     assert_eq!(n, 1000);
@@ -772,9 +778,20 @@ fn haversine_invariants() {
         if let Some(r) = r {
             v["radius"] = serde_json::json!(format!("{r} km"));
         }
-        num(&call("navigation.geodesic.haversine", &v.to_string()), "result.distance.value")
+        num(
+            &call("navigation.geodesic.haversine", &v.to_string()),
+            "result.distance.value",
+        )
     };
-    let pts = [(40.6413, -73.7781), (51.47, -0.4543), (-33.9, 151.2), (0.0, 0.0), (89.0, 10.0), (-60.0, -170.0), (12.5, 179.9)];
+    let pts = [
+        (40.6413, -73.7781),
+        (51.47, -0.4543),
+        (-33.9, 151.2),
+        (0.0, 0.0),
+        (89.0, 10.0),
+        (-60.0, -170.0),
+        (12.5, 179.9),
+    ];
     let half = std::f64::consts::PI * 6371.008771;
     for &a in &pts {
         assert_eq!(d(a, a, None), 0.0);
@@ -825,7 +842,10 @@ fn rhumb_tools_match_rhumbsolve() {
     }
     eprintln!("rhumb tools vs RhumbSolve: {ds:e} m, {da:e}°, direct {dp:e} m");
     assert_eq!(n, 2000);
-    assert!(ds <= 1e-6 && da <= 1e-9 && dp <= 1e-6, "{ds:e} m, {da:e}°, {dp:e} m");
+    assert!(
+        ds <= 1e-6 && da <= 1e-9 && dp <= 1e-6,
+        "{ds:e} m, {da:e}°, {dp:e} m"
+    );
 }
 
 #[test]
@@ -835,11 +855,18 @@ fn rhumb_invariants() {
     // on the same line (the course from there to the end is unchanged).
     let mut seed: u64 = 17;
     let mut rnd = || {
-        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        seed = seed
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
         (seed >> 11) as f64 / (1u64 << 53) as f64
     };
     for _ in 0..300 {
-        let (a, b, c, d) = (rnd() * 160.0 - 80.0, rnd() * 360.0 - 180.0, rnd() * 160.0 - 80.0, rnd() * 360.0 - 180.0);
+        let (a, b, c, d) = (
+            rnd() * 160.0 - 80.0,
+            rnd() * 360.0 - 180.0,
+            rnd() * 160.0 - 80.0,
+            rnd() * 360.0 - 180.0,
+        );
         let inv = |a: f64, b: f64, c: f64, d: f64| {
             call(
                 "navigation.rhumb.inverse",
@@ -847,7 +874,10 @@ fn rhumb_invariants() {
             )
         };
         let f = inv(a, b, c, d);
-        let (s, course) = (num(&f, "result.distance.value"), num(&f, "result.course.value"));
+        let (s, course) = (
+            num(&f, "result.distance.value"),
+            num(&f, "result.course.value"),
+        );
         assert!(s >= num(&f, "result.geodesic_distance.value") - 1e-6);
         let r = inv(c, d, a, b);
         assert!((num(&r, "result.distance.value") - s).abs() < 1e-6);
@@ -856,8 +886,16 @@ fn rhumb_invariants() {
             "navigation.rhumb.direct",
             &serde_json::json!({"lat1": a, "lon1": b, "course": course, "distance": format!("{} m", s / 2.0)}).to_string(),
         );
-        let rest = inv(num(&mid, "result.lat2.value"), num(&mid, "result.lon2.value"), c, d);
-        assert!(adiff(num(&rest, "result.course.value"), course) < 1e-8, "{rest}");
+        let rest = inv(
+            num(&mid, "result.lat2.value"),
+            num(&mid, "result.lon2.value"),
+            c,
+            d,
+        );
+        assert!(
+            adiff(num(&rest, "result.course.value"), course) < 1e-8,
+            "{rest}"
+        );
         assert!((num(&rest, "result.distance.value") - s / 2.0).abs() < 1e-5);
     }
 }
@@ -870,13 +908,21 @@ fn cross_track_invariants() {
     // lies between the ends.
     let mut seed: u64 = 41;
     let mut rnd = || {
-        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        seed = seed
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
         (seed >> 11) as f64 / (1u64 << 53) as f64
     };
     for _ in 0..200 {
         let (a1, o1) = (rnd() * 140.0 - 70.0, rnd() * 360.0 - 180.0);
-        let (a2, o2) = ((a1 + rnd() * 20.0 - 10.0).clamp(-85.0, 85.0), o1 + rnd() * 20.0 - 10.0);
-        let (lat, lon) = ((a1 + rnd() * 24.0 - 12.0).clamp(-88.0, 88.0), o1 + rnd() * 24.0 - 12.0);
+        let (a2, o2) = (
+            (a1 + rnd() * 20.0 - 10.0).clamp(-85.0, 85.0),
+            o1 + rnd() * 20.0 - 10.0,
+        );
+        let (lat, lon) = (
+            (a1 + rnd() * 24.0 - 12.0).clamp(-88.0, 88.0),
+            o1 + rnd() * 24.0 - 12.0,
+        );
         let xt = |lat: f64, lon: f64| {
             call(
                 "navigation.route.cross-track",
@@ -890,11 +936,27 @@ fn cross_track_invariants() {
             num(&r, "result.along_track.value"),
             num(&r, "result.segment.value"),
         );
-        assert_eq!(r["result"]["within"], if (0.0..=seg).contains(&along) { "yes" } else { "no" });
+        assert_eq!(
+            r["result"]["within"],
+            if (0.0..=seg).contains(&along) {
+                "yes"
+            } else {
+                "no"
+            }
+        );
         // The foot point is on the line: no cross-track distance, same along-track.
-        let foot = xt(num(&r, "result.foot_lat.value"), num(&r, "result.foot_lon.value"));
-        assert!(num(&foot, "result.cross_track.value").abs() < 1e-3, "{foot}");
-        assert!((num(&foot, "result.along_track.value") - along).abs() < 1e-3, "{foot}");
+        let foot = xt(
+            num(&r, "result.foot_lat.value"),
+            num(&r, "result.foot_lon.value"),
+        );
+        assert!(
+            num(&foot, "result.cross_track.value").abs() < 1e-3,
+            "{foot}"
+        );
+        assert!(
+            (num(&foot, "result.along_track.value") - along).abs() < 1e-3,
+            "{foot}"
+        );
         // Both ends are on the line, at 0 and the segment length.
         for (la, lo, want) in [(a1, o1, 0.0), (a2, o2, seg)] {
             let e = xt(la, lo);
@@ -911,35 +973,59 @@ fn time_speed_distance_invariants() {
     // ETA is the local ETA less the UTC offset.
     let mut seed: u64 = 53;
     let mut rnd = || {
-        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        seed = seed
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
         (seed >> 11) as f64 / (1u64 << 53) as f64
     };
-    let tsd = |input: serde_json::Value| call("navigation.route.time-speed-distance", &input.to_string());
+    let tsd =
+        |input: serde_json::Value| call("navigation.route.time-speed-distance", &input.to_string());
     for _ in 0..200 {
         let (speed, hours) = (0.5 + rnd() * 600.0, 0.05 + rnd() * 20.0);
         let distance = speed * hours;
         // The same leg in nautical and statute units gives the same distance.
-        let a = tsd(serde_json::json!({"speed": format!("{speed} kt"), "time": format!("{hours} h"),
-                                       "options": {"outputUnits": {"distance": "NM"}}}));
-        let b = tsd(serde_json::json!({"speed": format!("{} mi/h", speed * 1.150_779_448_023_074_2), "time": format!("{} min", hours * 60.0),
-                                       "options": {"outputUnits": {"distance": "NM"}}}));
-        let (da, db) = (num(&a, "result.distance.value"), num(&b, "result.distance.value"));
+        let a = tsd(
+            serde_json::json!({"speed": format!("{speed} kt"), "time": format!("{hours} h"),
+                                       "options": {"outputUnits": {"distance": "NM"}}}),
+        );
+        let b = tsd(
+            serde_json::json!({"speed": format!("{} mi/h", speed * 1.150_779_448_023_074_2), "time": format!("{} min", hours * 60.0),
+                                       "options": {"outputUnits": {"distance": "NM"}}}),
+        );
+        let (da, db) = (
+            num(&a, "result.distance.value"),
+            num(&b, "result.distance.value"),
+        );
         assert!((da - distance).abs() < 1e-9 * distance.max(1.0), "{a}");
         assert!((da - db).abs() < 1e-9 * distance.max(1.0), "{a} vs {b}");
         // Solving for speed, then for time, returns what it started from.
-        let s = tsd(serde_json::json!({"distance": format!("{distance} NM"), "time": format!("{hours} h"),
-                                       "options": {"outputUnits": {"speed": "kt"}}}));
-        assert!((num(&s, "result.speed.value") - speed).abs() < 1e-9 * speed, "{s}");
-        let t = tsd(serde_json::json!({"distance": format!("{distance} NM"), "speed": format!("{speed} kt"),
-                                       "options": {"outputUnits": {"time": "h"}}}));
-        assert!((num(&t, "result.time.value") - hours).abs() < 1e-9 * hours, "{t}");
+        let s = tsd(
+            serde_json::json!({"distance": format!("{distance} NM"), "time": format!("{hours} h"),
+                                       "options": {"outputUnits": {"speed": "kt"}}}),
+        );
+        assert!(
+            (num(&s, "result.speed.value") - speed).abs() < 1e-9 * speed,
+            "{s}"
+        );
+        let t = tsd(
+            serde_json::json!({"distance": format!("{distance} NM"), "speed": format!("{speed} kt"),
+                                       "options": {"outputUnits": {"time": "h"}}}),
+        );
+        assert!(
+            (num(&t, "result.time.value") - hours).abs() < 1e-9 * hours,
+            "{t}"
+        );
     }
     // The clock: 14:20 plus 1 h 30 min is 15:50 local, 20:50 Zulu five hours west.
-    let r = tsd(serde_json::json!({"speed": "120 kt", "time": "90 min", "departure": "14:20", "utc_offset": "-5"}));
+    let r = tsd(
+        serde_json::json!({"speed": "120 kt", "time": "90 min", "departure": "14:20", "utc_offset": "-5"}),
+    );
     assert_eq!(r["result"]["eta"], "15:50");
     assert_eq!(r["result"]["eta_utc"], "20:50Z");
     assert_eq!(r["result"]["ete"], "1 h 30 min");
     // Past midnight the ETA wraps, and says so.
-    let late = tsd(serde_json::json!({"speed": "60 kt", "time": "4 h", "departure": "23:30", "utc_offset": "0"}));
+    let late = tsd(
+        serde_json::json!({"speed": "60 kt", "time": "4 h", "departure": "23:30", "utc_offset": "0"}),
+    );
     assert_eq!(late["result"]["eta"], "03:30 (next day)");
 }

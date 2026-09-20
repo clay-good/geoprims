@@ -217,7 +217,9 @@ fn packed(s: &str) -> Option<Result<(f64, f64), String>> {
     // between them; "30 34 14.3 N 1 25 23.9 E" is spaced DMS, not packed.
     let up = s.trim().to_ascii_uppercase();
     let (lat_part, lon_part) = up.split_at(up.find(['N', 'S'])?);
-    if lat_part.trim().contains(char::is_whitespace) || lon_part[1..].trim().contains(char::is_whitespace) {
+    if lat_part.trim().contains(char::is_whitespace)
+        || lon_part[1..].trim().contains(char::is_whitespace)
+    {
         return None;
     }
     let t: String = s

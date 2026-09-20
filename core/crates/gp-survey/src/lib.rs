@@ -989,7 +989,12 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::UnitMismatch],
-    warnings: &["AMBIGUOUS_INPUT", "LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &[
+        "AMBIGUOUS_INPUT",
+        "LEGACY_UNIT",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
     model: "T = R·tan(Δ/2), L = R·Δ, C = 2R·sin(Δ/2), E = R(sec(Δ/2) − 1), M = R(1 − cos(Δ/2)); D(arc) = 5,729.578/R ft, sin(D(chord)/2) = 50/R ft; PT station = PC + L along the arc",
     accuracy: "Exact; two given elements other than R and Δ are solved by bisection to 1e-15 relative",
     references: &[GHILANI],
@@ -1033,7 +1038,10 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .filter(|n| ctx.is_set(n))
         .collect();
     // R and each degree of curve fix the same element, the radius.
-    let radii = given.iter().filter(|n| matches!(**n, "radius" | "degree" | "degree_chord")).count();
+    let radii = given
+        .iter()
+        .filter(|n| matches!(**n, "radius" | "degree" | "degree_chord"))
+        .count();
     if given.len() != 2 || radii > 1 {
         return Err(ToolError::invalid(
             "/radius",
@@ -1041,7 +1049,10 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let mut lens: Vec<(&str, Q)> = Vec::new();
-    for n in given.iter().filter(|n| !matches!(**n, "delta" | "degree" | "degree_chord")) {
+    for n in given
+        .iter()
+        .filter(|n| !matches!(**n, "delta" | "degree" | "degree_chord"))
+    {
         lens.push((*n, ctx.req_quantity(n)?));
     }
     let u = if lens.is_empty() {
@@ -1135,7 +1146,8 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
             let n = 720;
             let edge = 1e-7;
             let at = |i: usize| {
-                (core::f64::consts::FRAC_PI_2 * i as f64 / n as f64).clamp(edge, core::f64::consts::FRAC_PI_2 - edge)
+                (core::f64::consts::FRAC_PI_2 * i as f64 / n as f64)
+                    .clamp(edge, core::f64::consts::FRAC_PI_2 - edge)
             };
             let mut roots = Vec::new();
             for i in 0..n {

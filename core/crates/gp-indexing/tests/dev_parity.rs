@@ -25,7 +25,9 @@ fn f(s: &str) -> f64 {
 }
 
 fn deg(r: &Value, k: &str) -> f64 {
-    r["result"][k]["value"].as_f64().unwrap_or_else(|| panic!("{k} missing in {r}"))
+    r["result"][k]["value"]
+        .as_f64()
+        .unwrap_or_else(|| panic!("{k} missing in {r}"))
 }
 
 #[test]
@@ -46,7 +48,12 @@ fn geohash_matches_pygeohash() {
             bad.push(format!("{} -> {}", c.join(","), r["result"]));
         }
     }
-    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} mismatches:\n{}",
+        bad.len(),
+        bad[..bad.len().min(10)].join("\n")
+    );
 }
 
 #[test]
@@ -73,7 +80,12 @@ fn tiles_match_mercantile() {
             bad.push(format!("bounds {} -> {}", c.join(","), b["result"]));
         }
     }
-    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} mismatches:\n{}",
+        bad.len(),
+        bad[..bad.len().min(10)].join("\n")
+    );
 }
 
 #[test]
@@ -82,7 +94,10 @@ fn grid_disk_matches_h3_c() {
     assert_eq!(rows.len(), 250);
     let mut bad = Vec::new();
     for c in &rows {
-        let r = call("indexing.h3.grid-disk", &json!({"cell": c[0], "k": f(&c[1])}));
+        let r = call(
+            "indexing.h3.grid-disk",
+            &json!({"cell": c[0], "k": f(&c[1])}),
+        );
         let got: Vec<&str> = r["result"]["cells"]
             .as_array()
             .unwrap_or_else(|| panic!("{r}"))
@@ -93,11 +108,25 @@ fn grid_disk_matches_h3_c() {
         let mut sorted = got.clone();
         sorted.sort_unstable();
         want.sort_unstable();
-        if sorted != want || got[0] != c[0] || r["result"]["count"].as_f64() != Some(want.len() as f64) {
-            bad.push(format!("{} k={}: {} cells, want {}", c[0], c[1], got.len(), want.len()));
+        if sorted != want
+            || got[0] != c[0]
+            || r["result"]["count"].as_f64() != Some(want.len() as f64)
+        {
+            bad.push(format!(
+                "{} k={}: {} cells, want {}",
+                c[0],
+                c[1],
+                got.len(),
+                want.len()
+            ));
         }
     }
-    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} mismatches:\n{}",
+        bad.len(),
+        bad[..bad.len().min(10)].join("\n")
+    );
 }
 
 #[test]
@@ -113,7 +142,12 @@ fn geohash_decode_matches_pygeohash() {
             bad.push(format!("{} -> {}", c[3], r["result"]));
         }
     }
-    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} mismatches:\n{}",
+        bad.len(),
+        bad[..bad.len().min(10)].join("\n")
+    );
 }
 
 #[test]
@@ -130,7 +164,12 @@ fn geohash_neighbors_match_pygeohash() {
             }
         }
     }
-    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad[..bad.len().min(10)].join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} mismatches:\n{}",
+        bad.len(),
+        bad[..bad.len().min(10)].join("\n")
+    );
 }
 
 #[test]
@@ -146,7 +185,11 @@ fn ground_resolution_matches_mercantile_tile_widths() {
             &json!({"lat": lat, "zoom": f(&c[2]), "tile_size": "256"}),
         );
         let got = deg(&r, "resolution");
-        assert!((got / want - 1.0).abs() < 1e-9, "{}: {got} vs {want}", c.join(","));
+        assert!(
+            (got / want - 1.0).abs() < 1e-9,
+            "{}: {got} vs {want}",
+            c.join(",")
+        );
     }
 }
 
@@ -154,7 +197,10 @@ fn ground_resolution_matches_mercantile_tile_widths() {
 fn resolution_table_matches_h3_c() {
     let rows = rows("h3_res_diff.csv");
     assert_eq!(rows.len(), 16);
-    let r = call("indexing.h3.resolution-chooser", &json!({"target_area": "1 km2"}));
+    let r = call(
+        "indexing.h3.resolution-chooser",
+        &json!({"target_area": "1 km2"}),
+    );
     let table = r["result"]["table"].as_array().unwrap();
     for (row, c) in table.iter().zip(&rows) {
         let area = row["area"]["value"].as_f64().unwrap();
@@ -162,6 +208,11 @@ fn resolution_table_matches_h3_c() {
         assert!((area / f(&c[1]) - 1.0).abs() < 1e-12, "area r{}", c[0]);
         // H3 C tabulates the edges rounded to the millimeter or finer.
         assert!((edge - f(&c[2])).abs() <= 5e-7, "edge r{}", c[0]);
-        assert_eq!(row["cells"].as_u64().unwrap().to_string(), c[3], "cells r{}", c[0]);
+        assert_eq!(
+            row["cells"].as_u64().unwrap().to_string(),
+            c[3],
+            "cells r{}",
+            c[0]
+        );
     }
 }

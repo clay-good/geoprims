@@ -463,7 +463,15 @@ fn sun_events_invariants() {
     // noon, sunset, and back), solar noon sits midway between sunrise and
     // sunset to within a minute, and in June the day lengthens with latitude.
     let order = [
-        "astronomical_dawn", "nautical_dawn", "civil_dawn", "sunrise", "solar_noon", "sunset", "civil_dusk", "nautical_dusk", "astronomical_dusk",
+        "astronomical_dawn",
+        "nautical_dawn",
+        "civil_dawn",
+        "sunrise",
+        "solar_noon",
+        "sunset",
+        "civil_dusk",
+        "nautical_dusk",
+        "astronomical_dusk",
     ];
     for (lat, lon, date, off) in [
         (39.7392, -104.9903, "2026-06-21", "-06:00"),
@@ -476,18 +484,32 @@ fn sun_events_invariants() {
             "time.sun.events",
             &serde_json::json!({"lat": lat, "lon": lon, "date": date, "offset": off}).to_string(),
         );
-        let t: Vec<i64> = order.iter().map(|k| ut_minutes(r["result"][k].as_str().unwrap())).collect();
-        assert!(t.windows(2).all(|w| w[0] < w[1]), "{lat}: out of order {:?}", order.iter().zip(&t).collect::<Vec<_>>());
-        assert!(((t[3] + t[5]) - 2 * t[4]).abs() <= 2, "{lat}: noon is not midway");
+        let t: Vec<i64> = order
+            .iter()
+            .map(|k| ut_minutes(r["result"][k].as_str().unwrap()))
+            .collect();
+        assert!(
+            t.windows(2).all(|w| w[0] < w[1]),
+            "{lat}: out of order {:?}",
+            order.iter().zip(&t).collect::<Vec<_>>()
+        );
+        assert!(
+            ((t[3] + t[5]) - 2 * t[4]).abs() <= 2,
+            "{lat}: noon is not midway"
+        );
     }
     let mut prev = 0.0;
     for lat in [-60.0, -30.0, 0.0, 30.0, 50.0, 60.0, 65.0] {
         let r = call(
             "time.sun.events",
-            &serde_json::json!({"lat": lat, "lon": 0.0, "date": "2026-06-21", "offset": "+00:00"}).to_string(),
+            &serde_json::json!({"lat": lat, "lon": 0.0, "date": "2026-06-21", "offset": "+00:00"})
+                .to_string(),
         );
         let d = num(&r, "result.day_minutes");
-        assert!(d > prev, "June day length must grow with latitude ({lat}: {d})");
+        assert!(
+            d > prev,
+            "June day length must grow with latitude ({lat}: {d})"
+        );
         prev = d;
     }
 }
@@ -512,8 +534,14 @@ fn aviation_nights_invariants() {
         let (set, rise) = w("position_lights");
         let (dusk, dawn) = w("logging_night");
         let (c0, c1) = w("passenger_currency");
-        assert!(set < dusk && dawn < rise, "{lat}: logging night outside sunset to sunrise");
-        assert!((c0 - (set + 60)).abs() <= 1 && (c1 - (rise - 60)).abs() <= 1, "{lat}: currency is not 1 h in");
+        assert!(
+            set < dusk && dawn < rise,
+            "{lat}: logging night outside sunset to sunrise"
+        );
+        assert!(
+            (c0 - (set + 60)).abs() <= 1 && (c1 - (rise - 60)).abs() <= 1,
+            "{lat}: currency is not 1 h in"
+        );
         assert_eq!(w("part107_evening").0, set);
         assert!((w("part107_evening").1 - (set + 30)).abs() <= 1);
         assert_eq!(w("part107_morning").1, rise);
@@ -525,11 +553,27 @@ fn aviation_nights_invariants() {
 fn utc_offset_invariants() {
     // UTC to local and back is the identity for fixed offsets and named zones
     // (away from DST gaps), and the local time minus the UTC time is the offset.
-    for zone in ["-05:00", "+05:45", "+13:45", "America/Denver", "Europe/London", "Asia/Kathmandu", "Australia/Lord_Howe", "America/St_Johns"] {
-        for utc in ["2026-01-15T03:07Z", "2026-07-01T23:59Z", "2026-03-08T09:30Z", "2026-11-01T08:30Z", "2026-12-31T23:30Z"] {
+    for zone in [
+        "-05:00",
+        "+05:45",
+        "+13:45",
+        "America/Denver",
+        "Europe/London",
+        "Asia/Kathmandu",
+        "Australia/Lord_Howe",
+        "America/St_Johns",
+    ] {
+        for utc in [
+            "2026-01-15T03:07Z",
+            "2026-07-01T23:59Z",
+            "2026-03-08T09:30Z",
+            "2026-11-01T08:30Z",
+            "2026-12-31T23:30Z",
+        ] {
             let to_local = call(
                 "time.scale.utc-offset",
-                &serde_json::json!({"time": utc, "offset": zone, "direction": "utc-to-local"}).to_string(),
+                &serde_json::json!({"time": utc, "offset": zone, "direction": "utc-to-local"})
+                    .to_string(),
             );
             let local = to_local["result"]["local"].as_str().unwrap();
             let back = call(
@@ -537,15 +581,29 @@ fn utc_offset_invariants() {
                 &serde_json::json!({"time": &local[..16], "offset": zone, "direction": "local-to-utc"}).to_string(),
             );
             // An hour repeated at a fall-back resolves to its first occurrence, so skip those.
-            let ambiguous = back["meta"]["warnings"].as_array().is_some_and(|w| w.iter().any(|x| x["code"] == "AMBIGUOUS_INPUT"));
+            let ambiguous = back["meta"]["warnings"]
+                .as_array()
+                .is_some_and(|w| w.iter().any(|x| x["code"] == "AMBIGUOUS_INPUT"));
             if !ambiguous {
-                assert_eq!(back["result"]["utc"].as_str().unwrap()[..16], utc[..16], "{zone} {utc} -> {local}");
+                assert_eq!(
+                    back["result"]["utc"].as_str().unwrap()[..16],
+                    utc[..16],
+                    "{zone} {utc} -> {local}"
+                );
             }
             let sign = if local.as_bytes()[19] == b'-' { -1 } else { 1 };
-            let off = sign * (local[20..22].parse::<i64>().unwrap() * 60 + local[23..25].parse::<i64>().unwrap());
-            let mins = |s: &str| s[11..13].parse::<i64>().unwrap() * 60 + s[14..16].parse::<i64>().unwrap();
+            let off = sign
+                * (local[20..22].parse::<i64>().unwrap() * 60
+                    + local[23..25].parse::<i64>().unwrap());
+            let mins = |s: &str| {
+                s[11..13].parse::<i64>().unwrap() * 60 + s[14..16].parse::<i64>().unwrap()
+            };
             let day = num(&to_local, "result.day_shift") as i64;
-            assert_eq!(mins(local) - mins(utc) + 1440 * -day, off, "{zone} {utc} -> {local}");
+            assert_eq!(
+                mins(local) - mins(utc) + 1440 * -day,
+                off,
+                "{zone} {utc} -> {local}"
+            );
         }
     }
 }

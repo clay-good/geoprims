@@ -164,7 +164,11 @@ pub fn crossing(lat: f64, lon: f64, noon_jd: f64, altitude: f64, sign: f64) -> S
     // that is not within 0.05° of grazing, and seeds a 20-minute bracket.
     let culmination = |jd: f64, upper: bool| {
         let (d, _) = declination_eot(jd);
-        if upper { 90.0 - (lat - d).abs() } else { (lat + d).abs() - 90.0 }
+        if upper {
+            90.0 - (lat - d).abs()
+        } else {
+            (lat + d).abs() - 90.0
+        }
     };
     let (hi, lo) = (culmination(noon, true), culmination(low, false));
     if hi < altitude - 0.05 {
@@ -177,11 +181,16 @@ pub fn crossing(lat: f64, lon: f64, noon_jd: f64, altitude: f64, sign: f64) -> S
         let (phi, mut t) = (lat * RAD, noon);
         for _ in 0..4 {
             let d = declination_eot(t).0 * RAD;
-            let x = ((sin(altitude * RAD) - sin(phi) * sin(d)) / (cos(phi) * cos(d))).clamp(-1.0, 1.0);
+            let x =
+                ((sin(altitude * RAD) - sin(phi) * sin(d)) / (cos(phi) * cos(d))).clamp(-1.0, 1.0);
             t = noon + sign * acos(x) / RAD * 4.0 / 1440.0;
         }
         let span = 10.0 / 1440.0;
-        let (mut below, mut above) = if sign < 0.0 { (t - span, t + span) } else { (t + span, t - span) };
+        let (mut below, mut above) = if sign < 0.0 {
+            (t - span, t + span)
+        } else {
+            (t + span, t - span)
+        };
         if e(below) < 0.0 && e(above) > 0.0 {
             for _ in 0..16 {
                 let mid = (below + above) / 2.0;
@@ -217,7 +226,10 @@ pub fn crossing(lat: f64, lon: f64, noon_jd: f64, altitude: f64, sign: f64) -> S
 /// The rising and setting crossings of `altitude` around the transit at
 /// `noon_jd` (see [`crossing`]).
 pub fn crossings(lat: f64, lon: f64, noon_jd: f64, altitude: f64) -> Crossing {
-    match (crossing(lat, lon, noon_jd, altitude, -1.0), crossing(lat, lon, noon_jd, altitude, 1.0)) {
+    match (
+        crossing(lat, lon, noon_jd, altitude, -1.0),
+        crossing(lat, lon, noon_jd, altitude, 1.0),
+    ) {
         (Side::At(r), Side::At(s)) => Crossing::Times(r, s),
         (Side::Below, _) | (_, Side::Below) => Crossing::AlwaysBelow,
         _ => Crossing::AlwaysAbove,

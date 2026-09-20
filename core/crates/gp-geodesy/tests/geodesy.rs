@@ -346,26 +346,67 @@ fn utm_invariants() {
 #[test]
 fn parse_regressions_from_the_notation_fixture() {
     // Found by tests/parse_parity.rs (1,500 independently written strings).
-    let parse = |t: &str| call("geodesy.parse.coordinates", &serde_json::json!({"text": t}).to_string());
+    let parse = |t: &str| {
+        call(
+            "geodesy.parse.coordinates",
+            &serde_json::json!({"text": t}).to_string(),
+        )
+    };
     let near = |r: &Value, lat: f64, lon: f64| {
-        (num(r, "result.lat.value") - lat).abs() < 1e-9 && (num(r, "result.lon.value") - lon).abs() < 1e-9
+        (num(r, "result.lat.value") - lat).abs() < 1e-9
+            && (num(r, "result.lon.value") - lon).abs() < 1e-9
     };
     // Signed DMS with degree signs and no hemisphere letters: sliced inside the two-byte ° and panicked.
     let r = parse("21°4'34.13\" -139°35'55.91\"");
-    assert!(near(&r, 21.0 + 4.0 / 60.0 + 34.13 / 3600.0, -(139.0 + 35.0 / 60.0 + 55.91 / 3600.0)), "{r}");
+    assert!(
+        near(
+            &r,
+            21.0 + 4.0 / 60.0 + 34.13 / 3600.0,
+            -(139.0 + 35.0 / 60.0 + 55.91 / 3600.0)
+        ),
+        "{r}"
+    );
     let r = parse("21°4′34.13″ -139°35′55.91″");
-    assert!(near(&r, 21.0 + 4.0 / 60.0 + 34.13 / 3600.0, -(139.0 + 35.0 / 60.0 + 55.91 / 3600.0)), "{r}");
+    assert!(
+        near(
+            &r,
+            21.0 + 4.0 / 60.0 + 34.13 / 3600.0,
+            -(139.0 + 35.0 / 60.0 + 55.91 / 3600.0)
+        ),
+        "{r}"
+    );
     // Spaced DMS with a one- or two-digit longitude was read as packed notation (1°25' became 125°).
     let r = parse("30 34 14.3 N 1 25 23.9 E");
-    assert!(near(&r, 30.0 + 34.0 / 60.0 + 14.3 / 3600.0, 1.0 + 25.0 / 60.0 + 23.9 / 3600.0), "{r}");
+    assert!(
+        near(
+            &r,
+            30.0 + 34.0 / 60.0 + 14.3 / 3600.0,
+            1.0 + 25.0 / 60.0 + 23.9 / 3600.0
+        ),
+        "{r}"
+    );
     let r = parse("3 41 7.5 S 151 22 45.1 W");
-    assert!(near(&r, -(3.0 + 41.0 / 60.0 + 7.5 / 3600.0), -(151.0 + 22.0 / 60.0 + 45.1 / 3600.0)), "{r}");
+    assert!(
+        near(
+            &r,
+            -(3.0 + 41.0 / 60.0 + 7.5 / 3600.0),
+            -(151.0 + 22.0 / 60.0 + 45.1 / 3600.0)
+        ),
+        "{r}"
+    );
     // One-digit decimal degrees with a hemisphere letter underflowed the packed check.
     let r = parse("5.12345N 7.54321E");
     assert!(near(&r, 5.12345, 7.54321), "{r}");
     // Packed notation itself still reads.
     let r = parse("402646N0795856W");
-    assert!(near(&r, 40.0 + 26.0 / 60.0 + 46.0 / 3600.0, -(79.0 + 58.0 / 60.0 + 56.0 / 3600.0)), "{r}");
+    assert!(
+        near(
+            &r,
+            40.0 + 26.0 / 60.0 + 46.0 / 3600.0,
+            -(79.0 + 58.0 / 60.0 + 56.0 / 3600.0)
+        ),
+        "{r}"
+    );
 }
 
 #[test]
@@ -373,20 +414,43 @@ fn parse_coordinates_invariants() {
     // Whatever the formatter writes, the parser reads back to the point within
     // the printed rounding; hemisphere letters and signs agree; Unicode primes
     // and ASCII marks agree.
-    let pts = [(40.446111, -79.982222), (-33.8688, 151.2093), (0.000_5, -0.000_5), (89.99, 179.99), (-89.99, -179.99), (7.5, 5.25)];
+    let pts = [
+        (40.446111, -79.982222),
+        (-33.8688, 151.2093),
+        (0.000_5, -0.000_5),
+        (89.99, 179.99),
+        (-89.99, -179.99),
+        (7.5, 5.25),
+    ];
     for (lat, lon) in pts {
-        for (style, decimals, tol) in [("dms", 3, 0.001 / 3600.0), ("ddm", 4, 0.0001 / 60.0), ("dd", 7, 1e-7)] {
+        for (style, decimals, tol) in [
+            ("dms", 3, 0.001 / 3600.0),
+            ("ddm", 4, 0.0001 / 60.0),
+            ("dd", 7, 1e-7),
+        ] {
             for signs in ["letters", "signed"] {
                 let f = call(
                     "geodesy.parse.format",
                     &serde_json::json!({"lat": lat, "lon": lon, "style": style, "decimals": decimals, "signs": signs}).to_string(),
                 );
                 let text = f["result"]["formatted"].as_str().unwrap().to_owned();
-                let p = call("geodesy.parse.coordinates", &serde_json::json!({"text": text}).to_string());
-                assert!((num(&p, "result.lat.value") - lat).abs() <= tol * 0.51, "{text}: {p}");
-                assert!((num(&p, "result.lon.value") - lon).abs() <= tol * 0.51, "{text}: {p}");
+                let p = call(
+                    "geodesy.parse.coordinates",
+                    &serde_json::json!({"text": text}).to_string(),
+                );
+                assert!(
+                    (num(&p, "result.lat.value") - lat).abs() <= tol * 0.51,
+                    "{text}: {p}"
+                );
+                assert!(
+                    (num(&p, "result.lon.value") - lon).abs() <= tol * 0.51,
+                    "{text}: {p}"
+                );
                 let unicode = text.replace('\'', "′").replace('"', "″");
-                let u = call("geodesy.parse.coordinates", &serde_json::json!({"text": unicode}).to_string());
+                let u = call(
+                    "geodesy.parse.coordinates",
+                    &serde_json::json!({"text": unicode}).to_string(),
+                );
                 assert_eq!(u["result"]["lat"], p["result"]["lat"], "{unicode}");
                 assert_eq!(u["result"]["lon"], p["result"]["lon"], "{unicode}");
             }

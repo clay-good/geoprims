@@ -1,12 +1,13 @@
 // docs/launch/hero-tools.md must match the build: every tool id exists, a
 // row's Stable box is checked exactly when all of its tools are stable, and its
 // "Shows its work" box exactly when all of them show their work, as a
-// formula trace or, for a decoder, as its decoded groups.
+// formula trace, a decoder's coded groups, or a list of rows the card tables.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../packages/runtime/src/node.mjs';
+import { rowTables } from '../../apps/web/src/lib/rows.js';
 
 const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -19,8 +20,9 @@ async function showWork() {
     const ex = t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
     const input = { ...ex.input, options: { ...(ex.input.options ?? {}), explain: true } };
     const r = JSON.parse(await host.invoke(t.id, JSON.stringify(input)));
-    // A decoder's work is its decoded groups, not a formula trace.
-    if (r.ok && (r.trace?.length || r.result?.groups?.length)) ids.add(t.id);
+    // Three shapes count, because three shapes are shown: a formula trace, a
+    // decoder's coded groups, and a list of rows the answer card tables.
+    if (r.ok && (r.trace?.length || r.result?.groups?.length || rowTables(r).length)) ids.add(t.id);
   }
   return ids;
 }

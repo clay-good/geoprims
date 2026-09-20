@@ -908,6 +908,28 @@ fn run_vlos(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let dlos = 0.3 * gv;
     let vlos = dlos.min(alos);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Where you can still see the aircraft",
+            "ALOS from the characteristic dimension, per the EASA procedure",
+            format!("{} m across", n(cd, 2)),
+            format!("{} m", n(alos, 0)),
+        );
+        ctx.step(
+            "Where the air is still clear enough",
+            "DLOS = 0.3 × ground visibility",
+            format!("0.3 × {} m", n(gv, 0)),
+            format!("{} m", n(dlos, 0)),
+        );
+        ctx.step(
+            "Visual line of sight",
+            "VLOS = the smaller of the two",
+            format!("the smaller of {} m and {} m", n(alos, 0), n(dlos, 0)),
+            format!("{} m", n(vlos, 0)),
+        );
+    }
     let m = |v: f64| q(v, QT::Distance, "m");
     let mut o = vec![("alos", ctx.out("alos", m(alos)))];
     o.push(("dlos", ctx.out("dlos", m(dlos))));

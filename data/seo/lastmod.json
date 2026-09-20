@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "755c05a11c5c712e",
+    "hash": "ef8c3dbcf04ef0e7",
     "lastmod": "2026-09-20"
   },
   "/agents/": {
@@ -20,11 +20,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "49f3053865ae66bf",
+    "hash": "127ec1e1efe1b9a2",
     "lastmod": "2026-09-20"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "48800ced07f097ed",
+    "hash": "956d41b45107e433",
     "lastmod": "2026-09-20"
   },
   "/aviation/atmosphere/": {
@@ -32,7 +32,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "5e09f9b8b0e0b75a",
+    "hash": "a92d6075f6defc82",
     "lastmod": "2026-09-20"
   },
   "/aviation/ifr/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/loading/weight-balance/": {
-    "hash": "e7e0e19c8f00d785",
+    "hash": "5d2ab5889d85d67f",
     "lastmod": "2026-09-20"
   },
   "/aviation/performance/": {
@@ -52,11 +52,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/top-of-descent/": {
-    "hash": "5f0d0885e9fbdd0c",
+    "hash": "c3d624ab7e758986",
     "lastmod": "2026-09-20"
   },
   "/aviation/performance/vdp/": {
-    "hash": "a79100a6b7d4b203",
+    "hash": "67fab675fbb73900",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/": {
@@ -64,15 +64,15 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/weather/fb-winds-decode/": {
-    "hash": "1421bf84fb12ce94",
+    "hash": "27870db259af2ca1",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/metar-decode/": {
-    "hash": "ae80a68b57249790",
+    "hash": "da725cf729c748b0",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/taf-decode/": {
-    "hash": "4abb491e2cefe20f",
+    "hash": "44c6e5577445a616",
     "lastmod": "2026-09-20"
   },
   "/aviation/wind/": {
@@ -80,11 +80,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "1771bbc161c08ca4",
+    "hash": "f7471c60e22fd6c7",
     "lastmod": "2026-09-20"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "b971695451e25bfc",
+    "hash": "19349364cdf9ba67",
     "lastmod": "2026-09-20"
   },
   "/changelog/": {
@@ -112,11 +112,11 @@
     "lastmod": "2026-09-19"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
-    "hash": "9321a1ff2a88d6f7",
+    "hash": "f0dbb258dd2b9b5f",
     "lastmod": "2026-09-20"
   },
   "/drone/photogrammetry/gsd/": {
-    "hash": "2f97c76d15df9989",
+    "hash": "dc3df0c274021bf0",
     "lastmod": "2026-09-20"
   },
   "/drone/power/": {
@@ -124,7 +124,7 @@
     "lastmod": "2026-09-19"
   },
   "/drone/power/battery-energy/": {
-    "hash": "278d685a0899fc87",
+    "hash": "6a7bb48d708ced43",
     "lastmod": "2026-09-20"
   },
   "/drone/sensors/": {
@@ -132,7 +132,7 @@
     "lastmod": "2026-09-19"
   },
   "/drone/sensors/vlos/": {
-    "hash": "a31a646fa68d9ad1",
+    "hash": "b7f35f06e69dd43a",
     "lastmod": "2026-09-20"
   },
   "/geodesy/": {
@@ -400,15 +400,15 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "6b8cb2537249aea9",
+    "hash": "dd0399d910ffc114",
     "lastmod": "2026-09-20"
   },
   "/navigation/geodesic/haversine/": {
-    "hash": "727d8fe5603b1472",
+    "hash": "8e59f75e0c7c17e2",
     "lastmod": "2026-09-20"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "2b829dbd64371309",
+    "hash": "048341b1afe24aa9",
     "lastmod": "2026-09-20"
   },
   "/navigation/los/": {
@@ -416,7 +416,7 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/los/horizon/": {
-    "hash": "5165ac7f7232eb8e",
+    "hash": "f0e33dc175203593",
     "lastmod": "2026-09-20"
   },
   "/navigation/rhumb/": {
@@ -424,11 +424,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/rhumb/direct/": {
-    "hash": "74cd2cdfc446ab57",
+    "hash": "875f5d63e2bb0c58",
     "lastmod": "2026-09-20"
   },
   "/navigation/rhumb/inverse/": {
-    "hash": "0d6d28f6e6c008b8",
+    "hash": "7e74394d55315ca6",
     "lastmod": "2026-09-20"
   },
   "/navigation/route/": {
@@ -436,11 +436,11 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/route/cross-track/": {
-    "hash": "b1d6defc0d59b2c4",
+    "hash": "ddb0be6ed62ed2b4",
     "lastmod": "2026-09-20"
   },
   "/navigation/route/time-speed-distance/": {
-    "hash": "7cab824b82e73189",
+    "hash": "c527a5fd44c8e4c7",
     "lastmod": "2026-09-20"
   },
   "/privacy/": {
@@ -632,7 +632,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5c5b6dbc238f2fcc",
+    "hash": "b0f3a9ef14a36db5",
     "lastmod": "2026-09-20"
   }
 }

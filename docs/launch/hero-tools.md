@@ -6,7 +6,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 - **Reviewed:** a signed row in [review-signoffs.md](../review-signoffs.md). Until then, every page says "Not yet independently reviewed."
 - **Usable, mobile, findable:** the 5-second and task tests, the mobile sweep, and the content minimums with an OG image and explainer link. These gates are not built yet, so no tool is checked.
 - **MCP and report:** the both-surfaces gate and the report button. Every stable tool passes both-surfaces, and every tool has the report button.
-- **Shows its work:** the tool records a trace, so the page and `explain: true` both show the formula with this call's values in it; a decoder shows every coded group beside what it says instead. Checked against the build.
+- **Shows its work:** the tool records a trace, so the page and `explain: true` both show the formula with this call's values in it; a decoder shows every coded group beside what it says, and a tool whose answer is a list of rows shows the rows. Checked against the build.
 
 | Audience | Hero tool | Tool id | Stable | Reviewed | Usable / mobile / findable | Shows its work |
 |---|---|---|---|---|---|---|
@@ -17,13 +17,13 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] | [x] |
 | Pilots | The four nights | `time.sun.aviation-nights` | [x] | [ ] | [ ] | [ ] |
 | Pilots | METAR decoder | `aviation.weather.metar-decode` | [x] | [ ] | [ ] | [x] |
-| Pilots | TAF decoder | `aviation.weather.taf-decode` | [x] | [ ] | [ ] | [ ] |
-| Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [x] | [ ] | [ ] | [ ] |
+| Pilots | TAF decoder | `aviation.weather.taf-decode` | [x] | [ ] | [ ] | [x] |
+| Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [x] | [ ] | [ ] | [x] |
 | Pilots | Holding entry | `aviation.ifr.hold-entry` | [ ] | [ ] | [ ] | [ ] |
 | Pilots | Zulu time | `time.scale.utc-offset` | [x] | [ ] | [ ] | [ ] |
 | Pilots | Weight and balance | `aviation.loading.weight-balance` | [x] | [ ] | [ ] | [x] |
 | Pilots | Top of descent | `aviation.performance.top-of-descent` | [x] | [ ] | [ ] | [x] |
-| Pilots | Visual descent point | `aviation.performance.vdp` | [x] | [ ] | [ ] | [ ] |
+| Pilots | Visual descent point | `aviation.performance.vdp` | [x] | [ ] | [ ] | [x] |
 | Drone | GSD | `drone.photogrammetry.gsd` | [x] | [ ] | [ ] | [x] |
 | Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] | [x] |
 | Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [ ] | [ ] | [ ] | [ ] |
@@ -31,7 +31,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Drone | Flight time | `drone.power.endurance` | [ ] | [ ] | [ ] | [x] |
 | Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] | [x] |
 | Drone | Mapping sun window | `time.sun.mapping-window` | [ ] | [ ] | [ ] | [ ] |
-| Drone | VLOS guidance | `drone.sensors.vlos` | [x] | [ ] | [ ] | [ ] |
+| Drone | VLOS guidance | `drone.sensors.vlos` | [x] | [ ] | [ ] | [x] |
 | Drone | Part 107 altitude | `drone.ops.part107-altitude` | [ ] | [ ] | [ ] | [x] |
 | Surveyors | Coordinate converter (DMS ↔ decimal) | `geodesy.parse.coordinates` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | UTM | `geodesy.utm.forward`, `geodesy.utm.inverse` | [x] | [ ] | [ ] | [ ] |
@@ -40,20 +40,20 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Surveyors | Geoid and orthometric height | `geodesy.geoid.geoid-height` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Grid ↔ ground combined factor | `survey.reduction.combined-factor` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Traverse closure | `survey.cogo.traverse-closure` | [x] | [ ] | [ ] | [x] |
-| Surveyors | Deed plotter | `survey.land.deed-plot` | [x] | [ ] | [ ] | [ ] |
+| Surveyors | Deed plotter | `survey.land.deed-plot` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Horizontal curve | `survey.curves.circular-curve` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Vertical curve | `survey.curves.vertical-curve` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [x] | [ ] | [ ] | [x] |
 | Developers | H3 cell | `indexing.h3.lat-lng-to-cell` | [x] | [ ] | [ ] | [ ] |
-| Developers | H3 k-ring | `indexing.h3.grid-disk` | [x] | [ ] | [ ] | [ ] |
+| Developers | H3 k-ring | `indexing.h3.grid-disk` | [x] | [ ] | [ ] | [x] |
 | Developers | Tile and quadkey | `indexing.tile.from-point` | [x] | [ ] | [ ] | [x] |
 | Developers | Tile bounds | `indexing.tile.bounds` | [x] | [ ] | [ ] | [x] |
 | Developers | Geohash | `indexing.geohash.encode` | [x] | [ ] | [ ] | [x] |
-| Developers | Geodesic distance | `navigation.geodesic.inverse` | [x] | [ ] | [ ] | [ ] |
+| Developers | Geodesic distance | `navigation.geodesic.inverse` | [x] | [ ] | [ ] | [x] |
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [x] |
 
-Stable: 36 of 42 rows. Shows its work: 24 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 36 of 42 rows. Shows its work: 31 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 

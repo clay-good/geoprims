@@ -941,6 +941,22 @@ fn run_vdp(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let t = tan(theta.to_radians());
     let dist = (hat - tch) / t;
     let rule = hat / FT / 300.0 * NM;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Height to lose",
+            "h = height above touchdown − threshold crossing height",
+            format!("{} ft − {} ft", n(hat / FT, 0), n(tch / FT, 0)),
+            format!("{} ft", n((hat - tch) / FT, 0)),
+        );
+        ctx.step(
+            "Distance from the threshold",
+            "d = h / tan θ",
+            format!("{} ft / tan {}°", n((hat - tch) / FT, 0), n(theta, 2)),
+            format!("{} NM", n(dist / NM, 2)),
+        );
+    }
     let mut o = vec![
         ("distance", ctx.out("distance", nm_dist(dist))),
         ("rule_hat_300", ctx.out("rule_hat_300", nm_dist(rule))),

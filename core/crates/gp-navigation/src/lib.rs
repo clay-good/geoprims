@@ -266,6 +266,36 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let p = two_points(ctx)?;
     let (e, g) = setup(ctx)?;
     let (s12, az1, az2, m12, big_m12, big_m21, s_12, a12) = karney(ctx, &g, p);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        // Karney's method solves the auxiliary sphere iteratively; the honest
+        // work is the geometry it settles on, not its iterations.
+        ctx.step(
+            "Arc between the points",
+            "σ12, the angle the geodesic subtends on the auxiliary sphere",
+            format!(
+                "{}°, {}° to {}°, {}°",
+                n(p.0, 6),
+                n(p.1, 6),
+                n(p.2, 6),
+                n(p.3, 6)
+            ),
+            format!("{}°", n(a12, 6)),
+        );
+        ctx.step(
+            "Courses at each end",
+            "α1 leaving and α2 arriving, which differ because the meridians converge",
+            format!("{}° and {}°", n(az1, 4), n(az2, 4)),
+            format!("{}°", n(az1, 4)),
+        );
+        ctx.step(
+            "Distance",
+            "s12 along the ellipsoid, from the arc and the ellipsoid's shape",
+            format!("{}° of arc on {}", n(a12, 6), e.name),
+            format!("{} km", n(s12 / 1000.0, 3)),
+        );
+    }
     ctx.model = Some(format!("Karney (2013) geodesic on {}", e.describe()));
     Ok(Json::obj([
         ("distance", ctx.out("distance", meters(s12))),

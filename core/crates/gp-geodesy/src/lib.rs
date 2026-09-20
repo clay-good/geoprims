@@ -1349,6 +1349,34 @@ fn run_mgrs_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     } else {
         utmups::utm_inverse(wgs.a, wgs.f, d.zone, d.north, d.easting, d.northing)
     };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Square the reference names",
+            "the digits give a square, not a point: half as many digits, ten times the square",
+            s.trim().to_owned(),
+            format!("{} m across", n(d.size, 0)),
+        );
+        ctx.step(
+            "Its south-west corner",
+            "the grid easting and northing the reference resolves to",
+            format!(
+                "zone {}, {} m E, {} m N",
+                d.zone,
+                n(d.easting, 0),
+                n(d.northing, 0)
+            ),
+            format!("{}°, {}°", n(slat, 6), n(wrap_lon(slon), 6)),
+        );
+        ctx.step(
+            "Centre of the square",
+            "the middle of it, which is the position to use",
+            format!("{} m from the corner", n(d.size / 2.0, 1)),
+            // The card prints seven decimals; the last step has to match it.
+            format!("{}°", n(clat, 7)),
+        );
+    }
     Ok(Json::obj([
         ("lat", ctx.out("lat", deg(clat))),
         ("lon", ctx.out("lon", deg(wrap_lon(clon)))),

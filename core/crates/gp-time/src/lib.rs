@@ -1046,6 +1046,35 @@ fn run_utc_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
         offset: Some(-off),
     });
     let unix = ud * 86_400 + us as i64;
+    if ctx.explaining() {
+        // The offset is carried in minutes.
+        let hours = off as f64 / 60.0;
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let zulu = format!("{:02}{:02}Z", (us as i64) / 3600, (us as i64) / 60 % 60);
+        ctx.step(
+            "Offset from UTC",
+            "the zone's offset at that moment, daylight saving included",
+            civil::offset_text(off, false),
+            format!("{} hours", n(hours, 2)),
+        );
+        ctx.step(
+            "The same moment in UTC",
+            if to_utc_dir {
+                "UTC = local time − offset"
+            } else {
+                "local time = UTC + offset"
+            },
+            civil::iso(ld, ls, &civil::offset_text(off, false)),
+            civil::iso(ud, us, "Z"),
+        );
+        ctx.step(
+            "Zulu",
+            "the same time written the way a flight plan wants it",
+            civil::iso(ud, us, "Z"),
+            zulu,
+        );
+    }
     let mut out = vec![
         (
             "zulu",

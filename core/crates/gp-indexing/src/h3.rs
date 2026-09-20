@@ -267,6 +267,28 @@ fn run_to_cell(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if c.is_pentagon() {
         pentagon_note(ctx, "This cell");
     }
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Resolution",
+            "the cell size the resolution picks, 0 coarsest to 15 finest",
+            format!("resolution {}", res as u8),
+            format!("{} km² per cell", n(c.area_km2(), 6)),
+        );
+        ctx.step(
+            "Cell centre",
+            "the centre of the cell the point falls in",
+            format!("{}°, {}°", n(lat, 6), n(lon, 6)),
+            format!("{}°, {}°", n(center.lat(), 6), n(center.lng(), 6)),
+        );
+        ctx.step(
+            "Cell",
+            "the index of that cell, in hexadecimal",
+            format!("resolution {} at {}°, {}°", res as u8, n(lat, 6), n(lon, 6)),
+            hex(c),
+        );
+    }
     Ok(Json::obj([
         ("cell", Json::str(hex(c))),
         ("center_lat", ctx.out("center_lat", deg(center.lat()))),

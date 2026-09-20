@@ -14,7 +14,7 @@ const dist = join(web, 'dist');
 export const PRECACHE_BUDGET = 12_000_000;
 export const VERSION_MARK = '__GP_APP_VERSION__';
 const SKIP_DIRS = new Set(['vectors', 'sitemaps', '.well-known']);
-const SKIP_FILES = new Set(['robots.txt', 'llms.txt', 'AGENTS.md', 'sitemap-index.xml', 'sw.js', '_headers']);
+const SKIP_FILES = new Set(['robots.txt', 'llms.txt', 'AGENTS.md', 'sitemap-index.xml', 'sw.js', '_headers', '_redirects']);
 
 function files(dir, out = []) {
   for (const f of readdirSync(dir)) {

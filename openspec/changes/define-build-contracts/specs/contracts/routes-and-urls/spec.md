@@ -10,6 +10,7 @@ The site SHALL serve exactly these route classes:
 | Class | Route | Indexable | Sitemap |
 |---|---|---|---|
 | Home | `/` | yes | `pages` |
+| Catalog | `/tools/` | yes | `pages` |
 | Domain hub | `/<domain>/` | yes | `<domain>` |
 | Group hub | `/<domain>/<group>/` | yes | `<domain>` |
 | Tool (operation) | `/<domain>/<group>/<operation>/` | yes if stable, or experimental with full content | `<domain>` |
@@ -18,9 +19,9 @@ The site SHALL serve exactly these route classes:
 | Alias slug | `/<domain>/<alias>/` | no (canonical to parent) | none |
 | Explainer | `/learn/<slug>/` | yes | `learn` |
 | Journey | `/journeys/<slug>/` | yes | `learn` |
-| Trust pages | `/sources/`, `/methodology/`, `/verification/<version>/`, `/changelog/`, `/known-issues/`, `/quality/`, `/licenses/`, `/privacy/` | yes | `pages` |
+| Trust pages | `/sources/`, `/methodology/`, `/verification/`, `/verification/<version>/`, `/changelog/`, `/known-issues/`, `/disclaimer/`, `/quality/`, `/licenses/`, `/privacy/` | yes | `pages` |
 | Agents | `/agents/` (setup), `/llms.txt`, `/AGENTS.md`, `/.well-known/mcp.json`, `/catalog/v1.json` | `/agents/` only | `pages` |
-| App | `/settings/`, `/offline/` | no | none |
+| App | `/settings/`, `/offline/`, `/404` | no | none |
 | API | `/api/reports`, `/api/reports/config` | no | none |
 
 Every non-indexable HTML route SHALL carry `rel="canonical"` to its parent (or `noindex` for app routes). The build SHALL fail on any route outside this map.

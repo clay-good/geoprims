@@ -21,7 +21,7 @@
 - [x] 3.1 Define the manifest meta-schema (JSON Schema 2020-12 plus every extension listed in `contracts/manifest-extensions`, closed to unknown `x-` fields); verify it validates a hand-written sample manifest and rejects each missing required field (the core's lint and tools/trust/metaschema.mjs together are the meta-schema: the closed extension set, each extension's shape, and every structural rule. The hand-written sample in core/crates/gp-base/tests/fixtures/sample-manifest.json is pinned byte for byte, and a sweep blanks each of its eleven required fields in turn and fails if any blanked manifest is accepted)
 - [x] 3.2 Implement the Rust tool definition (a static `ToolDef` per tool, per design D5) that emits manifests; verify a sample tool produces a manifest identical to a checked-in snapshot
 - [x] 3.3 Implement the id-pattern, alias-uniqueness, inverse-symmetry, visualization-mapping, and reference checks; verify each fails on a targeted bad fixture
-- [ ] 3.4 Generate `catalog/v1.json` (done: `tools/codegen/catalog.mjs`), TypeScript types, MCP schemas, and search documents from manifests; verify a snapshot test over the sample tool for each output
+- [x] 3.4 Generate `catalog/v1.json`, TypeScript types, MCP schemas, and search documents from manifests; verify a snapshot test over the sample tool for each output (the pinned sample snapshots and full-catalog schema and search-parity checks pass)
 - [x] 3.5 Implement the conversion-graph generator with pair allow-list and `composedOf`; verify that a non-allow-listed pair produces no endpoint
 - [x] 3.6 Emit operation and endpoint counts from the build; verify the counts match the manifests
 

@@ -7,6 +7,7 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadModule } from '../../packages/runtime/src/module.mjs';
+import { buildArtifacts } from './artifacts.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 
@@ -44,7 +45,11 @@ export async function buildCatalog() {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const catalog = await buildCatalog();
+  const artifacts = buildArtifacts(catalog);
   mkdirSync(join(root, 'dist/catalog'), { recursive: true });
   writeFileSync(join(root, 'dist/catalog/v1.json'), JSON.stringify(catalog) + '\n');
+  writeFileSync(join(root, 'dist/catalog/types.d.ts'), artifacts.types);
+  writeFileSync(join(root, 'dist/catalog/mcp-tools.json'), JSON.stringify(artifacts.mcp) + '\n');
+  writeFileSync(join(root, 'dist/catalog/search.json'), JSON.stringify(artifacts.search) + '\n');
   console.log(JSON.stringify(catalog.counts));
 }

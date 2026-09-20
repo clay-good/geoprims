@@ -1,0 +1,79 @@
+{
+  "id": "units.length.sample",
+  "name": "gp_units_length_sample",
+  "title": "Sample",
+  "description": "A sample tool. Model: exact. Accuracy: exact. Same as geoprims_run with id \"units.length.sample\". Planning aid; relay warnings.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "x": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "title": "X",
+        "description": "12 ft",
+        "x-quantity": "length",
+        "x-unit": "ft",
+        "x-help": "12 ft",
+        "x-step": {
+          "small": 1,
+          "large": 10
+        }
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "numberFormat": {
+            "type": "string",
+            "enum": [
+              "decimal-point",
+              "decimal-comma"
+            ],
+            "description": "How to read numbers written as strings. Default decimal-point."
+          },
+          "profile": {
+            "type": "string",
+            "enum": [
+              "si",
+              "aviation",
+              "aviation-hpa",
+              "us-customary",
+              "survey-metric",
+              "survey-us"
+            ],
+            "description": "Unit profile for quantity outputs."
+          },
+          "outputUnits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Unit per output field, overriding the profile."
+          },
+          "explain": {
+            "type": "boolean",
+            "description": "Show the tool's work: each step's formula, the formula with these values in it, and what it came to. Default false."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "x"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "ok"
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+  "units.length.sample": { "x": number | string; "options"?: { "numberFormat"?: "decimal-point" | "decimal-comma"; "profile"?: "si" | "aviation" | "aviation-hpa" | "us-customary" | "survey-metric" | "survey-us"; "outputUnits"?: { [key: string]: string; }; "explain"?: boolean; }; };
+  "units.length.sample": { "y": { "value": number; "unit": string; }; };

@@ -119,7 +119,7 @@ node mcp/server.mjs
 npm run test:js
 ```
 
-The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests), and the catalog step writes `dist/catalog/v1.json`. It fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).
+The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests). From those same Wasm manifests, the catalog step writes `dist/catalog/v1.json`, `types.d.ts`, `mcp-tools.json`, and `search.json`. See [the codegen README](tools/codegen/README.md) for the outputs and their checks. The build fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).
 
 [AGENTS.md](AGENTS.md) holds the working rules for anyone, human or AI, implementing the specs: the three doors (web, MCP, report), how to add a tool, and the non-negotiables.
 

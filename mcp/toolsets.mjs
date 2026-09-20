@@ -16,6 +16,7 @@ export const TOOLSETS = {
 };
 const MAX_PER_TOOLSET = 40;
 const NAME = /^[a-zA-Z0-9_-]{1,64}$/;
+export const DIRECT_OUTPUT_SCHEMA = { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] };
 
 /** gp_ + the id with dots as underscores; over 64 characters, a deterministic hash suffix. */
 export function directName(id) {
@@ -23,6 +24,10 @@ export function directName(id) {
   if (name.length <= 64) return name;
   const hash = createHash('sha256').update(id).digest('hex').slice(0, 8);
   return `${name.slice(0, 55)}_${hash}`;
+}
+
+export function directDescription(t) {
+  return `${t.summary} Model: ${t.model}. Accuracy: ${t.accuracy}. Same as geoprims_run with id "${t.id}". Planning aid; relay warnings.`;
 }
 
 /** Throws with the valid names when any requested toolset is unknown. */
@@ -55,9 +60,9 @@ export function directTools(catalog, names, annotations) {
       id: t.id,
       name,
       title: t.title,
-      description: `${t.summary} Model: ${t.model}. Accuracy: ${t.accuracy}. Same as geoprims_run with id "${t.id}". Planning aid; relay warnings.`,
+      description: directDescription(t),
       inputSchema: t.inputs,
-      outputSchema: { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] },
+      outputSchema: DIRECT_OUTPUT_SCHEMA,
       annotations: { title: t.title, ...annotations },
     };
   });

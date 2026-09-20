@@ -392,6 +392,10 @@ pub static DECLINATION: ToolDef = ToolDef {
             id: "aviation.wind.runway-components",
             reason: "next",
         },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "parent",
+        },
     ],
     sentence: "Magnetic declination is {declination_text}, moving {abs(annual_change)} {if annual_change < 0}west{else}east{/if} each year.{if declination_uncertainty > 0} The model is good to about {declination_uncertainty}.{/if}{warn COMPASS_BLACKOUT_ZONE} A compass is unreliable here.{/warn}{warn COMPASS_CAUTION_ZONE} Compass readings may be poor here.{/warn}",
     limits: &[("batchRows", 10_000)],

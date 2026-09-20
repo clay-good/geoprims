@@ -118,6 +118,10 @@ pub static RHUMB_INVERSE: ToolDef = ToolDef {
             id: "navigation.geodesic.inverse",
             reason: "alternative",
         },
+        Related {
+            id: "navigation.route.legs",
+            reason: "next",
+        },
     ],
     sentence: "The rhumb line runs {distance} on a constant course of {course}, {extra_distance} longer than the shortest route.",
     limits: &[("batchRows", 10_000)],
@@ -248,10 +252,20 @@ pub static RHUMB_DIRECT: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat2"), ("lon", "lon2")],
     }],
-    related: &[Related {
-        id: "navigation.rhumb.inverse",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "navigation.rhumb.inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "navigation.geodesic.direct",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.route.legs",
+            reason: "next",
+        },
+    ],
     sentence: "The destination is {lat2}, {lon2}.{warn RHUMB_REACHES_POLE} The rhumb line stops at the pole with {beyond_pole} left.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_direct,

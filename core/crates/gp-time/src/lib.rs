@@ -948,10 +948,20 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.scale.block-time",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "time.scale.block-time",
+            reason: "next",
+        },
+        Related {
+            id: "time.scale.zone-info",
+            reason: "parent",
+        },
+        Related {
+            id: "time.sun.events",
+            reason: "next",
+        },
+    ],
     sentence: "That is {zulu}.{if day_shift != 0} The UTC date is {date_change}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_utc_offset,

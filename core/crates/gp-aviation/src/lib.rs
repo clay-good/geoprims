@@ -365,6 +365,10 @@ pub static ISA: ToolDef = ToolDef {
             id: "aviation.altimetry.isa-temperature",
             reason: "alternative",
         },
+        Related {
+            id: "aviation.altimetry.pressure-altitude",
+            reason: "next",
+        },
     ],
     sentence: "At {geopotential_altitude} in the standard atmosphere it is {temperature} with pressure {pressure} and density {density}, in the {layer}.",
     limits: &[("batchRows", 10_000)],
@@ -1786,6 +1790,10 @@ pub static HEADING_GROUNDSPEED: ToolDef = ToolDef {
         Related {
             id: "aviation.wind.runway-components",
             reason: "alternative",
+        },
+        Related {
+            id: "aviation.weather.fb-winds-decode",
+            reason: "parent",
         },
     ],
     sentence: "Fly heading {heading} for a groundspeed of {groundspeed}, a wind correction of {abs(wind_correction_angle)} to the {if wind_correction_angle < 0}left{else}right{/if}.",

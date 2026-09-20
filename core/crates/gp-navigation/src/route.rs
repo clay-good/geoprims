@@ -225,10 +225,20 @@ pub static CROSS_TRACK: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "foot_lat"), ("lon", "foot_lon")],
     }],
-    related: &[Related {
-        id: "navigation.geodesic.inverse",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.route.closest-point",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.route.legs",
+            reason: "parent",
+        },
+    ],
     sentence: "The point is {cross_track} off course, {along_track} along it.{warn FOOT_OUTSIDE_SEGMENT} Its closest point is past the end of the segment.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_cross_track,
@@ -658,10 +668,20 @@ pub static TSD: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "navigation.geodesic.inverse",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.route.legs",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.geodesic.haversine",
+            reason: "next",
+        },
+    ],
     sentence: "At {speed}, {distance} takes {ete}.",
     limits: &[("batchRows", 10_000)],
     run: run_tsd,

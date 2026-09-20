@@ -11,10 +11,11 @@ const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
 
 /**
- * How many stable tools were still short when the gate landed. Lower this
- * number as lists are curated; the test fails if it ever needs raising.
+ * How many stable tools are still short of three related tools. Every stable
+ * tool has a curated list now, so this is zero: the gate is a plain floor
+ * again, and any new stable tool has to arrive with its list.
  */
-const SHORT_BASELINE = 68;
+const SHORT_BASELINE = 0;
 
 test('every related list resolves, gives a reason, and agrees about inverses', () => {
   assert.deepEqual(relatedProblems(catalog), []);
@@ -53,4 +54,5 @@ test(`the number of stable tools with fewer than ${MIN_RELATED} related tools on
   if (still.length < SHORT_BASELINE) {
     assert.fail(`only ${still.length} stable tools are short now: lower SHORT_BASELINE to ${still.length}`);
   }
+  assert.deepEqual(still, [], 'a stable tool arrived without a curated list of related tools');
 });

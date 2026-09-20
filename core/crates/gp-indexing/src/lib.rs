@@ -204,10 +204,20 @@ pub static GEOHASH_ENCODE: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.geohash.decode",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.geohash.decode",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.geohash.neighbors",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.plus-code.encode",
+            reason: "alternative",
+        },
+    ],
     sentence: "The geohash is {geohash}, a cell about {cell_width} wide.",
     limits: &[("batchRows", 10_000)],
     run: run_geohash_encode,
@@ -312,6 +322,10 @@ pub static GEOHASH_DECODE: ToolDef = ToolDef {
             id: "indexing.geohash.neighbors",
             reason: "next",
         },
+        Related {
+            id: "indexing.plus-code.decode",
+            reason: "alternative",
+        },
     ],
     sentence: "The cell center is {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
@@ -377,10 +391,20 @@ pub static GEOHASH_NEIGHBORS: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.geohash.decode",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "indexing.geohash.decode",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.geohash.encode",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "alternative",
+        },
+    ],
     sentence: "The north neighbor is {n} and the east neighbor is {e}.",
     limits: &[("batchRows", 10_000)],
     run: run_geohash_neighbors,
@@ -490,10 +514,20 @@ pub static TILE_FROM_POINT: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.tile.bounds",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.tile.bounds",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.tile.ground-resolution",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.geohash.encode",
+            reason: "alternative",
+        },
+    ],
     sentence: "The tile is {tile}, quadkey {quadkey}.",
     limits: &[("batchRows", 10_000)],
     run: run_tile_from_point,
@@ -625,10 +659,20 @@ pub static TILE_BOUNDS: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.tile.from-point",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.tile.from-point",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.tile.ground-resolution",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.geohash.decode",
+            reason: "alternative",
+        },
+    ],
     sentence: "Tile {xyz} spans latitude {south} to {north}.",
     limits: &[("batchRows", 10_000)],
     run: run_tile_bounds,
@@ -786,10 +830,20 @@ pub static GROUND_RESOLUTION: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.tile.from-point",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "indexing.tile.from-point",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.tile.bounds",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.resolution-chooser",
+            reason: "alternative",
+        },
+    ],
     sentence: "Each pixel covers {resolution}, a scale of about 1 to {scale}.",
     limits: &[("batchRows", 10_000)],
     run: run_ground_resolution,
@@ -894,10 +948,20 @@ pub static OLC_ENCODE: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.plus-code.decode",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.plus-code.decode",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.plus-code.shorten",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.geohash.encode",
+            reason: "alternative",
+        },
+    ],
     sentence: "The Plus Code is {code}.",
     limits: &[("batchRows", 10_000)],
     run: run_olc_encode,
@@ -1004,6 +1068,10 @@ pub static OLC_DECODE: ToolDef = ToolDef {
         Related {
             id: "indexing.plus-code.shorten",
             reason: "next",
+        },
+        Related {
+            id: "indexing.geohash.decode",
+            reason: "alternative",
         },
     ],
     sentence: "The code's center is {lat}, {lon}.",
@@ -1116,10 +1184,20 @@ pub static OLC_SHORTEN: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.plus-code.decode",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "indexing.plus-code.decode",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.plus-code.encode",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "The short code is {short_code}.",
     limits: &[("batchRows", 10_000)],
     run: run_olc_shorten,

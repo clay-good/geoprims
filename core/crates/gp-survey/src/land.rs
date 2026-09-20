@@ -1106,6 +1106,10 @@ pub static DEED_PLOT: ToolDef = ToolDef {
             id: "survey.cogo.traverse-closure",
             reason: "alternative",
         },
+        Related {
+            id: "survey.cogo.area-by-coordinates",
+            reason: "next",
+        },
     ],
     sentence: "The deed closes within {misclosure} ({precision}). The area is {acres}, {area_basis}.",
     limits: &[("batchRows", 100)],

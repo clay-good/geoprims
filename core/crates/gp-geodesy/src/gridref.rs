@@ -159,10 +159,20 @@ pub static MAIDENHEAD_FORWARD: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: BBOX,
-    related: &[Related {
-        id: "geodesy.grid-ref.maidenhead-inverse",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.maidenhead-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.grid-ref.gars-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "parent",
+        },
+    ],
     sentence: "The Maidenhead locator is {locator}.",
     limits: &[("batchRows", 10_000)],
     run: run_maidenhead_forward,
@@ -223,10 +233,20 @@ pub static MAIDENHEAD_INVERSE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: BBOX,
-    related: &[Related {
-        id: "geodesy.grid-ref.maidenhead-forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.maidenhead-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.grid-ref.gars-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "The locator's cell is centered at {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_maidenhead_inverse,
@@ -306,6 +326,10 @@ pub static GARS_FORWARD: ToolDef = ToolDef {
             id: "geodesy.grid-ref.georef-forward",
             reason: "alternative",
         },
+        Related {
+            id: "geodesy.grid-ref.maidenhead-forward",
+            reason: "alternative",
+        },
     ],
     sentence: "The GARS reference is {gars}.",
     limits: &[("batchRows", 10_000)],
@@ -349,10 +373,20 @@ pub static GARS_INVERSE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: BBOX,
-    related: &[Related {
-        id: "geodesy.grid-ref.gars-forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.gars-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.grid-ref.georef-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "The GARS cell is centered at {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_gars_inverse,
@@ -441,6 +475,10 @@ pub static GEOREF_FORWARD: ToolDef = ToolDef {
             id: "geodesy.grid-ref.gars-forward",
             reason: "alternative",
         },
+        Related {
+            id: "geodesy.grid-ref.maidenhead-forward",
+            reason: "alternative",
+        },
     ],
     sentence: "The GEOREF is {georef}.",
     limits: &[("batchRows", 10_000)],
@@ -488,10 +526,20 @@ pub static GEOREF_INVERSE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: BBOX,
-    related: &[Related {
-        id: "geodesy.grid-ref.georef-forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.georef-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.grid-ref.gars-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "The GEOREF cell is centered at {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_georef_inverse,
@@ -589,6 +637,10 @@ pub static USNG_FORWARD: ToolDef = ToolDef {
             id: "geodesy.grid-ref.mgrs-forward",
             reason: "alternative",
         },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "alternative",
+        },
     ],
     sentence: "The USNG reference is {usng}.",
     limits: &[("batchRows", 10_000)],
@@ -683,10 +735,20 @@ pub static USNG_INVERSE: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.grid-ref.usng-forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.usng-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "The {square_size} square is centered at {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_usng_inverse,

@@ -188,6 +188,10 @@ pub static PARSE: ToolDef = ToolDef {
             id: "geodesy.utm.forward",
             reason: "next",
         },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "next",
+        },
     ],
     sentence: "That is {lat}, {lon} ({notation}).{warn AMBIGUOUS_INPUT} Check the assumption noted.{/warn}",
     limits: &[("batchRows", 10_000)],
@@ -810,10 +814,20 @@ pub static UTM_INVERSE: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.utm.forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "That is {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_utm_inverse,
@@ -1170,6 +1184,10 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
             id: "geodesy.utm.forward",
             reason: "alternative",
         },
+        Related {
+            id: "geodesy.grid-ref.usng-forward",
+            reason: "alternative",
+        },
     ],
     sentence: "The MGRS reference is {mgrs_spaced}{if square_size > 0}, a {square_size} square{/if}.",
     limits: &[("batchRows", 10_000)],
@@ -1269,10 +1287,20 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
         kind: "bbox",
         map: &[("size", "square_size")],
     }],
-    related: &[Related {
-        id: "geodesy.grid-ref.mgrs-forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.grid-ref.usng-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.utm.inverse",
+            reason: "alternative",
+        },
+    ],
     sentence: "The center of this {square_size} square is {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_mgrs_inverse,

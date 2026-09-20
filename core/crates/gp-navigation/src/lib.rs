@@ -398,10 +398,20 @@ pub static DIRECT: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat2"), ("lon", "lon2")],
     }],
-    related: &[Related {
-        id: "navigation.geodesic.inverse",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "navigation.rhumb.direct",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.waypoints",
+            reason: "next",
+        },
+    ],
     sentence: "The destination is {lat2}, {lon2}, arriving on a course of {azimuth2}.",
     limits: &[("batchRows", 10_000)],
     run: run_direct,
@@ -501,10 +511,20 @@ pub static HAVERSINE: ToolDef = ToolDef {
         kind: "line-geodesic",
         map: &[("distance", "distance")],
     }],
-    related: &[Related {
-        id: "navigation.geodesic.inverse",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.direct",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.route.time-speed-distance",
+            reason: "next",
+        },
+    ],
     limitation: Some(Limitation {
         simplification: "Measures on a sphere, not on the ellipsoid the Earth actually is.",
         instead: "Use the geodesic distance for anything you act on: it is exact on WGS 84, and this tool reports how far the sphere puts it wrong for your own two points.",

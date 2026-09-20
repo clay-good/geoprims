@@ -224,10 +224,20 @@ pub static HORIZON: ToolDef = ToolDef {
         kind: "profile-chart",
         map: &[],
     }],
-    related: &[Related {
-        id: "navigation.los.visibility",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "navigation.los.visibility",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.los.dip",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.los.fresnel",
+            reason: "next",
+        },
+    ],
     sentence: "From that height the visible horizon is {optical} away ({geometric} with no refraction, {radio} for radio).",
     limits: &[("batchRows", 10_000)],
     run: run_horizon,

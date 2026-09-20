@@ -400,10 +400,20 @@ pub static WEIGHT_BALANCE: ToolDef = ToolDef {
         kind: "profile-chart",
         map: &[("value", "cg")],
     }],
-    related: &[Related {
-        id: "aviation.loading.fuel-weight",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.loading.fuel-weight",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.altimetry.density-altitude",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.performance.climb-gradient",
+            reason: "next",
+        },
+    ],
     sentence: "The takeoff weight is {total_weight} with the CG at {cg}.{if landing_cg > 0} After the burn it is {landing_weight} at {landing_cg}.{/if}{warn OUTSIDE_CG_ENVELOPE} A point is outside the envelope.{/warn}",
     limits: &[("batchRows", 1_000)],
     run: run_weight_balance,

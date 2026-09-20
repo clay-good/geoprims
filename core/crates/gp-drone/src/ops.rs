@@ -815,10 +815,20 @@ pub static VLOS: ToolDef = ToolDef {
         kind: "gauge",
         map: &[("value", "vlos")],
     }],
-    related: &[Related {
-        id: "drone.ops.part107-altitude",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "drone.ops.part107-altitude",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.ops.kinetic-energy",
+            reason: "next",
+        },
+    ],
     sentence: "You can keep it in sight to about {vlos}.{if margin < 0} The mission goes {abs(margin)} beyond that.{/if}{if margin >= 0} The mission stays within it.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_vlos,

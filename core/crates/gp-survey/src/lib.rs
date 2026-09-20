@@ -429,10 +429,20 @@ pub static TRAVERSE: ToolDef = ToolDef {
         kind: "polygon",
         map: &[("ring", "adjusted")],
     }],
-    related: &[Related {
-        id: "survey.cogo.area-by-coordinates",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "survey.cogo.area-by-coordinates",
+            reason: "next",
+        },
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "next",
+        },
+        Related {
+            id: "survey.land.deed-plot",
+            reason: "alternative",
+        },
+    ],
     sentence: "The traverse precision is {precision}, with a misclosure of {misclosure} over {total_length}.{warn PERFECT_CLOSURE} The closure is perfect, which is unusual for field data.{/warn}",
     limits: &[("batchRows", 1_000)],
     run: run_traverse,
@@ -669,10 +679,20 @@ pub static AREA: ToolDef = ToolDef {
         kind: "polygon",
         map: &[("ring", "area")],
     }],
-    related: &[Related {
-        id: "survey.cogo.traverse-closure",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.land.deed-plot",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "next",
+        },
+    ],
     sentence: "The area is {acres} ({area}), with a perimeter of {perimeter}.",
     limits: &[("batchRows", 1_000)],
     run: run_area,
@@ -1039,10 +1059,20 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
         kind: "vector-diagram",
         map: &[("radius", "radius"), ("angle", "delta")],
     }],
-    related: &[Related {
-        id: "survey.curves.vertical-curve",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "survey.curves.vertical-curve",
+            reason: "next",
+        },
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "next",
+        },
+        Related {
+            id: "survey.earthwork.average-end-area",
+            reason: "next",
+        },
+    ],
     sentence: "The curve has tangent {tangent}, length {length}, and long chord {chord}.",
     limits: &[("batchRows", 10_000)],
     run: run_circular,
@@ -1405,10 +1435,20 @@ pub static VERTICAL_CURVE: ToolDef = ToolDef {
         kind: "profile-chart",
         map: &[("value", "pvc_elevation")],
     }],
-    related: &[Related {
-        id: "survey.curves.circular-curve",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "survey.curves.circular-curve",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.earthwork.average-end-area",
+            reason: "next",
+        },
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "alternative",
+        },
+    ],
     sentence: "The curve starts at {pvc_station} and ends at {pvt_station}, with K = {k}.{if turning_elevation > -1e12} The {curve_type} point is at {turning_station}, elevation {turning_elevation}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_vertical,
@@ -1947,10 +1987,20 @@ pub static COMBINED_FACTOR: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.cogo.inverse",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.spcs.spcs83-forward",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "next",
+        },
+    ],
     sentence: "The combined factor is {combined_factor}.{if grid_distance > 0} A ground distance of {ground_distance} is {grid_distance} on the grid.{/if}{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_combined,

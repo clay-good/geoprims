@@ -446,10 +446,20 @@ pub static POSITION: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.sun.events",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "time.sun.events",
+            reason: "next",
+        },
+        Related {
+            id: "time.sun.aviation-nights",
+            reason: "alternative",
+        },
+        Related {
+            id: "time.sun.mapping-window",
+            reason: "next",
+        },
+    ],
     sentence: "The sun is {elevation} up, at azimuth {azimuth}.{warn SUN_BELOW_HORIZON} It is below the horizon.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_position,
@@ -689,10 +699,20 @@ pub static EVENTS: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.sun.aviation-nights",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "time.sun.aviation-nights",
+            reason: "next",
+        },
+        Related {
+            id: "time.sun.position",
+            reason: "next",
+        },
+        Related {
+            id: "time.sun.mapping-window",
+            reason: "next",
+        },
+    ],
     sentence: "Sunrise is {sunrise} and sunset is {sunset}.",
     limits: &[("batchRows", 1_000)],
     run: run_events,
@@ -874,10 +894,20 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.sun.events",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "time.sun.events",
+            reason: "parent",
+        },
+        Related {
+            id: "time.sun.position",
+            reason: "next",
+        },
+        Related {
+            id: "time.scale.utc-offset",
+            reason: "parent",
+        },
+    ],
     sentence: "Night landings for passenger currency count after {currency_from} local.{if landing_state == 1} This landing counts.{/if}{if landing_state == 2} This landing is loggable night but does not count for currency.{/if}{if landing_state == 3} This landing is not at night.{/if}",
     limits: &[("batchRows", 1_000)],
     run: run_nights,

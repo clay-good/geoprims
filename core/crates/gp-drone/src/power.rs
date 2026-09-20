@@ -305,6 +305,10 @@ pub static BATTERY_ENERGY: ToolDef = ToolDef {
             id: "drone.power.hover-power",
             reason: "next",
         },
+        Related {
+            id: "drone.power.rth-budget",
+            reason: "next",
+        },
     ],
     sentence: "The pack holds {energy}, with {usable_energy} usable.{if c_rate > 0} It runs at {c_rate} C.{/if}{warn C_RATE_EXCEEDED} That is above its rating.{/warn}",
     limits: &[("batchRows", 10_000)],

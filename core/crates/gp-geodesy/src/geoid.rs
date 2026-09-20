@@ -149,10 +149,20 @@ pub static GEOID_HEIGHT: ToolDef = ToolDef {
         kind: "point",
         map: &[("value", "geoid_height")],
     }],
-    related: &[Related {
-        id: "geodesy.height.convert",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.height.convert",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "next",
+        },
+    ],
     sentence: "The geoid is {geoid_height} above the ellipsoid here.",
     limits: &[("batchRows", 10_000)],
     run: run_geoid,

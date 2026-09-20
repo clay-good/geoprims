@@ -233,10 +233,20 @@ pub static LAT_LNG_TO_CELL: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.cell-info",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.resolution-chooser",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "next",
+        },
+    ],
     sentence: "The H3 cell is {cell}, about {area}.",
     limits: &[("batchRows", 10_000)],
     slots: &[Slot::new(
@@ -353,10 +363,20 @@ pub static CELL_INFO: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.lat-lng-to-cell",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.lat-lng-to-cell",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.edges",
+            reason: "next",
+        },
+    ],
     sentence: "The cell's center is {lat}, {lon}, at resolution {resolution}.",
     limits: &[("batchRows", 10_000)],
     run: run_cell_info,
@@ -447,10 +467,20 @@ pub static GRID_DISK: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.grid-ring",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.grid-ring",
+            reason: "alternative",
+        },
+        Related {
+            id: "indexing.h3.grid-path",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
     sentence: "The disk of radius {k} holds {count} {plural count \"cell\" \"cells\"}.{warn PENTAGON_DISTORTION} A pentagon is nearby.{/warn}",
     limits: &[("batchRows", 1_000)],
     run: run_grid_disk,
@@ -499,10 +529,20 @@ pub static GRID_RING: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.grid-disk",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "alternative",
+        },
+        Related {
+            id: "indexing.h3.grid-path",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
     sentence: "The ring at k = {k} has {count} {plural count \"cell\" \"cells\"}.",
     limits: &[("batchRows", 1_000)],
     run: run_grid_ring,
@@ -558,10 +598,20 @@ pub static GRID_PATH: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.grid-disk",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.grid-ring",
+            reason: "alternative",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
     sentence: "The cells are {distance} steps apart.",
     limits: &[("batchRows", 1_000)],
     run: run_grid_path,
@@ -632,10 +682,20 @@ pub static PARENT: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.children",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.children",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.compact",
+            reason: "alternative",
+        },
+    ],
     sentence: "The parent is {parent}.",
     limits: &[("batchRows", 10_000)],
     run: run_parent,
@@ -692,10 +752,20 @@ pub static CHILDREN: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.parent",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.parent",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.uncompact",
+            reason: "alternative",
+        },
+    ],
     sentence: "The cell has {count} {plural count \"child\" \"children\"} at that resolution.",
     limits: &[("batchRows", 1_000)],
     run: run_children,
@@ -777,10 +847,20 @@ pub static COMPACT: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.uncompact",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.uncompact",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.polygon-to-cells",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
     sentence: "The set compacts to {count} {plural count \"cell\" \"cells\"}.",
     limits: &[("batchRows", 100)],
     run: run_compact,
@@ -873,10 +953,20 @@ pub static UNCOMPACT: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.compact",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.compact",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.children",
+            reason: "alternative",
+        },
+    ],
     sentence: "The set expands to {count} {plural count \"cell\" \"cells\"}.",
     limits: &[("batchRows", 100)],
     run: run_uncompact,
@@ -969,10 +1059,20 @@ pub static EDGES: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.cell-info",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "alternative",
+        },
+        Related {
+            id: "indexing.h3.lat-lng-to-cell",
+            reason: "parent",
+        },
+    ],
     sentence: "The cell has {edge_count} edges.",
     limits: &[("batchRows", 1_000)],
     run: run_edges,
@@ -1133,10 +1233,20 @@ pub static RESOLUTION_CHOOSER: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "indexing.h3.lat-lng-to-cell",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "indexing.h3.lat-lng-to-cell",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.polygon-to-cells",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
     sentence: "Use resolution {resolution}, averaging {average_area} per cell.",
     limits: &[("batchRows", 1_000)],
     run: run_chooser,
@@ -1317,7 +1427,16 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer { kind: "table-only", map: &[] }],
-    related: &[Related { id: "indexing.h3.compact", reason: "next" }],
+    related: &[Related { id: "indexing.h3.compact", reason: "next" },
+        Related {
+            id: "indexing.h3.resolution-chooser",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
     sentence: "The polygon fills with {count} {plural count \"cell\" \"cells\"} by {containment} containment.",
     limits: &[("batchRows", 10)],
     run: run_polygon_to_cells,

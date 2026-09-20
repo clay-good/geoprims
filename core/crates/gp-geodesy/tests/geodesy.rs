@@ -79,7 +79,17 @@ fn catalog_lint_examples_vectors() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let mut failures = manifest::lint(TOOLS, &taxonomy, &["aviation.wind.runway-components"]);
+    // Tools in other crates that geodesy tools point at; this crate cannot see
+    // them, so they are named here. tools/trust/related.mjs checks the links
+    // themselves against the whole catalog.
+    let mut failures = manifest::lint(
+        TOOLS,
+        &taxonomy,
+        &[
+            "aviation.wind.runway-components",
+            "survey.reduction.combined-factor",
+        ],
+    );
     let codes_reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {
         for w in t.warnings {

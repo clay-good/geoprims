@@ -1399,6 +1399,10 @@ pub static FB_WINDS: ToolDef = ToolDef {
             id: "aviation.weather.metar-decode",
             reason: "alternative",
         },
+        Related {
+            id: "aviation.weather.taf-decode",
+            reason: "alternative",
+        },
     ],
     sentence: "Decoded the winds aloft. Winds are true. Get a current official briefing before flight.",
     limits: &[("batchRows", 1_000)],
@@ -1862,6 +1866,10 @@ pub static TAF: ToolDef = ToolDef {
         Related {
             id: "aviation.wind.runway-components",
             reason: "next",
+        },
+        Related {
+            id: "aviation.weather.fb-winds-decode",
+            reason: "alternative",
         },
     ],
     sentence: "{station} forecast from {valid_from} to {valid_to}, {count} {plural count \"period\" \"periods\"}. Get a current official briefing before flight.",

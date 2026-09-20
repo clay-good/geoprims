@@ -328,6 +328,10 @@ pub static GSD: ToolDef = ToolDef {
             id: "drone.photogrammetry.trigger",
             reason: "next",
         },
+        Related {
+            id: "drone.photogrammetry.image-count",
+            reason: "next",
+        },
     ],
     sentence: "Each pixel covers {gsd} of ground, and one image spans {footprint_across} across track.{warn EQUIVALENT_FOCAL_LENGTH} Check the focal length: it looks like a 35 mm-equivalent value.{/warn}",
     limits: &[("batchRows", 10_000)],
@@ -479,10 +483,20 @@ pub static ALTITUDE_FOR_GSD: ToolDef = ToolDef {
         kind: "gauge",
         map: &[("value", "height")],
     }],
-    related: &[Related {
-        id: "drone.photogrammetry.gsd",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "inverse",
+        },
+        Related {
+            id: "drone.photogrammetry.trigger",
+            reason: "next",
+        },
+        Related {
+            id: "drone.ops.part107-altitude",
+            reason: "next",
+        },
+    ],
     sentence: "Fly at {height} above ground for that GSD.{warn ABOVE_ALTITUDE_CEILING} That is above your altitude ceiling.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_altitude_for_gsd,

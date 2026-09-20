@@ -532,6 +532,10 @@ pub static DESCENT: ToolDef = ToolDef {
             id: "aviation.performance.vdp",
             reason: "next",
         },
+        Related {
+            id: "aviation.performance.glide",
+            reason: "alternative",
+        },
     ],
     sentence: "Start down {distance} out and descend at {vertical_speed}, taking {time}.{if rule_3_to_1 > 0} The 3-to-1 rule says {rule_3_to_1}.{/if}",
     limits: &[("batchRows", 10_000)],
@@ -895,10 +899,20 @@ pub static VDP: ToolDef = ToolDef {
         kind: "profile-chart",
         map: &[("value", "distance")],
     }],
-    related: &[Related {
-        id: "aviation.performance.top-of-descent",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.performance.top-of-descent",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.performance.climb-gradient",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.ifr.hold-entry",
+            reason: "next",
+        },
+    ],
     sentence: "Start down from the MDA {distance} from the threshold.{if vertical_speed > 0} Descend at about {vertical_speed}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_vdp,

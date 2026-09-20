@@ -55,7 +55,9 @@ fn catalog_examples_vectors() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let mut failures = manifest::lint(TOOLS, &taxonomy, &[]);
+    // Tools in other crates that survey tools point at; this crate cannot see
+    // them, so they are named here.
+    let mut failures = manifest::lint(TOOLS, &taxonomy, &["geodesy.spcs.spcs83-forward"]);
     let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {
         failures.extend(

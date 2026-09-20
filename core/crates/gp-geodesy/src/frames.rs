@@ -622,6 +622,10 @@ pub static TO_ECEF: ToolDef = ToolDef {
             id: "geodesy.frame.to-local",
             reason: "next",
         },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "parent",
+        },
     ],
     sentence: "ECEF X {x}, Y {y}, Z {z}.",
     limits: &[("batchRows", 10_000)],
@@ -720,10 +724,20 @@ pub static FROM_ECEF: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.frame.geodetic-to-ecef",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.frame.geodetic-to-ecef",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.frame.to-local",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "Latitude {lat}, longitude {lon}, ellipsoidal height {height}.{warn LONGITUDE_UNDEFINED} The point is on the polar axis, so the longitude is shown as 0.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_from_ecef,
@@ -910,6 +924,10 @@ pub static TO_LOCAL: ToolDef = ToolDef {
             id: "geodesy.frame.geodetic-to-ecef",
             reason: "alternative",
         },
+        Related {
+            id: "geodesy.frame.ecef-to-geodetic",
+            reason: "next",
+        },
     ],
     sentence: "The target is at azimuth {azimuth}, elevation {elevation}, range {range}.{warn AZIMUTH_UNDEFINED} It is straight up or down, so the azimuth is shown as 0.{/warn}",
     limits: &[("batchRows", 10_000)],
@@ -1087,10 +1105,20 @@ pub static FROM_LOCAL: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.frame.to-local",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.frame.to-local",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.frame.ecef-to-geodetic",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.frame.geodetic-to-ecef",
+            reason: "alternative",
+        },
+    ],
     sentence: "The point is at latitude {lat}, longitude {lon}, ellipsoidal height {height}.",
     limits: &[("batchRows", 10_000)],
     run: run_from_local,

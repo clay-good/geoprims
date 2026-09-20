@@ -372,10 +372,20 @@ pub static INVERSE: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.spcs.spcs83-forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.spcs.spcs83-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.utm.inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "The point is at {lat}, {lon} (NAD83).",
     limits: &[("batchRows", 10_000)],
     run: run_inverse,

@@ -181,6 +181,15 @@ button.term:hover { color: var(--accent); }
 /* Where a cited document can be read, or the fact that it is sold. */
 .free-access { color: var(--muted); font-size: 0.9em; }
 
+/* "Send to": where a value came from, and where it can go next. */
+.came-from { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--muted); }
+.facts dd .send-open { inline-size: auto; min-block-size: var(--target); min-inline-size: var(--target); margin: 0 0 0 0.25rem; padding: 0 0.4rem; border: 0; background: none; color: var(--muted); font-size: 1rem; }
+.facts dd .send-open:hover, .facts dd .send-open[aria-expanded='true'] { color: var(--accent); }
+.send-to { grid-column: 1 / -1; margin-block: 0.25rem 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.send-to ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.send-to a { display: block; min-block-size: var(--target); display: flex; align-items: center; font-size: 0.9rem; }
+.send-field { color: var(--muted); margin-inline-start: 0.35em; }
+
 /* Whether this browser holds the release, said plainly in the footer. */
 .chip.offline { display: inline-block; margin-inline-end: 0.6rem; padding: 0.05rem 0.45rem; border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.85em; color: var(--muted); }
 .chip.offline[data-state='ready'] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }

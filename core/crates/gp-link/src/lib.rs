@@ -10,8 +10,9 @@
 //! ```
 //!
 //! The canonical JSON has only the keys `i` (inputs), `u` (unit overrides),
-//! `v` (canvas view), and `e` (pinned epoch), sorted at every level, with
-//! numbers in the core's ECMAScript format. Built as its own `link` module.
+//! `v` (canvas view), `e` (pinned epoch), and `c` (the tool a chained value
+//! came from), sorted at every level, with numbers in the core's ECMAScript
+//! format. Built as its own `link` module.
 
 pub mod deflate;
 
@@ -98,7 +99,7 @@ fn check_state(state: &Value) -> Result<(), ToolError> {
     let Value::Object(m) = state else {
         return Err(ToolError::invalid(
             "/state",
-            "The state must be an object with keys i, u, v, e.",
+            "The state must be an object with keys i, u, v, e, c.",
         ));
     };
     for (k, v) in m {
@@ -122,6 +123,23 @@ fn check_state(state: &Value) -> Result<(), ToolError> {
                     }
                 }
             }
+            // The chain breadcrumb: a tool id, so a link cannot carry a
+            // sentence of someone else's text into the page.
+            "c" => {
+                let ok = v.as_str().is_some_and(|id| {
+                    id.len() <= 64
+                        && id.split('.').count() == 3
+                        && id.split('.').all(|part| {
+                            !part.is_empty()
+                                && part.bytes().all(|b| {
+                                    b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-'
+                                })
+                        })
+                });
+                if !ok {
+                    return Err(ToolError::invalid(&at, "c must be a tool id."));
+                }
+            }
             "v" if !v.is_object() => return Err(ToolError::invalid(&at, "v must be an object.")),
             "e" if !(v.is_string() || v.is_number()) => {
                 return Err(ToolError::invalid(
@@ -133,7 +151,7 @@ fn check_state(state: &Value) -> Result<(), ToolError> {
             _ => {
                 return Err(ToolError::invalid(
                     &at,
-                    format!("{k} is not a fragment key. Keys: i, u, v, e."),
+                    format!("{k} is not a fragment key. Keys: i, u, v, e, c."),
                 ));
             }
         }
@@ -298,6 +316,28 @@ mod tests {
         assert!(unbase64url("-_9").is_none(), "non-zero trailing bits");
         assert!(unbase64url("a").is_none());
         assert!(unbase64url("ab+c").is_none());
+    }
+
+    /// A chained link carries where the value came from, and nothing else
+    /// (web/app-shell, "Tool chaining").
+    #[test]
+    fn chain_breadcrumb_is_a_tool_id() {
+        let sent = v(&encode(
+            r#"{"state":{"c":"navigation.geodesic.inverse","i":{"course":"64.5 deg"}}}"#,
+        ));
+        let d = v(&decode(sent["result"]["fragment"].as_str().unwrap()));
+        assert_eq!(d["result"]["state"]["c"], "navigation.geodesic.inverse");
+        assert_eq!(d["result"]["state"]["i"]["course"], "64.5 deg");
+        // Anything that is not a tool id is refused, so a link cannot carry
+        // someone else's words onto the page.
+        for bad in [
+            r#"{"state":{"c":"Sent from a friend"}}"#,
+            r#"{"state":{"c":"navigation.geodesic"}}"#,
+            r#"{"state":{"c":"Navigation.Geodesic.Inverse"}}"#,
+            r#"{"state":{"c":42}}"#,
+        ] {
+            assert_eq!(v(&encode(bad))["error"]["field"], "/state/c", "{bad}");
+        }
     }
 
     #[test]

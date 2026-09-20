@@ -10,6 +10,7 @@
 
   import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
+  import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
   let { tool, example, initial, embedded = false } = $props();
@@ -240,7 +241,31 @@
     run();
   }
 
+  let from = $state(null);
   let copiedRow = $state('');
+  let sendOpen = $state('');
+  /** Destination → link, built when a row's "Send to" is opened. */
+  let sendLinks = $state({});
+
+  /**
+   * The tools that can take this value, with the link that opens each of them
+   * with the value already in it (web/app-shell, "Tool chaining").
+   */
+  /** The catalog, fetched once and only when a reader asks to send a value. */
+  let tools = null;
+  const allTools = async () => (tools ??= (await (await fetch('/catalog/v1.json')).json()).tools);
+
+  async function openSend(name, text) {
+    sendOpen = sendOpen === name ? '' : name;
+    if (!sendOpen || sendLinks[name] || !compute) return;
+    const targets = chainTargets(await allTools(), tool, name);
+    const links = [];
+    for (const target of targets) {
+      const enc = await compute.encodeLink(chainState(target, text, tool.id));
+      if (enc?.ok) links.push({ ...target, href: chainHref(target, enc.result.fragment) });
+    }
+    sendLinks = { ...sendLinks, [name]: links };
+  }
   async function copyRow(k, v) {
     await navigator.clipboard.writeText(v);
     copiedRow = k;
@@ -327,6 +352,9 @@
       if (d.ok && d.result.kind === 'state') {
         for (const [k] of fields) values[k] = toText(k, d.result.state.i?.[k]);
         isExample = false;
+        // A "send to" link says which tool the value came from.
+        const id = d.result.state.c;
+        if (id) from = cameFrom(d.result.state, await allTools());
         run();
       } else if (!d.ok) {
         linkNote = d.error.code === 'UNSUPPORTED' ? d.error.message : 'This link could not be read, so the example is shown.';
@@ -341,6 +369,9 @@
 
 <div class="tool-grid">
 <section class="card answer" aria-live="polite" class:stale aria-label="Answer">
+  {#if from}
+    <p class="came-from">From <a href={from.href}>{from.title}</a></p>
+  {/if}
   {#if result?.ok}
     <div class="value" bind:this={answerCard}>{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
     <p class="sentence">{result.summary}</p>
@@ -372,7 +403,23 @@
         {#each facts as [k, v]}
           <div>
             <dt>{tool.outputs.properties[k]?.title ?? k}</dt>
-            <dd class:words={!/\d/.test(v)}><button type="button" class="copy-row" title="Copy this value" onclick={() => copyRow(k, v)}>{v}{#if copiedRow === k}<span class="copied" role="status"> Copied ✓</span>{/if}</button></dd>
+            <dd class:words={!/\d/.test(v)}>
+              <button type="button" class="copy-row" title="Copy this value" onclick={() => copyRow(k, v)}>{v}{#if copiedRow === k}<span class="copied" role="status"> Copied ✓</span>{/if}</button>
+              <button type="button" class="send-open" aria-expanded={sendOpen === k} aria-label={`Send ${tool.outputs.properties[k]?.title ?? k} to another tool`} title="Send this value to another tool" onclick={() => openSend(k, v)}>→</button>
+            </dd>
+            {#if sendOpen === k}
+              <div class="send-to" role="group" aria-label="Send this value to">
+                {#if sendLinks[k]?.length}
+                  <ul>
+                    {#each sendLinks[k] as target}
+                      <li><a href={target.href}>{target.title} <span class="send-field">as {target.fieldTitle.toLowerCase()}</span></a></li>
+                    {/each}
+                  </ul>
+                {:else}
+                  <p class="help">{sendLinks[k] ? 'No other tool takes this kind of value.' : 'Looking…'}</p>
+                {/if}
+              </div>
+            {/if}
           </div>
         {/each}
       </dl>

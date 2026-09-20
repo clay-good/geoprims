@@ -68,6 +68,13 @@ The browser suite separately checks that a long H3 calculation stops within
 in Chromium, Firefox, WebKit, and Node. These are functional checks, not
 performance measurements against profile 1.0.0.
 
+The Node benchmark is available with `npm run bench:node -- --output /tmp/geoprims-node-bench.json`.
+It warms every tool on its primary example, then reports p50 and p95 over 1,000
+invocations. Pass a prior report with `--baseline <path>` to show the p95 change
+and fail when it rises by more than 20%. Reports from different profile versions
+or hosts cannot be compared; new tools have no previous value. There is no published Node release baseline yet;
+local results vary with the machine and do not establish the browser budgets.
+
 ## Changing the profile
 
 A profile change is a version bump, not an edit. Raise `version` in

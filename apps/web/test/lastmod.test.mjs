@@ -17,6 +17,13 @@ test('a rebuilt island bundle does not change a page hash', () => {
   assert.equal(contentHash(rebuilt), contentHash(html));
 });
 
+test('a rebuilt island id does not change a page hash', () => {
+  const html = page('/aviation/altimetry/density-altitude/');
+  assert.match(html, /<astro-island uid="[A-Za-z0-9]+"/, 'the page really does carry an island id');
+  const rebuilt = html.replace(/<astro-island uid="[A-Za-z0-9]+"/g, '<astro-island uid="anotherId"');
+  assert.equal(contentHash(rebuilt), contentHash(html));
+});
+
 test('a rebuilt core does not change a page hash', () => {
   const html = page('/aviation/altimetry/density-altitude/');
   assert.match(html, /buildHash&quot;:\[0,&quot;[0-9a-f]{8,}/, 'the island really does carry the build hash');

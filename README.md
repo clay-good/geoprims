@@ -7,7 +7,7 @@
 
 No ads, no accounts, no tracking, no server-side compute. Inputs never leave the device.
 
-> **Status:** Phase 0 (platform) in progress. No tools are usable yet. The specs are in [OpenSpec](https://github.com/Fission-AI/OpenSpec) format, and the research behind them is in `docs/research/`. See [Progress](#progress) for what is built.
+> **Status:** Phase 0 (platform) is in progress. The local build has working web and MCP calculators, including 170 tool pages; it is not released or deployed. The specs are in [OpenSpec](https://github.com/Fission-AI/OpenSpec) format, and the research behind them is in `docs/research/`. See [Progress](#progress) for what is built.
 
 ## What's specified
 
@@ -101,7 +101,7 @@ openspec validate --all --strict
 
 ## Building it
 
-Requirements: [rustup](https://rustup.rs) (it installs the pinned toolchain from `rust-toolchain.toml`, including the wasm target), binaryen's `wasm-opt` at the version in `tools/toolchain.json`, and Node 22 or newer. The core, runtime, and MCP server have no npm dependencies; only the website (`apps/web`) installs build tools (Astro and Svelte).
+Requirements: [rustup](https://rustup.rs) (it installs the pinned toolchain from `rust-toolchain.toml`, including the wasm target), binaryen's `wasm-opt` at the version in `tools/toolchain.json`, and Node 22 or newer. The core, runtime, and MCP server have no npm dependencies; only the website (`apps/web`) installs build and browser-test tools (Astro, Svelte, and Playwright).
 
 ```bash
 cargo test --manifest-path core/Cargo.toml
@@ -118,6 +118,8 @@ node mcp/server.mjs
 ```bash
 npm run test:js
 ```
+
+The website's build, unit checks, and Chromium cancellation check run with `npm run build --prefix apps/web`, `npm test --prefix apps/web`, and `npm run test:browser --prefix apps/web`. The browser check needs Playwright's Chromium installed; see [apps/web/README.md](apps/web/README.md).
 
 The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests). From those same Wasm manifests, the catalog step writes `dist/catalog/v1.json`, `types.d.ts`, `mcp-tools.json`, and `search.json`. See [the codegen README](tools/codegen/README.md) for the outputs and their checks. The build fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).
 

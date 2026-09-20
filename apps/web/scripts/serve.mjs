@@ -48,5 +48,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const [pattern, headers] of rules) if (matches(pattern, path)) for (const [k, v] of Object.entries(headers)) res.setHeader(k, v);
     res.setHeader('Content-Type', TYPES[extname(file)] ?? 'application/octet-stream');
     res.writeHead(status).end(readFileSync(file));
-  }).listen(port, () => console.log(`serving dist with _headers on http://localhost:${port}`));
+  }).listen(port, function () { console.log(`serving dist with _headers on http://localhost:${this.address().port}`); });
 }

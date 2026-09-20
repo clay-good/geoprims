@@ -20,6 +20,14 @@ npm run build --prefix apps/web
 npm test --prefix apps/web
 ```
 
+The browser regression test also needs Chromium (`npm exec --prefix apps/web -- playwright install chromium`):
+
+```bash
+npm run test:browser --prefix apps/web
+```
+
+It serves the built site with production headers, starts a long H3 polygon calculation, edits the input, and checks that the worker stops within 100 ms and the new answer appears. CI installs Chromium and runs this test after the web build.
+
 The first command runs at the repository root and builds the Wasm modules and catalog into `dist/`. The web build copies them into `public/`.
 
 | Path | What |
@@ -41,7 +49,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/i18n.test.mjs` | No physical writing direction in any stylesheet, and a shared message lives in the catalog rather than being written out twice |
 | `test/compute.test.mjs` | Stale results: an out-of-order reply is dropped, the newest wins, and edits are debounced |
 | `test/worker.test.mjs` | The browser compute worker driven as the page drives it: every message gets exactly one envelope back |
-| `test/compute-cancel.test.mjs` | A stuck calculation cancels within 100 ms, another request survives the worker restart, and elapsed-time updates stop after cancellation |
+| `test/compute-cancel.test.mjs`, `test/browser/cancellation.test.mjs` | A stuck calculation cancels within 100 ms, another request survives the worker restart, and elapsed-time updates stop after cancellation; Chromium checks cancellation during a real H3 calculation and the replacement answer |
 | `src/lib/keyboard.mjs`, `test/keyboard.test.mjs` | Lifting the sticky answer above the on-screen keyboard: what the visual viewport says is covered becomes `--keyboard` on the document, re-read whenever it moves |
 | `test/responsive.test.mjs` | Layouts for every width: nothing declared wider than a 320 px screen, no column that refuses to narrow, wide tables inside a box that scrolls, and the side-by-side layout starting at a tablet |
 | `src/lib/offline.mjs`, `test/offline.test.mjs` | The footer's offline chip: what each service-worker state may honestly claim, and never "Works offline" before the release is cached |
@@ -72,4 +80,4 @@ The first command runs at the repository root and builds the Wasm modules and ca
 
 Generated endpoints (like `/units/speed/kt-to-mph/`) canonicalize to their parent operation. Experimental tools are `noindex` until they have their full content.
 
-Not built yet: the map canvas and animated scenes, offline packs and the pack manager, import and export, docs pages, and Playwright end-to-end suites. `node scripts/serve.mjs` serves the build with its production headers and CSP.
+The map canvas, animated scenes, import and export, and core offline cache are present. Offline packs, the pack manager, and dedicated docs pages remain open. The browser suite currently covers long-calculation cancellation in Chromium; broader cross-browser and mobile checks remain open. `node scripts/serve.mjs` serves the build with its production headers and CSP.

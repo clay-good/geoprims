@@ -8,11 +8,13 @@
     "build": "npm run prepare-assets && astro build && node scripts/links.mjs && node scripts/discovery.mjs && node scripts/routes.mjs && node scripts/headers.mjs && node scripts/pwa.mjs",
     "dev": "npm run prepare-assets && astro dev",
     "preview": "astro preview",
-    "test": "node --test 'test/**/*.test.mjs'"
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "node --test test/browser/*.test.mjs"
   },
   "devDependencies": {
     "@astrojs/svelte": "9.0.1",
     "astro": "7.3.3",
+    "playwright": "1.62.1",
     "svelte": "5.57.0"
   }
 }

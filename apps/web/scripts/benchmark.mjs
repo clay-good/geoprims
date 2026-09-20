@@ -44,13 +44,14 @@ async function main() {
   for (const name of ['module.mjs', 'harden.mjs', 'assets.mjs']) {
     copyFileSync(join(root, 'packages/runtime/src', name), join(benchDir, name));
   }
+  writeFileSync(join(benchDir, 'index.html'), '<!doctype html><html lang="en"><title>geoprims benchmark</title></html>');
   const { server, origin } = serve();
   let browser;
   try {
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     page.setDefaultTimeout(120_000);
-    await page.goto(`${await origin}/offline/`);
+    await page.goto(`${await origin}/${benchPath}/`);
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: profile.cpu.slowdown });
     await page.evaluate(async (path) => {
@@ -62,12 +63,20 @@ async function main() {
         return response.ok ? response.arrayBuffer() : null;
       });
       const modules = new Map();
+      const durations = new Map();
       window.__benchmark = {
+        durations,
         async get(name) {
           if (!modules.has(name)) {
             const bytes = await fetch(`/wasm/${name}.wasm`).then((r) => r.arrayBuffer());
             const start = performance.now();
-            const module = await loadModule(bytes, name, { maxBytes: 50_000_000, assets });
+            const module = await loadModule(bytes, name, {
+              maxBytes: 50_000_000, assets,
+              onInvoke: (id, ms) => {
+                if (!durations.has(id)) durations.set(id, []);
+                durations.get(id).push(ms);
+              },
+            });
             modules.set(name, { module, initMs: performance.now() - start });
           }
           return modules.get(name);
@@ -82,14 +91,14 @@ async function main() {
         const { module, initMs } = await window.__benchmark.get(moduleName);
         const invoke = () => module.invoke(id, input);
         for (let i = 0; i < warmup; i++) await invoke();
-        const times = [];
+        window.__benchmark.durations.set(id, []);
         for (let i = 0; i < samples; i++) {
-          const start = performance.now();
           const result = await invoke();
-          const elapsed = performance.now() - start;
           if (!JSON.parse(result).ok) throw new Error(`${id} returned an error during the benchmark`);
-          times.push(elapsed);
         }
+        const times = window.__benchmark.durations.get(id);
+        if (times.length !== samples) throw new Error(`${id} produced ${times.length} timings for ${samples} calls`);
+        window.__benchmark.durations.delete(id);
         return { times, initMs };
       }, { id: tool.id, moduleName: tool.module, input: JSON.stringify(example.input), warmup: WARMUP, samples: SAMPLES });
       stats.times.sort((a, b) => a - b);
@@ -98,7 +107,7 @@ async function main() {
       if ((index + 1) % 25 === 0) console.error(`measured ${index + 1}/${catalog.tools.length} tools`);
     }
     const report = {
-      profile: profile.version, host: 'chromium-main-thread', cpuSlowdown: profile.cpu.slowdown,
+      profile: profile.version, host: 'chromium-main-thread', measurement: 'synchronous-abi', cpuSlowdown: profile.cpu.slowdown,
       warmup: WARMUP, samples: SAMPLES,
       modules: [...modules].map(([name, initMs]) => ({ name, initMs })), tools,
     };

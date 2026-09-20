@@ -10,7 +10,7 @@ const dec = new TextDecoder();
  * it becomes an INTERNAL error envelope, and the instance is recreated so
  * later calls keep working (compute-core "Trap is contained").
  */
-export async function loadModule(bytes, name, { maxBytes, assets } = {}) {
+export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {}) {
   const compiled = await WebAssembly.compile(bytes);
   let inst = await WebAssembly.instantiate(compiled, {});
 
@@ -51,6 +51,9 @@ export async function loadModule(bytes, name, { maxBytes, assets } = {}) {
   };
   const call = (exportName, id, input) =>
     guarded(id, () => {
+      // The optional benchmark observer times the synchronous ABI call. It
+      // excludes worker messages, async scheduling, and asset downloads.
+      const started = onInvoke && exportName === 'gp_invoke' ? performance.now() : null;
       const [ip, il] = put(id);
       const [xp, xl] = put(input);
       try {
@@ -58,6 +61,7 @@ export async function loadModule(bytes, name, { maxBytes, assets } = {}) {
       } finally {
         inst.exports.gp_free(ip, il);
         inst.exports.gp_free(xp, xl);
+        if (started !== null) onInvoke(id, performance.now() - started);
       }
     });
 

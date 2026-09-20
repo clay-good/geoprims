@@ -33,6 +33,7 @@ export function compare(report, baseline) {
   if (report.profile !== baseline.profile || report.host !== baseline.host) {
     throw new Error('baseline has a different reference profile or host');
   }
+  if (report.measurement !== baseline.measurement) throw new Error('baseline uses a different timing method');
   if (report.cpuSlowdown !== baseline.cpuSlowdown) throw new Error('baseline has a different CPU slowdown');
   if (report.samples < 1000 || baseline.samples < 1000) throw new Error('both reports need at least 1,000 measured calls per tool');
   const previous = new Map(baseline.tools.map((t) => [t.id, t]));
@@ -69,7 +70,7 @@ async function main() {
     const stats = await measure(host.invoke, tool.id, input);
     tools.push({ id: tool.id, ...stats });
   }
-  const report = { profile: profile.version, host: 'node', warmup: WARMUP, samples: SAMPLES, tools };
+  const report = { profile: profile.version, host: 'node', measurement: 'host-invoke', warmup: WARMUP, samples: SAMPLES, tools };
   const baselinePath = option('--baseline');
   const rows = baselinePath ? compare(report, JSON.parse(readFileSync(baselinePath, 'utf8'))) : tools;
   console.log(`Node benchmark: profile ${profile.version}, ${WARMUP} warm-up and ${SAMPLES} measured invocations per tool`);

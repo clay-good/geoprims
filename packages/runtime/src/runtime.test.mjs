@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkJson } from './harden.mjs';
+import { loadModule } from './module.mjs';
 import { nodeHost } from './node.mjs';
 
 const root = new URL('../../..', import.meta.url).pathname;
@@ -35,6 +36,20 @@ test('invoke through Wasm: kt-to-mph pair vector', async () => {
   const r = await run('units.speed.kt-to-mph', '{"value":100}');
   assert.equal(r.result.converted.value, 115.07794480235425);
   assert.equal(r.meta.tool, 'units.speed.kt-to-mph');
+});
+
+test('the optional invocation timer observes the ABI without changing the answer', async () => {
+  const seen = [];
+  const module = await loadModule(readFileSync(join(root, 'dist/wasm/base.wasm')), 'base', {
+    onInvoke: (id, ms) => seen.push({ id, ms }),
+  });
+  const input = '{"value":100}';
+  assert.equal(await module.invoke('units.speed.kt-to-mph', input), await host.invoke('units.speed.kt-to-mph', input));
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0].id, 'units.speed.kt-to-mph');
+  assert.ok(Number.isFinite(seen[0].ms) && seen[0].ms >= 0);
+  await module.invoke('units.speed.kt-to-mph', '{"value":1e400}');
+  assert.equal(seen.length, 1, 'a refused input did not reach the ABI');
 });
 
 test('unknown tool ids', async () => {

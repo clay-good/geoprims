@@ -78,13 +78,19 @@ or hosts cannot be compared; new tools have no previous value. There is no publi
 local results vary with the machine and do not establish the browser budgets.
 
 The browser counterpart is `npm run bench:browser --prefix apps/web -- --output /tmp/geoprims-chromium.json`.
-It runs the same Wasm modules on Chromium's main thread with the profile's 4×
-CPU setting, 50 warm-up calls, and 1,000 timed calls per tool. CDP does not
-throttle a dedicated worker, so timing the site's worker would give a false
-reference-profile result. The report also records cold module initialization
+It runs the same Wasm modules on a blank Chromium page with the profile's 4×
+CPU setting, 50 warm-up calls, and 1,000 timed calls per tool. The timer is
+inside the shared loader around the synchronous Wasm ABI call; it excludes
+worker messages, async scheduling, and asset downloads. CDP does not throttle
+a dedicated worker. The report also records cold module initialization
 after download. CI uploads the table and JSON; a previous-release Chromium
 baseline and per-tool budget declarations are still needed for a release gate.
 Cold module instantiation already has a 150 ms gate in the Chromium benchmark.
+Local 4× runs show some simple calls with p50 near 0.2 ms and p95 above 3 ms;
+the ordered timings include irregular 3 ms stalls in about 9% of repeated
+identical calls. The 2 ms closed-form limit cannot be claimed as passing from
+these local runs. A reference runner or device check must resolve that before
+turning on the per-tool gate.
 
 ## Changing the profile
 

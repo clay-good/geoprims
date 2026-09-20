@@ -32,7 +32,7 @@ To time every primary example under Chromium's 4× CPU slowdown, after building 
 npm run bench:browser --prefix apps/web -- --output /tmp/geoprims-chromium.json
 ```
 
-The benchmark runs the shared Wasm loader on Chromium's page target because CDP does not throttle dedicated workers. It reports 1,000 calls per tool after 50 warm-up calls, module initialization time, and an optional `--baseline <path>` p95 comparison. CI uploads the table and JSON report.
+The benchmark runs the shared Wasm loader on a blank Chromium page because CDP does not throttle dedicated workers. It times the synchronous Wasm ABI call, excluding worker messages and asset downloads, and reports 1,000 calls per tool after 50 warm-up calls, module initialization time, and an optional `--baseline <path>` p95 comparison. CI uploads the table and JSON report.
 
 It serves the built site with production headers, starts a long H3 polygon calculation, edits the input, and checks that the worker stops within 100 ms and the new answer appears. It also compares every live golden vector's exact serialized result in Chromium, Firefox, WebKit, and Node. A network capture checks that sentinel inputs entered on every tool page never reach a request URL, header, or body. Runtime CSP and third-party request checks cover every built route. CI installs all three browsers and runs these tests after the web build.
 

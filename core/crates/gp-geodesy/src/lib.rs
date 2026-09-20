@@ -862,6 +862,28 @@ fn run_utm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/easting"));
     }
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Off the central meridian",
+            "x = easting − 500,000 m, the false easting the grid adds",
+            format!("{} m − 500,000 m", n(e_, 3)),
+            format!("{} m", n(e_ - 500_000.0, 3)),
+        );
+        ctx.step(
+            "Zone's central meridian",
+            "λ₀ = 6° × zone − 183°",
+            format!("6° × {} − 183°", n(z, 0)),
+            format!("{}°", n(6.0 * z - 183.0, 0)),
+        );
+        ctx.step(
+            "Latitude",
+            "φ from the transverse Mercator series, on this ellipsoid",
+            format!("{} m north at zone {}", n(n_, 3), n(z, 0)),
+            format!("{}°", n(lat, 8)),
+        );
+    }
     let g = utmups::utm_forward(ell.a, ell.f, lat, lon, z as u8);
     Ok(Json::obj([
         ("lat", ctx.out("lat", deg(lat))),

@@ -273,6 +273,41 @@ fn run_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         }
     };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "The rule",
+            "14 CFR 107.51(b): 400 ft above the ground",
+            r.citation.to_owned(),
+            format!("{} ft", n(lim, 0)),
+        );
+        match (sh, sd) {
+            (Some(h), Some(d)) if d <= lim => ctx.step(
+                "Within the structure's radius",
+                "max = structure height + 400 ft",
+                format!(
+                    "{} ft + {} ft, at {} ft from it",
+                    n(h, 0),
+                    n(lim, 0),
+                    n(d, 0)
+                ),
+                format!("{} ft", n(max, 0)),
+            ),
+            (Some(_), Some(d)) => ctx.step(
+                "Outside the structure's radius",
+                "beyond 400 ft from the structure the exception does not apply",
+                format!("{} ft from it, more than {} ft", n(d, 0), n(lim, 0)),
+                format!("{} ft", n(max, 0)),
+            ),
+            _ => ctx.step(
+                "No structure given",
+                "the plain limit applies",
+                format!("{} ft above the ground", n(lim, 0)),
+                format!("{} ft", n(max, 0)),
+            ),
+        }
+    }
     let mut o = vec![("max_agl", ctx.out("max_agl", q(max, QT::Length, "ft")))];
     if let Some(g) = ctx.quantity("ground_elevation")? {
         let msl = g.to(ft) + max;

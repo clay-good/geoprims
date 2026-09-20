@@ -498,6 +498,38 @@ fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let q = |v: f64| Q { value: v, unit: u };
     let mut out: Vec<(&str, Json)> = Vec::new();
     let ratio = total / mis;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Sum of latitudes",
+            "ΣL = Σ distance × cos(bearing)",
+            format!("{} courses", lat.len()),
+            format!("{} {}", n(sl, 4), u.symbol),
+        );
+        ctx.step(
+            "Sum of departures",
+            "ΣD = Σ distance × sin(bearing)",
+            format!("{} courses", dep.len()),
+            format!("{} {}", n(sd, 4), u.symbol),
+        );
+        ctx.step(
+            "Error of closure",
+            "e = √(ΣL² + ΣD²)",
+            format!("√({}² + {}²)", n(sl, 4), n(sd, 4)),
+            format!("{} {}", n(mis, 4), u.symbol),
+        );
+        ctx.step(
+            "Precision",
+            "precision = perimeter / error of closure",
+            format!("{} {} / {} {}", n(total, 3), u.symbol, n(mis, 4), u.symbol),
+            if perfect {
+                "perfect".to_owned()
+            } else {
+                format!("1:{}", n(ratio, 0))
+            },
+        );
+    }
     out.push((
         "precision",
         Json::str(if perfect {

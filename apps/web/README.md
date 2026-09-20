@@ -34,6 +34,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `scripts/routes.mjs` | The route-map gate: classifies every built page against `contracts/routes-and-urls` and fails naming anything outside the map, then writes `dist/_redirects` from `data/redirects.json` |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |
 | `src/lib/notices.mjs` | Ranks a tool page's notes by the contract's priority and splits them into the two shown in full and the rest behind "N more notes" |
+| `test/content.test.mjs` | Content minimums: a unique purpose and worked example per indexable page, the "You enter / You get" block, the answer as plain text, and a last-verified date |
 | `test/notices.test.mjs`, `test/chrome-copy.test.mjs` | The ranking and the two-visible limit; and the copy lint that fails any chrome string made only of capitalised words |
 | `test/anatomy.test.mjs` | The canonical page anatomy: every tool page's regions in the contract's order, and one report button, in the answer card |
 | `test/parity.test.mjs` | Example parity: every page ships the answer to its own primary example, and so do the printed agent call and the home page's featured card |

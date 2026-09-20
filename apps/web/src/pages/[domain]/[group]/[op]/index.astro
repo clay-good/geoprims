@@ -4,7 +4,7 @@ import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
-import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, sourceRowsFor, termsFor, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, lastVerifiedFor, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -19,6 +19,8 @@ const issue = openIssue(t.id);
 const { shown: notices, rest: moreNotices } = split(
   noticesFor({ tool: t, issue, changes: changesFor(t.id), sources: sourceRowsFor(t), today: new Date().toISOString().slice(0, 10) }),
 );
+const worked = youEnterYouGet(t, initial);
+const lastVerified = lastVerifiedFor(t);
 const agentCall = JSON.stringify({ name: 'geoprims_run', arguments: { id: t.id, args: ex.input } }, null, 2);
 const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
 const groupName = t.group.replaceAll('-', ' ');
@@ -57,7 +59,18 @@ const client = clientTool(t);
     <p><strong>Model:</strong> {t.model}</p>
     <p><strong>Accuracy:</strong> {t.accuracy}</p>
     <p><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
+    <div class="worked">
+      <div>
+        <h3>You enter</h3>
+        <dl>{worked.enter.map((r) => <><dt>{r.label}</dt><dd>{r.value}{r.unit ? ` ${r.unit}` : ''}</dd></>)}</dl>
+      </div>
+      <div>
+        <h3>You get</h3>
+        <dl>{worked.get.map((r) => <><dt>{r.label}</dt><dd>{r.value}</dd></>)}</dl>
+      </div>
+    </div>
     <p><strong>Review:</strong> {reviewLine(t.domain, t.id)}</p>
+    {lastVerified && <p><strong>Last verified:</strong> {lastVerified}, when a maintainer last confirmed this tool's sources at the issuer. See the <a href="/sources/">sources ledger</a>.</p>}
     <p><strong>Status:</strong> version {t.version}, core {catalog.coreVersion}. See this tool in the <a href={`/verification/${catalog.coreVersion}/#${t.id}`}>verification report</a>.</p>
     {changesFor(t.id).length > 0 && (
       <>

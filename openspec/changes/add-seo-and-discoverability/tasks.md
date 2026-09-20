@@ -1,6 +1,6 @@
 ## 1. Page content and rules
 
-- [ ] 1.1 Implement content-minimum checks (unique purpose, unique example, 150-word floor, answer in HTML); verify the thin-page and answer-before-script scenarios
+- [ ] 1.1 Implement content-minimum checks (unique purpose, unique example, 150-word floor, answer in HTML); verify the thin-page and answer-before-script scenarios (done: tool pages now lay the worked example out as "You enter / You get" and say when their sources were last checked, and apps/web/test/content.test.mjs checks that every indexable page has an H1 and a purpose no other page states, shows a worked example no other page shows, and carries its answer as plain text ahead of the island that hydrates it. Pending: the 150-word floor, which needs the "when to use this" and limitations prose fields the manifests do not have yet)
 - [ ] 1.2 Create `data/seo/high-intent-pages.json` (≤ 60, each justified) and the canonical-to-parent rendering for other pairs; verify both page-versus-endpoint scenarios
 - [ ] 1.3 Implement the shared title/description module with caps, a superlative lint, and SPA parity; verify the head-parity scenario
 - [ ] 1.4 Implement canonical rules and `#example` links; verify the shared-link scenario
@@ -17,7 +17,7 @@
 - [ ] 3.1 Render OG images at build with content-hash caching; verify the OG-image scenario
 - [ ] 3.2 Emit the sitemap index per domain with the lastmod content-hash ledger; verify the unchanged-page scenario (built: a sitemap index with one sitemap per domain plus one for site pages, only self-canonical indexable pages, and lastmod from the committed ledger data/seo/lastmod.json keyed by a hash of each page's <main>, stable across rebuilds and across a build that only renames island bundles, which used to move every tool page's date; test/lastmod.test.mjs pins the unchanged-page scenario and fails when the committed ledger is stale. Pending: IndexNow submission after a production deploy)
 - [ ] 3.3 Add IndexNow submission of changed URLs after production deploys; verify on a staging key
-- [ ] 3.4 Generate `/llms.txt`, `/.well-known/mcp.json`, and `/AGENTS.md` from the catalog and MCP surface; verify the counts and surface-parity scenarios (built: all three from the build catalog and mcp/surface.json by apps/web/scripts/discovery.mjs, plus robots.txt; pending: links to /methodology and /sources, which do not exist yet)
+- [ ] 3.4 Generate `/llms.txt`, `/.well-known/mcp.json`, and `/AGENTS.md` from the catalog and MCP surface; verify the counts and surface-parity scenarios (built: all three from the build catalog and mcp/surface.json by apps/web/scripts/discovery.mjs, plus robots.txt, and llms.txt links /methodology, /sources, and /known-issues, which now exist; pending: the counts and surface-parity gate itself)
 - [x] 3.5 Add the "For developers and agents" block per tool; verify the copyable-call scenario
 
 ## 4. Performance

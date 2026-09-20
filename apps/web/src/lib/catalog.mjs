@@ -22,6 +22,35 @@ const ledger = readLedger(root);
 /** The ledger rows a tool cites, deduplicated (trust/freshness). */
 export const sourceRowsFor = (t) => [...new Map(t.references.map((r) => rowFor(ledger, r)).filter(Boolean).map((r) => [r.id, r])).values()];
 
+/**
+ * The worked example as "You enter / You get" (contracts/page-chrome region 9,
+ * discovery/search-pages content minimums): the example's inputs with their
+ * labels and units, and the answer the core produced for them.
+ */
+export function youEnterYouGet(t, result) {
+  const ex = primaryExample(t);
+  // The same unit spellings a reader types, as the tool island shows them.
+  const readable = (text) => text.replace(/(\d)\s*deg([CF])\b/g, '$1 °$2');
+  const label = (side, k) => t[side].properties[k]?.title ?? k;
+  const unitOf = (side, k) => {
+    const u = t[side].properties[k]?.['x-unit'];
+    return u && u !== '1' ? u : '';
+  };
+  const enter = Object.entries(ex.input)
+    .filter(([k]) => k !== 'options')
+    .map(([k, v]) => ({ label: label('inputs', k), value: readable(typeof v === 'object' ? JSON.stringify(v) : String(v)), unit: typeof v === 'number' ? unitOf('inputs', k) : '' }));
+  const get = result?.ok
+    ? Object.entries(result.display ?? {}).map(([k, v]) => ({ label: label('outputs', k), value: v, unit: '' }))
+    : [];
+  return { title: ex.title, source: ex.source, enter, get };
+}
+
+/** The day a maintainer last confirmed the sources behind a tool, or null. */
+export function lastVerifiedFor(t) {
+  const days = sourceRowsFor(t).map((r) => r.lastVerified).filter(Boolean).sort();
+  return days[0] ?? null;
+}
+
 /** Severity of each warning a tool may emit (codes registry), for ordering and styling. */
 export const severities = (t) => Object.fromEntries(t.warnings.map((c) => [c, codes.warnings[c]?.severity ?? 'info']));
 const host = nodeHost(join(root, 'dist/wasm'));

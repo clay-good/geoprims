@@ -750,6 +750,33 @@ fn run_tile_bounds(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let b = codes::tile_bounds(z, x, y);
     let lat_c = codes::tile_bounds(z + 1, 2 * x, 2 * y).0;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let nn = move |v: f64, d: u8| gp_base::display::number(v, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Tiles across the map",
+            "n = 2^zoom",
+            format!("2^{z}"),
+            nn(n as f64, 0),
+        );
+        ctx.step(
+            "West and east edges",
+            "lon = x / n × 360 − 180, for x and x+1",
+            format!(
+                "{} and {} of {}",
+                nn(x as f64, 0),
+                nn((x + 1) as f64, 0),
+                nn(n as f64, 0)
+            ),
+            format!("{}° to {}°", nn(b.1, 6), nn(b.3, 6)),
+        );
+        ctx.step(
+            "Centre latitude",
+            "the latitude halfway down the tile in Web Mercator, not in degrees",
+            format!("between {}° and {}°", nn(b.2, 6), nn(b.0, 6)),
+            format!("{}°", nn(if z < 30 { lat_c } else { (b.0 + b.2) / 2.0 }, 6)),
+        );
+    }
     let mut out = vec![
         ("xyz", Json::str(format!("{z}/{x}/{y}"))),
         ("tms", Json::str(format!("{z}/{x}/{}", n - 1 - y))),

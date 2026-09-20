@@ -173,6 +173,29 @@ fn run_geoid(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let (n, err) = geoid_height(ctx, lat, lon)?;
     msl_note(ctx);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let nn = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        // A grid lookup has no formula to substitute; what a reader needs is
+        // which grid, where in it, and how much the interpolation can be off.
+        ctx.step(
+            "Where in the grid",
+            "the EGM96 15-arc-minute grid, 0.25° between posts",
+            format!("{}°, {}°", nn(lat, 6), nn(lon, 6)),
+            format!("{}° cell", nn(0.25, 2)),
+        );
+        ctx.step(
+            "Geoid height",
+            "N = bilinear interpolation between the four surrounding posts",
+            format!(
+                "at {}°, {}°, ±{} m from interpolation",
+                nn(lat, 6),
+                nn(lon, 6),
+                nn(err, 3)
+            ),
+            format!("{} m", nn(n, 3)),
+        );
+    }
     Ok(Json::obj(vec![
         ("geoid_height", ctx.out("geoid_height", m(n))),
         (

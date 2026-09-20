@@ -28,6 +28,9 @@ const ENDS_ELSEWHERE = {
   // The card leads with the radius, which the two given elements fix; the work
   // then derives the elements that follow from it, ending at the curve length.
   'survey.curves.circular-curve': 'length',
+  // The card leads with the canonical tile id, which is the input written
+  // back; the work ends at the centre the bounds are really asked for.
+  'indexing.tile.bounds': 'lat',
 };
 const run = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
 

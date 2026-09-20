@@ -1546,6 +1546,44 @@ fn run_vertical(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let x = -a1 * l / (a2 - a1);
     let turning =
         (x > 0.0 && x < l).then(|| (pvc_s + x, y_pvc + a1 * x + (a2 - a1) * x * x / (2.0 * l)));
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |v: f64, d: u8| display::number(v, Precision::Decimals(d), fmt);
+        let a = g2 - g1;
+        ctx.step(
+            "Algebraic difference",
+            "A = g2 − g1, in percent",
+            format!("{}% − {}%", n(g2, 3), n(g1, 3)),
+            format!("{}%", n(a, 3)),
+        );
+        ctx.step(
+            "Rate of change",
+            "K = L / |A|, the length per percent of grade change",
+            format!("{} {} / {}%", n(l, 3), u.symbol, n(a.abs(), 3)),
+            format!("{} {} per %", n(l / a.abs(), 3), u.symbol),
+        );
+        match turning {
+            Some((st, _)) => ctx.step(
+                if crest { "High point" } else { "Low point" },
+                "x = −g1 × L / A from the PVC, where the grade reaches zero",
+                format!(
+                    "−{}% × {} {} / {}%, from station {}",
+                    n(g1, 3),
+                    n(l, 3),
+                    u.symbol,
+                    n(a, 3),
+                    fmt_station(pvc_s, metric)
+                ),
+                fmt_station(st, metric),
+            ),
+            None => ctx.step(
+                "No high or low point",
+                "both grades run the same way, so the curve has none inside it",
+                format!("g1 {}% and g2 {}%", n(g1, 3), n(g2, 3)),
+                fmt_station(pvc_s, metric),
+            ),
+        }
+    }
     if let Some((s, y)) = turning {
         out.push(("turning_station", Json::str(fmt_station(s, metric))));
         out.push(("turning_elevation", ctx.emit("turning_elevation", q(y), u)));

@@ -37,23 +37,23 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Surveyors | UTM | `geodesy.utm.forward`, `geodesy.utm.inverse` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | MGRS | `geodesy.grid-ref.mgrs-forward`, `geodesy.grid-ref.mgrs-inverse` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | State plane | `geodesy.spcs.spcs83-forward`, `geodesy.spcs.spcs83-inverse` | [x] | [ ] | [ ] | [ ] |
-| Surveyors | Geoid and orthometric height | `geodesy.geoid.geoid-height` | [x] | [ ] | [ ] | [ ] |
+| Surveyors | Geoid and orthometric height | `geodesy.geoid.geoid-height` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Grid ↔ ground combined factor | `survey.reduction.combined-factor` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Traverse closure | `survey.cogo.traverse-closure` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Deed plotter | `survey.land.deed-plot` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | Horizontal curve | `survey.curves.circular-curve` | [x] | [ ] | [ ] | [x] |
-| Surveyors | Vertical curve | `survey.curves.vertical-curve` | [x] | [ ] | [ ] | [ ] |
+| Surveyors | Vertical curve | `survey.curves.vertical-curve` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [x] | [ ] | [ ] | [x] |
 | Developers | H3 cell | `indexing.h3.lat-lng-to-cell` | [x] | [ ] | [ ] | [ ] |
 | Developers | H3 k-ring | `indexing.h3.grid-disk` | [x] | [ ] | [ ] | [ ] |
 | Developers | Tile and quadkey | `indexing.tile.from-point` | [x] | [ ] | [ ] | [x] |
-| Developers | Tile bounds | `indexing.tile.bounds` | [x] | [ ] | [ ] | [ ] |
+| Developers | Tile bounds | `indexing.tile.bounds` | [x] | [ ] | [ ] | [x] |
 | Developers | Geohash | `indexing.geohash.encode` | [x] | [ ] | [ ] | [x] |
 | Developers | Geodesic distance | `navigation.geodesic.inverse` | [x] | [ ] | [ ] | [ ] |
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [ ] |
 
-Stable: 36 of 42 rows. Shows its work: 18 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 36 of 42 rows. Shows its work: 21 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 

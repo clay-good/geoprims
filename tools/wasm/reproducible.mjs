@@ -6,9 +6,8 @@
 //
 //   node tools/wasm/reproducible.mjs
 //
-// It is slow (two full release builds), so it runs at release time rather than
-// in every test run; tools/wasm/integrity.test.mjs holds the fast half, that
-// the recorded digests match what every surface ships.
+// It is slow (two full release builds), so it is a local or release-time check.
+// CI separately compares every shipped artifact from two independent runners.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';

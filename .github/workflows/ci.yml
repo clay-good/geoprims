@@ -25,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Pin the build date to this commit
+        run: echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
       - name: Format
         # A virtual workspace has no targets of its own: --all is what reaches the crates.
         run: cargo fmt --all --manifest-path core/Cargo.toml --check
@@ -51,7 +53,57 @@ jobs:
         run: npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
       - name: Browser checks
         run: npm run test:browser --prefix apps/web
+      - name: Hash shipped artifacts
+        run: node tools/wasm/artifact-digests.mjs > artifact-digests.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-digests-primary
+          path: artifact-digests.txt
       - uses: actions/upload-artifact@v4
         with:
           name: wasm
           path: dist
+
+  independent-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Install pinned wasm-opt
+        run: |
+          v=$(node -p "require('./tools/toolchain.json').wasmOpt")
+          curl -fsSL "https://github.com/WebAssembly/binaryen/releases/download/version_${v}/binaryen-version_${v}-x86_64-linux.tar.gz" | tar xz
+          echo "$PWD/binaryen-version_${v}/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pin the build date to this commit
+        run: echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
+      - name: Build all shipped artifacts on a separate runner
+        run: |
+          npm run build
+          node tools/mcp/build-dist.mjs
+          npm ci --prefix apps/web
+          npm run build --prefix apps/web
+      - name: Hash shipped artifacts
+        run: node tools/wasm/artifact-digests.mjs > artifact-digests.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-digests-independent
+          path: artifact-digests.txt
+
+  compare-builds:
+    needs: [core, independent-build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-digests-primary
+          path: primary
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-digests-independent
+          path: independent
+      - name: Compare every shipped byte
+        run: diff -u primary/artifact-digests.txt independent/artifact-digests.txt

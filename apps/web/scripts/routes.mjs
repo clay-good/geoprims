@@ -8,6 +8,7 @@
 // tool's old route working for at least 24 months.
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { buildDate } from '../src/lib/build-date.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const root = join(web, '../..');
@@ -107,7 +108,7 @@ export function check(pages, idx) {
  * tool is finally removed (platform/tool-contract, "Deprecated id resolves to
  * replacement").
  */
-export function deprecationRedirects(catalog, today = new Date().toISOString().slice(0, 10)) {
+export function deprecationRedirects(catalog, today = buildDate()) {
   return catalog.tools
     .filter((t) => t.deprecation)
     .map((t) => ({

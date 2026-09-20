@@ -8,6 +8,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from './lastmod.mjs';
+import { buildDate } from '../src/lib/build-date.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const root = join(web, '../..');
@@ -18,7 +19,7 @@ const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf
 const surface = JSON.parse(readFileSync(join(root, 'mcp/surface.json'), 'utf8'));
 const mcpPkg = JSON.parse(readFileSync(join(root, 'mcp/package.json'), 'utf8'));
 const LEDGER = join(root, 'data/seo/lastmod.json');
-const today = new Date().toISOString().slice(0, 10);
+const today = buildDate();
 
 const DOMAIN_TITLES = {
   geodesy: 'Geodesy', navigation: 'Navigation', geometry: 'Geometry', aviation: 'Aviation', drone: 'Drone',

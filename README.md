@@ -123,6 +123,8 @@ The website's build, unit checks, and Chromium cancellation check run with `npm 
 
 The build writes `dist/wasm/<module>.wasm` and `dist/wasm/modules.json` (sizes and SHA-256 digests). From those same Wasm manifests, the catalog step writes `dist/catalog/v1.json`, `types.d.ts`, `mcp-tools.json`, and `search.json`. See [the codegen README](tools/codegen/README.md) for the outputs and their checks. The build fails if the toolchain versions differ from the pins, if any module imports anything from the host, or if a module exceeds its compressed budget (base 120 KB, domain 400 KB).
 
+CI builds the core, MCP package, and website on two independent runners using the commit time as the build date, then compares SHA-256 digests for every shipped file. Run `node tools/wasm/artifact-digests.mjs` after a full build to print the same manifest locally.
+
 [AGENTS.md](AGENTS.md) holds the working rules for anyone, human or AI, implementing the specs: the three doors (web, MCP, report), how to add a tool, and the non-negotiables.
 
 ## Research

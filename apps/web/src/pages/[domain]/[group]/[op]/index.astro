@@ -7,6 +7,7 @@ import { defId, markTerms, sourceOf } from '../../../../lib/terms.mjs';
 import { freeAccess } from '../../../../lib/citation.mjs';
 import { ledger, ledgerRowFor as rowFor } from '../../../../lib/catalog.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
+import { buildDate } from '../../../../lib/build-date.mjs';
 import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
@@ -20,7 +21,7 @@ const ex = primaryExample(t);
 const initial = await exampleResult(t);
 const issue = openIssue(t.id);
 const { shown: notices, rest: moreNotices } = split(
-  noticesFor({ tool: t, issue, changes: changesFor(t.id), sources: sourceRowsFor(t), today: new Date().toISOString().slice(0, 10) }),
+  noticesFor({ tool: t, issue, changes: changesFor(t.id), sources: sourceRowsFor(t), today: buildDate() }),
 );
 const worked = youEnterYouGet(t, initial);
 const trace = await exampleTrace(t);

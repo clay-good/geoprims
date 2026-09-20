@@ -7,6 +7,7 @@ import { readSignoffs, reviewSentence } from '../../../../tools/trust/signoffs.m
 import { entriesFor, KINDS, readChangelog } from '../../../../tools/trust/changelog.mjs';
 import { verificationReport } from '../../../../tools/trust/verification.mjs';
 import { readLedger, rowFor } from '../../../../tools/trust/ledger.mjs';
+import { buildDate } from './build-date.mjs';
 
 const root = join(process.cwd(), '../..');
 export const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -14,7 +15,7 @@ const codes = JSON.parse(readFileSync(join(root, 'data/codes.json'), 'utf8'));
 const ledgerRows = Object.values(JSON.parse(readFileSync(join(root, 'data/sources-ledger.json'), 'utf8'))).find(Array.isArray);
 const sourceById = new Map(ledgerRows.map((r) => [r.id, r]));
 const signoffs = readSignoffs(root);
-const buildDay = new Date().toISOString().slice(0, 10);
+const buildDay = buildDate();
 /** The honest review line for a domain, or for one tool when `id` is given. */
 export const reviewLine = (domain, id = null) => reviewSentence(signoffs, domain, buildDay, id);
 

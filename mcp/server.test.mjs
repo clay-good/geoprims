@@ -519,3 +519,12 @@ test('a simplified tool tells an agent the same thing the page shows', async () 
   const plain = await c.call('geoprims_run', { id: 'units.speed.kt-to-mph', args: { value: 1 } });
   assert.equal(plain.structuredContent.meta.limitation, undefined, 'a tool that simplifies nothing carries none');
 });
+
+test('describe carries the limitation a simplified tool declares', async () => {
+  const r = await c.call('geoprims_describe', { ids: ['navigation.geodesic.haversine', 'units.speed.kt-to-mph'] });
+  const [simplified, plain] = r.structuredContent.result.tools;
+  assert.equal(simplified.id, 'navigation.geodesic.haversine');
+  assert.match(simplified.limitation.simplification, /Measures on a sphere/);
+  assert.deepEqual(Object.keys(simplified.limitation).sort(), ['governs', 'instead', 'simplification']);
+  assert.equal(plain.limitation, undefined, 'a tool that simplifies nothing carries none');
+});

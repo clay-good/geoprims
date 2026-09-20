@@ -53,7 +53,7 @@
     {
       "name": "geoprims_describe",
       "title": "Describe geoprims tools",
-      "description": "Get manifests for up to 20 tool ids. detail \"summary\" gives title and summary; \"schema\" adds input and output JSON Schemas, units, accuracy, model, references, warnings, and related tools; \"examples\" adds the worked example.",
+      "description": "Get manifests for up to 20 tool ids. detail \"summary\" gives title and summary; \"schema\" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, and the limitation a simplified tool declares; \"examples\" adds the worked example.",
       "inputSchema": {
         "type": "object",
         "properties": {

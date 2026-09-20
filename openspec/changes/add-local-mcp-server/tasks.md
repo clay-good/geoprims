@@ -3,7 +3,7 @@
 - [x] 1.1 Scaffold `mcp/server.mjs` as a zero-dependency stdio JSON-RPC server using the internal `packages/runtime`; verify it starts, opens no sockets (no-listening-socket scenario), and has an empty `dependencies` list
 - [ ] 1.1a Build release artifacts into `mcp/dist/` on tags, with the untagged-checkout message; verify the clone-and-run, untagged-checkout, and verify-before-running scenarios on a clean machine image with only Node installed
 - [ ] 1.1b Add the golden surface file and MCP Inspector CLI job; verify the surface-drift scenario
-- [ ] 1.2 Implement protocol negotiation for `2026-07-28`, `2025-11-25`, and `2025-06-18`; verify handshakes from recorded clients of each version (older-client scenario)
+- [x] 1.2 Implement protocol negotiation for `2026-07-28`, `2025-11-25`, and `2025-06-18`; verify handshakes from recorded clients of each version (older-client scenario) (the server echoes each of the three versions on initialize, answers a client asking for the retired 2024-11-05 with 2025-11-25 rather than refusing it, and lists all three in order from server/discover)
 - [x] 1.3 Verify cross-surface equality: run the golden-vector suite through the server and compare bytes to the website's results (same-result-as-website scenario)
 
 ## 2. Meta-tools
@@ -13,7 +13,7 @@
 - [x] 2.3 Implement `geoprims_run` with schema validation, unit handling, pagination, and summaries; verify the search-then-run and large-polyfill scenarios
 - [x] 2.4 Implement `geoprims_pipeline` with binding type checks, unit insertion, and cycle and forward-reference rejection; verify a 4-step chain and a cyclic chain
 - [x] 2.5 Implement `geoprims_convert_units`; verify against unit-registry vectors
-- [ ] 2.5a Add `prefill` to search, citations and limitations to describe, and `summary`, references, `explain` trace, and example-default to run; verify parity with the web page for 20 hero tools (done: prefill, summary, example-default; pending: limitations, explain trace, hero-tool parity)
+- [ ] 2.5a Add `prefill` to search, citations and limitations to describe, and `summary`, references, `explain` trace, and example-default to run; verify parity with the web page for 20 hero tools (done: prefill in search, citations and the simplified-method limitation in describe, and summary and the example default in run, with the default run checked against the primary example for every tool id; pending: the explain trace, and the hero-tool parity sweep)
 - [x] 2.6 Add titles, annotations, output schemas, and structured content plus text blocks; verify the annotations scenario with a conformance checker
 - [x] 2.7 Enforce the ≤ 6,000-token default `tools/list` budget in CI; verify with the 4-characters-per-token approximation
 

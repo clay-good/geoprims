@@ -104,7 +104,7 @@ For the `npx` path (once `@geoprims/mcp` is published), use `"command": "npx", "
 | Tool | What it does |
 |---|---|
 | `geoprims_search` | Ranks tools for a query with the same core ranker as the website's command palette. Experimental tools are hidden unless `includeExperimental` is true. |
-| `geoprims_describe` | Returns manifests for up to 20 ids at `summary`, `schema`, or `examples` detail |
+| `geoprims_describe` | Returns manifests for up to 20 ids at `summary`, `schema`, or `examples` detail, including each tool's citations and the limitation a simplified tool declares |
 | `geoprims_run` | Runs a tool. With no `args` it runs the worked example. `units` picks an output unit profile. |
 | `geoprims_pipeline` | Runs up to 20 steps. A bound `{value, unit}` carries its unit, so conversions happen automatically. |
 | `geoprims_convert_units` | Exact unit conversion, finding the quantity from the units |

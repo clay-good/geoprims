@@ -57,7 +57,9 @@ test('tools with an inverse link to it from the header, and related reasons read
 test('unknown URLs get a not-found page with search and popular tools', () => {
   const html = readFileSync(join(dist, '404.html'), 'utf8');
   assert.match(html, /We couldn’t find that page/);
-  assert.match(html, /class="hero-search" data-palette/);
+  // The search is a form, so a visitor without JavaScript can still search.
+  assert.match(html, /<form class="hero-search" role="search" action="\/tools\/" method="get">/);
+  assert.match(html, /<input id="notfound-q" type="search" name="q"/);
   assert.match(html, /<meta name="robots" content="noindex">/);
 });
 

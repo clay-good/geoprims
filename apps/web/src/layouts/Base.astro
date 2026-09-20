@@ -89,6 +89,12 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
         const el = e.target instanceof Element && e.target.closest('[data-palette]');
         if (el) palette(el.getAttribute('data-palette') ?? '');
       });
+      // The search field is a form, so it works with JavaScript off. With it
+      // on, submitting opens the palette instead of loading the catalog page.
+      document.querySelector('form.hero-search')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        palette(new FormData(e.currentTarget).get('q') ?? '');
+      });
       wireKeys(palette);
     </script>
   </body>

@@ -29,10 +29,11 @@ const TRY = [
       Exact, cited calculators for {subjects}. Every answer shows its formula, its sources, and how far it can be
       trusted. Everything runs on your device: no ads, no accounts, no tracking, and no network after your first visit.
     </p>
-    <button type="button" class="hero-search" data-palette>
-      <span class="hero-search-text">Search {ops} tools, or paste a coordinate</span>
-      <kbd aria-hidden="true">/</kbd>
-    </button>
+    <form class="hero-search" role="search" action="/tools/" method="get">
+      <label class="sr-only" for="home-q">Search tools</label>
+      <input id="home-q" type="search" name="q" autocomplete="off" placeholder={`Search ${ops} tools, or paste a coordinate`} />
+      <button type="submit" class="hero-search-go">Search<kbd aria-hidden="true">/</kbd></button>
+    </form>
     <p class="chips" aria-label="Examples to try">
       <span class="chips-label">Try</span>
       {TRY.map(([label, query]) => <button type="button" class="chip-button" data-palette={query}>{label}</button>)}

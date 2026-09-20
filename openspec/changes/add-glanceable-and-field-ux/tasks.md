@@ -10,7 +10,8 @@
 
 ## 2. Home page
 
-- [ ] 2.1 Build the glanceable home (question search, hero cards with no-JS answers, journeys, recents, four promises); verify the question-on-home scenario and no-JS rendering
+- [x] 2.1 Build the glanceable home (question search, hero cards with no-JS answers, journeys, recents, four promises); verify the question-on-home scenario and no-JS rendering (the hero-card grid and the journey rows were superseded by `redesign-minimal-shell`, whose home is a centred description, one search field, the topic counts, a link to `/tools/`, then recent and pinned. What survives is built and gated: the search is now a real form that works with JavaScript off and hands over to the palette when it is on; the featured tool renders its answer server-side, so the home shows a real computed result with no script; the four promises are in the description; browsing is one tap away.
+  The question-on-home scenario runs through the same Wasm search module the palette loads and is pinned in `data/prefill-fixture.json` — "crosswind rwy 27 wind 300 at 15" fills runway 27, wind 300°, 15 kt. The scenario's "both marked assumed magnetic" does not match how the tool works: it needs only the angle between the wind and the runway, so it assumes no frame, warns that a runway number is a heading to within 5°, and its variation input says it is what mixes true and magnetic.)
 
 ## 3. Mobile and field
 

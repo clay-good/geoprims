@@ -248,3 +248,23 @@ test('the site serves byte-identical Wasm modules, not a stale copy', () => {
   assert.deepEqual(problems, []);
   assert.ok(modules.length >= 10, `only ${modules.length} modules`);
 });
+
+test('the search works with JavaScript off', () => {
+  // ux/glanceable-results "Glanceable home page": one prominent search box.
+  // With no script it is a form that lands on the catalog, where the query is
+  // in the URL; with a script, submitting opens the palette instead. The
+  // catalog itself needs the script to narrow the list, which is why the
+  // fallback lands on the full list rather than a filtered one.
+  for (const path of ['', '404']) {
+    const html = path === '404' ? readFileSync(join(dist, '404.html'), 'utf8') : page('');
+    const form = /<form class="hero-search"[^>]*>[\s\S]*?<\/form>/.exec(html)?.[0];
+    assert.ok(form, `${path || 'home'}: the search is not a form`);
+    assert.match(form, /action="\/tools\/"/, `${path || 'home'}: the form goes nowhere`);
+    assert.match(form, /method="get"/);
+    assert.match(form, /<input[^>]*type="search"[^>]*name="q"/, `${path || 'home'}: no query field`);
+    assert.match(form, /<label class="sr-only"[^>]*>Search tools<\/label>/, `${path || 'home'}: the field has no label`);
+    assert.match(form, /<button type="submit"/, `${path || 'home'}: nothing submits it`);
+  }
+  // The catalog reads the query the form sends.
+  assert.match(readFileSync(join(web, 'src/lib/filter.js'), 'utf8'), /new URLSearchParams\(location\.search\)\.get\('q'\)/);
+});

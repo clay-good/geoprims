@@ -422,6 +422,11 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .hero-search { display: flex; align-items: center; justify-content: space-between; gap: 1rem; inline-size: min(40rem, 100%); min-block-size: 58px; margin: 1.75rem auto 0; padding-inline: 1.1rem 0.7rem; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); color: var(--muted); font-size: 1rem; text-align: start; }
 .hero-search:hover, .hero-search:focus-visible { border-color: var(--accent); color: var(--text); }
 .hero-search .hero-search-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hero-search input { flex: 1; min-inline-size: 0; margin: 0; padding-inline: 0; border: 0; background: none; color: var(--text); font-family: var(--sans); font-size: 1rem; }
+.hero-search input::placeholder { color: var(--muted); }
+.hero-search input:focus-visible { outline: none; }
+.hero-search .hero-search-go { flex: none; display: inline-flex; align-items: center; gap: 0.5rem; inline-size: auto; margin: 0; padding-inline: 0.8rem; border-color: var(--line); color: var(--muted); background: var(--bg); font-size: 0.9rem; }
+.hero-search .hero-search-go:hover { border-color: var(--accent); color: var(--accent); }
 .hero-search kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding: 0.1em 0.45em; flex: none; }
 .masthead .chips { justify-content: center; }
 

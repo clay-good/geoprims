@@ -24,7 +24,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 
 | Path | What |
 |---|---|
-| `src/pages/` | Home, domain hubs, group hubs, and one page per tool id (route map in `contracts/routes-and-urls`) |
+| `src/pages/` | Home, domain hubs, group hubs, and one page per tool id (route map in `contracts/routes-and-urls`). The home and not-found search is a form that lands on `/tools/?q=` without JavaScript and opens the palette with it when there is some |
 | `src/components/ToolApp.svelte` | The tool island: status phrases with a mark and the cited threshold; the compact diagram under the answer for a tool that declares `x-diagram-inline`; schema-driven form (list inputs edit as one row per line, comma- or tab-separated), live answer card (core-rendered `display` and `summary`), warnings ordered by severity, copy actions, permalinks (`#v1:` via the core `link` module), Clear and Try the example |
 | `src/components/PageHeader.astro`, `ListFilter.astro`, `ToolCards.astro` | The page-template building blocks: breadcrumbs, `h1`, and purpose line; the list filter (`?q=`, count, no-match search); and the tool card grid |
 | `src/lib/prefs.js`, `src/pages/settings/` | What this browser remembers: the unit profile, the number format, Field mode (larger targets, larger answers, step buttons), and the recent and pinned lists — all in local storage, nothing sent anywhere |

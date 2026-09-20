@@ -7,10 +7,11 @@ const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 ---
 <Base title="Page not found · geoprims" description="This page does not exist." canonical="/404/" noindex>
   <PageHeader title="We couldn’t find that page" purpose="The link may be old, or the address has a typo. Search for the tool you wanted:" />
-  <button type="button" class="hero-search" data-palette>
-    <span class="hero-search-text">Search tools or paste a value</span>
-    <kbd aria-hidden="true">/</kbd>
-  </button>
+  <form class="hero-search" role="search" action="/tools/" method="get">
+    <label class="sr-only" for="notfound-q">Search tools</label>
+    <input id="notfound-q" type="search" name="q" autocomplete="off" placeholder="Search tools or paste a value" />
+    <button type="submit" class="hero-search-go">Search<kbd aria-hidden="true">/</kbd></button>
+  </form>
   <h2>Popular</h2>
   <ul class="tools">
     {POPULAR.map((t) => <li><a href={route(t.id)}>{t.title}</a><p class="clamp3">{t.summary}</p></li>)}

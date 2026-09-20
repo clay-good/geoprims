@@ -14,7 +14,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Density altitude | `aviation.altimetry.density-altitude` | [x] | [ ] | [ ] | [x] |
 | Pilots | Pressure altitude | `aviation.altimetry.pressure-altitude` | [x] | [ ] | [ ] | [x] |
 | Pilots | E6B wind triangle | `aviation.wind.heading-groundspeed` | [x] | [ ] | [ ] | [x] |
-| Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] | [ ] |
+| Pilots | Sunrise, sunset, twilight | `time.sun.events` | [x] | [ ] | [ ] | [x] |
 | Pilots | The four nights | `time.sun.aviation-nights` | [x] | [ ] | [ ] | [ ] |
 | Pilots | METAR decoder | `aviation.weather.metar-decode` | [x] | [ ] | [ ] | [ ] |
 | Pilots | TAF decoder | `aviation.weather.taf-decode` | [x] | [ ] | [ ] | [ ] |
@@ -51,9 +51,9 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Geohash | `indexing.geohash.encode` | [x] | [ ] | [ ] | [x] |
 | Developers | Geodesic distance | `navigation.geodesic.inverse` | [x] | [ ] | [ ] | [ ] |
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
-| Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [ ] |
+| Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [x] |
 
-Stable: 36 of 42 rows. Shows its work: 21 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 36 of 42 rows. Shows its work: 23 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 

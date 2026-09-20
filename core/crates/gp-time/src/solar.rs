@@ -745,6 +745,31 @@ fn run_events(ctx: &mut Ctx) -> Result<Json, ToolError> {
             0.0,
         ),
     };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        // The solver is iterative, so the honest work is the geometry it solves:
+        // where solar noon falls, what altitude counts as sunrise, and the
+        // crossing it finds either side of noon.
+        ctx.step(
+            "Solar noon",
+            "when the sun crosses this longitude's meridian",
+            format!("at {}° longitude", n(lon, 6)),
+            event_text(noon, off),
+        );
+        ctx.step(
+            "Sunrise altitude",
+            "−0.8333° for the sun's radius and refraction, less the dip from height",
+            format!("{}° − {}° of dip", n(SUNRISE_ALTITUDE, 4), n(dip, 4)),
+            format!("{}°", n(SUNRISE_ALTITUDE - dip, 4)),
+        );
+        ctx.step(
+            "Sunrise",
+            "the crossing of that altitude before solar noon",
+            format!("at {}°, {}°", n(lat, 6), n(lon, 6)),
+            sunrise.clone(),
+        );
+    }
     let mut out = vec![
         ("sunrise", Json::str(sunrise)),
         ("sunset", Json::str(sunset)),

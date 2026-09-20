@@ -406,6 +406,31 @@ pub static DECLINATION: ToolDef = ToolDef {
 fn run_declination(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let ev = evaluate(ctx)?;
     let e = ev.e;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        // A spherical-harmonic model has no formula worth substituting; what a
+        // reader can check is the field it gives and the angle that follows.
+        ctx.step(
+            "Model and epoch",
+            "the field the model gives for this place at this date",
+            format!("{} at {}", ev.model.id(), n(ev.t, 3)),
+            format!("{} nT total", n(e.f, 0)),
+        );
+        ctx.step(
+            "Horizontal components",
+            "X north and Y east, the part of the field a compass follows",
+            format!("X {} nT, Y {} nT", n(e.x, 0), n(e.y, 0)),
+            format!("{} nT horizontal", n(e.h, 0)),
+        );
+        ctx.step(
+            "Declination",
+            "D = atan2(Y, X)",
+            format!("atan2({} nT, {} nT)", n(e.y, 0), n(e.x, 0)),
+            // The card rounds to hundredths; the last step has to read the same.
+            format!("{}°", n(e.d, 2)),
+        );
+    }
     let mut o = vec![
         ("declination", ctx.out("declination", deg(e.d))),
         ("declination_text", Json::str(east_west(e.d, ctx))),

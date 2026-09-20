@@ -11,29 +11,37 @@ const envelope = (code, message, hint) => JSON.stringify({ ok: false, error: { c
 export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
   let worker;
   let seq = 0;
-  let pending = null; // { id, resolve, timer }
+  let pending = null;
   const queue = [];
   let searchIndex = null; // re-sent to a fresh worker after a restart
 
+  const settle = (job, out) => {
+    clearTimeout(job.timer);
+    clearInterval(job.progress);
+    job.signal?.removeEventListener('abort', job.abort);
+    job.resolve(out);
+  };
   const start = () => {
-    worker = new Worker(workerUrl, { workerData: { wasmDir, maxBytes } });
-    worker.unref();
-    worker.on('message', ({ id, out }) => {
+    const current = new Worker(workerUrl, { workerData: { wasmDir, maxBytes } });
+    worker = current;
+    current.unref();
+    current.on('message', ({ id, out }) => {
+      if (worker !== current) return;
       if (!pending || pending.id !== id) return;
-      clearTimeout(pending.timer);
-      const { resolve } = pending;
+      const job = pending;
       pending = null;
-      resolve(out);
+      settle(job, out);
       pump();
     });
-    worker.on('error', () => fail(envelope('INTERNAL', 'The compute worker failed. It has been restarted. Please report it.')));
+    current.on('error', () => {
+      if (worker === current) fail(envelope('INTERNAL', 'The compute worker failed. It has been restarted. Please report it.'));
+    });
   };
   const fail = (out) => {
     if (pending) {
-      clearTimeout(pending.timer);
-      const { resolve } = pending;
+      const job = pending;
       pending = null;
-      resolve(out);
+      settle(job, out);
     }
     worker.terminate();
     start();
@@ -42,25 +50,51 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
   };
   const pump = () => {
     if (pending || !queue.length) return;
-    const { method, args, resolve } = queue.shift();
-    const id = ++seq;
-    const timer = setTimeout(
+    const job = queue.shift();
+    if (job.signal?.aborted) {
+      settle(job, null);
+      return pump();
+    }
+    job.id = ++seq;
+    job.timer = setTimeout(
       () => fail(envelope('LIMIT_EXCEEDED', `The call took longer than the ${timeoutMs} ms timeout and was stopped.`, 'Try a smaller input, or raise --timeout.')),
       timeoutMs,
     );
-    pending = { id, resolve, timer };
-    worker.postMessage({ id, method, args });
+    const started = performance.now();
+    if (job.onProgress) job.progress = setInterval(() => job.onProgress(performance.now() - started), 250);
+    pending = job;
+    worker.postMessage({ id: job.id, method: job.method, args: job.args });
   };
-  const call = (method, ...args) =>
+  const submit = (method, args, { signal, onProgress } = {}) =>
     new Promise((resolve) => {
-      queue.push({ method, args, resolve });
+      if (signal?.aborted) return resolve(null);
+      const job = { method, args, resolve, signal, onProgress };
+      job.abort = () => {
+        if (pending === job) {
+          pending = null;
+          settle(job, null);
+          worker.terminate();
+          start();
+          if (searchIndex) worker.postMessage({ id: -1, method: 'searchLoad', args: [searchIndex] });
+          pump();
+        } else {
+          const index = queue.indexOf(job);
+          if (index >= 0) {
+            queue.splice(index, 1);
+            settle(job, null);
+          }
+        }
+      };
+      signal?.addEventListener('abort', job.abort, { once: true });
+      queue.push(job);
       pump();
     });
+  const call = (method, ...args) => submit(method, args);
 
   start();
   return {
-    invoke: (id, input) => call('invoke', id, input),
-    invokeBatch: (id, inputs) => call('invokeBatch', id, inputs),
+    invoke: (id, input, options) => submit('invoke', [id, input], options),
+    invokeBatch: (id, inputs, options) => submit('invokeBatch', [id, inputs], options),
     searchLoad: (index) => {
       searchIndex = index;
       return call('searchLoad', index);
@@ -71,5 +105,6 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     close: () => worker.terminate(),
     /** For tests: call any worker method by name. */
     _call: call,
+    _callWithOptions: submit,
   };
 }

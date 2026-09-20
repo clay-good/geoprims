@@ -98,6 +98,56 @@ test('worker host: a runaway call times out and the host keeps serving', async (
   await h.close();
 });
 
+test('worker host: abort stops a spinning call within 100 ms and keeps serving', async () => {
+  const { workerHost } = await import('./worker-host.mjs');
+  const h = workerHost(join(root, 'dist/wasm'), { timeoutMs: 5_000 });
+  try {
+    await h.invoke('units.speed.kt-to-mph', '{"value":1}');
+    const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+    await h.searchLoad(JSON.stringify(catalog.tools));
+    const controller = new AbortController();
+    let firstProgress;
+    const progress = new Promise((resolve) => { firstProgress = resolve; });
+    let updates = 0;
+    const stuck = h._callWithOptions('spin', [], {
+      signal: controller.signal,
+      onProgress: (elapsed) => { updates++; firstProgress(elapsed); },
+    });
+    assert.ok(await progress >= 200, 'the first progress update was too early');
+    const started = performance.now();
+    controller.abort();
+    assert.equal(await stuck, null, 'a canceled call returned a partial result');
+    assert.ok(performance.now() - started < 100, 'cancellation took longer than 100 ms');
+    const good = JSON.parse(await h.invoke('units.speed.kt-to-mph', '{"value":100}'));
+    assert.equal(good.result.converted.value, 115.07794480235425);
+    const found = JSON.parse(await h.search('{"query":"density altitude","limit":1}'));
+    assert.equal(found.result.results[0].id, 'aviation.altimetry.density-altitude');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert.equal(updates, 1, 'progress continued after cancellation');
+  } finally {
+    await h.close();
+  }
+});
+
+test('worker host: a queued call can be canceled before it runs', async () => {
+  const { workerHost } = await import('./worker-host.mjs');
+  const h = workerHost(join(root, 'dist/wasm'), { timeoutMs: 5_000 });
+  try {
+    const running = new AbortController();
+    const queued = new AbortController();
+    const stuck = h._callWithOptions('spin', [], { signal: running.signal });
+    const next = h.invoke('units.speed.kt-to-mph', '{"value":100}', { signal: queued.signal });
+    queued.abort();
+    assert.equal(await next, null);
+    running.abort();
+    assert.equal(await stuck, null);
+    const good = JSON.parse(await h.invoke('units.speed.kt-to-mph', '{"value":1}'));
+    assert.equal(good.ok, true);
+  } finally {
+    await h.close();
+  }
+});
+
 test('search fixture: every expected tool ranks in the top 3', async () => {
   const { workerHost } = await import('./worker-host.mjs');
   const h = workerHost(join(root, 'dist/wasm'));

@@ -207,6 +207,20 @@ impl Field {
     }
 }
 
+/// A numeric constant or default a tool uses that the reader does not supply
+/// (`x-assumptions`, trust/citations: "Citation record per tool"). `source` is
+/// a sources-ledger id, so every constant is traceable to the same ledger the
+/// sources page and the freshness gates read.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Assumption {
+    pub name: &'static str,
+    /// The value as it is written in the source, so it can be compared by eye.
+    pub value: &'static str,
+    /// Its unit, or "1" for a pure number.
+    pub unit: &'static str,
+    pub source: &'static str,
+}
+
 /// A cited source: standard, paper, or agency publication.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Reference {
@@ -343,6 +357,9 @@ pub struct ToolDef {
     /// `x-diagram-inline`: the tool's meaning is a picture, so the page shows a
     /// compact one directly under the answer as well as the full canvas below.
     pub diagram_inline: bool,
+    /// The constants this tool uses that the reader does not supply
+    /// (`x-assumptions`), each citing a sources-ledger id.
+    pub assumptions: &'static [Assumption],
     /// Declared limits, as (name, value).
     pub limits: &'static [(&'static str, u64)],
     /// How free-text questions fill the inputs (natural-language prefill).
@@ -388,6 +405,7 @@ impl ToolDef {
         comparison: Comparison::NONE,
         limitation: None,
         diagram_inline: false,
+        assumptions: &[],
         limits: &[],
         slots: &[],
         run: unimplemented_run,

@@ -23,6 +23,7 @@ The manifest meta-schema SHALL define, and accept only, these extension fields.
 - `x-clock-default` (`allowed` or `forbidden`, default `forbidden`)
 - `x-primary-example` (vector id)
 - `x-limitation` (`{simplification, instead, governs}`, capped at 80, 240, and 120 characters), `x-glossary-terms` (term ids)
+- `x-assumptions` (`[{name, value, unit, source}]`: every numeric constant or default the tool uses that the reader does not supply, each citing a sources-ledger id, per `trust/citations`)
 - `x-related` (`[{id, reason}]`), `x-diagram-inline` (boolean)
 - `x-high-intent` (boolean, generated endpoints only)
 

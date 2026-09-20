@@ -6,6 +6,7 @@
 export const TOOL_EXTENSIONS = new Set([
   'x-sentence', 'x-comparison', 'x-near-margin', 'x-clock-default', 'x-primary-example',
   'x-limitation', 'x-glossary-terms', 'x-related', 'x-diagram-inline', 'x-high-intent',
+  'x-assumptions',
 ]);
 export const FIELD_EXTENSIONS = new Set([
   'x-quantity', 'x-unit', 'x-angle-range', 'x-display-precision', 'x-step', 'x-private',
@@ -67,6 +68,15 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
       for (const k of Object.keys(limitation)) {
         if (!(k in LIMITATION_CAPS)) problems.push(`${t.id}: x-limitation has no field ${k}`);
       }
+    }
+    for (const a of t['x-assumptions'] ?? []) {
+      const { name, value, unit, source, ...rest } = a;
+      if (!name) problems.push(`${t.id}: an assumption has no name`);
+      if (typeof value !== 'number' && typeof value !== 'string') problems.push(`${t.id}: assumption ${name} has no value`);
+      if (typeof unit !== 'string') problems.push(`${t.id}: assumption ${name} has no unit (use "1" for a pure number)`);
+      // Every constant is traceable to the same ledger the sources page uses.
+      if (!sourceIds.has(source)) problems.push(`${t.id}: assumption ${name} cites unknown source ${source}`);
+      for (const k of Object.keys(rest)) problems.push(`${t.id}: assumption ${name} has no field ${k}`);
     }
     const core = new Set();
     for (const [side, section] of [['inputs', t.inputs], ['outputs', t.outputs]]) {

@@ -32,7 +32,7 @@ export const TOOLS = [
     name: 'geoprims_describe',
     title: 'Describe geoprims tools',
     description:
-      'Get manifests for up to 20 tool ids. detail "summary" gives title and summary; "schema" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, and the limitation a simplified tool declares; "examples" adds the worked example.',
+      'Get manifests for up to 20 tool ids. detail "summary" gives title and summary; "schema" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, the constants the tool assumes with their sources, and the limitation a simplified tool declares; "examples" adds the worked example.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -235,6 +235,8 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       vectorCount: m.vectorCount,
       // What the tool simplifies, if anything, in the same words the site shows.
       ...(m['x-limitation'] ? { limitation: m['x-limitation'] } : {}),
+      // The constants the caller does not supply, each citing its source.
+      ...(m['x-assumptions'] ? { assumptions: m['x-assumptions'] } : {}),
     };
     if (detail === 'schema') return schema;
     return { ...schema, examples: m.examples, primaryExample: m['x-primary-example'] };

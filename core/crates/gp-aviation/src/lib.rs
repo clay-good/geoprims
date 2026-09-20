@@ -16,8 +16,8 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Bare, Comparison, Ctx, Example, Field, Kind, Layer, Limitation, Precision, Q, Registry,
-    Related, Slot, ToolDef,
+    Assumption, Bare, Comparison, Ctx, Example, Field, Kind, Layer, Limitation, Precision, Q,
+    Registry, Related, Slot, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use serde_json::Value;
@@ -371,6 +371,44 @@ pub static ISA: ToolDef = ToolDef {
         },
     ],
     sentence: "At {geopotential_altitude} in the standard atmosphere it is {temperature} with pressure {pressure} and density {density}, in the {layer}.",
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Tropospheric lapse rate",
+            value: "-0.0065",
+            unit: "K/m",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Earth radius for geopotential altitude",
+            value: "6356766",
+            unit: "m",
+            source: "icao-7488",
+        },
+    ],
     limits: &[("batchRows", 10_000)],
     run: run_isa,
     ..ToolDef::BLANK
@@ -701,6 +739,44 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
         },
     ],
     sentence: "Pressure altitude is {pressure_altitude}. The 1,000 ft per inch rule gives {rule_of_thumb}, off by {abs(rule_error)}.",
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Tropospheric lapse rate",
+            value: "-0.0065",
+            unit: "K/m",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Earth radius for geopotential altitude",
+            value: "6356766",
+            unit: "m",
+            source: "icao-7488",
+        },
+    ],
     limits: &[("batchRows", 10_000)],
     slots: &[
         Slot::new("elevation", &["elevation", "elev", "field", "airport"])
@@ -935,6 +1011,56 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
         kind: "vs-rule-of-thumb",
         text: "The 120 ft per °C rule of thumb gives {rule_120} ({abs(rule_120_error)} {if rule_120_error < 0}low{else}high{/if}).",
     },
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Tropospheric lapse rate",
+            value: "-0.0065",
+            unit: "K/m",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Magnus coefficient a (saturation vapor pressure)",
+            value: "17.625",
+            unit: "1",
+            source: "alduchov",
+        },
+        Assumption {
+            name: "Magnus coefficient b",
+            value: "243.04",
+            unit: "degC",
+            source: "alduchov",
+        },
+        Assumption {
+            name: "Magnus coefficient c",
+            value: "6.1094",
+            unit: "hPa",
+            source: "alduchov",
+        },
+    ],
     limits: &[("batchRows", 10_000)],
     slots: &[
         Slot::new("elevation", &["elevation", "elev", "field", "airport"])

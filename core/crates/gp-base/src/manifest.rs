@@ -486,6 +486,24 @@ pub fn manifest(def: &ToolDef) -> Json {
             ]),
         );
     }
+    if !def.assumptions.is_empty() {
+        put(
+            "x-assumptions",
+            Json::Arr(
+                def.assumptions
+                    .iter()
+                    .map(|a| {
+                        Json::obj([
+                            ("name", Json::str(a.name)),
+                            ("value", Json::str(a.value)),
+                            ("unit", Json::str(a.unit)),
+                            ("source", Json::str(a.source)),
+                        ])
+                    })
+                    .collect(),
+            ),
+        );
+    }
     if def.diagram_inline {
         put("x-diagram-inline", Json::Bool(true));
     }

@@ -119,6 +119,20 @@ const purpose = markTerms(t.summary, terms);
       </>
     )}
     <p><strong>Checked against:</strong> {t.vectorCount} golden test vectors (<a href={`/vectors/${t.id}.jsonl`} download>download the test vectors</a>, each with its source and tolerance). See <a href="/methodology/">how results are checked</a> and <a href="/sources/">every source</a>.</p>
+    {(t['x-assumptions'] ?? []).length > 0 && (
+      <>
+        <h3>Constants this tool assumes</h3>
+        <p class="help">Values you do not enter, and where each comes from.</p>
+        <dl class="groups assumptions">
+          {t['x-assumptions'].map((a) => (
+            <>
+              <dt>{a.name}</dt>
+              <dd><code>{a.value}{a.unit === '1' ? '' : ` ${a.unit}`}</code> — {sourceRow(a.source)?.name ?? a.source}</dd>
+            </>
+          ))}
+        </dl>
+      </>
+    )}
     <h3>Sources</h3>
     <ul>
       {t.references.map((r) => {

@@ -22,7 +22,7 @@
 - [x] 4.1 Add every extension to the meta-schema, closed to unknown fields; verify the unknown-extension and too-many-core-inputs scenarios (tools/trust/metaschema.mjs checks the built catalog: only the contract's tool and field extensions, well-formed x-comparison, x-clock-default, and x-primary-example, x-core on inputs only and at most 5 with a list of rows counting once; tested with x-color and six-core fixtures)
 - [x] 4.2 Implement the sentence-template renderer in the core with readability lint; verify the conditional and unit-profile scenarios
 - [x] 4.3 Create the glossary schema and missing-term gate; verify the RPP scenario (data/glossary.json with 92 entries, each a plain definition of at most 40 words citing a sources-ledger row, plus reasoned exclusions for symbols and example values; tools/trust/glossary.mjs fails the build naming the tool and term, keeps relatedTools in step with the catalog, and is tested with the RPP fixture)
-- [ ] 4.4 Implement primary-example designation and the parity gate across page, button, OG, hero card, MCP, and explainer; verify the example-parity scenario
+- [ ] 4.4 Implement primary-example designation and the parity gate across page, button, OG, hero card, MCP, and explainer; verify the example-parity scenario (done: x-primary-example is designated and validated, and the parity gate covers the page's shipped answer, the printed agent call, the home page's featured card, and the MCP default run for every tool, with divergent fixtures. Pending: OG images and explainers, neither of which the build emits yet)
 - [x] 4.5 Implement the decimal-separator rule in the core parser shared by all surfaces; verify both scenarios
 
 ## 5. Codes, profiles, and report API

@@ -128,6 +128,29 @@ test('run with no args runs the worked example; units selects a profile', async 
   assert.equal(si.structuredContent.result.mass.unit, 'kg');
 });
 
+// Example parity, the MCP half (contracts/manifest-extensions, "The primary
+// worked example"): the default run is the primary example, for every tool,
+// so an agent and a reader are looking at the same numbers.
+test('every tool: the default run is its primary example', async () => {
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const problems = [];
+  for (const t of catalog.tools) {
+    const primary = t.examples.find((e) => e.id === t['x-primary-example']);
+    if (!primary) {
+      problems.push(`${t.id}: x-primary-example ${t['x-primary-example']} is not one of its examples`);
+      continue;
+    }
+    const [byDefault, explicit] = await Promise.all([
+      c.call('geoprims_run', { id: t.id }),
+      c.call('geoprims_run', { id: t.id, args: primary.input }),
+    ]);
+    if (JSON.stringify(byDefault.structuredContent) !== JSON.stringify(explicit.structuredContent)) {
+      problems.push(`${t.id}: the default run is not the primary example ${primary.id}`);
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
 test('wrong id is a recoverable error with suggestions', async () => {
   const r = await c.call('geoprims_run', { id: 'units.kt-to-mph', args: { value: 1 } });
   assert.equal(r.isError, true);

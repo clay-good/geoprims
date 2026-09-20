@@ -33,6 +33,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `scripts/lastmod.mjs` | The content hash behind each sitemap `lastmod`: a page's words with Astro's scoped classes and bundle hashes taken out, so a JavaScript-only release moves no dates |
 | `scripts/routes.mjs` | The route-map gate: classifies every built page against `contracts/routes-and-urls` and fails naming anything outside the map, then writes `dist/_redirects` from `data/redirects.json` |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |
+| `test/parity.test.mjs` | Example parity: every page ships the answer to its own primary example, and so do the printed agent call and the home page's featured card |
 | `test/routes.test.mjs` | The route classifier, the canonical and noindex rules per route class, and the redirects file |
 
 Generated endpoints (like `/units/speed/kt-to-mph/`) canonicalize to their parent operation. Experimental tools are `noindex` until they have their full content.

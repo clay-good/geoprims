@@ -16,7 +16,7 @@
 
 - [x] 3.1 Implement the numeric input contract with ± toggle and decimal-comma support, plus the attribute gate; verify both input scenarios
 - [x] 3.2 Implement 48 px targets and Field mode (56 px, larger results, step buttons); verify the touch-target scenario
-- [ ] 3.3 Implement the sticky answer bar tracking the visual viewport; verify the keyboard-open scenario on iOS and Android emulation
+- [ ] 3.3 Implement the sticky answer bar tracking the visual viewport; verify the keyboard-open scenario on iOS and Android emulation (done so far: the bar lifts by what the visual viewport says the keyboard covers, and the page re-checks whether the answer card is still on screen each time it moves, both driven by a stand-in viewport in `apps/web/test/keyboard.test.mjs`; pending: the same scenario on real iOS and Android emulation, which waits on the browser matrix of task 3.5)
 - [ ] 3.4 Implement responsive layouts (320 px up, side-by-side from 900 px and on landscape tablets, split-screen); verify the landscape-iPad scenario
 - [ ] 3.5 Build the mobile quality gates (full 320 px sweep, sampled landscape and 200% zoom, Chromium and WebKit, 2xx guard); verify the overflow scenario
 - [ ] 3.6 Wire one-tap sunlight and night modes, with the night canvas palette and no bright frames; verify the one-tap scenario and a luminance check

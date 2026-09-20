@@ -9,6 +9,7 @@
   import { cellText, rowTables } from '../lib/rows.js';
 
   import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
+  import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
   let { tool, example, initial, embedded = false } = $props();
@@ -253,11 +254,22 @@
   let answerCard = $state(null);
   let answerHidden = $state(false);
   function checkAnswer() {
-    answerHidden = !!answerCard && answerCard.getBoundingClientRect().bottom < 0;
+    if (!answerCard) return;
+    const box = answerCard.getBoundingClientRect();
+    // What the keyboard covers is not on screen, however tall the window says
+    // it is, so the card counts as hidden behind it too.
+    const bottom = innerHeight - keyboardInset(visualViewport, innerHeight);
+    answerHidden = box.bottom < 0 || box.top > bottom;
   }
   onMount(() => {
     addEventListener('scroll', checkAnswer, { passive: true });
-    return () => removeEventListener('scroll', checkAnswer);
+    // The bar rides above the on-screen keyboard, which covers a fixed
+    // element pinned to the bottom of the page.
+    const untrack = trackKeyboard(document.documentElement, window, checkAnswer);
+    return () => {
+      removeEventListener('scroll', checkAnswer);
+      untrack();
+    };
   });
 
   let pinned = $state(false);

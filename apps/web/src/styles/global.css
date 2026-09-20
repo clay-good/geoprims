@@ -258,7 +258,8 @@ footer.site nav a:hover { color: var(--accent); text-decoration: underline; }
 .answer-bar { display: none; }
 @media (max-width: 55.99rem) {
   .answer-bar {
-    position: fixed; inset-inline: 12px; inset-block-end: 12px; z-index: 5; margin: 0;
+    /* --keyboard is what the on-screen keyboard covers; see lib/keyboard.mjs. */
+    position: fixed; inset-inline: 12px; inset-block-end: calc(12px + var(--keyboard, 0px)); z-index: 5; margin: 0;
     display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     padding: 0.6rem 1rem; border-radius: var(--radius-lg); border: 1px solid var(--line);
     background: var(--surface); color: var(--text); inline-size: auto;

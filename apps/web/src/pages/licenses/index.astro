@@ -1,0 +1,66 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { buildTools, datasets, excluded, siteLicense } from '../../lib/licenses.mjs';
+---
+<Base title="Licenses · geoprims" description="Every dataset, font, and build dependency geoprims uses, with its license and the attribution its license requires, and the datasets left out with the reason." canonical="/licenses/">
+  <PageHeader title="Licenses" purpose="What geoprims is built from, and the attribution each licence asks for." />
+
+  <p>
+    geoprims itself is <strong>{siteLicense.spdx}</strong>. Its source is at
+    <a href="https://github.com/clay-good/geoprims">github.com/clay-good/geoprims</a>, and the
+    <a href="/verification/">verification report</a> lists the digest of every module in this release.
+  </p>
+
+  <h2>Data shipped with the site</h2>
+  <p>Every dataset is self-hosted, with its SHA-256 checked before it is used. None is fetched from a third party at run time.</p>
+  <table>
+    <thead><tr><th scope="col">Dataset</th><th scope="col">Issuer</th><th scope="col">License</th></tr></thead>
+    <tbody>
+      {datasets.map((d) => (
+        <tr>
+          <td><a href={d.sourceUrl}>{d.title}</a><br /><span class="help">{d.attribution}</span></td>
+          <td>{d.issuer}</td>
+          <td>{d.license}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2>Fonts and the base map</h2>
+  <ul>
+    <li>
+      <strong>Geist and Geist Mono</strong>, © 2023 Vercel in collaboration with basement.studio, under the
+      <a href="/fonts/OFL.txt">SIL Open Font License 1.1</a>. Subset and self-hosted.
+    </li>
+    <li>
+      <strong>Natural Earth</strong> 1:110m land, lakes, and boundaries, public domain. Made with Natural Earth.
+    </li>
+  </ul>
+
+  <h2>Build dependencies</h2>
+  <p>None of these ship to your browser as themselves; they build the static files this site serves.</p>
+  <table>
+    <thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">License</th></tr></thead>
+    <tbody>
+      {buildTools.map((t) => (
+        <tr><td>{t.name}</td><td>{t.version}</td><td>{t.license}</td></tr>
+      ))}
+    </tbody>
+  </table>
+  <p>
+    The Rust core and the MCP server have no third-party runtime dependencies. The MCP server is plain Node with none
+    at all.
+  </p>
+
+  <h2>Left out on purpose</h2>
+  <p>Some datasets people ask for are not here, and will not be. The reason matters more than the absence:</p>
+  <dl>
+    {excluded.map((x) => (
+      <>
+        <dt>{x.name}</dt>
+        <dd>{x.reason}</dd>
+      </>
+    ))}
+  </dl>
+</Base>

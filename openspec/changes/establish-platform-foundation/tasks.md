@@ -46,7 +46,7 @@
 - [ ] 5.8 Implement integrity verification and eviction in both hosts; verify the corrupted-tile scenario
 - [ ] 5.9 Implement validity-window enforcement and the `MODEL_EXTRAPOLATED` / `OUT_OF_DOMAIN` behaviors; verify the WMM 2030.5 scenario
 - [ ] 5.10 Implement the `NON_OFFICIAL_DATUM` labeling from registry status; verify the SPCS2022 beta scenario
-- [ ] 5.11 Write the exclusions list (what3words, EMM) with reasons; verify it renders on `/licenses`
+- [x] 5.11 Write the exclusions list (what3words, EMM) with reasons; verify it renders on `/licenses` (what3words, the Enhanced Magnetic Model, copyrighted design tables, and commercial basemap tiles, each with the reason, rendered on /licenses/ and checked by a test)
 
 ## 6. Verification infrastructure
 
@@ -76,6 +76,6 @@
 ## 9. Release readiness
 
 - [ ] 9.1 Write the release pipeline (tag → build → verify → deploy site and assets → publish MCP server); verify on a release-candidate tag in a staging environment
-- [ ] 9.2 Publish the `/licenses` page generated from the registry and SBOM; verify every dependency and dataset appears
-- [ ] 9.3 Write the site-wide disclaimer, privacy page, and accuracy policy; verify each is linked from every page footer
+- [ ] 9.2 Publish the `/licenses` page generated from the registry and SBOM; verify every dependency and dataset appears (done: /licenses/ renders every asset-registry row with its licence and required attribution, the fonts under the OFL, the Natural Earth base map with the attribution its licence asks for, the build dependencies from the website's own package.json, and the exclusions list. A test fails if a registry row is missing. Pending: a full SBOM, which waits on the release pipeline)
+- [ ] 9.3 Write the site-wide disclaimer, privacy page, and accuracy policy; verify each is linked from every page footer (done: /disclaimer/ and a new /privacy/ that states what runs on the device, what the browser keeps, the one thing that is ever sent and exactly what it carries, the bot check as the only third-party code, and that no IP address is stored; the footer links both on every page, and tests check the promises and the links. Pending: the accuracy policy as its own page, which /methodology/ currently carries)
 - [ ] 9.4 Obtain export-control and liability review of the catalog and disclaimers; verify written sign-off is recorded before public launch

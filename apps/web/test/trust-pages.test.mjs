@@ -64,3 +64,39 @@ test('the "Use with agents" page shows every client snippet and the toolsets', a
   for (const name of Object.keys(TOOLSETS)) assert.ok(html.includes(`<code>${name}</code>`), name);
   assert.ok(page('').includes('href="/agents/"'));
 });
+
+test('the privacy page says what is kept, what is sent, and what never is', () => {
+  const html = page('/privacy/');
+  for (const promise of ['No accounts', 'No advertising', 'No analytics', 'No cookies', 'No third-party requests']) {
+    assert.ok(html.includes(promise), `the privacy page does not promise: ${promise}`);
+  }
+  // The one exception, named, and the one thing that is ever sent.
+  assert.match(html, /Turnstile/, 'names the bot check');
+  assert.match(html, /only while the report dialog is open/);
+  assert.match(html, /does not store your IP address/);
+  assert.match(html, /gp-/, 'names the local-storage keys');
+  // The note cap comes from the shared limits file, not a number typed twice.
+  const limits = JSON.parse(readFileSync(join(root, 'data/report-limits.json'), 'utf8'));
+  assert.ok(html.includes(`up to ${limits.noteChars} characters`), 'the note cap is the shared one');
+});
+
+test('the licenses page lists every registered dataset with its attribution', () => {
+  // Astro escapes the apostrophes in dataset titles; compare the text a reader sees.
+  const html = page('/licenses/').replaceAll('&#39;', "'").replaceAll('&amp;', '&').replaceAll('&quot;', '"');
+  const registry = JSON.parse(readFileSync(join(root, 'assets/registry.json'), 'utf8'));
+  for (const a of registry.assets) {
+    assert.ok(html.includes(a.title), `${a.id} is not listed`);
+    assert.ok(html.includes(a.license), `${a.id} has no license`);
+  }
+  assert.match(html, /Open Font License/, 'the fonts are attributed');
+  assert.match(html, /Made with Natural Earth/, 'the base map carries its required attribution');
+  for (const left of ['what3words', 'Enhanced Magnetic Model', 'Natural Earth']) assert.ok(html.includes(left), left);
+});
+
+test('every page links privacy and licenses in its footer', () => {
+  for (const route of ['/', '/tools/', '/aviation/', '/aviation/altimetry/density-altitude/', '/settings/']) {
+    const html = page(route);
+    assert.match(html, /<a href="\/privacy\/">Privacy<\/a>/, `${route} does not link privacy`);
+    assert.match(html, /<a href="\/licenses\/">Licenses<\/a>/, `${route} does not link licenses`);
+  }
+});

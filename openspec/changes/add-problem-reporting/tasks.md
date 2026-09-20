@@ -38,5 +38,5 @@
 
 ## 6. Privacy and launch
 
-- [ ] 6.1 Update the privacy page (what is sent, Turnstile, retention, no IP storage); verify each statement against the implementation checklist
+- [x] 6.1 Update the privacy page (what is sent, Turnstile, retention, no IP storage); verify each statement against the implementation checklist (/privacy/ lists every field a report carries, the x-private and "(withheld)" rules, the note cap read from data/report-limits.json so it cannot drift, Turnstile as the only third-party code and only while the dialog is open, the salted daily counter in place of an address, and the retention rules the cron enforces; a test checks each statement)
 - [ ] 6.2 Run the launch verification checklist on production (round trip, duplicate, quota, offline, kill switch); verify and record results in the runbook

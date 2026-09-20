@@ -383,6 +383,10 @@
     "hash": "ec03a40c42e7b3ab",
     "lastmod": "2026-09-19"
   },
+  "/licenses/": {
+    "hash": "d39cac422e76dbec",
+    "lastmod": "2026-09-20"
+  },
   "/methodology/": {
     "hash": "21ca69ffa5cce091",
     "lastmod": "2026-09-19"
@@ -437,6 +441,10 @@
   },
   "/navigation/route/time-speed-distance/": {
     "hash": "a555a7ec3c952c2d",
+    "lastmod": "2026-09-20"
+  },
+  "/privacy/": {
+    "hash": "eb7846107680f6dd",
     "lastmod": "2026-09-20"
   },
   "/sources/": {

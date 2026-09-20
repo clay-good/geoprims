@@ -12,6 +12,7 @@
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
+  import { exportText, fileName, FORMATS as EXPORTS, pointsOf } from '../lib/export.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
   let { tool, example, initial, embedded = false } = $props();
@@ -286,6 +287,31 @@
     applyRead(lat, lon);
   }
 
+  // Downloading a result (web/io-formats). The geographic formats are offered
+  // only when the result actually holds a point.
+  let exportOpen = $state(false);
+  const exportable = $derived(
+    result?.ok ? EXPORTS.filter((f) => !f.geographic || pointsOf(tool, result).length > 0) : [],
+  );
+
+  /** Writes one format to a file the browser saves. */
+  function download(format) {
+    const text = exportText(format.id, {
+      tool,
+      args: args(),
+      result,
+      display: result.display ?? {},
+      today: new Date().toISOString(),
+    });
+    const url = URL.createObjectURL(new Blob([text], { type: `${format.type};charset=utf-8` }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName(tool, format.id);
+    a.click();
+    URL.revokeObjectURL(url);
+    exportOpen = false;
+  }
+
   /** The catalog, fetched once and only when a reader asks to send a value. */
   let tools = null;
   const allTools = async () => (tools ??= (await (await fetch('/catalog/v1.json')).json()).tools);
@@ -466,6 +492,7 @@
       <button type="button" class="quiet" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
       <button type="button" class="quiet" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied ✓' : 'Copy sentence'}</button>
       <button type="button" class="quiet" onclick={share}>{copied === 'link' ? 'Link copied ✓' : 'Share'}</button>
+      <button type="button" class="quiet" onclick={() => (exportOpen = !exportOpen)} aria-expanded={exportOpen}>Download</button>
       <button type="button" class="quiet" onclick={() => copy('reference')} title="The answer with its inputs, method, sources, versions, and the notice">{copied === 'reference' ? 'Copied ✓' : 'Copy with reference'}</button>
       <button type="button" class="quiet" onclick={() => copy('agent-call')} title="The geoprims_run call that reproduces this, for an agent or the MCP server">{copied === 'agent-call' ? 'Call copied ✓' : 'Copy agent call'}</button>
       {#if hasUnits}
@@ -477,6 +504,13 @@
       {/if}
       {#if !embedded}<button type="button" class="quiet star" aria-pressed={pinned} aria-label={pinned ? 'Unpin tool' : 'Pin tool'} title={pinned ? 'Pinned to your home page' : 'Pin to your home page'} onclick={pin}>{pinned ? '★' : '☆'}</button>{/if}
     </div>
+    {#if exportOpen}
+      <div class="export-menu" role="group" aria-label="Download this result as">
+        {#each exportable as format}
+          <button type="button" class="quiet" onclick={() => download(format)}>{format.label}</button>
+        {/each}
+      </div>
+    {/if}
   {:else if result}
     <p class="error">{result.error.message}</p>
     {#if result.error.hint}<p class="hint">{result.error.hint}</p>{/if}

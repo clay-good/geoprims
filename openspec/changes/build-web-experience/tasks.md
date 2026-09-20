@@ -56,7 +56,7 @@
 - [ ] 7.1 Implement worker-based parsers for GeoJSON, KML/KMZ, GPX, CSV/TSV, WKT/WKB with size limits and safe parsing; verify with a fixture corpus including malicious KML
 - [ ] 7.2 Implement the CSV column-mapping dialog with swap detection and CRS choice; verify the swapped-columns scenario
 - [ ] 7.3 Implement geometry validation and repair on import; verify the unclosed-ring scenario
-- [ ] 7.4 Implement exporters (JSON, GeoJSON, KML, GPX, CSV, WKT, text, calculation sheet); verify round-trip import of each exported geographic format
+- [x] 7.4 Implement exporters (JSON, GeoJSON, KML, GPX, CSV, WKT, text, calculation sheet); verify round-trip import of each exported geographic format (all eight, as pure functions in `apps/web/src/lib/export.mjs`, behind a Download button on the answer card; the geographic four are offered only when the result holds a point. Every geographic export is read back and compared point for point in `apps/web/test/export.test.mjs`, GeoJSON is `[lon, lat]` per RFC 7946, the XML formats escape what would otherwise close a tag, and the calculation sheet carries the inputs, the results, the method, every source with its locator, the versions, the instant, and the notice. Importing files is task 7.1 and is not built; the round-trip here reads each export back, it does not yet open a file a reader brings.)
 - [ ] 7.5 Implement batch mode (100,000 rows, progress, cancel, per-row errors, joined export); verify the 10,000-row mixed-error scenario
 
 ## 8. Offline PWA

@@ -53,6 +53,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/canonical.test.mjs` | One canonical per page on its clean path, the reader's values only ever in the fragment, and `#example` on a link that opens the worked example |
 | `src/lib/chain.mjs`, `test/chain.test.mjs` | "Send to": which tools take a value, the one link that carries it with a breadcrumb back, and the geodesic-to-wind scenario end to end |
 | `src/lib/coordinate.mjs`, `test/coordinate.test.mjs` | The paste-a-coordinate field: any notation the catalog decodes, what it read shown before computing, and the swap when the order was assumed |
+| `src/lib/export.mjs`, `test/export.test.mjs` | The eight export formats and the calculation sheet, with every geographic export read back and compared point for point |
 | `test/targets.test.mjs` | Touch targets: the 48 px token, 56 px in Field mode, one rule sizing every control from it, nothing sizing a control below it, 8 px between neighbours, and the step buttons shown only in Field mode |
 | `test/fields.test.mjs` | Stepping a typed value: the unit stays, the reader's decimal separator stays, no floating-point noise |
 | `test/input-contract.test.mjs` | The numeric input contract: no `type="number"`, `inputmode="decimal"` on every numeric field, autocomplete/autocorrect/spellcheck off, `enterkeyhint` of `next` or `done`, a ± toggle wherever a value can read below zero, input text at 16 px, and pinch-zoom left alone |

@@ -266,7 +266,9 @@
 
   async function copy(kind) {
     const href = embedded ? new URL(toolHref, location.origin).href : location.href;
-    const text = copyText(kind, { answer, result, tool, args: args(), href });
+    // The day the reader copied it, which belongs to the copy, not the result.
+    const today = new Date().toISOString().slice(0, 10);
+    const text = copyText(kind, { answer, result, tool, args: args(), href, today });
     await navigator.clipboard.writeText(text);
     copied = kind;
     setTimeout(() => (copied = ''), 1500);
@@ -382,6 +384,7 @@
       <button type="button" class="quiet" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
       <button type="button" class="quiet" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied ✓' : 'Copy sentence'}</button>
       <button type="button" class="quiet" onclick={share}>{copied === 'link' ? 'Link copied ✓' : 'Share'}</button>
+      <button type="button" class="quiet" onclick={() => copy('reference')} title="The answer with its inputs, method, sources, versions, and the notice">{copied === 'reference' ? 'Copied ✓' : 'Copy with reference'}</button>
       <button type="button" class="quiet" onclick={() => copy('agent-call')} title="The geoprims_run call that reproduces this, for an agent or the MCP server">{copied === 'agent-call' ? 'Call copied ✓' : 'Copy agent call'}</button>
       {#if hasUnits}
         <label class="units-switch"><span class="sr-only">Units</span>

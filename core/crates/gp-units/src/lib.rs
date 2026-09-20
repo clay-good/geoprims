@@ -38,7 +38,7 @@ const ICAO_ANNEX5: Reference = Reference {
     year: 2010,
     edition: "5th edition",
     locator: "Chapter 3 and Table 3-3",
-    url: "https://store.icao.int/en/annex-5-units-of-measurement-to-be-used-in-air-and-ground-operations",
+    url: "https://store.icao.int/en/annex-5-units-of-measurement-to-be-used-in-the-air-and-ground-services",
 };
 
 const FR_2019_SURVEY_FOOT: Reference = Reference {

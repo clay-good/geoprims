@@ -19,9 +19,9 @@ const GEOHASH_REF: Reference = Reference {
     title: "Geohash (public domain algorithm)",
     issuer: "Niemeyer, G., geohash.org",
     year: 2008,
-    edition: "Original description",
+    edition: "Original description, as archived (the site is gone)",
     locator: "Base-32 alphabet 0123456789bcdefghjkmnpqrstuvwxyz, longitude bit first",
-    url: "http://geohash.org/site/tips.html",
+    url: "https://web.archive.org/web/20080305223755/http://geohash.org/site/tips.html",
 };
 const OSM_TILES: Reference = Reference {
     title: "Slippy map tilenames",

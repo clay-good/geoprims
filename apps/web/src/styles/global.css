@@ -178,6 +178,9 @@ button.term:hover { color: var(--accent); }
 [popover].def p:last-child { margin-block-end: 0; }
 .def-source { color: var(--muted); font-size: 0.85em; }
 
+/* Where a cited document can be read, or the fact that it is sold. */
+.free-access { color: var(--muted); font-size: 0.9em; }
+
 /* Whether this browser holds the release, said plainly in the footer. */
 .chip.offline { display: inline-block; margin-inline-end: 0.6rem; padding: 0.05rem 0.45rem; border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.85em; color: var(--muted); }
 .chip.offline[data-state='ready'] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }

@@ -1071,7 +1071,7 @@ const EPSG_DATASET: Reference = Reference {
     year: 2025,
     edition: "v10.094, as shipped in PROJ 9.3.0",
     locator: "Transformations 1108, 1122, 1133, 1173, 1267, 1305, 1314, 1864 to WGS 84",
-    url: "https://epsg.org/",
+    url: "https://epsg.org/search/by-name",
 };
 
 /// A published transformation from a legacy datum to WGS 84.

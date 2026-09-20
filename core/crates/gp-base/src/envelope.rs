@@ -33,6 +33,9 @@ pub struct Meta {
     /// For a deprecated tool (`meta.deprecation`): the id that replaces it and
     /// the version that removes it. The tool still runs until then.
     pub deprecation: Option<(&'static str, &'static str)>,
+    /// What the answer is traceable to (`meta.references`, trust/citations:
+    /// "Citations travel with results"), in short form.
+    pub references: &'static [crate::tool::Reference],
 }
 
 impl Meta {
@@ -92,6 +95,12 @@ impl Meta {
                 ]),
             ));
         }
+        if !self.references.is_empty() {
+            pairs.push((
+                "references".to_owned(),
+                Json::Arr(self.references.iter().map(short_reference).collect()),
+            ));
+        }
         if let Some(l) = self.limitation {
             pairs.push((
                 "limitation".to_owned(),
@@ -104,6 +113,20 @@ impl Meta {
         }
         Json::Obj(pairs)
     }
+}
+
+/// A citation as it travels with a result (trust/citations, "Citations travel
+/// with results"): who published it, what it is, which edition, and where in
+/// it to look — enough to find the page, small enough to carry on every call.
+/// The link is not part of the short form; the tool page and
+/// `geoprims_describe` carry it.
+pub fn short_reference(r: &crate::tool::Reference) -> Json {
+    Json::obj([
+        ("issuer", Json::str(r.issuer)),
+        ("title", Json::str(r.title)),
+        ("edition", Json::str(r.edition)),
+        ("locator", Json::str(r.locator)),
+    ])
 }
 
 /// Serializes a success envelope:
@@ -191,6 +214,7 @@ mod tests {
                 Warning::new("INPUT_NORMALIZED", "a").at("/lon"),
             ],
             context: vec![],
+            references: &[],
             notice: None,
             limitation: None,
             deprecation: None,

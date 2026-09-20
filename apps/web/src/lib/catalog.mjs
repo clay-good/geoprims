@@ -60,6 +60,10 @@ export const CHANGE_KINDS = KINDS;
 /** Changelog entries that name a tool. */
 export const changesFor = (id) => entriesFor(changelog, id);
 const glossary = JSON.parse(readFileSync(join(root, 'data/glossary.json'), 'utf8'));
+/** The sources ledger and the row a citation matches, for the page renderer. */
+export { ledger };
+export const ledgerRowFor = (rows, ref) => rowFor(rows, ref);
+
 /** A sources-ledger row by id, for anything that cites one. */
 export const sourceRow = (id) => sourceById.get(id) ?? null;
 

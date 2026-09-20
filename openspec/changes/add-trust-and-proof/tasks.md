@@ -2,7 +2,7 @@
 
 - [ ] 1.1 Define the citation schema and `data/citations/<domain>.json` layout; verify the schema rejects missing edition or locator (coverage scenario)
 - [ ] 1.2 Write citation records for every tool, including sourced assumptions; verify the coverage gate passes with zero exemptions
-- [ ] 1.3 Implement the shared citation renderer (page, print, copy-with-reference, calculation sheet, MCP `meta.references`); verify the copy-with-reference scenario
+- [x] 1.3 Implement the shared citation renderer (page, print, copy-with-reference, calculation sheet, MCP `meta.references`); verify the copy-with-reference scenario (one renderer in `apps/web/src/lib/citation.mjs` writes a citation for the page, the printed sheet, and the new "Copy with reference" action — answer, inputs, method, every citation with its locator, tool and core versions, the day it was copied, and the not-for-legal notice — and the core now puts the same short form in every result's `meta.references`, so an agent's answer is as traceable as the page's. That costs 476 tokens per MCP task against 406 before, recorded in `data/mcp-eval.json`. A cited document that is sold says "Paid only" rather than pretending to be free, and `apps/web/scripts/links.mjs` gives every outbound link `rel="noopener noreferrer"` at build time — 1,216 of them, none of which had it.)
 - [ ] 1.4 Replace any reproduced copyrighted table with a cited input field; verify the sight-distance scenario and a lint for table-shaped constants in the flagged tools
 - [x] 1.5 Build the inverse source map; verify the edition-rollover scenario (tools/trust/ledger.mjs maps every citation to its ledger row; rolling a row to a new edition fails the build and names the citing tools)
 
@@ -11,7 +11,7 @@
 - [x] 2.1 Create `data/sources-ledger.json` with every required row; verify the ledger-completeness gate
 - [x] 2.2 Implement the superseded-edition, overdue-verification, and model-expiry gates; verify each scenario with fixture ledgers
 - [x] 2.3 Implement monotonic provenance stamps against the base branch; verify the stale-revert scenario
-- [ ] 2.4 Add the monthly free-access probe workflow that opens issues; verify against a fixture with a dead link
+- [ ] 2.4 Add the monthly free-access probe workflow that opens issues; verify against a fixture with a dead link (done so far: a shape gate in `apps/web/test/citation.test.mjs` fails on any cited or free-access link that is a bare home page, which found 17; each was repointed at a page checked live, and two dead links were found on the way — the ICAO Annex 5 product page and geohash.org, which no longer resolves at all and is now cited through its archived original. Pending: the scheduled probe itself, which needs CI.)
 - [ ] 2.5 Link regulatory reference entries to ledger rows with "Rules as of" rendering; verify the Part 108 status-change scenario
 
 ## 3. Correctness program

@@ -4,6 +4,8 @@ import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
 import { defId, markTerms, sourceOf } from '../../../../lib/terms.mjs';
+import { freeAccess } from '../../../../lib/citation.mjs';
+import { ledger, ledgerRowFor as rowFor } from '../../../../lib/catalog.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
 import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
@@ -119,9 +121,17 @@ const purpose = markTerms(t.summary, terms);
     <p><strong>Checked against:</strong> {t.vectorCount} golden test vectors (<a href={`/vectors/${t.id}.jsonl`} download>download the test vectors</a>, each with its source and tolerance). See <a href="/methodology/">how results are checked</a> and <a href="/sources/">every source</a>.</p>
     <h3>Sources</h3>
     <ul>
-      {t.references.map((r) => (
-        <li><a href={r.url}>{r.title}</a>, {r.issuer}, {r.edition}. {r.locator}.</li>
-      ))}
+      {t.references.map((r) => {
+        const free = freeAccess(r, rowFor(ledger, r));
+        return (
+          <li>
+            <a href={r.url}>{r.title}</a>, {r.issuer}, {r.edition}. {r.locator}.
+            {free && (free.url
+              ? <> <a class="free-access" href={free.url}>{free.label}</a>.</>
+              : <> <span class="free-access">{free.label}</span>.</>)}
+          </li>
+        );
+      })}
     </ul>
     {t.stability === 'experimental' && (
       <p class="notice">Experimental means this tool has not yet met the stable bar: at least 20 golden vectors, differential tests, and an independent worked example.</p>

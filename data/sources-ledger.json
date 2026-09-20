@@ -93,7 +93,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Checked at the issuer on 2026-09-18. GeographicLib 2.7 installed for GeoidEval parity.",
-      "freeAccessUrl": "https://geographiclib.sourceforge.io/",
+      "freeAccessUrl": "https://geographiclib.sourceforge.io/C++/doc/index.html",
       "matchTerms": [
         "GeographicLib"
       ],
@@ -113,7 +113,7 @@
       "validTo": null,
       "lastVerified": null,
       "verificationNote": "Not cited yet.",
-      "freeAccessUrl": "https://earth-info.nga.mil/",
+      "freeAccessUrl": "https://earth-info.nga.mil/index.php?dir=wgs84&action=egm2008",
       "matchTerms": [
         "EGM2008"
       ],
@@ -237,7 +237,7 @@
       "validTo": null,
       "lastVerified": "2026-09-19",
       "verificationNote": "Checked on 2026-09-19: proj.db in PROJ 9.3.0 (pyproj 3.6.1) reports EPSG v10.094; used for the SPCS83 zones and the legacy-datum transformations.",
-      "freeAccessUrl": "https://epsg.org/",
+      "freeAccessUrl": "https://epsg.org/search/by-name",
       "matchTerms": [
         "EPSG Geodetic Parameter",
         "EPSG dataset"
@@ -338,7 +338,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://earth-info.nga.mil/",
+      "freeAccessUrl": "https://earth-info.nga.mil/php/download.php?file=coord-utmups",
       "matchTerms": [
         "NGA.SIG.0012",
         "The Universal Grids and the Transverse Mercator"
@@ -359,7 +359,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://earth-info.nga.mil/",
+      "freeAccessUrl": "https://earth-info.nga.mil/php/download.php?file=coord-mgrs",
       "matchTerms": [
         "NGA.STND.0037",
         "Military Grid Reference System"
@@ -583,7 +583,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://h3geo.org/",
+      "freeAccessUrl": "https://h3geo.org/docs/core-library/overview",
       "matchTerms": [
         "H3: A Hexagonal"
       ],
@@ -623,7 +623,7 @@
       "validTo": null,
       "lastVerified": null,
       "verificationNote": "Not cited yet.",
-      "freeAccessUrl": "https://s2geometry.io/",
+      "freeAccessUrl": "https://s2geometry.io/devguide/s2cell_hierarchy",
       "matchTerms": [
         "S2 Geometry"
       ],
@@ -663,7 +663,7 @@
       "validTo": null,
       "lastVerified": null,
       "verificationNote": "Not cited yet (experimental per the launch plan).",
-      "freeAccessUrl": "https://a5geo.org/",
+      "freeAccessUrl": "https://a5geo.org/docs",
       "matchTerms": [
         "A5 pentagonal"
       ],
@@ -683,7 +683,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "http://geohash.org/",
+      "freeAccessUrl": "https://web.archive.org/web/20080305223755/http://geohash.org/site/tips.html",
       "matchTerms": [
         "Geohash"
       ],
@@ -823,7 +823,7 @@
       "validTo": null,
       "lastVerified": null,
       "verificationNote": "Not cited yet.",
-      "freeAccessUrl": "https://store.icao.int/",
+      "freeAccessUrl": "https://store.icao.int/en/procedures-for-air-navigation-services-pans-aircraft-operations-volume-i-flight-procedures-doc-8168",
       "matchTerms": [
         "Doc 8168",
         "PANS-OPS"
@@ -844,7 +844,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://store.icao.int/",
+      "freeAccessUrl": "https://store.icao.int/en/annex-5-units-of-measurement-to-be-used-in-the-air-and-ground-services",
       "matchTerms": [
         "Annex 5 to the Convention"
       ],
@@ -1287,7 +1287,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://www.mheducation.com/",
+      "freeAccessUrl": "https://www.mheducation.com/highered/product/elements-photogrammetry-applications-gis-wolf-dewitt/M9780071761123.html",
       "matchTerms": [
         "Elements of Photogrammetry"
       ],
@@ -1307,7 +1307,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://support.pix4d.com/",
+      "freeAccessUrl": "https://support.pix4d.com/hc/en-us/articles/202557459",
       "matchTerms": [
         "Selecting the image acquisition plan type"
       ],
@@ -1367,7 +1367,7 @@
       "validTo": null,
       "lastVerified": null,
       "verificationNote": "Not cited yet.",
-      "freeAccessUrl": "https://www.nsps.us.com/",
+      "freeAccessUrl": "https://www.alta.org/file.cfm?name=2021-alta-nsps-standards",
       "matchTerms": [
         "ALTA/NSPS"
       ],
@@ -1407,7 +1407,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://www.pearson.com/",
+      "freeAccessUrl": "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000006224",
       "matchTerms": [
         "Elementary Surveying"
       ],
@@ -1427,7 +1427,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://www.wiley.com/",
+      "freeAccessUrl": "https://www.wiley.com/en-us/Introduction+to+Random+Signals+and+Applied+Kalman+Filtering-p-9780470609699",
       "matchTerms": [
         "Brown's Boundary Control"
       ],
@@ -1487,7 +1487,7 @@
       "validTo": "2027-06-30",
       "lastVerified": "2026-09-18",
       "verificationNote": "Checked at the issuer on 2026-09-18. Bulletin C 72: no leap second through 2027-06-30.",
-      "freeAccessUrl": "https://datacenter.iers.org/",
+      "freeAccessUrl": "https://datacenter.iers.org/data/latestVersion/bulletinC.txt",
       "matchTerms": [
         "IERS Bulletin C"
       ],
@@ -1587,7 +1587,7 @@
       "validTo": null,
       "lastVerified": "2026-09-18",
       "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://www.willbell.com/",
+      "freeAccessUrl": "https://www.willbell.com/math/mc1.htm",
       "matchTerms": [
         "Astronomical Algorithms"
       ],
@@ -1726,7 +1726,7 @@
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-09-19",
-      "verificationNote": "Checked at the issuer on 2026-09-19: NGA's publications API serves Bowditch_Vol_1.pdf and Bowditch_Vol_2.pdf, both titled 2024 EDITION, © 2024 NGA.",
+      "verificationNote": "Checked at the issuer on 2026-09-19: NGA's publications API serves Bowditch_Vol_1.pdf and Bowditch_Vol_2.pdf, both titled 2024 EDITION, \u00a9 2024 NGA.",
       "freeAccessUrl": "https://msi.nga.mil/Publications/APN",
       "matchTerms": [
         "American Practical Navigator"

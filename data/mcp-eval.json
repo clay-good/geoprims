@@ -4,7 +4,7 @@
   "selection1": 95.4,
   "selection3": 99.8,
   "answered": 94.8,
-  "tokensPerTask": 406,
+  "tokensPerTask": 476,
   "misses": [
     {
       "query": "100 mph drone with 90 mph 15 mph",

@@ -1050,6 +1050,7 @@ impl Registry {
                         } => Some((replacement, removal)),
                         _ => None,
                     },
+                    references: def.references,
                 };
                 envelope::success_with_trace(
                     x.result,

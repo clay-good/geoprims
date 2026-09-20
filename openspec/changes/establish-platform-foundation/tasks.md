@@ -29,14 +29,14 @@
 
 - [x] 4.1 Implement the uniform `invoke`, `invokeBatch`, `manifest`, `version` exports per module; verify the unknown-tool and batch-order scenarios
 - [x] 4.2 Implement the host asset-provider interface and `ASSET_UNAVAILABLE` flow; verify with a mock provider that supplies, withholds, and corrupts an asset
-- [ ] 4.3 Implement per-invocation memory caps and `LIMIT_EXCEEDED` pre-checks; verify with an over-limit fixture that no allocation beyond the cap occurs
+- [x] 4.3 Implement per-invocation memory caps and `LIMIT_EXCEEDED` pre-checks; verify with an over-limit fixture that no allocation beyond the cap occurs (packages/runtime/src/limits.test.mjs drives every capped list input from the tool's own example rows: one row over the cap is refused with LIMIT_EXCEEDED naming the cap and returning no result, and the cap itself still works, so it is not off by one. The byte cap is checked to refuse a payload before it is parsed)
 - [ ] 4.4 Implement progress reporting and cooperative cancellation for long tools; verify cancellation returns within 100 ms in a benchmark fixture
 - [ ] 4.5 Implement the browser worker host and trap containment; verify a trapping fixture restarts the worker and other tools keep working
 - [ ] 4.6 Implement the internal `packages/runtime` loader (done: shared module loader, input hardening, Node host) with browser and Node hosts (same Wasm, cache and filesystem asset providers); verify the cross-surface digest scenario (asset providers built: filesystem for Node and MCP, same-origin fetch in the browser worker, both checking SHA-256 with WebCrypto)
 
 ## 5. Data assets
 
-- [ ] 5.1 Implement the asset registry format and validator; verify every initial-dataset row is present with license, attribution, digest, and load policy (built: assets/registry.json with egm96-15, wmm2025, and igrf14, validated for fields, sizes, and digests; pending: the remaining initial datasets)
+- [ ] 5.1 Implement the asset registry format and validator; verify every initial-dataset row is present with license, attribution, digest, and load policy (built: assets/registry.json with egm96-15, wmm2025, igrf14, and nadcon5, validated for fields, sizes, and digests, and now cross-checked against the catalog in both directions: a dataset a tool uses must be registered, and a registered dataset no tool uses is caught as dead weight the licenses page would otherwise show. Each row's source URL, retrieval date, load policy, and attribution are checked for shape. Pending: the remaining initial datasets)
 - [ ] 5.2 Build asset pipelines for WMM2025, WMMHR2025, and IGRF-14 (coefficient files, public domain); verify digests and the NCEI test values load
 - [ ] 5.3 Build geoid tilers for EGM96-15, EGM2008-2.5, EGM2008-1, and GEOID18 (tiles ≥ 1° × 1°, per-tile digests, signed index); verify tile-size floor and digest checks
 - [ ] 5.4 Build NADCON5 grid packaging from NGS sources; verify against PROJ-data digests and NGS sample points
@@ -69,7 +69,7 @@
 ## 8. Catalog and lifecycle
 
 - [ ] 8.1 Implement the domain/group taxonomy file and validation; verify every id maps to exactly one group
-- [ ] 8.2 Implement lifecycle states and the stable-promotion gate (≥ 20 vectors, differential tests passing); verify promotion fails for a tool with 19 vectors
+- [x] 8.2 Implement lifecycle states and the stable-promotion gate (≥ 20 vectors, differential tests passing); verify promotion fails for a tool with 19 vectors (the gate runs over every stable tool in every test run; the spec's scenario is now pinned directly: a passing tool with its vector count set to 19 is refused with exactly that problem, 20 is accepted, and a tool still advertising the EXPERIMENTAL_TOOL warning cannot be stable)
 - [x] 8.3 Implement deprecation redirects and deprecation notices in results; verify the deprecated-id scenario (a deprecated tool still runs and its envelope carries meta.deprecation with the replacement id and the removal version; its page canonicalizes to the replacement and leaves the index; and the route gate writes its old route into dist/_redirects from the day it is deprecated, so the link survives removal. No tool is deprecated yet, so both halves are checked on fixtures: an envelope test in the core, and a route test that also holds a plain rename to the stricter rule that it may not shadow a live page)
 - [x] 8.4 Implement the `units` domain operations and allow-listed pair endpoints; verify the kt-to-mph and fuel-density scenarios
 

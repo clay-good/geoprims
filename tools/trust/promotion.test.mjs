@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { nodeHost } from '../../packages/runtime/src/node.mjs';
 import { lintDimensions } from './dimensions.mjs';
-import { derivationProblems, promotionProblems } from './promotion.mjs';
+import { MIN_VECTORS, derivationProblems, promotionProblems } from './promotion.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -56,4 +56,27 @@ test('dimension lint: the catalog is clean and a unit mismatch is caught', () =>
     'fixture.bad output field: the title says nT, but the field is dimensionless',
     'fixture.bad output bare: numeric field has no x-quantity and x-unit',
   ]);
+});
+
+test('nineteen vectors is not enough to promote a tool', async () => {
+  const host = nodeHost(join(root, 'dist/wasm'));
+  await (await host.module('search')).callString('gp_search_load', JSON.stringify(catalog.tools));
+  // A tool that passes today, with one vector taken away.
+  const passing = catalog.tools.find((t) => t.stability === 'stable' && t.vectorCount >= MIN_VECTORS);
+  assert.ok(passing, 'no stable tool to borrow');
+  assert.deepEqual(await promotionProblems({ root, tool: passing, host }), []);
+  const short = { ...passing, vectorCount: MIN_VECTORS - 1 };
+  const problems = await promotionProblems({ root, tool: short, host });
+  assert.deepEqual(problems, [`needs at least ${MIN_VECTORS} golden vectors (has ${MIN_VECTORS - 1})`]);
+  // Exactly the bar is enough.
+  assert.deepEqual(await promotionProblems({ root, tool: { ...passing, vectorCount: MIN_VECTORS }, host }), []);
+});
+
+test('a tool still advertising the experimental warning cannot be stable', async () => {
+  const host = nodeHost(join(root, 'dist/wasm'));
+  await (await host.module('search')).callString('gp_search_load', JSON.stringify(catalog.tools));
+  const passing = catalog.tools.find((t) => t.stability === 'stable' && t.vectorCount >= MIN_VECTORS);
+  const flagged = { ...passing, warnings: [...(passing.warnings ?? []), 'EXPERIMENTAL_TOOL'] };
+  const problems = await promotionProblems({ root, tool: flagged, host });
+  assert.ok(problems.includes('geoprims_describe still advertises the EXPERIMENTAL_TOOL warning'), problems.join('\n'));
 });

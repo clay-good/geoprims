@@ -67,7 +67,9 @@ test('every format the panel offers has a button on the page', () => {
   const html = readFileSync(join(dist, 'aviation/altimetry/density-altitude/index.html'), 'utf8');
   const actions = /<div class="actions">([\s\S]*?)<\/div>/.exec(html)[1];
   // Value, sentence, link, and the agent call are one click from the answer.
-  for (const [format, label] of [['value', 'Copy'], ['sentence', 'Copy sentence'], ['link', 'Share link'], ['agent-call', 'Copy agent call']]) {
+  // The link goes through the system share sheet where there is one, so its
+  // button says Share.
+  for (const [format, label] of [['value', 'Copy'], ['sentence', 'Copy sentence'], ['link', 'Share'], ['agent-call', 'Copy agent call']]) {
     assert.ok(actions.includes(label), `${format} has no button: ${actions.replace(/<[^>]+>/g, ' ')}`);
   }
   assert.ok(FORMATS.includes('json'), 'the JSON format is still offered');

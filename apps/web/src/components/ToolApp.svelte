@@ -5,7 +5,7 @@
   import { isPinned, numberFormat, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
-  import { copyText } from '../lib/copy.js';
+  import { copyText, sharePayload } from '../lib/copy.js';
   import { cellText, rowTables } from '../lib/rows.js';
 
   import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
@@ -242,6 +242,23 @@
     setTimeout(() => (copiedRow = ''), 1500);
   }
 
+  /**
+   * The share sheet where there is one, the clipboard where there is not.
+   * Either way the same sentence, reference, and link.
+   */
+  async function share() {
+    const href = embedded ? new URL(toolHref, location.origin).href : location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share(sharePayload({ answer, result, tool, args: args(), href }));
+        return;
+      } catch {
+        // A dismissed sheet is not a failure; fall through to the clipboard.
+      }
+    }
+    await copy('link');
+  }
+
   async function copy(kind) {
     const href = embedded ? new URL(toolHref, location.origin).href : location.href;
     const text = copyText(kind, { answer, result, tool, args: args(), href });
@@ -358,7 +375,7 @@
     <div class="actions">
       <button type="button" class="quiet" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
       <button type="button" class="quiet" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied ✓' : 'Copy sentence'}</button>
-      <button type="button" class="quiet" onclick={() => copy('link')}>{copied === 'link' ? 'Link copied ✓' : 'Share link'}</button>
+      <button type="button" class="quiet" onclick={share}>{copied === 'link' ? 'Link copied ✓' : 'Share'}</button>
       <button type="button" class="quiet" onclick={() => copy('agent-call')} title="The geoprims_run call that reproduces this, for an agent or the MCP server">{copied === 'agent-call' ? 'Call copied ✓' : 'Copy agent call'}</button>
       {#if hasUnits}
         <label class="units-switch"><span class="sr-only">Units</span>

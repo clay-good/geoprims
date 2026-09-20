@@ -66,6 +66,25 @@
 @media print {
   .masthead::before, .catalog-section > h2::after { display: none; }
 }
+/* Print: a one-page calculation sheet (ux/mobile-and-field). What is left is
+   what a sheet has to carry — the tool, the inputs, the answer with its
+   sentence, and where the method comes from. Every control, every navigation
+   aid, and everything that only exists on screen goes. */
+@media print {
+  header.site, footer.site nav, .crumbs, .actions, .answer-bar, .steps, .entry .sign,
+  .update, .palette-open, details.dev, .chip.offline, .copy-row .copied { display: none !important; }
+  main { padding-block-end: 0; }
+  .tool-grid { display: block; }
+  .card { border: 1px solid var(--line); break-inside: avoid; box-shadow: none; }
+  .card.inputs { margin-block-end: 0.5rem; }
+  .fields { gap: 0.25rem 1rem; }
+  label .help, .label-text .optional { display: none; }
+  input, select, textarea { border: 0; padding: 0; min-block-size: 0; background: none; }
+  details.card, details.card[open] > summary { break-inside: avoid; }
+  details.card:not(.terms) > *:not(summary) { display: none; }
+  a[href]::after { content: ''; }
+  @page { margin: 14mm; }
+}
 /* Print: the paper palette in any mode. */
 @media print {
   :root,

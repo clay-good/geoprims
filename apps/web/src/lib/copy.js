@@ -29,3 +29,14 @@ export function copyText(kind, { answer, result, tool, args, href }) {
       throw new Error(`no copy format ${kind}`);
   }
 }
+
+/**
+ * What the system share sheet is offered (ux/mobile-and-field, "Printing and
+ * sharing from mobile"): the sentence with its reference, and the permalink.
+ * The same text a paste would carry, so a share and a copy say the same thing.
+ */
+export const sharePayload = (parts) => ({
+  title: `${parts.tool.title} · geoprims`,
+  text: copyText('sentence', parts),
+  url: copyText('link', parts),
+});

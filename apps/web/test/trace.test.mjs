@@ -28,13 +28,27 @@ test('explaining changes no number, on any tool', async () => {
   assert.deepEqual(problems, []);
 });
 
-test('the steps end at the answer the card shows', async () => {
-  const t = catalog.tools.find((x) => x.id === DA);
-  const input = primary(t).input;
-  const shown = await run(DA, { ...input, options: { explain: true } });
-  assert.ok(shown.trace.length >= 3);
-  const first = Object.keys(t.outputs.properties).find((k) => shown.display?.[k] !== undefined);
-  assert.equal(shown.trace.at(-1).value, shown.display[first], 'the last step is the headline answer');
+test('every tool that shows its work ends at the answer the card shows', async () => {
+  const problems = [];
+  let showing = 0;
+  for (const t of catalog.tools) {
+    const input = primary(t).input;
+    const shown = await run(t.id, { ...input, options: { ...(input.options ?? {}), explain: true } });
+    if (!shown.trace) continue;
+    showing += 1;
+    if (shown.trace.length < 2) problems.push(`${t.id}: a trace of one step explains nothing`);
+    const first = Object.keys(t.outputs.properties).find((k) => shown.display?.[k] !== undefined);
+    if (shown.trace.at(-1).value !== shown.display[first]) {
+      problems.push(`${t.id}: the last step reads "${shown.trace.at(-1).value}", the answer is "${shown.display[first]}"`);
+    }
+    for (const step of shown.trace) {
+      for (const [field, text] of Object.entries(step)) {
+        if (!text) problems.push(`${t.id}: a step has an empty ${field}`);
+      }
+    }
+  }
+  assert.deepEqual(problems, []);
+  assert.ok(showing >= 5, `only ${showing} tools show their work`);
 });
 
 test('the page shows the same steps, in the same words', async () => {

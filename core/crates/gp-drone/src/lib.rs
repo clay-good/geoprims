@@ -353,6 +353,34 @@ fn run_gsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let cam = Camera::read(ctx)?;
     let (fa, fl) = cam.footprint(h);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Pixel pitch",
+            "pitch = sensor width / image width",
+            format!("{} mm / {} px", n(cam.sw * 1000.0, 2), n(cam.iw, 0)),
+            format!("{} µm", n(cam.sw / cam.iw * 1e6, 3)),
+        );
+        ctx.step(
+            "Footprint across track",
+            "footprint = GSD × image width",
+            format!("{} cm × {} px", n(cam.gsd(h) * 100.0, 3), n(cam.iw, 0)),
+            format!("{} m", n(fa, 2)),
+        );
+        ctx.step(
+            "Ground sample distance",
+            "GSD = pitch × height / focal length",
+            format!(
+                "{} µm × {} m / {} mm",
+                n(cam.sw / cam.iw * 1e6, 3),
+                n(h, 1),
+                n(cam.f * 1000.0, 2)
+            ),
+            // The card reads the GSD as a length, so the last step does too.
+            format!("{} cm", n(cam.gsd(h) * 100.0, 3)),
+        );
+    }
     let mut out = vec![
         ("gsd", ctx.out("gsd", m(cam.gsd(h)))),
         ("footprint_across", ctx.out("footprint_across", m(fa))),

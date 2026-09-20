@@ -722,6 +722,23 @@ fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
         unit: ft,
     }
     .base();
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        let inhg = qnh.to(unit(QT::Pressure, "inHg"));
+        ctx.step(
+            "Station pressure",
+            "p = 1013.25 × ((QNH/1013.25)^0.190284 − elevation × 6.8756e-6)^(1/0.190284)",
+            format!("p from QNH {} inHg at {} ft", n(inhg, 2), n(elev.to(ft), 0)),
+            format!("{} hPa", n(p / 100.0, 2)),
+        );
+        ctx.step(
+            "Pressure altitude",
+            "PA = the ISA altitude whose pressure is p",
+            format!("PA for p = {} hPa", n(p / 100.0, 2)),
+            format!("{} ft", n(m(pa_m).to(ft), 0)),
+        );
+    }
     Ok(obj(vec![
         ("pressure_altitude", ctx.out("pressure_altitude", m(pa_m))),
         ("station_pressure", ctx.out("station_pressure", pa(p))),
@@ -1582,6 +1599,33 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
             (x, -t, "either side", gust)
         }
     };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        let off = gp_base::angle::wrap_lon(w.dir.unwrap_or(rwy_heading) - rwy_heading);
+        ctx.step(
+            "Angle off the runway",
+            "θ = wind direction − runway heading",
+            format!(
+                "θ = {}° − {}°",
+                n(w.dir.unwrap_or(rwy_heading), 0),
+                n(rwy_heading, 0)
+            ),
+            format!("{}°", n(off, 0)),
+        );
+        ctx.step(
+            "Headwind",
+            "headwind = wind speed × cos θ",
+            format!("{} × cos {}°", n(w.speed, 0), n(off, 0)),
+            format!("{} kt", n(head, 1)),
+        );
+        ctx.step(
+            "Crosswind",
+            "crosswind = wind speed × sin θ",
+            format!("{} × sin {}°", n(w.speed, 0), n(off, 0)),
+            format!("{} kt", n(cross, 1)),
+        );
+    }
     out.push(("crosswind", ctx.out("crosswind", kt(cross))));
     out.push(("crosswind_from", Json::str(from)));
     out.push(("headwind", ctx.out("headwind", kt(head))));

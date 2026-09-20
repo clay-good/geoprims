@@ -535,6 +535,29 @@ fn run_haversine(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let d = 2.0 * r * libm::asin(libm::sqrt(h.min(1.0)));
     let ell: f64 = Geodesic::wgs84().inverse(p.0, p.1, p.2, p.3);
     let diff = ell - d;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let km = |x: f64| format!("{} km", n(x / 1000.0, 3));
+        ctx.step(
+            "Half-chord squared",
+            "h = sin²(Δφ/2) + cos φ₁ × cos φ₂ × sin²(Δλ/2)",
+            format!(
+                "Δφ = {}°, Δλ = {}°, φ₁ = {}°, φ₂ = {}°",
+                n(p.2 - p.0, 6),
+                n(p.3 - p.1, 6),
+                n(p.0, 6),
+                n(p.2, 6)
+            ),
+            n(h, 9),
+        );
+        ctx.step(
+            "Great-circle distance",
+            "d = 2 × R × asin(√h)",
+            format!("2 × {} × asin(√{})", km(r), n(h, 9)),
+            km(d),
+        );
+    }
     Ok(Json::obj([
         ("distance", ctx.out("distance", meters(d))),
         (

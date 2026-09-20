@@ -747,6 +747,36 @@ fn run_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
         value: area_m2,
         unit: m2,
     };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let acres = Q {
+            value: area_m2,
+            unit: m2,
+        }
+        .to(unit(QT::Area, acre_unit));
+        ctx.step(
+            "Twice the area",
+            "2A = Σ (xᵢ − x₀)(yᵢ₊₁ − y₀) − (xᵢ₊₁ − x₀)(yᵢ − y₀)",
+            format!(
+                "the shoelace sum over {} corners, about the first",
+                xy.len()
+            ),
+            format!("{} {}²", n(twice.abs(), 3), u.symbol),
+        );
+        ctx.step(
+            "Area",
+            "A = |2A| / 2",
+            format!("{} {}² / 2", n(twice.abs(), 3), u.symbol),
+            format!("{} {}²", n(area_u2, 3), u.symbol),
+        );
+        ctx.step(
+            "In acres",
+            "acres = A converted from the coordinate unit",
+            format!("{} {}²", n(area_u2, 3), u.symbol),
+            format!("{} {}", n(acres, 4), acre_unit),
+        );
+    }
     Ok(Json::obj([
         (
             "acres",

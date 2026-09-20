@@ -552,6 +552,38 @@ fn run_weight_balance(ctx: &mut Ctx) -> Result<Json, ToolError> {
         value: x,
         unit: arm_unit,
     };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let m_unit = format!("{}*{}", w_unit.symbol, arm_unit.symbol);
+        ctx.step(
+            "Total weight",
+            "W = the sum of every station's weight",
+            format!(
+                "{} stations summing to {} {}",
+                stations.len(),
+                n(w, 1),
+                w_unit.symbol
+            ),
+            format!("{} {}", n(w, 1), w_unit.symbol),
+        );
+        ctx.step(
+            "Total moment",
+            "M = the sum of weight × arm for every station",
+            stations
+                .iter()
+                .map(|(sw, sa, _)| format!("{} × {}", n(wv(*sw), 1), n(av(*sa), 1)))
+                .collect::<Vec<_>>()
+                .join(" + "),
+            format!("{} {}", n(mom, 1), m_unit),
+        );
+        ctx.step(
+            "Centre of gravity",
+            "CG = M / W",
+            format!("{} {} / {} {}", n(mom, 1), m_unit, n(w, 1), w_unit.symbol),
+            format!("{} {}", n(cg, 2), arm_unit.symbol),
+        );
+    }
     let mut o = vec![
         ("total_weight", ctx.emit("total_weight", wq(w), w_unit)),
         ("total_moment", Json::Num(mom)),

@@ -21,8 +21,8 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [x] | [ ] | [ ] | [ ] |
 | Pilots | Holding entry | `aviation.ifr.hold-entry` | [ ] | [ ] | [ ] | [ ] |
 | Pilots | Zulu time | `time.scale.utc-offset` | [x] | [ ] | [ ] | [ ] |
-| Pilots | Weight and balance | `aviation.loading.weight-balance` | [x] | [ ] | [ ] | [ ] |
-| Pilots | Top of descent | `aviation.performance.top-of-descent` | [x] | [ ] | [ ] | [ ] |
+| Pilots | Weight and balance | `aviation.loading.weight-balance` | [x] | [ ] | [ ] | [x] |
+| Pilots | Top of descent | `aviation.performance.top-of-descent` | [x] | [ ] | [ ] | [x] |
 | Pilots | Visual descent point | `aviation.performance.vdp` | [x] | [ ] | [ ] | [ ] |
 | Drone | GSD | `drone.photogrammetry.gsd` | [x] | [ ] | [ ] | [x] |
 | Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] | [x] |
@@ -43,17 +43,17 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Surveyors | Deed plotter | `survey.land.deed-plot` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | Horizontal curve | `survey.curves.circular-curve` | [x] | [ ] | [ ] | [ ] |
 | Surveyors | Vertical curve | `survey.curves.vertical-curve` | [x] | [ ] | [ ] | [ ] |
-| Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [x] | [ ] | [ ] | [ ] |
+| Surveyors | Acreage from coordinates | `survey.cogo.area-by-coordinates` | [x] | [ ] | [ ] | [x] |
 | Developers | H3 cell | `indexing.h3.lat-lng-to-cell` | [x] | [ ] | [ ] | [ ] |
 | Developers | H3 k-ring | `indexing.h3.grid-disk` | [x] | [ ] | [ ] | [ ] |
-| Developers | Tile and quadkey | `indexing.tile.from-point` | [x] | [ ] | [ ] | [ ] |
+| Developers | Tile and quadkey | `indexing.tile.from-point` | [x] | [ ] | [ ] | [x] |
 | Developers | Tile bounds | `indexing.tile.bounds` | [x] | [ ] | [ ] | [ ] |
 | Developers | Geohash | `indexing.geohash.encode` | [x] | [ ] | [ ] | [ ] |
 | Developers | Geodesic distance | `navigation.geodesic.inverse` | [x] | [ ] | [ ] | [ ] |
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [ ] |
 
-Stable: 36 of 42 rows. Shows its work: 9 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 36 of 42 rows. Shows its work: 13 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 

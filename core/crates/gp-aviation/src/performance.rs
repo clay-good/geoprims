@@ -592,6 +592,22 @@ fn run_descent(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let theta = path_angle(ctx, gs, "descent_angle", "vertical_speed", Some(3.0))?;
     let dist = dh / tan(theta);
     let v = gs * tan(theta);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Altitude to lose",
+            "Δh = cruise altitude − target altitude",
+            format!("{} ft − {} ft", n(from / FT, 0), n(to / FT, 0)),
+            format!("{} ft", n(dh / FT, 0)),
+        );
+        ctx.step(
+            "Distance to start down",
+            "d = Δh / tan θ",
+            format!("{} ft / tan {}°", n(dh / FT, 0), n(theta.to_degrees(), 2)),
+            format!("{} NM", n(dist / NM, 1)),
+        );
+    }
     let mut o = vec![
         ("distance", ctx.out("distance", nm_dist(dist))),
         ("vertical_speed", ctx.out("vertical_speed", vs(v))),

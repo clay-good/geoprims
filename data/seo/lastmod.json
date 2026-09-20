@@ -20,11 +20,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "967d539af88f5b93",
+    "hash": "db20e015335e798c",
     "lastmod": "2026-09-20"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "b92af77b8672944e",
+    "hash": "0444a61a71bce3f2",
     "lastmod": "2026-09-20"
   },
   "/aviation/atmosphere/": {
@@ -32,7 +32,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "11b2a07697379d51",
+    "hash": "ec79e98819d70152",
     "lastmod": "2026-09-20"
   },
   "/aviation/ifr/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/loading/weight-balance/": {
-    "hash": "ba342d4360775f8b",
+    "hash": "4db96f2edd8ae2c6",
     "lastmod": "2026-09-20"
   },
   "/aviation/performance/": {
@@ -52,11 +52,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/top-of-descent/": {
-    "hash": "534d85e4bd175b32",
+    "hash": "3a8116f42486aabc",
     "lastmod": "2026-09-20"
   },
   "/aviation/performance/vdp/": {
-    "hash": "b2fca1e38f42a5c2",
+    "hash": "427c5d48c2b1c358",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/": {
@@ -64,15 +64,15 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/weather/fb-winds-decode/": {
-    "hash": "648b284d908ffb00",
+    "hash": "81696c71603777fd",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/metar-decode/": {
-    "hash": "f2cf0cfaea45abbf",
+    "hash": "2398ef3fed446149",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/taf-decode/": {
-    "hash": "07e8cc0cc1d231d9",
+    "hash": "f33840185ff64054",
     "lastmod": "2026-09-20"
   },
   "/aviation/wind/": {
@@ -80,11 +80,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "86cb5df63b8d171c",
+    "hash": "1906bf868ec6ab97",
     "lastmod": "2026-09-20"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "486a2a3a2bafd977",
+    "hash": "708bdef78f8f3808",
     "lastmod": "2026-09-20"
   },
   "/changelog/": {
@@ -284,15 +284,15 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/geohash/decode/": {
-    "hash": "43a3568efa9ea212",
+    "hash": "3c8fbb6120d3565b",
     "lastmod": "2026-09-20"
   },
   "/indexing/geohash/encode/": {
-    "hash": "7777ef5fe08632ae",
+    "hash": "cc7f36d78787e37b",
     "lastmod": "2026-09-20"
   },
   "/indexing/geohash/neighbors/": {
-    "hash": "eafec305ebc52b8a",
+    "hash": "27a1796b666d6cb6",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/": {
@@ -300,51 +300,51 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/h3/cell-info/": {
-    "hash": "57ae71c7bbc33ae3",
+    "hash": "f7d0faf6401e21f6",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/children/": {
-    "hash": "f0bf40da3820e564",
+    "hash": "a25ccc86fefc5d19",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/compact/": {
-    "hash": "ef13b1dd2be56ce6",
+    "hash": "a890a59cb32240b4",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/edges/": {
-    "hash": "5ea5b648aac7ae56",
+    "hash": "35f709e1e0e4793a",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/grid-disk/": {
-    "hash": "37c85de85a75a1a1",
+    "hash": "e1e4423d599d0a03",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/grid-path/": {
-    "hash": "aa9ccc048016059a",
+    "hash": "00ba9e3e2a4876eb",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/grid-ring/": {
-    "hash": "ffb90139f2790d8f",
+    "hash": "ab7cf20364184a9f",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "f0c946e01cd5132e",
+    "hash": "7438222a8c1595b9",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/parent/": {
-    "hash": "f7eb325d0d0e7186",
+    "hash": "7c75165a2f506f71",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "f013d78132cf2acd",
+    "hash": "2a10a664c08306ba",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/resolution-chooser/": {
-    "hash": "ff38b8a4c18d4e7b",
+    "hash": "c8fa824b8065d72c",
     "lastmod": "2026-09-20"
   },
   "/indexing/h3/uncompact/": {
-    "hash": "6ef335e2bc6346aa",
+    "hash": "80f70e59fcfd8b71",
     "lastmod": "2026-09-20"
   },
   "/indexing/plus-code/": {
@@ -352,15 +352,15 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/plus-code/decode/": {
-    "hash": "865f430f362a1881",
+    "hash": "a59f3d5c2af550d9",
     "lastmod": "2026-09-20"
   },
   "/indexing/plus-code/encode/": {
-    "hash": "ce45061766d3908c",
+    "hash": "92ddb180c6ef2622",
     "lastmod": "2026-09-20"
   },
   "/indexing/plus-code/shorten/": {
-    "hash": "6b234cbc410f391e",
+    "hash": "38dede685a308cd6",
     "lastmod": "2026-09-20"
   },
   "/indexing/tile/": {
@@ -368,15 +368,15 @@
     "lastmod": "2026-09-19"
   },
   "/indexing/tile/bounds/": {
-    "hash": "f5b92b72b82b2a69",
+    "hash": "77b1c7fb2aa12804",
     "lastmod": "2026-09-20"
   },
   "/indexing/tile/from-point/": {
-    "hash": "e36954d6d458a944",
+    "hash": "e4051b572def09c1",
     "lastmod": "2026-09-20"
   },
   "/indexing/tile/ground-resolution/": {
-    "hash": "371565737e3f17dc",
+    "hash": "02681ba2d7041bb6",
     "lastmod": "2026-09-20"
   },
   "/known-issues/": {
@@ -464,11 +464,11 @@
     "lastmod": "2026-09-19"
   },
   "/survey/cogo/area-by-coordinates/": {
-    "hash": "1e16af7b2da34671",
+    "hash": "9ceeea936793214f",
     "lastmod": "2026-09-20"
   },
   "/survey/cogo/traverse-closure/": {
-    "hash": "89b50627573e0a5d",
+    "hash": "412e15d1c0594ea5",
     "lastmod": "2026-09-20"
   },
   "/survey/curves/": {
@@ -476,11 +476,11 @@
     "lastmod": "2026-09-19"
   },
   "/survey/curves/circular-curve/": {
-    "hash": "4eaf7cf54442b9c2",
+    "hash": "8cf8cf51dca556e8",
     "lastmod": "2026-09-20"
   },
   "/survey/curves/vertical-curve/": {
-    "hash": "936bb8fae48a445b",
+    "hash": "c440f020b020ce86",
     "lastmod": "2026-09-20"
   },
   "/survey/earthwork/": {
@@ -492,7 +492,7 @@
     "lastmod": "2026-09-19"
   },
   "/survey/land/deed-plot/": {
-    "hash": "edd5525d84c621a1",
+    "hash": "13c68c38d744e120",
     "lastmod": "2026-09-20"
   },
   "/survey/reduction/": {
@@ -500,7 +500,7 @@
     "lastmod": "2026-09-19"
   },
   "/survey/reduction/combined-factor/": {
-    "hash": "8013b7495d4285ed",
+    "hash": "22a671747fa496ed",
     "lastmod": "2026-09-20"
   },
   "/time/": {

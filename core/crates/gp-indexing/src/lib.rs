@@ -512,6 +512,35 @@ fn run_tile_from_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let (x, y) = codes::tile(clamped, lon, z);
     let tms = (1u64 << z) - 1 - y;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+        let tiles = 1u64 << z;
+        ctx.step(
+            "Tiles across the map",
+            "n = 2^zoom",
+            format!("2^{z}"),
+            n(tiles as f64, 0),
+        );
+        ctx.step(
+            "Column",
+            "x = ⌊(lon + 180) / 360 × n⌋",
+            format!("⌊({} + 180) / 360 × {}⌋", n(lon, 6), n(tiles as f64, 0)),
+            n(x as f64, 0),
+        );
+        ctx.step(
+            "Row",
+            "y = ⌊(1 − ln(tan φ + sec φ) / π) / 2 × n⌋",
+            format!("from latitude {}° at zoom {z}", n(clamped, 6)),
+            n(y as f64, 0),
+        );
+        ctx.step(
+            "Tile",
+            "tile = zoom/x/y",
+            format!("{z}/{x}/{y}"),
+            format!("{z}/{x}/{y}"),
+        );
+    }
     Ok(Json::obj([
         ("tile", Json::str(format!("{z}/{x}/{y}"))),
         ("x", Json::Num(x as f64)),

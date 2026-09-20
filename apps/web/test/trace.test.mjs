@@ -14,6 +14,18 @@ const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf
 const host = nodeHost(join(root, 'dist/wasm'));
 const DA = 'aviation.altimetry.density-altitude';
 const primary = (t) => t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
+
+/**
+ * A trace ends at the answer its card leads with. These few tools conclude
+ * somewhere else, and each one says why: the card leads with the number a
+ * reader checks first, which is not always the last thing the arithmetic
+ * produces. Everything absent from this list is held to the card's headline.
+ */
+const ENDS_ELSEWHERE = {
+  // The card leads with total weight, the number against the aircraft's limit,
+  // but the work ends at the centre of gravity it is used to find.
+  'aviation.loading.weight-balance': 'cg',
+};
 const run = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
 
 test('explaining changes no number, on any tool', async () => {
@@ -38,8 +50,9 @@ test('every tool that shows its work ends at the answer the card shows', async (
     showing += 1;
     if (shown.trace.length < 2) problems.push(`${t.id}: a trace of one step explains nothing`);
     const first = Object.keys(t.outputs.properties).find((k) => shown.display?.[k] !== undefined);
-    if (shown.trace.at(-1).value !== shown.display[first]) {
-      problems.push(`${t.id}: the last step reads "${shown.trace.at(-1).value}", the answer is "${shown.display[first]}"`);
+    const ends = ENDS_ELSEWHERE[t.id] ?? first;
+    if (shown.trace.at(-1).value !== shown.display[ends]) {
+      problems.push(`${t.id}: the last step reads "${shown.trace.at(-1).value}", the answer is "${shown.display[ends]}"`);
     }
     for (const step of shown.trace) {
       for (const [field, text] of Object.entries(step)) {

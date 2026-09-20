@@ -84,7 +84,10 @@ pub const FIELDS: [Field; 3] = [
         "Ellipsoid",
         "wgs84 (default), grs80, clarke1866, intl1924, airy1830, bessel1841, or krassovsky1940",
         Kind::Choice(IDS),
-    ),
+    )
+    // Which ellipsoid a result is on is not an assumption to leave invisible
+    // (ux/glanceable-results, "Progressive disclosure with visible defaults").
+    .core(),
     Field::new(
         "a",
         "Custom semi-major axis",

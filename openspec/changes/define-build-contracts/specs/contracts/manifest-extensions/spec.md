@@ -11,7 +11,7 @@ The manifest meta-schema SHALL define, and accept only, these extension fields.
 - `x-quantity`, `x-unit`, `x-angle-range`, `x-display-precision`
 - `x-step` (`{small, large}` in the field's default unit)
 - `x-private` (boolean: never included in reports or permalinks)
-- `x-core` (boolean: shown by default, at most 5 per tool)
+- `x-core` (boolean: shown by default, at most 5 per tool, where a list of rows counts once and a coordinate's two fields count as one point)
 - `x-help` (one-line help with an example value)
 - `x-prefill` (slot definition: accepted quantities, unit hints, keywords, order)
 - `x-swappable-with` (field name)
@@ -34,7 +34,7 @@ Unknown `x-` fields SHALL fail the build.
 
 #### Scenario: Too many core inputs
 - **WHEN** a manifest marks 6 fields `x-core: true`
-- **THEN** the build fails (row groups such as W&B stations count as one)
+- **THEN** the build fails (row groups such as W&B stations count as one, and a lat/lon pair counts as one point)
 
 ### Requirement: Sentence-template language
 Sentence templates SHALL use this language, rendered by the core:

@@ -5,6 +5,7 @@
   import { isPinned, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
+  import { copyText } from '../lib/copy.js';
 
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
@@ -220,16 +221,8 @@
   }
 
   async function copy(kind) {
-    const text =
-      kind === 'value'
-        ? answer
-        : kind === 'sentence'
-          ? `${result.summary} (geoprims ${tool.id} ${tool.version})`
-          : kind === 'link'
-            ? embedded
-              ? new URL(toolHref, location.origin).href
-              : location.href
-            : JSON.stringify({ tool: 'geoprims_run', arguments: { id: tool.id, args: args() } });
+    const href = embedded ? new URL(toolHref, location.origin).href : location.href;
+    const text = copyText(kind, { answer, result, tool, args: args(), href });
     await navigator.clipboard.writeText(text);
     copied = kind;
     setTimeout(() => (copied = ''), 1500);
@@ -322,6 +315,7 @@
       <button type="button" class="quiet" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
       <button type="button" class="quiet" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied ✓' : 'Copy sentence'}</button>
       <button type="button" class="quiet" onclick={() => copy('link')}>{copied === 'link' ? 'Link copied ✓' : 'Share link'}</button>
+      <button type="button" class="quiet" onclick={() => copy('agent-call')} title="The geoprims_run call that reproduces this, for an agent or the MCP server">{copied === 'agent-call' ? 'Call copied ✓' : 'Copy agent call'}</button>
       {#if hasUnits}
         <label class="units-switch"><span class="sr-only">Units</span>
           <select bind:value={unitProfile} onchange={() => setProfile(unitProfile)} title="Units for every tool (also in Settings)">

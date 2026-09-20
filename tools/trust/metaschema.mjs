@@ -17,6 +17,19 @@ const STATUS_KINDS = new Set(['threshold', 'conformance']);
 const LIMITATION_CAPS = { simplification: 80, instead: 240, governs: 120 };
 const MAX_CORE = 5;
 
+/**
+ * The thing a reader counts, for a core input. A coordinate is two fields and
+ * one decision, the same way a list of rows is many fields and one decision,
+ * so `lat1`/`lon1` count once. Anything else counts as itself.
+ */
+export function coreGroup(name) {
+  const m = /^(?:lat|latitude|lon|lng|longitude|northing|easting)(\d*)$/.exec(name);
+  if (m) return `point${m[1]}`;
+  const suffix = /^(.*)_(?:lat|latitude|lon|lng|longitude|north|northing|east|easting)$/.exec(name);
+  if (suffix) return `${suffix[1]}_point`;
+  return name;
+}
+
 /** Every field schema in a section, with a path, descending into list rows. */
 function* fields(section, path) {
   for (const [name, f] of Object.entries(section?.properties ?? {})) {
@@ -55,7 +68,7 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
         if (!(k in LIMITATION_CAPS)) problems.push(`${t.id}: x-limitation has no field ${k}`);
       }
     }
-    let core = 0;
+    const core = new Set();
     for (const [side, section] of [['inputs', t.inputs], ['outputs', t.outputs]]) {
       for (const [path, f] of fields(section, side)) {
         for (const k of Object.keys(f)) {
@@ -63,8 +76,9 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
         }
         if (f['x-core'] === true) {
           if (side === 'outputs') problems.push(`${t.id}: x-core is for inputs, not ${path}`);
-          // A list's row fields count with the list itself (W&B stations are one group).
-          else if (!path.includes('[]')) core++;
+          // A list's row fields count with the list itself (W&B stations are
+          // one group), and a coordinate's two fields count as one point.
+          else if (!path.includes('[]')) core.add(coreGroup(path.split('.').pop()));
         }
         const st = f['x-status'];
         if (st) {
@@ -76,7 +90,7 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
         }
       }
     }
-    if (core > MAX_CORE) problems.push(`${t.id}: ${core} x-core inputs (at most ${MAX_CORE})`);
+    if (core.size > MAX_CORE) problems.push(`${t.id}: ${core.size} x-core inputs (at most ${MAX_CORE})`);
   }
   return problems;
 }

@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { metaschemaProblems } from './metaschema.mjs';
+import { coreGroup, metaschemaProblems } from './metaschema.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -81,5 +81,21 @@ test('a limitation banner must carry all three lines, within their caps', () => 
   ]);
   assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-limitation': { ...good, colour: 'orange' } }] }, sourceIds), [
     'fixture.l: x-limitation has no field colour',
+  ]);
+});
+
+test('a coordinate counts as one core input, the way a list of rows does', () => {
+  assert.equal(coreGroup('lat1'), coreGroup('lon1'), 'lat1 and lon1 are one point');
+  assert.notEqual(coreGroup('lat1'), coreGroup('lat2'), 'two points are two things');
+  assert.equal(coreGroup('b_north'), coreGroup('b_east'), 'a named easting and northing are one point');
+  assert.equal(coreGroup('temperature'), 'temperature', 'anything else counts as itself');
+  const core = { type: 'number', 'x-core': true };
+  const props = Object.fromEntries(['lat1', 'lon1', 'lat2', 'lon2', 'lat', 'lon', 'ellipsoid'].map((k) => [k, core]));
+  const t = { id: 'fixture.points', examples: [], inputs: { properties: props }, outputs: { properties: {} } };
+  assert.deepEqual(metaschemaProblems({ tools: [t] }, sourceIds), [], 'three points and a choice is four inputs');
+  // Six genuinely separate inputs still fail.
+  const six = Object.fromEntries(['a', 'b', 'c', 'd', 'e', 'f'].map((k) => [k, core]));
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...t, id: 'fixture.six', inputs: { properties: six } }] }, sourceIds), [
+    'fixture.six: 6 x-core inputs (at most 5)',
   ]);
 });

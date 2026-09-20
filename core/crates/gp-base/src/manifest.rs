@@ -449,6 +449,41 @@ pub fn from_value(v: &serde_json::Value) -> Json {
     }
 }
 
+/// The thing a reader counts, for a core input: a coordinate's two fields are
+/// one point, and anything else counts as itself.
+pub fn core_group(name: &str) -> &str {
+    const POINT: &[&str] = &[
+        "lat",
+        "latitude",
+        "lon",
+        "lng",
+        "longitude",
+        "north",
+        "northing",
+        "east",
+        "easting",
+    ];
+    // "lat1" and "lon1" are the same point; "lat2" is a different one.
+    let digits = name.trim_end_matches(|c: char| c.is_ascii_digit());
+    if POINT.contains(&digits) {
+        return match &name[digits.len()..] {
+            "" => "point",
+            "1" => "point1",
+            "2" => "point2",
+            "3" => "point3",
+            _ => "pointN",
+        };
+    }
+    // "b_north" and "b_east" are the same point.
+    if let Some((prefix, part)) = name.rsplit_once('_')
+        && POINT.contains(&part)
+        && !prefix.is_empty()
+    {
+        return prefix;
+    }
+    name
+}
+
 /// Visualization layer kinds (tool-contract "Each tool declares its visualization").
 pub const LAYER_KINDS: &[&str] = &[
     "point",
@@ -558,7 +593,17 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
                 ));
             }
         }
-        if t.inputs.iter().filter(|f| f.core).count() > 5 {
+        // A coordinate is two fields and one decision, so it counts once, the
+        // same way a list of rows does (contracts/manifest-extensions).
+        let mut groups: Vec<&str> = t
+            .inputs
+            .iter()
+            .filter(|f| f.core)
+            .map(|f| core_group(f.name))
+            .collect();
+        groups.sort_unstable();
+        groups.dedup();
+        if groups.len() > 5 {
             e("more than 5 x-core inputs".into());
         }
         for f in t.outputs {
@@ -856,6 +901,16 @@ mod tests {
     /// is (platform/tool-contract, "the meta-schema rejects each missing
     /// required field").
     #[test]
+    fn a_coordinate_counts_as_one_core_input() {
+        assert_eq!(core_group("lat1"), core_group("lon1"));
+        assert_ne!(core_group("lat1"), core_group("lat2"));
+        assert_eq!(core_group("lat"), core_group("lon"));
+        assert_eq!(core_group("b_north"), core_group("b_east"));
+        assert_eq!(core_group("temperature"), "temperature");
+        assert_eq!(core_group("northing"), core_group("easting"));
+    }
+
+    #[test]
     fn each_missing_required_field_is_rejected() {
         let cases: Vec<(&str, ToolDef)> = vec![
             ("id", ToolDef { id: "", ..GOOD }),
@@ -1026,7 +1081,16 @@ mod tests {
             },
         )
         .core();
-        const SIX: &[Field] = &[F, F, F, F, F, F];
+        // Six separate inputs, not one repeated: a coordinate's two fields count
+        // once, so the names have to differ for this to be six.
+        const SIX: &[Field] = &[
+            Field { name: "a", ..F },
+            Field { name: "b", ..F },
+            Field { name: "c", ..F },
+            Field { name: "d", ..F },
+            Field { name: "e", ..F },
+            Field { name: "f", ..F },
+        ];
         fails(
             &ToolDef {
                 inputs: SIX,

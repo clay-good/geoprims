@@ -10,4 +10,4 @@ Generators that turn tool manifests into published files (design D5).
 | `dist/catalog/search.json` | Compact documents for the core search ranker, including prefill fields |
 | Docs scaffolds | Not built yet; tool prose still needs a human author |
 
-Run `npm run build` at the repository root to regenerate these files. They are build outputs and are not committed. `tools/codegen/artifacts.test.mjs` checks each output against the pinned sample manifest and checks the full catalog for schema and search parity.
+Run `npm run build` at the repository root to regenerate these files. They are build outputs and are not committed. Catalog generation checks every tool against `data/taxonomy.json` and rejects duplicate ids or ambiguous groups across modules. `tools/codegen/artifacts.test.mjs` checks the generated outputs against the pinned sample and the full catalog; `taxonomy.test.mjs` checks the taxonomy gate and its failure cases.

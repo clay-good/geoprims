@@ -8,6 +8,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadModule } from '../../packages/runtime/src/module.mjs';
 import { buildArtifacts } from './artifacts.mjs';
+import { taxonomyProblems } from './taxonomy.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 
@@ -27,6 +28,9 @@ export async function buildCatalog() {
     }
   }
   tools.sort((a, b) => (a.id < b.id ? -1 : 1));
+  const taxonomy = JSON.parse(readFileSync(join(root, 'data/taxonomy.json'), 'utf8'));
+  const problems = taxonomyProblems(tools, taxonomy);
+  if (problems.length) throw new Error(`catalog taxonomy: ${problems.join('; ')}`);
   const count = (pred) => ({
     operations: tools.filter((t) => pred(t) && t.composedOf.length === 0).length,
     endpoints: tools.filter(pred).length,

@@ -86,7 +86,10 @@
     },
     "raster": {
       "title": "Raster",
-      "groups": []
+      "groups": [
+        "index",
+        "terrain"
+      ]
     },
     "time": {
       "title": "Time",

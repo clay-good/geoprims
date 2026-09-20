@@ -53,6 +53,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/browser/determinism.test.mjs` | Every live golden vector returns byte-identical JSON in Chromium, Firefox, WebKit, and Node, including tools that load assets |
 | `test/browser/egress.test.mjs` | Chromium visits every tool page with a unique sentinel input and captures all requests, including compute-worker fetches; an injected leaking fetch proves the detector works |
 | `test/browser/csp.test.mjs` | Runtime CSP and third-party request report for the 87 non-tool routes and both report-dialog states; an injected inline script is blocked, and the Turnstile script loads only after the dialog opens |
+| `test/browser/asset-recovery.test.mjs` | A corrupt service-worker geoid asset is rejected and evicted; retry fetches verified bytes, which a fresh worker can use offline |
 | `src/lib/keyboard.mjs`, `test/keyboard.test.mjs` | Lifting the sticky answer above the on-screen keyboard: what the visual viewport says is covered becomes `--keyboard` on the document, re-read whenever it moves |
 | `test/responsive.test.mjs` | Layouts for every width: nothing declared wider than a 320 px screen, no column that refuses to narrow, wide tables inside a box that scrolls, and the side-by-side layout starting at a tablet |
 | `src/lib/offline.mjs`, `test/offline.test.mjs` | The footer's offline chip: what each service-worker state may honestly claim, and never "Works offline" before the release is cached |

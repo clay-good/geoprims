@@ -637,7 +637,7 @@ pub static FRESNEL: ToolDef = ToolDef {
         qf(
             "position",
             "Distance from one end",
-            "Where to evaluate; default the midpoint",
+            "Where to evaluate; default the midpoint, like 5 km",
             QT::Distance,
             "km",
         )

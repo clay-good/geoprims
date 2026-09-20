@@ -666,14 +666,14 @@ const CALL_ROW: &[Field] = &[
     Field::new(
         "radius",
         "Radius",
-        "Curve radius",
+        "Curve radius, like 300 ftUS",
         Kind::Text { max_len: 40 },
     )
     .optional(),
     Field::new(
         "arc_length",
         "Arc length",
-        "Curve length",
+        "Curve length along the arc, like 120 ftUS",
         Kind::Text { max_len: 40 },
     )
     .optional(),
@@ -694,15 +694,21 @@ const CALL_ROW: &[Field] = &[
     Field::new(
         "chord",
         "Chord",
-        "Chord distance",
+        "Chord distance, like 118 ftUS",
         Kind::Text { max_len: 40 },
     )
     .optional(),
-    Field::new("turn", "Turn", "left or right", Kind::Text { max_len: 8 }).optional(),
+    Field::new(
+        "turn",
+        "Turn",
+        "left or right, like left",
+        Kind::Text { max_len: 8 },
+    )
+    .optional(),
     Field::new(
         "tangent",
         "Tangent",
-        "tangent or non-tangent",
+        "tangent or non-tangent, like tangent",
         Kind::Text { max_len: 12 },
     )
     .optional(),
@@ -860,7 +866,7 @@ const PLOT_ROW: &[Field] = &[
     Field::new(
         "kind",
         "Kind",
-        "line (default) or curve",
+        "line (default) or curve, like line",
         Kind::Text { max_len: 12 },
     ),
     Field::new(
@@ -881,7 +887,7 @@ const PLOT_ROW: &[Field] = &[
     Field::new(
         "radius",
         "Radius",
-        "Curve radius",
+        "Curve radius, like 300 ftUS",
         Kind::Quantity {
             q: gp_base::units::Quantity::Length,
             unit: "ftUS",
@@ -890,7 +896,7 @@ const PLOT_ROW: &[Field] = &[
     Field::new(
         "arc_length",
         "Arc length",
-        "Curve length",
+        "Curve length along the arc, like 120 ftUS",
         Kind::Quantity {
             q: gp_base::units::Quantity::Length,
             unit: "ftUS",
@@ -905,23 +911,28 @@ const PLOT_ROW: &[Field] = &[
     Field::new(
         "chord_direction",
         "Chord bearing",
-        "For non-tangent curves",
+        "For non-tangent curves, like N 45°00'00\" E",
         Kind::Text { max_len: 40 },
     ),
     Field::new(
         "chord",
         "Chord",
-        "Chord distance",
+        "Chord distance, like 118 ftUS",
         Kind::Quantity {
             q: gp_base::units::Quantity::Length,
             unit: "ftUS",
         },
     ),
-    Field::new("turn", "Turn", "left or right", Kind::Text { max_len: 8 }),
+    Field::new(
+        "turn",
+        "Turn",
+        "left or right, like left",
+        Kind::Text { max_len: 8 },
+    ),
     Field::new(
         "tangent",
         "Tangent",
-        "tangent or non-tangent",
+        "tangent or non-tangent, like tangent",
         Kind::Text { max_len: 12 },
     ),
 ];
@@ -982,7 +993,7 @@ pub static DEED_PLOT: ToolDef = ToolDef {
         Field::new(
             "calls",
             "Calls",
-            "Confirmed calls, from the deed parser or typed",
+            "Confirmed calls, from the deed parser or typed, like N 0°00'00\" E and 500 ftUS",
             Kind::List {
                 items: PLOT_ROW,
                 min: 2,
@@ -1813,7 +1824,7 @@ pub static BASIS_ROTATION: ToolDef = ToolDef {
         Field::new(
             "directions",
             "Bearings to rotate",
-            "One per row",
+            "One per row, like S 80°00'00\" E",
             Kind::List {
                 items: DIR_ROW,
                 min: 0,

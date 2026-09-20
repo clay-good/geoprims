@@ -170,6 +170,14 @@ main { padding-block: 1.75rem 4rem; }
 .inline-diagram { margin-block: 0.5rem 0.25rem; }
 .inline-diagram svg { display: block; inline-size: 100%; max-inline-size: 22rem; block-size: auto; max-block-size: 11rem; }
 
+/* An abbreviation that explains itself on tap, and the popover it opens. */
+button.term { inline-size: auto; min-block-size: 0; margin: 0; padding: 0 0.1em; border: 0; border-block-end: 1px dotted currentColor; border-radius: 0; background: none; color: inherit; font: inherit; cursor: help; }
+button.term:hover { color: var(--accent); }
+[popover].def { max-inline-size: 26rem; padding: 0.75rem 1rem; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+[popover].def p { margin: 0 0 0.4rem; font-size: 0.9rem; }
+[popover].def p:last-child { margin-block-end: 0; }
+.def-source { color: var(--muted); font-size: 0.85em; }
+
 /* Whether this browser holds the release, said plainly in the footer. */
 .chip.offline { display: inline-block; margin-inline-end: 0.6rem; padding: 0.05rem 0.45rem; border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.85em; color: var(--muted); }
 .chip.offline[data-state='ready'] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }

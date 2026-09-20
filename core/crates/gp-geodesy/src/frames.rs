@@ -301,7 +301,7 @@ pub static RADII: ToolDef = ToolDef {
         Field::new(
             "lat2",
             "Second latitude",
-            "Optional: for the meridian arc between the two latitudes",
+            "Optional: for the meridian arc between the two latitudes, like 45",
             Kind::Quantity {
                 q: QT::Angle,
                 unit: "deg",
@@ -1079,8 +1079,8 @@ pub static FROM_LOCAL: ToolDef = ToolDef {
             "Above the ellipsoid, not sea level",
         ),
         len_out("x", "ECEF X", "Meters"),
-        len_out("y", "ECEF Y", "Meters"),
-        len_out("z", "ECEF Z", "Meters"),
+        len_out("y", "ECEF Y, like -4819000 m", "Meters"),
+        len_out("z", "ECEF Z, like 3976000 m", "Meters"),
     ],
     errors: &[
         ErrorCode::InvalidInput,

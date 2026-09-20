@@ -330,7 +330,7 @@ pub static TRAVERSE: ToolDef = ToolDef {
         Field::new(
             "courses",
             "Courses",
-            "Direction and distance for each leg, in order around the loop",
+            "Direction and distance for each leg, in order around the loop, like N 0°00'00\" E and 300 ft",
             Kind::List {
                 items: COURSE,
                 min: 2,
@@ -647,7 +647,7 @@ pub static AREA: ToolDef = ToolDef {
     inputs: &[Field::new(
         "points",
         "Points",
-        "Northing and easting of each corner, in order",
+        "Northing and easting of each corner, in order, like 0, 0",
         Kind::List {
             items: VERTEX,
             min: 3,
@@ -973,14 +973,18 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
         )
         .core()
         .angle_range("unbounded"),
-        len("tangent", "Tangent T", "Distance PI to PC").core(),
-        len("length", "Curve length L", "Along the arc"),
-        len("chord", "Long chord C", "PC to PT"),
-        len("external", "External E", "PI to the curve midpoint"),
+        len("tangent", "Tangent T", "Distance PI to PC, like 250 ft").core(),
+        len("length", "Curve length L", "Along the arc, like 480 ft"),
+        len("chord", "Long chord C", "PC to PT, like 470 ft"),
+        len(
+            "external",
+            "External E",
+            "PI to the curve midpoint, like 30 ft",
+        ),
         len(
             "middle_ordinate",
             "Middle ordinate M",
-            "Chord midpoint to the curve midpoint",
+            "Chord midpoint to the curve midpoint, like 28 ft",
         ),
         Field::new(
             "degree",
@@ -1024,8 +1028,8 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
         .precision(Precision::Decimals(6))
         .angle_range("unbounded"),
         len_out("tangent", "Tangent T", "PI to PC"),
-        len_out("length", "Curve length L", "Along the arc"),
-        len_out("chord", "Long chord C", "PC to PT"),
+        len_out("length", "Curve length L", "Along the arc, like 480 ft"),
+        len_out("chord", "Long chord C", "PC to PT, like 470 ft"),
         len_out("external", "External E", "PI to curve midpoint"),
         len_out(
             "middle_ordinate",
@@ -1387,7 +1391,7 @@ pub static VERTICAL_CURVE: ToolDef = ToolDef {
         Field::new(
             "k",
             "K value",
-            "Instead of L: length per percent of grade change",
+            "Instead of L: length per percent of grade change, like 40",
             Kind::Number { min: 0.0, max: 1e6 },
         ),
         Field::new(
@@ -2028,8 +2032,17 @@ pub static COMBINED_FACTOR: ToolDef = ToolDef {
             "Geoid height N",
             "Like -30 ft (negative in the conterminous US)",
         ),
-        len("ground_distance", "Ground distance", "To convert to grid").core(),
-        len("grid_distance", "Grid distance", "To convert to ground"),
+        len(
+            "ground_distance",
+            "Ground distance",
+            "To convert to grid, like 1000 ft",
+        )
+        .core(),
+        len(
+            "grid_distance",
+            "Grid distance",
+            "To convert to ground, like 1000 ft",
+        ),
         len(
             "radius",
             "Earth radius",

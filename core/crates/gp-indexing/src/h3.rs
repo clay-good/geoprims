@@ -69,7 +69,7 @@ const fn angle(name: &'static str, title: &'static str, range: &'static str) -> 
     Field::new(
         name,
         title,
-        "Decimal degrees",
+        "Decimal degrees, like 40.4406 for a latitude and -80.002 for a longitude",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1383,7 +1383,7 @@ const POINT_ROW: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",
-        "Decimal degrees",
+        "Decimal degrees, like 40.4406",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1394,7 +1394,7 @@ const POINT_ROW: &[Field] = &[
     Field::new(
         "lon",
         "Longitude",
-        "Decimal degrees",
+        "Decimal degrees, like -80.002",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1416,11 +1416,11 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     aliases: &["polygonToCells", "polyfill", "H3 polygon to cells", "h3shape_to_cells"],
     keywords: &["H3", "polyfill", "polygonToCells", "polygon", "containment", "coverage", "GeoJSON"],
     inputs: &[
-        Field::new("points", "Polygon", "Corners in order, one per row (lat, lon)", Kind::List { items: POINT_ROW, min: 3, max: 10_000 }).core(),
-        Field::new("geojson", "GeoJSON", "Instead of points: a Polygon or MultiPolygon (holes allowed)", Kind::Text { max_len: 1_000_000 }),
+        Field::new("points", "Polygon", "Corners in order, one per row (lat, lon), like 40.4406, -80.002", Kind::List { items: POINT_ROW, min: 3, max: 10_000 }).core(),
+        Field::new("geojson", "GeoJSON", "Instead of points: a Polygon or MultiPolygon (holes allowed), like a Polygon with its corners as [lon, lat] pairs", Kind::Text { max_len: 1_000_000 }),
         RES_IN,
         Field::new("containment", "Containment", "center (default: cell centers inside), full (whole cells inside), or overlapping (any overlap)", Kind::Choice(&["center", "full", "overlapping"])).core(),
-        Field::new("offset", "List from", "For paging: position of the first cell to list, in index order", Kind::Number { min: 0.0, max: FILL_LIMIT as f64 }),
+        Field::new("offset", "List from", "For paging: position of the first cell to list, in index order, like 0", Kind::Number { min: 0.0, max: FILL_LIMIT as f64 }),
         Field::new("limit", "List at most", "For paging: most cells to list (up to 10,000)", Kind::Number { min: 1.0, max: LIST_LIMIT as f64 }),
     ],
     outputs: &[

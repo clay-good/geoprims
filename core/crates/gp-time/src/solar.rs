@@ -675,7 +675,7 @@ pub static EVENTS: ToolDef = ToolDef {
         Field::new(
             "height",
             "Observer height",
-            "Above the surrounding terrain or sea, for horizon dip (optional)",
+            "Above the surrounding terrain or sea, for horizon dip (optional), like 10 m",
             Kind::Quantity {
                 q: QT::Length,
                 unit: "m",

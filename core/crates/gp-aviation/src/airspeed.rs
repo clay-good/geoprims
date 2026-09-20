@@ -349,7 +349,7 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
         Field::new(
             "calibration",
             "Calibration table",
-            "From the POH/AFM: indicated and calibrated airspeed pairs, in increasing order",
+            "From the POH/AFM: indicated and calibrated airspeed pairs, in increasing order, like 70 kt indicated and 73 kt calibrated",
             Kind::List {
                 items: CAL_ROW,
                 min: 2,

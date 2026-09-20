@@ -216,7 +216,7 @@ pub static WEIGHT_BALANCE: ToolDef = ToolDef {
         Field::new(
             "stations",
             "Stations",
-            "Name, weight, and arm for each station, from your aircraft's weight and balance data",
+            "Name, weight, and arm for each station, from your aircraft's weight and balance data, like Empty, 1500 lb, 85 in",
             Kind::List {
                 items: STATION,
                 min: 1,
@@ -243,7 +243,7 @@ pub static WEIGHT_BALANCE: ToolDef = ToolDef {
         Field::new(
             "envelope",
             "CG envelope",
-            "Corner points (CG, weight) of the envelope from the POH, in order around it",
+            "Corner points (CG, weight) of the envelope from the POH, in order around it, like 1500 lb at 82 in",
             Kind::List {
                 items: ENVELOPE_POINT,
                 min: 3,

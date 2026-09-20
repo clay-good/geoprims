@@ -32,7 +32,7 @@ const VERTEX: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",
-        "Decimal degrees",
+        "Decimal degrees, like 40.4406",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -42,7 +42,7 @@ const VERTEX: &[Field] = &[
     Field::new(
         "lon",
         "Longitude",
-        "Decimal degrees",
+        "Decimal degrees, like -80.002",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",

@@ -735,7 +735,7 @@ pub static ENDURANCE: ToolDef = ToolDef {
         num(
             "derating",
             "Derating (%)",
-            "Your own derating; overrides the temperature heuristic",
+            "Your own derating; overrides the temperature heuristic, like 0.85",
             0.0,
             95.0,
         ),

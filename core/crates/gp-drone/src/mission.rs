@@ -343,7 +343,7 @@ const VERTEX: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",
-        "Decimal degrees",
+        "Decimal degrees, like 40.4406",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -353,7 +353,7 @@ const VERTEX: &[Field] = &[
     Field::new(
         "lon",
         "Longitude",
-        "Decimal degrees",
+        "Decimal degrees, like -80.002",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1036,7 +1036,7 @@ const CENTER_ROW: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",
-        "Decimal degrees",
+        "Decimal degrees, like 40.4406",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1046,7 +1046,7 @@ const CENTER_ROW: &[Field] = &[
     Field::new(
         "lon",
         "Longitude",
-        "Decimal degrees",
+        "Decimal degrees, like -80.002",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1097,7 +1097,7 @@ pub static CORRIDOR: ToolDef = ToolDef {
         Field::new(
             "centerline",
             "Centerline",
-            "Points along the corridor, in order",
+            "Points along the corridor, in order, like 40, -105",
             Kind::List {
                 items: CENTER_ROW,
                 min: 2,
@@ -1368,7 +1368,7 @@ pub static ORBIT: ToolDef = ToolDef {
         Field::new(
             "lat",
             "Center latitude",
-            "Decimal degrees",
+            "Decimal degrees, like 40.4406",
             Kind::Quantity {
                 q: QT::Angle,
                 unit: "deg",
@@ -1380,7 +1380,7 @@ pub static ORBIT: ToolDef = ToolDef {
         Field::new(
             "lon",
             "Center longitude",
-            "Decimal degrees",
+            "Decimal degrees, like -80.002",
             Kind::Quantity {
                 q: QT::Angle,
                 unit: "deg",

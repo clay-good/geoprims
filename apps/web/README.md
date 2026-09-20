@@ -48,6 +48,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/example.test.mjs` | The prefilled example on every tool page: a real answer in the HTML, the label until the first edit, and both ways out |
 | `test/disclosure.test.mjs` | Progressive disclosure: no required input behind "More options", and every assumption a tool makes in place of an input stated on its page |
 | `test/inline-diagram.test.mjs` | The compact picture under the answer: the manifests and the drawings agreeing on which tools are pictures, both drawings on the page, and no id shared between them |
+| `src/lib/terms.mjs`, `test/terms.test.mjs` | Tap to define: the first use of an abbreviation becomes a button opening a native popover with the definition and its source, plus the help-text gate over every input |
 | `test/targets.test.mjs` | Touch targets: the 48 px token, 56 px in Field mode, one rule sizing every control from it, nothing sizing a control below it, 8 px between neighbours, and the step buttons shown only in Field mode |
 | `test/fields.test.mjs` | Stepping a typed value: the unit stays, the reader's decimal separator stays, no floating-point noise |
 | `test/input-contract.test.mjs` | The numeric input contract: no `type="number"`, `inputmode="decimal"` on every numeric field, autocomplete/autocorrect/spellcheck off, `enterkeyhint` of `next` or `done`, a ± toggle wherever a value can read below zero, input text at 16 px, and pinch-zoom left alone |

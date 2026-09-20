@@ -890,10 +890,16 @@ pub static CPA: ToolDef = ToolDef {
         "intercept",
     ],
     inputs: &[
-        qty_field("a_course", "A course", "Degrees true", QT::Angle, "deg")
-            .required()
-            .core()
-            .angle_range("unbounded"),
+        qty_field(
+            "a_course",
+            "A course",
+            "Degrees true, like 090",
+            QT::Angle,
+            "deg",
+        )
+        .required()
+        .core()
+        .angle_range("unbounded"),
         qty_field(
             "a_speed",
             "A speed",
@@ -915,9 +921,15 @@ pub static CPA: ToolDef = ToolDef {
         )
         .required()
         .core(),
-        qty_field("b_course", "B course", "Degrees true", QT::Angle, "deg")
-            .required()
-            .angle_range("unbounded"),
+        qty_field(
+            "b_course",
+            "B course",
+            "Degrees true, like 090",
+            QT::Angle,
+            "deg",
+        )
+        .required()
+        .angle_range("unbounded"),
         qty_field("b_speed", "B speed", "Like 10 m/s", QT::Speed, "kt").required(),
         qty_field(
             "at_time",
@@ -1143,7 +1155,7 @@ const WAYPOINT: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",
-        "Decimal degrees",
+        "Decimal degrees, like 40.4406",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1153,7 +1165,7 @@ const WAYPOINT: &[Field] = &[
     Field::new(
         "lon",
         "Longitude",
-        "Decimal degrees",
+        "Decimal degrees, like -80.002",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1253,7 +1265,7 @@ pub static LEGS: ToolDef = ToolDef {
         Field::new(
             "waypoints",
             "Waypoints",
-            "In order: name (optional), latitude, longitude",
+            "In order: name (optional), latitude, longitude, like KDEN, 39.8617, -104.6731",
             Kind::List {
                 items: WAYPOINT,
                 min: 2,
@@ -1568,7 +1580,7 @@ const ROUTE_POINT: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",
-        "Decimal degrees",
+        "Decimal degrees, like 40.4406",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1578,7 +1590,7 @@ const ROUTE_POINT: &[Field] = &[
     Field::new(
         "lon",
         "Longitude",
-        "Decimal degrees",
+        "Decimal degrees, like -80.002",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",
@@ -1609,7 +1621,7 @@ pub static CLOSEST_POINT: ToolDef = ToolDef {
         Field::new(
             "route",
             "Route",
-            "Waypoints in order: latitude, longitude",
+            "Waypoints in order: latitude, longitude, like 40, -105",
             Kind::List {
                 items: ROUTE_POINT,
                 min: 2,

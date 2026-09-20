@@ -57,7 +57,7 @@ const POINT_ROW: &[Field] = &[
     Field::new(
         "azimuth",
         "Course here",
-        "Degrees true",
+        "Degrees true, like 090",
         Kind::Quantity {
             q: QT::Angle,
             unit: "deg",

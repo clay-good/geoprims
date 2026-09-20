@@ -3,8 +3,9 @@ import Base from '../../../../layouts/Base.astro';
 import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
+import { defId, markTerms, sourceOf } from '../../../../lib/terms.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
-import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -31,12 +32,18 @@ const related = t.related.filter((r) => find(r.id) && r !== inverse);
 // Plain words for why a tool is related (tool.rs `Related`).
 const WHY = { inverse: 'Goes the other way', next: 'A common next step', alternative: 'Another way to get this', parent: 'The bigger calculation this is part of' };
 const client = clientTool(t);
+// The abbreviations in this tool's purpose line become buttons that open their
+// definition (ux/glanceable-results, "Tap to define"). Native popovers: no
+// script, so they work with JavaScript off and offline.
+const terms = termsFor(t.id);
+const purpose = markTerms(t.summary, terms);
+
 ---
 <Base title={`${t.title} · geoprims`} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
   <PageHeader
     title={t.title}
     crumbs={[[DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [groupName, route(`${t.domain}.${t.group}`)]]}
-    purpose={t.summary}
+    purpose={purpose.html}
   >
     {inverse && <p class="other-way"><a href={route(inverse.id)}>Go the other way: {find(inverse.id).title} →</a></p>}
   </PageHeader>
@@ -120,6 +127,13 @@ const client = clientTool(t);
       <p class="notice">Experimental means this tool has not yet met the stable bar: at least 20 golden vectors, differential tests, and an independent worked example.</p>
     )}
   </details>
+  {purpose.used.map((e) => (
+    <div popover id={defId(e)} class="card def">
+      <p class="def-term"><strong>{e.term}</strong> — {e.expansion}</p>
+      <p>{e.definition}</p>
+      {sourceOf(e, { get: sourceRow }) && <p class="def-source">Source: {sourceOf(e, { get: sourceRow }).name}</p>}
+    </div>
+  ))}
   {termsFor(t.id).length > 0 && (
     <details class="card terms">
       <summary>Terms on this page</summary>
@@ -127,7 +141,7 @@ const client = clientTool(t);
         {termsFor(t.id).map((e) => (
           <>
             <dt id={`term-${e.id}`}><abbr title={e.expansion}>{e.term}</abbr>: {e.expansion}</dt>
-            <dd>{e.definition}</dd>
+            <dd>{e.definition}{sourceRow(e.source) && <span class="def-source"> Source: {sourceRow(e.source).name}</span>}</dd>
           </>
         ))}
       </dl>

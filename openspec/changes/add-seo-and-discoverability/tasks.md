@@ -9,7 +9,7 @@
 ## 2. Content
 
 - [ ] 2.1 Write at least 25 concept explainers with citations and embedded live examples; verify the density-altitude explainer scenario
-- [ ] 2.2 Author curated related lists with reasons for all stable tools, plus the validation gate; verify the related-validation scenario
+- [ ] 2.2 Author curated related lists with reasons for all stable tools, plus the validation gate; verify the related-validation scenario (done: the gate. tools/trust/related.mjs fails a list that points at a tool that does not exist or at itself, repeats an entry, gives a reason outside inverse/next/alternative/parent, names an inverse that does not name it back, or runs past six, and it is checked against broken fixtures. The 3-to-6 count is a ratchet: 68 stable tools are still short of three, down from 71, and the test fails if that number rises, or if it falls without the baseline being lowered. Pending: curating the remaining 68 lists, which is editorial work per domain)
 - [ ] 2.3 Build domain and group hubs grouped by task; verify hub JSON-LD and links
 
 ## 3. Build outputs

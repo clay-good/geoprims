@@ -691,6 +691,10 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
             id: "units.pressure.inhg-to-hpa",
             reason: "alternative",
         },
+        Related {
+            id: "aviation.atmosphere.isa",
+            reason: "alternative",
+        },
     ],
     sentence: "Pressure altitude is {pressure_altitude}. The 1,000 ft per inch rule gives {rule_of_thumb}, off by {abs(rule_error)}.",
     limits: &[("batchRows", 10_000)],
@@ -894,6 +898,10 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
         Related {
             id: "aviation.atmosphere.isa",
             reason: "alternative",
+        },
+        Related {
+            id: "aviation.weather.metar-decode",
+            reason: "next",
         },
     ],
     sentence: "Density altitude is {density_altitude}, about {abs(above_field)} {if above_field < 0}lower{else}higher{/if} than the field.{if above_field > 1000} Expect a longer takeoff roll and weaker climb.{/if}{warn DRY_AIR_ASSUMED} Assumes dry air.{/warn}",
@@ -1451,10 +1459,20 @@ pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
             ("heading", "runway_heading"),
         ],
     }],
-    related: &[Related {
-        id: "aviation.wind.heading-groundspeed",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "aviation.wind.heading-groundspeed",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.weather.metar-decode",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.density-altitude",
+            reason: "next",
+        },
+    ],
     sentence: "{if crosswind > 0}{crosswind} crosswind from the {crosswind_from}{else}No crosswind{/if} and {abs(headwind)} {if headwind < 0}tailwind{else}headwind{/if} on runway {runway}{if gust_crosswind > 0}, {gust_crosswind} crosswind in gusts{/if}.{warn VARIABLE_WIND} These are the worst case for the variable wind.{/warn}",
     limits: &[("batchRows", 10_000)],
     slots: &[

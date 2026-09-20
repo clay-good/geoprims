@@ -20,11 +20,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "447ac08e6364cdad",
+    "hash": "342046b021df2f1f",
     "lastmod": "2026-09-20"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "e15bb08f12fc2e01",
+    "hash": "849062f72d83de91",
     "lastmod": "2026-09-20"
   },
   "/aviation/atmosphere/": {
@@ -32,7 +32,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "64772dcd8f87ac19",
+    "hash": "92d5e693466208ef",
     "lastmod": "2026-09-20"
   },
   "/aviation/ifr/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/loading/weight-balance/": {
-    "hash": "6c046472718c0296",
+    "hash": "39426b0199490a15",
     "lastmod": "2026-09-20"
   },
   "/aviation/performance/": {
@@ -52,11 +52,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/performance/top-of-descent/": {
-    "hash": "f60a128dcbfd34cf",
+    "hash": "0c5efd4439e940a8",
     "lastmod": "2026-09-20"
   },
   "/aviation/performance/vdp/": {
-    "hash": "ff5e5187a559b7c4",
+    "hash": "2cb3d4c05ee2d660",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/": {
@@ -64,15 +64,15 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/weather/fb-winds-decode/": {
-    "hash": "50b660d925028ef6",
+    "hash": "05c347ebc585ee0e",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/metar-decode/": {
-    "hash": "7d5ff0be04c22e03",
+    "hash": "c661851d25824308",
     "lastmod": "2026-09-20"
   },
   "/aviation/weather/taf-decode/": {
-    "hash": "d5ed2b7668ed58f0",
+    "hash": "57d15f901f96367a",
     "lastmod": "2026-09-20"
   },
   "/aviation/wind/": {
@@ -80,11 +80,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "0fdbd88e839e279f",
+    "hash": "ba5dc8314a6ce932",
     "lastmod": "2026-09-20"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "aeada8bbd66e9c29",
+    "hash": "5ce270d45bd5b258",
     "lastmod": "2026-09-20"
   },
   "/changelog/": {

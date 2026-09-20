@@ -101,12 +101,32 @@ export function check(pages, idx) {
   return problems;
 }
 
+/**
+ * The redirects a deprecated tool implies: its own route points at the
+ * replacement from the day it is deprecated, so a link keeps working when the
+ * tool is finally removed (platform/tool-contract, "Deprecated id resolves to
+ * replacement").
+ */
+export function deprecationRedirects(catalog, today = new Date().toISOString().slice(0, 10)) {
+  return catalog.tools
+    .filter((t) => t.deprecation)
+    .map((t) => ({
+      from: `/${t.id.split('.').join('/')}/`,
+      to: `/${t.deprecation.replacement.split('.').join('/')}/`,
+      since: today,
+      deprecated: true,
+    }))
+    .sort((a, b) => a.from.localeCompare(b.from));
+}
+
 /** Problems with the redirects file itself (renamed routes must still resolve). */
 export function checkRedirects(list, builtRoutes) {
   const problems = [];
-  for (const { from, to, since } of list) {
+  for (const { from, to, since, deprecated } of list) {
     if (!STYLE.test(from ?? '')) problems.push(`redirect from ${from} is not a well-formed route`);
-    else if (builtRoutes.has(from)) problems.push(`redirect from ${from} shadows a page the build still emits`);
+    // A deprecated tool keeps its page until removal: the redirect is the
+    // fallback for after it goes, so it may name a route the build still emits.
+    else if (builtRoutes.has(from) && !deprecated) problems.push(`redirect from ${from} shadows a page the build still emits`);
     if (!builtRoutes.has(to)) problems.push(`redirect to ${to} is not a page this build emits`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(since ?? '')) problems.push(`redirect from ${from} has no ISO since date`);
   }
@@ -134,7 +154,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const pages = htmlFiles(dist)
     .sort()
     .map((p) => ({ route: routeOf(p), html: readFileSync(p, 'utf8') }));
-  const list = JSON.parse(readFileSync(join(root, 'data/redirects.json'), 'utf8'));
+  const list = [
+    ...JSON.parse(readFileSync(join(root, 'data/redirects.json'), 'utf8')),
+    ...deprecationRedirects(catalog),
+  ];
   const problems = [...check(pages, idx), ...checkRedirects(list, new Set(pages.map((p) => p.route)))];
   if (problems.length > 0) {
     console.error(`routes: ${problems.length} problem(s)\n${problems.map((m) => `  ${m}`).join('\n')}`);

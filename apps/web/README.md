@@ -31,7 +31,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/lib/report.js`, `sw/sw.js` | The problem-report payload and the dialog's opening and send states, shared with the Worker's validator; the service worker precaches the release and lets every `/api/` request past it, so a report is never cached, replayed, or queued |
 | `src/styles/global.css` | Atlas design tokens: paper (the default) and ink, and the Geist fonts |
 | `scripts/lastmod.mjs` | The content hash behind each sitemap `lastmod`: a page's words with Astro's scoped classes and bundle hashes taken out, so a JavaScript-only release moves no dates |
-| `scripts/routes.mjs` | The route-map gate: classifies every built page against `contracts/routes-and-urls` and fails naming anything outside the map, then writes `dist/_redirects` from `data/redirects.json` |
+| `scripts/routes.mjs` | The route-map gate: classifies every built page against `contracts/routes-and-urls` and fails naming anything outside the map, then writes `dist/_redirects` from `data/redirects.json` and from every deprecated tool in the catalog |
 | `test/build.test.mjs` | One page per endpoint, answer in the HTML, canonical and noindex rules, no third-party requests |
 | `src/lib/quality.mjs` | The monthly correctness summary behind `/quality/`, derived only from the known-issues file and the changelog |
 | `src/lib/licenses.mjs` | What `/licenses/` renders: the asset registry's rows with their attribution, the build dependencies, and the datasets left out with reasons |

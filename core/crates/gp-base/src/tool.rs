@@ -987,6 +987,13 @@ impl Registry {
                     context: x.context,
                     notice: operational_notice(def),
                     limitation: def.limitation,
+                    deprecation: match def.stability {
+                        Stability::Deprecated {
+                            replacement,
+                            removal,
+                        } => Some((replacement, removal)),
+                        _ => None,
+                    },
                 };
                 envelope::success(
                     x.result,

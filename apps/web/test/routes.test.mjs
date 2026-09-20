@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { check, checkRedirects, classify, index, serialize, SITE } from '../scripts/routes.mjs';
+import { check, checkRedirects, classify, deprecationRedirects, index, serialize, SITE } from '../scripts/routes.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const dist = join(web, 'dist');
@@ -68,8 +68,28 @@ test('the redirects file keeps renamed routes resolvable', () => {
   assert.match(checkRedirects([{ ...good[0], since: 'January' }], built).at(-1), /no ISO since date/);
 });
 
-test('the build writes the redirects file from data/redirects.json', () => {
+test('the build writes the redirects file from data/redirects.json and the catalog', () => {
   const list = JSON.parse(readFileSync(join(web, '../../data/redirects.json'), 'utf8'));
   assert.ok(Array.isArray(list));
-  assert.equal(readFileSync(join(dist, '_redirects'), 'utf8'), serialize(list));
+  assert.equal(readFileSync(join(dist, '_redirects'), 'utf8'), serialize([...list, ...deprecationRedirects(catalog)]));
+});
+
+test('a deprecated tool redirects to its replacement and leaves the index', () => {
+  // No tool is deprecated yet, so the rules are checked on a fixture.
+  assert.deepEqual(deprecationRedirects(catalog), [], 'nothing is deprecated today');
+  const gone = {
+    id: 'aviation.wind.old-crosswind',
+    deprecation: { replacement: 'aviation.wind.runway-components', removal: '2.0.0' },
+  };
+  assert.deepEqual(deprecationRedirects({ tools: [...catalog.tools, gone] }, '2026-09-20'), [
+    { from: '/aviation/wind/old-crosswind/', to: '/aviation/wind/runway-components/', since: '2026-09-20', deprecated: true },
+  ]);
+  // Its own page is still built until removal, so the redirect may name it.
+  const built = new Set(['/aviation/wind/old-crosswind/', '/aviation/wind/runway-components/']);
+  assert.deepEqual(checkRedirects(deprecationRedirects({ tools: [gone] }, '2026-09-20'), built), []);
+  // A plain rename may not shadow a live page.
+  assert.match(
+    checkRedirects([{ from: '/aviation/wind/old-crosswind/', to: '/aviation/wind/runway-components/', since: '2026-09-20' }], built)[0],
+    /shadows a page/,
+  );
 });

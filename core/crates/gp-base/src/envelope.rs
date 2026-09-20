@@ -30,6 +30,9 @@ pub struct Meta {
     pub notice: Option<&'static str>,
     /// The simplified-method banner (`meta.limitation`), when the tool has one.
     pub limitation: Option<crate::tool::Limitation>,
+    /// For a deprecated tool (`meta.deprecation`): the id that replaces it and
+    /// the version that removes it. The tool still runs until then.
+    pub deprecation: Option<(&'static str, &'static str)>,
 }
 
 impl Meta {
@@ -79,6 +82,15 @@ impl Meta {
         }
         if let Some(n) = self.notice {
             pairs.push(("notice".to_owned(), Json::str(n)));
+        }
+        if let Some((replacement, removal)) = self.deprecation {
+            pairs.push((
+                "deprecation".to_owned(),
+                Json::obj([
+                    ("replacement", Json::str(replacement)),
+                    ("removal", Json::str(removal)),
+                ]),
+            ));
         }
         if let Some(l) = self.limitation {
             pairs.push((
@@ -150,6 +162,7 @@ mod tests {
             context: vec![],
             notice: None,
             limitation: None,
+            deprecation: None,
         }
     }
 
@@ -177,6 +190,25 @@ mod tests {
             CORE_VERSION
         );
         assert_eq!(got, want);
+    }
+
+    #[test]
+    fn a_deprecated_tool_names_its_replacement_and_removal() {
+        let mut m = meta();
+        m.deprecation = Some(("units.speed.convert", "2.0.0"));
+        let got = success(Json::Obj(vec![]), None, None, Json::Obj(vec![]), &m);
+        assert!(
+            got.contains(
+                r#""deprecation":{"replacement":"units.speed.convert","removal":"2.0.0"}"#
+            ),
+            "{got}"
+        );
+        // The result is still there: a deprecated tool keeps working until removal.
+        assert!(got.starts_with(r#"{"ok":true"#), "{got}");
+        assert!(
+            !success(Json::Obj(vec![]), None, None, Json::Obj(vec![]), &meta())
+                .contains("deprecation")
+        );
     }
 
     #[test]

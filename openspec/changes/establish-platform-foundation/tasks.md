@@ -70,7 +70,7 @@
 
 - [ ] 8.1 Implement the domain/group taxonomy file and validation; verify every id maps to exactly one group
 - [ ] 8.2 Implement lifecycle states and the stable-promotion gate (≥ 20 vectors, differential tests passing); verify promotion fails for a tool with 19 vectors
-- [ ] 8.3 Implement deprecation redirects and deprecation notices in results; verify the deprecated-id scenario
+- [x] 8.3 Implement deprecation redirects and deprecation notices in results; verify the deprecated-id scenario (a deprecated tool still runs and its envelope carries meta.deprecation with the replacement id and the removal version; its page canonicalizes to the replacement and leaves the index; and the route gate writes its old route into dist/_redirects from the day it is deprecated, so the link survives removal. No tool is deprecated yet, so both halves are checked on fixtures: an envelope test in the core, and a route test that also holds a plain rename to the stricter rule that it may not shadow a live page)
 - [x] 8.4 Implement the `units` domain operations and allow-listed pair endpoints; verify the kt-to-mph and fuel-density scenarios
 
 ## 9. Release readiness

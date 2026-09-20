@@ -119,11 +119,15 @@ export const sentenceList = (words) =>
 export const route = (id) => '/' + id.split('.').join('/') + '/';
 export const tool = (id) => catalog.tools.find((t) => t.id === id);
 
-/** A tool's canonical page: generated endpoints point at their parent operation. */
-export const canonicalOf = (t) => (t.composedOf.length ? route(t.composedOf[0]) : route(t.id));
+/**
+ * A tool's canonical page: a deprecated tool points at its replacement, and a
+ * generated endpoint at the operation it composes.
+ */
+export const canonicalOf = (t) =>
+  t.deprecation ? route(t.deprecation.replacement) : t.composedOf.length ? route(t.composedOf[0]) : route(t.id);
 
-/** Only stable tools are indexable (experimental pages lack their full content). */
-export const indexable = (t) => t.stability === 'stable' && t.composedOf.length === 0;
+/** Only stable tools are indexable (experimental and deprecated pages are not). */
+export const indexable = (t) => t.stability === 'stable' && t.composedOf.length === 0 && !t.deprecation;
 
 export const primaryExample = (t) => t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
 

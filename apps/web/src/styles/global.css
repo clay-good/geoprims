@@ -316,7 +316,7 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 /* Home: a centered masthead over a graticule, one search field, then the
    categories. The graticule is decoration only: it never moves, it is
    aria-hidden, and print drops it. */
-.masthead { position: relative; text-align: center; padding-block: clamp(2.5rem, 7vw, 4.5rem) 1.5rem; margin-block-end: 0.5rem; }
+.masthead { position: relative; text-align: center; padding-block: clamp(1.75rem, 4.5vw, 3rem) 1.25rem; margin-block-end: 0.5rem; }
 .masthead::before {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
@@ -333,6 +333,25 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .hero-search .hero-search-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero-search kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding: 0.1em 0.45em; flex: none; }
 .masthead .chips { justify-content: center; }
+
+/* Home: the featured tool. A real, working ToolApp, so it inherits every tool
+   style; only the heading row and the frame around it are new here. */
+.featured { margin-block-start: 1.5rem; padding-block-start: 1.25rem; border-block-start: 1px solid var(--line); }
+.featured-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; }
+.featured-head h2 { margin: 0; font-size: 1.15rem; }
+.featured-link { font-size: 0.95rem; font-weight: 600; flex: none; }
+.featured-blurb { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.95rem; max-inline-size: 70ch; }
+/* The map is the point of the featured tool, so on the home page it comes
+   before the form. Astro islands are display:contents, so the tool's own
+   sections order directly against the heading here. */
+.featured { display: flex; flex-direction: column; }
+.featured-head, .featured-blurb, .featured noscript { order: -2; }
+.featured .map { order: -1; margin-block: 0.85rem 0; }
+.featured .tool-grid { margin-block-start: 1rem; }
+/* One line out to the tool's own page, in the slot the report line uses there. */
+.open-tool { font-weight: 600; }
+.browse-title { font-size: 1.15rem; margin-block-start: 2.5rem; }
+.browse-title + .categories { margin-block-start: 0.85rem; }
 
 /* Categories: one hairline-ruled row each, with its count set in figures. */
 .categories { list-style: none; margin: 2.5rem 0 0; padding: 0; border-block-start: 1px solid var(--line); }

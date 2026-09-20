@@ -194,3 +194,18 @@ test('the catalog page lists every operation once', () => {
   assert.ok(readdirSync(join(dist, 'sitemaps')).some((f) => readFileSync(join(dist, 'sitemaps', f), 'utf8').includes('https://geoprims.com/tools/')), 'in a sitemap');
   assert.match(page(''), /href="\/tools\/"/);
 });
+
+test('the home page leads with the search field, then a working featured tool', () => {
+  const html = page('/');
+  // Order on the page: search first, then the featured tool, then browsing.
+  const search = html.indexOf('class="hero-search"');
+  const featured = html.indexOf('class="featured"');
+  const browse = html.indexOf('class="browse-title"');
+  assert.ok(search > -1 && featured > search && browse > featured, 'search, then featured tool, then browse');
+  // The answer is server-rendered, so the tool is useful before any JavaScript runs.
+  assert.match(html, /class="value[^"]*">[^<]+</, 'no featured answer value');
+  assert.match(html, /class="sentence[^"]*">[^<]+</, 'no featured sentence');
+  // Embedded mode: it links out to the tool's own page and keeps the page's own chrome off.
+  assert.match(html, /class="open-tool" href="\/navigation\/geodesic\/inverse\/#/, 'no link to the full tool');
+  assert.ok(!html.includes('Report a problem'), 'the embedded copy should not offer the report dialog');
+});

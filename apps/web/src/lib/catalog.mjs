@@ -149,3 +149,18 @@ export const inputRows = (t) =>
       unit: s['x-unit'] && s['x-unit'] !== '1' ? s['x-unit'] : '',
       range: s.enum ? s.enum.join(', ') : s['x-angle-range'] ?? (s.minimum !== undefined || s.maximum !== undefined ? `${s.minimum ?? ''} to ${s.maximum ?? ''}` : s.type === 'array' ? 'list of rows' : ''),
     }));
+
+/** The slice of a tool that ToolApp needs in the browser (tool page and the home page's featured copy). */
+export const clientTool = (t) => ({
+  id: t.id,
+  title: t.title,
+  route: route(t.id),
+  visualization: t.visualization,
+  timeline: t.timeline ?? null,
+  version: t.version,
+  inputs: t.inputs,
+  outputs: t.outputs,
+  severity: severities(t),
+  coreVersion: catalog.coreVersion,
+  buildHash: buildHashOf(t),
+});

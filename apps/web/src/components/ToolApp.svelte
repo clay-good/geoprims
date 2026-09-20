@@ -6,7 +6,9 @@
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
 
-  let { tool, example, initial } = $props();
+  // `embedded` is the home page's featured copy: it leaves the page URL alone,
+  // stays out of the recent list, and links out to the tool's own page instead.
+  let { tool, example, initial, embedded = false } = $props();
 
   const fields = Object.entries(tool.inputs.properties).filter(([k]) => k !== 'options');
   const required = new Set(tool.inputs.required);
@@ -55,6 +57,9 @@
   let stale = $state(false);
   let copied = $state('');
   let linkNote = $state('');
+  // Embedded: the permalink rides on the "open the full tool" link instead of the URL.
+  let fragment = $state('#example');
+  const toolHref = $derived(tool.route + fragment);
   let compute = $state.raw(null);
   let timer;
   // The report dialog is imported on first click, so nothing loads before then.
@@ -169,7 +174,9 @@
     stale = false;
     if (settingsOnly) return;
     const enc = await compute.encodeLink({ i: a });
-    if (enc?.ok) history.replaceState(null, '', `#${enc.result.fragment}`);
+    if (!enc?.ok) return;
+    if (embedded) fragment = `#${enc.result.fragment}`;
+    else history.replaceState(null, '', `#${enc.result.fragment}`);
   }
 
   function edited() {
@@ -186,7 +193,8 @@
   function tryExample() {
     for (const [k] of fields) values[k] = exampleText(k);
     isExample = true;
-    history.replaceState(null, '', '#example');
+    if (embedded) fragment = '#example';
+    else history.replaceState(null, '', '#example');
     run();
   }
 
@@ -204,7 +212,9 @@
         : kind === 'sentence'
           ? `${result.summary} (geoprims ${tool.id} ${tool.version})`
           : kind === 'link'
-            ? location.href
+            ? embedded
+              ? new URL(toolHref, location.origin).href
+              : location.href
             : JSON.stringify({ tool: 'geoprims_run', arguments: { id: tool.id, args: args() } });
     await navigator.clipboard.writeText(text);
     copied = kind;
@@ -229,9 +239,11 @@
   }
 
   onMount(async () => {
-    pinned = isPinned(tool.id);
+    if (!embedded) {
+      pinned = isPinned(tool.id);
+      recordUse(tool);
+    }
     unitProfile = profile();
-    recordUse(tool);
     addEventListener('gp-prefs', () => {
       unitProfile = profile();
       if (compute) run(true);
@@ -241,6 +253,10 @@
       result = { ok: false, error: { code: 'UNSUPPORTED', message: NO_WASM } };
     }
     compute = await import('../lib/compute.js');
+    if (embedded) {
+      if (toolOptions()) run(true);
+      return;
+    }
     const hash = location.hash.slice(1);
     if (hash && hash !== 'example') {
       const d = await compute.decodeLink(hash);
@@ -295,7 +311,7 @@
           </select>
         </label>
       {/if}
-      <button type="button" class="quiet star" aria-pressed={pinned} aria-label={pinned ? 'Unpin tool' : 'Pin tool'} title={pinned ? 'Pinned to your home page' : 'Pin to your home page'} onclick={pin}>{pinned ? '★' : '☆'}</button>
+      {#if !embedded}<button type="button" class="quiet star" aria-pressed={pinned} aria-label={pinned ? 'Unpin tool' : 'Pin tool'} title={pinned ? 'Pinned to your home page' : 'Pin to your home page'} onclick={pin}>{pinned ? '★' : '☆'}</button>{/if}
     </div>
   {:else if result}
     <p class="error">{result.error.message}</p>
@@ -305,7 +321,11 @@
       <button type="button" class="quiet" onclick={tryExample}>Use the example</button>
     </div>
   {/if}
+  {#if embedded}
+    <p class="report-line"><a class="open-tool" href={toolHref}>Open the full tool, with your values →</a></p>
+  {:else}
   <p class="report-line">{#if linkNote}<span class="notice">{linkNote} </span>{/if}Something look off? <button type="button" class="link" onclick={openReport}>Report a problem</button></p>
+  {/if}
 </section>
 
 {#if result?.ok && answerHidden}

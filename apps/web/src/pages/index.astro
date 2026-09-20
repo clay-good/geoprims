@@ -1,7 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
-import { catalog, DOMAIN_BLURBS, DOMAIN_NOUNS, DOMAIN_TITLES, route, sentenceList } from '../lib/catalog.mjs';
+import ToolApp from '../components/ToolApp.svelte';
+import { catalog, clientTool, DOMAIN_BLURBS, DOMAIN_NOUNS, DOMAIN_TITLES, exampleResult, primaryExample, route, sentenceList, tool as find } from '../lib/catalog.mjs';
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
+// The home page leads with one working tool: the question people arrive with
+// ("how far is it?"), which is also the one that draws itself on a map.
+const FEATURED = 'navigation.geodesic.inverse';
+const featured = find(FEATURED);
+const featuredExample = primaryExample(featured);
+const featuredInitial = await exampleResult(featured);
 const ops = catalog.counts.all.operations;
 const stable = catalog.counts.stable.operations;
 // The description names the domains the catalog actually has, so the claim cannot drift.
@@ -32,7 +39,17 @@ const TRY = [
     </p>
   </section>
 
-  <h2 class="sr-only">Browse by topic</h2>
+  <section class="featured" aria-labelledby="featured-title">
+    <div class="featured-head">
+      <h2 id="featured-title">{featured.title}</h2>
+      <a class="featured-link" href={route(FEATURED)}>Open the full tool →</a>
+    </div>
+    <p class="featured-blurb">{featured.summary} Change any value: it recomputes on your device, with no network.</p>
+    <noscript><p class="card notice" role="note">Computing your own values needs JavaScript and WebAssembly. The worked example below was computed when this page was built.</p></noscript>
+    <ToolApp client:load tool={clientTool(featured)} example={featuredExample.input} initial={featuredInitial} embedded />
+  </section>
+
+  <h2 class="browse-title">Or browse by topic</h2>
   <ul class="categories">
     {domains.map((d) => (
       <li>

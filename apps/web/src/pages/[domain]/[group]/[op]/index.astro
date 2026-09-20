@@ -3,7 +3,7 @@ import Base from '../../../../layouts/Base.astro';
 import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
-import { breadcrumbs, buildHashOf, catalog, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, severities, termsFor, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, termsFor, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -22,7 +22,7 @@ const inverse = t.related.find((r) => r.reason === 'inverse' && find(r.id));
 const related = t.related.filter((r) => find(r.id) && r !== inverse);
 // Plain words for why a tool is related (tool.rs `Related`).
 const WHY = { inverse: 'Goes the other way', next: 'A common next step', alternative: 'Another way to get this', parent: 'The bigger calculation this is part of' };
-const client = { id: t.id, title: t.title, route: route(t.id), visualization: t.visualization, timeline: t.timeline ?? null, version: t.version, inputs: t.inputs, outputs: t.outputs, severity: severities(t), coreVersion: catalog.coreVersion, buildHash: buildHashOf(t) };
+const client = clientTool(t);
 ---
 <Base title={`${t.title} · geoprims`} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
   <PageHeader

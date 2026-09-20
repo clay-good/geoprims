@@ -1,5 +1,5 @@
 //! Wind inputs and geometry shared by the wind tools: METAR wind groups,
-//! runway designators, references, and the Within/Near/Beyond status phrase.
+//! runway designators, and references.
 
 use gp_base::error::ToolError;
 use libm::{atan2, cos, sin, sqrt};
@@ -177,17 +177,6 @@ pub fn find_wind(heading: f64, tas: f64, track: f64, gs: f64) -> (f64, f64) {
     (toward + 180.0, speed)
 }
 
-/// "Within / Near / Beyond your <limit>" (ux/glanceable-results status phrases).
-pub fn status(value: f64, limit: f64, near_margin: f64, limit_text: &str) -> String {
-    if value > limit {
-        format!("Beyond your {limit_text}")
-    } else if value >= limit * (1.0 - near_margin) {
-        format!("Near your {limit_text}")
-    } else {
-        format!("Within your {limit_text}")
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -249,22 +238,6 @@ mod tests {
         assert!(
             ((d - 30.0).rem_euclid(360.0)).min((30.0 - d).rem_euclid(360.0)) < 1e-9
                 && (s - 20.0).abs() < 1e-9
-        );
-    }
-
-    #[test]
-    fn status_phrases() {
-        assert_eq!(
-            status(16.0, 15.0, 0.1, "15 kt crosswind limit"),
-            "Beyond your 15 kt crosswind limit"
-        );
-        assert_eq!(
-            status(14.0, 15.0, 0.1, "15 kt crosswind limit"),
-            "Near your 15 kt crosswind limit"
-        );
-        assert_eq!(
-            status(5.0, 15.0, 0.1, "15 kt crosswind limit"),
-            "Within your 15 kt crosswind limit"
         );
     }
 }

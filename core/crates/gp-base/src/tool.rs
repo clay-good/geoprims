@@ -83,7 +83,24 @@ pub struct Field {
     /// For a `Number` in a fixed unit the unit system does not convert (nT,
     /// A): its dimension and unit, emitted as `x-quantity` and `x-unit`.
     pub measure: Option<(&'static str, &'static str)>,
+    /// For an output that judges the result against a threshold (`x-status`):
+    /// the answer card shows it as a status line, not as another value.
+    pub status: Option<Status>,
 }
+
+/// What an `x-status` output judges, and where its threshold comes from
+/// (`ux/glanceable-results`, "Status phrases without false assurance").
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Status {
+    /// `threshold` for Within/Near/Beyond, `conformance` for Meets/Does not meet.
+    pub kind: &'static str,
+    /// The sources-ledger id the threshold is cited from, or `user` when the
+    /// reader enters the limit themselves.
+    pub source: &'static str,
+}
+
+/// The two kinds an `x-status` output may declare.
+pub const STATUS_KINDS: &[&str] = &["threshold", "conformance"];
 
 impl Field {
     pub const fn new(
@@ -103,7 +120,15 @@ impl Field {
             precision: None,
             angle_range: None,
             measure: None,
+            status: None,
         }
+    }
+
+    /// Marks an output as a status phrase judged against `source` (a
+    /// sources-ledger id, or `user` when the reader sets the limit).
+    pub const fn status(mut self, kind: &'static str, source: &'static str) -> Field {
+        self.status = Some(Status { kind, source });
+        self
     }
 
     pub const fn required(mut self) -> Field {

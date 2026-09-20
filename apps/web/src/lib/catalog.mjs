@@ -10,6 +10,8 @@ import { verificationReport } from '../../../../tools/trust/verification.mjs';
 const root = join(process.cwd(), '../..');
 export const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
 const codes = JSON.parse(readFileSync(join(root, 'data/codes.json'), 'utf8'));
+const ledgerRows = Object.values(JSON.parse(readFileSync(join(root, 'data/sources-ledger.json'), 'utf8'))).find(Array.isArray);
+const sourceById = new Map(ledgerRows.map((r) => [r.id, r]));
 const signoffs = readSignoffs(root);
 const buildDay = new Date().toISOString().slice(0, 10);
 /** The honest review line for a domain, or for one tool when `id` is given. */
@@ -150,6 +152,22 @@ export const inputRows = (t) =>
       range: s.enum ? s.enum.join(', ') : s['x-angle-range'] ?? (s.minimum !== undefined || s.maximum !== undefined ? `${s.minimum ?? ''} to ${s.maximum ?? ''}` : s.type === 'array' ? 'list of rows' : ''),
     }));
 
+/**
+ * Where each status output's threshold comes from, resolved at build time so
+ * the answer card can always cite it (ux/glanceable-results status phrases).
+ */
+export const statusSources = (t) =>
+  Object.fromEntries(
+    Object.entries(t.outputs?.properties ?? {})
+      .filter(([, f]) => f['x-status'])
+      .map(([name, f]) => {
+        const { kind, source } = f['x-status'];
+        if (source === 'user') return [name, { kind, label: 'the limit you entered', url: '' }];
+        const row = sourceById.get(source);
+        return [name, { kind, label: row?.name ?? source, url: row?.freeAccessUrl ?? '' }];
+      }),
+  );
+
 /** The slice of a tool that ToolApp needs in the browser (tool page and the home page's featured copy). */
 export const clientTool = (t) => ({
   id: t.id,
@@ -161,6 +179,7 @@ export const clientTool = (t) => ({
   inputs: t.inputs,
   outputs: t.outputs,
   severity: severities(t),
+  statusSources: statusSources(t),
   coreVersion: catalog.coreVersion,
   buildHash: buildHashOf(t),
 });

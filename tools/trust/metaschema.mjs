@@ -9,9 +9,10 @@ export const TOOL_EXTENSIONS = new Set([
 ]);
 export const FIELD_EXTENSIONS = new Set([
   'x-quantity', 'x-unit', 'x-angle-range', 'x-display-precision', 'x-step', 'x-private',
-  'x-core', 'x-help', 'x-prefill', 'x-swappable-with',
+  'x-core', 'x-help', 'x-prefill', 'x-swappable-with', 'x-status',
 ]);
 const COMPARISONS = new Set(['vs-input', 'vs-rule-of-thumb', 'vs-typical-range', 'none']);
+const STATUS_KINDS = new Set(['threshold', 'conformance']);
 const MAX_CORE = 5;
 
 /** Every field schema in a section, with a path, descending into list rows. */
@@ -22,7 +23,7 @@ function* fields(section, path) {
   }
 }
 
-export function metaschemaProblems(catalog) {
+export function metaschemaProblems(catalog, sourceIds = new Set()) {
   const problems = [];
   for (const t of catalog.tools) {
     for (const k of Object.keys(t)) {
@@ -46,6 +47,14 @@ export function metaschemaProblems(catalog) {
           if (side === 'outputs') problems.push(`${t.id}: x-core is for inputs, not ${path}`);
           // A list's row fields count with the list itself (W&B stations are one group).
           else if (!path.includes('[]')) core++;
+        }
+        const st = f['x-status'];
+        if (st) {
+          if (side === 'inputs') problems.push(`${t.id}: x-status is for outputs, not ${path}`);
+          if (!STATUS_KINDS.has(st.kind)) problems.push(`${t.id}: x-status kind ${st.kind} on ${path} is not one of ${[...STATUS_KINDS].join(', ')}`);
+          // "user" means the reader entered the limit; anything else cites a ledger row.
+          if (st.source !== 'user' && !sourceIds.has(st.source)) problems.push(`${t.id}: x-status on ${path} cites unknown source ${st.source}`);
+          if (f.type !== 'string') problems.push(`${t.id}: x-status output ${path} must be a string`);
         }
       }
     }

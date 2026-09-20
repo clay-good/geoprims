@@ -209,3 +209,15 @@ test('the home page leads with the search field, then a working featured tool', 
   assert.match(html, /class="open-tool" href="\/navigation\/geodesic\/inverse\/#/, 'no link to the full tool');
   assert.ok(!html.includes('Report a problem'), 'the embedded copy should not offer the report dialog');
 });
+
+test('a status output reads as a judgment with a mark and its source, not as another value', () => {
+  const html = page('/aviation/wind/runway-components/');
+  const line = /<p class="status">([\s\S]*?)<\/p>/.exec(html);
+  assert.ok(line, 'the crosswind page shows a status line');
+  const text = line[1].replace(/<!--.*?-->/g, '').replace(/<[^>]+>/g, '');
+  assert.match(text, /^[✓!✕] (Within|Near|Beyond) your .+ limit Against the limit you entered\.$/, text);
+  assert.match(line[1], /<span class="mark" aria-hidden="true">/, 'the mark is decorative; the words carry the meaning');
+  // The phrase must not also appear as a row in the facts list.
+  const facts = /<dl class="facts">([\s\S]*?)<\/dl>/.exec(html)?.[1] ?? '';
+  assert.doesNotMatch(facts, /Within your|Near your|Beyond your/, 'a status is not repeated as a fact');
+});

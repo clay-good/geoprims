@@ -85,7 +85,21 @@
       ? result.meta.warnings.filter((w) => w.code !== 'EXPERIMENTAL_TOOL').sort((a, b) => RANK[severityOf(a.code)] - RANK[severityOf(b.code)])
       : [],
   );
-  const secondary = $derived(result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary) : []);
+  // Status outputs ("Beyond your 15 kt crosswind limit") are a judgment, not a
+  // value: they get their own line with an icon and the threshold's source,
+  // and stay out of the list of facts.
+  const STATUS_MARK = { Within: '✓', Near: '!', Beyond: '✕', Meets: '✓', Does: '✕' };
+  const statusOf = (t) => tool.statusSources?.[t];
+  const statuses = $derived(
+    result?.ok
+      ? Object.entries(result.result ?? {})
+          .filter(([k, v]) => statusOf(k) && typeof v === 'string')
+          .map(([k, phrase]) => ({ key: k, phrase, mark: STATUS_MARK[phrase.split(' ')[0]] ?? '•', source: statusOf(k) }))
+      : [],
+  );
+  const secondary = $derived(
+    result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary && !statusOf(k)) : [],
+  );
   // An input error names its field as a JSON pointer ("/points/2/lat" is the points field): mark it, and let the answer card jump to it.
   const errorField = $derived(result && !result.ok ? result.error.field?.split('/')[1] : undefined);
   const badField = $derived(errorField && errorField in tool.inputs.properties ? errorField : undefined);
@@ -280,6 +294,9 @@
   {#if result?.ok}
     <div class="value" bind:this={answerCard}>{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
     <p class="sentence">{result.summary}</p>
+    {#each statuses as st}
+      <p class="status"><span class="mark" aria-hidden="true">{st.mark}</span> <strong>{st.phrase}</strong> <span class="against">Against {#if st.source.url}<a href={st.source.url}>{st.source.label}</a>{:else}{st.source.label}{/if}.</span></p>
+    {/each}
     {#if warnings.length}
       <ul class="warnings">
         {#each warnings as w}

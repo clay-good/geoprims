@@ -1400,6 +1400,7 @@ pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
             "Within, near, or beyond your limit",
             Kind::Text { max_len: 80 },
         )
+        .status("threshold", "user")
         .optional(),
         Field::new(
             "tailwind_status",
@@ -1407,6 +1408,7 @@ pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
             "Within, near, or beyond your limit",
             Kind::Text { max_len: 80 },
         )
+        .status("threshold", "user")
         .optional(),
         Field::new(
             "runway_heading",
@@ -1549,7 +1551,15 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     ctx.options.format
                 )
             );
-            out.push((name, Json::str(wind::status(value, lim_kt, 0.10, &text))));
+            out.push((
+                name,
+                Json::str(gp_base::status::threshold(
+                    value,
+                    lim_kt,
+                    gp_base::status::NEAR_MARGIN,
+                    &text,
+                )),
+            ));
         }
     }
     out.push((

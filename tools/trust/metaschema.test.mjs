@@ -8,9 +8,11 @@ import { metaschemaProblems } from './metaschema.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+const ledger = JSON.parse(readFileSync(join(root, 'data/sources-ledger.json'), 'utf8'));
+const sourceIds = new Set(Object.values(ledger).find(Array.isArray).map((r) => r.id));
 
 test('the catalog carries only contract extensions, well formed', () => {
-  assert.deepEqual(metaschemaProblems(catalog), []);
+  assert.deepEqual(metaschemaProblems(catalog, sourceIds), []);
 });
 
 test('an unknown extension fails, naming the field', () => {
@@ -31,4 +33,23 @@ test('six core inputs fail; a list of rows counts once', () => {
   const rows = { type: 'array', 'x-core': true, items: { properties: { weight: field, arm: field } } };
   const w = { id: 'fixture.rows', examples: [], inputs: { properties: { a: field, b: field, c: field, d: field, stations: rows } }, outputs: { properties: {} } };
   assert.deepEqual(metaschemaProblems({ tools: [w] }), []);
+});
+
+test('a status output must name a kind, a real source, and be text', () => {
+  const status = { type: 'string', 'x-status': { kind: 'threshold', source: 'user' } };
+  const ok = { id: 'fixture.status', examples: [], inputs: { properties: {} }, outputs: { properties: { s: status } } };
+  assert.deepEqual(metaschemaProblems({ tools: [ok] }, sourceIds), []);
+
+  const bad = structuredClone(ok);
+  bad.outputs.properties.s['x-status'].kind = 'vibes';
+  bad.outputs.properties.s['x-status'].source = 'no-such-source';
+  bad.outputs.properties.s.type = 'number';
+  assert.deepEqual(metaschemaProblems({ tools: [bad] }, sourceIds), [
+    'fixture.status: x-status kind vibes on outputs.s is not one of threshold, conformance',
+    'fixture.status: x-status on outputs.s cites unknown source no-such-source',
+    'fixture.status: x-status output outputs.s must be a string',
+  ]);
+
+  const onInput = { id: 'fixture.in', examples: [], inputs: { properties: { s: structuredClone(status) } }, outputs: { properties: {} } };
+  assert.deepEqual(metaschemaProblems({ tools: [onInput] }, sourceIds), ['fixture.in: x-status is for outputs, not inputs.s']);
 });

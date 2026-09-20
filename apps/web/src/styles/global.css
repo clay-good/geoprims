@@ -142,6 +142,11 @@ main { padding-block: 1.75rem 4rem; }
 .facts dt { color: var(--muted); font-size: 0.92rem; }
 .facts dd { margin: 0; font: 500 0.95rem var(--mono); font-variant-numeric: tabular-nums; text-align: end; overflow-wrap: anywhere; }
 .facts dd.words { font-family: var(--sans); }
+/* A status phrase reads on its own: a mark, the words, and the threshold's
+   source. Never colour alone: the mark and the wording both carry it. */
+.answer .status { margin: 0.6rem 0 0; font-size: 0.98rem; display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; }
+.answer .status .mark { font-weight: 700; }
+.answer .status .against { color: var(--muted); font-size: 0.85rem; }
 .warnings { margin: 0.75rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.35rem; }
 .warnings li { font-size: 0.9rem; padding: 0.5rem 0.7rem; border-radius: var(--radius-lg); background: var(--bg); }
 .warnings .caution { color: var(--caution); font-weight: 600; background: color-mix(in srgb, var(--caution) 10%, var(--surface)); }

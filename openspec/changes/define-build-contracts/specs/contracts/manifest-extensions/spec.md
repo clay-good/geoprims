@@ -15,6 +15,7 @@ The manifest meta-schema SHALL define, and accept only, these extension fields.
 - `x-help` (one-line help with an example value)
 - `x-prefill` (slot definition: accepted quantities, unit hints, keywords, order)
 - `x-swappable-with` (field name)
+- `x-status` (outputs only: `{kind: "threshold" | "conformance", source}`, where `source` is a sources-ledger id or `user` when the reader enters the limit)
 
 **Per tool:**
 - `x-sentence` (template), `x-comparison` (`vs-input`, `vs-rule-of-thumb`, `vs-typical-range`, or `none`, plus its parameters)

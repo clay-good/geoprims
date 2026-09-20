@@ -134,6 +134,11 @@ fn field_schema(f: &Field, is_input: bool) -> Json {
         if f.core {
             put("x-core", Json::Bool(true));
         }
+    } else if let Some(s) = f.status {
+        put(
+            "x-status",
+            Json::obj([("kind", Json::str(s.kind)), ("source", Json::str(s.source))]),
+        );
     }
     Json::Obj(o)
 }
@@ -543,6 +548,31 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
                     "numeric output {} needs x-display-precision",
                     f.name
                 ));
+            }
+        }
+        for f in t.outputs {
+            let Some(st) = f.status else { continue };
+            if !crate::tool::STATUS_KINDS.contains(&st.kind) {
+                e(format!(
+                    "output {} declares x-status kind {}, which is not one of {}",
+                    f.name,
+                    st.kind,
+                    crate::tool::STATUS_KINDS.join(", ")
+                ));
+            }
+            if st.source.is_empty() {
+                e(format!(
+                    "output {} needs a source for its threshold",
+                    f.name
+                ));
+            }
+            if !matches!(f.kind, Kind::Text { .. }) {
+                e(format!("x-status output {} must be text", f.name));
+            }
+        }
+        for f in t.inputs {
+            if f.status.is_some() {
+                e(format!("input {} may not declare x-status", f.name));
             }
         }
         if t.references.is_empty() {

@@ -8,6 +8,7 @@
   import { copyText } from '../lib/copy.js';
   import { cellText, rowTables } from '../lib/rows.js';
 
+  import { isNumeric, isSigned, flipped } from '../lib/fields.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
   let { tool, example, initial, embedded = false } = $props();
@@ -20,9 +21,18 @@
   const moreFields = fields.filter((f) => !isCore(f));
   const outputOrder = Object.keys(tool.outputs.properties);
 
+  // The numeric input contract (ux/mobile-and-field): never type="number",
+  // which fights unit-carrying text like "29.92 inHg"; a decimal keypad on
+  // anything numeric; and a ± toggle where a value can be negative.
+  function flipSign(name) {
+    values[name] = flipped(values[name]);
+    edited();
+  }
+
   // List inputs (traverse courses, polygon corners) edit as one row per line,
   // columns in schema order, separated by commas or tabs (a spreadsheet paste).
   const columns = (schema) => Object.keys(schema.items?.properties ?? {});
+  const lastField = fields.at(-1)?.[0];
   const isList = (schema) => schema.type === 'array';
   const NUMBER = /^[-+]?[\d.]+(e[-+]?\d+)?$/i;
   function toText(k, v) {
@@ -378,9 +388,26 @@
           {#each schema.enum as option}<option value={option}>{option}</option>{/each}
         </select>
       {:else if isList(schema)}
-        <textarea id={`field-${name}`} aria-invalid={badField === name} aria-describedby={badField === name ? 'field-error' : undefined} bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" spellcheck="false"></textarea>
+        <textarea id={`field-${name}`} aria-invalid={badField === name} aria-describedby={badField === name ? 'field-error' : undefined} bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
       {:else}
-        <input id={`field-${name}`} aria-invalid={badField === name} aria-describedby={badField === name ? 'field-error' : undefined} bind:value={values[name]} oninput={edited} autocomplete="off" spellcheck="false" />
+        <span class="entry">
+          <input
+            id={`field-${name}`}
+            type="text"
+            inputmode={isNumeric(schema) ? 'decimal' : undefined}
+            enterkeyhint={name === lastField ? 'done' : 'next'}
+            aria-invalid={badField === name}
+            aria-describedby={badField === name ? 'field-error' : undefined}
+            bind:value={values[name]}
+            oninput={edited}
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          {#if isSigned(name, schema)}
+            <button type="button" class="sign" onclick={() => flipSign(name)} aria-label={`Change the sign of ${schema.title}`} title="Plus or minus">±</button>
+          {/if}
+        </span>
       {/if}
       {#if badField === name}<span class="field-error" id="field-error">{result.error.message}</span>{/if}
       <span class="help">{readable(schema.description ?? '')}{isList(schema) ? ` · one per line: ${columns(schema).map((c) => schema.items.properties[c].title.toLowerCase()).join(', ')}` : ''}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · plain numbers mean ${friendly(schema['x-unit'])}` : ''}</span>

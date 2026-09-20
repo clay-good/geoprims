@@ -35,8 +35,8 @@ jobs:
         run: node tools/wasm/build.mjs
       - name: Catalog (dist/catalog/v1.json with honest counts)
         run: node tools/codegen/catalog.mjs
-      - name: JS tests (gates, runtime, vectors through Wasm, vector integrity, MCP server end to end)
-        run: node --test 'tools/**/*.test.mjs' 'packages/**/*.test.mjs' 'mcp/**/*.test.mjs'
+      - name: JS tests (gates, runtime, vectors through Wasm, vector integrity, MCP server and Worker end to end)
+        run: npm run test:js
         env:
           VECTOR_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
       - name: Website build and checks

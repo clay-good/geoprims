@@ -7,6 +7,7 @@ Build tooling. No npm dependencies.
 | `toolchain.json` | Pinned rustc and wasm-opt versions, and module size budgets |
 | `wasm/build.mjs` | Builds every module to `dist/wasm/`, enforces pins, the import lint, and Brotli budgets, and writes SHA-256 digests |
 | `wasm/*.test.mjs` | Gate tests against bad fixtures, and module smoke tests |
+| `repo/suites.test.mjs` | Holds the test scripts to every test file in the tree, and CI to those scripts, so a directory of tests cannot sit unrun |
 | `codegen/catalog.mjs` | Builds `dist/catalog/v1.json` from the manifests the built modules report, with vector counts and operation and endpoint counts |
 | `vectors/gen_units.py` | Generates the units golden vectors from the published definitions, using exact rational arithmetic |
 | `vectors/gen_*.py` | One generator per domain (aviation, navigation, geodesy, drone, survey, time, sun, indexing, H3). `gen_sun.py` and `gen_h3.py` need `pvlib` and `h3` in a scratch virtualenv |

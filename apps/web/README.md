@@ -45,6 +45,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/responsive.test.mjs` | Layouts for every width: nothing declared wider than a 320 px screen, no column that refuses to narrow, wide tables inside a box that scrolls, and the side-by-side layout starting at a tablet |
 | `src/lib/offline.mjs`, `test/offline.test.mjs` | The footer's offline chip: what each service-worker state may honestly claim, and never "Works offline" before the release is cached |
 | `test/print.test.mjs` | The printed calculation sheet and the share payload: what the print rules drop, what they keep (including the example chip), and that a share says exactly what a copy says |
+| `test/example.test.mjs` | The prefilled example on every tool page: a real answer in the HTML, the label until the first edit, and both ways out |
 | `test/targets.test.mjs` | Touch targets: the 48 px token, 56 px in Field mode, one rule sizing every control from it, nothing sizing a control below it, 8 px between neighbours, and the step buttons shown only in Field mode |
 | `test/fields.test.mjs` | Stepping a typed value: the unit stays, the reader's decimal separator stays, no floating-point noise |
 | `test/input-contract.test.mjs` | The numeric input contract: no `type="number"`, `inputmode="decimal"` on every numeric field, autocomplete/autocorrect/spellcheck off, `enterkeyhint` of `next` or `done`, a ± toggle wherever a value can read below zero, input text at 16 px, and pinch-zoom left alone |

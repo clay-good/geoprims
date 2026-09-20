@@ -391,7 +391,7 @@
     {#if result.error.hint}<p class="hint">{result.error.hint}</p>{/if}
     <div class="actions">
       {#if badField}<button type="button" class="quiet" onclick={goToField}>Go to {tool.inputs.properties[badField].title.toLowerCase()}</button>{/if}
-      <button type="button" class="quiet" onclick={tryExample}>Use the example</button>
+      <button type="button" class="quiet" onclick={tryExample}>Try the example</button>
     </div>
   {/if}
   {#if embedded}
@@ -467,7 +467,7 @@
     </details>
   {/if}
   <div class="actions">
-    <button type="button" class="quiet" onclick={tryExample}>Use the example</button>
+    <button type="button" class="quiet" onclick={tryExample}>Try the example</button>
     <button type="button" class="quiet" onclick={clearAll}>Clear</button>
   </div>
 </form>

@@ -340,6 +340,9 @@ pub struct ToolDef {
     /// The banner a simplified tool shows (`x-limitation`), when it simplifies
     /// the governing method.
     pub limitation: Option<Limitation>,
+    /// `x-diagram-inline`: the tool's meaning is a picture, so the page shows a
+    /// compact one directly under the answer as well as the full canvas below.
+    pub diagram_inline: bool,
     /// Declared limits, as (name, value).
     pub limits: &'static [(&'static str, u64)],
     /// How free-text questions fill the inputs (natural-language prefill).
@@ -384,6 +387,7 @@ impl ToolDef {
         sentence: "",
         comparison: Comparison::NONE,
         limitation: None,
+        diagram_inline: false,
         limits: &[],
         slots: &[],
         run: unimplemented_run,

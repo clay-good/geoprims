@@ -1349,6 +1349,7 @@ const WIND_FIELDS: [Field; 6] = [
 
 pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
     id: "aviation.wind.runway-components",
+    diagram_inline: true,
     stability: gp_base::tool::Stability::Stable,
     title: "Runway wind components",
     summary: "Crosswind and headwind or tailwind on a runway, with gusts, variable winds, and your personal limits.",
@@ -1679,6 +1680,7 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HEADING_GROUNDSPEED: ToolDef = ToolDef {
     id: "aviation.wind.heading-groundspeed",
+    diagram_inline: true,
     stability: gp_base::tool::Stability::Stable,
     title: "Wind triangle: heading and groundspeed",
     summary: "The heading to fly and the groundspeed you will get for a course, true airspeed, and wind: the E6B wind side, exact.",

@@ -144,6 +144,11 @@
   const showMap = (tool.visualization ?? []).some((v) => GEO.has(v.kind)) || ('lat' in tool.inputs.properties && 'lon' in tool.inputs.properties);
   let drawnArgs = $state(example);
   const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result) : null);
+  // A tool whose meaning is a picture shows a compact one directly under the
+  // answer, as well as the full canvas in its place below (contracts/page-chrome,
+  // "Fixed tool-page anatomy"). The full one carries the description; this copy
+  // is the same picture, so it is decoration.
+  const inlineDg = $derived(tool['x-diagram-inline'] && result?.ok ? diagram(tool.id, drawnArgs, result, 'inline') : null);
 
   // Scene playback (map-canvas "Animated scenes"): the playhead is the tool's
   // timeline input, so every frame is a core result and the permalink keeps it.
@@ -337,6 +342,7 @@
   {#if result?.ok}
     <div class="value" bind:this={answerCard}>{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
     <p class="sentence">{result.summary}</p>
+    {#if inlineDg}<div class="inline-diagram" aria-hidden="true">{@html inlineDg.markup}</div>{/if}
     {#if result.comparison}<p class="comparison">{result.comparison}</p>{/if}
     {#each statuses as st}
       <p class="status"><span class="mark" aria-hidden="true">{st.mark}</span> <strong>{st.phrase}</strong> <span class="against">Against {#if st.source.url}<a href={st.source.url}>{st.source.label}</a>{:else}{st.source.label}{/if}.</span></p>

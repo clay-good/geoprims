@@ -165,6 +165,11 @@ main { padding-block: 1.75rem 4rem; }
 
 /* Field mode (ux/mobile-and-field): bigger targets and bigger answers, for
    gloved hands and a moving vehicle. Everything else is unchanged. */
+/* The compact picture under the answer: the same drawing as the canvas below,
+   small enough that the answer and the shape of it read together. */
+.inline-diagram { margin-block: 0.5rem 0.25rem; }
+.inline-diagram svg { display: block; inline-size: 100%; max-inline-size: 22rem; block-size: auto; max-block-size: 11rem; }
+
 /* Whether this browser holds the release, said plainly in the footer. */
 .chip.offline { display: inline-block; margin-inline-end: 0.6rem; padding: 0.05rem 0.45rem; border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.85em; color: var(--muted); }
 .chip.offline[data-state='ready'] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }

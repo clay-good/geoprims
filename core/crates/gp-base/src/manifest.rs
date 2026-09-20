@@ -486,6 +486,9 @@ pub fn manifest(def: &ToolDef) -> Json {
             ]),
         );
     }
+    if def.diagram_inline {
+        put("x-diagram-inline", Json::Bool(true));
+    }
     put("x-clock-default", Json::str("forbidden"));
     put("x-primary-example", Json::str(def.primary_example));
     Json::Obj(o)

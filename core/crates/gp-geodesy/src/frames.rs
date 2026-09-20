@@ -833,6 +833,7 @@ const ROW: &[Field] = &[
 
 pub static TO_LOCAL: ToolDef = ToolDef {
     id: "geodesy.frame.to-local",
+    diagram_inline: true,
     stability: gp_base::tool::Stability::Stable,
     title: "Point to local ENU, NED, and AER",
     summary: "Expresses a target point in a local tangent plane at an origin: east-north-up, north-east-down, and azimuth-elevation-range, with the rotation matrix on request.",

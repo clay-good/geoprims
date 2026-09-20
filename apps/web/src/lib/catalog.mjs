@@ -252,4 +252,6 @@ export const clientTool = (t) => ({
   statusSources: statusSources(t),
   coreVersion: catalog.coreVersion,
   buildHash: buildHashOf(t),
+  // Whether the answer carries a compact picture of itself.
+  'x-diagram-inline': t['x-diagram-inline'] ?? false,
 });

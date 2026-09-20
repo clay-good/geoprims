@@ -362,6 +362,7 @@ const fn qty_field(
 
 pub static FLY_BY: ToolDef = ToolDef {
     id: "navigation.route.fly-by",
+    diagram_inline: true,
     title: "Fly-by turn anticipation",
     summary: "How early to start a fly-by turn at a waypoint: turn radius, lead distance, arc length, and time in the turn, from the inbound and outbound courses, speed, and bank angle or turn rate.",
     aliases: &[
@@ -870,6 +871,7 @@ fn run_tsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CPA: ToolDef = ToolDef {
     id: "navigation.route.cpa",
+    diagram_inline: true,
     title: "Closest point of approach",
     summary: "When two moving objects come closest, how close, and the bearing and range then, in a local flat plane (for separations under 500 km).",
     aliases: &[

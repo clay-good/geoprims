@@ -30,6 +30,15 @@ const disp = (result, k) => result.display?.[k] ?? '';
 /** Compass vector: bearing (deg true) and length → SVG dx, dy (y down). */
 const vec = (bearing, len) => [len * Math.sin(bearing * R), -len * Math.cos(bearing * R)];
 
+/**
+ * The scope the marker ids belong to. A page may draw the same diagram twice —
+ * compact under the answer and full-size in the canvas — and two elements may
+ * not share an id, so each drawing sets this before it builds its markup.
+ */
+let scope = '';
+
+const headId = (cls) => `dg-head-${cls.includes('accent') ? 'accent' : 'muted'}${scope}`;
+
 function arrow(x1, y1, x2, y2, cls, label, labelAt = 0.55, side = -1) {
   // The label sits beside the vector, `side` -1 to its left and 1 to its right.
   const len = Math.hypot(x2 - x1, y2 - y1) || 1;
@@ -37,7 +46,7 @@ function arrow(x1, y1, x2, y2, cls, label, labelAt = 0.55, side = -1) {
   const [lx, ly] = [x1 + (x2 - x1) * labelAt + nx * 12, y1 + (y2 - y1) * labelAt + ny * 12];
   const anchor = Math.abs(nx) > Math.abs(ny) ? (nx > 0 ? 'start' : 'end') : 'middle';
   const t = label ? `<text class="dg-label" text-anchor="${anchor}" x="${lx.toFixed(1)}" y="${(ly + (ny > 0.5 ? 10 : ny < -0.5 ? -2 : 4)).toFixed(1)}">${esc(label)}</text>` : '';
-  return `<line class="dg-casing" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/><line class="${cls}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" marker-end="url(#dg-head-${cls.includes('accent') ? 'accent' : 'muted'})"/>${t}`;
+  return `<line class="dg-casing" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/><line class="${cls}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" marker-end="url(#${headId(cls)})"/>${t}`;
 }
 
 /** Scales and centers points (in any units, y up) into the 320 × 240 drawing, returning a mapper. */
@@ -51,8 +60,8 @@ function fit(points, w = 220, h = 150) {
 
 function svg(body, title) {
   return `<svg viewBox="0 0 320 240" class="dg" role="img" aria-label="${esc(title)}" xmlns="http://www.w3.org/2000/svg"><defs>` +
-    `<marker id="dg-head-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head-accent" d="M0 0L10 5L0 10z"/></marker>` +
-    `<marker id="dg-head-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head-muted" d="M0 0L10 5L0 10z"/></marker>` +
+    `<marker id="dg-head-accent${scope}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head-accent" d="M0 0L10 5L0 10z"/></marker>` +
+    `<marker id="dg-head-muted${scope}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head-muted" d="M0 0L10 5L0 10z"/></marker>` +
     `</defs>${body}</svg>`;
 }
 
@@ -214,14 +223,21 @@ const DIAGRAMS = {
   'navigation.route.fly-by': flyBy,
 };
 
-/** The diagram for a tool's result, or null: { markup, desc }. */
-export function diagram(id, args, result) {
+/**
+ * The diagram for a tool's result, or null: { markup, desc }.
+ * `at` names this drawing, so a second copy of the same diagram on one page
+ * carries its own marker ids.
+ */
+export function diagram(id, args, result, at = '') {
   const f = DIAGRAMS[id];
   if (!f || !result?.ok) return null;
+  scope = at ? `-${at}` : '';
   try {
     return f(args, result);
   } catch {
     return null;
+  } finally {
+    scope = '';
   }
 }
 

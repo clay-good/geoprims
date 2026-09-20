@@ -97,3 +97,53 @@ test('the gate catches a page with no answer card', () => {
   const html = page(route('aviation.altimetry.density-altitude'));
   assert.deepEqual(anatomyProblems(html.replace('<section class="card answer"', '<section class="card result"')), ['no answer card']);
 });
+
+/**
+ * Answer first on a phone (ux/glanceable-results). Without a browser this is
+ * measured as the text a phone would have to scroll past before the answer:
+ * at 390 px a line of body text holds about 45 characters and stands about
+ * 24 px tall, so a budget of 1,200 characters is about 640 px — the header,
+ * the card's own padding, and the value itself still inside an 844 px screen.
+ * It is a proxy for the layout, not the layout itself.
+ */
+const PHONE_BUDGET = 1200;
+
+/** What a phone renders above a point: no scripts, no noscript, no closed details. */
+const visibleText = (html) =>
+  html
+    .replace(/<script[\s\S]*?<\/script>/g, '')
+    .replace(/<style[\s\S]*?<\/style>/g, '')
+    .replace(/<noscript>[\s\S]*?<\/noscript>/g, '')
+    .replace(/<details(?![^>]*\bopen\b)[^>]*>[\s\S]*?<\/details>/g, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+test('the answer is the first thing on a tool page, not the inputs', () => {
+  const problems = [];
+  for (const t of catalog.tools) {
+    const html = page(route(t.id));
+    const answer = html.indexOf('<section class="card answer"');
+    const inputs = html.indexOf('<form class="card inputs"');
+    if (!(answer > 0 && answer < inputs)) problems.push(`${t.id}: the inputs come first`);
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('little enough stands above the answer for a phone to show it', () => {
+  const over = [];
+  for (const t of catalog.tools) {
+    const html = page(route(t.id));
+    const above = visibleText(html.slice(html.indexOf('<main'), html.indexOf('<section class="card answer"')));
+    if (above.length > PHONE_BUDGET) over.push(`${t.id}: ${above.length} characters above the answer`);
+  }
+  assert.deepEqual(over, []);
+});
+
+test('the phone budget is measured, not assumed', () => {
+  // A page with a wall of text above the answer fails, so the budget bites.
+  const html = page(route('units.length.convert'));
+  const bloated = html.replace('<section class="card answer"', `<p>${'word '.repeat(300)}</p><section class="card answer"`);
+  const above = visibleText(bloated.slice(bloated.indexOf('<main'), bloated.indexOf('<section class="card answer"')));
+  assert.ok(above.length > PHONE_BUDGET);
+});

@@ -2,7 +2,7 @@
 
 - [x] 1.1 Scaffold `mcp/server.mjs` as a zero-dependency stdio JSON-RPC server using the internal `packages/runtime`; verify it starts, opens no sockets (no-listening-socket scenario), and has an empty `dependencies` list
 - [ ] 1.1a Build release artifacts into `mcp/dist/` on tags, with the untagged-checkout message; verify the clone-and-run, untagged-checkout, and verify-before-running scenarios on a clean machine image with only Node installed
-- [ ] 1.1b Add the golden surface file and MCP Inspector CLI job; verify the surface-drift scenario
+- [ ] 1.1b Add the golden surface file and MCP Inspector CLI job; verify the surface-drift scenario (done so far: `mcp/surface.json` holds the tools, resources, templates, and prompts, and `mcp/server.test.mjs` fails on any change to them — it caught this session's describe-description edit and had to be regenerated deliberately. Pending: the MCP Inspector CLI job, which needs CI and a network install the zero-dependency repo does not carry locally.)
 - [x] 1.2 Implement protocol negotiation for `2026-07-28`, `2025-11-25`, and `2025-06-18`; verify handshakes from recorded clients of each version (older-client scenario) (the server echoes each of the three versions on initialize, answers a client asking for the retired 2024-11-05 with 2025-11-25 rather than refusing it, and lists all three in order from server/discover)
 - [x] 1.3 Verify cross-surface equality: run the golden-vector suite through the server and compare bytes to the website's results (same-result-as-website scenario)
 

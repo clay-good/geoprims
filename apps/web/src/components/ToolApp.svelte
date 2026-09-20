@@ -6,6 +6,7 @@
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
   import { copyText } from '../lib/copy.js';
+  import { cellText, rowTables } from '../lib/rows.js';
 
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
@@ -101,6 +102,11 @@
   const secondary = $derived(
     result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary && !statusOf(k)) : [],
   );
+  // A list of rows is part of the answer, not a footnote: a decoder's groups, a
+  // forecast's periods, a lookup's matches. The rule lives in lib/rows.js.
+  const tables = $derived(rowTables(result));
+  const columnTitle = (key, column) =>
+    tool.outputs.properties[key]?.items?.properties?.[column]?.title ?? column;
   // An input error names its field as a JSON pointer ("/points/2/lat" is the points field): mark it, and let the answer card jump to it.
   const errorField = $derived(result && !result.ok ? result.error.field?.split('/')[1] : undefined);
   const badField = $derived(errorField && errorField in tool.inputs.properties ? errorField : undefined);
@@ -298,6 +304,17 @@
         {/each}
       </ul>
     {/if}
+    {#each tables as t}
+      <div class="table-scroll rows">
+        <table>
+        <caption>{tool.outputs.properties[t.key]?.title ?? t.key}</caption>
+        <thead><tr>{#each t.columns as c}<th scope="col">{columnTitle(t.key, c)}</th>{/each}</tr></thead>
+        <tbody>
+          {#each t.rows as row}<tr>{#each t.columns as c}<td>{cellText(row[c])}</td>{/each}</tr>{/each}
+        </tbody>
+        </table>
+      </div>
+    {/each}
     {#if secondary.length}
       <dl class="facts">
         {#each facts as [k, v]}

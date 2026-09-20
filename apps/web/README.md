@@ -41,6 +41,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/compute.test.mjs` | Stale results: an out-of-order reply is dropped, the newest wins, and edits are debounced |
 | `test/worker.test.mjs` | The browser compute worker driven as the page drives it: every message gets exactly one envelope back |
 | `test/form.test.mjs` | Every manifest renders: a control per input, labelled, lists naming their columns, and at most five inputs before "More options" |
+| `src/lib/rows.js`, `test/tables.test.mjs` | Which list outputs the answer card shows as a table: short and narrow ones, with quantities read as "119 kt" |
 | `test/copy.test.mjs` | Each copy format against a real result, including running the copied agent call and comparing its answer |
 | `test/egress.test.mjs` | The privacy claim, checked: no network primitive but same-origin `fetch`, one POST, and sentinel values that reach only the report the user previewed |
 | `test/trace.test.mjs` | "Show your work": the page renders the core's trace or, for a decoder, every coded group beside its meaning; explaining moves no number on any tool |

@@ -12,7 +12,7 @@
 - [ ] 2.3 Build base components (field, unit selector, result value, warning, badge, table, tabs, toast, dialog) with focus and target-size rules; verify axe-core passes in every mode
 - [ ] 2.4 Build the print stylesheet (`paper` palette, canvas snapshot); verify a print-to-PDF snapshot test (the paper palette applies in print from any mode; pending: expanded panels, the canvas snapshot, and the PDF test)
 - [ ] 2.5 Add the contrast audit on rendered pixels (over real map fills) and color-vision-deficiency simulations; verify all states meet 4.5:1 / 3:1
-- [ ] 2.6 Externalize strings into a message catalog and use logical CSS properties; verify the i18n lint passes
+- [ ] 2.6 Externalize strings into a message catalog and use logical CSS properties; verify the i18n lint passes (done: the logical-properties half. apps/web/test/i18n.test.mjs fails on any physical direction in a source or built stylesheet, in a margin, padding, border, inset, scroll offset, corner radius, or text alignment, and leaves the logical spellings alone. It found and fixed one padding-left. The catalog holds the strings shown in more than one place, and the lint fails if one is written out again instead of imported. Pending: moving the rest of the interface's strings into the catalog, which is worth doing when a second locale is)
 
 ## 3. Tool page and form engine
 

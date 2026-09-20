@@ -145,7 +145,7 @@ main { padding-block: 1.75rem 4rem; }
 .report .digest code { font-size: 0.78rem; word-break: break-all; }
 
 /* Show your work: one numbered step per line, formulas in the mono face. */
-.trace { margin: 0.4rem 0 0; padding-left: 1.2rem; display: grid; gap: 0.6rem; }
+.trace { margin: 0.4rem 0 0; padding-inline-start: 1.2rem; display: grid; gap: 0.6rem; }
 .trace p { margin: 0; }
 .trace-label { font-weight: 600; }
 .trace-formula, .trace-sub { font-size: 0.9rem; }

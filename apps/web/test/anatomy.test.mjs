@@ -25,10 +25,8 @@ export const REGIONS = [
   { name: 'core inputs', find: /<form class="card inputs"/ },
   { name: 'more options', find: /<summary>More options/, optional: true },
   { name: 'canvas', find: /<section class="card canvas"/, optional: true },
-  { name: 'how we got this', find: /<summary>How we got this<\/summary>/ },
-  { name: 'terms on this page', find: /<summary>Terms on this page<\/summary>/, optional: true },
-  { name: 'related tools', find: /<h2>Related tools<\/h2>/, optional: true },
-  { name: 'for developers and agents', find: /<summary>For developers and agents<\/summary>/ },
+  { name: 'how we got this', find: /<summary>How we got this/ },
+  { name: 'related tools', find: /<h2 id="related-title">Related tools<\/h2>/, optional: true },
 ];
 
 /** Every region missing or out of order on one page. */
@@ -66,7 +64,7 @@ test('every stable tool page carries all the regions the contract requires', () 
     }
     // A tool whose only relation is its inverse shows it as the "Go the other
     // way" link in the title block instead of a section of one.
-    if (!/<h2>Related tools<\/h2>/.test(html) && !/class="other-way"/.test(html)) {
+    if (!/>Related tools<\/h2>/.test(html) && !/class="other-way"/.test(html)) {
       problems.push(`${t.id}: a stable tool points at no related tool`);
     }
   }
@@ -86,11 +84,25 @@ test('exactly one report button per page, in the answer card', () => {
 test('the gate catches a page whose regions are out of order', () => {
   const html = page(route('aviation.altimetry.density-altitude'));
   assert.deepEqual(anatomyProblems(html), []);
-  // Move the developer block above "How we got this".
-  const dev = /<details class="card dev">[\s\S]*?<\/details>/.exec(html)[0];
-  const howWeGot = /<details[^>]*>\s*<summary>How we got this<\/summary>/.exec(html)[0];
-  const moved = html.replace(dev, '').replace(howWeGot, dev + howWeGot);
-  assert.deepEqual(anatomyProblems(moved), ['for developers and agents comes before related tools']);
+  // Move the related tools above "How we got this".
+  const related = /<section class="related"[\s\S]*?<\/section>/.exec(html)[0];
+  const howWeGot = /<details class="card proof">/.exec(html)[0];
+  const moved = html.replace(related, '').replace(howWeGot, related + howWeGot);
+  assert.deepEqual(anatomyProblems(moved), ['related tools comes before how we got this']);
+});
+
+test('a tool page is the tool, its proof, and nothing for developers', () => {
+  // The owner's call: tools, a worked example, Report a problem, and one
+  // panel of explanation and proof. The agent material lives on /agents/.
+  const problems = [];
+  for (const t of catalog.tools) {
+    const html = page(route(t.id));
+    if (/For developers and agents|class="card dev"|geoprims_run/.test(html.replace(/<script[\s\S]*?<\/script>/g, ''))) {
+      problems.push(`${t.id}: still carries developer material`);
+    }
+    if ((html.match(/<details class="card proof">/g) ?? []).length !== 1) problems.push(`${t.id}: not exactly one proof panel`);
+  }
+  assert.deepEqual(problems, []);
 });
 
 test('the gate catches a page with no answer card', () => {

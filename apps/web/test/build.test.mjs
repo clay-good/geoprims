@@ -93,18 +93,18 @@ test('structured data: only allowlisted JSON-LD types, valid, with < escaped', (
 
 const unescape = (s) => s.replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
 
-test('every tool page has a developer block whose call reproduces the example', async () => {
+test('every tool page shows the answer its own example gives an agent', async () => {
+  // The printed agent call is gone from tool pages (it lives on /agents/),
+  // but the guarantee it carried stays: what the page says is exactly what
+  // the same call returns.
   const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
   const host = nodeHost(join(web, '../../dist/wasm'));
   for (const t of catalog.tools) {
     const html = page(route(t.id));
-    const m = /<pre class="agent-call[^"]*">([\s\S]*?)<\/pre>/.exec(html);
-    assert.ok(m, `${t.id}: no agent call`);
-    const call = JSON.parse(unescape(m[1]));
-    assert.equal(call.arguments.id, t.id);
-    const r = JSON.parse(await host.invoke(t.id, JSON.stringify(call.arguments.args)));
-    const sentence = unescape(/class="sentence[^"]*">([^<]+)</.exec(html)[1]);
-    assert.equal(r.summary, sentence, `${t.id}: the agent call does not reproduce the page`);
+    const ex = t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
+    const r = JSON.parse(await host.invoke(t.id, JSON.stringify(ex.input)));
+    const sentence = unescape(/class="sentence[^"]*">([^<]+)</.exec(html)?.[1] ?? '');
+    assert.equal(r.summary, sentence, `${t.id}: the page does not say what the tool returns`);
   }
 });
 
@@ -160,22 +160,23 @@ test('every aviation, drone, and navigation tool shows the safety notice in its 
 });
 
 test('the home page explains the product, then searches, then browses', () => {
-  // web/page-template "The home page explains the product": description, one
-  // search field, then the categories. Nothing personal or historical above them.
+  // The hero says what this is, the search comes next, then the instrument
+  // panel and the topics. Nothing personal or historical above them.
   const html = page('');
   const at = (re) => html.search(re);
-  const description = at(/<p class="purpose">/);
+  const title = at(/<h1 id="hero-title">/);
   const search = at(/class="hero-search"/);
+  const panel = at(/<ul class="panel-grid">/);
   const categories = at(/<ul class="categories">/);
-  assert.ok(description > 0 && search > description, 'search follows the description');
-  assert.ok(categories > search, 'categories follow the search');
+  assert.ok(title > 0 && search > title, 'search follows the headline');
+  assert.ok(panel > search && categories > panel, 'the panel, then the topics, follow the search');
   assert.ok(at(/class="pinned"/) > categories && at(/class="recent"/) > categories, 'recent and pinned come last');
-  // Every domain the description names is a domain the catalog has.
-  const NOUNS = { drones: 'drone', surveying: 'survey', 'spatial indexing': 'indexing', terrain: 'raster' };
+  // Every subject the headline names is a domain the catalog has.
+  const NOUNS = { 'drone mapping': 'drone', surveying: 'survey', aviation: 'aviation', geodesy: 'geodesy' };
   const domains = new Set(catalog.tools.map((t) => t.domain));
-  const named = /Exact, cited calculators for ([^.]+)\./.exec(html.replace(/\s+/g, ' '))?.[1];
-  assert.ok(named, 'the description names its subjects');
-  for (const word of named.split(/,\s*/).map((w) => w.replace(/^and\s+/, '').trim()).filter(Boolean)) {
+  const named = /<p class="hero-sub">([^.]+)\./.exec(html)?.[1];
+  assert.ok(named, 'the headline names its subjects');
+  for (const word of named.split(/,\s*/).map((w) => w.replace(/^and\s+/, '').trim().toLowerCase()).filter(Boolean)) {
     assert.ok(domains.has(NOUNS[word] ?? word), `the home page claims "${word}", which the catalog does not have`);
   }
 });
@@ -196,19 +197,18 @@ test('the catalog page lists every operation once', () => {
   assert.match(page(''), /href="\/tools\/"/);
 });
 
-test('the home page leads with the search field, then a working featured tool', () => {
-  const html = page('/');
-  // Order on the page: search first, then the featured tool, then browsing.
-  const search = html.indexOf('class="hero-search"');
-  const featured = html.indexOf('class="featured"');
-  const browse = html.indexOf('class="browse-title"');
-  assert.ok(search > -1 && featured > search && browse > featured, 'search, then featured tool, then browse');
-  // The answer is server-rendered, so the tool is useful before any JavaScript runs.
-  assert.match(html, /class="value[^"]*">[^<]+</, 'no featured answer value');
-  assert.match(html, /class="sentence[^"]*">[^<]+</, 'no featured sentence');
-  // Embedded mode: it links out to the tool's own page and keeps the page's own chrome off.
-  assert.match(html, /class="open-tool" href="\/navigation\/geodesic\/inverse\/#/, 'no link to the full tool');
-  assert.ok(!html.includes('Report a problem'), 'the embedded copy should not offer the report dialog');
+test('the instrument panel shows real answers, before any script runs', () => {
+  const html = page('');
+  const gauges = [...html.matchAll(/<li class="gauge"><a href="([^"#]+)#example">[\s\S]*?<span class="gauge-value">([^<]+)<span class="gauge-unit">([^<]*)<\/span>/g)];
+  assert.ok(gauges.length >= 6, `only ${gauges.length} readouts`);
+  for (const [, href, value, unit] of gauges) {
+    // Each readout is a value the tool's own page shows for the same example.
+    const tool = page(href.replace(/^\/|\/$/g, ''));
+    assert.ok(tool.includes(value.trim()), `${href}: the panel shows ${value}, which its page does not`);
+    assert.ok(!/^\d{4}$/.test(value.trim()) || unit, `${href}: a bare year is not a readout`);
+  }
+  // The terrain is decoration: hidden from assistive technology.
+  assert.match(html, /<div class="hero-bg" aria-hidden="true">/);
 });
 
 test('a status output reads as a judgment with a mark and its source, not as another value', () => {
@@ -252,7 +252,7 @@ test('the site serves byte-identical Wasm modules, not a stale copy', () => {
 test('the search works with JavaScript off', () => {
   // ux/glanceable-results "Glanceable home page": one prominent search box.
   // With no script it is a form that lands on the catalog, where the query is
-  // in the URL; with a script, submitting opens the palette instead. The
+  // in the URL; with a script, submitting opens the best match directly. The
   // catalog itself needs the script to narrow the list, which is why the
   // fallback lands on the full list rather than a filtered one.
   for (const path of ['', '404']) {
@@ -262,7 +262,7 @@ test('the search works with JavaScript off', () => {
     assert.match(form, /action="\/tools\/"/, `${path || 'home'}: the form goes nowhere`);
     assert.match(form, /method="get"/);
     assert.match(form, /<input[^>]*type="search"[^>]*name="q"/, `${path || 'home'}: no query field`);
-    assert.match(form, /<label class="sr-only"[^>]*>Search tools<\/label>/, `${path || 'home'}: the field has no label`);
+    assert.match(form, /<label class="sr-only"[^>]*>[^<]*[Ss]earch[^<]*tools<\/label>/, `${path || 'home'}: the field has no label`);
     assert.match(form, /<button type="submit"/, `${path || 'home'}: nothing submits it`);
   }
   // The catalog reads the query the form sends.

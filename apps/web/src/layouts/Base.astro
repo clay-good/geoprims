@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { catalog } from '../lib/catalog.mjs';
 import { capTitle, description as capDescription } from '../lib/head.mjs';
+import { icon } from '../lib/icons.mjs';
 interface Props { title: string; description: string; canonical: string; noindex?: boolean; jsonld?: object[] }
 const props = Astro.props;
 const { canonical, noindex = false, jsonld = [] } = props;
@@ -30,8 +31,8 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="theme-color" content="#f7f6f3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0e1015" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f3f4f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c0f14" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-title" content="geoprims" />
     {ld.map((j) => <script type="application/ld+json" set:html={j} />)}
   </head>
@@ -39,13 +40,23 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <header class="site">
       <div class="wrap">
         <a class="brand" href="/">
-          <span class="name">geoprims</span>
-          <span class="what">Exact, cited geospatial and aerospace math</span>
+          <span class="mark" set:html={icon('reticle', { size: 26 })} />
+          <span class="brand-text">
+            <span class="name">geoprims</span>
+            <span class="what">Field-grade geospatial math</span>
+          </span>
         </a>
+        <div class="header-tools">
+        <button type="button" class="header-search" data-palette aria-keyshortcuts="/ Control+K Meta+K">
+          <span set:html={icon('search', { size: 18 })} />
+          <span class="label">Search tools</span>
+          <kbd aria-hidden="true">/</kbd>
+        </button>
         <button type="button" class="theme-toggle" data-theme-toggle>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
           <span class="label">Dark</span>
         </button>
+        </div>
       </div>
     </header>
     <main class="wrap"><slot /></main>
@@ -88,12 +99,6 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
       document.addEventListener('click', (e) => {
         const el = e.target instanceof Element && e.target.closest('[data-palette]');
         if (el) palette(el.getAttribute('data-palette') ?? '');
-      });
-      // The search field is a form, so it works with JavaScript off. With it
-      // on, submitting opens the palette instead of loading the catalog page.
-      document.querySelector('form.hero-search')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        palette(new FormData(e.currentTarget).get('q') ?? '');
       });
       wireKeys(palette);
     </script>

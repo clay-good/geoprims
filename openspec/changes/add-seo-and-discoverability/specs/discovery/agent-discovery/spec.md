@@ -35,9 +35,9 @@ The site SHALL publish `/AGENTS.md` telling coding agents:
 - **WHEN** an agent fetches `/AGENTS.md`
 - **THEN** it receives the run instructions and the caveat-relay guidance
 
-### Requirement: Field names on every tool page
-Every tool page SHALL include a small "For developers and agents" block. It lists the tool id, each input's field name with unit and range, and an example `geoprims_run` call that reproduces the worked example.
+### Requirement: Field names for developers and agents
+Superseded for tool pages by `redesign-field-instrument`, which keeps tool pages to the tool and its proof. Each tool's id, each input's field name with unit and range, and an example `geoprims_run` call that reproduces the worked example SHALL be available to developers and agents through `geoprims_describe` and `/llms.txt`, and SHALL NOT be printed on tool pages.
 
-#### Scenario: Copyable agent call
-- **WHEN** a developer copies the example call from the page
-- **THEN** running it through the MCP server returns the page's worked-example result
+#### Scenario: Same answer on both surfaces
+- **WHEN** an agent runs a tool's worked example through the MCP server
+- **THEN** it returns exactly the sentence the tool page shows for that example

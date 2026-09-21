@@ -16,8 +16,32 @@ export const isCell = (x) => x === null || typeof x !== 'object' || isQuantity(x
 
 const isRow = (v) => v !== null && typeof v === 'object' && !Array.isArray(v) && Object.values(v).every(isCell);
 
-/** What one cell prints as. */
-export const cellText = (x) => (isQuantity(x) ? `${x.value} ${x.unit}` : (x ?? ''));
+/** Digits grouped in threes, written out rather than read from a locale. */
+const group = (digits) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+/**
+ * A number as its column declares it should read (`x-display-precision`):
+ * a fixed number of decimals, grouped unless the column says not to, or a
+ * number of significant figures. A column with no declaration prints the
+ * number as the core serialized it. Display only: the result is not rounded.
+ */
+export function formatNumber(n, precision) {
+  if (typeof n !== 'number' || !Number.isFinite(n) || !precision) return String(n);
+  if (precision.significant !== undefined) return String(Number(n.toPrecision(precision.significant)));
+  const fixed = n.toFixed(precision.decimals ?? 0);
+  if (precision.grouping === false) return fixed;
+  const [whole, frac] = fixed.split('.');
+  const sign = whole.startsWith('-') ? '-' : '';
+  return `${sign}${group(whole.replace('-', ''))}${frac !== undefined ? `.${frac}` : ''}`;
+}
+
+/** What one cell prints as, rounded the way its column's schema asks. */
+export function cellText(x, schema) {
+  const precision = schema?.['x-display-precision'];
+  if (isQuantity(x)) return `${formatNumber(x.value, precision)} ${x.unit}`;
+  if (typeof x === 'number') return formatNumber(x, precision);
+  return x ?? '';
+}
 
 /**
  * The tables to show for a result: one per list output short enough and narrow

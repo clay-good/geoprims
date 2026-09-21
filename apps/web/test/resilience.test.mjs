@@ -30,6 +30,6 @@ test('with JavaScript disabled, every tool page explains and keeps its worked ex
     const i = html.indexOf('<noscript>');
     assert.ok(i > 0 && html.slice(i, i + 200).includes('Computing your own values needs JavaScript and WebAssembly'), t.id);
     assert.match(html, /class="sentence[^"]*">[^<]+</, `${t.id}: pre-rendered example`);
-    assert.match(html, /<summary>How we got this<\/summary>/, `${t.id}: docs`);
+    assert.match(html, /<summary>How we got this/, `${t.id}: docs`);
   }
 });

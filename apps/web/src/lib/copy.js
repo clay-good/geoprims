@@ -6,7 +6,7 @@ import { withReference } from './citation.mjs';
 // someone pasting it elsewhere can tell where it came from.
 
 /** The copy formats the answer card offers, in the order it offers them. */
-export const FORMATS = ['value', 'sentence', 'reference', 'link', 'agent-call', 'json'];
+export const FORMATS = ['value', 'sentence', 'reference', 'link', 'json'];
 
 /**
  * The text for one format.
@@ -26,8 +26,6 @@ export function copyText(kind, { answer, result, tool, args, href, today }) {
       return withReference({ answer, result, tool, args, href, today });
     case 'link':
       return href;
-    case 'agent-call':
-      return JSON.stringify({ name: 'geoprims_run', arguments: { id: tool.id, args } }, null, 2);
     case 'json':
       return JSON.stringify(result, null, 2);
     default:

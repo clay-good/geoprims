@@ -8,7 +8,7 @@ import { freeAccess } from '../../../../lib/citation.mjs';
 import { ledger, ledgerRowFor as rowFor } from '../../../../lib/catalog.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
 import { buildDate } from '../../../../lib/build-date.mjs';
-import { breadcrumbs, catalog, clientTool, inputRows, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -27,7 +27,6 @@ const worked = youEnterYouGet(t, initial);
 const trace = await exampleTrace(t);
 const groups = await exampleGroups(t);
 const lastVerified = lastVerifiedFor(t);
-const agentCall = JSON.stringify({ name: 'geoprims_run', arguments: { id: t.id, args: ex.input } }, null, 2);
 const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
 const groupName = t.group.replaceAll('-', ' ');
 const inverse = t.related.find((r) => r.reason === 'inverse' && find(r.id));
@@ -66,8 +65,8 @@ const purpose = markTerms(t.summary, terms);
   )}
   <noscript><p class="card notice" role="note">Computing your own values needs JavaScript and WebAssembly. The worked example below was computed when this page was built, and the documentation under "How we got this" applies.</p></noscript>
   <ToolApp client:load tool={client} example={ex.input} initial={initial} />
-  <details class="card">
-    <summary>How we got this</summary>
+  <details class="card proof">
+    <summary>How we got this<span class="summary-note">Formula, worked example, sources, and proof</span></summary>
     <p><strong>Model:</strong> {t.model}</p>
     {groups.length > 0 && (
       <>
@@ -148,6 +147,19 @@ const purpose = markTerms(t.summary, terms);
         );
       })}
     </ul>
+    {termsFor(t.id).length > 0 && (
+      <>
+        <h3>Terms</h3>
+        <dl class="terms">
+          {termsFor(t.id).map((e) => (
+            <>
+              <dt id={`term-${e.id}`}><abbr title={e.expansion}>{e.term}</abbr>: {e.expansion}</dt>
+              <dd>{e.definition}{sourceRow(e.source) && <span class="def-source"> Source: {sourceRow(e.source).name}</span>}</dd>
+            </>
+          ))}
+        </dl>
+      </>
+    )}
     {t.stability === 'experimental' && (
       <p class="notice">Experimental means this tool has not yet met the stable bar: at least 20 golden vectors, differential tests, and an independent worked example.</p>
     )}
@@ -159,37 +171,12 @@ const purpose = markTerms(t.summary, terms);
       {sourceOf(e, { get: sourceRow }) && <p class="def-source">Source: {sourceOf(e, { get: sourceRow }).name}</p>}
     </div>
   ))}
-  {termsFor(t.id).length > 0 && (
-    <details class="card terms">
-      <summary>Terms on this page</summary>
-      <dl>
-        {termsFor(t.id).map((e) => (
-          <>
-            <dt id={`term-${e.id}`}><abbr title={e.expansion}>{e.term}</abbr>: {e.expansion}</dt>
-            <dd>{e.definition}{sourceRow(e.source) && <span class="def-source"> Source: {sourceRow(e.source).name}</span>}</dd>
-          </>
-        ))}
-      </dl>
-    </details>
-  )}
   {related.length > 0 && (
-    <section>
-      <h2>Related tools</h2>
-      <ul class="tools">
-        {related.map((r) => <li><a href={route(r.id)}>{find(r.id).title}</a> <p>{WHY[r.reason] ?? r.reason}</p></li>)}
+    <section class="related" aria-labelledby="related-title">
+      <h2 id="related-title">Related tools</h2>
+      <ul>
+        {related.map((r) => <li><a href={route(r.id)}><span class="related-title">{find(r.id).title}</span><span class="related-why">{WHY[r.reason] ?? r.reason}</span></a></li>)}
       </ul>
     </section>
   )}
-  <details class="card dev">
-    <summary>For developers and agents</summary>
-    <p>Tool id <code>{t.id}</code>, version {t.version}. Run it from the <a href="https://github.com/clay-good/geoprims/tree/main/mcp#readme">local MCP server</a>; the result matches this page byte for byte.</p>
-    <table>
-      <thead><tr><th scope="col">Input</th><th scope="col">Unit</th><th scope="col">Values</th></tr></thead>
-      <tbody>
-        {inputRows(t).map((r) => <tr><td><code>{r.name}</code>{r.required ? '' : ' (optional)'}</td><td>{r.unit}</td><td>{r.range}</td></tr>)}
-      </tbody>
-    </table>
-    <p>This call reproduces the worked example:</p>
-    <pre class="agent-call">{agentCall}</pre>
-  </details>
 </Base>

@@ -461,7 +461,7 @@
         <caption>{tool.outputs.properties[t.key]?.title ?? t.key}</caption>
         <thead><tr>{#each t.columns as c}<th scope="col">{columnTitle(t.key, c)}</th>{/each}</tr></thead>
         <tbody>
-          {#each t.rows as row}<tr>{#each t.columns as c}<td>{cellText(row[c])}</td>{/each}</tr>{/each}
+          {#each t.rows as row}<tr>{#each t.columns as c}<td>{cellText(row[c], tool.outputs.properties[t.key]?.items?.properties?.[c])}</td>{/each}</tr>{/each}
         </tbody>
         </table>
       </div>
@@ -496,12 +496,10 @@
       {/if}
     {/if}
     <div class="actions">
-      <button type="button" class="quiet" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
-      <button type="button" class="quiet" onclick={() => copy('sentence')}>{copied === 'sentence' ? 'Copied ✓' : 'Copy sentence'}</button>
+      <button type="button" class="primary" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
+      <button type="button" class="quiet" onclick={() => copy('reference')} title="The answer with its inputs, method, sources, versions, and the notice">{copied === 'reference' ? 'Copied ✓' : 'Copy with reference'}</button>
       <button type="button" class="quiet" onclick={share}>{copied === 'link' ? 'Link copied ✓' : 'Share'}</button>
       <button type="button" class="quiet" onclick={() => (exportOpen = !exportOpen)} aria-expanded={exportOpen}>Download</button>
-      <button type="button" class="quiet" onclick={() => copy('reference')} title="The answer with its inputs, method, sources, versions, and the notice">{copied === 'reference' ? 'Copied ✓' : 'Copy with reference'}</button>
-      <button type="button" class="quiet" onclick={() => copy('agent-call')} title="The geoprims_run call that reproduces this, for an agent or the MCP server">{copied === 'agent-call' ? 'Call copied ✓' : 'Copy agent call'}</button>
       {#if hasUnits}
         <label class="units-switch"><span class="sr-only">Units</span>
           <select bind:value={unitProfile} onchange={() => setProfile(unitProfile)} title="Units for every tool (also in Settings)">
@@ -529,7 +527,7 @@
   {#if embedded}
     <p class="report-line"><a class="open-tool" href={toolHref}>Open the full tool, with your values →</a></p>
   {:else}
-  <p class="report-line">{#if linkNote}<span class="notice">{linkNote} </span>{/if}Something look off? <button type="button" class="link" onclick={openReport}>Report a problem</button></p>
+  <p class="report-line">{#if linkNote}<span class="notice">{linkNote} </span>{/if}<span>Something look off?</span> <button type="button" class="report-button" onclick={openReport}>Report a problem</button></p>
   {/if}
 </section>
 

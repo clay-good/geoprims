@@ -32,7 +32,7 @@ test('winds aloft show the level, direction, speed, and temperature', () => {
   const [t] = tables(page(route('aviation.weather.fb-winds-decode')));
   assert.ok(t, 'the winds-aloft decoder shows no winds');
   const body = text(t);
-  for (const cell of ['34000 ft', '230 deg', '119 kt', '-60 degC']) {
+  for (const cell of ['34,000 ft', '230 deg', '119 kt', '-60 degC']) {
     assert.ok(body.includes(cell), `the table does not show ${cell}`);
   }
 });
@@ -79,4 +79,42 @@ test('every rendered table names its columns from the manifest', () => {
     }
   }
   assert.deepEqual(problems, []);
+});
+
+test('a table cell reads to the precision its column declares', async () => {
+  const { cellText, formatNumber } = await import('../src/lib/rows.js');
+  // The traverse's adjusted points: three decimals, grouped, not 13.
+  assert.equal(cellText({ value: 5299.974325199917, unit: 'ft' }, { 'x-display-precision': { decimals: 3 } }), '5,299.974 ft');
+  assert.equal(cellText(2, { 'x-display-precision': { decimals: 0 } }), '2');
+  assert.equal(formatNumber(-1234.5, { decimals: 1 }), '-1,234.5');
+  assert.equal(formatNumber(2436, { decimals: 0, grouping: false }), '2436');
+  assert.equal(formatNumber(0.000123456, { significant: 3 }), '0.000123');
+  // A column that declares nothing prints what the core gave.
+  assert.equal(cellText({ value: 1.23456789, unit: 'm' }), '1.23456789 m');
+  assert.equal(cellText('N 0°00\'13" W'), 'N 0°00\'13" W');
+});
+
+test('every table cell on a page reads exactly as its column declares', async () => {
+  // Each cell the page printed is compared with what the column's own
+  // precision gives for the same value, so float noise cannot slip through
+  // and a coordinate declared to nine decimals keeps its nine.
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const unescape = (x) => x.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  const problems = [];
+  let cells = 0;
+  for (const t of catalog.tools) {
+    const shown = tables(page(route(t.id)));
+    if (!shown.length) continue;
+    const ex = t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
+    const result = JSON.parse(await host.invoke(t.id, JSON.stringify(ex.input)));
+    const expected = rowTables(result).flatMap((table) =>
+      table.rows.flatMap((row) => table.columns.map((c) => String(cellText(row[c], t.outputs.properties[table.key]?.items?.properties?.[c])))),
+    );
+    const printed = shown.flatMap((html) => [...html.matchAll(/<td>([^<]*)<\/td>/g)].map((m) => unescape(m[1])));
+    cells += printed.length;
+    if (JSON.stringify(printed) !== JSON.stringify(expected)) problems.push(`${t.id}: ${printed.slice(0, 3).join(' | ')} vs ${expected.slice(0, 3).join(' | ')}`);
+  }
+  assert.deepEqual(problems, []);
+  assert.ok(cells > 50, `only ${cells} table cells checked`);
 });

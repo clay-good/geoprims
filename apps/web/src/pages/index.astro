@@ -1,66 +1,119 @@
 ---
 import Base from '../layouts/Base.astro';
-import ToolApp from '../components/ToolApp.svelte';
-import { catalog, clientTool, DOMAIN_BLURBS, DOMAIN_NOUNS, DOMAIN_TITLES, exampleResult, primaryExample, route, sentenceList, tool as find } from '../lib/catalog.mjs';
+import { catalog, DOMAIN_BLURBS, DOMAIN_TITLES, exampleResult, route, tool as find } from '../lib/catalog.mjs';
+import { icon } from '../lib/icons.mjs';
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
-// The home page leads with one working tool: the question people arrive with
-// ("how far is it?"), which is also the one that draws itself on a map.
-const FEATURED = 'navigation.geodesic.inverse';
-const featured = find(FEATURED);
-const featuredExample = primaryExample(featured);
-const featuredInitial = await exampleResult(featured);
 const ops = catalog.counts.all.operations;
 const stable = catalog.counts.stable.operations;
-// The description names the domains the catalog actually has, so the claim cannot drift.
-const subjects = sentenceList(domains.map((d) => DOMAIN_NOUNS[d] ?? d));
-// Example searches under the search field; each opens the palette with the query typed.
-const TRY = [
-  ['Density altitude', 'density altitude'],
-  ['A coordinate', '40.6892, -74.0445'],
-  ['Knots to mph', '120 kt to mph'],
-  ['Crosswind', 'crosswind'],
-  ['Sunrise', 'sunrise'],
+
+// Questions that show what the search does: each one opens a calculator with
+// its numbers already in it. They cycle through the field's placeholder, and
+// the chips below it fill the field.
+const QUESTIONS = [
+  ['Crosswind', 'crosswind rwy 27 wind 300 at 15'],
+  ['Density altitude', 'density altitude 5000 ft 30C 29.80'],
+  ['Drone GSD', 'gsd 120 m altitude 13.2 mm sensor 8.8 mm focal length 5472 px'],
+  ['Lat/lon to UTM', '40.6892, -74.0445 to utm'],
+  ['Sunrise', 'sunrise 39.74 -104.99'],
+  ['Battery Wh', 'battery 5000 mah 15.2 v'],
 ];
+
+// The instrument panel: tools people reach for in the field, each showing its
+// worked example's real answer, computed when this page was built.
+// Each tile names the output that tells its story, not just the first one.
+const PANEL = [
+  ['drone.photogrammetry.gsd', 'gsd'],
+  ['aviation.wind.runway-components', 'crosswind'],
+  ['aviation.altimetry.density-altitude', 'density_altitude'],
+  ['survey.cogo.traverse-closure', 'precision'],
+  ['geodesy.utm.forward', 'easting'],
+  ['time.sun.events', 'sunrise'],
+];
+/** A readout as a value and a unit in two sizes: "2.741 cm", "05:32 local". */
+function readout(shown) {
+  const clock = /^\d{4}-\d{2}-\d{2}[ T](\d{2}:\d{2})\S*\s*([A-Za-z]*)/.exec(shown);
+  if (clock) return { value: clock[1], unit: clock[2] || 'UTC' };
+  const [, value = shown, unit = ''] = /^(-?[\d,.:+]+[°']?)\s*(.*)$/.exec(shown) ?? [];
+  return { value, unit };
+}
+const panel = await Promise.all(
+  PANEL.map(async ([id, key]) => {
+    const t = find(id);
+    const r = await exampleResult(t);
+    const out = key in t.outputs.properties ? key : Object.keys(t.outputs.properties)[0];
+    const { value, unit } = readout(String(r.ok ? (r.display?.[out] ?? '') : ''));
+    return { id, title: t.title, domain: t.domain, label: t.outputs.properties[out]?.title ?? out, value, unit };
+  }),
+);
 ---
-<Base title="geoprims: geospatial and aerospace calculators" description="Exact, cited geodesy, aviation, drone, survey, and unit calculations that run on your device. Free, no ads, no tracking." canonical="/">
-  <section class="masthead">
-    <h1>The math behind maps, flights, and surveys.</h1>
-    <p class="purpose">
-      Exact, cited calculators for {subjects}. Every answer shows its formula, its sources, and how far it can be
-      trusted. Everything runs on your device: no ads, no accounts, no tracking, and no network after your first visit.
-    </p>
-    <form class="hero-search" role="search" action="/tools/" method="get">
-      <label class="sr-only" for="home-q">Search tools</label>
-      <input id="home-q" type="search" name="q" autocomplete="off" placeholder={`Search ${ops} tools, or paste a coordinate`} />
-      <button type="submit" class="hero-search-go">Search<kbd aria-hidden="true">/</kbd></button>
-    </form>
-    <p class="chips" aria-label="Examples to try">
-      <span class="chips-label">Try</span>
-      {TRY.map(([label, query]) => <button type="button" class="chip-button" data-palette={query}>{label}</button>)}
-    </p>
-  </section>
-
-  <section class="featured" aria-labelledby="featured-title">
-    <div class="featured-head">
-      <h2 id="featured-title">{featured.title}</h2>
-      <a class="featured-link" href={route(FEATURED)}>Open the full tool →</a>
+<Base title="geoprims: field-grade geospatial and aerospace calculators" description="Precise, cited calculators for drone mapping, surveying, aviation, and geodesy. Ask with your numbers; it opens the right tool. Runs on your device." canonical="/">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-bg" aria-hidden="true">
+      <canvas class="terrain"></canvas>
+      <p class="hud">
+        <span class="hud-coord">N 40.00000°  W 105.30000°</span>
+        <span class="hud-elev">ELEV ---- m</span>
+      </p>
     </div>
-    <p class="featured-blurb">{featured.summary} Change any value: it recomputes on your device, with no network.</p>
-    <noscript><p class="card notice" role="note">Computing your own values needs JavaScript and WebAssembly. The worked example below was computed when this page was built.</p></noscript>
-    <ToolApp client:load tool={clientTool(featured)} example={featuredExample.input} initial={featuredInitial} embedded />
+    <div class="hero-inner">
+      <p class="kicker">Field-grade math · runs on your device</p>
+      <h1 id="hero-title">Precise answers for the field.</h1>
+      <p class="hero-sub">Drone mapping, surveying, aviation, and geodesy. Ask with your numbers and the right calculator opens, already filled in.</p>
+      <form class="hero-search" role="search" action="/tools/" method="get">
+        <label class="sr-only" for="home-q">Ask a question or search {ops} tools</label>
+        <span class="hero-search-icon" set:html={icon('search', { size: 22 })} />
+        <input
+          id="home-q"
+          type="search"
+          name="q"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder={QUESTIONS[0][1]}
+          data-examples={QUESTIONS.map(([, q]) => q).join('|')}
+        />
+        <button type="submit" class="hero-search-go">Go</button>
+      </form>
+      <div class="try" role="group" aria-label="Example questions">
+        {QUESTIONS.map(([label, q]) => <button type="button" class="chip-button" data-ask={q}>{label}</button>)}
+      </div>
+    </div>
   </section>
 
-  <h2 class="browse-title">Or browse by topic</h2>
-  <ul class="categories">
-    {domains.map((d) => (
-      <li>
-        <a href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a>
-        <p class="blurb">{DOMAIN_BLURBS[d] ?? ''}</p>
-        <span class="count">{catalog.tools.filter((t) => t.domain === d).length}</span>
-      </li>
-    ))}
-  </ul>
-  <p class="all-tools-line"><a href="/tools/">See all {ops} tools on one page</a></p>
+  <section class="panel" aria-labelledby="panel-title">
+    <div class="section-head">
+      <h2 id="panel-title">In the field today</h2>
+      <p class="section-note">Real answers from each tool's worked example.</p>
+    </div>
+    <ul class="panel-grid">
+      {panel.map((p) => (
+        <li class="gauge">
+          <a href={`${route(p.id)}#example`}>
+            <span class="gauge-kicker"><span set:html={icon(p.domain, { size: 16 })} />{DOMAIN_TITLES[p.domain] ?? p.domain}</span>
+            <span class="gauge-value">{p.value}<span class="gauge-unit">{p.unit}</span></span>
+            <span class="gauge-label">{p.label}</span>
+            <span class="gauge-title">{p.title}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="topics" aria-labelledby="topics-title">
+    <div class="section-head">
+      <h2 id="topics-title">Browse by topic</h2>
+      <a class="section-link" href="/tools/">All {ops} tools →</a>
+    </div>
+    <ul class="categories">
+      {domains.map((d) => (
+        <li>
+          <span class="topic-icon" set:html={icon(d)} />
+          <a href={route(d)}>{DOMAIN_TITLES[d] ?? d}</a>
+          <p class="blurb">{DOMAIN_BLURBS[d] ?? ''}</p>
+          <span class="count">{catalog.tools.filter((t) => t.domain === d).length}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
 
   <section class="pinned" hidden aria-labelledby="pinned-title">
     <h2 id="pinned-title">Pinned</h2>
@@ -71,10 +124,30 @@ const TRY = [
     <ul class="tools"></ul>
     <p class="notice"><button type="button" class="link">Clear recent tools</button> (kept only in this browser)</p>
   </section>
+
+  <ul class="promises" aria-label="What you can count on">
+    <li><strong>Cited.</strong> Every answer shows its formula and sources.</li>
+    <li><strong>Deterministic.</strong> The same inputs give the same bytes, everywhere.</li>
+    <li><strong>Private.</strong> Runs on your device. No ads, accounts, or tracking.</li>
+    <li><strong>Offline.</strong> Works with no signal after your first visit.</li>
+  </ul>
+
+  <p class="status">Early release: {ops} operations are built so far, and {stable} {stable === 1 ? 'has' : 'have'} passed the full <a href="/methodology/">verification bar</a>. The rest are marked experimental until they do.</p>
+
   <script>
     import { mountLists } from '../lib/lists.js';
+    import { mountHomeSearch } from '../lib/home-search.js';
+    import { readoutCoord, startTerrain } from '../lib/terrain.js';
     mountLists(document);
+    mountHomeSearch(document.querySelector('form.hero-search'));
+    const coord = document.querySelector('.hud-coord');
+    const elev = document.querySelector('.hud-elev');
+    const canvas = document.querySelector('canvas.terrain');
+    if (canvas) {
+      startTerrain(canvas, ({ lat, lon, elevation }) => {
+        coord.textContent = readoutCoord(lat, lon);
+        elev.textContent = `ELEV ${Math.round(elevation).toLocaleString('en-US')} m`;
+      });
+    }
   </script>
-
-  <p class="status">Early release: {ops} operations are built so far, and {stable} {stable === 1 ? 'has' : 'have'} passed the full <a href="/methodology/">verification bar</a>. The rest are marked experimental until they do. The same calculators work <a href="/agents/">with AI agents</a>.</p>
 </Base>

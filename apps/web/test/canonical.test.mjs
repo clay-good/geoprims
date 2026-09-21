@@ -51,9 +51,10 @@ test('the values a reader types stay in the fragment', () => {
 test('a link that opens the worked example says so with #example', () => {
   // Search engines ignore a fragment, so an example link cannot split the page.
   const home = readFileSync(join(dist, 'index.html'), 'utf8');
-  const open = /class="open-tool" href="([^"]+)"/.exec(home)?.[1];
-  assert.ok(open, 'the home page does not link to the featured tool');
-  assert.match(open, /#example$/);
+  // The instrument panel's readouts open each tool on its worked example.
+  const links = [...home.matchAll(/<li class="gauge"><a href="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(links.length >= 6, 'the home page links to no worked examples');
+  for (const href of links) assert.match(href, /#example$/, href);
   const app = readFileSync(join(web, 'src/components/ToolApp.svelte'), 'utf8');
   // The page uses the same fragment when it puts the example back.
   assert.match(app, /'#example'/);

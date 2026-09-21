@@ -35,19 +35,6 @@ test('the sentence carries its reference, so a pasted claim is traceable', () =>
   assert.ok(text.endsWith(`(geoprims ${tool.id} ${tool.version})`), text);
 });
 
-test('the agent call is a call an agent can make, and it reproduces the answer', async () => {
-  const text = copyText('agent-call', { answer: '', result, tool, args, href });
-  const call = JSON.parse(text);
-  assert.equal(call.name, 'geoprims_run');
-  assert.equal(call.arguments.id, ID);
-  const again = JSON.parse(await host.invoke(call.arguments.id, JSON.stringify(call.arguments.args)));
-  assert.deepEqual(again.result, result.result, 'the copied call gives a different answer');
-  // It is the shape the page prints for developers, so both teach the same call.
-  const printed = /<pre class="agent-call">([\s\S]*?)<\/pre>/.exec(readFileSync(join(dist, 'aviation/altimetry/density-altitude/index.html'), 'utf8'))[1];
-  const unescaped = printed.replaceAll('&quot;', '"').replaceAll('&amp;', '&');
-  assert.deepEqual(JSON.parse(unescaped), call, 'the copied call and the printed call differ');
-});
-
 test('the JSON copy is the whole envelope, warnings and provenance included', () => {
   const copied = JSON.parse(copyText('json', { answer: '', result, tool, args, href }));
   assert.deepEqual(copied, result);
@@ -66,11 +53,12 @@ test('an unknown format is a mistake, not a silent empty clipboard', () => {
 test('every format the panel offers has a button on the page', () => {
   const html = readFileSync(join(dist, 'aviation/altimetry/density-altitude/index.html'), 'utf8');
   const actions = /<div class="actions">([\s\S]*?)<\/div>/.exec(html)[1];
-  // Value, sentence, link, and the agent call are one click from the answer.
-  // The link goes through the system share sheet where there is one, so its
-  // button says Share.
-  for (const [format, label] of [['value', 'Copy'], ['sentence', 'Copy sentence'], ['link', 'Share'], ['agent-call', 'Copy agent call']]) {
+  // The value, the value with its reference, the link, and the files are one
+  // click from the answer. The link goes through the system share sheet where
+  // there is one, so its button says Share. The agent call lives on /agents/.
+  for (const [format, label] of [['value', 'Copy'], ['reference', 'Copy with reference'], ['link', 'Share'], ['files', 'Download']]) {
     assert.ok(actions.includes(label), `${format} has no button: ${actions.replace(/<[^>]+>/g, ' ')}`);
   }
+  assert.ok(!actions.includes('Copy agent call'), 'the tool page offers developer material');
   assert.ok(FORMATS.includes('json'), 'the JSON format is still offered');
 });

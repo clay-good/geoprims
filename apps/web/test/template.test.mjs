@@ -63,13 +63,18 @@ test('unknown URLs get a not-found page with search and popular tools', () => {
   assert.match(html, /<meta name="robots" content="noindex">/);
 });
 
-test('home offers example searches that open the palette', () => {
+test('home offers example questions that fill the search', () => {
+  // Each chip is a real question with its numbers in it, so a first visitor
+  // sees the search open a calculator already filled in.
   const html = page('/');
-  assert.ok([...html.matchAll(/class="chip-button" data-palette="[^"]+"/g)].length >= 4);
+  const asks = [...html.matchAll(/class="chip-button" data-ask="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(asks.length >= 4, `only ${asks.length} example questions`);
+  assert.ok(asks.filter((q) => /\d/.test(q)).length >= 4, 'the examples do not show questions with values');
 });
 
-test('the site header holds the title, what the site is, and the light/dark control, and nothing else', () => {
-  // web/page-template "One page anatomy": exactly two things in the header.
+test('the site header holds the mark and title, search, and the night toggle, and nothing else', () => {
+  // web/page-template "One page anatomy": the brand on the left; search and
+  // the display toggle on the right, so search is one tap away from any tool.
   for (const f of htmlFiles(dist)) {
     const name = f.slice(dist.length);
     const header = /<header class="site">([\s\S]*?)<\/header>/.exec(readFileSync(f, 'utf8'))?.[1];
@@ -77,9 +82,10 @@ test('the site header holds the title, what the site is, and the light/dark cont
     assert.match(header, /<span class="name">geoprims<\/span>/, name);
     assert.match(header, /<span class="what">[^<]+<\/span>/, name);
     assert.match(header, /<button type="button" class="theme-toggle" data-theme-toggle>/, name);
-    // One link (the brand, home) and one control (the toggle). Nothing else.
+    assert.match(header, /<button type="button" class="header-search" data-palette/, name);
+    // One link (the brand, home) and two controls (search and the toggle).
     assert.equal(header.match(/<a\b/g)?.length, 1, `${name} header links`);
-    assert.equal(header.match(/<button\b/g)?.length, 1, `${name} header buttons`);
+    assert.equal(header.match(/<button\b/g)?.length, 2, `${name} header buttons`);
     assert.doesNotMatch(header, /<input|<select|<nav/, `${name} header controls`);
   }
 });

@@ -6,7 +6,7 @@
 // detected first, with the tools worth opening pre-filled with it. Starting
 // the query with ">" lists actions instead of tools. A question with numbers
 // ("density altitude 5000 ft 30C 29.80") offers the top tool filled in.
-import { detect, search } from './compute.js';
+import { ask } from './ask.js';
 import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
 import { clearRecents, eraseLocalData, pins, PROFILES, recents, setProfile } from './prefs.js';
 
@@ -146,30 +146,16 @@ async function update() {
     status.textContent = results.length ? `${results.length} ${results.length === 1 ? 'action' : 'actions'}` : 'No actions found';
     return;
   }
-  // Values contain digits, "+", or "/"; plain words only search.
-  const [out, det] = await Promise.all([
-    search({ query, limit: LIMIT, includeExperimental: true }),
-    /[\d+/]/.test(query) ? detect(query) : null,
-  ]);
-  if (!out || query !== input.value.trim()) return; // superseded by a newer keystroke
-  const found = det?.ok ? det.result.found : [];
-  const detected = found.flatMap((f) =>
-    f.actions.map((a, k) => ({
-      title: a.title,
-      summary: `Opens with ${f.value}`,
-      href: a.href,
-      head: k === 0 ? `Detected: ${f.label}.` : null,
-      headDetail: f.summary,
-    })),
-  );
-  const tools = out.ok ? out.result.results : [];
-  const filled = tools[0]?.open ?? [];
-  results = [...filled, ...detected, ...tools];
+  // The same resolver the home search uses, so a question lands in one place.
+  const answered = await ask(query, { limit: LIMIT });
+  if (!answered || query !== input.value.trim()) return; // superseded by a newer keystroke
+  results = answered.results;
   active = results.length ? 0 : -1;
   render();
+  const tools = results.filter((r) => r.kind === 'tool');
   const parts = [];
-  if (filled.length) parts.push(filled[0].head);
-  if (found.length) parts.push(`Detected ${found.map((f) => f.label).join(', ')}`);
+  if (answered.filled) parts.push(results[0].head);
+  if (answered.found.length) parts.push(`Detected ${answered.found.map((f) => f.label).join(', ')}`);
   parts.push(tools.length ? `${tools.length} ${tools.length === 1 ? 'tool' : 'tools'} found` : 'No tools found');
   status.textContent = parts.join('. ');
 }

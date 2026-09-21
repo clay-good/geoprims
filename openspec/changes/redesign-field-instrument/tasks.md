@@ -18,4 +18,4 @@
 ## 4. Mobile
 
 - [x] 4.1 Two readouts per row, a scrolling row of example questions, full-width actions below 40 rem
-- [ ] 4.2 Sweep every page type at 320, 375, and 768 px in a real browser and fix what breaks
+- [x] 4.2 Sweep every page type at 320, 375, and 768 px in a real browser and fix what breaks (home, catalog, topic, group, five tool pages, methodology, sources, settings, agents, verification, units, and not-found, measured in Chromium: no page scrolls sideways. The sweep found two real faults, both fixed: the sources page was 11 px too wide at 320 px because long identifiers could not wrap, and a list input's worked example printed as raw JSON)

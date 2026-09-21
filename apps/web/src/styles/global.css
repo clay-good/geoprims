@@ -261,7 +261,7 @@ label.switch input { inline-size: var(--target); block-size: var(--target); min-
 .worked h3 { margin: 0 0 0.3rem; font-size: 0.95rem; }
 .worked dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 0.6rem; }
 .worked dt { color: var(--muted); }
-.worked dd { margin: 0; font-variant-numeric: tabular-nums; }
+.worked dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; white-space: pre-line; font-family: var(--mono); font-size: 0.9rem; }
 
 .answer .comparison { margin: 0.35rem 0 0; font-size: 0.92rem; color: var(--muted); }
 
@@ -576,6 +576,9 @@ label.invalid input, label.invalid select, label.invalid textarea { border-color
    like an instrument's legends, readouts in the mono face.
    ------------------------------------------------------------------------ */
 body { font-feature-settings: 'ss01', 'cv11'; }
+/* A long identifier, link, or code may break anywhere rather than push a phone
+   page wider than its screen. */
+main p, main li, main dd, main dt, main td, main h1, main h2, main h3 { overflow-wrap: anywhere; }
 ::selection { background: color-mix(in srgb, var(--signal) 28%, transparent); }
 h1, h2, h3 { letter-spacing: -0.02em; }
 main { padding-block: 1.75rem 4rem; }

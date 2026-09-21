@@ -37,9 +37,16 @@ export function youEnterYouGet(t, result) {
     const u = t[side].properties[k]?.['x-unit'];
     return u && u !== '1' ? u : '';
   };
+  // A list input reads as its rows, one per line and in the column order the
+  // manifest declares, the way the form takes them ("0, 300"), never as JSON.
+  const listText = (k, rows) => {
+    const cols = Object.keys(t.inputs.properties[k]?.items?.properties ?? {});
+    return rows.map((row) => (cols.length ? cols : Object.keys(row)).filter((c) => row[c] !== undefined).map((c) => row[c]).join(', ')).join('\n');
+  };
+  const valueText = (k, v) => (Array.isArray(v) ? listText(k, v) : typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v));
   const enter = Object.entries(ex.input)
     .filter(([k]) => k !== 'options')
-    .map(([k, v]) => ({ label: label('inputs', k), value: readable(typeof v === 'object' ? JSON.stringify(v) : String(v)), unit: typeof v === 'number' ? unitOf('inputs', k) : '' }));
+    .map(([k, v]) => ({ label: label('inputs', k), value: readable(valueText(k, v)), unit: typeof v === 'number' ? unitOf('inputs', k) : '', rows: Array.isArray(v) }));
   const get = result?.ok
     ? Object.entries(result.display ?? {}).map(([k, v]) => ({ label: label('outputs', k), value: v, unit: '' }))
     : [];

@@ -334,7 +334,7 @@ pub static TRAVERSE: ToolDef = ToolDef {
     id: "survey.cogo.traverse-closure",
     stability: gp_base::tool::Stability::Stable,
     title: "Traverse closure and adjustment",
-    summary: "Latitudes, departures, linear misclosure, and precision ratio for a closed loop traverse, adjusted by the compass (Bowditch) or transit rule.",
+    summary: "Latitudes, departures, linear misclosure, and precision ratio for a closed loop traverse, adjusted by the compass (Bowditch), transit, or Crandall rule.",
     aliases: &[
         "traverse closure calculator",
         "Bowditch adjustment",
@@ -348,6 +348,7 @@ pub static TRAVERSE: ToolDef = ToolDef {
         "Bowditch",
         "compass rule",
         "transit rule",
+        "Crandall rule",
         "latitudes",
         "departures",
     ],
@@ -367,8 +368,8 @@ pub static TRAVERSE: ToolDef = ToolDef {
         Field::new(
             "adjustment",
             "Adjustment",
-            "none, compass (Bowditch, default), or transit",
-            Kind::Choice(&["none", "compass", "transit"]),
+            "none, compass (Bowditch, default), transit, or crandall (bearings held)",
+            Kind::Choice(&["none", "compass", "transit", "crandall"]),
         )
         .core(),
         len("start_northing", "Start northing", "Default 5000"),
@@ -433,14 +434,14 @@ pub static TRAVERSE: ToolDef = ToolDef {
         )
         .optional(),
     ],
-    errors: &[ErrorCode::UnitMismatch],
+    errors: &[ErrorCode::UnitMismatch, ErrorCode::DegenerateGeometry],
     warnings: &[
         "PERFECT_CLOSURE",
         "LEGACY_UNIT",
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
-    model: "Latitudes and departures; compass rule corrections ∝ course length; transit rule ∝ |latitude| and |departure|",
+    model: "Latitudes and departures; compass rule corrections ∝ course length; transit rule ∝ |latitude| and |departure|; Crandall rule holds every bearing and corrects distances only, by weighted least squares with weights ∝ 1/length",
     accuracy: "Exact arithmetic; the adjusted traverse closes to within 1e-9 of the unit",
     references: &[GHILANI],
     examples: &[Example {
@@ -589,6 +590,28 @@ fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if method == "transit" {
         out.push(("note", Json::str("Transit-rule corrections depend on the orientation of the coordinate axes; rotate the grid and the adjustment changes.")));
     }
+    // Crandall: each correction lies along its own course, (cL, cD) = (L, D)·(L·k1 + D·k2)/S,
+    // with k1 and k2 chosen so the corrections cancel ΣL and ΣD.
+    let (mut k1, mut k2) = (0.0, 0.0);
+    if method == "crandall" && !perfect {
+        let (mut a, mut b, mut c) = (0.0, 0.0, 0.0);
+        for i in 0..lat.len() {
+            a += lat[i] * lat[i] / dists[i];
+            b += lat[i] * dep[i] / dists[i];
+            c += dep[i] * dep[i] / dists[i];
+        }
+        let det = a * c - b * b;
+        if det <= 1e-12 * a.max(c) * a.max(c) {
+            return Err(ToolError::new(
+                ErrorCode::DegenerateGeometry,
+                "The Crandall rule needs courses in at least two directions; use the compass rule for a traverse along one line.",
+            )
+            .at("/adjustment"));
+        }
+        k1 = (b * sd - c * sl) / det;
+        k2 = (b * sl - a * sd) / det;
+        out.push(("note", Json::str("The Crandall rule holds every bearing as measured and puts the whole correction into the distances.")));
+    }
     if method != "none" {
         let (sum_abs_lat, sum_abs_dep): (f64, f64) = (
             lat.iter().map(|x| x.abs()).sum(),
@@ -605,6 +628,9 @@ fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         for i in 0..lat.len() {
             let (cl, cd) = if perfect {
                 (0.0, 0.0)
+            } else if method == "crandall" {
+                let w = (lat[i] * k1 + dep[i] * k2) / dists[i];
+                (lat[i] * w, dep[i] * w)
             } else if method == "transit" {
                 (
                     if sum_abs_lat == 0.0 {

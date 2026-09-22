@@ -70,7 +70,17 @@ def traverse_case(courses, method="compass"):
     exp = {"result.sum_latitudes.value": sl, "result.sum_departures.value": sd, "result.misclosure.value": mis,
            "result.total_length.value": float(total), "result.precision_ratio": total / mis}
     # Adjusted second point.
-    if method == "compass":
+    if method == "crandall":
+        # Weighted least squares holding bearings, solved here as the 2 × 2 normal equations.
+        a = sum(l * l / d for l, (_, d) in zip(lat, courses))
+        b = sum(l * p / d for l, p, (_, d) in zip(lat, dep, courses))
+        c = sum(p * p / d for p, (_, d) in zip(dep, courses))
+        det = a * c - b * b
+        k1, k2 = (b * sd - c * sl) / det, (b * sl - a * sd) / det
+        w = (lat[0] * k1 + dep[0] * k2) / courses[0][1]
+        cl, cd = lat[0] * w, dep[0] * w
+        exp["result.adjusted.1.distance.value"] = courses[0][1] * (1 + w)
+    elif method == "compass":
         cl, cd = -sl * courses[0][1] / total, -sd * courses[0][1] / total
     else:
         cl = -sl * abs(lat[0]) / sum(abs(x) for x in lat)
@@ -119,6 +129,13 @@ def traverse():
                    {"result.precision": "1:2,083", "result.misclosure.value": 1.262, "result.sum_latitudes.value": 0.601,
                     "result.sum_departures.value": -1.110}, MEMPHIS, MEMPHIS_VER))
     out[-1]["tolerance"] = {k: {"abs": 0.0005} for k in out[-1]["expect"] if isinstance(out[-1]["expect"][k], float)}
+    # Crandall rule: the adjusted bearing of each course is the measured one.
+    for loop in [loops[1], MORE_LOOPS[0], MORE_LOOPS[10]]:
+        exp = traverse_case(loop, "crandall")
+        out.append(vec(len(out) + 1, {"courses": [{"direction": str(a), "distance": d} for a, d in loop], "adjustment": "crandall"},
+                       exp, SRC, VER, rel=1e-9))
+    out.append(vec(len(out) + 1, {"courses": [{"direction": "0", "distance": 100}, {"direction": "180", "distance": 100.02}], "adjustment": "crandall"},
+                   {"ok": False, "error.code": "DEGENERATE_GEOMETRY"}, SRC, VER))
     return out
 
 

@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-09-22",
+      "kind": "changed",
+      "tools": [
+        "survey.cogo.traverse-closure"
+      ],
+      "vectors": [],
+      "summary": "Traverse closure now offers the Crandall rule: it holds every measured bearing and puts the whole correction into the distances. Existing compass and transit results are unchanged."
+    },
+    {
+      "date": "2026-09-22",
       "kind": "result-change",
       "tools": [
         "aviation.loading.fuel-plan"

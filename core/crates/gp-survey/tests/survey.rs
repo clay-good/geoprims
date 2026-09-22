@@ -419,7 +419,7 @@ fn traverse_closure_invariants() {
         let r = run(&back, "compass");
         assert!((num(&r, "result.sum_latitudes.value") + sl).abs() < 1e-9);
         assert!((num(&r, "result.sum_departures.value") + sd).abs() < 1e-9);
-        for method in ["compass", "transit"] {
+        for method in ["compass", "transit", "crandall"] {
             let r = run(courses, method);
             let pts = r["result"]["adjusted"].as_array().unwrap();
             let (first, last) = (&pts[0], &pts[pts.len() - 1]);
@@ -428,6 +428,54 @@ fn traverse_closure_invariants() {
                 assert!(gap.abs() < 1e-9, "{method} {k} gap {gap}");
             }
         }
+    }
+}
+
+#[test]
+fn crandall_holds_every_bearing() {
+    // The Crandall rule corrects distances only, so each adjusted course keeps
+    // its measured azimuth; and unlike the transit rule it does not depend on
+    // the grid's orientation, so turning the loop leaves the distances alone.
+    let courses = [
+        (15.0, 120.0),
+        (75.0, 95.0),
+        (130.0, 140.0),
+        (200.0, 180.0),
+        (260.0, 90.0),
+        (320.0, 110.0),
+    ];
+    let run = |rot: f64| {
+        let c: Vec<Value> = courses
+            .iter()
+            .map(|(a, d)| serde_json::json!({"direction": (a + rot).rem_euclid(360.0).to_string(), "distance": d}))
+            .collect();
+        call(
+            "survey.cogo.traverse-closure",
+            &serde_json::json!({"courses": c, "adjustment": "crandall"}).to_string(),
+        )
+    };
+    let base = run(0.0);
+    assert!(
+        base["result"]["note"].as_str().unwrap().contains("bearing"),
+        "{base}"
+    );
+    let pts = base["result"]["adjusted"].as_array().unwrap();
+    for (i, (az, _)) in courses.iter().enumerate() {
+        let dn = pts[i + 1]["northing"]["value"].as_f64().unwrap()
+            - pts[i]["northing"]["value"].as_f64().unwrap();
+        let de = pts[i + 1]["easting"]["value"].as_f64().unwrap()
+            - pts[i]["easting"]["value"].as_f64().unwrap();
+        let got = de.atan2(dn).to_degrees().rem_euclid(360.0);
+        assert!((got - az).abs() < 1e-9, "course {i}: {got} vs {az}");
+    }
+    let turned = run(37.5);
+    let d = |r: &Value, i: usize| {
+        r["result"]["adjusted"][i]["distance"]["value"]
+            .as_f64()
+            .unwrap()
+    };
+    for i in 1..=courses.len() {
+        assert!((d(&base, i) - d(&turned, i)).abs() < 1e-9);
     }
 }
 

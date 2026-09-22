@@ -96,7 +96,7 @@
     "lastmod": "2026-09-22"
   },
   "/changelog/": {
-    "hash": "3a605f9ae70e552f",
+    "hash": "d75fbda0bd1ab18d",
     "lastmod": "2026-09-22"
   },
   "/disclaimer/": {
@@ -456,7 +456,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "71c2ea96bcaaf907",
+    "hash": "3b55ec4491871d3e",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -524,11 +524,11 @@
     "lastmod": "2026-09-22"
   },
   "/survey/": {
-    "hash": "3961fb60535be7e6",
+    "hash": "1984b96a083228a8",
     "lastmod": "2026-09-22"
   },
   "/survey/cogo/": {
-    "hash": "e781d417ecc62b9b",
+    "hash": "b787e5256df86a2e",
     "lastmod": "2026-09-22"
   },
   "/survey/cogo/area-by-coordinates/": {
@@ -536,7 +536,7 @@
     "lastmod": "2026-09-22"
   },
   "/survey/cogo/traverse-closure/": {
-    "hash": "02c5ba083d0c4b8e",
+    "hash": "03633c17f9895ef7",
     "lastmod": "2026-09-22"
   },
   "/survey/curves/": {
@@ -604,7 +604,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "4b634a1811fb11c2",
+    "hash": "fadbcfe426905cb9",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -704,7 +704,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "551080178a1e0205",
+    "hash": "faf8012bfad12fae",
     "lastmod": "2026-09-22"
   }
 }

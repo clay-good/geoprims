@@ -52,10 +52,33 @@ calculation runs in a worker.
 ## What is measured today
 
 The Playwright suite checks cancellation and cross-host result equality in CI.
-The Chromium calculator benchmark now applies the profile's 4× CPU setting and
-reports each tool's p50 and p95, but the browser performance budgets have no gate yet:
-the suite does not apply the profile's network settings or measure paint,
-interaction, and layout shift. The following checks run without a browser:
+The page budgets now have a gate: `apps/web/test/browser/perf.test.mjs` loads
+50 sampled routes (the home page, the tool index, every domain, a few groups,
+and tools spread across the catalog) three times each, cold, under profile
+1.0.0: 4× CPU slowdown, 9 Mbps down, 1.5 Mbps up, 150 ms round trip, no cache,
+at the typical-phone viewport. The median of each is held to the hard budgets.
+LCP and layout shift come from the browser's performance entries, interactive
+is the moment every island has hydrated, INP is the longest event after typing
+into a tool's first field (or pressing the mode toggle on other pages), and
+shell JavaScript is every script the page loads, gzip-compressed.
+
+The last local run (2026-09-21, on a developer Mac, served over plain HTTP on
+localhost, so without TLS) passed every route. Worst medians:
+
+| Budget | Worst of 50 routes | Hard budget |
+|---|---|---|
+| Largest contentful paint | 564 ms | 2.0 s |
+| Interactive | 939 ms | 2.5 s |
+| Interaction to next paint | 72 ms | 200 ms |
+| Cumulative layout shift | 0.030 | 0.1 |
+| JavaScript (tool page, gzip) | 63.8 KB | 90 KB |
+
+These are local numbers. The profile names the CI runner, and CI is not running
+yet, so no release baseline exists; the same gate runs there once it is.
+Chromium only: WebKit and Firefox page metrics are still to come.
+
+The Chromium calculator benchmark applies the profile's 4× CPU setting and
+reports each tool's p50 and p95. The following checks run without a browser:
 
 | Check | Where | Today |
 |---|---|---|

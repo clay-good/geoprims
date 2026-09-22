@@ -41,3 +41,16 @@ test('the shortcut sheet lists every shortcut, and the palette offers actions', 
   const src = readFileSync(join(new URL('..', import.meta.url).pathname, 'src/lib/palette.js'), 'utf8');
   for (const a of ['Display: ', 'Erase all local data', 'Turn single-key shortcuts', 'Show keyboard shortcuts']) assert.ok(src.includes(a), a);
 });
+
+test('page shortcuts: c, y, l, s, p, [, and ] map to their actions, and each can say why it did nothing', async () => {
+  const { shortcutFor, SHORTCUTS, UNAVAILABLE } = await import('../src/lib/keys.js');
+  const key = (k) => shortcutFor({ key: k, target: null });
+  assert.deepEqual(['c', 'y', 'l', 's', 'p', '[', ']'].map(key), ['canvas', 'copy-json', 'copy-link', 'swap', 'play', 'previous', 'next']);
+  for (const a of ['canvas', 'copy-json', 'copy-link', 'swap', 'play']) assert.ok(UNAVAILABLE[a], `${a} has a message`);
+  // Off when single keys are off, and never while typing.
+  assert.equal(shortcutFor({ key: 'c', target: null }, { singleKeys: false }), null);
+  assert.equal(shortcutFor({ key: 's', target: { closest: () => true } }), null);
+  assert.equal(shortcutFor({ key: 'y', ctrlKey: true, target: null }), null, 'Ctrl+Y stays the browser’s');
+  const listed = SHORTCUTS.map(([k]) => k).join(' ');
+  for (const k of ['c', 'y', 'l', 's', 'p', '[ and ]']) assert.ok(listed.includes(k), `${k} is on the sheet`);
+});

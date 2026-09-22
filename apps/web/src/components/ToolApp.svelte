@@ -5,6 +5,9 @@
   import { isPinned, numberFormat, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
+  import { migrateState } from '../lib/migrate.mjs';
+  import { say } from '../lib/keys.js';
+  import linkMigrations from '../../../../data/link-migrations.json';
   import { attributionLines, caption, inlineStyles, loadRegistry, saveBlob, svgWithFooter } from '../lib/canvas-export.mjs';
   import { copyText, sharePayload } from '../lib/copy.js';
   import { cellText, rowTables } from '../lib/rows.js';
@@ -482,6 +485,34 @@
     setTimeout(() => (copied = ''), 1500);
   }
 
+  // Page shortcuts (web/command-palette, "Global shortcuts"): the keys module
+  // announces them, and this tool acts on those it can, cancelling the event.
+  const two = ['lat1', 'lon1', 'lat2', 'lon2'].every((k) => k in tool.inputs.properties);
+  async function onShortcut(e) {
+    const act = {
+      'copy-json': () => result?.ok && copy('json').then(() => say('Result copied as JSON')),
+      'copy-link': () => copy('link').then(() => say('Link copied')),
+      swap: () => {
+        if (!two) return false;
+        [values.lat1, values.lat2] = [values.lat2, values.lat1];
+        [values.lon1, values.lon2] = [values.lon2, values.lon1];
+        edited();
+        say('Swapped A and B');
+      },
+      play: () => {
+        if (!(tl && sceneEnd > 0)) return false;
+        togglePlay();
+        say(playing ? 'Playing' : 'Paused');
+      },
+    }[e.detail];
+    if (act && act() !== false) e.preventDefault();
+  }
+  onMount(() => {
+    if (embedded) return;
+    addEventListener('gp-shortcut', onShortcut);
+    return () => removeEventListener('gp-shortcut', onShortcut);
+  });
+
   // On phones, a slim bar keeps the answer in view once the big number scrolls away.
   let answerCard = $state(null);
   let answerHidden = $state(false);
@@ -533,7 +564,10 @@
     if (hash && hash !== 'example') {
       const d = await compute.decodeLink(hash);
       if (d.ok && d.result.kind === 'state') {
-        for (const [k] of fields) values[k] = toText(k, d.result.state.i?.[k]);
+        // A link made before a field was renamed or removed still opens.
+        const { inputs, dropped } = migrateState(tool, d.result.state.i, linkMigrations.tools);
+        for (const [k] of fields) values[k] = toText(k, inputs[k]);
+        if (dropped.length) linkNote = `This link had ${dropped.length === 1 ? 'a value' : 'values'} for ${dropped.join(', ')}, which this tool no longer takes; ${dropped.length === 1 ? 'it was' : 'they were'} left out.`;
         isExample = false;
         // A "send to" link says which tool the value came from.
         const id = d.result.state.c;

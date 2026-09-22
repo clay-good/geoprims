@@ -1,0 +1,4 @@
+{
+  "note": "Permalink migrations (web/app-shell, permalinks; build-web-experience 3.5). When a tool renames or removes an input, add an entry here so links made before the change still open: rename maps an old field to its new name, drop lists fields that no longer exist. Entries apply in order. A link's value for a field the tool does not take is dropped with a note either way.",
+  "tools": {}
+}

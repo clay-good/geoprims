@@ -9,6 +9,7 @@
   import { magneticNorth, readoutText } from '../lib/map/readout.js';
   import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
   import { coordFormat } from '../lib/prefs.js';
+  import { say } from '../lib/keys.js';
   import { attributionLines, caption, layersGeoJson, loadRegistry, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
 
   let { tool, args, result, compute, onmove } = $props();
@@ -294,7 +295,16 @@
     return { update: set };
   }
 
+  // `c` switches between the flat map and the globe.
+  function onShortcut(e) {
+    if (e.detail !== 'canvas') return;
+    e.preventDefault();
+    setMode(mode === 'globe' ? projection : 'globe');
+    say(mode === 'globe' ? 'Globe' : PROJECTION_NAMES[mode]);
+  }
+
   onMount(() => {
+    addEventListener('gp-shortcut', onShortcut);
     fmt = coordFormat();
     const onPrefs = () => (fmt = coordFormat());
     addEventListener('gp-prefs', onPrefs);
@@ -319,6 +329,7 @@
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] });
     canvas.addEventListener('wheel', wheel, { passive: false });
     return () => {
+      removeEventListener('gp-shortcut', onShortcut);
       removeEventListener('gp-prefs', onPrefs);
       ro.disconnect();
       mo.disconnect();

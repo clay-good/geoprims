@@ -29,6 +29,10 @@ const groups = await exampleGroups(t);
 const lastVerified = lastVerifiedFor(t);
 const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
 const groupName = t.group.replaceAll('-', ' ');
+// Neighbors in the group, in catalog order, for the [ and ] shortcuts.
+const inGroup = catalog.tools.filter((x) => x.domain === t.domain && x.group === t.group);
+const at = inGroup.findIndex((x) => x.id === t.id);
+const siblings = { previous: inGroup[at - 1], next: inGroup[at + 1] };
 const inverse = t.related.find((r) => r.reason === 'inverse' && find(r.id));
 const related = t.related.filter((r) => find(r.id) && r !== inverse);
 // Plain words for why a tool is related (tool.rs `Related`).
@@ -183,6 +187,8 @@ const purpose = markTerms(t.summary, terms);
       </ul>
     </section>
   )}
+  {/* Previous and next tool in the group, for the [ and ] shortcuts. */}
+  <div hidden data-sibling data-previous={siblings.previous && route(siblings.previous.id)} data-next={siblings.next && route(siblings.next.id)}></div>
   <script>
     // Printing opens "How we got this", so the sheet carries the formulas,
     // the model, and the sources (web/visual-theme, "Print"); the panel goes

@@ -7,12 +7,27 @@ export const SHORTCUTS = [
   ['?', 'Show these shortcuts'],
   ['g then h', 'Go to the home page'],
   ['u', 'Switch to the next unit profile'],
+  ['c', 'Switch the map between flat and globe'],
+  ['y', 'Copy the result as JSON'],
+  ['l', 'Copy the link to this calculation'],
+  ['s', 'Swap points A and B, on tools with two points'],
+  ['p', 'Play or pause the scene, on tools with one'],
+  ['[ and ]', 'Previous or next tool in this group'],
   ['Esc', 'Close the palette or this list'],
   ['↑ ↓ or Ctrl+N Ctrl+P', 'Move through palette results'],
   ['Enter', 'Open the selected result'],
   ['Ctrl+Enter or ⌘Enter', 'Open the selected result in a new tab'],
   ['> in the palette', 'List actions: display modes, erase local data, and more'],
 ];
+
+/** What a page shortcut says when this page cannot do it. */
+export const UNAVAILABLE = {
+  canvas: 'This page has no map.',
+  'copy-json': 'There is no result to copy on this page.',
+  'copy-link': 'There is no calculation to link to on this page.',
+  swap: 'This tool has no points A and B to swap.',
+  play: 'This tool has no scene to play.',
+};
 
 const KEY = 'gp-single-keys';
 
@@ -48,7 +63,9 @@ export function shortcutFor(e, { singleKeys = true, pending = false } = {}) {
   if (pending && e.key === 'h') return 'home';
   if (e.key === 'g') return 'pending';
   if (e.key === 'u') return 'units';
-  return null;
+  // Page shortcuts: the tool page acts on them if it can.
+  const page = { c: 'canvas', y: 'copy-json', l: 'copy-link', s: 'swap', p: 'play', '[': 'previous', ']': 'next' }[e.key];
+  return page ?? null;
 }
 
 let sheet;
@@ -81,11 +98,8 @@ export function openSheet() {
   sheet.showModal();
 }
 
-/** Switches to the next unit profile and says which, in a polite live region. */
-async function cycleUnits() {
-  const { nextProfile, PROFILES, setProfile } = await import('./prefs.js');
-  const next = nextProfile();
-  setProfile(next);
+/** Says something briefly in a polite live region (the shortcuts' feedback). */
+export function say(text) {
   let toast = document.querySelector('.toast');
   if (!toast) {
     toast = document.createElement('p');
@@ -93,10 +107,18 @@ async function cycleUnits() {
     toast.setAttribute('role', 'status');
     document.body.append(toast);
   }
-  toast.textContent = `Units: ${PROFILES.find(([id]) => id === next)[1]}`;
+  toast.textContent = text;
   toast.hidden = false;
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => (toast.hidden = true), 2500);
+}
+
+/** Switches to the next unit profile and says which, in a polite live region. */
+async function cycleUnits() {
+  const { nextProfile, PROFILES, setProfile } = await import('./prefs.js');
+  const next = nextProfile();
+  setProfile(next);
+  say(`Units: ${PROFILES.find(([id]) => id === next)[1]}`);
 }
 
 export function wireKeys(palette) {
@@ -114,5 +136,14 @@ export function wireKeys(palette) {
     else if (what === 'sheet') openSheet();
     else if (what === 'home') location.href = '/';
     else if (what === 'units') cycleUnits();
+    else if (what === 'previous' || what === 'next') {
+      const to = document.querySelector('[data-sibling]')?.dataset[what];
+      if (to) location.href = to;
+      else say('This is the only tool in its group.');
+    } else {
+      // The page acts and cancels the event; if nothing did, say why.
+      const handled = !dispatchEvent(new CustomEvent('gp-shortcut', { detail: what, cancelable: true }));
+      if (!handled) say(UNAVAILABLE[what]);
+    }
   });
 }

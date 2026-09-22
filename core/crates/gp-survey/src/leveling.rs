@@ -157,6 +157,15 @@ fn run_level(ctx: &mut Ctx) -> Result<Json, ToolError> {
         })
         .collect();
     let at = |i: usize, f: &str| format!("/shots/{i}/{f}");
+    if let Some(i) = shots
+        .iter()
+        .position(|s| s.dist.is_some_and(|d| !(d > 0.0)))
+    {
+        return Err(ToolError::invalid(
+            &at(i, "distance"),
+            "A leg's distance must be positive.",
+        ));
+    }
     if shots[0].bs.is_none() {
         return Err(ToolError::invalid(
             &at(0, "backsight"),

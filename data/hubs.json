@@ -921,6 +921,12 @@
           "tools": [
             "vertical-curve"
           ]
+        },
+        {
+          "want": "size a vertical curve for sight distance",
+          "tools": [
+            "sight-distance"
+          ]
         }
       ]
     },
@@ -957,6 +963,12 @@
           "want": "set a slope stake at the catch point",
           "tools": [
             "slope-stake"
+          ]
+        },
+        {
+          "want": "check the grades along a profile",
+          "tools": [
+            "profile-grades"
           ]
         }
       ]

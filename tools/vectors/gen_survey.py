@@ -849,6 +849,69 @@ def spiral():
     return out
 
 
+def sight_distance():
+    out = []
+
+    def crest(S, A, h1, h2):
+        c = (math.sqrt(h1) + math.sqrt(h2)) ** 2
+        L = A * S * S / (200 * c)
+        return (L, "S < L: the sight line lies within the curve") if L >= S else (2 * S - 200 * c / A, "S > L: the sight line extends past the curve")
+
+    def sag(S, A, H, beta):
+        c = H + S * math.tan(math.radians(beta))
+        L = A * S * S / (200 * c)
+        return (L, "S < L: the sight line lies within the curve") if L >= S else (max(0.0, 2 * S - 200 * c / A), "S > L: the sight line extends past the curve")
+
+    # The crest scenario: S = 400 ft, A = 5%, h1 3.5 ft, h2 2.0 ft: about 368.3 ft, S > L.
+    L, case = crest(400, 5, 3.5, 2.0)
+    out.append(vec(1, {"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "3.5 ft", "object_height": "2.0 ft"},
+                   {"result.min_length.value": L, "result.case": case, "result.k": L / 5}, SPEC, "2026"))
+    L, case = crest(650, 7.5, 3.5, 2.0)
+    out.append(vec(2, {"curve": "crest", "sight_distance": "650 ft", "grade_change": 7.5, "eye_height": "3.5 ft", "object_height": "2.0 ft"}, {"result.min_length.value": L, "result.case": case}))
+    L, case = sag(500, 6, 2.0, 1.0)
+    out.append(vec(3, {"curve": "sag", "sight_distance": "500 ft", "grade_change": 6, "headlight_height": "2 ft", "divergence": "1 deg"}, {"result.min_length.value": L, "result.case": case}))
+    L, case = sag(150, 2, 0.6, 1.0)
+    out.append(vec(4, {"curve": "sag", "sight_distance": "150 m", "grade_change": 2, "headlight_height": "0.6 m", "divergence": "1 deg"}, {"result.min_length.value": L, "result.case": case}))
+    out.append(vec(5, {"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "3.5 ft", "object_height": "2.0 ft", "design_k": 44,
+                       "design_k_source": "A design manual's crest K table"}, {"result.design_length.value": 220.0, "result.design_source": "A design manual's crest K table"}))
+    out.append(vec(6, {"curve": "crest", "sight_distance": "400 ft", "grade_change": 5}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/eye_height"}))
+    return out
+
+
+def profile_grades():
+    out = []
+
+    def run(pts, limit=None):
+        grades = [(b[1] - a[1]) / (b[0] - a[0]) * 100 for a, b in zip(pts, pts[1:])]
+        climb = sum(max(0.0, b[1] - a[1]) for a, b in zip(pts, pts[1:]))
+        desc = sum(max(0.0, a[1] - b[1]) for a, b in zip(pts, pts[1:]))
+        mx = max(grades, key=abs)
+        avg = (pts[-1][1] - pts[0][1]) / (pts[-1][0] - pts[0][0]) * 100
+        return grades, climb, desc, mx, avg, (sum(abs(g) > limit for g in grades) if limit is not None else None)
+
+    def pin(pts, u="ft"):
+        return [{"distance": f"{d} {u}", "elevation": f"{e} {u}"} for d, e in pts]
+
+    # The threshold scenario: an 11% segment against an 8% limit is flagged.
+    p1 = [(0.0, 400.0), (100.0, 406.0), (200.0, 417.0), (300.0, 414.0)]
+    g, c, d, mx, avg, fl = run(p1, 8)
+    out.append(vec(1, {"points": pin(p1), "limit": 8}, {"result.segments.1.grade": g[1], "result.segments.1.over_limit": "yes", "result.segments.0.over_limit": "no",
+                                                        "result.flagged": float(fl), "result.max_grade": mx, "result.climb.value": c, "result.descent.value": d}, SPEC, "2026"))
+    for i, (pts, lim, u) in enumerate([([(0.0, 10.0), (50.0, 12.5), (80.0, 9.0), (200.0, 15.0)], 10, "m"), ([(0.0, 100.0), (25.0, 99.0), (75.0, 96.5)], None, "ft"),
+                                        ([(0.0, 0.0), (10.0, 1.2), (20.0, 2.0), (30.0, 1.0), (40.0, 3.5)], 12, "m")], 2):
+        g, c, d, mx, avg, fl = run(pts, lim)
+        exp = {"result.max_grade": mx, "result.average_grade": avg, "result.climb.value": c, "result.descent.value": d}
+        if fl is not None:
+            exp["result.flagged"] = float(fl)
+        inp = {"points": pin(pts, u)}
+        if lim is not None:
+            inp["limit"] = lim
+        out.append(vec(i, inp, exp))
+    out.append(vec(5, {"points": pin([(0.0, 1.0), (10.0, 1.5)])}, {"result.average_grade": 5.0}))
+    out.append(vec(6, {"points": pin([(0.0, 1.0), (0.0, 2.0)])}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -954,6 +1017,7 @@ def main():
         "survey.cogo.angular-closure": angular_closure(), "survey.earthwork.slope-stake": slope_stake(),
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
         "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(),
+        "survey.curves.sight-distance": sight_distance(), "survey.earthwork.profile-grades": profile_grades(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

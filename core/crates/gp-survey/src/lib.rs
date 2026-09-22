@@ -10,8 +10,10 @@ pub mod intersect;
 pub mod land;
 pub mod layout;
 pub mod leveling;
+pub mod profile;
 pub mod reduction;
 pub mod section;
+pub mod sight;
 pub mod spiral;
 pub mod staking;
 
@@ -2250,6 +2252,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &VERTICAL_CURVE,
     &layout::CURVE_LAYOUT,
     &spiral::SPIRAL,
+    &sight::SIGHT_DISTANCE,
+    &profile::PROFILE_GRADES,
     &AVERAGE_END_AREA,
     &PRISMOIDAL,
     &SHRINK_SWELL,

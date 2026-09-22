@@ -27,7 +27,7 @@
 - [x] 3.5 Implement grade conversions with ratio disambiguation; verify the ambiguous-ratio scenario (`survey.earthwork.grade`: percent, degrees, per mille, and ratios labeled H:V and V:H, with rise, run, and slope length from any two; a bare `3:1` is refused with both readings, 3H:1V (about 18.43°, 33.3%) and 3V:1H (about 71.57°, 300.0%), until a convention is chosen; 10 golden vectors)
 - [x] 3.6 Implement slope staking with Brent iteration; verify the catch-point scenario (`survey.earthwork.slope-stake`: cut or fill decided at the shoulder, the catch point on ground given as offset and elevation pairs found by Brent's method to 1e-6 of the unit, and the stake written as `C 4.5 / 25.0 R`; a slope that never meets the ground reports DID_NOT_CONVERGE. 6 golden vectors solved in closed form segment by segment)
 - [ ] 3.7 Implement TIN stockpile and solid volumes; verify the TIN scenario against an analytic cone
-- [ ] 3.8 Implement profile slope analysis; verify the grade-threshold scenario
+- [ ] 3.8 Implement profile slope analysis; verify the grade-threshold scenario (done so far: `survey.earthwork.profile-grades`: segment grades, the steepest and average grade, total climb and descent, and segments over a limit flagged; the 11% segment against an 8% limit is flagged. 6 golden vectors. Pending: highlighting on a profile chart, and DEM profiles from the raster tools)
 
 ## 4. Alignment curves
 
@@ -35,7 +35,7 @@
 - [x] 4.2 Implement stationing and layout tables with coordinates; verify the layout scenario (`survey.curves.curve-layout`: PC and PT stations and a row at every interval with the deflection from the PC, the chord from the PC, the sub-chord, and coordinates from the PI and back tangent, turning right or left, in `12+34.56` or `1+234.567` stationing; the last deflection is Δ/2. 6 golden vectors, the coordinates checked by rotating about the curve's center)
 - [x] 4.3 Implement spirals and spiral-curve-spiral stations; verify the spiral scenario against a textbook example (`survey.curves.spiral`: θs, X and Y by four-term series (stated), p, k, long and short tangents, total tangent, TS/SC/CS/ST stations with the arc R(Δ − 2θs), and deflections along the spiral at an interval; refused past a 30° spiral angle or when Δ leaves no arc. 6 golden vectors against the Fresnel integrals by Simpson's rule, agreeing to 1e-6 of the unit. The spiral scenario is checked against those integrals rather than a printed textbook table)
 - [ ] 4.4 Implement vertical curves (equal and unequal tangents, turning point, K); verify the crest and no-turning-point scenarios (done so far: equal-tangent curves with the high or low point and K, in 100 ft or 1,000 m stationing; pending: unequal tangents)
-- [ ] 4.5 Implement sight-distance curve lengths with the design K and heights as cited user inputs (no reproduced AASHTO tables); verify the crest SSD scenario
+- [x] 4.5 Implement sight-distance curve lengths with the design K and heights as cited user inputs (no reproduced AASHTO tables); verify the crest SSD scenario (`survey.curves.sight-distance`: crest and sag (headlight) minimum lengths from the standard formulas, stating the S < L or S > L case; eye, object, and headlight heights and the divergence are required inputs with no manual's values built in, and a design K must come with its citation. The crest scenario gives 368.3 ft, S > L. 6 golden vectors)
 - [ ] 4.6 Implement plan and profile visualization; verify visual fixtures
 
 ## 5. Catalog and docs

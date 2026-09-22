@@ -155,12 +155,15 @@ header.site .brand .what { color: var(--muted); font: 500 0.68rem/1.3 var(--mono
 .header-search { inline-size: auto; margin: 0; display: inline-flex; align-items: center; gap: 0.5rem; min-block-size: 40px; min-inline-size: var(--target); padding-inline: 0.75rem; background: var(--surface); color: var(--muted); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.9rem; cursor: pointer; }
 .header-search:hover { border-color: var(--text); color: var(--text); }
 .header-search kbd { font: 500 0.75rem var(--mono); border: 1px solid var(--line); border-radius: 4px; padding: 0 0.35em; }
-.theme-toggle { inline-size: auto; margin: 0; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-block-size: 40px; min-inline-size: var(--target); padding-inline: 0.7rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.9rem; cursor: pointer; }
-.theme-toggle:hover { border-color: var(--text); }
-.theme-toggle svg { inline-size: 18px; block-size: 18px; flex: none; }
-.theme-toggle .label { white-space: nowrap; }
+.theme-toggle, .audio-toggle { inline-size: auto; margin: 0; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-block-size: 40px; min-inline-size: var(--target); padding-inline: 0.7rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.9rem; cursor: pointer; }
+.theme-toggle:hover, .audio-toggle:hover { border-color: var(--text); }
+.theme-toggle svg, .audio-toggle svg { inline-size: 18px; block-size: 18px; flex: none; }
+.audio-toggle[hidden] { display: none; }
+.audio-toggle[aria-pressed='true'] .waves { display: none; }
+.audio-volume input { inline-size: min(100%, 16rem); }
+.theme-toggle .label, .audio-toggle .label { white-space: nowrap; }
 @media (max-width: 40rem) {
-  .theme-toggle .label, .header-search .label, .header-search kbd { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .theme-toggle .label, .audio-toggle .label, .header-search .label, .header-search kbd { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   header.site .brand .what { display: none; }
 }
 main { padding-block: 1.75rem 4rem; }

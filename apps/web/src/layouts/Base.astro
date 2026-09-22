@@ -52,6 +52,10 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
           <span class="label">Search tools</span>
           <kbd aria-hidden="true">/</kbd>
         </button>
+        <button type="button" class="audio-toggle" data-audio-toggle hidden aria-pressed="false" aria-label="Mute sounds">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z" /><path class="waves" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" /></svg>
+          <span class="label">Sound</span>
+        </button>
         <button type="button" class="theme-toggle" data-theme-toggle>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
           <span class="label">Dark</span>
@@ -101,6 +105,19 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
         if (el) palette(el.getAttribute('data-palette') ?? '');
       });
       wireKeys(palette);
+      // Audio: a header mute control only while audio is on (web/audio-feedback).
+      import { audioMuted, audioOn, setAudioMuted, sound, wireAudio } from '../lib/sound.js';
+      wireAudio();
+      const mute = document.querySelector('[data-audio-toggle]');
+      const showMute = () => {
+        mute.hidden = !audioOn();
+        mute.setAttribute('aria-pressed', String(audioMuted()));
+        mute.setAttribute('aria-label', audioMuted() ? 'Unmute sounds' : 'Mute sounds');
+      };
+      mute.addEventListener('click', () => setAudioMuted(!audioMuted()));
+      addEventListener('gp-audio', showMute);
+      showMute();
+      document.querySelector('[data-theme-toggle]').addEventListener('click', () => sound('mode'));
     </script>
   </body>
 </html>

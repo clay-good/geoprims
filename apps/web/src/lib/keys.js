@@ -7,6 +7,7 @@ export const SHORTCUTS = [
   ['?', 'Show these shortcuts'],
   ['g then h', 'Go to the home page'],
   ['u', 'Switch to the next unit profile'],
+  ['m', 'Mute or unmute sounds, once audio is on'],
   ['c', 'Switch the map between flat and globe'],
   ['y', 'Copy the result as JSON'],
   ['l', 'Copy the link to this calculation'],
@@ -64,6 +65,7 @@ export function shortcutFor(e, { singleKeys = true, pending = false } = {}) {
   if (e.key === 'g') return 'pending';
   if (e.key === 'u') return 'units';
   // Page shortcuts: the tool page acts on them if it can.
+  if (e.key === 'm') return 'mute';
   const page = { c: 'canvas', y: 'copy-json', l: 'copy-link', s: 'swap', p: 'play', '[': 'previous', ']': 'next' }[e.key];
   return page ?? null;
 }
@@ -113,6 +115,14 @@ export function say(text) {
   toast.timer = setTimeout(() => (toast.hidden = true), 2500);
 }
 
+/** `m`: mutes or unmutes, and only once the reader has turned audio on. */
+async function toggleMute() {
+  const { audioMuted, audioOn, setAudioMuted } = await import('./sound.js');
+  if (!audioOn()) return say('Sounds are off. Turn them on in Settings.');
+  setAudioMuted(!audioMuted());
+  say(audioMuted() ? 'Audio muted' : 'Audio on');
+}
+
 /** Switches to the next unit profile and says which, in a polite live region. */
 async function cycleUnits() {
   const { nextProfile, PROFILES, setProfile } = await import('./prefs.js');
@@ -136,6 +146,7 @@ export function wireKeys(palette) {
     else if (what === 'sheet') openSheet();
     else if (what === 'home') location.href = '/';
     else if (what === 'units') cycleUnits();
+    else if (what === 'mute') toggleMute();
     else if (what === 'previous' || what === 'next') {
       const to = document.querySelector('[data-sibling]')?.dataset[what];
       if (to) location.href = to;

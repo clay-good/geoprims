@@ -7,6 +7,7 @@
   import { diagram } from '../lib/diagrams.js';
   import { migrateState } from '../lib/migrate.mjs';
   import { say } from '../lib/keys.js';
+  import { sound } from '../lib/sound.js';
   import linkMigrations from '../../../../data/link-migrations.json';
   import { attributionLines, caption, inlineStyles, loadRegistry, saveBlob, svgWithFooter } from '../lib/canvas-export.mjs';
   import { copyText, sharePayload } from '../lib/copy.js';
@@ -255,6 +256,8 @@
     const out = await compute.invoke(tool.id, a, 'invoke', (elapsed) => { elapsedMs = elapsed; });
     if (!out) return; // superseded by a newer edit
     result = out;
+    // Sound mirrors what the panel shows: an answer, an answer with a caution, or an error.
+    if (!settingsOnly) sound(!out.ok ? 'error' : (out.meta?.warnings ?? []).some((w) => severityOf(w.code) === 'caution') ? 'warning' : 'computed');
     drawnArgs = a;
     stale = false;
     elapsedMs = null;
@@ -481,6 +484,7 @@
     const today = new Date().toISOString().slice(0, 10);
     const text = copyText(kind, { answer, result, tool, args: args(), href, today });
     await navigator.clipboard.writeText(text);
+    sound('copy');
     copied = kind;
     setTimeout(() => (copied = ''), 1500);
   }
@@ -539,6 +543,7 @@
   function pin() {
     togglePin(tool);
     pinned = isPinned(tool.id);
+    sound('click');
   }
 
   onMount(async () => {

@@ -82,6 +82,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `data/hubs.json`, `test/hubs.test.mjs` | Group hub pages: tools listed under "I want to…" tasks, each once, and a short guide where tools form a sequence |
 | `src/lib/crs.mjs`, `test/crs.test.mjs` | Projected coordinates on import: UTM and State Plane CSVs, and GeoJSON in a WGS 84 UTM zone, converted by the core's inverse tools; other declared systems refused |
 | `src/lib/map/projection.js`, `test/projections.test.mjs` | The map's projections: Web Mercator, equirectangular, polar azimuthal equidistant, and the globe, each inverting what it draws; the polar-cap scenario |
+| `src/lib/audio.js`, `src/lib/sound.js`, `test/audio.test.mjs` | Optional interface sounds: off by default, synthesized (no audio files), rate limited, muted by `m` or the header control |
 | `src/lib/map/handles.js`, `test/handles.test.mjs` | Canvas input: drag A, B, or a single point on the map (the fields follow), and click to set a single-point tool's point |
 | `src/lib/map/readout.js`, `test/readout.test.mjs` | The map's cursor readout in the chosen coordinate format (degrees, DMS, MGRS, and UTM from the core), and the magnetic north indicator |
 | `src/lib/canvas-export.mjs`, `test/canvas-export.test.mjs` | Canvas export: the map as PNG with the caption and every attribution in a footer strip, its layers as GeoJSON, and diagrams as standalone SVG |

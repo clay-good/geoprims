@@ -8,6 +8,7 @@
 // ("density altitude 5000 ft 30C 29.80") offers the top tool filled in.
 import { ask } from './ask.js';
 import { personalize } from './boost.js';
+import { audioOn, setAudioOn, sound } from './sound.js';
 import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
 import { clearRecents, eraseLocalData, pins, PROFILES, recents, setProfile } from './prefs.js';
 
@@ -32,6 +33,9 @@ function actions() {
   const on = singleKeysOn();
   return [
     ...MODES.map(([mode, label]) => ({ title: `Display: ${label}`, summary: 'Change the display mode', words: `theme mode display color colour dark light ${mode}`, run: () => setDisplay(mode) })),
+    audioOn()
+      ? { title: 'Turn sounds off', summary: 'Interface sounds, off for every page', words: 'audio sound sounds mute off', run: () => setAudioOn(false) }
+      : { title: 'Turn sounds on', summary: 'Quiet clicks and tones for results, warnings, and copies', words: 'audio sound sounds on', run: () => setAudioOn(true) },
     { title: 'Show keyboard shortcuts', summary: 'Or press ?', words: 'help keys keyboard shortcuts', run: openSheet },
     { title: on ? 'Turn single-key shortcuts off' : 'Turn single-key shortcuts on', summary: '/, ?, and g h; Ctrl+K always works', words: 'keys keyboard shortcuts single', run: () => setSingleKeys(!on) },
     { title: 'Erase all local data', summary: 'Settings, recent and pinned tools, and offline copies on this device', words: 'erase clear reset delete storage offline cache privacy data', run: eraseLocalData },
@@ -200,6 +204,7 @@ export function openPalette(query = '') {
   if (dialog.open) return query ? update() : input.focus();
   restore = document.activeElement;
   dialog.showModal();
+  sound('palette');
   if (!query) input.select();
   input.focus();
   update();

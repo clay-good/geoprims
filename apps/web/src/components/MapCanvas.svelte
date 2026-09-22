@@ -10,6 +10,7 @@
   import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
   import { coordFormat } from '../lib/prefs.js';
   import { say } from '../lib/keys.js';
+  import { sound } from '../lib/sound.js';
   import { attributionLines, caption, layersGeoJson, loadRegistry, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
 
   let { tool, args, result, compute, onmove } = $props();
@@ -142,6 +143,7 @@
   });
 
   function setMode(m) {
+    if (m !== mode) sound('mode');
     mode = m;
     keepView = false;
     reframe();

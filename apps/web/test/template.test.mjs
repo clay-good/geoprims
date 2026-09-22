@@ -72,7 +72,7 @@ test('home offers example questions that fill the search', () => {
   assert.ok(asks.filter((q) => /\d/.test(q)).length >= 4, 'the examples do not show questions with values');
 });
 
-test('the site header holds the mark and title, search, and the night toggle, and nothing else', () => {
+test('the site header holds the mark and title, search, the night toggle, the sound control once audio is on, and nothing else', () => {
   // web/page-template "One page anatomy": the brand on the left; search and
   // the display toggle on the right, so search is one tap away from any tool.
   for (const f of htmlFiles(dist)) {
@@ -83,9 +83,12 @@ test('the site header holds the mark and title, search, and the night toggle, an
     assert.match(header, /<span class="what">[^<]+<\/span>/, name);
     assert.match(header, /<button type="button" class="theme-toggle" data-theme-toggle>/, name);
     assert.match(header, /<button type="button" class="header-search" data-palette/, name);
-    // One link (the brand, home) and two controls (search and the toggle).
+    // One link (the brand, home) and two controls (search and the toggle),
+    // plus the sound control, which stays hidden until a reader turns audio
+    // on (web/audio-feedback, "Mute and volume").
     assert.equal(header.match(/<a\b/g)?.length, 1, `${name} header links`);
-    assert.equal(header.match(/<button\b/g)?.length, 2, `${name} header buttons`);
+    assert.equal(header.match(/<button\b/g)?.length, 3, `${name} header buttons`);
+    assert.match(header, /<button type="button" class="audio-toggle" data-audio-toggle hidden/, `${name}: the sound control is hidden by default`);
     assert.doesNotMatch(header, /<input|<select|<nav/, `${name} header controls`);
   }
 });

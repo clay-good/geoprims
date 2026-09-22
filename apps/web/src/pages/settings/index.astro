@@ -17,6 +17,13 @@ import { COORD_FORMATS, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
       <select name="coordFormat">{COORD_FORMATS.map(([id, label]) => <option value={id}>{label}</option>)}</select>
     </label>
     <p class="notice">How the map writes the point under your pointer.</p>
+    <label class="switch">Sounds
+      <input type="checkbox" name="audio" />
+    </label>
+    <label class="audio-volume">Volume
+      <input type="range" name="volume" min="0" max="1" step="0.05" />
+    </label>
+    <p class="notice" data-audio-status>Quiet clicks and tones for results, warnings, and copies. Off unless you turn it on; every sound comes with something you can see.</p>
     <label class="switch">Field mode
       <input type="checkbox" name="fieldMode" />
     </label>
@@ -30,6 +37,7 @@ import { COORD_FORMATS, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
     <button type="button" data-action="erase">Erase all local data</button>
   </p>
   <script>
+    import { audioOn, audioState, audioVolume, setAudioOn, setAudioVolume, sound } from '../../lib/sound.js';
     import { clearRecents, coordFormat, eraseLocalData, fieldMode, numberFormat, profile, setCoordFormat, setFieldMode, setNumberFormat, setProfile } from '../../lib/prefs.js';
     const form = document.querySelector('form.settings');
     form.profile.value = profile();
@@ -38,6 +46,17 @@ import { COORD_FORMATS, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
     form.numberFormat.addEventListener('change', () => setNumberFormat(form.numberFormat.value));
     form.coordFormat.value = coordFormat();
     form.coordFormat.addEventListener('change', () => setCoordFormat(form.coordFormat.value));
+    const status = document.querySelector('[data-audio-status]');
+    const showAudio = () => {
+      form.audio.checked = audioOn();
+      form.volume.value = String(audioVolume());
+      form.volume.disabled = !audioOn();
+      if (audioState() === 'unavailable') status.textContent = 'Audio unavailable in this browser.';
+    };
+    form.audio.addEventListener('change', () => { setAudioOn(form.audio.checked); if (form.audio.checked) sound('click'); });
+    form.volume.addEventListener('change', () => { setAudioVolume(Number(form.volume.value)); sound('click'); });
+    addEventListener('gp-audio', showAudio);
+    showAudio();
     form.fieldMode.checked = fieldMode();
     form.fieldMode.addEventListener('change', () => setFieldMode(form.fieldMode.checked));
     addEventListener('gp-prefs', () => (form.profile.value = profile()));

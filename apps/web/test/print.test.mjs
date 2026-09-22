@@ -3,9 +3,9 @@
 // of an app: the tool, the inputs as typed, the answer with its sentence, and
 // where the method comes from — and none of the controls.
 //
-// The limit of this gate: it reads the print rules and the built pages, not a
-// rendered PDF. It checks that each thing that belongs on the sheet survives
-// the print rules and each thing that does not is hidden by them.
+// This gate reads the print rules and the built pages. The rendered sheet is
+// checked in a real browser by test/browser/print.test.mjs, which prints a PDF
+// and counts its pages.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';

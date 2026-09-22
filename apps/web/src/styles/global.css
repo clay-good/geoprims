@@ -92,7 +92,14 @@
   label .help, .label-text .optional { display: none; }
   input, select, textarea { border: 0; padding: 0; min-block-size: 0; background: none; }
   details.card, details.card[open] > summary { break-inside: avoid; }
-  details.card:not(.terms) > *:not(summary) { display: none; }
+  details.card:not(.terms):not(.proof) > *:not(summary) { display: none; }
+  /* The proof panel prints its formulas, model, constants, and sources. The
+     substituted steps and the worked example belong to the example, not to
+     the values on this sheet, so they stay off it. */
+  details.card.proof { break-inside: auto; }
+  details.card.proof > summary .summary-note, .no-print, .trace-sub { display: none !important; }
+  /* The map prints as drawn: a snapshot of the view, without its controls. */
+  .map-bar, .map-readout > span:nth-child(2), .diagram-actions, .related { display: none !important; }
   a[href]::after { content: ''; }
   @page { margin: 14mm; }
 }
@@ -744,3 +751,31 @@ table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color:
 .expect-label { display: block; }
 .journey-step .carried { color: var(--accent); font-size: 0.9rem; }
 .hub-journeys { margin-block-start: 2.5rem; }
+
+/* Print, last so it wins over the screen rules: one calculation sheet.
+   Smaller type, tight rows, the answer beside the inputs, the proof in two
+   columns, and nothing that only helps on screen. */
+@media print {
+  html, body { font-size: 11px; line-height: 1.35; }
+  h1 { font-size: 19px; margin-block: 0 3px; }
+  h3 { font-size: 11px; margin-block: 6px 2px; }
+  p { margin-block: 2px; }
+  .page-head { padding-block: 0 3px; margin: 0; }
+  .page-head .purpose, .page-head p { font-size: 11px; }
+  .tool-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-block: 4px; }
+  .card { padding: 6px 9px; margin-block: 4px; }
+  .report-line, .report-button, .quiet.more, .import-block, details.batch, .hint, .send-to, .send-open, .units-switch, .star,
+  .inline-diagram, .safety a, footer.site .version, .card.inputs .help { display: none !important; }
+  .facts { margin-block-start: 4px; }
+  .facts div { padding-block: 1px; }
+  /* The manifest's limitation repeats what the answer's own note says. */
+  main > .card.notice.limitation { display: none !important; }
+  main { padding-block: 0; }
+  .value { font-size: 24px; }
+  .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  details.card.proof { column-count: 2; column-gap: 14px; font-size: 10px; }
+  details.card.proof > summary { column-span: all; font-size: 12px; }
+  details.card.proof p, details.card.proof li, details.card.proof code { font-size: 10px; }
+  .trace li, .sources li { margin-block: 1px; break-inside: avoid; }
+  footer.site { padding-block: 2px; font-size: 9px; }
+}

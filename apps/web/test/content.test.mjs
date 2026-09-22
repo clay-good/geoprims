@@ -36,7 +36,7 @@ test('no two indexable pages show the same worked example', () => {
   const seen = new Map();
   const problems = [];
   for (const t of indexable) {
-    const block = /<div class="worked">([\s\S]*?)<\/div>\s*<\/div>/.exec(page(route(t.id)))?.[1] ?? '';
+    const block = /<div class="worked(?: no-print)?">([\s\S]*?)<\/div>\s*<\/div>/.exec(page(route(t.id)))?.[1] ?? '';
     const key = block.replace(/<[^>]+>/g, '|').replace(/\s+/g, ' ');
     const first = seen.get(key);
     if (first) problems.push(`${t.id} and ${first} show the same worked example`);
@@ -49,7 +49,7 @@ test('every indexable page lays the example out as "You enter / You get"', () =>
   const problems = [];
   for (const t of indexable) {
     const html = page(route(t.id));
-    const block = /<div class="worked">([\s\S]*?)<\/div>\s*<\/div>/.exec(html)?.[1];
+    const block = /<div class="worked(?: no-print)?">([\s\S]*?)<\/div>\s*<\/div>/.exec(html)?.[1];
     if (!block) {
       problems.push(`${t.id}: no worked-example block`);
       continue;

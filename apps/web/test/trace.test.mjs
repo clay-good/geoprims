@@ -100,7 +100,7 @@ test('a bad explain option is refused, not ignored', async () => {
 
 test('a decoder shows every coded group beside what it says', () => {
   const html = readFileSync(join(dist, 'aviation/weather/metar-decode/index.html'), 'utf8');
-  const block = /<dl class="groups">([\s\S]*?)<\/dl>/.exec(html);
+  const block = /<dl class="groups(?: no-print)?">([\s\S]*?)<\/dl>/.exec(html);
   assert.ok(block, 'the METAR decoder shows no decoded groups');
   const text = block[1].replace(/<[^>]+>/g, ' ').replace(/&#39;/g, "'").replace(/\s+/g, ' ');
   // Every group of the example report, and what each one says.
@@ -120,5 +120,5 @@ test('a decoder shows every coded group beside what it says', () => {
 
 test('a tool with no decoder shows no groups block', () => {
   const html = readFileSync(join(dist, 'aviation/altimetry/density-altitude/index.html'), 'utf8');
-  assert.doesNotMatch(html, /<dl class="groups">/);
+  assert.doesNotMatch(html, /<dl class="groups(?: no-print)?">/);
 });

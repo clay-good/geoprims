@@ -70,9 +70,9 @@ const purpose = markTerms(t.summary, terms);
     <p><strong>Model:</strong> {t.model}</p>
     {groups.length > 0 && (
       <>
-        <h3>Show your work</h3>
-        <p class="help">Every coded group of the report, and what it says.</p>
-        <dl class="groups">
+        <h3 class="no-print">Show your work</h3>
+        <p class="help no-print">Every coded group of the report, and what it says.</p>
+        <dl class="groups no-print">
           {groups.map((g) => (
             <>
               <dt><code>{g.group}</code></dt>
@@ -94,12 +94,12 @@ const purpose = markTerms(t.summary, terms);
             </li>
           ))}
         </ol>
-        <p class="help">The same steps an agent gets from the MCP server with <code>explain: true</code>.</p>
+        <p class="help no-print">The same steps an agent gets from the MCP server with <code>explain: true</code>.</p>
       </>
     )}
     <p><strong>Accuracy:</strong> {t.accuracy}</p>
-    <p><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
-    <div class="worked">
+    <p class="no-print"><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
+    <div class="worked no-print">
       <div>
         <h3>You enter</h3>
         <dl>{worked.enter.map((r) => <><dt>{r.label}</dt><dd>{r.value}{r.unit ? ` ${r.unit}` : ''}</dd></>)}</dl>
@@ -114,16 +114,16 @@ const purpose = markTerms(t.summary, terms);
     <p><strong>Status:</strong> version {t.version}, core {catalog.coreVersion}. See this tool in the <a href={`/verification/${catalog.coreVersion}/#${t.id}`}>verification report</a>.</p>
     {changesFor(t.id).length > 0 && (
       <>
-        <h3>Changes</h3>
-        <ul>{changesFor(t.id).map((e) => <li>{e.date}, {CHANGE_KINDS[e.kind].toLowerCase()}: {e.summary} <a href="/changelog/">Changelog</a></li>)}</ul>
+        <h3 class="no-print">Changes</h3>
+        <ul class="no-print">{changesFor(t.id).map((e) => <li>{e.date}, {CHANGE_KINDS[e.kind].toLowerCase()}: {e.summary} <a href="/changelog/">Changelog</a></li>)}</ul>
       </>
     )}
     <p><strong>Checked against:</strong> {t.vectorCount} golden test vectors (<a href={`/vectors/${t.id}.jsonl`} download>download the test vectors</a>, each with its source and tolerance). See <a href="/methodology/">how results are checked</a> and <a href="/sources/">every source</a>.</p>
     {(t['x-assumptions'] ?? []).length > 0 && (
       <>
-        <h3>Constants this tool assumes</h3>
-        <p class="help">Values you do not enter, and where each comes from.</p>
-        <dl class="groups assumptions">
+        <h3 class="no-print">Constants this tool assumes</h3>
+        <p class="help no-print">Values you do not enter, and where each comes from.</p>
+        <dl class="groups assumptions no-print">
           {t['x-assumptions'].map((a) => (
             <>
               <dt>{a.name}</dt>
@@ -134,7 +134,7 @@ const purpose = markTerms(t.summary, terms);
       </>
     )}
     <h3>Sources</h3>
-    <ul>
+    <ul class="sources">
       {t.references.map((r) => {
         const row = rowFor(ledger, r);
         const free = freeAccess(r, row);
@@ -153,8 +153,8 @@ const purpose = markTerms(t.summary, terms);
     </ul>
     {termsFor(t.id).length > 0 && (
       <>
-        <h3>Terms</h3>
-        <dl class="terms">
+        <h3 class="no-print">Terms</h3>
+        <dl class="terms no-print">
           {termsFor(t.id).map((e) => (
             <>
               <dt id={`term-${e.id}`}><abbr title={e.expansion}>{e.term}</abbr>: {e.expansion}</dt>
@@ -183,4 +183,20 @@ const purpose = markTerms(t.summary, terms);
       </ul>
     </section>
   )}
+  <script>
+    // Printing opens "How we got this", so the sheet carries the formulas,
+    // the model, and the sources (web/visual-theme, "Print"); the panel goes
+    // back as it was afterwards.
+    const proof = document.querySelector('details.proof');
+    let wasOpen = null;
+    addEventListener('beforeprint', () => {
+      if (!proof) return;
+      wasOpen = proof.open;
+      proof.open = true;
+    });
+    addEventListener('afterprint', () => {
+      if (proof && wasOpen !== null) proof.open = wasOpen;
+      wasOpen = null;
+    });
+  </script>
 </Base>

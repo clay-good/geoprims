@@ -139,3 +139,28 @@ fn spec_scenarios() {
         "INVALID_INPUT"
     );
 }
+
+#[test]
+fn a_bow_tie_has_no_single_area_and_is_sent_to_the_repair_tool() {
+    let r = call(
+        "geometry.area.polygon",
+        r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.004,"lon":-104.995},{"lat":40.0,"lon":-104.995},{"lat":40.004,"lon":-105.0}]}"#,
+    );
+    assert_eq!(r["error"]["code"], "DEGENERATE_GEOMETRY", "{r}");
+    assert!(
+        r["error"]["message"].as_str().unwrap().contains("40.002"),
+        "{r}"
+    );
+    assert!(
+        r["error"]["hint"]
+            .as_str()
+            .unwrap()
+            .contains("geometry.validity.make-valid")
+    );
+    // The same corners in a sensible order are a plain rectangle.
+    let ok = call(
+        "geometry.area.polygon",
+        r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.995},{"lat":40.004,"lon":-104.995},{"lat":40.004,"lon":-105.0}]}"#,
+    );
+    assert_eq!(ok["ok"], true, "{ok}");
+}

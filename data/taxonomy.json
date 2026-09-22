@@ -37,7 +37,8 @@
         "area",
         "buffer",
         "predicate",
-        "shape"
+        "shape",
+        "validity"
       ]
     },
     "aviation": {

@@ -715,6 +715,17 @@
         }
       ]
     },
+    "geometry.validity": {
+      "summary": "Checks that polygons are well formed, and repairs them.",
+      "tasks": [
+        {
+          "want": "check a polygon and repair it",
+          "tools": [
+            "make-valid"
+          ]
+        }
+      ]
+    },
     "indexing.geohash": {
       "summary": "Geohash encoding, decoding, and neighbors.",
       "tasks": [

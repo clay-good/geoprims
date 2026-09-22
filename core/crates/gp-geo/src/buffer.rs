@@ -382,41 +382,7 @@ pub fn plane(kind: Shape, rings: &[Vec<P>], d: f64, st: &Style, sides: usize) ->
             edges.push((sh[k], sh[(k + 1) % sh.len()], si));
         }
     }
-    let eboxes: Vec<(P, P)> = edges.iter().map(|e| bbox(&[e.0, e.1])).collect();
-    let edge_grid = Grid::new(&eboxes, cell);
-    let mut splits: Vec<Vec<(f64, P)>> = vec![Vec::new(); edges.len()];
-    let mut seen = std::collections::HashSet::new();
-    let mut hits = Vec::new();
-    for bucket in edge_grid.cells.values() {
-        for (x, &i) in bucket.iter().enumerate() {
-            for &j in &bucket[x + 1..] {
-                let (a, b) = (i.min(j), i.max(j));
-                if edges[a].2 == edges[b].2 || !seen.insert((a, b)) {
-                    continue;
-                }
-                let (ba, bb) = (eboxes[a], eboxes[b]);
-                if ba.1.0 + eps < bb.0.0
-                    || bb.1.0 + eps < ba.0.0
-                    || ba.1.1 + eps < bb.0.1
-                    || bb.1.1 + eps < ba.0.1
-                {
-                    continue;
-                }
-                hits.clear();
-                meet(
-                    edges[a].0, edges[a].1, edges[b].0, edges[b].1, eps, &mut hits,
-                );
-                for &(t, u, pt) in &hits {
-                    if !t.is_nan() {
-                        splits[a].push((t, pt));
-                    }
-                    if !u.is_nan() {
-                        splits[b].push((u, pt));
-                    }
-                }
-            }
-        }
-    }
+    let splits = split(&edges, cell, eps, true, &mut |_, _, _, _, _| {});
     let nudge = 1e-6 * r.max(1e-3);
     let polygon = kind == Shape::Polygon;
     let mut kept: Vec<(P, P)> = Vec::new();
@@ -455,6 +421,155 @@ pub fn plane(kind: Shape, rings: &[Vec<P>], d: f64, st: &Style, sides: usize) ->
 
 fn bits(p: P) -> (u64, u64) {
     (p.0.to_bits(), p.1.to_bits())
+}
+
+/// Splits every edge where another crosses or touches it, so both split at
+/// bit-identical points. `skip_same_owner` leaves pairs from one owner alone
+/// (a convex shape's own edges never cross); `hit` sees each meeting as
+/// (edge a, t on a, edge b, u on b, point), with NaN for an endpoint-only side.
+fn split(
+    edges: &[(P, P, usize)],
+    cell: f64,
+    eps: f64,
+    skip_same_owner: bool,
+    hit: &mut dyn FnMut(usize, f64, usize, f64, P),
+) -> Vec<Vec<(f64, P)>> {
+    let eboxes: Vec<(P, P)> = edges.iter().map(|e| bbox(&[e.0, e.1])).collect();
+    let edge_grid = Grid::new(&eboxes, cell);
+    let mut splits: Vec<Vec<(f64, P)>> = vec![Vec::new(); edges.len()];
+    let mut seen = std::collections::HashSet::new();
+    let mut hits = Vec::new();
+    for bucket in edge_grid.cells.values() {
+        for (x, &i) in bucket.iter().enumerate() {
+            for &j in &bucket[x + 1..] {
+                let (a, b) = (i.min(j), i.max(j));
+                if (skip_same_owner && edges[a].2 == edges[b].2) || !seen.insert((a, b)) {
+                    continue;
+                }
+                let (ba, bb) = (eboxes[a], eboxes[b]);
+                if ba.1.0 + eps < bb.0.0
+                    || bb.1.0 + eps < ba.0.0
+                    || ba.1.1 + eps < bb.0.1
+                    || bb.1.1 + eps < ba.0.1
+                {
+                    continue;
+                }
+                hits.clear();
+                meet(
+                    edges[a].0, edges[a].1, edges[b].0, edges[b].1, eps, &mut hits,
+                );
+                for &(t, u, pt) in &hits {
+                    hit(a, t, b, u, pt);
+                    if !t.is_nan() {
+                        splits[a].push((t, pt));
+                    }
+                    if !u.is_nan() {
+                        splits[b].push((u, pt));
+                    }
+                }
+            }
+        }
+    }
+    splits
+}
+
+/// Every edge of closed rings, owned by its ring.
+fn ring_edges(rings: &[Vec<P>]) -> Vec<(P, P, usize)> {
+    let mut edges = Vec::new();
+    for (ri, r) in rings.iter().enumerate() {
+        for k in 0..r.len() {
+            edges.push((r[k], r[(k + 1) % r.len()], ri));
+        }
+    }
+    edges
+}
+
+fn ring_scale(rings: &[Vec<P>]) -> (f64, f64, f64) {
+    let all: Vec<P> = rings.iter().flatten().copied().collect();
+    let (lo, hi) = bbox(&all);
+    let size = (hi.0 - lo.0).max(hi.1 - lo.1).max(1e-9);
+    let scale = all
+        .iter()
+        .map(|p| p.0.abs().max(p.1.abs()))
+        .fold(size, f64::max);
+    let longest = ring_edges(rings)
+        .iter()
+        .map(|e| norm(sub(e.1, e.0)))
+        .fold(0.0, f64::max);
+    (
+        size,
+        1e-9 * scale,
+        (size / 64.0).max(longest / 8.0).max(scale * 1e-9),
+    )
+}
+
+/// A place where rings cross or touch other than at a shared corner:
+/// (ring, edge, other ring, other edge, point). Edge k runs from corner k to k + 1.
+pub type Crossing = (usize, usize, usize, usize, P);
+
+/// Every self-intersection and touch between the rings' edges, adjacent
+/// edges meeting at their shared corner excepted.
+pub fn crossings(rings: &[Vec<P>]) -> Vec<Crossing> {
+    let edges = ring_edges(rings);
+    let (_, eps, cell) = ring_scale(rings);
+    // Each edge's index within its ring, and its ring's length.
+    let mut local = Vec::with_capacity(edges.len());
+    for r in rings {
+        for k in 0..r.len() {
+            local.push((k, r.len()));
+        }
+    }
+    let mut out = Vec::new();
+    let inner = |t: f64| !t.is_nan() && t > 1e-9 && t < 1.0 - 1e-9;
+    split(&edges, cell, eps, false, &mut |a, t, b, u, pt| {
+        let (ra, rb) = (edges[a].2, edges[b].2);
+        let ((ka, n), (kb, _)) = (local[a], local[b]);
+        let adjacent = ra == rb && ((ka + 1) % n == kb || (kb + 1) % n == ka);
+        if (inner(t) || inner(u)) || (!adjacent && (!t.is_nan() || !u.is_nan())) {
+            out.push((ra, ka, rb, kb, pt));
+        }
+    });
+    out.sort_by_key(|x| (x.0, x.1, x.2, x.3));
+    out.dedup_by(|x, y| (x.0, x.1, x.2, x.3) == (y.0, y.1, y.2, y.3) && norm(sub(x.4, y.4)) < 1e-9);
+    out
+}
+
+/// The region the rings enclose by the even-odd rule, as valid rings:
+/// outlines counterclockwise, holes clockwise. Crossing rings are split where
+/// they cross, so a bow-tie becomes two triangles.
+pub fn even_odd(rings: &[Vec<P>]) -> Vec<Vec<P>> {
+    let edges = ring_edges(rings);
+    let (size, eps, cell) = ring_scale(rings);
+    let splits = split(&edges, cell, eps, false, &mut |_, _, _, _, _| {});
+    let nudge = 1e-7 * size;
+    let mut kept = Vec::new();
+    for (i, &(a, b, _)) in edges.iter().enumerate() {
+        let mut pts = splits[i].clone();
+        pts.push((0.0, a));
+        pts.push((1.0, b));
+        pts.sort_by(|x, y| x.0.total_cmp(&y.0));
+        pts.dedup_by(|x, y| x.1 == y.1);
+        for w in pts.windows(2) {
+            let (p, q) = (w[0].1, w[1].1);
+            let dir = sub(q, p);
+            let l = norm(dir);
+            if l <= eps {
+                continue;
+            }
+            let (m, n) = (mul(add(p, q), 0.5), (dir.1 / l, -dir.0 / l));
+            let right = inside_rings(rings, add(m, mul(n, nudge)));
+            let left = inside_rings(rings, sub(m, mul(n, nudge)));
+            match (left, right) {
+                (true, false) => kept.push((p, q)),
+                (false, true) => kept.push((q, p)),
+                _ => {}
+            }
+        }
+    }
+    // Two copies of one piece (rings sharing an edge) would pair up; keep one.
+    kept.sort_by(|x, y| bits(x.0).cmp(&bits(y.0)).then(bits(x.1).cmp(&bits(y.1))));
+    kept.dedup();
+    stitch(kept, eps, size)
 }
 
 /// Joins directed edges end to start into closed rings.
@@ -932,6 +1047,36 @@ mod tests {
         let out = plane(Shape::Line, &line, 10.0, &ROUND, 64);
         assert_eq!(out.len(), 2);
         assert_eq!(out.iter().filter(|r| area2(r) < 0.0).count(), 1);
+    }
+
+    #[test]
+    fn a_bow_tie_crosses_once_and_repairs_into_two_triangles() {
+        let bow = vec![vec![(0.0, 0.0), (10.0, 10.0), (10.0, 0.0), (0.0, 10.0)]];
+        let x = crossings(&bow);
+        assert_eq!(x.len(), 1, "{x:?}");
+        assert!((x[0].4.0 - 5.0).abs() < 1e-9 && (x[0].4.1 - 5.0).abs() < 1e-9);
+        let fixed = even_odd(&bow);
+        assert_eq!(fixed.len(), 2);
+        assert!(
+            fixed.iter().all(|r| area2(r) > 0.0),
+            "outlines run counterclockwise"
+        );
+        assert!((area(&fixed) - 50.0).abs() < 1e-9, "{}", area(&fixed));
+    }
+
+    #[test]
+    fn valid_rings_have_no_crossings_and_repair_to_themselves() {
+        let sq = vec![
+            vec![(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)],
+            vec![(3.0, 3.0), (3.0, 6.0), (6.0, 6.0), (6.0, 3.0)],
+        ];
+        assert!(crossings(&sq).is_empty());
+        let fixed = even_odd(&sq);
+        assert_eq!(fixed.len(), 2);
+        assert!((area(&fixed) - 91.0).abs() < 1e-9);
+        // A hole touching the outline at one corner is a touch, reported.
+        let touch = vec![sq[0].clone(), vec![(0.0, 0.0), (3.0, 6.0), (6.0, 3.0)]];
+        assert!(!crossings(&touch).is_empty());
     }
 
     #[test]

@@ -1395,6 +1395,26 @@
       "editionCheck": true
     },
     {
+      "id": "ogc-sfa",
+      "name": "OGC Simple Feature Access, Part 1: Common Architecture",
+      "issuer": "Open Geospatial Consortium",
+      "currentEdition": "OGC 06-103r4, version 1.2.1",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Checked at ogc.org/standards/sfa on 2026-09-22: version 1.2.1 (06-103r4) is the current Implementation Standard; 1.2.0 and 1.1.0 are superseded.",
+      "freeAccessUrl": "https://www.ogc.org/standards/sfa",
+      "matchTerms": [
+        "Simple feature access"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "olc",
       "name": "Open Location Code",
       "issuer": "Google",

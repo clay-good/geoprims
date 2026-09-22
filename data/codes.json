@@ -317,6 +317,10 @@
     "BUFFER_ACCURACY": {
       "severity": "caution",
       "message": "The buffer's boundary strays from the distance by more than its tolerance."
+    },
+    "GEOMETRY_INVALID": {
+      "severity": "caution",
+      "message": "The geometry is not valid; a repaired version is returned."
     }
   }
 }

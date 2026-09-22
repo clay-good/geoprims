@@ -5,6 +5,7 @@ pub mod buffer;
 pub mod envelope;
 pub mod predicate;
 pub mod shape;
+pub mod validity;
 
 use geographiclib_rs::{PolygonArea, Winding};
 use gp_base::ErrorCode;
@@ -233,7 +234,11 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
         )
         .precision(Precision::Significant(10)),
     ],
-    errors: &[ErrorCode::Unsupported, ErrorCode::InvalidInput],
+    errors: &[
+        ErrorCode::Unsupported,
+        ErrorCode::InvalidInput,
+        ErrorCode::DegenerateGeometry,
+    ],
     warnings: &[
         "POLE_ENCLOSED",
         "INPUT_NORMALIZED",
@@ -274,6 +279,18 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let rings = read_rings(ctx)?;
     let e = Ellipsoid::from_ctx(ctx)?;
     let g = e.geodesic()?;
+    // A ring that crosses itself has no single area: send it to be repaired.
+    let refs: Vec<&Vec<(f64, f64)>> = rings.iter().collect();
+    if let Some((r, edge, (lat, lon))) =
+        validity::first_crossing(&geographiclib_rs::Geodesic::wgs84(), &refs)?
+    {
+        return Err(ToolError::new(
+            ErrorCode::DegenerateGeometry,
+            format!("Ring {r} crosses or touches itself at edge {} (from corner {}), near {lat:.6}°, {lon:.6}°, so it has no single area.", edge + 1, edge + 1),
+        )
+        .at("/polygon")
+        .hint("Repair it with geometry.validity.make-valid, which splits a crossing ring into valid parts."));
+    }
     let (outline, mut perimeter) = ring_area(&g, &rings[0]);
     let mut holes_area = 0.0;
     for hole in &rings[1..] {
@@ -336,6 +353,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &envelope::BBOX,
     &envelope::ENCLOSING,
     &predicate::POINT_IN_POLYGON,
+    &validity::MAKE_VALID,
 ];
 
 pub static REGISTRY: Registry = Registry {

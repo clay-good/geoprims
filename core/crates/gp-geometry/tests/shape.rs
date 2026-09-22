@@ -39,3 +39,16 @@ fn a_c_shapes_centroid_is_outside_and_its_interior_point_is_inside() {
     let clearance = r["result"]["clearance"]["value"].as_f64().unwrap();
     assert!(clearance > 33.0 && clearance < 38.0, "{clearance}");
 }
+
+#[test]
+fn a_corner_pushed_to_the_pole_answers_quickly() {
+    // Found by the fuzzer: one corner at 90° made the shape thousands of edge pieces long.
+    let t = std::time::Instant::now();
+    let r = call(
+        &json!({"polygon":[{"lat":40,"lon":-105},{"lat":40,"lon":-104.997},{"lat":40.0006,"lon":-104.997},{"lat":40.0006,"lon":-104.9994},{"lat":40.0024,"lon":-104.9994},{"lat":40.0024,"lon":-104.997},{"lat":90,"lon":-104.997},{"lat":40.003,"lon":-105}]}),
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    assert_eq!(r["result"]["centroid_inside"], "yes");
+    // A bounded search: well under a second natively, a few in size-optimized Wasm.
+    assert!(t.elapsed().as_secs_f64() < 1.5, "{:?}", t.elapsed());
+}

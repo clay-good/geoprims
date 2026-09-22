@@ -201,6 +201,10 @@ impl Ord for Cell {
 /// The pole of inaccessibility within `precision` (Agafonkin's polylabel):
 /// a quadtree search that drops cells that cannot beat the best point so far.
 fn polylabel(rings: &[Vec<P>], precision: f64, start: P) -> (P, f64) {
+    // Each probe measures every edge, so bound the total work, not just the
+    // probes: the best point so far is always inside, only less centered.
+    let edges: usize = rings.iter().map(Vec::len).sum();
+    let budget = (20_000_000 / edges.max(1)).clamp(1_000, 200_000);
     let (mut x0, mut y0, mut x1, mut y1) = (
         f64::INFINITY,
         f64::INFINITY,
@@ -213,11 +217,14 @@ fn polylabel(rings: &[Vec<P>], precision: f64, start: P) -> (P, f64) {
         x1 = x1.max(p.0);
         y1 = y1.max(p.1);
     }
-    let size = (x1 - x0).min(y1 - y0);
+    let (short, long) = ((x1 - x0).min(y1 - y0), (x1 - x0).max(y1 - y0));
     let mut best = Cell::new(start, 0.0, rings);
-    if size <= 0.0 {
+    if short <= 0.0 {
         return (best.c, best.d);
     }
+    // A sliver would start with thousands of cells, each measuring every edge;
+    // at most 128 along the long side, and they count against the budget.
+    let size = short.max(long / 128.0);
     let h0 = size / 2.0;
     let mut heap = BinaryHeap::new();
     let mut y = y0;
@@ -233,7 +240,7 @@ fn polylabel(rings: &[Vec<P>], precision: f64, start: P) -> (P, f64) {
     if bbox.d > best.d {
         best = bbox;
     }
-    let mut probes = 0;
+    let mut probes = heap.len();
     while let Some(cell) = heap.pop() {
         if cell.d > best.d {
             best = Cell {
@@ -243,7 +250,7 @@ fn polylabel(rings: &[Vec<P>], precision: f64, start: P) -> (P, f64) {
                 max: cell.d,
             };
         }
-        if cell.max - best.d <= precision || probes > 200_000 {
+        if cell.max - best.d <= precision || probes > budget {
             continue;
         }
         let h = cell.h / 2.0;
@@ -376,8 +383,8 @@ pub static CENTROID: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
     warnings: &["CENTROID_OUTSIDE", "EXPERIMENTAL_TOOL"],
-    model: "Geodesic edges cut into 5 km pieces and mapped to a Lambert azimuthal equal-area plane on the authalic sphere of WGS 84, centered at the corners' mean (an exact equal-area map, Snyder 1987 ch. 24 and eq. 3-11 to 3-16); the centroid is the plane's area-weighted centroid, holes subtracted, mapped back. The interior point is the pole of inaccessibility on that plane (Agafonkin's polylabel, to 0.1% of the shape's size), with its clearance measured as a geodesic distance",
-    accuracy: "The centroid is exact for the equal-area plane, which is what area-weighting on a curved surface needs a choice of; for shapes of a few hundred kilometers it matches a local plane to well under 1 m. The interior point is within 0.1% of the shape's size of the true pole of inaccessibility",
+    model: "Geodesic edges cut into 5 km pieces and mapped to a Lambert azimuthal equal-area plane on the authalic sphere of WGS 84, centered at the corners' mean (an exact equal-area map, Snyder 1987 ch. 24 and eq. 3-11 to 3-16); the centroid is the plane's area-weighted centroid, holes subtracted, mapped back. The interior point is the pole of inaccessibility on that plane (Agafonkin's polylabel, to 0.1% of the shape's narrow side), with its clearance measured as a geodesic distance",
+    accuracy: "The centroid is exact for the equal-area plane, which is what area-weighting on a curved surface needs a choice of; for shapes of a few hundred kilometers it matches a local plane to well under 1 m. The interior point is within 0.1% of the shape's narrow side of the true pole of inaccessibility; for extreme slivers (thousands of times longer than wide) it is the best found within a fixed amount of work, always inside",
     references: &[SNYDER],
     examples: &[Example {
         id: "primary",
@@ -516,7 +523,8 @@ fn run_centroid(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
             (lo.min(p.1), hi.max(p.1))
         });
-    let precision = 1e-3 * (x1 - x0).max(y1 - y0);
+    // 0.1% of the narrow side, so a sliver is searched as finely as its width.
+    let precision = (1e-3 * (x1 - x0).min(y1 - y0)).max(1e-3);
     let (rep, _) = polylabel(&plane, precision, c);
     let (rlat, rlon) = map.rev(rep);
     // The clearance, measured as a geodesic distance to every ring.

@@ -703,6 +703,55 @@ def section_area():
     return out
 
 
+def borrow_pit():
+    out = []
+
+    def run(ex, fg, a):
+        h = [[e - fg for e in r] for r in ex]
+        R, C = len(h), len(h[0])
+        net = 0.0
+        for i in range(R):
+            for j in range(C):
+                edges = sum([i == 0, i == R - 1, j == 0, j == C - 1])
+                w = 4 if edges == 0 else 2 if edges == 1 else 1
+                net += w * h[i][j]
+        net *= a * a / 4
+        cut = fill = 0.0
+        for i in range(R - 1):
+            for j in range(C - 1):
+                hs = [h[i][j], h[i][j + 1], h[i + 1][j + 1], h[i + 1][j]]
+                p, n = sum(x for x in hs if x > 0), -sum(x for x in hs if x < 0)
+                if n == 0:
+                    cut += a * a * p / 4
+                elif p == 0:
+                    fill += a * a * n / 4
+                else:
+                    cut += a * a * p * p / (4 * (p + n))
+                    fill += a * a * n * n / (4 * (p + n))
+        return net, cut, fill
+
+    def rows(g):
+        return [{"elevations": ", ".join(str(v) for v in r)} for r in g]
+
+    # The corner-weights scenario: a 3 x 3-node grid.
+    g1 = [[102.0, 101.5, 101.0], [101.2, 100.6, 100.2], [100.4, 99.8, 99.2]]
+    grids = [(g1, 100.0, 25.0), ([[5.0, 6.0], [7.0, 8.0]], 4.0, 10.0), ([[98.0, 99.0, 100.5, 101.0], [98.5, 99.5, 100.2, 101.5], [99.0, 100.0, 100.8, 102.0]], 100.0, 20.0),
+             ([[50.0, 50.0], [50.0, 50.0]], 51.0, 5.0)]
+    for i, (g, fg, a) in enumerate(grids, 1):
+        net, cut, fill = run(g, fg, a)
+        src, ver = (SPEC, "2026") if i == 1 else (SRC, VER)
+        exp = {"result.net_volume.value": net, "result.cut_volume.value": cut, "result.fill_volume.value": fill}
+        if i == 1:
+            exp["result.net_cubic_yards.value"] = net / 27
+        out.append(vec(i, {"existing": rows(g), "cell_size": f"{a} ft", "finished_grade": f"{fg} ft"}, exp, src, ver, rel=1e-11))
+    pr = [[100.5, 100.3, 100.1], [100.4, 100.2, 100.0], [100.3, 100.1, 99.9]]
+    h = [[e - p for e, p in zip(re, rp)] for re, rp in zip(g1, pr)]
+    net = 25.0 ** 2 / 4 * sum((1 if (i in (0, 2) and j in (0, 2)) else 4 if (i, j) == (1, 1) else 2) * h[i][j] for i in range(3) for j in range(3))
+    out.append(vec(5, {"existing": rows(g1), "proposed": rows(pr), "cell_size": "25 ft"}, {"result.net_volume.value": net}, rel=1e-11))
+    out.append(vec(6, {"existing": [{"elevations": "1, 2, 3"}, {"elevations": "1, 2"}], "cell_size": "10 ft", "finished_grade": "0 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -806,7 +855,7 @@ def main():
         "survey.reduction.level-run": level_run(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.cogo.angular-closure": angular_closure(), "survey.earthwork.slope-stake": slope_stake(),
-        "survey.earthwork.section-area": section_area(),
+        "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

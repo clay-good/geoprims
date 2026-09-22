@@ -922,10 +922,11 @@
           ]
         },
         {
-          "want": "find a volume between cross sections",
+          "want": "find a volume between cross sections or over a grid",
           "tools": [
             "average-end-area",
-            "prismoidal"
+            "prismoidal",
+            "borrow-pit"
           ]
         },
         {

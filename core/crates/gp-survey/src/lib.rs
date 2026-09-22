@@ -2,6 +2,7 @@
 //! horizontal and vertical curves, earthwork volumes, and the combined scale
 //! factor (add-survey-suite). Results keep the linear unit the surveyor entered.
 
+pub mod borrow;
 pub mod closure;
 pub mod direction;
 pub mod grade;
@@ -2251,6 +2252,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &grade::GRADE,
     &staking::SLOPE_STAKE,
     &section::SECTION_AREA,
+    &borrow::BORROW_PIT,
     &COMBINED_FACTOR,
     &reduction::SLOPE,
     &reduction::CURVATURE,

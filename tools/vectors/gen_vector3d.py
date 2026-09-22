@@ -113,9 +113,73 @@ def look_vectors():
     return out
 
 
+ALG = "Vector algebra evaluated in Python (tools/vectors/gen_vector3d.py)"
+
+
+def polar_vectors():
+    out = []
+    # The spec scenario first: 10 at 090, navigational, is (10, 0).
+    out.append(vec(1, {"magnitude": 10, "direction": "090 deg"}, {"result.x": 10.0, "result.y": 0.0, "result.magnitude": 10.0}, SPEC, "2026", {"abs": 1e-12}))
+    for m, t, e, nav in [(10, 90, None, False), (25.5, 225, None, True), (100, 30, 45, True), (7, 300, -20, False)]:
+        h = m * math.cos(math.radians(e or 0))
+        s_, c = math.sin(math.radians(t)), math.cos(math.radians(t))
+        x, y = (h * s_, h * c) if nav else (h * c, h * s_)
+        inp = {"magnitude": m, "direction": f"{t} deg"}
+        if e is not None:
+            inp["elevation"] = f"{e} deg"
+        if not nav:
+            inp["convention"] = "mathematical"
+        exp = {"result.x": x, "result.y": y}
+        if e is not None:
+            exp["result.z"] = m * math.sin(math.radians(e))
+        out.append(vec(len(out) + 1, inp, exp, ALG, "2026", {"abs": 1e-12}))
+    # Back from components.
+    for x, y, z, nav in [(3, 4, None, True), (-3, 4, None, False), (1, -1, 1.4142135623730951, True)]:
+        d = (math.degrees(math.atan2(x, y)) if nav else math.degrees(math.atan2(y, x))) % 360
+        inp = {"x": x, "y": y}
+        if z is not None:
+            inp["z"] = z
+        if not nav:
+            inp["convention"] = "mathematical"
+        exp = {"result.magnitude": math.sqrt(x * x + y * y + (z or 0) ** 2), "result.direction.value": d}
+        if z is not None:
+            exp["result.elevation.value"] = math.degrees(math.atan2(z, math.hypot(x, y)))
+        out.append(vec(len(out) + 1, inp, exp, ALG, "2026", {"abs": 1e-12}))
+    out.append(vec(len(out) + 1, {"magnitude": 10, "direction": "90 deg", "x": 1, "y": 2}, {"ok": False, "error.code": "INVALID_INPUT"}, ALG, "2026"))
+    return out
+
+
+def ops_vectors():
+    out = []
+    cases = [([(3, 4), (-1, 2), (2, -3)], True), ([(1, 0, 0), (0, 1, 0)], True), ([(2, 3, 4), (5, 6, 7)], False),
+             ([(10, 0), (0, 10)], False), ([(1.5, -2.5, 3.25), (-4, 0.5, 2)], True)]
+    for vs, nav in cases:
+        three = any(len(v) == 3 for v in vs)
+        vv = [tuple(v) + (0,) * (3 - len(v)) for v in vs]
+        sx, sy, sz = (sum(v[k] for v in vv) for k in range(3))
+        exp = {"result.magnitude": math.sqrt(sx * sx + sy * sy + sz * sz), "result.x": float(sx), "result.y": float(sy),
+               "result.direction.value": (math.degrees(math.atan2(sx, sy)) if nav else math.degrees(math.atan2(sy, sx))) % 360}
+        if three:
+            exp["result.z"] = float(sz)
+        if len(vv) == 2:
+            a, b = vv
+            dot = sum(a[k] * b[k] for k in range(3))
+            na, nb = math.sqrt(sum(c * c for c in a)), math.sqrt(sum(c * c for c in b))
+            exp["result.dot"] = float(dot)
+            exp["result.angle_between.value"] = math.degrees(math.acos(max(-1, min(1, dot / (na * nb)))))
+            exp["result.projection"] = dot / nb
+        inp = {"vectors": [dict(zip("xyz", v)) for v in vs]}
+        if not nav:
+            inp["convention"] = "mathematical"
+        out.append(vec(len(out) + 1, inp, exp, ALG, "2026", {"abs": 1e-12}))
+    out.append(vec(len(out) + 1, {"vectors": [{"x": 1, "y": "north"}]}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/vectors/0/y"}, ALG, "2026"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
-    for tool, vs in {"navigation.vector.distance-3d": distance_vectors(), "navigation.vector.look-angles": look_vectors()}.items():
+    for tool, vs in {"navigation.vector.distance-3d": distance_vectors(), "navigation.vector.look-angles": look_vectors(),
+                     "navigation.vector.polar-cartesian": polar_vectors(), "navigation.vector.operations": ops_vectors()}.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 

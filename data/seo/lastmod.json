@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "22a6a886f8eb40b5",
+    "hash": "4ffa2a02f241b1ac",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -456,11 +456,11 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "2479cbddb33ce9db",
+    "hash": "58098895edb22924",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
-    "hash": "454331e4e488eb44",
+    "hash": "eb23b51b2f9e2ff7",
     "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/": {
@@ -500,7 +500,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/route/": {
-    "hash": "a1a48806cdb10208",
+    "hash": "2dfa154eb762c42a",
     "lastmod": "2026-09-22"
   },
   "/navigation/route/cross-track/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/vector/": {
-    "hash": "5a921bb1e503ebfa",
+    "hash": "000736e7a6c4c682",
     "lastmod": "2026-09-22"
   },
   "/privacy/": {
@@ -524,7 +524,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "7f98d603855fc09f",
+    "hash": "e9fd94e1566b7b84",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -608,7 +608,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "7117334a6cbad8d7",
+    "hash": "e6e53dd85b76e31e",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -708,7 +708,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "034ed077a4d746fa",
+    "hash": "ec2f0b9763c92400",
     "lastmod": "2026-09-22"
   }
 }

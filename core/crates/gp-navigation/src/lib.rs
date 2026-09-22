@@ -981,6 +981,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &sphere::INTERMEDIATE,
     &vector::DISTANCE_3D,
     &vector::LOOK_ANGLES,
+    &vector::POLAR_CARTESIAN,
+    &vector::OPERATIONS,
 ];
 
 pub static REGISTRY: Registry = Registry {

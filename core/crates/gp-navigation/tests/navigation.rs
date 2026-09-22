@@ -1145,3 +1145,37 @@ fn range_rings_are_valid_geojson_around_the_pole_and_across_the_antimeridian() {
     assert_eq!(doc["features"][0]["geometry"]["type"], "Polygon");
     valid_polygon(&doc["features"][0]["geometry"]["coordinates"]).unwrap();
 }
+
+#[test]
+fn cpa_in_three_dimensions() {
+    // Head-on at the same track, 1,000 ft apart vertically: the aircraft pass
+    // overhead, so the horizontal miss is zero and the vertical is 1,000 ft.
+    let r = call(
+        "navigation.route.cpa",
+        r#"{"a_course":"360 deg","a_speed":"250 kt","b_east":"0 m","b_north":"20 NM","b_course":"180 deg","b_speed":"250 kt","b_up":"1000 ft"}"#,
+    );
+    assert!(
+        num(&r, "result.horizontal_separation.value").abs() < 1e-6,
+        "{r}"
+    );
+    assert!((num(&r, "result.vertical_separation.value") - 1000.0).abs() < 1e-9);
+    assert_eq!(r["result"]["vertical_separation"]["unit"], "ft");
+    assert!((num(&r, "result.separation.value") - 304.8).abs() < 1e-9);
+    // A descends into B's level: the 3D minimum comes before the tracks cross.
+    let r = call(
+        "navigation.route.cpa",
+        r#"{"a_course":"360 deg","a_speed":"100 m/s","b_east":"0 m","b_north":"10000 m","b_course":"180 deg","b_speed":"100 m/s","b_up":"-1000 m","a_vertical_speed":"-10 m/s"}"#,
+    );
+    // r(t) = (0, 10000 − 200t, −1000 + 10t): minimized at t = 2,010,000 / 40,100.
+    let t = 2_010_000.0 / 40_100.0;
+    assert!((num(&r, "result.time.value") - t).abs() < 1e-9, "{r}");
+    let sep = (10_000.0_f64 - 200.0 * t).hypot(-1000.0 + 10.0 * t);
+    assert!((num(&r, "result.separation.value") - sep).abs() < 1e-9);
+    // Without vertical inputs the result stays 2D and adds no fields.
+    let r = call(
+        "navigation.route.cpa",
+        r#"{"a_course":"090 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"1200 m","b_course":"180 deg","b_speed":"10 m/s"}"#,
+    );
+    assert!(r["result"].get("vertical_separation").is_none());
+    assert!((num(&r, "result.separation.value") - 141.421_356_237).abs() < 1e-6);
+}

@@ -539,3 +539,504 @@ fn run_look(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ));
     Ok(Json::obj(out))
 }
+
+// ---------------------------------------------------------------- vector algebra
+
+const CONVENTION: Field = Field::new(
+    "convention",
+    "Direction measured",
+    "navigational (clockwise from north, default) or mathematical (counterclockwise from +x, east)",
+    Kind::Choice(&["navigational", "mathematical"]),
+);
+
+const fn num(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Number {
+            min: -1e15,
+            max: 1e15,
+        },
+    )
+}
+
+/// Direction of (x east, y north) in the chosen convention, degrees in [0, 360).
+fn direction(x: f64, y: f64, nav: bool) -> f64 {
+    let a = if nav {
+        libm::atan2(x, y)
+    } else {
+        libm::atan2(y, x)
+    };
+    gp_base::angle::wrap_azimuth(a.to_degrees())
+}
+
+fn convention_note(nav: bool) -> &'static str {
+    if nav {
+        "Directions clockwise from north (+y); x is east, y is north, z is up."
+    } else {
+        "Directions counterclockwise from +x (east); y is north, z is up."
+    }
+}
+
+pub static POLAR_CARTESIAN: ToolDef = ToolDef {
+    id: "navigation.vector.polar-cartesian",
+    title: "Vector components and direction",
+    summary: "Turns a magnitude and direction (and elevation, for 3D) into x, y, and z components, or components back into magnitude and direction, with the direction convention stated: navigational from north or mathematical from +x.",
+    aliases: &[
+        "polar to cartesian",
+        "cartesian to polar",
+        "vector components calculator",
+        "resolve a vector",
+    ],
+    keywords: &[
+        "vector",
+        "components",
+        "polar",
+        "cartesian",
+        "magnitude",
+        "direction",
+        "spherical",
+    ],
+    inputs: &[
+        num("magnitude", "Magnitude", "Like 10, in any unit").core(),
+        ang("direction", "Direction", "Like 090").core(),
+        num(
+            "x",
+            "x component",
+            "Toward east, instead of magnitude and direction, like 10",
+        )
+        .core(),
+        num("y", "y component", "Toward north, like 0").core(),
+        CONVENTION.core(),
+        ang(
+            "elevation",
+            "Elevation",
+            "Above the horizontal, for a 3D vector, like 30; default 0",
+        ),
+        num("z", "z component", "Up, for a 3D vector, like 5; default 0"),
+    ],
+    outputs: &[
+        num("magnitude", "Magnitude", "√(x² + y² + z²)").precision(Precision::Decimals(6)),
+        num("x", "x component", "Toward east").precision(Precision::Decimals(6)),
+        num("y", "y component", "Toward north").precision(Precision::Decimals(6)),
+        num("z", "z component", "Up, for 3D")
+            .precision(Precision::Decimals(6))
+            .optional(),
+        ang("direction", "Direction", "In the convention chosen")
+            .precision(Precision::Decimals(4))
+            .angle_range("[0,360)"),
+        ang("elevation", "Elevation", "Above the horizontal, for 3D")
+            .precision(Precision::Decimals(4))
+            .angle_range("unbounded")
+            .optional(),
+        Field::new(
+            "convention_used",
+            "Convention",
+            "How the direction is measured",
+            Kind::Text { max_len: 120 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Navigational: x = m·cos e·sin θ, y = m·cos e·cos θ; mathematical: x = m·cos e·cos θ, y = m·cos e·sin θ; z = m·sin e. Back: m = √(x² + y² + z²), θ = atan2 in the chosen convention, e = atan2(z, √(x² + y²))",
+    accuracy: "Exact arithmetic",
+    references: &[LOCAL_CARTESIAN],
+    examples: &[Example {
+        id: "primary",
+        title: "Magnitude 10 at 090, navigational",
+        input: r#"{"magnitude":10,"direction":"090 deg"}"#,
+        source: "add-navigation-and-geometry navigational-convention scenario: (10, 0)",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "navigation.vector.operations",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.vector.look-angles",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The vector has components {x} east and {y} north, magnitude {magnitude}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_polar,
+    ..ToolDef::BLANK
+};
+
+fn run_polar(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let dg = unit(QT::Angle, "deg");
+    let nav = ctx.choice("convention")? != Some("mathematical");
+    let mag = ctx.number("magnitude")?;
+    let dir = ctx.quantity("direction")?.map(|q| q.to(dg));
+    let el = ctx.quantity("elevation")?.map(|q| q.to(dg));
+    let (xi, yi, zi) = (ctx.number("x")?, ctx.number("y")?, ctx.number("z")?);
+    let polar = mag.is_some() || dir.is_some() || el.is_some();
+    let cart = xi.is_some() || yi.is_some() || zi.is_some();
+    let (x, y, z, three_d) = match (polar, cart) {
+        (true, false) => {
+            let (Some(m), Some(t)) = (mag, dir) else {
+                return Err(ToolError::invalid(
+                    if mag.is_none() {
+                        "/magnitude"
+                    } else {
+                        "/direction"
+                    },
+                    "Give both a magnitude and a direction.",
+                ));
+            };
+            let e = el.unwrap_or(0.0);
+            if !(-90.0..=90.0).contains(&e) {
+                return Err(ToolError::invalid(
+                    "/elevation",
+                    "Elevation is between -90° and 90°.",
+                ));
+            }
+            let h = m * e.to_radians().cos();
+            let (s, c) = (t.to_radians().sin(), t.to_radians().cos());
+            let (x, y) = if nav { (h * s, h * c) } else { (h * c, h * s) };
+            (x, y, m * e.to_radians().sin(), el.is_some())
+        }
+        (false, true) => {
+            let (Some(x), Some(y)) = (xi, yi) else {
+                return Err(ToolError::invalid(
+                    if xi.is_none() { "/x" } else { "/y" },
+                    "Give both x and y.",
+                ));
+            };
+            (x, y, zi.unwrap_or(0.0), zi.is_some())
+        }
+        (true, true) => {
+            return Err(ToolError::invalid(
+                "/x",
+                "Give a magnitude and direction, or components, not both.",
+            ));
+        }
+        (false, false) => {
+            return Err(ToolError::invalid(
+                "/magnitude",
+                "Give a magnitude and direction, or x and y components.",
+            )
+            .hint("Example: magnitude 10, direction 090"));
+        }
+    };
+    let m = libm::sqrt(x * x + y * y + z * z);
+    let theta = direction(x, y, nav);
+    let elev = libm::atan2(z, libm::hypot(x, y)).to_degrees();
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |v: f64, d: u8| display::number(v, Precision::Decimals(d), fmt);
+        if polar {
+            ctx.step(
+                "Components",
+                if nav {
+                    "x = m·cos e·sin θ, y = m·cos e·cos θ, z = m·sin e"
+                } else {
+                    "x = m·cos e·cos θ, y = m·cos e·sin θ, z = m·sin e"
+                },
+                format!(
+                    "m = {}, θ = {}°, e = {}°",
+                    n(mag.unwrap_or(m), 6),
+                    n(dir.unwrap_or(theta), 4),
+                    n(el.unwrap_or(0.0), 4)
+                ),
+                format!("({}, {}, {})", n(x, 6), n(y, 6), n(z, 6)),
+            );
+        } else {
+            ctx.step(
+                "Direction",
+                if nav {
+                    "θ = atan2(x, y), clockwise from north"
+                } else {
+                    "θ = atan2(y, x), counterclockwise from +x"
+                },
+                format!("x = {}, y = {}", n(x, 6), n(y, 6)),
+                format!("{}°", n(theta, 4)),
+            );
+        }
+        ctx.step(
+            "Magnitude",
+            "m = √(x² + y² + z²)",
+            format!("√({}² + {}² + {}²)", n(x, 6), n(y, 6), n(z, 6)),
+            n(m, 6),
+        );
+    }
+    let mut out = vec![
+        ("magnitude", Json::Num(m)),
+        ("x", Json::Num(x)),
+        ("y", Json::Num(y)),
+    ];
+    if three_d {
+        out.push(("z", Json::Num(z)));
+    }
+    out.push(("direction", ctx.out("direction", deg(theta))));
+    if three_d {
+        out.push(("elevation", ctx.out("elevation", deg(elev))));
+    }
+    out.push(("convention_used", Json::str(convention_note(nav))));
+    Ok(Json::obj(out))
+}
+
+const VECTOR_ROW: &[Field] = &[
+    num("x", "x component", "Toward east, like 3").required(),
+    num("y", "y component", "Toward north, like 4").required(),
+    num("z", "z component", "Up, for 3D; default 0"),
+];
+
+pub static OPERATIONS: ToolDef = ToolDef {
+    id: "navigation.vector.operations",
+    title: "Vector sum, dot, and cross product",
+    summary: "Adds any number of 2D or 3D vectors head to tail; for two vectors, also their difference, dot and cross products, the angle between them, and the projection of one on the other.",
+    aliases: &[
+        "vector addition calculator",
+        "dot product calculator",
+        "cross product calculator",
+        "angle between vectors",
+        "resultant vector",
+    ],
+    keywords: &[
+        "vector",
+        "resultant",
+        "sum",
+        "dot product",
+        "cross product",
+        "projection",
+        "angle between",
+        "unit vector",
+    ],
+    inputs: &[
+        Field::new(
+            "vectors",
+            "Vectors",
+            "x, y, and optional z of each, like 3, 4",
+            Kind::List {
+                items: VECTOR_ROW,
+                min: 1,
+                max: 1000,
+            },
+        )
+        .required()
+        .core(),
+        CONVENTION.core(),
+        num("scale", "Scale factor", "Multiplies the resultant, like 2"),
+    ],
+    outputs: &[
+        num("magnitude", "Resultant magnitude", "|Σ vectors|").precision(Precision::Decimals(6)),
+        num("x", "Resultant x", "Σ x").precision(Precision::Decimals(6)),
+        num("y", "Resultant y", "Σ y").precision(Precision::Decimals(6)),
+        num("z", "Resultant z", "Σ z, for 3D")
+            .precision(Precision::Decimals(6))
+            .optional(),
+        ang(
+            "direction",
+            "Resultant direction",
+            "In the convention chosen",
+        )
+        .precision(Precision::Decimals(4))
+        .angle_range("[0,360)")
+        .optional(),
+        Field::new(
+            "unit_vector",
+            "Unit vector",
+            "The resultant ÷ its magnitude",
+            Kind::Text { max_len: 120 },
+        )
+        .optional(),
+        Field::new(
+            "scaled",
+            "Scaled resultant",
+            "Scale factor × resultant",
+            Kind::Text { max_len: 120 },
+        )
+        .optional(),
+        Field::new(
+            "difference",
+            "Difference",
+            "First − second, for two vectors",
+            Kind::Text { max_len: 120 },
+        )
+        .optional(),
+        num("dot", "Dot product", "a·b, for two vectors")
+            .precision(Precision::Decimals(6))
+            .optional(),
+        Field::new(
+            "cross",
+            "Cross product",
+            "a × b, for two vectors",
+            Kind::Text { max_len: 120 },
+        )
+        .optional(),
+        ang("angle_between", "Angle between", "acos(a·b / |a||b|)")
+            .precision(Precision::Decimals(4))
+            .angle_range("unbounded")
+            .optional(),
+        num(
+            "projection",
+            "Projection of the first on the second",
+            "a·b / |b|, signed",
+        )
+        .precision(Precision::Decimals(6))
+        .optional(),
+        Field::new(
+            "convention_used",
+            "Convention",
+            "How the direction is measured",
+            Kind::Text { max_len: 120 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Component-wise sums; a·b = Σ aᵢbᵢ; a × b = (a_y b_z − a_z b_y, a_z b_x − a_x b_z, a_x b_y − a_y b_x); angle = acos(a·b / |a||b|); projection = a·b / |b|",
+    accuracy: "Exact arithmetic. All vectors must share one unit; the tool does not convert them",
+    references: &[LOCAL_CARTESIAN],
+    examples: &[Example {
+        id: "primary",
+        title: "Three vectors head to tail",
+        input: r#"{"vectors":[{"x":3,"y":4},{"x":-1,"y":2},{"x":2,"y":-3}]}"#,
+        source: "Component-wise sum: (4, 3), magnitude 5, direction 053.1301° from north",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "navigation.vector.polar-cartesian",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.route.cpa",
+            reason: "next",
+        },
+    ],
+    sentence: "The resultant has a magnitude of {magnitude}.",
+    limits: &[("batchRows", 1_000)],
+    run: run_operations,
+    ..ToolDef::BLANK
+};
+
+fn triple(v: [f64; 3], three_d: bool, fmt: gp_base::parse::NumberFormat) -> String {
+    let n = |x: f64| display::number(x, Precision::Decimals(6), fmt);
+    if three_d {
+        format!("({}, {}, {})", n(v[0]), n(v[1]), n(v[2]))
+    } else {
+        format!("({}, {})", n(v[0]), n(v[1]))
+    }
+}
+
+fn run_operations(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let rows = ctx.rows("vectors")?;
+    let mut vs: Vec<[f64; 3]> = Vec::with_capacity(rows.len());
+    let mut three_d = false;
+    for (i, row) in rows.iter().enumerate() {
+        let mut v = [0.0; 3];
+        for (k, name) in ["x", "y", "z"].into_iter().enumerate() {
+            let raw = row.get(name).filter(|x| !x.is_null());
+            let val = match raw {
+                None => continue,
+                Some(x) => x
+                    .as_f64()
+                    .or_else(|| x.as_str().and_then(|s| s.trim().parse().ok())),
+            };
+            match val {
+                Some(f) if f.is_finite() && f.abs() <= 1e15 => {
+                    v[k] = f;
+                    three_d |= k == 2;
+                }
+                _ => {
+                    return Err(ToolError::invalid(
+                        &format!("/vectors/{i}/{name}"),
+                        format!("{name} must be a number up to 1e15 in size."),
+                    ));
+                }
+            }
+        }
+        vs.push(v);
+    }
+    let nav = ctx.choice("convention")? != Some("mathematical");
+    let scale = ctx.number("scale")?;
+    let fmt = ctx.options.format;
+    let sum = vs
+        .iter()
+        .fold([0.0; 3], |a, v| [a[0] + v[0], a[1] + v[1], a[2] + v[2]]);
+    let norm = |v: [f64; 3]| libm::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    let mag = norm(sum);
+    if ctx.explaining() {
+        let n = move |v: f64| display::number(v, Precision::Decimals(6), fmt);
+        let list = |k: usize| vs.iter().map(|v| n(v[k])).collect::<Vec<_>>().join(" + ");
+        ctx.step(
+            "Add the components",
+            "Σ x, Σ y, Σ z",
+            format!("x: {}; y: {}", list(0), list(1)),
+            triple(sum, three_d, fmt),
+        );
+        ctx.step(
+            "Resultant magnitude",
+            "√(x² + y² + z²)",
+            format!("√({}² + {}² + {}²)", n(sum[0]), n(sum[1]), n(sum[2])),
+            n(mag),
+        );
+    }
+    let mut out = vec![
+        ("magnitude", Json::Num(mag)),
+        ("x", Json::Num(sum[0])),
+        ("y", Json::Num(sum[1])),
+    ];
+    if three_d {
+        out.push(("z", Json::Num(sum[2])));
+    }
+    if mag > 0.0 {
+        out.push((
+            "direction",
+            ctx.out("direction", deg(direction(sum[0], sum[1], nav))),
+        ));
+        out.push((
+            "unit_vector",
+            Json::str(triple(sum.map(|c| c / mag), three_d, fmt)),
+        ));
+    }
+    if let Some(k) = scale {
+        out.push((
+            "scaled",
+            Json::str(triple(sum.map(|c| c * k), three_d, fmt)),
+        ));
+    }
+    if let [a, b] = vs[..] {
+        let dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        let cross = [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ];
+        out.push((
+            "difference",
+            Json::str(triple(
+                [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+                three_d,
+                fmt,
+            )),
+        ));
+        out.push(("dot", Json::Num(dot)));
+        // A 2D cross product still points along z.
+        out.push(("cross", Json::str(triple(cross, true, fmt))));
+        let (na, nb) = (norm(a), norm(b));
+        if na > 0.0 && nb > 0.0 {
+            let c = (dot / (na * nb)).clamp(-1.0, 1.0);
+            out.push((
+                "angle_between",
+                ctx.out("angle_between", deg(acos(c).to_degrees())),
+            ));
+        }
+        if nb > 0.0 {
+            out.push(("projection", Json::Num(dot / nb)));
+        }
+    }
+    out.push(("convention_used", Json::str(convention_note(nav))));
+    Ok(Json::obj(out))
+}

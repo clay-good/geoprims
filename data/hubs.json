@@ -1151,6 +1151,13 @@
           "tools": [
             "look-angles"
           ]
+        },
+        {
+          "want": "add vectors or turn a direction into components",
+          "tools": [
+            "operations",
+            "polar-cartesian"
+          ]
         }
       ]
     },

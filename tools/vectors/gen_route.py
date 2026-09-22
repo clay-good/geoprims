@@ -159,6 +159,23 @@ def formulas(rnd):
         inp = {"a_course": f"{ac!r} deg", "a_speed": f"{asp!r} m/s", "b_east": f"{bx!r} m", "b_north": f"{by!r} m", "b_course": f"{bc!r} deg", "b_speed": f"{bsp!r} m/s"}
         exp = {"result.time.value": t, "result.separation.value": math.hypot(rx, ry)}
         rows.append(vec(i, inp, exp, {k: {"rel": 1e-9, "abs": 1e-9} for k in exp}, cpa_src))
+    # In 3D, with heights and climb rates: the same minimum over (east, north, up).
+    cpa3_src = "Relative motion in a local east-north-up frame: t = -(r.v)/|v|^2, evaluated in Python"
+    for ac, asp, bx, by, bz, bc, bsp, vza, vzb in [(360, 128.6111, 0, 37040, 304.8, 180, 128.6111, 0, 0),
+                                                  (360, 100, 0, 10000, -1000, 180, 100, -10, 0),
+                                                  (45, 60, 5000, 8000, 600, 250, 55, 2.54, -5.08),
+                                                  (270, 80, -12000, 3000, 0, 90, 20, 0, 7.5)]:
+        va = (asp * math.sin(math.radians(ac)), asp * math.cos(math.radians(ac)), vza)
+        vb = (bsp * math.sin(math.radians(bc)), bsp * math.cos(math.radians(bc)), vzb)
+        v = [vb[k] - va[k] for k in range(3)]
+        r0 = (bx, by, bz)
+        t = max(0.0, -sum(r0[k] * v[k] for k in range(3)) / sum(x * x for x in v))
+        r = [r0[k] + v[k] * t for k in range(3)]
+        inp = {"a_course": f"{ac} deg", "a_speed": f"{asp} m/s", "b_east": f"{bx} m", "b_north": f"{by} m", "b_course": f"{bc} deg",
+               "b_speed": f"{bsp} m/s", "b_up": f"{bz} m", "a_vertical_speed": f"{vza} m/s", "b_vertical_speed": f"{vzb} m/s"}
+        exp = {"result.time.value": t, "result.separation.value": math.sqrt(sum(x * x for x in r)),
+               "result.horizontal_separation.value": math.hypot(r[0], r[1]), "result.vertical_separation.value": r[2] / 0.3048}
+        rows.append(vec(len(rows) + 1, inp, exp, {k: {"rel": 1e-9, "abs": 1e-6} for k in exp}, cpa3_src))
     write("navigation.route.cpa", rows)
 
     legs_src = "Karney's geographiclib (Python) geodesic inverse per leg"

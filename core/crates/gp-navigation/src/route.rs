@@ -874,7 +874,7 @@ pub static CPA: ToolDef = ToolDef {
     id: "navigation.route.cpa",
     diagram_inline: true,
     title: "Closest point of approach",
-    summary: "When two moving objects come closest, how close, and the bearing and range then, in a local flat plane (for separations under 500 km).",
+    summary: "When two moving objects come closest, how close, and the bearing and range then, in a local flat frame (for separations under 500 km), with climb rates and height for aircraft in 3D.",
     aliases: &[
         "closest point of approach",
         "CPA TCPA",
@@ -889,6 +889,7 @@ pub static CPA: ToolDef = ToolDef {
         "separation",
         "miss distance",
         "intercept",
+        "vertical separation",
     ],
     inputs: &[
         qty_field(
@@ -939,6 +940,27 @@ pub static CPA: ToolDef = ToolDef {
             QT::Time,
             "s",
         ),
+        qty_field(
+            "b_up",
+            "B above A",
+            "Now, like 1000 ft; default 0. Any vertical input makes the approach 3D",
+            QT::Length,
+            "ft",
+        ),
+        qty_field(
+            "a_vertical_speed",
+            "A climb rate",
+            "Negative to descend, like -500 ft/min; default 0",
+            QT::VerticalSpeed,
+            "ft/min",
+        ),
+        qty_field(
+            "b_vertical_speed",
+            "B climb rate",
+            "Negative to descend, like 500 ft/min; default 0",
+            QT::VerticalSpeed,
+            "ft/min",
+        ),
     ],
     outputs: &[
         qty_field(
@@ -974,6 +996,24 @@ pub static CPA: ToolDef = ToolDef {
             "m",
         )
         .precision(Precision::Decimals(2)),
+        qty_field(
+            "horizontal_separation",
+            "Horizontal separation at CPA",
+            "When a vertical input is given",
+            QT::Length,
+            "m",
+        )
+        .precision(Precision::Decimals(2))
+        .optional(),
+        qty_field(
+            "vertical_separation",
+            "Vertical separation at CPA",
+            "B above A; when a vertical input is given",
+            QT::Length,
+            "ft",
+        )
+        .precision(Precision::Decimals(0))
+        .optional(),
         qty_field(
             "scene_end",
             "Scene length",
@@ -1029,7 +1069,7 @@ pub static CPA: ToolDef = ToolDef {
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
-    model: "Constant velocities in a local east-north plane",
+    model: "Constant velocities in a local east-north(-up) frame: t = −(r·v) / |v|², the 3D minimum when heights or climb rates are given",
     accuracy: "Exact in the plane; the flat-plane approximation is good to about 0.1% under 500 km",
     references: &[KARNEY],
     examples: &[Example {
@@ -1083,8 +1123,13 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ToolError::new(ErrorCode::OutOfDomain, "Speeds cannot be negative.").at("/a_speed"),
         );
     }
-    let now = hypot(bx, by);
-    if now > 500_000.0 {
+    let bz = ctx.quantity("b_up")?.map(|x| x.base());
+    let vza = ctx.quantity("a_vertical_speed")?.map(|x| x.base());
+    let vzb = ctx.quantity("b_vertical_speed")?.map(|x| x.base());
+    let three_d = bz.is_some() || vza.is_some() || vzb.is_some();
+    let bz = bz.unwrap_or(0.0);
+    let vz = vzb.unwrap_or(0.0) - vza.unwrap_or(0.0);
+    if hypot(bx, by) > 500_000.0 {
         return Err(ToolError::new(
             ErrorCode::OutOfDomain,
             "The flat-plane method applies to separations under 500 km.",
@@ -1093,11 +1138,12 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let (va, vb) = (vel(ac, asp), vel(bc, bsp));
     let (vx, vy) = (vb.0 - va.0, vb.1 - va.1);
-    let v2 = vx * vx + vy * vy;
+    let now = hypot(hypot(bx, by), bz);
+    let v2 = vx * vx + vy * vy + vz * vz;
     let mut t = if v2 == 0.0 {
         0.0
     } else {
-        -(bx * vx + by * vy) / v2
+        -(bx * vx + by * vy + bz * vz) / v2
     };
     if t < 0.0 || v2 == 0.0 {
         if v2 != 0.0 {
@@ -1105,7 +1151,7 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         t = 0.0;
     }
-    let (rx, ry) = (bx + vx * t, by + vy * t);
+    let (rx, ry, rz) = (bx + vx * t, by + vy * t, bz + vz * t);
     let bearing = (atan2(rx, ry).to_degrees() + 360.0) % 360.0;
     let m = crate::unit(QT::Length, "m");
     let sec = crate::unit(QT::Time, "s");
@@ -1113,7 +1159,10 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
     // The scene runs past the CPA (at least a minute), so it can be seen passing.
     let end = (t * 1.5).max(60.0);
     let mut out = vec![
-        ("separation", ctx.out("separation", q(hypot(rx, ry), m))),
+        (
+            "separation",
+            ctx.out("separation", q(hypot(hypot(rx, ry), rz), m)),
+        ),
         ("time", ctx.out("time", q(t, sec))),
         ("bearing", ctx.out("bearing", deg(bearing))),
         (
@@ -1122,6 +1171,16 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
         ("scene_end", ctx.out("scene_end", q(end, sec))),
     ];
+    if three_d {
+        out.push((
+            "horizontal_separation",
+            ctx.out("horizontal_separation", q(hypot(rx, ry), m)),
+        ));
+        out.push((
+            "vertical_separation",
+            ctx.out("vertical_separation", q(rz, m)),
+        ));
+    }
     if let Some(at) = ctx.quantity("at_time")?.map(|x| x.base()) {
         if !(0.0..=1e7).contains(&at) {
             return Err(ToolError::new(
@@ -1134,7 +1193,10 @@ fn run_cpa(ctx: &mut Ctx) -> Result<Json, ToolError> {
         let (bxa, bya) = (bx + vb.0 * at, by + vb.1 * at);
         out.push((
             "separation_at",
-            ctx.out("separation_at", q(hypot(bxa - ax, bya - ay), m)),
+            ctx.out(
+                "separation_at",
+                q(hypot(hypot(bxa - ax, bya - ay), bz + vz * at), m),
+            ),
         ));
         out.push(("a_east_at", ctx.out("a_east_at", q(ax, m))));
         out.push(("a_north_at", ctx.out("a_north_at", q(ay, m))));

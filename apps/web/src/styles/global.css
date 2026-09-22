@@ -694,3 +694,16 @@ label.import-button:focus-within { outline: 3px solid color-mix(in srgb, var(--a
 .csv-pick { display: grid; gap: 0.2rem; font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
 .csv-pick select { margin: 0; min-inline-size: 9rem; }
 .csv-map button { margin: 0; }
+
+/* Batch mode: a quiet panel under the inputs, opened when wanted. */
+details.batch { margin-block-start: 1rem; padding-block-start: 0.25rem; border-block-start: 1px dashed var(--line); }
+details.batch > summary { font-size: 0.92rem; color: var(--data); }
+.batch-panel { display: grid; gap: 0.6rem; }
+table.batch-map { border-collapse: collapse; font-size: 0.88rem; inline-size: 100%; }
+table.batch-map th, table.batch-map td { text-align: start; padding: 0.3rem 0.4rem; border-block-end: 1px solid var(--line); vertical-align: middle; }
+table.batch-map thead th { font: 600 0.7rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+table.batch-map select, table.batch-map input { margin: 0; }
+.batch-unit { max-inline-size: 7rem; }
+.batch-progress { inline-size: 100%; block-size: 10px; accent-color: var(--accent); }
+.batch-errors { margin: 0; padding-inline-start: 1.1rem; font: 0.82rem var(--mono); color: var(--danger); max-block-size: 12rem; overflow-y: auto; }
+table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color: var(--muted); font-size: 0.85em; }

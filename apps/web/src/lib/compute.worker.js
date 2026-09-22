@@ -117,6 +117,8 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
     // A file a reader brought is parsed here, off the page, and nothing it
     // points at is fetched (web/io-formats "Safe parsing").
     else if (method === 'readFile') out = JSON.stringify(readFile(args[0], args[1]));
+    // Batch mode: one chunk of rows through the core's own batch entry point.
+    else if (method === 'invokeBatch') out = await (await get(moduleFor(args[0]))).invokeBatch(args[0], args[1]);
     else out = await (await get(args[0])).callString(args[1], args[2]);
     self.postMessage({ seq, out });
   } catch (e) {

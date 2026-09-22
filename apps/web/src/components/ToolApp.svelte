@@ -88,6 +88,10 @@
   let timer;
   // The report dialog is imported on first click, so nothing loads before then.
   let ReportDialog = $state(null);
+  // Batch mode loads only when a reader opens it.
+  let BatchPanel = $state(null);
+  const batchable = Object.entries(tool.inputs.properties).some(([n, s]) => n !== 'options' && s.type !== 'array');
+  const loadBatch = async () => (BatchPanel ??= (await import('./BatchPanel.svelte')).default);
   let reporting = $state(false);
 
   async function openReport() {
@@ -722,6 +726,12 @@
     <button type="button" class="quiet" onclick={tryExample}>Try the example</button>
     <button type="button" class="quiet" onclick={clearAll}>Clear</button>
   </div>
+  {#if !embedded && batchable}
+    <details class="batch" ontoggle={(e) => e.currentTarget.open && loadBatch()}>
+      <summary>Run many at once from a CSV</summary>
+      {#if BatchPanel && compute}<BatchPanel {tool} {compute} />{:else}<p class="help">Loading…</p>{/if}
+    </details>
+  {/if}
 </form>
 </div>
 

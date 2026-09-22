@@ -66,3 +66,6 @@ export const detect = (query) => call('detect', [query], 'detect');
 export const readCoordinate = (text) => call('readCoordinate', [text], 'coordinate');
 /** Parses a file's text in the worker: GeoJSON, KML, GPX, WKT, CSV, or TSV. */
 export const readFile = (name, text) => call('readFile', [name, text]);
+/** One chunk of a batch: the core's array of envelopes, in row order. No key,
+ *  so a keystroke on the form never supersedes or cancels a running batch. */
+export const invokeBatch = (id, inputsJson) => call('invokeBatch', [id, inputsJson]);

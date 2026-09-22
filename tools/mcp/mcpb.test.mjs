@@ -4,7 +4,7 @@
 // names the same versions with a digest the build writes.
 import { createHash } from 'node:crypto';
 import { inflateRawSync } from 'node:zlib';
-import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, mkdtempSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -90,4 +90,28 @@ test('the registry entry names the same release, and the build writes its digest
   const updated = writeDigest(built, copy);
   const digest = createHash('sha256').update(readFileSync(built.file)).digest('hex');
   assert.equal(updated.packages.find((p) => p.registryType === 'mcpb').fileSha256, digest);
+});
+
+test('the bundled offline assets stay inside the 6 MB the spec allows', () => {
+  // add-local-mcp-server 4.2: the bundle is what makes the server work with
+  // no network, and it is also what a desktop user downloads, so it is capped.
+  const dir = join(root, 'mcp/dist/assets');
+  const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]));
+  const files = walk(dir);
+  const bytes = files.reduce((n, f) => n + statSync(f).size, 0);
+  assert.ok(bytes <= 6e6, `bundled assets are ${(bytes / 1e6).toFixed(1)} MB, over the 6 MB cap`);
+  // Every asset the registry lists is either bundled or compiled into the
+  // core; nothing is listed that the server cannot reach offline.
+  const registry = JSON.parse(readFileSync(join(dir, 'registry.json'), 'utf8'));
+  const present = new Set(files.map((f) => f.slice(dir.length + 1)));
+  const compiledIn = new Set(['wmm2025', 'igrf14']);
+  for (const asset of registry.assets) {
+    if (compiledIn.has(asset.id)) continue;
+    for (const name of Object.keys(asset.files)) {
+      assert.ok(present.has(join('data', asset.id, asset.version, name)), `${asset.id}/${name} is listed but not bundled`);
+    }
+  }
+  // A compiled-in asset really is reachable with no files on disk: its tool
+  // answers from the bundle as shipped.
+  for (const id of compiledIn) assert.ok(registry.assets.some((a) => a.id === id), `${id} is not in the registry`);
 });

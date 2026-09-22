@@ -28,7 +28,7 @@
 ## 4. Limits, assets, and security
 
 - [x] 4.1 Implement timeouts, request-size limits, trap survival, and stderr-only logging without argument values; verify the timeout scenario and a trapping fixture
-- [ ] 4.2 Bundle the small offline assets (≤ 6 MB) and implement `--allow-asset-download` with verified, cached tiles; verify the geoid-tile-missing and download-allowed scenarios
+- [ ] 4.2 Bundle the small offline assets (≤ 6 MB) and implement `--allow-asset-download` with verified, cached tiles; verify the geoid-tile-missing and download-allowed scenarios (done: the bundle. The EGM96 geoid grid and the NADCON5 grids ship in `mcp/dist/assets` at 3.7 MB, WMM2025 and IGRF-14 are compiled into the core, and a gate holds the total under the 6 MB cap and fails if the registry lists a file the bundle does not carry. The offline half of the requirement is already proved by the network audit, which runs every tool's worked example inside a sandbox with no network. Pending: `--allow-asset-download` and both scenarios, which need the EGM2008-1 tiles and an asset origin to download them from; the flag is accepted today and does nothing, because nothing is downloadable yet)
 - [x] 4.3 Run the network-sandbox audit (no allowed hosts); verify all offline-capable tools succeed and no connection attempts occur
 
 ## 5. Distribution

@@ -951,6 +951,12 @@
           "tools": [
             "enclosing"
           ]
+        },
+        {
+          "want": "add vertices so a line follows the geodesic on a flat map",
+          "tools": [
+            "densify"
+          ]
         }
       ]
     },

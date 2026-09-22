@@ -2,6 +2,7 @@
 //! (add-navigation-and-geometry, geometry/computational).
 
 pub mod buffer;
+pub mod densify;
 pub mod distance;
 pub mod envelope;
 pub mod overlay;
@@ -448,6 +449,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &distance::TRACKS,
     &simplify::RDP,
     &simplify::VISVALINGAM_WHYATT,
+    &densify::DENSIFY,
 ];
 
 pub static REGISTRY: Registry = Registry {

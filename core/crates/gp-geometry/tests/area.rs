@@ -88,6 +88,7 @@ fn catalog_lint() {
     let external = [
         "survey.cogo.area-by-coordinates",
         "navigation.geodesic.inverse",
+        "navigation.geodesic.waypoints",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &external);
     assert!(errs.is_empty(), "{}", errs.join("\n"));

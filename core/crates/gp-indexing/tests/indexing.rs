@@ -1031,3 +1031,90 @@ fn cross_index_matches_resolutions_to_a_target_size() {
         assert_eq!(e["ok"], false, "{bad}: {e}");
     }
 }
+
+#[test]
+fn an_s2_covering_contains_its_region() {
+    // "Region coverer parameters": at most the cells asked for, all inside the
+    // level range, and together covering the region. The last of those is the
+    // one that matters, so it is checked by sampling the region itself: every
+    // point inside it must fall in one of the covering's cells.
+    use gp_indexing::s2::CellId;
+    let call_cover = |input: &str| call("indexing.s2.covering", input);
+    let holds = |r: &serde_json::Value, lat: f64, lon: f64| {
+        r["result"]["cells"].as_array().unwrap().iter().any(|c| {
+            let level = c["level"].as_u64().unwrap() as u8;
+            let token = c["cell"].as_str().unwrap();
+            CellId::from_lat_lon(lat, lon, level).token() == token
+        })
+    };
+    // A small box, the spec's own parameters.
+    let r = call_cover(
+        r#"{"south":"40.43 deg","north":"40.46 deg","west":"-80.01 deg","east":"-79.96 deg","min_level":10,"max_level":16,"max_cells":8}"#,
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    let cells = r["result"]["cells"].as_array().unwrap();
+    assert!(cells.len() <= 8, "{} cells, budget 8", cells.len());
+    for c in cells {
+        let level = c["level"].as_u64().unwrap();
+        assert!((10..=16).contains(&level), "level {level} outside 10 to 16");
+    }
+    // 400 points across the box, including its edges and corners.
+    let mut missed = 0;
+    for a in 0..20 {
+        for b in 0..20 {
+            let lat = 40.43 + (40.46 - 40.43) * f64::from(a) / 19.0;
+            let lon = -80.01 + (-79.96 + 80.01) * f64::from(b) / 19.0;
+            if !holds(&r, lat, lon) {
+                missed += 1;
+            }
+        }
+    }
+    assert_eq!(
+        missed, 0,
+        "{missed} points in the box are not in the covering"
+    );
+
+    // A circle: points inside it, out to the radius, are covered too.
+    let cap = call_cover(
+        r#"{"lat":40.44,"lon":-79.99,"radius":"5 km","min_level":8,"max_level":14,"max_cells":12}"#,
+    );
+    assert_eq!(cap["ok"], true, "{cap}");
+    let mut missed = 0;
+    for k in 0..72 {
+        let bearing = f64::from(k) * 5.0_f64.to_radians();
+        for frac in [0.0, 0.5, 0.95, 1.0] {
+            // A small offset on a sphere, good enough at 5 km.
+            let d = 5_000.0 * frac / 6_371_008.8;
+            let lat = 40.44 + (d * bearing.cos()).to_degrees();
+            let lon = -79.99 + (d * bearing.sin()).to_degrees() / 40.44_f64.to_radians().cos();
+            if !holds(&cap, lat, lon) {
+                missed += 1;
+            }
+        }
+    }
+    assert_eq!(
+        missed, 0,
+        "{missed} points in the circle are not in the covering"
+    );
+
+    // The whole world is the six faces, and the covering's area is the sphere.
+    let world = call_cover(
+        r#"{"south":"-89 deg","north":"89 deg","west":"-179 deg","east":"179 deg","min_level":0,"max_level":4,"max_cells":6}"#,
+    );
+    assert_eq!(world["result"]["count"], 6.0, "{world}");
+    let area = world["result"]["covered_area"]["value"].as_f64().unwrap();
+    assert!(
+        (area / 510_065_621.0 - 1.0).abs() < 0.01,
+        "the six faces cover {area} km2"
+    );
+
+    // The parameters are checked rather than silently reordered.
+    for bad in [
+        r#"{"south":"1 deg","north":"0 deg","west":"0 deg","east":"1 deg"}"#,
+        r#"{"south":"0 deg","north":"1 deg","west":"0 deg","east":"1 deg","min_level":12,"max_level":8}"#,
+        r#"{"lat":40,"lon":-80}"#,
+    ] {
+        let e = call_cover(bad);
+        assert_eq!(e["ok"], false, "{bad}: {e}");
+    }
+}

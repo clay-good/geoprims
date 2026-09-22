@@ -110,6 +110,10 @@
       "severity": "caution",
       "message": "Magnetic compasses may be unreliable here: the horizontal field is weak."
     },
+    "COVERING_OVER_BUDGET": {
+      "severity": "info",
+      "message": "The covering needs more cells than the budget allows."
+    },
     "CROSSES_ANTIMERIDIAN": {
       "severity": "info",
       "message": "The geometry crosses the antimeridian."

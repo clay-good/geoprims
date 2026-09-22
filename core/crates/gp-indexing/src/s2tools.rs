@@ -10,7 +10,7 @@ use gp_geo::point;
 
 use crate::s2::{self, CellId};
 
-const S2_DOCS: Reference = Reference {
+pub const S2_DOCS: Reference = Reference {
     title: "S2 Geometry",
     issuer: "Google",
     year: 2025,

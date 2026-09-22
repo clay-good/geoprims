@@ -8,6 +8,7 @@ pub mod cross;
 pub mod h3;
 pub mod h3fill;
 pub mod s2;
+pub mod s2cover;
 pub mod s2tools;
 
 use codes::Bounds;
@@ -1352,6 +1353,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &s2tools::POINT_TO_CELL,
     &s2tools::CELL_INFO,
     &s2tools::NEIGHBORS,
+    &s2cover::COVERING,
     &cross::CROSS_INDEX,
 ];
 

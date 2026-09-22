@@ -1127,6 +1127,12 @@
           "tools": [
             "neighbors"
           ]
+        },
+        {
+          "want": "cover a box or a circle with S2 cells",
+          "tools": [
+            "covering"
+          ]
         }
       ]
     },

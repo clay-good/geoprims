@@ -1287,6 +1287,29 @@
         }
       ]
     },
+    "survey.gnss": {
+      "summary": "GNSS field work: precision budgets, OPUS sessions, and antenna heights.",
+      "tasks": [
+        {
+          "want": "estimate RTK or PPK precision from a receiver's spec",
+          "tools": [
+            "rtk-budget"
+          ]
+        },
+        {
+          "want": "plan an OPUS session and name the RINEX file",
+          "tools": [
+            "opus-plan"
+          ]
+        },
+        {
+          "want": "turn a slant antenna height into the vertical to the ARP",
+          "tools": [
+            "antenna-height"
+          ]
+        }
+      ]
+    },
     "survey.land": {
       "summary": "Deeds, legal descriptions, and old units.",
       "tasks": [

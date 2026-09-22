@@ -6,6 +6,7 @@ pub mod borrow;
 pub mod closure;
 pub mod direction;
 pub mod edm;
+pub mod gnss;
 pub mod grade;
 pub mod intersect;
 pub mod land;
@@ -2249,6 +2250,9 @@ fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TOOLS: &[&ToolDef] = &[
     &edm::EDM_CORRECTION,
+    &gnss::RTK_BUDGET,
+    &gnss::OPUS_PLAN,
+    &gnss::ANTENNA_HEIGHT,
     &INVERSE,
     &FORWARD,
     &TRAVERSE,

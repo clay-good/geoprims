@@ -2097,6 +2097,66 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "ngs-rt-guidelines",
+      "name": "User Guidelines for Single Base Real Time GNSS Positioning",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "Version 3.1, April 2014",
+      "currentReleaseDate": "2014-04-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Read on 2026-09-22: page 25 and the localization section.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/PUBS_LIB/UserGuidelinesForSingleBaseRealTimeGNSSPositioningv.3.1APR2014-1.pdf",
+      "matchTerms": [
+        "User Guidelines for Single Base Real Time GNSS Positioning"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "ngs-opus",
+      "name": "OPUS: Online Positioning User Service, About",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "Web page, last modified 2026-09-09",
+      "currentReleaseDate": "2026-09-09",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Data requirements read on 2026-09-22; the page had changed from the spec's OPUS-S and OPUS-RS windows, which the tool follows the page on.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/OPUS/about.jsp",
+      "matchTerms": [
+        "OPUS: Online Positioning User Service"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "ngs-antcal",
+      "name": "GPS Antenna Calibration: antenna reference point and slant heights",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "ANTINFO and antenna calibration pages",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "The page answered on 2026-09-22; antenna radii and ARP offsets come from its ANTINFO records.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/ANTCAL/",
+      "matchTerms": [
+        "GPS Antenna Calibration"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

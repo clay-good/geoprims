@@ -12,6 +12,7 @@
         "aviation.weather.taf-decode",
         "navigation.route.legs",
         "navigation.route.time-speed-distance",
+        "survey.gnss.opus-plan",
         "time.scale.gps-to-utc",
         "time.scale.gps-week",
         "time.scale.julian-date",
@@ -320,6 +321,7 @@
       "relatedTools": [
         "geodesy.spcs.spcs83-forward",
         "geodesy.spcs.spcs83-inverse",
+        "survey.gnss.opus-plan",
         "survey.reduction.combined-factor"
       ]
     },
@@ -1011,6 +1013,7 @@
       "definition": "The standard text format for GNSS receiver observations. Daily files are named by station, day of year, and year, so any processing service can read them.",
       "source": "rinex",
       "relatedTools": [
+        "survey.gnss.opus-plan",
         "time.scale.julian-date"
       ]
     },
@@ -1318,6 +1321,56 @@
       "source": "flir-3x3",
       "relatedTools": [
         "drone.sensors.thermal-footprint"
+      ]
+    },
+    {
+      "id": "rtk",
+      "term": "RTK",
+      "expansion": "real-time kinematic",
+      "definition": "GNSS positioning corrected live from a base station or network, good to about a centimeter plus about a millimeter per kilometer from the base.",
+      "source": "ngs-rt-guidelines",
+      "relatedTools": [
+        "survey.gnss.rtk-budget"
+      ]
+    },
+    {
+      "id": "ppk",
+      "term": "PPK",
+      "expansion": "post-processed kinematic",
+      "definition": "Like RTK, but the corrections are applied after the survey, from logged base and rover data.",
+      "source": "ngs-rt-guidelines",
+      "relatedTools": [
+        "survey.gnss.rtk-budget"
+      ]
+    },
+    {
+      "id": "opus",
+      "term": "OPUS",
+      "expansion": "Online Positioning User Service",
+      "definition": "The free NGS service that computes a precise position from GNSS data you upload, tied to nearby continuously operating reference stations.",
+      "source": "ngs-opus",
+      "relatedTools": [
+        "survey.gnss.opus-plan"
+      ]
+    },
+    {
+      "id": "arp",
+      "term": "ARP",
+      "expansion": "antenna reference point",
+      "definition": "The point on a GNSS antenna, usually the bottom of its mount, that antenna heights and calibrations are measured to.",
+      "source": "ngs-antcal",
+      "relatedTools": [
+        "survey.gnss.antenna-height"
+      ]
+    },
+    {
+      "id": "antinfo",
+      "term": "ANTINFO",
+      "expansion": "antenna information",
+      "definition": "NGS's records of GNSS antenna dimensions, including the radius to the measurement mark and the offset to the ARP.",
+      "source": "ngs-antcal",
+      "relatedTools": [
+        "survey.gnss.antenna-height"
       ]
     }
   ],

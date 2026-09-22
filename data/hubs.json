@@ -1015,6 +1015,12 @@
           "tools": [
             "neighbors"
           ]
+        },
+        {
+          "want": "list the geohashes over a box or polygon",
+          "tools": [
+            "cover"
+          ]
         }
       ]
     },
@@ -1092,6 +1098,13 @@
           "want": "know the ground resolution and scale at a zoom",
           "tools": [
             "ground-resolution"
+          ]
+        },
+        {
+          "want": "find a tile's parent and children, or the tiles over a box",
+          "tools": [
+            "family",
+            "cover"
           ]
         }
       ]

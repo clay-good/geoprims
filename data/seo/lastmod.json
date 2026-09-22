@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "1b78b3a186f459d9",
+    "hash": "a27b0f4c2ac5322f",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -320,15 +320,15 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/": {
-    "hash": "686bd6af006d30d1",
+    "hash": "9d420541b876e72e",
     "lastmod": "2026-09-22"
   },
   "/indexing/geohash/": {
-    "hash": "fa333c0a76cc01fb",
+    "hash": "06396cd16807c564",
     "lastmod": "2026-09-22"
   },
   "/indexing/geohash/decode/": {
-    "hash": "1f50b3dc6c4f3605",
+    "hash": "68759cd9a84d885f",
     "lastmod": "2026-09-22"
   },
   "/indexing/geohash/encode/": {
@@ -408,15 +408,15 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/tile/": {
-    "hash": "3a1993cc68e37c44",
+    "hash": "d3598c2dade38677",
     "lastmod": "2026-09-22"
   },
   "/indexing/tile/bounds/": {
-    "hash": "cb7f5c8ac81d3565",
+    "hash": "3ee082cb391e708e",
     "lastmod": "2026-09-22"
   },
   "/indexing/tile/from-point/": {
-    "hash": "37561f7288bad749",
+    "hash": "6602b95da0365d20",
     "lastmod": "2026-09-22"
   },
   "/indexing/tile/ground-resolution/": {
@@ -464,7 +464,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "a9ef42e5b3f74edb",
+    "hash": "3b08752ed974f2a0",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -532,7 +532,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "1d642d0fa3237a06",
+    "hash": "4903d38ffbdd9fc2",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -616,7 +616,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "06d950eefeeb1bda",
+    "hash": "41064da820f60cfd",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -716,7 +716,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "57a20a18e61cea2b",
+    "hash": "3e3c9ed780452924",
     "lastmod": "2026-09-22"
   }
 }

@@ -3,6 +3,7 @@
 //! follow.
 
 pub mod codes;
+pub mod cover;
 pub mod h3;
 pub mod h3fill;
 
@@ -1306,8 +1307,11 @@ pub static TOOLS: &[&ToolDef] = &[
     &GEOHASH_ENCODE,
     &GEOHASH_DECODE,
     &GEOHASH_NEIGHBORS,
+    &cover::GEOHASH_COVER,
     &TILE_FROM_POINT,
     &TILE_BOUNDS,
+    &cover::TILE_FAMILY,
+    &cover::TILE_COVER,
     &GROUND_RESOLUTION,
     &OLC_ENCODE,
     &OLC_DECODE,

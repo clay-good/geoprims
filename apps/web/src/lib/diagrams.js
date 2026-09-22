@@ -676,6 +676,48 @@ function profileGrades(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Borrow pit: the grid of nodes marked cut or fill, with the balance line through the crossings. */
+function borrowPit(args, result) {
+  const num = (v) => (typeof v === 'number' ? v : Number.parseFloat(String(v ?? '')));
+  const rows = (Array.isArray(args.existing) ? args.existing : []).map((r) =>
+    String(r.elevations ?? '').split(/[,\s]+/).filter(Boolean).map(Number),
+  );
+  const cell = measure(args.cell_size, LENGTH, 'ft');
+  const grade = num(args.finished_grade);
+  // The crossings come back in the result's own unit, the cell in the input's.
+  const crossings = (result.result.balance_points ?? []).map((p) => [measure(`${p.x.value} ${p.x.unit}`, LENGTH, 'ft'), measure(`${p.y.value} ${p.y.unit}`, LENGTH, 'ft')]);
+  if (rows.length < 2 || !cell || !Number.isFinite(grade) || rows.some((r) => r.length !== rows[0].length || r.some((x) => !Number.isFinite(x)))) return null;
+  const [w, h] = [(rows[0].length - 1) * cell, (rows.length - 1) * cell];
+  const k = Math.min(200 / w, 130 / h);
+  const P = ([x, y]) => [60 + x * k, 50 + y * k];
+  // The balance line runs through the crossings; nearest neighbour from the
+  // westmost one chains them into the boundary between cut and fill.
+  const left = [...crossings].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const chain = left.length ? [left.shift()] : [];
+  while (left.length) {
+    const i = left.reduce((best, p, j) => (Math.hypot(p[0] - chain.at(-1)[0], p[1] - chain.at(-1)[1]) < Math.hypot(left[best][0] - chain.at(-1)[0], left[best][1] - chain.at(-1)[1]) ? j : best), 0);
+    chain.push(left.splice(i, 1)[0]);
+  }
+  const body = [
+    ...rows.map((_, i) => line('dg-grid', P([0, i * cell]), P([w, i * cell]))),
+    ...rows[0].map((_, j) => line('dg-grid', P([j * cell, 0]), P([j * cell, h]))),
+    ...chain.slice(1).map((p, i) => line('dg-accent dg-dash', P(chain[i]), P(p))),
+    ...chain.map((p) => dot(...P(p), 'dg-dot-now')),
+    ...rows.flatMap((r, i) =>
+      r.map((e, j) => {
+        const d = e - grade;
+        const [x, y] = P([j * cell, i * cell]);
+        return text('dg-muted-text', x, y - 6, `${d > 0 ? '+' : ''}${d.toFixed(1)}`, 'middle');
+      }),
+    ),
+    text('dg-label', 160, 22, `Cut ${disp(result, 'cut_volume')}, fill ${disp(result, 'fill_volume')}`, 'middle'),
+    text('dg-muted-text', 60, 212, `+ is cut, \u2212 is fill, against ${args.finished_grade ?? 'the finished grade'}`),
+  ].join('');
+  const title = `Borrow pit over ${rows.length} by ${rows[0].length} nodes: cut ${disp(result, 'cut_volume')} against fill ${disp(result, 'fill_volume')}, net ${disp(result, 'net_cubic_yards')}. ` +
+    (chain.length ? `The balance line crosses the grid at ${chain.length} points.` : 'Every node is on one side of the grade, so there is no balance line.');
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -693,6 +735,7 @@ const DIAGRAMS = {
   'aviation.altimetry.true-altitude': altimetry,
   'navigation.vector.operations': vectorSum,
   'survey.earthwork.profile-grades': profileGrades,
+  'survey.earthwork.borrow-pit': borrowPit,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

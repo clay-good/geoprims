@@ -398,3 +398,37 @@ test('the ground profile flags the steep segments and states the exaggeration', 
   const rise = (drawn[0].y1 - drawn[0].y2) / 6;
   assert.ok(Math.abs(rise / run - stated) < 0.1, `states ×${stated}, draws ×${(rise / run).toFixed(1)}`);
 });
+
+test('the borrow pit draws the balance line through every crossing', async () => {
+  // add-survey-suite 3.3 fixture.
+  const args = {
+    cell_size: '25 ft',
+    existing: [{ elevations: '102.0, 101.5, 101.0' }, { elevations: '101.2, 100.6, 100.2' }, { elevations: '100.4, 99.8, 99.2' }],
+    finished_grade: '100 ft',
+  };
+  const r = JSON.parse(await host.invoke('survey.earthwork.borrow-pit', JSON.stringify(args)));
+  const d = diagram('survey.earthwork.borrow-pit', args, r);
+  const marks = circles(d.markup).filter((c) => c.cls === 'dg-dot-now');
+  assert.equal(marks.length, r.result.balance_points.length, 'every crossing is marked');
+  const segs = lines(d.markup).filter((l) => l.cls.includes('dg-dash'));
+  assert.equal(segs.length, marks.length - 1, 'the line joins the crossings');
+  // The line is one chain: each segment starts where the last ended, and its
+  // ends are marked crossings, not points of its own.
+  for (const [i, seg] of segs.entries()) {
+    if (i) assert.ok(Math.hypot(seg.x1 - segs[i - 1].x2, seg.y1 - segs[i - 1].y2) < 0.2, 'the balance line is continuous');
+    for (const [x, y] of [[seg.x1, seg.y1], [seg.x2, seg.y2]]) {
+      assert.ok(marks.some((m) => Math.hypot(m.x - x, m.y - y) < 0.2), 'a segment end is not a crossing');
+    }
+  }
+  // The grid is drawn at the shape of the elevation table, and each node says
+  // how deep the cut or fill is there.
+  const grid = lines(d.markup).filter((l) => l.cls === 'dg-grid');
+  assert.equal(grid.length, 3 + 3, 'a line per row and per column');
+  for (const e of ['+2.0', '+1.5', '+1.0', '+0.4', '-0.2', '-0.8']) assert.ok(d.markup.includes(`>${e}<`), `node ${e} is not labeled`);
+  // Where nothing crosses the grade there is no balance line, and the drawing
+  // says so rather than leaving the reader to notice its absence.
+  const allCut = { cell_size: '10 m', existing: [{ elevations: '5, 6' }, { elevations: '7, 8' }], finished_grade: '0 m' };
+  const none = diagram('survey.earthwork.borrow-pit', allCut, JSON.parse(await host.invoke('survey.earthwork.borrow-pit', JSON.stringify(allCut))));
+  assert.match(none.desc, /no balance line/);
+  assert.equal(lines(none.markup).filter((l) => l.cls.includes('dg-dash')).length, 0);
+});

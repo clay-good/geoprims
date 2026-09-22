@@ -912,6 +912,48 @@ def profile_grades():
     return out
 
 
+def stockpile():
+    """One interior apex over a convex base forces the TIN (a fan), so volume = base area x apex height / 3 exactly."""
+    out = []
+
+    def xyz(pts, u="ft"):
+        return [{"easting": f"{x} {u}", "northing": f"{y} {u}", "elevation": f"{z} {u}"} for x, y, z in pts]
+
+    def area(poly):
+        return abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(poly, poly[1:] + poly[:1]))) / 2
+
+    cases = [([(0, 0, 100), (50, 0, 100), (50, 50, 100), (0, 50, 100)], (25, 25, 110)),
+             ([(0, 0, 100), (50, 0, 100), (50, 50, 100), (0, 50, 100)], (10, 35, 107.5)),
+             ([(0, 0, 20), (60, 0, 20), (30, 40, 20)], (30, 15, 26)),
+             ([(0, 0, 10), (40, 0, 12), (40, 30, 14), (0, 30, 12)], (20, 15, 20))]
+    for i, (base, apex) in enumerate(cases, 1):
+        # The base plane (these bases are planar): z = a + b x + c y, fitted exactly.
+        (x0, y0, z0), (x1, y1, z1), (x2, y2, z2) = base[0], base[1], base[2]
+        det = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0)
+        b = ((z1 - z0) * (y2 - y0) - (z2 - z0) * (y1 - y0)) / det
+        c = ((x1 - x0) * (z2 - z0) - (x2 - x0) * (z1 - z0)) / det
+        a = z0 - b * x0 - c * y0
+        h = apex[2] - (a + b * apex[0] + c * apex[1])
+        A = area([(p[0], p[1]) for p in base])
+        out.append(vec(i, {"base": xyz(base), "surface": xyz([apex])}, {"result.volume.value": A * h / 3, "result.base_area.value": float(A), "result.cubic_yards.value": A * h / 3 / 27}, rel=1e-10))
+    out.append(vec(5, {"base": xyz([(0, 0, 0), (10, 0, 0), (20, 0, 0)]), "surface": xyz([(5, 1, 3)])}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(6, {"base": xyz([(0, 0, 0), (10, 0, 0), (10, 10, 0)]), "surface": xyz([(0, 0, 5)])}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
+def solid_volume():
+    out = []
+    pi = math.pi
+    out.append(vec(1, {"shape": "cone", "radius": "20 ft", "height": "12 ft"}, {"result.volume.value": pi * 400 * 12 / 3, "result.cubic_yards.value": pi * 400 * 12 / 3 / 27}))
+    out.append(vec(2, {"shape": "frustum", "radius": "10 m", "top_radius": "4 m", "height": "6 m"}, {"result.volume.value": pi * 6 * (100 + 40 + 16) / 3}))
+    out.append(vec(3, {"shape": "prism", "base_area": "150 ft2", "height": "40 ft"}, {"result.volume.value": 6000.0}))
+    h = 15 * math.tan(math.radians(34))
+    out.append(vec(4, {"shape": "cone", "radius": "15 ft", "repose_angle": "34 deg", "repose_source": "measured on site"}, {"result.height_used.value": h, "result.volume.value": pi * 225 * h / 3, "result.repose_source": "measured on site"}))
+    out.append(vec(5, {"shape": "cone", "radius": "15 ft", "repose_angle": "34 deg"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/repose_source"}))
+    out.append(vec(6, {"shape": "frustum", "radius": "10 m", "height": "6 m"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -1018,6 +1060,7 @@ def main():
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
         "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(),
         "survey.curves.sight-distance": sight_distance(), "survey.earthwork.profile-grades": profile_grades(),
+        "survey.earthwork.stockpile": stockpile(), "survey.earthwork.solid-volume": solid_volume(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

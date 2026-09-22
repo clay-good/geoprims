@@ -712,3 +712,46 @@ fn level_run_carries_its_arithmetic_check() {
     );
     assert_eq!(r["display"]["misclosure"], "-0.02 ft", "{r}");
 }
+
+#[test]
+fn tin_stockpile_approaches_an_analytic_cone() {
+    // A cone of radius 30 and height 12: a 24-sided base, and about 500
+    // surface shots on rings. The TIN's volume approaches πr²h/3 from below.
+    let (r, h) = (30.0_f64, 12.0_f64);
+    let mut base = Vec::new();
+    for k in 0..24 {
+        let a = k as f64 * std::f64::consts::TAU / 24.0;
+        base.push(format!(
+            r#"{{"easting":{:.6},"northing":{:.6},"elevation":0}}"#,
+            r * a.cos(),
+            r * a.sin()
+        ));
+    }
+    let mut surf = vec![format!(r#"{{"easting":0,"northing":0,"elevation":{h}}}"#)];
+    for ring in 1..=10 {
+        let rr = r * ring as f64 / 11.0;
+        let n = 10 * ring;
+        for k in 0..n {
+            let a = (k as f64 + 0.5 * (ring % 2) as f64) * std::f64::consts::TAU / n as f64;
+            surf.push(format!(
+                r#"{{"easting":{:.6},"northing":{:.6},"elevation":{:.9}}}"#,
+                rr * a.cos(),
+                rr * a.sin(),
+                h * (1.0 - rr / r)
+            ));
+        }
+    }
+    assert!(surf.len() >= 500, "{} shots", surf.len());
+    let input = format!(
+        r#"{{"base":[{}],"surface":[{}]}}"#,
+        base.join(","),
+        surf.join(",")
+    );
+    let res = call("survey.earthwork.stockpile", &input);
+    let v = num(&res, "result.volume.value");
+    // The base polygon inscribes the circle, so compare with the cone on that polygon's area.
+    let poly_area = 0.5 * 24.0 * r * r * (std::f64::consts::TAU / 24.0).sin();
+    let cone = poly_area * h / 3.0;
+    assert!((v - cone).abs() / cone < 0.01, "TIN {v} vs cone {cone}");
+    assert!(num(&res, "result.triangles") > 900.0);
+}

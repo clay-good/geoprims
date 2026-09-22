@@ -16,6 +16,7 @@ pub mod section;
 pub mod sight;
 pub mod spiral;
 pub mod staking;
+pub mod stockpile;
 
 use gp_base::ErrorCode;
 use gp_base::display;
@@ -2261,6 +2262,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &staking::SLOPE_STAKE,
     &section::SECTION_AREA,
     &borrow::BORROW_PIT,
+    &stockpile::STOCKPILE,
+    &stockpile::SOLID,
     &COMBINED_FACTOR,
     &reduction::SLOPE,
     &reduction::CURVATURE,

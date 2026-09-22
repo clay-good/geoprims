@@ -1071,6 +1071,16 @@
       "relatedTools": [
         "survey.curves.spiral"
       ]
+    },
+    {
+      "id": "tin",
+      "term": "TIN",
+      "expansion": "triangulated irregular network",
+      "definition": "A surface built by joining surveyed points into triangles, each flat, so the ground between shots is taken as varying linearly. Volumes and contours are computed from those triangles.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.earthwork.stockpile"
+      ]
     }
   ],
   "notAbbreviations": [

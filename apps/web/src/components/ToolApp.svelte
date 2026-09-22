@@ -159,8 +159,25 @@
           .map(([k, phrase]) => ({ key: k, phrase, mark: STATUS_MARK[phrase.split(' ')[0]] ?? '•', source: statusOf(k) }))
       : [],
   );
+  // A tool that writes a file (a mission export) returns its text, name, and
+  // media type: that is a download, not a fact to read.
+  const fileOut = $derived(
+    result?.ok && typeof result.result?.file === 'string' && typeof result.result?.filename === 'string'
+      ? { name: result.result.filename, type: result.result.media_type ?? 'text/plain', text: result.result.file }
+      : null,
+  );
+  function downloadFile() {
+    const url = URL.createObjectURL(new Blob([fileOut.text], { type: `${fileOut.type};charset=utf-8` }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileOut.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
   const secondary = $derived(
-    result?.ok ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary && !statusOf(k)) : [],
+    result?.ok
+      ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary && !statusOf(k) && !(fileOut && (k === 'file' || k === 'media_type')))
+      : [],
   );
   // A list of rows is part of the answer, not a footnote: a decoder's groups, a
   // forecast's periods, a lookup's matches. The rule lives in lib/rows.js.
@@ -601,6 +618,7 @@
     <p class="sentence">{result.summary}</p>
     {#if inlineDg}<div class="inline-diagram" aria-hidden="true">{@html inlineDg.markup}</div>{/if}
     {#if result.comparison}<p class="comparison">{result.comparison}</p>{/if}
+    {#if fileOut}<div class="actions file-download"><button type="button" onclick={downloadFile}>Download {fileOut.name}</button></div>{/if}
     {#each statuses as st}
       <p class="status"><span class="mark" aria-hidden="true">{st.mark}</span> <strong>{st.phrase}</strong> <span class="against">Against {#if st.source.url}<a href={st.source.url}>{st.source.label}</a>{:else}{st.source.label}{/if}.</span></p>
     {/each}

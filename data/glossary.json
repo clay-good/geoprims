@@ -1087,6 +1087,26 @@
       "relatedTools": [
         "survey.earthwork.stockpile"
       ]
+    },
+    {
+      "id": "kml",
+      "term": "KML",
+      "expansion": "Keyhole Markup Language",
+      "definition": "An XML file format for places, paths, and areas on the Earth, read by Google Earth and most mapping apps. Each height says what it is measured from.",
+      "source": "ogc-kml",
+      "relatedTools": [
+        "drone.mission.export"
+      ]
+    },
+    {
+      "id": "csv",
+      "term": "CSV",
+      "expansion": "comma-separated values",
+      "definition": "A plain-text table with one row per line and the columns separated by commas, which spreadsheets open directly.",
+      "source": "rfc4180",
+      "relatedTools": [
+        "drone.mission.export"
+      ]
     }
   ],
   "notAbbreviations": [

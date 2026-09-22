@@ -291,3 +291,101 @@ fn waypoint_outside_the_fence_is_flagged_with_index_and_distance() {
         .collect();
     assert!(codes.contains(&"WAYPOINT_OUTSIDE_GEOFENCE"));
 }
+
+fn export(format: &str, reference: &str, extra: Value) -> Value {
+    let mut input = json!({
+        "waypoints": [
+            {"lat":40.4406,"lon":-80.002,"height":"80 m","heading":90,"gimbal_pitch":-90,"action":"photo, then \"hover\" <5 s>"},
+            {"lat":40.4406,"lon":-80.0005,"height":"80 m"},
+            {"lat":40.4412,"lon":-80.0005,"height":"95 m","heading":270}
+        ],
+        "height_reference": reference, "format": format, "name": "North & South"
+    });
+    for (k, v) in extra.as_object().unwrap() {
+        input[k] = v.clone();
+    }
+    let r = call("drone.mission.export", &input);
+    assert_eq!(r["ok"], true, "{r}");
+    r
+}
+
+/// Every opened tag closes in order (and the declaration and comment are skipped).
+fn well_formed(xml: &str) -> bool {
+    let mut stack: Vec<&str> = Vec::new();
+    let mut rest = xml;
+    while let Some(i) = rest.find('<') {
+        let j = rest[i..].find('>').map(|j| i + j).unwrap();
+        let tag = &rest[i + 1..j];
+        rest = &rest[j + 1..];
+        if tag.starts_with('?') || tag.starts_with('!') {
+            continue;
+        }
+        if let Some(name) = tag.strip_prefix('/') {
+            if stack.pop() != Some(name) {
+                return false;
+            }
+        } else if !tag.ends_with('/') {
+            stack.push(tag.split_whitespace().next().unwrap());
+        }
+    }
+    stack.is_empty()
+}
+
+#[test]
+fn kml_altitude_mode_follows_the_height_reference() {
+    let agl = export("kml", "agl", json!({}));
+    let file = agl["result"]["file"].as_str().unwrap();
+    assert!(well_formed(file), "{file}");
+    assert_eq!(
+        file.matches("<altitudeMode>relativeToGround</altitudeMode>")
+            .count(),
+        4
+    );
+    assert!(file.contains("<!-- geoprims drone.mission.export"));
+    assert!(file.contains("not for navigation"));
+    assert!(file.contains("North &amp; South"));
+    assert!(file.contains("&quot;hover&quot; &lt;5 s&gt;"));
+    assert!(file.contains("-80.002,40.4406,80 "));
+    // Above takeoff and HAE become absolute, shifted to sea level.
+    let takeoff = export("kml", "takeoff", json!({"takeoff_elevation":"312 m"}));
+    let f = takeoff["result"]["file"].as_str().unwrap();
+    assert!(
+        f.contains("<altitudeMode>absolute</altitudeMode>") && f.contains("-80.0005,40.4412,407"),
+        "{f}"
+    );
+    let hae = export("kml", "hae", json!({"geoid_height":"-33.9 m"}));
+    let f = hae["result"]["file"].as_str().unwrap();
+    assert!(f.contains("-80.002,40.4406,113.9"), "{f}");
+}
+
+#[test]
+fn geojson_and_csv_carry_every_waypoint() {
+    let g = export("geojson", "agl", json!({}));
+    let doc: Value = serde_json::from_str(g["result"]["file"].as_str().unwrap()).unwrap();
+    assert_eq!(doc["type"], "FeatureCollection");
+    assert_eq!(doc["geoprims"]["height_reference"], "AGL");
+    let feats = doc["features"].as_array().unwrap();
+    assert_eq!(feats.len(), 4);
+    assert_eq!(feats[0]["geometry"]["type"], "LineString");
+    // RFC 7946: longitude, latitude, then height.
+    assert_eq!(
+        feats[1]["geometry"]["coordinates"],
+        json!([-80.002, 40.4406, 80])
+    );
+    assert_eq!(feats[1]["properties"]["gimbal_pitch"], -90.0);
+    assert!(feats[2]["properties"].get("heading").is_none());
+    let c = export("csv", "msl", json!({}));
+    let text = c["result"]["file"].as_str().unwrap();
+    let lines: Vec<&str> = text.lines().collect();
+    assert!(lines[0].starts_with("# geoprims drone.mission.export"));
+    assert_eq!(
+        lines[2],
+        "index,lat,lon,height_m,reference,heading_deg,gimbal_pitch_deg,action"
+    );
+    assert_eq!(
+        lines[3],
+        "1,40.4406,-80.002,80,MSL,90,-90,\"photo, then \"\"hover\"\" <5 s>\""
+    );
+    assert_eq!(lines[4], "2,40.4406,-80.0005,80,MSL,,,");
+    assert_eq!(lines.len(), 6);
+}

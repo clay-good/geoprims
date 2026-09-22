@@ -173,7 +173,7 @@
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-09-19",
-      "verificationNote": "Checked at the issuer on 2026-09-19: NGA's publications API serves Bowditch_Vol_1.pdf and Bowditch_Vol_2.pdf, both titled 2024 EDITION, \u00a9 2024 NGA.",
+      "verificationNote": "Checked at the issuer on 2026-09-19: NGA's publications API serves Bowditch_Vol_1.pdf and Bowditch_Vol_2.pdf, both titled 2024 EDITION, © 2024 NGA.",
       "freeAccessUrl": "https://msi.nga.mil/Publications/APN",
       "matchTerms": [
         "American Practical Navigator"
@@ -1375,6 +1375,26 @@
       "editionCheck": true
     },
     {
+      "id": "ogc-kml",
+      "name": "OGC KML 2.3",
+      "issuer": "Open Geospatial Consortium",
+      "currentEdition": "OGC 12-007r2",
+      "currentReleaseDate": "2015-08-04",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Checked at docs.ogc.org on 2026-09-22: OGC 12-007r2, KML version 2.3, dated 2015-08-04; section 9.20 defines altitudeMode, with absolute relative to sea level.",
+      "freeAccessUrl": "https://docs.ogc.org/is/12-007r2/12-007r2.html",
+      "matchTerms": [
+        "OGC KML"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "olc",
       "name": "Open Location Code",
       "issuer": "Google",
@@ -1490,6 +1510,46 @@
       "freeAccessUrl": "https://www.rfc-editor.org/rfc/rfc3339",
       "matchTerms": [
         "RFC 3339"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "rfc4180",
+      "name": "Common Format and MIME Type for CSV Files (RFC 4180)",
+      "issuer": "IETF",
+      "currentEdition": "RFC 4180",
+      "currentReleaseDate": "2005-10-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Checked at rfc-editor.org on 2026-09-22: RFC 4180, Informational, October 2005; updated by RFC 7111 (fragment identifiers only), not obsoleted.",
+      "freeAccessUrl": "https://www.rfc-editor.org/rfc/rfc4180",
+      "matchTerms": [
+        "Comma-Separated Values"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "rfc7946",
+      "name": "The GeoJSON Format (RFC 7946)",
+      "issuer": "IETF",
+      "currentEdition": "RFC 7946",
+      "currentReleaseDate": "2016-08-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Checked at rfc-editor.org on 2026-09-22: RFC 7946, Standards Track, August 2016, not obsoleted.",
+      "freeAccessUrl": "https://www.rfc-editor.org/rfc/rfc7946",
+      "matchTerms": [
+        "The GeoJSON Format"
       ],
       "editionStatus": "current",
       "legalStatus": null,

@@ -2,6 +2,7 @@
 //! vendor-neutral: GSD, altitude for a target GSD, footprint and trigger
 //! timing, motion blur, and the ASPRS Edition 2 accuracy calculator.
 
+pub mod export;
 pub mod facade;
 pub mod geofence;
 pub mod mission;
@@ -1166,6 +1167,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &terrain::TERRAIN_OVERLAP,
     &facade::FACADE,
     &geofence::GEOFENCE,
+    &export::EXPORT,
     &ALTITUDE_FOR_GSD,
     &TRIGGER,
     &MOTION_BLUR,

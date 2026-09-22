@@ -509,6 +509,30 @@ def geofence_vectors():
     return out
 
 
+EXP_SRC = "OGC KML 2.3 section 9.13 altitude modes and RFC 7946, applied by hand (tools/vectors/gen_drone.py)"
+
+
+def export_vectors():
+    wps = [{"lat": 40.4406, "lon": -80.002, "height": "80 m", "heading": 90, "gimbal_pitch": -90, "action": "photo"},
+           {"lat": 40.4406, "lon": -80.0005, "height": "80 m"}, {"lat": 40.4412, "lon": -80.0005, "height": "95 m"}]
+    out = []
+    modes = {"agl": "relativeToGround", "msl": "absolute", "takeoff": "absolute", "hae": "absolute"}
+    labels = {"agl": "AGL", "msl": "MSL", "takeoff": "above takeoff", "hae": "HAE"}
+    for ref in ["agl", "msl", "takeoff", "hae"]:
+        for fmt, ext in [("kml", "kml"), ("geojson", "geojson"), ("csv", "csv")]:
+            inp = {"waypoints": wps, "height_reference": ref, "format": fmt, "name": "North field"}
+            if ref == "takeoff":
+                inp["takeoff_elevation"] = "312 m"
+            if ref == "hae":
+                inp["geoid_height"] = "-33.9 m"
+            mode = modes[ref] if fmt == "kml" else (f"{labels[ref]} in each waypoint's properties" if fmt == "geojson" else f"{labels[ref]} in the reference column")
+            out.append(fvec(len(out) + 1, inp, {"result.altitude_mode": mode, "result.filename": f"north-field.{ext}", "result.waypoint_count": 3}, EXP_SRC, "2026"))
+    # Without the takeoff elevation or the geoid height, KML cannot say where the heights are.
+    for ref, field in [("takeoff", "takeoff_elevation"), ("hae", "geoid_height")]:
+        out.append(fvec(len(out) + 1, {"waypoints": wps, "height_reference": ref}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": f"/{field}"}, SPEC, "2026"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
@@ -523,7 +547,8 @@ def main():
              "drone.photogrammetry.oblique-gsd": oblique_vectors(),
              "drone.photogrammetry.terrain-overlap": terrain_vectors(),
              "drone.mission.facade": facade_vectors(),
-             "drone.mission.geofence": geofence_vectors()}
+             "drone.mission.geofence": geofence_vectors(),
+             "drone.mission.export": export_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

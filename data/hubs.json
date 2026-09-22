@@ -260,6 +260,12 @@
           "tools": [
             "geofence"
           ]
+        },
+        {
+          "want": "save waypoints as KML, GeoJSON, or CSV",
+          "tools": [
+            "export"
+          ]
         }
       ]
     },

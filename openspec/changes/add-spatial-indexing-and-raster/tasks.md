@@ -21,7 +21,7 @@
 
 ## 3. Imagery indices
 
-- [ ] 3.1 Implement the index catalog with citations and separate NDWI tools; verify the NDVI, NDWI, and zero-denominator scenarios
+- [x] 3.1 Implement the index catalog with citations and separate NDWI tools; verify the NDVI, NDWI, and zero-denominator scenarios — ten index tools on surface reflectance (NDVI, both NDWIs as separate tools, MNDWI, NDBI, NBR, EVI, EVI2, SAVI with its L factor, and dNBR with the Key and Benson severity ranges), each citing the paper it comes from, with all nine sources verified at the DOI registry or the issuer and entered in the ledger. A zero denominator is refused with the reason rather than returned as infinity, and a value outside the plausible reflectance range raises SUSPECT_SCALING naming the Sentinel-2 and Landsat scalings rather than guessing at one. 120 golden vectors from the formulas transcribed independently in Python, and the spec scenarios are core testss
 - [ ] 3.2 Implement sensor presets and scaling checks; verify the raw-DN and Sentinel-2 scenarios
 - [ ] 3.3 Implement GeoTIFF/COG decoding and tiled per-pixel processing with no-data; verify the grid-mismatch and georeferencing scenarios
 - [ ] 3.4 Implement the AST-based band-math evaluator with limits; verify the unknown-identifier scenario and fuzz the parser

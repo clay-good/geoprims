@@ -760,17 +760,6 @@
         }
       ]
     },
-    "geodesy.projection": {
-      "summary": "Corrections for lines drawn on a map projection.",
-      "tasks": [
-        {
-          "want": "correct a grid bearing for the curve of the projected line",
-          "tools": [
-            "arc-to-chord"
-          ]
-        }
-      ]
-    },
     "geodesy.magnetic": {
       "summary": "Magnetic declination and true and magnetic bearings.",
       "tasks": [
@@ -819,6 +808,17 @@
           "want": "add or subtract angles in degrees, minutes, and seconds",
           "tools": [
             "angle-arithmetic"
+          ]
+        }
+      ]
+    },
+    "geodesy.projection": {
+      "summary": "Corrections for lines drawn on a map projection.",
+      "tasks": [
+        {
+          "want": "correct a grid bearing for the curve of the projected line",
+          "tools": [
+            "arc-to-chord"
           ]
         }
       ]
@@ -921,23 +921,6 @@
         }
       ]
     },
-    "geometry.simplify": {
-      "summary": "Fewer vertices, with the shape kept.",
-      "tasks": [
-        {
-          "want": "thin out a track or boundary to a distance tolerance",
-          "tools": [
-            "rdp"
-          ]
-        },
-        {
-          "want": "cut a shape down to a set number of vertices",
-          "tools": [
-            "visvalingam"
-          ]
-        }
-      ]
-    },
     "geometry.mesh": {
       "summary": "Triangles and nearest-point regions from scattered points.",
       "tasks": [
@@ -1002,6 +985,23 @@
           "want": "add vertices so a line follows the geodesic on a flat map",
           "tools": [
             "densify"
+          ]
+        }
+      ]
+    },
+    "geometry.simplify": {
+      "summary": "Fewer vertices, with the shape kept.",
+      "tasks": [
+        {
+          "want": "thin out a track or boundary to a distance tolerance",
+          "tools": [
+            "rdp"
+          ]
+        },
+        {
+          "want": "cut a shape down to a set number of vertices",
+          "tools": [
+            "visvalingam"
           ]
         }
       ]
@@ -1226,30 +1226,6 @@
         }
       ]
     },
-    "navigation.vector": {
-      "summary": "Distances and angles between points with heights.",
-      "tasks": [
-        {
-          "want": "measure the straight-line distance to a drone or aircraft",
-          "tools": [
-            "distance-3d"
-          ]
-        },
-        {
-          "want": "point an antenna or camera at a target",
-          "tools": [
-            "look-angles"
-          ]
-        },
-        {
-          "want": "add vectors or turn a direction into components",
-          "tools": [
-            "operations",
-            "polar-cartesian"
-          ]
-        }
-      ]
-    },
     "navigation.route": {
       "summary": "Routes, legs, and the geometry around them.",
       "tasks": [
@@ -1295,6 +1271,60 @@
           "want": "draw range rings around a point",
           "tools": [
             "range-rings"
+          ]
+        }
+      ]
+    },
+    "navigation.vector": {
+      "summary": "Distances and angles between points with heights.",
+      "tasks": [
+        {
+          "want": "measure the straight-line distance to a drone or aircraft",
+          "tools": [
+            "distance-3d"
+          ]
+        },
+        {
+          "want": "point an antenna or camera at a target",
+          "tools": [
+            "look-angles"
+          ]
+        },
+        {
+          "want": "add vectors or turn a direction into components",
+          "tools": [
+            "operations",
+            "polar-cartesian"
+          ]
+        }
+      ]
+    },
+    "raster.index": {
+      "summary": "Spectral indices from surface reflectance: vegetation, water, built-up, and burn severity, each with the paper it comes from.",
+      "tasks": [
+        {
+          "want": "measure vegetation in a pixel",
+          "tools": [
+            "ndvi",
+            "evi",
+            "evi2",
+            "savi"
+          ]
+        },
+        {
+          "want": "find water, or measure water in vegetation",
+          "tools": [
+            "ndwi-mcfeeters",
+            "mndwi",
+            "ndwi-gao"
+          ]
+        },
+        {
+          "want": "map built-up ground or burn severity",
+          "tools": [
+            "ndbi",
+            "nbr",
+            "dnbr"
           ]
         }
       ]

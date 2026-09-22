@@ -144,6 +144,7 @@ name = "gp-raster"
 version = "0.1.0"
 dependencies = [
  "gp-base",
+ "serde_json",
 ]
 
 [[package]]

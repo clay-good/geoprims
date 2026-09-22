@@ -83,6 +83,26 @@
       "editionCheck": true
     },
     {
+      "id": "alduchov-eskridge-1996",
+      "name": "Improved Magnus Form Approximation of Saturation Vapor Pressure",
+      "issuer": "Alduchov and Eskridge, Journal of Applied Meteorology",
+      "currentEdition": "Vol. 35, No. 4 (1996)",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "A journal paper; the coefficients 6.1094 hPa, 17.625, and 243.04 °C are its AERK set.",
+      "freeAccessUrl": "https://doi.org/10.1175/1520-0450(1996)035%3C0601:IMFAOS%3E2.0.CO;2",
+      "matchTerms": [
+        "Improved Magnus Form Approximation"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "alta-nsps",
       "name": "Minimum Standard Detail Requirements for ALTA/NSPS Land Title Surveys",
       "issuer": "ALTA and NSPS",
@@ -101,6 +121,26 @@
       ],
       "editionStatus": "current",
       "legalStatus": "in-force",
+      "editionCheck": true
+    },
+    {
+      "id": "asprs-las-1-4",
+      "name": "LAS Specification 1.4 R15",
+      "issuer": "ASPRS",
+      "currentEdition": "1.4 R15 (2019-07-09)",
+      "currentReleaseDate": "2019-07-09",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Minimum point data record sizes for formats 0 to 10 and the 375-byte header read in R15 on 2026-09-22; ASPRS allows unlimited distribution with attribution, and asprs.org's own copy was not reachable.",
+      "freeAccessUrl": "https://paulbourke.net/dataformats/laz/LAS_1_4_r15.pdf",
+      "matchTerms": [
+        "LAS Specification 1.4"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
       "editionCheck": true
     },
     {
@@ -184,26 +224,6 @@
       "editionCheck": true
     },
     {
-      "id": "alduchov-eskridge-1996",
-      "name": "Improved Magnus Form Approximation of Saturation Vapor Pressure",
-      "issuer": "Alduchov and Eskridge, Journal of Applied Meteorology",
-      "currentEdition": "Vol. 35, No. 4 (1996)",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "A journal paper; the coefficients 6.1094 hPa, 17.625, and 243.04 °C are its AERK set.",
-      "freeAccessUrl": "https://doi.org/10.1175/1520-0450(1996)035%3C0601:IMFAOS%3E2.0.CO;2",
-      "matchTerms": [
-        "Improved Magnus Form Approximation"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": false
-    },
-    {
       "id": "bowditch",
       "name": "The American Practical Navigator (Bowditch), NGA Pub. No. 9",
       "issuer": "National Geospatial-Intelligence Agency",
@@ -285,47 +305,6 @@
       "editionCheck": false
     },
     {
-      "id": "cfr-14-91",
-      "name": "14 CFR Part 91",
-      "issuer": "FAA (eCFR)",
-      "currentEdition": "eCFR",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Sections 91.151 and 91.167 checked at the issuer on 2026-09-22. Values in data/regulations.json.",
-      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91",
-      "matchTerms": [
-        "14 CFR Part 91",
-        "14 CFR 91"
-      ],
-      "editionStatus": "current",
-      "legalStatus": "in-force",
-      "editionCheck": false
-    },
-    {
-      "id": "nws-wxcalc-altimeter",
-      "name": "Altimeter Setting (WxCalc)",
-      "issuer": "National Weather Service, El Paso",
-      "currentEdition": "Web calculator documentation",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Formula read from the NWS PDF on 2026-09-22.",
-      "freeAccessUrl": "https://www.weather.gov/media/epz/wxcalc/altimeterSetting.pdf",
-      "matchTerms": [
-        "Altimeter Setting (WxCalc)"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": false
-    },
-    {
       "id": "cfr-14-61",
       "name": "14 CFR Part 61",
       "issuer": "FAA (eCFR)",
@@ -367,6 +346,48 @@
       "editionCheck": false
     },
     {
+      "id": "cfr-14-91",
+      "name": "14 CFR Part 91",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Sections 91.151 and 91.167 checked at the issuer on 2026-09-22. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91",
+      "matchTerms": [
+        "14 CFR Part 91",
+        "14 CFR 91"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "cfr-47-15",
+      "name": "47 CFR Part 15",
+      "issuer": "FCC (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Section 15.247 read through the eCFR API on 2026-09-22. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15",
+      "matchTerms": [
+        "47 CFR Part 15",
+        "47 CFR 15"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
       "id": "copernicus-dem",
       "name": "Copernicus DEM GLO-30",
       "issuer": "ESA and European Commission",
@@ -381,6 +402,46 @@
       "freeAccessUrl": "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM",
       "matchTerms": [
         "Copernicus DEM"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "de-berg-cg",
+      "name": "de Berg et al. (2008) Computational Geometry: Algorithms and Applications",
+      "issuer": "Springer",
+      "currentEdition": "3rd edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved at Crossref on 2026-09-22 (Springer, 2008, the third edition); newer editions not yet checked at the publisher.",
+      "freeAccessUrl": "https://doi.org/10.1007/978-3-540-77974-2",
+      "matchTerms": [
+        "Computational Geometry: Algorithms and Applications"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "douglas-peucker",
+      "name": "Douglas and Peucker (1973) line reduction",
+      "issuer": "Cartographica",
+      "currentEdition": "Vol. 10, No. 2",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved at doi.org on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.3138/FM57-6770-U75U-7727",
+      "matchTerms": [
+        "Algorithms for the reduction of the number of points required to represent a digitized line or its caricature"
       ],
       "editionStatus": "current",
       "legalStatus": null,
@@ -505,6 +566,26 @@
       ],
       "editionStatus": "current",
       "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "etsi-en-300-328",
+      "name": "ETSI EN 300 328",
+      "issuer": "ETSI",
+      "currentEdition": "V2.2.2 (2019-07)",
+      "currentReleaseDate": "2019-07-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Clauses 4.3.1.2 and 4.3.2.2 read in the V2.2.2 PDF on 2026-09-22. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.etsi.org/deliver/etsi_en/300300_300399/300328/02.02.02_60/en_300328v020202p.pdf",
+      "matchTerms": [
+        "EN 300 328"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
       "editionCheck": true
     },
     {
@@ -668,6 +749,26 @@
       "editionCheck": true
     },
     {
+      "id": "faa-jo-7930-2",
+      "name": "Notices to Air Missions (NOTAM), FAA Order JO 7930.2",
+      "issuer": "FAA",
+      "currentEdition": "JO 7930.2U",
+      "currentReleaseDate": "2025-08-10",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Edition and effective date read at the issuer on 2026-09-22.",
+      "freeAccessUrl": "https://www.faa.gov/air_traffic/publications/atpubs/notam_html/",
+      "matchTerms": [
+        "FAA Order JO 7930.2"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "faa-phak",
       "name": "Pilot's Handbook of Aeronautical Knowledge",
       "issuer": "FAA",
@@ -727,6 +828,46 @@
         "FGDC-STD-011-2001",
         "United States National Grid"
       ]
+    },
+    {
+      "id": "flir-3x3",
+      "name": "How Far Can You Measure with a Thermal Camera?",
+      "issuer": "Teledyne FLIR",
+      "currentEdition": "Web article (2023-09-12)",
+      "currentReleaseDate": "2023-09-12",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Read on 2026-09-22: at least 3 x 3 pixels on a target for an accurate temperature measurement.",
+      "freeAccessUrl": "https://www.flir.com/discover/professional-tools/how-far-can-you-measure-with-a-thermal-camera/",
+      "matchTerms": [
+        "How Far Can You Measure with a Thermal Camera"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "gao-1996",
+      "name": "NDWI - A normalized difference water index for remote sensing of vegetation liquid water from space",
+      "issuer": "Gao, B.-C., Remote Sensing of Environment",
+      "currentEdition": "Volume 58, issue 3, pages 257-266",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1016/S0034-4257(96)00067-3",
+      "matchTerms": [
+        "vegetation liquid water from space"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     },
     {
       "id": "geographiclib",
@@ -907,6 +1048,46 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "huete-1988",
+      "name": "A soil-adjusted vegetation index (SAVI)",
+      "issuer": "Huete, A. R., Remote Sensing of Environment",
+      "currentEdition": "Volume 25, issue 3, pages 295-309",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1016/0034-4257(88)90106-X",
+      "matchTerms": [
+        "soil-adjusted vegetation index"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "huete-2002",
+      "name": "Overview of the radiometric and biophysical performance of the MODIS vegetation indices",
+      "issuer": "Huete, A., Didan, K., Miura, T., Rodriguez, E. P., Gao, X., and Ferreira, L. G., Remote Sensing of Environment",
+      "currentEdition": "Volume 83, issues 1-2, pages 195-213",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1016/S0034-4257(02)00096-2",
+      "matchTerms": [
+        "MODIS vegetation indices"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     },
     {
       "currentReleaseDate": "2026-02",
@@ -1130,6 +1311,26 @@
       ]
     },
     {
+      "id": "itu-r-p525",
+      "name": "Recommendation ITU-R P.525-4: Calculation of free-space attenuation",
+      "issuer": "International Telecommunication Union",
+      "currentEdition": "P.525-4 (08/2019)",
+      "currentReleaseDate": "2019-08-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Edition from the ITU-R recommendation list; not re-checked at the issuer (its site did not answer a scripted request).",
+      "freeAccessUrl": "https://www.itu.int/rec/R-REC-P.525-4-201908-I/en",
+      "matchTerms": [
+        "ITU-R P.525"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "itu-r-p530",
       "name": "ITU-R P.530, terrestrial line-of-sight propagation",
       "issuer": "International Telecommunication Union",
@@ -1150,6 +1351,26 @@
       "editionCheck": true
     },
     {
+      "id": "jiang-2008",
+      "name": "Development of a two-band enhanced vegetation index without a blue band",
+      "issuer": "Jiang, Z., Huete, A. R., Didan, K., and Miura, T., Remote Sensing of Environment",
+      "currentEdition": "Volume 112, issue 10, pages 3833-3845",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1016/j.rse.2008.06.006",
+      "matchTerms": [
+        "two-band enhanced vegetation index"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "karney-geod",
       "name": "Karney (2013) Algorithms for geodesics",
       "issuer": "Journal of Geodesy",
@@ -1164,6 +1385,46 @@
       "freeAccessUrl": "https://doi.org/10.1007/s00190-012-0578-z",
       "matchTerms": [
         "Algorithms for geodesics"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "karney-intersect",
+      "name": "Karney (2024) Geodesic intersections",
+      "issuer": "Journal of Surveying Engineering",
+      "currentEdition": "Vol. 150, No. 3",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved and bibliographic data read from Crossref on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.1061/JSUED2.SUENG-1483",
+      "matchTerms": [
+        "Geodesic intersections"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "karney-rhumb-area",
+      "name": "Karney (2024) The area of rhumb polygons",
+      "issuer": "Studia Geophysica et Geodaetica",
+      "currentEdition": "Vol. 68, No. 3-4",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved and bibliographic data read from Crossref on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.1007/s11200-024-0709-z",
+      "matchTerms": [
+        "The area of rhumb polygons"
       ],
       "editionStatus": "current",
       "legalStatus": null,
@@ -1190,6 +1451,47 @@
       "editionCheck": true
     },
     {
+      "id": "key-benson-2006",
+      "name": "Landscape Assessment (LA): sampling and analysis methods, in FIREMON: Fire Effects Monitoring and Inventory System",
+      "issuer": "Key, C. H., and Benson, N. C., USDA Forest Service, Rocky Mountain Research Station",
+      "currentEdition": "General Technical Report RMRS-GTR-164-CD, pages LA-1 to LA-55",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at USDA Forest Service Treesearch on 2026-09-22: RMRS-GTR-164-CD, 2006. The report is a fixed technical report with no later edition.",
+      "freeAccessUrl": "https://www.fs.usda.gov/research/treesearch/24066",
+      "matchTerms": [
+        "Landscape Assessment",
+        "FIREMON"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "landgate-edmi-manual",
+      "name": "The Survey Instrumentation Calibration Technical User Manual",
+      "issuer": "Landgate (Western Australian Land Information Authority) with ICSM",
+      "currentEdition": "Online edition, updated 24 November 2025",
+      "currentReleaseDate": "2025-11-24",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Section 4.2.3 read at the issuer on 2026-09-22: the IAG 1999 Resolution 3 closed formula (equations 4.6 and 4.7) and the first velocity correction (equation 4.1).",
+      "freeAccessUrl": "https://medjil0.lb.landgate.wa.gov.au/calibrationguide/read_manual/edmi_calibration_manual.html",
+      "matchTerms": [
+        "Survey Instrumentation Calibration Technical User Manual"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "leishman",
       "name": "Principles of Helicopter Aerodynamics",
       "issuer": "Cambridge University Press",
@@ -1208,6 +1510,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "mcfeeters-1996",
+      "name": "The use of the Normalized Difference Water Index (NDWI) in the delineation of open water features",
+      "issuer": "McFeeters, S. K., International Journal of Remote Sensing",
+      "currentEdition": "Volume 17, issue 7, pages 1425-1432",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1080/01431169608948714",
+      "matchTerms": [
+        "delineation of open water features"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     },
     {
       "id": "meeus",
@@ -1334,6 +1656,26 @@
       ]
     },
     {
+      "id": "ngs-antcal",
+      "name": "GPS Antenna Calibration: antenna reference point and slant heights",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "ANTINFO and antenna calibration pages",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "The page answered on 2026-09-22; antenna radii and ARP offsets come from its ANTINFO records.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/ANTCAL/",
+      "matchTerms": [
+        "GPS Antenna Calibration"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "currentReleaseDate": "2025-04-07",
       "cycleMonths": null,
       "nextExpected": null,
@@ -1352,6 +1694,46 @@
       "matchTerms": [
         "Horizontal Time-Dependent Positioning"
       ]
+    },
+    {
+      "id": "ngs-opus",
+      "name": "OPUS: Online Positioning User Service, About",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "Web page, last modified 2026-09-09",
+      "currentReleaseDate": "2026-09-09",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Data requirements read on 2026-09-22; the page had changed from the spec's OPUS-S and OPUS-RS windows, which the tool follows the page on.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/OPUS/about.jsp",
+      "matchTerms": [
+        "OPUS: Online Positioning User Service"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "ngs-rt-guidelines",
+      "name": "User Guidelines for Single Base Real Time GNSS Positioning",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "Version 3.1, April 2014",
+      "currentReleaseDate": "2014-04-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Read on 2026-09-22: page 25 and the localization section.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/PUBS_LIB/UserGuidelinesForSingleBaseRealTimeGNSSPositioningv.3.1APR2014-1.pdf",
+      "matchTerms": [
+        "User Guidelines for Single Base Real Time GNSS Positioning"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     },
     {
       "id": "nist-hb-44",
@@ -1455,6 +1837,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "nws-wxcalc-altimeter",
+      "name": "Altimeter Setting (WxCalc)",
+      "issuer": "National Weather Service, El Paso",
+      "currentEdition": "Web calculator documentation",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Formula read from the NWS PDF on 2026-09-22.",
+      "freeAccessUrl": "https://www.weather.gov/media/epz/wxcalc/altimeterSetting.pdf",
+      "matchTerms": [
+        "Altimeter Setting (WxCalc)"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     },
     {
       "id": "ogc-kml",
@@ -1678,6 +2080,26 @@
       "editionCheck": false
     },
     {
+      "id": "rouse-1974",
+      "name": "Monitoring vegetation systems in the Great Plains with ERTS",
+      "issuer": "Rouse, J. W., Haas, R. H., Schell, J. A., and Deering, D. W., NASA",
+      "currentEdition": "Third ERTS Symposium, NASA SP-351, volume 1, pages 309-317",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at NASA NTRS on 2026-09-22: record 19740022614, 1974, Rouse, Haas, Schell, Deering. A conference paper: it has no later edition.",
+      "freeAccessUrl": "https://ntrs.nasa.gov/citations/19740022614",
+      "matchTerms": [
+        "Monitoring vegetation systems in the Great Plains"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "s2",
       "name": "S2 Geometry",
       "issuer": "Google",
@@ -1779,6 +2201,26 @@
       "editionCheck": true
     },
     {
+      "id": "usgs-lbs",
+      "name": "Lidar Base Specification",
+      "issuer": "U.S. Geological Survey, 3D Elevation Program",
+      "currentEdition": "2025 rev. A (June 2025)",
+      "currentReleaseDate": "2025-06-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Table 1 (aggregate nominal pulse spacing and density by quality level) read at the issuer on 2026-09-22.",
+      "freeAccessUrl": "https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-tables",
+      "matchTerms": [
+        "Lidar Base Specification"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "usno-jd",
       "name": "USNO Julian Date Converter",
       "issuer": "U.S. Naval Observatory",
@@ -1859,6 +2301,26 @@
       "editionCheck": true
     },
     {
+      "id": "visvalingam-whyatt",
+      "name": "Visvalingam and Whyatt (1993) line generalisation",
+      "issuer": "The Cartographic Journal",
+      "currentEdition": "Vol. 30, No. 1",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved at doi.org on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.1179/000870493786962263",
+      "matchTerms": [
+        "Line generalisation by repeated elimination of points"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "wmm",
       "name": "World Magnetic Model",
       "issuer": "NOAA NCEI and BGS",
@@ -1919,325 +2381,44 @@
       "editionCheck": true
     },
     {
-      "id": "landgate-edmi-manual",
-      "name": "The Survey Instrumentation Calibration Technical User Manual",
-      "issuer": "Landgate (Western Australian Land Information Authority) with ICSM",
-      "currentEdition": "Online edition, updated 24 November 2025",
-      "currentReleaseDate": "2025-11-24",
+      "id": "xu-2006",
+      "name": "Modification of normalised difference water index (NDWI) to enhance open water features in remotely sensed imagery",
+      "issuer": "Xu, H., International Journal of Remote Sensing",
+      "currentEdition": "Volume 27, issue 14, pages 3025-3033",
+      "currentReleaseDate": null,
       "cycleMonths": null,
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-09-22",
-      "verificationNote": "Section 4.2.3 read at the issuer on 2026-09-22: the IAG 1999 Resolution 3 closed formula (equations 4.6 and 4.7) and the first velocity correction (equation 4.1).",
-      "freeAccessUrl": "https://medjil0.lb.landgate.wa.gov.au/calibrationguide/read_manual/edmi_calibration_manual.html",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1080/01431160600589179",
       "matchTerms": [
-        "Survey Instrumentation Calibration Technical User Manual"
+        "Modification of normalised difference water index"
       ],
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
     },
     {
-      "id": "faa-jo-7930-2",
-      "name": "Notices to Air Missions (NOTAM), FAA Order JO 7930.2",
-      "issuer": "FAA",
-      "currentEdition": "JO 7930.2U",
-      "currentReleaseDate": "2025-08-10",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Edition and effective date read at the issuer on 2026-09-22.",
-      "freeAccessUrl": "https://www.faa.gov/air_traffic/publications/atpubs/notam_html/",
-      "matchTerms": [
-        "FAA Order JO 7930.2"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "cfr-47-15",
-      "name": "47 CFR Part 15",
-      "issuer": "FCC (eCFR)",
-      "currentEdition": "eCFR",
+      "id": "zha-2003",
+      "name": "Use of normalized difference built-up index in automatically mapping urban areas from TM imagery",
+      "issuer": "Zha, Y., Gao, J., and Ni, S., International Journal of Remote Sensing",
+      "currentEdition": "Volume 24, issue 3, pages 583-594",
       "currentReleaseDate": null,
       "cycleMonths": null,
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-09-22",
-      "verificationNote": "Section 15.247 read through the eCFR API on 2026-09-22. Values in data/regulations.json.",
-      "freeAccessUrl": "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1080/01431160304987",
       "matchTerms": [
-        "47 CFR Part 15",
-        "47 CFR 15"
-      ],
-      "editionStatus": "current",
-      "legalStatus": "in-force",
-      "editionCheck": false
-    },
-    {
-      "id": "etsi-en-300-328",
-      "name": "ETSI EN 300 328",
-      "issuer": "ETSI",
-      "currentEdition": "V2.2.2 (2019-07)",
-      "currentReleaseDate": "2019-07-01",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Clauses 4.3.1.2 and 4.3.2.2 read in the V2.2.2 PDF on 2026-09-22. Values in data/regulations.json.",
-      "freeAccessUrl": "https://www.etsi.org/deliver/etsi_en/300300_300399/300328/02.02.02_60/en_300328v020202p.pdf",
-      "matchTerms": [
-        "EN 300 328"
-      ],
-      "editionStatus": "current",
-      "legalStatus": "in-force",
-      "editionCheck": true
-    },
-    {
-      "id": "asprs-las-1-4",
-      "name": "LAS Specification 1.4 R15",
-      "issuer": "ASPRS",
-      "currentEdition": "1.4 R15 (2019-07-09)",
-      "currentReleaseDate": "2019-07-09",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Minimum point data record sizes for formats 0 to 10 and the 375-byte header read in R15 on 2026-09-22; ASPRS allows unlimited distribution with attribution, and asprs.org's own copy was not reachable.",
-      "freeAccessUrl": "https://paulbourke.net/dataformats/laz/LAS_1_4_r15.pdf",
-      "matchTerms": [
-        "LAS Specification 1.4"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "flir-3x3",
-      "name": "How Far Can You Measure with a Thermal Camera?",
-      "issuer": "Teledyne FLIR",
-      "currentEdition": "Web article (2023-09-12)",
-      "currentReleaseDate": "2023-09-12",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Read on 2026-09-22: at least 3 x 3 pixels on a target for an accurate temperature measurement.",
-      "freeAccessUrl": "https://www.flir.com/discover/professional-tools/how-far-can-you-measure-with-a-thermal-camera/",
-      "matchTerms": [
-        "How Far Can You Measure with a Thermal Camera"
+        "normalized difference built-up index"
       ],
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
-    },
-    {
-      "id": "itu-r-p525",
-      "name": "Recommendation ITU-R P.525-4: Calculation of free-space attenuation",
-      "issuer": "International Telecommunication Union",
-      "currentEdition": "P.525-4 (08/2019)",
-      "currentReleaseDate": "2019-08-01",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Edition from the ITU-R recommendation list; not re-checked at the issuer (its site did not answer a scripted request).",
-      "freeAccessUrl": "https://www.itu.int/rec/R-REC-P.525-4-201908-I/en",
-      "matchTerms": [
-        "ITU-R P.525"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "ngs-rt-guidelines",
-      "name": "User Guidelines for Single Base Real Time GNSS Positioning",
-      "issuer": "NOAA National Geodetic Survey",
-      "currentEdition": "Version 3.1, April 2014",
-      "currentReleaseDate": "2014-04-01",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Read on 2026-09-22: page 25 and the localization section.",
-      "freeAccessUrl": "https://geodesy.noaa.gov/PUBS_LIB/UserGuidelinesForSingleBaseRealTimeGNSSPositioningv.3.1APR2014-1.pdf",
-      "matchTerms": [
-        "User Guidelines for Single Base Real Time GNSS Positioning"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "ngs-opus",
-      "name": "OPUS: Online Positioning User Service, About",
-      "issuer": "NOAA National Geodetic Survey",
-      "currentEdition": "Web page, last modified 2026-09-09",
-      "currentReleaseDate": "2026-09-09",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Data requirements read on 2026-09-22; the page had changed from the spec's OPUS-S and OPUS-RS windows, which the tool follows the page on.",
-      "freeAccessUrl": "https://geodesy.noaa.gov/OPUS/about.jsp",
-      "matchTerms": [
-        "OPUS: Online Positioning User Service"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "ngs-antcal",
-      "name": "GPS Antenna Calibration: antenna reference point and slant heights",
-      "issuer": "NOAA National Geodetic Survey",
-      "currentEdition": "ANTINFO and antenna calibration pages",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "The page answered on 2026-09-22; antenna radii and ARP offsets come from its ANTINFO records.",
-      "freeAccessUrl": "https://geodesy.noaa.gov/ANTCAL/",
-      "matchTerms": [
-        "GPS Antenna Calibration"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": false
-    },
-    {
-      "id": "usgs-lbs",
-      "name": "Lidar Base Specification",
-      "issuer": "U.S. Geological Survey, 3D Elevation Program",
-      "currentEdition": "2025 rev. A (June 2025)",
-      "currentReleaseDate": "2025-06-01",
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Table 1 (aggregate nominal pulse spacing and density by quality level) read at the issuer on 2026-09-22.",
-      "freeAccessUrl": "https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-tables",
-      "matchTerms": [
-        "Lidar Base Specification"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "douglas-peucker",
-      "name": "Douglas and Peucker (1973) line reduction",
-      "issuer": "Cartographica",
-      "currentEdition": "Vol. 10, No. 2",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "DOI resolved at doi.org on 2026-09-22; a journal article, so its edition does not change.",
-      "freeAccessUrl": "https://doi.org/10.3138/FM57-6770-U75U-7727",
-      "matchTerms": [
-        "Algorithms for the reduction of the number of points required to represent a digitized line or its caricature"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "visvalingam-whyatt",
-      "name": "Visvalingam and Whyatt (1993) line generalisation",
-      "issuer": "The Cartographic Journal",
-      "currentEdition": "Vol. 30, No. 1",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "DOI resolved at doi.org on 2026-09-22; a journal article, so its edition does not change.",
-      "freeAccessUrl": "https://doi.org/10.1179/000870493786962263",
-      "matchTerms": [
-        "Line generalisation by repeated elimination of points"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "karney-rhumb-area",
-      "name": "Karney (2024) The area of rhumb polygons",
-      "issuer": "Studia Geophysica et Geodaetica",
-      "currentEdition": "Vol. 68, No. 3-4",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "DOI resolved and bibliographic data read from Crossref on 2026-09-22; a journal article, so its edition does not change.",
-      "freeAccessUrl": "https://doi.org/10.1007/s11200-024-0709-z",
-      "matchTerms": [
-        "The area of rhumb polygons"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "karney-intersect",
-      "name": "Karney (2024) Geodesic intersections",
-      "issuer": "Journal of Surveying Engineering",
-      "currentEdition": "Vol. 150, No. 3",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "DOI resolved and bibliographic data read from Crossref on 2026-09-22; a journal article, so its edition does not change.",
-      "freeAccessUrl": "https://doi.org/10.1061/JSUED2.SUENG-1483",
-      "matchTerms": [
-        "Geodesic intersections"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
-      "id": "de-berg-cg",
-      "name": "de Berg et al. (2008) Computational Geometry: Algorithms and Applications",
-      "issuer": "Springer",
-      "currentEdition": "3rd edition",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "DOI resolved at Crossref on 2026-09-22 (Springer, 2008, the third edition); newer editions not yet checked at the publisher.",
-      "freeAccessUrl": "https://doi.org/10.1007/978-3-540-77974-2",
-      "matchTerms": [
-        "Computational Geometry: Algorithms and Applications"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
     }
   ]
 }

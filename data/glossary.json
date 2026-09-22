@@ -241,6 +241,14 @@
       ]
     },
     {
+      "id": "dnbr",
+      "term": "dNBR",
+      "expansion": "difference in normalized burn ratio",
+      "definition": "The pre-fire NBR minus the post-fire NBR, which is what burn-severity mapping is based on.",
+      "source": "key-benson-2006",
+      "relatedTools": []
+    },
+    {
       "id": "dut1",
       "term": "DUT1",
       "expansion": "UT1 minus UTC",
@@ -356,6 +364,26 @@
       "source": "itrf2020-pmm",
       "relatedTools": [
         "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "evi",
+      "term": "EVI",
+      "expansion": "enhanced vegetation index",
+      "definition": "A vegetation index that uses blue as well as red and near-infrared, staying responsive over dense canopy where NDVI flattens out.",
+      "source": "huete-2002",
+      "relatedTools": [
+        "raster.index.evi"
+      ]
+    },
+    {
+      "id": "evi2",
+      "term": "EVI2",
+      "expansion": "two-band enhanced vegetation index",
+      "definition": "EVI computed without a blue band, fitted to follow EVI on atmospherically corrected imagery.",
+      "source": "jiang-2008",
+      "relatedTools": [
+        "raster.index.evi2"
       ]
     },
     {
@@ -736,6 +764,16 @@
       ]
     },
     {
+      "id": "mndwi",
+      "term": "MNDWI",
+      "expansion": "modified normalized difference water index",
+      "definition": "Water index using green and shortwave-infrared reflectance. It separates water from built-up surfaces better than NDWI does.",
+      "source": "xu-2006",
+      "relatedTools": [
+        "raster.index.mndwi"
+      ]
+    },
+    {
       "id": "msl",
       "term": "MSL",
       "expansion": "mean sea level",
@@ -788,6 +826,48 @@
       ]
     },
     {
+      "id": "nbr",
+      "term": "NBR",
+      "expansion": "normalized burn ratio",
+      "definition": "The difference between near-infrared and the longer shortwave-infrared band over their sum. It falls sharply over recently burned ground.",
+      "source": "key-benson-2006",
+      "relatedTools": [
+        "raster.index.dnbr",
+        "raster.index.nbr"
+      ]
+    },
+    {
+      "id": "ndbi",
+      "term": "NDBI",
+      "expansion": "normalized difference built-up index",
+      "definition": "The difference between shortwave-infrared and near-infrared reflectance over their sum, which highlights roofs, pavement, and bare construction.",
+      "source": "zha-2003",
+      "relatedTools": [
+        "raster.index.ndbi"
+      ]
+    },
+    {
+      "id": "ndvi",
+      "term": "NDVI",
+      "expansion": "normalized difference vegetation index",
+      "definition": "The difference between near-infrared and red reflectance over their sum. Green vegetation reflects near-infrared strongly and absorbs red, so the index rises with leaf cover.",
+      "source": "rouse-1974",
+      "relatedTools": [
+        "raster.index.ndvi"
+      ]
+    },
+    {
+      "id": "ndwi",
+      "term": "NDWI",
+      "expansion": "normalized difference water index",
+      "definition": "Two different indices share this name: McFeeters 1996 uses green and near-infrared to map open water, and Gao 1996 uses near-infrared and shortwave-infrared to measure water inside vegetation.",
+      "source": "mcfeeters-1996",
+      "relatedTools": [
+        "raster.index.ndwi-gao",
+        "raster.index.ndwi-mcfeeters"
+      ]
+    },
+    {
       "id": "ned",
       "term": "NED",
       "expansion": "north, east, down",
@@ -810,6 +890,14 @@
         "survey.gnss.opus-plan",
         "survey.reduction.combined-factor"
       ]
+    },
+    {
+      "id": "nir",
+      "term": "NIR",
+      "expansion": "near-infrared",
+      "definition": "Light just beyond visible red, around 0.7 to 1.3 micrometers. Healthy leaves reflect it strongly, which is what most vegetation indices measure.",
+      "source": "rouse-1974",
+      "relatedTools": []
     },
     {
       "id": "nm",
@@ -1139,6 +1227,16 @@
       ]
     },
     {
+      "id": "savi",
+      "term": "SAVI",
+      "expansion": "soil-adjusted vegetation index",
+      "definition": "NDVI with a soil adjustment factor L, for scenes where bare ground between plants would otherwise dominate the signal.",
+      "source": "huete-1988",
+      "relatedTools": [
+        "raster.index.savi"
+      ]
+    },
+    {
       "id": "sc",
       "term": "SC",
       "expansion": "spiral to curve",
@@ -1179,6 +1277,14 @@
       "relatedTools": [
         "survey.curves.spiral"
       ]
+    },
+    {
+      "id": "swir",
+      "term": "SWIR",
+      "expansion": "shortwave-infrared",
+      "definition": "Light from about 1.4 to 2.5 micrometers. Liquid water absorbs it, so it carries moisture and burn information that visible bands do not.",
+      "source": "gao-1996",
+      "relatedTools": []
     },
     {
       "id": "taf",

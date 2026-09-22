@@ -659,3 +659,29 @@ fn fb_pasted_block_uses_its_header() {
     );
     assert_eq!(r["result"]["winds"][0]["level"]["value"], 24000.0, "{r}");
 }
+
+#[test]
+fn a_table_is_never_extrapolated_and_the_refusal_names_the_axis() {
+    let table = r#"[{"a":0,"b":0,"value":1000},{"a":0,"b":30,"value":1225},{"a":4000,"b":0,"value":1335},{"a":4000,"b":30,"value":1655}]"#;
+    let r = call(
+        "aviation.loading.table-interpolate",
+        &format!(
+            r#"{{"table":{table},"at_a":5000,"at_b":10,"names":"pressure altitude, temperature"}}"#
+        ),
+    );
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+    let msg = r["error"]["message"].as_str().unwrap();
+    assert!(
+        msg.contains("pressure altitude") && msg.contains("0 to 4000"),
+        "{msg}"
+    );
+    // Inside the table, the four cells are listed with weights that sum to 1.
+    let ok = call(
+        "aviation.loading.table-interpolate",
+        &format!(r#"{{"table":{table},"at_a":1000,"at_b":10}}"#),
+    );
+    let cells = ok["result"]["cells"].as_array().unwrap();
+    assert_eq!(cells.len(), 4);
+    let w: f64 = cells.iter().map(|c| c["weight"].as_f64().unwrap()).sum();
+    assert!((w - 1.0).abs() < 1e-12);
+}

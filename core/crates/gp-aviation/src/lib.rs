@@ -10,6 +10,7 @@ pub mod heading;
 pub mod ifr;
 pub mod loading;
 pub mod performance;
+pub mod table;
 pub mod weather;
 pub mod wind;
 
@@ -2175,6 +2176,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &dme::ARC_LEAD,
     &heading::HEADING_CHAIN,
     &heading::CLOUD_BASE,
+    &table::TABLE,
 ];
 
 pub static REGISTRY: Registry = Registry {

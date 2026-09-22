@@ -160,6 +160,12 @@
           "tools": [
             "weight-balance"
           ]
+        },
+        {
+          "want": "read a POH performance table between its values",
+          "tools": [
+            "table-interpolate"
+          ]
         }
       ]
     },

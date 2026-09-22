@@ -46,7 +46,7 @@
 - [ ] 6.1 Implement fuel planning and weights with nominal presets; verify the fuel-weight scenario (built: fuel weight and volume with nominal 100LL and Jet A densities, and the scenario; pending: fuel planning by leg)
 - [ ] 6.2 Implement dated reserve presets from reference data; verify the VFR-night scenario and the citation display
 - [ ] 6.3 Implement weight and balance (CG, % MAC, envelope check, burn path, weight shift, ballast); verify the CG, out-of-envelope, and landing-shift scenarios (built: CG, % MAC, envelope check with the CG shift and weight change to the edge, and the landing state, with all three scenarios; pending: the envelope diagram, weight shift, and ballast)
-- [ ] 6.4 Implement 1D/2D/3D table interpolation with correction steps and no extrapolation; verify the bilinear and extrapolation scenarios
+- [x] 6.4 Implement 1D/2D/3D table interpolation with correction steps and no extrapolation; verify the bilinear and extrapolation scenarios (`aviation.loading.table-interpolate`: a full grid of one, two, or three variables read by linear, bilinear, or trilinear interpolation over the 2, 4, or 8 surrounding cells, listed with their weights; OUT_OF_DOMAIN naming the variable and the table's range, never extrapolating; percent, add, and multiply corrections applied as labeled steps. Both scenarios pass (3,000 ft and 25 °C from the four surrounding cells; 5,000 ft refused on the pressure-altitude axis, 0 to 4000); 11 golden vectors)
 - [ ] 6.5 Implement local aircraft profiles with JSON export/import; verify the export round trip
 
 ## 7. Catalog, docs, and safety

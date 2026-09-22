@@ -7,6 +7,8 @@
 // element is named in the report, because a file a reader brings must not be
 // able to make their browser go and get something else.
 
+import { crsFromName } from './crs.mjs';
+
 /** The declared limits. A larger file is refused before it is parsed. */
 export const MAX_BYTES = 50 * 1024 * 1024;
 export const MAX_VERTICES = 1_000_000;
@@ -100,9 +102,12 @@ export function readGeoJson(text) {
     return fail(`That is not readable JSON: ${e.message}`);
   }
   const out = empty();
-  // A legacy `crs` member that is not WGS 84 changes what the numbers mean.
-  const crs = doc?.crs?.properties?.name;
-  if (crs && !/CRS84|4326/i.test(crs)) return fail(`That file declares ${crs}. Only WGS 84 (CRS84) is read.`);
+  // A legacy `crs` member that is not WGS 84 changes what the numbers mean:
+  // a WGS 84 UTM zone is converted by the core (crs.mjs), anything else refused.
+  const name = doc?.crs?.properties?.name;
+  const crs = name ? crsFromName(name) : null;
+  if (name && !crs) return fail(`That file declares ${name}. geoprims reads WGS 84 and the WGS 84 UTM zones (EPSG 32601 to 32760); convert it to one of those first.`);
+  if (crs?.kind === 'utm') out.crs = crs;
   const features = doc?.type === 'FeatureCollection' ? (doc.features ?? []) : [doc];
   for (const f of features) {
     const before = out.geometries.length;

@@ -6,6 +6,7 @@ import { detectValues } from './detect.js';
 import { prefillActions } from './prefill.js';
 import { readCoordinate } from './coordinate.mjs';
 import { readFile, readFileBytes } from './import.mjs';
+import { projectParsed } from './crs.mjs';
 import { NO_WASM } from './messages.js';
 
 // Data assets come from the same origin, whole files only, checked against the
@@ -80,6 +81,7 @@ const searchWithPrefill = async (request) => {
   if (top) top.open = await prefillActions(top, tools.get(top.id), encode);
   return JSON.stringify(out);
 };
+const batch = async (id, inputsJson) => (await get(moduleFor(id))).invokeBatch(id, inputsJson);
 const run = async (id, input) => JSON.parse(await (await get(moduleFor(id))).invoke(id, JSON.stringify(input)));
 // The coordinate field: any notation the catalog can decode, read by the same
 // core code the palette uses.
@@ -116,8 +118,9 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
     else if (method === 'readCoordinate') out = await readAnyCoordinate(args[0]);
     // A file a reader brought is parsed here, off the page, and nothing it
     // points at is fetched (web/io-formats "Safe parsing").
-    else if (method === 'readFile') out = JSON.stringify(readFile(args[0], args[1]));
-    else if (method === 'readFileBytes') out = JSON.stringify(await readFileBytes(args[0], args[1]));
+    // A file in a WGS 84 UTM zone is converted here, by the core's UTM inverse.
+    else if (method === 'readFile') out = JSON.stringify(await projectParsed(readFile(args[0], args[1]), batch));
+    else if (method === 'readFileBytes') out = JSON.stringify(await projectParsed(await readFileBytes(args[0], args[1]), batch));
     // Batch mode: one chunk of rows through the core's own batch entry point.
     else if (method === 'invokeBatch') out = await (await get(moduleFor(args[0]))).invokeBatch(args[0], args[1]);
     else out = await (await get(args[0])).callString(args[1], args[2]);

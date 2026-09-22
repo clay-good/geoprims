@@ -701,6 +701,8 @@ label.import-button:focus-within { outline: 3px solid color-mix(in srgb, var(--a
 .csv-pick { display: grid; gap: 0.2rem; font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
 .csv-pick select { margin: 0; min-inline-size: 9rem; }
 .csv-map button { margin: 0; }
+.csv-crs { flex-basis: 100%; }
+.csv-pick input { margin: 0; inline-size: 9rem; }
 
 /* Batch mode: a quiet panel under the inputs, opened when wanted. */
 details.batch { margin-block-start: 1rem; padding-block-start: 0.25rem; border-block-start: 1px dashed var(--line); }

@@ -15,7 +15,8 @@
   import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
-  import { csvRows, importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
+  import { csvProjected, csvRows, importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
+  import { CSV_CRS, SPCS_UNITS } from '../lib/crs.mjs';
   import { exportText, fileName, FORMATS as EXPORTS, pointsOf } from '../lib/export.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
@@ -375,7 +376,7 @@
         ...importNote,
         [name]: {
           ok: true,
-          csv: { fileName: file.name, parsed, lat: swapped ? suggested.lon : suggested.lat, lon: swapped ? suggested.lat : suggested.lon, swapped },
+          csv: { fileName: file.name, parsed, lat: swapped ? suggested.lon : suggested.lat, lon: swapped ? suggested.lat : suggested.lon, swapped, crs: 'wgs84', zone: '', hemisphere: 'N', unit: 'legal' },
           text: swapped
             ? `The column named latitude holds values beyond ±90, so the columns look swapped. Check them below.`
             : `Which columns are latitude and longitude?`,
@@ -391,12 +392,34 @@
     }
   }
 
-  /** Fills a list from a CSV once its latitude and longitude columns are chosen. */
-  function useColumns(name) {
+  /** A projected CSV's columns start from headers like "easting" and "northing". */
+  function pickCrs(name, crs) {
+    const c = importNote[name].csv;
+    c.crs = crs;
+    if (crs !== 'wgs84') {
+      const find = (re) => c.parsed.headers.findIndex((h) => re.test(h.trim()));
+      const e = find(/^(e|east|easting|x)$/i);
+      const n = find(/^(n|north|northing|y)$/i);
+      if (e >= 0 && n >= 0) [c.lat, c.lon] = [n, e];
+    }
+    importNote = { ...importNote };
+  }
+
+  /** Fills a list from a CSV once its columns, and the system they are in, are chosen. */
+  async function useColumns(name) {
     const note = importNote[name];
     const schema = tool.inputs.properties[name];
-    const filled = csvRows(schema, note.csv.parsed, Number(note.csv.lat), Number(note.csv.lon));
-    importNote = { ...importNote, [name]: { ...note, ok: filled.ok, text: importReport(note.csv.fileName, note.csv.parsed.format, note.csv.parsed, filled), csv: filled.ok ? null : note.csv } };
+    const c = note.csv;
+    let filled;
+    if (c.crs === 'wgs84') filled = csvRows(schema, c.parsed, Number(c.lat), Number(c.lon));
+    else if (!String(c.zone).trim()) filled = { ok: false, message: c.crs === 'utm' ? 'Enter the UTM zone, 1 to 60.' : 'Enter the State Plane zone, like 3702 or Pennsylvania South.' };
+    else {
+      const crs = c.crs === 'utm' ? { kind: 'utm', zone: Number(c.zone), hemisphere: c.hemisphere } : { kind: 'spcs', zone: String(c.zone).trim(), unit: c.unit };
+      if (crs.kind === 'utm' && !(Number.isInteger(crs.zone) && crs.zone >= 1 && crs.zone <= 60)) filled = { ok: false, message: 'A UTM zone is a whole number from 1 to 60.' };
+      else filled = await csvProjected(schema, c.parsed, Number(c.lon), Number(c.lat), crs, compute.invokeBatch);
+    }
+    const reported = { ...c.parsed, converted: filled.converted, datum: filled.datum };
+    importNote = { ...importNote, [name]: { ...note, ok: filled.ok, text: importReport(c.fileName, c.parsed.format, reported, filled), csv: filled.ok ? null : c } };
     if (filled.ok) {
       values[name] = rowsText(schema, filled.rows);
       edited();
@@ -698,12 +721,32 @@
           {#if importNote[name]}<span class="import-note" class:bad={!importNote[name].ok} role="status">{importNote[name].text}</span>{/if}
           {#if importNote[name]?.csv}
             <span class="csv-map">
-              <label class="csv-pick">Latitude
+              <label class="csv-pick csv-crs">Coordinates are
+                <select value={importNote[name].csv.crs} onchange={(e) => pickCrs(name, e.currentTarget.value)}>
+                  {#each CSV_CRS as c}<option value={c.id}>{c.label}</option>{/each}
+                </select>
+              </label>
+              {#if importNote[name].csv.crs === 'utm'}
+                <label class="csv-pick">Zone
+                  <input type="text" inputmode="numeric" bind:value={importNote[name].csv.zone} placeholder="17" autocomplete="off" />
+                </label>
+                <label class="csv-pick">Hemisphere
+                  <select bind:value={importNote[name].csv.hemisphere}><option value="N">North</option><option value="S">South</option></select>
+                </label>
+              {:else if importNote[name].csv.crs === 'spcs'}
+                <label class="csv-pick">Zone
+                  <input type="text" bind:value={importNote[name].csv.zone} placeholder="3702" autocomplete="off" />
+                </label>
+                <label class="csv-pick">Unit
+                  <select bind:value={importNote[name].csv.unit}>{#each SPCS_UNITS as [id, label]}<option value={id}>{label}</option>{/each}</select>
+                </label>
+              {/if}
+              <label class="csv-pick">{importNote[name].csv.crs === 'wgs84' ? 'Latitude' : 'Northing'}
                 <select bind:value={importNote[name].csv.lat}>
                   {#each importNote[name].csv.parsed.headers as h, i}<option value={i}>{h || `column ${i + 1}`}</option>{/each}
                 </select>
               </label>
-              <label class="csv-pick">Longitude
+              <label class="csv-pick">{importNote[name].csv.crs === 'wgs84' ? 'Longitude' : 'Easting'}
                 <select bind:value={importNote[name].csv.lon}>
                   {#each importNote[name].csv.parsed.headers as h, i}<option value={i}>{h || `column ${i + 1}`}</option>{/each}
                 </select>

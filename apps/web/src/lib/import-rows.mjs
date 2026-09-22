@@ -4,6 +4,8 @@
 // is the one place the two meet, so the order of a pair is decided here and
 // nowhere else.
 
+import { crsLabel, datumNote, toGeographic } from './crs.mjs';
+
 const num = (x) => Number(x.toFixed(9));
 
 /**
@@ -64,6 +66,8 @@ export function importReport(fileName, format, parsed, filled) {
   const parts = [];
   if (filled.ok) parts.push(`Read ${filled.rows.length.toLocaleString('en-US')} ${filled.rows.length === 1 ? 'point' : 'points'} from ${fileName} (${String(format ?? '').toUpperCase()}), using ${filled.used}.`);
   else parts.push(filled.message);
+  if (parsed?.converted) parts.push(`Converted from ${parsed.converted} by the core’s inverse projection.`);
+  if (parsed?.datum) parts.push(parsed.datum);
   if (parsed?.ignored?.length) parts.push(`Ignored, never fetched: ${[...new Set(parsed.ignored)].join(', ')}.`);
   const repairs = (parsed?.repairs ?? []).filter((r) => !(filled.openRings && /ring closed/.test(r)));
   if (repairs.length) parts.push(`Fixed: ${repairs.join('; ')}.`);
@@ -95,4 +99,34 @@ export function csvRows(schema, parsed, latCol, lonCol) {
   const max = schema.maxItems ?? Infinity;
   if (rows.length > max) return { ok: false, message: `That file has ${rows.length.toLocaleString('en-US')} points; this input takes at most ${max.toLocaleString('en-US')}.` };
   return { ok: true, rows, used: `columns “${parsed.headers[latCol]}” and “${parsed.headers[lonCol]}”` };
+}
+
+/**
+ * Rows from a CSV whose two chosen columns are easting and northing in a
+ * projected system (UTM or State Plane). Every row must be a pair of numbers;
+ * the whole file is converted in one core batch, and the converted latitudes
+ * and longitudes then go through the same checks as a CSV of degrees.
+ */
+export async function csvProjected(schema, parsed, eastCol, northCol, crs, invokeBatch) {
+  if (eastCol === northCol || eastCol < 0 || northCol < 0) return { ok: false, message: 'Choose two different columns for easting and northing.' };
+  const pairs = [];
+  for (const [i, r] of (parsed.rows ?? []).entries()) {
+    const x = Number(r[eastCol]);
+    const y = Number(r[northCol]);
+    if (String(r[eastCol] ?? '').trim() === '' || String(r[northCol] ?? '').trim() === '' || !Number.isFinite(x) || !Number.isFinite(y)) {
+      return { ok: false, message: `Line ${i + 2} is not a pair of numbers: ${r[eastCol] ?? ''}, ${r[northCol] ?? ''}.` };
+    }
+    pairs.push([x, y]);
+  }
+  if (!pairs.length) return { ok: false, message: 'That file has no rows under its header.' };
+  const done = await toGeographic(crs, pairs, invokeBatch);
+  if (!done.ok) return { ok: false, message: `Line ${done.index + 2} could not be converted from ${crsLabel(crs)}: ${done.message}` };
+  const n = parsed.headers.length;
+  const withDegrees = {
+    headers: [...parsed.headers, 'latitude', 'longitude'],
+    rows: parsed.rows.map((r, i) => [...parsed.headers.map((_, c) => r[c] ?? ''), done.coords[i][1], done.coords[i][0]]),
+  };
+  const filled = csvRows(schema, withDegrees, n, n + 1);
+  if (!filled.ok) return filled;
+  return { ...filled, used: `columns “${parsed.headers[eastCol]}” and “${parsed.headers[northCol]}”`, converted: crsLabel(crs), datum: datumNote(crs) };
 }

@@ -37,12 +37,14 @@ pub enum Quantity {
     KinematicViscosity,
     Frequency,
     DataRate,
+    /// Fuel flow and other volumes per time.
+    VolumeFlow,
     Slope,
     Dimensionless,
 }
 
 impl Quantity {
-    pub const ALL: [Quantity; 25] = [
+    pub const ALL: [Quantity; 26] = [
         Self::Length,
         Self::Distance,
         Self::Area,
@@ -66,6 +68,7 @@ impl Quantity {
         Self::KinematicViscosity,
         Self::Frequency,
         Self::DataRate,
+        Self::VolumeFlow,
         Self::Slope,
         Self::Dimensionless,
     ];
@@ -96,6 +99,7 @@ impl Quantity {
             Self::KinematicViscosity => "kinematic-viscosity",
             Self::Frequency => "frequency",
             Self::DataRate => "data-rate",
+            Self::VolumeFlow => "volume-flow",
             Self::Slope => "slope",
             Self::Dimensionless => "dimensionless",
         }
@@ -131,6 +135,7 @@ impl Quantity {
             Self::KinematicViscosity => "a kinematic viscosity",
             Self::Frequency => "a frequency",
             Self::DataRate => "a data rate",
+            Self::VolumeFlow => "a volume flow",
             Self::Slope => "a slope",
             Self::Dimensionless => "a plain number",
         }
@@ -618,6 +623,26 @@ pub static UNITS: &[Unit] = &[
         ex(1_000_000_000, 1),
         &["Gbps", "Gb/s"],
     ),
+    // Volume flow (base m³/s): fuel burn in gallons or liters per hour
+    u("m3/s", Q::VolumeFlow, ex(1, 1), &["m³/s"]),
+    u(
+        "L/h",
+        Q::VolumeFlow,
+        ex(1, 3_600_000),
+        &["l/h", "L/hr", "lph", "LPH"],
+    ),
+    u(
+        "galUS/h",
+        Q::VolumeFlow,
+        ex(3_785_411_784, 3_600_000_000_000_000),
+        &["gph", "GPH", "USG/h", "usg/h"],
+    ),
+    u(
+        "galImp/h",
+        Q::VolumeFlow,
+        ex(454_609, 360_000_000_000),
+        &["imp-gal/h"],
+    ),
     // Slope (base rise/run ratio); slope in degrees is nonlinear and lives in the slope tool
     u("ratio", Q::Slope, ex(1, 1), &["rise/run"]),
     u("%", Q::Slope, ex(1, 100), &["percent", "pct"]),
@@ -735,6 +760,8 @@ mod tests {
         assert_eq!(conv(Q::Speed, 1.0, "kt", "m/s"), 1852.0 / 3600.0);
         assert_eq!(conv(Q::Mass, 1.0, "lb", "kg"), 0.45359237);
         assert_eq!(conv(Q::Volume, 1.0, "galUS", "L"), 3.785411784);
+        assert_eq!(conv(Q::VolumeFlow, 10.0, "galUS/h", "L/h"), 37.85411784);
+        assert_eq!(conv(Q::VolumeFlow, 1.0, "galImp/h", "L/h"), 4.54609);
         assert_eq!(conv(Q::Pressure, 1.0, "inHg", "Pa"), 3386.389);
         assert_eq!(conv(Q::Pressure, 1.0, "hPa", "Pa"), 100.0);
         assert_eq!(conv(Q::Pressure, 1.0, "mbar", "Pa"), 100.0);

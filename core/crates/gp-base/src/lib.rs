@@ -12,6 +12,7 @@ pub mod manifest;
 pub mod num;
 pub mod parse;
 pub mod profile;
+pub mod regulation;
 pub mod status;
 pub mod template;
 pub mod tool;

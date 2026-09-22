@@ -36,6 +36,12 @@ const ASSUMED: &[(Quantity, &str, &str, &str)] = &[
         "galUS",
         "gal was read as US gallons, not imperial gallons.",
     ),
+    (
+        Quantity::VolumeFlow,
+        "gal/h",
+        "galUS/h",
+        "gal/h was read as US gallons per hour, not imperial gallons.",
+    ),
 ];
 
 const MIL_VARIANTS: &str =

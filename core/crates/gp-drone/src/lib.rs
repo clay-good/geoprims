@@ -3,6 +3,7 @@
 //! timing, motion blur, and the ASPRS Edition 2 accuracy calculator.
 
 pub mod facade;
+pub mod geofence;
 pub mod mission;
 pub mod oblique;
 pub mod ops;
@@ -1164,6 +1165,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &oblique::OBLIQUE_GSD,
     &terrain::TERRAIN_OVERLAP,
     &facade::FACADE,
+    &geofence::GEOFENCE,
     &ALTITUDE_FOR_GSD,
     &TRIGGER,
     &MOTION_BLUR,

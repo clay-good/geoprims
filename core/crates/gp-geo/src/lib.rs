@@ -1,4 +1,5 @@
 //! Shared geodesy math linked into several domain modules.
+pub mod buffer;
 pub mod dms;
 pub mod ellipsoid;
 pub mod frames;

@@ -456,6 +456,59 @@ def facade_vectors():
     return out
 
 
+GEO_SRC = "Geodesic distance on the equator and a meridian in closed form, and Steiner's formula for the fence area, evaluated in Python (tools/vectors/gen_drone.py)"
+
+
+def geofence_vectors():
+    """A rectangle whose south edge is the equator and west edge the prime meridian:
+    a waypoint x m south of the equator edge or x m west of the meridian edge
+    (at the rectangle's mid-height) is x m from the area, so it is outside a
+    d m fence by exactly x − d."""
+    a, f = 6378137.0, 1 / 298.257223563
+    m0 = a * (1 - f * (2 - f))
+    dlat, dlon = (lambda m: math.degrees(m / m0)), (lambda m: math.degrees(m / a))
+    out = []
+    cases = [(200, 150, 50, 30, [62, 40, 10]), (500, 300, 100, 60, [150, 80, 20, 101]), (100, 100, 25, None, [30, 20]),
+             (1000, 400, 200, 150, [260, 180, 120]), (300, 300, 50, 45, [48, 55])]
+    for w, h, d, warn, south in cases:
+        area = [{"lat": 0, "lon": 0}, {"lat": 0, "lon": dlon(w)}, {"lat": dlat(h), "lon": dlon(w)}, {"lat": dlat(h), "lon": 0}]
+        wps = [{"lat": -dlat(x), "lon": dlon(w / 2)} for x in south] + [{"lat": dlat(h / 2), "lon": -dlon(south[0])}]
+        dists = south + [south[0]]
+        inp = {"area": area, "distance": f"{d} m", "waypoints": wps}
+        if warn:
+            inp["warning_distance"] = f"{warn} m"
+        e = {"result.outside_count": sum(1 for x in dists if x > d),
+             "result.area_enclosed.value": (w * h + 2 * (w + h) * d + math.pi * d * d) / 1e6}
+        flagged = [(i + 1, x) for i, x in enumerate(dists) if x > d or (warn and x > warn)]
+        for k, (idx, x) in enumerate(flagged):
+            e[f"result.flagged.{k}.waypoint"] = idx
+            e[f"result.flagged.{k}.beyond.value"] = float(x - d if x > d else x - warn)
+        if warn:
+            e["result.warning_count"] = sum(1 for x in dists if warn < x <= d)
+        v = fvec(len(out) + 1, inp, e, GEO_SRC, "2026", rel=1e-6)
+        v["tolerance"]["result.area_enclosed.value"] = {"rel": 2e-3, "abs": 0}
+        for k in v["tolerance"]:
+            if k.endswith("beyond.value"):
+                v["tolerance"][k] = {"rel": 0, "abs": 1e-3}
+        v["expect"]["result.max_deviation.value"] = 0.0
+        v["tolerance"]["result.max_deviation.value"] = {"rel": 0, "abs": max(0.001 * d, 0.5)}
+        out.append(v)
+    # A route: a line's fence is a stadium, 2dL + πd², and a point's a circle.
+    L, d = 2000, 100
+    out.append(fvec(len(out) + 1, {"area": [{"lat": 0, "lon": 0}, {"lat": 0, "lon": dlon(L)}], "distance": f"{d} m",
+                                   "waypoints": [{"lat": dlat(130), "lon": dlon(L / 2)}]},
+                    {"result.outside_count": 1, "result.flagged.0.beyond.value": 30.0, "result.area_enclosed.value": (2 * d * L + math.pi * d * d) / 1e6}, GEO_SRC, "2026", rel=2e-3))
+    out[-1]["tolerance"]["result.flagged.0.beyond.value"] = {"rel": 0, "abs": 1e-3}
+    out.append(fvec(len(out) + 1, {"area": [{"lat": 0, "lon": 0}], "distance": "500 m"}, {"result.outside_count": 0, "result.area_enclosed.value": math.pi * 0.25}, GEO_SRC, "2026", rel=1e-3))
+    # The spec scenario: a waypoint 12 m outside is flagged with its index and distance.
+    out.append(fvec(len(out) + 1, {"area": [{"lat": 0, "lon": 0}, {"lat": 0, "lon": dlon(300)}, {"lat": dlat(200), "lon": dlon(300)}, {"lat": dlat(200), "lon": 0}],
+                                   "distance": "50 m", "waypoints": [{"lat": dlat(100), "lon": dlon(150)}, {"lat": -dlat(62), "lon": dlon(150)}]},
+                    {"meta.warnings.1.code": "WAYPOINT_OUTSIDE_GEOFENCE", "result.flagged.0.waypoint": 2, "result.flagged.0.beyond.value": 12.0}, SPEC, "2026"))
+    out[-1]["tolerance"]["result.flagged.0.beyond.value"] = {"rel": 0, "abs": 1e-3}
+    out.append(fvec(len(out) + 1, {"area": [{"lat": 0, "lon": 0}], "distance": "50 m", "warning_distance": "60 m"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
@@ -469,7 +522,8 @@ def main():
              "drone.mission.corridor": corridor_vectors(), "drone.mission.orbit": orbit_vectors(),
              "drone.photogrammetry.oblique-gsd": oblique_vectors(),
              "drone.photogrammetry.terrain-overlap": terrain_vectors(),
-             "drone.mission.facade": facade_vectors()}
+             "drone.mission.facade": facade_vectors(),
+             "drone.mission.geofence": geofence_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

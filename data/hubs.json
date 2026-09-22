@@ -254,6 +254,12 @@
           "tools": [
             "facade"
           ]
+        },
+        {
+          "want": "fence a mission and check its waypoints",
+          "tools": [
+            "geofence"
+          ]
         }
       ]
     },

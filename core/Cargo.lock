@@ -101,7 +101,6 @@ dependencies = [
  "geographiclib-rs",
  "gp-base",
  "gp-geo",
- "libm",
  "serde_json",
 ]
 

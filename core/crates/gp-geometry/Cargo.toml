@@ -16,7 +16,6 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 gp-base.workspace = true
 serde_json.workspace = true
-libm.workspace = true
 gp-geo = { path = "../gp-geo" }
 geographiclib-rs = "0.2.7"
 

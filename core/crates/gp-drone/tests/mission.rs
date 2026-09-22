@@ -246,3 +246,48 @@ fn facade_gsd_uses_the_standoff() {
     let hd = wps[0]["heading"]["value"].as_f64().unwrap();
     assert!(hd.min(360.0 - hd) < 0.01, "{hd}");
 }
+
+#[test]
+fn waypoint_outside_the_fence_is_flagged_with_index_and_distance() {
+    // A survey grid over a field, one waypoint 12 m past a 50 m fence.
+    let field = json!([{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.998},{"lat":40.0015,"lon":-104.998},{"lat":40.0015,"lon":-105.0}]);
+    let grid = call(
+        "drone.mission.survey-grid",
+        &json!({"area": field, "line_spacing":"30 m", "photo_spacing":"20 m"}),
+    );
+    let mut wps: Vec<Value> = grid["result"]["waypoints"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| json!({"lat": w["lat"]["value"], "lon": w["lon"]["value"]}))
+        .collect();
+    assert!(!wps.is_empty(), "{grid}");
+    // 62 m due south of the field's south edge (40.0°), along the meridian.
+    let g = Geodesic::wgs84();
+    let (lat, _, _): (f64, f64, f64) =
+        geographiclib_rs::DirectGeodesic::direct(&g, 40.0, -104.999, 180.0, 62.0);
+    wps.push(json!({"lat": lat, "lon": -104.999}));
+    let n = wps.len();
+    let r = call(
+        "drone.mission.geofence",
+        &json!({"area": field, "distance":"50 m", "waypoints": wps}),
+    );
+    assert_eq!(
+        r["result"]["outside_count"], 1.0,
+        "{}",
+        r["result"]["flagged"]
+    );
+    let f = &r["result"]["flagged"][0];
+    assert_eq!(f["waypoint"].as_f64().unwrap() as usize, n);
+    assert!(
+        (f["beyond"]["value"].as_f64().unwrap() - 12.0).abs() < 0.01,
+        "{f}"
+    );
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"WAYPOINT_OUTSIDE_GEOFENCE"));
+}

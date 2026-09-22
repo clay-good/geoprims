@@ -1138,6 +1138,36 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- mapping window
 
+/// A point of the day's sun path, as the diagram reads it.
+const SUN_PATH_ROW: &[Field] = &[
+    Field::new(
+        "time",
+        "Local time",
+        "Clock time",
+        Kind::Text { max_len: 5 },
+    ),
+    Field::new(
+        "azimuth",
+        "Azimuth",
+        "Clockwise from north",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(2)),
+    Field::new(
+        "elevation",
+        "Elevation",
+        "Above the horizon, negative below",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(2)),
+];
+
 pub static MAPPING_WINDOW: ToolDef = ToolDef {
     id: "time.sun.mapping-window",
     title: "Mapping light window",
@@ -1189,10 +1219,20 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(1))
         .angle_range("[-90,90]"),
+        Field::new(
+            "path",
+            "Sun path",
+            "Where the sun stands through the day, every 20 minutes",
+            Kind::List {
+                items: SUN_PATH_ROW,
+                min: 0,
+                max: 73,
+            },
+        ),
     ],
     errors: &[],
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Times the geometric sun (NREL SPA) crosses the threshold, by bisection between the day's highest and lowest points",
+    model: "Times the geometric sun (NREL SPA) crosses the threshold, by bisection between the day's highest and lowest points; the path is the same sun every 20 minutes of local clock time",
     accuracy: "About 1 minute",
     references: &[NOAA],
     examples: &[Example {
@@ -1290,6 +1330,23 @@ fn run_mapping(ctx: &mut Ctx) -> Result<Json, ToolError> {
         "max_elevation",
         ctx.out("max_elevation", deg(top.elevation + top.refraction)),
     ));
+    // The whole day's sun, every 20 minutes of local clock time, so the
+    // window can be read against the path it sits on.
+    let base = jd(day, -f64::from(off.minutes_at(day * 86_400 + 43_200)));
+    let q = |v: f64| deg(v).to_json();
+    let path: Vec<Json> = (0..73)
+        .map(|k| {
+            let t = base + f64::from(k) * 20.0 / 1440.0;
+            let p = sun::position(lat, lon, t);
+            let m = k * 20;
+            Json::obj([
+                ("time", Json::str(format!("{:02}:{:02}", m / 60, m % 60))),
+                ("azimuth", q(p.azimuth)),
+                ("elevation", q(p.elevation + p.refraction)),
+            ])
+        })
+        .collect();
+    out.push(("path", Json::Arr(path)));
     Ok(Json::obj(out))
 }
 

@@ -537,3 +537,39 @@ test('the holding diagram draws the sector lines where the entry actually change
     near(bearing(arrival).deg, (inbound + 150) % 360, 0.5, 'the arriving aircraft');
   }
 });
+
+test('the sun path plots the day in the sky, with the usable part marked', async () => {
+  // add-practitioner-essentials 2.6 fixture.
+  const args = { lat: 39.7392, lon: -104.9903, date: '2026-06-21', offset: '-06:00', threshold: '30 deg' };
+  const r = JSON.parse(await host.invoke('time.sun.mapping-window', JSON.stringify(args)));
+  const d = diagram('time.sun.mapping-window', args, r);
+  const [cx, cy] = [150, 124];
+  // Read a drawn point back: the rim is the horizon, the center overhead.
+  const sky = Math.max(...[...d.markup.matchAll(/<circle class="dg-grid" cx="150" cy="124" r="([\d.]+)"/g)].map((m) => Number(m[1])));
+  const readBack = (x, y) => {
+    const rr = Math.hypot(x - cx, y - cy);
+    return { az: ((Math.atan2(x - cx, cy - y) * 180) / Math.PI + 360) % 360, el: 90 * (1 - rr / sky) };
+  };
+  const segs = lines(d.markup).filter((l) => l.cls === 'dg-accent' || l.cls === 'dg-muted');
+  const above = r.result.path.filter((p) => p.elevation.value >= 0);
+  assert.equal(segs.length, above.length - 1, 'a segment between each pair of daylight points');
+  // Each drawn point is the sun where the core put it.
+  for (const [i, seg] of segs.entries()) {
+    const got = readBack(seg.x1, seg.y1);
+    assert.ok(Math.abs(((got.az - above[i].azimuth.value + 540) % 360) - 180) < 0.5, `point ${i} azimuth ${got.az} vs ${above[i].azimuth.value}`);
+    assert.ok(Math.abs(got.el - above[i].elevation.value) < 0.5, `point ${i} elevation ${got.el} vs ${above[i].elevation.value}`);
+  }
+  // The marked part is exactly the part above the threshold.
+  for (const [i, seg] of segs.entries()) {
+    const both = Math.min(above[i].elevation.value, above[i + 1].elevation.value) >= 30;
+    assert.equal(seg.cls === 'dg-accent', both, `segment ${i} marked wrongly`);
+  }
+  // The threshold ring is at the threshold, and the day's highest point is
+  // marked with its time, which is the elevation the tool reports.
+  const rings = [...d.markup.matchAll(/<circle class="dg-grid dg-dash" cx="150" cy="124" r="([\d.]+)"/g)].map((m) => Number(m[1]));
+  assert.equal(rings.length, 1);
+  assert.ok(Math.abs(90 * (1 - rings[0] / sky) - 30) < 0.2, 'the threshold ring is not at the threshold');
+  const peak = circles(d.markup).find((c) => c.cls === 'dg-dot-now');
+  assert.ok(Math.abs(readBack(peak.x, peak.y).el - r.result.max_elevation.value) < 0.5, 'the peak is not at the highest sun');
+  assert.match(d.desc, /North is up/);
+});

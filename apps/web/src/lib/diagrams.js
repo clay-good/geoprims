@@ -640,6 +640,42 @@ function vectorSum(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Ground profile: elevation against distance, with the segments over the grade limit called out. */
+function profileGrades(args, result) {
+  const num = (v) => (typeof v === 'number' ? v : Number.parseFloat(String(v ?? '')));
+  const pts = (Array.isArray(args.points) ? args.points : []).map((p) => [num(p.distance), num(p.elevation)]);
+  const segs = result.result.segments ?? [];
+  if (pts.length < 2 || pts.some((p) => !p.every(Number.isFinite)) || segs.length !== pts.length - 1) return null;
+  // Distance and elevation are both lengths, but a profile is read with the
+  // heights exaggerated; the drawing says by how much rather than implying
+  // slopes it does not have.
+  const span = (i, lo, hi) => {
+    const [a, b] = [Math.min(...pts.map((p) => p[i])), Math.max(...pts.map((p) => p[i]))];
+    const pad = (b - a) * 0.08 || 1;
+    return { at: (v) => lo + ((v - a + pad) / (b - a + 2 * pad)) * (hi - lo), per: (hi - lo) / (b - a + 2 * pad) };
+  };
+  const [sx, sy] = [span(0, 45, 300), span(1, 195, 55)];
+  const P = ([x, y]) => [sx.at(x), sy.at(y)];
+  const exaggeration = Math.abs(sy.per / sx.per);
+  const body = [
+    line('dg-grid', [45, 195], [300, 195]),
+    ...segs.map((seg, i) => {
+      const over = seg.over_limit === 'yes';
+      const [a, b] = [P(pts[i]), P(pts[i + 1])];
+      const label = over ? text('dg-label', (a[0] + b[0]) / 2, Math.min(a[1], b[1]) - 8, `${seg.grade}% over limit`, 'middle') : '';
+      return line(over ? 'dg-accent' : 'dg-muted', a, b) + label;
+    }),
+    ...pts.map((p) => dot(...P(p), 'dg-dot')),
+    text('dg-muted-text', 45, 212, `Distance \u2192 · heights \u00d7${exaggeration.toFixed(1)}`),
+    text('dg-muted-text', 12, 26, 'Elevation \u2191'),
+    text('dg-muted-text', 300, 26, `Steepest ${disp(result, 'max_grade')}%`, 'end'),
+  ].join('');
+  const flagged = val(result, 'flagged');
+  const title = `Ground profile over ${pts.length} points: steepest ${disp(result, 'max_grade')}%, average ${disp(result, 'average_grade')}%, ` +
+    `${flagged ? `${flagged} segment${flagged === 1 ? '' : 's'} over the limit` : 'nothing over the limit'}. Heights exaggerated ${exaggeration.toFixed(1)} times.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -656,6 +692,7 @@ const DIAGRAMS = {
   'aviation.loading.weight-balance': cgEnvelope,
   'aviation.altimetry.true-altitude': altimetry,
   'navigation.vector.operations': vectorSum,
+  'survey.earthwork.profile-grades': profileGrades,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

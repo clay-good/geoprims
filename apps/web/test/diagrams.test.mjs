@@ -363,3 +363,38 @@ test('the vector diagram chains the vectors head to tail to the sum', async () =
     if (vectors.some((v) => v.z)) assert.match(d.markup, new RegExp(`, ${vectors[0].z}\\)`));
   }
 });
+
+test('the ground profile flags the steep segments and states the exaggeration', async () => {
+  // add-survey-suite 3.8 fixture.
+  const args = {
+    limit: 8,
+    points: [
+      { distance: '0 ft', elevation: '400 ft' },
+      { distance: '100 ft', elevation: '406 ft' },
+      { distance: '200 ft', elevation: '417 ft' },
+      { distance: '300 ft', elevation: '414 ft' },
+    ],
+  };
+  const r = JSON.parse(await host.invoke('survey.earthwork.profile-grades', JSON.stringify(args)));
+  const d = diagram('survey.earthwork.profile-grades', args, r);
+  const drawn = lines(d.markup).filter((l) => l.cls === 'dg-muted' || l.cls === 'dg-accent');
+  assert.equal(drawn.length, r.result.segments.length, 'one line per segment');
+  // The segment over the limit is the one drawn as such, and it says so in
+  // words with its grade, not by color alone.
+  for (const [i, seg] of r.result.segments.entries()) {
+    assert.equal(drawn[i].cls === 'dg-accent', seg.over_limit === 'yes', `segment ${i}`);
+    if (seg.over_limit === 'yes') assert.match(d.markup, new RegExp(`${seg.grade}% over limit`));
+  }
+  // Distance runs left to right and the segments join end to end.
+  for (let i = 1; i < drawn.length; i += 1) {
+    assert.ok(drawn[i].x1 > drawn[i - 1].x1, 'distance increases across the chart');
+    assert.ok(Math.hypot(drawn[i].x1 - drawn[i - 1].x2, drawn[i].y1 - drawn[i - 1].y2) < 0.2, 'the profile is continuous');
+  }
+  // Rising ground climbs the chart, falling ground drops.
+  for (const [i, seg] of r.result.segments.entries()) assert.equal(drawn[i].y2 < drawn[i].y1, seg.grade > 0, `segment ${i} direction`);
+  // A profile is drawn with its heights stretched, so it says by how much.
+  const stated = Number(/heights ×([\d.]+)/.exec(d.markup)[1]);
+  const run = (drawn[0].x2 - drawn[0].x1) / 100;
+  const rise = (drawn[0].y1 - drawn[0].y2) / 6;
+  assert.ok(Math.abs(rise / run - stated) < 0.1, `states ×${stated}, draws ×${(rise / run).toFixed(1)}`);
+});

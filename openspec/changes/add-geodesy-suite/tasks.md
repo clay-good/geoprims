@@ -4,7 +4,7 @@
 - [ ] 1.2 Implement ambiguity detection with alternatives (order, exponent E, decimal comma, multi-grid strings); verify the ambiguity scenarios (built: order inference, the unlabeled-pair alternative, and decimal commas; pending: exponent-E and multi-grid ambiguity)
 - [x] 1.3 Implement strict component validation; verify the seconds-overflow, contradictory-sign, and negative-zero scenarios
 - [x] 1.4 Implement the formatter with rounding carry and resolution reporting; verify the carry and resolution scenarios
-- [ ] 1.5 Implement angle arithmetic and bearing difference; verify across-north cases and a property test (built: bearing difference across north; pending: DMS add and subtract)
+- [x] 1.5 Implement angle arithmetic and bearing difference; verify across-north cases and a property test (bearing difference across north, and `geodesy.parse.angle-arithmetic`: DMS or decimal angles added and subtracted in seconds of arc, normalized to 0-360° or ±180° if chosen, with carries through minutes and degrees; 8 vectors from exact rational arithmetic)
 
 ## 2. Ellipsoids and frames
 

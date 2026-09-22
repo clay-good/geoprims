@@ -860,6 +860,7 @@
       "definition": "An angle written as whole degrees, minutes (1/60 degree), and seconds (1/3600 degree), like 40°26'46\".",
       "source": "iso6709",
       "relatedTools": [
+        "geodesy.parse.angle-arithmetic",
         "geodesy.parse.coordinates",
         "survey.reduction.slope"
       ]

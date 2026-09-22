@@ -534,6 +534,215 @@ fn run_bearing_difference(ctx: &mut Ctx) -> Result<Json, ToolError> {
     )]))
 }
 
+const TERM: &[Field] = &[
+    Field::new(
+        "angle",
+        "Angle",
+        "DMS or decimal degrees, like 45-30-15 or 45°30'15\"",
+        Kind::Text { max_len: 40 },
+    )
+    .required(),
+    Field::new(
+        "operation",
+        "Operation",
+        "add (default) or subtract",
+        Kind::Choice(&["add", "subtract"]),
+    ),
+];
+
+pub static ANGLE_ARITHMETIC: ToolDef = ToolDef {
+    id: "geodesy.parse.angle-arithmetic",
+    title: "Add and subtract DMS angles",
+    summary: "Adds and subtracts angles in degrees, minutes, and seconds (or decimal degrees), carrying seconds and minutes exactly, with the result normalized to 0-360° or ±180° if you like.",
+    aliases: &[
+        "DMS calculator",
+        "add degrees minutes seconds",
+        "subtract angles",
+        "angle calculator",
+    ],
+    keywords: &[
+        "DMS",
+        "degrees minutes seconds",
+        "angle",
+        "add",
+        "subtract",
+        "sum",
+    ],
+    inputs: &[
+        Field::new(
+            "terms",
+            "Angles",
+            "In order, each added or subtracted, like 45-30-15 then 12-45-50",
+            Kind::List {
+                items: TERM,
+                min: 1,
+                max: 1000,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "normalize",
+            "Normalize",
+            "none (default), 0-360, or plus-minus-180",
+            Kind::Choice(&["none", "0-360", "plus-minus-180"]),
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "dms",
+            "Result",
+            "Degrees, minutes, and seconds to 0.01″",
+            Kind::Text { max_len: 40 },
+        ),
+        Field::new(
+            "degrees",
+            "Result (decimal)",
+            "Decimal degrees",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("unbounded"),
+        Field::new(
+            "seconds",
+            "Result in seconds",
+            "The total in seconds of arc",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "arcsec",
+            },
+        )
+        .precision(Precision::Decimals(4))
+        .angle_range("unbounded"),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Each angle to seconds of arc (3600 × degrees), summed with its sign, then normalized if chosen and written back as D°MM'SS.ss\" with rounding carried into minutes and degrees",
+    accuracy: "Exact to 0.0001″ for sums of up to 1,000 angles",
+    references: &[DMS_REF],
+    examples: &[Example {
+        id: "primary",
+        title: "45°30'15\" + 12°45'50\" − 3°00'05\"",
+        input: r#"{"terms":[{"angle":"45-30-15"},{"angle":"12-45-50"},{"angle":"3-00-05","operation":"subtract"}]}"#,
+        source: "Sexagesimal arithmetic: 55°16'00\"",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.parse.bearing-difference",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "parent",
+        },
+    ],
+    sentence: "The result is {dms}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_angle_arithmetic,
+    ..ToolDef::BLANK
+};
+
+fn run_angle_arithmetic(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let rows = ctx.rows("terms")?;
+    let mut total = 0.0f64;
+    let mut shown = Vec::new();
+    for (i, r) in rows.iter().enumerate() {
+        let text = ctx.row_text("terms", i, r, "angle")?.expect("required");
+        let t = text.trim();
+        let (neg, body) = match t.strip_prefix('-').or_else(|| t.strip_prefix('\u{2212}')) {
+            Some(rest) => (true, rest),
+            None => (false, t),
+        };
+        let v = dms::parse_plain(&body.replace('-', " ")).map_err(|_| {
+            ToolError::invalid(
+                &format!("/terms/{i}/angle"),
+                format!("\"{text}\" is not an angle."),
+            )
+        })?;
+        let v = if neg { -v } else { v };
+        let sub = r.get("operation").and_then(|x| x.as_str()) == Some("subtract");
+        if let Some(op) = r.get("operation").and_then(|x| x.as_str())
+            && op != "add"
+            && op != "subtract"
+        {
+            return Err(ToolError::invalid(
+                &format!("/terms/{i}/operation"),
+                "The operation is add or subtract.",
+            ));
+        }
+        let secs = v * 3600.0;
+        total += if sub { -secs } else { secs };
+        shown.push(format!(
+            "{}{}",
+            if sub {
+                "− "
+            } else if i > 0 {
+                "+ "
+            } else {
+                ""
+            },
+            t
+        ));
+    }
+    let full = 360.0 * 3600.0;
+    let total = match ctx.choice("normalize")?.unwrap_or("none") {
+        "0-360" => total.rem_euclid(full),
+        "plus-minus-180" => {
+            let r = (total + full / 2.0).rem_euclid(full) - full / 2.0;
+            if r == -full / 2.0 { full / 2.0 } else { r }
+        }
+        _ => total,
+    };
+    // Round to 0.0001″ so sums of exact DMS values come out exact.
+    let total = (total * 1e4).round() / 1e4;
+    let degrees = total / 3600.0;
+    let text = dms::format(degrees, Axis::Lon, Style::Dms, 2, false);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        ctx.step(
+            "Sum in seconds of arc",
+            "Σ ± 3600 × angle",
+            shown.join(" "),
+            format!(
+                "{}″",
+                gp_base::display::number(total, Precision::Decimals(4), fmt)
+            ),
+        );
+        ctx.step(
+            "Degrees, minutes, and seconds",
+            "D = ⌊s / 3600⌋, M = ⌊(s mod 3600) / 60⌋, S = s mod 60",
+            format!(
+                "{}″",
+                gp_base::display::number(total, Precision::Decimals(4), fmt)
+            ),
+            text.clone(),
+        );
+    }
+    Ok(Json::obj(vec![
+        ("dms", Json::str(text)),
+        ("degrees", ctx.out("degrees", deg(degrees))),
+        (
+            "seconds",
+            ctx.out(
+                "seconds",
+                Q {
+                    value: total,
+                    unit: unit(QT::Angle, "arcsec"),
+                },
+            ),
+        ),
+    ]))
+}
+
 // ---------------------------------------------------------------- UTM / UPS
 
 const E: [Field; 3] = ellipsoid::FIELDS;
@@ -1463,6 +1672,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &PARSE,
     &FORMAT,
     &BEARING_DIFFERENCE,
+    &ANGLE_ARITHMETIC,
     &UTM_FORWARD,
     &UTM_INVERSE,
     &UTM_ZONE,

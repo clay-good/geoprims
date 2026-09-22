@@ -803,6 +803,12 @@
           "tools": [
             "bearing-difference"
           ]
+        },
+        {
+          "want": "add or subtract angles in degrees, minutes, and seconds",
+          "tools": [
+            "angle-arithmetic"
+          ]
         }
       ]
     },

@@ -1029,3 +1029,21 @@ fn time_speed_distance_invariants() {
     );
     assert_eq!(late["result"]["eta"], "03:30 (next day)");
 }
+
+#[test]
+fn a_utc_offset_with_a_stray_unicode_mark_is_refused_not_a_crash() {
+    // U+202E (right-to-left override) shares its first byte with U+2212 (minus);
+    // the offset parser once sliced it mid-character and trapped (found by the fuzzer).
+    for off in ["\u{202e}1", "\u{202e}0600", "−06:00x", "+0é"] {
+        let input = serde_json::json!({"distance":"250 NM","speed":"125 kt","departure":"14:30","utc_offset":off});
+        let r = call("navigation.route.time-speed-distance", &input.to_string());
+        assert_eq!(r["error"]["code"], "INVALID_INPUT", "{off}: {r}");
+    }
+    // The Unicode minus sign still reads as a negative offset (the field's
+    // 6-character limit counts bytes, so the short form).
+    let r = call(
+        "navigation.route.time-speed-distance",
+        r#"{"distance":"250 NM","speed":"125 kt","departure":"14:30","utc_offset":"−6"}"#,
+    );
+    assert_eq!(r["result"]["eta_utc"], "22:30Z", "{r}");
+}

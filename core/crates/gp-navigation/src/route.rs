@@ -706,16 +706,17 @@ fn parse_offset(s: &str) -> Option<i64> {
     if s.eq_ignore_ascii_case("z") || s == "0" {
         return Some(0);
     }
-    let sign = match s.as_bytes().first()? {
-        b'+' => 1,
-        b'-' | 0xE2 => -1, // also the Unicode minus (U+2212, starts with 0xE2)
+    let mut chars = s.chars();
+    let sign = match chars.next()? {
+        '+' => 1,
+        '-' | '\u{2212}' => -1, // also the Unicode minus sign
         _ => return None,
     };
-    let body: String = s
-        .trim_start_matches(['+', '-', '\u{2212}'])
-        .chars()
-        .filter(|c| *c != ':')
-        .collect();
+    let body: String = chars.filter(|c| *c != ':').collect();
+    // Digits only, so the slices below fall on character boundaries.
+    if !body.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
     let (h, m) = match body.len() {
         1 | 2 => (body.parse::<i64>().ok()?, 0),
         4 => (

@@ -8,6 +8,7 @@ pub mod rhumb;
 pub mod rings;
 pub mod route;
 pub mod sphere;
+pub mod vector;
 pub mod vincenty;
 pub mod waypoints;
 
@@ -978,6 +979,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &sphere::SPHERICAL_INVERSE,
     &sphere::SPHERICAL_DIRECT,
     &sphere::INTERMEDIATE,
+    &vector::DISTANCE_3D,
+    &vector::LOOK_ANGLES,
 ];
 
 pub static REGISTRY: Registry = Registry {

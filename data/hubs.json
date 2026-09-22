@@ -1137,6 +1137,23 @@
         }
       ]
     },
+    "navigation.vector": {
+      "summary": "Distances and angles between points with heights.",
+      "tasks": [
+        {
+          "want": "measure the straight-line distance to a drone or aircraft",
+          "tools": [
+            "distance-3d"
+          ]
+        },
+        {
+          "want": "point an antenna or camera at a target",
+          "tools": [
+            "look-angles"
+          ]
+        }
+      ]
+    },
     "navigation.route": {
       "summary": "Routes, legs, and the geometry around them.",
       "tasks": [

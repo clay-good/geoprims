@@ -24,7 +24,7 @@
 
 - [x] 3.1 Implement horizon models, mutual visibility, hidden height, dip, and geographic range; verify the 100 m, hidden-height, and dip scenarios (navigation.los.horizon, .visibility, .dip with geometric, optical, and radio models and the rules of thumb with their errors; every result carries TERRAIN_NOT_CONSIDERED; 22 vectors each)
 - [x] 3.2 Implement Fresnel zone and Earth-bulge clearance; verify the 5.8 GHz scenario against the textbook formula (navigation.los.fresnel: first Fresnel radius, 60% clearance, and Earth bulge at any point, K = 4/3 by default; cites ITU-R P.530-19, verified at the issuer)
-- [ ] 3.3 Implement 3D distance with height-reference reconciliation and look angles; verify the drone and below-horizon scenarios
+- [x] 3.3 Implement 3D distance with height-reference reconciliation and look angles; verify the drone and below-horizon scenarios (`navigation.vector.distance-3d`: straight-line distance through ECEF with the ground distance, elevation angle, and the flat-Earth figures beside them; sea-level heights become ellipsoidal through EGM96, and mixed references without a geoid are refused. `navigation.vector.look-angles`: azimuth, elevation, and range with optional refraction and `BELOW_HORIZON`. The drone scenario gives 2,003.694 m and 3.4245°; 13 vectors agree with GeographicLib CartConvert, GeodSolve, and GeoidEval to 1e-6 m)
 - [ ] 3.4 Implement vector algebra with convention selection and 3D CPA; verify the navigational-convention and vertical-separation scenarios
 - [ ] 3.5 Implement vector-diagram rendering (head-to-tail, rotatable ENU); verify the visual fixture
 

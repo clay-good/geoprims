@@ -59,12 +59,19 @@ fn catalog_lint() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let errs = manifest::lint(TOOLS, &taxonomy, &[]);
+    // Related tools that live in other crates.
+    let known = ["geodesy.height.convert", "geodesy.frame.to-local"];
+    let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));
 }
 
 #[test]
 fn examples_and_vectors() {
+    // The host supplies data assets; the test plays the host.
+    gp_base::assets::put(
+        "egm96-15@2009-08-29/egm96-15.pgm",
+        include_bytes!("../../../../assets/data/egm96-15/2009-08-29/egm96-15.pgm"),
+    );
     let mut failures = Vec::new();
     for t in TOOLS {
         for ex in t.examples {

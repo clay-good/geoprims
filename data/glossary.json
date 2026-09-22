@@ -261,7 +261,9 @@
       "definition": "The scientific union that adopted GRS 80 and the mean Earth radius R1.",
       "source": "grs80",
       "relatedTools": [
-        "navigation.geodesic.haversine"
+        "navigation.geodesic.haversine",
+        "navigation.geodesic.spherical-direct",
+        "navigation.geodesic.spherical-inverse"
       ]
     },
     {
@@ -1192,6 +1194,19 @@
       "source": "aim",
       "relatedTools": [
         "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "r1",
+      "term": "R1",
+      "expansion": "IUGG mean Earth radius",
+      "definition": "The radius of a sphere the size of the Earth on average, (2a + b) ÷ 3 = 6,371,008.771 m for WGS 84. Spherical formulas use it when they treat the Earth as a ball.",
+      "source": "grs80",
+      "relatedTools": [
+        "geodesy.ellipsoid.parameters",
+        "navigation.geodesic.haversine",
+        "navigation.geodesic.spherical-direct",
+        "navigation.geodesic.spherical-inverse"
       ]
     }
   ],

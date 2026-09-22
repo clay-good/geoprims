@@ -20,6 +20,8 @@ KT = 1852 / 3600
 
 
 def run(cmd, line):
+    # Fixed-point only: GeographicLib reads the "e" of 2.5e-15 as a hemisphere letter.
+    line = " ".join(f"{float(x):.15f}" for x in line.split())
     return [float(x) for x in subprocess.run(cmd, input=line + "\n", capture_output=True, text=True, check=True).stdout.split()]
 
 

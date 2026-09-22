@@ -7,6 +7,7 @@ pub mod los;
 pub mod rhumb;
 pub mod rings;
 pub mod route;
+pub mod sphere;
 pub mod vincenty;
 pub mod waypoints;
 
@@ -974,6 +975,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &los::FRESNEL,
     &intersect::COURSE_INTERSECTION,
     &intersect::INTERCEPT,
+    &sphere::SPHERICAL_INVERSE,
+    &sphere::SPHERICAL_DIRECT,
+    &sphere::INTERMEDIATE,
 ];
 
 pub static REGISTRY: Registry = Registry {

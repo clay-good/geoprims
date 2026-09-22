@@ -974,6 +974,14 @@
       "summary": "Shortest paths on the ellipsoid.",
       "tasks": [
         {
+          "want": "work on a sphere: great-circle course, destination, or a point part way",
+          "tools": [
+            "spherical-inverse",
+            "spherical-direct",
+            "intermediate-point"
+          ]
+        },
+        {
           "want": "find the distance and courses between two points",
           "tools": [
             "inverse",

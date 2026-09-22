@@ -17,7 +17,7 @@ Adds the `survey` domain: about 57 operations and 57 tool ids (inventory in `des
 
 - **COGO and traverse:** inverse and forward (bearing/azimuth and distance), quadrant bearing parsing, traverse closure (angular and linear misclosure, precision ratio), compass (Bowditch), transit, and Crandall adjustments, a small least-squares adjustment (experimental), area by coordinates, intersections (bearing-bearing, bearing-distance, distance-distance), three-point resection, and offsets.
 - **Instrument reductions:** slope to horizontal and vertical from zenith or vertical angle, HI/HR elevation, curvature and refraction, EDM atmospheric (ppm) correction, sea-level/elevation factor, grid-ground combined factor, trigonometric leveling, differential level-loop closure and adjustment, stadia, and total-station offset shots.
-- **Earthwork and grade:** average end area, prismoidal, borrow-pit (grid) volumes, cut/fill from cross sections, shrink/swell, grade in %/ratio/degrees, slope staking (catch points), angle of repose reference, stockpile volumes, and profile slope analysis.
+- **Earthwork and grade:** average end area, prismoidal, borrow-pit (grid) volumes, cut/fill from cross sections, shrink/swell, grade in %/ratio/degrees, slope staking (catch points), stockpile volumes, and profile slope analysis.
 - **Alignment curves:** horizontal circular curves (all elements, arc and chord definitions of the degree of curve, stationing, deflection-angle layout), spiral curves, and parabolic vertical curves (high/low point, station elevations, K values).
 
 ## Capabilities

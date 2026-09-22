@@ -53,7 +53,7 @@
 
 ## 7. Cuts and catalog
 
-- [ ] 7.1 Remove `koch-estimate` and `angle-of-repose-reference` from inventories and specs; verify the catalog no longer lists them
-- [ ] 7.2 Convert the sight-distance design K to a cited input; verify per `trust/citations`
+- [x] 7.1 Remove `koch-estimate` and `angle-of-repose-reference` from inventories and specs; verify the catalog no longer lists them (neither was ever built; the survey proposal's scope no longer lists the angle-of-repose reference, the solids tool takes an angle of repose only as the user's own input with its source, and `tools/trust/removed-tools.test.mjs` fails if either id, or a generic takeoff estimate, appears in the catalog)
+- [x] 7.2 Convert the sight-distance design K to a cited input; verify per `trust/citations` (`survey.curves.sight-distance` reproduces no design table: a design K is the user's input and is refused without its source, which the result echoes; golden vectors cover both, the refusal added 2026-09-22)
 - [ ] 7.3 Add the terrain-following acknowledgment and margin to drone mission export; verify that export is blocked without acknowledgment
 - [ ] 7.4 Register all new operations with practitioner aliases (zulu, metar decoder, night currency, hold entry, deed plotter, township range section); verify alias fixtures and catalog counts

@@ -875,6 +875,9 @@ def sight_distance():
     out.append(vec(5, {"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "3.5 ft", "object_height": "2.0 ft", "design_k": 44,
                        "design_k_source": "A design manual's crest K table"}, {"result.design_length.value": 220.0, "result.design_source": "A design manual's crest K table"}))
     out.append(vec(6, {"curve": "crest", "sight_distance": "400 ft", "grade_change": 5}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/eye_height"}))
+    # A design K is only taken with the source it came from (trust/citations).
+    out.append(vec(7, {"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "3.5 ft", "object_height": "2.0 ft", "design_k": 44},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/design_k_source"}))
     return out
 
 

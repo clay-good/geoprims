@@ -6,6 +6,7 @@
   import { buildLayers, extent } from '../lib/map/layers.js';
   import { decode, frame, inverse } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
+  import { attributionLines, caption, layersGeoJson, loadRegistry, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
 
   let { tool, args, result, compute } = $props();
 
@@ -160,6 +161,18 @@
     e.preventDefault();
   }
 
+  // Export (web/map-canvas, "Export"): the view as drawn, with the caption and
+  // every attribution it owes in a footer strip, or its layers as GeoJSON.
+  async function exportPng() {
+    paint();
+    const lines = attributionLines(result, await loadRegistry());
+    saveBlob(await pngWithFooter(canvas, caption(tool, result), lines), `${tool.id}.png`);
+  }
+  function exportGeoJson() {
+    const text = `${JSON.stringify(layersGeoJson(layers, tool), null, 2)}\n`;
+    saveBlob(new Blob([text], { type: 'application/geo+json' }), `${tool.id}.geojson`);
+  }
+
   // Detail beyond Natural Earth 1:110m: say the base map is generalized.
   const generalized = $derived(view && readout !== undefined && view.scale * (Math.PI / 180) > 60);
 
@@ -202,6 +215,10 @@
       <button type="button" onclick={() => zoom(1 / 1.5)} aria-label="Zoom out">−</button>
       <button type="button" onclick={() => zoom(1.5)} aria-label="Zoom in">+</button>
       <button type="button" onclick={reframe} aria-label="Fit the result in view">Fit</button>
+    </div>
+    <div class="map-tools" role="group" aria-label="Export">
+      <button type="button" onclick={exportPng} aria-label="Download the view as PNG, with attribution">PNG</button>
+      <button type="button" onclick={exportGeoJson} aria-label="Download the layers as GeoJSON">GeoJSON</button>
     </div>
   </div>
   <canvas

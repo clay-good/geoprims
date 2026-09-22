@@ -84,11 +84,11 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "6fcb9b183ff3be52",
+    "hash": "2dec04e4985ba045",
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "184fd3aa99016e08",
+    "hash": "e29bd49f63aaab61",
     "lastmod": "2026-09-22"
   },
   "/changelog/": {
@@ -168,7 +168,7 @@
     "lastmod": "2026-09-22"
   },
   "/geodesy/frame/to-local/": {
-    "hash": "1a3e5223baf553ee",
+    "hash": "8100757e08e95d00",
     "lastmod": "2026-09-22"
   },
   "/geodesy/geoid/": {

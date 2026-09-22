@@ -5,6 +5,7 @@
   import { isPinned, numberFormat, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { diagram } from '../lib/diagrams.js';
+  import { attributionLines, caption, inlineStyles, loadRegistry, saveBlob, svgWithFooter } from '../lib/canvas-export.mjs';
   import { copyText, sharePayload } from '../lib/copy.js';
   import { cellText, rowTables } from '../lib/rows.js';
 
@@ -103,6 +104,17 @@
       fetch('/assets/registry.json').then((r) => r.json()).then((r) => (assetRegistry = r), () => (assetRegistry = { assets: [] }));
     }
   });
+  // The diagram as a file, with the caption and any data attribution written in.
+  async function exportSvg() {
+    const lines = attributionLines(result, await loadRegistry(), { basemap: false });
+    const css = getComputedStyle(document.documentElement);
+    const markup = svgWithFooter(dg.markup, caption(tool, result), lines, {
+      style: inlineStyles('.dg'),
+      background: css.getPropertyValue('--surface').trim() || '#ffffff',
+      ink: css.getPropertyValue('--muted').trim() || '#4f5763',
+    });
+    saveBlob(new Blob([markup], { type: 'image/svg+xml' }), `${tool.id}.svg`);
+  }
   let ReportDialog = $state(null);
   // Batch mode loads only when a reader opens it.
   let BatchPanel = $state(null);
@@ -755,6 +767,9 @@
 {#if dg}
   <figure class="diagram card">
     {@html dg.markup}
+    <div class="diagram-actions">
+      <button type="button" class="quiet" onclick={exportSvg}>Download SVG</button>
+    </div>
     {#if tl && sceneEnd > 0}
       <div class="timeline" role="group" aria-label="Scene playback">
         <button type="button" aria-pressed={playing} onclick={togglePlay}>{playing ? 'Pause' : 'Play'}</button>

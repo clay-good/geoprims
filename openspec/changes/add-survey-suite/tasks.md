@@ -21,7 +21,7 @@
 ## 3. Earthwork and grade
 
 - [x] 3.1 Implement average end area and prismoidal with the averaged-middle guard; verify the three volume scenarios
-- [ ] 3.2 Implement cross-section areas with daylight points; verify the mixed-section scenario
+- [x] 3.2 Implement cross-section areas with daylight points; verify the mixed-section scenario (`survey.earthwork.section-area`: cut and fill areas between the ground and the design template, each interval split where the lines cross, with every grade point listed; the mixed section gives 144 ft² of cut and 64 ft² of fill with its grade point at offset 8 ft. 6 golden vectors checked against dense numerical integration)
 - [ ] 3.3 Implement borrow-pit and four-point methods with balance-line rendering; verify the corner-weights scenario
 - [x] 3.4 Implement shrink/swell and haul loads; verify the truck-load scenario
 - [x] 3.5 Implement grade conversions with ratio disambiguation; verify the ambiguous-ratio scenario (`survey.earthwork.grade`: percent, degrees, per mille, and ratios labeled H:V and V:H, with rise, run, and slope length from any two; a bare `3:1` is refused with both readings, 3H:1V (about 18.43°, 33.3%) and 3V:1H (about 71.57°, 300.0%), until a convention is chosen; 10 golden vectors)

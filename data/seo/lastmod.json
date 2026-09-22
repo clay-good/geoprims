@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f2a2500152ad5e46",
+    "hash": "99e4739bf21d1ab7",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -424,7 +424,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "efce01c9973d4beb",
+    "hash": "d9311048e4c4ff8f",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -488,11 +488,11 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "9875967d66649aa1",
+    "hash": "578d4d0ff0f78435",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
-    "hash": "cda543d9fd91e85f",
+    "hash": "cc13542756af67fb",
     "lastmod": "2026-09-22"
   },
   "/survey/cogo/": {
@@ -520,7 +520,7 @@
     "lastmod": "2026-09-22"
   },
   "/survey/earthwork/": {
-    "hash": "4039c5d8b1a704ec",
+    "hash": "f4c1969caa5e72ba",
     "lastmod": "2026-09-22"
   },
   "/survey/land/": {
@@ -568,7 +568,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "0cbe0f86135a5d3d",
+    "hash": "0612cd53bad1d786",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -668,7 +668,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4a8563f17c918cdd",
+    "hash": "1d54508a1993a728",
     "lastmod": "2026-09-22"
   }
 }

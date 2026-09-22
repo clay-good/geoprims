@@ -916,6 +916,12 @@
       "summary": "Volumes, truck loads, grades, and slope stakes.",
       "tasks": [
         {
+          "want": "find the cut and fill areas of a cross section",
+          "tools": [
+            "section-area"
+          ]
+        },
+        {
           "want": "find a volume between cross sections",
           "tools": [
             "average-end-area",

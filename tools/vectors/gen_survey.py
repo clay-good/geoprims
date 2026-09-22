@@ -655,6 +655,54 @@ def slope_stake():
     return out
 
 
+def section_area():
+    """Cut and fill by dense numerical integration: a different method from the tool's exact splitting."""
+    out = []
+
+    def at(pts, x):
+        for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+            if x <= xb:
+                return ya + (yb - ya) * (x - xa) / (xb - xa)
+        return pts[-1][1]
+
+    def integrate(g, t, n=400000):
+        lo, hi = max(g[0][0], t[0][0]), min(g[-1][0], t[-1][0])
+        h = (hi - lo) / n
+        cut = fill = 0.0
+        for k in range(n):
+            x = lo + (k + 0.5) * h
+            d = at(g, x) - at(t, x)
+            if d > 0:
+                cut += d * h
+            else:
+                fill -= d * h
+        return cut, fill
+
+    def pts_in(pts, u="ft"):
+        return [{"offset": f"{x} {u}", "elevation": f"{y} {u}"} for x, y in pts]
+
+    template = [(-40.0, 94.0), (-28.0, 100.0), (28.0, 100.0), (40.0, 94.0)]
+    cases = [
+        ([(-40.0, 106.0), (40.0, 96.0)], [(-40.0, 100.0), (40.0, 100.0)]),  # the mixed-section scenario
+        ([(-50.0, 103.0), (0.0, 104.0), (50.0, 101.0)], template),
+        ([(-45.0, 96.0), (-10.0, 97.5), (20.0, 99.0), (45.0, 101.0)], template),
+        ([(-40.0, 90.0), (40.0, 91.0)], template),
+    ]
+    for i, (g, t) in enumerate(cases, 1):
+        cut, fill = integrate(g, t)
+        src, ver = (SPEC, "2026") if i == 1 else (SRC, VER)
+        exp = {"result.cut_area.value": cut, "result.fill_area.value": fill}
+        if i == 1:
+            exp["result.grade_points.0.offset.value"] = 8.0
+        v = vec(i, {"ground": pts_in(g), "template": pts_in(t)}, exp, src, ver)
+        for k in ("result.cut_area.value", "result.fill_area.value"):
+            v["tolerance"][k] = {"rel": 1e-6, "abs": 1e-6}
+        out.append(v)
+    out.append(vec(5, {"ground": pts_in([(-10.0, 5.0), (10.0, 5.0)], "m"), "template": pts_in([(-10.0, 5.0), (10.0, 5.0)], "m")}, {"result.cut_area.value": 0.0, "result.fill_area.value": 0.0}))
+    out.append(vec(6, {"ground": pts_in([(0.0, 1.0), (10.0, 1.0)]), "template": pts_in([(20.0, 1.0), (30.0, 1.0)])}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -758,6 +806,7 @@ def main():
         "survey.reduction.level-run": level_run(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.cogo.angular-closure": angular_closure(), "survey.earthwork.slope-stake": slope_stake(),
+        "survey.earthwork.section-area": section_area(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

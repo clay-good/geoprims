@@ -856,7 +856,8 @@
       "definition": "On a horizontal curve, where the two straight tangents would meet.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.curves.circular-curve"
+        "survey.curves.circular-curve",
+        "survey.curves.curve-layout"
       ]
     },
     {
@@ -866,7 +867,8 @@
       "definition": "On a horizontal curve, where the curve leaves the back tangent.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.curves.circular-curve"
+        "survey.curves.circular-curve",
+        "survey.curves.curve-layout"
       ]
     },
     {
@@ -876,7 +878,8 @@
       "definition": "On a horizontal curve, where the curve joins the forward tangent.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.curves.circular-curve"
+        "survey.curves.circular-curve",
+        "survey.curves.curve-layout"
       ]
     },
     {

@@ -905,6 +905,12 @@
           ]
         },
         {
+          "want": "stake out a curve at a station interval",
+          "tools": [
+            "curve-layout"
+          ]
+        },
+        {
           "want": "design a vertical curve",
           "tools": [
             "vertical-curve"

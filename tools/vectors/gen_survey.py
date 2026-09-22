@@ -752,6 +752,62 @@ def borrow_pit():
     return out
 
 
+def curve_layout():
+    """Layout checked from the curve's center (rotation about it), not by deflections and chords."""
+    out = []
+
+    def fmt(v, metric=False):
+        per, dec = (1000, 3) if metric else (100, 2)
+        tot = round(v * 10 ** dec)
+        whole = tot // (per * 10 ** dec)
+        rest = (tot - whole * per * 10 ** dec) / 10 ** dec
+        return f"{whole}+{rest:0{7 if metric else 5}.{dec}f}"
+
+    def layout(R, delta, pi, step, right=True, pin=None, pie=None, az=None):
+        d = math.radians(delta)
+        T, L = R * math.tan(d / 2), R * d
+        pc, pt = pi - T, pi - T + L
+        sts = [pc]
+        s = (pc // step) * step + step
+        while s < pt - 1e-9:
+            if s > pc + 1e-9:
+                sts.append(s)
+            s += step
+        sts.append(pt)
+        pts = None
+        if pin is not None:
+            a = math.radians(az)
+            n0, e0 = pin - T * math.cos(a), pie - T * math.sin(a)
+            side = 1 if right else -1
+            cn, ce = n0 + R * math.cos(a + side * math.pi / 2), e0 + R * math.sin(a + side * math.pi / 2)
+            start = math.atan2(e0 - ce, n0 - cn)
+            pts = [(cn + R * math.cos(start + side * (st - pc) / R), ce + R * math.sin(start + side * (st - pc) / R)) for st in sts]
+        return pc, pt, T, L, sts, pts
+
+    # The layout scenario: R = 500 ft, Δ = 30°, PI at 12+34.56, every 50 ft; the last deflection is Δ/2.
+    pc, pt, T, L, sts, _ = layout(500, 30, 1234.56, 50)
+    out.append(vec(1, {"radius": "500 ft", "delta": "30°00'00\"", "pi_station": "12+34.56", "interval": "50 ft"},
+                   {"result.pc_station": fmt(pc), "result.pt_station": fmt(pt), "result.tangent.value": T, "result.length.value": L,
+                    f"result.rows.{len(sts) - 1}.deflection": "15°00'00.0\"", "result.rows.1.station": fmt(sts[1]),
+                    "result.rows.1.chord_from_pc.value": 2 * 500 * math.sin((sts[1] - pc) / 1000)}, SPEC, "2026"))
+    # With coordinates, right and left.
+    for i, right in enumerate([True, False], 2):
+        pc, pt, T, L, sts, pts = layout(800, 40, 2500.0, 100, right, 5000.0, 5000.0, 45.0)
+        k = len(sts) - 1
+        out.append(vec(i, {"radius": "800 ft", "delta": "40 deg", "pi_station": "25+00", "interval": "100 ft", "turn": "right" if right else "left",
+                           "pi_northing": "5000 ft", "pi_easting": "5000 ft", "back_azimuth": "N 45°00'00\" E"},
+                       {"result.rows.2.northing.value": pts[2][0], "result.rows.2.easting.value": pts[2][1],
+                        f"result.rows.{k}.northing.value": pts[k][0], f"result.rows.{k}.easting.value": pts[k][1]}, rel=1e-10))
+    # Metric stationing.
+    pc, pt, T, L, sts, _ = layout(300, 25, 1234.567, 20)
+    out.append(vec(4, {"radius": "300 m", "delta": "25 deg", "pi_station": "1+234.567", "interval": "20 m"},
+                   {"result.pc_station": fmt(pc, True), "result.pt_station": fmt(pt, True), "result.rows.1.station": fmt(sts[1], True)}))
+    pc, pt, T, L, sts, _ = layout(1000, 12.5, 5000, 25)
+    out.append(vec(5, {"radius": "1000 ft", "delta": "12°30'", "pi_station": "50+00", "interval": "25 ft"}, {"result.length.value": L, "result.tangent.value": T}))
+    out.append(vec(6, {"radius": "500 ft", "delta": "30 deg", "pi_station": "12+34.56", "interval": "50 ft", "pi_northing": "0 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -856,6 +912,7 @@ def main():
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.cogo.angular-closure": angular_closure(), "survey.earthwork.slope-stake": slope_stake(),
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
+        "survey.curves.curve-layout": curve_layout(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

@@ -8,6 +8,7 @@ pub mod direction;
 pub mod grade;
 pub mod intersect;
 pub mod land;
+pub mod layout;
 pub mod leveling;
 pub mod reduction;
 pub mod section;
@@ -880,7 +881,7 @@ fn run_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
 // ---------------------------------------------------------------- stations
 
 /// Reads a station: `12+34.56`, `1+234.567`, or a plain number (in `u`).
-fn station(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
+pub(crate) fn station(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
     match ctx.raw(name).cloned() {
         None => Ok(None),
         Some(Value::Number(n)) => Ok(n.as_f64()),
@@ -918,7 +919,7 @@ fn station(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
 }
 
 /// Formats a station: `12+34.56` (per 100 units, feet) or `1+234.567` (per 1,000, meters).
-fn fmt_station(v: f64, metric: bool) -> String {
+pub(crate) fn fmt_station(v: f64, metric: bool) -> String {
     let (per, dec) = if metric { (1000.0, 3) } else { (100.0, 2) };
     let neg = v < 0.0;
     let a = v.abs();
@@ -937,7 +938,7 @@ fn fmt_station(v: f64, metric: bool) -> String {
     )
 }
 
-fn is_metric(u: &Unit) -> bool {
+pub(crate) fn is_metric(u: &Unit) -> bool {
     matches!(u.symbol, "m" | "km" | "cm" | "mm")
 }
 
@@ -2246,6 +2247,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &AREA,
     &CIRCULAR_CURVE,
     &VERTICAL_CURVE,
+    &layout::CURVE_LAYOUT,
     &AVERAGE_END_AREA,
     &PRISMOIDAL,
     &SHRINK_SWELL,

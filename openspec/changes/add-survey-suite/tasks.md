@@ -32,7 +32,7 @@
 ## 4. Alignment curves
 
 - [x] 4.1 Implement circular curve element solving from any two inputs with arc and chord definitions; verify the R = 500 ft and inconsistent-input scenarios
-- [ ] 4.2 Implement stationing and layout tables with coordinates; verify the layout scenario
+- [x] 4.2 Implement stationing and layout tables with coordinates; verify the layout scenario (`survey.curves.curve-layout`: PC and PT stations and a row at every interval with the deflection from the PC, the chord from the PC, the sub-chord, and coordinates from the PI and back tangent, turning right or left, in `12+34.56` or `1+234.567` stationing; the last deflection is Δ/2. 6 golden vectors, the coordinates checked by rotating about the curve's center)
 - [ ] 4.3 Implement spirals and spiral-curve-spiral stations; verify the spiral scenario against a textbook example
 - [ ] 4.4 Implement vertical curves (equal and unequal tangents, turning point, K); verify the crest and no-turning-point scenarios (done so far: equal-tangent curves with the high or low point and K, in 100 ft or 1,000 m stationing; pending: unequal tangents)
 - [ ] 4.5 Implement sight-distance curve lengths with the design K and heights as cited user inputs (no reproduced AASHTO tables); verify the crest SSD scenario

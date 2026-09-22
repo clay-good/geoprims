@@ -268,7 +268,7 @@ pub static COLD_TEMPERATURE: ToolDef = ToolDef {
     errors: &[ErrorCode::InvalidInput],
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "ΔH = (−ΔT_std ÷ L0) · ln(1 + L0·H ÷ (T0 + L0·H_aerodrome)), with L0 = −0.0019812 K/ft, T0 = 288.15 K, ΔT_std the airport temperature minus ISA at its elevation, and H the height above the airport (ICAO Doc 8168 Vol II, 2020; not the 2018 Vol III form). Approximations shown beside it: 4% of H per 10 °C below ISA, and AIM Table 7-3-1 read by bilinear interpolation",
-    accuracy: "The equation is the ICAO standard for procedure design corrections. The 4% rule and the table (built for a sea-level airport) run higher. Use the correction method your procedure and the FAA Cold Temperature Airports list in AIM 7-3 call for; this is a planning aid",
+    accuracy: "The equation is the ICAO standard for procedure design corrections. Transport Canada AC 500-020 (Issue 04, 2025) prints the same equation with T0 written as 273 + 15, which moves a correction by about 0.1 ft. The 4% rule and the table (built for a sea-level airport) run higher. Use the correction method your procedure and the FAA Cold Temperature Airports list in AIM 7-3 call for; this is a planning aid",
     references: &[PANS_OPS, AIM_COLD],
     examples: &[Example {
         id: "primary",

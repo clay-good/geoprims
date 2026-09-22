@@ -271,7 +271,100 @@ export const FAMILIES = [
       return null;
     },
   },
+  {
+    name: 'polygon-area',
+    tool: 'geometry.area.polygon',
+    needs: 'Planimeter',
+    // Star-shaped rings (sorted bearings from a center) never cross themselves.
+    make(r) {
+      const c = [q(uniformLat(r) * 0.8), q(uniformLon(r))];
+      const n = 3 + Math.floor(6 * r());
+      const radius = 0.05 + 3 * r();
+      const cw = r() < 0.5;
+      // Bearings in order, each a slice apart, so the ring cannot cross itself.
+      const step = 360 / n;
+      const angles = Array.from({ length: n }, (_, i) => i * step + 0.8 * step * r()).sort((x, y) => x - y);
+      if (cw) angles.reverse();
+      const ring = angles.map((th) => {
+        const d = radius * (0.4 + 0.6 * r());
+        const lat = q(Math.max(-89.5, Math.min(89.5, c[0] + d * Math.cos((th * Math.PI) / 180))));
+        const lon = q(c[1] + (d * Math.sin((th * Math.PI) / 180)) / Math.max(0.05, Math.cos((c[0] * Math.PI) / 180)));
+        return [lat, lon];
+      });
+      return {
+        input: { polygon: ring.map(([lat, lon]) => ({ lat, lon })), options: { outputUnits: { area: 'm2', perimeter: 'm' } } },
+        line: ring.map(([lat, lon]) => `${fx(lat)} ${fx(lon)}`).join('\n') + '\n',
+      };
+    },
+    // Planimeter takes one polygon per block, blocks separated by blank lines.
+    run: (lines) => referenceBlocks(lines),
+    compare(res, [, perimeter, area]) {
+      const a = Math.abs(area);
+      if (Math.abs(res.area.value - a) > 1e-6 * a + 1e-3) return `area ${res.area.value} vs ${a}`;
+      if (Math.abs(res.perimeter.value - perimeter) > 1e-9 * perimeter + 1e-6) return `perimeter ${res.perimeter.value} vs ${perimeter}`;
+      const ccw = area >= 0;
+      if ((res.orientation === 'counterclockwise') !== ccw) return `orientation ${res.orientation} vs ${ccw ? 'ccw' : 'cw'}`;
+      return null;
+    },
+  },
+  {
+    name: 'rhumb-direct',
+    tool: 'navigation.rhumb.direct',
+    needs: 'RhumbSolve',
+    make(r) {
+      const p = point(r).map(q);
+      const az = q(360 * r() - 180);
+      const s = Number((2e7 * r()).toFixed(9));
+      return { input: { lat1: p[0], lon1: p[1], course: `${az} deg`, distance: `${s} m` }, line: `${fx(p[0])} ${fx(p[1])} ${fx(az)} ${s.toFixed(9)}` };
+    },
+    run: (lines) => reference('RhumbSolve', ['-p', '12'], lines),
+    // Past a pole the two part ways on purpose: RhumbSolve carries on with an
+    // undefined longitude, the tool stops at the pole and says how far is left.
+    compare(res, [lat2, lon2], c) {
+      if (Math.abs(res.lat2.value - lat2) > 1e-9) {
+        // A NaN longitude means the reference carried on past the pole.
+        if (Number.isNaN(lon2) && Math.abs(res.lat2.value) === 90 && res.beyond_pole?.value > 0) return null;
+        return `lat2 ${res.lat2.value} vs ${lat2}`;
+      }
+      // From a pole the starting longitude means nothing, so only latitude is
+      // comparable; elsewhere a meter of it is worth more longitude the nearer
+      // the pole the end lands.
+      if (Math.abs(c.input.lat1) === 90 || Number.isNaN(lon2)) return null;
+      // A rhumb near a pole carries an isometric latitude of 16 or more, where
+      // the last bits of a double are worth far more longitude than at the
+      // equator: scale by the narrower end.
+      const cos = (d) => Math.cos((d * Math.PI) / 180);
+      const tol = 1e-9 / Math.max(Math.min(cos(lat2), cos(c.input.lat1)), 1e-3);
+      if (Math.abs(lat2) < 90 - 1e-7 && angDiff(res.lon2.value, lon2) > tol) return `lon2 ${res.lon2.value} vs ${lon2}`;
+      return null;
+    },
+  },
+  {
+    name: 'ups-forward',
+    tool: 'geodesy.ups.forward',
+    needs: 'GeoConvert',
+    // Poleward of 84° N and 80° S, where GeoConvert -u gives UPS.
+    make(r) {
+      const north = r() < 0.5;
+      const lat = q(north ? 84.1 + 5.9 * r() : -80.1 - 9.9 * r());
+      const lon = q(uniformLon(r));
+      return { input: { lat, lon, options: { outputUnits: { easting: 'm', northing: 'm' } } }, line: `${fx(lat)} ${fx(lon)}` };
+    },
+    run: (lines) => reference('GeoConvert', ['-u', '-p', '9'], lines),
+    compare(res, [, e, n]) {
+      if (Math.abs(res.easting.value - e) > 1e-8) return `easting ${res.easting.value} vs ${e}`;
+      if (Math.abs(res.northing.value - n) > 1e-8) return `northing ${res.northing.value} vs ${n}`;
+      return null;
+    },
+  },
 ];
+
+/** One Planimeter result per polygon: blocks separated by blank lines. */
+function referenceBlocks(blocks) {
+  const out = spawnSync('Planimeter', ['-p', '9'], { input: blocks.join('\n') + '\n', encoding: 'utf8', maxBuffer: 1 << 28 });
+  if (out.status !== 0) throw new Error(`Planimeter failed: ${out.stderr || out.stdout}`);
+  return out.stdout.trim().split('\n').map((l) => l.trim().split(/\s+/).map(Number));
+}
 
 /** The central angle between two points on a sphere, degrees. */
 function centralAngle(p, t) {

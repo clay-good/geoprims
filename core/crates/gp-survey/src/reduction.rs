@@ -465,3 +465,391 @@ fn run_curvature(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+pub static STADIA: ToolDef = ToolDef {
+    id: "survey.reduction.stadia",
+    title: "Stadia reduction",
+    summary: "Horizontal distance, vertical difference, and elevation difference from a stadia rod interval and the sight's zenith angle.",
+    aliases: &["stadia", "stadia reduction", "tacheometry"],
+    keywords: &[
+        "stadia",
+        "rod interval",
+        "stadia constant",
+        "tacheometry",
+        "zenith",
+        "middle hair",
+    ],
+    inputs: &[
+        len(
+            "interval",
+            "Rod interval",
+            "Upper hair minus lower hair, like 1.234 m",
+        )
+        .required()
+        .core(),
+        angle(
+            "zenith",
+            "Zenith angle",
+            "Like 88°30'00\" (or give a vertical angle)",
+        )
+        .core(),
+        len("instrument_height", "Instrument height HI", "Like 1.50 m").core(),
+        len("rod_reading", "Middle-hair reading", "Like 1.60 m").core(),
+        angle(
+            "vertical_angle",
+            "Vertical angle",
+            "From the horizon, up positive, like 1°30'",
+        ),
+        Field::new(
+            "stadia_constant",
+            "Stadia constant K",
+            "The multiplier, 100 on most instruments",
+            Kind::Number {
+                min: 1.0,
+                max: 1000.0,
+            },
+        ),
+        len(
+            "additive_constant",
+            "Additive constant C",
+            "0 for internal-focusing instruments",
+        ),
+    ],
+    outputs: &[
+        len_out(
+            "horizontal_distance",
+            "Horizontal distance",
+            "K × s × sin² Z + C × sin Z",
+        ),
+        len_out(
+            "vertical_difference",
+            "Vertical difference",
+            "K × s × sin Z × cos Z + C × cos Z",
+        ),
+        len_out(
+            "elevation_difference",
+            "Elevation difference",
+            "HI + V − the middle-hair reading",
+        )
+        .optional(),
+    ],
+    errors: &[gp_base::ErrorCode::UnitMismatch],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Inclined stadia sight: H = K·s·sin²Z + C·sin Z and V = K·s·sin Z·cos Z + C·cos Z (Ghilani & Wolf 2018, stadia); K = 100 and C = 0 by default",
+    accuracy: "Stadia distances are good to about 1 part in 300 to 1 in 1,000, set by reading the rod interval; the arithmetic is exact",
+    references: &[GHILANI],
+    examples: &[Example {
+        id: "primary",
+        title: "A 1.234 m interval at a zenith of 88°30'",
+        input: r#"{"interval":"1.234 m","zenith":"88°30'00\"","instrument_height":"1.50 m","rod_reading":"1.60 m"}"#,
+        source: "Stadia formulas with K = 100, C = 0",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.reduction.slope",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.reduction.inaccessible-height",
+            reason: "next",
+        },
+    ],
+    sentence: "The horizontal distance is {horizontal_distance} and the vertical difference {vertical_difference}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_stadia,
+    ..ToolDef::BLANK
+};
+
+/// The zenith of a single sight: a zenith, or 90° less a vertical angle.
+fn one_zenith(ctx: &mut Ctx, zname: &str, vname: &str) -> Result<f64, ToolError> {
+    match (plain_angle(ctx, zname)?, plain_angle(ctx, vname)?) {
+        (Some(_), Some(_)) => Err(ToolError::invalid(
+            &format!("/{vname}"),
+            "Give a zenith angle or a vertical angle, not both.",
+        )),
+        (Some(z), None) if (0.0..=180.0).contains(&z) => Ok(z),
+        (Some(_), None) => Err(ToolError::invalid(
+            &format!("/{zname}"),
+            "A zenith angle is between 0° and 180°.",
+        )),
+        (None, Some(a)) if (-90.0..=90.0).contains(&a) => Ok(90.0 - a),
+        (None, Some(_)) => Err(ToolError::invalid(
+            &format!("/{vname}"),
+            "A vertical angle is between -90° and 90°.",
+        )),
+        (None, None) => Err(ToolError::invalid(
+            &format!("/{zname}"),
+            "Give the zenith angle (or a vertical angle).",
+        )),
+    }
+}
+
+fn run_stadia(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let s = ctx.req_quantity("interval")?;
+    let hi = ctx.quantity("instrument_height")?;
+    let rod = ctx.quantity("rod_reading")?;
+    let c = ctx.quantity("additive_constant")?;
+    let named: Vec<(&str, Q)> = [
+        ("interval", Some(s)),
+        ("instrument_height", hi),
+        ("rod_reading", rod),
+        ("additive_constant", c),
+    ]
+    .into_iter()
+    .filter_map(|(n, q)| q.map(|q| (n, q)))
+    .collect();
+    let u = common_unit(&named)?;
+    let iv = s.to(u);
+    if iv <= 0.0 {
+        return Err(ToolError::invalid(
+            "/interval",
+            "The rod interval must be positive.",
+        ));
+    }
+    let k = ctx.number("stadia_constant")?.unwrap_or(100.0);
+    let c = c.map_or(0.0, |q| q.to(u));
+    let z = one_zenith(ctx, "zenith", "vertical_angle")?.to_radians();
+    let (sz, cz) = (sin(z), cos(z));
+    let h = k * iv * sz * sz + c * sz;
+    let v = k * iv * sz * cz + c * cz;
+    let q = |x: f64| Q { value: x, unit: u };
+    let mut out = vec![
+        (
+            "horizontal_distance",
+            ctx.emit("horizontal_distance", q(h), u),
+        ),
+        (
+            "vertical_difference",
+            ctx.emit("vertical_difference", q(v), u),
+        ),
+    ];
+    if hi.is_some() || rod.is_some() {
+        let de = hi.map_or(0.0, |x| x.to(u)) + v - rod.map_or(0.0, |x| x.to(u));
+        out.push((
+            "elevation_difference",
+            ctx.emit("elevation_difference", q(de), u),
+        ));
+    }
+    Ok(Json::obj(out))
+}
+
+pub static INACCESSIBLE: ToolDef = ToolDef {
+    id: "survey.reduction.inaccessible-height",
+    title: "Height of an inaccessible object",
+    summary: "The height of a tower, tree, or building you cannot reach, from zenith angles to its base and top and a horizontal distance, or from two stations in line with it.",
+    aliases: &[
+        "tower height",
+        "height of a building",
+        "inaccessible height",
+        "tree height",
+    ],
+    keywords: &[
+        "height",
+        "tower",
+        "inaccessible",
+        "zenith",
+        "baseline",
+        "two stations",
+        "trigonometric height",
+    ],
+    inputs: &[
+        angle(
+            "zenith_top",
+            "Zenith to the top",
+            "From the near station, like 70°00'00\"",
+        )
+        .required()
+        .core(),
+        angle(
+            "zenith_base",
+            "Zenith to the base",
+            "From the same station, like 92°00'00\"",
+        )
+        .core(),
+        len(
+            "distance",
+            "Horizontal distance",
+            "Station to the object, like 120 m",
+        )
+        .core(),
+        len(
+            "baseline",
+            "Baseline",
+            "Instead of the distance: from a second station farther away, in line, like 30 m",
+        ),
+        angle(
+            "zenith_top_far",
+            "Zenith to the top from the far station",
+            "With the baseline, like 75°00'00\"",
+        ),
+        len(
+            "curvature_beyond",
+            "Correct curvature beyond",
+            "Apply curvature and refraction to sights longer than this, like 150 m",
+        ),
+        Field::new(
+            "refraction",
+            "Refraction coefficient k",
+            "Default 0.13",
+            Kind::Number { min: 0.0, max: 1.0 },
+        ),
+    ],
+    outputs: &[
+        len_out(
+            "height",
+            "Height",
+            "Top above base (or above the instrument, with no base sight)",
+        ),
+        len_out(
+            "top_above_instrument",
+            "Top above the instrument",
+            "D / tan Z to the top, plus curvature and refraction when applied",
+        ),
+        len_out(
+            "distance_used",
+            "Horizontal distance",
+            "Measured, or solved from the two stations",
+        ),
+        len_out(
+            "curvature_refraction",
+            "Curvature and refraction",
+            "Added to each point's height above the instrument; it cancels in the height",
+        )
+        .optional(),
+    ],
+    errors: &[gp_base::ErrorCode::UnitMismatch],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "One station: height = D·(cot Z_top − cot Z_base). Two stations in line: D = b·cot Z_far / (cot Z_near − cot Z_far) from the near station, then as for one station (Ghilani & Wolf 2018, trigonometric leveling); curvature and refraction (1 − k)·D²/(2R) when D exceeds the threshold",
+    accuracy: "Exact for the geometry; the result carries the angle and distance errors, and assumes the top is plumb over the base",
+    references: &[GHILANI],
+    examples: &[Example {
+        id: "primary",
+        title: "A tower 120 m away, zenith 70° to the top and 92° to the base",
+        input: r#"{"zenith_top":"70°00'00\"","zenith_base":"92°00'00\"","distance":"120 m"}"#,
+        source: "One-station trigonometric height",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.reduction.stadia",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.reduction.curvature-refraction",
+            reason: "next",
+        },
+    ],
+    sentence: "The object is {height} tall, measured {distance_used} away.",
+    limits: &[("batchRows", 10_000)],
+    run: run_inaccessible,
+    ..ToolDef::BLANK
+};
+
+fn cot_of(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
+    let Some(z) = plain_angle(ctx, name)? else {
+        return Ok(None);
+    };
+    if !(z > 0.0 && z < 180.0) {
+        return Err(ToolError::invalid(
+            &format!("/{name}"),
+            "A zenith angle is between 0° and 180°, not straight up or down.",
+        ));
+    }
+    let r = z.to_radians();
+    Ok(Some(cos(r) / sin(r)))
+}
+
+fn run_inaccessible(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let top = cot_of(ctx, "zenith_top")?.expect("required");
+    let base = cot_of(ctx, "zenith_base")?;
+    let far = cot_of(ctx, "zenith_top_far")?;
+    let dist = ctx.quantity("distance")?;
+    let b = ctx.quantity("baseline")?;
+    let beyond = ctx.quantity("curvature_beyond")?;
+    let named: Vec<(&str, Q)> = [
+        ("distance", dist),
+        ("baseline", b),
+        ("curvature_beyond", beyond),
+    ]
+    .into_iter()
+    .filter_map(|(n, q)| q.map(|q| (n, q)))
+    .collect();
+    let u = common_unit(&named)?;
+    let d = match (dist, b, far) {
+        (Some(d), None, _) => d.to(u),
+        (None, Some(b), Some(far)) => {
+            // Same top, same height: d·cot Z_near = (d + b)·cot Z_far, so
+            // d = b·cot Z_far / (cot Z_near − cot Z_far). The far station must
+            // see the top lower, a larger zenith and so a smaller cotangent.
+            if top - far <= 0.0 {
+                return Err(ToolError::invalid(
+                    "/zenith_top_far",
+                    "From the farther station the top must look lower (a larger zenith) than from the near one.",
+                ));
+            }
+            b.to(u) * far / (top - far)
+        }
+        (None, Some(_), None) => {
+            return Err(ToolError::invalid(
+                "/zenith_top_far",
+                "With a baseline, give the zenith to the top from the far station too.",
+            ));
+        }
+        (Some(_), Some(_), _) => {
+            return Err(ToolError::invalid(
+                "/baseline",
+                "Give the distance or a baseline, not both.",
+            ));
+        }
+        (None, None, _) => {
+            return Err(ToolError::invalid(
+                "/distance",
+                "Give the horizontal distance, or a baseline with the far station's zenith.",
+            ));
+        }
+    };
+    if d <= 0.0 {
+        return Err(ToolError::invalid(
+            "/distance",
+            "The horizontal distance must be positive.",
+        ));
+    }
+    let k = ctx.number("refraction")?.unwrap_or(0.13);
+    let m = unit(QT::Length, "m");
+    let q = |x: f64| Q { value: x, unit: u };
+    let cr = beyond.map(|t| t.to(u)).filter(|t| d > *t).map(|_| {
+        let dm = q(d).to(m);
+        Q {
+            value: (1.0 - k) * dm * dm / (2.0 * 6_371_000.0),
+            unit: m,
+        }
+        .to(u)
+    });
+    let top_h = d * top + cr.unwrap_or(0.0);
+    // Base and top share the distance, so curvature and refraction cancel in the height.
+    let height = base.map_or(top_h, |bc| d * top - d * bc);
+    let mut out = vec![
+        ("height", ctx.emit("height", q(height), u)),
+        (
+            "top_above_instrument",
+            ctx.emit("top_above_instrument", q(top_h), u),
+        ),
+        ("distance_used", ctx.emit("distance_used", q(d), u)),
+    ];
+    if let Some(c) = cr {
+        out.push((
+            "curvature_refraction",
+            ctx.emit("curvature_refraction", q(c), u),
+        ));
+    }
+    Ok(Json::obj(out))
+}

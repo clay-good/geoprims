@@ -959,12 +959,24 @@
       }
     },
     "survey.reduction": {
-      "summary": "Slope reduction, curvature and refraction, and scale between grid and ground.",
+      "summary": "Slope and stadia reductions, heights you cannot reach, curvature and refraction, and scale between grid and ground.",
       "tasks": [
         {
           "want": "reduce a slope distance to horizontal and vertical",
           "tools": [
             "slope"
+          ]
+        },
+        {
+          "want": "reduce a stadia reading",
+          "tools": [
+            "stadia"
+          ]
+        },
+        {
+          "want": "find the height of a tower or tree I cannot reach",
+          "tools": [
+            "inaccessible-height"
           ]
         },
         {

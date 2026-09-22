@@ -994,7 +994,8 @@
       "definition": "The height of the instrument's horizontal axis above the station mark, measured with a tape at setup and added when reducing a sight to an elevation difference.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.reduction.slope"
+        "survey.reduction.slope",
+        "survey.reduction.stadia"
       ]
     },
     {

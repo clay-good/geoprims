@@ -402,6 +402,46 @@ def curvature():
     return out
 
 
+def stadia():
+    out = []
+    cases = [("1.234 m", 88.5, 1.5, 1.6), ("0.875 m", 91.25, 1.45, 2.1), ("3.5 ft", 90.0, 5.0, 5.0), ("2.1 m", 80.0, None, None), ("1.0 m", 95.5, 1.55, 0.9)]
+    for i, (iv, z, hi, rod) in enumerate(cases, 1):
+        v = float(iv.split()[0])
+        zr = math.radians(z)
+        inp = {"interval": iv, "zenith": f"{z} deg"}
+        exp = {"result.horizontal_distance.value": 100 * v * math.sin(zr) ** 2, "result.vertical_difference.value": 100 * v * math.sin(zr) * math.cos(zr)}
+        if hi is not None:
+            u = iv.split()[1]
+            inp.update({"instrument_height": f"{hi} {u}", "rod_reading": f"{rod} {u}"})
+            exp["result.elevation_difference.value"] = hi + 100 * v * math.sin(zr) * math.cos(zr) - rod
+        out.append(vec(i, inp, exp))
+    zr = math.radians(87)
+    out.append(vec(6, {"interval": "1.5 m", "vertical_angle": "3 deg", "stadia_constant": 100, "additive_constant": "0.3 m"},
+                   {"result.horizontal_distance.value": 150 * math.sin(zr) ** 2 + 0.3 * math.sin(zr), "result.vertical_difference.value": 150 * math.sin(zr) * math.cos(zr) + 0.3 * math.cos(zr)}))
+    return out
+
+
+def inaccessible():
+    R = 6371000.0
+    out = []
+    cot = lambda z: 1 / math.tan(math.radians(z))
+    # One station: height = D (cot Z_top - cot Z_base).
+    for i, (zt, zb, d) in enumerate([(70.0, 92.0, 120.0), (80.0, 90.5, 250.0), (60.0, 95.0, 45.5), (85.0, 89.0, 400.0)], 1):
+        out.append(vec(i, {"zenith_top": f"{zt} deg", "zenith_base": f"{zb} deg", "distance": f"{d} m"},
+                       {"result.height.value": d * (cot(zt) - cot(zb)), "result.top_above_instrument.value": d * cot(zt)}))
+    # Two stations in line, built from a real tower: 42 m of top above the instrument, near station 90 m away, baseline 35 m.
+    h, dn, b = 42.0, 90.0, 35.0
+    zn, zf = math.degrees(math.atan2(dn, h)), math.degrees(math.atan2(dn + b, h))
+    out.append(vec(5, {"zenith_top": f"{zn!r} deg", "baseline": f"{b} m", "zenith_top_far": f"{zf!r} deg"},
+                   {"result.distance_used.value": dn, "result.top_above_instrument.value": h}, rel=1e-10))
+    # The tower scenario beyond the threshold: curvature and refraction lift each sight's height, and cancel in the height.
+    d = 600.0
+    cr = (1 - 0.13) * d * d / (2 * R)
+    out.append(vec(6, {"zenith_top": "85 deg", "zenith_base": "90.5 deg", "distance": "600 m", "curvature_beyond": "150 m"},
+                   {"result.height.value": d * (cot(85.0) - cot(90.5)), "result.top_above_instrument.value": d * cot(85.0) + cr, "result.curvature_refraction.value": cr}, SPEC, "2026"))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -500,6 +540,7 @@ def main():
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),
         "survey.reduction.combined-factor": combined(),
         "survey.reduction.slope": slope(), "survey.reduction.curvature-refraction": curvature(),
+        "survey.reduction.stadia": stadia(), "survey.reduction.inaccessible-height": inaccessible(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

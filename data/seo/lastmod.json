@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ecf0d31b781d3a24",
+    "hash": "5c9fb3586b7c49a9",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -424,7 +424,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "ccf06d9ae5e6115b",
+    "hash": "df6a8644c5450d81",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -488,11 +488,11 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "36821a7f1e21c84f",
+    "hash": "fa71fde3bae968a2",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
-    "hash": "0b9400918656f8d4",
+    "hash": "85adc4a97610b97b",
     "lastmod": "2026-09-22"
   },
   "/survey/cogo/": {
@@ -532,7 +532,7 @@
     "lastmod": "2026-09-22"
   },
   "/survey/reduction/": {
-    "hash": "2b5503869e8418e4",
+    "hash": "5f22197d37b546af",
     "lastmod": "2026-09-22"
   },
   "/survey/reduction/combined-factor/": {
@@ -568,7 +568,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "f06d96a91bd4afd0",
+    "hash": "ccf5a0df1c7f0b0e",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -668,7 +668,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c6f26dbb37522872",
+    "hash": "48e4e37b47ff98a5",
     "lastmod": "2026-09-22"
   }
 }

@@ -2245,6 +2245,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &COMBINED_FACTOR,
     &reduction::SLOPE,
     &reduction::CURVATURE,
+    &reduction::STADIA,
+    &reduction::INACCESSIBLE,
     &land::LEGACY_UNITS,
     &land::DEED_PARSE,
     &land::DEED_PLOT,

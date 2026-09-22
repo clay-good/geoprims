@@ -74,9 +74,24 @@ def cases():
     return out
 
 
+def true_altitude():
+    out = []
+    for ind, dev, stn in [(8000, -20, None), (8000, 20, None), (12000, -10, 3000), (5500, 0, 1500), (35000, -15, None), (3000, -35, 2500)]:
+        h = ind - (stn or 0)
+        err = (dev / L0) * math.log(1 + L0 * h / (T0 + L0 * (stn or 0)))
+        inp = {"indicated": f"{ind} ft", "isa_deviation": f"{dev} degC"}
+        if stn is not None:
+            inp["station_elevation"] = f"{stn} ft"
+        out.append(vec(len(out) + 1, inp, {"result.true_altitude.value": ind + err, "result.error.value": err, "result.rule_error.value": 0.04 * dev / 10 * h}))
+    out[0]["source"] = SPEC + " (ISA -20 °C at 8,000 ft indicated: true altitude below indicated)"
+    out.append(vec(len(out) + 1, {"indicated": "1000 ft", "isa_deviation": "-10 degC", "station_elevation": "2000 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def main():
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
-    (dest / "aviation.altimetry.cold-temperature.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in cases()))
+    for name, vs in [("aviation.altimetry.cold-temperature", cases()), ("aviation.altimetry.true-altitude", true_altitude())]:
+        (dest / f"{name}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 
 if __name__ == "__main__":

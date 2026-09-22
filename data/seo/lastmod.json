@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c168133e2f0a3d21",
+    "hash": "d0b8a4bc942e558c",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
-    "hash": "f5c98b107494a45f",
+    "hash": "c0929ef2595818c7",
     "lastmod": "2026-09-22"
   },
   "/aviation/airspeed/": {
@@ -20,7 +20,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/altimetry/": {
-    "hash": "d80f9a14fed49494",
+    "hash": "0c46e173be814d1e",
     "lastmod": "2026-09-22"
   },
   "/aviation/altimetry/density-altitude/": {
@@ -448,7 +448,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "fdeebd7b339ab371",
+    "hash": "61ae4272dd2ed221",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "5c2b9983707ac093",
+    "hash": "c7f5a8d1e87fabab",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "529866568539629b",
+    "hash": "1ae8ec4de842c524",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -692,7 +692,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "7a70d7741531272e",
+    "hash": "ec458d9e84064542",
     "lastmod": "2026-09-22"
   }
 }

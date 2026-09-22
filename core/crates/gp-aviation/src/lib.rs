@@ -2241,6 +2241,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &fuel::FUEL_PLAN,
     &range::SPECIFIC_RANGE,
     &coldtemp::COLD_TEMPERATURE,
+    &coldtemp::TRUE_ALTITUDE,
     &qcodes::Q_CODES,
     &qcodes::FLIGHT_LEVEL,
 ];

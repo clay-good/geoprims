@@ -406,6 +406,170 @@ fn run_cold(ctx: &mut Ctx) -> Result<Json, ToolError> {
     Ok(obj(out))
 }
 
+// ---------------------------------------------------------------- true altitude
+
+pub static TRUE_ALTITUDE: ToolDef = ToolDef {
+    id: "aviation.altimetry.true-altitude",
+    title: "True altitude",
+    summary: "Your true height above sea level from the altimeter reading when the air is colder or warmer than standard: high to low, look out below.",
+    aliases: &[
+        "true altitude calculator",
+        "indicated to true altitude",
+        "high to low look out below",
+        "altimeter temperature error",
+    ],
+    keywords: &[
+        "true altitude",
+        "indicated altitude",
+        "temperature error",
+        "ISA deviation",
+        "cold",
+        "warm",
+        "altimeter",
+    ],
+    inputs: &[
+        qty(
+            "indicated",
+            "Indicated altitude",
+            "With the local altimeter setting, like 8000 ft",
+            QT::Length,
+            "ft",
+        )
+        .required()
+        .core(),
+        qty(
+            "isa_deviation",
+            "ISA deviation",
+            "Temperature minus standard, like -20 degC",
+            QT::TemperatureDifference,
+            "degC",
+        )
+        .required()
+        .core(),
+        qty(
+            "station_elevation",
+            "Altimeter-setting station elevation",
+            "Where the setting comes from, like 0 ft (the default)",
+            QT::Length,
+            "ft",
+        )
+        .core(),
+    ],
+    outputs: &[
+        qty(
+            "true_altitude",
+            "True altitude",
+            "Height above sea level",
+            QT::Length,
+            "ft",
+        )
+        .precision(Precision::Decimals(0)),
+        qty(
+            "error",
+            "True minus indicated",
+            "Negative: you are lower than the altimeter shows",
+            QT::Length,
+            "ft",
+        )
+        .precision(Precision::Decimals(0)),
+        qty(
+            "rule_error",
+            "By the 4% rule",
+            "4% of the height above the station per 10 °C of deviation",
+            QT::Length,
+            "ft",
+        )
+        .precision(Precision::Decimals(0)),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "True − indicated = (ΔT ÷ L0) · ln(1 + L0·H ÷ (T0 + L0·H_station)) with L0 = −0.0019812 K/ft, T0 = 288.15 K, ΔT the ISA deviation, and H the indicated height above the altimeter-setting station: the ICAO Doc 8168 temperature relation, applied both colder and warmer than ISA. The 4% rule is shown beside it",
+    accuracy: "Assumes the deviation holds from the station to the aircraft, as the ICAO relation does; real temperature profiles vary. For procedure altitudes, use the cold-temperature correction tool",
+    references: &[PANS_OPS, PHAK],
+    examples: &[Example {
+        id: "primary",
+        title: "8,000 ft indicated in air 20 °C colder than standard",
+        input: r#"{"indicated":"8000 ft","isa_deviation":"-20 degC"}"#,
+        source: "add-aviation-suite true-altitude scenario: in colder air the true altitude is below the indicated one, and the difference is reported",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.altimetry.cold-temperature",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.altimetry.isa-temperature",
+            reason: "parent",
+        },
+    ],
+    sentence: "You are at {true_altitude}, {abs(error)} {if error < 0}below{else}above{/if} what the altimeter shows.",
+    limits: &[("batchRows", 10_000)],
+    run: run_true_altitude,
+    ..ToolDef::BLANK
+};
+
+fn run_true_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let ft = unit(QT::Length, "ft");
+    let ind = ctx.req_quantity("indicated")?.to(ft);
+    let dev = ctx
+        .req_quantity("isa_deviation")?
+        .to(unit(QT::TemperatureDifference, "degC"));
+    let stn = ctx.quantity("station_elevation")?.map_or(0.0, |q| q.to(ft));
+    if !(-80.0..=60.0).contains(&dev) {
+        return Err(ToolError::invalid(
+            "/isa_deviation",
+            "Give an ISA deviation between -80 °C and +60 °C.",
+        ));
+    }
+    if !(-2_000.0..=15_000.0).contains(&stn) {
+        return Err(ToolError::invalid(
+            "/station_elevation",
+            "Give a station elevation between -2,000 and 15,000 ft.",
+        ));
+    }
+    let h = ind - stn;
+    if !(0.0..=60_000.0).contains(&h) || ind > 60_000.0 {
+        return Err(ToolError::invalid(
+            "/indicated",
+            "The indicated altitude must be at or above the station and at most 60,000 ft.",
+        ));
+    }
+    let err = (dev / L0) * log(1.0 + L0 * h / (T0 + L0 * stn));
+    let rule = 0.04 * (dev / 10.0) * h;
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Temperature error",
+            "(ΔT ÷ L0) · ln(1 + L0·H ÷ (T0 + L0·H_station))",
+            format!(
+                "({} ÷ −0.0019812) · ln(1 − 0.0019812 × {} ÷ (288.15 − 0.0019812 × {}))",
+                n(dev, 1),
+                n(h, 0),
+                n(stn, 0)
+            ),
+            display::quantity(err, "ft", Precision::Decimals(0), fmt),
+        );
+        ctx.step(
+            "True altitude",
+            "indicated + error",
+            format!("{} + {}", n(ind, 0), n(err, 0)),
+            display::quantity(ind + err, "ft", Precision::Decimals(0), fmt),
+        );
+    }
+    let f = |v: f64| Q { value: v, unit: ft };
+    Ok(obj(vec![
+        ("true_altitude", ctx.out("true_altitude", f(ind + err))),
+        ("error", ctx.out("error", f(err))),
+        ("rule_error", ctx.out("rule_error", f(rule))),
+    ]))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -70,6 +70,12 @@
           ]
         },
         {
+          "want": "find my true altitude in cold or warm air",
+          "tools": [
+            "true-altitude"
+          ]
+        },
+        {
           "want": "find pressure altitude from field elevation and the altimeter setting",
           "tools": [
             "pressure-altitude"

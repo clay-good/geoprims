@@ -181,6 +181,7 @@
       "source": "faa-awh",
       "relatedTools": [
         "aviation.weather.metar-decode",
+        "aviation.wind.best-runway",
         "aviation.wind.heading-groundspeed",
         "aviation.wind.runway-components"
       ]
@@ -213,6 +214,7 @@
       "definition": "A recorded broadcast at busier airports of current weather, runways in use, and notices, updated at least hourly.",
       "source": "aim",
       "relatedTools": [
+        "aviation.wind.best-runway",
         "aviation.wind.runway-components"
       ]
     },

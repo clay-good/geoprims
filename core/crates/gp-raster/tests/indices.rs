@@ -280,3 +280,89 @@ fn no_data_and_the_wrong_preset_are_refused() {
     assert_eq!(odd["ok"], true, "{odd}");
     assert!(warns(&odd, "SUSPECT_SCALING"), "{odd}");
 }
+
+#[test]
+fn band_math_evaluates_only_what_the_language_has() {
+    // "Unknown identifier": window.location is refused by name.
+    let r = call(
+        "raster.index.band-math",
+        r#"{"expression":"window.location","bands":[{"name":"nir","value":0.4}]}"#,
+    );
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["code"], "INVALID_INPUT");
+    let m = r["error"]["message"].as_str().unwrap();
+    assert!(m.contains("window"), "the message should name it: {m}");
+    // NDVI written by hand gives what the NDVI tool gives.
+    let hand = call(
+        "raster.index.band-math",
+        r#"{"expression":"(nir - red) / (nir + red)","bands":[{"name":"nir","value":0.45},{"name":"red","value":0.08}]}"#,
+    );
+    let tool = call("raster.index.ndvi", r#"{"nir":0.45,"red":0.08}"#);
+    assert!(
+        (num(&hand, "result.value") - num(&tool, "result.ndvi")).abs() < 1e-15,
+        "{hand}"
+    );
+    assert_eq!(
+        hand["result"]["bands_used"],
+        serde_json::json!(["nir", "red"])
+    );
+    // A band the expression does not name is not read, and a band that was
+    // never given cannot be read at all.
+    let unknown = call(
+        "raster.index.band-math",
+        r#"{"expression":"nir - swir","bands":[{"name":"nir","value":0.4}]}"#,
+    );
+    assert_eq!(unknown["ok"], false, "{unknown}");
+    assert!(
+        unknown["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("swir"),
+        "{unknown}"
+    );
+    // A conditional standing in for no-data.
+    let masked = call(
+        "raster.index.band-math",
+        r#"{"expression":"nir + red > 0 ? (nir - red) / (nir + red) : -999","bands":[{"name":"nir","value":0},{"name":"red","value":0}]}"#,
+    );
+    assert!(
+        (num(&masked, "result.value") + 999.0).abs() < 1e-12,
+        "{masked}"
+    );
+    // A result that is not finite is refused rather than returned as infinity.
+    let div0 = call(
+        "raster.index.band-math",
+        r#"{"expression":"1 / (nir - nir)","bands":[{"name":"nir","value":0.4}]}"#,
+    );
+    assert_eq!(div0["ok"], false, "{div0}");
+    assert_eq!(div0["error"]["code"], "OUT_OF_DOMAIN");
+}
+
+#[test]
+fn band_math_refuses_pathological_expressions() {
+    let bands = r#"[{"name":"a","value":1}]"#;
+    let deep: String = format!("{}a{}", "(".repeat(600), ")".repeat(600));
+    let long: String = std::iter::repeat_n("a", 900).collect::<Vec<_>>().join("+");
+    for expr in [deep.as_str(), long.as_str()] {
+        let r = call(
+            "raster.index.band-math",
+            &format!(
+                r#"{{"expression":{},"bands":{bands}}}"#,
+                serde_json::Value::from(expr)
+            ),
+        );
+        assert_eq!(
+            r["ok"],
+            false,
+            "an expression of {} characters was evaluated",
+            expr.len()
+        );
+        assert_eq!(r["error"]["code"], "INVALID_INPUT");
+    }
+    // Two bands with the same name would make the expression ambiguous.
+    let dup = call(
+        "raster.index.band-math",
+        r#"{"expression":"a","bands":[{"name":"a","value":1},{"name":"a","value":2}]}"#,
+    );
+    assert_eq!(dup["ok"], false, "{dup}");
+}

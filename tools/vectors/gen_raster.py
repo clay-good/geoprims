@@ -107,3 +107,27 @@ for dn in (18639, 7273, 43636, 10000, 30000):
 path = OUT / "raster.scale.reflectance.jsonl"
 path.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
 print(f"{path.name}: {len(rows)}")
+
+# Band math: the same formulas written as expressions, so the parser and the
+# evaluator are checked against the arithmetic rather than against themselves.
+rows = []
+for i, (expr, bands, want) in enumerate([
+    ("(nir - red) / (nir + red)", {"nir": 0.45, "red": 0.08}, (0.45 - 0.08) / (0.45 + 0.08)),
+    ("2.5 * (nir - red) / (nir + 2.4 * red + 1)", {"nir": 0.45, "red": 0.08},
+     2.5 * (0.45 - 0.08) / (0.45 + 2.4 * 0.08 + 1)),
+    ("a + b * c", {"a": 2, "b": 3, "c": 4}, 2 + 3 * 4),
+    ("(a + b) * c", {"a": 2, "b": 3, "c": 4}, (2 + 3) * 4),
+    ("a < b ? c : a", {"a": 2, "b": 3, "c": 4}, 4),
+    ("a > b ? c : a", {"a": 2, "b": 3, "c": 4}, 2),
+    ("clamp(x, 0, 1)", {"x": 1.4}, 1.0),
+    ("clamp(x, 0, 1)", {"x": -0.3}, 0.0),
+    ("min(a, b) + max(a, b)", {"a": 2, "b": 3}, 5),
+    ("sqrt(a) * exp(0) - abs(0 - b)", {"a": 9, "b": 2}, 3 - 2),
+    ("nir + red > 0 ? (nir - red) / (nir + red) : -999", {"nir": 0.0, "red": 0.0}, -999),
+    ("-a + b * -c", {"a": 2, "b": 3, "c": 4}, -2 + 3 * -4),
+], 1):
+    inp = {"expression": expr, "bands": [{"name": n, "value": v} for n, v in bands.items()]}
+    rows.append(vec(i, inp, {"result.value": float(want)}))
+path = OUT / "raster.index.band-math.jsonl"
+path.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
+print(f"{path.name}: {len(rows)}")

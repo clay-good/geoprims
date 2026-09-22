@@ -835,3 +835,30 @@ fn chi_square_quantiles_match_the_tables() {
         );
     }
 }
+
+#[test]
+fn a_perfect_fit_has_no_standardized_residuals_rather_than_infinite_ones() {
+    // Found by the bounds fuzzer: repeating two angles until the adjustment
+    // fits them exactly drives the reference variance to zero, and a
+    // standardized residual of 0/0 is not a residual of zero.
+    let mut angles = String::new();
+    for i in 0..30 {
+        if i > 0 {
+            angles.push(',');
+        }
+        angles.push_str(r#"{"station":"A","backsight":"B","foresight":"P","angle":"303-41-26","sd":5},{"station":"B","backsight":"P","foresight":"A","angle":"303-41-20","sd":5}"#);
+    }
+    let r = call(
+        "survey.cogo.least-squares-2d",
+        &format!(
+            r#"{{"angles":[{angles}],"control":[{{"name":"A","easting":"1000 m","northing":"1000 m"}},{{"name":"B","easting":"1400 m","northing":"1000 m"}}],"unknowns":[{{"name":"P","easting":"1200 m","northing":"1300 m"}}]}}"#
+        ),
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    for row in r["result"]["residuals"].as_array().unwrap() {
+        let z = row["standardized"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("{row}"));
+        assert!(z.is_finite(), "{row}");
+    }
+}

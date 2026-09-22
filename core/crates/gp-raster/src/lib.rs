@@ -1,5 +1,6 @@
 //! Raster: spectral indices and terrain analysis.
 
+pub mod bandmath;
 pub mod indices;
 pub mod scaling;
 
@@ -23,6 +24,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &indices::EVI2,
     &indices::SAVI,
     &indices::DNBR,
+    &bandmath::BANDMATH,
 ];
 
 gp_base::export_module!("raster", REGISTRY);

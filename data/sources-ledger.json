@@ -1171,6 +1171,27 @@
       "editionCheck": true
     },
     {
+      "id": "ieee-754",
+      "name": "IEEE Standard for Floating-Point Arithmetic (IEEE 754)",
+      "issuer": "Institute of Electrical and Electronics Engineers",
+      "currentEdition": "IEEE 754-2019",
+      "currentReleaseDate": "2019-07-22",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Checked at the IEEE standards page on 2026-09-22: 754-2019 is the current edition, superseding 754-2008.",
+      "freeAccessUrl": "https://standards.ieee.org/ieee/754/6210/",
+      "matchTerms": [
+        "Floating-Point Arithmetic",
+        "IEEE 754"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "iers-bulletin-c",
       "name": "IERS Bulletin C (leap seconds)",
       "issuer": "IERS",

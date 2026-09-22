@@ -823,12 +823,18 @@ fn run_lsq(ctx: &mut Ctx) -> Result<Json, ToolError> {
             }
         }
         let qvv = sd_of(&obs[k]).powi(2) - aqa;
-        let z = if qvv > 1e-15 * sd_of(&obs[k]).powi(2) {
-            v[k] / (sigma0 * sqrt(qvv))
+        // A standardized residual needs both a redundancy number and a
+        // reference variance to divide by. Repeating an observation until the
+        // fit is perfect drives the reference variance to zero, and 0/0 is not
+        // a residual of zero standard deviations, it is no residual at all.
+        let checkable = qvv > 1e-15 * sd_of(&obs[k]).powi(2) && sigma0 > 0.0;
+        let z = if checkable {
+            let z = v[k] / (sigma0 * sqrt(qvv));
+            if z.is_finite() { z } else { 0.0 }
         } else {
             0.0
         };
-        if qvv > 1e-15 * sd_of(&obs[k]).powi(2) {
+        if checkable {
             std_res.push((z, k));
         }
         let text = match obs[k] {

@@ -1326,6 +1326,12 @@
             "nbr",
             "dnbr"
           ]
+        },
+        {
+          "want": "write an index of my own over named bands",
+          "tools": [
+            "band-math"
+          ]
         }
       ]
     },

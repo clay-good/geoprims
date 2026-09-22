@@ -681,6 +681,17 @@
         }
       ]
     },
+    "geometry.overlay": {
+      "summary": "Overlaps, unions, and differences of polygons.",
+      "tasks": [
+        {
+          "want": "find where two areas overlap, or combine or subtract them",
+          "tools": [
+            "boolean"
+          ]
+        }
+      ]
+    },
     "geometry.predicate": {
       "summary": "Tests of where points and shapes sit against each other.",
       "tasks": [

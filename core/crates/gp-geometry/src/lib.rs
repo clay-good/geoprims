@@ -3,6 +3,7 @@
 
 pub mod buffer;
 pub mod envelope;
+pub mod overlay;
 pub mod predicate;
 pub mod shape;
 pub mod validity;
@@ -354,6 +355,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &envelope::ENCLOSING,
     &predicate::POINT_IN_POLYGON,
     &validity::MAKE_VALID,
+    &overlay::BOOLEAN,
 ];
 
 pub static REGISTRY: Registry = Registry {

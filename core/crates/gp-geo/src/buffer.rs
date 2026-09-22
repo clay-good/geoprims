@@ -572,6 +572,60 @@ pub fn even_odd(rings: &[Vec<P>]) -> Vec<Vec<P>> {
     stitch(kept, eps, size)
 }
 
+/// A set operation on two regions.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Op {
+    Intersection,
+    Union,
+    Difference,
+    SymmetricDifference,
+}
+
+/// The region `op(A, B)`, each input read by the even-odd rule, as valid
+/// rings (outlines counterclockwise, holes clockwise). Every piece of either
+/// boundary is kept exactly when the result's inside differs on its two sides.
+pub fn boolean(a: &[Vec<P>], b: &[Vec<P>], op: Op) -> Vec<Vec<P>> {
+    let both: Vec<Vec<P>> = a.iter().chain(b).cloned().collect();
+    let edges = ring_edges(&both);
+    let (size, eps, cell) = ring_scale(&both);
+    let splits = split(&edges, cell, eps, false, &mut |_, _, _, _, _| {});
+    let nudge = 1e-7 * size;
+    let inside = |p: P| {
+        let (ia, ib) = (inside_rings(a, p), inside_rings(b, p));
+        match op {
+            Op::Intersection => ia && ib,
+            Op::Union => ia || ib,
+            Op::Difference => ia && !ib,
+            Op::SymmetricDifference => ia != ib,
+        }
+    };
+    let mut kept = Vec::new();
+    for (i, &(p0, p1, _)) in edges.iter().enumerate() {
+        let mut pts = splits[i].clone();
+        pts.push((0.0, p0));
+        pts.push((1.0, p1));
+        pts.sort_by(|x, y| x.0.total_cmp(&y.0));
+        pts.dedup_by(|x, y| x.1 == y.1);
+        for w in pts.windows(2) {
+            let (p, q) = (w[0].1, w[1].1);
+            let dir = sub(q, p);
+            let l = norm(dir);
+            if l <= eps {
+                continue;
+            }
+            let (m, n) = (mul(add(p, q), 0.5), (dir.1 / l, -dir.0 / l));
+            match (inside(sub(m, mul(n, nudge))), inside(add(m, mul(n, nudge)))) {
+                (true, false) => kept.push((p, q)),
+                (false, true) => kept.push((q, p)),
+                _ => {}
+            }
+        }
+    }
+    kept.sort_by(|x, y| bits(x.0).cmp(&bits(y.0)).then(bits(x.1).cmp(&bits(y.1))));
+    kept.dedup();
+    stitch(kept, eps, size)
+}
+
 /// Joins directed edges end to start into closed rings.
 fn stitch(edges: Vec<(P, P)>, eps: f64, r: f64) -> Vec<Vec<P>> {
     let mut from: HashMap<(u64, u64), Vec<usize>> = HashMap::new();
@@ -1077,6 +1131,28 @@ mod tests {
         // A hole touching the outline at one corner is a touch, reported.
         let touch = vec![sq[0].clone(), vec![(0.0, 0.0), (3.0, 6.0), (6.0, 3.0)]];
         assert!(!crossings(&touch).is_empty());
+    }
+
+    #[test]
+    fn set_operations_on_two_overlapping_squares() {
+        let a = vec![vec![(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]];
+        let b = vec![vec![(5.0, 5.0), (15.0, 5.0), (15.0, 15.0), (5.0, 15.0)]];
+        let got = |op| area(&boolean(&a, &b, op));
+        assert!((got(Op::Intersection) - 25.0).abs() < 1e-9);
+        assert!((got(Op::Union) - 175.0).abs() < 1e-9);
+        assert!((got(Op::Difference) - 75.0).abs() < 1e-9);
+        assert!((got(Op::SymmetricDifference) - 150.0).abs() < 1e-9);
+        // Sharing an edge exactly: the union is one rectangle, the intersection empty.
+        let c = vec![vec![(10.0, 0.0), (20.0, 0.0), (20.0, 10.0), (10.0, 10.0)]];
+        let u = boolean(&a, &c, Op::Union);
+        assert_eq!(u.len(), 1, "{u:?}");
+        assert!((area(&u) - 200.0).abs() < 1e-9);
+        assert!(boolean(&a, &c, Op::Intersection).is_empty());
+        // One inside the other: the difference has a hole.
+        let inner = vec![vec![(2.0, 2.0), (4.0, 2.0), (4.0, 4.0), (2.0, 4.0)]];
+        let d = boolean(&a, &inner, Op::Difference);
+        assert_eq!(d.len(), 2);
+        assert!((area(&d) - 96.0).abs() < 1e-9);
     }
 
     #[test]

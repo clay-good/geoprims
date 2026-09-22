@@ -36,6 +36,7 @@
       "groups": [
         "area",
         "buffer",
+        "overlay",
         "predicate",
         "shape",
         "validity"

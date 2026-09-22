@@ -308,11 +308,11 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/children/": {
-    "hash": "2dae507b6e3d92c8",
+    "hash": "a21aebfbef49490a",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/compact/": {
-    "hash": "d10f00aaebd07c53",
+    "hash": "2a8640d9ccf21f58",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/edges/": {
@@ -320,27 +320,27 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/grid-disk/": {
-    "hash": "76e2a3933c33e6a7",
+    "hash": "4f55701ec097d9a3",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/grid-path/": {
-    "hash": "5b1989278f4431d3",
+    "hash": "81e17ce9c418f735",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/grid-ring/": {
-    "hash": "f67695e93e0d05a4",
+    "hash": "99b0cabb7f6aa0b0",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "5af57a2b703324b2",
+    "hash": "3ed0e8cdd097458e",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/parent/": {
-    "hash": "5313afee16ca0a66",
+    "hash": "5b013dbf7feb030b",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "9110ad7df3f11239",
+    "hash": "bb5feec105e94743",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/resolution-chooser/": {
@@ -348,7 +348,7 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/uncompact/": {
-    "hash": "d8b4f5aa86e7fbfc",
+    "hash": "c3132ea0a077528c",
     "lastmod": "2026-09-22"
   },
   "/indexing/plus-code/": {
@@ -668,7 +668,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bffe8c9eeb044fb6",
+    "hash": "a755edca248a0d17",
     "lastmod": "2026-09-22"
   }
 }

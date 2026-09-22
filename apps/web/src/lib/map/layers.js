@@ -37,11 +37,23 @@ function rings(tool, args) {
   return [];
 }
 
+/** The most cells a set draws; a larger answer draws its first MAX_CELLS and says so. */
+export const MAX_CELLS = 1000;
+
+/** The cell ids a cell-set layer names: one output field holding an id or a list of {cell}. */
+export function cellIds(result, field) {
+  const v = result?.result?.[field];
+  if (typeof v === 'string') return [v];
+  return Array.isArray(v) ? v.map((c) => (typeof c === 'string' ? c : c?.cell)).filter(Boolean) : [];
+}
+
 /**
  * Layers for a result: [{ kind, role, points, rings, label }]. `densify(input)`
- * runs navigation.geodesic.waypoints and returns its result, or null.
+ * runs navigation.geodesic.waypoints and returns its result, or null. `cells`
+ * (for cell-set layers) gives { boundaries(ids) → [[lon, lat], …] per id, and
+ * rings(origin, k) → the ids at each grid distance 0…k }, both from the core.
  */
-export async function buildLayers(tool, args, result, densify) {
+export async function buildLayers(tool, args, result, densify, cells) {
   const kinds = new Set((tool.visualization ?? []).map((v) => v.kind));
   const layers = [];
   const p1 = [numberOf(args.lon1), numberOf(args.lat1)];
@@ -86,6 +98,25 @@ export async function buildLayers(tool, args, result, densify) {
     for (let i = 1; i <= steps; i++) ring.push([e - ((e - w) * i) / steps, n]);
     for (let i = 1; i < steps; i++) ring.push([w, n - ((n - s) * i) / steps]);
     layers.push({ kind: 'polygon', role: 'result', rings: [ring] });
+  }
+  // A set of H3 cells: each cell's outline from the core. Around an origin
+  // (a k-ring or ring), each cell carries its grid distance, so the drawing
+  // can fade with distance and mark the origin.
+  for (const v of tool.visualization ?? []) {
+    if (v.kind !== 'cell-set' || !cells) continue;
+    const map = mapOf(v.map);
+    const ids = cellIds(result, map.cells ?? map.cell).slice(0, MAX_CELLS);
+    if (!ids.length) continue;
+    const outlines = await cells.boundaries(ids);
+    const k = Number.isInteger(Number(args.k)) ? Number(args.k) : null;
+    const origin = typeof args.cell === 'string' && k !== null ? args.cell.trim().toLowerCase() : null;
+    const distance = new Map();
+    if (origin && k <= 10) (await cells.rings(origin, k)).forEach((ring, d) => ring.forEach((id) => distance.set(id, d)));
+    ids.forEach((id, i) => {
+      if (!outlines[i]?.length) return;
+      const d = distance.get(id);
+      layers.push({ kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id, ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}) });
+    });
   }
   if (kinds.has('polygon')) {
     const rs = rings(tool, args);

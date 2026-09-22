@@ -179,7 +179,7 @@
   const facts = $derived(allFacts ? secondary : secondary.slice(0, FACTS));
 
   // The canvas draws geographic tools: lines, points, polygons, or a lat/lon input.
-  const GEO = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon']);
+  const GEO = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon', 'bbox', 'cell-set']);
   const showMap = (tool.visualization ?? []).some((v) => GEO.has(v.kind)) || ('lat' in tool.inputs.properties && 'lon' in tool.inputs.properties);
   let drawnArgs = $state(example);
   const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result) : null);

@@ -72,3 +72,12 @@ test('equirectangular spaces parallels evenly', () => {
   const y = (lat) => forward(v, 0, lat)[1];
   assert.ok(Math.abs((y(0) - y(10)) - (y(70) - y(80))) < 1e-9);
 });
+
+test('an area frames on itself; a lone point keeps its context', () => {
+  const cell = [[-80, 40.4], [-79.9, 40.4], [-79.9, 40.45], [-80, 40.45]];
+  const loose = frame('map', cell, 800, 600);
+  const tight = frame('map', cell, 800, 600, { tight: true });
+  assert.ok(tight.scale > loose.scale * 20, 'a small area fills the view when tight');
+  const w = (v) => forward(v, -79.9, 40.4)[0] - forward(v, -80, 40.4)[0];
+  assert.ok(w(tight) > 300 && w(tight) < 800, `the area spans most of the view: ${w(tight)} px`);
+});

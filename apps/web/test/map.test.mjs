@@ -111,3 +111,30 @@ test('a single point is framed with context around it, not zoomed to meters', ()
   const g = frame('globe', [[-105, 40]], 800, 400);
   assert.ok(g.scale <= (400 * 0.45) / 0.5 + 1e-9, String(g.scale));
 });
+
+test('h3 k-ring: k = 2 on a resolution 7 cell draws 19 cell outlines, the origin highlighted, fading by ring', async () => {
+  const { buildLayers, cellIds } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const tool = catalog.tools.find((t) => t.id === 'indexing.h3.grid-disk');
+  assert.equal(tool.visualization[0].kind, 'cell-set');
+  const args = { cell: '872a8471effffff', k: 2 };
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  const batch = async (id, inputs) => JSON.parse(await host.invokeBatch(id, JSON.stringify(inputs)));
+  const cells = {
+    boundaries: async (ids) => (await batch('indexing.h3.cell-info', ids.map((cell) => ({ cell })))).map((r) => r.result.boundary.map((p) => [p.lon, p.lat])),
+    rings: async (origin, k) => (await batch('indexing.h3.grid-ring', Array.from({ length: k + 1 }, (_, d) => ({ cell: origin, k: d })))).map((r) => r.result.cells.map((c) => c.cell)),
+  };
+  const layers = (await buildLayers(tool, args, result, async () => null, cells)).filter((l) => l.cell);
+  assert.equal(layers.length, 19);
+  assert.ok(layers.every((l) => l.rings[0].length === 6), 'hexagon outlines');
+  const origin = layers.filter((l) => l.role === 'result');
+  assert.deepEqual(origin.map((l) => l.cell), ['872a8471effffff']);
+  assert.deepEqual([0, 1, 2].map((d) => layers.filter((l) => l.distance === d).length), [1, 6, 12]);
+  const w = (d) => layers.find((l) => l.distance === d).weight;
+  assert.ok(w(0) > w(1) && w(1) > w(2), 'intensity falls with ring distance');
+  assert.deepEqual(cellIds({ result: { cell: 'abc' } }, 'cell'), ['abc']);
+  assert.deepEqual(cellIds({ result: { cells: [{ cell: 'a' }, 'b'] } }, 'cells'), ['a', 'b']);
+});

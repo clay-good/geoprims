@@ -84,11 +84,12 @@ export function inverse(view, sx, sy) {
 }
 
 /**
- * A view that frames the given [lon, lat] points with some margin. Longitudes
+ * A view that frames the given [lon, lat] points with some margin; `tight`
+ * drops the minimum span a lone point gets, for areas that frame themselves. Longitudes
  * are unwrapped around the first point, so a set across the antimeridian is
  * framed as one group rather than the whole world.
  */
-export function frame(mode, points, width, height) {
+export function frame(mode, points, width, height, { tight = false } = {}) {
   if (!points.length) return { mode, lon: 0, lat: 20, scale: Math.min(width, height) / (mode === 'globe' ? 2.2 : 6.5), width, height };
   const base = points[0][0];
   const lons = points.map(([lon]) => base + wrap(lon - base));
@@ -103,7 +104,8 @@ export function frame(mode, points, width, height) {
       return p ? Math.hypot(p[0], p[1]) : 1;
     }));
     // A point or a small area still shows a good part of the hemisphere around it.
-    const MIN_FAR = 0.5;
+    // An area (a parcel, a set of cells) is framed on itself.
+    const MIN_FAR = tight ? 0.002 : 0.5;
     return { ...view, scale: Math.min(width, height) * 0.45 / Math.max(far, MIN_FAR) };
   }
   if (mode === 'polar') {
@@ -114,7 +116,7 @@ export function frame(mode, points, width, height) {
     return { mode, lon, lat: h * 90, scale: (Math.min(width, height) * 0.45) / Math.min(reach, POLAR_REACH * RAD), width, height };
   }
   // At least about 12° across, so a single point sits among coastlines and borders.
-  const MIN_SPAN = 12 * RAD;
+  const MIN_SPAN = (tight ? 0.01 : 12) * RAD;
   const spanX = Math.max(MIN_SPAN, (Math.max(...lons) - Math.min(...lons)) * RAD);
   const ys = (p) => (mode === 'equirect' ? p * RAD : mercY(p));
   const spanY = Math.max(MIN_SPAN * 0.6, ys(Math.max(...lats)) - ys(Math.min(...lats)));

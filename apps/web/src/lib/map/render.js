@@ -217,7 +217,21 @@ export function draw(g, view, base, layers, c) {
   const order = { comparison: 0, input: 1, result: 2 };
   for (const layer of [...layers].sort((a, b) => order[a.role] - order[b.role])) {
     const stroke = layer.role === 'result' ? c.accent : c.muted;
-    if (layer.kind === 'polygon') {
+    if (layer.kind === 'polygon' && layer.cell) {
+      // A grid cell: the origin strong, the rest fading with grid distance.
+      const origin = layer.role === 'result';
+      const w = origin ? 1 : (layer.weight ?? 0.8);
+      g.beginPath();
+      for (const ring of layer.rings) trace(g, view, ring, true);
+      g.fillStyle = c.accent;
+      g.globalAlpha = origin ? 0.28 : 0.1 * w;
+      g.fill();
+      g.globalAlpha = 0.3 + 0.7 * w;
+      g.strokeStyle = c.accent;
+      g.lineWidth = origin ? 3 : 1.5;
+      g.stroke();
+      g.globalAlpha = 1;
+    } else if (layer.kind === 'polygon') {
       g.beginPath();
       for (const ring of layer.rings) trace(g, view, ring, true);
       g.fillStyle = stroke;

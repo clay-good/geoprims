@@ -91,16 +91,31 @@
 
   function reframe() {
     const [w, h] = size();
-    target = frame(mode, extent(layers), w, h);
+    target = frame(mode, extent(layers), w, h, { tight: layers.some((l) => l.kind === 'polygon') });
     ease();
   }
+
+  // H3 cells for cell-set layers: outlines and grid rings, one batch each, from the core.
+  const batch = async (id, inputs) => {
+    const raw = await compute.invokeBatch(id, JSON.stringify(inputs));
+    return Array.isArray(raw) ? raw : [];
+  };
+  const cellSource = {
+    boundaries: async (ids) =>
+      (await batch('indexing.h3.cell-info', ids.map((cell) => ({ cell })))).map((r) => (r?.ok ? r.result.boundary.map((p) => [p.lon, p.lat]) : [])),
+    rings: async (origin, k) =>
+      (await batch('indexing.h3.grid-ring', Array.from({ length: k + 1 }, (_, d) => ({ cell: origin, k: d })))).map((r) => (r?.ok ? r.result.cells.map((c) => c.cell) : [])),
+  };
 
   async function rebuild() {
     if (!result?.ok) return;
     layers = await buildLayers(tool, args, result, (input) =>
       compute.invoke('navigation.geodesic.waypoints', input, 'densify'),
+      cellSource,
     );
-    const what = layers.map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
+    const cellCount = layers.filter((l) => l.cell).length;
+    const what = layers.filter((l) => !l.cell).map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
+    if (cellCount) what.push(`${cellCount} H3 ${cellCount === 1 ? 'cell' : 'cells'}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
     shown = what.join(', ') || 'the world';
     // What the lines mean: the result path, and the other kind of line for comparison.
     const rhumb = kinds.has('line-rhumb');
@@ -108,7 +123,8 @@
     legend = [
       layers.some((l) => l.kind === 'line' && l.role === 'result') && { cls: 'solid', text: named(rhumb) },
       layers.some((l) => l.kind === 'line' && l.role === 'comparison') && { cls: 'dashed', text: `${named(!rhumb)}, for comparison` },
-      layers.some((l) => l.kind === 'polygon') && { cls: 'area', text: 'The area' },
+      layers.some((l) => l.kind === 'polygon' && !l.cell) && { cls: 'area', text: 'The area' },
+      layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? 'H3 cells: the origin strongest, fading with grid distance' : 'H3 cells' },
     ].filter(Boolean);
     // A result that lands mid-drag was computed for an earlier position:
     // keep the point under the pointer until the drag ends.

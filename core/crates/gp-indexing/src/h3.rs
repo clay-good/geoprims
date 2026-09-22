@@ -230,8 +230,8 @@ pub static LAT_LNG_TO_CELL: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cell", "cell")],
     }],
     related: &[
         Related {
@@ -486,8 +486,8 @@ pub static GRID_DISK: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cells")],
     }],
     related: &[
         Related {
@@ -548,8 +548,8 @@ pub static GRID_RING: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cells")],
     }],
     related: &[
         Related {
@@ -617,8 +617,8 @@ pub static GRID_PATH: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cells")],
     }],
     related: &[
         Related {
@@ -701,8 +701,8 @@ pub static PARENT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cell", "parent")],
     }],
     related: &[
         Related {
@@ -771,8 +771,8 @@ pub static CHILDREN: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cells")],
     }],
     related: &[
         Related {
@@ -866,8 +866,8 @@ pub static COMPACT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cells")],
     }],
     related: &[
         Related {
@@ -972,8 +972,8 @@ pub static UNCOMPACT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cells")],
     }],
     related: &[
         Related {
@@ -1448,7 +1448,10 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
         source: "H3 polygonToCells",
     }],
     primary_example: "primary",
-    visualization: &[Layer { kind: "table-only", map: &[] }],
+    visualization: &[Layer {
+        kind: "cell-set",
+        map: &[("cells", "cells")],
+    }],
     related: &[Related { id: "indexing.h3.compact", reason: "next" },
         Related {
             id: "indexing.h3.resolution-chooser",

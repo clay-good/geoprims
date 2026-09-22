@@ -216,3 +216,38 @@ test('layers: a route draws its legs in order, once, with a start marker', async
   const start = layers.find((l) => l.kind === 'point' && l.label === 'Start');
   assert.deepEqual(start.points[0], [args.waypoints[0].lon, args.waypoints[0].lat]);
 });
+
+test('h3 pentagon: a ring around a pentagon draws five neighbours, not six', async () => {
+  // add-spatial-indexing-and-raster 1.4: the twelve pentagons are the cases
+  // that break a hexagon assumption, so the drawing is pinned on one.
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const tool = catalog.tools.find((t) => t.id === 'indexing.h3.grid-disk');
+  const args = { cell: '85080003fffffff', k: 1 };
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  assert.equal(result.result.count, 6, 'a pentagon has five neighbours, so k=1 is six cells');
+  assert.ok(result.meta.warnings.some((w) => w.code === 'PENTAGON_DISTORTION'), 'the distortion is flagged');
+  const batch = async (id, inputs) => JSON.parse(await host.invokeBatch(id, JSON.stringify(inputs)));
+  const cells = {
+    boundaries: async (ids) => (await batch('indexing.h3.cell-info', ids.map((cell) => ({ cell })))).map((r) => r.result.boundary.map((p) => [p.lon, p.lat])),
+    rings: async (origin, k) => (await batch('indexing.h3.grid-ring', Array.from({ length: k + 1 }, (_, d) => ({ cell: origin, k: d })))).map((r) => r.result.cells.map((c) => c.cell)),
+  };
+  const layers = (await buildLayers(tool, args, result, async () => null, cells)).filter((l) => l.cell);
+  assert.equal(layers.length, 6, 'six outlines drawn');
+  assert.deepEqual([0, 1].map((d) => layers.filter((l) => l.distance === d).length), [1, 5], 'one origin, five around it');
+  // The pentagon itself is drawn with its own corner count, not a hexagon's.
+  // Resolution 5 is Class III, where H3 gives a pentagon ten boundary
+  // vertices: its five corners with a distortion vertex between each pair.
+  const origin = layers.find((l) => l.role === 'result');
+  assert.equal(origin.cell, args.cell);
+  assert.equal(origin.rings[0].length, 10, 'the Class III pentagon outline');
+  assert.ok(layers.filter((l) => l.distance === 1).every((l) => l.rings[0].length >= 5), 'its neighbours still close');
+  // At a Class II resolution the same pentagon is drawn with five corners.
+  const parent = JSON.parse(await host.invoke('indexing.h3.parent', JSON.stringify({ cell: args.cell, resolution: 4 })));
+  const info = JSON.parse(await host.invoke('indexing.h3.cell-info', JSON.stringify({ cell: parent.result.parent })));
+  assert.equal(info.result.pentagon, 'yes');
+  assert.equal(info.result.boundary.length, 5, 'the Class II pentagon outline');
+});

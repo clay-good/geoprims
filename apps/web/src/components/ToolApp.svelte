@@ -13,7 +13,7 @@
   import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
-  import { importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
+  import { csvRows, importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
   import { exportText, fileName, FORMATS as EXPORTS, pointsOf } from '../lib/export.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
@@ -334,8 +334,37 @@
       return;
     }
     const parsed = await compute.readFile(file.name, await file.text());
+    // A CSV says nothing about which column is which, so the reader chooses,
+    // starting from what the headers suggest.
+    if ((parsed.format === 'csv' || parsed.format === 'tsv') && parsed.ok) {
+      const suggested = parsed.columns ?? { lat: -1, lon: -1 };
+      const swapped = parsed.swapped === true;
+      importNote = {
+        ...importNote,
+        [name]: {
+          ok: true,
+          csv: { fileName: file.name, parsed, lat: swapped ? suggested.lon : suggested.lat, lon: swapped ? suggested.lat : suggested.lon, swapped },
+          text: swapped
+            ? `The column named latitude holds values beyond ±90, so the columns look swapped. Check them below.`
+            : `Which columns are latitude and longitude?`,
+        },
+      };
+      return;
+    }
     const filled = rowsFor(schema, parsed);
     importNote = { ...importNote, [name]: { ok: filled.ok, text: importReport(file.name, parsed.format, parsed, filled) } };
+    if (filled.ok) {
+      values[name] = rowsText(schema, filled.rows);
+      edited();
+    }
+  }
+
+  /** Fills a list from a CSV once its latitude and longitude columns are chosen. */
+  function useColumns(name) {
+    const note = importNote[name];
+    const schema = tool.inputs.properties[name];
+    const filled = csvRows(schema, note.csv.parsed, Number(note.csv.lat), Number(note.csv.lon));
+    importNote = { ...importNote, [name]: { ...note, ok: filled.ok, text: importReport(note.csv.fileName, note.csv.parsed.format, note.csv.parsed, filled), csv: filled.ok ? null : note.csv } };
     if (filled.ok) {
       values[name] = rowsText(schema, filled.rows);
       edited();
@@ -634,6 +663,22 @@
             <span class="import-hint">KML, GPX, GeoJSON, CSV, or WKT — or drop it on the box. Read on this device.</span>
           </span>
           {#if importNote[name]}<span class="import-note" class:bad={!importNote[name].ok} role="status">{importNote[name].text}</span>{/if}
+          {#if importNote[name]?.csv}
+            <span class="csv-map">
+              <label class="csv-pick">Latitude
+                <select bind:value={importNote[name].csv.lat}>
+                  {#each importNote[name].csv.parsed.headers as h, i}<option value={i}>{h || `column ${i + 1}`}</option>{/each}
+                </select>
+              </label>
+              <label class="csv-pick">Longitude
+                <select bind:value={importNote[name].csv.lon}>
+                  {#each importNote[name].csv.parsed.headers as h, i}<option value={i}>{h || `column ${i + 1}`}</option>{/each}
+                </select>
+              </label>
+              <button type="button" class="quiet" onclick={() => { const c = importNote[name].csv; [c.lat, c.lon] = [c.lon, c.lat]; importNote = { ...importNote }; }}>Swap</button>
+              <button type="button" class="primary" onclick={() => useColumns(name)}>Use these columns</button>
+            </span>
+          {/if}
       </div>
     {/if}
   {/snippet}

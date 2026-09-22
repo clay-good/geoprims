@@ -94,3 +94,29 @@ test('every tool with a list of points offers the import', () => {
   }
   assert.deepEqual(problems, []);
 });
+
+test('a CSV fills once its columns are chosen, and a swapped choice is caught', async () => {
+  const { csvRows } = await import('../src/lib/import-rows.mjs');
+  const legs = input('navigation.route.legs', 'waypoints');
+  const parsed = readFile('airports.csv', 'name,latitude,longitude\nKDEN,-104.6731,39.8617\nKBDU,-105.2256,40.0394\n');
+  assert.equal(parsed.swapped, true, 'the swap was not noticed');
+  // Taken as labelled, the first row's latitude is -104.67: refused, and it says why.
+  const wrong = csvRows(legs, parsed, 1, 2);
+  assert.equal(wrong.ok, false);
+  assert.match(wrong.message, /Line 2 has latitude -104\.6731, beyond ±90\. The columns may be the other way round\./);
+  // Swapped, it fills, names and all.
+  const right = csvRows(legs, parsed, 2, 1);
+  assert.ok(right.ok, right.message);
+  assert.deepEqual(right.rows, [{ name: 'KDEN', lat: 39.8617, lon: -104.6731 }, { name: 'KBDU', lat: 40.0394, lon: -105.2256 }]);
+  // And the report does not call a warning a fix.
+  assert.doesNotMatch(importReport('airports.csv', 'csv', parsed, right), /Fixed/);
+});
+
+test('a CSV row that is not a coordinate is named by its line', async () => {
+  const { csvRows } = await import('../src/lib/import-rows.mjs');
+  const parsed = readFile('a.csv', 'lat,lon\n40,-105\nnorth,west\n');
+  const out = csvRows(input('drone.mission.corridor', 'centerline'), parsed, 0, 1);
+  assert.equal(out.ok, false);
+  assert.match(out.message, /Line 3 is not a pair of numbers/);
+  assert.equal(csvRows(input('drone.mission.corridor', 'centerline'), parsed, 0, 0).ok, false);
+});

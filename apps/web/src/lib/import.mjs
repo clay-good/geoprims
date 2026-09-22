@@ -253,7 +253,8 @@ export function readDelimited(text, delimiter = ',') {
   if (columns.lat >= 0) {
     const bad = rows.filter((r) => Math.abs(Number(r[columns.lat])) > 90).length;
     if (bad) {
-      out.repairs.push(`${bad} of ${rows.length} rows have a latitude beyond ±90. The columns may be the other way round.`);
+      // A warning for the column choice, not a repair: nothing was changed.
+      out.warnings = [`${bad} of ${rows.length} rows have a latitude beyond ±90. The columns may be the other way round.`];
       out.swapped = true;
     }
   }

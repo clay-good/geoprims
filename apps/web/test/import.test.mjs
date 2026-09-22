@@ -148,7 +148,8 @@ test('a CSV with the columns the wrong way round says so', () => {
   assert.equal(out.rows.length, 2);
   assert.deepEqual(out.columns, { lat: 1, lon: 2 });
   assert.equal(out.swapped, true);
-  assert.match(out.repairs[0], /beyond/);
+  assert.match(out.warnings[0], /beyond/);
+  assert.deepEqual(out.repairs, [], 'a column warning is not a repair');
 });
 
 test('a CSV cell holding a comma or a quote survives the trip', () => {

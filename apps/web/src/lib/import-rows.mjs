@@ -69,3 +69,30 @@ export function importReport(fileName, format, parsed, filled) {
   if (repairs.length) parts.push(`Fixed: ${repairs.join('; ')}.`);
   return parts.join(' ');
 }
+
+/**
+ * Rows from a CSV once the reader has said which columns are latitude and
+ * longitude (web/io-formats, "Coordinate order and CRS safety"). Every row
+ * must read as a coordinate; the first that does not is named, and a
+ * latitude beyond ±90 says the columns are probably the other way round.
+ */
+export function csvRows(schema, parsed, latCol, lonCol) {
+  const columns = Object.keys(schema?.items?.properties ?? {});
+  if (!columns.includes('lat') || !columns.includes('lon')) return { ok: false, message: 'This input does not take latitude and longitude.' };
+  if (latCol === lonCol || latCol < 0 || lonCol < 0) return { ok: false, message: 'Choose two different columns for latitude and longitude.' };
+  const nameCol = columns.includes('name') ? (parsed.headers ?? []).findIndex((h) => /^(name|id|label|point)$/i.test(h.trim())) : -1;
+  const rows = [];
+  for (const [i, r] of (parsed.rows ?? []).entries()) {
+    const lat = Number(r[latCol]);
+    const lon = Number(r[lonCol]);
+    const line = i + 2; // the header is line 1
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return { ok: false, message: `Line ${line} is not a pair of numbers: ${r[latCol] ?? ''}, ${r[lonCol] ?? ''}.` };
+    if (Math.abs(lat) > 90) return { ok: false, message: `Line ${line} has latitude ${lat}, beyond ±90. The columns may be the other way round.`, swap: true };
+    if (Math.abs(lon) > 180) return { ok: false, message: `Line ${line} has longitude ${lon}, beyond ±180.` };
+    rows.push({ ...(nameCol >= 0 && r[nameCol] ? { name: r[nameCol] } : {}), lat: num(lat), lon: num(lon) });
+  }
+  if (!rows.length) return { ok: false, message: 'That file has no rows under its header.' };
+  const max = schema.maxItems ?? Infinity;
+  if (rows.length > max) return { ok: false, message: `That file has ${rows.length.toLocaleString('en-US')} points; this input takes at most ${max.toLocaleString('en-US')}.` };
+  return { ok: true, rows, used: `columns “${parsed.headers[latCol]}” and “${parsed.headers[lonCol]}”` };
+}

@@ -649,7 +649,9 @@
       "definition": "The point where an aircraft's weight acts. It must stay inside the envelope in the POH for safe control.",
       "source": "faa-wbh",
       "relatedTools": [
-        "aviation.loading.weight-balance"
+        "aviation.loading.ballast",
+        "aviation.loading.weight-balance",
+        "aviation.loading.weight-shift"
       ]
     },
     {

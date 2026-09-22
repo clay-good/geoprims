@@ -17,6 +17,7 @@ pub mod performance;
 pub mod qcodes;
 pub mod range;
 pub mod runway;
+pub mod shift;
 pub mod table;
 pub mod triangle;
 pub mod weather;
@@ -2246,6 +2247,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &qcodes::Q_CODES,
     &qcodes::FLIGHT_LEVEL,
     &humidity::HUMIDITY,
+    &shift::WEIGHT_SHIFT,
+    &shift::BALLAST,
 ];
 
 pub static REGISTRY: Registry = Registry {

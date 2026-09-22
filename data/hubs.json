@@ -198,6 +198,18 @@
           ]
         },
         {
+          "want": "see where the CG goes when I move weight, or how much to move",
+          "tools": [
+            "weight-shift"
+          ]
+        },
+        {
+          "want": "find the ballast that brings the CG into limits",
+          "tools": [
+            "ballast"
+          ]
+        },
+        {
           "want": "read a POH performance table between its values",
           "tools": [
             "table-interpolate"

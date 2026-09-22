@@ -689,6 +689,12 @@
           "tools": [
             "centroid"
           ]
+        },
+        {
+          "want": "find the bounding box, even across the antimeridian",
+          "tools": [
+            "bbox"
+          ]
         }
       ]
     },

@@ -319,7 +319,7 @@ button.quiet.star[aria-pressed='true'] { color: var(--accent); border-color: var
 button.quiet.more { margin-block-start: 0.5rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-block-start: 1rem; }
 .chip { font-size: 0.8rem; color: var(--muted); }
-details summary { cursor: pointer; font-weight: 600; min-block-size: var(--target); display: flex; align-items: center; }
+details summary { cursor: pointer; font-weight: 600; min-block-size: var(--target); padding-block: 0.85rem 0; box-sizing: border-box; }
 details.card { padding-block: 0.25rem; }
 details.card[open] { padding-block-end: 1rem; }
 
@@ -783,3 +783,10 @@ table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color:
   .trace li, .sources li { margin-block: 1px; break-inside: avoid; }
   footer.site { padding-block: 2px; font-size: 9px; }
 }
+
+/* The answer's provenance: the record of this result, one click away. */
+details.provenance { margin-block: 0.75rem 0; font-size: 0.88rem; }
+details.provenance summary { cursor: pointer; color: var(--muted); font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; min-block-size: var(--target); padding-block: 0.85rem 0; box-sizing: border-box; }
+details.provenance dl { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr); gap: 0.25rem 0.75rem; margin: 0.5rem 0 0; }
+details.provenance dt { color: var(--muted); }
+details.provenance dd { margin: 0; }

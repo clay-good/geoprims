@@ -8,6 +8,7 @@
   import { migrateState } from '../lib/migrate.mjs';
   import { say } from '../lib/keys.js';
   import { sound } from '../lib/sound.js';
+  import { provenanceRows } from '../lib/provenance.js';
   import linkMigrations from '../../../../data/link-migrations.json';
   import { attributionLines, caption, inlineStyles, loadRegistry, saveBlob, svgWithFooter } from '../lib/canvas-export.mjs';
   import { copyText, sharePayload } from '../lib/copy.js';
@@ -649,6 +650,14 @@
       {#if secondary.length > FACTS}
         <button type="button" class="quiet more" onclick={() => (allFacts = !allFacts)}>{allFacts ? 'Show fewer' : `Show all ${secondary.length} results`}</button>
       {/if}
+    {/if}
+    {#if result?.ok}
+      <details class="provenance" ontoggle={(e) => e.currentTarget.open && !assetRegistry && fetch('/assets/registry.json').then((r) => r.json()).then((r) => (assetRegistry = r), () => (assetRegistry = { assets: [] }))}>
+        <summary>Provenance</summary>
+        <dl>
+          {#each provenanceRows(result.meta, assetRegistry) as row}<dt>{row.label}</dt><dd>{row.value}</dd>{/each}
+        </dl>
+      </details>
     {/if}
     <div class="actions">
       <button type="button" class="primary" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>

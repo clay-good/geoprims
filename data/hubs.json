@@ -208,6 +208,18 @@
           "tools": [
             "runway-components"
           ]
+        },
+        {
+          "want": "find the wind at my altitude between forecast levels",
+          "tools": [
+            "aloft-interpolate"
+          ]
+        },
+        {
+          "want": "turn a wind into u and v components, or back",
+          "tools": [
+            "uv"
+          ]
         }
       ],
       "guide": {

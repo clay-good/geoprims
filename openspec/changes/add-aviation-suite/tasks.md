@@ -31,7 +31,7 @@
 - [ ] 4.2 Implement runway components, gusts, limits, designator parsing, and best-runway ranking; verify the runway 27, gust, designator, and ranking scenarios (built: components, gusts, variable winds, limits, designators, and their scenarios; pending: best-runway ranking)
 - [ ] 4.3 Implement the heading chain with deviation-card interpolation; verify the interpolation scenario
 - [ ] 4.4 Implement 1-in-60 corrections (exact and rule); verify the 4 NM scenario
-- [ ] 4.5 Implement u/v wind conversion and winds-aloft interpolation between levels; verify against a hand-computed fixture
+- [x] 4.5 Implement u/v wind conversion and winds-aloft interpolation between levels; verify against a hand-computed fixture (`aviation.wind.uv` both ways in the meteorological convention, u = −s·sin θ and v = −s·cos θ for a wind from θ true; `aviation.wind.aloft-interpolate` linear in u, v, and temperature between the two levels that bracket the altitude, no extrapolation, levels in any order. The hand-computed fixture: 7,500 ft between 270° at 20 kt and 300° at 30 kt gives 288° at 24.2 kt; 21 golden vectors, including a wind veering through north and opposite winds cancelling to calm)
 - [ ] 4.6 Implement wind-triangle and runway diagrams; verify visual fixtures
 
 ## 5. Performance

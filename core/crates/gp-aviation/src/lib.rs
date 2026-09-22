@@ -3,6 +3,7 @@
 //! temperature, runway wind components, and the wind triangle.
 
 pub mod airspeed;
+pub mod aloft;
 pub mod atmosphere;
 pub mod ifr;
 pub mod loading;
@@ -2165,6 +2166,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,
     &ifr::HOLD_SPEED,
+    &aloft::UV,
+    &aloft::ALOFT,
 ];
 
 pub static REGISTRY: Registry = Registry {

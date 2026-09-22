@@ -7,6 +7,7 @@
 // the query with ">" lists actions instead of tools. A question with numbers
 // ("density altitude 5000 ft 30C 29.80") offers the top tool filled in.
 import { ask } from './ask.js';
+import { personalize } from './boost.js';
 import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
 import { clearRecents, eraseLocalData, pins, PROFILES, recents, setProfile } from './prefs.js';
 
@@ -149,7 +150,7 @@ async function update() {
   // The same resolver the home search uses, so a question lands in one place.
   const answered = await ask(query, { limit: LIMIT });
   if (!answered || query !== input.value.trim()) return; // superseded by a newer keystroke
-  results = answered.results;
+  results = personalize(answered.results, { pinned: pins().map((p) => p.id), recent: recents().slice(0, 10).map((r) => r.id) });
   active = results.length ? 0 : -1;
   render();
   const tools = results.filter((r) => r.kind === 'tool');

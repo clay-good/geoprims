@@ -17,6 +17,7 @@ test('expressions become MathML: fractions stay inline, powers rise, subscripts 
 });
 
 test('prose, paths, and broken input stay as text', () => {
+  assert.equal(toMathML('p = ((QNH/1013.25)^0.190284 − elevation × 6.8756e-6)^(1/0.190284) × 1013.25'), null, 'too long to set without wrapping');
   for (const f of ['M = the sum of weight × arm for every station', 'headwind = wind speed × cos θ', 'tile = zoom/x/y', 'the centre of the cell the point falls in', 'x = (1 + 2', '']) {
     assert.equal(toMathML(f), null, f);
   }

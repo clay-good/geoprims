@@ -35,8 +35,15 @@ function ident(v) {
   return `<msub>${mi(m[1])}<mrow>${subML}</mrow></msub>`;
 }
 
-/** The MathML for a formula, or null when it is prose or will not parse. */
+/**
+ * The longest formula set as MathML. MathML does not wrap, so a longer one
+ * would push a phone's page sideways; it stays as text, which does wrap.
+ */
+export const MAX_MATH_LENGTH = 60;
+
+/** The MathML for a formula, or null when it is prose, too long, or will not parse. */
 export function toMathML(formula) {
+  if (String(formula ?? '').length > MAX_MATH_LENGTH) return null;
   // "zoom/x/y" names a path, not a division.
   if (/[A-Za-z]\w*\/[A-Za-z]\w*\/[A-Za-z]/.test(String(formula ?? ''))) return null;
   const toks = tokenize(String(formula ?? ''));

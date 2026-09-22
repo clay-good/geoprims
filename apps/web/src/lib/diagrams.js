@@ -616,6 +616,30 @@ function altimetry(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Vector sum: the vectors head to tail in the east-north plane, and the resultant from the origin. */
+function vectorSum(args, result) {
+  const num = (v) => (typeof v === 'number' ? v : Number.parseFloat(String(v ?? '')));
+  const rows = (Array.isArray(args.vectors) ? args.vectors : []).map((r) => [num(r.x), num(r.y), num(r.z) || 0]);
+  if (rows.length < 1 || !rows.every((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]))) return null;
+  const sum = [val(result, 'x'), val(result, 'y')];
+  if (!sum.every(Number.isFinite)) return null;
+  // Head to tail: each vector starts where the last one ended.
+  const chain = [[0, 0]];
+  for (const [x, y] of rows) chain.push([chain.at(-1)[0] + x, chain.at(-1)[1] + y]);
+  const S = fit([...chain, sum, [0, 0]]);
+  const pts = chain.map(S);
+  const flat = rows.every((p) => p[2] === 0);
+  const body = [
+    line('dg-grid', S([Math.min(...chain.map((p) => p[0])), 0]), S([Math.max(...chain.map((p) => p[0])), 0])),
+    line('dg-grid', S([0, Math.min(...chain.map((p) => p[1]))]), S([0, Math.max(...chain.map((p) => p[1]))])),
+    ...rows.map((v, i) => arrow(...pts[i], ...pts[i + 1], 'dg-muted', `(${v[0]}, ${v[1]}${flat ? '' : `, ${v[2]}`})`, 0.5, -1)),
+    arrow(...S([0, 0]), ...S(sum), 'dg-accent', `Sum ${disp(result, 'magnitude')} at ${disp(result, 'direction')}`, 0.6, 1),
+    text('dg-muted-text', 12, 22, flat ? 'East →, north ↑' : 'East →, north ↑, up in the labels'),
+  ].join('');
+  const title = `${rows.length} vectors head to tail in the east-north plane: the sum is ${disp(result, 'magnitude')} at ${disp(result, 'direction')}, components ${disp(result, 'x')} east and ${disp(result, 'y')} north.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -631,6 +655,7 @@ const DIAGRAMS = {
   'aviation.atmosphere.isa': isaProfile,
   'aviation.loading.weight-balance': cgEnvelope,
   'aviation.altimetry.true-altitude': altimetry,
+  'navigation.vector.operations': vectorSum,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

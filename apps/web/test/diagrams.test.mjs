@@ -330,3 +330,36 @@ test('the airspeed gauge marks each V-speed arc and names it in words', async ()
   assert.doesNotMatch(bare.markup, /dg-arc-/);
   assert.doesNotMatch(bare.markup, /Never exceed/);
 });
+
+test('the vector diagram chains the vectors head to tail to the sum', async () => {
+  // add-navigation-and-geometry 3.5 fixture.
+  for (const vectors of [
+    [{ x: 3, y: 4 }, { x: -1, y: 2 }, { x: 2, y: -3 }],
+    [{ x: -5, y: -2 }, { x: 1, y: 6 }],
+    [{ x: 2, y: 1, z: 4 }, { x: -3, y: 2, z: -1 }],
+  ]) {
+    const args = { vectors };
+    const r = JSON.parse(await host.invoke('navigation.vector.operations', JSON.stringify(args)));
+    const d = diagram('navigation.vector.operations', args, r);
+    const drawn = lines(d.markup).filter((l) => l.cls === 'dg-muted' || l.cls === 'dg-accent');
+    const parts = drawn.filter((l) => l.cls === 'dg-muted');
+    const sum = drawn.find((l) => l.cls === 'dg-accent');
+    assert.equal(parts.length, vectors.length, 'one arrow per vector');
+    // One scale for the whole drawing, taken from the first vector.
+    const k = (parts[0].x2 - parts[0].x1) / vectors[0].x;
+    for (const [i, v] of vectors.entries()) {
+      assert.ok(Math.abs((parts[i].x2 - parts[i].x1) / k - v.x) < 0.02, `vector ${i} east component`);
+      // North is up, so y runs the other way on screen.
+      assert.ok(Math.abs((parts[i].y1 - parts[i].y2) / k - v.y) < 0.02, `vector ${i} north component`);
+      if (i) assert.ok(Math.hypot(parts[i].x1 - parts[i - 1].x2, parts[i].y1 - parts[i - 1].y2) < 0.2, `vector ${i} does not start where ${i - 1} ended`);
+    }
+    // The resultant runs from the origin to the last head, at the direction
+    // the core computed, clockwise from north.
+    assert.ok(Math.hypot(sum.x1 - parts[0].x1, sum.y1 - parts[0].y1) < 0.2, 'the sum starts at the origin');
+    assert.ok(Math.hypot(sum.x2 - parts.at(-1).x2, sum.y2 - parts.at(-1).y2) < 0.2, 'the sum ends at the last head');
+    near(bearing(sum).deg, r.result.direction.value, 0.5, 'the sum direction');
+    assert.ok(d.markup.includes(r.display.magnitude), 'the sum carries its magnitude');
+    // A vertical component has no place on a plan view, so it is written out.
+    if (vectors.some((v) => v.z)) assert.match(d.markup, new RegExp(`, ${vectors[0].z}\\)`));
+  }
+});

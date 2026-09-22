@@ -1996,6 +1996,107 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "cfr-47-15",
+      "name": "47 CFR Part 15",
+      "issuer": "FCC (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Section 15.247 read through the eCFR API on 2026-09-22. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15",
+      "matchTerms": [
+        "47 CFR Part 15",
+        "47 CFR 15"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "etsi-en-300-328",
+      "name": "ETSI EN 300 328",
+      "issuer": "ETSI",
+      "currentEdition": "V2.2.2 (2019-07)",
+      "currentReleaseDate": "2019-07-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Clauses 4.3.1.2 and 4.3.2.2 read in the V2.2.2 PDF on 2026-09-22. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.etsi.org/deliver/etsi_en/300300_300399/300328/02.02.02_60/en_300328v020202p.pdf",
+      "matchTerms": [
+        "EN 300 328"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": true
+    },
+    {
+      "id": "asprs-las-1-4",
+      "name": "LAS Specification 1.4 R15",
+      "issuer": "ASPRS",
+      "currentEdition": "1.4 R15 (2019-07-09)",
+      "currentReleaseDate": "2019-07-09",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Minimum point data record sizes for formats 0 to 10 and the 375-byte header read in R15 on 2026-09-22; ASPRS allows unlimited distribution with attribution, and asprs.org's own copy was not reachable.",
+      "freeAccessUrl": "https://paulbourke.net/dataformats/laz/LAS_1_4_r15.pdf",
+      "matchTerms": [
+        "LAS Specification 1.4"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "flir-3x3",
+      "name": "How Far Can You Measure with a Thermal Camera?",
+      "issuer": "Teledyne FLIR",
+      "currentEdition": "Web article (2023-09-12)",
+      "currentReleaseDate": "2023-09-12",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Read on 2026-09-22: at least 3 x 3 pixels on a target for an accurate temperature measurement.",
+      "freeAccessUrl": "https://www.flir.com/discover/professional-tools/how-far-can-you-measure-with-a-thermal-camera/",
+      "matchTerms": [
+        "How Far Can You Measure with a Thermal Camera"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "itu-r-p525",
+      "name": "Recommendation ITU-R P.525-4: Calculation of free-space attenuation",
+      "issuer": "International Telecommunication Union",
+      "currentEdition": "P.525-4 (08/2019)",
+      "currentReleaseDate": "2019-08-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Edition from the ITU-R recommendation list; not re-checked at the issuer (its site did not answer a scripted request).",
+      "freeAccessUrl": "https://www.itu.int/rec/R-REC-P.525-4-201908-I/en",
+      "matchTerms": [
+        "ITU-R P.525"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

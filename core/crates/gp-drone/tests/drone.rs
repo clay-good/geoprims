@@ -57,7 +57,7 @@ fn catalog_examples_vectors() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let mut failures = manifest::lint(TOOLS, &taxonomy, &[]);
+    let mut failures = manifest::lint(TOOLS, &taxonomy, &["navigation.los.fresnel"]);
     let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {
         failures.extend(

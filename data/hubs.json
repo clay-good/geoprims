@@ -371,6 +371,17 @@
         ]
       }
     },
+    "drone.links": {
+      "summary": "Radio links: path loss, fade margin, and the EIRP limit.",
+      "tasks": [
+        {
+          "want": "work out a radio link budget and check the EIRP limit",
+          "tools": [
+            "link-budget"
+          ]
+        }
+      ]
+    },
     "drone.mission": {
       "summary": "Flight patterns for mapping and inspection.",
       "tasks": [
@@ -559,6 +570,18 @@
     "drone.sensors": {
       "summary": "How far away a drone stays visible.",
       "tasks": [
+        {
+          "want": "estimate how much storage a mapping job needs",
+          "tools": [
+            "dataset-size"
+          ]
+        },
+        {
+          "want": "find a thermal camera's pixel footprint and smallest target",
+          "tools": [
+            "thermal-footprint"
+          ]
+        },
         {
           "want": "know how far I can see my drone",
           "tools": [

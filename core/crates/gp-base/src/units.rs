@@ -282,6 +282,12 @@ pub static UNITS: &[Unit] = &[
     u("cm", Q::Length, ex(1, 100), &["centimeter", "centimeters"]),
     u("mm", Q::Length, ex(1, 1000), &["millimeter", "millimeters"]),
     u(
+        "um",
+        Q::Length,
+        ex(1, 1_000_000),
+        &["µm", "micrometer", "micrometers", "micron", "microns"],
+    ),
+    u(
         "Mm",
         Q::Length,
         ex(1_000_000, 1),

@@ -734,6 +734,7 @@
       "source": "cfr-14-1",
       "relatedTools": [
         "aviation.loading.fuel-plan",
+        "drone.links.link-budget",
         "drone.photogrammetry.altitude-for-gsd"
       ]
     },
@@ -1268,6 +1269,56 @@
       "relatedTools": [
         "aviation.airspace.tfr-area"
       ]
+    },
+    {
+      "id": "eirp",
+      "term": "EIRP",
+      "expansion": "effective isotropic radiated power",
+      "definition": "The power a transmitter and its antenna put out in their strongest direction, as if from an antenna that radiates equally everywhere; radio rules cap it.",
+      "source": "cfr-47-15",
+      "relatedTools": [
+        "drone.links.link-budget"
+      ]
+    },
+    {
+      "id": "etsi",
+      "term": "ETSI",
+      "expansion": "European Telecommunications Standards Institute",
+      "definition": "The body that writes the European radio standards, such as EN 300 328 for 2.4 GHz equipment.",
+      "source": "etsi-en-300-328",
+      "relatedTools": [
+        "drone.links.link-budget"
+      ]
+    },
+    {
+      "id": "las",
+      "term": "LAS",
+      "expansion": "LASer file format",
+      "definition": "The ASPRS standard file format for lidar point clouds: a header, then one fixed-size record per point.",
+      "source": "asprs-las-1-4",
+      "relatedTools": [
+        "drone.sensors.dataset-size"
+      ]
+    },
+    {
+      "id": "laz",
+      "term": "LAZ",
+      "expansion": "compressed LAS",
+      "definition": "A losslessly compressed LAS file, usually several times smaller.",
+      "source": "asprs-las-1-4",
+      "relatedTools": [
+        "drone.sensors.dataset-size"
+      ]
+    },
+    {
+      "id": "ifov",
+      "term": "IFOV",
+      "expansion": "instantaneous field of view",
+      "definition": "The angle one detector pixel sees, usually in milliradians; times the distance, it is the patch of surface that pixel covers.",
+      "source": "flir-3x3",
+      "relatedTools": [
+        "drone.sensors.thermal-footprint"
+      ]
     }
   ],
   "notAbbreviations": [
@@ -1388,6 +1439,34 @@
         "drone.mission.export"
       ],
       "reason": "Part of the product name Copernicus DEM GLO-30"
+    },
+    {
+      "token": "GB",
+      "tools": [
+        "drone.sensors.dataset-size"
+      ],
+      "reason": "Unit symbol for gigabytes"
+    },
+    {
+      "token": "MB",
+      "tools": [
+        "drone.sensors.dataset-size"
+      ],
+      "reason": "Unit symbol for megabytes"
+    },
+    {
+      "token": "RGB",
+      "tools": [
+        "drone.sensors.dataset-size"
+      ],
+      "reason": "Common English for red, green, and blue camera bands"
+    },
+    {
+      "token": "EN",
+      "tools": [
+        "drone.links.link-budget"
+      ],
+      "reason": "Part of the European Norm designation EN 300 328"
     }
   ]
 }

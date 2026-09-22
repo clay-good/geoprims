@@ -976,6 +976,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &los::FRESNEL,
     &intersect::COURSE_INTERSECTION,
     &intersect::INTERCEPT,
+    &intersect::SEGMENT_INTERSECTION,
+    &intersect::VERTEX,
     &sphere::SPHERICAL_INVERSE,
     &sphere::SPHERICAL_DIRECT,
     &sphere::INTERMEDIATE,

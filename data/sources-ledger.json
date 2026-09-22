@@ -2198,6 +2198,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "karney-intersect",
+      "name": "Karney (2024) Geodesic intersections",
+      "issuer": "Journal of Surveying Engineering",
+      "currentEdition": "Vol. 150, No. 3",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved and bibliographic data read from Crossref on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.1061/JSUED2.SUENG-1483",
+      "matchTerms": [
+        "Geodesic intersections"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

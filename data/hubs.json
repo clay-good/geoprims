@@ -1093,6 +1093,13 @@
             "midpoint",
             "waypoints"
           ]
+        },
+        {
+          "want": "check whether two lines cross, or find a route's highest point",
+          "tools": [
+            "intersection",
+            "vertex"
+          ]
         }
       ],
       "guide": {

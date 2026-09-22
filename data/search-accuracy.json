@@ -1,11 +1,12 @@
 {
-  "queries": 929,
-  "top1": 97.8,
-  "top3": 99.9,
-  "prefillPrecision": 96.9,
-  "prefillRecall": 39,
+  "queries": 969,
+  "top1": 97.7,
+  "top3": 99.8,
+  "prefillPrecision": 97.2,
+  "prefillRecall": 40.2,
   "misses": [
-    "100 mph drone with 90 mph 15 mph"
+    "100 mph drone with 90 mph 15 mph",
+    "3D distance calculator with 40 -105 250 m 40.018012369978514 -105 370 m"
   ],
   "wrongFills": [
     "Thermal pixel footprint with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",

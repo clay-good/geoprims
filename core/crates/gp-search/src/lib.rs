@@ -390,10 +390,14 @@ pub fn search(json: &str) -> String {
             .collect();
         // Best score first. On a tie, the full method before a simplified one
         // (haversine is a sphere; the geodesic is the ellipsoid it stands in
-        // for), then by id, so the same question always ranks the same way.
+        // for), then a verified tool before an experimental one, then by id,
+        // so the same question always ranks the same way.
         hits.sort_by(|a, b| {
             b.0.cmp(&a.0)
                 .then_with(|| a.1.simplified.cmp(&b.1.simplified))
+                .then_with(|| {
+                    (a.1.stability == "experimental").cmp(&(b.1.stability == "experimental"))
+                })
                 .then_with(|| a.1.id.cmp(&b.1.id))
         });
         let hidden = hits

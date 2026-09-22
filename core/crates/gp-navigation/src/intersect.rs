@@ -78,9 +78,9 @@ fn tangent(lat: f64, lon: f64, az: f64) -> [f64; 3] {
     ]
 }
 
-/// Spherical seed: signed arc distances (m on the mean sphere) along each
-/// course to the crossing nearest ahead, or None for the same great circle.
-fn spherical_seed(a: (f64, f64, f64), b: (f64, f64, f64)) -> Option<(f64, f64)> {
+/// Both spherical crossings of two great circles, as signed arc distances (m
+/// on the mean sphere) along each course, or None for the same great circle.
+fn spherical_pair(a: (f64, f64, f64), b: (f64, f64, f64)) -> Option<[(f64, f64); 2]> {
     let (pa, pb) = (vec3(a.0, a.1), vec3(b.0, b.1));
     let (ta, tb) = (tangent(a.0, a.1, a.2), tangent(b.0, b.1, b.2));
     let x = cross(cross(pa, ta), cross(pb, tb));
@@ -90,9 +90,13 @@ fn spherical_seed(a: (f64, f64, f64), b: (f64, f64, f64)) -> Option<(f64, f64)> 
     }
     let x = [x[0] / n, x[1] / n, x[2] / n];
     let along = |p: [f64; 3], t: [f64; 3], x: [f64; 3]| atan2(dot(x, t), dot(x, p)) * R1;
-    // Of the two antipodal crossings, prefer the one ahead on both courses,
-    // then the nearer.
-    let cands = [x, [-x[0], -x[1], -x[2]]].map(|x| (along(pa, ta, x), along(pb, tb, x)));
+    Some([x, [-x[0], -x[1], -x[2]]].map(|x| (along(pa, ta, x), along(pb, tb, x))))
+}
+
+/// Of the two antipodal spherical crossings, the one ahead on both courses,
+/// then the nearer.
+fn spherical_seed(a: (f64, f64, f64), b: (f64, f64, f64)) -> Option<(f64, f64)> {
+    let cands = spherical_pair(a, b)?;
     cands.into_iter().min_by(|u, v| {
         let score = |c: &(f64, f64)| {
             let behind = (c.0 < 0.0) as u8 + (c.1 < 0.0) as u8;
@@ -109,7 +113,17 @@ fn geodesic_crossing(
     a: (f64, f64, f64),
     b: (f64, f64, f64),
 ) -> Option<((f64, f64), f64, f64)> {
-    let (mut s1, mut s2) = spherical_seed(a, b)?;
+    newton(g, a, b, spherical_seed(a, b)?)
+}
+
+/// Newton's method on (s1, s2) from a seed: ((lat, lon), s1, s2).
+fn newton(
+    g: &Geodesic,
+    a: (f64, f64, f64),
+    b: (f64, f64, f64),
+    seed: (f64, f64),
+) -> Option<((f64, f64), f64, f64)> {
+    let (mut s1, mut s2) = seed;
     for _ in 0..50 {
         let (la1, lo1, az1): (f64, f64, f64) = g.direct(a.0, a.1, a.2, s1);
         let (la2, lo2, az2): (f64, f64, f64) = g.direct(b.0, b.1, b.2, s2);
@@ -130,6 +144,11 @@ fn geodesic_crossing(
         }
         let ds1 = (-r.0 * -u2.1 - -r.1 * -u2.0) / det;
         let ds2 = (u1.0 * -r.1 - u1.1 * -r.0) / det;
+        // Rounding in the direct and inverse problems can hold the gap a little
+        // above a nanometer; once the steps vanish, that is the answer.
+        if d <= 1e-6 && ds1.abs() + ds2.abs() <= 1e-8_f64.max(1e-15 * (s1.abs() + s2.abs())) {
+            return Some(((la1, lo1), s1, s2));
+        }
         s1 += ds1;
         s2 += ds2;
     }
@@ -550,4 +569,382 @@ fn run_intercept(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("meet_lat", ctx.out("meet_lat", deg(mla))),
         ("meet_lon", ctx.out("meet_lon", deg(mlo))),
     ]))
+}
+
+// ---------------------------------------------------------------- segment intersection
+
+pub static SEGMENT_INTERSECTION: ToolDef = ToolDef {
+    id: "navigation.geodesic.intersection",
+    title: "Where two geodesic segments cross",
+    summary: "The crossing of the geodesics through two segments on the ellipsoid, nearest the segments' middles, and whether it falls within both segments or out on their extensions.",
+    aliases: &[
+        "geodesic intersection",
+        "intersection of two lines on the earth",
+        "great circle intersection",
+        "do two routes cross",
+    ],
+    keywords: &[
+        "intersection",
+        "segment",
+        "crossing",
+        "great circle",
+        "Karney",
+    ],
+    inputs: &[
+        point::lat_field("a_start_lat", "Segment A start latitude"),
+        point::lon_field("a_start_lon", "Segment A start longitude"),
+        point::lat_field("a_end_lat", "Segment A end latitude"),
+        point::lon_field("a_end_lon", "Segment A end longitude"),
+        point::lat_field("b_start_lat", "Segment B start latitude"),
+        point::lon_field("b_start_lon", "Segment B start longitude"),
+        point::lat_field("b_end_lat", "Segment B end latitude"),
+        point::lon_field("b_end_lon", "Segment B end longitude"),
+        E[0],
+        E[1],
+        E[2],
+    ],
+    outputs: &[
+        point::lat_field("lat", "Crossing latitude").precision(Precision::Decimals(9)),
+        point::lon_field("lon", "Crossing longitude").precision(Precision::Decimals(9)),
+        Field::new(
+            "within",
+            "Within both segments",
+            "yes, or no when the crossing is on an extension",
+            Kind::Text { max_len: 4 },
+        ),
+        Field::new(
+            "position",
+            "Where it falls",
+            "Relative to each segment",
+            Kind::Text { max_len: 120 },
+        ),
+        dist(
+            "along_a",
+            "Along A",
+            "From A's start; negative is behind it",
+        ),
+        dist(
+            "along_b",
+            "Along B",
+            "From B's start; negative is behind it",
+        ),
+        dist("length_a", "Length of A", "Start to end"),
+        dist("length_b", "Length of B", "Start to end"),
+    ],
+    errors: &[ErrorCode::DegenerateGeometry, ErrorCode::InvalidInput],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Each segment's geodesic from its start at the inverse azimuth; the two crossings of the matching great circles seed Newton's method on the distances along both geodesics (to a nanometer); the crossing kept is the one nearest the segments' midpoints, |x − a/2| + |y − b/2|, as in GeographicLib's Intersect class",
+    accuracy: "Matches GeographicLib IntersectTool -i on 60 random segment pairs: to a micrometer, or 5e-12 of the distance for crossings thousands of kilometers out at a shallow angle, where both are limited by rounding",
+    references: &[KARNEY, KARNEY_INTERSECT],
+    examples: &[Example {
+        id: "primary",
+        title: "JFK to London and Reykjavík to Lisbon",
+        input: r#"{"a_start_lat":40.6413,"a_start_lon":-73.7781,"a_end_lat":51.47,"a_end_lon":-0.4543,"b_start_lat":64.1466,"b_start_lon":-21.9426,"b_end_lat":38.7223,"b_end_lon":-9.1393}"#,
+        source: "GeographicLib IntersectTool -i (Karney 2023)",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "navigation.route.course-intersection",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.vertex",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The geodesics cross at {lat}, {lon}: {position}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_segments,
+    ..ToolDef::BLANK
+};
+
+const KARNEY_INTERSECT: gp_base::tool::Reference = gp_base::tool::Reference {
+    title: "Geodesic intersections",
+    issuer: "Karney, C. F. F., Journal of Surveying Engineering",
+    year: 2024,
+    edition: "Vol. 150, No. 3",
+    locator: "04024005 (closest intersection and segment intersections)",
+    url: "https://doi.org/10.1061/JSUED2.SUENG-1483",
+};
+
+fn run_segments(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (_, g) = setup(ctx)?;
+    let a1 = point::read(ctx, "a_start_lat", "a_start_lon")?;
+    let a2 = point::read(ctx, "a_end_lat", "a_end_lon")?;
+    let b1 = point::read(ctx, "b_start_lat", "b_start_lon")?;
+    let b2 = point::read(ctx, "b_end_lat", "b_end_lon")?;
+    let (la, az_a, _, _): (f64, f64, f64, f64) = g.inverse(a1.0, a1.1, a2.0, a2.1);
+    let (lb, az_b, _, _): (f64, f64, f64, f64) = g.inverse(b1.0, b1.1, b2.0, b2.1);
+    if la == 0.0 || lb == 0.0 {
+        return Err(ToolError::invalid(
+            if la == 0.0 {
+                "/a_end_lat"
+            } else {
+                "/b_end_lat"
+            },
+            "Each segment needs two different ends.",
+        ));
+    }
+    let (a, b) = ((a1.0, a1.1, az_a), (b1.0, b1.1, az_b));
+    let same = || {
+        ToolError::new(
+            ErrorCode::DegenerateGeometry,
+            "The two segments lie on the same geodesic, so they overlap rather than cross.",
+        )
+        .at("/b_start_lat")
+    };
+    let seeds = spherical_pair(a, b).ok_or_else(same)?;
+    let (mid_a, mid_b) = (la / 2.0, lb / 2.0);
+    let best = seeds
+        .into_iter()
+        .filter_map(|seed| newton(&g, a, b, seed))
+        .min_by(|x, y| {
+            let key = |c: &((f64, f64), f64, f64)| (c.1 - mid_a).abs() + (c.2 - mid_b).abs();
+            key(x).total_cmp(&key(y))
+        })
+        .ok_or_else(same)?;
+    let ((lat, lon), x, y) = best;
+    let side = |s: f64, len: f64, name: &str| {
+        if s < 0.0 {
+            format!("before the start of {name}")
+        } else if s > len {
+            format!("past the end of {name}")
+        } else {
+            format!("on {name}")
+        }
+    };
+    let inside = (0.0..=la).contains(&x) && (0.0..=lb).contains(&y);
+    let position = if inside {
+        "on both segments".to_owned()
+    } else {
+        format!("{}; {}", side(x, la, "A"), side(y, lb, "B"))
+    };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |v: f64, d: u8| display::number(v, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Distances to the crossing",
+            "Newton's method on the distances along A and B, from the great-circle crossings",
+            format!(
+                "A {} m long at {}°, B {} m long at {}°",
+                n(la, 3),
+                n(az_a, 6),
+                n(lb, 3),
+                n(az_b, 6)
+            ),
+            format!("{} m along A, {} m along B", n(x, 3), n(y, 3)),
+        );
+        ctx.step(
+            "Crossing latitude",
+            "direct problem along A",
+            format!("{} m from A's start", n(x, 3)),
+            display::quantity(lat, "deg", Precision::Decimals(9), fmt),
+        );
+    }
+    Ok(Json::obj(vec![
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(wrap_lon_deg(lon)))),
+        ("within", Json::str(if inside { "yes" } else { "no" })),
+        ("position", Json::str(position)),
+        ("along_a", ctx.out("along_a", meters(x))),
+        ("along_b", ctx.out("along_b", meters(y))),
+        ("length_a", ctx.out("length_a", meters(la))),
+        ("length_b", ctx.out("length_b", meters(lb))),
+    ]))
+}
+
+// ---------------------------------------------------------------- vertex
+
+pub static VERTEX: ToolDef = ToolDef {
+    id: "navigation.geodesic.vertex",
+    title: "Highest point of a geodesic (vertex)",
+    summary: "The vertex of a geodesic: the northernmost point it reaches, where it runs due east or west, and how far along the line from the start it lies.",
+    aliases: &[
+        "geodesic vertex",
+        "maximum latitude of a great circle",
+        "northernmost point of a route",
+        "great circle vertex",
+    ],
+    keywords: &[
+        "vertex",
+        "maximum latitude",
+        "great circle",
+        "Clairaut",
+        "route",
+    ],
+    inputs: &[
+        point::lat_field("lat1", "Start latitude"),
+        point::lon_field("lon1", "Start longitude"),
+        Field::new(
+            "lat2",
+            "Second point latitude",
+            "Or give an azimuth instead; decimal degrees, like 51.47",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .core()
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon2",
+            "Second point longitude",
+            "Decimal degrees, east positive, like -0.4543",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .core()
+        .angle_range("[-180,180)"),
+        angle(
+            "azimuth",
+            "Azimuth",
+            "Instead of a second point, like 51.38",
+        ),
+        E[0],
+        E[1],
+        E[2],
+    ],
+    outputs: &[
+        point::lat_field("vertex_lat", "Vertex latitude").precision(Precision::Decimals(9)),
+        point::lon_field("vertex_lon", "Vertex longitude").precision(Precision::Decimals(9)),
+        Field::new(
+            "along",
+            "Distance to the vertex",
+            "Along the geodesic from the start; negative is behind it",
+            Kind::Quantity {
+                q: QT::Distance,
+                unit: "m",
+            },
+        )
+        .precision(DIST_P),
+        Field::new(
+            "within",
+            "Between the two points",
+            "yes when a second point is given and the vertex lies between them",
+            Kind::Text { max_len: 4 },
+        )
+        .optional(),
+        angle(
+            "equator_azimuth",
+            "Azimuth at the equator",
+            "α₀, the Clairaut constant as an angle",
+        )
+        .precision(Precision::Decimals(9)),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Clairaut's relation on the auxiliary sphere: sin α₀ = sin α₁ cos β₁ and σ₁ = atan2(sin β₁, cos α₁ cos β₁); the northern vertex is at σ = 90°, reached by the direct problem in arc length from the start",
+    accuracy: "Exact to rounding: the azimuth at the vertex is 90° to within 1e-9°",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "The JFK to London geodesic",
+        input: r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543}"#,
+        source: "Karney (2013) auxiliary sphere; GeographicLib GeodSolve -a",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.geodesic.intersection",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The geodesic peaks at {vertex_lat}, {vertex_lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_vertex,
+    ..ToolDef::BLANK
+};
+
+fn run_vertex(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (e, g) = setup(ctx)?;
+    let (lat1, lon1) = point::read(ctx, "lat1", "lon1")?;
+    let second = ctx.raw("lat2").is_some_and(|v| !v.is_null());
+    let az_in = ctx
+        .quantity("azimuth")?
+        .map(|q| q.to(unit(QT::Angle, "deg")));
+    let (azi1, len) = match (second, az_in) {
+        (true, None) => {
+            let (la2, lo2) = point::read(ctx, "lat2", "lon2")?;
+            let (s12, az, _, _): (f64, f64, f64, f64) = g.inverse(lat1, lon1, la2, lo2);
+            if s12 == 0.0 {
+                return Err(ToolError::invalid(
+                    "/lat2",
+                    "The two points coincide, so they define no geodesic.",
+                ));
+            }
+            (az, Some(s12))
+        }
+        (false, Some(az)) => (az, None),
+        _ => {
+            return Err(ToolError::invalid(
+                "/azimuth",
+                "Give a second point or an azimuth, not both.",
+            ));
+        }
+    };
+    // Reduced latitude and the auxiliary-sphere arc from the node to the start.
+    let beta1 = atan((1.0 - e.f) * tan(lat1.to_radians()));
+    let (sa, ca) = (sin(azi1.to_radians()), cos(azi1.to_radians()));
+    let alpha0 = atan2(sa * cos(beta1), libm::hypot(ca, sa * sin(beta1)));
+    let sigma1 = atan2(sin(beta1), ca * cos(beta1));
+    let arc = ((90.0 - sigma1.to_degrees()) + 180.0).rem_euclid(360.0) - 180.0;
+    let r = g._gen_direct(
+        lat1,
+        lon1,
+        azi1,
+        true,
+        arc,
+        geographiclib_rs::geodesic_capability::STANDARD,
+    );
+    let (vlat, vlon, s) = (r.1, r.2, r.4);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |v: f64, d: u8| display::number(v, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Arc from the equator crossing",
+            "σ₁ = atan2(sin β₁, cos α₁ cos β₁)",
+            format!("β₁ = {}°, α₁ = {}°", n(beta1.to_degrees(), 9), n(azi1, 9)),
+            format!("{}°", n(sigma1.to_degrees(), 9)),
+        );
+        ctx.step(
+            "Vertex latitude",
+            "direct problem to σ = 90°",
+            format!("{}° of arc from the start", n(arc, 9)),
+            display::quantity(vlat, "deg", Precision::Decimals(9), fmt),
+        );
+    }
+    let mut out = vec![
+        ("vertex_lat", ctx.out("vertex_lat", deg(vlat))),
+        ("vertex_lon", ctx.out("vertex_lon", deg(wrap_lon_deg(vlon)))),
+        ("along", ctx.out("along", meters(s))),
+    ];
+    if let Some(l) = len {
+        out.push((
+            "within",
+            Json::str(if (0.0..=l).contains(&s) { "yes" } else { "no" }),
+        ));
+    }
+    out.push((
+        "equator_azimuth",
+        ctx.out(
+            "equator_azimuth",
+            deg(alpha0.to_degrees().rem_euclid(360.0)),
+        ),
+    ));
+    Ok(Json::obj(out))
 }

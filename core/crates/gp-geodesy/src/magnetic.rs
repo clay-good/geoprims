@@ -609,7 +609,7 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
     ],
     model: "Magnetic = true − variation, with east variation positive (east is least, west is best)",
     accuracy: "Exact for the variation used. Charts, runways, and navaids use an assigned epoch variation that can differ from today's model value by a degree or more.",
-    references: &[FAA_VARIATION, WMM_REPORT],
+    references: &[FAA_VARIATION, WMM_REPORT, IGRF_REF],
     examples: &[Example {
         id: "primary",
         title: "True course 090° with 12°W variation",
@@ -773,13 +773,14 @@ pub static GRIVATION: ToolDef = ToolDef {
     ],
     model: "Grid variation G = D − γ: the model's declination D minus the grid convergence γ (the bearing of grid north from true north) of the UTM or UPS zone, both east positive",
     accuracy: "As good as the declination (WMM2025: about 0.3° to a few degrees near the poles); the convergence is exact",
-    references: &[WMM_REPORT, crate::NGA_UTM],
+    references: &[WMM_REPORT, IGRF_REF, crate::NGA_UTM],
     examples: &[Example {
         id: "primary",
         title: "At 86° N, 45° E in UPS north",
         input: r#"{"lat":86,"lon":45,"date":"2026-09-22","grid":"ups"}"#,
         source: "add-geodesy-suite grivation scenario: WMM2025 declination minus the UPS convergence",
     }],
+    assets: &["wmm2025", "igrf14"],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "point",

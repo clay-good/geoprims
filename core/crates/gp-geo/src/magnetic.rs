@@ -7,6 +7,16 @@
 
 use libm::{asin, atan2, cos, hypot, sin, sqrt};
 
+/// The WMM2025 technical report, for tools in other crates that use the model.
+pub const WMM_REPORT: gp_base::tool::Reference = gp_base::tool::Reference {
+    title: "The US/UK World Magnetic Model for 2025-2030: Technical Report",
+    issuer: "NOAA National Centers for Environmental Information and British Geological Survey",
+    year: 2024,
+    edition: "WMM2025, NESDIS/NCEI (December 2024)",
+    locator: "Section 1.2 (equations 1-25: synthesis, secular variation, and elements)",
+    url: "https://www.ncei.noaa.gov/products/world-magnetic-model",
+};
+
 static WMM2025_COF: &str = include_str!("../data/WMM2025.COF");
 static IGRF14_TXT: &str = include_str!("../data/igrf14coeffs.txt");
 

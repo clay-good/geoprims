@@ -125,13 +125,14 @@ pub static RADIAL_FIX: ToolDef = ToolDef {
     ],
     model: "True course = radial + station variation (east positive); the fix is the Karney geodesic direct on WGS 84 from the station. With a date, WMM2025 declination at the station at sea level is compared with the station variation",
     accuracy: "Exact geometry for the entered ground distance (convert a DME reading with the slant-range tool first). The station variation governs the radial, even when the Earth's field has moved since",
-    references: &[IFH_VOR],
+    references: &[IFH_VOR, gp_geo::magnetic::WMM_REPORT],
     examples: &[Example {
         id: "primary",
         title: "Radial 098 at 12.5 NM from a station with 11° E variation",
         input: r#"{"lat":39.8,"lon":-104.7,"radial":"98 deg","distance":"12.5 NM","variation":"11 deg","date":"2026-09-22"}"#,
         source: "add-practitioner-essentials variation scenario: the fix uses the station's 11° E, and the difference from WMM is reported and warned when over 1°",
     }],
+    assets: &["wmm2025"],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",

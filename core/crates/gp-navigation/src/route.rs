@@ -1434,13 +1434,14 @@ pub static LEGS: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Geodesic legs (Karney 2013) on WGS 84; magnetic declination from WMM2025",
     accuracy: "Distances and courses to nanometers; declination per WMM2025 (about ±0.5° typical)",
-    references: &[KARNEY],
+    references: &[KARNEY, gp_geo::magnetic::WMM_REPORT],
     examples: &[Example {
         id: "primary",
         title: "Denver to Aspen to Grand Junction to Denver at 120 kt",
         input: r#"{"waypoints":[{"name":"KDEN","lat":39.8617,"lon":-104.6731},{"name":"KASE","lat":39.2232,"lon":-106.8688},{"name":"KGJT","lat":39.1224,"lon":-108.5267},{"name":"KDEN","lat":39.8617,"lon":-104.6731}],"date":"2026-09-18","groundspeed":"120 kt","departure":"09:00","utc_offset":"-06:00"}"#,
         source: "navigation route-geometry scenario: a 4-waypoint route shows true and magnetic courses per leg, with the declination and model",
     }],
+    assets: &["wmm2025"],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",

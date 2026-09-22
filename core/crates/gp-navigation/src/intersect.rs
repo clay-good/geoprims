@@ -116,6 +116,9 @@ fn geodesic_crossing(
     newton(g, a, b, spherical_seed(a, b)?)
 }
 
+/// A crossing: ((lat, lon), distance along the first course, along the second).
+type Crossing = ((f64, f64), f64, f64);
+
 /// Newton's method on (s1, s2) from a seed: ((lat, lon), s1, s2).
 fn newton(
     g: &Geodesic,
@@ -124,6 +127,10 @@ fn newton(
     seed: (f64, f64),
 ) -> Option<((f64, f64), f64, f64)> {
     let (mut s1, mut s2) = seed;
+    // The closest approach seen: rounding can keep the gap from settling
+    // below the step threshold (it differs by a few ulps between hosts), so a
+    // gap under a micrometer at the end still counts.
+    let mut best: Option<(f64, Crossing)> = None;
     for _ in 0..50 {
         let (la1, lo1, az1): (f64, f64, f64) = g.direct(a.0, a.1, a.2, s1);
         let (la2, lo2, az2): (f64, f64, f64) = g.direct(b.0, b.1, b.2, s2);
@@ -133,6 +140,9 @@ fn newton(
         // A nanometer, or rounding at 10,000 km, whichever is larger.
         if d <= 1e-9_f64.max(1e-15 * (s1.abs() + s2.abs())) {
             return Some(((la1, lo1), s1, s2));
+        }
+        if best.is_none_or(|(bd, _)| d < bd) {
+            best = Some((d, ((la1, lo1), s1, s2)));
         }
         let r = (d * sin(beta.to_radians()), d * cos(beta.to_radians()));
         let u1 = (sin(az1.to_radians()), cos(az1.to_radians()));
@@ -152,7 +162,7 @@ fn newton(
         s1 += ds1;
         s2 += ds2;
     }
-    None
+    best.filter(|(d, _)| *d <= 1e-6).map(|(_, found)| found)
 }
 
 /// Rhumb crossing in Mercator coordinates (λ, ψ): ((lat, lon), s1, s2) with

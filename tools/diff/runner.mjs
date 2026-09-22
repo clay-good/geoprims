@@ -7,8 +7,8 @@
 //
 //   node tools/diff/runner.mjs [--cases 10000] [--family name] [--report dir]
 //
-// References are GeographicLib's command-line tools (GeodSolve, RhumbSolve,
-// GeoConvert, CartConvert, GeoidEval). A family whose reference is missing is
+// References are GeographicLib's command-line tools (GeodSolve, including its
+// exact -E mode, RhumbSolve, GeoConvert, CartConvert, GeoidEval, IntersectTool). A family whose reference is missing is
 // skipped and says so; the reference container (platform task 6.2) makes them
 // all present in CI.
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -199,7 +199,93 @@ export const FAMILIES = [
       return Math.abs(res.geoid_height.value - n) > 6e-5 ? `geoid height ${res.geoid_height.value} vs ${n}` : null;
     },
   },
+  {
+    name: 'exact-inverse',
+    tool: 'navigation.geodesic.inverse',
+    needs: 'GeodSolve',
+    // Strongly flattened ellipsoids take the exact method (0.02 < f ≤ 0.5); the
+    // tool refuses nearly antipodal points there, so pairs stay within 150°.
+    make(r) {
+      const rf = [40, 10, 3, 2][Math.floor(4 * r())];
+      let p;
+      let t;
+      do {
+        p = [uniformLat(r), uniformLon(r)].map(q);
+        t = [uniformLat(r), uniformLon(r)].map(q);
+      } while (centralAngle(p, t) > 150);
+      return {
+        input: { lat1: p[0], lon1: p[1], lat2: t[0], lon2: t[1], a: '6378137 m', inverse_flattening: rf, options: { outputUnits: { distance: 'm' } } },
+        line: `${fx(p[0])} ${fx(p[1])} ${fx(t[0])} ${fx(t[1])}`,
+        rf,
+      };
+    },
+    batchKey: (c) => String(c.rf),
+    run: (lines, c) => reference('GeodSolve', ['-i', '-E', '-e', '6378137', `1/${c.rf}`, '-p', '12'], lines),
+    compare(res, [az1, az2, s]) {
+      if (Math.abs(res.distance.value - s) > 1e-9 * s + 15e-9) return `distance ${res.distance.value} vs ${s}`;
+      const tol = 1e-9 + azRounding(s);
+      if (angDiff(res.azimuth1.value, az1) > tol) return `azimuth1 ${res.azimuth1.value} vs ${az1}`;
+      if (angDiff(res.azimuth2.value, az2) > tol) return `azimuth2 ${res.azimuth2.value} vs ${az2}`;
+      return null;
+    },
+  },
+  {
+    name: 'mgrs-forward',
+    tool: 'geodesy.grid-ref.mgrs-forward',
+    needs: 'GeoConvert',
+    // 1 m references (the default) and, 1 time in 4, millimeters; MGRS truncates.
+    make(r) {
+      const p = point(r).map(q);
+      const mm = r() < 0.25;
+      return { input: { lat: p[0], lon: p[1], ...(mm ? { precision: '0.001m' } : {}) }, line: `${fx(p[0])} ${fx(p[1])}`, mm };
+    },
+    batchKey: (c) => (c.mm ? 'mm' : 'm'),
+    run: (lines, c) => referenceText('GeoConvert', ['-m', '-p', c.mm ? '3' : '0'], lines),
+    compare(res, [want]) {
+      return res.mgrs === want ? null : `mgrs ${res.mgrs} vs ${want}`;
+    },
+  },
+  {
+    name: 'segment-intersection',
+    tool: 'navigation.geodesic.intersection',
+    needs: 'IntersectTool',
+    make(r) {
+      const lat0 = 120 * r() - 60;
+      const lon0 = uniformLon(r);
+      const near = () => [q(Math.max(-85, Math.min(85, lat0 + 50 * (r() - 0.5)))), q(lon0 + 60 * (r() - 0.5))];
+      const [a1, a2, b1, b2] = [near(), near(), near(), near()];
+      return {
+        input: { a_start_lat: a1[0], a_start_lon: a1[1], a_end_lat: a2[0], a_end_lon: a2[1], b_start_lat: b1[0], b_start_lon: b1[1], b_end_lat: b2[0], b_end_lon: b2[1] },
+        line: [a1, a2, b1, b2].flat().map(fx).join(' '),
+      };
+    },
+    run: (lines) => reference('IntersectTool', ['-i', '-p', '9'], lines),
+    // IntersectTool -i prints x y c k: the distances along each segment,
+    // coincidence, and 0 when the crossing is within both segments.
+    compare(res, [x, y, c, k]) {
+      if (c !== 0) return null;
+      const tol = (v) => 1e-6 + 5e-12 * Math.abs(v);
+      if (Math.abs(res.along_a.value - x) > tol(x)) return `along A ${res.along_a.value} vs ${x}`;
+      if (Math.abs(res.along_b.value - y) > tol(y)) return `along B ${res.along_b.value} vs ${y}`;
+      if ((res.within === 'yes') !== (k === 0)) return `within ${res.within} vs k = ${k}`;
+      return null;
+    },
+  },
 ];
+
+/** The central angle between two points on a sphere, degrees. */
+function centralAngle(p, t) {
+  const R = Math.PI / 180;
+  const c = Math.sin(p[0] * R) * Math.sin(t[0] * R) + Math.cos(p[0] * R) * Math.cos(t[0] * R) * Math.cos((t[1] - p[1]) * R);
+  return Math.acos(Math.max(-1, Math.min(1, c))) / R;
+}
+
+/** Like `reference`, for tools that print words (GeoConvert -m). */
+function referenceText(cmd, args, lines) {
+  const out = spawnSync(cmd, args, { input: lines.join('\n') + '\n', encoding: 'utf8', maxBuffer: 1 << 28 });
+  if (out.status !== 0) throw new Error(`${cmd} failed: ${out.stderr || out.stdout}`);
+  return out.stdout.trim().split('\n').map((l) => l.trim().split(/\s+/));
+}
 
 /**
  * Runs one family on `n` cases. `perturb`, when given, changes each tool

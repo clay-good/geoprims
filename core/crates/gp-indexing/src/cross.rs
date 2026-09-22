@@ -165,6 +165,20 @@ fn run_cross(ctx: &mut Ctx) -> Result<Json, ToolError> {
         qth_size,
     );
 
+    // S2: quadrilaterals on a cube face, compared by the side of a square of
+    // the same average area for the level.
+    let s2_options: Vec<(u8, f64)> = (0..=30u8)
+        .map(|level| {
+            (
+                level,
+                sqrt(crate::s2::average_area_steradians(level) * 6_371_008.8 * 6_371_008.8),
+            )
+        })
+        .collect();
+    let (s2_level, s2_size) = closest(&s2_options, target);
+    let s2_cell = crate::s2::CellId::from_lat_lon(lat, lon, s2_level);
+    row("S2", s2_cell.token(), format!("level {s2_level}"), s2_size);
+
     // MGRS: squares in meters on the grid, so their size does not vary.
     let mgrs_options: Vec<(i32, f64)> = (0..=5)
         .map(|digits| (digits, 100_000.0 / 10f64.powi(digits)))
@@ -267,7 +281,7 @@ const CELL_ROW: &[Field] = &[
 pub static CROSS_INDEX: ToolDef = ToolDef {
     id: "indexing.convert.cross-index",
     title: "One place in every index, at a matched cell size",
-    summary: "A point written as an H3 cell, a geohash, a Plus Code, a map tile, a Maidenhead locator, and an MGRS reference, each at the resolution whose cell is closest to the size you name, with the size it actually has there.",
+    summary: "A point written as an H3 cell, an S2 cell, a geohash, a Plus Code, a map tile, a Maidenhead locator, and an MGRS reference, each at the resolution whose cell is closest to the size you name, with the size it actually has there.",
     aliases: &[
         "cross index conversion",
         "geohash to h3",
@@ -277,6 +291,7 @@ pub static CROSS_INDEX: ToolDef = ToolDef {
     keywords: &[
         "cross index",
         "H3",
+        "S2",
         "geohash",
         "Plus Code",
         "tile",
@@ -324,7 +339,7 @@ pub static CROSS_INDEX: ToolDef = ToolDef {
     model: "For each system, the resolution whose cell size is closest to the target by ratio (log distance), since sizes step by factors; cell size is the side of a square of the same area, computed at this latitude for the systems whose cells are measured in degrees or in Web Mercator",
     accuracy: "Exact encodings. Cell sizes are that system's own cell at this point, except H3, whose figure is the resolution's average area over the globe.",
     when_to_use: "Use this when data arrives keyed by one index and has to be joined to data keyed by another, or when choosing which system to key by: the same ground is a resolution 10 hexagon, a seven-character geohash, and a zoom 18 tile, and they are not the same size. It also answers what a resolution in one system is worth in another, which is the question behind most cross-dataset joins.",
-    limitations: "No two systems tile the ground the same way, so these are the nearest resolutions rather than equivalents, and the sizes differ by tens of percent. Cells in degrees narrow toward the poles and Web Mercator tiles shrink with the cosine of the latitude, so the same resolutions compare differently at other latitudes. S2, which the spec also names, is not implemented yet and is absent here rather than approximated.",
+    limitations: "No two systems tile the ground the same way, so these are the nearest resolutions rather than equivalents, and the sizes differ by tens of percent. Cells in degrees narrow toward the poles and Web Mercator tiles shrink with the cosine of the latitude, so the same resolutions compare differently at other latitudes. The H3 and S2 figures are their level's average over the globe rather than this cell's own area, since neither grid is equal-area.",
     references: &[
         crate::h3::H3_DOCS,
         crate::GEOHASH_REF,

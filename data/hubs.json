@@ -1112,6 +1112,24 @@
         }
       ]
     },
+    "indexing.s2": {
+      "summary": "S2 cells: a point to a cell id or token at any level, what a cell covers, and the cells across its edges.",
+      "tasks": [
+        {
+          "want": "turn a point into an S2 cell, or read a token",
+          "tools": [
+            "lat-lng-to-cell",
+            "cell-info"
+          ]
+        },
+        {
+          "want": "find the cells around one, including across a cube face",
+          "tools": [
+            "neighbors"
+          ]
+        }
+      ]
+    },
     "indexing.tile": {
       "summary": "Web map tiles and ground resolution.",
       "tasks": [

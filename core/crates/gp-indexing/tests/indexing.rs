@@ -959,6 +959,11 @@ fn cross_index_matches_resolutions_to_a_target_size() {
     assert_eq!(h3["resolution"], "resolution 10", "{h3}");
     let h3_size = h3["cell_size"]["value"].as_f64().unwrap();
     assert!((h3_size - 123.0).abs() < 2.0, "H3 cell side {h3_size} m");
+    // The scenario's third number: S2 level 16, about 141 m average.
+    let s2 = by("S2");
+    assert_eq!(s2["resolution"], "level 16", "{s2}");
+    let s2_size = s2["cell_size"]["value"].as_f64().unwrap();
+    assert!((s2_size - 141.0).abs() < 2.0, "S2 cell side {s2_size} m");
     let gh = by("Geohash");
     assert_eq!(gh["resolution"], "precision 7", "{gh}");
     let gh_size = gh["cell_size"]["value"].as_f64().unwrap();
@@ -966,6 +971,7 @@ fn cross_index_matches_resolutions_to_a_target_size() {
     // Every system answers, and every reference decodes back to the point.
     for system in [
         "H3",
+        "S2",
         "Geohash",
         "Plus Code",
         "Map tile",

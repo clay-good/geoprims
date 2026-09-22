@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "4eb7017236f28a86",
+    "hash": "4a07e1f3d79d7a62",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -96,7 +96,7 @@
     "lastmod": "2026-09-22"
   },
   "/changelog/": {
-    "hash": "b8e8c0182619dfdc",
+    "hash": "65357bec638f547f",
     "lastmod": "2026-09-22"
   },
   "/disclaimer/": {
@@ -324,11 +324,11 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/": {
-    "hash": "046b92718b958cb5",
+    "hash": "9a02b6a1a419fbba",
     "lastmod": "2026-09-22"
   },
   "/indexing/convert/": {
-    "hash": "7571378cd419cd07",
+    "hash": "bc4722b66832432e",
     "lastmod": "2026-09-22"
   },
   "/indexing/geohash/": {
@@ -415,6 +415,10 @@
     "hash": "f3c4c67f9db37d37",
     "lastmod": "2026-09-22"
   },
+  "/indexing/s2/": {
+    "hash": "68cc54874af8e3ec",
+    "lastmod": "2026-09-22"
+  },
   "/indexing/tile/": {
     "hash": "d3598c2dade38677",
     "lastmod": "2026-09-22"
@@ -472,7 +476,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "2116575de160ac7d",
+    "hash": "aeadfa7f4a9a0533",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -536,7 +540,7 @@
     "lastmod": "2026-09-20"
   },
   "/quality/": {
-    "hash": "f0d704292a3bb8cf",
+    "hash": "48ecf11ec9a002e0",
     "lastmod": "2026-09-22"
   },
   "/raster/": {
@@ -556,7 +560,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "607f233794825da2",
+    "hash": "2457e5bc26cf80d1",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -640,7 +644,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "105efddc1f8cdc04",
+    "hash": "34661fd32d774845",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -740,7 +744,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c8655148e9e87a70",
+    "hash": "054f0978a1c512f4",
     "lastmod": "2026-09-22"
   }
 }

@@ -2190,8 +2190,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": null,
-      "verificationNote": "Not cited yet.",
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Read the S2 cell hierarchy guide at s2geometry.io on 2026-09-22: levels 0 to 30, leaf cells about 1 cm across, the cell id as face, Hilbert position, and level bits, and the token form. A living documentation site rather than an edition.",
       "freeAccessUrl": "https://s2geometry.io/devguide/s2cell_hierarchy",
       "matchTerms": [
         "S2 Geometry"

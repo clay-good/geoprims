@@ -3,6 +3,21 @@
   "entries": [
     {
       "date": "2026-09-22",
+      "kind": "result-change",
+      "tools": [
+        "indexing.convert.cross-index"
+      ],
+      "vectors": [
+        "indexing.convert.cross-index v001",
+        "indexing.convert.cross-index v002",
+        "indexing.convert.cross-index v003",
+        "indexing.convert.cross-index v004",
+        "indexing.convert.cross-index v005"
+      ],
+      "summary": "The cross-index tool now includes S2, which sits between Maidenhead and MGRS in its list, so the rows after it shift by one. The cell each system reports is unchanged; only the positions in the list moved, and the golden vectors that addressed rows by position were superseded."
+    },
+    {
+      "date": "2026-09-22",
       "kind": "changed",
       "tools": [
         "navigation.geodesic.inverse",

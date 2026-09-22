@@ -7,6 +7,8 @@ pub mod cover;
 pub mod cross;
 pub mod h3;
 pub mod h3fill;
+pub mod s2;
+pub mod s2tools;
 
 use codes::Bounds;
 use gp_base::error::{ToolError, Warning};
@@ -1347,6 +1349,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &h3::EDGES,
     &h3::RESOLUTION_CHOOSER,
     &h3::POLYGON_TO_CELLS,
+    &s2tools::POINT_TO_CELL,
+    &s2tools::CELL_INFO,
+    &s2tools::NEIGHBORS,
     &cross::CROSS_INDEX,
 ];
 

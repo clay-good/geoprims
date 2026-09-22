@@ -1225,6 +1225,18 @@
       ]
     },
     {
+      "id": "s2",
+      "term": "S2",
+      "expansion": "S2 Geometry",
+      "definition": "A way of indexing the sphere: the Earth is projected onto a cube, each face is traced by a Hilbert curve, and a cell is a position along that curve at a level from 0 to 30.",
+      "source": "s2",
+      "relatedTools": [
+        "indexing.s2.cell-info",
+        "indexing.s2.lat-lng-to-cell",
+        "indexing.s2.neighbors"
+      ]
+    },
+    {
       "id": "sad69",
       "term": "SAD69",
       "expansion": "South American Datum 1969",

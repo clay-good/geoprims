@@ -48,13 +48,16 @@ for i, (lat, lon, target) in enumerate([(40.6892, -74.0445, 150.0), (0.0, 0.0, 1
                                         (60.0, 10.0, 1000.0), (-33.8688, 151.2093, 10.0),
                                         (51.5074, -0.1278, 25000.0)], 1):
     gh, olc, qth, tile, mg = sizes(lat, target)
+    s2 = pick([(lvl, math.sqrt(4*math.pi/(6*4**lvl)*6371008.8**2)) for lvl in range(0, 31)], target)
     e = {"result.cells.1.resolution": f"precision {gh[0]}",
          "result.cells.2.resolution": f"{olc[0]} characters",
          "result.cells.3.resolution": f"zoom {tile[0]}",
          "result.cells.4.resolution": f"{qth[0]} characters",
-         "result.cells.5.resolution": f"{mg[0]} digits, {int(mg[1])} m squares",
+         "result.cells.5.resolution": f"level {s2[0]}",
+         "result.cells.6.resolution": f"{mg[0]} digits, {int(mg[1])} m squares",
          "result.cells.1.cell_size.value": gh[1],
          "result.cells.3.cell_size.value": tile[1],
+         "result.cells.5.cell_size.value": s2[1],
          "ok": True}
     t = {k: {"rel": 1e-9, "abs": 1e-6} for k, v in e.items() if isinstance(v, float)}
     rows.append({"id": f"v{i:03d}", "input": {"lat": lat, "lon": lon, "target_size": f"{target:g} m"},

@@ -29,6 +29,13 @@ function row(r, i, active) {
     tag.textContent = 'Values filled';
     title.append(' ', tag);
     summary.textContent = r.summary;
+  } else if (r.kind === 'note') {
+    title.textContent = r.title;
+    const tag = document.createElement('span');
+    tag.className = 'ask-tag muted';
+    tag.textContent = 'Not here';
+    title.append(' ', tag);
+    summary.textContent = r.summary;
   } else if (r.kind === 'detected') {
     title.textContent = r.title;
     summary.textContent = r.head ? `${r.head.replace(/\.$/, '')} · ${r.summary}` : r.summary;

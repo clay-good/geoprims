@@ -1,0 +1,64 @@
+{
+  "manifest_version": "0.3",
+  "name": "geoprims",
+  "display_name": "geoprims",
+  "version": "0.1.0",
+  "description": "Exact, cited geospatial, aviation, drone, survey, and unit calculations. Offline, with no network access at all.",
+  "long_description": "geoprims answers the calculations practitioners actually do — geodesics and datums, airspeed and density altitude, ground sampling distance and mission plans, traverses and curves, grid references and cell indexes — from one local server that never reaches the network. Every answer carries its units, its method, its accuracy, and the source it comes from, and every tool is checked against golden vectors and, where a reference implementation exists, against that implementation on tens of thousands of cases.\n\nThe six meta-tools let an agent find a tool, read its contract, run it, chain several, convert units, and report a problem. Optional direct toolsets expose the stable tools of a domain as their own tools when an agent works in one area.",
+  "author": {
+    "name": "Clay Good",
+    "url": "https://github.com/clay-good"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clay-good/geoprims.git"
+  },
+  "homepage": "https://geoprims.com",
+  "documentation": "https://github.com/clay-good/geoprims/blob/main/mcp/README.md",
+  "support": "https://github.com/clay-good/geoprims/issues",
+  "server": {
+    "type": "node",
+    "entry_point": "server.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server.mjs",
+        "--toolsets=${user_config.toolsets}"
+      ]
+    }
+  },
+  "tools": [
+    { "name": "geoprims_search", "description": "Find the tool for a question, ranked, with the values the question fills in" },
+    { "name": "geoprims_describe", "description": "A tool's inputs, outputs, units, method, accuracy, sources, and worked example" },
+    { "name": "geoprims_run", "description": "Run a tool, with units, warnings, and the steps behind the answer" },
+    { "name": "geoprims_pipeline", "description": "Run several tools in order, passing each answer to the next" },
+    { "name": "geoprims_convert_units", "description": "Convert a quantity between units, exactly" },
+    { "name": "geoprims_report_problem", "description": "Report a wrong or unclear answer, with the inputs that produced it" }
+  ],
+  "tools_generated": true,
+  "keywords": [
+    "geospatial",
+    "aviation",
+    "drone",
+    "survey",
+    "geodesy",
+    "units",
+    "offline"
+  ],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
+  },
+  "user_config": {
+    "toolsets": {
+      "type": "string",
+      "title": "Direct toolsets",
+      "description": "Expose the stable tools of these domains as their own tools, beside the six meta-tools. Comma-separated, from: geodesy-core, navigation, e6b, atmosphere, drone-mapping, survey-cogo, indexing. Leave empty for the meta-tools alone.",
+      "required": false,
+      "default": ""
+    }
+  }
+}

@@ -35,6 +35,15 @@ export async function ask(query, { limit = 8 } = {}) {
     })),
   );
   const tools = (out.ok ? out.result.results : []).map((t) => ({ kind: 'tool', ...t, href: route(t.id) }));
+  // A system the catalog deliberately does not implement: say why, and offer
+  // what to use instead, rather than leaving the reader with a thin list.
+  const notes = (out.ok ? (out.result.notes ?? []) : []).map((n) => ({
+    kind: 'note',
+    id: n.instead[0],
+    title: n.title,
+    summary: n.body,
+    href: route(n.instead[0]),
+  }));
   const filled = (tools[0]?.open ?? []).map((a) => ({ kind: 'filled', tool: tools[0].title, id: tools[0].id, ...a }));
   // A recognized format — a METAR, an MGRS reference, an H3 cell — is an exact
   // reading of the whole text, where the question parser only guesses at the
@@ -46,7 +55,7 @@ export async function ask(query, { limit = 8 } = {}) {
   // are the same answer.
   const opened = new Set(detected.map((d) => d.id));
   const results = exact
-    ? [...detected, ...filled.filter((f) => !opened.has(f.id)), ...tools]
-    : [...filled, ...detected, ...tools];
+    ? [...notes, ...detected, ...filled.filter((f) => !opened.has(f.id)), ...tools]
+    : [...notes, ...filled, ...detected, ...tools];
   return { results, filled: !exact && filled.length > 0, found };
 }

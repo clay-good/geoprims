@@ -498,6 +498,8 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .ask-summary { font: 0.82rem var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ask-tag { display: inline-block; margin-inline-start: 0.35rem; padding: 0 0.4rem; border-radius: 4px; font: 700 0.66rem/1.6 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--on-ink); background: var(--accent); vertical-align: 0.15em; }
 .ask-tag.muted { color: var(--caution); background: color-mix(in srgb, var(--caution) 14%, var(--surface)); }
+/* An explanation row carries a sentence or two, so it wraps rather than being cut. */
+.ask-row.ask-note .ask-summary { white-space: normal; }
 
 /* Example questions: one scrolling row on a phone, wrapping where there is room. */
 .try { display: flex; gap: 0.4rem; margin-block-start: 0.9rem; overflow-x: auto; scrollbar-width: none; padding-block-end: 2px; mask-image: linear-gradient(to right, var(--text) 85%, transparent); }

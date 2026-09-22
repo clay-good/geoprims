@@ -306,6 +306,68 @@ pub fn load(json: &str) -> String {
         .expect("finite")
 }
 
+/// Systems the catalog does not implement, and why. A reader searching for
+/// one gets the reason and what to use instead, rather than an empty list
+/// that reads as "this site cannot do that" (indexing/hierarchical-cells,
+/// "Excluded proprietary systems").
+struct Excluded {
+    /// Query words that raise the note, lowercased.
+    terms: &'static [&'static str],
+    title: &'static str,
+    body: &'static str,
+    /// Tool ids to offer instead.
+    instead: &'static [&'static str],
+}
+
+const EXCLUDED: &[Excluded] = &[Excluded {
+    terms: &[
+        "what3words",
+        "what3word",
+        "w3w",
+        "3 word address",
+        "three word address",
+    ],
+    title: "what3words is not here",
+    body: "what3words is proprietary and patented, and its terms do not allow the offline use this site is built for. Plus Codes name a place just as short, are an open standard, and work with no network.",
+    instead: &[
+        "indexing.plus-code.encode",
+        "indexing.plus-code.decode",
+        "indexing.plus-code.shorten",
+    ],
+}];
+
+/// The notes a query raises, as JSON entries.
+fn notes_for(query: &str) -> Vec<Json> {
+    let q = query.to_lowercase();
+    // Words, so "w3w" matches on its own but not inside another word.
+    let words: Vec<&str> = q
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .collect();
+    EXCLUDED
+        .iter()
+        .filter(|e| {
+            e.terms.iter().any(|t| {
+                if t.contains(' ') {
+                    q.contains(t)
+                } else {
+                    words.contains(t)
+                }
+            })
+        })
+        .map(|e| {
+            Json::obj([
+                ("title", Json::str(e.title)),
+                ("body", Json::str(e.body)),
+                (
+                    "instead",
+                    Json::Arr(e.instead.iter().map(|id| Json::str(*id)).collect()),
+                ),
+            ])
+        })
+        .collect()
+}
+
 pub const DEFAULT_LIMIT: usize = 10;
 pub const MAX_LIMIT: usize = 50;
 
@@ -460,6 +522,10 @@ pub fn search(json: &str) -> String {
             })
             .collect();
         let mut out = vec![("results".to_owned(), Json::Arr(results))];
+        let notes = notes_for(query);
+        if !notes.is_empty() {
+            out.push(("notes".to_owned(), Json::Arr(notes)));
+        }
         if hidden > 0 {
             out.push(("hiddenExperimental".to_owned(), Json::Num(hidden as f64)));
         }
@@ -531,6 +597,48 @@ mod exports {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn what3words_is_explained_rather_than_missing() {
+        // indexing/hierarchical-cells "Excluded proprietary systems".
+        index();
+        for q in [
+            "what3words",
+            "w3w",
+            "What3Words address",
+            "three word address",
+        ] {
+            let out: Value =
+                serde_json::from_str(&search(&format!(r#"{{"query":"{q}"}}"#))).unwrap();
+            let notes = out["result"]["notes"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{q}: {out}"));
+            assert_eq!(notes.len(), 1, "{q}");
+            let body = notes[0]["body"].as_str().unwrap();
+            assert!(
+                body.contains("proprietary") && body.contains("Plus Codes"),
+                "{body}"
+            );
+            let instead: Vec<&str> = notes[0]["instead"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_str().unwrap())
+                .collect();
+            assert!(
+                instead
+                    .iter()
+                    .all(|id| id.starts_with("indexing.plus-code.")),
+                "{instead:?}"
+            );
+        }
+        // A query that does not name it gets no note.
+        let out: Value = serde_json::from_str(&search(r#"{"query":"density altitude"}"#)).unwrap();
+        assert!(out["result"]["notes"].is_null(), "{out}");
+        // And a word that merely contains one of the terms does not raise it.
+        let out: Value = serde_json::from_str(&search(r#"{"query":"w3wx"}"#)).unwrap();
+        assert!(out["result"]["notes"].is_null(), "{out}");
+    }
 
     #[test]
     fn edit_distance_one() {

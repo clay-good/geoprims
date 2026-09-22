@@ -17,7 +17,7 @@
 - [x] 2.4 Implement tile, TMS, quadkey, bbox cover, and ground resolution; verify the tile, resolution, and convention scenarios (done so far: point to XYZ tile, TMS, and quadkey, tile or quadkey to bounds with a detect-convention reading, and ground resolution and scale for 256 or 512 px tiles, with WEB_MERCATOR_CLAMPED; and `indexing.tile.family` (parent and children, XYZ or TMS) and `indexing.tile.cover` (every tile over a box, across the antimeridian, capped at 10,000); all checked against an independent Python transcription)
 - [x] 2.5 Integrate Open Location Code; verify all official OLC test files and the short-code scenario (all four official test files pass: encoding, decoding, validity, and shortening/recovery)
 - [ ] 2.6 Implement cross-index conversion with matched sizes; verify the 150 m scenario
-- [ ] 2.7 Add the what3words explanation entry; verify the search scenario
+- [x] 2.7 Add the what3words explanation entry; verify the search scenario — searching for what3words, w3w, or a three-word address returns a note saying why it is not here (proprietary, patented, and its terms do not allow offline use) and pointing at the Plus Code tools, which the search results carry as `notes` and the palette and home search render as a row. A core test covers the wording, the suggested tools, that an unrelated query raises no note, and that a word merely containing a term does not raise one; a web test checks every tool it points at exists
 
 ## 3. Imagery indices
 

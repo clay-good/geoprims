@@ -99,6 +99,14 @@ Settings, Developer, Edit Config: claude_desktop_config.json.
 
 For the `npx` path (once `@geoprims/mcp` is published), use `"command": "npx", "args": ["-y", "@geoprims/mcp"]` instead, or `claude mcp add geoprims -- npx -y @geoprims/mcp`.
 
+### Desktop bundle
+
+`npm run build:mcpb` writes `dist/mcpb/geoprims-<version>.mcpb`, a one-click bundle for desktop hosts: the server, its manifest, and the whole `mcp/dist` it reads, so the installed extension is as offline as the checkout. The zip is built byte-for-byte reproducibly — fixed entry order, fixed timestamps — so the same source gives the same digest, and `npm run build:mcpb -- --write-digest` writes that digest into `mcp/server.json` as the MCPB package's `fileSha256`.
+
+The bundle's one setting is the same `--toolsets` the command line takes: leave it empty for the six meta-tools, or name domains to expose their stable tools directly.
+
+`mcp/server.json` is the MCP Registry entry for `com.geoprims/mcp`. It names the npm package and the MCPB download of the same release; the digest in the committed file is a placeholder until a release is built.
+
 ## Tools
 
 | Tool | What it does |

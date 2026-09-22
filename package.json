@@ -11,6 +11,7 @@
     "build:wasm": "node tools/wasm/build.mjs",
     "build:catalog": "node tools/codegen/catalog.mjs",
     "build:mcp": "node tools/mcp/build-dist.mjs",
+    "build:mcpb": "node tools/mcp/build-mcpb.mjs",
     "diff": "node tools/diff/runner.mjs",
     "test": "npm run test:rust && npm run test:js",
     "test:rust": "cargo test --manifest-path core/Cargo.toml",

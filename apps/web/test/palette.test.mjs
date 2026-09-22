@@ -140,3 +140,24 @@ test('a question with numbers opens the tool filled in; ambiguous values become 
   assert.deepEqual(await prefillActions(await top('density altitude'), tools.get('aviation.altimetry.density-altitude'), encode), []);
   assert.equal(placements([{ value: '1', candidates: ['a', 'b', 'c'] }, { value: '2', candidates: ['a', 'b', 'c'] }, { value: '3', candidates: ['a', 'b', 'c'] }]).length, 6);
 });
+
+test('searching for what3words explains why it is not here, and offers Plus Codes', async () => {
+  // add-spatial-indexing-and-raster 2.7 and indexing/hierarchical-cells
+  // "Excluded proprietary systems": an empty list would read as a failing
+  // site, so the search answers with the reason and what to use instead.
+  const m = await nodeHost(join(root, 'dist/wasm')).module('search');
+  await m.callString('gp_search_load', JSON.stringify(catalog.tools));
+  const run = async (query) => JSON.parse(await m.callString('gp_search', JSON.stringify({ query, limit: 8, includeExperimental: true }))).result;
+  for (const q of ['what3words', 'w3w', 'three word address']) {
+    const { notes } = await run(q);
+    assert.ok(notes?.length === 1, `${q}: no explanation`);
+    assert.match(notes[0].body, /proprietary/);
+    assert.match(notes[0].body, /Plus Codes/);
+    // Every tool it points at exists and is a Plus Code tool.
+    for (const id of notes[0].instead) {
+      assert.ok(catalog.tools.some((t) => t.id === id), `${id} is not in the catalog`);
+      assert.match(id, /^indexing\.plus-code\./);
+    }
+  }
+  assert.equal((await run('density altitude')).notes, undefined, 'an unrelated query raises no note');
+});

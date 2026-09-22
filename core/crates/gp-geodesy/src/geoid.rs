@@ -243,8 +243,18 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
         Field::new(
             "from",
             "Height type",
-            "ellipsoidal (HAE, default) or orthometric (MSL)",
-            Kind::Choice(&["ellipsoidal", "orthometric"]),
+            "ellipsoidal (HAE, default), orthometric (MSL), or agl above the terrain you give",
+            Kind::Choice(&["ellipsoidal", "orthometric", "agl"]),
+        )
+        .core(),
+        Field::new(
+            "terrain",
+            "Terrain elevation",
+            "The ground at this point, above mean sea level, like 250 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
         )
         .core(),
         MODEL,
@@ -291,9 +301,24 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
             },
         )
         .precision(Precision::Decimals(3)),
+        Field::new(
+            "agl",
+            "Height above ground",
+            "Orthometric height less the terrain elevation",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
     ],
-    errors: &[ErrorCode::AssetUnavailable, ErrorCode::AssetIntegrity],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::AssetUnavailable,
+        ErrorCode::AssetIntegrity,
+    ],
     warnings: &[
+        "BELOW_TERRAIN",
         "ORTHOMETRIC_AS_ELLIPSOIDAL",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
@@ -302,12 +327,20 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
     model: "h = H + N with N from the EGM96 15′ grid",
     accuracy: "As good as the geoid: about 0.5-1 m for EGM96. Exact arithmetic otherwise.",
     references: &[EGM96_REF, GEOGRAPHICLIB_GEOID],
-    examples: &[Example {
-        id: "primary",
-        title: "A GPS height of 100 m at Timbuktu",
-        input: r#"{"lat":16.776,"lon":-3.009,"height":"100 m"}"#,
-        source: "h − N with N = 28.7079 m from GeographicLib GeoidEval (egm96-15, cubic): 71.292 m above sea level",
-    }],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "A GPS height of 100 m at Timbuktu",
+            input: r#"{"lat":16.776,"lon":-3.009,"height":"100 m"}"#,
+            source: "h − N with N = 28.7079 m from GeographicLib GeoidEval (egm96-15, cubic): 71.292 m above sea level",
+        },
+        Example {
+            id: "drone",
+            title: "A drone reporting 120 m above the ellipsoid over 250 m terrain",
+            input: r#"{"lat":-33.8688,"lon":151.2093,"height":"120 m","terrain":"250 m"}"#,
+            source: "add-geodesy-suite heights-and-geoid scenario: the height above ground is negative, so the aircraft is below the terrain it reported over",
+        },
+    ],
     primary_example: "primary",
     assets: &[EGM96_ID],
     visualization: &[Layer {
@@ -318,7 +351,7 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
         id: "geodesy.geoid.geoid-height",
         reason: "parent",
     }],
-    sentence: "The converted height is {converted}. The geoid is {geoid_height} above the ellipsoid here.",
+    sentence: "The converted height is {converted}. The geoid is {geoid_height} above the ellipsoid here.{if agl != 0} That is {agl} above the ground.{/if}{warn BELOW_TERRAIN} Below the terrain given.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_convert,
     ..ToolDef::BLANK
@@ -329,18 +362,45 @@ fn run_convert(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let h = ctx.req_quantity("height")?;
     let (n, _) = geoid_height(ctx, lat, lon)?;
     msl_note(ctx);
-    let from_ortho = ctx.choice("from")? == Some("orthometric");
-    let (ell, orth) = if from_ortho {
-        (h.base() + n, h.base())
-    } else {
-        (h.base(), h.base() - n)
+    let from = ctx.choice("from")?;
+    let terrain = ctx.quantity("terrain")?.map(|t| t.base());
+    // A height above ground says nothing without the ground it is above.
+    if from == Some("agl") && terrain.is_none() {
+        return Err(ToolError::invalid(
+            "/terrain",
+            "A height above ground needs the terrain elevation at this point.",
+        )
+        .hint("Give the ground elevation above mean sea level, like 250 m."));
+    }
+    let (ell, orth) = match from {
+        Some("orthometric") => (h.base() + n, h.base()),
+        Some("agl") => {
+            let g = terrain.expect("checked");
+            (h.base() + g + n, h.base() + g)
+        }
+        _ => (h.base(), h.base() - n),
     };
     let unit = h.unit;
-    let conv = if from_ortho { ell } else { orth };
-    Ok(Json::obj(vec![
+    let conv = match from {
+        Some("orthometric") => ell,
+        Some("agl") => orth,
+        _ => orth,
+    };
+    let mut out = vec![
         ("converted", ctx.emit("converted", m(conv), unit)),
         ("ellipsoidal", ctx.emit("ellipsoidal", m(ell), unit)),
         ("orthometric", ctx.emit("orthometric", m(orth), unit)),
         ("geoid_height", ctx.out("geoid_height", m(n))),
-    ]))
+    ];
+    if let Some(g) = terrain {
+        let agl = orth - g;
+        out.push(("agl", ctx.emit("agl", m(agl), unit)));
+        if agl < 0.0 {
+            ctx.warnings.push(Warning::new(
+                "BELOW_TERRAIN",
+                "This height is below the terrain elevation given, so the point is underground.",
+            ).at("/height"));
+        }
+    }
+    Ok(Json::obj(out))
 }

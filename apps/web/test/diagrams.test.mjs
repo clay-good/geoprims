@@ -467,3 +467,37 @@ test('the fly-by turn arc leaves the inbound leg and meets the outbound one', as
     assert.ok(Math.abs(coreRatio - half) < 0.02, `the core's lead/radius is ${coreRatio}`);
   }
 });
+
+test('the height diagram stacks the references in the order they stand', async () => {
+  // add-geodesy-suite 6.4 fixture, including the drone scenario.
+  const drone = { lat: -33.8688, lon: 151.2093, height: '120 m', terrain: '250 m' };
+  const r = JSON.parse(await host.invoke('geodesy.height.convert', JSON.stringify(drone)));
+  // The spec's drone case: a height above the ellipsoid that is under the ground.
+  assert.ok(r.result.agl.value < 0, 'this case should be below the terrain');
+  assert.ok(r.meta.warnings.some((w) => w.code === 'BELOW_TERRAIN'), 'the core flags it');
+  const d = diagram('geodesy.height.convert', drone, r);
+  const at = (cls) => lines(d.markup).find((l) => l.cls === cls);
+  const [ellipsoid, terrain] = [at('dg-grid'), at('dg-runway')];
+  const point = circles(d.markup).find((c) => c.cls === 'dg-dot-now');
+  // The geoid is above the ellipsoid here, and the terrain above both, with
+  // the point below the terrain: y grows downward, so higher means smaller.
+  const geoid = Number(/<path class="dg-muted dg-dash" d="M40 ([-\d.]+)/.exec(d.markup)[1]);
+  assert.ok(geoid < ellipsoid.y1, 'a positive geoid height is drawn above the ellipsoid');
+  assert.ok(terrain.y1 < geoid, 'the terrain stands above the geoid');
+  assert.ok(point.y > terrain.y1, 'the point is drawn below the terrain, as the numbers say');
+  // Each measure spans the two surfaces it is between, to one scale.
+  const [hBar, HBar, aglBar] = lines(d.markup).filter((l) => l.cls === 'dg-accent');
+  assert.equal(hBar.y1, ellipsoid.y1);
+  assert.ok(Math.abs(hBar.y2 - point.y) < 0.2, 'h is measured to the point');
+  assert.ok(Math.abs(HBar.y1 - geoid) < 0.2, 'H starts at the geoid');
+  assert.ok(Math.abs(aglBar.y1 - terrain.y1) < 0.2, 'AGL starts at the terrain');
+  const k = (ellipsoid.y1 - point.y) / r.result.ellipsoidal.value;
+  assert.ok(Math.abs((terrain.y1 - point.y) / k - r.result.agl.value) < 0.2, 'the heights are drawn to one scale');
+  for (const key of ['ellipsoidal', 'orthometric', 'geoid_height', 'agl']) assert.ok(d.markup.includes(r.display[key]), `${key} is not labeled`);
+  assert.match(d.desc, /underground/);
+  // Without a terrain elevation there is no ground to measure from.
+  const plain = { lat: 16.776, lon: -3.009, height: '100 m' };
+  const bare = diagram('geodesy.height.convert', plain, JSON.parse(await host.invoke('geodesy.height.convert', JSON.stringify(plain))));
+  assert.equal(lines(bare.markup).filter((l) => l.cls === 'dg-runway').length, 0);
+  assert.doesNotMatch(bare.markup, /AGL/);
+});

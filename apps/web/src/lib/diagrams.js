@@ -718,6 +718,43 @@ function borrowPit(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Height references at a point: the ellipsoid, the geoid above or below it, the terrain, and the height itself. */
+function heightStack(args, result) {
+  const h = val(result, 'ellipsoidal');
+  const H = val(result, 'orthometric');
+  const N = val(result, 'geoid_height');
+  const agl = val(result, 'agl');
+  if (![h, H, N].every(Number.isFinite)) return null;
+  // Everything is measured from the ellipsoid, which is the drawing's datum.
+  const ground = Number.isFinite(agl) ? H - agl + N : null;
+  const marks = [0, N, h, ...(ground === null ? [] : [ground])];
+  const [lo, hi] = [Math.min(...marks), Math.max(...marks)];
+  const pad = (hi - lo) * 0.15 || 1;
+  const Y = (v) => 190 - ((v - lo + pad) / (hi - lo + 2 * pad)) * 150;
+  const rule = (v, cls, label) => `${line(cls, [40, Y(v)], [250, Y(v)])}${text('dg-muted-text', 254, Y(v) + 4, label)}`;
+  // The geoid is drawn wavy, because it is: it is an equipotential surface,
+  // not a second ellipsoid.
+  const wave = (v) => {
+    const y = Y(v);
+    let d = `M40 ${f1(y)}`;
+    for (let x = 40; x < 250; x += 35) d += `q17.5 ${x % 70 === 40 ? -4 : 4} 35 0`;
+    return `<path class="dg-muted dg-dash" d="${d}"/>${text('dg-muted-text', 254, y + 4, `Geoid, N ${disp(result, 'geoid_height')}`)}`;
+  };
+  const body = [
+    rule(0, 'dg-grid', 'Ellipsoid'),
+    wave(N),
+    ground === null ? '' : rule(ground, 'dg-runway', `Terrain ${args.terrain ?? ''}`),
+    dot(145, Y(h), 'dg-dot-now'),
+    text('dg-label', 145, Y(h) - 10, `Here: ${disp(result, 'ellipsoidal')} above the ellipsoid`, 'middle'),
+    arrow(60, Y(0), 60, Y(h), 'dg-accent', `h ${disp(result, 'ellipsoidal')}`, 0.5, -1),
+    arrow(100, Y(N), 100, Y(h), 'dg-accent', `H ${disp(result, 'orthometric')}`, 0.5, 1),
+    ground === null ? '' : arrow(200, Y(ground), 200, Y(h), 'dg-accent', `AGL ${disp(result, 'agl')}`, 0.5, 1),
+  ].join('');
+  const title = `Height references here: ${disp(result, 'ellipsoidal')} above the ellipsoid, ${disp(result, 'orthometric')} above the geoid, which is itself ${disp(result, 'geoid_height')} above the ellipsoid` +
+    (ground === null ? '.' : `, and ${disp(result, 'agl')} above the terrain${agl < 0 ? ', which puts the point underground' : ''}.`);
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -736,6 +773,7 @@ const DIAGRAMS = {
   'navigation.vector.operations': vectorSum,
   'survey.earthwork.profile-grades': profileGrades,
   'survey.earthwork.borrow-pit': borrowPit,
+  'geodesy.height.convert': heightStack,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

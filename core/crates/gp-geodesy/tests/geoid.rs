@@ -120,3 +120,46 @@ fn geoid_height_invariants() {
         }
     }
 }
+
+#[test]
+fn height_above_ground_needs_the_ground_and_flags_being_under_it() {
+    // add-geodesy-suite heights-and-geoid: a drone's height above the
+    // ellipsoid over terrain given as mean sea level.
+    supply();
+    let at = |extra: &str| {
+        call(
+            "geodesy.height.convert",
+            &format!(r#"{{"lat":-33.8688,"lon":151.2093,"height":"120 m"{extra}}}"#),
+        )
+    };
+    let r = at(r#","terrain":"250 m""#);
+    let n = r["result"]["geoid_height"]["value"].as_f64().unwrap();
+    let orth = r["result"]["orthometric"]["value"].as_f64().unwrap();
+    assert!((orth - (120.0 - n)).abs() < 1e-9, "{r}");
+    // 120 m above the ellipsoid is well under 250 m of ground.
+    let agl = r["result"]["agl"]["value"].as_f64().unwrap();
+    assert!((agl - (orth - 250.0)).abs() < 1e-9, "{r}");
+    assert!(agl < 0.0);
+    assert!(
+        r["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|w| w["code"] == "BELOW_TERRAIN"),
+        "{r}"
+    );
+    // The other way: 120 m above that ground is 370 m above sea level.
+    let up = at(r#","from":"agl","terrain":"250 m""#);
+    assert!(
+        (up["result"]["orthometric"]["value"].as_f64().unwrap() - 370.0).abs() < 1e-9,
+        "{up}"
+    );
+    assert!((up["result"]["ellipsoidal"]["value"].as_f64().unwrap() - (370.0 + n)).abs() < 1e-9);
+    assert!((up["result"]["agl"]["value"].as_f64().unwrap() - 120.0).abs() < 1e-9);
+    // A height above ground says nothing without the ground.
+    let bad = at(r#","from":"agl""#);
+    assert_eq!(bad["ok"], false, "{bad}");
+    assert_eq!(bad["error"]["field"], "/terrain");
+    // Without terrain the tool says nothing about height above ground.
+    assert!(at("")["result"].get("agl").is_none());
+}

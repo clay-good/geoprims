@@ -95,7 +95,10 @@ test('paste-to-detect: H3, ambiguous geohash, coordinates, MGRS, and altimeter g
   const decoded = JSON.parse(await link.callString('gp_link_decode', fragment));
   assert.equal(decoded.result.state.i.lat, utm.input.lat);
 
-  assert.equal((await found('18T WL 80669 23543'))[0]?.kind, 'coordinates', 'MGRS parses as coordinates');
+  // MGRS is its own reading now, decoded by the MGRS tool, and leads.
+  const grid = await found('18T WL 80669 23543');
+  assert.equal(grid[0]?.kind, 'mgrs', 'MGRS is read as MGRS');
+  assert.ok(grid.some((g) => g.kind === 'coordinates'), 'the coordinate parser still reads it too');
   const [alt] = await found('A2992');
   assert.match(alt.summary, /1,013/);
   assert.equal(alt.actions[0].input.altimeter, 'A2992');

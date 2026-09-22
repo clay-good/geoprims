@@ -104,6 +104,45 @@ fn is_altimeter(s: &str) -> bool {
         && b[1..].iter().all(u8::is_ascii_digit)
 }
 
+/// An MGRS reference: a zone (1 to 60), a latitude band, a 100 km square,
+/// and an even number of digits, with or without spaces and with or without a
+/// leading "MGRS": "18SUJ2348706483", "mgrs 18S UJ 23487 06483".
+fn is_mgrs(s: &str) -> bool {
+    let upper = s.to_ascii_uppercase();
+    let body = upper.trim().strip_prefix("MGRS").unwrap_or(upper.trim());
+    let c: String = body.chars().filter(|ch| !ch.is_whitespace()).collect();
+    let b = c.as_bytes();
+    let zone_len = b.iter().take_while(|x| x.is_ascii_digit()).count();
+    if !(1..=2).contains(&zone_len) || b.len() < zone_len + 3 {
+        return false;
+    }
+    let zone: u32 = c[..zone_len].parse().unwrap_or(0);
+    let band = b[zone_len];
+    let square = &b[zone_len + 1..zone_len + 3];
+    let digits = &b[zone_len + 3..];
+    (1..=60).contains(&zone)
+        && (b'C'..=b'X').contains(&band)
+        && band != b'I'
+        && band != b'O'
+        && square
+            .iter()
+            .all(|x| x.is_ascii_uppercase() && *x != b'I' && *x != b'O')
+        && digits.len().is_multiple_of(2)
+        && digits.len() <= 10
+        && digits.iter().all(u8::is_ascii_digit)
+}
+
+fn mgrs(v: &str) -> Vec<(&'static str, Json)> {
+    let upper = v.to_ascii_uppercase();
+    let body = upper
+        .trim()
+        .strip_prefix("MGRS")
+        .unwrap_or(upper.trim())
+        .trim()
+        .to_owned();
+    vec![("mgrs", Json::str(body))]
+}
+
 fn is_metar(s: &str) -> bool {
     // Reports are written in capitals, but a person types "metar kden …".
     let upper = s.to_ascii_uppercase();
@@ -265,6 +304,14 @@ const KINDS: &[Kind] = &[
         ],
     },
     Kind {
+        kind: "mgrs",
+        label: "MGRS reference",
+        matches: is_mgrs,
+        decoder: "geodesy.grid-ref.mgrs-inverse",
+        decode: mgrs,
+        offers: AT_POINT,
+    },
+    Kind {
         kind: "metar",
         label: "METAR report",
         matches: is_metar,
@@ -325,9 +372,9 @@ fn obj(pairs: Vec<(&'static str, Json)>) -> Json {
 }
 
 /// Formats structured enough that recognizing one decides the tool: a METAR,
-/// an H3 cell, a Plus Code, an altimeter group. Looser ones (a geohash is any
+/// an MGRS reference, an H3 cell, a Plus Code, an altimeter group. Looser ones (a geohash is any
 /// short word in its alphabet, so "denver" qualifies) only ever suggest.
-const DECISIVE: &[&str] = &["metar", "h3", "plus-code", "altimeter"];
+const DECISIVE: &[&str] = &["metar", "mgrs", "h3", "plus-code", "altimeter"];
 
 /// The decoder and its input when the whole query is a decisive format: what
 /// the search should open, with the value already in it.
@@ -415,6 +462,34 @@ mod tests {
             .collect()
     }
 
+    /// An MGRS reference is recognized however it is spaced or cased, and a
+    /// near miss (band I, odd digits, zone 61) is not.
+    #[test]
+    fn mgrs_references() {
+        for yes in [
+            "18SUJ2348706483",
+            "18S UJ 23487 06483",
+            "mgrs 18s uj 23487 06483",
+            "4QFJ12345678",
+            "31U DQ 48251 11932",
+        ] {
+            assert!(is_mgrs(yes), "{yes}");
+        }
+        for no in [
+            "18IUJ2348706483",
+            "18SUJ234870648",
+            "61SUJ2348706483",
+            "denver",
+            "18S",
+            "40.4461 -79.9822",
+        ] {
+            assert!(!is_mgrs(no), "{no}");
+        }
+        let (id, input) = decisive("mgrs 18S UJ 23487 06483").unwrap();
+        assert_eq!(id, "geodesy.grid-ref.mgrs-inverse");
+        assert_eq!(input[0].1, Json::str("18S UJ 23487 06483"));
+    }
+
     #[test]
     fn recognizes_each_kind() {
         assert_eq!(kinds("8928308280fffff"), ["h3"]);
@@ -428,7 +503,9 @@ mod tests {
             ["metar", "coordinates"] // the host drops readings its decoder rejects
         );
         assert_eq!(kinds("40.4461, -79.9822"), ["coordinates"]);
-        assert_eq!(kinds("18T WL 80669 23543"), ["coordinates"]);
+        // An MGRS reference is its own reading first; the coordinate parser
+        // reads it too, and the host keeps whichever decoders accept it.
+        assert_eq!(kinds("18T WL 80669 23543"), ["mgrs", "coordinates"]);
         assert!(kinds("density altitude").is_empty());
         assert!(kinds("utm").is_empty() && kinds("gps").is_empty());
         assert!(kinds("").is_empty());

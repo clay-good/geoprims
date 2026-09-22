@@ -225,6 +225,13 @@
       "prefill": {
         "report": "METAR KDEN 211753Z 36010KT 10SM FEW080 22/05 A3012"
       }
+    },
+    {
+      "query": "mgrs 18S UJ 23487 06483",
+      "id": "geodesy.grid-ref.mgrs-inverse",
+      "prefill": {
+        "mgrs": "18S UJ 23487 06483"
+      }
     }
   ]
 }

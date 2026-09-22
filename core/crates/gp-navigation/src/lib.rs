@@ -235,6 +235,8 @@ pub static INVERSE: ToolDef = ToolDef {
     warnings: WARNINGS,
     model: "Karney (2013) geodesic on WGS 84",
     accuracy: "About 15 nanometers on WGS 84; converges for every pair, including antipodal and polar points",
+    when_to_use: "Use this when you need the distance between two coordinates and the courses to fly or walk between them: the shortest path on the ellipsoid, with the azimuth at each end. This is the tool behind leg distances, ranges, and any comparison of one route against another, and it holds for pairs that defeat simpler formulas, including nearly antipodal ones.",
+    limitations: "The distance is along the surface of the ellipsoid: it is not a road or track distance, it takes no account of terrain or height, and it is not the length of a constant-heading course, which is a rhumb line. The azimuths are true and they differ at the two ends, because a geodesic changes direction as it goes.",
     references: &[KARNEY, GEOGRAPHICLIB],
     examples: &[Example {
         id: "primary",
@@ -458,6 +460,8 @@ pub static DIRECT: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Karney (2013) geodesic on WGS 84",
     accuracy: "About 15 nanometers on WGS 84, for any distance",
+    when_to_use: "Use this when you have a starting point, a bearing, and a distance and need the point you arrive at: laying out a leg, projecting a position from a fix, placing a point at a known range and bearing, or building a circle of points around a center. It follows the shortest path on the ellipsoid, at any distance.",
+    limitations: "It answers geometry on an ellipsoid, not travel: the azimuth is the initial one and it changes along the path, so a course held constant on a compass is a rhumb line and belongs in that tool. Heights are not part of it, a geodesic is not a route around terrain or airspace, and the azimuth here is true rather than magnetic.",
     references: &[KARNEY, GEOGRAPHICLIB],
     examples: &[Example {
         id: "primary",
@@ -581,6 +585,8 @@ pub static HAVERSINE: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Haversine great circle on a sphere of radius R1; compared with Karney (2013) on WGS 84",
     accuracy: "Exact on the sphere. On the Earth the sphere itself is off by up to about 0.5%; the difference is reported",
+    when_to_use: "Use this when you want the classic spherical distance, either because a specification calls for the haversine formula, because you are checking another system that uses it, or because you want to see how far the sphere is from the ellipsoid for your pair of points. The difference against the exact geodesic is reported beside the answer.",
+    limitations: "A sphere is not the Earth: this can differ from the ellipsoidal distance by up to about half a percent, which is kilometers on a long leg, and the error depends on latitude and direction. Use the geodesic tool when the distance is the answer rather than the method. Course angles from a sphere carry the same approximation.",
     references: &[IUGG_MEAN_RADIUS, KARNEY],
     examples: &[Example {
         id: "primary",

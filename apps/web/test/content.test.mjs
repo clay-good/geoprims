@@ -86,3 +86,45 @@ test('every indexable page says when its sources were last checked', () => {
   }
   assert.deepEqual(problems, []);
 });
+
+/** The prose a page says itself, counting only manifest fields, never template text. */
+const ownWords = (t) =>
+  [t.summary, t.whenToUse, t.limitations, t.accuracy, ...(t.related ?? []).map((r) => r.reason), ...(t.examples ?? []).map((e) => `${e.title} ${e.source}`)]
+    .join(' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+
+test('every indexable page carries 150 words of its own prose', () => {
+  // The floor counts the manifest's own fields only: a page that would meet it
+  // on shared template text is exactly the thin page this is meant to catch.
+  const thin = indexable.filter((t) => ownWords(t) < 150).map((t) => `${t.id}: ${ownWords(t)} words`);
+  assert.deepEqual(thin, []);
+});
+
+test('when-to-use and limitations are written per tool, not shared', () => {
+  const problems = [];
+  for (const field of ['whenToUse', 'limitations']) {
+    const seen = new Map();
+    for (const t of indexable) {
+      const v = t[field];
+      if (!v) {
+        problems.push(`${t.id} has no ${field}`);
+        continue;
+      }
+      if (v.split(/\s+/).length < 35) problems.push(`${t.id}: ${field} is ${v.split(/\s+/).length} words`);
+      const first = seen.get(v);
+      if (first) problems.push(`${t.id} and ${first} share their ${field}`);
+      else seen.set(v, t.id);
+    }
+  }
+  assert.deepEqual(problems, []);
+  // And the page shows them, so the words are on the page and not only in the
+  // manifest. Astro escapes the text, so the check escapes it the same way.
+  const esc = (t) => t.replace(/&/g, '&#38;').replace(/'/g, '&#39;').replace(/"/g, '&#34;').replace(/</g, '&#60;').replace(/>/g, '&#62;');
+  for (const t of indexable) {
+    const html = page(route(t.id));
+    assert.ok(html.includes(esc(t.whenToUse)), `${t.id}: when-to-use is not rendered`);
+    assert.ok(html.includes(esc(t.limitations)), `${t.id}: limitations are not rendered`);
+  }
+});

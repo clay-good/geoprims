@@ -192,6 +192,8 @@ pub static FORWARD: ToolDef = ToolDef {
     ],
     model: "SPCS83 zone definitions from the EPSG dataset on GRS 80: transverse Mercator (Krüger series), Lambert Conic Conformal (2SP), and Hotine Oblique Mercator (variant A) for Alaska zone 1",
     accuracy: "Matches PROJ within 0.05 µm on 2,480 points across all 124 zones; inverse round trips within 1e-12°. The input must already be NAD83; this tool does not change datums.",
+    when_to_use: "Use this for survey and engineering work in the United States, where plans, plats, and agency data are on State Plane coordinates: it converts NAD 83 latitude and longitude to easting and northing in any of the 124 zones, in meters, international feet, or US survey feet, with the convergence and scale factor the work needs.",
+    limitations: "The input must already be NAD 83: passing WGS 84 or ITRF coordinates puts the result off by up to a meter or two, because this projects rather than transforms datums. Feet come in two lengths and the legal one differs by state, which the result states. A point outside its zone's extent still converts, with a warning, but the distortion grows.",
     references: &[NGS_5, EPSG_G7_2, KARNEY_TM],
     examples: &[Example {
         id: "primary",
@@ -389,6 +391,8 @@ pub static INVERSE: ToolDef = ToolDef {
     ],
     model: "Inverse of the SPCS83 zone projection on GRS 80",
     accuracy: "Round trips within 1e-12° of latitude and longitude.",
+    when_to_use: "Use this when plan coordinates have to become geographic ones: State Plane easting and northing in any of the 124 zones back to NAD 83 latitude and longitude, with the convergence and scale factor at that point. It is what turns a plan, a plat, or an agency dataset back into coordinates you can map, compare with GPS, or hand to a tool that works in latitude and longitude.",
+    limitations: "The zone and the unit have to match the ones the coordinates were computed in; the same numbers in the wrong zone or in feet rather than meters land far away without looking wrong. The result is NAD 83, not WGS 84, and the difference reaches a meter or more. The convergence it reports is the angle between grid north and true north at that point, which is what a bearing taken from the plan has to be corrected by before it is a true bearing.",
     references: &[NGS_5, EPSG_G7_2, KARNEY_TM],
     examples: &[Example {
         id: "primary",

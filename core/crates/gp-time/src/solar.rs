@@ -436,6 +436,8 @@ pub static POSITION: ToolDef = ToolDef {
     ],
     model: "NREL Solar Position Algorithm (topocentric, with refraction from pressure and temperature); ΔT from Espenak and Meeus unless given; NOAA equations as a cross-check",
     accuracy: "±0.0003° (SPA, −2000 to 6000) with UT1; taking UT1 as UTC adds up to about 0.004° of azimuth",
+    when_to_use: "Use this when you need where the sun is at a moment: the azimuth and elevation for shadow studies, solar panel aiming, camera and survey planning, glare and hotspot checks, or the incidence angle on a sloping surface. It also gives the shadow an object of a given height casts, with its direction.",
+    limitations: "Refraction near the horizon depends on the pressure and temperature you give it, and a low sun is where that matters most. Taking UT1 as UTC costs up to about four thousandths of a degree of azimuth, which is only a concern for survey work, where DUT1 from IERS belongs in the input. It is the sun's geometry, not the weather: cloud, haze, and terrain are yours to account for.",
     references: &[NREL_SPA, ESPENAK_MEEUS, NOAA],
     examples: &[Example {
         id: "primary",
@@ -689,6 +691,8 @@ pub static EVENTS: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Geometric sun from the NREL Solar Position Algorithm; each crossing found by bisection between the day's highest and lowest points, which also decide polar states; sunrise and sunset at −0.833° (minus horizon dip when a height is given); solar noon from the NOAA equation of time",
     accuracy: "Within 1 minute of USNO on 1,200 events (300 places and dates, 94% to the same minute), including twilights that graze their altitude",
+    when_to_use: "Use this when you need the day's light: sunrise and sunset for a place and date, solar noon, the length of the day, and the three twilights, in local time and Zulu. It is the tool behind planning a flight, a survey, a shoot, or any outdoor work that has to finish before the light goes.",
+    limitations: "The times are for a level horizon at sea level: hills, a valley, or a tall building move sunrise and sunset by minutes, and refraction near the horizon varies with the weather. Inside the polar circles the sun may not rise or set at all, which the result states rather than inventing a time for. Legal twilight comes from the Air Almanac.",
     references: &[NREL_SPA, NOAA, MEEUS],
     examples: &[Example {
         id: "primary",
@@ -913,6 +917,8 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
     ],
     model: "Sunrise and sunset (−0.833°) and civil twilight (−6°) from the NREL SPA geometric sun, for the evening of the date and the next morning",
     accuracy: "Within 1 minute of the windows built from USNO times at 100 places (491 windows); the Air Almanac, the legal source for twilight, tabulates to the minute",
+    when_to_use: "Use this when a regulation turns on which night it is: logging night flight, carrying passengers on night currency, when position lights are required, and the civil-twilight window a Part 107 operation works to. All four are computed for one place and date, each shown beside the regulation that defines it, because they start and end at different times.",
+    limitations: "These are the US definitions for the place and date you enter. The Air Almanac is the legal source for twilight and tabulates to the minute; this computes the same events from the sun's geometry and agrees within a minute. It does not know your aircraft's equipment, your currency record, or any waiver, and it does not decide whether a flight is legal.",
     references: &[CFR_1_1_NIGHT, CFR_61_57, CFR_91_209, CFR_107_29],
     examples: &[Example {
         id: "primary",

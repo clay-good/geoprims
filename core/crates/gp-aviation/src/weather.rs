@@ -703,6 +703,8 @@ pub static METAR: ToolDef = ToolDef {
     warnings: &["OBSERVATION_OLD", "SUSPECT_VALUE", "EXPERIMENTAL_TOOL"],
     model: "WMO FM 15/16 METAR and SPECI as coded in the US under FAA Order JO 7900.5E, with its remarks; flight categories from the FAA Aviation Weather Handbook",
     accuracy: "Decodes the text as written. It does not check the report against the station or fetch anything.",
+    when_to_use: "Use this when you have a METAR or SPECI in front of you and want it in words: the wind, visibility, present weather, clouds and the ceiling, temperature and dew point, the altimeter setting, the US remarks, and the flight category that follows from the ceiling and visibility. It is also a way to check your own reading of an unfamiliar group.",
+    limitations: "It reads the report as written: it does not fetch anything, does not check the report against the station, and does not judge whether the weather is flyable. Winds in a METAR are true, not magnetic, which matters when you compare them with a runway. Groups it cannot read are listed rather than dropped, so an unexpected remark is visible rather than silently lost.",
     references: &[JO_7900_5, WEATHER_HANDBOOK],
     examples: &[Example {
         id: "primary",
@@ -1378,6 +1380,8 @@ pub static FB_WINDS: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "FB winds and temperatures aloft coding: direction in tens of degrees true, 51-86 means add 100 kt, 9900 is light and variable, and signs are omitted above 24,000 ft (all negative)",
     accuracy: "Decodes the text as written. Levels missing at the left of a station line are the ones within 1,500 ft of the station (winds) or at 3,000 ft (temperature).",
+    when_to_use: "Use this when you have an FB winds and temperatures aloft product and want a level read in plain language: the wind direction and speed and the temperature at a flight level, either from a single coded group or from a whole station line. It is the quickest way to get the wind for a cruising altitude into the wind triangle or a fuel plan.",
+    limitations: "It decodes the text you paste and nothing else: it does not fetch the product, check it against the station, or interpolate between levels. Levels near the station are omitted by the coding itself, so a station line may not carry the altitude you want. Forecast winds aloft are a forecast, and the temperature sign is implied above 24,000 ft, which this tool applies rather than guesses.",
     references: &[WEATHER_HANDBOOK],
     examples: &[Example {
         id: "primary",
@@ -1846,6 +1850,8 @@ pub static TAF: ToolDef = ToolDef {
     warnings: &["SUSPECT_VALUE", "EXPERIMENTAL_TOOL"],
     model: "TAF coding as in the FAA Aviation Weather Handbook and FAA Order JO 7900.5E groups; day numbers below the start day belong to the next month",
     accuracy: "Decodes the text as written. It does not check the forecast against the station or fetch anything.",
+    when_to_use: "Use this when planning around a forecast: it lays a TAF out as a timeline of periods — the base period and each FM, TEMPO, BECMG, and PROB group — in plain language, with both UTC and local times, so you can see what is forecast when you expect to arrive, and how the flight category changes across the period.",
+    limitations: "It reads the forecast as written and does not fetch it, check it against the station, or tell you whether to go. A TAF covers a radius around the airport and is amended, so an old one in a text box stays old here. Winds are true. Probability and temporary groups describe conditions that may occur, not a sequence, and this tool shows them as the coding gives them.",
     references: &[WEATHER_HANDBOOK, JO_7900_5],
     examples: &[Example {
         id: "primary",

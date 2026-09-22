@@ -167,6 +167,8 @@ pub static PARSE: ToolDef = ToolDef {
     ],
     model: "geoprims coordinate grammar (ISO 6709 notations, NGA MGRS)",
     accuracy: "Exact: every notation converts by exact arithmetic",
+    when_to_use: "Use this when a coordinate arrives as text and you do not want to hand-convert it: decimal degrees, degrees and minutes, degrees, minutes and seconds, packed aviation form, labeled pairs, MGRS, or UTM. It reports what it read, in your chosen output form, and says which assumptions it had to make.",
+    limitations: "Text can be genuinely ambiguous — which number is the latitude, which hemisphere an unsigned pair means, whether a comma is a decimal mark — and this tool reports the ambiguity and its alternatives instead of guessing. It cannot know the datum of a bare pair: coordinates are treated as WGS 84 unless the notation itself carries one.",
     references: &[DMS_REF, NGA_MGRS],
     examples: &[Example {
         id: "primary",
@@ -845,6 +847,8 @@ pub static UTM_FORWARD: ToolDef = ToolDef {
     warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "Transverse Mercator, 6th-order Krüger series (Karney 2011), k0 = 0.9996",
     accuracy: "Better than 5 nm within 3,900 km of the central meridian",
+    when_to_use: "Use this when work is done on a metric grid: UTM easting and northing for a latitude and longitude, with the zone, the grid convergence between grid north and true north, and the point scale factor. It handles the Norway and Svalbard zone exceptions and can force a neighboring zone when a project spans a boundary.",
+    limitations: "UTM is a projection, so distances and directions carry scale distortion that the scale factor quantifies, and a grid bearing is not a true bearing by the amount of the convergence. Zones are six degrees wide and coordinates do not carry their zone, so a easting and northing without it is ambiguous. The datum is whatever the input's was.",
     references: &[KARNEY_TM, NGA_UTM],
     examples: &[Example {
         id: "primary",
@@ -1057,6 +1061,8 @@ pub static UTM_INVERSE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Transverse Mercator, 6th-order Krüger series (Karney 2011), k0 = 0.9996",
     accuracy: "Better than 5 nm within 3,900 km of the central meridian",
+    when_to_use: "Use this when UTM coordinates arrive from a map, a data file, or a GPS set to a grid: give the zone, hemisphere, easting, and northing and it returns latitude and longitude, with the convergence and scale factor at that point. It is also the way to check a dataset's zone: converting a few coordinates and seeing where they land tells you quickly whether the zone recorded with them is the one they were computed in.",
+    limitations: "The zone and hemisphere are part of the coordinate: the same easting and northing exist in every zone, so a missing or wrong zone produces a plausible position in the wrong place. The result carries the datum the coordinates were on, which this tool does not change, and points far from the central meridian carry more projection distortion. A northing alone does not say which hemisphere it belongs to, because southern coordinates carry a false northing; the hemisphere has to come with the coordinate.",
     references: &[KARNEY_TM, NGA_UTM],
     examples: &[Example {
         id: "primary",
@@ -1440,6 +1446,8 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "NGA MGRS (AA lettering) over UTM and UPS on WGS 84",
     accuracy: "Exact; the reference names the square containing the point (truncation)",
+    when_to_use: "Use this when a position has to be written the way military and emergency services read it: an MGRS reference at the precision you choose, from a 100 km square down to a meter. It is the form used on ground operations, in search and rescue, and on maps that carry the grid.",
+    limitations: "The reference names the square that contains the point, because MGRS truncates rather than rounds: a ten-digit reference is a one-meter square whose south-west corner is the position given, and a shorter one names a larger square. It is defined on UTM and UPS, so it carries their zone structure, and the coordinates here are WGS 84.",
     references: &[NGA_MGRS, GEOGRAPHICLIB_MGRS],
     examples: &[Example {
         id: "primary",
@@ -1579,6 +1587,8 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
     warnings: &["BAND_ADJUSTED", "EXPERIMENTAL_TOOL"],
     model: "NGA MGRS (AA lettering) over UTM and UPS on WGS 84",
     accuracy: "Exact; the true point is anywhere in the square",
+    when_to_use: "Use this when an MGRS or USNG reference arrives by radio, from a report, or off a map and you need to plot it: it returns the south-west corner and the center of the square it names, with the square's size so the precision is explicit. It is also how to check the precision of a reference you were given: the square's size is reported, so an eight-digit reference is visibly a ten-meter square rather than a point.",
+    limitations: "The reference is a square and the true point is anywhere within it: at six digits that is a hundred-meter square, at four a kilometer. The center is offered for plotting, not as the reported position. A reference without its grid zone is ambiguous over long distances, and this reports what it assumed. Polar references use UPS rather than UTM and follow different lettering, which this handles but which is worth knowing when a reference looks unusual.",
     references: &[NGA_MGRS, GEOGRAPHICLIB_MGRS],
     examples: &[Example {
         id: "primary",

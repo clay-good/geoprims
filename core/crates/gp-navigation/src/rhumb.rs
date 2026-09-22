@@ -97,6 +97,8 @@ pub static RHUMB_INVERSE: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Rhumb line on WGS 84 (conformal latitude and Krüger series, as GeographicLib's Rhumb)",
     accuracy: "Within 1 µm of GeographicLib's RhumbSolve (47 nm typical); the course within 1e-10°",
+    when_to_use: "Use this when you want the single course that connects two points and the distance along it: the heading to steer without changing it, a line as drawn on a Mercator chart, or a comparison against the shortest route. The extra distance over the geodesic is reported, which is what tells you whether holding one course is worth it.",
+    limitations: "The rhumb line is not the shortest path, and near the poles the difference grows quickly. The course is true. As with any two-point geometry here, it takes no account of terrain, airspace, traffic, or current, and a course held on a compass also needs the magnetic variation applied.",
     references: &[KARNEY_RHUMB, KARNEY],
     examples: &[Example {
         id: "primary",
@@ -240,6 +242,8 @@ pub static RHUMB_DIRECT: ToolDef = ToolDef {
     ],
     model: "Rhumb line on WGS 84 (conformal latitude and Krüger series, as GeographicLib's Rhumb)",
     accuracy: "Within 1 µm of GeographicLib's RhumbSolve away from the poles; starts within 0.01° of a pole within 20 µm",
+    when_to_use: "Use this when a course is held constant rather than flown as the shortest path: marine navigation on a single heading, a leg drawn on a Mercator chart, or any layout where the bearing must not change along the line. Given a start, a constant course, and a distance, it gives where you arrive on the ellipsoid.",
+    limitations: "A rhumb line is longer than the geodesic, and much longer on high-latitude east-west runs; the inverse tool reports that difference. A rhumb course that would carry you over a pole stops at the pole instead, because the line spirals there. The course is true rather than magnetic, and this is geometry, not a route clear of terrain or traffic.",
     references: &[KARNEY_RHUMB],
     examples: &[Example {
         id: "primary",

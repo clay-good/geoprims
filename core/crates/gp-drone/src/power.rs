@@ -284,6 +284,8 @@ pub static BATTERY_ENERGY: ToolDef = ToolDef {
     ],
     model: "E = capacity × nominal voltage; usable = E × (DoD limit − reserve); I = P / V; C-rate = I / capacity",
     accuracy: "Exact at the nominal voltage. Real packs deliver less when cold, old, or at high current.",
+    when_to_use: "Use this when planning endurance or checking what a pack can carry: it converts capacity and voltage into watt-hours, subtracts the depth-of-discharge limit and the reserve you land with to give the energy you can actually use, and turns a power draw into a current and a C-rate you can compare against the cell's rating.",
+    limitations: "It is nameplate arithmetic at the nominal voltage. A real pack delivers less when it is cold, old, or worked hard, its voltage sags under load, and the C-rate a manufacturer prints is not a promise at every state of charge. Transport and shipping rules count watt-hours the same way this does, but the limits themselves are the carrier's.",
     references: &[LEISHMAN],
     examples: &[Example {
         id: "primary",

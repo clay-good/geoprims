@@ -307,6 +307,12 @@ pub fn manifest(def: &ToolDef) -> Json {
     put("warnings", strs(&warnings));
     put("model", Json::str(def.model));
     put("accuracy", Json::str(def.accuracy));
+    if !def.when_to_use.is_empty() {
+        put("whenToUse", Json::str(def.when_to_use));
+    }
+    if !def.limitations.is_empty() {
+        put("limitations", Json::str(def.limitations));
+    }
     put(
         "references",
         Json::Arr(
@@ -637,6 +643,18 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
         ] {
             if v.trim().is_empty() {
                 e(format!("missing {name}"));
+            }
+        }
+        // A stable tool has a page a reader is meant to land on, so it says
+        // when to reach for it and where its answer stops.
+        if t.stability == Stability::Stable && t.parent.is_none() {
+            for (name, v) in [
+                ("when_to_use", t.when_to_use),
+                ("limitations", t.limitations),
+            ] {
+                if v.trim().is_empty() {
+                    e(format!("missing {name}"));
+                }
             }
         }
         let fields = t

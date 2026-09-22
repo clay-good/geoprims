@@ -810,6 +810,8 @@ pub static VLOS: ToolDef = ToolDef {
     ],
     model: "ALOS = 327·CD + 20 m (multirotor) or 490·CD + 30 m (fixed wing); DLOS = 0.3·GV; VLOS = min(ALOS, DLOS)",
     accuracy: "Guidance values for planning, not a guarantee you will see the drone.",
+    when_to_use: "Use this when planning a flight you have to keep in sight: it gives the distance at which the aircraft's attitude is still readable, the distance at which it can still be detected in the visibility you have, and the smaller of the two, checked against the farthest point of your planned area.",
+    limitations: "These are the EASA guidance formulas for planning, not a promise that you will see the aircraft. They depend on the characteristic dimension you enter and on the visibility, and they say nothing about the sun's position, the background you are looking against, an observer's eyesight, or obstacles in the way. The rule you fly under, and your own judgement in the moment, govern.",
     references: &[EASA_GUIDE],
     examples: &[Example {
         id: "primary",

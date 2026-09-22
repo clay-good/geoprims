@@ -445,6 +445,8 @@ pub static TRAVERSE: ToolDef = ToolDef {
     ],
     model: "Latitudes and departures; compass rule corrections ∝ course length; transit rule ∝ |latitude| and |departure|; Crandall rule holds every bearing and corrects distances only, by weighted least squares with weights ∝ 1/length",
     accuracy: "Exact arithmetic; the adjusted traverse closes to within 1e-9 of the unit",
+    when_to_use: "Use this to close a loop traverse: it gives the latitudes and departures, the linear misclosure and its direction, the precision ratio, and the adjusted courses by the compass, transit, or Crandall rule, so you can see how good the fieldwork was before the coordinates are used.",
+    limitations: "Adjustment distributes error by a rule rather than finding a blunder: a large misclosure usually means a mistake in a bearing or a distance, and the rule will spread it across every course. The three rules assume different error behavior, and the one to use is the one your specification names. Distances are treated as plane and level.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -752,6 +754,8 @@ pub static AREA: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Coordinate (shoelace) method on plane coordinates",
     accuracy: "Exact for plane coordinates; for latitude and longitude use a geodesic area tool",
+    when_to_use: "Use this when you have plane survey coordinates for a parcel or a figure and need the area it encloses: the coordinate, or shoelace, method with the perimeter beside it, in square units, acres, and hectares. It is the standard way to take an area from a closed traverse or a plotted deed.",
+    limitations: "The coordinates must be plane — State Plane, UTM, or a local grid — because the method is plane geometry; latitude and longitude need a geodesic area tool instead. A grid area is not a ground area until the combined factor is applied, and the figure has to close: points listed out of order enclose a different shape.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -1136,6 +1140,8 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
     ],
     model: "T = R·tan(Δ/2), L = R·Δ, C = 2R·sin(Δ/2), E = R(sec(Δ/2) − 1), M = R(1 − cos(Δ/2)); D(arc) = 5,729.578/R ft, sin(D(chord)/2) = 50/R ft; PT station = PC + L along the arc",
     accuracy: "Exact; two given elements other than R and Δ are solved by bisection to 1e-15 relative",
+    when_to_use: "Use this to work out a simple horizontal curve from whichever two elements you have: radius and deflection, tangent and degree of curve, chord and external, and so on. It returns every other element with the PC and PT stations, which is what staking and plan checking need.",
+    limitations: "It describes one simple circular curve: no spiral transitions, no compound or reverse curves, and no superelevation or sight distance, which have their own tools and design tables. Both degree-of-curve definitions are given because the arc and chord definitions differ; use the one your agency's standard names.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -1548,6 +1554,8 @@ pub static VERTICAL_CURVE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Symmetric parabola: y(x) = y_PVC + g1·x + (g2 − g1)·x² / (2L)",
     accuracy: "Exact",
+    when_to_use: "Use this on a profile where one grade meets another: it gives the PVC and PVT stations and elevations, the high or low point, and the K value that design tables are read with, for a symmetric parabolic curve.",
+    limitations: "It is the geometry of a symmetric curve, not a design: sight distance, drainage, and comfort criteria come from the governing design manual and its tables, which this does not reproduce. When both grades run the same way there is no high or low point within the curve, which the result says rather than inventing one.",
     references: &[GHILANI, AASHTO_GREEN_BOOK],
     examples: &[Example {
         id: "primary",
@@ -2147,6 +2155,8 @@ pub static COMBINED_FACTOR: ToolDef = ToolDef {
     ],
     model: "Elevation factor = R/(R + h) with h the ellipsoid height; combined factor = grid factor × elevation factor (Stem 1990)",
     accuracy: "About 1 ppm with the mean radius; better with a local radius of curvature",
+    when_to_use: "Use this before a grid distance becomes a ground distance or the other way round: the elevation factor from the height, the combined factor with the grid scale factor, and the converted distance. It is the reduction every project on State Plane or UTM coordinates needs.",
+    limitations: "The elevation factor uses the mean radius unless you give a local radius of curvature, which is about a part per million either way, and heights must be above the ellipsoid rather than above sea level. The grid scale factor belongs to the point or the line you are reducing; using one factor across a long project is where the error usually comes from.",
     references: &[STEM],
     examples: &[Example {
         id: "primary",

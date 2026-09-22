@@ -314,6 +314,8 @@ pub static GSD: ToolDef = ToolDef {
     ],
     model: "GSD = sensor width × height / (focal length × image width)",
     accuracy: "Exact for a nadir view over flat ground at the given height; real GSD varies with terrain and lens distortion",
+    when_to_use: "Use this when you know the height you can fly and want to know what resolution the imagery will have: it gives the ground each pixel covers and the footprint of one image, across and along track. That footprint is what overlap, line spacing, and photo interval are computed from, so it is the starting point for the rest of the mission plan.",
+    limitations: "It describes a nadir view over flat ground at one height with an undistorted lens. Terrain relief changes the ground sampling distance across the frame, oblique views change it more, and lens distortion and the processing pipeline move the final product's resolution away from this number. The sensor width and true focal length are the camera's own; a 35 mm-equivalent focal length entered here is caught rather than used.",
     references: &[WOLF],
     examples: &[Example {
         id: "primary",
@@ -478,6 +480,8 @@ pub static ALTITUDE_FOR_GSD: ToolDef = ToolDef {
     ],
     model: "Height = GSD × focal length × image width / sensor width",
     accuracy: "Exact for a nadir view over flat ground",
+    when_to_use: "Use this when the deliverable fixes the resolution: a client asks for 2 cm ground sampling distance, or a survey specification names one, and you need the height to fly to get it with the camera you have. It is the inverse of the GSD tool and the first number in a mapping flight plan, before overlap, spacing, and battery time.",
+    limitations: "The height it returns is above the ground being mapped, not above the takeoff point, so terrain that rises under the flight changes the resolution you actually get. It assumes a nadir view over flat ground and an undistorted lens. Airspace and the rule you fly under cap the height regardless of what the resolution wants, and this tool checks only the ceiling you enter.",
     references: &[WOLF, FAA_107],
     examples: &[Example {
         id: "primary",

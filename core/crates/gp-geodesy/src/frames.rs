@@ -601,6 +601,8 @@ pub static TO_ECEF: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "X = (N + h) cosφ cosλ, Y = (N + h) cosφ sinλ, Z = (N(1 − e²) + h) sinφ",
     accuracy: "Exact formula in double precision; matches GeographicLib CartConvert to 1 µm",
+    when_to_use: "Use this when a calculation wants Cartesian coordinates rather than angles: baselines between stations, vector arithmetic on positions, satellite geometry, or feeding a system that works in X, Y, Z. It takes latitude, longitude, and ellipsoidal height on the ellipsoid you choose. It is also the step before any vector arithmetic between two positions: differences, baselines, and rotations are done in Cartesian space, not on latitudes and longitudes.",
+    limitations: "The height must be ellipsoidal; passing a height above mean sea level puts the point off by the geoid separation, which reaches tens of meters. The result is only as well defined as the frame its input belongs to, and this tool converts coordinates rather than datums, frames, or epochs. The ellipsoid matters: the same latitude, longitude, and height on a different ellipsoid gives different X, Y, Z, so the ellipsoid has to be the one the coordinates belong to.",
     references: &[GEOGRAPHICLIB_GEOCENTRIC, NGA_WGS84],
     examples: &[Example {
         id: "primary",
@@ -712,6 +714,8 @@ pub static FROM_ECEF: ToolDef = ToolDef {
     warnings: &["LONGITUDE_UNDEFINED", "EXPERIMENTAL_TOOL"],
     model: "Vermeille (2011) closed form, as in GeographicLib's Geocentric class: no iteration",
     accuracy: "Round trips close within 5 nm near the Earth's surface (a few units in the last place) and within 1e-15 of the distance at any height; matches GeographicLib CartConvert",
+    when_to_use: "Use this when a position arrives as Earth-centered X, Y, Z — from a GNSS receiver's raw output, a satellite product, or a coordinate exchange — and you need it as latitude, longitude, and height to plot or compare it. It is the inverse of the geodetic-to-ECEF tool and holds at any height, from below the surface to orbit.",
+    limitations: "The height is above the ellipsoid, not above mean sea level: the geoid tool supplies the separation that turns one into the other. The frame the X, Y, Z came in matters as much as the arithmetic — ITRF, a WGS 84 realization, and a regional frame differ by centimeters to meters — and this conversion does not change frames or epochs.",
     references: &[GEOGRAPHICLIB_GEOCENTRIC, NGA_WGS84],
     examples: &[Example {
         id: "primary",
@@ -904,6 +908,8 @@ pub static TO_LOCAL: ToolDef = ToolDef {
     warnings: &["AZIMUTH_UNDEFINED", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "ECEF difference rotated into the origin's east-north-up frame (GeographicLib LocalCartesian)",
     accuracy: "Round trips within 1e-8 m for targets within 1,000 km",
+    when_to_use: "Use this when you want a target described the way an observer at a station sees it: east, north and up, north, east and down, or an azimuth, elevation and range. It is the tool behind sky plots, antenna and camera aiming, and any check of where one point lies relative to another.",
+    limitations: "The plane is tangent at the origin, so it is a local description rather than a map projection, and it takes no account of refraction, which bends both light and radio near the horizon, or of obstacles between the two points. The azimuth is true, and heights are above the ellipsoid rather than above sea level.",
     references: &[GEOGRAPHICLIB_GEOCENTRIC],
     examples: &[Example {
         id: "primary",
@@ -1094,6 +1100,8 @@ pub static FROM_LOCAL: ToolDef = ToolDef {
     ],
     model: "Local offset rotated from the origin's east-north-up frame to ECEF, then Vermeille's closed-form inverse",
     accuracy: "Round trips within 1e-8 m for points within 1,000 km of the origin",
+    when_to_use: "Use this when a point is described relative to a known station: east, north and up from an origin, north, east and down in an aircraft or vehicle frame, or as an azimuth, elevation and range from a total station or a tracker. It returns the point's latitude, longitude, height, and ECEF position.",
+    limitations: "The local frame is tangent at the origin you give, so the further out the point lies the more the Earth's curvature matters; round trips stay within a hundredth of a micrometer out to a thousand kilometers. Heights are ellipsoidal. An azimuth here is true and geometric: it carries no refraction, no magnetic variation, and no instrument correction.",
     references: &[GEOGRAPHICLIB_GEOCENTRIC],
     examples: &[Example {
         id: "primary",

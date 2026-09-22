@@ -937,6 +937,8 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
     warnings: &["AMBIGUOUS_INPUT", "EXPERIMENTAL_TOOL"],
     model: "UTC = local − offset; named zones from the embedded IANA tzdb (TZif with POSIX rules)",
     accuracy: "Exact for the tzdb release echoed in meta.assets",
+    when_to_use: "Use this when a time has to be right across zones: filing or reading a flight plan in Zulu, converting a log entry, scheduling an observation, or checking what a local time means in UTC on a date when daylight saving shifts. It takes either a named IANA zone or a plain offset, and shows the date change when one happens.",
+    limitations: "The zone rules come from the embedded IANA database, whose release is reported with the result; a change published after that release is not in it. A local time in a spring-forward gap does not exist and one in a fall-back overlap happens twice, and this reports that rather than choosing for you. It does not read your computer's clock or its time zone.",
     references: &[RFC_3339, IANA_TZ],
     examples: &[Example {
         id: "primary",

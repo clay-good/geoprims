@@ -213,6 +213,8 @@ pub static CROSS_TRACK: ToolDef = ToolDef {
     ],
     model: "Closest point on the geodesic by Karney's interception method on WGS 84",
     accuracy: "Foot point within 1 mm of a brute-force search along the geodesic; the spherical method is the classic formula on the mean radius",
+    when_to_use: "Use this when you want to know how far off a course line you are, and where along the line your closest point lies: checking a track against a planned leg, measuring a deviation, or finding where to rejoin. Right of course is positive, so the sign tells you which way to correct.",
+    limitations: "It measures distance from the course line on the ellipsoid, not from a corridor's edge or an airway's protected width, and it does not know whether the closest point lies between the ends of the leg or beyond them, so check the along-track distance before acting on it. Heights play no part, and the answer is geometry rather than guidance.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
@@ -657,6 +659,8 @@ pub static TSD: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "distance = speed × time",
     accuracy: "Exact arithmetic; arrival times round to the minute",
+    when_to_use: "Use this for the arithmetic every leg needs: any two of time, speed, and distance give the third, and a departure time with a UTC offset gives the arrival. It is the quickest way to turn a leg's distance and a groundspeed into an estimate, or to work out the speed a required arrival time implies.",
+    limitations: "It assumes one constant speed over the whole leg, which a climb, a descent, a wind change, or a hold breaks. The speed it works with is whatever you give it, so a true airspeed entered where a groundspeed belongs produces a time that a wind will not honor. Arrival times round to the minute.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",

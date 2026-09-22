@@ -221,6 +221,8 @@ pub static LAT_LNG_TO_CELL: ToolDef = ToolDef {
     ],
     model: "H3 v4 (h3o 0.11): gnomonic projection onto icosahedron faces, aperture-7 hexagon hierarchy",
     accuracy: "Identical indexes to H3 C; coordinates within 1e-12° below 88° latitude, 5e-11° nearer the poles",
+    when_to_use: "Use this to put a point on the H3 grid: the cell containing a latitude and longitude at the resolution you choose, with the cell's center and area. It is the entry point for aggregating points into hexagons, joining datasets on a common grid, or keying rows by cell. It is also the join key between datasets that have nothing else in common: two sets of points indexed to the same resolution can be aggregated and compared cell by cell.",
+    limitations: "The cell is an area and the point is somewhere inside it, so aggregation at too coarse a resolution hides real structure and too fine a one scatters it; the resolution chooser helps pick. H3 cells are not equal-area, so counts per cell are not strictly comparable without dividing by each cell's own area. Points on a cell boundary fall into exactly one cell by the library's rule, so a dataset binned at one resolution cannot be re-binned by string manipulation; it has to be indexed again.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -373,6 +375,8 @@ pub static CELL_INFO: ToolDef = ToolDef {
     warnings: &["PENTAGON_DISTORTION", "EXPERIMENTAL_TOOL"],
     model: "H3 v4 (h3o 0.11)",
     accuracy: "Identical to H3 C; coordinates within 1e-12° below 88° latitude, 5e-11° nearer the poles; areas within 6e-15 relative at resolution 0 and 2e-8 at resolution 15, where the 1 m² cell's spherical excess runs out of digits",
+    when_to_use: "Use this when an H3 index arrives and you need to know what it is: the center, the boundary to draw, the resolution, the base cell, whether it is one of the twelve pentagons, whether it is Class III, and the cell's area. It is the first stop when debugging an H3 dataset.",
+    limitations: "The area is that cell's own; H3 cells are not equal-area, and neighbors differ by a few percent. A boundary at a Class III resolution carries extra vertices where cells meet, and a pentagon has no sixth neighbor, which is the case most code built on hexagons forgets.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -477,6 +481,8 @@ pub static GRID_DISK: ToolDef = ToolDef {
     warnings: &["PENTAGON_DISTORTION", "EXPERIMENTAL_TOOL"],
     model: "H3 v4 gridDisk (h3o 0.11), falling back to the safe traversal near pentagons",
     accuracy: "Identical to H3 C",
+    when_to_use: "Use this for neighborhood queries on an H3 grid: every cell within k steps of a center, which is how a local aggregation, a buffer in cell counts, or a spread from a point is expressed. The disk is the usual first step in a spatial join on hexagons. It is also the cheap way to express a buffer: rather than a distance in meters, a disk of k rings at a chosen resolution gives a neighborhood whose size you control by the grid itself.",
+    limitations: "The count is fewer than the hexagonal formula when a pentagon is within reach, and the result says so. Steps are grid distance, not ground distance: the disk is roughly circular but not exactly, and its radius in meters depends on the resolution and, slightly, on where it is. Because the disk is a count of steps, its ground radius changes with resolution and its edge is a ragged hexagon rather than a circle, so a true distance filter still belongs after it.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -539,6 +545,8 @@ pub static GRID_RING: ToolDef = ToolDef {
     warnings: &["PENTAGON_DISTORTION", "EXPERIMENTAL_TOOL"],
     model: "H3 v4 gridRing (h3o 0.11)",
     accuracy: "Identical to H3 C",
+    when_to_use: "Use this when you want a hollow ring rather than a filled disk: the cells exactly k steps out. It is how a band at a given distance is selected, how a disk is built up one ring at a time, and how a search expands outward without repeating the cells it has already seen. Rings are how an expanding search is done without rework: take ring one, then ring two, stopping as soon as enough is found, instead of taking a large disk and discarding most of it.",
+    limitations: "Like the disk, a ring is measured in grid steps rather than meters, and it is distorted near the twelve pentagons, where a ring can be incomplete. Rings at the same k have different ground radii at different resolutions. Near a pentagon a ring can come back incomplete or fail, so a search that relies on rings alone should handle that rather than assume six times k cells.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -608,6 +616,8 @@ pub static GRID_PATH: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "H3 v4 local IJ coordinates (h3o 0.11)",
     accuracy: "Identical to H3 C; fails where H3 C fails (across pentagon distortion or very far apart)",
+    when_to_use: "Use this to measure separation in cells rather than meters, and to draw the line of cells between two of them: the grid distance and the path, which is how movement, corridors, and step counts are expressed on an H3 grid. It is also how a corridor is built on the grid: the path's cells, widened by a ring or two, give a band between two places without any geometry work.",
+    limitations: "Grid distance is a count of steps, not a distance on the ground, and the two only track each other within a resolution. Near the pentagons the path can fail to exist, which the result reports with the reason rather than returning a line that is not one. Both cells must be at the same resolution. The path is a grid line, not a route: it ignores terrain, roads, and obstacles, and between distant cells it can be long and is not guaranteed to exist.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -692,6 +702,8 @@ pub static PARENT: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "H3 v4 hierarchy (h3o 0.11)",
     accuracy: "Identical to H3 C",
+    when_to_use: "Use this when rolling detail up: the coarser cell that contains a cell, and the child position it occupies within that parent. It is how a fine aggregation is summarized, and how cells at mixed resolutions are compared on common ground. The child position it reports is what lets you tell siblings apart within a parent, which matters when building keys or checking that a set is complete before compacting it.",
+    limitations: "H3's hierarchy is approximate: a child is not wholly inside its parent, so rolling up near boundaries moves a little area between parents. The parent's resolution must be coarser than the cell's, and a chain of parents accumulates that approximation. Because the hierarchy is approximate, a point near a cell boundary can belong to a parent that does not contain its own cell's center, so rolled-up counts shift slightly between levels. Resolution 0 has no parent.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -762,6 +774,8 @@ pub static CHILDREN: ToolDef = ToolDef {
     warnings: &["PENTAGON_DISTORTION", "EXPERIMENTAL_TOOL"],
     model: "H3 v4 hierarchy (h3o 0.11): 7 children per step, 6 for pentagons",
     accuracy: "Identical to H3 C",
+    when_to_use: "Use this when moving to a finer resolution: the cells inside a cell one or more levels down, their count, and the center child. It is how a coarse aggregation is broken into a finer one, and how a cell is refined where more detail is wanted. It is also how a coarse selection is refined for rendering: draw the parent at a distance, its children when zoomed in, which is the usual level-of-detail pattern on a hexagonal grid.",
+    limitations: "H3's hierarchy is not an exact subdivision: children do not tile their parent exactly, so a child near the edge overlaps the neighboring parent. The count grows by about seven per level, so refining several levels at once produces very large sets; a pentagon has fewer children than a hexagon. Each level multiplies the count by roughly seven, so going three levels down from one cell is already several hundred cells and five levels is tens of thousands.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -857,6 +871,8 @@ pub static COMPACT: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "H3 v4 compactCells (h3o 0.11)",
     accuracy: "Identical to H3 C",
+    when_to_use: "Use this to shrink a large set of cells before storing or sending it: wherever seven siblings are all present they are replaced by their parent, repeatedly, giving the smallest mixed-resolution set that covers the same area. It is the usual way to keep an H3 coverage compact. It is what makes large coverages practical to store and ship: a continent-sized area at a fine resolution collapses to a few thousand mixed-resolution cells.",
+    limitations: "The result is mixed resolution, so anything consuming it has to handle cells of different sizes, or expand it again with the uncompact tool. Compaction is exact — the area covered does not change — but it only collapses complete groups, so a set with gaps compacts little. Pentagons, having fewer children, constrain what can collapse. Compaction changes the resolution mix but not the area, so a consumer that assumes one resolution has to uncompact first or it will silently drop the coarse cells.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -963,6 +979,8 @@ pub static UNCOMPACT: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "H3 v4 uncompactCells (h3o 0.11)",
     accuracy: "Identical to H3 C",
+    when_to_use: "Use this to flatten a mixed-resolution set back to one resolution, which is what most joins, counts, and exports need: give the set and the resolution and it returns every cell at that level covering the same area. It is the other half of compaction: data is stored or transmitted compacted, then expanded to a single resolution for joining, counting, or rendering, because most consumers assume one cell size.",
+    limitations: "Expanding is where a compacted set becomes large: each level multiplies the count by about seven, so uncompacting a coarse set to a fine resolution can produce millions of cells. The target resolution has to be at least as fine as the finest cell in the set. Expansion is exact in area but not in count: cells that were coarse become many, and the memory and join cost follow. Uncompacting to a resolution finer than needed is the usual cause of a query that will not finish.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -1069,6 +1087,8 @@ pub static EDGES: ToolDef = ToolDef {
     warnings: &["PENTAGON_DISTORTION", "EXPERIMENTAL_TOOL"],
     model: "H3 v4 directed edges and vertexes (h3o 0.11)",
     accuracy: "Identical to H3 C",
+    when_to_use: "Use this when the boundaries between cells matter rather than the cells: the directed edges leaving a cell, with their lengths and the neighbor each one leads to, and the cell's vertexes. It is what routing, flow, and adjacency work on an H3 grid is built from. Edges are also how a boundary between two regions is expressed on the grid: the edges whose two cells fall on different sides trace it, which is how outlines are extracted from a cell set.",
+    limitations: "A hexagon has six edges and a pentagon five, so code that assumes six breaks at the twelve pentagons of each resolution. Edge lengths vary across the grid because H3 cells are not identical, and an edge is a grid relationship rather than a physical boundary on the ground. A directed edge belongs to its origin cell, so an edge and its reverse are different objects, and code that treats them as one counts every boundary twice.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -1243,6 +1263,8 @@ pub static RESOLUTION_CHOOSER: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "H3 average hexagon area and edge length per resolution (h3o 0.11 tables, same as H3 C)",
     accuracy: "Averages; real cells vary by about ±50% from center to icosahedron edges",
+    when_to_use: "Use this before anything else on an H3 grid: it names the resolution whose average cell is closest to the area or edge length you want, and shows the whole table, so a choice between two levels can be made with the numbers in front of you rather than by trial.",
+    limitations: "The table is averages: real cells vary by a few percent, cells are not equal-area, and each resolution has twelve pentagons that are smaller than their neighbors. An average area is a guide to a resolution, not a guarantee about any one cell, and the right resolution also depends on how many cells the work can carry.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -1440,6 +1462,8 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "H3 C polygonToCells containment tests (point in polygon on latitude and longitude, boundary crossings), breadth-first fill from cells along every edge",
     accuracy: "Identical cell sets to H3 C 4.4.1 in center, full, and overlapping modes on 1,000 random polygons with holes and antimeridian crossings",
+    when_to_use: "Use this to turn an area into cells: the H3 cells that fill a polygon, with holes and across the antimeridian, at a resolution you choose. It is how a region, a service area, or an administrative boundary becomes a set of keys that rows can be joined on.",
+    limitations: "Which cells count as inside is a choice, not a fact, so the containment mode has to be stated: centers inside, whole cells inside, or any overlap all give different sets, and the difference is largest at coarse resolutions relative to the polygon. A fine resolution over a large area produces very many cells.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",

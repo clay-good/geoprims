@@ -193,6 +193,8 @@ pub static GEOHASH_ENCODE: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Interleaved longitude and latitude bisection bits, base-32 encoded; sizes on the mean-radius sphere",
     accuracy: "Exact cell; sizes within 0.5% (spherical)",
+    when_to_use: "Use this to turn a position into a short string that sorts by location: geohashes are used as database keys, for bucketing points, and for coarse proximity search, because a shared prefix usually means nearby. It reports the cell's size and bounds at the precision you choose. It is also the way to bucket points for aggregation without a spatial index: group rows by a prefix of the geohash and you have a grid, at the precision the prefix length chooses.",
+    limitations: "The string names a cell whose size depends on its length, from thousands of kilometers at one character to centimeters at twelve, and the cells narrow toward the poles. Prefix similarity is a rough proxy for nearness, not a distance: points either side of a cell boundary, the equator, or the prime meridian can have very different geohashes. Cell sizes step by factors of eight and four alternately as characters are added, so the precision you want often falls between two lengths.",
     references: &[GEOHASH_REF],
     examples: &[Example {
         id: "primary",
@@ -329,6 +331,8 @@ pub static GEOHASH_DECODE: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "Base-32 decode to interleaved bisection bits",
     accuracy: "Exact",
+    when_to_use: "Use this when a geohash turns up in a database key, a log line, or an API response and you need the ground it stands for: the center of its cell, the bounding box, and the error margins either side, so the precision is explicit rather than implied by the string's length. It is also how a stored key is checked: decoding the geohash shows the area a row actually covers, which is what tells you whether the precision chosen for the index suits the query.",
+    limitations: "A geohash is a cell, not a point: six characters is roughly 1.2 km by 0.6 km, and the center is a convenience. Cells are rectangles in latitude and longitude, so their ground width shrinks toward the poles, and two points close together can sit in cells whose strings share no prefix, which matters when prefixes are used for proximity. The error margins it reports are half the cell in each direction, which is the honest uncertainty of any point derived from a geohash.",
     references: &[GEOHASH_REF],
     examples: &[Example {
         id: "primary",
@@ -412,6 +416,8 @@ pub static GEOHASH_NEIGHBORS: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "Encode the center shifted one cell in each direction, longitude wrapped",
     accuracy: "Exact",
+    when_to_use: "Use this when a proximity search has to look past one cell: the eight geohashes surrounding a cell, which is how a geohash index avoids missing points that sit just over a boundary. It wraps across the antimeridian, so a search near it still finds its neighbors. It is also how a tile-like index is walked: given one cell, the eight around it give the next ring of keys to fetch, which is the standard pattern for a bounding-box or radius query on a geohash-keyed store.",
+    limitations: "Neighbors are cells of the same precision, so a query still has to filter by true distance afterward: the ring covers the cell's surroundings unevenly, especially at high latitudes. At a pole there is no cell beyond, which the result reports rather than wrapping to something wrong. Neighbor cells are the same size as the origin, so at coarse precisions the ring covers a very large area, and at fine ones nine cells may not reach far enough for the radius you want.",
     references: &[GEOHASH_REF],
     examples: &[Example {
         id: "primary",
@@ -535,6 +541,8 @@ pub static TILE_FROM_POINT: ToolDef = ToolDef {
     ],
     model: "Spherical Web Mercator (EPSG:3857) tile grid",
     accuracy: "Exact tile; resolution on the Web Mercator sphere",
+    when_to_use: "Use this to find which web map tile a point falls in at a zoom level, in XYZ, TMS, and quadkey form, with the ground resolution at that point. It is how a coordinate is turned into a tile request, a cache key, or a pyramid lookup. It is also how a point is matched to the imagery or terrain tile that covers it, which is the first step in reading a value out of a tiled raster.",
+    limitations: "Web Mercator distorts with latitude, so a tile covers far less ground near the poles than at the equator, and the projection stops short of the poles themselves. The tile is an area containing the point, and the y convention matters: XYZ and TMS number rows in opposite directions. At high zooms the tile numbers grow large, and a coordinate outside Web Mercator's latitude limits has no tile at all rather than one at the edge.",
     references: &[OSM_TILES, BING_QUADKEY],
     examples: &[Example {
         id: "primary",
@@ -680,6 +688,8 @@ pub static TILE_BOUNDS: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "Spherical Web Mercator tile grid; TMS y = 2^z − 1 − XYZ y",
     accuracy: "Exact",
+    when_to_use: "Use this when a tile coordinate or a quadkey has to become geography: the latitude and longitude bounds of the tile, with its XYZ, TMS, and quadkey forms, which is what debugging a tile cache, a slippy map, or a tile-based pipeline needs. It is the quickest way to check that a tile pipeline is asking for the tile it means: compare the bounds it returns against the data that came back.",
+    limitations: "The two y conventions are the usual trap: XYZ counts from the top and TMS from the bottom, so the same numbers name different tiles, and detect mode shows both rather than choosing. Web Mercator cuts off near the poles, and a tile's ground size depends on latitude. A quadkey encodes the zoom in its length, while z/x/y does not, so a tile coordinate without its zoom is meaningless. The bounds are the projection's, not the data's: a tile may be empty or clipped.",
     references: &[OSM_TILES, BING_QUADKEY],
     examples: &[Example {
         id: "primary",
@@ -883,6 +893,8 @@ pub static GROUND_RESOLUTION: ToolDef = ToolDef {
     warnings: &["WEB_MERCATOR_CLAMPED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "cos(lat) × 2π × 6,378,137 m / (tile size × 2^zoom); scale = resolution × 96 / 0.0254",
     accuracy: "Exact on the Web Mercator sphere",
+    when_to_use: "Use this when choosing a zoom level: the meters each pixel covers and the map scale at a latitude, for 256 or 512 pixel tiles. It is what connects a required ground resolution, a print scale, or a source imagery resolution to the zoom a map should serve. It is also how to check whether a tileset can support a measurement: if a pixel covers two meters, nothing read from it is good to half a meter.",
+    limitations: "Resolution in Web Mercator changes with the cosine of the latitude, so a zoom that gives half a meter per pixel at the equator gives much less at sixty degrees. Scale also depends on the display's pixel density, and the number here describes the projection rather than the detail actually present in any particular tileset. The map scale it reports assumes a nominal screen pixel size, so a print or a high-density display works out differently.",
     references: &[BING_QUADKEY, OSM_TILES],
     examples: &[Example {
         id: "primary",
@@ -1001,6 +1013,8 @@ pub static OLC_ENCODE: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Open Location Code: base-20 pairs to 10 digits, then a 4 × 5 grid per digit",
     accuracy: "Exact, matching the reference implementations' integer method",
+    when_to_use: "Use this to give a location where there is no street address: an Open Location Code that can be read aloud, written down, or put in a message, at the length you choose, with the area it covers so the precision is clear. It is also a compact way to store or print a position at a stated precision, since the code's length is its precision and nothing else has to be carried with it.",
+    limitations: "Longer codes mean smaller cells: ten characters is about fourteen meters, eleven about three. The code is an area rather than a point, and it is defined on WGS 84. Codes near a pole or the antimeridian still work but their cells' ground shape changes, as with any grid defined on degrees. Codes are case-insensitive but their alphabet is deliberately restricted, so a code copied with a letter that is not in it is invalid rather than nearly right.",
     references: &[OLC_SPEC],
     examples: &[Example {
         id: "primary",
@@ -1118,6 +1132,8 @@ pub static OLC_DECODE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Open Location Code decode; short codes recovered to the nearest match to the reference",
     accuracy: "Exact",
+    when_to_use: "Use this when a Plus Code arrives as an address: it returns the center and the area of the code's cell. A short code, the form written with a town name, needs a nearby reference point before it can be recovered, and this takes one. It is what turns an address written as a code into coordinates you can navigate to, map, or compare against another position.",
+    limitations: "The code names a cell, not a point: the common ten-character form is about fourteen meters square, and a shorter one is much larger. A short code without a reference point is ambiguous, and giving the wrong reference recovers a different place entirely, which is a real risk when the town name is dropped. Codes of different lengths mean very different areas, from a degree at four characters to a few meters at eleven, and a code with a plus sign in an unexpected place is invalid rather than approximate.",
     references: &[OLC_SPEC],
     examples: &[Example {
         id: "primary",
@@ -1247,6 +1263,8 @@ pub static OLC_SHORTEN: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Remove 4, 6, or 8 leading digits while the reference is within 0.3 of that digit's resolution",
     accuracy: "Exact",
+    when_to_use: "Use this to make a Plus Code short enough to say: given a full code and a nearby reference point, such as a town, it drops the leading characters that the reference already implies, while keeping the code recoverable. It is what makes a Plus Code usable in speech and on paper: the full code is precise but long, and the short form with a town name is what fits on a sign, a form, or a delivery note.",
+    limitations: "A short code only works with its reference: the same short code near a different town names a different place, so the reference has to travel with it. How much can be dropped depends on how close the reference is, and a reference too far away leaves the code unshortened rather than ambiguous. Shortening is only safe relative to the reference you used: pairing a short code with a different town, or dropping the town, gives a code that recovers somewhere else. Keep the reference with the code.",
     references: &[OLC_SPEC],
     examples: &[Example {
         id: "primary",

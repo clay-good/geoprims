@@ -212,6 +212,8 @@ pub static HORIZON: ToolDef = ToolDef {
     ],
     model: "Spherical Earth with effective radius R/(1 − k)",
     accuracy: "Exact for the model; real refraction varies with the weather, often by 10% or more near the surface",
+    when_to_use: "Use this when the question is how far away something can be seen or reached from a height: the horizon from a tower or an aircraft, the range at which a light or a landmark comes into view, or the radio horizon for a line-of-sight link, which is longer because the atmosphere bends the signal. The familiar rules of thumb are shown with their errors.",
+    limitations: "It is a smooth sphere with a refraction factor: no terrain, no buildings, and no obstacle between you and the horizon. Real refraction changes with the weather and can move the answer by ten percent or more near the surface, and ducting can carry a signal far past it. For a specific obstacle or a terrain profile, use the visibility and profile tools.",
     references: &[BOWDITCH],
     examples: &[Example {
         id: "primary",

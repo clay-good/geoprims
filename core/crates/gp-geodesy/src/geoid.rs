@@ -136,6 +136,8 @@ pub static GEOID_HEIGHT: ToolDef = ToolDef {
     ],
     model: "EGM96 geoid on a 15′ grid (GeographicLib packaging), cubic or bilinear interpolation",
     accuracy: "Matches GeographicLib GeoidEval at its printed 0.1 mm on 2,010 points, including both poles. The grid itself departs from full EGM96 by up to 0.17 m (cubic); EGM96 is good to about 0.5-1 m worldwide.",
+    when_to_use: "Use this whenever a GPS height has to become a height above mean sea level: the separation N between the ellipsoid and the geoid at a point is the number that connects them, and it reaches tens of meters. It is also what a drone, a survey, or an elevation product needs before its heights can be compared with published ones.",
+    limitations: "This is the EGM96 global model: it is a smooth global surface, and a national or regional geoid model, such as a GEOID published for your country, is the one a survey is required to use. The gridded form here departs from full EGM96 by up to about 0.17 m, and the model itself has its own error against the true geoid.",
     references: &[EGM96_REF, GEOGRAPHICLIB_GEOID],
     examples: &[Example {
         id: "primary",

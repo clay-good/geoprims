@@ -512,6 +512,8 @@ pub static DESCENT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Straight descent path over flat ground at constant groundspeed: distance = Δh / tan θ, vertical speed = GS · tan θ",
     accuracy: "Exact for a constant angle and groundspeed; real descents slow down and meet changing winds. Planning aid, not certified for navigation.",
+    when_to_use: "Use this in the cruise, when you want to know where to start down: give the altitude to lose and either the descent angle or the vertical speed you intend, and it returns the distance out to begin, the rate to hold, and the time it takes. The 3-to-1 and five-times-groundspeed rules are shown beside the exact answer, so you can see how close the mental arithmetic is.",
+    limitations: "It describes a straight path at a constant angle and groundspeed over flat ground. Real descents change speed, meet changing winds, and are interrupted by level-offs and crossing restrictions, all of which move the top of descent. It does not know terrain, airspace, or an arrival procedure's restrictions, and it is a planning aid rather than a clearance.",
     references: &[IPH, PHAK],
     examples: &[Example {
         id: "primary",
@@ -913,6 +915,8 @@ pub static VDP: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "A straight path at the descent angle from the MDA to the threshold crossing height; a VASI or PAPI path at the same angle and TCH puts you TCH + d·tan θ above the threshold at distance d",
     accuracy: "Exact geometry. A published VDP on the chart always governs. Planning aid, not certified for navigation.",
+    when_to_use: "Use this on a non-precision approach with no published visual descent point: it gives the distance from the threshold where a normal descent from the MDA begins, so you can decide before you get there rather than diving late. It also shows the HAT-over-300 rule and the descent rate the angle asks for at your groundspeed.",
+    limitations: "A published VDP on the chart governs whenever there is one, and so do the minimums, the missed approach point, and any step-down fix. The geometry assumes a straight path at the angle you give from the MDA to the threshold crossing height, over flat ground; it does not know obstacles, terrain, or the runway's lighting, and it is a planning aid rather than an approach procedure.",
     references: &[IPH, AIM],
     examples: &[Example {
         id: "primary",

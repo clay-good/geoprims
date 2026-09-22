@@ -327,6 +327,12 @@ pub struct ToolDef {
     pub warnings: &'static [&'static str],
     pub model: &'static str,
     pub accuracy: &'static str,
+    /// When a reader should reach for this tool rather than another
+    /// (`x-when-to-use`): the situation it belongs to, in the reader's terms.
+    pub when_to_use: &'static str,
+    /// What the tool does not cover (`x-limitations`): the cases where its
+    /// answer stops being the one to act on.
+    pub limitations: &'static str,
     pub references: &'static [Reference],
     pub examples: &'static [Example],
     pub primary_example: &'static str,
@@ -388,6 +394,8 @@ impl ToolDef {
         warnings: &[],
         model: "",
         accuracy: "",
+        when_to_use: "",
+        limitations: "",
         references: &[],
         examples: &[],
         primary_example: "",

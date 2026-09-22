@@ -359,6 +359,8 @@ pub static ISA: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL", "UNIT_ASSUMED"],
     model: "ICAO Standard Atmosphere (Doc 7488/3) layer equations on geopotential altitude; US 1976 optional",
     accuracy: "Exact evaluation of the standard's defining equations to double precision; matches the printed tables within their rounding",
+    when_to_use: "Use this when you need the standard atmosphere's own numbers at an altitude: the temperature to compare a reported one against, the pressure or density a performance or instrument calculation assumes, or the speed of sound behind a Mach number. It is the reference the rest of the aviation tools are built on, and it takes a temperature deviation when the day is not standard.",
+    limitations: "The standard atmosphere is a model, not a forecast: it describes a fixed average and says nothing about the air over your airport today. Above the tropopause the layers are isothermal by definition, and beyond the model's ceiling the tool stops rather than extrapolating. Use a real sounding, a METAR, or a forecast when the actual air matters.",
     references: &[ICAO_7488, US76],
     examples: &[Example {
         id: "primary",
@@ -727,6 +729,8 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
     warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "ISA pressure-height relation (ISA-derived constants 145,442.16 ft and 0.190263), layered above 36,089 ft",
     accuracy: "Exact to the ISA definition. The NWS constant set (145,366.45 ft, 0.190284) differs by up to about 12 ft. Planning aid, not certified for navigation.",
+    when_to_use: "Use this when a performance chart, a flight level, or another calculation asks for pressure altitude rather than field elevation: it is the altitude the airplane would read with the altimeter set to 29.92 inHg, which is what the standard atmosphere is indexed by. It is also the first step into density altitude, true airspeed, and the airspeed and altimetry tools here.",
+    limitations: "It converts an altimeter setting to a height in the standard atmosphere and nothing more: it does not know the temperature, so it is not the true altitude, and it does not apply the cold-temperature correction an approach needs. Two constant sets are in use and they differ by about 12 ft; this reports the ISA-derived set unless you ask for the NWS one.",
     references: &[ICAO_7488, WEATHER_HANDBOOK, PHAK],
     examples: &[Example {
         id: "primary",
@@ -990,6 +994,8 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
     ],
     model: "Air density from station pressure and (virtual) temperature, inverted through the layered ISA density profile; Magnus vapor pressure (Alduchov and Eskridge 1996)",
     accuracy: "Exact to the ISA definition for dry air; with humidity, vapor pressure is within 0.4% from -40 to 50 °C. Planning aid, not certified for navigation.",
+    when_to_use: "Reach for this before a takeoff or climb on a warm day, at a high field, or when the air is humid: density altitude is the altitude the airplane's wing and engine behave as though they are at, and the POH performance charts are read at that altitude rather than at the field elevation. Run it with the field elevation, the altimeter setting, and the temperature you actually have, and again with the dew point when the air is muggy.",
+    limitations: "This is the air, not the airplane: it does not know your weight, your runway, or your propeller, and it does not produce a takeoff or climb number. Take the density altitude it gives to the performance charts in your POH or AFM, which govern. The humidity correction uses vapor pressure and is small next to the temperature effect, and nothing here accounts for wind, slope, or surface.",
     references: &[ICAO_7488, PHAK, WEATHER_HANDBOOK, ALDUCHOV],
     examples: &[Example {
         id: "primary",
@@ -1643,6 +1649,8 @@ pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
     ],
     model: "Vector components: headwind = W·cos(θ), crosswind = W·sin(θ)",
     accuracy: "Exact for the entered wind and heading. Runway numbers round the heading to 10°, so components can be off by up to W·sin 5°. Planning aid, not certified for navigation.",
+    when_to_use: "Use this at the hold short line or while planning: given the wind and the runway, it splits the wind into the part along the runway and the part across it, so you can compare the crosswind against your own limit and the aircraft's demonstrated value. It handles gusts and a variable wind range, and can flag the components against a limit you set.",
+    limitations: "It resolves the wind you enter into components and nothing more: it does not know the runway's surface, its slope, or your aircraft's demonstrated crosswind, and it does not decide whether the landing is within your ability. A runway number rounds the true heading to ten degrees, so components can be off by the sine of five degrees unless you enter the exact heading, and a reported wind is a measurement at one place and moment.",
     references: &[PHAK, AC_150_5340, AIM],
     examples: &[Example {
         id: "primary",
@@ -1963,6 +1971,8 @@ pub static HEADING_GROUNDSPEED: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Wind triangle: WCA = asin(W/TAS · sin(WD − TC)), GS = TAS·cos(WCA) − W·cos(WD − TC)",
     accuracy: "Exact for steady wind and flat-earth geometry over a leg. Planning aid, not certified for navigation.",
+    when_to_use: "Use this on a leg where you know the course you want to make good, your true airspeed, and the wind: it gives the heading to fly, the wind correction angle, and the groundspeed you will get. It is the wind side of the E6B, solved exactly, and it feeds the time and fuel for the leg.",
+    limitations: "One steady wind over a straight leg, in flat-earth geometry: it does not model wind that changes with altitude or along the route, climbs and descents, or the difference between a great circle and a straight line on a chart. The heading is true unless you convert it; the declination and true-to-magnetic tools do that. Planning aid, not for primary navigation.",
     references: &[PHAK, AIM],
     examples: &[Example {
         id: "primary",

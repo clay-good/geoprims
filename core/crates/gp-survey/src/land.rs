@@ -1096,6 +1096,8 @@ pub static DEED_PLOT: ToolDef = ToolDef {
     ],
     model: "Latitudes and departures; curves advance by their chord (given, or 2R·sin(Δ/2) on a bearing of the incoming tangent ± Δ/2) and add or subtract their circular segment R²(Δ − sin Δ)/2; area by coordinates with the implied closing line",
     accuracy: "Exact arithmetic on the confirmed calls. The area includes the closing line's gap, stated in the result.",
+    when_to_use: "Use this when a deed's calls have to become a figure: it plots the lines and curves you confirmed, reports the misclosure and its direction, the precision ratio, and the area closed by the implied closing line. It is the way to see whether a description closes before the coordinates are used.",
+    limitations: "It plots what the deed says: courses are not adjusted unless you ask, because a survey retracement is about what the document calls for. Monuments and calls for adjoiners govern over bearings and distances on the ground, and that is a surveyor's judgement rather than arithmetic. The area includes the closing gap, which the result states.",
     references: &[GHILANI, BROWN],
     examples: &[Example {
         id: "primary",

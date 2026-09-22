@@ -388,6 +388,8 @@ pub static WEIGHT_BALANCE: ToolDef = ToolDef {
     warnings: &["OUTSIDE_CG_ENVELOPE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "CG = Σ(weight × arm) / Σ weight; landing state removes the fuel burn at the fuel arm; envelope membership by the even-odd rule, with points on an edge counted inside",
     accuracy: "Exact arithmetic on your data. Your aircraft's POH/AFM and current weight and balance record govern.",
+    when_to_use: "Use this when loading an aircraft: it totals the weights and moments of your stations, gives the center of gravity and the percent MAC, and checks the result against the envelope corners you enter, both at takeoff and after the fuel burn. It also answers the two questions that follow a bad result — how far a seat or bag has to move, and how much weight has to come off.",
+    limitations: "Every number here is yours: the empty weight and arm, the station arms, the fuel arm, and the envelope come from your aircraft's weight and balance record and its POH or AFM, which govern. The tool checks the arithmetic and the envelope you give it; it does not know your aircraft, its equipment list, or any limit you did not enter, and a straight fuel-burn path assumes one fuel station.",
     references: &[WB_HANDBOOK],
     examples: &[Example {
         id: "primary",

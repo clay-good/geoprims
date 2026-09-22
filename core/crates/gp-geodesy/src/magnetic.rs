@@ -362,6 +362,8 @@ pub static DECLINATION: ToolDef = ToolDef {
     ],
     model: "WMM2025 (degree 12) or IGRF-14 (degree 13) spherical-harmonic main field with linear secular variation, on the WGS 84 ellipsoid",
     accuracy: "Matches all 100 NCEI WMM2025 test values (declination and inclination to their printed 0.01°, intensities within 0.001 nT). The model itself is good to about 0.3° of declination away from the poles; local crustal anomalies of several degrees are not modeled.",
+    when_to_use: "Use this whenever a magnetic direction meets a true one: setting a compass or a heading indicator, converting a runway or a chart bearing, checking the variation for a flight plan or a survey, or seeing how strong and how steep the field is for a magnetometer. It runs WMM2025 or IGRF-14 back to 1900.",
+    limitations: "A model is a smooth global field: local magnetic anomalies, iron structures, and vehicle deviation move a compass off it, and the model carries its own published uncertainty, which grows toward the poles. Declination changes year to year, so the date matters, and a model has a validity window that this tool enforces rather than extrapolating past.",
     references: &[WMM_REPORT, IGRF_REF],
     examples: &[
         Example {

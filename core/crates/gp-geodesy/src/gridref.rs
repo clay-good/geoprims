@@ -150,6 +150,8 @@ pub static MAIDENHEAD_FORWARD: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "IARU Maidenhead locator: 18×18 fields, 10×10 squares, 24×24 subsquares, and the extended pairs; a point on a grid line falls in the cell east or north of it, and +90° and +180° in the last cell",
     accuracy: "Exact (integer cell arithmetic); matches an independent implementation of the definition",
+    when_to_use: "Use this for amateur radio and anything that follows it: a Maidenhead or QTH locator identifies a station's square in two to ten characters, and contest logs, propagation reports, and antenna-aiming software all speak it. Give a position and it returns the locator at the length you want, with the square's bounds. Six characters is the usual exchange, eight or ten when a station wants to be pinned down for a contest or for microwave work.",
+    limitations: "A locator is a square, not a point: the common six-character form is about five kilometers by two and a half, and the square's ground size changes with latitude because it is defined on degrees. Distances computed between two locators are between square centers and inherit that uncertainty. Beyond eight characters the extra precision is finer than most stations know their own position to, so it implies more than it delivers.",
     references: &[IARU_LOCATOR],
     examples: &[Example {
         id: "primary",
@@ -224,6 +226,8 @@ pub static MAIDENHEAD_INVERSE: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "IARU Maidenhead locator definition",
     accuracy: "Exact cell bounds",
+    when_to_use: "Use this when a locator arrives from a log, a spot, or a QSO and you want the position: it returns the center of the square and its bounds, in any letter case and at any length from two to ten characters. It is the counterpart of the encoder: a locator from a log, a cluster spot, or a QSL card becomes a position you can plot, measure a bearing to, or hand to a rotator.",
+    limitations: "The locator names a square, so the station is somewhere inside it rather than at the center; a four-character locator is a degree of latitude by two of longitude. Treat the center as a representative point and not a surveyed position. Two-character and four-character locators cover very large areas, so a distance computed from them carries tens or hundreds of kilometers of uncertainty. The locator says nothing about the station's height or its antenna.",
     references: &[IARU_LOCATOR],
     examples: &[Example {
         id: "primary",
@@ -308,6 +312,8 @@ pub static GARS_FORWARD: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "GARS: 720 longitude bands from 180° W, 360 latitude bands from 90° S, quadrants and keypads numbered from the north-west",
     accuracy: "Identical to GeographicLib's GARS class on 1,218 points at every precision",
+    when_to_use: "Use this when work is organized by GARS cells: search and rescue, military planning, and some agency products divide the world into thirty-minute cells with quadrants and keypads. This turns a latitude and longitude into that cell at the precision you pick, and gives the cell's bounds so you can see the area it covers.",
+    limitations: "A GARS reference names an area, not a point: the coarsest cell is thirty minutes of latitude and longitude, which is tens of kilometers wide. The cells are defined on latitude and longitude, so their ground size shrinks toward the poles. It carries no datum of its own; coordinates are taken as WGS 84.",
     references: &[NGA_GARS, GEOGRAPHICLIB_GRIDS],
     examples: &[Example {
         id: "primary",
@@ -364,6 +370,8 @@ pub static GARS_INVERSE: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "GARS as in GeographicLib's GARS class",
     accuracy: "Identical to GeographicLib's GARS class (within 1e-13°)",
+    when_to_use: "Use this when a GARS code arrives in a message, a plan, or a product and you need the ground it refers to: it returns the center and the bounds of the cell, quadrant, or keypad, at whatever precision the code carries. It is the counterpart to the encoder, so a cell named in a tasking message or an overlay can be drawn on a map with its true extent rather than as a point.",
+    limitations: "The code names a cell, so the true position is anywhere inside it and the center is a convenience rather than the point. Codes of different lengths mean different areas, and a keypad cell is still about nine kilometers across at the equator. No datum is implied beyond WGS 84. The three precisions are nested but very different in size, from thirty minutes down to five, so reading a code at the wrong length puts the area out by a factor of six in each direction.",
     references: &[NGA_GARS, GEOGRAPHICLIB_GRIDS],
     examples: &[Example {
         id: "primary",
@@ -457,6 +465,8 @@ pub static GEOREF_FORWARD: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "GEOREF: 24 × 12 tiles of 15°, 15 × 15 one-degree letters, then minutes of longitude and latitude",
     accuracy: "Identical to GeographicLib's Georef class on 5,278 encodings, except that 180° E is written as 180° W",
+    when_to_use: "Use this when a system asks for GEOREF: it is still used in air operations and some defense products, dividing the world into fifteen-degree tiles and subdividing to minutes and thousandths of a minute. Give a latitude and longitude and it returns the reference and the bounds of the cell it names.",
+    limitations: "GEOREF names an area whose size depends on the precision you choose, from fifteen degrees down to thousandths of a minute, and the cells narrow toward the poles. The convention writes 180 degrees east as 180 degrees west. It assumes WGS 84 and carries no height.",
     references: &[GEOGRAPHICLIB_GRIDS],
     examples: &[Example {
         id: "primary",
@@ -517,6 +527,8 @@ pub static GEOREF_INVERSE: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "GEOREF as in GeographicLib's Georef class",
     accuracy: "Identical to GeographicLib's Georef class (within 1e-13°)",
+    when_to_use: "Use this to turn a GEOREF reference back into coordinates: it gives the center of the cell the code names and the cell's bounds, so you can plot it or check its extent. It is the counterpart to the encoder, so a reference written in an operations order or a legacy product can be plotted without hand-decoding the letter pairs, and the bounds show how much ground the code actually commits you to.",
+    limitations: "The reference names a cell rather than a point, and the cell can be large: a four-character code is a one-degree box. The center is the middle of that box, not a surveyed position. Coordinates come out as WGS 84. A code with an odd number of digits after the letters cannot be split into a latitude and a longitude part, and is rejected rather than guessed at. Nothing in a GEOREF carries a height, a datum, or a time.",
     references: &[GEOGRAPHICLIB_GRIDS],
     examples: &[Example {
         id: "primary",
@@ -616,6 +628,8 @@ pub static USNG_FORWARD: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "USNG = MGRS on NAD 83/WGS 84, written with spaces; truncated, never rounded",
     accuracy: "Identical to GeographicLib's MGRS (GeoConvert) on the test points",
+    when_to_use: "Use this for the US National Grid form, written with spaces, which US civilian agencies and emergency management use on maps and in reports. Give a position and it returns the reference truncated to the precision you choose. It is the form printed on US topographic maps and used by emergency management, so a position given this way can be read straight off a paper map by someone with no equipment.",
+    limitations: "USNG shares MGRS geometry, so the reference names a square and truncates rather than rounds, and its precision is the size of that square. It is defined on WGS 84 or NAD 83, which differ by about a meter; a reference is only as good as the datum behind the coordinates you gave. Spacing and precision are part of the convention: a reference written without its spaces, or truncated further than intended, names a larger square than the writer meant.",
     references: &[USNG_STD],
     examples: &[Example {
         id: "primary",
@@ -723,6 +737,8 @@ pub static USNG_INVERSE: ToolDef = ToolDef {
     warnings: &["BAND_ADJUSTED", "EXPERIMENTAL_TOOL"],
     model: "USNG = MGRS on NAD 83/WGS 84; the square's center and corner by inverse UTM or UPS",
     accuracy: "Identical to GeographicLib's MGRS decoding (GeoConvert) within 1e-9°",
+    when_to_use: "Use this to read a US National Grid reference, including the truncated local form used on a single map sheet, such as NE 863 777, when you supply the grid zone. It returns the center and south-west corner of the square. It is what a dispatcher or a team member does with a grid reference passed by radio: read it back as coordinates and plot it.",
+    limitations: "A truncated local reference repeats every 100 km, so without the grid zone and square it can name more than one place; this is why the zone is asked for. The square's size is the precision, and the center is for plotting rather than a position report. USNG and MGRS share their geometry but not always their spacing conventions, so a reference copied between systems should be checked rather than assumed identical.",
     references: &[USNG_STD],
     examples: &[Example {
         id: "primary",

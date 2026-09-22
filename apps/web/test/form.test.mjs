@@ -81,8 +81,6 @@ const SHOWS_SIX = new Set([
   // optional on the GSD tool it shares a camera with, which is the question to
   // settle before this row can go.
   'drone.photogrammetry.trigger',
-  // figure_of_merit is marked core and target_time is required, so six show.
-  'drone.power.max-payload',
 ]);
 
 test('at most five inputs are shown before "More options"', () => {

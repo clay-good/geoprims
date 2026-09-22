@@ -25,7 +25,7 @@
 - [x] 3.1 Implement battery energy, usable energy, and C-rate; verify the 90.4 Wh and C-rate scenarios
 - [ ] 3.2 Implement momentum-theory hover power with FM, efficiency, and density; verify the 1.4 kg and density-altitude scenarios (built: momentum theory with FM, efficiency, avionics power, and ISA troposphere density from altitude and temperature or density altitude; both scenarios pass; pending: the coaxial-overlap option)
 - [ ] 3.3 Implement endurance, range, and heuristic derating; verify the reserve and cold-battery scenarios (built: endurance with reserve, cruise power, range, and the labeled cold derating; both scenarios pass; pending: wind-aware range through the aviation wind tools)
-- [ ] 3.4 Implement payload impact and maximum payload; verify the maximum-payload scenario (built: maximum payload for a target time with NO_SOLUTION; pending: the payload-impact comparison)
+- [x] 3.4 Implement payload impact and maximum payload; verify the maximum-payload scenario (maximum payload for a target time with NO_SOLUTION, and `drone.power.payload-impact`: hover power and time with and without the payload mass and its electrical draw)
 - [x] 3.5 Implement the return-to-home energy budget; verify the headwind and cannot-return scenarios
 - [ ] 3.6 Implement optional Peukert (off by default) and test-flight calibration (back-solve FM·η); verify the default-off scenario and a calibration fixture
 

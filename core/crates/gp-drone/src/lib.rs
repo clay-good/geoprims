@@ -1178,6 +1178,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &power::HOVER_POWER,
     &power::ENDURANCE,
     &power::MAX_PAYLOAD,
+    &power::PAYLOAD_IMPACT,
     &power::RTH_BUDGET,
     &ops::PART107_ALTITUDE,
     &ops::SPEED_CHECK,

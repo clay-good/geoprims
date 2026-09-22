@@ -563,6 +563,12 @@
           "tools": [
             "max-payload"
           ]
+        },
+        {
+          "want": "see what a payload costs in flight time",
+          "tools": [
+            "payload-impact"
+          ]
         }
       ],
       "guide": {

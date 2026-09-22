@@ -201,6 +201,31 @@ def payload_vectors():
     return out
 
 
+def payload_impact_vectors():
+    out = []
+    # mass, rotors, rotor in, payload kg, usable Wh, payload W, avionics W, altitude ft
+    cases = [(1.4, 4, 9.4, 0.3, 72, 8, 0, None), (0.9, 4, 7.0, 0.1, 45, 0, 0, None), (6.5, 6, 22.0, 1.5, 400, 20, 15, None),
+             (2.5, 4, 13.0, 0.5, 90, 0, 10, 5000), (4.0, 4, 15.0, 0.0, 160, 12, 0, None), (1.4, 4, 9.4, 0.3, 72, 8, 0, 8000)]
+    rho0 = P0 / (R_AIR * T0)
+    for i, (m, n, d_in, pm, e, pp, av, alt_ft) in enumerate(cases, 1):
+        d = d_in * 0.0254
+        a = n * math.pi * d * d / 4
+        rho = rho_at(alt_ft * 0.3048) if alt_ft else rho0
+        lift = lambda mm: (mm * G0) ** 1.5 / math.sqrt(2 * rho * a) / 0.51
+        p0, p1 = lift(m) + av, lift(m + pm) + av + pp
+        t0, t1 = e * 60 / p0, e * 60 / p1
+        inp = {"mass": f"{m} kg", "rotors": n, "rotor_diameter": f"{d_in} in", "payload_mass": f"{pm} kg", "usable_energy": f"{e} Wh"}
+        if pp:
+            inp["payload_power"] = f"{pp} W"
+        if av:
+            inp["avionics_power"] = f"{av} W"
+        if alt_ft:
+            inp["altitude"] = f"{alt_ft} ft"
+        out.append(fvec(i, inp, {"result.hover_time_with.value": t1, "result.hover_time_without.value": t0,
+                                  "result.power_increase.value": p1 - p0}, PW_SRC, PW_VER))
+    return out
+
+
 def rth_vectors():
     out = []
     cases = [(1.5, 15, 10, 180, 40, 10), (2.0, 12, 0, 150, 50, 5), (0.8, 18, -5, 300, 30, 10), (3.0, 20, 8, 250, 80, 15), (1.0, 10, 6, 120, 25, 0)]
@@ -551,7 +576,7 @@ def main():
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
              "drone.photogrammetry.motion-blur": blur(), "drone.photogrammetry.asprs-accuracy": asprs(),
              "drone.power.battery-energy": battery_vectors(), "drone.power.hover-power": hover_vectors(),
-             "drone.power.endurance": endurance_vectors(), "drone.power.max-payload": payload_vectors(),
+             "drone.power.endurance": endurance_vectors(), "drone.power.max-payload": payload_vectors(), "drone.power.payload-impact": payload_impact_vectors(),
              "drone.power.rth-budget": rth_vectors(), "drone.ops.part107-altitude": altitude_vectors(),
              "drone.ops.speed-check": speed_vectors(), "drone.ops.kinetic-energy": ke_vectors(),
              "drone.ops.easa-subcategory": easa_vectors(), "drone.sensors.vlos": vlos_vectors(),

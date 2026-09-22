@@ -456,8 +456,7 @@ const HOVER_INPUTS: [Field; 5] = [
         "Rotor efficiency vs ideal, 0.4 to 0.8, default 0.6",
         0.4,
         0.8,
-    )
-    .core(),
+    ),
     num(
         "efficiency",
         "Motor and speed-controller efficiency",
@@ -539,7 +538,7 @@ pub static HOVER_POWER: ToolDef = ToolDef {
         HOVER_INPUTS[0],
         HOVER_INPUTS[1],
         HOVER_INPUTS[2],
-        HOVER_INPUTS[3],
+        HOVER_INPUTS[3].core(),
         HOVER_INPUTS[4],
         DENSITY_INPUTS[0],
         DENSITY_INPUTS[1],
@@ -1081,6 +1080,217 @@ fn run_max_payload(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "base_hover_time",
             ctx.out("base_hover_time", q(e / base, QT::Time, "s")),
         ),
+    ]))
+}
+
+// ---------------------------------------------------------------- payload impact
+
+pub static PAYLOAD_IMPACT: ToolDef = ToolDef {
+    id: "drone.power.payload-impact",
+    title: "What a payload costs in flight time",
+    summary: "The extra hover power and the flight time lost when a multirotor carries a payload, from its mass and any electrical draw, by momentum theory.",
+    aliases: &[
+        "payload flight time loss",
+        "drone payload impact",
+        "how much flight time does a payload cost",
+    ],
+    keywords: &[
+        "payload",
+        "flight time",
+        "hover power",
+        "endurance",
+        "gimbal",
+        "sensor",
+        "momentum theory",
+    ],
+    inputs: &[
+        HOVER_INPUTS[0],
+        HOVER_INPUTS[1],
+        HOVER_INPUTS[2],
+        qty(
+            "payload_mass",
+            "Payload mass",
+            "Added to the takeoff mass, like 0.3 kg",
+            QT::Mass,
+            "kg",
+        )
+        .required()
+        .core(),
+        qty(
+            "usable_energy",
+            "Usable energy",
+            "After reserve, like 72 Wh",
+            QT::Energy,
+            "Wh",
+        )
+        .required()
+        .core(),
+        qty(
+            "payload_power",
+            "Payload electrical power",
+            "What the payload draws from the flight battery, like 8 W; default 0",
+            QT::Power,
+            "W",
+        ),
+        HOVER_INPUTS[3],
+        HOVER_INPUTS[4],
+        qty(
+            "avionics_power",
+            "Avionics power",
+            "Flight controller, radios, and so on, like 10 W; default 0",
+            QT::Power,
+            "W",
+        ),
+        DENSITY_INPUTS[0],
+        DENSITY_INPUTS[1],
+        DENSITY_INPUTS[2],
+    ],
+    outputs: &[
+        out(
+            "hover_time_with",
+            "Hover time with the payload",
+            "Usable energy / power with the payload",
+            QT::Time,
+            "min",
+            1,
+        ),
+        out(
+            "hover_time_without",
+            "Hover time without it",
+            "Usable energy / power at the takeoff mass alone",
+            QT::Time,
+            "min",
+            1,
+        ),
+        out(
+            "time_lost",
+            "Flight time lost",
+            "Without − with",
+            QT::Time,
+            "min",
+            1,
+        ),
+        out(
+            "power_with",
+            "Hover power with the payload",
+            "Lift power at the new mass + payload and avionics power",
+            QT::Power,
+            "W",
+            1,
+        ),
+        out(
+            "power_increase",
+            "Power added",
+            "With − without",
+            QT::Power,
+            "W",
+            1,
+        ),
+        num(
+            "power_increase_percent",
+            "Power added (%)",
+            "Power added / power without",
+            0.0,
+            100_000.0,
+        )
+        .precision(Precision::Decimals(1)),
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Lift power = (m·g0)^1.5 / √(2ρA) / (FM·η), so it grows with mass to the power 1.5; hover power = lift power + avionics (+ payload draw when carried); time = usable energy / power",
+    accuracy: "Momentum-theory estimate. It ignores the motors' thrust limit and any drag the payload adds in forward flight, so check the maximum takeoff mass in the manual.",
+    references: &[LEISHMAN],
+    examples: &[Example {
+        id: "primary",
+        title: "The 1.4 kg quad with a 0.3 kg, 8 W payload on 72 Wh",
+        input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0.3 kg","usable_energy":"72 Wh","payload_power":"8 W"}"#,
+        source: "Momentum theory (Leishman 2006, chapter 2) at both masses",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "gauge",
+        map: &[("value", "hover_time_with")],
+    }],
+    related: &[
+        Related {
+            id: "drone.power.max-payload",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.power.endurance",
+            reason: "next",
+        },
+    ],
+    sentence: "With the payload it hovers for about {hover_time_with}, {time_lost} less than without it.",
+    limits: &[("batchRows", 10_000)],
+    run: run_payload_impact,
+    ..ToolDef::BLANK
+};
+
+fn non_negative(ctx: &mut Ctx, name: &str, what: &str) -> Result<f64, ToolError> {
+    let v = ctx.quantity(name)?.map_or(0.0, |x| x.base());
+    if v < 0.0 {
+        return Err(ToolError::invalid(
+            &format!("/{name}"),
+            format!("{what} cannot be negative."),
+        ));
+    }
+    Ok(v)
+}
+
+fn run_payload_impact(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let h = read_hover(ctx)?;
+    let e = positive(ctx, "usable_energy", "Usable energy")?;
+    let pm = non_negative(ctx, "payload_mass", "Payload mass")?;
+    let pp = non_negative(ctx, "payload_power", "Payload power")?;
+    let av = non_negative(ctx, "avionics_power", "Avionics power")?;
+    let lift0 = hover(h.m, h.n, h.d, h.rho, h.fm, h.eta).electrical;
+    let lift1 = hover(h.m + pm, h.n, h.d, h.rho, h.fm, h.eta).electrical;
+    let (p0, p1) = (lift0 + av, lift1 + av + pp);
+    let (t0, t1) = (e / p0, e / p1);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        ctx.step(
+            "Lift power with the payload",
+            "lift power grows with mass^1.5",
+            format!(
+                "{} W × ({} kg / {} kg)^1.5",
+                n(lift0, 1),
+                n(h.m + pm, 3),
+                n(h.m, 3)
+            ),
+            format!("{} W", n(lift1, 1)),
+        );
+        ctx.step(
+            "Hover power with the payload",
+            "lift + avionics + payload draw",
+            format!("{} W + {} W + {} W", n(lift1, 1), n(av, 1), n(pp, 1)),
+            format!("{} W", n(p1, 1)),
+        );
+        ctx.step(
+            "Hover time with the payload",
+            "time = usable energy / power",
+            format!("{} Wh / {} W", n(e / 3600.0, 1), n(p1, 1)),
+            format!("{} min", n(t1 / 60.0, 1)),
+        );
+    }
+    Ok(Json::obj(vec![
+        (
+            "hover_time_with",
+            ctx.out("hover_time_with", q(t1, QT::Time, "s")),
+        ),
+        (
+            "hover_time_without",
+            ctx.out("hover_time_without", q(t0, QT::Time, "s")),
+        ),
+        ("time_lost", ctx.out("time_lost", q(t0 - t1, QT::Time, "s"))),
+        ("power_with", ctx.out("power_with", q(p1, QT::Power, "W"))),
+        (
+            "power_increase",
+            ctx.out("power_increase", q(p1 - p0, QT::Power, "W")),
+        ),
+        ("power_increase_percent", Json::Num((p1 / p0 - 1.0) * 100.0)),
     ]))
 }
 

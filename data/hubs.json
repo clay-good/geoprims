@@ -176,8 +176,14 @@
       ]
     },
     "aviation.performance": {
-      "summary": "Climb, descent, glide, and turns.",
+      "summary": "Climb, descent, glide, turns, and range per gallon.",
       "tasks": [
+        {
+          "want": "know how far each gallon takes me",
+          "tools": [
+            "specific-range"
+          ]
+        },
         {
           "want": "plan a climb gradient or vertical speed",
           "tools": [

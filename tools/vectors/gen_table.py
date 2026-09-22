@@ -66,6 +66,8 @@ def main():
     gap = rows(grid)[:-1]
     out.append(vec(len(out) + 1, {"table": gap, "at_a": 1000, "at_b": 5}, {"ok": False, "error.code": "INVALID_INPUT"}))
     out.append(vec(len(out) + 1, {"table": rows(grid), "at_a": 1000}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/at_b"}))
+    # No POH table: refused with the reason, never a generic estimate.
+    out.append(vec(len(out) + 1, {"at_a": 3000, "at_b": 25}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/table"}, "add-aviation-suite no-POH scenario"))
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     (dest / "aviation.loading.table-interpolate.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in out))
 

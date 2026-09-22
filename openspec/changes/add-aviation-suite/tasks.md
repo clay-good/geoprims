@@ -39,7 +39,7 @@
 - [x] 5.1 Implement turn relations, stall in turn, and load-limit checks; verify the standard-rate, 60°-bank, and load-limit scenarios
 - [x] 5.2 Implement climb/descent gradients, top of descent, and VDP; verify the FL350 and climb-gradient scenarios
 - [ ] 5.3 Implement glide range with wind and the glide ring on the map; verify the headwind scenario (built: glide range with wind and the headwind scenario; pending: the glide ring on the map)
-- [ ] 5.4 Implement pivotal altitude and specific range, and the no-POH refusal; verify the pivotal-altitude and no-POH scenarios (built: pivotal altitude and its scenario; pending: specific range and the no-POH refusal)
+- [x] 5.4 Implement pivotal altitude and specific range, and the no-POH refusal; verify the pivotal-altitude and no-POH scenarios (pivotal altitude and its scenario; `aviation.performance.specific-range`: NM per US gallon through the air and over the ground and fuel per 100 NM, with gal/h or L/h flows, 8 golden vectors; the no-POH refusal lives in the table tool, which takeoff- and landing-distance searches now reach: with no table it explains that the aircraft's own POH/AFM data is required, offers the table entry, and points to density altitude, with a regression vector)
 
 ## 6. Fuel and loading
 

@@ -12,6 +12,7 @@ pub mod ifr;
 pub mod loading;
 pub mod offcourse;
 pub mod performance;
+pub mod range;
 pub mod runway;
 pub mod table;
 pub mod triangle;
@@ -2236,6 +2237,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &triangle::TAS_FROM_GROUNDSPEED,
     &triangle::COURSE_FROM_HEADING,
     &fuel::FUEL_PLAN,
+    &range::SPECIFIC_RANGE,
 ];
 
 pub static REGISTRY: Registry = Registry {

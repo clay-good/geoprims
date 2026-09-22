@@ -115,7 +115,8 @@
         "aviation.airspeed.cas-to-tas",
         "aviation.loading.fuel-plan",
         "aviation.loading.weight-balance",
-        "aviation.performance.glide"
+        "aviation.performance.glide",
+        "aviation.performance.specific-range"
       ]
     },
     {
@@ -135,6 +136,7 @@
       "definition": "A distance of exactly 1,852 meters, about one minute of latitude. Aviation and marine navigation measure distance in it.",
       "source": "icao-annex5",
       "relatedTools": [
+        "aviation.performance.specific-range",
         "units.length.nm-to-km",
         "units.length.nm-to-mi"
       ]

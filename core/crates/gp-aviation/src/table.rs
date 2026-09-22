@@ -95,6 +95,8 @@ pub static TABLE: ToolDef = ToolDef {
         "bilinear interpolation",
         "takeoff distance table",
         "interpolate table",
+        "takeoff distance calculator",
+        "landing distance calculator",
     ],
     keywords: &[
         "interpolate",
@@ -118,7 +120,6 @@ pub static TABLE: ToolDef = ToolDef {
                 max: 2_000,
             },
         )
-        .required()
         .core(),
         num("at_a", "Look up first variable at", "Like 3000")
             .required()
@@ -215,6 +216,15 @@ pub static TABLE: ToolDef = ToolDef {
 };
 
 fn run_table(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    // aviation/flight-performance "Density-altitude effects need aircraft data":
+    // no generic takeoff or landing estimate, only the user's own table.
+    if !ctx.is_set("table") {
+        return Err(ToolError::invalid(
+            "/table",
+            "Takeoff and landing distances need your aircraft's own data: enter the table from its POH or AFM. There is no generic estimate here, because one could be mistaken for your aircraft's numbers.",
+        )
+        .hint("Copy the table's rows here, one cell per row, like 2000, 20, 1350. To see how altitude and temperature change performance, use aviation.altimetry.density-altitude."));
+    }
     let rows = ctx.rows("table")?;
     let get = |r: &serde_json::Map<String, Value>, k: &str| -> Option<f64> {
         r.get(k).and_then(Value::as_f64)

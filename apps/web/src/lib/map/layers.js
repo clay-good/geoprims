@@ -58,11 +58,14 @@ export async function buildLayers(tool, args, result, densify) {
     // The geodesic tools show the rhumb line as a dashed comparison, and the other way round.
     await line(rhumb ? 'geodesic' : 'rhumb', 'comparison');
   }
-  if (p1.every((x) => x !== null)) layers.push({ kind: 'point', role: 'input', points: [p1], label: 'A' });
-  if (two) layers.push({ kind: 'point', role: 'input', points: [p2], label: 'B' });
+  // Input points name the fields they came from, so the canvas can drag them.
+  const has = (f) => f in tool.inputs.properties;
+  const fieldOf = (lat, lon) => (has(lat) && has(lon) ? { lat, lon } : undefined);
+  if (p1.every((x) => x !== null)) layers.push({ kind: 'point', role: 'input', points: [p1], label: 'A', field: fieldOf('lat1', 'lon1') });
+  if (two) layers.push({ kind: 'point', role: 'input', points: [p2], label: 'B', field: fieldOf('lat2', 'lon2') });
   // A single input point (lat, lon), like the declination or geoid tools.
   const p = [numberOf(args.lon), numberOf(args.lat)];
-  if (p.every((x) => x !== null)) layers.push({ kind: 'point', role: two ? 'result' : 'input', points: [p], label: two ? 'P' : '' });
+  if (p.every((x) => x !== null)) layers.push({ kind: 'point', role: two ? 'result' : 'input', points: [p], label: two ? 'P' : '', field: two ? undefined : fieldOf('lat', 'lon') });
   for (const v of tool.visualization ?? []) {
     if (v.kind !== 'point') continue;
     const map = mapOf(v.map);

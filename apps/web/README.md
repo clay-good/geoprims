@@ -79,6 +79,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `src/lib/coordinate.mjs`, `test/coordinate.test.mjs` | The paste-a-coordinate field: any notation the catalog decodes, what it read shown before computing, and the swap when the order was assumed |
 | `data/hubs.json`, `test/hubs.test.mjs` | Group hub pages: tools listed under "I want to…" tasks, each once, and a short guide where tools form a sequence |
 | `src/lib/crs.mjs`, `test/crs.test.mjs` | Projected coordinates on import: UTM and State Plane CSVs, and GeoJSON in a WGS 84 UTM zone, converted by the core's inverse tools; other declared systems refused |
+| `src/lib/map/handles.js`, `test/handles.test.mjs` | Canvas input: drag A, B, or a single point on the map (the fields follow), and click to set a single-point tool's point |
 | `src/lib/map/readout.js`, `test/readout.test.mjs` | The map's cursor readout in the chosen coordinate format (degrees, DMS, MGRS, and UTM from the core), and the magnetic north indicator |
 | `src/lib/canvas-export.mjs`, `test/canvas-export.test.mjs` | Canvas export: the map as PNG with the caption and every attribution in a footer strip, its layers as GeoJSON, and diagrams as standalone SVG |
 | `src/lib/export.mjs`, `test/export.test.mjs` | The eight export formats and the calculation sheet, with every geographic export read back and compared point for point |

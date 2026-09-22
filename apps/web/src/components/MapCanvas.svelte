@@ -4,13 +4,14 @@
   // scroll or pinch to zoom; arrow keys, + and -, and 0 (reset) do the same.
   import { onMount } from 'svelte';
   import { buildLayers, extent } from '../lib/map/layers.js';
-  import { decode, frame, inverse } from '../lib/map/projection.js';
+  import { decode, forward, frame, inverse } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
   import { magneticNorth, readoutText } from '../lib/map/readout.js';
+  import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
   import { coordFormat } from '../lib/prefs.js';
   import { attributionLines, caption, layersGeoJson, loadRegistry, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
 
-  let { tool, args, result, compute } = $props();
+  let { tool, args, result, compute, onmove } = $props();
 
   const kinds = new Set((tool.visualization ?? []).map((v) => v.kind));
   let mode = $state(kinds.has('line-geodesic') ? 'globe' : 'map');
@@ -104,7 +105,13 @@
       layers.some((l) => l.kind === 'line' && l.role === 'comparison') && { cls: 'dashed', text: `${named(!rhumb)}, for comparison` },
       layers.some((l) => l.kind === 'polygon') && { cls: 'area', text: 'The area' },
     ].filter(Boolean);
-    reframe();
+    // A result that lands mid-drag was computed for an earlier position:
+    // keep the point under the pointer until the drag ends.
+    const held = drag?.handle && drag.at && layers.find((l) => l.field === drag.handle.field);
+    if (held) held.points = [drag.at];
+    // After the reader has moved a point on the map, keep their view.
+    if (keepView) paint();
+    else reframe();
   }
 
   $effect(() => {
@@ -114,14 +121,32 @@
 
   function setMode(m) {
     mode = m;
+    keepView = false;
     reframe();
   }
 
   // Pointer: drag pans the map or spins the globe; the readout follows the pointer.
+  // A press on an input point drags it (the form follows); a press elsewhere
+  // pans; a click without moving sets a single-point tool's point.
   let drag = null;
+  let keepView = false;
+  const canDrag = !!onmove;
+  const local = (e) => {
+    const r = canvas.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  };
+  function place(field, ll) {
+    const d = dragDegrees(ll[1], ll[0], metersPerPixel(view));
+    onmove(field, d.lat, d.lon);
+  }
   function down(e) {
     canvas.setPointerCapture(e.pointerId);
-    drag = { x: e.clientX, y: e.clientY, view: { ...view } };
+    const [w, h] = size();
+    const [x, y] = local(e);
+    const handle = canDrag && view ? handleAt(handlesOf(layers), { ...view, width: w, height: h }, x, y) : null;
+    // Keep where on the point the press landed, so the point does not jump.
+    const grab = handle ? forward({ ...view, width: w, height: h }, handle.lon, handle.lat) : null;
+    drag = { x: e.clientX, y: e.clientY, view: { ...view }, handle, moved: false, dx: grab ? grab[0] - x : 0, dy: grab ? grab[1] - y : 0 };
     target = null;
   }
   function move(e) {
@@ -129,7 +154,25 @@
     const [w, h] = size();
     const ll = view && inverse({ ...view, width: w, height: h }, e.clientX - r.left, e.clientY - r.top);
     showPoint(ll);
+    if (canDrag && !drag && view) {
+      const [x, y] = local(e);
+      canvas.style.cursor = handleAt(handlesOf(layers), { ...view, width: w, height: h }, x, y) ? 'move' : '';
+    }
     if (!drag) return;
+    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 3) drag.moved = true;
+    if (drag.handle) {
+      const [x, y] = local(e);
+      const ll = inverse({ ...view, width: w, height: h }, x + drag.dx, y + drag.dy);
+      if (!ll || !drag.moved) return;
+      keepView = true;
+      // Move the point now; the recomputed result redraws the rest.
+      const layer = layers.find((l) => l.field === drag.handle.field);
+      drag.at = [ll[0], ll[1]];
+      if (layer) layer.points = [drag.at];
+      paint();
+      place(drag.handle.field, ll);
+      return;
+    }
     const d = 180 / Math.PI / drag.view.scale;
     view = {
       ...drag.view,
@@ -159,8 +202,17 @@
       showPoint(next);
     }
   }
-  function up() {
+  function up(e) {
+    const click = drag && !drag.moved && !drag.handle && e?.type === 'pointerup';
     drag = null;
+    const field = canDrag && click && clickTarget(tool);
+    if (!field) return;
+    const [w, h] = size();
+    const [x, y] = local(e);
+    const ll = inverse({ ...view, width: w, height: h }, x, y);
+    if (!ll) return;
+    keepView = true;
+    place(field, ll);
   }
   function zoom(f) {
     target = null;
@@ -252,7 +304,7 @@
     <div class="map-tools" role="group" aria-label="Zoom">
       <button type="button" onclick={() => zoom(1 / 1.5)} aria-label="Zoom out">−</button>
       <button type="button" onclick={() => zoom(1.5)} aria-label="Zoom in">+</button>
-      <button type="button" onclick={reframe} aria-label="Fit the result in view">Fit</button>
+      <button type="button" onclick={() => { keepView = false; reframe(); }} aria-label="Fit the result in view">Fit</button>
     </div>
     <div class="map-tools" role="group" aria-label="Export">
       <button type="button" onclick={exportPng} aria-label="Download the view as PNG, with attribution">PNG</button>
@@ -285,7 +337,7 @@
   {/if}
   <p class="map-readout" aria-hidden="true">
     <span class="scale">{#if scaleBar.px > 0}<span class="scale-bar" use:width={scaleBar.px}></span>{scaleBar.label}{/if}</span>
-    <span>{readout || (mode === 'globe' ? 'Drag to turn the globe' : 'Drag to pan, scroll to zoom')}</span>
+    <span>{readout || (canDrag && clickTarget(tool) ? 'Click to set the point, or drag it' : canDrag && tool.inputs.properties.lat1 ? 'Drag A or B to move them' : mode === 'globe' ? 'Drag to turn the globe' : 'Drag to pan, scroll to zoom')}</span>
     <span>{mode === 'globe' ? 'Globe' : 'Web Mercator'} · Natural Earth{generalized ? ' (generalized at this zoom)' : ''}</span>
   </p>
 </figure>

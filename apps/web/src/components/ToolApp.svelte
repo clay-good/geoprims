@@ -320,6 +320,14 @@
     edited();
   }
 
+  /** A point moved or set on the map: its fields follow, and the tool recomputes. */
+  function moveFromMap(field, lat, lon) {
+    values[field.lat] = lat;
+    values[field.lon] = lon;
+    if (pair && field.lat === pair.lat) [read, pasted] = [null, ''];
+    edited();
+  }
+
   /** The other reading, when the text carried no hemisphere or label. */
   function swapRead() {
     if (!read?.ambiguous) return;
@@ -842,7 +850,7 @@
 {/if}
 
 {#if showMap && compute && result?.ok}
-  <MapCanvas {tool} args={drawnArgs} {result} {compute} />
+  <MapCanvas {tool} args={drawnArgs} {result} {compute} onmove={moveFromMap} />
 {/if}
 {#if reporting && ReportDialog}
   <ReportDialog {tool} args={args()} {result} onclose={() => (reporting = false)} />

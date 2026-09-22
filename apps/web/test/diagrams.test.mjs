@@ -432,3 +432,38 @@ test('the borrow pit draws the balance line through every crossing', async () =>
   assert.match(none.desc, /no balance line/);
   assert.equal(lines(none.markup).filter((l) => l.cls.includes('dg-dash')).length, 0);
 });
+
+test('the fly-by turn arc leaves the inbound leg and meets the outbound one', async () => {
+  // add-navigation-and-geometry 2.8 turn-arc fixture.
+  for (const args of [
+    { inbound: '360 deg', outbound: '090 deg', speed: '120 kt', bank: '25 deg' },
+    { inbound: '090 deg', outbound: '010 deg', speed: '200 kt', bank: '30 deg' },
+    { inbound: '270 deg', outbound: '160 deg', speed: '150 kt', bank: '20 deg' },
+  ]) {
+    const r = JSON.parse(await host.invoke('navigation.route.fly-by', JSON.stringify(args)));
+    const d = diagram('navigation.route.fly-by', args, r);
+    const legs = lines(d.markup).filter((l) => l.cls === 'dg-muted');
+    const [inbound, outbound] = legs;
+    // The legs run along the courses, through the waypoint.
+    near(bearing(inbound).deg, Number.parseFloat(args.inbound), 0.5, 'inbound leg');
+    near(bearing(outbound).deg, Number.parseFloat(args.outbound), 0.5, 'outbound leg');
+    const waypoint = circles(d.markup).find((c) => c.cls === 'dg-dot');
+    assert.ok(Math.hypot(inbound.x2 - waypoint.x, inbound.y2 - waypoint.y) < 0.2, 'the inbound leg ends at the waypoint');
+    assert.ok(Math.hypot(outbound.x1 - waypoint.x, outbound.y1 - waypoint.y) < 0.2, 'the outbound leg starts there');
+    // The arc leaves the inbound leg and rejoins the outbound one, the same
+    // distance either side of the waypoint, and sweeps the way the core says.
+    const arc = /<path class="dg-accent" d="M([-\d.]+) ([-\d.]+) A([\d.]+) [\d.]+ 0 0 ([01]) ([-\d.]+) ([-\d.]+)"/.exec(d.markup);
+    const [sx, sy, radius, sweep, ex, ey] = arc.slice(1).map(Number);
+    assert.equal(sweep === 1, r.result.direction === 'right', `a ${r.result.direction} turn drawn the other way`);
+    const lead = Math.hypot(sx - waypoint.x, sy - waypoint.y);
+    assert.ok(Math.abs(Math.hypot(ex - waypoint.x, ey - waypoint.y) - lead) < 0.2, 'the turn is not symmetric about the waypoint');
+    // Start and end sit on the legs, before and after the waypoint.
+    near(bearing({ x1: sx, y1: sy, x2: waypoint.x, y2: waypoint.y }).deg, Number.parseFloat(args.inbound), 0.5, 'the turn starts on the inbound leg');
+    near(bearing({ x1: waypoint.x, y1: waypoint.y, x2: ex, y2: ey }).deg, Number.parseFloat(args.outbound), 0.5, 'the turn ends on the outbound leg');
+    // Tangent geometry: lead = radius × tan(half the turn), as the core has it.
+    const half = Math.tan(((r.result.turn_angle.value ?? r.result.turn_angle) / 2) * (Math.PI / 180));
+    assert.ok(Math.abs(lead / radius - half) < 0.02, `drawn lead/radius ${lead / radius}, tan(half turn) ${half}`);
+    const coreRatio = r.result.lead_distance.value / r.result.radius.value;
+    assert.ok(Math.abs(coreRatio - half) < 0.02, `the core's lead/radius is ${coreRatio}`);
+  }
+});

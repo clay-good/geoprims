@@ -192,3 +192,27 @@ test('a flight path draws from output waypoints, flattening a corridor’s lines
   assert.ok(layers.some((l) => l.kind === 'point' && l.label === 'Start'));
   assert.ok(layers.some((l) => l.kind === 'line' && l.role === 'input' && l.points.length === 2));
 });
+
+test('layers: a route draws its legs in order, once, with a start marker', async () => {
+  // add-navigation-and-geometry 2.8: the route the legs table describes is
+  // drawn on the map, and the waypoints are not laid down twice.
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const catalog = JSON.parse(readFileSync(join(web, '../../dist/catalog/v1.json'), 'utf8'));
+  const host = nodeHost(join(web, '../../dist/wasm'));
+  const tool = catalog.tools.find((t) => t.id === 'navigation.route.legs');
+  const args = tool.examples[0].input;
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  const layers = await buildLayers(tool, args, result, null, null);
+  const routes = layers.filter((l) => l.kind === 'line');
+  assert.equal(routes.length, 1, 'the route is drawn once, not as input and result both');
+  const [route] = routes;
+  assert.equal(route.role, 'result');
+  assert.equal(route.points.length, args.waypoints.length, 'a point per waypoint');
+  for (const [i, w] of args.waypoints.entries()) {
+    assert.ok(Math.abs(route.points[i][0] - w.lon) < 1e-9 && Math.abs(route.points[i][1] - w.lat) < 1e-9, `waypoint ${i} out of order`);
+  }
+  assert.ok(route.arrows, 'the legs carry their direction');
+  const start = layers.find((l) => l.kind === 'point' && l.label === 'Start');
+  assert.deepEqual(start.points[0], [args.waypoints[0].lon, args.waypoints[0].lat]);
+});

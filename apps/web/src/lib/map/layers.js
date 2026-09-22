@@ -133,7 +133,11 @@ export async function buildLayers(tool, args, result, densify, cells) {
           if (rs.length) layers.push({ kind: 'polygon', role: 'input', rings: rs });
         } else {
           const line = args[name].map((r) => [numberOf(r.lon), numberOf(r.lat)]).filter((q) => q.every((x) => x !== null));
-          if (line.length >= 2) layers.push({ kind: 'line', role: 'input', points: line });
+          // A route's waypoints are the path itself; drawing them again as the
+          // input would lay the same line over itself in two roles.
+          const drawn = layers.find((l) => l.kind === 'line' && l.role === 'result')?.points ?? [];
+          const same = drawn.length === line.length && line.every((q, i) => Math.abs(q[0] - drawn[i][0]) < 1e-9 && Math.abs(q[1] - drawn[i][1]) < 1e-9);
+          if (line.length >= 2 && !same) layers.push({ kind: 'line', role: 'input', points: line });
         }
         break;
       }

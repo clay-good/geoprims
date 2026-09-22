@@ -10,7 +10,7 @@ use gp_base::ErrorCode;
 use gp_base::angle::wrap_lon;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_geo::point;
 use libm::{acos, asin, atan2, cos, hypot, sin};
@@ -1237,6 +1237,13 @@ const WAYPOINT: &[Field] = &[
     .required(),
 ];
 
+/// A waypoint of the route, as the map layer reads it.
+const PATH_ROW: &[Field] = &[
+    qty_field("lat", "Latitude", "Degrees", QT::Angle, "deg").precision(Precision::Decimals(7)),
+    qty_field("lon", "Longitude", "Degrees", QT::Angle, "deg").precision(Precision::Decimals(7)),
+    Field::new("name", "Name", "Waypoint", Kind::Text { max_len: 24 }),
+];
+
 const LEG_ROW: &[Field] = &[
     Field::new("from", "From", "Waypoint", Kind::Text { max_len: 24 }),
     Field::new("to", "To", "Waypoint", Kind::Text { max_len: 24 }),
@@ -1425,6 +1432,16 @@ pub static LEGS: ToolDef = ToolDef {
                 max: 99,
             },
         ),
+        Field::new(
+            "path",
+            "Route",
+            "The waypoints in order, for drawing",
+            Kind::List {
+                items: PATH_ROW,
+                min: 2,
+                max: 100,
+            },
+        ),
     ],
     errors: &[
         ErrorCode::InvalidInput,
@@ -1444,8 +1461,8 @@ pub static LEGS: ToolDef = ToolDef {
     assets: &["wmm2025"],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "line-geodesic",
+        map: &[("path", "path"), ("distance", "total_distance")],
     }],
     related: &[Related {
         id: "navigation.route.time-speed-distance",
@@ -1621,6 +1638,34 @@ fn run_legs(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     out.push(("legs", Json::Arr(legs)));
     out.push(("legs_count", Json::Num(n as f64)));
+    out.push((
+        "path",
+        Json::Arr(
+            pts.iter()
+                .map(|(name, la, lo)| {
+                    Json::obj([
+                        (
+                            "lat",
+                            Q {
+                                value: *la,
+                                unit: dunit,
+                            }
+                            .to_json(),
+                        ),
+                        (
+                            "lon",
+                            Q {
+                                value: *lo,
+                                unit: dunit,
+                            }
+                            .to_json(),
+                        ),
+                        ("name", Json::str(name.clone())),
+                    ])
+                })
+                .collect(),
+        ),
+    ));
     ctx.model = Some(format!(
         "{} legs on {}{}",
         if rhumb {

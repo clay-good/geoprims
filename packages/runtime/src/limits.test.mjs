@@ -78,3 +78,25 @@ test('an oversized payload is refused before it is parsed', async () => {
   assert.match(r.error.message, /bytes/);
   assert.equal(r.result, undefined, 'nothing was parsed');
 });
+
+test('a 2,000,000-vertex polygon is refused before any geometry runs', async () => {
+  // The geometry spec's oversized-input scenario, on both surfaces: the web
+  // host's 50 MB ceiling and the MCP server's 10 MB one each stop it by size,
+  // and a polygon small enough in bytes still meets the tool's row cap.
+  const { LIMITS } = await import('./harden.mjs');
+  const rows = (n) => '[' + Array.from({ length: n }, (_, i) => `{"lat":${(40 + (i % 1000) * 1e-6).toFixed(6)},"lon":-105}`).join(',') + ']';
+  const huge = `{"polygon":${rows(2_000_000)}}`;
+  for (const maxBytes of [LIMITS.webBytes, LIMITS.mcpBytes]) {
+    const h = nodeHost(join(root, 'dist/wasm'), { maxBytes });
+    const t = Date.now();
+    const r = JSON.parse(await h.invoke('geometry.area.polygon', huge));
+    assert.equal(r.error?.code, 'LIMIT_EXCEEDED', `${maxBytes}: ${JSON.stringify(r).slice(0, 200)}`);
+    assert.match(r.error.message, /bytes/);
+    assert.ok(Date.now() - t < 5_000, 'refused quickly');
+  }
+  const cap = catalog.tools.find((x) => x.id === 'geometry.area.polygon').inputs.properties.polygon.maxItems;
+  const r = JSON.parse(await host.invoke('geometry.area.polygon', `{"polygon":${rows(200_001)}}`));
+  assert.equal(r.error?.code, 'LIMIT_EXCEEDED');
+  assert.match(r.error.message, new RegExp(`limit is ${cap}`));
+  assert.equal(r.result, undefined, 'nothing was computed');
+});

@@ -23,9 +23,9 @@
 
 ## 4. Triage and corrections
 
-- [ ] 4.1 Write `docs/runbooks/problem-reports.md` (queries, status transitions, SLAs, launch checklist); verify every query runs against a seeded local D1
+- [x] 4.1 Write `docs/runbooks/problem-reports.md` (queries, status transitions, SLAs, launch checklist); verify every query runs against a seeded local D1 (`worker/test/runbook.test.mjs` runs every SQL block in the runbook against the real migration with seeded reports; the D1 is Node's SQLite, the same engine, as `wrangler` is not in CI yet)
 - [ ] 4.2 Write the reproduction script (report id → recompute on reported and current builds); verify on seeded reports
-- [ ] 4.3 Write the status-transition wrappers enforcing `primary_source` for confirmed and `fixed_in_version` for fixed; verify rejection of invalid transitions
+- [x] 4.3 Write the status-transition wrappers enforcing `primary_source` for confirmed and `fixed_in_version` for fixed; verify rejection of invalid transitions (`worker/src/triage.mjs` and the `worker/scripts/triage.mjs` CLI: only the workflow's own moves, a primary source for confirmed, a semantic version for fixed, a resolution note for each close, and a WHERE on the old status so a stale move changes nothing; `worker/test/triage.test.mjs` walks a report through, refuses ten invalid moves, and checks the triage order and the CLI's SQL quoting)
 - [ ] 4.4 Create `known-issues.json` schema, the `/known-issues` page, and tool-page banners; verify the banner scenario (built: data/known-issues.json with a build-time validator, the /known-issues page, and the tool-page banner for confirmed issues)
 - [ ] 4.5 Add the "Result change" changelog label and the 90-day tool-page notice; verify the result-change scenario
 - [x] 4.6 Add `.github/ISSUE_TEMPLATE/wrong-answer.yml` and `config.yml`; verify required-field validation (the form carries the `correctness` label and marks the tool or URL, inputs, answer received, answer expected, and published source as required; `config.yml` points security reports to a private advisory; `tools/github/issue-form.test.mjs` checks each required field and that every link to the form names a file that exists. GitHub's own blocking of an incomplete form is verified once the repository is public)

@@ -1007,6 +1007,26 @@
       "relatedTools": [
         "survey.reduction.slope"
       ]
+    },
+    {
+      "id": "bs",
+      "term": "BS",
+      "expansion": "backsight",
+      "definition": "In leveling, the rod reading on a point of known elevation. Added to that elevation it gives the height of the instrument.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.level-run"
+      ]
+    },
+    {
+      "id": "fs",
+      "term": "FS",
+      "expansion": "foresight",
+      "definition": "In leveling, the rod reading on a point whose elevation is wanted. Subtracted from the height of the instrument it gives that elevation.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.level-run"
+      ]
     }
   ],
   "notAbbreviations": [

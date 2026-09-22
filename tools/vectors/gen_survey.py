@@ -467,6 +467,81 @@ def offset_shot():
     return out
 
 
+def grade():
+    out = []
+    # The spec scenario's reading: 3H:1V is about 18.43° and 33.3%.
+    for i, (g, gr) in enumerate([("3H:1V", 1 / 3), ("1V:3H", 1 / 3), ("5%", 0.05), ("2.5°", math.tan(math.radians(2.5))), ("50‰", 0.05), ("0.125", 0.125)], 1):
+        src, ver = (SPEC, "2026") if i == 1 else (SRC, VER)
+        out.append(vec(i, {"grade": g}, {"result.percent": gr * 100, "result.degrees.value": math.degrees(math.atan(gr)), "result.per_mille": gr * 1000}, src, ver))
+    out.append(vec(7, {"grade": "3:1", "convention": "V:H"}, {"result.percent": 300.0}))
+    out.append(vec(8, {"grade": "3:1"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/convention"}, SPEC, "2026"))
+    out.append(vec(9, {"rise": "5 ft", "run": "100 ft"}, {"result.percent": 5.0, "result.slope_length.value": math.hypot(5, 100)}))
+    out.append(vec(10, {"grade": "2%", "run": "250 m"}, {"result.rise.value": 5.0, "result.slope_length.value": math.hypot(5, 250)}))
+    return out
+
+
+def level_run():
+    """Level notes reduced by hand-style arithmetic: HI = elev + BS, elev = HI - FS."""
+    out = []
+
+    def reduce(start, book):
+        elev, hi, sbs, sfs, elevs = start, None, 0.0, 0.0, []
+        for st, bs, fs, d in book:
+            if fs is not None:
+                elev = hi - fs
+                sfs += fs
+            elevs.append(elev)
+            hi = elev + bs if bs is not None else None
+            if bs is not None:
+                sbs += bs
+        return elevs, sbs, sfs
+
+    def book_input(book, u):
+        rows = []
+        for st, bs, fs, d in book:
+            r = {"station": st}
+            if bs is not None:
+                r["backsight"] = f"{bs} {u}"
+            if fs is not None:
+                r["foresight"] = f"{fs} {u}"
+            if d is not None:
+                r["distance"] = f"{d} {u}"
+            rows.append(r)
+        return rows
+
+    loop = [("BM 1", 4.52, None, None), ("TP 1", 6.13, 3.97, 300), ("TP 2", 2.84, 5.26, 280), ("BM 1", None, 4.28, 310)]
+    e, sbs, sfs = reduce(100.0, loop)
+    mis = e[-1] - 100.0
+    cum = [0, 300, 580, 890]
+    adj = [e[i] - mis * cum[i] / 890 for i in range(4)]
+    out.append(vec(1, {"start_elevation": "100 ft", "shots": book_input(loop, "ft")},
+                   {"result.sum_backsights.value": sbs, "result.sum_foresights.value": sfs, "result.misclosure.value": mis,
+                    "result.stations.1.elevation.value": e[1], "result.stations.2.adjusted.value": adj[2], "result.stations.3.adjusted.value": 100.0}))
+    km = 890 * FT / 1000
+    out.append(vec(2, {"start_elevation": "100 ft", "shots": book_input(loop, "ft"), "allowable_constant": "0.05 ft"},
+                   {"result.allowable.value": 0.05 * math.sqrt(km), "result.closure": "within the allowable"}))
+    run = [("BM A", 1.234, None, None), ("TP 1", 2.110, 0.987, 120), ("TP 2", 0.542, 3.004, 95), ("BM B", None, 1.876, 150)]
+    e, sbs, sfs = reduce(250.0, run)
+    mis = e[-1] - 247.975
+    out.append(vec(3, {"start_elevation": "250 m", "shots": book_input(run, "m"), "end_elevation": "247.975 m"},
+                   {"result.misclosure.value": mis, "result.stations.3.elevation.value": e[-1], "result.stations.3.adjusted.value": 247.975,
+                    "result.stations.1.adjusted.value": e[1] - mis * 120 / 365}))
+    # No distances: the misclosure goes by setups.
+    nd = [(a, b, c, None) for a, b, c, _ in run]
+    e, _, _ = reduce(250.0, nd)
+    mis = e[-1] - 247.975
+    out.append(vec(4, {"start_elevation": "250 m", "shots": book_input(nd, "m"), "end_elevation": "247.975 m"},
+                   {"result.stations.1.adjusted.value": e[1] - mis * 1 / 3, "result.stations.2.adjusted.value": e[2] - mis * 2 / 3}))
+    # An open run: elevations and the check, no closure.
+    open_ = run[:3] + [("TP 3", None, 1.2, 80)]
+    e, sbs, sfs = reduce(250.0, open_)
+    out.append(vec(5, {"start_elevation": "250 m", "shots": book_input(open_, "m")},
+                   {"result.stations.3.elevation.value": e[-1], "result.sum_backsights.value": sbs, "result.sum_foresights.value": sfs}))
+    out.append(vec(6, {"start_elevation": "100 ft", "shots": [{"station": "BM 1", "foresight": "1 ft"}, {"station": "TP 1", "foresight": "2 ft"}]},
+                   {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -566,7 +641,8 @@ def main():
         "survey.reduction.combined-factor": combined(),
         "survey.reduction.slope": slope(), "survey.reduction.curvature-refraction": curvature(),
         "survey.reduction.stadia": stadia(), "survey.reduction.inaccessible-height": inaccessible(),
-        "survey.cogo.offset-shot": offset_shot(),
+        "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
+        "survey.reduction.level-run": level_run(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

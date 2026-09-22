@@ -900,7 +900,7 @@
       ]
     },
     "survey.earthwork": {
-      "summary": "Volumes and truck loads.",
+      "summary": "Volumes, truck loads, and grades.",
       "tasks": [
         {
           "want": "find a volume between cross sections",
@@ -913,6 +913,12 @@
           "want": "account for swell and shrink and count truck loads",
           "tools": [
             "shrink-swell"
+          ]
+        },
+        {
+          "want": "convert a grade between percent, degrees, and ratios",
+          "tools": [
+            "grade"
           ]
         }
       ]
@@ -965,7 +971,7 @@
       }
     },
     "survey.reduction": {
-      "summary": "Slope and stadia reductions, heights you cannot reach, curvature and refraction, and scale between grid and ground.",
+      "summary": "Slope, stadia, and level-run reductions, heights you cannot reach, curvature and refraction, and scale between grid and ground.",
       "tasks": [
         {
           "want": "reduce a slope distance to horizontal and vertical",
@@ -983,6 +989,12 @@
           "want": "find the height of a tower or tree I cannot reach",
           "tools": [
             "inaccessible-height"
+          ]
+        },
+        {
+          "want": "reduce a level run and check its closure",
+          "tools": [
+            "level-run"
           ]
         },
         {

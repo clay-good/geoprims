@@ -3,7 +3,9 @@
 //! factor (add-survey-suite). Results keep the linear unit the surveyor entered.
 
 pub mod direction;
+pub mod grade;
 pub mod land;
+pub mod leveling;
 pub mod reduction;
 
 use gp_base::ErrorCode;
@@ -2242,12 +2244,14 @@ pub static TOOLS: &[&ToolDef] = &[
     &AVERAGE_END_AREA,
     &PRISMOIDAL,
     &SHRINK_SWELL,
+    &grade::GRADE,
     &COMBINED_FACTOR,
     &reduction::SLOPE,
     &reduction::CURVATURE,
     &reduction::STADIA,
     &reduction::INACCESSIBLE,
     &reduction::OFFSET,
+    &leveling::LEVEL_RUN,
     &land::LEGACY_UNITS,
     &land::DEED_PARSE,
     &land::DEED_PLOT,

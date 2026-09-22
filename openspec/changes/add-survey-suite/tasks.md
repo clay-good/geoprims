@@ -15,7 +15,7 @@
 - [x] 2.2 Implement curvature and refraction with labeled coefficients; verify the 1 km scenario (`survey.reduction.curvature-refraction`: (1 − k)·D²/2R with k (default 0.13) and R shown, the curvature and refraction parts, and the coefficient labeled with its k; 1 km gives 0.0675 m at k = 0.14 and 0.0683 m at k = 0.13; 6 golden vectors)
 - [ ] 2.3 Implement EDM atmospheric and prism corrections; verify the ppm scenario and a manufacturer-formula fixture
 - [x] 2.4 Implement elevation factor, combined factor, and grid/ground conversions with the orthometric guard; verify the combined-factor and guard scenarios
-- [ ] 2.5 Implement level runs, arithmetic check, closure, and adjustment; verify the arithmetic-check scenario and a textbook loop
+- [x] 2.5 Implement level runs, arithmetic check, closure, and adjustment; verify the arithmetic-check scenario and a textbook loop (`survey.reduction.level-run`: a level book with backsights, foresights, and side shots reduced to heights of instrument and elevations; the arithmetic check shown with every result and refused loudly if it does not balance; closure on a known benchmark, or on the start for a loop, against C·√K; the misclosure distributed by distance, or by setups when no distances are given; 6 golden vectors and a loop test: 13.490 − 13.510 = −0.020 ft)
 - [x] 2.6 Implement stadia, inaccessible heights, and offset shots; verify the tower and tree-center scenarios (done so far: `survey.reduction.stadia` (K·s·sin²Z + C·sin Z, with K and C editable) and `survey.reduction.inaccessible-height` from one station and a distance, or two stations in line with a baseline; the tower scenario applies curvature and refraction beyond the threshold to each sight's height and notes that it cancels in the tower's height. 12 golden vectors, the two-station ones built from a known tower.. `survey.cogo.offset-shot` takes distance offsets (right or left, out or in) or an angle offset to the center of a tree or pole, the center at the measured distance plus the radius along the direction turned to it; 6 golden vectors with the tree-center scenario)
 
 ## 3. Earthwork and grade
@@ -24,7 +24,7 @@
 - [ ] 3.2 Implement cross-section areas with daylight points; verify the mixed-section scenario
 - [ ] 3.3 Implement borrow-pit and four-point methods with balance-line rendering; verify the corner-weights scenario
 - [x] 3.4 Implement shrink/swell and haul loads; verify the truck-load scenario
-- [ ] 3.5 Implement grade conversions with ratio disambiguation; verify the ambiguous-ratio scenario
+- [x] 3.5 Implement grade conversions with ratio disambiguation; verify the ambiguous-ratio scenario (`survey.earthwork.grade`: percent, degrees, per mille, and ratios labeled H:V and V:H, with rise, run, and slope length from any two; a bare `3:1` is refused with both readings, 3H:1V (about 18.43°, 33.3%) and 3V:1H (about 71.57°, 300.0%), until a convention is chosen; 10 golden vectors)
 - [ ] 3.6 Implement slope staking with Brent iteration; verify the catch-point scenario
 - [ ] 3.7 Implement TIN stockpile and solid volumes; verify the TIN scenario against an analytic cone
 - [ ] 3.8 Implement profile slope analysis; verify the grade-threshold scenario

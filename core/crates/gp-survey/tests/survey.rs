@@ -680,3 +680,35 @@ fn curvature_refraction_scenario() {
     assert_eq!(a["result"]["coefficient_label"], "0.0675 m/km² (k = 0.14)");
     assert_eq!(b["result"]["coefficient_label"], "0.0683 m/km² (k = 0.13)");
 }
+
+#[test]
+fn ambiguous_ratio_shows_both_readings() {
+    let r = call("survey.earthwork.grade", r#"{"grade":"3:1"}"#);
+    assert_eq!(r["error"]["field"], "/convention", "{r}");
+    let m = r["error"]["message"].as_str().unwrap();
+    assert!(
+        m.contains("3H:1V (about 18.43°, 33.3%)") && m.contains("3V:1H (about 71.57°, 300.0%)"),
+        "{m}"
+    );
+    let r = call("survey.earthwork.grade", r#"{"grade":"3H:1V"}"#);
+    assert_eq!(r["result"]["ratio_hv"], "3H:1V", "{r}");
+    assert_eq!(r["display"]["percent"], "33.333", "{r}");
+}
+
+#[test]
+fn level_run_carries_its_arithmetic_check() {
+    let r = call(
+        "survey.reduction.level-run",
+        r#"{"start_elevation":"100 ft","shots":[{"station":"BM 1","backsight":"4.52 ft"},{"station":"TP 1","foresight":"3.97 ft","backsight":"6.13 ft","distance":"300 ft"},{"station":"TP 2","foresight":"5.26 ft","backsight":"2.84 ft","distance":"280 ft"},{"station":"BM 1","foresight":"4.28 ft","distance":"310 ft"}]}"#,
+    );
+    let check = r["result"]["check"].as_str().unwrap();
+    assert!(
+        check.contains("ΣBS − ΣFS = 13.490 − 13.510 = -0.020 ft") && check.ends_with("balanced"),
+        "{check}"
+    );
+    assert!(
+        (num(&r, "result.misclosure.value") + 0.02).abs() < 1e-9,
+        "{r}"
+    );
+    assert_eq!(r["display"]["misclosure"], "-0.02 ft", "{r}");
+}

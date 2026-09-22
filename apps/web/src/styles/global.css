@@ -35,12 +35,12 @@
   --line: #d9ddd6;
   --text: #0c1116;
   --muted: #4f5763;
-  --accent: #c2410c;
+  --accent: #b53c0a;
   --signal: #ff5a1f;
   --data: #0f766e;
   --caution: #8a5300;
   --danger: #b42318;
-  --focus: #c2410c;
+  --focus: #b53c0a;
   --land: #e8ebe4;
   --graticule: #e1e4dd;
   --contour: #c6cfc3;
@@ -114,10 +114,10 @@
     --muted: #5b616e;
     --land: #ebe8e1;
     --graticule: #dedbd3;
-    --accent: #c2410c;
+    --accent: #b53c0a;
     --caution: #8a5300;
     --danger: #b42318;
-    --focus: #c2410c;
+    --focus: #b53c0a;
     color-scheme: light;
   }
 }

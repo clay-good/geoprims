@@ -79,7 +79,7 @@ Minimal and modern, like the best product tools, and deliberately unlike the sis
 | Raised surface | `#FFFFFF` | `#161920` |
 | Text | `#15171C` (16.6:1) | `#ECEEF2` (16.4:1) |
 | Muted text | `#5B616E` (5.8:1) | `#9AA1AE` (6.8:1) |
-| Signal accent | `#C2410C` (4.8:1) | `#FF8A4C` (8.2:1) |
+| Signal accent | `#B53C0A` (5.3:1 on the page; 4.6:1 through deuteranopia, darkened from `#C2410C` by the 2.5 audit) | `#FF8A4C` (8.2:1) |
 
 - Type: Geist Sans for prose and Geist Mono for numbers (both SIL OFL 1.1, self-hosted, subset). Big answer numerals, small muted units.
 - Layout: generous whitespace, hairline dividers, 8 px radius, almost no shadow. The canvas gets the most space on the page.

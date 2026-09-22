@@ -23,9 +23,27 @@ function blocks(src) {
   return out;
 }
 
+/** The stylesheet without its @media print blocks (print has its own palette). */
+function screenOnly(src) {
+  let out = '';
+  let i = 0;
+  for (;;) {
+    const at = src.indexOf('@media print', i);
+    if (at < 0) return out + src.slice(i);
+    out += src.slice(i, at);
+    let depth = 0;
+    let j = src.indexOf('{', at);
+    for (; j < src.length; j++) {
+      if (src[j] === '{') depth++;
+      else if (src[j] === '}' && --depth === 0) break;
+    }
+    i = j + 1;
+  }
+}
+
 /** A mode's tokens: :root defaults, then the mode's own block. */
 function tokens(mode) {
-  const all = blocks(css);
+  const all = blocks(screenOnly(css));
   const pick = (sel) => Object.assign({}, ...all.filter(([s]) => sel(s)).map(([, v]) => v));
   const t = { ...pick((s) => s === ':root' || s.startsWith(':root,')), ...pick((s) => s.includes(`data-theme='${mode}']`) && !s.includes('data-accent') && !s.includes('@')) };
   return t;

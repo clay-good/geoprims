@@ -5,6 +5,7 @@ pub mod buffer;
 pub mod densify;
 pub mod distance;
 pub mod envelope;
+pub mod mesh;
 pub mod overlay;
 pub mod predicate;
 pub mod shape;
@@ -450,6 +451,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &simplify::RDP,
     &simplify::VISVALINGAM_WHYATT,
     &densify::DENSIFY,
+    &mesh::DELAUNAY,
+    &mesh::VORONOI,
 ];
 
 pub static REGISTRY: Registry = Registry {

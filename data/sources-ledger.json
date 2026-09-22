@@ -2218,6 +2218,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "de-berg-cg",
+      "name": "de Berg et al. (2008) Computational Geometry: Algorithms and Applications",
+      "issuer": "Springer",
+      "currentEdition": "3rd edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved at Crossref on 2026-09-22 (Springer, 2008, the third edition); newer editions not yet checked at the publisher.",
+      "freeAccessUrl": "https://doi.org/10.1007/978-3-540-77974-2",
+      "matchTerms": [
+        "Computational Geometry: Algorithms and Applications"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

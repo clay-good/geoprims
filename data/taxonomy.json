@@ -37,6 +37,7 @@
         "area",
         "buffer",
         "distance",
+        "mesh",
         "overlay",
         "predicate",
         "shape",

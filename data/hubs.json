@@ -909,6 +909,23 @@
         }
       ]
     },
+    "geometry.mesh": {
+      "summary": "Triangles and nearest-point regions from scattered points.",
+      "tasks": [
+        {
+          "want": "triangulate survey or sensor points",
+          "tools": [
+            "delaunay"
+          ]
+        },
+        {
+          "want": "find the region nearest each point",
+          "tools": [
+            "voronoi"
+          ]
+        }
+      ]
+    },
     "geometry.overlay": {
       "summary": "Overlaps, unions, and differences of polygons.",
       "tasks": [

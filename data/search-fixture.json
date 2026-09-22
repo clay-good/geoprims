@@ -283,6 +283,10 @@
     },
     {
       "query": "night currency",
+      "expect": "time.sun.night-currency"
+    },
+    {
+      "query": "when does night start for pilots",
       "expect": "time.sun.aviation-nights"
     },
     {

@@ -4,6 +4,7 @@
 //! leap-second table is embedded and echoed in `meta.assets`.
 
 pub mod civil;
+pub mod currency;
 pub mod solar;
 pub mod spa;
 mod spa_tables;
@@ -1225,6 +1226,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &solar::POSITION,
     &solar::EVENTS,
     &solar::AVIATION_NIGHTS,
+    &currency::NIGHT_CURRENCY,
     &solar::MAPPING_WINDOW,
 ];
 

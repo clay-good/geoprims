@@ -37,7 +37,7 @@ const CFR_1_1_NIGHT: Reference = Reference {
     locator: "\"Night\": end of evening civil twilight to beginning of morning civil twilight, as published in the Air Almanac",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-A/part-1/section-1.1",
 };
-const CFR_61_57: Reference = Reference {
+pub(crate) const CFR_61_57: Reference = Reference {
     title: "14 CFR 61.57(b), Night takeoff and landing experience",
     issuer: "Federal Aviation Administration",
     year: 2024,
@@ -99,7 +99,7 @@ fn local_date(ctx: &Ctx) -> Result<i64, ToolError> {
 const JD_UNIX: f64 = 2_440_587.5;
 
 /// Julian date (UT) for a day number and minutes of day in UTC.
-fn jd(days: i64, minutes: f64) -> f64 {
+pub(crate) fn jd(days: i64, minutes: f64) -> f64 {
     JD_UNIX + days as f64 + minutes / 1440.0
 }
 
@@ -138,7 +138,7 @@ fn duration(minutes: f64) -> String {
 }
 
 /// The transit nearest local noon of the local date.
-fn local_noon(lon: f64, day: i64, zone: &ZoneSpec) -> f64 {
+pub(crate) fn local_noon(lon: f64, day: i64, zone: &ZoneSpec) -> f64 {
     let offset = zone.minutes_at(day * 86_400 + 43_200);
     sun::transit(lon, jd(day, 720.0 - f64::from(offset)))
 }
@@ -812,7 +812,6 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
     title: "The four aviation nights",
     summary: "All four US aviation night periods for a place and date, each with its regulation: logging night, passenger-currency night, position lights, and Part 107 civil twilight.",
     aliases: &[
-        "night currency calculator",
         "when does night start for pilots",
         "logging night time",
         "Part 107 civil twilight",

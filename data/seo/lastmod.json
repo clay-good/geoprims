@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "5cec6f1b8e47ded5",
+    "hash": "0bf979391da039a2",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -448,7 +448,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "1f2fe29aa1501803",
+    "hash": "3e6277feedace5ec",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "07d0b5493001e813",
+    "hash": "a00e6a45cfbf30f7",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -564,7 +564,7 @@
     "lastmod": "2026-09-22"
   },
   "/time/": {
-    "hash": "867593e233d5ab6c",
+    "hash": "00f2ab7a7f7e8d4a",
     "lastmod": "2026-09-22"
   },
   "/time/scale/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-09-22"
   },
   "/time/sun/": {
-    "hash": "a34d98e4943031f8",
+    "hash": "4c201dbc118c6a65",
     "lastmod": "2026-09-22"
   },
   "/time/sun/aviation-nights/": {
@@ -588,11 +588,11 @@
     "lastmod": "2026-09-22"
   },
   "/time/sun/position/": {
-    "hash": "76a2b859ad50a440",
+    "hash": "3756991ea3d14cc4",
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "2a38ae10f8536c91",
+    "hash": "68163bf283d6db99",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -692,7 +692,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c15183ae0d506241",
+    "hash": "0ad292268fa78138",
     "lastmod": "2026-09-22"
   }
 }

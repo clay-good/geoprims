@@ -1377,6 +1377,12 @@
       "summary": "Where the sun is and when it rises and sets.",
       "tasks": [
         {
+          "want": "check my night passenger currency from my logbook",
+          "tools": [
+            "night-currency"
+          ]
+        },
+        {
           "want": "know sunrise, sunset, and twilight",
           "tools": [
             "events"

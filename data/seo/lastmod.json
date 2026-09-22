@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "39bb7d901839512e",
+    "hash": "f2a2500152ad5e46",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -424,7 +424,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "b33edd3b6386cd2d",
+    "hash": "efce01c9973d4beb",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -488,11 +488,11 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "30b5526faadede86",
+    "hash": "9875967d66649aa1",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
-    "hash": "1a5372f8fd4fb90b",
+    "hash": "cda543d9fd91e85f",
     "lastmod": "2026-09-22"
   },
   "/survey/cogo/": {
@@ -520,7 +520,7 @@
     "lastmod": "2026-09-22"
   },
   "/survey/earthwork/": {
-    "hash": "8fe7f6ca08ef41a4",
+    "hash": "4039c5d8b1a704ec",
     "lastmod": "2026-09-22"
   },
   "/survey/land/": {
@@ -568,12 +568,12 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "dc827ea18d216b47",
+    "hash": "0cbe0f86135a5d3d",
     "lastmod": "2026-09-22"
   },
   "/units/": {
-    "hash": "20e440dd5108c444",
-    "lastmod": "2026-09-19"
+    "hash": "8de8db9230403d62",
+    "lastmod": "2026-09-22"
   },
   "/units/acceleration/": {
     "hash": "74e8fcd574a09130",
@@ -636,7 +636,7 @@
     "lastmod": "2026-09-22"
   },
   "/units/slope/": {
-    "hash": "8d2db3df6a073c74",
+    "hash": "b06c8a086952ca11",
     "lastmod": "2026-09-22"
   },
   "/units/speed/": {
@@ -668,7 +668,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "47268e4026d2865c",
+    "hash": "4a8563f17c918cdd",
     "lastmod": "2026-09-22"
   }
 }

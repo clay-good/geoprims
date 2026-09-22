@@ -549,7 +549,7 @@ pub static SLOPE: ToolDef = ToolDef {
     summary: "Converts a slope between rise/run ratio, percent grade, per mille, and degrees.",
     aliases: &["grade calculator", "percent grade to degrees"],
     keywords: &[
-        "slope", "grade", "gradient", "incline", "percent", "degrees",
+        "slope", "grade", "gradient", "incline", "ramp", "percent", "degrees",
     ],
     inputs: &[
         Field::new(

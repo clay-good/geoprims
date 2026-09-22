@@ -96,26 +96,25 @@ fn parse(text: &str, convention: Option<&str>) -> Result<f64, ToolError> {
 
 pub static GRADE: ToolDef = ToolDef {
     id: "survey.earthwork.grade",
-    title: "Grade and slope converter",
-    summary: "One grade as percent, degrees, per mille, and H:V and V:H ratios, and rise, run, or slope length from any two of them.",
+    title: "Side slope and grade (H:V)",
+    summary: "A construction side slope or grade with its ratio labeled H:V and V:H, refusing an unlabeled 3:1, with rise, run, or slope length from any two; for a plain unit conversion of a slope, use the slope converter.",
     aliases: &[
-        "grade calculator",
-        "slope converter",
-        "percent grade to degrees",
-        "slope ratio",
+        "side slope ratio",
+        "H:V slope",
+        "3H:1V",
+        "rise run slope length",
     ],
     keywords: &[
-        "grade",
-        "slope",
-        "percent",
-        "ratio",
+        "side slope",
         "H:V",
         "V:H",
+        "ratio",
         "rise",
         "run",
-        "degrees",
-        "per mille",
-        "side slope",
+        "slope length",
+        "embankment",
+        "cut slope",
+        "fill slope",
     ],
     inputs: &[
         Field::new(

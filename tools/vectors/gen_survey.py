@@ -616,6 +616,45 @@ def angular_closure():
     return out
 
 
+def slope_stake():
+    """Catch points solved in closed form, segment by segment, against the tool's iteration."""
+    out = []
+
+    def solve(G, w, pts, cut_s, fill_s):
+        gw = next(ya + (yb - ya) * (w - xa) / (xb - xa) for (xa, ya), (xb, yb) in zip(pts, pts[1:]) if xa <= w <= xb)
+        cut = gw > G
+        s = cut_s if cut else fill_s
+        sign = 1 if cut else -1
+        for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+            if xb <= w:
+                continue
+            m = (yb - ya) / (xb - xa)
+            # ya + m (x - xa) = G + sign (x - w) / s
+            x = (G - sign * w / s - ya + m * xa) / (m - sign / s)
+            if max(xa, w) - 1e-12 <= x <= xb + 1e-12:
+                return x, abs(ya + m * (x - xa) - G), cut
+        raise ValueError("no catch")
+
+    def pts_in(pts):
+        return [{"offset": f"{x} ft", "elevation": f"{y} ft"} for x, y in pts]
+
+    cases = [(100.0, 16.0, [(0.0, 102.0), (60.0, 108.0)], "right"),  # the scenario: cut on ground rising 10%
+             (100.0, 16.0, [(0.0, 98.0), (80.0, 90.0)], "left"),     # fill on falling ground
+             (250.0, 12.0, [(0.0, 251.0), (20.0, 252.5), (50.0, 260.0)], "right"),  # a break in the ground
+             (50.0, 20.0, [(0.0, 49.0), (30.0, 47.3), (90.0, 40.0)], "right")]
+    for i, (G, w, pts, side) in enumerate(cases, 1):
+        x, depth, cut = solve(G, w, pts, 2.0, 3.0)
+        stake = f"{'C' if cut else 'F'} {depth:.1f} / {x:.1f} {'L' if side == 'left' else 'R'}"
+        src, ver = (SPEC, "2026") if i == 1 else (SRC, VER)
+        out.append(vec(i, {"grade_elevation": f"{G} ft", "half_width": f"{w} ft", "ground": pts_in(pts), "cut_slope": 2, "fill_slope": 3, "side": side},
+                       {"result.catch_offset.value": x, "result.cut_fill.value": depth, "result.stake": stake}, src, ver, rel=1e-6))
+    out.append(vec(5, {"grade_elevation": "100 ft", "half_width": "16 ft", "ground": pts_in([(0.0, 102.0), (30.0, 140.0)]), "cut_slope": 2},
+                   {"ok": False, "error.code": "DID_NOT_CONVERGE"}))
+    out.append(vec(6, {"grade_elevation": "100 ft", "half_width": "16 ft", "ground": pts_in([(0.0, 98.0), (60.0, 90.0)]), "cut_slope": 2},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/fill_slope"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -718,7 +757,7 @@ def main():
         "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
         "survey.reduction.level-run": level_run(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
-        "survey.cogo.angular-closure": angular_closure(),
+        "survey.cogo.angular-closure": angular_closure(), "survey.earthwork.slope-stake": slope_stake(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

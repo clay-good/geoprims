@@ -9,6 +9,7 @@ pub mod intersect;
 pub mod land;
 pub mod leveling;
 pub mod reduction;
+pub mod staking;
 
 use gp_base::ErrorCode;
 use gp_base::display;
@@ -2247,6 +2248,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &PRISMOIDAL,
     &SHRINK_SWELL,
     &grade::GRADE,
+    &staking::SLOPE_STAKE,
     &COMBINED_FACTOR,
     &reduction::SLOPE,
     &reduction::CURVATURE,

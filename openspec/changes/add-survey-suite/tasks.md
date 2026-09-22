@@ -25,7 +25,7 @@
 - [ ] 3.3 Implement borrow-pit and four-point methods with balance-line rendering; verify the corner-weights scenario
 - [x] 3.4 Implement shrink/swell and haul loads; verify the truck-load scenario
 - [x] 3.5 Implement grade conversions with ratio disambiguation; verify the ambiguous-ratio scenario (`survey.earthwork.grade`: percent, degrees, per mille, and ratios labeled H:V and V:H, with rise, run, and slope length from any two; a bare `3:1` is refused with both readings, 3H:1V (about 18.43°, 33.3%) and 3V:1H (about 71.57°, 300.0%), until a convention is chosen; 10 golden vectors)
-- [ ] 3.6 Implement slope staking with Brent iteration; verify the catch-point scenario
+- [x] 3.6 Implement slope staking with Brent iteration; verify the catch-point scenario (`survey.earthwork.slope-stake`: cut or fill decided at the shoulder, the catch point on ground given as offset and elevation pairs found by Brent's method to 1e-6 of the unit, and the stake written as `C 4.5 / 25.0 R`; a slope that never meets the ground reports DID_NOT_CONVERGE. 6 golden vectors solved in closed form segment by segment)
 - [ ] 3.7 Implement TIN stockpile and solid volumes; verify the TIN scenario against an analytic cone
 - [ ] 3.8 Implement profile slope analysis; verify the grade-threshold scenario
 

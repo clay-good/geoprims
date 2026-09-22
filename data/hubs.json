@@ -913,7 +913,7 @@
       ]
     },
     "survey.earthwork": {
-      "summary": "Volumes, truck loads, and grades.",
+      "summary": "Volumes, truck loads, grades, and slope stakes.",
       "tasks": [
         {
           "want": "find a volume between cross sections",
@@ -932,6 +932,12 @@
           "want": "convert a grade between percent, degrees, and ratios",
           "tools": [
             "grade"
+          ]
+        },
+        {
+          "want": "set a slope stake at the catch point",
+          "tools": [
+            "slope-stake"
           ]
         }
       ]

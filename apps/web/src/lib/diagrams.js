@@ -755,6 +755,45 @@ function heightStack(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Holding pattern: the racetrack, the AIM entry sectors, and where this heading falls among them. */
+function holdEntry(args, result) {
+  const course = val(result, 'outbound_course');
+  if (!Number.isFinite(course)) return null;
+  const inbound = (course + 180) % 360;
+  const heading = deg(args.heading);
+  const left = result.result.turns_used === 'left' || args.turns === 'left';
+  const side = left ? -90 : 90;
+  const [fx, fy] = [150, 136];
+  const [L, r] = [72, 21];
+  const at = (b, len, from = [fx, fy]) => [from[0] + vec(b, len)[0], from[1] + vec(b, len)[1]];
+  // The inbound leg ends at the fix; the outbound leg is parallel, one turn
+  // diameter to the holding side.
+  const A = at(inbound + 180, L);
+  const C = at(side, 2 * r);
+  const D = at(inbound + 180, L, C);
+  const sweep = left ? 0 : 1;
+  const arc = (from, to) => `<path class="dg-muted" d="M${from.map(f1).join(' ')}A${r} ${r} 0 0 ${sweep} ${to.map(f1).join(' ')}"/>`;
+  // The sectors of AIM 5-3-8, as the three headings where the entry changes.
+  const bounds = [(inbound + 180) % 360, (inbound + (left ? 70 : 110)) % 360, (inbound + (left ? 250 : 290)) % 360];
+  const middle = (a, b) => (a + ((b - a + 720) % 360) / 2) % 360;
+  const sectors = left
+    ? [['Parallel', middle(bounds[1], bounds[0])], ['Teardrop', middle(bounds[0], bounds[2])], ['Direct', middle(bounds[2], bounds[1])]]
+    : [['Teardrop', middle(bounds[1], bounds[0])], ['Parallel', middle(bounds[0], bounds[2])], ['Direct', middle(bounds[2], bounds[1])]];
+  const body = [
+    ...bounds.map((b) => line('dg-grid dg-dash', [fx, fy], at(b, 108))),
+    ...sectors.map(([name, b]) => text('dg-muted-text', ...at(b, 92).map((q, i) => q + (i ? 4 : 0)), name, 'middle')),
+    arrow(...A, fx, fy, 'dg-muted', `Inbound ${Math.round(inbound)}\u00b0`, 0.3),
+    line('dg-muted', C, D),
+    arc([fx, fy], C),
+    arc(D, A),
+    heading === null ? '' : arrow(...at(heading + 180, 96), fx, fy, 'dg-accent', `Arriving ${Math.round(heading)}\u00b0`, 0.15),
+    dot(fx, fy, 'dg-dot-now'),
+    text('dg-label', 160, 226, `${result.result.entry[0].toUpperCase()}${result.result.entry.slice(1)} entry, ${left ? 'left' : 'right'} turns`, 'middle'),
+  ].join('');
+  const title = `Holding on the ${Math.round(inbound)}\u00b0 inbound course with ${left ? 'left' : 'right'} turns: arriving on ${Math.round(heading ?? inbound)}\u00b0 puts the aircraft in the ${result.result.entry} sector. ${result.display?.explanation ?? ''}`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -774,6 +813,7 @@ const DIAGRAMS = {
   'survey.earthwork.profile-grades': profileGrades,
   'survey.earthwork.borrow-pit': borrowPit,
   'geodesy.height.convert': heightStack,
+  'aviation.ifr.hold-entry': holdEntry,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

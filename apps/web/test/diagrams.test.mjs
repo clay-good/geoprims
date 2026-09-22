@@ -501,3 +501,39 @@ test('the height diagram stacks the references in the order they stand', async (
   assert.equal(lines(bare.markup).filter((l) => l.cls === 'dg-runway').length, 0);
   assert.doesNotMatch(bare.markup, /AGL/);
 });
+
+test('the holding diagram draws the sector lines where the entry actually changes', async () => {
+  // add-practitioner-essentials 4.5 fixture: the drawing is checked against
+  // the core's own answers, not against a second copy of the AIM rule.
+  for (const [inbound, turns] of [[360, 'right'], [270, 'left'], [45, 'right']]) {
+    const entryAt = async (h) =>
+      JSON.parse(await host.invoke('aviation.ifr.hold-entry', JSON.stringify({ inbound_course: `${inbound} deg`, heading: `${h} deg`, turns }))).result.entry;
+    // Where the core changes its mind, to the degree.
+    const flips = [];
+    let prev = await entryAt(0);
+    for (let h = 1; h < 360; h += 1) {
+      const e = await entryAt(h);
+      if (e !== prev) flips.push(h);
+      prev = e;
+    }
+    assert.equal(flips.length, 3, `${inbound}/${turns}: ${flips.length} sector boundaries`);
+    const args = { inbound_course: `${inbound} deg`, heading: `${(inbound + 150) % 360} deg`, turns };
+    const r = JSON.parse(await host.invoke('aviation.ifr.hold-entry', JSON.stringify(args)));
+    const d = diagram('aviation.ifr.hold-entry', args, r);
+    const drawn = lines(d.markup).filter((l) => l.cls === 'dg-grid dg-dash').map((l) => bearing(l).deg);
+    assert.equal(drawn.length, 3, 'three sector lines');
+    // The boundary lies between the last heading of one sector and the first
+    // of the next, so each flip has a line within half a degree of it.
+    for (const h of flips) {
+      assert.ok(drawn.some((b) => Math.abs(((b - (h - 0.5) + 540) % 360) - 180) < 0.6), `no sector line at ${h}°, drawn at ${drawn.map((x) => x.toFixed(1))}`);
+    }
+    // Every sector is named, and the one the aircraft is in is called out.
+    for (const name of ['Direct', 'Teardrop', 'Parallel']) assert.ok(d.markup.includes(`>${name}<`), `${name} sector unlabeled`);
+    assert.match(d.markup, new RegExp(`${r.result.entry} entry, ${turns} turns`, 'i'));
+    // The legs: inbound to the fix along the inbound course, the aircraft
+    // arriving on its heading.
+    const [inbLeg, arrival] = [lines(d.markup).find((l) => l.cls === 'dg-muted' && l.x2 === 150), lines(d.markup).find((l) => l.cls === 'dg-accent')];
+    near(bearing(inbLeg).deg, inbound % 360, 0.5, 'the inbound leg');
+    near(bearing(arrival).deg, (inbound + 150) % 360, 0.5, 'the arriving aircraft');
+  }
+});

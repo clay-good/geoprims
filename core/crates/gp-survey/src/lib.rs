@@ -2,6 +2,7 @@
 //! horizontal and vertical curves, earthwork volumes, and the combined scale
 //! factor (add-survey-suite). Results keep the linear unit the surveyor entered.
 
+pub mod closure;
 pub mod direction;
 pub mod grade;
 pub mod intersect;
@@ -2254,6 +2255,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &reduction::OFFSET,
     &intersect::INTERSECTION,
     &intersect::RESECTION,
+    &closure::ANGULAR,
     &leveling::LEVEL_RUN,
     &land::LEGACY_UNITS,
     &land::DEED_PARSE,

@@ -589,6 +589,33 @@ def resection():
     return out
 
 
+def angular_closure():
+    out = []
+
+    def secs(d, m, s):
+        return d * 3600 + m * 60 + s
+
+    # The spec scenario: five interior angles summing to 540°00'25" miss by +25".
+    five = [(108, 0, 5), (101, 59, 55), (115, 0, 10), (95, 0, 0), (120, 0, 15)]
+    rows = [{"angle": f"{d}°{m:02d}'{s:02d}\""} for d, m, s in five]
+    mis = sum(secs(*a) for a in five) - 540 * 3600
+    out.append(vec(1, {"angles": rows, "allowable_k": 10}, {"result.misclosure.value": float(mis), "result.allowable.value": 10 * math.sqrt(5),
+                                                             "result.closure": "beyond the allowable", "result.correction.value": -mis / 5}, SPEC, "2026"))
+    four = [(90, 0, 10), (89, 59, 40), (90, 0, 20), (89, 59, 55)]
+    mis = sum(secs(*a) for a in four) - 360 * 3600
+    out.append(vec(2, {"angles": [{"angle": f"{d}-{m:02d}-{s:02d}"} for d, m, s in four], "allowable_k": 15},
+                   {"result.misclosure.value": float(mis), "result.closure": "within the allowable"}))
+    ext = [(270, 0, 5), (270, 0, 0), (269, 59, 50), (270, 0, 0)]
+    mis = sum(secs(*a) for a in ext) - 6 * 180 * 3600
+    out.append(vec(3, {"angles": [{"angle": f"{d}°{m:02d}'{s:02d}\""} for d, m, s in ext], "kind": "exterior"}, {"result.misclosure.value": float(mis)}))
+    tri = [(60, 0, 0), (60, 0, 0), (60, 0, 3)]
+    out.append(vec(4, {"angles": [{"angle": f"{d}°{m:02d}'{s:02d}\""} for d, m, s in tri]}, {"result.misclosure.value": 3.0, "result.correction.value": -1.0,
+                                                                                           "result.adjusted.2.angle": "60°00'02.0\""}))
+    out.append(vec(5, {"angles": [{"angle": "90"}, {"angle": "90"}, {"angle": "90"}, {"angle": "90"}, {"angle": "180"}]}, {"result.misclosure.value": 0.0}))
+    out.append(vec(6, {"angles": [{"angle": "90"}, {"angle": "abc"}, {"angle": "90"}]}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -691,6 +718,7 @@ def main():
         "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
         "survey.reduction.level-run": level_run(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
+        "survey.cogo.angular-closure": angular_closure(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

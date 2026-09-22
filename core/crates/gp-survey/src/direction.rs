@@ -1,6 +1,7 @@
 //! Survey directions (survey/cogo spec, "Bearings, azimuths, and angle
 //! notation"): quadrant bearings like `N 45°30'15" E` or `S44-30-00W`, north
-//! azimuths in decimal degrees or DMS, and formatting back to bearings.
+//! azimuths in decimal degrees, DMS, or gons (`123.4567 gon`, 400 to the
+//! circle), and formatting back to bearings.
 
 use gp_geo::dms::{self, Axis, Style};
 
@@ -25,6 +26,19 @@ pub fn parse(s: &str) -> Result<f64, String> {
             _ => 360.0 - angle,
         };
         return Ok(gp_base::angle::wrap_azimuth(az));
+    }
+    // Gons (grads): 400 to the circle, so one gon is 0.9°.
+    if let Some(num) = ["GON", "GRAD", "G"].iter().find_map(|u| t.strip_suffix(u)) {
+        let g: f64 = num
+            .trim()
+            .parse()
+            .map_err(|_| format!("\"{s}\" has an unreadable number of gons"))?;
+        if !(0.0..=400.0).contains(&g) {
+            return Err(format!(
+                "\"{s}\": an azimuth in gons must be between 0 and 400"
+            ));
+        }
+        return Ok(gp_base::angle::wrap_azimuth(g * 0.9));
     }
     let angle = dms::parse_plain(&t.replace('-', " "))
         .map_err(|_| format!("\"{s}\" is not a bearing or azimuth"))?;
@@ -66,6 +80,14 @@ pub fn azimuth(az: f64, decimals: u32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gons() {
+        assert_eq!(parse("100 gon").unwrap(), 90.0);
+        assert_eq!(parse("200g").unwrap(), 180.0);
+        assert!((parse("123.4567 grad").unwrap() - 111.11103).abs() < 1e-9);
+        assert!(parse("401 gon").unwrap_err().contains("between 0 and 400"));
+    }
 
     #[test]
     fn quadrant_bearings() {

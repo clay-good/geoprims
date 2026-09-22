@@ -881,9 +881,10 @@
           ]
         },
         {
-          "want": "check and adjust a traverse",
+          "want": "check and adjust a traverse, angles and distances",
           "tools": [
-            "traverse-closure"
+            "traverse-closure",
+            "angular-closure"
           ]
         },
         {

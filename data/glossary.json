@@ -1208,6 +1208,16 @@
         "navigation.geodesic.spherical-direct",
         "navigation.geodesic.spherical-inverse"
       ]
+    },
+    {
+      "id": "edm",
+      "term": "EDM",
+      "expansion": "electronic distance measurement",
+      "definition": "Measuring a distance by timing light or infrared bounced off a prism or a surface, as a total station does. The air slows the light a little, so the reading is corrected for temperature and pressure, in parts per million.",
+      "source": "landgate-edmi-manual",
+      "relatedTools": [
+        "survey.reduction.edm-correction"
+      ]
     }
   ],
   "notAbbreviations": [

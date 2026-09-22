@@ -1956,6 +1956,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "landgate-edmi-manual",
+      "name": "The Survey Instrumentation Calibration Technical User Manual",
+      "issuer": "Landgate (Western Australian Land Information Authority) with ICSM",
+      "currentEdition": "Online edition, updated 24 November 2025",
+      "currentReleaseDate": "2025-11-24",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Section 4.2.3 read at the issuer on 2026-09-22: the IAG 1999 Resolution 3 closed formula (equations 4.6 and 4.7) and the first velocity correction (equation 4.1).",
+      "freeAccessUrl": "https://medjil0.lb.landgate.wa.gov.au/calibrationguide/read_manual/edmi_calibration_manual.html",
+      "matchTerms": [
+        "Survey Instrumentation Calibration Technical User Manual"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

@@ -1298,6 +1298,12 @@
       "summary": "Slope, stadia, and level-run reductions, heights you cannot reach, curvature and refraction, and scale between grid and ground.",
       "tasks": [
         {
+          "want": "correct an EDM distance for the air and the prism constant",
+          "tools": [
+            "edm-correction"
+          ]
+        },
+        {
           "want": "reduce a slope distance to horizontal and vertical",
           "tools": [
             "slope"

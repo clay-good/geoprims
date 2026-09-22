@@ -5,6 +5,7 @@
 pub mod borrow;
 pub mod closure;
 pub mod direction;
+pub mod edm;
 pub mod grade;
 pub mod intersect;
 pub mod land;
@@ -2247,6 +2248,7 @@ fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
 }
 
 pub static TOOLS: &[&ToolDef] = &[
+    &edm::EDM_CORRECTION,
     &INVERSE,
     &FORWARD,
     &TRAVERSE,

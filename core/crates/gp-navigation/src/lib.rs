@@ -135,9 +135,11 @@ pub static INVERSE: ToolDef = ToolDef {
         "geodesic distance",
         "great circle distance calculator",
         "inverse geodesic",
+        "how far",
+        "how far apart",
     ],
     keywords: &[
-        "distance", "bearing", "azimuth", "geodesic", "inverse", "Karney", "WGS 84",
+        "distance", "far", "apart", "bearing", "azimuth", "geodesic", "inverse", "Karney", "WGS 84",
     ],
     inputs: &[LAT1, LON1, LAT2, LON2, E[0], E[1], E[2]],
     outputs: &[

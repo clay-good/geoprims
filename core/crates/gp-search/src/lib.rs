@@ -40,6 +40,9 @@ pub struct Entry {
     title_tokens: Vec<u32>,
     /// How a typed question fills this tool's inputs.
     slots: Vec<prefill::SlotDef>,
+    /// The tool declares itself a simplified method (`x-limitation`), so on
+    /// an equal score the full method it names ranks first.
+    simplified: bool,
 }
 
 const W_ID: u32 = 3;
@@ -195,6 +198,7 @@ impl Entry {
             summary: s("summary"),
             domain: s("domain"),
             stability: s("stability"),
+            simplified: m["x-limitation"].is_object(),
             fields,
         })
     }
@@ -366,7 +370,14 @@ pub fn search(json: &str) -> String {
             })
             .filter(|(s, _)| *s > 0)
             .collect();
-        hits.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.id.cmp(&b.1.id)));
+        // Best score first. On a tie, the full method before a simplified one
+        // (haversine is a sphere; the geodesic is the ellipsoid it stands in
+        // for), then by id, so the same question always ranks the same way.
+        hits.sort_by(|a, b| {
+            b.0.cmp(&a.0)
+                .then_with(|| a.1.simplified.cmp(&b.1.simplified))
+                .then_with(|| a.1.id.cmp(&b.1.id))
+        });
         let hidden = hits
             .iter()
             .filter(|(_, e)| !include_experimental && e.stability == "experimental")
@@ -574,6 +585,26 @@ mod tests {
             vec![
                 "aviation.altimetry.density-altitude",
                 "aviation.altimetry.pressure-altitude"
+            ]
+        );
+    }
+    /// A simplified method never wins a tie against the full one: the page
+    /// that says "use the geodesic for anything you act on" should not be
+    /// the one a distance question opens.
+    #[test]
+    fn full_method_wins_a_tie_over_a_simplification() {
+        load(
+            r#"[
+            {"id":"navigation.geodesic.haversine","title":"Distance on a sphere","summary":"s","domain":"navigation","group":"geodesic","aliases":[],"keywords":["distance"],"stability":"stable","x-limitation":{"simplification":"Sphere.","instead":"Use the geodesic.","governs":"Karney."}},
+            {"id":"navigation.geodesic.inverse","title":"Distance on the ellipsoid","summary":"s","domain":"navigation","group":"geodesic","aliases":[],"keywords":["distance"],"stability":"stable"}
+        ]"#,
+        );
+        // Alphabetically haversine comes first; the limitation puts it second.
+        assert_eq!(
+            top("distance"),
+            vec![
+                "navigation.geodesic.inverse",
+                "navigation.geodesic.haversine"
             ]
         );
     }

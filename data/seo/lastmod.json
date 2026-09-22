@@ -396,12 +396,12 @@
     "lastmod": "2026-09-19"
   },
   "/navigation/": {
-    "hash": "e5c5c576951eb0b8",
-    "lastmod": "2026-09-19"
+    "hash": "98e4a0ad4cfc7841",
+    "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/": {
-    "hash": "5f19150b97b73eeb",
-    "lastmod": "2026-09-19"
+    "hash": "ee0cec32f07d9a74",
+    "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/direct/": {
     "hash": "08b90c8989b77ae2",
@@ -536,8 +536,8 @@
     "lastmod": "2026-09-21"
   },
   "/tools/": {
-    "hash": "b938036453a58090",
-    "lastmod": "2026-09-20"
+    "hash": "f99f56d680a2a6b8",
+    "lastmod": "2026-09-22"
   },
   "/units/": {
     "hash": "20e440dd5108c444",
@@ -636,7 +636,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f43c8ffccc4b4ccd",
-    "lastmod": "2026-09-20"
+    "hash": "eba53a09ba3097fb",
+    "lastmod": "2026-09-22"
   }
 }

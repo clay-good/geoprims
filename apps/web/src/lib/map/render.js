@@ -422,11 +422,15 @@ export function draw(g, view, base, layers, c) {
         // forward() places a point at its copy nearest the view center.
         const p = forward(view, lon, lat);
         if (!p) continue;
-        const r = layer.role === 'result' ? 7 : 5.5;
-        g.beginPath();
-        g.arc(p[0], p[1], r + 2.5, 0, 2 * Math.PI);
-        g.fillStyle = c.surface;
-        g.fill();
+        // Detail points are many — a mission's camera triggers — so they are
+        // drawn small enough not to bury the path they sit on.
+        const r = layer.role === 'result' ? 7 : layer.role === 'detail' ? 2.5 : 5.5;
+        if (layer.role !== 'detail') {
+          g.beginPath();
+          g.arc(p[0], p[1], r + 2.5, 0, 2 * Math.PI);
+          g.fillStyle = c.surface;
+          g.fill();
+        }
         g.beginPath();
         g.arc(p[0], p[1], r, 0, 2 * Math.PI);
         g.fillStyle = stroke;

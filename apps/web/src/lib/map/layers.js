@@ -122,6 +122,13 @@ export async function buildLayers(tool, args, result, densify, cells) {
       layers.push({ kind: 'point', role: 'result', points: [pts[0]], label: 'Start' });
       pathDrawn = true;
     }
+    // Where the camera fires along that path, when the tool reports it: the
+    // photos are the mission's product, so they are drawn as their own points.
+    for (const v of tool.visualization ?? []) {
+      const field = v.kind === 'point' && mapOf(v.map).points;
+      const shots = field ? outputPath(result, field) : [];
+      if (shots.length) layers.push({ kind: 'point', role: 'detail', points: shots });
+    }
     // What the path was planned over: an area (rows with rings) or a line (a
     // corridor's centerline, a facade's wall), drawn as the input.
     if (pathDrawn && !kinds.has('polygon')) {

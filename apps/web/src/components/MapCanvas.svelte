@@ -119,6 +119,8 @@
     );
     const cellCount = layers.filter((l) => l.cell).length;
     const what = layers.filter((l) => !l.cell).map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
+    const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
+    if (shots) what.push(`${shots.points.length} photo trigger points`);
     if (cellCount) what.push(`${cellCount} H3 ${cellCount === 1 ? 'cell' : 'cells'}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
     shown = what.join(', ') || 'the world';
     // What the lines mean: the result path, and the other kind of line for comparison.
@@ -128,6 +130,7 @@
       layers.some((l) => l.kind === 'line' && l.role === 'result' && l.arrows) && { cls: 'solid', text: 'Flight path, in order' },
       layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows) && { cls: 'solid', text: named(rhumb) },
       layers.some((l) => l.kind === 'line' && l.role === 'comparison') && { cls: 'dashed', text: `${named(!rhumb)}, for comparison` },
+      layers.some((l) => l.kind === 'point' && l.role === 'detail') && { cls: 'solid', text: 'Photo trigger points' },
       layers.some((l) => l.kind === 'polygon' && !l.cell) && { cls: 'area', text: 'The area' },
       layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? 'H3 cells: the origin strongest, fading with grid distance' : 'H3 cells' },
     ].filter(Boolean);

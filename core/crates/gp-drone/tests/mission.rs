@@ -399,3 +399,71 @@ fn a_huge_focal_length_is_a_limit_not_a_crash() {
     );
     assert_eq!(r["error"]["code"], "LIMIT_EXCEEDED", "{r}");
 }
+
+#[test]
+fn trigger_points_sit_on_the_lines_at_the_photo_spacing() {
+    // add-drone-suite 2.8: every photo the plan counts has a place on the map.
+    let g = Geodesic::wgs84();
+    let rect = [(0.0, 0.0), (600.0, 0.0), (600.0, 150.0), (0.0, 150.0)];
+    let r = call(
+        "drone.mission.survey-grid",
+        &json!({"area": area(&rect, 0), "line_spacing": "52.5 m", "photo_spacing": "30 m"}),
+    );
+    let shots = r["result"]["photo_points"]
+        .as_array()
+        .expect("trigger points");
+    assert_eq!(
+        shots.len() as f64,
+        num(&r, "result.photos"),
+        "one point per photo the plan counts"
+    );
+    let at = |i: usize| {
+        (
+            shots[i]["lat"]["value"].as_f64().unwrap(),
+            shots[i]["lon"]["value"].as_f64().unwrap(),
+        )
+    };
+    // Numbered in flight order, and spaced along each line at the photo
+    // spacing; the jumps between lines are the turns, which are longer.
+    for (i, s) in shots.iter().enumerate() {
+        assert_eq!(
+            s["photo"].as_f64().unwrap(),
+            (i + 1) as f64,
+            "photo numbering"
+        );
+    }
+    let mut along = 0;
+    for i in 1..shots.len() {
+        let (a, b) = (at(i - 1), at(i));
+        let (d, _, _, _): (f64, f64, f64, f64) = g.inverse(a.0, a.1, b.0, b.1);
+        if d < 40.0 {
+            assert!(
+                (d - 30.0).abs() < 0.1,
+                "step {i} is {d} m, not the 30 m spacing"
+            );
+            along += 1;
+        }
+    }
+    assert!(
+        along >= shots.len() - 6,
+        "most steps are along a line: {along} of {}",
+        shots.len() - 1
+    );
+    // Each point lies on the swept area, not outside it.
+    let waypoints = r["result"]["waypoints"].as_array().unwrap();
+    let ends: Vec<(f64, f64)> = waypoints
+        .iter()
+        .map(|w| {
+            (
+                w["lat"]["value"].as_f64().unwrap(),
+                w["lon"]["value"].as_f64().unwrap(),
+            )
+        })
+        .collect();
+    let first = at(0);
+    let (d0, _, _, _): (f64, f64, f64, f64) = g.inverse(first.0, first.1, ends[0].0, ends[0].1);
+    assert!(
+        d0 < 1e-6,
+        "the first photo is at the first line's start: {d0} m"
+    );
+}

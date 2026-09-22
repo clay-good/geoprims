@@ -251,3 +251,27 @@ test('h3 pentagon: a ring around a pentagon draws five neighbours, not six', asy
   assert.equal(info.result.pentagon, 'yes');
   assert.equal(info.result.boundary.length, 5, 'the Class II pentagon outline');
 });
+
+test('layers: a survey grid draws its photo trigger points along the flight path', async () => {
+  // add-drone-suite 2.8: the photos are the mission's product, so they are
+  // drawn, small enough not to bury the path they sit on.
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const tool = catalog.tools.find((t) => t.id === 'drone.mission.survey-grid');
+  const args = tool.examples[0].input;
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  const layers = await buildLayers(tool, args, result, null, null);
+  const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
+  assert.ok(shots, 'no trigger points drawn');
+  assert.equal(shots.points.length, result.result.photos, 'one point per photo');
+  // They sit on the drawn path: each is within a photo spacing of some leg.
+  const path = layers.find((l) => l.kind === 'line' && l.role === 'result').points;
+  const [minLon, maxLon] = [Math.min(...path.map((p) => p[0])), Math.max(...path.map((p) => p[0]))];
+  const [minLat, maxLat] = [Math.min(...path.map((p) => p[1])), Math.max(...path.map((p) => p[1]))];
+  for (const [lon, lat] of shots.points) {
+    assert.ok(lon >= minLon - 1e-6 && lon <= maxLon + 1e-6 && lat >= minLat - 1e-6 && lat <= maxLat + 1e-6, `a trigger point lies off the path's extent`);
+  }
+});

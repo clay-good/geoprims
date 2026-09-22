@@ -242,6 +242,10 @@
       "severity": "accuracy",
       "message": "An orthometric height was treated as ellipsoidal."
     },
+    "OUTPUT_TRUNCATED": {
+      "severity": "info",
+      "message": "The result is longer than the tool returns, so part of it is left out."
+    },
     "OUTSIDE_AREA_OF_USE": {
       "severity": "accuracy",
       "message": "The point is outside the area the transformation was derived for."

@@ -10,7 +10,7 @@
 use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
 use gp_base::ErrorCode;
 use gp_base::display;
-use gp_base::error::ToolError;
+use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::{self, Quantity as QT};
@@ -576,6 +576,81 @@ fn waypoints(plane: &Plane, pts: &[(P, &str)]) -> Json {
     )
 }
 
+/// The camera trigger points along the survey lines: one at each line's start
+/// and every `spacing` after it, in flight order, matching the photo count.
+/// Returns the points and how many were left out when the cap is reached.
+fn trigger_points(plane: &Plane, pts: &[(P, &str)], spacing: f64, cap: usize) -> (Json, usize) {
+    let deg = |v: f64| {
+        Q {
+            value: v,
+            unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
+        }
+        .to_json()
+    };
+    let (mut out, mut dropped) = (Vec::new(), 0);
+    for w in pts.windows(2) {
+        let ((a, ka), (b, _)) = (w[0], w[1]);
+        if ka != "line_start" {
+            continue;
+        }
+        let len = hypot(b.0 - a.0, b.1 - a.1);
+        let n = photos(len, spacing);
+        for i in 0..n {
+            if out.len() >= cap {
+                dropped += n - i;
+                break;
+            }
+            let t = if len == 0.0 {
+                0.0
+            } else {
+                (i as f64 * spacing) / len
+            };
+            let (x, y) = (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t);
+            let (la, lo) = plane.inv(x, y);
+            out.push(Json::obj([
+                ("lat", deg(la)),
+                ("lon", deg(lo)),
+                ("photo", Json::Num((out.len() + 1) as f64)),
+            ]));
+        }
+    }
+    (Json::Arr(out), dropped)
+}
+
+/// A camera trigger point of a survey grid, as the map layer reads it.
+const PHOTO_ROW: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "photo",
+        "Photo",
+        "Its number in flight order",
+        Kind::Number {
+            min: 1.0,
+            max: 2000.0,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+];
+
 pub static SURVEY_GRID: ToolDef = ToolDef {
     id: "drone.mission.survey-grid",
     title: "Survey grid (lawnmower pattern)",
@@ -694,6 +769,16 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         )
         .optional(),
         Field::new(
+            "photo_points",
+            "Trigger points",
+            "Where each photo is taken, in flight order",
+            Kind::List {
+                items: PHOTO_ROW,
+                min: 0,
+                max: 2_000,
+            },
+        ),
+        Field::new(
             "waypoints",
             "Waypoints",
             "In flight order",
@@ -705,7 +790,7 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["OUTPUT_TRUNCATED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Lines swept on a local transverse Mercator plane, clipped to the area minus buffered holes (even-odd), joined in serpentine order; transits that would cross a hole follow its buffered boundary",
     accuracy: "Line spacing is true to within 1e-7 across a few kilometers (checked geodesically). Flight time ignores turns, climbs, and wind.",
     references: &[PIX4D, KARNEY],
@@ -716,10 +801,16 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         source: "add-drone-suite survey-grid scenario: lines run along the long axis, ⌈150 / 52.5⌉ = 3 lines",
     }],
     primary_example: "primary",
-    visualization: &[Layer {
-        kind: "line-geodesic",
-        map: &[("path", "waypoints")],
-    }],
+    visualization: &[
+        Layer {
+            kind: "point",
+            map: &[("points", "photo_points")],
+        },
+        Layer {
+            kind: "line-geodesic",
+            map: &[("path", "waypoints")],
+        },
+    ],
     related: &[
         Related {
             id: "drone.photogrammetry.trigger",
@@ -851,6 +942,17 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     o.push(("waypoints", waypoints(&plane, &pts)));
+    let spacing = positive(ctx, "photo_spacing", "Photo spacing")?;
+    let (triggers, dropped) = trigger_points(&plane, &pts, spacing, 2_000);
+    if dropped > 0 {
+        ctx.warnings.push(Warning::new(
+            "OUTPUT_TRUNCATED",
+            format!(
+                "The plan has {photos} photos; the first 2,000 trigger points are drawn and {dropped} are left out."
+            ),
+        ));
+    }
+    o.push(("photo_points", triggers));
     Ok(Json::obj(o))
 }
 

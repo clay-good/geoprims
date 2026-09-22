@@ -106,8 +106,9 @@ const purpose = markTerms(t.summary, terms);
       </>
     )}
     <p><strong>Accuracy:</strong> {t.accuracy}</p>
-    {t.whenToUse && <p><strong>When to use this:</strong> {t.whenToUse}</p>}
-    {t.limitations && <p><strong>Limitations:</strong> {t.limitations}</p>}
+    {/* Orientation for a reader, not part of the sheet carried into the field. */}
+    {t.whenToUse && <p class="no-print"><strong>When to use this:</strong> {t.whenToUse}</p>}
+    {t.limitations && <p class="no-print"><strong>Limitations:</strong> {t.limitations}</p>}
     <p class="no-print"><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.{golden && <> It is golden test vector {golden.id}, and every build checks the tool still gives its answer within its tolerance.</>}</p>
     <div class="worked no-print">
       <div>

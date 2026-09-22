@@ -366,26 +366,6 @@
       "editionCheck": false
     },
     {
-      "id": "cfr-14-91",
-      "name": "14 CFR Part 91",
-      "issuer": "FAA (eCFR)",
-      "currentEdition": "eCFR",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91",
-      "matchTerms": [
-        "14 CFR 91"
-      ],
-      "editionStatus": "current",
-      "legalStatus": "in-force",
-      "editionCheck": false
-    },
-    {
       "id": "copernicus-dem",
       "name": "Copernicus DEM GLO-30",
       "issuer": "ESA and European Commission",
@@ -1798,26 +1778,6 @@
       "editionCheck": true
     },
     {
-      "id": "usgs-lbs",
-      "name": "USGS Lidar Base Specification",
-      "issuer": "USGS",
-      "currentEdition": "current",
-      "currentReleaseDate": null,
-      "cycleMonths": null,
-      "nextExpected": null,
-      "validFrom": null,
-      "validTo": null,
-      "lastVerified": null,
-      "verificationNote": "Not cited yet.",
-      "freeAccessUrl": "https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-online",
-      "matchTerms": [
-        "Lidar Base Specification"
-      ],
-      "editionStatus": "current",
-      "legalStatus": null,
-      "editionCheck": true
-    },
-    {
       "id": "usno-jd",
       "name": "USNO Julian Date Converter",
       "issuer": "U.S. Naval Observatory",
@@ -2157,6 +2117,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "usgs-lbs",
+      "name": "Lidar Base Specification",
+      "issuer": "U.S. Geological Survey, 3D Elevation Program",
+      "currentEdition": "2025 rev. A (June 2025)",
+      "currentReleaseDate": "2025-06-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Table 1 (aggregate nominal pulse spacing and density by quality level) read at the issuer on 2026-09-22.",
+      "freeAccessUrl": "https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-tables",
+      "matchTerms": [
+        "Lidar Base Specification"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

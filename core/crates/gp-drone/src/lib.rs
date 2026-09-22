@@ -1186,6 +1186,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &ops::VLOS,
     &sensing::DATASET_SIZE,
     &sensing::THERMAL_FOOTPRINT,
+    &sensing::LIDAR_PLAN,
     &links::LINK_BUDGET,
     &mission::SURVEY_GRID,
     &mission::IMAGE_COUNT,

@@ -60,3 +60,9 @@ test('verification stamps only move forward against the base branch', () => {
     }
   }
 });
+
+test('every ledger id is used once', () => {
+  const ids = ledger.map((r) => r.id);
+  const twice = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+  assert.deepEqual(twice, [], `ledger ids used more than once: ${twice.join(', ')}`);
+});

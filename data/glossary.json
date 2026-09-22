@@ -1372,6 +1372,16 @@
       "relatedTools": [
         "survey.gnss.antenna-height"
       ]
+    },
+    {
+      "id": "usgs",
+      "term": "USGS",
+      "expansion": "U.S. Geological Survey",
+      "definition": "The US government science agency that runs the 3D Elevation Program and sets the quality levels for lidar data.",
+      "source": "usgs-lbs",
+      "relatedTools": [
+        "drone.sensors.lidar-plan"
+      ]
     }
   ],
   "notAbbreviations": [

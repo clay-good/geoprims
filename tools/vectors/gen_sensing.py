@@ -81,9 +81,29 @@ def link():
     return out
 
 
+def lidar():
+    out = []
+    for prr, fov, h, v, ov, ret in [(240000, 70, 100, 10, 0, 1), (240000, 70, 100, 10, 30, 1.5), (100000, 60, 120, 15, 50, 1),
+                                    (50000, 90, 300, 30, 20, 2), (20000, 40, 250, 25, 0, 1)]:
+        swath = 2 * h * math.tan(math.radians(fov / 2))
+        spacing = swath * (1 - ov / 100)
+        one, agg = prr / (v * swath), prr / (v * spacing)
+        ql = next((f"{q} (at least {m:g} pulses per m²)" for q, m in [("QL1", 8.0), ("QL2", 2.0), ("QL3", 0.5)] if agg >= m), "below QL3 (0.5 pulses per m²)")
+        inp = {"pulse_rate": f"{prr / 1000:g} kHz", "fov": f"{fov} deg", "height": f"{h} m", "speed": f"{v} m/s"}
+        if ov:
+            inp["side_overlap"] = ov
+        if ret != 1:
+            inp["returns"] = ret
+        out.append(vec(len(out) + 1, inp, {"result.swath.value": swath, "result.line_spacing.value": spacing, "result.pulse_density": one,
+                                           "result.aggregate_density": agg, "result.point_density": agg * ret, "result.quality_level": ql}))
+    out[0]["source"] = SPEC + " (swath about 140.0 m, 171 pulses per m², beyond QL1)"
+    out.append(vec(len(out) + 1, {"pulse_rate": "240 kHz", "fov": "180 deg", "height": "100 m", "speed": "10 m/s"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def main():
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
-    for name, vs in [("drone.sensors.dataset-size", dataset()), ("drone.sensors.thermal-footprint", thermal()), ("drone.links.link-budget", link())]:
+    for name, vs in [("drone.sensors.dataset-size", dataset()), ("drone.sensors.thermal-footprint", thermal()), ("drone.links.link-budget", link()), ("drone.sensors.lidar-plan", lidar())]:
         (dest / f"{name}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 

@@ -48,7 +48,7 @@
 
 - [x] 6.1 Implement VLOS (verify EASA coefficients against current AMC/GM text) and mission comparison; verify both VLOS scenarios (coefficients checked against the EASA guidelines for UAS operations in the open and specific category on 2026-09-18)
 - [ ] 6.2 Present the Part 107 twilight window as a drone view of `time.sun.aviation-nights`; verify the evening scenario
-- [ ] 6.3 Implement lidar planning with USGS QL comparison; verify the density scenario
+- [x] 6.3 Implement lidar planning with USGS QL comparison; verify the density scenario (`drone.sensors.lidar-plan`: swath, line spacing, one-line and aggregate nominal pulse density, points from returns per pulse, and the highest USGS 3DEP quality level met (Lidar Base Specification 2025 rev. A, table 1, read at the source), with the note that uneven scan patterns are not uniform across the swath; the scenario passes (140.0 m, 171 pulses per m², beyond QL1); 6 golden vectors)
 - [x] 6.4 Implement dataset size, link budget, and thermal footprint; verify the orthomosaic, FSPL, and thermal scenarios (`drone.sensors.dataset-size` (orthomosaic with a stated compression range, raw images, and LAS/LAZ from the LAS 1.4 R15 record sizes), `drone.links.link-budget` (FSPL per ITU-R P.525, received power, fade margin, and EIRP against dated 2.4 GHz limits: 47 CFR 15.247 and ETSI EN 300 328, each checked at the source), and `drone.sensors.thermal-footprint` (IFOV × distance with FLIR's 3 × 3 rule and the farthest distance for a target). All three scenarios pass (7.5 GB, 114.0 dB, 39 and 117 mm); 21 golden vectors)
 
 ## 7. Cuts and catalog

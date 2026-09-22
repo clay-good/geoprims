@@ -602,3 +602,236 @@ fn run_thermal(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     Ok(Json::obj(out))
 }
+
+// ---------------------------------------------------------------- lidar planning
+
+const USGS_LBS: Reference = Reference {
+    title: "Lidar Base Specification",
+    issuer: "U.S. Geological Survey, 3D Elevation Program",
+    year: 2025,
+    edition: "2025 rev. A (June 2025)",
+    locator: "Table 1: aggregate nominal pulse density, QL0 and QL1 ≥ 8.0, QL2 ≥ 2.0, QL3 ≥ 0.5 pulses per m²",
+    url: "https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-tables",
+};
+
+/// USGS 3DEP quality levels by aggregate nominal pulse density (pulses per m²).
+const QUALITY: [(&str, f64); 3] = [("QL1", 8.0), ("QL2", 2.0), ("QL3", 0.5)];
+
+const fn density(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    num(name, title, help, 0.0, 1e9)
+        .measure("areal_density", "pls/m2")
+        .precision(Precision::Decimals(1))
+}
+
+pub static LIDAR_PLAN: ToolDef = ToolDef {
+    id: "drone.sensors.lidar-plan",
+    title: "Lidar mission planning",
+    summary: "Swath, line spacing, and pulse density for a lidar flight, with the aggregate density over overlapping lines checked against the USGS 3DEP quality levels.",
+    aliases: &[
+        "lidar point density calculator",
+        "lidar swath width",
+        "pulse density",
+        "USGS QL1 QL2",
+    ],
+    keywords: &[
+        "lidar",
+        "pulse density",
+        "swath",
+        "QL1",
+        "QL2",
+        "3DEP",
+        "points per square meter",
+        "line spacing",
+    ],
+    inputs: &[
+        Field::new(
+            "pulse_rate",
+            "Pulse rate",
+            "Pulses per second, like 240 kHz",
+            Kind::Quantity {
+                q: QT::Frequency,
+                unit: "kHz",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "fov",
+            "Field of view",
+            "Full scan angle across track, like 70 deg",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "height",
+            "Flight height",
+            "Above ground, like 100 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "speed",
+            "Groundspeed",
+            "Like 10 m/s",
+            Kind::Quantity {
+                q: QT::Speed,
+                unit: "m/s",
+            },
+        )
+        .required()
+        .core(),
+        num(
+            "side_overlap",
+            "Side overlap",
+            "Percent of the swath, like 30 (the default 0)",
+            0.0,
+            95.0,
+        )
+        .core(),
+        num(
+            "returns",
+            "Returns per pulse",
+            "Average recorded, like 1.5 (the default 1)",
+            1.0,
+            16.0,
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "swath",
+            "Swath width",
+            "2 × height × tan(FOV ÷ 2)",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "line_spacing",
+            "Line spacing",
+            "Swath × (1 − side overlap)",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        density(
+            "pulse_density",
+            "Pulse density, one line",
+            "Pulse rate ÷ (speed × swath)",
+        ),
+        density(
+            "aggregate_density",
+            "Aggregate pulse density",
+            "Pulse rate ÷ (speed × line spacing), all lines together",
+        ),
+        density(
+            "point_density",
+            "Point density",
+            "Aggregate pulses × returns per pulse",
+        ),
+        Field::new(
+            "quality_level",
+            "USGS 3DEP quality level",
+            "The highest level the aggregate pulse density meets",
+            Kind::Text { max_len: 120 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Swath = 2H tan(FOV/2); line spacing = swath (1 − side overlap); nominal pulse density = pulse rate ÷ (speed × swath) for one line, and ÷ (speed × line spacing) for the aggregate over overlapping lines; points = pulses × returns per pulse. Quality levels by aggregate nominal pulse density (USGS Lidar Base Specification 2025 rev. A, table 1)",
+    accuracy: "Nominal and averaged across the swath: oscillating and non-repetitive scan patterns spread pulses unevenly, denser at the swath edges or center. Quality levels also set accuracy requirements that density alone does not meet; QL0 has QL1's density with tighter accuracy",
+    references: &[USGS_LBS],
+    examples: &[Example {
+        id: "primary",
+        title: "240,000 pulses a second, 70° field of view, 100 m at 10 m/s",
+        input: r#"{"pulse_rate":"240 kHz","fov":"70 deg","height":"100 m","speed":"10 m/s"}"#,
+        source: "add-practitioner-essentials lidar scenario: swath about 140.0 m and 171 pulses per m², beyond QL1",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.sensors.dataset-size",
+            reason: "next",
+        },
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "next",
+        },
+    ],
+    sentence: "Each line is {swath} wide; all lines together give {aggregate_density} pulses per square meter.",
+    limits: &[("batchRows", 10_000)],
+    run: run_lidar,
+    ..ToolDef::BLANK
+};
+
+fn run_lidar(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = unit(QT::Length, "m");
+    let prr = ctx.req_quantity("pulse_rate")?.base();
+    let fov = ctx.req_quantity("fov")?.to(unit(QT::Angle, "deg"));
+    let h = ctx.req_quantity("height")?.base();
+    let v = ctx.req_quantity("speed")?.base();
+    let overlap = ctx.number("side_overlap")?.unwrap_or(0.0) / 100.0;
+    let returns = ctx.number("returns")?.unwrap_or(1.0);
+    if prr.is_nan() || prr <= 0.0 || h.is_nan() || h <= 0.0 || v.is_nan() || v <= 0.0 {
+        return Err(ToolError::invalid(
+            "/pulse_rate",
+            "The pulse rate, height, and speed must be above zero.",
+        ));
+    }
+    if !(0.0..180.0).contains(&fov) || fov == 0.0 {
+        return Err(ToolError::invalid(
+            "/fov",
+            "The field of view must be above 0° and under 180°.",
+        ));
+    }
+    let swath = 2.0 * h * libm::tan((fov / 2.0).to_radians());
+    let spacing = swath * (1.0 - overlap);
+    let one = prr / (v * swath);
+    let agg = prr / (v * spacing);
+    let ql = QUALITY
+        .iter()
+        .find(|(_, min)| agg >= *min)
+        .map_or("below QL3 (0.5 pulses per m²)".to_owned(), |(q, min)| {
+            format!("{q} (at least {min} pulses per m²)")
+        });
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, dp: u8| display::number(x, Precision::Decimals(dp), fmt);
+        ctx.step(
+            "Pulse density, one line",
+            "pulse rate ÷ (speed × swath)",
+            format!("{} ÷ ({} × {})", n(prr, 0), n(v, 2), n(swath, 2)),
+            n(one, 1),
+        );
+        ctx.step(
+            "Swath width",
+            "2 × height × tan(FOV ÷ 2)",
+            format!("2 × {} × tan {}°", n(h, 1), n(fov / 2.0, 2)),
+            display::quantity(swath, "m", Precision::Decimals(1), fmt),
+        );
+    }
+    let q = |x: f64| Q { value: x, unit: m };
+    Ok(Json::obj(vec![
+        ("swath", ctx.out("swath", q(swath))),
+        ("line_spacing", ctx.out("line_spacing", q(spacing))),
+        ("pulse_density", Json::Num(one)),
+        ("aggregate_density", Json::Num(agg)),
+        ("point_density", Json::Num(agg * returns)),
+        ("quality_level", Json::str(ql)),
+    ]))
+}

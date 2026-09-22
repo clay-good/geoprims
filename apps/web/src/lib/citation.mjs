@@ -59,3 +59,23 @@ export function withReference({ answer, result, tool, args, href, today }) {
 /** An input value as the reader typed it, or as a quantity reads. */
 const format = (v) =>
   v !== null && typeof v === 'object' && 'value' in v ? `${v.value} ${v.unit ?? ''}`.trim() : String(v);
+
+/**
+ * How a regulation is dated where it is cited (web/tool-docs: "Rules as of
+ * <date>", with the authority's link; a proposed rule labelled "Proposed"
+ * with its Federal Register citation). Null for a source that is not a rule.
+ * The date is the day a maintainer last confirmed the text at the authority,
+ * from the sources ledger, never the build day.
+ */
+export function ruleStatus(row) {
+  if (!row?.legalStatus) return null;
+  if (row.legalStatus === 'proposed') {
+    return { kind: 'proposed', label: 'Proposed', text: `Proposed rule, ${row.currentEdition}; not in force.`, url: row.freeAccessUrl };
+  }
+  return {
+    kind: 'in-force',
+    label: 'Rules as of',
+    text: row.lastVerified ? `Rules as of ${row.lastVerified}` : 'Rules as of: not yet confirmed at the authority',
+    url: row.freeAccessUrl,
+  };
+}

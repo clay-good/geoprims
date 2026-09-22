@@ -707,3 +707,9 @@ table.batch-map select, table.batch-map input { margin: 0; }
 .batch-progress { inline-size: 100%; block-size: 10px; accent-color: var(--accent); }
 .batch-errors { margin: 0; padding-inline-start: 1.1rem; font: 0.82rem var(--mono); color: var(--danger); max-block-size: 12rem; overflow-y: auto; }
 table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color: var(--muted); font-size: 0.85em; }
+
+/* A regulation cited by a tool: dated, and a proposed rule labelled. */
+.rule-label { display: inline-block; padding: 0 0.4rem; border-radius: 4px; font: 700 0.66rem/1.7 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; vertical-align: 0.1em; }
+.rule-label.proposed { color: var(--caution); background: color-mix(in srgb, var(--caution) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--caution) 35%, var(--line)); }
+.rule-date { font-size: 0.9em; color: var(--muted); }
+.rule-date a { color: inherit; }

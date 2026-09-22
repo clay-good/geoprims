@@ -4,7 +4,7 @@ import ToolApp from '../../../../components/ToolApp.svelte';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
 import { defId, markTerms, sourceOf } from '../../../../lib/terms.mjs';
-import { freeAccess } from '../../../../lib/citation.mjs';
+import { freeAccess, ruleStatus } from '../../../../lib/citation.mjs';
 import { ledger, ledgerRowFor as rowFor } from '../../../../lib/catalog.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
 import { buildDate } from '../../../../lib/build-date.mjs';
@@ -136,13 +136,17 @@ const purpose = markTerms(t.summary, terms);
     <h3>Sources</h3>
     <ul>
       {t.references.map((r) => {
-        const free = freeAccess(r, rowFor(ledger, r));
+        const row = rowFor(ledger, r);
+        const free = freeAccess(r, row);
+        const rule = ruleStatus(row);
         return (
           <li>
+            {rule?.kind === 'proposed' && <><span class="rule-label proposed">Proposed</span> </>}
             <a href={r.url}>{r.title}</a>, {r.issuer}, {r.edition}. {r.locator}.
             {free && (free.url
               ? <> <a class="free-access" href={free.url}>{free.label}</a>.</>
               : <> <span class="free-access">{free.label}</span>.</>)}
+            {rule && <span class="rule-date"> {rule.url ? <a href={rule.url}>{rule.text}</a> : rule.text}.</span>}
           </li>
         );
       })}

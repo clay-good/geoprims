@@ -116,7 +116,7 @@
     "lastmod": "2026-09-19"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
-    "hash": "036782820d71c1ad",
+    "hash": "2dca9af0078fe5bb",
     "lastmod": "2026-09-22"
   },
   "/drone/photogrammetry/gsd/": {
@@ -456,8 +456,8 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "749fe6c66c058aa2",
-    "lastmod": "2026-09-20"
+    "hash": "9c41a376d300506a",
+    "lastmod": "2026-09-22"
   },
   "/survey/": {
     "hash": "04a9d43c8a1cbf4c",
@@ -524,7 +524,7 @@
     "lastmod": "2026-09-19"
   },
   "/time/sun/aviation-nights/": {
-    "hash": "4387bdbb9fd35df4",
+    "hash": "24e74bf7ad214d0f",
     "lastmod": "2026-09-22"
   },
   "/time/sun/events/": {
@@ -636,7 +636,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1de3a48cb62892bb",
+    "hash": "bffe8c9eeb044fb6",
     "lastmod": "2026-09-22"
   }
 }

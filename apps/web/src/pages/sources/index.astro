@@ -24,7 +24,7 @@ const tracked = map.filter((s) => s.tools.size === 0);
     {cited.map(({ row, tools }) => (
       <li class="card" id={row.id}>
         <h2>{row.name}</h2>
-        <p><strong>Issuer:</strong> {row.issuer}. <strong>Edition:</strong> {row.currentEdition}{row.legalStatus === 'proposed' && ' (Proposed)'}.
+        <p><strong>Issuer:</strong> {row.issuer}. <strong>Edition:</strong> {row.legalStatus === 'proposed' && <><span class="rule-label proposed">Proposed</span> </>}{row.currentEdition}.
           {row.validTo && <> <strong>Valid through:</strong> {row.validTo}.</>}</p>
         <p><strong>Last checked:</strong> {row.lastVerified ?? 'not yet'}. {row.verificationNote}</p>
         {row.freeAccessUrl && <p><a href={row.freeAccessUrl}>Issuer page</a></p>}
@@ -38,6 +38,6 @@ const tracked = map.filter((s) => s.tools.size === 0);
   <h2>Tracked, not cited yet</h2>
   <p>Sources the plan depends on, tracked so new editions are noticed before any tool uses them.</p>
   <ul>
-    {tracked.map(({ row }) => <li id={row.id}>{row.name} ({row.issuer}), {row.currentEdition}{row.legalStatus === 'proposed' ? ', proposed' : ''}. Last checked: {row.lastVerified ?? 'not yet'}.</li>)}
+    {tracked.map(({ row }) => <li id={row.id}>{row.legalStatus === 'proposed' && <><span class="rule-label proposed">Proposed</span> </>}{row.name} ({row.issuer}), {row.currentEdition}. Last checked: {row.lastVerified ?? 'not yet'}.</li>)}
   </ul>
 </Base>

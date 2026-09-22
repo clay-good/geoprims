@@ -108,3 +108,34 @@ test('the gate bites', () => {
   assert.deepEqual(unsafeLinks('<a href="https://x.test/a">x</a>'), ['<a href="https://x.test/a">']);
   assert.deepEqual(unsafeLinks('<a href="https://x.test/a" rel="noopener">x</a>'), ['<a href="https://x.test/a" rel="noopener">']);
 });
+
+test('every regulation a tool cites is dated, and a proposed rule is labelled', async () => {
+  // web/tool-docs: "rules as of <date>" with the authority's link; a
+  // proposed rule labelled "Proposed" with its Federal Register citation.
+  const { ruleStatus } = await import('../src/lib/citation.mjs');
+  const { rowFor } = await import('../../../tools/trust/ledger.mjs');
+  const problems = [];
+  let dated = 0;
+  for (const t of catalog.tools) {
+    const html = page(t.id);
+    for (const r of t.references) {
+      const status = ruleStatus(rowFor(ledger, r));
+      if (!status) continue;
+      dated += 1;
+      if (status.kind === 'in-force' && !html.includes(status.text)) problems.push(`${t.id}: ${r.title} is not dated`);
+      if (status.kind === 'proposed' && !/rule-label proposed">Proposed</.test(html)) problems.push(`${t.id}: ${r.title} is not labelled Proposed`);
+    }
+  }
+  assert.deepEqual(problems, []);
+  assert.ok(dated >= 10, `only ${dated} regulation citations checked`);
+  // Part 108 is proposed wherever it appears, with its Federal Register citation.
+  const sources = readFileSync(join(web, 'dist/sources/index.html'), 'utf8');
+  const at = sources.indexOf('Part 108');
+  assert.ok(at > 0, 'the sources page does not list Part 108');
+  const near = sources.slice(Math.max(0, at - 200), at + 300);
+  assert.match(near, /rule-label proposed">Proposed</);
+  assert.match(near, /90 FR 38212/);
+  // A rule's date is the day it was confirmed at the authority, never the build day.
+  assert.deepEqual(ruleStatus({ legalStatus: 'in-force', lastVerified: '2026-09-18', freeAccessUrl: 'https://www.ecfr.gov/x' }), { kind: 'in-force', label: 'Rules as of', text: 'Rules as of 2026-09-18', url: 'https://www.ecfr.gov/x' });
+  assert.equal(ruleStatus({ name: 'A textbook' }), null);
+});

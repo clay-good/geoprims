@@ -51,7 +51,7 @@ const PART_107: Reference = Reference {
     title: "14 CFR Part 107, Small Unmanned Aircraft Systems",
     issuer: "Federal Aviation Administration",
     year: 2021,
-    edition: "eCFR, current as of the review date in data/regulations.json",
+    edition: "eCFR, current text (dated on the page as \"Rules as of\")",
     locator: "§107.51 (operating limitations) and §107.120 (operations over people, category 2)",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-107",
 };

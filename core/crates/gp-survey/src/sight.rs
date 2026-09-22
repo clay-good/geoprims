@@ -215,6 +215,17 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
         })?;
         h.to(u) + s * tan(beta.to_radians())
     };
+    // Zero or negative heights leave no sight line to design for.
+    if !(c > 0.0 && c.is_finite()) {
+        return Err(ToolError::invalid(
+            if crest {
+                "/eye_height"
+            } else {
+                "/headlight_height"
+            },
+            "The heights must be positive, like a 3.5 ft eye and a 2.0 ft object.",
+        ));
+    }
     let long = a * s * s / (200.0 * c); // S < L
     let (l, case) = if long >= s {
         (long, "S < L: the sight line lies within the curve")

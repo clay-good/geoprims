@@ -755,3 +755,14 @@ fn tin_stockpile_approaches_an_analytic_cone() {
     assert!((v - cone).abs() / cone < 0.01, "TIN {v} vs cone {cone}");
     assert!(num(&res, "result.triangles") > 900.0);
 }
+
+#[test]
+fn zero_sight_heights_are_refused_not_infinite() {
+    // Found by the fuzzer: zero eye and object heights divided by zero.
+    let r: serde_json::Value = serde_json::from_str(&gp_survey::REGISTRY.invoke(
+        "survey.curves.sight-distance",
+        r#"{"curve":"crest","eye_height":0,"grade_change":5,"object_height":0,"sight_distance":"400 ft"}"#,
+    ))
+    .unwrap();
+    assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+}

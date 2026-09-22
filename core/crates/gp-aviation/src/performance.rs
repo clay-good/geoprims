@@ -8,7 +8,7 @@ use crate::refs::*;
 use crate::{deg, m, obj, unit};
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_base::{ErrorCode, display};
 use libm::{acos, atan, cos, sqrt, tan};
@@ -540,6 +540,15 @@ pub static DESCENT: ToolDef = ToolDef {
     sentence: "Start down {distance} out and descend at {vertical_speed}, taking {time}.{if rule_3_to_1 > 0} The 3-to-1 rule says {rule_3_to_1}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_descent,
+    // "from 12000 to 3000 ft": the words say which altitude is which, and a
+    // bare number takes the unit of the input its word names.
+    slots: &[
+        Slot::new("from_altitude", &["from", "cruise", "cruising", "at"]).range(0.0, 60_000.0),
+        Slot::new("to_altitude", &["to", "target", "down"]).range(0.0, 60_000.0),
+        Slot::new("groundspeed", &["groundspeed", "gs", "speed"]),
+        Slot::new("descent_angle", &["angle", "path", "glidepath"]),
+        Slot::new("vertical_speed", &["fpm", "descent", "rate", "vertical"]),
+    ],
     ..ToolDef::BLANK
 };
 

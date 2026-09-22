@@ -10,7 +10,7 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use libm::{acos, asin, atan, atan2, cos, hypot, sin, tan};
@@ -1120,6 +1120,19 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
     sentence: "The curve has tangent {tangent}, length {length}, and long chord {chord}.",
     limits: &[("batchRows", 10_000)],
     run: run_circular,
+    // "radius 500 ft delta 30": delta is a deflection angle in degrees.
+    slots: &[
+        Slot::new("radius", &["radius", "r"]),
+        Slot::new("delta", &["delta", "deflection", "central", "intersection"]).range(0.0, 180.0),
+        Slot::new("tangent", &["tangent", "t"]),
+        Slot::new("length", &["length", "l", "arc"]),
+        Slot::new("chord", &["chord", "c"]),
+        Slot::new("external", &["external", "e"]),
+        Slot::new("middle_ordinate", &["ordinate", "m"]),
+        Slot::new("degree", &["degree", "d"]),
+        Slot::new("degree_chord", &["dc"]),
+        Slot::new("pi_station", &["pi", "station"]),
+    ],
     ..ToolDef::BLANK
 };
 

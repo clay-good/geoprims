@@ -195,6 +195,36 @@
         "lat2": "51.47 deg",
         "lon2": "-0.45 deg"
       }
+    },
+    {
+      "query": "top of descent from 12000 to 3000 ft",
+      "id": "aviation.performance.top-of-descent",
+      "prefill": {
+        "from_altitude": "12000 ft",
+        "to_altitude": "3000 ft"
+      }
+    },
+    {
+      "query": "curve radius 500 ft delta 30",
+      "id": "survey.curves.circular-curve",
+      "prefill": {
+        "radius": "500 ft",
+        "delta": "30 deg"
+      }
+    },
+    {
+      "query": "knots to mph 120",
+      "id": "units.speed.kt-to-mph",
+      "prefill": {
+        "value": "120 kt"
+      }
+    },
+    {
+      "query": "metar KDEN 211753Z 36010KT 10SM FEW080 22/05 A3012",
+      "id": "aviation.weather.metar-decode",
+      "prefill": {
+        "report": "METAR KDEN 211753Z 36010KT 10SM FEW080 22/05 A3012"
+      }
     }
   ]
 }

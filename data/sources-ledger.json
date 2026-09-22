@@ -2138,6 +2138,46 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "douglas-peucker",
+      "name": "Douglas and Peucker (1973) line reduction",
+      "issuer": "Cartographica",
+      "currentEdition": "Vol. 10, No. 2",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved at doi.org on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.3138/FM57-6770-U75U-7727",
+      "matchTerms": [
+        "Algorithms for the reduction of the number of points required to represent a digitized line or its caricature"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "visvalingam-whyatt",
+      "name": "Visvalingam and Whyatt (1993) line generalisation",
+      "issuer": "The Cartographic Journal",
+      "currentEdition": "Vol. 30, No. 1",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved at doi.org on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.1179/000870493786962263",
+      "matchTerms": [
+        "Line generalisation by repeated elimination of points"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

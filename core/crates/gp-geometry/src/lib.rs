@@ -7,6 +7,7 @@ pub mod envelope;
 pub mod overlay;
 pub mod predicate;
 pub mod shape;
+pub mod simplify;
 pub mod validity;
 
 use geographiclib_rs::{PolygonArea, Winding};
@@ -358,6 +359,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &validity::MAKE_VALID,
     &overlay::BOOLEAN,
     &distance::TRACKS,
+    &simplify::RDP,
+    &simplify::VISVALINGAM_WHYATT,
 ];
 
 pub static REGISTRY: Registry = Registry {

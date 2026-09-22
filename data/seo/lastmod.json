@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "4ffa2a02f241b1ac",
+    "hash": "c1d710f6ebb13c8a",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -280,7 +280,7 @@
     "lastmod": "2026-09-22"
   },
   "/geometry/": {
-    "hash": "899728cf971bfe15",
+    "hash": "937e3423efa2dc0c",
     "lastmod": "2026-09-22"
   },
   "/geometry/area/": {
@@ -305,6 +305,10 @@
   },
   "/geometry/shape/": {
     "hash": "7ab2489a2b7b0083",
+    "lastmod": "2026-09-22"
+  },
+  "/geometry/simplify/": {
+    "hash": "aa610f0cb411f2cd",
     "lastmod": "2026-09-22"
   },
   "/geometry/validity/": {
@@ -456,7 +460,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "58098895edb22924",
+    "hash": "511510b8c64b372c",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -524,7 +528,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "e9fd94e1566b7b84",
+    "hash": "ebfb9075dfca7167",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -608,7 +612,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "e6e53dd85b76e31e",
+    "hash": "11dd4e7f6b921fb4",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -708,7 +712,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ec2f0b9763c92400",
+    "hash": "179c8cf0007610a5",
     "lastmod": "2026-09-22"
   }
 }

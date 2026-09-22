@@ -892,6 +892,23 @@
         }
       ]
     },
+    "geometry.simplify": {
+      "summary": "Fewer vertices, with the shape kept.",
+      "tasks": [
+        {
+          "want": "thin out a track or boundary to a distance tolerance",
+          "tools": [
+            "rdp"
+          ]
+        },
+        {
+          "want": "cut a shape down to a set number of vertices",
+          "tools": [
+            "visvalingam"
+          ]
+        }
+      ]
+    },
     "geometry.overlay": {
       "summary": "Overlaps, unions, and differences of polygons.",
       "tasks": [

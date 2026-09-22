@@ -17,9 +17,9 @@ test('every abbreviation in the catalog resolves to a glossary entry', () => {
 });
 
 test('a label using an undefined abbreviation fails, naming the tool and term', () => {
-  const tool = { id: 'fixture.rpp', title: 'Weight of the RPP kit', inputs: { properties: {} }, outputs: { properties: {} } };
+  const tool = { id: 'fixture.qzx', title: 'Weight of the QZX kit', inputs: { properties: {} }, outputs: { properties: {} } };
   const problems = glossaryProblems(loadGlossary(root), { tools: [...catalog.tools, tool] }, ledgerIds);
-  assert.deepEqual(problems, ['fixture.rpp: "RPP" has no glossary entry']);
+  assert.deepEqual(problems, ['fixture.qzx: "QZX" has no glossary entry']);
 });
 
 test('the schema catches an overlong definition and an unknown source', () => {

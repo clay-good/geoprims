@@ -40,7 +40,7 @@
 - [x] 5.5 Implement basis-of-bearing rotation and the professional-use notice; verify the rotation scenario
 - [ ] 5.6 Implement almanac parsing, DOP, sky plot, and terrain mask; verify both DOP scenarios against a reference planning tool
 - [x] 5.7 Implement the RTK budget, OPUS planning, and antenna height; verify the corresponding scenarios (`survey.gnss.rtk-budget` (a + b·d as manufacturers state it, NGS RT guidelines v3.1, with 95% scaling and a target check), `survey.gnss.opus-plan` (rapid static below 2 hours and static from 2 to 48 hours with the RINEX 2 name; the NGS OPUS page as modified 2026-09-09 no longer has the spec's separate OPUS-RS and OPUS-S windows, and the tool follows the page), and `survey.gnss.antenna-height` (√(s² − r²) + offset). All three scenarios pass (23 mm; rapid static for 60 min; 1.7972 m); 16 golden vectors)
-- [ ] 5.8 Implement the ALTA RPP check tied to error ellipses; verify both RPP scenarios and obtain PLS review
+- [ ] 5.8 Implement the ALTA RPP check tied to error ellipses; verify both RPP scenarios and obtain PLS review (built: `survey.land.alta-rpp`: 2 cm (0.07 ft) + 50 ppm from the 2026 standards (Section 3.E.v, read in the official PDF, dated in `data/regulations.json`), compared with the 95% ellipse semi-major axis entered or computed from the coordinate-difference covariance, and a misclosure refused with the reason; both scenarios pass (0.12 ft at 1,000 ft; misclosure refused); 5 golden vectors. Pending: PLS review)
 - [ ] 5.9 Implement similarity and affine localization with warnings; verify both localization scenarios
 - [ ] 5.10 (v1.1) Package BLM CadNSDI per state and implement PLSS lookup and reverse lookup; verify against BLM sample points
 

@@ -84,22 +84,23 @@
     },
     {
       "id": "alta-nsps",
-      "name": "ALTA/NSPS Minimum Standard Detail Requirements",
+      "name": "Minimum Standard Detail Requirements for ALTA/NSPS Land Title Surveys",
       "issuer": "ALTA and NSPS",
-      "currentEdition": "current",
-      "currentReleaseDate": null,
+      "currentEdition": "2026 standards, effective February 23, 2026",
+      "currentReleaseDate": "2026-02-23",
       "cycleMonths": null,
       "nextExpected": null,
-      "validFrom": null,
+      "validFrom": "2026-02-23",
       "validTo": null,
-      "lastVerified": null,
-      "verificationNote": "Not cited yet.",
-      "freeAccessUrl": "https://www.alta.org/file.cfm?name=2021-alta-nsps-standards",
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Sections 3.E.i and 3.E.v read in the official PDF (v. 11.13.2025) on 2026-09-22. Values in data/regulations.json.",
+      "freeAccessUrl": "https://cdn.ymaws.com/nsps.us.com/resource/resmgr/alta_standards/2026_OFFICIAL_FINAL_PDF_ALTA.pdf",
       "matchTerms": [
-        "ALTA/NSPS"
+        "ALTA/NSPS",
+        "Minimum Standard Detail Requirements for ALTA/NSPS"
       ],
       "editionStatus": "current",
-      "legalStatus": null,
+      "legalStatus": "in-force",
       "editionCheck": true
     },
     {

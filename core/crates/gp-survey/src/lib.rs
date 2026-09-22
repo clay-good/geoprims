@@ -2253,6 +2253,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &gnss::RTK_BUDGET,
     &gnss::OPUS_PLAN,
     &gnss::ANTENNA_HEIGHT,
+    &gnss::ALTA_RPP,
     &INVERSE,
     &FORWARD,
     &TRAVERSE,

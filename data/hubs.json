@@ -1336,6 +1336,12 @@
       "summary": "Deeds, legal descriptions, and old units.",
       "tasks": [
         {
+          "want": "check a survey against the ALTA/NSPS precision standard",
+          "tools": [
+            "alta-rpp"
+          ]
+        },
+        {
           "want": "read a metes-and-bounds deed and plot it",
           "tools": [
             "deed-parse",

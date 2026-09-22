@@ -1382,6 +1382,36 @@
       "relatedTools": [
         "drone.sensors.lidar-plan"
       ]
+    },
+    {
+      "id": "alta",
+      "term": "ALTA",
+      "expansion": "American Land Title Association",
+      "definition": "The title insurers' association that, with NSPS, sets the standards for land title surveys.",
+      "source": "alta-nsps",
+      "relatedTools": [
+        "survey.land.alta-rpp"
+      ]
+    },
+    {
+      "id": "nsps",
+      "term": "NSPS",
+      "expansion": "National Society of Professional Surveyors",
+      "definition": "The US surveyors' society that, with ALTA, sets the standards for land title surveys.",
+      "source": "alta-nsps",
+      "relatedTools": [
+        "survey.land.alta-rpp"
+      ]
+    },
+    {
+      "id": "rpp",
+      "term": "RPP",
+      "expansion": "relative positional precision",
+      "definition": "How well two adjacent boundary corners are located relative to each other: the long axis of their 95% error ellipse.",
+      "source": "alta-nsps",
+      "relatedTools": [
+        "survey.land.alta-rpp"
+      ]
     }
   ],
   "notAbbreviations": [

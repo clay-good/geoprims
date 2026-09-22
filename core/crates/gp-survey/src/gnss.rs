@@ -596,3 +596,257 @@ fn run_antenna(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("difference", ctx.out("difference", q(s - v))),
     ]))
 }
+
+// ---------------------------------------------------------------- ALTA/NSPS relative positional precision
+
+const ALTA_2026: Reference = Reference {
+    title: "Minimum Standard Detail Requirements for ALTA/NSPS Land Title Surveys",
+    issuer: "American Land Title Association and National Society of Professional Surveyors",
+    year: 2026,
+    edition: "2026 standards, effective February 23, 2026",
+    locator: "Section 3.E.i (Relative Positional Precision: the semi-major axis of the 95% error ellipse between adjacent corners) and 3.E.v (at most 2 cm (0.07 feet) plus 50 ppm)",
+    url: "https://cdn.ymaws.com/nsps.us.com/resource/resmgr/alta_standards/2026_OFFICIAL_FINAL_PDF_ALTA.pdf",
+};
+
+/// The two-dimensional 95% factor, √(χ²₂,0.95) = √5.991.
+const K95: f64 = 2.447_746_830_680_816;
+
+pub static ALTA_RPP: ToolDef = ToolDef {
+    id: "survey.land.alta-rpp",
+    title: "ALTA/NSPS relative positional precision",
+    summary: "The allowable relative positional precision between two adjacent boundary corners under the 2026 ALTA/NSPS standards, compared with the 95% error ellipse from your adjustment.",
+    aliases: &[
+        "ALTA RPP",
+        "relative positional precision",
+        "ALTA survey precision check",
+        "RPP calculator",
+    ],
+    keywords: &[
+        "ALTA",
+        "NSPS",
+        "RPP",
+        "relative positional precision",
+        "error ellipse",
+        "land title survey",
+        "50 ppm",
+    ],
+    inputs: &[
+        Field::new(
+            "distance",
+            "Distance between the corners",
+            "Direct, like 1000 ft",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "semi_major",
+            "95% ellipse semi-major axis",
+            "Of the line between the corners, from the adjustment, like 0.05 ft",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .core(),
+        Field::new(
+            "sigma_e",
+            "σ of the east difference",
+            "Or give the covariance, like 0.02 ft",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .core(),
+        Field::new(
+            "sigma_n",
+            "σ of the north difference",
+            "Like 0.015 ft",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .core(),
+        Field::new(
+            "covariance",
+            "East-north covariance",
+            "In square feet, like 0.0001 (the default 0)",
+            Kind::Number {
+                min: -1e6,
+                max: 1e6,
+            },
+        ),
+        Field::new(
+            "misclosure",
+            "Traverse misclosure",
+            "Like 0.05 ft. Not a measure of RPP; the tool explains why",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "allowable",
+            "Allowable RPP",
+            "2 cm (0.07 ft) + 50 ppm of the distance",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "semi_major_95",
+            "Your 95% semi-major axis",
+            "Given, or 2.448 × the largest σ of the covariance",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .precision(Precision::Decimals(3))
+        .optional(),
+        Field::new(
+            "status",
+            "Against the standard",
+            "Within, near, or beyond the allowable RPP",
+            Kind::Text { max_len: 120 },
+        )
+        .status("threshold", "alta-nsps")
+        .optional(),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Allowable = 2 cm (0.07 ft when the distance is in feet) + 50 × 10⁻⁶ × distance (ALTA/NSPS 2026, 3.E.v). RPP is the semi-major axis of the 95% error ellipse of the line between the corners: 2.448 × √(largest eigenvalue of the east-north covariance) when a covariance is given",
+    accuracy: "The allowable value is exact; the comparison is as good as the adjustment's weighting. Misclosure is not RPP and is refused",
+    references: &[ALTA_2026],
+    examples: &[Example {
+        id: "primary",
+        title: "Adjacent corners 1,000 ft apart, a 0.05 ft ellipse",
+        input: r#"{"distance":"1000 ft","semi_major":"0.05 ft"}"#,
+        source: "add-practitioner-essentials RPP scenario: 0.12 ft allowable at 1,000 ft",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[Related {
+        id: "survey.cogo.traverse-closure",
+        reason: "alternative",
+    }],
+    sentence: "The standard allows {allowable} between these corners.",
+    limits: &[("batchRows", 10_000)],
+    run: run_alta,
+    ..ToolDef::BLANK
+};
+
+fn run_alta(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    if ctx.is_set("misclosure") {
+        return Err(ToolError::invalid(
+            "/misclosure",
+            "Relative positional precision is judged from the 95% relative error ellipse between adjacent corners, not from a traverse misclosure. Give the ellipse's semi-major axis, or the covariance of the corners' coordinate difference, from your least-squares adjustment.",
+        ));
+    }
+    let dq = ctx.req_quantity("distance")?;
+    let (ft, m) = (unit(QT::Length, "ft"), unit(QT::Length, "m"));
+    let metric = crate::is_metric(dq.unit);
+    let d = dq.base();
+    if d.is_nan() || !(0.0..=100_000.0).contains(&d) {
+        return Err(ToolError::invalid(
+            "/distance",
+            "Give a distance between the corners from 0 to 100 km.",
+        ));
+    }
+    let constant = if metric { 0.02 } else { 0.07 * 0.3048 };
+    let allowable = constant + 50e-6 * d;
+    let ellipse = match (
+        ctx.quantity("semi_major")?,
+        ctx.quantity("sigma_e")?,
+        ctx.quantity("sigma_n")?,
+    ) {
+        (Some(a), None, None) => Some(a.base()),
+        (None, Some(se), Some(sn)) => {
+            let (se, sn) = (se.base(), sn.base());
+            // Covariance is entered in the distance's unit squared.
+            let scale = if metric { 1.0 } else { 0.3048 * 0.3048 };
+            let c = ctx.number("covariance")?.unwrap_or(0.0) * scale;
+            let (a, b) = (se * se, sn * sn);
+            let big = (a + b) / 2.0 + sqrt(((a - b) / 2.0).powi(2) + c * c);
+            if c * c > a * b {
+                return Err(ToolError::invalid(
+                    "/covariance",
+                    "That covariance is larger than the two variances allow.",
+                ));
+            }
+            Some(K95 * sqrt(big))
+        }
+        (None, None, None) => None,
+        _ => {
+            return Err(ToolError::invalid(
+                "/semi_major",
+                "Give the ellipse's semi-major axis, or both σ values (and the covariance), not a mix.",
+            ));
+        }
+    };
+    let u = if metric { m } else { ft };
+    let q = |v: f64| Q { value: v, unit: m };
+    // Meters to the distance's own unit, for the text.
+    let conv = |v: f64| Q { value: v, unit: m }.to(u);
+    let mut out = vec![("allowable", ctx.out("allowable", q(allowable)))];
+    if let Some(e) = ellipse {
+        if e.is_nan() || e < 0.0 {
+            return Err(ToolError::invalid(
+                "/semi_major",
+                "The ellipse must be zero or larger.",
+            ));
+        }
+        out.push(("semi_major_95", ctx.out("semi_major_95", q(e))));
+        let label = format!(
+            "{} allowable RPP (ALTA/NSPS 2026)",
+            display::quantity(
+                conv(allowable),
+                u.symbol,
+                Precision::Decimals(3),
+                ctx.options.format
+            )
+        );
+        out.push((
+            "status",
+            Json::str(gp_base::status::threshold(
+                e,
+                allowable,
+                gp_base::status::NEAR_MARGIN,
+                &label,
+            )),
+        ));
+    }
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, dp: u8| display::number(x, Precision::Decimals(dp), fmt);
+        ctx.step(
+            "Distance term",
+            "50 × 10⁻⁶ × distance",
+            format!("50 × 10⁻⁶ × {}", n(conv(d), 3)),
+            format!("{} {}", n(conv(50e-6 * d), 3), u.symbol),
+        );
+        ctx.step(
+            "Allowable RPP",
+            if metric {
+                "2 cm + distance term"
+            } else {
+                "0.07 ft + distance term"
+            },
+            format!("{} + {}", n(conv(constant), 3), n(conv(50e-6 * d), 3)),
+            display::quantity(conv(allowable), u.symbol, Precision::Decimals(3), fmt),
+        );
+    }
+    Ok(Json::obj(out))
+}

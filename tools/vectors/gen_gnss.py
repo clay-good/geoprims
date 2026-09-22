@@ -59,9 +59,28 @@ def antenna():
     return out
 
 
+def alta():
+    K = math.sqrt(-2 * math.log(0.05))  # 2.4477, the 2-D 95% factor
+    out = [vec(1, {"distance": "1000 ft", "semi_major": "0.05 ft"},
+               {"result.allowable.value": 0.12, "result.semi_major_95.value": 0.05, "result.status": "Within your 0.12 ft allowable RPP (ALTA/NSPS 2026)"},
+               SPEC + " (0.12 ft allowable at 1,000 ft)", 1e-12)]
+    out.append(vec(2, {"distance": "300 m", "semi_major": "0.034 m"},
+                   {"result.allowable.value": 0.035 / 0.3048, "result.status": "Near your 0.035 m allowable RPP (ALTA/NSPS 2026)"}, tol=1e-12))
+    se, sn, c = 0.02, 0.015, 0.0001
+    a, b = se * se, sn * sn
+    big = (a + b) / 2 + math.sqrt(((a - b) / 2) ** 2 + c * c)
+    e = K * math.sqrt(big)
+    out.append(vec(3, {"distance": "500 ft", "sigma_e": f"{se} ft", "sigma_n": f"{sn} ft", "covariance": c},
+                   {"result.allowable.value": 0.07 + 50e-6 * 500, "result.semi_major_95.value": e,
+                    "result.status": "Within your 0.095 ft allowable RPP (ALTA/NSPS 2026)" if e < 0.095 * 0.9 else ("Near your 0.095 ft allowable RPP (ALTA/NSPS 2026)" if e <= 0.095 else "Beyond your 0.095 ft allowable RPP (ALTA/NSPS 2026)")}, tol=1e-9))
+    out.append(vec(4, {"distance": "2000 ft", "semi_major": "0.2 ft"}, {"result.allowable.value": 0.17, "result.status": "Beyond your 0.17 ft allowable RPP (ALTA/NSPS 2026)"}, tol=1e-12))
+    out.append(vec(5, {"distance": "1000 ft", "misclosure": "0.05 ft"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/misclosure"}, SPEC + " (a misclosure is refused: RPP comes from the error ellipse)"))
+    return out
+
+
 def main():
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
-    for name, vs in [("survey.gnss.rtk-budget", rtk()), ("survey.gnss.opus-plan", opus()), ("survey.gnss.antenna-height", antenna())]:
+    for name, vs in [("survey.gnss.rtk-budget", rtk()), ("survey.gnss.opus-plan", opus()), ("survey.gnss.antenna-height", antenna()), ("survey.land.alta-rpp", alta())]:
         (dest / f"{name}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 

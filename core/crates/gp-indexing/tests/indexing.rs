@@ -936,3 +936,92 @@ fn chooser_and_fill_invariants() {
         assert!(!overlap.is_empty());
     }
 }
+
+#[test]
+fn cross_index_matches_resolutions_to_a_target_size() {
+    // "Matched sizes": a 150 m target gives geohash precision 7 (about 153 m
+    // at the equator) and H3 resolution 10, whose cell is about 123 m on a
+    // side as an equal-area square.
+    let r = call(
+        "indexing.convert.cross-index",
+        r#"{"lat":0,"lon":0,"target_size":"150 m"}"#,
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    let cells = r["result"]["cells"].as_array().unwrap();
+    let by = |system: &str| {
+        cells
+            .iter()
+            .find(|c| c["system"] == system)
+            .unwrap_or_else(|| panic!("{system} missing in {r}"))
+            .clone()
+    };
+    let h3 = by("H3");
+    assert_eq!(h3["resolution"], "resolution 10", "{h3}");
+    let h3_size = h3["cell_size"]["value"].as_f64().unwrap();
+    assert!((h3_size - 123.0).abs() < 2.0, "H3 cell side {h3_size} m");
+    let gh = by("Geohash");
+    assert_eq!(gh["resolution"], "precision 7", "{gh}");
+    let gh_size = gh["cell_size"]["value"].as_f64().unwrap();
+    assert!((gh_size - 153.0).abs() < 2.0, "geohash cell {gh_size} m");
+    // Every system answers, and every reference decodes back to the point.
+    for system in [
+        "H3",
+        "Geohash",
+        "Plus Code",
+        "Map tile",
+        "Maidenhead",
+        "MGRS",
+    ] {
+        let c = by(system);
+        assert!(
+            !c["reference"].as_str().unwrap().is_empty(),
+            "{system}: {c}"
+        );
+        let size = c["cell_size"]["value"].as_f64().unwrap();
+        assert!(
+            size > 0.0 && size < 5000.0,
+            "{system} cell is {size} m for a 150 m target"
+        );
+    }
+
+    // Cells laid out in degrees or in Web Mercator cover less ground toward
+    // the poles, so at 70 N the same target is met at a coarser zoom, and a
+    // geohash of the same precision is a smaller cell than at the equator.
+    let north = call(
+        "indexing.convert.cross-index",
+        r#"{"lat":70,"lon":10,"target_size":"150 m"}"#,
+    );
+    let field = |v: &serde_json::Value, system: &str, key: &str| {
+        v["result"]["cells"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["system"] == system)
+            .unwrap_or_else(|| panic!("{system} missing"))[key]
+            .clone()
+    };
+    assert_eq!(field(&r, "Map tile", "resolution"), "zoom 18");
+    assert_eq!(field(&north, "Map tile", "resolution"), "zoom 16");
+    let gh_north = field(&north, "Geohash", "cell_size")["value"]
+        .as_f64()
+        .unwrap();
+    assert!(
+        gh_north < gh_size,
+        "a precision 7 geohash at 70 N is {gh_north} m against {gh_size} m at the equator"
+    );
+
+    // MGRS squares are in meters, so they do not change with latitude.
+    assert_eq!(
+        field(&north, "MGRS", "cell_size")["value"],
+        field(&r, "MGRS", "cell_size")["value"]
+    );
+
+    // A target outside what any index offers is refused rather than clamped.
+    for bad in [
+        r#"{"lat":0,"lon":0,"target_size":"1 mm"}"#,
+        r#"{"lat":0,"lon":0,"target_size":"20000 km"}"#,
+    ] {
+        let e = call("indexing.convert.cross-index", bad);
+        assert_eq!(e["ok"], false, "{bad}: {e}");
+    }
+}

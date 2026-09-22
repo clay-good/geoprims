@@ -13,7 +13,7 @@ use gp_geo::point;
 use h3o::{CellIndex, LatLng, Resolution};
 use serde_json::{Map, Value};
 
-const H3_DOCS: Reference = Reference {
+pub const H3_DOCS: Reference = Reference {
     title: "H3: A Hexagonal Hierarchical Geospatial Indexing System (API reference v4)",
     issuer: "Uber Technologies and the H3 contributors",
     year: 2024,

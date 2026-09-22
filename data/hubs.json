@@ -1017,6 +1017,17 @@
         }
       ]
     },
+    "indexing.convert": {
+      "summary": "Moving between indexing systems: one place in each, at resolutions chosen to match a cell size.",
+      "tasks": [
+        {
+          "want": "see one place in every indexing system at a matched cell size",
+          "tools": [
+            "cross-index"
+          ]
+        }
+      ]
+    },
     "indexing.geohash": {
       "summary": "Geohash encoding, decoding, and neighbors.",
       "tasks": [

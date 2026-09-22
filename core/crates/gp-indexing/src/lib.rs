@@ -4,6 +4,7 @@
 
 pub mod codes;
 pub mod cover;
+pub mod cross;
 pub mod h3;
 pub mod h3fill;
 
@@ -16,7 +17,7 @@ use gp_base::tool::{
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::point;
 
-const GEOHASH_REF: Reference = Reference {
+pub const GEOHASH_REF: Reference = Reference {
     title: "Geohash (public domain algorithm)",
     issuer: "Niemeyer, G., geohash.org",
     year: 2008,
@@ -24,7 +25,7 @@ const GEOHASH_REF: Reference = Reference {
     locator: "Base-32 alphabet 0123456789bcdefghjkmnpqrstuvwxyz, longitude bit first",
     url: "https://web.archive.org/web/20080305223755/http://geohash.org/site/tips.html",
 };
-const OSM_TILES: Reference = Reference {
+pub const OSM_TILES: Reference = Reference {
     title: "Slippy map tilenames",
     issuer: "OpenStreetMap Wiki",
     year: 2024,
@@ -40,7 +41,7 @@ const BING_QUADKEY: Reference = Reference {
     locator: "Tile coordinates and quadkeys; ground resolution = cos(lat) × 2π × 6,378,137 / (256 × 2^level)",
     url: "https://learn.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system",
 };
-const OLC_SPEC: Reference = Reference {
+pub const OLC_SPEC: Reference = Reference {
     title: "Open Location Code: Specification",
     issuer: "Google, open-location-code project",
     year: 2023,
@@ -1346,6 +1347,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &h3::EDGES,
     &h3::RESOLUTION_CHOOSER,
     &h3::POLYGON_TO_CELLS,
+    &cross::CROSS_INDEX,
 ];
 
 pub static REGISTRY: Registry = Registry {

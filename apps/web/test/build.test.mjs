@@ -268,3 +268,31 @@ test('the search works with JavaScript off', () => {
   // The catalog reads the query the form sends.
   assert.match(readFileSync(join(web, 'src/lib/filter.js'), 'utf8'), /new URLSearchParams\(location\.search\)\.get\('q'\)/);
 });
+
+test('llms.txt and mcp.json agree with the catalog and the MCP surface, number for number', () => {
+  // add-seo-and-discoverability 3.4: counts come from the build catalog, and the
+  // discovery document matches the golden surface, or the build fails.
+  const llms = readFileSync(join(dist, 'llms.txt'), 'utf8');
+  const { counts } = catalog;
+  assert.ok(
+    llms.includes(`(${counts.stable.endpoints} stable, ${counts.experimental.endpoints} experimental)`),
+    'the stable and experimental split',
+  );
+  assert.equal(counts.stable.endpoints + counts.experimental.endpoints, counts.all.endpoints);
+  assert.equal(catalog.tools.length, counts.all.endpoints, 'the catalog counts every tool id once');
+  // Each domain line: its hub link and its own count.
+  const domains = [...new Set(catalog.tools.map((t) => t.domain))];
+  for (const d of domains) {
+    const n = catalog.tools.filter((t) => t.domain === d).length;
+    assert.match(llms, new RegExp(`\\]\\(https://geoprims\\.com/${d}/\\): ${n} tool ids`), `${d}: ${n} tool ids`);
+  }
+  const listed = [...llms.matchAll(/\]\(https:\/\/geoprims\.com\/([a-z]+)\/\): \d+ tool ids/g)].map((m) => m[1]);
+  assert.deepEqual(listed.sort(), domains.sort(), 'no domain missing or extra');
+  // The discovery document names exactly the surface's tools, resources, and templates.
+  const surface = JSON.parse(readFileSync(join(web, '../../mcp/surface.json'), 'utf8'));
+  const mcp = JSON.parse(readFileSync(join(dist, '.well-known/mcp.json'), 'utf8'));
+  assert.deepEqual(mcp.resources, surface.resources.map((r) => r.uri));
+  assert.deepEqual(mcp.resourceTemplates, surface.resourceTemplates.map((r) => r.uriTemplate));
+  const pkg = JSON.parse(readFileSync(join(web, '../../mcp/package.json'), 'utf8'));
+  assert.equal(mcp.version, pkg.version, 'the server version');
+});

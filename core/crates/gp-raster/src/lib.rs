@@ -1,12 +1,28 @@
 //! Raster: spectral indices and terrain analysis.
 
 pub mod indices;
+pub mod scaling;
 
 use gp_base::tool::Registry;
 
 pub static REGISTRY: Registry = Registry {
     module: "raster",
-    tools: indices::TOOLS,
+    tools: TOOLS,
 };
+
+/// Every raster tool: the scaling step first, then the indices it feeds.
+pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
+    &scaling::SCALE,
+    &indices::NDVI,
+    &indices::NDWI_MCFEETERS,
+    &indices::NDWI_GAO,
+    &indices::MNDWI,
+    &indices::NDBI,
+    &indices::NBR,
+    &indices::EVI,
+    &indices::EVI2,
+    &indices::SAVI,
+    &indices::DNBR,
+];
 
 gp_base::export_module!("raster", REGISTRY);

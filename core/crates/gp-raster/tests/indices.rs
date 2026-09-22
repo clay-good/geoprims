@@ -210,3 +210,73 @@ fn dnbr_classes_follow_key_and_benson() {
     assert_eq!(bad["ok"], false, "{bad}");
     assert_eq!(bad["error"]["field"], "/nbr_pre");
 }
+
+#[test]
+fn sensor_presets_scale_as_their_products_say() {
+    // "Sentinel-2 offset": DN 1,450 at baseline 04.00 is 0.045.
+    let r = call(
+        "raster.scale.reflectance",
+        r#"{"dn":1450,"sensor":"sentinel-2-l2a","band":"B8"}"#,
+    );
+    assert!((num(&r, "result.reflectance") - 0.045).abs() < 1e-15, "{r}");
+    assert_eq!(r["result"]["band_role"], "near-infrared");
+    // Before that baseline the same number means something else, which is the
+    // whole reason the preset carries a baseline.
+    let old = call(
+        "raster.scale.reflectance",
+        r#"{"dn":1450,"sensor":"sentinel-2-l2a","baseline":"before-04.00"}"#,
+    );
+    assert!(
+        (num(&old, "result.reflectance") - 0.145).abs() < 1e-15,
+        "{old}"
+    );
+    // The USGS worked example: 18,639 scales to about 0.313.
+    let l = call(
+        "raster.scale.reflectance",
+        r#"{"dn":18639,"sensor":"landsat-c2-l2","band":"SR_B5"}"#,
+    );
+    assert!(
+        (num(&l, "result.reflectance") - 0.3125725).abs() < 1e-12,
+        "{l}"
+    );
+    // The product metadata governs: given values are used over the usual ones.
+    let meta = call(
+        "raster.scale.reflectance",
+        r#"{"dn":1450,"sensor":"sentinel-2-l2a","offset":-1200,"quantification":20000}"#,
+    );
+    assert!(
+        (num(&meta, "result.reflectance") - 0.0125).abs() < 1e-15,
+        "{meta}"
+    );
+}
+
+#[test]
+fn no_data_and_the_wrong_preset_are_refused() {
+    for input in [
+        r#"{"dn":0,"sensor":"sentinel-2-l2a"}"#,
+        r#"{"dn":0,"sensor":"landsat-c2-l2"}"#,
+    ] {
+        let r = call("raster.scale.reflectance", input);
+        assert_eq!(r["ok"], false, "{r}");
+        assert!(
+            r["error"]["message"].as_str().unwrap().contains("no-data"),
+            "{r}"
+        );
+    }
+    // A band name that belongs to another sensor is a mistake, and the message
+    // lists the bands this preset has.
+    let r = call(
+        "raster.scale.reflectance",
+        r#"{"dn":1450,"sensor":"landsat-c2-l2","band":"B8"}"#,
+    );
+    assert_eq!(r["ok"], false, "{r}");
+    let m = r["error"]["message"].as_str().unwrap();
+    assert!(m.contains("SR_B5") && m.contains("no band B8"), "{m}");
+    // A digital number that does not scale into reflectance is flagged.
+    let odd = call(
+        "raster.scale.reflectance",
+        r#"{"dn":3500,"sensor":"landsat-c2-l2"}"#,
+    );
+    assert_eq!(odd["ok"], true, "{odd}");
+    assert!(warns(&odd, "SUSPECT_SCALING"), "{odd}");
+}

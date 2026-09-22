@@ -88,3 +88,22 @@ for i, (pre, post) in enumerate([(0.61, 0.13), (0.7, 0.05), (0.5, 0.45), (0.4, 0
     name = next((n for edge, n in CLASSES if d < edge), "high severity")
     rows.append(vec(i, {"nbr_pre": pre, "nbr_post": post}, {"result.dnbr": d, "result.severity": name}))
 write("dnbr", rows)
+
+# Sensor scaling, from each product's published relation:
+#   Sentinel-2 L2A: (DN + BOA_ADD_OFFSET) / QUANTIFICATION_VALUE, offset -1000
+#     from processing baseline 04.00 (SentiWiki, Sentinel-2 products)
+#   Landsat Collection 2 Level-2: DN * 0.0000275 - 0.2 (USGS scale factor FAQ)
+rows = []
+i = 0
+for dn in (1450, 2000, 1001, 9000, 1200, 3500):
+    i += 1
+    rows.append(vec(i, {"dn": dn, "sensor": "sentinel-2-l2a"}, {"result.reflectance": (dn - 1000) / 10000}))
+    i += 1
+    rows.append(vec(i, {"dn": dn, "sensor": "sentinel-2-l2a", "baseline": "before-04.00"},
+                    {"result.reflectance": dn / 10000}))
+for dn in (18639, 7273, 43636, 10000, 30000):
+    i += 1
+    rows.append(vec(i, {"dn": dn, "sensor": "landsat-c2-l2"}, {"result.reflectance": dn * 0.0000275 - 0.2}))
+path = OUT / "raster.scale.reflectance.jsonl"
+path.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
+print(f"{path.name}: {len(rows)}")

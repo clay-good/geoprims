@@ -1329,6 +1329,17 @@
         }
       ]
     },
+    "raster.scale": {
+      "summary": "Turning a band's stored digital numbers into surface reflectance, with each sensor's own scaling.",
+      "tasks": [
+        {
+          "want": "scale a band to reflectance before computing an index",
+          "tools": [
+            "reflectance"
+          ]
+        }
+      ]
+    },
     "survey.cogo": {
       "summary": "Coordinate geometry: inverses, forwards, intersections, resection, offset shots, traverses, and areas.",
       "tasks": [

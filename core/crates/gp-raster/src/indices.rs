@@ -890,16 +890,3 @@ pub static DNBR: ToolDef = ToolDef {
     run: run_dnbr,
     ..ToolDef::BLANK
 };
-
-pub static TOOLS: &[&ToolDef] = &[
-    &NDVI,
-    &NDWI_MCFEETERS,
-    &NDWI_GAO,
-    &MNDWI,
-    &NDBI,
-    &NBR,
-    &EVI,
-    &EVI2,
-    &SAVI,
-    &DNBR,
-];

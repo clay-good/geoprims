@@ -96,6 +96,7 @@
     "raster": {
       "title": "Raster",
       "groups": [
+        "scale",
         "index",
         "terrain"
       ]

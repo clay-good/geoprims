@@ -253,13 +253,21 @@ pub static FACADE: ToolDef = ToolDef {
 
 /// How many evenly spread photos cover `span` with `foot`-wide photos at
 /// `overlap`, and the centers' offsets from the span's start.
+/// How many stations, counted before any are made, so a tiny footprint
+/// cannot ask for billions of them.
+fn station_count(span: f64, foot: f64, overlap: f64) -> f64 {
+    if span <= foot {
+        return 1.0;
+    }
+    // A hair under the exact count keeps 2.0000000001 steps at 3 stations.
+    ceil((span - foot) / (foot * (1.0 - overlap)) - 1e-9) + 1.0
+}
+
 fn stations(span: f64, foot: f64, overlap: f64) -> Vec<f64> {
     if span <= foot {
         return vec![span / 2.0];
     }
-    let step = foot * (1.0 - overlap);
-    // A hair under the exact count keeps 2.0000000001 steps at 3 stations.
-    let n = ceil((span - foot) / step - 1e-9) as usize + 1;
+    let n = station_count(span, foot, overlap) as usize;
     (0..n)
         .map(|k| foot / 2.0 + k as f64 * (span - foot) / (n - 1) as f64)
         .collect()
@@ -322,16 +330,19 @@ fn run_facade(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let (w, h) = (sw * standoff / f, sh * standoff / f);
-    let cols = stations(length, w, oh);
-    let rows = stations(top - bottom, h, ov);
-    let total = cols.len() * rows.len();
-    if total > 10_000 {
+    let planned = station_count(length, w, oh) * station_count(top - bottom, h, ov);
+    // NaN (a degenerate footprint) counts as over the limit too.
+    if planned.is_nan() || planned > 10_000.0 {
+        let total = planned;
         return Err(ToolError::new(
             ErrorCode::LimitExceeded,
-            format!("That is {total} photos, over the 10,000 limit. Stand farther off, lower the overlap, or split the facade."),
+            format!("That is {total:.0} photos, over the 10,000 limit. Stand farther off, lower the overlap, or split the facade."),
         )
         .at("/standoff"));
     }
+    let cols = stations(length, w, oh);
+    let rows = stations(top - bottom, h, ov);
+    let total = cols.len() * rows.len();
     // Each station: along the facade, then square to it by the standoff.
     let stn: Vec<(f64, f64, f64)> = cols
         .iter()

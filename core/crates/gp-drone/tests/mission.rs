@@ -389,3 +389,13 @@ fn geojson_and_csv_carry_every_waypoint() {
     assert_eq!(lines[4], "2,40.4406,-80.0005,80,MSL,,,");
     assert_eq!(lines.len(), 6);
 }
+
+#[test]
+fn a_huge_focal_length_is_a_limit_not_a_crash() {
+    // Found by the fuzzer: a 1e9 mm lens asked for billions of photo stations.
+    let r = call(
+        "drone.mission.facade",
+        &json!({"facade":[{"lat":40.4406,"lon":-80.002},{"lat":40.4406,"lon":-80.001411}],"focal_length":"1000000000 mm","sensor_height":"8.8 mm","sensor_width":"13.2 mm","standoff":"30 m","top_height":"25 m"}),
+    );
+    assert_eq!(r["error"]["code"], "LIMIT_EXCEEDED", "{r}");
+}

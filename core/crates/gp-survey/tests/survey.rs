@@ -627,3 +627,56 @@ fn circular_curve_extreme_angles() {
         );
     }
 }
+
+#[test]
+fn slope_reduction_scenarios() {
+    // 500 m at 85°00'00": HD ≈ 498.097 m and VD ≈ 43.578 m.
+    let r = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"500 m","zenith":"85°00'00\""}"#,
+    );
+    assert_eq!(r["display"]["horizontal_distance"], "498.097 m", "{r}");
+    assert_eq!(r["display"]["vertical_difference"], "43.578 m", "{r}");
+    // Two faces: FL 85°00'10", FR 274°59'40" give a mean of 85°00'15" and an index error of -5".
+    let r = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"500 m","zenith":"85°00'10\"","zenith_face_right":"274°59'40\""}"#,
+    );
+    assert_eq!(r["result"]["mean_zenith_dms"], "85°00'15.0\"", "{r}");
+    assert_eq!(r["display"]["index_error"], "-5″", "{r}");
+    // A face-right reading entered as the zenith is caught, and says why.
+    let r = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"500 m","zenith":"274°59'40\""}"#,
+    );
+    assert!(
+        r["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("face right"),
+        "{r}"
+    );
+}
+
+#[test]
+fn curvature_refraction_scenario() {
+    // 1 km: 0.0675 m with k = 0.14 and 0.0683 m with k = 0.13, each labeled with its k.
+    let a = call(
+        "survey.reduction.curvature-refraction",
+        r#"{"distance":"1000 m","refraction":0.14}"#,
+    );
+    let b = call(
+        "survey.reduction.curvature-refraction",
+        r#"{"distance":"1000 m","refraction":0.13}"#,
+    );
+    assert!(
+        (a["result"]["correction"]["value"].as_f64().unwrap() - 0.0675).abs() < 5e-5,
+        "{a}"
+    );
+    assert!(
+        (b["result"]["correction"]["value"].as_f64().unwrap() - 0.0683).abs() < 5e-5,
+        "{b}"
+    );
+    assert_eq!(a["result"]["coefficient_label"], "0.0675 m/km² (k = 0.14)");
+    assert_eq!(b["result"]["coefficient_label"], "0.0683 m/km² (k = 0.13)");
+}

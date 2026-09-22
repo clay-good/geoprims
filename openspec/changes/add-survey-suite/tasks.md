@@ -11,8 +11,8 @@
 
 ## 2. Instrument reductions
 
-- [ ] 2.1 Implement slope reduction and two-face means; verify the 500 m and two-face scenarios
-- [ ] 2.2 Implement curvature and refraction with labeled coefficients; verify the 1 km scenario
+- [x] 2.1 Implement slope reduction and two-face means; verify the 500 m and two-face scenarios (`survey.reduction.slope`: HD, VD, and elevation difference from a slope distance and a zenith or vertical angle in degrees or DMS, the two-face mean and index error, a face-right reading entered as the zenith caught by name, and curvature and refraction added beyond a threshold; 10 golden vectors and the two scenarios in `core/crates/gp-survey/tests/survey.rs`: 498.097 m and 43.578 m; 85°00'15" and -5")
+- [x] 2.2 Implement curvature and refraction with labeled coefficients; verify the 1 km scenario (`survey.reduction.curvature-refraction`: (1 − k)·D²/2R with k (default 0.13) and R shown, the curvature and refraction parts, and the coefficient labeled with its k; 1 km gives 0.0675 m at k = 0.14 and 0.0683 m at k = 0.13; 6 golden vectors)
 - [ ] 2.3 Implement EDM atmospheric and prism corrections; verify the ppm scenario and a manufacturer-formula fixture
 - [x] 2.4 Implement elevation factor, combined factor, and grid/ground conversions with the orthometric guard; verify the combined-factor and guard scenarios
 - [ ] 2.5 Implement level runs, arithmetic check, closure, and adjustment; verify the arithmetic-check scenario and a textbook loop

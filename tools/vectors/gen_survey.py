@@ -356,6 +356,52 @@ LAND_SRC = "Independent Python arithmetic on the BLM Manual unit definitions and
 LAND_VER = "BLM Manual of Surveying Instructions (2009)"
 
 
+def slope():
+    R = 6371000.0
+    out = []
+    # The spec scenario: 500 m at 85°00'00".
+    cases = [("500 m", "85°00'00\"", 500.0), ("250 ft", "92°30'00\"", 250.0), ("1,234.567 m", "88°15'30\"", 1234.567), ("80 m", "90", 80.0), ("300.25 ft", "45°", 300.25)]
+    for i, (sd, z, v) in enumerate(cases, 1):
+        zz = z.replace("\"", "").replace("'", ":").replace("°", ":").rstrip(":").split(":")
+        zd = sum(float(x) / 60 ** k for k, x in enumerate(zz))
+        exp = {"result.horizontal_distance.value": v * math.sin(math.radians(zd)), "result.vertical_difference.value": v * math.cos(math.radians(zd))}
+        src, ver = (SPEC, "2026") if i == 1 else (SRC, VER)
+        out.append(vec(i, {"slope_distance": sd, "zenith": z}, exp, src, ver))
+    # The two-face scenario: FL 85°00'10", FR 274°59'40" -> mean 85°00'15", index error -5".
+    fl, fr = 85 + 10 / 3600, 274 + 59 / 60 + 40 / 3600
+    mean, idx = (fl + 360 - fr) / 2, (fl + fr - 360) / 2
+    out.append(vec(6, {"slope_distance": "500 m", "zenith": "85°00'10\"", "zenith_face_right": "274°59'40\""},
+                   {"result.mean_zenith.value": mean, "result.index_error.value": idx * 3600, "result.mean_zenith_dms": "85°00'15.0\"",
+                    "result.horizontal_distance.value": 500 * math.sin(math.radians(mean))}, SPEC, "2026", rel=1e-11))
+    # Elevation difference with instrument and target heights, then with curvature and refraction.
+    hd, vd = 800 * math.sin(math.radians(89.5)), 800 * math.cos(math.radians(89.5))
+    out.append(vec(7, {"slope_distance": "800 m", "zenith": "89°30'", "instrument_height": "1.55 m", "target_height": "1.8 m"},
+                   {"result.elevation_difference.value": 1.55 + vd - 1.8}))
+    cr = (1 - 0.13) * hd * hd / (2 * R)
+    out.append(vec(8, {"slope_distance": "800 m", "zenith": "89°30'", "instrument_height": "1.55 m", "target_height": "1.8 m", "curvature_beyond": "150 m"},
+                   {"result.elevation_difference.value": 1.55 + vd - 1.8 + cr, "result.curvature_refraction.value": cr}))
+    out.append(vec(9, {"slope_distance": "100 m", "vertical_angle": "5°"}, {"result.vertical_difference.value": 100 * math.cos(math.radians(85))}))
+    out.append(vec(10, {"slope_distance": "100 m", "zenith": "274°59'40\""}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
+
+
+def curvature():
+    R = 6371000.0
+    out = []
+    # The spec scenario: 1 km with k = 0.14 is 0.0675 m; with k = 0.13, 0.0683 m.
+    for i, (d, dm, k) in enumerate([("1 km", 1000.0, 0.14), ("1 km", 1000.0, 0.13), ("150 m", 150.0, 0.13), ("5 km", 5000.0, 0.0), ("2 km", 2000.0, 0.2)], 1):
+        c = (1 - k) * dm * dm / (2 * R)
+        exp = {"result.coefficient": (1 - k) * 1e6 / (2 * R)}
+        if d.endswith("km"):
+            exp["result.correction.value"] = c / 1000
+        else:
+            exp["result.correction.value"] = c
+        src, ver = (SPEC, "2026") if i <= 2 else (SRC, VER)
+        out.append(vec(i, {"distance": d, "refraction": k}, exp, src, ver))
+    out.append(vec(6, {"distance": "500 ft"}, {"result.correction.value": (1 - 0.13) * (500 * FT) ** 2 / (2 * R) / FT}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -453,6 +499,7 @@ def main():
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),
         "survey.reduction.combined-factor": combined(),
+        "survey.reduction.slope": slope(), "survey.reduction.curvature-refraction": curvature(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

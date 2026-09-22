@@ -4,6 +4,7 @@
 
 pub mod direction;
 pub mod land;
+pub mod reduction;
 
 use gp_base::ErrorCode;
 use gp_base::display;
@@ -41,7 +42,7 @@ const STEM: Reference = Reference {
     url: "https://geodesy.noaa.gov/library/pdfs/NOAA_Manual_NOS_NGS_0005.pdf",
 };
 
-fn unit(q: QT, s: &str) -> &'static Unit {
+pub(crate) fn unit(q: QT, s: &str) -> &'static Unit {
     units::by_symbol(q, s).expect("registered unit")
 }
 
@@ -52,7 +53,7 @@ fn deg(v: f64) -> Q {
     }
 }
 
-const fn len(name: &'static str, title: &'static str, help: &'static str) -> Field {
+pub(crate) const fn len(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
         title,
@@ -64,7 +65,7 @@ const fn len(name: &'static str, title: &'static str, help: &'static str) -> Fie
     )
 }
 
-const fn len_out(name: &'static str, title: &'static str, help: &'static str) -> Field {
+pub(crate) const fn len_out(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
         title,
@@ -2242,6 +2243,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &PRISMOIDAL,
     &SHRINK_SWELL,
     &COMBINED_FACTOR,
+    &reduction::SLOPE,
+    &reduction::CURVATURE,
     &land::LEGACY_UNITS,
     &land::DEED_PARSE,
     &land::DEED_PLOT,

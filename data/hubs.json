@@ -959,8 +959,20 @@
       }
     },
     "survey.reduction": {
-      "summary": "Between grid and ground.",
+      "summary": "Slope reduction, curvature and refraction, and scale between grid and ground.",
       "tasks": [
+        {
+          "want": "reduce a slope distance to horizontal and vertical",
+          "tools": [
+            "slope"
+          ]
+        },
+        {
+          "want": "correct a long sight for curvature and refraction",
+          "tools": [
+            "curvature-refraction"
+          ]
+        },
         {
           "want": "scale distances between grid and ground",
           "tools": [

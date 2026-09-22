@@ -835,7 +835,8 @@
       "definition": "An angle written as whole degrees, minutes (1/60 degree), and seconds (1/3600 degree), like 40°26'46\".",
       "source": "iso6709",
       "relatedTools": [
-        "geodesy.parse.coordinates"
+        "geodesy.parse.coordinates",
+        "survey.reduction.slope"
       ]
     },
     {
@@ -984,6 +985,26 @@
       "source": "rinex",
       "relatedTools": [
         "time.scale.julian-date"
+      ]
+    },
+    {
+      "id": "hi",
+      "term": "HI",
+      "expansion": "height of instrument",
+      "definition": "The height of the instrument's horizontal axis above the station mark, measured with a tape at setup and added when reducing a sight to an elevation difference.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.slope"
+      ]
+    },
+    {
+      "id": "hr",
+      "term": "HR",
+      "expansion": "height of rod (target height)",
+      "definition": "The height of the prism or target above the point sighted, subtracted when reducing a sight to an elevation difference.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.slope"
       ]
     }
   ],

@@ -728,3 +728,19 @@ table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color:
 .rule-label.proposed { color: var(--caution); background: color-mix(in srgb, var(--caution) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--caution) 35%, var(--line)); }
 .rule-date { font-size: 0.9em; color: var(--muted); }
 .rule-date a { color: inherit; }
+
+/* Learning guides: the home list, and a journey's steps. */
+.journey-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+.journey-list li { position: relative; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.journey-list a { font-weight: 600; color: var(--text); text-decoration: none; }
+.journey-list a::after { content: ''; position: absolute; inset: 0; }
+.journey-list li:hover { border-color: var(--accent); }
+.journey-list .blurb { margin: 0.3rem 0 0.4rem; color: var(--muted); font-size: 0.9rem; }
+.journey-list .count { font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.guide-meta { color: var(--muted); }
+.journey { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 1rem; }
+.journey-step h2 { margin: 0.2rem 0 0.4rem; font-size: 1.15rem; }
+.journey-step .step-num, .expect-label { font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.expect-label { display: block; }
+.journey-step .carried { color: var(--accent); font-size: 0.9rem; }
+.hub-journeys { margin-block-start: 2.5rem; }

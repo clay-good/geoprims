@@ -1,0 +1,685 @@
+{
+  "note": "The practitioner journeys of plan-launch-and-value-proof (design L3), published as learning guides at /journeys/<slug>/ (web/tool-docs). An input is a value, or {\"from\": [step, \"output\"]} for an earlier step's answer (steps count from 0), with \"columns\" to carry only the columns of a list the next tool takes. The site build runs every chain through the core and fails if a step does.",
+  "journeys": [
+    {
+      "slug": "vfr-preflight",
+      "title": "VFR preflight",
+      "audience": "Pilots",
+      "summary": "From the latest METAR to pressure altitude, density altitude, and the crosswind on your runway.",
+      "steps": [
+        {
+          "tool": "aviation.weather.metar-decode",
+          "why": "Read the weather: wind, temperature, dew point, and altimeter setting.",
+          "input": {
+            "report": "KDEN 181753Z 30015G25KT 10SM FEW080 SCT200 30/08 A2980 RMK AO2 SLP052 T03000083"
+          }
+        },
+        {
+          "tool": "aviation.altimetry.pressure-altitude",
+          "why": "Field elevation and the METAR's altimeter setting give pressure altitude.",
+          "input": {
+            "elevation": "5434 ft",
+            "altimeter": {
+              "from": [
+                0,
+                "altimeter"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "aviation.altimetry.density-altitude",
+          "why": "Add the temperature and dew point: the altitude the airplane will perform at.",
+          "input": {
+            "elevation": "5434 ft",
+            "altimeter": {
+              "from": [
+                0,
+                "altimeter"
+              ]
+            },
+            "temperature": {
+              "from": [
+                0,
+                "temperature"
+              ]
+            },
+            "dew_point": {
+              "from": [
+                0,
+                "dew_point"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "aviation.wind.runway-components",
+          "why": "Split the wind on runway 25. A METAR wind is true and runway numbers are magnetic, so the variation is applied.",
+          "input": {
+            "runway": "25",
+            "wind_direction": {
+              "from": [
+                0,
+                "wind_direction"
+              ]
+            },
+            "wind_speed": {
+              "from": [
+                0,
+                "wind_speed"
+              ]
+            },
+            "gust": {
+              "from": [
+                0,
+                "wind_gust"
+              ]
+            },
+            "wind_reference": "true",
+            "variation": 8,
+            "max_crosswind": "15 kt"
+          }
+        }
+      ]
+    },
+    {
+      "slug": "vfr-cross-country",
+      "title": "VFR cross-country",
+      "audience": "Pilots",
+      "summary": "Distance and true course between two airports, the heading to fly into the wind, the magnetic heading, and the time en route.",
+      "steps": [
+        {
+          "tool": "navigation.geodesic.inverse",
+          "why": "Distance and true course from Centennial (KAPA) to Colorado Springs (KCOS).",
+          "input": {
+            "lat1": 39.5701,
+            "lon1": -104.8493,
+            "lat2": 38.8058,
+            "lon2": -104.7009
+          }
+        },
+        {
+          "tool": "aviation.wind.heading-groundspeed",
+          "why": "Correct the true course for the forecast wind at cruise.",
+          "input": {
+            "course": {
+              "from": [
+                0,
+                "azimuth1"
+              ]
+            },
+            "tas": "110 kt",
+            "wind_direction": "270 deg",
+            "wind_speed": "15 kt"
+          }
+        },
+        {
+          "tool": "geodesy.magnetic.true-to-magnetic",
+          "why": "Turn the true heading into the magnetic heading you will hold.",
+          "input": {
+            "bearing": {
+              "from": [
+                1,
+                "heading"
+              ]
+            },
+            "direction": "true-to-magnetic",
+            "lat": 39.57,
+            "lon": -104.85,
+            "date": "2026-09-21"
+          }
+        },
+        {
+          "tool": "navigation.route.time-speed-distance",
+          "why": "Distance over groundspeed gives the time en route.",
+          "input": {
+            "distance": {
+              "from": [
+                0,
+                "distance"
+              ]
+            },
+            "speed": {
+              "from": [
+                1,
+                "groundspeed"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "slug": "ifr-approach-brief",
+      "title": "IFR approach brief",
+      "audience": "Instrument pilots",
+      "summary": "The weather, the holding speed, the entry, the wind-corrected hold, and the visual descent point.",
+      "steps": [
+        {
+          "tool": "aviation.weather.metar-decode",
+          "why": "Read the weather at the field.",
+          "input": {
+            "report": "KBJC 211653Z 34012KT 3SM BR OVC008 12/10 A3002"
+          }
+        },
+        {
+          "tool": "aviation.ifr.hold-speed-limit",
+          "why": "The most you may fly in the hold at 9,000 ft.",
+          "input": {
+            "altitude": "9000 ft"
+          }
+        },
+        {
+          "tool": "aviation.ifr.hold-entry",
+          "why": "Arriving on a 150° heading for a hold with a 300° inbound course, right turns.",
+          "input": {
+            "inbound_course": "300 deg",
+            "heading": "150 deg",
+            "turns": "right"
+          }
+        },
+        {
+          "tool": "geodesy.magnetic.true-to-magnetic",
+          "why": "The METAR wind is true; holding courses are magnetic.",
+          "input": {
+            "bearing": {
+              "from": [
+                0,
+                "wind_direction"
+              ]
+            },
+            "direction": "true-to-magnetic",
+            "lat": 39.909,
+            "lon": -105.117,
+            "date": "2026-09-21"
+          }
+        },
+        {
+          "tool": "aviation.ifr.hold-wind-timing",
+          "why": "Headings and timing that keep the hold's shape in that wind.",
+          "input": {
+            "inbound_course": "300 deg",
+            "turns": "right",
+            "tas": "120 kt",
+            "wind_direction": {
+              "from": [
+                3,
+                "result"
+              ]
+            },
+            "wind_speed": {
+              "from": [
+                0,
+                "wind_speed"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "aviation.performance.vdp",
+          "why": "Where to leave the minimum descent altitude for a 3° path.",
+          "input": {
+            "height_above_touchdown": "440 ft",
+            "groundspeed": "90 kt"
+          }
+        }
+      ]
+    },
+    {
+      "slug": "drone-mapping-day",
+      "title": "Drone mapping day",
+      "audience": "Drone operators",
+      "summary": "From the resolution the client wants to the height, overlap, blur check, image count, and the hours of good light.",
+      "steps": [
+        {
+          "tool": "drone.photogrammetry.altitude-for-gsd",
+          "why": "The height that gives a 2 cm ground sampling distance with this camera.",
+          "input": {
+            "target_gsd": "2 cm",
+            "sensor_width": "13.2 mm",
+            "focal_length": "8.8 mm",
+            "image_width": 5472,
+            "sensor_height": "8.8 mm",
+            "image_height": 3648
+          }
+        },
+        {
+          "tool": "drone.ops.part107-altitude",
+          "why": "Check that height against the Part 107 ceiling of 400 ft above ground.",
+          "input": {}
+        },
+        {
+          "tool": "drone.photogrammetry.gsd",
+          "why": "The GSD at that height, along and across the flight line.",
+          "input": {
+            "height": {
+              "from": [
+                0,
+                "height"
+              ]
+            },
+            "sensor_width": "13.2 mm",
+            "focal_length": "8.8 mm",
+            "image_width": 5472,
+            "sensor_height": "8.8 mm",
+            "image_height": 3648
+          }
+        },
+        {
+          "tool": "drone.photogrammetry.trigger",
+          "why": "75% front and 65% side overlap at 8 m/s set the photo interval and line spacing.",
+          "input": {
+            "height": {
+              "from": [
+                0,
+                "height"
+              ]
+            },
+            "groundspeed": "8 m/s",
+            "front_overlap": 75,
+            "side_overlap": 65,
+            "sensor_width": "13.2 mm",
+            "focal_length": "8.8 mm",
+            "image_width": 5472,
+            "sensor_height": "8.8 mm",
+            "image_height": 3648
+          }
+        },
+        {
+          "tool": "drone.photogrammetry.motion-blur",
+          "why": "At 8 m/s and 1/1000 s, is blur under half a pixel?",
+          "input": {
+            "groundspeed": "8 m/s",
+            "exposure": "0.001 s",
+            "gsd": {
+              "from": [
+                2,
+                "gsd"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "drone.photogrammetry.image-count",
+          "why": "How many photos and how long the block takes.",
+          "input": {
+            "area": [
+              {
+                "lat": 39.74,
+                "lon": -105.0
+              },
+              {
+                "lat": 39.74,
+                "lon": -104.993
+              },
+              {
+                "lat": 39.7445,
+                "lon": -104.993
+              },
+              {
+                "lat": 39.7445,
+                "lon": -105.0
+              }
+            ],
+            "line_spacing": {
+              "from": [
+                3,
+                "line_spacing"
+              ]
+            },
+            "photo_spacing": {
+              "from": [
+                3,
+                "trigger_distance"
+              ]
+            },
+            "groundspeed": "8 m/s"
+          }
+        },
+        {
+          "tool": "time.sun.mapping-window",
+          "why": "The hours when the sun is high enough for even light.",
+          "input": {
+            "lat": 39.742,
+            "lon": -104.997,
+            "date": "2026-06-21",
+            "offset": "-06:00"
+          }
+        }
+      ]
+    },
+    {
+      "slug": "gnss-to-state-plane",
+      "title": "GNSS control to OPUS to state plane",
+      "audience": "Surveyors",
+      "summary": "An OPUS position in ITRF2020 to NAD83(2011), then state plane coordinates, the orthometric height, and the combined factor for ground distances.",
+      "steps": [
+        {
+          "tool": "geodesy.datum.nad83",
+          "why": "OPUS reports ITRF2020 at the observation epoch; bring the point to NAD83(2011).",
+          "input": {
+            "from": "ITRF2020",
+            "to": "NAD83(2011)",
+            "epoch": "2026.7",
+            "lat": 39.7392,
+            "lon": -104.9903,
+            "height": 1590
+          }
+        },
+        {
+          "tool": "geodesy.spcs.zone-lookup",
+          "why": "Which state plane zone the point is in.",
+          "input": {
+            "lat": {
+              "from": [
+                0,
+                "lat"
+              ]
+            },
+            "lon": {
+              "from": [
+                0,
+                "lon"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "geodesy.spcs.spcs83-forward",
+          "why": "Northing and easting in Colorado Central (0502), in the zone's legal unit.",
+          "input": {
+            "lat": {
+              "from": [
+                0,
+                "lat"
+              ]
+            },
+            "lon": {
+              "from": [
+                0,
+                "lon"
+              ]
+            },
+            "zone": "0502"
+          }
+        },
+        {
+          "tool": "geodesy.height.convert",
+          "why": "The ellipsoid height as a height above the geoid (EGM96 here; US work usually uses GEOID18).",
+          "input": {
+            "lat": {
+              "from": [
+                0,
+                "lat"
+              ]
+            },
+            "lon": {
+              "from": [
+                0,
+                "lon"
+              ]
+            },
+            "height": {
+              "from": [
+                0,
+                "height"
+              ]
+            },
+            "from": "ellipsoidal"
+          }
+        },
+        {
+          "tool": "survey.reduction.combined-factor",
+          "why": "Grid scale and elevation factor together: how 1,000 ft on the ground reads on the grid.",
+          "input": {
+            "grid_scale": {
+              "from": [
+                2,
+                "scale_factor"
+              ]
+            },
+            "ellipsoid_height": {
+              "from": [
+                0,
+                "height"
+              ]
+            },
+            "ground_distance": "1000 ftUS"
+          }
+        }
+      ]
+    },
+    {
+      "slug": "boundary-retracement",
+      "title": "Boundary retracement from a deed",
+      "audience": "Surveyors",
+      "summary": "Read the calls out of a deed, plot them and check closure, then rotate the bearings to the basis you found in the field.",
+      "steps": [
+        {
+          "tool": "survey.land.deed-parse",
+          "why": "Pull the bearings and distances out of the description.",
+          "input": {
+            "text": "Beginning at an iron pin at the northeast corner of Lot 7; thence S 00°15'00\" E 150.00 feet to an iron pin; thence South 89 degrees 45 minutes West 100.00 feet; thence N 0-15-00 W 150.00 feet; thence N 89°45'00\" E 100.00 feet to the point of beginning."
+          }
+        },
+        {
+          "tool": "survey.land.deed-plot",
+          "why": "Plot the calls, check how well they close, and find the area.",
+          "input": {
+            "calls": {
+              "from": [
+                0,
+                "calls"
+              ],
+              "columns": [
+                "kind",
+                "direction",
+                "distance",
+                "radius",
+                "arc_length",
+                "delta",
+                "chord_direction",
+                "chord",
+                "turn",
+                "tangent"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "survey.land.basis-rotation",
+          "why": "The record's east line reads S 00°15'00\" E; you found it at S 00°17'40\" E. Rotate every call by the difference.",
+          "input": {
+            "record_bearing": "S 00°15'00\" E",
+            "new_bearing": "S 00°17'40\" E",
+            "directions": {
+              "from": [
+                0,
+                "calls"
+              ],
+              "columns": [
+                "direction"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "slug": "lidar-bid",
+      "title": "Lidar bid",
+      "audience": "Drone operators and surveyors",
+      "summary": "The size of the site, the flight lines and flight time, the batteries it takes, and the accuracy you can state.",
+      "steps": [
+        {
+          "tool": "geometry.area.polygon",
+          "why": "The area and perimeter of the site.",
+          "input": {
+            "polygon": [
+              {
+                "lat": 39.74,
+                "lon": -105.0
+              },
+              {
+                "lat": 39.74,
+                "lon": -104.993
+              },
+              {
+                "lat": 39.7445,
+                "lon": -104.993
+              },
+              {
+                "lat": 39.7445,
+                "lon": -105.0
+              }
+            ]
+          }
+        },
+        {
+          "tool": "drone.mission.survey-grid",
+          "why": "Flight lines 60 m apart at 80 m and 8 m/s: path length and flight time.",
+          "input": {
+            "area": [
+              {
+                "lat": 39.74,
+                "lon": -105.0
+              },
+              {
+                "lat": 39.74,
+                "lon": -104.993
+              },
+              {
+                "lat": 39.7445,
+                "lon": -104.993
+              },
+              {
+                "lat": 39.7445,
+                "lon": -105.0
+              }
+            ],
+            "line_spacing": "60 m",
+            "photo_spacing": "60 m",
+            "groundspeed": "8 m/s",
+            "height": "80 m"
+          }
+        },
+        {
+          "tool": "drone.power.battery-energy",
+          "why": "The energy in one battery pack.",
+          "input": {
+            "capacity": "5935 mAh",
+            "voltage": "52.8 V"
+          }
+        },
+        {
+          "tool": "drone.power.endurance",
+          "why": "Flight time per pack at a power draw of 900 W, keeping 20% in reserve.",
+          "input": {
+            "energy": {
+              "from": [
+                2,
+                "energy"
+              ]
+            },
+            "power": "900 W",
+            "usable": 80
+          }
+        },
+        {
+          "tool": "drone.photogrammetry.asprs-accuracy",
+          "why": "The accuracy class your checkpoints support, to the ASPRS standard.",
+          "input": {
+            "checkpoint_rmse": "2.0 cm",
+            "checkpoints": 30,
+            "rmse_z": "4.0 cm"
+          }
+        }
+      ]
+    },
+    {
+      "slug": "index-to-area",
+      "title": "Developer: index to area",
+      "audience": "Developers",
+      "summary": "Choose an H3 resolution for the cell size you want, index a point, inspect its cell and neighbors, and fill an area.",
+      "steps": [
+        {
+          "tool": "indexing.h3.resolution-chooser",
+          "why": "The resolution whose cells are about 0.1 km².",
+          "input": {
+            "target_area": "0.1 km2"
+          }
+        },
+        {
+          "tool": "indexing.h3.lat-lng-to-cell",
+          "why": "The cell a point falls in at that resolution.",
+          "input": {
+            "lat": 40.446111,
+            "lon": -79.982222,
+            "resolution": {
+              "from": [
+                0,
+                "resolution"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "indexing.h3.cell-info",
+          "why": "The cell's center, area, and boundary.",
+          "input": {
+            "cell": {
+              "from": [
+                1,
+                "cell"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "indexing.h3.grid-disk",
+          "why": "The cell and its ring of neighbors.",
+          "input": {
+            "cell": {
+              "from": [
+                1,
+                "cell"
+              ]
+            },
+            "k": 1
+          }
+        },
+        {
+          "tool": "indexing.h3.polygon-to-cells",
+          "why": "Every cell whose center falls in a block of downtown Pittsburgh.",
+          "input": {
+            "points": [
+              {
+                "lat": 40.4406,
+                "lon": -80.002
+              },
+              {
+                "lat": 40.4406,
+                "lon": -79.99
+              },
+              {
+                "lat": 40.448,
+                "lon": -79.99
+              },
+              {
+                "lat": 40.448,
+                "lon": -80.002
+              }
+            ],
+            "resolution": {
+              "from": [
+                0,
+                "resolution"
+              ]
+            },
+            "containment": "center"
+          }
+        }
+      ]
+    }
+  ]
+}

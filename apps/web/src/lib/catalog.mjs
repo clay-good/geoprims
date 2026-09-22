@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../../../packages/runtime/src/node.mjs';
+import { runJourney } from './journeys.mjs';
 import { readSignoffs, reviewSentence } from '../../../../tools/trust/signoffs.mjs';
 import { entriesFor, KINDS, readChangelog } from '../../../../tools/trust/changelog.mjs';
 import { verificationReport } from '../../../../tools/trust/verification.mjs';
@@ -287,3 +288,32 @@ export function hubFor(domain, group) {
     guide: hub.guide ? { title: hub.guide.title, steps: hub.guide.steps.map((s) => ({ text: s.text, tool: s.tool ? find(s.tool) : null })) } : null,
   };
 }
+
+// Learning guides (web/tool-docs): each journey in data/journeys.json run
+// through the core at build time, every step with the permalink that opens its
+// tool holding those inputs and naming the step it came from. A step that
+// fails stops the build (runJourney throws).
+export const JOURNEYS = JSON.parse(readFileSync(join(root, 'data/journeys.json'), 'utf8')).journeys;
+let guides;
+export function journeyGuides() {
+  guides ??= (async () => {
+    const link = await host.module('link');
+    const invoke = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
+    const out = [];
+    for (const j of JOURNEYS) {
+      const steps = await runJourney(j, invoke);
+      for (const s of steps) {
+        const came = s.carried.length ? steps[s.carried[0].from].tool : undefined;
+        const enc = JSON.parse(await link.callString('gp_link_encode', JSON.stringify({ state: { i: s.input, ...(came ? { c: came } : {}) } })));
+        if (!enc.ok) throw new Error(`${j.slug}: ${s.tool}: ${enc.error.message}`);
+        s.href = `${route(s.tool)}#${enc.result.fragment}`;
+        s.title = catalog.tools.find((t) => t.id === s.tool).title;
+      }
+      out.push({ ...j, steps, route: `/journeys/${j.slug}/` });
+    }
+    return out;
+  })();
+  return guides;
+}
+/** The journeys a tool appears in, for hub and home links. */
+export const journeysWith = (ids) => JOURNEYS.filter((j) => j.steps.some((s) => ids.includes(s.tool)));

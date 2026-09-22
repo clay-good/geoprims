@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { catalog, DOMAIN_BLURBS, DOMAIN_TITLES, exampleResult, route, tool as find } from '../lib/catalog.mjs';
+import { catalog, DOMAIN_BLURBS, JOURNEYS, DOMAIN_TITLES, exampleResult, route, tool as find } from '../lib/catalog.mjs';
 import { icon } from '../lib/icons.mjs';
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 const ops = catalog.counts.all.operations;
@@ -94,6 +94,17 @@ const panel = await Promise.all(
             <span class="gauge-title">{p.title}</span>
           </a>
         </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="journeys" aria-labelledby="journeys-title">
+    <div class="section-head">
+      <h2 id="journeys-title">Follow a job end to end</h2>
+    </div>
+    <ul class="journey-list">
+      {JOURNEYS.map((j) => (
+        <li><a href={`/journeys/${j.slug}/`}>{j.title}</a><p class="blurb">{j.summary}</p><span class="count">{j.steps.length} steps</span></li>
       ))}
     </ul>
   </section>

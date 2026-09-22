@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "8d8e66fb6f8f02ef",
-    "lastmod": "2026-09-21"
+    "hash": "ade379fdb3896246",
+    "lastmod": "2026-09-22"
   },
   "/accuracy/": {
     "hash": "8422a436e969ce80",
@@ -20,7 +20,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/altimetry/": {
-    "hash": "8a196da4b07a9e1c",
+    "hash": "82972a936301654e",
     "lastmod": "2026-09-22"
   },
   "/aviation/altimetry/density-altitude/": {
@@ -40,7 +40,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/ifr/": {
-    "hash": "a718e5db74f44615",
+    "hash": "e64cfe66c37e0dd7",
     "lastmod": "2026-09-22"
   },
   "/aviation/loading/": {
@@ -52,7 +52,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/performance/": {
-    "hash": "5d70ffccde6279ee",
+    "hash": "777f5ed6b354c536",
     "lastmod": "2026-09-22"
   },
   "/aviation/performance/top-of-descent/": {
@@ -64,7 +64,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/weather/": {
-    "hash": "83b28e14e04b512b",
+    "hash": "3b1aed0066b49169",
     "lastmod": "2026-09-22"
   },
   "/aviation/weather/fb-winds-decode/": {
@@ -80,7 +80,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/": {
-    "hash": "ac86c9c7240725ce",
+    "hash": "ce83da2b6ed716ef",
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/heading-groundspeed/": {
@@ -104,15 +104,15 @@
     "lastmod": "2026-09-22"
   },
   "/drone/mission/": {
-    "hash": "fc73cd26306167cd",
+    "hash": "87a01083670bdaa2",
     "lastmod": "2026-09-22"
   },
   "/drone/ops/": {
-    "hash": "6332139b8acacf5c",
+    "hash": "573817818879bc71",
     "lastmod": "2026-09-22"
   },
   "/drone/photogrammetry/": {
-    "hash": "80f7d0373c58f92a",
+    "hash": "b0b33bd97bf85dbe",
     "lastmod": "2026-09-22"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
@@ -124,7 +124,7 @@
     "lastmod": "2026-09-22"
   },
   "/drone/power/": {
-    "hash": "ca1dd90cbebf23d6",
+    "hash": "f44e5e21b077bf05",
     "lastmod": "2026-09-22"
   },
   "/drone/power/battery-energy/": {
@@ -144,7 +144,7 @@
     "lastmod": "2026-09-22"
   },
   "/geodesy/datum/": {
-    "hash": "8b44817091bb0e7e",
+    "hash": "ca006f65087b9459",
     "lastmod": "2026-09-22"
   },
   "/geodesy/ellipsoid/": {
@@ -224,11 +224,11 @@
     "lastmod": "2026-09-22"
   },
   "/geodesy/height/": {
-    "hash": "b4dc4100d5a8a03a",
+    "hash": "0d56c8a1459f75fe",
     "lastmod": "2026-09-22"
   },
   "/geodesy/magnetic/": {
-    "hash": "d9e19b597f8dcf63",
+    "hash": "d4d8493e21080253",
     "lastmod": "2026-09-22"
   },
   "/geodesy/magnetic/declination/": {
@@ -244,7 +244,7 @@
     "lastmod": "2026-09-22"
   },
   "/geodesy/spcs/": {
-    "hash": "85df66829b31d4b3",
+    "hash": "9a9d518a48cd740a",
     "lastmod": "2026-09-22"
   },
   "/geodesy/spcs/spcs83-forward/": {
@@ -276,7 +276,7 @@
     "lastmod": "2026-09-22"
   },
   "/geometry/area/": {
-    "hash": "af05cb4c783c63fd",
+    "hash": "ee7538249d7527da",
     "lastmod": "2026-09-22"
   },
   "/indexing/": {
@@ -300,7 +300,7 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/": {
-    "hash": "5995fe1645ebb771",
+    "hash": "206601d5f1898aea",
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/cell-info/": {
@@ -383,6 +383,38 @@
     "hash": "46e77d765caf904c",
     "lastmod": "2026-09-22"
   },
+  "/journeys/boundary-retracement/": {
+    "hash": "609668a66b5b5960",
+    "lastmod": "2026-09-22"
+  },
+  "/journeys/drone-mapping-day/": {
+    "hash": "8b88f816770c22f8",
+    "lastmod": "2026-09-22"
+  },
+  "/journeys/gnss-to-state-plane/": {
+    "hash": "f0b3e94a99749f9a",
+    "lastmod": "2026-09-22"
+  },
+  "/journeys/ifr-approach-brief/": {
+    "hash": "11bb5587166386dc",
+    "lastmod": "2026-09-22"
+  },
+  "/journeys/index-to-area/": {
+    "hash": "b142f94550d5b542",
+    "lastmod": "2026-09-22"
+  },
+  "/journeys/lidar-bid/": {
+    "hash": "572f8162539959e9",
+    "lastmod": "2026-09-22"
+  },
+  "/journeys/vfr-cross-country/": {
+    "hash": "3802d33db561539b",
+    "lastmod": "2026-09-22"
+  },
+  "/journeys/vfr-preflight/": {
+    "hash": "069406baab8e1a90",
+    "lastmod": "2026-09-22"
+  },
   "/known-issues/": {
     "hash": "ec03a40c42e7b3ab",
     "lastmod": "2026-09-19"
@@ -400,7 +432,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/": {
-    "hash": "c231960d2a49a11c",
+    "hash": "7a1e53112d431194",
     "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/direct/": {
@@ -436,7 +468,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/route/": {
-    "hash": "a81f7ca9c6bb531d",
+    "hash": "147683a987c9fdf0",
     "lastmod": "2026-09-22"
   },
   "/navigation/route/cross-track/": {
@@ -492,7 +524,7 @@
     "lastmod": "2026-09-22"
   },
   "/survey/land/": {
-    "hash": "40873f95c8ae77eb",
+    "hash": "0b2119b881a03dc9",
     "lastmod": "2026-09-22"
   },
   "/survey/land/deed-plot/": {
@@ -500,7 +532,7 @@
     "lastmod": "2026-09-22"
   },
   "/survey/reduction/": {
-    "hash": "a031fee47add017d",
+    "hash": "2ae72322a37297dd",
     "lastmod": "2026-09-22"
   },
   "/survey/reduction/combined-factor/": {
@@ -520,7 +552,7 @@
     "lastmod": "2026-09-22"
   },
   "/time/sun/": {
-    "hash": "6facc9119050603b",
+    "hash": "a34d98e4943031f8",
     "lastmod": "2026-09-22"
   },
   "/time/sun/aviation-nights/": {

@@ -3,7 +3,7 @@ import Base from '../../../layouts/Base.astro';
 import PageHeader from '../../../components/PageHeader.astro';
 import ListFilter from '../../../components/ListFilter.astro';
 import ToolCards from '../../../components/ToolCards.astro';
-import { breadcrumbs, catalog, collection, DOMAIN_TITLES, hubFor, route } from '../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, collection, DOMAIN_TITLES, hubFor, journeysWith, route } from '../../../lib/catalog.mjs';
 export function getStaticPaths() {
   const seen = new Set();
   return catalog.tools
@@ -15,6 +15,7 @@ const tools = catalog.tools.filter((t) => t.domain === domain && t.group === gro
 const name = group.replaceAll('-', ' ');
 const domainTitle = DOMAIN_TITLES[domain] ?? domain;
 const hub = hubFor(domain, group);
+const guides = journeysWith(tools.map((t) => t.id));
 const jsonld = [collection(name, route(`${domain}.${group}`), tools.filter((t) => t.composedOf.length === 0)), breadcrumbs([['geoprims', '/'], [domainTitle, route(domain)], [name, route(`${domain}.${group}`)]])];
 ---
 <Base title={`${name} · ${domainTitle} · geoprims`} description={hub.summary || `geoprims ${name} tools.`} canonical={route(`${domain}.${group}`)} jsonld={jsonld}>
@@ -32,6 +33,12 @@ const jsonld = [collection(name, route(`${domain}.${group}`), tools.filter((t) =
       <ol>
         {hub.guide.steps.map((s) => <li>{s.text}{s.tool && <> <a href={route(s.tool.id)}>{s.tool.title}</a></>}</li>)}
       </ol>
+    </section>
+  )}
+  {guides.length > 0 && (
+    <section class="hub-journeys" aria-labelledby="journeys-title">
+      <h2 id="journeys-title">Guides that use these tools</h2>
+      <ul>{guides.map((j) => <li><a href={`/journeys/${j.slug}/`}>{j.title}</a>: {j.summary}</li>)}</ul>
     </section>
   )}
 </Base>

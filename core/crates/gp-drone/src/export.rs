@@ -5,7 +5,7 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 
 use crate::unit;
@@ -103,11 +103,13 @@ pub static EXPORT: ToolDef = ToolDef {
     keywords: &["export", "KML", "GeoJSON", "CSV", "waypoints", "altitude mode", "relativeToGround", "mission file"],
     inputs: &[
         Field::new("waypoints", "Waypoints", "In flight order, one per line: lat, lon, height, like 40.4406, -80.002, 80", Kind::List { items: WAYPOINT, min: 1, max: 10_000 }).required().core(),
-        Field::new("height_reference", "Heights are", "agl (above the ground below), takeoff (above the takeoff point), msl (above sea level), or hae (above the ellipsoid)", Kind::Choice(&["agl", "takeoff", "msl", "hae"])).required().core(),
+        Field::new("height_reference", "Heights are", "agl (above the ground below), takeoff (above the takeoff point), msl (above sea level), hae (above the ellipsoid), or terrain (above sea level, following a surface model such as GLO-30)", Kind::Choice(&["agl", "takeoff", "msl", "hae", "terrain"])).required().core(),
         Field::new("format", "Format", "kml (the default), geojson, or csv", Kind::Choice(&["kml", "geojson", "csv"])).core(),
         Field::new("takeoff_elevation", "Takeoff elevation", "Above sea level, like 312 m; needed to write takeoff heights to KML", Kind::Quantity { q: QT::Length, unit: "m" }),
         Field::new("geoid_height", "Geoid height", "N at the site, like -33.9 m (from the geoid tool); needed to write HAE to KML", Kind::Quantity { q: QT::Length, unit: "m" }),
         Field::new("name", "Mission name", "Like North field, shown in the file", Kind::Text { max_len: 80 }),
+        Field::new("surface_model_acknowledged", "Surface-model notice", "yes: terrain-following heights come from a surface model that includes trees and buildings inconsistently", Kind::Choice(&["yes"])),
+        Field::new("clearance_margin", "Clearance margin", "Added to every terrain-following waypoint, like 15 m (the default)", Kind::Quantity { q: QT::Length, unit: "m" }),
     ],
     outputs: &[
         Field::new("waypoint_count", "Waypoints", "Written to the file", Kind::Number { min: 0.0, max: 1e6 }).precision(Precision::Decimals(0)),
@@ -116,6 +118,7 @@ pub static EXPORT: ToolDef = ToolDef {
         Field::new("altitude_mode", "Heights in the file", "KML altitude mode, or the reference as labeled", Kind::Text { max_len: 60 }),
         Field::new("media_type", "Media type", "For the download", Kind::Text { max_len: 60 }),
         Field::new("file", "File", "The file's text", Kind::Text { max_len: 50_000_000 }),
+        Field::new("clearance_margin", "Clearance margin added", "To every terrain-following waypoint", Kind::Quantity { q: QT::Length, unit: "m" }).precision(Precision::Decimals(1)).optional(),
     ],
     errors: &[],
     warnings: &["EXPERIMENTAL_TOOL"],
@@ -218,12 +221,36 @@ fn run_export(ctx: &mut Ctx) -> Result<Json, ToolError> {
         });
     }
     let reference = ctx.choice("height_reference")?.expect("required");
+    // Terrain following: blocked until the surface-model notice is acknowledged,
+    // and a clearance margin (15 m unless set) rides on every waypoint.
+    let margin = if reference == "terrain" {
+        if ctx.choice("surface_model_acknowledged")? != Some("yes") {
+            return Err(ToolError::invalid(
+                "/surface_model_acknowledged",
+                "Export is blocked until you acknowledge that terrain-following heights come from a surface model (like GLO-30) that includes trees and buildings inconsistently: set the surface-model notice to yes, and check the clearance margin (15 m unless you set one).",
+            ));
+        }
+        let mg = ctx.quantity("clearance_margin")?.map_or(15.0, |q| q.to(m));
+        if mg.is_nan() || !(0.0..=500.0).contains(&mg) {
+            return Err(ToolError::invalid(
+                "/clearance_margin",
+                "Give a clearance margin from 0 to 500 m.",
+            ));
+        }
+        for w in &mut wps {
+            w.h += mg;
+        }
+        Some(mg)
+    } else {
+        None
+    };
     let format = ctx.choice("format")?.unwrap_or("kml");
     let name = ctx.text("name")?.unwrap_or_else(|| "Mission".to_owned());
     let label = match reference {
         "agl" => "AGL",
         "takeoff" => "above takeoff",
         "msl" => "MSL",
+        "terrain" => "terrain-following MSL",
         _ => "HAE",
     };
     let header = format!(
@@ -253,6 +280,7 @@ fn run_export(ctx: &mut Ctx) -> Result<Json, ToolError> {
         "agl" => "above the ground",
         "takeoff" => "above the takeoff point",
         "msl" => "above sea level",
+        "terrain" => "above sea level, following a surface model, plus the clearance margin",
         _ => "above the ellipsoid",
     };
     let heights = match (format, reference) {
@@ -265,7 +293,7 @@ fn run_export(ctx: &mut Ctx) -> Result<Json, ToolError> {
             // KML's absolute is above sea level, so other references convert first.
             let (mode, offset) = match reference {
                 "agl" => ("relativeToGround", 0.0),
-                "msl" => ("absolute", 0.0),
+                "msl" | "terrain" => ("absolute", 0.0),
                 "takeoff" => {
                     let Some(e) = ctx.quantity("takeoff_elevation")?.map(|q| q.to(m)) else {
                         return Err(ToolError::invalid(
@@ -403,7 +431,7 @@ fn run_export(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     r(w.lat, 7),
                     r(w.lon, 7),
                     r(w.h, 2),
-                    label,
+                    csv_cell(label),
                     w.heading.map_or(String::new(), |h| r(h, 1).to_string()),
                     w.pitch.map_or(String::new(), |p| r(p, 1).to_string()),
                     csv_cell(&w.action)
@@ -417,12 +445,19 @@ fn run_export(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )
         }
     };
-    Ok(Json::obj([
+    let mut out = vec![
         ("waypoint_count", Json::Num(wps.len() as f64)),
         ("filename", Json::str(format!("{stem}.{ext}"))),
         ("heights", Json::str(heights)),
         ("altitude_mode", Json::str(mode)),
         ("media_type", Json::str(media)),
         ("file", Json::str(file)),
-    ]))
+    ];
+    if let Some(mg) = margin {
+        out.push((
+            "clearance_margin",
+            ctx.out("clearance_margin", Q { value: mg, unit: m }),
+        ));
+    }
+    Ok(Json::obj(out))
 }

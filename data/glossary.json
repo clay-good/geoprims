@@ -1381,6 +1381,13 @@
         "aviation.altimetry.isa-temperature"
       ],
       "reason": "A flight level written as an example"
+    },
+    {
+      "token": "GLO",
+      "tools": [
+        "drone.mission.export"
+      ],
+      "reason": "Part of the product name Copernicus DEM GLO-30"
     }
   ]
 }

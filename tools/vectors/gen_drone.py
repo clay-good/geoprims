@@ -533,6 +533,16 @@ def export_vectors():
     # Without the takeoff elevation or the geoid height, KML cannot say where the heights are.
     for ref, field in [("takeoff", "takeoff_elevation"), ("hae", "geoid_height")]:
         out.append(fvec(len(out) + 1, {"waypoints": wps, "height_reference": ref}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": f"/{field}"}, SPEC, "2026"))
+    # Terrain following: blocked until the surface-model notice is acknowledged; then the margin rides on every waypoint.
+    out.append(fvec(len(out) + 1, {"waypoints": wps, "height_reference": "terrain"},
+                    {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/surface_model_acknowledged"}, SPEC + " (terrain following requires acknowledgment)", "2026"))
+    for margin, expect in [(None, 15.0), ("25 m", 25.0)]:
+        inp = {"waypoints": wps, "height_reference": "terrain", "surface_model_acknowledged": "yes", "format": "kml", "name": "North field"}
+        if margin:
+            inp["clearance_margin"] = margin
+        out.append(fvec(len(out) + 1, inp, {"result.altitude_mode": "absolute", "result.clearance_margin.value": expect, "result.waypoint_count": 3}, SPEC, "2026"))
+    out.append(fvec(len(out) + 1, {"waypoints": wps, "height_reference": "terrain", "surface_model_acknowledged": "yes", "format": "csv"},
+                    {"result.altitude_mode": "terrain-following MSL in the reference column", "result.clearance_margin.value": 15.0}, SPEC, "2026"))
     return out
 
 

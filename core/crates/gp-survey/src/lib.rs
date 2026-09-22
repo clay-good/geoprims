@@ -4,6 +4,7 @@
 
 pub mod direction;
 pub mod grade;
+pub mod intersect;
 pub mod land;
 pub mod leveling;
 pub mod reduction;
@@ -2251,6 +2252,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &reduction::STADIA,
     &reduction::INACCESSIBLE,
     &reduction::OFFSET,
+    &intersect::INTERSECTION,
+    &intersect::RESECTION,
     &leveling::LEVEL_RUN,
     &land::LEGACY_UNITS,
     &land::DEED_PARSE,

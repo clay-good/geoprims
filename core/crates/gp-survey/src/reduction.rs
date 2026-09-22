@@ -5,7 +5,7 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Bare, Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_geo::dms::{self, Axis, Style};
 use gp_geo::point::plain_angle;
@@ -425,6 +425,12 @@ pub static CURVATURE: ToolDef = ToolDef {
     }],
     sentence: "Curvature and refraction lower a level sight by {correction} at this distance, a coefficient of {coefficient_label}.",
     limits: &[("batchRows", 10_000)],
+    slots: &[
+        Slot::new("distance", &["distance", "sight", "d"]),
+        Slot::new("refraction", &["k", "refraction", "coefficient"])
+            .range(0.0, 1.0)
+            .bare(Bare::Decimal),
+    ],
     run: run_curvature,
     ..ToolDef::BLANK
 };

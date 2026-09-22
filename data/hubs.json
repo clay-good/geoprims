@@ -853,7 +853,7 @@
       ]
     },
     "survey.cogo": {
-      "summary": "Coordinate geometry: inverses, forwards, offset shots, traverses, and areas.",
+      "summary": "Coordinate geometry: inverses, forwards, intersections, resection, offset shots, traverses, and areas.",
       "tasks": [
         {
           "want": "find bearing and distance between two points, or a point from them",
@@ -866,6 +866,18 @@
           "want": "locate a point the prism could not sit on",
           "tools": [
             "offset-shot"
+          ]
+        },
+        {
+          "want": "find where two bearings or distances meet",
+          "tools": [
+            "intersection"
+          ]
+        },
+        {
+          "want": "locate my station from three control points",
+          "tools": [
+            "resection"
           ]
         },
         {

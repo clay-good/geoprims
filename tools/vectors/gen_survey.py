@@ -542,6 +542,53 @@ def level_run():
     return out
 
 
+def intersection():
+    out = []
+    # The two-solution scenario: circles of 300 ft and 250 ft about points 400 ft apart on an east-west line.
+    a, b, r1, r2 = (1000.0, 1000.0), (1000.0, 1400.0), 300.0, 250.0
+    x = (r1 * r1 - r2 * r2 + 400 * 400) / 800
+    h = math.sqrt(r1 * r1 - x * x)
+    # Facing east from the first point, north is on the left.
+    out.append(vec(1, {"northing1": "1000 ft", "easting1": "1000 ft", "distance1": "300 ft", "northing2": "1000 ft", "easting2": "1400 ft", "distance2": "250 ft"},
+                   {"result.count": 2.0, "result.solutions.0.label": "left of the baseline", "result.solutions.0.northing.value": 1000 + h, "result.solutions.0.easting.value": 1000 + x,
+                    "result.solutions.1.label": "right of the baseline", "result.solutions.1.northing.value": 1000 - h}, SPEC, "2026"))
+    # Bearing-bearing: from (0,0) on N 45° E and from (0,100) on N 45° W meet at (50, 50).
+    out.append(vec(2, {"northing1": "0 m", "easting1": "0 m", "direction1": "N 45°00'00\" E", "northing2": "0 m", "easting2": "100 m", "direction2": "N 45°00'00\" W"},
+                   {"result.count": 1.0, "result.solutions.0.northing.value": 50.0, "result.solutions.0.easting.value": 50.0}))
+    # Bearing-distance: due north from (0,0), a 50 m circle about (40, 30) meets it at N = 0 and N = 80.
+    out.append(vec(3, {"northing1": "0 m", "easting1": "0 m", "direction1": "0", "northing2": "40 m", "easting2": "30 m", "distance2": "50 m"},
+                   {"result.count": 2.0, "result.solutions.0.northing.value": 0.0, "result.solutions.1.northing.value": 80.0}))
+    # Tangent circles meet once.
+    out.append(vec(4, {"northing1": "0 ft", "easting1": "0 ft", "distance1": "60 ft", "northing2": "0 ft", "easting2": "100 ft", "distance2": "40 ft"},
+                   {"result.count": 1.0, "result.solutions.0.easting.value": 60.0}))
+    out.append(vec(5, {"northing1": "0 ft", "easting1": "0 ft", "direction1": "N 10 E", "northing2": "0 ft", "easting2": "100 ft", "direction2": "N 10 E"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(6, {"northing1": "0 ft", "easting1": "0 ft", "distance1": "10 ft", "northing2": "0 ft", "easting2": "100 ft", "distance2": "10 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
+def resection():
+    out = []
+    az = lambda p, q: math.degrees(math.atan2(q[1] - p[1], q[0] - p[0])) % 360
+    A, B, C = (1000.0, 1000.0), (1500.0, 1400.0), (1100.0, 1800.0)
+    CTRL = [{"northing": f"{p[0]:g} ft", "easting": f"{p[1]:g} ft"} for p in (A, B, C)]
+    # Stations built first, then the angles they would turn: outside, inside, and far off the triangle.
+    for i, P in enumerate([(500.0, 1350.0), (1200.0, 1400.0), (300.0, 600.0), (2200.0, 1300.0)], 1):
+        ab, bc = (az(P, B) - az(P, A)) % 360, (az(P, C) - az(P, B)) % 360
+        out.append(vec(i, {"control": CTRL, "angle_ab": f"{ab!r} deg", "angle_bc": f"{bc!r} deg"},
+                       {"result.northing.value": P[0], "result.easting.value": P[1]}, rel=1e-8))
+    # The danger-circle scenario: a station just off the circle through A, B, and C.
+    ax, ay, bx, by, cx, cy = *A, *B, *C
+    d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
+    ox = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d
+    oy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d
+    R = math.hypot(ax - ox, ay - oy)
+    P = (ox - 1.01 * R, oy)
+    ab, bc = (az(P, B) - az(P, A)) % 360, (az(P, C) - az(P, B)) % 360
+    out.append(vec(5, {"control": CTRL, "angle_ab": f"{ab!r} deg", "angle_bc": f"{bc!r} deg"},
+                   {"meta.warnings.*.code": "RESECTION_UNSTABLE"}, SPEC, "2026"))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -643,6 +690,7 @@ def main():
         "survey.reduction.stadia": stadia(), "survey.reduction.inaccessible-height": inaccessible(),
         "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
         "survey.reduction.level-run": level_run(),
+        "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

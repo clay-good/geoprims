@@ -265,3 +265,37 @@ test('the standard-atmosphere chart marks the point on the profile it draws', as
     assert.match(d.desc, /Standard atmosphere/);
   }
 });
+
+test('the altimetry drawing puts true altitude below indicated in cold air', async () => {
+  // add-aviation-suite 3.7 fixture.
+  for (const args of [
+    { indicated: '8000 ft', isa_deviation: '-20 degC' },
+    { indicated: '8000 ft', isa_deviation: '25 degC' },
+    { indicated: '2500 ft', isa_deviation: '-30 degC', station_elevation: '500 ft' },
+  ]) {
+    const r = JSON.parse(await host.invoke('aviation.altimetry.true-altitude', JSON.stringify(args)));
+    const d = diagram('aviation.altimetry.true-altitude', args, r);
+    const drawn = lines(d.markup).filter((l) => l.cls !== 'dg-casing');
+    const indicated = drawn.find((l) => l.cls.includes('dg-dash'));
+    const truth = drawn.find((l) => l.cls === 'dg-accent' && l.x1 === 150);
+    const gap = drawn.find((l) => l.cls === 'dg-accent' && l.x1 === 170);
+    const err = r.result.error.value;
+    // Colder than standard, the aircraft is lower than the altimeter reads, so
+    // the true line is drawn below the indicated one (y grows downward).
+    assert.equal(truth.y1 > indicated.y1, err < 0, `${args.isa_deviation}: true line on the wrong side`);
+    // The measured gap spans exactly the two, and both carry their values.
+    assert.equal(gap.y1, indicated.y1);
+    assert.equal(gap.y2, truth.y1);
+    assert.ok(Math.abs(gap.y2 - gap.y1) > 20, 'the gap is legible, not a hairline');
+    assert.ok(d.markup.includes(r.display.error), 'the gap is labeled with the error');
+    assert.ok(d.markup.includes(r.display.true_altitude), 'the true altitude is labeled');
+    // The window is a zoom, so the drawing says the axis is cut rather than
+    // letting the reader scale the height off the ground line.
+    assert.match(d.markup, /axis cut/);
+    // The altimeter face reads the indicated altitude: its hundreds hand.
+    const face = [...d.markup.matchAll(/<line class="dg-accent" x1="62(?:\.0)?" y1="120(?:\.0)?" x2="([-\d.]+)" y2="([-\d.]+)"/g)][0];
+    const hundreds = (Math.atan2(Number(face[1]) - 62, 120 - Number(face[2])) * 180) / Math.PI;
+    const want = ((Number.parseFloat(args.indicated) / 1000) % 1) * 360;
+    assert.ok(Math.abs(((hundreds - want + 540) % 360) - 180) < 0.5, `hundreds hand at ${hundreds}, altitude wants ${want}`);
+  }
+});

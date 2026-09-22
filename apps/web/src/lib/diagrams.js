@@ -27,6 +27,7 @@ const val = (result, k) => {
   return typeof v === 'number' ? v : v?.value;
 };
 const disp = (result, k) => result.display?.[k] ?? '';
+const unitOf = (result, k) => result.result?.[k]?.unit ?? '';
 
 /** Compass vector: bearing (deg true) and length → SVG dx, dy (y down). */
 const vec = (bearing, len) => [len * Math.sin(bearing * R), -len * Math.cos(bearing * R)];
@@ -536,6 +537,65 @@ function cgEnvelope(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** A three-pointer altimeter face reading `alt`: the hundreds hand, the thousands hand, and the ten-thousands pointer. */
+function altimeterFace(alt, unit) {
+  const [cx, cy, r] = [62, 120, 50];
+  const hand = (turns, len, cls, head) => {
+    const a = turns * 360 * R;
+    return head
+      ? `<path class="${cls}" d="M${f1(cx + len * Math.sin(a))} ${f1(cy - len * Math.cos(a))}L${f1(cx + 6 * Math.cos(a))} ${f1(cy + 6 * Math.sin(a))}L${f1(cx - 6 * Math.cos(a))} ${f1(cy - 6 * Math.sin(a))}z"/>`
+      : line(cls, [cx, cy], [cx + len * Math.sin(a), cy - len * Math.cos(a)]);
+  };
+  const ticks = [];
+  for (let i = 0; i < 10; i += 1) {
+    const a = (i / 10) * 360 * R;
+    ticks.push(line('dg-muted', [cx + r * Math.sin(a), cy - r * Math.cos(a)], [cx + (r - 7) * Math.sin(a), cy - (r - 7) * Math.cos(a)]));
+    ticks.push(text('dg-muted-text', cx + (r - 18) * Math.sin(a), cy - (r - 18) * Math.cos(a) + 4, String(i), 'middle'));
+  }
+  return [
+    `<circle class="dg-grid" cx="${cx}" cy="${cy}" r="${r}" fill="none"/>`,
+    ...ticks,
+    hand(alt / 100000, r - 26, 'dg-muted', true), // ten thousands
+    hand(alt / 10000, r - 22, 'dg-muted'), // thousands
+    hand(alt / 1000, r - 8, 'dg-accent'), // hundreds
+    `<circle class="dg-dot-now" cx="${cx}" cy="${cy}" r="3.5"/>`,
+    text('dg-muted-text', cx, cy + 68, `Altimeter, ${unit}`, 'middle'),
+  ];
+}
+
+/** Altimetry: the indicated altitude against the true altitude above the setting's station. */
+function altimetry(args, result) {
+  const num = (v) => (typeof v === 'number' ? v : Number.parseFloat(String(v ?? '')));
+  const truth = val(result, 'true_altitude');
+  const err = val(result, 'error');
+  const ind = truth - err;
+  const base = Number.isFinite(num(args.station_elevation)) ? num(args.station_elevation) : 0;
+  if (![truth, err, ind].every(Number.isFinite) || truth <= base) return null;
+  // Drawn to scale over a window around the two altitudes, since the gap
+  // between them is a small part of the height: a few hundred feet in eight
+  // thousand. The window leaves the ground out, so the axis is cut and the
+  // cut is drawn, and nothing reads as a full column from the station up.
+  const pad = Math.max(Math.abs(err) * 0.8, (Math.max(ind, truth) - base) * 0.02);
+  const [lo, hi] = [Math.min(ind, truth) - pad, Math.max(ind, truth) + pad];
+  const Y = (h) => 186 - ((h - lo) / (hi - lo)) * 126;
+  const [ti, tt] = [Y(ind), Y(truth)];
+  const body = [
+    ...altimeterFace(ind, unitOf(result, 'true_altitude')),
+    line('dg-grid', [130, 196], [300, 196]),
+    `<path class="dg-grid" d="M130 192L160 192L168 186L184 198L192 192L300 192"/>`,
+    text('dg-muted-text', 130, 212, `Station${base ? ` ${args.station_elevation}` : ' (sea level)'}, axis cut`),
+    `<line class="dg-muted dg-dash" x1="150" y1="${f1(ti)}" x2="230" y2="${f1(ti)}"/>`,
+    text('dg-muted-text', 234, ti + 4, `Indicated ${args.indicated ?? ''}`),
+    line('dg-accent', [150, tt], [230, tt]),
+    text('dg-label', 234, tt + 4, `True ${disp(result, 'true_altitude')}`),
+    // The gap between the two, measured and named.
+    arrow(170, ti, 170, tt, 'dg-accent', `${disp(result, 'error')}`, 0.5, err < 0 ? -1 : 1),
+    text('dg-muted-text', 12, 24, `ISA deviation ${args.isa_deviation ?? ''}: true altitude ${err < 0 ? 'below' : 'above'} indicated`),
+  ].join('');
+  const title = `Altimetry: an indicated ${args.indicated} in air ${args.isa_deviation} from standard is a true ${disp(result, 'true_altitude')}, ${disp(result, 'error')} against the altimeter.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -550,6 +610,7 @@ const DIAGRAMS = {
   'aviation.airspeed.tas-to-cas': airspeedGauge,
   'aviation.atmosphere.isa': isaProfile,
   'aviation.loading.weight-balance': cgEnvelope,
+  'aviation.altimetry.true-altitude': altimetry,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

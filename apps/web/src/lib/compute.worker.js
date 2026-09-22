@@ -5,6 +5,7 @@ import { loadModule } from '../../../../packages/runtime/src/module.mjs';
 import { detectValues } from './detect.js';
 import { prefillActions } from './prefill.js';
 import { readCoordinate } from './coordinate.mjs';
+import { readFile } from './import.mjs';
 import { NO_WASM } from './messages.js';
 
 // Data assets come from the same origin, whole files only, checked against the
@@ -113,6 +114,9 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
     else if (method === 'search') out = await searchWithPrefill(args[0]);
     else if (method === 'detect') out = await detect(args[0]);
     else if (method === 'readCoordinate') out = await readAnyCoordinate(args[0]);
+    // A file a reader brought is parsed here, off the page, and nothing it
+    // points at is fetched (web/io-formats "Safe parsing").
+    else if (method === 'readFile') out = JSON.stringify(readFile(args[0], args[1]));
     else out = await (await get(args[0])).callString(args[1], args[2]);
     self.postMessage({ seq, out });
   } catch (e) {

@@ -64,3 +64,5 @@ export const search = (request) => call('search', [JSON.stringify(request)], 'se
 export const detect = (query) => call('detect', [query], 'detect');
 /** Reads a pasted coordinate in any notation; only the latest read resolves. */
 export const readCoordinate = (text) => call('readCoordinate', [text], 'coordinate');
+/** Parses a file's text in the worker: GeoJSON, KML, GPX, WKT, CSV, or TSV. */
+export const readFile = (name, text) => call('readFile', [name, text]);

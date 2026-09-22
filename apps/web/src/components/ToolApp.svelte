@@ -12,6 +12,8 @@
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
+  import { checkSize } from '../lib/import.mjs';
+  import { importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
   import { exportText, fileName, FORMATS as EXPORTS, pointsOf } from '../lib/export.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
@@ -318,6 +320,28 @@
     exportOpen = false;
   }
 
+  // Bringing a file into a list of points (web/io-formats): a KML boundary, a
+  // GPX track, a GeoJSON polygon, a CSV of coordinates.
+  let importNote = $state({});
+  const takesPoints = (schema) => isList(schema) && ['lat', 'lon'].every((c) => c in (schema.items?.properties ?? {}));
+
+  async function importInto(name, file) {
+    if (!file || !compute) return;
+    const schema = tool.inputs.properties[name];
+    const tooBig = checkSize(file.size);
+    if (tooBig) {
+      importNote = { ...importNote, [name]: { ok: false, text: tooBig } };
+      return;
+    }
+    const parsed = await compute.readFile(file.name, await file.text());
+    const filled = rowsFor(schema, parsed);
+    importNote = { ...importNote, [name]: { ok: filled.ok, text: importReport(file.name, parsed.format, parsed, filled) } };
+    if (filled.ok) {
+      values[name] = rowsText(schema, filled.rows);
+      edited();
+    }
+  }
+
   /** The catalog, fetched once and only when a reader asks to send a value. */
   let tools = null;
   const allTools = async () => (tools ??= (await (await fetch('/catalog/v1.json')).json()).tools);
@@ -552,7 +576,23 @@
           {#each schema.enum as option}<option value={option}>{option}</option>{/each}
         </select>
       {:else if isList(schema)}
-        <textarea id={`field-${name}`} aria-invalid={badField === name} aria-describedby={badField === name ? 'field-error' : undefined} bind:value={values[name]} oninput={edited} rows="6" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+        <textarea
+          id={`field-${name}`}
+          aria-invalid={badField === name}
+          aria-describedby={badField === name ? 'field-error' : undefined}
+          bind:value={values[name]}
+          oninput={edited}
+          rows="6"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          ondragover={(e) => takesPoints(schema) && e.preventDefault()}
+          ondrop={(e) => {
+            if (!takesPoints(schema) || !e.dataTransfer?.files?.length) return;
+            e.preventDefault();
+            importInto(name, e.dataTransfer.files[0]);
+          }}
+        ></textarea>
       {:else}
         <span class="entry">
           <input
@@ -584,6 +624,18 @@
       {#if badField === name}<span class="field-error" id="field-error">{result.error.message}</span>{/if}
       <span class="help">{readable(schema.description ?? '')}{isList(schema) ? ` · one per line: ${columns(schema).map((c) => schema.items.properties[c].title.toLowerCase()).join(', ')}` : ''}{schema['x-unit'] && schema['x-unit'] !== '1' ? ` · plain numbers mean ${friendly(schema['x-unit'])}` : ''}</span>
     </label>
+    {#if takesPoints(schema)}
+      <div class="import-block">
+          <span class="import-row">
+            <label class="import-button">
+              <input type="file" class="sr-only" accept=".geojson,.json,.kml,.gpx,.csv,.tsv,.wkt,.txt" onchange={(e) => importInto(name, e.currentTarget.files?.[0])} />
+              Import a file
+            </label>
+            <span class="import-hint">KML, GPX, GeoJSON, CSV, or WKT — or drop it on the box. Read on this device.</span>
+          </span>
+          {#if importNote[name]}<span class="import-note" class:bad={!importNote[name].ok} role="status">{importNote[name].text}</span>{/if}
+      </div>
+    {/if}
   {/snippet}
   {#if pair}
     <div class="coordinate-field">

@@ -676,3 +676,13 @@ footer.site .version { font: 0.78rem var(--mono); }
   .actions button { flex: 1 1 auto; }
   .answer .value { font-size: clamp(2.3rem, 11vw, 3rem); }
 }
+
+/* Importing a file into a list of points. */
+.fields > .import-block { grid-column: 1 / -1; margin-block-start: -0.4rem; }
+.import-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.75rem; margin-block-start: 0.5rem; }
+label.import-button { display: inline-flex; align-items: center; min-block-size: var(--target); padding: 0 0.9rem; border: 1.5px dashed color-mix(in srgb, var(--data) 55%, var(--line)); border-radius: var(--radius); color: var(--data); font: 650 0.88rem var(--sans); letter-spacing: 0; text-transform: none; cursor: pointer; }
+label.import-button:hover { border-style: solid; background: color-mix(in srgb, var(--data) 7%, var(--surface)); }
+label.import-button:focus-within { outline: 3px solid color-mix(in srgb, var(--accent) 22%, transparent); }
+.import-hint { font: 400 0.78rem var(--sans); color: var(--muted); }
+.import-note { display: block; margin-block-start: 0.4rem; font: 500 0.82rem var(--sans); color: var(--data); }
+.import-note.bad { color: var(--danger); }

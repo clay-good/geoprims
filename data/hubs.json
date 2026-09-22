@@ -681,6 +681,17 @@
         }
       ]
     },
+    "geometry.distance": {
+      "summary": "How far apart lines and tracks are.",
+      "tasks": [
+        {
+          "want": "compare two GPS tracks",
+          "tools": [
+            "tracks"
+          ]
+        }
+      ]
+    },
     "geometry.overlay": {
       "summary": "Overlaps, unions, and differences of polygons.",
       "tasks": [

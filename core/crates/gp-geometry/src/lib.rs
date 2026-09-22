@@ -2,6 +2,7 @@
 //! (add-navigation-and-geometry, geometry/computational).
 
 pub mod buffer;
+pub mod distance;
 pub mod envelope;
 pub mod overlay;
 pub mod predicate;
@@ -356,6 +357,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &predicate::POINT_IN_POLYGON,
     &validity::MAKE_VALID,
     &overlay::BOOLEAN,
+    &distance::TRACKS,
 ];
 
 pub static REGISTRY: Registry = Registry {

@@ -385,6 +385,26 @@
       "editionCheck": true
     },
     {
+      "id": "eiter-mannila",
+      "name": "Computing Discrete Fréchet Distance (Eiter and Mannila)",
+      "issuer": "Technische Universität Wien, Christian Doppler Laboratory for Expert Systems",
+      "currentEdition": "Technical Report CD-TR 94/64",
+      "currentReleaseDate": "1994-04-25",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Checked on 2026-09-22 at the authors' archive: the PDF's title page reads CD-TR 94/64, April 25, 1994. A fixed technical report, not revised.",
+      "freeAccessUrl": "https://www.kr.tuwien.ac.at/staff/eiter/et-archive/files/cdtr9464.pdf",
+      "matchTerms": [
+        "Computing Discrete Fréchet Distance"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "epsg",
       "name": "EPSG Geodetic Parameter Dataset",
       "issuer": "IOGP",

@@ -18,7 +18,7 @@
 
 ## 3. Gates
 
-- [ ] 3.1 Write the feedback-loop gate (one button per tool, lazy import, limits agree across client, Worker, and D1, SW bypass, CSP entries); verify it fails on each targeted bad fixture
+- [x] 3.1 Write the feedback-loop gate (one button per tool, lazy import, limits agree across client, Worker, and D1, SW bypass, CSP entries); verify it fails on each targeted bad fixture (`tools/trust/feedback.mjs` checks all five on the real build, and `tools/trust/feedback.test.mjs` shows each failing on its own bad fixture: two buttons or none, an early bot-check script, a static dialog import, a hand-edited migration or a second limits file, a service worker that handles or precaches `/api/`, and a CSP missing the bot check or letting reports go elsewhere)
 - [x] 3.2 Add the payload-schema lock (no new fields without a spec change); verify it fails when a field is added (`tools/trust/report-schema.test.mjs` reads the key list from the contracts/report-api spec and requires the Worker's accepted keys, the web dialog's payload with and without inputs, and, through the Worker's list, the MCP report to match it exactly; it fails on an added field in the spec or the payload, and on any identifying name)
 
 ## 4. Triage and corrections

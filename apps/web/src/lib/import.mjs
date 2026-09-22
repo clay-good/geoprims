@@ -46,12 +46,14 @@ const countVertices = (geometries) => geometries.reduce((n, g) => n + g.coordina
 export function sniff(name, text) {
   const ext = /\.([a-z0-9]+)$/i.exec(name ?? '')?.[1]?.toLowerCase();
   if (ext === 'kmz') return 'kmz';
-  if (['geojson', 'json', 'kml', 'gpx', 'csv', 'tsv', 'wkt'].includes(ext)) return ext === 'json' ? 'geojson' : ext;
+  if (['geojson', 'json', 'kml', 'gpx', 'csv', 'tsv', 'wkt', 'wkb'].includes(ext)) return ext === 'json' ? 'geojson' : ext;
   const head = String(text ?? '').trimStart().slice(0, 400);
   if (head.startsWith('{') || head.startsWith('[')) return 'geojson';
   if (/<kml\b/i.test(head)) return 'kml';
   if (/<gpx\b/i.test(head)) return 'gpx';
   if (/^\s*(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON)\s*[ZM]*\s*\(/i.test(head)) return 'wkt';
+  // Hex WKB starts with a byte-order byte: 00 or 01.
+  if (/^\s*(\\x)?0[01][0-9a-f]{8,}\s*$/i.test(head) && /^[\s0-9a-fx\\]+$/i.test(String(text).trim())) return 'wkb';
   if (head.includes('\t')) return 'tsv';
   if (head.includes(',')) return 'csv';
   return null;
@@ -331,6 +333,151 @@ function finish(out) {
   return { ...out, geometries, vertices };
 }
 
+
+// ------------------------------------------------------------ WKB and EWKB
+
+/** Hex text as bytes, or null when it is not hex. */
+export function hexBytes(text) {
+  const hex = String(text ?? '').trim().replace(/^\\x/i, '').replace(/\s+/g, '');
+  if (!hex || hex.length % 2 || /[^0-9a-f]/i.test(hex)) return null;
+  return Uint8Array.from({ length: hex.length / 2 }, (_, i) => parseInt(hex.slice(i * 2, i * 2 + 2), 16));
+}
+
+/**
+ * Hex-encoded WKB or PostGIS EWKB: points, lines, polygons, and their MULTI
+ * forms, in either byte order, with an optional SRID (which must be 4326) and
+ * Z or M values (which are dropped: these tools work in two dimensions).
+ */
+export function readWkb(text) {
+  const bytes = hexBytes(text);
+  if (!bytes) return fail('That is not hex-encoded WKB.');
+  const view = new DataView(bytes.buffer);
+  const out = empty();
+  let at = 0;
+  const need = (n) => {
+    if (at + n > bytes.length) throw new Error('The WKB ends in the middle of a geometry.');
+  };
+  const geometryAt = () => {
+    need(5);
+    const little = view.getUint8(at) === 1;
+    at += 1;
+    let type = view.getUint32(at, little);
+    at += 4;
+    // EWKB flags, then the ISO 1000/2000/3000 offsets for Z, M, ZM.
+    const hasZ = (type & 0x80000000) !== 0;
+    const hasM = (type & 0x40000000) !== 0;
+    const hasSrid = (type & 0x20000000) !== 0;
+    type &= 0x0fffffff;
+    let dims = 2 + (hasZ ? 1 : 0) + (hasM ? 1 : 0);
+    if (type > 1000) {
+      const iso = Math.floor(type / 1000);
+      dims = iso === 3 ? 4 : 3;
+      type %= 1000;
+    }
+    if (hasSrid) {
+      need(4);
+      const srid = view.getUint32(at, little);
+      at += 4;
+      if (srid !== 4326) throw new Error(`That geometry is in SRID ${srid}. Only WGS 84 (SRID 4326) is read.`);
+    }
+    const point = () => {
+      need(8 * dims);
+      const x = view.getFloat64(at, little);
+      const y = view.getFloat64(at + 8, little);
+      at += 8 * dims;
+      return [x, y];
+    };
+    const count = () => {
+      need(4);
+      const n = view.getUint32(at, little);
+      at += 4;
+      return n;
+    };
+    switch (type) {
+      case 1:
+        out.geometries.push(geometry('point', [point()]));
+        break;
+      case 2:
+        out.geometries.push(geometry('line', Array.from({ length: count() }, point)));
+        break;
+      case 3:
+        for (let r = count(); r > 0; r -= 1) out.geometries.push(geometry('polygon', Array.from({ length: count() }, point)));
+        break;
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+        for (let n = count(); n > 0; n -= 1) geometryAt();
+        break;
+      default:
+        throw new Error(`WKB geometry type ${type} is not read.`);
+    }
+  };
+  try {
+    geometryAt();
+  } catch (e) {
+    return fail(e.message);
+  }
+  return finish(out);
+}
+
+// --------------------------------------------------------------------- KMZ
+
+/**
+ * The KML inside a KMZ (a zip): the first .kml entry, usually doc.kml,
+ * inflated with the platform's own DecompressionStream. Only stored and
+ * deflated entries are read, and the unzipped size is capped like any file.
+ */
+export async function kmzText(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const decoder = new TextDecoder();
+  let at = 0;
+  while (at + 30 <= bytes.length && view.getUint32(at, true) === 0x04034b50) {
+    const method = view.getUint16(at + 8, true);
+    const flags = view.getUint16(at + 6, true);
+    let size = view.getUint32(at + 18, true);
+    const nameLength = view.getUint16(at + 26, true);
+    const extraLength = view.getUint16(at + 28, true);
+    const name = decoder.decode(bytes.subarray(at + 30, at + 30 + nameLength));
+    const start = at + 30 + nameLength + extraLength;
+    if (flags & 0x08) {
+      // Sizes follow the data; find them from the central directory instead.
+      size = centralSize(bytes, view, name) ?? 0;
+    }
+    const data = bytes.subarray(start, start + size);
+    if (/\.kml$/i.test(name)) {
+      if (method === 0) return decoder.decode(data);
+      if (method !== 8) throw new Error(`The KML in that KMZ is compressed with method ${method}, which is not read.`);
+      const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      const inflated = new Uint8Array(await new Response(stream).arrayBuffer());
+      if (inflated.length > MAX_BYTES) throw new Error(`The KML inside that KMZ is larger than ${MAX_BYTES / 1024 / 1024} MB.`);
+      return decoder.decode(inflated);
+    }
+    at = start + size;
+  }
+  throw new Error('That KMZ holds no KML file.');
+}
+
+/** An entry's compressed size from the zip's central directory. */
+function centralSize(bytes, view, name) {
+  const decoder = new TextDecoder();
+  for (let at = bytes.length - 46; at >= 0; at -= 1) {
+    if (view.getUint32(at, true) !== 0x02014b50) continue;
+    const nameLength = view.getUint16(at + 28, true);
+    if (decoder.decode(bytes.subarray(at + 46, at + 46 + nameLength)) === name) return view.getUint32(at + 20, true);
+  }
+  return null;
+}
+
+/** Reads a KMZ's bytes as KML, with what was ignored and repaired. */
+export async function readKmz(bytes) {
+  try {
+    return readKml(await kmzText(bytes));
+  } catch (e) {
+    return fail(e.message);
+  }
+}
+
 /** Reads a file of any supported format, by what it looks like. */
 export function readFile(name, text) {
   const format = sniff(name, text);
@@ -347,9 +494,19 @@ export function readFile(name, text) {
       return { format, ...readDelimited(text, ',') };
     case 'tsv':
       return { format, ...readDelimited(text, '\t') };
+    case 'wkb':
+      return { format, ...readWkb(text) };
     case 'kmz':
-      return { format, ...fail('KMZ is a zipped KML. Unzip it and open the KML inside.') };
+      return { format, ...fail('A KMZ is read from its bytes; open it with the Import button.') };
     default:
       return { format: null, ...fail('That file is not a format this reader knows.') };
   }
+}
+
+/** Reads a file from its bytes: a KMZ is unzipped; anything else is text. */
+export async function readFileBytes(name, bytes) {
+  if (/\.kmz$/i.test(name ?? '') || (bytes[0] === 0x50 && bytes[1] === 0x4b)) {
+    return { format: 'kmz', ...(await readKmz(bytes)) };
+  }
+  return readFile(name, new TextDecoder().decode(bytes));
 }

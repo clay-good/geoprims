@@ -66,6 +66,8 @@ export const detect = (query) => call('detect', [query], 'detect');
 export const readCoordinate = (text) => call('readCoordinate', [text], 'coordinate');
 /** Parses a file's text in the worker: GeoJSON, KML, GPX, WKT, CSV, or TSV. */
 export const readFile = (name, text) => call('readFile', [name, text]);
+/** Parses a file from its bytes, so a KMZ can be unzipped: any format above, and KMZ. */
+export const readFileBytes = (name, bytes) => call('readFileBytes', [name, bytes]);
 /** One chunk of a batch: the core's array of envelopes, in row order. No key,
  *  so a keystroke on the form never supersedes or cancels a running batch. */
 export const invokeBatch = (id, inputsJson) => call('invokeBatch', [id, inputsJson]);

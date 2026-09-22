@@ -182,8 +182,100 @@ test('markup in a description is shown as the words it holds', () => {
 });
 
 test('a format the reader does not know says so plainly', () => {
+  // A KMZ is a zip, read from its bytes, never as text.
   const out = readFile('a.kmz', 'PK');
   assert.equal(out.ok, false);
-  assert.match(out.message, /zipped KML/);
+  assert.match(out.message, /read from its bytes/);
   assert.equal(readFile('a.xyz', 'nothing').ok, false);
+});
+
+// ---------------------------------------------------------------- WKB, KMZ
+import { readFileBytes, readWkb, kmzText } from '../src/lib/import.mjs';
+
+/** A WKB point, in either byte order, optionally EWKB with an SRID. */
+function wkbPoint(x, y, { little = true, srid = null, z = null } = {}) {
+  const dims = z === null ? 2 : 3;
+  const bytes = new Uint8Array(1 + 4 + (srid === null ? 0 : 4) + 8 * dims);
+  const v = new DataView(bytes.buffer);
+  v.setUint8(0, little ? 1 : 0);
+  let type = 1 | (srid === null ? 0 : 0x20000000) | (z === null ? 0 : 0x80000000);
+  v.setUint32(1, type >>> 0, little);
+  let at = 5;
+  if (srid !== null) {
+    v.setUint32(at, srid, little);
+    at += 4;
+  }
+  v.setFloat64(at, x, little);
+  v.setFloat64(at + 8, y, little);
+  if (z !== null) v.setFloat64(at + 16, z, little);
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+test('hex WKB and PostGIS EWKB read in either byte order, dropping Z', () => {
+  for (const hex of [wkbPoint(-105, 40), wkbPoint(-105, 40, { little: false }), wkbPoint(-105, 40, { srid: 4326 }), wkbPoint(-105, 40, { z: 1600 })]) {
+    const out = readWkb(hex);
+    assert.ok(out.ok, `${hex}: ${out.message}`);
+    assert.deepEqual(out.geometries[0].coordinates, [[-105, 40]]);
+  }
+  assert.equal(readFile('', wkbPoint(-105, 40)).format, 'wkb', 'WKB is recognized by its content');
+});
+
+test('WKB in a projected system, or cut short, is refused with a reason', () => {
+  const projected = readWkb(wkbPoint(500000, 4500000, { srid: 26913 }));
+  assert.equal(projected.ok, false);
+  assert.match(projected.message, /SRID 26913/);
+  const cut = readWkb(wkbPoint(-105, 40).slice(0, 20));
+  assert.equal(cut.ok, false);
+  assert.match(cut.message, /ends in the middle/);
+  assert.equal(readWkb('not hex').ok, false);
+});
+
+test('a WKB polygon becomes rings a polygon input can take', () => {
+  // POLYGON((0 0, 1 0, 1 1, 0 0)), little-endian.
+  const pts = [[0, 0], [1, 0], [1, 1], [0, 0]];
+  const bytes = new Uint8Array(1 + 4 + 4 + 4 + pts.length * 16);
+  const v = new DataView(bytes.buffer);
+  v.setUint8(0, 1);
+  v.setUint32(1, 3, true);
+  v.setUint32(5, 1, true);
+  v.setUint32(9, pts.length, true);
+  pts.forEach(([x, y], i) => {
+    v.setFloat64(13 + i * 16, x, true);
+    v.setFloat64(21 + i * 16, y, true);
+  });
+  const out = readWkb([...bytes].map((b) => b.toString(16).padStart(2, '0')).join(''));
+  assert.ok(out.ok, out.message);
+  assert.equal(out.geometries[0].kind, 'polygon');
+});
+
+/** A one-entry zip holding `name`, deflated with the platform's own compressor. */
+async function zip(name, text) {
+  const raw = new TextEncoder().encode(text);
+  const data = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+  const nameBytes = new TextEncoder().encode(name);
+  const out = new Uint8Array(30 + nameBytes.length + data.length);
+  const v = new DataView(out.buffer);
+  v.setUint32(0, 0x04034b50, true);
+  v.setUint16(4, 20, true);
+  v.setUint16(8, 8, true); // deflate
+  v.setUint32(18, data.length, true);
+  v.setUint32(22, raw.length, true);
+  v.setUint16(26, nameBytes.length, true);
+  out.set(nameBytes, 30);
+  out.set(data, 30 + nameBytes.length);
+  return out;
+}
+
+test('a KMZ is unzipped and read as its KML', async () => {
+  const kml = `<?xml version="1.0"?><kml><Document><Placemark><name>Pad</name><Point><coordinates>-105.5,40.5,0</coordinates></Point></Placemark></Document></kml>`;
+  const bytes = await zip('doc.kml', kml);
+  assert.equal(await kmzText(bytes), kml);
+  const out = await readFileBytes('site.kmz', bytes);
+  assert.equal(out.format, 'kmz');
+  assert.ok(out.ok, out.message);
+  assert.deepEqual(out.geometries[0].coordinates, [[-105.5, 40.5]]);
+  // A zip with no KML in it says so.
+  const empty = await readFileBytes('other.kmz', await zip('readme.txt', 'hello'));
+  assert.equal(empty.ok, false);
+  assert.match(empty.message, /no KML/);
 });

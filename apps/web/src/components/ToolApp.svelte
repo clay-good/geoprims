@@ -353,7 +353,7 @@
       importNote = { ...importNote, [name]: { ok: false, text: tooBig } };
       return;
     }
-    const parsed = await compute.readFile(file.name, await file.text());
+    const parsed = await compute.readFileBytes(file.name, new Uint8Array(await file.arrayBuffer()));
     // A CSV says nothing about which column is which, so the reader chooses,
     // starting from what the headers suggest.
     if ((parsed.format === 'csv' || parsed.format === 'tsv') && parsed.ok) {
@@ -678,10 +678,10 @@
       <div class="import-block">
           <span class="import-row">
             <label class="import-button">
-              <input type="file" class="sr-only" accept=".geojson,.json,.kml,.gpx,.csv,.tsv,.wkt,.txt" onchange={(e) => importInto(name, e.currentTarget.files?.[0])} />
+              <input type="file" class="sr-only" accept=".geojson,.json,.kml,.kmz,.gpx,.csv,.tsv,.wkt,.wkb,.txt" onchange={(e) => importInto(name, e.currentTarget.files?.[0])} />
               Import a file
             </label>
-            <span class="import-hint">KML, GPX, GeoJSON, CSV, or WKT — or drop it on the box. Read on this device.</span>
+            <span class="import-hint">KML, KMZ, GPX, GeoJSON, CSV, WKT, or WKB — or drop it on the box. Read on this device.</span>
           </span>
           {#if importNote[name]}<span class="import-note" class:bad={!importNote[name].ok} role="status">{importNote[name].text}</span>{/if}
           {#if importNote[name]?.csv}

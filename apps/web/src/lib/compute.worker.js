@@ -5,7 +5,7 @@ import { loadModule } from '../../../../packages/runtime/src/module.mjs';
 import { detectValues } from './detect.js';
 import { prefillActions } from './prefill.js';
 import { readCoordinate } from './coordinate.mjs';
-import { readFile } from './import.mjs';
+import { readFile, readFileBytes } from './import.mjs';
 import { NO_WASM } from './messages.js';
 
 // Data assets come from the same origin, whole files only, checked against the
@@ -117,6 +117,7 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
     // A file a reader brought is parsed here, off the page, and nothing it
     // points at is fetched (web/io-formats "Safe parsing").
     else if (method === 'readFile') out = JSON.stringify(readFile(args[0], args[1]));
+    else if (method === 'readFileBytes') out = JSON.stringify(await readFileBytes(args[0], args[1]));
     // Batch mode: one chunk of rows through the core's own batch entry point.
     else if (method === 'invokeBatch') out = await (await get(moduleFor(args[0]))).invokeBatch(args[0], args[1]);
     else out = await (await get(args[0])).callString(args[1], args[2]);

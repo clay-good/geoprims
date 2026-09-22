@@ -3,6 +3,7 @@
 //! timing, motion blur, and the ASPRS Edition 2 accuracy calculator.
 
 pub mod mission;
+pub mod oblique;
 pub mod ops;
 pub mod power;
 
@@ -49,7 +50,7 @@ const FAA_107: Reference = Reference {
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-107/subpart-B/section-107.51",
 };
 
-fn unit(q: QT, s: &str) -> &'static Unit {
+pub(crate) fn unit(q: QT, s: &str) -> &'static Unit {
     units::by_symbol(q, s).expect("registered unit")
 }
 
@@ -74,7 +75,7 @@ fn mps(v: f64) -> Q {
     }
 }
 
-const fn mm_field(name: &'static str, title: &'static str, help: &'static str) -> Field {
+pub(crate) const fn mm_field(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
         title,
@@ -217,7 +218,7 @@ fn show_mm(meters: f64) -> String {
     )
 }
 
-const HEIGHT: Field = Field::new(
+pub(crate) const HEIGHT: Field = Field::new(
     "height",
     "Height above ground",
     "Like 100 m AGL",
@@ -1158,6 +1159,7 @@ fn run_asprs(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TOOLS: &[&ToolDef] = &[
     &GSD,
+    &oblique::OBLIQUE_GSD,
     &ALTITUDE_FOR_GSD,
     &TRIGGER,
     &MOTION_BLUR,

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ffc5bbe21206e2b3",
+    "hash": "a9e892bc9764e8ca",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -100,7 +100,7 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "527028eb60ee5c15",
+    "hash": "9587dc1cf4539dab",
     "lastmod": "2026-09-22"
   },
   "/drone/mission/": {
@@ -112,7 +112,7 @@
     "lastmod": "2026-09-22"
   },
   "/drone/photogrammetry/": {
-    "hash": "b0b33bd97bf85dbe",
+    "hash": "923a7775fc833e3e",
     "lastmod": "2026-09-22"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
@@ -424,7 +424,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "031e44f0236510f6",
+    "hash": "32013818ade8241f",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -488,7 +488,7 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "6b87f5932778c962",
+    "hash": "8d0227258d9c9362",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -568,7 +568,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "d89807afff8ffee0",
+    "hash": "508142a150ec42bb",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -668,7 +668,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8c36fd52b66b7839",
+    "hash": "0f8eb18f60c286ae",
     "lastmod": "2026-09-22"
   }
 }

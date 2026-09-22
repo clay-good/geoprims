@@ -286,6 +286,12 @@
           ]
         },
         {
+          "want": "find the GSD and footprint of a tilted (oblique) camera",
+          "tools": [
+            "oblique-gsd"
+          ]
+        },
+        {
           "want": "set overlap, trigger interval, and line spacing",
           "tools": [
             "trigger"

@@ -319,6 +319,44 @@ def orbit_vectors():
                 {"result.gimbal_pitch.value": -math.degrees(math.atan((h - t) / r))}, MIS_SRC) for i, (r, h, t) in enumerate(cases, 1)]
 
 
+OBL_SRC = "Tilted-photo geometry (Wolf, Dewitt & Wilkinson 2014, ch. 10) in closed angle form, evaluated in Python (tools/vectors/gen_drone.py)"
+
+
+def oblique_vectors():
+    """Ground ahead of nadir for image row y (mm from center, up = far): H·tan(θ + atan(y/f));
+    across at (x, y): H·x / (√(f² + y²)·cos(θ + atan(y/f)))."""
+    out = []
+    cases = [(CAMS[0], 100, 45), (CAMS[0], 100, 0), (CAMS[0], 60, 30), (CAMS[1], 80, 20), (CAMS[2], 50, 50),
+             (CAMS[3], 150, 35), (CAMS[4], 120, 10), (CAMS[0], 45, 55), (CAMS[1], 200, 40), (CAMS[4], 30, 60)]
+    for c, h, th in cases:
+        sw, sh, f, iw, ih = c
+        p, t = sw / iw, math.radians(th)
+        ahead = lambda y: h * math.tan(t + math.atan(y / f))
+        right = lambda x, y: h * x / (math.hypot(f, y) * math.cos(t + math.atan(y / f)))
+        e = {
+            "result.gsd_center.value": 100 * (right(p / 2, 0) - right(-p / 2, 0)),
+            "result.gsd_center_along.value": 100 * (ahead(p / 2) - ahead(-p / 2)),
+            "result.gsd_near.value": 100 * (ahead(-sh / 2 + p) - ahead(-sh / 2)),
+            "result.gsd_far.value": 100 * (ahead(sh / 2) - ahead(sh / 2 - p)),
+            "result.gsd_nadir.value": 100 * p * h / f,
+            "result.near_distance.value": ahead(-sh / 2),
+            "result.far_distance.value": ahead(sh / 2),
+            "result.footprint.0.ahead.value": ahead(-sh / 2), "result.footprint.0.right.value": right(-sw / 2, -sh / 2),
+            "result.footprint.2.ahead.value": ahead(sh / 2), "result.footprint.2.right.value": right(sw / 2, sh / 2),
+        }
+        out.append(fvec(len(out) + 1, dict(cam_inp(c), height=f"{h} m", pitch=f"{th} deg"), e, OBL_SRC, "4th edition (2014)"))
+    # The spec scenario: at 45° and 100 m the center GSD is coarser than nadir (checked in the Rust tests too).
+    c = CAMS[0]
+    out.append(fvec(len(out) + 1, dict(cam_inp(c), height="100 m", pitch="75 deg"), {"meta.warnings.0.code": "BEYOND_HORIZON", "result.horizon": "the far edge reaches the horizon"}, SPEC, "2026"))
+    sq = {k: v for k, v in cam_inp(c).items() if k != "sensor_height"}
+    t = math.radians(45)
+    out.append(fvec(len(out) + 1, dict(sq, height="100 m", pitch="45 deg"), {"result.near_distance.value": 100 * math.tan(t - math.atan(c[0] * c[4] / c[3] / 2 / c[2]))}, OBL_SRC, "4th edition (2014)"))
+    out.append(fvec(len(out) + 1, dict(cam_inp(c), height="100 m", pitch="90 deg"), {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    nop = {k: v for k, v in sq.items() if k != "image_height"}
+    out.append(fvec(len(out) + 1, dict(nop, height="100 m", pitch="45 deg"), {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
@@ -329,7 +367,8 @@ def main():
              "drone.ops.speed-check": speed_vectors(), "drone.ops.kinetic-energy": ke_vectors(),
              "drone.ops.easa-subcategory": easa_vectors(), "drone.sensors.vlos": vlos_vectors(),
              "drone.mission.survey-grid": grid_vectors("grid"), "drone.photogrammetry.image-count": grid_vectors("count"),
-             "drone.mission.corridor": corridor_vectors(), "drone.mission.orbit": orbit_vectors()}
+             "drone.mission.corridor": corridor_vectors(), "drone.mission.orbit": orbit_vectors(),
+             "drone.photogrammetry.oblique-gsd": oblique_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

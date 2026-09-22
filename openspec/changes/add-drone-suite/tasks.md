@@ -5,7 +5,7 @@
 - [x] 1.3 Implement cited overlap presets; verify the forest scenario
 - [ ] 1.4 Implement terrain-aware overlap using a highest-terrain value or DEM profile; verify the hill scenario
 - [x] 1.5 Implement motion blur and maximum shutter; verify the 1/1000 s scenario
-- [ ] 1.6 Implement oblique GSD and trapezoid footprint; verify the 45° scenario against a hand-computed fixture
+- [ ] 1.6 Implement oblique GSD and trapezoid footprint; verify the 45° scenario against a hand-computed fixture (done so far: `drone.photogrammetry.oblique-gsd`: a pinhole camera tilted off nadir over flat ground, by ray casting; GSD across and along at the center, along at the near and far edges, the nadir GSD for comparison, the near and far distances, and the four footprint corners; a BEYOND_HORIZON warning drops the far values when the top of the image reaches the horizon. The 45° at 100 m scenario gives 33.33 m and 300 m to the near and far edges (tan 18.43° and tan 71.57°), with a center GSD √2 times the nadir GSD; 14 golden vectors from the closed angle form. Pending: drawing the trapezoid on the map)
 - [x] 1.7 Implement image-count estimation; verify the 2% agreement scenario against generated grids for 20 polygons
 - [ ] 1.8 Implement the ASPRS Edition 2 calculator (RMSE_H, NVA/VVA, checkpoint error, 30-point minimum, blunders, mean error); verify all three ASPRS scenarios and the worked examples in the standard (built: product accuracy with checkpoint error, RMSE_H, and the 30-checkpoint minimum with two of the three scenarios; pending: per-checkpoint lists for blunder and mean-error checks, NVA/VVA)
 

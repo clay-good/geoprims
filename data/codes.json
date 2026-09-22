@@ -309,6 +309,10 @@
     "CIVIL_TWILIGHT_APPROXIMATED": {
       "severity": "accuracy",
       "message": "Civil twilight was computed as the sun 6° below the horizon, not read from the Air Almanac."
+    },
+    "BEYOND_HORIZON": {
+      "severity": "caution",
+      "message": "Part of the camera's view reaches the horizon, so that part of the footprint is unbounded."
     }
   }
 }

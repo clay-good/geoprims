@@ -219,3 +219,24 @@ fn gsd_invariants() {
         }
     }
 }
+
+#[test]
+fn oblique_45_degrees_is_coarser_than_nadir_and_a_trapezoid() {
+    let r = call(
+        "drone.photogrammetry.oblique-gsd",
+        &format!(r#"{{{CAM},"height":"100 m","pitch":"45 deg"}}"#),
+    );
+    let (c, n) = (
+        num(&r, "result.gsd_center.value"),
+        num(&r, "result.gsd_nadir.value"),
+    );
+    assert!(c > n, "center {c} should be coarser than nadir {n}");
+    // Across at the center is nadir ÷ cos θ; along, ÷ cos² θ.
+    assert!((c - n * 2f64.sqrt()).abs() < 1e-9);
+    assert!(num(&r, "result.gsd_center_along.value") > c);
+    let fp = &r["result"]["footprint"];
+    let x = |i: usize| fp[i]["right"]["value"].as_f64().unwrap();
+    let w = |a: usize, b: usize| x(b) - x(a);
+    assert!(w(3, 2) > w(0, 1), "the far edge is wider: a trapezoid");
+    assert!(codes(&r).iter().all(|c| c != "BEYOND_HORIZON"));
+}

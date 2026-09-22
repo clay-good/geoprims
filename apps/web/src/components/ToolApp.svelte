@@ -51,7 +51,9 @@
     if (v === undefined) return '';
     const schema = tool.inputs.properties[k];
     if (!isList(schema) || !Array.isArray(v)) return String(v);
-    return v.map((row) => columns(schema).map((c) => row[c] ?? '').join(', ')).join('\n');
+    // Trailing empty cells (an optional ring, a name left out) are not written,
+    // so a row reads "37, -109.05", not "37, -109.05,".
+    return v.map((row) => columns(schema).map((c) => row[c] ?? '').join(', ').replace(/(,\s*)+$/, '')).join('\n');
   }
   function fromList(schema, text) {
     return text

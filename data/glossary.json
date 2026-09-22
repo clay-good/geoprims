@@ -1218,6 +1218,26 @@
       "relatedTools": [
         "survey.reduction.edm-correction"
       ]
+    },
+    {
+      "id": "vasi",
+      "term": "VASI",
+      "expansion": "visual approach slope indicator",
+      "definition": "Rows of red and white lights beside a runway that show whether you are above, on, or below the visual glidepath, usually 3°.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.performance.vdp"
+      ]
+    },
+    {
+      "id": "papi",
+      "term": "PAPI",
+      "expansion": "precision approach path indicator",
+      "definition": "A row of four lights beside a runway: two white and two red means on the glidepath, more white means high, more red means low.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.performance.vdp"
+      ]
     }
   ],
   "notAbbreviations": [

@@ -839,6 +839,13 @@ pub static VDP: ToolDef = ToolDef {
             "kt",
         )
         .core(),
+        qty(
+            "check_distance",
+            "Distance to check the path",
+            "From the threshold, for the height a VASI or PAPI path puts you at, like 2 NM",
+            QT::Distance,
+            "NM",
+        ),
     ],
     outputs: &[
         out(
@@ -891,10 +898,19 @@ pub static VDP: ToolDef = ToolDef {
             0,
         )
         .optional(),
+        out(
+            "path_height",
+            "Height on the path",
+            "Above the threshold at the check distance: TCH + distance × tan(angle)",
+            QT::Length,
+            "ft",
+            0,
+        )
+        .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "A straight path at the descent angle from the MDA to the threshold crossing height",
+    model: "A straight path at the descent angle from the MDA to the threshold crossing height; a VASI or PAPI path at the same angle and TCH puts you TCH + d·tan θ above the threshold at distance d",
     accuracy: "Exact geometry. A published VDP on the chart always governs. Planning aid, not certified for navigation.",
     references: &[IPH, AIM],
     examples: &[Example {
@@ -987,6 +1003,25 @@ fn run_vdp(ctx: &mut Ctx) -> Result<Json, ToolError> {
         o.push((
             "time_to_threshold",
             ctx.out("time_to_threshold", seconds(dist / gs)),
+        ));
+    }
+    if let Some(d) = ctx.quantity("check_distance")? {
+        let d = d.base();
+        if d.is_nan() || !(0.0..=50.0 * NM).contains(&d) {
+            return Err(ToolError::invalid(
+                "/check_distance",
+                "Give a check distance from the threshold of 0 to 50 NM.",
+            ));
+        }
+        o.push((
+            "path_height",
+            ctx.out(
+                "path_height",
+                Q {
+                    value: tch + d * t,
+                    unit: gp_base::units::base_unit(QT::Length),
+                },
+            ),
         ));
     }
     Ok(obj(o))

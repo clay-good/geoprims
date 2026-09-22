@@ -367,6 +367,12 @@ def vdp_vectors():
     # FAA-H-8083-16B chapter 4: on a three-degree path the height above the TDZE is 300 ft per NM (450 ft at 1.5 NM, 600 ft at 2 NM).
     for hat, nm in [(450, 1.5), (600, 2.0)]:
         out.append(vec(len(out) + 1, {"height_above_touchdown": f"{hat} ft"}, {"result.rule_hat_300.value": nm}, 1e-12, IPH, IPH_VER))
+    # VASI/PAPI path check: TCH + d tan(angle) above the threshold at d from it.
+    for hat, ang, tch, d in [(400, 3, 50, 2.0), (520, 3, 0, 1.0), (700, 3.2, 55, 4.0), (365, 2.75, 44, 0.5)]:
+        inp = {"height_above_touchdown": f"{hat} ft", "descent_angle": f"{ang} deg", "check_distance": f"{d} NM"}
+        if tch:
+            inp["threshold_crossing_height"] = f"{tch} ft"
+        out.append(vec(len(out) + 1, inp, {"result.path_height.value": tch + d * NMI * math.tan(math.radians(ang)) / FT}, 1e-9, PERF_SRC, "FAA-H-8083-16B (2017)"))
     return out
 
 

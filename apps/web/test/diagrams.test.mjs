@@ -117,3 +117,70 @@ test('schematics say so, and units with digits parse (ft2)', async () => {
   assert.equal(measure('10 m/s', { 'm/s': 1 }, 'm/s'), 10);
   assert.equal(measure('12', { kt: 3 }, 'kt'), 36);
 });
+
+/** Every `<line>` in a drawing, as {cls, x1, y1, x2, y2}. */
+const lines = (markup) =>
+  [...markup.matchAll(/<line class="([^"]*)" x1="([-\d.]+)" y1="([-\d.]+)" x2="([-\d.]+)" y2="([-\d.]+)"/g)].map((m) => ({
+    cls: m[1],
+    x1: Number(m[2]),
+    y1: Number(m[3]),
+    x2: Number(m[4]),
+    y2: Number(m[5]),
+  }));
+/** A screen vector's compass bearing (y grows downward) and length. */
+const bearing = (l) => ({
+  deg: ((Math.atan2(l.x2 - l.x1, l.y1 - l.y2) * 180) / Math.PI + 360) % 360,
+  len: Math.hypot(l.x2 - l.x1, l.y1 - l.y2),
+});
+const near = (a, b, tol, what) => assert.ok(Math.abs(((a - b + 540) % 360) - 180) < tol, `${what}: ${a} vs ${b}`);
+
+test('the wind triangle closes: air vector, then wind, reach the ground vector', async () => {
+  // add-aviation-suite 4.6 fixture.
+  for (const args of [
+    { course: '90 deg', tas: '120 kt', wind_direction: '30 deg', wind_speed: '20 kt' },
+    { course: '350 deg', tas: '95 kt', wind_direction: '260 deg', wind_speed: '35 kt' },
+    { course: '180 deg', tas: '140 kt', wind_direction: '180 deg', wind_speed: '15 kt' },
+  ]) {
+    const r = JSON.parse(await host.invoke('aviation.wind.heading-groundspeed', JSON.stringify(args)));
+    const d = diagram('aviation.wind.heading-groundspeed', args, r);
+    const [air, wind, ground] = lines(d.markup).filter((l) => l.cls !== 'dg-casing');
+    // The air vector is drawn at the heading the core computed, the ground
+    // vector along the requested course, and the three meet head to tail.
+    near(bearing(air).deg, r.result.heading.value, 0.5, 'air vector');
+    near(bearing(ground).deg, Number.parseFloat(args.course), 0.5, 'ground vector');
+    near(bearing(wind).deg, (Number.parseFloat(args.wind_direction) + 180) % 360, 0.5, 'wind vector');
+    assert.ok(Math.hypot(air.x2 - wind.x1, air.y2 - wind.y1) < 0.2, 'wind starts where the air vector ends');
+    assert.ok(Math.hypot(wind.x2 - ground.x2, wind.y2 - ground.y2) < 0.2, 'the wind reaches the ground vector');
+    // Lengths are to scale: ground / air = groundspeed / true airspeed.
+    const ratio = r.result.groundspeed.value / Number.parseFloat(args.tas);
+    assert.ok(Math.abs(bearing(ground).len / bearing(air).len - ratio) < 0.02, 'to scale');
+  }
+});
+
+test('the runway drawing puts the wind components along and across the runway', async () => {
+  for (const args of [
+    { runway: '09', wind_direction: '120 deg', wind_speed: '15 kt' },
+    { runway: '09', wind_direction: '060 deg', wind_speed: '15 kt' },
+    { runway: '36', wind_direction: '170 deg', wind_speed: '20 kt' },
+  ]) {
+    const r = JSON.parse(await host.invoke('aviation.wind.runway-components', JSON.stringify(args)));
+    const d = diagram('aviation.wind.runway-components', args, r);
+    const drawn = lines(d.markup).filter((l) => l.cls !== 'dg-casing');
+    const runway = drawn.find((l) => l.cls.includes('dg-runway'));
+    const [head, cross] = drawn.filter((l) => l.cls.includes('dg-accent'));
+    const rwy = r.result.runway_heading.value;
+    near(bearing(runway).deg, rwy, 0.5, 'runway');
+    // A headwind arrow points back down the runway, a tailwind along it.
+    const hw = r.result.headwind.value;
+    near(bearing(head).deg, rwy + (hw >= 0 ? 180 : 0), 0.5, 'headwind arrow');
+    // The crosswind arrow is square to the runway, pointing the way the wind
+    // blows: to the right of the runway when the wind comes from its left.
+    const blows = (Number.parseFloat(args.wind_direction) + 180 - rwy + 720) % 360;
+    const across = (bearing(cross).deg - rwy + 720) % 360;
+    assert.ok(Math.abs(across - (blows < 180 ? 90 : 270)) < 0.5, `crosswind drawn ${across} for wind blowing ${blows}`);
+    // Both are to the same scale as the wind they came from.
+    const k = bearing(head).len / Math.abs(hw);
+    assert.ok(Math.abs(bearing(cross).len / Math.abs(r.result.crosswind.value) - k) < 0.02, 'components to one scale');
+    assert.match(d.markup, /Crosswind/);
+  }
+});

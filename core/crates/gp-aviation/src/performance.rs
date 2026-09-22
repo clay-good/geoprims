@@ -6,6 +6,7 @@
 use crate::atmosphere::G0;
 use crate::refs::*;
 use crate::{deg, m, obj, unit};
+use geographiclib_rs::{DirectGeodesic, Geodesic};
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef};
@@ -1029,6 +1030,36 @@ fn run_vdp(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- glide
 
+/// A point of the glide ring, as the map layer reads it.
+const GLIDE_RING_ROW: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "part",
+        "Ring",
+        "0 for the outline",
+        Kind::Number { min: 0.0, max: 0.0 },
+    ),
+];
+
 pub static GLIDE: ToolDef = ToolDef {
     id: "aviation.performance.glide",
     title: "Glide range with wind",
@@ -1086,6 +1117,29 @@ pub static GLIDE: ToolDef = ToolDef {
             "kt",
         )
         .core(),
+        qty(
+            "lat",
+            "Latitude",
+            "Where you are now, to draw the ring, like 39.8561",
+            QT::Angle,
+            "deg",
+        )
+        .core(),
+        qty(
+            "lon",
+            "Longitude",
+            "Where you are now, to draw the ring, like -104.6737",
+            QT::Angle,
+            "deg",
+        )
+        .core(),
+        qty(
+            "wind_direction",
+            "Wind direction",
+            "The direction the wind blows from, like 270 deg; needed to place the ring in wind",
+            QT::Angle,
+            "deg",
+        ),
     ],
     outputs: &[
         out(
@@ -1128,23 +1182,47 @@ pub static GLIDE: ToolDef = ToolDef {
             "min",
             1,
         ),
+        Field::new(
+            "rings",
+            "Glide ring",
+            "The reachable outline around your position, for drawing",
+            Kind::List {
+                items: GLIDE_RING_ROW,
+                min: 0,
+                max: 400,
+            },
+        ),
     ],
-    errors: &[ErrorCode::OutOfDomain],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Steady glide at the given glide ratio, with TAS taken as the horizontal airspeed (under 1% error for glide ratios of 7 or more) and a steady along-track wind",
+    model: "Steady glide at the given glide ratio, with TAS taken as the horizontal airspeed (under 1% error for glide ratios of 7 or more) and a steady along-track wind; the ring is 72 points at 5° steps of the geodesic direct problem (Karney 2013), each at that bearing\'s range with the wind component along it",
     accuracy: "Exact for the model. Real glides lose height in turns and with a windmilling propeller. Planning aid, not certified for navigation.",
     references: &[AFH, PHAK],
-    examples: &[Example {
-        id: "primary",
-        title: "5,000 ft AGL, 9:1, 70 kt, into a 20 kt headwind",
-        input: r#"{"height":"5000 ft","glide_ratio":9,"tas":"70 kt","headwind":"20 kt"}"#,
-        source: "add-aviation-suite glide scenario: still air 7.41 NM, headwind 5.29 NM",
-    }],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "5,000 ft AGL, 9:1, 70 kt, into a 20 kt headwind",
+            input: r#"{"height":"5000 ft","glide_ratio":9,"tas":"70 kt","headwind":"20 kt"}"#,
+            source: "add-aviation-suite glide scenario: still air 7.41 NM, headwind 5.29 NM",
+        },
+        Example {
+            id: "ring",
+            title: "The same glide drawn around a position east of Denver",
+            input: r#"{"height":"5000 ft","glide_ratio":9,"tas":"70 kt","headwind":"20 kt","lat":39.8561,"lon":-104.6737,"wind_direction":"270 deg"}"#,
+            source: "add-aviation-suite glide ring: 9.53 NM downwind, 5.29 NM upwind, 7.41 NM across",
+        },
+    ],
     primary_example: "primary",
-    visualization: &[Layer {
-        kind: "gauge",
-        map: &[("value", "wind_range")],
-    }],
+    visualization: &[
+        Layer {
+            kind: "polygon",
+            map: &[("rings", "rings")],
+        },
+        Layer {
+            kind: "gauge",
+            map: &[("value", "wind_range")],
+        },
+    ],
     related: &[Related {
         id: "aviation.performance.turn",
         reason: "alternative",
@@ -1184,7 +1262,52 @@ fn run_glide(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
         ("sink_rate", ctx.out("sink_rate", vs(sink))),
         ("time_aloft", ctx.out("time_aloft", seconds(h / sink))),
+        ("rings", glide_ring(ctx, still, v, hw)?),
     ]))
+}
+
+/// The reachable outline around the position, if one was given: at each bearing
+/// the range the wind component along it allows, which makes the ring an egg
+/// rather than a circle. Without a position there is nothing to draw.
+fn glide_ring(ctx: &mut Ctx, still: f64, v: f64, hw: f64) -> Result<Json, ToolError> {
+    let (lat, lon) = match (ctx.quantity("lat")?, ctx.quantity("lon")?) {
+        (Some(a), Some(b)) => (a.to(unit(QT::Angle, "deg")), b.to(unit(QT::Angle, "deg"))),
+        (None, None) => return Ok(Json::Arr(vec![])),
+        _ => {
+            return Err(ToolError::invalid(
+                "/lat",
+                "Give both a latitude and a longitude to draw the ring, or neither.",
+            ));
+        }
+    };
+    let from = ctx
+        .quantity("wind_direction")?
+        .map(|x| x.to(unit(QT::Angle, "deg")));
+    if hw != 0.0 && from.is_none() {
+        return Err(ToolError::invalid(
+            "/wind_direction",
+            "With a wind, the ring depends on which way it blows: give the wind direction.",
+        )
+        .hint("The direction the wind blows from, like 270 deg."));
+    }
+    let from = from.unwrap_or(0.0);
+    let g = Geodesic::wgs84();
+    let dg = unit(QT::Angle, "deg");
+    let d = |x: f64| Q { value: x, unit: dg };
+    let mut ring = Vec::with_capacity(72);
+    for i in 0..72 {
+        let az = i as f64 * 5.0;
+        // Flying toward the wind is a headwind; 90° across it, none of it.
+        let along = hw * cos((az - from).to_radians());
+        let range = still * (v - along) / v;
+        let (la, lo): (f64, f64) = g.direct(lat, lon, az, range.max(0.0));
+        ring.push(Json::obj([
+            ("lat", d(la).to_json()),
+            ("lon", d(lo).to_json()),
+            ("part", Json::Num(0.0)),
+        ]));
+    }
+    Ok(Json::Arr(ring))
 }
 
 // ---------------------------------------------------------------- pivotal altitude

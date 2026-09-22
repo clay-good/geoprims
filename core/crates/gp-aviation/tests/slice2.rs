@@ -434,3 +434,76 @@ fn v_speeds_place_the_airspeed_among_the_arcs() {
         assert!(!warns(&plain, code), "{code} without V-speeds: {plain}");
     }
 }
+
+#[test]
+fn the_glide_ring_reaches_farther_downwind() {
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    let g = Geodesic::wgs84();
+    let (lat, lon) = (39.8561, -104.6737);
+    let r = call(
+        "aviation.performance.glide",
+        &format!(
+            r#"{{"height":"5000 ft","glide_ratio":9,"tas":"70 kt","headwind":"20 kt","lat":{lat},"lon":{lon},"wind_direction":"270 deg"}}"#
+        ),
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    let ring = r["result"]["rings"].as_array().expect("a ring");
+    assert_eq!(ring.len(), 72, "5° steps");
+    let reach = |az: usize| {
+        let p = &ring[az / 5];
+        let (s, _, _, _): (f64, f64, f64, f64) = g.inverse(
+            lat,
+            lon,
+            p["lat"]["value"].as_f64().unwrap(),
+            p["lon"]["value"].as_f64().unwrap(),
+        );
+        s / 1852.0
+    };
+    // The wind is from the west, so west is upwind: gliding into it is the
+    // published wind range, and downwind reaches as much farther.
+    let wind_range = r["result"]["wind_range"]["value"].as_f64().unwrap();
+    let still = r["result"]["still_air_range"]["value"].as_f64().unwrap();
+    assert!(
+        (reach(270) - wind_range).abs() < 0.01,
+        "upwind {}",
+        reach(270)
+    );
+    assert!(
+        (reach(90) - still * 90.0 / 70.0).abs() < 0.01,
+        "downwind {}",
+        reach(90)
+    );
+    // Across the wind, none of it counts, so the ring is at the still-air range.
+    assert!((reach(0) - still).abs() < 0.01, "crosswind {}", reach(0));
+    // Downwind 90 kt over the ground against 50 kt upwind: nine parts to five.
+    assert!(
+        (reach(90) / reach(270) - 9.0 / 5.0).abs() < 0.01,
+        "the ring is an egg, not a circle: {} downwind, {} upwind",
+        reach(90),
+        reach(270)
+    );
+    // Without a wind direction there is no way to place the ring.
+    let bad = call(
+        "aviation.performance.glide",
+        &format!(
+            r#"{{"height":"5000 ft","glide_ratio":9,"tas":"70 kt","headwind":"20 kt","lat":{lat},"lon":{lon}}}"#
+        ),
+    );
+    assert_eq!(bad["ok"], false, "{bad}");
+    assert_eq!(bad["error"]["field"], "/wind_direction");
+    // In still air it is a circle, and with no position there is nothing to draw.
+    let calm = call(
+        "aviation.performance.glide",
+        &format!(r#"{{"height":"5000 ft","glide_ratio":9,"tas":"70 kt","lat":{lat},"lon":{lon}}}"#),
+    );
+    let circle = calm["result"]["rings"].as_array().unwrap();
+    assert_eq!(circle.len(), 72);
+    let plain = call(
+        "aviation.performance.glide",
+        r#"{"height":"5000 ft","glide_ratio":9,"tas":"70 kt","headwind":"20 kt"}"#,
+    );
+    assert!(
+        plain["result"]["rings"].as_array().unwrap().is_empty(),
+        "{plain}"
+    );
+}

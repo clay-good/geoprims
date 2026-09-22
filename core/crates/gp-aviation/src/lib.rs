@@ -20,6 +20,7 @@ pub mod range;
 pub mod runway;
 pub mod shift;
 pub mod table;
+pub mod tfr;
 pub mod triangle;
 pub mod weather;
 pub mod wind;
@@ -2251,6 +2252,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &shift::WEIGHT_SHIFT,
     &shift::BALLAST,
     &radial::RADIAL_FIX,
+    &tfr::TFR_AREA,
 ];
 
 pub static REGISTRY: Registry = Registry {

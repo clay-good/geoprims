@@ -1,6 +1,17 @@
 {
   "note": "Group hub pages (web/tool-docs, 'Domain and group index pages'): the tasks a group's tools serve, each tool in exactly one task, and a short guide where the tools form a sequence. Tool ids are the operation within the group, or a full id for a tool elsewhere. Unit groups need no entry: their one task is converting.",
   "hubs": {
+    "aviation.airspace": {
+      "summary": "Airspace from NOTAM text: TFR circles and areas with their limits.",
+      "tasks": [
+        {
+          "want": "draw a TFR or NOTAM area and download it",
+          "tools": [
+            "tfr-area"
+          ]
+        }
+      ]
+    },
     "aviation.airspeed": {
       "summary": "From the number on the airspeed indicator to true airspeed and Mach, and back.",
       "tasks": [

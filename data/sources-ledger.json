@@ -1976,6 +1976,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "faa-jo-7930-2",
+      "name": "Notices to Air Missions (NOTAM), FAA Order JO 7930.2",
+      "issuer": "FAA",
+      "currentEdition": "JO 7930.2U",
+      "currentReleaseDate": "2025-08-10",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Edition and effective date read at the issuer on 2026-09-22.",
+      "freeAccessUrl": "https://www.faa.gov/air_traffic/publications/atpubs/notam_html/",
+      "matchTerms": [
+        "FAA Order JO 7930.2"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

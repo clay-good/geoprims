@@ -1248,6 +1248,26 @@
       "relatedTools": [
         "aviation.ifr.radial-fix"
       ]
+    },
+    {
+      "id": "notam",
+      "term": "NOTAM",
+      "expansion": "Notice to Air Missions",
+      "definition": "A published notice of something pilots need to know that is not on the charts yet, such as a closed runway, an unlit tower, or a flight restriction.",
+      "source": "faa-jo-7930-2",
+      "relatedTools": [
+        "aviation.airspace.tfr-area"
+      ]
+    },
+    {
+      "id": "tfr",
+      "term": "TFR",
+      "expansion": "temporary flight restriction",
+      "definition": "Airspace closed to most flights for a time, for example around a fire, a stadium, or a VIP visit, published by NOTAM as a circle or area with a floor and a ceiling.",
+      "source": "faa-jo-7930-2",
+      "relatedTools": [
+        "aviation.airspace.tfr-area"
+      ]
     }
   ],
   "notAbbreviations": [

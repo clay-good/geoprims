@@ -53,7 +53,8 @@
         "performance",
         "loading",
         "weather",
-        "ifr"
+        "ifr",
+        "airspace"
       ]
     },
     "drone": {

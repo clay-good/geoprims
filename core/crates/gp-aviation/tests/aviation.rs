@@ -48,7 +48,11 @@ fn catalog_lint_and_registry() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let known = ["units.pressure.inhg-to-hpa", "navigation.route.cross-track"];
+    let known = [
+        "units.pressure.inhg-to-hpa",
+        "navigation.route.cross-track",
+        "navigation.route.range-rings",
+    ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));
     let codes: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();

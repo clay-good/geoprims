@@ -4,6 +4,7 @@
 
 pub mod los;
 pub mod rhumb;
+pub mod rings;
 pub mod route;
 pub mod vincenty;
 pub mod waypoints;
@@ -964,6 +965,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &route::CPA,
     &route::LEGS,
     &route::CLOSEST_POINT,
+    &rings::RANGE_RINGS,
     &waypoints::WAYPOINTS,
     &los::HORIZON,
     &los::VISIBILITY,

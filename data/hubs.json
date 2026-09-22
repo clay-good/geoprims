@@ -913,6 +913,12 @@
           "tools": [
             "fly-by"
           ]
+        },
+        {
+          "want": "draw range rings around a point",
+          "tools": [
+            "range-rings"
+          ]
         }
       ]
     },

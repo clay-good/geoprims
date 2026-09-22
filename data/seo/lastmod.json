@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "27bb54c4d6d3dbbb",
+    "hash": "b05fe61ffee39e8e",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -432,11 +432,11 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "78ba791833691089",
+    "hash": "d0fb12b48b41d205",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
-    "hash": "0b020da5a0d95b8e",
+    "hash": "0b91862f0567646f",
     "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/": {
@@ -476,7 +476,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/route/": {
-    "hash": "147683a987c9fdf0",
+    "hash": "c1ef915804f003b8",
     "lastmod": "2026-09-22"
   },
   "/navigation/route/cross-track/": {
@@ -484,7 +484,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/route/time-speed-distance/": {
-    "hash": "b82dcfdb342613ff",
+    "hash": "3e71bca383336935",
     "lastmod": "2026-09-22"
   },
   "/privacy/": {
@@ -496,7 +496,7 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "618de1f46243a19b",
+    "hash": "554cadaf8ed2073b",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "37741d5aabf24ccf",
+    "hash": "5a25a52f77dba144",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -676,7 +676,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8cdb5918ba5ae748",
+    "hash": "eb74e444a816a462",
     "lastmod": "2026-09-22"
   }
 }

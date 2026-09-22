@@ -1047,3 +1047,94 @@ fn a_utc_offset_with_a_stray_unicode_mark_is_refused_not_a_crash() {
     );
     assert_eq!(r["result"]["eta_utc"], "22:30Z", "{r}");
 }
+
+/// RFC 7946 checks for one polygon: closed rings, positions in range, the
+/// exterior counterclockwise in lon/lat, and no edge jumping across ±180°.
+fn valid_polygon(rings: &Value) -> Result<f64, String> {
+    let ext = rings[0].as_array().ok_or("no exterior")?;
+    let pts: Vec<(f64, f64)> = ext
+        .iter()
+        .map(|p| (p[0].as_f64().unwrap(), p[1].as_f64().unwrap()))
+        .collect();
+    if pts.len() < 4 || pts[0] != pts[pts.len() - 1] {
+        return Err("ring not closed".into());
+    }
+    for w in pts.windows(2) {
+        if !(-180.0..=180.0).contains(&w[0].0) || !(-90.0..=90.0).contains(&w[0].1) {
+            return Err(format!("position out of range: {:?}", w[0]));
+        }
+        // Along a pole (lat ±90) the edge is a point, so ±180° there is fine.
+        let on_pole = w[0].1.abs() == 90.0 && w[1].1 == w[0].1;
+        if (w[1].0 - w[0].0).abs() > 180.0 && !on_pole {
+            return Err(format!(
+                "edge jumps the antimeridian: {:?} → {:?}",
+                w[0], w[1]
+            ));
+        }
+    }
+    let area2: f64 = pts
+        .windows(2)
+        .map(|w| w[0].0 * w[1].1 - w[1].0 * w[0].1)
+        .sum();
+    if area2 <= 0.0 {
+        return Err("exterior not counterclockwise".into());
+    }
+    Ok(area2 / 2.0)
+}
+
+#[test]
+fn range_rings_are_valid_geojson_around_the_pole_and_across_the_antimeridian() {
+    // The spec scenario: 1,500 km around 85° N encloses the North Pole.
+    let r = call(
+        "navigation.route.range-rings",
+        r#"{"lat":85,"lon":30,"radii":[{"radius":"1500 km"}]}"#,
+    );
+    let doc: Value = serde_json::from_str(r["result"]["file"].as_str().unwrap()).unwrap();
+    let geom = &doc["features"][0]["geometry"];
+    assert_eq!(geom["type"], "Polygon", "{geom}");
+    valid_polygon(&geom["coordinates"]).unwrap();
+    let ext = geom["coordinates"][0].as_array().unwrap();
+    assert!(ext.iter().any(|p| p[1] == 90.0), "reaches the pole");
+    assert_eq!(r["result"]["summary"][0]["pole"], "north");
+    // South pole too, reaching -90.
+    let s = call(
+        "navigation.route.range-rings",
+        r#"{"lat":-89,"lon":0,"radii":[{"radius":"300 km"}]}"#,
+    );
+    let doc: Value = serde_json::from_str(s["result"]["file"].as_str().unwrap()).unwrap();
+    let g = &doc["features"][0]["geometry"];
+    valid_polygon(&g["coordinates"]).unwrap();
+    assert!(
+        g["coordinates"][0]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|p| p[1] == -90.0)
+    );
+    // Across the antimeridian: two valid polygons, one each side.
+    let a = call(
+        "navigation.route.range-rings",
+        r#"{"lat":0,"lon":179.5,"radii":[{"radius":"150 km"}]}"#,
+    );
+    let doc: Value = serde_json::from_str(a["result"]["file"].as_str().unwrap()).unwrap();
+    let g = &doc["features"][0]["geometry"];
+    assert_eq!(g["type"], "MultiPolygon", "{g}");
+    let parts = g["coordinates"].as_array().unwrap();
+    assert_eq!(parts.len(), 2);
+    let sides: Vec<f64> = parts
+        .iter()
+        .map(|p| {
+            valid_polygon(p).unwrap();
+            p[0][0][0].as_f64().unwrap().signum()
+        })
+        .collect();
+    assert!(sides.contains(&1.0) && sides.contains(&-1.0), "{sides:?}");
+    // An ordinary ring is one polygon.
+    let d = call(
+        "navigation.route.range-rings",
+        r#"{"lat":39.86,"lon":-104.67,"radii":[{"radius":"25 NM"}]}"#,
+    );
+    let doc: Value = serde_json::from_str(d["result"]["file"].as_str().unwrap()).unwrap();
+    assert_eq!(doc["features"][0]["geometry"]["type"], "Polygon");
+    valid_polygon(&doc["features"][0]["geometry"]["coordinates"]).unwrap();
+}

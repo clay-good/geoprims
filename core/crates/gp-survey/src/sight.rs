@@ -98,7 +98,7 @@ pub static SIGHT_DISTANCE: ToolDef = ToolDef {
         Field::new(
             "design_k",
             "Design K",
-            "Optional: the K from your design manual's table, to compare",
+            "Optional: the K from your design manual's table, to compare, like 44",
             Kind::Number {
                 min: 0.0,
                 max: 10_000.0,

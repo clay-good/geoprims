@@ -159,7 +159,7 @@ fn run_level(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let at = |i: usize, f: &str| format!("/shots/{i}/{f}");
     if let Some(i) = shots
         .iter()
-        .position(|s| s.dist.is_some_and(|d| !(d > 0.0)))
+        .position(|s| s.dist.is_some_and(|d| d.is_nan() || d <= 0.0))
     {
         return Err(ToolError::invalid(
             &at(i, "distance"),

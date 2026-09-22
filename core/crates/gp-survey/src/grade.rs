@@ -98,12 +98,7 @@ pub static GRADE: ToolDef = ToolDef {
     id: "survey.earthwork.grade",
     title: "Side slope and grade (H:V)",
     summary: "A construction side slope or grade with its ratio labeled H:V and V:H, refusing an unlabeled 3:1, with rise, run, or slope length from any two; for a plain unit conversion of a slope, use the slope converter.",
-    aliases: &[
-        "side slope ratio",
-        "H:V slope",
-        "3H:1V",
-        "rise run slope length",
-    ],
+    aliases: &["side slope ratio", "H:V slope", "rise run slope length"],
     keywords: &[
         "side slope",
         "H:V",

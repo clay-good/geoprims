@@ -16,6 +16,7 @@ pub mod section;
 pub mod sight;
 pub mod spiral;
 pub mod staking;
+pub mod stationing;
 pub mod stockpile;
 
 use gp_base::ErrorCode;
@@ -888,7 +889,7 @@ fn run_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
 pub(crate) fn station(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
     match ctx.raw(name).cloned() {
         None => Ok(None),
-        Some(Value::Number(n)) => Ok(n.as_f64()),
+        Some(Value::Number(n)) => Ok(n.as_f64().filter(|x| x.is_finite())),
         Some(Value::String(s)) => {
             let t = s.trim();
             let parse = |x: &str| x.trim().parse::<f64>().ok();
@@ -908,7 +909,7 @@ pub(crate) fn station(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolErro
                 }
                 None => parse(t),
             };
-            v.map(Some).ok_or_else(|| {
+            v.filter(|x| x.is_finite()).map(Some).ok_or_else(|| {
                 ToolError::invalid(
                     &format!("/{name}"),
                     format!("\"{s}\" is not a station like 10+00 or 1+234.567."),
@@ -2273,6 +2274,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &intersect::INTERSECTION,
     &intersect::RESECTION,
     &closure::ANGULAR,
+    &stationing::STATION_OFFSET,
     &leveling::LEVEL_RUN,
     &land::LEGACY_UNITS,
     &land::DEED_PARSE,

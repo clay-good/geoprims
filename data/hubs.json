@@ -881,6 +881,12 @@
           ]
         },
         {
+          "want": "find a point's station and offset from a line, or set one out",
+          "tools": [
+            "station-offset"
+          ]
+        },
+        {
           "want": "check and adjust a traverse, angles and distances",
           "tools": [
             "traverse-closure",

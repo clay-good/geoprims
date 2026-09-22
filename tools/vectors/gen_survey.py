@@ -954,6 +954,37 @@ def solid_volume():
     return out
 
 
+def station_offset():
+    """Checked by rotating the point into the line's frame with a rotation matrix."""
+    out = []
+
+    def fmt(v):
+        tot = round(v * 100)
+        whole = tot // 10000
+        return f"{whole}+{(tot - whole * 10000) / 100:05.2f}"
+
+    def frame(sn, se, az, pn, pe):
+        a = math.radians(az)
+        # Rotate by -az: north along the line, east to its right.
+        dn, de = pn - sn, pe - se
+        return dn * math.cos(a) + de * math.sin(a), -dn * math.sin(a) + de * math.cos(a)
+
+    for i, (sn, se, s0, az, pn, pe) in enumerate([(5000, 5000, 1000, 60, 5300, 5400), (0, 0, 0, 0, 50, -20), (1000, 2000, 500, 225, 900, 1950), (200, 300, 1250, 135, 150, 400)], 1):
+        along, off = frame(sn, se, az, pn, pe)
+        side = "right" if off > 0 else "left" if off < 0 else "on the line"
+        out.append(vec(i, {"start_northing": f"{sn} ft", "start_easting": f"{se} ft", "start_station": fmt(s0), "direction": f"{az}", "northing": f"{pn} ft", "easting": f"{pe} ft"},
+                       {"result.station": fmt(s0 + along), "result.offset.value": off, "result.side": side,
+                        "result.foot_northing.value": sn + along * math.cos(math.radians(az)), "result.foot_easting.value": se + along * math.sin(math.radians(az))}, rel=1e-11))
+    # And back: the point at 13+50, 12.5 ft left of a line N 60 E from 10+00.
+    a = math.radians(60)
+    along, off = 350, -12.5
+    pn, pe = 5000 + along * math.cos(a) - off * math.sin(a), 5000 + along * math.sin(a) + off * math.cos(a)
+    out.append(vec(5, {"start_northing": "5000 ft", "start_easting": "5000 ft", "start_station": "10+00", "direction": "60", "station": "13+50", "offset": "-12.5 ft"},
+                   {"result.northing.value": pn, "result.easting.value": pe, "result.side": "left"}, rel=1e-11))
+    out.append(vec(6, {"start_northing": "0 ft", "start_easting": "0 ft", "direction": "0"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -1056,7 +1087,7 @@ def main():
         "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
         "survey.reduction.level-run": level_run(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
-        "survey.cogo.angular-closure": angular_closure(), "survey.earthwork.slope-stake": slope_stake(),
+        "survey.cogo.angular-closure": angular_closure(), "survey.cogo.station-offset": station_offset(), "survey.earthwork.slope-stake": slope_stake(),
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
         "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(),
         "survey.curves.sight-distance": sight_distance(), "survey.earthwork.profile-grades": profile_grades(),

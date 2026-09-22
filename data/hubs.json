@@ -905,6 +905,12 @@
           ]
         },
         {
+          "want": "lay out a spiral transition",
+          "tools": [
+            "spiral"
+          ]
+        },
+        {
           "want": "stake out a curve at a station interval",
           "tools": [
             "curve-layout"

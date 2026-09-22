@@ -808,6 +808,47 @@ def curve_layout():
     return out
 
 
+def spiral():
+    """Spiral elements from the Fresnel integrals by Simpson's rule: independent of the tool's series."""
+    out = []
+
+    def fresnel(l, R, Ls, n=20000):
+        h = l / n
+        sx = sy = 0.0
+        for k in range(n + 1):
+            s = k * h
+            w = 1 if k in (0, n) else (4 if k % 2 else 2)
+            t = s * s / (2 * R * Ls)
+            sx += w * math.cos(t)
+            sy += w * math.sin(t)
+        return sx * h / 3, sy * h / 3
+
+    def fmt(v):
+        tot = round(v * 100)
+        whole = tot // 10000
+        return f"{whole}+{(tot - whole * 10000) / 100:05.2f}"
+
+    for i, (Ls, R, dd, pi) in enumerate([(200.0, 1000.0, 40.0, 5000.0), (150.0, 800.0, 30.0, 2345.67), (300.0, 1500.0, 55.0, 10000.0), (100.0, 2000.0, 12.0, 750.0)], 1):
+        th = Ls / (2 * R)
+        X, Y = fresnel(Ls, R, Ls)
+        p, k = Y - R * (1 - math.cos(th)), X - R * math.sin(th)
+        d = math.radians(dd)
+        Ts = (R + p) * math.tan(d / 2) + k
+        arc = R * (d - 2 * th)
+        ts = pi - Ts
+        exp = {"result.x.value": X, "result.y.value": Y, "result.p.value": p, "result.k.value": k, "result.total_tangent.value": Ts,
+               "result.arc_length.value": arc, "result.ts_station": fmt(ts), "result.st_station": fmt(ts + 2 * Ls + arc)}
+        src, ver = (SPEC, "2026") if i == 1 else (SRC, VER)
+        v = vec(i, {"spiral_length": f"{Ls} ft", "radius": f"{R} ft", "delta": f"{dd} deg", "pi_station": fmt(pi)}, exp, src, ver)
+        # The spec asks for 0.001 of the unit; the series is held to a millionth.
+        for key in ("result.x.value", "result.y.value", "result.p.value", "result.k.value", "result.total_tangent.value"):
+            v["tolerance"][key] = {"rel": 0.0, "abs": 1e-6}
+        out.append(v)
+    out.append(vec(5, {"spiral_length": "200 ft", "radius": "100 ft", "delta": "40 deg", "pi_station": "50+00"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(6, {"spiral_length": "200 ft", "radius": "1000 ft", "delta": "10 deg", "pi_station": "50+00"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -912,7 +953,7 @@ def main():
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.cogo.angular-closure": angular_closure(), "survey.earthwork.slope-stake": slope_stake(),
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
-        "survey.curves.curve-layout": curve_layout(),
+        "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

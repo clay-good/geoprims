@@ -857,7 +857,8 @@
       "source": "ghilani",
       "relatedTools": [
         "survey.curves.circular-curve",
-        "survey.curves.curve-layout"
+        "survey.curves.curve-layout",
+        "survey.curves.spiral"
       ]
     },
     {
@@ -1029,6 +1030,46 @@
       "source": "ghilani",
       "relatedTools": [
         "survey.reduction.level-run"
+      ]
+    },
+    {
+      "id": "ts",
+      "term": "TS",
+      "expansion": "tangent to spiral",
+      "definition": "The station where the straight tangent ends and a spiral transition begins, curving gradually from straight toward the circular curve.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "sc",
+      "term": "SC",
+      "expansion": "spiral to curve",
+      "definition": "The station where the entry spiral ends and the circular curve begins, at the curve's full radius.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "cs",
+      "term": "CS",
+      "expansion": "curve to spiral",
+      "definition": "The station where the circular curve ends and the exit spiral begins.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "st",
+      "term": "ST",
+      "expansion": "spiral to tangent",
+      "definition": "The station where the exit spiral ends and the alignment is straight again.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
       ]
     }
   ],

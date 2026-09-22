@@ -12,6 +12,7 @@ pub mod layout;
 pub mod leveling;
 pub mod reduction;
 pub mod section;
+pub mod spiral;
 pub mod staking;
 
 use gp_base::ErrorCode;
@@ -2248,6 +2249,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &CIRCULAR_CURVE,
     &VERTICAL_CURVE,
     &layout::CURVE_LAYOUT,
+    &spiral::SPIRAL,
     &AVERAGE_END_AREA,
     &PRISMOIDAL,
     &SHRINK_SWELL,

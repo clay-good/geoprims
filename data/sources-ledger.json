@@ -163,6 +163,26 @@
       "editionCheck": true
     },
     {
+      "id": "bolton-1980",
+      "name": "The Computation of Equivalent Potential Temperature (Bolton)",
+      "issuer": "American Meteorological Society, Monthly Weather Review",
+      "currentEdition": "Vol. 108, No. 7",
+      "currentReleaseDate": "1980-07-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Checked on 2026-09-22: the DOI resolves to Monthly Weather Review vol. 108, issue 7, page 1046 at journals.ametsoc.org. A published article, not revised.",
+      "freeAccessUrl": "https://doi.org/10.1175/1520-0493(1980)108%3C1046:TCOEPT%3E2.0.CO;2",
+      "matchTerms": [
+        "The Computation of Equivalent Potential Temperature"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "bowditch",
       "name": "The American Practical Navigator (Bowditch), NGA Pub. No. 9",
       "issuer": "National Geospatial-Intelligence Agency",

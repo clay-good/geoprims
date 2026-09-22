@@ -96,6 +96,12 @@
           "tools": [
             "isa"
           ]
+        },
+        {
+          "want": "estimate the cloud base and freezing level",
+          "tools": [
+            "cloud-base"
+          ]
         }
       ]
     },
@@ -237,6 +243,12 @@
           "want": "turn a wind into u and v components, or back",
           "tools": [
             "uv"
+          ]
+        },
+        {
+          "want": "work out the compass heading from a true course",
+          "tools": [
+            "heading-chain"
           ]
         }
       ],

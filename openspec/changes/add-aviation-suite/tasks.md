@@ -4,7 +4,7 @@
 - [ ] 1.2 Implement US76 to 86 km; verify the table-agreement scenario (built: US 1976 to 86 km with the M/M0 kinetic-temperature table; checked against 4 printed rows so far)
 - [x] 1.3 Implement non-standard days with temperature-difference inputs; verify the ISA+20 scenario
 - [ ] 1.4 Implement humidity functions (cited Magnus coefficients), virtual temperature, and moist density; verify the humid-density scenario against a published psychrometric example
-- [ ] 1.5 Implement cloud-base and freezing-level estimates; verify the cloud-base scenario
+- [x] 1.5 Implement cloud-base and freezing-level estimates; verify the cloud-base scenario (`aviation.atmosphere.cloud-base`: 400 ft per °C of spread, labeled a rule of thumb, beside the lifting condensation level by Bolton (1980) eq. 15 and the dry-adiabatic rate, above the field and above sea level with the elevation; the freezing level from the surface temperature at a lapse rate, standard 1.98 °C per 1,000 ft by default. The scenario: 25 °C and 15 °C give 4,000 ft by the rule and 4,125 ft by the LCL; 7 golden vectors)
 - [ ] 1.6 Implement the atmosphere profile chart; verify the visual fixture
 
 ## 2. Airspeed
@@ -29,7 +29,7 @@
 
 - [ ] 4.1 Implement all wind-triangle forms with reference checks; verify the heading, find-wind, too-strong, and mixed-reference scenarios (built: heading/groundspeed and find-wind forms with the heading, find-wind, too-strong, and mixed-reference scenarios; pending: two remaining forms)
 - [ ] 4.2 Implement runway components, gusts, limits, designator parsing, and best-runway ranking; verify the runway 27, gust, designator, and ranking scenarios (built: components, gusts, variable winds, limits, designators, and their scenarios; pending: best-runway ranking)
-- [ ] 4.3 Implement the heading chain with deviation-card interpolation; verify the interpolation scenario
+- [x] 4.3 Implement the heading chain with deviation-card interpolation; verify the interpolation scenario (`aviation.wind.heading-chain`: true course, wind correction, true heading, variation (east positive, from the chart or a model), magnetic heading, deviation read linearly from the card around the circle, compass heading, each step listed. The scenario: +2° at 060° and -1° at 090° read +0.5° at 075° magnetic, compass 074.5°; 8 golden vectors, including a card wrapping through north)
 - [ ] 4.4 Implement 1-in-60 corrections (exact and rule); verify the 4 NM scenario
 - [x] 4.5 Implement u/v wind conversion and winds-aloft interpolation between levels; verify against a hand-computed fixture (`aviation.wind.uv` both ways in the meteorological convention, u = −s·sin θ and v = −s·cos θ for a wind from θ true; `aviation.wind.aloft-interpolate` linear in u, v, and temperature between the two levels that bracket the altitude, no extrapolation, levels in any order. The hand-computed fixture: 7,500 ft between 270° at 20 kt and 300° at 30 kt gives 288° at 24.2 kt; 21 golden vectors, including a wind veering through north and opposite winds cancelling to calm)
 - [ ] 4.6 Implement wind-triangle and runway diagrams; verify visual fixtures

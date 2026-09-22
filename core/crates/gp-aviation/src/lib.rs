@@ -6,6 +6,7 @@ pub mod airspeed;
 pub mod aloft;
 pub mod atmosphere;
 pub mod dme;
+pub mod heading;
 pub mod ifr;
 pub mod loading;
 pub mod performance;
@@ -2172,6 +2173,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &dme::SLANT,
     &dme::TIME_TO_STATION,
     &dme::ARC_LEAD,
+    &heading::HEADING_CHAIN,
+    &heading::CLOUD_BASE,
 ];
 
 pub static REGISTRY: Registry = Registry {

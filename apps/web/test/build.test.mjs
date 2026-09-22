@@ -159,6 +159,40 @@ test('every aviation, drone, and navigation tool shows the safety notice in its 
   assert.match(page('/disclaimer/'), /Not for primary navigation\./);
 });
 
+test('every hub page for an operational domain carries the safety notice too', () => {
+  // add-aviation-suite 7.3: a pilot who lands on a hub from search reads the
+  // same notice as one who lands on a tool.
+  const notice = '<strong>Planning and education aid. Not for primary navigation.</strong>';
+  const hubs = new Set();
+  for (const t of catalog.tools) {
+    hubs.add(route(t.domain));
+    hubs.add(route(`${t.domain}.${t.group}`));
+  }
+  const problems = [];
+  for (const hub of hubs) {
+    const operational = ['aviation', 'drone', 'navigation'].includes(hub.split('/')[1]);
+    if (page(hub).includes(notice) !== operational) problems.push(`${hub}: notice ${operational ? 'missing' : 'shown where it does not belong'}`);
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('every aviation page dates the rules it relies on', () => {
+  // add-aviation-suite 7.3: a regulation or handbook changes, so a citation
+  // that does not say which edition it means is worth little to a pilot.
+  const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const problems = [];
+  for (const t of catalog.tools.filter((t) => t.domain === 'aviation')) {
+    const html = page(route(t.id));
+    assert.ok(t.references.length, `${t.id} cites nothing`);
+    for (const r of t.references) {
+      if (!r.edition) problems.push(`${t.id}: "${r.title}" has no edition`);
+      else if (!html.includes(esc(r.edition))) problems.push(`${t.id}: the page does not show the edition of "${r.title}"`);
+      if (!html.includes(esc(r.title))) problems.push(`${t.id}: the page does not cite "${r.title}"`);
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
 test('the home page explains the product, then searches, then browses', () => {
   // The hero says what this is, the search comes next, then the instrument
   // panel and the topics. Nothing personal or historical above them.

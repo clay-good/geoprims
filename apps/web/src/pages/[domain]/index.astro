@@ -17,6 +17,11 @@ const jsonld = [collection(`${title} calculators`, route(domain), listed), bread
   <PageHeader title={title} purpose={DOMAIN_BLURBS[domain]}>
     <p class="review notice">{reviewLine(domain)}</p>
   </PageHeader>
+  {['aviation', 'drone', 'navigation'].includes(domain) && (
+    <p class="safety" role="note">
+      <span><strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a></span>
+    </p>
+  )}
   {listed.length > 8 && <ListFilter total={listed.length} noun={title.toLowerCase()} />}
   {/* Jump chips help when there are a few groups; past 12 the filter does the job. */}
   {byGroup.length > 1 && byGroup.length <= 12 && (

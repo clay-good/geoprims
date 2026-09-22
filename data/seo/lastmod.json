@@ -12,19 +12,19 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
-    "hash": "aee45468018ca20d",
+    "hash": "632e851e97fe2c16",
     "lastmod": "2026-09-22"
   },
   "/aviation/airspace/": {
-    "hash": "8b21042b66291fd8",
+    "hash": "89f267bd6e2db074",
     "lastmod": "2026-09-22"
   },
   "/aviation/airspeed/": {
-    "hash": "6fca2e2c6a971fd0",
+    "hash": "3c12107758dd7864",
     "lastmod": "2026-09-22"
   },
   "/aviation/altimetry/": {
-    "hash": "0c46e173be814d1e",
+    "hash": "84d2e57a1023ce98",
     "lastmod": "2026-09-22"
   },
   "/aviation/altimetry/density-altitude/": {
@@ -36,7 +36,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/atmosphere/": {
-    "hash": "c48224cadfdad133",
+    "hash": "35ecc5abafd97f3b",
     "lastmod": "2026-09-22"
   },
   "/aviation/atmosphere/isa/": {
@@ -44,11 +44,11 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/ifr/": {
-    "hash": "d39aef9914ace108",
+    "hash": "61fe2cf3e32a0282",
     "lastmod": "2026-09-22"
   },
   "/aviation/loading/": {
-    "hash": "d2d47a1062d355a1",
+    "hash": "2eba234e993e1110",
     "lastmod": "2026-09-22"
   },
   "/aviation/loading/weight-balance/": {
@@ -56,7 +56,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/performance/": {
-    "hash": "9af29e58cb866861",
+    "hash": "02cfecff91f469d2",
     "lastmod": "2026-09-22"
   },
   "/aviation/performance/top-of-descent/": {
@@ -68,7 +68,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/weather/": {
-    "hash": "3b1aed0066b49169",
+    "hash": "0d93d5a63ef13da2",
     "lastmod": "2026-09-22"
   },
   "/aviation/weather/fb-winds-decode/": {
@@ -84,7 +84,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/": {
-    "hash": "640703bc6bbd956b",
+    "hash": "768406211a627e86",
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/heading-groundspeed/": {
@@ -104,23 +104,23 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "467095e118c6f028",
+    "hash": "896f85650ca0149b",
     "lastmod": "2026-09-22"
   },
   "/drone/links/": {
-    "hash": "1057fed4836204e6",
+    "hash": "2a5561dc7a58f934",
     "lastmod": "2026-09-22"
   },
   "/drone/mission/": {
-    "hash": "672abf23d6e10388",
+    "hash": "7ef8d92c7d6ef955",
     "lastmod": "2026-09-22"
   },
   "/drone/ops/": {
-    "hash": "382ac194116f1f89",
+    "hash": "3128c013b07916cd",
     "lastmod": "2026-09-22"
   },
   "/drone/photogrammetry/": {
-    "hash": "6929e51eaced61f8",
+    "hash": "85ef8305bcf0f52f",
     "lastmod": "2026-09-22"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
@@ -132,7 +132,7 @@
     "lastmod": "2026-09-22"
   },
   "/drone/power/": {
-    "hash": "78c9261910486762",
+    "hash": "8cda9d9efe6fb89d",
     "lastmod": "2026-09-22"
   },
   "/drone/power/battery-energy/": {
@@ -140,7 +140,7 @@
     "lastmod": "2026-09-22"
   },
   "/drone/sensors/": {
-    "hash": "feb1393453ad0636",
+    "hash": "05212f9834371418",
     "lastmod": "2026-09-22"
   },
   "/drone/sensors/vlos/": {
@@ -472,11 +472,11 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
-    "hash": "c716cdd7b075b1f7",
+    "hash": "703957a19db3e7c3",
     "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/": {
-    "hash": "8447c500c35c8222",
+    "hash": "c7a14b33d4474280",
     "lastmod": "2026-09-22"
   },
   "/navigation/geodesic/direct/": {
@@ -492,7 +492,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/los/": {
-    "hash": "bfccfc69dd7a4a35",
+    "hash": "b31f27e104a4f404",
     "lastmod": "2026-09-22"
   },
   "/navigation/los/horizon/": {
@@ -500,7 +500,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/rhumb/": {
-    "hash": "15cff26030489d1d",
+    "hash": "3f3261ae761ab9a7",
     "lastmod": "2026-09-22"
   },
   "/navigation/rhumb/direct/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/route/": {
-    "hash": "2dfa154eb762c42a",
+    "hash": "bddc52667f943314",
     "lastmod": "2026-09-22"
   },
   "/navigation/route/cross-track/": {
@@ -524,7 +524,7 @@
     "lastmod": "2026-09-22"
   },
   "/navigation/vector/": {
-    "hash": "000736e7a6c4c682",
+    "hash": "03b7dfb592e0cf09",
     "lastmod": "2026-09-22"
   },
   "/privacy/": {

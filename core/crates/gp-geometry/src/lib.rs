@@ -333,6 +333,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &buffer::BUFFER,
     &shape::CENTROID,
     &envelope::BBOX,
+    &envelope::ENCLOSING,
 ];
 
 pub static REGISTRY: Registry = Registry {

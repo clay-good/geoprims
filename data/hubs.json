@@ -695,6 +695,12 @@
           "tools": [
             "bbox"
           ]
+        },
+        {
+          "want": "find the hull, smallest rectangle, or smallest circle around points",
+          "tools": [
+            "enclosing"
+          ]
         }
       ]
     },

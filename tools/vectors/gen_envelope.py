@@ -43,6 +43,53 @@ def box(w, s, e, n, span, crosses, pole="none"):
             "result.lon_span.value": float(span), "result.crosses_antimeridian": crosses, "result.pole": pole}
 
 
+def direct(lat, lon, az, s):
+    out = subprocess.run(["GeodSolve", "-p", "12"], input=f"{lat} {lon} {az} {s}\n", capture_output=True, text=True, check=True).stdout.split()
+    return float(out[0]), float(out[1])
+
+
+def inverse(a, b):
+    out = subprocess.run(["GeodSolve", "-i", "-p", "12"], input=f"{a[0]} {a[1]} {b[0]} {b[1]}\n", capture_output=True, text=True, check=True).stdout.split()
+    return float(out[0]), float(out[2])  # azi1, s12
+
+
+def enclosing_vectors():
+    out = []
+    src = "Circles and rectangles built with GeographicLib's GeodSolve (C++), evaluated in Python (tools/vectors/gen_envelope.py)"
+    cv = lambda lat, lon, r, tol_m: ({"result.circle_lat.value": lat, "result.circle_lon.value": lon, "result.circle_radius.value": r},
+                                     {"result.circle_lat.value": tol_m / 111_000, "result.circle_lon.value": tol_m / 50_000, "result.circle_radius.value": tol_m})
+    # Two points: the circle is centered on the geodesic midpoint.
+    for a, b in [((40, -105), (40.01, -104.98)), ((-33.9, 18.4), (-34.2, 18.9)), ((64, -150), (65, -145))]:
+        az, s12 = inverse(a, b)
+        m = direct(a[0], a[1], az, s12 / 2)
+        exp, tol = cv(m[0], m[1], s12 / 2, 1e-3)
+        v = vec(len(out) + 1, {"points": pts(a, b)}, exp, src, VER)
+        v["tolerance"].update({k: {"rel": 0, "abs": t} for k, t in tol.items()})
+        out.append(v)
+    # Points at one distance from a center, at 0, 120, and 240 degrees (and 90-degree steps
+    # with interior points): that center is the smallest circle's, whatever the scale.
+    for c, r, azs, inner in [((40, -105), 500, [0, 120, 240], []), ((10, 30), 5000, [0, 90, 180, 270], [(45, 1500), (200, 3000)]),
+                             ((52, 4), 500_000, [10, 130, 250], [(0, 100_000)]), ((-70, 160), 20_000, [0, 120, 240], [])]:
+        ring = [direct(c[0], c[1], az, r) for az in azs] + [direct(c[0], c[1], az, d) for az, d in inner]
+        exp, tol = cv(float(c[0]), float(c[1]), float(r), 1e-3)
+        if len(azs) == 4:
+            exp["result.hull_count"] = 4
+        v = vec(len(out) + 1, {"points": pts(*ring)}, exp, src, VER)
+        v["tolerance"].update({k: {"rel": 0, "abs": t} for k, t in tol.items()})
+        out.append(v)
+    # A 300 m by 100 m rectangle turned to 30 degrees, with points inside.
+    c = (39.95, -105.2)
+    corners = []
+    for along, across in [(-150, -50), (150, -50), (150, 50), (-150, 50), (20, 10), (-60, -30)]:
+        d, az = math.hypot(along, across), math.degrees(math.atan2(across, along)) + 30
+        corners.append(direct(c[0], c[1], az, d))
+    v = vec(len(out) + 1, {"points": pts(*corners)}, {"result.rect_length.value": 300.0, "result.rect_width.value": 100.0, "result.rect_azimuth.value": 30.0, "result.hull_count": 4}, src, VER)
+    v["tolerance"].update({"result.rect_length.value": {"rel": 0, "abs": 2e-3}, "result.rect_width.value": {"rel": 0, "abs": 2e-3}, "result.rect_azimuth.value": {"rel": 0, "abs": 1e-4}})
+    out.append(v)
+    out.append(vec(len(out) + 1, {"points": pts((0, 0), (0, 120), (0, -120))}, {"ok": False, "error.code": "OUT_OF_DOMAIN"}, SPEC))
+    return out
+
+
 def main():
     out = []
     # The spec scenario: 170° E and 170° W give a 20° box across the antimeridian.
@@ -68,6 +115,7 @@ def main():
                    {"result.west.value": 179.0, "result.east.value": -179.0, "result.lon_span.value": 2.0, "result.crosses_antimeridian": "yes"}))
     out.append(vec(len(out) + 1, {"points": [{"lat": 91, "lon": 0}]}, {"ok": False, "error.code": "OUT_OF_DOMAIN"}, SPEC))
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
+    (dest / "geometry.shape.enclosing.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in enclosing_vectors()))
     (dest / "geometry.shape.bbox.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in out))
 
 

@@ -349,3 +349,476 @@ fn run_bbox(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("pole", Json::str(pole)),
     ]))
 }
+
+// ---------------------------------------------------------------- hull, rectangle, circle
+
+use gp_geo::buffer::{Aeqd, center};
+use libm::{atan2, hypot, sin};
+
+type P = (f64, f64);
+
+fn cross3(o: P, a: P, b: P) -> f64 {
+    (a.0 - o.0) * (b.1 - o.1) - (a.1 - o.1) * (b.0 - o.0)
+}
+
+/// Convex hull indices, counterclockwise (Andrew's monotone chain).
+fn hull(pts: &[P]) -> Vec<usize> {
+    let mut idx: Vec<usize> = (0..pts.len()).collect();
+    idx.sort_by(|&a, &b| {
+        pts[a]
+            .0
+            .total_cmp(&pts[b].0)
+            .then(pts[a].1.total_cmp(&pts[b].1))
+    });
+    idx.dedup_by(|a, b| pts[*a] == pts[*b]);
+    if idx.len() < 3 {
+        return idx;
+    }
+    let mut h: Vec<usize> = Vec::with_capacity(2 * idx.len());
+    for pass in 0..2 {
+        let start = h.len();
+        let seq: Vec<usize> = if pass == 0 {
+            idx.clone()
+        } else {
+            idx.iter().rev().copied().collect()
+        };
+        for &i in &seq {
+            while h.len() >= start + 2
+                && cross3(pts[h[h.len() - 2]], pts[h[h.len() - 1]], pts[i]) <= 0.0
+            {
+                h.pop();
+            }
+            h.push(i);
+        }
+        h.pop();
+    }
+    h
+}
+
+/// The smallest circle holding every point (Welzl's algorithm, iterative,
+/// over a fixed shuffle so the answer is the same every run).
+fn min_circle(pts: &[P]) -> (P, f64) {
+    let mut p: Vec<P> = pts.to_vec();
+    let mut s: u64 = 0x9E37_79B9_7F4A_7C15;
+    for i in (1..p.len()).rev() {
+        s ^= s << 13;
+        s ^= s >> 7;
+        s ^= s << 17;
+        p.swap(i, (s % (i as u64 + 1)) as usize);
+    }
+    let circle2 = |a: P, b: P| {
+        (
+            ((a.0 + b.0) / 2.0, (a.1 + b.1) / 2.0),
+            hypot(a.0 - b.0, a.1 - b.1) / 2.0,
+        )
+    };
+    let circle3 = |a: P, b: P, c: P| {
+        let d = 2.0 * (a.0 * (b.1 - c.1) + b.0 * (c.1 - a.1) + c.0 * (a.1 - b.1));
+        if d.abs() < 1e-300 {
+            return None;
+        }
+        let (a2, b2, c2) = (
+            a.0 * a.0 + a.1 * a.1,
+            b.0 * b.0 + b.1 * b.1,
+            c.0 * c.0 + c.1 * c.1,
+        );
+        let ux = (a2 * (b.1 - c.1) + b2 * (c.1 - a.1) + c2 * (a.1 - b.1)) / d;
+        let uy = (a2 * (c.0 - b.0) + b2 * (a.0 - c.0) + c2 * (b.0 - a.0)) / d;
+        Some(((ux, uy), hypot(a.0 - ux, a.1 - uy)))
+    };
+    let inside = |c: (P, f64), q: P| hypot(q.0 - c.0.0, q.1 - c.0.1) <= c.1 * (1.0 + 1e-12) + 1e-9;
+    let mut c = (p[0], 0.0);
+    for i in 1..p.len() {
+        if inside(c, p[i]) {
+            continue;
+        }
+        c = (p[i], 0.0);
+        for j in 0..i {
+            if inside(c, p[j]) {
+                continue;
+            }
+            c = circle2(p[i], p[j]);
+            for k in 0..j {
+                if !inside(c, p[k]) {
+                    c = circle3(p[i], p[j], p[k]).unwrap_or(c);
+                }
+            }
+        }
+    }
+    c
+}
+
+const OUTLINE_ROW: &[Field] = &[
+    deg_out("lat", "Latitude", "Degrees"),
+    deg_out("lon", "Longitude", "Degrees"),
+    Field::new(
+        "shape",
+        "Shape",
+        "hull, rectangle, or circle",
+        Kind::Text { max_len: 10 },
+    ),
+    Field::new(
+        "part",
+        "Part",
+        "0 hull, 1 rectangle, 2 circle",
+        Kind::Number { min: 0.0, max: 2.0 },
+    )
+    .precision(Precision::Decimals(0)),
+];
+
+pub static ENCLOSING: ToolDef = ToolDef {
+    id: "geometry.shape.enclosing",
+    title: "Hull, bounding rectangle, and enclosing circle",
+    summary: "Around a set of points: the convex hull, the smallest rotated rectangle, and the smallest circle that holds them all, with its center and geodesic radius.",
+    aliases: &[
+        "convex hull",
+        "minimum enclosing circle",
+        "smallest enclosing circle",
+        "minimum bounding rectangle",
+        "oriented bounding box",
+    ],
+    keywords: &[
+        "hull",
+        "convex hull",
+        "enclosing circle",
+        "bounding rectangle",
+        "MBR",
+        "oriented",
+        "smallest circle",
+        "points",
+    ],
+    inputs: &[Field::new(
+        "points",
+        "Points",
+        "One per line, like 40.4406, -80.002",
+        Kind::List {
+            items: VERTEX,
+            min: 1,
+            max: 5_000,
+        },
+    )
+    .required()
+    .core()],
+    outputs: &[
+        deg_out(
+            "circle_lat",
+            "Circle center latitude",
+            "Of the smallest enclosing circle",
+        ),
+        deg_out(
+            "circle_lon",
+            "Circle center longitude",
+            "Of the smallest enclosing circle",
+        ),
+        Field::new(
+            "circle_radius",
+            "Circle radius",
+            "Geodesic, to the farthest point",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "hull_count",
+            "Hull corners",
+            "Points on the convex hull",
+            Kind::Number { min: 0.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "hull_area",
+            "Hull area",
+            "Geodesic",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "km2",
+            },
+        )
+        .precision(Precision::Significant(8)),
+        Field::new(
+            "rect_length",
+            "Rectangle length",
+            "The long side",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "rect_width",
+            "Rectangle width",
+            "The short side",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "rect_azimuth",
+            "Rectangle direction",
+            "Of the long side, from north, 0° to 180°",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "outlines",
+            "Outlines",
+            "Hull corners, rectangle corners, and the circle",
+            Kind::List {
+                items: OUTLINE_ROW,
+                min: 0,
+                max: 100_000,
+            },
+        ),
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Circle: Welzl's smallest circle on an azimuthal equidistant plane, re-centered on its result until the circle's center is the plane's own; that plane keeps distances and directions from its center, so the fixed point is the smallest geodesic circle (Karney 2013). Hull: great-circle hull of the points on the sphere, by monotone chain in a gnomonic projection from their mean. Rectangle: the smallest-area rectangle on an edge of the hull, on the equidistant plane at the points' center",
+    accuracy: "The circle's radius is an exact geodesic distance, the center converged to 1 mm; the rectangle is planar on the equidistant map, true for spans of tens of kilometers to about 1 part in 10⁶",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "Seven survey points",
+        input: r#"{"points":[{"lat":40.0,"lon":-105.0},{"lat":40.004,"lon":-104.996},{"lat":40.001,"lon":-104.99},{"lat":39.997,"lon":-104.993},{"lat":40.002,"lon":-104.994},{"lat":39.999,"lon":-104.998},{"lat":40.006,"lon":-104.992}]}"#,
+        source: "add-navigation-and-geometry envelopes: hull, MBR, and minimum enclosing circle",
+    }],
+    primary_example: "primary",
+    visualization: &[
+        Layer {
+            kind: "polygon",
+            map: &[("rings", "outlines")],
+        },
+        Layer {
+            kind: "point",
+            map: &[("lat", "circle_lat"), ("lon", "circle_lon")],
+        },
+    ],
+    related: &[
+        Related {
+            id: "geometry.shape.bbox",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.shape.centroid",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The smallest circle around the points has a radius of {circle_radius}. The smallest rectangle is {rect_length} by {rect_width}.",
+    limits: &[("batchRows", 1_000)],
+    run: run_enclosing,
+    ..ToolDef::BLANK
+};
+
+fn run_enclosing(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let rows = ctx.rows("points")?;
+    let mut pts: Vec<(f64, f64)> = Vec::with_capacity(rows.len());
+    for (i, r) in rows.iter().enumerate() {
+        let lat = ctx
+            .row_quantity("points", i, r, "lat")?
+            .expect("required")
+            .to(deg);
+        let lon = ctx
+            .row_quantity("points", i, r, "lon")?
+            .expect("required")
+            .to(deg);
+        if !(-90.0..=90.0).contains(&lat) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "Latitude must be between -90° and 90°.",
+            )
+            .at(&format!("/points/{i}/lat")));
+        }
+        pts.push((lat, norm180(lon)));
+    }
+    let g = Geodesic::wgs84();
+    let (lat0, lon0) = center(&pts);
+    // Everything must sit well inside the hemisphere around the points' center.
+    let unit = |(la, lo): (f64, f64)| {
+        let (a, o) = (la.to_radians(), lo.to_radians());
+        (cos(a) * cos(o), cos(a) * sin(o), sin(a))
+    };
+    let c3 = unit((lat0, lon0));
+    if pts.iter().any(|&p| {
+        let v = unit(p);
+        v.0 * c3.0 + v.1 * c3.1 + v.2 * c3.2 < 0.2
+    }) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The points spread over most of a hemisphere; split them into smaller groups.",
+        )
+        .at("/points"));
+    }
+    // The smallest circle: re-center the equidistant plane until the circle sits at its origin.
+    let (mut clat, mut clon) = (lat0, lon0);
+    for _ in 0..30 {
+        let map = Aeqd {
+            g: &g,
+            lat0: clat,
+            lon0: clon,
+        };
+        let plane: Vec<P> = pts.iter().map(|&p| map.fwd(p)).collect();
+        let (c, _) = min_circle(&plane);
+        if hypot(c.0, c.1) < 1e-4 {
+            break;
+        }
+        (clat, clon) = map.rev(c);
+    }
+    let radius = pts
+        .iter()
+        .map(|p| {
+            let d: f64 = g.inverse(clat, clon, p.0, p.1);
+            d
+        })
+        .fold(0.0, f64::max);
+    // The great-circle hull, by a gnomonic projection from the points' center.
+    let (sl, cl) = (sin(lon0.to_radians()), cos(lon0.to_radians()));
+    let e = (-sl, cl, 0.0);
+    let n = (
+        c3.1 * e.2 - c3.2 * e.1,
+        c3.2 * e.0 - c3.0 * e.2,
+        c3.0 * e.1 - c3.1 * e.0,
+    );
+    let gno: Vec<P> = pts
+        .iter()
+        .map(|&p| {
+            let v = unit(p);
+            let k = v.0 * c3.0 + v.1 * c3.1 + v.2 * c3.2;
+            (
+                (v.0 * e.0 + v.1 * e.1 + v.2 * e.2) / k,
+                (v.0 * n.0 + v.1 * n.1 + v.2 * n.2) / k,
+            )
+        })
+        .collect();
+    let h = hull(&gno);
+    let hull_ll: Vec<(f64, f64)> = h.iter().map(|&i| pts[i]).collect();
+    let hull_area = if hull_ll.len() >= 3 {
+        super::ring_area(&g, &hull_ll).0.abs()
+    } else {
+        0.0
+    };
+    // The smallest rectangle, on the equidistant plane at the points' center.
+    let map = Aeqd { g: &g, lat0, lon0 };
+    let plane: Vec<P> = pts.iter().map(|&p| map.fwd(p)).collect();
+    let ph = hull(&plane);
+    let hp: Vec<P> = ph.iter().map(|&i| plane[i]).collect();
+    let mut best: Option<(f64, P, f64, f64, f64, f64)> = None; // area, u, lo_u, hi_u, lo_v, hi_v
+    let dirs: Vec<P> = if hp.len() >= 2 {
+        (0..hp.len())
+            .map(|i| {
+                let (a, b) = (hp[i], hp[(i + 1) % hp.len()]);
+                let l = hypot(b.0 - a.0, b.1 - a.1);
+                ((b.0 - a.0) / l, (b.1 - a.1) / l)
+            })
+            .filter(|u| u.0.is_finite())
+            .collect()
+    } else {
+        vec![(0.0, 1.0)]
+    };
+    for u in dirs {
+        let v = (-u.1, u.0);
+        let (mut lu, mut hu, mut lv, mut hv) = (
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        );
+        for p in if hp.is_empty() { &plane } else { &hp } {
+            let (a, b) = (p.0 * u.0 + p.1 * u.1, p.0 * v.0 + p.1 * v.1);
+            lu = lu.min(a);
+            hu = hu.max(a);
+            lv = lv.min(b);
+            hv = hv.max(b);
+        }
+        let area = (hu - lu) * (hv - lv);
+        if best.is_none_or(|b| area < b.0 - 1e-9 * area.abs()) {
+            best = Some((area, u, lu, hu, lv, hv));
+        }
+    }
+    let (_, u, lu, hu, lv, hv) = best.expect("at least one direction");
+    let v = (-u.1, u.0);
+    let (len_u, len_v) = (hu - lu, hv - lv);
+    let corner = |a: f64, b: f64| map.rev((a * u.0 + b * v.0, a * u.1 + b * v.1));
+    let rect = [
+        corner(lu, lv),
+        corner(hu, lv),
+        corner(hu, hv),
+        corner(lu, hv),
+    ];
+    let long = if len_u >= len_v { u } else { v };
+    let azimuth = atan2(long.0, long.1).to_degrees().rem_euclid(180.0);
+    let dq = |v: f64| Q {
+        value: v,
+        unit: deg,
+    };
+    let mut outlines = Vec::new();
+    let mut row = |ll: (f64, f64), shape: &str, part: f64| {
+        outlines.push(Json::obj([
+            ("lat", dq(ll.0).to_json()),
+            ("lon", dq(ll.1).to_json()),
+            ("shape", Json::str(shape)),
+            ("part", Json::Num(part)),
+        ]));
+    };
+    for &p in &hull_ll {
+        row(p, "hull", 0.0);
+    }
+    for &p in &rect {
+        row(p, "rectangle", 1.0);
+    }
+    if radius > 0.0 {
+        for k in 0..72 {
+            let (la, lo, _): (f64, f64, f64) = g.direct(clat, clon, 5.0 * k as f64, radius);
+            row((la, norm180(lo)), "circle", 2.0);
+        }
+    }
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    Ok(Json::obj([
+        ("circle_lat", ctx.out("circle_lat", dq(clat))),
+        ("circle_lon", ctx.out("circle_lon", dq(norm180(clon)))),
+        (
+            "circle_radius",
+            ctx.out(
+                "circle_radius",
+                Q {
+                    value: radius,
+                    unit: m,
+                },
+            ),
+        ),
+        ("hull_count", Json::Num(hull_ll.len() as f64)),
+        (
+            "hull_area",
+            ctx.out("hull_area", super::q(hull_area, "m2", QT::Area)),
+        ),
+        (
+            "rect_length",
+            ctx.out(
+                "rect_length",
+                Q {
+                    value: len_u.max(len_v),
+                    unit: m,
+                },
+            ),
+        ),
+        (
+            "rect_width",
+            ctx.out(
+                "rect_width",
+                Q {
+                    value: len_u.min(len_v),
+                    unit: m,
+                },
+            ),
+        ),
+        ("rect_azimuth", ctx.out("rect_azimuth", dq(azimuth))),
+        ("outlines", Json::Arr(outlines)),
+    ]))
+}

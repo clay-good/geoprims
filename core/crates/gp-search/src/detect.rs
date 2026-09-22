@@ -105,7 +105,9 @@ fn is_altimeter(s: &str) -> bool {
 }
 
 fn is_metar(s: &str) -> bool {
-    let words: Vec<&str> = s.split_whitespace().collect();
+    // Reports are written in capitals, but a person types "metar kden …".
+    let upper = s.to_ascii_uppercase();
+    let words: Vec<&str> = upper.split_whitespace().collect();
     let rest = match words.first() {
         Some(&"METAR" | &"SPECI") => &words[1..],
         _ => &words[..],
@@ -315,11 +317,31 @@ fn altimeter_setting(v: &str) -> Vec<(&'static str, Json)> {
     ]
 }
 fn report(v: &str) -> Vec<(&'static str, Json)> {
-    vec![("report", Json::str(v))]
+    vec![("report", Json::str(v.to_ascii_uppercase()))]
 }
 
 fn obj(pairs: Vec<(&'static str, Json)>) -> Json {
     Json::Obj(pairs.into_iter().map(|(k, v)| (k.to_owned(), v)).collect())
+}
+
+/// Formats structured enough that recognizing one decides the tool: a METAR,
+/// an H3 cell, a Plus Code, an altimeter group. Looser ones (a geohash is any
+/// short word in its alphabet, so "denver" qualifies) only ever suggest.
+const DECISIVE: &[&str] = &["metar", "h3", "plus-code", "altimeter"];
+
+/// The decoder and its input when the whole query is a decisive format: what
+/// the search should open, with the value already in it.
+pub fn decisive(query: &str) -> Option<(&'static str, Vec<(&'static str, Json)>)> {
+    let v = query.trim();
+    let k = KINDS
+        .iter()
+        .find(|k| DECISIVE.contains(&k.kind) && (k.matches)(v))?;
+    let value = if k.kind == "h3" {
+        v.to_ascii_lowercase()
+    } else {
+        v.to_owned()
+    };
+    Some((k.decoder, (k.decode)(&value)))
 }
 
 /// Candidates for a pasted value: `{kind, label, value, decoder: {id, input}, offers: [{id, input, from}]}`.

@@ -26,6 +26,7 @@ export async function ask(query, { limit = 8 } = {}) {
   const detected = found.flatMap((f) =>
     f.actions.map((a, k) => ({
       kind: 'detected',
+      id: a.id,
       title: a.title,
       summary: `Opens with ${f.value}`,
       href: a.href,
@@ -35,5 +36,17 @@ export async function ask(query, { limit = 8 } = {}) {
   );
   const tools = (out.ok ? out.result.results : []).map((t) => ({ kind: 'tool', ...t, href: route(t.id) }));
   const filled = (tools[0]?.open ?? []).map((a) => ({ kind: 'filled', tool: tools[0].title, id: tools[0].id, ...a }));
-  return { results: [...filled, ...detected, ...tools], filled: filled.length > 0, found };
+  // A recognized format — a METAR, an MGRS reference, an H3 cell — is an exact
+  // reading of the whole text, where the question parser only guesses at the
+  // numbers in it; so a detection leads, and a numeric guess follows. Plain
+  // coordinates are the exception: they are also what questions are made of,
+  // and the question's own words say which tool they are for.
+  const exact = found.some((f) => f.kind !== 'coordinates');
+  // One row per destination: a detection and a fill that open the same tool
+  // are the same answer.
+  const opened = new Set(detected.map((d) => d.id));
+  const results = exact
+    ? [...detected, ...filled.filter((f) => !opened.has(f.id)), ...tools]
+    : [...filled, ...detected, ...tools];
+  return { results, filled: !exact && filled.length > 0, found };
 }

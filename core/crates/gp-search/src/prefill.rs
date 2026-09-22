@@ -454,11 +454,19 @@ pub fn slots(m: &Value) -> Vec<SlotDef> {
                     r[0].as_f64().unwrap_or(f64::NEG_INFINITY),
                     r[1].as_f64().unwrap_or(f64::INFINITY),
                 ),
-                _ if quantity.is_none() => (
+                // A plain number declares its bounds, and a plain number is
+                // tagged dimensionless, so read them whatever the quantity:
+                // an epoch of 1900 to 2200 never takes the 14 of "14 parameters".
+                _ if !p["minimum"].is_null() || !p["maximum"].is_null() => (
                     bound("minimum", f64::NEG_INFINITY),
                     bound("maximum", f64::INFINITY),
                 ),
-                _ => (f64::NEG_INFINITY, f64::INFINITY),
+                // An angle declares its range ("[-90,90]" for a latitude), so a
+                // number torn out of a weather report is never read as 360°.
+                _ => p["x-angle-range"]
+                    .as_str()
+                    .and_then(angle_range)
+                    .unwrap_or((f64::NEG_INFINITY, f64::INFINITY)),
             };
             let bare = match ex.and_then(|e| e["bare"].as_str()) {
                 Some(b) => b.to_owned(),
@@ -477,6 +485,18 @@ pub fn slots(m: &Value) -> Vec<SlotDef> {
             })
         })
         .collect()
+}
+
+/// The bounds of an `x-angle-range` such as "[-90,90]" or "[0,360)", or None
+/// for "unbounded". Both ends are treated as inclusive: the tool itself
+/// normalizes the open end.
+fn angle_range(r: &str) -> Option<(f64, f64)> {
+    let inner = r
+        .trim()
+        .strip_prefix(['[', '('])?
+        .strip_suffix([']', ')'])?;
+    let (lo, hi) = inner.split_once(',')?;
+    Some((lo.trim().parse().ok()?, hi.trim().parse().ok()?))
 }
 
 /// The value a slot would take from `v`, or None when it cannot.
@@ -634,6 +654,26 @@ pub fn map(slots: &[SlotDef], values: &[Val]) -> (Filled, Ambiguous) {
             ));
         }
     }
+    // 4. A tool with exactly one number to fill, and a question with exactly
+    //    one bare number, has nothing to guess: "knots to mph 120" is 120 kt.
+    //    The unit is the input's own, which the tool shows beside the value.
+    let numeric: Vec<usize> = (0..slots.len()).filter(|&si| !slots[si].text).collect();
+    let bare: Vec<usize> = (0..values.len())
+        .filter(|&vi| !placed[vi] && matches!(&values[vi].kind, Kind::Num { unit: None, .. }))
+        .collect();
+    if let ([si], [vi]) = (numeric.as_slice(), bare.as_slice())
+        && filled[*si].is_none()
+        && ambiguous.is_empty()
+        && let Kind::Num { num, text, .. } = &values[*vi].kind
+        && *num >= slots[*si].range.0
+        && *num <= slots[*si].range.1
+    {
+        let s = &slots[*si];
+        filled[*si] = Some(match s.quantity {
+            Some(q) if q != Quantity::Dimensionless => Json::str(format!("{text} {}", s.unit)),
+            _ => Json::Num(*num),
+        });
+    }
     let fields = slots
         .iter()
         .zip(filled)
@@ -678,6 +718,68 @@ mod tests {
             })
             .collect();
         (vals, p.words)
+    }
+
+    /// A bounded plain number keeps its bounds even though it is tagged
+    /// dimensionless: the Helmert epoch is a year, not the 14 of "14 parameters".
+    #[test]
+    fn a_bounded_number_keeps_its_bounds() {
+        let m: Value = serde_json::from_str(
+            r#"{"inputs":{"properties":{"reference_epoch":{"type":"number","title":"Parameter reference epoch","minimum":1900,"maximum":2200,"x-quantity":"dimensionless","x-unit":"1"}}},"prefill":[{"input":"reference_epoch"}]}"#,
+        )
+        .unwrap();
+        let slots = slots(&m);
+        assert_eq!(slots[0].range, (1900.0, 2200.0));
+        assert!(
+            map(
+                &slots,
+                &parse("14 parameter transformation epoch 14").values
+            )
+            .0
+            .is_empty()
+        );
+        assert_eq!(
+            map(&slots, &parse("reference epoch 2010.0").values).0.len(),
+            1
+        );
+    }
+
+    /// A tool with one number to fill takes a question's one bare number, in
+    /// the input's own unit; two bare numbers are still a guess, so neither goes.
+    #[test]
+    fn a_single_input_tool_takes_the_lone_number() {
+        let m: Value = serde_json::from_str(
+            r#"{"inputs":{"properties":{"value":{"type":["number","string"],"title":"Value","x-quantity":"speed","x-unit":"kt"}}},"prefill":[{"input":"value"}]}"#,
+        )
+        .unwrap();
+        let slots = slots(&m);
+        let (fields, _) = map(&slots, &parse("knots to mph 120").values);
+        assert_eq!(fields, vec![("value".to_owned(), Json::str("120 kt"))]);
+        let (fields, _) = map(&slots, &parse("knots to mph 120 130").values);
+        assert!(fields.is_empty(), "two bare numbers were guessed at");
+    }
+
+    /// A declared angle range keeps an impossible number out of a field: a
+    /// latitude is never 360°, whatever a pasted report contains.
+    #[test]
+    fn a_latitude_takes_no_number_outside_its_range() {
+        assert_eq!(angle_range("[-90,90]"), Some((-90.0, 90.0)));
+        assert_eq!(angle_range("[0,360)"), Some((0.0, 360.0)));
+        assert_eq!(angle_range("unbounded"), None);
+        let m: Value = serde_json::from_str(
+            r#"{"inputs":{"properties":{"lat":{"type":["number","string"],"title":"Latitude","x-quantity":"angle","x-unit":"deg","x-angle-range":"[-90,90]"}}},"prefill":[{"input":"lat"}]}"#,
+        )
+        .unwrap();
+        let slots = slots(&m);
+        assert_eq!(slots[0].range, (-90.0, 90.0));
+        assert!(
+            fits(&slots, &parse("lat 360 deg").values) == 0,
+            "360 degrees filled a latitude"
+        );
+        assert!(
+            fits(&slots, &parse("lat 40.5 deg").values) == 1,
+            "a real latitude was refused"
+        );
     }
 
     #[test]

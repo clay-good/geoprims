@@ -53,6 +53,8 @@ const W_GROUP: u32 = 2;
 const W_SUMMARY: u32 = 1;
 /// Added per question value a tool's inputs can take.
 const FIT_BONUS: u32 = 100;
+/// Above any text score, below an exact id: a decisive paste leads the list.
+const DECISIVE_SCORE: u32 = 500_000;
 
 const STOPWORDS: &[&str] = &[
     "a", "an", "the", "of", "for", "and", "in", "on", "at", "is", "what", "how", "my", "me", "i",
@@ -342,6 +344,9 @@ pub fn search(json: &str) -> String {
         .collect();
     let q = if q.is_empty() { tokens(ranked) } else { q };
     let raw_id = query.trim().to_lowercase();
+    // A pasted report or code decides its own tool: the numbers inside a METAR
+    // are not a question about ellipsoid radii.
+    let decisive = detect::decisive(query);
     INDEX.with(|index| {
         let index = index.borrow();
         let (vocab, entries) = &*index;
@@ -360,6 +365,9 @@ pub fn search(json: &str) -> String {
             .iter()
             .filter(|e| domain.is_none_or(|d| e.domain == d))
             .map(|e| {
+                if decisive.as_ref().is_some_and(|(id, _)| *id == e.id) {
+                    return (DECISIVE_SCORE, e);
+                }
                 let score = e.score(&table, &connector, &raw_id);
                 let bonus = if score > 0 {
                     FIT_BONUS * prefill::fits(&e.slots, &parsed.values)
@@ -395,8 +403,21 @@ pub fn search(json: &str) -> String {
                     ("domain", Json::str(&e.domain)),
                     ("stability", Json::str(&e.stability)),
                 ];
-                // The top result carries what the question filled in.
-                if rank == 0 && !parsed.values.is_empty() {
+                // A decisive paste opens its decoder with the whole value in it.
+                if let Some((_, input)) =
+                    decisive.as_ref().filter(|(id, _)| rank == 0 && *id == e.id)
+                {
+                    o.push((
+                        "prefill",
+                        Json::Obj(
+                            input
+                                .iter()
+                                .map(|(k, v)| ((*k).to_owned(), v.clone()))
+                                .collect(),
+                        ),
+                    ));
+                } else if rank == 0 && !parsed.values.is_empty() {
+                    // The top result carries what the question filled in.
                     let (fields, ambiguous) = prefill::map(&e.slots, &parsed.values);
                     if !fields.is_empty() {
                         o.push(("prefill", Json::Obj(fields)));
@@ -588,6 +609,36 @@ mod tests {
             ]
         );
     }
+    /// A pasted METAR opens the METAR decoder with the report in it, however it
+    /// is typed, instead of feeding its wind group to a geometry tool.
+    #[test]
+    fn a_pasted_report_opens_its_decoder() {
+        load(
+            r#"[
+            {"id":"aviation.weather.metar-decode","title":"METAR decoder","summary":"s","domain":"aviation","group":"weather","aliases":[],"keywords":["metar"],"stability":"stable","inputs":{"properties":{"report":{"type":"string","title":"Report"}}}},
+            {"id":"geodesy.ellipsoid.radii","title":"Radii of curvature","summary":"s","domain":"geodesy","group":"ellipsoid","aliases":[],"keywords":["azimuth"],"stability":"stable","inputs":{"properties":{"azimuth":{"type":["number","string"],"title":"Azimuth","x-quantity":"angle","x-unit":"deg","x-angle-range":"[0,360]"}}}}
+        ]"#,
+        );
+        for q in [
+            "KDEN 211753Z 36010KT 10SM FEW080 22/05 A3012",
+            "metar kden 211753z 36010kt 10sm few080 22/05 a3012",
+        ] {
+            let v: Value = serde_json::from_str(&search(&format!(r#"{{"query":"{q}"}}"#))).unwrap();
+            let top = &v["result"]["results"][0];
+            assert_eq!(top["id"], "aviation.weather.metar-decode", "{q}");
+            assert_eq!(top["prefill"]["report"], q.to_ascii_uppercase(), "{q}");
+        }
+        // A word that merely looks like a geohash decides nothing.
+        let v: Value = serde_json::from_str(&search(r#"{"query":"denver"}"#)).unwrap();
+        assert!(
+            v["result"]["results"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|r| r["id"] != "indexing.geohash.decode")
+        );
+    }
+
     /// A simplified method never wins a tie against the full one: the page
     /// that says "use the geodesic for anything you act on" should not be
     /// the one a distance question opens.

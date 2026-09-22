@@ -10,6 +10,7 @@
 
   import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
+  import { assetMessage } from '../lib/messages.js';
   import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
@@ -87,6 +88,19 @@
   let compute = $state.raw(null);
   let timer;
   // The report dialog is imported on first click, so nothing loads before then.
+  // A missing or damaged data file reads as the dataset's name and what to
+  // do, not as an asset id and a file name (web/offline-pwa).
+  let assetRegistry = $state(null);
+  const assetError = $derived(
+    result && !result.ok && /^ASSET_/.test(result.error.code) && assetRegistry
+      ? assetMessage(result.error, assetRegistry, globalThis.navigator?.onLine !== false)
+      : null,
+  );
+  $effect(() => {
+    if (result && !result.ok && /^ASSET_/.test(result.error.code) && !assetRegistry) {
+      fetch('/assets/registry.json').then((r) => r.json()).then((r) => (assetRegistry = r), () => (assetRegistry = { assets: [] }));
+    }
+  });
   let ReportDialog = $state(null);
   // Batch mode loads only when a reader opens it.
   let BatchPanel = $state(null);
@@ -574,8 +588,9 @@
       </div>
     {/if}
   {:else if result}
-    <p class="error">{result.error.message}</p>
-    {#if result.error.hint}<p class="hint">{result.error.hint}</p>{/if}
+    {@const plain = assetError}
+    <p class="error">{plain?.message ?? result.error.message}</p>
+    {#if plain?.hint ?? result.error.hint}<p class="hint">{plain?.hint ?? result.error.hint}</p>{/if}
     <div class="actions">
       {#if badField}<button type="button" class="quiet" onclick={goToField}>Go to {tool.inputs.properties[badField].title.toLowerCase()}</button>{/if}
       <button type="button" class="quiet" onclick={tryExample}>Try the example</button>

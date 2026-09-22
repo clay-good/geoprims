@@ -60,9 +60,45 @@ def arc():
     return out
 
 
+def intercept():
+    """The heading is whichever of course ± the intercept angle actually reaches
+    the wanted radial: flown 10 NM out from the station on the current radial,
+    its track must cross the radial's ray (not its extension past the station)."""
+    out = []
+    for now, want, inbound, given in [(30, 360, True, None), (30, 360, False, None), (350, 20, True, None), (100, 90, False, None),
+                                      (200, 250, True, 45), (275, 270, True, None), (5, 355, False, 30), (180, 180, True, None)]:
+        course = (want + 180) % 360 if inbound else want % 360
+        off = (now - want + 180) % 360 - 180
+        angle = given if given is not None else min(90, max(20, 2 * abs(off)))
+        px, py = 10 * math.sin(math.radians(now)), 10 * math.cos(math.radians(now))
+        ux, uy = math.sin(math.radians(want)), math.cos(math.radians(want))
+        heading = course if off == 0 else None
+        for h in ((course + angle) % 360, (course - angle) % 360):
+            dx, dy = math.sin(math.radians(h)), math.cos(math.radians(h))
+            den = dx * uy - dy * ux
+            if abs(den) < 1e-12:
+                continue
+            t = (ux * py - uy * px) / den  # along the track to the radial's line
+            r = (dx * py - dy * px) / den  # along the radial from the station
+            if off != 0 and t > 0 and r > 0:
+                heading = h
+        inp = {"current_radial": f"{now} deg", "desired_radial": f"{want} deg", "direction": "inbound" if inbound else "outbound"}
+        if given is not None:
+            inp["intercept_angle"] = f"{given} deg"
+        if heading is None:
+            # Neither heading meets the radial before the station.
+            out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "NO_SOLUTION"}))
+            continue
+        out.append(vec(len(out) + 1, inp, {"result.heading.value": float(heading), "result.course.value": float(course),
+                                           "result.intercept_angle.value": float(angle), "result.angle_off.value": float(abs(off))},
+                       "Plane geometry: the heading of course ± the angle whose track crosses the radial (tools/vectors/gen_dme.py)"))
+    out.append(vec(len(out) + 1, {"current_radial": "200 deg", "desired_radial": "360 deg"}, {"ok": False, "error.code": "NO_SOLUTION"}))
+    return out
+
+
 def main():
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
-    for name, vs in [("aviation.ifr.dme-slant-range", slant()), ("aviation.ifr.time-to-station", tts()), ("aviation.ifr.dme-arc-lead", arc())]:
+    for name, vs in [("aviation.ifr.dme-slant-range", slant()), ("aviation.ifr.time-to-station", tts()), ("aviation.ifr.dme-arc-lead", arc()), ("aviation.ifr.radial-intercept", intercept())]:
         (dest / f"{name}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 

@@ -190,6 +190,12 @@
           "tools": [
             "dme-arc-lead"
           ]
+        },
+        {
+          "want": "find the heading to intercept a radial",
+          "tools": [
+            "radial-intercept"
+          ]
         }
       ]
     },

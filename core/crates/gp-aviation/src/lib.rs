@@ -2235,6 +2235,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &dme::SLANT,
     &dme::TIME_TO_STATION,
     &dme::ARC_LEAD,
+    &dme::RADIAL_INTERCEPT,
     &heading::HEADING_CHAIN,
     &heading::CLOUD_BASE,
     &table::TABLE,

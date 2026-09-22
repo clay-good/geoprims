@@ -530,3 +530,231 @@ fn run_arc_lead(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// ---------------------------------------------------------------- radial intercept
+
+const IFH_INTERCEPT: Reference = Reference {
+    locator: "Chapter 9 (VOR navigation: intercepting a radial, inbound and outbound, with an intercept angle no more than 90°)",
+    ..IFH
+};
+
+pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
+    id: "aviation.ifr.radial-intercept",
+    title: "Heading to intercept a radial",
+    summary: "The heading to fly to intercept a VOR radial inbound or outbound from the radial you are on now, with the intercept angle doubled from the angle off course or set by you.",
+    aliases: &[
+        "radial intercept",
+        "intercept a VOR radial",
+        "intercept heading",
+        "course intercept angle",
+    ],
+    keywords: &[
+        "intercept",
+        "radial",
+        "VOR",
+        "heading",
+        "inbound",
+        "outbound",
+        "course",
+    ],
+    inputs: &[
+        qty(
+            "current_radial",
+            "Radial you are on",
+            "From the station, like 030",
+            QT::Angle,
+            "deg",
+        )
+        .required()
+        .core()
+        .angle_range("unbounded"),
+        qty(
+            "desired_radial",
+            "Radial to intercept",
+            "Like 360",
+            QT::Angle,
+            "deg",
+        )
+        .required()
+        .core()
+        .angle_range("unbounded"),
+        Field::new(
+            "direction",
+            "Track it",
+            "inbound (to the station, default) or outbound (from it)",
+            Kind::Choice(&["inbound", "outbound"]),
+        )
+        .core(),
+        qty(
+            "intercept_angle",
+            "Intercept angle",
+            "Your own, 10 to 90, like 45; default twice the angle off course, 20 to 90",
+            QT::Angle,
+            "deg",
+        )
+        .angle_range("unbounded"),
+    ],
+    outputs: &[
+        qty(
+            "heading",
+            "Intercept heading",
+            "Magnetic, before wind correction",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(0))
+        .angle_range("[0,360)"),
+        qty(
+            "course",
+            "Course on the radial",
+            "The magnetic course once established",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(0))
+        .angle_range("[0,360)"),
+        qty(
+            "angle_off",
+            "Angle off course",
+            "Between the radial you are on and the one you want",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(0))
+        .angle_range("unbounded"),
+        qty(
+            "intercept_angle",
+            "Intercept angle",
+            "Between the intercept heading and the course",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(0))
+        .angle_range("unbounded"),
+        Field::new(
+            "side",
+            "Where you are",
+            "Left or right of the course, facing along it",
+            Kind::Text { max_len: 40 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::NoSolution],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Course = the radial outbound, or the radial + 180° inbound. The heading is the course turned toward the radial by the intercept angle: by default twice the angle off course, kept between 20° and 90° (a common training technique), or your own",
+    accuracy: "Geometry only: correct the heading for wind, and follow the procedure or ATC's assigned heading when there is one",
+    references: &[IFH_INTERCEPT],
+    examples: &[Example {
+        id: "primary",
+        title: "On the 030 radial, intercept the 360 radial inbound",
+        input: r#"{"current_radial":"030 deg","desired_radial":"360 deg","direction":"inbound"}"#,
+        source: "FAA-H-8083-15B chapter 9 course interception; 30° off, so a 60° intercept: heading 180 + 60 = 240",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.ifr.dme-arc-lead",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.ifr.radial-fix",
+            reason: "alternative",
+        },
+    ],
+    sentence: "Fly heading {heading} to intercept, a {intercept_angle} intercept onto course {course}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_intercept,
+    ..ToolDef::BLANK
+};
+
+fn run_intercept(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let dg = unit(QT::Angle, "deg");
+    let now = ctx.req_quantity("current_radial")?.to(dg).rem_euclid(360.0);
+    let want = ctx.req_quantity("desired_radial")?.to(dg).rem_euclid(360.0);
+    let inbound = ctx.choice("direction")? != Some("outbound");
+    // Signed angle from the wanted radial to the one you are on, clockwise positive.
+    let mut off = (now - want + 180.0).rem_euclid(360.0) - 180.0;
+    if off == -180.0 {
+        off = 180.0;
+    }
+    if off.abs() > 90.0 {
+        return Err(ToolError::new(
+            ErrorCode::NoSolution,
+            format!(
+                "You are {}° from that radial, on the far side of the station. Fly toward the station first, or pick the radial on your side.",
+                off.abs().round()
+            ),
+        )
+        .at("/current_radial"));
+    }
+    let angle = match ctx.quantity("intercept_angle")? {
+        Some(a) => {
+            let a = a.to(dg);
+            if !(10.0..=90.0).contains(&a) {
+                return Err(ToolError::invalid(
+                    "/intercept_angle",
+                    "An intercept angle is between 10° and 90°.",
+                ));
+            }
+            a
+        }
+        None => (2.0 * off.abs()).clamp(20.0, 90.0),
+    };
+    if inbound && off != 0.0 && angle <= off.abs() {
+        return Err(ToolError::new(
+            ErrorCode::NoSolution,
+            format!(
+                "A {}° intercept from {}° off course reaches the radial only past the station. Use an intercept angle larger than the angle off course.",
+                angle.round(),
+                off.abs().round()
+            ),
+        )
+        .at("/intercept_angle"));
+    }
+    let course = if inbound { want + 180.0 } else { want }.rem_euclid(360.0);
+    // Clockwise of the radial is left of the inbound course and right of the outbound one.
+    let turn = if off == 0.0 { 0.0 } else { off.signum() };
+    let heading = if inbound {
+        course + turn * angle
+    } else {
+        course - turn * angle
+    }
+    .rem_euclid(360.0);
+    let side = if off == 0.0 {
+        "on the radial".to_owned()
+    } else if (off > 0.0) == inbound {
+        "left of the course".to_owned()
+    } else {
+        "right of the course".to_owned()
+    };
+    if ctx.explaining() {
+        ctx.step(
+            "Angle off course",
+            "radial you are on − radial to intercept",
+            format!("{}° − {}°", now.round(), want.round()),
+            format!("{}°", off.abs().round()),
+        );
+        ctx.step(
+            "Intercept heading",
+            "course turned toward the radial by the intercept angle",
+            format!(
+                "{}° {} {}°",
+                course.round(),
+                if (turn > 0.0) == inbound { "+" } else { "−" },
+                angle.round()
+            ),
+            format!("{}°", heading.round().rem_euclid(360.0)),
+        );
+    }
+    let d = |v: f64| Q { value: v, unit: dg };
+    Ok(obj(vec![
+        ("heading", ctx.out("heading", d(heading))),
+        ("course", ctx.out("course", d(course))),
+        ("angle_off", ctx.out("angle_off", d(off.abs()))),
+        ("intercept_angle", ctx.out("intercept_angle", d(angle))),
+        ("side", Json::str(side)),
+    ]))
+}

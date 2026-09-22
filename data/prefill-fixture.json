@@ -232,6 +232,14 @@
       "prefill": {
         "mgrs": "18S UJ 23487 06483"
       }
+    },
+    {
+      "query": "height for a gsd of 2 cm with a 13.2 mm sensor",
+      "id": "drone.photogrammetry.altitude-for-gsd",
+      "prefill": {
+        "target_gsd": "2 cm",
+        "sensor_width": "13.2 mm"
+      }
     }
   ]
 }

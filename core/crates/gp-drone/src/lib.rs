@@ -500,6 +500,16 @@ pub static ALTITUDE_FOR_GSD: ToolDef = ToolDef {
     sentence: "Fly at {height} above ground for that GSD.{warn ABOVE_ALTITUDE_CEILING} That is above your altitude ceiling.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_altitude_for_gsd,
+    // A target GSD is centimetres per pixel, so "gsd 120 m" is a flight
+    // height, never a GSD: a mapping GSD runs from well under 1 cm to tens.
+    slots: &[
+        Slot::new("target_gsd", &["gsd", "target", "resolution"]).range(0.05, 100.0),
+        Slot::new("sensor_width", &["sensor", "width"]).range(1.0, 100.0),
+        Slot::new("focal_length", &["lens", "focal", "fl"]).range(1.0, 2000.0),
+        Slot::new("image_width", &["px", "pixels", "pixel", "width"]).range(100.0, 100_000.0),
+        Slot::new("sensor_height", &["sensor", "height"]).range(1.0, 100.0),
+        Slot::new("image_height", &["px", "pixels", "pixel", "height"]).range(100.0, 100_000.0),
+    ],
     ..ToolDef::BLANK
 };
 

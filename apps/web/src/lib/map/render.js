@@ -2,7 +2,7 @@
 // base layer in the Atlas style, a graticule, and tool layers. This is the
 // 2D-canvas path the spec requires as the fallback; colors come from the
 // page's design tokens, so every display mode applies.
-import { forward, forwardLimb, unwrap } from './projection.js';
+import { forward, forwardLimb } from './projection.js';
 
 const RAD = Math.PI / 180;
 const MAX_LAT = 85.0511287798;
@@ -36,63 +36,167 @@ function mix(a, b, k) {
   return `rgb(${[0, 1, 2].map((i) => Math.round(pa[i] + (pb[i] - pa[i]) * k)).join(',')})`;
 }
 
-/** Screen x, y on the 2D map without wrapping longitude, for unwrapped paths. */
-function mapXY(view, lon, lat) {
-  const dy = view.mode === 'equirect' ? (lat - view.lat) * RAD : mercY(lat) - mercY(view.lat);
-  return [view.width / 2 + view.scale * (lon - view.lon) * RAD, view.height / 2 - view.scale * dy];
+
+/**
+ * A pen that skips any vertex within half a pixel of the last one it drew, so
+ * a 100,000-vertex path costs what its pixels cost, not what its vertices do.
+ * The first and last points of every run are always drawn.
+ */
+function pen(g) {
+  let lx = NaN;
+  let ly = NaN;
+  let held = null;
+  return {
+    move(x, y) {
+      this.flush();
+      g.moveTo(x, y);
+      [lx, ly] = [x, y];
+    },
+    line(x, y) {
+      if (Math.abs(x - lx) < 0.5 && Math.abs(y - ly) < 0.5) {
+        held = [x, y];
+        return;
+      }
+      g.lineTo(x, y);
+      [lx, ly] = [x, y];
+      held = null;
+    },
+    flush() {
+      if (held) g.lineTo(held[0], held[1]);
+      held = null;
+    },
+  };
 }
 
 /**
- * Traces a path. On the 2D map the path is unwrapped and drawn at -360°, 0,
- * and +360° offsets so shapes across the antimeridian stay contiguous; on the
- * globe, points on the far side break the path.
+ * A path's world coordinates, computed once and kept for as long as the path
+ * is: longitudes made continuous, and each point's longitude, Mercator y, and
+ * latitude in radians. Panning and zooming the flat map then only scales and
+ * shifts these; nothing is projected again.
+ */
+const GEOMETRY = new WeakMap();
+function geometry(points) {
+  let geo = GEOMETRY.get(points);
+  if (geo) return geo;
+  const n = points.length;
+  const lon = new Float64Array(n);
+  const lat = new Float64Array(n);
+  const M = new Float64Array(n);
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const [l, p] = points[i];
+    lon[i] = i === 0 ? l : lon[i - 1] + ((((l - lon[i - 1] + 180) % 360) + 360) % 360) - 180;
+    lat[i] = p;
+    M[i] = mercY(p);
+    if (lon[i] < lo) lo = lon[i];
+    if (lon[i] > hi) hi = lon[i];
+  }
+  geo = { n, lon, lat, M, lo, hi, lods: new Map() };
+  GEOMETRY.set(points, geo);
+  return geo;
+}
+
+/**
+ * The vertices worth drawing at this zoom: one level of detail per doubling of
+ * scale, keeping a vertex only when it lies at least half a pixel (at the
+ * largest scale of its level) from the last one kept. The first and last
+ * vertices are always kept, so a path starts and ends where it should.
+ */
+function detail(geo, mode, scale) {
+  const level = Math.floor(Math.log2(Math.max(scale, 1e-9)));
+  const key = `${mode}${level}`;
+  let idx = geo.lods.get(key);
+  if (idx) return idx;
+  const tol = 0.5 / 2 ** (level + 1);
+  const { n, lon, lat, M } = geo;
+  const keep = [0];
+  let k = 0;
+  for (let i = 1; i < n; i++) {
+    const dx = Math.abs(lon[i] - lon[k]) * RAD;
+    const dy = mode === 'map' ? Math.abs(M[i] - M[k]) : Math.abs(lat[i] - lat[k]) * RAD;
+    // On the globe and the polar view a degree of longitude shrinks with latitude.
+    const sx = mode === 'map' || mode === 'equirect' ? dx : dx * Math.cos(lat[k] * RAD);
+    if (sx >= tol || dy >= tol || i === n - 1) {
+      keep.push(i);
+      k = i;
+    }
+  }
+  idx = Uint32Array.from(keep);
+  geo.lods.set(key, idx);
+  return idx;
+}
+
+/**
+ * Traces a path. On the 2D map the path is drawn at -360°, 0, and +360°
+ * offsets so shapes across the antimeridian stay contiguous (a copy wholly off
+ * screen is skipped); on the globe, points on the far side break the path.
+ * Only the vertices that can change a pixel are drawn.
  */
 function trace(g, view, points, closed) {
+  if (!points.length) return;
+  const geo = geometry(points);
+  const idx = detail(geo, view.mode, view.scale);
+  const p = pen(g);
+  if (view.mode === 'map' || view.mode === 'equirect') {
+    const [cx, cy, s] = [view.width / 2, view.height / 2, view.scale];
+    const Y = view.mode === 'map' ? geo.M : null;
+    const y0 = view.mode === 'map' ? mercY(view.lat) : view.lat * RAD;
+    for (const off of [-360, 0, 360]) {
+      const x0 = cx + s * (geo.lo + off - view.lon) * RAD;
+      const x1 = cx + s * (geo.hi + off - view.lon) * RAD;
+      if (x1 < -2 || x0 > view.width + 2) continue;
+      for (let j = 0; j < idx.length; j++) {
+        const i = idx[j];
+        const x = cx + s * (geo.lon[i] + off - view.lon) * RAD;
+        const y = cy - s * ((Y ? Y[i] : geo.lat[i] * RAD) - y0);
+        if (j === 0) p.move(x, y);
+        else p.line(x, y);
+      }
+      p.flush();
+      if (closed) g.closePath();
+    }
+    return;
+  }
   if (view.mode === 'globe' && closed) {
     // Filled rings: skip those wholly on the far side; otherwise run hidden
     // stretches along the limb.
-    if (!points.some(([lon, lat]) => forward(view, lon, lat))) return;
-    points.forEach(([lon, lat], i) => {
-      const [x, y] = forwardLimb(view, lon, lat);
-      if (i === 0) g.moveTo(x, y);
-      else g.lineTo(x, y);
-    });
-    g.closePath();
-    return;
-  }
-  // The polar view: a ring that leaves the view is skipped whole (only
-  // Antarctica, seen from the north), and a line breaks where it leaves.
-  if (view.mode === 'polar' && closed) {
-    const pts = points.map(([lon, lat]) => forward(view, lon, lat));
-    if (pts.some((p) => !p)) return;
-    pts.forEach(([x, y], i) => (i === 0 ? g.moveTo(x, y) : g.lineTo(x, y)));
-    g.closePath();
-    return;
-  }
-  if (view.mode === 'globe' || view.mode === 'polar') {
-    let open = false;
-    for (const [lon, lat] of points) {
-      const p = forward(view, lon, lat);
-      if (!p) {
-        open = false;
-        continue;
-      }
-      if (open) g.lineTo(p[0], p[1]);
-      else g.moveTo(p[0], p[1]);
-      open = true;
+    let any = false;
+    for (let j = 0; j < idx.length && !any; j++) any = !!forward(view, geo.lon[idx[j]], geo.lat[idx[j]]);
+    if (!any) return;
+    for (let j = 0; j < idx.length; j++) {
+      const [x, y] = forwardLimb(view, geo.lon[idx[j]], geo.lat[idx[j]]);
+      if (j === 0) p.move(x, y);
+      else p.line(x, y);
     }
-    if (closed && open) g.closePath();
+    p.flush();
+    g.closePath();
     return;
   }
-  const pts = unwrap(points);
-  for (const off of [-360, 0, 360]) {
-    pts.forEach(([lon, lat], i) => {
-      const [x, y] = mapXY(view, lon + off, lat);
-      if (i === 0) g.moveTo(x, y);
-      else g.lineTo(x, y);
-    });
-    if (closed) g.closePath();
+  const pts = Array.from(idx, (i) => forward(view, geo.lon[i], geo.lat[i]));
+  // The polar view: a ring that leaves the view is skipped whole (only
+  // Antarctica, seen from the north).
+  if (view.mode === 'polar' && closed) {
+    if (pts.some((q) => !q)) return;
+    pts.forEach(([x, y], j) => (j === 0 ? p.move(x, y) : p.line(x, y)));
+    p.flush();
+    g.closePath();
+    return;
   }
+  // Lines on the globe and the polar view break where they leave the view.
+  let open = false;
+  for (const q of pts) {
+    if (!q) {
+      if (open) p.flush();
+      open = false;
+      continue;
+    }
+    if (open) p.line(q[0], q[1]);
+    else p.move(q[0], q[1]);
+    open = true;
+  }
+  p.flush();
+  if (closed && open) g.closePath();
 }
 
 function graticule(step, reach = 80) {
@@ -144,6 +248,40 @@ function places(g, view, list, c) {
 }
 
 /** Draws the whole scene. `layers`: [{ kind: 'line'|'point'|'polygon', role: 'result'|'input'|'comparison', points, rings, label }]. */
+/**
+ * The globe's halo and lit sphere depend only on the canvas size, the globe's
+ * radius, and the colors, so they are painted once into an offscreen canvas
+ * and reused while the globe turns: two large gradients cost more than
+ * everything else in a frame.
+ */
+let backdropCache = null;
+function backdrop(width, height, r, c) {
+  const dpr = globalThis.devicePixelRatio || 1;
+  const key = `${width}x${height}@${dpr} r${r.toFixed(2)} ${c.surface} ${c.bg} ${c.shadow}`;
+  if (backdropCache?.key === key) return backdropCache.canvas;
+  const canvas = globalThis.OffscreenCanvas ? new OffscreenCanvas(Math.ceil(width * dpr), Math.ceil(height * dpr)) : Object.assign(document.createElement('canvas'), { width: Math.ceil(width * dpr), height: Math.ceil(height * dpr) });
+  const g = canvas.getContext('2d');
+  g.scale(dpr, dpr);
+  // A soft halo, then the sphere, lit from the upper left.
+  const [cx, cy] = [width / 2, height / 2];
+  const halo = g.createRadialGradient(cx, cy, r * 0.98, cx, cy, r * 1.08);
+  halo.addColorStop(0, mix(c.surface, c.shadow, 0.12));
+  halo.addColorStop(1, c.surface);
+  g.fillStyle = halo;
+  g.beginPath();
+  g.arc(cx, cy, r * 1.08, 0, 2 * Math.PI);
+  g.fill();
+  const sphere = g.createRadialGradient(cx - r * 0.35, cy - r * 0.35, r * 0.1, cx, cy, r);
+  sphere.addColorStop(0, c.bg);
+  sphere.addColorStop(1, mix(c.bg, c.shadow, 0.1));
+  g.beginPath();
+  g.arc(cx, cy, r, 0, 2 * Math.PI);
+  g.fillStyle = sphere;
+  g.fill();
+  backdropCache = { key, canvas };
+  return canvas;
+}
+
 export function draw(g, view, base, layers, c) {
   const { width, height } = view;
   g.clearRect(0, 0, width, height);
@@ -152,24 +290,7 @@ export function draw(g, view, base, layers, c) {
   // Water is the page's background; on the globe, space around it is the surface.
   g.fillStyle = view.mode === 'globe' ? c.surface : c.bg;
   g.fillRect(0, 0, width, height);
-  if (view.mode === 'globe') {
-    // A soft halo, then the sphere, lit from the upper left.
-    const [cx, cy, r] = [width / 2, height / 2, view.scale];
-    const halo = g.createRadialGradient(cx, cy, r * 0.98, cx, cy, r * 1.08);
-    halo.addColorStop(0, mix(c.surface, c.shadow, 0.12));
-    halo.addColorStop(1, c.surface);
-    g.fillStyle = halo;
-    g.beginPath();
-    g.arc(cx, cy, r * 1.08, 0, 2 * Math.PI);
-    g.fill();
-    const sphere = g.createRadialGradient(cx - r * 0.35, cy - r * 0.35, r * 0.1, cx, cy, r);
-    sphere.addColorStop(0, c.bg);
-    sphere.addColorStop(1, mix(c.bg, c.shadow, 0.1));
-    g.beginPath();
-    g.arc(cx, cy, r, 0, 2 * Math.PI);
-    g.fillStyle = sphere;
-    g.fill();
-  }
+  if (view.mode === 'globe') g.drawImage(backdrop(width, height, view.scale, c), 0, 0, width, height);
   // Graticule, faint.
   g.beginPath();
   for (const l of graticule(view.scale > width ? 10 : 30, view.mode === 'polar' ? 88 : 80)) trace(g, view, l, false);

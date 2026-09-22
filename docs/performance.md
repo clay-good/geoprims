@@ -73,6 +73,12 @@ localhost, so without TLS) passed every route. Worst medians:
 | Cumulative layout shift | 0.030 | 0.1 |
 | JavaScript (tool page, gzip) | 63.8 KB | 90 KB |
 
+Map frames: `apps/web/test/browser/frames.test.mjs` pans a 100,000-vertex
+track and a 100,000-vertex polygon at 4× CPU. Locally the p95 frame is
+11.1 ms on the flat map and 15.5 ms on the globe, within one 60 Hz frame
+(16.7 ms); a path that zig-zags every few pixels along its whole length still
+takes about 36 ms, since every one of its pixels has to be drawn.
+
 These are local numbers. The profile names the CI runner, and CI is not running
 yet, so no release baseline exists; the same gate runs there once it is.
 Chromium only: WebKit and Firefox page metrics are still to come.

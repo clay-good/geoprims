@@ -1686,6 +1686,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::FORWARD,
     &spcs::INVERSE,
     &spcs::LOOKUP,
+    &spcs::ARC_TO_CHORD,
     &geoid::GEOID_HEIGHT,
     &geoid::HEIGHT_CONVERT,
     &frames::PARAMETERS,

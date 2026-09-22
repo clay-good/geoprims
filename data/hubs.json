@@ -760,6 +760,17 @@
         }
       ]
     },
+    "geodesy.projection": {
+      "summary": "Corrections for lines drawn on a map projection.",
+      "tasks": [
+        {
+          "want": "correct a grid bearing for the curve of the projected line",
+          "tools": [
+            "arc-to-chord"
+          ]
+        }
+      ]
+    },
     "geodesy.magnetic": {
       "summary": "Magnetic declination and true and magnetic bearings.",
       "tasks": [

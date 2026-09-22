@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "47f1fc6f60b26f29",
+    "hash": "d149a405a5eeb39e",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -148,7 +148,7 @@
     "lastmod": "2026-09-22"
   },
   "/geodesy/": {
-    "hash": "73438458c0823f0c",
+    "hash": "62dbab55a0bf257d",
     "lastmod": "2026-09-22"
   },
   "/geodesy/datum/": {
@@ -249,6 +249,10 @@
   },
   "/geodesy/parse/coordinates/": {
     "hash": "997c882b2d040535",
+    "lastmod": "2026-09-22"
+  },
+  "/geodesy/projection/": {
+    "hash": "22111e5592c9272b",
     "lastmod": "2026-09-22"
   },
   "/geodesy/spcs/": {
@@ -464,7 +468,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "d598c6eef5328470",
+    "hash": "7afbd9c10c3d316c",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -532,7 +536,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "a0b926162e39cde8",
+    "hash": "5b8fca7b831c7fe2",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -616,7 +620,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "3b8d7d0c7e074c42",
+    "hash": "46a4690faab57b78",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -716,7 +720,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8337e4b00b7411d2",
+    "hash": "4562610baa6ef043",
     "lastmod": "2026-09-22"
   }
 }

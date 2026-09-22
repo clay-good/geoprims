@@ -592,6 +592,7 @@
       "definition": "124 zones of conformal projections on NAD 83, drawn so that distortion stays near 1 part in 10,000 within each zone.",
       "source": "spcs83",
       "relatedTools": [
+        "geodesy.projection.arc-to-chord",
         "geodesy.spcs.spcs83-forward",
         "geodesy.spcs.spcs83-inverse"
       ]

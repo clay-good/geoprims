@@ -654,3 +654,296 @@ fn run_lookup(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("note", Json::str(note)),
     ]))
 }
+
+// ---------------------------------------------------------------- arc to chord
+
+const NGS_5_T_T: Reference = Reference {
+    locator: "The (t − T) arc-to-chord correction for Lambert and transverse Mercator zones",
+    ..NGS_5
+};
+
+pub static ARC_TO_CHORD: ToolDef = ToolDef {
+    id: "geodesy.projection.arc-to-chord",
+    title: "Arc-to-chord correction (t − T)",
+    summary: "The small angle between a line's straight grid bearing and its curved projected geodesic, at each end, in UTM or a State Plane zone, with the grid and ellipsoid distances.",
+    aliases: &[
+        "arc to chord correction",
+        "t minus T",
+        "second term correction",
+        "grid bearing correction",
+    ],
+    keywords: &[
+        "arc-to-chord",
+        "t-T",
+        "grid bearing",
+        "convergence",
+        "state plane",
+        "UTM",
+        "Lambert",
+        "transverse Mercator",
+    ],
+    inputs: &[
+        point::lat_field("lat1", "From latitude"),
+        point::lon_field("lon1", "From longitude"),
+        point::lat_field("lat2", "To latitude"),
+        point::lon_field("lon2", "To longitude"),
+        Field::new(
+            "grid",
+            "Grid",
+            "utm (default, the From point's zone) or spcs",
+            Kind::Choice(&["utm", "spcs"]),
+        )
+        .core(),
+        Field::new(
+            "zone",
+            "Zone",
+            "SPCS83 code or name, like 3702 or Pennsylvania South; or a UTM zone number to force one",
+            Kind::Text { max_len: 60 },
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "t_minus_t_from",
+            "t − T at the From end",
+            "Grid bearing of the chord minus the projected geodesic's",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "arcsec",
+            },
+        )
+        .precision(Precision::Decimals(3))
+        .angle_range("unbounded"),
+        Field::new(
+            "t_minus_t_to",
+            "t − T at the To end",
+            "The same, looking back from the To end",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "arcsec",
+            },
+        )
+        .precision(Precision::Decimals(3))
+        .angle_range("unbounded"),
+        Field::new(
+            "grid_bearing",
+            "Grid bearing t",
+            "Of the straight line between the grid coordinates",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[0,360)"),
+        Field::new(
+            "projected_bearing",
+            "Projected geodesic bearing T",
+            "Geodesic azimuth minus convergence",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[0,360)"),
+        Field::new(
+            "grid_distance",
+            "Grid distance",
+            "Between the grid coordinates",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "ellipsoid_distance",
+            "Ellipsoid distance",
+            "Along the geodesic",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "grid_used",
+            "Grid",
+            "The zone the line is projected in",
+            Kind::Text { max_len: 60 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: "t = atan2(ΔE, ΔN) of the projected end points; T = geodesic azimuth − grid convergence at that end (Karney geodesic on WGS 84 for UTM, GRS 80 for SPCS83); t − T at each end. Exact for the projection, with no series approximation",
+    accuracy: "Exact to about 1e-6″; the classic formulas agree to about 0.01″ on lines of a few kilometers",
+    references: &[NGS_5_T_T, KARNEY_TM, EPSG_G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "A 10 km line in Pennsylvania South",
+        input: r#"{"lat1":40.44,"lon1":-79.99,"lat2":40.52,"lon2":-79.91,"grid":"spcs","zone":"3702"}"#,
+        source: "NGS Manual 5 (t − T) definition, evaluated exactly",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.spcs.spcs83-forward",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "parent",
+        },
+    ],
+    sentence: "The chord is {t_minus_t_from} off the projected geodesic at the From end.",
+    limits: &[("batchRows", 10_000)],
+    run: run_arc_to_chord,
+    ..ToolDef::BLANK
+};
+
+fn run_arc_to_chord(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    let (la1, lo1) = point::read(ctx, "lat1", "lon1")?;
+    let (la2, lo2) = point::read(ctx, "lat2", "lon2")?;
+    let zone_text = ctx.text("zone")?;
+    let spcs_grid = ctx.choice("grid")? == Some("spcs");
+    // (E, N, convergence) at each end, the ellipsoid, and the zone's name.
+    let (p1, p2, g, used) = if spcs_grid {
+        let key = zone_text.ok_or_else(|| {
+            ToolError::invalid(
+                "/zone",
+                "Give the SPCS83 zone, like 3702 or Pennsylvania South.",
+            )
+        })?;
+        let z = zone_by_key(&key)?;
+        let (a, b) = (z.forward(la1, lo1), z.forward(la2, lo2));
+        (
+            (a.e, a.n, a.convergence),
+            (b.e, b.n, b.convergence),
+            Geodesic::new(spcs::GRS80_A, spcs::GRS80_F),
+            format!("SPCS83 {} ({})", z.short_name(), z.fips),
+        )
+    } else {
+        if !gp_geo::utmups::in_utm_domain(la1) || !gp_geo::utmups::in_utm_domain(la2) {
+            return Err(
+                ToolError::new(ErrorCode::OutOfDomain, "UTM covers 80° S to 84° N.").at("/lat1"),
+            );
+        }
+        let zone = match zone_text {
+            Some(t) => {
+                let z: u8 = t
+                    .trim()
+                    .parse()
+                    .ok()
+                    .filter(|z| (1..=60).contains(z))
+                    .ok_or_else(|| {
+                        ToolError::invalid("/zone", "A UTM zone is a number from 1 to 60.")
+                    })?;
+                z
+            }
+            None => gp_geo::utmups::standard_zone(la1, lo1),
+        };
+        let (a0, f0) = (6_378_137.0, 1.0 / 298.257_223_563);
+        let a = gp_geo::utmups::utm_forward(a0, f0, la1, lo1, zone);
+        let b = gp_geo::utmups::utm_forward(a0, f0, la2, lo2, zone);
+        (
+            (a.easting, a.northing, a.convergence),
+            (b.easting, b.northing, b.convergence),
+            Geodesic::wgs84(),
+            format!("UTM zone {zone}"),
+        )
+    };
+    let (s12, az1, az2, _): (f64, f64, f64, f64) = g.inverse(la1, lo1, la2, lo2);
+    if s12 == 0.0 {
+        return Err(ToolError::invalid("/lat2", "The two points are the same."));
+    }
+    let wrap = |x: f64| {
+        let r = (x + 180.0).rem_euclid(360.0) - 180.0;
+        if r == -180.0 { 180.0 } else { r }
+    };
+    let t1 = libm::atan2(p2.0 - p1.0, p2.1 - p1.1).to_degrees();
+    let t2 = libm::atan2(p1.0 - p2.0, p1.1 - p2.1).to_degrees();
+    let big_t1 = az1 - p1.2;
+    let big_t2 = az2 + 180.0 - p2.2;
+    let (d1, d2) = (wrap(t1 - big_t1) * 3600.0, wrap(t2 - big_t2) * 3600.0);
+    let grid_d = libm::hypot(p2.0 - p1.0, p2.1 - p1.1);
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, dp: u8| gp_base::display::number(x, Precision::Decimals(dp), fmt);
+        ctx.step(
+            "Grid bearing t",
+            "atan2(ΔE, ΔN) between the projected ends",
+            format!("ΔE {} m, ΔN {} m", n(p2.0 - p1.0, 3), n(p2.1 - p1.1, 3)),
+            format!("{}°", n(t1.rem_euclid(360.0), 7)),
+        );
+        ctx.step(
+            "t − T",
+            "t − (geodesic azimuth − convergence)",
+            format!(
+                "{}° − ({}° − {}°)",
+                n(t1.rem_euclid(360.0), 7),
+                n(az1, 7),
+                n(p1.2, 7)
+            ),
+            gp_base::display::quantity(d1, "arcsec", Precision::Decimals(3), fmt),
+        );
+    }
+    let asec = units::by_symbol(QT::Angle, "arcsec").expect("arcsec");
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    Ok(Json::obj(vec![
+        (
+            "t_minus_t_from",
+            ctx.out(
+                "t_minus_t_from",
+                Q {
+                    value: d1,
+                    unit: asec,
+                },
+            ),
+        ),
+        (
+            "t_minus_t_to",
+            ctx.out(
+                "t_minus_t_to",
+                Q {
+                    value: d2,
+                    unit: asec,
+                },
+            ),
+        ),
+        (
+            "grid_bearing",
+            ctx.out("grid_bearing", deg(t1.rem_euclid(360.0))),
+        ),
+        (
+            "projected_bearing",
+            ctx.out("projected_bearing", deg(big_t1.rem_euclid(360.0))),
+        ),
+        (
+            "grid_distance",
+            ctx.out(
+                "grid_distance",
+                Q {
+                    value: grid_d,
+                    unit: m,
+                },
+            ),
+        ),
+        (
+            "ellipsoid_distance",
+            ctx.out(
+                "ellipsoid_distance",
+                Q {
+                    value: s12,
+                    unit: m,
+                },
+            ),
+        ),
+        ("grid_used", Json::str(used)),
+    ]))
+}

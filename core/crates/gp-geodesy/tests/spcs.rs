@@ -199,3 +199,50 @@ fn tools_round_trip_in_every_zone() {
         }
     }
 }
+
+#[test]
+fn arc_to_chord_matches_a_projected_step_along_the_geodesic() {
+    // T is the direction of the projected geodesic at the From end. Measure it
+    // without the convergence formula: project points 1 m behind and ahead
+    // along the geodesic and take the bearing between them (a millimeter step
+    // drowns in the rounding of a Lambert cone radius of about 7,000 km, and a
+    // central difference cancels the curvature). Then t − T from the tool must
+    // match t − T_step, in TM and LCC zones alike.
+    use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
+    use gp_geo::spcs::{self, Proj};
+    let g = Geodesic::new(spcs::GRS80_A, spcs::GRS80_F);
+    for (zone, tm, (la1, lo1, la2, lo2)) in [
+        ("1201", true, (40.9, -88.3, 41.2, -87.9)),
+        ("3702", false, (40.44, -79.99, 40.52, -79.91)),
+        ("3702", false, (40.1, -80.4, 40.6, -76.2)),
+        ("0405", false, (34.0, -118.3, 34.3, -117.6)),
+    ] {
+        let z = spcs::find(zone).unwrap();
+        assert_eq!(matches!(z.proj, Proj::Tm { .. }), tm, "{zone}");
+        let (_, az1, _, _): (f64, f64, f64, f64) = g.inverse(la1, lo1, la2, lo2);
+        let (fla, flo): (f64, f64) = g.direct(la1, lo1, az1, 1.0);
+        let (bla, blo): (f64, f64) = g.direct(la1, lo1, az1, -1.0);
+        let (p1, pf, pb, p2) = (
+            z.forward(la1, lo1),
+            z.forward(fla, flo),
+            z.forward(bla, blo),
+            z.forward(la2, lo2),
+        );
+        let t = (p2.e - p1.e).atan2(p2.n - p1.n).to_degrees();
+        let t_step = (pf.e - pb.e).atan2(pf.n - pb.n).to_degrees();
+        let want = ((t - t_step + 180.0).rem_euclid(360.0) - 180.0) * 3600.0;
+        let r = call(
+            "geodesy.projection.arc-to-chord",
+            &format!(
+                r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2},"grid":"spcs","zone":"{zone}"}}"#
+            ),
+        );
+        let got = r["result"]["t_minus_t_from"]["value"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("{r}"));
+        assert!(
+            (got - want).abs() < 5e-3,
+            "{zone}: tool {got}″, step {want}″"
+        );
+    }
+}

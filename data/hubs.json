@@ -292,6 +292,12 @@
           ]
         },
         {
+          "want": "check overlap where the ground rises",
+          "tools": [
+            "terrain-overlap"
+          ]
+        },
+        {
           "want": "set overlap, trigger interval, and line spacing",
           "tools": [
             "trigger"

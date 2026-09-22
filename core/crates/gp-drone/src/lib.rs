@@ -6,6 +6,7 @@ pub mod mission;
 pub mod oblique;
 pub mod ops;
 pub mod power;
+pub mod terrain;
 
 use gp_base::ErrorCode;
 use gp_base::display;
@@ -1160,6 +1161,7 @@ fn run_asprs(ctx: &mut Ctx) -> Result<Json, ToolError> {
 pub static TOOLS: &[&ToolDef] = &[
     &GSD,
     &oblique::OBLIQUE_GSD,
+    &terrain::TERRAIN_OVERLAP,
     &ALTITUDE_FOR_GSD,
     &TRIGGER,
     &MOTION_BLUR,

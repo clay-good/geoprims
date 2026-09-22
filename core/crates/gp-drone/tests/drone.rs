@@ -240,3 +240,17 @@ fn oblique_45_degrees_is_coarser_than_nadir_and_a_trapezoid() {
     assert!(w(3, 2) > w(0, 1), "the far edge is wider: a trapezoid");
     assert!(codes(&r).iter().all(|c| c != "BEYOND_HORIZON"));
 }
+
+#[test]
+fn hill_reduces_overlap() {
+    let r = call(
+        "drone.photogrammetry.terrain-overlap",
+        r#"{"height":"100 m","highest_terrain":"40 m","front_overlap":75}"#,
+    );
+    assert_eq!(num(&r, "result.effective_height.value"), 60.0);
+    let f = num(&r, "result.front_overlap_worst");
+    assert!((f - 58.333_333_333).abs() < 1e-6, "{f}");
+    assert!(codes(&r).iter().any(|c| c == "OVERLAP_BELOW_TARGET"));
+    let msg = r["meta"]["warnings"][1]["message"].as_str().unwrap();
+    assert!(msg.starts_with("Front overlap falls to 58.3%"), "{msg}");
+}

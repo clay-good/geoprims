@@ -357,6 +357,49 @@ def oblique_vectors():
     return out
 
 
+TER_SRC = "Flight-planning geometry (Wolf, Dewitt & Wilkinson 2014, ch. 18): footprint and fixed photo spacing, evaluated in Python (tools/vectors/gen_drone.py)"
+
+
+def terrain_vectors():
+    """Footprint L(h) = sensor·h/f; the plan fixes spacing B = (1 − o)·L(H); over ground t the overlap is 1 − B/L(H − t)."""
+    out = []
+    c = CAMS[0]
+    cases = [(100, 40, 75, 65, None), (100, 0, 75, 65, None), (120, 30, 80, 70, 70), (60, 10, 85, 70, None), (150, 90, 75, 60, 60),
+             (100, -20, 75, 65, None), (80, 50, 90, 80, 75), (200, 25, 70, None, 65), (45, 5, 80, 60, 50), (100, 40, 75, 65, 70),
+             (130, 60, 85, 75, 80), (90, 30, 60, 50, None)]
+    for h, t, fo, so, tgt in cases:
+        lf, ls = c[1] * h / c[2], c[0] * h / c[2]  # along (short side) and across footprints, mm/mm × m
+        bf, bs = (1 - fo / 100) * lf, (1 - (so or 0) / 100) * ls
+        lf2, ls2 = c[1] * (h - t) / c[2], c[0] * (h - t) / c[2]
+        inp = {"height": f"{h} m", "highest_terrain": f"{t} m", "front_overlap": fo}
+        e = {"result.effective_height.value": float(h - t), "result.front_overlap_worst": 100 * (1 - bf / lf2)}
+        if so is not None:
+            inp["side_overlap"] = so
+            e["result.side_overlap_worst"] = 100 * (1 - bs / ls2)
+        if tgt is not None:
+            inp["target_overlap"] = tgt
+            planned = [fo] + ([so] if so is not None else [])
+            if t > 0 and all(tgt < o for o in planned):
+                # Bisect for the height where the tighter direction's overlap at the terrain equals the target.
+                def ok(H):
+                    return all(1 - (1 - o / 100) * H / (H - t) >= tgt / 100 for o in planned)
+                lo, hi = t + 1e-9, 1e7
+                for _ in range(200):
+                    mid = (lo + hi) / 2
+                    lo, hi = (lo, mid) if ok(mid) else (mid, hi)
+                e["result.min_height.value"] = hi
+        worst = min([e["result.front_overlap_worst"]] + ([e["result.side_overlap_worst"]] if so is not None else []))
+        if worst < (tgt if tgt is not None else min([fo] + ([so] if so is not None else []))) - 1e-9:
+            e["meta.warnings.1.code"] = "OVERLAP_BELOW_TARGET"
+        out.append(fvec(len(out) + 1, inp, e, TER_SRC, "4th edition (2014)"))
+    out.append(fvec(len(out) + 1, {"height": "100 m", "highest_terrain": "40 m", "front_overlap": 75, "side_overlap": 65,
+                                   "sensor_width": "13.2 mm", "focal_length": "8.8 mm", "image_width": 5472},
+                    {"result.gsd_worst.value": 13.2 / 5472 * 60 / 8.8 * 100, "result.gsd_takeoff.value": 13.2 / 5472 * 100 / 8.8 * 100,
+                     "result.front_overlap_worst": 100 * (1 - 0.25 * 100 / 60)}, SPEC, "2026"))
+    out.append(fvec(len(out) + 1, {"height": "100 m", "highest_terrain": "100 m", "front_overlap": 75}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
@@ -368,7 +411,8 @@ def main():
              "drone.ops.easa-subcategory": easa_vectors(), "drone.sensors.vlos": vlos_vectors(),
              "drone.mission.survey-grid": grid_vectors("grid"), "drone.photogrammetry.image-count": grid_vectors("count"),
              "drone.mission.corridor": corridor_vectors(), "drone.mission.orbit": orbit_vectors(),
-             "drone.photogrammetry.oblique-gsd": oblique_vectors()}
+             "drone.photogrammetry.oblique-gsd": oblique_vectors(),
+             "drone.photogrammetry.terrain-overlap": terrain_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

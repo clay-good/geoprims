@@ -226,7 +226,8 @@
         "drone.photogrammetry.altitude-for-gsd",
         "drone.photogrammetry.gsd",
         "drone.photogrammetry.motion-blur",
-        "drone.photogrammetry.oblique-gsd"
+        "drone.photogrammetry.oblique-gsd",
+        "drone.photogrammetry.terrain-overlap"
       ]
     },
     {

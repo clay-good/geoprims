@@ -2,6 +2,7 @@
 pub mod buffer;
 pub mod dms;
 pub mod ellipsoid;
+pub mod exact;
 pub mod frames;
 pub mod geoid;
 pub mod gridref;

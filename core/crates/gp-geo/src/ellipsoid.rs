@@ -158,12 +158,13 @@ impl Ellipsoid {
     }
 
     /// The geodesic engine for this ellipsoid, or `UNSUPPORTED` when the
-    /// flattening needs the exact method (not built yet).
+    /// flattening needs the exact method, which only the geodesic distance
+    /// and destination tools use (`crate::exact`).
     pub fn geodesic(&self) -> Result<Geodesic, ToolError> {
         if self.f.abs() > SERIES_LIMIT {
             return Err(ToolError::new(
                 ErrorCode::Unsupported,
-                "This ellipsoid is too flattened for the series method (|f| > 0.02), and the exact method is not built yet.",
+                "This ellipsoid is too flattened for the series method (|f| > 0.02). The geodesic distance and destination tools use the exact method, for |f| up to 0.5; this tool does not.",
             )
             .at("/inverse_flattening"));
         }

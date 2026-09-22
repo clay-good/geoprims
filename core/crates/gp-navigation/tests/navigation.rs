@@ -180,9 +180,24 @@ fn mars_and_high_flattening() {
         model.contains("3396190") && model.contains("169.894"),
         "{model}"
     );
+    // f = 1/10 takes the exact method, and agrees with GeodSolve -E.
     let r = call(
         "navigation.geodesic.inverse",
-        r#"{"lat1":0,"lon1":0,"lat2":10,"lon2":10,"a":"6378137 m","inverse_flattening":10}"#,
+        r#"{"lat1":0,"lon1":0,"lat2":10,"lon2":10,"a":"6378137 m","inverse_flattening":10,"options":{"outputUnits":{"distance":"m"}}}"#,
+    );
+    assert!(
+        r["meta"]["model"]
+            .as_str()
+            .unwrap()
+            .contains("GeodesicExact"),
+        "{r}"
+    );
+    let s = num(&r, "result.distance.value");
+    assert!((s - 1_430_617.478_749_418).abs() < 1e-9 * s, "{s}");
+    // Beyond |f| = 0.5 it is refused rather than guessed.
+    let r = call(
+        "navigation.geodesic.inverse",
+        r#"{"lat1":0,"lon1":0,"lat2":10,"lon2":10,"a":"6378137 m","inverse_flattening":1.5}"#,
     );
     assert_eq!(r["error"]["code"], "UNSUPPORTED");
     let r = call(

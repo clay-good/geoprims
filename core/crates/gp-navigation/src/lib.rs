@@ -268,10 +268,46 @@ pub static INVERSE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+/// The exact method for a strongly flattened ellipsoid (0.02 < |f| ≤ 0.5).
+fn exact_for(e: &Ellipsoid) -> Option<gp_geo::exact::Exact> {
+    (e.f.abs() > ellipsoid::SERIES_LIMIT && e.f.abs() <= gp_geo::exact::MAX_F)
+        .then(|| gp_geo::exact::Exact::new(e.a, e.f))
+}
+
+fn exact_model(e: &Ellipsoid) -> String {
+    format!(
+        "Exact geodesic (the integrals behind GeographicLib's GeodesicExact, by Gauss-Legendre quadrature) on {}",
+        e.describe()
+    )
+}
+
 fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let p = two_points(ctx)?;
-    let (e, g) = setup(ctx)?;
-    let (s12, az1, az2, m12, big_m12, big_m21, s_12, a12) = karney(ctx, &g, p);
+    let e = Ellipsoid::from_ctx(ctx)?;
+    let ((s12, az1, az2, m12, big_m12, big_m21, s_12, a12), model) = match exact_for(&e) {
+        Some(x) => {
+            let r = x.inverse(p.0, p.1, p.2, p.3).ok_or_else(|| {
+                ToolError::new(
+                    ErrorCode::Unsupported,
+                    "These points are nearly antipodal on a strongly flattened ellipsoid, where the exact method here does not settle which geodesic is shortest.",
+                )
+                .at("/lat2")
+            })?;
+            (
+                (
+                    r.s12, r.azi1, r.azi2, r.m12, r.big_m12, r.big_m21, r.area12, r.a12,
+                ),
+                exact_model(&e),
+            )
+        }
+        None => {
+            let g = e.geodesic()?;
+            (
+                karney(ctx, &g, p),
+                format!("Karney (2013) geodesic on {}", e.describe()),
+            )
+        }
+    };
     if ctx.explaining() {
         let fmt = ctx.options.format;
         let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
@@ -302,7 +338,7 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
             format!("{} km", n(s12 / 1000.0, 3)),
         );
     }
-    ctx.model = Some(format!("Karney (2013) geodesic on {}", e.describe()));
+    ctx.model = Some(model);
     Ok(Json::obj([
         ("distance", ctx.out("distance", meters(s12))),
         ("azimuth1", ctx.out("azimuth1", deg(wrap_azimuth(az1)))),
@@ -458,9 +494,19 @@ fn run_direct(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (la1, lo1) = point::read(ctx, "lat1", "lon1")?;
     let az = ctx.req_quantity("azimuth")?.to(unit(QT::Angle, "deg"));
     let s = ctx.req_quantity("distance")?.to(unit(QT::Distance, "m"));
-    let (e, g) = setup(ctx)?;
-    let (la2, lo2, az2): (f64, f64, f64) = g.direct(la1, lo1, az, s);
-    ctx.model = Some(format!("Karney (2013) geodesic on {}", e.describe()));
+    let e = Ellipsoid::from_ctx(ctx)?;
+    let (la2, lo2, az2) = match exact_for(&e) {
+        Some(x) => {
+            let r = x.direct(la1, lo1, az, s);
+            ctx.model = Some(exact_model(&e));
+            (r.lat2, r.lon2, r.azi2)
+        }
+        None => {
+            let g = e.geodesic()?;
+            ctx.model = Some(format!("Karney (2013) geodesic on {}", e.describe()));
+            g.direct(la1, lo1, az, s)
+        }
+    };
     Ok(Json::obj([
         ("lat2", ctx.out("lat2", deg(la2))),
         ("lon2", ctx.out("lon2", deg(gp_base::angle::wrap_lon(lo2)))),

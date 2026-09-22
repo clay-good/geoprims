@@ -6,3 +6,5 @@
 - SHA-256 of the downloaded `.gz`: `31d376e8158f7af26277d887d7a1e7726e14d172db5a848a1730dd4886ab6121`
 - Regenerate: `gunzip -k GeodTest-short.dat.gz && awk 'NR%10==1' GeodTest-short.dat > GeodTest-sample.dat`
 - License: GeographicLib test data is MIT-licensed with GeographicLib.
+
+`exact_diff.txt` holds 480 geodesics on ellipsoids with f from 1/40 to 1/2 (a = 6,378,137 m), from GeographicLib's `GeodSolve -E -f` (GeodesicExact): 240 from the inverse problem (kind I, the shortest geodesic) and 240 from the direct (kind D). Columns after the kind: f lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 M12 M21 S12. Regenerate with `python3 tools/vectors/gen_exact_diff.py` (seeded).

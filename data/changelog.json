@@ -5,6 +5,16 @@
       "date": "2026-09-22",
       "kind": "changed",
       "tools": [
+        "navigation.geodesic.inverse",
+        "navigation.geodesic.direct"
+      ],
+      "vectors": [],
+      "summary": "Geodesic distance and destination now work on strongly flattened ellipsoids (|f| from 0.02 up to 0.5) by the exact method, where they used to refuse. On 480 geodesics at six flattenings they match GeographicLib's GeodesicExact to rounding. Results on WGS 84 and other catalog ellipsoids are unchanged."
+    },
+    {
+      "date": "2026-09-22",
+      "kind": "changed",
+      "tools": [
         "survey.cogo.traverse-closure"
       ],
       "vectors": [],

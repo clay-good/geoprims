@@ -12,6 +12,7 @@ pub mod intersect;
 pub mod land;
 pub mod layout;
 pub mod leveling;
+pub mod localize;
 pub mod profile;
 pub mod reduction;
 pub mod section;
@@ -2280,6 +2281,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &gnss::OPUS_PLAN,
     &gnss::ANTENNA_HEIGHT,
     &gnss::ALTA_RPP,
+    &localize::LOCALIZATION,
     &INVERSE,
     &FORWARD,
     &TRAVERSE,

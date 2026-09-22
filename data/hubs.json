@@ -1412,6 +1412,12 @@
           "tools": [
             "antenna-height"
           ]
+        },
+        {
+          "want": "fit local site coordinates to the grid through control points",
+          "tools": [
+            "localization"
+          ]
         }
       ]
     },

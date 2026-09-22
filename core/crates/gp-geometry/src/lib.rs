@@ -2,6 +2,7 @@
 //! (add-navigation-and-geometry, geometry/computational).
 
 pub mod buffer;
+pub mod shape;
 
 use geographiclib_rs::{PolygonArea, Winding};
 use gp_base::ErrorCode;
@@ -326,7 +327,7 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
-pub static TOOLS: &[&ToolDef] = &[&POLYGON_AREA, &buffer::BUFFER];
+pub static TOOLS: &[&ToolDef] = &[&POLYGON_AREA, &buffer::BUFFER, &shape::CENTROID];
 
 pub static REGISTRY: Registry = Registry {
     module: "geometry",

@@ -680,7 +680,7 @@ pub const REACH: f64 = 1_000_000.0;
 
 /// The input with long edges cut into geodesic pieces, so each plane chord
 /// follows its geodesic closely.
-fn densify(
+pub fn densify(
     g: &Geodesic,
     kind: Shape,
     rings_ll: &[Vec<(f64, f64)>],

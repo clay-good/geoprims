@@ -681,6 +681,17 @@
         }
       ]
     },
+    "geometry.shape": {
+      "summary": "Centers, interior points, and envelopes of shapes.",
+      "tasks": [
+        {
+          "want": "find a polygon's center or a point inside it",
+          "tools": [
+            "centroid"
+          ]
+        }
+      ]
+    },
     "indexing.geohash": {
       "summary": "Geohash encoding, decoding, and neighbors.",
       "tasks": [

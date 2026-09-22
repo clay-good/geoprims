@@ -19,7 +19,7 @@
 ## 3. Gates
 
 - [ ] 3.1 Write the feedback-loop gate (one button per tool, lazy import, limits agree across client, Worker, and D1, SW bypass, CSP entries); verify it fails on each targeted bad fixture
-- [ ] 3.2 Add the payload-schema lock (no new fields without a spec change); verify it fails when a field is added
+- [x] 3.2 Add the payload-schema lock (no new fields without a spec change); verify it fails when a field is added (`tools/trust/report-schema.test.mjs` reads the key list from the contracts/report-api spec and requires the Worker's accepted keys, the web dialog's payload with and without inputs, and, through the Worker's list, the MCP report to match it exactly; it fails on an added field in the spec or the payload, and on any identifying name)
 
 ## 4. Triage and corrections
 
@@ -28,13 +28,13 @@
 - [ ] 4.3 Write the status-transition wrappers enforcing `primary_source` for confirmed and `fixed_in_version` for fixed; verify rejection of invalid transitions
 - [ ] 4.4 Create `known-issues.json` schema, the `/known-issues` page, and tool-page banners; verify the banner scenario (built: data/known-issues.json with a build-time validator, the /known-issues page, and the tool-page banner for confirmed issues)
 - [ ] 4.5 Add the "Result change" changelog label and the 90-day tool-page notice; verify the result-change scenario
-- [ ] 4.6 Add `.github/ISSUE_TEMPLATE/wrong-answer.yml` and `config.yml`; verify required-field validation
+- [x] 4.6 Add `.github/ISSUE_TEMPLATE/wrong-answer.yml` and `config.yml`; verify required-field validation (the form carries the `correctness` label and marks the tool or URL, inputs, answer received, answer expected, and published source as required; `config.yml` points security reports to a private advisory; `tools/github/issue-form.test.mjs` checks each required field and that every link to the form names a file that exists. GitHub's own blocking of an incomplete form is verified once the repository is public)
 - [ ] 4.7 Write the approval-gated GitHub mirror script with a fine-grained token; verify the structured-mirror scenario against a test repository
 - [x] 4.8 Build the monthly `/quality` summary from statuses and the changelog; verify with seeded data (/quality/ shows confirmed defects open, under investigation, and fixed, the median days to fix, result changes and fixes published, and a row per month, all derived from data/known-issues.json and data/changelog.json, both reviewed in pull requests. Reports received is reported as not measured yet rather than as a zero, because only the Worker can count it and reporting is off. Tests check the counts against the changelog, the month rows, the honest absences, and that the page adds no script of its own)
 
 ## 5. MCP
 
-- [ ] 5.1 Implement `geoprims_report_problem` (payload plus prefilled link, no network); verify the agent-prepared scenario and the network-sandbox audit
+- [x] 5.1 Implement `geoprims_report_problem` (payload plus prefilled link, no network); verify the agent-prepared scenario and the network-sandbox audit (the agent-prepared scenario is in `mcp/server.test.mjs`, and `mcp/network.test.mjs` now prepares a report inside the no-network sandbox after every worked example, with no connection attempt)
 
 ## 6. Privacy and launch
 

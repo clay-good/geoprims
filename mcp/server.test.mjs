@@ -330,7 +330,9 @@ test('report_problem prepares a payload and link without sending anything', asyn
   assert.match(link, /^https:\/\/geoprims\.com\/units\/fuel\/convert\/#v1:[A-Za-z0-9_-]+;report$/);
   assert.match(issueUrl, /template=wrong-answer\.yml$/);
   const limits = JSON.parse(readFileSync(join(root, 'data/report-limits.json'), 'utf8'));
-  assert.deepEqual(Object.keys(payload), ['apiVersion', 'toolId', 'toolVersion', 'coreVersion', 'buildHash', 'assetVersions', 'kind', 'pagePath', 'inputs', 'outputs', 'warnings', 'display', 'note', 'token']);
+  // The Worker's exact key set, itself locked to the contract by tools/trust/report-schema.test.mjs.
+  const { KEYS } = await import('../worker/src/report.mjs');
+  assert.deepEqual(Object.keys(payload), KEYS);
   assert.equal(payload.kind, 'wrong-result');
   assert.equal(payload.token, null);
   assert.deepEqual(payload.inputs, [

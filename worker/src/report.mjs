@@ -23,8 +23,8 @@ export const KEYS = [
   'token',
 ];
 
-const ROW_KEYS = ['field', 'label', 'value', 'unit'];
-const DISPLAY_KEYS = ['theme', 'unitProfile', 'viewportClass'];
+export const ROW_KEYS = ['field', 'label', 'value', 'unit'];
+export const DISPLAY_KEYS = ['theme', 'unitProfile', 'viewportClass'];
 // C0 and C1 controls (except none) and bidirectional overrides and isolates.
 const FORBIDDEN = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/;
 const URL_LIKE = /(https?:\/\/|www\.|[a-z0-9-]+\.(com|net|org|io|ru|cn|xyz|info|biz)\b)/i;

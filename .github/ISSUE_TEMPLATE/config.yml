@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/clay-good/geoprims/security/advisories/new
+    about: Please do not open a public issue for a vulnerability; see SECURITY.md.
+  - name: Report a problem from the tool page
+    url: https://geoprims.com/
+    about: Every tool page has a "Report a problem" button that attaches the exact inputs and result for you.

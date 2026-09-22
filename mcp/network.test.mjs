@@ -71,6 +71,15 @@ test('every tool runs its worked example with no network and no connection attem
     }
     assert.deepEqual(failed, []);
     assert.equal(catalog.tools.length > 150, true);
+    // feedback/triage-and-corrections "Agent-prepared report": the report is
+    // prepared inside the same sandbox, so preparing it opens no connection.
+    const rep = await request('tools/call', {
+      name: 'geoprims_report_problem',
+      arguments: { toolId: 'aviation.altimetry.pressure-altitude', args: { elevation: '5000 ft', altimeter: '29.80 inHg' }, observed: '5108 ft', expected: '5120 ft' },
+    });
+    const body = rep.result?.structuredContent;
+    assert.equal(body?.ok, true, JSON.stringify(body?.error ?? rep.error));
+    assert.match(body.result.link, /^https:\/\/geoprims\.com\/aviation\/altimetry\/pressure-altitude\/#v1:[\w-]+;report$/);
   } finally {
     proc.stdin.end();
   }

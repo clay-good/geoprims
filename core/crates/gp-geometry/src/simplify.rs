@@ -684,6 +684,50 @@ impl PartialOrd for Entry {
     }
 }
 
+/// A uniform grid of edges by the cells their bounding boxes cover. Edges
+/// that a removal replaces stay filed and are skipped when read.
+struct Grid {
+    lo: P,
+    size: f64,
+    side: usize,
+    edges: Vec<Vec<(usize, usize)>>,
+}
+
+impl Grid {
+    fn new(xy: &[P]) -> Grid {
+        let (mut lo, mut hi) = (
+            (f64::INFINITY, f64::INFINITY),
+            (f64::NEG_INFINITY, f64::NEG_INFINITY),
+        );
+        for p in xy {
+            lo = (lo.0.min(p.0), lo.1.min(p.1));
+            hi = (hi.0.max(p.0), hi.1.max(p.1));
+        }
+        let side = (libm::sqrt(xy.len() as f64) as usize).clamp(1, 256);
+        let size = ((hi.0 - lo.0).max(hi.1 - lo.1) / side as f64).max(1e-9);
+        Grid {
+            lo,
+            size,
+            side,
+            edges: vec![Vec::new(); side * side],
+        }
+    }
+
+    fn cells(&self, a: P, b: P) -> impl Iterator<Item = usize> + '_ {
+        let cell = |v: f64, o: f64| (((v - o) / self.size) as usize).min(self.side - 1);
+        let (x0, x1) = (cell(a.0.min(b.0), self.lo.0), cell(a.0.max(b.0), self.lo.0));
+        let (y0, y1) = (cell(a.1.min(b.1), self.lo.1), cell(a.1.max(b.1), self.lo.1));
+        (y0..=y1).flat_map(move |y| (x0..=x1).map(move |x| y * self.side + x))
+    }
+
+    fn file(&mut self, xy: &[P], j: usize, k: usize) {
+        let cells: Vec<usize> = self.cells(xy[j], xy[k]).collect();
+        for c in cells {
+            self.edges[c].push((j, k));
+        }
+    }
+}
+
 fn tri(a: P, b: P, c: P) -> f64 {
     orient(a, b, c).abs() / 2.0
 }
@@ -741,6 +785,13 @@ fn run_vw(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let mut count = n;
     let mut last = 0.0f64;
     let mut blocked = vec![false; n];
+    let mut grid = Grid::new(xy);
+    if inp.topology {
+        let edges = if inp.ring { n } else { n - 1 };
+        for (j, &k) in next.iter().enumerate().take(edges) {
+            grid.file(xy, j, k);
+        }
+    }
     while count > target {
         let Some(Entry {
             area: a,
@@ -760,25 +811,15 @@ fn run_vw(ctx: &mut Ctx) -> Result<Json, ToolError> {
         let (p, q) = (prev[i], next[i]);
         if inp.topology {
             // The new edge p→q must not cross any other remaining edge; the
-            // edges that meet p, i, or q are its neighbors, not rivals.
-            let start = if inp.ring { q } else { 0 };
-            let mut j = start;
-            let mut hits = false;
-            loop {
-                if !inp.ring && j == n - 1 {
-                    break;
-                }
-                let k = next[j];
-                let near = [p, i, q].contains(&j) || [p, i, q].contains(&k);
-                if !near && cross(xy[p], xy[q], xy[j], xy[k]) {
-                    hits = true;
-                    break;
-                }
-                j = k;
-                if j == start {
-                    break;
-                }
-            }
+            // edges that meet p, i, or q are its neighbors, not rivals. Only
+            // edges filed in the cells p→q passes over can meet it.
+            let hits = grid.cells(xy[p], xy[q]).any(|c| {
+                grid.edges[c].iter().any(|&(j, k)| {
+                    let live = alive[j] && alive[k] && next[j] == k;
+                    let near = [p, i, q].contains(&j) || [p, i, q].contains(&k);
+                    live && !near && cross(xy[p], xy[q], xy[j], xy[k])
+                })
+            });
             if hits {
                 blocked[i] = true;
                 continue;
@@ -789,6 +830,9 @@ fn run_vw(ctx: &mut Ctx) -> Result<Json, ToolError> {
         count -= 1;
         next[p] = q;
         prev[q] = p;
+        if inp.topology {
+            grid.file(xy, p, q);
+        }
         for v in [p, q] {
             if removable(v) && alive[v] {
                 stamp[v] += 1;

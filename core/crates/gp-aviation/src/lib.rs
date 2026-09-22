@@ -9,6 +9,7 @@ pub mod coldtemp;
 pub mod dme;
 pub mod fuel;
 pub mod heading;
+pub mod humidity;
 pub mod ifr;
 pub mod loading;
 pub mod offcourse;
@@ -2244,6 +2245,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &coldtemp::TRUE_ALTITUDE,
     &qcodes::Q_CODES,
     &qcodes::FLIGHT_LEVEL,
+    &humidity::HUMIDITY,
 ];
 
 pub static REGISTRY: Registry = Registry {

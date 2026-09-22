@@ -183,6 +183,26 @@
       "editionCheck": true
     },
     {
+      "id": "alduchov-eskridge-1996",
+      "name": "Improved Magnus Form Approximation of Saturation Vapor Pressure",
+      "issuer": "Alduchov and Eskridge, Journal of Applied Meteorology",
+      "currentEdition": "Vol. 35, No. 4 (1996)",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "A journal paper; the coefficients 6.1094 hPa, 17.625, and 243.04 °C are its AERK set.",
+      "freeAccessUrl": "https://doi.org/10.1175/1520-0450(1996)035%3C0601:IMFAOS%3E2.0.CO;2",
+      "matchTerms": [
+        "Improved Magnus Form Approximation"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "bowditch",
       "name": "The American Practical Navigator (Bowditch), NGA Pub. No. 9",
       "issuer": "National Geospatial-Intelligence Agency",

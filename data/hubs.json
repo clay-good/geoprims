@@ -116,6 +116,12 @@
       "summary": "Pressure, temperature, density, and speed of sound in the standard atmosphere.",
       "tasks": [
         {
+          "want": "work out humidity, dew point, and moist air density",
+          "tools": [
+            "humidity"
+          ]
+        },
+        {
           "want": "look up the standard atmosphere at an altitude",
           "tools": [
             "isa"

@@ -2,6 +2,17 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-09-22",
+      "kind": "result-change",
+      "tools": [
+        "aviation.loading.fuel-plan"
+      ],
+      "vectors": [
+        "aviation.loading.fuel-plan v001"
+      ],
+      "summary": "The reserve basis now links 14 CFR 91.151 and 91.167 where eCFR files them, in subpart B; the first release pointed at subpart C, which does not hold them. The fuel figures are unchanged. Tool version 1.1.0."
+    },
+    {
       "date": "2026-09-19",
       "kind": "changed",
       "tools": [

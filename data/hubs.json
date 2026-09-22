@@ -52,6 +52,18 @@
       "summary": "Pressure altitude, the standard temperature for it, density altitude, and cold-day corrections.",
       "tasks": [
         {
+          "want": "convert between QNH and QFE, or work out the altimeter setting",
+          "tools": [
+            "q-codes"
+          ]
+        },
+        {
+          "want": "find the lowest usable flight level or a flight level's altitude",
+          "tools": [
+            "flight-level"
+          ]
+        },
+        {
           "want": "correct approach altitudes for a cold day",
           "tools": [
             "cold-temperature"

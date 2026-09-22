@@ -29,7 +29,7 @@ const CFR_91: Reference = Reference {
     year: 2000,
     edition: "eCFR, current",
     locator: "§ 91.151 (fuel requirements for flight in VFR conditions) and § 91.167 (fuel requirements for flight in IFR conditions)",
-    url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91/subpart-C",
+    url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91",
 };
 
 const LEG: &[Field] = &[
@@ -62,6 +62,7 @@ const RESERVES: &[&str] = &["vfr-day", "vfr-night", "ifr", "custom", "none"];
 
 pub static FUEL_PLAN: ToolDef = ToolDef {
     id: "aviation.loading.fuel-plan",
+    version: "1.1.0",
     title: "Fuel planning",
     summary: "Fuel for a trip by leg, with taxi and climb allowances, fuel to an alternate, and a reserve from the 14 CFR 91.151 or 91.167 minimum, checked against your usable fuel.",
     aliases: &[

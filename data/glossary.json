@@ -1139,6 +1139,57 @@
       "relatedTools": [
         "aviation.loading.fuel-plan"
       ]
+    },
+    {
+      "id": "qnh",
+      "term": "QNH",
+      "expansion": "altimeter setting (Q code)",
+      "definition": "The pressure setting that makes an altimeter read the airport's elevation on the ground, and altitude above sea level in the air.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.flight-level",
+        "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "qfe",
+      "term": "QFE",
+      "expansion": "field pressure (Q code)",
+      "definition": "The air pressure at the airport. With it set, an altimeter reads zero on the ground and height above the airport in the air.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "qne",
+      "term": "QNE",
+      "expansion": "standard setting (Q code)",
+      "definition": "What an altimeter reads with 29.92 inHg (1013.25 hPa) set: the pressure altitude. On the ground it is the field's pressure altitude.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "fl",
+      "term": "FL",
+      "expansion": "flight level",
+      "definition": "A pressure altitude in hundreds of feet, flown with the altimeter set to 29.92 inHg. FL185 is 18,500 ft of pressure altitude.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.flight-level"
+      ]
+    },
+    {
+      "id": "nws",
+      "term": "NWS",
+      "expansion": "National Weather Service",
+      "definition": "The US government weather service, which runs the airport weather stations and computes their altimeter settings.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.q-codes"
+      ]
     }
   ],
   "notAbbreviations": [

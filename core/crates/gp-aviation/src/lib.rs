@@ -13,6 +13,7 @@ pub mod ifr;
 pub mod loading;
 pub mod offcourse;
 pub mod performance;
+pub mod qcodes;
 pub mod range;
 pub mod runway;
 pub mod table;
@@ -2240,6 +2241,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &fuel::FUEL_PLAN,
     &range::SPECIFIC_RANGE,
     &coldtemp::COLD_TEMPERATURE,
+    &qcodes::Q_CODES,
+    &qcodes::FLIGHT_LEVEL,
 ];
 
 pub static REGISTRY: Registry = Registry {

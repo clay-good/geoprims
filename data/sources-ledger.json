@@ -285,6 +285,26 @@
       "editionCheck": false
     },
     {
+      "id": "nws-wxcalc-altimeter",
+      "name": "Altimeter Setting (WxCalc)",
+      "issuer": "National Weather Service, El Paso",
+      "currentEdition": "Web calculator documentation",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Formula read from the NWS PDF on 2026-09-22.",
+      "freeAccessUrl": "https://www.weather.gov/media/epz/wxcalc/altimeterSetting.pdf",
+      "matchTerms": [
+        "Altimeter Setting (WxCalc)"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "cfr-14-61",
       "name": "14 CFR Part 61",
       "issuer": "FAA (eCFR)",

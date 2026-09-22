@@ -10,6 +10,9 @@ from pathlib import Path
 
 SRC = "Fuel arithmetic worked in Python (tools/vectors/gen_fuel.py)"
 SPEC = "add-aviation-suite fuel scenarios"
+RULE_151 = "14 CFR 91.151(a)(2) minimum, rules as of 2026-09-22; operators may require more. Not legal advice: "
+OLD_151 = "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91/subpart-C/section-91.151"
+NEW_151 = "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91/subpart-B/subject-group-ECFR4d5279ba676bedc/section-91.151"
 L_PER_GAL = 3.785411784
 RESERVE = {("vfr-day", "airplane"): 30, ("vfr-night", "airplane"): 45, ("vfr-day", "rotorcraft"): 20,
            ("vfr-night", "rotorcraft"): 20, ("ifr", "airplane"): 45, ("ifr", "rotorcraft"): 30}
@@ -45,7 +48,7 @@ def fuel():
     L = lambda legs: [{"time": f"{t} h", "burn": f"{b} gph"} for t, b in legs]
     legs = [(1.5, 9.5), (0.75, 9)]
     out.append(vec(1, {"legs": L(legs), "reserve": "vfr-night", "taxi": "1.4 gal", "usable_fuel": "53 gal"},
-                   dict(plan(legs, "vfr-night", taxi=1.4, usable=53), **{"result.reserve_rule": "14 CFR 91.151(a)(2) minimum, rules as of 2026-09-22; operators may require more. Not legal advice: https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91/subpart-C/section-91.151"}),
+                   dict(plan(legs, "vfr-night", taxi=1.4, usable=53), **{"result.reserve_rule": RULE_151 + NEW_151}),
                    SPEC + " (VFR night: 45 minutes at the cruise burn, cited to 14 CFR 91.151(a)(2))"))
     heli = [(1.2, 25)]
     out.append(vec(2, {"legs": L(heli), "reserve": "vfr-day", "category": "rotorcraft"}, plan(heli, "vfr-day", "rotorcraft"),
@@ -65,6 +68,11 @@ def fuel():
                 {"legs": [{"time": "1 h", "burn": "0 gph"}], "reserve": "vfr-day"},
                 {"legs": L(day), "reserve": "vfr-day", "custom_reserve": "60 min"}]:
         out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT"}))
+    # v001 as first published linked 91.151 under subpart C; it lives in subpart B.
+    fixed = dict(out[0], id=f"v{len(out) + 1:03d}")
+    out[0] = dict(out[0], expect=dict(out[0]["expect"], **{"result.reserve_rule": RULE_151 + OLD_151}),
+                  supersededBy=fixed["id"], reason="The 14 CFR 91.151 link pointed at subpart C; the section is in subpart B.")
+    out.append(fixed)
     return out
 
 

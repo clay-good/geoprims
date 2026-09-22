@@ -17,11 +17,11 @@
 
 ## 3. Altimetry
 
-- [ ] 3.1 Implement pressure altitude, station pressure, and altimeter setting (ISA-derived constants, NWS option); verify the 5,000 ft and standard-setting scenarios (built: pressure altitude with ISA constants and both scenarios; pending: station pressure and altimeter-setting tools, NWS option)
+- [x] 3.1 Implement pressure altitude, station pressure, and altimeter setting (ISA-derived constants, NWS option); verify the 5,000 ft and standard-setting scenarios (pressure altitude with ISA constants and both scenarios; `aviation.altimetry.q-codes` gives station pressure (QFE) from QNH and the altimeter setting from station pressure by ISA and by the NWS formula, read from its published PDF)
 - [x] 3.2 Implement METAR-group parsing and plausibility flags; verify the `Q1009` scenario
 - [x] 3.3 Implement density altitude (dry and humid) with approximations shown; verify the hot-high and humidity scenarios
 - [x] 3.4 Implement ISA temperature and deviation; verify the FL410 scenario
-- [ ] 3.5 Implement Q-code conversions, flight levels, and lowest usable flight level from dated reference data; verify the QFE and FL185 scenarios
+- [x] 3.5 Implement Q-code conversions, flight levels, and lowest usable flight level from dated reference data; verify the QFE and FL185 scenarios (`aviation.altimetry.q-codes`: QNH ↔ QFE and QNE; `aviation.altimetry.flight-level`: flight level ↔ altitude on a QNH, the 18,000 ft US transition altitude, and the lowest usable flight level from the 14 CFR 91.121(b) table, a dated `data/regulations.json` entry checked against eCFR on 2026-09-22. Both scenarios pass; 17 golden vectors from an independent ISA, and a unit test of every table band edge. The Part 91 fuel-rule links, which pointed at subpart C, now point at their real place in subpart B)
 - [x] 3.6 Implement the 2020 ICAO cold-temperature equation, table method, 4% rule, and multi-segment correction; verify the -30 °C and warmer-than-ISA scenarios against Transport Canada AC 500-020 worked examples (`aviation.altimetry.cold-temperature`: the equation, the 4% rule, AIM Table 7-3-1 read bilinearly (transcribed from the FAA's image, with printed and interpolated cells spot-checked in unit tests), and up to 20 procedure altitudes at once. Both scenarios pass (+218 ft, +246 ft by the rule; 0 when warmer than ISA); 7 golden vectors. AC 500-020 Issue 04 (2025-10-28) section 4.8 was checked on 2026-09-22: it has the same equation but no worked examples, and writes T0 as 273 + 15, a 0.1 ft difference here, noted on the tool)
 - [ ] 3.7 Implement true altitude and the altimetry diagram and gauge; verify the colder-air scenario and visual fixture
 

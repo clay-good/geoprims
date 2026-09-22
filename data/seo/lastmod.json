@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "62f18dcce9f74eef",
+    "hash": "83488f71448820d6",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
-    "hash": "bbd816155f065023",
+    "hash": "3a3cee1aae51220e",
     "lastmod": "2026-09-22"
   },
   "/aviation/airspeed/": {
@@ -80,7 +80,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/": {
-    "hash": "dc78f0f7ad5cd644",
+    "hash": "71fa23fdce69fdf5",
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/heading-groundspeed/": {
@@ -448,7 +448,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "2f2a067f621d4e71",
+    "hash": "861e2e1a9983be7e",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "cf1ae2b3034cf559",
+    "hash": "cfe596067f2aacaf",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "c0b844765b49b90b",
+    "hash": "8275d0bc56e40df1",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -692,7 +692,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1944f18b206c4960",
+    "hash": "ae25b8423db692bf",
     "lastmod": "2026-09-22"
   }
 }

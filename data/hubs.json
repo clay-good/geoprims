@@ -240,6 +240,12 @@
           ]
         },
         {
+          "want": "rank the runways for the wind",
+          "tools": [
+            "best-runway"
+          ]
+        },
+        {
           "want": "find the wind at my altitude between forecast levels",
           "tools": [
             "aloft-interpolate"

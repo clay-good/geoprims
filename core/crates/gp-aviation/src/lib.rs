@@ -11,6 +11,7 @@ pub mod ifr;
 pub mod loading;
 pub mod offcourse;
 pub mod performance;
+pub mod runway;
 pub mod table;
 pub mod weather;
 pub mod wind;
@@ -1679,6 +1680,76 @@ pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+/// The wind on one runway: crosswind magnitude, headwind (negative for a
+/// tailwind), the side the crosswind comes from, the gust (crosswind,
+/// headwind), and whether these are the worst case for a variable wind.
+pub(crate) struct RunwayWind {
+    pub cross: f64,
+    pub head: f64,
+    pub from: &'static str,
+    pub gust: Option<(f64, f64)>,
+    pub variable: bool,
+}
+
+impl RunwayWind {
+    /// The largest crosswind and tailwind (at least 0), steady or in gusts.
+    pub fn worst(&self) -> (f64, f64) {
+        let cross = self.gust.map_or(self.cross, |(gx, _)| gx.max(self.cross));
+        let tail = (-self.head)
+            .max(self.gust.map_or(0.0, |(_, gh)| -gh))
+            .max(0.0);
+        (cross, tail)
+    }
+}
+
+pub(crate) fn runway_wind(
+    rwy_heading: f64,
+    rwy_ref: &str,
+    w: &wind::Wind,
+    wind_ref: &str,
+    var: Option<f64>,
+) -> Result<RunwayWind, ToolError> {
+    let (cross, head, from, gust, variable) = match (w.dir, w.range) {
+        (Some(d), None) if w.speed > 0.0 => {
+            let d = to_reference(d, wind_ref, rwy_ref, var, "/wind_reference")?;
+            let (h, x) = wind::components(rwy_heading, d, w.speed);
+            let side = if x.abs() < 1e-9 {
+                "none"
+            } else if x > 0.0 {
+                "right"
+            } else {
+                "left"
+            };
+            let gust = w.gust.map(|g| wind::components(rwy_heading, d, g));
+            (x.abs(), h, side, gust.map(|(gh, gx)| (gx.abs(), gh)), false)
+        }
+        (_, _) if w.speed == 0.0 => (0.0, 0.0, "none", None, false),
+        (dir, range) => {
+            // Variable wind: the worst case over the range, or over all directions (VRB).
+            let range = match (dir, range) {
+                (_, Some((a, b))) => Some((
+                    to_reference(a, wind_ref, rwy_ref, var, "/wind_reference")?,
+                    to_reference(b, wind_ref, rwy_ref, var, "/wind_reference")?,
+                )),
+                _ => None,
+            };
+            let (x, t) = wind::worst_case(rwy_heading, w.speed, range);
+            let gust = w.gust.map(|g| {
+                let (gx, gt) = wind::worst_case(rwy_heading, g, range);
+                (gx, -gt)
+            });
+            (x, -t, "either side", gust, true)
+        }
+    };
+    Ok(RunwayWind {
+        cross,
+        head,
+        from,
+        gust,
+        variable,
+    })
+}
+
 fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let designator = ctx.text("runway")?.expect("required");
     let rwy = wind::parse_designator(&designator, "/runway")?;
@@ -1702,39 +1773,21 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let rwy_heading = heading;
     let kt = |v: f64| knots(v);
     let mut out: Vec<(&str, Json)> = Vec::new();
-    let (cross, head, from, gust) = match (w.dir, w.range) {
-        (Some(d), None) if w.speed > 0.0 => {
-            let d = to_reference(d, wind_ref, rwy_ref, var, "/wind_reference")?;
-            let (h, x) = wind::components(rwy_heading, d, w.speed);
-            let side = if x.abs() < 1e-9 {
-                "none"
-            } else if x > 0.0 {
-                "right"
-            } else {
-                "left"
-            };
-            let gust = w.gust.map(|g| wind::components(rwy_heading, d, g));
-            (x.abs(), h, side, gust.map(|(gh, gx)| (gx.abs(), gh)))
-        }
-        (_, _) if w.speed == 0.0 => (0.0, 0.0, "none", None),
-        (dir, range) => {
-            // Variable wind: the worst case over the range, or over all directions (VRB).
-            let range = match (dir, range) {
-                (_, Some((a, b))) => Some((
-                    to_reference(a, wind_ref, rwy_ref, var, "/wind_reference")?,
-                    to_reference(b, wind_ref, rwy_ref, var, "/wind_reference")?,
-                )),
-                _ => None,
-            };
-            ctx.warnings.push(Warning::new("VARIABLE_WIND", "The wind direction varies, so the components shown are the worst case over its range."));
-            let (x, t) = wind::worst_case(rwy_heading, w.speed, range);
-            let gust = w.gust.map(|g| {
-                let (gx, gt) = wind::worst_case(rwy_heading, g, range);
-                (gx, -gt)
-            });
-            (x, -t, "either side", gust)
-        }
-    };
+    let rw = runway_wind(rwy_heading, rwy_ref, &w, wind_ref, var)?;
+    let (worst_cross, worst_tail) = rw.worst();
+    let RunwayWind {
+        cross,
+        head,
+        from,
+        gust,
+        variable,
+    } = rw;
+    if variable {
+        ctx.warnings.push(Warning::new(
+            "VARIABLE_WIND",
+            "The wind direction varies, so the components shown are the worst case over its range.",
+        ));
+    }
     if ctx.explaining() {
         let fmt = ctx.options.format;
         let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
@@ -1769,8 +1822,6 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
         out.push(("gust_crosswind", ctx.out("gust_crosswind", kt(gx))));
         out.push(("gust_headwind", ctx.out("gust_headwind", kt(gh))));
     }
-    let worst_cross = gust.map_or(cross, |(gx, _)| gx.max(cross));
-    let worst_tail = (-head).max(gust.map_or(0.0, |(_, gh)| -gh)).max(0.0);
     for (field, name, value, label) in [
         (
             "max_crosswind",
@@ -2179,6 +2230,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &heading::CLOUD_BASE,
     &table::TABLE,
     &offcourse::ONE_IN_SIXTY,
+    &runway::BEST_RUNWAY,
 ];
 
 pub static REGISTRY: Registry = Registry {

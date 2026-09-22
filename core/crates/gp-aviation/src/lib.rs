@@ -9,6 +9,7 @@ pub mod dme;
 pub mod heading;
 pub mod ifr;
 pub mod loading;
+pub mod offcourse;
 pub mod performance;
 pub mod table;
 pub mod weather;
@@ -2177,6 +2178,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &heading::HEADING_CHAIN,
     &heading::CLOUD_BASE,
     &table::TABLE,
+    &offcourse::ONE_IN_SIXTY,
 ];
 
 pub static REGISTRY: Registry = Registry {

@@ -256,6 +256,12 @@
           "tools": [
             "heading-chain"
           ]
+        },
+        {
+          "want": "get back on course with the 1-in-60 rule",
+          "tools": [
+            "one-in-sixty"
+          ]
         }
       ],
       "guide": {

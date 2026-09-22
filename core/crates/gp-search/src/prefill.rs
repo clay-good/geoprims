@@ -193,7 +193,31 @@ fn numv(num: f64, text: &str, decimal: bool, unit: Option<&str>) -> Kind {
 
 /// Splits a question into values and ranking words.
 pub fn parse(q: &str) -> Parsed {
-    let toks = scan(q);
+    let mut toks = scan(q);
+    // A ratio, "1 in 60" (not 1 inch): its numbers are words to rank on.
+    for i in 0..toks.len().saturating_sub(2) {
+        if let (
+            Some(Tok::Num {
+                text: a,
+                decimal: false,
+                glued: false,
+                ..
+            }),
+            Some(Tok::Word(w)),
+            Some(Tok::Num {
+                text: b,
+                decimal: false,
+                ..
+            }),
+        ) = (toks.get(i), toks.get(i + 1), toks.get(i + 2))
+            && w.eq_ignore_ascii_case("in")
+            && word(toks.get(i + 3)).and_then(unit_word).is_none()
+        {
+            let (a, b) = (a.clone(), b.clone());
+            toks[i] = Tok::Word(a);
+            toks[i + 2] = Tok::Word(b);
+        }
+    }
     // Each token is consumed by a value, kept as a word, or dropped.
     let mut values: Vec<(Kind, usize, usize, Option<&'static str>)> = Vec::new(); // kind, first, last, hint
     let mut used = vec![false; toks.len()];
@@ -797,6 +821,15 @@ mod tests {
         );
         assert_eq!(shown("5,000ft").0, vec!["5000 ft"]);
         assert_eq!(shown("-5°C").0, vec!["-5 degC"]);
+        // A ratio is a phrase, not inches: "1 in 60 rule".
+        assert_eq!(
+            shown("1 in 60 rule"),
+            (
+                vec![],
+                vec!["1".into(), "in".into(), "60".into(), "rule".into()]
+            )
+        );
+        assert_eq!(shown("3 in").0, vec!["3 in"]);
         assert_eq!(
             shown("A2992 Q1013").0,
             vec!["29.92 inHg [altimeter]", "1013 hPa [altimeter]"]

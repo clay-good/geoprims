@@ -35,6 +35,12 @@ node worker/scripts/triage.mjs show REPORT_ID --remote
 node worker/scripts/triage.mjs set REPORT_ID --from triaged --to confirmed --source "ICAO Doc 7488/3, Table 1" --remote
 ```
 
+Before confirming, reproduce the report. The script restores the inputs from its permalink and prints what the report said, the result on the reported build, and the result on the current build, marking each field that differs (`≠`). When the reported build is an older release, pass that release's `dist/wasm` with `--reported-wasm`.
+
+```bash
+node worker/scripts/reproduce.mjs REPORT_ID --remote
+```
+
 `list` shows open reports with wrong results first, oldest first, and `overdue = 1` on wrong results older than 24 hours and anything older than 72. A fix for a confirmed defect adds a golden vector with the reported inputs and its source, bumps the tool version, and, if results move beyond tolerance, adds a `result-change` entry to `data/changelog.json` with the old and new values.
 
 ## Queries

@@ -429,7 +429,7 @@ figure.map canvas:focus-visible { outline-offset: -3px; }
 figure.diagram { margin-inline: 0; }
 figure.diagram svg { display: block; inline-size: 100%; block-size: auto; max-block-size: 340px; }
 .diagram-actions { display: flex; justify-content: flex-end; margin-block-start: 0.5rem; }
-.dg-casing { stroke: var(--surface); stroke-width: 6; stroke-linecap: round; }
+.dg-casing { stroke: var(--surface); stroke-width: 6; stroke-linecap: round; fill: none; }
 .dg-accent { stroke: var(--accent); stroke-width: 2.5; fill: none; stroke-linecap: round; }
 .dg-muted { stroke: var(--muted); stroke-width: 1.75; fill: none; stroke-linecap: round; }
 .dg-dash { stroke-dasharray: 6 5; }

@@ -215,12 +215,168 @@ function skyPlot(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+const f1 = (n) => n.toFixed(1);
+const line = (cls, a, b) => `<line class="${cls}" x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(b[0])}" y2="${f1(b[1])}"/>`;
+const text = (cls, x, y, t, anchor = 'start') => `<text class="${cls}" text-anchor="${anchor}" x="${f1(x)}" y="${f1(y)}">${esc(t)}</text>`;
+const dot = (x, y, cls = 'dg-dot') => `<circle class="${cls}" cx="${f1(x)}" cy="${f1(y)}" r="4.5"/>`;
+
+/** Descent profile: cruise, then a straight descent from the top of descent to the target altitude. */
+function descentProfile(args, result) {
+  const d = val(result, 'distance');
+  if (!Number.isFinite(d) || d <= 0) return null;
+  const [x0, x1, xe, yTop, yBot] = [24, 92, 300, 60, 176];
+  const body = [
+    line('dg-grid', [x0, yBot + 32], [xe, yBot + 32]),
+    `<line class="dg-muted dg-dash" x1="${x0}" y1="${yTop}" x2="${x1}" y2="${yTop}"/>`,
+    line('dg-casing', [x1, yTop], [xe, yBot]),
+    line('dg-accent', [x1, yTop], [xe, yBot]),
+    dot(x1, yTop),
+    dot(xe, yBot, 'dg-dot-now'),
+    text('dg-label', x1, yTop - 12, 'Top of descent', 'middle'),
+    text('dg-muted-text', x0, yTop + 16, args.from_altitude ?? ''),
+    text('dg-muted-text', xe, yBot + 18, args.to_altitude ?? '', 'end'),
+    // The distance, measured along the ground under the descent.
+    line('dg-muted', [x1, yBot + 32], [xe, yBot + 32]),
+    line('dg-muted', [x1, yBot + 26], [x1, yBot + 38]),
+    line('dg-muted', [xe, yBot + 26], [xe, yBot + 38]),
+    text('dg-label', (x1 + xe) / 2, yBot + 52, disp(result, 'distance'), 'middle'),
+    text('dg-muted-text', (x1 + xe) / 2 - 10, (yTop + yBot) / 2 + 22, `${disp(result, 'descent_angle')} · ${disp(result, 'vertical_speed')}`, 'end'),
+  ].join('');
+  const title = `Descent profile: start down ${disp(result, 'distance')} before the target, descending at ${disp(result, 'descent_angle')} and ${disp(result, 'vertical_speed')}. Not to scale vertically.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Approach profile: level at the MDA, then down a constant angle from the VDP to the threshold. */
+function approachProfile(args, result) {
+  const d = val(result, 'distance');
+  if (!Number.isFinite(d) || d <= 0) return null;
+  const [x0, xv, xt, yMda, yRwy] = [20, 150, 262, 70, 190];
+  const tch = yRwy - 14;
+  const body = [
+    `<line class="dg-runway" x1="${xt}" y1="${yRwy}" x2="304" y2="${yRwy}"/>`,
+    line('dg-grid', [x0, yRwy], [xt, yRwy]),
+    `<line class="dg-muted dg-dash" x1="${x0}" y1="${yMda}" x2="${xv}" y2="${yMda}"/>`,
+    line('dg-casing', [xv, yMda], [xt, tch]),
+    line('dg-accent', [xv, yMda], [xt, tch]),
+    dot(xv, yMda),
+    text('dg-label', xv, yMda - 12, 'VDP', 'middle'),
+    text('dg-muted-text', x0, yMda + 18, 'MDA'),
+    text('dg-muted-text', x0, yMda + 32, `${args.height_above_touchdown ?? ''} above touchdown`),
+    text('dg-muted-text', xt, yRwy + 16, 'Threshold', 'middle'),
+    line('dg-muted', [xv, yRwy + 28], [xt, yRwy + 28]),
+    line('dg-muted', [xv, yRwy + 22], [xv, yRwy + 34]),
+    line('dg-muted', [xt, yRwy + 22], [xt, yRwy + 34]),
+    text('dg-label', (xv + xt) / 2, yRwy + 44, disp(result, 'distance'), 'middle'),
+    text('dg-muted-text', (xv + xt) / 2 + 8, (yMda + tch) / 2 - 8, disp(result, 'vertical_speed')),
+  ].join('');
+  const title = `Approach profile: leave the MDA at the visual descent point, ${disp(result, 'distance')} from the threshold, descending at ${disp(result, 'vertical_speed')}. Not to scale vertically.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** A station like "7+00.00" as a number (700). */
+export const station = (s) => {
+  const m = /^\s*(-?\d+)\+(\d+(?:\.\d+)?)\s*$/.exec(String(s ?? ''));
+  return m ? Number(m[1]) * 100 + Math.sign(Number(m[1]) || 1) * Number(m[2]) : Number.parseFloat(s);
+};
+
+/** Vertical curve: the two grade tangents meeting at the PVI, and the parabola between PVC and PVT. */
+function verticalCurve(args, result) {
+  const [sc, st] = [station(result.result.pvc_station), station(result.result.pvt_station)];
+  const [yc, yt] = [val(result, 'pvc_elevation'), val(result, 'pvt_elevation')];
+  const [g1, g2] = [Number(args.g1), Number(args.g2)];
+  if (![sc, st, yc, yt, g1, g2].every(Number.isFinite) || st <= sc) return null;
+  const L = st - sc;
+  const y = (x) => yc + (g1 / 100) * x + ((g2 - g1) / (200 * L)) * x * x;
+  const pvi = [sc + L / 2, yc + (g1 / 100) * (L / 2)];
+  const curve = Array.from({ length: 41 }, (_, i) => [sc + (L * i) / 40, y((L * i) / 40)]);
+  // Grades are a few percent: scale height and length apart, and say so.
+  const pts = [...curve, pvi];
+  const [xmin, xmax] = [Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0]))];
+  const [ymin, ymax] = [Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1]))];
+  const S = ([x, yy]) => [40 + ((x - xmin) / (xmax - xmin)) * 240, 170 - ((yy - ymin) / Math.max(ymax - ymin, 1e-9)) * 110];
+  const path = curve.map((p, i) => `${i ? 'L' : 'M'}${S(p).map(f1).join(' ')}`).join('');
+  const [c, t, v] = [S([sc, yc]), S([st, yt]), S(pvi)];
+  const turn = result.result.turning_station ? S([station(result.result.turning_station), val(result, 'turning_elevation')]) : null;
+  const body = [
+    `<line class="dg-muted dg-dash" x1="${f1(c[0])}" y1="${f1(c[1])}" x2="${f1(v[0])}" y2="${f1(v[1])}"/>`,
+    `<line class="dg-muted dg-dash" x1="${f1(v[0])}" y1="${f1(v[1])}" x2="${f1(t[0])}" y2="${f1(t[1])}"/>`,
+    `<path class="dg-casing" fill="none" d="${path}"/><path class="dg-accent" d="${path}"/>`,
+    dot(...c), dot(...t), dot(v[0], v[1], 'dg-dot-now'),
+    text('dg-label', c[0], c[1] + 20, `PVC ${result.result.pvc_station}`, 'middle'),
+    text('dg-label', t[0], t[1] + 20, `PVT ${result.result.pvt_station}`, 'middle'),
+    text('dg-muted-text', v[0] + 8, v[1] + (result.result.curve_type === 'high' ? -8 : 16), 'PVI'),
+    turn ? `${dot(turn[0], turn[1], 'dg-dot-now')}${text('dg-muted-text', turn[0], result.result.curve_type === 'high' ? 36 : 206, `${result.result.curve_type === 'high' ? 'High' : 'Low'} point ${result.result.turning_station}`, 'middle')}${line('dg-grid', [turn[0], result.result.curve_type === 'high' ? 42 : 196], turn)}` : '',
+    text('dg-muted-text', 160, 232, `${g1 > 0 ? '+' : ''}${g1}% to ${g2 > 0 ? '+' : ''}${g2}% · K ${result.result.k}`, 'middle'),
+  ].join('');
+  const title = `Vertical curve from PVC ${result.result.pvc_station} to PVT ${result.result.pvt_station}, grades ${g1}% to ${g2}%${turn ? `, ${result.result.curve_type} point at ${result.result.turning_station}` : ''}. Vertical scale exaggerated.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Traverse sketch: the courses as plotted, numbered, with the gap that does not close. */
+function traverseSketch(args, result) {
+  const pts = (result.result.points ?? []).map((p) => [val({ result: p }, 'easting'), val({ result: p }, 'northing')]);
+  if (pts.length < 3 || !pts.flat().every(Number.isFinite)) return null;
+  const S = fit(pts, 220, 150);
+  const xy = pts.map(S);
+  const path = xy.map((p, i) => `${i ? 'L' : 'M'}${p.map(f1).join(' ')}`).join('');
+  const [first, last] = [xy[0], xy[xy.length - 1]];
+  const body = [
+    `<path class="dg-casing" fill="none" d="${path}"/><path class="dg-accent" d="${path}"/>`,
+    ...xy.slice(0, -1).map((p, i) => `${dot(p[0], p[1], i === 0 ? 'dg-dot-now' : 'dg-dot')}${text('dg-muted-text', p[0] + 7, p[1] - 7, String(i + 1))}`),
+    // The misclosure is usually far smaller than a pixel: ring it so it can be found.
+    `<circle class="dg-muted dg-dash" cx="${f1((first[0] + last[0]) / 2)}" cy="${f1((first[1] + last[1]) / 2)}" r="12"/>`,
+    text('dg-label', 160, 226, `Misclosure ${disp(result, 'misclosure')} · ${result.result.precision ?? ''}`, 'middle'),
+    text('dg-muted-text', 296, 30, 'N ↑', 'end'),
+  ].join('');
+  const title = `Traverse sketch of ${pts.length - 1} courses; it misses closing by ${disp(result, 'misclosure')} (${result.result.precision ?? ''}), ringed at the point of beginning.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Airspeed gauge: calibrated and true airspeed on one dial, with the Mach number. */
+function airspeedGauge(args, result) {
+  const [cas, tas] = [val(result, 'cas'), val(result, 'tas')];
+  if (!Number.isFinite(cas) || !Number.isFinite(tas) || tas <= 0) return null;
+  const unit = result.result.tas.unit;
+  // A round top, so the ten ticks land on round numbers.
+  const step = Math.max(cas, tas) * 1.2 > 200 ? 100 : 50;
+  const top = Math.ceil((Math.max(cas, tas) * 1.2) / step) * step;
+  const [cx, cy, r] = [160, 108, 84];
+  // 0 at the bottom left, the top of the scale at the bottom right: a 270° dial.
+  const at = (v) => -135 + (270 * Math.min(v, top)) / top;
+  const pt = (v, rr) => { const a = at(v) * R; return [cx + rr * Math.sin(a), cy - rr * Math.cos(a)]; };
+  const ticks = [];
+  for (let v = 0; v <= top; v += top / 10) {
+    const [a, b] = [pt(v, r), pt(v, r - 8)];
+    ticks.push(line('dg-muted', a, b), text('dg-muted-text', ...pt(v, r - 20).map((q, i) => q + (i ? 4 : 0)), String(Math.round(v)), 'middle'));
+  }
+  const arc = (v0, v1) => { const [a, b] = [pt(v0, r), pt(v1, r)]; return `<path class="dg-grid" d="M${a.map(f1).join(' ')}A${r} ${r} 0 ${at(v1) - at(v0) > 180 ? 1 : 0} 1 ${b.map(f1).join(' ')}"/>`; };
+  const needle = (v, cls) => arrow(cx, cy, ...pt(v, r - 32), cls, '');
+  const body = [
+    arc(0, top),
+    ...ticks,
+    needle(cas, 'dg-muted'),
+    needle(tas, 'dg-accent'),
+    `<circle class="dg-dot-now" cx="${cx}" cy="${cy}" r="4"/>`,
+    text('dg-muted-text', cx, cy + 24, unit, 'middle'),
+    text('dg-label', cx, 216, `TAS ${disp(result, 'tas')}`, 'middle'),
+    text('dg-muted-text', cx, 232, `CAS ${disp(result, 'cas')} · Mach ${disp(result, 'mach')}`, 'middle'),
+  ].join('');
+  const title = `Airspeed dial: calibrated airspeed ${disp(result, 'cas')} and true airspeed ${disp(result, 'tas')}, Mach ${disp(result, 'mach')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
   'aviation.wind.runway-components': runwayComponents,
   'navigation.route.cpa': cpa,
   'navigation.route.fly-by': flyBy,
+  'aviation.performance.top-of-descent': descentProfile,
+  'aviation.performance.vdp': approachProfile,
+  'survey.curves.vertical-curve': verticalCurve,
+  'survey.land.deed-plot': traverseSketch,
+  'aviation.airspeed.cas-to-tas': airspeedGauge,
+  'aviation.airspeed.tas-to-cas': airspeedGauge,
 };
 
 /**

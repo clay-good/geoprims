@@ -68,3 +68,42 @@ test('the sky plot shows the target by azimuth and elevation', async () => {
   const under = JSON.parse(await host.invoke('geodesy.frame.to-local', JSON.stringify({ ...args, height: -500, lat: 45 })));
   assert.match(diagram('geodesy.frame.to-local', args, under).desc, /below the horizon/);
 });
+
+test('profiles, the traverse sketch, and the airspeed dial draw from core values', async () => {
+  const { join } = await import('node:path');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const { station } = await import('../src/lib/diagrams.js');
+  const root = join(new URL('..', import.meta.url).pathname, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const run = async (id, args) => [args, JSON.parse(await host.invoke(id, JSON.stringify(args)))];
+
+  // Vertical curve: the drawn parabola ends where the core puts PVC and PVT.
+  const [va, vr] = await run('survey.curves.vertical-curve', { g1: 2, g2: -3, length: '600 ft', pvi_elevation: '100 ft', pvi_station: '10+00' });
+  const L = station(vr.result.pvt_station) - station(vr.result.pvc_station);
+  const yEnd = vr.result.pvc_elevation.value + (va.g1 / 100) * L + ((va.g2 - va.g1) / (200 * L)) * L * L;
+  assert.ok(Math.abs(yEnd - vr.result.pvt_elevation.value) < 1e-9, 'the curve reaches the PVT elevation');
+  const vc = diagram('survey.curves.vertical-curve', va, vr);
+  assert.match(vc.markup, /PVC 7\+00\.00/);
+  assert.match(vc.desc, /high point at 9\+40\.00/);
+  assert.equal(station('7+00.00'), 700);
+  assert.equal(station('12+34.5'), 1234.5);
+
+  // Descent and approach profiles name the core's distance and rate.
+  const [da, dr] = await run('aviation.performance.top-of-descent', { from_altitude: '35000 ft', to_altitude: '3000 ft', groundspeed: '420 kt' });
+  assert.ok(diagram('aviation.performance.top-of-descent', da, dr).markup.includes(dr.display.distance));
+  const [pa, pr] = await run('aviation.performance.vdp', { height_above_touchdown: '400 ft', groundspeed: '90 kt' });
+  assert.match(diagram('aviation.performance.vdp', pa, pr).desc, new RegExp(pr.display.distance));
+
+  // Traverse: one numbered dot per course and the misclosure named.
+  const calls = [{ direction: "N 0°00'00\" E", distance: '500 ftUS' }, { direction: "N 90°00'00\" E", distance: '425 ftUS' }, { direction: "S 0°00'00\" E", distance: '500 ftUS' }, { direction: "S 89°56'36\" W", distance: '425 ftUS' }];
+  const [ta, tr] = await run('survey.land.deed-plot', { calls });
+  const ts = diagram('survey.land.deed-plot', ta, tr);
+  assert.equal((ts.markup.match(/class="dg-dot(-now)?"/g) ?? []).length, 4);
+  assert.match(ts.desc, /4 courses/);
+
+  // Airspeed dial: TAS sits clockwise of CAS when TAS is the larger.
+  const [aa, ar] = await run('aviation.airspeed.cas-to-tas', { airspeed: '250 kt', pressure_altitude: '10000 ft', temperature: '-5 degC' });
+  const g = diagram('aviation.airspeed.cas-to-tas', aa, ar);
+  assert.match(g.desc, /true airspeed 288\.6/);
+  assert.equal(diagram('aviation.airspeed.cas-to-tas', aa, { ok: true, result: { cas: { value: 1, unit: 'kt' } } }), null);
+});

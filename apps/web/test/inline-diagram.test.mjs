@@ -22,8 +22,11 @@ async function ran(id) {
   return [args, JSON.parse(await host.invoke(id, JSON.stringify(args)))];
 }
 
-test('the manifests and the drawings agree on which tools are pictures', () => {
-  assert.deepEqual(inlineTools.sort(), [...DIAGRAM_TOOLS].sort());
+test('every tool whose meaning is a picture has a drawing', () => {
+  // Other tools may draw a supporting diagram (a profile, a dial) in the canvas
+  // position without being pictures; the reverse must always hold.
+  assert.ok(inlineTools.length >= 5);
+  for (const id of inlineTools) assert.ok(DIAGRAM_TOOLS.includes(id), `${id}: flagged x-diagram-inline but draws nothing`);
 });
 
 test('each of those pages draws the picture under the answer, and again as the canvas', () => {

@@ -77,6 +77,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/canonical.test.mjs` | One canonical per page on its clean path, the reader's values only ever in the fragment, and `#example` on a link that opens the worked example |
 | `src/lib/chain.mjs`, `test/chain.test.mjs` | "Send to": which tools take a value, the one link that carries it with a breadcrumb back, and the geodesic-to-wind scenario end to end |
 | `src/lib/coordinate.mjs`, `test/coordinate.test.mjs` | The paste-a-coordinate field: any notation the catalog decodes, what it read shown before computing, and the swap when the order was assumed |
+| `src/lib/diagrams.js`, `test/diagrams.test.mjs` | Vector diagrams from core values: wind triangle, runway components, CPA, fly-by, sky plot, airspeed dial, traverse sketch, and descent, approach, and vertical-curve profiles |
 | `data/journeys.json`, `src/lib/journeys.mjs`, `test/journeys.test.mjs` | Learning guides: the eight launch journeys, each chain run through the core at build time, every step opening its tool with the previous steps' outputs |
 | `data/hubs.json`, `test/hubs.test.mjs` | Group hub pages: tools listed under "I want to…" tasks, each once, and a short guide where tools form a sequence |
 | `src/lib/crs.mjs`, `test/crs.test.mjs` | Projected coordinates on import: UTM and State Plane CSVs, and GeoJSON in a WGS 84 UTM zone, converted by the core's inverse tools; other declared systems refused |

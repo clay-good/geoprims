@@ -164,3 +164,24 @@ fn a_bow_tie_has_no_single_area_and_is_sent_to_the_repair_tool() {
     );
     assert_eq!(ok["ok"], true, "{ok}");
 }
+
+#[test]
+fn planar_mode_on_degrees_warns_and_points_to_geodesic() {
+    let r = call(
+        "geometry.area.polygon",
+        r#"{"polygon":[{"lat":37,"lon":-109.05},{"lat":41,"lon":-109.05},{"lat":41,"lon":-102.05},{"lat":37,"lon":-102.05}],"edges":"planar"}"#,
+    );
+    let w = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|w| w["code"] == "PLANAR_ON_GEOGRAPHIC")
+        .unwrap_or_else(|| panic!("{r}"));
+    assert!(w["message"].as_str().unwrap().contains("geodesic"), "{w}");
+    // Geodesic, the default, has no such warning.
+    let g = call(
+        "geometry.area.polygon",
+        r#"{"polygon":[{"lat":37,"lon":-109.05},{"lat":41,"lon":-109.05},{"lat":41,"lon":-102.05},{"lat":37,"lon":-102.05}]}"#,
+    );
+    assert!(!g.to_string().contains("PLANAR_ON_GEOGRAPHIC"));
+}

@@ -28,6 +28,14 @@ const KARNEY: Reference = Reference {
     locator: "pp. 43-55, section 6",
     url: "https://doi.org/10.1007/s00190-012-0578-z",
 };
+const KARNEY_RHUMB: Reference = Reference {
+    title: "The area of rhumb polygons",
+    issuer: "Karney, C. F. F., Studia Geophysica et Geodaetica",
+    year: 2024,
+    edition: "Vol. 68, No. 3-4",
+    locator: "pp. 99-120 (area between a rhumb line and the equator)",
+    url: "https://doi.org/10.1007/s11200-024-0709-z",
+};
 const PLANIMETER: Reference = Reference {
     title: "GeographicLib Planimeter: area of geodesic polygons",
     issuer: "Karney, C. F. F., GeographicLib",
@@ -154,6 +162,31 @@ fn ring_area(g: &geographiclib_rs::Geodesic, ring: &[(f64, f64)]) -> (f64, f64) 
     (area, perimeter)
 }
 
+/// Shoelace area (m², counterclockwise positive) and perimeter (m) of a ring
+/// on a flat equirectangular map centered on the outline `base`, using the
+/// mean Earth radius: the naive calculation, for comparison only.
+fn planar_area(base: &[(f64, f64)], ring: &[(f64, f64)]) -> (f64, f64) {
+    const R: f64 = 6_371_008.8;
+    let lat0 = base.iter().map(|p| p.0).sum::<f64>() / base.len() as f64;
+    let lon0 = base[0].1;
+    let k = libm::cos(lat0.to_radians());
+    let xy: Vec<(f64, f64)> = ring
+        .iter()
+        .map(|p| {
+            let dlon = (p.1 - lon0 + 180.0).rem_euclid(360.0) - 180.0;
+            (R * k * dlon.to_radians(), R * (p.0 - lat0).to_radians())
+        })
+        .collect();
+    let n = xy.len();
+    let (mut a, mut per) = (0.0, 0.0);
+    for i in 0..n {
+        let (p, q) = (xy[i], xy[(i + 1) % n]);
+        a += p.0 * q.1 - q.0 * p.1;
+        per += (q.0 - p.0).hypot(q.1 - p.1);
+    }
+    (a / 2.0, per)
+}
+
 /// Net longitude turned around the ring: ±360° when it circles a pole.
 fn winding(ring: &[(f64, f64)]) -> f64 {
     (0..ring.len())
@@ -182,7 +215,18 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
         "geodesic",
         "holes",
     ],
-    inputs: &[POLYGON, E[0], E[1], E[2]],
+    inputs: &[
+        POLYGON,
+        Field::new(
+            "edges",
+            "Edges are",
+            "geodesic (shortest paths, default), rhumb (constant course), or planar (flat shoelace, a rough check only)",
+            Kind::Choice(&["geodesic", "rhumb", "planar"]),
+        ),
+        E[0],
+        E[1],
+        E[2],
+    ],
     outputs: &[
         Field::new(
             "area",
@@ -244,13 +288,14 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
     ],
     warnings: &[
         "POLE_ENCLOSED",
+        "PLANAR_ON_GEOGRAPHIC",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
-    model: "Karney (2013) geodesic polygon area on WGS 84",
-    accuracy: "Matches GeographicLib Planimeter within 1e-8 relative (3e-9 observed on 500 polygons); edges are geodesics",
-    references: &[KARNEY, PLANIMETER],
+    model: "Karney (2013) geodesic polygon area on WGS 84; rhumb edges by Karney (2024); planar by the shoelace formula on a local flat map",
+    accuracy: "Geodesic and rhumb edges match GeographicLib Planimeter (with -R for rhumbs) within 1e-8 relative. Planar mode is a rough check that grows wrong with size",
+    references: &[KARNEY, KARNEY_RHUMB, PLANIMETER],
     examples: &[Example {
         id: "primary",
         title: "A Colorado-shaped rectangle",
@@ -294,10 +339,32 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .at("/polygon")
         .hint("Repair it with geometry.validity.make-valid, which splits a crossing ring into valid parts."));
     }
-    let (outline, mut perimeter) = ring_area(&g, &rings[0]);
+    let edges = ctx.choice("edges")?.unwrap_or("geodesic");
+    let rhumb = gp_geo::rhumb::Rhumb::new(e.a, e.f);
+    if edges == "rhumb" && rings.iter().flatten().any(|p| p.0.abs() >= 90.0) {
+        return Err(ToolError::invalid(
+            "/polygon",
+            "A rhumb line cannot pass through a pole; move the corner off it or use geodesic edges.",
+        ));
+    }
+    let measure = |ring: &[(f64, f64)]| match edges {
+        "rhumb" => {
+            let n = ring.len();
+            let p: f64 = (0..n)
+                .map(|i| {
+                    let (a, b) = (ring[i], ring[(i + 1) % n]);
+                    rhumb.inverse(a.0, a.1, b.0, b.1).0
+                })
+                .sum();
+            (rhumb.ring_area(ring), p)
+        }
+        "planar" => planar_area(&rings[0], ring),
+        _ => ring_area(&g, ring),
+    };
+    let (outline, mut perimeter) = measure(&rings[0]);
     let mut holes_area = 0.0;
     for hole in &rings[1..] {
-        let (a, p) = ring_area(&g, hole);
+        let (a, p) = measure(hole);
         holes_area += a.abs();
         perimeter += p;
     }
@@ -322,10 +389,30 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
             format!("The outline circles the {pole} pole, so the area is the cap on that side."),
         ));
     }
-    ctx.model = Some(format!(
-        "Karney (2013) geodesic polygon area on {}",
-        e.describe()
-    ));
+    ctx.model = Some(match edges {
+        "rhumb" => format!("Karney (2024) rhumb polygon area on {}", e.describe()),
+        "planar" => "Shoelace formula on a flat map of the polygon (equirectangular at its mean latitude, mean Earth radius)".to_owned(),
+        _ => format!("Karney (2013) geodesic polygon area on {}", e.describe()),
+    });
+    if edges == "planar" {
+        let geodesic: f64 = ring_area(&g, &rings[0]).0.abs()
+            - rings[1..]
+                .iter()
+                .map(|h| ring_area(&g, h).0.abs())
+                .sum::<f64>();
+        let off = if geodesic > 0.0 {
+            (area - geodesic) / geodesic * 100.0
+        } else {
+            0.0
+        };
+        ctx.warnings.push(Warning::new(
+            "PLANAR_ON_GEOGRAPHIC",
+            format!(
+                "Planar math on latitude and longitude: this area is {}% off the geodesic one. Use geodesic edges (the default) for a real measurement.",
+                gp_base::display::number(off, gp_base::tool::Precision::Significant(3), ctx.options.format)
+            ),
+        ));
+    }
     Ok(Json::obj([
         ("area", ctx.out("area", q(area, "m2", QT::Area))),
         (

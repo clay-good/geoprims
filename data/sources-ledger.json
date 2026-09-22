@@ -2178,6 +2178,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "karney-rhumb-area",
+      "name": "Karney (2024) The area of rhumb polygons",
+      "issuer": "Studia Geophysica et Geodaetica",
+      "currentEdition": "Vol. 68, No. 3-4",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "DOI resolved and bibliographic data read from Crossref on 2026-09-22; a journal article, so its edition does not change.",
+      "freeAccessUrl": "https://doi.org/10.1007/s11200-024-0709-z",
+      "matchTerms": [
+        "The area of rhumb polygons"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

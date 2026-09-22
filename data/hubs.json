@@ -658,6 +658,17 @@
         }
       ]
     },
+    "geometry.buffer": {
+      "summary": "Zones a set distance around points, lines, and polygons.",
+      "tasks": [
+        {
+          "want": "draw a zone around a point, line, or polygon",
+          "tools": [
+            "geodesic"
+          ]
+        }
+      ]
+    },
     "indexing.geohash": {
       "summary": "Geohash encoding, decoding, and neighbors.",
       "tasks": [

@@ -34,7 +34,8 @@
     "geometry": {
       "title": "Geometry",
       "groups": [
-        "area"
+        "area",
+        "buffer"
       ]
     },
     "aviation": {

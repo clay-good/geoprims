@@ -313,6 +313,10 @@
     "BEYOND_HORIZON": {
       "severity": "caution",
       "message": "Part of the camera's view reaches the horizon, so that part of the footprint is unbounded."
+    },
+    "BUFFER_ACCURACY": {
+      "severity": "caution",
+      "message": "The buffer's boundary strays from the distance by more than its tolerance."
     }
   }
 }

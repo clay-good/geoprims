@@ -1,6 +1,8 @@
 //! Computational geometry on the plane and the ellipsoid
 //! (add-navigation-and-geometry, geometry/computational).
 
+pub mod buffer;
+
 use geographiclib_rs::{PolygonArea, Winding};
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
@@ -324,7 +326,7 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
-pub static TOOLS: &[&ToolDef] = &[&POLYGON_AREA];
+pub static TOOLS: &[&ToolDef] = &[&POLYGON_AREA, &buffer::BUFFER];
 
 pub static REGISTRY: Registry = Registry {
     module: "geometry",

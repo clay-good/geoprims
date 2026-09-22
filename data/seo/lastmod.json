@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "61fac0abc28f98bd",
+    "hash": "f221ccebaf053603",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -272,11 +272,15 @@
     "lastmod": "2026-09-22"
   },
   "/geometry/": {
-    "hash": "7e9657ac14ee61c6",
+    "hash": "c52d0d2a66949fc9",
     "lastmod": "2026-09-22"
   },
   "/geometry/area/": {
     "hash": "ee7538249d7527da",
+    "lastmod": "2026-09-22"
+  },
+  "/geometry/buffer/": {
+    "hash": "c207a9206dae4473",
     "lastmod": "2026-09-22"
   },
   "/indexing/": {
@@ -424,7 +428,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "e1a6033d0b5e4592",
+    "hash": "75762f363c9d3dac",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -488,7 +492,7 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "2a6d5782c80dbd30",
+    "hash": "352f8e634be1069f",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -568,7 +572,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "9df2b82f6ecb6838",
+    "hash": "82eb77e7236640e1",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -668,7 +672,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "72a1e10f5ffc674a",
+    "hash": "3e1f8f42629b8f61",
     "lastmod": "2026-09-22"
   }
 }

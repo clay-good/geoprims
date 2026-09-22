@@ -37,6 +37,22 @@ function rings(tool, args) {
   return [];
 }
 
+/** An output list's rows as [lon, lat] rings, one per (part, ring). */
+export function outputRings(result, field) {
+  const rows = result?.result?.[field];
+  if (!Array.isArray(rows)) return [];
+  const byKey = new Map();
+  for (const row of rows) {
+    const lat = numberOf(row.lat?.value ?? row.lat);
+    const lon = numberOf(row.lon?.value ?? row.lon);
+    if (lat === null || lon === null) continue;
+    const key = `${row.part ?? 0}/${row.ring ?? 0}`;
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push([lon, lat]);
+  }
+  return [...byKey.values()].filter((r) => r.length >= 3);
+}
+
 /** The most cells a set draws; a larger answer draws its first MAX_CELLS and says so. */
 export const MAX_CELLS = 1000;
 
@@ -118,7 +134,15 @@ export async function buildLayers(tool, args, result, densify, cells) {
       layers.push({ kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id, ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}) });
     });
   }
-  if (kinds.has('polygon')) {
+  // A polygon the tool computes (a buffer, a geofence): an output list of
+  // lat/lon rows grouped by part and ring, drawn over the input it came from.
+  const drawn = (tool.visualization ?? []).find((v) => v.kind === 'polygon' && mapOf(v.map).rings);
+  const outRings = drawn ? outputRings(result, mapOf(drawn.map).rings) : [];
+  if (outRings.length) {
+    const input = rings(tool, args).filter((r) => r.length >= 3);
+    if (input.length && args.shape !== 'line') layers.push({ kind: 'polygon', role: 'input', rings: input });
+    layers.push({ kind: 'polygon', role: 'result', rings: outRings });
+  } else if (kinds.has('polygon')) {
     const rs = rings(tool, args);
     // Edges are geodesics: densify each through the core (up to 200 edges).
     const edges = rs.reduce((n, r) => n + r.length, 0);

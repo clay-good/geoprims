@@ -156,3 +156,21 @@ test('geohash, Plus Code, and tile cells draw as their bounds', async () => {
     assert.ok(Math.abs(Math.min(...lats) - r.result.south.value) < 1e-12 && Math.abs(Math.max(...lons) - r.result.east.value) < 1e-12, `${id}: outline is the core's bounds`);
   }
 });
+
+test('a computed polygon draws over its input, grouped by part and ring', async () => {
+  const { buildLayers, outputRings } = await import('../src/lib/map/layers.js');
+  const row = (lat, lon, part, ring) => ({ lat: { value: lat }, lon: { value: lon }, part, ring });
+  const result = { ok: true, result: { boundary: [
+    row(0, 0, 0, 0), row(0, 1, 0, 0), row(1, 1, 0, 0),
+    row(0.2, 0.5, 0, 1), row(0.4, 0.6, 0, 1), row(0.4, 0.5, 0, 1),
+    row(5, 5, 1, 0), row(5, 6, 1, 0), row(6, 6, 1, 0),
+  ] } };
+  assert.equal(outputRings(result, 'boundary').length, 3);
+  const tool = {
+    visualization: [{ kind: 'polygon', map: [['rings', 'boundary']] }],
+    inputs: { properties: { vertices: { type: 'array', items: { properties: { lat: {}, lon: {} } } } } },
+  };
+  const args = { vertices: [{ lat: 0.1, lon: 0.1 }, { lat: 0.1, lon: 0.9 }, { lat: 0.8, lon: 0.9 }] };
+  const layers = await buildLayers(tool, args, result, async () => null);
+  assert.deepEqual(layers.map((l) => [l.kind, l.role, l.rings.length]), [['polygon', 'input', 1], ['polygon', 'result', 3]]);
+});

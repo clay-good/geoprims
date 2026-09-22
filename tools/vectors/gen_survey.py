@@ -442,6 +442,31 @@ def inaccessible():
     return out
 
 
+def offset_shot():
+    out = []
+
+    def at(n, e, az, along, across):
+        t = math.radians(az)
+        return n + along * math.cos(t) + across * math.cos(t + math.pi / 2), e + along * math.sin(t) + across * math.sin(t + math.pi / 2)
+
+    # The tree-center scenario: 150 ft to the side, 0.75 ft radius, the center turned to at N 30°17' E.
+    c = 30 + 17 / 60
+    n2, e2 = at(5000, 5000, c, 150.75, 0)
+    out.append(vec(1, {"northing": "5000 ft", "easting": "5000 ft", "direction": "N 30°00'00\" E", "distance": "150 ft", "center_direction": "N 30°17'00\" E", "radius": "0.75 ft"},
+                   {"result.northing.value": n2, "result.easting.value": e2, "result.distance.value": 150.75}, SPEC, "2026"))
+    # Distance offsets: right, left, out, and in.
+    for i, (az, d, r, o) in enumerate([(30.0, 150.0, 2.5, 0.0), (210.0, 80.0, -1.2, 0.0), (90.0, 45.0, 0.0, 1.0), (315.0, 200.0, 3.0, -0.5)], 2):
+        n2, e2 = at(1000, 2000, az, d + o, r)
+        inp = {"northing": "1000 m", "easting": "2000 m", "direction": f"{az}", "distance": f"{d} m"}
+        if r:
+            inp["offset_right"] = f"{r} m"
+        if o:
+            inp["offset_out"] = f"{o} m"
+        out.append(vec(i, inp, {"result.northing.value": n2, "result.easting.value": e2, "result.distance.value": math.hypot(d + o, r)}))
+    out.append(vec(6, {"northing": "0 m", "easting": "0 m", "direction": "N 10 E", "distance": "10 m", "center_direction": "N 11 E"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -541,6 +566,7 @@ def main():
         "survey.reduction.combined-factor": combined(),
         "survey.reduction.slope": slope(), "survey.reduction.curvature-refraction": curvature(),
         "survey.reduction.stadia": stadia(), "survey.reduction.inaccessible-height": inaccessible(),
+        "survey.cogo.offset-shot": offset_shot(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }

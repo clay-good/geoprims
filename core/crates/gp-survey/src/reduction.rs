@@ -1,6 +1,7 @@
 //! Instrument reductions (add-survey-suite, survey/instrument-reductions):
-//! slope distance to horizontal and vertical with two-face zenith means, and
-//! the curvature-and-refraction correction with its textbook coefficient.
+//! slope distance to horizontal and vertical with two-face zenith means, the
+//! curvature-and-refraction correction with its textbook coefficient, stadia,
+//! heights of objects you cannot reach, and total-station offset shots.
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
@@ -852,4 +853,228 @@ fn run_inaccessible(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     Ok(Json::obj(out))
+}
+
+pub static OFFSET: ToolDef = ToolDef {
+    id: "survey.cogo.offset-shot",
+    title: "Total-station offset shot",
+    summary: "The coordinates of a point the prism cannot sit on: from a shot beside it with left, right, in, or out offsets, or from an angle offset to the center of a tree or pole.",
+    aliases: &[
+        "offset shot",
+        "angle offset",
+        "distance offset",
+        "tree center",
+    ],
+    keywords: &[
+        "offset",
+        "angle offset",
+        "distance offset",
+        "tree",
+        "pole",
+        "center",
+        "left",
+        "right",
+        "in",
+        "out",
+        "prism",
+    ],
+    inputs: &[
+        len(
+            "northing",
+            "Station northing",
+            "The occupied point, like 5000.000 ft",
+        )
+        .required()
+        .core(),
+        len("easting", "Station easting", "Like 5000.000 ft")
+            .required()
+            .core(),
+        Field::new(
+            "direction",
+            "Direction to the prism",
+            "Bearing or azimuth, like N 30°00'00\" E or 30",
+            Kind::Text { max_len: 32 },
+        )
+        .required()
+        .core(),
+        len(
+            "distance",
+            "Horizontal distance",
+            "Station to the prism, like 150.00 ft",
+        )
+        .required()
+        .core(),
+        len(
+            "offset_right",
+            "Offset right",
+            "Right of the line of sight, negative for left, like 2.5 ft",
+        )
+        .core(),
+        len(
+            "offset_out",
+            "Offset out",
+            "Beyond the prism along the line, negative for in, like 1.0 ft",
+        ),
+        Field::new(
+            "center_direction",
+            "Direction to the center",
+            "Angle offset: the direction turned to the center, like N 31°00'00\" E",
+            Kind::Text { max_len: 32 },
+        ),
+        len(
+            "radius",
+            "Radius",
+            "Angle offset: the tree or pole's radius, like 0.75 ft",
+        ),
+    ],
+    outputs: &[
+        len_out("northing", "Northing", "Of the offset point"),
+        len_out("easting", "Easting", "Of the offset point"),
+        len_out(
+            "distance",
+            "Horizontal distance",
+            "Station to the offset point",
+        ),
+        Field::new(
+            "azimuth",
+            "Azimuth",
+            "Station to the offset point",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(6)),
+        Field::new(
+            "bearing",
+            "Bearing",
+            "Station to the offset point",
+            Kind::Text { max_len: 32 },
+        ),
+    ],
+    errors: &[gp_base::ErrorCode::UnitMismatch],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Distance offset: out moves along the line of sight and right at 90° to it. Angle offset: the center lies at the measured distance plus the radius, along the direction turned to the center (Ghilani & Wolf 2018, total-station field practice)",
+    accuracy: "Exact for the geometry; an angle offset assumes the shot was taken to the side of a round object at the same distance as its face",
+    references: &[GHILANI],
+    examples: &[Example {
+        id: "primary",
+        title: "The center of a tree: 150.00 ft to its side, 0.75 ft radius",
+        input: r#"{"northing":"5000 ft","easting":"5000 ft","direction":"N 30°00'00\" E","distance":"150 ft","center_direction":"N 30°17'00\" E","radius":"0.75 ft"}"#,
+        source: "add-survey-suite tree-center scenario",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.cogo.forward",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "next",
+        },
+    ],
+    sentence: "The point is at northing {northing}, easting {easting}, {distance} from the station on {bearing}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_offset,
+    ..ToolDef::BLANK
+};
+
+fn run_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let n = ctx.req_quantity("northing")?;
+    let e = ctx.req_quantity("easting")?;
+    let d = ctx.req_quantity("distance")?;
+    let right = ctx.quantity("offset_right")?;
+    let out_ = ctx.quantity("offset_out")?;
+    let radius = ctx.quantity("radius")?;
+    let named: Vec<(&str, Q)> = [
+        ("northing", Some(n)),
+        ("easting", Some(e)),
+        ("distance", Some(d)),
+        ("offset_right", right),
+        ("offset_out", out_),
+        ("radius", radius),
+    ]
+    .into_iter()
+    .filter_map(|(k, q)| q.map(|q| (k, q)))
+    .collect();
+    let u = common_unit(&named)?;
+    let dir = |ctx: &Ctx, name: &str| -> Result<Option<f64>, ToolError> {
+        ctx.text(name)?
+            .map(|t| {
+                crate::direction::parse(&t).map_err(|m| ToolError::invalid(&format!("/{name}"), m))
+            })
+            .transpose()
+    };
+    let az = dir(ctx, "direction")?.expect("required");
+    let center = dir(ctx, "center_direction")?;
+    let dist = d.to(u);
+    if dist <= 0.0 {
+        return Err(ToolError::invalid(
+            "/distance",
+            "The distance must be positive.",
+        ));
+    }
+    let (along, across, toward) = match (center, radius) {
+        // Angle offset: the center, a radius beyond the face, along the direction turned to it.
+        (Some(c), Some(r)) => {
+            if right.is_some() || out_.is_some() {
+                return Err(ToolError::invalid(
+                    "/center_direction",
+                    "Use distance offsets or an angle offset, not both.",
+                ));
+            }
+            let r = r.to(u);
+            if r < 0.0 {
+                return Err(ToolError::invalid(
+                    "/radius",
+                    "The radius cannot be negative.",
+                ));
+            }
+            (dist + r, 0.0, c)
+        }
+        (Some(_), None) => {
+            return Err(ToolError::invalid(
+                "/radius",
+                "An angle offset needs the radius of the tree or pole.",
+            ));
+        }
+        (None, Some(_)) => {
+            return Err(ToolError::invalid(
+                "/center_direction",
+                "An angle offset needs the direction turned to the center.",
+            ));
+        }
+        (None, None) => (
+            dist + out_.map_or(0.0, |q| q.to(u)),
+            right.map_or(0.0, |q| q.to(u)),
+            az,
+        ),
+    };
+    let t = toward.to_radians();
+    let n2 = n.to(u) + along * cos(t) + across * cos(t + core::f64::consts::FRAC_PI_2);
+    let e2 = e.to(u) + along * sin(t) + across * sin(t + core::f64::consts::FRAC_PI_2);
+    let (dn, de) = (n2 - n.to(u), e2 - e.to(u));
+    let az2 = gp_base::angle::wrap_azimuth(libm::atan2(de, dn).to_degrees());
+    let q = |x: f64| Q { value: x, unit: u };
+    Ok(Json::obj(vec![
+        ("northing", ctx.emit("northing", q(n2), u)),
+        ("easting", ctx.emit("easting", q(e2), u)),
+        ("distance", ctx.emit("distance", q(libm::hypot(dn, de)), u)),
+        (
+            "azimuth",
+            ctx.out(
+                "azimuth",
+                Q {
+                    value: az2,
+                    unit: unit(QT::Angle, "deg"),
+                },
+            ),
+        ),
+        ("bearing", Json::Str(crate::direction::bearing(az2, 1))),
+    ]))
 }

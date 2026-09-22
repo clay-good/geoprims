@@ -97,6 +97,7 @@
         "geodesy.datum.legacy",
         "geodesy.datum.nad83",
         "geodesy.magnetic.declination",
+        "geodesy.magnetic.grivation",
         "geodesy.magnetic.true-to-magnetic"
       ]
     },
@@ -151,6 +152,7 @@
       "definition": "A grid of 60 zones, each 6° of longitude wide, that turns latitude and longitude into eastings and northings in meters.",
       "source": "nga-utmups",
       "relatedTools": [
+        "geodesy.magnetic.grivation",
         "geodesy.ups.forward",
         "geodesy.utm.forward",
         "geodesy.utm.inverse",
@@ -164,6 +166,7 @@
       "definition": "The polar companion to UTM, covering the areas north of 84° N and south of 80° S.",
       "source": "nga-utmups",
       "relatedTools": [
+        "geodesy.magnetic.grivation",
         "geodesy.ups.forward",
         "geodesy.ups.inverse"
       ]

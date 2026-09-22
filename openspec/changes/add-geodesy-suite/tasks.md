@@ -59,7 +59,7 @@
 - [ ] 7.2 Add WMMHR2025 and IGRF-14 models with validity windows; verify the model-selection and historical scenarios (built: IGRF-14 with DGRF/provisional/predictive labels, matching ppigrf within 0.001 nT, and the historical scenario; pending: WMMHR2025)
 - [x] 7.3 Implement uncertainty and blackout/caution zones; verify both zone scenarios
 - [x] 7.4 Implement true ↔ magnetic conversion with chart variation parsing and model comparison; verify the chart-variation scenarios
-- [ ] 7.5 Implement grivation; verify the UPS scenario
+- [x] 7.5 Implement grivation; verify the UPS scenario (`geodesy.magnetic.grivation`: G = D − γ with the sign convention stated, UTM or UPS chosen by latitude or forced within their legal ranges; 9 vectors from the NCEI WMM2025 test values and GeographicLib GeoConvert convergence, including 89° N in UPS north)
 - [ ] 7.6 Implement isogonic overlays in a worker; verify the overlay visual fixture
 
 ## 8. Catalog, docs, and promotion

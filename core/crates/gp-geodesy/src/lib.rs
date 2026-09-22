@@ -28,7 +28,7 @@ pub(crate) const KARNEY_TM: Reference = Reference {
     locator: "pp. 475-485 (6th-order Krüger series)",
     url: "https://doi.org/10.1007/s00190-011-0445-3",
 };
-const NGA_UTM: Reference = Reference {
+pub(crate) const NGA_UTM: Reference = Reference {
     title: "The Universal Grids and the Transverse Mercator and Polar Stereographic Map Projections, NGA.SIG.0012",
     issuer: "National Geospatial-Intelligence Agency",
     year: 2014,
@@ -1472,6 +1472,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &MGRS_INVERSE,
     &magnetic::DECLINATION,
     &magnetic::TRUE_TO_MAGNETIC,
+    &magnetic::GRIVATION,
     &spcs::FORWARD,
     &spcs::INVERSE,
     &spcs::LOOKUP,

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0e2fdc976baaad1f",
+    "hash": "1b78b3a186f459d9",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -148,7 +148,7 @@
     "lastmod": "2026-09-22"
   },
   "/geodesy/": {
-    "hash": "9c3f229fab789f23",
+    "hash": "d323483fb76584fe",
     "lastmod": "2026-09-22"
   },
   "/geodesy/datum/": {
@@ -236,11 +236,11 @@
     "lastmod": "2026-09-22"
   },
   "/geodesy/magnetic/": {
-    "hash": "d4d8493e21080253",
+    "hash": "0e352bb76705a36f",
     "lastmod": "2026-09-22"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "f25d6cb9b05f6376",
+    "hash": "97a52af9c19ed2ef",
     "lastmod": "2026-09-22"
   },
   "/geodesy/parse/": {
@@ -464,7 +464,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "6b2f0528d1a26ff2",
+    "hash": "a9ef42e5b3f74edb",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -532,7 +532,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "df2d1a884ce1dc6e",
+    "hash": "1d642d0fa3237a06",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -616,7 +616,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "7f53c38810ba8300",
+    "hash": "06d950eefeeb1bda",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -716,7 +716,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "55940cc94b6b9b31",
+    "hash": "57a20a18e61cea2b",
     "lastmod": "2026-09-22"
   }
 }

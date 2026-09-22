@@ -675,3 +675,201 @@ fn run_true_to_magnetic(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     Ok(Json::obj(o))
 }
+
+// ---------------------------------------------------------------- grid variation
+
+pub static GRIVATION: ToolDef = ToolDef {
+    id: "geodesy.magnetic.grivation",
+    title: "Grid variation (grivation)",
+    summary: "The angle from grid north (UTM or UPS) to magnetic north, for navigating by a grid near the poles or on military maps: declination minus grid convergence, with the sign convention stated.",
+    aliases: &[
+        "grivation",
+        "grid variation",
+        "grid magnetic angle",
+        "G-M angle",
+    ],
+    keywords: &[
+        "grivation",
+        "grid variation",
+        "convergence",
+        "declination",
+        "UPS",
+        "UTM",
+        "polar navigation",
+    ],
+    inputs: &[
+        LAT,
+        LON,
+        DATE.required().core(),
+        Field::new(
+            "grid",
+            "Grid",
+            "auto (UTM between 80° S and 84° N, else UPS; default), utm, or ups",
+            Kind::Choice(&["auto", "utm", "ups"]),
+        )
+        .core(),
+        MODEL.core(),
+        HEIGHT,
+    ],
+    outputs: &[
+        qty(
+            "grivation",
+            "Grid variation",
+            "Magnetic north measured clockwise from grid north: D − γ",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("(-180,180]"),
+        Field::new(
+            "grivation_text",
+            "Grid variation",
+            "East or west of grid north",
+            Kind::Text { max_len: 24 },
+        ),
+        qty(
+            "declination",
+            "Declination",
+            "Magnetic north clockwise from true north",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("(-180,180]"),
+        qty(
+            "convergence",
+            "Grid convergence",
+            "Grid north clockwise from true north",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(4))
+        .angle_range("(-180,180]"),
+        Field::new(
+            "grid_used",
+            "Grid",
+            "The zone the convergence is for",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "convention",
+            "Sign convention",
+            "How to use the grid variation",
+            Kind::Text { max_len: 160 },
+        ),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+    ],
+    warnings: &[
+        "DECLINATION_POLE_CONVENTION",
+        "COMPASS_BLACKOUT_ZONE",
+        "COMPASS_CAUTION_ZONE",
+        "INPUT_NORMALIZED",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Grid variation G = D − γ: the model's declination D minus the grid convergence γ (the bearing of grid north from true north) of the UTM or UPS zone, both east positive",
+    accuracy: "As good as the declination (WMM2025: about 0.3° to a few degrees near the poles); the convergence is exact",
+    references: &[WMM_REPORT, crate::NGA_UTM],
+    examples: &[Example {
+        id: "primary",
+        title: "At 86° N, 45° E in UPS north",
+        input: r#"{"lat":86,"lon":45,"date":"2026-09-22","grid":"ups"}"#,
+        source: "add-geodesy-suite grivation scenario: WMM2025 declination minus the UPS convergence",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("value", "grivation")],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.magnetic.declination",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.ups.forward",
+            reason: "parent",
+        },
+    ],
+    sentence: "Grid variation is {grivation_text}: magnetic north is that far from grid north.",
+    limits: &[("batchRows", 10_000)],
+    run: run_grivation,
+    ..ToolDef::BLANK
+};
+
+fn run_grivation(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let ev = evaluate(ctx)?;
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let (a, f) = (6_378_137.0, 1.0 / 298.257_223_563);
+    let grid = match ctx.choice("grid")?.unwrap_or("auto") {
+        "utm" => {
+            if !gp_geo::utmups::in_utm_domain(lat) {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    "UTM covers 80° S to 84° N; use UPS (or auto) nearer the pole.",
+                )
+                .at("/grid"));
+            }
+            gp_geo::utmups::utm_forward(a, f, lat, lon, gp_geo::utmups::standard_zone(lat, lon))
+        }
+        "ups" => {
+            // UPS is legal poleward of 83.5° N and 79.5° S (NGA.SIG.0012, with its overlap).
+            if lat < 83.5 && lat > -79.5 {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    "UPS covers 83.5° N to the North Pole and 79.5° S to the South Pole; use UTM (or auto) here.",
+                )
+                .at("/grid"));
+            }
+            gp_geo::utmups::ups_forward(a, f, lat, lon, lat >= 0.0)
+        }
+        _ => gp_geo::utmups::forward_auto(a, f, lat, lon),
+    };
+    let d = ev.e.d;
+    let gamma = grid.convergence;
+    let g = (d - gamma + 180.0).rem_euclid(360.0) - 180.0;
+    let g = if g == -180.0 { 180.0 } else { g };
+    let used = if grid.zone == 0 {
+        format!("UPS {}", if grid.north { "north" } else { "south" })
+    } else {
+        format!(
+            "UTM zone {}{}",
+            grid.zone,
+            if grid.north { "N" } else { "S" }
+        )
+    };
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let n = move |x: f64, dp: u8| display::number(x, Precision::Decimals(dp), fmt);
+        ctx.step(
+            "Grid convergence",
+            "bearing of grid north from true north",
+            used.clone(),
+            format!("{}°", n(gamma, 4)),
+        );
+        ctx.step(
+            "Grid variation",
+            "G = D − γ",
+            format!("{}° − {}°", n(d, 2), n(gamma, 4)),
+            format!("{}°", n(g, 2)),
+        );
+    }
+    let text = east_west(g, ctx);
+    Ok(Json::obj(vec![
+        ("grivation", ctx.out("grivation", deg(g))),
+        ("grivation_text", Json::str(text)),
+        ("declination", ctx.out("declination", deg(d))),
+        ("convergence", ctx.out("convergence", deg(gamma))),
+        ("grid_used", Json::str(used)),
+        (
+            "convention",
+            Json::str(
+                "East positive: grid bearing = magnetic bearing + G; magnetic bearing = grid bearing − G.",
+            ),
+        ),
+    ]))
+}

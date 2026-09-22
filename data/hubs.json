@@ -774,6 +774,12 @@
           "tools": [
             "true-to-magnetic"
           ]
+        },
+        {
+          "want": "find the angle from grid north to magnetic north",
+          "tools": [
+            "grivation"
+          ]
         }
       ]
     },

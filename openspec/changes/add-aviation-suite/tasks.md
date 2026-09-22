@@ -13,7 +13,7 @@
 - [x] 2.2 Implement calibration-table IAS ↔ CAS with no default correction; verify the no-table and beyond-table scenarios
 - [x] 2.3 Implement OAT-required TAS with the ISA-assumed warning; verify the standard-temperature scenario
 - [x] 2.4 Implement TAT ↔ SAT with recovery factor and dynamic pressure; verify the ram-rise and compressibility-sign scenarios
-- [ ] 2.5 Implement the airspeed tape gauge with labeled V-speed arcs; verify the visual fixture and the not-color-alone check
+- [x] 2.5 Implement the airspeed tape gauge with labeled V-speed arcs; verify the visual fixture and the not-color-alone check — both airspeed tools take the aircraft's VS0, VS1, VFE, VNO, and VNE from its POH, check them against the order an indicator's arcs are marked in, and say where the airspeed falls among them: CAUTION_RANGE between VNO and VNE, ABOVE_VNE past the red line, BELOW_STALL_SPEED under VS0. The dial draws the white, green, and yellow arcs and the red line, scaled to cover the marks, each named in words (Flaps, Normal, Caution, Never exceed) so nothing is carried by color alone. The fixture reads the scale off the dial's own ticks and checks each arc begins and ends at its V-speed, and that an unmarked gauge claims no ranges
 
 ## 3. Altimetry
 

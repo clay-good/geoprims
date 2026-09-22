@@ -379,3 +379,58 @@ fn percent_mac() {
         1e-9,
     );
 }
+
+#[test]
+fn v_speeds_place_the_airspeed_among_the_arcs() {
+    // A Skyhawk's markings: white 48-95, green 55-130, yellow 130-163.
+    let marks = r#""vs0":"48 kt","vs1":"55 kt","vfe":"95 kt","vno":"130 kt","vne":"163 kt""#;
+    let at = |cas: &str| {
+        call(
+            "aviation.airspeed.cas-to-tas",
+            &format!(
+                r#"{{"airspeed":"{cas}","pressure_altitude":"5000 ft","temperature":"5 degC",{marks}}}"#
+            ),
+        )
+    };
+    let green = at("110 kt");
+    assert_eq!(green["ok"], true, "{green}");
+    for code in ["CAUTION_RANGE", "ABOVE_VNE", "BELOW_STALL_SPEED"] {
+        assert!(!warns(&green, code), "{code} in the green arc: {green}");
+    }
+    // Between VNO and VNE: smooth air only, and the message names both.
+    let yellow = at("145 kt");
+    assert!(warns(&yellow, "CAUTION_RANGE"), "{yellow}");
+    let m = yellow["meta"]["warnings"][0]["message"].as_str().unwrap();
+    assert!(m.contains("130 kt") && m.contains("163 kt"), "{m}");
+    assert!(!warns(&yellow, "ABOVE_VNE"));
+    // Past the red line: the stronger warning, and not both at once.
+    let red = at("170 kt");
+    assert!(warns(&red, "ABOVE_VNE"), "{red}");
+    assert!(!warns(&red, "CAUTION_RANGE"), "{red}");
+    // Below the landing-configuration stall speed.
+    assert!(warns(&at("40 kt"), "BELOW_STALL_SPEED"));
+    // Speeds are checked as an indicator's arcs are ordered.
+    let bad = call(
+        "aviation.airspeed.cas-to-tas",
+        r#"{"airspeed":"110 kt","pressure_altitude":"5000 ft","temperature":"5 degC","vs0":"60 kt","vs1":"55 kt"}"#,
+    );
+    assert_eq!(bad["ok"], false, "{bad}");
+    assert_eq!(bad["error"]["code"], "INVALID_INPUT");
+    // The inverse tool takes the same markings and places its CAS the same way.
+    let back = call(
+        "aviation.airspeed.tas-to-cas",
+        &format!(
+            r#"{{"tas":"155 kt","pressure_altitude":"5000 ft","temperature":"5 degC",{marks}}}"#
+        ),
+    );
+    assert!(warns(&back, "CAUTION_RANGE"), "{back}");
+
+    // Without markings, nothing is assumed about the arcs.
+    let plain = call(
+        "aviation.airspeed.cas-to-tas",
+        r#"{"airspeed":"170 kt","pressure_altitude":"5000 ft","temperature":"5 degC"}"#,
+    );
+    for code in ["CAUTION_RANGE", "ABOVE_VNE", "BELOW_STALL_SPEED"] {
+        assert!(!warns(&plain, code), "{code} without V-speeds: {plain}");
+    }
+}

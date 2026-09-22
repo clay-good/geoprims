@@ -299,3 +299,34 @@ test('the altimetry drawing puts true altitude below indicated in cold air', asy
     assert.ok(Math.abs(((hundreds - want + 540) % 360) - 180) < 0.5, `hundreds hand at ${hundreds}, altitude wants ${want}`);
   }
 });
+
+test('the airspeed gauge marks each V-speed arc and names it in words', async () => {
+  // add-aviation-suite 2.5 fixture, including the not-color-alone check.
+  const marks = { vs0: '48 kt', vs1: '55 kt', vfe: '95 kt', vno: '130 kt', vne: '163 kt' };
+  const args = { airspeed: '110 kt', pressure_altitude: '5000 ft', temperature: '5 degC', ...marks };
+  const r = JSON.parse(await host.invoke('aviation.airspeed.cas-to-tas', JSON.stringify(args)));
+  const d = diagram('aviation.airspeed.cas-to-tas', args, r);
+  // The dial's own ticks give the scale: 0 at -135°, the top tick at +135°.
+  const top = Math.max(...[...d.markup.matchAll(/<text class="dg-muted-text" text-anchor="middle"[^>]*>(\d+)</g)].map((m) => Number(m[1])));
+  assert.ok(top >= 163, `the scale stops at ${top}, below VNE`);
+  const speedAt = (x, y) => (((Math.atan2(x - 160, 108 - y) * 180) / Math.PI + 135) / 270) * top;
+  const arcs = [...d.markup.matchAll(/<path class="(dg-arc-[a-z]+)" d="M([-\d.]+) ([-\d.]+)A[\d.]+ [\d.]+ 0 [01] 1 ([-\d.]+) ([-\d.]+)"/g)];
+  const ends = Object.fromEntries(arcs.map((m) => [m[1], [speedAt(Number(m[2]), Number(m[3])), speedAt(Number(m[4]), Number(m[5]))]]));
+  const kt = (s) => Number.parseFloat(marks[s]);
+  // White is the flap range, green the normal range, yellow the caution range.
+  for (const [cls, from, to] of [['dg-arc-white', 'vs0', 'vfe'], ['dg-arc-green', 'vs1', 'vno'], ['dg-arc-yellow', 'vno', 'vne']]) {
+    assert.ok(ends[cls], `${cls} is not drawn`);
+    assert.ok(Math.abs(ends[cls][0] - kt(from)) < 1, `${cls} starts at ${ends[cls][0]}, not ${from}`);
+    assert.ok(Math.abs(ends[cls][1] - kt(to)) < 1, `${cls} ends at ${ends[cls][1]}, not ${to}`);
+  }
+  // The red line is at VNE, radial rather than an arc.
+  const red = lines(d.markup).find((l) => l.cls === 'dg-arc-red');
+  assert.ok(Math.abs(speedAt(red.x1, red.y1) - kt('vne')) < 1, `the red line is at ${speedAt(red.x1, red.y1)}`);
+  // Not color alone: every arc says what it means.
+  for (const word of ['Flaps', 'Normal', 'Caution', 'Never exceed']) assert.match(d.markup, new RegExp(`>${word}<`));
+  // Without markings the gauge draws no arcs and claims no ranges.
+  const plain = { airspeed: '110 kt', pressure_altitude: '5000 ft', temperature: '5 degC' };
+  const bare = diagram('aviation.airspeed.cas-to-tas', plain, JSON.parse(await host.invoke('aviation.airspeed.cas-to-tas', JSON.stringify(plain))));
+  assert.doesNotMatch(bare.markup, /dg-arc-/);
+  assert.doesNotMatch(bare.markup, /Never exceed/);
+});

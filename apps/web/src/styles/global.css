@@ -452,6 +452,12 @@ figure.diagram svg { display: block; inline-size: 100%; block-size: auto; max-bl
 .dg-label { fill: var(--text); font: 600 11px var(--sans); paint-order: stroke; stroke: var(--surface); stroke-width: 3; }
 .dg-muted-text { fill: var(--muted); font: 11px var(--mono); }
 .dg-dot-now { fill: var(--text); stroke: var(--surface); stroke-width: 2; }
+/* Airspeed indicator arcs. The colors are the instrument's own convention; the
+   gauge also labels each arc in words, so nothing is carried by color alone. */
+.dg-arc-white { stroke: var(--text); stroke-width: 5; fill: none; }
+.dg-arc-green { stroke: var(--signal); stroke-width: 5; fill: none; }
+.dg-arc-yellow { stroke: var(--caution); stroke-width: 5; fill: none; }
+.dg-arc-red { stroke: var(--danger); stroke-width: 4; }
 .timeline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding-block-start: 0.5rem; border-block-start: 1px solid var(--line); }
 .timeline input[type='range'] { flex: 1 1 12rem; min-block-size: var(--target); accent-color: var(--accent); }
 .timeline button, .timeline select { min-block-size: var(--target); min-inline-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; padding-inline: 0.75rem; }

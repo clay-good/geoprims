@@ -14,309 +14,61 @@
     "INTERNAL": "Something went wrong inside geoprims. Please report it."
   },
   "warnings": {
-    "COMPASS_BLACKOUT_ZONE": {
+    "ABOVE_ALTITUDE_CEILING": {
       "severity": "caution",
-      "message": "Magnetic compasses are unreliable here: the horizontal field is too weak."
-    },
-    "COMPASS_CAUTION_ZONE": {
-      "severity": "caution",
-      "message": "Magnetic compasses may be unreliable here: the horizontal field is weak."
-    },
-    "LOAD_LIMIT_EXCEEDED": {
-      "severity": "caution",
-      "message": "A weight or load limit is exceeded."
-    },
-    "OUTSIDE_CG_ENVELOPE": {
-      "severity": "caution",
-      "message": "The center of gravity is outside the envelope you entered."
-    },
-    "TERRAIN_NOT_CONSIDERED": {
-      "severity": "info",
-      "message": "Terrain and obstacles are not considered."
-    },
-    "BELOW_TERRAIN": {
-      "severity": "caution",
-      "message": "Part of the path is below the terrain surface."
-    },
-    "CANNOT_RETURN_INTO_WIND": {
-      "severity": "caution",
-      "message": "The aircraft cannot return against this wind with the energy left."
+      "message": "The height is above the altitude ceiling you set (default 400 ft AGL)."
     },
     "ABOVE_MAX_HOLDING_SPEED": {
       "severity": "caution",
       "message": "The speed is above the maximum holding speed for this altitude."
     },
-    "WAYPOINT_OUTSIDE_GEOFENCE": {
+    "ABOVE_VNE": {
       "severity": "caution",
-      "message": "A waypoint is outside the geofence."
-    },
-    "C_RATE_EXCEEDED": {
-      "severity": "caution",
-      "message": "The battery discharge rate is above its rated C-rate."
-    },
-    "OBSERVATION_OLD": {
-      "severity": "caution",
-      "message": "The weather observation is old for planning."
-    },
-    "TRIGGER_TOO_FAST": {
-      "severity": "caution",
-      "message": "The camera cannot trigger this fast."
-    },
-    "OVERLAP_BELOW_TARGET": {
-      "severity": "caution",
-      "message": "Image overlap is below the target."
-    },
-    "FLY_OVER_RECOMMENDED": {
-      "severity": "caution",
-      "message": "The turn is too sharp to fly by; fly over the waypoint instead."
-    },
-    "INSUFFICIENT_CHECKPOINTS": {
-      "severity": "caution",
-      "message": "There are too few checkpoints to test accuracy."
-    },
-    "ADJUSTMENT_TEST_FAILED": {
-      "severity": "caution",
-      "message": "The adjustment failed its statistical test."
-    },
-    "RESECTION_UNSTABLE": {
-      "severity": "caution",
-      "message": "The resection geometry is weak or unstable."
-    },
-    "ABOVE_ALTITUDE_CEILING": {
-      "severity": "caution",
-      "message": "The height is above the altitude ceiling you set (default 400 ft AGL)."
+      "message": "The airspeed is above VNE, the never-exceed speed."
     },
     "ACCURACY_DEGRADED": {
       "severity": "accuracy",
       "message": "Accuracy is lower than usual for this input."
     },
+    "ADJUSTMENT_TEST_FAILED": {
+      "severity": "caution",
+      "message": "The adjustment failed its statistical test."
+    },
     "ALGORITHM_FALLBACK": {
       "severity": "accuracy",
       "message": "A different algorithm was used; see the model field."
-    },
-    "MODEL_EXTRAPOLATED": {
-      "severity": "accuracy",
-      "message": "The model is used outside its validity window."
-    },
-    "NON_OFFICIAL_DATUM": {
-      "severity": "accuracy",
-      "message": "This datum or zone is not official yet (beta)."
-    },
-    "LOW_ACCURACY_TRANSFORM": {
-      "severity": "accuracy",
-      "message": "The chosen transformation has low accuracy."
-    },
-    "OUTSIDE_AREA_OF_USE": {
-      "severity": "accuracy",
-      "message": "The point is outside the area the transformation was derived for."
-    },
-    "DEFORMATION_ZONE": {
-      "severity": "accuracy",
-      "message": "The point is in a zone of active crustal deformation."
-    },
-    "FRAME_MISMATCH": {
-      "severity": "accuracy",
-      "message": "The inputs use different reference frames."
-    },
-    "REALIZATION_ASSUMED": {
-      "severity": "accuracy",
-      "message": "A datum realization was assumed."
-    },
-    "ORTHOMETRIC_AS_ELLIPSOIDAL": {
-      "severity": "accuracy",
-      "message": "An orthometric height was treated as ellipsoidal."
-    },
-    "CALIBRATION_ASSUMED": {
-      "severity": "accuracy",
-      "message": "Instrument calibration was assumed."
-    },
-    "ISA_TEMPERATURE_ASSUMED": {
-      "severity": "accuracy",
-      "message": "Standard (ISA) temperature was assumed."
-    },
-    "DRY_AIR_ASSUMED": {
-      "severity": "accuracy",
-      "message": "Dry air was assumed; humidity would raise density altitude."
-    },
-    "HEURISTIC_DERATING": {
-      "severity": "accuracy",
-      "message": "A rule-of-thumb derating was applied."
-    },
-    "HOTSPOT_IN_FRAME": {
-      "severity": "accuracy",
-      "message": "The sun's hotspot falls inside the camera frame."
-    },
-    "HEURISTIC_PEUKERT": {
-      "severity": "accuracy",
-      "message": "A Peukert correction was applied; it describes lithium packs poorly."
-    },
-    "PLANAR_ON_GEOGRAPHIC": {
-      "severity": "accuracy",
-      "message": "Planar math was applied to geographic coordinates."
-    },
-    "PENTAGON_DISTORTION": {
-      "severity": "accuracy",
-      "message": "The result touches an H3 pentagon, where distortion is higher."
-    },
-    "UT1_APPROXIMATED": {
-      "severity": "accuracy",
-      "message": "UT1 was approximated by UTC."
     },
     "ALMANAC_OLD": {
       "severity": "accuracy",
       "message": "The satellite almanac is old."
     },
-    "LEAP_SECOND_TABLE_EXPIRED": {
-      "severity": "accuracy",
-      "message": "The leap-second table has expired."
-    },
-    "NO_REDUNDANCY": {
-      "severity": "accuracy",
-      "message": "There are no redundant measurements to check the result."
-    },
-    "SCALE_SUSPECT": {
-      "severity": "accuracy",
-      "message": "The scale looks suspicious."
-    },
-    "SUSPECT_SCALING": {
-      "severity": "accuracy",
-      "message": "The data scaling looks suspicious."
-    },
-    "SUSPECT_VALUE": {
-      "severity": "accuracy",
-      "message": "A value looks unusual; check it."
-    },
-    "EQUIVALENT_FOCAL_LENGTH": {
-      "severity": "accuracy",
-      "message": "A 35 mm equivalent focal length was used."
-    },
-    "STATION_VARIATION_DIFFERS": {
-      "severity": "accuracy",
-      "message": "The station's published variation differs from the model."
-    },
-    "RUNWAY_HEADING_APPROXIMATE": {
-      "severity": "accuracy",
-      "message": "The runway heading was taken from the runway number."
-    },
-    "PRISMOIDAL_MIDDLE_AREA_AVERAGED": {
-      "severity": "accuracy",
-      "message": "The prismoidal middle area was averaged from the end areas."
-    },
-    "CURVE_CALL_INCOMPLETE": {
-      "severity": "accuracy",
-      "message": "The curve call is missing elements."
-    },
-    "NON_METRIC_CALL": {
-      "severity": "accuracy",
-      "message": "The call has no bearing and distance (a monument, adjoiner, or natural boundary); it is kept as text."
-    },
-    "GRID_MISMATCH": {
-      "severity": "accuracy",
-      "message": "The grids do not match."
-    },
-    "EXPERIMENTAL_TOOL": {
-      "severity": "accuracy",
-      "message": "This tool is experimental and not yet fully verified."
-    },
-    "NOMINAL_VALUE_USED": {
-      "severity": "accuracy",
-      "message": "A nominal planning value was used; the actual value varies."
-    },
-    "INPUT_NORMALIZED": {
-      "severity": "info",
-      "message": "An input was normalized."
-    },
-    "UNIT_ASSUMED": {
-      "severity": "info",
-      "message": "A unit was assumed."
-    },
     "AMBIGUOUS_INPUT": {
       "severity": "info",
       "message": "The input was ambiguous; one reading was chosen."
-    },
-    "LEGACY_UNIT": {
-      "severity": "info",
-      "message": "The US survey foot was deprecated by NIST and NOAA on January 1, 2023."
-    },
-    "NONSTANDARD_ZONE": {
-      "severity": "info",
-      "message": "A nonstandard zone was used."
-    },
-    "OUTSIDE_ZONE_EXTENT": {
-      "severity": "info",
-      "message": "The point is outside the zone's usual extent."
-    },
-    "BAND_ADJUSTED": {
-      "severity": "info",
-      "message": "The latitude band was adjusted."
-    },
-    "WEB_MERCATOR_CLAMPED": {
-      "severity": "info",
-      "message": "Latitude was clamped to the Web Mercator limit."
-    },
-    "CROSSES_ANTIMERIDIAN": {
-      "severity": "info",
-      "message": "The geometry crosses the antimeridian."
-    },
-    "VARIABLE_WIND": {
-      "severity": "info",
-      "message": "The wind direction varies; components are the worst case over its range."
-    },
-    "AZIMUTH_UNDEFINED": {
-      "severity": "info",
-      "message": "The azimuth is undefined here."
     },
     "AZIMUTH_NOT_UNIQUE": {
       "severity": "info",
       "message": "The azimuth is not unique."
     },
-    "LONGITUDE_UNDEFINED": {
+    "AZIMUTH_UNDEFINED": {
       "severity": "info",
-      "message": "Longitude is undefined at a pole."
+      "message": "The azimuth is undefined here."
     },
-    "DECLINATION_POLE_CONVENTION": {
+    "BAND_ADJUSTED": {
       "severity": "info",
-      "message": "Declination at the pole follows a convention."
-    },
-    "POLE_ENCLOSED": {
-      "severity": "info",
-      "message": "The polygon circles a pole."
-    },
-    "RHUMB_REACHES_POLE": {
-      "severity": "info",
-      "message": "The rhumb line reaches a pole."
-    },
-    "FOOT_OUTSIDE_SEGMENT": {
-      "severity": "info",
-      "message": "The closest point is outside the segment."
-    },
-    "CENTROID_OUTSIDE": {
-      "severity": "info",
-      "message": "The centroid lies outside the shape."
-    },
-    "BUFFER_COLLAPSED": {
-      "severity": "info",
-      "message": "The buffer collapsed to nothing."
+      "message": "The latitude band was adjusted."
     },
     "BELOW_HORIZON": {
       "severity": "info",
       "message": "The target is below the horizon."
     },
-    "DIVERGING": {
-      "severity": "info",
-      "message": "The paths diverge."
+    "BELOW_STALL_SPEED": {
+      "severity": "caution",
+      "message": "The airspeed is below the stall speed for this configuration."
     },
-    "PERFECT_CLOSURE": {
-      "severity": "info",
-      "message": "The traverse closes perfectly, which is unusual for field data."
-    },
-    "SUN_BELOW_HORIZON": {
-      "severity": "info",
-      "message": "The sun is below the horizon."
-    },
-    "CIVIL_TWILIGHT_APPROXIMATED": {
-      "severity": "accuracy",
-      "message": "Civil twilight was computed as the sun 6° below the horizon, not read from the Air Almanac."
+    "BELOW_TERRAIN": {
+      "severity": "caution",
+      "message": "Part of the path is below the terrain surface."
     },
     "BEYOND_HORIZON": {
       "severity": "caution",
@@ -326,9 +78,269 @@
       "severity": "caution",
       "message": "The buffer's boundary strays from the distance by more than its tolerance."
     },
+    "BUFFER_COLLAPSED": {
+      "severity": "info",
+      "message": "The buffer collapsed to nothing."
+    },
+    "CALIBRATION_ASSUMED": {
+      "severity": "accuracy",
+      "message": "Instrument calibration was assumed."
+    },
+    "CANNOT_RETURN_INTO_WIND": {
+      "severity": "caution",
+      "message": "The aircraft cannot return against this wind with the energy left."
+    },
+    "CAUTION_RANGE": {
+      "severity": "caution",
+      "message": "The airspeed is in the caution range, between VNO and VNE."
+    },
+    "CENTROID_OUTSIDE": {
+      "severity": "info",
+      "message": "The centroid lies outside the shape."
+    },
+    "CIVIL_TWILIGHT_APPROXIMATED": {
+      "severity": "accuracy",
+      "message": "Civil twilight was computed as the sun 6° below the horizon, not read from the Air Almanac."
+    },
+    "COMPASS_BLACKOUT_ZONE": {
+      "severity": "caution",
+      "message": "Magnetic compasses are unreliable here: the horizontal field is too weak."
+    },
+    "COMPASS_CAUTION_ZONE": {
+      "severity": "caution",
+      "message": "Magnetic compasses may be unreliable here: the horizontal field is weak."
+    },
+    "CROSSES_ANTIMERIDIAN": {
+      "severity": "info",
+      "message": "The geometry crosses the antimeridian."
+    },
+    "CURVE_CALL_INCOMPLETE": {
+      "severity": "accuracy",
+      "message": "The curve call is missing elements."
+    },
+    "C_RATE_EXCEEDED": {
+      "severity": "caution",
+      "message": "The battery discharge rate is above its rated C-rate."
+    },
+    "DECLINATION_POLE_CONVENTION": {
+      "severity": "info",
+      "message": "Declination at the pole follows a convention."
+    },
+    "DEFORMATION_ZONE": {
+      "severity": "accuracy",
+      "message": "The point is in a zone of active crustal deformation."
+    },
+    "DIVERGING": {
+      "severity": "info",
+      "message": "The paths diverge."
+    },
+    "DRY_AIR_ASSUMED": {
+      "severity": "accuracy",
+      "message": "Dry air was assumed; humidity would raise density altitude."
+    },
+    "EQUIVALENT_FOCAL_LENGTH": {
+      "severity": "accuracy",
+      "message": "A 35 mm equivalent focal length was used."
+    },
+    "EXPERIMENTAL_TOOL": {
+      "severity": "accuracy",
+      "message": "This tool is experimental and not yet fully verified."
+    },
+    "FLY_OVER_RECOMMENDED": {
+      "severity": "caution",
+      "message": "The turn is too sharp to fly by; fly over the waypoint instead."
+    },
+    "FOOT_OUTSIDE_SEGMENT": {
+      "severity": "info",
+      "message": "The closest point is outside the segment."
+    },
+    "FRAME_MISMATCH": {
+      "severity": "accuracy",
+      "message": "The inputs use different reference frames."
+    },
     "GEOMETRY_INVALID": {
       "severity": "caution",
       "message": "The geometry is not valid; a repaired version is returned."
+    },
+    "GRID_MISMATCH": {
+      "severity": "accuracy",
+      "message": "The grids do not match."
+    },
+    "HEURISTIC_DERATING": {
+      "severity": "accuracy",
+      "message": "A rule-of-thumb derating was applied."
+    },
+    "HEURISTIC_PEUKERT": {
+      "severity": "accuracy",
+      "message": "A Peukert correction was applied; it describes lithium packs poorly."
+    },
+    "HOTSPOT_IN_FRAME": {
+      "severity": "accuracy",
+      "message": "The sun's hotspot falls inside the camera frame."
+    },
+    "INPUT_NORMALIZED": {
+      "severity": "info",
+      "message": "An input was normalized."
+    },
+    "INSUFFICIENT_CHECKPOINTS": {
+      "severity": "caution",
+      "message": "There are too few checkpoints to test accuracy."
+    },
+    "ISA_TEMPERATURE_ASSUMED": {
+      "severity": "accuracy",
+      "message": "Standard (ISA) temperature was assumed."
+    },
+    "LEAP_SECOND_TABLE_EXPIRED": {
+      "severity": "accuracy",
+      "message": "The leap-second table has expired."
+    },
+    "LEGACY_UNIT": {
+      "severity": "info",
+      "message": "The US survey foot was deprecated by NIST and NOAA on January 1, 2023."
+    },
+    "LOAD_LIMIT_EXCEEDED": {
+      "severity": "caution",
+      "message": "A weight or load limit is exceeded."
+    },
+    "LONGITUDE_UNDEFINED": {
+      "severity": "info",
+      "message": "Longitude is undefined at a pole."
+    },
+    "LOW_ACCURACY_TRANSFORM": {
+      "severity": "accuracy",
+      "message": "The chosen transformation has low accuracy."
+    },
+    "MODEL_EXTRAPOLATED": {
+      "severity": "accuracy",
+      "message": "The model is used outside its validity window."
+    },
+    "NOMINAL_VALUE_USED": {
+      "severity": "accuracy",
+      "message": "A nominal planning value was used; the actual value varies."
+    },
+    "NONSTANDARD_ZONE": {
+      "severity": "info",
+      "message": "A nonstandard zone was used."
+    },
+    "NON_METRIC_CALL": {
+      "severity": "accuracy",
+      "message": "The call has no bearing and distance (a monument, adjoiner, or natural boundary); it is kept as text."
+    },
+    "NON_OFFICIAL_DATUM": {
+      "severity": "accuracy",
+      "message": "This datum or zone is not official yet (beta)."
+    },
+    "NO_REDUNDANCY": {
+      "severity": "accuracy",
+      "message": "There are no redundant measurements to check the result."
+    },
+    "OBSERVATION_OLD": {
+      "severity": "caution",
+      "message": "The weather observation is old for planning."
+    },
+    "ORTHOMETRIC_AS_ELLIPSOIDAL": {
+      "severity": "accuracy",
+      "message": "An orthometric height was treated as ellipsoidal."
+    },
+    "OUTSIDE_AREA_OF_USE": {
+      "severity": "accuracy",
+      "message": "The point is outside the area the transformation was derived for."
+    },
+    "OUTSIDE_CG_ENVELOPE": {
+      "severity": "caution",
+      "message": "The center of gravity is outside the envelope you entered."
+    },
+    "OUTSIDE_ZONE_EXTENT": {
+      "severity": "info",
+      "message": "The point is outside the zone's usual extent."
+    },
+    "OVERLAP_BELOW_TARGET": {
+      "severity": "caution",
+      "message": "Image overlap is below the target."
+    },
+    "PENTAGON_DISTORTION": {
+      "severity": "accuracy",
+      "message": "The result touches an H3 pentagon, where distortion is higher."
+    },
+    "PERFECT_CLOSURE": {
+      "severity": "info",
+      "message": "The traverse closes perfectly, which is unusual for field data."
+    },
+    "PLANAR_ON_GEOGRAPHIC": {
+      "severity": "accuracy",
+      "message": "Planar math was applied to geographic coordinates."
+    },
+    "POLE_ENCLOSED": {
+      "severity": "info",
+      "message": "The polygon circles a pole."
+    },
+    "PRISMOIDAL_MIDDLE_AREA_AVERAGED": {
+      "severity": "accuracy",
+      "message": "The prismoidal middle area was averaged from the end areas."
+    },
+    "REALIZATION_ASSUMED": {
+      "severity": "accuracy",
+      "message": "A datum realization was assumed."
+    },
+    "RESECTION_UNSTABLE": {
+      "severity": "caution",
+      "message": "The resection geometry is weak or unstable."
+    },
+    "RHUMB_REACHES_POLE": {
+      "severity": "info",
+      "message": "The rhumb line reaches a pole."
+    },
+    "RUNWAY_HEADING_APPROXIMATE": {
+      "severity": "accuracy",
+      "message": "The runway heading was taken from the runway number."
+    },
+    "SCALE_SUSPECT": {
+      "severity": "accuracy",
+      "message": "The scale looks suspicious."
+    },
+    "STATION_VARIATION_DIFFERS": {
+      "severity": "accuracy",
+      "message": "The station's published variation differs from the model."
+    },
+    "SUN_BELOW_HORIZON": {
+      "severity": "info",
+      "message": "The sun is below the horizon."
+    },
+    "SUSPECT_SCALING": {
+      "severity": "accuracy",
+      "message": "The data scaling looks suspicious."
+    },
+    "SUSPECT_VALUE": {
+      "severity": "accuracy",
+      "message": "A value looks unusual; check it."
+    },
+    "TERRAIN_NOT_CONSIDERED": {
+      "severity": "info",
+      "message": "Terrain and obstacles are not considered."
+    },
+    "TRIGGER_TOO_FAST": {
+      "severity": "caution",
+      "message": "The camera cannot trigger this fast."
+    },
+    "UNIT_ASSUMED": {
+      "severity": "info",
+      "message": "A unit was assumed."
+    },
+    "UT1_APPROXIMATED": {
+      "severity": "accuracy",
+      "message": "UT1 was approximated by UTC."
+    },
+    "VARIABLE_WIND": {
+      "severity": "info",
+      "message": "The wind direction varies; components are the worst case over its range."
+    },
+    "WAYPOINT_OUTSIDE_GEOFENCE": {
+      "severity": "caution",
+      "message": "A waypoint is outside the geofence."
+    },
+    "WEB_MERCATOR_CLAMPED": {
+      "severity": "info",
+      "message": "Latitude was clamped to the Web Mercator limit."
     }
   }
 }

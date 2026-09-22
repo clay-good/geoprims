@@ -356,6 +356,11 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
                 max: 100,
             },
         ),
+        V_SPEEDS[0],
+        V_SPEEDS[1],
+        V_SPEEDS[2],
+        V_SPEEDS[3],
+        V_SPEEDS[4],
     ],
     outputs: &[
         speed_out("tas", "True airspeed", "Mach × speed of sound"),
@@ -380,6 +385,9 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &[
+        "ABOVE_VNE",
+        "CAUTION_RANGE",
+        "BELOW_STALL_SPEED",
         "CALIBRATION_ASSUMED",
         "ISA_TEMPERATURE_ASSUMED",
         "UNIT_ASSUMED",
@@ -421,11 +429,138 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "True airspeed is {tas}, Mach {mach}. The 2% rule gives {rule_of_thumb}, off by {abs(rule_error)}.{warn CALIBRATION_ASSUMED} Treats IAS as CAS.{/warn}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
+    sentence: "True airspeed is {tas}, Mach {mach}. The 2% rule gives {rule_of_thumb}, off by {abs(rule_error)}.{warn ABOVE_VNE} Above VNE.{/warn}{warn CAUTION_RANGE} In the caution range.{/warn}{warn CALIBRATION_ASSUMED} Treats IAS as CAS.{/warn}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_cas_to_tas,
     ..ToolDef::BLANK
 };
+
+/// The V-speeds of the aircraft, from its POH: the speeds an airspeed
+/// indicator's arcs begin and end at. All optional; each one given is checked
+/// against the airspeed, and the gauge draws the arcs the set can support.
+static V_SPEEDS: &[Field] = &[
+    qty(
+        "vs0",
+        "VS0, stall speed in the landing configuration",
+        "Bottom of the white arc, like 48 kt",
+        QT::Speed,
+        "kt",
+    ),
+    qty(
+        "vs1",
+        "VS1, stall speed clean",
+        "Bottom of the green arc, like 55 kt",
+        QT::Speed,
+        "kt",
+    ),
+    qty(
+        "vfe",
+        "VFE, maximum flaps extended",
+        "Top of the white arc, like 95 kt",
+        QT::Speed,
+        "kt",
+    ),
+    qty(
+        "vno",
+        "VNO, maximum structural cruising",
+        "Top of the green arc, like 130 kt",
+        QT::Speed,
+        "kt",
+    ),
+    qty(
+        "vne",
+        "VNE, never exceed",
+        "The red line, like 160 kt",
+        QT::Speed,
+        "kt",
+    ),
+];
+
+/// Reads the V-speeds, checks they are ordered as an indicator's arcs are, and
+/// says where this calibrated airspeed falls among them.
+fn check_v_speeds(ctx: &mut Ctx, cas: f64) -> Result<(), ToolError> {
+    let mut v = [None; 5];
+    for (i, f) in V_SPEEDS.iter().enumerate() {
+        v[i] = ctx.quantity(f.name)?.map(|q| q.base());
+        if v[i].is_some_and(|x| x <= 0.0) {
+            return Err(ToolError::invalid(
+                &format!("/{}", f.name),
+                "A V-speed must be positive.",
+            ));
+        }
+    }
+    let [vs0, vs1, vfe, vno, vne] = v;
+    // The arcs an indicator is marked with only make sense in this order.
+    for (lo, hi, why) in [
+        (
+            vs0,
+            vs1,
+            "VS0 is the stall speed with the flaps down, so it is below VS1, the clean stall speed.",
+        ),
+        (
+            vs1,
+            vno,
+            "VS1 is the bottom of the green arc and VNO its top.",
+        ),
+        (
+            vs0,
+            vfe,
+            "VS0 is the bottom of the white arc and VFE its top.",
+        ),
+        (
+            vno,
+            vne,
+            "VNO is the bottom of the yellow arc and VNE the red line at its top.",
+        ),
+    ] {
+        if let (Some(a), Some(b)) = (lo, hi)
+            && a >= b
+        {
+            return Err(ToolError::invalid("/vne", why)
+                .hint("Check the V-speeds against the POH/AFM airspeed indicator markings."));
+        }
+    }
+    let fmt = ctx.options.format;
+    let show = |x: f64| {
+        display::quantity(
+            mps(x).to(knots(0.0).unit),
+            "kt",
+            Precision::Decimals(0),
+            fmt,
+        )
+    };
+    if let Some(x) = vne
+        && cas > x
+    {
+        let m = format!(
+            "This calibrated airspeed is above VNE ({}), past the red line.",
+            show(x)
+        );
+        ctx.warnings
+            .push(Warning::new("ABOVE_VNE", m).at("/airspeed"));
+    } else if let (Some(a), Some(b)) = (vno, vne)
+        && cas > a
+    {
+        let m = format!(
+            "This calibrated airspeed is in the caution range, between VNO ({}) and VNE ({}): smooth air only.",
+            show(a),
+            show(b)
+        );
+        ctx.warnings
+            .push(Warning::new("CAUTION_RANGE", m).at("/airspeed"));
+    }
+    if let Some(a) = vs0
+        && cas < a
+    {
+        let m = format!(
+            "This calibrated airspeed is below VS0 ({}), the stall speed in the landing configuration.",
+            show(a)
+        );
+        ctx.warnings
+            .push(Warning::new("BELOW_STALL_SPEED", m).at("/airspeed"));
+    }
+    Ok(())
+}
 
 fn run_cas_to_tas(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let v = ctx.req_quantity("airspeed")?.base();
@@ -486,6 +621,7 @@ fn run_cas_to_tas(ctx: &mut Ctx) -> Result<Json, ToolError> {
             .at("/airspeed")
         })?
     };
+    check_v_speeds(ctx, cas)?;
     let p = static_pressure(ctx)?;
     let t = static_temperature(ctx, true)?;
     let s = from_cas(cas, p, t);
@@ -528,6 +664,11 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
         PRESSURE_ALTITUDE,
         TEMPERATURE,
         TEMPERATURE_SOURCE,
+        V_SPEEDS[0],
+        V_SPEEDS[1],
+        V_SPEEDS[2],
+        V_SPEEDS[3],
+        V_SPEEDS[4],
     ],
     outputs: &[
         speed_out(
@@ -546,6 +687,9 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &[
+        "ABOVE_VNE",
+        "CAUTION_RANGE",
+        "BELOW_STALL_SPEED",
         "ISA_TEMPERATURE_ASSUMED",
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
@@ -568,7 +712,7 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
         id: "aviation.airspeed.cas-to-tas",
         reason: "inverse",
     }],
-    sentence: "Fly {cas} calibrated for Mach {mach}.{if tas > 0} That is {tas} true.{/if}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
+    sentence: "Fly {cas} calibrated for Mach {mach}.{if tas > 0} That is {tas} true.{/if}{warn ABOVE_VNE} Above VNE.{/warn}{warn CAUTION_RANGE} In the caution range.{/warn}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_tas_to_cas,
     ..ToolDef::BLANK
@@ -604,6 +748,7 @@ fn run_tas_to_cas(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         }
     };
+    check_v_speeds(ctx, s.cas)?;
     let mut out = vec![("cas", ctx.out("cas", mps(s.cas)))];
     speeds_json(ctx, &s, &mut out);
     Ok(obj(out))

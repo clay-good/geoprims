@@ -2,26 +2,470 @@
   "note": "Plain-language definitions for every abbreviation in a tool's title, labels, help, or sentence (define-build-contracts manifest-extensions: glossary schema). Checked by tools/trust/glossary.test.mjs; relatedTools are filled from the catalog by tools/trust/glossary.mjs --write.",
   "entries": [
     {
-      "id": "utc",
-      "term": "UTC",
-      "expansion": "Coordinated Universal Time",
-      "definition": "The world's civil time standard, kept within 0.9 s of Earth's rotation by leap seconds. Aviation calls it Zulu time, written with a Z.",
+      "id": "aer",
+      "term": "AER",
+      "expansion": "azimuth, elevation, range",
+      "definition": "Direction and distance from a point: azimuth from north, elevation above the horizontal, and straight-line range.",
+      "source": "geographiclib",
+      "relatedTools": [
+        "geodesy.frame.from-local",
+        "geodesy.frame.to-local"
+      ]
+    },
+    {
+      "id": "afm",
+      "term": "AFM",
+      "expansion": "Airplane Flight Manual",
+      "definition": "The FAA-approved manual of an aircraft's limitations and performance. For many light aircraft the POH serves as the AFM.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas"
+      ]
+    },
+    {
+      "id": "agd66",
+      "term": "AGD66",
+      "expansion": "Australian Geodetic Datum 1966",
+      "definition": "A legacy Australian datum on the Australian National Spheroid.",
+      "source": "epsg",
+      "relatedTools": [
+        "geodesy.datum.legacy"
+      ]
+    },
+    {
+      "id": "agl",
+      "term": "AGL",
+      "expansion": "above ground level",
+      "definition": "Height measured from the ground directly below, not from sea level.",
+      "source": "aim",
+      "relatedTools": [
+        "drone.photogrammetry.altitude-for-gsd"
+      ]
+    },
+    {
+      "id": "aim",
+      "term": "AIM",
+      "expansion": "Aeronautical Information Manual",
+      "definition": "The FAA's official guide to US flight procedures and air traffic control practice.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.ifr.hold-wind-timing"
+      ]
+    },
+    {
+      "id": "alos",
+      "term": "ALOS",
+      "expansion": "attitude line of sight",
+      "definition": "The farthest distance at which a remote pilot can still see a drone's position and orientation. EASA ties it to the drone's size.",
+      "source": "easa-guidelines",
+      "relatedTools": [
+        "drone.sensors.vlos"
+      ]
+    },
+    {
+      "id": "alta",
+      "term": "ALTA",
+      "expansion": "American Land Title Association",
+      "definition": "The title insurers' association that, with NSPS, sets the standards for land title surveys.",
+      "source": "alta-nsps",
+      "relatedTools": [
+        "survey.land.alta-rpp"
+      ]
+    },
+    {
+      "id": "antinfo",
+      "term": "ANTINFO",
+      "expansion": "antenna information",
+      "definition": "NGS's records of GNSS antenna dimensions, including the radius to the measurement mark and the offset to the ARP.",
+      "source": "ngs-antcal",
+      "relatedTools": [
+        "survey.gnss.antenna-height"
+      ]
+    },
+    {
+      "id": "arp",
+      "term": "ARP",
+      "expansion": "antenna reference point",
+      "definition": "The point on a GNSS antenna, usually the bottom of its mount, that antenna heights and calibrations are measured to.",
+      "source": "ngs-antcal",
+      "relatedTools": [
+        "survey.gnss.antenna-height"
+      ]
+    },
+    {
+      "id": "asprs",
+      "term": "ASPRS",
+      "expansion": "American Society for Photogrammetry and Remote Sensing",
+      "definition": "The society that publishes the Positional Accuracy Standards for Digital Geospatial Data used to state map accuracy.",
+      "source": "asprs-pas",
+      "relatedTools": [
+        "drone.photogrammetry.asprs-accuracy"
+      ]
+    },
+    {
+      "id": "atis",
+      "term": "ATIS",
+      "expansion": "Automatic Terminal Information Service",
+      "definition": "A recorded broadcast at busier airports of current weather, runways in use, and notices, updated at least hourly.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.wind.best-runway",
+        "aviation.wind.runway-components"
+      ]
+    },
+    {
+      "id": "aust",
+      "term": "AUST",
+      "expansion": "Australian plate",
+      "definition": "The ITRF2020 plate motion model's code for the Australian tectonic plate.",
+      "source": "itrf2020-pmm",
+      "relatedTools": [
+        "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "bs",
+      "term": "BS",
+      "expansion": "backsight",
+      "definition": "In leveling, the rod reading on a point of known elevation. Added to that elevation it gives the height of the instrument.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.level-run"
+      ]
+    },
+    {
+      "id": "c1",
+      "term": "C1",
+      "expansion": "EASA class C1",
+      "definition": "An EASA drone class: under 900 g, or under 80 J of impact energy, meant for the A1 open subcategory.",
+      "source": "eu-2019-945",
+      "relatedTools": [
+        "drone.ops.kinetic-energy"
+      ]
+    },
+    {
+      "id": "cas",
+      "term": "CAS",
+      "expansion": "calibrated airspeed",
+      "definition": "Indicated airspeed corrected for instrument and position error. It measures dynamic pressure, which governs how the aircraft flies.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas"
+      ]
+    },
+    {
+      "id": "cfr",
+      "term": "CFR",
+      "expansion": "Code of Federal Regulations",
+      "definition": "The codified US federal regulations. Aviation rules are in Title 14, written as 14 CFR.",
+      "source": "cfr-14-1",
+      "relatedTools": [
+        "aviation.loading.fuel-plan",
+        "drone.links.link-budget",
+        "drone.photogrammetry.altitude-for-gsd"
+      ]
+    },
+    {
+      "id": "cg",
+      "term": "CG",
+      "expansion": "center of gravity",
+      "definition": "The point where an aircraft's weight acts. It must stay inside the envelope in the POH for safe control.",
+      "source": "faa-wbh",
+      "relatedTools": [
+        "aviation.loading.ballast",
+        "aviation.loading.weight-balance",
+        "aviation.loading.weight-shift"
+      ]
+    },
+    {
+      "id": "cpa",
+      "term": "CPA",
+      "expansion": "closest point of approach",
+      "definition": "The time and distance at which two moving aircraft or vessels will pass nearest each other.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.route.cpa"
+      ]
+    },
+    {
+      "id": "cs",
+      "term": "CS",
+      "expansion": "curve to spiral",
+      "definition": "The station where the circular curve ends and the exit spiral begins.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "csv",
+      "term": "CSV",
+      "expansion": "comma-separated values",
+      "definition": "A plain-text table with one row per line and the columns separated by commas, which spreadsheets open directly.",
+      "source": "rfc4180",
+      "relatedTools": [
+        "drone.mission.export"
+      ]
+    },
+    {
+      "id": "dlos",
+      "term": "DLOS",
+      "expansion": "detection line of sight",
+      "definition": "The distance at which other aircraft can be seen in time to avoid them. EASA takes it as 0.3 times the ground visibility.",
+      "source": "easa-guidelines",
+      "relatedTools": [
+        "drone.sensors.vlos"
+      ]
+    },
+    {
+      "id": "dme",
+      "term": "DME",
+      "expansion": "distance measuring equipment",
+      "definition": "A radio aid that shows the straight-line distance from the aircraft to a ground station, in nautical miles. Up high and close in, that slant distance is longer than the distance over the ground.",
+      "source": "faa-ifh",
+      "relatedTools": [
+        "aviation.ifr.dme-arc-lead",
+        "aviation.ifr.dme-slant-range"
+      ]
+    },
+    {
+      "id": "dms",
+      "term": "DMS",
+      "expansion": "degrees, minutes, seconds",
+      "definition": "An angle written as whole degrees, minutes (1/60 degree), and seconds (1/3600 degree), like 40°26'46\".",
+      "source": "iso6709",
+      "relatedTools": [
+        "geodesy.parse.angle-arithmetic",
+        "geodesy.parse.coordinates",
+        "survey.reduction.slope"
+      ]
+    },
+    {
+      "id": "dut1",
+      "term": "DUT1",
+      "expansion": "UT1 minus UTC",
+      "definition": "The difference between Earth-rotation time and UTC, always under 0.9 s, broadcast so users can recover UT1.",
       "source": "iers-bulletin-c",
       "relatedTools": [
-        "aviation.weather.metar-decode",
-        "aviation.weather.taf-decode",
-        "navigation.route.legs",
-        "navigation.route.time-speed-distance",
-        "survey.gnss.opus-plan",
-        "time.scale.gps-to-utc",
-        "time.scale.gps-week",
-        "time.scale.julian-date",
-        "time.scale.utc-offset",
-        "time.scale.zone-info",
-        "time.sun.aviation-nights",
-        "time.sun.events",
-        "time.sun.mapping-window",
         "time.sun.position"
+      ]
+    },
+    {
+      "id": "easa",
+      "term": "EASA",
+      "expansion": "European Union Aviation Safety Agency",
+      "definition": "The EU agency that sets aviation safety rules, including the drone rules in Regulations (EU) 2019/947 and 2019/945.",
+      "source": "easa-guidelines",
+      "relatedTools": [
+        "drone.ops.easa-subcategory",
+        "drone.ops.kinetic-energy"
+      ]
+    },
+    {
+      "id": "ecef",
+      "term": "ECEF",
+      "expansion": "Earth-centered, Earth-fixed",
+      "definition": "Cartesian X, Y, Z coordinates in meters from Earth's center, turning with the Earth. X points to 0° longitude on the equator and Z to the North Pole.",
+      "source": "nga-wgs84",
+      "relatedTools": [
+        "geodesy.datum.helmert",
+        "geodesy.datum.itrf",
+        "geodesy.frame.ecef-to-geodetic",
+        "geodesy.frame.from-local",
+        "geodesy.frame.geodetic-to-ecef",
+        "geodesy.frame.to-local"
+      ]
+    },
+    {
+      "id": "ed50",
+      "term": "ED50",
+      "expansion": "European Datum 1950",
+      "definition": "A legacy European datum on the International 1924 ellipsoid.",
+      "source": "epsg",
+      "relatedTools": [
+        "geodesy.datum.legacy"
+      ]
+    },
+    {
+      "id": "edm",
+      "term": "EDM",
+      "expansion": "electronic distance measurement",
+      "definition": "Measuring a distance by timing light or infrared bounced off a prism or a surface, as a total station does. The air slows the light a little, so the reading is corrected for temperature and pressure, in parts per million.",
+      "source": "landgate-edmi-manual",
+      "relatedTools": [
+        "survey.reduction.edm-correction"
+      ]
+    },
+    {
+      "id": "egm96",
+      "term": "EGM96",
+      "expansion": "Earth Gravitational Model 1996",
+      "definition": "A global gravity model whose geoid converts GPS ellipsoid heights to heights above mean sea level, to within about a meter.",
+      "source": "egm96",
+      "relatedTools": [
+        "geodesy.geoid.geoid-height"
+      ]
+    },
+    {
+      "id": "eirp",
+      "term": "EIRP",
+      "expansion": "effective isotropic radiated power",
+      "definition": "The power a transmitter and its antenna put out in their strongest direction, as if from an antenna that radiates equally everywhere; radio rules cap it.",
+      "source": "cfr-47-15",
+      "relatedTools": [
+        "drone.links.link-budget"
+      ]
+    },
+    {
+      "id": "enu",
+      "term": "ENU",
+      "expansion": "east, north, up",
+      "definition": "Local Cartesian coordinates centered on a chosen point, with axes toward east, north, and up.",
+      "source": "geographiclib",
+      "relatedTools": [
+        "geodesy.frame.from-local",
+        "geodesy.frame.to-local"
+      ]
+    },
+    {
+      "id": "epsg",
+      "term": "EPSG",
+      "expansion": "EPSG Geodetic Parameter Dataset",
+      "definition": "The IOGP registry of coordinate reference systems and transformations, each with a code such as EPSG:4326.",
+      "source": "epsg",
+      "relatedTools": [
+        "geodesy.datum.helmert",
+        "geodesy.spcs.spcs83-forward"
+      ]
+    },
+    {
+      "id": "etsi",
+      "term": "ETSI",
+      "expansion": "European Telecommunications Standards Institute",
+      "definition": "The body that writes the European radio standards, such as EN 300 328 for 2.4 GHz equipment.",
+      "source": "etsi-en-300-328",
+      "relatedTools": [
+        "drone.links.link-budget"
+      ]
+    },
+    {
+      "id": "eura",
+      "term": "EURA",
+      "expansion": "Eurasian plate",
+      "definition": "The ITRF2020 plate motion model's code for the Eurasian tectonic plate.",
+      "source": "itrf2020-pmm",
+      "relatedTools": [
+        "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "faa",
+      "term": "FAA",
+      "expansion": "Federal Aviation Administration",
+      "definition": "The US civil aviation authority.",
+      "source": "cfr-14-1",
+      "relatedTools": [
+        "drone.ops.kinetic-energy"
+      ]
+    },
+    {
+      "id": "fb",
+      "term": "FB",
+      "expansion": "winds and temperatures aloft forecast",
+      "definition": "The US text forecast of wind direction, wind speed, and temperature at standard altitudes, coded in groups like 2635-08.",
+      "source": "faa-awh",
+      "relatedTools": [
+        "aviation.weather.fb-winds-decode"
+      ]
+    },
+    {
+      "id": "fl",
+      "term": "FL",
+      "expansion": "flight level",
+      "definition": "A pressure altitude in hundreds of feet, flown with the altimeter set to 29.92 inHg. FL185 is 18,500 ft of pressure altitude.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.flight-level"
+      ]
+    },
+    {
+      "id": "fs",
+      "term": "FS",
+      "expansion": "foresight",
+      "definition": "In leveling, the rod reading on a point whose elevation is wanted. Subtracted from the height of the instrument it gives that elevation.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.level-run"
+      ]
+    },
+    {
+      "id": "gars",
+      "term": "GARS",
+      "expansion": "Global Area Reference System",
+      "definition": "A worldwide grid of 30-minute cells, split into 15- and 5-minute quadrants and keypads, used to name areas.",
+      "source": "nga-gars",
+      "relatedTools": [
+        "geodesy.grid-ref.gars-forward",
+        "geodesy.grid-ref.gars-inverse"
+      ]
+    },
+    {
+      "id": "georef",
+      "term": "GEOREF",
+      "expansion": "World Geographic Reference System",
+      "definition": "An aviation grid reference that names 15° and 1° squares with letters, then gives minutes of longitude and latitude.",
+      "source": "geographiclib",
+      "relatedTools": [
+        "geodesy.grid-ref.georef-forward",
+        "geodesy.grid-ref.georef-inverse"
+      ]
+    },
+    {
+      "id": "gps",
+      "term": "GPS",
+      "expansion": "Global Positioning System",
+      "definition": "The US satellite navigation system. Its time scale runs a fixed number of seconds ahead of UTC (18 s since 2017) because it never adds leap seconds.",
+      "source": "is-gps-200",
+      "relatedTools": [
+        "time.scale.gps-to-utc",
+        "time.scale.gps-week"
+      ]
+    },
+    {
+      "id": "gpx",
+      "term": "GPX",
+      "expansion": "GPS Exchange Format",
+      "definition": "An XML file format for waypoints, routes, and tracks that most GPS devices and mapping apps read.",
+      "source": "gpx",
+      "relatedTools": [
+        "navigation.geodesic.waypoints"
+      ]
+    },
+    {
+      "id": "grs",
+      "term": "GRS",
+      "expansion": "Geodetic Reference System",
+      "definition": "An Earth ellipsoid defined by the IUGG. GRS 80 underlies NAD 83 and is almost identical to WGS 84.",
+      "source": "grs80",
+      "relatedTools": [
+        "geodesy.datum.itrf",
+        "geodesy.datum.nad83",
+        "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "gsd",
+      "term": "GSD",
+      "expansion": "ground sampling distance",
+      "definition": "The ground width one image pixel covers, such as 2 cm per pixel. A smaller GSD shows more detail.",
+      "source": "wolf-photogrammetry",
+      "relatedTools": [
+        "drone.mission.facade",
+        "drone.photogrammetry.altitude-for-gsd",
+        "drone.photogrammetry.gsd",
+        "drone.photogrammetry.motion-blur",
+        "drone.photogrammetry.oblique-gsd",
+        "drone.photogrammetry.terrain-overlap"
       ]
     },
     {
@@ -46,6 +490,98 @@
       ]
     },
     {
+      "id": "hae",
+      "term": "HAE",
+      "expansion": "height above ellipsoid",
+      "definition": "Height measured from the reference ellipsoid, as GNSS receivers report it. It differs from height above sea level by the geoid height.",
+      "source": "egm96",
+      "relatedTools": [
+        "geodesy.height.convert"
+      ]
+    },
+    {
+      "id": "hat",
+      "term": "HAT",
+      "expansion": "height above touchdown",
+      "definition": "The height of the minimum descent or decision altitude above the touchdown zone elevation.",
+      "source": "faa-iph",
+      "relatedTools": [
+        "aviation.performance.vdp"
+      ]
+    },
+    {
+      "id": "hi",
+      "term": "HI",
+      "expansion": "height of instrument",
+      "definition": "The height of the instrument's horizontal axis above the station mark, measured with a tape at setup and added when reducing a sight to an elevation difference.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.slope",
+        "survey.reduction.stadia"
+      ]
+    },
+    {
+      "id": "hr",
+      "term": "HR",
+      "expansion": "height of rod (target height)",
+      "definition": "The height of the prism or target above the point sighted, subtracted when reducing a sight to an elevation difference.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.reduction.slope"
+      ]
+    },
+    {
+      "id": "iana",
+      "term": "IANA",
+      "expansion": "Internet Assigned Numbers Authority",
+      "definition": "The body that publishes the time zone database of names like America/Denver, which this site embeds.",
+      "source": "tzdb",
+      "relatedTools": [
+        "time.scale.zone-info"
+      ]
+    },
+    {
+      "id": "ias",
+      "term": "IAS",
+      "expansion": "indicated airspeed",
+      "definition": "The airspeed read directly from the airspeed indicator, before any correction.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas"
+      ]
+    },
+    {
+      "id": "iers",
+      "term": "IERS",
+      "expansion": "International Earth Rotation and Reference Systems Service",
+      "definition": "The service that maintains the ITRF and Earth orientation data, and announces leap seconds in Bulletin C.",
+      "source": "iers-bulletin-c",
+      "relatedTools": [
+        "geodesy.datum.helmert",
+        "time.sun.position"
+      ]
+    },
+    {
+      "id": "ifov",
+      "term": "IFOV",
+      "expansion": "instantaneous field of view",
+      "definition": "The angle one detector pixel sees, usually in milliradians; times the distance, it is the patch of surface that pixel covers.",
+      "source": "flir-3x3",
+      "relatedTools": [
+        "drone.sensors.thermal-footprint"
+      ]
+    },
+    {
+      "id": "ifr",
+      "term": "IFR",
+      "expansion": "instrument flight rules",
+      "definition": "The rules for flying by reference to instruments under air traffic control, required in clouds and low visibility. IFR flights must carry fuel to an alternate airport and a reserve.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.loading.fuel-plan"
+      ]
+    },
+    {
       "id": "isa",
       "term": "ISA",
       "expansion": "International Standard Atmosphere",
@@ -62,28 +598,835 @@
       ]
     },
     {
-      "id": "ecef",
-      "term": "ECEF",
-      "expansion": "Earth-centered, Earth-fixed",
-      "definition": "Cartesian X, Y, Z coordinates in meters from Earth's center, turning with the Earth. X points to 0° longitude on the equator and Z to the North Pole.",
-      "source": "nga-wgs84",
+      "id": "itrf",
+      "term": "ITRF",
+      "expansion": "International Terrestrial Reference Frame",
+      "definition": "The global scientific reference frame, realized from thousands of stations whose motions it models. ITRF2020 is current.",
+      "source": "iers-itrf2020-transfo",
       "relatedTools": [
-        "geodesy.datum.helmert",
         "geodesy.datum.itrf",
-        "geodesy.frame.ecef-to-geodetic",
+        "geodesy.datum.nad83"
+      ]
+    },
+    {
+      "id": "iugg",
+      "term": "IUGG",
+      "expansion": "International Union of Geodesy and Geophysics",
+      "definition": "The scientific union that adopted GRS 80 and the mean Earth radius R1.",
+      "source": "grs80",
+      "relatedTools": [
+        "navigation.geodesic.haversine",
+        "navigation.geodesic.spherical-direct",
+        "navigation.geodesic.spherical-inverse"
+      ]
+    },
+    {
+      "id": "kml",
+      "term": "KML",
+      "expansion": "Keyhole Markup Language",
+      "definition": "An XML file format for places, paths, and areas on the Earth, read by Google Earth and most mapping apps. Each height says what it is measured from.",
+      "source": "ogc-kml",
+      "relatedTools": [
+        "drone.mission.export"
+      ]
+    },
+    {
+      "id": "ktas",
+      "term": "KTAS",
+      "expansion": "knots true airspeed",
+      "definition": "True airspeed stated in knots.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.performance.turn"
+      ]
+    },
+    {
+      "id": "las",
+      "term": "LAS",
+      "expansion": "LASer file format",
+      "definition": "The ASPRS standard file format for lidar point clouds: a header, then one fixed-size record per point.",
+      "source": "asprs-las-1-4",
+      "relatedTools": [
+        "drone.sensors.dataset-size"
+      ]
+    },
+    {
+      "id": "laz",
+      "term": "LAZ",
+      "expansion": "compressed LAS",
+      "definition": "A losslessly compressed LAS file, usually several times smaller.",
+      "source": "asprs-las-1-4",
+      "relatedTools": [
+        "drone.sensors.dataset-size"
+      ]
+    },
+    {
+      "id": "lemac",
+      "term": "LEMAC",
+      "expansion": "leading edge of the mean aerodynamic chord",
+      "definition": "The station of the front of the mean aerodynamic chord, from which percent-MAC is measured.",
+      "source": "faa-wbh",
+      "relatedTools": [
+        "aviation.loading.weight-balance"
+      ]
+    },
+    {
+      "id": "mac",
+      "term": "MAC",
+      "expansion": "mean aerodynamic chord",
+      "definition": "The chord of an equivalent rectangular wing. Larger aircraft state their center-of-gravity limits in percent of it.",
+      "source": "faa-wbh",
+      "relatedTools": [
+        "aviation.loading.weight-balance"
+      ]
+    },
+    {
+      "id": "mda",
+      "term": "MDA",
+      "expansion": "minimum descent altitude",
+      "definition": "The lowest altitude on a non-precision approach to which a pilot may descend without the runway environment in sight.",
+      "source": "faa-iph",
+      "relatedTools": [
+        "aviation.performance.vdp"
+      ]
+    },
+    {
+      "id": "mdt",
+      "term": "MDT",
+      "expansion": "Mountain Daylight Time",
+      "definition": "Six hours behind UTC, used in the US Mountain time zone during daylight saving time.",
+      "source": "tzdb",
+      "relatedTools": []
+    },
+    {
+      "id": "metar",
+      "term": "METAR",
+      "expansion": "aviation routine weather report",
+      "definition": "An airport weather observation in a standard code: wind, visibility, weather, clouds, temperature, dew point, and altimeter setting, issued at least hourly.",
+      "source": "faa-awh",
+      "relatedTools": [
+        "aviation.weather.metar-decode",
+        "aviation.wind.best-runway",
+        "aviation.wind.course-from-heading",
+        "aviation.wind.heading-groundspeed",
+        "aviation.wind.runway-components",
+        "aviation.wind.tas-from-groundspeed"
+      ]
+    },
+    {
+      "id": "mgrs",
+      "term": "MGRS",
+      "expansion": "Military Grid Reference System",
+      "definition": "UTM and UPS coordinates written as a zone, a latitude band, a two-letter 100 km square, and digits, like 17T NE 86309 77770.",
+      "source": "nga-mgrs",
+      "relatedTools": [
+        "geodesy.grid-ref.mgrs-forward",
+        "geodesy.grid-ref.mgrs-inverse",
+        "geodesy.grid-ref.usng-forward"
+      ]
+    },
+    {
+      "id": "mjd",
+      "term": "MJD",
+      "expansion": "Modified Julian Date",
+      "definition": "The Julian date minus 2,400,000.5, so days begin at midnight. MJD 0 is 1858 November 17.",
+      "source": "usno-jd",
+      "relatedTools": [
+        "time.scale.julian-date"
+      ]
+    },
+    {
+      "id": "msl",
+      "term": "MSL",
+      "expansion": "mean sea level",
+      "definition": "Height above the average level of the sea, in practice the geoid. Airport elevations and altimeter altitudes are given above MSL.",
+      "source": "aim",
+      "relatedTools": [
+        "drone.ops.part107-altitude",
+        "geodesy.height.convert"
+      ]
+    },
+    {
+      "id": "nad",
+      "term": "NAD",
+      "expansion": "North American Datum",
+      "definition": "The family of North American horizontal datums: NAD 27 on the Clarke 1866 ellipsoid and NAD 83 on GRS 80.",
+      "source": "nadcon5",
+      "relatedTools": [
+        "geodesy.datum.nad83",
+        "geodesy.datum.nadcon5"
+      ]
+    },
+    {
+      "id": "nad27",
+      "term": "NAD27",
+      "expansion": "North American Datum of 1927",
+      "definition": "The older North American datum on the Clarke 1866 ellipsoid. Its positions can differ from NAD 83 by tens of meters.",
+      "source": "nadcon5",
+      "relatedTools": [
+        "geodesy.datum.legacy"
+      ]
+    },
+    {
+      "id": "nad83",
+      "term": "NAD83",
+      "expansion": "North American Datum of 1983",
+      "definition": "The North American datum on the GRS 80 ellipsoid, fixed to the North American plate. Realizations include NAD 83(2011).",
+      "source": "nadcon5",
+      "relatedTools": [
+        "geodesy.spcs.spcs83-inverse"
+      ]
+    },
+    {
+      "id": "nadcon5",
+      "term": "NADCON5",
+      "expansion": "NGS datum conversion grids, version 5",
+      "definition": "NGS grids that convert positions between US datums, such as NAD 27 to NAD 83, by interpolating measured shifts.",
+      "source": "nadcon5",
+      "relatedTools": [
+        "geodesy.datum.nadcon5"
+      ]
+    },
+    {
+      "id": "ned",
+      "term": "NED",
+      "expansion": "north, east, down",
+      "definition": "Local Cartesian axes toward north, east, and down, as aircraft navigation uses them.",
+      "source": "geographiclib",
+      "relatedTools": [
         "geodesy.frame.from-local",
-        "geodesy.frame.geodetic-to-ecef",
         "geodesy.frame.to-local"
       ]
     },
     {
-      "id": "agl",
-      "term": "AGL",
-      "expansion": "above ground level",
-      "definition": "Height measured from the ground directly below, not from sea level.",
+      "id": "ngs",
+      "term": "NGS",
+      "expansion": "National Geodetic Survey",
+      "definition": "The NOAA office that defines the US National Spatial Reference System: datums, geoid models, and state plane coordinates.",
+      "source": "spcs83",
+      "relatedTools": [
+        "geodesy.spcs.spcs83-forward",
+        "geodesy.spcs.spcs83-inverse",
+        "survey.gnss.opus-plan",
+        "survey.reduction.combined-factor"
+      ]
+    },
+    {
+      "id": "nm",
+      "term": "NM",
+      "expansion": "nautical mile",
+      "definition": "A distance of exactly 1,852 meters, about one minute of latitude. Aviation and marine navigation measure distance in it.",
+      "source": "icao-annex5",
+      "relatedTools": [
+        "aviation.performance.specific-range",
+        "units.length.nm-to-km",
+        "units.length.nm-to-mi"
+      ]
+    },
+    {
+      "id": "noaa",
+      "term": "NOAA",
+      "expansion": "National Oceanic and Atmospheric Administration",
+      "definition": "The US agency that includes the National Geodetic Survey and the National Weather Service.",
+      "source": "noaa-solar",
+      "relatedTools": [
+        "survey.reduction.combined-factor",
+        "time.sun.position"
+      ]
+    },
+    {
+      "id": "noam",
+      "term": "NOAM",
+      "expansion": "North American plate",
+      "definition": "The ITRF2020 plate motion model's code for the North American tectonic plate.",
+      "source": "itrf2020-pmm",
+      "relatedTools": [
+        "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "nos",
+      "term": "NOS",
+      "expansion": "National Ocean Service",
+      "definition": "The part of NOAA that includes the National Geodetic Survey.",
+      "source": "spcs83",
+      "relatedTools": [
+        "survey.reduction.combined-factor"
+      ]
+    },
+    {
+      "id": "notam",
+      "term": "NOTAM",
+      "expansion": "Notice to Air Missions",
+      "definition": "A published notice of something pilots need to know that is not on the charts yet, such as a closed runway, an unlit tower, or a flight restriction.",
+      "source": "faa-jo-7930-2",
+      "relatedTools": [
+        "aviation.airspace.tfr-area"
+      ]
+    },
+    {
+      "id": "nsps",
+      "term": "NSPS",
+      "expansion": "National Society of Professional Surveyors",
+      "definition": "The US surveyors' society that, with ALTA, sets the standards for land title surveys.",
+      "source": "alta-nsps",
+      "relatedTools": [
+        "survey.land.alta-rpp"
+      ]
+    },
+    {
+      "id": "nubi",
+      "term": "NUBI",
+      "expansion": "Nubian plate",
+      "definition": "The ITRF2020 plate motion model's code for the Nubian (African) tectonic plate.",
+      "source": "itrf2020-pmm",
+      "relatedTools": [
+        "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "nws",
+      "term": "NWS",
+      "expansion": "National Weather Service",
+      "definition": "The US government weather service, which runs the airport weather stations and computes their altimeter settings.",
       "source": "aim",
       "relatedTools": [
-        "drone.photogrammetry.altitude-for-gsd"
+        "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "opus",
+      "term": "OPUS",
+      "expansion": "Online Positioning User Service",
+      "definition": "The free NGS service that computes a precise position from GNSS data you upload, tied to nearby continuously operating reference stations.",
+      "source": "ngs-opus",
+      "relatedTools": [
+        "survey.gnss.opus-plan"
+      ]
+    },
+    {
+      "id": "osgb36",
+      "term": "OSGB36",
+      "expansion": "Ordnance Survey Great Britain 1936",
+      "definition": "The legacy datum of the British National Grid, on the Airy 1830 ellipsoid.",
+      "source": "epsg",
+      "relatedTools": [
+        "geodesy.datum.legacy"
+      ]
+    },
+    {
+      "id": "papi",
+      "term": "PAPI",
+      "expansion": "precision approach path indicator",
+      "definition": "A row of four lights beside a runway: two white and two red means on the glidepath, more white means high, more red means low.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.performance.vdp"
+      ]
+    },
+    {
+      "id": "pc",
+      "term": "PC",
+      "expansion": "point of curvature",
+      "definition": "On a horizontal curve, where the curve leaves the back tangent.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.circular-curve",
+        "survey.curves.curve-layout"
+      ]
+    },
+    {
+      "id": "pcfc",
+      "term": "PCFC",
+      "expansion": "Pacific plate",
+      "definition": "The ITRF2020 plate motion model's code for the Pacific tectonic plate.",
+      "source": "itrf2020-pmm",
+      "relatedTools": [
+        "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "pi",
+      "term": "PI",
+      "expansion": "point of intersection",
+      "definition": "On a horizontal curve, where the two straight tangents would meet.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.circular-curve",
+        "survey.curves.curve-layout",
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "plss",
+      "term": "PLSS",
+      "expansion": "Public Land Survey System",
+      "definition": "The US rectangular survey of townships, ranges, and sections, carried out by the federal government since 1785.",
+      "source": "blm-manual",
+      "relatedTools": [
+        "survey.land.plss-parse"
+      ]
+    },
+    {
+      "id": "pm",
+      "term": "PM",
+      "expansion": "principal meridian",
+      "definition": "A PLSS reference meridian from which ranges are counted east and west.",
+      "source": "blm-manual",
+      "relatedTools": []
+    },
+    {
+      "id": "poh",
+      "term": "POH",
+      "expansion": "Pilot's Operating Handbook",
+      "definition": "The manufacturer's handbook for an aircraft: limitations, procedures, performance charts, and weight-and-balance data. Its numbers govern over any calculator.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas",
+        "aviation.loading.fuel-plan",
+        "aviation.loading.weight-balance",
+        "aviation.performance.glide",
+        "aviation.performance.specific-range"
+      ]
+    },
+    {
+      "id": "ppk",
+      "term": "PPK",
+      "expansion": "post-processed kinematic",
+      "definition": "Like RTK, but the corrections are applied after the survey, from logged base and rover data.",
+      "source": "ngs-rt-guidelines",
+      "relatedTools": [
+        "survey.gnss.rtk-budget"
+      ]
+    },
+    {
+      "id": "pt",
+      "term": "PT",
+      "expansion": "point of tangency",
+      "definition": "On a horizontal curve, where the curve joins the forward tangent.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.circular-curve",
+        "survey.curves.curve-layout"
+      ]
+    },
+    {
+      "id": "pvc",
+      "term": "PVC",
+      "expansion": "point of vertical curvature",
+      "definition": "On a vertical curve, where the curve leaves the incoming grade.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.unequal-vertical-curve",
+        "survey.curves.vertical-curve"
+      ]
+    },
+    {
+      "id": "pvi",
+      "term": "PVI",
+      "expansion": "point of vertical intersection",
+      "definition": "On a vertical curve, where the two grade lines would meet.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.unequal-vertical-curve",
+        "survey.curves.vertical-curve"
+      ]
+    },
+    {
+      "id": "pvt",
+      "term": "PVT",
+      "expansion": "point of vertical tangency",
+      "definition": "On a vertical curve, where the curve joins the outgoing grade.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.unequal-vertical-curve",
+        "survey.curves.vertical-curve"
+      ]
+    },
+    {
+      "id": "qfe",
+      "term": "QFE",
+      "expansion": "field pressure (Q code)",
+      "definition": "The air pressure at the airport. With it set, an altimeter reads zero on the ground and height above the airport in the air.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "qne",
+      "term": "QNE",
+      "expansion": "standard setting (Q code)",
+      "definition": "What an altimeter reads with 29.92 inHg (1013.25 hPa) set: the pressure altitude. On the ground it is the field's pressure altitude.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "qnh",
+      "term": "QNH",
+      "expansion": "altimeter setting (Q code)",
+      "definition": "The pressure setting that makes an altimeter read the airport's elevation on the ground, and altitude above sea level in the air.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.altimetry.flight-level",
+        "aviation.altimetry.q-codes"
+      ]
+    },
+    {
+      "id": "r1",
+      "term": "R1",
+      "expansion": "IUGG mean Earth radius",
+      "definition": "The radius of a sphere the size of the Earth on average, (2a + b) ÷ 3 = 6,371,008.771 m for WGS 84. Spherical formulas use it when they treat the Earth as a ball.",
+      "source": "grs80",
+      "relatedTools": [
+        "geodesy.ellipsoid.parameters",
+        "navigation.geodesic.haversine",
+        "navigation.geodesic.spherical-direct",
+        "navigation.geodesic.spherical-inverse"
+      ]
+    },
+    {
+      "id": "rinex",
+      "term": "RINEX",
+      "expansion": "Receiver Independent Exchange Format",
+      "definition": "The standard text format for GNSS receiver observations. Daily files are named by station, day of year, and year, so any processing service can read them.",
+      "source": "rinex",
+      "relatedTools": [
+        "survey.gnss.opus-plan",
+        "time.scale.julian-date"
+      ]
+    },
+    {
+      "id": "rmse",
+      "term": "RMSE",
+      "expansion": "root-mean-square error",
+      "definition": "The square root of the average squared difference between measured and true values. ASPRS accuracy classes are stated with it.",
+      "source": "asprs-pas",
+      "relatedTools": [
+        "drone.photogrammetry.asprs-accuracy"
+      ]
+    },
+    {
+      "id": "rpp",
+      "term": "RPP",
+      "expansion": "relative positional precision",
+      "definition": "How well two adjacent boundary corners are located relative to each other: the long axis of their 95% error ellipse.",
+      "source": "alta-nsps",
+      "relatedTools": [
+        "survey.land.alta-rpp"
+      ]
+    },
+    {
+      "id": "rtk",
+      "term": "RTK",
+      "expansion": "real-time kinematic",
+      "definition": "GNSS positioning corrected live from a base station or network, good to about a centimeter plus about a millimeter per kilometer from the base.",
+      "source": "ngs-rt-guidelines",
+      "relatedTools": [
+        "survey.gnss.rtk-budget"
+      ]
+    },
+    {
+      "id": "sad69",
+      "term": "SAD69",
+      "expansion": "South American Datum 1969",
+      "definition": "A legacy South American datum on the GRS 1967 ellipsoid.",
+      "source": "epsg",
+      "relatedTools": [
+        "geodesy.datum.legacy"
+      ]
+    },
+    {
+      "id": "sc",
+      "term": "SC",
+      "expansion": "spiral to curve",
+      "definition": "The station where the entry spiral ends and the circular curve begins, at the curve's full radius.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "soam",
+      "term": "SOAM",
+      "expansion": "South American plate",
+      "definition": "The ITRF2020 plate motion model's code for the South American tectonic plate.",
+      "source": "itrf2020-pmm",
+      "relatedTools": [
+        "geodesy.datum.plate-motion"
+      ]
+    },
+    {
+      "id": "spcs83",
+      "term": "SPCS83",
+      "expansion": "State Plane Coordinate System of 1983",
+      "definition": "124 zones of conformal projections on NAD 83, drawn so that distortion stays near 1 part in 10,000 within each zone.",
+      "source": "spcs83",
+      "relatedTools": [
+        "geodesy.projection.arc-to-chord",
+        "geodesy.spcs.spcs83-forward",
+        "geodesy.spcs.spcs83-inverse"
+      ]
+    },
+    {
+      "id": "st",
+      "term": "ST",
+      "expansion": "spiral to tangent",
+      "definition": "The station where the exit spiral ends and the alignment is straight again.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "taf",
+      "term": "TAF",
+      "expansion": "terminal aerodrome forecast",
+      "definition": "A forecast for an airport, usually 24 or 30 hours long, coded like a METAR with change groups such as FM, TEMPO, BECMG, and PROB30.",
+      "source": "faa-awh",
+      "relatedTools": [
+        "aviation.weather.taf-decode",
+        "aviation.wind.course-from-heading",
+        "aviation.wind.heading-groundspeed",
+        "aviation.wind.tas-from-groundspeed"
+      ]
+    },
+    {
+      "id": "tai",
+      "term": "TAI",
+      "expansion": "International Atomic Time",
+      "definition": "The continuous atomic time scale. UTC has been TAI minus 37 seconds since 2017.",
+      "source": "iers-bulletin-c",
+      "relatedTools": [
+        "time.scale.gps-week"
+      ]
+    },
+    {
+      "id": "tas",
+      "term": "TAS",
+      "expansion": "true airspeed",
+      "definition": "The aircraft's speed through the air mass. At altitude, where the air is thinner, it is higher than calibrated airspeed.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.performance.glide"
+      ]
+    },
+    {
+      "id": "tfr",
+      "term": "TFR",
+      "expansion": "temporary flight restriction",
+      "definition": "Airspace closed to most flights for a time, for example around a fire, a stadium, or a VIP visit, published by NOTAM as a circle or area with a floor and a ceiling.",
+      "source": "faa-jo-7930-2",
+      "relatedTools": [
+        "aviation.airspace.tfr-area"
+      ]
+    },
+    {
+      "id": "tin",
+      "term": "TIN",
+      "expansion": "triangulated irregular network",
+      "definition": "A surface built by joining surveyed points into triangles, each flat, so the ground between shots is taken as varying linearly. Volumes and contours are computed from those triangles.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.earthwork.stockpile"
+      ]
+    },
+    {
+      "id": "tms",
+      "term": "TMS",
+      "expansion": "Tile Map Service",
+      "definition": "A web map tile numbering like XYZ, but with rows counted from the south edge.",
+      "source": "osm-tiles",
+      "relatedTools": [
+        "indexing.tile.bounds",
+        "indexing.tile.from-point"
+      ]
+    },
+    {
+      "id": "ts",
+      "term": "TS",
+      "expansion": "tangent to spiral",
+      "definition": "The station where the straight tangent ends and a spiral transition begins, curving gradually from straight toward the circular curve.",
+      "source": "ghilani",
+      "relatedTools": [
+        "survey.curves.spiral"
+      ]
+    },
+    {
+      "id": "tt",
+      "term": "TT",
+      "expansion": "Terrestrial Time",
+      "definition": "The uniform time scale of astronomical ephemerides: TAI plus 32.184 seconds.",
+      "source": "espenak-meeus",
+      "relatedTools": [
+        "time.sun.position"
+      ]
+    },
+    {
+      "id": "ups",
+      "term": "UPS",
+      "expansion": "Universal Polar Stereographic",
+      "definition": "The polar companion to UTM, covering the areas north of 84° N and south of 80° S.",
+      "source": "nga-utmups",
+      "relatedTools": [
+        "geodesy.magnetic.grivation",
+        "geodesy.ups.forward",
+        "geodesy.ups.inverse"
+      ]
+    },
+    {
+      "id": "usgs",
+      "term": "USGS",
+      "expansion": "U.S. Geological Survey",
+      "definition": "The US government science agency that runs the 3D Elevation Program and sets the quality levels for lidar data.",
+      "source": "usgs-lbs",
+      "relatedTools": [
+        "drone.sensors.lidar-plan"
+      ]
+    },
+    {
+      "id": "usng",
+      "term": "USNG",
+      "expansion": "United States National Grid",
+      "definition": "MGRS as adopted for US civilian use on NAD 83, usually written with spaces between its parts.",
+      "source": "fgdc-usng",
+      "relatedTools": [
+        "geodesy.grid-ref.usng-forward",
+        "geodesy.grid-ref.usng-inverse"
+      ]
+    },
+    {
+      "id": "ut1",
+      "term": "UT1",
+      "expansion": "Universal Time 1",
+      "definition": "Time kept by Earth's actual rotation. It drifts against atomic time, and UTC is kept within 0.9 s of it.",
+      "source": "iers-bulletin-c",
+      "relatedTools": [
+        "time.sun.position"
+      ]
+    },
+    {
+      "id": "utc",
+      "term": "UTC",
+      "expansion": "Coordinated Universal Time",
+      "definition": "The world's civil time standard, kept within 0.9 s of Earth's rotation by leap seconds. Aviation calls it Zulu time, written with a Z.",
+      "source": "iers-bulletin-c",
+      "relatedTools": [
+        "aviation.weather.metar-decode",
+        "aviation.weather.taf-decode",
+        "navigation.route.legs",
+        "navigation.route.time-speed-distance",
+        "survey.gnss.opus-plan",
+        "time.scale.gps-to-utc",
+        "time.scale.gps-week",
+        "time.scale.julian-date",
+        "time.scale.utc-offset",
+        "time.scale.zone-info",
+        "time.sun.aviation-nights",
+        "time.sun.events",
+        "time.sun.mapping-window",
+        "time.sun.position"
+      ]
+    },
+    {
+      "id": "utm",
+      "term": "UTM",
+      "expansion": "Universal Transverse Mercator",
+      "definition": "A grid of 60 zones, each 6° of longitude wide, that turns latitude and longitude into eastings and northings in meters.",
+      "source": "nga-utmups",
+      "relatedTools": [
+        "geodesy.magnetic.grivation",
+        "geodesy.ups.forward",
+        "geodesy.utm.forward",
+        "geodesy.utm.inverse",
+        "geodesy.utm.zone"
+      ]
+    },
+    {
+      "id": "vasi",
+      "term": "VASI",
+      "expansion": "visual approach slope indicator",
+      "definition": "Rows of red and white lights beside a runway that show whether you are above, on, or below the visual glidepath, usually 3°.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.performance.vdp"
+      ]
+    },
+    {
+      "id": "vdp",
+      "term": "VDP",
+      "expansion": "visual descent point",
+      "definition": "A point on a non-precision approach from which a normal descent from the MDA to the runway can begin.",
+      "source": "faa-iph",
+      "relatedTools": [
+        "aviation.performance.vdp"
+      ]
+    },
+    {
+      "id": "vfe",
+      "term": "VFE",
+      "expansion": "maximum flap extended speed",
+      "definition": "The fastest speed at which the flaps may be extended. It is the top of the white arc on the airspeed indicator.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.tas-to-cas"
+      ]
+    },
+    {
+      "id": "vlos",
+      "term": "VLOS",
+      "expansion": "visual line of sight",
+      "definition": "Flying where the remote pilot can see the drone without aids. EASA's acceptable distance is the smaller of ALOS and DLOS.",
+      "source": "easa-guidelines",
+      "relatedTools": [
+        "drone.sensors.vlos"
+      ]
+    },
+    {
+      "id": "vne",
+      "term": "VNE",
+      "expansion": "never exceed speed",
+      "definition": "The speed never to be exceeded in any operation. It is the red line on the airspeed indicator.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.tas-to-cas"
+      ]
+    },
+    {
+      "id": "vno",
+      "term": "VNO",
+      "expansion": "maximum structural cruising speed",
+      "definition": "The fastest speed for normal operation. Above it, in the yellow arc, fly only in smooth air.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.tas-to-cas"
+      ]
+    },
+    {
+      "id": "vs0",
+      "term": "VS0",
+      "expansion": "stall speed in the landing configuration",
+      "definition": "The slowest speed at which the aircraft still flies with the flaps and gear down. It is the bottom of the white arc on the airspeed indicator.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.tas-to-cas"
+      ]
+    },
+    {
+      "id": "vs1",
+      "term": "VS1",
+      "expansion": "stall speed in a stated configuration",
+      "definition": "The slowest speed at which the aircraft still flies in the clean configuration. It is the bottom of the green arc on the airspeed indicator.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.tas-to-cas"
       ]
     },
     {
@@ -110,491 +1453,13 @@
       "relatedTools": []
     },
     {
-      "id": "poh",
-      "term": "POH",
-      "expansion": "Pilot's Operating Handbook",
-      "definition": "The manufacturer's handbook for an aircraft: limitations, procedures, performance charts, and weight-and-balance data. Its numbers govern over any calculator.",
-      "source": "faa-phak",
+      "id": "wmm",
+      "term": "WMM",
+      "expansion": "World Magnetic Model",
+      "definition": "The model of the Earth's magnetic field used by charts and GPS units to give magnetic variation for a place and date. It is replaced every five years; WMM2025 runs to 2030.",
+      "source": "wmm",
       "relatedTools": [
-        "aviation.airspeed.cas-to-tas",
-        "aviation.loading.fuel-plan",
-        "aviation.loading.weight-balance",
-        "aviation.performance.glide",
-        "aviation.performance.specific-range"
-      ]
-    },
-    {
-      "id": "afm",
-      "term": "AFM",
-      "expansion": "Airplane Flight Manual",
-      "definition": "The FAA-approved manual of an aircraft's limitations and performance. For many light aircraft the POH serves as the AFM.",
-      "source": "faa-phak",
-      "relatedTools": [
-        "aviation.airspeed.cas-to-tas"
-      ]
-    },
-    {
-      "id": "nm",
-      "term": "NM",
-      "expansion": "nautical mile",
-      "definition": "A distance of exactly 1,852 meters, about one minute of latitude. Aviation and marine navigation measure distance in it.",
-      "source": "icao-annex5",
-      "relatedTools": [
-        "aviation.performance.specific-range",
-        "units.length.nm-to-km",
-        "units.length.nm-to-mi"
-      ]
-    },
-    {
-      "id": "utm",
-      "term": "UTM",
-      "expansion": "Universal Transverse Mercator",
-      "definition": "A grid of 60 zones, each 6° of longitude wide, that turns latitude and longitude into eastings and northings in meters.",
-      "source": "nga-utmups",
-      "relatedTools": [
-        "geodesy.magnetic.grivation",
-        "geodesy.ups.forward",
-        "geodesy.utm.forward",
-        "geodesy.utm.inverse",
-        "geodesy.utm.zone"
-      ]
-    },
-    {
-      "id": "ups",
-      "term": "UPS",
-      "expansion": "Universal Polar Stereographic",
-      "definition": "The polar companion to UTM, covering the areas north of 84° N and south of 80° S.",
-      "source": "nga-utmups",
-      "relatedTools": [
-        "geodesy.magnetic.grivation",
-        "geodesy.ups.forward",
-        "geodesy.ups.inverse"
-      ]
-    },
-    {
-      "id": "msl",
-      "term": "MSL",
-      "expansion": "mean sea level",
-      "definition": "Height above the average level of the sea, in practice the geoid. Airport elevations and altimeter altitudes are given above MSL.",
-      "source": "aim",
-      "relatedTools": [
-        "drone.ops.part107-altitude",
-        "geodesy.height.convert"
-      ]
-    },
-    {
-      "id": "metar",
-      "term": "METAR",
-      "expansion": "aviation routine weather report",
-      "definition": "An airport weather observation in a standard code: wind, visibility, weather, clouds, temperature, dew point, and altimeter setting, issued at least hourly.",
-      "source": "faa-awh",
-      "relatedTools": [
-        "aviation.weather.metar-decode",
-        "aviation.wind.best-runway",
-        "aviation.wind.course-from-heading",
-        "aviation.wind.heading-groundspeed",
-        "aviation.wind.runway-components",
-        "aviation.wind.tas-from-groundspeed"
-      ]
-    },
-    {
-      "id": "taf",
-      "term": "TAF",
-      "expansion": "terminal aerodrome forecast",
-      "definition": "A forecast for an airport, usually 24 or 30 hours long, coded like a METAR with change groups such as FM, TEMPO, BECMG, and PROB30.",
-      "source": "faa-awh",
-      "relatedTools": [
-        "aviation.weather.taf-decode",
-        "aviation.wind.course-from-heading",
-        "aviation.wind.heading-groundspeed",
-        "aviation.wind.tas-from-groundspeed"
-      ]
-    },
-    {
-      "id": "fb",
-      "term": "FB",
-      "expansion": "winds and temperatures aloft forecast",
-      "definition": "The US text forecast of wind direction, wind speed, and temperature at standard altitudes, coded in groups like 2635-08.",
-      "source": "faa-awh",
-      "relatedTools": [
-        "aviation.weather.fb-winds-decode"
-      ]
-    },
-    {
-      "id": "atis",
-      "term": "ATIS",
-      "expansion": "Automatic Terminal Information Service",
-      "definition": "A recorded broadcast at busier airports of current weather, runways in use, and notices, updated at least hourly.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.wind.best-runway",
-        "aviation.wind.runway-components"
-      ]
-    },
-    {
-      "id": "gsd",
-      "term": "GSD",
-      "expansion": "ground sampling distance",
-      "definition": "The ground width one image pixel covers, such as 2 cm per pixel. A smaller GSD shows more detail.",
-      "source": "wolf-photogrammetry",
-      "relatedTools": [
-        "drone.mission.facade",
-        "drone.photogrammetry.altitude-for-gsd",
-        "drone.photogrammetry.gsd",
-        "drone.photogrammetry.motion-blur",
-        "drone.photogrammetry.oblique-gsd",
-        "drone.photogrammetry.terrain-overlap"
-      ]
-    },
-    {
-      "id": "grs",
-      "term": "GRS",
-      "expansion": "Geodetic Reference System",
-      "definition": "An Earth ellipsoid defined by the IUGG. GRS 80 underlies NAD 83 and is almost identical to WGS 84.",
-      "source": "grs80",
-      "relatedTools": [
-        "geodesy.datum.itrf",
-        "geodesy.datum.nad83",
-        "geodesy.datum.plate-motion"
-      ]
-    },
-    {
-      "id": "iugg",
-      "term": "IUGG",
-      "expansion": "International Union of Geodesy and Geophysics",
-      "definition": "The scientific union that adopted GRS 80 and the mean Earth radius R1.",
-      "source": "grs80",
-      "relatedTools": [
-        "navigation.geodesic.haversine",
-        "navigation.geodesic.spherical-direct",
-        "navigation.geodesic.spherical-inverse"
-      ]
-    },
-    {
-      "id": "mgrs",
-      "term": "MGRS",
-      "expansion": "Military Grid Reference System",
-      "definition": "UTM and UPS coordinates written as a zone, a latitude band, a two-letter 100 km square, and digits, like 17T NE 86309 77770.",
-      "source": "nga-mgrs",
-      "relatedTools": [
-        "geodesy.grid-ref.mgrs-forward",
-        "geodesy.grid-ref.mgrs-inverse",
-        "geodesy.grid-ref.usng-forward"
-      ]
-    },
-    {
-      "id": "usng",
-      "term": "USNG",
-      "expansion": "United States National Grid",
-      "definition": "MGRS as adopted for US civilian use on NAD 83, usually written with spaces between its parts.",
-      "source": "fgdc-usng",
-      "relatedTools": [
-        "geodesy.grid-ref.usng-forward",
-        "geodesy.grid-ref.usng-inverse"
-      ]
-    },
-    {
-      "id": "gars",
-      "term": "GARS",
-      "expansion": "Global Area Reference System",
-      "definition": "A worldwide grid of 30-minute cells, split into 15- and 5-minute quadrants and keypads, used to name areas.",
-      "source": "nga-gars",
-      "relatedTools": [
-        "geodesy.grid-ref.gars-forward",
-        "geodesy.grid-ref.gars-inverse"
-      ]
-    },
-    {
-      "id": "georef",
-      "term": "GEOREF",
-      "expansion": "World Geographic Reference System",
-      "definition": "An aviation grid reference that names 15° and 1° squares with letters, then gives minutes of longitude and latitude.",
-      "source": "geographiclib",
-      "relatedTools": [
-        "geodesy.grid-ref.georef-forward",
-        "geodesy.grid-ref.georef-inverse"
-      ]
-    },
-    {
-      "id": "ngs",
-      "term": "NGS",
-      "expansion": "National Geodetic Survey",
-      "definition": "The NOAA office that defines the US National Spatial Reference System: datums, geoid models, and state plane coordinates.",
-      "source": "spcs83",
-      "relatedTools": [
-        "geodesy.spcs.spcs83-forward",
-        "geodesy.spcs.spcs83-inverse",
-        "survey.gnss.opus-plan",
-        "survey.reduction.combined-factor"
-      ]
-    },
-    {
-      "id": "nos",
-      "term": "NOS",
-      "expansion": "National Ocean Service",
-      "definition": "The part of NOAA that includes the National Geodetic Survey.",
-      "source": "spcs83",
-      "relatedTools": [
-        "survey.reduction.combined-factor"
-      ]
-    },
-    {
-      "id": "noaa",
-      "term": "NOAA",
-      "expansion": "National Oceanic and Atmospheric Administration",
-      "definition": "The US agency that includes the National Geodetic Survey and the National Weather Service.",
-      "source": "noaa-solar",
-      "relatedTools": [
-        "survey.reduction.combined-factor",
-        "time.sun.position"
-      ]
-    },
-    {
-      "id": "mdt",
-      "term": "MDT",
-      "expansion": "Mountain Daylight Time",
-      "definition": "Six hours behind UTC, used in the US Mountain time zone during daylight saving time.",
-      "source": "tzdb",
-      "relatedTools": []
-    },
-    {
-      "id": "iana",
-      "term": "IANA",
-      "expansion": "Internet Assigned Numbers Authority",
-      "definition": "The body that publishes the time zone database of names like America/Denver, which this site embeds.",
-      "source": "tzdb",
-      "relatedTools": [
-        "time.scale.zone-info"
-      ]
-    },
-    {
-      "id": "cas",
-      "term": "CAS",
-      "expansion": "calibrated airspeed",
-      "definition": "Indicated airspeed corrected for instrument and position error. It measures dynamic pressure, which governs how the aircraft flies.",
-      "source": "faa-phak",
-      "relatedTools": [
-        "aviation.airspeed.cas-to-tas"
-      ]
-    },
-    {
-      "id": "ias",
-      "term": "IAS",
-      "expansion": "indicated airspeed",
-      "definition": "The airspeed read directly from the airspeed indicator, before any correction.",
-      "source": "faa-phak",
-      "relatedTools": [
-        "aviation.airspeed.cas-to-tas"
-      ]
-    },
-    {
-      "id": "tas",
-      "term": "TAS",
-      "expansion": "true airspeed",
-      "definition": "The aircraft's speed through the air mass. At altitude, where the air is thinner, it is higher than calibrated airspeed.",
-      "source": "faa-phak",
-      "relatedTools": [
-        "aviation.performance.glide"
-      ]
-    },
-    {
-      "id": "ktas",
-      "term": "KTAS",
-      "expansion": "knots true airspeed",
-      "definition": "True airspeed stated in knots.",
-      "source": "faa-phak",
-      "relatedTools": [
-        "aviation.performance.turn"
-      ]
-    },
-    {
-      "id": "easa",
-      "term": "EASA",
-      "expansion": "European Union Aviation Safety Agency",
-      "definition": "The EU agency that sets aviation safety rules, including the drone rules in Regulations (EU) 2019/947 and 2019/945.",
-      "source": "easa-guidelines",
-      "relatedTools": [
-        "drone.ops.easa-subcategory",
-        "drone.ops.kinetic-energy"
-      ]
-    },
-    {
-      "id": "hae",
-      "term": "HAE",
-      "expansion": "height above ellipsoid",
-      "definition": "Height measured from the reference ellipsoid, as GNSS receivers report it. It differs from height above sea level by the geoid height.",
-      "source": "egm96",
-      "relatedTools": [
-        "geodesy.height.convert"
-      ]
-    },
-    {
-      "id": "epsg",
-      "term": "EPSG",
-      "expansion": "EPSG Geodetic Parameter Dataset",
-      "definition": "The IOGP registry of coordinate reference systems and transformations, each with a code such as EPSG:4326.",
-      "source": "epsg",
-      "relatedTools": [
-        "geodesy.datum.helmert",
-        "geodesy.spcs.spcs83-forward"
-      ]
-    },
-    {
-      "id": "iers",
-      "term": "IERS",
-      "expansion": "International Earth Rotation and Reference Systems Service",
-      "definition": "The service that maintains the ITRF and Earth orientation data, and announces leap seconds in Bulletin C.",
-      "source": "iers-bulletin-c",
-      "relatedTools": [
-        "geodesy.datum.helmert",
-        "time.sun.position"
-      ]
-    },
-    {
-      "id": "itrf",
-      "term": "ITRF",
-      "expansion": "International Terrestrial Reference Frame",
-      "definition": "The global scientific reference frame, realized from thousands of stations whose motions it models. ITRF2020 is current.",
-      "source": "iers-itrf2020-transfo",
-      "relatedTools": [
-        "geodesy.datum.itrf",
-        "geodesy.datum.nad83"
-      ]
-    },
-    {
-      "id": "nad",
-      "term": "NAD",
-      "expansion": "North American Datum",
-      "definition": "The family of North American horizontal datums: NAD 27 on the Clarke 1866 ellipsoid and NAD 83 on GRS 80.",
-      "source": "nadcon5",
-      "relatedTools": [
-        "geodesy.datum.nad83",
-        "geodesy.datum.nadcon5"
-      ]
-    },
-    {
-      "id": "nad83",
-      "term": "NAD83",
-      "expansion": "North American Datum of 1983",
-      "definition": "The North American datum on the GRS 80 ellipsoid, fixed to the North American plate. Realizations include NAD 83(2011).",
-      "source": "nadcon5",
-      "relatedTools": [
-        "geodesy.spcs.spcs83-inverse"
-      ]
-    },
-    {
-      "id": "nad27",
-      "term": "NAD27",
-      "expansion": "North American Datum of 1927",
-      "definition": "The older North American datum on the Clarke 1866 ellipsoid. Its positions can differ from NAD 83 by tens of meters.",
-      "source": "nadcon5",
-      "relatedTools": [
-        "geodesy.datum.legacy"
-      ]
-    },
-    {
-      "id": "nadcon5",
-      "term": "NADCON5",
-      "expansion": "NGS datum conversion grids, version 5",
-      "definition": "NGS grids that convert positions between US datums, such as NAD 27 to NAD 83, by interpolating measured shifts.",
-      "source": "nadcon5",
-      "relatedTools": [
-        "geodesy.datum.nadcon5"
-      ]
-    },
-    {
-      "id": "ed50",
-      "term": "ED50",
-      "expansion": "European Datum 1950",
-      "definition": "A legacy European datum on the International 1924 ellipsoid.",
-      "source": "epsg",
-      "relatedTools": [
-        "geodesy.datum.legacy"
-      ]
-    },
-    {
-      "id": "osgb36",
-      "term": "OSGB36",
-      "expansion": "Ordnance Survey Great Britain 1936",
-      "definition": "The legacy datum of the British National Grid, on the Airy 1830 ellipsoid.",
-      "source": "epsg",
-      "relatedTools": [
-        "geodesy.datum.legacy"
-      ]
-    },
-    {
-      "id": "agd66",
-      "term": "AGD66",
-      "expansion": "Australian Geodetic Datum 1966",
-      "definition": "A legacy Australian datum on the Australian National Spheroid.",
-      "source": "epsg",
-      "relatedTools": [
-        "geodesy.datum.legacy"
-      ]
-    },
-    {
-      "id": "sad69",
-      "term": "SAD69",
-      "expansion": "South American Datum 1969",
-      "definition": "A legacy South American datum on the GRS 1967 ellipsoid.",
-      "source": "epsg",
-      "relatedTools": [
-        "geodesy.datum.legacy"
-      ]
-    },
-    {
-      "id": "egm96",
-      "term": "EGM96",
-      "expansion": "Earth Gravitational Model 1996",
-      "definition": "A global gravity model whose geoid converts GPS ellipsoid heights to heights above mean sea level, to within about a meter.",
-      "source": "egm96",
-      "relatedTools": [
-        "geodesy.geoid.geoid-height"
-      ]
-    },
-    {
-      "id": "enu",
-      "term": "ENU",
-      "expansion": "east, north, up",
-      "definition": "Local Cartesian coordinates centered on a chosen point, with axes toward east, north, and up.",
-      "source": "geographiclib",
-      "relatedTools": [
-        "geodesy.frame.from-local",
-        "geodesy.frame.to-local"
-      ]
-    },
-    {
-      "id": "ned",
-      "term": "NED",
-      "expansion": "north, east, down",
-      "definition": "Local Cartesian axes toward north, east, and down, as aircraft navigation uses them.",
-      "source": "geographiclib",
-      "relatedTools": [
-        "geodesy.frame.from-local",
-        "geodesy.frame.to-local"
-      ]
-    },
-    {
-      "id": "aer",
-      "term": "AER",
-      "expansion": "azimuth, elevation, range",
-      "definition": "Direction and distance from a point: azimuth from north, elevation above the horizontal, and straight-line range.",
-      "source": "geographiclib",
-      "relatedTools": [
-        "geodesy.frame.from-local",
-        "geodesy.frame.to-local"
-      ]
-    },
-    {
-      "id": "spcs83",
-      "term": "SPCS83",
-      "expansion": "State Plane Coordinate System of 1983",
-      "definition": "124 zones of conformal projections on NAD 83, drawn so that distortion stays near 1 part in 10,000 within each zone.",
-      "source": "spcs83",
-      "relatedTools": [
-        "geodesy.projection.arc-to-chord",
-        "geodesy.spcs.spcs83-forward",
-        "geodesy.spcs.spcs83-inverse"
+        "aviation.ifr.radial-fix"
       ]
     },
     {
@@ -606,816 +1471,6 @@
       "relatedTools": [
         "indexing.tile.bounds",
         "indexing.tile.from-point"
-      ]
-    },
-    {
-      "id": "tms",
-      "term": "TMS",
-      "expansion": "Tile Map Service",
-      "definition": "A web map tile numbering like XYZ, but with rows counted from the south edge.",
-      "source": "osm-tiles",
-      "relatedTools": [
-        "indexing.tile.bounds",
-        "indexing.tile.from-point"
-      ]
-    },
-    {
-      "id": "gps",
-      "term": "GPS",
-      "expansion": "Global Positioning System",
-      "definition": "The US satellite navigation system. Its time scale runs a fixed number of seconds ahead of UTC (18 s since 2017) because it never adds leap seconds.",
-      "source": "is-gps-200",
-      "relatedTools": [
-        "time.scale.gps-to-utc",
-        "time.scale.gps-week"
-      ]
-    },
-    {
-      "id": "gpx",
-      "term": "GPX",
-      "expansion": "GPS Exchange Format",
-      "definition": "An XML file format for waypoints, routes, and tracks that most GPS devices and mapping apps read.",
-      "source": "gpx",
-      "relatedTools": [
-        "navigation.geodesic.waypoints"
-      ]
-    },
-    {
-      "id": "aim",
-      "term": "AIM",
-      "expansion": "Aeronautical Information Manual",
-      "definition": "The FAA's official guide to US flight procedures and air traffic control practice.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.ifr.hold-wind-timing"
-      ]
-    },
-    {
-      "id": "cg",
-      "term": "CG",
-      "expansion": "center of gravity",
-      "definition": "The point where an aircraft's weight acts. It must stay inside the envelope in the POH for safe control.",
-      "source": "faa-wbh",
-      "relatedTools": [
-        "aviation.loading.ballast",
-        "aviation.loading.weight-balance",
-        "aviation.loading.weight-shift"
-      ]
-    },
-    {
-      "id": "mac",
-      "term": "MAC",
-      "expansion": "mean aerodynamic chord",
-      "definition": "The chord of an equivalent rectangular wing. Larger aircraft state their center-of-gravity limits in percent of it.",
-      "source": "faa-wbh",
-      "relatedTools": [
-        "aviation.loading.weight-balance"
-      ]
-    },
-    {
-      "id": "lemac",
-      "term": "LEMAC",
-      "expansion": "leading edge of the mean aerodynamic chord",
-      "definition": "The station of the front of the mean aerodynamic chord, from which percent-MAC is measured.",
-      "source": "faa-wbh",
-      "relatedTools": [
-        "aviation.loading.weight-balance"
-      ]
-    },
-    {
-      "id": "mda",
-      "term": "MDA",
-      "expansion": "minimum descent altitude",
-      "definition": "The lowest altitude on a non-precision approach to which a pilot may descend without the runway environment in sight.",
-      "source": "faa-iph",
-      "relatedTools": [
-        "aviation.performance.vdp"
-      ]
-    },
-    {
-      "id": "vdp",
-      "term": "VDP",
-      "expansion": "visual descent point",
-      "definition": "A point on a non-precision approach from which a normal descent from the MDA to the runway can begin.",
-      "source": "faa-iph",
-      "relatedTools": [
-        "aviation.performance.vdp"
-      ]
-    },
-    {
-      "id": "hat",
-      "term": "HAT",
-      "expansion": "height above touchdown",
-      "definition": "The height of the minimum descent or decision altitude above the touchdown zone elevation.",
-      "source": "faa-iph",
-      "relatedTools": [
-        "aviation.performance.vdp"
-      ]
-    },
-    {
-      "id": "c1",
-      "term": "C1",
-      "expansion": "EASA class C1",
-      "definition": "An EASA drone class: under 900 g, or under 80 J of impact energy, meant for the A1 open subcategory.",
-      "source": "eu-2019-945",
-      "relatedTools": [
-        "drone.ops.kinetic-energy"
-      ]
-    },
-    {
-      "id": "faa",
-      "term": "FAA",
-      "expansion": "Federal Aviation Administration",
-      "definition": "The US civil aviation authority.",
-      "source": "cfr-14-1",
-      "relatedTools": [
-        "drone.ops.kinetic-energy"
-      ]
-    },
-    {
-      "id": "cfr",
-      "term": "CFR",
-      "expansion": "Code of Federal Regulations",
-      "definition": "The codified US federal regulations. Aviation rules are in Title 14, written as 14 CFR.",
-      "source": "cfr-14-1",
-      "relatedTools": [
-        "aviation.loading.fuel-plan",
-        "drone.links.link-budget",
-        "drone.photogrammetry.altitude-for-gsd"
-      ]
-    },
-    {
-      "id": "asprs",
-      "term": "ASPRS",
-      "expansion": "American Society for Photogrammetry and Remote Sensing",
-      "definition": "The society that publishes the Positional Accuracy Standards for Digital Geospatial Data used to state map accuracy.",
-      "source": "asprs-pas",
-      "relatedTools": [
-        "drone.photogrammetry.asprs-accuracy"
-      ]
-    },
-    {
-      "id": "rmse",
-      "term": "RMSE",
-      "expansion": "root-mean-square error",
-      "definition": "The square root of the average squared difference between measured and true values. ASPRS accuracy classes are stated with it.",
-      "source": "asprs-pas",
-      "relatedTools": [
-        "drone.photogrammetry.asprs-accuracy"
-      ]
-    },
-    {
-      "id": "alos",
-      "term": "ALOS",
-      "expansion": "attitude line of sight",
-      "definition": "The farthest distance at which a remote pilot can still see a drone's position and orientation. EASA ties it to the drone's size.",
-      "source": "easa-guidelines",
-      "relatedTools": [
-        "drone.sensors.vlos"
-      ]
-    },
-    {
-      "id": "dlos",
-      "term": "DLOS",
-      "expansion": "detection line of sight",
-      "definition": "The distance at which other aircraft can be seen in time to avoid them. EASA takes it as 0.3 times the ground visibility.",
-      "source": "easa-guidelines",
-      "relatedTools": [
-        "drone.sensors.vlos"
-      ]
-    },
-    {
-      "id": "vlos",
-      "term": "VLOS",
-      "expansion": "visual line of sight",
-      "definition": "Flying where the remote pilot can see the drone without aids. EASA's acceptable distance is the smaller of ALOS and DLOS.",
-      "source": "easa-guidelines",
-      "relatedTools": [
-        "drone.sensors.vlos"
-      ]
-    },
-    {
-      "id": "noam",
-      "term": "NOAM",
-      "expansion": "North American plate",
-      "definition": "The ITRF2020 plate motion model's code for the North American tectonic plate.",
-      "source": "itrf2020-pmm",
-      "relatedTools": [
-        "geodesy.datum.plate-motion"
-      ]
-    },
-    {
-      "id": "pcfc",
-      "term": "PCFC",
-      "expansion": "Pacific plate",
-      "definition": "The ITRF2020 plate motion model's code for the Pacific tectonic plate.",
-      "source": "itrf2020-pmm",
-      "relatedTools": [
-        "geodesy.datum.plate-motion"
-      ]
-    },
-    {
-      "id": "eura",
-      "term": "EURA",
-      "expansion": "Eurasian plate",
-      "definition": "The ITRF2020 plate motion model's code for the Eurasian tectonic plate.",
-      "source": "itrf2020-pmm",
-      "relatedTools": [
-        "geodesy.datum.plate-motion"
-      ]
-    },
-    {
-      "id": "aust",
-      "term": "AUST",
-      "expansion": "Australian plate",
-      "definition": "The ITRF2020 plate motion model's code for the Australian tectonic plate.",
-      "source": "itrf2020-pmm",
-      "relatedTools": [
-        "geodesy.datum.plate-motion"
-      ]
-    },
-    {
-      "id": "soam",
-      "term": "SOAM",
-      "expansion": "South American plate",
-      "definition": "The ITRF2020 plate motion model's code for the South American tectonic plate.",
-      "source": "itrf2020-pmm",
-      "relatedTools": [
-        "geodesy.datum.plate-motion"
-      ]
-    },
-    {
-      "id": "nubi",
-      "term": "NUBI",
-      "expansion": "Nubian plate",
-      "definition": "The ITRF2020 plate motion model's code for the Nubian (African) tectonic plate.",
-      "source": "itrf2020-pmm",
-      "relatedTools": [
-        "geodesy.datum.plate-motion"
-      ]
-    },
-    {
-      "id": "dms",
-      "term": "DMS",
-      "expansion": "degrees, minutes, seconds",
-      "definition": "An angle written as whole degrees, minutes (1/60 degree), and seconds (1/3600 degree), like 40°26'46\".",
-      "source": "iso6709",
-      "relatedTools": [
-        "geodesy.parse.angle-arithmetic",
-        "geodesy.parse.coordinates",
-        "survey.reduction.slope"
-      ]
-    },
-    {
-      "id": "cpa",
-      "term": "CPA",
-      "expansion": "closest point of approach",
-      "definition": "The time and distance at which two moving aircraft or vessels will pass nearest each other.",
-      "source": "bowditch",
-      "relatedTools": [
-        "navigation.route.cpa"
-      ]
-    },
-    {
-      "id": "pi",
-      "term": "PI",
-      "expansion": "point of intersection",
-      "definition": "On a horizontal curve, where the two straight tangents would meet.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.circular-curve",
-        "survey.curves.curve-layout",
-        "survey.curves.spiral"
-      ]
-    },
-    {
-      "id": "pc",
-      "term": "PC",
-      "expansion": "point of curvature",
-      "definition": "On a horizontal curve, where the curve leaves the back tangent.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.circular-curve",
-        "survey.curves.curve-layout"
-      ]
-    },
-    {
-      "id": "pt",
-      "term": "PT",
-      "expansion": "point of tangency",
-      "definition": "On a horizontal curve, where the curve joins the forward tangent.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.circular-curve",
-        "survey.curves.curve-layout"
-      ]
-    },
-    {
-      "id": "pvi",
-      "term": "PVI",
-      "expansion": "point of vertical intersection",
-      "definition": "On a vertical curve, where the two grade lines would meet.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.unequal-vertical-curve",
-        "survey.curves.vertical-curve"
-      ]
-    },
-    {
-      "id": "pvc",
-      "term": "PVC",
-      "expansion": "point of vertical curvature",
-      "definition": "On a vertical curve, where the curve leaves the incoming grade.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.unequal-vertical-curve",
-        "survey.curves.vertical-curve"
-      ]
-    },
-    {
-      "id": "pvt",
-      "term": "PVT",
-      "expansion": "point of vertical tangency",
-      "definition": "On a vertical curve, where the curve joins the outgoing grade.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.unequal-vertical-curve",
-        "survey.curves.vertical-curve"
-      ]
-    },
-    {
-      "id": "plss",
-      "term": "PLSS",
-      "expansion": "Public Land Survey System",
-      "definition": "The US rectangular survey of townships, ranges, and sections, carried out by the federal government since 1785.",
-      "source": "blm-manual",
-      "relatedTools": [
-        "survey.land.plss-parse"
-      ]
-    },
-    {
-      "id": "pm",
-      "term": "PM",
-      "expansion": "principal meridian",
-      "definition": "A PLSS reference meridian from which ranges are counted east and west.",
-      "source": "blm-manual",
-      "relatedTools": []
-    },
-    {
-      "id": "tai",
-      "term": "TAI",
-      "expansion": "International Atomic Time",
-      "definition": "The continuous atomic time scale. UTC has been TAI minus 37 seconds since 2017.",
-      "source": "iers-bulletin-c",
-      "relatedTools": [
-        "time.scale.gps-week"
-      ]
-    },
-    {
-      "id": "mjd",
-      "term": "MJD",
-      "expansion": "Modified Julian Date",
-      "definition": "The Julian date minus 2,400,000.5, so days begin at midnight. MJD 0 is 1858 November 17.",
-      "source": "usno-jd",
-      "relatedTools": [
-        "time.scale.julian-date"
-      ]
-    },
-    {
-      "id": "tt",
-      "term": "TT",
-      "expansion": "Terrestrial Time",
-      "definition": "The uniform time scale of astronomical ephemerides: TAI plus 32.184 seconds.",
-      "source": "espenak-meeus",
-      "relatedTools": [
-        "time.sun.position"
-      ]
-    },
-    {
-      "id": "ut1",
-      "term": "UT1",
-      "expansion": "Universal Time 1",
-      "definition": "Time kept by Earth's actual rotation. It drifts against atomic time, and UTC is kept within 0.9 s of it.",
-      "source": "iers-bulletin-c",
-      "relatedTools": [
-        "time.sun.position"
-      ]
-    },
-    {
-      "id": "dut1",
-      "term": "DUT1",
-      "expansion": "UT1 minus UTC",
-      "definition": "The difference between Earth-rotation time and UTC, always under 0.9 s, broadcast so users can recover UT1.",
-      "source": "iers-bulletin-c",
-      "relatedTools": [
-        "time.sun.position"
-      ]
-    },
-    {
-      "id": "rinex",
-      "term": "RINEX",
-      "expansion": "Receiver Independent Exchange Format",
-      "definition": "The standard text format for GNSS receiver observations. Daily files are named by station, day of year, and year, so any processing service can read them.",
-      "source": "rinex",
-      "relatedTools": [
-        "survey.gnss.opus-plan",
-        "time.scale.julian-date"
-      ]
-    },
-    {
-      "id": "hi",
-      "term": "HI",
-      "expansion": "height of instrument",
-      "definition": "The height of the instrument's horizontal axis above the station mark, measured with a tape at setup and added when reducing a sight to an elevation difference.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.reduction.slope",
-        "survey.reduction.stadia"
-      ]
-    },
-    {
-      "id": "hr",
-      "term": "HR",
-      "expansion": "height of rod (target height)",
-      "definition": "The height of the prism or target above the point sighted, subtracted when reducing a sight to an elevation difference.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.reduction.slope"
-      ]
-    },
-    {
-      "id": "bs",
-      "term": "BS",
-      "expansion": "backsight",
-      "definition": "In leveling, the rod reading on a point of known elevation. Added to that elevation it gives the height of the instrument.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.reduction.level-run"
-      ]
-    },
-    {
-      "id": "fs",
-      "term": "FS",
-      "expansion": "foresight",
-      "definition": "In leveling, the rod reading on a point whose elevation is wanted. Subtracted from the height of the instrument it gives that elevation.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.reduction.level-run"
-      ]
-    },
-    {
-      "id": "ts",
-      "term": "TS",
-      "expansion": "tangent to spiral",
-      "definition": "The station where the straight tangent ends and a spiral transition begins, curving gradually from straight toward the circular curve.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.spiral"
-      ]
-    },
-    {
-      "id": "sc",
-      "term": "SC",
-      "expansion": "spiral to curve",
-      "definition": "The station where the entry spiral ends and the circular curve begins, at the curve's full radius.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.spiral"
-      ]
-    },
-    {
-      "id": "cs",
-      "term": "CS",
-      "expansion": "curve to spiral",
-      "definition": "The station where the circular curve ends and the exit spiral begins.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.spiral"
-      ]
-    },
-    {
-      "id": "st",
-      "term": "ST",
-      "expansion": "spiral to tangent",
-      "definition": "The station where the exit spiral ends and the alignment is straight again.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.curves.spiral"
-      ]
-    },
-    {
-      "id": "tin",
-      "term": "TIN",
-      "expansion": "triangulated irregular network",
-      "definition": "A surface built by joining surveyed points into triangles, each flat, so the ground between shots is taken as varying linearly. Volumes and contours are computed from those triangles.",
-      "source": "ghilani",
-      "relatedTools": [
-        "survey.earthwork.stockpile"
-      ]
-    },
-    {
-      "id": "kml",
-      "term": "KML",
-      "expansion": "Keyhole Markup Language",
-      "definition": "An XML file format for places, paths, and areas on the Earth, read by Google Earth and most mapping apps. Each height says what it is measured from.",
-      "source": "ogc-kml",
-      "relatedTools": [
-        "drone.mission.export"
-      ]
-    },
-    {
-      "id": "csv",
-      "term": "CSV",
-      "expansion": "comma-separated values",
-      "definition": "A plain-text table with one row per line and the columns separated by commas, which spreadsheets open directly.",
-      "source": "rfc4180",
-      "relatedTools": [
-        "drone.mission.export"
-      ]
-    },
-    {
-      "id": "dme",
-      "term": "DME",
-      "expansion": "distance measuring equipment",
-      "definition": "A radio aid that shows the straight-line distance from the aircraft to a ground station, in nautical miles. Up high and close in, that slant distance is longer than the distance over the ground.",
-      "source": "faa-ifh",
-      "relatedTools": [
-        "aviation.ifr.dme-arc-lead",
-        "aviation.ifr.dme-slant-range"
-      ]
-    },
-    {
-      "id": "ifr",
-      "term": "IFR",
-      "expansion": "instrument flight rules",
-      "definition": "The rules for flying by reference to instruments under air traffic control, required in clouds and low visibility. IFR flights must carry fuel to an alternate airport and a reserve.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.loading.fuel-plan"
-      ]
-    },
-    {
-      "id": "qnh",
-      "term": "QNH",
-      "expansion": "altimeter setting (Q code)",
-      "definition": "The pressure setting that makes an altimeter read the airport's elevation on the ground, and altitude above sea level in the air.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.altimetry.flight-level",
-        "aviation.altimetry.q-codes"
-      ]
-    },
-    {
-      "id": "qfe",
-      "term": "QFE",
-      "expansion": "field pressure (Q code)",
-      "definition": "The air pressure at the airport. With it set, an altimeter reads zero on the ground and height above the airport in the air.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.altimetry.q-codes"
-      ]
-    },
-    {
-      "id": "qne",
-      "term": "QNE",
-      "expansion": "standard setting (Q code)",
-      "definition": "What an altimeter reads with 29.92 inHg (1013.25 hPa) set: the pressure altitude. On the ground it is the field's pressure altitude.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.altimetry.q-codes"
-      ]
-    },
-    {
-      "id": "fl",
-      "term": "FL",
-      "expansion": "flight level",
-      "definition": "A pressure altitude in hundreds of feet, flown with the altimeter set to 29.92 inHg. FL185 is 18,500 ft of pressure altitude.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.altimetry.flight-level"
-      ]
-    },
-    {
-      "id": "nws",
-      "term": "NWS",
-      "expansion": "National Weather Service",
-      "definition": "The US government weather service, which runs the airport weather stations and computes their altimeter settings.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.altimetry.q-codes"
-      ]
-    },
-    {
-      "id": "r1",
-      "term": "R1",
-      "expansion": "IUGG mean Earth radius",
-      "definition": "The radius of a sphere the size of the Earth on average, (2a + b) ÷ 3 = 6,371,008.771 m for WGS 84. Spherical formulas use it when they treat the Earth as a ball.",
-      "source": "grs80",
-      "relatedTools": [
-        "geodesy.ellipsoid.parameters",
-        "navigation.geodesic.haversine",
-        "navigation.geodesic.spherical-direct",
-        "navigation.geodesic.spherical-inverse"
-      ]
-    },
-    {
-      "id": "edm",
-      "term": "EDM",
-      "expansion": "electronic distance measurement",
-      "definition": "Measuring a distance by timing light or infrared bounced off a prism or a surface, as a total station does. The air slows the light a little, so the reading is corrected for temperature and pressure, in parts per million.",
-      "source": "landgate-edmi-manual",
-      "relatedTools": [
-        "survey.reduction.edm-correction"
-      ]
-    },
-    {
-      "id": "vasi",
-      "term": "VASI",
-      "expansion": "visual approach slope indicator",
-      "definition": "Rows of red and white lights beside a runway that show whether you are above, on, or below the visual glidepath, usually 3°.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.performance.vdp"
-      ]
-    },
-    {
-      "id": "papi",
-      "term": "PAPI",
-      "expansion": "precision approach path indicator",
-      "definition": "A row of four lights beside a runway: two white and two red means on the glidepath, more white means high, more red means low.",
-      "source": "aim",
-      "relatedTools": [
-        "aviation.performance.vdp"
-      ]
-    },
-    {
-      "id": "wmm",
-      "term": "WMM",
-      "expansion": "World Magnetic Model",
-      "definition": "The model of the Earth's magnetic field used by charts and GPS units to give magnetic variation for a place and date. It is replaced every five years; WMM2025 runs to 2030.",
-      "source": "wmm",
-      "relatedTools": [
-        "aviation.ifr.radial-fix"
-      ]
-    },
-    {
-      "id": "notam",
-      "term": "NOTAM",
-      "expansion": "Notice to Air Missions",
-      "definition": "A published notice of something pilots need to know that is not on the charts yet, such as a closed runway, an unlit tower, or a flight restriction.",
-      "source": "faa-jo-7930-2",
-      "relatedTools": [
-        "aviation.airspace.tfr-area"
-      ]
-    },
-    {
-      "id": "tfr",
-      "term": "TFR",
-      "expansion": "temporary flight restriction",
-      "definition": "Airspace closed to most flights for a time, for example around a fire, a stadium, or a VIP visit, published by NOTAM as a circle or area with a floor and a ceiling.",
-      "source": "faa-jo-7930-2",
-      "relatedTools": [
-        "aviation.airspace.tfr-area"
-      ]
-    },
-    {
-      "id": "eirp",
-      "term": "EIRP",
-      "expansion": "effective isotropic radiated power",
-      "definition": "The power a transmitter and its antenna put out in their strongest direction, as if from an antenna that radiates equally everywhere; radio rules cap it.",
-      "source": "cfr-47-15",
-      "relatedTools": [
-        "drone.links.link-budget"
-      ]
-    },
-    {
-      "id": "etsi",
-      "term": "ETSI",
-      "expansion": "European Telecommunications Standards Institute",
-      "definition": "The body that writes the European radio standards, such as EN 300 328 for 2.4 GHz equipment.",
-      "source": "etsi-en-300-328",
-      "relatedTools": [
-        "drone.links.link-budget"
-      ]
-    },
-    {
-      "id": "las",
-      "term": "LAS",
-      "expansion": "LASer file format",
-      "definition": "The ASPRS standard file format for lidar point clouds: a header, then one fixed-size record per point.",
-      "source": "asprs-las-1-4",
-      "relatedTools": [
-        "drone.sensors.dataset-size"
-      ]
-    },
-    {
-      "id": "laz",
-      "term": "LAZ",
-      "expansion": "compressed LAS",
-      "definition": "A losslessly compressed LAS file, usually several times smaller.",
-      "source": "asprs-las-1-4",
-      "relatedTools": [
-        "drone.sensors.dataset-size"
-      ]
-    },
-    {
-      "id": "ifov",
-      "term": "IFOV",
-      "expansion": "instantaneous field of view",
-      "definition": "The angle one detector pixel sees, usually in milliradians; times the distance, it is the patch of surface that pixel covers.",
-      "source": "flir-3x3",
-      "relatedTools": [
-        "drone.sensors.thermal-footprint"
-      ]
-    },
-    {
-      "id": "rtk",
-      "term": "RTK",
-      "expansion": "real-time kinematic",
-      "definition": "GNSS positioning corrected live from a base station or network, good to about a centimeter plus about a millimeter per kilometer from the base.",
-      "source": "ngs-rt-guidelines",
-      "relatedTools": [
-        "survey.gnss.rtk-budget"
-      ]
-    },
-    {
-      "id": "ppk",
-      "term": "PPK",
-      "expansion": "post-processed kinematic",
-      "definition": "Like RTK, but the corrections are applied after the survey, from logged base and rover data.",
-      "source": "ngs-rt-guidelines",
-      "relatedTools": [
-        "survey.gnss.rtk-budget"
-      ]
-    },
-    {
-      "id": "opus",
-      "term": "OPUS",
-      "expansion": "Online Positioning User Service",
-      "definition": "The free NGS service that computes a precise position from GNSS data you upload, tied to nearby continuously operating reference stations.",
-      "source": "ngs-opus",
-      "relatedTools": [
-        "survey.gnss.opus-plan"
-      ]
-    },
-    {
-      "id": "arp",
-      "term": "ARP",
-      "expansion": "antenna reference point",
-      "definition": "The point on a GNSS antenna, usually the bottom of its mount, that antenna heights and calibrations are measured to.",
-      "source": "ngs-antcal",
-      "relatedTools": [
-        "survey.gnss.antenna-height"
-      ]
-    },
-    {
-      "id": "antinfo",
-      "term": "ANTINFO",
-      "expansion": "antenna information",
-      "definition": "NGS's records of GNSS antenna dimensions, including the radius to the measurement mark and the offset to the ARP.",
-      "source": "ngs-antcal",
-      "relatedTools": [
-        "survey.gnss.antenna-height"
-      ]
-    },
-    {
-      "id": "usgs",
-      "term": "USGS",
-      "expansion": "U.S. Geological Survey",
-      "definition": "The US government science agency that runs the 3D Elevation Program and sets the quality levels for lidar data.",
-      "source": "usgs-lbs",
-      "relatedTools": [
-        "drone.sensors.lidar-plan"
-      ]
-    },
-    {
-      "id": "alta",
-      "term": "ALTA",
-      "expansion": "American Land Title Association",
-      "definition": "The title insurers' association that, with NSPS, sets the standards for land title surveys.",
-      "source": "alta-nsps",
-      "relatedTools": [
-        "survey.land.alta-rpp"
-      ]
-    },
-    {
-      "id": "nsps",
-      "term": "NSPS",
-      "expansion": "National Society of Professional Surveyors",
-      "definition": "The US surveyors' society that, with ALTA, sets the standards for land title surveys.",
-      "source": "alta-nsps",
-      "relatedTools": [
-        "survey.land.alta-rpp"
-      ]
-    },
-    {
-      "id": "rpp",
-      "term": "RPP",
-      "expansion": "relative positional precision",
-      "definition": "How well two adjacent boundary corners are located relative to each other: the long axis of their 95% error ellipse.",
-      "source": "alta-nsps",
-      "relatedTools": [
-        "survey.land.alta-rpp"
       ]
     }
   ],

@@ -340,8 +340,14 @@ function airspeedGauge(args, result) {
   if (!Number.isFinite(cas) || !Number.isFinite(tas) || tas <= 0) return null;
   const unit = result.result.tas.unit;
   // A round top, so the ten ticks land on round numbers.
-  const step = Math.max(cas, tas) * 1.2 > 200 ? 100 : 50;
-  const top = Math.ceil((Math.max(cas, tas) * 1.2) / step) * step;
+  // The V-speeds the pilot entered, as the marked arcs of an airspeed
+  // indicator. Each is named in words as well as drawn, so the meaning never
+  // rides on the color: an arc alone tells a color-blind pilot nothing.
+  const v = Object.fromEntries(['vs0', 'vs1', 'vfe', 'vno', 'vne'].map((k) => [k, measure(args[k], SPEED, unit)]).filter(([, x]) => Number.isFinite(x) && x > 0));
+  const asUnit = (x) => x / (SPEED[unit.toLowerCase()] ?? 1);
+  const highest = Math.max(cas, tas, ...Object.values(v).map(asUnit));
+  const step = highest * 1.2 > 200 ? 100 : 50;
+  const top = Math.ceil((highest * 1.2) / step) * step;
   const [cx, cy, r] = [160, 108, 84];
   // 0 at the bottom left, the top of the scale at the bottom right: a 270° dial.
   const at = (v) => -135 + (270 * Math.min(v, top)) / top;
@@ -351,10 +357,24 @@ function airspeedGauge(args, result) {
     const [a, b] = [pt(v, r), pt(v, r - 8)];
     ticks.push(line('dg-muted', a, b), text('dg-muted-text', ...pt(v, r - 20).map((q, i) => q + (i ? 4 : 0)), String(Math.round(v)), 'middle'));
   }
-  const arc = (v0, v1) => { const [a, b] = [pt(v0, r), pt(v1, r)]; return `<path class="dg-grid" d="M${a.map(f1).join(' ')}A${r} ${r} 0 ${at(v1) - at(v0) > 180 ? 1 : 0} 1 ${b.map(f1).join(' ')}"/>`; };
+  const arc = (v0, v1, cls = 'dg-grid', rr = r) => { const [a, b] = [pt(v0, rr), pt(v1, rr)]; return `<path class="${cls}" d="M${a.map(f1).join(' ')}A${rr} ${rr} 0 ${at(v1) - at(v0) > 180 ? 1 : 0} 1 ${b.map(f1).join(' ')}"/>`; };
+  const marks = [];
+  const band = (a, b, cls, name) => {
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return;
+    const [ra, rb] = [asUnit(a), asUnit(b)];
+    marks.push(arc(ra, rb, cls, r - 4), text('dg-muted-text', ...pt((ra + rb) / 2, r - 34).map((q, i) => q + (i ? 4 : 0)), name, 'middle'));
+  };
+  band(v.vs0, v.vfe, 'dg-arc-white', 'Flaps');
+  band(v.vs1, v.vno, 'dg-arc-green', 'Normal');
+  band(v.vno, v.vne, 'dg-arc-yellow', 'Caution');
+  if (Number.isFinite(v.vne)) {
+    const [a, b] = [pt(asUnit(v.vne), r - 12), pt(asUnit(v.vne), r + 2)];
+    marks.push(line('dg-arc-red', a, b), text('dg-muted-text', ...pt(asUnit(v.vne), r - 34).map((q, i) => q + (i ? 4 : 0)), 'Never exceed', 'middle'));
+  }
   const needle = (v, cls) => arrow(cx, cy, ...pt(v, r - 32), cls, '');
   const body = [
     arc(0, top),
+    ...marks,
     ...ticks,
     needle(cas, 'dg-muted'),
     needle(tas, 'dg-accent'),

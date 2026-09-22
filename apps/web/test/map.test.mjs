@@ -174,3 +174,21 @@ test('a computed polygon draws over its input, grouped by part and ring', async 
   const layers = await buildLayers(tool, args, result, async () => null);
   assert.deepEqual(layers.map((l) => [l.kind, l.role, l.rings.length]), [['polygon', 'input', 1], ['polygon', 'result', 3]]);
 });
+
+test('a flight path draws from output waypoints, flattening a corridor’s lines', async () => {
+  const { buildLayers, outputPath } = await import('../src/lib/map/layers.js');
+  const wp = (lat, lon) => ({ lat: { value: lat, unit: 'deg' }, lon: { value: lon, unit: 'deg' } });
+  const corridor = { ok: true, result: { lines: [{ offset: { value: -50 }, waypoints: [wp(0, 0), wp(0, 1)] }, { offset: { value: 50 }, waypoints: [wp(1, 1), wp(1, 0)] }] } };
+  assert.deepEqual(outputPath(corridor, 'lines'), [[0, 0], [1, 0], [1, 1], [0, 1]]);
+  const tool = {
+    visualization: [{ kind: 'line-geodesic', map: [['path', 'lines']] }],
+    inputs: { properties: { centerline: { type: 'array', items: { properties: { lat: {}, lon: {} } } } } },
+  };
+  const args = { centerline: [{ lat: 0.5, lon: 0 }, { lat: 0.5, lon: 1 }] };
+  const layers = await buildLayers(tool, args, corridor, async () => null);
+  const path = layers.find((l) => l.kind === 'line' && l.role === 'result');
+  assert.equal(path.points.length, 4);
+  assert.ok(path.arrows && path.stops);
+  assert.ok(layers.some((l) => l.kind === 'point' && l.label === 'Start'));
+  assert.ok(layers.some((l) => l.kind === 'line' && l.role === 'input' && l.points.length === 2));
+});

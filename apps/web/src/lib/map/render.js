@@ -247,6 +247,45 @@ function places(g, view, list, c) {
   }
 }
 
+/**
+ * A path's direction and turns: a chevron at the middle of each leg long
+ * enough to hold one, and a small dot at each turn point.
+ */
+function marks(g, view, layer, stroke, surface) {
+  const pts = layer.points.map(([lon, lat]) => forward(view, lon, lat));
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const [a, b] = [pts[i], pts[i + 1]];
+    if (!a || !b) continue;
+    const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+    const len = Math.hypot(dx, dy);
+    if (layer.arrows && len >= 36) {
+      const [ux, uy] = [dx / len, dy / len];
+      const [mx, my] = [(a[0] + b[0]) / 2 + ux * 3, (a[1] + b[1]) / 2 + uy * 3];
+      g.beginPath();
+      g.moveTo(mx - ux * 7 - uy * 5, my - uy * 7 + ux * 5);
+      g.lineTo(mx, my);
+      g.lineTo(mx - ux * 7 + uy * 5, my - uy * 7 - ux * 5);
+      g.strokeStyle = surface;
+      g.lineWidth = 5;
+      g.stroke();
+      g.strokeStyle = stroke;
+      g.lineWidth = 2;
+      g.stroke();
+    }
+  }
+  if (!layer.stops) return;
+  for (const p of pts.slice(1, -1)) {
+    if (!p) continue;
+    g.beginPath();
+    g.arc(p[0], p[1], 2.5, 0, 2 * Math.PI);
+    g.fillStyle = surface;
+    g.fill();
+    g.lineWidth = 1.5;
+    g.strokeStyle = stroke;
+    g.stroke();
+  }
+}
+
 /** Draws the whole scene. `layers`: [{ kind: 'line'|'point'|'polygon', role: 'result'|'input'|'comparison', points, rings, label }]. */
 /**
  * The globe's halo and lit sphere depend only on the canvas size, the globe's
@@ -377,6 +416,7 @@ export function draw(g, view, base, layers, c) {
       g.lineWidth = layer.role === 'result' ? 3 : 1.5;
       g.stroke();
       g.setLineDash([]);
+      if (layer.arrows || layer.stops) marks(g, view, layer, stroke, c.surface);
     } else if (layer.kind === 'point') {
       for (const [lon, lat] of layer.points) {
         // forward() places a point at its copy nearest the view center.

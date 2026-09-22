@@ -37,6 +37,30 @@ function rings(tool, args) {
   return [];
 }
 
+/**
+ * A flight path from an output list, in order: rows of {lat, lon}, or rows
+ * that hold such a list (a corridor's lines, each with its waypoints).
+ */
+export function outputPath(result, field) {
+  const rows = result?.result?.[field];
+  if (!Array.isArray(rows)) return [];
+  const pts = [];
+  const take = (row) => {
+    const lat = numberOf(row?.lat?.value ?? row?.lat);
+    const lon = numberOf(row?.lon?.value ?? row?.lon);
+    if (lat !== null && lon !== null) {
+      pts.push([lon, lat]);
+      return;
+    }
+    for (const v of Object.values(row ?? {})) if (Array.isArray(v)) v.forEach(take);
+  };
+  rows.forEach(take);
+  return pts;
+}
+
+/** The most turn points a path marks; longer paths show direction only. */
+export const MAX_STOPS = 400;
+
 /** An output list's rows as [lon, lat] rings, one per (part, ring). */
 export function outputRings(result, field) {
   const rows = result?.result?.[field];
@@ -85,6 +109,35 @@ export async function buildLayers(tool, args, result, densify, cells) {
     await line(rhumb ? 'rhumb' : 'geodesic', 'result');
     // The geodesic tools show the rhumb line as a dashed comparison, and the other way round.
     await line(rhumb ? 'geodesic' : 'rhumb', 'comparison');
+  }
+  // A generated flight path (a survey grid, corridor, orbit, or facade scan):
+  // the output waypoints in order, with direction arrows and turn points.
+  let pathDrawn = false;
+  if (!two) {
+    for (const v of tool.visualization ?? []) {
+      const field = (v.kind === 'line-geodesic' || v.kind === 'line-rhumb') && mapOf(v.map).path;
+      const pts = field ? outputPath(result, field) : [];
+      if (pts.length < 2) continue;
+      layers.push({ kind: 'line', role: 'result', points: pts, arrows: true, stops: pts.length <= MAX_STOPS });
+      layers.push({ kind: 'point', role: 'result', points: [pts[0]], label: 'Start' });
+      pathDrawn = true;
+    }
+    // What the path was planned over: an area (rows with rings) or a line (a
+    // corridor's centerline, a facade's wall), drawn as the input.
+    if (pathDrawn && !kinds.has('polygon')) {
+      for (const [name, schema] of Object.entries(tool.inputs.properties)) {
+        const cols = schema.items?.properties ?? {};
+        if (schema.type !== 'array' || !cols.lat || !cols.lon || !Array.isArray(args[name])) continue;
+        if (cols.ring) {
+          const rs = rings(tool, args).filter((r) => r.length >= 3);
+          if (rs.length) layers.push({ kind: 'polygon', role: 'input', rings: rs });
+        } else {
+          const line = args[name].map((r) => [numberOf(r.lon), numberOf(r.lat)]).filter((q) => q.every((x) => x !== null));
+          if (line.length >= 2) layers.push({ kind: 'line', role: 'input', points: line });
+        }
+        break;
+      }
+    }
   }
   // Input points name the fields they came from, so the canvas can drag them.
   const has = (f) => f in tool.inputs.properties;
@@ -156,7 +209,8 @@ export async function buildLayers(tool, args, result, densify, cells) {
       }
       return out;
     }));
-    if (dense.length) layers.push({ kind: 'polygon', role: 'result', rings: dense });
+    // Under a flight path, the area is what the path covers: an input.
+    if (dense.length) layers.push({ kind: 'polygon', role: pathDrawn ? 'input' : 'result', rings: dense });
   }
   return layers;
 }

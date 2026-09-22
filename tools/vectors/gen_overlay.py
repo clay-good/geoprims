@@ -70,6 +70,8 @@ def main():
     w, e = rect(-1, 179.0, 1, -179.5), rect(-0.5, 179.5, 0.5, -179.0)
     out.append(vec(len(out) + 1, {"polygon_a": P(w), "polygon_b": P(e), "operation": "intersection"}, {"result.parts": 1}))
     out.append(vec(len(out) + 1, {"polygon_a": P(a[:2]), "polygon_b": P(b), "operation": "union"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC))
+    # Found by the fuzzer: a ring passing through its corners 15 times took 10 s.
+    out.append(vec(len(out) + 1, {"polygon_a": P(a) * 15, "polygon_b": P(b), "operation": "union"}, {"ok": False, "error.code": "INVALID_INPUT"}))
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     (dest / "geometry.overlay.boolean.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in out))
 

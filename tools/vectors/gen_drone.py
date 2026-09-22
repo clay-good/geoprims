@@ -506,6 +506,9 @@ def geofence_vectors():
                     {"meta.warnings.1.code": "WAYPOINT_OUTSIDE_GEOFENCE", "result.flagged.0.waypoint": 2, "result.flagged.0.beyond.value": 12.0}, SPEC, "2026"))
     out[-1]["tolerance"]["result.flagged.0.beyond.value"] = {"rel": 0, "abs": 1e-3}
     out.append(fvec(len(out) + 1, {"area": [{"lat": 0, "lon": 0}], "distance": "50 m", "warning_distance": "60 m"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    # Found by the fuzzer: an area pasted 15 times over took 8 s and enclosed 300 times its size.
+    sq = [{"lat": 0, "lon": 0}, {"lat": 0, "lon": dlon(300)}, {"lat": dlat(200), "lon": dlon(300)}, {"lat": dlat(200), "lon": 0}]
+    out.append(fvec(len(out) + 1, {"area": sq * 15, "distance": "50 m"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
     return out
 
 

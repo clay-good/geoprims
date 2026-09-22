@@ -288,6 +288,9 @@ fn run_geofence(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if kind == Shape::Polygon && area.len() > 1 && area.first() == area.last() {
         area.pop();
     }
+    if kind == Shape::Polygon {
+        gp_geo::point::refuse_repeated_corner(&area, "/area")?;
+    }
     let need = match kind {
         Shape::Point => 1,
         Shape::Line => 2,

@@ -193,6 +193,7 @@ fn read(ctx: &mut Ctx, list: &str) -> Result<Vec<Vec<(f64, f64)>>, ToolError> {
                 format!("Ring {k} needs at least 3 distinct corners."),
             ));
         }
+        gp_geo::point::refuse_repeated_corner(ring, &format!("/{list}"))?;
     }
     Ok(rings)
 }

@@ -86,7 +86,9 @@ def main():
     # Refusals.
     for inp, code in [({"vertices": [{"lat": 0, "lon": 0}], "distance": "10 m", "cap": "flat"}, "INVALID_INPUT"),
                       ({"vertices": rect(100, 100), "distance": "0 m"}, "INVALID_INPUT"),
-                      ({"vertices": rect(100, 100), "distance": "1500 km"}, "OUT_OF_DOMAIN")]:
+                      ({"vertices": rect(100, 100), "distance": "1500 km"}, "OUT_OF_DOMAIN"),
+                      # Found by the fuzzer: a ring pasted 15 times over took 7 s and returned 15 parts.
+                      ({"vertices": field * 15, "distance": "500 m"}, "INVALID_INPUT")]:
         out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": code}, SPEC))
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     (dest / "geometry.buffer.geodesic.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in out))

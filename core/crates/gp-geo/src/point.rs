@@ -88,3 +88,58 @@ pub fn plain_angle(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> 
         },
     }
 }
+
+/// Refuses a polygon ring (closing corner already dropped, consecutive
+/// repeats removed) that passes through the same corner twice: it touches or
+/// overlaps itself, which no area, buffer, or overlay can answer honestly,
+/// and a ring pasted several times over made those tools grind for seconds.
+pub fn refuse_repeated_corner(ring: &[(f64, f64)], field: &str) -> Result<(), ToolError> {
+    let mut idx: Vec<usize> = (0..ring.len()).collect();
+    idx.sort_by(|&a, &b| {
+        ring[a]
+            .0
+            .total_cmp(&ring[b].0)
+            .then(ring[a].1.total_cmp(&ring[b].1))
+            .then(a.cmp(&b))
+    });
+    match idx.windows(2).find(|w| ring[w[0]] == ring[w[1]]) {
+        None => Ok(()),
+        Some(w) => Err(ToolError::invalid(
+            field,
+            format!(
+                "Corner {} repeats corner {}: the outline passes through the same point twice, so it touches or crosses itself.",
+                w[1] + 1,
+                w[0] + 1
+            ),
+        )
+        .hint("List each corner once, in order around the shape; geometry.validity.make-valid can repair a shape that crosses itself.")),
+    }
+}
+
+#[cfg(test)]
+mod ring_tests {
+    use super::refuse_repeated_corner;
+
+    #[test]
+    fn a_ring_through_the_same_corner_twice_is_refused() {
+        let sq = [(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)];
+        assert!(refuse_repeated_corner(&sq, "/p").is_ok());
+        let twice: Vec<_> = sq.iter().chain(sq.iter()).copied().collect();
+        let e = refuse_repeated_corner(&twice, "/p").unwrap_err();
+        assert!(
+            e.message.contains("Corner 5 repeats corner 1"),
+            "{}",
+            e.message
+        );
+        // A figure eight through one shared corner.
+        let eight = [
+            (0.0, 0.0),
+            (1.0, 1.0),
+            (1.0, 0.0),
+            (0.0, 0.0),
+            (-1.0, -1.0),
+            (-1.0, 0.0),
+        ];
+        assert!(refuse_repeated_corner(&eight, "/p").is_err());
+    }
+}

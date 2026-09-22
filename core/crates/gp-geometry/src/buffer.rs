@@ -206,6 +206,7 @@ fn run_buffer(ctx: &mut Ctx) -> Result<Json, ToolError> {
                         format!("Ring {k} needs at least 3 distinct corners."),
                     ));
                 }
+                gp_geo::point::refuse_repeated_corner(ring, "/vertices")?;
             }
         }
         _ => {}

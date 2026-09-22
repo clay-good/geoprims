@@ -159,6 +159,22 @@ test('every aviation, drone, and navigation tool shows the safety notice in its 
   assert.match(page('/disclaimer/'), /Not for primary navigation\./);
 });
 
+test('the README states the counts the build actually has', () => {
+  // The status line is the first thing a reader believes, so it is checked
+  // against the catalog rather than kept up to date by hand.
+  const readme = readFileSync(join(web, '../../README.md'), 'utf8');
+  const status = /\*\*Status:\*\*[^\n]*/.exec(readme)[0];
+  const said = [...status.matchAll(/(\d[\d,]*) (operations|tool pages)|(\d[\d,]*) of them past/g)];
+  const n = (k) => Number(String(k).replace(/,/g, ''));
+  const ops = said.find((m) => m[2] === 'operations');
+  const pages = said.find((m) => m[2] === 'tool pages');
+  const stable = said.find((m) => m[3]);
+  assert.ok(ops && pages && stable, `the status line names no counts: ${status}`);
+  assert.equal(n(ops[1]), catalog.counts.all.operations, 'operations');
+  assert.equal(n(pages[1]), catalog.counts.all.endpoints, 'tool pages');
+  assert.equal(n(stable[3]), catalog.counts.stable.operations, 'stable operations');
+});
+
 test('every hub page for an operational domain carries the safety notice too', () => {
   // add-aviation-suite 7.3: a pilot who lands on a hub from search reads the
   // same notice as one who lands on a tool.

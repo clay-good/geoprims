@@ -204,7 +204,7 @@ fn polylabel(rings: &[Vec<P>], precision: f64, start: P) -> (P, f64) {
     // Each probe measures every edge, so bound the total work, not just the
     // probes: the best point so far is always inside, only less centered.
     let edges: usize = rings.iter().map(Vec::len).sum();
-    let budget = (20_000_000 / edges.max(1)).clamp(1_000, 200_000);
+    let budget = (4_000_000 / edges.max(1)).clamp(1_000, 200_000);
     let (mut x0, mut y0, mut x1, mut y1) = (
         f64::INFINITY,
         f64::INFINITY,

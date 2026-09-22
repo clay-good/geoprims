@@ -745,6 +745,20 @@ pub static ENDURANCE: ToolDef = ToolDef {
             QT::Speed,
             "m/s",
         ),
+        num(
+            "peukert",
+            "Peukert exponent",
+            "Off unless entered, like 1.05. A weak model for lithium packs: use it only with your own discharge data",
+            1.0,
+            1.5,
+        ),
+        qty(
+            "rated_time",
+            "Rated discharge time",
+            "The time the pack's rated capacity assumes, like 1 h (the default)",
+            QT::Time,
+            "h",
+        ),
     ],
     outputs: &[
         out(
@@ -805,9 +819,23 @@ pub static ENDURANCE: ToolDef = ToolDef {
             100.0,
         )
         .precision(Precision::Decimals(0)),
+        num(
+            "peukert_factor",
+            "Peukert factor at hover",
+            "(rated power / hover power)^(k − 1); only when an exponent is entered",
+            0.0,
+            100.0,
+        )
+        .precision(Precision::Decimals(3))
+        .optional(),
     ],
-    warnings: &["HEURISTIC_DERATING", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Time = energy × usable share × (1 − derating) × (1 − reserve) / power; heuristic cold derating 0% at 20 °C or warmer, rising 1% per °C (20% at 0 °C), capped at 50%",
+    warnings: &[
+        "HEURISTIC_DERATING",
+        "HEURISTIC_PEUKERT",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Time = energy × usable share × (1 − derating) × (1 − reserve) / power; heuristic cold derating 0% at 20 °C or warmer, rising 1% per °C (20% at 0 °C), capped at 50%. Peukert, off by default: energy × (rated power / power)^(k − 1), where rated power = pack energy / rated discharge time",
     accuracy: "Only as good as the power figure. Wind, climbs, and aging packs shorten real flights.",
     references: &[LEISHMAN],
     examples: &[Example {
@@ -868,6 +896,34 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let avail = e * usable * (1.0 - derate);
     let flyable = avail * (1.0 - reserve);
+    let k = ctx.number("peukert")?;
+    let rated_time = match ctx.quantity("rated_time")? {
+        Some(_) if k.is_none() => {
+            return Err(ToolError::invalid(
+                "/rated_time",
+                "The rated discharge time only matters with a Peukert exponent; enter one or leave this out.",
+            ));
+        }
+        Some(t) if t.base() <= 0.0 => {
+            return Err(ToolError::invalid(
+                "/rated_time",
+                "The rated discharge time must be positive.",
+            ));
+        }
+        Some(t) => t.base(),
+        None => 3600.0,
+    };
+    // Effective-energy factor at a steady draw: 1 when Peukert is off.
+    let peukert = |pw: f64| k.map_or(1.0, |k| pow(e / rated_time / pw, k - 1.0));
+    if k.is_some_and(|k| k > 1.0) {
+        ctx.warnings.push(
+            Warning::new(
+                "HEURISTIC_PEUKERT",
+                "Peukert's law was fitted to lead-acid cells and describes lithium packs poorly; the times use it only because you entered an exponent.",
+            )
+            .at("/peukert"),
+        );
+    }
     let wh = |v: f64| q(v, QT::Energy, "J");
     if ctx.explaining() {
         let fmt = ctx.options.format;
@@ -894,21 +950,42 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ),
             format!("{} Wh", n(flyable / 3600.0, 1)),
         );
+        if let Some(k) = k {
+            ctx.step(
+                "Peukert factor",
+                "(pack energy / rated time / hover power)^(k − 1)",
+                format!(
+                    "({} W / {} W)^{}",
+                    n(e / rated_time, 1),
+                    n(p, 1),
+                    n(k - 1.0, 3)
+                ),
+                n(peukert(p), 3),
+            );
+        }
         ctx.step(
             "Hover time",
-            "time = flyable energy / hover power",
-            format!("{} Wh / {} W", n(flyable / 3600.0, 1), n(p, 0)),
-            format!("{} min", mins(flyable)),
+            "time = flyable energy × Peukert factor / hover power",
+            format!(
+                "{} Wh × {} / {} W",
+                n(flyable / 3600.0, 1),
+                n(peukert(p), 3),
+                n(p, 0)
+            ),
+            format!("{} min", mins(flyable * peukert(p))),
         );
     }
     let mut o = vec![
         (
             "hover_time",
-            ctx.out("hover_time", q(flyable / p, QT::Time, "s")),
+            ctx.out("hover_time", q(flyable * peukert(p) / p, QT::Time, "s")),
         ),
         (
             "hover_time_no_reserve",
-            ctx.out("hover_time_no_reserve", q(avail / p, QT::Time, "s")),
+            ctx.out(
+                "hover_time_no_reserve",
+                q(avail * peukert(p) / p, QT::Time, "s"),
+            ),
         ),
     ];
     let cruise = ctx.quantity("cruise_power")?.map(|x| x.base());
@@ -921,11 +998,12 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         o.push((
             "cruise_time",
-            ctx.out("cruise_time", q(flyable / cp, QT::Time, "s")),
+            ctx.out("cruise_time", q(flyable * peukert(cp) / cp, QT::Time, "s")),
         ));
     }
     if let Some(gs) = ctx.quantity("groundspeed")? {
-        let t = flyable / cruise.unwrap_or(p);
+        let pw = cruise.unwrap_or(p);
+        let t = flyable * peukert(pw) / pw;
         o.push((
             "range",
             ctx.out("range", q(t * gs.base(), QT::Distance, "m")),
@@ -937,6 +1015,9 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ctx.out("reserve_energy", wh(avail * reserve)),
     ));
     o.push(("derating_applied", Json::Num(derate * 100.0)));
+    if k.is_some() {
+        o.push(("peukert_factor", Json::Num(peukert(p))));
+    }
     Ok(Json::obj(o))
 }
 
@@ -1079,6 +1160,193 @@ fn run_max_payload(ctx: &mut Ctx) -> Result<Json, ToolError> {
         (
             "base_hover_time",
             ctx.out("base_hover_time", q(e / base, QT::Time, "s")),
+        ),
+    ]))
+}
+
+// ---------------------------------------------------------------- calibration
+
+pub static CALIBRATE_HOVER: ToolDef = ToolDef {
+    id: "drone.power.calibrate-hover",
+    title: "Calibrate hover power from a test flight",
+    summary: "Back-solve a multirotor's real figure of merit × efficiency from a measured hover: the energy it drew and for how long, so the hover-power and flight-time tools match your aircraft.",
+    aliases: &[
+        "calibrate drone hover power",
+        "figure of merit from test flight",
+        "measured hover power",
+    ],
+    keywords: &[
+        "calibration",
+        "test flight",
+        "figure of merit",
+        "efficiency",
+        "hover power",
+        "momentum theory",
+    ],
+    inputs: &[
+        HOVER_INPUTS[0],
+        HOVER_INPUTS[1],
+        HOVER_INPUTS[2],
+        qty(
+            "energy_used",
+            "Energy used",
+            "Drawn during the steady hover, from the flight log or recharge, like 40 Wh",
+            QT::Energy,
+            "Wh",
+        )
+        .required()
+        .core(),
+        qty(
+            "hover_time",
+            "Hover time",
+            "How long the steady hover lasted, like 15 min",
+            QT::Time,
+            "min",
+        )
+        .required()
+        .core(),
+        qty(
+            "avionics_power",
+            "Avionics and payload power",
+            "Drawn apart from the motors, like 10 W; default 0",
+            QT::Power,
+            "W",
+        ),
+        num(
+            "efficiency",
+            "Motor and speed-controller efficiency",
+            "To split out the figure of merit, 0.5 to 1, default 0.85",
+            0.5,
+            1.0,
+        ),
+        DENSITY_INPUTS[0],
+        DENSITY_INPUTS[1],
+        DENSITY_INPUTS[2],
+    ],
+    outputs: &[
+        num(
+            "fm_eta",
+            "Figure of merit × efficiency",
+            "Ideal power / measured lift power; the defaults give 0.51",
+            0.0,
+            1.0,
+        )
+        .precision(Precision::Decimals(3)),
+        num(
+            "figure_of_merit",
+            "Figure of merit",
+            "At the entered or default efficiency",
+            0.0,
+            2.0,
+        )
+        .precision(Precision::Decimals(3)),
+        out(
+            "measured_power",
+            "Measured hover power",
+            "Energy used / hover time",
+            QT::Power,
+            "W",
+            1,
+        ),
+        out(
+            "ideal_power",
+            "Ideal induced power",
+            "T^1.5 / √(2ρA)",
+            QT::Power,
+            "W",
+            1,
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Measured power = energy used / hover time; lift power = measured − avionics; FM·η = (m·g0)^1.5 / √(2ρA) / lift power; FM = FM·η / η",
+    accuracy: "As good as the measurement: use a steady hover in calm air, and the energy the log or charger reports for that hover alone, not the whole flight.",
+    references: &[LEISHMAN],
+    examples: &[Example {
+        id: "primary",
+        title: "The 1.4 kg quad drew 40 Wh in a 15-minute hover",
+        input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","energy_used":"40 Wh","hover_time":"15 min"}"#,
+        source: "Momentum theory (Leishman 2006, chapter 2) solved for the figure of merit",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.power.hover-power",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.endurance",
+            reason: "next",
+        },
+    ],
+    sentence: "Your flight shows a figure of merit × efficiency of {fm_eta}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_calibrate,
+    ..ToolDef::BLANK
+};
+
+fn run_calibrate(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = positive(ctx, "mass", "Mass")?;
+    let n = ctx.number("rotors")?.expect("required");
+    if n.fract() != 0.0 {
+        return Err(ToolError::invalid(
+            "/rotors",
+            "Rotors must be a whole number.",
+        ));
+    }
+    let d = positive(ctx, "rotor_diameter", "Rotor diameter")?;
+    let e = positive(ctx, "energy_used", "Energy used")?;
+    let t = positive(ctx, "hover_time", "Hover time")?;
+    let av = ctx.quantity("avionics_power")?.map_or(0.0, |x| x.base());
+    let eta = ctx.number("efficiency")?.unwrap_or(0.85);
+    let rho = read_density(ctx)?;
+    let measured = e / t;
+    let lift = measured - av;
+    if av < 0.0 || lift <= 0.0 {
+        return Err(ToolError::invalid(
+            "/avionics_power",
+            "The avionics power must be at least 0 and below the measured power.",
+        ));
+    }
+    let ideal = hover(m, n, d, rho, 1.0, 1.0).ideal;
+    let fm_eta = ideal / lift;
+    if fm_eta >= 1.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "That hover would beat an ideal rotor, which is impossible; check the mass, the energy used, and the time.",
+        )
+        .at("/energy_used"));
+    }
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let x = move |v: f64, dp: u8| display::number(v, Precision::Decimals(dp), fmt);
+        ctx.step(
+            "Measured power",
+            "energy used / hover time",
+            format!("{} Wh / {} min", x(e / 3600.0, 1), x(t / 60.0, 1)),
+            format!("{} W", x(measured, 1)),
+        );
+        ctx.step(
+            "Figure of merit × efficiency",
+            "ideal power / (measured − avionics)",
+            format!("{} W / {} W", x(ideal, 1), x(lift, 1)),
+            x(fm_eta, 3),
+        );
+    }
+    Ok(Json::obj(vec![
+        ("fm_eta", Json::Num(fm_eta)),
+        ("figure_of_merit", Json::Num(fm_eta / eta)),
+        (
+            "measured_power",
+            ctx.out("measured_power", q(measured, QT::Power, "W")),
+        ),
+        (
+            "ideal_power",
+            ctx.out("ideal_power", q(ideal, QT::Power, "W")),
         ),
     ]))
 }

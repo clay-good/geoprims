@@ -142,6 +142,10 @@
       "severity": "accuracy",
       "message": "A rule-of-thumb derating was applied."
     },
+    "HEURISTIC_PEUKERT": {
+      "severity": "accuracy",
+      "message": "A Peukert correction was applied; it describes lithium packs poorly."
+    },
     "PLANAR_ON_GEOGRAPHIC": {
       "severity": "accuracy",
       "message": "Planar math was applied to geographic coordinates."

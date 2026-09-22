@@ -183,6 +183,41 @@ def endurance_vectors():
     for i, (e, u, p, r) in enumerate(cases, 1):
         t = e * u / 100 * (1 - r / 100) / p * 60
         out.append(fvec(i, {"energy": f"{e} Wh", "usable": u, "power": f"{p} W", "reserve": r}, {"result.hover_time.value": t}, PW_SRC, PW_VER))
+    # Peukert, only when an exponent is entered: energy × (pack energy / rated time / power)^(k − 1).
+    for e, p, k, rated_h in [(100, 150, 1.05, None), (90.4, 150.6, 1.1, 1), (274, 900, 1.03, 0.5), (45, 30, 1.08, 2)]:
+        f = (e / (rated_h or 1) / p) ** (k - 1)
+        inp = {"energy": f"{e} Wh", "power": f"{p} W", "peukert": k}
+        if rated_h:
+            inp["rated_time"] = f"{rated_h} h"
+        out.append(fvec(len(out) + 1, inp, {"result.hover_time.value": e * f / p * 60, "result.peukert_factor": f}, PW_SRC, PW_VER))
+    return out
+
+
+def calibrate_vectors():
+    out = []
+    rho0 = P0 / (R_AIR * T0)
+    # mass, rotors, rotor in, Wh used, min, avionics W, efficiency, altitude ft
+    cases = [(1.4, 4, 9.4, 40, 15, 0, None, None), (0.9, 4, 7.0, 20, 12, 5, None, None), (6.5, 6, 22.0, 150, 12, 20, 0.9, None),
+             (2.5, 4, 13.0, 60, 15, 10, None, 5000), (25.0, 8, 30.0, 700, 10, 30, 0.8, None)]
+    for i, (m, n, d_in, e, t, av, eta, alt_ft) in enumerate(cases, 1):
+        d = d_in * 0.0254
+        a = n * math.pi * d * d / 4
+        rho = rho_at(alt_ft * 0.3048) if alt_ft else rho0
+        ideal = (m * G0) ** 1.5 / math.sqrt(2 * rho * a)
+        measured = e * 60 / t
+        fe = ideal / (measured - av)
+        inp = {"mass": f"{m} kg", "rotors": n, "rotor_diameter": f"{d_in} in", "energy_used": f"{e} Wh", "hover_time": f"{t} min"}
+        if av:
+            inp["avionics_power"] = f"{av} W"
+        if eta:
+            inp["efficiency"] = eta
+        if alt_ft:
+            inp["altitude"] = f"{alt_ft} ft"
+        out.append(fvec(i, inp, {"result.fm_eta": fe, "result.figure_of_merit": fe / (eta or 0.85),
+                                  "result.measured_power.value": measured}, PW_SRC, PW_VER))
+    # A hover that would beat an ideal rotor is refused.
+    out.append(fvec(len(out) + 1, {"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "10 Wh", "hover_time": "15 min"},
+                    {"ok": False, "error.code": "OUT_OF_DOMAIN"}, PW_SRC, PW_VER))
     return out
 
 
@@ -575,7 +610,7 @@ def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
              "drone.photogrammetry.motion-blur": blur(), "drone.photogrammetry.asprs-accuracy": asprs(),
-             "drone.power.battery-energy": battery_vectors(), "drone.power.hover-power": hover_vectors(),
+             "drone.power.battery-energy": battery_vectors(), "drone.power.hover-power": hover_vectors(), "drone.power.calibrate-hover": calibrate_vectors(),
              "drone.power.endurance": endurance_vectors(), "drone.power.max-payload": payload_vectors(), "drone.power.payload-impact": payload_impact_vectors(),
              "drone.power.rth-budget": rth_vectors(), "drone.ops.part107-altitude": altitude_vectors(),
              "drone.ops.speed-check": speed_vectors(), "drone.ops.kinetic-energy": ke_vectors(),

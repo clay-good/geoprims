@@ -27,7 +27,7 @@
 - [ ] 3.3 Implement endurance, range, and heuristic derating; verify the reserve and cold-battery scenarios (built: endurance with reserve, cruise power, range, and the labeled cold derating; both scenarios pass; pending: wind-aware range through the aviation wind tools)
 - [x] 3.4 Implement payload impact and maximum payload; verify the maximum-payload scenario (maximum payload for a target time with NO_SOLUTION, and `drone.power.payload-impact`: hover power and time with and without the payload mass and its electrical draw)
 - [x] 3.5 Implement the return-to-home energy budget; verify the headwind and cannot-return scenarios
-- [ ] 3.6 Implement optional Peukert (off by default) and test-flight calibration (back-solve FM·η); verify the default-off scenario and a calibration fixture
+- [x] 3.6 Implement optional Peukert (off by default) and test-flight calibration (back-solve FM·η); verify the default-off scenario and a calibration fixture (the endurance tool applies Peukert only when an exponent is entered, labeled `HEURISTIC_PEUKERT`; `drone.power.calibrate-hover` back-solves FM·η from a measured hover, and the result fed back into hover power reproduces the measurement)
 
 ## 4. Operations reference
 

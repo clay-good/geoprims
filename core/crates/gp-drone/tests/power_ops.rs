@@ -408,3 +408,50 @@ fn vlos_invariants() {
         assert_eq!(num(&none, "result.vlos.value"), 1500.0);
     }
 }
+
+#[test]
+fn peukert_off_by_default() {
+    let r = call(
+        "drone.power.endurance",
+        r#"{"energy":"100 Wh","power":"150 W"}"#,
+    );
+    near(&r, "result.hover_time.value", 40.0, 1e-9);
+    assert!(r["result"].get("peukert_factor").is_none(), "{r}");
+    assert!(!warns(&r, "HEURISTIC_PEUKERT"));
+    // Entered, it is applied and labeled.
+    let r = call(
+        "drone.power.endurance",
+        r#"{"energy":"100 Wh","power":"150 W","peukert":1.05}"#,
+    );
+    near(
+        &r,
+        "result.peukert_factor",
+        (100.0_f64 / 150.0).powf(0.05),
+        1e-12,
+    );
+    assert!(warns(&r, "HEURISTIC_PEUKERT"));
+    // A rated time without an exponent is refused, not silently ignored.
+    let r = call(
+        "drone.power.endurance",
+        r#"{"energy":"100 Wh","power":"150 W","rated_time":"1 h"}"#,
+    );
+    assert_eq!(r["error"]["field"], "/rated_time", "{r}");
+}
+
+#[test]
+fn calibration_round_trips_through_hover_power() {
+    let r = call(
+        "drone.power.calibrate-hover",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","energy_used":"40 Wh","hover_time":"15 min"}"#,
+    );
+    near(&r, "result.measured_power.value", 160.0, 1e-9);
+    let fm = num(&r, "result.figure_of_merit");
+    // Fed back into the hover tool at the same efficiency, it predicts the measured power.
+    let h = call(
+        "drone.power.hover-power",
+        &format!(
+            r#"{{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","figure_of_merit":{fm}}}"#
+        ),
+    );
+    near(&h, "result.electrical_power.value", 160.0, 1e-9);
+}

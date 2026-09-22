@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c277173df08d29ab",
+    "hash": "e8e46f361b76cb9a",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -104,7 +104,7 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "9060ccd2b5700429",
+    "hash": "467095e118c6f028",
     "lastmod": "2026-09-22"
   },
   "/drone/links/": {
@@ -132,11 +132,11 @@
     "lastmod": "2026-09-22"
   },
   "/drone/power/": {
-    "hash": "229a7662193d92cb",
+    "hash": "78c9261910486762",
     "lastmod": "2026-09-22"
   },
   "/drone/power/battery-energy/": {
-    "hash": "7d6621b0a698d8ae",
+    "hash": "6754bde3e218e694",
     "lastmod": "2026-09-22"
   },
   "/drone/sensors/": {
@@ -456,7 +456,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "1d6d3f5816552903",
+    "hash": "71c2ea96bcaaf907",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -520,7 +520,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "a85dfda9abf29ee5",
+    "hash": "b99cee6e598587ff",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -604,7 +604,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "13711fddd2f163a8",
+    "hash": "4b634a1811fb11c2",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -704,7 +704,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "84edf68e83523243",
+    "hash": "551080178a1e0205",
     "lastmod": "2026-09-22"
   }
 }

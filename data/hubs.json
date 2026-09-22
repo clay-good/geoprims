@@ -569,6 +569,12 @@
           "tools": [
             "payload-impact"
           ]
+        },
+        {
+          "want": "tune the power estimate to my own aircraft",
+          "tools": [
+            "calibrate-hover"
+          ]
         }
       ],
       "guide": {

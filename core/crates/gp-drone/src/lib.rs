@@ -1176,6 +1176,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &ASPRS_ACCURACY,
     &power::BATTERY_ENERGY,
     &power::HOVER_POWER,
+    &power::CALIBRATE_HOVER,
     &power::ENDURANCE,
     &power::MAX_PAYLOAD,
     &power::PAYLOAD_IMPACT,

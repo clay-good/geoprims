@@ -234,6 +234,18 @@
           ]
         },
         {
+          "want": "find the airspeed and heading for a groundspeed I need",
+          "tools": [
+            "tas-from-groundspeed"
+          ]
+        },
+        {
+          "want": "see where a heading and airspeed will take me",
+          "tools": [
+            "course-from-heading"
+          ]
+        },
+        {
           "want": "find the headwind and crosswind on a runway",
           "tools": [
             "runway-components"

@@ -182,8 +182,10 @@
       "relatedTools": [
         "aviation.weather.metar-decode",
         "aviation.wind.best-runway",
+        "aviation.wind.course-from-heading",
         "aviation.wind.heading-groundspeed",
-        "aviation.wind.runway-components"
+        "aviation.wind.runway-components",
+        "aviation.wind.tas-from-groundspeed"
       ]
     },
     {
@@ -194,7 +196,9 @@
       "source": "faa-awh",
       "relatedTools": [
         "aviation.weather.taf-decode",
-        "aviation.wind.heading-groundspeed"
+        "aviation.wind.course-from-heading",
+        "aviation.wind.heading-groundspeed",
+        "aviation.wind.tas-from-groundspeed"
       ]
     },
     {

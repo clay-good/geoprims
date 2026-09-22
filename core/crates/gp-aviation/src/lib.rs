@@ -13,6 +13,7 @@ pub mod offcourse;
 pub mod performance;
 pub mod runway;
 pub mod table;
+pub mod triangle;
 pub mod weather;
 pub mod wind;
 
@@ -2231,6 +2232,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &table::TABLE,
     &offcourse::ONE_IN_SIXTY,
     &runway::BEST_RUNWAY,
+    &triangle::TAS_FROM_GROUNDSPEED,
+    &triangle::COURSE_FROM_HEADING,
 ];
 
 pub static REGISTRY: Registry = Registry {

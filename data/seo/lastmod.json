@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0bf979391da039a2",
+    "hash": "8e7b2820cf76b573",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
-    "hash": "11166898977c32c8",
+    "hash": "fd3a213023124941",
     "lastmod": "2026-09-22"
   },
   "/aviation/airspeed/": {
@@ -40,7 +40,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/ifr/": {
-    "hash": "d99a6875f98774d2",
+    "hash": "853ac33b073db244",
     "lastmod": "2026-09-22"
   },
   "/aviation/loading/": {
@@ -448,7 +448,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "1dd862b5be8ef802",
+    "hash": "2926bc9e388df657",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "a00e6a45cfbf30f7",
+    "hash": "4ae7c208a1a397e0",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "68163bf283d6db99",
+    "hash": "e7e45aefcd861b50",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -692,7 +692,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1c010c6701abf932",
+    "hash": "6b25bb1df7408d0b",
     "lastmod": "2026-09-22"
   }
 }

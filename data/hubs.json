@@ -157,6 +157,12 @@
           ]
         },
         {
+          "want": "find the fix on a radial at a distance, with the station's variation",
+          "tools": [
+            "radial-fix"
+          ]
+        },
+        {
           "want": "turn a DME reading into ground distance",
           "tools": [
             "dme-slant-range"

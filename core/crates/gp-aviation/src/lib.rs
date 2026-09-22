@@ -15,6 +15,7 @@ pub mod loading;
 pub mod offcourse;
 pub mod performance;
 pub mod qcodes;
+pub mod radial;
 pub mod range;
 pub mod runway;
 pub mod shift;
@@ -2249,6 +2250,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &humidity::HUMIDITY,
     &shift::WEIGHT_SHIFT,
     &shift::BALLAST,
+    &radial::RADIAL_FIX,
 ];
 
 pub static REGISTRY: Registry = Registry {

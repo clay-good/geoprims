@@ -1238,6 +1238,16 @@
       "relatedTools": [
         "aviation.performance.vdp"
       ]
+    },
+    {
+      "id": "wmm",
+      "term": "WMM",
+      "expansion": "World Magnetic Model",
+      "definition": "The model of the Earth's magnetic field used by charts and GPS units to give magnetic variation for a place and date. It is replaced every five years; WMM2025 runs to 2030.",
+      "source": "wmm",
+      "relatedTools": [
+        "aviation.ifr.radial-fix"
+      ]
     }
   ],
   "notAbbreviations": [

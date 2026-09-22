@@ -51,7 +51,9 @@ dependencies = [
 name = "gp-aviation"
 version = "0.1.0"
 dependencies = [
+ "geographiclib-rs",
  "gp-base",
+ "gp-geo",
  "libm",
  "serde_json",
 ]

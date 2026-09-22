@@ -1593,6 +1593,12 @@
           ]
         },
         {
+          "want": "check whether the sun's hotspot will show in my photos",
+          "tools": [
+            "hotspot"
+          ]
+        },
+        {
           "want": "find the sun's azimuth and elevation",
           "tools": [
             "position"

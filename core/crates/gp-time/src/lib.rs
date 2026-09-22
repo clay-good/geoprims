@@ -1228,6 +1228,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &solar::AVIATION_NIGHTS,
     &currency::NIGHT_CURRENCY,
     &solar::MAPPING_WINDOW,
+    &solar::HOTSPOT,
 ];
 
 pub static REGISTRY: Registry = Registry {

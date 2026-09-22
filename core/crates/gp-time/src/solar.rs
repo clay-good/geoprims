@@ -3,6 +3,8 @@
 //! window. Events are tied to the requested local date and shown in local
 //! time and Zulu, each dated.
 
+use gp_base::ErrorCode;
+use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
@@ -1289,4 +1291,282 @@ fn run_mapping(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ctx.out("max_elevation", deg(top.elevation + top.refraction)),
     ));
     Ok(Json::obj(out))
+}
+
+// ---------------------------------------------------------------- hotspot
+
+pub static HOTSPOT: ToolDef = ToolDef {
+    id: "time.sun.hotspot",
+    title: "Sun hotspot in a camera frame",
+    summary: "Whether the hotspot, the bright patch where the camera looks straight away from the sun, falls in a camera's frame for its heading and pitch at a place and time, and how far off it is.",
+    aliases: &[
+        "sun hotspot calculator",
+        "photogrammetry hotspot",
+        "antisolar point",
+        "drone hotspot check",
+    ],
+    keywords: &[
+        "hotspot",
+        "antisolar",
+        "sun",
+        "camera",
+        "drone mapping",
+        "glare",
+        "BRDF",
+    ],
+    inputs: &[
+        LAT,
+        LON,
+        text(
+            "time",
+            "Time",
+            "With Z or an offset, like 2026-06-21T12:00-06:00",
+        )
+        .required()
+        .core(),
+        Field::new(
+            "camera_heading",
+            "Camera heading",
+            "Where the camera points, from true north, like 90 deg; default 0",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .core()
+        .angle_range("unbounded"),
+        Field::new(
+            "camera_pitch",
+            "Camera pitch",
+            "From level, down negative, like -90 deg for straight down (the default)",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .core()
+        .angle_range("[-90,90]"),
+        Field::new(
+            "field_of_view",
+            "Diagonal field of view",
+            "Like 84 deg (the default, common for 1-inch drone cameras)",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("unbounded"),
+    ],
+    outputs: &[
+        Field::new(
+            "hotspot_angle",
+            "Hotspot off the look direction",
+            "Angle from where the camera points to the antisolar point",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("[0,180]"),
+        Field::new(
+            "in_frame",
+            "Hotspot in frame",
+            "yes when within half the diagonal field of view",
+            Kind::Text { max_len: 40 },
+        ),
+        Field::new(
+            "sun_elevation",
+            "Sun elevation",
+            "Apparent, with refraction",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "sun_azimuth",
+            "Sun azimuth",
+            "From true north",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("[0,360)"),
+        Field::new(
+            "antisolar_azimuth",
+            "Antisolar azimuth",
+            "Opposite the sun",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("[0,360)"),
+        Field::new(
+            "antisolar_elevation",
+            "Antisolar elevation",
+            "Minus the sun's elevation",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("[-90,90]"),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "HOTSPOT_IN_FRAME",
+        "SUN_BELOW_HORIZON",
+        "INPUT_NORMALIZED",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Sun azimuth and apparent elevation by the NREL SPA (standard atmosphere, sea level); the antisolar point is opposite the sun, at −elevation. The hotspot angle is the angle between the camera's look vector (heading, pitch) and the antisolar direction; it is in frame when within half the diagonal field of view",
+    accuracy: "Sun direction to about 0.0003°; the frame test treats the field of view as a cone around the look direction, so a hotspot near a frame corner is borderline",
+    references: &[NREL_SPA],
+    examples: &[Example {
+        id: "primary",
+        title: "A nadir camera at noon near the June solstice in Denver",
+        input: r#"{"lat":39.74,"lon":-104.99,"time":"2026-06-21T13:00-06:00","camera_pitch":"-90 deg"}"#,
+        source: "NREL SPA sun position; with the sun near 73° up, the antisolar point is 17° off nadir, inside an 84° field of view",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "time.sun.mapping-window",
+            reason: "alternative",
+        },
+        Related {
+            id: "time.sun.position",
+            reason: "parent",
+        },
+    ],
+    sentence: "The hotspot is {hotspot_angle} from where the camera points: in frame, {in_frame}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_hotspot,
+    ..ToolDef::BLANK
+};
+
+fn run_hotspot(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let t = ctx.text("time")?.expect("required");
+    let st = civil::parse_stamp(&t).map_err(|m| ToolError::invalid("/time", m))?;
+    if st.offset.is_none() {
+        return Err(ToolError::invalid(
+            "/time",
+            "Add Z for UTC or the UTC offset, like 2026-06-21T12:00-06:00.",
+        ));
+    }
+    let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let heading = ctx.quantity("camera_heading")?.map_or(0.0, |q| q.to(deg));
+    let pitch = ctx.quantity("camera_pitch")?.map_or(-90.0, |q| q.to(deg));
+    let fov = ctx.quantity("field_of_view")?.map_or(84.0, |q| q.to(deg));
+    if !(-90.0..=90.0).contains(&pitch) {
+        return Err(ToolError::invalid(
+            "/camera_pitch",
+            "Pitch is between -90° (straight down) and 90° (straight up).",
+        ));
+    }
+    if !(fov > 0.0 && fov < 180.0) {
+        return Err(ToolError::invalid(
+            "/field_of_view",
+            "The field of view is between 0° and 180°.",
+        ));
+    }
+    let (d, s) = crate::to_utc(st);
+    let jd_utc = jd(d, s.min(86_400.0) / 60.0);
+    let (y, mo, _) = civil::civil_from_days(d);
+    let p = crate::spa::position(
+        jd_utc,
+        crate::spa::delta_t(y as f64, f64::from(mo)),
+        crate::spa::Observer {
+            lat,
+            lon,
+            elevation: 0.0,
+            pressure: 1013.25,
+            temperature: 12.0,
+            atmos_refract: 0.5667,
+        },
+    );
+    let el = 90.0 - p.zenith;
+    let az = p.azimuth.rem_euclid(360.0);
+    let (anti_az, anti_el) = ((az + 180.0).rem_euclid(360.0), -el);
+    let v = |a: f64, e: f64| {
+        let (a, e) = (a.to_radians(), e.to_radians());
+        [a.sin() * e.cos(), a.cos() * e.cos(), e.sin()]
+    };
+    let (look, anti) = (v(heading, pitch), v(anti_az, anti_el));
+    let c = (look[0] * anti[0] + look[1] * anti[1] + look[2] * anti[2]).clamp(-1.0, 1.0);
+    let angle = libm::acos(c).to_degrees();
+    let visible = el > 0.0;
+    let inside = visible && angle <= fov / 2.0;
+    let fmt = ctx.options.format;
+    if !visible {
+        ctx.warnings.push(Warning::new(
+            "SUN_BELOW_HORIZON",
+            "The sun is below the horizon, so there is no hotspot.",
+        ));
+    } else if inside {
+        ctx.warnings.push(Warning::new(
+            "HOTSPOT_IN_FRAME",
+            format!(
+                "The hotspot is {}° from the look direction, inside the {}° field of view: expect a bright patch where the drone's own shadow falls, which can upset image matching. Fly earlier or later, or tilt the camera.",
+                display::number(angle, Precision::Decimals(1), fmt),
+                display::number(fov, Precision::Decimals(0), fmt)
+            ),
+        ));
+    }
+    if ctx.explaining() {
+        let n = move |x: f64, dp: u8| display::number(x, Precision::Decimals(dp), fmt);
+        ctx.step(
+            "Antisolar point",
+            "opposite the sun: azimuth + 180°, elevation × −1",
+            format!("sun at {}°, {}°", n(az, 2), n(el, 2)),
+            format!("{}°, {}°", n(anti_az, 2), n(anti_el, 2)),
+        );
+        ctx.step(
+            "Angle from the look direction",
+            "acos(look · antisolar)",
+            format!("camera {}°, {}°", n(heading, 1), n(pitch, 1)),
+            display::quantity(angle, "deg", Precision::Decimals(1), fmt),
+        );
+    }
+    let q = |v: f64| Q {
+        value: v,
+        unit: deg,
+    };
+    Ok(Json::obj(vec![
+        ("hotspot_angle", ctx.out("hotspot_angle", q(angle))),
+        (
+            "in_frame",
+            Json::str(if !visible {
+                "no, the sun is down"
+            } else if inside {
+                "yes"
+            } else {
+                "no"
+            }),
+        ),
+        ("sun_elevation", ctx.out("sun_elevation", q(el))),
+        ("sun_azimuth", ctx.out("sun_azimuth", q(az))),
+        (
+            "antisolar_azimuth",
+            ctx.out("antisolar_azimuth", q(anti_az)),
+        ),
+        (
+            "antisolar_elevation",
+            ctx.out("antisolar_elevation", q(anti_el)),
+        ),
+    ]))
 }

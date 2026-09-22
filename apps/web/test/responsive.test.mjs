@@ -121,3 +121,16 @@ test('the gate bites', () => {
   assert.ok(px('20rem') > CONTENT, 'a 320 px column would overflow a 320 px screen');
   assert.equal(px('auto'), null);
 });
+
+test('no table cell may break mid-word', () => {
+  // Letting cells wrap anywhere shrinks a column to one letter a line; the
+  // route-legs table read "K / A / S / E" before this was caught. Tables
+  // scroll inside their own box instead.
+  const offending = rules.filter(
+    ({ selector, body }) =>
+      /(^|[\s,])(td|th)\b/.test(selector) && /overflow-wrap:\s*anywhere|word-break:\s*break-all/.test(body),
+  );
+  assert.deepEqual(offending.map((r) => r.selector), []);
+  const cells = rules.find((r) => r.selector === 'main td, main th');
+  assert.ok(cells && /overflow-wrap:\s*normal/.test(cells.body), 'table cells do not reset the page-wide word breaking');
+});

@@ -1,11 +1,32 @@
 {
-  "queries": 861,
+  "queries": 869,
   "top1": 97.7,
   "top3": 99.9,
-  "prefillPrecision": 100,
-  "prefillRecall": 39.3,
+  "prefillPrecision": 97.5,
+  "prefillRecall": 38.3,
   "misses": [
     "100 mph drone with 90 mph 15 mph"
   ],
-  "wrongFills": []
+  "wrongFills": [
+    "Where two courses cross with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat1 = \"43.66 deg\"",
+    "Where two courses cross with 42.36 -71 45 deg 43.66 -70.26 135 deg: lon1 = \"-70.26 deg\"",
+    "Where two courses cross with 42.36 -71 45 deg 43.66 -70.26 135 deg: course1 = \"135 deg\"",
+    "Where two courses cross with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat2 = \"45 deg\"",
+    "course intersection with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat1 = \"43.66 deg\"",
+    "course intersection with 42.36 -71 45 deg 43.66 -70.26 135 deg: lon1 = \"-70.26 deg\"",
+    "course intersection with 42.36 -71 45 deg 43.66 -70.26 135 deg: course1 = \"135 deg\"",
+    "course intersection with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat2 = \"45 deg\"",
+    "intersection of two bearings with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat1 = \"43.66 deg\"",
+    "intersection of two bearings with 42.36 -71 45 deg 43.66 -70.26 135 deg: lon1 = \"-70.26 deg\"",
+    "intersection of two bearings with 42.36 -71 45 deg 43.66 -70.26 135 deg: course1 = \"135 deg\"",
+    "intersection of two bearings with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat2 = \"45 deg\"",
+    "two bearing fix with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat1 = \"43.66 deg\"",
+    "two bearing fix with 42.36 -71 45 deg 43.66 -70.26 135 deg: lon1 = \"-70.26 deg\"",
+    "two bearing fix with 42.36 -71 45 deg 43.66 -70.26 135 deg: course1 = \"135 deg\"",
+    "two bearing fix with 42.36 -71 45 deg 43.66 -70.26 135 deg: lat2 = \"45 deg\"",
+    "Intercept a moving target with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\"",
+    "intercept course with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\"",
+    "intercept calculator with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\"",
+    "pursuit course with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\""
+  ]
 }

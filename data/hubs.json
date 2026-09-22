@@ -1059,6 +1059,18 @@
       "summary": "Routes, legs, and the geometry around them.",
       "tasks": [
         {
+          "want": "find where two courses cross",
+          "tools": [
+            "course-intersection"
+          ]
+        },
+        {
+          "want": "work out the course to intercept a moving target",
+          "tools": [
+            "intercept"
+          ]
+        },
+        {
           "want": "total up a route's legs",
           "tools": [
             "legs",

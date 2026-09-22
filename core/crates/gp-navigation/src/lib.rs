@@ -2,6 +2,7 @@
 //! (2013) is the default; Vincenty and haversine are comparison tools that
 //! always report their difference from Karney.
 
+pub mod intersect;
 pub mod los;
 pub mod rhumb;
 pub mod rings;
@@ -971,6 +972,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &los::VISIBILITY,
     &los::DIP,
     &los::FRESNEL,
+    &intersect::COURSE_INTERSECTION,
+    &intersect::INTERCEPT,
 ];
 
 pub static REGISTRY: Registry = Registry {

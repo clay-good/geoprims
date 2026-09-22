@@ -5,6 +5,7 @@
 pub mod airspeed;
 pub mod aloft;
 pub mod atmosphere;
+pub mod dme;
 pub mod ifr;
 pub mod loading;
 pub mod performance;
@@ -2168,6 +2169,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &ifr::HOLD_SPEED,
     &aloft::UV,
     &aloft::ALOFT,
+    &dme::SLANT,
+    &dme::TIME_TO_STATION,
+    &dme::ARC_LEAD,
 ];
 
 pub static REGISTRY: Registry = Registry {

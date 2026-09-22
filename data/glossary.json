@@ -1107,6 +1107,17 @@
       "relatedTools": [
         "drone.mission.export"
       ]
+    },
+    {
+      "id": "dme",
+      "term": "DME",
+      "expansion": "distance measuring equipment",
+      "definition": "A radio aid that shows the straight-line distance from the aircraft to a ground station, in nautical miles. Up high and close in, that slant distance is longer than the distance over the ground.",
+      "source": "faa-ifh",
+      "relatedTools": [
+        "aviation.ifr.dme-arc-lead",
+        "aviation.ifr.dme-slant-range"
+      ]
     }
   ],
   "notAbbreviations": [

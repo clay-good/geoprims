@@ -26,7 +26,7 @@ pub const IFH: Reference = Reference {
     year: 2012,
     edition: "FAA-H-8083-15B",
     locator: "Chapter 10 (holding: wind drift correction, triple the inbound drift outbound, and outbound leg timing)",
-    url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_flying_handbook",
+    url: "https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/FAA-H-8083-15B.pdf",
 };
 
 const fn qty(

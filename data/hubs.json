@@ -100,7 +100,7 @@
       ]
     },
     "aviation.ifr": {
-      "summary": "Holding: the entry, the speed limit, and the wind correction.",
+      "summary": "Holding, DME, and station geometry for instrument flying.",
       "tasks": [
         {
           "want": "choose a holding entry",
@@ -118,6 +118,24 @@
           "want": "correct a hold for wind and time the legs",
           "tools": [
             "hold-wind-timing"
+          ]
+        },
+        {
+          "want": "turn a DME reading into ground distance",
+          "tools": [
+            "dme-slant-range"
+          ]
+        },
+        {
+          "want": "time a bearing change to find the station",
+          "tools": [
+            "time-to-station"
+          ]
+        },
+        {
+          "want": "find the lead points for a DME arc",
+          "tools": [
+            "dme-arc-lead"
           ]
         }
       ]

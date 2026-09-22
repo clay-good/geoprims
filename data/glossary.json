@@ -223,6 +223,7 @@
       "definition": "The ground width one image pixel covers, such as 2 cm per pixel. A smaller GSD shows more detail.",
       "source": "wolf-photogrammetry",
       "relatedTools": [
+        "drone.mission.facade",
         "drone.photogrammetry.altitude-for-gsd",
         "drone.photogrammetry.gsd",
         "drone.photogrammetry.motion-blur",

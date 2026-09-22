@@ -248,6 +248,12 @@
           "tools": [
             "orbit"
           ]
+        },
+        {
+          "want": "photograph a building face",
+          "tools": [
+            "facade"
+          ]
         }
       ]
     },

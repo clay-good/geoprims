@@ -222,3 +222,27 @@ fn hull_and_width() {
             || (mission::min_width_angle(&pts).abs() - std::f64::consts::PI).abs() < 1e-12
     );
 }
+
+#[test]
+fn facade_gsd_uses_the_standoff() {
+    let r = call(
+        "drone.mission.facade",
+        &serde_json::json!({"facade":[{"lat":40.4406,"lon":-80.0020},{"lat":40.4406,"lon":-80.001411}],
+            "standoff":"30 m","top_height":"25 m","sensor_width":"13.2 mm","focal_length":"8.8 mm",
+            "image_width":5472,"sensor_height":"8.8 mm"}),
+    );
+    let gsd = r["result"]["gsd"]["value"].as_f64().unwrap();
+    assert!(
+        (gsd - 13.2 / 5472.0 * 30.0 / 8.8 * 100.0).abs() < 1e-9,
+        "{gsd}"
+    );
+    // A 45 m photo height covers a 25 m wall in one pass; passes alternate direction.
+    assert_eq!(r["result"]["passes"], 1.0);
+    let wps = r["result"]["waypoints"].as_array().unwrap();
+    assert_eq!(wps.len() as f64, r["result"]["photos"].as_f64().unwrap());
+    // Flying on the right of a wall that runs east puts the drone south, facing north.
+    let lat = wps[0]["lat"]["value"].as_f64().unwrap();
+    assert!(lat < 40.4406);
+    let hd = wps[0]["heading"]["value"].as_f64().unwrap();
+    assert!(hd.min(360.0 - hd) < 0.01, "{hd}");
+}

@@ -400,6 +400,62 @@ def terrain_vectors():
     return out
 
 
+FAC_SRC = "Coverage with the standoff as the object distance (Wolf, Dewitt & Wilkinson 2014, ch. 6), on the equator where the geodesic is closed form, evaluated in Python (tools/vectors/gen_drone.py)"
+
+
+def facade_vectors():
+    """A facade on the equator running east: its length is a·Δλ, and a station
+    D to the right (south) sits at latitude −D / (a(1 − e²)) to well under 1e-12."""
+    a, f = 6378137.0, 1 / 298.257223563
+    e2 = f * (2 - f)
+    out = []
+    cases = [(CAMS[0], 50, 30, 25, 0, 75, 60), (CAMS[0], 120, 15, 40, 2, 80, 70), (CAMS[1], 30, 20, 10, 0, 70, 60),
+             (CAMS[2], 80, 10, 30, 5, 75, 65), (CAMS[3], 200, 40, 60, 0, 80, 80), (CAMS[4], 60, 25, 20, 3, 60, 50),
+             (CAMS[0], 10, 30, 8, 0, 75, 60), (CAMS[1], 150, 50, 90, 10, 85, 75), (CAMS[2], 40, 8, 12, 1, 70, 70),
+             (CAMS[4], 90, 35, 45, 0, 75, 60)]
+
+    def stations(span, foot, o):
+        if span <= foot:
+            return [span / 2]
+        n = math.ceil((span - foot) / (foot * (1 - o)) - 1e-9) + 1
+        return [foot / 2 + k * (span - foot) / (n - 1) for k in range(n)]
+
+    for c, length, d, top, bottom, oh, ov in cases:
+        sw, sh, fl, iw, ih = c
+        w, h = sw * d / fl, sh * d / fl
+        cols, rows = stations(length, w, oh / 100), stations(top - bottom, h, ov / 100)
+        inp = {"facade": [{"lat": 0, "lon": 0}, {"lat": 0, "lon": math.degrees(length / a)}], "standoff": f"{d} m", "top_height": f"{top} m",
+               "sensor_width": f"{sw} mm", "focal_length": f"{fl} mm", "image_width": iw, "sensor_height": f"{sh} mm",
+               "horizontal_overlap": oh, "vertical_overlap": ov}
+        if bottom:
+            inp["bottom_height"] = f"{bottom} m"
+        e = {"result.gsd.value": 100 * sw / iw * d / fl, "result.footprint_width.value": w, "result.footprint_height.value": h,
+             "result.passes": len(rows), "result.photos_per_pass": len(cols), "result.photos": len(rows) * len(cols),
+             "result.photo_spacing.value": cols[1] - cols[0] if len(cols) > 1 else 0.0,
+             "result.pass_spacing.value": rows[1] - rows[0] if len(rows) > 1 else 0.0,
+             "result.waypoints.0.lat.value": -math.degrees(d / (a * (1 - e2))),
+             "result.waypoints.0.lon.value": math.degrees(cols[0] / a),
+             "result.waypoints.0.height.value": bottom + rows[0], "result.waypoints.0.heading.value": 0.0}
+        v = fvec(len(out) + 1, inp, e, FAC_SRC, "4th edition (2014)")
+        v["tolerance"]["result.facade_length.value"] = {"rel": 1e-9, "abs": 1e-6}
+        v["expect"]["result.facade_length.value"] = float(length)
+        out.append(v)
+    # The spec scenario: 30 m standoff, 1-inch camera, GSD = 13.2 / 5472 × 30 / 8.8 mm.
+    out.append(fvec(len(out) + 1, {"facade": [{"lat": 40.4406, "lon": -80.002}, {"lat": 40.4406, "lon": -80.001411}], "standoff": "30 m", "top_height": "25 m",
+                                   "sensor_width": "13.2 mm", "focal_length": "8.8 mm", "image_width": 5472, "sensor_height": "8.8 mm"},
+                    {"result.gsd.value": 100 * 13.2 / 5472 * 30 / 8.8}, SPEC, "2026"))
+    out.append(fvec(len(out) + 1, {"facade": [{"lat": 0, "lon": 0}, {"lat": 0, "lon": 0.001}], "standoff": "30 m", "top_height": "0 m",
+                                   "sensor_width": "13.2 mm", "focal_length": "8.8 mm", "image_width": 5472, "sensor_height": "8.8 mm"},
+                    {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    out.append(fvec(len(out) + 1, {"facade": [{"lat": 0, "lon": 0}, {"lat": 0, "lon": 0.5}], "standoff": "1 m", "top_height": "300 m",
+                                   "sensor_width": "13.2 mm", "focal_length": "8.8 mm", "image_width": 5472, "sensor_height": "8.8 mm"},
+                    {"ok": False, "error.code": "LIMIT_EXCEEDED"}, SPEC, "2026"))
+    out.append(fvec(len(out) + 1, {"facade": [{"lat": 0, "lon": 0}, {"lat": 0, "lon": 0.001}], "standoff": "30 m", "top_height": "25 m",
+                                   "sensor_width": "13.2 mm", "focal_length": "8.8 mm", "image_width": 5472},
+                    {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
@@ -412,7 +468,8 @@ def main():
              "drone.mission.survey-grid": grid_vectors("grid"), "drone.photogrammetry.image-count": grid_vectors("count"),
              "drone.mission.corridor": corridor_vectors(), "drone.mission.orbit": orbit_vectors(),
              "drone.photogrammetry.oblique-gsd": oblique_vectors(),
-             "drone.photogrammetry.terrain-overlap": terrain_vectors()}
+             "drone.photogrammetry.terrain-overlap": terrain_vectors(),
+             "drone.mission.facade": facade_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 

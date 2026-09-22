@@ -28,7 +28,7 @@ const PIX4D: Reference = Reference {
     locator: "Chapter 18 (flight planning: flight lines, photo spacing, number of photos)",
     url: "https://www.mheducation.com/highered/product/elements-photogrammetry-applications-gis-wolf-dewitt/9780071761123.html",
 };
-const KARNEY: Reference = Reference {
+pub(crate) const KARNEY: Reference = Reference {
     title: "Algorithms for geodesics",
     issuer: "Karney, C. F. F., Journal of Geodesy",
     year: 2013,

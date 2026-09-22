@@ -254,3 +254,14 @@ fn hill_reduces_overlap() {
     let msg = r["meta"]["warnings"][1]["message"].as_str().unwrap();
     assert!(msg.starts_with("Front overlap falls to 58.3%"), "{msg}");
 }
+
+#[test]
+fn a_vanishing_focal_length_is_refused_not_a_crash() {
+    // Found by the fuzzer: a 1e-12 mm focal length trapped the module.
+    let r = call(
+        "drone.photogrammetry.oblique-gsd",
+        r#"{"focal_length":1e-12,"height":"100 m","image_height":3648,"image_width":5472,"pitch":"45 deg","sensor_width":"13.2 mm"}"#,
+    );
+    assert_eq!(r["ok"], false, "{r}");
+    assert_ne!(r["error"]["code"], "INTERNAL", "{r}");
+}

@@ -272,6 +272,14 @@ fn run_oblique(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "The tilt is from 0° (straight down) up to, not including, 90°.",
         ));
     }
+    // A lens wider than 170° is not a mapping camera, and its pixels can
+    // straddle the horizon even at the image center.
+    if libm::atan(sw.max(sh) / 2.0 / f).to_degrees() > 85.0 {
+        return Err(ToolError::invalid(
+            "/focal_length",
+            "The focal length is too short for this sensor: the view would be wider than 170°. Check the focal length, like 8.8 mm.",
+        ));
+    }
     let t = th.to_radians();
     let p = sw / iw; // pixel pitch
     // Axis, image-up (toward the far edge), and across, in (ahead, right, down).
@@ -294,8 +302,17 @@ fn run_oblique(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (c_across, c_along) = row_gsd(0.0);
     let (_, near_along) = row_gsd(-half_h + p / 2.0);
     let (_, far_along) = row_gsd(half_h - p / 2.0);
-    let near = ground(0.0, -half_h)
-        .expect("the near edge is below the horizon when the tilt is under 90°");
+    let beyond = || {
+        ToolError::invalid(
+            "/pitch",
+            "The center of the image is at or above the horizon: tilt the camera further down.",
+        )
+    };
+    let (Some(c_across), Some(c_along), Some(near_along), Some(near)) =
+        (c_across, c_along, near_along, ground(0.0, -half_h))
+    else {
+        return Err(beyond());
+    };
     let far = ground(0.0, half_h);
     let cm = unit(QT::Length, "cm");
     let q = |v: f64| Q { value: v, unit: m };
@@ -315,18 +332,12 @@ fn run_oblique(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let mut out = vec![
-        (
-            "gsd_center",
-            ctx.emit("gsd_center", q(c_across.expect("center")), cm),
-        ),
+        ("gsd_center", ctx.emit("gsd_center", q(c_across), cm)),
         (
             "gsd_center_along",
-            ctx.emit("gsd_center_along", q(c_along.expect("center")), cm),
+            ctx.emit("gsd_center_along", q(c_along), cm),
         ),
-        (
-            "gsd_near",
-            ctx.emit("gsd_near", q(near_along.expect("near edge")), cm),
-        ),
+        ("gsd_near", ctx.emit("gsd_near", q(near_along), cm)),
         ("gsd_nadir", ctx.emit("gsd_nadir", q(p * h / f), cm)),
         ("near_distance", ctx.out("near_distance", q(near.0))),
     ];

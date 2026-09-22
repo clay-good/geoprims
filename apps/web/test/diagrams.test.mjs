@@ -107,3 +107,13 @@ test('profiles, the traverse sketch, and the airspeed dial draw from core values
   assert.match(g.desc, /true airspeed 288\.6/);
   assert.equal(diagram('aviation.airspeed.cas-to-tas', aa, { ok: true, result: { cas: { value: 1, unit: 'kt' } } }), null);
 });
+
+test('schematics say so, and units with digits parse (ft2)', async () => {
+  const { DIAGRAM_TOOLS: all } = await import('../src/lib/diagrams.js');
+  for (const id of ['aviation.atmosphere.isa', 'aviation.performance.climb-gradient', 'navigation.los.horizon', 'navigation.los.visibility', 'navigation.los.fresnel', 'survey.earthwork.average-end-area', 'survey.earthwork.prismoidal']) {
+    assert.ok(all.includes(id), `${id}: no diagram`);
+  }
+  assert.equal(measure('120 ft2', { ft2: 2 }, 'ft2'), 240);
+  assert.equal(measure('10 m/s', { 'm/s': 1 }, 'm/s'), 10);
+  assert.equal(measure('12', { kt: 3 }, 'kt'), 36);
+});

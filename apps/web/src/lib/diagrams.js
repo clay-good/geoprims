@@ -10,9 +10,10 @@ const R = Math.PI / 180;
 /** Speeds and lengths in base units (m/s, m) from "120 kt", "10 m/s", or a bare number in `unit`. */
 const SPEED = { kt: 1852 / 3600, kts: 1852 / 3600, knots: 1852 / 3600, mph: 0.44704, 'km/h': 1 / 3.6, kph: 1 / 3.6, 'm/s': 1, 'ft/s': 0.3048 };
 const LENGTH = { m: 1, km: 1000, nm: 1852, ft: 0.3048, mi: 1609.344, sm: 1609.344 };
+const AREA = { m2: 1, ft2: 0.09290304, yd2: 0.83612736, ftus2: 0.09290341161 };
 export function measure(v, table, unit) {
   if (typeof v === 'number') return v * table[unit];
-  const m = /^\s*([-+]?[\d.]+(?:e[-+]?\d+)?)\s*([a-z/]*)\s*$/i.exec(String(v ?? ''));
+  const m = /^\s*([-+]?[\d.]+(?:e[-+]?\d+)?)\s*([a-z/][a-z0-9/]*)?\s*$/i.exec(String(v ?? ''));
   if (!m) return null;
   const k = table[(m[2] || unit).toLowerCase()];
   return k ? Number(m[1]) * k : null;
@@ -365,6 +366,140 @@ function airspeedGauge(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** ISA temperature profile: the standard lapse to the tropopause, then isothermal, with this altitude marked. */
+function isaProfile(args, result) {
+  const t = val(result, 'temperature');
+  const hFt = val(result, 'geopotential_altitude');
+  const unit = result.result.geopotential_altitude?.unit;
+  if (!Number.isFinite(t) || !Number.isFinite(hFt)) return null;
+  const km = unit === 'ft' ? (hFt * 0.3048) / 1000 : unit === 'm' ? hFt / 1000 : hFt;
+  // The standard's two lowest layers: +15 °C at sea level, -6.5 °C/km to 11 km, then -56.5 °C to 20 km.
+  const std = [[15, 0], [-56.5, 11], [-56.5, 20]];
+  const X = (c) => 40 + ((c + 70) / 100) * 240;
+  const Y = (k) => 200 - (Math.min(k, 20) / 20) * 170;
+  const path = std.map(([c, k], i) => `${i ? 'L' : 'M'}${f1(X(c))} ${f1(Y(k))}`).join('');
+  const inRange = km >= 0 && km <= 20;
+  const body = [
+    line('dg-grid', [40, 200], [280, 200]),
+    line('dg-grid', [X(0), 30], [X(0), 200]),
+    text('dg-muted-text', X(0) + 4, 42, '0 °C'),
+    `<line class="dg-grid dg-dash" x1="40" y1="${f1(Y(11))}" x2="280" y2="${f1(Y(11))}"/>`,
+    text('dg-muted-text', 278, Y(11) - 5, 'Tropopause, 11 km', 'end'),
+    `<path class="dg-muted" d="${path}"/>`,
+    inRange ? `${line('dg-grid', [40, Y(km)], [X(t), Y(km)])}${dot(X(t), Y(km))}${text('dg-label', X(t) + 10, Y(km) + 4, `${disp(result, 'temperature')} at ${disp(result, 'geopotential_altitude')}`)}` : '',
+    text('dg-muted-text', 40, 216, 'Temperature →'),
+    text('dg-muted-text', 44, 26, 'Altitude ↑'),
+  ].join('');
+  const title = `Standard atmosphere: ${disp(result, 'temperature')} at ${disp(result, 'geopotential_altitude')}, on the standard temperature profile (${result.result.layer}).`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Climb gradient: the rise over one nautical mile, the angle, and the vertical speed. */
+function climbTriangle(args, result) {
+  if (!Number.isFinite(val(result, 'gradient'))) return null;
+  const [a, b, c] = [[50, 190], [270, 190], [270, 80]];
+  const body = [
+    line('dg-muted', a, b),
+    line('dg-muted dg-dash', b, c),
+    line('dg-casing', a, c), line('dg-accent', a, c),
+    dot(...a), dot(...c),
+    text('dg-label', 160, 210, '1 NM', 'middle'),
+    text('dg-label', 262, 140, disp(result, 'gradient'), 'end'),
+    text('dg-muted-text', 96, 182, disp(result, 'angle')),
+    text('dg-muted-text', 50, 60, `${disp(result, 'vertical_speed')} · ${disp(result, 'gradient_percent')}`),
+  ].join('');
+  const title = `Climb of ${disp(result, 'gradient')} (${disp(result, 'gradient_percent')}, ${disp(result, 'angle')}), ${disp(result, 'vertical_speed')} at this groundspeed. Not to scale vertically.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** The earth's curve as an arc across the drawing, and a height above it at x. */
+const EARTH = { cx: 160, cy: 760, r: 600 };
+const onEarth = (x) => [x, EARTH.cy - Math.sqrt(EARTH.r ** 2 - (x - EARTH.cx) ** 2)];
+const earthArc = () => { const [a, b] = [onEarth(10), onEarth(310)]; return `<path class="dg-grid" d="M${f1(a[0])} ${f1(a[1])}A${EARTH.r} ${EARTH.r} 0 0 1 ${f1(b[0])} ${f1(b[1])}"/>`; };
+
+/** Distance to the horizon: a line from the eye, tangent to the curve. */
+function horizonSketch(args, result) {
+  if (!Number.isFinite(val(result, 'optical'))) return null;
+  const g = onEarth(60);
+  const eye = [60, g[1] - 60];
+  const t = onEarth(240);
+  const body = [
+    earthArc(),
+    line('dg-muted', g, eye),
+    line('dg-casing', eye, t), line('dg-accent', eye, t),
+    dot(...eye), dot(t[0], t[1], 'dg-dot-now'),
+    text('dg-muted-text', eye[0] - 6, eye[1] + 30, args.height ?? '', 'end'),
+    text('dg-label', 160, 40, `${disp(result, 'optical')} to the horizon, with refraction`, 'middle'),
+    text('dg-muted-text', 160, 226, `Geometric ${disp(result, 'geometric')} · radio ${disp(result, 'radio')}`, 'middle'),
+  ].join('');
+  const title = `Horizon: ${disp(result, 'optical')} away with standard refraction, ${disp(result, 'geometric')} geometrically. Schematic, not to scale.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Line of sight: observer and target over the bulge of the earth between them. */
+function sightLine(args, result) {
+  const visible = result.result.visible;
+  if (!visible) return null;
+  const [o, t] = [onEarth(40), onEarth(280)];
+  const [eye, top] = [[40, o[1] - 24], [280, t[1] - 90]];
+  const hidden = val(result, 'hidden_height');
+  const body = [
+    earthArc(),
+    line('dg-muted', o, eye), line('dg-muted', t, top),
+    line('dg-casing', eye, top), line(visible === 'yes' ? 'dg-accent' : 'dg-muted dg-dash', eye, top),
+    dot(...eye), dot(...top),
+    text('dg-muted-text', eye[0] + 8, eye[1] + 18, 'Observer'),
+    text('dg-muted-text', top[0] - 6, top[1] - 8, 'Target', 'end'),
+    Number.isFinite(hidden) && hidden > 0 ? `<line class="dg-muted dg-dash" x1="${top[0] - 10}" y1="${f1(t[1])}" x2="${top[0] - 10}" y2="${f1(t[1] - 40)}"/>${text('dg-muted-text', top[0] - 16, t[1] - 20, `${disp(result, 'hidden_height')} hidden`, 'end')}` : '',
+    text('dg-label', 160, 226, visible === 'yes' ? `In sight · ${disp(result, 'midpoint_clearance')} clear at midpoint` : 'Below the horizon', 'middle'),
+  ].join('');
+  const title = `Line of sight: ${visible === 'yes' ? 'the target is in sight' : 'the target is hidden'}; the lowest ${disp(result, 'hidden_height')} of it is below the horizon. Schematic, not to scale.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Fresnel zone: the first zone's ellipse between two antennas, with the clearance it needs. */
+function fresnelZone(args, result) {
+  if (!Number.isFinite(val(result, 'fresnel_radius'))) return null;
+  const [a, b] = [[40, 90], [280, 90]];
+  const ry = 44;
+  const body = [
+    earthArc(),
+    `<ellipse class="dg-muted" cx="160" cy="90" rx="120" ry="${ry}"/>`,
+    `<ellipse class="dg-grid dg-dash" cx="160" cy="90" rx="120" ry="${f1(ry * 0.6)}"/>`,
+    line('dg-casing', a, b), line('dg-accent', a, b),
+    dot(...a), dot(...b),
+    line('dg-muted', [160, 90], [160, 90 + ry]),
+    text('dg-label', 166, 90 + ry / 2 + 4, `${disp(result, 'fresnel_radius')} radius`),
+    text('dg-muted-text', 160, 30, `Keep ${disp(result, 'required_clearance')} clear below the path`, 'middle'),
+    text('dg-muted-text', 160, 226, `60% of the zone ${disp(result, 'clearance_60')} · earth bulge ${disp(result, 'earth_bulge')}`, 'middle'),
+  ].join('');
+  const title = `First Fresnel zone: ${disp(result, 'fresnel_radius')} radius at midpath; keep ${disp(result, 'required_clearance')} clear, 60% of the zone plus ${disp(result, 'earth_bulge')} of earth bulge. Schematic, not to scale.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Earthwork: two end sections a length apart, sized by their areas, and the volume between. */
+function endAreas(args, result) {
+  const [a1, a2] = [measure(args.area1, AREA, 'ft2'), measure(args.area2, AREA, 'ft2')];
+  if (!Number.isFinite(a1) || !Number.isFinite(a2) || a1 <= 0 || a2 <= 0) return null;
+  const k = 70 / Math.sqrt(Math.max(a1, a2));
+  const [s1, s2] = [Math.sqrt(a1) * k, Math.sqrt(a2) * k];
+  // Trapezoid sections, like a road cut: the top wider than the base.
+  const section = (x, y, w) => [[x - w * 0.35, y], [x + w * 0.35, y], [x + w * 0.6, y - w * 0.7], [x - w * 0.6, y - w * 0.7]];
+  const p1 = section(90, 170, s1);
+  const p2 = section(230, 130, s2);
+  const poly = (p, cls) => `<polygon class="${cls}" points="${p.map((q) => q.map(f1).join(',')).join(' ')}"/>`;
+  const body = [
+    ...p1.map((q, i) => line('dg-grid', q, p2[i])),
+    poly(p1, 'dg-muted'), poly(p2, 'dg-accent'),
+    text('dg-muted-text', 90, 188, args.area1 ?? '', 'middle'),
+    text('dg-muted-text', 230, 148, args.area2 ?? '', 'middle'),
+    text('dg-muted-text', 160, 196, args.length ?? '', 'middle'),
+    text('dg-label', 160, 226, `Volume ${disp(result, 'volume')}`, 'middle'),
+  ].join('');
+  const title = `Earthwork between end areas of ${args.area1} and ${args.area2}, ${args.length} apart: ${disp(result, 'volume')}. Schematic.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -377,6 +512,13 @@ const DIAGRAMS = {
   'survey.land.deed-plot': traverseSketch,
   'aviation.airspeed.cas-to-tas': airspeedGauge,
   'aviation.airspeed.tas-to-cas': airspeedGauge,
+  'aviation.atmosphere.isa': isaProfile,
+  'aviation.performance.climb-gradient': climbTriangle,
+  'navigation.los.horizon': horizonSketch,
+  'navigation.los.visibility': sightLine,
+  'navigation.los.fresnel': fresnelZone,
+  'survey.earthwork.average-end-area': endAreas,
+  'survey.earthwork.prismoidal': endAreas,
 };
 
 /**

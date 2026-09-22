@@ -208,6 +208,14 @@
       ]
     },
     {
+      "id": "dem",
+      "term": "DEM",
+      "expansion": "digital elevation model",
+      "definition": "A grid of elevations. A surface model includes buildings and canopy; a terrain model is the ground beneath them.",
+      "source": "copernicus-dem",
+      "relatedTools": []
+    },
+    {
       "id": "dlos",
       "term": "DLOS",
       "expansion": "detection line of sight",
@@ -1349,6 +1357,22 @@
         "indexing.tile.bounds",
         "indexing.tile.from-point"
       ]
+    },
+    {
+      "id": "tpi",
+      "term": "TPI",
+      "expansion": "topographic position index",
+      "definition": "A cell's elevation less the mean of its neighbours: positive on a ridge or summit, negative in a valley or hollow.",
+      "source": "wilson-2007",
+      "relatedTools": []
+    },
+    {
+      "id": "tri",
+      "term": "TRI",
+      "expansion": "terrain ruggedness index",
+      "definition": "The mean absolute difference in elevation between a cell and its eight neighbours: how broken the ground is around it.",
+      "source": "riley-1999",
+      "relatedTools": []
     },
     {
       "id": "ts",

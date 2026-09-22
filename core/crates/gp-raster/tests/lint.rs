@@ -39,7 +39,13 @@ fn catalog_lint_and_registry() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let errs = manifest::lint(TOOLS, &taxonomy, &[]);
+    // Tools in other modules that these point at; the lint cannot see them
+    // from here, as each crate lints only its own registry.
+    let known = [
+        "survey.earthwork.profile-grades",
+        "navigation.los.visibility",
+    ];
+    let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));
     let codes: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {

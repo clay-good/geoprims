@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "7ffef5021455694e",
+    "hash": "ada658357408001b",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -468,7 +468,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "28e6afe693ef0875",
+    "hash": "b79e7ff25cbe2d7d",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -536,7 +536,7 @@
     "lastmod": "2026-09-22"
   },
   "/raster/": {
-    "hash": "8af72b03aac8d9ee",
+    "hash": "387b1ead5f7e0816",
     "lastmod": "2026-09-22"
   },
   "/raster/index/": {
@@ -547,8 +547,12 @@
     "hash": "5d389ce9acfee50d",
     "lastmod": "2026-09-22"
   },
+  "/raster/terrain/": {
+    "hash": "8283db24469edc52",
+    "lastmod": "2026-09-22"
+  },
   "/sources/": {
-    "hash": "845e07eb7bffbb92",
+    "hash": "ff6a7262d1ea118f",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -632,7 +636,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "aca342a7fd1dccc3",
+    "hash": "f69ccb43ec9dd63d",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -732,7 +736,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e010f075a929f252",
+    "hash": "167a2baddf35584b",
     "lastmod": "2026-09-22"
   }
 }

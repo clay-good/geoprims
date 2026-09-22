@@ -1346,6 +1346,23 @@
         }
       ]
     },
+    "raster.terrain": {
+      "summary": "What a digital elevation model says about a cell: how steep it is, which way it faces, and how broken the ground around it is.",
+      "tasks": [
+        {
+          "want": "find the slope, aspect, and hillshade of a cell",
+          "tools": [
+            "slope-aspect"
+          ]
+        },
+        {
+          "want": "describe how rugged the ground is, and whether a cell is a ridge or a hollow",
+          "tools": [
+            "ruggedness"
+          ]
+        }
+      ]
+    },
     "survey.cogo": {
       "summary": "Coordinate geometry: inverses, forwards, intersections, resection, offset shots, traverses, and areas.",
       "tasks": [

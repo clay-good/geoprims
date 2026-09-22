@@ -146,6 +146,10 @@
       "severity": "accuracy",
       "message": "This tool is experimental and not yet fully verified."
     },
+    "FLAT_CELL": {
+      "severity": "info",
+      "message": "The cell is flat, so it has no aspect."
+    },
     "FLY_OVER_RECOMMENDED": {
       "severity": "caution",
       "message": "The turn is too sharp to fly by; fly over the waypoint instead."

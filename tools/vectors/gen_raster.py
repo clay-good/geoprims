@@ -19,6 +19,7 @@ Formulas (see each tool's citation for the paper):
   dNBR   NBR(pre) - NBR(post)                             Key and Benson 2006
 """
 import json
+import math
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[2] / "core" / "vectors"
@@ -29,7 +30,9 @@ VER = "2026-09-22"
 def vec(i, inp, expect, tol=1e-12):
     e = dict(expect)
     e.setdefault("ok", True)
-    t = {k: {"rel": 0, "abs": tol} for k, v in e.items() if isinstance(v, float)}
+    # Every numeric expectation needs a tolerance: the JS runner reads one for
+    # each, and a whole number like a hillshade is as numeric as any other.
+    t = {k: {"rel": 0, "abs": tol} for k, v in e.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
     return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": SRC, "sourceVersion": VER, "tolerance": t}
 
 
@@ -129,5 +132,67 @@ for i, (expr, bands, want) in enumerate([
     inp = {"expression": expr, "bands": [{"name": n, "value": v} for n, v in bands.items()]}
     rows.append(vec(i, inp, {"result.value": float(want)}))
 path = OUT / "raster.index.band-math.jsonl"
+path.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
+print(f"{path.name}: {len(rows)}")
+
+# Terrain derivatives, from Horn's formulas as GDAL's gdaldem implements them,
+# transcribed here independently. Aspect follows gdaldem: degrees clockwise
+# from north, downslope, and no aspect at all where the window is flat.
+WINDOWS = [
+    [101.2, 100.6, 100.2, 100.4, 99.8, 99.2, 99.6, 99.0, 98.4],
+    [100, 100, 100, 100, 100, 100, 100, 100, 100],
+    [120, 118, 116, 119, 117, 115, 118, 116, 114],
+    [50, 60, 70, 50, 60, 70, 50, 60, 70],
+    [70, 60, 50, 70, 60, 50, 70, 60, 50],
+    [10, 10, 10, 10, 20, 10, 10, 10, 10],
+    [200, 190, 180, 190, 180, 170, 180, 170, 160],
+]
+
+
+def horn(z, dx, dy, zf=1.0, az=315.0, alt=45.0):
+    a, b, c, d, e, f, g, h, i = z
+    dzdx = ((c + 2 * f + i) - (a + 2 * d + g)) / (8 * dx) * zf
+    dzdy = ((g + 2 * h + i) - (a + 2 * b + c)) / (8 * dy) * zf
+    rise = math.hypot(dzdx, dzdy)
+    slope = math.degrees(math.atan(rise))
+    asp = math.degrees(math.atan2(dzdy, -dzdx))
+    asp = 90 - asp if asp < 0 else (360 - asp + 90 if asp > 90 else 90 - asp)
+    if asp >= 360:
+        asp -= 360
+    zen, sun = math.radians(90 - alt), math.radians(90 - az)
+    sl, ar = math.atan(rise), math.atan2(dzdy, -dzdx)
+    shade = 255 * (math.cos(zen) * math.cos(sl) + math.sin(zen) * math.sin(sl) * math.cos(sun - ar))
+    return slope, (None if rise == 0 else asp), max(0.0, min(255.0, shade))
+
+
+rows = []
+for i, z in enumerate(WINDOWS, 1):
+    cell = 30.0
+    slope, asp, shade = horn(z, cell, cell)
+    inp = {"elevations": [{"row": ", ".join(str(v) for v in z[k:k + 3])} for k in (0, 3, 6)],
+           "cell_size": f"{cell:g} m"}
+    expect = {"result.slope.value": slope, "result.hillshade": round(shade)}
+    if asp is not None:
+        expect["result.aspect.value"] = asp
+    rows.append(vec(i, inp, expect, tol=1e-9))
+path = OUT / "raster.terrain.slope-aspect.jsonl"
+path.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
+print(f"{path.name}: {len(rows)}")
+
+rows = []
+for i, z in enumerate(WINDOWS, 1):
+    center = z[4]
+    others = [v for k, v in enumerate(z) if k != 4]
+    # Riley's own index, as the erratum printed with the paper corrects it,
+    # and the mean absolute difference that shares its name.
+    tri = math.sqrt(sum((center - v) ** 2 for v in others))
+    tri_mean = sum(abs(v - center) for v in others) / 8
+    tpi = center - sum(others) / 8
+    inp = {"elevations": [{"row": ", ".join(str(v) for v in z[k:k + 3])} for k in (0, 3, 6)],
+           "cell_size": "30 m"}
+    rows.append(vec(i, inp, {"result.tri.value": tri, "result.tri_mean.value": tri_mean,
+                             "result.tpi.value": tpi,
+                             "result.roughness.value": max(z) - min(z)}, tol=1e-9))
+path = OUT / "raster.terrain.ruggedness.jsonl"
 path.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
 print(f"{path.name}: {len(rows)}")

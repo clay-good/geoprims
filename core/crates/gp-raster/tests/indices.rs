@@ -366,3 +366,129 @@ fn band_math_refuses_pathological_expressions() {
     );
     assert_eq!(dup["ok"], false, "{dup}");
 }
+
+#[test]
+fn slope_and_aspect_follow_horn_as_gdaldem_does() {
+    let win =
+        r#"[{"row":"101.2, 100.6, 100.2"},{"row":"100.4, 99.8, 99.2"},{"row":"99.6, 99.0, 98.4"}]"#;
+    let r = call(
+        "raster.terrain.slope-aspect",
+        &format!(r#"{{"elevations":{win},"cell_size":"30 m"}}"#),
+    );
+    // The same window worked independently in Python from gdaldem's formulas.
+    assert!(
+        (num(&r, "result.slope.value") - 1.919_853_389_085_437_7).abs() < 1e-12,
+        "{r}"
+    );
+    assert!(
+        (num(&r, "result.aspect.value") - 145.124_671_655_397_55).abs() < 1e-12,
+        "{r}"
+    );
+    assert!((num(&r, "result.hillshade") - 174.0).abs() < 0.5, "{r}");
+    assert_eq!(r["result"]["aspect_text"], "south-east");
+
+    // "Geographic cell size": on a degree grid the east-west cell shrinks by
+    // the cosine of the latitude, which changes the slope.
+    let geo = call(
+        "raster.terrain.slope-aspect",
+        &format!(r#"{{"elevations":{win},"cell_degrees":0.000277778,"lat":60}}"#),
+    );
+    let east = num(&geo, "result.cell_size_east.value");
+    let north = num(&geo, "result.cell_size_north.value");
+    assert!(
+        (east / north - 0.5).abs() < 0.01,
+        "east {east} m against north {north} m at 60 N"
+    );
+    assert!(
+        num(&geo, "result.slope.value") > num(&r, "result.slope.value"),
+        "{geo}"
+    );
+    // The same grid at the equator has near-square cells.
+    let eq = call(
+        "raster.terrain.slope-aspect",
+        &format!(r#"{{"elevations":{win},"cell_degrees":0.000277778,"lat":0}}"#),
+    );
+    let ratio = num(&eq, "result.cell_size_east.value") / num(&eq, "result.cell_size_north.value");
+    assert!(
+        (ratio - 1.0).abs() < 0.01,
+        "at the equator the cells are nearly square: {ratio}"
+    );
+    // A degree cell size without a latitude cannot be turned into meters.
+    let no_lat = call(
+        "raster.terrain.slope-aspect",
+        &format!(r#"{{"elevations":{win},"cell_degrees":0.000277778}}"#),
+    );
+    assert_eq!(no_lat["ok"], false, "{no_lat}");
+
+    // Flat ground has no aspect, and says so rather than naming a direction.
+    let flat = call(
+        "raster.terrain.slope-aspect",
+        r#"{"elevations":[{"row":"10,10,10"},{"row":"10,10,10"},{"row":"10,10,10"}],"cell_size":"30 m"}"#,
+    );
+    assert_eq!(num(&flat, "result.slope.value"), 0.0, "{flat}");
+    assert_eq!(flat["result"]["aspect_text"], "flat");
+    assert!(flat["result"].get("aspect").is_none(), "{flat}");
+    assert!(warns(&flat, "FLAT_CELL"), "{flat}");
+
+    // A window that is not three rows of three is a mistake worth naming.
+    for bad in [
+        r#"{"elevations":[{"row":"1,2,3"},{"row":"4,5,6"}],"cell_size":"30 m"}"#,
+        r#"{"elevations":[{"row":"1,2"},{"row":"4,5,6"},{"row":"7,8,9"}],"cell_size":"30 m"}"#,
+        r#"{"elevations":[{"row":"1,2,x"},{"row":"4,5,6"},{"row":"7,8,9"}],"cell_size":"30 m"}"#,
+    ] {
+        let r = call("raster.terrain.slope-aspect", bad);
+        assert_eq!(r["ok"], false, "{bad}: {r}");
+    }
+}
+
+#[test]
+fn ruggedness_places_the_cell_against_its_neighbours() {
+    let peak = call(
+        "raster.terrain.ruggedness",
+        r#"{"elevations":[{"row":"10,10,10"},{"row":"10,20,10"},{"row":"10,10,10"}],"cell_size":"30 m"}"#,
+    );
+    assert!(
+        (num(&peak, "result.tpi.value") - 10.0).abs() < 1e-12,
+        "{peak}"
+    );
+    // Riley's TRI over one peak 10 m above eight neighbours is the root of
+    // eight squared differences; the mean absolute difference, the other index
+    // of the same name, is 10. They are not the same number.
+    assert!(
+        (num(&peak, "result.tri.value") - 800.0_f64.sqrt()).abs() < 1e-12,
+        "{peak}"
+    );
+    assert!(
+        (num(&peak, "result.tri_mean.value") - 10.0).abs() < 1e-12,
+        "{peak}"
+    );
+    assert!(
+        (num(&peak, "result.roughness.value") - 10.0).abs() < 1e-12,
+        "{peak}"
+    );
+    assert!(
+        peak["result"]["position"]
+            .as_str()
+            .unwrap()
+            .contains("above"),
+        "{peak}"
+    );
+    let pit = call(
+        "raster.terrain.ruggedness",
+        r#"{"elevations":[{"row":"10,10,10"},{"row":"10,5,10"},{"row":"10,10,10"}],"cell_size":"30 m"}"#,
+    );
+    assert!(
+        pit["result"]["position"]
+            .as_str()
+            .unwrap()
+            .contains("below"),
+        "{pit}"
+    );
+    let level = call(
+        "raster.terrain.ruggedness",
+        r#"{"elevations":[{"row":"10,10,10"},{"row":"10,10,10"},{"row":"10,10,10"}],"cell_size":"30 m"}"#,
+    );
+    assert_eq!(num(&level, "result.tri.value"), 0.0, "{level}");
+    assert_eq!(num(&level, "result.tri_mean.value"), 0.0, "{level}");
+    assert_eq!(num(&level, "result.roughness.value"), 0.0);
+}

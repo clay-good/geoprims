@@ -1050,6 +1050,26 @@
       "editionCheck": true
     },
     {
+      "id": "horn-1981",
+      "name": "Hill shading and the reflectance map",
+      "issuer": "Horn, B. K. P., Proceedings of the IEEE",
+      "currentEdition": "Volume 69, issue 1, pages 14-47",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1109/PROC.1981.11918",
+      "matchTerms": [
+        "Hill shading and the reflectance map"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "huete-1988",
       "name": "A soil-adjusted vegetation index (SAVI)",
       "issuer": "Huete, A. R., Remote Sensing of Environment",
@@ -2101,6 +2121,26 @@
       "editionCheck": true
     },
     {
+      "id": "riley-1999",
+      "name": "A terrain ruggedness index that quantifies topographic heterogeneity",
+      "issuer": "Riley, S. J., DeGloria, S. D., and Elliot, R., Intermountain Journal of Sciences",
+      "currentEdition": "Volume 5, issues 1-4, pages 23-27",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Read the reprint PDF on 2026-09-22: Intermountain Journal of Sciences, Vol. 5, No. 1-4: 23-27, December 1999, by Riley, DeGloria, and Elliot. Its first page carries an erratum correcting the published code: TRI is the square root of the summed squared differences, not the squared sum. The journal is not indexed by DOI.",
+      "freeAccessUrl": "https://download.osgeo.org/qgis/doc/reference-docs/Terrain_Ruggedness_Index.pdf",
+      "matchTerms": [
+        "terrain ruggedness index"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "rinex",
       "name": "RINEX: the Receiver Independent Exchange Format",
       "issuer": "IGS and RTCM-SC104",
@@ -2380,6 +2420,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "wilson-2007",
+      "name": "Multiscale terrain analysis of multibeam bathymetry data for habitat mapping on the continental slope",
+      "issuer": "Wilson, M. F. J., O'Connell, B., Brown, C., Guinan, J. C., and Grehan, A. J., Marine Geodesy",
+      "currentEdition": "Volume 30, issues 1-2, pages 3-35",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-22",
+      "verificationNote": "Verified at the DOI registry on 2026-09-22: title, journal, volume, issue, pages, and year as cited.",
+      "freeAccessUrl": "https://doi.org/10.1080/01490410701295962",
+      "matchTerms": [
+        "Multiscale terrain analysis"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     },
     {
       "id": "wmm",

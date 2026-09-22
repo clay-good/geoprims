@@ -3,6 +3,7 @@
 pub mod bandmath;
 pub mod indices;
 pub mod scaling;
+pub mod terrain;
 
 use gp_base::tool::Registry;
 
@@ -25,6 +26,8 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &indices::SAVI,
     &indices::DNBR,
     &bandmath::BANDMATH,
+    &terrain::SLOPE,
+    &terrain::RUGGEDNESS,
 ];
 
 gp_base::export_module!("raster", REGISTRY);

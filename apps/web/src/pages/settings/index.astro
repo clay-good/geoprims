@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/PageHeader.astro';
-import { COORD_FORMATS, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
+import { CANVAS_DEFAULTS, COORD_FORMATS, MOTION, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
 ---
 <Base title="Settings · geoprims" description="Unit profile, number format, display mode, and the data geoprims keeps in this browser." canonical="/settings/" noindex>
   <PageHeader title="Settings" purpose={`Settings apply right away and are saved only in this browser.`} />
@@ -17,6 +17,13 @@ import { COORD_FORMATS, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
       <select name="coordFormat">{COORD_FORMATS.map(([id, label]) => <option value={id}>{label}</option>)}</select>
     </label>
     <p class="notice">How the map writes the point under your pointer.</p>
+    <label>Map view
+      <select name="canvas">{CANVAS_DEFAULTS.map(([id, label]) => <option value={id}>{label}</option>)}</select>
+    </label>
+    <label>Motion
+      <select name="motion">{MOTION.map(([id, label]) => <option value={id}>{label}</option>)}</select>
+    </label>
+    <p class="notice">Reduce motion stops the home page's moving terrain, map camera moves, and every transition, whatever this device is set to.</p>
     <label class="switch">Sounds
       <input type="checkbox" name="audio" />
     </label>
@@ -38,12 +45,17 @@ import { COORD_FORMATS, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
   </p>
   <script>
     import { audioOn, audioState, audioVolume, setAudioOn, setAudioVolume, sound } from '../../lib/sound.js';
+    import { canvasDefault, motion, setCanvasDefault, setMotion } from '../../lib/prefs.js';
     import { clearRecents, coordFormat, eraseLocalData, fieldMode, numberFormat, profile, setCoordFormat, setFieldMode, setNumberFormat, setProfile } from '../../lib/prefs.js';
     const form = document.querySelector('form.settings');
     form.profile.value = profile();
     form.numberFormat.value = numberFormat();
     form.profile.addEventListener('change', () => setProfile(form.profile.value));
     form.numberFormat.addEventListener('change', () => setNumberFormat(form.numberFormat.value));
+    form.canvas.value = canvasDefault();
+    form.canvas.addEventListener('change', () => setCanvasDefault(form.canvas.value));
+    form.motion.value = motion();
+    form.motion.addEventListener('change', () => setMotion(form.motion.value));
     form.coordFormat.value = coordFormat();
     form.coordFormat.addEventListener('change', () => setCoordFormat(form.coordFormat.value));
     const status = document.querySelector('[data-audio-status]');

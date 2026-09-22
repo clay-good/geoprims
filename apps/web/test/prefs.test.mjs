@@ -68,3 +68,20 @@ test('the coordinate format is saved, defaults to decimal degrees, and never rea
   assert.equal(prefs.coordFormat(), 'dd', 'an unknown saved value reads as the default');
   prefs.setCoordFormat('dd');
 });
+
+test('motion and the default map view are saved, and reduce motion wins over the device', () => {
+  globalThis.matchMedia = () => ({ matches: false });
+  assert.equal(prefs.motion(), 'system');
+  assert.equal(prefs.reducedMotion(), false);
+  prefs.setMotion('reduce');
+  assert.equal(prefs.reducedMotion(), true, 'the setting reduces motion on a device that does not');
+  prefs.setMotion('system');
+  globalThis.matchMedia = () => ({ matches: true });
+  assert.equal(prefs.reducedMotion(), true, 'and the device still can');
+  assert.equal(prefs.canvasDefault(), 'auto');
+  prefs.setCanvasDefault('globe');
+  assert.equal(prefs.canvasDefault(), 'globe');
+  store.set('gp-canvas', JSON.stringify('cube'));
+  assert.equal(prefs.canvasDefault(), 'auto', 'an unknown value reads as the default');
+  prefs.setCanvasDefault('auto');
+});

@@ -358,6 +358,7 @@ footer.site nav a:hover { color: var(--accent); text-decoration: underline; }
   header.site .brand .what { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+:root[data-motion='reduce'] * { transition: none !important; animation: none !important; }
 
 /* Problem-report button and dialog */
 .report-line { font-size: 0.95rem; }

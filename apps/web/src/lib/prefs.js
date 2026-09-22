@@ -25,6 +25,17 @@ export const COORD_FORMATS = [
   ['mgrs', 'MGRS (17T NE 86309 77770)'],
   ['utm', 'UTM (17N 586310 mE 4477770 mN)'],
 ];
+/** Motion: follow the device's setting, or always reduce it. */
+export const MOTION = [
+  ['system', 'Follow this device'],
+  ['reduce', 'Reduce motion'],
+];
+/** The view a map opens in. */
+export const CANVAS_DEFAULTS = [
+  ['auto', 'Each tool’s own'],
+  ['map', 'Flat map'],
+  ['globe', 'Globe'],
+];
 export const MAX_RECENT = 50;
 
 const read = (k, fallback) => {
@@ -50,6 +61,16 @@ export const fieldMode = () => read('gp-field-mode', false) === true;
 export const numberFormat = () => read('gp-number-format', 'decimal-point');
 export const coordFormat = () => (COORD_FORMATS.some(([id]) => id === read('gp-coord-format', 'dd')) ? read('gp-coord-format', 'dd') : 'dd');
 export const setCoordFormat = (f) => write('gp-coord-format', f, 'gp-prefs');
+export const motion = () => (read('gp-motion', 'system') === 'reduce' ? 'reduce' : 'system');
+/** Whether to keep still: the reader's setting, or their device's. */
+export const reducedMotion = () => motion() === 'reduce' || !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+export function setMotion(m) {
+  write('gp-motion', m === 'reduce' ? 'reduce' : 'system', 'gp-prefs');
+  const root = globalThis.document?.documentElement;
+  if (root) m === 'reduce' ? (root.dataset.motion = 'reduce') : delete root.dataset.motion;
+}
+export const canvasDefault = () => (CANVAS_DEFAULTS.some(([id]) => id === read('gp-canvas', 'auto')) ? read('gp-canvas', 'auto') : 'auto');
+export const setCanvasDefault = (c) => write('gp-canvas', c, 'gp-prefs');
 export const setProfile = (p) => write('gp-profile', p, 'gp-prefs');
 export const setNumberFormat = (f) => write('gp-number-format', f, 'gp-prefs');
 export function setFieldMode(on) {

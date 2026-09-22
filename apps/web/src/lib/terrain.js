@@ -6,6 +6,7 @@
 // The field is seeded value noise, so every visit draws the same country.
 // Contours come from marching squares over a coarse grid, which keeps a frame
 // to a few milliseconds on a phone.
+import { reducedMotion } from './prefs.js';
 
 /** A small deterministic generator, so the terrain is the same every visit. */
 function mulberry32(seed) {
@@ -83,7 +84,7 @@ export function startTerrain(canvas, readout) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return () => {};
   const field = heightField();
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const still = reducedMotion();
   const css = getComputedStyle(document.documentElement);
   const color = (name) => css.getPropertyValue(name).trim();
   let colors = { contour: color('--contour'), index: color('--contour-index'), signal: color('--signal'), data: color('--data') };

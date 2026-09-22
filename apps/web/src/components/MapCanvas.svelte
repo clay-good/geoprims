@@ -8,7 +8,7 @@
   import { colors, draw } from '../lib/map/render.js';
   import { magneticNorth, readoutText } from '../lib/map/readout.js';
   import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
-  import { coordFormat } from '../lib/prefs.js';
+  import { canvasDefault, coordFormat, reducedMotion } from '../lib/prefs.js';
   import { say } from '../lib/keys.js';
   import { sound } from '../lib/sound.js';
   import { attributionLines, caption, layersGeoJson, loadRegistry, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
@@ -16,7 +16,9 @@
   let { tool, args, result, compute, onmove } = $props();
 
   const kinds = new Set((tool.visualization ?? []).map((v) => v.kind));
-  let mode = $state(kinds.has('line-geodesic') ? 'globe' : 'map');
+  // The reader's default view if they chose one, else the tool's own.
+  const preferred = canvasDefault();
+  let mode = $state(preferred !== 'auto' ? preferred : kinds.has('line-geodesic') ? 'globe' : 'map');
   // The 2D projection the Map button shows: Web Mercator, equirectangular, or polar.
   let projection = $state('map');
   let canvas;
@@ -310,7 +312,7 @@
     fmt = coordFormat();
     const onPrefs = () => (fmt = coordFormat());
     addEventListener('gp-prefs', onPrefs);
-    reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    reduced = reducedMotion();
     fetch('/basemap/ne-110m.json')
       .then((r) => r.json())
       .then((ne) => {

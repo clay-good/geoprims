@@ -5,6 +5,7 @@
 // the catalog with the query in the URL.
 //
 // It is a WAI-ARIA combobox: arrows move, Enter opens, Esc closes the list.
+import { reducedMotion } from './prefs.js';
 import { ask } from './ask.js';
 
 const DEBOUNCE_MS = 110;
@@ -157,7 +158,7 @@ export function mountHomeSearch(form) {
 
   // The placeholder cycles through real questions until the field is used.
   const examples = (input.dataset.examples ?? '').split('|').filter(Boolean);
-  if (examples.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (examples.length > 1 && !reducedMotion()) {
     let k = 0;
     const cycle = setInterval(() => {
       if (document.activeElement === input || input.value) return;

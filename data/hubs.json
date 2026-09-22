@@ -445,7 +445,23 @@
             "kinetic-energy"
           ]
         }
-      ]
+      ],
+      "guide": {
+        "title": "Flying at dusk under Part 107",
+        "steps": [
+          {
+            "text": "Civil twilight under §107.29(c) is the 30 minutes after official sunset and before official sunrise (the Air Almanac period in Alaska); the four-nights tool shows it for your site and date, with when §1.1 night begins.",
+            "tool": "time.sun.aviation-nights"
+          },
+          {
+            "text": "In civil twilight and at night the drone needs anti-collision lighting visible for at least 3 statute miles; at night the remote pilot also needs the §107.65 training."
+          },
+          {
+            "text": "The altitude limit is the same at dusk as by day.",
+            "tool": "part107-altitude"
+          }
+        ]
+      }
     },
     "drone.photogrammetry": {
       "summary": "Ground sampling distance, overlap, image count, blur, and accuracy.",

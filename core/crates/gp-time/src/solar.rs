@@ -897,6 +897,11 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(0))
         .optional(),
+        text(
+            "part107_lighting",
+            "Part 107 lighting, §107.29(a)(2) and (b)",
+            "What the drone must carry in civil twilight and at night",
+        ),
     ],
     errors: &[],
     warnings: &[
@@ -1122,6 +1127,10 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
             }),
         ));
     }
+    out.push((
+        "part107_lighting",
+        Json::str("Anti-collision lighting visible for at least 3 statute miles, with a flash rate enough to avoid a collision, is required during civil twilight (§107.29(b)) and at night (§107.29(a)(2)); night also needs the §107.65 training."),
+    ));
     Ok(Json::obj(out))
 }
 

@@ -74,3 +74,23 @@ fn nights_follow_usno() {
     assert!(checked >= 450, "only {checked} windows checked");
     println!("{checked} windows within a minute of USNO");
 }
+
+/// add-practitioner-essentials "Part 107 lighting window": the drone view
+/// states the anti-collision lighting rule with both paragraphs cited.
+#[test]
+fn part_107_lighting_is_stated() {
+    let r = call(
+        "time.sun.aviation-nights",
+        &json!({"lat": 39.7392, "lon": -104.9903, "date": "2026-09-22", "offset": "-06:00"}),
+    );
+    let text = r["result"]["part107_lighting"].as_str().expect("stated");
+    assert!(text.contains("3 statute miles"), "{text}");
+    assert!(
+        text.contains("§107.29(b)") && text.contains("§107.29(a)(2)"),
+        "{text}"
+    );
+    // The evening period starts at sunset, where the position-lights window starts, and lasts 30 minutes.
+    let (a, b) = window(r["result"]["part107_evening"].as_str().unwrap()).unwrap();
+    let (s, _) = window(r["result"]["position_lights"].as_str().unwrap()).unwrap();
+    assert_eq!((a, b - a), (s, 30));
+}

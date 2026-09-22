@@ -985,6 +985,52 @@ def station_offset():
     return out
 
 
+def unequal_vertical():
+    """Checked two ways: equal halves must reproduce the spec's crest scenario, and every
+    case must meet each tangent and itself smoothly under the PVI."""
+    out = []
+
+    def fmt(v):
+        tot = round(v * 100)
+        whole = tot // 10000
+        return f"{whole}+{(tot - whole * 10000) / 100:05.2f}"
+
+    def solve(g1, g2, l1, l2, pvi, e):
+        g1, g2 = g1 / 100, g2 / 100
+        gc = (l1 * g1 + l2 * g2) / (l1 + l2)
+        r1, r2 = (gc - g1) / l1, (g2 - gc) / l2
+        epvc, ecvc = e - g1 * l1, e + l1 * l2 * (g2 - g1) / (2 * (l1 + l2))
+        turn = None
+        for r, g, s0, L, e0 in ((r1, g1, pvi - l1, l1, epvc), (r2, gc, pvi, l2, ecvc)):
+            if r and 0 <= -g / r <= L:
+                x = -g / r
+                turn = (s0 + x, e0 + g * x + r * x * x / 2)
+                break
+        return gc * 100, epvc, ecvc, e + g2 * l2, turn
+
+    # Equal halves: the spec scenario (PVC 7+00 at 94.00, high point 9+40 at 96.40).
+    gc, epvc, ecvc, epvt, turn = solve(2, -3, 300, 300, 1000, 100)
+    assert abs(turn[0] - 940) < 1e-9 and abs(turn[1] - 96.4) < 1e-9 and abs(epvc - 94) < 1e-12
+    out.append(vec(1, {"g1": 2, "g2": -3, "length1": "300 ft", "length2": "300 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft"},
+                   {"result.pvc_station": "7+00.00", "result.pvc_elevation.value": 94.0, "result.turning_station": "9+40.00", "result.turning_elevation.value": 96.4}, SPEC, "2026"))
+    for i, (g1, g2, l1, l2, pvi, e) in enumerate([(2, -3, 200, 400, 1000, 100), (-4, 1.5, 350, 150, 2500, 250), (1, 3, 100, 300, 500, 50)], 2):
+        gc, epvc, ecvc, epvt, turn = solve(g1, g2, l1, l2, pvi, e)
+        exp = {"result.cvc_elevation.value": ecvc, "result.cvc_grade": gc, "result.pvc_elevation.value": epvc, "result.pvt_elevation.value": epvt}
+        if turn:
+            exp["result.turning_station"] = fmt(turn[0])
+            exp["result.turning_elevation.value"] = turn[1]
+        else:
+            exp["result.turning"] = "no high or low point lies on the curve"
+        out.append(vec(i, {"g1": g1, "g2": g2, "length1": f"{l1} ft", "length2": f"{l2} ft", "pvi_station": fmt(pvi), "pvi_elevation": f"{e} ft"}, exp, rel=1e-11))
+    # Elevation at a station on the second parabola.
+    gc, epvc, ecvc, epvt, _ = solve(2, -3, 200, 400, 1000, 100)
+    x = 150
+    out.append(vec(5, {"g1": 2, "g2": -3, "length1": "200 ft", "length2": "400 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft", "at_station": "11+50"},
+                   {"result.elevation.value": ecvc + gc / 100 * x + ((-0.03 - gc / 100) / 400) * x * x / 2}, rel=1e-11))
+    out.append(vec(6, {"g1": 2, "g2": -3, "length1": "0 ft", "length2": "400 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    return out
+
+
 def lvec(i, inp, exp, src=LAND_SRC, ver=LAND_VER):
     e = dict(exp)
     e.setdefault("ok", True)
@@ -1089,7 +1135,7 @@ def main():
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.cogo.angular-closure": angular_closure(), "survey.cogo.station-offset": station_offset(), "survey.earthwork.slope-stake": slope_stake(),
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
-        "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(),
+        "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(), "survey.curves.unequal-vertical-curve": unequal_vertical(),
         "survey.curves.sight-distance": sight_distance(), "survey.earthwork.profile-grades": profile_grades(),
         "survey.earthwork.stockpile": stockpile(), "survey.earthwork.solid-volume": solid_volume(),
         "survey.land.legacy-units": legacy_units(), "survey.land.deed-plot": deed_plot(), "survey.land.plss-parse": plss(),

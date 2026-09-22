@@ -890,6 +890,7 @@
       "definition": "On a vertical curve, where the two grade lines would meet.",
       "source": "ghilani",
       "relatedTools": [
+        "survey.curves.unequal-vertical-curve",
         "survey.curves.vertical-curve"
       ]
     },
@@ -900,6 +901,7 @@
       "definition": "On a vertical curve, where the curve leaves the incoming grade.",
       "source": "ghilani",
       "relatedTools": [
+        "survey.curves.unequal-vertical-curve",
         "survey.curves.vertical-curve"
       ]
     },
@@ -910,6 +912,7 @@
       "definition": "On a vertical curve, where the curve joins the outgoing grade.",
       "source": "ghilani",
       "relatedTools": [
+        "survey.curves.unequal-vertical-curve",
         "survey.curves.vertical-curve"
       ]
     },

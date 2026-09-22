@@ -925,7 +925,8 @@
         {
           "want": "design a vertical curve",
           "tools": [
-            "vertical-curve"
+            "vertical-curve",
+            "unequal-vertical-curve"
           ]
         },
         {

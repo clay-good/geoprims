@@ -18,6 +18,7 @@ pub mod spiral;
 pub mod staking;
 pub mod stationing;
 pub mod stockpile;
+pub mod vcurve;
 
 use gp_base::ErrorCode;
 use gp_base::display;
@@ -2253,6 +2254,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &CIRCULAR_CURVE,
     &VERTICAL_CURVE,
     &layout::CURVE_LAYOUT,
+    &vcurve::UNEQUAL,
     &spiral::SPIRAL,
     &sight::SIGHT_DISTANCE,
     &profile::PROFILE_GRADES,

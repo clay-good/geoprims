@@ -10,7 +10,7 @@
 
 - [ ] 2.1 Write at least 25 concept explainers with citations and embedded live examples; verify the density-altitude explainer scenario
 - [x] 2.2 Author curated related lists with reasons for all stable tools, plus the validation gate; verify the related-validation scenario (every one of the 75 stable tools now points at three to six others, each with a reason. tools/trust/related.mjs fails a list that points at a tool that does not exist or at itself, repeats an entry, gives a reason outside inverse/next/alternative/parent, names an inverse that does not name it back, or runs past six, and it is checked against broken fixtures. The floor is now plain rather than a ratchet: a new stable tool has to arrive with its list)
-- [ ] 2.3 Build domain and group hubs grouped by task; verify hub JSON-LD and links
+- [x] 2.3 Build domain and group hubs grouped by task; verify hub JSON-LD and links (all 9 domain and 75 group hubs list their tools under "I want to" tasks from data/hubs.json; apps/web/test/hubs.test.mjs checks each hub's CollectionPage ItemList holds exactly its tools, its breadcrumbs end at the hub, and every internal link resolves to a built page)
 
 ## 3. Build outputs
 

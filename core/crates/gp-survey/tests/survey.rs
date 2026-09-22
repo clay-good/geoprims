@@ -814,3 +814,24 @@ fn zero_sight_heights_are_refused_not_infinite() {
     .unwrap();
     assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
 }
+
+#[test]
+fn chi_square_quantiles_match_the_tables() {
+    use gp_survey::lsq::chi2_inv;
+    // Standard chi-square table values (NIST/SEMATECH e-Handbook, 1.3.6.7.4).
+    for (p, k, want) in [
+        (0.95, 2.0, 5.991),
+        (0.975, 4.0, 11.143),
+        (0.025, 4.0, 0.484),
+        (0.975, 10.0, 20.483),
+        (0.025, 10.0, 3.247),
+        (0.975, 1.0, 5.024),
+        (0.025, 30.0, 16.791),
+    ] {
+        let got = chi2_inv(p, k);
+        assert!(
+            (got - want).abs() < 6e-4,
+            "χ²({p}, {k}) = {got}, table {want}"
+        );
+    }
+}

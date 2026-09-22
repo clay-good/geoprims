@@ -13,6 +13,7 @@ pub mod land;
 pub mod layout;
 pub mod leveling;
 pub mod localize;
+pub mod lsq;
 pub mod profile;
 pub mod reduction;
 pub mod section;
@@ -2282,6 +2283,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &gnss::ANTENNA_HEIGHT,
     &gnss::ALTA_RPP,
     &localize::LOCALIZATION,
+    &lsq::LEAST_SQUARES,
     &INVERSE,
     &FORWARD,
     &TRAVERSE,

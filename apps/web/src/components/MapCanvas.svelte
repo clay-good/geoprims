@@ -4,7 +4,7 @@
   // scroll or pinch to zoom; arrow keys, + and -, and 0 (reset) do the same.
   import { onMount } from 'svelte';
   import { buildLayers, extent } from '../lib/map/layers.js';
-  import { decode, forward, frame, inverse } from '../lib/map/projection.js';
+  import { decode, forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
   import { magneticNorth, readoutText } from '../lib/map/readout.js';
   import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
@@ -15,12 +15,16 @@
 
   const kinds = new Set((tool.visualization ?? []).map((v) => v.kind));
   let mode = $state(kinds.has('line-geodesic') ? 'globe' : 'map');
+  // The 2D projection the Map button shows: Web Mercator, equirectangular, or polar.
+  let projection = $state('map');
   let canvas;
   let base = null;
   let layers = [];
   let view = null;
   let target = null;
-  let desc = $state('');
+  // The canvas's text alternative: the view, what it shows, and the answer.
+  let shown = $state('');
+  const desc = $derived(shown ? `${mode === 'globe' ? 'Globe' : `${PROJECTION_NAMES[mode]} map`} showing ${shown}. ${result?.summary ?? ''}` : '');
   let readout = $state('');
   let scaleBar = $state({ px: 0, label: '' });
   let legend = $state([]);
@@ -31,7 +35,8 @@
     set(px);
     return { update: set };
   }
-  const metersPerPixel = (v) => (v.mode === 'globe' ? R_EARTH : R_EARTH * Math.cos((v.lat * Math.PI) / 180)) / v.scale;
+  // Mercator's scale grows with latitude; the other views are true along meridians.
+  const metersPerPixel = (v) => (v.mode === 'map' ? R_EARTH * Math.cos((v.lat * Math.PI) / 180) : R_EARTH) / v.scale;
   /** A round distance (1, 2, or 5 × 10^n meters) about 100 px long at the view's center. */
   function measure(v) {
     const perPx = metersPerPixel(v);
@@ -96,7 +101,7 @@
       compute.invoke('navigation.geodesic.waypoints', input, 'densify'),
     );
     const what = layers.map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
-    desc = `${mode === 'globe' ? 'Globe' : 'Map'} showing ${what.join(', ') || 'the world'}. ${result.summary ?? ''}`;
+    shown = what.join(', ') || 'the world';
     // What the lines mean: the result path, and the other kind of line for comparison.
     const rhumb = kinds.has('line-rhumb');
     const named = (r) => (r ? 'Rhumb line: constant heading' : 'Geodesic: the shortest path');
@@ -159,6 +164,15 @@
       canvas.style.cursor = handleAt(handlesOf(layers), { ...view, width: w, height: h }, x, y) ? 'move' : '';
     }
     if (!drag) return;
+    if (drag.view.mode === 'polar' && !drag.handle) {
+      // Turn the map about the pole, keeping the grabbed meridian under the pointer.
+      const hs = drag.view.lat >= 0 ? 1 : -1;
+      const bearing = (cx, cy) => Math.atan2(cx - r.left - w / 2, hs * (cy - r.top - h / 2));
+      view = { ...drag.view, lon: drag.view.lon - ((bearing(e.clientX, e.clientY) - bearing(drag.x, drag.y)) * 180) / Math.PI };
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 3) drag.moved = true;
+      paint();
+      return;
+    }
     if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 3) drag.moved = true;
     if (drag.handle) {
       const [x, y] = local(e);
@@ -228,7 +242,9 @@
     const step = 60 / view.scale * (180 / Math.PI);
     const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] };
     if (moves[e.key]) {
-      view = { ...view, lon: view.lon + moves[e.key][0], lat: Math.max(-85, Math.min(85, view.lat + moves[e.key][1])) };
+      view = view.mode === 'polar'
+        ? { ...view, lon: view.lon + (moves[e.key][0] ? Math.sign(moves[e.key][0]) * 10 : 0) }
+        : { ...view, lon: view.lon + moves[e.key][0], lat: Math.max(-85, Math.min(85, view.lat + moves[e.key][1])) };
       paint();
     } else if (e.key === '+' || e.key === '=') zoom(1.25);
     else if (e.key === '-') zoom(0.8);
@@ -298,9 +314,18 @@
 <figure class="map card">
   <div class="map-bar">
     <div class="segmented" role="group" aria-label="View">
-      <button type="button" aria-pressed={mode === 'map'} onclick={() => setMode('map')}>Map</button>
+      <button type="button" aria-pressed={mode !== 'globe'} onclick={() => setMode(projection)}>Map</button>
       <button type="button" aria-pressed={mode === 'globe'} onclick={() => setMode('globe')}>Globe</button>
     </div>
+    {#if mode !== 'globe'}
+      <label class="map-projection"><span class="sr-only">Projection</span>
+        <select value={projection} onchange={(e) => { projection = e.currentTarget.value; setMode(projection); }}>
+          <option value="map">Web Mercator</option>
+          <option value="equirect">Equirectangular</option>
+          <option value="polar">Polar</option>
+        </select>
+      </label>
+    {/if}
     <div class="map-tools" role="group" aria-label="Zoom">
       <button type="button" onclick={() => zoom(1 / 1.5)} aria-label="Zoom out">−</button>
       <button type="button" onclick={() => zoom(1.5)} aria-label="Zoom in">+</button>
@@ -338,6 +363,6 @@
   <p class="map-readout" aria-hidden="true">
     <span class="scale">{#if scaleBar.px > 0}<span class="scale-bar" use:width={scaleBar.px}></span>{scaleBar.label}{/if}</span>
     <span>{readout || (canDrag && clickTarget(tool) ? 'Click to set the point, or drag it' : canDrag && tool.inputs.properties.lat1 ? 'Drag A or B to move them' : mode === 'globe' ? 'Drag to turn the globe' : 'Drag to pan, scroll to zoom')}</span>
-    <span>{mode === 'globe' ? 'Globe' : 'Web Mercator'} · Natural Earth{generalized ? ' (generalized at this zoom)' : ''}</span>
+    <span>{PROJECTION_NAMES[mode]} · Natural Earth{generalized ? ' (generalized at this zoom)' : ''}</span>
   </p>
 </figure>

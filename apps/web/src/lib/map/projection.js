@@ -1,11 +1,19 @@
 // Map projections for the canvas (web/map-canvas "Canvas modes"): Web
-// Mercator for the 2D map and an orthographic globe. A view is
+// Mercator (`map`), equirectangular (`equirect`), and a polar azimuthal
+// equidistant view (`polar`, centered on the pole of the hemisphere the view's
+// latitude is in, with its central meridian pointing down in the north and up
+// in the south) for the 2D map, and an orthographic globe. A view is
 // { mode, lon, lat, scale, width, height }: the center, pixels per radian,
 // and the canvas size. forward() returns screen [x, y] or null when the point
 // is not visible (the far side of the globe); inverse() returns [lon, lat] or
 // null off the map.
 const RAD = Math.PI / 180;
 export const MAX_MERCATOR_LAT = 85.0511287798;
+/** The polar view reaches this far from its pole, in degrees of colatitude. */
+export const POLAR_REACH = 150;
+/** Readout names for each mode. */
+export const PROJECTION_NAMES = { map: 'Web Mercator', equirect: 'Equirectangular', polar: 'Polar azimuthal equidistant', globe: 'Globe' };
+const hemi = (view) => (view.lat >= 0 ? 1 : -1);
 
 const wrap = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (Math.max(-MAX_MERCATOR_LAT, Math.min(MAX_MERCATOR_LAT, lat)) * RAD) / 2));
@@ -20,8 +28,16 @@ export function forward(view, lon, lat) {
     const y = Math.cos(p0) * Math.sin(p) - Math.sin(p0) * Math.cos(p) * Math.cos(l - l0);
     return [view.width / 2 + view.scale * x, view.height / 2 - view.scale * y];
   }
+  if (view.mode === 'polar') {
+    const h = hemi(view);
+    const colat = 90 - h * lat;
+    if (colat > POLAR_REACH) return null;
+    const rho = colat * RAD * view.scale;
+    const dl = (lon - view.lon) * RAD;
+    return [view.width / 2 + rho * Math.sin(dl), view.height / 2 + h * rho * Math.cos(dl)];
+  }
   const x = wrap(lon - view.lon) * RAD;
-  const y = mercY(lat) - mercY(view.lat);
+  const y = view.mode === 'equirect' ? (lat - view.lat) * RAD : mercY(lat) - mercY(view.lat);
   return [view.width / 2 + view.scale * x, view.height / 2 - view.scale * y];
 }
 
@@ -53,6 +69,16 @@ export function inverse(view, sx, sy) {
     const lon = l0 + Math.atan2(x * Math.sin(c), rho * Math.cos(c) * Math.cos(p0) - y * Math.sin(c) * Math.sin(p0));
     return [wrap(lon / RAD), lat];
   }
+  if (view.mode === 'polar') {
+    const h = hemi(view);
+    const rho = Math.hypot(x, y);
+    if (rho / RAD > POLAR_REACH) return null;
+    return [wrap(view.lon + Math.atan2(x, -h * y) / RAD), h * (90 - rho / RAD)];
+  }
+  if (view.mode === 'equirect') {
+    const lat = view.lat + y / RAD;
+    return Math.abs(lat) > 90 ? null : [wrap(view.lon + x / RAD), lat];
+  }
   const lat = (2 * Math.atan(Math.exp(y + mercY(view.lat))) - Math.PI / 2) / RAD;
   return [wrap(view.lon + x / RAD), lat];
 }
@@ -80,10 +106,18 @@ export function frame(mode, points, width, height) {
     const MIN_FAR = 0.5;
     return { ...view, scale: Math.min(width, height) * 0.45 / Math.max(far, MIN_FAR) };
   }
+  if (mode === 'polar') {
+    // Centered on the pole of the hemisphere most of the points are in, with
+    // the points' middle meridian toward the viewer.
+    const h = lats.reduce((a, b) => a + b, 0) >= 0 ? 1 : -1;
+    const reach = Math.max(10, ...lats.map((p) => 90 - h * p)) * RAD;
+    return { mode, lon, lat: h * 90, scale: (Math.min(width, height) * 0.45) / Math.min(reach, POLAR_REACH * RAD), width, height };
+  }
   // At least about 12° across, so a single point sits among coastlines and borders.
   const MIN_SPAN = 12 * RAD;
   const spanX = Math.max(MIN_SPAN, (Math.max(...lons) - Math.min(...lons)) * RAD);
-  const spanY = Math.max(MIN_SPAN * 0.6, mercY(Math.max(...lats)) - mercY(Math.min(...lats)));
+  const ys = (p) => (mode === 'equirect' ? p * RAD : mercY(p));
+  const spanY = Math.max(MIN_SPAN * 0.6, ys(Math.max(...lats)) - ys(Math.min(...lats)));
   const scale = Math.min((width * 0.6) / spanX, (height * 0.6) / spanY, width * 2000);
   return { mode, lon, lat, scale: Math.max(scale, width / (2 * Math.PI)), width, height };
 }

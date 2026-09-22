@@ -38,7 +38,8 @@ function mix(a, b, k) {
 
 /** Screen x, y on the 2D map without wrapping longitude, for unwrapped paths. */
 function mapXY(view, lon, lat) {
-  return [view.width / 2 + view.scale * (lon - view.lon) * RAD, view.height / 2 - view.scale * (mercY(lat) - mercY(view.lat))];
+  const dy = view.mode === 'equirect' ? (lat - view.lat) * RAD : mercY(lat) - mercY(view.lat);
+  return [view.width / 2 + view.scale * (lon - view.lon) * RAD, view.height / 2 - view.scale * dy];
 }
 
 /**
@@ -59,7 +60,16 @@ function trace(g, view, points, closed) {
     g.closePath();
     return;
   }
-  if (view.mode === 'globe') {
+  // The polar view: a ring that leaves the view is skipped whole (only
+  // Antarctica, seen from the north), and a line breaks where it leaves.
+  if (view.mode === 'polar' && closed) {
+    const pts = points.map(([lon, lat]) => forward(view, lon, lat));
+    if (pts.some((p) => !p)) return;
+    pts.forEach(([x, y], i) => (i === 0 ? g.moveTo(x, y) : g.lineTo(x, y)));
+    g.closePath();
+    return;
+  }
+  if (view.mode === 'globe' || view.mode === 'polar') {
     let open = false;
     for (const [lon, lat] of points) {
       const p = forward(view, lon, lat);
@@ -85,14 +95,16 @@ function trace(g, view, points, closed) {
   }
 }
 
-function graticule(step) {
+function graticule(step, reach = 80) {
   const lines = [];
   for (let lon = -180; lon < 180; lon += step) {
     const l = [];
-    for (let lat = -80; lat <= 80; lat += 2) l.push([lon, lat]);
+    for (let lat = -reach; lat <= reach; lat += 2) l.push([lon, lat]);
     lines.push(l);
   }
-  for (let lat = -60; lat <= 60; lat += step) {
+  // Parallels on round numbers; the polar view shows them nearer the pole.
+  const top = reach > 80 ? Math.floor(80 / step) * step : 60;
+  for (let lat = -top; lat <= top; lat += step) {
     const l = [];
     for (let lon = -180; lon <= 180; lon += 2) l.push([lon, lat]);
     lines.push(l);
@@ -160,7 +172,7 @@ export function draw(g, view, base, layers, c) {
   }
   // Graticule, faint.
   g.beginPath();
-  for (const l of graticule(view.scale > width ? 10 : 30)) trace(g, view, l, false);
+  for (const l of graticule(view.scale > width ? 10 : 30, view.mode === 'polar' ? 88 : 80)) trace(g, view, l, false);
   g.strokeStyle = c.graticule;
   g.lineWidth = 1;
   g.stroke();

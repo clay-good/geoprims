@@ -413,6 +413,7 @@ figure.map canvas:focus-visible { outline-offset: -3px; }
 .map-bar button { margin: 0; min-block-size: var(--target); min-inline-size: var(--target); padding-inline: 0.8rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.88rem; cursor: pointer; }
 .map-bar button:hover { border-color: color-mix(in srgb, var(--muted) 45%, var(--line)); }
 .segmented, .map-tools { display: flex; gap: 0.35rem; }
+.map-projection select { margin: 0; min-block-size: var(--target); font-size: 0.88rem; }
 .segmented { padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg); gap: 2px; }
 .segmented button { border-color: transparent; background: transparent; color: var(--muted); }
 .segmented button[aria-pressed='true'] { background: var(--surface); color: var(--text); border-color: var(--line); box-shadow: 0 1px 3px color-mix(in srgb, var(--shadow) 10%, transparent); }

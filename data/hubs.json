@@ -147,8 +147,14 @@
       ]
     },
     "aviation.loading": {
-      "summary": "Fuel weight and the weight and balance calculation.",
+      "summary": "Fuel planning with legal reserves, fuel weight, and weight and balance.",
       "tasks": [
+        {
+          "want": "plan fuel for a trip, with the legal reserve",
+          "tools": [
+            "fuel-plan"
+          ]
+        },
         {
           "want": "turn fuel volume into weight",
           "tools": [

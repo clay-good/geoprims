@@ -6,6 +6,7 @@ pub mod airspeed;
 pub mod aloft;
 pub mod atmosphere;
 pub mod dme;
+pub mod fuel;
 pub mod heading;
 pub mod ifr;
 pub mod loading;
@@ -2234,6 +2235,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &runway::BEST_RUNWAY,
     &triangle::TAS_FROM_GROUNDSPEED,
     &triangle::COURSE_FROM_HEADING,
+    &fuel::FUEL_PLAN,
 ];
 
 pub static REGISTRY: Registry = Registry {

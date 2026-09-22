@@ -113,6 +113,7 @@
       "source": "faa-phak",
       "relatedTools": [
         "aviation.airspeed.cas-to-tas",
+        "aviation.loading.fuel-plan",
         "aviation.loading.weight-balance",
         "aviation.performance.glide"
       ]
@@ -724,6 +725,7 @@
       "definition": "The codified US federal regulations. Aviation rules are in Title 14, written as 14 CFR.",
       "source": "cfr-14-1",
       "relatedTools": [
+        "aviation.loading.fuel-plan",
         "drone.photogrammetry.altitude-for-gsd"
       ]
     },
@@ -1123,6 +1125,16 @@
       "relatedTools": [
         "aviation.ifr.dme-arc-lead",
         "aviation.ifr.dme-slant-range"
+      ]
+    },
+    {
+      "id": "ifr",
+      "term": "IFR",
+      "expansion": "instrument flight rules",
+      "definition": "The rules for flying by reference to instruments under air traffic control, required in clouds and low visibility. IFR flights must carry fuel to an alternate airport and a reserve.",
+      "source": "aim",
+      "relatedTools": [
+        "aviation.loading.fuel-plan"
       ]
     }
   ],

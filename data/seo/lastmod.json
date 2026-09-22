@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "34f26ba3a5ba2490",
+    "hash": "0edcd6f56f7721ae",
     "lastmod": "2026-09-22"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-09-19"
   },
   "/aviation/": {
-    "hash": "035a8683a0c733e2",
+    "hash": "3d4b1aad5f1cc32f",
     "lastmod": "2026-09-22"
   },
   "/aviation/airspeed/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/loading/": {
-    "hash": "fef665e0af5bc677",
+    "hash": "de634761ee19f461",
     "lastmod": "2026-09-22"
   },
   "/aviation/loading/weight-balance/": {
@@ -448,7 +448,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "63ec553462b92f61",
+    "hash": "fdf99eb7efa2cbf3",
     "lastmod": "2026-09-22"
   },
   "/navigation/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-09-20"
   },
   "/sources/": {
-    "hash": "8de7627f6b54d74b",
+    "hash": "109a7ce1849358ce",
     "lastmod": "2026-09-22"
   },
   "/survey/": {
@@ -580,7 +580,7 @@
     "lastmod": "2026-09-22"
   },
   "/time/sun/aviation-nights/": {
-    "hash": "f125c1a226c1adb7",
+    "hash": "5a49e3a8045f47af",
     "lastmod": "2026-09-22"
   },
   "/time/sun/events/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "4a670a350fe74a5f",
+    "hash": "332c56920288baca",
     "lastmod": "2026-09-22"
   },
   "/units/": {
@@ -692,7 +692,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "305fe07e5f77f013",
+    "hash": "b159b03d4af44017",
     "lastmod": "2026-09-22"
   }
 }

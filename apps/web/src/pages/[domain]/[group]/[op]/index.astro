@@ -6,9 +6,10 @@ import { openIssue } from '../../../../lib/known-issues.mjs';
 import { defId, markTerms, sourceOf } from '../../../../lib/terms.mjs';
 import { freeAccess, ruleStatus } from '../../../../lib/citation.mjs';
 import { ledger, ledgerRowFor as rowFor } from '../../../../lib/catalog.mjs';
+import { toMathML } from '../../../../lib/mathml.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
 import { buildDate } from '../../../../lib/build-date.mjs';
-import { breadcrumbs, catalog, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, workedVector, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -27,6 +28,7 @@ const worked = youEnterYouGet(t, initial);
 const trace = await exampleTrace(t);
 const groups = await exampleGroups(t);
 const lastVerified = lastVerifiedFor(t);
+const golden = workedVector(t);
 const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
 const groupName = t.group.replaceAll('-', ' ');
 // Neighbors in the group, in catalog order, for the [ and ] shortcuts.
@@ -93,7 +95,9 @@ const purpose = markTerms(t.summary, terms);
           {trace.map((s) => (
             <li>
               <p class="trace-label">{s.label}</p>
-              <p class="trace-formula"><code>{s.formula}</code></p>
+              {toMathML(s.formula)
+                ? <p class="trace-formula" set:html={toMathML(s.formula)} />
+                : <p class="trace-formula"><code>{s.formula}</code></p>}
               <p class="trace-sub"><code>{s.substituted}</code> = <strong>{s.value}</strong></p>
             </li>
           ))}
@@ -102,7 +106,7 @@ const purpose = markTerms(t.summary, terms);
       </>
     )}
     <p><strong>Accuracy:</strong> {t.accuracy}</p>
-    <p class="no-print"><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.</p>
+    <p class="no-print"><strong>Worked example:</strong> {ex.title}. Source: {ex.source}.{golden && <> It is golden test vector {golden.id}, and every build checks the tool still gives its answer within its tolerance.</>}</p>
     <div class="worked no-print">
       <div>
         <h3>You enter</h3>

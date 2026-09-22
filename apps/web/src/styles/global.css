@@ -790,3 +790,6 @@ details.provenance summary { cursor: pointer; color: var(--muted); font: 600 0.7
 details.provenance dl { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr); gap: 0.25rem 0.75rem; margin: 0.5rem 0 0; }
 details.provenance dt { color: var(--muted); }
 details.provenance dd { margin: 0; }
+
+/* Formulas set as MathML at build: left-aligned with the steps, in the data color. */
+.trace-formula math { display: inline math; font-size: 1.05rem; color: var(--data); max-inline-size: 100%; overflow-x: auto; }

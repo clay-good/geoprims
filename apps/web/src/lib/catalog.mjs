@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../../../packages/runtime/src/node.mjs';
 import { runJourney } from './journeys.mjs';
+import { vectorFor } from './worked.mjs';
 import { readSignoffs, reviewSentence } from '../../../../tools/trust/signoffs.mjs';
 import { entriesFor, KINDS, readChangelog } from '../../../../tools/trust/changelog.mjs';
 import { verificationReport } from '../../../../tools/trust/verification.mjs';
@@ -317,3 +318,10 @@ export function journeyGuides() {
 }
 /** The journeys a tool appears in, for hub and home links. */
 export const journeysWith = (ids) => JOURNEYS.filter((j) => j.steps.some((s) => ids.includes(s.tool)));
+
+// The golden vector a tool's worked example is, if it is one (9.1); the build
+// gate (scripts/examples.mjs) has already checked the tool agrees with it.
+export function workedVector(t) {
+  const vectors = readFileSync(join(root, t.vectors), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  return vectorFor(primaryExample(t).input, vectors);
+}

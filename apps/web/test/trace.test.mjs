@@ -88,7 +88,9 @@ test('the page shows the same steps, in the same words', async () => {
   // The intermediates the scenario names: pressure altitude and density.
   assert.match(text, /Pressure altitude/);
   assert.match(text, /Air density/);
-  assert.match(text, /ρ = p \/ \(R × Tv\)/, 'the formula in standard notation');
+  // The formula set as MathML, its exact text kept for screen readers and copying.
+  assert.match(block[1], /<math display="block" alttext="ρ = p \/ \(R × Tv\)">/, 'the formula in standard notation');
+  assert.match(block[1], /<mi>ρ<\/mi><mo>=<\/mo><mi>p<\/mi><mo>\/<\/mo>/);
 });
 
 test('a bad explain option is refused, not ignored', async () => {

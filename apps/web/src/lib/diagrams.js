@@ -500,6 +500,42 @@ function endAreas(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Weight and balance: the CG envelope with the takeoff point, the burn path, and the landing point. */
+function cgEnvelope(args, result) {
+  const num = (v) => (typeof v === 'number' ? v : Number.parseFloat(String(v ?? '')));
+  const rows = Array.isArray(args.envelope) ? args.envelope : [];
+  const corners = rows.map((r) => [num(r.arm), num(r.weight)]).filter((p) => p.every(Number.isFinite));
+  const to = [val(result, 'cg'), val(result, 'total_weight')];
+  const land = [val(result, 'landing_cg'), val(result, 'landing_weight')];
+  if (corners.length < 3 || !to.every(Number.isFinite)) return null;
+  const burn = land.every(Number.isFinite) && land[1] > 0;
+  // Arms and weights are different quantities, so each axis gets its own
+  // scale: a shared one would squeeze the envelope into a sliver.
+  const pts = [...corners, to, ...(burn ? [land] : [])];
+  const span = (i, lo, hi) => {
+    const [a, b] = [Math.min(...pts.map((p) => p[i])), Math.max(...pts.map((p) => p[i]))];
+    const pad = (b - a) * 0.12 || 1;
+    return (v) => lo + ((v - a + pad) / (b - a + 2 * pad)) * (hi - lo);
+  };
+  const [sx, sy] = [span(0, 45, 290), span(1, 200, 60)];
+  const S = ([x, y]) => [sx(x), sy(y)];
+  const ring = corners.map(S);
+  const [t, l] = [S(to), burn ? S(land) : null];
+  const body = [
+    `<polygon class="dg-grid" points="${ring.map((q) => q.map(f1).join(',')).join(' ')}"/>`,
+    burn ? line('dg-muted dg-dash', t, l) : '',
+    burn ? dot(...l) : '',
+    dot(...t, 'dg-dot-now'),
+    text('dg-label', t[0], t[1] - 10, `Takeoff ${disp(result, 'total_weight')} at ${disp(result, 'cg')} (${result.result.takeoff_status})`, 'middle'),
+    burn ? text('dg-muted-text', l[0], l[1] + 18, `Landing ${disp(result, 'landing_weight')} at ${disp(result, 'landing_cg')} (${result.result.landing_status})`, 'middle') : '',
+    text('dg-muted-text', 30, 226, `Arm (${result.result.cg.unit}) \u2192`),
+    text('dg-muted-text', 30, 24, `Weight (${result.result.total_weight.unit}) \u2191`),
+  ].join('');
+  const title = `Center of gravity envelope: takeoff at ${disp(result, 'cg')} and ${disp(result, 'total_weight')}, ${result.result.takeoff_status} the envelope` +
+    (burn ? `, moving to ${disp(result, 'landing_cg')} at ${disp(result, 'landing_weight')} after the burn, ${result.result.landing_status} it.` : '.');
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -513,6 +549,7 @@ const DIAGRAMS = {
   'aviation.airspeed.cas-to-tas': airspeedGauge,
   'aviation.airspeed.tas-to-cas': airspeedGauge,
   'aviation.atmosphere.isa': isaProfile,
+  'aviation.loading.weight-balance': cgEnvelope,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

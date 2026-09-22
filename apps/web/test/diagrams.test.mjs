@@ -184,3 +184,84 @@ test('the runway drawing puts the wind components along and across the runway', 
     assert.match(d.markup, /Crosswind/);
   }
 });
+
+/** Even-odd membership, the same rule the core uses for the envelope. */
+const inside = (ring, [x, y]) => {
+  let on = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [[xi, yi], [xj, yj]] = [ring[i], ring[j]];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) on = !on;
+  }
+  return on;
+};
+const circles = (markup) =>
+  [...markup.matchAll(/<circle class="([^"]*)" cx="([-\d.]+)" cy="([-\d.]+)"/g)].map((m) => ({ cls: m[1], x: Number(m[2]), y: Number(m[3]) }));
+
+test('the weight-and-balance chart puts the loaded point where the core says it is', async () => {
+  // add-aviation-suite 6.3 fixture.
+  const stations = [
+    { name: 'Empty', weight: '1500 lb', arm: '85 in' },
+    { name: 'Front seats', weight: '340 lb', arm: '90 in' },
+    { name: 'Rear seats', weight: '170 lb', arm: '118 in' },
+    { name: 'Fuel', weight: '240 lb', arm: '48 in' },
+  ];
+  const envelope = [
+    { arm: '82 in', weight: '1500 lb' },
+    { arm: '93 in', weight: '1500 lb' },
+    { arm: '93 in', weight: '2300 lb' },
+    { arm: '84 in', weight: '2300 lb' },
+    { arm: '82 in', weight: '1950 lb' },
+  ];
+  // The second load is nose-heavy enough to fall out the front of the envelope.
+  for (const args of [
+    { stations, fuel_burn: '60 lb', envelope },
+    { stations: [...stations.slice(0, 1), { name: 'Nose ballast', weight: '600 lb', arm: '40 in' }], envelope },
+  ]) {
+    const r = JSON.parse(await host.invoke('aviation.loading.weight-balance', JSON.stringify(args)));
+    const d = diagram('aviation.loading.weight-balance', args, r);
+    const ring = [...d.markup.matchAll(/<polygon class="dg-grid" points="([^"]+)"/g)][0][1]
+      .split(' ')
+      .map((p) => p.split(',').map(Number));
+    assert.equal(ring.length, envelope.length, 'every envelope corner is drawn');
+    const takeoff = circles(d.markup).find((c) => c.cls === 'dg-dot-now');
+    // The drawing agrees with the core about whether the load is in limits.
+    assert.equal(inside(ring, [takeoff.x, takeoff.y]), r.result.takeoff_status === 'inside', `${r.result.takeoff_status} point drawn on the wrong side`);
+    // The verdict is in words too, not the position and color alone.
+    assert.match(d.markup, new RegExp(`Takeoff .*\\(${r.result.takeoff_status}\\)`));
+    assert.match(d.desc, new RegExp(r.result.takeoff_status));
+    if (!r.result.landing_weight) continue;
+    // Burning fuel moves the point along the drawn burn path to the landing dot.
+    const landing = circles(d.markup).find((c) => c.cls === 'dg-dot');
+    const path = lines(d.markup).find((l) => l.cls.includes('dg-dash'));
+    assert.ok(Math.hypot(path.x1 - takeoff.x, path.y1 - takeoff.y) < 0.2, 'the burn path starts at the takeoff point');
+    assert.ok(Math.hypot(path.x2 - landing.x, path.y2 - landing.y) < 0.2, 'and ends at the landing point');
+    // Lighter after the burn, so the landing point is drawn higher up the weight axis.
+    assert.ok(landing.y > takeoff.y, 'the landing point is lower in weight');
+  }
+});
+
+test('the standard-atmosphere chart marks the point on the profile it draws', async () => {
+  // add-aviation-suite 1.6 fixture.
+  let last = -Infinity;
+  for (const altitude of ['0 ft', '8000 ft', '18000 ft', '38000 ft']) {
+    const args = { altitude };
+    const r = JSON.parse(await host.invoke('aviation.atmosphere.isa', JSON.stringify(args)));
+    const d = diagram('aviation.atmosphere.isa', args, r);
+    const profile = [...d.markup.matchAll(/<path class="dg-muted" d="([^"]+)"/g)][0][1]
+      .split(/[ML]/)
+      .filter(Boolean)
+      .map((p) => p.trim().split(' ').map(Number));
+    const mark = circles(d.markup).find((c) => c.cls === 'dg-dot');
+    // The marked temperature and altitude lie on the standard profile: in the
+    // troposphere on the sloping leg, above it on the isothermal one.
+    const [a, b] = mark.y < profile[1][1] ? [profile[1], profile[2]] : [profile[0], profile[1]];
+    const at = (b[1] - a[1]) === 0 ? a[0] : a[0] + ((b[0] - a[0]) * (mark.y - a[1])) / (b[1] - a[1]);
+    assert.ok(Math.abs(at - mark.x) < 1.5, `${altitude}: marked at x ${mark.x}, profile is at ${at}`);
+    // Higher altitude, higher on the chart; the tropopause rule is drawn at the kink.
+    assert.ok(mark.y <= last || last === -Infinity, `${altitude} drawn below a lower altitude`);
+    last = mark.y;
+    const kink = [...d.markup.matchAll(/<line class="dg-grid dg-dash"[^>]*y1="([-\d.]+)"/g)][0][1];
+    assert.ok(Math.abs(Number(kink) - profile[1][1]) < 0.2, 'the tropopause rule sits at the kink');
+    assert.match(d.desc, /Standard atmosphere/);
+  }
+});

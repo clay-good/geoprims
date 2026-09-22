@@ -22,7 +22,7 @@
 - [x] 3.3 Implement density altitude (dry and humid) with approximations shown; verify the hot-high and humidity scenarios
 - [x] 3.4 Implement ISA temperature and deviation; verify the FL410 scenario
 - [ ] 3.5 Implement Q-code conversions, flight levels, and lowest usable flight level from dated reference data; verify the QFE and FL185 scenarios
-- [ ] 3.6 Implement the 2020 ICAO cold-temperature equation, table method, 4% rule, and multi-segment correction; verify the -30 °C and warmer-than-ISA scenarios against Transport Canada AC 500-020 worked examples
+- [ ] 3.6 Implement the 2020 ICAO cold-temperature equation, table method, 4% rule, and multi-segment correction; verify the -30 °C and warmer-than-ISA scenarios against Transport Canada AC 500-020 worked examples (built: `aviation.altimetry.cold-temperature` with the equation, the 4% rule, AIM Table 7-3-1 read bilinearly (transcribed from the FAA's image, with printed and interpolated cells spot-checked in unit tests), and up to 20 procedure altitudes at once; both scenarios pass (+218 ft and +246 ft by the rule; 0 when warmer than ISA); 7 golden vectors. Pending: checking against the Transport Canada AC 500-020 worked examples themselves, which have not been obtained)
 - [ ] 3.7 Implement true altitude and the altimetry diagram and gauge; verify the colder-air scenario and visual fixture
 
 ## 4. Wind and navigation

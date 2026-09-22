@@ -53,6 +53,7 @@
       "relatedTools": [
         "aviation.airspeed.cas-to-tas",
         "aviation.airspeed.tas-to-cas",
+        "aviation.altimetry.cold-temperature",
         "aviation.altimetry.density-altitude",
         "aviation.altimetry.isa-temperature",
         "aviation.atmosphere.isa"

@@ -49,8 +49,14 @@
       }
     },
     "aviation.altimetry": {
-      "summary": "Pressure altitude, the standard temperature for it, and density altitude.",
+      "summary": "Pressure altitude, the standard temperature for it, density altitude, and cold-day corrections.",
       "tasks": [
+        {
+          "want": "correct approach altitudes for a cold day",
+          "tools": [
+            "cold-temperature"
+          ]
+        },
         {
           "want": "find pressure altitude from field elevation and the altimeter setting",
           "tools": [

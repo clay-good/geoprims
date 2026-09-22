@@ -5,6 +5,7 @@
 pub mod airspeed;
 pub mod aloft;
 pub mod atmosphere;
+pub mod coldtemp;
 pub mod dme;
 pub mod fuel;
 pub mod heading;
@@ -2238,6 +2239,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &triangle::COURSE_FROM_HEADING,
     &fuel::FUEL_PLAN,
     &range::SPECIFIC_RANGE,
+    &coldtemp::COLD_TEMPERATURE,
 ];
 
 pub static REGISTRY: Registry = Registry {

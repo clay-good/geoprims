@@ -1,5 +1,5 @@
 // Local preferences (web/app-shell "Settings", "Recent and pinned tools"):
-// the unit profile, number format, recent tools (up to 50), and pinned tools.
+// the unit profile, number format, coordinate format, recent tools (up to 50), and pinned tools.
 // Everything stays in this browser's local storage; nothing is sent anywhere.
 // Setting changes fire "gp-prefs" (open tools re-run with them); list changes
 // fire "gp-lists" (the home page and palette redraw).
@@ -16,6 +16,14 @@ export const PROFILES = [
 export const NUMBER_FORMATS = [
   ['decimal-point', '1,234.5'],
   ['decimal-comma', '1.234,5'],
+];
+/** How coordinates are written where the reader reads them, like the map readout. */
+export const COORD_FORMATS = [
+  ['dd', 'Decimal degrees (40.4461°, -79.9822°)'],
+  ['ddm', 'Degrees and minutes (40° 26.767′ N)'],
+  ['dms', 'Degrees, minutes, seconds (40° 26′ 46.0″ N)'],
+  ['mgrs', 'MGRS (17T NE 86309 77770)'],
+  ['utm', 'UTM (17N 586310 mE 4477770 mN)'],
 ];
 export const MAX_RECENT = 50;
 
@@ -40,6 +48,8 @@ export const profile = () => read('gp-profile', '');
 /** Field mode: larger targets, larger result text, and per-field step buttons. */
 export const fieldMode = () => read('gp-field-mode', false) === true;
 export const numberFormat = () => read('gp-number-format', 'decimal-point');
+export const coordFormat = () => (COORD_FORMATS.some(([id]) => id === read('gp-coord-format', 'dd')) ? read('gp-coord-format', 'dd') : 'dd');
+export const setCoordFormat = (f) => write('gp-coord-format', f, 'gp-prefs');
 export const setProfile = (p) => write('gp-profile', p, 'gp-prefs');
 export const setNumberFormat = (f) => write('gp-number-format', f, 'gp-prefs');
 export function setFieldMode(on) {

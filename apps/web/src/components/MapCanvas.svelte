@@ -6,6 +6,8 @@
   import { buildLayers, extent } from '../lib/map/layers.js';
   import { decode, frame, inverse } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
+  import { magneticNorth, readoutText } from '../lib/map/readout.js';
+  import { coordFormat } from '../lib/prefs.js';
   import { attributionLines, caption, layersGeoJson, loadRegistry, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
 
   let { tool, args, result, compute } = $props();
@@ -28,9 +30,10 @@
     set(px);
     return { update: set };
   }
+  const metersPerPixel = (v) => (v.mode === 'globe' ? R_EARTH : R_EARTH * Math.cos((v.lat * Math.PI) / 180)) / v.scale;
   /** A round distance (1, 2, or 5 × 10^n meters) about 100 px long at the view's center. */
   function measure(v) {
-    const perPx = (v.mode === 'globe' ? R_EARTH : R_EARTH * Math.cos((v.lat * Math.PI) / 180)) / v.scale;
+    const perPx = metersPerPixel(v);
     const target = perPx * 100;
     const p10 = 10 ** Math.floor(Math.log10(target));
     const nice = [5, 2, 1].map((k) => k * p10).find((d) => d <= target) ?? p10;
@@ -125,7 +128,7 @@
     const r = canvas.getBoundingClientRect();
     const [w, h] = size();
     const ll = view && inverse({ ...view, width: w, height: h }, e.clientX - r.left, e.clientY - r.top);
-    readout = ll ? `${ll[1].toFixed(4)}°, ${ll[0].toFixed(4)}°` : '';
+    showPoint(ll);
     if (!drag) return;
     const d = 180 / Math.PI / drag.view.scale;
     view = {
@@ -134,6 +137,27 @@
       lat: Math.max(-85, Math.min(85, drag.view.lat + (e.clientY - drag.y) * d)),
     };
     paint();
+  }
+  // The readout in the chosen format. Grid formats ask the core; one request
+  // is in flight at a time and only the newest pointer position is kept.
+  let fmt = 'dd';
+  let asking = false;
+  let queued;
+  async function showPoint(ll) {
+    if (!ll) return (readout = '');
+    if (asking) return (queued = ll);
+    asking = true;
+    const text = await readoutText(ll[1], ll[0], fmt, {
+      invoke: compute?.invokeLatest && ((id, input) => compute.invokeLatest(id, input, 'readout')),
+      metersPerPixel: metersPerPixel(view),
+    });
+    asking = false;
+    if (text !== null) readout = text;
+    if (queued) {
+      const next = queued;
+      queued = undefined;
+      showPoint(next);
+    }
   }
   function up() {
     drag = null;
@@ -176,7 +200,20 @@
   // Detail beyond Natural Earth 1:110m: say the base map is generalized.
   const generalized = $derived(view && readout !== undefined && view.scale * (Math.PI / 180) > 60);
 
+  // North is up at the center of every view here: the Mercator map and the
+  // globe are both drawn north-up. Magnetic north shows when the tool's
+  // result carries a declination.
+  const magnetic = $derived(magneticNorth(result));
+  function turn(node, deg) {
+    const set = (d) => (node.style.rotate = `${d}deg`);
+    set(deg);
+    return { update: set };
+  }
+
   onMount(() => {
+    fmt = coordFormat();
+    const onPrefs = () => (fmt = coordFormat());
+    addEventListener('gp-prefs', onPrefs);
     reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     fetch('/basemap/ne-110m.json')
       .then((r) => r.json())
@@ -198,6 +235,7 @@
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] });
     canvas.addEventListener('wheel', wheel, { passive: false });
     return () => {
+      removeEventListener('gp-prefs', onPrefs);
       ro.disconnect();
       mo.disconnect();
       canvas.removeEventListener('wheel', wheel);
@@ -221,17 +259,25 @@
       <button type="button" onclick={exportGeoJson} aria-label="Download the layers as GeoJSON">GeoJSON</button>
     </div>
   </div>
-  <canvas
-    bind:this={canvas}
-    role="img"
-    aria-label={desc || 'Map'}
-    tabindex="0"
-    onpointerdown={down}
-    onpointermove={move}
-    onpointerup={up}
-    onpointercancel={up}
-    onkeydown={key}
-  ></canvas>
+  <div class="map-stage">
+    <canvas
+      bind:this={canvas}
+      role="img"
+      aria-label={desc || 'Map'}
+      tabindex="0"
+      onpointerdown={down}
+      onpointermove={move}
+      onpointerup={up}
+      onpointercancel={up}
+      onkeydown={key}
+    ></canvas>
+    <div class="map-north" aria-hidden="true">
+      <span class="north-true"><svg viewBox="0 0 16 24" width="16" height="24"><path d="M8 1 L14 21 L8 17 L2 21 Z" /></svg>N</span>
+      {#if magnetic !== null}
+        <span class="north-mag" title="Magnetic north"><svg use:turn={magnetic} viewBox="0 0 16 24" width="16" height="24"><path d="M8 1 L8 23 M4 6 L8 1 L12 6" /></svg>MN</span>
+      {/if}
+    </div>
+  </div>
   {#if legend.length}
     <ul class="map-legend">
       {#each legend as l}<li><span class={`swatch ${l.cls}`} aria-hidden="true"></span>{l.text}</li>{/each}

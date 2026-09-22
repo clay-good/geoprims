@@ -77,6 +77,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/canonical.test.mjs` | One canonical per page on its clean path, the reader's values only ever in the fragment, and `#example` on a link that opens the worked example |
 | `src/lib/chain.mjs`, `test/chain.test.mjs` | "Send to": which tools take a value, the one link that carries it with a breadcrumb back, and the geodesic-to-wind scenario end to end |
 | `src/lib/coordinate.mjs`, `test/coordinate.test.mjs` | The paste-a-coordinate field: any notation the catalog decodes, what it read shown before computing, and the swap when the order was assumed |
+| `src/lib/map/readout.js`, `test/readout.test.mjs` | The map's cursor readout in the chosen coordinate format (degrees, DMS, MGRS, and UTM from the core), and the magnetic north indicator |
 | `src/lib/canvas-export.mjs`, `test/canvas-export.test.mjs` | Canvas export: the map as PNG with the caption and every attribution in a footer strip, its layers as GeoJSON, and diagrams as standalone SVG |
 | `src/lib/export.mjs`, `test/export.test.mjs` | The eight export formats and the calculation sheet, with every geographic export read back and compared point for point |
 | `src/lib/import.mjs`, `src/lib/import-rows.mjs`, `test/import*.test.mjs` | Reading a file a reader brings — GeoJSON, KML, KMZ, GPX, WKT, WKB, CSV — in the worker, never fetching what it points at, repairing geometry with a report; and filling a tool's list of points from it, the one place a pair's order is decided |

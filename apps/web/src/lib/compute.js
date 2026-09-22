@@ -58,6 +58,9 @@ function call(method, args, key, onProgress) {
 
 // `key` groups requests: only the latest per key resolves (the map uses its own).
 export const invoke = (id, args, key = 'invoke', onProgress) => call('invoke', [id, JSON.stringify(args)], key, onProgress);
+/** A quick call where only the newest answer matters (the map readout): an
+ *  older one resolves null, and nothing is cancelled, so the worker stays warm. */
+export const invokeLatest = (id, args, key) => call('invokeLatest', [id, JSON.stringify(args)], key);
 export const encodeLink = (state, flags = []) => call('callString', ['link', 'gp_link_encode', JSON.stringify({ state, flags })], 'encode');
 export const decodeLink = (fragment) => call('callString', ['link', 'gp_link_decode', fragment]);
 export const search = (request) => call('search', [JSON.stringify(request)], 'search');

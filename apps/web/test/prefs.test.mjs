@@ -56,3 +56,15 @@ test('every profile id is one the core accepts', async () => {
   const r = JSON.parse(await host.invoke('navigation.geodesic.inverse', JSON.stringify({ lat1: 40, lon1: -74, lat2: 51, lon2: 0, options: { profile: 'aviation' } })));
   assert.equal(r.result.distance.unit, 'NM', 'aviation shows distance in NM');
 });
+
+test('the coordinate format is saved, defaults to decimal degrees, and never reaches the core', () => {
+  assert.equal(prefs.coordFormat(), 'dd');
+  events.length = 0;
+  prefs.setCoordFormat('mgrs');
+  assert.equal(prefs.coordFormat(), 'mgrs');
+  assert.deepEqual(events, ['gp-prefs'], 'an open map rereads it');
+  assert.ok(!('coordFormat' in (prefs.toolOptions() ?? {})), 'a display setting, not a tool option');
+  store.set('gp-coord-format', JSON.stringify('bogus'));
+  assert.equal(prefs.coordFormat(), 'dd', 'an unknown saved value reads as the default');
+  prefs.setCoordFormat('dd');
+});

@@ -403,6 +403,12 @@ figure.map { margin-inline: 0; padding: 0; overflow: hidden; }
 figure.map canvas { display: block; inline-size: 100%; block-size: min(60vh, 460px); touch-action: none; cursor: grab; }
 figure.map canvas:active { cursor: grabbing; }
 figure.map canvas:focus-visible { outline-offset: -3px; }
+.map-stage { position: relative; }
+.map-north { position: absolute; inset-block-start: 0.6rem; inset-inline-end: 0.6rem; display: flex; gap: 0.5rem; pointer-events: none; font: 600 0.7rem/1 var(--mono); color: var(--text); }
+.map-north > span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 5px; background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); border-radius: var(--radius); }
+.north-true path { fill: var(--text); }
+.north-mag { color: var(--muted); }
+.north-mag path { fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .map-bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; padding: 0.6rem; border-block-end: 1px solid var(--line); }
 .map-bar button { margin: 0; min-block-size: var(--target); min-inline-size: var(--target); padding-inline: 0.8rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.88rem; cursor: pointer; }
 .map-bar button:hover { border-color: color-mix(in srgb, var(--muted) 45%, var(--line)); }

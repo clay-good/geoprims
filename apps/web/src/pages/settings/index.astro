@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/PageHeader.astro';
-import { NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
+import { COORD_FORMATS, NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
 ---
 <Base title="Settings · geoprims" description="Unit profile, number format, display mode, and the data geoprims keeps in this browser." canonical="/settings/" noindex>
   <PageHeader title="Settings" purpose={`Settings apply right away and are saved only in this browser.`} />
@@ -13,6 +13,10 @@ import { NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
     <label>Number format
       <select name="numberFormat">{NUMBER_FORMATS.map(([id, label]) => <option value={id}>{label}</option>)}</select>
     </label>
+    <label>Coordinate format
+      <select name="coordFormat">{COORD_FORMATS.map(([id, label]) => <option value={id}>{label}</option>)}</select>
+    </label>
+    <p class="notice">How the map writes the point under your pointer.</p>
     <label class="switch">Field mode
       <input type="checkbox" name="fieldMode" />
     </label>
@@ -26,12 +30,14 @@ import { NUMBER_FORMATS, PROFILES } from '../../lib/prefs.js';
     <button type="button" data-action="erase">Erase all local data</button>
   </p>
   <script>
-    import { clearRecents, eraseLocalData, fieldMode, numberFormat, profile, setFieldMode, setNumberFormat, setProfile } from '../../lib/prefs.js';
+    import { clearRecents, coordFormat, eraseLocalData, fieldMode, numberFormat, profile, setCoordFormat, setFieldMode, setNumberFormat, setProfile } from '../../lib/prefs.js';
     const form = document.querySelector('form.settings');
     form.profile.value = profile();
     form.numberFormat.value = numberFormat();
     form.profile.addEventListener('change', () => setProfile(form.profile.value));
     form.numberFormat.addEventListener('change', () => setNumberFormat(form.numberFormat.value));
+    form.coordFormat.value = coordFormat();
+    form.coordFormat.addEventListener('change', () => setCoordFormat(form.coordFormat.value));
     form.fieldMode.checked = fieldMode();
     form.fieldMode.addEventListener('change', () => setFieldMode(form.fieldMode.checked));
     addEventListener('gp-prefs', () => (form.profile.value = profile()));

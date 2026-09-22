@@ -3,6 +3,7 @@
 
 pub mod buffer;
 pub mod envelope;
+pub mod predicate;
 pub mod shape;
 
 use geographiclib_rs::{PolygonArea, Winding};
@@ -334,6 +335,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &shape::CENTROID,
     &envelope::BBOX,
     &envelope::ENCLOSING,
+    &predicate::POINT_IN_POLYGON,
 ];
 
 pub static REGISTRY: Registry = Registry {

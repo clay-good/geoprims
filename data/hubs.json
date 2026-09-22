@@ -681,6 +681,17 @@
         }
       ]
     },
+    "geometry.predicate": {
+      "summary": "Tests of where points and shapes sit against each other.",
+      "tasks": [
+        {
+          "want": "check whether points are inside a polygon",
+          "tools": [
+            "point-in-polygon"
+          ]
+        }
+      ]
+    },
     "geometry.shape": {
       "summary": "Centers, interior points, and envelopes of shapes.",
       "tasks": [

@@ -36,6 +36,7 @@
       "groups": [
         "area",
         "buffer",
+        "predicate",
         "shape"
       ]
     },

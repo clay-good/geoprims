@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import ListFilter from '../../components/ListFilter.astro';
 import ToolCards from '../../components/ToolCards.astro';
-import { breadcrumbs, catalog, collection, DOMAIN_BLURBS, DOMAIN_TITLES, groups, groupTitle, reviewLine, route } from '../../lib/catalog.mjs';
+import { breadcrumbs, catalog, collection, DOMAIN_BLURBS, DOMAIN_TITLES, groups, groupTitle, hubFor, reviewLine, route } from '../../lib/catalog.mjs';
 export function getStaticPaths() {
   return [...new Set(catalog.tools.map((t) => t.domain))].map((domain) => ({ params: { domain } }));
 }
@@ -30,6 +30,7 @@ const jsonld = [collection(`${title} calculators`, route(domain), listed), bread
         <h2>{groupTitle(group)}</h2>
         <a href={route(`${domain}.${group}`)}>See all</a>
       </div>
+      {hubFor(domain, group).summary && <p class="group-summary">{hubFor(domain, group).summary}</p>}
       <ToolCards tools={tools} />
     </section>
   ))}

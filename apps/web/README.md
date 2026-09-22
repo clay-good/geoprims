@@ -77,6 +77,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/canonical.test.mjs` | One canonical per page on its clean path, the reader's values only ever in the fragment, and `#example` on a link that opens the worked example |
 | `src/lib/chain.mjs`, `test/chain.test.mjs` | "Send to": which tools take a value, the one link that carries it with a breadcrumb back, and the geodesic-to-wind scenario end to end |
 | `src/lib/coordinate.mjs`, `test/coordinate.test.mjs` | The paste-a-coordinate field: any notation the catalog decodes, what it read shown before computing, and the swap when the order was assumed |
+| `data/hubs.json`, `test/hubs.test.mjs` | Group hub pages: tools listed under "I want to…" tasks, each once, and a short guide where tools form a sequence |
 | `src/lib/crs.mjs`, `test/crs.test.mjs` | Projected coordinates on import: UTM and State Plane CSVs, and GeoJSON in a WGS 84 UTM zone, converted by the core's inverse tools; other declared systems refused |
 | `src/lib/map/readout.js`, `test/readout.test.mjs` | The map's cursor readout in the chosen coordinate format (degrees, DMS, MGRS, and UTM from the core), and the magnetic north indicator |
 | `src/lib/canvas-export.mjs`, `test/canvas-export.test.mjs` | Canvas export: the map as PNG with the caption and every attribution in a footer strip, its layers as GeoJSON, and diagrams as standalone SVG |

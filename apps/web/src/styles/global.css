@@ -541,6 +541,11 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .group-head h2 { margin: 0; }
 .group-head a { font-size: 0.88rem; color: var(--muted); text-decoration: none; }
 .group-head a:hover { color: var(--accent); }
+.task-want { margin-block: 2rem 0.75rem; font-size: 1.15rem; }
+.want-lead { display: block; font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.hub-guide { margin-block-start: 2.5rem; }
+.hub-guide ol { padding-inline-start: 1.25rem; display: grid; gap: 0.6rem; }
+.group-summary { margin-block: -0.4rem 0.75rem; color: var(--muted); }
 
 /* Page template (openspec web/page-template): page header, chips, list filter,
    field-located errors, copyable result rows, and the unit switch. */

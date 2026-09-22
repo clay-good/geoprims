@@ -270,3 +270,20 @@ export const clientTool = (t) => ({
   // Whether the answer carries a compact picture of itself.
   'x-diagram-inline': t['x-diagram-inline'] ?? false,
 });
+
+// Group hubs (web/tool-docs, "Domain and group index pages"): the tasks a
+// group serves, each with its tools, and a short guide where they form a
+// sequence. Unit groups have one task, converting. A step's tool is an
+// operation in the group or a full id elsewhere.
+const hubs = JSON.parse(readFileSync(join(root, 'data/hubs.json'), 'utf8')).hubs;
+export function hubFor(domain, group) {
+  const inGroup = catalog.tools.filter((t) => t.domain === domain && t.group === group);
+  const find = (ref) => catalog.tools.find((t) => t.id === (ref.includes('.') ? ref : `${domain}.${group}.${ref}`));
+  const hub = hubs[`${domain}.${group}`];
+  if (!hub) return { summary: '', tasks: [{ want: `convert ${group.replaceAll('-', ' ')}`, tools: inGroup }], guide: null };
+  return {
+    summary: hub.summary,
+    tasks: hub.tasks.map((t) => ({ want: t.want, tools: t.tools.map(find).filter(Boolean) })),
+    guide: hub.guide ? { title: hub.guide.title, steps: hub.guide.steps.map((s) => ({ text: s.text, tool: s.tool ? find(s.tool) : null })) } : null,
+  };
+}

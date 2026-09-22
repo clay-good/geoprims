@@ -1,0 +1,1034 @@
+{
+  "note": "Group hub pages (web/tool-docs, 'Domain and group index pages'): the tasks a group's tools serve, each tool in exactly one task, and a short guide where the tools form a sequence. Tool ids are the operation within the group, or a full id for a tool elsewhere. Unit groups need no entry: their one task is converting.",
+  "hubs": {
+    "aviation.airspeed": {
+      "summary": "From the number on the airspeed indicator to true airspeed and Mach, and back.",
+      "tasks": [
+        {
+          "want": "turn indicated or calibrated airspeed into true airspeed and Mach",
+          "tools": [
+            "cas-to-tas"
+          ]
+        },
+        {
+          "want": "find the calibrated airspeed to fly for a true airspeed or Mach",
+          "tools": [
+            "tas-to-cas"
+          ]
+        },
+        {
+          "want": "get outside air temperature from a total air temperature probe",
+          "tools": [
+            "tat-sat"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "IAS → CAS → EAS → TAS → Mach",
+        "steps": [
+          {
+            "text": "IAS is what the airspeed indicator shows. Correcting it for instrument and position error, from the calibration table in the POH or AFM, gives calibrated airspeed (CAS).",
+            "tool": "cas-to-tas"
+          },
+          {
+            "text": "Correcting CAS for the compression of air in the pitot tube gives equivalent airspeed (EAS). The difference is small below about 200 kt and 10,000 ft and grows with speed and altitude."
+          },
+          {
+            "text": "Correcting EAS for air density, from pressure altitude and outside air temperature, gives true airspeed (TAS): your speed through the air mass.",
+            "tool": "cas-to-tas"
+          },
+          {
+            "text": "TAS divided by the local speed of sound, which depends only on temperature, is the Mach number. A probe reads total air temperature, warmer than the outside air at speed, so convert it first.",
+            "tool": "tat-sat"
+          },
+          {
+            "text": "To plan the other way, from a TAS or Mach you want to the CAS to fly, run the chain in reverse.",
+            "tool": "tas-to-cas"
+          }
+        ]
+      }
+    },
+    "aviation.altimetry": {
+      "summary": "Pressure altitude, the standard temperature for it, and density altitude.",
+      "tasks": [
+        {
+          "want": "find pressure altitude from field elevation and the altimeter setting",
+          "tools": [
+            "pressure-altitude"
+          ]
+        },
+        {
+          "want": "know how far today's temperature is from standard",
+          "tools": [
+            "isa-temperature"
+          ]
+        },
+        {
+          "want": "find density altitude for takeoff and climb performance",
+          "tools": [
+            "density-altitude"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "Field elevation to density altitude",
+        "steps": [
+          {
+            "text": "Start from field elevation and the altimeter setting: the difference from 29.92 inHg (1013.25 hPa) gives pressure altitude.",
+            "tool": "pressure-altitude"
+          },
+          {
+            "text": "The standard atmosphere gives the temperature expected at that pressure altitude; the deviation says how much warmer or colder today is.",
+            "tool": "isa-temperature"
+          },
+          {
+            "text": "Pressure altitude and outside air temperature give density altitude, the altitude the airplane performs as if it were at.",
+            "tool": "density-altitude"
+          }
+        ]
+      }
+    },
+    "aviation.atmosphere": {
+      "summary": "Pressure, temperature, density, and speed of sound in the standard atmosphere.",
+      "tasks": [
+        {
+          "want": "look up the standard atmosphere at an altitude",
+          "tools": [
+            "isa"
+          ]
+        }
+      ]
+    },
+    "aviation.ifr": {
+      "summary": "Holding: the entry, the speed limit, and the wind correction.",
+      "tasks": [
+        {
+          "want": "choose a holding entry",
+          "tools": [
+            "hold-entry"
+          ]
+        },
+        {
+          "want": "know the maximum holding airspeed",
+          "tools": [
+            "hold-speed-limit"
+          ]
+        },
+        {
+          "want": "correct a hold for wind and time the legs",
+          "tools": [
+            "hold-wind-timing"
+          ]
+        }
+      ]
+    },
+    "aviation.loading": {
+      "summary": "Fuel weight and the weight and balance calculation.",
+      "tasks": [
+        {
+          "want": "turn fuel volume into weight",
+          "tools": [
+            "fuel-weight"
+          ]
+        },
+        {
+          "want": "check weight and center of gravity",
+          "tools": [
+            "weight-balance"
+          ]
+        }
+      ]
+    },
+    "aviation.performance": {
+      "summary": "Climb, descent, glide, and turns.",
+      "tasks": [
+        {
+          "want": "plan a climb gradient or vertical speed",
+          "tools": [
+            "climb-gradient"
+          ]
+        },
+        {
+          "want": "plan when to start down",
+          "tools": [
+            "top-of-descent",
+            "vdp"
+          ]
+        },
+        {
+          "want": "know how far I can glide",
+          "tools": [
+            "glide"
+          ]
+        },
+        {
+          "want": "work out a turn: radius, rate, bank, and load factor",
+          "tools": [
+            "turn",
+            "pivotal-altitude"
+          ]
+        }
+      ]
+    },
+    "aviation.weather": {
+      "summary": "METARs, TAFs, and winds aloft, decoded into plain language.",
+      "tasks": [
+        {
+          "want": "read a METAR or TAF",
+          "tools": [
+            "metar-decode",
+            "taf-decode"
+          ]
+        },
+        {
+          "want": "read a winds aloft forecast",
+          "tools": [
+            "fb-winds-decode"
+          ]
+        }
+      ]
+    },
+    "aviation.wind": {
+      "summary": "The wind triangle and runway wind components.",
+      "tasks": [
+        {
+          "want": "find the heading to fly and my groundspeed",
+          "tools": [
+            "heading-groundspeed"
+          ]
+        },
+        {
+          "want": "work out the wind from heading, track, and speeds",
+          "tools": [
+            "find-wind"
+          ]
+        },
+        {
+          "want": "find the headwind and crosswind on a runway",
+          "tools": [
+            "runway-components"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "The wind triangle",
+        "steps": [
+          {
+            "text": "Your airplane moves through the air on its heading at true airspeed; the air moves over the ground with the wind. Adding the two gives your track and groundspeed.",
+            "tool": "heading-groundspeed"
+          },
+          {
+            "text": "In flight, a known heading, track, TAS, and groundspeed give the wind back.",
+            "tool": "find-wind"
+          },
+          {
+            "text": "At the runway, the same wind splits into a headwind and a crosswind component.",
+            "tool": "runway-components"
+          }
+        ]
+      }
+    },
+    "drone.mission": {
+      "summary": "Flight patterns for mapping and inspection.",
+      "tasks": [
+        {
+          "want": "lay out a mapping grid over an area",
+          "tools": [
+            "survey-grid"
+          ]
+        },
+        {
+          "want": "map a road, pipeline, or river",
+          "tools": [
+            "corridor"
+          ]
+        },
+        {
+          "want": "circle a point of interest",
+          "tools": [
+            "orbit"
+          ]
+        }
+      ]
+    },
+    "drone.ops": {
+      "summary": "Rules checks for Part 107 and the EASA open category.",
+      "tasks": [
+        {
+          "want": "check an altitude or speed limit under Part 107",
+          "tools": [
+            "part107-altitude",
+            "speed-check"
+          ]
+        },
+        {
+          "want": "find my EASA open subcategory",
+          "tools": [
+            "easa-subcategory"
+          ]
+        },
+        {
+          "want": "know the impact energy of my drone",
+          "tools": [
+            "kinetic-energy"
+          ]
+        }
+      ]
+    },
+    "drone.photogrammetry": {
+      "summary": "Ground sampling distance, overlap, image count, blur, and accuracy.",
+      "tasks": [
+        {
+          "want": "find the GSD for a height, or the height for a GSD",
+          "tools": [
+            "gsd",
+            "altitude-for-gsd"
+          ]
+        },
+        {
+          "want": "set overlap, trigger interval, and line spacing",
+          "tools": [
+            "trigger"
+          ]
+        },
+        {
+          "want": "estimate how many images a job takes",
+          "tools": [
+            "image-count"
+          ]
+        },
+        {
+          "want": "check for motion blur",
+          "tools": [
+            "motion-blur"
+          ]
+        },
+        {
+          "want": "state accuracy to the ASPRS standard",
+          "tools": [
+            "asprs-accuracy"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "Planning a mapping flight",
+        "steps": [
+          {
+            "text": "Pick the ground sampling distance the deliverable needs, and find the height that gives it with your camera.",
+            "tool": "altitude-for-gsd"
+          },
+          {
+            "text": "Choose front and side overlap; they set the photo interval and the spacing between lines.",
+            "tool": "trigger"
+          },
+          {
+            "text": "Check the shutter speed keeps motion blur under a fraction of a pixel at your groundspeed.",
+            "tool": "motion-blur"
+          },
+          {
+            "text": "Estimate the image count for the area, which drives batteries and processing time.",
+            "tool": "image-count"
+          },
+          {
+            "text": "After processing, report accuracy against checkpoints to the ASPRS standard.",
+            "tool": "asprs-accuracy"
+          }
+        ]
+      }
+    },
+    "drone.power": {
+      "summary": "Battery energy, hover power, flight time, and reserves.",
+      "tasks": [
+        {
+          "want": "turn a battery's mAh and voltage into watt-hours",
+          "tools": [
+            "battery-energy"
+          ]
+        },
+        {
+          "want": "estimate flight time",
+          "tools": [
+            "endurance",
+            "hover-power"
+          ]
+        },
+        {
+          "want": "keep enough energy to come home",
+          "tools": [
+            "rth-budget"
+          ]
+        },
+        {
+          "want": "find how much payload I can carry",
+          "tools": [
+            "max-payload"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "From battery label to flight time",
+        "steps": [
+          {
+            "text": "A battery's capacity in mAh times its voltage is its energy in watt-hours.",
+            "tool": "battery-energy"
+          },
+          {
+            "text": "Hover power depends on weight and rotor area; flight time is usable energy over power.",
+            "tool": "endurance"
+          },
+          {
+            "text": "Hold back what the return leg needs, against the wind.",
+            "tool": "rth-budget"
+          }
+        ]
+      }
+    },
+    "drone.sensors": {
+      "summary": "How far away a drone stays visible.",
+      "tasks": [
+        {
+          "want": "know how far I can see my drone",
+          "tools": [
+            "vlos"
+          ]
+        }
+      ]
+    },
+    "geodesy.datum": {
+      "summary": "Moving coordinates between datums, frames, and epochs.",
+      "tasks": [
+        {
+          "want": "move coordinates between NAD 83, ITRF, and WGS 84",
+          "tools": [
+            "nad83",
+            "itrf"
+          ]
+        },
+        {
+          "want": "bring an old US datum to NAD 83",
+          "tools": [
+            "nadcon5"
+          ]
+        },
+        {
+          "want": "convert a legacy datum to or from WGS 84",
+          "tools": [
+            "legacy"
+          ]
+        },
+        {
+          "want": "apply a Helmert transformation I have the parameters for",
+          "tools": [
+            "helmert"
+          ]
+        },
+        {
+          "want": "move a position to another epoch",
+          "tools": [
+            "plate-motion"
+          ]
+        }
+      ]
+    },
+    "geodesy.ellipsoid": {
+      "summary": "Ellipsoid parameters, radii, and auxiliary latitudes.",
+      "tasks": [
+        {
+          "want": "look up an ellipsoid's parameters",
+          "tools": [
+            "parameters"
+          ]
+        },
+        {
+          "want": "find the radius of curvature or the length of a degree",
+          "tools": [
+            "radii"
+          ]
+        },
+        {
+          "want": "convert between geodetic and other latitudes",
+          "tools": [
+            "auxiliary-latitude"
+          ]
+        }
+      ]
+    },
+    "geodesy.frame": {
+      "summary": "Earth-centered and local coordinates.",
+      "tasks": [
+        {
+          "want": "convert between latitude, longitude, height and ECEF",
+          "tools": [
+            "geodetic-to-ecef",
+            "ecef-to-geodetic"
+          ]
+        },
+        {
+          "want": "describe a point from where I stand (ENU, NED, azimuth and elevation)",
+          "tools": [
+            "to-local",
+            "from-local"
+          ]
+        }
+      ]
+    },
+    "geodesy.geoid": {
+      "summary": "The geoid height that separates GPS heights from heights above sea level.",
+      "tasks": [
+        {
+          "want": "find the geoid height at a point",
+          "tools": [
+            "geoid-height"
+          ]
+        }
+      ]
+    },
+    "geodesy.grid-ref": {
+      "summary": "Military, aviation, and radio grid references.",
+      "tasks": [
+        {
+          "want": "convert to or from MGRS or USNG",
+          "tools": [
+            "mgrs-forward",
+            "mgrs-inverse",
+            "usng-forward",
+            "usng-inverse"
+          ]
+        },
+        {
+          "want": "convert to or from GARS or GEOREF",
+          "tools": [
+            "gars-forward",
+            "gars-inverse",
+            "georef-forward",
+            "georef-inverse"
+          ]
+        },
+        {
+          "want": "convert to or from a Maidenhead locator",
+          "tools": [
+            "maidenhead-forward",
+            "maidenhead-inverse"
+          ]
+        }
+      ]
+    },
+    "geodesy.height": {
+      "summary": "Ellipsoidal and orthometric heights.",
+      "tasks": [
+        {
+          "want": "turn a GPS height into a height above sea level, or back",
+          "tools": [
+            "convert"
+          ]
+        }
+      ]
+    },
+    "geodesy.magnetic": {
+      "summary": "Magnetic declination and true and magnetic bearings.",
+      "tasks": [
+        {
+          "want": "find the magnetic declination",
+          "tools": [
+            "declination"
+          ]
+        },
+        {
+          "want": "convert a bearing between true and magnetic",
+          "tools": [
+            "true-to-magnetic"
+          ]
+        }
+      ]
+    },
+    "geodesy.parse": {
+      "summary": "Reading, formatting, and comparing coordinates and bearings.",
+      "tasks": [
+        {
+          "want": "read a coordinate in any notation",
+          "tools": [
+            "coordinates"
+          ]
+        },
+        {
+          "want": "write a coordinate in another format",
+          "tools": [
+            "format"
+          ]
+        },
+        {
+          "want": "find the angle between two bearings",
+          "tools": [
+            "bearing-difference"
+          ]
+        }
+      ]
+    },
+    "geodesy.spcs": {
+      "summary": "State plane coordinates (SPCS83).",
+      "tasks": [
+        {
+          "want": "find the state plane zone for a place",
+          "tools": [
+            "zone-lookup"
+          ]
+        },
+        {
+          "want": "convert between latitude and longitude and state plane",
+          "tools": [
+            "spcs83-forward",
+            "spcs83-inverse"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "Working in state plane",
+        "steps": [
+          {
+            "text": "Find the zone for the job from the state and county, or from a point.",
+            "tool": "zone-lookup"
+          },
+          {
+            "text": "Convert latitude and longitude to northing and easting in that zone, in its legal unit.",
+            "tool": "spcs83-forward"
+          },
+          {
+            "text": "Grid distances are not ground distances: the combined factor scales between them.",
+            "tool": "survey.reduction.combined-factor"
+          }
+        ]
+      }
+    },
+    "geodesy.ups": {
+      "summary": "Universal Polar Stereographic, for the polar caps UTM does not cover.",
+      "tasks": [
+        {
+          "want": "convert to or from UPS",
+          "tools": [
+            "forward",
+            "inverse"
+          ]
+        }
+      ]
+    },
+    "geodesy.utm": {
+      "summary": "Universal Transverse Mercator.",
+      "tasks": [
+        {
+          "want": "find the UTM zone for a place",
+          "tools": [
+            "zone"
+          ]
+        },
+        {
+          "want": "convert between latitude and longitude and UTM",
+          "tools": [
+            "forward",
+            "inverse"
+          ]
+        }
+      ]
+    },
+    "geometry.area": {
+      "summary": "Areas on the ellipsoid.",
+      "tasks": [
+        {
+          "want": "find the area and perimeter of a polygon",
+          "tools": [
+            "polygon"
+          ]
+        }
+      ]
+    },
+    "indexing.geohash": {
+      "summary": "Geohash encoding, decoding, and neighbors.",
+      "tasks": [
+        {
+          "want": "encode or decode a geohash",
+          "tools": [
+            "encode",
+            "decode"
+          ]
+        },
+        {
+          "want": "find a geohash's neighbors",
+          "tools": [
+            "neighbors"
+          ]
+        }
+      ]
+    },
+    "indexing.h3": {
+      "summary": "Uber's H3 hexagonal grid.",
+      "tasks": [
+        {
+          "want": "find the H3 cell for a point, or inspect a cell",
+          "tools": [
+            "lat-lng-to-cell",
+            "cell-info",
+            "edges"
+          ]
+        },
+        {
+          "want": "choose a resolution",
+          "tools": [
+            "resolution-chooser"
+          ]
+        },
+        {
+          "want": "move up or down the hierarchy",
+          "tools": [
+            "parent",
+            "children",
+            "compact",
+            "uncompact"
+          ]
+        },
+        {
+          "want": "find cells around or between cells",
+          "tools": [
+            "grid-disk",
+            "grid-ring",
+            "grid-path"
+          ]
+        },
+        {
+          "want": "fill a polygon with cells",
+          "tools": [
+            "polygon-to-cells"
+          ]
+        }
+      ]
+    },
+    "indexing.plus-code": {
+      "summary": "Open Location Codes (Plus Codes).",
+      "tasks": [
+        {
+          "want": "encode or decode a Plus Code",
+          "tools": [
+            "encode",
+            "decode"
+          ]
+        },
+        {
+          "want": "shorten a Plus Code near a reference place",
+          "tools": [
+            "shorten"
+          ]
+        }
+      ]
+    },
+    "indexing.tile": {
+      "summary": "Web map tiles and ground resolution.",
+      "tasks": [
+        {
+          "want": "find the tile for a point, or a tile's bounds",
+          "tools": [
+            "from-point",
+            "bounds"
+          ]
+        },
+        {
+          "want": "know the ground resolution and scale at a zoom",
+          "tools": [
+            "ground-resolution"
+          ]
+        }
+      ]
+    },
+    "navigation.geodesic": {
+      "summary": "Shortest paths on the ellipsoid.",
+      "tasks": [
+        {
+          "want": "find the distance and courses between two points",
+          "tools": [
+            "inverse",
+            "haversine",
+            "vincenty-inverse"
+          ]
+        },
+        {
+          "want": "find where I end up from a start, course, and distance",
+          "tools": [
+            "direct",
+            "vincenty-direct"
+          ]
+        },
+        {
+          "want": "find points along the way",
+          "tools": [
+            "midpoint",
+            "waypoints"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "Which distance method",
+        "steps": [
+          {
+            "text": "The geodesic tools solve the ellipsoid exactly (Karney's method) and are the ones to use.",
+            "tool": "inverse"
+          },
+          {
+            "text": "Haversine treats the earth as a sphere and can be off by about 0.5%; it is here for comparison with other software.",
+            "tool": "haversine"
+          },
+          {
+            "text": "Vincenty's method is a legacy iteration that can fail near antipodal points; it is here to check older results.",
+            "tool": "vincenty-inverse"
+          }
+        ]
+      }
+    },
+    "navigation.los": {
+      "summary": "Horizon, line of sight, and radio clearance.",
+      "tasks": [
+        {
+          "want": "know how far the horizon is",
+          "tools": [
+            "horizon",
+            "dip"
+          ]
+        },
+        {
+          "want": "check whether two points can see each other",
+          "tools": [
+            "visibility"
+          ]
+        },
+        {
+          "want": "check a radio link's Fresnel clearance",
+          "tools": [
+            "fresnel"
+          ]
+        }
+      ]
+    },
+    "navigation.rhumb": {
+      "summary": "Constant-course lines.",
+      "tasks": [
+        {
+          "want": "find the distance and course of a rhumb line",
+          "tools": [
+            "inverse"
+          ]
+        },
+        {
+          "want": "find where a constant course takes me",
+          "tools": [
+            "direct"
+          ]
+        }
+      ]
+    },
+    "navigation.route": {
+      "summary": "Routes, legs, and the geometry around them.",
+      "tasks": [
+        {
+          "want": "total up a route's legs",
+          "tools": [
+            "legs",
+            "time-speed-distance"
+          ]
+        },
+        {
+          "want": "know how far I am off a route",
+          "tools": [
+            "cross-track",
+            "closest-point"
+          ]
+        },
+        {
+          "want": "find when two moving craft pass closest",
+          "tools": [
+            "cpa"
+          ]
+        },
+        {
+          "want": "anticipate a turn at a waypoint",
+          "tools": [
+            "fly-by"
+          ]
+        }
+      ]
+    },
+    "survey.cogo": {
+      "summary": "Coordinate geometry: inverses, forwards, traverses, and areas.",
+      "tasks": [
+        {
+          "want": "find bearing and distance between two points, or a point from them",
+          "tools": [
+            "inverse",
+            "forward"
+          ]
+        },
+        {
+          "want": "check and adjust a traverse",
+          "tools": [
+            "traverse-closure"
+          ]
+        },
+        {
+          "want": "find an area from coordinates",
+          "tools": [
+            "area-by-coordinates"
+          ]
+        }
+      ]
+    },
+    "survey.curves": {
+      "summary": "Horizontal and vertical curves.",
+      "tasks": [
+        {
+          "want": "lay out a horizontal curve",
+          "tools": [
+            "circular-curve"
+          ]
+        },
+        {
+          "want": "design a vertical curve",
+          "tools": [
+            "vertical-curve"
+          ]
+        }
+      ]
+    },
+    "survey.earthwork": {
+      "summary": "Volumes and truck loads.",
+      "tasks": [
+        {
+          "want": "find a volume between cross sections",
+          "tools": [
+            "average-end-area",
+            "prismoidal"
+          ]
+        },
+        {
+          "want": "account for swell and shrink and count truck loads",
+          "tools": [
+            "shrink-swell"
+          ]
+        }
+      ]
+    },
+    "survey.land": {
+      "summary": "Deeds, legal descriptions, and old units.",
+      "tasks": [
+        {
+          "want": "read a metes-and-bounds deed and plot it",
+          "tools": [
+            "deed-parse",
+            "deed-plot"
+          ]
+        },
+        {
+          "want": "rotate bearings to a new basis",
+          "tools": [
+            "basis-rotation"
+          ]
+        },
+        {
+          "want": "read a PLSS description",
+          "tools": [
+            "plss-parse"
+          ]
+        },
+        {
+          "want": "convert chains, rods, links, and varas",
+          "tools": [
+            "legacy-units"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "From deed to plot",
+        "steps": [
+          {
+            "text": "Read the calls out of the deed text: bearings, distances, and curves.",
+            "tool": "deed-parse"
+          },
+          {
+            "text": "Plot them, check the closure, and find the area.",
+            "tool": "deed-plot"
+          },
+          {
+            "text": "If the deed's bearings are on a different basis from your survey, rotate them.",
+            "tool": "basis-rotation"
+          }
+        ]
+      }
+    },
+    "survey.reduction": {
+      "summary": "Between grid and ground.",
+      "tasks": [
+        {
+          "want": "scale distances between grid and ground",
+          "tools": [
+            "combined-factor"
+          ]
+        }
+      ]
+    },
+    "time.scale": {
+      "summary": "Time scales, zones, and flight time.",
+      "tasks": [
+        {
+          "want": "convert local time to UTC, or check a zone's rules",
+          "tools": [
+            "utc-offset",
+            "zone-info"
+          ]
+        },
+        {
+          "want": "convert between UTC and GPS time",
+          "tools": [
+            "gps-week",
+            "gps-to-utc"
+          ]
+        },
+        {
+          "want": "find a Julian date or day of year",
+          "tools": [
+            "julian-date"
+          ]
+        },
+        {
+          "want": "log flight time",
+          "tools": [
+            "block-time",
+            "decimal-hours"
+          ]
+        }
+      ]
+    },
+    "time.sun": {
+      "summary": "Where the sun is and when it rises and sets.",
+      "tasks": [
+        {
+          "want": "know sunrise, sunset, and twilight",
+          "tools": [
+            "events"
+          ]
+        },
+        {
+          "want": "know when night starts for aviation rules",
+          "tools": [
+            "aviation-nights"
+          ]
+        },
+        {
+          "want": "find the hours of good light for mapping",
+          "tools": [
+            "mapping-window"
+          ]
+        },
+        {
+          "want": "find the sun's azimuth and elevation",
+          "tools": [
+            "position"
+          ]
+        }
+      ]
+    }
+  }
+}

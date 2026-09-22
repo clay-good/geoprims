@@ -138,3 +138,21 @@ test('h3 k-ring: k = 2 on a resolution 7 cell draws 19 cell outlines, the origin
   assert.deepEqual(cellIds({ result: { cell: 'abc' } }, 'cell'), ['abc']);
   assert.deepEqual(cellIds({ result: { cells: [{ cell: 'a' }, 'b'] } }, 'cells'), ['a', 'b']);
 });
+
+test('geohash, Plus Code, and tile cells draw as their bounds', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  for (const id of ['indexing.geohash.decode', 'indexing.geohash.encode', 'indexing.plus-code.encode', 'indexing.plus-code.decode', 'indexing.tile.bounds']) {
+    const t = catalog.tools.find((x) => x.id === id);
+    const args = (t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0]).input;
+    const r = JSON.parse(await host.invoke(id, JSON.stringify(args)));
+    const cell = (await buildLayers(t, args, r, async () => null)).find((l) => l.kind === 'polygon');
+    assert.ok(cell, `${id}: no cell outline`);
+    const lons = cell.rings[0].map((p) => p[0]);
+    const lats = cell.rings[0].map((p) => p[1]);
+    assert.ok(Math.abs(Math.min(...lats) - r.result.south.value) < 1e-12 && Math.abs(Math.max(...lons) - r.result.east.value) < 1e-12, `${id}: outline is the core's bounds`);
+  }
+});

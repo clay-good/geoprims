@@ -201,8 +201,13 @@ pub static GEOHASH_ENCODE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "bbox",
+        map: &[
+            ("south", "south"),
+            ("west", "west"),
+            ("north", "north"),
+            ("east", "east"),
+        ],
     }],
     related: &[
         Related {
@@ -332,8 +337,13 @@ pub static GEOHASH_DECODE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "bbox",
+        map: &[
+            ("south", "south"),
+            ("west", "west"),
+            ("north", "north"),
+            ("east", "east"),
+        ],
     }],
     related: &[
         Related {
@@ -678,8 +688,13 @@ pub static TILE_BOUNDS: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "bbox",
+        map: &[
+            ("south", "south"),
+            ("west", "west"),
+            ("north", "north"),
+            ("east", "east"),
+        ],
     }],
     related: &[
         Related {
@@ -994,8 +1009,13 @@ pub static OLC_ENCODE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "bbox",
+        map: &[
+            ("south", "south"),
+            ("west", "west"),
+            ("north", "north"),
+            ("east", "east"),
+        ],
     }],
     related: &[
         Related {
@@ -1106,8 +1126,13 @@ pub static OLC_DECODE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "bbox",
+        map: &[
+            ("south", "south"),
+            ("west", "west"),
+            ("north", "north"),
+            ("east", "east"),
+        ],
     }],
     related: &[
         Related {

@@ -823,6 +823,39 @@ function sunPath(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Circular curve, plan view: the two tangents meeting at the PI, the arc from PC to PT, and the long chord. */
+function circularCurve(args, result) {
+  const [R_, delta, T, L] = ['radius', 'delta', 'tangent', 'length'].map((k) => val(result, k));
+  if (![R_, delta, T].every(Number.isFinite) || delta <= 0 || delta >= 180) return null;
+  // Drawn as the surveyor sets it out: the back tangent along the page, the
+  // forward tangent deflected by delta, and the arc tangent to both.
+  const k = 105 / Math.max(T * 1.35, R_ * Math.tan((delta / 2) * R) * 1.35);
+  const [t, r] = [T * k, R_ * k];
+  const [px, py] = [160, 96 + r * (1 - Math.cos((delta / 2) * R))];
+  const dir = (b, len, from = [px, py]) => [from[0] + len * Math.sin(b * R), from[1] - len * Math.cos(b * R)];
+  // The back tangent runs into the PI from the left, the forward one leaves it deflected right.
+  const back = dir(270, t);
+  const fwd = dir(90 - delta, t);
+  const pc = back;
+  const pt = fwd;
+  const body = [
+    line('dg-grid dg-dash', dir(270, t * 1.5), [px, py]),
+    line('dg-grid dg-dash', [px, py], dir(90 - delta, t * 1.5)),
+    `<path class="dg-accent" d="M${pc.map(f1).join(' ')}A${f1(r)} ${f1(r)} 0 0 1 ${pt.map(f1).join(' ')}"/>`,
+    line('dg-muted dg-dash', pc, pt),
+    dot(...pc, 'dg-dot'),
+    dot(px, py, 'dg-dot-now'),
+    dot(...pt, 'dg-dot'),
+    text('dg-label', pc[0], pc[1] + 18, `PC ${result.result.pc_station ?? ''}`, 'middle'),
+    text('dg-label', px, py - 10, `PI ${args.pi_station ?? ''}`, 'middle'),
+    text('dg-label', pt[0] + 6, pt[1] + 4, `PT ${result.result.pt_station ?? ''}`),
+    text('dg-muted-text', 12, 214, `R ${disp(result, 'radius')} · \u0394 ${disp(result, 'delta')} · T ${disp(result, 'tangent')} · L ${disp(result, 'length')}`),
+    text('dg-muted-text', 12, 230, `Long chord ${disp(result, 'chord')}, middle ordinate ${disp(result, 'middle_ordinate')}`),
+  ].join('');
+  const title = `Circular curve in plan: a ${disp(result, 'delta')} deflection on a ${disp(result, 'radius')} radius, tangent ${disp(result, 'tangent')}, arc ${disp(result, 'length')} from PC ${result.result.pc_station ?? ''} to PT ${result.result.pt_station ?? ''}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -844,6 +877,7 @@ const DIAGRAMS = {
   'geodesy.height.convert': heightStack,
   'aviation.ifr.hold-entry': holdEntry,
   'time.sun.mapping-window': sunPath,
+  'survey.curves.circular-curve': circularCurve,
   'aviation.performance.climb-gradient': climbTriangle,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,

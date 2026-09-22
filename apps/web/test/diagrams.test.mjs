@@ -573,3 +573,35 @@ test('the sun path plots the day in the sky, with the usable part marked', async
   assert.ok(Math.abs(readBack(peak.x, peak.y).el - r.result.max_elevation.value) < 0.5, 'the peak is not at the highest sun');
   assert.match(d.desc, /North is up/);
 });
+
+test('the curve plan sets the PC and PT out from the PI, tangent to both legs', async () => {
+  // add-survey-suite 4.6 plan-view fixture.
+  for (const args of [
+    { delta: '30 deg', pi_station: '12+34.56', radius: '500 ft' },
+    { delta: '90 deg', radius: '300 ft' },
+    { delta: '120 deg', radius: '250 ft' },
+  ]) {
+    const r = JSON.parse(await host.invoke('survey.curves.circular-curve', JSON.stringify(args)));
+    const d = diagram('survey.curves.circular-curve', args, r);
+    const [backLeg, fwdLeg] = lines(d.markup).filter((l) => l.cls === 'dg-grid dg-dash');
+    const chord = lines(d.markup).find((l) => l.cls === 'dg-muted dg-dash');
+    const arc = /<path class="dg-accent" d="M([-\d.]+) ([-\d.]+)A([\d.]+) [\d.]+ 0 0 1 ([-\d.]+) ([-\d.]+)"/.exec(d.markup);
+    const [sx, sy, radius, ex, ey] = arc.slice(1).map(Number);
+    const pi = [backLeg.x2, backLeg.y2];
+    // The legs deflect by delta, which is what the curve turns through. The
+    // tool gives no direction, so the drawing picks one and delta is unsigned.
+    const turn = Math.abs(((bearing(fwdLeg).deg - bearing(backLeg).deg + 540) % 360) - 180);
+    assert.ok(Math.abs(turn - r.result.delta.value) < 0.5, `the legs deflect ${turn}, not ${r.result.delta.value}`);
+    // PC and PT sit a tangent length from the PI, to the drawing's scale.
+    const k = Math.hypot(sx - pi[0], sy - pi[1]) / r.result.tangent.value;
+    // Coordinates are written to a tenth of a pixel, so a foot is the floor here.
+    assert.ok(Math.abs(Math.hypot(ex - pi[0], ey - pi[1]) / k - r.result.tangent.value) < 1, 'PT is not a tangent length from the PI');
+    // The arc is drawn at the radius, and the chord spans PC to PT.
+    assert.ok(Math.abs(radius / k - r.result.radius.value) < 2, `the arc radius is ${radius / k}, not ${r.result.radius.value}`);
+    assert.ok(Math.hypot(chord.x1 - sx, chord.y1 - sy) < 0.2 && Math.hypot(chord.x2 - ex, chord.y2 - ey) < 0.2, 'the chord does not span PC to PT');
+    assert.ok(Math.abs(Math.hypot(chord.x2 - chord.x1, chord.y2 - chord.y1) / k - r.result.chord.value) < 1, 'the long chord is drawn the wrong length');
+    // The points are named, with their stations where the input gives one.
+    for (const name of ['PC', 'PI', 'PT']) assert.ok(d.markup.includes(`>${name} `), `${name} unlabeled`);
+    if (args.pi_station) assert.ok(d.markup.includes(r.result.pc_station), 'the PC station is not shown');
+  }
+});

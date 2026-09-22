@@ -73,6 +73,14 @@ pub fn tokens(s: &str) -> Vec<String> {
         .collect()
 }
 
+/// Tokens without stopwords: the words a query keeps.
+fn content(s: &str) -> Vec<String> {
+    tokens(s)
+        .into_iter()
+        .filter(|t| !STOPWORDS.contains(&t.as_str()))
+        .collect()
+}
+
 fn stem(t: &str) -> &str {
     for (suffix, min) in [("ing", 6), ("ies", 5), ("es", 5), ("ed", 5), ("s", 4)] {
         if t.len() >= min
@@ -184,16 +192,18 @@ impl Entry {
         // The operation segment reads as a phrase too ("f to c", "ft to m"),
         // so a conversion ranks by its direction.
         let op = tokens(id.rsplit('.').next().unwrap_or_default());
+        // Phrases drop stopwords as queries do, so "point in polygon" matches
+        // its alias word for word.
         let phrases = aliases
             .iter()
             .chain(&keywords)
-            .map(|a| tokens(a))
+            .map(|a| content(a))
             .chain(std::iter::once(op))
             .map(&mut t)
             .collect();
         Some(Entry {
             slots: prefill::slots(m),
-            title_tokens: t(tokens(&s("title"))),
+            title_tokens: t(content(&s("title"))),
             phrases,
             id,
             title: s("title"),
@@ -569,6 +579,25 @@ mod tests {
         assert_eq!(
             top("aviation.altimetry.pressure-altitude")[0],
             "aviation.altimetry.pressure-altitude"
+        );
+    }
+
+    #[test]
+    fn a_stopword_inside_an_alias_still_matches_it_word_for_word() {
+        // "in" is dropped from the query, so it must be dropped from the phrase too,
+        // or a tool whose title merely holds "point" and "polygon" outranks it.
+        let manifests = serde_json::json!([
+            {"id":"geometry.buffer.geodesic","title":"Buffer a point, line, or polygon","summary":"The area within a distance of a point, line, or polygon.","domain":"geometry","group":"buffer","aliases":["buffer"],"keywords":["polygon","point"],"stability":"stable"},
+            {"id":"geometry.predicate.point-in-polygon","title":"Point in polygon","summary":"Whether points are inside a polygon.","domain":"geometry","group":"predicate","aliases":["point in polygon"],"keywords":["inside"],"stability":"stable"}
+        ]);
+        load(&manifests.to_string());
+        assert_eq!(
+            top("point in polygon")[0],
+            "geometry.predicate.point-in-polygon"
+        );
+        assert_eq!(
+            top("Point in polygon")[0],
+            "geometry.predicate.point-in-polygon"
         );
     }
 

@@ -50,7 +50,7 @@ The geoid heights come from `GeoidEval`, GeographicLib's own evaluator, run over
 
 - `core/crates/gp-geodesy/tests/geoid.rs`: the full 2,010-point fixture, both interpolation schemes
 - `tools/vectors/gen_geodesy_last.py`: 18 of the 26 vectors, from that same fixture
-- `core/vectors/geodesy.height.convert.jsonl`: 26 conversions across the globe and six height bands
+- `core/vectors/geodesy.height.convert.jsonl`: 26 conversions across the globe and six height bands, and two (v027, v028) that pin the result sentence when the geoid or the point is below
 
 ## Invariants
 

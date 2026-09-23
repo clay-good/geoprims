@@ -5,6 +5,16 @@
       "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
+        "geodesy.geoid.geoid-height",
+        "geodesy.height.convert"
+      ],
+      "vectors": [],
+      "summary": "Where the geoid is below the ellipsoid, the sentence said the geoid was a negative height above it (\"-17.21 m above the ellipsoid\"). It now says \"17.21 m below the ellipsoid\", and a point under the ground given reads as below the ground. The height converter's second example, a drone reporting 120 m above the ellipsoid over 250 m terrain, put the drone underground; it is replaced by a drone at 180 m above the ellipsoid over 40 m terrain, 117.539 m above the ground. Both tools are version 1.0.1; values are unchanged."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
         "indexing.tile.from-point"
       ],
       "vectors": [],

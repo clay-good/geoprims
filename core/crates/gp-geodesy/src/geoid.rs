@@ -89,6 +89,7 @@ fn msl_note(ctx: &mut Ctx) {
 
 pub static GEOID_HEIGHT: ToolDef = ToolDef {
     id: "geodesy.geoid.geoid-height",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Geoid height (EGM96)",
     summary: "The geoid height N (geoid undulation) above the WGS 84 ellipsoid at any point from the EGM96 global geoid, the number that turns GPS ellipsoidal heights into heights above mean sea level.",
@@ -167,7 +168,7 @@ pub static GEOID_HEIGHT: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "The geoid is {geoid_height} above the ellipsoid here.",
+    sentence: "The geoid is {abs(geoid_height)} {if geoid_height < 0}below{else}above{/if} the ellipsoid here.",
     limits: &[("batchRows", 10_000)],
     run: run_geoid,
     ..ToolDef::BLANK
@@ -213,6 +214,7 @@ fn run_geoid(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HEIGHT_CONVERT: ToolDef = ToolDef {
     id: "geodesy.height.convert",
+    version: "1.0.1",
     title: "Ellipsoidal and orthometric height",
     summary: "Converts a GPS ellipsoidal height to height above mean sea level (orthometric) or back, with h = H + N and the EGM96 geoid height N.",
     aliases: &[
@@ -341,10 +343,10 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
             source: "h − N with N = 28.7079 m from GeographicLib GeoidEval (egm96-15, cubic): 71.292 m above sea level",
         },
         Example {
-            id: "drone",
-            title: "A drone reporting 120 m above the ellipsoid over 250 m terrain",
-            input: r#"{"lat":-33.8688,"lon":151.2093,"height":"120 m","terrain":"250 m"}"#,
-            source: "add-geodesy-suite heights-and-geoid scenario: the height above ground is negative, so the aircraft is below the terrain it reported over",
+            id: "drone-agl",
+            title: "A drone reporting 180 m above the ellipsoid over 40 m terrain",
+            input: r#"{"lat":-33.8688,"lon":151.2093,"height":"180 m","terrain":"40 m"}"#,
+            source: "h − N − terrain with N = 22.461 m from GeographicLib GeoidEval (egm96-15, cubic): 157.539 m above sea level, 117.539 m above the ground",
         },
     ],
     primary_example: "primary",
@@ -367,7 +369,7 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
-    sentence: "The converted height is {converted}. The geoid is {geoid_height} above the ellipsoid here.{if agl != 0} That is {agl} above the ground.{/if}{warn BELOW_TERRAIN} Below the terrain given.{/warn}",
+    sentence: "The converted height is {converted}. The geoid is {abs(geoid_height)} {if geoid_height < 0}below{else}above{/if} the ellipsoid here.{if agl != 0} That is {abs(agl)} {if agl < 0}below{else}above{/if} the ground.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_convert,
     ..ToolDef::BLANK

@@ -377,8 +377,12 @@
         ]
       }
     },
+    "drone": {
+      "intro": "Calculators for planning drone work: mapping and photogrammetry, mission patterns, flight time and batteries, radio links, sensors, and the Part 107 and EASA open-category rules. They are for remote pilots, mapping crews, and anyone sizing a drone for a job. Most mapping jobs start with the GSD tool, then overlap and trigger, then the survey grid. These are planning aids: a flight still needs the current rules, any airspace authorization it requires, and your aircraft's own limits."
+    },
     "drone.links": {
       "summary": "Radio links: path loss, fade margin, and the EIRP limit.",
+      "intro": "A link budget for a drone's control or video radio: free-space path loss, received signal, and fade margin over a distance, with the transmitter's EIRP checked against the dated 2.4 GHz limit where you fly. It is for pilots planning longer flights and builders choosing radios and antennas. Start with the link budget tool. Free-space loss is the best case: terrain, trees, buildings, and the ground near the path all cut the real range, so keep a generous fade margin.",
       "tasks": [
         {
           "want": "work out a radio link budget and check the EIRP limit",
@@ -390,6 +394,7 @@
     },
     "drone.mission": {
       "summary": "Flight patterns for mapping and inspection.",
+      "intro": "Flight patterns for mapping and inspection: a serpentine survey grid over an area, corridor lines along a road or pipeline, an orbit around a tower, facade passes up a wall, a geofence, and waypoint export as KML, GeoJSON, or CSV. It is for mapping and inspection pilots. Start with the survey grid for an area map, using the line and photo spacing from the overlap and trigger tool. Check the height reference before you fly: a constant height above takeoff is not a constant height above the ground, and overlap drops over hills.",
       "tasks": [
         {
           "want": "lay out a mapping grid over an area",
@@ -431,6 +436,7 @@
     },
     "drone.ops": {
       "summary": "Rules checks for Part 107 and the EASA open category.",
+      "intro": "Rules checks for flying under Part 107 in the United States and the EASA open category in Europe: the 400 ft altitude limit and its structure exception, the 87 knot groundspeed limit, which open subcategory a drone fits, and impact energy against the published thresholds. It is for remote pilots checking a plan against the rules. Start with the Part 107 altitude tool. Each tool checks one rule; none grants airspace access, and a waiver, a TFR, or controlled airspace can change what you may fly.",
       "tasks": [
         {
           "want": "check an altitude or speed limit under Part 107",
@@ -471,6 +477,7 @@
     },
     "drone.photogrammetry": {
       "summary": "Ground sampling distance, overlap, image count, blur, and accuracy.",
+      "intro": "The numbers behind a mapping flight: ground sample distance, the height for a target GSD, overlap, trigger interval and line spacing, image count, motion blur, overlap over high ground, oblique footprints, and accuracy to the ASPRS Edition 2 standard. It is for drone mapping crews and surveyors planning photogrammetry. Start with the GSD tool, then overlap and trigger. Use the camera's physical focal length, not the 35 mm equivalent on the spec sheet, or the GSD comes out far too fine.",
       "tasks": [
         {
           "want": "find the GSD for a height, or the height for a GSD",
@@ -544,6 +551,7 @@
     },
     "drone.power": {
       "summary": "Battery energy, hover power, flight time, and reserves.",
+      "intro": "Battery energy, multirotor hover power, flight time, return-to-home reserves, and payload limits, worked out from the battery label and the aircraft's mass. It is for pilots and builders estimating how long a drone can fly and what a payload costs. Start with battery energy, then flight time. The estimates are only as good as the power figure: wind, climbs, cold, and aging packs all shorten real flight time, so calibrate hover power from your own test flight when you can.",
       "tasks": [
         {
           "want": "turn a battery's mAh and voltage into watt-hours",
@@ -603,6 +611,7 @@
     },
     "drone.sensors": {
       "summary": "How far away a drone stays visible.",
+      "intro": "Sensor planning beyond the camera: lidar swath and point density against the USGS 3DEP quality levels, the storage a mapping job needs, a thermal camera's pixel footprint and smallest measurable target, and how far a drone stays in visual line of sight. It is for crews flying lidar, thermal, and mapping payloads. Start with the tool for your sensor. The line-of-sight tool uses EASA guidance formulas for planning; it cannot promise you will see the aircraft against a bright sky or a busy background.",
       "tasks": [
         {
           "want": "plan a lidar flight for a USGS quality level",
@@ -1411,8 +1420,12 @@
         }
       ]
     },
+    "survey": {
+      "intro": "Calculators for land and construction surveying: coordinate geometry and traverses, horizontal and vertical curves, earthwork volumes, GNSS field work, deeds and legal descriptions, and distance reductions. They are for surveyors, survey technicians, and civil engineers checking field and office work. Most jobs start with the inverse and traverse closure tools in coordinate geometry. Watch grid versus ground: distances between state plane coordinates differ from measured ground distances by the combined factor."
+    },
     "survey.cogo": {
       "summary": "Coordinate geometry: inverses, forwards, intersections, resection, offset shots, traverses, and areas.",
+      "intro": "Coordinate geometry on plane survey coordinates: inverse and forward, intersections, resection, offset shots, station and offset, traverse closure and adjustment, least-squares networks, and area by coordinates. It is for surveyors reducing field work and checking plats. Start with the inverse tool for a bearing and distance, or traverse closure for a loop. Check angular closure before linear closure: the compass and transit rules spread a blunder across every course instead of finding it.",
       "tasks": [
         {
           "want": "find bearing and distance between two points, or a point from them",
@@ -1468,6 +1481,7 @@
     },
     "survey.curves": {
       "summary": "Horizontal and vertical curves.",
+      "intro": "Road and rail geometry: horizontal circular curves, spiral transitions, curve staking tables, equal- and unequal-tangent vertical curves, and vertical curve length for sight distance. It is for survey crews staking alignments and engineers checking plans. Start with the circular curve tool or the vertical curve tool. Check whether a degree of curve uses the arc or the chord definition before turning it into a radius, because the two give different curves.",
       "tasks": [
         {
           "want": "lay out a horizontal curve",
@@ -1504,6 +1518,7 @@
     },
     "survey.earthwork": {
       "summary": "Volumes, truck loads, grades, and slope stakes.",
+      "intro": "Earthwork quantities: cut and fill areas at a cross section, volumes by average end area, the prismoidal formula, and a borrow-pit grid, stockpile volumes, swell and shrink with truck loads, grades and side slopes, and slope stakes. It is for survey crews, estimators, and contractors. Start with section areas, then average end area between stations. Label side slopes as H:V or V:H: an unlabeled 3:1 is ambiguous, and the grade tool will not accept one.",
       "tasks": [
         {
           "want": "find the cut and fill areas of a cross section",
@@ -1554,6 +1569,7 @@
     },
     "survey.gnss": {
       "summary": "GNSS field work: precision budgets, OPUS sessions, and antenna heights.",
+      "intro": "GNSS field work: the precision a receiver's millimeters-plus-ppm specification promises over your baseline, planning an NGS OPUS session and naming its RINEX file, reducing a slant antenna height to the antenna reference point, and site localization that fits local coordinates to the grid. It is for surveyors running RTK, PPK, and static sessions. Start with the RTK and PPK precision budget. A slant height measured to the edge of the antenna is not the vertical height to the reference point, so reduce it before processing.",
       "tasks": [
         {
           "want": "estimate RTK or PPK precision from a receiver's spec",
@@ -1583,6 +1599,7 @@
     },
     "survey.land": {
       "summary": "Deeds, legal descriptions, and old units.",
+      "intro": "Boundary work from the record: reading metes-and-bounds deeds, plotting their calls with closure and area, rotating bearings to a new basis, reading PLSS legal descriptions, converting chains, rods, and varas, and checking relative positional precision under the 2026 ALTA/NSPS standards. Start with the deed parser, then the deed plot. A deed plot shows what the document says, not where the line is on the ground: monuments and calls for adjoiners usually control over bearings and distances, and that is a surveyor's judgment.",
       "tasks": [
         {
           "want": "check a survey against the ALTA/NSPS precision standard",
@@ -1636,6 +1653,7 @@
     },
     "survey.reduction": {
       "summary": "Slope, stadia, and level-run reductions, heights you cannot reach, curvature and refraction, and scale between grid and ground.",
+      "intro": "Turning field measurements into usable numbers: slope distance to horizontal, stadia, level runs and their closure, heights you cannot reach, curvature and refraction on long sights, EDM atmospheric and prism corrections, and the combined factor between grid and ground. It is for field crews and office staff reducing raw observations. Start with the slope reduction or the level run. Use ellipsoid height, not sea-level elevation, in the combined factor, and divide a grid area by the combined factor squared to get a ground area.",
       "tasks": [
         {
           "want": "correct an EDM distance for the air and the prism constant",

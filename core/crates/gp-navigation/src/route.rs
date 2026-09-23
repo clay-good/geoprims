@@ -1727,6 +1727,7 @@ const ROUTE_POINT: &[Field] = &[
 
 pub static CLOSEST_POINT: ToolDef = ToolDef {
     id: "navigation.route.closest-point",
+    stability: gp_base::tool::Stability::Stable,
     title: "Closest point on a route",
     summary: "The point on a multi-leg route closest to a position: which leg, how far along the route, and how far off it (right of course positive).",
     aliases: &[
@@ -1818,25 +1819,37 @@ pub static CLOSEST_POINT: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::Unsupported,
     ],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    when_to_use: "Use this when the course is a whole route rather than one leg: to say which leg a position belongs to, how far along the route its closest point lies, and how far off the route it is. It is the tool for placing a reported position, a diversion, or a point of interest against a filed plan, and for measuring how far a flown track wandered from it.",
+    limitations: "It measures to the route line itself, not to a corridor or an airway's protected width, and the cross-track sign is right of course on the leg it chose, so the sign flips at a turn. Where two legs are nearly equidistant, as inside a sharp turn, the leg reported is the nearer by geometry and may not be the one being flown. A closest point that falls past the end of a leg is reported as that waypoint, which is correct as a distance but means the answer is a corner rather than a perpendicular. A leg a quarter of the Earth or more away is skipped, keeping its length in the total but never holding the answer. Heights play no part, and the route is geodesic legs, not rhumb lines.",
     model: "Closest point on each geodesic leg by Karney's interception method, on WGS 84",
     accuracy: "Within 1 mm, like the cross-track tool",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
-        title: "A position beside the third leg of a five-leg route",
+        title: "A position beside the second leg of a five-leg route",
         input: r#"{"route":[{"lat":40,"lon":-105},{"lat":40,"lon":-104},{"lat":41,"lon":-104},{"lat":41,"lon":-103},{"lat":40,"lon":-103},{"lat":40,"lon":-102}],"lat":40.5,"lon":-103.9}"#,
-        source: "navigation route-geometry scenario: closest to leg 3, with the along-route distance including the first two legs",
+        source: "GeographicLib 2.7 GeodSolve: the closest point sits where the course to the position is 90.00000000000 from the leg, 8476.774536 m away, with the first leg and the run up to it summing to the along-route distance",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "point",
         map: &[("lat", "closest_lat"), ("lon", "closest_lon")],
     }],
-    related: &[Related {
-        id: "navigation.route.cross-track",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "navigation.route.cross-track",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.route.legs",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "alternative",
+        },
+    ],
     sentence: "The closest point is on leg {leg}, {along_route} along the route and {cross_track} off it.",
     limits: &[("batchRows", 1_000)],
     run: run_closest_point,
@@ -1873,14 +1886,21 @@ fn run_closest_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (e, g) = setup(ctx)?;
     let mut best: Option<Closest> = None;
     let mut before = 0.0;
+    let mut too_far = false;
     for (k, w) in pts.windows(2).enumerate() {
         let (a, b) = (w[0], w[1]);
         let seg: f64 = g.inverse(a.0, a.1, b.0, b.1);
         if seg == 0.0 {
             continue; // a repeated waypoint adds no leg
         }
+        // A leg a quarter of the Earth or more away cannot be projected, but it
+        // is also nowhere near the answer, so skip it and keep its length.
+        // Refusing the whole route for one distant leg turned a position on a
+        // route's own first waypoint into an error.
         let Some((f, t, cross)) = foot(&g, a, b, (lat, lon)) else {
-            return Err(ToolError::new(ErrorCode::OutOfDomain, "The position is too far from a leg (a quarter of the Earth or more) for the method.").at("/lat"));
+            too_far = true;
+            before += seg;
+            continue;
         };
         // Clamp to the leg: past either end, the end itself is closest.
         let (c, along) = if t < 0.0 {
@@ -1898,6 +1918,9 @@ fn run_closest_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
         before += seg;
     }
     let Some((_, leg, along, xt, c)) = best else {
+        if too_far {
+            return Err(ToolError::new(ErrorCode::OutOfDomain, "The position is a quarter of the Earth or more from every leg, where the method does not apply.").at("/lat"));
+        }
         return Err(ToolError::invalid(
             "/route",
             "The route needs two different waypoints.",

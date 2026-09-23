@@ -1502,3 +1502,251 @@ fn geodesic_waypoints_invariants() {
         }
     }
 }
+
+/// Build the route literal for `navigation.route.closest-point`.
+fn route_json(pts: &[(f64, f64)], lat: f64, lon: f64) -> String {
+    let ws: Vec<String> = pts
+        .iter()
+        .map(|(a, o)| format!(r#"{{"lat":{a},"lon":{o}}}"#))
+        .collect();
+    format!(
+        r#"{{"route":[{}],"lat":{lat},"lon":{lon},"options":{{"outputUnits":{{"along_route":"m","cross_track":"m","route_length":"m"}}}}}}"#,
+        ws.join(",")
+    )
+}
+
+#[test]
+fn closest_point_matches_a_brute_force_search() {
+    // Independent reference: for every leg, walk the geodesic from its start by
+    // the direct problem and take the nearest point on it, then the nearest of
+    // those. Nothing here uses the gnomonic interception the tool runs on.
+    use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
+    let g = Geodesic::wgs84();
+    let mut seed = 987_654_321u64;
+    let mut rnd = || {
+        seed = seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let (mut worst_d, mut worst_along, mut worst_len) = (0.0f64, 0.0f64, 0.0f64);
+    let mut compared_legs = 0;
+    for _ in 0..150 {
+        // A route of three to six waypoints, each leg 50-500 km.
+        let n = 3 + (rnd() * 4.0) as usize;
+        let mut pts = vec![(rnd() * 140.0 - 70.0, rnd() * 360.0 - 180.0)];
+        for _ in 1..n {
+            let (a, o) = *pts.last().unwrap();
+            let (x, y): (f64, f64) = g.direct(a, o, rnd() * 360.0, 50e3 + rnd() * 450e3);
+            pts.push((x, y));
+        }
+        // A position off one of the waypoints, up to 300 km away.
+        let (wa, wo) = pts[(rnd() * n as f64) as usize % n];
+        let (lat, lon): (f64, f64) = g.direct(wa, wo, rnd() * 360.0, rnd() * 300e3);
+
+        // Brute force: the nearest point of each leg, by scan then bisection on
+        // the perpendicularity condition inside the bracketing interval.
+        let mut legs = Vec::new();
+        let mut total = 0.0;
+        for (k, w) in pts.windows(2).enumerate() {
+            let ((a1, o1), (a2, o2)) = (w[0], w[1]);
+            // The one-value inverse gives s12; the three-value one gives
+            // (azi1, azi2, a12), so the length has to come from its own call.
+            let len: f64 = g.inverse(a1, o1, a2, o2);
+            let (az, _, _): (f64, f64, f64) = g.inverse(a1, o1, a2, o2);
+            let dist = |s: f64| -> f64 {
+                let (x, y): (f64, f64) = g.direct(a1, o1, az, s);
+                g.inverse(x, y, lat, lon)
+            };
+            // The position is ahead of the point at s while the course to it
+            // is within 90 deg of the leg's course there; that turns over
+            // exactly at the foot, so bisect on it rather than on distance,
+            // which is flat at its minimum. Outside the leg there is no
+            // turnover and the nearer end is the answer.
+            let ahead = |s: f64| -> bool {
+                let (x, y, line_az): (f64, f64, f64) = g.direct(a1, o1, az, s);
+                let (to_p, _, _): (f64, f64, f64) = g.inverse(x, y, lat, lon);
+                (to_p - line_az).to_radians().cos() > 0.0
+            };
+            let best = if !ahead(0.0) {
+                (dist(0.0), 0.0)
+            } else if ahead(len) {
+                (dist(len), len)
+            } else {
+                let (mut lo, mut hi) = (0.0, len);
+                for _ in 0..100 {
+                    let m = (lo + hi) / 2.0;
+                    if ahead(m) { lo = m } else { hi = m }
+                }
+                let s = (lo + hi) / 2.0;
+                (dist(s), s)
+            };
+            legs.push((best.0, k + 1, total + best.1));
+            total += len;
+        }
+        let mut sorted = legs.clone();
+        sorted.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let (d_ref, leg_ref, along_ref) = sorted[0];
+
+        let r = call(
+            "navigation.route.closest-point",
+            &route_json(&pts, lat, lon),
+        );
+        assert!(r["ok"].as_bool().unwrap_or(false), "{r}");
+        worst_d = worst_d.max((num(&r, "result.cross_track.value").abs() - d_ref).abs());
+        worst_len = worst_len.max((num(&r, "result.route_length.value") - total).abs());
+        // The leg and the along-route distance are only comparable when one leg
+        // is plainly nearest; a tie between two is a tie-break, not an answer.
+        if sorted.len() == 1 || sorted[1].0 - d_ref > 1.0 {
+            compared_legs += 1;
+            assert_eq!(num(&r, "result.leg") as usize, leg_ref, "leg\n{r}");
+            worst_along = worst_along.max((num(&r, "result.along_route.value") - along_ref).abs());
+        }
+    }
+    assert!(
+        compared_legs > 100,
+        "only {compared_legs} routes had a clear nearest leg"
+    );
+    assert!(worst_d < 1e-3, "distance off the route {worst_d} m");
+    assert!(worst_along < 1e-3, "along-route {worst_along} m");
+    assert!(worst_len < 1e-6, "route length {worst_len} m");
+}
+
+#[test]
+fn closest_point_invariants() {
+    // Every claim is checked against navigation.geodesic.inverse, never against
+    // the tool's own arithmetic.
+    let routes: [&[(f64, f64)]; 3] = [
+        &[
+            (40.0, -105.0),
+            (40.0, -104.0),
+            (41.0, -104.0),
+            (41.0, -103.0),
+            (40.0, -103.0),
+        ],
+        &[
+            (40.6413, -73.7781),
+            (51.47, -0.4543),
+            (48.3538, 11.7861),
+            (25.2532, 55.3657),
+        ],
+        // Across the antimeridian, in both directions.
+        &[
+            (35.5494, 139.7798),
+            (52.0, 175.0),
+            (61.1744, -149.9961),
+            (21.3187, -157.9224),
+        ],
+    ];
+    let inv = |a: (f64, f64), b: (f64, f64)| {
+        call(
+            "navigation.geodesic.inverse",
+            &format!(
+                r#"{{"lat1":{},"lon1":{},"lat2":{},"lon2":{},"options":{{"outputUnits":{{"distance":"m"}}}}}}"#,
+                a.0, a.1, b.0, b.1
+            ),
+        )
+    };
+    for pts in routes {
+        // The legs, measured independently.
+        let lens: Vec<f64> = pts
+            .windows(2)
+            .map(|w| num(&inv(w[0], w[1]), "result.distance.value"))
+            .collect();
+        let total: f64 = lens.iter().sum();
+
+        // Every waypoint is its own closest point, at the running total.
+        let mut run = 0.0;
+        for (j, &p) in pts.iter().enumerate() {
+            let r = call("navigation.route.closest-point", &route_json(pts, p.0, p.1));
+            assert!(
+                num(&r, "result.cross_track.value").abs() < 1e-6,
+                "waypoint {j} is off its own route\n{r}"
+            );
+            assert!(
+                (num(&r, "result.along_route.value") - run).abs() < 1e-6,
+                "waypoint {j} along-route {} wanted {run}\n{r}",
+                num(&r, "result.along_route.value")
+            );
+            assert!(
+                (num(&r, "result.route_length.value") - total).abs() < 1e-6,
+                "route length\n{r}"
+            );
+            if j < lens.len() {
+                run += lens[j];
+            }
+        }
+
+        // A position off the route: the closest point is perpendicular to its
+        // leg, and reversing the route gives the same point from the far end.
+        for (k, w) in pts.windows(2).enumerate() {
+            // Half way along the leg, then 40 km off to the left.
+            let mid = call(
+                "navigation.geodesic.direct",
+                &format!(
+                    r#"{{"lat1":{},"lon1":{},"azimuth":{},"distance":"{} m"}}"#,
+                    w[0].0,
+                    w[0].1,
+                    num(&inv(w[0], w[1]), "result.azimuth1.value"),
+                    lens[k] / 2.0
+                ),
+            );
+            let m = (
+                num(&mid, "result.lat2.value"),
+                num(&mid, "result.lon2.value"),
+            );
+            let off = call(
+                "navigation.geodesic.direct",
+                &format!(
+                    r#"{{"lat1":{},"lon1":{},"azimuth":{},"distance":"40000 m"}}"#,
+                    m.0,
+                    m.1,
+                    num(&mid, "result.azimuth2.value") - 90.0
+                ),
+            );
+            let p = (
+                num(&off, "result.lat2.value"),
+                num(&off, "result.lon2.value"),
+            );
+
+            let r = call("navigation.route.closest-point", &route_json(pts, p.0, p.1));
+            let leg = num(&r, "result.leg") as usize;
+            let c = (
+                num(&r, "result.closest_lat.value"),
+                num(&r, "result.closest_lon.value"),
+            );
+            // Perpendicular: the course to the position is 90° off the leg's
+            // course where it stands.
+            let to_p = num(&inv(c, p), "result.azimuth1.value");
+            let along_leg = num(&inv(c, pts[leg]), "result.azimuth1.value");
+            let turn = (to_p - along_leg).rem_euclid(360.0);
+            assert!(
+                (turn - 90.0).abs() < 1e-6 || (turn - 270.0).abs() < 1e-6,
+                "leg {leg}: course to the position {to_p} against the leg's {along_leg}\n{r}"
+            );
+            // The sign says which side, and it is the side the point was put on.
+            assert!(
+                num(&r, "result.cross_track.value") < 0.0,
+                "a point 90° left of course should read negative\n{r}"
+            );
+            // The same distance off the route, measured the other way round.
+            let back: Vec<(f64, f64)> = pts.iter().rev().copied().collect();
+            let rb = call(
+                "navigation.route.closest-point",
+                &route_json(&back, p.0, p.1),
+            );
+            assert!(
+                (num(&rb, "result.cross_track.value") + num(&r, "result.cross_track.value")).abs()
+                    < 1e-6,
+                "reversed cross-track\n{r}\n{rb}"
+            );
+            assert!(
+                (num(&rb, "result.along_route.value") + num(&r, "result.along_route.value")
+                    - total)
+                    .abs()
+                    < 1e-6,
+                "reversed along-route\n{r}\n{rb}"
+            );
+        }
+    }
+}

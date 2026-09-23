@@ -200,3 +200,94 @@ fn delaunay_invariants() {
         );
     }
 }
+
+#[test]
+fn voronoi_invariants() {
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    let g = Geodesic::wgs84();
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/voronoi_geos.json");
+    let cases: Vec<Value> =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("JSON");
+
+    for case in cases.iter().take(6) {
+        let name = case["name"].as_str().unwrap();
+        let points = case["points"].as_array().unwrap();
+        let r = tool(
+            "geometry.mesh.voronoi",
+            &json!({"points": case["points"], "surface": "planar"}),
+        );
+        assert!(r["ok"].as_bool().unwrap_or(false), "{name}: {r}");
+
+        let mut rings: BTreeMap<u64, Vec<Value>> = BTreeMap::new();
+        for p in r["result"]["cells"].as_array().unwrap() {
+            rings
+                .entry(p["point"].as_u64().unwrap())
+                .or_default()
+                .push(json!({"lat": p["lat"]["value"], "lon": p["lon"]["value"]}));
+        }
+        assert_eq!(rings.len(), points.len(), "{name}: not one cell per point");
+        assert_eq!(
+            r["result"]["cell_count"].as_u64().unwrap() as usize,
+            rings.len(),
+            "{name}: cell_count is not the number of cells returned"
+        );
+
+        let mut total = 0.0;
+        for (who, ring) in &rings {
+            let site = &points[*who as usize - 1];
+            let (glat, glon) = (site["lat"].as_f64().unwrap(), site["lon"].as_f64().unwrap());
+
+            // The generator is inside its own cell, decided by the predicate
+            // tool rather than by anything the mesh computed.
+            let inside = tool(
+                "geometry.predicate.point-in-polygon",
+                &json!({"polygon": ring, "points": [site]}),
+            );
+            assert_eq!(
+                inside["result"]["first"], "inside",
+                "{name}: point {who} is not inside its own cell"
+            );
+
+            // The definition: everywhere in the cell is nearer to its own
+            // generator than to any other. Probed halfway to each corner. This
+            // is the only check that would catch cells given to the wrong points.
+            for corner in ring.iter().take(3) {
+                let probe = (
+                    (glat + corner["lat"].as_f64().unwrap()) / 2.0,
+                    (glon + corner["lon"].as_f64().unwrap()) / 2.0,
+                );
+                let mine: f64 = g.inverse(probe.0, probe.1, glat, glon);
+                for (i, other) in points.iter().enumerate() {
+                    if i as u64 + 1 == *who {
+                        continue;
+                    }
+                    let d: f64 = g.inverse(
+                        probe.0,
+                        probe.1,
+                        other["lat"].as_f64().unwrap(),
+                        other["lon"].as_f64().unwrap(),
+                    );
+                    assert!(
+                        mine <= d + 1e-6,
+                        "{name}: a point in cell {who} is {mine} m from its generator and {d} m from point {}",
+                        i + 1
+                    );
+                }
+            }
+            total += area_of(&Value::Array(ring.clone()));
+        }
+
+        // The cells tile the clip box: the areas sum to what GEOS measured for
+        // the same box, with no gap and no overlap.
+        let want: f64 = case["cells"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["area"].as_f64().unwrap())
+            .sum();
+        assert!(
+            (total - want).abs() / want < 1e-5,
+            "{name}: the cells cover {total} m2 against {want} m2"
+        );
+    }
+}

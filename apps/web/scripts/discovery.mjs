@@ -30,6 +30,17 @@ const { counts } = catalog;
 
 // ---------------------------------------------------------------- llms.txt
 
+// The explainers, read from their Markdown frontmatter: title and one-line summary.
+const learnDir = join(web, 'src/content/learn');
+const explainers = readdirSync(learnDir)
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => {
+    const text = readFileSync(join(learnDir, f), 'utf8');
+    const field = (k) => new RegExp(`^${k}: (.+)$`, 'm').exec(text)?.[1].trim() ?? '';
+    return { slug: f.slice(0, -3), title: field('title'), summary: field('summary') };
+  })
+  .sort((a, b) => a.title.localeCompare(b.title));
+
 const llms = `# geoprims
 
 > Exact, cited geospatial and aerospace calculators: geodesy, navigation, aviation, drone, surveying, spatial indexing, time, and units. The website and a local MCP server run the same Rust → WebAssembly core and return byte-identical results.
@@ -52,6 +63,10 @@ This build has ${counts.all.operations} operations and ${counts.all.endpoints} t
 ## Domains
 
 ${domains.map((d) => `- [${DOMAIN_TITLES[d] ?? d}](${SITE}/${d}/): ${catalog.tools.filter((t) => t.domain === d).length} tool ids`).join('\n')}
+
+## Learn
+
+${explainers.map((e) => `- [${e.title}](${SITE}/learn/${e.slug}/): ${e.summary}`).join('\n')}
 `;
 
 // ---------------------------------------------------------------- AGENTS.md

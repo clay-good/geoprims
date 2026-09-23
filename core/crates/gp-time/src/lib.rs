@@ -17,7 +17,8 @@ use gp_base::envelope::AssetRef;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Stability,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT};
 
@@ -543,7 +544,7 @@ pub static JULIAN_DATE: ToolDef = ToolDef {
         ),
     ],
     errors: &[],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "JD = 2440587.5 + days since 1970-01-01 + fraction of the UTC day; MJD = JD − 2400000.5",
     accuracy: "JD and MJD to about 1 ms; UTC-based (leap seconds are not counted, as is conventional)",
     references: &[USNO_JD],
@@ -558,10 +559,23 @@ pub static JULIAN_DATE: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.scale.gps-week",
-        reason: "next",
-    }],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn a UTC time into the day number a geodetic or astronomical workflow wants: a Julian date or MJD for an epoch label, a day of year for a RINEX or OPUS submission, or the RINEX daily file name itself. Give it a JD or MJD instead and the UTC time comes back.",
+    limitations: "A Julian date rolls over at noon, not midnight, so midnight UTC is always a .5 -- that is the convention, not a bug, and the MJD reported alongside is the one that rolls at midnight. UTC is not a uniform scale: a day with a leap second is 86,401 seconds long, and the count here is of 86,400-second days from the UTC epoch, as every JD-from-UTC converter does, so within such a day the value is up to a second from a strictly TAI-derived one. This is a UTC date, not a local one: a day of year is the UTC day, which is not the local day everywhere at once.",
+    related: &[
+        Related {
+            id: "time.scale.gps-week",
+            reason: "next",
+        },
+        Related {
+            id: "time.scale.utc-offset",
+            reason: "alternative",
+        },
+        Related {
+            id: "time.scale.zone-info",
+            reason: "alternative",
+        },
+    ],
     sentence: "The Julian date is {jd}, and it is day {day_of_year} of {year}.",
     limits: &[("batchRows", 10_000)],
     run: run_julian,
@@ -700,7 +714,7 @@ pub static DECIMAL_HOURS: ToolDef = ToolDef {
         DURATION_OUT[3],
     ],
     errors: &[],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "minutes = round(hours × 60); hours = h + mm / 60",
     accuracy: "Decimal hours round to the nearest minute",
     references: &[CFR_1_1],
@@ -715,10 +729,23 @@ pub static DECIMAL_HOURS: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.scale.block-time",
-        reason: "next",
-    }],
+    stability: Stability::Stable,
+    when_to_use: "Use this whenever a duration is written in tenths and needed in minutes, or the other way: a Hobbs or tach reading into a logbook, a logged 1:18 into the 1.3 an invoice or a maintenance interval wants. It takes either form and returns both, so there is no mode to set.",
+    limitations: "This is a duration, not a time of day: it is not wrapped at 24 hours, and 25 hours stays 25 hours. Minutes are rounded to the nearest whole minute, which is the resolution a logbook is kept in; a value that is not a tenth of an hour can therefore move by up to half a minute. And it does no arithmetic beyond the conversion -- adding up a column of times, or working out a duration from two clock times, is the block-time tool next door.",
+    related: &[
+        Related {
+            id: "time.scale.block-time",
+            reason: "next",
+        },
+        Related {
+            id: "units.time.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "time.scale.julian-date",
+            reason: "alternative",
+        },
+    ],
     sentence: "That is {duration}, or {hours} hours.",
     limits: &[("batchRows", 10_000)],
     run: run_decimal_hours,
@@ -808,7 +835,7 @@ pub static BLOCK_TIME: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "in − out, adding 24 h when a clock-only in time is earlier than out",
     accuracy: "Exact to the minute (to the second with full timestamps)",
     references: &[CFR_1_1],
@@ -823,10 +850,23 @@ pub static BLOCK_TIME: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.scale.decimal-hours",
-        reason: "alternative",
-    }],
+    stability: Stability::Stable,
+    when_to_use: "Use this for the time between two clock times when one of them may be on the other side of midnight: block time out to in, a flight time, a duty period, the gap between two logged events. It takes 2215, 22:15, 2215Z or a full timestamp, and reports the span in hours and minutes and in decimal hours.",
+    limitations: "With clock times and no date, a span is read as less than 24 hours, because that is the only span a pair of bare clock times can describe; give full timestamps when it could be longer and the dates settle it instead. Equal clock times are a zero block, not a day. Mixing a zoned timestamp with a bare clock time is refused rather than guessed at. And this is arithmetic on the times you supply -- it does not know what 14 CFR 1.1 counts as flight time, only what you tell it the out and in were.",
+    related: &[
+        Related {
+            id: "time.scale.decimal-hours",
+            reason: "alternative",
+        },
+        Related {
+            id: "time.scale.zone-info",
+            reason: "next",
+        },
+        Related {
+            id: "units.time.convert",
+            reason: "alternative",
+        },
+    ],
     sentence: "Block time is {duration} ({hours} hours).",
     limits: &[("batchRows", 10_000)],
     run: run_block_time,

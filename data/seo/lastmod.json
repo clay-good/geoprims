@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cd2650d9baaec7d9",
+    "hash": "faf526b6cdb1da12",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "ff6abb6c14915a36",
+    "hash": "e2153f06d279fa6e",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -775,6 +775,18 @@
     "hash": "f027a84026f74049",
     "lastmod": "2026-09-22"
   },
+  "/time/scale/block-time/": {
+    "hash": "f84460d42b667ee4",
+    "lastmod": "2026-09-23"
+  },
+  "/time/scale/decimal-hours/": {
+    "hash": "3f60277faa39a987",
+    "lastmod": "2026-09-23"
+  },
+  "/time/scale/julian-date/": {
+    "hash": "9ecdbd8cd08d2fa0",
+    "lastmod": "2026-09-23"
+  },
   "/time/scale/utc-offset/": {
     "hash": "ed117aed7a4d0fe5",
     "lastmod": "2026-09-22"
@@ -796,7 +808,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "8412d8b2526f6f3c",
+    "hash": "111f7a9f8febcbc2",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -984,7 +996,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "94a626ad87471641",
+    "hash": "7ba96fff7d949f6e",
     "lastmod": "2026-09-23"
   }
 }

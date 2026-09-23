@@ -55,7 +55,9 @@ fn catalog_examples_vectors() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let mut failures = manifest::lint(TOOLS, &taxonomy, &[]);
+    // Related tools that live in other crates.
+    let known = ["units.time.convert"];
+    let mut failures = manifest::lint(TOOLS, &taxonomy, &known);
     let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {
         failures.extend(
@@ -606,4 +608,125 @@ fn utc_offset_invariants() {
             );
         }
     }
+}
+
+#[test]
+fn julian_date_invariants() {
+    const J: &str = "time.scale.julian-date";
+    let jd = |utc: &str| {
+        let r = call(J, &format!(r#"{{"utc":"{utc}"}}"#));
+        (num(&r, "result.jd"), num(&r, "result.mjd"))
+    };
+    // The USNO's own published anchor: JD 2451545.0 is NOON on 2000-01-01.
+    assert_eq!(jd("2000-01-01T12:00:00Z"), (2451545.0, 51544.5));
+    // A Julian date rolls over at noon, so midnight UTC is always a .5 and the
+    // MJD, whose origin drops the half day, is always a whole number.
+    for d in [
+        "1970-01-01",
+        "1980-01-06",
+        "2000-02-29",
+        "2024-02-29",
+        "2026-09-18",
+    ] {
+        let (j, m) = jd(&format!("{d}T00:00:00Z"));
+        assert_eq!(j.fract(), 0.5, "{d}: midnight is not a half day");
+        assert_eq!(m.fract(), 0.0, "{d}: MJD does not roll at midnight");
+        assert_eq!(m, j - 2400000.5, "{d}: MJD is not JD - 2400000.5");
+        // A day later is exactly one more.
+        let next = jd(&format!("{d}T00:00:00Z")).0 + 1.0;
+        assert_eq!(next, j + 1.0);
+    }
+    assert_eq!(
+        jd("2026-09-19T00:00:00Z").0 - jd("2026-09-18T00:00:00Z").0,
+        1.0
+    );
+    // Before the Unix epoch the count is lower, which is correct, not an error.
+    assert!(jd("1969-07-20T20:17:00Z").0 < 2440587.5);
+    // The Gregorian leap rule, at both century cases.
+    let doy = |utc: &str| {
+        num(
+            &call(J, &format!(r#"{{"utc":"{utc}"}}"#)),
+            "result.day_of_year",
+        )
+    };
+    assert_eq!(doy("2000-01-01T00:00:00Z"), 1.0);
+    assert_eq!(doy("2000-12-31T12:00:00Z"), 366.0, "2000 is a leap year");
+    assert_eq!(
+        doy("1900-12-31T00:00:00Z"),
+        365.0,
+        "1900 is not a leap year"
+    );
+    assert_eq!(doy("2100-12-31T00:00:00Z"), 365.0, "2100 is not either");
+    assert_eq!(doy("2024-12-31T00:00:00Z"), 366.0);
+    // Given a JD or an MJD back, the UTC time comes out again.
+    assert_eq!(
+        call(J, r#"{"jd":2451545.0}"#)["result"]["utc"],
+        "2000-01-01T12:00:00Z"
+    );
+    assert_eq!(
+        call(J, r#"{"mjd":51544.5}"#)["result"]["utc"],
+        "2000-01-01T12:00:00Z"
+    );
+}
+
+#[test]
+fn decimal_hours_invariants() {
+    const D: &str = "time.scale.decimal-hours";
+    let get = |t: &str| {
+        let r = call(D, &format!(r#"{{"time":"{t}"}}"#));
+        (
+            num(&r, "result.minutes"),
+            r["result"]["hm"].as_str().expect("hm").to_owned(),
+            num(&r, "result.hours"),
+        )
+    };
+    // The whole reason the tool exists: 1.3 h is 1:18, not 1:30.
+    assert_eq!(get("1.3"), (78.0, "1:18".to_owned(), 1.3));
+    assert_ne!(get("1.3").0, 90.0);
+    // The two input forms are the same question asked twice.
+    assert_eq!(get("1.3"), get("1:18"));
+    assert_eq!(get("2.75"), get("2:45"));
+    // A Hobbs tenth is six minutes exactly, so no tenth loses anything.
+    for k in 0..10 {
+        let (m, _, _) = get(&format!("{}.{k}", 0));
+        assert_eq!(m, (k * 6) as f64, "0.{k} h is not {} min", k * 6);
+    }
+    // Monotonic, and not wrapped at a day: this is a duration.
+    assert!(get("2.7").0 > get("2.6").0);
+    assert_eq!(get("25").0, 1500.0, "a duration wrapped at 24 h");
+    assert_eq!(get("100").0, 6000.0);
+}
+
+#[test]
+fn block_time_invariants() {
+    const B: &str = "time.scale.block-time";
+    let mins = |out: &str, inn: &str| {
+        num(
+            &call(B, &format!(r#"{{"out_time":"{out}","in_time":"{inn}"}}"#)),
+            "result.minutes",
+        )
+    };
+    // The midnight rule, and what a plain difference would have given.
+    assert_eq!(mins("2215", "0140"), 205.0);
+    assert_ne!(mins("2215", "0140"), 1235.0);
+    // One minute either side of midnight, the right way round.
+    assert_eq!(mins("2359", "0000"), 1.0);
+    assert_eq!(mins("0005", "0004"), 1439.0);
+    // Equal clock times are a zero block, not a full day.
+    assert_eq!(mins("1200", "1200"), 0.0);
+    assert_eq!(mins("0000", "0000"), 0.0);
+    // One span, three spellings.
+    assert_eq!(mins("0915", "1045"), 90.0);
+    assert_eq!(mins("09:15", "10:45"), 90.0);
+    assert_eq!(mins("0915Z", "1045Z"), 90.0);
+    // A clock-only answer can never reach a day -- that is what the wrap buys.
+    for (a, b) in [("0000", "2359"), ("1800", "0600"), ("2330", "0030")] {
+        assert!(mins(a, b) < 1440.0, "{a} to {b} reached a whole day");
+    }
+    // Dates settle the question themselves, so a long span stays long.
+    assert_eq!(
+        mins("2026-09-18T22:15:00Z", "2026-09-20T04:15:00Z"),
+        1800.0,
+        "a dated span was folded into a day"
+    );
 }

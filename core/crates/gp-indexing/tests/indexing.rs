@@ -1671,3 +1671,113 @@ fn s2_contains(a: &str, b: &str) -> bool {
     let lsb = ia.isolate_lowest_one();
     ia != ib && ib >= ia - (lsb - 1) && ib <= ia + (lsb - 1)
 }
+
+#[test]
+fn cross_index_invariants() {
+    const X: &str = "indexing.convert.cross-index";
+    let at = |lat: f64, lon: f64, target: &str| {
+        call(
+            X,
+            &format!(r#"{{"lat":{lat},"lon":{lon},"target_size":"{target}"}}"#),
+        )
+    };
+    let rows = |r: &Value| -> Vec<(String, String, f64)> {
+        r["result"]["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .map(|c| {
+                (
+                    c["system"].as_str().expect("system").to_owned(),
+                    c["reference"].as_str().unwrap_or_default().to_owned(),
+                    c["cell_size"]["value"].as_f64().expect("cell_size"),
+                )
+            })
+            .collect()
+    };
+    // Every system answers, at every point tried.
+    for (lat, lon, target) in [
+        (40.6892, -74.0445, "150 m"),
+        (0.0, 0.0, "1 m"),
+        (-33.8688, 151.2093, "10 m"),
+        (80.0, -60.0, "100 m"),
+        (51.5074, -0.1278, "25000 m"),
+    ] {
+        let r = at(lat, lon, target);
+        let cs = rows(&r);
+        assert_eq!(cs.len(), 7, "{lat},{lon} @ {target}: {} systems", cs.len());
+        for (system, cell, size) in &cs {
+            assert!(
+                !cell.is_empty(),
+                "{system} gave no reference at {lat},{lon}"
+            );
+            assert!(*size > 0.0, "{system} gave a size of {size}");
+        }
+        // closest_match is the system nearest the target by ratio, not by
+        // difference -- recomputed here rather than taken on trust.
+        let want: f64 = target.trim_end_matches(" m").parse().expect("target");
+        let best = cs
+            .iter()
+            .min_by(|a, b| (a.2 / want).ln().abs().total_cmp(&(b.2 / want).ln().abs()))
+            .expect("a nearest system");
+        assert_eq!(
+            r["result"]["closest_match"].as_str(),
+            Some(best.0.as_str()),
+            "{lat},{lon} @ {target}: closest_match is not the nearest by ratio"
+        );
+    }
+    // A smaller target never gives a coarser cell: the ladder is monotonic.
+    let coarse = rows(&at(40.6892, -74.0445, "10000 m"));
+    let fine = rows(&at(40.6892, -74.0445, "10 m"));
+    for (a, b) in coarse.iter().zip(fine.iter()) {
+        assert_eq!(a.0, b.0, "the systems came back in a different order");
+        assert!(
+            b.2 <= a.2,
+            "{}: a 10 m target gave {} m, coarser than the 10 km target's {} m",
+            a.0,
+            b.2,
+            a.2
+        );
+    }
+    // The systems defined in degrees or in Web Mercator have smaller cells at
+    // higher latitude, so reaching the same target size there needs a COARSER
+    // rung. The chosen size stays near the target either way -- that is the
+    // point of the tool -- so it is the resolution that carries the effect.
+    let level = |r: &Value, system: &str| -> i64 {
+        r["result"]["cells"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["system"] == system)
+            .and_then(|c| c["resolution"].as_str())
+            .and_then(|s| {
+                s.split(|c: char| !c.is_ascii_digit())
+                    .find(|p| !p.is_empty())
+                    .and_then(|p| p.parse().ok())
+            })
+            .unwrap_or_else(|| panic!("no numeric resolution for {system}"))
+    };
+    let eq = at(0.0, 0.0, "150 m");
+    let north = at(60.0, 0.0, "150 m");
+    for system in ["Map tile", "Geohash", "Plus Code", "Maidenhead"] {
+        assert!(
+            level(&north, system) <= level(&eq, system),
+            "{system}: 60 deg north chose a finer rung than the equator"
+        );
+    }
+    // A tile zoom is a factor of two per step and a degree of longitude is half
+    // as long at 60 deg, so that one moves for certain.
+    assert_eq!(
+        level(&north, "Map tile"),
+        level(&eq, "Map tile") - 1,
+        "a tile zoom did not step once between the equator and 60 deg north"
+    );
+    // S2 and H3 are defined on the sphere, so they do not move at all.
+    for system in ["S2", "H3"] {
+        assert_eq!(
+            level(&north, system),
+            level(&eq, system),
+            "{system} changed with latitude"
+        );
+    }
+}

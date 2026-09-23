@@ -11,7 +11,7 @@
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Stability, ToolDef};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::{ellipsoid, gridref, mgrs, point, utmups};
 use h3o::{LatLng, Resolution};
@@ -335,7 +335,8 @@ pub static CROSS_INDEX: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    warnings: &["UNIT_ASSUMED"],
     model: "For each system, the resolution whose cell size is closest to the target by ratio (log distance), since sizes step by factors; cell size is the side of a square of the same area, computed at this latitude for the systems whose cells are measured in degrees or in Web Mercator",
     accuracy: "Exact encodings. Cell sizes are that system's own cell at this point, except H3, whose figure is the resolution's average area over the globe.",
     when_to_use: "Use this when data arrives keyed by one index and has to be joined to data keyed by another, or when choosing which system to key by: the same ground is a resolution 10 hexagon, a seven-character geohash, and a zoom 18 tile, and they are not the same size. It also answers what a resolution in one system is worth in another, which is the question behind most cross-dataset joins.",

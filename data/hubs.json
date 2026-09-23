@@ -622,7 +622,7 @@
       }
     },
     "drone.sensors": {
-      "summary": "How far away a drone stays visible.",
+      "summary": "Lidar flight planning, thermal pixel footprints, how much storage a mapping job needs, and how far away a drone stays visible.",
       "intro": "Sensor planning beyond the camera: lidar swath and point density against the USGS 3DEP quality levels, the storage a mapping job needs, a thermal camera's pixel footprint and smallest measurable target, and how far a drone stays in visual line of sight. It is for crews flying lidar, thermal, and mapping payloads. Start with the tool for your sensor. The line-of-sight tool uses EASA guidance formulas for planning; it cannot promise you will see the aircraft against a bright sky or a busy background.",
       "tasks": [
         {

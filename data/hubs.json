@@ -651,8 +651,12 @@
         }
       ]
     },
+    "geodesy": {
+      "intro": "Geodesy is the math of where things are on the Earth: datums, heights, map projections, grid references, and the Earth's shape and magnetic field. These tools convert coordinates between systems, turn GPS heights into elevations, and write positions as UTM, state plane, or MGRS. Surveyors, GIS analysts, and developers use them to make data from different sources line up. If the terms are new, the Learn pages on datums and on geoid heights are a good first stop."
+    },
     "geodesy.datum": {
       "summary": "Moving coordinates between datums, frames, and epochs.",
+      "intro": "These tools move coordinates between datums, frames, and epochs: NAD 83, the ITRF, WGS 84, NAD 27 and other old datums, and legacy datums worldwide. Surveyors and GIS analysts use them when GNSS data meets older control or a map on a different datum. For modern GNSS positions in the US, start with the NAD 83 transformation. The common pitfall is treating NAD 83(2011) and WGS 84 as the same, which puts a meter or more of error in the data.",
       "tasks": [
         {
           "want": "move coordinates between NAD 83, ITRF, and WGS 84",
@@ -689,6 +693,7 @@
     },
     "geodesy.ellipsoid": {
       "summary": "Ellipsoid parameters, radii, and auxiliary latitudes.",
+      "intro": "These tools describe the reference ellipsoid itself: its axes, flattening, and mean radii, its radii of curvature at a latitude, and the auxiliary latitudes used inside map projection and geodesic formulas. Developers and geodesy students use them to check constants and intermediate values. Start with the ellipsoid parameters for WGS 84 or GRS 80. One pitfall: the two ellipsoids differ slightly in flattening, so pick the one your datum actually uses.",
       "tasks": [
         {
           "want": "look up an ellipsoid's parameters",
@@ -712,6 +717,7 @@
     },
     "geodesy.frame": {
       "summary": "Earth-centered and local coordinates.",
+      "intro": "These tools convert between latitude, longitude, and height and Earth-centered X, Y, Z (ECEF), and between a point and a local east-north-up, north-east-down, or azimuth-elevation-range frame. Developers, drone and antenna engineers, and GNSS users need them to relate a position to where they stand. Start with latitude, longitude, and height to ECEF. The usual pitfall is feeding in a height above sea level; these frames need height above the ellipsoid.",
       "tasks": [
         {
           "want": "convert between latitude, longitude, height and ECEF",
@@ -731,6 +737,7 @@
     },
     "geodesy.geoid": {
       "summary": "The geoid height that separates GPS heights from heights above sea level.",
+      "intro": "The geoid height is how far the geoid, close to mean sea level, sits above the ellipsoid that GPS heights refer to. Surveyors, drone pilots, and GIS analysts need it to turn a GPS height into an elevation. This group reads the global EGM96 model at any point. It is not NAVD 88: for official US elevations use NGS GEOID18.",
       "tasks": [
         {
           "want": "find the geoid height at a point",
@@ -742,6 +749,7 @@
     },
     "geodesy.grid-ref": {
       "summary": "Military, aviation, and radio grid references.",
+      "intro": "These tools write and read grid references: MGRS and the US National Grid, plus GARS, GEOREF, and Maidenhead locators. Search and rescue teams, military users, pilots, and radio amateurs use them to pass a position as a short code. Start with MGRS encoding for a point. The main pitfall is rounding a shortened reference; MGRS and USNG truncate, and a reference names a square, not a point.",
       "tasks": [
         {
           "want": "convert to or from MGRS or USNG",
@@ -772,6 +780,7 @@
     },
     "geodesy.height": {
       "summary": "Ellipsoidal and orthometric heights.",
+      "intro": "This group converts between a GPS height above the ellipsoid, a height above mean sea level, and a height above the ground you give. Drone operators, surveyors, and GIS analysts use it to line up GPS heights with maps and terrain. Start with the height conversion. The classic mistake is reading a GPS height as elevation, which can be off by tens of meters: about 28 m in central Kansas.",
       "tasks": [
         {
           "want": "turn a GPS height into a height above sea level, or back",
@@ -783,6 +792,7 @@
     },
     "geodesy.magnetic": {
       "summary": "Magnetic declination and true and magnetic bearings.",
+      "intro": "These tools give magnetic declination from the World Magnetic Model or IGRF, the angle from grid north to magnetic north, and conversions between true and magnetic bearings. Pilots, hikers, surveyors retracing old bearings, and drone operators calibrating compasses use them. Start with magnetic declination for your place and date. Declination changes year to year, so an old chart's variation or an old deed's bearing needs the date it was true.",
       "tasks": [
         {
           "want": "find the magnetic declination",
@@ -806,6 +816,7 @@
     },
     "geodesy.parse": {
       "summary": "Reading, formatting, and comparing coordinates and bearings.",
+      "intro": "These tools read and write coordinates and angles: decimal degrees, degrees-minutes-seconds, packed aviation formats, MGRS, and UTM, plus DMS arithmetic and the turn between two bearings. Anyone copying coordinates between systems uses them. Start with reading any coordinate, which reports what it assumed. The common pitfall is a longitude missing its west sign or W, which moves a US point to Asia.",
       "tasks": [
         {
           "want": "read a coordinate in any notation",
@@ -835,6 +846,7 @@
     },
     "geodesy.projection": {
       "summary": "Corrections for lines drawn on a map projection.",
+      "intro": "This group covers corrections that come from projecting the curved Earth onto a flat grid. The arc-to-chord correction is the small angle between a line's straight grid bearing and the curved line it represents, in UTM or a state plane zone. Surveyors running long traverses or precise azimuths on a grid use it. The pitfall is ignoring it on long lines far from a zone's center, where it grows.",
       "tasks": [
         {
           "want": "correct a grid bearing for the curve of the projected line",
@@ -846,6 +858,7 @@
     },
     "geodesy.spcs": {
       "summary": "State plane coordinates (SPCS83).",
+      "intro": "These tools convert between NAD 83 latitude and longitude and State Plane Coordinate System of 1983 eastings and northings, and find which zone covers a place. US surveyors, engineers, and county GIS staff use them for deeds, plats, and project control. Start with the zone lookup, then convert. The costly pitfall is the foot: US survey feet and international feet differ by 2 parts per million, which is feet on a state plane coordinate.",
       "tasks": [
         {
           "want": "find the state plane zone for a place",
@@ -881,6 +894,7 @@
     },
     "geodesy.ups": {
       "summary": "Universal Polar Stereographic, for the polar caps UTM does not cover.",
+      "intro": "Universal Polar Stereographic (UPS) is the grid for the polar caps, north of 84° N and south of 80° S, where UTM stops. Polar researchers, military users, and anyone mapping Antarctica or the high Arctic use it. Start with latitude and longitude to UPS. A pitfall is expecting a zone number: UPS has none, and in MGRS the polar areas use the letters A, B, Y, and Z instead.",
       "tasks": [
         {
           "want": "convert to or from UPS",
@@ -893,6 +907,7 @@
     },
     "geodesy.utm": {
       "summary": "Universal Transverse Mercator.",
+      "intro": "These tools convert between latitude and longitude and Universal Transverse Mercator zone, easting, and northing, and find a point's zone and latitude band, including the Norway and Svalbard exceptions. GIS analysts, drone mappers, and field teams use UTM for measuring in meters. Start with UTM forward. The usual pitfall is dropping the zone or hemisphere, since the same numbers repeat in every zone.",
       "tasks": [
         {
           "want": "find the UTM zone for a place",
@@ -909,8 +924,12 @@
         }
       ]
     },
+    "geometry": {
+      "intro": "These tools measure and shape areas and lines on the real Earth, not on a flat map: polygon area, buffers, overlaps, point-in-polygon tests, simplification, and repairs. GIS analysts, developers, and drone mappers use them when a flat-map shortcut would bend the answer. Edges follow geodesics on the WGS 84 ellipsoid, and shapes that cross the antimeridian or circle a pole are handled. Start with polygon area."
+    },
     "geometry.area": {
       "summary": "Areas on the ellipsoid.",
+      "intro": "This group measures the area and perimeter of a polygon on the WGS 84 ellipsoid, with geodesic edges, holes, and shapes that cross the antimeridian or circle a pole. Farmers, land managers, GIS analysts, and drone mappers use it for field and parcel areas. Start with polygon area. The pitfall is computing area from raw latitude and longitude as if they were flat x and y; a degree of longitude shrinks toward the poles.",
       "tasks": [
         {
           "want": "find the area and perimeter of a polygon",
@@ -922,6 +941,7 @@
     },
     "geometry.buffer": {
       "summary": "Zones a set distance around points, lines, and polygons.",
+      "intro": "This group draws the area within a set distance of a point, line, or polygon, measured on the ellipsoid, or shrinks a polygon inward. GIS analysts, planners, and drone operators use it for setbacks, geofences, and keep-out zones. Start with the geodesic buffer. One pitfall is buffering in degrees in a GIS package: a buffer of a fixed number of degrees is narrower east to west than north to south away from the equator.",
       "tasks": [
         {
           "want": "draw a zone around a point, line, or polygon",
@@ -933,6 +953,7 @@
     },
     "geometry.distance": {
       "summary": "How far apart lines and tracks are.",
+      "intro": "This group compares two tracks or routes as whole shapes: the Fréchet distance, the Hausdorff distance, and their closest approach. Developers, GPS track analysts, and researchers use it to tell whether two recorded paths follow the same route. Start with comparing two tracks. A pitfall is judging similarity by closest approach alone; two paths can touch once and still be far apart elsewhere.",
       "tasks": [
         {
           "want": "compare two GPS tracks",
@@ -944,6 +965,7 @@
     },
     "geometry.mesh": {
       "summary": "Triangles and nearest-point regions from scattered points.",
+      "intro": "This group builds Delaunay triangles and Voronoi cells from a set of points, on a local flat map for a regional set or on the sphere for a global one. GIS analysts and developers use them for nearest-station areas, interpolation, and coverage maps. Start with Voronoi cells to see which point is nearest each place. The pitfall is triangulating global data on a flat map, which breaks at the antimeridian and near the poles.",
       "tasks": [
         {
           "want": "triangulate survey or sensor points",
@@ -961,6 +983,7 @@
     },
     "geometry.overlay": {
       "summary": "Overlaps, unions, and differences of polygons.",
+      "intro": "This group finds where two polygons overlap, their combined outline, and what one covers that the other does not, with geodesic areas. GIS analysts and drone operators use it to compare parcels, flight areas, and geofences. Start with the overlap of two polygons. A common pitfall is feeding in an invalid polygon, such as a bow-tie with crossed edges; check and repair it first.",
       "tasks": [
         {
           "want": "find where two areas overlap, or combine or subtract them",
@@ -972,6 +995,7 @@
     },
     "geometry.predicate": {
       "summary": "Tests of where points and shapes sit against each other.",
+      "intro": "This group tests whether points fall inside a polygon with geodesic edges, including holes and points on the boundary, and reports how far each point is from the edge. Developers and GIS analysts use it for geofencing and assigning points to areas. Start with point in polygon. A pitfall is a long polygon edge drawn as a straight line on a flat map; on the Earth it bows, and points near it can change sides.",
       "tasks": [
         {
           "want": "check whether points are inside a polygon",
@@ -983,6 +1007,7 @@
     },
     "geometry.shape": {
       "summary": "Centers, interior points, and envelopes of shapes.",
+      "intro": "These tools describe a shape: its bounding box, centroid and a point guaranteed inside it, extra vertices along geodesic edges, and the hull, rectangle, and circle that enclose a set of points. GIS analysts and developers use them for map extents, labels, and summaries. Start with the bounding box. The classic pitfall is a box that crosses the antimeridian, where west is greater than east.",
       "tasks": [
         {
           "want": "find a polygon's center or a point inside it",
@@ -1012,6 +1037,7 @@
     },
     "geometry.simplify": {
       "summary": "Fewer vertices, with the shape kept.",
+      "intro": "These tools remove vertices from a line or polygon while keeping it within a set tolerance, by the Douglas-Peucker or Visvalingam method, and report the largest deviation. Developers and cartographers use them to shrink GPS tracks and boundaries for faster maps. Start with Douglas-Peucker for a distance tolerance. The pitfall is simplifying so hard that edges cross; turn on the option that prevents it.",
       "tasks": [
         {
           "want": "thin out a track or boundary to a distance tolerance",
@@ -1029,6 +1055,7 @@
     },
     "geometry.validity": {
       "summary": "Checks that polygons are well formed, and repairs them.",
+      "intro": "This group checks a polygon for problems such as crossed or touching edges, duplicate corners, spikes, holes outside the outline, and wrong ring order, says where each one is, and returns a repaired polygon. GIS analysts and developers use it before measuring areas or running overlays. Start with check and repair. A common pitfall is a bow-tie outline with crossed edges, whose area means nothing until it is split into two triangles.",
       "tasks": [
         {
           "want": "check a polygon and repair it",
@@ -1204,8 +1231,12 @@
         }
       ]
     },
+    "navigation": {
+      "intro": "These tools find distances, courses, and routes on the Earth, and what can be seen over its curve. Pilots, mariners, drone operators, radio planners, and developers use them for planning and checking. Distances use the WGS 84 ellipsoid, with spherical versions alongside to show the difference. Start with distance between two points, and compare it with the haversine tool to see how far the spherical shortcut drifts on your route."
+    },
     "navigation.geodesic": {
       "summary": "Shortest paths on the ellipsoid.",
+      "intro": "These tools solve distance and course problems on the Earth: the shortest path between two points on the ellipsoid, the destination from a start, course, and distance, midpoints, waypoints, and where two paths cross, plus the spherical and Vincenty versions for comparison. Pilots, mariners, developers, and GIS analysts use them. Start with distance between two points, and compare it with the haversine tool to see how far the spherical shortcut drifts on your route. The pitfall is trusting the haversine formula for reported distances; it can be off by tenths of a percent.",
       "tasks": [
         {
           "want": "work on a sphere: great-circle course, destination, or a point part way",
@@ -1265,6 +1296,7 @@
     },
     "navigation.los": {
       "summary": "Horizon, line of sight, and radio clearance.",
+      "intro": "These tools answer line-of-sight questions: how far the horizon is, how far below eye level it lies, whether two raised points can see each other over the Earth's curve, and the Fresnel zone clearance a radio link needs. Radio and antenna planners, drone operators, and mariners use them. Start with distance to the horizon. The pitfall is ignoring refraction; light and radio bend, and the answer depends on which you mean.",
       "tasks": [
         {
           "want": "know how far the horizon is",
@@ -1289,6 +1321,7 @@
     },
     "navigation.rhumb": {
       "summary": "Constant-course lines.",
+      "intro": "A rhumb line keeps one compass course all the way, and these tools find its course and distance between two points and the destination along a constant course, on the ellipsoid. Mariners and pilots planning constant-heading legs use them. Start with rhumb line distance and course. The pitfall is using a rhumb line for a long east-west route at high latitude, where it can be far longer than the shortest path.",
       "tasks": [
         {
           "want": "find the distance and course of a rhumb line",
@@ -1306,6 +1339,7 @@
     },
     "navigation.route": {
       "summary": "Routes, legs, and the geometry around them.",
+      "intro": "These tools work with routes and moving objects: legs and totals for a route, cross-track error, the closest point on a route, range rings, fly-by turns, closest point of approach, intercepts, and time, speed, and distance. Pilots, drone operators, and mariners use them for planning. Start with route legs. A pitfall is mixing true and magnetic courses between legs; the legs tool lists both.",
       "tasks": [
         {
           "want": "find where two courses cross",
@@ -1355,6 +1389,7 @@
     },
     "navigation.vector": {
       "summary": "Distances and angles between points with heights.",
+      "intro": "These tools handle vectors and straight-line geometry: 3D distance between two points with heights, look angles from an observer to a target, vector sums and products, and conversion between magnitude and direction and x, y, z components. Drone operators, antenna installers, and students use them. Start with look angles. The pitfall is mixing direction conventions: navigation measures clockwise from north, mathematics counterclockwise from the x axis.",
       "tasks": [
         {
           "want": "measure the straight-line distance to a drone or aircraft",

@@ -184,11 +184,11 @@ fn run_slope_stake(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     // Cut when the ground at the shoulder stands above grade, fill when below.
     let cut = ground(w) > g;
-    let slope = if cut {
-        ctx.number("cut_slope")?
-    } else {
-        ctx.number("fill_slope")?
-    };
+    // Both slopes are read, though only one is used: a slope outside its range
+    // is a mistake worth reporting whichever way the section turns out, and a
+    // field that is never read is never checked against the range it declares.
+    let (cut_given, fill_given) = (ctx.number("cut_slope")?, ctx.number("fill_slope")?);
+    let slope = if cut { cut_given } else { fill_given };
     let Some(s) = slope else {
         let field = if cut { "/cut_slope" } else { "/fill_slope" };
         return Err(ToolError::invalid(

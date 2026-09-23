@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cf40f61eedc9c957",
+    "hash": "0a0ca3005145077c",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "4aafc5161063d2ea",
+    "hash": "664520eba5c98252",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -96,8 +96,8 @@
     "lastmod": "2026-09-22"
   },
   "/changelog/": {
-    "hash": "65357bec638f547f",
-    "lastmod": "2026-09-22"
+    "hash": "be1a1e3ec5fbe32b",
+    "lastmod": "2026-09-23"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -302,6 +302,10 @@
   "/geometry/area/": {
     "hash": "ee7538249d7527da",
     "lastmod": "2026-09-22"
+  },
+  "/geometry/area/polygon/": {
+    "hash": "1148967b487a67c9",
+    "lastmod": "2026-09-23"
   },
   "/geometry/buffer/": {
     "hash": "c207a9206dae4473",
@@ -512,7 +516,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "140c2a5e282c856e",
+    "hash": "eddb70a11c0a39bd",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -576,8 +580,8 @@
     "lastmod": "2026-09-20"
   },
   "/quality/": {
-    "hash": "48ecf11ec9a002e0",
-    "lastmod": "2026-09-22"
+    "hash": "ad38f19651d5eca3",
+    "lastmod": "2026-09-23"
   },
   "/raster/": {
     "hash": "387b1ead5f7e0816",
@@ -680,7 +684,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "7f9323423433ea15",
+    "hash": "8e6d82d3c9ab7bae",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -780,7 +784,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "19708858efe674ee",
+    "hash": "cbb22b6df55636a2",
     "lastmod": "2026-09-23"
   }
 }

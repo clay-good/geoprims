@@ -186,3 +186,111 @@ fn planar_mode_on_degrees_warns_and_points_to_geodesic() {
     );
     assert!(!g.to_string().contains("PLANAR_ON_GEOGRAPHIC"));
 }
+
+/// Layer E for `geometry.area.polygon`. Area does not depend on where the ring
+/// starts or which way it is walked, and a polygon cut in two has the area of
+/// its parts.
+#[test]
+fn polygon_area_invariants() {
+    let ring = |pts: &[(f64, f64)]| {
+        let rows: Vec<String> = pts
+            .iter()
+            .map(|(la, lo)| format!(r#"{{"lat":{la},"lon":{lo}}}"#))
+            .collect();
+        format!(r#"{{"polygon":[{}]}}"#, rows.join(","))
+    };
+    let area = |pts: &[(f64, f64)]| {
+        let r = call("geometry.area.polygon", &ring(pts));
+        assert_eq!(r["ok"], true, "{r}");
+        (
+            r["result"]["area"]["value"].as_f64().expect("area"),
+            r["result"]["perimeter"]["value"]
+                .as_f64()
+                .expect("perimeter"),
+            r["result"]["orientation"]
+                .as_str()
+                .expect("orientation")
+                .to_owned(),
+        )
+    };
+    // Colorado, as the worked example draws it.
+    let colorado = [
+        (37.0, -109.05),
+        (41.0, -109.05),
+        (41.0, -102.05),
+        (37.0, -102.05),
+    ];
+    let (a0, p0, o0) = area(&colorado);
+
+    // Starting the ring at a different vertex changes nothing.
+    for start in 1..colorado.len() {
+        let mut rotated = colorado[start..].to_vec();
+        rotated.extend_from_slice(&colorado[..start]);
+        let (a, p, o) = area(&rotated);
+        assert!(
+            (a - a0).abs() < 1e-6,
+            "starting at vertex {start} gives {a}"
+        );
+        assert!(
+            (p - p0).abs() < 1e-6,
+            "starting at vertex {start} gives perimeter {p}"
+        );
+        assert_eq!(o, o0, "starting at vertex {start} changes the orientation");
+    }
+
+    // Walking it the other way turns the orientation round and leaves the
+    // area and the perimeter alone.
+    let mut reversed = colorado;
+    reversed.reverse();
+    let (a, p, o) = area(&reversed);
+    assert!((a - a0).abs() < 1e-6, "reversed gives {a}");
+    assert!((p - p0).abs() < 1e-6, "reversed gives perimeter {p}");
+    assert_ne!(o, o0, "reversed keeps the same orientation");
+
+    // Cut along 39 N: the halves have the area of the whole.
+    let north = [
+        (39.0, -109.05),
+        (41.0, -109.05),
+        (41.0, -102.05),
+        (39.0, -102.05),
+    ];
+    let south = [
+        (37.0, -109.05),
+        (39.0, -109.05),
+        (39.0, -102.05),
+        (37.0, -102.05),
+    ];
+    let (an, _, _) = area(&north);
+    let (as_, _, _) = area(&south);
+    assert!(
+        (an + as_ - a0).abs() < 1e-3,
+        "the halves are {an} and {as_}, the whole is {a0}"
+    );
+
+    // Points strung along a meridian make a ring that retraces its own path,
+    // because a meridian is itself a geodesic. That has no single area, and is
+    // refused with somewhere to go rather than answered with zero, which is
+    // what Planimeter returns for it.
+    let r = call(
+        "geometry.area.polygon",
+        &ring(&[(10.0, 20.0), (11.0, 20.0), (12.0, 20.0)]),
+    );
+    assert_eq!(r["ok"], false, "a ring along a meridian: {r}");
+    assert_eq!(r["error"]["code"], "DEGENERATE_GEOMETRY");
+    assert!(
+        r["error"]["hint"]
+            .as_str()
+            .is_some_and(|h| h.contains("make-valid")),
+        "{r}"
+    );
+
+    // Points along a parallel do not: a parallel is not a geodesic, every edge
+    // bows towards the pole, and the long closing edge bows further than the
+    // two short hops, which leaves a sliver between them. GeographicLib's
+    // Planimeter gives 18218566.2 m2 for this ring, run for this test.
+    let (parallel, _, _) = area(&[(10.0, 20.0), (10.0, 21.0), (10.0, 22.0)]);
+    assert!(
+        (parallel - 18.2185662).abs() < 1e-6,
+        "three points on a parallel enclose {parallel}, not the 18.2185662 km2 Planimeter gives"
+    );
+}

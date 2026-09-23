@@ -5,6 +5,17 @@
       "date": "2026-09-22",
       "kind": "result-change",
       "tools": [
+        "geometry.area.polygon"
+      ],
+      "vectors": [
+        "geometry.area.polygon v029"
+      ],
+      "summary": "Promotion to stable removed the EXPERIMENTAL_TOOL warning from the envelope, and the warnings are ordered by severity, so PLANAR_ON_GEOGRAPHIC moved from index 1 to index 0. The area, the perimeter, and every other value are unchanged; what moved is where the warning sits in the list. v029 is superseded by v030, which pins the same warning at its new index."
+    },
+    {
+      "date": "2026-09-22",
+      "kind": "result-change",
+      "tools": [
         "indexing.convert.cross-index"
       ],
       "vectors": [

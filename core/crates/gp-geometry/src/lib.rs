@@ -198,6 +198,7 @@ fn winding(ring: &[(f64, f64)]) -> f64 {
 
 pub static POLYGON_AREA: ToolDef = ToolDef {
     id: "geometry.area.polygon",
+    stability: gp_base::tool::Stability::Stable,
     title: "Polygon area and perimeter on the ellipsoid",
     summary: "The area and perimeter of a polygon with geodesic edges on WGS 84 (or any ellipsoid), with holes, across the antimeridian or around a pole, and its ring orientation.",
     aliases: &[
@@ -295,6 +296,8 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
+    when_to_use: "Use this for the area and perimeter of ground: a parcel, a burn scar, a survey boundary, a service area, or any ring of latitudes and longitudes, measured on the ellipsoid rather than on a flat picture of it. It also says which way the ring is wound and whether it takes in a pole, both of which change what the number means.",
+    limitations: "The edges are geodesics, which is what a boundary on the ground is, and not straight lines on a projection or arcs along a parallel: a ring whose corners all sit on one parallel still encloses real area, because every edge bows towards the pole and the longer ones bow further. A ring that crosses or touches itself has no single area and is refused rather than answered, with make-valid named as the way out. The area comes back positive whichever way the ring is wound, with the winding reported beside it, so a hole has to be given as a hole rather than as a ring walked backwards.",
     model: "Karney (2013) geodesic polygon area on WGS 84; rhumb edges by Karney (2024); planar by the shoelace formula on a local flat map",
     accuracy: "Geodesic and rhumb edges match GeographicLib Planimeter (with -R for rhumbs) within 1e-8 relative. Planar mode is a rough check that grows wrong with size",
     references: &[KARNEY, KARNEY_RHUMB, PLANIMETER],
@@ -316,6 +319,10 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
         },
         Related {
             id: "navigation.geodesic.inverse",
+            reason: "next",
+        },
+        Related {
+            id: "geometry.validity.make-valid",
             reason: "next",
         },
     ],

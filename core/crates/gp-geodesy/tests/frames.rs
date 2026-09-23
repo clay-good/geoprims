@@ -497,3 +497,93 @@ fn ellipsoid_radii_invariants() {
         last_arc = arc;
     }
 }
+
+#[test]
+fn auxiliary_latitude_invariants() {
+    const AUX: &str = "geodesy.ellipsoid.auxiliary-latitude";
+    // The order they take through the northern hemisphere. Rectifying comes
+    // before authalic, which is easy to write down the other way round.
+    const ORDER: [&str; 6] = [
+        "geocentric",
+        "conformal",
+        "rectifying",
+        "authalic",
+        "parametric",
+        "geodetic",
+    ];
+    let aux = |lat: f64| call(AUX, &format!(r#"{{"latitude":{lat}}}"#));
+    let (a, b) = (CATALOG[0].a, CATALOG[0].a * (1.0 - CATALOG[0].f));
+
+    for i in 0..=90 {
+        let phi = i as f64;
+        let r = aux(phi);
+        assert!(r["ok"].as_bool().unwrap_or(false), "{phi}: {r}");
+
+        // Ordered, and odd in the latitude.
+        let mut last = f64::NEG_INFINITY;
+        for k in ORDER {
+            let v = num(&r, &format!("result.{k}.value"));
+            assert!(v >= last - 1e-12, "{phi}: {k} = {v} below {last}\n{r}");
+            last = v;
+        }
+        let neg = aux(-phi);
+        for k in ORDER.iter().chain(["isometric"].iter()) {
+            let (p, m) = (
+                num(&r, &format!("result.{k}.value")),
+                num(&neg, &format!("result.{k}.value")),
+            );
+            assert!((p + m).abs() < 1e-12, "{phi}: {k} is not odd: {p} and {m}");
+        }
+        // The equator and the poles are fixed, except that the isometric
+        // latitude has no pole to reach.
+        if i == 0 || i == 90 {
+            for k in ORDER {
+                assert!(
+                    (num(&r, &format!("result.{k}.value")) - phi).abs() < 1e-9,
+                    "{phi}: {k}\n{r}"
+                );
+            }
+        }
+
+        // The conformal latitude is the Gudermannian of the isometric: two of
+        // the outputs, tied to each other rather than each to the same source.
+        if i < 90 {
+            let psi: f64 = num(&r, "result.isometric.value").to_radians();
+            let chi = psi.sinh().atan().to_degrees();
+            assert!(
+                (chi - num(&r, "result.conformal.value")).abs() < 1e-11,
+                "{phi}: conformal from isometric {chi}\n{r}"
+            );
+        }
+
+        // The geocentric and parametric latitudes are the ones the ECEF tool
+        // implies from its own X and Z, which knows nothing of this tool.
+        let e = call(
+            "geodesy.frame.geodetic-to-ecef",
+            &format!(r#"{{"lat":{phi},"lon":0,"height":0}}"#),
+        );
+        let (x, z) = (num(&e, "result.x.value"), num(&e, "result.z.value"));
+        assert!(
+            (z.atan2(x).to_degrees() - num(&r, "result.geocentric.value")).abs() < 1e-9,
+            "{phi}: geocentric against ECEF\n{r}\n{e}"
+        );
+        assert!(
+            ((z / b).atan2(x / a).to_degrees() - num(&r, "result.parametric.value")).abs() < 1e-9,
+            "{phi}: parametric against ECEF\n{r}\n{e}"
+        );
+
+        // Every latitude reads back as the geodetic one it came from.
+        for k in ORDER.iter().chain(["isometric"].iter()) {
+            if *k == "geodetic" {
+                continue;
+            }
+            let v = num(&r, &format!("result.{k}.value"));
+            let back = call(AUX, &format!(r#"{{"latitude":{v},"from":"{k}"}}"#));
+            assert!(
+                (num(&back, "result.geodetic.value") - phi).abs() < 1e-12,
+                "{phi}: {k} = {v} came back as {}\n{back}",
+                num(&back, "result.geodetic.value")
+            );
+        }
+    }
+}

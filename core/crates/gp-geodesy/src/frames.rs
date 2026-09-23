@@ -461,6 +461,7 @@ const AUX_KINDS: &[&str] = &[
 
 pub static AUXILIARY: ToolDef = ToolDef {
     id: "geodesy.ellipsoid.auxiliary-latitude",
+    stability: gp_base::tool::Stability::Stable,
     title: "Auxiliary latitudes",
     summary: "Converts between geodetic latitude and the geocentric, parametric (reduced), rectifying, conformal, authalic, and isometric latitudes, in either direction.",
     aliases: &["geocentric latitude", "reduced latitude", "conformal latitude", "authalic latitude", "isometric latitude"],
@@ -492,25 +493,37 @@ pub static AUXILIARY: ToolDef = ToolDef {
         ang_out("isometric", "Isometric latitude", "unbounded"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain, ErrorCode::Unsupported],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Closed forms for geocentric, parametric, conformal (Karney's τ′), and authalic (cancellation-free qp − q) latitudes; rectifying by the exact meridian arc; inverses by closed form or Newton's method",
     accuracy: "Within 1e-13° of 40-digit reference values on WGS 84; round trips within 1e-12°",
+    when_to_use: "Use this when a formula calls for a latitude that is not the geodetic one. Map projections ask for the conformal latitude to keep angles, the authalic to keep areas, and the rectifying to keep distances along a meridian; the isometric latitude is the one a Mercator chart and every rhumb-line calculation are built on; the geocentric latitude is the angle at the center of the Earth, which is what satellite and gravity work wants; and the parametric latitude is the parameter that makes the ellipse easy to walk along. It converts in either direction, so it also reads such a latitude back into the geodetic one a position is quoted in.",
+    limitations: "These are latitudes on an ellipsoid of revolution, so they depend on the ellipsoid and say nothing about a datum, an epoch, or a height: a point above the surface has the same auxiliary latitudes as the point below it. They differ from the geodetic latitude by up to about 0.19° on WGS 84, all of it vanishing at the equator and the poles, so a value that looks close is not the same value. The isometric latitude has no limit, running to infinity at the poles, and beyond ±10,000° the pole is all that double precision can represent, which is where the tool stops. Newton's method for the inverse conformal latitude is settled only for flattenings near the Earth's, so a wildly flattened custom ellipsoid is refused rather than answered.",
     references: &[SNYDER, super::KARNEY_TM],
     examples: &[Example {
         id: "primary",
         title: "45° geodetic on WGS 84",
         input: r#"{"latitude":45}"#,
-        source: "add-geodesy-suite scenario: geocentric latitude ≈ 44.8076°",
+        source: "GeographicLib 2.7, each latitude from the shipped tool that depends on it: CartConvert for the geocentric and parametric, GeodSolve for the rectifying, RhumbSolve for the isometric, ConicProj for the authalic; all six agree within 3e-14°, except the rectifying at 1e-12° where GeodSolve's printed meters run out",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "geodesy.ellipsoid.radii",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.ellipsoid.radii",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.ellipsoid.parameters",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.frame.geodetic-to-ecef",
+            reason: "next",
+        },
+    ],
     sentence: "The geocentric latitude is {geocentric} and the geodetic latitude is {geodetic}.",
     limits: &[("batchRows", 10_000)],
     run: run_auxiliary,

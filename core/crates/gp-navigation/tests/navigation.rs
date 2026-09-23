@@ -1290,3 +1290,120 @@ fn geodesic_intersection_invariants() {
         );
     }
 }
+
+/// Layer E for `navigation.route.legs`. The legs add up to the total, there is
+/// one fewer leg than waypoints, each leg is the geodesic between its own ends,
+/// flying the route backwards covers the same ground, and the time is the
+/// distance at the speed given.
+#[test]
+fn route_legs_invariants() {
+    let route = |pts: &[(f64, f64)], extra: &str| {
+        let rows: Vec<String> = pts
+            .iter()
+            .map(|(la, lo)| format!(r#"{{"lat":{la},"lon":{lo}}}"#))
+            .collect();
+        let r = call(
+            "navigation.route.legs",
+            &format!(r#"{{"waypoints":[{}]{extra}}}"#, rows.join(",")),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    let routes: [&[(f64, f64)]; 3] = [
+        &[
+            (39.8617, -104.6731),
+            (39.2232, -106.8688),
+            (39.1224, -108.5267),
+        ],
+        &[(0.0, 0.0), (0.0, 30.0), (10.0, 60.0), (-5.0, 90.0)],
+        // Across the antimeridian and up near the pole.
+        &[(60.0, 170.0), (65.0, -175.0), (70.0, -160.0)],
+    ];
+    for pts in routes {
+        let r = route(pts, "");
+        let legs = r["result"]["legs"].as_array().expect("legs");
+        assert_eq!(legs.len(), pts.len() - 1, "one fewer leg than waypoints");
+        assert_eq!(
+            num(&r, "result.legs_count") as usize,
+            pts.len() - 1,
+            "legs_count disagrees with the legs"
+        );
+
+        // The legs add up to the total.
+        let summed: f64 = legs
+            .iter()
+            .map(|l| l["distance"]["value"].as_f64().expect("distance"))
+            .sum();
+        let total = num(&r, "result.total_distance.value");
+        assert!(
+            (summed - total).abs() < 1e-6,
+            "the legs sum to {summed} and the total says {total}"
+        );
+
+        // Each leg is the geodesic between its own two waypoints.
+        for (i, leg) in legs.iter().enumerate() {
+            let inv = call(
+                "navigation.geodesic.inverse",
+                &format!(
+                    r#"{{"lat1":{},"lon1":{},"lat2":{},"lon2":{}}}"#,
+                    pts[i].0,
+                    pts[i].1,
+                    pts[i + 1].0,
+                    pts[i + 1].1
+                ),
+            );
+            // The route answers in nautical miles and the inverse in kilometres.
+            let want_nm = num(&inv, "result.distance.value") / 1.852;
+            let got = leg["distance"]["value"].as_f64().expect("distance");
+            assert!(
+                (got - want_nm).abs() < 1e-6,
+                "leg {i} is {got} NM and the geodesic between its ends is {want_nm} NM"
+            );
+            let course = leg["true_course"]["value"].as_f64().expect("course");
+            let azimuth = num(&inv, "result.azimuth1.value");
+            assert!(
+                (course - azimuth).abs() < 1e-6,
+                "leg {i} courses {course} and the geodesic leaves on {azimuth}"
+            );
+        }
+
+        // Flying it backwards covers the same ground.
+        let mut back = pts.to_vec();
+        back.reverse();
+        let rev = route(&back, "");
+        assert!(
+            (num(&rev, "result.total_distance.value") - total).abs() < 1e-6,
+            "the route is a different length backwards"
+        );
+
+        // Time is distance over speed, and nothing else. It is written for a
+        // reader ("15 h 02 min"), so it is read back the same way.
+        let timed = route(pts, r#","groundspeed":"120 kt""#);
+        let written = timed["result"]["total_time"]
+            .as_str()
+            .expect("a written time");
+        let part = |unit: &str| -> f64 {
+            written
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .windows(2)
+                .find(|w| w[1] == unit)
+                .and_then(|w| w[0].parse::<f64>().ok())
+                .unwrap_or(0.0)
+        };
+        let hours = part("h") + part("min") / 60.0;
+        // The written time is rounded to the minute, so allow half of one.
+        assert!(
+            (hours - total / 120.0).abs() < 1.0 / 120.0,
+            "{written} for {total} NM at 120 kt"
+        );
+
+        // The last leg's running total is the route's total.
+        let last = legs.last().expect("a leg");
+        assert!(
+            (last["cumulative"]["value"].as_f64().expect("cumulative") - total).abs() < 1e-6,
+            "the running total ends at {:?} and the route is {total}",
+            last["cumulative"]["value"]
+        );
+    }
+}

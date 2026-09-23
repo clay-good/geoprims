@@ -1316,6 +1316,7 @@ const LEG_ROW: &[Field] = &[
 
 pub static LEGS: ToolDef = ToolDef {
     id: "navigation.route.legs",
+    stability: gp_base::tool::Stability::Stable,
     title: "Route legs, courses, and totals",
     summary: "Each leg's distance, true and magnetic course, and cumulative distance for a route of waypoints, with leg times and arrival times from a groundspeed and departure time.",
     aliases: &[
@@ -1452,7 +1453,9 @@ pub static LEGS: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::Unsupported,
     ],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    when_to_use: "Use this to turn a list of waypoints into a flight or voyage plan: the distance and true course of every leg, the running total, and, with a groundspeed and a departure time, how long each leg takes and when you arrive. It is the table a navigation log is filled in from.",
+    limitations: "The legs are geodesics, the shortest way between each pair, so the course changes continuously along one and the figure given is the course leaving the waypoint; a rhumb line holds one heading instead and is the other tool. The time assumes the groundspeed given holds for the whole route, which is a planning figure and not a forecast: wind, climb, and descent are not in it. Courses are true, not magnetic, so a compass needs the variation applied.",
     model: "Geodesic legs (Karney 2013) on WGS 84; magnetic declination from WMM2025",
     accuracy: "Distances and courses to nanometers; declination per WMM2025 (about ±0.5° typical)",
     references: &[KARNEY, gp_geo::magnetic::WMM_REPORT],
@@ -1468,10 +1471,20 @@ pub static LEGS: ToolDef = ToolDef {
         kind: "line-geodesic",
         map: &[("path", "path"), ("distance", "total_distance")],
     }],
-    related: &[Related {
-        id: "navigation.route.time-speed-distance",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.route.time-speed-distance",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.rhumb.inverse",
+            reason: "alternative",
+        },
+    ],
     sentence: "The route is {total_distance} in {legs_count} legs.",
     limits: &[("batchRows", 1_000)],
     run: run_legs,

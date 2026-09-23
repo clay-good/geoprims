@@ -381,3 +381,80 @@ fn results_list_outputs_in_schema_order() {
         }
     }
 }
+
+/// Every length unit the converter offers.
+const LENGTHS: [&str; 12] = [
+    "m", "km", "cm", "mm", "um", "Mm", "ft", "ftUS", "in", "yd", "mi", "NM",
+];
+
+fn length(value: f64, from: &str, to: &str) -> f64 {
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "units.length.convert",
+        &format!(r#"{{"value":"{value} {from}","to":"{to}"}}"#),
+    ))
+    .expect("JSON");
+    r["result"]["converted"]["value"]
+        .as_f64()
+        .unwrap_or_else(|| panic!("{from}->{to}: {r}"))
+}
+
+#[test]
+fn length_invariants() {
+    let (mut worst_trip, mut worst_linear) = (0.0f64, 0.0f64);
+    for a in LENGTHS {
+        for b in LENGTHS {
+            let x = 1.234_567_f64;
+            let there = length(x, a, b);
+            let back = length(there, b, a);
+            worst_trip = worst_trip.max((back - x).abs() / x);
+
+            // Linear: twice the input is twice the output, and the conversion
+            // of a sum is the sum of the conversions. A converter with an
+            // offset where it should have a factor fails both.
+            let twice = length(2.0 * x, a, b);
+            worst_linear = worst_linear.max((twice - 2.0 * there).abs() / twice.abs().max(1e-300));
+            let sum = length(x + 3.0, a, b);
+            assert!(
+                (sum - (there + length(3.0, a, b))).abs() / sum.abs().max(1e-300) < 1e-14,
+                "{a}->{b}: the conversion of a sum is not the sum of the conversions"
+            );
+
+            // Zero is zero and a sign is kept, in every pair.
+            assert_eq!(length(0.0, a, b), 0.0, "{a}->{b}: zero did not stay zero");
+            assert!(
+                length(-2.5, a, b) < 0.0,
+                "{a}->{b}: a negative changed sign"
+            );
+        }
+        // Converting a unit to itself is not arithmetic at all.
+        assert_eq!(
+            length(4.625_25, a, a),
+            4.625_25,
+            "{a}->{a} changed the value"
+        );
+    }
+    assert!(worst_trip < 1e-15, "round trip {worst_trip}");
+    assert!(worst_linear < 1e-15, "linearity {worst_linear}");
+
+    // The units line up in the order they should: a metre is more feet than
+    // yards and more yards than miles. A transposed pair of factors passes
+    // every check above and fails this one.
+    let m = |u: &str| length(1.0, "m", u);
+    assert!(
+        m("ft") > m("yd") && m("yd") > m("mi"),
+        "a metre is {} ft, {} yd, {} mi",
+        m("ft"),
+        m("yd"),
+        m("mi")
+    );
+    assert!(m("mm") > m("cm") && m("cm") > m("m") && m("m") > m("km"));
+
+    // The two feet are two units. A million of each differ by 0.6096 m -- the
+    // two parts per million that a converter treating them as one would lose,
+    // and that nothing else in this test would notice.
+    let gap = length(1e6, "ftUS", "m") - length(1e6, "ft", "m");
+    assert!(
+        (gap - 0.609_601_219_2).abs() < 1e-6,
+        "a million survey feet and a million international feet differ by {gap} m"
+    );
+}

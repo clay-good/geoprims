@@ -8,7 +8,8 @@ use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::parse;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Stability,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity};
 
@@ -56,17 +57,36 @@ const TABLE: &[Layer] = &[Layer {
     map: &[],
 }];
 const CONVERT_WARNINGS: &[&str] = &["UNIT_ASSUMED", "LEGACY_UNIT", "EXPERIMENTAL_TOOL"];
+/// The same list once a converter is past the bar.
+const CONVERT_STABLE: &[&str] = &["UNIT_ASSUMED", "LEGACY_UNIT"];
 /// Conversions are exact, so show enough digits to see small differences such
 /// as the 2 ppm survey-foot offset.
 const P8: Precision = Precision::Significant(8);
 
 /// Declares one `units.<group>.convert` operation.
 macro_rules! convert_op {
+    // Still experimental: no prose yet, and the experimental warning stays.
     (
         $name:ident, $group:literal, $q:expr, $unit:literal, $title:literal, $summary:literal,
         aliases: [$($a:literal),*], refs: [$($r:expr),*], example: ($ex_title:literal, $ex:literal)
     ) => {
+        convert_op!($name, $group, $q, $unit, $title, $summary,
+            aliases: [$($a),*], refs: [$($r),*], example: ($ex_title, $ex),
+            stability: Stability::Experimental,
+            warnings: CONVERT_WARNINGS, when: "", limits: "",
+            related: [Related { id: "units.quantity.normalize", reason: "alternative" }]);
+    };
+    // Promoted: its own when-to-use, limitations and neighbours.
+    (
+        $name:ident, $group:literal, $q:expr, $unit:literal, $title:literal, $summary:literal,
+        aliases: [$($a:literal),*], refs: [$($r:expr),*], example: ($ex_title:literal, $ex:literal),
+        stability: $stab:expr, warnings: $warn:expr, when: $when:literal, limits: $lim:literal,
+        related: [$($rel:expr),*]
+    ) => {
         pub static $name: ToolDef = ToolDef {
+            stability: $stab,
+            when_to_use: $when,
+            limitations: $lim,
             id: concat!("units.", $group, ".convert"),
             title: $title,
             summary: $summary,
@@ -82,14 +102,14 @@ macro_rules! convert_op {
                 Field::new("converted", "Converted", "The value in the target unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
                 Field::new("input", "Input", "The value as read, in its unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
             ],
-            warnings: CONVERT_WARNINGS,
+            warnings: $warn,
             model: "Exact unit definitions",
             accuracy: "Exact to double precision: each conversion is one correctly rounded ratio of exact definitions",
             references: &[$($r),*],
             examples: &[Example { id: "primary", title: $ex_title, input: $ex, source: EXACT_SOURCE }],
             primary_example: "primary",
             visualization: TABLE,
-            related: &[Related { id: "units.quantity.normalize", reason: "alternative" }],
+            related: &[$($rel),*],
             sentence: "{input} is {converted}.",
             limits: &[("batchRows", 10_000)],
             run: run_convert,
@@ -126,9 +146,17 @@ fn run_convert(ctx: &mut Ctx) -> Result<Json, ToolError> {
 use Quantity as QT;
 
 convert_op!(LENGTH, "length", QT::Length, "ft", "Length converter",
-    "Converts lengths and distances: m, km, ft, US survey ft, in, yd, mi, and NM.",
-    aliases: ["feet to meters", "length conversion"], refs: [NIST_811, NIST_HB44, FR_2019_SURVEY_FOOT],
-    example: ("5,280 ft in meters", r#"{"value":"5280 ft","to":"m"}"#));
+"Converts lengths and distances: m, km, ft, US survey ft, in, yd, mi, and NM.",
+aliases: ["feet to meters", "length conversion"], refs: [NIST_811, NIST_HB44, FR_2019_SURVEY_FOOT],
+example: ("5,280 ft in meters", r#"{"value":"5280 ft","to":"m"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for any distance that has to move between systems: a runway length in feet against a chart in meters, a leg in nautical miles against a road distance in statute miles, a survey dimension in feet against a design in millimeters. The two kinds of foot are both here and kept apart, which matters more than it sounds: US survey feet and international feet differ by two parts per million, which is a tenth of a millimeter over a meter and two feet across a state plane zone.",
+limits: "A conversion is exact and a measurement is not, so this changes the unit and never improves the number: 5,280 ft becomes 1,609.344 m exactly, but if the 5,280 was good to a foot the answer is good to 0.3 m. The US survey foot was withdrawn for new work at the end of 2022 and is kept here only for reading existing records; a value carrying it is flagged. Nautical miles are the international 1,852 m exactly, not the old British or US ones, and the statute mile is the international one -- an old chart may mean neither.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.area.convert", reason: "alternative" },
+    Related { id: "units.speed.convert", reason: "alternative" }
+]);
 convert_op!(AREA, "area", QT::Area, "ac", "Area converter",
     "Converts areas: m², km², hectares, acres, ft², mi², and NM².",
     aliases: ["area conversion"], refs: [NIST_811, NIST_HB44],

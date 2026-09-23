@@ -19,6 +19,15 @@ const WOLF: Reference = Reference {
     url: "https://www.accessengineeringlibrary.com/content/book/9780071761123",
 };
 
+const PRYOR: Reference = Reference {
+    title: "Relationship of Topographic Relief, Flight Height, and Minimum and Maximum Overlap",
+    issuer: "Pryor, W. T., Bureau of Public Roads, Highway Research Board Bulletin 228",
+    year: 1959,
+    edition: "Bulletin 228",
+    locator: "pp. 31 and 36-37 (endlap at the datum and at the point of highest relief)",
+    url: "https://onlinepubs.trb.org/Onlinepubs/hrbbulletin/228/228-005.pdf",
+};
+
 const fn pct(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
@@ -56,6 +65,7 @@ const fn m_field(name: &'static str, title: &'static str, help: &'static str) ->
 
 pub static TERRAIN_OVERLAP: ToolDef = ToolDef {
     id: "drone.photogrammetry.terrain-overlap",
+    stability: gp_base::tool::Stability::Stable,
     title: "Overlap over high terrain",
     summary: "A mission flown at one height above takeoff is closer to the ground over hills, so photos cover less and overlap drops. The lowest overlap and the height left over the highest ground.",
     aliases: &[
@@ -166,16 +176,26 @@ pub static TERRAIN_OVERLAP: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[],
-    warnings: &["OVERLAP_BELOW_TARGET", "EXPERIMENTAL_TOOL"],
+    warnings: &["OVERLAP_BELOW_TARGET"],
     model: "The footprint scales with height above the ground, h − t, while photo and line spacing stay fixed from the flat plan at h. Overlap there = 1 − (1 − o)·h/(h − t); GSD = pixel pitch × (h − t)/f. The height that keeps overlap o_min at the terrain solves (1 − o)·h/(h − t) = 1 − o_min for h, with spacing replanned at that height (Wolf, Dewitt & Wilkinson 2014, ch. 18)",
     accuracy: "Exact for a vertical camera over the stated highest ground; use the highest point along any flight line, and a DEM profile for more",
-    references: &[WOLF],
-    examples: &[Example {
-        id: "primary",
-        title: "100 m above takeoff over a 40 m hill at 75/65 overlap",
-        input: r#"{"height":"100 m","highest_terrain":"40 m","front_overlap":75,"side_overlap":65}"#,
-        source: "add-drone-suite hill scenario",
-    }],
+    when_to_use: "Use this before you fly a mapping mission over hills at one height above the takeoff point. It shows how much front and side overlap is left over the highest ground, and the height to fly instead so the overlap there stays at the lowest value your processing software accepts.",
+    limitations: "It checks one highest point, not a full terrain profile, and assumes a camera pointing straight down. Trees and buildings on the high ground bring the surface even closer. Flying higher to hold overlap also coarsens the GSD over low ground, and the new height must still fit your altitude limit. A terrain-following flight avoids the problem instead.",
+    references: &[WOLF, PRYOR],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "100 m above takeoff over a 40 m hill at 75/65 overlap",
+            input: r#"{"height":"100 m","highest_terrain":"40 m","front_overlap":75,"side_overlap":65}"#,
+            source: "add-drone-suite hill scenario",
+        },
+        Example {
+            id: "pryor-1959",
+            title: "65% endlap at the low ground, 20,000 ft up, 4,444 ft of relief",
+            input: r#"{"height":"20000 ft","highest_terrain":"4444 ft","front_overlap":65,"target_overlap":55}"#,
+            source: "Pryor 1959, Highway Research Board Bulletin 228, p. 31: 55% endlap at the highest relief",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
@@ -188,6 +208,14 @@ pub static TERRAIN_OVERLAP: ToolDef = ToolDef {
         },
         Related {
             id: "drone.photogrammetry.gsd",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.altitude-for-gsd",
+            reason: "next",
+        },
+        Related {
+            id: "drone.ops.part107-altitude",
             reason: "next",
         },
     ],

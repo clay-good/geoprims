@@ -26,7 +26,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | Visual descent point | `aviation.performance.vdp` | [x] | [ ] | [ ] | [x] |
 | Drone | GSD | `drone.photogrammetry.gsd` | [x] | [ ] | [ ] | [x] |
 | Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] | [x] |
-| Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [ ] | [ ] | [ ] | [x] |
+| Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [x] | [ ] | [ ] | [x] |
 | Drone | Image count | `drone.photogrammetry.image-count` | [ ] | [ ] | [ ] | [x] |
 | Drone | Flight time | `drone.power.endurance` | [x] | [ ] | [ ] | [x] |
 | Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] | [x] |
@@ -53,7 +53,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [x] |
 
-Stable: 38 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 39 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 
@@ -63,4 +63,4 @@ The stable bar needs an independent, published worked example. These rows are he
 |---|---|
 | Holding entry | AIM 5-3-8 and FAA-H-8083-15B define the sectors only by figure; the FAA instrument sample tests have no entry question |
 | Part 107 altitude | 14 CFR 107.51, AC 107-2A, FAA-G-8082-22, the UAG sample test, and the 2016 final rule preamble state the rule without a numeric case |
-| Overlap and trigger, image count | Blog and vendor examples found in search did not contain the numbers when checked; the peer-reviewed footprint paper (AKJournals, 2024) is not freely retrievable |
+| Image count | Searched again 2026-09-23. Penn State GEOG 892, the Wolf-style flight map example, and University of Washington CEE 424 all put the first and last lines at or near the edges (lines = width / spacing + 1, or a 0.2G to 0.25G margin) and add extra photos past each end; the tool, per the survey-grid spec, centers ⌈width / spacing⌉ lines and takes ⌊length / spacing⌋ + 1 photos per line, so none of them is a worked example of its method. Overlap and trigger left this list on 2026-09-23 with the Penn State GEOG 892 example |

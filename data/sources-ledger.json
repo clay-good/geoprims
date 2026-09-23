@@ -2081,6 +2081,26 @@
       "editionCheck": false
     },
     {
+      "id": "pryor-1959",
+      "name": "Relationship of Topographic Relief, Flight Height, and Minimum and Maximum Overlap",
+      "issuer": "Pryor, W. T., Bureau of Public Roads, Highway Research Board Bulletin 228",
+      "currentEdition": "Bulletin 228",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-23",
+      "verificationNote": "Read at the TRB online publications archive on 2026-09-23: Highway Research Board Bulletin 228 (1959), pp. 28-48; the 4,444 ft example is on p. 31 and the endlap equation on pp. 36-37. A bulletin paper: it has no later edition.",
+      "freeAccessUrl": "https://onlinepubs.trb.org/Onlinepubs/hrbbulletin/228/228-005.pdf",
+      "matchTerms": [
+        "Relationship of Topographic Relief, Flight Height"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "rfc3339",
       "name": "RFC 3339",
       "issuer": "IETF",

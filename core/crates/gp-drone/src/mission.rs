@@ -1043,7 +1043,7 @@ pub static IMAGE_COUNT: ToolDef = ToolDef {
         id: "primary",
         title: "The 600 m by 150 m field",
         input: r#"{"area":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99295},{"lat":40.00135,"lon":-104.99295},{"lat":40.00135,"lon":-105.0}],"line_spacing":"52.5 m","photo_spacing":"30 m"}"#,
-        source: "Wolf, Dewitt, and Wilkinson, ch. 18 flight-planning method: 3 lines of about 600 m at 30 m spacing",
+        source: "The survey-grid sweep: 3 centered lines (⌈150 / 52.5⌉) of about 600 m, photos 30 m apart",
     }],
     primary_example: "primary",
     visualization: &[Layer {

@@ -251,7 +251,13 @@ fn hill_reduces_overlap() {
     let f = num(&r, "result.front_overlap_worst");
     assert!((f - 58.333_333_333).abs() < 1e-6, "{f}");
     assert!(codes(&r).iter().any(|c| c == "OVERLAP_BELOW_TARGET"));
-    let msg = r["meta"]["warnings"][1]["message"].as_str().unwrap();
+    let msg = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|w| w["code"] == "OVERLAP_BELOW_TARGET")
+        .and_then(|w| w["message"].as_str())
+        .unwrap();
     assert!(msg.starts_with("Front overlap falls to 58.3%"), "{msg}");
 }
 
@@ -264,4 +270,166 @@ fn a_vanishing_focal_length_is_refused_not_a_crash() {
     );
     assert_eq!(r["ok"], false, "{r}");
     assert_ne!(r["error"]["code"], "INTERNAL", "{r}");
+}
+
+#[test]
+fn trigger_invariants() {
+    // Spacing is the footprint times (1 − overlap), the footprint is the GSD
+    // tool's, everything scales linearly with height, the interval times the
+    // groundspeed is the trigger distance, portrait swaps the two axes, and
+    // the camera check fires exactly when the interval is under the minimum.
+    let cams = [
+        (13.2, 8.8, 8.8, 5472),
+        (17.3, 13.0, 12.29, 5280),
+        (6.17, 4.55, 4.5, 4000),
+        (35.9, 24.0, 35.0, 8192),
+    ];
+    let v = |r: &Value, k: &str| num(r, &format!("result.{k}.value"));
+    let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 * b.abs().max(1.0);
+    for (w, h, f, iw) in cams {
+        let run = |m: f64, gs: f64, fo: f64, so: f64, extra: &str| {
+            call(
+                "drone.photogrammetry.trigger",
+                &format!(
+                    r#"{{"sensor_width":"{w} mm","sensor_height":"{h} mm","focal_length":"{f} mm","image_width":{iw},"height":"{m} m","groundspeed":"{gs} m/s","front_overlap":{fo},"side_overlap":{so}{extra}}}"#
+                ),
+            )
+        };
+        for m in [20.0, 60.0, 100.0, 120.0] {
+            let gsd = call(
+                "drone.photogrammetry.gsd",
+                &format!(
+                    r#"{{"sensor_width":"{w} mm","sensor_height":"{h} mm","focal_length":"{f} mm","image_width":{iw},"height":"{m} m"}}"#
+                ),
+            );
+            for (fo, so) in [(0.0, 0.0), (60.0, 30.0), (75.0, 65.0), (85.0, 70.0)] {
+                let r = run(m, 10.0, fo, so, "");
+                let (along, across) = (v(&r, "footprint_along"), v(&r, "footprint_across"));
+                assert!(close(across, v(&gsd, "footprint_across")), "{r}");
+                assert!(close(along, v(&gsd, "footprint_along")), "{r}");
+                assert!(close(v(&r, "trigger_distance"), along * (1.0 - fo / 100.0)));
+                assert!(close(v(&r, "line_spacing"), across * (1.0 - so / 100.0)));
+                assert!(close(
+                    v(&r, "trigger_interval") * 10.0,
+                    v(&r, "trigger_distance")
+                ));
+                // Linear in height, inverse in groundspeed.
+                let hi = run(2.0 * m, 10.0, fo, so, "");
+                assert!(close(
+                    v(&hi, "trigger_distance"),
+                    2.0 * v(&r, "trigger_distance")
+                ));
+                assert!(close(v(&hi, "line_spacing"), 2.0 * v(&r, "line_spacing")));
+                let fast = run(m, 20.0, fo, so, "");
+                assert!(close(
+                    2.0 * v(&fast, "trigger_interval"),
+                    v(&r, "trigger_interval")
+                ));
+                // Portrait: the long side runs along the track.
+                let p = run(m, 10.0, fo, so, r#","orientation":"portrait""#);
+                assert!(close(v(&p, "footprint_along"), across));
+                assert!(close(v(&p, "footprint_across"), along));
+                // The camera check: max speed × minimum interval = distance.
+                let t = v(&r, "trigger_interval");
+                for min in [0.5 * t, 2.0 * t] {
+                    let c = run(m, 10.0, fo, so, &format!(r#","min_interval":"{min} s""#));
+                    assert!(close(
+                        v(&c, "max_groundspeed") * min,
+                        v(&r, "trigger_distance")
+                    ));
+                    let warned = codes(&c).iter().any(|x| x == "TRIGGER_TOO_FAST");
+                    assert_eq!(warned, t < min, "{c}");
+                }
+            }
+            // More overlap never spreads photos or lines further apart.
+            let mut last = (f64::INFINITY, f64::INFINITY);
+            for o in [0.0, 30.0, 50.0, 60.0, 70.0, 80.0, 90.0, 99.0] {
+                let r = run(m, 10.0, o, o, "");
+                let now = (v(&r, "trigger_distance"), v(&r, "line_spacing"));
+                assert!(now.0 < last.0 && now.1 < last.1);
+                last = now;
+            }
+        }
+    }
+}
+
+#[test]
+fn terrain_overlap_invariants() {
+    // Flat ground keeps the plan, rising ground only lowers overlap, the
+    // result is the trigger tool's spacing over the footprint at h − t, it is
+    // scale-free in (h, t), the GSD shrinks by (h − t)/h, and flying at the
+    // reported height holds the accepted overlap exactly.
+    let v = |r: &Value, k: &str| num(r, &format!("result.{k}.value"));
+    let pct = |r: &Value, k: &str| num(r, &format!("result.{k}"));
+    let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 * b.abs().max(1.0);
+    let cam = r#""sensor_width":"13.2 mm","focal_length":"8.8 mm","image_width":5472"#;
+    let run = |h: f64, t: f64, fo: f64, so: f64, extra: &str| {
+        call(
+            "drone.photogrammetry.terrain-overlap",
+            &format!(
+                r#"{{"height":"{h} m","highest_terrain":"{t} m","front_overlap":{fo},"side_overlap":{so}{extra}}}"#
+            ),
+        )
+    };
+    for (fo, so) in [(60.0, 30.0), (75.0, 65.0), (80.0, 70.0), (85.0, 75.0)] {
+        for h in [45.0, 100.0, 120.0] {
+            let flat = run(h, 0.0, fo, so, "");
+            assert!(close(pct(&flat, "front_overlap_worst"), fo));
+            assert!(close(pct(&flat, "side_overlap_worst"), so));
+            assert!(codes(&flat).iter().all(|c| c != "OVERLAP_BELOW_TARGET"));
+            let plan = call(
+                "drone.photogrammetry.trigger",
+                &format!(
+                    r#"{{{cam},"sensor_height":"8.8 mm","height":"{h} m","groundspeed":"10 m/s","front_overlap":{fo},"side_overlap":{so}}}"#
+                ),
+            );
+            let mut last = (f64::INFINITY, f64::INFINITY);
+            for k in [-0.4, -0.1, 0.1, 0.3, 0.5, 0.7, 0.9] {
+                let t = k * h;
+                let r = run(h, t, fo, so, "");
+                let now = (
+                    pct(&r, "front_overlap_worst"),
+                    pct(&r, "side_overlap_worst"),
+                );
+                assert!(now.0 < last.0 && now.1 < last.1, "{r}");
+                last = now;
+                assert_eq!(
+                    codes(&r).iter().any(|c| c == "OVERLAP_BELOW_TARGET"),
+                    t > 0.0,
+                    "{r}"
+                );
+                // The same answer from the trigger tool's spacing at h and the
+                // GSD tool's footprint at h − t.
+                let there = call(
+                    "drone.photogrammetry.gsd",
+                    &format!(
+                        r#"{{{cam},"sensor_height":"8.8 mm","height":"{} m"}}"#,
+                        h - t
+                    ),
+                );
+                let o = |spacing: f64, fp: f64| 100.0 * (1.0 - spacing / fp);
+                let front = o(v(&plan, "trigger_distance"), v(&there, "footprint_along"));
+                let side = o(v(&plan, "line_spacing"), v(&there, "footprint_across"));
+                assert!((now.0 - front).abs() < 1e-9, "{now:?} {front}");
+                assert!((now.1 - side).abs() < 1e-9, "{now:?} {side}");
+                // Scale-free: the same ratio of terrain to height, the same overlap.
+                let big = run(3.0 * h, 3.0 * t, fo, so, "");
+                assert!(close(pct(&big, "front_overlap_worst"), now.0));
+                // The GSD over the high ground shrinks by (h − t)/h.
+                let g = run(h, t, fo, so, &format!(",{cam}"));
+                assert!(close(
+                    v(&g, "gsd_worst"),
+                    v(&g, "gsd_takeoff") * (h - t) / h
+                ));
+            }
+            // Flying at the reported height holds the accepted overlap.
+            let t = 0.3 * h;
+            let target = so - 10.0;
+            let r = run(h, t, fo, so, &format!(r#","target_overlap":{target}"#));
+            let up = v(&r, "min_height");
+            let again = run(up, t, fo, so, "");
+            let worst = pct(&again, "front_overlap_worst").min(pct(&again, "side_overlap_worst"));
+            assert!((worst - target).abs() < 1e-9, "{again}");
+        }
+    }
 }

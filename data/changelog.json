@@ -14,6 +14,24 @@
       "date": "2026-09-23",
       "kind": "result-change",
       "tools": [
+        "drone.photogrammetry.terrain-overlap"
+      ],
+      "vectors": [
+        "drone.photogrammetry.terrain-overlap v001",
+        "drone.photogrammetry.terrain-overlap v003",
+        "drone.photogrammetry.terrain-overlap v004",
+        "drone.photogrammetry.terrain-overlap v005",
+        "drone.photogrammetry.terrain-overlap v007",
+        "drone.photogrammetry.terrain-overlap v010",
+        "drone.photogrammetry.terrain-overlap v011",
+        "drone.photogrammetry.terrain-overlap v012"
+      ],
+      "summary": "Promoting this tool to stable removed EXPERIMENTAL_TOOL from its warnings, which moved OVERLAP_BELOW_TARGET from index 1 to index 0 and broke eight vectors that pinned the index. Nothing computed changed. v001, v003, v004, v005, v007, v010, v011, and v012 are superseded by v015 to v022, which name the warning with the meta.warnings.*.code form."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "result-change",
+      "tools": [
         "aviation.altimetry.pressure-altitude",
         "aviation.altimetry.density-altitude",
         "aviation.altimetry.q-codes",

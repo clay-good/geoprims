@@ -580,6 +580,7 @@ fn run_altitude_for_gsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TRIGGER: ToolDef = ToolDef {
     id: "drone.photogrammetry.trigger",
+    stability: gp_base::tool::Stability::Stable,
     title: "Overlap, trigger interval, and line spacing",
     summary: "Photo spacing, trigger interval, and flight-line spacing for your front and side overlap, with a check that the camera can keep up.",
     aliases: &[
@@ -731,17 +732,26 @@ pub static TRIGGER: ToolDef = ToolDef {
         "TRIGGER_TOO_FAST",
         "EQUIVALENT_FOCAL_LENGTH",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Trigger distance = along-track footprint × (1 − front overlap); line spacing = across-track footprint × (1 − side overlap)",
     accuracy: "Exact over flat ground at the given height; terrain changes the effective overlap",
+    when_to_use: "Use this when you set up a mapping flight and need the numbers the flight app asks for: how far apart to take photos, how often to trigger at your groundspeed, and how far apart to fly the lines for the front and side overlap you want. It also tells you whether the camera can shoot fast enough.",
+    limitations: "It assumes a nadir camera over flat ground at the height you give. Ground that rises toward the drone shrinks each photo, so the real overlap there is lower; check it with the terrain overlap tool. Wind, gimbal tilt, and a camera that cannot hold a steady interval also cut overlap in flight. It does not plan the lines over your area.",
     references: &[WOLF, PIX4D],
-    examples: &[Example {
-        id: "primary",
-        title: "75/65 overlap at 100 m and 10 m/s with a 1-inch camera",
-        input: r#"{"height":"100 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","image_width":5472,"groundspeed":"10 m/s","front_overlap":75,"side_overlap":65}"#,
-        source: "add-drone-suite scenario: 25.0 m, 2.5 s, 52.5 m",
-    }],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "75/65 overlap at 100 m and 10 m/s with a 1-inch camera",
+            input: r#"{"height":"100 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","image_width":5472,"groundspeed":"10 m/s","front_overlap":75,"side_overlap":65}"#,
+            source: "add-drone-suite scenario: 25.0 m, 2.5 s, 52.5 m",
+        },
+        Example {
+            id: "psu-geog892",
+            title: "A 12,000 by 7,000 pixel camera at 1 ft GSD, 60/30 overlap, 150 knots",
+            input: r#"{"height":"10000 ft","sensor_width":"120 mm","sensor_height":"70 mm","focal_length":"100 mm","image_width":12000,"groundspeed":"150 kn","front_overlap":60,"side_overlap":30}"#,
+            source: "Penn State GEOG 892, Designing a Flight Route: air base 2,800 ft, line spacing 8,400 ft, 11.067 s between exposures",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "vector-diagram",
@@ -750,10 +760,28 @@ pub static TRIGGER: ToolDef = ToolDef {
             ("distance", "trigger_distance"),
         ],
     }],
-    related: &[Related {
-        id: "drone.photogrammetry.gsd",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.photogrammetry.terrain-overlap",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.motion-blur",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.image-count",
+            reason: "next",
+        },
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "next",
+        },
+    ],
     sentence: "Take a photo every {trigger_interval} ({trigger_distance}) and space flight lines {line_spacing} apart.{warn TRIGGER_TOO_FAST} The camera cannot shoot that fast: slow to {max_groundspeed}.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_trigger,
@@ -764,10 +792,16 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let h = ctx.req_quantity("height")?.to(unit(QT::Length, "m"));
     let cam = Camera::read(ctx)?;
     let v = ctx.req_quantity("groundspeed")?.to(unit(QT::Speed, "m/s"));
-    if h <= 0.0 || v <= 0.0 {
+    if h <= 0.0 {
+        return Err(ToolError::invalid(
+            "/height",
+            "The height above ground must be positive.",
+        ));
+    }
+    if v <= 0.0 {
         return Err(ToolError::invalid(
             "/groundspeed",
-            "Height and groundspeed must be positive.",
+            "The groundspeed must be positive.",
         ));
     }
     let (pf, ps) = match ctx.choice("preset")? {

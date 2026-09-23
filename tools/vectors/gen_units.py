@@ -129,6 +129,30 @@ CASES = {
 TEMP_CASES = [("30", "degC", "degF"), ("32", "degF", "K"), ("100", "degC", "degF"), ("-40", "degF", "degC"),
               ("0", "K", "degC"), ("15", "degC", "K"), ("59", "degF", "degC")]
 
+# The hand-picked cases above are the ones worth reading: round numbers, the
+# pairs people actually convert, the signs and zeroes that catch an offset
+# dropped. They are too few to promote a tool, and choosing more by hand would
+# be choosing which mistakes to look for. So every ordered pair of units in a
+# group is also swept, at magnitudes chosen to exercise a factor in both
+# directions. A factor that is wrong is wrong at any magnitude; one applied
+# upside down, or an offset lost, is not.
+#
+# The sweep is APPENDED, so every vector published before it keeps its id and
+# its value and the file stays reproducible.
+SWEEP_VALUES = ["1", "2.5", "100", "0.125", "7.5", "-3", "60", "1000"]
+
+
+def sweep(group, want):
+    """Ordered pairs of every unit in the group, cycling magnitudes."""
+    units = sorted(set(LINEAR.get(group, {})) | set(PI_UNITS.get(group, {})))
+    pairs = [(a, b) for a in units for b in units if a != b]
+    if not pairs:
+        return []
+    return [
+        (SWEEP_VALUES[(k // len(pairs) + k) % len(SWEEP_VALUES)],) + pairs[k % len(pairs)]
+        for k in range(want)
+    ]
+
 # (group, slug, from, to, examples) for allow-listed pairs; must match core/crates/gp-units/src/pairs.rs
 PAIRS = [
     ("speed", "kt-to-mph", "kt", "mph", ["100", "1", "250"]),
@@ -167,6 +191,20 @@ PAIRS = [
     ("angle", "deg-to-rad", "deg", "rad", ["180", "1", "90"]),
     ("angle", "rad-to-deg", "rad", "deg", ["1", "3.141592653589793", "0.5"]),
 ]
+
+
+TARGET_VECTORS = 22
+for _group, _cases in CASES.items():
+    _cases.extend(sweep(_group, max(0, TARGET_VECTORS - len(_cases))))
+TEMP_CASES.extend(
+    (v, a, b)
+    for k, (v, (a, b)) in enumerate(
+        zip(
+            (SWEEP_VALUES[(i // 6 + i) % len(SWEEP_VALUES)] for i in range(TARGET_VECTORS - len(TEMP_CASES))),
+            [(a, b) for a in sorted(TEMP) for b in sorted(TEMP) if a != b] * 4,
+        )
+    )
+)
 
 
 def special_vectors():

@@ -238,6 +238,7 @@ fn east_west(v: f64, ctx: &Ctx) -> String {
 
 pub static DECLINATION: ToolDef = ToolDef {
     id: "geodesy.magnetic.declination",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Magnetic declination",
     summary: "Magnetic declination (variation), inclination, and field strength at any place and date from the World Magnetic Model 2025 or IGRF-14, with the model's uncertainty and compass warning zones.",

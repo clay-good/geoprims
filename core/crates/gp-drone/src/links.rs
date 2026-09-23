@@ -37,6 +37,7 @@ const fn db(
 
 pub static LINK_BUDGET: ToolDef = ToolDef {
     id: "drone.links.link-budget",
+    version: "1.0.1",
     title: "Radio link budget",
     summary: "Free-space path loss, received signal, and fade margin for a control or video link, with the transmitter's EIRP checked against the dated 2.4 GHz limit where you fly.",
     aliases: &[
@@ -245,7 +246,7 @@ fn run_link(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 n(20.0 * log10(d), 2),
                 n(20.0 * log10(f), 2)
             ),
-            n(fspl, 1),
+            format!("{} dB", n(fspl, 1)),
         );
     }
     if let Some(pt) = ctx.number("tx_power")? {

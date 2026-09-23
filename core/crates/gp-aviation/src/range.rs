@@ -34,6 +34,7 @@ const PHAK_RANGE: Reference = Reference {
 
 pub static SPECIFIC_RANGE: ToolDef = ToolDef {
     id: "aviation.performance.specific-range",
+    version: "1.0.1",
     title: "Specific range",
     summary: "How far each gallon of fuel takes you, through the air and over the ground, and the fuel each 100 NM takes, from your airspeed and fuel flow.",
     aliases: &[
@@ -174,7 +175,7 @@ fn run_specific_range(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "Air distance per gallon",
             "TAS ÷ fuel flow",
             format!("{} kt ÷ {} gal/h", n(tas, 1), n(ff, 2)),
-            n(tas / ff, 2),
+            display::quantity(tas / ff, "NM/galUS", Precision::Decimals(2), fmt),
         );
     }
     let g = |v: f64| Q {

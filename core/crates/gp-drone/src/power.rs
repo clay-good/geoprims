@@ -170,6 +170,7 @@ fn read_density(ctx: &mut Ctx) -> Result<f64, ToolError> {
 
 pub static BATTERY_ENERGY: ToolDef = ToolDef {
     id: "drone.power.battery-energy",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Battery energy (mAh to Wh)",
     summary: "Battery energy in watt-hours from capacity and voltage (or cell count), usable energy after a discharge limit and landing reserve, and the current and C-rate for a power draw.",
@@ -271,16 +272,10 @@ pub static BATTERY_ENERGY: ToolDef = ToolDef {
             "V",
             2,
         ),
-        num(
-            "current",
-            "Current (A)",
-            "Power / nominal voltage",
-            0.0,
-            1e9,
-        )
-        .precision(Precision::Decimals(1))
-        .measure("electric_current", "A")
-        .optional(),
+        num("current", "Current", "Power / nominal voltage", 0.0, 1e9)
+            .precision(Precision::Decimals(1))
+            .measure("electric_current", "A")
+            .optional(),
         num("c_rate", "C-rate", "Current / capacity in Ah", 0.0, 1e9)
             .precision(Precision::Decimals(2))
             .optional(),

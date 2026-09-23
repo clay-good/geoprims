@@ -1324,9 +1324,19 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, String, Json) {
                     (None, Some(u)) => {
                         crate::display::quantity(v.value, u.symbol, v.precision, ctx.options.format)
                     }
-                    (None, None) => {
-                        crate::display::number(v.value, v.precision, ctx.options.format)
-                    }
+                    // A plain-number output that declares what it measures
+                    // (amperes, gigabytes, decibels) shows that unit too.
+                    (None, None) => match def
+                        .outputs
+                        .iter()
+                        .find(|f| f.name == *k)
+                        .and_then(|f| f.measure)
+                    {
+                        Some((_, u)) => {
+                            crate::display::quantity(v.value, u, v.precision, ctx.options.format)
+                        }
+                        None => crate::display::number(v.value, v.precision, ctx.options.format),
+                    },
                 };
                 ((*k).to_owned(), Json::str(text))
             })

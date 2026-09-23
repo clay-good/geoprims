@@ -54,6 +54,7 @@ const fn gb(name: &'static str, title: &'static str, help: &'static str) -> Fiel
 
 pub static DATASET_SIZE: ToolDef = ToolDef {
     id: "drone.sensors.dataset-size",
+    version: "1.0.1",
     title: "Dataset size estimate",
     summary: "An estimate of how much storage a mapping job needs: the raw images, the orthomosaic (uncompressed and over a compression range), and a lidar point cloud as LAS and LAZ.",
     aliases: &[
@@ -282,7 +283,7 @@ fn run_dataset(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     n(bands, 0),
                     n(bits, 0)
                 ),
-                n(gbv, 2),
+                format!("{} GB", n(gbv, 2)),
             ));
         }
         (None, None) => {}
@@ -625,6 +626,7 @@ const fn density(name: &'static str, title: &'static str, help: &'static str) ->
 
 pub static LIDAR_PLAN: ToolDef = ToolDef {
     id: "drone.sensors.lidar-plan",
+    version: "1.0.1",
     title: "Lidar mission planning",
     summary: "Swath, line spacing, and pulse density for a lidar flight, with the aggregate density over overlapping lines checked against the USGS 3DEP quality levels.",
     aliases: &[

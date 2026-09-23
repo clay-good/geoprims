@@ -46,6 +46,7 @@ pub fn dew_point(e: f64) -> f64 {
 
 pub static HUMIDITY: ToolDef = ToolDef {
     id: "aviation.atmosphere.humidity",
+    version: "1.0.1",
     title: "Humidity and moist air",
     summary: "Dew point, relative humidity, and vapor pressure from each other, with the mixing ratio, virtual temperature, and how much lighter the moist air is than dry air.",
     aliases: &[

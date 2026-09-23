@@ -1770,7 +1770,7 @@ const PERIOD_ROW: &[Field] = &[
 pub static TAF: ToolDef = ToolDef {
     id: "aviation.weather.taf-decode",
     stability: gp_base::tool::Stability::Stable,
-    version: "1.2.0",
+    version: "1.2.1",
     title: "TAF decoder",
     summary: "Turns a pasted TAF into a timeline of forecast periods (FM, TEMPO, BECMG, PROB30/40) in plain language, with UTC and local times, winds (true), visibility, weather, clouds and ceilings, and flight categories.",
     aliases: &[

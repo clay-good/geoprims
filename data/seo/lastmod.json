@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f68fb60b509998ee",
+    "hash": "ca184bdbd8b80dec",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "e6b64cebae5ed540",
+    "hash": "e4a68ccb90963bfc",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -100,7 +100,7 @@
     "lastmod": "2026-09-23"
   },
   "/changelog/": {
-    "hash": "1032b1c2ca2572e0",
+    "hash": "79d4b74bbc31325f",
     "lastmod": "2026-09-23"
   },
   "/disclaimer/": {
@@ -108,8 +108,8 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "896f85650ca0149b",
-    "lastmod": "2026-09-22"
+    "hash": "b4e71e914a21b672",
+    "lastmod": "2026-09-23"
   },
   "/drone/links/": {
     "hash": "2a5561dc7a58f934",
@@ -128,8 +128,8 @@
     "lastmod": "2026-09-23"
   },
   "/drone/photogrammetry/": {
-    "hash": "85ef8305bcf0f52f",
-    "lastmod": "2026-09-22"
+    "hash": "245079465fa17a64",
+    "lastmod": "2026-09-23"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
     "hash": "4e053d7789a2df06",
@@ -137,6 +137,10 @@
   },
   "/drone/photogrammetry/gsd/": {
     "hash": "39e23e193ca82328",
+    "lastmod": "2026-09-23"
+  },
+  "/drone/photogrammetry/image-count/": {
+    "hash": "d8c1b55b31f1ebc0",
     "lastmod": "2026-09-23"
   },
   "/drone/photogrammetry/terrain-overlap/": {
@@ -640,8 +644,8 @@
     "lastmod": "2026-09-22"
   },
   "/journeys/drone-mapping-day/": {
-    "hash": "8b88f816770c22f8",
-    "lastmod": "2026-09-22"
+    "hash": "7a17b2f517d8661c",
+    "lastmod": "2026-09-23"
   },
   "/journeys/gnss-to-state-plane/": {
     "hash": "f0b3e94a99749f9a",
@@ -656,8 +660,8 @@
     "lastmod": "2026-09-22"
   },
   "/journeys/lidar-bid/": {
-    "hash": "572f8162539959e9",
-    "lastmod": "2026-09-22"
+    "hash": "bed26bcd2248e6f3",
+    "lastmod": "2026-09-23"
   },
   "/journeys/vfr-cross-country/": {
     "hash": "3802d33db561539b",
@@ -676,7 +680,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "45c4436913b97c5e",
+    "hash": "cbd18b3e8688e285",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -824,7 +828,7 @@
     "lastmod": "2026-09-23"
   },
   "/quality/": {
-    "hash": "3a86a5f1ae43df4c",
+    "hash": "3269df1b6ee7a7b1",
     "lastmod": "2026-09-23"
   },
   "/raster/": {
@@ -848,7 +852,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "b8000262b7031d2c",
+    "hash": "0cd4f343982f4cb6",
     "lastmod": "2026-09-23"
   },
   "/survey/": {
@@ -968,7 +972,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "d56fb152e3b7cf07",
+    "hash": "9f894811cb6b43e2",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1156,7 +1160,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "54dcf0e71655abd3",
+    "hash": "72747818d77503e6",
     "lastmod": "2026-09-23"
   }
 }

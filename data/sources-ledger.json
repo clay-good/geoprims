@@ -2101,6 +2101,26 @@
       "editionCheck": false
     },
     {
+      "id": "psu-geog892",
+      "name": "GEOG 892: Geospatial Applications of Unmanned Aerial Systems",
+      "issuer": "Abdullah, Q., Penn State College of Earth and Mineral Sciences",
+      "currentEdition": "online course text",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-23",
+      "verificationNote": "Read at courses.ems.psu.edu on 2026-09-23: Lesson 4, Designing a Flight Route. Number of flight lines = width / spacing + 1, rounded up, the first line on the southern boundary; images per line = length / air base + 1, rounded up, plus two at each end (10 lines, 43 images per line, 430 images). An online course text with no numbered editions.",
+      "freeAccessUrl": "https://courses.ems.psu.edu/geog892/node/658",
+      "matchTerms": [
+        "GEOG 892"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "rfc3339",
       "name": "RFC 3339",
       "issuer": "IETF",

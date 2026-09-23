@@ -3,6 +3,27 @@
   "entries": [
     {
       "date": "2026-09-23",
+      "kind": "result-change",
+      "tools": [
+        "drone.photogrammetry.image-count",
+        "drone.mission.survey-grid"
+      ],
+      "vectors": [
+        "drone.photogrammetry.image-count v001",
+        "drone.photogrammetry.image-count v002",
+        "drone.photogrammetry.image-count v003",
+        "drone.photogrammetry.image-count v004",
+        "drone.photogrammetry.image-count v005",
+        "drone.mission.survey-grid v001",
+        "drone.mission.survey-grid v002",
+        "drone.mission.survey-grid v003",
+        "drone.mission.survey-grid v004",
+        "drone.mission.survey-grid v005"
+      ],
+      "summary": "Image count and the survey grid (version 1.1.0) now count the way published flight planning does (Penn State GEOG 892): ⌈width / spacing⌉ + 1 lines with the outer lines on the edges, and ⌈length / photo spacing⌉ + 1 photos per line plus extra photos past each end, 2 by default (a new input; 0 leaves them out). Most areas gain a line. The Penn State block now gives its published 10 lines and 430 photos, where 1.0.0 gave 9 and 342. The superseded vectors pinned the old line counts."
+    },
+    {
+      "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
         "aviation.ifr.hold-entry"

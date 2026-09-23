@@ -5,11 +5,11 @@ Generates vendor-neutral flight patterns (survey grids, corridors, orbits, facad
 ## ADDED Requirements
 
 ### Requirement: Survey grid over a polygon
-Given an area polygon, line spacing (or camera and overlap settings from photogrammetry), flight direction (degrees true, or "auto" for the fewest lines), overshoot distance, and height above ground, the tool SHALL generate a serpentine (lawnmower) path clipped to the polygon (including polygons with holes). It SHALL return waypoints, line count, total path length, turn count, and estimated flight time at a groundspeed. An optional crosshatch SHALL add a second perpendicular grid.
+Given an area polygon, line spacing (or camera and overlap settings from photogrammetry), flight direction (degrees true, or "auto" for the fewest lines), overshoot distance, and height above ground, the tool SHALL generate a serpentine (lawnmower) path clipped to the polygon (including polygons with holes). It SHALL return waypoints, line count, total path length, turn count, and estimated flight time at a groundspeed. Lines and photos SHALL follow the image-count requirement's published method (⌈width / spacing⌉ + 1 lines; ⌈length / photo spacing⌉ + 1 photos per line plus the extra photos past each end), and each line SHALL be flown far enough past its ends to take those photos. An optional crosshatch SHALL add a second perpendicular grid.
 
 #### Scenario: Auto direction minimizes lines
 - **WHEN** direction is "auto" for a long, thin rectangle
-- **THEN** the lines run parallel to the rectangle's long axis and the line count equals ⌈width / spacing⌉ (±1)
+- **THEN** the lines run parallel to the rectangle's long axis and the line count equals ⌈width / spacing⌉ + 1, the first and last lines on or just past the long edges (the published flight-line count, Penn State GEOG 892, "Designing a Flight Route")
 
 #### Scenario: Polygon with a hole
 - **WHEN** the polygon has a hole (a no-fly area)

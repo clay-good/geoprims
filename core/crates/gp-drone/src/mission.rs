@@ -28,6 +28,14 @@ const PIX4D: Reference = Reference {
     locator: "Chapter 18 (flight planning: flight lines, photo spacing, number of photos)",
     url: "https://www.mheducation.com/highered/product/elements-photogrammetry-applications-gis-wolf-dewitt/9780071761123.html",
 };
+const PSU_FLIGHT_ROUTE: Reference = Reference {
+    title: "GEOG 892: Geospatial Applications of Unmanned Aerial Systems",
+    issuer: "Abdullah, Q., Penn State College of Earth and Mineral Sciences",
+    year: 2026,
+    edition: "online course text, retrieved 2026-09-23",
+    locator: "Lesson 4, Designing a Flight Route (number of flight lines; number of images)",
+    url: "https://courses.ems.psu.edu/geog892/node/658",
+};
 pub(crate) const KARNEY: Reference = Reference {
     title: "Algorithms for geodesics",
     issuer: "Karney, C. F. F., Journal of Geodesy",
@@ -171,30 +179,92 @@ pub struct Sweep {
     pub obstacles: Vec<Vec<P>>,
 }
 
+/// Slack on a count of spacings, so plane round-off and the slight tilt of a
+/// block's ends on the plane (millimeters) do not add a line or a photo: a
+/// 1,000 m extent at 100 m spacing is 10 spacings, not 11. It lets a spacing
+/// run over by at most 0.01% of itself.
+const SLACK: f64 = 1e-4;
+
+/// The x-intervals of `outer` anywhere in the strip `lo..=hi` (lo ≤ hi, both
+/// inside the ring's extent): the union of its intervals at the strip's edges
+/// and just either side of every corner inside it, where the extent turns.
+fn strip(outer: &[P], lo: f64, hi: f64, eps: f64) -> Vec<(f64, f64)> {
+    let ring = [outer.to_vec()];
+    let mut ys = vec![lo, hi];
+    for q in outer {
+        if q.1 > lo && q.1 < hi {
+            ys.push((q.1 - eps).max(lo));
+            ys.push((q.1 + eps).min(hi));
+        }
+    }
+    let mut all: Vec<(f64, f64)> = ys.iter().flat_map(|&y| intervals(&ring, y)).collect();
+    all.sort_by(|a, b| a.partial_cmp(b).expect("finite"));
+    let mut out: Vec<(f64, f64)> = Vec::new();
+    for (a, b) in all {
+        match out.last_mut() {
+            Some(last) if a <= last.1 => last.1 = last.1.max(b),
+            _ => out.push((a, b)),
+        }
+    }
+    out
+}
+
+/// `iv` minus the intervals in `cut`.
+fn subtract(iv: Vec<(f64, f64)>, cut: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let mut out = iv;
+    for &(c, d) in cut {
+        out = out
+            .into_iter()
+            .flat_map(|(a, b)| {
+                if d <= a || c >= b {
+                    vec![(a, b)]
+                } else {
+                    [(a, c), (d, b)]
+                        .into_iter()
+                        .filter(|(x, y)| y > x)
+                        .collect()
+                }
+            })
+            .collect();
+    }
+    out
+}
+
 /// Sweeps lines at `spacing` over the outer ring minus buffered holes, lines at
-/// `angle` (radians from +x). The first line is half a spacing inside the area.
+/// `angle` (radians from +x). Published flight planning puts the first and last
+/// lines on the edges, so the lines are ⌈width / spacing⌉ + 1, centered: they
+/// reach the edges or just past them. Each line covers its strip, half a
+/// spacing to either side, so it runs across the area's full extent in that
+/// strip (a line on or past an edge flies the extent along that edge), and is
+/// cut where it would cross a buffered hole.
 pub fn sweep(outer: &[P], holes: &[Vec<P>], angle: f64, spacing: f64, buffer: f64) -> Sweep {
     let obstacles: Vec<Vec<P>> = holes.iter().map(|h| buffered(h, buffer)).collect();
     let r = |p: &P| rot(*p, -angle);
-    let mut rings: Vec<Vec<P>> = vec![outer.iter().map(r).collect()];
-    rings.extend(
-        obstacles
-            .iter()
-            .map(|h| h.iter().map(r).collect::<Vec<_>>()),
-    );
-    let (ymin, ymax) = rings[0]
+    let ring: Vec<P> = outer.iter().map(r).collect();
+    let cuts: Vec<Vec<P>> = obstacles
+        .iter()
+        .map(|h| h.iter().map(r).collect::<Vec<_>>())
+        .collect();
+    let (ymin, ymax) = ring
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
             (lo.min(p.1), hi.max(p.1))
         });
-    // Slack for round-off: a 1,000 m extent at 100 m spacing is 10 lines, not 11.
-    let n = ((ymax - ymin) / spacing - 1e-6).ceil().max(1.0) as usize;
-    // Center the lines in the extent: n lines cover n·spacing.
+    let n = ((ymax - ymin) / spacing - SLACK).ceil().max(0.0) as usize + 1;
+    // Center the lines on the extent: n lines span (n - 1)·spacing ≥ the extent.
     let first = ymin + ((ymax - ymin) - (n as f64 - 1.0) * spacing) / 2.0;
+    let eps = 1e-9 * (ymax - ymin).max(1.0);
+    let (inner_lo, inner_hi) = (ymin + eps, (ymax - eps).max(ymin + eps));
     let lines = (0..n)
         .map(|k| {
             let y = first + k as f64 * spacing;
-            (y, intervals(&rings, y))
+            let lo = (y - spacing / 2.0).clamp(inner_lo, inner_hi);
+            let hi = (y + spacing / 2.0).clamp(inner_lo, inner_hi);
+            let cut: Vec<(f64, f64)> = cuts
+                .iter()
+                .flat_map(|c| intervals(core::slice::from_ref(c), y))
+                .collect();
+            (y, subtract(strip(&ring, lo, hi, eps), &cut))
         })
         .filter(|(_, iv)| !iv.is_empty())
         .collect();
@@ -205,9 +275,10 @@ pub fn sweep(outer: &[P], holes: &[Vec<P>], angle: f64, spacing: f64, buffer: f6
     }
 }
 
-/// Photos along an interval of length `l` at `p` spacing: one at each end and every p between.
-pub fn photos(l: f64, p: f64) -> usize {
-    (l / p).floor() as usize + 1
+/// Photo spacings along an interval of length `l` at most `p` apart:
+/// ⌈l / p⌉, so the photos are ⌈l / p⌉ + 1 with one at each end.
+pub fn spacings(l: f64, p: f64) -> usize {
+    (l / p - SLACK).ceil().max(0.0) as usize
 }
 
 fn seg_hits(a: P, b: P, c: P, d: P) -> Option<f64> {
@@ -282,17 +353,26 @@ fn route(a: P, b: P, obstacles: &[Vec<P>]) -> Vec<P> {
     vec![a, b]
 }
 
-/// A serpentine path: waypoints (plane coordinates) with a kind, and totals.
+/// A serpentine path: waypoints (plane coordinates) with a kind, the photo
+/// positions in flight order, and totals.
 pub struct Path {
     pub points: Vec<(P, &'static str)>,
+    pub shots: Vec<P>,
     pub lines: usize,
     pub survey_length: f64,
-    pub photos: usize,
 }
 
-pub fn serpentine(s: &Sweep, overshoot: f64, photo_spacing: f64) -> Path {
+/// Joins the swept lines in serpentine order. Each line (or piece of a line
+/// split by a hole) takes ⌈length / photo spacing⌉ + 1 photos, evenly spaced
+/// from end to end at no more than the photo spacing, plus `end_photos` more
+/// past each outer end of the line at that same step (Penn State GEOG 892:
+/// length / B + 1, rounded up, then two more at each end). The line is flown
+/// past its outer ends by the overshoot or far enough to take those photos,
+/// whichever is longer.
+pub fn serpentine(s: &Sweep, overshoot: f64, photo_spacing: f64, end_photos: usize) -> Path {
     let mut pts: Vec<(P, &'static str)> = Vec::new();
-    let (mut survey, mut n_photos) = (0.0, 0);
+    let mut shots: Vec<P> = Vec::new();
+    let mut survey = 0.0;
     for (k, (y, iv)) in s.lines.iter().enumerate() {
         let mut segs: Vec<(f64, f64)> = iv.clone();
         if k % 2 == 1 {
@@ -301,10 +381,22 @@ pub fn serpentine(s: &Sweep, overshoot: f64, photo_spacing: f64) -> Path {
         }
         for (j, &(x0, x1)) in segs.iter().enumerate() {
             let dir = (x1 - x0).signum();
+            let len = (x1 - x0).abs();
+            let gaps = spacings(len, photo_spacing);
+            let step = if gaps == 0 {
+                photo_spacing
+            } else {
+                len / gaps as f64
+            };
+            let (head, tail) = (
+                if j == 0 { end_photos } else { 0 },
+                if j + 1 == segs.len() { end_photos } else { 0 },
+            );
+            let reach = |extra: usize| overshoot.max(extra as f64 * step);
             let (xs, xe) = (
-                if j == 0 { x0 - dir * overshoot } else { x0 },
+                if j == 0 { x0 - dir * reach(head) } else { x0 },
                 if j + 1 == segs.len() {
-                    x1 + dir * overshoot
+                    x1 + dir * reach(tail)
                 } else {
                     x1
                 },
@@ -319,15 +411,19 @@ pub fn serpentine(s: &Sweep, overshoot: f64, photo_spacing: f64) -> Path {
             }
             pts.push((a, "line_start"));
             pts.push((b, "line_end"));
-            survey += (x1 - x0).abs();
-            n_photos += photos((x1 - x0).abs(), photo_spacing);
+            survey += len;
+            // Photos from `head` steps before the start to `tail` steps past the end.
+            let first = x0 - dir * head as f64 * step;
+            for i in 0..head + gaps + 1 + tail {
+                shots.push(rot((first + dir * i as f64 * step, *y), s.angle));
+            }
         }
     }
     Path {
         points: pts,
+        shots,
         lines: s.lines.len(),
         survey_length: survey,
-        photos: n_photos,
     }
 }
 
@@ -529,6 +625,16 @@ const OVERSHOOT: Field = qty(
     "m",
 );
 
+const END_PHOTOS: Field = Field::new(
+    "end_photos",
+    "Extra photos per line end",
+    "Photos past each end of every line, like 2 (the default); 0 for none",
+    Kind::Number {
+        min: 0.0,
+        max: 10.0,
+    },
+);
+
 const WAYPOINT: &[Field] = &[
     Field::new(
         "lat",
@@ -576,10 +682,9 @@ fn waypoints(plane: &Plane, pts: &[(P, &str)]) -> Json {
     )
 }
 
-/// The camera trigger points along the survey lines: one at each line's start
-/// and every `spacing` after it, in flight order, matching the photo count.
+/// The camera trigger points, in flight order, one per photo the plan counts.
 /// Returns the points and how many were left out when the cap is reached.
-fn trigger_points(plane: &Plane, pts: &[(P, &str)], spacing: f64, cap: usize) -> (Json, usize) {
+fn trigger_points(plane: &Plane, shots: &[P], cap: usize) -> (Json, usize) {
     let deg = |v: f64| {
         Q {
             value: v,
@@ -587,34 +692,20 @@ fn trigger_points(plane: &Plane, pts: &[(P, &str)], spacing: f64, cap: usize) ->
         }
         .to_json()
     };
-    let (mut out, mut dropped) = (Vec::new(), 0);
-    for w in pts.windows(2) {
-        let ((a, ka), (b, _)) = (w[0], w[1]);
-        if ka != "line_start" {
-            continue;
-        }
-        let len = hypot(b.0 - a.0, b.1 - a.1);
-        let n = photos(len, spacing);
-        for i in 0..n {
-            if out.len() >= cap {
-                dropped += n - i;
-                break;
-            }
-            let t = if len == 0.0 {
-                0.0
-            } else {
-                (i as f64 * spacing) / len
-            };
-            let (x, y) = (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t);
+    let out: Vec<Json> = shots
+        .iter()
+        .take(cap)
+        .enumerate()
+        .map(|(i, &(x, y))| {
             let (la, lo) = plane.inv(x, y);
-            out.push(Json::obj([
+            Json::obj([
                 ("lat", deg(la)),
                 ("lon", deg(lo)),
-                ("photo", Json::Num((out.len() + 1) as f64)),
-            ]));
-        }
-    }
-    (Json::Arr(out), dropped)
+                ("photo", Json::Num((i + 1) as f64)),
+            ])
+        })
+        .collect();
+    (Json::Arr(out), shots.len().saturating_sub(cap))
 }
 
 /// A camera trigger point of a survey grid, as the map layer reads it.
@@ -653,6 +744,7 @@ const PHOTO_ROW: &[Field] = &[
 
 pub static SURVEY_GRID: ToolDef = ToolDef {
     id: "drone.mission.survey-grid",
+    version: "1.1.0",
     title: "Survey grid (lawnmower pattern)",
     summary: "A serpentine mapping pattern over an area, with no-fly holes routed around, the fewest lines by default, overshoot, and an optional crosshatch: waypoints, line count, path length, turns, photo count, and flight time.",
     aliases: &[
@@ -677,6 +769,7 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         PHOTO.required().core(),
         DIRECTION.core(),
         OVERSHOOT,
+        END_PHOTOS,
         qty(
             "hole_buffer",
             "Hole buffer",
@@ -717,7 +810,7 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         Field::new(
             "photos",
             "Photos",
-            "At the photo spacing, one at each line end",
+            "One at each line end, no farther apart than the photo spacing, plus the extras past each end",
             Kind::Number { min: 0.0, max: 1e9 },
         )
         .precision(Precision::Decimals(0)),
@@ -791,14 +884,14 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
     warnings: &["OUTPUT_TRUNCATED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Lines swept on a local transverse Mercator plane, clipped to the area minus buffered holes (even-odd), joined in serpentine order; transits that would cross a hole follow its buffered boundary",
+    model: "Lines swept on a local transverse Mercator plane, ⌈width / spacing⌉ + 1 of them centered so the outer lines reach the edges (Penn State GEOG 892), each covering its strip of the area and cut at buffered holes, joined in serpentine order; ⌈length / photo spacing⌉ + 1 photos per line plus the extras past each end; transits that would cross a hole follow its buffered boundary",
     accuracy: "Line spacing is true to within 1e-7 across a few kilometers (checked geodesically). Flight time ignores turns, climbs, and wind.",
-    references: &[PIX4D, KARNEY],
+    references: &[PSU_FLIGHT_ROUTE, PIX4D, KARNEY],
     examples: &[Example {
         id: "primary",
         title: "A 600 m by 150 m field at 52.5 m line spacing",
         input: r#"{"area":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99295},{"lat":40.00135,"lon":-104.99295},{"lat":40.00135,"lon":-105.0}],"line_spacing":"52.5 m","photo_spacing":"30 m","groundspeed":"10 m/s","height":"120 m"}"#,
-        source: "add-drone-suite survey-grid scenario: lines run along the long axis, ⌈150 / 52.5⌉ = 3 lines",
+        source: "add-drone-suite survey-grid scenario: lines run along the long axis, ⌈150 / 52.5⌉ + 1 = 4 lines",
     }],
     primary_example: "primary",
     visualization: &[
@@ -848,6 +941,16 @@ fn grid_paths(ctx: &mut Ctx) -> Result<(Plane, Vec<Path>, f64, f64), ToolError> 
                 .at("/overshoot"),
         );
     }
+    let end_photos = match ctx.number("end_photos")? {
+        None => 2,
+        Some(x) if x.fract() == 0.0 => x as usize,
+        Some(_) => {
+            return Err(ToolError::invalid(
+                "/end_photos",
+                "Extra photos per line end must be a whole number, like 2.",
+            ));
+        }
+    };
     let buf = if ctx.declares("hole_buffer") {
         ctx.quantity("hole_buffer")?
             .map_or(10.0, |q| q.base())
@@ -868,12 +971,18 @@ fn grid_paths(ctx: &mut Ctx) -> Result<(Plane, Vec<Path>, f64, f64), ToolError> 
         )
         .at("/line_spacing"));
     }
-    let mut paths = vec![serpentine(&sweep(&outer, &holes, angle, s, buf), over, p)];
+    let mut paths = vec![serpentine(
+        &sweep(&outer, &holes, angle, s, buf),
+        over,
+        p,
+        end_photos,
+    )];
     if ctx.declares("crosshatch") && ctx.choice("crosshatch")? == Some("yes") {
         paths.push(serpentine(
             &sweep(&outer, &holes, angle + core::f64::consts::FRAC_PI_2, s, buf),
             over,
             p,
+            end_photos,
         ));
     }
     let twice: f64 = (0..outer.len())
@@ -891,9 +1000,14 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
     for p in &paths {
         pts.extend(p.points.iter().copied());
     }
-    let (lines, photos, survey): (usize, usize, f64) = paths.iter().fold((0, 0, 0.0), |a, p| {
-        (a.0 + p.lines, a.1 + p.photos, a.2 + p.survey_length)
-    });
+    let mut shots: Vec<P> = Vec::new();
+    for p in &paths {
+        shots.extend(p.shots.iter().copied());
+    }
+    let (lines, survey): (usize, f64) = paths
+        .iter()
+        .fold((0, 0.0), |a, p| (a.0 + p.lines, a.1 + p.survey_length));
+    let photos = shots.len();
     let length = path_length(&pts);
     let turns = pts.len().saturating_sub(2);
     let mut o = vec![
@@ -942,8 +1056,7 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     o.push(("waypoints", waypoints(&plane, &pts)));
-    let spacing = positive(ctx, "photo_spacing", "Photo spacing")?;
-    let (triggers, dropped) = trigger_points(&plane, &pts, spacing, 2_000);
+    let (triggers, dropped) = trigger_points(&plane, &shots, 2_000);
     if dropped > 0 {
         ctx.warnings.push(Warning::new(
             "OUTPUT_TRUNCATED",
@@ -960,8 +1073,10 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static IMAGE_COUNT: ToolDef = ToolDef {
     id: "drone.photogrammetry.image-count",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Image count and survey size",
-    summary: "How many photos, flight lines, and kilometers a mapping survey of an area takes at your line and photo spacing, from the same sweep the survey-grid tool flies.",
+    summary: "How many photos, flight lines, and kilometers a mapping survey of an area takes at your line and photo spacing, counted the way published flight planning counts them and from the same sweep the survey-grid tool flies.",
     aliases: &[
         "how many photos drone survey",
         "image count calculator",
@@ -982,6 +1097,7 @@ pub static IMAGE_COUNT: ToolDef = ToolDef {
         PHOTO.required().core(),
         DIRECTION.core(),
         OVERSHOOT,
+        END_PHOTOS,
         qty(
             "groundspeed",
             "Groundspeed",
@@ -995,7 +1111,7 @@ pub static IMAGE_COUNT: ToolDef = ToolDef {
         Field::new(
             "photos",
             "Photos",
-            "At the photo spacing",
+            "Every line’s photos, with the extras past each end",
             Kind::Number { min: 0.0, max: 1e9 },
         )
         .precision(Precision::Decimals(0)),
@@ -1035,25 +1151,49 @@ pub static IMAGE_COUNT: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "The survey-grid sweep without waypoint output: photos per line = ⌊length / photo spacing⌋ + 1",
-    accuracy: "Equal to the survey-grid pattern for the same settings (no holes here). Real missions add photos on turns if the camera keeps shooting.",
-    references: &[PIX4D],
-    examples: &[Example {
-        id: "primary",
-        title: "The 600 m by 150 m field",
-        input: r#"{"area":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99295},{"lat":40.00135,"lon":-104.99295},{"lat":40.00135,"lon":-105.0}],"line_spacing":"52.5 m","photo_spacing":"30 m"}"#,
-        source: "The survey-grid sweep: 3 centered lines (⌈150 / 52.5⌉) of about 600 m, photos 30 m apart",
-    }],
+    warnings: &["UNIT_ASSUMED"],
+    model: "Published flight planning (Penn State GEOG 892) on the survey-grid sweep: lines = ⌈width / line spacing⌉ + 1, centered so the outer lines reach the edges; photos per line = ⌈length / photo spacing⌉ + 1, plus the extra photos past each end (2 by default)",
+    accuracy: "Matches the published block counts exactly (Penn State GEOG 892: 10 lines, 430 photos; King Saud University SE 321: 45 lines, 6,120 photos) and the survey-grid pattern for the same settings. Photos a camera takes during turns are not counted.",
+    when_to_use: "Use this when you are sizing a mapping job before you plan it in detail: how many photos the camera will take, how many flight lines it will fly, and how many kilometers of flying that is, so you can estimate batteries, storage, processing time, and a price for the work.",
+    limitations: "It counts photos the way published flight planning does, with the outer lines on the edges and extra photos past each end, but your flight app may place lines, margins, and extra photos its own way, so its count can differ by a line or a few photos. It assumes a constant photo spacing over flat ground. It cuts lines at no-fly holes but does not count the detours around them; the survey grid plans those.",
+    references: &[PSU_FLIGHT_ROUTE, PIX4D],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "The 600 m by 150 m field",
+            input: r#"{"area":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99295},{"lat":40.00135,"lon":-104.99295},{"lat":40.00135,"lon":-105.0}],"line_spacing":"52.5 m","photo_spacing":"30 m"}"#,
+            source: "4 lines (⌈150 / 52.5⌉ + 1) of 602 m, each with ⌈602 / 30⌉ + 1 = 22 photos plus 2 past each end: 104 photos",
+        },
+        Example {
+            id: "psu-geog892",
+            title: "A 20 by 13 mile block at 8,400 ft line spacing and 2,800 ft air base",
+            input: r#"{"area":[{"lat":-0.094604,"lon":-0.14457},{"lat":-0.094604,"lon":0.14457},{"lat":0.094604,"lon":0.14457},{"lat":0.094604,"lon":-0.14457}],"line_spacing":"8400 ft","photo_spacing":"2800 ft"}"#,
+            source: "Penn State GEOG 892, Designing a Flight Route: 13 × 5,280 / 8,400 + 1 = 9.171, so 10 lines; 105,600 / 2,800 + 1 = 38.7, so 39, plus 4 = 43 per line; 430 photos",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "polygon",
         map: &[("area", "area_size")],
     }],
-    related: &[Related {
-        id: "drone.mission.survey-grid",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.photogrammetry.trigger",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.sensors.dataset-size",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.endurance",
+            reason: "next",
+        },
+    ],
     sentence: "Plan on about {photos} photos over {lines} {plural lines \"line\" \"lines\"} and {path_length} of flying.",
     limits: &[("batchRows", 1_000)],
     run: run_count,
@@ -1075,24 +1215,24 @@ fn run_count(ctx: &mut Ctx) -> Result<Json, ToolError> {
         );
         ctx.step(
             "Flight lines",
-            "the area's width divided by the spacing between lines",
+            "the area's width divided by the spacing between lines, rounded up, plus one so the outer lines reach both edges",
             format!("{} m of survey line", n(p.survey_length, 0)),
             format!("{} lines", n(p.lines as f64, 0)),
         );
         ctx.step(
             "Photos",
-            "the line length divided by the distance between photos, over every line",
+            "each line's length divided by the distance between photos, rounded up, plus one, plus the extra photos past each end",
             format!(
                 "{} m along {} lines",
                 n(p.survey_length, 0),
                 n(p.lines as f64, 0)
             ),
             // The card prints the count bare; the last step reads the same.
-            n(p.photos as f64, 0),
+            n(p.shots.len() as f64, 0),
         );
     }
     let mut o = vec![
-        ("photos", Json::Num(p.photos as f64)),
+        ("photos", Json::Num(p.shots.len() as f64)),
         ("lines", Json::Num(p.lines as f64)),
         (
             "survey_length",

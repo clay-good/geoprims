@@ -1,5 +1,5 @@
-//! Mission patterns: every spec scenario, geodesic spacing, holes, and the
-//! image-count agreement on 20 polygons.
+//! Mission patterns: every spec scenario, geodesic spacing, holes, the
+//! image-count agreement on 20 polygons, and the image-count invariants.
 
 use geographiclib_rs::{Geodesic, InverseGeodesic};
 use gp_drone::REGISTRY;
@@ -41,7 +41,12 @@ fn auto_direction_minimizes_lines() {
         "drone.mission.survey-grid",
         &json!({"area": area(&rect, 0), "line_spacing": "52.5 m", "photo_spacing": "30 m"}),
     );
-    assert_eq!(num(&r, "result.lines"), (150.0f64 / 52.5).ceil(), "{r}");
+    // Published flight planning: the outer lines on the edges, ⌈width / spacing⌉ + 1.
+    assert_eq!(
+        num(&r, "result.lines"),
+        (150.0f64 / 52.5).ceil() + 1.0,
+        "{r}"
+    );
     // Lines parallel to the long axis: azimuth 60° (math angle 30°).
     assert!(
         (num(&r, "result.direction.value") - 60.0).abs() < 0.5,
@@ -73,7 +78,8 @@ fn line_spacing_is_true_geodesically() {
         .filter(|p| p[0]["kind"] == "line_start" && p[1]["kind"] == "line_end")
         .map(|p| (ll(&p[0]), ll(&p[1])))
         .collect();
-    assert_eq!(lines.len(), 10);
+    // 1,000 m at 100 m: 10 spacings, so 11 lines, the outer two on the edges.
+    assert_eq!(lines.len(), 11);
     let g = Geodesic::wgs84();
     let d = |a: (f64, f64), b: (f64, f64)| -> f64 { g.inverse(a.0, a.1, b.0, b.1) };
     for k in 0..lines.len() - 1 {
@@ -466,4 +472,79 @@ fn trigger_points_sit_on_the_lines_at_the_photo_spacing() {
         d0 < 1e-6,
         "the first photo is at the first line's start: {d0} m"
     );
+}
+
+#[test]
+fn image_count_invariants() {
+    // Plane rectangles (m) around (40, -105), lines along x (direction 90°).
+    let rect = |w: f64, l: f64| area(&[(0.0, 0.0), (l, 0.0), (l, w), (0.0, w)], 0);
+    let run = |id: &str, w: f64, l: f64, s: f64, p: f64, extra: Option<u32>, over: f64| {
+        let mut input = json!({"area": rect(w, l), "line_spacing": format!("{s} m"),
+            "photo_spacing": format!("{p} m"), "direction": "90 deg", "overshoot": format!("{over} m")});
+        if let Some(e) = extra {
+            input["end_photos"] = json!(e);
+        }
+        let r = call(id, &input);
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    let ic = "drone.photogrammetry.image-count";
+    let sg = "drone.mission.survey-grid";
+    let blocks: [(f64, f64, f64, f64); 4] = [
+        (150.0, 600.0, 52.5, 30.0),
+        (333.0, 1210.0, 40.0, 17.0),
+        (95.0, 480.0, 100.0, 45.0),
+        (1000.0, 2000.0, 70.0, 26.0),
+    ];
+    for (w, l, s, p) in blocks {
+        // The published count, closed form on a rectangle.
+        let lines = (w / s - 1e-4).ceil() + 1.0;
+        let per = (l / p - 1e-4).ceil() + 1.0;
+        for e in 0..=3u32 {
+            let r = run(ic, w, l, s, p, Some(e), 0.0);
+            assert_eq!(num(&r, "result.lines"), lines, "{r}");
+            assert_eq!(
+                num(&r, "result.photos"),
+                lines * (per + 2.0 * e as f64),
+                "{r}"
+            );
+            // Every line crosses the whole length (to 0.01%: the block's ends
+            // are tilted by the meridian convergence between the two planes).
+            assert!(
+                (num(&r, "result.survey_length.value") * 1000.0 - lines * l).abs()
+                    < 1e-4 * lines * l
+            );
+            // The survey grid flies the same sweep, photo for photo.
+            let g = run(sg, w, l, s, p, Some(e), 0.0);
+            assert_eq!(num(&g, "result.photos"), num(&r, "result.photos"));
+            assert_eq!(num(&g, "result.lines"), lines);
+            assert_eq!(
+                g["result"]["photo_points"].as_array().unwrap().len() as f64,
+                num(&g, "result.photos")
+            );
+        }
+        // The default is the published two photos past each end.
+        assert_eq!(
+            num(&run(ic, w, l, s, p, None, 0.0), "result.photos"),
+            num(&run(ic, w, l, s, p, Some(2), 0.0), "result.photos")
+        );
+        // Closer lines or photos never mean fewer of them.
+        let base = run(ic, w, l, s, p, Some(2), 0.0);
+        let dense = run(ic, w, l, s * 0.7, p * 0.7, Some(2), 0.0);
+        assert!(num(&dense, "result.lines") >= num(&base, "result.lines"));
+        assert!(num(&dense, "result.photos") >= num(&base, "result.photos"));
+        // Overshoot moves the turns, never the photos; the path only grows.
+        let step = l / (per - 1.0);
+        let short = run(ic, w, l, s, p, Some(2), 1.5 * step);
+        let long = run(ic, w, l, s, p, Some(2), 3.0 * step);
+        assert_eq!(num(&short, "result.photos"), num(&base, "result.photos"));
+        assert_eq!(num(&long, "result.photos"), num(&base, "result.photos"));
+        assert!(
+            (num(&short, "result.path_length.value") - num(&base, "result.path_length.value"))
+                .abs()
+                < 1e-9,
+            "an overshoot shorter than the extra photos adds nothing"
+        );
+        assert!(num(&long, "result.path_length.value") > num(&base, "result.path_length.value"));
+    }
 }

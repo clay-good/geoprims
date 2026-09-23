@@ -62,11 +62,15 @@ For a camera pitched off nadir by θ, the tool SHALL compute GSD at the image ce
 - **THEN** the center GSD is larger than the nadir GSD, and the footprint is a trapezoid drawn on the map
 
 ### Requirement: Image count and survey size
-Given an area polygon, the tool SHALL estimate image count, number of flight lines, total line length, and flight time (using the mission-patterns grid). The estimate SHALL agree with the generated pattern within 2%.
+Given an area polygon, the tool SHALL estimate image count, number of flight lines, total line length, and flight time (using the mission-patterns grid). It SHALL count them by the published flight-planning method (Penn State GEOG 892, "Designing a Flight Route," https://courses.ems.psu.edu/geog892/node/658; the same method in King Saud University SE 321, "Design of Photogrammetric Flight Plan"): flight lines = ⌈width / line spacing⌉ + 1, so the first and last lines lie on or just past the edges; photos per line = ⌈length / photo spacing⌉ + 1, plus a set number of extra photos past each end of every line. The extra photos per end SHALL be an input, 2 by default (the published convention), and 0 SHALL leave them out. The estimate SHALL agree with the generated pattern within 2%.
 
 #### Scenario: Estimate matches pattern
 - **WHEN** the estimate and the generated grid are computed for the same polygon and settings
 - **THEN** image counts differ by at most 2%
+
+#### Scenario: Penn State block
+- **WHEN** a 20 mi by 13 mi block is counted at 8,400 ft line spacing and 2,800 ft photo spacing, lines along the 20 mi side
+- **THEN** the count is 10 flight lines and 430 photos (43 per line), or 390 photos with 0 extra photos per end
 
 ### Requirement: ASPRS Positional Accuracy Standards (Edition 2)
 A tool SHALL implement the ASPRS Positional Accuracy Standards for Digital Geospatial Data, Edition 2 (v2, 2024):

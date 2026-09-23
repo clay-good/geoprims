@@ -415,16 +415,23 @@ test('each workflow prompt produces a pipeline that runs end to end', async () =
 
 test('large polyfill: one page of cells with the total, covered area, and bounds', async () => {
   // mcp "Large polyfill": a county-sized square at resolution 10.
+  // On its own client with a longer deadline: the fill is a quarter of a
+  // million cells and takes a second or two idle, but the test files run
+  // alongside each other and it has crossed the server's default 10 s under
+  // that load. What is being tested is the paging, not the speed, and a test
+  // that depends on the machine being quiet reports the machine, not the code.
+  const slow = new Client(['--timeout=120000']);
   const points = [{ lat: 40.0, lon: -80.35 }, { lat: 40.0, lon: -79.55 }, { lat: 40.5, lon: -79.55 }, { lat: 40.5, lon: -80.35 }];
-  const r = (await c.call('geoprims_run', { id: 'indexing.h3.polygon-to-cells', args: { points, resolution: 10 } })).structuredContent;
+  const r = (await slow.call('geoprims_run', { id: 'indexing.h3.polygon-to-cells', args: { points, resolution: 10 } })).structuredContent;
   assert.equal(r.ok, true, JSON.stringify(r.error));
   assert.equal(r.result.cells.length, 1000);
   assert.ok(r.result.count > 240000, String(r.result.count));
   assert.deepEqual(r.page.cells, { total: r.result.count, offset: 0, returned: 1000, truncated: true });
   assert.ok(r.result.area.value > 3700 && r.result.area.value < 3800, String(r.result.area.value));
   assert.ok(r.result.south.value < 40 && r.result.north.value > 40.5 && r.result.west.value < -80.35 && r.result.east.value > -79.55);
-  const last = (await c.call('geoprims_run', { id: 'indexing.h3.polygon-to-cells', args: { points, resolution: 10 }, output: { maxItems: 10000, offset: r.result.count - 5 } })).structuredContent;
+  const last = (await slow.call('geoprims_run', { id: 'indexing.h3.polygon-to-cells', args: { points, resolution: 10 }, output: { maxItems: 10000, offset: r.result.count - 5 } })).structuredContent;
   assert.deepEqual(last.page.cells, { total: r.result.count, offset: r.result.count - 5, returned: 5, truncated: false });
+  slow.close();
 });
 
 test('other long lists are sliced by the server with the same page fields', async () => {

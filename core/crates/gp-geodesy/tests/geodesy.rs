@@ -976,3 +976,127 @@ fn utm_zone_invariants() {
         assert_eq!(band(lat, 20.0), want);
     }
 }
+
+#[test]
+fn true_to_magnetic_invariants() {
+    const T: &str = "geodesy.magnetic.true-to-magnetic";
+    let go = |bearing: f64, dir: &str, extra: &str| {
+        call(
+            T,
+            &format!(r#"{{"bearing":{bearing},"direction":"{dir}"{extra}}}"#),
+        )
+    };
+    const PIT: &str = r#","lat":40.446111,"lon":-79.982222,"date":"2026-07-02""#;
+    // Sydney's variation is easterly and Pittsburgh's westerly, which is what
+    // the "east is least" check needs on both sides.
+    const SYD: &str = r#","lat":-33.8688,"lon":151.2093,"date":"2026-08-08""#;
+    // The two directions undo each other.
+    for (b, place) in [(0.0, PIT), (90.0, PIT), (270.0, SYD), (359.0, SYD)] {
+        let m = num(&go(b, "true-to-magnetic", place), "result.result.value");
+        let back = num(&go(m, "magnetic-to-true", place), "result.result.value");
+        assert!(
+            ((back - b + 180.0).rem_euclid(360.0) - 180.0).abs() < 1e-9,
+            "{b} went to {m} and came back {back}"
+        );
+        // Every answer is a bearing.
+        assert!((0.0..360.0).contains(&m), "{m} is not in [0, 360)");
+    }
+    // East is least, west is best. Pittsburgh's variation is westerly and
+    // Sydney's easterly, so the magnetic bearing is larger at one and
+    // smaller at the other.
+    let west = go(90.0, "true-to-magnetic", PIT);
+    assert!(
+        num(&west, "result.variation_used.value") < 0.0,
+        "not westerly"
+    );
+    assert!(
+        num(&west, "result.result.value") > 90.0,
+        "west is best: the magnetic bearing should be larger"
+    );
+    let east = go(90.0, "true-to-magnetic", SYD);
+    assert!(
+        num(&east, "result.variation_used.value") > 0.0,
+        "not easterly"
+    );
+    assert!(
+        num(&east, "result.result.value") < 90.0,
+        "east is least: the magnetic bearing should be smaller"
+    );
+    // The source is named, and a chart figure is used in preference to the
+    // model, with the model reported beside it.
+    assert_eq!(west["result"]["variation_source"], "model");
+    assert!(west["result"]["model_declination"].is_null());
+    let chart = go(
+        0.0,
+        "true-to-magnetic",
+        &format!(r#","variation":"9.2W"{PIT}"#),
+    );
+    assert_eq!(chart["result"]["variation_source"], "chart");
+    assert_eq!(num(&chart, "result.variation_used.value"), -9.2);
+    // difference is chart minus model, signed.
+    let d = num(&chart, "result.model_declination.value");
+    assert!(
+        (num(&chart, "result.difference.value") - (-9.2 - d)).abs() < 1e-9,
+        "difference is not the chart figure less the model's"
+    );
+}
+
+#[test]
+fn grivation_invariants() {
+    const G: &str = "geodesy.magnetic.grivation";
+    let at = |lat: f64, lon: f64, date: &str| {
+        call(
+            G,
+            &format!(r#"{{"lat":{lat},"lon":{lon},"date":"{date}"}}"#),
+        )
+    };
+    // Grivation is the declination less the convergence, everywhere.
+    for (lat, lon) in [
+        (40.446111, -79.982222),
+        (51.5074, -0.1278),
+        (-33.8688, 151.2093),
+        (78.0, 15.0),
+        (-45.0, 170.0),
+    ] {
+        let r = at(lat, lon, "2026-07-02");
+        let (g, d, c) = (
+            num(&r, "result.grivation.value"),
+            num(&r, "result.declination.value"),
+            num(&r, "result.convergence.value"),
+        );
+        assert!(
+            (g - (d - c)).abs() < 1e-9,
+            "{lat},{lon}: {g} is not {d} - {c}"
+        );
+        // And the declination is the one the declination tool gives, not a
+        // second copy of the model.
+        let own = num(
+            &call(
+                "geodesy.magnetic.declination",
+                &format!(r#"{{"lat":{lat},"lon":{lon},"date":"2026-07-02"}}"#),
+            ),
+            "result.declination.value",
+        );
+        assert!((d - own).abs() < 1e-9, "{lat},{lon}: two different models");
+    }
+    // On a zone's central meridian the convergence is zero, so the grivation
+    // is the declination itself. Zone 17's meridian is -81.
+    let on = at(40.0, -81.0, "2026-07-02");
+    assert!(
+        num(&on, "result.convergence.value").abs() < 1e-9,
+        "the central meridian is not straight"
+    );
+    assert!(
+        (num(&on, "result.grivation.value") - num(&on, "result.declination.value")).abs() < 1e-9
+    );
+    // It changes sign either side, positive to the east.
+    assert!(num(&at(40.0, -80.0, "2026-07-02"), "result.convergence.value") > 0.0);
+    assert!(num(&at(40.0, -82.0, "2026-07-02"), "result.convergence.value") < 0.0);
+    // And grows with latitude for the same offset, since it goes as sin(lat).
+    let near = num(&at(20.0, -80.0, "2026-07-02"), "result.convergence.value");
+    let far = num(&at(60.0, -80.0, "2026-07-02"), "result.convergence.value");
+    assert!(
+        far > near,
+        "convergence did not grow with latitude: {near} then {far}"
+    );
+}

@@ -7,7 +7,9 @@ use gp_base::display;
 use gp_base::envelope::AssetRef;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::dms::{self, Axis};
 use gp_geo::magnetic::{self as mag, Elements, Model};
@@ -607,8 +609,10 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
         "DECLINATION_POLE_CONVENTION",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn a true bearing into a magnetic one or back: a runway heading against a chart course, a plotted track against what the compass will read, a survey bearing against a magnetic one. Give it a chart variation, or a place and date to take the variation from the model, or both to see how far apart they are.",
+    limitations: "The variation is the uncertain part, not the arithmetic. The magnetic model carries about half a degree and more near the poles, and it drifts measurably year to year. A chart, a runway number or a navaid uses an assigned epoch variation that was right when it was published and can be a degree or more from today's value -- which is why giving both a chart figure and a place shows the difference rather than reconciling it. Near the magnetic poles the compass is unreliable whatever the number says, and the result warns when you are in that region.",
     model: "Magnetic = true − variation, with east variation positive (east is least, west is best)",
     accuracy: "Exact for the variation used. Charts, runways, and navaids use an assigned epoch variation that can differ from today's model value by a degree or more.",
     references: &[FAA_VARIATION, WMM_REPORT, IGRF_REF],
@@ -624,10 +628,20 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
         kind: "vector-diagram",
         map: &[("bearing", "result")],
     }],
-    related: &[Related {
-        id: "geodesy.magnetic.declination",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.magnetic.declination",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.magnetic.grivation",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.bearing-difference",
+            reason: "alternative",
+        },
+    ],
     sentence: "The converted bearing is {result}, using {variation_text} of variation.{if difference > -1000} The model value differs from the chart by {abs(difference)}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_true_to_magnetic,
@@ -771,8 +785,10 @@ pub static GRIVATION: ToolDef = ToolDef {
         "COMPASS_CAUTION_ZONE",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
+    stability: Stability::Stable,
+    when_to_use: "Use this when you are navigating on a grid rather than on meridians -- a military map, a polar route, anything working in UTM or UPS bearings. Grivation is the angle from grid north to magnetic north, so it is what turns a compass reading into a grid bearing, and it is not the declination unless you happen to be on the zone's central meridian.",
+    limitations: "Three norths, and mixing them is the danger this tool exists to remove: grivation is measured from GRID north, so it is not interchangeable with the declination except on a central meridian, where the convergence is zero. Its accuracy is the declination's -- about half a degree from the model, more near the poles -- since the convergence is exact. And the grid matters: the same point has a different grivation in UTM and in UPS, so the grid used is reported with the answer rather than assumed.",
     model: "Grid variation G = D − γ: the model's declination D minus the grid convergence γ (the bearing of grid north from true north) of the UTM or UPS zone, both east positive",
     accuracy: "As good as the declination (WMM2025: about 0.3° to a few degrees near the poles); the convergence is exact",
     references: &[WMM_REPORT, IGRF_REF, crate::NGA_UTM],
@@ -795,6 +811,10 @@ pub static GRIVATION: ToolDef = ToolDef {
         },
         Related {
             id: "geodesy.ups.forward",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.utm.zone",
             reason: "parent",
         },
     ],

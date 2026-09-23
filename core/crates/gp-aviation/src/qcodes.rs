@@ -56,6 +56,7 @@ pub fn nws_altimeter(p_hpa: f64, h_m: f64) -> f64 {
 
 pub static Q_CODES: ToolDef = ToolDef {
     id: "aviation.altimetry.q-codes",
+    version: "1.1.0",
     title: "QNH, QFE, and QNE",
     summary: "Converts between the altimeter setting (QNH) and station pressure (QFE) at an airport, gives the field's pressure altitude (QNE), and works out the altimeter setting from a barometer reading.",
     aliases: &[
@@ -130,8 +131,8 @@ pub static Q_CODES: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "QFE = QNH × p_ISA(elevation) ÷ 1013.25 hPa, the ISA pressure-height relation that defines QNH, and QNH from QFE the other way; QNE is the ISA altitude of QFE. From QFE the NWS formula is also shown: (P − 0.3) × (1 + (1013.25^0.190284 × 0.0065 ÷ 288) × h ÷ (P − 0.3)^0.190284)^(1/0.190284), P in hPa and h in m",
-    accuracy: "Exact for the ISA relation. The NWS formula subtracts 0.3 hPa for the barometer's height and differs from the ISA form by a few hundredths of an inch at high fields",
+    model: "QFE = p_ISA(elevation + PA(QNH)): an altimeter set to QNH reads the field elevation on the ground, which is the relation that defines QNH, and QNH from QFE the other way; QNE is the ISA altitude of QFE. From QFE the NWS formula is also shown: (P − 0.3) × (1 + (1013.25^0.190284 × 0.0065 ÷ 288) × h ÷ (P − 0.3)^0.190284)^(1/0.190284), P in hPa and h in m",
+    accuracy: "Exact for the ISA relation. The NWS formula is the same relation with its own constants, less 0.3 hPa for the barometer's height, so it reads about 0.3 hPa (0.01 inHg) lower",
     references: &[ICAO_7488, NWS_ALTIMETER],
     examples: &[Example {
         id: "primary",
@@ -163,7 +164,6 @@ pub static Q_CODES: ToolDef = ToolDef {
 fn run_q_codes(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let elev = field_elevation(ctx)?;
     let e_m = elev.base();
-    let ratio = isa::at(e_m).p / isa::P0;
     let (qnh_pa, qfe_pa, from_qfe) = match (
         ctx.is_set("altimeter"),
         ctx.quantity("station_pressure")?,
@@ -181,7 +181,9 @@ fn run_q_codes(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 )
                 .at("/station_pressure"));
             }
-            (p / ratio, p, true)
+            // The inverse of station_pressure: QNH is the ISA pressure at
+            // the station's pressure altitude less the field elevation.
+            (isa::at(isa::altitude_for_pressure(p) - e_m).p, p, true)
         }
         _ => {
             return Err(ToolError::invalid(
@@ -194,16 +196,17 @@ fn run_q_codes(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if ctx.explaining() {
         let fmt = ctx.options.format;
         let n = move |x: f64, d: u8| display::number(x, Precision::Decimals(d), fmt);
+        let qnh_alt = isa::altitude_for_pressure(qnh_pa);
         ctx.step(
-            "ISA pressure ratio at the field",
-            "p_ISA(elevation) ÷ 1013.25 hPa",
-            format!("p_ISA({} m) ÷ 1013.25", n(e_m, 1)),
-            n(ratio, 5),
+            "Pressure altitude of QNH",
+            "PA(QNH) = the ISA altitude whose pressure is QNH",
+            format!("PA({} hPa)", n(qnh_pa / 100.0, 2)),
+            format!("{} m", n(qnh_alt, 1)),
         );
         ctx.step(
             "QFE",
-            "QFE = QNH × ratio",
-            format!("{} hPa × {}", n(qnh_pa / 100.0, 2), n(ratio, 5)),
+            "QFE = p_ISA(elevation + PA(QNH))",
+            format!("p_ISA({} m + {} m)", n(e_m, 1), n(qnh_alt, 1)),
             display::quantity(qfe_pa / 100.0, "hPa", Precision::Decimals(1), fmt),
         );
     }
@@ -230,6 +233,7 @@ pub fn lowest_usable_fl(inhg: f64) -> Option<u32> {
 
 pub static FLIGHT_LEVEL: ToolDef = ToolDef {
     id: "aviation.altimetry.flight-level",
+    version: "1.1.0",
     title: "Flight level and altitude",
     summary: "The altitude on the local altimeter setting that a flight level puts you at, or the other way round, with the US lowest usable flight level and transition altitude.",
     aliases: &[
@@ -324,7 +328,7 @@ pub static FLIGHT_LEVEL: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "A flight level is a pressure altitude in hundreds of feet. On a QNH the same pressure sits at the ISA altitude of p_FL × 1013.25 ÷ QNH (the ISA pressure-height relation that defines QNH). The US lowest usable flight level is FL180 at 29.92 inHg or higher and 500 ft higher for each 0.50 inHg lower, to FL210 at 26.92 (14 CFR 91.121(b))",
+    model: "A flight level is a pressure altitude in hundreds of feet. On a QNH the altimeter reads that pressure altitude less PA(QNH), the pressure altitude of the setting itself (the altimeter-setting relation that defines QNH). The US lowest usable flight level is FL180 at 29.92 inHg or higher and 500 ft higher for each 0.50 inHg lower, to FL210 at 26.92 (14 CFR 91.121(b))",
     accuracy: "Exact for ISA; real temperature moves the true altitude (see the cold-temperature tool). The US table covers settings down to 26.92 inHg",
     references: &[CFR_91_121, ICAO_7488],
     examples: &[Example {
@@ -381,11 +385,11 @@ fn run_flight_level(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )),
         ),
     ];
-    // Pressure-altitude offset of the QNH datum, through the ISA relation.
-    let scale = isa::P0 / qnh.base();
+    // An altimeter set to QNH reads the pressure altitude less PA(QNH), the
+    // altimeter-setting relation that defines QNH.
+    let qnh_offset = isa::altitude_for_pressure(qnh.base());
     if let Some(fl) = ctx.number("flight_level")? {
-        let p = isa::at(fq(fl * 100.0).base()).p;
-        let h = isa::altitude_for_pressure(p * scale);
+        let h = fq(fl * 100.0).base() - qnh_offset;
         out.push(("altitude_of_fl", ctx.out("altitude_of_fl", m(h))));
     }
     if let Some(a) = ctx.quantity("altitude")? {
@@ -397,8 +401,7 @@ fn run_flight_level(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )
             .at("/altitude"));
         }
-        let p = isa::at(a_m).p / scale;
-        let pa_ft = m(isa::altitude_for_pressure(p)).to(ft);
+        let pa_ft = m(a_m + qnh_offset).to(ft);
         out.push(("fl_of_altitude", Json::Num(pa_ft / 100.0)));
     }
     if ctx.explaining() {

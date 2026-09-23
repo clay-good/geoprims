@@ -120,7 +120,9 @@ def isa_vectors():
 
 
 def station(qnh_pa, elev_m):
-    return qnh_pa * isa(elev_m)[1] / P0
+    # An altimeter set to QNH reads PA(p) - PA(QNH); on the field it reads the
+    # elevation, so the station sits at ISA altitude elevation + PA(QNH).
+    return isa(elev_m + alt_for(qnh_pa, "p"))[1]
 
 
 def pa_vectors():

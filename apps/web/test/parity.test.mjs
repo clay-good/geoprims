@@ -63,8 +63,8 @@ test("the home page's readouts are the answers each tool's page shows", () => {
 test('a page whose answer drifted from its example is caught', async () => {
   const t = catalog.tools.find((x) => x.id === 'aviation.altimetry.density-altitude');
   const html = page(route(t.id));
-  assert.equal(pageAnswer(html), '7,932 ft');
-  const drifted = html.replaceAll('7,932', '7,900');
+  assert.equal(pageAnswer(html), '7,937 ft');
+  const drifted = html.replaceAll('7,937', '7,900');
   assert.notEqual(pageAnswer(drifted), await coreAnswer(t, primaryOf(t).input));
 });
 

@@ -36,7 +36,7 @@ Secondary outputs SHALL follow in a compact list.
 
 #### Scenario: Density altitude sentence
 - **WHEN** density altitude is computed for a 5,000 ft field at 30 °C and 29.80 inHg
-- **THEN** the card reads "7,932 ft" and "Density altitude is 7,932 ft, about 2,900 ft higher than the field. Expect a longer takeoff roll and weaker climb.", followed by "The 120 ft per °C rule of thumb gives 8,123 ft (191 ft high)." (the more exact 118.8 ft/°C rule appears in the details)
+- **THEN** the card reads "7,937 ft" and "Density altitude is 7,937 ft, about 2,900 ft higher than the field. Expect a longer takeoff roll and weaker climb.", followed by "The 120 ft per °C rule of thumb gives 8,123 ft (191 ft high)." (the more exact 118.8 ft/°C rule appears in the details)
 
 ### Requirement: Sentence templates for every tool
 Every tool manifest SHALL define an `x-sentence` template in plain US English (reading grade 8 or below, checked by a readability lint) that states the result, its meaning, and any key caveat. The template SHALL use the user's units and display precision. MCP results SHALL include the same rendered sentence as `summary`.

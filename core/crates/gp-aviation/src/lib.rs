@@ -70,7 +70,7 @@ pub mod refs {
         year: 2024,
         edition: "FAA-H-8083-28A",
         locator: "Section 8.4 (altimetry), chapter 24 (METAR and SPECI, flight categories in tables 3-15 to 3-18), and section 27.2 (FB winds and temperatures aloft)",
-        url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/faa-h-8083-28-aviation-weather-handbook",
+        url: "https://www.faa.gov/sites/faa.gov/files/FAA-H-8083-28A_FAA_Web.pdf",
     };
     pub const ALDUCHOV: Reference = Reference {
         title: "Improved Magnus form approximation of saturation vapor pressure",
@@ -641,10 +641,13 @@ fn field_elevation(ctx: &mut Ctx) -> Result<Q, ToolError> {
     Ok(e)
 }
 
-/// Station pressure (Pa) from an altimeter setting and field elevation (m),
-/// through the ISA pressure-height relation (the definition of QNH).
+/// Station pressure (Pa) from an altimeter setting and field elevation (m).
+/// An altimeter set to QNH reads PA(p) − PA(QNH), and on the field it reads
+/// the elevation, so the station sits at the ISA altitude elevation + PA(QNH):
+/// the altimeter-setting relation behind the NWS formula. Scaling QNH by the
+/// ISA pressure ratio instead agrees only at sea level or at 29.92 inHg.
 fn station_pressure(qnh: Q, elevation_m: f64) -> f64 {
-    qnh.base() * isa::at(elevation_m).p / isa::P0
+    isa::at(elevation_m + isa::altitude_for_pressure(qnh.base())).p
 }
 
 const ELEVATION: Field = Field::new(
@@ -672,6 +675,7 @@ const ALTIMETER: Field = Field::new(
 
 pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.altimetry.pressure-altitude",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Pressure altitude",
     summary: "Pressure altitude from field elevation and the altimeter setting, exact from the standard atmosphere, with the 1,000 ft per inch rule of thumb beside it.",
@@ -736,7 +740,7 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
         id: "primary",
         title: "A 5,000 ft field with the altimeter at 29.80 inHg",
         input: r#"{"elevation":"5000 ft","altimeter":"29.80 inHg"}"#,
-        source: "add-aviation-suite altimetry scenario: 5,108 ft (±1 ft); rule of thumb 5,120 ft",
+        source: "add-aviation-suite altimetry scenario: 5,112 ft (±1 ft); rule of thumb 5,120 ft",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -848,6 +852,7 @@ fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.altimetry.density-altitude",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Density altitude",
     summary: "How high the airplane feels: density altitude from field elevation, altimeter setting, and temperature, with optional dew point, and the rules of thumb beside it.",
@@ -1001,7 +1006,7 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
         id: "primary",
         title: "A 5,000 ft field at 30 °C with the altimeter at 29.80 inHg",
         input: r#"{"elevation":"5000 ft","altimeter":"29.80 inHg","temperature":"30 degC"}"#,
-        source: "add-aviation-suite altimetry scenario: PA 5,108 ft, ISA 4.88 °C, DA 7,932 ft (±5 ft), 118.8 rule 8,093 ft",
+        source: "add-aviation-suite altimetry scenario: PA 5,112 ft, ISA 4.87 °C, DA 7,937 ft (±5 ft), 118.8 rule 8,098 ft",
     }],
     primary_example: "primary",
     visualization: &[Layer {

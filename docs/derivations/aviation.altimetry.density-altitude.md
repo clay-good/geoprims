@@ -7,7 +7,7 @@ Find the station pressure from the field elevation and the altimeter setting, as
 
 ## Equations
 
-- p = QNH × p_ISA(elevation) / p0.
+- p = p_ISA(elevation + PA(QNH)), the station pressure from the altimeter-setting relation (see pressure altitude).
 - Dry air: ρ = p / (R T).
 - Humid air: e = 610.94 exp(17.625 Td / (Td + 243.04)) Pa (Alduchov and Eskridge 1996), Tv = T / (1 − 0.378 e / p), ρ = p / (R Tv).
 - DA = H such that ρ_ISA(H) = ρ.

@@ -5,11 +5,15 @@ Computes pressure altitude, density altitude, flight levels, altimeter settings,
 ## ADDED Requirements
 
 ### Requirement: Pressure altitude from altimeter setting
-Given field (or indicated) elevation and altimeter setting (QNH, in inHg or hPa), the tool SHALL compute station pressure via the ISA relation and pressure altitude PA = (T0/L)·(1 − (p/P0)^(R·L/g0)). This closed form applies below 36,089 ft; above it the tool SHALL invert the layered ISA model (isothermal tropopause and higher layers). It SHALL use the ISA-derived constants 145,442.16 ft and exponent 0.190263 (documented), and SHALL also show the rule of thumb PA ≈ elevation + (29.92 − setting) × 1,000 ft.
+Given field (or indicated) elevation and altimeter setting (QNH, in inHg or hPa), the tool SHALL compute station pressure from the altimeter-setting relation (an altimeter set to QNH reads the field elevation on the ground, so the field sits at the ISA altitude elevation + PA(QNH)) and pressure altitude PA = (T0/L)·(1 − (p/P0)^(R·L/g0)). This closed form applies below 36,089 ft; above it the tool SHALL invert the layered ISA model (isothermal tropopause and higher layers). It SHALL use the ISA-derived constants 145,442.16 ft and exponent 0.190263 (documented), and SHALL also show the rule of thumb PA ≈ elevation + (29.92 − setting) × 1,000 ft.
 
 #### Scenario: 5,000 ft field, 29.80 inHg
 - **WHEN** elevation = 5,000 ft and altimeter = 29.80 inHg
-- **THEN** pressure altitude ≈ 5,108 ft (±1 ft), and the rule of thumb (5,120 ft) is shown with its difference
+- **THEN** pressure altitude ≈ 5,112 ft (±1 ft), and the rule of thumb (5,120 ft) is shown with its difference
+
+#### Scenario: High field, low setting
+- **WHEN** elevation = 8,000 ft and altimeter = 28.20 inHg
+- **THEN** pressure altitude ≈ 9,630 ft (±1 ft): the field elevation plus the FAA-H-8083-25C figure 11-3 correction of 1,630 ft
 
 #### Scenario: Standard setting at sea level
 - **WHEN** elevation = 0 ft and altimeter = 29.92126 inHg (1013.25 hPa)
@@ -27,7 +31,7 @@ The density altitude tool SHALL compute DA from the air density ratio (dry air b
 
 #### Scenario: Hot, high field
 - **WHEN** elevation = 5,000 ft, altimeter = 29.80 inHg, OAT = 30 °C, dry air
-- **THEN** PA ≈ 5,108 ft, ISA temperature at PA ≈ 4.88 °C, DA ≈ 7,932 ft (±5 ft), and the approximation (≈ 8,093 ft) is shown with its +161 ft error
+- **THEN** PA ≈ 5,112 ft, ISA temperature at PA ≈ 4.87 °C, DA ≈ 7,937 ft (±5 ft), and the approximation (≈ 8,098 ft) is shown with its +161 ft error
 
 #### Scenario: Humidity raises DA
 - **WHEN** the same case adds dew point 20 °C

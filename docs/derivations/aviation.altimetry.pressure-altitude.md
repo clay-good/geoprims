@@ -3,11 +3,12 @@
 
 ## Method
 
-The altimeter setting (QNH) is the pressure reduced to sea level through the standard atmosphere. Undo that reduction to get the station pressure at the field, then find the altitude at which the ICAO standard atmosphere has that pressure. The 1,000 ft per inch rule of thumb is shown next to it with its error.
+An altimeter set to QNH reads PA(p) − PA(QNH): its pressure altitude less the pressure altitude of the setting itself. On the field it reads the elevation, so the field's pressure altitude is the elevation plus PA(QNH). The station pressure is the ICAO standard-atmosphere pressure at that altitude. This is the relation the NWS altimeter-setting formula and the FAA handbook's correction table both encode. The 1,000 ft per inch rule of thumb is shown next to it with its error.
 
 ## Equations
 
-- Station pressure: p = QNH × p_ISA(elevation) / p0.
+- Station pressure: p = p_ISA(elevation + PA(QNH)), where PA(QNH) is the ISA altitude whose pressure is QNH.
+- Scaling QNH by the ratio p_ISA(elevation) / p0 instead, as version 1.0.0 did, agrees only at sea level or at 29.92 inHg: at an 8,000 ft field with 28.20 inHg it is 90 ft low (see the changelog).
 - Pressure altitude: PA = H such that p_ISA(H) = p, using the closed-form inverse of the troposphere layer, T0/L × ((p/p0)^(−R L/g0) − 1), and the matching layer formula above 11 km.
 - Rule of thumb: PA ≈ elevation + (29.92 − QNH in inHg) × 1,000 ft.
 

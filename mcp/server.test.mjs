@@ -523,7 +523,7 @@ test('search prefill matches the web palette and runs as-is', async () => {
   assert.deepEqual(top.prefill, { elevation: '5000 ft', altimeter: '29.80 inHg', temperature: '30 degC' });
   const r = (await c.call('geoprims_run', { id: top.id, args: top.prefill })).structuredContent;
   assert.equal(r.ok, true);
-  assert.ok(Math.abs(r.result.density_altitude.value - 7932) < 1, String(r.result.density_altitude.value));
+  assert.ok(Math.abs(r.result.density_altitude.value - 7937) < 1, String(r.result.density_altitude.value));
 });
 
 test('a simplified tool tells an agent the same thing the page shows', async () => {

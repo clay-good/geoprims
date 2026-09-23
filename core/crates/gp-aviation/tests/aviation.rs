@@ -177,7 +177,7 @@ fn pressure_altitude_5000_ft() {
         "aviation.altimetry.pressure-altitude",
         r#"{"elevation":"5000 ft","altimeter":"29.80 inHg"}"#,
     );
-    assert!((num(&r, "result.pressure_altitude.value") - 5108.0).abs() <= 1.0);
+    assert!((num(&r, "result.pressure_altitude.value") - 5112.0).abs() <= 1.0);
     assert!((num(&r, "result.rule_of_thumb.value") - 5120.0).abs() < 1e-6);
 }
 
@@ -229,17 +229,17 @@ fn density_altitude_hot_high_and_sentence() {
         "aviation.altimetry.density-altitude",
         r#"{"elevation":"5000 ft","altimeter":"29.80 inHg","temperature":"30 degC"}"#,
     );
-    assert!((num(&r, "result.pressure_altitude.value") - 5108.0).abs() <= 1.0);
-    assert!((num(&r, "result.isa_temperature.value") - 4.88).abs() < 0.01);
-    assert!((num(&r, "result.density_altitude.value") - 7932.0).abs() <= 5.0);
-    assert!((num(&r, "result.rule_118_8.value") - 8093.0).abs() <= 1.0);
+    assert!((num(&r, "result.pressure_altitude.value") - 5112.0).abs() <= 1.0);
+    assert!((num(&r, "result.isa_temperature.value") - 4.87).abs() < 0.01);
+    assert!((num(&r, "result.density_altitude.value") - 7937.0).abs() <= 5.0);
+    assert!((num(&r, "result.rule_118_8.value") - 8098.0).abs() <= 1.0);
     assert!((num(&r, "result.rule_118_8_error.value") - 161.0).abs() <= 1.0);
-    assert!((num(&r, "result.rule_120.value") - 8123.0).abs() <= 1.0);
+    assert!((num(&r, "result.rule_120.value") - 8128.0).abs() <= 1.0);
     assert_eq!(
         r["summary"],
-        "Density altitude is 7,932 ft, about 2,900 ft higher than the field. Expect a longer takeoff roll and weaker climb. Assumes dry air."
+        "Density altitude is 7,937 ft, about 2,900 ft higher than the field. Expect a longer takeoff roll and weaker climb. Assumes dry air."
     );
-    assert_eq!(r["display"]["density_altitude"], "7,932 ft");
+    assert_eq!(r["display"]["density_altitude"], "7,937 ft");
 }
 
 #[test]

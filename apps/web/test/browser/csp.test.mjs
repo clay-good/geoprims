@@ -50,8 +50,15 @@ test('production CSP reports no violations on non-tool routes and the report dia
     const response = await page.goto(`${origin}${route}`, { waitUntil: 'load' });
     assert.equal(response.status(), path === '404.html' ? 404 : 200, `${route} failed to load`);
   }
+  // The footer's page report on a non-tool page, then the tool's own report.
+  await page.goto(`${origin}/privacy/`);
+  await page.locator('footer [data-report]').click();
+  await page.locator('dialog[open]').waitFor();
+  await page.waitForTimeout(100);
+  assert.deepEqual(external, [], 'a page report made a third-party request while paused');
+  await page.getByRole('button', { name: 'Close' }).click();
   await page.goto(`${origin}/aviation/altimetry/density-altitude/`);
-  await page.getByRole('button', { name: /Report a problem/ }).click();
+  await page.locator('.report-button').click();
   await page.locator('dialog[open]').waitFor();
   await page.waitForTimeout(100);
   assert.deepEqual(external, [], 'a non-tool page made a third-party request');
@@ -65,7 +72,7 @@ test('production CSP reports no violations on non-tool routes and the report dia
   await context.route(/^https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/api\.js/, (route) => route.fulfill({
     status: 200, contentType: 'text/javascript', body: 'window.turnstile={render(){return "test"},reset(){}};',
   }));
-  await page.getByRole('button', { name: /Report a problem/ }).click();
+  await page.locator('.report-button').click();
   await page.waitForFunction(() => document.querySelector('dialog button[type="submit"]')?.disabled === false);
   assert.equal(external.length, 1, `the dialog made ${external.length} third-party requests`);
   assert.match(external[0], /^https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/api\.js/);

@@ -61,7 +61,9 @@ async function measure(browser, origin, path) {
   await page.waitForTimeout(300);
   const lcp = await page.evaluate(() => window.__perf.lcp);
   // One interaction: type into the first field of a tool, or press the mode toggle elsewhere.
-  const field = await page.$('.card.inputs input[type="text"], .card.inputs input:not([type])');
+  // Visible only: a tool whose first field is a textarea keeps its plain text
+  // inputs inside the collapsed "more options" disclosure, which cannot be clicked.
+  const field = await page.$('.card.inputs textarea:visible, .card.inputs input[type="text"]:visible, .card.inputs input:not([type]):visible');
   if (field) {
     await field.click();
     await page.keyboard.type('1');

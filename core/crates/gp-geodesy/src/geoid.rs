@@ -5,7 +5,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::geoid::Grid;
 use gp_geo::point;
@@ -324,8 +326,10 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
         "ORTHOMETRIC_AS_ELLIPSOIDAL",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
+    stability: Stability::Stable,
+    when_to_use: "Use this whenever a GPS height has to be compared with anything on a map. A receiver gives height above the ellipsoid; a benchmark, a chart, a flood map and an airfield elevation all give height above sea level, and the two differ by tens of metres. Give it either and it returns both, with the geoid height it used.",
+    limitations: "EGM96 is a global model of the geoid, good to about half a metre to a metre against levelled benchmarks and worse in mountains. For survey work the right reference is a national model -- GEOID18 in the United States -- and this is not that. The difference between the two heights is not small anywhere: it runs from about 85 m to -106 m across the world, so a GPS height read as a sea-level height is wrong by that much, not by a rounding. Bilinear interpolation is offered to reproduce an older number, not because it is better.",
     model: "h = H + N with N from the EGM96 15′ grid",
     accuracy: "As good as the geoid: about 0.5-1 m for EGM96. Exact arithmetic otherwise.",
     references: &[EGM96_REF, GEOGRAPHICLIB_GEOID],
@@ -349,10 +353,20 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
         kind: "profile-chart",
         map: &[("value", "converted")],
     }],
-    related: &[Related {
-        id: "geodesy.geoid.geoid-height",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.geoid.geoid-height",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.length.convert",
+            reason: "alternative",
+        },
+    ],
     sentence: "The converted height is {converted}. The geoid is {geoid_height} above the ellipsoid here.{if agl != 0} That is {agl} above the ground.{/if}{warn BELOW_TERRAIN} Below the terrain given.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_convert,

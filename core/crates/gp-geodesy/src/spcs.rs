@@ -5,7 +5,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::point;
 use gp_geo::spcs::{self, Zone};
@@ -571,7 +573,10 @@ pub static LOOKUP: ToolDef = ToolDef {
         .precision(Precision::Decimals(0)),
         text("note", "Note", "How the match was made", 200),
     ],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to find the State Plane zone you need before projecting anything: by state, by the zone's own name, or by a point. Each zone comes back with its NGS code, its EPSG code, which projection it uses and which foot its foot-based twin is defined in.",
+    limitations: "A point lookup uses each zone\'s published rectangular area of use, not the state boundary, so a point near a zone line matches both zones and a point just outside a state can still match its zone. Treat the answer as a shortlist and confirm against the county list for the zone. The zones are the SPCS83 ones; the older SPCS27 zones are different ground with different parameters and are not here. And the two feet matter: the same zone exists in metres and in feet, and the US survey foot and the international foot differ by two parts per million.",
+    warnings: &["INPUT_NORMALIZED"],
     model: "Name match against the SPCS83 zone table, or the EPSG area-of-use box of each zone",
     accuracy: "Point lookup uses each zone's bounding box, so near a zone line more than one zone can match: confirm with the county list for the zone.",
     references: &[NGS_5],
@@ -586,10 +591,20 @@ pub static LOOKUP: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "geodesy.spcs.spcs83-forward",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.spcs.spcs83-forward",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.utm.zone",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "next",
+        },
+    ],
     sentence: "Found {count} {plural count \"zone\" \"zones\"}.",
     limits: &[("batchRows", 1_000)],
     run: run_lookup,
@@ -779,7 +794,10 @@ pub static ARC_TO_CHORD: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this when a traverse has to close on the grid: the arc-to-chord correction is the angle between the straight grid line between two points and the projection of the geodesic that actually joins them, at each end separately. It is seconds of arc over a few kilometres, and it is the difference between a traverse that closes and one that does not.",
+    limitations: "The correction is per end and the two ends do not agree -- the curve leaves one at one angle and arrives at the other at a different one -- so applying the from value at both ends is wrong. Both points must be in the same zone; this refuses rather than extrapolating a projection past its zone. And this is the angular correction only: the scale factor between grid and ground distance is a separate quantity, which the combined-factor tool handles.",
+    warnings: &["INPUT_NORMALIZED"],
     model: "t = atan2(ΔE, ΔN) of the projected end points; T = geodesic azimuth − grid convergence at that end (Karney geodesic on WGS 84 for UTM, GRS 80 for SPCS83); t − T at each end. Exact for the projection, with no series approximation",
     accuracy: "Exact to about 1e-6″; the classic formulas agree to about 0.01″ on lines of a few kilometers",
     references: &[NGS_5_T_T, KARNEY_TM, EPSG_G7_2],
@@ -802,6 +820,10 @@ pub static ARC_TO_CHORD: ToolDef = ToolDef {
         Related {
             id: "geodesy.utm.forward",
             reason: "parent",
+        },
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "next",
         },
     ],
     sentence: "The chord is {t_minus_t_from} off the projected geodesic at the From end.",

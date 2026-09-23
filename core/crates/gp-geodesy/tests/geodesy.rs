@@ -89,6 +89,7 @@ fn catalog_lint_examples_vectors() {
             "aviation.wind.runway-components",
             "navigation.geodesic.inverse",
             "survey.reduction.combined-factor",
+            "units.length.convert",
         ],
     );
     let codes_reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
@@ -1099,4 +1100,218 @@ fn grivation_invariants() {
         far > near,
         "convergence did not grow with latitude: {near} then {far}"
     );
+}
+
+#[test]
+fn height_convert_invariants() {
+    const H: &str = "geodesy.height.convert";
+    // The geoid grid is an asset, not compiled in, so it has to be supplied
+    // before anything that reads it will answer.
+    gp_base::assets::put(
+        "egm96-15@2009-08-29/egm96-15.pgm",
+        include_bytes!("../../../../assets/data/egm96-15/2009-08-29/egm96-15.pgm"),
+    );
+    let go = |lat: f64, lon: f64, h: f64, from: &str| {
+        call(
+            H,
+            &format!(r#"{{"lat":{lat},"lon":{lon},"height":"{h} m","from":"{from}"}}"#),
+        )
+    };
+    for (lat, lon) in [
+        (40.446111, -79.982222),
+        (-33.8688, 151.2093),
+        (90.0, 0.0),
+        (-90.0, 0.0),
+        (0.0, 179.9),
+        (27.9881, 86.9250),
+    ] {
+        let r = go(lat, lon, 100.0, "ellipsoidal");
+        let (h, ortho, n) = (
+            num(&r, "result.ellipsoidal.value"),
+            num(&r, "result.orthometric.value"),
+            num(&r, "result.geoid_height.value"),
+        );
+        // h = H + N, stated as an identity rather than assumed.
+        assert!(
+            (h - ortho - n).abs() < 1e-9,
+            "{lat},{lon}: {h} != {ortho} + {n}"
+        );
+        // Where the geoid is above the ellipsoid, the sea-level height is the
+        // smaller of the two. That is the sign, and it is easy to flip.
+        if n > 0.0 {
+            assert!(ortho < h, "{lat},{lon}: N is +{n} but H is not below h");
+        } else if n < 0.0 {
+            assert!(ortho > h, "{lat},{lon}: N is {n} but H is not above h");
+        }
+        // The two directions are exact inverses.
+        let back = go(lat, lon, ortho, "orthometric");
+        assert!(
+            (num(&back, "result.ellipsoidal.value") - h).abs() < 1e-9,
+            "{lat},{lon}: round trip lost {h}"
+        );
+        // The geoid height is a property of the place, not of the height.
+        let higher = go(lat, lon, 3000.0, "ellipsoidal");
+        assert!(
+            (num(&higher, "result.geoid_height.value") - n).abs() < 1e-12,
+            "{lat},{lon}: the geoid moved when the height changed"
+        );
+        // And it is the same model the geoid tool uses.
+        let own = num(
+            &call(
+                "geodesy.geoid.geoid-height",
+                &format!(r#"{{"lat":{lat},"lon":{lon}}}"#),
+            ),
+            "result.geoid_height.value",
+        );
+        assert!((n - own).abs() < 1e-9, "{lat},{lon}: two different geoids");
+    }
+    // The two interpolation schemes differ by centimetres, not metres.
+    let cubic = num(
+        &call(
+            H,
+            r#"{"lat":40.446111,"lon":-79.982222,"height":"100 m","interpolation":"cubic"}"#,
+        ),
+        "result.geoid_height.value",
+    );
+    let bilinear = num(
+        &call(
+            H,
+            r#"{"lat":40.446111,"lon":-79.982222,"height":"100 m","interpolation":"bilinear"}"#,
+        ),
+        "result.geoid_height.value",
+    );
+    assert!(
+        (cubic - bilinear).abs() < 0.5,
+        "the two schemes differ by {} m",
+        cubic - bilinear
+    );
+}
+
+#[test]
+fn arc_to_chord_invariants() {
+    const A: &str = "geodesy.projection.arc-to-chord";
+    let line = |la1: f64, lo1: f64, la2: f64, lo2: f64, z: &str| {
+        call(
+            A,
+            &format!(
+                r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2},"grid":"utm","zone":"{z}"}}"#
+            ),
+        )
+    };
+    let ends = |r: &Value| {
+        (
+            num(r, "result.t_minus_t_from.value"),
+            num(r, "result.t_minus_t_to.value"),
+        )
+    };
+    // Along a central meridian there is no correction at either end. Zone 17's
+    // meridian is -81.
+    let (a, b) = ends(&line(40.0, -81.0, 41.0, -81.0, "17"));
+    assert!(
+        a.abs() < 1e-3 && b.abs() < 1e-3,
+        "on the central meridian the correction is {a} and {b}"
+    );
+    // Reversing the line swaps the ends: one curve read two ways.
+    let there = ends(&line(40.0, -80.0, 40.5, -79.5, "17"));
+    let back = ends(&line(40.5, -79.5, 40.0, -80.0, "17"));
+    assert!(
+        (there.0 - back.1).abs() < 1e-6 && (there.1 - back.0).abs() < 1e-6,
+        "reversing gave {back:?} against {there:?}"
+    );
+    // Away from the central meridian the two ends take opposite signs, which
+    // is the classical near-equal-and-opposite result. A line that STRADDLES
+    // the meridian is the exception and both ends take the same sign, the
+    // curve bending the same way on either half. I had this the wrong way
+    // round until the test said so.
+    for (la1, lo1, la2, lo2) in [
+        (40.44, -79.99, 40.52, -79.91),
+        (40.0, -80.5, 40.0, -79.5),
+        (39.0, -80.0, 41.0, -79.0),
+    ] {
+        let (a, b) = ends(&line(la1, lo1, la2, lo2, "17"));
+        assert!(a * b < 0.0, "{la1},{lo1}..{la2},{lo2} gave {a} and {b}");
+    }
+    let (s1, s2) = ends(&line(40.0, -81.4, 40.3, -80.6, "17"));
+    assert!(
+        s1 * s2 > 0.0,
+        "straddling the meridian gave {s1} and {s2}, opposite signs"
+    );
+    // Longer lines and lines further from the meridian have larger corrections.
+    let short = ends(&line(40.0, -80.5, 40.0, -80.3, "17")).0.abs();
+    let long = ends(&line(40.0, -80.5, 40.0, -79.5, "17")).0.abs();
+    assert!(long > short, "a longer line gave a smaller correction");
+    let near = ends(&line(40.0, -81.1, 40.0, -80.9, "17")).0.abs();
+    let far = ends(&line(40.0, -78.6, 40.0, -78.4, "17")).0.abs();
+    assert!(
+        far > near,
+        "further from the meridian gave {far} against {near}"
+    );
+    // Grid and ellipsoid distance differ only by the scale factor.
+    let r = line(40.0, -80.0, 40.5, -79.5, "17");
+    let ratio = num(&r, "result.grid_distance.value") / num(&r, "result.ellipsoid_distance.value");
+    assert!(
+        (0.999..1.001).contains(&ratio),
+        "the scale factor came out as {ratio}"
+    );
+}
+
+#[test]
+fn spcs_zone_lookup_invariants() {
+    const S: &str = "geodesy.spcs.zone-lookup";
+    let by_name = |q: &str| call(S, &format!(r#"{{"query":"{q}"}}"#));
+    let at = |lat: f64, lon: f64| call(S, &format!(r#"{{"lat":{lat},"lon":{lon}}}"#));
+    let codes = |r: &Value| -> Vec<i64> {
+        r["result"]["zones"]
+            .as_array()
+            .expect("zones")
+            .iter()
+            .map(|z| z["epsg"].as_i64().expect("epsg"))
+            .collect()
+    };
+    // Every row is filled in, and the count matches the list.
+    for q in ["Colorado", "Texas", "Alaska", "Hawaii"] {
+        let r = by_name(q);
+        let zones = r["result"]["zones"].as_array().expect("zones");
+        assert_eq!(num(&r, "result.count") as usize, zones.len(), "{q}");
+        for z in zones {
+            for field in ["zone_code", "zone_name", "projection", "feet"] {
+                assert!(
+                    z[field].as_str().is_some_and(|s| !s.is_empty()),
+                    "{q}: a zone with no {field}"
+                );
+            }
+            assert!(
+                z["epsg"].as_i64().is_some(),
+                "{q}: a zone with no EPSG code"
+            );
+        }
+    }
+    // A more specific query returns a subset of a less specific one.
+    let all = codes(&by_name("Colorado"));
+    let one = codes(&by_name("Colorado Central"));
+    assert_eq!(one.len(), 1, "Colorado Central is one zone");
+    assert!(
+        all.contains(&one[0]),
+        "the specific zone is not among the state's"
+    );
+    // Whole words, not a prefix: zone 1 is not zone 10.
+    assert_eq!(codes(&by_name("Alaska zone 1")).len(), 1);
+    assert_eq!(codes(&by_name("Alaska")).len(), 10);
+    // A zone found by name is found again by a point inside it, and every
+    // code the lookup gives is one the projection tool accepts.
+    let denver = at(39.7392, -104.9903);
+    let found = codes(&denver);
+    assert!(!found.is_empty(), "Denver matched no zone");
+    for epsg in &found {
+        let p = call(
+            "geodesy.spcs.spcs83-forward",
+            &format!(r#"{{"lat":39.7392,"lon":-104.9903,"zone":"{epsg}"}}"#),
+        );
+        assert_eq!(
+            p["ok"], true,
+            "EPSG {epsg} is not a zone the projector takes: {p}"
+        );
+    }
+    // The middle of the Pacific belongs to no zone, and says so.
+    assert_eq!(num(&at(0.0, -150.0), "result.count"), 0.0);
 }

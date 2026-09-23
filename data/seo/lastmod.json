@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "4fb97ff6b972d0db",
+    "hash": "d8bb18e8aacf2fe3",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "74a11b712dae91b5",
+    "hash": "e7faa8e2dac004bd",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -161,6 +161,10 @@
   },
   "/geodesy/datum/itrf/": {
     "hash": "cfc546fee49dd2ce",
+    "lastmod": "2026-09-23"
+  },
+  "/geodesy/datum/legacy/": {
+    "hash": "5c29e587ddfea1e8",
     "lastmod": "2026-09-23"
   },
   "/geodesy/datum/nad83/": {
@@ -536,7 +540,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "14c5f8843278df50",
+    "hash": "ffd578780b797f4b",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -732,7 +736,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "0761357cf210f570",
+    "hash": "c5b1d3bf7b810336",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -832,7 +836,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c120d33a7648c157",
+    "hash": "f62b34438a777b86",
     "lastmod": "2026-09-23"
   }
 }

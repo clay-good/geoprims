@@ -456,3 +456,178 @@ fn plate_motion_invariants() {
     assert!(warn(&san), "the San Andreas system is not flagged\n{san}");
     assert!(!warn(&fwd), "Kansas is flagged as deforming\n{fwd}");
 }
+
+/// Each legacy datum, the EPSG operation cited for it, a point inside its area
+/// of use, and what PROJ 9.3.0 returns for that point when handed nothing but
+/// the operation code -- `Transformer.from_pipeline("EPSG:<code>")` through
+/// pyproj 3.6.1, so every parameter, ellipsoid and convention is PROJ's own.
+/// One legacy datum: the EPSG operation cited for it, a point inside its area
+/// of use, and what PROJ returns for that point.
+struct LegacyCase {
+    datum: &'static str,
+    epsg: u32,
+    input: (f64, f64),
+    proj: (f64, f64),
+}
+
+const fn case(datum: &'static str, epsg: u32, input: (f64, f64), proj: (f64, f64)) -> LegacyCase {
+    LegacyCase {
+        datum,
+        epsg,
+        input,
+        proj,
+    }
+}
+
+/// What PROJ 9.3.0 returns when handed nothing but the operation code --
+/// `Transformer.from_pipeline("EPSG:<code>")` through pyproj 3.6.1 -- so every
+/// parameter, ellipsoid and convention used is PROJ's own.
+const LEGACY_VS_PROJ: [LegacyCase; 8] = [
+    case(
+        "ED50",
+        1133,
+        (48.8566, 2.3522),
+        (48.85568546266484, 2.350914333016232),
+    ),
+    case(
+        "NAD27",
+        1173,
+        (39.7392, -104.9903),
+        (39.73919145953264, -104.99087295987641),
+    ),
+    case(
+        "OSGB36",
+        1314,
+        (51.5074, -0.1278),
+        (51.50791032017188, -0.12940630149646004),
+    ),
+    case(
+        "Tokyo",
+        1305,
+        (37.5665, 126.978),
+        (37.56927863276617, 126.97588409236896),
+    ),
+    case(
+        "AGD66",
+        1108,
+        (-33.8688, 151.2093),
+        (-33.86721767612492, 151.21044689790693),
+    ),
+    case(
+        "Pulkovo1942",
+        1267,
+        (55.7558, 37.6173),
+        (55.755836475992524, 37.61542637686821),
+    ),
+    case(
+        "SAD69",
+        1864,
+        (-23.5505, -46.6333),
+        (-23.550979261705645, -46.63369911997513),
+    ),
+    case(
+        "Arc1960",
+        1122,
+        (-1.2921, 36.8219),
+        (-1.2947152792111898, 36.82271848212878),
+    ),
+];
+
+fn legacy(datum: &str, direction: &str, lat: f64, lon: f64) -> Value {
+    call(
+        "geodesy.datum.legacy",
+        &format!(
+            r#"{{"datum":"{datum}","direction":"{direction}","lat":{lat},"lon":{lon},"options":{{"outputUnits":{{"shift":"m"}}}}}}"#
+        ),
+    )
+}
+
+fn has_warning(r: &Value, code: &str) -> bool {
+    r["meta"]["warnings"]
+        .as_array()
+        .map(|a| a.iter().any(|w| w["code"] == code))
+        .unwrap_or(false)
+}
+
+#[test]
+fn legacy_matches_proj_on_every_datum() {
+    const M_PER_DEG: f64 = 111_320.0;
+    let mut worst = 0.0f64;
+    for c in LEGACY_VS_PROJ {
+        let (datum, code) = (c.datum, c.epsg);
+        let ((lat, lon), (plat, plon)) = (c.input, c.proj);
+        let r = legacy(datum, "to-wgs84", lat, lon);
+        assert!(r["ok"].as_bool().unwrap_or(false), "{datum}: {r}");
+        let d = ((f(&r, "result.lat.value") - plat).abs())
+            .max((f(&r, "result.lon.value") - plon).abs())
+            * M_PER_DEG;
+        assert!(
+            d < 1e-8,
+            "{datum} (EPSG:{code}): {} {} against PROJ's {plat} {plon}, {d} m apart",
+            f(&r, "result.lat.value"),
+            f(&r, "result.lon.value")
+        );
+        worst = worst.max(d);
+    }
+    eprintln!("legacy datums against PROJ: worst {worst:.3e} m over 8 operations");
+}
+
+#[test]
+fn legacy_invariants() {
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    let g = Geodesic::wgs84();
+    const M_PER_DEG: f64 = 111_320.0;
+
+    for c in LEGACY_VS_PROJ {
+        let (datum, (lat, lon)) = (c.datum, c.input);
+        let out = legacy(datum, "to-wgs84", lat, lon);
+        let (wlat, wlon) = (f(&out, "result.lat.value"), f(&out, "result.lon.value"));
+
+        // The shift is the distance between the two positions, measured by
+        // geographiclib-rs rather than by anything this tool did.
+        let measured: f64 = g.inverse(lat, lon, wlat, wlon);
+        assert!(
+            (measured - f(&out, "result.shift.value")).abs() < 1e-6,
+            "{datum}: reported {} m against {measured} m measured",
+            f(&out, "result.shift.value")
+        );
+        // These datums really do differ from WGS 84 by this much.
+        assert!(
+            (10.0..500.0).contains(&measured),
+            "{datum}: a shift of {measured} m is not the scale a legacy datum differs by"
+        );
+
+        // Back again. Not exact: the operations are two-dimensional and the
+        // vertical part of the translation is discarded at each crossing, which
+        // returns as a few millimetres. Held tight enough that a real
+        // regression in the reverse direction could not hide in it.
+        let back = legacy(datum, "from-wgs84", wlat, wlon);
+        assert!(back["ok"].as_bool().unwrap_or(false), "{datum}: {back}");
+        let closed = ((f(&back, "result.lat.value") - lat).abs())
+            .max((f(&back, "result.lon.value") - lon).abs())
+            * M_PER_DEG;
+        assert!(closed < 5e-3, "{datum}: round trip off by {closed} m");
+
+        // Every one of these is worth metres, and says so with its own figure.
+        assert!(
+            has_warning(&out, "LOW_ACCURACY_TRANSFORM"),
+            "{datum} does not admit its accuracy\n{out}"
+        );
+        let stated = f(&out, "result.accuracy.value");
+        assert!(
+            (2.0..=35.0).contains(&stated),
+            "{datum} states an accuracy of {stated} m, outside the published range"
+        );
+        assert!(
+            !has_warning(&out, "OUTSIDE_AREA_OF_USE"),
+            "{datum} flagged its own area of use\n{out}"
+        );
+    }
+
+    // And a point nowhere near the datum's region is flagged.
+    let far = legacy("OSGB36", "to-wgs84", -33.0, 151.0);
+    assert!(
+        has_warning(&far, "OUTSIDE_AREA_OF_USE"),
+        "Sydney on OSGB36 is not flagged\n{far}"
+    );
+}

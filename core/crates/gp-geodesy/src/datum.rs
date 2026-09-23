@@ -1255,6 +1255,7 @@ const LEGACY_IDS: &[&str] = &[
 
 pub static LEGACY_SHIFT: ToolDef = ToolDef {
     id: "geodesy.datum.legacy",
+    stability: gp_base::tool::Stability::Stable,
     title: "Legacy datum to or from WGS 84",
     summary: "Converts a latitude and longitude between a legacy datum (ED50, NAD27, OSGB36, Tokyo, AGD66, Pulkovo 1942, SAD69, or Arc 1960) and WGS 84 with the published EPSG transformation, and states its accuracy, which is meters, not centimeters.",
     aliases: &[
@@ -1361,26 +1362,37 @@ pub static LEGACY_SHIFT: ToolDef = ToolDef {
         "LOW_ACCURACY_TRANSFORM",
         "OUTSIDE_AREA_OF_USE",
         "INPUT_NORMALIZED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "EPSG geocentric translation or 7-parameter Helmert (geog2D domain): geographic → ECEF on the datum's ellipsoid → Helmert → WGS 84",
     accuracy: "As stated by EPSG for each transformation: 2 m (OSGB36) to 35 m (Arc 1960); matches PROJ's implementation of the same EPSG operation to 1e-9°",
+    when_to_use: "Use this to place an old map, chart, or survey record against a modern position. Coordinates printed before satellite positioning are on a datum fitted to one region — ED50 across western Europe, NAD27 in North America, Tokyo in Japan and Korea, Arc 1960 in east Africa — and reading them as WGS 84 puts a point tens to hundreds of meters from where it belongs, far enough to move a boundary onto the wrong side of a road. The answer reports how far the point moves and in which direction, so the size of the correction is visible, along with what the transformation is actually worth.",
+    limitations: "This is meters of accuracy, not centimeters, and the stated figure is the point: from 2 m for OSGB36 to 35 m for Arc 1960. A single set of parameters is being asked to stand for a whole continental datum that was never that consistent, so the error varies across the region and no single number describes any particular point. Each transformation has a published area of use and the answer is flagged outside it, where it is extrapolation rather than transformation. Where a national grid exists — the NADCON5 grids for North America, OSTN15 for Great Britain — that grid is more accurate than this and should be preferred; the neighbouring NADCON5 tool covers the American cases. Only latitude and longitude are converted; heights are untouched, and nothing here concerns a vertical datum.",
     references: &[EPSG_DATASET, IOGP_7_2],
     examples: &[Example {
         id: "primary",
         title: "Paris on ED50 to WGS 84",
         input: r#"{"datum":"ED50","lat":48.8566,"lon":2.3522}"#,
-        source: "PROJ EPSG:1133 (ED50 to WGS 84 (1)) through pyproj",
+        source: "PROJ 9.3.0 asked for EPSG:1133 (ED50 to WGS 84 (1)) by code alone, through pyproj, returns 48.85568546266484 and 2.350914333016232 — identical to the tool in every digit a double carries",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.datum.helmert",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.helmert",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.nadcon5",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "next",
+        },
+    ],
     sentence: "The point shifts {shift} toward {azimuth}.{warn LOW_ACCURACY_TRANSFORM} This shift is good only to about {accuracy}.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_legacy,

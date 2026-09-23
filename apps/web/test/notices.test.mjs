@@ -87,7 +87,7 @@ test('no built page shows more than two notices in full', () => {
 });
 
 test('an experimental tool says so above the answer, in plain words', () => {
-  const html = readFileSync(join(dist, 'aviation/ifr/hold-entry/index.html'), 'utf8');
+  const html = readFileSync(join(dist, 'aviation/ifr/hold-speed-limit/index.html'), 'utf8');
   const notice = /<p class="card notice experimental" role="note">([\s\S]*?)<\/p>/.exec(html);
   assert.ok(notice, 'the experimental notice is on the page');
   assert.match(notice[1], /Experimental: not yet fully verified\./);

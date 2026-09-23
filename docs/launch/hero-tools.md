@@ -19,7 +19,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Pilots | METAR decoder | `aviation.weather.metar-decode` | [x] | [ ] | [ ] | [x] |
 | Pilots | TAF decoder | `aviation.weather.taf-decode` | [x] | [ ] | [ ] | [x] |
 | Pilots | Winds-aloft decoder | `aviation.weather.fb-winds-decode` | [x] | [ ] | [ ] | [x] |
-| Pilots | Holding entry | `aviation.ifr.hold-entry` | [ ] | [ ] | [ ] | [x] |
+| Pilots | Holding entry | `aviation.ifr.hold-entry` | [x] | [ ] | [ ] | [x] |
 | Pilots | Zulu time | `time.scale.utc-offset` | [x] | [ ] | [ ] | [x] |
 | Pilots | Weight and balance | `aviation.loading.weight-balance` | [x] | [ ] | [ ] | [x] |
 | Pilots | Top of descent | `aviation.performance.top-of-descent` | [x] | [ ] | [ ] | [x] |
@@ -32,7 +32,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] | [x] |
 | Drone | Mapping sun window | `time.sun.mapping-window` | [x] | [ ] | [ ] | [x] |
 | Drone | VLOS guidance | `drone.sensors.vlos` | [x] | [ ] | [ ] | [x] |
-| Drone | Part 107 altitude | `drone.ops.part107-altitude` | [ ] | [ ] | [ ] | [x] |
+| Drone | Part 107 altitude | `drone.ops.part107-altitude` | [x] | [ ] | [ ] | [x] |
 | Surveyors | Coordinate converter (DMS ↔ decimal) | `geodesy.parse.coordinates` | [x] | [ ] | [ ] | [x] |
 | Surveyors | UTM | `geodesy.utm.forward`, `geodesy.utm.inverse` | [x] | [ ] | [ ] | [x] |
 | Surveyors | MGRS | `geodesy.grid-ref.mgrs-forward`, `geodesy.grid-ref.mgrs-inverse` | [x] | [ ] | [ ] | [x] |
@@ -53,7 +53,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [x] |
 
-Stable: 39 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 41 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 

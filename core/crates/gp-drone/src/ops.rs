@@ -95,6 +95,7 @@ const NOTICE: Field = text(
 
 pub static PART107_ALTITUDE: ToolDef = ToolDef {
     id: "drone.ops.part107-altitude",
+    stability: gp_base::tool::Stability::Stable,
     title: "Part 107 maximum altitude",
     summary: "Your maximum altitude under 14 CFR 107.51: 400 ft above ground, or up to 400 ft above a structure when you stay within 400 ft of it, shown above ground, above sea level, and above the ellipsoid.",
     aliases: &[
@@ -175,9 +176,11 @@ pub static PART107_ALTITUDE: ToolDef = ToolDef {
         text("basis", "Why", "Which part of §107.51(b) applies", 300),
         NOTICE,
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "14 CFR 107.51(b): 400 ft AGL, unless within a 400 ft radius of a structure and no higher than 400 ft above its immediate uppermost limit",
     accuracy: "Arithmetic on the rule and your inputs. MSL and HAE limits are only as good as the ground elevation and geoid height you enter.",
+    when_to_use: "Use this when you fly under Part 107 and want the highest altitude you may reach: 400 ft above the ground in open country, or up to 400 ft above the top of a tower, building, or other structure while you stay within 400 ft of it sideways. Add the ground elevation to get the ceiling above sea level, and the geoid height for the ellipsoid height a GPS autopilot may use.",
+    limitations: "This is the altitude limit of 14 CFR 107.51(b) only. It does not grant airspace access: in Class B, C, D, or surface Class E airspace you still need an FAA authorization, and a waiver, TFR, or local restriction can set a lower or higher limit. Structure height is measured from the ground at its base, so on sloping ground the height above the ground under the drone can differ. The sea-level and ellipsoid figures add your ground elevation and geoid height as entered; a geoid height without a ground elevation is not used. It does not cover recreational flying under 49 U.S.C. 44809. Not legal advice.",
     references: &[PART_107],
     examples: &[Example {
         id: "primary",
@@ -190,10 +193,20 @@ pub static PART107_ALTITUDE: ToolDef = ToolDef {
         kind: "gauge",
         map: &[("value", "max_agl")],
     }],
-    related: &[Related {
-        id: "drone.ops.speed-check",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "drone.ops.speed-check",
+            reason: "next",
+        },
+        Related {
+            id: "drone.sensors.vlos",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.geoid.geoid-height",
+            reason: "next",
+        },
+    ],
     sentence: "You may fly up to {max_agl} above the ground here.{if max_msl > -100000} That is {max_msl} above sea level.{/if} Not legal advice.",
     limits: &[("batchRows", 10_000)],
     run: run_altitude,
@@ -210,7 +223,11 @@ fn run_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
         (Some(h), Some(d)) => {
             if h < 0.0 || d < 0.0 {
                 return Err(ToolError::invalid(
-                    "/structure_height",
+                    if h < 0.0 {
+                        "/structure_height"
+                    } else {
+                        "/structure_distance"
+                    },
                     "Structure height and distance cannot be negative.",
                 ));
             }

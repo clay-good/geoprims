@@ -186,6 +186,75 @@ fn near_a_structure() {
     near(&r, "result.max_agl.value", 400.0, 1e-9);
 }
 
+/// The limit is never below 400 ft, is exactly 400 ft beyond 400 ft from a
+/// structure (400 ft itself counts as within), grows foot for foot with the
+/// structure inside that radius, does not depend on the units typed, and the
+/// MSL and ellipsoid ceilings are the AGL limit plus the ground elevation and
+/// then the geoid height.
+#[test]
+fn part107_altitude_invariants() {
+    const P: &str = "drone.ops.part107-altitude";
+    let mut reached = 0;
+    for h in [0.0, 1.0, 57.5, 200.0, 399.0, 400.0, 1000.0, 2063.0] {
+        let mut last = f64::NEG_INFINITY;
+        for d in [0.0, 10.0, 199.9, 399.99, 400.0, 400.01, 800.0, 5000.0] {
+            let r = call(
+                P,
+                &format!(r#"{{"structure_height":"{h} ft","structure_distance":"{d} ft"}}"#),
+            );
+            let agl = num(&r, "result.max_agl.value");
+            assert!(agl >= 400.0, "{r}");
+            if d <= 400.0 {
+                assert!((agl - (h + 400.0)).abs() < 1e-9, "{r}");
+                last = agl;
+            } else {
+                assert!((agl - 400.0).abs() < 1e-9, "{r}");
+            }
+            let m = call(
+                P,
+                &format!(
+                    r#"{{"structure_height":"{} m","structure_distance":"{} m"}}"#,
+                    h * 0.3048,
+                    d * 0.3048
+                ),
+            );
+            assert!((num(&m, "result.max_agl.value") - agl).abs() < 1e-6, "{m}");
+            reached += 1;
+        }
+        assert!(last >= 400.0 + h - 1e-9);
+    }
+    // Monotone in the structure height within the radius.
+    let mut prev = 0.0;
+    for h in (0..3000).step_by(50) {
+        let r = call(
+            P,
+            &format!(r#"{{"structure_height":"{h} ft","structure_distance":"100 ft"}}"#),
+        );
+        let agl = num(&r, "result.max_agl.value");
+        assert!(agl > prev);
+        prev = agl;
+    }
+    for (g, n) in [
+        (-282.0, -30.0),
+        (0.0, 0.0),
+        (5280.0, -17.0),
+        (12000.0, 45.5),
+    ] {
+        let r = call(
+            P,
+            &format!(
+                r#"{{"structure_height":"300 ft","structure_distance":"200 ft","ground_elevation":"{g} ft","geoid_height":"{n} m"}}"#
+            ),
+        );
+        let agl = num(&r, "result.max_agl.value");
+        let msl = num(&r, "result.max_msl.value");
+        let hae = num(&r, "result.max_hae.value");
+        assert!((msl - g - agl).abs() < 1e-9, "{r}");
+        assert!((hae - msl - n / 0.3048).abs() < 1e-9, "{r}");
+    }
+    assert_eq!(reached, 64);
+}
+
 #[test]
 fn msl_and_hae() {
     let r = call(

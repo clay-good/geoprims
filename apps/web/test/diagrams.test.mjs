@@ -523,12 +523,20 @@ test('the holding diagram draws the sector lines where the entry actually change
     const drawn = lines(d.markup).filter((l) => l.cls === 'dg-grid dg-dash').map((l) => bearing(l).deg);
     assert.equal(drawn.length, 3, 'three sector lines');
     // The boundary lies between the last heading of one sector and the first
-    // of the next, so each flip has a line within half a degree of it.
+    // of the next. The lines are drawn where the aircraft comes from, as the
+    // AIM figure draws them: heading h arrives from bearing h + 180, so each
+    // flip has a line within half a degree of that bearing.
     for (const h of flips) {
-      assert.ok(drawn.some((b) => Math.abs(((b - (h - 0.5) + 540) % 360) - 180) < 0.6), `no sector line at ${h}°, drawn at ${drawn.map((x) => x.toFixed(1))}`);
+      assert.ok(drawn.some((b) => Math.abs(((b - (h - 0.5 + 180) + 540) % 360) - 180) < 0.6), `no sector line at ${h}° + 180, drawn at ${drawn.map((x) => x.toFixed(1))}`);
     }
     // Every sector is named, and the one the aircraft is in is called out.
     for (const name of ['Direct', 'Teardrop', 'Parallel']) assert.ok(d.markup.includes(`>${name}<`), `${name} sector unlabeled`);
+    // The arriving aircraft comes from inside the sector named for its entry:
+    // of the three labels, the one nearest the arrow's tail is that entry.
+    const tail = lines(d.markup).find((l) => l.cls === 'dg-accent');
+    const labels = [...d.markup.matchAll(/<text class="dg-muted-text"[^>]*x="([\d.]+)" y="([\d.]+)">(Direct|Teardrop|Parallel)</g)].map((m) => [Math.hypot(m[1] - tail.x1, m[2] - tail.y1), m[3]]);
+    assert.equal(labels.length, 3);
+    assert.equal(labels.sort((a, b) => a[0] - b[0])[0][1].toLowerCase(), r.result.entry, `${inbound}/${turns}: the arrival is drawn in the wrong sector`);
     assert.match(d.markup, new RegExp(`${r.result.entry} entry, ${turns} turns`, 'i'));
     // The legs: inbound to the fix along the inbound course, the aircraft
     // arriving on its heading.

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "5887b929116be9cb",
+    "hash": "f68fb60b509998ee",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "5ed55cf581c3f2a5",
+    "hash": "e6b64cebae5ed540",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -45,6 +45,10 @@
   },
   "/aviation/ifr/": {
     "hash": "1c56705e2255bb27",
+    "lastmod": "2026-09-23"
+  },
+  "/aviation/ifr/hold-entry/": {
+    "hash": "acdb137da80e694e",
     "lastmod": "2026-09-23"
   },
   "/aviation/loading/": {
@@ -88,7 +92,7 @@
     "lastmod": "2026-09-22"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "5ab2fdf60c2b4b93",
+    "hash": "a7fdbd7e6db6ec1a",
     "lastmod": "2026-09-23"
   },
   "/aviation/wind/runway-components/": {
@@ -96,7 +100,7 @@
     "lastmod": "2026-09-23"
   },
   "/changelog/": {
-    "hash": "f98788cadcad8887",
+    "hash": "1032b1c2ca2572e0",
     "lastmod": "2026-09-23"
   },
   "/disclaimer/": {
@@ -118,6 +122,10 @@
   "/drone/ops/": {
     "hash": "3128c013b07916cd",
     "lastmod": "2026-09-22"
+  },
+  "/drone/ops/part107-altitude/": {
+    "hash": "1cc7afdb34e3ad97",
+    "lastmod": "2026-09-23"
   },
   "/drone/photogrammetry/": {
     "hash": "85ef8305bcf0f52f",
@@ -668,7 +676,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "677956232d06aaf1",
+    "hash": "45c4436913b97c5e",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -816,7 +824,7 @@
     "lastmod": "2026-09-23"
   },
   "/quality/": {
-    "hash": "88ac02ab89d66b5c",
+    "hash": "3a86a5f1ae43df4c",
     "lastmod": "2026-09-23"
   },
   "/raster/": {
@@ -840,7 +848,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c3f8f47ebfc59837",
+    "hash": "b8000262b7031d2c",
     "lastmod": "2026-09-23"
   },
   "/survey/": {
@@ -960,7 +968,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "1693b22aa8274352",
+    "hash": "d56fb152e3b7cf07",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1148,7 +1156,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8acefbb56cc133d1",
+    "hash": "54dcf0e71655abd3",
     "lastmod": "2026-09-23"
   }
 }

@@ -291,6 +291,74 @@ fn boundary_either_entry() {
     assert!(r["result"].get("alternative").is_none());
 }
 
+/// The entry depends only on the arrival angle toward the holding side, a
+/// left hold mirrors a right one (including exactly on a boundary), the three
+/// sectors are 180°, 70°, and 110° wide, a second entry is offered exactly
+/// within 5° of a boundary and is always the neighboring sector, and the
+/// headings are the outbound course and 30° off it toward the holding side.
+#[test]
+fn hold_entry_invariants() {
+    let bounds = [-70.0f64, 110.0, 180.0];
+    let neighbors = |e: &str| match e {
+        "direct" => vec!["teardrop", "parallel"],
+        "teardrop" => vec!["direct", "parallel"],
+        _ => vec!["direct", "teardrop"],
+    };
+    let mut reached = 0;
+    for ic in (0..360).step_by(29).map(f64::from) {
+        let mut width = std::collections::HashMap::new();
+        for rel in (-179..=180).map(f64::from) {
+            let right = entry(ic, (ic + rel).rem_euclid(360.0), "right");
+            let left = entry(ic, (ic - rel).rem_euclid(360.0), "left");
+            let e = right["result"]["entry"].as_str().unwrap().to_owned();
+            assert_eq!(left["result"]["entry"], e, "mirror at ic {ic} rel {rel}");
+            assert_eq!(
+                right["result"]["alternative"], left["result"]["alternative"],
+                "mirrored alternative at ic {ic} rel {rel}"
+            );
+            // Rotating the whole picture does not change the answer.
+            let turned = entry(
+                (ic + 100.0).rem_euclid(360.0),
+                (ic + 100.0 + rel).rem_euclid(360.0),
+                "right",
+            );
+            assert_eq!(
+                turned["result"]["entry"], e,
+                "rotation at ic {ic} rel {rel}"
+            );
+            *width.entry(e.clone()).or_insert(0) += 1;
+            let d = bounds
+                .iter()
+                .map(|b| {
+                    let x = (rel - b).abs();
+                    x.min(360.0 - x)
+                })
+                .fold(f64::INFINITY, f64::min);
+            match right["result"].get("alternative") {
+                Some(a) => {
+                    assert!(d <= 5.0, "alternative {a} {d}° from a boundary");
+                    assert!(neighbors(&e).contains(&a.as_str().unwrap()), "{right}");
+                }
+                None => assert!(d > 5.0, "no alternative {d}° from a boundary: {right}"),
+            }
+            let oc = (ic + 180.0).rem_euclid(360.0);
+            assert!((num(&right, "result.outbound_course.value") - oc).abs() < 1e-9);
+            assert!((num(&right, "result.parallel_heading.value") - oc).abs() < 1e-9);
+            let tr = num(&right, "result.teardrop_heading.value");
+            let tl = num(&left, "result.teardrop_heading.value");
+            assert!(((oc - 30.0).rem_euclid(360.0) - tr).abs() < 1e-9);
+            assert!(((oc + 30.0).rem_euclid(360.0) - tl).abs() < 1e-9);
+            reached += 1;
+        }
+        // Integer angles −179..180: direct −70..110 (181), teardrop 111..180
+        // (70), parallel −179..−71 (109).
+        assert_eq!(width["direct"], 181, "ic {ic}");
+        assert_eq!(width["teardrop"], 70, "ic {ic}");
+        assert_eq!(width["parallel"], 109, "ic {ic}");
+    }
+    assert_eq!(reached, 13 * 360);
+}
+
 #[test]
 fn holding_speed_limit() {
     let r = call(

@@ -52,8 +52,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Checked at the issuer on 2026-09-18. Holding paragraph 5-3-8.",
+      "lastVerified": "2026-09-23",
+      "verificationNote": "Checked at the issuer on 2026-09-23: the basic AIM with Changes 1, 2, and 3 (Change 3 dated July 9, 2026). Holding paragraph 5-3-8j: entry procedures FIG 5-3-4, maximum holding airspeeds TBL 5-3-24.",
       "freeAccessUrl": "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/",
       "matchTerms": [
         "Aeronautical Information Manual"
@@ -1180,7 +1180,7 @@
       "validFrom": null,
       "validTo": null,
       "lastVerified": null,
-      "verificationNote": "Not cited yet.",
+      "verificationNote": "Sold by ICAO, not read at the issuer. The Volume I holding-entry wording (entry by heading, a 5-degree zone of flexibility on the sector boundaries) was checked on 2026-09-23 in Transport Canada AIM RAC 10.5, which adopts it.",
       "freeAccessUrl": "https://store.icao.int/en/procedures-for-air-navigation-services-pans-aircraft-operations-volume-i-flight-procedures-doc-8168",
       "matchTerms": [
         "Doc 8168",
@@ -2296,6 +2296,26 @@
       "freeAccessUrl": "https://geodesy.noaa.gov/library/pdfs/NOAA_Manual_NOS_NGS_0005.pdf",
       "matchTerms": [
         "State Plane Coordinate System of 1983"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "tc-aim",
+      "name": "Transport Canada Aeronautical Information Manual (TC AIM)",
+      "issuer": "Transport Canada",
+      "currentEdition": "AIM 2026-1",
+      "currentReleaseDate": "2026-03-19",
+      "cycleMonths": 6,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-23",
+      "verificationNote": "RAC 10.2 and 10.5 read in the AIM 2026-1 RAC PDF (TP 14371E, effective March 19, 2026) on 2026-09-23. Cited for the holding entry sectors, the 5-degree zone of flexibility, and a worked holding example.",
+      "freeAccessUrl": "https://tc.canada.ca/en/aviation/publications/transport-canada-aeronautical-information-manual-tc-aim-tp-14371",
+      "matchTerms": [
+        "Transport Canada Aeronautical Information Manual"
       ],
       "editionStatus": "current",
       "legalStatus": null,

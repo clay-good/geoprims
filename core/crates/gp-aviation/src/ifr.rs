@@ -17,7 +17,7 @@ pub const AIM_HOLDING: Reference = Reference {
     issuer: "Federal Aviation Administration",
     year: 2026,
     edition: "Current edition (rules as of 2026-09-18)",
-    locator: "Chapter 5, Section 3, paragraph 5-3-8 (holding: entry procedures, figure 5-3-2, and maximum holding airspeeds, table 5-3-1)",
+    locator: "Chapter 5, Section 3, paragraph 5-3-8j (holding: entry procedures, FIG 5-3-4, and maximum holding airspeeds, TBL 5-3-24)",
     url: "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/chap5_section_3.html",
 };
 pub const IFH: Reference = Reference {
@@ -27,6 +27,24 @@ pub const IFH: Reference = Reference {
     edition: "FAA-H-8083-15B",
     locator: "Chapter 10 (holding: wind drift correction, triple the inbound drift outbound, and outbound leg timing)",
     url: "https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/FAA-H-8083-15B.pdf",
+};
+/// ICAO and Transport Canada state the 5° zone of flexibility on the sector
+/// boundaries; the FAA AIM does not give one.
+pub const PANS_OPS_HOLD: Reference = Reference {
+    title: "Procedures for Air Navigation Services, Aircraft Operations (PANS-OPS), Doc 8168",
+    issuer: "International Civil Aviation Organization",
+    year: 2018,
+    edition: "Volume I, 6th edition",
+    locator: "Holding procedures: entry by heading against the three entry sectors, with a zone of flexibility of 5° on either side of the sector boundaries",
+    url: "https://store.icao.int/en/procedures-for-air-navigation-services-pans-aircraft-operations-volume-i-flight-procedures-doc-8168",
+};
+pub const TC_AIM: Reference = Reference {
+    title: "Transport Canada Aeronautical Information Manual (TC AIM), TP 14371E",
+    issuer: "Transport Canada",
+    year: 2026,
+    edition: "AIM 2026-1, effective March 19, 2026",
+    locator: "RAC 10.2 (holding at a clearance limit, example 2), RAC 10.5 (entry procedures, Figure 10.2, the 5° zone of flexibility)",
+    url: "https://tc.canada.ca/en/aviation/publications/transport-canada-aeronautical-information-manual-tc-aim-tp-14371",
 };
 
 const fn qty(
@@ -82,8 +100,10 @@ fn rel(a: f64, b: f64) -> f64 {
 /// The AIM 5-3-8 entry for an arrival heading, relative to the inbound course
 /// (degrees, (−180, 180]), for right turns. Left turns mirror it.
 /// Direct: −70° to +110°; teardrop: +110° to 180°; parallel: −180° to −70°.
+/// A boundary heading takes the direct entry at ±70°/110° and the teardrop at
+/// 180°, for either turn direction, so a left hold mirrors a right one exactly.
 pub fn entry(relative: f64, left: bool) -> &'static str {
-    let r = if left { -relative } else { relative };
+    let r = toward_holding_side(relative, left);
     if (-70.0..=110.0).contains(&r) {
         "direct"
     } else if r > 110.0 {
@@ -91,6 +111,13 @@ pub fn entry(relative: f64, left: bool) -> &'static str {
     } else {
         "parallel"
     }
+}
+
+/// The arrival angle measured positive toward the holding side, in
+/// (−180, 180]: the relative angle for right turns, its mirror for left.
+fn toward_holding_side(relative: f64, left: bool) -> f64 {
+    let r = if left { -relative } else { relative };
+    if r <= -180.0 { r + 360.0 } else { r }
 }
 
 /// Sector boundaries (relative, right turns) and the entries on each side.
@@ -104,6 +131,8 @@ const BOUNDARIES: [(f64, &str, &str); 3] = [
 
 pub static HOLD_ENTRY: ToolDef = ToolDef {
     id: "aviation.ifr.hold-entry",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Holding pattern entry",
     summary: "Which holding entry to fly (direct, teardrop, or parallel) from your heading to the fix, the inbound course, and the turn direction, per AIM 5-3-8, with the headings for each entry.",
     aliases: &[
@@ -193,22 +222,30 @@ pub static HOLD_ENTRY: ToolDef = ToolDef {
             Kind::Text { max_len: 200 },
         ),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "AIM 5-3-8 sectors relative to the inbound course: direct 180°, teardrop 70°, parallel 110°; mirrored for left turns; within 5° of a boundary either entry is acceptable",
+    warnings: &["UNIT_ASSUMED"],
+    model: "AIM 5-3-8 sectors relative to the inbound course, split by the 70° line on the holding side: direct 180°, teardrop 70°, parallel 110°; mirrored for left turns; within 5° of a boundary either entry is acceptable (ICAO PANS-OPS and TC AIM zone of flexibility)",
     accuracy: "Exact sector geometry, using your heading as you reach the fix. ATC instructions and the published procedure govern.",
-    references: &[AIM_HOLDING, IFH],
+    when_to_use: "Use this when you are cleared to hold, or a hold is published at your clearance limit, and you want to know before you reach the fix which entry to fly: direct, teardrop, or parallel. Give the inbound course, the turn direction, and your heading to the fix, and it names the entry, the headings to fly, and whether you are close enough to a sector line that the next entry is also fine.",
+    limitations: "The sectors are read from your heading as you reach the fix. In a strong crosswind your heading and your track differ, and the FAA draws the sectors by where you come from, so near a boundary work from the course you are flying to the fix. It does not know the holding fix type: at a VOR intersection or a DME fix, ICAO and Transport Canada limit the entry to the radials or arc that form the fix. It says nothing about wind correction or timing on the legs, the maximum holding speed, or an RNAV system that flies the entry for you with a fly-by turn. ATC instructions and the published procedure come first.",
+    references: &[AIM_HOLDING, IFH, PANS_OPS_HOLD, TC_AIM],
     examples: &[
         Example {
             id: "primary",
             title: "Inbound 360°, right turns, arriving on heading 090°",
             input: r#"{"inbound_course":"360 deg","heading":"90 deg"}"#,
-            source: "AIM 5-3-8 figure 5-3-2: an arrival 90° right of the inbound course is in the direct sector",
+            source: "AIM 5-3-8 FIG 5-3-4: an arrival 90° right of the inbound course is in the direct sector",
         },
         Example {
             id: "teardrop",
             title: "Inbound 360°, right turns, arriving on heading 150°",
             input: r#"{"inbound_course":"360 deg","heading":"150 deg"}"#,
-            source: "AIM 5-3-8 figure 5-3-2: teardrop sector (110° to 180° right of the inbound course)",
+            source: "AIM 5-3-8 FIG 5-3-4: teardrop sector (110° to 180° right of the inbound course)",
+        },
+        Example {
+            id: "missed-approach",
+            title: "Missed approach to the ZHZ beacon, holding on the inbound track of 234°",
+            input: r#"{"inbound_course":"234 deg","heading":"234 deg","turns":"right"}"#,
+            source: "TC AIM RAC 10.2 example 2: proceed directly to the beacon, make a right turn and hold on an inbound track of 234°",
         },
     ],
     primary_example: "primary",
@@ -223,6 +260,10 @@ pub static HOLD_ENTRY: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.ifr.hold-speed-limit",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.wind.heading-groundspeed",
             reason: "next",
         },
     ],
@@ -241,7 +282,7 @@ fn run_hold_entry(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let oc = wrap_azimuth(ic + 180.0);
     // The holding side is right of the inbound course for right turns.
     let teardrop = wrap_azimuth(if left { oc + 30.0 } else { oc - 30.0 });
-    let rr = if left { -r } else { r };
+    let rr = toward_holding_side(r, left);
     let alt = BOUNDARIES.iter().find_map(|(b, lo, hi)| {
         let d = if *b == 180.0 {
             180.0 - rr.abs()
@@ -279,20 +320,21 @@ fn run_hold_entry(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if ctx.explaining() {
         // The sectors are defined by a figure, so the work is the angle the
         // figure is read at, and which sector it falls in.
+        // A relative angle is not a heading: 0° prints as 0°, not 360°.
+        let signed = |x: f64| {
+            let v = x.round();
+            format!("{}{}°", if v < 0.0 { "−" } else { "" }, v.abs())
+        };
         ctx.step(
             "Angle onto the inbound course",
             "the heading measured against the inbound course",
             format!("heading {} against inbound {}", show(h), show(ic)),
-            format!("{}{}", if rr < 0.0 { "−" } else { "" }, show(rr.abs())),
+            signed(r),
         );
         ctx.step(
             "Sector",
-            format!("the entry sector that angle falls in, for a hold with turns to the {side}"),
-            format!(
-                "{}{} on a {side}-hand hold",
-                if rr < 0.0 { "−" } else { "" },
-                show(rr.abs())
-            ),
+            format!("the entry sector that angle falls in, measured toward the holding side, for a hold with turns to the {side}"),
+            format!("{} toward the holding side", signed(rr)),
             e.to_owned(),
         );
     }

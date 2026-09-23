@@ -762,7 +762,8 @@ function holdEntry(args, result) {
   const inbound = (course + 180) % 360;
   const heading = deg(args.heading);
   const left = result.result.turns_used === 'left' || args.turns === 'left';
-  const side = left ? -90 : 90;
+  // The holding side, square to the inbound course: right of it for right turns.
+  const side = (inbound + (left ? 270 : 90)) % 360;
   const [fx, fy] = [150, 136];
   const [L, r] = [72, 21];
   const at = (b, len, from = [fx, fy]) => [from[0] + vec(b, len)[0], from[1] + vec(b, len)[1]];
@@ -775,13 +776,35 @@ function holdEntry(args, result) {
   const arc = (from, to) => `<path class="dg-muted" d="M${from.map(f1).join(' ')}A${r} ${r} 0 0 ${sweep} ${to.map(f1).join(' ')}"/>`;
   // The sectors of AIM 5-3-8, as the three headings where the entry changes.
   const bounds = [(inbound + 180) % 360, (inbound + (left ? 70 : 110)) % 360, (inbound + (left ? 250 : 290)) % 360];
-  const middle = (a, b) => (a + ((b - a + 720) % 360) / 2) % 360;
+  // Each sector as the headings it runs over, clockwise from lo to hi.
+  const [b0, b1, b2] = bounds;
   const sectors = left
-    ? [['Parallel', middle(bounds[1], bounds[0])], ['Teardrop', middle(bounds[0], bounds[2])], ['Direct', middle(bounds[2], bounds[1])]]
-    : [['Teardrop', middle(bounds[1], bounds[0])], ['Parallel', middle(bounds[0], bounds[2])], ['Direct', middle(bounds[2], bounds[1])]];
+    ? [['Parallel', b1, b0], ['Teardrop', b0, b2], ['Direct', b2, b1]]
+    : [['Teardrop', b1, b0], ['Parallel', b0, b2], ['Direct', b2, b1]];
+  // Drawn where the aircraft comes FROM, as the AIM figure draws them: an
+  // aircraft on heading h arrives from the bearing h + 180 off the fix, so a
+  // sector of headings sits on the opposite side of the fix. (The 70° line
+  // maps onto itself; the course boundary becomes the inbound course
+  // extended beyond the fix.)
+  const from = (h) => (h + 180) % 360;
+  // Teardrop and parallel are labeled between their lines, near the fix. The
+  // arrival's own label sits clockwise of its arrow, so when the aircraft
+  // arrives through a sector, that sector's label moves into the part of it
+  // counterclockwise of the arrow. Direct is 180° wide and holds both legs, so
+  // its label goes on the non-holding side, off the inbound leg, above the
+  // caption.
+  const place = (name, lo, hi) => {
+    const span = (hi - lo + 360) % 360;
+    const d = heading === null ? -1 : (heading - lo + 360) % 360;
+    let spot;
+    if (name === 'Direct') spot = at((inbound + (left ? 110 : 250)) % 360, 95);
+    else if (d > 0 && d < span) spot = at(from(lo + (d >= 24 ? d / 2 : (d + span) / 2 + 8)), 55);
+    else spot = at(from(lo + span / 2), 55);
+    return [spot[0], Math.min(spot[1] + 4, 208)];
+  };
   const body = [
-    ...bounds.map((b) => line('dg-grid dg-dash', [fx, fy], at(b, 108))),
-    ...sectors.map(([name, b]) => text('dg-muted-text', ...at(b, 92).map((q, i) => q + (i ? 4 : 0)), name, 'middle')),
+    ...bounds.map((b) => line('dg-grid dg-dash', [fx, fy], at(from(b), 108))),
+    ...sectors.map(([name, lo, hi]) => text('dg-muted-text', ...place(name, lo, hi), name, 'middle')),
     arrow(...A, fx, fy, 'dg-muted', `Inbound ${Math.round(inbound)}\u00b0`, 0.3),
     line('dg-muted', C, D),
     arc([fx, fy], C),

@@ -3,7 +3,7 @@
 // hands over a million outlines. Past its listing limit it compacts, so an
 // 889,954-cell fill arrives as 6,256 cells covering the same ground, which is
 // the level of detail that exists today. This draws that set over the base map
-// with the real 2D renderer while the view pans, at 4x CPU.
+// with the real 2D renderer while the view pans, with the CPU throttled to the reference profile's target device.
 //
 // It does not yet hold a 60 Hz frame, and the number here says so rather than
 // hiding it: p95 is about 90 ms, because 6,256 cells are 6,256 fills and
@@ -23,6 +23,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
+import { cpuRate } from '../../scripts/cpu.mjs';
 import { nodeHost } from '../../../../packages/runtime/src/node.mjs';
 import { web } from './site.mjs';
 
@@ -69,7 +70,7 @@ test('a million-cell answer draws its compacted stand-in, whole', { timeout: 300
   });
   await page.goto('http://bench.local/');
   const cdp = await page.context().newCDPSession(page);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: profile.cpu.slowdown });
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: (await cpuRate(browser, profile)).rate });
   const result = await page.evaluate(async () => {
     const { decode, frame } = await import('/projection.js');
     const { draw } = await import('/render.js');
@@ -98,7 +99,7 @@ test('a million-cell answer draws its compacted stand-in, whole', { timeout: 300
     }
     return out;
   });
-  t.diagnostic(`4x CPU: map p50 ${result.map.p50.toFixed(1)} ms, p95 ${result.map.p95.toFixed(1)} ms · globe p50 ${result.globe.p50.toFixed(1)} ms, p95 ${result.globe.p95.toFixed(1)} ms`);
+  t.diagnostic(`${(await cpuRate(browser, profile)).rate}x CPU (host BenchmarkIndex ${(await cpuRate(browser, profile)).hostIndex}, target ${profile.cpu.targetBenchmarkIndex}): map p50 ${result.map.p50.toFixed(1)} ms, p95 ${result.map.p95.toFixed(1)} ms · globe p50 ${result.globe.p50.toFixed(1)} ms, p95 ${result.globe.p95.toFixed(1)} ms`);
   for (const mode of ['map', 'globe']) {
     assert.ok(result[mode].p95 <= CEILING, `${mode}: p95 ${result[mode].p95.toFixed(1)} ms, over the ${CEILING} ms this is held to`);
   }

@@ -1,12 +1,13 @@
 // 100,000-vertex scenes (build-web-experience 5.11; web/map-canvas): the real
 // 2D renderer draws a 100k-vertex route and a 100k-vertex polygon over the
-// Natural Earth base while the view pans, at 4x CPU slowdown (reference
-// profile), and the p95 frame time is held to 16.7 ms.
+// Natural Earth base while the view pans, with the CPU throttled to the reference
+// profile's target device, and the p95 frame time is held to 16.7 ms.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
+import { cpuRate } from '../../scripts/cpu.mjs';
 import { web } from './site.mjs';
 
 const root = join(web, '../..');
@@ -25,7 +26,7 @@ test('100,000-vertex scenes pan at p95 within one 60 Hz frame', { timeout: 300_0
   });
   await page.goto('http://bench.local/');
   const cdp = await page.context().newCDPSession(page);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: profile.cpu.slowdown });
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: (await cpuRate(browser, profile)).rate });
   if (process.env.FRAME_PROFILE) await page.evaluate(() => (window.__profile = true));
   const result = await page.evaluate(async () => {
     const { decode, frame } = await import('/projection.js');
@@ -81,6 +82,6 @@ test('100,000-vertex scenes pan at p95 within one 60 Hz frame', { timeout: 300_0
     return out;
   });
   if (result.parts) t.diagnostic(`parts: ${JSON.stringify(result.parts)} globe: ${JSON.stringify(result.globeParts)}`);
-  t.diagnostic(`4x CPU: map p50 ${result.map.p50.toFixed(1)} ms, p95 ${result.map.p95.toFixed(1)} ms · globe p50 ${result.globe.p50.toFixed(1)} ms, p95 ${result.globe.p95.toFixed(1)} ms`);
+  t.diagnostic(`${(await cpuRate(browser, profile)).rate}x CPU (host BenchmarkIndex ${(await cpuRate(browser, profile)).hostIndex}, target ${profile.cpu.targetBenchmarkIndex}): map p50 ${result.map.p50.toFixed(1)} ms, p95 ${result.map.p95.toFixed(1)} ms · globe p50 ${result.globe.p50.toFixed(1)} ms, p95 ${result.globe.p95.toFixed(1)} ms`);
   for (const mode of ['map', 'globe']) assert.ok(result[mode].p95 <= 16.7, `${mode}: p95 ${result[mode].p95.toFixed(1)} ms`);
 });

@@ -7,6 +7,7 @@ import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'no
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { cpuRate } from './cpu.mjs';
 import { compare, percentile, table } from '../../../tools/perf/bench.mjs';
 
 const web = fileURLToPath(new URL('..', import.meta.url));
@@ -53,7 +54,8 @@ async function main() {
     page.setDefaultTimeout(120_000);
     await page.goto(`${await origin}/${benchPath}/`);
     const cdp = await page.context().newCDPSession(page);
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: profile.cpu.slowdown });
+    const cpu = await cpuRate(browser, profile);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpu.rate });
     await page.evaluate(async (path) => {
       const { loadModule } = await import(`/${path}/module.mjs`);
       const { assetProvider } = await import(`/${path}/assets.mjs`);
@@ -107,13 +109,13 @@ async function main() {
       if ((index + 1) % 25 === 0) console.error(`measured ${index + 1}/${catalog.tools.length} tools`);
     }
     const report = {
-      profile: profile.version, host: 'chromium-main-thread', measurement: 'synchronous-abi', cpuSlowdown: profile.cpu.slowdown,
+      profile: profile.version, host: 'chromium-main-thread', measurement: 'synchronous-abi', cpuTarget: profile.cpu.targetBenchmarkIndex, cpuSlowdown: cpu.rate, hostBenchmarkIndex: cpu.hostIndex,
       warmup: WARMUP, samples: SAMPLES,
       modules: [...modules].map(([name, initMs]) => ({ name, initMs })), tools,
     };
     const baseline = option('--baseline');
     const rows = baseline ? compare(report, JSON.parse(readFileSync(baseline, 'utf8'))) : tools;
-    console.log(`Chromium benchmark: profile ${profile.version}, ${profile.cpu.slowdown}× CPU slowdown, ${WARMUP} warm-up and ${SAMPLES} measured calls per tool`);
+    console.log(`Chromium benchmark: profile ${profile.version}, ${cpu.rate}× CPU slowdown (host BenchmarkIndex ${cpu.hostIndex}, target ${profile.cpu.targetBenchmarkIndex}), ${WARMUP} warm-up and ${SAMPLES} measured calls per tool`);
     console.log(table(rows));
     const output = option('--output');
     if (output) writeFileSync(output, JSON.stringify(report, null, 2) + '\n');

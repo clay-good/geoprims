@@ -1,6 +1,6 @@
 // Performance budgets (build-web-experience 1.4; contracts/reference-profiles):
 // 50 sampled routes, each loaded cold three times under the reference profile
-// (4x CPU slowdown; 9 Mbps down, 1.5 Mbps up, 150 ms round trip; no cache) at
+// (CPU throttled to the target BenchmarkIndex; 9 Mbps down, 1.5 Mbps up, 150 ms round trip; no cache) at
 // the typical-phone viewport, with the median held to the hard budgets:
 // LCP 2.0 s, interactive 2.5 s, INP 200 ms, CLS 0.1, and shell JavaScript
 // 90 KB compressed. PERF_SAMPLE=n measures only the first n routes.
@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
+import { cpuRate } from '../../scripts/cpu.mjs';
 import { serveBuiltSite, web } from './site.mjs';
 
 const root = join(web, '../..');
@@ -36,7 +37,7 @@ async function measure(browser, origin, path) {
   const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width: phone.width, height: phone.height } });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: profile.cpu.slowdown });
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: (await cpuRate(browser, profile)).rate });
   await cdp.send('Network.enable');
   await cdp.send('Network.setCacheDisabled', { cacheDisabled: true });
   await cdp.send('Network.emulateNetworkConditions', {

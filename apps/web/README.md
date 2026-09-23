@@ -26,7 +26,7 @@ The browser regression tests need Chromium, Firefox, and WebKit (`npm exec --pre
 npm run test:browser --prefix apps/web
 ```
 
-To time every primary example under Chromium's 4× CPU slowdown, after building the site:
+To time every primary example with Chromium's CPU throttled to the reference profile's target device, after building the site:
 
 ```bash
 npm run bench:browser --prefix apps/web -- --output /tmp/geoprims-chromium.json

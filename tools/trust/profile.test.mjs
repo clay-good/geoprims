@@ -40,7 +40,7 @@ test('every budget has a hard number, and targets are stricter than hard limits'
 });
 
 test('the profile says how it is measured, so a report can name it', () => {
-  assert.equal(profile.cpu.slowdown, 4);
+  assert.equal(profile.cpu.targetBenchmarkIndex, 800);
   assert.equal(profile.measurement.runsPerRoute, 3);
   assert.equal(profile.measurement.statistic, 'median');
   assert.deepEqual(profile.engines, ['chromium', 'webkit', 'firefox']);

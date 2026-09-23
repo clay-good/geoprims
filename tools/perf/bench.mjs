@@ -34,7 +34,8 @@ export function compare(report, baseline) {
     throw new Error('baseline has a different reference profile or host');
   }
   if (report.measurement !== baseline.measurement) throw new Error('baseline uses a different timing method');
-  if (report.cpuSlowdown !== baseline.cpuSlowdown) throw new Error('baseline has a different CPU slowdown');
+  // The throttle is calibrated per host, so reports agree on the device they emulate, not the multiplier.
+  if (report.cpuTarget !== baseline.cpuTarget) throw new Error('baseline emulates a different CPU target');
   if (report.samples < 1000 || baseline.samples < 1000) throw new Error('both reports need at least 1,000 measured calls per tool');
   const previous = new Map(baseline.tools.map((t) => [t.id, t]));
   return report.tools.map((row) => {

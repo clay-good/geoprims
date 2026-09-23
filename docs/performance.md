@@ -5,13 +5,13 @@ one document means the same thing as the same number in another. The profile
 lives in [`data/reference-profile.json`](../data/reference-profile.json), which
 is what the gates read; this page explains it and records its history.
 
-**Current profile: 1.0.0**, in force since 2026-09-20.
+**Current profile: 1.1.0**, in force since 2026-09-23.
 
 ## The profile
 
 | Aspect | Profile 1.0.0 |
 |---|---|
-| CPU | Chromium on the CI runner at 4× slowdown, a proxy for a mid-tier 2024 Android phone, plus a quarterly manual check on a real mid-tier Android device and a 3-year-old iPhone |
+| CPU | Chromium on the CI runner, throttled to Lighthouse BenchmarkIndex 800 (the top of Lighthouse's mid-tier mobile range), a proxy for a mid-tier 2024 Android phone, plus a quarterly manual check on a real mid-tier Android device and a 3-year-old iPhone |
 | Network, cold load | 9 Mbps down, 1.5 Mbps up, 150 ms round trip, no cache |
 | Warm load | Service worker installed, same network |
 | Engines | Chromium, WebKit, and Firefox, current stable; Node.js active LTS for the MCP server and the core |
@@ -55,7 +55,7 @@ The Playwright suite checks cancellation and cross-host result equality in CI.
 The page budgets now have a gate: `apps/web/test/browser/perf.test.mjs` loads
 50 sampled routes (the home page, the tool index, every domain, a few groups,
 and tools spread across the catalog) three times each, cold, under profile
-1.0.0: 4× CPU slowdown, 9 Mbps down, 1.5 Mbps up, 150 ms round trip, no cache,
+1.1.0: CPU throttled to BenchmarkIndex 800, 9 Mbps down, 1.5 Mbps up, 150 ms round trip, no cache,
 at the typical-phone viewport. The median of each is held to the hard budgets.
 LCP and layout shift come from the browser's performance entries, interactive
 is the moment every island has hydrated, INP is the longest event after typing
@@ -130,3 +130,21 @@ both the old and the new profile so the baselines can be reset knowingly.
 | Version | Date | Change |
 |---|---|---|
 | 1.0.0 | 2026-09-20 | First profile, from `contracts/reference-profiles` |
+| 1.1.0 | 2026-09-23 | CPU throttle calibrated to the host's Lighthouse BenchmarkIndex (target 800) instead of a fixed 4× |
+
+## Profile 1.1.0 (2026-09-23): the CPU throttle is calibrated to the host
+
+Profile 1.0.0 throttled every host by a fixed 4×. The first CI runs after the
+repository went public showed what that hid: the development Mac scores a
+Lighthouse BenchmarkIndex of about 4,150, so 4× emulated a phone of about
+1,010 (Lighthouse's high-end mobile range), while the slower CI runner at 4×
+emulated a much slower phone. The same page passed its budgets on one machine
+and missed them by about 20% on the other. Lighthouse's own throttling guide
+says the multiplier should follow the host's BenchmarkIndex.
+
+Every timing gate now measures the host's BenchmarkIndex once per run (its
+`computeBenchmarkIndex`, median of three, unthrottled) and throttles by
+host ÷ 800, held to 1–10, so every machine emulates the same device. On the
+development Mac that is 5.2×, stricter than before. The rate and the host's
+index are printed with each result (`apps/web/scripts/cpu.mjs`).
+

@@ -1091,6 +1091,12 @@
           "tools": [
             "polygon-to-cells"
           ]
+        },
+        {
+          "want": "outline a set of cells as a polygon",
+          "tools": [
+            "cells-to-polygon"
+          ]
         }
       ]
     },

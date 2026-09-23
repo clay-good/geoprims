@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "008c058d4e9c01fe",
-    "lastmod": "2026-09-22"
+    "hash": "b58bd123b6f69881",
+    "lastmod": "2026-09-23"
   },
   "/accuracy/": {
     "hash": "8422a436e969ce80",
@@ -324,8 +324,8 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/": {
-    "hash": "bbec96323870dadc",
-    "lastmod": "2026-09-22"
+    "hash": "8f2b505ea54b418c",
+    "lastmod": "2026-09-23"
   },
   "/indexing/convert/": {
     "hash": "bc4722b66832432e",
@@ -348,16 +348,16 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/": {
-    "hash": "206601d5f1898aea",
-    "lastmod": "2026-09-22"
+    "hash": "0a2449dbfb1401b5",
+    "lastmod": "2026-09-23"
   },
   "/indexing/h3/cell-info/": {
-    "hash": "50d12d79ea5bf295",
-    "lastmod": "2026-09-22"
+    "hash": "b8a0277a8c93de9b",
+    "lastmod": "2026-09-23"
   },
   "/indexing/h3/children/": {
-    "hash": "84915f32d2134067",
-    "lastmod": "2026-09-22"
+    "hash": "ea5558c175456c24",
+    "lastmod": "2026-09-23"
   },
   "/indexing/h3/compact/": {
     "hash": "2679feb005f82404",
@@ -388,8 +388,8 @@
     "lastmod": "2026-09-22"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "0f040c88e68d3daf",
-    "lastmod": "2026-09-22"
+    "hash": "de378f8c0bf50d19",
+    "lastmod": "2026-09-23"
   },
   "/indexing/h3/resolution-chooser/": {
     "hash": "25fc26f20f467843",
@@ -476,8 +476,8 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "0467ea3dc8b40eaf",
-    "lastmod": "2026-09-22"
+    "hash": "f8de334760920aa9",
+    "lastmod": "2026-09-23"
   },
   "/navigation/": {
     "hash": "703957a19db3e7c3",
@@ -560,8 +560,8 @@
     "lastmod": "2026-09-22"
   },
   "/sources/": {
-    "hash": "f09d29d1ceb6037a",
-    "lastmod": "2026-09-22"
+    "hash": "3c720261894df625",
+    "lastmod": "2026-09-23"
   },
   "/survey/": {
     "hash": "27c2197d00a891d1",
@@ -644,8 +644,8 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "614344889d7ad6ae",
-    "lastmod": "2026-09-22"
+    "hash": "d4552288e4837a94",
+    "lastmod": "2026-09-23"
   },
   "/units/": {
     "hash": "8de8db9230403d62",
@@ -744,7 +744,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1fbe7cf1c97f4349",
-    "lastmod": "2026-09-22"
+    "hash": "65dd2663c9630c53",
+    "lastmod": "2026-09-23"
   }
 }

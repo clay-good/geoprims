@@ -1478,6 +1478,10 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     }],
     related: &[Related { id: "indexing.h3.compact", reason: "next" },
         Related {
+            id: "indexing.h3.cells-to-polygon",
+            reason: "inverse",
+        },
+        Related {
             id: "indexing.h3.resolution-chooser",
             reason: "parent",
         },
@@ -1718,4 +1722,216 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
     }
     Ok(Json::obj(out))
+}
+
+// ---------------------------------------------------------------- cell set outline
+
+/// The most ring points listed before the answer is cut short.
+const OUTLINE_POINTS: usize = 20_000;
+
+const RING_ROW: &[Field] = &[
+    Field::new(
+        "part",
+        "Part",
+        "0, 1, … when the set is in separate pieces",
+        Kind::Number { min: 0.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "ring",
+        "Ring",
+        "0 for the outer ring of a part, 1, 2, … for its holes",
+        Kind::Number { min: 0.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    angle("lat", "Latitude", "[-90,90]"),
+    angle("lon", "Longitude", "[-180,180]"),
+];
+
+pub static CELLS_TO_POLYGON: ToolDef = ToolDef {
+    id: "indexing.h3.cells-to-polygon",
+    title: "H3 cell set outline (cellsToMultiPolygon)",
+    summary: "The outline of a set of H3 cells: the boundary between the set and everything outside it, as polygons with their holes, in GeoJSON.",
+    aliases: &[
+        "cellsToMultiPolygon",
+        "cells_to_h3shape",
+        "H3 cells to polygon",
+        "dissolve H3 cells",
+        "H3 outline",
+    ],
+    keywords: &[
+        "H3",
+        "outline",
+        "cellsToMultiPolygon",
+        "boundary",
+        "dissolve",
+        "GeoJSON",
+        "polygon",
+        "hole",
+    ],
+    inputs: &[CELLS_IN],
+    outputs: &[
+        count(
+            "polygon_count",
+            "Pieces",
+            "Separate polygons in the outline",
+        ),
+        count("hole_count", "Holes", "Holes across every piece"),
+        count("point_count", "Points", "Points over every ring"),
+        Field::new(
+            "area",
+            "Enclosed area",
+            "Sum of the cells' exact areas",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "km2",
+            },
+        )
+        .precision(Precision::Significant(6)),
+        angle("south", "South", "[-90,90]").optional(),
+        angle("west", "West", "[-180,180]").optional(),
+        angle("north", "North", "[-90,90]").optional(),
+        angle("east", "East", "[-180,180]").optional(),
+        Field::new(
+            "rings",
+            "Rings",
+            "Every ring point in order, by part and ring",
+            Kind::List {
+                items: RING_ROW,
+                min: 0,
+                max: OUTLINE_POINTS,
+            },
+        )
+        .optional(),
+        Field::new(
+            "geojson",
+            "GeoJSON",
+            "A MultiPolygon of the outline",
+            Kind::Text { max_len: 2_000_000 },
+        )
+        .optional(),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["EXPERIMENTAL_TOOL", "OUTPUT_TRUNCATED"],
+    model: "H3 C cellsToMultiPolygon: the boundary segments of every cell, less those walked from both sides, followed end to end",
+    accuracy: "The same polygons as H3 C 4.4.1 on 400 cell sets: solid patches, patches with a hole, separate patches, sets around a pentagon, and sets across the antimeridian, at resolutions 3 to 11",
+    when_to_use: "Use this to turn a set of cells back into an area: the outline of a covering, a service area assembled from cells, or a set of cells picked on a map, ready to draw or to hand to something that speaks GeoJSON. It is the inverse of filling a polygon with cells.",
+    limitations: "Every cell must be at one resolution, so compact a mixed set back to one resolution first. The outline follows cell edges, so it is the boundary of the cells rather than of whatever they were meant to approximate, and at a coarse resolution the two differ by up to a cell. A set in separate pieces comes back as separate polygons, and a piece wrapped around a gap comes back with a hole.",
+    references: &[H3_DOCS, H3O],
+    examples: &[Example {
+        id: "primary",
+        title: "A cell and its six neighbors outline as one hexagon of 18 sides",
+        input: r#"{"cells":[{"cell":"892a8471483ffff"},{"cell":"892a8471487ffff"},{"cell":"892a847148fffff"},{"cell":"892a8471497ffff"},{"cell":"892a84714b3ffff"},{"cell":"892a84714bbffff"},{"cell":"892a847334bffff"}]}"#,
+        source: "H3 cellsToMultiPolygon",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "polygon",
+        map: &[("rings", "rings")],
+    }],
+    related: &[
+        Related {
+            id: "indexing.h3.polygon-to-cells",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.compact",
+            reason: "parent",
+        },
+        Related {
+            id: "indexing.h3.edges",
+            reason: "next",
+        },
+    ],
+    sentence: "The set outlines as {polygon_count} {plural polygon_count \"piece\" \"pieces\"}.",
+    limits: &[("batchRows", 10)],
+    run: run_cells_to_polygon,
+    ..ToolDef::BLANK
+};
+
+fn run_cells_to_polygon(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let cells = cells_input(ctx)?;
+    let polys = crate::h3outline::outline(&cells).map_err(|e| match e {
+        crate::h3outline::Error::MixedResolution => ToolError::invalid(
+            "/cells",
+            "Every cell has to be at one resolution; compact or uncompact the set to one first.",
+        ),
+    })?;
+    let holes: usize = polys.iter().map(|p| p.len().saturating_sub(1)).sum();
+    let points: usize = polys.iter().flatten().map(Vec::len).sum();
+    let area: f64 = cells.iter().map(|c| c.area_km2()).sum();
+    let bbox = cells_bbox(&cells);
+    let mut out = vec![
+        ("polygon_count", Json::Num(polys.len() as f64)),
+        ("hole_count", Json::Num(holes as f64)),
+        ("point_count", Json::Num(points as f64)),
+        (
+            "area",
+            ctx.out(
+                "area",
+                Q {
+                    value: area,
+                    unit: units::by_symbol(QT::Area, "km2").expect("km2"),
+                },
+            ),
+        ),
+    ];
+    if let Some([s, w, n, e]) = bbox {
+        out.push(("south", ctx.out("south", deg(s))));
+        out.push(("west", ctx.out("west", deg(w))));
+        out.push(("north", ctx.out("north", deg(n))));
+        out.push(("east", ctx.out("east", deg(e))));
+    }
+    if points > OUTLINE_POINTS {
+        ctx.warnings.push(Warning::new(
+            "OUTPUT_TRUNCATED",
+            format!("The outline has {points} points; the first {OUTLINE_POINTS} are listed."),
+        ));
+    }
+    let mut rows = Vec::new();
+    let mut left = OUTLINE_POINTS;
+    for (pi, poly) in polys.iter().enumerate() {
+        for (ri, ring) in poly.iter().enumerate() {
+            for (lat, lon) in ring.iter().take(left) {
+                rows.push(Json::obj([
+                    ("part", Json::Num(pi as f64)),
+                    ("ring", Json::Num(ri as f64)),
+                    ("lat", deg(*lat).to_json()),
+                    ("lon", deg(*lon).to_json()),
+                ]));
+            }
+            left = left.saturating_sub(ring.len());
+        }
+    }
+    out.push(("rings", Json::Arr(rows)));
+    out.push(("geojson", Json::str(geojson_multipolygon(&polys))));
+    Ok(Json::obj(out))
+}
+
+/// The outline as a GeoJSON MultiPolygon, which orders a position longitude
+/// first and a polygon outer ring first.
+fn geojson_multipolygon(polys: &[crate::h3outline::Poly]) -> String {
+    let mut s = String::from(r#"{"type":"MultiPolygon","coordinates":["#);
+    for (pi, poly) in polys.iter().enumerate() {
+        if pi > 0 {
+            s.push(',');
+        }
+        s.push('[');
+        for (ri, ring) in poly.iter().enumerate() {
+            if ri > 0 {
+                s.push(',');
+            }
+            s.push('[');
+            for (i, (lat, lon)) in ring.iter().enumerate() {
+                if i > 0 {
+                    s.push(',');
+                }
+                s.push_str(&format!("[{lon:.9},{lat:.9}]"));
+            }
+            s.push(']');
+        }
+        s.push(']');
+    }
+    s.push_str("]}");
+    s
 }

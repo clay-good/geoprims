@@ -7,6 +7,7 @@ pub mod cover;
 pub mod cross;
 pub mod h3;
 pub mod h3fill;
+pub mod h3outline;
 pub mod s2;
 pub mod s2cover;
 pub mod s2tools;
@@ -1350,6 +1351,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &h3::EDGES,
     &h3::RESOLUTION_CHOOSER,
     &h3::POLYGON_TO_CELLS,
+    &h3::CELLS_TO_POLYGON,
     &s2tools::POINT_TO_CELL,
     &s2tools::CELL_INFO,
     &s2tools::NEIGHBORS,

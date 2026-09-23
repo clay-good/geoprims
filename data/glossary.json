@@ -512,6 +512,7 @@
       "source": "h3",
       "relatedTools": [
         "indexing.h3.cell-info",
+        "indexing.h3.cells-to-polygon",
         "indexing.h3.children",
         "indexing.h3.compact",
         "indexing.h3.edges",

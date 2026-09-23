@@ -65,6 +65,7 @@ const fn index(name: &'static str, title: &'static str, help: &'static str) -> F
 const MAX_PAIRS: usize = 250_000;
 
 pub static TRACKS: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geometry.distance.tracks",
     title: "Compare two tracks",
     summary: "How far apart two GPS tracks or routes are: the discrete Fréchet distance (the leash two walkers need, with where it is tightest), the Hausdorff distance, and their closest approach.",
@@ -128,15 +129,17 @@ pub static TRACKS: ToolDef = ToolDef {
         meters("closest", "Closest approach", "0 where the tracks cross"),
     ],
     errors: &[ErrorCode::LimitExceeded, ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Discrete Fréchet by the Eiter-Mannila recurrence over geodesic point distances (Karney's inverse), with the tightest pair found by walking the best coupling back; Hausdorff as the larger of the two directed maxima of each point's geodesic distance to the other track's segments; closest approach as the least point-to-segment distance, or 0 where segments cross on an azimuthal equidistant plane",
     accuracy: "Distances exact to the geodesic (under 1 µm); Fréchet is the discrete measure over the given points, so sample both tracks alike",
+    when_to_use: "Use this to ask how alike two paths are: a flown track against the route that was filed, a survey line against the one that was planned, two GPS traces of the same journey, a vehicle's path against a corridor. Three numbers come back because they answer different questions. The Fréchet distance is the leash two walkers need if neither may go backwards, so it notices when two paths cover the same ground in a different order or at a different pace. The Hausdorff distance ignores order and asks only how far any point of one is from the other path. The closest approach is how near they ever come, which is zero if they cross.",
+    limitations: "The Fréchet distance here is the discrete one, taken over the points as given, so it depends on how the two tracks are sampled: a coarse track compared against a fine one will show a Fréchet distance of about the coarse track's own step, which is a fact about the sampling and not about the paths. Sample both alike, or densify first. The Hausdorff distance says nothing about direction or order — two tracks over the same ground in opposite directions have a Hausdorff distance of zero and a Fréchet distance of the whole track length, which is correct and is the clearest illustration of what each measure is for. Neither is a similarity score: they are worst-case distances, so one stray point moves them both.",
     references: &[EITER],
     examples: &[Example {
         id: "primary",
         title: "A planned line and the flown track",
         input: r#"{"track_a":[{"lat":40.0,"lon":-105.0},{"lat":40.001,"lon":-104.999},{"lat":40.002,"lon":-104.998},{"lat":40.003,"lon":-104.997}],"track_b":[{"lat":40.0,"lon":-104.9999},{"lat":40.00105,"lon":-104.9989},{"lat":40.0021,"lon":-104.998},{"lat":40.0029,"lon":-104.9971}]}"#,
-        source: "add-navigation-and-geometry track-similarity scenario",
+        source: "checked against GEOS 3.11.4 through shapely on PROJ's azimuthal equidistant plane — GEOS's own Fréchet implementation, and its point-to-segment distance for the Hausdorff — over fourteen pairs of tracks, agreeing to 6.3e-9 relative at worst",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -151,6 +154,10 @@ pub static TRACKS: ToolDef = ToolDef {
         Related {
             id: "geometry.buffer.geodesic",
             reason: "alternative",
+        },
+        Related {
+            id: "geometry.shape.densify",
+            reason: "parent",
         },
     ],
     sentence: "The tracks are {frechet} apart by Fréchet distance, tightest at points {frechet_a} and {frechet_b}, and {hausdorff} by Hausdorff distance.",

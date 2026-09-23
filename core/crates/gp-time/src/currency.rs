@@ -8,7 +8,7 @@
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::regulation::rule;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, Stability, ToolDef};
 
 use crate::solar::{CFR_61_57, jd, local_noon};
 use crate::sun::{self, SUNRISE_ALTITUDE};
@@ -137,7 +137,10 @@ pub static NIGHT_CURRENCY: ToolDef = ToolDef {
         Field::new("events", "Each event", "Whether it counts, with that night's period", Kind::List { items: OUT_EVENT, min: 1, max: 200 }),
     ],
     errors: &[],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to see which of your logged night takeoffs and full-stop landings actually count toward 14 CFR 61.57(b), whether you are current to carry passengers at night on a date, and the day that currency lapses -- per category and class, from the times and places you flew.",
+    limitations: "This is a planning aid. Your logbook and the regulation govern, and simulator credit, which 61.57(c) allows in some cases, is not counted here. Sun times are within about a minute of USNO, so an event within a minute of the one-hour boundary is worth checking against the Air Almanac, which is the legal source. At high latitudes in summer the period can be empty -- the sun never gets low enough -- and then nothing counts, which is the correct answer. The count reported is of qualifying events in the 90 days before the date asked about, which is a narrower window than the events that set the lapse date.",
+    warnings: &["INPUT_NORMALIZED"],
     model: "Each event counts when its time lies from 1 hour after that evening's sunset to 1 hour before the next sunrise at its place (the sun's centre at −0.8333°, NREL SPA); a time before noon belongs to the night that began the evening before. Per category and class, current through the 90th day after the older of the third most recent qualifying takeoff and the third most recent qualifying full-stop landing on or before the date",
     accuracy: "Sun times within about a minute of USNO; an event within a minute of the boundary is worth checking against the Air Almanac. Planning aid: your logbook and 61.57 govern, including simulator credit this does not count",
     references: &[CFR_61_57],
@@ -149,7 +152,20 @@ pub static NIGHT_CURRENCY: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer { kind: "table-only", map: &[] }],
-    related: &[Related { id: "time.sun.aviation-nights", reason: "parent" }],
+    related: &[
+        Related {
+            id: "time.sun.aviation-nights",
+            reason: "parent",
+        },
+        Related {
+            id: "time.sun.events",
+            reason: "alternative",
+        },
+        Related {
+            id: "time.scale.block-time",
+            reason: "alternative",
+        },
+    ],
     sentence: "{if state == 1}You are current to carry passengers at night through {through}.{/if}{if state == 2}You are not current to carry passengers at night on that date.{/if}",
     limits: &[("batchRows", 100)],
     run: run_currency,

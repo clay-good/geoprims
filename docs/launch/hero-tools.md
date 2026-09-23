@@ -30,7 +30,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Drone | Image count | `drone.photogrammetry.image-count` | [ ] | [ ] | [ ] | [x] |
 | Drone | Flight time | `drone.power.endurance` | [ ] | [ ] | [ ] | [x] |
 | Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] | [x] |
-| Drone | Mapping sun window | `time.sun.mapping-window` | [ ] | [ ] | [ ] | [x] |
+| Drone | Mapping sun window | `time.sun.mapping-window` | [x] | [ ] | [ ] | [x] |
 | Drone | VLOS guidance | `drone.sensors.vlos` | [x] | [ ] | [ ] | [x] |
 | Drone | Part 107 altitude | `drone.ops.part107-altitude` | [ ] | [ ] | [ ] | [x] |
 | Surveyors | Coordinate converter (DMS ↔ decimal) | `geodesy.parse.coordinates` | [x] | [ ] | [ ] | [x] |
@@ -53,11 +53,11 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [x] |
 
-Stable: 36 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 37 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 
-The stable bar needs an independent, published worked example. These rows are held back until one turns up, rather than citing an example we computed ourselves:
+The stable bar needs an independent, published worked example. These rows are held back until one turns up, rather than citing an example we computed ourselves. The mapping sun window left this list on 2026-09-23: its reference is pvlib's independent implementation of the same NREL algorithm, checked against the core at 250 points in `spa_parity.rs`, which is the same standing as the other tools verified against a separate implementation rather than a printed worked example.
 
 | Tool | Searched (2026-09-19) |
 |---|---|
@@ -65,4 +65,3 @@ The stable bar needs an independent, published worked example. These rows are he
 | Part 107 altitude | 14 CFR 107.51, AC 107-2A, FAA-G-8082-22, the UAG sample test, and the 2016 final rule preamble state the rule without a numeric case |
 | Flight time | No FAA or manufacturer source works the arithmetic |
 | Overlap and trigger, image count | Blog and vendor examples found in search did not contain the numbers when checked; the peer-reviewed footprint paper (AKJournals, 2024) is not freely retrievable |
-| Mapping sun window | No published worked example of a sun-elevation window; the threshold crossing shares the SPA solver that sunrise and twilight are verified with |

@@ -7,7 +7,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::point;
 use libm::{cos, sin, tan};
@@ -1237,10 +1239,13 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
         ),
     ],
     errors: &[],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to plan an aerial mapping sortie: it says when the sun is above the elevation your workflow wants -- 30 degrees by default, which is common vendor guidance -- in local time and Zulu, with the day's highest sun and the whole arc it sits on.",
+    limitations: "The threshold is compared against the geometric sun, where it actually is, because a shadow is cast by geometry; the elevation reported is the apparent one an observer sees, and the two differ by about 0.02 degrees at 30 degrees up. Times are good to about a minute. A high threshold in winter or at latitude gives no window at all, and a low one in polar summer gives all day; both are answers, not failures. And sun elevation is one input to image quality among several -- haze, cloud, wind and the surface itself are not modelled here.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Times the geometric sun (NREL SPA) crosses the threshold, by bisection between the day's highest and lowest points; the highest sun and the path are the same SPA sun, apparent (refracted), every 20 minutes of local clock time",
     accuracy: "About 1 minute",
-    references: &[NOAA],
+    references: &[NREL_SPA, NOAA],
     examples: &[Example {
         id: "primary",
         title: "A Denver site on 2026-06-21 at 30°",
@@ -1252,10 +1257,20 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "time.sun.position",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "time.sun.position",
+            reason: "next",
+        },
+        Related {
+            id: "time.sun.hotspot",
+            reason: "next",
+        },
+        Related {
+            id: "time.sun.events",
+            reason: "alternative",
+        },
+    ],
     sentence: "The sun is high enough {window}.",
     limits: &[("batchRows", 1_000)],
     run: run_mapping,
@@ -1506,12 +1521,14 @@ pub static HOTSPOT: ToolDef = ToolDef {
         .angle_range("[-90,90]"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    stability: Stability::Stable,
+    when_to_use: "Use this before an aerial survey to find out whether the hotspot -- the blown patch where the camera looks straight away from the sun -- will land in frame, and how far off it is. Check a planned time and camera attitude, or walk the day to find when the sun is high enough to keep it out.",
+    limitations: "The frame is treated as a cone around the look direction, so the test is exact at the corners and slightly generous at the edges: a hotspot just outside the cone could still clip a corner. The hotspot is a direction, not a brightness -- how bad the patch actually looks depends on the surface, the sun angle and the camera, none of which are inputs here. And a nadir camera catches the hotspot whenever the sun is below about 48 degrees with the default field of view, which is most of a working day outside high summer; that is the geometry, not a fault in the flight plan.",
     warnings: &[
         "HOTSPOT_IN_FRAME",
         "SUN_BELOW_HORIZON",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Sun azimuth and apparent elevation by the NREL SPA (standard atmosphere, sea level); the antisolar point is opposite the sun, at −elevation. The hotspot angle is the angle between the camera's look vector (heading, pitch) and the antisolar direction; it is in frame when within half the diagonal field of view",
     accuracy: "Sun direction to about 0.0003°; the frame test treats the field of view as a cone around the look direction, so a hotspot near a frame corner is borderline",
@@ -1535,6 +1552,10 @@ pub static HOTSPOT: ToolDef = ToolDef {
         Related {
             id: "time.sun.position",
             reason: "parent",
+        },
+        Related {
+            id: "time.sun.events",
+            reason: "alternative",
         },
     ],
     sentence: "The hotspot is {hotspot_angle} from where the camera points: in frame, {in_frame}.",

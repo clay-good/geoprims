@@ -236,7 +236,8 @@ def window_rows(start):
 
 
 def main():
-    plan = [("time.sun.hotspot", hotspot_rows), ("time.sun.mapping-window", window_rows)]
+    plan = [("time.sun.hotspot", hotspot_rows), ("time.sun.mapping-window", window_rows),
+            ("time.sun.night-currency", currency_rows)]
     for tool, build in plan:
         path = ROOT / f"{tool}.jsonl"
         existing = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -253,3 +254,174 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ------------------------------------------------------------ night currency
+
+def crossing_after(lat, lon, t0, rising, limit_hours=30):
+    """First instant after t0 where the sun's centre crosses -0.8333 deg."""
+    want = -0.8333
+
+    def el(t):
+        return sun(lat, lon, t.astimezone(timezone.utc).isoformat())[2]
+
+    step = timedelta(minutes=10)
+    prev, t = t0, t0 + step
+    end = t0 + timedelta(hours=limit_hours)
+    while t <= end:
+        a, b = el(prev), el(t)
+        if (a < want <= b) if rising else (a > want >= b):
+            lo, hi = prev, t
+            for _ in range(40):
+                mid = lo + (hi - lo) / 2
+                if (el(mid) < want) == (el(lo) < want):
+                    lo = mid
+                else:
+                    hi = mid
+            return lo + (hi - lo) / 2
+        prev, t = t, t + step
+    return None
+
+
+def night_window(lat, lon, when):
+    """(start, end) of the 61.57(b) period for the night `when` falls in.
+
+    An event before local noon belongs to the night that began the evening
+    before, so the search starts from noon on that evening's date."""
+    local_noon = when.replace(hour=12, minute=0, second=0, microsecond=0)
+    if when < local_noon:
+        local_noon -= timedelta(days=1)
+    sunset = crossing_after(lat, lon, local_noon, rising=False)
+    if sunset is None:
+        return None, None
+    sunrise = crossing_after(lat, lon, sunset, rising=True)
+    if sunrise is None:
+        return None, None
+    return sunset + timedelta(hours=1), sunrise - timedelta(hours=1)
+
+
+def counts(lat, lon, when):
+    start, end = night_window(lat, lon, when)
+    return start is not None and start <= when <= end
+
+
+DEN = (39.86, -104.67)  # Denver Front Range, the place the first vectors used
+SEA = (47.53, -122.30)  # Boeing Field, a later sunset and a shorter night
+ANC = (61.17, -150.00)  # Anchorage: in June the night never qualifies at all
+
+
+def ev(place, when, takeoffs=1, landings=1, aircraft="ASEL"):
+    lat, lon = place
+    return {"when": when, "lat": lat, "lon": lon,
+            "takeoffs": takeoffs, "landings": landings, "aircraft": aircraft}
+
+
+def qualifying(events, aircraft, as_of=None):
+    """Qualifying takeoffs and landings for one category and class.
+
+    With `as_of`, only those in the preceding 90 days -- which is what the
+    tool's count means, and why an event exactly 91 days back stops counting
+    while the currency it started still runs to its own 90th day."""
+    out = {"takeoffs": [], "landings": []}
+    for e in events:
+        if e["aircraft"] != aircraft:
+            continue
+        when = datetime.fromisoformat(e["when"])
+        if not counts(e["lat"], e["lon"], when):
+            continue
+        if as_of is not None and not (as_of - timedelta(days=90) <= when.date() <= as_of):
+            continue
+        for kind in out:
+            out[kind] += [when.date()] * e[kind]
+    return out
+
+
+def through_date(events, aircraft):
+    """The 90th day after the older of the third most recent qualifying
+    takeoff and the third most recent qualifying full-stop landing.
+
+    Counted per category and class: a multi-engine night does nothing for
+    single-engine currency, so the events are grouped before they are counted."""
+    q = qualifying(events, aircraft)
+    thirds = []
+    for kind in ("takeoffs", "landings"):
+        days = sorted(q[kind], reverse=True)
+        if len(days) < 3:
+            return None
+        thirds.append(days[2])
+    return min(thirds) + timedelta(days=90)
+
+
+# (as_of, events) -- each event sits at least 20 minutes inside or outside its
+# boundary, so a yes/no never hangs on the solver's last minute.
+CURRENCY_CASES = [
+    # Three qualifying nights, checked inside and outside the 90 days.
+    ("2026-06-10", [ev(DEN, "2026-05-01T22:30:00-06:00"), ev(DEN, "2026-05-10T22:30:00-06:00"),
+                    ev(DEN, "2026-06-02T23:00:00-06:00")]),
+    ("2026-07-31", [ev(DEN, "2026-05-01T22:30:00-06:00"), ev(DEN, "2026-05-10T22:30:00-06:00"),
+                    ev(DEN, "2026-06-02T23:00:00-06:00")]),
+    # Two is not three.
+    ("2026-06-10", [ev(DEN, "2026-05-01T22:30:00-06:00"), ev(DEN, "2026-05-10T22:30:00-06:00")]),
+    # An hour after sunset is the boundary: 20:30 is before it, 22:30 after.
+    ("2026-06-10", [ev(DEN, "2026-05-01T20:30:00-06:00"), ev(DEN, "2026-05-10T22:30:00-06:00"),
+                    ev(DEN, "2026-06-02T23:00:00-06:00")]),
+    # A time before noon belongs to the night that began the evening before:
+    # 04:00 still counts, 05:30 is inside the hour before sunrise and does not.
+    ("2026-06-10", [ev(DEN, "2026-05-02T04:00:00-06:00"), ev(DEN, "2026-05-11T04:00:00-06:00"),
+                    ev(DEN, "2026-06-03T04:00:00-06:00")]),
+    ("2026-06-10", [ev(DEN, "2026-05-02T05:30:00-06:00"), ev(DEN, "2026-05-11T04:00:00-06:00"),
+                    ev(DEN, "2026-06-03T04:00:00-06:00")]),
+    # Takeoffs and landings are counted separately, so three of one and two of
+    # the other is not currency.
+    ("2026-06-10", [ev(DEN, "2026-05-01T22:30:00-06:00", landings=0),
+                    ev(DEN, "2026-05-10T22:30:00-06:00"), ev(DEN, "2026-06-02T23:00:00-06:00")]),
+    # Several in one night count for as many as were flown.
+    ("2026-06-10", [ev(DEN, "2026-06-02T23:00:00-06:00", takeoffs=3, landings=3)]),
+    # Category and class are counted apart.
+    ("2026-06-10", [ev(DEN, "2026-05-01T22:30:00-06:00"), ev(DEN, "2026-05-10T22:30:00-06:00"),
+                    ev(DEN, "2026-06-02T23:00:00-06:00"), ev(DEN, "2026-06-02T23:30:00-06:00", aircraft="AMEL")]),
+    ("2026-06-10", [ev(DEN, "2026-05-01T22:30:00-06:00", aircraft="AMEL"),
+                    ev(DEN, "2026-05-10T22:30:00-06:00", aircraft="AMEL"),
+                    ev(DEN, "2026-06-02T23:00:00-06:00", aircraft="AMEL")]),
+    # Somewhere else, with a later sunset.
+    ("2026-06-10", [ev(SEA, "2026-05-01T23:30:00-07:00"), ev(SEA, "2026-05-10T23:30:00-07:00"),
+                    ev(SEA, "2026-06-02T23:59:00-07:00")]),
+    ("2026-06-10", [ev(SEA, "2026-05-01T21:30:00-07:00"), ev(SEA, "2026-05-10T23:30:00-07:00"),
+                    ev(SEA, "2026-06-02T23:59:00-07:00")]),
+    # Winter, when the window is wide open.
+    ("2026-03-01", [ev(DEN, "2026-01-05T19:30:00-07:00"), ev(DEN, "2026-01-15T19:30:00-07:00"),
+                    ev(DEN, "2026-02-01T19:30:00-07:00")]),
+    ("2026-03-01", [ev(SEA, "2026-01-05T18:30:00-08:00"), ev(SEA, "2026-01-15T18:30:00-08:00"),
+                    ev(SEA, "2026-02-01T18:30:00-08:00")]),
+    # A mix of places on one logbook.
+    ("2026-06-10", [ev(DEN, "2026-05-01T22:30:00-06:00"), ev(SEA, "2026-05-10T23:30:00-07:00"),
+                    ev(DEN, "2026-06-02T23:00:00-06:00")]),
+    # The day currency lapses, and the day after.
+    ("2026-07-30", [ev(DEN, "2026-05-01T22:30:00-06:00"), ev(DEN, "2026-05-10T22:30:00-06:00"),
+                    ev(DEN, "2026-06-02T23:00:00-06:00")]),
+]
+
+
+def currency_rows(start):
+    rows = []
+    for i, (as_of, events) in enumerate(CURRENCY_CASES, start=start + 1):
+        # `through` is reported for the FIRST category and class in the log.
+        first = events[0]["aircraft"]
+        through = through_date(events, first)
+        q = qualifying(events, first, datetime.fromisoformat(as_of).date())
+        current = through is not None and datetime.fromisoformat(as_of).date() <= through
+        expect = {"ok": True, "result.current": "yes" if current else "no",
+                  "result.state": 1.0 if current else 2.0}
+        tol = {"result.current": {"abs": 0}, "result.state": {"abs": 0}}
+        expect["result.aircraft.0.takeoffs"] = float(len(q["takeoffs"]))
+        expect["result.aircraft.0.landings"] = float(len(q["landings"]))
+        tol["result.aircraft.0.takeoffs"] = {"abs": 0}
+        tol["result.aircraft.0.landings"] = {"abs": 0}
+        if through is not None:
+            expect["result.through"] = through.isoformat()
+            tol["result.through"] = {"abs": 0}
+        for k, e in enumerate(events):
+            expect[f"result.events.{k}.counts"] = "yes" if counts(e["lat"], e["lon"], datetime.fromisoformat(e["when"])) else "no"
+            tol[f"result.events.{k}.counts"] = {"abs": 0}
+        rows.append((i, {"as_of": as_of, "events": events}, expect, tol, CUR_SRC))
+    return rows

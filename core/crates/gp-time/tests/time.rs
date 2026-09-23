@@ -920,3 +920,243 @@ fn zone_info_invariants() {
     // An unknown zone is refused rather than falling back to UTC.
     assert_eq!(at("Mars/Olympus", "2026-09-18T00:00:00Z")["ok"], false);
 }
+
+#[test]
+fn hotspot_invariants() {
+    const H: &str = "time.sun.hotspot";
+    let at = |lat: f64, lon: f64, time: &str, extra: &str| {
+        call(
+            H,
+            &format!(r#"{{"lat":{lat},"lon":{lon},"time":"{time}"{extra}}}"#),
+        )
+    };
+    // A nadir camera: the hotspot angle is 90 deg minus the sun's elevation.
+    // That one identity is the whole geometry, and it fails if the antisolar
+    // elevation is not the negation of the sun's.
+    for (lat, lon, time) in [
+        (39.74, -104.99, "2026-06-21T13:00:00-06:00"),
+        (39.74, -104.99, "2026-12-21T12:00:00-07:00"),
+        (-33.87, 151.21, "2026-01-15T13:00:00+11:00"),
+        (1.35, 103.82, "2026-03-21T13:00:00+08:00"),
+    ] {
+        let r = at(lat, lon, time, r#","camera_pitch":"-90 deg""#);
+        let el = num(&r, "result.sun_elevation.value");
+        let angle = num(&r, "result.hotspot_angle.value");
+        assert!(
+            (angle - (90.0 - el)).abs() < 1e-9,
+            "{lat} {time}: nadir hotspot {angle} is not 90 - {el}"
+        );
+        // The antisolar point is the opposite bearing.
+        let az = num(&r, "result.sun_azimuth.value");
+        let anti = num(&r, "result.antisolar_azimuth.value");
+        assert!(
+            ((anti - az - 180.0).rem_euclid(360.0)).abs() < 1e-9,
+            "{lat} {time}: antisolar {anti} is not opposite {az}"
+        );
+    }
+    // A camera pointed straight at the sun is exactly 180 deg from the
+    // hotspot, at every elevation -- the antisolar point is the sun's antipode
+    // on the sphere, not a reflection of it in the horizon, so the separation
+    // does not depend on how high the sun is.
+    let r = at(39.74, -104.99, "2026-06-21T13:00:00-06:00", "");
+    let (el, az) = (
+        num(&r, "result.sun_elevation.value"),
+        num(&r, "result.sun_azimuth.value"),
+    );
+    let at_sun = at(
+        39.74,
+        -104.99,
+        "2026-06-21T13:00:00-06:00",
+        &format!(r#","camera_heading":"{az} deg","camera_pitch":"{el} deg""#),
+    );
+    assert!(
+        (num(&at_sun, "result.hotspot_angle.value") - 180.0).abs() < 1e-6,
+        "looking at the sun is not the far side of the hotspot"
+    );
+    // The verdict follows the cone. Widening the field of view past twice the
+    // angle turns a no into a yes, and it is the field of view that moves, not
+    // the sun, so nothing else can explain the change.
+    let morning = at(
+        39.74,
+        -104.99,
+        "2026-06-21T12:00:00-06:00",
+        r#","camera_pitch":"-90 deg""#,
+    );
+    let angle = num(&morning, "result.hotspot_angle.value");
+    let verdict = |fov: f64| {
+        at(
+            39.74,
+            -104.99,
+            "2026-06-21T12:00:00-06:00",
+            &format!(r#","camera_pitch":"-90 deg","field_of_view":"{fov} deg""#),
+        )["result"]["in_frame"]
+            .as_str()
+            .unwrap()
+            .to_owned()
+    };
+    assert_eq!(verdict(2.0 * angle + 1.0), "yes");
+    assert_eq!(verdict(2.0 * angle - 1.0), "no");
+}
+
+#[test]
+fn mapping_window_invariants() {
+    const M: &str = "time.sun.mapping-window";
+    let run = |lat: f64, lon: f64, date: &str, off: &str, extra: &str| {
+        call(
+            M,
+            &format!(r#"{{"lat":{lat},"lon":{lon},"date":"{date}","offset":"{off}"{extra}}}"#),
+        )
+    };
+    // The peak this tool reports and the peak time.sun.position gives are the
+    // same sun. They were not: the peak came from the NOAA series while the
+    // times were solved on the SPA, and the tool reported a maximum ABOVE the
+    // highest elevation the other tool would ever return.
+    for (lat, lon, date, off) in [
+        (39.7392, -104.9903, "2026-03-21", "-06:00"),
+        (51.5074, -0.1278, "2026-06-21", "+01:00"),
+        (-33.8688, 151.2093, "2026-01-15", "+11:00"),
+    ] {
+        let top = num(&run(lat, lon, date, off, ""), "result.max_elevation.value");
+        // Golden-section over the local day, through the other tool.
+        let el = |t: f64| {
+            let r = call(
+                "time.sun.position",
+                &format!(
+                    r#"{{"lat":{lat},"lon":{lon},"time":"{}"}}"#,
+                    minute_stamp(date, off, t)
+                ),
+            );
+            num(&r, "result.elevation.value")
+        };
+        let (mut a, mut b) = (0.0f64, 1440.0f64);
+        for _ in 0..60 {
+            let (c, d) = (a + (b - a) / 3.0, b - (b - a) / 3.0);
+            if el(c) < el(d) {
+                a = c;
+            } else {
+                b = d;
+            }
+        }
+        let peak = el((a + b) / 2.0);
+        assert!(
+            (top - peak).abs() * 3600.0 < 1.0,
+            "{lat} {date}: window peak {top} vs sun.position {peak}"
+        );
+    }
+    // Raising the threshold can only shorten the window.
+    let minutes = |thr: f64| {
+        let r = run(
+            39.7392,
+            -104.9903,
+            "2026-06-21",
+            "-06:00",
+            &format!(r#","threshold":"{thr} deg""#),
+        );
+        r["result"]["duration"]
+            .as_str()
+            .expect("duration")
+            .to_owned()
+    };
+    assert_ne!(minutes(20.0), minutes(60.0));
+    // A threshold above the day's peak is no window at all, not an empty one.
+    let none = run(
+        39.7392,
+        -104.9903,
+        "2026-12-21",
+        "-07:00",
+        r#","threshold":"60 deg""#,
+    );
+    assert_eq!(none["result"]["window"], "at no time that day");
+    assert!(none["result"]["window_start"].is_null());
+    // Where a window exists, the peak clears the threshold.
+    let r = run(
+        39.7392,
+        -104.9903,
+        "2026-06-21",
+        "-06:00",
+        r#","threshold":"60 deg""#,
+    );
+    assert!(num(&r, "result.max_elevation.value") >= 60.0);
+}
+
+#[test]
+fn night_currency_invariants() {
+    const N: &str = "time.sun.night-currency";
+    const DEN: &str = r#""lat":39.86,"lon":-104.67"#;
+    let log = |as_of: &str, events: &str| {
+        call(N, &format!(r#"{{"as_of":"{as_of}","events":[{events}]}}"#))
+    };
+    let e = |when: &str, t: u32, l: u32, ac: &str| {
+        format!(r#"{{"when":"{when}",{DEN},"takeoffs":{t},"landings":{l},"aircraft":"{ac}"}}"#)
+    };
+    let three = format!(
+        "{},{},{}",
+        e("2026-05-01T22:30:00-06:00", 1, 1, "ASEL"),
+        e("2026-05-10T22:30:00-06:00", 1, 1, "ASEL"),
+        e("2026-06-02T23:00:00-06:00", 1, 1, "ASEL")
+    );
+    let two = format!(
+        "{},{}",
+        e("2026-05-10T22:30:00-06:00", 1, 1, "ASEL"),
+        e("2026-06-02T23:00:00-06:00", 1, 1, "ASEL")
+    );
+    // Three is the threshold; two is not.
+    assert_eq!(log("2026-06-10", &three)["result"]["current"], "yes");
+    assert_eq!(log("2026-06-10", &two)["result"]["current"], "no");
+    // Takeoffs and landings are counted apart.
+    let lopsided = format!(
+        "{},{},{}",
+        e("2026-05-01T22:30:00-06:00", 1, 0, "ASEL"),
+        e("2026-05-10T22:30:00-06:00", 1, 1, "ASEL"),
+        e("2026-06-02T23:00:00-06:00", 1, 1, "ASEL")
+    );
+    assert_eq!(log("2026-06-10", &lopsided)["result"]["current"], "no");
+    // Category and class are counted apart: a multi-engine night does nothing
+    // for single-engine currency.
+    let mixed = format!(
+        "{},{},{}",
+        e("2026-05-01T22:30:00-06:00", 1, 1, "ASEL"),
+        e("2026-05-10T22:30:00-06:00", 1, 1, "ASEL"),
+        e("2026-06-02T23:00:00-06:00", 1, 1, "AMEL")
+    );
+    assert_eq!(log("2026-06-10", &mixed)["result"]["current"], "no");
+    // The margin is an hour after sunset, not sunset. Denver on 2026-05-01
+    // sets near 19:53 local, so 20:30 is inside the hour and does not count
+    // while 22:30 does.
+    let counts = |when: &str| {
+        log("2026-06-10", &e(when, 1, 1, "ASEL"))["result"]["events"][0]["counts"]
+            .as_str()
+            .unwrap()
+            .to_owned()
+    };
+    assert_eq!(counts("2026-05-01T22:30:00-06:00"), "yes");
+    assert_eq!(counts("2026-05-01T20:30:00-06:00"), "no");
+    // A time before noon belongs to the night that began the evening before.
+    assert_eq!(counts("2026-05-02T04:00:00-06:00"), "yes");
+    assert_eq!(counts("2026-05-02T05:30:00-06:00"), "no");
+    // Currency holds on the through date and not the day after.
+    let through = log("2026-06-10", &three)["result"]["through"]
+        .as_str()
+        .expect("through")
+        .to_owned();
+    assert_eq!(through, "2026-07-30");
+    assert_eq!(log("2026-07-30", &three)["result"]["current"], "yes");
+    assert_eq!(log("2026-07-31", &three)["result"]["current"], "no");
+    // An event that does not qualify changes nothing.
+    let with_dud = format!("{},{}", three, e("2026-06-05T14:00:00-06:00", 1, 1, "ASEL"));
+    assert_eq!(
+        log("2026-06-10", &with_dud)["result"]["through"],
+        through.as_str()
+    );
+}
+
+/// "YYYY-MM-DDTHH:MM:SS+oo:oo" for `m` minutes past local midnight.
+fn minute_stamp(date: &str, offset: &str, m: f64) -> String {
+    let m = m.round() as i64;
+    format!(
+        "{date}T{:02}:{:02}:{:02}{offset}",
+        (m / 60).min(23),
+        m % 60,
+        0
+    )
+}

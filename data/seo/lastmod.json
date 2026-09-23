@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "4a57de213ae664cb",
+    "hash": "00d81ace21b2a7a9",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "d12e8779ccd034de",
+    "hash": "1e40c1d92c676725",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -315,6 +315,10 @@
     "hash": "c207a9206dae4473",
     "lastmod": "2026-09-22"
   },
+  "/geometry/buffer/geodesic/": {
+    "hash": "fa03fda34a6fed6f",
+    "lastmod": "2026-09-23"
+  },
   "/geometry/distance/": {
     "hash": "bbf282c61360b44b",
     "lastmod": "2026-09-22"
@@ -520,7 +524,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "9a8f3ea428cca77b",
+    "hash": "b5eb7e0edc81fcf9",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -716,7 +720,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "8f3418f6e95e03a1",
+    "hash": "792622632aa60d2f",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -816,7 +820,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b5f2d922709a8a5f",
+    "hash": "367efad3b684bbf2",
     "lastmod": "2026-09-23"
   }
 }

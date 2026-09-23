@@ -152,3 +152,128 @@ fn mitre_corners_respect_the_limit() {
     // √2 > 1.2, so the right-angle corners are beveled: eight vertices.
     assert_eq!(num(&r, "vertex_count"), 8.0);
 }
+
+/// Buffer with every length in metres.
+fn buf(input: Value) -> Value {
+    let mut v = input;
+    v["options"] = json!({"outputUnits": {"area": "m2", "perimeter": "m",
+                                          "max_deviation": "m", "tolerance": "m"}});
+    call(&v)
+}
+
+/// The input polygon's own area and perimeter, from the area tool.
+fn own_area(vertices: &Value) -> (f64, f64) {
+    let r: Value = serde_json::from_str(
+        &REGISTRY.invoke(
+            "geometry.area.polygon",
+            &json!({"polygon": vertices,
+                "options": {"outputUnits": {"area": "m2", "perimeter": "m"}}})
+            .to_string(),
+        ),
+    )
+    .expect("JSON");
+    (
+        r["result"]["area"]["value"].as_f64().unwrap(),
+        r["result"]["perimeter"]["value"].as_f64().unwrap(),
+    )
+}
+
+#[test]
+fn buffer_invariants() {
+    // A buffered point is a disk, and its boundary is inscribed in that disk,
+    // so the area and perimeter must fall just short -- never over.
+    for d in [100.0, 1_000.0, 50_000.0] {
+        let r = buf(json!({"vertices": [{"lat": 0.5, "lon": 0.5}], "distance": format!("{d} m")}));
+        let (a, p) = (num(&r, "area"), num(&r, "perimeter"));
+        let (circle, circumference) =
+            (std::f64::consts::PI * d * d, 2.0 * std::f64::consts::PI * d);
+        assert!(
+            a < circle && a / circle > 0.998,
+            "d={d}: area {a} of {circle}"
+        );
+        assert!(
+            p < circumference && p / circumference > 0.9995,
+            "d={d}: perimeter {p} of {circumference}"
+        );
+        assert!(
+            num(&r, "max_deviation") <= num(&r, "tolerance"),
+            "d={d}: deviation over tolerance\n{r}"
+        );
+    }
+
+    // Steiner: the buffer of a convex polygon is A + Pd + pi d^2. A and P come
+    // from geometry.area.polygon, not from anything computed here.
+    let (a0, p0) = own_area(&field());
+    for d in [50.0, 200.0, 500.0] {
+        let r = buf(json!({"vertices": field(), "distance": format!("{d} m")}));
+        let steiner = a0 + p0 * d + std::f64::consts::PI * d * d;
+        let got = num(&r, "area");
+        assert!(
+            (got / steiner - 1.0).abs() < 1e-4,
+            "d={d}: {got} against Steiner's {steiner}"
+        );
+        assert!(got > a0 + p0 * d, "d={d}: below Steiner's lower bound");
+        assert!(
+            num(&r, "max_deviation") <= num(&r, "tolerance"),
+            "d={d}: deviation over tolerance\n{r}"
+        );
+        // A mitre corner reaches d / cos(theta/2), past where a round one stops.
+        let m = buf(json!({"vertices": field(), "distance": format!("{d} m"), "join": "mitre"}));
+        assert!(
+            num(&m, "area") > got,
+            "d={d}: the mitre buffer is not the larger"
+        );
+    }
+
+    // Outward then inward with mitre corners is the identity: the mitre has no
+    // chord sag, so the two constructions are exact inverses. A round corner is
+    // a polygon inscribed in its arc and cannot survive being eroded by the
+    // full d -- that case is `round_buffer_cannot_be_eroded_by_its_own_radius`.
+    let out = buf(json!({"vertices": field(), "distance": "200 m", "join": "mitre"}));
+    let ring: Vec<Value> = out["result"]["boundary"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| json!({"lat": p["lat"]["value"], "lon": p["lon"]["value"]}))
+        .collect();
+    let back = buf(json!({"vertices": ring, "distance": "-200 m", "join": "mitre"}));
+    assert_eq!(
+        back["result"]["parts"].as_f64().unwrap() as i64,
+        1,
+        "{back}"
+    );
+    assert!(
+        (num(&back, "area") / a0 - 1.0).abs() < 1e-8,
+        "mitre round trip: {} against {a0}",
+        num(&back, "area")
+    );
+}
+
+#[test]
+fn round_buffer_cannot_be_eroded_by_its_own_radius() {
+    // A round corner is drawn as a polygon inscribed in the arc, so the corner's
+    // own inradius is short of d by the chord sag the tool reports. Eroding by
+    // more than d minus that sag empties the corners, and the shape collapses.
+    // That is arithmetic, not a defect, and this pins where it turns over.
+    let out = buf(json!({"vertices": field(), "distance": "200 m"}));
+    let sag = num(&out, "max_deviation");
+    assert!((0.05..0.5).contains(&sag), "unexpected sag {sag}");
+    let ring: Vec<Value> = out["result"]["boundary"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| json!({"lat": p["lat"]["value"], "lon": p["lon"]["value"]}))
+        .collect();
+    let parts = |d: f64| {
+        let r = buf(json!({"vertices": ring, "distance": format!("{d} m")}));
+        r["result"]["parts"].as_f64().unwrap() as i64
+    };
+    // Comfortably inside the sag it survives; past it, nothing is left.
+    assert_eq!(parts(-(200.0 - 4.0 * sag)), 1, "erosion short of the sag");
+    assert_eq!(parts(-200.0), 0, "erosion by the full radius");
+    let collapsed = buf(json!({"vertices": ring, "distance": "-200 m"}));
+    assert!(
+        codes(&collapsed).contains(&"BUFFER_COLLAPSED".to_string()),
+        "the collapse is not reported: {collapsed}"
+    );
+}

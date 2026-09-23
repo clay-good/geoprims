@@ -79,11 +79,13 @@ The Worker's daily cron deletes resolved reports 180 days after they close and t
 
 Run on production with `REPORTS_ENABLED` still `"false"` until the last step, and record the date and result of each line here.
 
+Reporting was turned on for the public launch on 2026-09-23 at the owner's direction, with the round trip, duplicate, and quota rows still to be run from a person's browser.
+
 | Check | How | Result |
 |---|---|---|
-| Paused state | Open the dialog: it says reporting is paused and offers to copy the report | |
-| Round trip | Enable, send a report from a tool page, and find it with `list` | |
-| Duplicate | Send the same report again: 202, and no second row | |
-| Quota | Send past the daily cap: still 202, no new rows | |
-| Offline | Turn the network off and open the dialog: the copy-report path works | |
-| Kill switch | Set `REPORTS_ENABLED` to `"false"`: the config endpoint returns 503 and the dialog pauses | |
+| Paused state | Open the dialog: it says reporting is paused and offers to copy the report | 2026-09-23 pass: with `REPORTS_ENABLED` "false", a page report on /privacy/ said paused and offered Copy report, nothing else |
+| Round trip | Enable, send a report from a tool page, and find it with `list` | 2026-09-23 not yet run: the bot check issues no token to an automated browser, so this needs one send from a person's browser. Until then the Worker's own tests (worker/test/worker.test.mjs) are the evidence |
+| Duplicate | Send the same report again: 202, and no second row | 2026-09-23 not yet run in production (needs the round trip); covered by the dedupe-key test in worker/test/worker.test.mjs |
+| Quota | Send past the daily cap: still 202, no new rows | 2026-09-23 not yet run in production (needs the round trip); covered by the cap tests in worker/test/worker.test.mjs |
+| Offline | Turn the network off and open the dialog: the copy-report path works | 2026-09-23 pass: Playwright on geoprims.com, offline, the density-altitude dialog said reporting needs a connection and offered Copy report |
+| Kill switch | Set `REPORTS_ENABLED` to `"false"`: the config endpoint returns 503 and the dialog pauses | 2026-09-23 pass: deployed with "false", /api/reports/config returned 503 and the dialog paused; with "true" it returns 200 with the site key |

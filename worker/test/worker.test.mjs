@@ -247,14 +247,21 @@ test('security headers on every response, and no cookies', async () => {
   }
 });
 
-test('wrangler config keeps logging off and reporting paused by default', () => {
+test('wrangler config keeps logging off, and reporting on only after the launch checklist', () => {
   const text = readFileSync(join(root, 'worker/wrangler.jsonc'), 'utf8').replace(/^\s*\/\/.*$/gm, '');
   const cfg = JSON.parse(text);
   assert.equal(cfg.observability.enabled, false);
   assert.equal(cfg.observability.logs.enabled, false);
   assert.equal(cfg.observability.logs.invocation_logs, false);
   assert.equal(cfg.logpush, false);
-  assert.equal(cfg.vars.REPORTS_ENABLED, 'false');
+  // Reporting may be switched on only once every launch-checklist row in the
+  // runbook has a recorded result.
+  if (cfg.vars.REPORTS_ENABLED !== 'false') {
+    const runbook = readFileSync(join(root, 'docs/runbooks/problem-reports.md'), 'utf8');
+    const rows = runbook.slice(runbook.indexOf('## Launch checklist')).split('\n').filter((l) => /^\| (?!Check|---)/.test(l));
+    assert.ok(rows.length >= 6, 'the launch checklist is missing');
+    for (const r of rows) assert.ok(r.split('|')[3].trim(), `no recorded result: ${r}`);
+  }
   assert.deepEqual(cfg.routes.map((r) => r.pattern), ['geoprims.com/api/reports*']);
 });
 

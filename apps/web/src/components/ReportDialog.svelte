@@ -18,6 +18,8 @@
   let token = '';
   let tokenAt = 0;
   let tokenWaiters = [];
+  /** How long a send waits for the bot check before offering to copy instead. */
+  const TOKEN_WAIT_MS = 20_000;
 
   const theme = () =>
     document.documentElement.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -62,8 +64,12 @@
         callback: (t) => {
           token = t;
           tokenAt = Date.now();
-          tokenWaiters.splice(0).forEach((w) => w(t));
+          tokenWaiters.splice(0).forEach((w) => w.resolve(t));
         },
+        // A bot check that errors or cannot run fails the send rather than
+        // leaving it on "Sending…"; the reader can still copy the report.
+        'error-callback': () => tokenWaiters.splice(0).forEach((w) => w.reject(new Error('bot check failed'))),
+        'unsupported-callback': () => tokenWaiters.splice(0).forEach((w) => w.reject(new Error('bot check unsupported'))),
       });
       return 'ready';
     } catch {
@@ -76,7 +82,15 @@
     if (tokenIsFresh(token, tokenAt, Date.now())) return Promise.resolve(token);
     token = '';
     window.turnstile.reset(widget);
-    return new Promise((resolve) => tokenWaiters.push(resolve));
+    return new Promise((resolve, reject) => {
+      const waiter = { resolve, reject };
+      tokenWaiters.push(waiter);
+      setTimeout(() => {
+        const i = tokenWaiters.indexOf(waiter);
+        if (i >= 0) tokenWaiters.splice(i, 1);
+        reject(new Error('bot check timed out'));
+      }, TOKEN_WAIT_MS);
+    });
   }
 
   async function send() {

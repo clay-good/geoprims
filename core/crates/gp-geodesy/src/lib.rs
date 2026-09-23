@@ -13,7 +13,8 @@ use gp_base::angle::wrap_lon;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Stability,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::dms::{self, Axis, Style};
@@ -1163,7 +1164,10 @@ pub static UPS_FORWARD: ToolDef = ToolDef {
     inputs: &[LAT, LON, E[0], E[1], E[2]],
     outputs: UTM_OUTPUTS,
     errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this for a position in the polar caps, where UTM stops: north of 84 degrees or south of 80. It gives the UPS easting and northing a military grid reference, a polar chart or a navigation system expects, with the grid convergence you need to turn a true bearing into a grid one.",
+    limitations: "UPS covers only the caps: north of 84 degrees and south of 80. Between those and the equator, UTM is the projection, and this refuses rather than extrapolating a polar projection into latitudes it distorts badly. Grid north here is the prime meridian, not the meridian through your point, so the convergence is the longitude itself and is large -- at 120 degrees east a grid bearing and a true bearing differ by 120 degrees. The scale is 0.994 at the pole and grows outward, reaching 1 near 81 degrees 6 minutes, so a distance measured on the grid is not a distance on the ground without it.",
+    warnings: &["INPUT_NORMALIZED"],
     model: "Polar stereographic, k0 = 0.994, false easting and northing 2,000,000 m",
     accuracy: "Exact to double precision",
     references: &[NGA_UTM],
@@ -1186,6 +1190,10 @@ pub static UPS_FORWARD: ToolDef = ToolDef {
         Related {
             id: "geodesy.utm.forward",
             reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "next",
         },
     ],
     sentence: "UPS {hemisphere}: easting {easting}, northing {northing}.",
@@ -1253,7 +1261,10 @@ pub static UPS_INVERSE: ToolDef = ToolDef {
     ],
     outputs: &[lat_out("lat", "Latitude"), lon_out("lon", "Longitude")],
     errors: &[ErrorCode::Unsupported],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn a UPS easting and northing back into latitude and longitude: a polar grid reference off a chart, a logged position, or the output of a system that works in the polar caps. Say which hemisphere it came from, since the two caps use the same numbers.",
+    limitations: "The hemisphere is required and is not guessed: 2,000,000 by 2,000,000 is the north pole and the south pole both, and every other pair of numbers is equally ambiguous. Near the pole a longitude is a very short distance on the ground, so a coordinate rounded to the metre fixes the longitude only loosely up there -- at 89.99 degrees a metre of easting is five thousand times the longitude it is at the equator. At the pole itself the longitude has no meaning at all.",
+    warnings: &["UNIT_ASSUMED"],
     model: "Polar stereographic, k0 = 0.994",
     accuracy: "Exact to double precision",
     references: &[NGA_UTM],
@@ -1268,10 +1279,20 @@ pub static UPS_INVERSE: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.ups.forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.ups.forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.utm.inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "That is {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_ups_inverse,

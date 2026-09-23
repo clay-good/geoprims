@@ -615,3 +615,95 @@ fn parse_coordinates_invariants() {
         }
     }
 }
+
+#[test]
+fn ups_invariants() {
+    const F: &str = "geodesy.ups.forward";
+    const I: &str = "geodesy.ups.inverse";
+    let fwd = |lat: f64, lon: f64| call(F, &format!(r#"{{"lat":{lat},"lon":{lon}}}"#));
+    let inv = |h: &str, e: f64, n: f64| {
+        call(
+            I,
+            &format!(r#"{{"hemisphere":"{h}","easting":{e},"northing":{n}}}"#),
+        )
+    };
+    let en = |r: &Value| {
+        (
+            num(r, "result.easting.value"),
+            num(r, "result.northing.value"),
+        )
+    };
+    // The pole is the false origin, in both hemispheres.
+    for (lat, h) in [(90.0, "N"), (-90.0, "S")] {
+        let (e, n) = en(&fwd(lat, 0.0));
+        assert_eq!(
+            (e, n),
+            (2_000_000.0, 2_000_000.0),
+            "the pole is not the origin"
+        );
+        let back = inv(h, 2_000_000.0, 2_000_000.0);
+        assert!(
+            (num(&back, "result.lat.value") - lat).abs() < 1e-9,
+            "the origin does not invert to the pole"
+        );
+    }
+    // Forward then inverse is the point it started from, to under a micrometre
+    // of ground. Longitude is divided by cos(lat), since that is the factor
+    // that turns a ground distance into an angle.
+    for (lat, lon) in [
+        (84.0, 0.0),
+        (84.0, -135.0),
+        (86.5, 30.0),
+        (89.9, 170.0),
+        (-80.0, 45.0),
+        (-88.0, 100.0),
+    ] {
+        let h = if lat > 0.0 { "N" } else { "S" };
+        let (e, n) = en(&fwd(lat, lon));
+        let back = inv(h, e, n);
+        let (blat, blon) = (
+            num(&back, "result.lat.value"),
+            num(&back, "result.lon.value"),
+        );
+        assert!((blat - lat).abs() < 1e-11, "{lat},{lon}: latitude {blat}");
+        let slack = 1e-11 / lat.to_radians().cos().abs();
+        assert!(
+            (blon - lon).abs() < slack,
+            "{lat},{lon}: longitude {blon}, outside {slack}"
+        );
+    }
+    // Distance from the origin depends only on latitude, so walking the
+    // longitude circle traces a circle.
+    let radius = |lat: f64, lon: f64| {
+        let (e, n) = en(&fwd(lat, lon));
+        ((e - 2_000_000.0).powi(2) + (n - 2_000_000.0).powi(2)).sqrt()
+    };
+    let r0 = radius(84.0, 0.0);
+    for lon in [45.0, 90.0, 135.0, -45.0, -90.0, -135.0, 179.0] {
+        assert!(
+            (radius(84.0, lon) - r0).abs() < 1e-6,
+            "84 deg at {lon} is not on the same circle"
+        );
+    }
+    // Further from the pole is a larger radius: the projection does not fold.
+    assert!(radius(84.0, 0.0) > radius(86.0, 0.0));
+    assert!(radius(86.0, 0.0) > radius(89.0, 0.0));
+    // Convergence is the longitude, negated in the south.
+    for lon in [0.0, 30.0, -120.0] {
+        assert!(
+            (num(&fwd(84.0, lon), "result.convergence.value") - lon).abs() < 1e-9,
+            "north convergence at {lon}"
+        );
+        assert!(
+            (num(&fwd(-84.0, lon), "result.convergence.value") + lon).abs() < 1e-9,
+            "south convergence at {lon}"
+        );
+    }
+    // The hemisphere is read, not guessed: the same numbers give latitudes of
+    // opposite sign.
+    let (e, n) = en(&fwd(85.0, 40.0));
+    let north = num(&inv("N", e, n), "result.lat.value");
+    let south = num(&inv("S", e, n), "result.lat.value");
+    assert!(north > 0.0 && south < 0.0, "{north} and {south}");
+    assert!((north + south).abs() < 1e-9, "the caps are not mirrored");
+}

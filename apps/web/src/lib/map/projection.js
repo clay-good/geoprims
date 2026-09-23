@@ -45,6 +45,10 @@ export function forward(view, lon, lat) {
  * Like forward(), but a point on the far side of the globe lands on the limb
  * in its direction, so a filled ring that crosses the edge follows the edge
  * instead of cutting a chord across the disk.
+ *
+ * render.js traces the globe with its own copy of this, from the sines and
+ * cosines it keeps per vertex, because a hundred thousand of them a frame
+ * cannot afford a returned pair each; change one and change the other.
  */
 export function forwardLimb(view, lon, lat) {
   const p = forward(view, lon, lat);

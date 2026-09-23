@@ -2,7 +2,7 @@
 // base layer in the Atlas style, a graticule, and tool layers. This is the
 // 2D-canvas path the spec requires as the fallback; colors come from the
 // page's design tokens, so every display mode applies.
-import { forward, forwardLimb } from './projection.js';
+import { forward } from './projection.js';
 
 const RAD = Math.PI / 180;
 const MAX_LAT = 85.0511287798;
@@ -98,6 +98,27 @@ function geometry(points) {
 }
 
 /**
+ * The sine and cosine of every vertex's latitude and longitude. The globe needs
+ * all four for every vertex of every frame, and none of them change as the view
+ * moves, so they are worth keeping; they are filled on first use because the
+ * flat map never asks for them.
+ */
+function sphere(geo) {
+  if (geo.sph) return geo.sph;
+  const { n, lon, lat } = geo;
+  const [slat, clat, slon, clon] = [new Float64Array(n), new Float64Array(n), new Float64Array(n), new Float64Array(n)];
+  for (let i = 0; i < n; i++) {
+    const [p, l] = [lat[i] * RAD, lon[i] * RAD];
+    slat[i] = Math.sin(p);
+    clat[i] = Math.cos(p);
+    slon[i] = Math.sin(l);
+    clon[i] = Math.cos(l);
+  }
+  geo.sph = { slat, clat, slon, clon };
+  return geo.sph;
+}
+
+/**
  * The vertices worth drawing at this zoom: one level of detail per doubling of
  * scale, keeping a vertex only when it lies at least half a pixel (at the
  * largest scale of its level) from the last one kept. The first and last
@@ -161,16 +182,60 @@ function trace(g, view, points, closed) {
   if (view.mode === 'globe' && closed) {
     // Filled rings: skip those wholly on the far side; otherwise run hidden
     // stretches along the limb.
+    const { slat, clat, slon, clon } = sphere(geo);
+    const [sl0, cl0] = [Math.sin(view.lon * RAD), Math.cos(view.lon * RAD)];
+    const [sp0, cp0] = [Math.sin(view.lat * RAD), Math.cos(view.lat * RAD)];
+    const [cx, cy, s] = [view.width / 2, view.height / 2, view.scale];
     let any = false;
-    for (let j = 0; j < idx.length && !any; j++) any = !!forward(view, geo.lon[idx[j]], geo.lat[idx[j]]);
+    for (let j = 0; j < idx.length && !any; j++) {
+      const i = idx[j];
+      any = sp0 * slat[i] + cp0 * clat[i] * (clon[i] * cl0 + slon[i] * sl0) >= 0;
+    }
     if (!any) return;
     for (let j = 0; j < idx.length; j++) {
-      const [x, y] = forwardLimb(view, geo.lon[idx[j]], geo.lat[idx[j]]);
-      if (j === 0) p.move(x, y);
-      else p.line(x, y);
+      const i = idx[j];
+      const [sph, cph] = [slat[i], clat[i]];
+      const [sdl, cdl] = [slon[i] * cl0 - clon[i] * sl0, clon[i] * cl0 + slon[i] * sl0];
+      const x = cph * sdl;
+      const y = cp0 * sph - sp0 * cph * cdl;
+      // A hidden vertex is pinned to the limb: same direction, radius 1.
+      const r = sp0 * sph + cp0 * cph * cdl >= 0 ? 1 : Math.hypot(x, y) || 1;
+      if (j === 0) p.move(cx + (s * x) / r, cy - (s * y) / r);
+      else p.line(cx + (s * x) / r, cy - (s * y) / r);
     }
     p.flush();
     g.closePath();
+    return;
+  }
+  // The globe projects every vertex, so it is written out here rather than
+  // called through forward(): the view's own sines and cosines are the same for
+  // the whole path, each vertex's come from sphere(), and returning a pair of
+  // numbers per vertex is an allocation per vertex at a hundred thousand of them.
+  // The difference of the two longitudes is then had by angle addition alone.
+  if (view.mode === 'globe') {
+    const { slat, clat, slon, clon } = sphere(geo);
+    const [sl0, cl0] = [Math.sin(view.lon * RAD), Math.cos(view.lon * RAD)];
+    const [sp0, cp0] = [Math.sin(view.lat * RAD), Math.cos(view.lat * RAD)];
+    const [cx, cy, s] = [view.width / 2, view.height / 2, view.scale];
+    let open = false;
+    for (let j = 0; j < idx.length; j++) {
+      const i = idx[j];
+      const [sph, cph] = [slat[i], clat[i]];
+      const cdl = clon[i] * cl0 + slon[i] * sl0;
+      if (sp0 * sph + cp0 * cph * cdl < 0) {
+        // The far side of the globe: the path breaks here.
+        if (open) p.flush();
+        open = false;
+        continue;
+      }
+      const x = cx + s * (cph * (slon[i] * cl0 - clon[i] * sl0));
+      const y = cy - s * (cp0 * sph - sp0 * cph * cdl);
+      if (open) p.line(x, y);
+      else p.move(x, y);
+      open = true;
+    }
+    p.flush();
+    if (closed && open) g.closePath();
     return;
   }
   const pts = Array.from(idx, (i) => forward(view, geo.lon[i], geo.lat[i]));
@@ -199,7 +264,14 @@ function trace(g, view, points, closed) {
   if (closed && open) g.closePath();
 }
 
+const GRATICULES = new Map();
 function graticule(step, reach = 80) {
+  // Held by step and reach, of which the call site admits four pairs. The
+  // lines themselves never move, and keeping the same arrays is what lets
+  // geometry(), its levels of detail, and sphere() survive from frame to frame.
+  const key = `${step}:${reach}`;
+  const held = GRATICULES.get(key);
+  if (held) return held;
   const lines = [];
   for (let lon = -180; lon < 180; lon += step) {
     const l = [];
@@ -213,6 +285,7 @@ function graticule(step, reach = 80) {
     for (let lon = -180; lon <= 180; lon += 2) l.push([lon, lat]);
     lines.push(l);
   }
+  GRATICULES.set(key, lines);
   return lines;
 }
 

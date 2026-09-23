@@ -1,8 +1,12 @@
 {
   "note": "Group hub pages (web/tool-docs, 'Domain and group index pages'): the tasks a group's tools serve, each tool in exactly one task, and a short guide where the tools form a sequence. Tool ids are the operation within the group, or a full id for a tool elsewhere. Unit groups need no entry: their one task is converting.",
   "hubs": {
+    "aviation": {
+      "intro": "Aviation calculators for pilots planning a flight: altimetry, the standard atmosphere, airspeed, wind, weight and balance, fuel, performance, IFR holding and DME geometry, and plain-language weather decoding. Each tool shows its method and sources under \"How we got this,\" with the common rule of thumb beside the exact answer. A good place to start is the METAR decoder, then density altitude and runway wind components for the departure. These are planning and education aids: your POH or AFM, current charts, and ATC govern."
+    },
     "aviation.airspace": {
       "summary": "Airspace from NOTAM text: TFR circles and areas with their limits.",
+      "intro": "Draws the area a TFR or NOTAM describes, from a circle around a point or fix to a list of corner points, with its altitude limits, and lets you download it as GeoJSON. Pilots and drone operators use it to see where a restriction sits before a flight. Start with the TFR and NOTAM area tool and paste the coordinates as the NOTAM gives them. It draws only what you enter, so check the drawing against the official NOTAM text before you rely on it.",
       "tasks": [
         {
           "want": "draw a TFR or NOTAM area and download it",
@@ -14,6 +18,7 @@
     },
     "aviation.airspeed": {
       "summary": "From the number on the airspeed indicator to true airspeed and Mach, and back.",
+      "intro": "Turns the number on the airspeed indicator into calibrated airspeed, true airspeed, and Mach, and works back from a true airspeed or Mach to the calibrated airspeed to fly. Pilots use it for flight planning, the wind triangle, and checking cruise performance. Start with the true airspeed tool, which shows the 2% per 1,000 ft rule beside the exact answer. Correct indicated airspeed to calibrated first, from the calibration table in your POH or AFM, because the rest of the chain assumes calibrated airspeed.",
       "tasks": [
         {
           "want": "turn indicated or calibrated airspeed into true airspeed and Mach",
@@ -61,6 +66,7 @@
     },
     "aviation.altimetry": {
       "summary": "Pressure altitude, the standard temperature for it, density altitude, and cold-day corrections.",
+      "intro": "Pressure altitude, the standard temperature for it, density altitude, flight levels, the QNH, QFE, and QNE settings, and cold-temperature corrections. Pilots use these tools before a hot or high departure, when planning a flight level, and when flying approaches on a cold day. Start with pressure altitude, then carry it into density altitude. Remember that the altimeter reads correctly only in standard temperatures: in cold air you are lower than it shows, which the cold temperature tool corrects for.",
       "tasks": [
         {
           "want": "convert between QNH and QFE, or work out the altimeter setting",
@@ -125,6 +131,7 @@
     },
     "aviation.atmosphere": {
       "summary": "Pressure, temperature, density, and speed of sound in the standard atmosphere.",
+      "intro": "The ICAO standard atmosphere at any altitude, humidity and dew point relations, and estimates of cloud base and freezing level. Pilots use it to see how far today's air is from standard and to judge where cumulus clouds will form. Start with the standard atmosphere tool for pressure, temperature, and density at a height. The standard atmosphere is a reference model, not a forecast, and the cloud base from the temperature and dew point spread is an estimate for well-mixed air, not a report.",
       "tasks": [
         {
           "want": "work out humidity, dew point, and moist air density",
@@ -148,6 +155,7 @@
     },
     "aviation.ifr": {
       "summary": "Holding, DME, and station geometry for instrument flying.",
+      "intro": "Holding entries, holding speeds and wind correction, DME slant range and arcs, radial fixes and intercepts, and time to a station, for instrument pilots planning or reviewing a procedure. Start with the holding entry tool, which picks direct, teardrop, or parallel from your heading and the hold's inbound course, per AIM 5-3-8. Decide the entry from your heading as you reach the fix, not from where you are when the clearance comes. ATC instructions and the published procedure always govern.",
       "tasks": [
         {
           "want": "choose a holding entry",
@@ -201,6 +209,7 @@
     },
     "aviation.loading": {
       "summary": "Fuel planning with legal reserves, fuel weight, and weight and balance.",
+      "intro": "Weight and balance, fuel weight, fuel planning with the legal reserve, weight shifts, ballast, and reading a POH performance table between its printed values. Pilots use these tools before every flight where weight or fuel is close. Start with weight and balance, which checks your center of gravity against your envelope at takeoff and after the fuel burn. Check both: burning fuel moves the CG, and a load that is in limits for takeoff can be out of limits for landing.",
       "tasks": [
         {
           "want": "plan fuel for a trip, with the legal reserve",
@@ -242,6 +251,7 @@
     },
     "aviation.performance": {
       "summary": "Climb, descent, glide, turns, and range per gallon.",
+      "intro": "Climb gradient and vertical speed, top of descent, the visual descent point, glide range with wind, turn radius and load factor, pivotal altitude, and range per gallon. Pilots use these tools for departure climb requirements, descent planning, and emergency glide planning. Start with top of descent, which shows the 3-to-1 and 5 times groundspeed rules beside the exact values. Both rules start you down a little late and descend a little slowly, so on a long descent they leave you high.",
       "tasks": [
         {
           "want": "know how far each gallon takes me",
@@ -279,6 +289,7 @@
     },
     "aviation.weather": {
       "summary": "METARs, TAFs, and winds aloft, decoded into plain language.",
+      "intro": "Decoders for METARs, TAFs, and FB winds and temperatures aloft, turning the coded text into plain language with each group explained. Pilots use them during preflight briefings and to check a report they are not sure how to read. Start with the METAR decoder, then carry its wind, temperature, and altimeter setting into the wind and altimetry tools. Remember that winds in METARs, TAFs, and forecasts aloft are from true north, while ATIS and tower winds are magnetic.",
       "tasks": [
         {
           "want": "read a METAR or TAF",
@@ -297,6 +308,7 @@
     },
     "aviation.wind": {
       "summary": "The wind triangle and runway wind components.",
+      "intro": "The wind triangle in every direction, runway headwind and crosswind components, ranking runways for a wind, winds aloft between forecast levels, true course to compass heading, and the 1-in-60 rule for getting back on course. Pilots use these tools for cross-country planning and runway choice. Start with heading and groundspeed, the wind side of the E6B solved exactly. Work in one reference: forecast winds are true, runways and ATIS winds are magnetic, so convert before you compare.",
       "tasks": [
         {
           "want": "find the heading to fly and my groundspeed",

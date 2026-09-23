@@ -9,6 +9,7 @@ Depends on: `redesign-minimal-shell`, which this narrows further.
 - **Footer**: one centered row of links and nothing else: All tools, Units, Agents, Source, Privacy, Security, Accuracy, Disclaimer, Licenses. The disclaimer, privacy, and accuracy policies stay one click from every page; the disclaimer paragraph, version line, offline chip, and footer search button go.
 - **Security page**: new at `/security/`, the reader-facing version of `SECURITY.md`: how to report privately, what is in scope, and what the design rules out.
 - **Settings page removed**: `/settings/` is deleted, with its palette entry and its "Clear recent tools" and "Erase all local data" controls. The unit choice stays on each tool page. Clearing the site's data in the browser clears everything geoprims keeps.
+- **Report a problem everywhere**: the footer's "Report a problem" opens the tool's own report on a tool page and a page report anywhere else. Reports go only through the site's report Worker; the GitHub "Wrong answer" links are gone from the site and from the MCP report tool, because most readers have no GitHub account.
 - **Home page**: the Recent list and its clear button are removed. Pinned tools stay.
 
 ## Impact

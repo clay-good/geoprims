@@ -4,7 +4,7 @@
   "main": "src/index.mjs",
   "compatibility_date": "2026-09-01",
   "routes": [{ "pattern": "geoprims.com/api/reports*", "zone_name": "geoprims.com" }],
-  "d1_databases": [{ "binding": "DB", "database_name": "geoprims-reports", "database_id": "REPLACE_WITH_D1_ID", "migrations_dir": "migrations" }],
+  "d1_databases": [{ "binding": "DB", "database_name": "geoprims-reports", "database_id": "169ee2ba-4380-40fa-8cbb-dffc525c6d5a", "migrations_dir": "migrations" }],
   "triggers": { "crons": ["17 3 * * *"] },
   // Request logging stays off so no request metadata is retained (spec "Isolated server component").
   "observability": { "enabled": false, "logs": { "enabled": false, "invocation_logs": false } },
@@ -12,7 +12,10 @@
   "vars": {
     // The kill switch: reporting is off until set to "true" after the launch checklist.
     "REPORTS_ENABLED": "false",
-    "ALLOWED_ORIGINS": "https://geoprims.com"
+    "ALLOWED_ORIGINS": "https://geoprims.com",
+    // The Turnstile widget's site key is public: it is sent to every browser
+    // that opens the dialog. Kept here so a deploy does not drop it.
+    "TURNSTILE_SITEKEY": "0x4AAAAAAE96leAFifAumwMa"
   }
-  // Secrets (wrangler secret put): TURNSTILE_SITEKEY, TURNSTILE_SECRET, REPORTER_KEY_SECRET
+  // Secrets (wrangler secret put): TURNSTILE_SECRET, REPORTER_KEY_SECRET
 }

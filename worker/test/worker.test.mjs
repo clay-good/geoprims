@@ -179,6 +179,21 @@ test('control and bidi characters are rejected; URLs in notes are flagged', asyn
   assert.equal(validate(report({ note: 'see https://example.com' }), tools).note_has_url, 1);
 });
 
+test('a page report: any site path, no inputs, outputs, warnings, or assets', () => {
+  const tools = new Map([['aviation.altimetry.density-altitude', '1.0.0']]);
+  const page = (over = {}) => report({ toolId: 'site', toolVersion: '0.1.0', pagePath: '/privacy/', inputs: [], outputs: [], warnings: [], assetVersions: {}, kind: 'broken', ...over });
+  const row = validate(page(), tools);
+  assert.ok(row, 'a clean page report is accepted');
+  assert.equal(row.tool_id, 'site');
+  assert.equal(row.tool_version, row.core_version, 'a page report is versioned by the core it was built with');
+  assert.ok(validate(page({ pagePath: '/' }), tools), 'the home page');
+  assert.equal(validate(page({ inputs: [{ field: 'a', label: 'A', value: '1', unit: '' }] }), tools), null, 'no inputs');
+  assert.equal(validate(page({ warnings: ['SUSPECT_VALUE'] }), tools), null, 'no warnings');
+  assert.equal(validate(page({ assetVersions: { egm96: '1' } }), tools), null, 'no assets');
+  assert.equal(validate(page({ pagePath: 'privacy' }), tools), null, 'a site path');
+  assert.equal(validate(page({ pagePath: '/privacy/#v1:abc' }), tools), null, 'no fragment: a page report carries no state');
+});
+
 test('the worst-case payload fits the body cap and every CHECK', async () => {
   const s = (n) => 'x'.repeat(n);
   const rowMax = { field: s(LIMITS.fieldChars), label: s(LIMITS.labelChars), value: s(LIMITS.valueChars), unit: s(LIMITS.unitChars) };

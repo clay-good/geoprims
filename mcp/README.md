@@ -116,7 +116,7 @@ The bundle's one setting is the same `--toolsets` the command line takes: leave 
 | `geoprims_run` | Runs a tool. With no `args` it runs the worked example. `units` picks an output unit profile. `explain: true` adds the tool's work: each step's formula, the formula with your values in it, and what it came to. Every result carries `meta.references`: the publisher, title, edition, and locator of each source behind the answer |
 | `geoprims_pipeline` | Runs up to 20 steps. A bound `{value, unit}` carries its unit, so conversions happen automatically. |
 | `geoprims_convert_units` | Exact unit conversion, finding the quantity from the units |
-| `geoprims_report_problem` | Prepares (never sends) a problem report: the payload, a geoprims.com link that reopens the tool with the inputs and the report form filled in, and a GitHub issue link |
+| `geoprims_report_problem` | Prepares (never sends) a problem report: the payload, and a geoprims.com link that reopens the tool with the inputs and the report form filled in |
 
 Resources: `geoprims://catalog` and `geoprims://tool/{id}` (the manifest plus its golden vectors).
 

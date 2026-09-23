@@ -3,7 +3,7 @@
 ### Requirement: One page anatomy
 Every page SHALL have, in order: the site header, a page header built with the `PageHeader` component (breadcrumbs when the page has a parent, one `h1` in sentence case, an optional status badge, and one purpose line in plain words), the page body, and the site footer.
 
-The site footer SHALL be one centered row of links: All tools, Units, Agents, Source, Privacy, Security, Accuracy, Disclaimer, and Licenses. It SHALL carry nothing else.
+The site footer SHALL be one centered row: links to All tools, Units, Agents, Source, Privacy, Security, Accuracy, Disclaimer, and Licenses, and a "Report a problem" button. It SHALL carry nothing else.
 
 Page types and their bodies:
 
@@ -19,4 +19,4 @@ Page types and their bodies:
 
 #### Scenario: Footer links
 - **WHEN** any page is built
-- **THEN** its footer links to all nine destinations and holds no other text or control
+- **THEN** its footer links to all nine destinations, offers "Report a problem", and holds no other text or control

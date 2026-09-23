@@ -23,6 +23,9 @@ export const KEYS = [
   'token',
 ];
 
+/** The toolId of a report about a page rather than a tool. */
+export const SITE_ID = 'site';
+
 export const ROW_KEYS = ['field', 'label', 'value', 'unit'];
 export const DISPLAY_KEYS = ['theme', 'unitProfile', 'viewportClass'];
 // C0 and C1 controls (except none) and bidirectional overrides and isolates.
@@ -58,13 +61,16 @@ export const routeOf = (toolId) => `/${toolId.split('.').join('/')}/`;
 export function validate(body, tools) {
   if (!exactKeys(body, KEYS)) return null;
   if (body.apiVersion !== LIMITS.apiVersion) return null;
-  if (!isStr(body.toolId, 80) || !tools.has(body.toolId)) return null;
+  // A page report (toolId "site") is about a page that is not a tool: it has
+  // no inputs, outputs, warnings, or assets, and its path is any site path.
+  const site = body.toolId === SITE_ID;
+  if (!isStr(body.toolId, 80) || !(site || tools.has(body.toolId))) return null;
   for (const k of ['toolVersion', 'coreVersion', 'buildHash']) if (!isStr(body[k], 64) || !body[k]) return null;
   if (!LIMITS.kinds.includes(body.kind)) return null;
   if (!isStr(body.pagePath, LIMITS.pagePathChars)) return null;
-  const route = routeOf(body.toolId);
   const path = body.pagePath.split('#')[0];
-  if (path !== route) return null;
+  if (site ? !/^\/[^\s#]*$/.test(body.pagePath) : path !== routeOf(body.toolId)) return null;
+  if (site && (body.inputs.length || body.outputs.length || body.warnings.length || Object.keys(body.assetVersions ?? {}).length)) return null;
   if (!rowsOk(body.inputs, LIMITS.inputRows) || !rowsOk(body.outputs, LIMITS.outputRows)) return null;
   if (!Array.isArray(body.warnings) || body.warnings.length > LIMITS.warningCodes || !body.warnings.every((w) => typeof w === 'string' && /^[A-Z][A-Z0-9_]{0,39}$/.test(w))) {
     return null;
@@ -78,7 +84,7 @@ export function validate(body, tools) {
   const row = {
     tool_id: body.toolId,
     // The tool version is re-derived from the bundled catalog, not trusted.
-    tool_version: tools.get(body.toolId),
+    tool_version: site ? body.coreVersion : tools.get(body.toolId),
     core_version: body.coreVersion,
     build_hash: body.buildHash,
     asset_versions_json: JSON.stringify(body.assetVersions),

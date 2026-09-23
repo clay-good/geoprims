@@ -336,9 +336,9 @@ test('report_problem prepares a payload and link without sending anything', asyn
     source: 'FAA-H-8083-25C',
   });
   assert.equal(r.structuredContent.ok, true, JSON.stringify(r.structuredContent));
-  const { link, issueUrl, payload } = r.structuredContent.result;
+  const { link, payload } = r.structuredContent.result;
+  assert.ok(!('issueUrl' in r.structuredContent.result), 'reports go through the site, not a GitHub issue');
   assert.match(link, /^https:\/\/geoprims\.com\/units\/fuel\/convert\/#v1:[A-Za-z0-9_-]+;report$/);
-  assert.match(issueUrl, /template=wrong-answer\.yml$/);
   const limits = JSON.parse(readFileSync(join(root, 'data/report-limits.json'), 'utf8'));
   // The Worker's exact key set, itself locked to the contract by tools/trust/report-schema.test.mjs.
   const { KEYS } = await import('../worker/src/report.mjs');

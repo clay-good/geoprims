@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { capTitle, description as capDescription } from '../lib/head.mjs';
+import { buildHashOf, catalog } from '../lib/catalog.mjs';
 import { icon } from '../lib/icons.mjs';
 interface Props { title: string; description: string; canonical: string; noindex?: boolean; jsonld?: object[]; og?: { eyebrow?: string; title?: string; answer?: string; caption?: string } }
 const props = Astro.props;
@@ -91,6 +92,7 @@ const ogAlt = [ogTitle, og.answer].filter(Boolean).join(': ');
         <a href="/accuracy/">Accuracy</a>
         <a href="/disclaimer/">Disclaimer</a>
         <a href="/licenses/">Licenses</a>
+        <button type="button" class="link footer-report" data-report data-core={catalog.coreVersion} data-build={buildHashOf({ domain: 'units' })}>Report a problem</button>
       </nav></div>
     </footer>
     <div class="update card" role="status" hidden>
@@ -111,6 +113,16 @@ const ogAlt = [ogTitle, og.answer].filter(Boolean).join(': ');
         if (el) palette(el.getAttribute('data-palette') ?? '');
       });
       wireKeys(palette);
+      // "Report a problem" on every page (feedback/problem-reports). A tool page
+      // takes it as a report on that tool, with its inputs; any other page gets
+      // a page report. The dialog loads only on the first click.
+      document.querySelector('[data-report]')?.addEventListener('click', async (e) => {
+        if (!dispatchEvent(new Event('gp-report', { cancelable: true }))) return;
+        const { core, build } = e.currentTarget.dataset;
+        const [{ mount, unmount }, { default: ReportDialog }] = await Promise.all([import('svelte'), import('../components/ReportDialog.svelte')]);
+        const host = document.body.appendChild(document.createElement('div'));
+        const app = mount(ReportDialog, { target: host, props: { site: { coreVersion: core, buildHash: build }, onclose: () => { unmount(app); host.remove(); } } });
+      });
       // Audio: a header mute control only while audio is on (web/audio-feedback).
       import { audioMuted, audioOn, setAudioMuted, sound, wireAudio } from '../lib/sound.js';
       wireAudio();

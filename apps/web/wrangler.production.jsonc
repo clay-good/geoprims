@@ -1,0 +1,20 @@
+{
+  // Production: the static site on geoprims.com. Static assets only, no
+  // Worker code: every page, header (dist/_headers), and redirect comes from
+  // the build. The problem-report Worker (worker/wrangler.jsonc) owns
+  // geoprims.com/api/reports* through a route, and a route runs before a
+  // Custom Domain, so reports reach it without passing through this Worker.
+  // Deploy from apps/web after both builds:
+  //   npx wrangler deploy --config wrangler.production.jsonc
+  // The noindex preview is wrangler.jsonc.
+  "name": "geoprims",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "routes": [{ "pattern": "geoprims.com", "custom_domain": true }],
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "observability": { "enabled": false }
+}

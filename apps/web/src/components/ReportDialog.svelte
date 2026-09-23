@@ -3,15 +3,16 @@
   // user clicks "Report a problem". It shows exactly what will be sent, loads
   // the bot check only now, posts once, and never retries on its own.
   import { onMount } from 'svelte';
-  import { buildPayload, openState, reportText, sendState, tokenIsFresh, ISSUE_URL, LIMITS, viewportClass } from '../lib/report.js';
+  import { buildPayload, buildSitePayload, openState, reportText, sendState, tokenIsFresh, LIMITS, viewportClass } from '../lib/report.js';
 
-  let { tool, args, result, onclose } = $props();
+  // A tool report carries `tool`, `args`, and `result`; a page report carries `site` instead.
+  let { tool = null, args = {}, result = null, site = null, onclose } = $props();
 
   let dialog;
   let status = $state('loading'); // loading | ready | paused | offline | sending | sent | failed
   let includeInputs = $state(true);
   let note = $state('');
-  let kind = $state('wrong-result');
+  let kind = $state(tool ? 'wrong-result' : 'broken');
   let copied = $state(false);
   let widget = null;
   let token = '';
@@ -20,17 +21,11 @@
 
   const theme = () =>
     document.documentElement.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const display = () => ({ theme: theme(), unitProfile: 'default', viewportClass: viewportClass(innerWidth) });
   const payload = $derived(
-    buildPayload({
-      tool,
-      args,
-      result,
-      includeInputs,
-      note,
-      kind,
-      display: { theme: theme(), unitProfile: 'default', viewportClass: viewportClass(innerWidth) },
-      pagePath: location.pathname + location.hash,
-    }),
+    tool
+      ? buildPayload({ tool, args, result, includeInputs, note, kind, display: display(), pagePath: location.pathname + location.hash })
+      : buildSitePayload({ site, note, kind, display: display(), pagePath: location.pathname }),
   );
   const preview = $derived(JSON.stringify({ ...payload, token: '(added when you send)' }, null, 2));
 
@@ -114,12 +109,13 @@
 <dialog bind:this={dialog} class="report" aria-labelledby="report-title" onclose={onclose}>
   <h2 id="report-title">Report a problem</h2>
   <p>
-    This sends the tool, its version, the inputs and results shown below, and your note to geoprims. Nothing else: no
-    account, no address, no device details. A Cloudflare bot check runs only while this dialog is open.
+    {#if tool}This sends the tool, its version, the inputs and results shown below, and your note to geoprims.{:else}This
+    sends this page's address, the site version, and your note to geoprims.{/if} Nothing else: no account, no address,
+    no device details. A Cloudflare bot check runs only while this dialog is open.
   </p>
 
   {#if status === 'paused'}
-    <p role="status">Reporting is paused right now. You can <a href={ISSUE_URL}>open a "Wrong answer" issue</a> instead, or copy the report.</p>
+    <p role="status">Reporting is paused for a moment. Copy the report and try again later.</p>
     <div class="actions"><button type="button" onclick={copyReport}>{copied ? 'Copied' : 'Copy report'}</button><button type="button" onclick={close}>Close</button></div>
   {:else if status === 'offline'}
     <p role="status">Reporting needs a connection. Copy the report now and send it later; nothing is queued.</p>
@@ -140,10 +136,10 @@
       </label>
       <label>
         Note (optional)
-        <textarea bind:value={note} maxlength={LIMITS.noteChars} rows="3" placeholder="Expected 7,900 ft per the POH chart"></textarea>
+        <textarea bind:value={note} maxlength={LIMITS.noteChars} rows="3" placeholder={tool ? 'Expected 7,900 ft per the POH chart' : 'What went wrong, or what you expected'}></textarea>
         <span class="help" aria-live="polite">{note.length} / {LIMITS.noteChars}</span>
       </label>
-      <label class="check"><input type="checkbox" bind:checked={includeInputs} /> Include my inputs and results</label>
+      {#if tool}<label class="check"><input type="checkbox" bind:checked={includeInputs} /> Include my inputs and results</label>{/if}
       <details open>
         <summary>Exactly what will be sent</summary>
         <pre class="payload">{preview}</pre>

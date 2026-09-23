@@ -546,6 +546,15 @@
     const bottom = innerHeight - keyboardInset(visualViewport, innerHeight);
     answerHidden = box.bottom < 0 || box.top > bottom;
   }
+  // The footer's "Report a problem" asks for the tool's own report here (Base.astro).
+  onMount(() => {
+    const onReport = (e) => {
+      e.preventDefault();
+      openReport();
+    };
+    addEventListener('gp-report', onReport);
+    return () => removeEventListener('gp-report', onReport);
+  });
   onMount(() => {
     addEventListener('scroll', checkAnswer, { passive: true });
     // The bar rides above the on-screen keyboard, which covers a fixed

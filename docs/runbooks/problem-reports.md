@@ -81,7 +81,7 @@ Run on production with `REPORTS_ENABLED` still `"false"` until the last step, an
 
 | Check | How | Result |
 |---|---|---|
-| Paused state | Open the dialog: it offers the copy-report and "Wrong answer" form paths | |
+| Paused state | Open the dialog: it says reporting is paused and offers to copy the report | |
 | Round trip | Enable, send a report from a tool page, and find it with `list` | |
 | Duplicate | Send the same report again: 202, and no second row | |
 | Quota | Send past the daily cap: still 202, no new rows | |

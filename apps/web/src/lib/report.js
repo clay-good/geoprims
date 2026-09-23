@@ -4,7 +4,8 @@
 import LIMITS from '../../../../data/report-limits.json' with { type: 'json' };
 
 export { LIMITS };
-export const ISSUE_URL = 'https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml';
+/** The toolId of a report about a page rather than a tool: the home page, a hub, a policy page. */
+export const SITE_ID = 'site';
 
 // Control characters and bidi overrides would be rejected by the Worker; replace them.
 const RANGES = [
@@ -24,6 +25,31 @@ const row = (field, label, value, unit) => ({
 });
 
 export const viewportClass = (width) => (width < 600 ? 'phone' : width < 1024 ? 'tablet' : 'desktop');
+
+/**
+ * A report about a page that is not a tool (contracts/report-api "Page
+ * reports"): the page's path, the site's core version and build, the kind,
+ * and the note. No inputs, outputs, or warnings, because there are none.
+ */
+export function buildSitePayload({ site, note, kind, display, pagePath, token = '' }) {
+  const trimmed = clean(note ?? '').trim();
+  return {
+    apiVersion: LIMITS.apiVersion,
+    toolId: SITE_ID,
+    toolVersion: site.coreVersion,
+    coreVersion: site.coreVersion,
+    buildHash: site.buildHash,
+    assetVersions: {},
+    kind,
+    pagePath: cut(pagePath.split('#')[0], LIMITS.pagePathChars),
+    inputs: [],
+    outputs: [],
+    warnings: [],
+    display,
+    note: trimmed ? cut(trimmed, LIMITS.noteChars) : null,
+    token,
+  };
+}
 
 /**
  * Builds the report. `tool` is the page's client manifest (inputs, outputs,
@@ -97,5 +123,5 @@ export const sendState = (status) => (status === 202 ? 'sent' : 'failed');
 /** Plain text for "Copy report" (offline or paused): the payload without the token. */
 export function reportText(payload) {
   const { token: _token, ...rest } = payload;
-  return `geoprims problem report\n${JSON.stringify(rest, null, 2)}\n\nSend it at ${ISSUE_URL}`;
+  return `geoprims problem report\n${JSON.stringify(rest, null, 2)}\n\nSend it from the page's "Report a problem" button when you are back online.`;
 }

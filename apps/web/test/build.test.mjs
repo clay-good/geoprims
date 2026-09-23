@@ -58,10 +58,13 @@ test('ships the Wasm modules and the catalog at their contract routes', () => {
   for (const m of ['base', 'link']) assert.ok(existsSync(join(dist, 'wasm', `${m}.wasm`)), m);
 });
 
-test('every tool page has one report button and no bot-check script in its HTML', () => {
+test('every tool page has one report button, the footer has one, and no bot-check script loads', () => {
+  const count = (s) => (s.match(/>Report a problem</g) ?? []).length;
   for (const t of catalog.tools) {
     const html = page(route(t.id));
-    assert.equal((html.match(/>Report a problem</g) ?? []).length, 1, t.id);
+    const at = html.indexOf('<footer class="site">');
+    assert.equal(count(html.slice(0, at)), 1, t.id);
+    assert.equal(count(html.slice(at)), 1, `${t.id} footer`);
     assert.ok(!/src="https:\/\/challenges\.cloudflare\.com/.test(html), `${t.id} loads the bot check before a click`);
   }
 });

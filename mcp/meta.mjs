@@ -136,7 +136,6 @@ export const TOOLS = [
 ].map((t) => ({ ...t, annotations: { title: t.title, ...ANNOTATIONS } }));
 
 const SITE = 'https://geoprims.com';
-const ISSUE_URL = 'https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml';
 
 const cut = (s, n) => {
   const t = String(s ?? '');
@@ -371,7 +370,6 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
         ok: true,
         result: {
           link: `${SITE}${pagePath}#${enc.result.fragment}`,
-          issueUrl: ISSUE_URL,
           payload,
           instructions:
             'Show the link to the user. Opening it restores these inputs and the report form; the user reviews and sends it. Nothing was sent.',

@@ -13,3 +13,6 @@ node_modules/
 /apps/web/dist/
 /worker/src/catalog-tools.json
 /apps/web/public/vectors/
+
+# wrangler local state
+.wrangler/

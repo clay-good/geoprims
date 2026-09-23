@@ -71,10 +71,10 @@ test('every stable tool page carries all the regions the contract requires', () 
   assert.deepEqual(problems, []);
 });
 
-test('exactly one report button per page, in the answer card', () => {
+test('exactly one report button in the tool, in the answer card (the footer has its own)', () => {
   for (const t of catalog.tools) {
     const html = page(route(t.id));
-    const buttons = [...html.matchAll(/>Report a problem</g)];
+    const buttons = [...html.slice(0, html.indexOf('<footer class="site">')).matchAll(/>Report a problem</g)];
     assert.equal(buttons.length, 1, `${t.id} has ${buttons.length} report buttons`);
     const answer = /<section class="card answer"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
     assert.match(answer, />Report a problem</, `${t.id}: the report button is not in the answer card`);

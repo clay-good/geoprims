@@ -3,7 +3,8 @@
 // a list of problems, so the test runs it on the real build and on a bad
 // fixture for each way it can break.
 //
-// 1. Pages: every tool page has exactly one "Report a problem" button and no
+// 1. Pages: every tool page has exactly one "Report a problem" button in the
+//    tool and one in the footer (which opens the same report), and no
 //    bot-check script before the click.
 // 2. Lazy import: the dialog is only reached through a dynamic import().
 // 3. Limits: the client and the Worker read the one limits file, and the D1
@@ -17,8 +18,11 @@ export const TURNSTILE = 'https://challenges.cloudflare.com';
 export function checkPages(pages) {
   const out = [];
   for (const { id, html } of pages) {
-    const n = (html.match(/>Report a problem</g) ?? []).length;
+    const at = html.indexOf('<footer class="site">');
+    const count = (s) => (s.match(/>Report a problem</g) ?? []).length;
+    const n = count(at < 0 ? html : html.slice(0, at));
     if (n !== 1) out.push(`${id}: ${n} report buttons, want 1`);
+    if (at >= 0 && count(html.slice(at)) !== 1) out.push(`${id}: the footer has no "Report a problem" button`);
     if (html.includes(`src="${TURNSTILE}`)) out.push(`${id}: loads the bot check before a click`);
   }
   return out;

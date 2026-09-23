@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPayload, openState, reportText, sendState, tokenIsFresh, TOKEN_MAX_AGE_MS } from '../src/lib/report.js';
+import { buildPayload, buildSitePayload, openState, reportText, sendState, tokenIsFresh, TOKEN_MAX_AGE_MS } from '../src/lib/report.js';
 import { KEYS, validate } from '../../../worker/src/report.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
@@ -79,3 +79,16 @@ test('the slow note: a token older than the window is asked for again', () => {
   assert.equal(tokenIsFresh('t', now - 6 * 60_000, now), false, 'six minutes writing a note');
   assert.equal(tokenIsFresh('', now, now), false, 'no token yet');
 });
+
+test('a page report from any page is one the Worker accepts, and names no GitHub issue', () => {
+  const display = { theme: 'paper', unitProfile: 'default', viewportClass: 'desktop' };
+  const site = { coreVersion: '0.1.0', buildHash: '0123456789abcdef' };
+  for (const pagePath of ['/', '/privacy/', '/aviation/altimetry/', '/journeys/vfr-preflight/', '/nope/404-path']) {
+    const p = buildSitePayload({ site, note: 'The filter did nothing', kind: 'broken', display, pagePath: `${pagePath}#stale`, token: 't' });
+    assert.deepEqual(Object.keys(p), KEYS);
+    assert.equal(p.pagePath, pagePath, 'the fragment is dropped');
+    assert.ok(validate(p, new Map()), `${pagePath} rejected by the Worker`);
+  }
+  assert.doesNotMatch(reportText(buildSitePayload({ site, note: '', kind: 'other', display, pagePath: '/' })), /github/i);
+});
+

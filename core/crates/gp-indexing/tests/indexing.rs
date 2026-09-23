@@ -1371,3 +1371,199 @@ fn s2_invariants() {
         }
     }
 }
+
+#[test]
+fn tile_family_invariants() {
+    const F: &str = "indexing.tile.family";
+    let fam = |tile: &str, conv: &str| {
+        let extra = if conv.is_empty() {
+            String::new()
+        } else {
+            format!(r#","convention":"{conv}""#)
+        };
+        call(F, &format!(r#"{{"tile":"{tile}"{extra}}}"#))
+    };
+    // Every child's parent is the tile you started from. That is the quadtree
+    // property, stated as a round trip.
+    for tile in [
+        "1/0/0",
+        "1/1/1",
+        "7/0/0",
+        "7/127/127",
+        "12/1137/1544",
+        "20/1048575/1048575",
+    ] {
+        let r = fam(tile, "");
+        let kids: Vec<String> = (0..4)
+            .map(|k| {
+                r["result"]["children"][k]["tile"]
+                    .as_str()
+                    .expect("child")
+                    .to_owned()
+            })
+            .collect();
+        let mut seen = kids.clone();
+        seen.sort();
+        seen.dedup();
+        assert_eq!(seen.len(), 4, "{tile}: children are not distinct");
+        for kid in &kids {
+            assert_eq!(
+                fam(kid, "")["result"]["parent"].as_str(),
+                Some(tile),
+                "{kid} does not point back at {tile}"
+            );
+        }
+        // Each child's quadkey extends the parent's by exactly one digit.
+        let pq = fam(&kids[0], "")["result"]["parent_quadkey"]
+            .as_str()
+            .expect("parent quadkey")
+            .to_owned();
+        for k in 0..4 {
+            let q = r["result"]["children"][k]["quadkey"]
+                .as_str()
+                .expect("quadkey");
+            assert_eq!(q.len(), pq.len() + 1, "{tile} child {k}: {q} vs {pq}");
+            assert!(q.starts_with(&pq), "{q} does not extend {pq}");
+        }
+    }
+    // Zoom 0 has no parent, and says so rather than inventing one.
+    assert_eq!(fam("0/0/0", "")["result"]["parent"], "none");
+    // TMS and XYZ describe the same tiles: 2^z - 1 - y, both ways.
+    let xyz = fam("4/5/3", "");
+    let tms = fam("4/5/12", "tms");
+    assert_eq!(
+        xyz["result"]["children"][0]["quadkey"], tms["result"]["children"][0]["quadkey"],
+        "the two conventions name different tiles"
+    );
+    // A quadkey is the same tile written another way. It has one digit per
+    // zoom level, so its length IS the zoom: "021230" is six digits and
+    // therefore 6/10/22, not a shorthand for something deeper.
+    assert_eq!(fam("021230", "")["result"], fam("6/10/22", "")["result"]);
+    assert_eq!(
+        fam("032001112001", "")["result"],
+        fam("12/1137/1544", "")["result"]
+    );
+}
+
+#[test]
+fn tile_cover_invariants() {
+    const C: &str = "indexing.tile.cover";
+    let cover = |s: f64, w: f64, n: f64, e: f64, z: u32| {
+        call(
+            C,
+            &format!(r#"{{"south":{s},"west":{w},"north":{n},"east":{e},"zoom":{z}}}"#),
+        )
+    };
+    let count = |s: f64, w: f64, n: f64, e: f64, z: u32| num(&cover(s, w, n, e, z), "result.count");
+    // The count is the column span times the row span: nothing listed twice,
+    // nothing missed.
+    for (s, w, n, e, z) in [
+        (40.43, -80.02, 40.45, -79.98, 14),
+        (51.4, -0.3, 51.6, 0.1, 12),
+        (-33.95, 151.1, -33.8, 151.3, 12),
+    ] {
+        let r = cover(s, w, n, e, z);
+        let tiles = r["result"]["tiles"].as_array().expect("tiles");
+        let mut xs = Vec::new();
+        let mut ys = Vec::new();
+        for t in tiles {
+            let parts: Vec<i64> = t["tile"]
+                .as_str()
+                .expect("tile")
+                .split('/')
+                .map(|p| p.parse().expect("number"))
+                .collect();
+            xs.push(parts[1]);
+            ys.push(parts[2]);
+        }
+        let span = |v: &[i64]| v.iter().max().unwrap() - v.iter().min().unwrap() + 1;
+        assert_eq!(
+            num(&r, "result.count") as i64,
+            span(&xs) * span(&ys),
+            "{s},{w},{n},{e}@{z}: the grid has holes or repeats"
+        );
+    }
+    // A box of exactly one tile is one tile: the east and south edges are
+    // exclusive, so landing on a boundary does not take the next one.
+    assert_eq!(count(0.0, 0.0, 0.0001, 0.0001, 10), 1.0);
+    // One zoom deeper is four times as many, for a box on tile boundaries.
+    let shallow = count(0.0, -180.0, 45.0, -90.0, 2);
+    let deep = count(0.0, -180.0, 45.0, -90.0, 3);
+    assert_eq!(deep, 4.0 * shallow, "a zoom step is not a quadtree step");
+    // A box across the antimeridian is the two boxes either side of it.
+    let across = count(-45.0, 179.0, -44.0, -179.0, 7);
+    let west = count(-45.0, 179.0, -44.0, 180.0, 7);
+    let east = count(-45.0, -180.0, -44.0, -179.0, 7);
+    assert_eq!(
+        across,
+        west + east,
+        "the antimeridian wrap lost or doubled a column"
+    );
+    // Past the Mercator limit is the same as clamped to it, because the grid
+    // genuinely ends there.
+    assert_eq!(
+        count(-90.0, -10.0, -80.0, 10.0, 4),
+        count(-85.05112877980659, -10.0, -80.0, 10.0, 4)
+    );
+}
+
+#[test]
+fn geohash_cover_invariants() {
+    const G: &str = "indexing.geohash.cover";
+    let cover = |p: u32, area: &str, mode: &str| {
+        let m = if mode.is_empty() {
+            String::new()
+        } else {
+            format!(r#","mode":"{mode}""#)
+        };
+        call(G, &format!(r#"{{"precision":{p},{area}{m}}}"#))
+    };
+    let cells = |r: &Value| -> Vec<String> {
+        r["result"]["geohashes"]
+            .as_array()
+            .expect("geohashes")
+            .iter()
+            .map(|g| g["geohash"].as_str().expect("geohash").to_owned())
+            .collect()
+    };
+    let box_ = r#""bbox":"51.4, -0.3, 51.6, 0.1""#;
+    for p in [4u32, 5, 6] {
+        let overlap = cells(&cover(p, box_, ""));
+        let centre = cells(&cover(p, box_, "center"));
+        // The modes nest: centre mode is a subset of overlap mode, never
+        // merely a different set.
+        assert!(centre.len() <= overlap.len(), "p{p}: centre has more cells");
+        for c in &centre {
+            assert!(
+                overlap.contains(c),
+                "p{p}: {c} is in centre but not overlap"
+            );
+        }
+        // Every cell has the precision that was asked for.
+        for c in &overlap {
+            assert_eq!(c.len(), p as usize, "{c} is not precision {p}");
+        }
+        // Each cell decodes back inside the box it was asked for.
+        for c in overlap.iter().take(20) {
+            let d = call(
+                "indexing.geohash.decode",
+                &format!(r#"{{"geohash":"{c}"}}"#),
+            );
+            let (lat, lon) = (num(&d, "result.lat.value"), num(&d, "result.lon.value"));
+            assert!(
+                (51.0..52.0).contains(&lat) && (-0.8..0.6).contains(&lon),
+                "{c} decodes to {lat},{lon}, outside the area"
+            );
+        }
+    }
+    // More precision, more cells, for the same area.
+    assert!(
+        cells(&cover(6, box_, "")).len() > cells(&cover(5, box_, "")).len(),
+        "a finer precision did not give more cells"
+    );
+    // A polygon smaller than one cell covers nothing in centre mode and
+    // something in overlap mode. That pair is what the modes mean.
+    let tiny = r#""polygon":[{"lat":51.50,"lon":-0.15},{"lat":51.52,"lon":-0.10},{"lat":51.48,"lon":-0.08}]"#;
+    assert_eq!(num(&cover(5, tiny, "center"), "result.count"), 0.0);
+    assert!(num(&cover(5, tiny, ""), "result.count") > 0.0);
+}

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "d18e129939f0dc8c",
+    "hash": "9e79486c0ad9dd96",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "8b60513ddcc22a4d",
+    "hash": "228590319b8d61be",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -427,6 +427,10 @@
     "hash": "06396cd16807c564",
     "lastmod": "2026-09-22"
   },
+  "/indexing/geohash/cover/": {
+    "hash": "8d756a4f1e1064a9",
+    "lastmod": "2026-09-23"
+  },
   "/indexing/geohash/decode/": {
     "hash": "1069107efff3b8db",
     "lastmod": "2026-09-22"
@@ -543,6 +547,14 @@
     "hash": "d0440e3199ec03ac",
     "lastmod": "2026-09-22"
   },
+  "/indexing/tile/cover/": {
+    "hash": "90bc6dafaeeab182",
+    "lastmod": "2026-09-23"
+  },
+  "/indexing/tile/family/": {
+    "hash": "84e20ae8e6891be6",
+    "lastmod": "2026-09-23"
+  },
   "/indexing/tile/from-point/": {
     "hash": "f27c08a5498c6b56",
     "lastmod": "2026-09-22"
@@ -592,7 +604,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "64993199bdae52c8",
+    "hash": "7630455748a7cb9e",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -832,7 +844,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "b5608ad083985db8",
+    "hash": "6af6fd3336c4a7b8",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1020,7 +1032,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "9d9672f713b04fd2",
+    "hash": "f403f885167318b9",
     "lastmod": "2026-09-23"
   }
 }

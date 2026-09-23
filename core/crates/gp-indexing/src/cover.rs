@@ -6,7 +6,7 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, Stability, ToolDef};
 use gp_base::units::Quantity as QT;
 
 use crate::codes::{self, Bounds, MERCATOR_MAX_LAT};
@@ -92,7 +92,10 @@ pub static TILE_FAMILY: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to walk a tile pyramid: the parent one zoom out, the four children one zoom in, with their quadkeys. It is the step you need when invalidating a cache upward, splitting a download, or reading a tile reference someone gave you in the other numbering.",
+    limitations: "XYZ and TMS number the y axis from opposite ends, and the two agree only at zoom 0, where the grid is one tile tall -- which is exactly why an untested conversion looks right and is not. Say which convention you mean; the default is XYZ, what web maps use. A quadkey carries its own zoom in its length, so a six-character quadkey is a zoom-6 tile and cannot be a shorthand for a deeper one. Zoom 0 has no parent, and this says none rather than returning a tile that does not exist.",
+    warnings: &[],
     model: "Parent = (z − 1, ⌊x/2⌋, ⌊y/2⌋); children = (z + 1, 2x + i, 2y + j). TMS y = 2^z − 1 − XYZ y",
     accuracy: "Exact",
     references: &[OSM_TILES, BING_QUADKEY],
@@ -111,6 +114,10 @@ pub static TILE_FAMILY: ToolDef = ToolDef {
         Related {
             id: "indexing.tile.bounds",
             reason: "parent",
+        },
+        Related {
+            id: "indexing.tile.ground-resolution",
+            reason: "alternative",
         },
         Related {
             id: "indexing.tile.cover",
@@ -227,7 +234,10 @@ pub static TILE_COVER: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::LimitExceeded],
-    warnings: &["WEB_MERCATOR_CLAMPED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to list the tiles an area needs: pre-caching a region for offline use, planning a download, working out how much a basemap job will cost, or invalidating everything that covers a changed area. Give the box and the zoom and it returns every tile that touches it.",
+    limitations: "The grid ends at plus or minus 85.0511 degrees, where the Web Mercator square runs out; a box beyond that is clamped, with a warning, because there are no tiles there. A box edge lying exactly on a tile edge does not take the next tile, so a one-tile box returns one tile. West greater than east means the box crosses the antimeridian and the columns wrap. The count grows fourfold per zoom, so a wide box at a deep zoom is refused rather than answered with a list nobody wanted.",
+    warnings: &["WEB_MERCATOR_CLAMPED", "UNIT_ASSUMED"],
     model: "The tiles from the one holding the northwest corner to the one holding the southeast corner, on the spherical Web Mercator grid; a box edge on a tile edge does not take the next tile",
     accuracy: "Exact; latitudes beyond ±85.0511° are clamped to the Web Mercator limit",
     references: &[OSM_TILES, BING_QUADKEY],
@@ -249,6 +259,10 @@ pub static TILE_COVER: ToolDef = ToolDef {
         },
         Related {
             id: "indexing.tile.ground-resolution",
+            reason: "next",
+        },
+        Related {
+            id: "indexing.tile.bounds",
             reason: "next",
         },
     ],
@@ -458,7 +472,10 @@ pub static GEOHASH_COVER: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::LimitExceeded],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn an area into a set of geohash prefixes you can index or query with: the cells that touch a bounding box or polygon, or only those whose centres fall inside. It is the usual way to make a spatial query out of a string prefix match.",
+    limitations: "Pick the mode for the job. Overlap keeps every cell the area touches, so nothing inside is missed and some outside is included -- the right choice for a query. Centre keeps only cells centred inside, so cells are more or less contained, and a polygon smaller than one cell covers nothing at all, which is correct and surprising. Geohash cells are not square and alternate between wide and tall as precision grows, because each character adds five bits split unevenly between longitude and latitude. Polygon edges are treated as straight in latitude and longitude, the same space the cells live in.",
+    warnings: &["UNIT_ASSUMED"],
     model: "The geohash grid at the precision (cells 360° / 2^⌈5p/2⌉ wide and 180° / 2^⌊5p/2⌋ tall), kept where a cell overlaps the box or polygon, or where its center is inside. Polygon edges are straight in latitude and longitude, like the cells",
     accuracy: "Exact on the latitude-longitude grid; a polygon may not cross the antimeridian",
     references: &[GEOHASH_REF],
@@ -481,6 +498,10 @@ pub static GEOHASH_COVER: ToolDef = ToolDef {
         Related {
             id: "indexing.h3.polygon-to-cells",
             reason: "alternative",
+        },
+        Related {
+            id: "indexing.geohash.decode",
+            reason: "next",
         },
     ],
     sentence: "{count} geohashes cover the area.",

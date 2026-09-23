@@ -64,6 +64,7 @@ fn catalog_lint() {
         "geodesy.height.convert",
         "geodesy.frame.to-local",
         "time.sun.position",
+        "drone.links.link-budget",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));
@@ -1930,6 +1931,123 @@ fn visibility_invariants() {
                         "k={k} {oh}/{th} at {f}: {a} hidden against {b} with no refraction"
                     );
                 }
+            }
+        }
+    }
+}
+
+/// Call the Fresnel tool, all lengths in metres.
+fn fresnel(f_ghz: f64, d_km: f64, pos_km: Option<f64>, k: f64) -> Value {
+    let position = pos_km.map_or(String::new(), |p| format!(r#""position":"{p} km","#));
+    call(
+        "navigation.los.fresnel",
+        &format!(
+            r#"{{"frequency":"{f_ghz} GHz","distance":"{d_km} km",{position}"k":{k},"options":{{"outputUnits":{{"fresnel_radius":"m","clearance_60":"m","earth_bulge":"m","required_clearance":"m"}}}}}}"#
+        ),
+    )
+}
+
+#[test]
+fn fresnel_matches_the_published_constants() {
+    // Two printed constants, each folding a different quantity's arithmetic
+    // into a number: ITU-R P.530's F1 = 17.3 sqrt(d1 d2 / (f d)), and the
+    // microwave-path bulge d1 d2 / (12.75 K). Each is short of the exact form
+    // by its own rounding and by nothing else, so each is held to that figure
+    // rather than to a loose band.
+    let itu_short = 17.3 / (299.792458f64).sqrt() - 1.0; // -0.0838%
+    let bulge_short = 6371.0 / 6375.0 - 1.0; // -0.0627%
+    for f in [0.9, 2.4, 5.8, 24.0] {
+        for d in [1.0, 10.0, 50.0] {
+            for frac in [0.5, 0.25, 0.1] {
+                for k in [0.25, 0.0, 1.0 / 3.0] {
+                    let (d1, d2) = (d * frac, d * (1.0 - frac));
+                    let r = fresnel(f, d, Some(d1), k);
+                    assert!(r["ok"].as_bool().unwrap_or(false), "{r}");
+
+                    let itu = 17.3 * (d1 * d2 / (f * d)).sqrt();
+                    let got = num(&r, "result.fresnel_radius.value");
+                    assert!(
+                        ((itu / got - 1.0) - itu_short).abs() < 1e-6,
+                        "f={f} d={d} frac={frac}: ITU gives {itu}, the tool {got}"
+                    );
+
+                    let big_k = 1.0 / (1.0 - k);
+                    let bulge = d1 * d2 / (12.75 * big_k);
+                    let got_b = num(&r, "result.earth_bulge.value");
+                    assert!(
+                        ((bulge / got_b - 1.0) - bulge_short).abs() < 1e-6,
+                        "d={d} frac={frac} K={big_k}: 12.75 gives {bulge}, the tool {got_b}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn fresnel_invariants() {
+    let radius = |r: &Value| num(r, "result.fresnel_radius.value");
+    let bulge = |r: &Value| num(r, "result.earth_bulge.value");
+
+    for k in [0.25, 0.0] {
+        for f in [0.9, 5.8] {
+            for d in [1.0, 10.0] {
+                let mid = fresnel(f, d, None, k);
+                // The parts add up the way the page says they do.
+                assert!(
+                    (num(&mid, "result.clearance_60.value") - 0.6 * radius(&mid)).abs() < 1e-9,
+                    "60% of the radius\n{mid}"
+                );
+                assert!(
+                    (num(&mid, "result.required_clearance.value")
+                        - (num(&mid, "result.clearance_60.value") + bulge(&mid)))
+                    .abs()
+                        < 1e-9,
+                    "required clearance is the 60% figure plus the bulge\n{mid}"
+                );
+                // The default point is the midpoint, and it is the widest.
+                assert!(
+                    (radius(&mid) - radius(&fresnel(f, d, Some(d / 2.0), k))).abs() < 1e-9,
+                    "the default is not the midpoint\n{mid}"
+                );
+                for frac in [0.1, 0.25, 0.4] {
+                    assert!(
+                        radius(&fresnel(f, d, Some(d * frac), k)) < radius(&mid),
+                        "k={k} f={f} d={d}: {frac} of the way along is not narrower"
+                    );
+                }
+                // Nothing at either end: the zone closes on the antennas.
+                for end in [0.0, d] {
+                    assert!(
+                        radius(&fresnel(f, d, Some(end), k)) < 1e-9,
+                        "the zone is open at {end} km"
+                    );
+                }
+                // Scaling, checked by doubling rather than by the formula.
+                let quad = radius(&fresnel(f * 4.0, d, None, k));
+                assert!(
+                    (quad * 2.0 - radius(&mid)).abs() < 1e-9,
+                    "four times the frequency should halve the radius"
+                );
+                let four_d = radius(&fresnel(f, d * 4.0, None, k));
+                assert!(
+                    (four_d - 2.0 * radius(&mid)).abs() < 1e-9,
+                    "four times the path should double the radius"
+                );
+                assert!(
+                    (bulge(&fresnel(f, d * 2.0, None, k)) - 4.0 * bulge(&mid)).abs() < 1e-9,
+                    "the bulge should go as d1 d2"
+                );
+                // The two terms are separable: frequency moves only the zone,
+                // and the refractive factor only the bulge.
+                assert!(
+                    (bulge(&fresnel(f * 4.0, d, None, k)) - bulge(&mid)).abs() < 1e-9,
+                    "the bulge moved with frequency"
+                );
+                assert!(
+                    (radius(&fresnel(f, d, None, 0.5)) - radius(&mid)).abs() < 1e-9,
+                    "the zone moved with the refractive factor"
+                );
             }
         }
     }

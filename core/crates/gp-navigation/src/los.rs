@@ -622,6 +622,7 @@ fn run_dip(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static FRESNEL: ToolDef = ToolDef {
     id: "navigation.los.fresnel",
+    stability: gp_base::tool::Stability::Stable,
     title: "Fresnel zone and radio link clearance",
     summary: "The first Fresnel zone radius at a point on a radio link, the 60% clearance it needs, and the Earth's bulge there, summed into the clearance above a smooth Earth.",
     aliases: &[
@@ -706,30 +707,37 @@ pub static FRESNEL: ToolDef = ToolDef {
         .precision(Precision::Decimals(2)),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &[
-        "TERRAIN_NOT_CONSIDERED",
-        "INPUT_NORMALIZED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["TERRAIN_NOT_CONSIDERED", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "First Fresnel zone √(λ d1 d2 / d) and Earth bulge on an effective radius R/(1 − k)",
     accuracy: "Exact for the model; the effective Earth radius varies with the weather, so plan margin for lower k",
+    when_to_use: "Use this when planning a radio path rather than a sightline: a drone control link, a point-to-point backhaul, a repeater shot across a valley. A radio link needs more room than a bare line of sight, because the signal travels in a zone around the straight path and an obstacle intruding into that zone costs signal even when nothing blocks the view. This gives the first Fresnel zone's radius at a point along the path, the 60% of it that is the usual planning rule, the Earth's bulge there, and the two added: the height a smooth Earth path has to clear.",
+    limitations: "This is clearance above a smooth Earth, not above the ground you are actually shooting over, so a terrain profile still has to be laid under it. It is one zone at one point on the path, not a diffraction loss: an obstacle inside the 60% figure degrades the link by an amount this does not compute. The Earth bulge depends on the refractive K factor, held at the standard 4/3; real air departs from it, and a sub-refractive day flattens the effective Earth and raises the bulge, which is why margin is planned against lower K rather than the nominal. Frequency is treated as a single wavelength, so a wideband or frequency-hopping link should be planned at its lowest frequency, where the zone is widest.",
     references: &[ITU_P530],
     examples: &[Example {
         id: "primary",
         title: "A 5.8 GHz drone link of 10 km, at the midpoint",
         input: r#"{"frequency":"5.8 GHz","distance":"10 km"}"#,
-        source: "navigation line-of-sight scenario: first Fresnel radius and Earth bulge (K = 4/3) summed as required clearance",
+        source: "ITU-R P.530's printed form F1 = 17.3 √(d1 d2 / (f d)) gives 11.3580 m against the tool's 11.3675 m, and the microwave-path Earth bulge d1 d2 / (12.75 K) gives 1.4706 m against 1.4715 m; each published constant is short by its own rounding, 0.084% and 0.063%, at every frequency and distance alike",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "profile-chart",
         map: &[],
     }],
-    related: &[Related {
-        id: "navigation.los.visibility",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.los.visibility",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.los.horizon",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.links.link-budget",
+            reason: "next",
+        },
+    ],
     sentence: "At that point the link needs {required_clearance} of clearance above a smooth Earth.",
     limits: &[("batchRows", 10_000)],
     run: run_fresnel,

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "aaf2141cbe76a678",
+    "hash": "4a57de213ae664cb",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "bd728d298ff42177",
+    "hash": "d12e8779ccd034de",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -520,7 +520,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "637aefcb2931d3f2",
+    "hash": "9a8f3ea428cca77b",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -557,6 +557,10 @@
   },
   "/navigation/los/dip/": {
     "hash": "657ba786d1f85540",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/los/fresnel/": {
+    "hash": "342de060869a066d",
     "lastmod": "2026-09-23"
   },
   "/navigation/los/horizon/": {
@@ -712,7 +716,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "285b6b02c75dc99b",
+    "hash": "8f3418f6e95e03a1",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -812,7 +816,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "07f0798fb5bed984",
+    "hash": "b5f2d922709a8a5f",
     "lastmod": "2026-09-23"
   }
 }

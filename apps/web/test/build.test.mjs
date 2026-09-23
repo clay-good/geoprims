@@ -159,20 +159,15 @@ test('every aviation, drone, and navigation tool shows the safety notice in its 
   assert.match(page('/disclaimer/'), /Not for primary navigation\./);
 });
 
-test('the README states the counts the build actually has', () => {
-  // The status line is the first thing a reader believes, so it is checked
-  // against the catalog rather than kept up to date by hand.
+test('any count the README states is the count the build has', () => {
+  // A count is the first thing a reader believes, so every one the README
+  // states is checked against the catalog rather than kept up to date by hand.
+  // The README may state none ("Hundreds of tools"), and then nothing can go stale.
   const readme = readFileSync(join(web, '../../README.md'), 'utf8');
-  const status = /\*\*Status:\*\*[^\n]*/.exec(readme)[0];
-  const said = [...status.matchAll(/(\d[\d,]*) (operations|tool pages)|(\d[\d,]*) of them past/g)];
   const n = (k) => Number(String(k).replace(/,/g, ''));
-  const ops = said.find((m) => m[2] === 'operations');
-  const pages = said.find((m) => m[2] === 'tool pages');
-  const stable = said.find((m) => m[3]);
-  assert.ok(ops && pages && stable, `the status line names no counts: ${status}`);
-  assert.equal(n(ops[1]), catalog.counts.all.operations, 'operations');
-  assert.equal(n(pages[1]), catalog.counts.all.endpoints, 'tool pages');
-  assert.equal(n(stable[3]), catalog.counts.stable.operations, 'stable operations');
+  const want = { operations: catalog.counts.all.operations, 'tool pages': catalog.counts.all.endpoints, tools: catalog.counts.all.operations };
+  for (const m of readme.matchAll(/(\d[\d,]*) (operations|tool pages|tools)\b/g)) assert.equal(n(m[1]), want[m[2]], m[0]);
+  for (const m of readme.matchAll(/(\d[\d,]*) of them past/g)) assert.equal(n(m[1]), catalog.counts.stable.operations, m[0]);
 });
 
 test('every hub page for an operational domain carries the safety notice too', () => {

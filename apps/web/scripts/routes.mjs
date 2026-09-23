@@ -136,6 +136,19 @@ export function checkRedirects(list, builtRoutes) {
   return problems;
 }
 
+/**
+ * Every redirect the build writes: the listed ones, then each page's address
+ * without its trailing slash. Cloudflare's own trailing-slash handling answers
+ * 307, which search engines treat as temporary; a 301 tells them the slashed
+ * URL is the one to keep.
+ */
+export function redirectRules(list, routes) {
+  const slashless = routes
+    .filter((r) => r !== '/' && r.endsWith('/') && !list.some((x) => x.from === r.slice(0, -1)))
+    .map((r) => ({ from: r.slice(0, -1), to: r }));
+  return [...list, ...slashless];
+}
+
 /** The Cloudflare static-assets redirects file. */
 export const serialize = (list) => list.map(({ from, to }) => `${from} ${to} 301`).join('\n') + '\n';
 
@@ -166,7 +179,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`routes: ${problems.length} problem(s)\n${problems.map((m) => `  ${m}`).join('\n')}`);
     process.exit(1);
   }
-  writeFileSync(join(dist, '_redirects'), serialize(list));
+  const rules = redirectRules(list, pages.map((p) => p.route));
+  // Cloudflare static assets accept at most 2,000 static redirects.
+  if (rules.length > 2000) throw new Error(`${rules.length} redirects, over Cloudflare's 2,000`);
+  writeFileSync(join(dist, '_redirects'), serialize(rules));
   const counts = new Map();
   for (const { route } of pages) {
     const kind = classify(route, idx);

@@ -1,10 +1,10 @@
 // The route-map gate (contracts/routes-and-urls). Checks the built site, then
 // the classifier against paths the contract does and does not allow.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { check, checkRedirects, classify, deprecationRedirects, index, serialize, SITE } from '../scripts/routes.mjs';
+import { check, checkRedirects, classify, deprecationRedirects, index, redirectRules, serialize, SITE } from '../scripts/routes.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const dist = join(web, 'dist');
@@ -72,7 +72,25 @@ test('the redirects file keeps renamed routes resolvable', () => {
 test('the build writes the redirects file from data/redirects.json and the catalog', () => {
   const list = JSON.parse(readFileSync(join(web, '../../data/redirects.json'), 'utf8'));
   assert.ok(Array.isArray(list));
-  assert.equal(readFileSync(join(dist, '_redirects'), 'utf8'), serialize([...list, ...deprecationRedirects(catalog)]));
+  const listed = serialize([...list, ...deprecationRedirects(catalog)]).trim();
+  const lines = readFileSync(join(dist, '_redirects'), 'utf8').trim().split('\n');
+  const head = listed ? listed.split('\n') : [];
+  assert.deepEqual(lines.slice(0, head.length), head, 'the listed redirects come first');
+  // The rest send each page's slash-less address to the page, permanently.
+  const rest = lines.slice(head.length);
+  assert.ok(rest.includes('/aviation /aviation/ 301') && rest.includes('/aviation/altimetry/density-altitude /aviation/altimetry/density-altitude/ 301'));
+  for (const l of rest) {
+    const [from, to, code] = l.split(' ');
+    assert.equal(`${from}/`, to, l);
+    assert.equal(code, '301', l);
+    assert.ok(existsSync(join(dist, to, 'index.html')), `${l}: no page at ${to}`);
+  }
+});
+
+test('redirect rules add a slash-less 301 for every page, and never for the home page', () => {
+  assert.deepEqual(redirectRules([], ['/', '/a/', '/a/b/']), [{ from: '/a', to: '/a/' }, { from: '/a/b', to: '/a/b/' }]);
+  const listed = [{ from: '/a', to: '/c/' }];
+  assert.deepEqual(redirectRules(listed, ['/a/']), listed, 'a listed redirect wins');
 });
 
 test('a deprecated tool redirects to its replacement and leaves the index', () => {

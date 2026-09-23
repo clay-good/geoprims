@@ -1474,7 +1474,7 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     primary_example: "primary",
     visualization: &[Layer {
         kind: "cell-set",
-        map: &[("cells", "cells")],
+        map: &[("cells", "cells"), ("compacted", "compacted")],
     }],
     related: &[Related { id: "indexing.h3.compact", reason: "next" },
         Related {

@@ -139,6 +139,45 @@ test('h3 k-ring: k = 2 on a resolution 7 cell draws 19 cell outlines, the origin
   assert.deepEqual(cellIds({ result: { cells: [{ cell: 'a' }, 'b'] } }, 'cells'), ['a', 'b']);
 });
 
+test('a fill too large to list draws its compacted stand-in, dashed', async () => {
+  // A fill past the 10,000-cell listing limit comes back as `compacted`
+  // instead of `cells`; without the fallback the map drew nothing at all.
+  const { buildLayers, MAX_COMPACTED } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const tool = catalog.tools.find((t) => t.id === 'indexing.h3.polygon-to-cells');
+  const args = {
+    points: [
+      { lat: 40.0, lon: -80.35 },
+      { lat: 40.0, lon: -79.55 },
+      { lat: 40.5, lon: -79.55 },
+      { lat: 40.5, lon: -80.35 },
+    ],
+    resolution: 9,
+  };
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  assert.equal(result.ok, true, JSON.stringify(result.error));
+  assert.ok(result.result.count > 10000, `${result.result.count} cells`);
+  assert.equal(result.result.cells, undefined, 'too many to list');
+  assert.ok(result.result.compacted.length > 0, 'a compacted set instead');
+  const batch = async (id, inputs) => JSON.parse(await host.invokeBatch(id, JSON.stringify(inputs)));
+  const cells = {
+    boundaries: async (ids) => (await batch('indexing.h3.cell-info', ids.map((cell) => ({ cell })))).map((r) => r.result.boundary.map((p) => [p.lon, p.lat])),
+    rings: async () => [],
+  };
+  const drawn = (await buildLayers(tool, args, result, async () => null, cells)).filter((l) => l.cell);
+  assert.ok(drawn.length > 0, 'the compacted set is drawn');
+  // Whole, not truncated: a part of a covering reads as the whole answer.
+  assert.equal(drawn.length, result.result.compacted.length);
+  assert.ok(drawn.length <= MAX_COMPACTED);
+  assert.ok(drawn.every((l) => l.compacted === true), 'each is marked as a stand-in');
+  // Mixed resolutions are what compaction produces, and what the drawing shows.
+  const resolutions = new Set(drawn.map((l) => l.cell.length));
+  assert.ok(resolutions.size >= 1);
+});
+
 test('geohash, Plus Code, and tile cells draw as their bounds', async () => {
   const { buildLayers } = await import('../src/lib/map/layers.js');
   const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');

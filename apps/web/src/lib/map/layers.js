@@ -80,6 +80,14 @@ export function outputRings(result, field) {
 /** The most cells a set draws; a larger answer draws its first MAX_CELLS and says so. */
 export const MAX_CELLS = 1000;
 
+/**
+ * The most cells a compacted stand-in draws. The core sends one only when it
+ * fits its 10,000-cell listing limit, so this is a backstop rather than a cut:
+ * the 889,954-cell fill that compacts to 6,256 costs 270 ms of boundaries and
+ * 37,536 vertices, which the renderer draws well inside a frame.
+ */
+export const MAX_COMPACTED = 10_000;
+
 /** The cell ids a cell-set layer names: one output field holding an id or a list of {cell}. */
 export function cellIds(result, field) {
   const v = result?.result?.[field];
@@ -185,7 +193,15 @@ export async function buildLayers(tool, args, result, densify, cells) {
   for (const v of tool.visualization ?? []) {
     if (v.kind !== 'cell-set' || !cells) continue;
     const map = mapOf(v.map);
-    const ids = cellIds(result, map.cells ?? map.cell).slice(0, MAX_CELLS);
+    // A fill too large to list comes back compacted instead: the same ground,
+    // in fewer and coarser cells. Drawing that is what a large answer looks
+    // like, rather than an empty map.
+    const full = cellIds(result, map.cells ?? map.cell);
+    const compacted = full.length ? [] : cellIds(result, map.compacted);
+    // A compacted set is drawn whole. The core only sends one when it fits
+    // inside its own listing limit, so it is already small, and half of a
+    // covering drawn is worse than none: it reads as the answer.
+    const ids = full.length ? full.slice(0, MAX_CELLS) : compacted.slice(0, MAX_COMPACTED);
     if (!ids.length) continue;
     const outlines = await cells.boundaries(ids);
     const k = Number.isInteger(Number(args.k)) ? Number(args.k) : null;
@@ -195,7 +211,7 @@ export async function buildLayers(tool, args, result, densify, cells) {
     ids.forEach((id, i) => {
       if (!outlines[i]?.length) return;
       const d = distance.get(id);
-      layers.push({ kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id, ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}) });
+      layers.push({ kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id, ...(compacted.length ? { compacted: true } : {}), ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}) });
     });
   }
   // A polygon the tool computes (a buffer, a geofence): an output list of

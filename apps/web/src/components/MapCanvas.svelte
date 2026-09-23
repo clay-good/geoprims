@@ -121,7 +121,8 @@
     const what = layers.filter((l) => !l.cell).map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
     if (shots) what.push(`${shots.points.length} photo trigger points`);
-    if (cellCount) what.push(`${cellCount} H3 ${cellCount === 1 ? 'cell' : 'cells'}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
+    const compacted = layers.some((l) => l.compacted);
+    if (cellCount) what.push(`${cellCount} H3 ${cellCount === 1 ? 'cell' : 'cells'}${compacted ? `, drawn dashed because they are the compacted stand-in for the ${result.result?.count ?? 'many'} the answer counts` : ''}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
     shown = what.join(', ') || 'the world';
     // What the lines mean: the result path, and the other kind of line for comparison.
     const rhumb = kinds.has('line-rhumb');

@@ -452,6 +452,8 @@ export function draw(g, view, base, layers, c) {
     const stroke = layer.role === 'result' ? c.accent : c.muted;
     if (layer.kind === 'polygon' && layer.cell) {
       // A grid cell: the origin strong, the rest fading with grid distance.
+      // A compacted cell stands for a group of finer ones, so it is drawn
+      // dashed: the ground is right, the edges inside it are not being shown.
       const origin = layer.role === 'result';
       const w = origin ? 1 : (layer.weight ?? 0.8);
       g.beginPath();
@@ -462,7 +464,9 @@ export function draw(g, view, base, layers, c) {
       g.globalAlpha = 0.3 + 0.7 * w;
       g.strokeStyle = c.accent;
       g.lineWidth = origin ? 3 : 1.5;
+      if (layer.compacted) g.setLineDash([5, 3]);
       g.stroke();
+      g.setLineDash([]);
       g.globalAlpha = 1;
     } else if (layer.kind === 'polygon') {
       g.beginPath();

@@ -254,3 +254,104 @@ fn itrf_invariants() {
         );
     }
 }
+
+const NAD83_FRAMES: [&str; 6] = [
+    "NAD83(2011)",
+    "ITRF2020",
+    "ITRF2014",
+    "ITRF2008",
+    "ITRF2000",
+    "WGS84(G2296)",
+];
+
+fn nad83(from: &str, to: &str, epoch: f64, p: (f64, f64, f64)) -> Value {
+    call(
+        "geodesy.datum.nad83",
+        &format!(
+            r#"{{"from":"{from}","to":"{to}","epoch":"{epoch}","lat":{},"lon":{},"height":{},"options":{{"outputUnits":{{"shift":"m","east":"m","north":"m","up":"m","height":"m"}}}}}}"#,
+            p.0, p.1, p.2
+        ),
+    )
+}
+
+#[test]
+fn nad83_invariants() {
+    const P: (f64, f64, f64) = (38.5, -98.0, 500.0); // Kansas, well inside CONUS
+    const M_PER_DEG: f64 = 111_320.0;
+
+    for frame in NAD83_FRAMES {
+        let r = nad83(frame, frame, 2026.7, P);
+        assert_eq!(
+            f(&r, "result.shift.value"),
+            0.0,
+            "{frame} to itself moved\n{r}"
+        );
+    }
+
+    let mut worst_trip = 0.0f64;
+    for a in NAD83_FRAMES {
+        for b in NAD83_FRAMES {
+            let out = nad83(a, b, 2026.7, P);
+            assert!(out["ok"].as_bool().unwrap_or(false), "{a}->{b}: {out}");
+            let back = nad83(
+                b,
+                a,
+                2026.7,
+                (
+                    f(&out, "result.lat.value"),
+                    f(&out, "result.lon.value"),
+                    f(&out, "result.height.value"),
+                ),
+            );
+            worst_trip = worst_trip
+                .max((f(&back, "result.lat.value") - P.0).abs() * M_PER_DEG)
+                .max((f(&back, "result.height.value") - P.2).abs());
+
+            // The shift here is the HORIZONTAL distance, not the 3D one its
+            // sibling geodesy.datum.itrf reports -- the fields are titled
+            // "Horizontal shift" and "3D distance". East and north alone
+            // recompose to it, to the last bit.
+            let (e, n) = (f(&out, "result.east.value"), f(&out, "result.north.value"));
+            assert_eq!(
+                e.hypot(n),
+                f(&out, "result.shift.value"),
+                "{a}->{b}: the shift is not the horizontal distance\n{out}"
+            );
+            // And the azimuth is the one those two imply.
+            if e.hypot(n) > 1e-6 {
+                let az = e.atan2(n).to_degrees().rem_euclid(360.0);
+                assert!(
+                    (az - f(&out, "result.azimuth.value")).abs() < 1e-9,
+                    "{a}->{b}: azimuth {az} against {}",
+                    f(&out, "result.azimuth.value")
+                );
+            }
+        }
+    }
+    assert!(worst_trip < 2e-7, "round trip {worst_trip} m");
+
+    // NAD 83 rides the North American plate and the ITRF does not, so in CONUS
+    // they stand one to two metres apart, and further every year.
+    for b in ["ITRF2020", "ITRF2014", "ITRF2000"] {
+        let now = f(&nad83("NAD83(2011)", b, 2026.7, P), "result.shift.value");
+        let then = f(&nad83("NAD83(2011)", b, 2000.0, P), "result.shift.value");
+        assert!(
+            (1.0..2.0).contains(&now),
+            "NAD83(2011) to {b} is {now} m, outside the metre-scale NGS documents"
+        );
+        assert!(
+            now > then,
+            "NAD83(2011) to {b}: {now} m in 2026.7 is not beyond {then} m in 2000.0"
+        );
+    }
+
+    // The model takes WGS 84 (G2296) as ITRF2020. If that mapping were wrong
+    // the two would differ, and nothing else here would notice.
+    let w = nad83("WGS84(G2296)", "NAD83(2011)", 2026.7, P);
+    let i = nad83("ITRF2020", "NAD83(2011)", 2026.7, P);
+    assert_eq!(
+        f(&w, "result.height.value"),
+        f(&i, "result.height.value"),
+        "WGS 84 (G2296) is not being taken as ITRF2020"
+    );
+}

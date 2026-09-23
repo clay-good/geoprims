@@ -880,6 +880,7 @@ const NAD83_FRAMES: &[&str] = &[
 
 pub static NAD83: ToolDef = ToolDef {
     id: "geodesy.datum.nad83",
+    stability: gp_base::tool::Stability::Stable,
     title: "Transform between NAD 83 and ITRF or WGS 84",
     summary: "Transforms a position between NAD 83 (2011, PA11, or MA11) and ITRF2020, ITRF2014, ITRF2008, ITRF2005, ITRF2000, or WGS 84 at one epoch, with the NGS HTDP parameters, and shows the meter-level difference between them.",
     aliases: &[
@@ -1001,19 +1002,17 @@ pub static NAD83: ToolDef = ToolDef {
         mm_out("height", "Ellipsoidal height", "In the target frame"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "INPUT_NORMALIZED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "INPUT_NORMALIZED"],
     model: "NGS HTDP 3.6.0 14-parameter transformations through ITRF94, applied as HTDP does; WGS 84 (G2296, G2139, G1762) taken as ITRF2020, ITRF2014, and ITRF2008",
     accuracy: "Matches NGS HTDP 3.6.0 within 1 mm; the transformation itself is good to about 1–2 cm in the conterminous United States",
+    when_to_use: "Use this whenever survey or mapping data in NAD 83 has to meet a GNSS position. Published US control, state plane coordinates, parcel data, and almost every official map are on NAD 83, while a receiver gives ITRF or WGS 84; the two differ by more than a meter in the conterminous United States, which is far too much to ignore and small enough to go unnoticed. Give the epoch the coordinates belong to. The answer includes the difference as a distance and an azimuth, so the size and direction of the discrepancy are visible rather than buried in the new numbers.",
+    limitations: "The published transformation is itself good to about one to two centimeters in the conterminous United States, so the result cannot be better than that however many digits it carries; the arithmetic matches HTDP to a millimeter, which is a different claim. It changes the frame, not the epoch, and does not move a position along its plate's motion — that is the plate-motion tool, and the two are usually wanted together. NAD 83 (2011), (PA11) and (MA11) cover different plates and are not interchangeable: using the wrong one puts the answer out by meters. Unqualified WGS 84 is taken as the realization aligned with the ITRF of its day and says so, because a bare WGS 84 label does not identify a realization. Heights are ellipsoidal throughout, not orthometric, and nothing here touches a vertical datum.",
     references: &[NGS_HTDP],
     examples: &[Example {
         id: "primary",
         title: "Kansas: WGS 84 (G2296) to NAD 83 (2011) in 2026.7",
         input: r#"{"from":"WGS84(G2296)","to":"NAD83(2011)","epoch":"2026.7","lat":38.5,"lon":-98,"height":500}"#,
-        source: "NGS HTDP 3.6.0 (compiled from htdp.f), menu option 4",
+        source: "NGS HTDP 3.6.0 compiled from htdp.f, menu option 4, and independently PROJ 9.3.0 through pyproj on EPSG:9988 to EPSG:6319, which agrees with the tool to 9.5 nanometres in latitude, 1.2 in longitude and 0.2 in height",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -1028,6 +1027,10 @@ pub static NAD83: ToolDef = ToolDef {
         Related {
             id: "geodesy.datum.plate-motion",
             reason: "next",
+        },
+        Related {
+            id: "geodesy.datum.nadcon5",
+            reason: "alternative",
         },
     ],
     sentence: "The frames differ here by {shift} horizontally, toward {azimuth}.",

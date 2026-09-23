@@ -7,7 +7,7 @@
 
 No ads, no accounts, no tracking, no server-side compute. Inputs never leave the device.
 
-> **Status:** Phase 0 (platform) is in progress. The local build has working web and MCP calculators: 288 operations on 323 tool pages, 95 of them past the stable verification bar; it is not released or deployed. The specs are in [OpenSpec](https://github.com/Fission-AI/OpenSpec) format, and the research behind them is in `docs/research/`. See [Progress](#progress) for what is built.
+> **Status:** Phase 0 (platform) is in progress. The local build has working web and MCP calculators: 288 operations on 323 tool pages, 96 of them past the stable verification bar; it is not released or deployed. The specs are in [OpenSpec](https://github.com/Fission-AI/OpenSpec) format, and the research behind them is in `docs/research/`. See [Progress](#progress) for what is built.
 
 ## What's specified
 

@@ -103,6 +103,7 @@ macro_rules! convert_op {
                 Field::new("input", "Input", "The value as read, in its unit", Kind::Quantity { q: $q, unit: $unit }).precision(P8),
             ],
             warnings: $warn,
+            errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
             model: "Exact unit definitions",
             accuracy: "Exact to double precision: each conversion is one correctly rounded ratio of exact definitions",
             references: &[$($r),*],
@@ -134,6 +135,22 @@ fn run_convert(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ),
         )
         .hint("Give the unit once: either in the value or in from."));
+    }
+    // A temperature below absolute zero is not a temperature. Converting it
+    // gives a negative kelvin, which is not a colder temperature but a
+    // different kind of thing, and the input is far more likely to be a
+    // difference that reached the wrong tool -- put -300 through here as a
+    // reading and it comes back -26.85 K, which looks like an answer.
+    if value.unit.quantity == QT::Temperature {
+        let kelvin = units::by_symbol(QT::Temperature, "K").expect("K");
+        if value.to(kelvin) < 0.0 {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "That is below absolute zero, which is 0 K, -273.15 °C or -459.67 °F.",
+            )
+            .at("/value")
+            .hint("For a change in temperature rather than a reading, use units.temperature-difference.convert."));
+        }
     }
     let to = ctx.req_unit("to")?;
     let converted = ctx.emit("converted", value, to);
@@ -186,14 +203,30 @@ convert_op!(PRESSURE, "pressure", QT::Pressure, "inHg", "Pressure converter",
     aliases: ["altimeter setting conversion", "inHg to hPa"], refs: [NIST_811, ICAO_ANNEX5],
     example: ("29.92 inHg in hPa", r#"{"value":"29.92 inHg","to":"hPa"}"#));
 convert_op!(TEMPERATURE, "temperature", QT::Temperature, "degC", "Temperature converter",
-    "Converts temperatures between °C, °F, and K.",
-    aliases: ["celsius to fahrenheit", "temperature conversion"], refs: [NIST_811],
-    example: ("30 °C in °F", r#"{"value":"30 °C","to":"degF"}"#));
+"Converts temperatures between °C, °F, and K.",
+aliases: ["celsius to fahrenheit", "temperature conversion"], refs: [NIST_811],
+example: ("30 °C in °F", r#"{"value":"30 °C","to":"degF"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a temperature that is a reading rather than a change: an outside air temperature against a performance chart, a forecast in one scale against a limit in another, a surface temperature against an operating range. It is the tool for a point on the scale, and it applies the offsets those scales are built on, which is exactly what a change in temperature must not have.",
+limits: "This converts temperatures, not differences between them, and the two are different conversions: 10 °C is 50 °F, but a rise of 10 °C is a rise of 18 °F. Using this where a deviation is meant -- an ISA deviation, a lapse, a spread -- puts the answer out by the whole offset, 32 degrees between Fahrenheit and Celsius, and the temperature-difference converter next door is the one for that. Below absolute zero is refused rather than converted, since no scale means anything there.",
+related: [
+    Related { id: "units.temperature-difference.convert", reason: "alternative" },
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.pressure.convert", reason: "alternative" }
+]);
 convert_op!(TEMPERATURE_DIFFERENCE, "temperature-difference", QT::TemperatureDifference, "degC",
-    "Temperature difference converter",
-    "Converts temperature differences, like ISA deviation: a change of 1 °C is 1 K and 1.8 °F.",
-    aliases: ["isa deviation conversion"], refs: [NIST_811],
-    example: ("An ISA deviation of +18 °F in kelvins", r#"{"value":"18 degF","to":"K"}"#));
+"Temperature difference converter",
+"Converts temperature differences, like ISA deviation: a change of 1 °C is 1 K and 1.8 °F.",
+aliases: ["isa deviation conversion"], refs: [NIST_811],
+example: ("An ISA deviation of +18 °F in kelvins", r#"{"value":"18 degF","to":"K"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a change in temperature rather than a temperature: an ISA deviation, a lapse rate's worth of cooling, the spread between dew point and air temperature, a tolerance band. A difference carries only the size of the scale's degree and none of its offset, so a change of one degree Celsius is a change of one kelvin and of 1.8 degrees Fahrenheit -- which is why it is a separate tool and not a setting on the other one.",
+limits: "A difference has no zero and no absolute meaning: this will happily convert a negative one, because a temperature can fall, and it cannot tell you whether the number you gave it was a reading by mistake. That is the error worth guarding against, and only you can: put 10 °C through here and it stays 10 K, where as a temperature it would be 283.15 K. Kelvin and Celsius degrees are the same size, so those two directions change nothing at all.",
+related: [
+    Related { id: "units.temperature.convert", reason: "alternative" },
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "aviation.atmosphere.isa", reason: "next" }
+]);
 convert_op!(ANGLE, "angle", QT::Angle, "deg", "Angle converter",
     "Converts angles: degrees, radians, gons, arcminutes, arcseconds, turns, and the four kinds of mil.",
     aliases: ["degrees to radians", "mils conversion"], refs: [NIST_811],

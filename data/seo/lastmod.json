@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "636126e08b1d73b1",
+    "hash": "30a7dbffa6f5fc9f",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "210fcd075d69bfef",
+    "hash": "9c2a75d0b7c2b322",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -796,7 +796,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "deed4fe2c8011492",
+    "hash": "4067be5935686698",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -879,9 +879,17 @@
     "hash": "9f5eaa52687953a5",
     "lastmod": "2026-09-22"
   },
+  "/units/temperature-difference/convert/": {
+    "hash": "77e8673e429ee052",
+    "lastmod": "2026-09-23"
+  },
   "/units/temperature/": {
     "hash": "da9f1e9138fbcdf8",
     "lastmod": "2026-09-22"
+  },
+  "/units/temperature/convert/": {
+    "hash": "39aebff4e837868a",
+    "lastmod": "2026-09-23"
   },
   "/units/time/": {
     "hash": "7b78f2e070c764e7",
@@ -900,7 +908,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0d37b9c9b5171ae8",
+    "hash": "b1f1ee03a0edd353",
     "lastmod": "2026-09-23"
   }
 }

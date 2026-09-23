@@ -639,8 +639,21 @@ impl<'a> Ctx<'a> {
         // units; such values only overflow or underflow the arithmetic. A
         // nonzero value that underflows to zero in base units ("5e-324 ft")
         // counts as below the range, not as zero.
+        // A unit with an offset is an absolute temperature scale, where a
+        // nonzero reading can legitimately land on zero in base units:
+        // -273.15 degC IS 0 K, and -459.67 degF is too. The underflow rule
+        // below is about a value so small it vanishes, which cannot happen on
+        // an affine scale, so those units are exempt from it. Without this,
+        // absolute zero itself was refused as "far outside any meaningful
+        // range" in every scale but kelvin.
+        let affine = matches!(
+            q.unit.scale,
+            crate::units::Scale::Exact { offset, .. } if offset.num != 0
+        );
         let base = q.base().abs();
-        if !base.is_finite() || (q.value != 0.0 && !(MIN_MAGNITUDE..=MAX_MAGNITUDE).contains(&base))
+        if !base.is_finite()
+            || (q.value != 0.0 && !affine && !(MIN_MAGNITUDE..=MAX_MAGNITUDE).contains(&base))
+            || (affine && !(0.0..=MAX_MAGNITUDE).contains(&base))
         {
             return Err(ToolError::new(
                 ErrorCode::OutOfDomain,

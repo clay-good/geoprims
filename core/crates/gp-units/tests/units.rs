@@ -41,7 +41,9 @@ fn catalog_lint_passes() {
         .iter()
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
-    let errs = manifest::lint(TOOLS, &taxonomy, &[]);
+    // Related tools that live in other crates.
+    let known = ["aviation.atmosphere.isa"];
+    let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "catalog lint:\n{}", errs.join("\n"));
 }
 
@@ -456,5 +458,121 @@ fn length_invariants() {
     assert!(
         (gap - 0.609_601_219_2).abs() < 1e-6,
         "a million survey feet and a million international feet differ by {gap} m"
+    );
+}
+
+const SCALES: [&str; 3] = ["K", "degC", "degF"];
+
+/// A converter call that is expected to succeed.
+fn conv(tool: &str, value: f64, from: &str, to: &str) -> f64 {
+    let r = conv_raw(tool, value, from, to);
+    r["result"]["converted"]["value"]
+        .as_f64()
+        .unwrap_or_else(|| panic!("{tool} {value} {from}->{to}: {r}"))
+}
+
+fn conv_raw(tool: &str, value: f64, from: &str, to: &str) -> Value {
+    serde_json::from_str(&REGISTRY.invoke(
+        tool,
+        &format!(r#"{{"value":"{value} {from}","to":"{to}"}}"#),
+    ))
+    .expect("JSON")
+}
+
+#[test]
+fn temperature_invariants() {
+    const T: &str = "units.temperature.convert";
+    let mut worst = 0.0f64;
+    for a in SCALES {
+        for b in SCALES {
+            let x = 37.5;
+            let back = conv(T, conv(T, x, a, b), b, a);
+            worst = worst.max((back - x).abs());
+        }
+        assert_eq!(conv(T, 21.5, a, a), 21.5, "{a}->{a} changed the value");
+    }
+    assert!(worst < 1e-12, "round trip {worst}");
+
+    // The fixed points, exactly. A dropped or halved offset misses all of them.
+    for (v, a, b, want) in [
+        (0.0, "degC", "K", 273.15),
+        (0.0, "degC", "degF", 32.0),
+        (100.0, "degC", "degF", 212.0),
+        (-40.0, "degC", "degF", -40.0),
+        (0.0, "K", "degC", -273.15),
+        (0.0, "K", "degF", -459.67),
+    ] {
+        assert_eq!(conv(T, v, a, b), want, "{v} {a} in {b}");
+    }
+
+    // Affine, not linear: doubling the input does not double the output. This
+    // is the whole difference from the difference converter, so it is asserted
+    // rather than left to the reader.
+    assert!(
+        (conv(T, 20.0, "degC", "degF") - 2.0 * conv(T, 10.0, "degC", "degF")).abs() > 30.0,
+        "the temperature converter behaved linearly"
+    );
+
+    // Below absolute zero is refused in every scale, and says where to go.
+    for (v, s) in [(-300.0, "degC"), (-1.0, "K"), (-500.0, "degF")] {
+        let r = conv_raw(T, v, s, "K");
+        assert_eq!(
+            r["error"]["code"], "OUT_OF_DOMAIN",
+            "{v} {s} was converted rather than refused: {r}"
+        );
+        assert!(
+            r["error"]["hint"]
+                .as_str()
+                .unwrap_or("")
+                .contains("temperature-difference"),
+            "the refusal does not point at the difference converter: {r}"
+        );
+    }
+    // And the coldest real temperature is still accepted.
+    assert_eq!(conv(T, 0.0, "K", "K"), 0.0);
+    assert_eq!(conv(T, -273.15, "degC", "K"), 0.0);
+}
+
+#[test]
+fn temperature_difference_invariants() {
+    const D: &str = "units.temperature-difference.convert";
+    let mut worst = 0.0f64;
+    for a in SCALES {
+        for b in SCALES {
+            let x = 37.5;
+            worst = worst.max((conv(D, conv(D, x, a, b), b, a) - x).abs());
+            // Linear, so zero is zero and twice is twice -- exactly what the
+            // temperature converter must not do.
+            assert_eq!(conv(D, 0.0, a, b), 0.0, "{a}->{b}: zero moved");
+            assert!(
+                (conv(D, 2.0 * x, a, b) - 2.0 * conv(D, x, a, b)).abs() < 1e-12,
+                "{a}->{b}: not linear"
+            );
+            assert!(conv(D, -12.0, a, b) < 0.0, "{a}->{b}: a fall became a rise");
+        }
+    }
+    assert!(worst < 1e-12, "round trip {worst}");
+
+    // A kelvin and a Celsius degree are the same size, so those two directions
+    // are not arithmetic at all.
+    for v in [1.0, -17.5, 1000.0] {
+        assert_eq!(
+            conv(D, v, "degC", "K"),
+            v,
+            "{v} degC of change is not {v} K"
+        );
+        assert_eq!(conv(D, v, "K", "degC"), v);
+    }
+    assert_eq!(conv(D, 1.0, "degC", "degF"), 1.8);
+    assert_eq!(conv(D, 18.0, "degF", "K"), 10.0);
+
+    // The reason these are two tools: the same number means different things.
+    // A reading of 10 degC is 283.15 K; a change of 10 degC is 10 K.
+    let as_reading = conv("units.temperature.convert", 10.0, "degC", "K");
+    let as_change = conv(D, 10.0, "degC", "K");
+    assert_eq!(
+        as_reading - as_change,
+        273.15,
+        "the two tools have converged"
     );
 }

@@ -311,6 +311,7 @@ const FRAMES: &[&str] = &[
 
 pub static ITRF: ToolDef = ToolDef {
     id: "geodesy.datum.itrf",
+    stability: gp_base::tool::Stability::Stable,
     title: "Transform between ITRF and WGS 84 realizations",
     summary: "Transforms a position between International Terrestrial Reference Frame realizations (ITRF2020 back to ITRF88) and the WGS 84 realizations aligned with them, at the coordinates' epoch, with the IERS parameters.",
     aliases: &[
@@ -426,19 +427,17 @@ pub static ITRF: ToolDef = ToolDef {
         mm_out("z", "Z", "Target ECEF Z"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "INPUT_NORMALIZED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "INPUT_NORMALIZED"],
     model: "IERS ITRF2020 → past-ITRF Helmert parameters (epoch 2015.0, with rates), chained through ITRF2020; WGS 84 realizations taken as coincident with the ITRF each was aligned with",
     accuracy: "The IERS parameters; a few millimeters between ITRF2020, ITRF2014, and ITRF2008, and up to centimeters for older realizations",
+    when_to_use: "Use this when two positions are quoted in different realizations of what people loosely call the same system. A GNSS network gives coordinates in a particular ITRF, a receiver may report WGS 84 without saying which realization, and archived survey data carries whichever was current when it was observed; combining them without this step buries a shift of centimeters to decimeters in the result. Give the epoch the coordinates belong to, because the frames move relative to each other over time and the parameters carry rates. It reports the shift in meters and as east, north, and up, so the size of what would otherwise be silent is visible.",
+    limitations: "This changes the frame, not the epoch: it does not move a position forward or back in time along its plate's motion, which is the neighbouring plate-motion tool, and the two are usually needed together. Unqualified WGS 84 is treated as the realization aligned with the ITRF of its day and says so in a warning, because a bare WGS 84 label does not identify a realization. The parameters are the published IERS values, so the answer is as good as they are — a few millimeters among ITRF2020, ITRF2014, and ITRF2008, and up to centimeters for the older realizations — and none of that accounts for the accuracy of the coordinates themselves. It is a rigid transformation of the whole Earth and knows nothing about local deformation.",
     references: &[IERS_ITRF2020, NGA_WGS84],
     examples: &[Example {
         id: "primary",
         title: "Pittsburgh from ITRF2020 to ITRF2014 in 2026",
         input: r#"{"from":"ITRF2020","to":"ITRF2014","epoch":"2026.72","lat":40.446111,"lon":-79.982222,"height":300}"#,
-        source: "PROJ +proj=helmert with its ITRF2020 parameter file",
+        source: "PROJ 9.3.0 through pyproj, transforming EPSG:9988 (ITRF2020) to EPSG:7912 (ITRF2014) with PROJ's own EPSG-sourced parameters at epoch 2026.72: latitude 40.44611101524038 and longitude -79.98222202049854 identical in every digit, height 300.0011211372912 m against 300.0011211390832 m, a difference of 1.8 nanometres",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -452,6 +451,10 @@ pub static ITRF: ToolDef = ToolDef {
         },
         Related {
             id: "geodesy.frame.to-local",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.datum.plate-motion",
             reason: "next",
         },
     ],

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "00d81ace21b2a7a9",
+    "hash": "88f46e5e7607f8e0",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "1e40c1d92c676725",
+    "hash": "e77fc6f2f606d6d2",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -157,6 +157,10 @@
   },
   "/geodesy/datum/helmert/": {
     "hash": "d6ee6acb62561fd5",
+    "lastmod": "2026-09-23"
+  },
+  "/geodesy/datum/itrf/": {
+    "hash": "cfc546fee49dd2ce",
     "lastmod": "2026-09-23"
   },
   "/geodesy/ellipsoid/": {
@@ -524,7 +528,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "b5eb7e0edc81fcf9",
+    "hash": "990f1d01be8eb5ec",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -720,7 +724,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "792622632aa60d2f",
+    "hash": "967293707c957833",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -820,7 +824,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "367efad3b684bbf2",
+    "hash": "7a724e3b3ee3d73d",
     "lastmod": "2026-09-23"
   }
 }

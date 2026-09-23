@@ -135,3 +135,122 @@ fn helmert_invariants() {
         }
     }
 }
+
+const FRAMES: [&str; 5] = ["ITRF2020", "ITRF2014", "ITRF2008", "ITRF2000", "ITRF88"];
+
+/// Transform a position between two frames, every length in metres.
+fn itrf(from: &str, to: &str, epoch: f64, p: (f64, f64, f64)) -> Value {
+    call(
+        "geodesy.datum.itrf",
+        &format!(
+            r#"{{"from":"{from}","to":"{to}","epoch":"{epoch}","lat":{},"lon":{},"height":{},"options":{{"outputUnits":{{"shift":"m","east":"m","north":"m","up":"m","height":"m"}}}}}}"#,
+            p.0, p.1, p.2
+        ),
+    )
+}
+
+fn f(r: &Value, path: &str) -> f64 {
+    path.split('.')
+        .fold(r, |v, k| &v[k])
+        .as_f64()
+        .unwrap_or_else(|| panic!("{path} in {r}"))
+}
+
+#[test]
+fn itrf_invariants() {
+    const P: (f64, f64, f64) = (40.446111, -79.982222, 300.0);
+    const M_PER_DEG: f64 = 111_320.0;
+
+    for frame in FRAMES {
+        for epoch in [1995.0, 2015.0, 2030.0] {
+            // A frame to itself. Not identically zero: the chain still runs out
+            // through ITRF2020 and back, so it is held to a fifth of a
+            // nanometre -- the worst seen is 1.16e-10 m, on ITRF88 at 2030.
+            let r = itrf(frame, frame, epoch, P);
+            assert!(
+                f(&r, "result.shift.value").abs() < 2e-10,
+                "{frame} at {epoch} moved {} m",
+                f(&r, "result.shift.value")
+            );
+        }
+    }
+
+    let (mut worst_trip, mut worst_enu) = (0.0f64, 0.0f64);
+    for a in FRAMES {
+        for b in FRAMES {
+            let out = itrf(a, b, 2026.72, P);
+            assert!(out["ok"].as_bool().unwrap_or(false), "{a}->{b}: {out}");
+            // The inverse is applied as an inverse, not as negated parameters.
+            let back = itrf(
+                b,
+                a,
+                2026.72,
+                (
+                    f(&out, "result.lat.value"),
+                    f(&out, "result.lon.value"),
+                    f(&out, "result.height.value"),
+                ),
+            );
+            worst_trip = worst_trip
+                .max((f(&back, "result.lat.value") - P.0).abs() * M_PER_DEG)
+                .max((f(&back, "result.height.value") - P.2).abs());
+            // East, north and up recompose to the reported shift.
+            let (e, n, u) = (
+                f(&out, "result.east.value"),
+                f(&out, "result.north.value"),
+                f(&out, "result.up.value"),
+            );
+            worst_enu = worst_enu
+                .max(((e * e + n * n + u * u).sqrt() - f(&out, "result.shift.value")).abs());
+        }
+    }
+    assert!(worst_trip < 4e-9, "round trip {worst_trip} m");
+    assert!(
+        worst_enu < 1e-15,
+        "east/north/up against the shift: {worst_enu} m"
+    );
+
+    // Chaining: straight through, or by way of a third frame.
+    let direct = itrf("ITRF2020", "ITRF2000", 2026.72, P);
+    let step = itrf("ITRF2020", "ITRF2008", 2026.72, P);
+    let rest = itrf(
+        "ITRF2008",
+        "ITRF2000",
+        2026.72,
+        (
+            f(&step, "result.lat.value"),
+            f(&step, "result.lon.value"),
+            f(&step, "result.height.value"),
+        ),
+    );
+    assert!(
+        (f(&direct, "result.height.value") - f(&rest, "result.height.value")).abs() < 4e-9,
+        "chaining: {} against {}",
+        f(&direct, "result.height.value"),
+        f(&rest, "result.height.value")
+    );
+
+    // The older the frame, the further it has moved. Millimetres to ITRF2014,
+    // and well over a hundred times that to ITRF88.
+    let shifts: Vec<f64> = ["ITRF2014", "ITRF2008", "ITRF2000", "ITRF88"]
+        .iter()
+        .map(|b| f(&itrf("ITRF2020", b, 2026.72, P), "result.shift.value"))
+        .collect();
+    assert!(shifts[0] < 0.005, "ITRF2014 shift {} is not mm", shifts[0]);
+    assert!(
+        shifts[3] > 0.1 && shifts[3] > 30.0 * shifts[0],
+        "ITRF88 shift {} against ITRF2014's {}",
+        shifts[3],
+        shifts[0]
+    );
+
+    // Every pair carries rates, so every shift depends on the epoch.
+    for b in ["ITRF2014", "ITRF2008", "ITRF2000", "ITRF88"] {
+        let early = f(&itrf("ITRF2020", b, 1995.0, P), "result.shift.value");
+        let late = f(&itrf("ITRF2020", b, 2026.72, P), "result.shift.value");
+        assert!(
+            (early - late).abs() > 1e-6,
+            "ITRF2020->{b} did not move with the epoch: {early} against {late}"
+        );
+    }
+}

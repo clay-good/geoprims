@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "efff3e6074667222",
+    "hash": "77fa2dd3cb9c4c52",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "7739b5147c6718fa",
+    "hash": "465ee11d6b6cd8f4",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -796,7 +796,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "36616c1f5c64e8e4",
+    "hash": "b8b889eaeaf58924",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -822,6 +822,10 @@
   "/units/area/": {
     "hash": "12b5f55cace976dd",
     "lastmod": "2026-09-22"
+  },
+  "/units/area/convert/": {
+    "hash": "ba5fa6e396819c5b",
+    "lastmod": "2026-09-23"
   },
   "/units/charge/": {
     "hash": "53fe5853f374b169",
@@ -859,6 +863,10 @@
     "hash": "bc4118c3d6afee79",
     "lastmod": "2026-09-22"
   },
+  "/units/mass/convert/": {
+    "hash": "8e92467e710ab3b7",
+    "lastmod": "2026-09-23"
+  },
   "/units/power/": {
     "hash": "2955ad46cca072d4",
     "lastmod": "2026-09-22"
@@ -883,6 +891,10 @@
     "hash": "6fa8869b9616f540",
     "lastmod": "2026-09-22"
   },
+  "/units/speed/convert/": {
+    "hash": "24ba76ceae60d691",
+    "lastmod": "2026-09-23"
+  },
   "/units/temperature-difference/": {
     "hash": "9f5eaa52687953a5",
     "lastmod": "2026-09-22"
@@ -903,6 +915,10 @@
     "hash": "7b78f2e070c764e7",
     "lastmod": "2026-09-22"
   },
+  "/units/time/convert/": {
+    "hash": "b3698eb9bfee924e",
+    "lastmod": "2026-09-23"
+  },
   "/units/vertical-speed/": {
     "hash": "8ca029364367e814",
     "lastmod": "2026-09-22"
@@ -911,12 +927,16 @@
     "hash": "ae201ab365e3376d",
     "lastmod": "2026-09-22"
   },
+  "/units/volume/convert/": {
+    "hash": "f8e1c3728c81e8ce",
+    "lastmod": "2026-09-23"
+  },
   "/verification/": {
     "hash": "7a85d65f9b0db7a4",
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "621abb665c62b9ac",
+    "hash": "5e983547ceacc017",
     "lastmod": "2026-09-23"
   }
 }

@@ -31,6 +31,12 @@ macro_rules! pair {
             .required()
             .core()],
             outputs: $parent.outputs,
+            // A pair is its parent with `to` preset, so it is exactly as
+            // verified as its parent is: same vectors, same definitions, same
+            // arithmetic. Without this it kept announcing itself as
+            // experimental after its parent was promoted, and the bytes of a
+            // preset stopped matching the bytes of the call it presets.
+            stability: $parent.stability,
             warnings: $parent.warnings,
             model: $parent.model,
             accuracy: $parent.accuracy,

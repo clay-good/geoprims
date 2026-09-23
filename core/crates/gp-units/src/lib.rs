@@ -175,21 +175,53 @@ related: [
     Related { id: "units.speed.convert", reason: "alternative" }
 ]);
 convert_op!(AREA, "area", QT::Area, "ac", "Area converter",
-    "Converts areas: m², km², hectares, acres, ft², mi², and NM².",
-    aliases: ["area conversion"], refs: [NIST_811, NIST_HB44],
-    example: ("One acre in square feet", r#"{"value":"1 ac","to":"ft2"}"#));
+"Converts areas: m², km², hectares, acres, ft², mi², and NM².",
+aliases: ["area conversion"], refs: [NIST_811, NIST_HB44],
+example: ("One acre in square feet", r#"{"value":"1 ac","to":"ft2"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for any area that crosses systems: a parcel in acres against a plan in hectares, a footprint in square feet against square metres, a survey block in square nautical miles. Both acres are here and kept apart, which matters for land records: the international acre and the US survey acre differ by four parts per million, about 16 square centimetres on an acre and a square metre on a section.",
+limits: "An area converts exactly; a measured area does not become more accurate for being converted. The US survey foot and its acre were withdrawn for new work at the end of 2022 and are kept for reading existing records, which is why a value using them is flagged. A square nautical mile is the square of the international nautical mile and is not an official unit of anything -- it appears because airspace and search areas are quoted in it. Nothing here computes the area of a shape; that is the geometry tools.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.length.convert", reason: "parent" },
+    Related { id: "geometry.area.polygon", reason: "next" }
+]);
 convert_op!(VOLUME, "volume", QT::Volume, "galUS", "Volume converter",
-    "Converts volumes: m³, liters, US and imperial gallons, ft³, and yd³.",
-    aliases: ["volume conversion"], refs: [NIST_811, NIST_HB44],
-    example: ("50 US gallons in liters", r#"{"value":"50 galUS","to":"L"}"#));
+"Converts volumes: m³, liters, US and imperial gallons, ft³, and yd³.",
+aliases: ["volume conversion"], refs: [NIST_811, NIST_HB44],
+example: ("50 US gallons in liters", r#"{"value":"50 galUS","to":"L"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for volumes that cross systems: fuel in US gallons against litres, a tank in imperial gallons, earthworks in cubic yards against cubic metres, a container in cubic feet. Fuel is the common case and the two gallons are the common trap, so both are here under names that cannot be confused for each other.",
+limits: "The US and imperial gallons are different units and neither is called just gallon here: an imperial gallon is 4.54609 L and a US gallon is 3.785411784 L, so reading one as the other is a 20% error -- enough to matter on any tank. Volumes convert exactly, but a volume of fuel is not a mass of fuel; that needs a density, which is the fuel converter next door. Nothing here accounts for temperature, and fuel volume changes with it.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.fuel.convert", reason: "next" },
+    Related { id: "units.density.convert", reason: "alternative" }
+]);
 convert_op!(MASS, "mass", QT::Mass, "lb", "Mass converter",
-    "Converts masses: kg, g, lb, oz, and metric tonnes.",
-    aliases: ["weight conversion"], refs: [NIST_811, NIST_HB44],
-    example: ("2,550 lb in kilograms", r#"{"value":"2550 lb","to":"kg"}"#));
+"Converts masses: kg, g, lb, oz, and metric tonnes.",
+aliases: ["weight conversion"], refs: [NIST_811, NIST_HB44],
+example: ("2,550 lb in kilograms", r#"{"value":"2550 lb","to":"kg"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for any weight that has to move between systems: an aircraft or vehicle weight in pounds against a limit in kilograms, a payload in ounces, a load in tonnes. Weight and balance, freight manifests and equipment lists are quoted in whichever system the document came from, and the limit is usually in the other one.",
+limits: "These are masses, not forces. A pound here is the international avoirdupois pound of mass, not the pound-force, and the two are the same number only where gravity is standard -- which is why the pressure converter builds psi from this pound times standard gravity rather than treating them as interchangeable. The tonne is the metric tonne of 1,000 kg, not the short ton of 2,000 lb nor the long ton of 2,240 lb, neither of which is offered, so a document saying only ton has to be read before it is converted.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.density.convert", reason: "next" },
+    Related { id: "units.fuel.convert", reason: "next" }
+]);
 convert_op!(SPEED, "speed", QT::Speed, "kt", "Speed converter",
-    "Converts speeds: knots, mph, km/h, m/s, and ft/s.",
-    aliases: ["speed conversion", "knots converter"], refs: [NIST_811, ICAO_ANNEX5],
-    example: ("100 knots in mph", r#"{"value":"100 kt","to":"mph"}"#));
+"Converts speeds: knots, mph, km/h, m/s, and ft/s.",
+aliases: ["speed conversion", "knots converter"], refs: [NIST_811, ICAO_ANNEX5],
+example: ("100 knots in mph", r#"{"value":"100 kt","to":"mph"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this wherever a speed crosses between trades: an airspeed or a boat speed in knots against a groundspeed in km/h, a road limit in mph, a wind in m/s, a descent in ft/s. The geodetic rates are here too -- mm/yr and m/yr -- because plate motion and subsidence are quoted in them and belong on the same scale as everything else.",
+limits: "A speed is a rate and nothing more: this cannot tell airspeed from groundspeed, true from indicated, or a speed through the water from a speed over it. Those distinctions are what the navigation and aviation tools carry. The knot here is the international one, 1,852 m per hour exactly; an old chart or a British source may mean the Admiralty knot, which is about 0.06% larger and will not announce itself.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.length.convert", reason: "alternative" },
+    Related { id: "units.vertical-speed.convert", reason: "alternative" }
+]);
 convert_op!(VERTICAL_SPEED, "vertical-speed", QT::VerticalSpeed, "ft/min", "Vertical speed converter",
     "Converts climb and descent rates: ft/min, m/s, m/min, and ft/s.",
     aliases: ["climb rate conversion", "fpm to m/s"], refs: [NIST_811, ICAO_ANNEX5],
@@ -252,9 +284,17 @@ convert_op!(ANGULAR_RATE, "angular-rate", QT::AngularRate, "deg/s", "Angular rat
     aliases: ["rate of turn conversion"], refs: [NIST_811],
     example: ("A standard-rate turn (3 °/s) in rpm", r#"{"value":"3 deg/s","to":"rpm"}"#));
 convert_op!(TIME, "time", QT::Time, "min", "Time converter",
-    "Converts durations: seconds, milliseconds, minutes, hours, and days.",
-    aliases: ["duration conversion"], refs: [NIST_811],
-    example: ("90 minutes in hours", r#"{"value":"90 min","to":"h"}"#));
+"Converts durations: seconds, milliseconds, minutes, hours, and days.",
+aliases: ["duration conversion"], refs: [NIST_811],
+example: ("90 minutes in hours", r#"{"value":"90 min","to":"h"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a duration: a flight time, an endurance, a logged interval, a timeout. Give it a span in one unit and get the same span in another, from milliseconds to days, which is what a fuel calculation or schedule arithmetic needs.",
+limits: "This converts durations, not times of day and not dates. A day here is exactly 86,400 seconds, which is what a duration of one day means; it is not the length of a particular calendar day, and a day containing a leap second or a change of clocks is longer or shorter than this by a second or an hour. Anything that has to know what happened on a given date -- a time zone, a UTC offset, a leap second -- belongs to the time domain and not here.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.speed.convert", reason: "alternative" },
+    Related { id: "time.scale.utc-offset", reason: "next" }
+]);
 convert_op!(ENERGY, "energy", QT::Energy, "Wh", "Energy converter",
     "Converts energy: J, kJ, MJ, Wh, and kWh.",
     aliases: ["watt hours conversion"], refs: [NIST_811],

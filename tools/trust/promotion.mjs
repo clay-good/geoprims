@@ -64,19 +64,32 @@ export function derivationProblems(root, id) {
  * search index loaded; both surfaces rank with the same core search.
  */
 export async function promotionProblems({ root, tool, host }) {
-  const problems = derivationProblems(root, tool.id);
+  // A preset is one call of another tool with an input fixed -- units.speed
+  // .kt-to-mph is units.speed.convert with `to` set. It runs the same code
+  // over the same vectors and its correctness claim is entirely its parent's,
+  // so the things a claim needs -- a derivation note, twenty vectors of its
+  // own, three neighbours, a page of prose -- belong to the parent and are not
+  // asked of the preset. What still is asked: its own example runs, its
+  // dimensions lint, and that search can find it.
+  //
+  // This exemption was written against `tool.parent`, which the catalog does
+  // not carry; the field is `preset`. So it never fired, and the moment
+  // presets began inheriting their parent's stability, 34 of them were asked
+  // for derivation notes they should never have needed.
+  const preset = Boolean(tool.preset);
+  const problems = preset ? [] : derivationProblems(root, tool.id);
   for (const p of lintDimensions({ tools: [tool] })) problems.push(`(C) ${p}`);
-  if (tool.vectorCount < MIN_VECTORS) problems.push(`needs at least ${MIN_VECTORS} golden vectors (has ${tool.vectorCount})`);
+  if (!preset && tool.vectorCount < MIN_VECTORS) problems.push(`needs at least ${MIN_VECTORS} golden vectors (has ${tool.vectorCount})`);
   // What the build asks of a stable tool as well as what this module asks,
   // so that "ready" means the build will take it. These live in the manifest
   // lint and the related-tools gate, and a tool that passed here and then
   // failed them cost two rounds of finding out.
-  if (!tool.parent) {
+  if (!preset) {
     for (const [name, v] of [['whenToUse', tool.whenToUse], ['limitations', tool.limitations]]) {
       if (!String(v ?? '').trim()) problems.push(`(A) a stable tool needs ${name}: when to reach for it, and where its answer stops`);
     }
   }
-  if ((tool.composedOf?.length ?? 0) === 0 && (tool.related?.length ?? 0) < MIN_RELATED) {
+  if (!preset && (tool.composedOf?.length ?? 0) === 0 && (tool.related?.length ?? 0) < MIN_RELATED) {
     problems.push(`(A) a stable tool needs ${MIN_RELATED} related tools (has ${tool.related?.length ?? 0})`);
   }
   // A stable tool's page is indexable, and an indexable page carries its own
@@ -94,7 +107,7 @@ export async function promotionProblems({ root, tool, host }) {
     .trim()
     .split(/\s+/)
     .filter(Boolean).length;
-  if (own < MIN_OWN_WORDS) {
+  if (!preset && own < MIN_OWN_WORDS) {
     problems.push(`(A) its page would carry ${own} words of its own prose, under the ${MIN_OWN_WORDS} an indexable page needs`);
   }
 

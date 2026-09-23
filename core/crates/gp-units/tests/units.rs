@@ -42,7 +42,12 @@ fn catalog_lint_passes() {
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
     // Related tools that live in other crates.
-    let known = ["aviation.atmosphere.isa", "geodesy.parse.angle-arithmetic"];
+    let known = [
+        "aviation.atmosphere.isa",
+        "geodesy.parse.angle-arithmetic",
+        "geometry.area.polygon",
+        "time.scale.utc-offset",
+    ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "catalog lint:\n{}", errs.join("\n"));
 }
@@ -204,16 +209,27 @@ fn aviation_profile_on_fuel() {
 
 #[test]
 fn provenance_present() {
+    // Every result carries where it came from, whatever its stability.
     let r = call("units.speed.convert", r#"{"value":1,"to":"mph"}"#);
     for k in ["tool", "toolVersion", "coreVersion", "model", "accuracy"] {
         assert!(!r["meta"][k].as_str().unwrap().is_empty(), "meta.{k}");
     }
     assert!(
-        r["meta"]["warnings"]
+        !r["meta"]["references"].as_array().unwrap().is_empty(),
+        "a result with no references"
+    );
+    assert!(r["meta"]["warnings"].is_array(), "warnings is not a list");
+
+    // A tool that has not been promoted still says so. Speed used to serve as
+    // this example and stopped being able to when it went stable.
+    let e = call("units.energy.convert", r#"{"value":1,"to":"kJ"}"#);
+    assert!(
+        e["meta"]["warnings"]
             .as_array()
             .unwrap()
             .iter()
-            .any(|w| w["code"] == "EXPERIMENTAL_TOOL")
+            .any(|w| w["code"] == "EXPERIMENTAL_TOOL"),
+        "an experimental tool does not announce itself: {e}"
     );
 }
 
@@ -720,4 +736,135 @@ fn pressure_invariants() {
         (gap - 4.24).abs() < 0.1,
         "29.92 inHg and one atmosphere are {gap} Pa apart, not about 4"
     );
+}
+
+/// The algebra every linear converter must satisfy: exact round trips, no
+/// change converting to itself, zero fixed, signs kept, and twice in is twice
+/// out. Returns the worst relative round-trip error so a caller can report it.
+fn linear_converter(tool: &str, units: &[&str]) -> f64 {
+    let mut worst = 0.0f64;
+    for a in units {
+        for b in units {
+            let x = 17.25;
+            worst = worst.max((conv(tool, conv(tool, x, a, b), b, a) - x).abs() / x);
+            assert_eq!(conv(tool, 0.0, a, b), 0.0, "{tool} {a}->{b}: zero moved");
+            assert!(
+                conv(tool, -3.5, a, b) < 0.0,
+                "{tool} {a}->{b}: a sign was lost"
+            );
+            let one = conv(tool, x, a, b);
+            assert!(
+                (conv(tool, 2.0 * x, a, b) - 2.0 * one).abs() / one < 1e-14,
+                "{tool} {a}->{b}: not linear"
+            );
+        }
+        assert_eq!(
+            conv(tool, 4.625_25, a, a),
+            4.625_25,
+            "{tool} {a}->{a} changed the value"
+        );
+    }
+    assert!(worst < 1e-14, "{tool}: round trip {worst}");
+    worst
+}
+
+#[test]
+fn speed_invariants() {
+    const S: &str = "units.speed.convert";
+    linear_converter(S, &["m/s", "km/h", "kt", "mph", "ft/s", "mm/yr", "m/yr"]);
+    // The two definitions the rest of the table leans on.
+    assert_eq!(conv(S, 1.0, "kt", "km/h"), 1.852);
+    assert_eq!(conv(S, 1.0, "mph", "m/s"), 0.44704);
+    assert_eq!(conv(S, 1.0, "m/yr", "mm/yr"), 1000.0);
+    // The smaller the unit, the more of them a given speed is. In metres per
+    // second the units run km/h 0.2778, ft/s 0.3048, mph 0.44704, kt 0.51444,
+    // so the counts run the other way -- a knot is the biggest of the four and
+    // a speed is FEWER knots than mph, not more.
+    let v = 100.0;
+    let count = |u: &str| conv(S, v, "m/s", u);
+    assert!(
+        count("km/h") > count("ft/s"),
+        "km/h is not the smallest unit here"
+    );
+    assert!(count("ft/s") > count("mph"));
+    assert!(
+        count("mph") > count("kt"),
+        "a knot is larger than a mile per hour"
+    );
+    assert!(count("kt") > count("m/s"));
+}
+
+#[test]
+fn mass_invariants() {
+    const M: &str = "units.mass.convert";
+    linear_converter(M, &["kg", "g", "lb", "oz", "t"]);
+    assert_eq!(conv(M, 1.0, "lb", "kg"), 0.453_592_37);
+    assert_eq!(conv(M, 1.0, "oz", "g"), 28.349_523_125);
+    assert_eq!(
+        conv(M, 16.0, "oz", "lb"),
+        1.0,
+        "sixteen ounces is not a pound"
+    );
+    // The metric tonne, not a short ton (907.18 kg) nor a long one (1016.05).
+    assert_eq!(conv(M, 1.0, "t", "kg"), 1000.0);
+}
+
+#[test]
+fn area_invariants() {
+    const A: &str = "units.area.convert";
+    linear_converter(
+        A,
+        &[
+            "m2", "km2", "ha", "ac", "ft2", "mi2", "NM2", "ftUS2", "acUS",
+        ],
+    );
+    assert_eq!(conv(A, 1.0, "ha", "m2"), 10_000.0);
+    assert_eq!(
+        conv(A, 1.0, "mi2", "ac"),
+        640.0,
+        "a section is not 640 acres"
+    );
+    assert_eq!(conv(A, 1.0, "NM2", "m2"), 3_429_904.0);
+    // The two acres are two units. A thousand of each are about 16 m2 apart:
+    // the two-parts-per-million of the two feet, doubled by squaring.
+    let gap = conv(A, 1000.0, "acUS", "m2") - conv(A, 1000.0, "ac", "m2");
+    assert!(
+        (gap - 16.187_474).abs() < 1e-3,
+        "a thousand of each acre differ by {gap} m2"
+    );
+}
+
+#[test]
+fn volume_invariants() {
+    const V: &str = "units.volume.convert";
+    linear_converter(V, &["m3", "L", "mL", "galUS", "galImp", "ft3", "yd3"]);
+    assert_eq!(conv(V, 1.0, "galUS", "L"), 3.785_411_784);
+    assert_eq!(conv(V, 1.0, "galImp", "L"), 4.546_09);
+    assert!(
+        (conv(V, 1.0, "yd3", "ft3") - 27.0).abs() < 1e-12,
+        "a cubic yard is not 27 cubic feet"
+    );
+    // Twenty per cent apart. A converter carrying one definition under both
+    // names makes this 1.
+    let ratio = conv(V, 1.0, "galImp", "galUS");
+    assert!(
+        (ratio - 1.200_949_925_5).abs() < 1e-9,
+        "the two gallons have converged: {ratio}"
+    );
+}
+
+#[test]
+fn time_invariants() {
+    const T: &str = "units.time.convert";
+    linear_converter(T, &["s", "ms", "min", "h", "d"]);
+    // Whole-number ratios, so these are identities rather than approximations.
+    assert_eq!(conv(T, 1.0, "d", "h"), 24.0);
+    assert_eq!(conv(T, 1.0, "d", "min"), 1440.0);
+    assert_eq!(conv(T, 1.0, "d", "s"), 86_400.0);
+    assert_eq!(conv(T, 1.0, "h", "s"), 3600.0);
+    assert_eq!(conv(T, 1.0, "ms", "s"), 0.001);
+    // And the round trip is exact, not merely close.
+    for u in ["ms", "min", "h", "d"] {
+        assert_eq!(conv(T, conv(T, 7.0, "s", u), u, "s"), 7.0, "s->{u}->s");
+    }
 }

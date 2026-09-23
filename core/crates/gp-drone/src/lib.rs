@@ -36,7 +36,7 @@ const PIX4D: Reference = Reference {
     issuer: "Pix4D support documentation",
     year: 2024,
     edition: "Vendor guidance, not a standard",
-    locator: "General case: 75% front, 60% side; forest and dense vegetation: 85% front, 70% side",
+    locator: "General case: at least 75% front, 60% side; forest and dense vegetation: at least 85% front and side",
     url: "https://support.pix4d.com/hc/en-us/articles/202557459",
 };
 const ASPRS: Reference = Reference {
@@ -581,6 +581,7 @@ fn run_altitude_for_gsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
 pub static TRIGGER: ToolDef = ToolDef {
     id: "drone.photogrammetry.trigger",
     stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Overlap, trigger interval, and line spacing",
     summary: "Photo spacing, trigger interval, and flight-line spacing for your front and side overlap, with a check that the camera can keep up.",
     aliases: &[
@@ -643,7 +644,7 @@ pub static TRIGGER: ToolDef = ToolDef {
         Field::new(
             "preset",
             "Overlap preset",
-            "general (75/60) or forest (85/70), Pix4D guidance",
+            "general (75/60) or forest (85/85), Pix4D guidance",
             Kind::Choice(&["general", "forest"]),
         ),
         Field::new(
@@ -805,7 +806,7 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let (pf, ps) = match ctx.choice("preset")? {
-        Some("forest") => (85.0, 70.0),
+        Some("forest") => (85.0, 85.0),
         Some(_) => (75.0, 60.0),
         None => (75.0, 60.0),
     };

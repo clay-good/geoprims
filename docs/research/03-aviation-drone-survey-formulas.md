@@ -196,7 +196,7 @@ Source: [Wikipedia ISA summary](https://en.wikipedia.org/wiki/International_Stan
 - Trigger distance = footprint along track × (1 − front overlap). Trigger interval = distance/groundspeed.
 - Line spacing = footprint across track × (1 − side overlap).
 - Motion blur in pixels = V·t_shutter/GSD. Keep it ≤ 0.5–1 px, so t ≤ k·GSD/V.
-- Overlap (Pix4D): at least 75% front / 60% side in general; at least 85% / 70% for forest and dense vegetation ([Pix4D](https://support.pix4d.com/hc/en-us/articles/115002471546)).
+- Overlap (Pix4D): at least 75% front / 60% side in general; at least 85% front and side for forest and dense vegetation (85% / 70% is its snow and sand case) ([Pix4D](https://support.pix4d.com/hc/en-us/articles/115002471546)).
 - Overlap is lower on high terrain because H AGL drops. Use H above the highest terrain for the worst case.
 
 **ASPRS Positional Accuracy Standards:**

@@ -12,7 +12,7 @@ Classical flight-planning geometry for a vertical camera over flat ground. One p
 - Line spacing SP = footprint across × (1 − side overlap).
 - Trigger interval = B / groundspeed.
 - Fastest groundspeed the camera allows = B / camera minimum interval; `TRIGGER_TOO_FAST` when the interval is under that minimum.
-- Presets (Pix4D vendor guidance, not a standard): general 75/60, forest 85/70; a given overlap overrides its preset value.
+- Presets (Pix4D vendor guidance, not a standard): general 75/60, forest 85/85; a given overlap overrides its preset value.
 
 ## Symbols and units
 

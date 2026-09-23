@@ -155,7 +155,8 @@ fn forest_preset() {
         r#"{"height":"100 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","image_width":5472,"groundspeed":"10 m/s","preset":"forest"}"#,
     );
     assert!((num(&r, "result.trigger_distance.value") - 15.0).abs() < 1e-9);
-    assert!((num(&r, "result.line_spacing.value") - 45.0).abs() < 1e-9);
+    // Pix4D: at least 85% frontal and side overlap for forest.
+    assert!((num(&r, "result.line_spacing.value") - 22.5).abs() < 1e-9);
 }
 
 #[test]

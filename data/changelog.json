@@ -3,6 +3,17 @@
   "entries": [
     {
       "date": "2026-09-23",
+      "kind": "result-change",
+      "tools": [
+        "drone.photogrammetry.trigger"
+      ],
+      "vectors": [
+        "drone.photogrammetry.trigger v010"
+      ],
+      "summary": "The forest overlap preset (version 1.1.0) is now 85% front and 85% side. It used 85% front and 70% side, but Pix4D's page recommends at least 85% frontal and side overlap for forest and dense vegetation; 85/70 is its advice for snow and sand. With the preset, flight lines are now closer together: 22.5 m instead of 45 m for a 1-inch camera at 100 m. The superseded vector pinned the old line spacing."
+    },
+    {
+      "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
         "drone.sensors.vlos"

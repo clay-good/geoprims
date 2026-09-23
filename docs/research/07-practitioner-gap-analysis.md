@@ -213,7 +213,7 @@ Why geoprims can win these queries:
    Hold entry sector + wind-corrected outbound timing → DME arc lead radial → descent rate for the glidepath at the planned groundspeed → VDP from HAT → cold-temperature correction of step-down fixes. Every output carries the not-for-navigation notice.
 
 4. **Drone mapping day.**
-   Draw polygon → GSD target → altitude for that GSD (checked against the 400 ft AGL limit and structure rule) → overlap preset (Pix4D 75/60; forest 85/70) ([Pix4D](https://support.pix4d.com/hc/en-us/articles/115002471546)) → motion blur and maximum shutter speed → grid + image count + dataset GB → battery swaps via endurance with losses → sun window (elevation >30°, avoiding the hotspot) → Part 107 lighting check → VLOS distance vs the farthest waypoint → export.
+   Draw polygon → GSD target → altitude for that GSD (checked against the 400 ft AGL limit and structure rule) → overlap preset (Pix4D 75/60; forest 85/85) ([Pix4D](https://support.pix4d.com/hc/en-us/articles/115002471546)) → motion blur and maximum shutter speed → grid + image count + dataset GB → battery swaps via endurance with losses → sun window (elevation >30°, avoiding the hotspot) → Part 107 lighting check → VLOS distance vs the farthest waypoint → export.
 
 5. **GNSS control and OPUS workflow.**
    Paste almanac → DOP and sky plot window → session length (OPUS-RS or OPUS-S) → slant antenna height → vertical height to the antenna reference point → after OPUS: frame and epoch transform (ITRF2020 → NAD83(2011)) → state plane → combined factor using ellipsoid height from the geoid tool → ground coordinates → localization residuals.

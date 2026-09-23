@@ -9,6 +9,7 @@ Decode FB wind and temperature groups by the forecast's coding rules. Paste one 
 
 - Group DDSS[±TT]: direction DD × 10° true, speed SS kt.
 - DD from 51 to 86: subtract 50 from DD and add 100 kt to the speed.
+- A coded 199 kt (like 7799) means 199 kt or greater: forecasts of 200 kt and more are coded as 199 kt (FAA-H-8083-28B section 27.2.1.1.1). The row says "or greater", carries `speed_bound: "at-least"`, and the result carries the SPEED_AT_LEAST warning.
 - 9900: light and variable (under 5 kt).
 - Above 24,000 ft the temperature has no sign and is negative.
 
@@ -40,7 +41,7 @@ None: it decodes the text as written. A forecast is only as good as its model ru
 ## Differential tests
 
 - `tools/vectors/gen_aviation.py`: an independent Python encoder chooses the wind and temperature, codes the group by the FB rules, and expects them back (8 random groups at levels from 6,000 ft to 39,000 ft), alongside hand decodes
-- `core/vectors/aviation.weather.fb-winds-decode.jsonl`: 23 vectors, including the whole handbook product and each of its table rows
+- `core/vectors/aviation.weather.fb-winds-decode.jsonl`: 24 vectors, including the whole handbook product, each of its table rows, and the 199 kt code
 
 ## Invariants
 

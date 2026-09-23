@@ -310,6 +310,10 @@
       "severity": "accuracy",
       "message": "The scale looks suspicious."
     },
+    "SPEED_AT_LEAST": {
+      "severity": "info",
+      "message": "A speed is a lower bound: the coded value means that speed or greater."
+    },
     "STATION_VARIATION_DIFFERS": {
       "severity": "accuracy",
       "message": "The station's published variation differs from the model."

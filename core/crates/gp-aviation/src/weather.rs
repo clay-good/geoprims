@@ -544,7 +544,7 @@ const UNDECODED_ROW: &[Field] = &[
 pub static METAR: ToolDef = ToolDef {
     id: "aviation.weather.metar-decode",
     stability: gp_base::tool::Stability::Stable,
-    version: "1.1.0",
+    version: "1.1.1",
     title: "METAR decoder",
     summary: "Turns a pasted METAR or SPECI into plain language: wind (true), visibility, weather, clouds and ceiling, temperature, altimeter, US remarks, and the flight category. Groups it cannot read are listed, never dropped.",
     aliases: &[
@@ -667,7 +667,7 @@ pub static METAR: ToolDef = ToolDef {
             QT::Pressure,
             "inHg",
         )
-        .precision(Precision::Decimals(2))
+        .precision(Precision::Fixed(2))
         .optional(),
         qty(
             "sea_level_pressure",
@@ -1007,7 +1007,7 @@ fn run_metar(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     g,
                     format!(
                         "altimeter {} inHg",
-                        display::number(x, Precision::Decimals(2), fmt)
+                        display::number(x, Precision::Fixed(2), fmt)
                     ),
                     &mut groups,
                 );
@@ -1235,6 +1235,9 @@ pub const FB_LEVELS: &[f64] = &[
     3000.0, 6000.0, 9000.0, 12000.0, 18000.0, 24000.0, 30000.0, 34000.0, 39000.0,
 ];
 
+/// The highest speed an FB group can code; it stands for this speed or greater.
+pub const FB_MAX_KT: f64 = 199.0;
+
 /// A decoded FB group.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FbGroup {
@@ -1316,12 +1319,20 @@ const FB_ROW: &[Field] = &[
     )
     .precision(Precision::Decimals(0))
     .optional(),
+    text(
+        "speed_bound",
+        "Speed bound",
+        "at-least when the group is coded 199 kt, which means 199 kt or greater; absent otherwise",
+        8,
+    )
+    .optional(),
     text("text", "Decoded", "In plain words", 120),
 ];
 
 pub static FB_WINDS: ToolDef = ToolDef {
     id: "aviation.weather.fb-winds-decode",
     stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Winds aloft (FB) decoder",
     summary: "Decodes FB winds and temperatures aloft: one group at a level, or a whole station line, with light-and-variable winds, speeds over 100 kt, and the implied minus sign above 24,000 ft.",
     aliases: &[
@@ -1377,8 +1388,8 @@ pub static FB_WINDS: ToolDef = ToolDef {
         ),
         text("notice", "Notice", "Safety framing", 120),
     ],
-    warnings: &["EXPERIMENTAL_TOOL"],
-    model: "FB winds and temperatures aloft coding: direction in tens of degrees true, 51-86 means add 100 kt, 9900 is light and variable, and signs are omitted above 24,000 ft (all negative)",
+    warnings: &["SPEED_AT_LEAST", "EXPERIMENTAL_TOOL"],
+    model: "FB winds and temperatures aloft coding: direction in tens of degrees true, 51-86 means add 100 kt, a coded 199 kt means 199 kt or greater, 9900 is light and variable, and signs are omitted above 24,000 ft (all negative)",
     accuracy: "Decodes the text as written. Levels missing at the left of a station line are the ones within 1,500 ft of the station (winds) or at 3,000 ft (temperature).",
     when_to_use: "Use this when you have an FB winds and temperatures aloft product and want a level read in plain language: the wind direction and speed and the temperature at a flight level, either from a single coded group or from a whole station line. It is the quickest way to get the wind for a cruising altitude into the wind triangle or a fuel plan.",
     limitations: "It decodes the text you paste and nothing else: it does not fetch the product, check it against the station, or interpolate between levels. Levels near the station are omitted by the coding itself, so a station line may not carry the altitude you want. Forecast winds aloft are a forecast, and the temperature sign is implied above 24,000 ft, which this tool applies rather than guesses.",
@@ -1408,7 +1419,7 @@ pub static FB_WINDS: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
-    sentence: "Decoded the winds aloft. Winds are true. Get a current official briefing before flight.",
+    sentence: "Decoded the winds aloft. Winds are true.{warn SPEED_AT_LEAST} A speed of 199 kt means 199 kt or greater.{/warn} Get a current official briefing before flight.",
     limits: &[("batchRows", 1_000)],
     run: run_fb,
     ..ToolDef::BLANK
@@ -1480,12 +1491,15 @@ fn run_fb(ctx: &mut Ctx) -> Result<Json, ToolError> {
         let d = decode_fb(g, *level).map_err(|m| {
             ToolError::invalid("/report", m).hint(format!("Group {} of the line.", k + 1))
         })?;
+        // FAA-H-8083-28B 27.2.1.1.1: 200 kt or more is coded as 199 kt.
+        let at_least = d.dir.is_some() && d.speed >= FB_MAX_KT;
         let wind = match d.dir {
             None => "light and variable (less than 5 kt)".to_owned(),
             Some(dir) => format!(
-                "{:03}° true at {} kt",
+                "{:03}° true at {} kt{}",
                 dir as i64,
-                display::number(d.speed, Precision::Decimals(0), fmt)
+                display::number(d.speed, Precision::Decimals(0), fmt),
+                if at_least { " or greater" } else { "" }
             ),
         };
         let txt = match d.temp {
@@ -1513,6 +1527,18 @@ fn run_fb(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "speed",
             ctx.emit("speed", q(d.speed, QT::Speed, "kt"), unit(QT::Speed, "kt")),
         ));
+        if at_least {
+            row.push(("speed_bound", Json::str("at-least")));
+            if !ctx.warnings.iter().any(|w| w.code == "SPEED_AT_LEAST") {
+                ctx.warnings.push(
+                    Warning::new(
+                        "SPEED_AT_LEAST",
+                        "A wind coded as 199 kt means 199 kt or greater; FB forecasts code 200 kt and more as 199 kt.",
+                    )
+                    .at("/report"),
+                );
+            }
+        }
         if let Some(t) = d.temp {
             row.push((
                 "temperature",

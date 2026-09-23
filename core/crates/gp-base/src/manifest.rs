@@ -180,6 +180,10 @@ fn field_schema(f: &Field, is_input: bool) -> Json {
                     ("decimals", Json::Num(n.into())),
                     ("grouping", Json::Bool(false)),
                 ]),
+                Precision::Fixed(n) => Json::obj([
+                    ("decimals", Json::Num(n.into())),
+                    ("trailingZeros", Json::Bool(true)),
+                ]),
             },
         );
     }

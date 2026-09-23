@@ -43,6 +43,10 @@ pub enum Precision {
     /// Decimals, but a small value keeps up to this many significant digits,
     /// with at most that many extra decimals (0.000859 km, not 0.001 km).
     DecimalsMinSig(u8, u8),
+    /// Decimals that keep their trailing zeros, for a value reported to a fixed
+    /// resolution (an altimeter setting of 29.80 inHg). It applies in the
+    /// field's declared unit; in any other unit it reads like `Decimals`.
+    Fixed(u8),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -1281,7 +1285,11 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, String, Json) {
                 let num = q.iter().find(|(k, _)| k == "value").map(|(_, v)| v);
                 let sym = q.iter().find(|(k, _)| k == "unit").map(|(_, v)| v);
                 match (num, sym, f.kind) {
-                    (Some(Json::Num(x)), Some(Json::Str(u)), Kind::Quantity { q, .. }) => {
+                    (Some(Json::Num(x)), Some(Json::Str(u)), Kind::Quantity { q, unit }) => {
+                        let precision = match precision {
+                            Precision::Fixed(p) if u.as_str() != unit => Precision::Decimals(p),
+                            p => p,
+                        };
                         Some(Val::num(*x, units::by_symbol(q, u), precision))
                     }
                     (Some(Json::Num(x)), Some(Json::Str(u)), _) => {

@@ -15,7 +15,7 @@ Read a METAR or SPECI group by group in the order WMO FM 15/16 and FAA Order JO 
 
 ## Symbols and units
 
-Directions in degrees true, speeds in kt, visibility in SM (metric reports converted, with the original text kept), heights in ft AGL, temperatures in °C, altimeter in inHg or hPa as reported.
+Directions in degrees true, speeds in kt, visibility in SM (metric reports converted, with the original text kept), heights in ft AGL, temperatures in °C, altimeter in inHg or hPa as reported. An inHg altimeter setting is shown to hundredths, trailing zero kept (A2980 reads 29.80 inHg), as the setting is coded (FAA-H-8083-28B section 24.4.3.11).
 
 ## Domain
 
@@ -42,7 +42,7 @@ None: it decodes the text as written and does not check it against the station o
 
 - `core/crates/gp-aviation/tests/metar_parity.rs`: 612 live reports from the US and Europe (Aviation Weather Center data API, 2026-09-19) against python-metar 1.11.0, comparing wind, gust, visibility, temperature and dew point, altimeter, sea-level pressure, and every cloud layer. It found three decoder defects, now fixed and pinned: /// cloud types dropped, trend groups applied as current weather, and NDV visibility not read.
 - `tools/vectors/gen_metar_diff.py`: regenerates that fixture
-- `core/vectors/aviation.weather.metar-decode.jsonl`: 21 vectors, including hand decodes per JO 7900.5E, the handbook example, the regressions, and every 60th live report
+- `core/vectors/aviation.weather.metar-decode.jsonl`: 24 vectors, including hand decodes per JO 7900.5E, the handbook example, the regressions, every 60th live report, and the altimeter shown to hundredths (inHg) or whole hPa
 
 ## Invariants
 

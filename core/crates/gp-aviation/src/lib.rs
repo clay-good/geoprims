@@ -832,7 +832,11 @@ fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ctx.step(
             "Station pressure",
             "p = 1013.25 × ((QNH/1013.25)^0.190284 − elevation × 6.8756e-6)^(1/0.190284)",
-            format!("p from QNH {} inHg at {} ft", n(inhg, 2), n(elev.to(ft), 0)),
+            format!(
+                "p from QNH {} inHg at {} ft",
+                display::number(inhg, Precision::Fixed(2), fmt),
+                n(elev.to(ft), 0)
+            ),
             format!("{} hPa", n(p / 100.0, 2)),
         );
         ctx.step(
@@ -1501,6 +1505,7 @@ const WIND_FIELDS: [Field; 6] = [
 
 pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
     id: "aviation.wind.runway-components",
+    version: "1.0.1",
     diagram_inline: true,
     stability: gp_base::tool::Stability::Stable,
     title: "Runway wind components",
@@ -1686,7 +1691,7 @@ pub static RUNWAY_COMPONENTS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "{if crosswind > 0}{crosswind} crosswind from the {crosswind_from}{else}No crosswind{/if} and {abs(headwind)} {if headwind < 0}tailwind{else}headwind{/if} on runway {runway}{if gust_crosswind > 0}, {gust_crosswind} crosswind in gusts{/if}.{warn VARIABLE_WIND} These are the worst case for the variable wind.{/warn}",
+    sentence: "{if crosswind >= 0.05}{crosswind} crosswind from the {crosswind_from}{else}No crosswind{/if} and {if headwind <= -0.05}{abs(headwind)} tailwind{else}{if headwind >= 0.05}{headwind} headwind{else}no headwind or tailwind{/if}{/if} on runway {runway}{if gust_crosswind >= 0.05}, {gust_crosswind} crosswind in gusts{/if}.{warn VARIABLE_WIND} These are the worst case for the variable wind.{/warn}",
     limits: &[("batchRows", 10_000)],
     slots: &[
         Slot::new("runway", &["rwy", "runway"]),
@@ -1734,8 +1739,12 @@ pub(crate) fn runway_wind(
     let (cross, head, from, gust, variable) = match (w.dir, w.range) {
         (Some(d), None) if w.speed > 0.0 => {
             let d = to_reference(d, wind_ref, rwy_ref, var, "/wind_reference")?;
+            // Snap float noise (cos 90° = 6e-17) to exact zero so a square or
+            // straight-down-the-runway wind reads as no component, not "-0".
+            let snap = |v: f64| if v.abs() < 1e-9 { 0.0 } else { v };
             let (h, x) = wind::components(rwy_heading, d, w.speed);
-            let side = if x.abs() < 1e-9 {
+            let (h, x) = (snap(h), snap(x));
+            let side = if x == 0.0 {
                 "none"
             } else if x > 0.0 {
                 "right"
@@ -1743,7 +1752,13 @@ pub(crate) fn runway_wind(
                 "left"
             };
             let gust = w.gust.map(|g| wind::components(rwy_heading, d, g));
-            (x.abs(), h, side, gust.map(|(gh, gx)| (gx.abs(), gh)), false)
+            (
+                x.abs(),
+                h,
+                side,
+                gust.map(|(gh, gx)| (snap(gx).abs(), snap(gh))),
+                false,
+            )
         }
         (_, _) if w.speed == 0.0 => (0.0, 0.0, "none", None, false),
         (dir, range) => {
@@ -1884,6 +1899,7 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HEADING_GROUNDSPEED: ToolDef = ToolDef {
     id: "aviation.wind.heading-groundspeed",
+    version: "1.0.1",
     diagram_inline: true,
     stability: gp_base::tool::Stability::Stable,
     title: "Wind triangle: heading and groundspeed",
@@ -2004,7 +2020,7 @@ pub static HEADING_GROUNDSPEED: ToolDef = ToolDef {
             reason: "parent",
         },
     ],
-    sentence: "Fly heading {heading} for a groundspeed of {groundspeed}, a wind correction of {abs(wind_correction_angle)} to the {if wind_correction_angle < 0}left{else}right{/if}.",
+    sentence: "Fly heading {heading} for a groundspeed of {groundspeed}, {if wind_correction_angle <= -0.05}a wind correction of {abs(wind_correction_angle)} to the left{else}{if wind_correction_angle >= 0.05}a wind correction of {wind_correction_angle} to the right{else}with no wind correction{/if}{/if}.",
     limits: &[("batchRows", 10_000)],
     run: run_heading_groundspeed,
     ..ToolDef::BLANK

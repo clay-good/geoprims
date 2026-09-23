@@ -109,7 +109,7 @@ test('a decoder shows every coded group beside what it says', () => {
   for (const [group, meaning] of [
     ['30015G25KT', 'wind 300° true at 15 kt, gusting 25 kt'],
     ['10SM', 'visibility 10 statute miles'],
-    ['A2980', 'altimeter 29.8 inHg'],
+    ['A2980', 'altimeter 29.80 inHg'],
     ['30/08', 'temperature 30 °C, dew point 8 °C'],
   ]) {
     assert.ok(text.includes(group), `the block does not show ${group}`);

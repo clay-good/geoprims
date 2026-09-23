@@ -5,6 +5,35 @@
       "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
+        "aviation.wind.runway-components",
+        "aviation.wind.heading-groundspeed"
+      ],
+      "vectors": [],
+      "summary": "A wind straight across the runway read \"0 kt tailwind\", and one straight down it read \"0 kt crosswind from the none\": float noise like \u22120.0000000000000018 kt was taken as a tailwind. Components under a billionth of a knot are now exactly zero, and the sentence says \"no headwind or tailwind\" or \"No crosswind\" whenever a component rounds to zero. The wind triangle said \"a wind correction of 0\u00b0 to the right\" with no crosswind; it now says \"with no wind correction\". Runway wind components and the wind triangle are now version 1.0.1."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
+        "aviation.weather.metar-decode",
+        "aviation.altimetry.q-codes"
+      ],
+      "vectors": [],
+      "summary": "An altimeter setting of A2980 showed as 29.8 inHg. Settings are given to hundredths (FAA-H-8083-28B section 24.4.3.11), so the METAR decoder and the QNH of the Q-codes tool now keep the trailing zero: 29.80 inHg. In hPa they read as before. The METAR decoder is now version 1.1.1 and the Q-codes tool 1.1.1."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
+        "aviation.weather.fb-winds-decode"
+      ],
+      "vectors": [],
+      "summary": "The winds aloft code 7799 decoded as \"270\u00b0 true at 199 kt\". FB forecasts code 200 kt and more as 199 kt (FAA-H-8083-28B section 27.2.1.1.1), so it now reads \"270\u00b0 true at 199 kt or greater\", the row carries speed_bound \"at-least\", and the result has a SPEED_AT_LEAST note. The decoder is now version 1.1.0."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
         "geodesy.datum.nadcon5"
       ],
       "vectors": [],
@@ -165,7 +194,7 @@
         "drone.mission.survey-grid v004",
         "drone.mission.survey-grid v005"
       ],
-      "summary": "Image count and the survey grid (version 1.1.0) now count the way published flight planning does (Penn State GEOG 892): ⌈width / spacing⌉ + 1 lines with the outer lines on the edges, and ⌈length / photo spacing⌉ + 1 photos per line plus extra photos past each end, 2 by default (a new input; 0 leaves them out). Most areas gain a line. The Penn State block now gives its published 10 lines and 430 photos, where 1.0.0 gave 9 and 342. The superseded vectors pinned the old line counts."
+      "summary": "Image count and the survey grid (version 1.1.0) now count the way published flight planning does (Penn State GEOG 892): \u2308width / spacing\u2309 + 1 lines with the outer lines on the edges, and \u2308length / photo spacing\u2309 + 1 photos per line plus extra photos past each end, 2 by default (a new input; 0 leaves them out). Most areas gain a line. The Penn State block now gives its published 10 lines and 430 photos, where 1.0.0 gave 9 and 342. The superseded vectors pinned the old line counts."
     },
     {
       "date": "2026-09-23",
@@ -183,7 +212,7 @@
         "drone.power.endurance"
       ],
       "vectors": [],
-      "summary": "Drone flight time is stable. It reproduces the endurance step of Bauersfeld and Scaramuzza's DJI Mavic 3 example (IEEE Robotics and Automation Letters, 2022): 4.89 Ah at 4 × 3.7 V and 89.5 W is 2,909 s, and 4.88 Ah at 107.0 W is 2,429 s, both within the rounding of the printed capacity. The derating field's help now asks for a percent, like 15, where it used to suggest 0.85, which the tool would have read as 0.85%. The reserve's help now says it is a share of the usable energy, which is what the tool has always computed. Results are unchanged."
+      "summary": "Drone flight time is stable. It reproduces the endurance step of Bauersfeld and Scaramuzza's DJI Mavic 3 example (IEEE Robotics and Automation Letters, 2022): 4.89 Ah at 4 \u00d7 3.7 V and 89.5 W is 2,909 s, and 4.88 Ah at 107.0 W is 2,429 s, both within the rounding of the printed capacity. The derating field's help now asks for a percent, like 15, where it used to suggest 0.85, which the tool would have read as 0.85%. The reserve's help now says it is a share of the usable energy, which is what the tool has always computed. Results are unchanged."
     },
     {
       "date": "2026-09-23",

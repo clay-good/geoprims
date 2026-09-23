@@ -56,7 +56,7 @@ pub fn nws_altimeter(p_hpa: f64, h_m: f64) -> f64 {
 
 pub static Q_CODES: ToolDef = ToolDef {
     id: "aviation.altimetry.q-codes",
-    version: "1.1.0",
+    version: "1.1.1",
     title: "QNH, QFE, and QNE",
     summary: "Converts between the altimeter setting (QNH) and station pressure (QFE) at an airport, gives the field's pressure altitude (QNE), and works out the altimeter setting from a barometer reading.",
     aliases: &[
@@ -110,7 +110,7 @@ pub static Q_CODES: ToolDef = ToolDef {
             QT::Pressure,
             "inHg",
         )
-        .precision(Precision::Decimals(2)),
+        .precision(Precision::Fixed(2)),
         qty(
             "qne",
             "QNE (field pressure altitude)",
@@ -126,7 +126,7 @@ pub static Q_CODES: ToolDef = ToolDef {
             QT::Pressure,
             "inHg",
         )
-        .precision(Precision::Decimals(2))
+        .precision(Precision::Fixed(2))
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],

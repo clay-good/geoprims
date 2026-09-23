@@ -11,6 +11,9 @@ use crate::tool::Precision;
 /// Trailing fractional zeros are dropped, so shown digits never imply more
 /// precision than the value has.
 pub fn number(x: f64, precision: Precision, format: NumberFormat) -> String {
+    if let Precision::Fixed(p) = precision {
+        return pad_decimals(number(x, Precision::Decimals(p), format), p, format);
+    }
     if !x.is_finite() {
         return "—".to_owned();
     }
@@ -20,7 +23,7 @@ pub fn number(x: f64, precision: Precision, format: NumberFormat) -> String {
     let (digits, mut n) = shortest_digits(x.abs());
     let mut d: Vec<u8> = digits.bytes().map(|b| b - b'0').collect();
     let keep = match precision {
-        Precision::Decimals(p) | Precision::Plain(p) => n + i32::from(p),
+        Precision::Decimals(p) | Precision::Plain(p) | Precision::Fixed(p) => n + i32::from(p),
         Precision::Significant(s) => i32::from(s),
         // Up to `s` significant digits, but never more than `s` extra decimals,
         // so rounding noise near zero still shows as 0.
@@ -90,6 +93,24 @@ pub fn number(x: f64, precision: Precision, format: NumberFormat) -> String {
         out.push_str(frac);
     }
     out
+}
+
+/// Pads a rounded number back out to `p` decimals (`Precision::Fixed`).
+fn pad_decimals(s: String, p: u8, format: NumberFormat) -> String {
+    if p == 0 || s == "—" {
+        return s;
+    }
+    let point = match format {
+        NumberFormat::DecimalPoint => '.',
+        NumberFormat::DecimalComma => ',',
+    };
+    let have = s.find(point).map_or(0, |i| s.len() - i - 1);
+    let mut s = s;
+    if have == 0 {
+        s.push(point);
+    }
+    s.push_str(&"0".repeat(usize::from(p) - have));
+    s
 }
 
 fn to_str(d: &[u8]) -> String {
@@ -175,6 +196,11 @@ mod tests {
             (1e-7, S(2), "0.0000001"),
             (0.0, D(2), "0"),
             (-0.001, D(1), "0"),
+            (29.8, Precision::Fixed(2), "29.80"),
+            (30.0, Precision::Fixed(2), "30.00"),
+            (29.921, Precision::Fixed(2), "29.92"),
+            (0.0, Precision::Fixed(2), "0.00"),
+            (1013.0, Precision::Fixed(0), "1,013"),
         ];
         for (x, p, want) in cases {
             assert_eq!(number(*x, *p, P), *want, "{x:e} {p:?}");
@@ -203,6 +229,10 @@ mod tests {
         assert_eq!(
             number(12345.678, D(2), NumberFormat::DecimalComma),
             "12\u{202f}345,68"
+        );
+        assert_eq!(
+            number(29.8, Precision::Fixed(2), NumberFormat::DecimalComma),
+            "29,80"
         );
     }
 

@@ -101,14 +101,19 @@ test('golden surface file matches (UPDATE_SURFACE=1 to regenerate)', async () =>
 });
 
 test('search hides experimental tools unless asked', async () => {
-  // This needs a tool that has not been promoted. Speed used to serve, and
-  // stopped being able to when it went stable.
-  const hidden = await c.call('geoprims_search', { query: 'ft/min to m/s' });
+  // This needs a tool that has not been promoted. Naming one here means
+  // rewriting the test on every promotion -- speed, then vertical speed -- so
+  // the example is whichever tool is still experimental when the test runs,
+  // searched for by its own title.
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const exp = catalog.tools.find((t) => t.stability === 'experimental');
+  assert.ok(exp, 'no experimental tool is left to hide');
+  const hidden = await c.call('geoprims_search', { query: exp.title });
   assert.ok(hidden.structuredContent.result.results.every((r) => r.stability === 'stable'));
-  assert.ok(!hidden.structuredContent.result.results.some((r) => r.id === 'units.vertical-speed.fpm-to-mps'));
+  assert.ok(!hidden.structuredContent.result.results.some((r) => r.id === exp.id));
   assert.ok(hidden.structuredContent.result.hiddenExperimental > 0);
-  const shown = await c.call('geoprims_search', { query: 'ft/min to m/s', includeExperimental: true });
-  assert.equal(shown.structuredContent.result.results[0].id, 'units.vertical-speed.fpm-to-mps');
+  const shown = await c.call('geoprims_search', { query: exp.title, includeExperimental: true });
+  assert.equal(shown.structuredContent.result.results[0].id, exp.id);
   // And a stable tool is not hidden from the default search.
   const stable = await c.call('geoprims_search', { query: 'knots to mph' });
   assert.equal(stable.structuredContent.result.results[0].id, 'units.speed.kt-to-mph');

@@ -223,13 +223,29 @@ related: [
     Related { id: "units.vertical-speed.convert", reason: "alternative" }
 ]);
 convert_op!(VERTICAL_SPEED, "vertical-speed", QT::VerticalSpeed, "ft/min", "Vertical speed converter",
-    "Converts climb and descent rates: ft/min, m/s, m/min, and ft/s.",
-    aliases: ["climb rate conversion", "fpm to m/s"], refs: [NIST_811, ICAO_ANNEX5],
-    example: ("500 ft/min in m/s", r#"{"value":"500 ft/min","to":"m/s"}"#));
+"Converts climb and descent rates: ft/min, m/s, m/min, and ft/s.",
+aliases: ["climb rate conversion", "fpm to m/s"], refs: [NIST_811, ICAO_ANNEX5],
+example: ("500 ft/min in m/s", r#"{"value":"500 ft/min","to":"m/s"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a rate of climb or descent that has to cross systems: an instrument or a clearance in feet per minute against a performance figure or a glider variometer in metres per second. Keep the sign -- a descent is a negative climb -- and the direction comes through the conversion with it.",
+limits: "This is a vertical rate, not a horizontal one, and knots are deliberately not offered: a climb rate in knots is almost always a ground speed misread. Nothing here knows about air or ground: an indicated rate of climb is what the instrument reads in the air mass it is in, and a rate through a descending air mass is not a rate over the ground. Converting a rate does not convert a gradient either -- a feet-per-nautical-mile figure needs a speed as well, which the slope converter is for.",
+related: [
+    Related { id: "units.speed.convert", reason: "alternative" },
+    Related { id: "units.slope.convert", reason: "next" },
+    Related { id: "units.quantity.normalize", reason: "alternative" }
+]);
 convert_op!(ACCELERATION, "acceleration", QT::Acceleration, "g0", "Acceleration converter",
-    "Converts accelerations: m/s², standard gravity (g), and ft/s².",
-    aliases: ["g force conversion"], refs: [NIST_811],
-    example: ("2 g in m/s²", r#"{"value":"2 g0","to":"m/s2"}"#));
+"Converts accelerations: m/s², standard gravity (g), and ft/s².",
+aliases: ["g force conversion"], refs: [NIST_811],
+example: ("2 g in m/s²", r#"{"value":"2 g0","to":"m/s2"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a load factor, a braking or launch figure, or a vibration limit quoted in one system and needed in another: a 2 g manoeuvring limit in m/s², a sensor reading in ft/s² against a specification in g.",
+limits: "The g here is standard gravity, the defined constant of 9.80665 m/s². It is not the local acceleration of gravity, which runs from about 9.78 at the equator to 9.83 at the poles and falls with height -- a few parts in a thousand, which matters for gravimetry and does not for a load factor. A load factor is also not the same thing as an acceleration in a straight line: it is the ratio of lift to weight, and in a steady turn the aircraft is not speeding up at all.",
+related: [
+    Related { id: "units.speed.convert", reason: "alternative" },
+    Related { id: "units.vertical-speed.convert", reason: "alternative" },
+    Related { id: "units.quantity.normalize", reason: "alternative" }
+]);
 convert_op!(PRESSURE, "pressure", QT::Pressure, "inHg", "Pressure converter",
 "Converts pressures: inHg, hPa, mbar, Pa, kPa, bar, psi, mmHg, and atm.",
 aliases: ["altimeter setting conversion", "inHg to hPa"], refs: [NIST_811, ICAO_ANNEX5],
@@ -280,9 +296,17 @@ related: [
     Related { id: "geodesy.parse.angle-arithmetic", reason: "alternative" }
 ]);
 convert_op!(ANGULAR_RATE, "angular-rate", QT::AngularRate, "deg/s", "Angular rate converter",
-    "Converts turn and rotation rates: °/s, °/min, rad/s, and rpm.",
-    aliases: ["rate of turn conversion"], refs: [NIST_811],
-    example: ("A standard-rate turn (3 °/s) in rpm", r#"{"value":"3 deg/s","to":"rpm"}"#));
+"Converts turn and rotation rates: °/s, °/min, rad/s, rpm, and arcsec or mas per year.",
+aliases: ["rate of turn conversion"], refs: [NIST_811],
+example: ("A standard-rate turn (3 °/s) in rpm", r#"{"value":"3 deg/s","to":"rpm"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a rate of turn or rotation: a standard-rate turn in degrees per second against a gyro output in rad/s, a shaft or rotor speed in rpm, or a plate-motion and station-velocity rotation published in milliarcseconds per year.",
+limits: "The year in arcsec/yr and mas/yr is the Julian year of exactly 365.25 days, which is what published velocities are quoted against; a calendar year would move the answer by up to a fifth of a percent. This converts a rate, not a turn: how fast something rotates, not how far it has rotated, which is the angle converter. And a rate of turn is not a radius -- an aircraft turning at 3 °/s sweeps a different circle at every speed, so a turn radius needs the speed as well.",
+related: [
+    Related { id: "units.angle.convert", reason: "next" },
+    Related { id: "units.time.convert", reason: "alternative" },
+    Related { id: "units.quantity.normalize", reason: "alternative" }
+]);
 convert_op!(TIME, "time", QT::Time, "min", "Time converter",
 "Converts durations: seconds, milliseconds, minutes, hours, and days.",
 aliases: ["duration conversion"], refs: [NIST_811],

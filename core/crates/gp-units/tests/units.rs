@@ -941,6 +941,57 @@ fn power_invariants() {
 }
 
 #[test]
+fn vertical_speed_invariants() {
+    const V: &str = "units.vertical-speed.convert";
+    linear_converter(V, &["m/s", "ft/min", "m/min", "ft/s"]);
+    assert_eq!(conv(V, 1.0, "ft/min", "m/s"), 0.00508);
+    assert_eq!(conv(V, 1.0, "ft/s", "m/s"), 0.3048);
+    assert_eq!(conv(V, 60.0, "ft/min", "ft/s"), 1.0, "a minute is not 60 s");
+    // A descent stays a descent: a sign dropped here turns one into a climb.
+    for u in ["m/s", "m/min", "ft/s"] {
+        assert!(conv(V, -500.0, "ft/min", u) < 0.0, "-500 ft/min to {u}");
+    }
+}
+
+#[test]
+fn acceleration_invariants() {
+    const A: &str = "units.acceleration.convert";
+    linear_converter(A, &["m/s2", "g0", "ft/s2"]);
+    assert_eq!(conv(A, 1.0, "g0", "m/s2"), 9.806_65);
+    assert_eq!(conv(A, 1.0, "ft/s2", "m/s2"), 0.3048);
+    // One g in ft/s2 is 9.80665/0.3048 = 32.174048556430446..., not the 32.174
+    // a textbook prints. It is also not what dividing the two doubles gives:
+    // 9.806_65 and 0.3048 are each already rounded, so the quotient rounds
+    // twice and lands one bit low, at ...044. The core combines the exact
+    // definitions into one ratio and rounds once, giving the correctly rounded
+    // ...045. That one bit is the whole reason the conversion is done this
+    // way, so it is pinned here rather than hidden behind a tolerance.
+    assert_eq!(conv(A, 1.0, "g0", "ft/s2"), 32.174_048_556_430_45);
+    assert_ne!(conv(A, 1.0, "g0", "ft/s2"), 9.806_65 / 0.3048);
+    assert_ne!(conv(A, 1.0, "g0", "ft/s2"), 32.174);
+}
+
+#[test]
+fn angular_rate_invariants() {
+    const R: &str = "units.angular-rate.convert";
+    linear_converter(
+        R,
+        &["deg/s", "deg/min", "rad/s", "rpm", "arcsec/yr", "mas/yr"],
+    );
+    assert_eq!(conv(R, 1.0, "rpm", "deg/s"), 6.0);
+    assert_eq!(conv(R, 1.0, "deg/min", "deg/s"), 1.0 / 60.0);
+    assert_eq!(conv(R, 360.0, "deg/min", "deg/s"), 6.0);
+    assert_eq!(conv(R, 1.0, "arcsec/yr", "mas/yr"), 1000.0);
+    // The year is the Julian one of 31,557,600 s, not the 31,536,000 of a
+    // 365-day year -- 0.07% apart, which a loose check would let through.
+    let per_year = conv(R, 1.0, "deg/s", "arcsec/yr");
+    assert!(
+        (per_year / (3600.0 * 31_557_600.0) - 1.0).abs() < 1e-14,
+        "the year behind arcsec/yr is not Julian: {per_year}"
+    );
+}
+
+#[test]
 fn every_unit_pair_has_a_vector() {
     let mut failures = Vec::new();
     for t in TOOLS {

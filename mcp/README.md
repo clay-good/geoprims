@@ -4,15 +4,17 @@ A local, offline MCP server that runs the same WebAssembly calculators as geopri
 
 ## Run it
 
-Release tags will ship prebuilt files in `mcp/dist/`, so a tagged clone runs with Node alone. No release is tagged yet, so for now build from source (Rust via rustup, binaryen `wasm-opt`, and Node 22 or newer):
+Release tags carry the prebuilt calculators in `mcp/dist/`, so a clone of a tag runs with Node 22 or newer and nothing else. The server is not published to npm; the repository is the way to get it.
 
 ```bash
-npm run build
+git clone --branch v0.1.0 --depth 1 https://github.com/clay-good/geoprims
 ```
 
 ```bash
-node mcp/server.mjs
+node geoprims/mcp/server.mjs
 ```
+
+Each release on [GitHub](https://github.com/clay-good/geoprims/releases) also has a zip of the same files and a `.mcpb` bundle that Claude Desktop installs in one click. To build from source instead, clone `main` and run `npm run build` (Rust via rustup, binaryen `wasm-opt`, and Node 22 or newer).
 
 Without built files, the server prints how to get them and exits with code 1.
 
@@ -97,15 +99,11 @@ Settings, Developer, Edit Config: claude_desktop_config.json.
 }
 ```
 
-For the `npx` path (once `@geoprims/mcp` is published), use `"command": "npx", "args": ["-y", "@geoprims/mcp"]` instead, or `claude mcp add geoprims -- npx -y @geoprims/mcp`.
-
 ### Desktop bundle
 
-`npm run build:mcpb` writes `dist/mcpb/geoprims-<version>.mcpb`, a one-click bundle for desktop hosts: the server, its manifest, and the whole `mcp/dist` it reads, so the installed extension is as offline as the checkout. The zip is built byte-for-byte reproducibly — fixed entry order, fixed timestamps — so the same source gives the same digest, and `npm run build:mcpb -- --write-digest` writes that digest into `mcp/server.json` as the MCPB package's `fileSha256`.
+`npm run build:mcpb` writes `dist/mcpb/geoprims-<version>.mcpb`, a one-click bundle for desktop hosts: the server, its manifest, and the whole `mcp/dist` it reads, so the installed extension is as offline as the checkout. The zip is built byte-for-byte reproducibly — fixed entry order, fixed timestamps — so the same source gives the same digest, which the release notes carry.
 
 The bundle's one setting is the same `--toolsets` the command line takes: leave it empty for the six meta-tools, or name domains to expose their stable tools directly.
-
-`mcp/server.json` is the MCP Registry entry for `com.geoprims/mcp`. It names the npm package and the MCPB download of the same release; the digest in the committed file is a placeholder until a release is built.
 
 ## Tools
 

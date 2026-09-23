@@ -6,6 +6,10 @@ import { CLIENTS, snippet } from '../../../../../mcp/clients.mjs';
 import { ANNOTATIONS, TOOLS } from '../../../../../mcp/meta.mjs';
 import { PROMPTS } from '../../../../../mcp/prompts.mjs';
 import { TOOLSETS, directTools } from '../../../../../mcp/toolsets.mjs';
+import mcpPkg from '../../../../../mcp/package.json' with { type: 'json' };
+// The release tag that carries the prebuilt server (mcp/dist), so a clone of it runs with Node alone.
+const tag = `v${mcpPkg.version}`;
+const releases = 'https://github.com/clay-good/geoprims/releases';
 const route = (id) => '/' + id.split('.').join('/') + '/';
 const toolsets = Object.keys(TOOLSETS).map((name) => ({ name, tools: directTools(catalog, [name], ANNOTATIONS) }));
 ---
@@ -19,23 +23,22 @@ const toolsets = Object.keys(TOOLSETS).map((name) => ({ name, tools: directTools
 
   <h2>Get the server</h2>
   <p>
-    No release is tagged yet, so build from a clone (Rust via rustup, binaryen <code>wasm-opt</code>, and Node 22 or newer), then
+    Clone the {tag} release. It carries the built calculators, so it runs with Node 22 or newer and nothing else. Then
     replace <code>/abs/path/geoprims</code> below with your clone's path.
-    The <code>npx</code> snippets work once <code>@geoprims/mcp</code> is published.
   </p>
-  <pre class="snippet"><code>git clone https://github.com/clay-good/geoprims
-cd geoprims && npm run build</code></pre>
+  <pre class="snippet"><code>git clone --branch {tag} --depth 1 https://github.com/clay-good/geoprims</code></pre>
+  <p>
+    Or download the release as a zip from <a href={`${releases}/tag/${tag}`}>GitHub</a>. Claude Desktop can also install the
+    <code>geoprims-{mcpPkg.version}.mcpb</code> file from the same page in one click. To build from source instead, clone
+    <code>main</code> and run <code>npm run build</code> (it needs Rust via rustup and binaryen <code>wasm-opt</code>).
+  </p>
 
   <h2>Add it to your client</h2>
   {CLIENTS.map((c) => (
     <section class="client" id={c.id}>
       <h3>{c.name}</h3>
       <p class="where">{c.where}</p>
-      <pre class="snippet" data-client={c.id} data-how="clone"><code>{snippet(c, 'clone')}</code></pre>
-      <details>
-        <summary>With npx (after publishing)</summary>
-        <pre class="snippet" data-client={c.id} data-how="npx"><code>{snippet(c, 'npx')}</code></pre>
-      </details>
+      <pre class="snippet" data-client={c.id}><code>{snippet(c)}</code></pre>
     </section>
   ))}
 

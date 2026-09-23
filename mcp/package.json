@@ -1,13 +1,28 @@
 {
   "name": "@geoprims/mcp",
+  "private": true,
   "version": "0.1.0",
   "description": "Local MCP server for geoprims: exact, cited geospatial, aviation, drone, survey, and unit calculations. Offline, zero dependencies.",
   "type": "module",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/clay-good/geoprims.git", "directory": "mcp" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clay-good/geoprims.git",
+    "directory": "mcp"
+  },
   "mcpName": "com.geoprims/mcp",
-  "bin": { "geoprims-mcp": "server.mjs" },
-  "files": ["server.mjs", "meta.mjs", "toolsets.mjs", "prompts.mjs", "dist/"],
-  "engines": { "node": ">=22" },
+  "bin": {
+    "geoprims-mcp": "server.mjs"
+  },
+  "files": [
+    "server.mjs",
+    "meta.mjs",
+    "toolsets.mjs",
+    "prompts.mjs",
+    "dist/"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {}
 }

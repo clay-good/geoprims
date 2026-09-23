@@ -4,11 +4,10 @@
 
 /** Placeholder for the clone's path in every clone-path snippet. */
 export const CLONE_PATH = '/abs/path/geoprims';
-export const NPX_PACKAGE = '@geoprims/mcp';
 
-/** The command and arguments that start the server for one install path. */
-export function launch(path, how = 'clone') {
-  return how === 'npx' ? { command: 'npx', args: ['-y', NPX_PACKAGE] } : { command: 'node', args: [`${path}/mcp/server.mjs`] };
+/** The command and arguments that start the server from a clone. */
+export function launch(path) {
+  return { command: 'node', args: [`${path}/mcp/server.mjs`] };
 }
 
 export const CLIENTS = [
@@ -20,8 +19,8 @@ export const CLIENTS = [
 ];
 
 /** The snippet text for a client: a shell command for Claude Code, JSON for the rest. */
-export function snippet(client, how = 'clone', path = CLONE_PATH) {
-  const { command, args } = launch(path, how);
+export function snippet(client, path = CLONE_PATH) {
+  const { command, args } = launch(path);
   if (client.id === 'claude-code') return `claude mcp add geoprims -- ${[command, ...args].join(' ')}`;
   return JSON.stringify({ [client.key]: { geoprims: { ...client.entry, command, args } } }, null, 2);
 }

@@ -55,10 +55,9 @@ test('the "Use with agents" page shows every client snippet and the toolsets', a
   const html = page('agents');
   const esc = (s) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   for (const c of CLIENTS) {
-    for (const how of ['clone', 'npx']) {
-      const text = snippet(c, how);
-      assert.ok(html.includes(text) || html.includes(esc(text)), `${c.name} ${how}`);
-    }
+    const text = snippet(c);
+    assert.ok(html.includes(text) || html.includes(esc(text)), c.name);
+    assert.ok(!html.includes('npx'), 'no npx path: the server ships in the repository only');
   }
   assert.match(html, /&quot;servers&quot;|"servers"/);
   for (const name of Object.keys(TOOLSETS)) assert.ok(html.includes(`<code>${name}</code>`), name);

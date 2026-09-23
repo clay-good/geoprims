@@ -3,8 +3,8 @@
 //
 // The zip is written here rather than shelled out to, so the bundle is
 // byte-reproducible: entries in a fixed order, a fixed timestamp, and deflate
-// from node:zlib. The digest it prints is the one `mcp/server.json` carries as
-// the MCPB package's fileSha256.
+// from node:zlib. The digest it prints goes in the release notes, so a download
+// can be checked against the source it was built from.
 import { createHash } from 'node:crypto';
 import { deflateRawSync } from 'node:zlib';
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -99,29 +99,8 @@ export function build(out = join(root, 'dist/mcpb')) {
   return { file, digest, entries: entries.length, bytes: bytes.length, version: manifest.version };
 }
 
-/**
- * Writes the built bundle's digest and version into `mcp/server.json`, which
- * is what the registry verifies the download against. The placeholder in the
- * committed file is zeros, because the digest only exists once the release
- * artifact does.
- */
-export function writeDigest(result, path = join(mcp, 'server.json')) {
-  const doc = JSON.parse(readFileSync(path, 'utf8'));
-  const pkg = doc.packages.find((p) => p.registryType === 'mcpb');
-  if (!pkg) throw new Error('server.json has no mcpb package');
-  pkg.fileSha256 = result.digest;
-  pkg.version = result.version;
-  pkg.identifier = pkg.identifier.replace(/mcp-v[^/]+\/geoprims-[^/]+\.mcpb$/, `mcp-v${result.version}/geoprims-${result.version}.mcpb`);
-  writeFileSync(path, `${JSON.stringify(doc, null, 2)}\n`);
-  return doc;
-}
-
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const r = build();
   console.log(`${relative(root, r.file)}  ${r.entries} files  ${(r.bytes / 1e6).toFixed(1)} MB`);
   console.log(`sha256 ${r.digest}`);
-  if (process.argv.includes('--write-digest')) {
-    writeDigest(r);
-    console.log('wrote the digest into mcp/server.json');
-  }
 }

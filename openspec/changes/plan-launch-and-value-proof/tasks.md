@@ -10,7 +10,7 @@
 - [ ] 2.3 Publish the 8 journeys and 25 explainers; verify each journey runs end to end with prefilled steps
 - [x] 2.4 ~~Complete export-control and liability review and the privacy page review~~ Owner decision 2026-09-23: launch on the published disclaimer, privacy, accuracy, and security pages without an outside review
 - [ ] 2.5 Verify Search Console and Bing, submit the sitemap index, and record the baseline in `docs/seo-log.md`; verify coverage reports show the hero pages discovered
-- [ ] 2.6 Publish the MCP server release tag, npm package, MCPB bundle, and registry entry; verify the clone-and-run and npx scenarios on clean machines
+- [ ] 2.6 Publish the MCP server release tag with the prebuilt `mcp/dist/` and the MCPB bundle; verify clone-and-run on a clean checkout with Node alone (no npm package or registry entry: owner decision 2026-09-23)
 
 ## 3. Measurement
 

@@ -469,10 +469,10 @@ test('search then describe then run', async () => {
 });
 
 test('every setup snippet launches the server; README and package agree', async () => {
-  const { CLIENTS, NPX_PACKAGE, parseSnippet, snippet } = await import('./clients.mjs');
+  const { CLIENTS, parseSnippet, snippet } = await import('./clients.mjs');
   const readme = readFileSync(join(here, 'README.md'), 'utf8');
   const pkg = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8'));
-  assert.equal(pkg.name, NPX_PACKAGE);
+  assert.equal(pkg.private, true, 'the MCP server ships in the repository, never to npm');
   assert.ok(pkg.bin['geoprims-mcp']);
   // mcp "VS Code key": VS Code reads "servers", the others "mcpServers".
   const vscode = JSON.parse(snippet(CLIENTS.find((x) => x.id === 'vscode')));
@@ -480,8 +480,7 @@ test('every setup snippet launches the server; README and package agree', async 
   assert.equal(vscode.servers.geoprims.type, 'stdio');
   for (const client of CLIENTS) {
     assert.ok(readme.includes(snippet(client)), `README is missing the ${client.name} snippet`);
-    assert.deepEqual(parseSnippet(client, snippet(client, 'npx')), { command: 'npx', args: ['-y', NPX_PACKAGE] });
-    const { command, args } = parseSnippet(client, snippet(client, 'clone', root.replace(/\/$/, '')));
+    const { command, args } = parseSnippet(client, snippet(client, root.replace(/\/$/, '')));
     const r = spawnSync(command, args, {
       input: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25', capabilities: {} } }) + '\n',
       encoding: 'utf8',

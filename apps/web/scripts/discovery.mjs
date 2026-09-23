@@ -63,7 +63,7 @@ geoprims has two surfaces: this website for people and a local MCP server for ag
 ## Run the MCP server
 
 \`\`\`bash
-git clone ${REPO}.git
+git clone --branch v${mcpPkg.version} --depth 1 ${REPO}.git
 \`\`\`
 
 \`\`\`bash
@@ -96,8 +96,7 @@ const mcpJson = {
   homepage: SITE,
   repository: REPO,
   install: [
-    { kind: 'git-clone', command: `git clone ${REPO}.git && node geoprims/mcp/server.mjs` },
-    { kind: 'npx', command: `npx -y ${mcpPkg.name}`, status: 'not yet published' },
+    { kind: 'git-clone', command: `git clone --branch v${mcpPkg.version} --depth 1 ${REPO}.git && node geoprims/mcp/server.mjs` },
   ],
   tools: surface.tools.map((t) => t.name),
   resources: surface.resources.map((r) => r.uri),

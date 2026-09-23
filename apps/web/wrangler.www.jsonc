@@ -1,0 +1,10 @@
+{
+  // Redirects www.geoprims.com to geoprims.com (www-redirect.mjs). Deploy from apps/web:
+  //   npx wrangler deploy --config wrangler.www.jsonc
+  "name": "geoprims-www",
+  "main": "www-redirect.mjs",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "routes": [{ "pattern": "www.geoprims.com", "custom_domain": true }],
+  "observability": { "enabled": false }
+}

@@ -142,10 +142,10 @@ The server's full surface (tools, schemas, annotations, resources, prompts) SHAL
 - **THEN** CI fails showing the diff
 
 ### Requirement: Distribution
-The server SHALL also be installable via `npx -y @geoprims/mcp`, as an MCPB bundle (`server.type: node`) for one-click desktop install, and listed in the MCP Registry as `com.geoprims/mcp` with a `server.json` referencing the npm package (`mcpName` in `package.json`) and the MCPB release with `fileSha256`. npm releases SHALL carry provenance attestations.
+The server SHALL be distributed through the repository only, not npm or the MCP Registry (owner decision, 2026-09-23). Each release tag SHALL commit the prebuilt `mcp/dist/`, so a clone of the tag, or GitHub's zip of it, runs with Node alone. Each GitHub release SHALL attach an MCPB bundle (`server.type: node`) for one-click desktop install, with its SHA-256 in the release notes. The package SHALL be marked `private` so it cannot be published by accident.
 
-#### Scenario: npx install
-- **WHEN** a user adds `{"command": "npx", "args": ["-y", "@geoprims/mcp"]}` to a client configuration
+#### Scenario: Clone a release and run
+- **WHEN** a user runs `git clone --branch v0.1.0 --depth 1 https://github.com/clay-good/geoprims` and adds `node <path>/mcp/server.mjs` to a client, with only Node 22 installed
 - **THEN** the client lists the six meta-tools
 
 ### Requirement: Agent-evaluation benchmark

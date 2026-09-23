@@ -2,14 +2,13 @@
 // the manifest says what the server actually takes, the bundle carries every
 // file the server reads and unpacks byte-for-byte, and the registry entry
 // names the same versions with a digest the build writes.
-import { createHash } from 'node:crypto';
 import { inflateRawSync } from 'node:zlib';
-import { readdirSync, readFileSync, mkdtempSync, statSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, mkdtempSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, bundleFiles, writeDigest } from './build-mcpb.mjs';
+import { build, bundleFiles } from './build-mcpb.mjs';
 import { TOOLSETS } from '../../mcp/toolsets.mjs';
 import { TOOLS as META_TOOLS } from '../../mcp/meta.mjs';
 
@@ -67,29 +66,6 @@ test('the bundle carries every file it declares, and unpacks to the same bytes',
   }
   // The bundle is reproducible: the same inputs give the same bytes.
   assert.equal(build(mkdtempSync(join(tmpdir(), 'mcpb-'))).digest, r.digest);
-});
-
-test('the registry entry names the same release, and the build writes its digest', () => {
-  const server = JSON.parse(readFileSync(join(root, 'mcp/server.json'), 'utf8'));
-  assert.equal(server.name, pkg.mcpName);
-  assert.match(server.name, /^[a-zA-Z0-9.-]+\/[a-zA-Z0-9._-]+$/, 'reverse-DNS name');
-  assert.ok(server.description.length <= 100, 'the registry caps the description at 100 characters');
-  assert.equal(server.version, pkg.version);
-  const npm = server.packages.find((p) => p.registryType === 'npm');
-  assert.equal(npm.identifier, pkg.name);
-  assert.equal(npm.version, pkg.version);
-  assert.equal(npm.transport.type, 'stdio');
-  const mcpb = server.packages.find((p) => p.registryType === 'mcpb');
-  assert.match(mcpb.fileSha256, /^[a-f0-9]{64}$/, 'a digest, even as a placeholder');
-  assert.ok(mcpb.identifier.includes(`geoprims-${pkg.version}.mcpb`), 'the download names this release');
-  // Releasing fills the digest in from the built bundle.
-  const out = mkdtempSync(join(tmpdir(), 'mcpb-'));
-  const built = build(out);
-  const copy = join(out, 'server.json');
-  writeFileSync(copy, JSON.stringify(server, null, 2));
-  const updated = writeDigest(built, copy);
-  const digest = createHash('sha256').update(readFileSync(built.file)).digest('hex');
-  assert.equal(updated.packages.find((p) => p.registryType === 'mcpb').fileSha256, digest);
 });
 
 test('the bundled offline assets stay inside the 6 MB the spec allows', () => {

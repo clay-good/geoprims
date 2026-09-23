@@ -18,7 +18,7 @@ const GHILANI: Reference = Reference {
     year: 2018,
     edition: "15th edition",
     locator: "Chapter 25 (vertical curves: sight distance on crest and sag curves)",
-    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003237",
+    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 
 pub static SIGHT_DISTANCE: ToolDef = ToolDef {

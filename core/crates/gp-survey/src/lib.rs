@@ -41,7 +41,7 @@ const GHILANI: Reference = Reference {
     year: 2018,
     edition: "15th edition",
     locator: "Chapters 10 (traverse computations), 12 (area), 24 (horizontal curves), 25 (vertical curves), 26 (volumes)",
-    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003237",
+    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 const AASHTO_GREEN_BOOK: Reference = Reference {
     title: "A Policy on Geometric Design of Highways and Streets (the Green Book)",

@@ -31,7 +31,7 @@ const MEEUS: Reference = Reference {
     year: 1998,
     edition: "2nd edition",
     locator: "Chapters 25 (solar coordinates) and 28 (equation of time)",
-    url: "https://openlibrary.org/search?q=astronomical+algorithms+meeus",
+    url: "https://www.willbell.com/math/mc1.htm",
 };
 const CFR_1_1_NIGHT: Reference = Reference {
     title: "14 CFR 1.1, General definitions (night)",

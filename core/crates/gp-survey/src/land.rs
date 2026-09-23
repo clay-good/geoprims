@@ -35,7 +35,7 @@ const GHILANI: Reference = Reference {
     year: 2018,
     edition: "15th edition",
     locator: "Chapters 10 (traverse computations) and 12 (area by coordinates)",
-    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003237",
+    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 const VARA_SOURCES: Reference = Reference {
     title: "Units of Measure: land measurements and definitions (vara, arpent)",

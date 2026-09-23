@@ -17,7 +17,7 @@ const GHILANI: Reference = Reference {
     year: 2018,
     edition: "15th edition",
     locator: "Grades and slopes in route surveying and construction layout",
-    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003237",
+    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 
 /// A grade as rise over run, from its written form. A bare `a:b` needs a

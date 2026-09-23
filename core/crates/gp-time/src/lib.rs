@@ -28,7 +28,7 @@ const IS_GPS_200: Reference = Reference {
     year: 2022,
     edition: "Revision N",
     locator: "Sections 3.3.4 (GPS time, epoch 1980 January 6) and 20.3.3.3.1.1 (10-bit transmission week number)",
-    url: "https://www.gps.gov/technical/icwg/IS-GPS-200N.pdf",
+    url: "https://www.gps.gov/sites/default/files/2025-07/IS-GPS-200N.pdf",
 };
 const BULLETIN_C: Reference = Reference {
     title: "IERS Bulletin C 72",

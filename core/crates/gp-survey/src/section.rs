@@ -17,7 +17,7 @@ const GHILANI: Reference = Reference {
     year: 2018,
     edition: "15th edition",
     locator: "Chapter 26 (volumes: cross-section areas by coordinates, mixed sections)",
-    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003237",
+    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 
 const PT: &[Field] = &[

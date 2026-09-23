@@ -5,6 +5,19 @@
       "date": "2026-09-23",
       "kind": "result-change",
       "tools": [
+        "units.fuel.convert",
+        "units.quantity.normalize"
+      ],
+      "vectors": [
+        "units.fuel.convert v001",
+        "units.quantity.normalize v002"
+      ],
+      "summary": "Promoting these two tools to stable removed EXPERIMENTAL_TOOL from their warnings, which moved NOMINAL_VALUE_USED and UNIT_ASSUMED from index 1 to index 0 and broke the two vectors that pinned the index. Nothing computed changed. v001 is superseded by v021 and v002 by v025, both naming the warning by its code with the meta.warnings.*.code form the runner supports, so no warning sorting above them can shift them again -- the same fix geometry.validity.make-valid v001 took for the same reason."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "result-change",
+      "tools": [
         "geometry.validity.make-valid"
       ],
       "vectors": [
@@ -121,7 +134,7 @@
         "navigation.rhumb.direct"
       ],
       "vectors": [],
-      "summary": "The rhumb-line tools are stable. They reproduce Bowditch's Mercator sailing examples (NGA Pub. 9, 2024 edition) to within its 1 minute = 1 nautical mile convention, and match GeographicLib's RhumbSolve within 0.4 µm on 2,000 pairs run through the tools, including nearly east-west, nearly meridional, and near-pole lines. The Bowditch citation is now the 2024 edition, verified at NGA. Results are unchanged."
+      "summary": "The rhumb-line tools are stable. They reproduce Bowditch's Mercator sailing examples (NGA Pub. 9, 2024 edition) to within its 1 minute = 1 nautical mile convention, and match GeographicLib's RhumbSolve within 0.4 \u00b5m on 2,000 pairs run through the tools, including nearly east-west, nearly meridional, and near-pole lines. The Bowditch citation is now the 2024 edition, verified at NGA. Results are unchanged."
     },
     {
       "date": "2026-09-19",
@@ -146,7 +159,7 @@
         "geodesy.grid-ref.maidenhead-forward"
       ],
       "vectors": [],
-      "summary": "A longitude or latitude typed on a Maidenhead grid line in decimal degrees (like 145.83333333333334 for 145°50′) could land in the cell on either side of the line, depending on floating-point rounding. It now always falls in the cell east or north of the line. The tool is now version 1.1.0."
+      "summary": "A longitude or latitude typed on a Maidenhead grid line in decimal degrees (like 145.83333333333334 for 145\u00b050\u2032) could land in the cell on either side of the line, depending on floating-point rounding. It now always falls in the cell east or north of the line. The tool is now version 1.1.0."
     },
     {
       "date": "2026-09-19",
@@ -233,7 +246,7 @@
         "geodesy.parse.coordinates"
       ],
       "vectors": [],
-      "summary": "The coordinate reader had three defects, found by 1,500 independently written strings in ten notations and now fixed: spaced DMS with a one- or two-digit longitude (like 30 34 14.3 N 1 25 23.9 E) was misread as packed aviation notation, so 1°25′ became 125°; signed DMS with degree signs and no hemisphere letters crashed; and one-digit decimal degrees with a hemisphere letter could fail. Tool version 1.1.0. It is now stable."
+      "summary": "The coordinate reader had three defects, found by 1,500 independently written strings in ten notations and now fixed: spaced DMS with a one- or two-digit longitude (like 30 34 14.3 N 1 25 23.9 E) was misread as packed aviation notation, so 1\u00b025\u2032 became 125\u00b0; signed DMS with degree signs and no hemisphere letters crashed; and one-digit decimal degrees with a hemisphere letter could fail. Tool version 1.1.0. It is now stable."
     },
     {
       "date": "2026-09-19",
@@ -363,7 +376,7 @@
         "time.sun.mapping-window"
       ],
       "vectors": [],
-      "summary": "Sun event times now use the NREL SPA geometric sun instead of the low-precision NOAA series, and each side of the day is decided on its own. A twilight that grazes its altitude is now placed correctly: at 67.19°S on February 1, 2026, evening civil twilight ends at 23:59 local (matching USNO) instead of never. Across 1,200 USNO events every time is within a minute; published vectors are unchanged."
+      "summary": "Sun event times now use the NREL SPA geometric sun instead of the low-precision NOAA series, and each side of the day is decided on its own. A twilight that grazes its altitude is now placed correctly: at 67.19\u00b0S on February 1, 2026, evening civil twilight ends at 23:59 local (matching USNO) instead of never. Across 1,200 USNO events every time is within a minute; published vectors are unchanged."
     },
     {
       "date": "2026-09-19",
@@ -498,7 +511,7 @@
         "geodesy.spcs.spcs83-forward"
       ],
       "vectors": [],
-      "summary": "State plane convergence and scale factor in the Hotine oblique Mercator zone (Alaska zone 1) are now computed with Richardson-extrapolated differences. They moved by up to 0.0000001°, well inside the published tolerance, and now agree between the forward and inverse tools."
+      "summary": "State plane convergence and scale factor in the Hotine oblique Mercator zone (Alaska zone 1) are now computed with Richardson-extrapolated differences. They moved by up to 0.0000001\u00b0, well inside the published tolerance, and now agree between the forward and inverse tools."
     },
     {
       "date": "2026-09-19",
@@ -560,7 +573,7 @@
         "time.sun.position v006",
         "time.sun.position v007"
       ],
-      "summary": "Sun position uses the NREL Solar Position Algorithm (±0.0003°) instead of the NOAA equations (about ±0.01°). Elevation and azimuth changed by up to a few hundredths of a degree."
+      "summary": "Sun position uses the NREL Solar Position Algorithm (\u00b10.0003\u00b0) instead of the NOAA equations (about \u00b10.01\u00b0). Elevation and azimuth changed by up to a few hundredths of a degree."
     },
     {
       "date": "2026-09-18",

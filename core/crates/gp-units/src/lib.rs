@@ -56,8 +56,9 @@ const TABLE: &[Layer] = &[Layer {
     kind: "table-only",
     map: &[],
 }];
-const CONVERT_WARNINGS: &[&str] = &["UNIT_ASSUMED", "LEGACY_UNIT", "EXPERIMENTAL_TOOL"];
-/// The same list once a converter is past the bar.
+/// What a converter can warn about. Every tool in this domain is past the
+/// stable bar, so nothing carries EXPERIMENTAL_TOOL any more; the macro's
+/// experimental arm adds it for a converter that has not got there yet.
 const CONVERT_STABLE: &[&str] = &["UNIT_ASSUMED", "LEGACY_UNIT"];
 /// Conversions are exact, so show enough digits to see small differences such
 /// as the 2 ppm survey-foot offset.
@@ -73,7 +74,7 @@ macro_rules! convert_op {
         convert_op!($name, $group, $q, $unit, $title, $summary,
             aliases: [$($a),*], refs: [$($r),*], example: ($ex_title, $ex),
             stability: Stability::Experimental,
-            warnings: CONVERT_WARNINGS, when: "", limits: "",
+            warnings: &["UNIT_ASSUMED", "LEGACY_UNIT", "EXPERIMENTAL_TOOL"], when: "", limits: "",
             related: [Related { id: "units.quantity.normalize", reason: "alternative" }]);
     };
     // Promoted: its own when-to-use, limitations and neighbours.
@@ -606,7 +607,10 @@ pub static FUEL: ToolDef = ToolDef {
         )
         .precision(Precision::Significant(3)),
     ],
-    warnings: &["NOMINAL_VALUE_USED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn fuel on board into weight, or a weight allowance into gallons or litres: a load sheet, a weight-and-balance line, a tankering decision. Give it a measured density when you have one; give it a fuel type and it uses the published nominal figure and tells you it did.",
+    limitations: "A nominal density is a planning number, not a measurement. Fuel density moves with temperature and batch by roughly 3%, and Jet A at 6.7 lb per US gallon is quoted at 15 °C, so on a hot day the same gallons weigh less; for weight and balance, use a measured density. The gallon is the US liquid gallon throughout, not the imperial one. And nothing here knows about usable versus unusable fuel, tank geometry or what is already burnt: it converts the quantity you give it.",
+    warnings: &["NOMINAL_VALUE_USED", "UNIT_ASSUMED"],
     model: "mass = volume × density",
     accuracy: "Exact for a given density. Nominal fuel densities vary about ±3% with temperature and batch",
     references: &[
@@ -628,10 +632,20 @@ pub static FUEL: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: TABLE,
-    related: &[Related {
-        id: "units.density.convert",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "units.density.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.volume.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.mass.convert",
+            reason: "next",
+        },
+    ],
     sentence: "{volume} of fuel weighs {mass} at {density}.",
     limits: &[("batchRows", 10_000)],
     run: run_fuel,
@@ -811,7 +825,10 @@ pub static SLOPE: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this whenever a slope is written one way and needed another: a ramp or road at a percent grade against a limit in degrees, a railway gradient in per mille, a rise-over-run on a drawing, a roof pitch. Give it any one of the four and all four come back.",
+    limitations: "A percent grade is not an angle, and the two are only close on shallow slopes -- a 100% grade is 45°, not 90°. Vertical has no grade at all, so ±90° is refused rather than returned as an infinity. This is the slope of a straight line, not a route: a road that climbs and descends has no single grade, and an average of two grades is not the grade of the whole. And the angle conversions go through tan and atan, so they carry a few units in the last place that the exact ratio conversions do not.",
+    warnings: &[],
     model: "ratio = tan(angle); percent = 100 × ratio",
     accuracy: "Exact for ratio, percent, and per mille; degrees to double precision (libm tan/atan)",
     references: &[NIST_811],
@@ -823,6 +840,20 @@ pub static SLOPE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: TABLE,
+    related: &[
+        Related {
+            id: "units.angle.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.vertical-speed.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.quantity.normalize",
+            reason: "alternative",
+        },
+    ],
     sentence: "A grade of {percent} is a slope of {degrees}.",
     limits: &[("batchRows", 10_000)],
     run: run_slope,
@@ -911,7 +942,7 @@ const QUANTITY_IDS: &[&str] = &[
 pub static NORMALIZE: ToolDef = ToolDef {
     id: "units.quantity.normalize",
     title: "Normalize a unit-tagged value",
-    summary: "Reads any value with a unit, like \"145 kts\", and returns it in canonical units (SI; degrees for angles).",
+    summary: "Reads any value with a unit, like “145 kts”, and returns it in canonical units (SI; degrees for angles).",
     aliases: &["unit parser", "to si units"],
     keywords: &["normalize", "si", "canonical", "parse unit"],
     inputs: &[
@@ -942,7 +973,10 @@ pub static NORMALIZE: ToolDef = ToolDef {
         .precision(P8),
         Field::new("input", "Input", "The value as read", Kind::AnyQuantity).precision(P8),
     ],
-    warnings: CONVERT_WARNINGS,
+    stability: Stability::Stable,
+    when_to_use: "Use this when you have a value written the way a document writes it -- 145 kts, 29.92 inHg, 15 C -- and want it in SI without first working out which converter it belongs to. It is the one to reach for from a script or an agent, where the unit is whatever the source happened to use.",
+    limitations: "You have to say what the value measures: the same spelling means different things in different quantities, and the tool will not guess between them. A bare number with no unit is refused for the same reason. Angles come back in degrees rather than radians, which is a deliberate departure from strict SI -- a bearing is written in degrees everywhere it is used. And an ambiguous spelling the quantity does settle, like nm for a distance, is resolved with a warning rather than in silence.",
+    warnings: CONVERT_STABLE,
     model: "Exact unit definitions",
     accuracy: "Exact to double precision",
     references: &[NIST_811],
@@ -954,10 +988,20 @@ pub static NORMALIZE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: TABLE,
-    related: &[Related {
-        id: "units.speed.convert",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "units.speed.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.length.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.pressure.convert",
+            reason: "alternative",
+        },
+    ],
     sentence: "{input} is {normalized} in canonical units.",
     limits: &[("batchRows", 10_000)],
     run: run_normalize,

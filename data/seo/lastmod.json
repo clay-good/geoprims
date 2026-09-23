@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "68e9b3b066953a7a",
+    "hash": "cd2650d9baaec7d9",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -96,7 +96,7 @@
     "lastmod": "2026-09-22"
   },
   "/changelog/": {
-    "hash": "c009dc315ad1e643",
+    "hash": "3c9f2083699d085c",
     "lastmod": "2026-09-23"
   },
   "/disclaimer/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "039b49ea73b4c1a6",
+    "hash": "ff6abb6c14915a36",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -692,7 +692,7 @@
     "lastmod": "2026-09-20"
   },
   "/quality/": {
-    "hash": "3d3b185b044c66ed",
+    "hash": "ce48daac4e9e457d",
     "lastmod": "2026-09-23"
   },
   "/raster/": {
@@ -796,11 +796,11 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "98e92f46895ed339",
+    "hash": "8412d8b2526f6f3c",
     "lastmod": "2026-09-23"
   },
   "/units/": {
-    "hash": "81feea6a8215fa67",
+    "hash": "f6481960fb63a888",
     "lastmod": "2026-09-23"
   },
   "/units/acceleration/": {
@@ -879,6 +879,10 @@
     "hash": "d7ab50b68ba09553",
     "lastmod": "2026-09-22"
   },
+  "/units/fuel/convert/": {
+    "hash": "0ea821d766ec3caa",
+    "lastmod": "2026-09-23"
+  },
   "/units/length/": {
     "hash": "4f51dc9a26b5cf63",
     "lastmod": "2026-09-22"
@@ -912,12 +916,20 @@
     "lastmod": "2026-09-23"
   },
   "/units/quantity/": {
-    "hash": "ceb5ab5a2a8d4284",
-    "lastmod": "2026-09-22"
+    "hash": "c7b7b176edc5b6b1",
+    "lastmod": "2026-09-23"
+  },
+  "/units/quantity/normalize/": {
+    "hash": "d699cf8b9161319c",
+    "lastmod": "2026-09-23"
   },
   "/units/slope/": {
     "hash": "b06c8a086952ca11",
     "lastmod": "2026-09-22"
+  },
+  "/units/slope/convert/": {
+    "hash": "414077f1b15720e8",
+    "lastmod": "2026-09-23"
   },
   "/units/speed/": {
     "hash": "6fa8869b9616f540",
@@ -972,7 +984,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "cbd651d3fd28397c",
+    "hash": "94a626ad87471641",
     "lastmod": "2026-09-23"
   }
 }

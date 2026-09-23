@@ -213,7 +213,7 @@ def special_vectors():
     jet = F(67, 10)
     fuel = [
         ({"volume": "50 galUS", "fuel": "avgas-100ll"}, {"result.mass.value": float(50 * lb_gal), "result.mass.unit": "lb",
-                                                        "meta.warnings.1.code": "NOMINAL_VALUE_USED"}),
+                                                        "meta.warnings.*.code": "NOMINAL_VALUE_USED"}),
         ({"mass": "300 lb", "fuel": "avgas-100ll"}, {"result.volume.value": 50.0, "result.volume.unit": "galUS"}),
         ({"volume": "100 galUS", "fuel": "jet-a"}, {"result.mass.value": float(100 * jet), "result.mass.unit": "lb"}),
         ({"volume": "20 galUS", "density": "6.02 lb/galUS"}, {"result.mass.value": float(20 * F("6.02"))}),
@@ -233,7 +233,7 @@ def special_vectors():
         ({"value": "145 kts", "quantity": "speed"}, {"result.normalized.value": float(145 * F(1852, 3600)),
                                                      "result.normalized.unit": "m/s"}),
         ({"value": "12 nm", "quantity": "distance"}, {"result.normalized.value": 22224.0,
-                                                      "meta.warnings.1.code": "UNIT_ASSUMED"}),
+                                                      "meta.warnings.*.code": "UNIT_ASSUMED"}),
         ({"value": "29.92 inHg", "quantity": "pressure"}, {"result.normalized.value": float(F("29.92") * F(3386389, 1000))}),
         ({"value": "15 C", "quantity": "temperature"}, {"result.normalized.value": 288.15, "result.normalized.unit": "K"}),
         ({"value": "5280'", "quantity": "length"}, {"result.normalized.value": 1609.344}),

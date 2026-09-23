@@ -1089,6 +1089,172 @@ fn charge_invariants() {
 }
 
 #[test]
+fn fuel_invariants() {
+    const F: &str = "units.fuel.convert";
+    let mass = |input: &str| call(F, input)["result"]["mass"]["value"].as_f64();
+    let vol = |input: &str| call(F, input)["result"]["volume"]["value"].as_f64();
+    // Working in the density's own units, not through SI: exactly 300, not a
+    // float a hair under it, which is what a weight sheet would show.
+    assert_eq!(
+        mass(r#"{"volume":"50 galUS","fuel":"avgas-100ll"}"#),
+        Some(300.0)
+    );
+    assert_eq!(
+        vol(r#"{"mass":"300 lb","fuel":"avgas-100ll"}"#),
+        Some(50.0),
+        "the two directions do not invert"
+    );
+    // The published nominal densities.
+    assert_eq!(
+        mass(r#"{"volume":"1 galUS","fuel":"avgas-100ll"}"#),
+        Some(6.0)
+    );
+    assert_eq!(mass(r#"{"volume":"1 galUS","fuel":"jet-a"}"#), Some(6.7));
+    // Linear in both arguments.
+    assert_eq!(
+        mass(r#"{"volume":"100 galUS","fuel":"avgas-100ll"}"#),
+        Some(600.0)
+    );
+    assert_eq!(
+        mass(r#"{"volume":"50 galUS","density":"12 lb/galUS"}"#),
+        Some(600.0)
+    );
+    // A nominal density says so; a measured one has nothing to announce.
+    let warned = |input: &str| {
+        call(F, input)["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|w| w["code"] == "NOMINAL_VALUE_USED")
+    };
+    assert!(warned(r#"{"volume":"50 galUS","fuel":"jet-a"}"#));
+    assert!(!warned(
+        r#"{"volume":"50 galUS","density":"6.02 lb/galUS"}"#
+    ));
+    // Neither refusal may lapse into a guess.
+    assert_eq!(
+        call(F, r#"{"volume":"50 galUS"}"#)["error"]["code"],
+        "INVALID_INPUT"
+    );
+    assert_eq!(
+        call(
+            F,
+            r#"{"volume":"50 galUS","fuel":"jet-a","density":"6.7 lb/galUS"}"#
+        )["error"]["code"],
+        "INVALID_INPUT"
+    );
+}
+
+#[test]
+fn slope_invariants() {
+    const S: &str = "units.slope.convert";
+    let all = |v: f64, from: &str| {
+        let r = call(S, &format!(r#"{{"value":{v},"from":"{from}"}}"#));
+        [
+            r["result"]["ratio"]["value"].as_f64().expect("ratio"),
+            r["result"]["percent"]["value"].as_f64().expect("percent"),
+            r["result"]["permille"]["value"].as_f64().expect("permille"),
+            r["result"]["degrees"]["value"].as_f64().expect("degrees"),
+        ]
+    };
+    // The ratio family is exact and is one number under three names.
+    let q = all(0.25, "ratio");
+    assert_eq!((q[0], q[1], q[2]), (0.25, 25.0, 250.0));
+    assert_eq!(all(25.0, "percent"), q);
+    assert_eq!(all(250.0, "permille"), q);
+    // A 100% grade is 45 degrees, not 90. This is the assertion that catches a
+    // percent grade being read as an angle: below about 10% the two agree to
+    // within a percent, which is why that error survives.
+    let g = all(100.0, "percent");
+    assert_eq!((g[0], g[3]), (1.0, 45.0));
+    let d = all(45.0, "degrees");
+    assert!((d[0] - 1.0).abs() < 1e-15 && (d[1] - 100.0).abs() < 1e-13);
+    assert!(all(10.0, "percent")[3] < 5.72, "a 10% grade is 5.71 deg");
+    // Flat is flat, and a descent stays a descent.
+    assert_eq!(all(0.0, "percent"), [0.0, 0.0, 0.0, 0.0]);
+    for x in all(-6.0, "percent") {
+        assert!(x < 0.0, "a descent came back positive");
+    }
+    // The round trip, and the boundary where it says it is.
+    let back = all(all(0.3, "ratio")[3], "degrees")[0];
+    assert!(
+        (back - 0.3).abs() < 1e-15,
+        "ratio -> degrees -> ratio: {back}"
+    );
+    assert_eq!(
+        call(S, r#"{"value":90,"from":"degrees"}"#)["error"]["code"],
+        "OUT_OF_DOMAIN"
+    );
+    assert_eq!(
+        call(S, r#"{"value":-90,"from":"degrees"}"#)["error"]["code"],
+        "OUT_OF_DOMAIN"
+    );
+    assert_eq!(
+        call(S, r#"{"value":89.999,"from":"degrees"}"#)["ok"],
+        true,
+        "89.999 deg is inside the domain"
+    );
+}
+
+#[test]
+fn normalize_invariants() {
+    const N: &str = "units.quantity.normalize";
+    // For every quantity it accepts, a value already in the canonical unit
+    // comes back untouched -- which is what pins the canonical choice itself.
+    let quantities = TOOLS
+        .iter()
+        .find(|t| t.id == N)
+        .and_then(|t| t.inputs.iter().find(|f| f.name == "quantity"))
+        .map(|f| match f.kind {
+            gp_base::tool::Kind::Choice(c) => c,
+            _ => panic!("quantity is not a choice"),
+        })
+        .expect("the quantity field");
+    assert!(quantities.len() >= 20, "{} quantities", quantities.len());
+    for q in quantities {
+        // "distance" is length under the name a document would use for it.
+        let kind = gp_base::units::Quantity::from_id(q).unwrap_or(gp_base::units::Quantity::Length);
+        let unit = gp_base::units::base_unit(kind).symbol;
+        let r = call(N, &format!(r#"{{"value":"7 {unit}","quantity":"{q}"}}"#));
+        assert_eq!(
+            r["result"]["normalized"]["value"], 7.0,
+            "{q}: {unit} is not the canonical unit: {r}"
+        );
+        assert_eq!(r["result"]["normalized"]["unit"], unit);
+    }
+    // Angles canonicalize to degrees, not radians -- a normalizer written
+    // straight from SI would get this one wrong.
+    assert_eq!(
+        call(N, r#"{"value":"100 gon","quantity":"angle"}"#)["result"]["normalized"],
+        call("units.angle.convert", r#"{"value":"100 gon","to":"deg"}"#)["result"]["converted"],
+        "normalize and the angle converter disagree"
+    );
+    // A value must carry a unit: a bare number is refused rather than read
+    // with a default, which is the stricter and the right answer here.
+    assert_eq!(
+        call(N, r#"{"value":12,"quantity":"distance"}"#)["error"]["code"],
+        "INVALID_INPUT"
+    );
+    // An ambiguous spelling is resolved and says so. "nm" is a nautical mile
+    // to a navigator and a nanometre to everyone else; asked for a distance it
+    // takes the first reading and warns, rather than choosing in silence.
+    let assumed = |input: &str| {
+        call(N, input)["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|w| w["code"] == "UNIT_ASSUMED")
+    };
+    assert!(assumed(r#"{"value":"12 nm","quantity":"distance"}"#));
+    assert!(!assumed(r#"{"value":"12 km","quantity":"distance"}"#));
+    // A unit from the wrong quantity is refused, not reinterpreted.
+    assert_eq!(
+        call(N, r#"{"value":"1600 mil","quantity":"angle"}"#)["error"]["code"],
+        "UNIT_MISMATCH"
+    );
+}
+
+#[test]
 fn every_unit_pair_has_a_vector() {
     let mut failures = Vec::new();
     for t in TOOLS {

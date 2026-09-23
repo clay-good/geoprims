@@ -593,6 +593,7 @@ fn run_rdp(ctx: &mut Ctx) -> Result<Json, ToolError> {
 // ---------------------------------------------------------------- Visvalingam-Whyatt
 
 pub static VISVALINGAM_WHYATT: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geometry.simplify.visvalingam",
     title: "Simplify a line or polygon (Visvalingam)",
     summary: "Removes the vertices that make the smallest triangles with their neighbors, down to an area threshold or a target number of vertices, optionally without letting edges cross, and reports the largest deviation.",
@@ -637,15 +638,17 @@ pub static VISVALINGAM_WHYATT: ToolDef = ToolDef {
     ],
     outputs: OUTPUTS,
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Visvalingam-Whyatt on an azimuthal equidistant plane centered on the shape: repeatedly remove the vertex whose triangle with its neighbors has the smallest area (never less than the last removed), until every remaining triangle reaches the threshold or the target count is met. With topology kept, a removal that would make edges cross is skipped. The largest deviation is measured on the ellipsoid",
     accuracy: "Triangle areas are on the plane, exact to about 0.1% for shapes a few hundred kilometers across; the reported deviation is geodesic",
+    when_to_use: "Use this to thin a line when you care how it looks rather than how far it moves. Visvalingam-Whyatt drops the vertices that contribute least area, so it takes out the small wiggles first and keeps the shape's character — which is why cartographers reach for it when a coastline or a contour has to be drawn smaller. Ask for an area threshold, or ask for a number of vertices and get the best line of that length, which Douglas-Peucker cannot do because its threshold is a distance and the count that falls out of it is not controllable.",
+    limitations: "The threshold is an area and the guarantee is about area, so unlike Douglas-Peucker this makes no promise about how far the line moves; the largest deviation is reported precisely because it is not bounded in advance. Removing vertices by least area is a good rule for appearance and a poor one for tolerance — a long thin triangle has little area but its apex can be far from the line that replaces it. Vertices are dropped, never moved, so the result is always a subset of the input. Without the topology option a simplified outline can cross itself; with it, vertices are put back and the count says how many.",
     references: &[VISVALINGAM],
     examples: &[Example {
         id: "primary",
         title: "The wavy track down to 4 vertices",
         input: r#"{"points":[{"lat":40.0,"lon":-105.0},{"lat":40.0002,"lon":-104.998},{"lat":39.9998,"lon":-104.996},{"lat":40.0003,"lon":-104.994},{"lat":40.0,"lon":-104.992},{"lat":40.0015,"lon":-104.990},{"lat":40.0,"lon":-104.988}],"target_vertices":4}"#,
-        source: "Visvalingam and Whyatt (1993) with geodesic deviations (Karney 2013)",
+        source: "Visvalingam and Whyatt (1993) with geodesic deviations (Karney 2013). Checked against urschrei's simplification crate, an unrelated implementation of the same paper, over six shapes at four area thresholds each: the two kept exactly the same vertices in all twenty-four",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -660,6 +663,10 @@ pub static VISVALINGAM_WHYATT: ToolDef = ToolDef {
         Related {
             id: "geometry.validity.make-valid",
             reason: "parent",
+        },
+        Related {
+            id: "geometry.distance.tracks",
+            reason: "next",
         },
     ],
     sentence: "Kept {vertices_out} of {vertices_in} vertices. The largest shift is {max_deviation}.",

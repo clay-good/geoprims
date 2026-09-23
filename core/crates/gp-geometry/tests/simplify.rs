@@ -269,3 +269,127 @@ fn rdp_invariants() {
         );
     }
 }
+
+/// Visvalingam-Whyatt on a line.
+fn vw(points: &Value, stop: &str, topology: &str) -> Value {
+    serde_json::from_str(
+        &REGISTRY.invoke(
+            "geometry.simplify.visvalingam",
+            &json!({"points": points, "shape": "line", "preserve_topology": topology})
+                .as_object()
+                .map(|m| {
+                    let mut m = m.clone();
+                    for (k, v) in
+                        serde_json::from_str::<serde_json::Map<String, Value>>(stop).unwrap()
+                    {
+                        m.insert(k, v);
+                    }
+                    Value::Object(m)
+                })
+                .unwrap()
+                .to_string(),
+        ),
+    )
+    .expect("JSON")
+}
+
+#[test]
+fn visvalingam_invariants() {
+    let shape = zigzag();
+    let n_in = shape.as_array().unwrap().len();
+    let orig: Vec<(f64, f64)> = shape
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| (p["lat"].as_f64().unwrap(), p["lon"].as_f64().unwrap()))
+        .collect();
+    let same =
+        |a: (f64, f64), b: (f64, f64)| (a.0 - b.0).abs() < 1e-12 && (a.1 - b.1).abs() < 1e-12;
+
+    // The one-based indices of the vertices that survived.
+    let survivors = |r: &Value| -> Vec<usize> {
+        let mut out = Vec::new();
+        let mut j = 0;
+        for p in r["result"]["simplified"].as_array().unwrap() {
+            let want = (
+                p["lat"]["value"].as_f64().unwrap(),
+                p["lon"]["value"].as_f64().unwrap(),
+            );
+            while j < orig.len() && !same(orig[j], want) {
+                j += 1;
+            }
+            assert!(
+                j < orig.len(),
+                "the result is not a subsequence of the input"
+            );
+            out.push(j + 1);
+            j += 1;
+        }
+        out
+    };
+
+    let mut previous: Option<Vec<usize>> = None;
+    for area in [1000.0, 20_000.0, 60_000.0, 200_000.0, 2_000_000.0] {
+        let r = vw(&shape, &format!(r#"{{"area":"{area} m2"}}"#), "no");
+        assert!(r["ok"].as_bool().unwrap_or(false), "{area}: {r}");
+        let kept = survivors(&r);
+
+        assert_eq!(
+            kept.first(),
+            Some(&1),
+            "the first point was dropped at {area}"
+        );
+        assert_eq!(
+            kept.last(),
+            Some(&n_in),
+            "the last point was dropped at {area}"
+        );
+        assert_eq!(
+            kept.len(),
+            r["result"]["vertices_out"].as_u64().unwrap() as usize,
+            "vertices_out is not the number returned"
+        );
+
+        if let Some(before) = &previous {
+            // A looser threshold cannot keep more, and what survives it must
+            // have survived the tighter one too. The nesting is what the
+            // monotone removal order buys; an unstable implementation, where a
+            // neighbour's area can drop below the one just removed, loses it.
+            assert!(
+                kept.len() <= before.len(),
+                "raising the threshold to {area} kept more"
+            );
+            for v in &kept {
+                assert!(
+                    before.contains(v),
+                    "vertex {v} survives at {area} but not at the tighter threshold"
+                );
+            }
+        }
+        previous = Some(kept);
+    }
+
+    // Asking for a count gives exactly that count -- the thing a distance
+    // threshold cannot deliver, and the reason this rule is offered at all.
+    for target in [2usize, 4, 7, n_in] {
+        let r = vw(&shape, &format!(r#"{{"target_vertices":{target}}}"#), "no");
+        assert!(r["ok"].as_bool().unwrap_or(false), "target {target}: {r}");
+        assert_eq!(
+            r["result"]["vertices_out"].as_u64().unwrap() as usize,
+            target,
+            "asked for {target} vertices"
+        );
+        let kept = survivors(&r);
+        assert_eq!(kept.first(), Some(&1));
+        assert_eq!(kept.last(), Some(&n_in));
+    }
+
+    // Keeping topology puts vertices back; it can never take more away.
+    let plain = vw(&shape, r#"{"area":"60000 m2"}"#, "no");
+    let safe = vw(&shape, r#"{"area":"60000 m2"}"#, "yes");
+    assert!(
+        safe["result"]["vertices_out"].as_u64().unwrap()
+            >= plain["result"]["vertices_out"].as_u64().unwrap(),
+        "preserving topology returned fewer vertices"
+    );
+}

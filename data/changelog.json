@@ -8,6 +8,17 @@
         "geometry.area.polygon"
       ],
       "vectors": [
+        "geometry.area.polygon v030"
+      ],
+      "summary": "The planar-area vector now names the warning it expects by its code rather than by its place in the list, using the meta.warnings.*.code form the runner already supports. Nothing computed changed. v029 had pinned index 1 and broke when promotion removed EXPERIMENTAL_TOOL from the list; v030 pinned index 0, which would have broken again the next time a warning sorted above this one. v031 cannot be shifted by either."
+    },
+    {
+      "date": "2026-09-22",
+      "kind": "result-change",
+      "tools": [
+        "geometry.area.polygon"
+      ],
+      "vectors": [
         "geometry.area.polygon v029"
       ],
       "summary": "Promotion to stable removed the EXPERIMENTAL_TOOL warning from the envelope, and the warnings are ordered by severity, so PLANAR_ON_GEOGRAPHIC moved from index 1 to index 0. The area, the perimeter, and every other value are unchanged; what moved is where the warning sits in the list. v029 is superseded by v030, which pins the same warning at its new index."

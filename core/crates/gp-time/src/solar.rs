@@ -1238,7 +1238,7 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
     ],
     errors: &[],
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Times the geometric sun (NREL SPA) crosses the threshold, by bisection between the day's highest and lowest points; the path is the same sun every 20 minutes of local clock time",
+    model: "Times the geometric sun (NREL SPA) crosses the threshold, by bisection between the day's highest and lowest points; the highest sun and the path are the same SPA sun, apparent (refracted), every 20 minutes of local clock time",
     accuracy: "About 1 minute",
     references: &[NOAA],
     examples: &[Example {
@@ -1261,6 +1261,28 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
     run: run_mapping,
     ..ToolDef::BLANK
 };
+
+/// Apparent elevation and azimuth from the SPA, which is the sun the window
+/// solver uses. `sun::position` is the NOAA series, good to about 0.01 deg;
+/// reporting a peak from it beside times solved by the SPA made the tool
+/// disagree with `time.sun.position` by up to 10 arcseconds at the same
+/// instant, which is a disagreement a reader would have to explain.
+fn spa_apparent(lat: f64, lon: f64, jd_utc: f64) -> (f64, f64) {
+    let year = 2000.0 + (jd_utc - 2_451_545.0) / 365.25;
+    let p = crate::spa::position(
+        jd_utc,
+        crate::spa::delta_t(year, 0.5),
+        crate::spa::Observer {
+            lat,
+            lon,
+            elevation: 0.0,
+            pressure: 1013.25,
+            temperature: 12.0,
+            atmos_refract: 0.5667,
+        },
+    );
+    (90.0 - p.zenith, p.azimuth.rem_euclid(360.0))
+}
 
 fn run_mapping(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
@@ -1334,7 +1356,7 @@ fn run_mapping(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     out.push((
         "max_elevation",
-        ctx.out("max_elevation", deg(top.elevation + top.refraction)),
+        ctx.out("max_elevation", deg(spa_apparent(lat, lon, noon).0)),
     ));
     // The whole day's sun, every 20 minutes of local clock time, so the
     // window can be read against the path it sits on.
@@ -1343,12 +1365,12 @@ fn run_mapping(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let path: Vec<Json> = (0..73)
         .map(|k| {
             let t = base + f64::from(k) * 20.0 / 1440.0;
-            let p = sun::position(lat, lon, t);
+            let (el, az) = spa_apparent(lat, lon, t);
             let m = k * 20;
             Json::obj([
                 ("time", Json::str(format!("{:02}:{:02}", m / 60, m % 60))),
-                ("azimuth", q(p.azimuth)),
-                ("elevation", q(p.elevation + p.refraction)),
+                ("azimuth", q(az)),
+                ("elevation", q(el)),
             ])
         })
         .collect();

@@ -70,6 +70,7 @@ const OUT_VERTEX: &[Field] = &[
 const MAX_OUT: usize = 100_000;
 
 pub static DENSIFY: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geometry.shape.densify",
     title: "Add vertices along geodesic edges (densify)",
     summary: "Adds vertices along each edge of a line or polygon so no piece is longer than a set length, each on the true geodesic, so maps that draw straight segments still follow the Earth's curve.",
@@ -170,15 +171,17 @@ pub static DENSIFY: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::LimitExceeded,
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Each edge's geodesic on WGS 84 (Karney inverse) is cut into n = ⌈length / longest piece⌉ equal pieces, with the new vertices placed by the direct problem",
     accuracy: "Every new vertex lies on its edge's geodesic to a nanometer; the pieces of an edge are equal to a nanometer",
+    when_to_use: "Use this before anything that treats a line as straight between its points. A route drawn on a map, a shape reprojected, a buffer or an overlay computed in a plane, a corridor checked against terrain: all of them chord the gaps, and over a long leg the chord can sit far from the geodesic the leg actually means. Adding vertices no further apart than a chosen distance brings the chords back onto the curve. It is also what makes two tracks sampled differently comparable, since a discrete Fréchet distance depends on how each was sampled.",
+    limitations: "This adds vertices; it never moves or removes them, so the original points all survive and the result is longer to carry and slower to draw. It is the opposite of simplification, not a smoother: the shape is unchanged, only better described. The maximum length is a bound and pieces come out shorter, since an edge is divided into equal parts — an edge of 120 km at a 40 km maximum becomes three pieces of exactly 40 km, but one of 121 km becomes four of 30.25 km. There is a ceiling on how many vertices a result may have, and a very small maximum over a long route is refused rather than silently truncated.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
         title: "Denver to Chicago, in pieces of at most 200 km",
         input: r#"{"points":[{"lat":39.8561,"lon":-104.6737},{"lat":41.9742,"lon":-87.9073}],"max_length":"200 km"}"#,
-        source: "Karney (2013) inverse and direct on WGS 84",
+        source: "Karney (2013) inverse and direct on WGS 84. Checked against his own geographiclib over fifteen cases — lines, polygons, a meridian, the equator, the antimeridian and high latitudes — agreeing on every vertex count, on the lengths to 1.6e-13 relative, and placing the interior vertices within 2.1e-14 deg",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -193,6 +196,10 @@ pub static DENSIFY: ToolDef = ToolDef {
         Related {
             id: "geometry.simplify.rdp",
             reason: "alternative",
+        },
+        Related {
+            id: "geometry.distance.tracks",
+            reason: "next",
         },
     ],
     sentence: "The line now has {vertices_out} vertices, none more than {longest_piece} apart.",
@@ -252,7 +259,21 @@ fn run_densify(ctx: &mut Ctx) -> Result<Json, ToolError> {
     for i in 0..edges {
         let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
         let (s, az, _, _): (f64, f64, f64, f64) = g.inverse(a.0, a.1, b.0, b.1);
-        let n = libm::ceil(s / max).max(1.0);
+        // Ceiling at an exact multiple is a knife-edge. Walking 120 km by the
+        // direct problem and measuring back gives 119999.99999999964 m, and a
+        // different solver gives a few femtometres over; the first is three
+        // pieces at a 40 km maximum and the second is four. Snap the ratio to
+        // an integer when it is within a part in a million million of one --
+        // 0.12 µm over that 120 km -- so that asking for a third of a leg's
+        // length means three pieces, whichever side of the last bit it lands.
+        let ratio = s / max;
+        let nearest = libm::round(ratio);
+        let n = if (ratio - nearest).abs() <= 1e-12 * nearest.max(1.0) {
+            nearest
+        } else {
+            libm::ceil(ratio)
+        }
+        .max(1.0);
         if out.len() as f64 + n > MAX_OUT as f64 {
             return Err(ToolError::new(
                 ErrorCode::LimitExceeded,

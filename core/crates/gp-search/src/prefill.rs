@@ -417,6 +417,8 @@ pub struct SlotDef {
     pub range: (f64, f64),
     /// "never", "any", or "decimal".
     pub bare: String,
+    /// The tool cannot run without this one.
+    pub required: bool,
 }
 
 /// Slots for every input of a manifest, in input order (the manifest's
@@ -425,6 +427,10 @@ pub fn slots(m: &Value) -> Vec<SlotDef> {
     let Some(props) = m["inputs"]["properties"].as_object() else {
         return Vec::new();
     };
+    let required: Vec<&str> = m["inputs"]["required"]
+        .as_array()
+        .map(|a| a.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
     let listed: Vec<&Value> = m["prefill"]
         .as_array()
         .map(|a| a.iter().collect())
@@ -497,7 +503,9 @@ pub fn slots(m: &Value) -> Vec<SlotDef> {
                 None if quantity.is_none() && is_num => "any".to_owned(),
                 None => "never".to_owned(),
             };
+            let is_required = required.contains(&name);
             Some(SlotDef {
+                required: is_required,
                 input: name.to_owned(),
                 quantity,
                 unit: p["x-unit"].as_str().unwrap_or_default().to_owned(),
@@ -573,6 +581,17 @@ fn fit(s: &SlotDef, v: &Val, named: bool) -> Option<Json> {
 /// latitude, and two coordinate pairs prefer the tool with two points.
 pub fn fits(slots: &[SlotDef], values: &[Val]) -> u32 {
     map(slots, values).0.len() as u32
+}
+
+/// Required inputs the question leaves empty. A tool that needs four corners
+/// is a worse answer to a question carrying two than one that needs two, even
+/// when both take the two it has.
+pub fn unfilled(slots: &[SlotDef], values: &[Val]) -> u32 {
+    let filled = map(slots, values).0;
+    slots
+        .iter()
+        .filter(|s| s.required && !filled.iter().any(|(name, _)| *name == s.input))
+        .count() as u32
 }
 
 fn names(s: &SlotDef, v: &Val) -> bool {

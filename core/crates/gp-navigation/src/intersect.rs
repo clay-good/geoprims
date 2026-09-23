@@ -585,6 +585,7 @@ fn run_intercept(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static SEGMENT_INTERSECTION: ToolDef = ToolDef {
     id: "navigation.geodesic.intersection",
+    stability: gp_base::tool::Stability::Stable,
     title: "Where two geodesic segments cross",
     summary: "The crossing of the geodesics through two segments on the ellipsoid, nearest the segments' middles, and whether it falls within both segments or out on their extensions.",
     aliases: &[
@@ -642,7 +643,9 @@ pub static SEGMENT_INTERSECTION: ToolDef = ToolDef {
         dist("length_b", "Length of B", "Start to end"),
     ],
     errors: &[ErrorCode::DegenerateGeometry, ErrorCode::InvalidInput],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    when_to_use: "Use this to find where two great-circle routes cross: an airway against a boundary, a flight path against a corridor, a survey line against a parcel edge, or any two courses drawn between pairs of points. It says where they meet, how far along each the meeting lies, and whether it falls inside both segments or out beyond an end.",
+    limitations: "Two geodesics on an ellipsoid meet twice, at antipodal points, and this returns the closer crossing, so a pair of very long routes can cross somewhere other than where you meant. A crossing beyond the end of a segment is still reported, with within saying no and the distance running past the segment's length, because knowing where two courses would meet if extended is often the question; it is not a claim that anything crosses. Segments that lie along the same geodesic have no single crossing. The edges are geodesics, so two rhumb lines drawn on a chart do not cross where this says.",
     model: "Each segment's geodesic from its start at the inverse azimuth; the two crossings of the matching great circles seed Newton's method on the distances along both geodesics (to a nanometer); the crossing kept is the one nearest the segments' midpoints, |x − a/2| + |y − b/2|, as in GeographicLib's Intersect class",
     accuracy: "Matches GeographicLib IntersectTool -i on 60 random segment pairs: to a micrometer, or 5e-12 of the distance for crossings thousands of kilometers out at a shallow angle, where both are limited by rounding",
     references: &[KARNEY, KARNEY_INTERSECT],
@@ -665,6 +668,10 @@ pub static SEGMENT_INTERSECTION: ToolDef = ToolDef {
         Related {
             id: "navigation.geodesic.vertex",
             reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "parent",
         },
     ],
     sentence: "The geodesics cross at {lat}, {lon}: {position}.",

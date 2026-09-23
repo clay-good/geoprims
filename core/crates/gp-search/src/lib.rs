@@ -433,12 +433,12 @@ pub fn search(json: &str) -> String {
             })
             .collect();
         let connector: Vec<bool> = q.iter().map(|t| CONNECTORS.contains(&t.as_str())).collect();
-        let mut hits: Vec<(u32, &Entry)> = entries
+        let mut hits: Vec<(u32, u32, &Entry)> = entries
             .iter()
             .filter(|e| domain.is_none_or(|d| e.domain == d))
             .map(|e| {
                 if decisive.as_ref().is_some_and(|(id, _)| *id == e.id) {
-                    return (DECISIVE_SCORE, e);
+                    return (DECISIVE_SCORE, 0, e);
                 }
                 let score = e.score(&table, &connector, &raw_id);
                 let bonus = if score > 0 {
@@ -446,9 +446,14 @@ pub fn search(json: &str) -> String {
                 } else {
                     0
                 };
-                (score + bonus, e)
+                let short = if score > 0 {
+                    prefill::unfilled(&e.slots, &parsed.values)
+                } else {
+                    0
+                };
+                (score + bonus, short, e)
             })
-            .filter(|(s, _)| *s > 0)
+            .filter(|(s, _, _)| *s > 0)
             .collect();
         // Best score first. On a tie, the full method before a simplified one
         // (haversine is a sphere; the geodesic is the ellipsoid it stands in
@@ -456,22 +461,23 @@ pub fn search(json: &str) -> String {
         // so the same question always ranks the same way.
         hits.sort_by(|a, b| {
             b.0.cmp(&a.0)
-                .then_with(|| a.1.simplified.cmp(&b.1.simplified))
+                .then_with(|| a.1.cmp(&b.1))
+                .then_with(|| a.2.simplified.cmp(&b.2.simplified))
                 .then_with(|| {
-                    (a.1.stability == "experimental").cmp(&(b.1.stability == "experimental"))
+                    (a.2.stability == "experimental").cmp(&(b.2.stability == "experimental"))
                 })
-                .then_with(|| a.1.id.cmp(&b.1.id))
+                .then_with(|| a.2.id.cmp(&b.2.id))
         });
         let hidden = hits
             .iter()
-            .filter(|(_, e)| !include_experimental && e.stability == "experimental")
+            .filter(|(_, _, e)| !include_experimental && e.stability == "experimental")
             .count();
         let results: Vec<Json> = hits
             .iter()
-            .filter(|(_, e)| include_experimental || e.stability != "experimental")
+            .filter(|(_, _, e)| include_experimental || e.stability != "experimental")
             .take(limit)
             .enumerate()
-            .map(|(rank, (_, e))| {
+            .map(|(rank, (_, _, e))| {
                 let mut o = vec![
                     ("id", Json::str(&e.id)),
                     ("title", Json::str(&e.title)),

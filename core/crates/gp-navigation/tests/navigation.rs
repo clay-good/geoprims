@@ -1194,3 +1194,99 @@ fn cpa_in_three_dimensions() {
     assert!(r["result"].get("vertical_separation").is_none());
     assert!((num(&r, "result.separation.value") - 141.421_356_237).abs() < 1e-6);
 }
+
+/// Layer E for `navigation.geodesic.intersection`. The crossing point does not
+/// care which segment is called which, nor which way either is walked, and the
+/// distance reported along a segment is the distance to the point.
+#[test]
+fn geodesic_intersection_invariants() {
+    let cross = |a: [f64; 4], b: [f64; 4]| {
+        let r = call(
+            "navigation.geodesic.intersection",
+            &format!(
+                r#"{{"a_start_lat":{},"a_start_lon":{},"a_end_lat":{},"a_end_lon":{},"b_start_lat":{},"b_start_lon":{},"b_end_lat":{},"b_end_lon":{}}}"#,
+                a[0], a[1], a[2], a[3], b[0], b[1], b[2], b[3]
+            ),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    let pairs = [
+        // New York to London, crossed by Reykjavik to Lisbon.
+        (
+            [40.6413, -73.7781, 51.47, -0.4543],
+            [64.1466, -21.9426, 38.7223, -9.1393],
+        ),
+        // Two short segments that cross near the equator.
+        ([-1.0, -1.0, 1.0, 1.0], [-1.0, 1.0, 1.0, -1.0]),
+        // A pair that crosses well outside both segments.
+        ([0.0, 0.0, 0.0, 10.0], [10.0, 20.0, 5.0, 20.0]),
+        // Far north, where the meridians converge.
+        ([70.0, -50.0, 72.0, 50.0], [68.0, 10.0, 78.0, -10.0]),
+    ];
+    for (a, b) in pairs {
+        let r = cross(a, b);
+        let (lat, lon) = (num(&r, "result.lat.value"), num(&r, "result.lon.value"));
+        let (da, db) = (
+            num(&r, "result.along_a.value"),
+            num(&r, "result.along_b.value"),
+        );
+
+        // Naming the segments the other way round swaps the two distances and
+        // leaves the point where it is.
+        let s = cross(b, a);
+        assert!(
+            (num(&s, "result.lat.value") - lat).abs() < 1e-9
+                && (num(&s, "result.lon.value") - lon).abs() < 1e-9,
+            "swapping the segments moved the crossing"
+        );
+        assert!(
+            (num(&s, "result.along_a.value") - db).abs() < 1e-6,
+            "swapped along_a"
+        );
+        assert!(
+            (num(&s, "result.along_b.value") - da).abs() < 1e-6,
+            "swapped along_b"
+        );
+
+        // Walking segment A the other way puts the crossing the same distance
+        // from the other end, and does not move it.
+        let back = cross([a[2], a[3], a[0], a[1]], b);
+        let len_a = num(&r, "result.length_a.value");
+        assert!(
+            (num(&back, "result.lat.value") - lat).abs() < 1e-9,
+            "reversing a segment moved the crossing"
+        );
+        assert!(
+            (num(&back, "result.along_a.value") - (len_a - da)).abs() < 1e-6,
+            "reversed along_a is {} and the length less the original is {}",
+            num(&back, "result.along_a.value"),
+            len_a - da
+        );
+
+        // The distance said to be along a segment is the distance to the point.
+        let leg = call(
+            "navigation.geodesic.inverse",
+            &format!(
+                r#"{{"lat1":{},"lon1":{},"lat2":{lat},"lon2":{lon}}}"#,
+                a[0], a[1]
+            ),
+        );
+        // along_a is in metres and the geodesic inverse answers in kilometres.
+        let to_point_m = num(&leg, "result.distance.value") * 1000.0;
+        assert!(
+            (to_point_m - da.abs()).abs() < 1e-3,
+            "along_a is {da} m and the geodesic to the point is {to_point_m} m"
+        );
+
+        // "within" is exactly whether both distances fall inside their segments.
+        let len_b = num(&r, "result.length_b.value");
+        let inside = (0.0..=len_a).contains(&da) && (0.0..=len_b).contains(&db);
+        assert_eq!(
+            r["result"]["within"] == "yes",
+            inside,
+            "within says {} for {da} of {len_a} and {db} of {len_b}",
+            r["result"]["within"]
+        );
+    }
+}

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "faf526b6cdb1da12",
+    "hash": "3fcaa178bdf5ba37",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -96,7 +96,7 @@
     "lastmod": "2026-09-22"
   },
   "/changelog/": {
-    "hash": "3c9f2083699d085c",
+    "hash": "fb24111e8a544eb9",
     "lastmod": "2026-09-23"
   },
   "/disclaimer/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "e2153f06d279fa6e",
+    "hash": "fe73245ddf37f640",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -692,7 +692,7 @@
     "lastmod": "2026-09-20"
   },
   "/quality/": {
-    "hash": "ce48daac4e9e457d",
+    "hash": "4602473e7dcd043c",
     "lastmod": "2026-09-23"
   },
   "/raster/": {
@@ -783,6 +783,14 @@
     "hash": "3f60277faa39a987",
     "lastmod": "2026-09-23"
   },
+  "/time/scale/gps-to-utc/": {
+    "hash": "fec3a1e49d7f321c",
+    "lastmod": "2026-09-23"
+  },
+  "/time/scale/gps-week/": {
+    "hash": "745c2b616bf2e47e",
+    "lastmod": "2026-09-23"
+  },
   "/time/scale/julian-date/": {
     "hash": "9ecdbd8cd08d2fa0",
     "lastmod": "2026-09-23"
@@ -790,6 +798,10 @@
   "/time/scale/utc-offset/": {
     "hash": "ed117aed7a4d0fe5",
     "lastmod": "2026-09-22"
+  },
+  "/time/scale/zone-info/": {
+    "hash": "c0d5eeacf95c9776",
+    "lastmod": "2026-09-23"
   },
   "/time/sun/": {
     "hash": "90ad435ac3720c23",
@@ -808,7 +820,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "111f7a9f8febcbc2",
+    "hash": "9314b485376c88ab",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -996,7 +1008,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "7ba96fff7d949f6e",
+    "hash": "98dd64aa1b67a35d",
     "lastmod": "2026-09-23"
   }
 }

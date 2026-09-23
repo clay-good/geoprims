@@ -730,3 +730,193 @@ fn block_time_invariants() {
         "a dated span was folded into a day"
     );
 }
+
+#[test]
+fn gps_week_invariants() {
+    const G: &str = "time.scale.gps-week";
+    let at = |utc: &str| call(G, &format!(r#"{{"utc":"{utc}"}}"#));
+    let f = |r: &Value, k: &str| num(r, k);
+    // At the GPS epoch the week, the second and the offset are all zero. That
+    // is the definition, and the one instant where all three coincide.
+    let epoch = at("1980-01-06T00:00:00Z");
+    assert_eq!(f(&epoch, "result.gps_week"), 0.0);
+    assert_eq!(f(&epoch, "result.seconds_of_week"), 0.0);
+    assert_eq!(f(&epoch, "result.gps_minus_utc.value"), 0.0);
+    assert_eq!(f(&epoch, "result.tai_minus_utc.value"), 19.0);
+    // GPS - UTC is TAI - UTC - 19 everywhere, and the table is read at the
+    // right boundary: 17 s the second before 2017-01-01, 18 s at it.
+    for utc in [
+        "1980-01-06T00:00:00Z",
+        "2012-07-01T00:00:00Z",
+        "2016-12-31T23:59:59Z",
+        "2017-01-01T00:00:00Z",
+        "2026-09-18T00:00:00Z",
+    ] {
+        let r = at(utc);
+        assert_eq!(
+            f(&r, "result.gps_minus_utc.value"),
+            f(&r, "result.tai_minus_utc.value") - 19.0,
+            "{utc}: GPS - UTC is not TAI - UTC - 19"
+        );
+        // The full week is always the era and the 10-bit week put together,
+        // and the second of week is inside the week.
+        assert_eq!(
+            f(&r, "result.gps_week"),
+            f(&r, "result.rollover_era") * 1024.0 + f(&r, "result.week_10bit"),
+            "{utc}: the week does not decompose"
+        );
+        let sow = f(&r, "result.seconds_of_week");
+        assert!(
+            (0.0..604800.0).contains(&sow),
+            "{utc}: seconds of week {sow}"
+        );
+    }
+    assert_eq!(
+        f(&at("2016-12-31T23:59:59Z"), "result.gps_minus_utc.value"),
+        17.0
+    );
+    assert_eq!(
+        f(&at("2017-01-01T00:00:00Z"), "result.gps_minus_utc.value"),
+        18.0
+    );
+    // Both 1,024-week rollovers: the 10-bit week goes back to 0 and the era
+    // advances, while the full week keeps counting.
+    for (utc, week, era) in [
+        ("1999-08-22T00:00:00Z", 1024.0, 1.0),
+        ("2019-04-07T00:00:00Z", 2048.0, 2.0),
+    ] {
+        let r = at(utc);
+        assert_eq!(f(&r, "result.gps_week"), week, "{utc}");
+        assert_eq!(f(&r, "result.week_10bit"), 0.0, "{utc}: 10-bit week");
+        assert_eq!(f(&r, "result.rollover_era"), era, "{utc}: era");
+    }
+    // A week later is exactly one more week at the same second of week.
+    let a = at("2026-09-18T12:00:00Z");
+    let b = at("2026-09-25T12:00:00Z");
+    assert_eq!(
+        f(&b, "result.gps_week") - f(&a, "result.gps_week"),
+        1.0,
+        "a week apart is not one week"
+    );
+    assert_eq!(
+        f(&a, "result.seconds_of_week"),
+        f(&b, "result.seconds_of_week")
+    );
+}
+
+#[test]
+fn gps_to_utc_invariants() {
+    const F: &str = "time.scale.gps-week";
+    const B: &str = "time.scale.gps-to-utc";
+    // The two tools are exact inverses, at the epoch, at both rollovers, and
+    // either side of a leap second.
+    for utc in [
+        "1980-01-06T00:00:00Z",
+        "1999-08-22T00:00:00Z",
+        "2016-12-31T23:59:59Z",
+        "2017-01-01T00:00:00Z",
+        "2019-04-07T00:00:00Z",
+        "2026-09-18T12:34:56Z",
+    ] {
+        let fwd = call(F, &format!(r#"{{"utc":"{utc}"}}"#));
+        let (w, s) = (
+            num(&fwd, "result.gps_week"),
+            num(&fwd, "result.seconds_of_week"),
+        );
+        // A full week of 1,024 or more names itself. Week 0 -- the GPS epoch
+        // -- does not, since it is also a 10-bit week from any era, so it can
+        // only go back the other way.
+        if w >= 1024.0 {
+            let back = call(B, &format!(r#"{{"week":{w},"seconds_of_week":{s}}}"#));
+            assert_eq!(back["result"]["utc"], utc, "round trip via week {w}");
+        }
+        // The same instant named as a 10-bit week plus its era.
+        let split = call(
+            B,
+            &format!(
+                r#"{{"week":{},"seconds_of_week":{s},"era":{}}}"#,
+                (w as i64) % 1024,
+                (w as i64) / 1024
+            ),
+        );
+        assert_eq!(
+            split["result"]["utc"], utc,
+            "10-bit round trip for week {w}"
+        );
+        assert_eq!(num(&split, "result.gps_week"), w);
+    }
+    // A 10-bit week with its era names the same instant as the full week.
+    let full = call(B, r#"{"week":2436,"seconds_of_week":432018}"#);
+    let short = call(B, r#"{"week":388,"seconds_of_week":432018,"era":2}"#);
+    assert_eq!(full["result"]["utc"], short["result"]["utc"]);
+    assert_eq!(num(&short, "result.gps_week"), 2436.0);
+    // A bare week below 1,024 is ambiguous and is refused, not defaulted.
+    let bare = call(B, r#"{"week":0,"seconds_of_week":0}"#);
+    assert_eq!(bare["error"]["code"], "INVALID_INPUT");
+    assert_eq!(bare["error"]["field"], "/era");
+    // The same week with an era is fine, and era 0 week 0 is the GPS epoch.
+    assert_eq!(
+        call(B, r#"{"week":0,"seconds_of_week":0,"era":0}"#)["result"]["utc"],
+        "1980-01-06T00:00:00Z"
+    );
+    // A week of 1,024 or more is unambiguous on its own, and an era alongside
+    // one is refused rather than added to it -- adding it would move the
+    // answer 19.6 years without saying so.
+    assert_eq!(
+        call(B, r#"{"week":2436,"seconds_of_week":432018}"#)["ok"],
+        true
+    );
+    let both = call(B, r#"{"week":2436,"seconds_of_week":432018,"era":2}"#);
+    assert_eq!(both["ok"], false, "a full week accepted an era");
+    assert_eq!(both["error"]["field"], "/era");
+}
+
+#[test]
+fn zone_info_invariants() {
+    const Z: &str = "time.scale.zone-info";
+    let at = |zone: &str, time: &str| call(Z, &format!(r#"{{"zone":"{zone}","time":"{time}"}}"#));
+    let off = |zone: &str, time: &str| {
+        at(zone, time)["result"]["offset"]
+            .as_str()
+            .unwrap_or_else(|| panic!("{zone} at {time}"))
+            .to_owned()
+    };
+    let dst = |zone: &str, time: &str| at(zone, time)["result"]["dst"].as_str().unwrap().to_owned();
+    // A zone that observes daylight saving answers differently in January and
+    // July; one that does not answers the same.
+    assert_ne!(
+        off("America/New_York", "2026-01-15T12:00:00Z"),
+        off("America/New_York", "2026-07-15T12:00:00Z")
+    );
+    assert_eq!(
+        off("America/Phoenix", "2026-01-15T12:00:00Z"),
+        off("America/Phoenix", "2026-07-15T12:00:00Z"),
+        "Phoenix does not observe daylight saving"
+    );
+    assert_eq!(dst("America/Phoenix", "2026-07-04T18:00:00Z"), "no");
+    // The southern hemisphere runs the other way round.
+    assert_eq!(dst("Australia/Sydney", "2026-01-15T00:00:00Z"), "yes");
+    assert_eq!(dst("Australia/Sydney", "2026-07-01T00:00:00Z"), "no");
+    // The spring change is pinned to the hour, not the day.
+    assert_eq!(off("America/Denver", "2026-03-08T08:59:59Z"), "-07:00");
+    assert_eq!(off("America/Denver", "2026-03-08T09:00:00Z"), "-06:00");
+    // Offsets that are not whole hours survive the formatting.
+    assert_eq!(off("Asia/Kolkata", "2026-05-05T00:00:00Z"), "+05:30");
+    assert_eq!(off("Asia/Kathmandu", "2026-05-05T00:00:00Z"), "+05:45");
+    assert_eq!(off("UTC", "2026-09-18T00:00:00Z"), "+00:00");
+    assert_eq!(dst("UTC", "2026-09-18T00:00:00Z"), "no");
+    // The next change is later than the instant asked about, and the offset it
+    // reports is a different one -- otherwise it is not a change.
+    let r = at("America/Denver", "2026-09-18T00:00:00Z");
+    let next = r["result"]["next_change"].as_str().expect("next_change");
+    assert!(
+        next > "2026-09-18T00:00:00Z",
+        "next change {next} is not later"
+    );
+    assert_ne!(
+        r["result"]["next_offset"], r["result"]["offset"],
+        "the next change does not change the offset"
+    );
+    // An unknown zone is refused rather than falling back to UTC.
+    assert_eq!(at("Mars/Olympus", "2026-09-18T00:00:00Z")["ok"], false);
+}

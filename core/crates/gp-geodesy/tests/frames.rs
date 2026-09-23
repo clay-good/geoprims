@@ -366,3 +366,57 @@ fn frame_tool_invariants() {
         }
     }
 }
+
+/// Layer E for `geodesy.ellipsoid.parameters`. The derived values are not
+/// independent of one another: each follows exactly from the two that define
+/// the ellipsoid, and the three radii sit in a known order.
+#[test]
+fn ellipsoid_parameter_invariants() {
+    for name in ["wgs84", "grs80", "airy1830", "clarke1866", "intl1924"] {
+        let r = call(
+            "geodesy.ellipsoid.parameters",
+            &format!(r#"{{"ellipsoid":"{name}"}}"#),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        let g = |k: &str| num(&r, k);
+        let (a, b) = (g("result.a.value"), g("result.b.value"));
+        let (f, e2, ep2, n) = (
+            g("result.flattening"),
+            g("result.e2"),
+            g("result.ep2"),
+            g("result.n"),
+        );
+        let close = |got: f64, want: f64, what: &str| {
+            assert!(
+                (got - want).abs() <= 1e-12 * want.abs().max(1.0),
+                "{name}: {what} is {got}, and the defining values give {want}"
+            );
+        };
+        // Every derived value against the two that define the figure.
+        close(b, a * (1.0 - f), "b = a(1 − f)");
+        close(e2, f * (2.0 - f), "e² = f(2 − f)");
+        close(ep2, e2 / (1.0 - e2), "e′² = e²/(1 − e²)");
+        close(n, f / (2.0 - f), "n = f/(2 − f)");
+        close(
+            g("result.mean_radius.value"),
+            (2.0 * a + b) / 3.0,
+            "R₁ = (2a + b)/3",
+        );
+        // A sphere of equal area and one of equal volume both lie between the
+        // axes, and below the mean radius, which weights the equator twice.
+        for (radius, what) in [
+            (g("result.authalic_radius.value"), "the authalic radius"),
+            (g("result.volumetric_radius.value"), "the volumetric radius"),
+        ] {
+            assert!(
+                b < radius && radius < a,
+                "{name}: {what} is outside the axes"
+            );
+            assert!(
+                radius < g("result.mean_radius.value"),
+                "{name}: {what} is above the mean radius"
+            );
+        }
+        assert!(b < a, "{name}: the ellipsoid is not oblate");
+    }
+}

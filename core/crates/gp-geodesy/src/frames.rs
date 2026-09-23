@@ -124,6 +124,7 @@ fn describe_model(ctx: &mut Ctx, ell: &Ellipsoid, what: &str) {
 
 pub static PARAMETERS: ToolDef = ToolDef {
     id: "geodesy.ellipsoid.parameters",
+    stability: gp_base::tool::Stability::Stable,
     title: "Ellipsoid parameters",
     summary: "The defining and derived parameters of a reference ellipsoid: semi-minor axis, flattening, eccentricities, third flattening, and the mean, authalic, and volumetric radii.",
     aliases: &[
@@ -183,7 +184,9 @@ pub static PARAMETERS: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
+    when_to_use: "Use this when a calculation needs the shape of the Earth written out: the semi-minor axis, the flattening, the two eccentricities, the third flattening, and the mean, authalic, and volumetric radii of a named ellipsoid, or of one you give by its own two defining numbers. It is what a projection, a datum transformation, or a geodesic calculation is set up from, and what to quote when a result has to say which figure of the Earth it used.",
+    limitations: "An ellipsoid is a figure, not a datum: WGS 84 and GRS 80 differ in the last digits of their flattening and are still different realizations of position, so naming the ellipsoid does not pin down the coordinates. The derived values follow exactly from the two defining ones, so a custom ellipsoid given with a rounded flattening carries that rounding into everything below it. The radii are the ones a sphere would need to match the ellipsoid in one respect each -- mean, equal area, equal volume -- and they are not interchangeable: using the volumetric radius where an area calculation wanted the authalic one is a quiet error of about a part in a million.",
     model: "Closed-form ellipsoid relations; quarter meridian by Carlson's elliptic integrals",
     accuracy: "Exact formulas evaluated in double precision (relative error near 1e-16)",
     references: &[NGA_WGS84, GRS80_REF, SNYDER],
@@ -198,10 +201,20 @@ pub static PARAMETERS: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "geodesy.ellipsoid.radii",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.ellipsoid.radii",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.ellipsoid.auxiliary-latitude",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.frame.geodetic-to-ecef",
+            reason: "next",
+        },
+    ],
     sentence: "The semi-minor axis is {b}, with flattening {flattening}.",
     limits: &[("batchRows", 10_000)],
     run: run_parameters,

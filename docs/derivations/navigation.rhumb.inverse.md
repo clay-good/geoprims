@@ -42,7 +42,7 @@ Karney's series for the meridian arc and the conformal and rectifying latitudes 
 - `core/crates/gp-navigation/tests/navigation.rs` `rhumb_tools_match_rhumbsolve`: 2,000 pairs through the public tools against GeographicLib 2.7's RhumbSolve, within 4.2e-7 m and 2.4e-11°
 - `core/crates/gp-geo/tests/rhumb.rs`: the same pairs at the library level, including 200 nearly east-west, 100 nearly meridional, and 100 near-pole cases
 - `tools/vectors/gen_rhumb_diff.py`: regenerates that fixture and the vectors
-- `core/vectors/navigation.rhumb.inverse.jsonl`: 23 vectors from RhumbSolve and Bowditch
+- `core/vectors/navigation.rhumb.inverse.jsonl`: 23 vectors from RhumbSolve and Bowditch, and v024, which pins how a sub-meter distance is shown
 
 ## Invariants
 

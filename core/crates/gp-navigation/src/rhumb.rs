@@ -47,6 +47,7 @@ const fn km_field(name: &'static str, title: &'static str, help: &'static str) -
 
 pub static RHUMB_INVERSE: ToolDef = ToolDef {
     id: "navigation.rhumb.inverse",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Rhumb line distance and course",
     summary: "The constant course and distance of the rhumb line (loxodrome) between two points on the ellipsoid, and how much longer it is than the shortest route.",
@@ -83,7 +84,9 @@ pub static RHUMB_INVERSE: ToolDef = ToolDef {
             "Geodesic distance",
             "The shortest route, for comparison",
         ),
-        km_field("extra_distance", "Extra distance", "Rhumb minus geodesic"),
+        // A difference, not a distance: kept to the millimeter.
+        km_field("extra_distance", "Extra distance", "Rhumb minus geodesic")
+            .precision(Precision::Decimals(3)),
         Field::new(
             "extra_percent",
             "Extra over the geodesic (%)",
@@ -158,6 +161,7 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static RHUMB_DIRECT: ToolDef = ToolDef {
     id: "navigation.rhumb.direct",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Destination on a constant course (rhumb line)",
     summary: "Where a constant course (rhumb line, loxodrome) for a given distance ends on the ellipsoid; a rhumb that would cross a pole stops there.",

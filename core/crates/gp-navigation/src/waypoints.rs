@@ -53,7 +53,7 @@ const POINT_ROW: &[Field] = &[
             unit: "km",
         },
     )
-    .precision(Precision::Decimals(3)),
+    .precision(crate::DIST_P),
     Field::new(
         "azimuth",
         "Course here",
@@ -69,6 +69,7 @@ const POINT_ROW: &[Field] = &[
 
 pub static WAYPOINTS: ToolDef = ToolDef {
     id: "navigation.geodesic.waypoints",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Waypoints along a route line",
     summary: "Points along the geodesic (or rhumb line) from A to B at N equal intervals, a fixed spacing, or given fractions, with distance and course at each, as a table, a GPX route, and GeoJSON.",
@@ -144,7 +145,7 @@ pub static WAYPOINTS: ToolDef = ToolDef {
                 unit: "km",
             },
         )
-        .precision(Precision::Decimals(3)),
+        .precision(crate::DIST_P),
         Field::new(
             "points",
             "Points",

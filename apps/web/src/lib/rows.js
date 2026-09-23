@@ -28,6 +28,12 @@ const group = (digits) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 export function formatNumber(n, precision) {
   if (typeof n !== 'number' || !Number.isFinite(n) || !precision) return String(n);
   if (precision.significant !== undefined) return String(Number(n.toPrecision(precision.significant)));
+  // A small value keeps up to `minSignificant` digits, with at most that many
+  // extra decimals (0.000859, not 0.001), as the core renders it.
+  const min = precision.minSignificant;
+  if (min !== undefined && n !== 0 && Math.abs(n) < 10 ** (min - 1 - (precision.decimals ?? 0))) {
+    return String(Number(Number(n.toPrecision(min)).toFixed((precision.decimals ?? 0) + min)));
+  }
   const fixed = n.toFixed(precision.decimals ?? 0);
   if (precision.grouping === false) return fixed;
   const [whole, frac] = fixed.split('.');

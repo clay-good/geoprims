@@ -86,6 +86,7 @@ pub fn foot(
 
 pub static CROSS_TRACK: ToolDef = ToolDef {
     id: "navigation.route.cross-track",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Cross-track and along-track distance",
     summary: "How far a point is off the course line from A to B (right of course positive), how far along the course its closest point lies, and that point, on the ellipsoid to the millimeter.",
@@ -1752,6 +1753,7 @@ const ROUTE_POINT: &[Field] = &[
 
 pub static CLOSEST_POINT: ToolDef = ToolDef {
     id: "navigation.route.closest-point",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Closest point on a route",
     summary: "The point on a multi-leg route closest to a position: which leg, how far along the route, and how far off it (right of course positive).",
@@ -1803,7 +1805,7 @@ pub static CLOSEST_POINT: ToolDef = ToolDef {
             QT::Distance,
             "km",
         )
-        .precision(Precision::Decimals(3)),
+        .precision(DIST_P),
         qty_field(
             "cross_track",
             "Off the route",
@@ -1811,7 +1813,7 @@ pub static CLOSEST_POINT: ToolDef = ToolDef {
             QT::Distance,
             "km",
         )
-        .precision(Precision::Decimals(3)),
+        .precision(DIST_P),
         qty_field(
             "closest_lat",
             "Closest point latitude",
@@ -1837,7 +1839,7 @@ pub static CLOSEST_POINT: ToolDef = ToolDef {
             QT::Distance,
             "km",
         )
-        .precision(Precision::Decimals(3)),
+        .precision(DIST_P),
     ],
     errors: &[
         ErrorCode::InvalidInput,

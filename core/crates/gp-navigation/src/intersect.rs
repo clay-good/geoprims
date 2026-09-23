@@ -223,6 +223,7 @@ fn wrap_lon_deg(x: f64) -> f64 {
 
 pub static COURSE_INTERSECTION: ToolDef = ToolDef {
     id: "navigation.route.course-intersection",
+    version: "1.0.1",
     title: "Where two courses cross",
     summary: "The point where two courses from two positions meet, on geodesics or rhumb lines, and how far each has to run to get there.",
     aliases: &[
@@ -361,6 +362,7 @@ fn run_intersection(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static INTERCEPT: ToolDef = ToolDef {
     id: "navigation.route.intercept",
+    version: "1.0.1",
     title: "Intercept a moving target",
     summary: "The course to steer, the time, and the meeting point for reaching a target that is moving on a steady course and speed, or why it cannot be reached.",
     aliases: &[
@@ -585,6 +587,7 @@ fn run_intercept(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static SEGMENT_INTERSECTION: ToolDef = ToolDef {
     id: "navigation.geodesic.intersection",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Where two geodesic segments cross",
     summary: "The crossing of the geodesics through two segments on the ellipsoid, nearest the segments' middles, and whether it falls within both segments or out on their extensions.",
@@ -779,6 +782,7 @@ fn run_segments(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static VERTEX: ToolDef = ToolDef {
     id: "navigation.geodesic.vertex",
+    version: "1.0.1",
     title: "Highest point of a geodesic (vertex)",
     summary: "The vertex of a geodesic: the northernmost point it reaches, where it runs due east or west, and how far along the line from the start it lies.",
     aliases: &[

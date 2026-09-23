@@ -103,7 +103,9 @@ const STABLE_WARNINGS: &[&str] = &[
     "UNIT_ASSUMED",
 ];
 const JFK_LHR: &str = r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543}"#;
-const DIST_P: Precision = Precision::Decimals(3);
+/// Kilometers to the millimeter, but a short distance keeps three significant
+/// digits (0.000859 km, not 0.001 km).
+const DIST_P: Precision = Precision::DecimalsMinSig(3, 3);
 const AZ_P: Precision = Precision::Decimals(7);
 
 fn setup(ctx: &mut Ctx) -> Result<(Ellipsoid, Geodesic), ToolError> {
@@ -138,6 +140,7 @@ fn karney(
 
 pub static INVERSE: ToolDef = ToolDef {
     id: "navigation.geodesic.inverse",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Distance between two points (geodesic)",
     summary: "The shortest distance and the start and end courses between two points on the WGS 84 ellipsoid (or any ellipsoid), exact to nanometers with Karney's algorithm.",
@@ -527,6 +530,7 @@ fn run_direct(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HAVERSINE: ToolDef = ToolDef {
     id: "navigation.geodesic.haversine",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Haversine distance (spherical)",
     summary: "The great-circle distance on a sphere by the haversine formula, with its error against the ellipsoidal geodesic shown.",
@@ -933,6 +937,7 @@ fn run_vincenty_direct(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MIDPOINT: ToolDef = ToolDef {
     id: "navigation.geodesic.midpoint",
+    version: "1.0.1",
     title: "Midpoint on the geodesic",
     summary: "The point halfway along the shortest path between two points on the ellipsoid, and the course there.",
     aliases: &["midpoint calculator", "halfway point"],

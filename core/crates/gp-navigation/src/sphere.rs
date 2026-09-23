@@ -124,6 +124,7 @@ fn vec3(lat: f64, lon: f64) -> [f64; 3] {
 
 pub static SPHERICAL_INVERSE: ToolDef = ToolDef {
     id: "navigation.geodesic.spherical-inverse",
+    version: "1.0.1",
     title: "Great-circle distance and course (spherical)",
     summary: "Distance and initial and final courses along the great circle on a sphere, with the difference from the ellipsoidal geodesic shown.",
     aliases: &[

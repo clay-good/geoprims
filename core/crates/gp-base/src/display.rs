@@ -22,6 +22,12 @@ pub fn number(x: f64, precision: Precision, format: NumberFormat) -> String {
     let keep = match precision {
         Precision::Decimals(p) | Precision::Plain(p) => n + i32::from(p),
         Precision::Significant(s) => i32::from(s),
+        // Up to `s` significant digits, but never more than `s` extra decimals,
+        // so rounding noise near zero still shows as 0.
+        Precision::DecimalsMinSig(p, s) => {
+            let (fixed, s) = (n + i32::from(p), i32::from(s));
+            fixed.max(s.min(fixed + s))
+        }
     };
     if keep < 0 {
         return "0".to_owned();
@@ -172,6 +178,23 @@ mod tests {
         ];
         for (x, p, want) in cases {
             assert_eq!(number(*x, *p, P), *want, "{x:e} {p:?}");
+        }
+    }
+
+    #[test]
+    fn small_values_keep_significant_digits() {
+        let p = Precision::DecimalsMinSig(3, 3);
+        let cases: &[(f64, &str)] = &[
+            (5554.908791, "5,554.909"),
+            (0.859, "0.859"),
+            (0.0859, "0.0859"),
+            (0.000859, "0.000859"),
+            (0.0000054, "0.000005"),
+            (2.35e-13, "0"),
+            (-0.000859, "-0.000859"),
+        ];
+        for (x, want) in cases {
+            assert_eq!(number(*x, p, P), *want, "{x:e}");
         }
     }
 

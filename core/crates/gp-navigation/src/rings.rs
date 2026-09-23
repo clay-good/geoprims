@@ -83,7 +83,7 @@ const SUMMARY_ROW: &[Field] = &[
             unit: "km",
         },
     )
-    .precision(Precision::Decimals(3)),
+    .precision(crate::DIST_P),
     Field::new(
         "area",
         "Area inside",
@@ -110,6 +110,7 @@ const SUMMARY_ROW: &[Field] = &[
 
 pub static RANGE_RINGS: ToolDef = ToolDef {
     id: "navigation.route.range-rings",
+    version: "1.0.1",
     title: "Range rings",
     summary: "Geodesic circles at one or more distances around a point, drawn true on the ellipsoid, with their areas, and a GeoJSON file cut correctly at the antimeridian and around a pole.",
     aliases: &[

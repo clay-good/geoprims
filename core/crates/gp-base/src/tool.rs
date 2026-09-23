@@ -40,6 +40,9 @@ pub enum Precision {
     Significant(u8),
     /// Decimals without digit grouping, for identifiers (GPS week 2436, JD 2461301.5).
     Plain(u8),
+    /// Decimals, but a small value keeps up to this many significant digits,
+    /// with at most that many extra decimals (0.000859 km, not 0.001 km).
+    DecimalsMinSig(u8, u8),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

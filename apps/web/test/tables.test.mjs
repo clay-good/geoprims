@@ -89,6 +89,11 @@ test('a table cell reads to the precision its column declares', async () => {
   assert.equal(formatNumber(-1234.5, { decimals: 1 }), '-1,234.5');
   assert.equal(formatNumber(2436, { decimals: 0, grouping: false }), '2436');
   assert.equal(formatNumber(0.000123456, { significant: 3 }), '0.000123');
+  // A short distance keeps its digits, as the core shows it (0.859 m in km).
+  const km = { decimals: 3, minSignificant: 3 };
+  assert.equal(formatNumber(0.000859, km), '0.000859');
+  assert.equal(formatNumber(2.35e-13, km), '0');
+  assert.equal(formatNumber(5554.908791, km), '5,554.909');
   // A column that declares nothing prints what the core gave.
   assert.equal(cellText({ value: 1.23456789, unit: 'm' }), '1.23456789 m');
   assert.equal(cellText('N 0°00\'13" W'), 'N 0°00\'13" W');

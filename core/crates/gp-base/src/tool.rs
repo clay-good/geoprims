@@ -850,6 +850,24 @@ impl<'a> Ctx<'a> {
         let x = match self.raw(name) {
             None => return Ok(None),
             Some(Value::Number(n)) => n.as_f64().unwrap_or(f64::NAN),
+            // A field carrying a unit it does not parse -- decibels and the
+            // like, which are labels on a plain number rather than quantities
+            // that convert -- still advertises that unit in its schema, so a
+            // caller reasonably writes it. Say what to write instead of
+            // saying the number is not a number.
+            Some(Value::String(s))
+                if f.measure.is_some_and(|(_, u)| {
+                    s.trim()
+                        .strip_suffix(u)
+                        .is_some_and(|head| !head.is_empty() && head.trim().parse::<f64>().is_ok())
+                }) =>
+            {
+                let (_, u) = f.measure.expect("checked");
+                return Err(ToolError::invalid(
+                    &at,
+                    format!("{} is a plain number in {u}, without the unit.", f.title),
+                ));
+            }
             Some(Value::String(s)) => parse::parse_number(s, self.options.format, &at)?,
             Some(_) => {
                 return Err(ToolError::invalid(

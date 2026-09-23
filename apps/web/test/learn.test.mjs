@@ -13,7 +13,7 @@ const page = (route) => readFileSync(join(dist, route, 'index.html'), 'utf8');
 const words = (html) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter((w) => /[a-z]/i.test(w)).length;
 
 /** The minimum the launch plan asks for (plan-launch-and-value-proof L1). */
-export const MIN_EXPLAINERS = 1;
+export const MIN_EXPLAINERS = 25;
 
 test(`at least ${MIN_EXPLAINERS} explainers are published`, () => {
   assert.ok(slugs.length >= MIN_EXPLAINERS, `${slugs.length} explainers`);

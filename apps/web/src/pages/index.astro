@@ -3,6 +3,9 @@ import Base from '../layouts/Base.astro';
 import { catalog, DOMAIN_BLURBS, JOURNEYS, DOMAIN_TITLES, exampleResult, route, tool as find } from '../lib/catalog.mjs';
 import { icon } from '../lib/icons.mjs';
 import { EXPLAINERS } from '../lib/learn.js';
+// One or two explainers per audience on the home page; the rest are a click away on /learn/.
+const FEATURED = ['density-altitude', 'how-to-read-a-metar', 'ground-sample-distance', 'photo-overlap-and-flight-lines', 'geoid-vs-ellipsoid', 'h3-resolution'];
+const featured = FEATURED.map((slug) => EXPLAINERS.find((e) => e.slug === slug) ?? (() => { throw new Error(`featured explainer ${slug} does not exist`); })());
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 const ops = catalog.counts.all.operations;
 const stable = catalog.counts.stable.operations;
@@ -116,7 +119,7 @@ const panel = await Promise.all(
       <a class="section-link" href="/learn/">All {EXPLAINERS.length} explainers →</a>
     </div>
     <ul class="journey-list">
-      {EXPLAINERS.slice(0, 6).map((e) => (
+      {featured.map((e) => (
         <li><a href={e.route}>{e.title}</a><p class="blurb">{e.summary}</p><span class="count">{e.audience}</span></li>
       ))}
     </ul>

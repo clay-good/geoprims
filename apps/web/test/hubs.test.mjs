@@ -103,3 +103,8 @@ test('hub intros are a short paragraph of plain prose', () => {
   }
 });
 
+test('every group and domain hub has an intro, so no hub page is a bare list', () => {
+  const missing = [...groups, ...domains].filter((key) => !hubs[key]?.intro);
+  assert.deepEqual(missing, []);
+});
+

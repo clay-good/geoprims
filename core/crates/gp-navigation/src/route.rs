@@ -876,6 +876,7 @@ fn run_tsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CPA: ToolDef = ToolDef {
     id: "navigation.route.cpa",
+    stability: gp_base::tool::Stability::Stable,
     diagram_inline: true,
     title: "Closest point of approach",
     summary: "When two moving objects come closest, how close, and the bearing and range then, in a local flat frame (for separations under 500 km), with climb rates and height for aircraft in 3D.",
@@ -1067,20 +1068,17 @@ pub static CPA: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "DIVERGING",
-        "INPUT_NORMALIZED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["DIVERGING", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Constant velocities in a local east-north(-up) frame: t = −(r·v) / |v|², the 3D minimum when heights or climb rates are given",
     accuracy: "Exact in the plane; the flat-plane approximation is good to about 0.1% under 500 km",
+    when_to_use: "Use this to see whether two moving things will pass close enough to matter: two aircraft on steady courses, two vessels crossing, a drone against traffic, a chase boat against a target. Give each one's course and speed and where the second stands relative to the first, and it reports when they are nearest, how near, and the bearing and range at that moment. With heights and climb rates it does the same in three dimensions, which is the case that matters in the air, where two tracks that cross on a chart may be a thousand feet apart.",
+    limitations: "It assumes both keep their present course and speed, so it is a picture of the next few minutes and not a prediction: one turn and the answer is void. The frame is flat, which is why the separation should be kept under 500 km, where the approximation costs about a tenth of a percent. It is geometry, not separation standards: it does not know about wake turbulence, required separation minima, or the rules of the road, and a closest approach that looks comfortable here may still be a violation. Where the two are already moving apart the closest approach is in the past, which is flagged, and the present separation is the number that matters.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
         title: "A heading east, B crossing southbound",
         input: r#"{"a_course":"090 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"1200 m","b_course":"180 deg","b_speed":"10 m/s"}"#,
-        source: "navigation route-geometry scenario: CPA at t = 110 s with separation 141.42 m",
+        source: "exactly solvable by hand: with r = (1000, 1200) m and a relative velocity of (−10, −10) m/s, t = −(r·v)/|v|² = 22000/200 = 110 s exactly, the relative position is then (−100, +100) m, so the separation is 100√2 = 141.4213562373095 m on a bearing of exactly 315°, and the present separation is √(1000² + 1200²) = 1562.0499351813308 m",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -1092,10 +1090,20 @@ pub static CPA: ToolDef = ToolDef {
         end: "scene_end",
         key: "time",
     }),
-    related: &[Related {
-        id: "navigation.route.cross-track",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.route.cross-track",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.route.intercept",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.route.closest-point",
+            reason: "alternative",
+        },
+    ],
     sentence: "Closest approach is {separation} in {time}.{warn DIVERGING} They are already moving apart.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_cpa,

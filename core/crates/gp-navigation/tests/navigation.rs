@@ -2052,3 +2052,169 @@ fn fresnel_invariants() {
         }
     }
 }
+
+/// Closest approach, every length in metres and every time in seconds.
+fn cpa(extra: &str) -> Value {
+    call(
+        "navigation.route.cpa",
+        &format!(
+            r#"{{{extra},"options":{{"outputUnits":{{"separation":"m","current_separation":"m","time":"s","horizontal_separation":"m","vertical_separation":"m"}}}}}}"#
+        ),
+    )
+}
+
+#[test]
+fn cpa_matches_a_brute_force_search() {
+    // Independent method: walk time forward and find the least separation by
+    // golden-section search, rather than solving t = -(r.v)/|v|^2. A sign or a
+    // factor in the closed form could not survive this.
+    let mut seed = 24_681_357u64;
+    let mut rnd = || {
+        seed = seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let (mut worst_sep, mut worst_t, mut closing) = (0.0f64, 0.0f64, 0);
+    for _ in 0..300 {
+        let (ca, cb) = (rnd() * 360.0, rnd() * 360.0);
+        let (sa, sb) = (5.0 + rnd() * 200.0, 5.0 + rnd() * 200.0);
+        let (be, bn) = (rnd() * 40_000.0 - 20_000.0, rnd() * 40_000.0 - 20_000.0);
+        let r = cpa(&format!(
+            r#""a_course":"{ca} deg","a_speed":"{sa} m/s","b_east":"{be} m","b_north":"{bn} m","b_course":"{cb} deg","b_speed":"{sb} m/s""#
+        ));
+        assert!(r["ok"].as_bool().unwrap_or(false), "{r}");
+
+        // The same motion, written out here.
+        let vel = |course: f64, speed: f64| {
+            let t = course.to_radians();
+            (speed * t.sin(), speed * t.cos()) // east, north
+        };
+        let (ae, an) = vel(ca, sa);
+        let (bev, bnv) = vel(cb, sb);
+        let (vx, vy) = (bev - ae, bnv - an);
+        let sep = |t: f64| ((be + vx * t).powi(2) + (bn + vy * t).powi(2)).sqrt();
+
+        // Golden-section over a window that certainly contains the minimum.
+        let (mut lo, mut hi) = (0.0f64, 20_000.0f64);
+        let phi = (5f64.sqrt() - 1.0) / 2.0;
+        for _ in 0..300 {
+            let (m1, m2) = (hi - phi * (hi - lo), lo + phi * (hi - lo));
+            if sep(m1) < sep(m2) { hi = m2 } else { lo = m1 }
+        }
+        let t_ref = (lo + hi) / 2.0;
+        // Only compare where they are actually closing; a diverging pair has its
+        // minimum in the past and the tool clamps to zero, which the search here
+        // cannot see because it only looks forward.
+        if t_ref > 1e-6 && t_ref < 19_000.0 {
+            closing += 1;
+            worst_t = worst_t.max((num(&r, "result.time.value") - t_ref).abs());
+            worst_sep = worst_sep.max((num(&r, "result.separation.value") - sep(t_ref)).abs());
+        }
+    }
+    assert!(closing > 120, "only {closing} of 300 pairs were closing");
+    eprintln!(
+        "CPA against a golden-section search: {closing} closing pairs, worst separation {worst_sep:.3e} m, worst time {worst_t:.3e} s"
+    );
+    // The separation is what has to match, and it does to a micrometre. The
+    // moment cannot be pinned as tightly by this method and is not claimed to
+    // be: the separation is flat at its minimum, so a search on distance finds
+    // the value precisely and the argument only loosely. A tight bound on the
+    // time here would be measuring the search rather than the tool.
+    assert!(worst_sep < 1e-6, "separation off by {worst_sep} m");
+    assert!(
+        worst_t < 1e-3,
+        "time of closest approach off by {worst_t} s"
+    );
+}
+
+#[test]
+fn cpa_invariants() {
+    const A: &str = r#""a_course":"090 deg","a_speed":"10 m/s","b_east":"1000 m","b_north":"1200 m","b_course":"180 deg","b_speed":"10 m/s""#;
+    let base = cpa(A);
+    let (t0, s0) = (
+        num(&base, "result.time.value"),
+        num(&base, "result.separation.value"),
+    );
+
+    // Symmetric: it does not matter which one is called A. The same moment, the
+    // same distance, the bearing turned around.
+    let swapped = cpa(
+        r#""a_course":"180 deg","a_speed":"10 m/s","b_east":"-1000 m","b_north":"-1200 m","b_course":"090 deg","b_speed":"10 m/s""#,
+    );
+    assert!(
+        (num(&swapped, "result.time.value") - t0).abs() < 1e-9
+            && (num(&swapped, "result.separation.value") - s0).abs() < 1e-9,
+        "the answer depends on which is called A\n{base}\n{swapped}"
+    );
+    let turned = (num(&swapped, "result.bearing.value") - num(&base, "result.bearing.value"))
+        .rem_euclid(360.0);
+    assert!(
+        (turned - 180.0).abs() < 1e-9,
+        "the bearing did not reverse: {turned}"
+    );
+
+    // It really is the minimum: nothing on the track beats it.
+    for step in [-60.0, -10.0, -1.0, 1.0, 10.0, 60.0] {
+        let at = cpa(&format!(r#"{A},"at_time":"{} s""#, t0 + step));
+        assert!(
+            num(&at, "result.separation_at.value") >= s0 - 1e-9,
+            "at {}s the separation is {} m, under the reported closest {s0} m",
+            t0 + step,
+            num(&at, "result.separation_at.value")
+        );
+    }
+
+    // Same course, same speed: they never close, and the separation stands.
+    let parallel = cpa(
+        r#""a_course":"090 deg","a_speed":"10 m/s","b_east":"0 m","b_north":"500 m","b_course":"090 deg","b_speed":"10 m/s""#,
+    );
+    assert!(
+        (num(&parallel, "result.separation.value") - 500.0).abs() < 1e-9
+            && (num(&parallel, "result.current_separation.value") - 500.0).abs() < 1e-9,
+        "two on the same course did not hold their separation\n{parallel}"
+    );
+
+    // Already past each other: flagged, and the time clamped to now rather than
+    // offered as a negative moment nobody can fly to.
+    let diverging = cpa(
+        r#""a_course":"090 deg","a_speed":"10 m/s","b_east":"-1000 m","b_north":"0 m","b_course":"270 deg","b_speed":"10 m/s""#,
+    );
+    assert!(
+        codes(&diverging).contains(&"DIVERGING".to_string()),
+        "a diverging pair is not flagged\n{diverging}"
+    );
+    assert_eq!(
+        num(&diverging, "result.time.value"),
+        0.0,
+        "a diverging pair reported a time other than now"
+    );
+    assert!(
+        !codes(&base).contains(&"DIVERGING".to_string()),
+        "a closing pair was flagged as diverging"
+    );
+
+    // In three dimensions the parts recompose, and a zero height difference
+    // with no climb gives back the two-dimensional answer exactly -- the check
+    // that the third dimension enters only where it should.
+    let up = cpa(&format!(
+        r#"{A},"b_up":"300 m","a_vertical_speed":"0 m/s","b_vertical_speed":"0 m/s""#
+    ));
+    let (h, v) = (
+        num(&up, "result.horizontal_separation.value"),
+        num(&up, "result.vertical_separation.value"),
+    );
+    assert!(
+        (h.hypot(v) - num(&up, "result.separation.value")).abs() < 1e-9,
+        "the 3D separation is not its parts recomposed\n{up}"
+    );
+    assert!((v - 300.0).abs() < 1e-9, "vertical separation {v}");
+    let flat = cpa(&format!(
+        r#"{A},"b_up":"0 m","a_vertical_speed":"0 m/s","b_vertical_speed":"0 m/s""#
+    ));
+    assert_eq!(
+        num(&flat, "result.separation.value"),
+        s0,
+        "the three-dimensional path does not reduce to the flat one"
+    );
+}

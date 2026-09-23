@@ -99,3 +99,104 @@ fn collinear_points_make_no_triangles() {
     );
     assert_eq!(r["error"]["code"], "DEGENERATE_GEOMETRY", "{r}");
 }
+
+use std::collections::BTreeMap;
+
+fn tool(id: &str, input: &serde_json::Value) -> Value {
+    serde_json::from_str(&REGISTRY.invoke(id, &input.to_string())).expect("JSON")
+}
+
+fn area_of(polygon: &Value) -> f64 {
+    tool(
+        "geometry.area.polygon",
+        &json!({"polygon": polygon, "options": {"outputUnits": {"area": "m2"}}}),
+    )["result"]["area"]["value"]
+        .as_f64()
+        .unwrap()
+}
+
+#[test]
+fn delaunay_invariants() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/delaunay_geos.json");
+    let cases: Vec<Value> =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("JSON");
+
+    for case in cases.iter().take(8) {
+        let name = case["name"].as_str().unwrap();
+        let points = &case["points"];
+        let n = points.as_array().unwrap().len();
+        let r = tool(
+            "geometry.mesh.delaunay",
+            &json!({"points": points, "surface": "planar"}),
+        );
+        assert!(r["ok"].as_bool().unwrap_or(false), "{name}: {r}");
+        let triangles = r["result"]["triangles"].as_array().unwrap();
+
+        // The hull corner count comes from the neighbouring tool, so Euler's
+        // relation is checked against something this one did not compute.
+        let enc = tool("geometry.shape.enclosing", &json!({"points": points}));
+        let h = enc["result"]["hull_count"].as_u64().unwrap() as usize;
+        assert_eq!(
+            triangles.len(),
+            2 * n - 2 - h,
+            "{name}: {} triangles for {n} points with {h} on the hull, not the {} Euler requires",
+            triangles.len(),
+            2 * n - 2 - h
+        );
+
+        // Every interior edge is shared by exactly two triangles and every hull
+        // edge by one. That is what makes this a triangulation rather than a
+        // heap of triangles, and nothing else here would notice a tear.
+        let mut edges: BTreeMap<(u64, u64), usize> = BTreeMap::new();
+        for t in triangles {
+            let v = [
+                t["a"].as_u64().unwrap(),
+                t["b"].as_u64().unwrap(),
+                t["c"].as_u64().unwrap(),
+            ];
+            assert!(
+                v[0] != v[1] && v[1] != v[2] && v[0] != v[2],
+                "{name}: a triangle repeats a vertex: {v:?}"
+            );
+            for i in 0..3 {
+                let (a, b) = (v[i], v[(i + 1) % 3]);
+                *edges.entry((a.min(b), a.max(b))).or_default() += 1;
+            }
+        }
+        let on_hull = edges.values().filter(|&&c| c == 1).count();
+        assert!(
+            edges.values().all(|&c| c <= 2),
+            "{name}: an edge is shared by more than two triangles"
+        );
+        assert_eq!(
+            on_hull, h,
+            "{name}: {on_hull} edges border nothing, not the {h} on the hull"
+        );
+
+        // The triangles tile the hull exactly: no gap, no overlap. Areas from
+        // geometry.area.polygon, not from anything the mesh computed.
+        let total: f64 = triangles
+            .iter()
+            .map(|t| {
+                let pts: Vec<Value> = [&t["a"], &t["b"], &t["c"]]
+                    .iter()
+                    .map(|i| points[i.as_u64().unwrap() as usize - 1].clone())
+                    .collect();
+                area_of(&Value::Array(pts))
+            })
+            .sum();
+        let hull: Vec<Value> = enc["result"]["outlines"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|p| p["shape"] == "hull")
+            .map(|p| json!({"lat": p["lat"]["value"], "lon": p["lon"]["value"]}))
+            .collect();
+        assert_eq!(hull.len(), h, "{name}: the hull outline is not {h} points");
+        let hull_area = area_of(&Value::Array(hull));
+        assert!(
+            (total - hull_area).abs() / hull_area < 1e-9,
+            "{name}: the triangles cover {total} m2 of a {hull_area} m2 hull"
+        );
+    }
+}

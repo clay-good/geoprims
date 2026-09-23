@@ -354,6 +354,7 @@ fn build(ctx: &mut Ctx) -> Result<Mesh, ToolError> {
 // ---------------------------------------------------------------- Delaunay
 
 pub static DELAUNAY: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geometry.mesh.delaunay",
     title: "Delaunay triangulation of points",
     summary: "Triangles joining a set of points so no point sits inside any triangle's circumcircle: planar on a local map for a regional set, or on the sphere for a global one.",
@@ -424,15 +425,17 @@ pub static DELAUNAY: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::DegenerateGeometry,
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Planar: the lower convex hull of the points lifted to z = x² + y² on an azimuthal equidistant plane at their center. Spherical: the convex hull of their directions on the unit sphere. Both by incremental insertion, with a fixed jitter far below a millimeter to settle ties",
     accuracy: "Exact triangulation of the points on the chosen surface; where four points share a circle, either diagonal is valid and one is chosen consistently",
+    when_to_use: "Use this to turn scattered points into a surface. A triangulation is what interpolation between measurements runs on — a terrain model from spot heights, a field from soundings or samples, contours from a survey — and it is also the skeleton the Voronoi cells are built from, so the two answer opposite halves of the same question. Take the spherical surface when the points spread far enough that a plane would distort them; planar is right for a site, a field, or a survey block.",
+    limitations: "It triangulates the convex hull of the points and nothing beyond it, so a concave boundary is filled in: an L-shaped site comes back with triangles spanning the notch, and they have to be clipped afterwards. Where four or more points share a circle the triangulation is genuinely not unique and either diagonal is correct; one is chosen consistently, but two implementations can differ there and neither is wrong. The result is a mesh over the points given and interpolating on it is only as good as they are — it says nothing about what happens between them beyond a straight line.",
     references: &[DELAUNAY_REF],
     examples: &[Example {
         id: "primary",
         title: "Five survey points",
         input: r#"{"points":[{"lat":40.0,"lon":-105.0},{"lat":40.01,"lon":-104.99},{"lat":40.0,"lon":-104.98},{"lat":39.99,"lon":-104.992},{"lat":40.004,"lon":-104.995}]}"#,
-        source: "de Berg et al. (2008), the lifting map; checked against Qhull via SciPy",
+        source: "de Berg et al. (2008), the lifting map. Checked against GEOS 3.11.4's own delaunay_triangles over fifteen point sets — scatters, jittered grids, rings, two clusters, and sets at the equator, at 70 north and across the antimeridian — agreeing triangle for triangle on every one, which a unique triangulation permits demanding",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -447,6 +450,10 @@ pub static DELAUNAY: ToolDef = ToolDef {
         Related {
             id: "geometry.shape.enclosing",
             reason: "alternative",
+        },
+        Related {
+            id: "geometry.area.polygon",
+            reason: "next",
         },
     ],
     sentence: "The points make {triangle_count} triangles on the {surface_used} surface.",

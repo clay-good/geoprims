@@ -696,9 +696,8 @@ const EVENT_WORDS: &[(&str, &str)] = &[
 
 pub static EVENTS: ToolDef = ToolDef {
     id: "time.sun.events",
-    version: "1.0.1",
+    version: "1.0.2",
     stability: gp_base::tool::Stability::Stable,
-    version: "1.0.1",
     title: "Sunrise, sunset, and twilight",
     summary: "Sunrise, sunset, solar noon, day length, and civil, nautical, and astronomical twilight for a place and local date, in local time and Zulu, with polar states.",
     aliases: &[

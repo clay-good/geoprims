@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2f6896df4fe182b8",
+    "hash": "ae73a8d140a39f81",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "a82476d42cfc4678",
+    "hash": "4fc02f554a4a3485",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -283,9 +283,21 @@
     "hash": "82df6a811bc7b97b",
     "lastmod": "2026-09-22"
   },
+  "/geodesy/parse/angle-arithmetic/": {
+    "hash": "941e49ea5155aca9",
+    "lastmod": "2026-09-23"
+  },
+  "/geodesy/parse/bearing-difference/": {
+    "hash": "c589668dfe196cac",
+    "lastmod": "2026-09-23"
+  },
   "/geodesy/parse/coordinates/": {
     "hash": "4af96e2ee463f3e5",
     "lastmod": "2026-09-22"
+  },
+  "/geodesy/parse/format/": {
+    "hash": "03389b923570243b",
+    "lastmod": "2026-09-23"
   },
   "/geodesy/projection/": {
     "hash": "22111e5592c9272b",
@@ -620,7 +632,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "10523931a9b6f2c4",
+    "hash": "6d0da0658f84dfea",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -860,7 +872,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "0d69acdb9b2fe94d",
+    "hash": "669a16e1c537ac7a",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1048,7 +1060,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "65d27fa1acc2ee6b",
+    "hash": "67fb179cff33af36",
     "lastmod": "2026-09-23"
   }
 }

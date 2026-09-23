@@ -707,3 +707,207 @@ fn ups_invariants() {
     assert!(north > 0.0 && south < 0.0, "{north} and {south}");
     assert!((north + south).abs() < 1e-9, "the caps are not mirrored");
 }
+
+#[test]
+fn bearing_difference_invariants() {
+    const B: &str = "geodesy.parse.bearing-difference";
+    let diff = |a: f64, b: f64| {
+        num(
+            &call(B, &format!(r#"{{"from":{a},"to":{b}}}"#)),
+            "result.difference.value",
+        )
+    };
+    // The short way round, signed: the whole reason the tool exists.
+    assert_eq!(diff(350.0, 10.0), 20.0);
+    assert_eq!(diff(10.0, 350.0), -20.0);
+    assert_eq!(diff(359.0, 1.0), 2.0);
+    assert_eq!(diff(1.0, 359.0), -2.0);
+    for (a, b) in [
+        (0.0, 90.0),
+        (90.0, 0.0),
+        (45.0, 200.0),
+        (123.456, 234.567),
+        (359.5, 179.5),
+    ] {
+        let d = diff(a, b);
+        // The range is half-open the other way than one might guess. The
+        // definition is ((to - from + 180) mod 360) - 180, and a difference of
+        // exactly 180 gives (360 mod 360) - 180 = -180, so a reversal reads as
+        // a left turn. That falls out of the formula rather than being chosen,
+        // and the tool states the formula.
+        assert!((-180.0..180.0).contains(&d), "{a}->{b} gave {d}");
+        // Reversing the arguments negates the answer, except at the reversal
+        // where both directions are the same turn.
+        let back = diff(b, a);
+        assert!(
+            (d + back).abs() < 1e-9 || (d + 180.0).abs() < 1e-9,
+            "{a}->{b} is {d} but {b}->{a} is {back}"
+        );
+        // The difference added to `from` gives `to` back, which is what makes
+        // it a turn rather than a number.
+        assert!(
+            ((a + d - b).rem_euclid(360.0)).min((b - a - d).rem_euclid(360.0)) < 1e-9,
+            "{a} + {d} is not {b}"
+        );
+    }
+    // A whole turn on either side changes nothing.
+    assert_eq!(diff(10.0, 10.0), 0.0);
+    assert_eq!(diff(10.0, 370.0), 0.0);
+    assert_eq!(diff(370.0, 10.0), 0.0);
+    assert_eq!(diff(0.0, 180.0), -180.0, "a reversal reads as a left turn");
+    assert_eq!(diff(180.0, 0.0), -180.0, "and so does the other direction");
+}
+
+#[test]
+fn angle_arithmetic_invariants() {
+    const A: &str = "geodesy.parse.angle-arithmetic";
+    let sum = |terms: &str, norm: &str| {
+        let n = if norm.is_empty() {
+            String::new()
+        } else {
+            format!(r#","normalize":"{norm}""#)
+        };
+        call(A, &format!(r#"{{"terms":[{terms}]{n}}}"#))
+    };
+    let one = |a: &str| format!(r#"{{"angle":"{a}"}}"#);
+    let minus = |a: &str| format!(r#"{{"angle":"{a}","operation":"subtract"}}"#);
+    // The three outputs describe one angle.
+    for terms in [
+        format!("{},{}", one("45-30-15"), one("12-45-50")),
+        format!("{},{}", one("1-00-00"), minus("0-59-59.5")),
+        format!("{},{},{}", one("10"), one("20"), one("30")),
+    ] {
+        let r = sum(&terms, "");
+        let (secs, degs) = (
+            num(&r, "result.seconds.value"),
+            num(&r, "result.degrees.value"),
+        );
+        assert!(
+            (secs - degs * 3600.0).abs() < 1e-6,
+            "{terms}: {secs} arcseconds is not {degs} degrees"
+        );
+    }
+    // Adding and taking away the same angle returns the original exactly.
+    let base = sum(&one("45-30-15"), "");
+    let there_and_back = sum(
+        &format!(
+            "{},{},{}",
+            one("45-30-15"),
+            one("7-08-09"),
+            minus("7-08-09")
+        ),
+        "",
+    );
+    assert_eq!(
+        base["result"]["dms"], there_and_back["result"]["dms"],
+        "a round trip changed the angle"
+    );
+    // The carry goes all the way: 59'59.995" is a whole degree, not 60 minutes.
+    let carried = sum(&format!("{},{}", one("0-59-59.99"), one("0-00-00.01")), "");
+    assert_eq!(carried["result"]["dms"], "1\u{b0}00'00.00\"");
+    // And across the turn, under 0-360, it is zero rather than 360.
+    let wrapped = sum(
+        &format!("{},{}", one("359-59-59.995"), one("0-00-00.005")),
+        "0-360",
+    );
+    assert_eq!(wrapped["result"]["dms"], "0\u{b0}00'00.00\"");
+    // Each normalization lands in its own range.
+    for (terms, norm, lo, hi) in [
+        (
+            format!("{},{}", one("300"), one("100")),
+            "0-360",
+            0.0,
+            360.0,
+        ),
+        (
+            format!("{},{}", one("270"), one("180")),
+            "plus-minus-180",
+            -180.0,
+            180.0,
+        ),
+    ] {
+        let d = num(&sum(&terms, norm), "result.degrees.value");
+        assert!(d >= lo && d <= hi, "{terms} under {norm} gave {d}");
+    }
+    // The sum does not depend on the order the terms are given in.
+    let a = sum(
+        &format!(
+            "{},{},{}",
+            one("12-34-56"),
+            one("1-02-03"),
+            minus("0-30-00")
+        ),
+        "",
+    );
+    let b = sum(
+        &format!(
+            "{},{},{}",
+            minus("0-30-00"),
+            one("1-02-03"),
+            one("12-34-56")
+        ),
+        "",
+    );
+    assert_eq!(a["result"]["dms"], b["result"]["dms"]);
+}
+
+#[test]
+fn format_invariants() {
+    const F: &str = "geodesy.parse.format";
+    let fmt = |lat: f64, lon: f64, style: &str, d: u32| {
+        call(
+            F,
+            &format!(r#"{{"lat":{lat},"lon":{lon},"style":"{style}","decimals":{d}}}"#),
+        )
+    };
+    // The carry reaches the degrees rather than stopping at 60 minutes.
+    assert_eq!(
+        fmt(10.9999999, 0.0, "dms", 0)["result"]["formatted"],
+        "11\u{b0}00'00\"N 0\u{b0}00'00\"E"
+    );
+    // One more decimal divides the resolution by ten, and the styles differ by
+    // the 60 and 3600 their units say.
+    let res = |lat: f64, style: &str, d: u32| {
+        num(&fmt(lat, 0.0, style, d), "result.latitude_resolution.value")
+    };
+    assert!((res(45.0, "dd", 4) / res(45.0, "dd", 5) - 10.0).abs() < 1e-9);
+    assert!((res(45.0, "dd", 3) / res(45.0, "ddm", 3) - 60.0).abs() < 1e-9);
+    assert!((res(45.0, "ddm", 3) / res(45.0, "dms", 3) - 60.0).abs() < 1e-9);
+    // Longitude shrinks with latitude; latitude barely moves.
+    let lon_res = |lat: f64| num(&fmt(lat, 0.0, "dd", 6), "result.longitude_resolution.value");
+    assert!(
+        lon_res(60.0) < 0.55 * lon_res(0.0),
+        "longitude did not follow cos"
+    );
+    assert!(
+        (res(60.0, "dd", 6) / res(0.0, "dd", 6) - 1.0).abs() < 0.01,
+        "latitude resolution moved too much"
+    );
+    // Six decimals of longitude at the equator is the 11 cm this is always
+    // quoted as.
+    assert!(
+        (lon_res(0.0) - 0.1113).abs() < 0.001,
+        "{} m is not about 11 cm",
+        lon_res(0.0)
+    );
+    // Every style round trips through the coordinate parser to within the
+    // resolution it claims.
+    for (style, d) in [("dd", 6u32), ("ddm", 3), ("dms", 2)] {
+        let r = fmt(-33.8688, 151.2093, style, d);
+        let text = r["result"]["formatted"].as_str().expect("formatted");
+        // The formatted string carries a double quote for seconds, so it has
+        // to be escaped rather than pasted into JSON.
+        let escaped = text.replace('"', "\\\"");
+        let back = call(
+            "geodesy.parse.coordinates",
+            &format!(r#"{{"text":"{escaped}"}}"#),
+        );
+        assert_eq!(back["ok"], true, "{style}: {text} did not parse: {back}");
+        let slack = num(&r, "result.latitude_resolution.value") / 111_000.0 + 1e-9;
+        assert!(
+            (num(&back, "result.lat.value") + 33.8688).abs() < slack * 2.0,
+            "{style}: {text} came back as {}",
+            num(&back, "result.lat.value")
+        );
+    }
+}

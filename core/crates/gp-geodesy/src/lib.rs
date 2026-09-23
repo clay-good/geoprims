@@ -397,7 +397,10 @@ pub static FORMAT: ToolDef = ToolDef {
         )
         .precision(Precision::Significant(3)),
     ],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to write a position the way a form, a chart or a colleague wants it -- decimal degrees, degrees and decimal minutes, or degrees minutes seconds -- at a precision you choose, and to find out what that precision is actually worth on the ground before you decide how many digits to keep.",
+    limitations: "The resolution reported is the ground size of one unit in the last place, not the accuracy of the number: a coordinate printed to six decimals is not thereby good to eleven centimetres. Longitude resolution follows the cosine of the latitude, so the same number of digits means different distances at different latitudes, and at the pole it means nothing at all. Rounding is carried across the components, so a value a hair under a whole degree prints as that degree rather than as fifty-nine minutes sixty seconds.",
+    warnings: &["INPUT_NORMALIZED"],
     model: "Rounding carried across components; resolution from the WGS 84 radii of curvature",
     accuracy: "Exact formatting; resolution is the ground size of one unit in the last place",
     references: &[DMS_REF],
@@ -412,10 +415,20 @@ pub static FORMAT: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "geodesy.parse.coordinates",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.parse.angle-arithmetic",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "alternative",
+        },
+    ],
     sentence: "{formatted}, precise to about {latitude_resolution} on the ground.",
     limits: &[("batchRows", 10_000)],
     run: run_format,
@@ -506,7 +519,10 @@ pub static BEARING_DIFFERENCE: ToolDef = ToolDef {
     )
     .precision(Precision::Significant(10))
     .angle_range("[-180,180)")],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this for the turn between two headings or bearings when one of them may be on the other side of north: a course change, the angle between two legs, the correction from a heading flown to a heading wanted. It gives the short way round, signed, instead of the long way a plain subtraction gives.",
+    limitations: "The answer is the smaller of the two ways round, so it is never more than half a turn: if you need the actual turn a vehicle made through 200 degrees, this is not it. A difference of exactly 180 degrees comes out as minus 180 rather than plus 180, which falls out of the expression the tool states rather than being a choice about which way to turn -- at a reversal there is no shorter way. This is plane angle arithmetic and knows nothing about magnetic or true north; converting between those is the declination tool.",
+    warnings: &["UNIT_ASSUMED"],
     model: "Exact remainder: ((to − from + 180) mod 360) − 180",
     accuracy: "Exact",
     references: &[DMS_REF],
@@ -521,6 +537,20 @@ pub static BEARING_DIFFERENCE: ToolDef = ToolDef {
         kind: "vector-diagram",
         map: &[("angle", "difference")],
     }],
+    related: &[
+        Related {
+            id: "geodesy.parse.angle-arithmetic",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.magnetic.true-to-magnetic",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "alternative",
+        },
+    ],
     sentence: "Turn {abs(difference)} {if difference < 0}left{else}right{/if}.",
     limits: &[("batchRows", 10_000)],
     run: run_bearing_difference,
@@ -623,7 +653,10 @@ pub static ANGLE_ARITHMETIC: ToolDef = ToolDef {
         .angle_range("unbounded"),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to add and subtract angles written in degrees, minutes and seconds without doing the sexagesimal carries by hand: summing the interior angles of a traverse, applying a correction to a bearing, or closing a set of observations. Decimal degrees mix freely with DMS in the same sum.",
+    limitations: "The carry is exact and the printed seconds are rounded once at the end, so a sum a hair under a whole degree prints as that degree rather than as fifty-nine minutes sixty seconds -- but two sums each rounded to a hundredth of a second and then added by hand can still differ from the same terms summed here. Without a normalization the total is not wrapped, which is what a traverse needs; choose one if you want a bearing back. This is arithmetic on angles, not on directions: it does not know that a bearing and its reverse describe one line.",
+    warnings: &[],
     model: "Each angle to seconds of arc (3600 × degrees), summed with its sign, then normalized if chosen and written back as D°MM'SS.ss\" with rounding carried into minutes and degrees",
     accuracy: "Exact to 0.0001″ for sums of up to 1,000 angles",
     references: &[DMS_REF],
@@ -646,6 +679,10 @@ pub static ANGLE_ARITHMETIC: ToolDef = ToolDef {
         Related {
             id: "geodesy.parse.coordinates",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
         },
     ],
     sentence: "The result is {dms}.",

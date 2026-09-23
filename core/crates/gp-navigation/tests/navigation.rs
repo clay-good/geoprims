@@ -1407,3 +1407,98 @@ fn route_legs_invariants() {
         );
     }
 }
+
+/// Layer E for `navigation.geodesic.waypoints`. The ends are the ends, the
+/// spacing is even, every point lies on the line it came from, and walking the
+/// route the other way gives the same points in reverse.
+#[test]
+fn geodesic_waypoints_invariants() {
+    let along = |a: (f64, f64), b: (f64, f64), n: u32| {
+        let r = call(
+            "navigation.geodesic.waypoints",
+            &format!(
+                r#"{{"lat1":{},"lon1":{},"lat2":{},"lon2":{},"intervals":{n}}}"#,
+                a.0, a.1, b.0, b.1
+            ),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    let routes = [
+        ((40.6413, -73.7781), (51.47, -0.4543), 10u32), // New York to London
+        ((0.0, 0.0), (0.0, 90.0), 4),                   // along the equator
+        ((60.0, 170.0), (62.0, -175.0), 5),             // across the antimeridian
+        ((-33.8688, 151.2093), (51.5074, -0.1278), 8),  // Sydney to London, most of the globe
+    ];
+    for (a, b, n) in routes {
+        let r = along(a, b, n);
+        let pts = r["result"]["points"].as_array().expect("points");
+        assert_eq!(pts.len(), n as usize + 1, "intervals give one more point");
+        assert_eq!(
+            num(&r, "result.count") as usize,
+            pts.len(),
+            "count disagrees"
+        );
+
+        let at = |i: usize| {
+            (
+                pts[i]["lat"]["value"].as_f64().expect("lat"),
+                pts[i]["lon"]["value"].as_f64().expect("lon"),
+            )
+        };
+        // The ends are where the line starts and finishes.
+        for (got, want, which) in [(at(0), a, "first"), (at(pts.len() - 1), b, "last")] {
+            assert!(
+                (got.0 - want.0).abs() < 1e-9 && (got.1 - want.1).abs() < 1e-9,
+                "the {which} waypoint is {got:?} and the route's end is {want:?}"
+            );
+        }
+
+        // Every step is the same length, and they add up to the whole.
+        let total = num(&r, "result.length.value");
+        let step = total / f64::from(n);
+        let mut summed = 0.0;
+        for i in 0..pts.len() - 1 {
+            let (p, q) = (at(i), at(i + 1));
+            let leg = num(
+                &call(
+                    "navigation.geodesic.inverse",
+                    &format!(
+                        r#"{{"lat1":{},"lon1":{},"lat2":{},"lon2":{}}}"#,
+                        p.0, p.1, q.0, q.1
+                    ),
+                ),
+                "result.distance.value",
+            );
+            assert!(
+                (leg - step).abs() < 1e-6,
+                "step {i} is {leg} km and an even share would be {step} km"
+            );
+            summed += leg;
+        }
+        assert!(
+            (summed - total).abs() < 1e-6,
+            "the steps sum to {summed} and the line is {total}"
+        );
+
+        // Walking it the other way gives the same points, reversed.
+        let back = along(b, a, n);
+        let rev = back["result"]["points"].as_array().expect("points");
+        for i in 0..pts.len() {
+            let there = at(i);
+            let (bl, bo) = (
+                rev[pts.len() - 1 - i]["lat"]["value"]
+                    .as_f64()
+                    .expect("lat"),
+                rev[pts.len() - 1 - i]["lon"]["value"]
+                    .as_f64()
+                    .expect("lon"),
+            );
+            assert!(
+                (there.0 - bl).abs() < 1e-7 && (there.1 - bo).abs() < 1e-7,
+                "point {i} is {there:?} one way and {:?} the other",
+                (bl, bo)
+            );
+        }
+    }
+}

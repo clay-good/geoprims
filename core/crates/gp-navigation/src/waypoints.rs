@@ -69,6 +69,7 @@ const POINT_ROW: &[Field] = &[
 
 pub static WAYPOINTS: ToolDef = ToolDef {
     id: "navigation.geodesic.waypoints",
+    stability: gp_base::tool::Stability::Stable,
     title: "Waypoints along a route line",
     summary: "Points along the geodesic (or rhumb line) from A to B at N equal intervals, a fixed spacing, or given fractions, with distance and course at each, as a table, a GPX route, and GeoJSON.",
     aliases: &[
@@ -173,7 +174,9 @@ pub static WAYPOINTS: ToolDef = ToolDef {
         ErrorCode::LimitExceeded,
         ErrorCode::Unsupported,
     ],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    when_to_use: "Use this to lay points along a route: evenly spaced marks for a flight log, a track to draw on a map, a line to sample terrain or weather along, or a GPX or GeoJSON file to load somewhere else. The points sit on the geodesic, which is the line the route actually follows.",
+    limitations: "The points are on the shortest path, so drawn on a Mercator chart they curve; a line that holds one heading is the rhumb tool instead. Spacing is even in distance along the line, not in latitude or longitude, and not in time unless the speed is constant. Between two nearly antipodal points the shortest path is poorly determined, so a small change in either end can swing the whole line to the other side of the globe.",
     model: "Karney (2013) geodesic on WGS 84",
     accuracy: "Points on the geodesic to nanometers",
     references: &[KARNEY],
@@ -188,10 +191,20 @@ pub static WAYPOINTS: ToolDef = ToolDef {
         kind: "line-geodesic",
         map: &[("distance", "length")],
     }],
-    related: &[Related {
-        id: "navigation.geodesic.inverse",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.geodesic.direct",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.route.legs",
+            reason: "next",
+        },
+    ],
     sentence: "There are {count} points along the {length} line.",
     limits: &[("maxPoints", MAX_POINTS as u64)],
     run: run_waypoints,

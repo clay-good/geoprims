@@ -485,6 +485,7 @@ fn run_visibility(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static DIP: ToolDef = ToolDef {
     id: "navigation.los.dip",
+    stability: gp_base::tool::Stability::Stable,
     title: "Dip of the horizon",
     summary: "How far below eye level the visible horizon lies from a height, with refraction, and the navigator's 1.76′√h rule with its difference.",
     aliases: &["horizon dip", "dip correction", "sextant dip"],
@@ -529,30 +530,37 @@ pub static DIP: ToolDef = ToolDef {
         .precision(Precision::Decimals(2)),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &[
-        "TERRAIN_NOT_CONSIDERED",
-        "INPUT_NORMALIZED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["TERRAIN_NOT_CONSIDERED", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Spherical Earth with effective radius R/(1 − k)",
     accuracy: "Exact for the model; abnormal refraction over water can change dip by several arcminutes",
+    when_to_use: "Use this to correct a sextant altitude taken against the sea horizon: the horizon is below true horizontal by this angle, so it is subtracted from every observed altitude. It also answers how far below level the horizon sits from a bridge wing, a lookout, a lighthouse, or a cabin window, which is the angle a camera or a sight has to be depressed to put the horizon on the crosshair.",
+    limitations: "It assumes a clear sea horizon and a uniform atmosphere. Over land the visible horizon is terrain rather than the sea, and this answer does not apply; the tool says so rather than guessing. Abnormal refraction over water — a temperature inversion, a cold sea under warm air — moves the real dip by several arcminutes, which is far larger than any rounding here, and no coefficient known in advance captures it. Read the rule difference carefully: most of it is the refraction coefficient, not the rule. The default k is 0.13, while the navigator's 1.76′√h assumes about 0.169, and at that coefficient the rule is within a quarter of a percent of the exact dip.",
     references: &[BOWDITCH],
     examples: &[Example {
         id: "primary",
         title: "Height of eye 10 m",
         input: r#"{"height":"10 m"}"#,
-        source: "navigation line-of-sight scenario: dip in arcminutes with the 1.76′√h approximation and its difference",
+        source: "Bowditch (NGA Pub. 9) Table 12 and the 1.76′√h dip rule, which are the same rule: together they fix the effective radius at 7,666,208 m, and the exact dip on it is 5.5526′ against the rule's 5.5656′",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "vector-diagram",
         map: &[],
     }],
-    related: &[Related {
-        id: "navigation.los.horizon",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.los.horizon",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.los.visibility",
+            reason: "next",
+        },
+        Related {
+            id: "time.sun.position",
+            reason: "alternative",
+        },
+    ],
     sentence: "The horizon dips {dip} below eye level.",
     limits: &[("batchRows", 10_000)],
     run: run_dip,

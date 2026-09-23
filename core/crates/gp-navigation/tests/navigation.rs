@@ -60,7 +60,11 @@ fn catalog_lint() {
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
     // Related tools that live in other crates.
-    let known = ["geodesy.height.convert", "geodesy.frame.to-local"];
+    let known = [
+        "geodesy.height.convert",
+        "geodesy.frame.to-local",
+        "time.sun.position",
+    ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));
 }
@@ -1748,5 +1752,95 @@ fn closest_point_invariants() {
                 "reversed along-route\n{r}\n{rb}"
             );
         }
+    }
+}
+
+#[test]
+fn dip_invariants() {
+    // The dip and the distance to the horizon are the same tangent, so one is
+    // the other over the effective radius. The horizon tool is where that
+    // distance comes from; nothing here recomputes it.
+    const R: f64 = gp_navigation::los::R_DEFAULT;
+    let dip = |h: f64, k: f64| {
+        call(
+            "navigation.los.dip",
+            &format!(r#"{{"height":"{h} m","k":{k}}}"#),
+        )
+    };
+    let optical = |h: f64, k: f64| {
+        num(
+            &call(
+                "navigation.los.horizon",
+                &format!(
+                    r#"{{"height":"{h} m","k":{k},"options":{{"outputUnits":{{"optical":"m"}}}}}}"#
+                ),
+            ),
+            "result.optical.value",
+        )
+    };
+    let arcmin = |r: &Value| num(r, "result.dip.value").to_radians() / 60.0;
+
+    for k in [0.0, 0.13, 0.1689, 0.25] {
+        let re = R / (1.0 - k);
+        let mut previous = 0.0;
+        for h in [1.0, 10.0, 100.0, 1_000.0, 10_000.0] {
+            let r = dip(h, k);
+            assert!(r["ok"].as_bool().unwrap_or(false), "k={k} h={h}: {r}");
+            let d = arcmin(&r);
+
+            // d = optical / Re, the two tools agreeing on one tangent.
+            let from_horizon = optical(h, k) / re;
+            assert!(
+                (d - from_horizon).abs() / d < 1e-9,
+                "k={k} h={h}: dip {d} against the horizon's {from_horizon}"
+            );
+            // Deeper with height, and the rule difference is the rule minus it.
+            assert!(d > previous, "k={k}: dip did not grow at {h} m");
+            previous = d;
+            assert!(
+                (num(&r, "result.rule_error.value")
+                    - (num(&r, "result.rule.value") - num(&r, "result.dip.value")))
+                .abs()
+                    < 1e-9,
+                "k={k} h={h}: rule_error\n{r}"
+            );
+            // Below the small-height form everywhere, and close to it even at
+            // 10 km: the arccosine is exact, not a rescue.
+            let series = (2.0 * h / re).sqrt();
+            assert!(d < series, "k={k} h={h}: {d} not below the series {series}");
+            assert!(
+                (series - d) / d < 7e-4,
+                "k={k} h={h}: the series is {:.4}% away",
+                100.0 * (series - d) / d
+            );
+        }
+        // Refraction only ever lifts the horizon, so a larger k is a smaller dip.
+        if k > 0.0 {
+            assert!(
+                arcmin(&dip(10.0, k)) < arcmin(&dip(10.0, 0.0)),
+                "k={k} did not reduce the dip"
+            );
+        }
+    }
+
+    // Bowditch's two printed rules are one rule. Table 12's 1.17 sqrt(h in
+    // feet) and the dip rule 1.76' sqrt(h in metres) pin the same effective
+    // radius, and at that k the rule sits 0.231% above the exact dip at every
+    // height -- the constancy is the evidence, since both sides scale as sqrt h.
+    let implied = 1.17 * 1852.0 / 0.3048f64.sqrt() / (1.76 / 60.0f64).to_radians();
+    assert!(
+        (implied - 7_666_208.0).abs() < 1.0,
+        "the rules imply Re = {implied}"
+    );
+    let k = 1.0 - R / implied;
+    assert!((k - 0.1689).abs() < 1e-4, "implied k = {k}");
+    for h in [1.0, 10.0, 100.0] {
+        let r = dip(h, 0.1689);
+        let rel = num(&r, "result.rule_error.value") / num(&r, "result.dip.value");
+        assert!(
+            (rel - 0.00231).abs() < 1e-4,
+            "{h} m: the rule is {:.4}% off, not 0.231%",
+            100.0 * rel
+        );
     }
 }

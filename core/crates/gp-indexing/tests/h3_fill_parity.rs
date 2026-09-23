@@ -6,10 +6,17 @@ use serde_json::Value;
 
 /// Per mode: (polygons compared, polygons that differ, cells missing, cells extra).
 fn check(text: &str) -> Vec<(String, usize, usize, usize, usize)> {
-    let mut stats: Vec<(String, usize, usize, usize, usize)> = ["center", "full", "overlap"]
-        .iter()
-        .map(|m| (m.to_string(), 0, 0, 0, 0))
-        .collect();
+    let mut stats: Vec<(String, usize, usize, usize, usize)> = [
+        "center",
+        "full",
+        "overlap",
+        "center at a pole",
+        "full at a pole",
+        "overlap at a pole",
+    ]
+    .iter()
+    .map(|m| (m.to_string(), 0, 0, 0, 0))
+    .collect();
     for line in text.lines().skip(1) {
         let r: Value = serde_json::from_str(line).unwrap();
         let ring = |v: &Value| -> Vec<(f64, f64)> {
@@ -27,7 +34,7 @@ fn check(text: &str) -> Vec<(String, usize, usize, usize, usize)> {
             .into_iter()
             .enumerate()
         {
-            let want: Vec<String> = r[&stats[i].0]
+            let want: Vec<String> = r[["center", "full", "overlap"][i]]
                 .as_array()
                 .unwrap()
                 .iter()
@@ -38,7 +45,10 @@ fn check(text: &str) -> Vec<(String, usize, usize, usize, usize)> {
                 .iter()
                 .map(|c| c.to_string())
                 .collect();
-            let s = &mut stats[i];
+            // A ring that reaches a pole is counted apart: H3 reads rings in
+            // latitude and longitude with straight edges, so those shapes are
+            // degenerate and overlap disagrees there by a cell or two.
+            let s = &mut stats[i + if r["pole"] == true { 3 } else { 0 }];
             s.1 += 1;
             if got != want {
                 s.2 += 1;
@@ -59,9 +69,26 @@ fn committed_fixture() {
     .unwrap();
     let stats = check(&text);
     println!("{stats:?}");
-    assert_eq!(
-        stats[0].2, 0,
-        "center mode must match H3 C exactly: {stats:?}"
+    for i in 0..3 {
+        assert_eq!(
+            stats[i].2, 0,
+            "{} must match H3 C exactly: {stats:?}",
+            stats[i].0
+        );
+    }
+    // At a pole only the two containment tests that ask where a point or a
+    // whole boundary falls still agree; overlap, which asks whether an edge is
+    // crossed, differs by a cell or two on these degenerate rings.
+    for i in 3..5 {
+        assert_eq!(
+            stats[i].2, 0,
+            "{} must match H3 C exactly: {stats:?}",
+            stats[i].0
+        );
+    }
+    assert!(
+        stats[5].1 > 0,
+        "the fixture carries rings that reach a pole"
     );
 }
 

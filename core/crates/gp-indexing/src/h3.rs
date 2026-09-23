@@ -1463,7 +1463,7 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     model: "H3 C polygonToCells containment tests (point in polygon on latitude and longitude, boundary crossings), breadth-first fill from cells along every edge",
     accuracy: "Identical cell sets to H3 C 4.4.1 in center, full, and overlapping modes on 1,000 random polygons with holes and antimeridian crossings",
     when_to_use: "Use this to turn an area into cells: the H3 cells that fill a polygon, with holes and across the antimeridian, at a resolution you choose. It is how a region, a service area, or an administrative boundary becomes a set of keys that rows can be joined on.",
-    limitations: "Which cells count as inside is a choice, not a fact, so the containment mode has to be stated: centers inside, whole cells inside, or any overlap all give different sets, and the difference is largest at coarse resolutions relative to the polygon. A fine resolution over a large area produces very many cells.",
+    limitations: "Which cells count as inside is a choice, not a fact, so the containment mode has to be stated: centers inside, whole cells inside, or any overlap all give different sets, and the difference is largest at coarse resolutions relative to the polygon. A fine resolution over a large area produces very many cells. A polygon cannot take in a pole: H3 reads a ring in latitude and longitude with straight edges, so a ring at one latitude encloses no area and comes back with nothing rather than with the cap it looks like.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",

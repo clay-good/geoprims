@@ -51,6 +51,14 @@ const EASA_GUIDE: Reference = Reference {
     locator: "Part A, chapter I, VLOS distance: ALOS = 327 × CD + 20 m (multirotor), 490 × CD + 30 m (fixed wing); DLOS = 0.3 × ground visibility",
     url: "https://www.easa.europa.eu/en/downloads/139435/en",
 };
+const LBA_GUIDE: Reference = Reference {
+    title: "Guidance for Dimensioning of Flight Geography, Contingency Volume and Ground Risk Buffer",
+    issuer: "Luftfahrt-Bundesamt (LBA)",
+    year: 2024,
+    edition: "Revision 1.7, 26 November 2024",
+    locator: "Section 7 (DLOS limit: GVmax = 5 km) and section 7.1 (maximum VLOS distance table, valid for 5 km visibility or more)",
+    url: "https://www.lba.de/SharedDocs/Downloads/DE/B/B5_UAS/Leitfaden_FG_CV_GRB_eng.pdf?__blob=publicationFile&v=2",
+};
 
 fn q(v: f64, qt: QT, s: &str) -> Q {
     Q {
@@ -720,7 +728,7 @@ fn run_easa(ctx: &mut Ctx) -> Result<Json, ToolError> {
 pub static VLOS: ToolDef = ToolDef {
     id: "drone.sensors.vlos",
     stability: gp_base::tool::Stability::Stable,
-    version: "1.1.0",
+    version: "1.2.0",
     title: "Visual line of sight distance",
     summary: "How far you can keep a drone in visual line of sight by EASA guidance: attitude line of sight from its size, detection line of sight from visibility, and the smaller of the two, checked against your farthest point.",
     aliases: &[
@@ -756,7 +764,7 @@ pub static VLOS: ToolDef = ToolDef {
         qty(
             "ground_visibility",
             "Ground visibility",
-            "Like 5 km",
+            "Like 5 km; EASA recommends at least 5 km",
             QT::Distance,
             "km",
         )
@@ -820,16 +828,17 @@ pub static VLOS: ToolDef = ToolDef {
         ),
     ],
     warnings: &[
+        "VISIBILITY_BELOW_MINIMUM",
         "NOMINAL_VALUE_USED",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
-    model: "ALOS = 327·CD + 20 m (multirotor) or 490·CD + 30 m (fixed wing); DLOS = 0.3·GV; VLOS = min(ALOS, DLOS)",
+    model: "ALOS = 327·CD + 20 m (multirotor) or 490·CD + 30 m (fixed wing); DLOS = 0.3·GV, with GV counted up to 5 km (LBA); VLOS = min(ALOS, DLOS). EASA recommends a ground visibility of at least 5 km",
     accuracy: "Guidance values for planning, not a guarantee you will see the drone.",
     when_to_use: "Use this when planning a flight you have to keep in sight: it gives the distance at which the aircraft's attitude is still readable, the distance at which it can still be detected in the visibility you have, and the smaller of the two, checked against the farthest point of your planned area.",
     limitations: "These are the EASA guidance formulas for planning, not a promise that you will see the aircraft. They depend on the characteristic dimension you enter and on the visibility, and they say nothing about the sun's position, the background you are looking against, an observer's eyesight, or obstacles in the way. The rule you fly under, and your own judgement in the moment, govern.",
-    references: &[EASA_GUIDE],
+    references: &[EASA_GUIDE, LBA_GUIDE],
     examples: &[Example {
         id: "primary",
         title: "A 0.35 m multirotor with a mission 400 m out",
@@ -855,7 +864,7 @@ pub static VLOS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "You can keep it in sight to about {vlos}.{if margin < 0} The mission goes {abs(margin)} beyond that.{/if}{if margin >= 0} The mission stays within it.{/if}",
+    sentence: "You can keep it in sight to about {vlos}.{if margin < 0} The mission goes {abs(margin)} beyond that.{/if}{if margin >= 0} The mission stays within it.{/if}{warn VISIBILITY_BELOW_MINIMUM} The visibility is below the 5 km EASA recommends.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_vlos,
     ..ToolDef::BLANK
@@ -874,27 +883,40 @@ fn run_vlos(ctx: &mut Ctx) -> Result<Json, ToolError> {
     } else {
         327.0 * cd + 20.0
     };
-    // EASA and the LBA guidance take ground visibility as at most 5 km, so
-    // VLOS never exceeds 0.3 × 5 km = 1,500 m however large the aircraft.
-    const GV_MAX: f64 = 5_000.0;
+    // EASA recommends a ground visibility of at least 5 km ("which minimum
+    // value should be at least 5 km"); the LBA guidance its footnote points
+    // to counts at most 5 km ("GVmax = 5 km"), so VLOS never exceeds
+    // 0.3 × 5 km = 1,500 m however large the aircraft.
+    const GV_5KM: f64 = 5_000.0;
     let gv = match ctx.quantity("ground_visibility")? {
-        Some(v) if v.base() > GV_MAX => {
+        Some(v) if v.base() > GV_5KM => {
             ctx.warnings.push(
                 Warning::new(
                     "INPUT_NORMALIZED",
-                    "The ground visibility was taken as 5 km, the most the EASA procedure assumes.",
+                    "The ground visibility was counted as 5 km, the most the LBA guidance that EASA points to counts for detection line of sight.",
                 )
                 .at("/ground_visibility"),
             );
-            GV_MAX
+            GV_5KM
         }
-        Some(v) => v.base(),
+        Some(v) => {
+            if v.base() < GV_5KM {
+                ctx.warnings.push(
+                    Warning::new(
+                        "VISIBILITY_BELOW_MINIMUM",
+                        "The ground visibility is below 5 km, the least EASA recommends for flying within visual line of sight.",
+                    )
+                    .at("/ground_visibility"),
+                );
+            }
+            v.base()
+        }
         None => {
             ctx.warnings.push(Warning::new(
                 "NOMINAL_VALUE_USED",
-                "No ground visibility was given, so it was taken as 5 km, the most the EASA procedure assumes. Enter the actual visibility if it is lower.",
+                "No ground visibility was given, so it was taken as 5 km, the least EASA recommends and the most the LBA guidance counts. Enter the actual visibility if it is lower.",
             ));
-            GV_MAX
+            GV_5KM
         }
     };
     let dlos = 0.3 * gv;

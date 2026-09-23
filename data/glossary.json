@@ -274,7 +274,8 @@
       "source": "easa-guidelines",
       "relatedTools": [
         "drone.ops.easa-subcategory",
-        "drone.ops.kinetic-energy"
+        "drone.ops.kinetic-energy",
+        "drone.sensors.vlos"
       ]
     },
     {

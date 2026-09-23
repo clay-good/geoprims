@@ -477,8 +477,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-19",
-      "verificationNote": "Checked at the issuer on 2026-09-19: the download is Issue 03 of 17 July 2025, with the VLOS procedure (ALOS 327 x CD + 20 m, 490 x CD + 30 m; DLOS 0.3 x GV) unchanged. Its footnote points to the LBA guidance, whose section 7.1 table is used as the worked example.",
+      "lastVerified": "2026-09-23",
+      "verificationNote": "Checked at the issuer on 2026-09-23: the download is Issue 03 of 17 July 2025, with the VLOS procedure (ALOS 327 x CD + 20 m, 490 x CD + 30 m; DLOS 0.3 x GV, where the ground visibility \"minimum value should be at least 5 km\") unchanged. Its footnote points to the LBA guidance (ledger row lba-flight-geography), which caps GV at 5 km and whose section 7.1 table is used as the worked example.",
       "freeAccessUrl": "https://www.easa.europa.eu/en/downloads/139435/en",
       "matchTerms": [
         "Guidelines for UAS operations"
@@ -1571,6 +1571,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "lba-flight-geography",
+      "name": "LBA Guidance for Dimensioning of Flight Geography, Contingency Volume and Ground Risk Buffer",
+      "issuer": "Luftfahrt-Bundesamt",
+      "currentEdition": "Revision 1.7, 26 November 2024",
+      "currentReleaseDate": "2024-11-26",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-23",
+      "verificationNote": "Checked at the issuer on 2026-09-23: the English PDF linked from the EASA guidelines' VLOS footnote is revision 1.7 of 26 November 2024. Section 7 sets DLOS = 0.3 x GV with GVmax = 5 km; the section 7.1 table is valid for 5 km or more.",
+      "freeAccessUrl": "https://www.lba.de/SharedDocs/Downloads/DE/B/B5_UAS/Leitfaden_FG_CV_GRB_eng.pdf?__blob=publicationFile&v=2",
+      "matchTerms": [
+        "Guidance for Dimensioning of Flight Geography"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     },
     {
       "id": "leishman",

@@ -346,6 +346,10 @@
       "severity": "info",
       "message": "The wind direction varies; components are the worst case over its range."
     },
+    "VISIBILITY_BELOW_MINIMUM": {
+      "severity": "caution",
+      "message": "The visibility is below the minimum the guidance recommends."
+    },
     "WAYPOINT_OUTSIDE_GEOFENCE": {
       "severity": "caution",
       "message": "A waypoint is outside the geofence."

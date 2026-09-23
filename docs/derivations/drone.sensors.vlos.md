@@ -13,11 +13,11 @@ EASA's acceptable VLOS distance: the attitude line of sight (ALOS), the distance
 
 ## Symbols and units
 
-CD characteristic dimension (the largest dimension of the aircraft, m), GV ground visibility (km, with 5 km as EASA's working maximum), distances in m.
+CD characteristic dimension (the largest dimension of the aircraft, m), GV ground visibility (km; EASA recommends at least 5 km, and the LBA guidance counts at most 5 km), distances in m.
 
 ## Domain
 
-A positive characteristic dimension and ground visibility. Visibility is taken as at most 5 km, as the LBA guidance and EASA's procedure assume, so VLOS never exceeds 1,500 m. Without a visibility, 5 km is used and the tool says so; a larger value is taken as 5 km with a note.
+A positive characteristic dimension and ground visibility. EASA's guidelines say the ground visibility "should be at least 5 km", a minimum, so a visibility below 5 km gets a VISIBILITY_BELOW_MINIMUM caution (the distance is still computed from it). The LBA guidance EASA's footnote points to sets GVmax = 5 km, so a larger value is counted as 5 km with a note and VLOS never exceeds 1,500 m. Without a visibility, 5 km is used and the tool says so.
 
 ## Approximations
 

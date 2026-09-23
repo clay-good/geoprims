@@ -5,6 +5,15 @@
       "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
+        "drone.sensors.vlos"
+      ],
+      "vectors": [],
+      "summary": "Visual line of sight (version 1.2.0) now warns when the ground visibility is below 5 km, the least EASA's guidelines recommend. It gave no warning at 1 km or 0.3 km. Above 5 km it still counts only 5 km, but it now credits that cap to the LBA guidance EASA points to, and cites it; it wrongly called 5 km the most the EASA procedure assumes. No distance changes."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
         "drone.power.battery-energy",
         "drone.links.link-budget",
         "drone.sensors.dataset-size",

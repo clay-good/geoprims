@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "30a7dbffa6f5fc9f",
+    "hash": "83f981db8fac051a",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "9c2a75d0b7c2b322",
+    "hash": "ce83dad1e7213e05",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -796,7 +796,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "4067be5935686698",
+    "hash": "67cb2c7c760cd7a2",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -810,6 +810,10 @@
   "/units/angle/": {
     "hash": "29dc21d40e0e761f",
     "lastmod": "2026-09-22"
+  },
+  "/units/angle/convert/": {
+    "hash": "45015e9d5129f84e",
+    "lastmod": "2026-09-23"
   },
   "/units/angular-rate/": {
     "hash": "00b20863e4d0f985",
@@ -908,7 +912,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b1f1ee03a0edd353",
+    "hash": "efed0764992d7002",
     "lastmod": "2026-09-23"
   }
 }

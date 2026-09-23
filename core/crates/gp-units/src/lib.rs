@@ -228,9 +228,17 @@ related: [
     Related { id: "aviation.atmosphere.isa", reason: "next" }
 ]);
 convert_op!(ANGLE, "angle", QT::Angle, "deg", "Angle converter",
-    "Converts angles: degrees, radians, gons, arcminutes, arcseconds, turns, and the four kinds of mil.",
-    aliases: ["degrees to radians", "mils conversion"], refs: [NIST_811],
-    example: ("1,600 NATO mils in degrees", r#"{"value":"1600 mil-nato","to":"deg"}"#));
+"Converts angles: degrees, radians, gons, arcminutes, arcseconds, turns, and the four kinds of mil.",
+aliases: ["degrees to radians", "mils conversion"], refs: [NIST_811],
+example: ("1,600 NATO mils in degrees", r#"{"value":"1600 mil-nato","to":"deg"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this wherever an angle crosses between trades: a bearing in degrees against a calculation in radians, a survey angle in gons, a sight in mils, a catalogue position in milliarcseconds, a slope in milliradians. The three military mils are all here and kept apart, which is the point — they divide the circle 6,400, 6,000 and 6,300 ways, so the same number of mils is a different angle depending on whose manual it came from.",
+limits: "This converts the size of an angle and knows nothing about what it points at: it will not wrap a bearing into 0-360, decide whether an angle is measured from north or from east, or tell a heading from a course. Those are the coordinate and bearing tools. Radians and milliradians involve pi, which is not a ratio of whole numbers, so those conversions carry a slightly looser tolerance than the rest -- still far below any angle anyone measures. A mil given without saying which mil is the one error this tool cannot catch for you.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.angular-rate.convert", reason: "next" },
+    Related { id: "geodesy.parse.angle-arithmetic", reason: "alternative" }
+]);
 convert_op!(ANGULAR_RATE, "angular-rate", QT::AngularRate, "deg/s", "Angular rate converter",
     "Converts turn and rotation rates: °/s, °/min, rad/s, and rpm.",
     aliases: ["rate of turn conversion"], refs: [NIST_811],

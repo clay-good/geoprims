@@ -42,7 +42,7 @@ fn catalog_lint_passes() {
         .map(|(d, g)| (d.as_str(), g.iter().map(String::as_str).collect()))
         .collect();
     // Related tools that live in other crates.
-    let known = ["aviation.atmosphere.isa"];
+    let known = ["aviation.atmosphere.isa", "geodesy.parse.angle-arithmetic"];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "catalog lint:\n{}", errs.join("\n"));
 }
@@ -575,4 +575,83 @@ fn temperature_difference_invariants() {
         273.15,
         "the two tools have converged"
     );
+}
+
+const ANGLES: [&str; 11] = [
+    "deg",
+    "rad",
+    "gon",
+    "arcmin",
+    "arcsec",
+    "mas",
+    "mil-nato",
+    "mil-warsaw",
+    "mil-sweden",
+    "mrad",
+    "turn",
+];
+
+#[test]
+fn angle_invariants() {
+    const A: &str = "units.angle.convert";
+    let mut worst = 0.0f64;
+    for a in ANGLES {
+        for b in ANGLES {
+            let x = 12.5;
+            worst = worst.max((conv(A, conv(A, x, a, b), b, a) - x).abs() / x);
+            assert_eq!(conv(A, 0.0, a, b), 0.0, "{a}->{b}: zero moved");
+            assert!(conv(A, -7.0, a, b) < 0.0, "{a}->{b}: a sign was lost");
+            let one = conv(A, x, a, b);
+            assert!(
+                (conv(A, 2.0 * x, a, b) - 2.0 * one).abs() / one.abs().max(1e-300) < 1e-14,
+                "{a}->{b}: not linear"
+            );
+        }
+        assert_eq!(
+            conv(A, 4.625_25, a, a),
+            4.625_25,
+            "{a}->{a} changed the value"
+        );
+    }
+    assert!(worst < 1e-14, "round trip {worst}");
+
+    // A full turn, in each unit. Each is asserted on its own so that a mil
+    // resolving to the wrong definition fails here and nowhere else.
+    for (unit, want) in [
+        ("deg", 360.0),
+        ("gon", 400.0),
+        ("mil-nato", 6400.0),
+        ("mil-warsaw", 6000.0),
+        ("mil-sweden", 6300.0),
+        ("arcmin", 21_600.0),
+        ("arcsec", 1_296_000.0),
+        ("mas", 1_296_000_000.0),
+    ] {
+        assert_eq!(
+            conv(A, 1.0, "turn", unit),
+            want,
+            "a turn is not {want} {unit}"
+        );
+    }
+    assert!(
+        (conv(A, 1.0, "turn", "rad") - std::f64::consts::TAU).abs() < 1e-12,
+        "a turn is not 2 pi radians"
+    );
+
+    // The three mils are three units. A shared definition would make this 1.
+    assert_eq!(
+        conv(A, 1.0, "mil-nato", "mil-warsaw"),
+        0.9375,
+        "the NATO and Warsaw mils have converged"
+    );
+    assert_eq!(conv(A, 1600.0, "mil-nato", "deg"), 90.0);
+
+    // The sexagesimal chain.
+    assert_eq!(conv(A, 1.0, "deg", "arcmin"), 60.0);
+    assert_eq!(conv(A, 1.0, "deg", "arcsec"), 3600.0);
+    assert_eq!(conv(A, 1.0, "deg", "mas"), 3_600_000.0);
+
+    // Angles are sizes, not bearings: nothing is wrapped.
+    assert_eq!(conv(A, 400.0, "deg", "deg"), 400.0);
+    assert_eq!(conv(A, 400.0, "deg", "turn"), 400.0 / 360.0);
 }

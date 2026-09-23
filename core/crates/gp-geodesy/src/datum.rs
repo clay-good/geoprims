@@ -587,6 +587,7 @@ const PLATE_CODES: &[&str] = &[
 
 pub static PLATE_MOTION: ToolDef = ToolDef {
     id: "geodesy.datum.plate-motion",
+    stability: gp_base::tool::Stability::Stable,
     title: "Move a position between epochs (ITRF2020 plate motion)",
     summary: "Propagates an ITRF2020 position from one epoch to another with the rigid-plate velocity of its tectonic plate, or with a site velocity you give, and flags zones where plates deform and rigid motion does not apply.",
     aliases: &[
@@ -748,25 +749,37 @@ pub static PLATE_MOTION: ToolDef = ToolDef {
         mm_out("z", "Z", "ECEF at the new epoch"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["DEFORMATION_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    warnings: &["DEFORMATION_ZONE", "INPUT_NORMALIZED"],
     model: "ITRF2020 plate motion model: v = ω × X plus the origin rate bias, X(t2) = X(t1) + v (t2 − t1); a site velocity replaces the model",
     accuracy: "About 0.2 mm/yr on stable plate interiors (the model's fit); rigid-plate velocities can be wrong by centimeters per year in deforming zones",
+    when_to_use: "Use this to bring a position to the epoch you need it at. A coordinate in a modern reference frame is only meaningful with the date attached, because the ground it sits on is moving — 15 mm a year in Kansas, more than 50 on the Pacific plate — so a position observed in 2010 and one observed today are not the same number even for a mark that has not shifted an inch relative to its neighbours. Give the plate, or a site velocity from a nearby continuously operating station, which is better wherever one is available. It is the companion to changing frames: frames and epochs are separate steps and both are usually needed.",
+    limitations: "It moves a position in time, not between frames — that is the ITRF or NAD 83 tool — and the two are easy to confuse because both report a shift in meters. The model is rigid-plate rotation, so it is only as good as that assumption: on a stable plate interior it fits to about 0.2 mm a year, but in a deforming zone it can be wrong by centimeters a year, and those zones are flagged from Bird's PB2002 orogens with the advice to use a site velocity instead. It also cannot know about anything episodic — an earthquake, subsidence, a landslide — which moves a mark without warning and leaves this answer confidently wrong. Epochs are accepted between 1980 and 2100; further out the linear velocity is extrapolation rather than model.",
     references: &[ITRF2020_PMM, PB2002],
     examples: &[Example {
         id: "primary",
         title: "Kansas on the North American plate, 2010 to 2026.7",
         input: r#"{"lat":38.5,"lon":-98,"height":500,"from_epoch":"2010.0","to_epoch":"2026.7","plate":"NOAM"}"#,
-        source: "PROJ +proj=helmert with the NOAM_T rates of its data/ITRF2020",
+        source: "PROJ 9.3.0 given the Altamimi 2023 rotation pole and origin rate bias and left to do the cross product itself: it lands within 4 nanometres in latitude, 1.2 in longitude and 2.4 in height, and 14 mm away if the origin rate bias is omitted, so the check distinguishes that term",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "geodesy.datum.itrf",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.datum.nad83",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.helmert",
+            reason: "alternative",
+        },
+    ],
     sentence: "The position moves {displacement} horizontally: {east} east and {north} north.{warn DEFORMATION_ZONE} It lies in a deforming zone, so use a site velocity from a nearby station.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_plate_motion,

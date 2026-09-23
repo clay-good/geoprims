@@ -355,3 +355,104 @@ fn nad83_invariants() {
         "WGS 84 (G2296) is not being taken as ITRF2020"
     );
 }
+
+fn plate(extra: &str, p: (f64, f64, f64), t1: f64, t2: f64) -> Value {
+    call(
+        "geodesy.datum.plate-motion",
+        &format!(
+            r#"{{"lat":{},"lon":{},"height":{},"from_epoch":"{t1}","to_epoch":"{t2}",{extra},"options":{{"outputUnits":{{"displacement":"m","east":"m","north":"m","up":"m","height":"m"}}}}}}"#,
+            p.0, p.1, p.2
+        ),
+    )
+}
+
+#[test]
+fn plate_motion_invariants() {
+    const K: (f64, f64, f64) = (38.5, -98.0, 500.0); // Kansas, stable NOAM interior
+    const M_PER_DEG: f64 = 111_320.0;
+    let noam = |t1: f64, t2: f64| plate(r#""plate":"NOAM""#, K, t1, t2);
+
+    // No elapsed time, no motion.
+    assert_eq!(
+        f(&noam(2010.0, 2010.0), "result.displacement.value"),
+        0.0,
+        "a zero span moved the position"
+    );
+
+    // Exactly linear in the elapsed time. A velocity model has no curvature,
+    // and this is what separates it from anything that does.
+    let one = f(&noam(2010.0, 2011.0), "result.displacement.value");
+    let ten = f(&noam(2010.0, 2020.0), "result.displacement.value");
+    assert!(
+        (ten / one - 10.0).abs() < 1e-12,
+        "ten years is {} times one year",
+        ten / one
+    );
+
+    // Forward and back.
+    let fwd = noam(2010.0, 2026.7);
+    let back = plate(
+        r#""plate":"NOAM""#,
+        (
+            f(&fwd, "result.lat.value"),
+            f(&fwd, "result.lon.value"),
+            f(&fwd, "result.height.value"),
+        ),
+        2026.7,
+        2010.0,
+    );
+    assert!(
+        (f(&back, "result.lat.value") - K.0).abs() * M_PER_DEG < 1e-8
+            && (f(&back, "result.height.value") - K.2).abs() < 1e-8,
+        "forward and back did not return the position\n{back}"
+    );
+
+    // The velocity belongs to the place and the plate, not to the epochs asked
+    // about. If the epochs leaked into it, this would move.
+    let early = plate(r#""plate":"NOAM""#, K, 1990.0, 1991.0);
+    for k in ["v_east", "v_north", "v_up"] {
+        assert_eq!(
+            f(&early, &format!("result.{k}.value")),
+            f(&fwd, &format!("result.{k}.value")),
+            "{k} depends on the epochs"
+        );
+    }
+
+    // The horizontal displacement is east and north recomposed.
+    let (e, n) = (f(&fwd, "result.east.value"), f(&fwd, "result.north.value"));
+    assert!(
+        (e.hypot(n) - f(&fwd, "result.displacement.value")).abs() < 1e-15,
+        "displacement is not the horizontal part\n{fwd}"
+    );
+
+    // A site velocity replaces the model and is used as given: 10 mm/yr east
+    // for ten years is 100 mm east, and nothing about NOAM enters.
+    let site = plate(r#""v_east":10,"v_north":-5,"v_up":1"#, K, 2010.0, 2020.0);
+    assert!(site["ok"].as_bool().unwrap_or(false), "{site}");
+    assert!(
+        (f(&site, "result.east.value") - 0.1).abs() < 1e-9
+            && (f(&site, "result.north.value") + 0.05).abs() < 1e-9,
+        "the site velocity was not used as given\n{site}"
+    );
+
+    // The Pacific plate is the fast one, by the published poles.
+    let pac = plate(r#""plate":"PCFC""#, (20.0, -157.0, 0.0), 2010.0, 2026.7);
+    assert!(
+        f(&pac, "result.displacement.value") > 4.0 * f(&fwd, "result.displacement.value"),
+        "PCFC moved {} m against NOAM's {} m",
+        f(&pac, "result.displacement.value"),
+        f(&fwd, "result.displacement.value")
+    );
+
+    // Rigid rotation does not describe a deforming belt, and the tool says so
+    // on the San Andreas system but not in Kansas.
+    let san = plate(r#""plate":"NOAM""#, (35.0, -120.0, 0.0), 2010.0, 2026.7);
+    let warn = |r: &Value| {
+        r["meta"]["warnings"]
+            .as_array()
+            .map(|a| a.iter().any(|w| w["code"] == "DEFORMATION_ZONE"))
+            .unwrap_or(false)
+    };
+    assert!(warn(&san), "the San Andreas system is not flagged\n{san}");
+    assert!(!warn(&fwd), "Kansas is flagged as deforming\n{fwd}");
+}

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "e1b818561042bc6b",
+    "hash": "4fb97ff6b972d0db",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "3d1c9a627f1ec969",
+    "hash": "74a11b712dae91b5",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -165,6 +165,10 @@
   },
   "/geodesy/datum/nad83/": {
     "hash": "aaa371dadd79cfdc",
+    "lastmod": "2026-09-23"
+  },
+  "/geodesy/datum/plate-motion/": {
+    "hash": "d64857521e822b06",
     "lastmod": "2026-09-23"
   },
   "/geodesy/ellipsoid/": {
@@ -532,7 +536,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "0942bacde1edecc8",
+    "hash": "14c5f8843278df50",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -728,7 +732,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "35ffdd92b831b843",
+    "hash": "0761357cf210f570",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -828,7 +832,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "6a0a075d0255c4b9",
+    "hash": "c120d33a7648c157",
     "lastmod": "2026-09-23"
   }
 }

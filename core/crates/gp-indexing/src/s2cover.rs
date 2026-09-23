@@ -13,7 +13,7 @@ use std::collections::VecDeque;
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Stability, ToolDef};
 use gp_base::units::{self, Quantity as QT};
 use libm::{cos, sqrt};
 
@@ -556,11 +556,12 @@ pub static COVERING: ToolDef = ToolDef {
         .precision(Precision::Decimals(0)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["COVERING_OVER_BUDGET", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    warnings: &["COVERING_OVER_BUDGET", "UNIT_ASSUMED"],
     model: "Refinement from the six faces: the coarsest candidate that meets the region is split into its four children, keeping any cell the region contains whole, until the budget is reached; a cell that only partly overlaps is kept, so the covering contains the region",
     accuracy: "The covering always contains the region. It is not the smallest such set: S2's own coverer uses a priority order that can find a tighter cover for the same budget, so treat the cells as a superset rather than a canonical answer.",
     when_to_use: "Use this to turn an area into index keys: the cells of a covering are what you query a cell-indexed store with, then filter the results by the true geometry. The budget and the level range are the two knobs — more cells or finer levels mean a tighter cover and a larger key set.",
-    limitations: "A covering is a superset: every cell overlaps the region but the cells together cover more ground than it, which is why a covering query still needs a second filter. This covers a rectangle or a circle; polygons are not covered yet. The cells are a valid covering rather than S2's own choice, so a set from another library may differ while covering the same ground.",
+    limitations: "A covering is a superset: every cell overlaps the region but the cells together cover more ground than it, which is why a covering query still needs a second filter. This covers a rectangle or a circle; polygons are not covered yet. The cells are a valid covering rather than S2's own choice, so a set from another library may differ while covering the same ground. The cell budget is not a hard cap: the lowest level wins over it, so a region that needs more cells than the budget just to reach that level gets them, with a warning saying so -- a smaller set would leave part of the region out. Past four times the budget the request is refused instead.",
     references: &[crate::s2tools::S2_DOCS],
     examples: &[Example {
         id: "primary",

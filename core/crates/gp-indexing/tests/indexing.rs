@@ -1567,3 +1567,107 @@ fn geohash_cover_invariants() {
     assert_eq!(num(&cover(5, tiny, "center"), "result.count"), 0.0);
     assert!(num(&cover(5, tiny, ""), "result.count") > 0.0);
 }
+
+#[test]
+fn s2_covering_invariants() {
+    const S: &str = "indexing.s2.covering";
+    let cover = |area: &str, lo: u32, hi: u32, budget: u32| {
+        call(
+            S,
+            &format!(r#"{{{area},"min_level":{lo},"max_level":{hi},"max_cells":{budget}}}"#),
+        )
+    };
+    let tokens = |r: &Value| -> Vec<String> {
+        r["result"]["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .map(|c| c["cell"].as_str().expect("cell").to_owned())
+            .collect()
+    };
+    let rect = r#""south":"40.43 deg","north":"40.46 deg","west":"-80.01 deg","east":"-79.96 deg""#;
+    let circle = r#""lat":40.44,"lon":-79.99,"radius":"5 km""#;
+    for (area, lo, hi, budget) in [
+        (rect, 10u32, 16u32, 8u32),
+        (rect, 12, 18, 32),
+        (circle, 8, 14, 12),
+        (circle, 10, 16, 40),
+    ] {
+        let r = cover(area, lo, hi, budget);
+        assert_eq!(r["ok"], true, "{area}: {r}");
+        let cells = tokens(&r);
+        assert!(!cells.is_empty(), "{area}: an empty covering");
+        // The reported levels are the levels of the cells actually returned.
+        // An S2 token's length grows with level, so a token shorter than the
+        // coarsest or longer than the finest would contradict the report.
+        let (coarse, fine) = (
+            num(&r, "result.coarsest_level") as u32,
+            num(&r, "result.finest_level") as u32,
+        );
+        assert!(
+            lo <= coarse && coarse <= fine && fine <= hi,
+            "{area}: levels {coarse}..{fine} outside {lo}..{hi}"
+        );
+        // No cell is an ancestor of another, or the covering would be listing
+        // the same ground twice.
+        for a in &cells {
+            for b in &cells {
+                assert!(
+                    a == b || !s2_contains(a, b),
+                    "{area}: {a} is an ancestor of {b}"
+                );
+            }
+        }
+        // The count only exceeds the budget when the result says it does.
+        let warned = r["meta"]["warnings"]
+            .as_array()
+            .map(|w| w.iter().any(|x| x["code"] == "COVERING_OVER_BUDGET"))
+            .unwrap_or(false);
+        assert!(
+            cells.len() as u32 <= budget || warned,
+            "{area}: {} cells over a budget of {budget} without a warning",
+            cells.len()
+        );
+    }
+    // A covering is a superset, so its area is at least the region's. The
+    // rectangle here is 0.03 deg by 0.05 deg at 40.4 deg north.
+    let r = cover(rect, 10, 16, 8);
+    let region_km2 = 0.03 * 111.132 * (0.05 * 111.320 * 40.445f64.to_radians().cos());
+    let covered = num(&r, "result.covered_area.value");
+    assert!(
+        covered > 0.0 && covered >= region_km2,
+        "covered {covered} is less than the region's {region_km2}"
+    );
+    // A bigger budget never loses ground the smaller one held: every cell of
+    // the small covering is covered by the large one, whether as itself, as an
+    // ancestor, or as the descendants it was split into.
+    let small = tokens(&cover(rect, 10, 16, 8));
+    let large = tokens(&cover(rect, 10, 18, 64));
+    for s in &small {
+        assert!(
+            large
+                .iter()
+                .any(|l| l == s || s2_contains(l, s) || s2_contains(s, l)),
+            "a larger budget dropped the ground under {s}"
+        );
+    }
+}
+
+/// The S2 cell id a token names: hex, right-padded with zeros to 64 bits.
+fn s2_id(token: &str) -> u64 {
+    let mut hex = token.to_owned();
+    while hex.len() < 16 {
+        hex.push('0');
+    }
+    u64::from_str_radix(&hex, 16).expect("an S2 token is hex")
+}
+
+/// Whether cell `a` contains cell `b`. An S2 id carries a trailing 1 bit at
+/// its level, so the ids of a cell's descendants are exactly the range
+/// [id - (lsb - 1), id + (lsb - 1)]; string prefixes do not work here, because
+/// that trailing bit moves the hex digits.
+fn s2_contains(a: &str, b: &str) -> bool {
+    let (ia, ib) = (s2_id(a), s2_id(b));
+    let lsb = ia.isolate_lowest_one();
+    ia != ib && ib >= ia - (lsb - 1) && ib <= ia + (lsb - 1)
+}

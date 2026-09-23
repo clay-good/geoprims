@@ -10,7 +10,7 @@ use gp_base::ErrorCode;
 use gp_base::angle::wrap_lon;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_geo::point;
 use libm::{acos, asin, atan2, cos, hypot, sin};
@@ -362,8 +362,18 @@ const fn qty_field(
     Field::new(name, title, help, Kind::Quantity { q, unit })
 }
 
+const IFH: Reference = Reference {
+    title: "Instrument Flying Handbook, FAA-H-8083-15B",
+    issuer: "Federal Aviation Administration",
+    year: 2012,
+    edition: "FAA-H-8083-15B",
+    locator: "Chapter 5: the standard-rate turn, 3° per second, 360° in two minutes",
+    url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_flying_handbook",
+};
+
 pub static FLY_BY: ToolDef = ToolDef {
     id: "navigation.route.fly-by",
+    stability: gp_base::tool::Stability::Stable,
     diagram_inline: true,
     title: "Fly-by turn anticipation",
     summary: "How early to start a fly-by turn at a waypoint: turn radius, lead distance, arc length, and time in the turn, from the inbound and outbound courses, speed, and bank angle or turn rate.",
@@ -480,30 +490,37 @@ pub static FLY_BY: ToolDef = ToolDef {
         .precision(Precision::Decimals(2)),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "FLY_OVER_RECOMMENDED",
-        "INPUT_NORMALIZED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["FLY_OVER_RECOMMENDED", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Coordinated level turn at constant speed: R = V²/(g tan φ), lead = R tan(Δψ/2)",
     accuracy: "Exact for a steady coordinated turn in still air; wind changes the ground track",
-    references: &[KARNEY],
+    when_to_use: "Use this to know how far before a waypoint to start turning, so the aircraft rolls out on the outbound course instead of overshooting and correcting back. That lead distance is what a flight management system computes for a fly-by waypoint, and it is what a pilot hand-flying a route needs to anticipate: the sharper the turn and the faster the aircraft, the further out it begins. Give the bank angle you intend to use, or a turn rate — three degrees a second is the standard rate — and it also reports the radius, how long the turn takes, and how far it flies.",
+    limitations: "This is still air. Wind bends the ground track, and a turn into or out of a strong wind starts and ends in different places than this says; nothing here models it. It is a level coordinated turn at constant speed, so it does not describe a climbing turn, a decelerating one, or the roll-in and roll-out, which take a second or two each and make the real lead slightly longer. It is geometry rather than procedure design: it does not know an aircraft's certified bank limits, a category's protected airspace, or what a published procedure requires, and a course change large enough that a fly-by turn would leave the protected area is flagged as better flown as a fly-over.",
+    references: &[IFH, KARNEY],
     examples: &[Example {
         id: "primary",
         title: "A 90° fly-by at 120 kt and 25° of bank",
         input: r#"{"inbound":"360 deg","outbound":"090 deg","speed":"120 kt","bank":"25 deg"}"#,
-        source: "navigation route-geometry scenario: radius 833.4 m (0.450 NM), lead 833.4 m",
+        source: "exact by hand, and tied to the FAA's published standard-rate turn: at 120 kt and 25° of bank R = V²/(g tan 25°) = 833.3860599902922 m and the lead for a 90° turn is R tan 45° = R; at the standard 3°/s instead, the radius is 1179.0198184247606 m, identical to the V·T/(2π) the two-minute definition gives, and the 90° arc is 1852.0000000000002 m — one nautical mile exactly",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "vector-diagram",
         map: &[],
     }],
-    related: &[Related {
-        id: "navigation.route.cross-track",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "navigation.route.cross-track",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.route.legs",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.route.closest-point",
+            reason: "alternative",
+        },
+    ],
     sentence: "Start the {direction} turn {lead_distance} before the waypoint; the radius is {radius}.{warn FLY_OVER_RECOMMENDED} A course change this large is better flown as a fly-over.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_fly_by,

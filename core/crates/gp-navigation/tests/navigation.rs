@@ -2218,3 +2218,149 @@ fn cpa_invariants() {
         "the three-dimensional path does not reduce to the flat one"
     );
 }
+
+/// A fly-by turn, every length in metres and every time in seconds.
+fn fly_by(extra: &str) -> Value {
+    call(
+        "navigation.route.fly-by",
+        &format!(
+            r#"{{{extra},"options":{{"outputUnits":{{"radius":"m","lead_distance":"m","arc_length":"m","turn_time":"s"}}}}}}"#
+        ),
+    )
+}
+
+#[test]
+fn fly_by_matches_the_standard_rate_turn() {
+    // The FAA's standard-rate turn is a definition, not a measurement: 3 deg a
+    // second, so 360 deg in two minutes. That fixes the radius without using
+    // the tool's V/omega -- a full circle at V for 120 s has radius V*T/(2 pi).
+    const G: f64 = 9.80665;
+    let omega = 3.0f64.to_radians();
+    for kt in [60.0, 90.0, 120.0, 150.0, 180.0, 250.0, 320.0, 450.0] {
+        let v = kt * 1852.0 / 3600.0;
+        let r = fly_by(&format!(
+            r#""inbound":"360 deg","outbound":"090 deg","speed":"{kt} kt","turn_rate":"3 deg/s""#
+        ));
+        assert!(r["ok"].as_bool().unwrap_or(false), "{kt} kt: {r}");
+
+        let from_definition = v * 120.0 / (2.0 * std::f64::consts::PI);
+        assert!(
+            (num(&r, "result.radius.value") - from_definition).abs() / from_definition < 1e-12,
+            "{kt} kt: radius {} against the two-minute definition's {from_definition}",
+            num(&r, "result.radius.value")
+        );
+        let bank = (v * omega / G).atan().to_degrees();
+        assert!(
+            (num(&r, "result.bank_used.value") - bank).abs() < 1e-9,
+            "{kt} kt: bank {} against atan(V omega / g) = {bank}",
+            num(&r, "result.bank_used.value")
+        );
+        // 90 deg at 3 deg/s is 30 seconds, whatever the speed.
+        assert!(
+            (num(&r, "result.turn_time.value") - 30.0).abs() < 1e-9,
+            "{kt} kt: a 90 deg turn at the standard rate took {} s",
+            num(&r, "result.turn_time.value")
+        );
+        // And the arc is simply how far it flew in that time.
+        assert!(
+            (num(&r, "result.arc_length.value") - v * 30.0).abs() < 1e-9,
+            "{kt} kt: arc {} against {} flown",
+            num(&r, "result.arc_length.value"),
+            v * 30.0
+        );
+    }
+}
+
+#[test]
+fn fly_by_invariants() {
+    const BASE: &str =
+        r#""inbound":"360 deg","outbound":"090 deg","speed":"120 kt","bank":"25 deg""#;
+    let base = fly_by(BASE);
+    let radius = num(&base, "result.radius.value");
+
+    // The two ways in agree: a bank angle, and the turn rate that bank produces.
+    let rate = num(&base, "result.turn_angle.value") / num(&base, "result.turn_time.value");
+    let by_rate = fly_by(&format!(
+        r#""inbound":"360 deg","outbound":"090 deg","speed":"120 kt","turn_rate":"{rate} deg/s""#
+    ));
+    assert!(
+        (num(&by_rate, "result.radius.value") - radius).abs() / radius < 1e-12,
+        "bank and the rate it produces disagree: {} against {radius}",
+        num(&by_rate, "result.radius.value")
+    );
+
+    // The lead is the tangent length: R tan(dpsi/2). A 90 deg turn leads by
+    // exactly its radius, a 60 deg turn by R/sqrt(3), a 120 deg turn by R sqrt(3).
+    for (outbound, want) in [
+        ("090 deg", 1.0),
+        ("060 deg", 3.0f64.sqrt().recip()),
+        ("120 deg", 3.0f64.sqrt()),
+    ] {
+        let r = fly_by(&format!(
+            r#""inbound":"360 deg","outbound":"{outbound}","speed":"120 kt","bank":"25 deg""#
+        ));
+        let ratio = num(&r, "result.lead_distance.value") / num(&r, "result.radius.value");
+        assert!(
+            (ratio - want).abs() < 1e-12,
+            "{outbound}: lead is {ratio} radii, not {want}"
+        );
+    }
+
+    // Radius goes as the square of the speed and falls as the bank steepens,
+    // checked by doubling rather than by restating the formula.
+    let slow =
+        fly_by(r#""inbound":"360 deg","outbound":"090 deg","speed":"100 kt","bank":"25 deg""#);
+    let fast =
+        fly_by(r#""inbound":"360 deg","outbound":"090 deg","speed":"200 kt","bank":"25 deg""#);
+    assert!(
+        (num(&fast, "result.radius.value") / num(&slow, "result.radius.value") - 4.0).abs() < 1e-9,
+        "doubling the speed did not quadruple the radius"
+    );
+    let steep =
+        fly_by(r#""inbound":"360 deg","outbound":"090 deg","speed":"120 kt","bank":"45 deg""#);
+    assert!(
+        num(&steep, "result.radius.value") < radius,
+        "a steeper bank did not tighten the turn"
+    );
+
+    // The arc is the speed times the time, two outputs that reach it differently.
+    let v = 120.0 * 1852.0 / 3600.0;
+    assert!(
+        (num(&base, "result.arc_length.value") - v * num(&base, "result.turn_time.value")).abs()
+            < 1e-9,
+        "the arc is not what was flown in the time\n{base}"
+    );
+
+    // The turn is taken the short way, so swapping the courses turns the other
+    // way through the same geometry.
+    let reversed =
+        fly_by(r#""inbound":"090 deg","outbound":"360 deg","speed":"120 kt","bank":"25 deg""#);
+    assert_eq!(base["result"]["direction"], "right", "{base}");
+    assert_eq!(reversed["result"]["direction"], "left", "{reversed}");
+    assert_eq!(
+        num(&reversed, "result.radius.value"),
+        radius,
+        "reversing the courses changed the radius"
+    );
+    assert_eq!(
+        num(&reversed, "result.lead_distance.value"),
+        num(&base, "result.lead_distance.value"),
+        "reversing the courses changed the lead"
+    );
+
+    // Near a reversal the tangent runs away, and the tool says fly over it.
+    let sharp =
+        fly_by(r#""inbound":"360 deg","outbound":"170 deg","speed":"120 kt","bank":"25 deg""#);
+    assert!(
+        codes(&sharp).contains(&"FLY_OVER_RECOMMENDED".to_string()),
+        "a 170 deg course change is not flagged\n{sharp}"
+    );
+    assert!(
+        num(&sharp, "result.lead_distance.value") > 10.0 * radius,
+        "the lead for a near-reversal did not grow"
+    );
+    assert!(
+        !codes(&base).contains(&"FLY_OVER_RECOMMENDED".to_string()),
+        "an ordinary 90 deg turn was flagged"
+    );
+}

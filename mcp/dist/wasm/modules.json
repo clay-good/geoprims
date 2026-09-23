@@ -1,0 +1,102 @@
+{
+  "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+  "wasmOpt": "wasm-opt version 132",
+  "modules": [
+    {
+      "module": "aviation",
+      "crate": "gp-aviation",
+      "bytes": 731806,
+      "brotli": 258107,
+      "budget": 409600,
+      "sha256": "72bdf16e123abbb8b6036ac0e338a57d0c579001d60b6ca8ee80f6e15139f3d2"
+    },
+    {
+      "module": "drone",
+      "crate": "gp-drone",
+      "bytes": 600435,
+      "brotli": 222917,
+      "budget": 409600,
+      "sha256": "e8c841a812678ca2f4441907d31019f857c59b24d54e50d92890362672173985"
+    },
+    {
+      "module": "geodesy",
+      "crate": "gp-geodesy",
+      "bytes": 715529,
+      "brotli": 252592,
+      "budget": 409600,
+      "sha256": "eec148e9b19992f36db18336df9c948f29a9153387a16562c712775ae06c68ec"
+    },
+    {
+      "module": "geometry",
+      "crate": "gp-geometry",
+      "bytes": 545656,
+      "brotli": 205236,
+      "budget": 409600,
+      "sha256": "c6c62518b8b3a24b901800a1a9ff35870f6d2c79cb6b1e1bed5b4fda64f2cf2d"
+    },
+    {
+      "module": "indexing",
+      "crate": "gp-indexing",
+      "bytes": 629598,
+      "brotli": 232909,
+      "budget": 409600,
+      "sha256": "9b855e8dd27cd707e3ef29cb144127b6cd7db1a94d1437bee486791892862215"
+    },
+    {
+      "module": "link",
+      "crate": "gp-link",
+      "bytes": 244058,
+      "brotli": 105390,
+      "budget": 409600,
+      "sha256": "f294393673ccc771e9d0800c4711e0cd427fcfa416bb9c047822cd060b8e7baa"
+    },
+    {
+      "module": "navigation",
+      "crate": "gp-navigation",
+      "bytes": 578055,
+      "brotli": 210453,
+      "budget": 409600,
+      "sha256": "c03ab2e3a904152110f31d086987ac6cb7ed0aefdc72f35da6c45ee0f330fea2"
+    },
+    {
+      "module": "raster",
+      "crate": "gp-raster",
+      "bytes": 327582,
+      "brotli": 134651,
+      "budget": 409600,
+      "sha256": "94dec34341cbae8964004c5930cffe8bfaf4193fa55a091341ca4fd539d4ba95"
+    },
+    {
+      "module": "search",
+      "crate": "gp-search",
+      "bytes": 301436,
+      "brotli": 127757,
+      "budget": 409600,
+      "sha256": "af2fe1218190c7f22e73d0687a6e1c6aafa4f6f079625f0ae199325dd1005288"
+    },
+    {
+      "module": "survey",
+      "crate": "gp-survey",
+      "bytes": 624063,
+      "brotli": 233700,
+      "budget": 409600,
+      "sha256": "8b7790dc7ab391347e24e775392a0eae0d0dc31ece0e1dcbf2e20f1f0e1ae858"
+    },
+    {
+      "module": "time",
+      "crate": "gp-time",
+      "bytes": 619216,
+      "brotli": 205725,
+      "budget": 409600,
+      "sha256": "a271a3e967f23b35aa64ca57eb9967884d3b98f6b69f7752026aff01204637e6"
+    },
+    {
+      "module": "base",
+      "crate": "gp-units",
+      "bytes": 295793,
+      "brotli": 120984,
+      "budget": 122880,
+      "sha256": "d8497187014279f2343d5d2c558865d4db78455140d2c93d79d934e719bd641b"
+    }
+  ]
+}

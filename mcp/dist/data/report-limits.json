@@ -1,0 +1,20 @@
+{
+  "note": "The authoritative problem-report limits (contracts/report-api). Imported by the report dialog, the Worker, the D1 migration generator, and the MCP report tool.",
+  "apiVersion": 1,
+  "bodyBytes": 32768,
+  "inputRows": 32,
+  "outputRows": 32,
+  "fieldChars": 40,
+  "labelChars": 80,
+  "valueChars": 160,
+  "unitChars": 16,
+  "noteChars": 280,
+  "pagePathChars": 2048,
+  "warningCodes": 30,
+  "inputsJsonChars": 12000,
+  "outputsJsonChars": 12000,
+  "warningsJsonChars": 2000,
+  "displayJsonChars": 300,
+  "assetVersionsJsonChars": 2000,
+  "kinds": ["wrong-result", "broken", "confusing", "other"]
+}

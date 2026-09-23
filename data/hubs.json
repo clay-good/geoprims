@@ -1087,6 +1087,13 @@
           ]
         },
         {
+          "want": "do grid arithmetic around an origin cell",
+          "tools": [
+            "cell-to-local-ij",
+            "local-ij-to-cell"
+          ]
+        },
+        {
           "want": "fill a polygon with cells",
           "tools": [
             "polygon-to-cells"

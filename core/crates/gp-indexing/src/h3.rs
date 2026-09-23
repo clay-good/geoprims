@@ -1935,3 +1935,205 @@ fn geojson_multipolygon(polys: &[crate::h3outline::Poly]) -> String {
     s.push_str("]}");
     s
 }
+
+// ---------------------------------------------------------------- local IJ
+
+/// The IJ range H3's local grid can reach; far outside it the unfolding fails.
+const IJ_LIMIT: f64 = 1e9;
+
+pub static CELL_TO_LOCAL_IJ: ToolDef = ToolDef {
+    id: "indexing.h3.cell-to-local-ij",
+    title: "H3 local IJ for a cell (cellToLocalIj)",
+    summary: "The local IJ coordinates of a cell as seen from an origin cell: two whole numbers on the grid H3 unfolds around that origin.",
+    aliases: &[
+        "cellToLocalIj",
+        "cell_to_local_ij",
+        "H3 local IJ",
+        "H3 IJ coordinates",
+    ],
+    keywords: &[
+        "H3",
+        "local IJ",
+        "cellToLocalIj",
+        "coordinates",
+        "grid",
+        "anchor",
+        "traversal",
+    ],
+    inputs: &[cell_in("origin", "Origin"), cell_in("cell", "Cell")],
+    outputs: &[
+        count("i", "I", "Along the first grid axis"),
+        count("j", "J", "Along the second grid axis"),
+        text(
+            "anchor",
+            "Anchor",
+            "The origin the coordinates are measured from",
+        ),
+        text(
+            "cell",
+            "Cell",
+            "The cell those coordinates name, as H3 writes it",
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::DegenerateGeometry],
+    warnings: &["EXPERIMENTAL_TOOL", "PENTAGON_DISTORTION"],
+    model: "H3 C cellToLocalIj (h3o 0.11): the icosahedron faces unfolded around the origin into one plane of IJ axes",
+    accuracy: "The same coordinates as H3 C 4.4.1, which are whole numbers, so they agree exactly",
+    when_to_use: "Use this to do grid arithmetic on H3 cells: turn cells into plane coordinates around one origin, where the difference between two cells is a vector you can add, subtract, and compare. It is how neighborhoods, offsets, and regular patterns on the grid are expressed.",
+    limitations: "The coordinates mean nothing without their origin: the same cell has different IJ around a different anchor, so the anchor has to travel with them. The unfolding only reaches so far, and it is undefined across the twelve pentagons, where H3 refuses rather than answering wrongly. Both cells must be at one resolution.",
+    references: &[H3_DOCS, H3O],
+    examples: &[Example {
+        id: "primary",
+        title: "The cell east of downtown Pittsburgh, from its neighbor",
+        input: r#"{"origin":"892a8471487ffff","cell":"892a847148fffff"}"#,
+        source: "H3 cellToLocalIj",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "cell-set",
+        map: &[("cells", "cell")],
+    }],
+    related: &[
+        Related {
+            id: "indexing.h3.local-ij-to-cell",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "alternative",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
+    sentence: "From the anchor the cell sits at ({i}, {j}).{warn PENTAGON_DISTORTION} A pentagon is involved.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_cell_to_local_ij,
+    ..ToolDef::BLANK
+};
+
+fn run_cell_to_local_ij(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (o, c) = (cell(ctx, "origin")?, cell(ctx, "cell")?);
+    if o.is_pentagon() || c.is_pentagon() {
+        pentagon_note(ctx, "This pair");
+    }
+    let l = c
+        .to_local_ij(o)
+        .map_err(|e| local_ij_error(e).at("/cell"))?;
+    Ok(Json::obj([
+        ("i", Json::Num(f64::from(l.coord.i))),
+        ("j", Json::Num(f64::from(l.coord.j))),
+        ("anchor", Json::str(hex(l.anchor))),
+        ("cell", Json::str(hex(c))),
+    ]))
+}
+
+pub static LOCAL_IJ_TO_CELL: ToolDef = ToolDef {
+    id: "indexing.h3.local-ij-to-cell",
+    title: "H3 cell at local IJ (localIjToCell)",
+    summary: "The H3 cell at local IJ coordinates around an origin cell, undoing cellToLocalIj.",
+    aliases: &["localIjToCell", "local_ij_to_cell", "H3 IJ to cell"],
+    keywords: &[
+        "H3",
+        "local IJ",
+        "localIjToCell",
+        "coordinates",
+        "grid",
+        "anchor",
+        "traversal",
+    ],
+    inputs: &[
+        cell_in("origin", "Origin"),
+        Field::new(
+            "i",
+            "I",
+            "Along the first grid axis, like 309",
+            Kind::Number {
+                min: -IJ_LIMIT,
+                max: IJ_LIMIT,
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "j",
+            "J",
+            "Along the second grid axis, like 2470",
+            Kind::Number {
+                min: -IJ_LIMIT,
+                max: IJ_LIMIT,
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(0)),
+    ],
+    outputs: &[
+        text("cell", "Cell", "The H3 index at those coordinates"),
+        angle("lat", "Latitude", "[-90,90]"),
+        angle("lon", "Longitude", "[-180,180]"),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::DegenerateGeometry],
+    warnings: &["EXPERIMENTAL_TOOL", "PENTAGON_DISTORTION"],
+    model: "H3 C localIjToCell (h3o 0.11): the IJ plane around the origin folded back onto the icosahedron",
+    accuracy: "The same cells as H3 C 4.4.1, which are exact indexes, and a round trip through cellToLocalIj returns the cell it started from",
+    when_to_use: "Use this to turn grid arithmetic back into cells: having moved by a vector in local IJ around an origin, this says which cell you landed on. It is the other half of working on the H3 grid as a plane.",
+    limitations: "The coordinates only mean something with the origin they were measured from, so the same pair around a different anchor gives a different cell. Coordinates far from the origin, or across one of the twelve pentagons, have no cell, and H3 refuses rather than answering wrongly. The cell comes back at the origin's resolution.",
+    references: &[H3_DOCS, H3O],
+    examples: &[Example {
+        id: "primary",
+        title: "Back to the cell east of downtown Pittsburgh",
+        input: r#"{"origin":"892a8471487ffff","i":309,"j":2470}"#,
+        source: "H3 localIjToCell",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "cell-set",
+        map: &[("cells", "cell")],
+    }],
+    related: &[
+        Related {
+            id: "indexing.h3.cell-to-local-ij",
+            reason: "inverse",
+        },
+        Related {
+            id: "indexing.h3.cell-info",
+            reason: "next",
+        },
+    ],
+    sentence: "That is {cell}.{warn PENTAGON_DISTORTION} A pentagon is involved.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_local_ij_to_cell,
+    ..ToolDef::BLANK
+};
+
+fn run_local_ij_to_cell(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let o = cell(ctx, "origin")?;
+    let whole = |ctx: &Ctx, name: &str| -> Result<i32, ToolError> {
+        let v = ctx.number(name)?.expect("required");
+        if v.fract() != 0.0 {
+            return Err(ToolError::invalid(
+                &format!("/{name}"),
+                "Local IJ coordinates are whole numbers.",
+            ));
+        }
+        Ok(v as i32)
+    };
+    let (i, j) = (whole(ctx, "i")?, whole(ctx, "j")?);
+    if o.is_pentagon() {
+        pentagon_note(ctx, "This origin");
+    }
+    let l = h3o::LocalIJ::new(o, h3o::CoordIJ::new(i, j));
+    let c = CellIndex::try_from(l).map_err(|e| local_ij_error(e).at("/i"))?;
+    if c.is_pentagon() {
+        pentagon_note(ctx, "This cell");
+    }
+    let ll = LatLng::from(c);
+    Ok(Json::obj([
+        ("cell", Json::str(hex(c))),
+        ("lat", ctx.out("lat", deg(ll.lat()))),
+        ("lon", ctx.out("lon", deg(ll.lng()))),
+    ]))
+}

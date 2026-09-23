@@ -1352,6 +1352,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &h3::RESOLUTION_CHOOSER,
     &h3::POLYGON_TO_CELLS,
     &h3::CELLS_TO_POLYGON,
+    &h3::CELL_TO_LOCAL_IJ,
+    &h3::LOCAL_IJ_TO_CELL,
     &s2tools::POINT_TO_CELL,
     &s2tools::CELL_INFO,
     &s2tools::NEIGHBORS,

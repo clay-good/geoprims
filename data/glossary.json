@@ -512,6 +512,7 @@
       "source": "h3",
       "relatedTools": [
         "indexing.h3.cell-info",
+        "indexing.h3.cell-to-local-ij",
         "indexing.h3.cells-to-polygon",
         "indexing.h3.children",
         "indexing.h3.compact",
@@ -520,6 +521,7 @@
         "indexing.h3.grid-path",
         "indexing.h3.grid-ring",
         "indexing.h3.lat-lng-to-cell",
+        "indexing.h3.local-ij-to-cell",
         "indexing.h3.parent",
         "indexing.h3.polygon-to-cells",
         "indexing.h3.resolution-chooser",
@@ -1633,6 +1635,14 @@
         "indexing.h3.cell-info"
       ],
       "reason": "Roman numeral in H3's Class III resolutions"
+    },
+    {
+      "token": "IJ",
+      "tools": [
+        "indexing.h3.cell-to-local-ij",
+        "indexing.h3.local-ij-to-cell"
+      ],
+      "reason": "The names of H3's two local grid axes, I and J"
     },
     {
       "token": "NE",

@@ -5,6 +5,24 @@
       "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
+        "time.scale.utc-offset"
+      ],
+      "vectors": [],
+      "summary": "Converting UTC to local time, the sentence repeated the Zulu time you entered (\"That is 2300Z.\") instead of the answer. It now gives the local time and zone (\"That is 15:00 AKDT.\"), and when the date changes it gives the local date. Three outputs are new: answer (the converted time in the direction asked), to_local (1 for UTC to local, 0 for local to UTC), and local_date_change. Local to UTC reads as before. The tool is now version 1.1.0."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
+        "time.sun.events"
+      ],
+      "vectors": [],
+      "summary": "Where a twilight or the sunrise does not happen, the page showed codes like \"no-civil-twilight-begin\" and \"polar-day\", and the sentence read \"Sunrise is polar-day\". The result keeps those documented codes for machines, but the page now shows plain words, like \"None: the sun does not get low enough for civil twilight to begin\", and the sentence says \"The sun stays up all day, so there is no sunrise or sunset.\" The tool is now version 1.0.1."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
         "aviation.wind.runway-components",
         "aviation.wind.heading-groundspeed"
       ],

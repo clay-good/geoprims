@@ -375,6 +375,9 @@ pub struct ToolDef {
     pub assumptions: &'static [Assumption],
     /// Declared limits, as (name, value).
     pub limits: &'static [(&'static str, u64)],
+    /// Plain words for coded text outputs, as (code, words): the result keeps
+    /// the code for machines, and `display` and the sentence show the words.
+    pub words: &'static [(&'static str, &'static str)],
     /// How free-text questions fill the inputs (natural-language prefill).
     pub slots: &'static [Slot],
     pub run: RunFn,
@@ -422,6 +425,7 @@ impl ToolDef {
         diagram_inline: false,
         assumptions: &[],
         limits: &[],
+        words: &[],
         slots: &[],
         run: unimplemented_run,
     };
@@ -1299,7 +1303,12 @@ fn render_summary(ctx: &mut Ctx, result: &Json) -> (String, String, Json) {
                 }
             }
             (Kind::Number { .. }, Some(Json::Num(x))) => Some(Val::num(*x, None, precision)),
-            (Kind::Text { .. }, Some(Json::Str(t))) => Some(Val::text(t.clone())),
+            (Kind::Text { .. }, Some(Json::Str(t))) => Some(Val::text(
+                def.words
+                    .iter()
+                    .find(|(code, _)| code == t)
+                    .map_or_else(|| t.clone(), |(_, w)| (*w).to_owned()),
+            )),
             _ => None,
         };
         if let Some(v) = val {

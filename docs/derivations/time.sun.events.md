@@ -18,7 +18,7 @@ Latitude and longitude in degrees, the date as local YYYY-MM-DD, and the offset 
 
 ## Domain
 
-Any latitude and longitude, and dates in SPA's range (−2000 to 6000). The polar states are polar-day and polar-night for sunrise and sunset, and no-…-twilight-begin, no-…-twilight-end, or no-…-twilight for the twilights.
+Any latitude and longitude, and dates in SPA's range (−2000 to 6000). The polar states are polar-day and polar-night for sunrise and sunset, and no-…-twilight-begin, no-…-twilight-end, or no-…-twilight for the twilights. These codes stay in the result for machines; the page and the summary show them in plain words, like "None: the sun does not get low enough for civil twilight to begin".
 
 ## Approximations
 
@@ -41,7 +41,7 @@ Refraction at the horizon is the standard 34′. Real refraction varies with the
 
 - `core/crates/gp-time/tests/usno_sun.rs`: 1,200 events (sunrise, sunset, civil dawn and dusk at 300 seeded places and dates, from 72°S to 72°N, including polar day and night) against the USNO API. All are within 1 minute, and 94% are to the same minute. A civil twilight that grazes −6° by 0.013° (67.19°S on February 1) matches USNO's lone 23:59 end.
 - `tools/vectors/gen_usno_sun.py`: regenerates that fixture from the USNO API
-- `core/vectors/time.sun.events.jsonl`: 22 vectors, including USNO day lengths, polar states, and the grazing twilight
+- `core/vectors/time.sun.events.jsonl`: 24 vectors, including USNO day lengths, polar states, the grazing twilight, and the plain words a reader sees
 
 ## Invariants
 

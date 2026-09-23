@@ -651,10 +651,54 @@ const EVENT_OUT: [Field; 12] = [
     .measure("time", "min"),
 ];
 
+/// What a reader sees for each documented polar-state code.
+const EVENT_WORDS: &[(&str, &str)] = &[
+    ("polar-day", "Polar day: the sun stays up all day"),
+    ("polar-night", "Polar night: the sun stays down all day"),
+    (
+        "no-civil-twilight-begin",
+        "None: the sun does not get low enough for civil twilight to begin",
+    ),
+    (
+        "no-civil-twilight-end",
+        "None: the sun does not get low enough for civil twilight to end",
+    ),
+    (
+        "no-civil-twilight",
+        "None: the sun does not get high enough for civil twilight",
+    ),
+    (
+        "no-nautical-twilight-begin",
+        "None: the sun does not get low enough for nautical twilight to begin",
+    ),
+    (
+        "no-nautical-twilight-end",
+        "None: the sun does not get low enough for nautical twilight to end",
+    ),
+    (
+        "no-nautical-twilight",
+        "None: the sun does not get high enough for nautical twilight",
+    ),
+    (
+        "no-astronomical-twilight-begin",
+        "None: the sun does not get low enough for astronomical twilight to begin",
+    ),
+    (
+        "no-astronomical-twilight-end",
+        "None: the sun does not get low enough for astronomical twilight to end",
+    ),
+    (
+        "no-astronomical-twilight",
+        "None: the sun does not get high enough for astronomical twilight",
+    ),
+    ("normal", "Normal: the sun rises and sets"),
+];
+
 pub static EVENTS: ToolDef = ToolDef {
     id: "time.sun.events",
     version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
+    version: "1.0.1",
     title: "Sunrise, sunset, and twilight",
     summary: "Sunrise, sunset, solar noon, day length, and civil, nautical, and astronomical twilight for a place and local date, in local time and Zulu, with polar states.",
     aliases: &[
@@ -722,8 +766,9 @@ pub static EVENTS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "Sunrise is {sunrise} and sunset is {sunset}.",
+    sentence: "{if day_minutes >= 1440}The sun stays up all day, so there is no sunrise or sunset.{else}{if day_minutes <= 0}The sun stays down all day, so there is no sunrise or sunset.{else}Sunrise is {sunrise} and sunset is {sunset}.{/if}{/if}",
     limits: &[("batchRows", 1_000)],
+    words: EVENT_WORDS,
     run: run_events,
     ..ToolDef::BLANK
 };
@@ -809,7 +854,13 @@ fn run_events(ctx: &mut Ctx) -> Result<Json, ToolError> {
         out.push((dusk, Json::str(b)));
     }
     out.push(("state", Json::str(state)));
-    out.push(("day_minutes", Json::Num(minutes.round())));
+    // A day with a sunrise and a sunset keeps 1 to 1,439 minutes, so 0 and
+    // 1,440 always mean polar night and polar day.
+    let minutes = match state {
+        "normal" => minutes.round().clamp(1.0, 1439.0),
+        _ => minutes,
+    };
+    out.push(("day_minutes", Json::Num(minutes)));
     Ok(Json::obj(out))
 }
 

@@ -954,6 +954,7 @@ fn run_block_time(ctx: &mut Ctx) -> Result<Json, ToolError> {
 pub static UTC_OFFSET: ToolDef = ToolDef {
     id: "time.scale.utc-offset",
     stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Local time to UTC (Zulu)",
     summary: "Converts a local time to UTC and Zulu time with an IANA time zone or a UTC offset, or UTC to local, handling daylight saving gaps and overlaps and showing the date change.",
     aliases: &["Zulu time converter", "local to UTC", "UTC to local time"],
@@ -978,6 +979,18 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
         .core(),
     ],
     outputs: &[
+        text(
+            "answer",
+            "Answer",
+            "The converted time: HHMMZ for local-to-utc, local clock time and zone for utc-to-local",
+        ),
+        Field::new(
+            "to_local",
+            "Converted to local",
+            "1 when the answer is local time (utc-to-local), 0 when it is UTC",
+            Kind::Number { min: 0.0, max: 1.0 },
+        )
+        .precision(Precision::Decimals(0)),
         text("zulu", "Zulu", "HHMMZ"),
         text("utc", "UTC", "ISO 8601 UTC time"),
         text("local", "Local", "ISO 8601 with the offset"),
@@ -986,6 +999,12 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
             "date_change",
             "Date change",
             "When UTC and local dates differ",
+        )
+        .optional(),
+        text(
+            "local_date_change",
+            "Local date change",
+            "For utc-to-local, the local date when it differs from the UTC date",
         )
         .optional(),
         Field::new(
@@ -1031,7 +1050,7 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "That is {zulu}.{if day_shift != 0} The UTC date is {date_change}.{/if}",
+    sentence: "That is {answer}.{if day_shift != 0}{if to_local == 1} The local date is {local_date_change}.{else} The UTC date is {date_change}.{/if}{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_utc_offset,
     ..ToolDef::BLANK
@@ -1144,22 +1163,29 @@ fn run_utc_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
             zulu,
         );
     }
+    let zulu = format!("{:02}{:02}Z", (us as i64) / 3600, (us as i64) / 60 % 60);
+    let abbr = zone.abbr_at(unix);
+    let answer = if to_utc_dir {
+        zulu.clone()
+    } else {
+        let clock = format!("{:02}:{:02}", (ls as i64) / 3600, (ls as i64) / 60 % 60);
+        match &abbr {
+            // Numeric tzdb abbreviations (like -03) read better as an offset.
+            Some(a) if !a.starts_with(['+', '-']) => format!("{clock} {a}"),
+            _ => format!("{clock} (UTC{})", civil::offset_text(off, false)),
+        }
+    };
     let mut out = vec![
-        (
-            "zulu",
-            Json::str(format!(
-                "{:02}{:02}Z",
-                (us as i64) / 3600,
-                (us as i64) / 60 % 60
-            )),
-        ),
+        ("answer", Json::str(answer)),
+        ("to_local", Json::Num(if to_utc_dir { 0.0 } else { 1.0 })),
+        ("zulu", Json::str(zulu)),
         ("utc", Json::str(civil::iso(ud, us, "Z"))),
         (
             "local",
             Json::str(civil::iso(ld, ls, &civil::offset_text(off, false))),
         ),
     ];
-    if let Some(a) = zone.abbr_at(unix) {
+    if let Some(a) = abbr {
         out.push(("abbr", Json::str(a)));
     }
     if ud != ld {
@@ -1172,6 +1198,17 @@ fn run_utc_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "date_change",
             Json::str(format!("{} ({which})", civil::date(ud))),
         ));
+        if !to_utc_dir {
+            let which = if ld > ud {
+                "the next day"
+            } else {
+                "the previous day"
+            };
+            out.push((
+                "local_date_change",
+                Json::str(format!("{} ({which})", civil::date(ld))),
+            ));
+        }
     }
     out.push(("day_shift", Json::Num((ud - ld) as f64)));
     Ok(Json::obj(out))

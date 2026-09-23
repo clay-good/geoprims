@@ -3,7 +3,7 @@
 
 ## Method
 
-With a fixed offset, UTC = local − offset. With an IANA zone name, the offset in force comes from the embedded tzdb 2026d (TZif data with POSIX rules for future years): at the UTC instant for UTC to local, and for local to UTC by finding the local time's instant. A local time that falls in a spring-forward gap is refused. One repeated at a fall-back resolves to its first occurrence, with AMBIGUOUS_INPUT. The result gives the Zulu time, both timestamps, the zone abbreviation, and any change of date.
+With a fixed offset, UTC = local − offset. With an IANA zone name, the offset in force comes from the embedded tzdb 2026d (TZif data with POSIX rules for future years): at the UTC instant for UTC to local, and for local to UTC by finding the local time's instant. A local time that falls in a spring-forward gap is refused. One repeated at a fall-back resolves to its first occurrence, with AMBIGUOUS_INPUT. The result gives the answer in the direction asked (the Zulu time for local to UTC; the local clock time and zone for UTC to local), the Zulu time, both timestamps, the zone abbreviation, and any change of date.
 
 ## Equations
 
@@ -40,7 +40,7 @@ None for the stated tzdb release. Time-zone rules are political and change; a la
 
 - `core/crates/gp-time/tests/tz_parity.rs`: `zulu_tool_matches_zoneinfo` runs the public tool on 2,388 instants across every zone from 1970 to 2100 against Python zoneinfo on the same tzdata 2026d (offset and abbreviation identical; GMT and UTC entered as names read as the offset +00:00), and `committed_fixture` checks the zone table itself
 - `tools/vectors/gen_tz_diff.py`: regenerates that fixture
-- `core/vectors/time.scale.utc-offset.jsonl`: 23 vectors, including half- and quarter-hour zones, legacy names, a DST gap, and a fall-back hour
+- `core/vectors/time.scale.utc-offset.jsonl`: 25 vectors, including half- and quarter-hour zones, legacy names, a DST gap, a fall-back hour, and UTC to local answers
 
 ## Invariants
 

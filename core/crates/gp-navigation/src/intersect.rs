@@ -12,7 +12,7 @@ use gp_base::angle::wrap_azimuth;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Stability, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_geo::point;
 use gp_geo::tm::{tauf, taupf};
@@ -856,7 +856,10 @@ pub static VERTEX: ToolDef = ToolDef {
         .precision(Precision::Decimals(9)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to find the highest latitude a great-circle route reaches, and whether it reaches it on the way. A route from New York to London tops out at 53.7 degrees north, well above either end, which is what decides whether it crosses an area of operations, a weather band or an airspace you care about.",
+    limitations: "The vertex need not lie between the two points: when it does not, the route never reaches that latitude, and the `within` field says so -- reading the latitude without it is the mistake this tool invites. Vertices repeat around the globe, and the one reported is the one nearest the start, which may be behind it at a negative distance. A geodesic along the equator has no vertex, and a meridian's vertex is the pole, where longitude names nothing.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Clairaut's relation on the auxiliary sphere: sin α₀ = sin α₁ cos β₁ and σ₁ = atan2(sin β₁, cos α₁ cos β₁); the northern vertex is at σ = 90°, reached by the direct problem in arc length from the start",
     accuracy: "Exact to rounding: the azimuth at the vertex is 90° to within 1e-9°",
     references: &[KARNEY],
@@ -878,6 +881,10 @@ pub static VERTEX: ToolDef = ToolDef {
         },
         Related {
             id: "navigation.geodesic.intersection",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.midpoint",
             reason: "alternative",
         },
     ],

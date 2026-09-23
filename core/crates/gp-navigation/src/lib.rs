@@ -19,7 +19,7 @@ use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
     Ctx, Example, Field, Kind, Layer, Limitation, Precision, Q, Reference, Registry, Related,
-    ToolDef,
+    Stability, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
@@ -94,6 +94,13 @@ const WARNINGS: &[&str] = &[
     "AZIMUTH_NOT_UNIQUE",
     "UNIT_ASSUMED",
     "EXPERIMENTAL_TOOL",
+];
+/// The same list for a tool that is past the stable bar.
+const STABLE_WARNINGS: &[&str] = &[
+    "INPUT_NORMALIZED",
+    "AZIMUTH_UNDEFINED",
+    "AZIMUTH_NOT_UNIQUE",
+    "UNIT_ASSUMED",
 ];
 const JFK_LHR: &str = r#"{"lat1":40.6413,"lon1":-73.7781,"lat2":51.47,"lon2":-0.4543}"#;
 const DIST_P: Precision = Precision::Decimals(3);
@@ -963,7 +970,10 @@ pub static MIDPOINT: ToolDef = ToolDef {
         .precision(DIST_P),
     ],
     errors: &[ErrorCode::Unsupported],
-    warnings: WARNINGS,
+    stability: Stability::Stable,
+    when_to_use: "Use this for the point halfway along the shortest path between two places -- a staging point, the centre of a search area, a label position for a long route. It is halfway by distance travelled, which is not where averaging the coordinates puts it.",
+    limitations: "Averaging latitude and longitude is not this, and is not close: for New York to London the two are more than 700 km apart, and across the antimeridian the average lands on the wrong side of the planet. Halfway by distance is also not halfway in time or in fuel, which depend on wind and on speed. For nearly antipodal points the geodesic itself is barely determined -- many paths are almost equally short -- so the midpoint moves a long way for a small change in either end.",
+    warnings: STABLE_WARNINGS,
     model: "Karney (2013) geodesic on WGS 84 (inverse, then direct to half the distance)",
     accuracy: "About 15 nanometers on WGS 84",
     references: &[KARNEY],
@@ -978,10 +988,20 @@ pub static MIDPOINT: ToolDef = ToolDef {
         kind: "point",
         map: &[("lat", "lat"), ("lon", "lon")],
     }],
-    related: &[Related {
-        id: "navigation.geodesic.inverse",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "navigation.geodesic.intermediate-point",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.vertex",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "parent",
+        },
+    ],
     sentence: "The midpoint is {lat}, {lon}, {half_distance} from each end.",
     limits: &[("batchRows", 10_000)],
     run: run_midpoint,

@@ -2364,3 +2364,322 @@ fn fly_by_invariants() {
         "an ordinary 90 deg turn was flagged"
     );
 }
+
+/// The geodesic distance in METRES between two points, through the inverse
+/// tool, which reports kilometres.
+fn geo_dist(la1: f64, lo1: f64, la2: f64, lo2: f64) -> f64 {
+    num(
+        &call(
+            "navigation.geodesic.inverse",
+            &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+        ),
+        "result.distance.value",
+    ) * 1000.0
+}
+
+#[test]
+fn midpoint_invariants() {
+    const M: &str = "navigation.geodesic.midpoint";
+    let mid = |la1: f64, lo1: f64, la2: f64, lo2: f64| {
+        let r = call(
+            M,
+            &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+        );
+        (
+            num(&r, "result.lat.value"),
+            num(&r, "result.lon.value"),
+            num(&r, "result.half_distance.value"),
+        )
+    };
+    for (la1, lo1, la2, lo2) in [
+        (40.6413, -73.7781, 51.47, -0.4543),
+        (-33.9399, 151.1753, 37.6213, -122.379),
+        (51.5074, -0.1278, 35.6762, 139.6503),
+        (60.0, 5.0, 60.5, 7.0),
+    ] {
+        let (mlat, mlon, half) = mid(la1, lo1, la2, lo2);
+        // Equidistant from both ends -- the definition, checked against the
+        // answer rather than assumed from how it was built.
+        let d1 = geo_dist(la1, lo1, mlat, mlon);
+        let d2 = geo_dist(mlat, mlon, la2, lo2);
+        assert!(
+            (d1 - d2).abs() < 1e-3,
+            "{la1},{lo1}..{la2},{lo2}: {d1} m one side, {d2} m the other"
+        );
+        // Each half is the reported half distance (which is in kilometres).
+        assert!(
+            (d1 / 1000.0 - half).abs() < 1e-6,
+            "half distance {half} km against {d1} m"
+        );
+        // And the two halves add up to the whole: the midpoint is on the line.
+        let whole = geo_dist(la1, lo1, la2, lo2);
+        assert!(
+            (d1 + d2 - whole).abs() < 1e-3,
+            "the halves do not add up to {whole}"
+        );
+        // Swapping the ends gives the same place.
+        let (blat, blon, _) = mid(la2, lo2, la1, lo1);
+        assert!(
+            geo_dist(mlat, mlon, blat, blon) < 1e-3,
+            "reversing moved the midpoint"
+        );
+    }
+    // On the equator and on a meridian the midpoint stays there.
+    assert!(mid(0.0, 0.0, 0.0, 60.0).0.abs() < 1e-12);
+    assert!((mid(0.0, 0.0, 0.0, 60.0).1 - 30.0).abs() < 1e-9);
+    let (_, mlon, _) = mid(10.0, 20.0, -10.0, 20.0);
+    assert!((mlon - 20.0).abs() < 1e-9, "a meridian's midpoint left it");
+    // It is not the coordinate average, and not by a little.
+    let (mlat, mlon, _) = mid(40.6413, -73.7781, 51.47, -0.4543);
+    let naive = geo_dist(
+        mlat,
+        mlon,
+        (40.6413 + 51.47) / 2.0,
+        (-73.7781 - 0.4543) / 2.0,
+    );
+    assert!(
+        naive > 700_000.0,
+        "the coordinate average is only {naive} m away"
+    );
+}
+
+#[test]
+fn vertex_invariants() {
+    const V: &str = "navigation.geodesic.vertex";
+    let vertex = |la1: f64, lo1: f64, la2: f64, lo2: f64| {
+        call(
+            V,
+            &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+        )
+    };
+    for (la1, lo1, la2, lo2) in [
+        (40.6413, -73.7781, 51.47, -0.4543),
+        (-33.9399, 151.1753, 37.6213, -122.379),
+        (51.5074, -0.1278, 35.6762, 139.6503),
+        (45.0, 0.0, 45.0, 90.0),
+    ] {
+        let r = vertex(la1, lo1, la2, lo2);
+        let (vlat, along) = (
+            num(&r, "result.vertex_lat.value"),
+            num(&r, "result.along.value"),
+        );
+        // A geodesic runs due east at its vertex. Walk there and read the
+        // azimuth: that is the definition, tested against the answer.
+        let az1 = num(
+            &call(
+                "navigation.geodesic.inverse",
+                &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+            ),
+            "result.azimuth1.value",
+        );
+        let at = |s: f64| {
+            call(
+                "navigation.geodesic.direct",
+                &format!(r#"{{"lat1":{la1},"lon1":{lo1},"azimuth":{az1},"distance":"{s} m"}}"#),
+            )
+        };
+        let there = at(along);
+        assert!(
+            (num(&there, "result.azimuth2.value") - 90.0).abs() < 1e-6,
+            "the azimuth at the vertex is {} not 90",
+            num(&there, "result.azimuth2.value")
+        );
+        // It is at least as far north as either end, and is a maximum: a
+        // little either side is lower.
+        assert!(
+            vlat >= la1.max(la2) - 1e-9,
+            "the vertex {vlat} is south of an endpoint"
+        );
+        for step in [-50_000.0, 50_000.0] {
+            assert!(
+                num(&at(along + step), "result.lat2.value") <= vlat + 1e-9,
+                "a point {step} m along is higher than the vertex"
+            );
+        }
+        // `within` agrees with where `along` falls.
+        let whole = geo_dist(la1, lo1, la2, lo2);
+        let inside = (0.0..=whole).contains(&along);
+        assert_eq!(
+            r["result"]["within"],
+            if inside { "yes" } else { "no" },
+            "within disagrees with along {along} against {whole}"
+        );
+    }
+    // Sydney to San Francisco has its vertex beyond the route, at a latitude
+    // neither end reaches.
+    let far = vertex(-33.9399, 151.1753, 37.6213, -122.379);
+    assert_eq!(far["result"]["within"], "no");
+    assert!(num(&far, "result.vertex_lat.value") > 37.6213);
+}
+
+#[test]
+fn intermediate_point_invariants() {
+    const I: &str = "navigation.geodesic.intermediate-point";
+    let at = |la1: f64, lo1: f64, la2: f64, lo2: f64, f: f64| {
+        call(
+            I,
+            &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2},"fraction":{f}}}"#),
+        )
+    };
+    let ell = |r: &Value| {
+        (
+            num(r, "result.ellipsoidal_lat.value"),
+            num(r, "result.ellipsoidal_lon.value"),
+        )
+    };
+    let (la1, lo1, la2, lo2) = (40.6413, -73.7781, 51.47, -0.4543);
+    // The endpoints are the endpoints, exactly.
+    assert!(
+        geo_dist(
+            la1,
+            lo1,
+            ell(&at(la1, lo1, la2, lo2, 0.0)).0,
+            ell(&at(la1, lo1, la2, lo2, 0.0)).1
+        ) < 1e-6
+    );
+    assert!(
+        geo_dist(
+            la2,
+            lo2,
+            ell(&at(la1, lo1, la2, lo2, 1.0)).0,
+            ell(&at(la1, lo1, la2, lo2, 1.0)).1
+        ) < 1e-6
+    );
+    // Halfway is where the midpoint tool puts it.
+    let (hlat, hlon) = ell(&at(la1, lo1, la2, lo2, 0.5));
+    let m = call(
+        "navigation.geodesic.midpoint",
+        &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+    );
+    assert!(
+        geo_dist(
+            hlat,
+            hlon,
+            num(&m, "result.lat.value"),
+            num(&m, "result.lon.value")
+        ) < 1e-3,
+        "halfway and the midpoint disagree"
+    );
+    // At fraction f the point is f of the way along, and the distance grows.
+    let whole = geo_dist(la1, lo1, la2, lo2);
+    let mut last = -1.0;
+    for f in [0.1, 0.25, 0.5, 0.75, 0.9] {
+        let (lat, lon) = ell(&at(la1, lo1, la2, lo2, f));
+        let d = geo_dist(la1, lo1, lat, lon);
+        assert!(d > last, "fraction {f} went backwards");
+        last = d;
+        assert!(
+            (d / whole - f).abs() < 1e-9,
+            "fraction {f} is {} of the way",
+            d / whole
+        );
+    }
+    // The spherical and ellipsoidal answers meet at the ends and part in the
+    // middle -- which is why both are reported.
+    let offset = |f: f64| num(&at(la1, lo1, la2, lo2, f), "result.offset.value");
+    assert!(offset(0.0).abs() < 1e-6 && offset(1.0).abs() < 1e-6);
+    assert!(
+        offset(0.5) > offset(0.1),
+        "the offset does not peak in the middle"
+    );
+    // On a short route the two agree closely; on this one they do not.
+    assert!(
+        offset(0.5) > 100.0,
+        "a transatlantic route parts by {} m",
+        offset(0.5)
+    );
+    let short = num(
+        &at(1.3521, 103.8198, 1.2897, 103.8501, 0.5),
+        "result.offset.value",
+    );
+    assert!(short < 1.0, "a 7 km route parts by {short} m");
+}
+
+#[test]
+fn range_rings_invariants() {
+    const R: &str = "navigation.route.range-rings";
+    let rings = |lat: f64, lon: f64, radii: &str, points: u32| {
+        call(
+            R,
+            &format!(r#"{{"lat":{lat},"lon":{lon},"radii":{radii},"points":{points}}}"#),
+        )
+    };
+    let r = rings(40.6413, -73.7781, r#"[{"radius":"100000.0 m"}]"#, 36);
+    assert_eq!(num(&r, "result.ring_count"), 1.0);
+    // The rings come back as one flat list of points, each tagged with which
+    // ring it belongs to.
+    let pts: Vec<&Value> = r["result"]["rings"]
+        .as_array()
+        .expect("rings")
+        .iter()
+        .filter(|p| p["part"] == 0)
+        .collect();
+    assert_eq!(pts.len(), 36, "asked for 36 points, got {}", pts.len());
+    // Every point is the requested distance from the centre. That is what the
+    // tool is for, and it is checked against the geodesic rather than trusted
+    // from how the ring was built.
+    for p in pts {
+        let (la, lo) = (
+            p["lat"]["value"].as_f64().expect("lat"),
+            p["lon"]["value"].as_f64().expect("lon"),
+        );
+        let d = geo_dist(40.6413, -73.7781, la, lo);
+        assert!(
+            (d - 100_000.0).abs() < 1e-3,
+            "a ring point is {d} m from the centre, not 100 km"
+        );
+    }
+    // Rings come back in the order given, with areas increasing.
+    let many = rings(
+        -33.8688,
+        151.2093,
+        r#"[{"radius":"50000.0 m"},{"radius":"100000.0 m"},{"radius":"200000.0 m"}]"#,
+        72,
+    );
+    assert_eq!(num(&many, "result.ring_count"), 3.0);
+    // `num` walks string keys, which cannot index a JSON array, so the
+    // summary rows are reached directly.
+    let area = |r: &Value, k: usize| {
+        r["result"]["summary"][k]["area"]["value"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("no area for ring {k}"))
+    };
+    assert!(
+        area(&many, 0) < area(&many, 1) && area(&many, 1) < area(&many, 2),
+        "areas do not grow"
+    );
+    // More points, larger area: the inscribed polygon approaches the circle
+    // from below.
+    let coarse = area(&rings(0.0, 0.0, r#"[{"radius":"1000000.0 m"}]"#, 12), 0);
+    let fine = area(&rings(0.0, 0.0, r#"[{"radius":"1000000.0 m"}]"#, 144), 0);
+    assert!(fine > coarse, "more points gave a smaller area");
+    // A ring that ENCLOSES the pole wraps the whole longitude circle; one
+    // that does not, does not. At 89 degrees north the pole is 111 km away,
+    // so a 100 km ring misses it and a 200 km ring takes it in. I asserted the
+    // 100 km ring wrapped, and it spans 127 degrees.
+    let near = rings(89.0, 0.0, r#"[{"radius":"100000.0 m"}]"#, 72);
+    let near_lons: Vec<f64> = near["result"]["rings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|p| p["part"] == 0)
+        .map(|p| p["lon"]["value"].as_f64().unwrap())
+        .collect();
+    let near_span = near_lons.iter().cloned().fold(f64::MIN, f64::max)
+        - near_lons.iter().cloned().fold(f64::MAX, f64::min);
+    assert!(
+        near_span < 200.0,
+        "a ring short of the pole spans {near_span} degrees"
+    );
+    let polar = rings(89.0, 0.0, r#"[{"radius":"200000.0 m"}]"#, 72);
+    let lons: Vec<f64> = polar["result"]["rings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|p| p["part"] == 0)
+        .map(|p| p["lon"]["value"].as_f64().unwrap())
+        .collect();
+    let span = lons.iter().cloned().fold(f64::MIN, f64::max)
+        - lons.iter().cloned().fold(f64::MAX, f64::min);
+    assert!(span > 300.0, "a polar ring spans only {span} degrees");
+}

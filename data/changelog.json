@@ -5,6 +5,17 @@
       "date": "2026-09-23",
       "kind": "result-change",
       "tools": [
+        "navigation.route.range-rings"
+      ],
+      "vectors": [
+        "navigation.route.range-rings v008"
+      ],
+      "summary": "Promoting this tool to stable removed EXPERIMENTAL_TOOL from its warnings, which moved POLE_ENCLOSED from index 1 to index 0 and broke v008, which pinned the index. Nothing computed changed. v008 is superseded by v018, which names the warning by its code with the meta.warnings.*.code form the runner supports, so no warning sorting above it can shift it again -- the same fix time.scale.gps-week v007 took."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "result-change",
+      "tools": [
         "time.scale.gps-week"
       ],
       "vectors": [

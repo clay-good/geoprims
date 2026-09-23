@@ -9,7 +9,9 @@ use gp_base::angle::{wrap_azimuth, wrap_lon};
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Limitation, Precision, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Limitation, Precision, Related, Stability, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_geo::point;
 use libm::{asin, atan2, cos, sin, sqrt};
@@ -407,7 +409,10 @@ pub static INTERMEDIATE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::NoSolution, ErrorCode::InvalidInput],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this for a point a given fraction of the way along a route -- a waypoint every tenth, a reporting point, a place to draw a label. It returns both the spherical answer most code produces and the ellipsoidal one that is actually right, with the distance between them, so you can see what the approximation costs on this route.",
+    limitations: "The two answers differ, and on a long route they differ by kilometres: the spherical one is exact on a sphere and the Earth is not one. Use the ellipsoidal pair unless you are reproducing someone else's spherical figure. Antipodal points have no unique path between them -- every great circle joins them -- so there is no intermediate point to give. And a fraction of the distance is not a fraction of the flight time, which depends on the wind.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Spherical linear interpolation of the unit vectors: A = sin((1 − f)δ) ÷ sin δ, B = sin(fδ) ÷ sin δ, p = A·p₁ + B·p₂, with δ the central angle; the ellipsoidal point is f × s12 along the Karney geodesic on WGS 84",
     accuracy: "Exact on the sphere; the offset shows the approximation. Undefined for antipodal points, where every great circle joins them",
     references: &[KARNEY],
@@ -430,6 +435,10 @@ pub static INTERMEDIATE: ToolDef = ToolDef {
         Related {
             id: "navigation.geodesic.spherical-inverse",
             reason: "parent",
+        },
+        Related {
+            id: "navigation.geodesic.direct",
+            reason: "alternative",
         },
     ],
     limitation: Some(SPHERE_LIMITATION),

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "14e0670d45d08e9b",
+    "hash": "8ce5bf0a14e23ad3",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "a34849002073d97f",
+    "hash": "4948176985845013",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -96,7 +96,7 @@
     "lastmod": "2026-09-22"
   },
   "/changelog/": {
-    "hash": "fb24111e8a544eb9",
+    "hash": "d62374a01d7c4c64",
     "lastmod": "2026-09-23"
   },
   "/disclaimer/": {
@@ -656,7 +656,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "f832989681e24943",
+    "hash": "d4054ae94056bae5",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -675,6 +675,10 @@
     "hash": "6f55d8b034c7822b",
     "lastmod": "2026-09-22"
   },
+  "/navigation/geodesic/intermediate-point/": {
+    "hash": "8cd2b6c03ec7977d",
+    "lastmod": "2026-09-23"
+  },
   "/navigation/geodesic/intersection/": {
     "hash": "b660becd9f535569",
     "lastmod": "2026-09-23"
@@ -682,6 +686,14 @@
   "/navigation/geodesic/inverse/": {
     "hash": "82cf091ff087b8dc",
     "lastmod": "2026-09-22"
+  },
+  "/navigation/geodesic/midpoint/": {
+    "hash": "47c8d4340417f563",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/geodesic/vertex/": {
+    "hash": "e528d4d2f77f4008",
+    "lastmod": "2026-09-23"
   },
   "/navigation/geodesic/waypoints/": {
     "hash": "2b778135de8c92c7",
@@ -743,6 +755,10 @@
     "hash": "bbf90d857b9095ee",
     "lastmod": "2026-09-23"
   },
+  "/navigation/route/range-rings/": {
+    "hash": "f39300afb0d2e492",
+    "lastmod": "2026-09-23"
+  },
   "/navigation/route/time-speed-distance/": {
     "hash": "94debcca2f864925",
     "lastmod": "2026-09-22"
@@ -756,7 +772,7 @@
     "lastmod": "2026-09-20"
   },
   "/quality/": {
-    "hash": "4602473e7dcd043c",
+    "hash": "3f8ef3efd3203f4a",
     "lastmod": "2026-09-23"
   },
   "/raster/": {
@@ -896,7 +912,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "626c66a3c8220cf6",
+    "hash": "8d8c3e38b52f229b",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1084,7 +1100,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "43d154721be25a27",
+    "hash": "442dfc1807b4b4b8",
     "lastmod": "2026-09-23"
   }
 }

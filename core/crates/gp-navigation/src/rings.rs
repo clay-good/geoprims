@@ -6,7 +6,9 @@
 use geographiclib_rs::{DirectGeodesic, Geodesic, PolygonArea, Winding};
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::buffer::disk_sides;
 use gp_geo::point;
@@ -206,12 +208,14 @@ pub static RANGE_RINGS: ToolDef = ToolDef {
         ),
     ],
     errors: &[gp_base::ErrorCode::OutOfDomain],
+    stability: Stability::Stable,
+    when_to_use: "Use this to draw circles of true ground distance around a point -- a fuel radius, a radio horizon, a search area, a buffer zone -- as GeoJSON you can put straight on a map. Every vertex is exactly the distance you asked for, at any latitude.",
+    limitations: "A ring of constant ground distance is not a circle on a map, and drawing one as a map circle is the error this replaces: at high latitude the two are wildly different. The ring is a polygon, so the boundary between vertices is a chord rather than an arc, sagging 0.024% of the radius below the true circle at the default point count and giving an area slightly under the true one; more points reduce it as one over n squared. A ring that encloses a pole or crosses the antimeridian says so in a warning, because both need care in whatever draws them next.",
     warnings: &[
         "POLE_ENCLOSED",
         "CROSSES_ANTIMERIDIAN",
         "UNIT_ASSUMED",
         "INPUT_NORMALIZED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Each ring's points by the geodesic direct problem at equal azimuth steps from the center (Karney 2013), counterclockwise; area by Karney's geodesic polygon area. The GeoJSON splits a ring that crosses the antimeridian into a MultiPolygon, and turns a ring around a pole into a polygon that runs along ±180° to the pole, as RFC 7946 §3.1.9 asks",
     accuracy: "Points exact to the geodesic; with the default count each chord sags under 0.025% of the radius (or 0.125 m), inside the 0.1% canvas rule",
@@ -235,6 +239,10 @@ pub static RANGE_RINGS: ToolDef = ToolDef {
         Related {
             id: "navigation.route.legs",
             reason: "next",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "alternative",
         },
     ],
     sentence: "Drew {ring_count} {plural ring_count \"ring\" \"rings\"} around the point, each true on the ellipsoid.",

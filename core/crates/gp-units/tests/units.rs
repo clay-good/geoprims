@@ -868,3 +868,45 @@ fn time_invariants() {
         assert_eq!(conv(T, conv(T, 7.0, "s", u), u, "s"), 7.0, "s->{u}->s");
     }
 }
+
+/// Every unit a converter offers is reachable by a vector, in both directions.
+///
+/// A sample of pairs catches a factor that is wrong everywhere. It does not
+/// catch one unit's factor being wrong, which is the mistake that actually
+/// happens: fifteen units were offered by the enum and used by no vector at
+/// all, on four converters already past the stable bar. This is the ratchet --
+/// a unit added to the registry without vectors fails here, by name.
+#[test]
+fn every_unit_pair_has_a_vector() {
+    let mut failures = Vec::new();
+    for t in TOOLS {
+        let Some(f) = t.inputs.iter().find(|f| f.name == "to") else {
+            continue;
+        };
+        let gp_base::tool::Kind::Unit(q) = f.kind else {
+            continue;
+        };
+        if !t.id.ends_with(".convert") || !t.preset.is_empty() {
+            continue;
+        }
+        let text = repo(&format!("core/vectors/{}.jsonl", t.id));
+        let mut seen = Vec::new();
+        for line in text.lines().filter(|l| !l.trim().is_empty()) {
+            let v: Value = serde_json::from_str(line).expect("vector is JSON");
+            let value = v["input"]["value"].as_str().unwrap_or_default();
+            let (_, from) = value.split_once(' ').unwrap_or_default();
+            if let Some(to) = v["input"]["to"].as_str() {
+                seen.push((from.to_owned(), to.to_owned()));
+            }
+        }
+        let units: Vec<&str> = gp_base::units::units_of(q).map(|u| u.symbol).collect();
+        for a in &units {
+            for b in &units {
+                if a != b && !seen.iter().any(|(x, y)| x == a && y == b) {
+                    failures.push(format!("{}: no vector converts {a} to {b}", t.id));
+                }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}

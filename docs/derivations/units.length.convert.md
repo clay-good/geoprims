@@ -34,10 +34,10 @@ None in the definitions, which are exact integers or exact ratios. The only inex
 - sourceEdition: SP 811, 2008 edition, Appendix B.8
 - sourceLocator: foot = 0.3048 m exactly; US survey foot = 1200/3937 m; nautical mile = 1852 m
 - independent: yes
-- inputs: 22 conversions, including 5,280 ft to m, 1,000,000 ftUS to m against 1,000,000 ft to m, and every ordered pair of the twelve units
+- inputs: 135 conversions, including 5,280 ft to m, 1,000,000 ftUS to m against 1,000,000 ft to m, and every ordered pair of the twelve units
 - outputs: the converted value in each case
 - tolerance: 5e-16 relative, which is at most two roundings of an exact ratio
-- verifiedBy: golden vectors v001 to v022, run by the core on every build
+- verifiedBy: golden vectors v001 to v135, run by the core on every build
 - verifiedOn: 2026-09-23
 
 The expected values do not come from another converter. `tools/vectors/gen_units.py` restates each unit from the published definition and does the arithmetic in exact rational fractions — Python's `Fraction`, not floating point — rounding to binary64 only at the very end. So the reference has no rounding error of its own to hide behind, and the tolerance is set by what one correctly rounded ratio costs rather than by what two libraries happen to agree on.
@@ -48,9 +48,9 @@ A cross-check against `pint` during this work disagreed on nothing here, but did
 
 ## Differential tests
 
-- `tools/vectors/gen_units.py`: all 22 vectors, from exact definitions in rational arithmetic
+- `tools/vectors/gen_units.py`, `gen_units_gaps.py` and `gen_units_pairs.py`: all 135 vectors, from exact definitions in rational arithmetic
 - `core/crates/gp-units/tests/units.rs`: the catalog lint, the examples, and the vectors, run on every build
-- `core/vectors/units.length.convert.jsonl`: 22 vectors, nine hand-picked and thirteen from a sweep of every ordered pair
+- `core/vectors/units.length.convert.jsonl`: 135 vectors, the hand-picked cases and every ordered pair of the units, in both directions
 
 ## Invariants
 

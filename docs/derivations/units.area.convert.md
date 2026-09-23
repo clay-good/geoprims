@@ -34,10 +34,10 @@ None in the definitions, which are exact rational squares. The single final roun
 - sourceEdition: SP 811, 2008 edition, Appendix B.8
 - sourceLocator: acre = 43 560 ft²; the US survey foot as 1200/3937 m
 - independent: yes
-- inputs: 22 conversions, including 1 acre to square feet, 40 acres to hectares, 1 square mile to acres, and every ordered pair of the units
+- inputs: 75 conversions, including 1 acre to square feet, 40 acres to hectares, 1 square mile to acres, and every ordered pair of the units
 - outputs: the converted value in each case
 - tolerance: 5e-16 relative, at most two roundings of an exact ratio
-- verifiedBy: golden vectors v001 to v022, run by the core on every build
+- verifiedBy: golden vectors v001 to v075, run by the core on every build
 - verifiedOn: 2026-09-23
 
 The expected values come from `tools/vectors/gen_units.py`, which restates each unit from its published definition and converts in exact rational arithmetic — Python `Fraction`, not floating point — rounding to binary64 once at the end. The reference therefore has no rounding error of its own, and the tolerance is set by what one correctly rounded ratio costs rather than by what two libraries happen to agree on.
@@ -46,9 +46,9 @@ A cross-check against `pint` disagreed here by four parts per million and the ca
 
 ## Differential tests
 
-- `tools/vectors/gen_units.py`: all 22 vectors, from the exact definitions in rational arithmetic
+- `tools/vectors/gen_units.py`, `gen_units_gaps.py` and `gen_units_pairs.py`: all 75 vectors, from the exact definitions in rational arithmetic
 - `core/crates/gp-units/tests/units.rs`: the catalog lint, the examples, and the vectors, on every build
-- `core/vectors/units.area.convert.jsonl`: 22 vectors, the hand-picked cases and a sweep of every ordered pair
+- `core/vectors/units.area.convert.jsonl`: 75 vectors, the hand-picked cases and every ordered pair of the units, in both directions
 
 ## Invariants
 

@@ -33,10 +33,10 @@ None in the definitions, which are exact integers or exact rational products. Th
 - sourceEdition: 2008 edition, Appendix B.8
 - sourceLocator: inch of mercury (conventional) = 3.386 389 E+03 Pa; millimetre of mercury (conventional) = 1.333 224 E+02 Pa; standard atmosphere = 1.013 25 E+05 Pa
 - independent: yes
-- inputs: 22 conversions, including 29.92 inHg to hPa, 1013.25 hPa to inHg, 1 psi to Pa, 760 mmHg to hPa, and every ordered pair of the nine units
+- inputs: 73 conversions, including 29.92 inHg to hPa, 1013.25 hPa to inHg, 1 psi to Pa, 760 mmHg to hPa, and every ordered pair of the nine units
 - outputs: the converted pressure in each case
 - tolerance: 5e-16 relative
-- verifiedBy: golden vectors v001 to v022, run by the core on every build
+- verifiedBy: golden vectors v001 to v073, run by the core on every build
 - verifiedOn: 2026-09-23
 
 `tools/vectors/gen_units.py` carries each unit as an exact `Fraction` of a pascal — including psi, built up from the pound and standard gravity as fractions rather than as a decimal — and converts in rational arithmetic, rounding once.
@@ -47,9 +47,9 @@ One detail the vectors make visible: 29.92 inHg is 1013.2076 hPa, not 1013.25. T
 
 ## Differential tests
 
-- `tools/vectors/gen_units.py`: all 22 vectors, from exact definitions in rational arithmetic
+- `tools/vectors/gen_units.py`, `gen_units_gaps.py` and `gen_units_pairs.py`: all 73 vectors, from exact definitions in rational arithmetic
 - `core/crates/gp-units/tests/units.rs`: the catalog lint, the examples, and the vectors, on every build
-- `core/vectors/units.pressure.convert.jsonl`: 22 vectors, seven hand-picked and the rest from a sweep of every ordered pair
+- `core/vectors/units.pressure.convert.jsonl`: 73 vectors, the hand-picked cases and every ordered pair of the units, in both directions
 
 ## Invariants
 

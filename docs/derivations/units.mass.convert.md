@@ -33,10 +33,10 @@ None. The definitions are exact decimals and the only inexactness is the single 
 - sourceEdition: SP 811, 2008 edition, Appendix B.8
 - sourceLocator: pound (avoirdupois) = 0.453 592 37 kg exactly; ounce = 1/16 lb
 - independent: yes
-- inputs: 22 conversions, including 2,550 lb to kg, 16 oz to lb, 1 t to lb, and every ordered pair of the five units
+- inputs: 24 conversions, including 2,550 lb to kg, 16 oz to lb, 1 t to lb, and every ordered pair of the five units
 - outputs: the converted value in each case
 - tolerance: 5e-16 relative, at most two roundings of an exact ratio
-- verifiedBy: golden vectors v001 to v022, run by the core on every build
+- verifiedBy: golden vectors v001 to v024, run by the core on every build
 - verifiedOn: 2026-09-23
 
 The expected values come from `tools/vectors/gen_units.py`, which restates each unit from its published definition and converts in exact rational arithmetic — Python `Fraction`, not floating point — rounding to binary64 once at the end. The reference therefore has no rounding error of its own, and the tolerance is set by what one correctly rounded ratio costs rather than by what two libraries happen to agree on.
@@ -45,9 +45,9 @@ The pound of mass is the one the pressure converter uses to build psi, and the t
 
 ## Differential tests
 
-- `tools/vectors/gen_units.py`: all 22 vectors, from the exact definitions in rational arithmetic
+- `tools/vectors/gen_units.py`, `gen_units_gaps.py` and `gen_units_pairs.py`: all 24 vectors, from the exact definitions in rational arithmetic
 - `core/crates/gp-units/tests/units.rs`: the catalog lint, the examples, and the vectors, on every build
-- `core/vectors/units.mass.convert.jsonl`: 22 vectors, the hand-picked cases and a sweep of every ordered pair
+- `core/vectors/units.mass.convert.jsonl`: 24 vectors, the hand-picked cases and every ordered pair of the units, in both directions
 
 ## Invariants
 

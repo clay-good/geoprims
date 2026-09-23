@@ -34,10 +34,10 @@ None in the definitions, which are exact rational products. The single final rou
 - sourceEdition: SP 811, 2008 edition, Appendix B.8
 - sourceLocator: gallon (US) = 231 in³; gallon (imperial, UK) = 4.546 09 L
 - independent: yes
-- inputs: 22 conversions, including 50 US gallons to litres, 1 imperial gallon to US gallons, 27 cubic feet to cubic yards, and every ordered pair of the seven units
+- inputs: 45 conversions, including 50 US gallons to litres, 1 imperial gallon to US gallons, 27 cubic feet to cubic yards, and every ordered pair of the seven units
 - outputs: the converted value in each case
 - tolerance: 5e-16 relative, at most two roundings of an exact ratio
-- verifiedBy: golden vectors v001 to v022, run by the core on every build
+- verifiedBy: golden vectors v001 to v045, run by the core on every build
 - verifiedOn: 2026-09-23
 
 The expected values come from `tools/vectors/gen_units.py`, which restates each unit from its published definition and converts in exact rational arithmetic — Python `Fraction`, not floating point — rounding to binary64 once at the end. The reference therefore has no rounding error of its own, and the tolerance is set by what one correctly rounded ratio costs rather than by what two libraries happen to agree on.
@@ -46,9 +46,9 @@ One imperial gallon is 1.2009499255 US gallons. A tank filled to a number read i
 
 ## Differential tests
 
-- `tools/vectors/gen_units.py`: all 22 vectors, from the exact definitions in rational arithmetic
+- `tools/vectors/gen_units.py`, `gen_units_gaps.py` and `gen_units_pairs.py`: all 45 vectors, from the exact definitions in rational arithmetic
 - `core/crates/gp-units/tests/units.rs`: the catalog lint, the examples, and the vectors, on every build
-- `core/vectors/units.volume.convert.jsonl`: 22 vectors, the hand-picked cases and a sweep of every ordered pair
+- `core/vectors/units.volume.convert.jsonl`: 45 vectors, the hand-picked cases and every ordered pair of the units, in both directions
 
 ## Invariants
 

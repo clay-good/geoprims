@@ -33,10 +33,10 @@ The exact units convert through exact ratios with one rounding. Radians and mill
 - sourceEdition: 2008 edition, Appendix B.8
 - sourceLocator: degree = (π/180) rad; minute = (1/60)°; second = (1/60)′; gon (grade) = (π/200) rad
 - independent: yes
-- inputs: 22 conversions, including 1,600 NATO mils to degrees, 100 gon to degrees, 180° to radians, and every ordered pair of the eleven units
+- inputs: 110 conversions, including 1,600 NATO mils to degrees, 100 gon to degrees, 180° to radians, and every ordered pair of the eleven units
 - outputs: the converted angle in each case
 - tolerance: 5e-16 relative for the exact units, 2e-15 where π is involved
-- verifiedBy: golden vectors v001 to v022, run by the core on every build
+- verifiedBy: golden vectors v001 to v110, run by the core on every build
 - verifiedOn: 2026-09-23
 
 `tools/vectors/gen_units.py` holds each unit as an exact `Fraction` of a degree and converts in rational arithmetic, rounding once at the end. The units involving π are kept in a separate table and computed with `math.pi`, and they are the only ones that get the looser tolerance — which is why the two tolerances exist rather than one loose one covering both.
@@ -45,9 +45,9 @@ The mils are the reason this tool is worth a note. All three convert a full turn
 
 ## Differential tests
 
-- `tools/vectors/gen_units.py`: all 22 vectors, from exact fractions of a turn in rational arithmetic
+- `tools/vectors/gen_units.py`, `gen_units_gaps.py` and `gen_units_pairs.py`: all 110 vectors, from exact fractions of a turn in rational arithmetic
 - `core/crates/gp-units/tests/units.rs`: the catalog lint, the examples, and the vectors, on every build
-- `core/vectors/units.angle.convert.jsonl`: 22 vectors, eight hand-picked and the rest from a sweep of every ordered pair
+- `core/vectors/units.angle.convert.jsonl`: 110 vectors, the hand-picked cases and every ordered pair of the units, in both directions
 
 ## Invariants
 

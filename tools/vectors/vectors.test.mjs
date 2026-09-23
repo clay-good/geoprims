@@ -13,9 +13,15 @@ import assert from 'node:assert/strict';
 const root = new URL('../..', import.meta.url).pathname;
 const dir = join(root, 'core/vectors');
 
+// The units files are built by three generators in order: gen_units.py writes
+// the hand-picked cases and a sweep, then gen_units_gaps.py and
+// gen_units_pairs.py append the pairs it did not reach. Reproducibility is the
+// whole chain, run in that order, not the first script alone.
 test('units vectors are reproducible from tools/vectors/gen_units.py', () => {
   const out = mkdtempSync(join(tmpdir(), 'gp-vectors-'));
-  execFileSync('python3', [join(root, 'tools/vectors/gen_units.py'), out]);
+  for (const gen of ['gen_units.py', 'gen_units_gaps.py', 'gen_units_pairs.py']) {
+    execFileSync('python3', [join(root, 'tools/vectors', gen), out]);
+  }
   for (const f of readdirSync(out)) {
     assert.equal(readFileSync(join(out, f), 'utf8'), readFileSync(join(dir, f), 'utf8'), `${f} differs from its generator`);
   }

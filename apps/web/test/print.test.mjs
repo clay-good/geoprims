@@ -45,7 +45,6 @@ test('a sheet printed from an example still says it is an example', () => {
   // The example chip is the only thing standing between a printed sheet and a
   // reader taking prefilled values for their own.
   assert.ok(!hidden('.chip'), 'the example chip is hidden from the sheet');
-  assert.ok(hidden('.chip.offline'), 'the offline chip is printed');
 });
 
 test('the sheet fits a page', () => {

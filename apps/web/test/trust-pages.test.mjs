@@ -45,8 +45,8 @@ test('the changelog shows every entry, labels result changes, and tool pages lin
   const sun = page('time/sun/position');
   assert.match(sun, /NREL Solar Position Algorithm/);
   assert.ok(sun.includes(`/verification/${v}/#time.sun.position`));
-  const footer = page('');
-  assert.ok(footer.includes('href="/changelog/"') && footer.includes(`href="/verification/${v}/"`));
+  const da = page('aviation/altimetry/density-altitude');
+  assert.ok(da.includes('href="/changelog/"') && da.includes(`href="/verification/${v}/#aviation.altimetry.density-altitude"`));
 });
 
 test('the "Use with agents" page shows every client snippet and the toolsets', async () => {
@@ -94,7 +94,7 @@ test('the licenses page lists every registered dataset with its attribution', ()
 });
 
 test('every page links privacy and licenses in its footer', () => {
-  for (const route of ['/', '/tools/', '/aviation/', '/aviation/altimetry/density-altitude/', '/settings/']) {
+  for (const route of ['/', '/tools/', '/aviation/', '/aviation/altimetry/density-altitude/', '/security/']) {
     const html = page(route);
     assert.match(html, /<a href="\/privacy\/">Privacy<\/a>/, `${route} does not link privacy`);
     assert.match(html, /<a href="\/licenses\/">Licenses<\/a>/, `${route} does not link licenses`);
@@ -108,7 +108,7 @@ test('the accuracy policy explains the limits and every built page links all thr
   }
   for (const file of readdirSync(dist, { recursive: true }).filter((name) => name.endsWith('.html'))) {
     const html = readFileSync(join(dist, file), 'utf8');
-    for (const route of ['/disclaimer/', '/privacy/', '/accuracy/']) {
+    for (const route of ['/disclaimer/', '/privacy/', '/accuracy/', '/security/']) {
       assert.ok(html.includes(`href="${route}"`), `${file} has no footer link to ${route}`);
     }
   }

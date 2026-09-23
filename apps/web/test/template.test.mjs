@@ -93,16 +93,30 @@ test('the site header holds the mark and title, search, the night toggle, the so
   }
 });
 
-test('the footer carries the site links and the palette', () => {
+test('the footer carries the site links', () => {
   for (const f of htmlFiles(dist)) {
     const name = f.slice(dist.length);
     const footer = /<footer class="site">([\s\S]*?)<\/footer>/.exec(readFileSync(f, 'utf8'))?.[1];
     assert.ok(footer, `${name} has a site footer`);
     const nav = /<nav aria-label="Site">([\s\S]*?)<\/nav>/.exec(footer)?.[1];
     assert.ok(nav, `${name} footer nav`);
-    for (const href of ['/tools/', '/units/', '/agents/', '/settings/', 'https://github.com/clay-good/geoprims']) {
+    for (const href of ['/tools/', '/units/', '/agents/', 'https://github.com/clay-good/geoprims', '/privacy/', '/security/', '/accuracy/', '/disclaimer/', '/licenses/']) {
       assert.ok(nav.includes(`href="${href}"`), `${name} footer link ${href}`);
     }
-    assert.match(nav, /class="palette-open"/, `${name} footer search`);
   }
 });
+
+// Astro drops the space when a line of text ends and the next line opens a
+// tag, which printed "device.Privacy" in every footer. Write {' '} at the end
+// of such a line.
+test('no word runs straight into a link or emphasis', () => {
+  const glued = [];
+  for (const f of htmlFiles(dist)) {
+    const html = readFileSync(f, 'utf8').replace(/<(script|style|svg|pre|code)\b[^>]*>[\s\S]*?<\/\1>/g, '');
+    for (const m of html.matchAll(/([A-Za-z]{2}[.,;:]?|·)<(a|strong|em|abbr|kbd)\b[^>]*>([^<]{0,20})|<\/(a|strong|em|abbr|kbd)>([A-Za-z]{2}[^<]{0,10})/g)) {
+      glued.push(`${f.slice(dist.length)}: ${m[0].replace(/<[^>]*>/g, '|')}`);
+    }
+  }
+  assert.deepEqual(glued, []);
+});
+

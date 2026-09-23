@@ -39,7 +39,7 @@ test('the shortcut sheet lists every shortcut, and the palette offers actions', 
   const keys = SHORTCUTS.map(([k]) => k).join(' ');
   for (const k of ['/', 'Ctrl+K', '?', 'g then h', 'Esc', 'Enter', '>']) assert.ok(keys.includes(k), k);
   const src = readFileSync(join(new URL('..', import.meta.url).pathname, 'src/lib/palette.js'), 'utf8');
-  for (const a of ['Display: ', 'Erase all local data', 'Turn single-key shortcuts', 'Show keyboard shortcuts']) assert.ok(src.includes(a), a);
+  for (const a of ['Display: ', 'Turn single-key shortcuts', 'Show keyboard shortcuts']) assert.ok(src.includes(a), a);
 });
 
 test('page shortcuts: c, y, l, s, p, [, and ] map to their actions, and each can say why it did nothing', async () => {

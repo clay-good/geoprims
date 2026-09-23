@@ -1,11 +1,10 @@
 ---
 import '../styles/global.css';
-import { catalog } from '../lib/catalog.mjs';
 import { capTitle, description as capDescription } from '../lib/head.mjs';
 import { icon } from '../lib/icons.mjs';
-interface Props { title: string; description: string; canonical: string; noindex?: boolean; jsonld?: object[] }
+interface Props { title: string; description: string; canonical: string; noindex?: boolean; jsonld?: object[]; og?: { eyebrow?: string; title?: string; answer?: string; caption?: string } }
 const props = Astro.props;
-const { canonical, noindex = false, jsonld = [] } = props;
+const { canonical, noindex = false, jsonld = [], og = {} } = props;
 // Every page's head goes through one module, so the caps and the wording
 // rules hold whatever a template passes (discovery/search-pages).
 const title = capTitle(props.title);
@@ -13,6 +12,13 @@ const description = capDescription(props.description);
 // JSON-LD with < escaped so no string can close the script element (search-pages "Structured data allowlist").
 const ld = jsonld.map((o) => JSON.stringify(o).replaceAll('<', '\\u003c'));
 const canonicalUrl = new URL(canonical, Astro.site).href;
+// Every page gets a share card rendered after the build by scripts/og.mjs
+// (search-pages, "Open Graph images"). The data-og-* words are for that
+// script, which strips them from what ships.
+const canonicalPath = new URL(canonicalUrl).pathname;
+const ogImage = new URL(`/og${canonicalPath === '/' ? '/home' : canonicalPath.replace(/\/$/, '')}.jpg`, Astro.site).href;
+const ogTitle = og.title ?? title.replace(/ · geoprims$/, '');
+const ogAlt = [ogTitle, og.answer].filter(Boolean).join(': ');
 ---
 <!doctype html>
 <html lang="en">
@@ -27,6 +33,16 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="geoprims" />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} data-og-eyebrow={og.eyebrow} data-og-title={og.title} data-og-answer={og.answer} data-og-caption={og.caption} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="referrer" content="no-referrer" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
@@ -65,26 +81,17 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
     </header>
     <main class="wrap"><slot /></main>
     <footer class="site">
-      <div class="wrap">
-        <nav aria-label="Site">
-          <button type="button" class="palette-open" aria-keyshortcuts="/ Control+K Meta+K">Search tools <kbd aria-hidden="true">/</kbd></button>
-          <a href="/tools/">All tools</a>
-          <a href="/units/">Units</a>
-          <a href="/agents/">Agents</a>
-          <a href="/settings/">Settings</a>
-          <a href="https://github.com/clay-good/geoprims">Source</a>
-        </nav>
-        <p>
-          geoprims tools are planning, engineering, and education aids. They are not certified for navigation and are not legal
-          survey determinations. Verify operational values against official sources. <a href="/disclaimer/">Full disclaimer</a>
-        </p>
-        <p>
-          Free, no ads, no tracking. Your inputs never leave your device.
-          <a href="/privacy/">Privacy</a> · <a href="/accuracy/">Accuracy policy</a> · <a href="/licenses/">Licenses</a> ·
-          <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">Wrong answer?</a>
-        </p>
-        <p class="version"><span class="chip offline" data-offline hidden></span>Version <span data-app-version>__GP_APP_VERSION__</span> · core {catalog.coreVersion} · <a href="/changelog/">changelog</a> · <a href={`/verification/${catalog.coreVersion}/`}>verification report</a> · <a href="/methodology/">how results are checked</a> · <a href="/agents/">use with agents</a></p>
-      </div>
+      <div class="wrap"><nav aria-label="Site">
+        <a href="/tools/">All tools</a>
+        <a href="/units/">Units</a>
+        <a href="/agents/">Agents</a>
+        <a href="https://github.com/clay-good/geoprims">Source</a>
+        <a href="/privacy/">Privacy</a>
+        <a href="/security/">Security</a>
+        <a href="/accuracy/">Accuracy</a>
+        <a href="/disclaimer/">Disclaimer</a>
+        <a href="/licenses/">Licenses</a>
+      </nav></div>
     </footer>
     <div class="update card" role="status" hidden>
       <p>A new version is ready. Your results stay as they are until you reload.</p>
@@ -95,10 +102,9 @@ const canonicalUrl = new URL(canonical, Astro.site).href;
       import { wireKeys } from '../lib/keys.js';
       import { registerOffline } from '../lib/pwa.js';
       wireTheme(document.querySelector('[data-theme-toggle]'));
-      registerOffline(document.querySelector('.update'), document.querySelector('[data-offline]'));
+      registerOffline(document.querySelector('.update'), null);
       // The palette loads on first use: `/` outside text fields, or Ctrl/Cmd+K anywhere.
       const palette = (query) => import('../lib/palette.js').then((m) => m.openPalette(query));
-      document.querySelector('.palette-open').addEventListener('click', () => palette());
       // Any [data-palette] control opens the palette with its value as the query.
       document.addEventListener('click', (e) => {
         const el = e.target instanceof Element && e.target.closest('[data-palette]');

@@ -1,0 +1,55 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+---
+<Base title="Security · geoprims" description="How to report a security problem in geoprims privately, what is in scope, and what the design already rules out: no accounts, no cookies, and no server-side calculation." canonical="/security/">
+  <PageHeader title="Security" purpose="Found a way to break it? Tell us privately and we will fix it." />
+
+  <h2>Report a vulnerability</h2>
+  <p>
+    Open a private advisory at{' '}
+    <a href="https://github.com/clay-good/geoprims/security/advisories/new">github.com/clay-good/geoprims/security/advisories/new</a>.
+    Please do not open a public issue for a vulnerability. You should get a first reply within seven days.
+  </p>
+  <p>
+    Say what you found, how to reproduce it, and what an attacker could do with it. For the website, the page link is
+    usually enough to reproduce it: the part after <code>#</code> holds every input.
+  </p>
+
+  <h2>What is in scope</h2>
+  <table>
+    <thead><tr><th scope="col">Area</th><th scope="col">What matters</th></tr></thead>
+    <tbody>
+      <tr><td>The website</td><td>Anything that gets script or style past the content security policy, reads another site's data, or sends your inputs anywhere</td></tr>
+      <tr><td>The calculators</td><td>Memory safety in the WebAssembly modules, and any input that makes a module crash or hang instead of returning an error</td></tr>
+      <tr><td>The MCP server</td><td>Anything that makes it open a network connection, read outside its own folder, or run its input as code</td></tr>
+      <tr><td>Problem reports</td><td>Anything that stores a reporter's address, gets past the bot check or the limits, or reads another report</td></tr>
+      <tr><td>Releases</td><td>A build that does not reproduce, or a file whose published SHA-256 does not match</td></tr>
+    </tbody>
+  </table>
+  <p>
+    A wrong answer is not a vulnerability. Use "Report a problem" on the tool instead, or the{' '}
+    <a href="https://github.com/clay-good/geoprims/issues/new?template=wrong-answer.yml">wrong-answer form</a>.
+  </p>
+
+  <h2>What is not in scope</h2>
+  <ul>
+    <li>Reports from automated scanners with no demonstrated impact.</li>
+    <li>Missing headers on files that serve no data, or no rate limit on static files.</li>
+    <li>Anything that needs a compromised device, a malicious browser extension, or physical access.</li>
+    <li>Social engineering, and denial of service by sheer volume.</li>
+  </ul>
+
+  <h2>What the design already rules out</h2>
+  <p>
+    There are no accounts, no sessions, no cookies, and no calculation on a server. Every tool runs in your own
+    browser, so there is no stored user data to reach. The only server code handles problem reports, stores no
+    address, and answers every accepted request the same way. See <a href="/privacy/">Privacy</a> for the details.
+  </p>
+
+  <h2>Supported versions</h2>
+  <p>
+    The current release. Fixes ship in the next release, and a security fix is labeled in the{' '}
+    <a href="/changelog/">changelog</a>.
+  </p>
+</Base>

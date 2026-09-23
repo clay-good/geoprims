@@ -83,7 +83,7 @@
    aid, and everything that only exists on screen goes. */
 @media print {
   header.site, footer.site nav, .crumbs, .actions, .answer-bar, .steps, .entry .sign,
-  .update, .palette-open, details.dev, .chip.offline, .copy-row .copied { display: none !important; }
+  .update, details.dev, .copy-row .copied { display: none !important; }
   main { padding-block-end: 0; }
   .tool-grid { display: block; }
   .card { border: 1px solid var(--line); break-inside: avoid; box-shadow: none; }
@@ -181,8 +181,10 @@ main { padding-block: 1.75rem 4rem; }
   .tool-grid .inputs { grid-column: 1; grid-row: 1; }
   .tool-grid .answer { grid-column: 2; grid-row: 1; position: sticky; inset-block-start: 1rem; }
 }
-.answer .value { font: 700 var(--value-size)/1.05 var(--mono); font-variant-numeric: tabular-nums; color: var(--accent); overflow-wrap: anywhere; letter-spacing: -0.02em; }
-.answer .value .unit { font-size: 0.45em; font-weight: 500; color: var(--muted); margin-inline-start: 0.3em; letter-spacing: 0; }
+/* Big numbers set in the sans with tabular digits: a monospace comma takes a
+   whole digit cell, which at this size reads as "7 , 937". */
+.answer .value { font: 700 var(--value-size)/1.05 var(--sans); font-variant-numeric: tabular-nums; color: var(--accent); overflow-wrap: anywhere; letter-spacing: -0.02em; }
+.answer .value .unit { font-family: var(--mono); font-size: 0.45em; font-weight: 500; color: var(--muted); margin-inline-start: 0.3em; letter-spacing: 0; }
 .answer .sentence { font-size: 1.08rem; margin: 0.6rem 0 0; }
 .facts { margin: 1rem 0 0; display: grid; gap: 0; border-block-start: 1px solid var(--line); }
 .facts div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-block-end: 1px solid var(--line); }
@@ -226,9 +228,6 @@ button.term:hover { color: var(--accent); }
 .send-to a { display: block; min-block-size: var(--target); display: flex; align-items: center; font-size: 0.9rem; }
 .send-field { color: var(--muted); margin-inline-start: 0.35em; }
 
-/* Whether this browser holds the release, said plainly in the footer. */
-.chip.offline { display: inline-block; margin-inline-end: 0.6rem; padding: 0.05rem 0.45rem; border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.85em; color: var(--muted); }
-.chip.offline[data-state='ready'] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
 
 /* A setting that is on or off, with the box beside its label, not under it. */
 label.switch { display: flex; gap: 0.6rem; align-items: center; }
@@ -332,10 +331,9 @@ details.card[open] { padding-block-end: 1rem; }
 .tools li:hover a { color: var(--accent); }
 .tools a::after { content: ''; position: absolute; inset: 0; }
 .tools p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.4; }
-footer.site { border-block-start: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; padding-block: 2rem; }
-footer.site a { color: var(--muted); }
-footer.site nav { display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; margin-block-end: 1rem; }
-footer.site nav a { color: var(--text); text-decoration: none; font-size: 0.95rem; }
+footer.site { border-block-start: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; padding-block: 1.5rem; }
+footer.site nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25rem 1.5rem; }
+footer.site nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; padding-block: 0.5rem; }
 footer.site nav a:hover { color: var(--accent); text-decoration: underline; }
 .notice { font-size: 0.85rem; color: var(--muted); }
 .safety { display: flex; gap: 0.5rem; align-items: baseline; margin: 0 0 1rem; padding: 0.6rem 0.9rem; border-radius: var(--radius); background: color-mix(in srgb, var(--caution) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--caution) 25%, var(--line)); color: var(--text); font-size: 0.88rem; }
@@ -349,10 +347,12 @@ footer.site nav a:hover { color: var(--accent); text-decoration: underline; }
     background: var(--surface); color: var(--text); inline-size: auto;
     box-shadow: 0 6px 24px color-mix(in srgb, var(--shadow) 18%, transparent);
   }
-  .answer-bar-value { font: 700 1.35rem var(--mono); color: var(--accent); }
-  .answer-bar-value .unit { font-size: 0.65em; font-weight: 500; color: var(--muted); }
+  .answer-bar-value { font: 700 1.35rem var(--sans); font-variant-numeric: tabular-nums; color: var(--accent); }
+  .answer-bar-value .unit { font-family: var(--mono); font-size: 0.65em; font-weight: 500; color: var(--muted); }
   .answer-bar-go { color: var(--muted); }
   main { padding-block-end: 6rem; }
+  /* Room under the footer links for the answer bar, so it covers none of them. */
+  body:has(.answer-bar) footer.site { padding-block-end: 5.5rem; }
 }
 @media (max-width: 40rem) {
   header.site .brand .what { display: none; }
@@ -375,10 +375,7 @@ dialog.report pre.payload { max-height: 16rem; overflow: auto; font-size: 0.8rem
 .update button { min-block-size: var(--target); margin: 0; }
 .update .later { border-color: var(--line); color: var(--muted); }
 /* Command palette. */
-.palette-open { min-block-size: var(--target); margin: 0; inline-size: auto; display: inline-flex; align-items: center; gap: 0.5rem; background: transparent; color: var(--text); border: 0; padding: 0; font: inherit; font-size: 0.95rem; cursor: pointer; text-decoration: none; }
-.palette-open:hover { color: var(--accent); text-decoration: underline; }
-.palette-open:hover { border-color: color-mix(in srgb, var(--muted) 45%, var(--line)); color: var(--text); }
-.palette-open kbd, .palette-keys kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding-inline: 0.3em; color: var(--muted); }
+.palette-keys kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding-inline: 0.3em; color: var(--muted); }
 dialog.palette { inline-size: min(40rem, calc(100vw - 2rem)); max-block-size: min(32rem, calc(100vh - 4rem)); margin-block-start: 10vh; padding: 0; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-lg); }
 dialog.palette::backdrop { background: color-mix(in srgb, var(--backdrop) 50%, transparent); }
 dialog.palette input { box-sizing: border-box; inline-size: 100%; min-block-size: var(--target); padding: 0.75rem 1rem; font: inherit; font-size: 1.1rem; background: transparent; color: var(--text); border: 0; border-block-end: 1px solid var(--line); }
@@ -391,6 +388,10 @@ dialog.palette li[aria-selected='true'] { background: var(--bg); outline: 2px so
 .palette-keys { margin: 0; padding: 0.5rem 1rem; border-block-start: 1px solid var(--line); color: var(--muted); font-size: 0.8rem; }
 /* Wide tables scroll inside their box, never the page. */
 .table-scroll { overflow-x: auto; max-inline-size: 100%; }
+/* Plain tables on the trust pages (licenses, security). */
+main table:not([class]) { border-collapse: collapse; font-size: 0.9rem; inline-size: 100%; margin-block: 0.75rem 1rem; }
+main table:not([class]) th, main table:not([class]) td { text-align: start; vertical-align: top; padding: 0.45rem 0.6rem; border-block-end: 1px solid var(--line); }
+main table:not([class]) thead th { font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 table.report { border-collapse: collapse; font-size: 0.85rem; min-inline-size: 48rem; }
 table.report th, table.report td { text-align: start; vertical-align: top; padding: 0.4rem 0.6rem; border-block-end: 1px solid var(--line); }
 table.report thead th { color: var(--muted); font-weight: 600; }
@@ -402,11 +403,6 @@ dialog.shortcuts dl { display: grid; grid-template-columns: max-content 1fr; gap
 dialog.shortcuts dt { font-family: var(--mono); color: var(--accent); }
 dialog.shortcuts dd { margin: 0; }
 dialog.shortcuts button { min-block-size: var(--target); padding-inline: 1rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
-form.settings { display: grid; gap: 0.5rem; max-inline-size: 32rem; }
-form.settings label { display: grid; gap: 0.25rem; font-weight: 600; }
-form.settings select, .settings-actions button { min-block-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
-.settings-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.settings-actions button { padding-inline: 1rem; }
 .toast { position: fixed; inset-block-end: 1rem; inset-inline-start: 50%; transform: translateX(-50%); margin: 0; z-index: 11; }
 .toast[hidden] { display: none; }
 /* Map canvas. */
@@ -522,8 +518,8 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .gauge a:hover::before, .gauge a:hover::after { border-color: var(--signal); }
 .gauge-kicker { display: inline-flex; align-items: center; gap: 0.4rem; font: 600 0.68rem var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .gauge-kicker svg { color: var(--data); }
-.gauge-value { margin-block-start: 0.35rem; font: 700 2rem/1.05 var(--mono); letter-spacing: -0.03em; color: var(--accent); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.gauge-unit { margin-inline-start: 0.3rem; font-size: 0.5em; font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.gauge-value { margin-block-start: 0.35rem; font: 700 2rem/1.05 var(--sans); letter-spacing: -0.03em; color: var(--accent); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.gauge-unit { margin-inline-start: 0.3rem; font-family: var(--mono); font-size: 0.5em; font-weight: 500; letter-spacing: 0; color: var(--muted); }
 .gauge-label { font-size: 0.85rem; color: var(--muted); }
 .gauge-title { margin-block-start: auto; padding-block-start: 0.6rem; font-weight: 650; font-size: 0.95rem; }
 
@@ -646,7 +642,6 @@ main { padding-block: 1.75rem 4rem; }
 .answer .status { padding: 0.55rem 0.75rem; border-radius: var(--radius); background: color-mix(in srgb, var(--data) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--data) 25%, var(--line)); }
 .answer .status .mark { color: var(--data); }
 .chip { font: 600 0.72rem var(--mono); color: var(--caution); background: color-mix(in srgb, var(--caution) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--caution) 30%, var(--line)); border-radius: 4px; padding: 0.15rem 0.45rem; }
-.chip.offline { text-transform: none; letter-spacing: 0; font-family: var(--sans); background: none; }
 
 /* Inputs: legends in small capitals, values in the mono face. */
 .inputs-head h2 { font: 600 0.72rem var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); padding-inline-start: 0.9rem; }
@@ -672,7 +667,7 @@ button.quiet:hover { border-color: var(--text); color: var(--text); }
 
 /* How we got this: one panel for the proof. */
 details.proof > summary { gap: 0.25rem 0.75rem; flex-wrap: wrap; font-size: 1.05rem; }
-details.proof > summary .summary-note { font: 500 0.78rem var(--mono); color: var(--muted); letter-spacing: 0.02em; }
+details.proof > summary .summary-note { margin-inline-start: 0.75rem; font: 500 0.78rem var(--mono); color: var(--muted); letter-spacing: 0.02em; }
 details.proof h3 { margin-block: 1.5rem 0.5rem; font: 600 0.72rem var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
 details.proof .trace li::marker { font-family: var(--mono); color: var(--accent); font-weight: 700; }
 details.proof .trace-formula code, details.proof .trace-sub code { color: var(--data); }
@@ -697,8 +692,7 @@ dl.terms dd { margin: 0 0 0.25rem; color: var(--muted); }
 
 /* Footer: a quiet instrument back panel. */
 footer.site { margin-block-start: 3rem; background: var(--surface); }
-footer.site nav a { font-weight: 600; }
-footer.site .version { font: 0.78rem var(--mono); }
+footer.site nav a { font-weight: 500; }
 
 /* Phones: generous targets, no wasted gutter, the answer before the form. */
 @media (max-width: 40rem) {
@@ -777,11 +771,14 @@ table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color:
   .tool-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-block: 4px; }
   .card { padding: 6px 9px; margin-block: 4px; }
   .report-line, .report-button, .quiet.more, .import-block, details.batch, .hint, .send-to, .send-open, .units-switch, .star,
-  .inline-diagram, .safety a, footer.site .version, .card.inputs .help { display: none !important; }
+  .inline-diagram, .safety a, .card.inputs .help { display: none !important; }
   .facts { margin-block-start: 4px; }
   .facts div { padding-block: 1px; }
   /* The manifest's limitation repeats what the answer's own note says. */
   main > .card.notice.limitation { display: none !important; }
+  /* A recent result change is news for the screen and points at the changelog;
+     the sheet itself carries the tool version under "How we got this". */
+  main > .card.notice.result-change { display: none !important; }
   main { padding-block: 0; }
   .value { font-size: 24px; }
   .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }

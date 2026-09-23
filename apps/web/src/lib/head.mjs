@@ -65,6 +65,22 @@ export function description(text) {
   return first.length <= DESCRIPTION_MAX ? first : clip(first, DESCRIPTION_MAX);
 }
 
+/**
+ * A hub page's description: its lead sentence, then as many of its tools'
+ * names as fit under the cap, so a short lead still tells a search engine
+ * what the page holds.
+ */
+export function listDescription(lead, names) {
+  let text = String(lead).trim();
+  const picked = [];
+  for (const n of names) {
+    const next = `${text} Includes ${[...picked, n].join(', ')}.`;
+    if (next.length > DESCRIPTION_MAX) break;
+    picked.push(n);
+  }
+  return picked.length ? `${text} Includes ${picked.join(', ')}.` : text;
+}
+
 /** The superlative a string uses, if any. */
 export function superlative(text) {
   const lower = ` ${String(text).toLowerCase()} `;

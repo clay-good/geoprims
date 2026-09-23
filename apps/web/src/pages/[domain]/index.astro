@@ -13,7 +13,7 @@ const byGroup = [...groups(domain)].map(([group, tools]) => [group, tools.filter
 const listed = byGroup.flatMap(([, tools]) => tools);
 const jsonld = [collection(`${title} calculators`, route(domain), listed), breadcrumbs([['geoprims', '/'], [title, route(domain)]])];
 ---
-<Base title={`${title} calculators · geoprims`} description={`Every geoprims ${title.toLowerCase()} tool, with exact, cited math.`} canonical={route(domain)} jsonld={jsonld}>
+<Base title={`${title} calculators · geoprims`} description={`${DOMAIN_BLURBS[domain] ?? ''} ${listed.length} free calculators, each showing its formula and sources.`} canonical={route(domain)} jsonld={jsonld}>
   <PageHeader title={title} purpose={DOMAIN_BLURBS[domain]}>
     <p class="review notice">{reviewLine(domain)}</p>
   </PageHeader>

@@ -18,7 +18,6 @@ const PAGES = [
   '/indexing/h3/grid-disk/',
   '/survey/curves/vertical-curve/',
   '/journeys/drone-mapping-day/',
-  '/settings/',
   '/sources/',
 ];
 

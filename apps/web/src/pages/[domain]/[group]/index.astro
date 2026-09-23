@@ -3,7 +3,8 @@ import Base from '../../../layouts/Base.astro';
 import PageHeader from '../../../components/PageHeader.astro';
 import ListFilter from '../../../components/ListFilter.astro';
 import ToolCards from '../../../components/ToolCards.astro';
-import { breadcrumbs, catalog, collection, DOMAIN_TITLES, hubFor, journeysWith, route } from '../../../lib/catalog.mjs';
+import { listDescription } from '../../../lib/head.mjs';
+import { breadcrumbs, catalog, groupTitle, collection, DOMAIN_TITLES, hubFor, journeysWith, route } from '../../../lib/catalog.mjs';
 export function getStaticPaths() {
   const seen = new Set();
   return catalog.tools
@@ -12,20 +13,28 @@ export function getStaticPaths() {
 }
 const { domain, group } = Astro.params;
 const tools = catalog.tools.filter((t) => t.domain === domain && t.group === group);
-const name = group.replaceAll('-', ' ');
+const name = groupTitle(group);
 const domainTitle = DOMAIN_TITLES[domain] ?? domain;
+// In running text a group reads in lower case, unless it is an acronym ("IFR", "H3").
+const noun = /^[A-Z0-9]+$/.test(name) ? name : name.toLowerCase();
 const hub = hubFor(domain, group);
+// A hub's own description, never a copy of one of its tools': the summary and
+// the tools it lists, or for a units group the units its converter covers.
+const lead = tools.find((t) => t.composedOf.length === 0) ?? tools[0];
+const description = hub.summary
+  ? listDescription(hub.summary, tools.filter((t) => t.composedOf.length === 0).map((t) => t.title))
+  : lead.summary.includes(':') ? `Exact ${noun} conversions${lead.summary.slice(lead.summary.indexOf(':'))}` : `Exact ${noun} conversions. ${lead.summary}`;
 const guides = journeysWith(tools.map((t) => t.id));
 const jsonld = [collection(name, route(`${domain}.${group}`), tools.filter((t) => t.composedOf.length === 0)), breadcrumbs([['geoprims', '/'], [domainTitle, route(domain)], [name, route(`${domain}.${group}`)]])];
 ---
-<Base title={`${name} · ${domainTitle} · geoprims`} description={hub.summary || `geoprims ${name} tools.`} canonical={route(`${domain}.${group}`)} jsonld={jsonld}>
-  <PageHeader title={name[0].toUpperCase() + name.slice(1)} crumbs={[[domainTitle, route(domain)]]} purpose={hub.summary || `${tools.length} ${domainTitle.toLowerCase()} ${tools.length === 1 ? 'tool' : 'tools'} for ${name}.`} />
+<Base title={`${name} ${domain === 'units' ? 'converters' : 'calculators'} · ${domainTitle} · geoprims`} og={{ eyebrow: domainTitle, title: name }} description={description} canonical={route(`${domain}.${group}`)} jsonld={jsonld}>
+  <PageHeader title={name} crumbs={[[domainTitle, route(domain)]]} purpose={hub.summary || `${tools.length} ${domainTitle.toLowerCase()} ${tools.length === 1 ? 'tool' : 'tools'} for ${noun}.`} />
   {['aviation', 'drone', 'navigation'].includes(domain) && (
     <p class="safety" role="note">
       <span><strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a></span>
     </p>
   )}
-  {tools.length > 8 && <ListFilter total={tools.length} noun={name} />}
+  {tools.length > 8 && <ListFilter total={tools.length} noun={noun} />}
   {hub.tasks.map((task) => (
     <section class="group task" data-group>
       <h2 class="task-want"><span class="want-lead">I want to</span> {task.want}</h2>

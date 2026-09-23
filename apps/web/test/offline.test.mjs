@@ -31,17 +31,11 @@ test('the chip stays hidden until there is something to say', () => {
   assert.deepEqual([chip.hidden, chip.textContent, chip.dataset.state], [false, 'Works offline', 'ready']);
 });
 
-test('every page carries the chip, empty and hidden until the page runs', () => {
-  for (const path of ['index.html', 'aviation/altimetry/density-altitude/index.html', 'settings/index.html']) {
-    const html = readFileSync(join(web, 'dist', path), 'utf8');
-    assert.match(html, /<span class="chip offline" data-offline hidden><\/span>/, path);
-  }
-});
 
-test('the chip is wired to the registration, not to a guess', () => {
+test('the update prompt is wired to the registration, not to a guess', () => {
   const base = readFileSync(join(web, 'src/layouts/Base.astro'), 'utf8');
-  assert.match(base, /registerOffline\(document\.querySelector\('\.update'\), document\.querySelector\('\[data-offline\]'\)\)/);
-  // The first install takes control without a reload, and the chip follows.
+  assert.match(base, /registerOffline\(document\.querySelector\('\.update'\), null\)/);
+  // The first install takes control without a reload.
   const pwa = readFileSync(join(web, 'src/lib/pwa.js'), 'utf8');
   assert.match(pwa, /controllerchange[\s\S]*?say\(\{ controlled: true \}\)/);
 });

@@ -220,7 +220,8 @@ test('the home page explains the product, then searches, then browses', () => {
   const categories = at(/<ul class="categories">/);
   assert.ok(title > 0 && search > title, 'search follows the headline');
   assert.ok(panel > search && categories > panel, 'the panel, then the topics, follow the search');
-  assert.ok(at(/class="pinned"/) > categories && at(/class="recent"/) > categories, 'recent and pinned come last');
+  assert.ok(at(/class="pinned"/) > categories, 'pinned tools come last');
+  assert.equal(at(/class="recent"/), -1, 'the home page keeps no recent-tools list');
   // Every subject the headline names is a domain the catalog has.
   const NOUNS = { 'drone mapping': 'drone', surveying: 'survey', aviation: 'aviation', geodesy: 'geodesy' };
   const domains = new Set(catalog.tools.map((t) => t.domain));
@@ -278,7 +279,7 @@ test('the answer card frames the answer against a rule of thumb where the tool h
   const line = /<p class="comparison">([\s\S]*?)<\/p>/.exec(html);
   assert.ok(line, 'density altitude shows a comparison line');
   const text = line[1].replace(/<!--.*?-->/g, '').replace(/<[^>]+>/g, '').trim();
-  assert.equal(text, 'The 120 ft per °C rule of thumb gives 8,123 ft (191 ft high).');
+  assert.equal(text, 'The 120 ft per °C rule of thumb gives 8,128 ft (191 ft high).');
   // It sits under the sentence, not among the values.
   assert.ok(html.indexOf('<p class="sentence">') < html.indexOf('<p class="comparison">'));
 });

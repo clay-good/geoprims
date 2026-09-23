@@ -19,7 +19,6 @@ const PAGES = [
   '/indexing/h3/grid-disk/',
   '/survey/land/deed-plot/',
   '/journeys/vfr-preflight/',
-  '/settings/',
   '/sources/',
   '/accuracy/',
   '/404.html',
@@ -70,7 +69,7 @@ test('the axe check is live: a planted image without alt text and a nameless but
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
   const page = await (await browser.newContext({ serviceWorkers: 'block' })).newPage();
-  await page.goto(`${origin}/settings/`);
+  await page.goto(`${origin}/sources/`);
   await page.evaluate(() => {
     const img = document.createElement('img');
     img.src = '/favicon.svg';

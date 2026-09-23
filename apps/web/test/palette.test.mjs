@@ -58,7 +58,7 @@ test('p95 search time for 20 queries against 1,000 entries is within 16 ms', asy
 test('every page offers the palette by button, / and Ctrl/Cmd+K', () => {
   for (const path of ['index.html', 'aviation/index.html', 'aviation/altimetry/density-altitude/index.html']) {
     const html = readFileSync(join(web, 'dist', path), 'utf8');
-    assert.match(html, /<button type="button" class="palette-open" aria-keyshortcuts="\/ Control\+K Meta\+K">/, path);
+    assert.match(html, /<button type="button" class="header-search" data-palette aria-keyshortcuts="\/ Control\+K Meta\+K">/, path);
   }
   const src = readFileSync(join(web, 'src/lib/palette.js'), 'utf8');
   for (const need of ['role="combobox"', 'role="listbox"', 'aria-activedescendant', 'aria-live="polite"', "restore?.focus?.()"]) {

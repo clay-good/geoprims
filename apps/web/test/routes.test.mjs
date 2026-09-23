@@ -19,7 +19,7 @@ test('every route the contract allows classifies', () => {
   assert.equal(classify('/methodology/', idx), 'trust');
   assert.equal(classify('/accuracy/', idx), 'trust');
   assert.equal(classify('/verification/0.1.0/', idx), 'verification');
-  assert.equal(classify('/settings/', idx), 'app');
+  assert.equal(classify('/offline/', idx), 'app');
   assert.equal(classify('/aviation/', idx), 'domain');
   assert.equal(classify('/aviation/altimetry/', idx), 'group');
   assert.equal(classify('/aviation/altimetry/density-altitude/', idx), 'tool');
@@ -51,8 +51,8 @@ test('a generated endpoint must canonicalize to the operation it composes', () =
 });
 
 test('app routes must carry noindex', () => {
-  assert.deepEqual(check([ok('/settings/'), ok('/offline/')], idx), []);
-  assert.match(check([{ route: '/settings/', html: '' }], idx)[0], /must carry noindex/);
+  assert.deepEqual(check([ok('/offline/')], idx), []);
+  assert.match(check([{ route: '/offline/', html: '' }], idx)[0], /must carry noindex/);
 });
 
 test('the whole built site is inside the route map', () => {

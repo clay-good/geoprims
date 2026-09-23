@@ -14,7 +14,7 @@ globalThis.dispatchEvent = (e) => events.push(e.type);
 const prefs = await import('../src/lib/prefs.js');
 const tool = (n) => ({ id: `units.test.t${n}`, title: `Tool ${n}`, route: `/units/test/t${n}/` });
 
-test('recent tools: most recent first, no duplicates, at most 50, clearable', () => {
+test('recent tools: most recent first, no duplicates, at most 50', () => {
   for (const n of [1, 2, 3]) prefs.recordUse(tool(n));
   assert.deepEqual(prefs.recents().map((r) => r.title), ['Tool 3', 'Tool 2', 'Tool 1']);
   prefs.recordUse(tool(1));
@@ -22,8 +22,6 @@ test('recent tools: most recent first, no duplicates, at most 50, clearable', ()
   for (let n = 10; n < 80; n++) prefs.recordUse(tool(n));
   assert.equal(prefs.recents().length, prefs.MAX_RECENT);
   assert.equal(prefs.recents()[0].title, 'Tool 79');
-  prefs.clearRecents();
-  assert.deepEqual(prefs.recents(), []);
   assert.ok(events.includes('gp-lists') && !events.includes('gp-prefs'), 'list changes do not re-run tools');
 });
 

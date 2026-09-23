@@ -44,13 +44,14 @@ jobs:
         run: npm run test:js
         env:
           VECTOR_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
-      - name: Website build and checks
+      - name: Install the website's dependencies and browsers (share cards render in Chromium; cross-host checks use all three)
         run: |
           npm ci --prefix apps/web
+          npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
+      - name: Website build and checks
+        run: |
           npm run build --prefix apps/web
           npm test --prefix apps/web
-      - name: Install browsers for cross-host checks
-        run: npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
       - name: Browser checks
         run: npm run test:browser --prefix apps/web
       - name: Chromium reference benchmark
@@ -93,6 +94,7 @@ jobs:
           npm run build
           node tools/mcp/build-dist.mjs
           npm ci --prefix apps/web
+          npm exec --prefix apps/web -- playwright install --with-deps chromium
           npm run build --prefix apps/web
       - name: Hash shipped artifacts
         run: node tools/wasm/artifact-digests.mjs > artifact-digests.txt

@@ -112,18 +112,3 @@ export function togglePin(tool) {
   const now = pins();
   write('gp-pins', isPinned(tool.id) ? now.filter((p) => p.id !== tool.id) : [...now, { id: tool.id, title: tool.title, route: tool.route }], 'gp-lists');
 }
-
-export const clearRecents = () => write('gp-recent', [], 'gp-lists');
-
-/** Erases every geoprims setting, list, and offline copy on this device, then reloads. */
-export async function eraseLocalData() {
-  if (!confirm('Erase settings, recent and pinned tools, and offline copies saved on this device? Nothing is stored anywhere else.')) return;
-  try {
-    for (const k of Object.keys(localStorage)) if (k.startsWith('gp-')) localStorage.removeItem(k);
-  } catch {
-    /* storage blocked: nothing saved */
-  }
-  for (const k of (await globalThis.caches?.keys()) ?? []) if (k.startsWith('gp-')) await caches.delete(k);
-  for (const r of (await navigator.serviceWorker?.getRegistrations()) ?? []) await r.unregister();
-  location.reload();
-}

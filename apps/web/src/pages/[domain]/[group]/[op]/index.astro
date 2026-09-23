@@ -9,7 +9,8 @@ import { ledger, ledgerRowFor as rowFor } from '../../../../lib/catalog.mjs';
 import { toMathML } from '../../../../lib/mathml.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
 import { buildDate } from '../../../../lib/build-date.mjs';
-import { breadcrumbs, catalog, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, workedVector, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
+import { title as pageTitle } from '../../../../lib/head.mjs';
+import { breadcrumbs, catalog, groupTitle, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, workedVector, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -29,8 +30,12 @@ const trace = await exampleTrace(t);
 const groups = await exampleGroups(t);
 const lastVerified = lastVerifiedFor(t);
 const golden = workedVector(t);
-const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [t.group.replaceAll('-', ' '), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
-const groupName = t.group.replaceAll('-', ' ');
+const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [groupTitle(t.group), route(`${t.domain}.${t.group}`)], [t.title, route(t.id)]])];
+const groupName = groupTitle(t.group);
+// The share card shows the worked example's headline answer when it is short
+// enough to read at a glance (search-pages, "Open Graph images").
+const headline = initial.ok ? String(initial.display?.[Object.keys(t.outputs.properties)[0]] ?? '') : '';
+const og = { eyebrow: `${DOMAIN_TITLES[t.domain] ?? t.domain} / ${groupName}`, title: t.title, answer: headline.length <= 24 ? headline : '', caption: initial.ok ? initial.summary : t.summary };
 // Neighbors in the group, in catalog order, for the [ and ] shortcuts.
 const inGroup = catalog.tools.filter((x) => x.domain === t.domain && x.group === t.group);
 const at = inGroup.findIndex((x) => x.id === t.id);
@@ -47,7 +52,7 @@ const terms = termsFor(t.id);
 const purpose = markTerms(t.summary, terms);
 
 ---
-<Base title={`${t.title} · geoprims`} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
+<Base title={pageTitle(t.title, 'free calculator')} og={og} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
   <PageHeader
     title={t.title}
     crumbs={[[DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [groupName, route(`${t.domain}.${t.group}`)]]}

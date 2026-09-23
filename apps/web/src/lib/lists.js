@@ -1,6 +1,6 @@
-// The home page's pinned and recent tools (web/app-shell "Recent and pinned
-// tools"), drawn from local storage and redrawn when they change.
-import { clearRecents, pins, recents } from './prefs.js';
+// The home page's pinned tools (web/app-shell "Recent and pinned tools"),
+// drawn from local storage and redrawn when they change.
+import { pins } from './prefs.js';
 
 function fill(section, items) {
   const list = section.querySelector('ul');
@@ -19,15 +19,8 @@ function fill(section, items) {
 
 export function mountLists(root) {
   const pinned = root.querySelector('section.pinned');
-  const recent = root.querySelector('section.recent');
-  if (!pinned || !recent) return;
-  const draw = () => {
-    const p = pins();
-    const seen = new Set(p.map((x) => x.id));
-    fill(pinned, p);
-    fill(recent, recents().filter((r) => !seen.has(r.id)));
-  };
-  recent.querySelector('button')?.addEventListener('click', clearRecents);
+  if (!pinned) return;
+  const draw = () => fill(pinned, pins());
   addEventListener('gp-lists', draw);
   draw();
 }

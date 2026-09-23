@@ -2,7 +2,7 @@
 // Post-build offline step (web/offline-pwa): lists every page, script, style,
 // Wasm module, the catalog, and the data assets for the service worker to
 // precache, stamps the release version into the pages, and writes dist/sw.js.
-// Downloads (test vectors) and crawler files are left out. Fails the build if
+// Downloads (test vectors), share cards, and crawler files are left out. Fails the build if
 // the precache exceeds 12 MB of Brotli-compressed transfer.
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -16,7 +16,7 @@ const dist = join(web, 'dist');
 export const PROFILE = JSON.parse(readFileSync(join(web, '../../data/reference-profile.json'), 'utf8'));
 export const PRECACHE_BUDGET = PROFILE.budgets.precacheBytes.hard;
 export const VERSION_MARK = '__GP_APP_VERSION__';
-const SKIP_DIRS = new Set(['vectors', 'sitemaps', '.well-known']);
+const SKIP_DIRS = new Set(['vectors', 'sitemaps', '.well-known', 'og']);
 const SKIP_FILES = new Set(['robots.txt', 'llms.txt', 'AGENTS.md', 'sitemap-index.xml', 'sw.js', '_headers', '_redirects']);
 
 function files(dir, out = []) {

@@ -10,7 +10,7 @@ import { ask } from './ask.js';
 import { personalize } from './boost.js';
 import { audioOn, setAudioOn, sound } from './sound.js';
 import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
-import { clearRecents, eraseLocalData, pins, PROFILES, recents, setProfile } from './prefs.js';
+import { pins, PROFILES, recents, setProfile } from './prefs.js';
 
 const LIMIT = 8;
 
@@ -38,10 +38,7 @@ function actions() {
       : { title: 'Turn sounds on', summary: 'Quiet clicks and tones for results, warnings, and copies', words: 'audio sound sounds on', run: () => setAudioOn(true) },
     { title: 'Show keyboard shortcuts', summary: 'Or press ?', words: 'help keys keyboard shortcuts', run: openSheet },
     { title: on ? 'Turn single-key shortcuts off' : 'Turn single-key shortcuts on', summary: '/, ?, and g h; Ctrl+K always works', words: 'keys keyboard shortcuts single', run: () => setSingleKeys(!on) },
-    { title: 'Erase all local data', summary: 'Settings, recent and pinned tools, and offline copies on this device', words: 'erase clear reset delete storage offline cache privacy data', run: eraseLocalData },
     ...PROFILES.map(([id, label]) => ({ title: `Units: ${label}`, summary: 'Unit profile for every tool', words: `units unit profile ${id}`, run: () => setProfile(id) })),
-    { title: 'Clear recent tools', summary: 'Pinned tools stay', words: 'clear recent history', run: clearRecents },
-    page('Open settings', '/settings/', 'settings preferences options units'),
     page('Go to methodology', '/methodology/', 'how checked verification'),
     page('Go to changelog', '/changelog/', 'changes history results'),
     page('Go to sources', '/sources/', 'references standards citations'),

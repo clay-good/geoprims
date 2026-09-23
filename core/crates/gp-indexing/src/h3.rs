@@ -1944,6 +1944,7 @@ const IJ_LIMIT: f64 = 1e9;
 
 pub static CELL_TO_LOCAL_IJ: ToolDef = ToolDef {
     id: "indexing.h3.cell-to-local-ij",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 local IJ for a cell (cellToLocalIj)",
     summary: "The local IJ coordinates of a cell as seen from an origin cell: two whole numbers on the grid H3 unfolds around that origin.",
     aliases: &[
@@ -1977,7 +1978,7 @@ pub static CELL_TO_LOCAL_IJ: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::DegenerateGeometry],
-    warnings: &["EXPERIMENTAL_TOOL", "PENTAGON_DISTORTION"],
+    warnings: &["PENTAGON_DISTORTION"],
     model: "H3 C cellToLocalIj (h3o 0.11): the icosahedron faces unfolded around the origin into one plane of IJ axes",
     accuracy: "The same coordinates as H3 C 4.4.1, which are whole numbers, so they agree exactly",
     when_to_use: "Use this to do grid arithmetic on H3 cells: turn cells into plane coordinates around one origin, where the difference between two cells is a vector you can add, subtract, and compare. It is how neighborhoods, offsets, and regular patterns on the grid are expressed.",
@@ -2032,6 +2033,7 @@ fn run_cell_to_local_ij(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static LOCAL_IJ_TO_CELL: ToolDef = ToolDef {
     id: "indexing.h3.local-ij-to-cell",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 cell at local IJ (localIjToCell)",
     summary: "The H3 cell at local IJ coordinates around an origin cell, undoing cellToLocalIj.",
     aliases: &["localIjToCell", "local_ij_to_cell", "H3 IJ to cell"],
@@ -2077,10 +2079,10 @@ pub static LOCAL_IJ_TO_CELL: ToolDef = ToolDef {
         angle("lon", "Longitude", "[-180,180]"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::DegenerateGeometry],
-    warnings: &["EXPERIMENTAL_TOOL", "PENTAGON_DISTORTION"],
+    warnings: &["PENTAGON_DISTORTION"],
     model: "H3 C localIjToCell (h3o 0.11): the IJ plane around the origin folded back onto the icosahedron",
     accuracy: "The same cells as H3 C 4.4.1, which are exact indexes, and a round trip through cellToLocalIj returns the cell it started from",
-    when_to_use: "Use this to turn grid arithmetic back into cells: having moved by a vector in local IJ around an origin, this says which cell you landed on. It is the other half of working on the H3 grid as a plane.",
+    when_to_use: "Use this to turn grid arithmetic back into cells: having moved by a vector in local IJ around an origin, this says which cell you landed on. It is the other half of working on the H3 grid as a plane. A regular pattern is laid out this way one cell at a time — a lattice of sample sites at a fixed spacing, a block of cells offset from a reference point, or the neighbour two steps along one axis — by naming the coordinates you want rather than by walking the grid to find them.",
     limitations: "The coordinates only mean something with the origin they were measured from, so the same pair around a different anchor gives a different cell. Coordinates far from the origin, or across one of the twelve pentagons, have no cell, and H3 refuses rather than answering wrongly. The cell comes back at the origin's resolution.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
@@ -2102,6 +2104,10 @@ pub static LOCAL_IJ_TO_CELL: ToolDef = ToolDef {
         Related {
             id: "indexing.h3.cell-info",
             reason: "next",
+        },
+        Related {
+            id: "indexing.h3.grid-disk",
+            reason: "alternative",
         },
     ],
     sentence: "That is {cell}.{warn PENTAGON_DISTORTION} A pentagon is involved.{/warn}",

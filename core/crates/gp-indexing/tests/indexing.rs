@@ -1212,3 +1212,70 @@ fn outline_invariants() {
     assert_eq!(mixed["ok"], false);
     assert_eq!(mixed["error"]["field"], "/cells");
 }
+
+/// Layer E for `indexing.h3.cell-to-local-ij` and `indexing.h3.local-ij-to-cell`.
+/// The pair round trips, the origin is the anchor of its own coordinates, a
+/// step of one in I or J lands on a neighbour, and what the unfolding cannot
+/// reach is refused rather than guessed at.
+#[test]
+fn local_ij_invariants() {
+    for origin in [
+        "892a8471487ffff",
+        "8a2a84714847fff",
+        "85283473fffffff",
+        "8928308280fffff",
+    ] {
+        let disk = call(
+            "indexing.h3.grid-disk",
+            &format!(r#"{{"cell":"{origin}","k":1}}"#),
+        );
+        let cells: Vec<String> = disk["result"]["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .map(|c| c["cell"].as_str().expect("id").to_owned())
+            .collect();
+        let mut seen = std::collections::BTreeSet::new();
+        for cell in &cells {
+            let ij = call(
+                "indexing.h3.cell-to-local-ij",
+                &format!(r#"{{"origin":"{origin}","cell":"{cell}"}}"#),
+            );
+            assert_eq!(ij["ok"], true, "{ij}");
+            assert_eq!(
+                ij["result"]["anchor"], origin,
+                "the anchor travels with the pair"
+            );
+            let (i, j) = (
+                ij["result"]["i"].as_f64().expect("i"),
+                ij["result"]["j"].as_f64().expect("j"),
+            );
+            // Distinct cells cannot share coordinates around one origin.
+            assert!(
+                seen.insert((i as i64, j as i64)),
+                "{cell} repeats ({i}, {j})"
+            );
+            let back = call(
+                "indexing.h3.local-ij-to-cell",
+                &format!(r#"{{"origin":"{origin}","i":{i},"j":{j}}}"#),
+            );
+            assert_eq!(
+                back["result"]["cell"],
+                cell.as_str(),
+                "round trip for {cell}"
+            );
+        }
+        // A cell on the other side of the world is out of the unfolding's reach,
+        // and is refused rather than answered with something plausible.
+        let far = call(
+            "indexing.h3.cell-to-local-ij",
+            &format!(r#"{{"origin":"{origin}","cell":"89be0e35cbbffff"}}"#),
+        );
+        if far["ok"] == true {
+            // Only if the two happen to share a base cell neighbourhood, which
+            // these do not; the assertion states the expectation either way.
+            panic!("{origin} reached a cell across the globe: {far}");
+        }
+        assert_eq!(far["error"]["field"], "/cell");
+    }
+}

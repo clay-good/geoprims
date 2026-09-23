@@ -9,6 +9,8 @@ import { lintDimensions } from './dimensions.mjs';
 export const MIN_VECTORS = 20;
 /** The floor the related-tools gate holds stable tools to. */
 export const MIN_RELATED = 3;
+/** The prose an indexable page carries itself, per the content gate. */
+export const MIN_OWN_WORDS = 150;
 export const SECTIONS = ['Method', 'Equations', 'Symbols and units', 'Domain', 'Approximations', 'Worked example', 'Differential tests', 'Invariants'];
 export const EXAMPLE_FIELDS = ['sourcePublisher', 'sourceTitle', 'sourceEdition', 'sourceLocator', 'independent', 'inputs', 'outputs', 'tolerance', 'verifiedBy', 'verifiedOn'];
 
@@ -76,6 +78,24 @@ export async function promotionProblems({ root, tool, host }) {
   }
   if ((tool.composedOf?.length ?? 0) === 0 && (tool.related?.length ?? 0) < MIN_RELATED) {
     problems.push(`(A) a stable tool needs ${MIN_RELATED} related tools (has ${tool.related?.length ?? 0})`);
+  }
+  // A stable tool's page is indexable, and an indexable page carries its own
+  // prose rather than leaning on the template around it. Counted the same way
+  // apps/web/test/content.test.mjs counts it, so the two agree.
+  const own = [
+    tool.summary,
+    tool.whenToUse,
+    tool.limitations,
+    tool.accuracy,
+    ...(tool.related ?? []).map((r) => r.reason),
+    ...(tool.examples ?? []).map((e) => `${e.title} ${e.source}`),
+  ]
+    .join(' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+  if (own < MIN_OWN_WORDS) {
+    problems.push(`(A) its page would carry ${own} words of its own prose, under the ${MIN_OWN_WORDS} an indexable page needs`);
   }
 
   // Only a tool already marked stable can fail on this: an experimental one

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "1ba215a6956df8e0",
+    "hash": "c73e41a09e29d32e",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "e7d0ea5067f905b1",
+    "hash": "9e49b7fa18f42127",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -383,6 +383,10 @@
     "hash": "aa610f0cb411f2cd",
     "lastmod": "2026-09-22"
   },
+  "/geometry/simplify/rdp/": {
+    "hash": "34f95b4e4a0a847c",
+    "lastmod": "2026-09-23"
+  },
   "/geometry/validity/": {
     "hash": "f9889cec90f9977c",
     "lastmod": "2026-09-22"
@@ -564,7 +568,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "8053f08983ba59e6",
+    "hash": "3fa8988c288363a8",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -768,7 +772,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "558654bd1ab00139",
+    "hash": "e387c761c2d912dd",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -868,7 +872,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ee3bdec8f7f6db51",
+    "hash": "527fa6067f0ca443",
     "lastmod": "2026-09-23"
   }
 }

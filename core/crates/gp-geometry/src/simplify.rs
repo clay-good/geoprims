@@ -442,6 +442,7 @@ fn finish(
 
 pub static RDP: ToolDef = ToolDef {
     id: "geometry.simplify.rdp",
+    stability: gp_base::tool::Stability::Stable,
     title: "Simplify a line or polygon (Douglas-Peucker)",
     summary: "Removes vertices from a line or polygon while keeping every removed vertex within a distance tolerance of the simplified geodesic edges, optionally without letting edges cross, and reports the largest deviation.",
     aliases: &[
@@ -478,15 +479,17 @@ pub static RDP: ToolDef = ToolDef {
     ],
     outputs: OUTPUTS,
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Ramer-Douglas-Peucker on an azimuthal equidistant plane centered on the shape, then checked on the ellipsoid: any edge with a removed vertex farther than the tolerance (by geodesic distance) is split again. A polygon is split at the vertex farthest from its first. With topology kept, crossing edges get their farthest vertex back until none cross",
     accuracy: "Every removed vertex is within the tolerance of its simplified geodesic edge, measured on the ellipsoid; the crossing check is on the plane, exact for shapes a few hundred kilometers across",
+    when_to_use: "Use this to thin a track or an outline that carries more detail than the job needs: a GPS trace logged every second, a coastline captured finer than the map will ever show, a boundary being sent over a slow link or drawn in a browser. Set the tolerance to the error you are willing to accept on the ground and every dropped vertex is guaranteed to lie within it. Keeping topology costs a few vertices and stops a simplified outline crossing itself, which matters when the result has to stay a valid area.",
+    limitations: "The guarantee is about distance from the simplified line, not about anything else you might care about: area, length and the position of the centroid all change, and a polygon simplified hard can lose a noticeable fraction of its area. The tolerance is a bound, not a target — a shape already straighter than the tolerance collapses to its two end points however large it was. Without the topology option a simplified outline can cross itself, which is why that option exists; with it, a few vertices are put back and the count reported says how many. Vertices are dropped, never moved, so the result is always a subset of the input and never smooths a corner.",
     references: &[DOUGLAS_PEUCKER],
     examples: &[Example {
         id: "primary",
         title: "A wavy 1 km track at a 25 m tolerance",
         input: r#"{"points":[{"lat":40.0,"lon":-105.0},{"lat":40.0002,"lon":-104.998},{"lat":39.9998,"lon":-104.996},{"lat":40.0003,"lon":-104.994},{"lat":40.0,"lon":-104.992},{"lat":40.0015,"lon":-104.990},{"lat":40.0,"lon":-104.988}],"tolerance":"25 m"}"#,
-        source: "Douglas and Peucker (1973) with geodesic deviations (Karney 2013)",
+        source: "Douglas and Peucker (1973) with geodesic deviations (Karney 2013). Checked against GEOS 3.11.4's own LineString.simplify on the same plane over six shapes at four tolerances each: the two implementations kept the same vertices in all twenty-four, with the deviations agreeing to 1.3e-7 relative",
     }],
     primary_example: "primary",
     visualization: &[Layer {

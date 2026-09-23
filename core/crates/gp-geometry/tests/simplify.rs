@@ -146,3 +146,126 @@ fn a_target_count_is_met_and_bad_input_is_refused() {
     );
     assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
 }
+
+/// Douglas-Peucker on a line, with the deviation in metres.
+fn rdp(points: &Value, tolerance: &str, topology: &str) -> Value {
+    serde_json::from_str(
+        &REGISTRY.invoke(
+            "geometry.simplify.rdp",
+            &json!({"points": points, "tolerance": tolerance, "shape": "line",
+                "preserve_topology": topology,
+                "options": {"outputUnits": {"max_deviation": "m"}}})
+            .to_string(),
+        ),
+    )
+    .expect("JSON")
+}
+
+/// A zigzag: it keeps every vertex until the tolerance passes its amplitude,
+/// then collapses, so one shape covers several regimes.
+fn zigzag() -> Value {
+    let (mut lat, mut lon) = (40.0f64, -105.0f64);
+    let mut pts = Vec::new();
+    for i in 0..14 {
+        pts.push(json!({"lat": lat, "lon": lon}));
+        let b: f64 = 90.0 + if i % 2 == 0 { -35.0 } else { 35.0 };
+        lat += 250.0 * b.to_radians().cos() / 111_320.0;
+        lon += 250.0 * b.to_radians().sin() / (111_320.0 * lat.to_radians().cos());
+    }
+    Value::Array(pts)
+}
+
+#[test]
+fn rdp_invariants() {
+    let shape = zigzag();
+    let n_in = shape.as_array().unwrap().len();
+    // Matched numerically, not by formatting: the input and the echoed output
+    // travel through different serialisation paths and need not print alike.
+    let orig: Vec<(f64, f64)> = shape
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| (p["lat"].as_f64().unwrap(), p["lon"].as_f64().unwrap()))
+        .collect();
+    let same =
+        |a: (f64, f64), b: (f64, f64)| (a.0 - b.0).abs() < 1e-12 && (a.1 - b.1).abs() < 1e-12;
+
+    let mut last_kept = usize::MAX;
+    for tol in [1.0, 5.0, 25.0, 100.0, 200.0, 400.0, 2000.0] {
+        let r = rdp(&shape, &format!("{tol} m"), "no");
+        assert!(r["ok"].as_bool().unwrap_or(false), "{tol} m: {r}");
+        let kept = r["result"]["vertices_out"].as_u64().unwrap() as usize;
+
+        // The promise the tool makes, and the only one that matters.
+        let dev = r["result"]["max_deviation"]["value"].as_f64().unwrap();
+        assert!(
+            dev <= tol + 1e-9,
+            "at {tol} m a vertex ended up {dev} m away"
+        );
+
+        // Vertices are dropped, never moved or invented: the result is a
+        // subsequence of the input, checked vertex by vertex rather than by
+        // counting, which a re-ordering would pass.
+        let simplified: Vec<(f64, f64)> = r["result"]["simplified"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| {
+                (
+                    p["lat"]["value"].as_f64().unwrap(),
+                    p["lon"]["value"].as_f64().unwrap(),
+                )
+            })
+            .collect();
+        let mut j = 0;
+        for s in &simplified {
+            while j < orig.len() && !same(orig[j], *s) {
+                j += 1;
+            }
+            assert!(
+                j < orig.len(),
+                "at {tol} m the result is not a subsequence of the input"
+            );
+            j += 1;
+        }
+        assert!(same(simplified[0], orig[0]), "the first point was dropped");
+        assert!(
+            same(simplified[simplified.len() - 1], orig[orig.len() - 1]),
+            "the last point was dropped"
+        );
+        assert_eq!(
+            simplified.len(),
+            kept,
+            "vertices_out is not the number returned"
+        );
+
+        // A looser tolerance can never keep more.
+        assert!(
+            kept <= last_kept,
+            "raising the tolerance to {tol} m kept more vertices"
+        );
+        last_kept = kept;
+        assert_eq!(r["result"]["vertices_in"].as_u64().unwrap() as usize, n_in);
+    }
+
+    // Zero is refused rather than read as "keep everything".
+    let zero = rdp(&shape, "0 m", "no");
+    assert_eq!(zero["error"]["code"], "INVALID_INPUT", "{zero}");
+    assert_eq!(zero["error"]["field"], "/tolerance", "{zero}");
+
+    // Two points have nothing to drop.
+    let two = json!([{"lat":40.0,"lon":-105.0},{"lat":40.01,"lon":-104.99}]);
+    let r = rdp(&two, "100000 m", "no");
+    assert_eq!(r["result"]["vertices_out"].as_u64().unwrap(), 2, "{r}");
+
+    // Keeping topology puts vertices back; it can never take more away.
+    for tol in [100.0, 200.0, 400.0] {
+        let plain = rdp(&shape, &format!("{tol} m"), "no");
+        let kept_topology = rdp(&shape, &format!("{tol} m"), "yes");
+        assert!(
+            kept_topology["result"]["vertices_out"].as_u64().unwrap()
+                >= plain["result"]["vertices_out"].as_u64().unwrap(),
+            "at {tol} m preserving topology returned fewer vertices"
+        );
+    }
+}

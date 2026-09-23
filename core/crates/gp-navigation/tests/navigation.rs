@@ -2920,3 +2920,242 @@ fn look_angles_invariants() {
         "refraction lowered the target"
     );
 }
+
+const R_SPHERE_KM: f64 = 6371.008771;
+const WGS84_A_KM: f64 = 6378.137;
+
+#[test]
+fn spherical_inverse_invariants() {
+    const S: &str = "navigation.geodesic.spherical-inverse";
+    let go = |la1: f64, lo1: f64, la2: f64, lo2: f64| {
+        call(
+            S,
+            &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+        )
+    };
+    // A quarter of the equator is exactly R pi/2 -- arithmetic, not the series.
+    let quarter = go(0.0, 0.0, 0.0, 90.0);
+    assert!(
+        (num(&quarter, "result.distance.value") - R_SPHERE_KM * std::f64::consts::FRAC_PI_2).abs()
+            < 1e-9,
+        "a quarter of the equator is {}",
+        num(&quarter, "result.distance.value")
+    );
+    // Due east along the equator is a course of 90; due north is 0.
+    assert!((num(&quarter, "result.initial_course.value") - 90.0).abs() < 1e-9);
+    let meridian = go(-10.0, 20.0, 10.0, 20.0);
+    assert!(num(&meridian, "result.initial_course.value").abs() < 1e-9);
+    // Symmetric, with the courses swapping.
+    for (la1, lo1, la2, lo2) in [
+        (40.6413, -73.7781, 51.47, -0.4543),
+        (-33.9, 151.2, 1.35, 103.99),
+    ] {
+        let there = go(la1, lo1, la2, lo2);
+        let back = go(la2, lo2, la1, lo1);
+        assert!(
+            (num(&there, "result.distance.value") - num(&back, "result.distance.value")).abs()
+                < 1e-9,
+            "the distance is not symmetric"
+        );
+        // Leaving A for B on course `out`, the return leg ARRIVES at A on the
+        // reciprocal, out + 180 -- not on `out` itself. That is the direction
+        // of travel at A in each case, and they are opposite.
+        let out = num(&there, "result.initial_course.value");
+        let ret = num(&back, "result.final_course.value");
+        assert!(
+            ((out + 180.0 - ret).rem_euclid(360.0)).min((ret - out - 180.0).rem_euclid(360.0))
+                < 1e-6,
+            "the courses do not reverse: {out} out, {ret} back"
+        );
+        // The spherical answer is within half a percent of the ellipsoidal one,
+        // and the reported difference is exactly that gap.
+        let ell = num(&there, "result.ellipsoidal_distance.value");
+        let sph = num(&there, "result.distance.value");
+        assert!(
+            ((sph - ell) / ell).abs() < 0.005,
+            "the sphere is {}% out",
+            (sph - ell) / ell * 100.0
+        );
+        // Both distances are in kilometres and the difference is in metres.
+        assert!(
+            (num(&there, "result.difference.value").abs() - (sph - ell).abs() * 1000.0).abs()
+                < 1e-3,
+            "the reported difference {} m is not the gap {} m",
+            num(&there, "result.difference.value"),
+            (sph - ell) * 1000.0
+        );
+    }
+    // A bigger sphere scales the distance: the radius enters as a multiplier.
+    let doubled = call(
+        S,
+        r#"{"lat1":0,"lon1":0,"lat2":0,"lon2":90,"radius":"12742.017542 km"}"#,
+    );
+    assert!(
+        (num(&doubled, "result.distance.value") / num(&quarter, "result.distance.value") - 2.0)
+            .abs()
+            < 1e-9
+    );
+}
+
+#[test]
+fn spherical_direct_invariants() {
+    const D: &str = "navigation.geodesic.spherical-direct";
+    const I: &str = "navigation.geodesic.spherical-inverse";
+    let go = |la: f64, lo: f64, course: f64, km: f64| {
+        call(
+            D,
+            &format!(r#"{{"lat1":{la},"lon1":{lo},"course":"{course} deg","distance":"{km} km"}}"#),
+        )
+    };
+    // Out and back: the inverse recovers the course and the distance.
+    for (la, lo, course, km) in [
+        (40.6413, -73.7781, 51.0, 5540.0),
+        (-33.8688, 151.2093, 315.0, 2000.0),
+        (51.5074, -0.1278, 45.0, 100.0),
+    ] {
+        let r = go(la, lo, course, km);
+        let (la2, lo2) = (num(&r, "result.lat2.value"), num(&r, "result.lon2.value"));
+        let back = call(
+            I,
+            &format!(r#"{{"lat1":{la},"lon1":{lo},"lat2":{la2},"lon2":{lo2}}}"#),
+        );
+        assert!(
+            (num(&back, "result.distance.value") - km).abs() < 1e-6,
+            "{km} km came back as {}",
+            num(&back, "result.distance.value")
+        );
+        assert!(
+            (num(&back, "result.initial_course.value") - course).abs() < 1e-6,
+            "the course did not survive the round trip"
+        );
+    }
+    // Due north from the equator for a quarter circumference is the pole.
+    let pole = go(0.0, 0.0, 0.0, R_SPHERE_KM * std::f64::consts::FRAC_PI_2);
+    assert!(
+        (num(&pole, "result.lat2.value") - 90.0).abs() < 1e-6,
+        "due north a quarter turn gave {}",
+        num(&pole, "result.lat2.value")
+    );
+    // Due east along the equator stays on it, a quarter turn of longitude away.
+    let east = go(0.0, 0.0, 90.0, R_SPHERE_KM * std::f64::consts::FRAC_PI_2);
+    assert!(
+        num(&east, "result.lat2.value").abs() < 1e-9,
+        "it left the equator"
+    );
+    assert!((num(&east, "result.lon2.value") - 90.0).abs() < 1e-6);
+    // A full circumference returns to the start.
+    let round = go(12.0, 34.0, 56.0, 2.0 * std::f64::consts::PI * R_SPHERE_KM);
+    assert!(
+        (num(&round, "result.lat2.value") - 12.0).abs() < 1e-6
+            && (num(&round, "result.lon2.value") - 34.0).abs() < 1e-6,
+        "a full circumference did not return: {} {}",
+        num(&round, "result.lat2.value"),
+        num(&round, "result.lon2.value")
+    );
+    // The offset from the ellipsoidal answer grows with distance.
+    let near = num(&go(40.0, -75.0, 60.0, 100.0), "result.offset.value");
+    let far = num(&go(40.0, -75.0, 60.0, 5000.0), "result.offset.value");
+    assert!(far > near, "the offset did not grow: {near} then {far}");
+}
+
+#[test]
+fn vincenty_inverse_invariants() {
+    const V: &str = "navigation.geodesic.vincenty-inverse";
+    let go = |la1: f64, lo1: f64, la2: f64, lo2: f64| {
+        call(
+            V,
+            &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+        )
+    };
+    // A quarter of the equator is a quarter of 2 pi a: the ellipsoid's equator
+    // is a circle, so this needs no series at all.
+    let quarter = go(0.0, 0.0, 0.0, 90.0);
+    assert!(
+        (num(&quarter, "result.distance.value") - std::f64::consts::FRAC_PI_2 * WGS84_A_KM).abs()
+            < 1e-6,
+        "a quarter of the equator is {}",
+        num(&quarter, "result.distance.value")
+    );
+    for (la1, lo1, la2, lo2) in [
+        (40.6413, -73.7781, 51.47, -0.4543),
+        (-22.9068, -43.1729, -33.8688, 151.2093),
+        (60.0, 5.0, 60.5, 7.0),
+    ] {
+        let r = go(la1, lo1, la2, lo2);
+        // Symmetric.
+        let back = go(la2, lo2, la1, lo1);
+        assert!(
+            (num(&r, "result.distance.value") - num(&back, "result.distance.value")).abs() < 1e-9,
+            "not symmetric"
+        );
+        // Within a millimetre of Karney on an ordinary line -- what makes the
+        // two comparable rather than merely different.
+        let exact = num(
+            &call(
+                "navigation.geodesic.inverse",
+                &format!(r#"{{"lat1":{la1},"lon1":{lo1},"lat2":{la2},"lon2":{lo2}}}"#),
+            ),
+            "result.distance.value",
+        );
+        // Both distances are in kilometres; the reported difference is in
+        // millimetres, which is the scale the gap actually lives at.
+        let gap_mm = (num(&r, "result.distance.value") - exact).abs() * 1e6;
+        assert!(gap_mm < 1.0, "Vincenty is {gap_mm} mm from Karney");
+        assert!(
+            (num(&r, "result.karney_difference.value").abs() - gap_mm).abs() < 1e-3,
+            "the reported difference {} is not the gap {gap_mm}",
+            num(&r, "result.karney_difference.value")
+        );
+    }
+}
+
+#[test]
+fn vincenty_direct_invariants() {
+    const D: &str = "navigation.geodesic.vincenty-direct";
+    const I: &str = "navigation.geodesic.vincenty-inverse";
+    let go = |la: f64, lo: f64, azi: f64, km: f64| {
+        call(
+            D,
+            &format!(r#"{{"lat1":{la},"lon1":{lo},"azimuth":"{azi} deg","distance":"{km} km"}}"#),
+        )
+    };
+    // Out and back.
+    for (la, lo, azi, km) in [
+        (40.6413, -73.7781, 51.0, 5540.0),
+        (-45.0, 170.0, 90.0, 7500.0),
+        (35.6762, 139.6503, 60.0, 250.0),
+    ] {
+        let r = go(la, lo, azi, km);
+        let (la2, lo2) = (num(&r, "result.lat2.value"), num(&r, "result.lon2.value"));
+        let back = call(
+            I,
+            &format!(r#"{{"lat1":{la},"lon1":{lo},"lat2":{la2},"lon2":{lo2}}}"#),
+        );
+        assert!(
+            (num(&back, "result.distance.value") - km).abs() < 1e-6,
+            "{km} km came back as {}",
+            num(&back, "result.distance.value")
+        );
+        assert!(
+            (num(&back, "result.azimuth1.value") - azi).abs() < 1e-6,
+            "the azimuth did not survive the round trip"
+        );
+    }
+    // Due east along the equator stays on it. The ellipsoid's equator is a
+    // circle, so the answer is exact there and the two methods must agree.
+    let east = go(0.0, 0.0, 90.0, 1000.0);
+    assert!(
+        num(&east, "result.lat2.value").abs() < 1e-9,
+        "it left the equator"
+    );
+    // And the destination is within a millimetre of Karney's.
+    let exact = call(
+        "navigation.geodesic.direct",
+        r#"{"lat1":40.6413,"lon1":-73.7781,"azimuth":51.0,"distance":"5540 km"}"#,
+    );
+    let r = go(40.6413, -73.7781, 51.0, 5540.0);
+    assert!(
+        (num(&r, "result.lat2.value") - num(&exact, "result.lat2.value")).abs() < 1e-7,
+        "Vincenty and Karney land in different places"
+    );
+}

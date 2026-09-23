@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "dde7cbcdb70d05f8",
+    "hash": "145123bfbf5b1982",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "6ffc0a94c88e17dc",
+    "hash": "b13c1584df859966",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -656,7 +656,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "3f6de59fc31940ae",
+    "hash": "bd9109bd42ed69c5",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -691,8 +691,24 @@
     "hash": "47c8d4340417f563",
     "lastmod": "2026-09-23"
   },
+  "/navigation/geodesic/spherical-direct/": {
+    "hash": "b7072b294d3a422e",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/geodesic/spherical-inverse/": {
+    "hash": "d722b228e9fe3ed7",
+    "lastmod": "2026-09-23"
+  },
   "/navigation/geodesic/vertex/": {
     "hash": "e528d4d2f77f4008",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/geodesic/vincenty-direct/": {
+    "hash": "e657b06ee75910d5",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/geodesic/vincenty-inverse/": {
+    "hash": "91ee800128d7b752",
     "lastmod": "2026-09-23"
   },
   "/navigation/geodesic/waypoints/": {
@@ -928,7 +944,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "87a7102c94950473",
+    "hash": "03f743c905838b3c",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1116,7 +1132,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1ede88ff049d567c",
+    "hash": "e9307efa8fe3d90d",
     "lastmod": "2026-09-23"
   }
 }

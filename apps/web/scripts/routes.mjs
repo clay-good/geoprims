@@ -33,6 +33,7 @@ export const FIXED = new Map([
   ['/licenses/', 'trust'],
   ['/privacy/', 'trust'],
   ['/security/', 'trust'],
+  ['/learn/', 'explainer'],
   ['/offline/', 'app'],
 ]);
 

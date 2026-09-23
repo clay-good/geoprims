@@ -29,6 +29,7 @@ const jsonld = [collection(name, route(`${domain}.${group}`), tools.filter((t) =
 ---
 <Base title={`${name} ${domain === 'units' ? 'converters' : 'calculators'} · ${domainTitle} · geoprims`} og={{ eyebrow: domainTitle, title: name }} description={description} canonical={route(`${domain}.${group}`)} jsonld={jsonld}>
   <PageHeader title={name} crumbs={[[domainTitle, route(domain)]]} purpose={hub.summary || `${tools.length} ${domainTitle.toLowerCase()} ${tools.length === 1 ? 'tool' : 'tools'} for ${noun}.`} />
+  {hub.intro && <div class="prose hub-intro"><p>{hub.intro}</p></div>}
   {['aviation', 'drone', 'navigation'].includes(domain) && (
     <p class="safety" role="note">
       <span><strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a></span>

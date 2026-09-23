@@ -10,6 +10,7 @@ import { catalog, hubFor } from '../src/lib/catalog.mjs';
 const web = new URL('..', import.meta.url).pathname;
 const hubs = JSON.parse(readFileSync(join(web, '../../data/hubs.json'), 'utf8')).hubs;
 const groups = [...new Set(catalog.tools.map((t) => `${t.domain}.${t.group}`))];
+const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 
 test('every group lists each of its tools under exactly one task', () => {
   for (const key of groups) {
@@ -21,13 +22,14 @@ test('every group lists each of its tools under exactly one task', () => {
     assert.deepEqual([...listed].sort(), [...own].sort(), `${key}: tasks must list every tool once`);
     for (const t of hub.tasks) assert.match(t.want, /^[a-z]/, `${key}: "${t.want}" reads after "I want to"`);
   }
-  for (const key of Object.keys(hubs)) assert.ok(groups.includes(key), `${key}: no such group`);
+  // A domain may carry its own entry (an intro for its hub page).
+  for (const key of Object.keys(hubs)) assert.ok(groups.includes(key) || domains.includes(key), `${key}: no such group or domain`);
 });
 
 test('every tool a hub names exists, including guide steps elsewhere', () => {
   for (const [key, hub] of Object.entries(hubs)) {
     const [domain, group] = key.split('.');
-    const refs = [...hub.tasks.flatMap((t) => t.tools), ...(hub.guide?.steps ?? []).map((s) => s.tool).filter(Boolean)];
+    const refs = [...(hub.tasks ?? []).flatMap((t) => t.tools), ...(hub.guide?.steps ?? []).map((s) => s.tool).filter(Boolean)];
     for (const ref of refs) {
       const id = ref.includes('.') ? ref : `${domain}.${group}.${ref}`;
       assert.ok(catalog.tools.some((t) => t.id === id), `${key}: ${ref} is not a tool`);
@@ -91,3 +93,13 @@ test('every domain and group hub carries a CollectionPage of exactly its tools, 
   assert.deepEqual([...new Set(problems)], []);
   assert.ok(pages.length >= 60, `only ${pages.length} hubs checked`);
 });
+
+test('hub intros are a short paragraph of plain prose', () => {
+  for (const [key, hub] of Object.entries(hubs)) {
+    if (!hub.intro) continue;
+    const words = hub.intro.split(/\s+/).length;
+    assert.ok(words >= 30 && words <= 140, `${key}: intro is ${words} words, want 30 to 140`);
+    assert.ok(!/[<>]/.test(hub.intro), `${key}: intro is plain text`);
+  }
+});
+

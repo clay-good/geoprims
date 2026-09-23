@@ -10,6 +10,7 @@ import { toMathML } from '../../../../lib/mathml.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
 import { buildDate } from '../../../../lib/build-date.mjs';
 import { title as pageTitle } from '../../../../lib/head.mjs';
+import { explainersFor } from '../../../../lib/learn.js';
 import { breadcrumbs, catalog, groupTitle, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, workedVector, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
@@ -45,6 +46,8 @@ const related = t.related.filter((r) => find(r.id) && r !== inverse);
 // Plain words for why a tool is related (tool.rs `Related`).
 const WHY = { inverse: 'Goes the other way', next: 'A common next step', alternative: 'Another way to get this', parent: 'The bigger calculation this is part of' };
 const client = clientTool(t);
+// Explainers that teach this tool's concept (search-pages, "Concept explainers").
+const learn = explainersFor(t.id);
 // The abbreviations in this tool's purpose line become buttons that open their
 // definition (ux/glanceable-results, "Tap to define"). Native popovers: no
 // script, so they work with JavaScript off and offline.
@@ -191,6 +194,7 @@ const purpose = markTerms(t.summary, terms);
       {sourceOf(e, { get: sourceRow }) && <p class="def-source">Source: {sourceOf(e, { get: sourceRow }).name}</p>}
     </div>
   ))}
+  {learn.length > 0 && <p class="learn-links">Learn the concept: {learn.map((e, i) => <>{i > 0 && ', '}<a href={e.route}>{e.title}</a></>)}</p>}
   {related.length > 0 && (
     <section class="related" aria-labelledby="related-title">
       <h2 id="related-title">Related tools</h2>

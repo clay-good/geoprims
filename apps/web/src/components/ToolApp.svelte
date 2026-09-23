@@ -548,6 +548,8 @@
   }
   // The footer's "Report a problem" asks for the tool's own report here (Base.astro).
   onMount(() => {
+    // An embedded copy (the home page, an explainer) leaves the footer's report to the page itself.
+    if (embedded) return;
     const onReport = (e) => {
       e.preventDefault();
       openReport();

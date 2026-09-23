@@ -1,0 +1,75 @@
+---
+// A concept explainer (discovery/search-pages): the idea in plain words, how
+// it is worked out, a live copy of the tool that computes it running its
+// worked example, the tools to reach for next, and the sources.
+import Base from '../../../layouts/Base.astro';
+import PageHeader from '../../../components/PageHeader.astro';
+import ToolApp from '../../../components/ToolApp.svelte';
+import ToolCards from '../../../components/ToolCards.astro';
+import { EXPLAINERS } from '../../../lib/learn.js';
+import { breadcrumbs, clientTool, exampleResult, primaryExample, route, tool as find } from '../../../lib/catalog.mjs';
+
+export function getStaticPaths() {
+  return EXPLAINERS.map((e) => ({ params: { slug: e.slug } }));
+}
+const e = EXPLAINERS.find((x) => x.slug === Astro.params.slug);
+const { Content } = e;
+const tools = e.tools.map((id) => {
+  const t = find(id);
+  if (!t) throw new Error(`${e.slug}: unknown tool ${id}`);
+  return t;
+});
+// The live example: the named tool's own worked example, the same one its page opens with.
+const live = find(e.example ?? e.tools[0]);
+const initial = await exampleResult(live);
+const operational = tools.some((t) => ['aviation', 'drone', 'navigation'].includes(t.domain));
+const url = new URL(e.route, Astro.site).href;
+const jsonld = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: e.title,
+    description: e.description,
+    datePublished: e.published,
+    dateModified: e.updated ?? e.published,
+    author: { '@type': 'Organization', name: 'geoprims', url: 'https://geoprims.com/' },
+    publisher: { '@type': 'Organization', name: 'geoprims', url: 'https://geoprims.com/' },
+    mainEntityOfPage: url,
+    image: new URL(`/og${e.route.replace(/\/$/, '')}.jpg`, Astro.site).href,
+    isAccessibleForFree: true,
+    citation: e.sources.map((s) => ({ '@type': 'CreativeWork', name: s.title, url: s.url })),
+  },
+  breadcrumbs([['geoprims', '/'], ['Learn', '/learn/'], [e.title, e.route]]),
+];
+---
+<Base title={`${e.title} · geoprims`} description={e.description} canonical={e.route} jsonld={jsonld} og={{ eyebrow: `Learn / ${e.audience}`, title: e.title, caption: e.summary }}>
+  <PageHeader title={e.title} crumbs={[['Learn', '/learn/']]} purpose={e.summary}>
+    <p class="guide-meta">For {e.audience.toLowerCase()} · updated {e.updated ?? e.published}</p>
+  </PageHeader>
+  {operational && (
+    <p class="safety" role="note">
+      <span><strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a></span>
+    </p>
+  )}
+  <article class="prose">
+    <Content />
+  </article>
+  <section class="learn-live" aria-labelledby="live-title">
+    <h2 id="live-title">Try it: {live.title}</h2>
+    <p class="help">The calculator below is the real tool, running its worked example. Change any value; nothing leaves your device.</p>
+    <ToolApp client:visible tool={clientTool(live)} example={primaryExample(live).input} initial={initial} embedded />
+  </section>
+  <section class="learn-tools" aria-labelledby="tools-title">
+    <h2 id="tools-title">Tools for this</h2>
+    <ToolCards tools={tools} />
+  </section>
+  <section class="learn-sources" aria-labelledby="sources-title">
+    <h2 id="sources-title">Sources</h2>
+    <ul class="sources">
+      {e.sources.map((s) => (
+        <li><a href={s.url}>{s.title}</a>, {s.issuer}{s.edition ? `, ${s.edition}` : ''}.{s.locator ? ` ${s.locator}.` : ''}</li>
+      ))}
+    </ul>
+    <p class="help">Every number on this page comes from the tools above, which cite their sources on their own pages under "How we got this." Found a mistake? Use "Report a problem" at the bottom of the page.</p>
+  </section>
+</Base>

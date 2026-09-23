@@ -100,7 +100,7 @@ test('the footer carries the site links', () => {
     assert.ok(footer, `${name} has a site footer`);
     const nav = /<nav aria-label="Site">([\s\S]*?)<\/nav>/.exec(footer)?.[1];
     assert.ok(nav, `${name} footer nav`);
-    for (const href of ['/tools/', '/units/', '/agents/', 'https://github.com/clay-good/geoprims', '/privacy/', '/security/', '/accuracy/', '/disclaimer/', '/licenses/']) {
+    for (const href of ['/tools/', '/units/', '/learn/', '/agents/', 'https://github.com/clay-good/geoprims', '/privacy/', '/security/', '/accuracy/', '/disclaimer/', '/licenses/']) {
       assert.ok(nav.includes(`href="${href}"`), `${name} footer link ${href}`);
     }
   }

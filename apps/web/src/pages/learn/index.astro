@@ -1,0 +1,35 @@
+---
+// The explainers, by who reads them. Each links to the tools that compute its concept.
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { AUDIENCES, EXPLAINERS } from '../../lib/learn.js';
+import { breadcrumbs } from '../../lib/catalog.mjs';
+
+const byAudience = AUDIENCES.map((a) => [a, EXPLAINERS.filter((e) => e.audience === a)]).filter(([, list]) => list.length);
+const jsonld = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Learn the concepts',
+    url: 'https://geoprims.com/learn/',
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: EXPLAINERS.map((e, i) => ({ '@type': 'ListItem', position: i + 1, name: e.title, url: `https://geoprims.com${e.route}` })),
+    },
+  },
+  breadcrumbs([['geoprims', '/'], ['Learn', '/learn/']]),
+];
+---
+<Base title="Learn the concepts: aviation, drone, survey, and mapping math · geoprims" description={`${EXPLAINERS.length} plain-language explainers for pilots, drone operators, surveyors, and developers, each with a live calculator and its sources.`} canonical="/learn/" jsonld={jsonld} og={{ eyebrow: 'Learn', title: 'Learn the concepts', caption: `${EXPLAINERS.length} plain-language explainers, each with a live calculator and its sources.` }}>
+  <PageHeader title="Learn the concepts" purpose="The ideas behind the calculators, in plain words: what each one means, how it is worked out, and where the rules of thumb go wrong." />
+  {byAudience.map(([audience, list]) => (
+    <section class="group" aria-labelledby={`learn-${audience}`}>
+      <h2 id={`learn-${audience}`}>{audience}</h2>
+      <ul class="tools">
+        {list.map((e) => (
+          <li><a href={e.route}>{e.title}</a><p>{e.summary}</p></li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>

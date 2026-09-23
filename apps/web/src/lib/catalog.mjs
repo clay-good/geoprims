@@ -278,13 +278,18 @@ export const clientTool = (t) => ({
 // sequence. Unit groups have one task, converting. A step's tool is an
 // operation in the group or a full id elsewhere.
 const hubs = JSON.parse(readFileSync(join(root, 'data/hubs.json'), 'utf8')).hubs;
+/** A domain hub's intro paragraph, from data/hubs.json keyed by the domain. */
+export const domainIntro = (domain) => hubs[domain]?.intro ?? '';
+
 export function hubFor(domain, group) {
   const inGroup = catalog.tools.filter((t) => t.domain === domain && t.group === group);
   const find = (ref) => catalog.tools.find((t) => t.id === (ref.includes('.') ? ref : `${domain}.${group}.${ref}`));
   const hub = hubs[`${domain}.${group}`];
-  if (!hub) return { summary: '', tasks: [{ want: `convert ${group.replaceAll('-', ' ')}`, tools: inGroup }], guide: null };
+  // A hub may carry only an intro (the units groups), and then lists its tools as one task.
+  if (!hub?.tasks) return { summary: hub?.summary ?? '', intro: hub?.intro ?? '', tasks: [{ want: `convert ${group.replaceAll('-', ' ')}`, tools: inGroup }], guide: null };
   return {
     summary: hub.summary,
+    intro: hub.intro ?? '',
     tasks: hub.tasks.map((t) => ({ want: t.want, tools: t.tools.map(find).filter(Boolean) })),
     guide: hub.guide ? { title: hub.guide.title, steps: hub.guide.steps.map((s) => ({ text: s.text, tool: s.tool ? find(s.tool) : null })) } : null,
   };

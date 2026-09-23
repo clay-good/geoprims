@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { catalog, DOMAIN_BLURBS, JOURNEYS, DOMAIN_TITLES, exampleResult, route, tool as find } from '../lib/catalog.mjs';
 import { icon } from '../lib/icons.mjs';
+import { EXPLAINERS } from '../lib/learn.js';
 const domains = [...new Set(catalog.tools.map((t) => t.domain))];
 const ops = catalog.counts.all.operations;
 const stable = catalog.counts.stable.operations;
@@ -105,6 +106,18 @@ const panel = await Promise.all(
     <ul class="journey-list">
       {JOURNEYS.map((j) => (
         <li><a href={`/journeys/${j.slug}/`}>{j.title}</a><p class="blurb">{j.summary}</p><span class="count">{j.steps.length} steps</span></li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="journeys" aria-labelledby="learn-title">
+    <div class="section-head">
+      <h2 id="learn-title">Learn the concepts</h2>
+      <a class="section-link" href="/learn/">All {EXPLAINERS.length} explainers →</a>
+    </div>
+    <ul class="journey-list">
+      {EXPLAINERS.slice(0, 6).map((e) => (
+        <li><a href={e.route}>{e.title}</a><p class="blurb">{e.summary}</p><span class="count">{e.audience}</span></li>
       ))}
     </ul>
   </section>

@@ -801,3 +801,20 @@ details.provenance dd { margin: 0; }
 
 /* Formulas set as MathML at build: left-aligned with the steps, in the data color. */
 .trace-formula math { display: inline math; font-size: 1.05rem; color: var(--data); }
+
+/* Concept explainers (/learn/): a readable column, then the live tool. */
+.prose { max-inline-size: 46rem; font-size: 1.05rem; line-height: 1.65; }
+.prose h2 { margin-block: 2.25rem 0.6rem; font-size: 1.35rem; }
+.prose h3 { margin-block: 1.5rem 0.4rem; font-size: 1.1rem; }
+.prose p, .prose ul, .prose ol { margin-block: 0 1rem; }
+.prose li { margin-block: 0.3rem; }
+.prose table { border-collapse: collapse; font-size: 0.92rem; margin-block: 0.75rem 1.25rem; inline-size: 100%; }
+.prose th, .prose td { text-align: start; vertical-align: top; padding: 0.45rem 0.6rem; border-block-end: 1px solid var(--line); }
+.prose thead th { font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.prose code { font-family: var(--mono); font-size: 0.9em; }
+.prose pre { overflow-x: auto; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); font-size: 0.9rem; }
+.prose blockquote { margin: 0 0 1rem; padding-inline-start: 1rem; border-inline-start: 3px solid var(--accent); color: var(--muted); }
+.learn-live, .learn-tools, .learn-sources { margin-block-start: 2.5rem; }
+.learn-sources { max-inline-size: 46rem; }
+.learn-links { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.95rem; }
+.hub-intro { margin-block: 0 1.5rem; }

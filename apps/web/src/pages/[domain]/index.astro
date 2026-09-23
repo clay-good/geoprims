@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import ListFilter from '../../components/ListFilter.astro';
 import ToolCards from '../../components/ToolCards.astro';
-import { breadcrumbs, catalog, collection, DOMAIN_BLURBS, DOMAIN_TITLES, groups, groupTitle, hubFor, reviewLine, route } from '../../lib/catalog.mjs';
+import { breadcrumbs, catalog, collection, domainIntro, DOMAIN_BLURBS, DOMAIN_TITLES, groups, groupTitle, hubFor, reviewLine, route } from '../../lib/catalog.mjs';
 export function getStaticPaths() {
   return [...new Set(catalog.tools.map((t) => t.domain))].map((domain) => ({ params: { domain } }));
 }
@@ -17,6 +17,7 @@ const jsonld = [collection(`${title} calculators`, route(domain), listed), bread
   <PageHeader title={title} purpose={DOMAIN_BLURBS[domain]}>
     <p class="review notice">{reviewLine(domain)}</p>
   </PageHeader>
+  {domainIntro(domain) && <div class="prose hub-intro"><p>{domainIntro(domain)}</p></div>}
   {['aviation', 'drone', 'navigation'].includes(domain) && (
     <p class="safety" role="note">
       <span><strong>Planning and education aid. Not for primary navigation.</strong> <a href="/disclaimer/">Full disclaimer</a></span>

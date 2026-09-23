@@ -141,7 +141,8 @@ const sitemapOf = (paths) =>
 const groupsOf = new Map([['site', []]]);
 for (const p of pages.map((x) => x.path).sort()) {
   const d = p.split('/')[1];
-  const key = domains.includes(d) ? d : 'site';
+  // Explainers and journeys share the learn sitemap (search-pages, "Sitemaps").
+  const key = domains.includes(d) ? d : d === 'learn' || d === 'journeys' ? 'learn' : 'site';
   if (!groupsOf.has(key)) groupsOf.set(key, []);
   groupsOf.get(key).push(p);
 }

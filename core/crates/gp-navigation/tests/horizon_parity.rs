@@ -137,3 +137,46 @@ fn horizon_invariants() {
     let ratio = value(&doubled, "geometric") / value(&small, "geometric");
     assert!((ratio - 2f64.sqrt()).abs() < 5e-4, "{ratio}");
 }
+
+#[test]
+fn visibility_is_two_horizons_of_bowditch_table_12() {
+    // Bowditch's own procedure: the range at which two objects see each other
+    // is the sum of their horizon distances. The distances are the table's, so
+    // nothing here re-derives a horizon.
+    const K: f64 = 0.1689; // the coefficient the table's rule implies
+    let rows = table();
+    let (mut worst, mut at, mut pairs) = (0f64, (0.0, 0.0), 0);
+    for i in (0..rows.len()).step_by(7) {
+        for j in (i..rows.len()).step_by(11) {
+            let (f1, nm1, _, m1, bad1) = rows[i];
+            let (f2, nm2, _, m2, bad2) = rows[j];
+            if bad1 || bad2 {
+                continue; // Table 12's 640 ft misprint, pinned elsewhere
+            }
+            let r = call(
+                "navigation.los.visibility",
+                &json!({"observer_height": format!("{m1} m"), "target_height": format!("{m2} m"),
+                        "distance": "1 km", "k": K,
+                        "options": {"outputUnits": {"max_range": "NM", "observer_horizon": "NM"}}}),
+            );
+            let range = r["result"]["max_range"]["value"]
+                .as_f64()
+                .unwrap_or_else(|| panic!("{r}"));
+            let printed = nm1 + nm2;
+            // The table rounds each cell to a tenth, and its square-root rule
+            // sits 0.231% above the exact horizon; nothing else is allowed.
+            let budget = 0.1 + 0.00231 * printed + 1e-9;
+            assert!(
+                (range - printed).abs() <= budget,
+                "{f1} ft and {f2} ft: {range} against the table's {printed}"
+            );
+            if (range - printed).abs() > worst {
+                worst = (range - printed).abs();
+                at = (f1, f2);
+            }
+            pairs += 1;
+        }
+    }
+    eprintln!("Table 12 pairs: {pairs} within {worst:.4} nm, worst at {at:?}");
+    assert_eq!(pairs, 115);
+}

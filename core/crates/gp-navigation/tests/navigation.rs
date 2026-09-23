@@ -1844,3 +1844,93 @@ fn dip_invariants() {
         );
     }
 }
+
+#[test]
+fn visibility_invariants() {
+    let vis = |oh: f64, th: f64, d: f64, k: f64| {
+        call(
+            "navigation.los.visibility",
+            &format!(
+                r#"{{"observer_height":"{oh} m","target_height":"{th} m","distance":"{d} km","k":{k}}}"#
+            ),
+        )
+    };
+    let horizon = |h: f64, k: f64| {
+        num(
+            &call(
+                "navigation.los.horizon",
+                &format!(
+                    r#"{{"height":"{h} m","k":{k},"options":{{"outputUnits":{{"optical":"km"}}}}}}"#
+                ),
+            ),
+            "result.optical.value",
+        )
+    };
+    for k in [0.0, 0.13, 0.1689] {
+        for (oh, th) in [(2.0, 50.0), (10.0, 100.0), (30.0, 5.0), (1.7, 1.7)] {
+            let r = vis(oh, th, 1.0, k);
+            assert!(r["ok"].as_bool().unwrap_or(false), "{r}");
+            let range = num(&r, "result.max_range.value");
+
+            // The range is the two horizons added, and the observer's horizon
+            // is the horizon tool's own answer. Neither is recomputed here.
+            let (d1, d2) = (horizon(oh, k), horizon(th, k));
+            assert!(
+                (range - (d1 + d2)).abs() < 1e-9,
+                "k={k} {oh}/{th}: {range} against {d1} + {d2}"
+            );
+            assert!(
+                (num(&r, "result.observer_horizon.value") - d1).abs() < 1e-9,
+                "k={k} {oh}/{th}: observer horizon\n{r}"
+            );
+
+            // Visible exactly while inside the range.
+            for f in [0.5, 0.99, 1.01, 2.0] {
+                let v = vis(oh, th, range * f, k);
+                assert_eq!(
+                    v["result"]["visible"].as_str().unwrap(),
+                    if f <= 1.0 { "yes" } else { "no" },
+                    "k={k} {oh}/{th} at {f} of the range\n{v}"
+                );
+            }
+
+            // Nothing is hidden out to the observer's own horizon; past it the
+            // hidden height grows, and at the range it is the whole target.
+            assert!(
+                num(&vis(oh, th, d1 * 0.5, k), "result.hidden_height.value") == 0.0,
+                "k={k} {oh}/{th}: something hidden inside the observer's horizon"
+            );
+            let mut previous = -1.0;
+            for f in [0.1, 0.5, 0.9, 0.999] {
+                let h = num(&vis(oh, th, range * f, k), "result.hidden_height.value");
+                assert!(h >= previous, "k={k} {oh}/{th}: hidden height fell at {f}");
+                previous = h;
+            }
+            let at_range = num(&vis(oh, th, range, k), "result.hidden_height.value");
+            assert!(
+                (at_range - th).abs() < 1e-6,
+                "k={k} {oh}/{th}: {at_range} hidden at the range, not the whole {th}"
+            );
+
+            // The hidden height at a fraction of the range barely moves with k.
+            // It is not an identity -- the two heights stay fixed while the
+            // effective radius changes, so the construction is not a pure
+            // rescaling -- but at these angles it holds to a part in 100,000,
+            // tight enough to catch a k applied in the wrong place.
+            if k != 0.0 {
+                let zero_range = horizon(oh, 0.0) + horizon(th, 0.0);
+                for f in [0.5, 0.9] {
+                    let a = num(&vis(oh, th, range * f, k), "result.hidden_height.value");
+                    let b = num(
+                        &vis(oh, th, zero_range * f, 0.0),
+                        "result.hidden_height.value",
+                    );
+                    assert!(
+                        (a - b).abs() / b.max(1e-9) < 1e-5,
+                        "k={k} {oh}/{th} at {f}: {a} hidden against {b} with no refraction"
+                    );
+                }
+            }
+        }
+    }
+}

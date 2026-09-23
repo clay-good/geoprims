@@ -302,6 +302,7 @@ fn run_horizon(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static VISIBILITY: ToolDef = ToolDef {
     id: "navigation.los.visibility",
+    stability: gp_base::tool::Stability::Stable,
     title: "Can two points see each other?",
     summary: "The farthest two raised points can see each other over the Earth's curve, and for a given distance whether they can, the clearance at the midpoint, and how much of the far target is hidden.",
     aliases: &[
@@ -393,30 +394,37 @@ pub static VISIBILITY: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &[
-        "TERRAIN_NOT_CONSIDERED",
-        "INPUT_NORMALIZED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["TERRAIN_NOT_CONSIDERED", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Spherical Earth with effective radius R/(1 − k)",
     accuracy: "Exact for the model; real refraction varies with the weather",
+    when_to_use: "Use this to ask whether the curve of the Earth alone puts something out of sight: a light or a landmark from a bridge wing, a tower from a receiver, an aircraft from a ground station, a drone from its pilot. Give both heights for the range at which they lose each other, and add a distance to be told whether they can see each other at it, how much of the far object is cut off below the horizon, and how much room the sightline has over the bulge halfway between them.",
+    limitations: "This is the curve of the Earth and nothing else. There is no terrain in it, no buildings, no trees: a hill between the two points blocks a sightline this tool calls clear, which is why every answer carries the terrain warning. It is geometry rather than propagation, so it says nothing about whether a radio link closes or a light is bright enough to see at the range it gives — for a radio path the first Fresnel zone wants more clearance than a bare sightline, which is the neighbouring tool. Refraction enters only through the coefficient k, held at a nominal 0.13; real air varies, and a temperature inversion over water can lift a target well beyond the range given here.",
     references: &[BOWDITCH],
     examples: &[Example {
         id: "primary",
         title: "From 2 m, a target 30 km away",
         input: r#"{"observer_height":"2 m","target_height":"50 m","distance":"30 km"}"#,
-        source: "navigation line-of-sight scenario: the observer's horizon is 5.41 km and the target's lowest 41.3 m is hidden (k = 0.13)",
+        source: "Bowditch's own procedure, the distance to each horizon added together: the tool's range is that sum over 115 pairs of heights printed in NGA Pub. 9 Table 12, within the tenth of a nautical mile the table rounds to plus the 0.231% by which its square-root rule sits above the exact horizon",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "profile-chart",
         map: &[],
     }],
-    related: &[Related {
-        id: "navigation.los.horizon",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "navigation.los.horizon",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.los.dip",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.los.fresnel",
+            reason: "next",
+        },
+    ],
     sentence: "They can see each other up to {max_range} apart.",
     limits: &[("batchRows", 10_000)],
     run: run_visibility,

@@ -420,3 +420,80 @@ fn ellipsoid_parameter_invariants() {
         assert!(b < a, "{name}: the ellipsoid is not oblate");
     }
 }
+
+/// Layer E for `geodesy.ellipsoid.radii`. The two radii of curvature bracket
+/// their Gaussian mean and meet at the poles, Euler's formula gives the radius
+/// in any azimuth from them, a degree of longitude shrinks as the cosine of
+/// latitude, and the meridian arc grows without turning back.
+#[test]
+fn ellipsoid_radii_invariants() {
+    let at = |lat: f64, extra: &str| {
+        call(
+            "geodesy.ellipsoid.radii",
+            &format!(r#"{{"lat":{lat}{extra}}}"#),
+        )
+    };
+    let mut last_arc = -1.0;
+    for lat in [0.0, 15.0, 30.0, 45.0, 60.0, 75.0, 89.0] {
+        let r = at(lat, "");
+        assert_eq!(r["ok"], true, "{r}");
+        let (m, n, g) = (
+            num(&r, "result.meridional.value"),
+            num(&r, "result.prime_vertical.value"),
+            num(&r, "result.gaussian.value"),
+        );
+        // On an oblate ellipsoid the meridian bends more sharply than the
+        // prime vertical everywhere but the poles, and the Gaussian mean is
+        // the geometric mean of the two, so it sits between them.
+        assert!(m < n, "at {lat}: the meridional radius is not the smaller");
+        assert!(
+            m < g && g < n,
+            "at {lat}: the Gaussian mean is outside them"
+        );
+        assert!(
+            (g - (m * n).sqrt()).abs() < 1e-6,
+            "at {lat}: the Gaussian mean is not sqrt(MN)"
+        );
+        // Euler: 1/R(alpha) = cos^2(alpha)/M + sin^2(alpha)/N. Due north is M,
+        // due east is N, and 45 degrees follows from both.
+        for (azimuth, want) in [(0.0, m), (90.0, n)] {
+            let e = num(
+                &at(lat, &format!(r#","azimuth":{azimuth}"#)),
+                "result.in_azimuth.value",
+            );
+            assert!(
+                (e - want).abs() < 1e-6,
+                "at {lat} azimuth {azimuth}: {e} not {want}"
+            );
+        }
+        let diagonal = num(&at(lat, r#","azimuth":45"#), "result.in_azimuth.value");
+        let euler = 1.0 / (0.5 / m + 0.5 / n);
+        assert!(
+            (diagonal - euler).abs() < 1e-6,
+            "at {lat}: 45 degrees gives {diagonal}, Euler gives {euler}"
+        );
+        // A degree of longitude is a degree of the prime vertical circle,
+        // which shrinks with the cosine of latitude; a degree of latitude
+        // does not shrink at all, and at 45 degrees they cross.
+        let (dlat, dlon) = (
+            num(&r, "result.degree_lat.value"),
+            num(&r, "result.degree_lon.value"),
+        );
+        let want_lon = n * lat.to_radians().cos() * std::f64::consts::PI / 180.0;
+        assert!(
+            (dlon - want_lon).abs() < 1e-6,
+            "at {lat}: a degree of longitude is {dlon}"
+        );
+        assert!(dlat > 0.0 && dlon >= 0.0);
+        if lat > 0.0 {
+            assert!(
+                dlon < dlat,
+                "at {lat}: longitude has not fallen below latitude"
+            );
+        }
+        // The meridian arc from the equator only grows going north.
+        let arc = num(&r, "result.meridian_arc.value");
+        assert!(arc > last_arc, "the meridian arc turned back at {lat}");
+        last_arc = arc;
+    }
+}

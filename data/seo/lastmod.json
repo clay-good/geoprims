@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "a657e9aad4cbec8f",
+    "hash": "cf40f61eedc9c957",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "aabd51d8e18aac43",
+    "hash": "4aafc5161063d2ea",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -165,6 +165,10 @@
   },
   "/geodesy/ellipsoid/parameters/": {
     "hash": "0a29f8ea2492adfc",
+    "lastmod": "2026-09-23"
+  },
+  "/geodesy/ellipsoid/radii/": {
+    "hash": "0b03c883da823e91",
     "lastmod": "2026-09-23"
   },
   "/geodesy/frame/": {
@@ -508,7 +512,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "a4d41197a68f761d",
+    "hash": "140c2a5e282c856e",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -676,7 +680,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "b99cde6ac7cfcc8b",
+    "hash": "7f9323423433ea15",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -776,7 +780,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4abc91682adda74a",
+    "hash": "19708858efe674ee",
     "lastmod": "2026-09-23"
   }
 }

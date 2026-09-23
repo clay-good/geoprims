@@ -284,6 +284,7 @@ fn run_parameters(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static RADII: ToolDef = ToolDef {
     id: "geodesy.ellipsoid.radii",
+    stability: gp_base::tool::Stability::Stable,
     title: "Radii of curvature and degree lengths",
     summary: "At a latitude: the meridional and prime-vertical radii of curvature, their Gaussian mean, the radius in any azimuth, the length of one degree of latitude and longitude, and the meridian arc from the equator or between two latitudes.",
     aliases: &[
@@ -361,7 +362,9 @@ pub static RADII: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
+    when_to_use: "Use this when a local calculation needs the curvature of the Earth where you are: how far a degree of latitude and a degree of longitude run on the ground, the radius a survey reduction or a projection wants at that latitude, the radius in a particular azimuth, and the meridian arc from the equator. It is the ellipsoid seen from one place rather than as a whole.",
+    limitations: "These are curvatures at a point, not distances between places: a degree of longitude is the parallel through the point, which is not the shortest way between its ends, so a route calculation wants a geodesic and not this. The meridional and prime-vertical radii differ by about 21 km at the equator and meet only at the poles, so a single radius of the Earth is always an answer to a narrower question than it looks. Above 89 degrees a degree of longitude is a few dozen metres and the figures lose their usefulness before they lose their accuracy.",
     model: "Closed-form radii; meridian arc a[E(φ, e) − e² sinφ cosφ/W] by Carlson's elliptic integrals",
     accuracy: "Meridian arcs within 1 nm of GeographicLib's geodesic along the meridian; radii exact in double precision",
     references: &[SNYDER, GEOGRAPHICLIB_GEOCENTRIC],
@@ -383,6 +386,10 @@ pub static RADII: ToolDef = ToolDef {
         },
         Related {
             id: "geodesy.ellipsoid.auxiliary-latitude",
+            reason: "next",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
             reason: "next",
         },
     ],

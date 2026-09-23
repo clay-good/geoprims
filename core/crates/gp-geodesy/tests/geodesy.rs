@@ -87,6 +87,7 @@ fn catalog_lint_examples_vectors() {
         &taxonomy,
         &[
             "aviation.wind.runway-components",
+            "navigation.geodesic.inverse",
             "survey.reduction.combined-factor",
         ],
     );

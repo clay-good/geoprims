@@ -148,7 +148,7 @@ pub static ANGULAR: ToolDef = ToolDef {
     ],
     errors: &[],
     warnings: &["EXPERIMENTAL_TOOL"],
-    model: "Required sum (n − 2)·180° for interior angles and (n + 2)·180° for exterior; misclosure = Σ measured − required; allowable = K·√n; each angle corrected by −misclosure/n (Ghilani & Wolf 2018, ch. 10)",
+    model: "Required sum (n − 2)·180° for interior angles and (n + 2)·180° for exterior; misclosure = Σ measured − required; allowable = K·√n; each angle corrected by −misclosure/n (Ghilani & Wolf 2021, ch. 10)",
     accuracy: "Exact; the allowable depends on the standard, entered as K",
     references: &[GHILANI],
     examples: &[Example {

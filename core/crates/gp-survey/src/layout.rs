@@ -149,7 +149,7 @@ pub static CURVE_LAYOUT: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Arc definition: T = R tan(Δ/2), L = RΔ; deflection from the PC δ = s/(2R) for arc s; chord 2R sin δ; coordinates from the PC along the back tangent rotated by δ (Ghilani & Wolf 2018, ch. 24)",
+    model: "Arc definition: T = R tan(Δ/2), L = RΔ; deflection from the PC δ = s/(2R) for arc s; chord 2R sin δ; coordinates from the PC along the back tangent rotated by δ (Ghilani & Wolf 2021, ch. 24)",
     accuracy: "Exact for the elements given",
     references: &[GHILANI],
     examples: &[Example {

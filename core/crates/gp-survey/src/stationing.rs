@@ -122,7 +122,7 @@ pub static STATION_OFFSET: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "With the line's unit direction t = (cos α, sin α) in (N, E): station = start + (P − S)·t, offset = (P − S) × t positive to the right; and back, P = S + along·t + offset·n with n the right-hand normal (Ghilani & Wolf 2018, ch. 11)",
+    model: "With the line's unit direction t = (cos α, sin α) in (N, E): station = start + (P − S)·t, offset = (P − S) × t positive to the right; and back, P = S + along·t + offset·n with n the right-hand normal (Ghilani & Wolf 2021, ch. 11)",
     accuracy: "Exact",
     references: &[GHILANI],
     examples: &[Example {

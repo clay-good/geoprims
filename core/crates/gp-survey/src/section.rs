@@ -118,7 +118,7 @@ pub static SECTION_AREA: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Both lines are linear between their points; over the span both cover, the area between them is integrated interval by interval, each interval split where the difference changes sign (Ghilani & Wolf 2018, ch. 26)",
+    model: "Both lines are linear between their points; over the span both cover, the area between them is integrated interval by interval, each interval split where the difference changes sign (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "Exact for the lines given; the areas are as good as the ground shots and the template",
     references: &[GHILANI],
     examples: &[Example {

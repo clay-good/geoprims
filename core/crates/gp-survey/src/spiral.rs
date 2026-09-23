@@ -153,7 +153,7 @@ pub static SPIRAL: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Clothoid: θs = Ls/(2R); X = Ls(1 − θ²/10 + θ⁴/216 − θ⁶/9360), Y = Ls(θ/3 − θ³/42 + θ⁵/1320 − θ⁷/75600), four terms each; p = Y − R(1 − cos θs), k = X − R sin θs, Ts = (R + p) tan(Δ/2) + k, arc = R(Δ − 2θs) (Ghilani & Wolf 2018, ch. 24)",
+    model: "Clothoid: θs = Ls/(2R); X = Ls(1 − θ²/10 + θ⁴/216 − θ⁶/9360), Y = Ls(θ/3 − θ³/42 + θ⁵/1320 − θ⁷/75600), four terms each; p = Y − R(1 − cos θs), k = X − R sin θs, Ts = (R + p) tan(Δ/2) + k, arc = R(Δ − 2θs) (Ghilani & Wolf 2021, ch. 24)",
     accuracy: "The four-term series is good to far better than 0.001 of the unit for spiral angles up to about 30°",
     references: &[GHILANI],
     examples: &[Example {

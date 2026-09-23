@@ -218,7 +218,7 @@ pub static STOCKPILE: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Delaunay TIN (Bowyer–Watson) over the base vertices and surface shots; base plane z = a + bx + cy by least squares through the base vertices; volume = Σ triangle area × mean height above the plane, over triangles inside the outline (Ghilani & Wolf 2018, ch. 26)",
+    model: "Delaunay TIN (Bowyer–Watson) over the base vertices and surface shots; base plane z = a + bx + cy by least squares through the base vertices; volume = Σ triangle area × mean height above the plane, over triangles inside the outline (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "Exact for the TIN; a real pile's volume depends on how densely its surface was shot, especially along ridges and breaks",
     references: &[GHILANI],
     examples: &[Example {

@@ -1,7 +1,7 @@
 //! Least-squares adjustment of a small horizontal network (add-survey-suite,
 //! cogo-and-traverse "Least-squares adjustment (experimental)"): distances,
 //! angles, and direction sets with standard deviations, adjusted by weighted
-//! Gauss-Newton iteration (Ghilani and Wolf 2018, chapters 11, 16, and 19),
+//! Gauss-Newton iteration (Ghilani and Wolf 2021, chapters 11, 16, and 19),
 //! with standard errors, 95% error ellipses, the reference variance, and a
 //! two-tailed chi-square test of it.
 
@@ -311,7 +311,7 @@ pub static LEAST_SQUARES: ToolDef = ToolDef {
         id: "primary",
         title: "One new point from two control points",
         input: r#"{"control":[{"name":"A","northing":"1000 m","easting":"1000 m"},{"name":"B","northing":"1000 m","easting":"1400 m"}],"unknowns":[{"name":"P","northing":"1300 m","easting":"1200 m"}],"distances":[{"from":"A","to":"P","distance":"360.567 m","sd":"0.005 m"},{"from":"B","to":"P","distance":"360.551 m","sd":"0.005 m"}],"angles":[{"backsight":"B","station":"A","foresight":"P","angle":"303-41-26","sd":5},{"backsight":"P","station":"B","foresight":"A","angle":"303-41-20","sd":5}]}"#,
-        source: "Weighted least squares after Ghilani and Wolf (2018), chapter 16",
+        source: "Weighted least squares after Ghilani and Wolf (2021), chapter 16",
     }],
     primary_example: "primary",
     visualization: &[Layer {

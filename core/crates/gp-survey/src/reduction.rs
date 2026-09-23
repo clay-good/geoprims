@@ -220,7 +220,7 @@ pub static SLOPE: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "HD = SD·sin Z and VD = SD·cos Z (Ghilani & Wolf 2018, ch. 6); two-face mean Z = (FL + 360° − FR)/2 with index error (FL + FR − 360°)/2; curvature and refraction (1 − k)·HD²/(2R) with R = 6,371,000 m",
+    model: "HD = SD·sin Z and VD = SD·cos Z (Ghilani & Wolf 2021, ch. 6); two-face mean Z = (FL + 360° − FR)/2 with index error (FL + FR − 360°)/2; curvature and refraction (1 − k)·HD²/(2R) with R = 6,371,000 m",
     accuracy: "Exact for the reduction; the curvature and refraction correction carries the uncertainty of k, which varies with the air near the ground",
     references: &[GHILANI],
     examples: &[Example {
@@ -405,7 +405,7 @@ pub static CURVATURE: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "h = (1 − k)·D²/(2R), the curvature D²/(2R) less the refraction k·D²/(2R) (Ghilani & Wolf 2018, ch. 4); R = 6,371,000 m and k = 0.13 by default",
+    model: "h = (1 − k)·D²/(2R), the curvature D²/(2R) less the refraction k·D²/(2R) (Ghilani & Wolf 2021, ch. 4); R = 6,371,000 m and k = 0.13 by default",
     accuracy: "Exact for the given k and R; k itself varies with the air near the ground, most at low sights and midday",
     references: &[GHILANI],
     examples: &[Example {
@@ -542,7 +542,7 @@ pub static STADIA: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Inclined stadia sight: H = K·s·sin²Z + C·sin Z and V = K·s·sin Z·cos Z + C·cos Z (Ghilani & Wolf 2018, stadia); K = 100 and C = 0 by default",
+    model: "Inclined stadia sight: H = K·s·sin²Z + C·sin Z and V = K·s·sin Z·cos Z + C·cos Z (Ghilani & Wolf 2021, stadia); K = 100 and C = 0 by default",
     accuracy: "Stadia distances are good to about 1 part in 300 to 1 in 1,000, set by reading the rod interval; the arithmetic is exact",
     references: &[GHILANI],
     examples: &[Example {
@@ -731,7 +731,7 @@ pub static INACCESSIBLE: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "One station: height = D·(cot Z_top − cot Z_base). Two stations in line: D = b·cot Z_far / (cot Z_near − cot Z_far) from the near station, then as for one station (Ghilani & Wolf 2018, trigonometric leveling); curvature and refraction (1 − k)·D²/(2R) when D exceeds the threshold",
+    model: "One station: height = D·(cot Z_top − cot Z_base). Two stations in line: D = b·cot Z_far / (cot Z_near − cot Z_far) from the near station, then as for one station (Ghilani & Wolf 2021, trigonometric leveling); curvature and refraction (1 − k)·D²/(2R) when D exceeds the threshold",
     accuracy: "Exact for the geometry; the result carries the angle and distance errors, and assumes the top is plumb over the base",
     references: &[GHILANI],
     examples: &[Example {
@@ -960,7 +960,7 @@ pub static OFFSET: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Distance offset: out moves along the line of sight and right at 90° to it. Angle offset: the center lies at the measured distance plus the radius, along the direction turned to the center (Ghilani & Wolf 2018, total-station field practice)",
+    model: "Distance offset: out moves along the line of sight and right at 90° to it. Angle offset: the center lies at the measured distance plus the radius, along the direction turned to the center (Ghilani & Wolf 2021, total-station field practice)",
     accuracy: "Exact for the geometry; an angle offset assumes the shot was taken to the side of a round object at the same distance as its face",
     references: &[GHILANI],
     examples: &[Example {

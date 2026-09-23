@@ -85,7 +85,7 @@ pub static LEVEL_RUN: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "HI = elevation + BS; elevation = HI − FS (or − IS for a side shot); check ΣBS − ΣFS = last − first elevation; misclosure = observed − known closing elevation, distributed in proportion to cumulative distance (or to setups when no distances are given); allowable = C·√K (Ghilani & Wolf 2018, ch. 5)",
+    model: "HI = elevation + BS; elevation = HI − FS (or − IS for a side shot); check ΣBS − ΣFS = last − first elevation; misclosure = observed − known closing elevation, distributed in proportion to cumulative distance (or to setups when no distances are given); allowable = C·√K (Ghilani & Wolf 2021, ch. 5)",
     accuracy: "Exact arithmetic; the allowable closure is the standard you choose, entered as C",
     references: &[GHILANI],
     examples: &[Example {

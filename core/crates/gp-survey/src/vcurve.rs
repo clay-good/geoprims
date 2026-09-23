@@ -20,6 +20,7 @@ const GHILANI: Reference = Reference {
 
 pub static UNEQUAL: ToolDef = ToolDef {
     id: "survey.curves.unequal-vertical-curve",
+    version: "1.0.1",
     title: "Unequal-tangent vertical curve",
     summary: "A vertical curve with different tangent lengths each side of the PVI: PVC, PVT, and the point under the PVI, the high or low point, and the elevation at any station.",
     aliases: &[
@@ -145,7 +146,7 @@ pub static UNEQUAL: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Two parabolas, PVC to the point under the PVI and on to the PVT, sharing the grade g_c = (L1 g1 + L2 g2)/(L1 + L2) where they meet; the curve passes L1·L2·(g2 − g1)/(200(L1 + L2)) from the PVI (Ghilani & Wolf 2018, ch. 25)",
+    model: "Two parabolas, PVC to the point under the PVI and on to the PVT, sharing the grade g_c = (L1 g1 + L2 g2)/(L1 + L2) where they meet; the curve passes L1·L2·(g2 − g1)/(200(L1 + L2)) from the PVI (Ghilani & Wolf 2021, ch. 25)",
     accuracy: "Exact for the parabolas",
     references: &[GHILANI],
     examples: &[Example {
@@ -169,7 +170,7 @@ pub static UNEQUAL: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "The curve runs PVC {pvc_station} to PVT {pvt_station}, passing {cvc_elevation} under the PVI; {turning}.",
+    sentence: "The curve runs PVC {pvc_station} to PVT {pvt_station}. At the PVI station it is at {cvc_elevation}, and the PVI is at {pvi_elevation}; {turning}.",
     limits: &[("batchRows", 10_000)],
     run: run_unequal,
     ..ToolDef::BLANK

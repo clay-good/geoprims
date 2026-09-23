@@ -144,7 +144,7 @@ pub static BORROW_PIT: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Depth h = existing − proposed at each node. Net V = A/4 · Σ(w·h), w = 1 at corners, 2 on edges, 4 inside. Four-point: each cell's V = A·mean(h), or for a cell with both cut and fill, cut = A·(Σh⁺)²/(4Σ|h|) and fill = A·(Σh⁻)²/(4Σ|h|). Balance points by linear interpolation along cell edges (Ghilani & Wolf 2018, ch. 26)",
+    model: "Depth h = existing − proposed at each node. Net V = A/4 · Σ(w·h), w = 1 at corners, 2 on edges, 4 inside. Four-point: each cell's V = A·mean(h), or for a cell with both cut and fill, cut = A·(Σh⁺)²/(4Σ|h|) and fill = A·(Σh⁻)²/(4Σ|h|). Balance points by linear interpolation along cell edges (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "Exact for the grid; the volume is as good as the grid spacing is fine against the ground's shape",
     references: &[GHILANI],
     examples: &[Example {

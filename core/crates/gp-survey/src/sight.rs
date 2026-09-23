@@ -141,7 +141,7 @@ pub static SIGHT_DISTANCE: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Crest: L = AS²/(200(√h1 + √h2)²) when S < L, else L = 2S − 200(√h1 + √h2)²/A. Sag (headlight): L = AS²/(200(H + S tan β)) when S < L, else L = 2S − 200(H + S tan β)/A (Ghilani & Wolf 2018, ch. 25). Design values are inputs: no design table is reproduced",
+    model: "Crest: L = AS²/(200(√h1 + √h2)²) when S < L, else L = 2S − 200(√h1 + √h2)²/A. Sag (headlight): L = AS²/(200(H + S tan β)) when S < L, else L = 2S − 200(H + S tan β)/A (Ghilani & Wolf 2021, ch. 25). Design values are inputs: no design table is reproduced",
     accuracy: "Exact for the formulas; the design values, and whether they apply to your road, come from your design manual",
     references: &[GHILANI],
     examples: &[Example {

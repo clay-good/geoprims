@@ -233,7 +233,7 @@ pub static LOCALIZATION: ToolDef = ToolDef {
         id: "primary",
         title: "Four control points, similarity",
         input: r#"{"pairs":[{"name":"CP1","local_n":"5000 ft","local_e":"5000 ft","grid_n":"1520129.021 ft","grid_e":"3139867.253 ft"},{"name":"CP2","local_n":"6000 ft","local_e":"5200 ft","grid_n":"1521133.878 ft","grid_e":"3140041.010 ft"},{"name":"CP3","local_n":"5400 ft","local_e":"6100 ft","grid_n":"1520557.663 ft","grid_e":"3140956.371 ft"},{"name":"CP4","local_n":"4700 ft","local_e":"5800 ft","grid_n":"1519850.067 ft","grid_e":"3140674.813 ft"}],"expected_scale":0.99997}"#,
-        source: "Built at scale 0.99997 and 1.5° rotation with a few millimeters of noise; least squares after Ghilani and Wolf (2018)",
+        source: "Built at scale 0.99997 and 1.5° rotation with a few millimeters of noise; least squares after Ghilani and Wolf (2021)",
     }],
     primary_example: "primary",
     visualization: &[Layer {

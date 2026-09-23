@@ -862,3 +862,35 @@ fn a_perfect_fit_has_no_standardized_residuals_rather_than_infinite_ones() {
         assert!(z.is_finite(), "{row}");
     }
 }
+
+/// A tool's own text names Ghilani and Wolf by the edition its references
+/// cite (Elementary Surveying, 16th edition, 2021), never an older year.
+#[test]
+fn ghilani_citations_match_the_cited_edition() {
+    let mut bad = Vec::new();
+    for t in TOOLS {
+        let cited: Vec<String> = t
+            .references
+            .iter()
+            .filter(|r| r.issuer.contains("Ghilani"))
+            .map(|r| r.year.to_string())
+            .collect();
+        let texts = [t.model, t.accuracy, t.when_to_use, t.limitations]
+            .into_iter()
+            .chain(t.examples.iter().map(|e| e.source));
+        for text in texts {
+            for (i, _) in text.match_indices("Ghilani") {
+                let tail: String = text[i..].chars().take(40).collect();
+                let year: String = tail
+                    .split(|c: char| !c.is_ascii_digit())
+                    .find(|w| w.len() == 4)
+                    .unwrap_or_default()
+                    .to_owned();
+                if !year.is_empty() && !cited.contains(&year) {
+                    bad.push(format!("{}: {tail}", t.id));
+                }
+            }
+        }
+    }
+    assert!(bad.is_empty(), "{}", bad.join("\n"));
+}

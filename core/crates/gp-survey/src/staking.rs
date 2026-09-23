@@ -54,7 +54,7 @@ pub static SLOPE_STAKE: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch, gp_base::ErrorCode::DidNotConverge],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Design line from the shoulder: grade + (x − w)/s_cut in cut, grade − (x − w)/s_fill in fill; ground linear between the points given; the catch point solves ground(x) = design(x) by Brent's method to 1e-6 of the unit (Ghilani & Wolf 2018, ch. 26)",
+    model: "Design line from the shoulder: grade + (x − w)/s_cut in cut, grade − (x − w)/s_fill in fill; ground linear between the points given; the catch point solves ground(x) = design(x) by Brent's method to 1e-6 of the unit (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "The iteration converges far inside 0.01 of the unit; the answer is as good as the ground points and the template",
     references: &[GHILANI],
     examples: &[Example {

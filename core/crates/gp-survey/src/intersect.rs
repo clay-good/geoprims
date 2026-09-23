@@ -114,7 +114,7 @@ pub static INTERSECTION: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Plane coordinate geometry: two lines by their directions, a line and a circle, or two circles about the known points (Ghilani & Wolf 2018, ch. 11)",
+    model: "Plane coordinate geometry: two lines by their directions, a line and a circle, or two circles about the known points (Ghilani & Wolf 2021, ch. 11)",
     accuracy: "Exact for the geometry; a shallow crossing or a near-tangent meeting magnifies small errors in the inputs",
     references: &[GHILANI],
     examples: &[Example {
@@ -404,7 +404,7 @@ pub static RESECTION: ToolDef = ToolDef {
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
-    model: "Tienstra: with the triangle's angles A′, B′, C′ and the station's opposite angles α = ∠BPC, β = ∠CPA, γ = ∠APB, P = (K₁A + K₂B + K₃C)/(K₁ + K₂ + K₃), Kᵢ = 1/(cot of the triangle angle − cot of the station angle) (Ghilani & Wolf 2018, ch. 11)",
+    model: "Tienstra: with the triangle's angles A′, B′, C′ and the station's opposite angles α = ∠BPC, β = ∠CPA, γ = ∠APB, P = (K₁A + K₂B + K₃C)/(K₁ + K₂ + K₃), Kᵢ = 1/(cot of the triangle angle − cot of the station angle) (Ghilani & Wolf 2021, ch. 11)",
     accuracy: "Exact for the geometry; unstable near the circle through the three points, where every station on it sees the same angles",
     references: &[GHILANI],
     examples: &[Example {

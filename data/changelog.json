@@ -5,6 +5,43 @@
       "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
+        "survey.curves.unequal-vertical-curve"
+      ],
+      "vectors": [],
+      "summary": "The unequal-tangent vertical curve's sentence said the curve passed, for example, \"96.25 ft under the PVI\", when 96.25 ft is the curve's elevation at the PVI station and the curve is 3.75 ft below the PVI. It now says \"At the PVI station it is at 96.25 ft, and the PVI is at 100 ft\". Version 1.0.1; no numbers change."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
+        "survey.cogo.angular-closure",
+        "survey.cogo.intersection",
+        "survey.cogo.least-squares-2d",
+        "survey.cogo.offset-shot",
+        "survey.cogo.resection",
+        "survey.cogo.station-offset",
+        "survey.curves.curve-layout",
+        "survey.curves.sight-distance",
+        "survey.curves.spiral",
+        "survey.curves.unequal-vertical-curve",
+        "survey.earthwork.borrow-pit",
+        "survey.earthwork.section-area",
+        "survey.earthwork.slope-stake",
+        "survey.earthwork.stockpile",
+        "survey.gnss.localization",
+        "survey.reduction.curvature-refraction",
+        "survey.reduction.inaccessible-height",
+        "survey.reduction.level-run",
+        "survey.reduction.slope",
+        "survey.reduction.stadia"
+      ],
+      "vectors": [],
+      "summary": "Survey tools cite Ghilani and Wolf's Elementary Surveying, 16th edition (2021), but their method notes said \"Ghilani & Wolf 2018\". The notes now give 2021, the edition cited. No results change."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
         "drone.photogrammetry.image-count",
         "drone.mission.survey-grid"
       ],

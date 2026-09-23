@@ -368,7 +368,7 @@ const IFH: Reference = Reference {
     year: 2012,
     edition: "FAA-H-8083-15B",
     locator: "Chapter 5: the standard-rate turn, 3° per second, 360° in two minutes",
-    url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_flying_handbook",
+    url: "https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/FAA-H-8083-15B.pdf",
 };
 
 pub static FLY_BY: ToolDef = ToolDef {

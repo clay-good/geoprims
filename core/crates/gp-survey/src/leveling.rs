@@ -15,8 +15,8 @@ use crate::{common_unit, len, len_out, unit};
 const GHILANI: Reference = Reference {
     title: "Elementary Surveying: An Introduction to Geomatics",
     issuer: "Ghilani, C. D., and Wolf, P. R., Pearson",
-    year: 2018,
-    edition: "15th edition",
+    year: 2021,
+    edition: "16th edition",
     locator: "Chapter 5 (leveling field procedures and computations: level notes, arithmetic check, misclosure, and adjustment)",
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };

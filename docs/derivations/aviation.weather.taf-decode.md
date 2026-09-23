@@ -9,7 +9,7 @@ Read the header (amendment or correction, station, issue time, valid period), th
 
 - DDhh/DDhh validity and change periods; FMDDhhmm starts a new prevailing period.
 - Hours from the start of validity = (day difference, allowing a month end) × 24 + hour difference.
-- Conditions and flight categories as in the METAR decoder (FAA-H-8083-28A).
+- Conditions and flight categories as in the METAR decoder (FAA-H-8083-28B).
 
 ## Symbols and units
 
@@ -26,9 +26,9 @@ None: it decodes the text as written. TEMPO and PROB periods describe temporary 
 ## Worked example
 
 - sourcePublisher: Federal Aviation Administration
-- sourceTitle: Aviation Weather Handbook (FAA-H-8083-28A)
-- sourceEdition: 2024
-- sourceLocator: Section 27.3.3, TAF examples: KPIR 111140Z 1112/1212 … decoded line by line
+- sourceTitle: Aviation Weather Handbook (FAA-H-8083-28B)
+- sourceEdition: 2026
+- sourceLocator: Section 27.4.3 (section 27.3.3 in FAA-H-8083-28A), TAF examples: KPIR 111140Z 1112/1212 … decoded line by line
 - independent: yes
 - inputs: the KPIR TAF
 - outputs: 7 periods; base 130° at 12 kt, visibility over 6 SM, broken at 10,000 ft, wind shear at 2,000 ft from 350° at 35 kt; TEMPO to 1400Z; FM111500 160° at 15 kt gusting 25 kt; PROB30 broken cumulonimbus at 3,000 ft; last TEMPO overcast cumulonimbus at 3,000 ft

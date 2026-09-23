@@ -426,7 +426,7 @@ fn taf_bad_header() {
 
 #[test]
 fn present_weather_reads_like_the_handbook() {
-    // FAA-H-8083-28A table 24-3 and its notes: intensity qualifies the
+    // FAA-H-8083-28B table 24-3 and its notes: intensity qualifies the
     // precipitation ("heavy rain shower(s) is coded as +SHRA"), VC places the
     // phenomenon near the station, and +FC is a tornado or waterspout.
     for (code, words) in [

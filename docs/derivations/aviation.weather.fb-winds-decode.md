@@ -27,9 +27,9 @@ None: it decodes the text as written. A forecast is only as good as its model ru
 ## Worked example
 
 - sourcePublisher: Federal Aviation Administration
-- sourceTitle: Aviation Weather Handbook (FAA-H-8083-28A)
-- sourceEdition: 2024
-- sourceLocator: Section 27.2.1.1.2 and table 27-1 (Kansas City, MKC: 9900 1709+06 2018+00 2130-06 2242-18 2361-30 247242 258848, and 750252 at 39,000 ft). The coded message prints the last group as 550252, which would decode to 050°. The table decodes 250° at 102 kt, −52 °C, as 750252 does, and the table's group is used.
+- sourceTitle: Aviation Weather Handbook (FAA-H-8083-28B)
+- sourceEdition: 2026
+- sourceLocator: Section 27.2.1.1.2 and table 27-1 (Kansas City, MKC: 9900 1709+06 2018+00 2130-06 2242-18 2361-30 247242 258848, and 750252 at 39,000 ft). The earlier edition (FAA-H-8083-28A) printed the last group of the coded message as 550252, which would decode to 050°, against its own table's 250° at 102 kt, −52 °C. FAA-H-8083-28B corrects the message to 750252, matching the table, and that group is used.
 - independent: yes
 - inputs: the pasted product block
 - outputs: light and variable at 3,000 ft; 170° at 9 kt, +6 °C at 6,000 ft; … 250° at 102 kt, −52 °C at 39,000 ft

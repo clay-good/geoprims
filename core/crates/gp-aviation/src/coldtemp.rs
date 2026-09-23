@@ -30,7 +30,7 @@ const PANS_OPS: Reference = Reference {
     year: 2020,
     edition: "Volume II, 7th edition",
     locator: "Temperature correction of procedure altitudes below ISA (the 2020 equation, as cited in Transport Canada AC 500-020 section 4.8)",
-    url: "https://store.icao.int/en/procedures-for-air-navigation-services-aircraft-operations-doc-8168",
+    url: "https://store.icao.int/en/procedures-for-air-navigation-services-pans-aircraft-operations-volume-i-flight-procedures-doc-8168",
 };
 
 const AIM_COLD: Reference = Reference {

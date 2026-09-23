@@ -30,7 +30,7 @@ const NIST_HB44: Reference = Reference {
     year: 2026,
     edition: "2026 edition",
     locator: "Appendix C, General Tables of Units of Measurement",
-    url: "https://www.nist.gov/pml/owm/publications/nist-handbooks/handbook-44",
+    url: "https://www.nist.gov/pml/owm/nist-handbook-44-current-edition",
 };
 
 const ICAO_ANNEX5: Reference = Reference {

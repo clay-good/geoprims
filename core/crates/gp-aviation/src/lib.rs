@@ -65,12 +65,12 @@ pub mod refs {
         url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
     };
     pub const WEATHER_HANDBOOK: Reference = Reference {
-        title: "Aviation Weather Handbook, FAA-H-8083-28A",
+        title: "Aviation Weather Handbook, FAA-H-8083-28B",
         issuer: "Federal Aviation Administration",
-        year: 2024,
-        edition: "FAA-H-8083-28A",
-        locator: "Section 8.4 (altimetry), chapter 24 (METAR and SPECI, flight categories in tables 3-15 to 3-18), and section 27.2 (FB winds and temperatures aloft)",
-        url: "https://www.faa.gov/sites/faa.gov/files/FAA-H-8083-28A_FAA_Web.pdf",
+        year: 2026,
+        edition: "FAA-H-8083-28B",
+        locator: "Section 8.4 (altimetry), section 3.4.2.14 and tables 3-17 and 3-18 (flight categories), section 24.4 (METAR and SPECI), section 27.2 (FB winds and temperatures aloft), and section 27.4 (TAF)",
+        url: "https://www.faa.gov/sites/faa.gov/files/FAA-H-8083-28B.pdf",
     };
     pub const ALDUCHOV: Reference = Reference {
         title: "Improved Magnus form approximation of saturation vapor pressure",
@@ -126,7 +126,7 @@ pub mod refs {
         year: 2016,
         edition: "FAA-H-8083-1B",
         locator: "Chapter 2 (weight and balance theory, fuel weights) and Chapter 4 (CG envelope, percent MAC)",
-        url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/faa-h-8083-1",
+        url: "https://www.faa.gov/sites/faa.gov/files/2023-09/Weight_Balance_Handbook.pdf",
     };
 }
 

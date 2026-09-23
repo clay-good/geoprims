@@ -645,7 +645,7 @@ fn descent_invariants() {
 
 #[test]
 fn fb_pasted_block_uses_its_header() {
-    // FAA-H-8083-28A section 27.2.1.1.2: a whole FB product pasted at once.
+    // FAA-H-8083-28B section 27.2.1.1.2: a whole FB product pasted at once.
     let block = "DATA BASED ON 010000Z\nVALID 010600Z FOR USE 0500-0900Z. TEMPS NEG ABV 24000\nFT 3000 6000 9000 12000 18000 24000 30000 34000 39000\nMKC 9900 1709+06 2018+00 2130-06 2242-18 2361-30 247242 258848 750252";
     let r = call(
         "aviation.weather.fb-winds-decode",

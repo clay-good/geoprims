@@ -10,7 +10,7 @@ Read a METAR or SPECI group by group in the order WMO FM 15/16 and FAA Order JO 
 - Wind direction from the first three digits (degrees true), speed and gust in kt (MPS × 3,600/1,852).
 - SLPppp: 10pp.p hPa when ppp < 500, otherwise 9pp.p hPa.
 - T group: sign digit then tenths of °C.
-- Flight category (FAA-H-8083-28A tables 3-15 to 3-18): LIFR when ceiling < 500 ft or visibility < 1 SM; IFR when < 1,000 ft or < 3 SM; MVFR when 1,000–3,000 ft or 3–5 SM inclusive; otherwise VFR.
+- Flight category (FAA-H-8083-28B section 3.4.2.14 and tables 3-17 and 3-18): LIFR when ceiling < 500 ft or visibility < 1 SM; IFR when < 1,000 ft or < 3 SM; MVFR when 1,000–3,000 ft or 3–5 SM inclusive; otherwise VFR.
 - Present weather: intensity qualifies the precipitation, so +TSRA is a thunderstorm with heavy rain and +SHRA heavy rain showers (table 24-3).
 
 ## Symbols and units
@@ -28,8 +28,8 @@ None: it decodes the text as written and does not check it against the station o
 ## Worked example
 
 - sourcePublisher: Federal Aviation Administration
-- sourceTitle: Aviation Weather Handbook (FAA-H-8083-28A)
-- sourceEdition: 2024
+- sourceTitle: Aviation Weather Handbook (FAA-H-8083-28B)
+- sourceEdition: 2026
 - sourceLocator: Chapter 24, sections 24.4.3.1 to 24.4.3.14: METAR KOKC 011955Z AUTO 22015G25KT 180V250 3/4SM R17L/2600FT +TSRA BR OVC010CB 18/16 A2992 RMK AO2 TSB25 TS OHD MOV E SLP132, decoded group by group
 - independent: yes
 - inputs: that report

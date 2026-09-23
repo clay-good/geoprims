@@ -19,7 +19,7 @@ const BLM_MANUAL: Reference = Reference {
     year: 2009,
     edition: "2009 Manual",
     locator: "Chapter 1 (units: chain of 66 feet, link of 0.66 feet) and Chapter 3 (subdivision of sections, aliquot parts)",
-    url: "https://www.blm.gov/sites/default/files/documents/files/Manual_of_Surveying_Instructions_2009.pdf",
+    url: "https://www.blm.gov/sites/default/files/Manual_Of_Surveying_Instructions_2009.pdf",
 };
 const BROWN: Reference = Reference {
     title: "Brown's Boundary Control and Legal Principles",
@@ -32,8 +32,8 @@ const BROWN: Reference = Reference {
 const GHILANI: Reference = Reference {
     title: "Elementary Surveying: An Introduction to Geomatics",
     issuer: "Ghilani, C. D., and Wolf, P. R., Pearson",
-    year: 2018,
-    edition: "15th edition",
+    year: 2021,
+    edition: "16th edition",
     locator: "Chapters 10 (traverse computations) and 12 (area by coordinates)",
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };

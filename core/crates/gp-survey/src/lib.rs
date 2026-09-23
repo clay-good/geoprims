@@ -38,8 +38,8 @@ use serde_json::{Map, Value};
 const GHILANI: Reference = Reference {
     title: "Elementary Surveying: An Introduction to Geomatics",
     issuer: "Ghilani, C. D., and Wolf, P. R., Pearson",
-    year: 2018,
-    edition: "15th edition",
+    year: 2021,
+    edition: "16th edition",
     locator: "Chapters 10 (traverse computations), 12 (area), 24 (horizontal curves), 25 (vertical curves), 26 (volumes)",
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };

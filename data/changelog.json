@@ -2,6 +2,17 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-09-23",
+      "kind": "result-change",
+      "tools": [
+        "geometry.validity.make-valid"
+      ],
+      "vectors": [
+        "geometry.validity.make-valid v001"
+      ],
+      "summary": "Promoting this tool to stable removed EXPERIMENTAL_TOOL from its warnings, which moved GEOMETRY_INVALID from index 1 to index 0 and broke v001, which pinned the index. Nothing computed changed. v001 is superseded by v022, which names the warning by its code with the meta.warnings.*.code form the runner supports, so no warning sorting above it can shift it again -- the same fix geometry.area.polygon v030 took for the same reason."
+    },
+    {
       "date": "2026-09-22",
       "kind": "result-change",
       "tools": [

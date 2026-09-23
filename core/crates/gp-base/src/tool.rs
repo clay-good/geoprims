@@ -964,8 +964,10 @@ impl<'a> Ctx<'a> {
     }
 
     /// Returns `{value, unit}` in an explicit unit (e.g. the `to` of a conversion).
+    /// `LEGACY_UNIT` is added once per result, at the first ftUS output.
     pub fn emit(&mut self, name: &str, value: Q, unit: &'static Unit) -> Json {
-        if unit.symbol.starts_with("ftUS") {
+        if unit.symbol.starts_with("ftUS") && !self.warnings.iter().any(|w| w.code == "LEGACY_UNIT")
+        {
             self.warnings.push(
                 Warning::new(
                     "LEGACY_UNIT",

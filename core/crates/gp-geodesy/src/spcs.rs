@@ -140,7 +140,7 @@ const SPCS_OUTPUTS: &[Field] = &[
             max: 99999.0,
         },
     )
-    .precision(Precision::Decimals(0)),
+    .precision(Precision::Plain(0)),
     qty(
         "convergence",
         "Grid convergence",
@@ -162,6 +162,7 @@ const SPCS_OUTPUTS: &[Field] = &[
 
 pub static FORWARD: ToolDef = ToolDef {
     id: "geodesy.spcs.spcs83-forward",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to state plane (SPCS83)",
     summary: "Converts NAD83 latitude and longitude to State Plane Coordinate System of 1983 easting and northing in any of the 124 zones, in meters, international feet, or US survey feet, with convergence and scale factor.",
@@ -500,7 +501,7 @@ const ZONE_ROW: &[Field] = &[
             max: 99999.0,
         },
     )
-    .precision(Precision::Decimals(0)),
+    .precision(Precision::Plain(0)),
     text(
         "projection",
         "Projection",
@@ -517,6 +518,7 @@ const ZONE_ROW: &[Field] = &[
 
 pub static LOOKUP: ToolDef = ToolDef {
     id: "geodesy.spcs.zone-lookup",
+    version: "1.0.1",
     title: "State plane zone lookup",
     summary: "Finds SPCS83 zones by state or zone name, or the zones whose area of use covers a point, with each zone's NGS code, EPSG code, projection, and feet unit.",
     aliases: &[

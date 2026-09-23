@@ -57,6 +57,16 @@ fn pennsylvania_south_in_us_survey_feet() {
     assert!((e - 1_347_294.025).abs() <= 0.003, "{e}");
     assert!((n - 413_222.374).abs() <= 0.003, "{n}");
     assert!(warns(&r, "LEGACY_UNIT"));
+    // Once per result, not once per ftUS output.
+    let legacy = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|w| w["code"] == "LEGACY_UNIT")
+        .count();
+    assert_eq!(legacy, 1, "{r}");
+    // The EPSG code is an identifier, shown without grouping.
+    assert_eq!(r["display"]["epsg"], "32129", "{r}");
     assert_eq!(r["result"]["zone_code"], "3702");
     let back = call(
         "geodesy.spcs.spcs83-inverse",

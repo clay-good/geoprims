@@ -346,7 +346,7 @@ pub static DECLINATION: ToolDef = ToolDef {
                 max: 2030.0,
             },
         )
-        .precision(Precision::Decimals(3)),
+        .precision(Precision::Plain(3)),
         Field::new(
             "compass_zone",
             "Compass zone",

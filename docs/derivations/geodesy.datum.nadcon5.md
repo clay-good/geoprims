@@ -5,10 +5,12 @@
 
 A continental datum is not wrong by a constant. NAD 27 was built from a survey that grew outward from one station over decades, and the amount it differs from NAD 83 changes from place to place — tens of meters in Colorado, a few in Illinois — in a pattern no single set of parameters can carry. The National Geodetic Survey published that pattern as grids of latitude and longitude shifts, and this tool reads them: the point is located in the grid for its region, the shift at that point is interpolated from the surrounding nodes by the biquadratic scheme NGS uses, and the shift is added. The reverse direction has no closed form, because the shift to apply depends on the answer, so it is iterated until it settles.
 
+The grids and how NGS applies them are documented in NOAA Technical Report NOS NGS 63 (Smith and Bilich, 2017, revised 2020). The interpolation between grid nodes is documented in NOAA Technical Memorandum NOS NGS 84, *Biquadratic Interpolation* (Smith, 2022).
+
 ## Equations
 
 - Forward: φ′ = φ + Δφ(φ, λ), λ′ = λ + Δλ(φ, λ), the shifts interpolated from the region's grid.
-- Interpolation: NGS's `qterp` biquadratic over the nine nodes around the point, quadratic in each direction rather than bilinear.
+- Interpolation: NGS's `qterp` biquadratic over the nine nodes around the point, quadratic in each direction rather than bilinear (NOAA TM NOS NGS 84, section 2).
 - Reverse: iterate φ ← φ′ − Δφ(φ, λ), λ ← λ′ − Δλ(φ, λ) from the target as the first guess, until the move stops.
 - The reported shift is the geodesic distance between the two positions, with its azimuth, and the components as `dlat` and `dlon`.
 
@@ -45,7 +47,7 @@ A second check comes from inside the catalog and is worth having because it is s
 
 - `tools/vectors/gen_datum.py`: 34 vectors from PROJ's `+proj=gridshift` with the NADCON5 grids, through pyproj, across all seven regions
 - `core/crates/gp-geodesy/tests/datum.rs` `nadcon5_invariants`: the reverse iteration, the agreement with and departure from the Helmert path, and the refusal outside the grids
-- `core/vectors/geodesy.datum.nadcon5.jsonl`: 35 vectors, of which v001 is this worked example and one pins the refusal outside every grid
+- `core/vectors/geodesy.datum.nadcon5.jsonl`: 36 vectors, of which v001 is this worked example, one pins the refusal outside every grid, and v036 pins the two citations
 
 ## Invariants
 

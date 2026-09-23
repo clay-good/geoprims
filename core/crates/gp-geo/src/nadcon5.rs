@@ -1,5 +1,5 @@
-//! NADCON5 horizontal grid shifts (NGS, NOAA TM NOS NGS 84) with the
-//! biquadratic interpolation NADCON5 specifies, ported from PROJ's
+//! NADCON5 horizontal grid shifts (NGS, NOAA TR NOS NGS 63) with the
+//! biquadratic interpolation NADCON5 specifies (NOAA TM NOS NGS 84), ported from PROJ's
 //! gridshift (itself a port of NGS's qterp). The grid is a host-supplied
 //! asset packed by tools/codegen/nadcon5.py.
 

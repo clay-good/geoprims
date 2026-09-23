@@ -1487,11 +1487,20 @@ fn run_legacy(ctx: &mut Ctx) -> Result<Json, ToolError> {
 // ---------------------------------------------------------------- NADCON5
 
 const NADCON5_REF: Reference = Reference {
-    title: "NADCON5: a new transformation tool for converting between the North American Datums, NOAA Technical Memorandum NOS NGS 84",
-    issuer: "Smith, D. A., Pearson, C., and others, National Geodetic Survey",
+    title: "NADCON 5.0: Geometric Transformation Tool for Points in the National Spatial Reference System, NOAA Technical Report NOS NGS 63",
+    issuer: "Smith, D. A., and Bilich, A. L., National Geodetic Survey",
     year: 2017,
-    edition: "NOAA TM NOS NGS 84; grids release 20160901",
-    locator: "Grid transformations and biquadratic interpolation",
+    edition: "NOAA TR NOS NGS 63 (revised August 31, 2020); grids release 20160901",
+    locator: "The transformation grids by region and how they are applied",
+    url: "https://geodesy.noaa.gov/library/pdfs/NOAA_TR_NOS_NGS_0063.pdf",
+};
+/// The interpolation NADCON5 applies between grid nodes (NGS's `qterp`).
+const BIQUADRATIC_REF: Reference = Reference {
+    title: "Biquadratic Interpolation, NOAA Technical Memorandum NOS NGS 84",
+    issuer: "Smith, D. A., National Geodetic Survey",
+    year: 2022,
+    edition: "NOAA TM NOS NGS 84 (January 25, 2022)",
+    locator: "Section 2: quadratic interpolation over the nearest 3 × 3 grid nodes",
     url: "https://geodesy.noaa.gov/library/pdfs/NOAA_TM_NOS_NGS_0084.pdf",
 };
 pub const NADCON5_ID: &str = "nadcon5";
@@ -1576,6 +1585,7 @@ fn nc5_covers(r: &Nc5Region, lat: f64, lon: f64) -> bool {
 
 pub static NADCON5: ToolDef = ToolDef {
     id: "geodesy.datum.nadcon5",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Old US datums to NAD 83 (NADCON5)",
     summary: "Converts a latitude and longitude from a region's old datum to NAD 83 with the NGS NADCON5 grids, or back: NAD 27 in the conterminous US and Alaska, Old Hawaiian, Puerto Rico 1940, St. Paul 1952, American Samoa 1962, and Guam 1963.",
@@ -1707,7 +1717,7 @@ pub static NADCON5: ToolDef = ToolDef {
     accuracy: "Matches PROJ's NADCON5 transformations to 1e-9°; NGS states each first step itself at the decimeter level (about 0.15 m, 1σ, for NAD 27 in CONUS)",
     when_to_use: "Use this for old American coordinates when the answer has to be better than a meter. NAD 27 and the other regional datums — Old Hawaiian, Puerto Rico 1940, St. Paul 1952, American Samoa 1962, Guam 1963 — differ from NAD 83 by an amount that changes from place to place across the country, and the NGS grids model that variation directly instead of averaging it into one set of parameters. This is the transformation NGS itself publishes for the job, so it is what a survey, a parcel record, or a republished map should be brought forward with.",
     limitations: "It only covers what the grids cover: the conterminous United States, Alaska, Hawaii, Puerto Rico and the Virgin Islands, St. Paul Island, American Samoa, and Guam and the Northern Marianas. A point outside all of them is refused rather than extrapolated, and the regional helmert transformation is the fallback for anywhere else. This is the first step of NADCON5 — the one that carries the old datum to NAD 83 (1986) — and NGS states it at the decimeter level, about 0.15 m for NAD 27 in the conterminous states, so the result is decimeters, not centimeters. Later NAD 83 realizations are a separate step, which the NAD 83 tool handles. Only latitude and longitude are converted; the vertical grids are not part of this.",
-    references: &[NADCON5_REF],
+    references: &[NADCON5_REF, BIQUADRATIC_REF],
     examples: &[Example {
         id: "primary",
         title: "Central Kansas (Meades Ranch, the NAD 27 origin)",

@@ -5,6 +5,15 @@
       "date": "2026-09-23",
       "kind": "fixed",
       "tools": [
+        "geodesy.datum.nadcon5"
+      ],
+      "vectors": [],
+      "summary": "NADCON5 (version 1.0.1) cited NOAA Technical Memorandum NOS NGS 84 as the NADCON5 report. That memo is Dru Smith's Biquadratic Interpolation (2022). The tool now cites the NADCON 5.0 report, NOAA Technical Report NOS NGS 63 (Smith and Bilich, 2017, revised 2020), and cites TM 84 separately for the interpolation between grid nodes, which the tool does use. Results are unchanged."
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "fixed",
+      "tools": [
         "geodesy.spcs.spcs83-forward",
         "geodesy.spcs.zone-lookup",
         "geodesy.magnetic.declination"

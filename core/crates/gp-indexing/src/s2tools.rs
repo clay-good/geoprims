@@ -278,6 +278,7 @@ const CELL_OUT: [Field; 6] = [
 
 pub static POINT_TO_CELL: ToolDef = ToolDef {
     id: "indexing.s2.lat-lng-to-cell",
+    stability: gp_base::tool::Stability::Stable,
     title: "S2 cell for a point",
     summary: "The S2 cell containing a latitude and longitude at a level from 0 to 30, with its token, its 64-bit id, the face it sits on, and its area.",
     aliases: &[
@@ -321,7 +322,7 @@ pub static POINT_TO_CELL: ToolDef = ToolDef {
         .precision(Precision::Decimals(2)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "The S2 quadratic projection onto a cube face, the Hilbert curve across that face, and the cell id's face, position, and level bits",
     accuracy: "Matches s2sphere, an independent implementation of the same algorithms, on 400 cases across the sphere at every kind of level: identical tokens and neighbours, and geometry within 10 nanometers.",
     when_to_use: "Use this to key data by S2, which is what BigQuery GIS, MongoDB, and a number of mapping pipelines index with: a point becomes a cell at the level you choose, and cells at a level can be joined, counted, or compared. The token is the short form that travels in APIs; the decimal id is what most databases store.",
@@ -360,6 +361,7 @@ pub static POINT_TO_CELL: ToolDef = ToolDef {
 
 pub static CELL_INFO: ToolDef = ToolDef {
     id: "indexing.s2.cell-info",
+    stability: gp_base::tool::Stability::Stable,
     title: "S2 cell details",
     summary: "Everything about an S2 cell: its center, its four corners, the face and level, its exact area against the average for that level, and its parent and children.",
     aliases: &["S2 cell info", "decode S2 token", "S2 cell boundary"],
@@ -427,7 +429,7 @@ pub static CELL_INFO: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "The cell id's face, Hilbert position, and level bits, with the corners taken back through the quadratic projection",
     accuracy: "Matches s2sphere on 400 cases: identical hierarchy, and centers and corners within 10 nanometers. The exact area agrees to rounding down to level 20 and to about 2e-7 relative at level 30, where a cell is a centimeter across.",
     when_to_use: "Use this when an S2 token or id arrives and you need to know what it covers: the corners to draw it, the center to plot it, the area to weight it, and the parent and children to move between levels. The average area beside the exact one shows how far this particular cell sits from the level's nominal size.",
@@ -466,6 +468,7 @@ pub static CELL_INFO: ToolDef = ToolDef {
 
 pub static NEIGHBORS: ToolDef = ToolDef {
     id: "indexing.s2.neighbors",
+    stability: gp_base::tool::Stability::Stable,
     title: "S2 edge neighbours",
     summary: "The four cells across an S2 cell's edges, at the same level, wrapping onto the next cube face where the cell lies on a face edge.",
     aliases: &["S2 neighbors", "S2 adjacent cells"],
@@ -493,7 +496,7 @@ pub static NEIGHBORS: ToolDef = ToolDef {
         .precision(Precision::Decimals(0)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "The cell's (i, j) stepped by one cell in each direction, taken back through the sphere where it leaves the face, which is how S2 wraps across the cube",
     accuracy: "Matches s2sphere's edge neighbours exactly, in the same order, on 400 cases including cells on face edges.",
     when_to_use: "Use this for anything that has to look past one cell: a proximity search that must not miss points just over a boundary, a flood fill, or a smoothing window over cells. The count of neighbours on another cube face is the flag for the awkward cases, where the grid's axes turn.",

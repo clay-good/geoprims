@@ -1279,3 +1279,95 @@ fn local_ij_invariants() {
         assert_eq!(far["error"]["field"], "/cell");
     }
 }
+
+/// Layer E for the S2 tools. A point's cell at one level is the parent of its
+/// cell at the next, a token survives the trip out and back, the four children
+/// name their parent again, and the neighbours are four distinct cells at the
+/// same level that each count this one among their own.
+#[test]
+fn s2_invariants() {
+    let places = [
+        (40.446111, -79.982222),
+        (0.0, 0.0),
+        (-33.8688, 151.2093),
+        (89.5, 45.0),
+        (0.0, 179.999),
+        (-60.5, 90.25),
+    ];
+    for (lat, lon) in places {
+        let mut coarser: Option<(u8, String)> = None;
+        for level in [4u8, 5, 12, 13, 20, 21] {
+            let r = call(
+                "indexing.s2.lat-lng-to-cell",
+                &format!(r#"{{"lat":{lat},"lon":{lon},"level":{level}}}"#),
+            );
+            assert_eq!(r["ok"], true, "{r}");
+            let token = r["result"]["cell"].as_str().expect("token").to_owned();
+            assert_eq!(r["result"]["level"].as_f64(), Some(f64::from(level)));
+
+            let info = call("indexing.s2.cell-info", &format!(r#"{{"cell":"{token}"}}"#));
+            assert_eq!(info["ok"], true, "{info}");
+            // The token names the same cell coming back the other way.
+            assert_eq!(info["result"]["cell"], token.as_str(), "token round trip");
+            assert_eq!(info["result"]["level"].as_f64(), Some(f64::from(level)));
+
+            // Each of the four children calls this cell its parent.
+            if level < 30 {
+                for child in info["result"]["children"].as_array().expect("children") {
+                    let c = child["cell"].as_str().expect("child token");
+                    let ci = call("indexing.s2.cell-info", &format!(r#"{{"cell":"{c}"}}"#));
+                    assert_eq!(
+                        ci["result"]["parent"],
+                        token.as_str(),
+                        "{c} disowns its parent"
+                    );
+                    assert_eq!(
+                        ci["result"]["level"].as_f64(),
+                        Some(f64::from(level + 1)),
+                        "a child is one level finer"
+                    );
+                }
+            }
+            // Where the previous level was one coarser, its cell for this same
+            // point is this cell's parent. The list skips levels as well, and
+            // across a skip there is nothing to compare.
+            if let Some((up_level, up)) = coarser.take()
+                && up_level + 1 == level
+            {
+                assert_eq!(
+                    info["result"]["parent"],
+                    up.as_str(),
+                    "the hierarchy skips a step"
+                );
+            }
+            coarser = Some((level, token.clone()));
+
+            // Four neighbours, all distinct, all at this level, each holding
+            // this cell among its own neighbours.
+            let nb = call("indexing.s2.neighbors", &format!(r#"{{"cell":"{token}"}}"#));
+            assert_eq!(nb["ok"], true, "{nb}");
+            let names: Vec<String> = nb["result"]["neighbors"]
+                .as_array()
+                .expect("neighbors")
+                .iter()
+                .map(|n| n["cell"].as_str().expect("token").to_owned())
+                .collect();
+            assert_eq!(names.len(), 4, "a square cell has four edge neighbours");
+            let unique: std::collections::BTreeSet<&String> = names.iter().collect();
+            assert_eq!(unique.len(), 4, "the neighbours repeat: {names:?}");
+            for n in &names {
+                let back = call("indexing.s2.neighbors", &format!(r#"{{"cell":"{n}"}}"#));
+                let theirs: Vec<&str> = back["result"]["neighbors"]
+                    .as_array()
+                    .expect("neighbors")
+                    .iter()
+                    .map(|x| x["cell"].as_str().expect("token"))
+                    .collect();
+                assert!(
+                    theirs.contains(&token.as_str()),
+                    "{n} does not neighbour {token}"
+                );
+            }
+        }
+    }
+}

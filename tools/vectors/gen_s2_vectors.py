@@ -1,6 +1,11 @@
-import json, math, random, s2sphere
+"""Golden vectors for indexing.s2.* from s2sphere, an independent Python
+implementation of the S2 algorithms (pip install --user s2sphere).
+
+    gen_s2_vectors.py [core/vectors]
+"""
+import json, math, random, sys, s2sphere
 from pathlib import Path
-OUT = Path("/Users/user/Documents/development/public/geoprims/.claude/worktrees/geospatial-aviation-spec-b79149/core/vectors")
+OUT = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
 SRC = "s2sphere, an independent Python implementation of the S2 algorithms (tools/vectors/gen_s2.py)"
 VER = "s2sphere 0.2.5"
 random.seed(4090)
@@ -10,9 +15,14 @@ def vec(i, inp, expect, tol=1e-9):
     t = {k: {"rel": 0, "abs": tol} for k, v in e.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
     return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": SRC, "sourceVersion": VER, "tolerance": t}
 
+# Points over every face of the cube and the range of levels, including the
+# poles, the antimeridian, and the corners where faces meet.
 pts = [(40.446111, -79.982222, 15), (0, 0, 10), (-33.8688, 151.2093, 20), (89.5, 45, 8),
        (-89.5, -120, 12), (51.5074, -0.1278, 16), (35.6762, 139.6503, 22), (-22.9068, -43.1729, 5),
-       (60, 10, 13), (1.3521, 103.8198, 18)]
+       (60, 10, 13), (1.3521, 103.8198, 18),
+       (0, 179.999, 14), (0, -179.999, 19), (45, 135, 7), (-45, -135, 21),
+       (89.999, 0, 4), (-89.999, 180, 11), (12.3456, -12.3456, 24), (-60.5, 90.25, 9),
+       (23.4, -46.8, 28), (-78.9, 12.3, 17), (5.5, -175.5, 6), (66.5, -150, 26)]
 rows = []
 for i, (lat, lon, level) in enumerate(pts, 1):
     cid = s2sphere.CellId.from_lat_lng(s2sphere.LatLng.from_degrees(lat, lon)).parent(level)

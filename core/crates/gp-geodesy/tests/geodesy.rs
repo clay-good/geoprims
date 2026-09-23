@@ -289,6 +289,75 @@ fn a_malformed_first_value_is_reported_not_replaced() {
     assert_eq!(num(&r, "result.lat.value"), 40.45);
 }
 
+/// Every rejection the spec lists, written without the hemisphere letters its
+/// scenarios happen to carry. Letters send a pair down another branch, so a
+/// scenario can pass while the rule it names does nothing on a bare pair.
+#[test]
+fn the_rejections_bite_without_hemisphere_letters() {
+    let bad: [(&str, &str); 9] = [
+        (
+            "40\u{b0}26\'60\" 79\u{b0}58\'56\"",
+            "seconds must be less than 60",
+        ),
+        (
+            "40\u{b0}26\'46\" 79\u{b0}58\'60\"",
+            "seconds must be less than 60",
+        ),
+        (
+            "40\u{b0}60\'00\" 79\u{b0}58\'56\"",
+            "minutes must be less than 60",
+        ),
+        ("40\u{b0}-26\'46\" 79\u{b0}58\'56\"", "cannot be negative"),
+        ("40\u{b0}26\'-46\" 79\u{b0}58\'56\"", "cannot be negative"),
+        ("40:-26:46 79:58:56", "cannot be negative"),
+        (
+            "40\u{b0}26\'46\" 181\u{b0}58\'56\"",
+            "longitude must be within 180",
+        ),
+        ("40.45 -79.98xyz", "unexpected character"),
+        (
+            "40\u{b0}26.5\'46\" 79.98",
+            "only the last component may have decimals",
+        ),
+    ];
+    for (text, why) in bad {
+        let r = call(
+            "geodesy.parse.coordinates",
+            &format!(
+                r#"{{"text":"{}"}}"#,
+                text.replace('\\', "\\\\").replace('"', "\\\"")
+            ),
+        );
+        assert_eq!(r["ok"], false, "{text} should not parse: {r}");
+        assert!(
+            r["error"]["message"]
+                .as_str()
+                .expect("message")
+                .contains(why),
+            "{text}: wanted {why}, got {r}"
+        );
+    }
+    // A hyphen straight after a digit is still how 40-26-46 separates its
+    // components, which is what stops the rule above from being a blunt ban.
+    let r = call(
+        "geodesy.parse.coordinates",
+        r#"{"text":"40-26-46N 79-58-56W"}"#,
+    );
+    assert!(
+        (num(&r, "result.lat.value") - 40.446111).abs() < 1e-6,
+        "{r}"
+    );
+    assert!(
+        (num(&r, "result.lon.value") + 79.982222).abs() < 1e-6,
+        "{r}"
+    );
+    // A first value that cannot be a latitude still infers the order instead
+    // of being refused: that one is unusual, not wrong.
+    let r = call("geodesy.parse.coordinates", r#"{"text":"91.5 79.98"}"#);
+    assert_eq!(num(&r, "result.lat.value"), 79.98);
+    assert_eq!(num(&r, "result.lon.value"), 91.5);
+}
+
 /// UTM and MGRS round trips over a grid of points.
 #[test]
 fn round_trip_properties() {

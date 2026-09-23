@@ -110,8 +110,19 @@ fn written(s: &str) -> Result<Written, String> {
             '\'' | 'm' | 'M' => flush(&mut cur, Some('\''), &mut comps),
             '"' | 's' | 'S' => flush(&mut cur, Some('"'), &mut comps),
             ':' | ' ' | '-' => {
-                if c == '-' && cur.is_empty() && comps.is_empty() {
-                    return Err(format!("\"{s}\" has a misplaced minus sign"));
+                // A hyphen straight after a digit separates components, as
+                // 40-26-46 writes degrees, minutes, seconds. With nothing
+                // before it the hyphen is a sign instead: on the first
+                // component it is misplaced, since the leading sign came off
+                // above, and on a later one it would make a minute or a second
+                // negative, which the notation does not allow. Both used to
+                // pass through as separators, dropping the sign in silence.
+                if c == '-' && cur.is_empty() {
+                    return Err(if comps.is_empty() {
+                        format!("\"{s}\" has a misplaced minus sign")
+                    } else {
+                        format!("\"{s}\": minutes and seconds cannot be negative")
+                    });
                 }
                 flush(&mut cur, None, &mut comps)
             }

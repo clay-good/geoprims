@@ -24,6 +24,24 @@ const dir = join(root, 'core/vectors');
 // vector must match the committed one with its id, unless that one has been
 // superseded -- in which case it must match the replacement the supersede
 // pointed at, which is the same vector under a different name.
+/**
+ * `got`, with each number that is within a few units in the last place of the
+ * generator's replaced by the generator's own: Python's libm differs by a bit
+ * between macOS and Linux (atan(2) ends ...201 on one and ...202 on the
+ * other), and no tolerance a vector carries is anywhere near that tight.
+ */
+function near(got, want) {
+  if (typeof got === 'number' && typeof want === 'number') {
+    return Math.abs(got - want) <= 8 * Number.EPSILON * Math.max(Math.abs(got), Math.abs(want)) ? want : got;
+  }
+  if (got && want && typeof got === 'object' && typeof want === 'object') {
+    const out = Array.isArray(got) ? [] : {};
+    for (const k of Object.keys(got)) out[k] = k in want ? near(got[k], want[k]) : got[k];
+    return out;
+  }
+  return got;
+}
+
 const GENERATORS = ['gen_units.py', 'gen_units_gaps.py', 'gen_units_pairs.py', 'gen_units_special.py'];
 
 test('units vectors are reproducible from tools/vectors/gen_units.py', () => {
@@ -41,7 +59,7 @@ test('units vectors are reproducible from tools/vectors/gen_units.py', () => {
         got = have.get(got.supersededBy);
         assert.ok(got, `${f} ${id} is superseded by a vector that is not there`);
       }
-      assert.deepEqual({ ...got, id }, { ...want, id }, `${f} ${id} differs from its generator`);
+      assert.deepEqual(near({ ...got, id }, { ...want, id }), { ...want, id }, `${f} ${id} differs from its generator`);
     }
   }
 });

@@ -40,18 +40,21 @@ jobs:
         run: node tools/codegen/catalog.mjs
       - name: Build the MCP release directory (so the integrity gate checks it too)
         run: node tools/mcp/build-dist.mjs
-      - name: JS tests (gates, runtime, vectors through Wasm, vector integrity, MCP server and Worker end to end)
-        run: npm run test:js
-        env:
-          VECTOR_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
       - name: Install the website's dependencies and browsers (share cards render in Chromium; cross-host checks use all three)
         run: |
           npm ci --prefix apps/web
           npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
-      - name: Website build and checks
-        run: |
-          npm run build --prefix apps/web
-          npm test --prefix apps/web
+      # The website is built before the JS tests: several of them compare the
+      # built pages with the MCP server (both-surfaces, presets, sitemaps) and
+      # read the asset registry the build copies in.
+      - name: Website build
+        run: npm run build --prefix apps/web
+      - name: JS tests (gates, runtime, vectors through Wasm, vector integrity, MCP server and Worker end to end)
+        run: npm run test:js
+        env:
+          VECTOR_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
+      - name: Website checks
+        run: npm test --prefix apps/web
       - name: Browser checks
         run: npm run test:browser --prefix apps/web
       - name: Chromium reference benchmark

@@ -1399,7 +1399,10 @@ pub static UTM_ZONE: ToolDef = ToolDef {
         .angle_range("[-180,180)")
         .optional(),
     ],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this before projecting anything to UTM, or when reading a grid reference someone else produced: it gives the zone, the MGRS latitude band and the zone's central meridian for a point, with the Norway and Svalbard exceptions applied rather than left for you to remember.",
+    limitations: "Two exceptions break the plain six-degree rule, and both are included: zone 32 is widened over southern Norway, and the even zones vanish over Svalbard. A point near any zone boundary is a point where two people using different software may disagree, so check the boundary rather than the answer. At exactly 84 degrees north this keeps the point in UTM, symmetric with the 80 degrees south edge; GeographicLib switches to UPS there instead, and both are defensible readings of the published range. Beyond those limits the zone is 0 and the band is a polar one, which means UPS is the projection, not UTM.",
+    warnings: &["INPUT_NORMALIZED"],
     model: "NGA UTM zone rules with the Norway and Svalbard exceptions",
     accuracy: "Exact",
     references: &[NGA_UTM],
@@ -1414,10 +1417,20 @@ pub static UTM_ZONE: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "geodesy.utm.forward",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.ups.forward",
+            reason: "alternative",
+        },
+    ],
     sentence: "The grid zone is {grid_zone}.",
     limits: &[("batchRows", 10_000)],
     run: run_utm_zone,

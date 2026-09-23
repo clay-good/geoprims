@@ -911,3 +911,68 @@ fn format_invariants() {
         );
     }
 }
+
+#[test]
+fn utm_zone_invariants() {
+    const Z: &str = "geodesy.utm.zone";
+    let at = |lat: f64, lon: f64| call(Z, &format!(r#"{{"lat":{lat},"lon":{lon}}}"#));
+    let zone = |lat: f64, lon: f64| num(&at(lat, lon), "result.zone") as i64;
+    let band = |lat: f64, lon: f64| {
+        at(lat, lon)["result"]["grid_zone"]
+            .as_str()
+            .expect("grid_zone")
+            .to_owned()
+    };
+    // Away from the exceptions the zone is the formula and nothing else.
+    let mut lon: f64 = -179.0;
+    while lon < 180.0 {
+        let want = ((lon + 180.0) / 6.0).floor() as i64 + 1;
+        assert_eq!(zone(0.0, lon), want, "the equator at {lon}");
+        lon += 2.0;
+    }
+    // Norway: zone 32 is widened west to 3 deg between 56 and 64 north, and
+    // not a degree outside the box on any of the four sides.
+    for (lat, lon) in [(56.0, 3.0), (56.0, 5.0), (60.0, 4.0), (63.9, 11.9)] {
+        assert_eq!(zone(lat, lon), 32, "inside the Norway box at {lat},{lon}");
+    }
+    assert_eq!(zone(55.9, 5.0), 31, "below the Norway box");
+    assert_eq!(zone(64.1, 5.0), 31, "above the Norway box");
+    assert_eq!(zone(60.0, 2.9), 31, "west of the Norway box");
+    assert_eq!(zone(60.0, 12.1), 33, "east of the Norway box");
+    // Svalbard: the even zones vanish between 72 and 84 north and come back
+    // below it.
+    for lon in [0.0, 7.0, 10.0, 20.0, 22.0, 34.0, 40.0] {
+        let z = zone(78.0, lon);
+        assert!(
+            [31, 33, 35, 37].contains(&z),
+            "Svalbard at {lon} gave zone {z}"
+        );
+    }
+    assert_eq!(zone(71.9, 10.0), 32, "below Svalbard the even zone returns");
+    assert_eq!(zone(71.9, 22.0), 34);
+    // The central meridian belongs to the zone and is near the point.
+    for (lat, lon) in [(0.0, 0.0), (-35.0, -70.0), (60.0, 5.0), (78.0, 20.0)] {
+        let z = zone(lat, lon);
+        let cm = num(&at(lat, lon), "result.central_meridian.value");
+        assert_eq!(
+            cm,
+            (6 * z - 183) as f64,
+            "{lat},{lon}: meridian of zone {z}"
+        );
+    }
+    // The band letters skip I and O, and the poles are zone 0.
+    let mut lat: f64 = -79.0;
+    while lat < 84.0 {
+        let g = band(lat, 20.0);
+        let letter = g.chars().last().expect("a band letter");
+        assert!(
+            letter != 'I' && letter != 'O',
+            "{lat} gave band {letter}, which reads as a digit"
+        );
+        lat += 2.0;
+    }
+    for (lat, want) in [(-80.1, "B"), (84.1, "Z")] {
+        assert_eq!(zone(lat, 20.0), 0, "{lat} is polar");
+        assert_eq!(band(lat, 20.0), want);
+    }
+}

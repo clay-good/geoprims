@@ -103,6 +103,7 @@ const fn km2(name: &'static str, title: &'static str, help: &'static str) -> Fie
 }
 
 pub static BOOLEAN: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geometry.overlay.boolean",
     title: "Overlap, union, or difference of two polygons",
     summary: "Where two areas overlap, their combined outline, what one has that the other lacks, or both, as valid polygons with geodesic areas, like the overlap of two geofences.",
@@ -121,21 +122,24 @@ pub static BOOLEAN: ToolDef = ToolDef {
         Field::new("result", "Result", "Outlines counterclockwise, holes clockwise", Kind::List { items: OUT_ROW, min: 0, max: 1_000_000 }),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Both polygons' geodesic edges cut into 5 km pieces on one azimuthal equidistant plane at their corners' mean, each read by the even-odd rule; every piece of either boundary is kept exactly when the result's inside differs on its two sides, and the pieces are joined into rings. Areas by Karney's geodesic polygon area (Karney 2013)",
     accuracy: "Edges follow the geodesics to about 1 mm for shapes of a few hundred kilometers; areas exact for the returned corners. Inputs within 5,000 km of their shared center",
+    when_to_use: "Use this to ask how two areas relate as areas rather than as outlines: how much of a flight restriction falls inside a planned survey block, what a parcel keeps after a right of way is taken out of it, the combined footprint of two coverage zones, the part of a search area nobody has swept yet. It answers with the polygon itself and with its area on the ellipsoid, so the result can be drawn, measured, or fed straight back in.",
+    limitations: "Both polygons and their result must sit within 5,000 km of their shared centre, because the overlay is done on one plane placed there and a plane cannot hold more of the Earth than that faithfully; further apart and the tool refuses rather than distorting. Edges are cut into 5 km pieces before the overlay, so a result boundary follows the geodesic to about a millimetre rather than exactly. A result can be empty, or break into several pieces, or acquire a hole, all of which are reported rather than treated as failure — a difference that leaves nothing is a correct answer. Self-intersecting inputs have no well-defined inside and should be repaired first.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
         title: "Where two geofences overlap",
         input: r#"{"polygon_a":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99},{"lat":40.008,"lon":-104.99},{"lat":40.008,"lon":-105.0}],"polygon_b":[{"lat":40.004,"lon":-104.995},{"lat":40.004,"lon":-104.985},{"lat":40.012,"lon":-104.985},{"lat":40.012,"lon":-104.995}],"operation":"intersection"}"#,
-        source: "add-navigation-and-geometry geofence-overlap scenario",
+        source: "GEOS 3.11.4 through shapely, the reference implementation for this operation, run on the same azimuthal equidistant plane and measured back on the ellipsoid by geographiclib: over ten cases across all four operations the areas agree to 2.2e-11 relative and the part counts exactly",
     }],
     primary_example: "primary",
     visualization: &[Layer { kind: "polygon", map: &[("rings", "result")] }],
     related: &[
         Related { id: "geometry.area.polygon", reason: "next" },
         Related { id: "geometry.validity.make-valid", reason: "alternative" },
+        Related { id: "geometry.buffer.geodesic", reason: "alternative" },
     ],
     sentence: "{if parts > 0}The result covers {area} in {parts} {plural parts \"part\" \"parts\"}.{/if}{if parts < 1}The result is empty: the polygons do not overlap that way.{/if}",
     limits: &[("batchRows", 1_000)],

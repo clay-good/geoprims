@@ -1,0 +1,504 @@
+{"text": "41°01'60.0\" 4°18'26.8\"", "why": "seconds must be less than 60"}
+{"text": "75°60'41.1\" 58°01'25.3\"", "why": "minutes must be less than 60"}
+{"text": "76°-53'39.9\" 175°55'44.8\"", "why": "cannot be negative"}
+{"text": "38:51:-49.4 137:32:57.3", "why": "cannot be negative"}
+{"text": "-33.975327, 87.600791xyz", "why": "unexpected character"}
+{"text": "93.4711S 44.9525E", "why": "latitude must be within 90"}
+{"text": "S65.6250S 106.1666E", "why": "two hemisphere letters"}
+{"text": "-42.6068N 103.9785W", "why": "contradicts hemisphere"}
+{"text": "62°35'60.0\" 78°11'06.6\"", "why": "seconds must be less than 60"}
+{"text": "76°60'25.5\" 33°03'15.6\"", "why": "minutes must be less than 60"}
+{"text": "36°-02'28.0\" 152°10'49.4\"", "why": "cannot be negative"}
+{"text": "58:56:-11.1 89:16:46.9", "why": "cannot be negative"}
+{"text": "49.461720, 166.469495xyz", "why": "unexpected character"}
+{"text": "92.0429S 147.5798W", "why": "latitude must be within 90"}
+{"text": "N45.1621N 65.8472W", "why": "two hemisphere letters"}
+{"text": "-20.3576S 135.4043E", "why": "contradicts hemisphere"}
+{"text": "44°11'60.0\" 57°49'32.2\"", "why": "seconds must be less than 60"}
+{"text": "66°60'13.8\" 83°29'21.7\"", "why": "minutes must be less than 60"}
+{"text": "55°-46'57.9\" 51°32'29.8\"", "why": "cannot be negative"}
+{"text": "16:44:-59.5 158:21:38.0", "why": "cannot be negative"}
+{"text": "73.648167, 148.152820xyz", "why": "unexpected character"}
+{"text": "99.7284S 45.4594E", "why": "latitude must be within 90"}
+{"text": "S86.8616S 0.0113W", "why": "two hemisphere letters"}
+{"text": "-22.1825N 74.1964W", "why": "contradicts hemisphere"}
+{"text": "15°22'60.0\" 120°41'31.8\"", "why": "seconds must be less than 60"}
+{"text": "64°60'38.4\" 16°01'23.6\"", "why": "minutes must be less than 60"}
+{"text": "74°-22'13.1\" 41°35'11.3\"", "why": "cannot be negative"}
+{"text": "68:46:-40.1 40:27:36.2", "why": "cannot be negative"}
+{"text": "-84.685376, 129.041344xyz", "why": "unexpected character"}
+{"text": "92.4633N 7.3939E", "why": "latitude must be within 90"}
+{"text": "S38.0343S 71.6558W", "why": "two hemisphere letters"}
+{"text": "-57.0200S 43.9517E", "why": "contradicts hemisphere"}
+{"text": "80°57'60.0\" 160°02'38.1\"", "why": "seconds must be less than 60"}
+{"text": "71°60'35.3\" 44°38'34.8\"", "why": "minutes must be less than 60"}
+{"text": "13°-38'57.3\" 49°33'34.9\"", "why": "cannot be negative"}
+{"text": "39:51:-05.2 21:54:08.4", "why": "cannot be negative"}
+{"text": "-30.682418, 169.679197xyz", "why": "unexpected character"}
+{"text": "99.0655N 6.6951E", "why": "latitude must be within 90"}
+{"text": "N29.3550N 2.2351W", "why": "two hemisphere letters"}
+{"text": "-63.1671S 171.7321W", "why": "contradicts hemisphere"}
+{"text": "84°30'60.0\" 123°52'54.7\"", "why": "seconds must be less than 60"}
+{"text": "72°60'13.7\" 39°49'14.9\"", "why": "minutes must be less than 60"}
+{"text": "51°-15'23.9\" 141°51'17.6\"", "why": "cannot be negative"}
+{"text": "78:16:-21.6 132:18:28.4", "why": "cannot be negative"}
+{"text": "-19.379632, 36.981694xyz", "why": "unexpected character"}
+{"text": "94.0294S 70.4320E", "why": "latitude must be within 90"}
+{"text": "N45.7912N 19.1469W", "why": "two hemisphere letters"}
+{"text": "-62.7548N 39.9767W", "why": "contradicts hemisphere"}
+{"text": "59°56'60.0\" 42°23'40.3\"", "why": "seconds must be less than 60"}
+{"text": "17°60'41.3\" 44°11'31.9\"", "why": "minutes must be less than 60"}
+{"text": "37°-43'57.0\" 137°47'04.5\"", "why": "cannot be negative"}
+{"text": "76:54:-41.4 32:23:10.9", "why": "cannot be negative"}
+{"text": "60.329862, 69.081427xyz", "why": "unexpected character"}
+{"text": "93.8172S 48.7917W", "why": "latitude must be within 90"}
+{"text": "N69.4414N 102.2581W", "why": "two hemisphere letters"}
+{"text": "-81.6168N 38.9403W", "why": "contradicts hemisphere"}
+{"text": "3°38'60.0\" 74°52'38.0\"", "why": "seconds must be less than 60"}
+{"text": "32°60'23.1\" 32°32'58.1\"", "why": "minutes must be less than 60"}
+{"text": "66°-05'14.5\" 50°30'44.3\"", "why": "cannot be negative"}
+{"text": "74:50:-25.6 54:32:59.3", "why": "cannot be negative"}
+{"text": "15.793870, -159.487110xyz", "why": "unexpected character"}
+{"text": "92.4793N 97.4336W", "why": "latitude must be within 90"}
+{"text": "S49.3432S 162.1871W", "why": "two hemisphere letters"}
+{"text": "-21.8033N 46.6588W", "why": "contradicts hemisphere"}
+{"text": "27°25'60.0\" 112°46'39.0\"", "why": "seconds must be less than 60"}
+{"text": "79°60'51.4\" 109°03'21.3\"", "why": "minutes must be less than 60"}
+{"text": "60°-51'45.7\" 42°48'34.0\"", "why": "cannot be negative"}
+{"text": "80:20:-21.4 96:55:37.1", "why": "cannot be negative"}
+{"text": "89.022197, -13.337915xyz", "why": "unexpected character"}
+{"text": "99.7950N 23.6502E", "why": "latitude must be within 90"}
+{"text": "S20.6298S 119.4660E", "why": "two hemisphere letters"}
+{"text": "-78.6873S 49.4139W", "why": "contradicts hemisphere"}
+{"text": "35°12'60.0\" 150°29'40.5\"", "why": "seconds must be less than 60"}
+{"text": "9°60'13.1\" 40°02'32.5\"", "why": "minutes must be less than 60"}
+{"text": "50°-18'33.0\" 33°43'16.5\"", "why": "cannot be negative"}
+{"text": "43:46:-31.1 61:15:29.5", "why": "cannot be negative"}
+{"text": "16.438847, 99.303891xyz", "why": "unexpected character"}
+{"text": "98.2895S 28.9340E", "why": "latitude must be within 90"}
+{"text": "S72.0304S 57.5686E", "why": "two hemisphere letters"}
+{"text": "-30.0677N 45.4270E", "why": "contradicts hemisphere"}
+{"text": "53°35'60.0\" 174°26'27.6\"", "why": "seconds must be less than 60"}
+{"text": "40°60'14.5\" 170°46'56.7\"", "why": "minutes must be less than 60"}
+{"text": "27°-44'42.4\" 79°57'31.3\"", "why": "cannot be negative"}
+{"text": "65:49:-37.3 60:57:02.5", "why": "cannot be negative"}
+{"text": "22.836494, -127.432762xyz", "why": "unexpected character"}
+{"text": "93.7145N 57.5991W", "why": "latitude must be within 90"}
+{"text": "N13.7292N 152.4161E", "why": "two hemisphere letters"}
+{"text": "-21.2887S 172.8743W", "why": "contradicts hemisphere"}
+{"text": "67°57'60.0\" 13°52'28.9\"", "why": "seconds must be less than 60"}
+{"text": "61°60'00.9\" 162°19'59.7\"", "why": "minutes must be less than 60"}
+{"text": "15°-51'31.0\" 57°57'20.9\"", "why": "cannot be negative"}
+{"text": "10:33:-00.8 45:48:38.9", "why": "cannot be negative"}
+{"text": "0.491371, -82.204486xyz", "why": "unexpected character"}
+{"text": "94.4094N 111.4560E", "why": "latitude must be within 90"}
+{"text": "N71.4539N 134.6221W", "why": "two hemisphere letters"}
+{"text": "-6.2964N 94.9567W", "why": "contradicts hemisphere"}
+{"text": "72°31'60.0\" 153°39'15.9\"", "why": "seconds must be less than 60"}
+{"text": "28°60'57.5\" 15°42'15.7\"", "why": "minutes must be less than 60"}
+{"text": "47°-50'15.6\" 125°26'17.5\"", "why": "cannot be negative"}
+{"text": "6:09:-11.4 141:13:03.2", "why": "cannot be negative"}
+{"text": "72.188627, 2.496853xyz", "why": "unexpected character"}
+{"text": "96.7265S 110.1630W", "why": "latitude must be within 90"}
+{"text": "N3.6225N 132.3003E", "why": "two hemisphere letters"}
+{"text": "-77.6410N 129.1388W", "why": "contradicts hemisphere"}
+{"text": "68°25'60.0\" 176°50'42.3\"", "why": "seconds must be less than 60"}
+{"text": "4°60'44.1\" 48°13'13.2\"", "why": "minutes must be less than 60"}
+{"text": "35°-01'29.8\" 31°25'44.1\"", "why": "cannot be negative"}
+{"text": "18:57:-50.3 133:30:11.9", "why": "cannot be negative"}
+{"text": "22.238468, -171.662665xyz", "why": "unexpected character"}
+{"text": "93.0368S 121.6402E", "why": "latitude must be within 90"}
+{"text": "N16.8270N 88.3896E", "why": "two hemisphere letters"}
+{"text": "-0.0736S 75.7840E", "why": "contradicts hemisphere"}
+{"text": "27°28'60.0\" 48°12'11.2\"", "why": "seconds must be less than 60"}
+{"text": "28°60'21.8\" 74°13'14.9\"", "why": "minutes must be less than 60"}
+{"text": "80°-38'51.8\" 135°19'55.3\"", "why": "cannot be negative"}
+{"text": "8:07:-22.1 164:40:40.0", "why": "cannot be negative"}
+{"text": "76.645374, 111.245041xyz", "why": "unexpected character"}
+{"text": "97.8534N 166.9772E", "why": "latitude must be within 90"}
+{"text": "N45.8578N 38.5139E", "why": "two hemisphere letters"}
+{"text": "-29.2063S 44.2042E", "why": "contradicts hemisphere"}
+{"text": "14°00'60.0\" 117°12'20.0\"", "why": "seconds must be less than 60"}
+{"text": "60°60'38.9\" 141°29'01.9\"", "why": "minutes must be less than 60"}
+{"text": "33°-04'25.8\" 44°54'02.3\"", "why": "cannot be negative"}
+{"text": "87:44:-48.4 149:47:02.7", "why": "cannot be negative"}
+{"text": "-38.742044, -143.338967xyz", "why": "unexpected character"}
+{"text": "96.7545N 125.7254E", "why": "latitude must be within 90"}
+{"text": "S23.5982S 94.4374E", "why": "two hemisphere letters"}
+{"text": "-78.8353N 19.3213W", "why": "contradicts hemisphere"}
+{"text": "10°16'60.0\" 42°12'19.2\"", "why": "seconds must be less than 60"}
+{"text": "62°60'45.6\" 73°07'41.8\"", "why": "minutes must be less than 60"}
+{"text": "87°-43'03.1\" 128°12'54.7\"", "why": "cannot be negative"}
+{"text": "72:50:-52.0 136:33:29.6", "why": "cannot be negative"}
+{"text": "79.165322, -72.881798xyz", "why": "unexpected character"}
+{"text": "95.6861S 125.7225W", "why": "latitude must be within 90"}
+{"text": "S85.9238S 11.7345E", "why": "two hemisphere letters"}
+{"text": "-24.3285N 77.7123W", "why": "contradicts hemisphere"}
+{"text": "86°25'60.0\" 166°11'43.0\"", "why": "seconds must be less than 60"}
+{"text": "33°60'57.4\" 179°30'56.7\"", "why": "minutes must be less than 60"}
+{"text": "46°-59'59.1\" 18°34'15.7\"", "why": "cannot be negative"}
+{"text": "15:57:-40.4 155:19:13.0", "why": "cannot be negative"}
+{"text": "77.775386, 0.531191xyz", "why": "unexpected character"}
+{"text": "93.5371N 51.4039W", "why": "latitude must be within 90"}
+{"text": "N25.6950N 159.5239W", "why": "two hemisphere letters"}
+{"text": "-56.1076S 116.9303E", "why": "contradicts hemisphere"}
+{"text": "7°28'60.0\" 2°11'55.1\"", "why": "seconds must be less than 60"}
+{"text": "59°60'01.9\" 54°51'13.1\"", "why": "minutes must be less than 60"}
+{"text": "59°-10'29.2\" 12°23'45.7\"", "why": "cannot be negative"}
+{"text": "63:48:-56.9 54:01:31.9", "why": "cannot be negative"}
+{"text": "81.288296, -110.029385xyz", "why": "unexpected character"}
+{"text": "91.8061S 111.4232W", "why": "latitude must be within 90"}
+{"text": "S39.1130S 100.7940W", "why": "two hemisphere letters"}
+{"text": "-27.4232N 89.7128E", "why": "contradicts hemisphere"}
+{"text": "67°39'60.0\" 129°52'33.1\"", "why": "seconds must be less than 60"}
+{"text": "89°60'35.0\" 67°22'14.2\"", "why": "minutes must be less than 60"}
+{"text": "41°-20'24.0\" 62°16'08.0\"", "why": "cannot be negative"}
+{"text": "20:19:-18.9 52:53:00.6", "why": "cannot be negative"}
+{"text": "-40.642138, -149.075886xyz", "why": "unexpected character"}
+{"text": "97.0993S 128.7342E", "why": "latitude must be within 90"}
+{"text": "S22.9574S 54.9912E", "why": "two hemisphere letters"}
+{"text": "-9.3233S 95.3261W", "why": "contradicts hemisphere"}
+{"text": "12°22'60.0\" 99°14'03.0\"", "why": "seconds must be less than 60"}
+{"text": "12°60'10.6\" 110°34'46.9\"", "why": "minutes must be less than 60"}
+{"text": "66°-29'42.3\" 105°54'57.0\"", "why": "cannot be negative"}
+{"text": "33:52:-11.5 66:26:55.8", "why": "cannot be negative"}
+{"text": "76.669020, 149.390348xyz", "why": "unexpected character"}
+{"text": "97.1898N 0.9797W", "why": "latitude must be within 90"}
+{"text": "N2.8893N 173.5397W", "why": "two hemisphere letters"}
+{"text": "-31.6274N 1.3794E", "why": "contradicts hemisphere"}
+{"text": "28°29'60.0\" 127°14'49.0\"", "why": "seconds must be less than 60"}
+{"text": "45°60'57.6\" 103°06'34.3\"", "why": "minutes must be less than 60"}
+{"text": "28°-37'22.3\" 3°57'08.9\"", "why": "cannot be negative"}
+{"text": "49:53:-02.2 146:34:39.8", "why": "cannot be negative"}
+{"text": "-2.309275, 77.964923xyz", "why": "unexpected character"}
+{"text": "93.6103N 98.2744W", "why": "latitude must be within 90"}
+{"text": "N66.9715N 14.3379E", "why": "two hemisphere letters"}
+{"text": "-58.7125S 28.9943E", "why": "contradicts hemisphere"}
+{"text": "64°28'60.0\" 122°21'35.1\"", "why": "seconds must be less than 60"}
+{"text": "60°60'00.3\" 48°31'37.7\"", "why": "minutes must be less than 60"}
+{"text": "65°-09'48.4\" 94°49'23.2\"", "why": "cannot be negative"}
+{"text": "19:36:-37.3 8:48:08.4", "why": "cannot be negative"}
+{"text": "-8.485982, 170.502068xyz", "why": "unexpected character"}
+{"text": "99.2357S 24.0386E", "why": "latitude must be within 90"}
+{"text": "S12.2031S 164.9938E", "why": "two hemisphere letters"}
+{"text": "-21.3351S 178.3102W", "why": "contradicts hemisphere"}
+{"text": "9°59'60.0\" 15°51'09.7\"", "why": "seconds must be less than 60"}
+{"text": "44°60'47.5\" 49°03'10.5\"", "why": "minutes must be less than 60"}
+{"text": "69°-37'46.1\" 92°25'03.0\"", "why": "cannot be negative"}
+{"text": "23:55:-46.0 119:57:24.9", "why": "cannot be negative"}
+{"text": "69.827476, 109.755659xyz", "why": "unexpected character"}
+{"text": "92.7643N 28.9087W", "why": "latitude must be within 90"}
+{"text": "N76.0714N 87.4046E", "why": "two hemisphere letters"}
+{"text": "-12.3255S 158.3753E", "why": "contradicts hemisphere"}
+{"text": "68°39'60.0\" 169°07'44.5\"", "why": "seconds must be less than 60"}
+{"text": "80°60'11.2\" 160°48'47.1\"", "why": "minutes must be less than 60"}
+{"text": "15°-04'04.9\" 35°11'23.1\"", "why": "cannot be negative"}
+{"text": "85:27:-18.4 169:50:35.5", "why": "cannot be negative"}
+{"text": "80.377860, 117.019024xyz", "why": "unexpected character"}
+{"text": "92.7603S 46.4723E", "why": "latitude must be within 90"}
+{"text": "S21.5960S 88.5273E", "why": "two hemisphere letters"}
+{"text": "-75.0496N 90.8474E", "why": "contradicts hemisphere"}
+{"text": "61°16'60.0\" 77°46'57.0\"", "why": "seconds must be less than 60"}
+{"text": "0°60'02.0\" 10°56'02.6\"", "why": "minutes must be less than 60"}
+{"text": "78°-52'33.8\" 102°48'56.2\"", "why": "cannot be negative"}
+{"text": "39:34:-08.9 65:48:28.6", "why": "cannot be negative"}
+{"text": "-27.102312, 156.384675xyz", "why": "unexpected character"}
+{"text": "91.0391N 87.4665W", "why": "latitude must be within 90"}
+{"text": "S31.6029S 50.3725E", "why": "two hemisphere letters"}
+{"text": "-66.4375S 77.3791W", "why": "contradicts hemisphere"}
+{"text": "69°04'60.0\" 74°47'16.3\"", "why": "seconds must be less than 60"}
+{"text": "1°60'11.4\" 143°56'11.4\"", "why": "minutes must be less than 60"}
+{"text": "60°-40'42.1\" 15°17'52.8\"", "why": "cannot be negative"}
+{"text": "28:11:-54.0 93:15:15.2", "why": "cannot be negative"}
+{"text": "32.539371, -58.771291xyz", "why": "unexpected character"}
+{"text": "96.3834N 155.7348W", "why": "latitude must be within 90"}
+{"text": "S81.5007S 39.7762W", "why": "two hemisphere letters"}
+{"text": "-65.7927S 130.9218W", "why": "contradicts hemisphere"}
+{"text": "46°10'60.0\" 17°18'42.7\"", "why": "seconds must be less than 60"}
+{"text": "35°60'28.3\" 117°07'25.8\"", "why": "minutes must be less than 60"}
+{"text": "25°-20'10.2\" 97°26'17.8\"", "why": "cannot be negative"}
+{"text": "74:34:-06.8 116:41:01.4", "why": "cannot be negative"}
+{"text": "-7.404125, -62.430070xyz", "why": "unexpected character"}
+{"text": "99.2124N 21.1952E", "why": "latitude must be within 90"}
+{"text": "S5.5873S 39.4480W", "why": "two hemisphere letters"}
+{"text": "-59.8185S 112.5912W", "why": "contradicts hemisphere"}
+{"text": "40°47'60.0\" 175°20'51.4\"", "why": "seconds must be less than 60"}
+{"text": "60°60'05.5\" 31°36'22.7\"", "why": "minutes must be less than 60"}
+{"text": "1°-00'45.0\" 0°52'28.8\"", "why": "cannot be negative"}
+{"text": "7:55:-18.7 27:20:28.5", "why": "cannot be negative"}
+{"text": "89.841576, 7.682891xyz", "why": "unexpected character"}
+{"text": "94.6313N 71.0996W", "why": "latitude must be within 90"}
+{"text": "N54.9593N 12.3716E", "why": "two hemisphere letters"}
+{"text": "-64.6142N 164.6927E", "why": "contradicts hemisphere"}
+{"text": "54°26'60.0\" 141°02'20.2\"", "why": "seconds must be less than 60"}
+{"text": "24°60'02.4\" 141°49'29.0\"", "why": "minutes must be less than 60"}
+{"text": "81°-22'31.9\" 122°12'45.9\"", "why": "cannot be negative"}
+{"text": "44:13:-58.8 127:36:08.6", "why": "cannot be negative"}
+{"text": "-38.920310, -63.185471xyz", "why": "unexpected character"}
+{"text": "91.1321N 52.7350W", "why": "latitude must be within 90"}
+{"text": "N8.3173N 120.4652E", "why": "two hemisphere letters"}
+{"text": "-22.1032S 178.0868E", "why": "contradicts hemisphere"}
+{"text": "70°17'60.0\" 84°20'06.5\"", "why": "seconds must be less than 60"}
+{"text": "63°60'47.2\" 173°37'02.2\"", "why": "minutes must be less than 60"}
+{"text": "22°-03'01.7\" 146°09'25.7\"", "why": "cannot be negative"}
+{"text": "28:37:-30.3 37:51:48.9", "why": "cannot be negative"}
+{"text": "-72.308580, 93.458454xyz", "why": "unexpected character"}
+{"text": "96.1794S 173.2671E", "why": "latitude must be within 90"}
+{"text": "N19.7661N 161.6189W", "why": "two hemisphere letters"}
+{"text": "-6.0498N 134.7301W", "why": "contradicts hemisphere"}
+{"text": "31°32'60.0\" 60°51'34.6\"", "why": "seconds must be less than 60"}
+{"text": "74°60'45.4\" 118°38'46.9\"", "why": "minutes must be less than 60"}
+{"text": "33°-55'56.7\" 62°41'35.2\"", "why": "cannot be negative"}
+{"text": "31:51:-12.4 140:40:46.4", "why": "cannot be negative"}
+{"text": "5.826758, 60.732074xyz", "why": "unexpected character"}
+{"text": "98.9539N 57.2875E", "why": "latitude must be within 90"}
+{"text": "N44.3381N 13.3324W", "why": "two hemisphere letters"}
+{"text": "-48.5393S 13.8452E", "why": "contradicts hemisphere"}
+{"text": "77°50'60.0\" 18°46'50.8\"", "why": "seconds must be less than 60"}
+{"text": "79°60'39.8\" 48°23'05.4\"", "why": "minutes must be less than 60"}
+{"text": "63°-59'06.4\" 4°50'36.0\"", "why": "cannot be negative"}
+{"text": "33:09:-55.8 121:43:09.6", "why": "cannot be negative"}
+{"text": "31.379648, 13.037218xyz", "why": "unexpected character"}
+{"text": "99.5226N 1.3635W", "why": "latitude must be within 90"}
+{"text": "S9.7528S 20.7832W", "why": "two hemisphere letters"}
+{"text": "-69.7589N 176.7596E", "why": "contradicts hemisphere"}
+{"text": "4°23'60.0\" 91°59'48.6\"", "why": "seconds must be less than 60"}
+{"text": "42°60'54.5\" 88°16'17.8\"", "why": "minutes must be less than 60"}
+{"text": "69°-54'16.6\" 142°56'43.3\"", "why": "cannot be negative"}
+{"text": "18:15:-12.3 148:56:04.6", "why": "cannot be negative"}
+{"text": "-83.589475, 119.477668xyz", "why": "unexpected character"}
+{"text": "91.5881N 75.3867E", "why": "latitude must be within 90"}
+{"text": "S78.5885S 85.6029E", "why": "two hemisphere letters"}
+{"text": "-80.1443N 172.6921W", "why": "contradicts hemisphere"}
+{"text": "47°53'60.0\" 117°26'22.3\"", "why": "seconds must be less than 60"}
+{"text": "53°60'50.2\" 31°35'26.2\"", "why": "minutes must be less than 60"}
+{"text": "78°-50'04.8\" 25°57'05.8\"", "why": "cannot be negative"}
+{"text": "48:57:-44.2 107:23:10.1", "why": "cannot be negative"}
+{"text": "-37.134080, -99.464842xyz", "why": "unexpected character"}
+{"text": "95.6577S 122.1394W", "why": "latitude must be within 90"}
+{"text": "S53.8115S 103.1832E", "why": "two hemisphere letters"}
+{"text": "-9.5967S 179.4932W", "why": "contradicts hemisphere"}
+{"text": "80°14'60.0\" 124°05'28.1\"", "why": "seconds must be less than 60"}
+{"text": "42°60'22.7\" 1°37'30.6\"", "why": "minutes must be less than 60"}
+{"text": "25°-53'04.1\" 153°08'56.8\"", "why": "cannot be negative"}
+{"text": "56:54:-35.1 136:18:12.1", "why": "cannot be negative"}
+{"text": "-3.718520, -155.640510xyz", "why": "unexpected character"}
+{"text": "99.1703S 125.5473W", "why": "latitude must be within 90"}
+{"text": "S81.9256S 28.7647W", "why": "two hemisphere letters"}
+{"text": "-42.9816S 101.6013W", "why": "contradicts hemisphere"}
+{"text": "82°52'60.0\" 101°30'50.5\"", "why": "seconds must be less than 60"}
+{"text": "85°60'31.7\" 59°11'17.3\"", "why": "minutes must be less than 60"}
+{"text": "36°-56'32.6\" 35°24'13.4\"", "why": "cannot be negative"}
+{"text": "30:29:-19.5 32:44:41.7", "why": "cannot be negative"}
+{"text": "-6.343082, -30.449006xyz", "why": "unexpected character"}
+{"text": "95.9326N 147.9331W", "why": "latitude must be within 90"}
+{"text": "N59.6940N 77.4077E", "why": "two hemisphere letters"}
+{"text": "-60.6724N 103.3268E", "why": "contradicts hemisphere"}
+{"text": "65°34'60.0\" 149°50'24.1\"", "why": "seconds must be less than 60"}
+{"text": "27°60'48.5\" 41°31'42.5\"", "why": "minutes must be less than 60"}
+{"text": "65°-43'23.8\" 176°07'57.3\"", "why": "cannot be negative"}
+{"text": "26:41:-27.9 109:33:56.6", "why": "cannot be negative"}
+{"text": "-40.729116, 102.523705xyz", "why": "unexpected character"}
+{"text": "94.4220N 169.9471E", "why": "latitude must be within 90"}
+{"text": "N14.2263N 160.2995W", "why": "two hemisphere letters"}
+{"text": "-44.3695S 52.8914W", "why": "contradicts hemisphere"}
+{"text": "71°25'60.0\" 101°54'55.0\"", "why": "seconds must be less than 60"}
+{"text": "86°60'48.4\" 144°42'16.2\"", "why": "minutes must be less than 60"}
+{"text": "87°-23'53.5\" 114°36'26.3\"", "why": "cannot be negative"}
+{"text": "80:36:-35.6 100:29:40.5", "why": "cannot be negative"}
+{"text": "-46.626968, -109.379555xyz", "why": "unexpected character"}
+{"text": "98.1442S 132.9367E", "why": "latitude must be within 90"}
+{"text": "N58.6047N 136.5034W", "why": "two hemisphere letters"}
+{"text": "-68.0261S 106.6276E", "why": "contradicts hemisphere"}
+{"text": "66°23'60.0\" 104°50'08.6\"", "why": "seconds must be less than 60"}
+{"text": "35°60'43.1\" 4°30'32.4\"", "why": "minutes must be less than 60"}
+{"text": "62°-31'38.9\" 173°08'07.4\"", "why": "cannot be negative"}
+{"text": "15:49:-34.0 36:41:18.0", "why": "cannot be negative"}
+{"text": "55.648120, 160.090146xyz", "why": "unexpected character"}
+{"text": "99.1151S 135.6770W", "why": "latitude must be within 90"}
+{"text": "S29.1780S 107.1458W", "why": "two hemisphere letters"}
+{"text": "-79.8802N 111.4790W", "why": "contradicts hemisphere"}
+{"text": "21°56'60.0\" 78°49'09.2\"", "why": "seconds must be less than 60"}
+{"text": "50°60'30.6\" 57°04'43.1\"", "why": "minutes must be less than 60"}
+{"text": "22°-50'58.1\" 90°35'36.0\"", "why": "cannot be negative"}
+{"text": "48:13:-57.1 140:37:08.4", "why": "cannot be negative"}
+{"text": "71.050828, -133.758443xyz", "why": "unexpected character"}
+{"text": "98.1721N 174.0899W", "why": "latitude must be within 90"}
+{"text": "N69.9153N 52.6217W", "why": "two hemisphere letters"}
+{"text": "-85.3141S 160.8929E", "why": "contradicts hemisphere"}
+{"text": "12°20'60.0\" 52°06'11.5\"", "why": "seconds must be less than 60"}
+{"text": "64°60'13.7\" 110°24'35.8\"", "why": "minutes must be less than 60"}
+{"text": "1°-11'49.8\" 129°11'52.1\"", "why": "cannot be negative"}
+{"text": "51:59:-11.7 38:58:09.8", "why": "cannot be negative"}
+{"text": "7.865455, -11.494394xyz", "why": "unexpected character"}
+{"text": "93.0621N 9.9277W", "why": "latitude must be within 90"}
+{"text": "S73.5525S 13.4633W", "why": "two hemisphere letters"}
+{"text": "-71.4891N 155.8247W", "why": "contradicts hemisphere"}
+{"text": "45°50'60.0\" 19°33'30.4\"", "why": "seconds must be less than 60"}
+{"text": "68°60'10.1\" 75°12'35.8\"", "why": "minutes must be less than 60"}
+{"text": "33°-53'28.0\" 43°40'35.1\"", "why": "cannot be negative"}
+{"text": "54:59:-04.5 168:35:29.2", "why": "cannot be negative"}
+{"text": "57.550448, -108.524758xyz", "why": "unexpected character"}
+{"text": "92.5381S 22.2119W", "why": "latitude must be within 90"}
+{"text": "S64.3796S 162.3425W", "why": "two hemisphere letters"}
+{"text": "-75.6208S 101.9488W", "why": "contradicts hemisphere"}
+{"text": "84°36'60.0\" 110°38'55.0\"", "why": "seconds must be less than 60"}
+{"text": "75°60'06.6\" 160°23'53.5\"", "why": "minutes must be less than 60"}
+{"text": "51°-33'15.9\" 8°04'19.1\"", "why": "cannot be negative"}
+{"text": "44:43:-04.7 168:52:32.4", "why": "cannot be negative"}
+{"text": "75.565858, 81.205901xyz", "why": "unexpected character"}
+{"text": "93.5106S 19.6975W", "why": "latitude must be within 90"}
+{"text": "S33.3169S 115.4053W", "why": "two hemisphere letters"}
+{"text": "-23.0923S 35.1498W", "why": "contradicts hemisphere"}
+{"text": "58°49'60.0\" 63°11'06.1\"", "why": "seconds must be less than 60"}
+{"text": "41°60'46.7\" 39°45'06.3\"", "why": "minutes must be less than 60"}
+{"text": "12°-29'17.1\" 140°32'39.4\"", "why": "cannot be negative"}
+{"text": "40:38:-28.9 51:09:45.0", "why": "cannot be negative"}
+{"text": "-86.254223, -89.434970xyz", "why": "unexpected character"}
+{"text": "96.4099S 44.3475W", "why": "latitude must be within 90"}
+{"text": "N81.3981N 154.4378W", "why": "two hemisphere letters"}
+{"text": "-54.7399S 93.9533W", "why": "contradicts hemisphere"}
+{"text": "39°05'60.0\" 87°34'02.0\"", "why": "seconds must be less than 60"}
+{"text": "16°60'20.6\" 162°22'34.2\"", "why": "minutes must be less than 60"}
+{"text": "75°-23'16.9\" 22°54'59.9\"", "why": "cannot be negative"}
+{"text": "35:08:-45.2 88:25:47.7", "why": "cannot be negative"}
+{"text": "-68.028405, 119.558281xyz", "why": "unexpected character"}
+{"text": "92.0012N 2.8201W", "why": "latitude must be within 90"}
+{"text": "N35.6894N 53.4943W", "why": "two hemisphere letters"}
+{"text": "-39.8529N 17.5882W", "why": "contradicts hemisphere"}
+{"text": "4°58'60.0\" 152°49'54.6\"", "why": "seconds must be less than 60"}
+{"text": "84°60'52.0\" 27°48'24.5\"", "why": "minutes must be less than 60"}
+{"text": "69°-45'39.7\" 37°06'43.9\"", "why": "cannot be negative"}
+{"text": "66:39:-25.6 164:50:56.4", "why": "cannot be negative"}
+{"text": "51.572643, 152.850054xyz", "why": "unexpected character"}
+{"text": "99.1299S 11.6958W", "why": "latitude must be within 90"}
+{"text": "N30.4982N 13.4945E", "why": "two hemisphere letters"}
+{"text": "-36.8424S 58.3023E", "why": "contradicts hemisphere"}
+{"text": "34°17'60.0\" 155°37'54.3\"", "why": "seconds must be less than 60"}
+{"text": "72°60'45.4\" 117°02'13.5\"", "why": "minutes must be less than 60"}
+{"text": "58°-49'25.0\" 129°16'43.2\"", "why": "cannot be negative"}
+{"text": "65:25:-24.8 43:03:52.9", "why": "cannot be negative"}
+{"text": "-83.424033, 123.739987xyz", "why": "unexpected character"}
+{"text": "98.2999S 38.5554E", "why": "latitude must be within 90"}
+{"text": "N81.0564N 96.6384E", "why": "two hemisphere letters"}
+{"text": "-72.0096S 127.2930W", "why": "contradicts hemisphere"}
+{"text": "83°27'60.0\" 8°33'02.1\"", "why": "seconds must be less than 60"}
+{"text": "50°60'23.6\" 142°17'10.2\"", "why": "minutes must be less than 60"}
+{"text": "17°-03'52.0\" 95°55'48.8\"", "why": "cannot be negative"}
+{"text": "36:36:-41.1 26:38:33.7", "why": "cannot be negative"}
+{"text": "52.852854, -15.778677xyz", "why": "unexpected character"}
+{"text": "99.0888S 50.7285E", "why": "latitude must be within 90"}
+{"text": "N20.4770N 0.7377W", "why": "two hemisphere letters"}
+{"text": "-41.6234N 121.9982E", "why": "contradicts hemisphere"}
+{"text": "3°21'60.0\" 174°44'21.8\"", "why": "seconds must be less than 60"}
+{"text": "12°60'43.3\" 72°25'59.6\"", "why": "minutes must be less than 60"}
+{"text": "13°-08'22.2\" 50°27'02.8\"", "why": "cannot be negative"}
+{"text": "43:55:-28.2 33:51:24.0", "why": "cannot be negative"}
+{"text": "-58.544891, -174.248947xyz", "why": "unexpected character"}
+{"text": "97.2475S 133.8380W", "why": "latitude must be within 90"}
+{"text": "N10.2158N 117.1912W", "why": "two hemisphere letters"}
+{"text": "-88.1066S 108.3103E", "why": "contradicts hemisphere"}
+{"text": "59°51'60.0\" 75°58'05.1\"", "why": "seconds must be less than 60"}
+{"text": "80°60'34.6\" 156°42'00.5\"", "why": "minutes must be less than 60"}
+{"text": "45°-04'43.1\" 82°42'44.3\"", "why": "cannot be negative"}
+{"text": "71:32:-20.4 138:54:16.6", "why": "cannot be negative"}
+{"text": "-49.117032, 121.842453xyz", "why": "unexpected character"}
+{"text": "94.4374N 100.2006W", "why": "latitude must be within 90"}
+{"text": "S16.4137S 41.0142W", "why": "two hemisphere letters"}
+{"text": "-27.1448S 118.3837W", "why": "contradicts hemisphere"}
+{"text": "70°16'60.0\" 31°24'52.4\"", "why": "seconds must be less than 60"}
+{"text": "64°60'46.8\" 147°43'45.4\"", "why": "minutes must be less than 60"}
+{"text": "61°-14'07.0\" 126°38'23.0\"", "why": "cannot be negative"}
+{"text": "43:13:-18.1 127:16:07.5", "why": "cannot be negative"}
+{"text": "7.524743, 159.096202xyz", "why": "unexpected character"}
+{"text": "91.3830N 61.4838W", "why": "latitude must be within 90"}
+{"text": "N2.7271N 48.7482W", "why": "two hemisphere letters"}
+{"text": "-45.9158S 1.7650E", "why": "contradicts hemisphere"}
+{"text": "18°47'60.0\" 170°47'28.8\"", "why": "seconds must be less than 60"}
+{"text": "56°60'29.1\" 155°37'32.5\"", "why": "minutes must be less than 60"}
+{"text": "5°-32'05.8\" 143°38'27.2\"", "why": "cannot be negative"}
+{"text": "10:27:-16.0 18:25:34.2", "why": "cannot be negative"}
+{"text": "32.743085, 82.042430xyz", "why": "unexpected character"}
+{"text": "93.6790N 135.4753E", "why": "latitude must be within 90"}
+{"text": "S39.9703S 160.4314W", "why": "two hemisphere letters"}
+{"text": "-6.6853N 80.3514W", "why": "contradicts hemisphere"}
+{"text": "67°29'60.0\" 83°48'43.8\"", "why": "seconds must be less than 60"}
+{"text": "47°60'47.1\" 107°41'11.6\"", "why": "minutes must be less than 60"}
+{"text": "4°-22'16.5\" 107°41'20.1\"", "why": "cannot be negative"}
+{"text": "3:28:-21.2 116:40:20.6", "why": "cannot be negative"}
+{"text": "-22.403632, 115.373007xyz", "why": "unexpected character"}
+{"text": "95.9798S 23.2054W", "why": "latitude must be within 90"}
+{"text": "S5.8451S 45.7223E", "why": "two hemisphere letters"}
+{"text": "-28.3545N 45.1623E", "why": "contradicts hemisphere"}
+{"text": "43°24'60.0\" 159°04'05.1\"", "why": "seconds must be less than 60"}
+{"text": "22°60'19.6\" 143°10'26.8\"", "why": "minutes must be less than 60"}
+{"text": "29°-21'30.4\" 62°19'21.7\"", "why": "cannot be negative"}
+{"text": "52:20:-49.0 62:28:50.2", "why": "cannot be negative"}
+{"text": "43.311872, 142.893513xyz", "why": "unexpected character"}
+{"text": "99.9526S 140.7827W", "why": "latitude must be within 90"}
+{"text": "N14.1068N 124.8263E", "why": "two hemisphere letters"}
+{"text": "-11.1602S 59.6381E", "why": "contradicts hemisphere"}
+{"text": "7°29'60.0\" 32°12'22.3\"", "why": "seconds must be less than 60"}
+{"text": "7°60'56.4\" 25°48'58.8\"", "why": "minutes must be less than 60"}
+{"text": "23°-54'21.8\" 124°10'47.5\"", "why": "cannot be negative"}
+{"text": "62:21:-38.4 98:24:03.0", "why": "cannot be negative"}
+{"text": "-15.607111, -50.380179xyz", "why": "unexpected character"}
+{"text": "98.9549S 7.2506E", "why": "latitude must be within 90"}
+{"text": "S83.2949S 160.2457E", "why": "two hemisphere letters"}
+{"text": "-52.7801S 84.4421W", "why": "contradicts hemisphere"}
+{"text": "57°10'60.0\" 63°50'58.4\"", "why": "seconds must be less than 60"}
+{"text": "37°60'27.0\" 8°31'40.1\"", "why": "minutes must be less than 60"}
+{"text": "1°-56'12.7\" 146°46'50.4\"", "why": "cannot be negative"}
+{"text": "55:57:-11.1 50:21:17.7", "why": "cannot be negative"}
+{"text": "-80.873331, -5.397998xyz", "why": "unexpected character"}
+{"text": "91.9668N 32.0287E", "why": "latitude must be within 90"}
+{"text": "S85.4921S 91.0343W", "why": "two hemisphere letters"}
+{"text": "-26.1345S 174.5462E", "why": "contradicts hemisphere"}
+{"text": "57°24'60.0\" 128°58'20.0\"", "why": "seconds must be less than 60"}
+{"text": "41°60'52.3\" 0°07'23.3\"", "why": "minutes must be less than 60"}
+{"text": "36°-25'49.1\" 7°27'34.7\"", "why": "cannot be negative"}
+{"text": "33:56:-25.4 151:24:08.1", "why": "cannot be negative"}
+{"text": "87.165089, -6.682653xyz", "why": "unexpected character"}
+{"text": "93.2271N 57.5803E", "why": "latitude must be within 90"}
+{"text": "S35.0684S 8.6346W", "why": "two hemisphere letters"}
+{"text": "-11.9608S 166.5696W", "why": "contradicts hemisphere"}
+{"text": "60°55'60.0\" 70°46'29.3\"", "why": "seconds must be less than 60"}
+{"text": "25°60'19.1\" 1°08'49.0\"", "why": "minutes must be less than 60"}
+{"text": "57°-24'09.2\" 11°32'58.8\"", "why": "cannot be negative"}
+{"text": "60:00:-52.1 60:21:45.4", "why": "cannot be negative"}
+{"text": "7.051783, 71.943404xyz", "why": "unexpected character"}
+{"text": "95.4183N 107.4111W", "why": "latitude must be within 90"}
+{"text": "S13.0124S 133.4738E", "why": "two hemisphere letters"}
+{"text": "-62.1309S 98.7212E", "why": "contradicts hemisphere"}
+{"text": "47°35'60.0\" 127°43'27.9\"", "why": "seconds must be less than 60"}
+{"text": "16°60'33.6\" 101°57'26.6\"", "why": "minutes must be less than 60"}
+{"text": "87°-02'20.1\" 151°29'46.0\"", "why": "cannot be negative"}
+{"text": "85:17:-05.2 65:00:49.8", "why": "cannot be negative"}
+{"text": "6.238983, 89.335240xyz", "why": "unexpected character"}
+{"text": "95.7232N 144.8657E", "why": "latitude must be within 90"}
+{"text": "N42.3187N 9.3752W", "why": "two hemisphere letters"}
+{"text": "-86.2742N 94.9769E", "why": "contradicts hemisphere"}
+{"text": "73°17'60.0\" 135°27'19.3\"", "why": "seconds must be less than 60"}
+{"text": "2°60'55.3\" 50°12'45.9\"", "why": "minutes must be less than 60"}
+{"text": "89°-35'35.0\" 67°15'01.6\"", "why": "cannot be negative"}
+{"text": "67:35:-34.5 166:16:32.9", "why": "cannot be negative"}
+{"text": "-12.420512, 63.458460xyz", "why": "unexpected character"}
+{"text": "97.7128N 126.9012E", "why": "latitude must be within 90"}
+{"text": "N49.3254N 169.7826E", "why": "two hemisphere letters"}
+{"text": "-55.5458S 36.7440E", "why": "contradicts hemisphere"}
+{"text": "51°27'60.0\" 6°10'38.0\"", "why": "seconds must be less than 60"}
+{"text": "84°60'35.0\" 136°22'46.6\"", "why": "minutes must be less than 60"}
+{"text": "11°-06'41.7\" 108°27'02.9\"", "why": "cannot be negative"}
+{"text": "47:22:-10.4 141:22:12.2", "why": "cannot be negative"}
+{"text": "-23.411365, 40.762744xyz", "why": "unexpected character"}
+{"text": "96.2948N 81.3558W", "why": "latitude must be within 90"}
+{"text": "S70.9610S 121.0359E", "why": "two hemisphere letters"}
+{"text": "-87.2884S 106.1698W", "why": "contradicts hemisphere"}
+{"text": "63°21'60.0\" 105°39'09.5\"", "why": "seconds must be less than 60"}
+{"text": "25°60'19.5\" 147°41'08.8\"", "why": "minutes must be less than 60"}
+{"text": "77°-30'28.1\" 0°25'43.5\"", "why": "cannot be negative"}
+{"text": "81:15:-27.3 59:28:29.0", "why": "cannot be negative"}
+{"text": "-70.615666, 128.129028xyz", "why": "unexpected character"}
+{"text": "94.1968S 73.4973W", "why": "latitude must be within 90"}
+{"text": "N69.3422N 88.8750E", "why": "two hemisphere letters"}
+{"text": "-1.1653N 96.8489E", "why": "contradicts hemisphere"}

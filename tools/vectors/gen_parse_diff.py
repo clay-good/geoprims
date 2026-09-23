@@ -80,6 +80,40 @@ def main():
     out = Path("core/crates/gp-geodesy/tests/data/parse_diff.jsonl")
     out.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
     print(len(rows), "rows")
+    bad = rejects(random.Random(45), 504)
+    out = Path("core/crates/gp-geodesy/tests/data/parse_reject.jsonl")
+    out.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in bad))
+    print(len(bad), "rejections")
+
+
+def rejects(rnd, n):
+    """Strings that must not parse, built from the same parts as the good ones
+    so the only thing wrong with each is the one thing named."""
+    rows = []
+    for k in range(n):
+        la, lo = rnd.uniform(-89.9, 89.9), rnd.uniform(-179.9, 179.9)
+        (d1, m1, s1), (d2, m2, s2) = split(la, 1), split(lo, 1)
+        h1, h2 = ("N" if la >= 0 else "S"), ("E" if lo >= 0 else "W")
+        tail = f"{d2}\u00b0{m2:02d}'{s2:04.1f}\""
+        kind = k % 8
+        if kind == 0:
+            text, why = f"{d1}\u00b0{m1:02d}'60.0\" {tail}", "seconds must be less than 60"
+        elif kind == 1:
+            text, why = f"{d1}\u00b060'{s1:04.1f}\" {tail}", "minutes must be less than 60"
+        elif kind == 2:
+            text, why = f"{d1}\u00b0-{m1:02d}'{s1:04.1f}\" {tail}", "cannot be negative"
+        elif kind == 3:
+            text, why = f"{d1}:{m1:02d}:-{s1:04.1f} {d2}:{m2:02d}:{s2:04.1f}", "cannot be negative"
+        elif kind == 4:
+            text, why = f"{la:.6f}, {lo:.6f}xyz", "unexpected character"
+        elif kind == 5:
+            text, why = f"{91 + abs(la) % 9:.4f}{h1} {abs(lo):.4f}{h2}", "latitude must be within 90"
+        elif kind == 6:
+            text, why = f"{h1}{abs(la):.4f}{h1} {abs(lo):.4f}{h2}", "two hemisphere letters"
+        else:
+            text, why = f"-{abs(la):.4f}{h1} {abs(lo):.4f}{h2}", "contradicts hemisphere"
+        rows.append({"text": text, "why": why})
+    return rows
 
 
 if __name__ == "__main__":

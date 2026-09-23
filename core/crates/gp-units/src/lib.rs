@@ -296,13 +296,30 @@ related: [
     Related { id: "time.scale.utc-offset", reason: "next" }
 ]);
 convert_op!(ENERGY, "energy", QT::Energy, "Wh", "Energy converter",
-    "Converts energy: J, kJ, MJ, Wh, and kWh.",
-    aliases: ["watt hours conversion"], refs: [NIST_811],
-    example: ("99 Wh in kilojoules", r#"{"value":"99 Wh","to":"kJ"}"#));
+"Converts energy: J, kJ, MJ, Wh, kWh, and foot pounds-force.",
+aliases: ["watt hours conversion"], refs: [NIST_811],
+example: ("99 Wh in kilojoules", r#"{"value":"99 Wh","to":"kJ"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this when a capacity, a consumption or a quantity of work is quoted in one system and needed in another: a battery in watt hours against a limit in joules, a daily use in kilowatt hours against a supply in megajoules, a torque-wrench or fastener figure in foot pounds-force. Specification sheets and regulations each pick their own unit and rarely the same one.",
+limits: "This converts energy, not power: a kilowatt hour is an amount of energy and a kilowatt is a rate, and the two are a quantity and its per-hour, so the power converter next door is the one for a rate. A foot pound-force of energy is numerically the same as a pound-foot of torque and is not the same thing -- torque is a moment, energy is work, and nothing here will stop you converting one as the other. Battery capacities quoted in mAh are a charge, not an energy, and need a voltage before they can come here; the charge converter handles those.",
+related: [
+    Related { id: "units.power.convert", reason: "next" },
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.charge.convert", reason: "alternative" }
+]);
 convert_op!(POWER, "power", QT::Power, "hp", "Power converter",
-    "Converts power: W, kW, and mechanical horsepower (550 ft·lbf/s).",
-    aliases: ["horsepower to kilowatts"], refs: [NIST_811],
-    example: ("180 hp in kilowatts", r#"{"value":"180 hp","to":"kW"}"#));
+"Converts power: W, kW, and mechanical horsepower (550 ft·lbf/s).",
+aliases: ["horsepower to kilowatts"], refs: [NIST_811],
+example: ("180 hp in kilowatts", r#"{"value":"180 hp","to":"kW"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for any rating that has to cross systems: an engine or motor in horsepower against a limit in kilowatts, a generator or heater in watts, a pump curve quoted either way. Vehicle, aircraft and equipment ratings are published in whichever unit the market expects and compared against a specification in the other.",
+limits: "The horsepower here is the mechanical one of 550 ft·lbf/s, which is what a US or UK rating means. The metric horsepower (PS or ch) is 735.49875 W, 1.4% smaller, and the boiler horsepower is about thirteen times larger; neither is offered, because a document that says only horsepower has to be read before it is converted rather than guessed at here. Power is a rate, not an amount: a kilowatt for an hour is a kilowatt hour, and the energy converter is the one for that."
+,
+related: [
+    Related { id: "units.energy.convert", reason: "next" },
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.time.convert", reason: "alternative" }
+]);
 convert_op!(DENSITY, "density", QT::Density, "lb/galUS", "Density converter",
     "Converts densities: kg/m³, g/cm³, lb/US gal, and lb/ft³.",
     aliases: ["fuel density conversion"], refs: [NIST_811],

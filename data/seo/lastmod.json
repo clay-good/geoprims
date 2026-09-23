@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "77fa2dd3cb9c4c52",
+    "hash": "275b8b7769d6ab04",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "a80b73455fc9af73",
+    "hash": "c3093c6364335187",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -796,12 +796,12 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "b8b889eaeaf58924",
+    "hash": "bf2e5a642ff934a8",
     "lastmod": "2026-09-23"
   },
   "/units/": {
-    "hash": "8de8db9230403d62",
-    "lastmod": "2026-09-22"
+    "hash": "c93a077aff6fe1b9",
+    "lastmod": "2026-09-23"
   },
   "/units/acceleration/": {
     "hash": "74e8fcd574a09130",
@@ -840,8 +840,12 @@
     "lastmod": "2026-09-22"
   },
   "/units/energy/": {
-    "hash": "157d947f8ae3cffe",
-    "lastmod": "2026-09-22"
+    "hash": "4253a2b8e490937c",
+    "lastmod": "2026-09-23"
+  },
+  "/units/energy/convert/": {
+    "hash": "e54e52405f40dc1f",
+    "lastmod": "2026-09-23"
   },
   "/units/frequency/": {
     "hash": "ff974502b50f63e6",
@@ -870,6 +874,10 @@
   "/units/power/": {
     "hash": "2955ad46cca072d4",
     "lastmod": "2026-09-22"
+  },
+  "/units/power/convert/": {
+    "hash": "137f26678aa43f84",
+    "lastmod": "2026-09-23"
   },
   "/units/pressure/": {
     "hash": "57df2064735b7361",
@@ -936,7 +944,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1f23815e557998bd",
+    "hash": "eee77bbf38d51c5a",
     "lastmod": "2026-09-23"
   }
 }

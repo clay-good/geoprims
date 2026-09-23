@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use gp_base::manifest;
-use gp_base::tool::ToolDef;
+use gp_base::tool::{Stability, ToolDef};
 use gp_base::vectors;
 use gp_units::{REGISTRY, TOOLS};
 use serde_json::Value;
@@ -220,16 +220,30 @@ fn provenance_present() {
     );
     assert!(r["meta"]["warnings"].is_array(), "warnings is not a list");
 
-    // A tool that has not been promoted still says so. Speed used to serve as
-    // this example and stopped being able to when it went stable.
-    let e = call("units.energy.convert", r#"{"value":1,"to":"kJ"}"#);
+    // A tool that has not been promoted still says so. Naming one here means
+    // rewriting the test every time that tool is promoted -- speed, then
+    // energy -- so the example is whichever converter is still experimental
+    // when the test runs.
+    let Some(t) = TOOLS
+        .iter()
+        .find(|t| t.stability == Stability::Experimental && t.id.ends_with(".convert"))
+    else {
+        return; // every converter is promoted: nothing left to announce
+    };
+    let gp_base::tool::Kind::Unit(q) = t.inputs.iter().find(|f| f.name == "to").expect("to").kind
+    else {
+        panic!("{} does not take a unit", t.id)
+    };
+    let unit = gp_base::units::units_of(q).next().expect("a unit").symbol;
+    let e = call(t.id, &format!(r#"{{"value":1,"to":"{unit}"}}"#));
     assert!(
         e["meta"]["warnings"]
             .as_array()
             .unwrap()
             .iter()
             .any(|w| w["code"] == "EXPERIMENTAL_TOOL"),
-        "an experimental tool does not announce itself: {e}"
+        "{} does not announce itself as experimental: {e}",
+        t.id
     );
 }
 
@@ -742,6 +756,20 @@ fn pressure_invariants() {
 /// change converting to itself, zero fixed, signs kept, and twice in is twice
 /// out. Returns the worst relative round-trip error so a caller can report it.
 fn linear_converter(tool: &str, units: &[&str]) -> f64 {
+    // The list is written out so the assertions below read, but a unit left
+    // off it would be silently unchecked -- the same miss the vectors had.
+    let t = TOOLS.iter().find(|t| t.id == tool).expect("tool");
+    let f = t.inputs.iter().find(|f| f.name == "to").expect("to");
+    let gp_base::tool::Kind::Unit(q) = f.kind else {
+        panic!("{tool} does not take a unit")
+    };
+    let all: Vec<&str> = gp_base::units::units_of(q).map(|u| u.symbol).collect();
+    for u in &all {
+        assert!(
+            units.contains(u),
+            "{tool}: {u} is offered but not checked here"
+        );
+    }
     let mut worst = 0.0f64;
     for a in units {
         for b in units {
@@ -876,6 +904,42 @@ fn time_invariants() {
 /// happens: fifteen units were offered by the enum and used by no vector at
 /// all, on four converters already past the stable bar. This is the ratchet --
 /// a unit added to the registry without vectors fails here, by name.
+#[test]
+fn energy_invariants() {
+    const E: &str = "units.energy.convert";
+    linear_converter(E, &["J", "kJ", "MJ", "Wh", "kWh", "ft*lbf"]);
+    // A watt for an hour, exactly, which is why kWh and MJ are commensurable.
+    assert_eq!(conv(E, 1.0, "Wh", "J"), 3600.0);
+    assert_eq!(conv(E, 1.0, "kWh", "J"), 3_600_000.0);
+    assert_eq!(conv(E, 1.0, "kWh", "MJ"), 3.6);
+    // The foot pound-force built from its three defining constants rather than
+    // compared against a decimal copied out of a table: international foot,
+    // avoirdupois pound, standard gravity.
+    let lbf = 0.453_592_37 * 9.806_65;
+    assert_eq!(conv(E, 1.0, "ft*lbf", "J"), 0.3048 * lbf);
+    assert_eq!(conv(E, 1.0, "ft*lbf", "J"), 1.355_817_948_331_400_3);
+}
+
+#[test]
+fn power_invariants() {
+    const P: &str = "units.power.convert";
+    linear_converter(P, &["W", "kW", "hp"]);
+    assert_eq!(conv(P, 1.0, "kW", "W"), 1000.0);
+    // 550 ft*lbf/s, from the same three constants the energy converter uses.
+    let lbf = 0.453_592_37 * 9.806_65;
+    assert_eq!(conv(P, 1.0, "hp", "W"), 550.0 * 0.3048 * lbf);
+    assert_eq!(conv(P, 1.0, "hp", "W"), 745.699_871_582_270_2);
+    // The mechanical horsepower, not the metric one (PS, 735.49875 W). They
+    // are 1.4% apart -- close enough that a loose check would pass either, so
+    // the gap is pinned as well as the value.
+    let metric = 735.498_75;
+    let gap = (conv(P, 1.0, "hp", "W") - metric) / metric;
+    assert!(
+        (0.013..0.015).contains(&gap),
+        "hp is not the mechanical horsepower: {gap} from PS"
+    );
+}
+
 #[test]
 fn every_unit_pair_has_a_vector() {
     let mut failures = Vec::new();

@@ -1576,6 +1576,7 @@ fn nc5_covers(r: &Nc5Region, lat: f64, lon: f64) -> bool {
 
 pub static NADCON5: ToolDef = ToolDef {
     id: "geodesy.datum.nadcon5",
+    stability: gp_base::tool::Stability::Stable,
     title: "Old US datums to NAD 83 (NADCON5)",
     summary: "Converts a latitude and longitude from a region's old datum to NAD 83 with the NGS NADCON5 grids, or back: NAD 27 in the conterminous US and Alaska, Old Hawaiian, Puerto Rico 1940, St. Paul 1952, American Samoa 1962, and Guam 1963.",
     aliases: &[
@@ -1701,15 +1702,17 @@ pub static NADCON5: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::AssetUnavailable,
     ],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED"],
     model: "NADCON5 first-step grid for the region, biquadratic interpolation (NGS qterp); the reverse by iteration",
     accuracy: "Matches PROJ's NADCON5 transformations to 1e-9°; NGS states each first step itself at the decimeter level (about 0.15 m, 1σ, for NAD 27 in CONUS)",
+    when_to_use: "Use this for old American coordinates when the answer has to be better than a meter. NAD 27 and the other regional datums — Old Hawaiian, Puerto Rico 1940, St. Paul 1952, American Samoa 1962, Guam 1963 — differ from NAD 83 by an amount that changes from place to place across the country, and the NGS grids model that variation directly instead of averaging it into one set of parameters. This is the transformation NGS itself publishes for the job, so it is what a survey, a parcel record, or a republished map should be brought forward with.",
+    limitations: "It only covers what the grids cover: the conterminous United States, Alaska, Hawaii, Puerto Rico and the Virgin Islands, St. Paul Island, American Samoa, and Guam and the Northern Marianas. A point outside all of them is refused rather than extrapolated, and the regional helmert transformation is the fallback for anywhere else. This is the first step of NADCON5 — the one that carries the old datum to NAD 83 (1986) — and NGS states it at the decimeter level, about 0.15 m for NAD 27 in the conterminous states, so the result is decimeters, not centimeters. Later NAD 83 realizations are a separate step, which the NAD 83 tool handles. Only latitude and longitude are converted; the vertical grids are not part of this.",
     references: &[NADCON5_REF],
     examples: &[Example {
         id: "primary",
         title: "Central Kansas (Meades Ranch, the NAD 27 origin)",
         input: r#"{"lat":39.224,"lon":-98.542}"#,
-        source: "PROJ with the NADCON5 grid us_noaa_nadcon5_nad27_nad83_1986_conus.tif, through pyproj",
+        source: "PROJ 9.3 applying the NADCON5 grid us_noaa_nadcon5_nad27_nad83_1986_conus.tif through pyproj, which the 34 grid vectors come from across all seven regions; the grid moves this point 29.815 m where the single-parameter EPSG helmert moves it 31.793 m, the 2.5 m between them being the regional variation a grid carries and a helmert cannot",
     }],
     primary_example: "primary",
     assets: &[NADCON5_ID],
@@ -1725,6 +1728,10 @@ pub static NADCON5: ToolDef = ToolDef {
         Related {
             id: "geodesy.datum.nad83",
             reason: "next",
+        },
+        Related {
+            id: "geodesy.datum.helmert",
+            reason: "alternative",
         },
     ],
     sentence: "The point moves {shift} toward {azimuth} between the old datum and NAD 83.",

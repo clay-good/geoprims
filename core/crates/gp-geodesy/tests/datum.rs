@@ -631,3 +631,114 @@ fn legacy_invariants() {
         "Sydney on OSGB36 is not flagged\n{far}"
     );
 }
+
+/// The host supplies data assets; the test plays the host.
+fn load_nadcon5_grids() {
+    for g in [
+        "nad27_nad83_1986_conus",
+        "nad27_nad83_1986_alaska",
+        "ohd_nad83_1986_hawaii",
+        "pr40_nad83_1986_prvi",
+        "sp1952_nad83_1986_stpaul",
+        "as62_nad83_1993_as",
+        "gu63_nad83_1993_guamcnmi",
+    ] {
+        let path = format!(
+            "{}/../../../assets/data/nadcon5/20160901/{g}.grid",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        gp_base::assets::put(
+            &format!("nadcon5@20160901/{g}.grid"),
+            &std::fs::read(&path).unwrap_or_else(|e| panic!("read {path}: {e}")),
+        );
+    }
+}
+
+fn nadcon5(direction: &str, lat: f64, lon: f64) -> Value {
+    call(
+        "geodesy.datum.nadcon5",
+        &format!(
+            r#"{{"direction":"{direction}","lat":{lat},"lon":{lon},"options":{{"outputUnits":{{"shift":"m"}}}}}}"#
+        ),
+    )
+}
+
+#[test]
+fn nadcon5_invariants() {
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    load_nadcon5_grids();
+    let g = Geodesic::wgs84();
+    // Four places across the conterminous states, where NAD 27 is worst, middling
+    // and near zero, so a constant offset could not pass for the grid.
+    const PLACES: [(f64, f64); 4] = [
+        (39.224, -98.542),    // Meades Ranch, the NAD 27 origin
+        (39.7392, -104.9903), // Denver
+        (41.8781, -87.6298),  // Chicago
+        (34.0522, -118.2437), // Los Angeles
+    ];
+
+    for (lat, lon) in PLACES {
+        let out = nadcon5("to-nad83", lat, lon);
+        assert!(out["ok"].as_bool().unwrap_or(false), "{lat},{lon}: {out}");
+        let (nlat, nlon) = (f(&out, "result.lat.value"), f(&out, "result.lon.value"));
+
+        // The shift, and its components, measured rather than restated.
+        let measured: f64 = g.inverse(lat, lon, nlat, nlon);
+        assert!(
+            (measured - f(&out, "result.shift.value")).abs() < 1e-6,
+            "{lat},{lon}: reported {} m against {measured} m",
+            f(&out, "result.shift.value")
+        );
+        assert!(
+            (f(&out, "result.dlat.value") - (nlat - lat) * 3600.0).abs() < 1e-6
+                && (f(&out, "result.dlon.value") - (nlon - lon) * 3600.0).abs() < 1e-6,
+            "{lat},{lon}: dlat/dlon are not the components of the move\n{out}"
+        );
+
+        // The reverse iterates until it settles, so it returns the position
+        // exactly. Negating the forward shift instead would leave millimetres.
+        let back = nadcon5("from-nad83", nlat, nlon);
+        assert!(back["ok"].as_bool().unwrap_or(false), "{lat},{lon}: {back}");
+        assert_eq!(
+            (f(&back, "result.lat.value"), f(&back, "result.lon.value")),
+            (lat, lon),
+            "{lat},{lon}: the reverse did not return the position exactly"
+        );
+
+        // The grid and the single-parameter Helmert agree to well inside the
+        // 10 m EPSG allows NAD27 -- and differ by more than a metre, which is
+        // the regional variation the grid carries and the Helmert averages out.
+        let helmert = call(
+            "geodesy.datum.legacy",
+            &format!(
+                r#"{{"datum":"NAD27","direction":"to-wgs84","lat":{lat},"lon":{lon},"options":{{"outputUnits":{{"shift":"m"}}}}}}"#
+            ),
+        );
+        let apart: f64 = g.inverse(
+            nlat,
+            nlon,
+            f(&helmert, "result.lat.value"),
+            f(&helmert, "result.lon.value"),
+        );
+        assert!(
+            apart < 10.0,
+            "{lat},{lon}: the grid and the Helmert are {apart} m apart, beyond what EPSG allows"
+        );
+        assert!(
+            apart > 1.0,
+            "{lat},{lon}: the grid and the Helmert agree to {apart} m -- is the grid being read at all?"
+        );
+    }
+
+    // Outside every grid, refused by name rather than extrapolated.
+    let away = nadcon5("to-nad83", 48.0, 2.0);
+    assert!(
+        !away["ok"].as_bool().unwrap_or(true),
+        "Paris was accepted\n{away}"
+    );
+    let msg = away["error"]["message"].as_str().unwrap_or("");
+    assert!(
+        msg.contains("outside every NADCON5 grid") && msg.contains("Alaska"),
+        "the refusal does not name the regions: {msg}"
+    );
+}

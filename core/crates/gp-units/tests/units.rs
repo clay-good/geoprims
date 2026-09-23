@@ -222,19 +222,25 @@ fn provenance_present() {
 
     // A tool that has not been promoted still says so. Naming one here means
     // rewriting the test every time that tool is promoted -- speed, then
-    // energy -- so the example is whichever converter is still experimental
-    // when the test runs.
-    let Some(t) = TOOLS
+    // energy -- so the example is whichever plain unit converter is still
+    // experimental when the test runs. It has to be one that takes a `value`
+    // and a unit `to`, which is why the search looks for that field rather
+    // than for an id ending in ".convert": fuel and slope end that way and
+    // take neither.
+    let unit_to = |t: &ToolDef| match t.inputs.iter().find(|f| f.name == "to") {
+        Some(f) => match f.kind {
+            gp_base::tool::Kind::Unit(q) => gp_base::units::units_of(q).next().map(|u| u.symbol),
+            _ => None,
+        },
+        None => None,
+    };
+    let Some((t, unit)) = TOOLS
         .iter()
-        .find(|t| t.stability == Stability::Experimental && t.id.ends_with(".convert"))
+        .filter(|t| t.stability == Stability::Experimental)
+        .find_map(|t| unit_to(t).map(|u| (t, u)))
     else {
-        return; // every converter is promoted: nothing left to announce
+        return; // every unit converter is promoted: nothing left to announce
     };
-    let gp_base::tool::Kind::Unit(q) = t.inputs.iter().find(|f| f.name == "to").expect("to").kind
-    else {
-        panic!("{} does not take a unit", t.id)
-    };
-    let unit = gp_base::units::units_of(q).next().expect("a unit").symbol;
     let e = call(t.id, &format!(r#"{{"value":1,"to":"{unit}"}}"#));
     assert!(
         e["meta"]["warnings"]
@@ -989,6 +995,97 @@ fn angular_rate_invariants() {
         (per_year / (3600.0 * 31_557_600.0) - 1.0).abs() < 1e-14,
         "the year behind arcsec/yr is not Julian: {per_year}"
     );
+}
+
+#[test]
+fn density_invariants() {
+    const D: &str = "units.density.convert";
+    linear_converter(D, &["kg/m3", "g/cm3", "lb/galUS", "lb/ft3"]);
+    // g/cm3 and kg/L are one unit under two names; the fuel converter leans on it.
+    assert_eq!(conv(D, 1.0, "g/cm3", "kg/m3"), 1000.0);
+    // The pound over the corresponding volume, from the three constants.
+    let lb = 0.453_592_37;
+    assert_eq!(conv(D, 1.0, "lb/galUS", "kg/m3"), lb / 0.003_785_411_784);
+    assert_eq!(conv(D, 1.0, "lb/ft3", "kg/m3"), lb / 0.3048f64.powi(3));
+    // The US gallon, not the imperial one, which would be 20% smaller.
+    let imperial = lb / 0.004_546_09;
+    assert!(
+        conv(D, 1.0, "lb/galUS", "kg/m3") / imperial > 1.19,
+        "lb/gal is using the imperial gallon"
+    );
+}
+
+#[test]
+fn frequency_invariants() {
+    const F: &str = "units.frequency.convert";
+    linear_converter(F, &["Hz", "kHz", "MHz", "GHz", "ppm/yr", "ppb/yr"]);
+    // Decimal prefixes, not the binary ones storage software quotes.
+    for (big, small) in [("kHz", "Hz"), ("MHz", "kHz"), ("GHz", "MHz")] {
+        assert_eq!(
+            conv(F, 1.0, big, small),
+            1000.0,
+            "{big} is not 1000 {small}"
+        );
+    }
+    assert_ne!(conv(F, 1.0, "kHz", "Hz"), 1024.0);
+    assert_ne!(conv(F, 1.0, "MHz", "Hz"), 1_048_576.0);
+    assert_eq!(conv(F, 1.0, "ppm/yr", "ppb/yr"), 1000.0);
+    // The Julian year of 31,557,600 s, not the 31,536,000 of a 365-day one.
+    let per_year = conv(F, 1.0, "Hz", "ppm/yr");
+    assert!(
+        (per_year / (1e6 * 31_557_600.0) - 1.0).abs() < 1e-14,
+        "the year behind ppm/yr is not Julian: {per_year}"
+    );
+}
+
+#[test]
+fn data_rate_invariants() {
+    const R: &str = "units.data-rate.convert";
+    linear_converter(R, &["bit/s", "kbit/s", "Mbit/s", "Gbit/s"]);
+    for (big, small) in [
+        ("kbit/s", "bit/s"),
+        ("Mbit/s", "kbit/s"),
+        ("Gbit/s", "Mbit/s"),
+    ] {
+        assert_eq!(
+            conv(R, 1.0, big, small),
+            1000.0,
+            "{big} is not 1000 {small}"
+        );
+    }
+    // Not the binary multiples a converter written against the wrong
+    // convention would carry.
+    assert_ne!(conv(R, 1.0, "kbit/s", "bit/s"), 1024.0);
+    assert_ne!(conv(R, 1.0, "Mbit/s", "bit/s"), 1_048_576.0);
+    assert_ne!(conv(R, 1.0, "Gbit/s", "bit/s"), 1_073_741_824.0);
+}
+
+#[test]
+fn charge_invariants() {
+    const C: &str = "units.charge.convert";
+    linear_converter(C, &["C", "mAh", "Ah"]);
+    // An ampere for an hour, exactly.
+    assert_eq!(conv(C, 1.0, "Ah", "C"), 3600.0);
+    assert_eq!(conv(C, 1.0, "mAh", "C"), 3.6);
+    assert_eq!(conv(C, 1000.0, "mAh", "Ah"), 1.0);
+    // Energy is reported only when a voltage is given, and it is charge times
+    // voltage: doubling either doubles it.
+    let bare = call(C, r#"{"value":"5000 mAh","to":"Ah"}"#);
+    assert!(
+        bare["result"]["energy"].is_null(),
+        "energy without a voltage"
+    );
+    let e = |mah: f64, v: f64| {
+        call(
+            C,
+            &format!(r#"{{"value":"{mah} mAh","to":"Ah","voltage":"{v} V"}}"#),
+        )["result"]["energy"]["value"]
+            .as_f64()
+            .expect("energy")
+    };
+    assert_eq!(e(5000.0, 22.2), 111.0);
+    assert_eq!(e(10000.0, 22.2), 222.0);
+    assert_eq!(e(5000.0, 44.4), 222.0);
 }
 
 #[test]

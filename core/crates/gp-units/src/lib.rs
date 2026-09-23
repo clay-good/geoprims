@@ -345,17 +345,41 @@ related: [
     Related { id: "units.time.convert", reason: "alternative" }
 ]);
 convert_op!(DENSITY, "density", QT::Density, "lb/galUS", "Density converter",
-    "Converts densities: kg/m³, g/cm³, lb/US gal, and lb/ft³.",
-    aliases: ["fuel density conversion"], refs: [NIST_811],
-    example: ("6.7 lb/gal in kg/L", r#"{"value":"6.7 lb/galUS","to":"g/cm3"}"#));
+"Converts densities: kg/m³, g/cm³, lb/US gal, and lb/ft³.",
+aliases: ["fuel density conversion"], refs: [NIST_811],
+example: ("6.7 lb/gal in kg/L", r#"{"value":"6.7 lb/galUS","to":"g/cm3"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this when a density is quoted in one system and needed in another: a fuel at 6.7 lb per US gallon against a figure in kg/L, a material at 62.4 lb per cubic foot against one in kg/m³. It is the step before the fuel converter, which needs a density to turn a volume into a weight.",
+limits: "The gallon here is the US liquid gallon. A pound per imperial gallon is 20% smaller and is not offered, so a figure that says only lb/gal has to be read before it is converted. A density is a property of a substance at a temperature, and nothing here knows either one: fuel expands as it warms, by roughly a tenth of a percent per degree Celsius for Jet A, so a density measured at one temperature is not the density at another. And g/cm³ and kg/L are the same unit under two names, not two units that happen to agree.",
+related: [
+    Related { id: "units.fuel.convert", reason: "next" },
+    Related { id: "units.mass.convert", reason: "alternative" },
+    Related { id: "units.volume.convert", reason: "alternative" }
+]);
 convert_op!(FREQUENCY, "frequency", QT::Frequency, "MHz", "Frequency converter",
-    "Converts frequencies: Hz, kHz, MHz, and GHz.",
-    aliases: ["frequency conversion"], refs: [NIST_811],
-    example: ("2.4 GHz in MHz", r#"{"value":"2.4 GHz","to":"MHz"}"#));
+"Converts frequencies: Hz, kHz, MHz, GHz, and drift rates in ppm or ppb per year.",
+aliases: ["frequency conversion"], refs: [NIST_811],
+example: ("2.4 GHz in MHz", r#"{"value":"2.4 GHz","to":"MHz"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a radio or clock frequency that has to move between prefixes -- a 2.4 GHz link in MHz, an emergency frequency of 121.5 MHz in kHz, a 433 MHz beacon in Hz -- or for an oscillator drift rate quoted in parts per million or billion per year.",
+limits: "The prefixes are decimal: a megahertz is a million hertz, not 2^20. That is the SI meaning and the one radio has always used, but software that quotes storage in binary multiples can make it look otherwise, and the two differ by 4.9% at mega. The year behind ppm/yr and ppb/yr is the Julian year of exactly 365.25 days. A frequency is not a wavelength either: turning one into the other needs a propagation speed, which is not an input here.",
+related: [
+    Related { id: "units.time.convert", reason: "alternative" },
+    Related { id: "units.data-rate.convert", reason: "alternative" },
+    Related { id: "units.quantity.normalize", reason: "alternative" }
+]);
 convert_op!(DATA_RATE, "data-rate", QT::DataRate, "Mbit/s", "Data rate converter",
-    "Converts data rates: bit/s, kbit/s, Mbit/s, and Gbit/s.",
-    aliases: ["bandwidth conversion"], refs: [NIST_811],
-    example: ("20 Mbit/s in kbit/s", r#"{"value":"20 Mbit/s","to":"kbit/s"}"#));
+"Converts data rates: bit/s, kbit/s, Mbit/s, and Gbit/s.",
+aliases: ["bandwidth conversion"], refs: [NIST_811],
+example: ("20 Mbit/s in kbit/s", r#"{"value":"20 Mbit/s","to":"kbit/s"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this for a link or telemetry rate quoted in one prefix and needed in another: a 20 Mbit/s downlink in kbit/s, a gigabit backhaul in megabits, a modem or radio rate in bits per second. Datasheets, contracts and monitoring tools each pick their own prefix, and the figure being compared against is rarely in the same one.",
+limits: "These are bits, not bytes, and nothing here divides by eight: a rate in bytes per second is a different quantity and has to be converted before it comes here. The prefixes are decimal, so a megabit per second is 10^6 bit/s and not 2^20 -- the reading networks have always used, and the one IEC 80000-13 gives, with Ki, Mi and Gi reserved for the binary multiples; the two differ by 4.9% at mega and 7.4% at giga. A link rate is also not a throughput: framing, retransmission and protocol overhead all sit between them.",
+related: [
+    Related { id: "units.frequency.convert", reason: "alternative" },
+    Related { id: "units.time.convert", reason: "alternative" },
+    Related { id: "units.quantity.normalize", reason: "alternative" }
+]);
 
 pub static CHARGE: ToolDef = ToolDef {
     id: "units.charge.convert",
@@ -433,7 +457,10 @@ pub static CHARGE: ToolDef = ToolDef {
         .precision(Precision::Significant(4))
         .optional(),
     ],
-    warnings: CONVERT_WARNINGS,
+    stability: Stability::Stable,
+    when_to_use: "Use this for a battery capacity that has to cross units, and for the watt-hour figure a shipping rule or a spec sheet asks for: a 5,000 mAh pack in ampere hours, or in watt hours once you give it the pack's nominal voltage.",
+    limitations: "A charge is not an energy. The watt-hour figure is charge times the nominal voltage you supply, which is a convention for the pack rather than a measurement -- the real voltage falls as the pack discharges, so the delivered energy is typically a few percent either side and is reported to four significant figures for that reason. Give no voltage and no energy is reported, which is the honest answer rather than a guess. Nothing here knows about chemistry, C-rate, temperature or state of health, all of which change what a pack actually delivers.",
+    warnings: CONVERT_STABLE,
     model: "Exact unit definitions; energy = charge × nominal voltage",
     accuracy: "Exact to double precision for charge. Energy is as accurate as the nominal voltage, which varies with state of charge",
     references: &[NIST_811],
@@ -445,10 +472,20 @@ pub static CHARGE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: TABLE,
-    related: &[Related {
-        id: "units.energy.convert",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "units.energy.convert",
+            reason: "next",
+        },
+        Related {
+            id: "units.power.convert",
+            reason: "alternative",
+        },
+        Related {
+            id: "units.quantity.normalize",
+            reason: "alternative",
+        },
+    ],
     sentence: "{input} is {converted}.",
     limits: &[("batchRows", 10_000)],
     run: run_charge,

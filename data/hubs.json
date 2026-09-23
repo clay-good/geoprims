@@ -1412,8 +1412,12 @@
         }
       ]
     },
+    "raster": {
+      "intro": "Raster tools work on the numbers in one pixel or a small window of a satellite image or elevation model: scaling bands to reflectance, spectral indices such as NDVI, and terrain measures such as slope and ruggedness. They are for checking a formula or a pixel by hand, not for processing whole scenes. Start by scaling a band to reflectance, then compute an index from it. All of the raster tools are still experimental."
+    },
     "raster.index": {
       "summary": "Spectral indices from surface reflectance: vegetation, water, built-up, and burn severity, each with the paper it comes from.",
+      "intro": "Spectral index tools compute NDVI, EVI, SAVI, the two NDWIs and MNDWI, NDBI, and the burn ratios from band reflectances, each with the paper that defines it, plus band math for an index of your own. Remote sensing analysts, agronomists, and fire and water mappers use them to check a pixel or a formula before running it over a whole scene. Start with NDVI. One pitfall: the formulas expect surface reflectance, roughly 0 to 1, not the digital numbers stored in the file, so scale each band first; the tools flag values that look unscaled.",
       "tasks": [
         {
           "want": "measure vegetation in a pixel",
@@ -1450,6 +1454,7 @@
     },
     "raster.scale": {
       "summary": "Turning a band's stored digital numbers into surface reflectance, with each sensor's own scaling.",
+      "intro": "The scaling tool turns a band's stored digital number into surface reflectance with the sensor's own published scaling: the Sentinel-2 Level-2A offset and quantification value, or the Landsat Collection 2 gain and offset. Anyone computing a spectral index from raw Sentinel-2 or Landsat values needs this step first. One pitfall: Sentinel-2 Level-2A data from processing baseline 04.00 on carry an offset, so reflectance is the digital number minus 1,000, divided by 10,000, and dropping the offset shifts every index.",
       "tasks": [
         {
           "want": "scale a band to reflectance before computing an index",
@@ -1461,6 +1466,7 @@
     },
     "raster.terrain": {
       "summary": "What a digital elevation model says about a cell: how steep it is, which way it faces, and how broken the ground around it is.",
+      "intro": "Terrain tools read a 3 x 3 window of a digital elevation model and describe its center cell: slope, aspect, and hillshade by Horn's method, and the terrain ruggedness index, topographic position index, and roughness. GIS analysts, hydrologists, and site planners use them to check a cell by hand or to test the numbers a GIS reports. Start with slope, aspect, and hillshade. One pitfall: on a grid in degrees, a cell is narrower east to west than north to south away from the equator, so its size must be corrected for latitude, which the slope tool does.",
       "tasks": [
         {
           "want": "find the slope, aspect, and hillshade of a cell",
@@ -1755,8 +1761,12 @@
         }
       ]
     },
+    "time": {
+      "intro": "Time tools cover clocks and the sun. The time scale group converts between local time, UTC, GPS time, and Julian dates, and logs flight time. The sun group finds sunrise, twilight, the sun's position, and the night periods that US aviation rules use. Pilots, drone operators, and GNSS surveyors each lean on a different part. Every tool takes an explicit UTC offset or time zone and never reads your device's clock or zone, so the same inputs give the same answer anywhere."
+    },
     "time.scale": {
       "summary": "Time scales, zones, and flight time.",
+      "intro": "Time scale tools convert between the clocks that aviation, GNSS, and astronomy keep: local time and UTC (Zulu), GPS week and seconds, Julian dates and day of year, and flight time in hours and minutes or decimal hours. Pilots use them to turn a local departure time into Zulu and to log block time. GNSS users and surveyors use them to match receiver time to UTC and name RINEX files. Start with local time to UTC, which handles daylight saving gaps and the date change. One pitfall: GPS time runs ahead of UTC by the leap seconds added since 1980, now 18 seconds.",
       "tasks": [
         {
           "want": "convert local time to UTC, or check a zone's rules",
@@ -1789,6 +1799,7 @@
     },
     "time.sun": {
       "summary": "Where the sun is and when it rises and sets.",
+      "intro": "Sun tools find where the sun is and when it rises, sets, and passes through civil, nautical, and astronomical twilight, for any place and date, in local time and Zulu. Pilots use them for the four US aviation nights and night passenger currency. Drone operators use them for Part 107 civil twilight, mapping light, and the sun's hotspot in photos. Start with sunrise, sunset, and twilight. One pitfall: aviation rules define night in different ways, so a landing can be logged as night and still not count toward passenger currency.",
       "tasks": [
         {
           "want": "check my night passenger currency from my logbook",

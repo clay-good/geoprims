@@ -38,8 +38,10 @@ function mix(a, b, k) {
 
 
 /**
- * A pen that skips any vertex within half a pixel of the last one it drew, so
- * a 100,000-vertex path costs what its pixels cost, not what its vertices do.
+ * A pen that skips any vertex within a pixel of the last one it drew, so a
+ * 100,000-vertex path costs what its pixels cost, not what its vertices do.
+ * A pixel, not half: under strokes 1.5 to 3 px wide the difference cannot be
+ * seen, and it cut a dense track's frame time by a fifth (the frames gate).
  * The first and last points of every run are always drawn.
  */
 function pen(g) {
@@ -53,7 +55,7 @@ function pen(g) {
       [lx, ly] = [x, y];
     },
     line(x, y) {
-      if (Math.abs(x - lx) < 0.5 && Math.abs(y - ly) < 0.5) {
+      if (Math.abs(x - lx) < 1 && Math.abs(y - ly) < 1) {
         held = [x, y];
         return;
       }
@@ -120,7 +122,7 @@ function sphere(geo) {
 
 /**
  * The vertices worth drawing at this zoom: one level of detail per doubling of
- * scale, keeping a vertex only when it lies at least half a pixel (at the
+ * scale, keeping a vertex only when it lies at least a pixel (at the
  * largest scale of its level) from the last one kept. The first and last
  * vertices are always kept, so a path starts and ends where it should.
  */
@@ -129,7 +131,7 @@ function detail(geo, mode, scale) {
   const key = `${mode}${level}`;
   let idx = geo.lods.get(key);
   if (idx) return idx;
-  const tol = 0.5 / 2 ** (level + 1);
+  const tol = 1 / 2 ** (level + 1);
   const { n, lon, lat, M } = geo;
   const keep = [0];
   let k = 0;

@@ -655,3 +655,69 @@ fn angle_invariants() {
     assert_eq!(conv(A, 400.0, "deg", "deg"), 400.0);
     assert_eq!(conv(A, 400.0, "deg", "turn"), 400.0 / 360.0);
 }
+
+const PRESSURES: [&str; 9] = [
+    "Pa", "hPa", "kPa", "mbar", "bar", "inHg", "mmHg", "psi", "atm",
+];
+
+#[test]
+fn pressure_invariants() {
+    const P: &str = "units.pressure.convert";
+    let mut worst = 0.0f64;
+    for a in PRESSURES {
+        for b in PRESSURES {
+            let x = 17.25;
+            worst = worst.max((conv(P, conv(P, x, a, b), b, a) - x).abs() / x);
+            assert_eq!(conv(P, 0.0, a, b), 0.0, "{a}->{b}: zero moved");
+            assert!(conv(P, -3.0, a, b) < 0.0, "{a}->{b}: a sign was lost");
+            let one = conv(P, x, a, b);
+            assert!(
+                (conv(P, 2.0 * x, a, b) - 2.0 * one).abs() / one < 1e-14,
+                "{a}->{b}: not linear"
+            );
+        }
+        assert_eq!(
+            conv(P, 4.625_25, a, a),
+            4.625_25,
+            "{a}->{a} changed the value"
+        );
+    }
+    assert!(worst < 1e-14, "round trip {worst}");
+
+    // Exact by definition.
+    assert_eq!(conv(P, 1.0, "bar", "Pa"), 100_000.0);
+    assert_eq!(conv(P, 1.0, "atm", "Pa"), 101_325.0);
+    assert_eq!(
+        conv(P, 1.0, "mbar", "hPa"),
+        1.0,
+        "a millibar is a hectopascal"
+    );
+    assert_eq!(conv(P, 1.0, "kPa", "Pa"), 1000.0);
+
+    // Conventional by definition, not derived from mercury's density. A
+    // converter computing these from a density fails here by a part in 1e7.
+    assert_eq!(conv(P, 1.0, "inHg", "Pa"), 3386.389);
+    assert_eq!(conv(P, 1.0, "mmHg", "Pa"), 133.322_387_415);
+
+    // psi is the pound-force over the square inch, checked against that
+    // product formed here rather than against a copied decimal.
+    let psi = 0.453_592_37 * 9.806_65 / (0.0254 * 0.0254);
+    assert!(
+        (conv(P, 1.0, "psi", "Pa") - psi).abs() / psi < 1e-15,
+        "psi is {} Pa, not lb*g0/in^2 = {psi}",
+        conv(P, 1.0, "psi", "Pa")
+    );
+
+    // The standard atmosphere is 29.9212524 inHg. The familiar 29.92 is a
+    // rounded altimeter setting and is four pascals short of it.
+    let atm_in_hg = conv(P, 1.0, "atm", "inHg");
+    assert!(
+        (atm_in_hg - 29.921_252_4).abs() < 1e-7,
+        "an atmosphere is {atm_in_hg} inHg"
+    );
+    let gap = conv(P, 1.0, "atm", "Pa") - conv(P, 29.92, "inHg", "Pa");
+    assert!(
+        (gap - 4.24).abs() < 0.1,
+        "29.92 inHg and one atmosphere are {gap} Pa apart, not about 4"
+    );
+}

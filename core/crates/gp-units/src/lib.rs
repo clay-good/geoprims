@@ -199,9 +199,17 @@ convert_op!(ACCELERATION, "acceleration", QT::Acceleration, "g0", "Acceleration 
     aliases: ["g force conversion"], refs: [NIST_811],
     example: ("2 g in m/s²", r#"{"value":"2 g0","to":"m/s2"}"#));
 convert_op!(PRESSURE, "pressure", QT::Pressure, "inHg", "Pressure converter",
-    "Converts pressures: inHg, hPa, mbar, Pa, kPa, bar, psi, mmHg, and atm.",
-    aliases: ["altimeter setting conversion", "inHg to hPa"], refs: [NIST_811, ICAO_ANNEX5],
-    example: ("29.92 inHg in hPa", r#"{"value":"29.92 inHg","to":"hPa"}"#));
+"Converts pressures: inHg, hPa, mbar, Pa, kPa, bar, psi, mmHg, and atm.",
+aliases: ["altimeter setting conversion", "inHg to hPa"], refs: [NIST_811, ICAO_ANNEX5],
+example: ("29.92 inHg in hPa", r#"{"value":"29.92 inHg","to":"hPa"}"#),
+stability: Stability::Stable, warnings: CONVERT_STABLE,
+when: "Use this wherever a pressure has to cross between the systems that report it: an altimeter setting in inches of mercury against a QNH in hectopascals, a tyre or hydraulic pressure in psi against a gauge in bar, a blood-pressure or manometer reading in millimetres of mercury against pascals. Aviation runs on inHg in North America and hPa almost everywhere else, and the two appear side by side on the same flight.",
+limits: "This converts the size of a pressure and not what it is measured against: it cannot tell absolute pressure from gauge pressure, and a psi that meant psig is still 14.7 psi away from what it looks like here. The mercury units are the conventional ones -- inHg is exactly 3386.389 Pa and mmHg exactly 133.322387415 Pa by definition, not mercury weighed at a particular temperature -- so a laboratory manometer corrected for its own mercury will differ in the seventh digit. Altitude, standard atmospheres and pressure altitude are the atmosphere tools, not this.",
+related: [
+    Related { id: "units.quantity.normalize", reason: "alternative" },
+    Related { id: "units.density.convert", reason: "alternative" },
+    Related { id: "aviation.atmosphere.isa", reason: "next" }
+]);
 convert_op!(TEMPERATURE, "temperature", QT::Temperature, "degC", "Temperature converter",
 "Converts temperatures between °C, °F, and K.",
 aliases: ["celsius to fahrenheit", "temperature conversion"], refs: [NIST_811],

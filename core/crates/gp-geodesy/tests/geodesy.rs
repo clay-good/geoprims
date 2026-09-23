@@ -211,6 +211,84 @@ fn format_rounding_carry_and_resolution() {
     assert!((num(&r, "result.latitude_resolution.value") - 11.1).abs() < 0.05);
 }
 
+/// Coordinates as a machine exports them, with an exponent. The E of an
+/// exponent is not the E of East, and used to be refused outright.
+#[test]
+fn scientific_notation_is_read_as_a_number() {
+    let cases: [(&str, f64, f64); 5] = [
+        ("1.0E-3 2.0", 0.001, 2.0),
+        ("-1.0523e2 4.001e1", 40.01, -105.23),
+        ("4.05E1N 7.998E1W", 40.5, -79.98),
+        ("1.5E2 40.1", 40.1, 150.0),
+        ("4.0446111e1 -7.9982222e1", 40.446111, -79.982222),
+    ];
+    for (text, lat, lon) in cases {
+        let r = call(
+            "geodesy.parse.coordinates",
+            &format!(r#"{{"text":"{text}"}}"#),
+        );
+        assert_eq!(r["ok"], true, "{text}: {r}");
+        assert!(
+            (num(&r, "result.lat.value") - lat).abs() < 1e-9
+                && (num(&r, "result.lon.value") - lon).abs() < 1e-9,
+            "{text} -> {} {}",
+            num(&r, "result.lat.value"),
+            num(&r, "result.lon.value")
+        );
+    }
+    // A trailing E is still East, and a pair of them still splits the pair.
+    let r = call("geodesy.parse.coordinates", r#"{"text":"1.5E 40.1"}"#);
+    assert_eq!(num(&r, "result.lon.value"), 1.5);
+    let r = call("geodesy.parse.coordinates", r#"{"text":"40.45N 79.98E"}"#);
+    assert_eq!(num(&r, "result.lon.value"), 79.98);
+    // An exponent can outrun a double; that is refused, not carried as infinity.
+    let r = call("geodesy.parse.coordinates", r#"{"text":"1e400 2"}"#);
+    assert_eq!(r["ok"], false);
+    assert!(
+        r["error"]["message"]
+            .as_str()
+            .expect("message")
+            .contains("too large"),
+        "{r}"
+    );
+}
+
+/// A pair without hemisphere letters whose first value is malformed used to
+/// have that value thrown away and the second one read twice, so an invalid
+/// coordinate came back as a plausible one: `40d26'60" 79d58'56"` answered
+/// latitude and longitude both 79.98 instead of saying the seconds were 60.
+#[test]
+fn a_malformed_first_value_is_reported_not_replaced() {
+    let bad: [(&str, &str); 3] = [
+        (
+            "40\u{b0}26'60\" 79\u{b0}58'56\"",
+            "seconds must be less than 60",
+        ),
+        ("12:70:00 30", "minutes must be less than 60"),
+        ("1e400 2", "too large"),
+    ];
+    for (text, why) in bad {
+        let r = call(
+            "geodesy.parse.coordinates",
+            &format!(r#"{{"text":"{}"}}"#, text.replace('"', "\\\"")),
+        );
+        assert_eq!(r["ok"], false, "{text} should not parse: {r}");
+        assert!(
+            r["error"]["message"]
+                .as_str()
+                .expect("message")
+                .contains(why),
+            "{text}: {r}"
+        );
+    }
+    // The orders that are only unusual, not wrong, still read as before.
+    let r = call("geodesy.parse.coordinates", r#"{"text":"-105.27 40.01"}"#);
+    assert_eq!(num(&r, "result.lat.value"), 40.01);
+    assert_eq!(num(&r, "result.lon.value"), -105.27);
+    let r = call("geodesy.parse.coordinates", r#"{"text":"40.45 -79.98"}"#);
+    assert_eq!(num(&r, "result.lat.value"), 40.45);
+}
+
 /// UTM and MGRS round trips over a grid of points.
 #[test]
 fn round_trip_properties() {

@@ -80,6 +80,20 @@ fn written(s: &str) -> Result<Written, String> {
         body = rest.trim_start();
     }
     let mut comps = Vec::new();
+    // Scientific notation, which is how a machine writes a coordinate it
+    // exported: 1.0E-3, -4.05e2. The E is an exponent and not East, because
+    // East only ever sits at one end of the text and both ends came off
+    // above; what is left cannot be a hemisphere letter.
+    if body.contains(['e', 'E']) && body.parse::<f64>().is_ok() {
+        return Ok(Written {
+            comps: vec![Comp {
+                text: body.to_owned(),
+                mark: None,
+            }],
+            minus,
+            hemi,
+        });
+    }
     let mut cur = String::new();
     let flush = |cur: &mut String, mark: Option<char>, comps: &mut Vec<Comp>| {
         if !cur.is_empty() {
@@ -150,6 +164,14 @@ fn value(w: &Written, axis: Axis, src: &str) -> Result<(f64, &'static str), Stri
         return Err(format!("\"{src}\": seconds must be less than 60"));
     }
     let mut v = d + m / 60.0 + s / 3600.0;
+    // An exponent can carry a written number past what a double holds, and
+    // infinity would otherwise travel on and come out as a failed calculation.
+    if !v.is_finite() {
+        return Err(format!(
+            "\"{src}\": {} is too large to be an angle",
+            w.comps[0].text
+        ));
+    }
     if let Some(h) = w.hemi {
         let is_lat_hemi = matches!(h, 'N' | 'S');
         if is_lat_hemi != (axis == Axis::Lat) {
@@ -298,6 +320,18 @@ fn labeled(s: &str) -> Option<Result<(f64, f64), String>> {
 }
 
 /// Splits an unlabeled pair into its two angle texts.
+/// Whether the letter at `i` is the `e` of a number written with an exponent
+/// rather than the E of East: 1.0e-3 is one number, and cutting the pair at
+/// that letter would cut a number in half.
+fn exponent_at(t: &str, i: usize) -> bool {
+    let b = t.as_bytes();
+    if i == 0 || i + 1 >= b.len() || !b[i - 1].is_ascii_digit() {
+        return false;
+    }
+    let j = i + 1 + usize::from(b[i + 1] == b'+' || b[i + 1] == b'-');
+    j < b.len() && b[j].is_ascii_digit()
+}
+
 fn split_pair(s: &str) -> Result<(String, String), String> {
     let t = s.trim();
     // A single comma or semicolon separates the pair.
@@ -311,7 +345,7 @@ fn split_pair(s: &str) -> Result<(String, String), String> {
     let chars: Vec<(usize, char)> = t.char_indices().collect();
     let hemi: Vec<usize> = chars
         .iter()
-        .filter(|(_, c)| is_hemi(*c))
+        .filter(|(i, c)| is_hemi(*c) && !exponent_at(t, *i))
         .map(|(i, _)| *i)
         .collect();
     if hemi.len() == 2 {
@@ -420,14 +454,16 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
         _ => (&wa, &wb, &a, &b, false),
     };
     let lettered = wa.hemi.is_some() || wb.hemi.is_some();
-    let (lat, nlat) = value(lat_w, Axis::Lat, lat_s).or_else(|e| {
-        // Without letters, a first value beyond ±90 means the order is lon, lat.
-        if lettered {
-            Err(e)
-        } else {
-            value(lon_w, Axis::Lat, lon_s).map(|v| (v.0, v.1))
-        }
-    })?;
+    // A first value beyond ±90 means the order is lon, lat, and that is settled
+    // below on the value itself: value() reads the angle without range-checking
+    // it, so 105.27 arrives here intact. Anything that fails here is malformed
+    // rather than out of order -- seconds of 60, minutes of 70, an exponent past
+    // what a double holds -- and saying so is the whole point of the check. This
+    // used to fall back to reading the second value as the latitude, which threw
+    // the first away and answered with the second twice: "40d26'60\" 79d58'56\""
+    // came back as latitude and longitude both 79.98, an invalid coordinate
+    // turned into a plausible one.
+    let (lat, nlat) = value(lat_w, Axis::Lat, lat_s)?;
     let mut ambiguity = None;
     let (lat, lon, notation) = if !lettered && lat.abs() > 90.0 {
         let (lo, _) = value(lat_w, Axis::Lon, lat_s)?;

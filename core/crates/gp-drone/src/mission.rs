@@ -889,7 +889,7 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
     references: &[PSU_FLIGHT_ROUTE, PIX4D, KARNEY],
     examples: &[Example {
         id: "primary",
-        title: "A 600 m by 150 m field at 52.5 m line spacing",
+        title: "A 602 m by 150 m field at 52.5 m line spacing",
         input: r#"{"area":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99295},{"lat":40.00135,"lon":-104.99295},{"lat":40.00135,"lon":-105.0}],"line_spacing":"52.5 m","photo_spacing":"30 m","groundspeed":"10 m/s","height":"120 m"}"#,
         source: "add-drone-suite survey-grid scenario: lines run along the long axis, ⌈150 / 52.5⌉ + 1 = 4 lines",
     }],
@@ -1160,7 +1160,7 @@ pub static IMAGE_COUNT: ToolDef = ToolDef {
     examples: &[
         Example {
             id: "primary",
-            title: "The 600 m by 150 m field",
+            title: "A 602 m by 150 m field",
             input: r#"{"area":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99295},{"lat":40.00135,"lon":-104.99295},{"lat":40.00135,"lon":-105.0}],"line_spacing":"52.5 m","photo_spacing":"30 m"}"#,
             source: "4 lines (⌈150 / 52.5⌉ + 1) of 602 m, each with ⌈602 / 30⌉ + 1 = 22 photos plus 2 past each end: 104 photos",
         },

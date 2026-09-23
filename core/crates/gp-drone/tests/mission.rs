@@ -548,3 +548,27 @@ fn image_count_invariants() {
         assert!(num(&long, "result.path_length.value") > num(&base, "result.path_length.value"));
     }
 }
+
+/// The primary examples of image count and the survey grid name the field by
+/// its size. The corners span 602 m by 150 m (geodesic), not 600 m, and the
+/// titles say so: 4 lines of 602 m give ⌈602 / 30⌉ + 1 + 4 = 26 photos each.
+#[test]
+fn field_example_titles_match_their_geometry() {
+    let g = Geodesic::wgs84();
+    let long: f64 = g.inverse(40.0, -105.0, 40.0, -104.99295);
+    let short: f64 = g.inverse(40.0, -105.0, 40.00135, -105.0);
+    assert_eq!((long.round(), short.round()), (602.0, 150.0));
+    for id in [
+        "drone.photogrammetry.image-count",
+        "drone.mission.survey-grid",
+    ] {
+        let t = REGISTRY.find(id).expect("tool");
+        let ex = t
+            .examples
+            .iter()
+            .find(|e| e.id == "primary")
+            .expect("primary");
+        assert!(ex.input.contains("-104.99295"), "{id} example moved");
+        assert!(ex.title.contains("602 m by 150 m"), "{id}: {}", ex.title);
+    }
+}

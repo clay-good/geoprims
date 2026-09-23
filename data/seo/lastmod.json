@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "3bf0c5fa2ae3b1d1",
+    "hash": "5887b929116be9cb",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "b13c1584df859966",
+    "hash": "5ed55cf581c3f2a5",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -96,7 +96,7 @@
     "lastmod": "2026-09-23"
   },
   "/changelog/": {
-    "hash": "12b92f925db0d901",
+    "hash": "f98788cadcad8887",
     "lastmod": "2026-09-23"
   },
   "/disclaimer/": {
@@ -131,12 +131,24 @@
     "hash": "39e23e193ca82328",
     "lastmod": "2026-09-23"
   },
+  "/drone/photogrammetry/terrain-overlap/": {
+    "hash": "b116cdfa77259420",
+    "lastmod": "2026-09-23"
+  },
+  "/drone/photogrammetry/trigger/": {
+    "hash": "24371c56cbdafe2a",
+    "lastmod": "2026-09-23"
+  },
   "/drone/power/": {
     "hash": "8cda9d9efe6fb89d",
     "lastmod": "2026-09-22"
   },
   "/drone/power/battery-energy/": {
     "hash": "5de5ebd84a541d3f",
+    "lastmod": "2026-09-23"
+  },
+  "/drone/power/endurance/": {
+    "hash": "cc1bfe8036134151",
     "lastmod": "2026-09-23"
   },
   "/drone/sensors/": {
@@ -656,7 +668,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "371ac6a3a02bc4d8",
+    "hash": "677956232d06aaf1",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -804,7 +816,7 @@
     "lastmod": "2026-09-23"
   },
   "/quality/": {
-    "hash": "258578d53ff24aa4",
+    "hash": "88ac02ab89d66b5c",
     "lastmod": "2026-09-23"
   },
   "/raster/": {
@@ -828,7 +840,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "94e31e6fc6d2d6dd",
+    "hash": "c3f8f47ebfc59837",
     "lastmod": "2026-09-23"
   },
   "/survey/": {
@@ -948,7 +960,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "03f743c905838b3c",
+    "hash": "1693b22aa8274352",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1136,7 +1148,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0f75d8d7b89b2cee",
+    "hash": "8acefbb56cc133d1",
     "lastmod": "2026-09-23"
   }
 }

@@ -59,6 +59,22 @@ def main():
     # Coarse and fine, for the range of resolutions.
     sets.append(sorted(h3.grid_disk(h3.latlng_to_cell(64.8378, -147.7164, 3), 2)))
     sets.append(sorted(h3.grid_disk(h3.latlng_to_cell(51.5074, -0.1278, 12), 3)))
+    # Places spread over the globe and the resolutions, each as a solid disk and
+    # as the same disk with its middle taken out, so a hole is covered at every
+    # size as well as at one.
+    for lat, lon, res, k in [
+        (35.6762, 139.6503, 8, 2),
+        (-22.9068, -43.1729, 6, 3),
+        (55.7558, 37.6173, 10, 1),
+        (-33.9249, 18.4241, 7, 2),
+        (19.4326, -99.1332, 9, 2),
+        (1.3521, 103.8198, 11, 2),
+        (-41.2865, 174.7762, 5, 3),
+        (64.1466, -21.9426, 4, 2),
+    ]:
+        centre = h3.latlng_to_cell(lat, lon, res)
+        sets.append(sorted(h3.grid_disk(centre, k)))
+        sets.append(sorted(set(h3.grid_disk(centre, k)) - {centre}))
 
     rows = [vec(i, {"cells": [{"cell": c} for c in cs]}, case(cs)) for i, cs in enumerate(sets, 1)]
     path = out / "indexing.h3.cells-to-polygon.jsonl"

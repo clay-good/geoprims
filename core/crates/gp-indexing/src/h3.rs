@@ -1750,6 +1750,7 @@ const RING_ROW: &[Field] = &[
 
 pub static CELLS_TO_POLYGON: ToolDef = ToolDef {
     id: "indexing.h3.cells-to-polygon",
+    stability: gp_base::tool::Stability::Stable,
     title: "H3 cell set outline (cellsToMultiPolygon)",
     summary: "The outline of a set of H3 cells: the boundary between the set and everything outside it, as polygons with their holes, in GeoJSON.",
     aliases: &[
@@ -1812,7 +1813,7 @@ pub static CELLS_TO_POLYGON: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL", "OUTPUT_TRUNCATED"],
+    warnings: &["OUTPUT_TRUNCATED"],
     model: "H3 C cellsToMultiPolygon: the boundary segments of every cell, less those walked from both sides, followed end to end",
     accuracy: "The same polygons as H3 C 4.4.1 on 400 cell sets: solid patches, patches with a hole, separate patches, sets around a pentagon, and sets across the antimeridian, at resolutions 3 to 11",
     when_to_use: "Use this to turn a set of cells back into an area: the outline of a covering, a service area assembled from cells, or a set of cells picked on a map, ready to draw or to hand to something that speaks GeoJSON. It is the inverse of filling a polygon with cells.",

@@ -1118,3 +1118,97 @@ fn an_s2_covering_contains_its_region() {
         assert_eq!(e["ok"], false, "{bad}: {e}");
     }
 }
+
+/// Layer E for `indexing.h3.cells-to-polygon`. One cell outlines as its own
+/// boundary; a set outlines and fills back to the set it came from; and a
+/// mixed-resolution set is refused rather than traced wrongly.
+#[test]
+fn outline_invariants() {
+    let sets: [(&str, u8, u32); 4] = [
+        ("8928308280fffff", 9, 0),
+        ("8928308280fffff", 9, 1),
+        ("85283473fffffff", 5, 2),
+        ("8a2a84714847fff", 10, 1),
+    ];
+    for (origin, res, k) in sets {
+        let disk = call(
+            "indexing.h3.grid-disk",
+            &format!(r#"{{"cell":"{origin}","k":{k}}}"#),
+        );
+        let cells: Vec<String> = disk["result"]["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .map(|c| c["cell"].as_str().expect("id").to_owned())
+            .collect();
+        let rows: Vec<String> = cells
+            .iter()
+            .map(|c| format!(r#"{{"cell":"{c}"}}"#))
+            .collect();
+        let outline = call(
+            "indexing.h3.cells-to-polygon",
+            &format!(r#"{{"cells":[{}]}}"#, rows.join(",")),
+        );
+        assert_eq!(outline["ok"], true, "{outline}");
+        assert_eq!(outline["result"]["polygon_count"], 1, "a disk is one piece");
+        assert_eq!(outline["result"]["hole_count"], 0, "and has no hole");
+        // One cell traces its own boundary: six sides and the closing point.
+        if k == 0 {
+            let info = call(
+                "indexing.h3.cell-info",
+                &format!(r#"{{"cell":"{origin}"}}"#),
+            );
+            let sides = info["result"]["boundary"]
+                .as_array()
+                .expect("boundary")
+                .len();
+            assert_eq!(
+                outline["result"]["point_count"].as_u64().expect("count") as usize,
+                sides + 1,
+                "one cell outlines as its own boundary"
+            );
+        }
+        // Filling the outline at the same resolution returns the set it came
+        // from: every cell's centre is inside the ring its own edges drew.
+        let points: Vec<String> = outline["result"]["rings"]
+            .as_array()
+            .expect("rings")
+            .iter()
+            .map(|p| {
+                format!(
+                    r#"{{"lat":{},"lon":{}}}"#,
+                    p["lat"]["value"].as_f64().expect("lat"),
+                    p["lon"]["value"].as_f64().expect("lon")
+                )
+            })
+            .collect();
+        let filled = call(
+            "indexing.h3.polygon-to-cells",
+            &format!(
+                r#"{{"points":[{}],"resolution":{res},"containment":"center"}}"#,
+                points[1..].join(",")
+            ),
+        );
+        assert_eq!(filled["ok"], true, "{filled}");
+        let mut back: Vec<String> = filled["result"]["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .map(|c| c["cell"].as_str().expect("id").to_owned())
+            .collect();
+        let mut want = cells.clone();
+        back.sort();
+        want.sort();
+        assert_eq!(
+            back, want,
+            "filling the outline returns the set for {origin} k={k}"
+        );
+    }
+    // Cells at two resolutions have no common edges to cancel, and are refused.
+    let mixed = call(
+        "indexing.h3.cells-to-polygon",
+        r#"{"cells":[{"cell":"8928308280fffff"},{"cell":"8a2a84714847fff"}]}"#,
+    );
+    assert_eq!(mixed["ok"], false);
+    assert_eq!(mixed["error"]["field"], "/cells");
+}

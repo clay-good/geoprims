@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "7c2e0148b53d75dd",
+    "hash": "13a70d20f2496535",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "490535779e43f208",
+    "hash": "b84ee270ad687d07",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -359,6 +359,10 @@
     "hash": "8150ff2ffddbd609",
     "lastmod": "2026-09-23"
   },
+  "/indexing/h3/cells-to-polygon/": {
+    "hash": "e32443f824785263",
+    "lastmod": "2026-09-23"
+  },
   "/indexing/h3/children/": {
     "hash": "ea5558c175456c24",
     "lastmod": "2026-09-23"
@@ -480,7 +484,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "4560a699b9198e87",
+    "hash": "355467f9971edd69",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -648,7 +652,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "00769731816dcdf3",
+    "hash": "4bc57864fcd06f3d",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -748,7 +752,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5c6d86004ce1055c",
+    "hash": "f30a6c55639b19d0",
     "lastmod": "2026-09-23"
   }
 }

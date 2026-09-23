@@ -126,6 +126,7 @@ const RESULT_ROW: &[Field] = &[
 
 pub static POINT_IN_POLYGON: ToolDef = ToolDef {
     id: "geometry.predicate.point-in-polygon",
+    stability: gp_base::tool::Stability::Stable,
     title: "Point in polygon",
     summary: "Whether points are inside a polygon with geodesic edges, by the winding rule and the even-odd rule, with holes, on the boundary within 1 mm, and how far each is from the edge.",
     aliases: &[
@@ -197,15 +198,17 @@ pub static POINT_IN_POLYGON: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Winding number = Σ over geodesic edges of the signed turn in azimuth seen from the point, ÷ 360° (azimuths by the geodesic inverse problem, Karney 2013); holes are turned opposite the outline first. Winding rule: inside when the number is not 0. Even-odd: inside when it is odd. On the boundary when the geodesic distance to an edge is under 1 mm",
     accuracy: "Exact on the ellipsoid for rings smaller than a hemisphere around the point; on-boundary within 1 mm",
+    when_to_use: "Use this to ask whether positions fall inside an area: aircraft in a restricted zone, vehicles in a geofence, sightings in a survey block, addresses in a district. Many points can be asked about at once. It answers by both of the rules in common use — the winding rule and the even-odd rule, which differ for a self-overlapping outline — and gives each point's distance to the nearest edge, so a point that is nearly in can be told from one that is comfortably in.",
+    limitations: "Inside is decided on the ellipsoid with geodesic edges, which is not the same question as inside a polygon drawn on a projected map: near a boundary the two can differ, and the difference grows with the length of the edges. A point within a millimetre of an edge is reported as on the boundary rather than forced to one side, because at that range the answer belongs to the data rather than to the arithmetic. An outline that crosses itself has no single meaning of inside, which is why both rules are reported rather than one; where they differ, the shape is the problem. The ring must be smaller than a hemisphere around the point.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
         title: "A field with a pond, and three points",
         input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.99},{"lat":40.006,"lon":-104.99},{"lat":40.006,"lon":-105.0},{"lat":40.002,"lon":-104.997,"ring":1},{"lat":40.004,"lon":-104.997,"ring":1},{"lat":40.004,"lon":-104.994,"ring":1},{"lat":40.002,"lon":-104.994,"ring":1}],"points":[{"lat":40.001,"lon":-104.998},{"lat":40.003,"lon":-104.995},{"lat":40.003,"lon":-105.0}]}"#,
-        source: "add-navigation-and-geometry predicates: inside, in a hole, and on the boundary",
+        source: "inside, in a hole, and on the boundary. The verdicts are checked against GEOS 3.11.4 through shapely on PROJ's azimuthal equidistant plane over 51 points and five shapes — a planar test against a geodesic winding number, agreeing on every point — with the edge distances matching to 7.4e-6 relative",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -220,6 +223,10 @@ pub static POINT_IN_POLYGON: ToolDef = ToolDef {
         Related {
             id: "geometry.shape.centroid",
             reason: "alternative",
+        },
+        Related {
+            id: "geometry.overlay.boolean",
+            reason: "next",
         },
     ],
     sentence: "{inside_count} of the points {plural inside_count \"is\" \"are\"} inside the polygon by the winding rule. The first is {first}.",

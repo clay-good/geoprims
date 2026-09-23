@@ -115,6 +115,7 @@ const XYZ_IN: [Field; 3] = [
 
 pub static HELMERT: ToolDef = ToolDef {
     id: "geodesy.datum.helmert",
+    stability: gp_base::tool::Stability::Stable,
     title: "Helmert transformation (7 or 14 parameters)",
     summary: "Applies a 7-parameter Helmert transformation, or a 14-parameter time-dependent one with rates, to ECEF coordinates, in the position-vector or coordinate-frame convention you name, forward or exactly reversed.",
     aliases: &["Bursa-Wolf", "7 parameter transformation", "14 parameter transformation", "datum shift parameters"],
@@ -149,7 +150,9 @@ pub static HELMERT: ToolDef = ToolDef {
         mm_out("shift", "Shift", "Distance between source and target positions"),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
+    when_to_use: "Use this when you have the parameters of a datum transformation and need them applied to geocentric coordinates: a frame tie published by IERS or EPSG, a legacy datum's shift onto WGS 84, or the fourteen-parameter form that carries a position between epochs as the plates move. It runs either way round, and the reverse is the exact inverse rather than the negated parameters.",
+    limitations: "A parameter set belongs to one pair of frames, and often to one epoch and one region; applied to any other pair it gives an answer that looks reasonable and is wrong, so the set has to come from the authority for those frames. The convention must travel with the parameters, since position-vector and coordinate-frame differ in the sign of the rotations and the same seven numbers give different results under each. The rotations are linearized, as the EPSG methods define them, which is what published parameters are fitted against. A similarity transformation cannot model the distortion of a legacy survey network, which is why a grid-based transformation exists for the datums that have one.",
     model: "V_T = (1 + dS) · R · V_S + T with the linearized rotation matrix of IOGP GN 7-2; time-dependent parameters p + ṗ (t − t0); reverse by exact inversion",
     accuracy: "Exact for the given parameters in double precision; matches both IOGP GN 7-2 worked examples",
     references: &[IOGP_7_2],
@@ -164,10 +167,24 @@ pub static HELMERT: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "geodesy.datum.itrf",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.frame.geodetic-to-ecef",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.frame.ecef-to-geodetic",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.datum.plate-motion",
+            reason: "alternative",
+        },
+    ],
     sentence: "The transformed position is X {x}, Y {y}, Z {z}, {shift} from the original.",
     limits: &[("batchRows", 10_000)],
     run: run_helmert,

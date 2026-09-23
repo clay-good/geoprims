@@ -61,3 +61,77 @@ fn coincidence_and_realization() {
     let s = w["result"]["shift"]["value"].as_f64().unwrap();
     assert!(s > 0.0005 && s < 0.01, "{s}");
 }
+
+/// Layer E for `geodesy.datum.helmert`. The reverse is the exact inverse, the
+/// two conventions differ only in the sign of the rotations, and no parameters
+/// means no movement.
+#[test]
+fn helmert_invariants() {
+    let at = |r: &Value, k: &str| r["result"][k]["value"].as_f64().expect("a number");
+    // Positions spread over the globe, and parameter sets from the small ones
+    // a modern frame tie uses to rotations far larger than any real datum,
+    // where negating the parameters instead of inverting would show.
+    let places = [
+        (3657660.66, 255768.55, 5201382.11),
+        (-2694045.0, -4293642.0, 3857878.0),
+        (6378137.0, 0.0, 0.0),
+        (1113194.9, 1113194.9, 6259542.0),
+    ];
+    let sets = [
+        (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        (4.5, -1.2, 0.3, 0.0, 0.0, 0.554, 0.219),
+        (-146.0, 507.0, 685.0, 0.0, 0.0, 0.554, -2.4),
+        (10.0, -20.0, 30.0, 12.0, -30.0, 45.0, 100.0),
+    ];
+    for (x, y, z) in places {
+        for (tx, ty, tz, rx, ry, rz, scale) in sets {
+            for convention in ["position-vector", "coordinate-frame"] {
+                let args = format!(
+                    r#"{{"x":{x},"y":{y},"z":{z},"tx":{tx},"ty":{ty},"tz":{tz},"rx":{rx},"ry":{ry},"rz":{rz},"scale":{scale},"convention":"{convention}"}}"#
+                );
+                let f = call("geodesy.datum.helmert", &args);
+                assert_eq!(f["ok"], true, "{f}");
+                let (fx, fy, fz) = (at(&f, "x"), at(&f, "y"), at(&f, "z"));
+                let back = call(
+                    "geodesy.datum.helmert",
+                    &format!(
+                        r#"{{"x":{fx},"y":{fy},"z":{fz},"tx":{tx},"ty":{ty},"tz":{tz},"rx":{rx},"ry":{ry},"rz":{rz},"scale":{scale},"convention":"{convention}","direction":"reverse"}}"#
+                    ),
+                );
+                assert_eq!(back["ok"], true, "{back}");
+                for (got, want, axis) in [
+                    (at(&back, "x"), x, "x"),
+                    (at(&back, "y"), y, "y"),
+                    (at(&back, "z"), z, "z"),
+                ] {
+                    assert!(
+                        (got - want).abs() < 1e-6,
+                        "{convention} {axis}: {got} came back from {want}"
+                    );
+                }
+                // The conventions differ in the sign of the rotations alone.
+                let mirrored = call(
+                    "geodesy.datum.helmert",
+                    &format!(
+                        r#"{{"x":{x},"y":{y},"z":{z},"tx":{tx},"ty":{ty},"tz":{tz},"rx":{},"ry":{},"rz":{},"scale":{scale},"convention":"{}"}}"#,
+                        -rx,
+                        -ry,
+                        -rz,
+                        if convention == "position-vector" {
+                            "coordinate-frame"
+                        } else {
+                            "position-vector"
+                        }
+                    ),
+                );
+                for (a, b) in [
+                    (fx, at(&mirrored, "x")),
+                    (fy, at(&mirrored, "y")),
+                    (fz, at(&mirrored, "z")),
+                ] {
+                    assert!((a - b).abs() < 1e-9, "conventions disagree: {a} vs {b}");
+                }
+            }
+        }
+    }
+}

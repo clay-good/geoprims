@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { lintDimensions } from './dimensions.mjs';
 
 export const MIN_VECTORS = 20;
+/** The floor the related-tools gate holds stable tools to. */
+export const MIN_RELATED = 3;
 export const SECTIONS = ['Method', 'Equations', 'Symbols and units', 'Domain', 'Approximations', 'Worked example', 'Differential tests', 'Invariants'];
 export const EXAMPLE_FIELDS = ['sourcePublisher', 'sourceTitle', 'sourceEdition', 'sourceLocator', 'independent', 'inputs', 'outputs', 'tolerance', 'verifiedBy', 'verifiedOn'];
 
@@ -63,7 +65,26 @@ export async function promotionProblems({ root, tool, host }) {
   const problems = derivationProblems(root, tool.id);
   for (const p of lintDimensions({ tools: [tool] })) problems.push(`(C) ${p}`);
   if (tool.vectorCount < MIN_VECTORS) problems.push(`needs at least ${MIN_VECTORS} golden vectors (has ${tool.vectorCount})`);
-  if (tool.warnings?.includes('EXPERIMENTAL_TOOL')) problems.push('geoprims_describe still advertises the EXPERIMENTAL_TOOL warning');
+  // What the build asks of a stable tool as well as what this module asks,
+  // so that "ready" means the build will take it. These live in the manifest
+  // lint and the related-tools gate, and a tool that passed here and then
+  // failed them cost two rounds of finding out.
+  if (!tool.parent) {
+    for (const [name, v] of [['whenToUse', tool.whenToUse], ['limitations', tool.limitations]]) {
+      if (!String(v ?? '').trim()) problems.push(`(A) a stable tool needs ${name}: when to reach for it, and where its answer stops`);
+    }
+  }
+  if ((tool.composedOf?.length ?? 0) === 0 && (tool.related?.length ?? 0) < MIN_RELATED) {
+    problems.push(`(A) a stable tool needs ${MIN_RELATED} related tools (has ${tool.related?.length ?? 0})`);
+  }
+
+  // Only a tool already marked stable can fail on this: an experimental one
+  // carries the warning because it is experimental, and drops it as part of
+  // being promoted. Counting it as a blocker beforehand made the answer to
+  // "is this ready?" always no, whatever else was true of the tool.
+  if (tool.stability === 'stable' && tool.warnings?.includes('EXPERIMENTAL_TOOL')) {
+    problems.push('geoprims_describe still advertises the EXPERIMENTAL_TOOL warning');
+  }
 
   // (G) The one example the page, its button, and geoprims_run all use runs cleanly.
   const example = tool.examples.find((e) => e.id === tool['x-primary-example']) ?? tool.examples[0];
@@ -76,9 +97,15 @@ export async function promotionProblems({ root, tool, host }) {
     }
   }
 
-  // Both surfaces: the tool's own title finds it in the top 5, experimental tools hidden.
+  // Both surfaces: the tool's own title finds it in the top 5. Experimental
+  // tools are included in the ranking, because what is being asked is whether
+  // the title finds the tool, and search hides an experimental tool by design:
+  // leaving them out meant a tool could never be found by the check that
+  // decides whether it is ready to stop being experimental.
   const search = await host.module('search');
-  const out = JSON.parse(await search.callString('gp_search', JSON.stringify({ query: tool.title, limit: 5 })));
+  const out = JSON.parse(
+    await search.callString('gp_search', JSON.stringify({ query: tool.title, limit: 5, includeExperimental: true })),
+  );
   const ids = out.ok ? out.result.results.map((x) => x.id) : [];
   if (!ids.includes(tool.id)) problems.push(`searching its title "${tool.title}" does not rank it in the top 5 (got ${ids.join(', ') || 'nothing'})`);
   return problems;

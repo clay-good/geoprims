@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8ce5bf0a14e23ad3",
+    "hash": "dde7cbcdb70d05f8",
     "lastmod": "2026-09-23"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-20"
   },
   "/agents/": {
-    "hash": "4948176985845013",
+    "hash": "6ffc0a94c88e17dc",
     "lastmod": "2026-09-23"
   },
   "/aviation/": {
@@ -656,7 +656,7 @@
     "lastmod": "2026-09-22"
   },
   "/methodology/": {
-    "hash": "d4054ae94056bae5",
+    "hash": "3f6de59fc31940ae",
     "lastmod": "2026-09-23"
   },
   "/navigation/": {
@@ -766,6 +766,22 @@
   "/navigation/vector/": {
     "hash": "03b7dfb592e0cf09",
     "lastmod": "2026-09-22"
+  },
+  "/navigation/vector/distance-3d/": {
+    "hash": "900c7653d047121e",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/vector/look-angles/": {
+    "hash": "adf512716ca5fefd",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/vector/operations/": {
+    "hash": "ad483b534f1372f7",
+    "lastmod": "2026-09-23"
+  },
+  "/navigation/vector/polar-cartesian/": {
+    "hash": "14446a17c4d2bcc8",
+    "lastmod": "2026-09-23"
   },
   "/privacy/": {
     "hash": "5c675a22edc7a441",
@@ -912,7 +928,7 @@
     "lastmod": "2026-09-22"
   },
   "/tools/": {
-    "hash": "8d8c3e38b52f229b",
+    "hash": "87a7102c94950473",
     "lastmod": "2026-09-23"
   },
   "/units/": {
@@ -1100,7 +1116,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "442dfc1807b4b4b8",
+    "hash": "1ede88ff049d567c",
     "lastmod": "2026-09-23"
   }
 }

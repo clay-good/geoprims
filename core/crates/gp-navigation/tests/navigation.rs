@@ -2683,3 +2683,240 @@ fn range_rings_invariants() {
         - lons.iter().cloned().fold(f64::MAX, f64::min);
     assert!(span > 300.0, "a polar ring spans only {span} degrees");
 }
+
+#[test]
+fn polar_cartesian_invariants() {
+    const P: &str = "navigation.vector.polar-cartesian";
+    let to_xy = |m: f64, d: f64, conv: &str| {
+        let c = if conv.is_empty() {
+            String::new()
+        } else {
+            format!(r#","convention":"{conv}""#)
+        };
+        let r = call(
+            P,
+            &format!(r#"{{"magnitude":{m},"direction":"{d} deg"{c}}}"#),
+        );
+        (num(&r, "result.x"), num(&r, "result.y"))
+    };
+    // The two conventions are reflections: a navigational bearing t gives what
+    // a mathematical angle of 90 - t gives. One identity, and a swap anywhere
+    // breaks it.
+    for d in [0.0, 30.0, 45.0, 120.0, 270.0, 359.0] {
+        let nav = to_xy(10.0, d, "");
+        let math = to_xy(10.0, 90.0 - d, "mathematical");
+        assert!(
+            (nav.0 - math.0).abs() < 1e-9 && (nav.1 - math.1).abs() < 1e-9,
+            "{d} deg: navigational {nav:?} against mathematical {math:?}"
+        );
+    }
+    // Due north is +y and due east is +x in the navigational convention.
+    let north = to_xy(10.0, 0.0, "");
+    assert!(
+        north.0.abs() < 1e-9 && (north.1 - 10.0).abs() < 1e-9,
+        "{north:?}"
+    );
+    let east = to_xy(10.0, 90.0, "");
+    assert!(
+        (east.0 - 10.0).abs() < 1e-9 && east.1.abs() < 1e-9,
+        "{east:?}"
+    );
+    // In the mathematical convention 0 is +x and 90 is +y.
+    let zero = to_xy(10.0, 0.0, "mathematical");
+    assert!(
+        (zero.0 - 10.0).abs() < 1e-9 && zero.1.abs() < 1e-9,
+        "{zero:?}"
+    );
+    // The round trip, and the magnitude preserved under an elevation.
+    let r = call(
+        P,
+        r#"{"magnitude":25,"direction":"30 deg","elevation":"45 deg"}"#,
+    );
+    let (x, y, z) = (
+        num(&r, "result.x"),
+        num(&r, "result.y"),
+        num(&r, "result.z"),
+    );
+    assert!(
+        ((x * x + y * y + z * z).sqrt() - 25.0).abs() < 1e-9,
+        "the elevation changed the magnitude"
+    );
+    let back = call(P, &format!(r#"{{"x":{x},"y":{y},"z":{z}}}"#));
+    assert!((num(&back, "result.magnitude") - 25.0).abs() < 1e-9);
+    assert!((num(&back, "result.direction.value") - 30.0).abs() < 1e-9);
+    assert!((num(&back, "result.elevation.value") - 45.0).abs() < 1e-9);
+}
+
+#[test]
+fn vector_operations_invariants() {
+    const V: &str = "navigation.vector.operations";
+    let add = |vs: &str| call(V, &format!(r#"{{"vectors":[{vs}]}}"#));
+    let xyz = |r: &Value| (num(r, "result.x"), num(r, "result.y"), num(r, "result.z"));
+    // Order does not matter, and a vector plus its negation is exactly zero.
+    let a = add(r#"{"x":2,"y":-3,"z":6},{"x":1,"y":2,"z":-2}"#);
+    let b = add(r#"{"x":1,"y":2,"z":-2},{"x":2,"y":-3,"z":6}"#);
+    assert_eq!(xyz(&a), xyz(&b), "addition is not commutative");
+    let zero = add(r#"{"x":1.5,"y":-2.5,"z":3.5},{"x":-1.5,"y":2.5,"z":-3.5}"#);
+    assert_eq!(xyz(&zero), (0.0, 0.0, 0.0));
+    // Perpendicular vectors: dot zero, angle exactly a right angle.
+    let perp = add(r#"{"x":1,"y":0,"z":0},{"x":0,"y":1,"z":0}"#);
+    assert_eq!(num(&perp, "result.dot"), 0.0);
+    assert!((num(&perp, "result.angle_between.value") - 90.0).abs() < 1e-12);
+    // The cross product is perpendicular to both, and the Lagrange identity
+    // ties the two products together -- a sign error in either fails it.
+    let r = add(r#"{"x":2,"y":-3,"z":6},{"x":1,"y":2,"z":-2}"#);
+    // `cross` and `unit_vector` come back as display strings like "(-6, 10, 7)",
+    // not as objects, so the components are read out of the text.
+    let triple = |r: &Value, key: &str| -> Vec<f64> {
+        r["result"][key]
+            .as_str()
+            .unwrap_or_else(|| panic!("{key} is not a string"))
+            .trim_matches(['(', ')'])
+            .split(',')
+            .map(|p| p.trim().parse().expect("a number"))
+            .collect()
+    };
+    let c = triple(&r, "cross");
+    let cross = (c[0], c[1], c[2]);
+    let (ax, ay, az) = (2.0, -3.0, 6.0);
+    let (bx, by, bz) = (1.0, 2.0, -2.0);
+    assert!(
+        (cross.0 * ax + cross.1 * ay + cross.2 * az).abs() < 1e-9,
+        "the cross product is not perpendicular to a"
+    );
+    assert!(
+        (cross.0 * bx + cross.1 * by + cross.2 * bz).abs() < 1e-9,
+        "the cross product is not perpendicular to b"
+    );
+    let dot = num(&r, "result.dot");
+    let cross2 = cross.0 * cross.0 + cross.1 * cross.1 + cross.2 * cross.2;
+    let lhs = cross2 + dot * dot;
+    let rhs = (ax * ax + ay * ay + az * az) * (bx * bx + by * by + bz * bz);
+    assert!(
+        (lhs - rhs).abs() < 1e-6,
+        "|a x b|^2 + (a.b)^2 is {lhs}, not |a|^2|b|^2 = {rhs}"
+    );
+    // The unit vector has magnitude one.
+    let u = add(r#"{"x":3,"y":4}"#);
+    let uv = triple(&u, "unit_vector");
+    let len: f64 = uv.iter().map(|v| v * v).sum::<f64>().sqrt();
+    assert!((len - 1.0).abs() < 1e-5, "the unit vector has length {len}");
+}
+
+#[test]
+fn distance_3d_invariants() {
+    const D: &str = "navigation.vector.distance-3d";
+    let go = |la1: f64, lo1: f64, h1: f64, la2: f64, lo2: f64, h2: f64| {
+        call(
+            D,
+            &format!(
+                r#"{{"lat1":{la1},"lon1":{lo1},"height1":"{h1} m","lat2":{la2},"lon2":{lo2},"height2":"{h2} m","reference1":"hae","reference2":"hae"}}"#
+            ),
+        )
+    };
+    for (la1, lo1, h1, la2, lo2, h2) in [
+        (40.0, -105.0, 1600.0, 40.1, -105.0, 1700.0),
+        (51.47, -0.4543, 25.0, 51.5074, -0.1278, 310.0),
+        (-33.8688, 151.2093, 58.0, -33.9399, 151.1753, 6.0),
+    ] {
+        let r = go(la1, lo1, h1, la2, lo2, h2);
+        let (slant, ground, dh) = (
+            num(&r, "result.slant_range.value"),
+            num(&r, "result.ground_distance.value"),
+            num(&r, "result.height_difference.value"),
+        );
+        // Symmetric.
+        let back = go(la2, lo2, h2, la1, lo1, h1);
+        assert!(
+            (slant - num(&back, "result.slant_range.value")).abs() < 1e-6,
+            "the slant range is not symmetric"
+        );
+        // Bounded below by the height difference and above by the sum.
+        assert!(slant >= dh.abs() - 1e-9, "{slant} is under the height gap");
+        assert!(slant <= ground + dh.abs() + 1e-9, "{slant} exceeds the sum");
+        assert_eq!(dh, h2 - h1);
+    }
+    // At equal heights a chord cuts UNDER the arc, so the straight line is the
+    // shorter of the two. That sign is the check that the tool left the
+    // surface rather than doing Pythagoras on it.
+    let flat = go(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    assert!(
+        num(&flat, "result.slant_range.value") < num(&flat, "result.ground_distance.value"),
+        "the chord is not shorter than the arc"
+    );
+    // Straight up: the range is the height difference and the elevation 90.
+    let up = go(40.0, -105.0, 0.0, 40.0, -105.0, 1000.0);
+    assert!((num(&up, "result.slant_range.value") - 1000.0).abs() < 1e-6);
+    assert!((num(&up, "result.elevation_angle.value") - 90.0).abs() < 1e-9);
+    // Looking down gives a negative elevation.
+    let down = go(40.0, -105.0, 3000.0, 40.1, -105.0, 100.0);
+    assert!(num(&down, "result.elevation_angle.value") < 0.0);
+}
+
+#[test]
+fn look_angles_invariants() {
+    const L: &str = "navigation.vector.look-angles";
+    let look = |ola: f64, olo: f64, oh: f64, tla: f64, tlo: f64, th: f64| {
+        call(
+            L,
+            &format!(
+                r#"{{"observer_lat":{ola},"observer_lon":{olo},"observer_height":"{oh} m","target_lat":{tla},"target_lon":{tlo},"target_height":"{th} m"}}"#
+            ),
+        )
+    };
+    // Due east is 90 and due north is 0, not 360.
+    let east = look(40.0, -105.0, 10.0, 40.0, -104.0, 3000.0);
+    assert!(
+        (num(&east, "result.azimuth.value") - 90.0).abs() < 0.6,
+        "due east came out as {}",
+        num(&east, "result.azimuth.value")
+    );
+    let north = look(-45.0, 170.0, 100.0, -44.0, 170.0, 6000.0);
+    let az = num(&north, "result.azimuth.value");
+    assert!(az < 1e-6 || az > 359.999, "due north came out as {az}");
+    assert!((0.0..360.0).contains(&az), "{az} is outside [0, 360)");
+    // The slant range is the one the 3D distance tool gives.
+    let d = call(
+        "navigation.vector.distance-3d",
+        r#"{"lat1":40.0,"lon1":-105.0,"height1":"10 m","lat2":40.0,"lon2":-104.0,"height2":"3000 m","reference1":"hae","reference2":"hae"}"#,
+    );
+    assert!(
+        (num(&east, "result.slant_range.value") - num(&d, "result.slant_range.value")).abs() < 1e-3,
+        "the two tools disagree about the range"
+    );
+    // Overhead is 90 degrees up.
+    let over = look(40.0, -105.0, 10.0, 40.0, -105.0, 10000.0);
+    assert!((num(&over, "result.elevation.value") - 90.0).abs() < 1e-6);
+    // The horizon is below level and deepens with height.
+    let low = num(
+        &look(40.0, -105.0, 10.0, 41.0, -105.0, 10000.0),
+        "result.horizon_elevation.value",
+    );
+    let high = num(
+        &look(40.0, -105.0, 2240.0, 41.0, -105.0, 10000.0),
+        "result.horizon_elevation.value",
+    );
+    assert!(low < 0.0 && high < low, "horizon {low} then {high}");
+    // A distant low target is below the horizon; a near one is above it.
+    let far = look(40.0, -105.0, 10.0, 40.0, -100.0, 3000.0);
+    assert!(
+        num(&far, "result.elevation.value") < num(&far, "result.horizon_elevation.value"),
+        "a target 400 km away at 3 km is not below the horizon"
+    );
+    assert!(
+        num(&east, "result.elevation.value") > num(&east, "result.horizon_elevation.value"),
+        "a target 150 km away at 3 km is not above the horizon"
+    );
+    // Refraction only ever lifts a target. The apparent elevation appears
+    // only when a refraction factor is asked for; without one the tool reports
+    // the geometry alone, which is the honest default.
+    assert!(far["result"]["apparent_elevation"].is_null());
+    let bent = call(
+        L,
+        r#"{"observer_lat":40.0,"observer_lon":-105.0,"observer_height":"10 m","target_lat":40.0,"target_lon":-100.0,"target_height":"3000 m","k":0.25}"#,
+    );
+    assert!(
+        num(&bent, "result.apparent_elevation.value") > num(&bent, "result.elevation.value"),
+        "refraction lowered the target"
+    );
+}

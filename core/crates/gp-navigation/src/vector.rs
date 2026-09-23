@@ -9,7 +9,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_geo::ellipsoid::CATALOG;
 use gp_geo::frames as fr;
@@ -209,11 +211,13 @@ pub static DISTANCE_3D: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
+    stability: Stability::Stable,
+    when_to_use: "Use this for the straight-line distance between two points at different heights -- a drone and its ground station, an aircraft and a transmitter, a summit and a valley floor. It also gives the ground distance, the elevation angle and the azimuth, and the flat-earth answer beside them so you can see what curvature costs.",
+    limitations: "Say which kind of height each is. A GPS height is above the ellipsoid and a map height is above sea level, and they differ by tens of metres; give `msl` and the tool converts through EGM96, which carries about half a metre to a metre of its own. This is geometry, not visibility: it says where the target is, not whether you can see it -- terrain, buildings and the Earth's curve are the look-angles tool next door. And the flat-earth figures are there for comparison, not for use; over a hundred kilometres they are wrong by enough to matter.",
     warnings: &[
         "ORTHOMETRIC_AS_ELLIPSOIDAL",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Both points to WGS 84 ECEF (sea-level heights first become ellipsoidal, h = H + N, with EGM96); straight-line distance = |ΔECEF|; elevation and azimuth from the east-north-up frame at the first point; ground distance by the Karney geodesic inverse",
     accuracy: "Exact geometry for the heights given. A sea-level height carries the geoid's error, about 0.5-1 m for EGM96.",
@@ -436,12 +440,10 @@ pub static LOOK_ANGLES: ToolDef = ToolDef {
         .angle_range("unbounded"),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &[
-        "BELOW_HORIZON",
-        "INPUT_NORMALIZED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    stability: Stability::Stable,
+    when_to_use: "Use this to point something: the azimuth, elevation and range from an observer to a target, with the horizon depression beside them so you can tell at a glance whether the target is above it. An antenna, a camera, a tracking mount, a line-of-sight check.",
+    limitations: "The horizon here is the geometric one for a smooth sphere, and the ground is not smooth: a hill, a building or a tree between you and the target hides it whatever the numbers say. Refraction is reported only if you ask for a factor, since assuming one would be inventing an atmosphere; the standard 4/3 effective radius is a fair-weather average and a temperature inversion can carry a signal far past it. And this is a straight line through the air, not a radio path budget.",
+    warnings: &["BELOW_HORIZON", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Both points to WGS 84 ECEF, then east-north-up at the observer: azimuth = atan2(E, N), elevation = atan2(U, √(E² + N²)). The horizon is at −acos(Rₑ / (Rₑ + h)) with Rₑ = 6,371 km / (1 − k); refraction raises the elevation by k × (ground distance / 6,371 km) / 2",
     accuracy: "Exact geometry; the horizon and refraction use a mean-radius sphere and a single refraction coefficient, and ignore terrain.",
     references: &[LOCAL_CARTESIAN],
@@ -638,7 +640,10 @@ pub static POLAR_CARTESIAN: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn a magnitude and a bearing into components, or components back into a magnitude and a bearing: a wind into headwind and crosswind, a current into its parts, an offset into a direction and a distance. It takes an elevation too, for a three-dimensional vector.",
+    limitations: "The convention is the thing to get right, and it is why this exists: navigational angles run clockwise from north, mathematical ones counterclockwise from east, and code written in one and read in the other gives a vector that is wrong in a way that still looks reasonable. The tool reports which one it used. A zero vector has no direction, and this says so rather than returning an arbitrary one. Units are not converted -- whatever unit the magnitude is in, the components are in.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Navigational: x = m·cos e·sin θ, y = m·cos e·cos θ; mathematical: x = m·cos e·cos θ, y = m·cos e·sin θ; z = m·sin e. Back: m = √(x² + y² + z²), θ = atan2 in the chosen convention, e = atan2(z, √(x² + y²))",
     accuracy: "Exact arithmetic",
     references: &[LOCAL_CARTESIAN],
@@ -660,6 +665,10 @@ pub static POLAR_CARTESIAN: ToolDef = ToolDef {
         },
         Related {
             id: "navigation.vector.look-angles",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.vector.distance-3d",
             reason: "alternative",
         },
     ],
@@ -890,7 +899,10 @@ pub static OPERATIONS: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    stability: Stability::Stable,
+    when_to_use: "Use this to add vectors head to tail -- a wind triangle, a set of forces, a chain of offsets -- and, for two of them, to get their difference, dot and cross products, the angle between them and the projection of one on the other, all in one place and one convention.",
+    limitations: "Every vector must already be in the same unit: this adds numbers and does not convert them. A zero resultant has no direction, and the angle to a zero vector is undefined; both are reported as such rather than as zero. The cross product is a three-dimensional operation -- for two 2D vectors what comes back is its scalar z-component, which is the signed area of the parallelogram they span, not a vector.",
+    warnings: &["UNIT_ASSUMED"],
     model: "Component-wise sums; a·b = Σ aᵢbᵢ; a × b = (a_y b_z − a_z b_y, a_z b_x − a_x b_z, a_x b_y − a_y b_x); angle = acos(a·b / |a||b|); projection = a·b / |b|",
     accuracy: "Exact arithmetic. All vectors must share one unit; the tool does not convert them",
     references: &[LOCAL_CARTESIAN],
@@ -913,6 +925,10 @@ pub static OPERATIONS: ToolDef = ToolDef {
         Related {
             id: "navigation.route.cpa",
             reason: "next",
+        },
+        Related {
+            id: "navigation.vector.look-angles",
+            reason: "alternative",
         },
     ],
     sentence: "The resultant has a magnitude of {magnitude}.",

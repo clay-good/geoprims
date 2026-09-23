@@ -28,6 +28,15 @@ pub const ICAO_ATM: Reference = Reference {
     url: "https://store.icao.int/en/manual-of-the-icao-standard-atmosphere-extended-to-80-kilometres-262500-feet-doc-7488",
 };
 
+pub const BAUERSFELD: Reference = Reference {
+    title: "Range, Endurance, and Optimal Speed Estimates for Multicopters",
+    issuer: "Bauersfeld, L., and Scaramuzza, D., IEEE Robotics and Automation Letters 7(2)",
+    year: 2022,
+    edition: "Vol. 7, No. 2, pp. 2953-2960",
+    locator: "Sec. VII-E, step 6 (endurance = effective capacity × nominal voltage / electrical power)",
+    url: "https://arxiv.org/abs/2109.04741",
+};
+
 const G0: f64 = 9.806_65;
 const R: f64 = 287.052_87;
 const T0: f64 = 288.15;
@@ -680,6 +689,7 @@ pub fn cold_derating(t_c: f64) -> f64 {
 
 pub static ENDURANCE: ToolDef = ToolDef {
     id: "drone.power.endurance",
+    stability: gp_base::tool::Stability::Stable,
     title: "Drone flight time",
     summary: "Hover and cruise flight time from usable battery energy and power draw, with the landing reserve and cold-battery derating shown, and range at a groundspeed.",
     aliases: &[
@@ -721,7 +731,7 @@ pub static ENDURANCE: ToolDef = ToolDef {
         num(
             "reserve",
             "Landing reserve (%)",
-            "Share of the battery kept for landing, default 0",
+            "Share of the usable energy kept for landing, like 20; default 0",
             0.0,
             99.0,
         )
@@ -736,7 +746,7 @@ pub static ENDURANCE: ToolDef = ToolDef {
         num(
             "derating",
             "Derating (%)",
-            "Your own derating; overrides the temperature heuristic, like 0.85",
+            "Your own derating in percent, like 15; overrides the temperature heuristic",
             0.0,
             95.0,
         ),
@@ -831,21 +841,26 @@ pub static ENDURANCE: ToolDef = ToolDef {
         .precision(Precision::Decimals(3))
         .optional(),
     ],
-    warnings: &[
-        "HEURISTIC_DERATING",
-        "HEURISTIC_PEUKERT",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["HEURISTIC_DERATING", "HEURISTIC_PEUKERT", "UNIT_ASSUMED"],
     model: "Time = energy × usable share × (1 − derating) × (1 − reserve) / power; heuristic cold derating 0% at 20 °C or warmer, rising 1% per °C (20% at 0 °C), capped at 50%. Peukert, off by default: energy × (rated power / power)^(k − 1), where rated power = pack energy / rated discharge time",
     accuracy: "Only as good as the power figure. Wind, climbs, and aging packs shorten real flights.",
-    references: &[LEISHMAN],
-    examples: &[Example {
-        id: "primary",
-        title: "A 90.4 Wh pack, 80% usable, hovering at 150.6 W",
-        input: r#"{"energy":"90.4 Wh","usable":80,"power":"150.6 W"}"#,
-        source: "add-drone-suite endurance scenario: about 28.8 min",
-    }],
+    when_to_use: "Use this when you know, or have estimated, the power a drone draws and want to know how long a pack will keep it in the air: it takes the usable share of the battery, removes a cold-weather derating and the reserve you land with, and divides by the power, for hover and cruise, and turns the cruise time into a range at your groundspeed.",
+    limitations: "It is energy divided by power at a steady draw, so it is exactly as good as the power figure you give it. Climbs, wind, gusts, and payload changes raise the draw; a pack’s voltage sags as it empties and its capacity falls with age and at high current. The reserve here is a share of the usable energy, not of the whole pack, so 80% usable with a 20% reserve flies on 64%. The cold-battery derating is a rule of thumb, and range ignores wind: work the groundspeed out first.",
+    references: &[LEISHMAN, BAUERSFELD],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "A 90.4 Wh pack, 80% usable, hovering at 150.6 W",
+            input: r#"{"energy":"90.4 Wh","usable":80,"power":"150.6 W"}"#,
+            source: "add-drone-suite endurance scenario: about 28.8 min",
+        },
+        Example {
+            id: "mavic-3",
+            title: "A DJI Mavic 3 flying for maximum endurance",
+            input: r#"{"energy":"72.372 Wh","power":"89.5 W"}"#,
+            source: "Bauersfeld and Scaramuzza (2022), Sec. VII-E step 6: 4.89 Ah effective at 4 × 3.7 V and 89.5 W gives 2,909 s, about 48.5 min",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "gauge",
@@ -857,7 +872,19 @@ pub static ENDURANCE: ToolDef = ToolDef {
             reason: "alternative",
         },
         Related {
+            id: "drone.power.battery-energy",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.power.calibrate-hover",
+            reason: "alternative",
+        },
+        Related {
             id: "drone.power.rth-budget",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.max-payload",
             reason: "next",
         },
     ],

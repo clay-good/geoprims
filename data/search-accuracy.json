@@ -1,9 +1,9 @@
 {
-  "queries": 969,
-  "top1": 97.7,
+  "queries": 1105,
+  "top1": 97.9,
   "top3": 99.8,
-  "prefillPrecision": 97.2,
-  "prefillRecall": 40.2,
+  "prefillPrecision": 97,
+  "prefillRecall": 39,
   "misses": [
     "100 mph drone with 90 mph 15 mph",
     "3D distance calculator with 40 -105 250 m 40.018012369978514 -105 370 m"
@@ -36,6 +36,10 @@
     "Intercept a moving target with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\"",
     "intercept course with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\"",
     "intercept calculator with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\"",
-    "pursuit course with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\""
+    "pursuit course with 40 -70 20 kt 40.1665 -70 90 deg 12 kt: lat = \"90 deg\"",
+    "Sun hotspot in a camera frame with 39.74 -104.99 2026-06-21T13:00-06:00 -90 deg: camera_heading = \"-90 deg\"",
+    "sun hotspot calculator with 39.74 -104.99 2026-06-21T13:00-06:00 -90 deg: camera_heading = \"-90 deg\"",
+    "photogrammetry hotspot with 39.74 -104.99 2026-06-21T13:00-06:00 -90 deg: camera_heading = \"-90 deg\"",
+    "antisolar point with 39.74 -104.99 2026-06-21T13:00-06:00 -90 deg: camera_heading = \"-90 deg\""
   ]
 }

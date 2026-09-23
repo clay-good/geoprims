@@ -164,6 +164,26 @@
       "editionCheck": true
     },
     {
+      "id": "bauersfeld-multicopter-endurance",
+      "name": "Range, Endurance, and Optimal Speed Estimates for Multicopters",
+      "issuer": "IEEE Robotics and Automation Letters (Bauersfeld and Scaramuzza)",
+      "currentEdition": "Vol. 7, No. 2, pp. 2953-2960",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-23",
+      "verificationNote": "Journal version (DOI 10.1109/LRA.2022.3145063, April 2022) confirmed by search on 2026-09-23; the worked example was read in the free arXiv copy (2109.04741), Sec. VII-E.",
+      "freeAccessUrl": "https://arxiv.org/abs/2109.04741",
+      "matchTerms": [
+        "Optimal Speed Estimates for Multicopters"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "bing-tiles",
       "name": "Bing Maps Tile System",
       "issuer": "Microsoft",

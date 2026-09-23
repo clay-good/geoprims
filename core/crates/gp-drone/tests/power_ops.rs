@@ -455,3 +455,84 @@ fn calibration_round_trips_through_hover_power() {
     );
     near(&h, "result.electrical_power.value", 160.0, 1e-9);
 }
+
+#[test]
+fn endurance_invariants() {
+    // Time is energy over power: linear in energy, inverse in power, and the
+    // usable share, derating, and reserve each scale it by their own factor.
+    // The reserve is a share of the usable energy, and the two times differ
+    // by exactly that share. Range is time × groundspeed, and fed the usable
+    // energy from the battery tool, the time is that energy over the power.
+    let t = |inp: &str| {
+        num(
+            &call("drone.power.endurance", inp),
+            "result.hover_time.value",
+        )
+    };
+    for (e, p) in [(90.4, 150.6), (45.0, 60.0), (500.0, 1200.0)] {
+        let base = t(&format!(r#"{{"energy":"{e} Wh","power":"{p} W"}}"#));
+        assert!((base - e / p * 60.0).abs() < 1e-9);
+        assert!(
+            (t(&format!(r#"{{"energy":"{} Wh","power":"{p} W"}}"#, 2.0 * e)) - 2.0 * base).abs()
+                < 1e-9
+        );
+        assert!(
+            (t(&format!(r#"{{"energy":"{e} Wh","power":"{} W"}}"#, 4.0 * p)) - base / 4.0).abs()
+                < 1e-9
+        );
+        for (u, d, r) in [(80.0, 0.0, 20.0), (90.0, 15.0, 30.0), (100.0, 50.0, 0.0)] {
+            let res = call(
+                "drone.power.endurance",
+                &format!(
+                    r#"{{"energy":"{e} Wh","power":"{p} W","usable":{u},"derating":{d},"reserve":{r},"groundspeed":"10 m/s"}}"#
+                ),
+            );
+            let f = u / 100.0 * (1.0 - d / 100.0);
+            let h = num(&res, "result.hover_time.value");
+            assert!((h - base * f * (1.0 - r / 100.0)).abs() < 1e-9);
+            assert!(
+                (num(&res, "result.hover_time_no_reserve.value") * (1.0 - r / 100.0) - h).abs()
+                    < 1e-9
+            );
+            assert!(
+                (num(&res, "result.usable_energy.value") * r / 100.0
+                    - num(&res, "result.reserve_energy.value"))
+                .abs()
+                    < 1e-9
+            );
+            assert!((num(&res, "result.range.value") - h * 60.0 * 10.0 / 1000.0).abs() < 1e-9);
+        }
+    }
+    // Colder never flies longer; the heuristic is flat from 20 °C up, warns
+    // only below it, and is capped at 50%.
+    let cold = |c: f64| {
+        call(
+            "drone.power.endurance",
+            &format!(r#"{{"energy":"100 Wh","power":"100 W","battery_temperature":"{c} degC"}}"#),
+        )
+    };
+    let mut prev = f64::INFINITY;
+    for c in [40.0, 20.0, 15.0, 0.0, -10.0, -30.0, -60.0] {
+        let r = cold(c);
+        let h = num(&r, "result.hover_time.value");
+        assert!(h <= prev, "{c}: {h} > {prev}");
+        prev = h;
+        assert_eq!(warns(&r, "HEURISTIC_DERATING"), c < 20.0, "{c}\n{r}");
+    }
+    near(&cold(-60.0), "result.derating_applied", 50.0, 1e-9);
+    // Chained from the battery tool, the time is its usable energy over the power.
+    let b = call(
+        "drone.power.battery-energy",
+        r#"{"capacity":"5870 mAh","voltage":"15.4 V","depth_of_discharge":80,"reserve":20}"#,
+    );
+    let usable = num(&b, "result.usable_energy.value");
+    near(
+        &call(
+            "drone.power.endurance",
+            &format!(r#"{{"energy":"{usable} Wh","power":"150.6 W"}}"#),
+        ),
+        "result.hover_time.value",
+        usable / 150.6 * 60.0,
+        1e-9,
+    );
+}

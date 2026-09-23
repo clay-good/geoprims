@@ -28,7 +28,7 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Drone | Altitude for a GSD | `drone.photogrammetry.altitude-for-gsd` | [x] | [ ] | [ ] | [x] |
 | Drone | Overlap and trigger | `drone.photogrammetry.trigger` | [ ] | [ ] | [ ] | [x] |
 | Drone | Image count | `drone.photogrammetry.image-count` | [ ] | [ ] | [ ] | [x] |
-| Drone | Flight time | `drone.power.endurance` | [ ] | [ ] | [ ] | [x] |
+| Drone | Flight time | `drone.power.endurance` | [x] | [ ] | [ ] | [x] |
 | Drone | mAh to Wh | `drone.power.battery-energy` | [x] | [ ] | [ ] | [x] |
 | Drone | Mapping sun window | `time.sun.mapping-window` | [x] | [ ] | [ ] | [x] |
 | Drone | VLOS guidance | `drone.sensors.vlos` | [x] | [ ] | [ ] | [x] |
@@ -53,15 +53,14 @@ The ~30 hero tools from the [launch plan](../../openspec/changes/plan-launch-and
 | Developers | Haversine (vs geodesic) | `navigation.geodesic.haversine` | [x] | [ ] | [ ] | [x] |
 | Developers | Magnetic declination | `geodesy.magnetic.declination` | [x] | [ ] | [ ] | [x] |
 
-Stable: 37 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
+Stable: 38 of 42 rows. Shows its work: 42 of 42 rows. `tools/trust/hero.test.mjs` checks every id, Stable box, and "Shows its work" box against the build.
 
 ## Waiting on a published worked example
 
-The stable bar needs an independent, published worked example. These rows are held back until one turns up, rather than citing an example we computed ourselves. The mapping sun window left this list on 2026-09-23: its reference is pvlib's independent implementation of the same NREL algorithm, checked against the core at 250 points in `spa_parity.rs`, which is the same standing as the other tools verified against a separate implementation rather than a printed worked example.
+The stable bar needs an independent, published worked example. These rows are held back until one turns up, rather than citing an example we computed ourselves. The mapping sun window left this list on 2026-09-23: its reference is pvlib's independent implementation of the same NREL algorithm, checked against the core at 250 points in `spa_parity.rs`, which is the same standing as the other tools verified against a separate implementation rather than a printed worked example. Flight time left it the same day: Bauersfeld and Scaramuzza (IEEE RA-L, 2022, Sec. VII-E) work the energy-over-power step for a DJI Mavic 3.
 
 | Tool | Searched (2026-09-19) |
 |---|---|
 | Holding entry | AIM 5-3-8 and FAA-H-8083-15B define the sectors only by figure; the FAA instrument sample tests have no entry question |
 | Part 107 altitude | 14 CFR 107.51, AC 107-2A, FAA-G-8082-22, the UAG sample test, and the 2016 final rule preamble state the rule without a numeric case |
-| Flight time | No FAA or manufacturer source works the arithmetic |
 | Overlap and trigger, image count | Blog and vendor examples found in search did not contain the numbers when checked; the peer-reviewed footprint paper (AKJournals, 2024) is not freely retrievable |

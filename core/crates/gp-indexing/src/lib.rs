@@ -487,6 +487,7 @@ fn tile_px(ctx: &Ctx) -> Result<f64, ToolError> {
 
 pub static TILE_FROM_POINT: ToolDef = ToolDef {
     id: "indexing.tile.from-point",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Map tile for a point (XYZ, TMS, quadkey)",
     summary: "The web map tile containing a point at a zoom: XYZ, TMS, and quadkey, with the ground resolution.",

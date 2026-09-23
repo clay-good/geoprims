@@ -834,24 +834,32 @@ impl<'a> Ctx<'a> {
         let Kind::Choice(options) = f.kind else {
             panic!("{name} is not a choice field")
         };
-        match self.raw(name) {
-            None => Ok(None),
-            Some(Value::String(s)) => options
-                .iter()
-                .copied()
-                .find(|o| o == s)
-                .map(Some)
-                .ok_or_else(|| {
-                    ToolError::invalid(
-                        &pointer(name),
-                        format!("{} must be one of: {}.", f.title, options.join(", ")),
-                    )
-                }),
-            Some(_) => Err(ToolError::invalid(
-                &pointer(name),
-                format!("{} must be a string.", f.title),
-            )),
-        }
+        // A numeric option ("512") may also come as the JSON number 512.
+        let given = match self.raw(name) {
+            None => return Ok(None),
+            Some(Value::String(s)) => s.clone(),
+            Some(Value::Number(n)) => n
+                .as_f64()
+                .and_then(crate::num::format_f64)
+                .unwrap_or_default(),
+            Some(_) => {
+                return Err(ToolError::invalid(
+                    &pointer(name),
+                    format!("{} must be a string.", f.title),
+                ));
+            }
+        };
+        options
+            .iter()
+            .copied()
+            .find(|o| *o == given)
+            .map(Some)
+            .ok_or_else(|| {
+                ToolError::invalid(
+                    &pointer(name),
+                    format!("{} must be one of: {}.", f.title, options.join(", ")),
+                )
+            })
     }
 
     pub fn number(&self, name: &str) -> Result<Option<f64>, ToolError> {

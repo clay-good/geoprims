@@ -41,7 +41,7 @@ None for the tile: the tile grid is defined on the sphere. Web Mercator treats W
 
 - `core/crates/gp-indexing/tests/dev_parity.rs`: 1,000 random points at zooms 0 to 24 against mercantile 1.2.1 (tile and quadkey identical)
 - `tools/vectors/gen_dev_diff.py`: regenerates that fixture
-- `core/vectors/indexing.tile.from-point.jsonl`: 24 vectors from the slippy-map formulas in Python, including zoom 0, the antimeridian, and the clamped poles
+- `core/vectors/indexing.tile.from-point.jsonl`: vectors from the slippy-map formulas in Python, including zoom 0, the antimeridian, and the clamped poles, and v026, a tile size given as the number 512
 
 ## Invariants
 

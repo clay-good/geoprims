@@ -59,7 +59,8 @@ test('100,000-vertex scenes pan at p95 within one 60 Hz frame', { timeout: 300_0
       for (let pass = 0; pass < 3; pass++) {
         const times = [];
         for (let f = 0; f < 60; f++) {
-          const view = { ...v0, lon: v0.lon + f * 0.4, width: 1280, height: 800 };
+          // A pan: MapCanvas draws these frames with view.moving, as the app does mid-gesture.
+          const view = { ...v0, moving: true, lon: v0.lon + f * 0.4, width: 1280, height: 800 };
           const t0 = performance.now();
           draw(g, view, base, layers, colors);
           g.getImageData(0, 0, 1, 1); // make the frame's drawing actually finish

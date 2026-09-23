@@ -88,7 +88,7 @@ test('a million-cell answer draws its compacted stand-in, whole', { timeout: 300
       const v0 = frame(mode, rings.flat().filter((_, i) => i % 97 === 0), 1280, 800);
       const times = [];
       for (let f = 0; f < 60; f++) {
-        const view = { ...v0, lon: v0.lon + f * 0.002, width: 1280, height: 800 };
+        const view = { ...v0, moving: true, lon: v0.lon + f * 0.002, width: 1280, height: 800 };
         const t0 = performance.now();
         draw(g, view, base, layers, colors);
         g.getImageData(0, 0, 1, 1); // make the frame's drawing actually finish

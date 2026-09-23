@@ -57,7 +57,18 @@
     return [Math.max(1, r.width), Math.max(1, r.height)];
   };
 
-  function paint() {
+  // While the view moves (a drag, a wheel zoom, an eased camera), frames are
+  // drawn with the base map lighter (render.js, view.moving) so pans hold 60
+  // frames a second on a mid-tier phone; the full detail comes back 120 ms
+  // after the motion stops. Tool results are always drawn in full.
+  let still = null;
+  function motion() {
+    paint(true);
+    clearTimeout(still);
+    still = setTimeout(() => paint(), 120);
+  }
+
+  function paint(moving = false) {
     if (!canvas || !view) return;
     const dpr = globalThis.devicePixelRatio || 1;
     const [w, h] = size();
@@ -65,7 +76,7 @@
     if (canvas.height !== Math.round(h * dpr)) canvas.height = Math.round(h * dpr);
     const g = canvas.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    draw(g, { ...view, width: w, height: h }, base, layers, colors(canvas));
+    draw(g, { ...view, width: w, height: h, moving }, base, layers, colors(canvas));
     scaleBar = measure(view);
   }
 
@@ -86,7 +97,7 @@
       const k = Math.min(1, (now - t0) / 500);
       const e = 1 - (1 - k) ** 3;
       view = { ...to, lon: from.lon + dl * e, lat: from.lat + (to.lat - from.lat) * e, scale: from.scale * (to.scale / from.scale) ** e };
-      paint();
+      k < 1 ? motion() : paint();
       if (k < 1) requestAnimationFrame(step);
       else target = null;
     };
@@ -196,7 +207,7 @@
       const bearing = (cx, cy) => Math.atan2(cx - r.left - w / 2, hs * (cy - r.top - h / 2));
       view = { ...drag.view, lon: drag.view.lon - ((bearing(e.clientX, e.clientY) - bearing(drag.x, drag.y)) * 180) / Math.PI };
       if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 3) drag.moved = true;
-      paint();
+      motion();
       return;
     }
     if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 3) drag.moved = true;
@@ -209,7 +220,7 @@
       const layer = layers.find((l) => l.field === drag.handle.field);
       drag.at = [ll[0], ll[1]];
       if (layer) layer.points = [drag.at];
-      paint();
+      motion();
       place(drag.handle.field, ll);
       return;
     }
@@ -219,7 +230,7 @@
       lon: drag.view.lon - (e.clientX - drag.x) * d,
       lat: Math.max(-85, Math.min(85, drag.view.lat + (e.clientY - drag.y) * d)),
     };
-    paint();
+    motion();
   }
   // The readout in the chosen format. Grid formats ask the core; one request
   // is in flight at a time and only the newest pointer position is kept.
@@ -258,7 +269,7 @@
     target = null;
     const [w, h] = size();
     view = { ...view, scale: Math.max(Math.min(w, h) / 7, Math.min(view.scale * f, w * 5000)) };
-    paint();
+    motion();
   }
   function wheel(e) {
     e.preventDefault();

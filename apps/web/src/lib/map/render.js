@@ -126,12 +126,13 @@ function sphere(geo) {
  * largest scale of its level) from the last one kept. The first and last
  * vertices are always kept, so a path starts and ends where it should.
  */
-function detail(geo, mode, scale) {
+function detail(geo, mode, scale, coarse = false) {
   const level = Math.floor(Math.log2(Math.max(scale, 1e-9)));
-  const key = `${mode}${level}`;
+  const key = `${mode}${level}${coarse ? 'c' : ''}`;
   let idx = geo.lods.get(key);
   if (idx) return idx;
-  const tol = 1 / 2 ** (level + 1);
+  // Coarse (the base map while the view moves) keeps a vertex every 2 px.
+  const tol = (coarse ? 2 : 1) / 2 ** (level + 1);
   const { n, lon, lat, M } = geo;
   const keep = [0];
   let k = 0;
@@ -156,10 +157,10 @@ function detail(geo, mode, scale) {
  * screen is skipped); on the globe, points on the far side break the path.
  * Only the vertices that can change a pixel are drawn.
  */
-function trace(g, view, points, closed) {
+function trace(g, view, points, closed, coarse = false) {
   if (!points.length) return;
   const geo = geometry(points);
-  const idx = detail(geo, view.mode, view.scale);
+  const idx = detail(geo, view.mode, view.scale, coarse);
   const p = pen(g);
   if (view.mode === 'map' || view.mode === 'equirect') {
     const [cx, cy, s] = [view.width / 2, view.height / 2, view.scale];
@@ -398,33 +399,47 @@ function backdrop(width, height, r, c) {
 
 export function draw(g, view, base, layers, c) {
   const { width, height } = view;
-  g.clearRect(0, 0, width, height);
+  // No clearRect: the opaque fill below covers every pixel, and on a
+  // software-rasterized canvas each full-canvas pass is a frame cost.
   g.lineJoin = 'round';
   g.lineCap = 'round';
   // Water is the page's background; on the globe, space around it is the surface.
   g.fillStyle = view.mode === 'globe' ? c.surface : c.bg;
   g.fillRect(0, 0, width, height);
-  if (view.mode === 'globe') g.drawImage(backdrop(width, height, view.scale, c), 0, 0, width, height);
-  // Graticule, faint.
-  g.beginPath();
-  for (const l of graticule(view.scale > width ? 10 : 30, view.mode === 'polar' ? 88 : 80)) trace(g, view, l, false);
-  g.strokeStyle = c.graticule;
-  g.lineWidth = 1;
-  g.stroke();
+  if (view.mode === 'globe') {
+    // Only the halo's square is copied: the rest of the backdrop is transparent.
+    const dpr = globalThis.devicePixelRatio || 1;
+    const R = view.scale * 1.1;
+    const x = Math.max(0, Math.floor(width / 2 - R));
+    const y = Math.max(0, Math.floor(height / 2 - R));
+    const w = Math.min(width, Math.ceil(width / 2 + R)) - x;
+    const h = Math.min(height, Math.ceil(height / 2 + R)) - y;
+    if (w > 0 && h > 0) g.drawImage(backdrop(width, height, view.scale, c), x * dpr, y * dpr, w * dpr, h * dpr, x, y, w, h);
+  }
+  // Graticule, faint, and left out while the view moves.
+  if (!view.moving) {
+    g.beginPath();
+    for (const l of graticule(view.scale > width ? 10 : 30, view.mode === 'polar' ? 88 : 80)) trace(g, view, l, false);
+    g.strokeStyle = c.graticule;
+    g.lineWidth = 1;
+    g.stroke();
+  }
   if (base) {
     g.beginPath();
-    for (const ring of base.land) trace(g, view, ring, true);
+    for (const ring of base.land) trace(g, view, ring, true, view.moving);
     g.fillStyle = c.land;
     g.fill('evenodd');
     g.strokeStyle = c.line;
     g.lineWidth = 0.75;
     g.stroke();
     g.beginPath();
-    for (const ring of base.lakes) trace(g, view, ring, true);
+    for (const ring of base.lakes) trace(g, view, ring, true, view.moving);
     g.fillStyle = c.bg;
     g.fill();
     // State and province lines, fainter than the national borders.
-    if (base.states?.length) {
+    // State and province lines wait for the view to stop: the faintest detail,
+    // and a fifth of the base map's lines.
+    if (base.states?.length && !view.moving) {
       g.beginPath();
       for (const l of base.states) trace(g, view, l, false);
       g.strokeStyle = mix(c.line, c.muted, 0.25);
@@ -434,7 +449,7 @@ export function draw(g, view, base, layers, c) {
       g.setLineDash([]);
     }
     g.beginPath();
-    for (const l of base.borders) trace(g, view, l, false);
+    for (const l of base.borders) trace(g, view, l, false, view.moving);
     g.strokeStyle = mix(c.line, c.muted, 0.35);
     g.lineWidth = 0.8;
     g.stroke();

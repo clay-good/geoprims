@@ -1026,8 +1026,12 @@
         }
       ]
     },
+    "indexing": {
+      "intro": "Spatial indexes turn a location into a short key you can store, join, and search. This section covers H3 hexagons, S2 cells, geohashes, Plus Codes, and web map tiles, and converts one place between them. Developers and GIS analysts use them to bucket points, join datasets by cell, and plan map caches. If you are not sure which system fits, start with the cross-index tool, which shows one place in each at a matched cell size. Pitfall: every key names an area, not a point, and its size depends on the resolution you choose."
+    },
     "indexing.convert": {
       "summary": "Moving between indexing systems: one place in each, at resolutions chosen to match a cell size.",
+      "intro": "One place written in every indexing system this site supports: H3, S2, geohash, Plus Code, web map tile, Maidenhead, and MGRS. Each is shown at the resolution whose cell is closest to a size you name, with the size the cell really has there. Developers and GIS analysts use it to choose a system or to match resolutions between two datasets. Start with the cross-index tool and a target size such as 150 m. Pitfall: the matches are approximate, because each system steps in its own ratio, so no two cells cover exactly the same ground.",
       "tasks": [
         {
           "want": "see one place in every indexing system at a matched cell size",
@@ -1039,6 +1043,7 @@
     },
     "indexing.geohash": {
       "summary": "Geohash encoding, decoding, and neighbors.",
+      "intro": "Geohashes name a rectangle on the map with a short base-32 string, and each added character makes the box smaller. These tools encode and decode geohashes, find a cell's eight neighbors, and list the cells that cover a box or polygon. Developers use them for string keys, prefix searches, and simple spatial bucketing. Start with the encoder, which shows the cell's size and bounds at any length. Pitfall: points just across a cell edge can share no prefix at all, so always search a cell together with its neighbors.",
       "tasks": [
         {
           "want": "encode or decode a geohash",
@@ -1063,6 +1068,7 @@
     },
     "indexing.h3": {
       "summary": "Uber's H3 hexagonal grid.",
+      "intro": "H3 is Uber's hexagonal grid: 16 resolutions, each cell about one seventh the area of its parent, with 12 pentagons at every resolution. These tools index points, inspect cells, walk the hierarchy, search rings and paths, fill polygons, and outline sets of cells. Analysts and developers use H3 to aggregate points, join datasets, and search neighborhoods. Start with the resolution chooser to pick a cell size, then the point-to-cell tool. Pitfall: near a pentagon a cell has five neighbors, not six, so code that expects fixed ring sizes can break.",
       "tasks": [
         {
           "want": "find the H3 cell for a point, or inspect a cell",
@@ -1118,6 +1124,7 @@
     },
     "indexing.plus-code": {
       "summary": "Open Location Codes (Plus Codes).",
+      "intro": "Plus Codes, also called Open Location Codes, are short codes for places that have no street address, like 87G2C2W9+ for a spot in downtown Pittsburgh. These tools encode a point, decode a code to the area it names, and shorten a code relative to a nearby town. Field teams and developers use them where addresses are missing or unreliable. Start with the encoder. Pitfall: a shortened code only makes sense next to its reference place; without that place, it cannot be turned back into one location.",
       "tasks": [
         {
           "want": "encode or decode a Plus Code",
@@ -1136,6 +1143,7 @@
     },
     "indexing.s2": {
       "summary": "S2 cells: a point to a cell id or token at any level, what a cell covers, and the cells across its edges.",
+      "intro": "S2 projects a cube onto the sphere and splits each face into four children per level, from level 0 down to level 30, where cells are about 1 cm across. These tools turn a point into a cell id or token, describe what a cell covers, find its edge neighbors across cube faces, and cover a box or circle with cells. Developers use S2 for 64-bit spatial keys and region coverings. Start with the point-to-cell tool. Pitfall: a token and a 64-bit id are two spellings of the same cell, so compare like with like.",
       "tasks": [
         {
           "want": "turn a point into an S2 cell, or read a token",
@@ -1160,6 +1168,7 @@
     },
     "indexing.tile": {
       "summary": "Web map tiles and ground resolution.",
+      "intro": "Web map tiles divide the Web Mercator map into squares named by zoom, x, and y, or by a Bing quadkey. These tools find the tile for a point, give a tile's bounds, list its parent and children, cover a box with tiles, and give meters per pixel and map scale at any zoom. Map developers use them to debug tile URLs and size offline caches. Start with the tile-for-a-point tool, which shows XYZ, TMS, and quadkey at once. Pitfall: TMS counts rows up from the south and XYZ down from the north, so a mixed-up y lands in the wrong hemisphere.",
       "tasks": [
         {
           "want": "find the tile for a point, or a tile's bounds",
@@ -1771,6 +1780,75 @@
           ]
         }
       ]
+    },
+    "units": {
+      "intro": "Unit converters for the quantities that come up in flying, drone work, surveying, and mapping: length, area, speed, pressure, temperature, fuel, battery charge, and more. Most use exact unit definitions; fuel weight uses a density you can see and change. Pilots, drone operators, surveyors, and developers use them alongside the other tools. If you have a value written with its unit, like 145 kts, start with the quantity normalizer. Pitfall: many units share a name, such as the US survey foot and the international foot, or US and imperial gallons, so check which one your source means."
+    },
+    "units.acceleration": {
+      "intro": "Converts acceleration between meters per second squared, feet per second squared, and standard gravity (g). Engineers and drone builders use it for accelerometer ranges, load factors, and vibration limits. Start with the acceleration converter. Pitfall: g here is standard gravity, a fixed defined value, not the gravity at your site, which varies slightly with latitude and height. A sensor that reports in g has already been scaled by that standard value."
+    },
+    "units.angle": {
+      "intro": "Converts angles between degrees, radians, gons, arcminutes, arcseconds, milliarcseconds, milliradians, turns, and three kinds of military mil. Surveyors, GIS developers, and anyone reading a compass or a code library use it. Start with the angle converter, or the degrees-to-radians and radians-to-degrees shortcuts for code. Pitfall: \"mil\" means different things. NATO, Warsaw Pact, and Swedish mils divide a circle into different numbers of parts, and none of them is exactly a milliradian, so check which one your instrument uses."
+    },
+    "units.angular-rate": {
+      "intro": "Converts turn and rotation rates: degrees per second or per minute, radians per second, revolutions per minute, and slow rates such as arcseconds or milliarcseconds per year. Drone builders read gyro and motor specs with it, and geodesists use it for plate and frame rotation rates. Start with the angular rate converter. Pitfall: many gyros and code libraries report radians per second while datasheets quote degrees per second. One radian per second is 57.29578 degrees per second, so a mix-up is hard to miss but easy to make."
+    },
+    "units.area": {
+      "intro": "Converts areas between square meters, square kilometers, hectares, acres, square feet, square miles, and square nautical miles. Surveyors, farmers, and drone mappers use it for parcels, fields, and survey blocks. Start with the area converter, or the acres and hectares shortcuts. Pitfall: an area factor is the square of a length factor, so applying a length conversion to an area gives the wrong answer. A hectare is a square 100 m on a side."
+    },
+    "units.charge": {
+      "intro": "Converts battery charge between milliamp-hours, amp-hours, and coulombs, and to watt-hours at a voltage you state. Drone pilots and builders use it to compare packs and to check limits written in watt-hours. Start with the battery charge converter. Pitfall: charge is not energy. Two packs with the same mAh can hold very different energy at different voltages, so compare packs in watt-hours at their nominal voltage."
+    },
+    "units.data-rate": {
+      "intro": "Converts data rates between bits, kilobits, megabits, and gigabits per second. Drone operators use it for video downlinks and telemetry links, and developers for network and storage budgets. Start with the data rate converter. Pitfall: link rates are in bits, but file sizes are usually in bytes, and a byte is 8 bits. Divide a bit rate by 8 before comparing it with a file size, and allow for protocol overhead on top."
+    },
+    "units.density": {
+      "intro": "Converts densities between kilograms per cubic meter, grams per cubic centimeter, pounds per US gallon, and pounds per cubic foot. Pilots use it for fuel weight, and surveyors and engineers for soil and material weights. Start with the density converter. Pitfall: pounds per gallon depends on which gallon, and this converter uses the US gallon. Fuel density also changes with temperature, so use a measured value for weight and balance."
+    },
+    "units.energy": {
+      "intro": "Converts energy between joules, kilojoules, megajoules, watt-hours, kilowatt-hours, and foot-pounds. Drone operators use it for battery energy and impact energy, and engineers for work and heat. Start with the energy converter. Pitfall: watts and watt-hours are different things. Watts are a rate, like speed; watt-hours are an amount, like distance. A battery holds watt-hours, a motor draws watts, and flight time is the first divided by the second."
+    },
+    "units.frequency": {
+      "intro": "Converts frequency between hertz, kilohertz, megahertz, and gigahertz, and converts drift rates in parts per million or per billion per year. Drone operators use it for radio bands, and surveyors and timing engineers for oscillator drift. Start with the frequency converter. Pitfall: a drift in ppm is relative, so the same ppm means a bigger shift at a higher frequency. Convert it to hertz at your own frequency before you compare two parts."
+    },
+    "units.fuel": {
+      "intro": "Converts aviation fuel between volume and weight, using a density you enter or a nominal density for avgas 100LL or jet A. Pilots use it for fuel loads, weight and balance, and ordering. Start with the fuel converter. Pitfall: nominal densities are planning values. Real fuel density changes with temperature and batch, so 50 US gallons of 100LL is 300 lb only at the nominal 6 lb per gallon. Use a measured density for weight and balance."
+    },
+    "units.length": {
+      "intro": "Converts length and distance between meters, kilometers, feet, US survey feet, inches, yards, statute miles, and nautical miles, with shortcuts for the common pairs. Pilots, surveyors, and developers use it every day. Start with the length converter. Pitfall: the US survey foot and the international foot are not the same. The gap is only 2 ft in 1,000,000 ft, but state plane coordinates run into the millions of feet, so the wrong foot moves a point by feet on the ground."
+    },
+    "units.mass": {
+      "intro": "Converts mass between kilograms, grams, pounds, ounces, and metric tonnes. Pilots use it for weight and balance, and drone operators for takeoff mass and payload limits. Start with the mass converter, or the kilograms and pounds shortcuts. Pitfall: a metric tonne, a US short ton, and a UK long ton are three different masses. This converter handles metric tonnes; convert short or long tons through pounds."
+    },
+    "units.power": {
+      "intro": "Converts power between watts, kilowatts, and mechanical horsepower (550 foot-pounds-force per second). Pilots compare engine ratings with it, and drone builders use it for motor and battery loads. Start with the power converter. Pitfall: horsepower comes in more than one kind. Metric horsepower is slightly smaller than mechanical horsepower, so check which one an engine or motor rating uses before you convert it."
+    },
+    "units.pressure": {
+      "intro": "Converts pressure between inches of mercury, hectopascals, millibars, pascals, kilopascals, bars, psi, millimeters of mercury, and atmospheres. Pilots use it for altimeter settings, and engineers for tire, hydraulic, and weather pressures. Start with the pressure converter, or the inHg and hPa shortcuts. Pitfall: an altimeter setting is not the air pressure at the airport. It is reduced to sea level, so do not use it as station pressure in a density calculation."
+    },
+    "units.quantity": {
+      "intro": "Reads a value written with its unit, like 145 kts or 10 gal, and returns it in canonical units: SI, with angles in degrees. Developers use it to clean up mixed-unit data before running other tools, and anyone can use it to check what a unit label means. Start with the quantity normalizer. Pitfall: some unit names are ambiguous. The tool reads gal as US gallons, not imperial gallons, and warns you when it makes a choice like that."
+    },
+    "units.slope": {
+      "intro": "Converts a slope between rise over run, percent grade, per mille, and degrees. Surveyors, road and site designers, and drone mappers use it for grades, ramps, and terrain. Start with the slope converter. Pitfall: percent and degrees do not scale together. A 100% grade is a 45° slope, not a vertical wall, and the gap between the two scales widens as slopes get steeper."
+    },
+    "units.speed": {
+      "intro": "Converts speed between knots, statute miles per hour, kilometers per hour, meters per second, and feet per second, with shortcuts for the common pairs. Pilots and drone operators use it for airspeed, wind, and groundspeed limits. Start with the speed converter. Pitfall: a knot is one nautical mile per hour, not one statute mile per hour. Weather reports give wind in knots, while many drone apps show mph or m/s, so convert before you compare."
+    },
+    "units.temperature": {
+      "intro": "Converts temperature readings between degrees Celsius, degrees Fahrenheit, and kelvins. Pilots use it for outside air temperature and dew point, and everyone else for weather and equipment limits. Start with the temperature converter, or the Celsius and Fahrenheit shortcuts. Pitfall: this converter is for readings. For a change or a deviation, like ISA +15 °C, use the temperature difference converter, or you will add an offset that does not belong."
+    },
+    "units.temperature-difference": {
+      "intro": "Converts a change in temperature, not a temperature reading, between degrees Celsius, kelvins, and degrees Fahrenheit. Pilots use it for deviation from the ISA standard temperature and for lapse rates. Start with the temperature difference converter. Pitfall: using the ordinary temperature formula on a difference adds a 32° offset that does not belong. A change of 10 °C is a change of 18 °F, while a reading of 10 °C is 50 °F."
+    },
+    "units.time": {
+      "intro": "Converts durations between milliseconds, seconds, minutes, hours, and days. Pilots use it for logbook time, and drone operators and developers for endurance and timing. Start with the time converter. Pitfall: decimal hours are not hours and minutes. 1.5 h is 90 minutes, which is 1 hour 30 minutes, not 1 hour 50 minutes, so convert before you write a decimal time on a clock."
+    },
+    "units.vertical-speed": {
+      "intro": "Converts climb and descent rates between feet per minute, meters per second, meters per minute, and feet per second. Pilots use it for climb and descent rates, and drone operators for ascent and descent limits. Start with the vertical speed converter. Pitfall: aircraft instruments show feet per minute, while drone specs often use meters per second, and the same rate looks very different in the two units, so convert before you compare."
+    },
+    "units.volume": {
+      "intro": "Converts volume between cubic meters, liters, US gallons, imperial gallons, cubic feet, and cubic yards. Pilots use it for fuel, and surveyors and contractors for earthwork and stockpiles. Start with the volume converter, or the gallons and liters shortcuts. Pitfall: the US gallon and the imperial gallon are different sizes, so check which one your source uses. The shortcuts use US gallons, where one gallon is 3.7854118 liters."
     }
   }
 }

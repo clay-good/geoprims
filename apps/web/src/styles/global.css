@@ -19,9 +19,29 @@
   font-weight: 100 900;
   font-display: swap;
 }
+/* Metric-matched stand-ins, so text barely moves when Geist swaps in (CLS).
+   Arial and Courier New, or their metric twins Liberation Sans and Mono on
+   Linux, scaled to Geist's width, ascent, and descent, measured in Chromium
+   over a mixed sample: Geist runs 3.06% wider than Arial. */
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Arial'), local('Liberation Sans'), local('Arimo'), local('Helvetica');
+  size-adjust: 103.06%;
+  ascent-override: 98.01%;
+  descent-override: 28.14%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Geist Mono Fallback';
+  src: local('Courier New'), local('Liberation Mono'), local('Cousine');
+  size-adjust: 99.98%;
+  ascent-override: 101.02%;
+  descent-override: 29%;
+  line-gap-override: 0%;
+}
 :root {
-  --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --sans: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --sans: 'Geist', 'Geist Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --target: 48px;
   --weight: 400;
   --value-size: clamp(2.4rem, 1.6rem + 3.2vw, 3.4rem);

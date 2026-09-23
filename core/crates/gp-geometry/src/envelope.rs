@@ -75,6 +75,7 @@ const fn deg_out(name: &'static str, title: &'static str, help: &'static str) ->
 
 pub static BBOX: ToolDef = ToolDef {
     id: "geometry.shape.bbox",
+    stability: gp_base::tool::Stability::Stable,
     title: "Bounding box, antimeridian-aware",
     summary: "The smallest latitude and longitude box around points, a line, or a polygon, written west-south-east-north, crossing the antimeridian when that is shorter and reaching a pole a polygon circles.",
     aliases: &[
@@ -148,15 +149,17 @@ pub static BBOX: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["CROSSES_ANTIMERIDIAN", "POLE_ENCLOSED", "EXPERIMENTAL_TOOL"],
+    warnings: &["CROSSES_ANTIMERIDIAN", "POLE_ENCLOSED"],
     model: "Longitudes: every point, and for a line or polygon each geodesic edge's shorter arc of longitude, marked on the circle; the box is the complement of the largest gap (RFC 7946 §5.2 writes a crossing box with west > east). Latitudes: the points, plus each edge's vertex where its azimuth passes 90° or 270°, found by bisection on the geodesic direct problem (Karney 2013). A polygon whose outline winds around a pole spans every longitude and reaches that pole",
     accuracy: "Edge extremes to 1e-9° or better; the box is the smallest in longitude span",
+    when_to_use: "Use this to get the extent of something — the area a set of points covers, the window a map should open at, the bounds to index a shape by, the box to hand to a tile or data service. Two things make it more than taking the minimum and maximum of the coordinates, and both matter: a line or polygon is bounded by its geodesic edges rather than its corners, and those bow poleward, sometimes by degrees; and a shape either side of the antimeridian has to produce the short box across it rather than one wrapping the whole world.",
+    limitations: "The box is in latitude and longitude, so it is a region on the graticule and not a rectangle on the ground: it is widest in kilometres at its equatorward edge and its corners are not equidistant from anything. Treating a set of points as points rather than as a line or polygon is a different question and gives a different answer — the edges are only bounded when you say there are edges. Where a shape spreads so widely that no gap in longitude is clearly the largest, two correct implementations of the rule can return different boxes of the same width, so the tie is not something to depend on. A polygon whose outline winds around a pole spans every longitude and reaches that pole, which is right but is a very large box.",
     references: &[KARNEY, RFC7946],
     examples: &[Example {
         id: "primary",
         title: "Two points either side of the antimeridian",
         input: r#"{"points":[{"lat":-17.0,"lon":170.0},{"lat":-15.0,"lon":-170.0}]}"#,
-        source: "add-navigation-and-geometry antimeridian bbox scenario (west 170, east -170, a 20° span)",
+        source: "RFC 7946 §5.2 writes a box crossing the antimeridian with west > east, so 170 to -170 is the 20° box and not the 340° one. Checked over ten shapes against Karney's geographiclib bisected for where each edge's azimuth passes due east or west, which agrees with the tool exactly in every coordinate",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -176,6 +179,10 @@ pub static BBOX: ToolDef = ToolDef {
         Related {
             id: "geometry.area.polygon",
             reason: "next",
+        },
+        Related {
+            id: "geometry.shape.enclosing",
+            reason: "alternative",
         },
     ],
     sentence: "The box runs from {west} to {east} in longitude, a {lon_span} span, and from {south} to {north} in latitude.",

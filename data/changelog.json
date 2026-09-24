@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-09-24",
+      "kind": "changed",
+      "tools": [
+        "geometry.shape.enclosing"
+      ],
+      "vectors": [],
+      "summary": "The hull, bounding rectangle, and enclosing circle tool (version 1.1.0) can now draw the hull with edges straight in longitude and latitude, as most mapping software does, beside the great-circle hull it gives by default. The circle and the rectangle are unchanged."
+    },
+    {
+      "date": "2026-09-24",
       "kind": "fixed",
       "tools": [
         "geometry.validity.make-valid"

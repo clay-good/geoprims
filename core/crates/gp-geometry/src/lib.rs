@@ -447,6 +447,24 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
+/// A ring with straight edges in longitude and latitude, cut into pieces of
+/// at most 0.01° so its geodesic area is the area those edges enclose (the
+/// pieces bow from the straight line by well under a millimeter).
+pub(crate) fn densify_straight(ring: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let mut out = Vec::new();
+    for i in 0..ring.len() {
+        let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
+        let n = (((b.0 - a.0).abs().max((b.1 - a.1).abs())) / 0.01)
+            .ceil()
+            .max(1.0) as usize;
+        for k in 0..n {
+            let t = k as f64 / n as f64;
+            out.push((a.0 + t * (b.0 - a.0), a.1 + t * (b.1 - a.1)));
+        }
+    }
+    out
+}
+
 pub static TOOLS: &[&ToolDef] = &[
     &POLYGON_AREA,
     &buffer::BUFFER,

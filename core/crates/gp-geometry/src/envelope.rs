@@ -476,6 +476,7 @@ const OUTLINE_ROW: &[Field] = &[
 pub static ENCLOSING: ToolDef = ToolDef {
     id: "geometry.shape.enclosing",
     stability: gp_base::tool::Stability::Stable,
+    version: "1.1.0",
     title: "Hull, bounding rectangle, and enclosing circle",
     summary: "Around a set of points: the convex hull, the smallest rotated rectangle, and the smallest circle that holds them all, with its center and geodesic radius.",
     aliases: &[
@@ -495,18 +496,26 @@ pub static ENCLOSING: ToolDef = ToolDef {
         "smallest circle",
         "points",
     ],
-    inputs: &[Field::new(
-        "points",
-        "Points",
-        "One per line, like 40.4406, -80.002",
-        Kind::List {
-            items: VERTEX,
-            min: 1,
-            max: 5_000,
-        },
-    )
-    .required()
-    .core()],
+    inputs: &[
+        Field::new(
+            "points",
+            "Points",
+            "One per line, like 40.4406, -80.002",
+            Kind::List {
+                items: VERTEX,
+                min: 1,
+                max: 5_000,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "edges",
+            "Hull edges",
+            "geodesic (the default, a great-circle hull), or planar: straight in longitude and latitude, as most mapping software draws them, with longitudes taken as written",
+            Kind::Choice(&["geodesic", "planar"]),
+        ),
+    ],
     outputs: &[
         deg_out(
             "circle_lat",
@@ -588,10 +597,10 @@ pub static ENCLOSING: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &[],
-    model: "Circle: Welzl's smallest circle on an azimuthal equidistant plane, re-centered on its result until the circle's center is the plane's own; that plane keeps distances and directions from its center, so the fixed point is the smallest geodesic circle (Karney 2013). Hull: great-circle hull of the points on the sphere, by monotone chain in a gnomonic projection from their mean. Rectangle: the smallest-area rectangle on an edge of the hull, on the equidistant plane at the points' center",
+    model: "Circle: Welzl's smallest circle on an azimuthal equidistant plane, re-centered on its result until the circle's center is the plane's own; that plane keeps distances and directions from its center, so the fixed point is the smallest geodesic circle (Karney 2013). Hull: great-circle hull of the points on the sphere, by monotone chain in a gnomonic projection from their mean; with planar edges, by monotone chain on longitude and latitude as written, its area following those straight edges. Rectangle: the smallest-area rectangle on an edge of the hull, on the equidistant plane at the points' center",
     accuracy: "The circle's radius is an exact geodesic distance, the center converged to 1 mm; the rectangle is planar on the equidistant map, true for spans of tens of kilometers to about 1 part in 10⁶",
     when_to_use: "Use this to put a shape around a set of positions: the coverage circle for a set of sightings, the smallest area holding a survey's control points, the footprint of a swarm or a fleet, the block a site occupies. Three answers come back because they suit different jobs — a circle is what a range or a broadcast covers, the convex hull is the tightest area that holds everything, and the smallest rotated rectangle is how a field, a runway or a site plan is usually described.",
-    limitations: "All three are computed on one plane placed at the points, so they are meant for spreads of tens of kilometres rather than continental ones; the circle's radius is then an exact geodesic distance while the rectangle stays planar. The convex hull holds every point and says nothing about how they are distributed inside it: one outlier stretches all three answers, and none is a summary of where the points mostly are. Collinear or nearly collinear points give a hull and a rectangle that degenerate to a line, with zero area and zero width, which is correct. Where the hull is a triangle the smallest rectangle is not unique — all three edge-flush rectangles have exactly the same area — so the sides returned are one valid choice among equals.",
+    limitations: "All three are computed on one plane placed at the points, so they are meant for spreads of tens of kilometres rather than continental ones; the circle's radius is then an exact geodesic distance while the rectangle stays planar. The convex hull holds every point and says nothing about how they are distributed inside it: one outlier stretches all three answers, and none is a summary of where the points mostly are. Collinear or nearly collinear points give a hull and a rectangle that degenerate to a line, with zero area and zero width, which is correct. With planar edges only the hull changes, to the one GIS software draws on longitude and latitude; the circle and rectangle are measured on the ground either way. Where the hull is a triangle the smallest rectangle is not unique — all three edge-flush rectangles have exactly the same area — so the sides returned are one valid choice among equals.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
@@ -632,8 +641,11 @@ pub static ENCLOSING: ToolDef = ToolDef {
 
 fn run_enclosing(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let planar = ctx.choice("edges")? == Some("planar");
     let rows = ctx.rows("points")?;
     let mut pts: Vec<(f64, f64)> = Vec::with_capacity(rows.len());
+    // Longitudes as written, for a planar hull.
+    let mut raw: Vec<P> = Vec::with_capacity(rows.len());
     for (i, r) in rows.iter().enumerate() {
         let lat = ctx
             .row_quantity("points", i, r, "lat")?
@@ -651,6 +663,7 @@ fn run_enclosing(ctx: &mut Ctx) -> Result<Json, ToolError> {
             .at(&format!("/points/{i}/lat")));
         }
         pts.push((lat, norm180(lon)));
+        raw.push((lon, lat));
     }
     let g = Geodesic::wgs84();
     let (lat0, lon0) = center(&pts);
@@ -711,12 +724,19 @@ fn run_enclosing(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )
         })
         .collect();
-    let h = hull(&gno);
-    let hull_ll: Vec<(f64, f64)> = h.iter().map(|&i| pts[i]).collect();
-    let hull_area = if hull_ll.len() >= 3 {
-        super::ring_area(&g, &hull_ll).0.abs()
+    let hull_ll: Vec<(f64, f64)> = if planar {
+        hull(&raw).iter().map(|&i| (raw[i].1, raw[i].0)).collect()
     } else {
+        hull(&gno).iter().map(|&i| pts[i]).collect()
+    };
+    let hull_area = if hull_ll.len() < 3 {
         0.0
+    } else if planar {
+        super::ring_area(&g, &super::densify_straight(&hull_ll))
+            .0
+            .abs()
+    } else {
+        super::ring_area(&g, &hull_ll).0.abs()
     };
     // The smallest rectangle, on the equidistant plane at the points' center.
     let map = Aeqd { g: &g, lat0, lon0 };

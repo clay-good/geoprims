@@ -51,8 +51,10 @@ The triangle is the interesting case and its rectangle is deliberately not pinne
 
 - `tools/vectors/gen_enclosing_geos.py`: twelve vectors from GEOS, appended to the frozen file, skipping the rectangle where the hull is a triangle
 - `core/crates/gp-geometry/tests/envelope.rs` `enclosing_invariants`: containment, the degenerate cases, and the triangle theorem
-- `core/vectors/geometry.shape.enclosing.jsonl`: 21 vectors, the first nine from the original scenarios and the rest from GEOS
+- `core/vectors/geometry.shape.enclosing.jsonl`: 24 vectors, the first nine from the original scenarios and the rest from GEOS; v022 to v024 pin planar hull edges
+- `tools/vectors/gen_hull_planar.py`: planar hull edges (1.1.0), GEOS's convex hull on longitude and latitude as written, including a point between a straight edge and its geodesic and a scatter written past 180°, with areas from geographiclib on the hull cut into 0.01° pieces
 
 ## Invariants
 
+- `core/crates/gp-geometry/tests/shape.rs` `planar_hull_differs_from_the_geodesic_one_where_it_should`: planar edges change only the hull, keeping as a corner a point that lies inside the great-circle hull, while the circle and the rectangle stay the same
 - `core/crates/gp-geometry/tests/envelope.rs` `enclosing_invariants`: every input point lies within the enclosing circle, measured by `navigation.geodesic.inverse` rather than by anything this tool computed, and at least one point lies on it — a circle with room to spare is not the smallest; the hull has between two and as many corners as there are points, and every hull corner is one of the input points rather than a new position; the hull's area is the one `geometry.area.polygon` gives for those corners; the rectangle is at least as large as the hull and no larger than the circle's bounding square; where the hull is a triangle the rectangle's area is exactly twice the hull's, whichever of the three minimal orientations was returned; and two points give a hull of two corners with no area and a rectangle whose short side is about 15 picometres, held at a micrometre rather than at zero, since subtracting two nearly equal projected coordinates does not leave exactly nothing

@@ -219,26 +219,8 @@ fn geodesic_area(g: &Geodesic, rings: &[Vec<(f64, f64)>]) -> f64 {
         .sum()
 }
 
-/// A ring with straight edges in longitude and latitude, cut into pieces of
-/// at most 0.01° so its geodesic area is the area those edges enclose (the
-/// pieces bow from the straight line by well under a millimeter).
-fn densify_planar(ring: &[(f64, f64)]) -> Vec<(f64, f64)> {
-    let mut out = Vec::new();
-    for i in 0..ring.len() {
-        let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-        let n = (((b.0 - a.0).abs().max((b.1 - a.1).abs())) / 0.01)
-            .ceil()
-            .max(1.0) as usize;
-        for k in 0..n {
-            let t = k as f64 / n as f64;
-            out.push((a.0 + t * (b.0 - a.0), a.1 + t * (b.1 - a.1)));
-        }
-    }
-    out
-}
-
 fn planar_area(g: &Geodesic, rings: &[Vec<(f64, f64)>]) -> f64 {
-    let dense: Vec<Vec<(f64, f64)>> = rings.iter().map(|r| densify_planar(r)).collect();
+    let dense: Vec<Vec<(f64, f64)>> = rings.iter().map(|r| super::densify_straight(r)).collect();
     geodesic_area(g, &dense)
 }
 
@@ -326,7 +308,9 @@ fn run_boolean(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 None => out[idx].iter().map(|&(x, y)| (y, x)).collect(),
             };
             let r_area = if planar {
-                super::ring_area(&g, &densify_planar(&ring)).0.abs()
+                super::ring_area(&g, &super::densify_straight(&ring))
+                    .0
+                    .abs()
             } else {
                 super::ring_area(&g, &ring).0.abs()
             };

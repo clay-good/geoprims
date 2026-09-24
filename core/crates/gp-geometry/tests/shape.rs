@@ -164,3 +164,25 @@ fn centroid_invariants() {
         );
     }
 }
+
+/// Planar hull edges change only the hull: a point between a straight top
+/// edge along 60° N and the geodesic between its ends, which bows north, is a
+/// corner of the planar hull and inside the great-circle one (the geodesic
+/// reaches 60.38° at 10° E, where tan φ = tan 60° / cos 10°).
+#[test]
+fn planar_hull_differs_from_the_geodesic_one_where_it_should() {
+    let pts = serde_json::json!([{"lat":60,"lon":0},{"lat":60,"lon":20},{"lat":55,"lon":10},{"lat":60.2,"lon":10}]);
+    let run = |edges: &str| -> serde_json::Value {
+        serde_json::from_str(&gp_geometry::REGISTRY.invoke(
+            "geometry.shape.enclosing",
+            &serde_json::json!({"points": pts, "edges": edges}).to_string(),
+        ))
+        .unwrap()
+    };
+    let (g, p) = (run("geodesic"), run("planar"));
+    assert_eq!(g["result"]["hull_count"], 3);
+    assert_eq!(p["result"]["hull_count"], 4);
+    for k in ["circle_radius", "rect_length", "rect_width"] {
+        assert_eq!(g["result"][k], p["result"][k], "{k}");
+    }
+}

@@ -104,7 +104,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "735b5cf6af2efbcb",
+    "hash": "6fd6b1bb75586bd3",
     "lastmod": "2026-09-24"
   },
   "/disclaimer/": {
@@ -552,8 +552,8 @@
     "lastmod": "2026-09-23"
   },
   "/geometry/shape/enclosing/": {
-    "hash": "47efd67cd7485a65",
-    "lastmod": "2026-09-23"
+    "hash": "9dc07d8b0451580c",
+    "lastmod": "2026-09-24"
   },
   "/geometry/simplify/": {
     "hash": "c5bb6837edc600c7",
@@ -572,7 +572,7 @@
     "lastmod": "2026-09-23"
   },
   "/geometry/validity/make-valid/": {
-    "hash": "8238f27a501b90dc",
+    "hash": "312b140a4e89536a",
     "lastmod": "2026-09-24"
   },
   "/indexing/": {
@@ -900,7 +900,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "70d3be6e95abccb8",
+    "hash": "79013e39e18caad5",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1056,7 +1056,7 @@
     "lastmod": "2026-09-23"
   },
   "/quality/": {
-    "hash": "ab4e0b32eb2d6156",
+    "hash": "bf9302953f15ed0d",
     "lastmod": "2026-09-24"
   },
   "/raster/": {
@@ -1436,7 +1436,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e08da456e5f33035",
+    "hash": "bd0e8fe63b8b4baa",
     "lastmod": "2026-09-24"
   }
 }

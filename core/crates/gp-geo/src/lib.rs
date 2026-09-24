@@ -18,3 +18,4 @@ pub mod spcs;
 mod spcs83_zones;
 pub mod tm;
 pub mod utmups;
+pub mod wind;

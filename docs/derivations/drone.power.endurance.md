@@ -55,6 +55,8 @@ The paper's steps 1 to 5 derive the power and effective capacity from its aerody
 - `tools/vectors/gen_drone.py`: v001 to v009, the spec scenario and the Peukert factor
 - `core/vectors/drone.power.endurance.jsonl`: all 29, run through the core on every build
 
+- `core/vectors/drone.power.endurance.jsonl` v030 to v038 (1.1.0): range at an airspeed in a wind, the groundspeed from the wind triangle recomputed in Python from its textbook form, including straight head- and tailwinds, a quartering wind, a crosswind, no wind, and the winds the drone cannot fly against
+
 ## Invariants
 
 - `core/crates/gp-drone/tests/power_ops.rs` `endurance_invariants`: time is linear in energy and inverse in power; usable share, derating, and reserve each scale it by their own factor; the times with and without reserve differ by exactly the reserve share; range is time × groundspeed; colder batteries never fly longer, the heuristic warns only below 20 °C and stops at 50%; and the battery tool's usable energy, fed in, gives that energy over the power

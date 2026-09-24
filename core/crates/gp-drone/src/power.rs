@@ -684,9 +684,10 @@ pub fn cold_derating(t_c: f64) -> f64 {
 
 pub static ENDURANCE: ToolDef = ToolDef {
     id: "drone.power.endurance",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Drone flight time",
-    summary: "Hover and cruise flight time from usable battery energy and power draw, with the landing reserve and cold-battery derating shown, and range at a groundspeed.",
+    summary: "Hover and cruise flight time from usable battery energy and power draw, with the landing reserve and cold-battery derating shown, and range at a groundspeed or at an airspeed in a wind.",
     aliases: &[
         "drone flight time calculator",
         "drone endurance calculator",
@@ -752,6 +753,28 @@ pub static ENDURANCE: ToolDef = ToolDef {
             QT::Speed,
             "m/s",
         ),
+        qty(
+            "airspeed",
+            "Cruise airspeed",
+            "Instead of a groundspeed, with the wind below, like 12 m/s",
+            QT::Speed,
+            "m/s",
+        ),
+        qty(
+            "course",
+            "Course",
+            "The direction flown over the ground, true, like 270 deg",
+            QT::Angle,
+            "deg",
+        ),
+        qty(
+            "wind_direction",
+            "Wind from",
+            "True, like 300 deg",
+            QT::Angle,
+            "deg",
+        ),
+        qty("wind_speed", "Wind speed", "Like 6 m/s", QT::Speed, "m/s"),
         num(
             "peukert",
             "Peukert exponent",
@@ -790,6 +813,15 @@ pub static ENDURANCE: ToolDef = ToolDef {
             "Using cruise power",
             QT::Time,
             "min",
+            1,
+        )
+        .optional(),
+        out(
+            "groundspeed_used",
+            "Groundspeed",
+            "From the wind triangle, when an airspeed and wind are given",
+            QT::Speed,
+            "m/s",
             1,
         )
         .optional(),
@@ -836,11 +868,12 @@ pub static ENDURANCE: ToolDef = ToolDef {
         .precision(Precision::Decimals(3))
         .optional(),
     ],
+    errors: &[ErrorCode::NoSolution],
     warnings: &["HEURISTIC_DERATING", "HEURISTIC_PEUKERT", "UNIT_ASSUMED"],
-    model: "Time = energy × usable share × (1 − derating) × (1 − reserve) / power; heuristic cold derating 0% at 20 °C or warmer, rising 1% per °C (20% at 0 °C), capped at 50%. Peukert, off by default: energy × (rated power / power)^(k − 1), where rated power = pack energy / rated discharge time",
+    model: "Time = energy × usable share × (1 − derating) × (1 − reserve) / power; heuristic cold derating 0% at 20 °C or warmer, rising 1% per °C (20% at 0 °C), capped at 50%. Peukert, off by default: energy × (rated power / power)^(k − 1), where rated power = pack energy / rated discharge time. Range = time × groundspeed; from an airspeed, the groundspeed along the course by the wind triangle (the same code as the aviation wind tools): heading correction asin(w sin(θ_w − course) / V), groundspeed V cos(correction) − w cos(θ_w − course)",
     accuracy: "Only as good as the power figure. Wind, climbs, and aging packs shorten real flights.",
     when_to_use: "Use this when you know, or have estimated, the power a drone draws and want to know how long a pack will keep it in the air: it takes the usable share of the battery, removes a cold-weather derating and the reserve you land with, and divides by the power, for hover and cruise, and turns the cruise time into a range at your groundspeed.",
-    limitations: "It is energy divided by power at a steady draw, so it is exactly as good as the power figure you give it. Climbs, wind, gusts, and payload changes raise the draw; a pack’s voltage sags as it empties and its capacity falls with age and at high current. The reserve here is a share of the usable energy, not of the whole pack, so 80% usable with a 20% reserve flies on 64%. The cold-battery derating is a rule of thumb, and range ignores wind: work the groundspeed out first.",
+    limitations: "It is energy divided by power at a steady draw, so it is exactly as good as the power figure you give it. Climbs, wind, gusts, and payload changes raise the draw; a pack’s voltage sags as it empties and its capacity falls with age and at high current. The reserve here is a share of the usable energy, not of the whole pack, so 80% usable with a 20% reserve flies on 64%. The cold-battery derating is a rule of thumb. Range with wind assumes the same wind and power the whole way, one way along one course; for an out-and-back trip use the return-to-home tool, since a headwind costs more on the way back than a tailwind gives on the way out.",
     references: &[LEISHMAN, BAUERSFELD],
     examples: &[
         Example {
@@ -888,6 +921,42 @@ pub static ENDURANCE: ToolDef = ToolDef {
     run: run_endurance,
     ..ToolDef::BLANK
 };
+
+/// Groundspeed along the course from an airspeed and a wind, by the wind
+/// triangle the aviation tools use.
+fn wind_groundspeed(ctx: &mut Ctx, v: f64) -> Result<f64, ToolError> {
+    let w = ctx.quantity("wind_speed")?.map_or(0.0, |x| x.base());
+    if v <= 0.0 || w < 0.0 {
+        return Err(ToolError::invalid(
+            "/airspeed",
+            "The airspeed must be positive and the wind speed not negative.",
+        ));
+    }
+    if w == 0.0 {
+        return Ok(v);
+    }
+    let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let (Some(course), Some(wd)) = (ctx.quantity("course")?, ctx.quantity("wind_direction")?)
+    else {
+        return Err(ToolError::invalid(
+            "/course",
+            "With a wind, give the course and the direction the wind blows from.",
+        ));
+    };
+    match gp_geo::wind::heading_groundspeed(course.to(deg), v, wd.to(deg), w) {
+        Some((_, gs)) if gs > 0.0 => Ok(gs),
+        Some(_) => Err(ToolError::new(
+            ErrorCode::NoSolution,
+            "The headwind along this course is at least the airspeed: the drone makes no progress.",
+        )
+        .at("/wind_speed")),
+        None => Err(ToolError::new(
+            ErrorCode::NoSolution,
+            "The crosswind is stronger than the airspeed: the drone cannot hold this course.",
+        )
+        .at("/wind_speed")),
+    }
+}
 
 fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let e = positive(ctx, "energy", "Battery energy")?;
@@ -1025,13 +1094,28 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ctx.out("cruise_time", q(flyable * peukert(cp) / cp, QT::Time, "s")),
         ));
     }
-    if let Some(gs) = ctx.quantity("groundspeed")? {
+    let gs = match (ctx.quantity("groundspeed")?, ctx.quantity("airspeed")?) {
+        (Some(_), Some(_)) => {
+            return Err(ToolError::invalid(
+                "/airspeed",
+                "Give a groundspeed, or an airspeed with the wind, not both.",
+            ));
+        }
+        (Some(g), None) => Some(g.base()),
+        (None, Some(v)) => {
+            let gs = wind_groundspeed(ctx, v.base())?;
+            o.push((
+                "groundspeed_used",
+                ctx.out("groundspeed_used", q(gs, QT::Speed, "m/s")),
+            ));
+            Some(gs)
+        }
+        (None, None) => None,
+    };
+    if let Some(gs) = gs {
         let pw = cruise.unwrap_or(p);
         let t = flyable * peukert(pw) / pw;
-        o.push((
-            "range",
-            ctx.out("range", q(t * gs.base(), QT::Distance, "m")),
-        ));
+        o.push(("range", ctx.out("range", q(t * gs, QT::Distance, "m"))));
     }
     o.push(("usable_energy", ctx.out("usable_energy", wh(avail))));
     o.push((

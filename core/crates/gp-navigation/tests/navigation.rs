@@ -65,6 +65,7 @@ fn catalog_lint() {
         "geodesy.frame.to-local",
         "time.sun.position",
         "drone.links.link-budget",
+        "aviation.wind.heading-groundspeed",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));

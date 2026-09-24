@@ -2,7 +2,7 @@
 //! runway designators, and references.
 
 use gp_base::error::ToolError;
-use libm::{atan2, cos, sin, sqrt};
+use libm::{cos, sin};
 
 /// A parsed wind: direction the wind blows FROM (None when variable), speed and
 /// gust in knots, and an optional variable range (from, to) clockwise.
@@ -156,26 +156,8 @@ pub fn worst_case(runway: f64, speed: f64, range: Option<(f64, f64)>) -> (f64, f
     (cross, tail)
 }
 
-/// The wind triangle: wind correction angle (deg, signed) and groundspeed for a
-/// course, TAS, and wind FROM `wd` at `ws`. None when the crosswind exceeds TAS.
-pub fn heading_groundspeed(course: f64, tas: f64, wd: f64, ws: f64) -> Option<(f64, f64)> {
-    let d = (wd - course).to_radians();
-    let s = ws / tas * sin(d);
-    if s.abs() > 1.0 {
-        return None;
-    }
-    let wca = libm::asin(s);
-    Some((wca.to_degrees(), tas * cos(wca) - ws * cos(d)))
-}
-
-/// Wind FROM direction (deg) and speed from air and ground vectors.
-pub fn find_wind(heading: f64, tas: f64, track: f64, gs: f64) -> (f64, f64) {
-    let (h, t) = (heading.to_radians(), track.to_radians());
-    let (we, wn) = (gs * sin(t) - tas * sin(h), gs * cos(t) - tas * cos(h));
-    let speed = sqrt(we * we + wn * wn);
-    let toward = atan2(we, wn).to_degrees();
-    (toward + 180.0, speed)
-}
+// The wind triangle lives in gp-geo so the drone tools reach the same code.
+pub use gp_geo::wind::{find_wind, heading_groundspeed};
 
 #[cfg(test)]
 mod tests {

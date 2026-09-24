@@ -273,6 +273,10 @@ pub static INVERSE: ToolDef = ToolDef {
             id: "navigation.geodesic.midpoint",
             reason: "next",
         },
+        Related {
+            id: "aviation.wind.heading-groundspeed",
+            reason: "next",
+        },
     ],
     sentence: "The shortest distance is {distance}, leaving on a course of {azimuth1} and arriving on {azimuth2}.",
     limits: &[("batchRows", 10_000)],

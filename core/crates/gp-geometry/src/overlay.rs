@@ -105,7 +105,7 @@ const fn km2(name: &'static str, title: &'static str, help: &'static str) -> Fie
 pub static BOOLEAN: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     id: "geometry.overlay.boolean",
-    version: "1.1.0",
+    version: "1.1.1",
     title: "Overlap, union, or difference of two polygons",
     summary: "Where two areas overlap, their combined outline, what one has that the other lacks, or both, as valid polygons with geodesic areas, like the overlap of two geofences.",
     aliases: &["polygon intersection", "polygon union", "polygon difference", "overlap of two areas", "clip polygon", "boolean operation"],

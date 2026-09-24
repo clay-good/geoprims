@@ -5,6 +5,16 @@
       "date": "2026-09-24",
       "kind": "fixed",
       "tools": [
+        "geometry.validity.make-valid",
+        "geometry.overlay.boolean"
+      ],
+      "vectors": [],
+      "summary": "Check and repair a polygon (version 1.1.0) now returns pieces that touch at a single point as separate parts, as a valid polygon needs, where it used to join them into one ring touching itself; and it no longer repairs some small rings to nothing: a corner lying on another part of its own ring sits a fraction of a micron off it once projected, and the side test could step across. Corners that nearly touch another part of the ring are now put on it first, and crossing points that fall at one place are made one point. The overlay (version 1.1.1) gets the same crossing-point fix, for three edges crossing at one place. Checked against GEOS on 600 self-crossing rings; results for rings that do not touch themselves are unchanged."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "fixed",
+      "tools": [
         "geometry.overlay.boolean"
       ],
       "vectors": [],

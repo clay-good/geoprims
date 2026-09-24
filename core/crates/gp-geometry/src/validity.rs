@@ -145,6 +145,7 @@ const OUT_ROW: &[Field] = &[
 pub static MAKE_VALID: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     id: "geometry.validity.make-valid",
+    version: "1.1.0",
     title: "Check and repair a polygon",
     summary: "Finds what is wrong with a polygon (crossed or touching edges, duplicate corners, spikes, holes outside the outline, clockwise rings), says where, and returns a repaired version: a bow-tie becomes two triangles.",
     aliases: &[

@@ -47,7 +47,8 @@ The two that differ are worth their own paragraph, because neither is a fault. A
 
 - `tools/vectors/gen_makevalid_geos.py`: fourteen vectors from GEOS, appended to the frozen file, pinning only the area on the two degenerate rings
 - `core/crates/gp-geometry/tests/validity.rs` `make_valid_invariants`: the repair's own validity, the area relationships, and the located problems
-- `core/vectors/geometry.validity.make-valid.jsonl`: 21 vectors, the first seven from the original scenarios and the rest from GEOS
+- `core/vectors/geometry.validity.make-valid.jsonl`: 25 vectors, the first seven from the original scenarios and the rest from GEOS; v023 to v025 are regressions for 1.1.0
+- `tools/vectors/gen_make_valid_grid.py` and `core/crates/gp-geometry/tests/make_valid_parity.rs` `make_valid_matches_geos_on_degenerate_rings`: 600 self-crossing, self-touching, and retracing rings on a small grid, each repaired by the even-odd rule from GEOS's own noding and polygonizing (GEOS's make_valid reads a retracing ring differently, so it is not the reference), 1,800 checks: exact agreement on the grid, the same answers with every corner moved by up to 0.2 µm, and the geodesic tool at a one-meter step returning the same parts and area. Version 1.0.0 failed 852 of them: pieces touching at a point came back as one ring touching itself, and a corner a hair off its own ring's edge after projection could be nudged across it, repairing some rings to nothing. 1.1.0 snaps corners onto nearby edges of any ring, its own included, makes crossing points that fall at one place a single point, and joins rings by the sharpest left turn where they meet
 
 ## Invariants
 

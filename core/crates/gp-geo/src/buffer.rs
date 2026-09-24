@@ -538,10 +538,16 @@ pub fn crossings(rings: &[Vec<P>]) -> Vec<Crossing> {
 /// outlines counterclockwise, holes clockwise. Crossing rings are split where
 /// they cross, so a bow-tie becomes two triangles.
 pub fn even_odd(rings: &[Vec<P>]) -> Vec<Vec<P>> {
-    let edges = ring_edges(rings);
     let (size, eps, cell) = ring_scale(rings);
-    let splits = split(&edges, cell, eps, false, &mut |_, _, _, _, _| {});
-    let nudge = 1e-7 * size;
+    // As in `boolean`: near-touches made exact, and the side test's nudge a
+    // tenth of the snapping distance.
+    let snap_tol = (1e-6 * size).min(1e-3);
+    let snapped = snap(rings, snap_tol, cell);
+    let rings = &snapped[..];
+    let edges = ring_edges(rings);
+    let mut splits = split(&edges, cell, eps, false, &mut |_, _, _, _, _| {});
+    unify(rings, &mut splits, snap_tol);
+    let nudge = snap_tol / 10.0;
     let mut kept = Vec::new();
     for (i, &(a, b, _)) in edges.iter().enumerate() {
         let mut pts = splits[i].clone();
@@ -569,7 +575,7 @@ pub fn even_odd(rings: &[Vec<P>]) -> Vec<Vec<P>> {
     // Two copies of one piece (rings sharing an edge) would pair up; keep one.
     kept.sort_by(|x, y| bits(x.0).cmp(&bits(y.0)).then(bits(x.1).cmp(&bits(y.1))));
     kept.dedup();
-    stitch(kept, eps, size, false)
+    stitch(kept, eps, size, true)
 }
 
 /// A set operation on two regions.
@@ -598,7 +604,8 @@ pub fn boolean(a: &[Vec<P>], b: &[Vec<P>], op: Op) -> Vec<Vec<P>> {
     let (a, b) = snapped.split_at(a.len());
     let both: Vec<Vec<P>> = snapped.clone();
     let edges = ring_edges(&both);
-    let splits = split(&edges, cell, eps, false, &mut |_, _, _, _, _| {});
+    let mut splits = split(&edges, cell, eps, false, &mut |_, _, _, _, _| {});
+    unify(&both, &mut splits, snap_tol);
     let nudge = snap_tol / 10.0;
     let inside = |p: P| {
         let (ia, ib) = (inside_rings(a, p), inside_rings(b, p));
@@ -636,14 +643,16 @@ pub fn boolean(a: &[Vec<P>], b: &[Vec<P>], op: Op) -> Vec<Vec<P>> {
     stitch(kept, eps, size, true)
 }
 
-/// Every corner within `tol` of another ring moved onto it: onto that ring's
-/// corner when one is that close, or else onto the nearest edge, which gains
-/// the moved corner as a corner of its own, so the two rings then share it
-/// exactly. Rings of the same polygon count as others (a hole touching its
-/// outline). So that two corners near each other do not each move to where the
-/// other was, a corner moves only onto rings earlier in the list; toward a
-/// later ring it stays put, and is added to that ring's edge when it is near
-/// the edge's middle. Passes repeat until nothing moves, at most four times.
+/// Every corner within `tol` of another edge moved onto it: onto that edge's
+/// corner when one is that close, or else onto the edge, which gains the moved
+/// corner as a corner of its own, so the two then share it exactly. Any edge
+/// counts except the two that meet at the corner itself: another polygon's,
+/// another ring of the same polygon (a hole touching its outline), or a far
+/// part of the same ring (a ring touching itself). So that two corners near
+/// each other do not each move to where the other was, corners and edges are
+/// numbered in order and a corner moves only onto an earlier edge; toward a
+/// later one it stays put, and is added to it when it is near its middle.
+/// Passes repeat until nothing moves, at most four times.
 fn snap(rings: &[Vec<P>], tol: f64, cell: f64) -> Vec<Vec<P>> {
     let mut rings = rings.to_vec();
     for _ in 0..4 {
@@ -659,15 +668,21 @@ fn snap(rings: &[Vec<P>], tol: f64, cell: f64) -> Vec<Vec<P>> {
         let mut inserts: Vec<Vec<(f64, P)>> = vec![Vec::new(); edges.len()];
         let mut moved = false;
         let mut next = rings.clone();
-        for (ri, ring) in next.iter_mut().enumerate() {
-            for v in ring.iter_mut() {
-                // Onto the nearest earlier ring first.
+        let mut g = 0;
+        for ring in next.iter_mut() {
+            let (first, n) = (g, ring.len());
+            for (vi, v) in ring.iter_mut().enumerate() {
+                // Edge k runs from corner k to k + 1: the two that meet here.
+                let own = [first + vi, first + (vi + n - 1) % n];
+                let me = first + vi;
+                g += 1;
+                // Onto the nearest earlier edge first.
                 let mut best: Option<(f64, usize, f64, P)> = None;
                 for &k in grid.at(*v) {
-                    let (p, q, owner) = edges[k];
+                    let (p, q, _) = edges[k];
                     let d = sub(q, p);
                     let l2 = dot(d, d);
-                    if owner >= ri || l2 == 0.0 {
+                    if k >= me || own.contains(&k) || l2 == 0.0 {
                         continue;
                     }
                     let t = (dot(sub(*v, p), d) / l2).clamp(0.0, 1.0);
@@ -692,12 +707,13 @@ fn snap(rings: &[Vec<P>], tol: f64, cell: f64) -> Vec<Vec<P>> {
                         moved = true;
                     }
                 }
-                // Then into the middle of any later ring's edge it is near.
+                // Then into the middle of any later edge it is near.
                 for &k in grid.at(*v) {
-                    let (p, q, owner) = edges[k];
+                    let (p, q, _) = edges[k];
                     let d = sub(q, p);
                     let l2 = dot(d, d);
-                    if owner <= ri
+                    if k < me
+                        || own.contains(&k)
                         || l2 == 0.0
                         || norm(sub(*v, p)) <= tol
                         || norm(sub(*v, q)) <= tol
@@ -739,6 +755,30 @@ fn snap(rings: &[Vec<P>], tol: f64, cell: f64) -> Vec<Vec<P>> {
         }
     }
     rings
+}
+
+/// Crossing points within `tol` of a corner or of each other made one point,
+/// so that where three edges cross at one place (computed pair by pair, the
+/// crossings differ in the last digits) the pieces still share a corner.
+fn unify(rings: &[Vec<P>], splits: &mut [Vec<(f64, P)>], tol: f64) {
+    let key = |p: P| ((p.0 / tol).floor() as i64, (p.1 / tol).floor() as i64);
+    let mut reps: HashMap<(i64, i64), Vec<P>> = HashMap::new();
+    for &c in rings.iter().flatten() {
+        reps.entry(key(c)).or_default().push(c);
+    }
+    for (_, p) in splits.iter_mut().flatten() {
+        let (i, j) = key(*p);
+        let near = (i - 1..=i + 1)
+            .flat_map(|x| (j - 1..=j + 1).map(move |y| (x, y)))
+            .filter_map(|k| reps.get(&k))
+            .flatten()
+            .copied()
+            .find(|r| norm(sub(*r, *p)) <= tol);
+        match near {
+            Some(r) => *p = r,
+            None => reps.entry((i, j)).or_default().push(*p),
+        }
+    }
 }
 
 /// A ring that passes through one corner twice split there into two rings,

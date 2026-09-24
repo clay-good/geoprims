@@ -2202,6 +2202,26 @@
       "editionCheck": false
     },
     {
+      "id": "psu-meteo300",
+      "name": "METEO 300: Fundamentals of Atmospheric Science",
+      "issuer": "Penn State College of Earth and Mineral Sciences",
+      "currentEdition": "online course text",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-24",
+      "verificationNote": "Read at courses.ems.psu.edu on 2026-09-24: section 3.1, Ways to Specify Water Vapor, defines epsilon = Rd/Rv = 0.622, the molar mass of water (18.02) over that of dry air (28.97). An online course text with no numbered editions.",
+      "freeAccessUrl": "https://courses.ems.psu.edu/meteo300/node/519",
+      "matchTerms": [
+        "METEO 300"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "rfc3339",
       "name": "RFC 3339",
       "issuer": "IETF",

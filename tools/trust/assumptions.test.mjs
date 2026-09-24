@@ -58,6 +58,7 @@ const MUST_DECLARE = [
   'survey.reduction.edm-correction',
   'time.scale.gps-week',
   'time.scale.gps-to-utc',
+  'aviation.atmosphere.humidity',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

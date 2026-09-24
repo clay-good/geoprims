@@ -10,7 +10,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::log;
 
@@ -31,6 +33,15 @@ const ALDUCHOV: Reference = Reference {
     edition: "Vol. 35, No. 4",
     locator: "pp. 601-609, equation 21 (AERK coefficients 6.1094 hPa, 17.625, 243.04 °C; within 0.4% from -40 to 50 °C)",
     url: "https://doi.org/10.1175/1520-0450(1996)035%3C0601:IMFAOS%3E2.0.CO;2",
+};
+
+const METEO300: Reference = Reference {
+    title: "METEO 300: Fundamentals of Atmospheric Science",
+    issuer: "Penn State College of Earth and Mineral Sciences",
+    year: 2026,
+    edition: "Online course text",
+    locator: "Section 3.1, Ways to Specify Water Vapor: epsilon = Rd/Rv = 0.622, the mixing ratio, and the specific humidity",
+    url: "https://courses.ems.psu.edu/meteo300/node/519",
 };
 
 const A: f64 = 17.625;
@@ -175,7 +186,7 @@ pub static HUMIDITY: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "e_s(T) = 6.1094 hPa × exp(17.625·T ÷ (T + 243.04)) (Alduchov and Eskridge 1996, over water); e = e_s(dew point) or RH × e_s(T); dew point by inverting the same form; mixing ratio = 622 × e ÷ (p − e) g/kg; virtual temperature T ÷ (1 − 0.378·e ÷ p); densities p ÷ (287.05287 × T)",
     accuracy: "The saturation pressure is within 0.4% from -40 °C to 50 °C, over liquid water; below freezing over ice it reads high. The densities follow from the ideal-gas law",
-    references: &[ALDUCHOV, crate::refs::ICAO_7488],
+    references: &[ALDUCHOV, crate::refs::ICAO_7488, METEO300],
     examples: &[Example {
         id: "primary",
         title: "30 °C, dew point 24 °C, 1,000 hPa",
@@ -195,6 +206,38 @@ pub static HUMIDITY: ToolDef = ToolDef {
         Related {
             id: "aviation.atmosphere.cloud-base",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Magnus coefficient a (saturation vapor pressure)",
+            value: "17.625",
+            unit: "1",
+            source: "alduchov",
+        },
+        Assumption {
+            name: "Magnus coefficient b",
+            value: "243.04",
+            unit: "degC",
+            source: "alduchov",
+        },
+        Assumption {
+            name: "Magnus coefficient c",
+            value: "6.1094",
+            unit: "hPa",
+            source: "alduchov",
+        },
+        Assumption {
+            name: "Ratio of the gas constants of dry air and water vapor, epsilon",
+            value: "0.622",
+            unit: "1",
+            source: "psu-meteo300",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
         },
     ],
     sentence: "Moist air here weighs {moist_density}, against {dry_density} if it were dry; relative humidity is {relative_humidity}%.",

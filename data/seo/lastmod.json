@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8434ee607fc80698",
+    "hash": "9d39a8c95aea5bac",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "9ea38c68220f661b",
+    "hash": "24da424460b765ed",
     "lastmod": "2026-09-24"
   },
   "/aviation/": {
@@ -936,7 +936,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "1a80e9f1c5d6cb81",
+    "hash": "d230d1f7a2feb4a7",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1195,6 +1195,10 @@
     "hash": "47e58bc83bc8a293",
     "lastmod": "2026-09-24"
   },
+  "/survey/cogo/intersection/": {
+    "hash": "42d381c893ed1c62",
+    "lastmod": "2026-09-24"
+  },
   "/survey/cogo/inverse/": {
     "hash": "faf83284738901d1",
     "lastmod": "2026-09-24"
@@ -1316,7 +1320,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "d8ac8e6dca3a1edb",
+    "hash": "d80e6f352da7c821",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1504,7 +1508,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a18f388f59f9f528",
+    "hash": "bbf4d415b03e3633",
     "lastmod": "2026-09-24"
   }
 }

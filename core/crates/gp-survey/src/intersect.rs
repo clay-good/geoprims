@@ -33,6 +33,7 @@ const SOLUTION: &[Field] = &[
 
 pub static INTERSECTION: ToolDef = ToolDef {
     id: "survey.cogo.intersection",
+    stability: gp_base::tool::Stability::Stable,
     title: "Intersection (bearings and distances)",
     summary: "Where two lines cross, a line meets a circle, or two circles meet: bearing–bearing, bearing–distance, and distance–distance intersections from two known points, every solution returned and labeled.",
     aliases: &[
@@ -113,7 +114,9 @@ pub static INTERSECTION: ToolDef = ToolDef {
         ),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
+    when_to_use: "Use this to fix a point from two known points without measuring to it directly: two bearings (a line-line intersection), a bearing and a distance, or two distances. It gives every point that fits, labeled, so you can pick the one that matches the field, and refuses lines that are parallel or cross behind a point.",
+    limitations: "The geometry is plane, so the coordinates must be grid or local plane coordinates, not latitude and longitude. A distance-distance or bearing-distance problem usually has two answers, and the tool cannot know which one you meant; a shallow crossing angle makes any of them sensitive to small errors in the directions.",
     model: "Plane coordinate geometry: two lines by their directions, a line and a circle, or two circles about the known points (Ghilani & Wolf 2021, ch. 11)",
     accuracy: "Exact for the geometry; a shallow crossing or a near-tangent meeting magnifies small errors in the inputs",
     references: &[GHILANI],
@@ -135,6 +138,10 @@ pub static INTERSECTION: ToolDef = ToolDef {
         },
         Related {
             id: "survey.cogo.resection",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.cogo.forward",
             reason: "alternative",
         },
     ],

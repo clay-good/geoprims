@@ -699,7 +699,84 @@ def intersection():
                    {"result.count": 1.0, "result.solutions.0.easting.value": 60.0}))
     out.append(vec(5, {"northing1": "0 ft", "easting1": "0 ft", "direction1": "N 10 E", "northing2": "0 ft", "easting2": "100 ft", "direction2": "N 10 E"}, {"ok": False, "error.code": "INVALID_INPUT"}))
     out.append(vec(6, {"northing1": "0 ft", "easting1": "0 ft", "distance1": "10 ft", "northing2": "0 ft", "easting2": "100 ft", "distance2": "10 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    # Michigan DOT survey manual, part III, section 3.6.1 and figure 3.26: from
+    # A (X 5447.330, Y 4080.822) on 334°48'47" and B (X 5752.796, Y 4377.864) on
+    # 308°39'58", C is at X 5039.038, Y 4948.999.
+    out.append(vec(7, {"northing1": "4080.822 ft", "easting1": "5447.330 ft", "direction1": "334°48'47\"",
+                       "northing2": "4377.864 ft", "easting2": "5752.796 ft", "direction2": "308°39'58\""},
+                   {"result.count": 1.0, "result.solutions.0.northing.value": 4948.999, "result.solutions.0.easting.value": 5039.038}, MDOT, MDOT_VER))
+    out[-1]["tolerance"] = {"result.count": {"abs": 0}, "result.solutions.0.northing.value": {"abs": 0.001}, "result.solutions.0.easting.value": {"abs": 0.001}}
+    rng = random.Random(3261)
+    az = lambda dn, de: math.degrees(math.atan2(de, dn)) % 360
+    def pt():
+        return round(rng.uniform(1000, 9000), 3), round(rng.uniform(1000, 9000), 3)
+    # Two lines toward a point ahead of both.
+    while len(out) < 12:
+        (na, ea), (nb, eb), (nc, ec) = pt(), pt(), pt()
+        a1, a2 = az(nc - na, ec - ea), az(nc - nb, ec - eb)
+        if min(abs(a1 - a2) % 180, 180 - abs(a1 - a2) % 180) < 10:
+            continue
+        a1, a2 = round(a1, 6), round(a2, 6)
+        r1, r2 = math.radians(a1), math.radians(a2)
+        det = math.sin(r1) * -math.cos(r2) + math.sin(r2) * math.cos(r1)
+        t = ((eb - ea) * -math.cos(r2) + math.sin(r2) * (nb - na)) / det
+        out.append(vec(len(out) + 1, {"northing1": f"{na} ft", "easting1": f"{ea} ft", "direction1": f"{a1}",
+                                      "northing2": f"{nb} ft", "easting2": f"{eb} ft", "direction2": f"{a2}"},
+                       {"result.count": 1.0, "result.solutions.0.northing.value": na + t * math.cos(r1),
+                        "result.solutions.0.easting.value": ea + t * math.sin(r1)}, rel=1e-9))
+    # Two circles: the left and right of the baseline from the first point to the second.
+    while len(out) < 17:
+        (na, ea), (nb, eb) = pt(), pt()
+        d = math.hypot(nb - na, eb - ea)
+        r1 = round(rng.uniform(0.3, 1.2) * d, 3)
+        r2 = round(rng.uniform(0.3, 1.2) * d, 3)
+        if not (abs(r1 - r2) + 1 < d < r1 + r2 - 1):
+            continue
+        x = (r1 * r1 - r2 * r2 + d * d) / (2 * d)
+        h = math.sqrt(r1 * r1 - x * x)
+        un, ue = (nb - na) / d, (eb - ea) / d
+        left = (na + x * un + h * ue, ea + x * ue - h * un)
+        right = (na + x * un - h * ue, ea + x * ue + h * un)
+        out.append(vec(len(out) + 1, {"northing1": f"{na} ft", "easting1": f"{ea} ft", "distance1": f"{r1} ft",
+                                      "northing2": f"{nb} ft", "easting2": f"{eb} ft", "distance2": f"{r2} ft"},
+                       {"result.count": 2.0, "result.solutions.0.label": "left of the baseline",
+                        "result.solutions.0.northing.value": left[0], "result.solutions.0.easting.value": left[1],
+                        "result.solutions.1.label": "right of the baseline",
+                        "result.solutions.1.northing.value": right[0], "result.solutions.1.easting.value": right[1]}, rel=1e-9))
+    # A line and a circle crossing it twice ahead of the start, nearest first.
+    while len(out) < 22:
+        (na, ea) = pt()
+        a1 = round(rng.uniform(0, 360), 6) % 360
+        r = math.radians(a1)
+        t1, t2 = sorted([rng.uniform(100, 2000), rng.uniform(100, 2000)])
+        if t2 - t1 < 50:
+            continue
+        mid, half = (t1 + t2) / 2, (t2 - t1) / 2
+        off = rng.uniform(-800, 800)
+        nb = na + mid * math.cos(r) - off * math.sin(r)
+        eb = ea + mid * math.sin(r) + off * math.cos(r)
+        nb, eb = round(nb, 3), round(eb, 3)
+        # Recompute exactly from the rounded center.
+        pn, pe = nb - na, eb - ea
+        proj = pn * math.cos(r) + pe * math.sin(r)
+        perp2 = pn * pn + pe * pe - proj * proj
+        rad = round(math.sqrt(perp2 + half * half), 3)
+        q = math.sqrt(rad * rad - perp2)
+        s1, s2 = proj - q, proj + q
+        if s1 <= 1:
+            continue
+        out.append(vec(len(out) + 1, {"northing1": f"{na} ft", "easting1": f"{ea} ft", "direction1": f"{a1}",
+                                      "northing2": f"{nb} ft", "easting2": f"{eb} ft", "distance2": f"{rad} ft"},
+                       {"result.count": 2.0,
+                        "result.solutions.0.northing.value": na + s1 * math.cos(r), "result.solutions.0.easting.value": ea + s1 * math.sin(r),
+                        "result.solutions.1.northing.value": na + s2 * math.cos(r), "result.solutions.1.easting.value": ea + s2 * math.sin(r)}, rel=1e-9))
+    out.append(vec(len(out) + 1, {"northing1": "0 ft", "easting1": "0 ft", "direction1": "S 45 W", "northing2": "0 ft", "easting2": "100 ft", "direction2": "S 45 E"},
+                   {"ok": False, "error.code": "INVALID_INPUT"}))
     return out
+
+
+MDOT = "Michigan Department of Transportation survey manual, part III (Basic Survey Observations), section 3.6.1 and figure 3.26, the line-line intersection example"
+MDOT_VER = "retrieved 2026-09-24"
 
 
 def resection():

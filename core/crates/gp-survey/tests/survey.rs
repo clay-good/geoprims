@@ -1073,3 +1073,66 @@ fn slope_stake_invariants() {
         assert_eq!(ra.trim_end_matches('R'), la.trim_end_matches('L'));
     }
 }
+
+#[test]
+fn intersection_invariants() {
+    // Each answer lies on what defined it: the inverse from each known point
+    // gives back its direction or distance. Shifting the whole problem shifts
+    // the answer, and swapping the two points leaves a crossing where it was.
+    let run = |v: Value| call("survey.cogo.intersection", &v.to_string());
+    let sol =
+        |r: &Value, i: usize, k: &str| r["result"]["solutions"][i][k]["value"].as_f64().unwrap();
+    let inverse = |n1: f64, e1: f64, n2: f64, e2: f64| {
+        let r = call(
+            "survey.cogo.inverse",
+            &serde_json::json!({"northing1": n1, "easting1": e1, "northing2": n2, "easting2": e2})
+                .to_string(),
+        );
+        (
+            num(&r, "result.azimuth.value"),
+            num(&r, "result.distance.value"),
+        )
+    };
+    let (na, ea, nb, eb) = (4080.822, 5447.330, 4377.864, 5752.796);
+    let (a1, a2) = (334.813_055_555_555_6, 308.666_111_111_111_1);
+    let ll = run(
+        serde_json::json!({"northing1": na, "easting1": ea, "direction1": a1.to_string(), "northing2": nb, "easting2": eb, "direction2": a2.to_string()}),
+    );
+    let (nc, ec) = (sol(&ll, 0, "northing"), sol(&ll, 0, "easting"));
+    assert!((inverse(na, ea, nc, ec).0 - a1).abs() < 1e-9);
+    assert!((inverse(nb, eb, nc, ec).0 - a2).abs() < 1e-9);
+    let swapped = run(
+        serde_json::json!({"northing1": nb, "easting1": eb, "direction1": a2.to_string(), "northing2": na, "easting2": ea, "direction2": a1.to_string()}),
+    );
+    assert!(
+        (sol(&swapped, 0, "northing") - nc).abs() < 1e-8
+            && (sol(&swapped, 0, "easting") - ec).abs() < 1e-8
+    );
+    let shifted = run(
+        serde_json::json!({"northing1": na + 1e5, "easting1": ea - 2e5, "direction1": a1.to_string(), "northing2": nb + 1e5, "easting2": eb - 2e5, "direction2": a2.to_string()}),
+    );
+    assert!((sol(&shifted, 0, "northing") - nc - 1e5).abs() < 1e-6);
+    assert!((sol(&shifted, 0, "easting") - ec + 2e5).abs() < 1e-6);
+    // Two circles: both answers sit at the two distances.
+    let cc = run(
+        serde_json::json!({"northing1": na, "easting1": ea, "distance1": 700.0, "northing2": nb, "easting2": eb, "distance2": 520.0}),
+    );
+    for i in 0..2 {
+        let (n, e) = (sol(&cc, i, "northing"), sol(&cc, i, "easting"));
+        assert!((inverse(na, ea, n, e).1 - 700.0).abs() < 1e-8);
+        assert!((inverse(nb, eb, n, e).1 - 520.0).abs() < 1e-8);
+    }
+    // A line and a circle: both answers on the line and on the circle.
+    let lc = run(
+        serde_json::json!({"northing1": na, "easting1": ea, "direction1": "10", "northing2": nb, "easting2": eb, "distance2": 600.0}),
+    );
+    for i in 0..sol_count(&lc) {
+        let (n, e) = (sol(&lc, i, "northing"), sol(&lc, i, "easting"));
+        assert!((inverse(na, ea, n, e).0 - 10.0).abs() < 1e-8);
+        assert!((inverse(nb, eb, n, e).1 - 600.0).abs() < 1e-8);
+    }
+}
+
+fn sol_count(r: &Value) -> usize {
+    r["result"]["count"].as_u64().unwrap() as usize
+}

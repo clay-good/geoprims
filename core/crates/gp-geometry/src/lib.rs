@@ -8,6 +8,7 @@ pub mod envelope;
 pub mod mesh;
 pub mod overlay;
 pub mod predicate;
+pub mod relate;
 pub mod shape;
 pub mod simplify;
 pub mod validity;
@@ -452,6 +453,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &envelope::BBOX,
     &envelope::ENCLOSING,
     &predicate::POINT_IN_POLYGON,
+    &relate::RELATE,
     &validity::MAKE_VALID,
     &overlay::BOOLEAN,
     &distance::TRACKS,

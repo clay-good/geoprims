@@ -208,6 +208,16 @@
       ]
     },
     {
+      "id": "de-9im",
+      "term": "DE-9IM",
+      "expansion": "Dimensionally Extended Nine-Intersection Model",
+      "definition": "A nine-cell record of how two shapes meet: whether each one's inside, edge, and outside touches each of the other's, and whether they meet at points, along lines, or over an area.",
+      "source": "ogc-sfa",
+      "relatedTools": [
+        "geometry.predicate.relate"
+      ]
+    },
+    {
       "id": "dem",
       "term": "DEM",
       "expansion": "digital elevation model",

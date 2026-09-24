@@ -995,12 +995,18 @@
     },
     "geometry.predicate": {
       "summary": "Tests of where points and shapes sit against each other.",
-      "intro": "This group tests whether points fall inside a polygon with geodesic edges, including holes and points on the boundary, and reports how far each point is from the edge. Developers and GIS analysts use it for geofencing and assigning points to areas. Start with point in polygon. A pitfall is a long polygon edge drawn as a straight line on a flat map; on the Earth it bows, and points near it can change sides.",
+      "intro": "This group tests whether points fall inside a polygon with geodesic edges, including holes and points on the boundary, and how two shapes relate: whether they touch, cross, overlap, or lie one inside the other. Developers and GIS analysts use it for geofencing, assigning points to areas, and checking a route against a zone. Start with point in polygon. A pitfall is a long polygon edge drawn as a straight line on a flat map; on the Earth it bows, and points near it can change sides.",
       "tasks": [
         {
           "want": "check whether points are inside a polygon",
           "tools": [
             "point-in-polygon"
+          ]
+        },
+        {
+          "want": "check whether a route or area touches, crosses, or lies inside another",
+          "tools": [
+            "relate"
           ]
         }
       ]

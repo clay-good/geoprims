@@ -7,7 +7,9 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const TOKEN = /\b[A-Z][A-Z0-9]{1,6}\b/g;
+// A hyphenated suffix with a letter in it stays part of the term (DE-9IM);
+// a numeric one does not (GLO-30 is GLO).
+const TOKEN = /\b[A-Z][A-Z0-9]{1,6}(?:-[0-9]*[A-Z][A-Z0-9]*)?\b/g;
 
 /** Text a tool shows: title, sentence, field labels, and help up to its examples. */
 function texts(tool) {

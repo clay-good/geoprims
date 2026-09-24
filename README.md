@@ -20,7 +20,7 @@ Geodesy, navigation, geometry, aviation, drones, surveying, spatial indexing, ra
 
 ## Status
 
-In development and not yet released. Hundreds of tools work locally; only the ones that pass full verification will be published. The plan and specs live in [`openspec/changes/`](openspec/changes/).
+Live at [geoprims.com](https://geoprims.com) since September 23, 2026, and still growing. Tools that pass full verification are marked stable; the rest are labeled experimental. The plan and specs live in [`openspec/changes/`](openspec/changes/).
 
 ## Build and run
 

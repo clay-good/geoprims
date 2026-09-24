@@ -2660,6 +2660,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "shewchuk-predicates",
+      "name": "Shewchuk (1997) Adaptive precision floating-point arithmetic and fast robust geometric predicates",
+      "issuer": "Discrete & Computational Geometry",
+      "currentEdition": "Vol. 18, No. 3, pp. 305-363",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-24",
+      "verificationNote": "Checked at Crossref (DOI 10.1007/PL00009321) on 2026-09-24: volume 18, issue 3, pages 305-363, October 1997; the author's copy at berkeley.edu serves the PDF.",
+      "freeAccessUrl": "https://people.eecs.berkeley.edu/~jrs/papers/robustr.pdf",
+      "matchTerms": [
+        "fast robust geometric predicates"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

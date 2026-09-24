@@ -62,6 +62,7 @@ const ROW: &[Field] = &[
 
 pub static LEVEL_RUN: ToolDef = ToolDef {
     id: "survey.reduction.level-run",
+    stability: gp_base::tool::Stability::Stable,
     title: "Level run reduction and closure",
     summary: "Heights of instrument and elevations from a level book, the arithmetic check, and for a loop or a run between benchmarks, the misclosure, its allowable, and the adjusted elevations.",
     aliases: &["level loop", "differential leveling", "level notes", "benchmark run"],
@@ -84,7 +85,9 @@ pub static LEVEL_RUN: ToolDef = ToolDef {
         Field::new("closure", "Closure", "Within or beyond the allowable", Kind::Text { max_len: 60 }).optional(),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
+    when_to_use: "Use this to reduce a page of differential leveling notes: heights of instrument and elevations at every turning point, the arithmetic check that catches a slip in the sums, and, when the run closes on a known benchmark or back on the start, the misclosure, whether it is within your allowable, and the adjusted elevations.",
+    limitations: "The adjustment spreads the misclosure in proportion to distance, or evenly by setups when no distances are given, which assumes the error grew steadily along the run; it does not find a blunder, and a misclosure far beyond the allowable means rerunning the levels, not adjusting them. Curvature and refraction are taken as cancelled by balanced sights.",
     model: "HI = elevation + BS; elevation = HI − FS (or − IS for a side shot); check ΣBS − ΣFS = last − first elevation; misclosure = observed − known closing elevation, distributed in proportion to cumulative distance (or to setups when no distances are given); allowable = C·√K (Ghilani & Wolf 2021, ch. 5)",
     accuracy: "Exact arithmetic; the allowable closure is the standard you choose, entered as C",
     references: &[GHILANI],
@@ -99,6 +102,7 @@ pub static LEVEL_RUN: ToolDef = ToolDef {
     related: &[
         Related { id: "survey.reduction.slope", reason: "alternative" },
         Related { id: "survey.reduction.curvature-refraction", reason: "next" },
+        Related { id: "survey.earthwork.profile-grades", reason: "next" },
     ],
     sentence: "ΣBS − ΣFS is {sum_backsights} less {sum_foresights}, and it checks against the elevations.{if abs(misclosure) >= 0} The run misses closing by {misclosure}.{/if}",
     limits: &[("batchRows", 1_000)],

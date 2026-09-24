@@ -990,3 +990,43 @@ fn average_end_area_invariants() {
         assert!((split - v).abs() <= 1e-9 * v.max(1.0));
     }
 }
+
+#[test]
+fn level_run_invariants() {
+    // Raising every elevation by a constant raises every result by it; the
+    // arithmetic check always holds; the adjusted closing benchmark is the
+    // known one; and a book whose sums close exactly has no misclosure.
+    let run = |start: f64, end: f64| {
+        let input = serde_json::json!({
+            "start_elevation": format!("{start} ft"),
+            "end_elevation": format!("{end} ft"),
+            "shots": [
+                {"station": "BM A", "backsight": "8.42 ft"},
+                {"station": "TP 1", "backsight": "11.56 ft", "foresight": "1.20 ft", "distance": "300 ft"},
+                {"station": "TP 2", "backsight": "6.15 ft", "foresight": "1.35 ft", "distance": "280 ft"},
+                {"station": "TP 3", "backsight": "4.39 ft", "foresight": "10.90 ft", "distance": "250 ft"},
+                {"station": "BM K", "foresight": "5.94 ft", "distance": "310 ft"},
+            ],
+        });
+        call("survey.reduction.level-run", &input.to_string())
+    };
+    let a = run(820.0, 831.15);
+    let b = run(1820.0, 1831.15);
+    for i in 0..5 {
+        let e = |r: &Value, k: &str| r["result"]["stations"][i][k]["value"].as_f64().unwrap();
+        assert!((e(&b, "elevation") - e(&a, "elevation") - 1000.0).abs() < 1e-9);
+        assert!((e(&b, "adjusted") - e(&a, "adjusted") - 1000.0).abs() < 1e-9);
+    }
+    assert!((num(&a, "result.misclosure.value") - num(&b, "result.misclosure.value")).abs() < 1e-9);
+    let sums = num(&a, "result.sum_backsights.value") - num(&a, "result.sum_foresights.value");
+    let st =
+        |r: &Value, i: usize, k: &str| r["result"]["stations"][i][k]["value"].as_f64().unwrap();
+    let last = st(&a, 4, "elevation");
+    assert!((sums - (last - 820.0)).abs() < 1e-9);
+    assert!((st(&a, 4, "adjusted") - 831.15).abs() < 1e-9);
+    let exact = run(820.0, last);
+    assert!(num(&exact, "result.misclosure.value").abs() < 1e-9);
+    for i in 0..5 {
+        assert!((st(&exact, i, "adjusted") - st(&exact, i, "elevation")).abs() < 1e-9);
+    }
+}

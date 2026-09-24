@@ -635,7 +635,47 @@ def level_run():
                    {"result.stations.3.elevation.value": e[-1], "result.sum_backsights.value": sbs, "result.sum_foresights.value": sfs}))
     out.append(vec(6, {"start_elevation": "100 ft", "shots": [{"station": "BM 1", "foresight": "1 ft"}, {"station": "TP 1", "foresight": "2 ft"}]},
                    {"ok": False, "error.code": "INVALID_INPUT"}))
+    # Indiana DOT Survey Procedures, chapter 2, figure 2-4: benchmark A (820.00)
+    # to benchmark K (831.15) through three turning points, closing at 831.13.
+    indot = [("BM A", 8.42, None, None), ("TP 1", 11.56, 1.20, None), ("TP 2", 6.15, 1.35, None),
+             ("TP 3", 4.39, 10.90, None), ("BM K", None, 5.94, None)]
+    out.append(vec(7, {"start_elevation": "820.00 ft", "shots": book_input(indot, "ft"), "end_elevation": "831.15 ft"},
+                   {"result.stations.1.elevation.value": 827.22, "result.stations.2.elevation.value": 837.43,
+                    "result.stations.3.elevation.value": 832.68, "result.stations.4.elevation.value": 831.13,
+                    "result.sum_backsights.value": 30.52, "result.sum_foresights.value": 19.39, "result.misclosure.value": -0.02},
+                   INDOT, INDOT_VER))
+    out[-1]["tolerance"] = {k: {"abs": 0.005} for k, v in out[-1]["expect"].items() if isinstance(v, float)}
+    # Random level books: loops and runs, with distances and without.
+    rng = random.Random(4321)
+    while len(out) < 21:
+        n = rng.randrange(3, 9)
+        u = rng.choice(["ft", "m"])
+        start = round(rng.uniform(100, 1500), 3)
+        with_d = rng.random() < 0.6
+        book = [("BM 1", round(rng.uniform(0.5, 12), 3), None, None)]
+        for k in range(1, n - 1):
+            book.append((f"TP {k}", round(rng.uniform(0.5, 12), 3), round(rng.uniform(0.5, 12), 3), round(rng.uniform(40, 400), 1) if with_d else None))
+        book.append(("BM 2", None, round(rng.uniform(0.5, 12), 3), round(rng.uniform(40, 400), 1) if with_d else None))
+        e, sbs, sfs = reduce(start, book)
+        known = round(e[-1] + rng.uniform(-0.03, 0.03), 3)
+        mis = e[-1] - known
+        if with_d:
+            cum = [0.0]
+            for _, _, _, d in book[1:]:
+                cum.append(cum[-1] + d)
+            share = [c / cum[-1] for c in cum]
+        else:
+            share = [i / (n - 1) for i in range(n)]
+        mid = n // 2
+        out.append(vec(len(out) + 1, {"start_elevation": f"{start} {u}", "shots": book_input(book, u), "end_elevation": f"{known} {u}"},
+                       {"result.sum_backsights.value": sbs, "result.sum_foresights.value": sfs, "result.misclosure.value": mis,
+                        f"result.stations.{mid}.elevation.value": e[mid], f"result.stations.{mid}.adjusted.value": e[mid] - mis * share[mid],
+                        f"result.stations.{n - 1}.adjusted.value": known}, rel=1e-10))
     return out
+
+
+INDOT = "Indiana Department of Transportation, Survey Procedures, chapter 2 (Use and Care of Level), figure 2-4, closed form level notes"
+INDOT_VER = "retrieved 2026-09-24"
 
 
 def intersection():

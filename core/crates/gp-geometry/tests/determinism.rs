@@ -24,7 +24,9 @@ fn results_do_not_depend_on_earlier_calls() {
         let first = REGISTRY.invoke("geometry.validity.make-valid", input);
         for k in 0..7 {
             // Each new RandomState steps the thread's keys on.
-            let _ = (0..=k).map(|_| RandomState::new()).count();
+            for _ in 0..=k {
+                let _ = RandomState::new();
+            }
             assert_eq!(
                 REGISTRY.invoke("geometry.validity.make-valid", input),
                 first,

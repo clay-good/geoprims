@@ -523,6 +523,20 @@ pub static TRUE_ALTITUDE: ToolDef = ToolDef {
             reason: "parent",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Lapse rate L0",
+            value: "-0.0019812",
+            unit: "K/ft",
+            source: "icao-8168",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-8168",
+        },
+    ],
     sentence: "You are at {true_altitude}, {abs(error)} {if error < 0}below{else}above{/if} what the altimeter shows.",
     limits: &[("batchRows", 10_000)],
     run: run_true_altitude,

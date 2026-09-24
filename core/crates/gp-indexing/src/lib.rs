@@ -583,6 +583,20 @@ pub static TILE_FROM_POINT: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Sphere radius, the WGS 84 semi-major axis",
+            value: "6378137",
+            unit: "m",
+            source: "bing-tiles",
+        },
+        Assumption {
+            name: "Latitude limit of the tile grid",
+            value: "85.05112878",
+            unit: "deg",
+            source: "bing-tiles",
+        },
+    ],
     sentence: "The tile is {tile}, quadkey {quadkey}.",
     limits: &[("batchRows", 10_000)],
     run: run_tile_from_point,
@@ -933,6 +947,26 @@ pub static GROUND_RESOLUTION: ToolDef = ToolDef {
         Related {
             id: "indexing.h3.resolution-chooser",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Sphere radius, the WGS 84 semi-major axis",
+            value: "6378137",
+            unit: "m",
+            source: "bing-tiles",
+        },
+        Assumption {
+            name: "Latitude limit of the tile grid",
+            value: "85.05112878",
+            unit: "deg",
+            source: "bing-tiles",
+        },
+        Assumption {
+            name: "Screen resolution for the map scale",
+            value: "96",
+            unit: "dpi",
+            source: "bing-tiles",
         },
     ],
     sentence: "Each pixel covers {resolution}, a scale of about 1 to {scale}.",

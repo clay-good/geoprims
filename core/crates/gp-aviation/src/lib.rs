@@ -1313,6 +1313,26 @@ pub static ISA_TEMPERATURE: ToolDef = ToolDef {
         id: "aviation.atmosphere.isa",
         reason: "alternative",
     }],
+    assumptions: &[
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Tropospheric lapse rate",
+            value: "-0.0065",
+            unit: "K/m",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Earth radius for geopotential altitude",
+            value: "6356766",
+            unit: "m",
+            source: "icao-7488",
+        },
+    ],
     sentence: "The standard temperature at {pressure_altitude} is {isa_temperature}.{if isa_deviation > -1000} The outside air is ISA {isa_deviation}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_isa_temperature,

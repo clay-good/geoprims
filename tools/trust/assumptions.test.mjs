@@ -46,6 +46,12 @@ const MUST_DECLARE = [
   'geodesy.magnetic.true-to-magnetic',
   'geodesy.magnetic.grivation',
   'time.sun.events',
+  'indexing.tile.from-point',
+  'indexing.tile.ground-resolution',
+  'indexing.tile.cover',
+  'aviation.altimetry.isa-temperature',
+  'aviation.altimetry.true-altitude',
+  'time.scale.julian-date',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

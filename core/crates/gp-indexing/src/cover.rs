@@ -6,7 +6,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, Stability, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Related, Stability, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 
 use crate::codes::{self, Bounds, MERCATOR_MAX_LAT};
@@ -266,6 +268,12 @@ pub static TILE_COVER: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Latitude limit of the tile grid",
+        value: "85.05112878",
+        unit: "deg",
+        source: "bing-tiles",
+    }],
     sentence: "{count} tiles cover the box at this zoom.",
     limits: &[("batchRows", 100)],
     run: run_tile_cover,

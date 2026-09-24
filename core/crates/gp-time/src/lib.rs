@@ -17,8 +17,8 @@ use gp_base::envelope::AssetRef;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Stability,
-    ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related,
+    Stability, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT};
 
@@ -600,6 +600,20 @@ pub static JULIAN_DATE: ToolDef = ToolDef {
         Related {
             id: "time.scale.zone-info",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Julian date of 1970-01-01 00:00 UTC",
+            value: "2440587.5",
+            unit: "d",
+            source: "usno-jd",
+        },
+        Assumption {
+            name: "Modified Julian date offset",
+            value: "2400000.5",
+            unit: "d",
+            source: "usno-jd",
         },
     ],
     sentence: "The Julian date is {jd}, and it is day {day_of_year} of {year}.",

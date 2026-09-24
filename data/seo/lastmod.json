@@ -728,20 +728,20 @@
     "lastmod": "2026-09-23"
   },
   "/indexing/tile/cover/": {
-    "hash": "6efe8e150424be21",
-    "lastmod": "2026-09-23"
+    "hash": "36b1234cd87182e8",
+    "lastmod": "2026-09-24"
   },
   "/indexing/tile/family/": {
     "hash": "636dcf5720ec09a7",
     "lastmod": "2026-09-23"
   },
   "/indexing/tile/from-point/": {
-    "hash": "f801f419c3010388",
-    "lastmod": "2026-09-23"
+    "hash": "d19767e278640df4",
+    "lastmod": "2026-09-24"
   },
   "/indexing/tile/ground-resolution/": {
-    "hash": "3517df2288074e93",
-    "lastmod": "2026-09-23"
+    "hash": "2c99792dfc998d3d",
+    "lastmod": "2026-09-24"
   },
   "/journeys/boundary-retracement/": {
     "hash": "609668a66b5b5960",
@@ -1220,8 +1220,8 @@
     "lastmod": "2026-09-23"
   },
   "/time/scale/julian-date/": {
-    "hash": "48cd5ac899024850",
-    "lastmod": "2026-09-23"
+    "hash": "4cb193df5f526f8a",
+    "lastmod": "2026-09-24"
   },
   "/time/scale/utc-offset/": {
     "hash": "da73e507ef6b7104",
@@ -1448,7 +1448,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "13371284d94c5d34",
+    "hash": "250ba6a21c16379d",
     "lastmod": "2026-09-24"
   }
 }

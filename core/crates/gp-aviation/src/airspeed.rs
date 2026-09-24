@@ -898,6 +898,12 @@ pub static TAT_SAT: ToolDef = ToolDef {
         id: "aviation.airspeed.cas-to-tas",
         reason: "next",
     }],
+    assumptions: &[Assumption {
+        name: "Ratio of specific heats for air",
+        value: "1.4",
+        unit: "1",
+        source: "icao-7488",
+    }],
     sentence: "The static air temperature is {sat}. Ram heating adds {ram_rise}.",
     limits: &[("batchRows", 10_000)],
     run: run_tat_sat,

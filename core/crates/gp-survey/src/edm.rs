@@ -8,7 +8,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::exp;
 
@@ -212,6 +214,56 @@ pub static EDM_CORRECTION: ToolDef = ToolDef {
         Related {
             id: "survey.reduction.combined-factor",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Group refractivity constant term (IAG 1999)",
+            value: "287.6155",
+            unit: "1",
+            source: "landgate-edmi-manual",
+        },
+        Assumption {
+            name: "Group refractivity coefficient on 1/wavelength squared",
+            value: "4.88660",
+            unit: "um2",
+            source: "landgate-edmi-manual",
+        },
+        Assumption {
+            name: "Group refractivity coefficient on 1/wavelength to the fourth",
+            value: "0.06800",
+            unit: "um4",
+            source: "landgate-edmi-manual",
+        },
+        Assumption {
+            name: "Reference pressure for the group refractivity",
+            value: "1013.25",
+            unit: "hPa",
+            source: "landgate-edmi-manual",
+        },
+        Assumption {
+            name: "Water vapor refractivity coefficient",
+            value: "11.27",
+            unit: "K/hPa",
+            source: "landgate-edmi-manual",
+        },
+        Assumption {
+            name: "Magnus coefficient a (saturation vapor pressure)",
+            value: "17.625",
+            unit: "1",
+            source: "alduchov",
+        },
+        Assumption {
+            name: "Magnus coefficient b",
+            value: "243.04",
+            unit: "degC",
+            source: "alduchov",
+        },
+        Assumption {
+            name: "Magnus coefficient c",
+            value: "6.1094",
+            unit: "hPa",
+            source: "alduchov",
         },
     ],
     sentence: "The corrected distance is {corrected}: {ppm} ppm for the air and {prism_correction} for the prism.",

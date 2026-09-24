@@ -9,7 +9,9 @@ use crate::{deg, m, obj, unit};
 use geographiclib_rs::{DirectGeodesic, Geodesic};
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_base::{ErrorCode, display};
 use libm::{acos, atan, cos, sqrt, tan};
@@ -255,6 +257,12 @@ pub static TURN: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Standard gravity g0",
+        value: "9.80665",
+        unit: "m/s2",
+        source: "icao-7488",
+    }],
     sentence: "Bank {bank} for {turn_rate} at {tas}. The turn radius is {radius} and the load factor is {load_factor} g.{if stall_speed_in_turn > 0} Stall speed rises to {stall_speed_in_turn}.{/if}{warn LOAD_LIMIT_EXCEEDED} This is past the load limit.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_turn,
@@ -1376,6 +1384,12 @@ pub static PIVOTAL_ALTITUDE: ToolDef = ToolDef {
     related: &[Related {
         id: "aviation.performance.turn",
         reason: "alternative",
+    }],
+    assumptions: &[Assumption {
+        name: "Standard gravity g0",
+        value: "9.80665",
+        unit: "m/s2",
+        source: "icao-7488",
     }],
     sentence: "The pivotal altitude is {pivotal_altitude} above the ground.",
     limits: &[("batchRows", 10_000)],

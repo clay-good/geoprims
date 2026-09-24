@@ -52,6 +52,10 @@ const MUST_DECLARE = [
   'aviation.altimetry.isa-temperature',
   'aviation.altimetry.true-altitude',
   'time.scale.julian-date',
+  'aviation.performance.turn',
+  'aviation.performance.pivotal-altitude',
+  'aviation.airspeed.tat-sat',
+  'survey.reduction.edm-correction',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

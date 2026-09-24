@@ -98,3 +98,28 @@ test("every explainer's live example shows the answer its tool's page shows", as
   assert.ok(checked >= 25, `only ${checked} explainers checked`);
   assert.deepEqual(problems, []);
 });
+
+test("every tool's share card carries the answer its page shows", () => {
+  // Recorded by scripts/og.mjs as it draws the cards, since the attributes a
+  // card is drawn from are stripped from the pages that ship.
+  const drawn = JSON.parse(readFileSync(join(web, 'node_modules/.cache/og/drawn.json'), 'utf8'));
+  const problems = [];
+  for (const t of catalog.tools) {
+    const html = page(route(t.id));
+    const card = /<meta property="og:image" content="https:\/\/[^/]+(\/og\/[^"]+)"/.exec(html)?.[1];
+    if (!card) {
+      problems.push(`${t.id}: no share card`);
+      continue;
+    }
+    // A preset shares its canonical page's card. A card carries the answer
+    // only when it reads at a glance, 24 characters or fewer, and otherwise
+    // none rather than a different one.
+    const canonical = /<link rel="canonical" href="https:\/\/[^/]+([^"]+)"/.exec(html)?.[1];
+    const drawnFrom = canonical && canonical !== route(t.id) ? page(canonical) : html;
+    const shown = pageAnswer(drawnFrom) ?? '';
+    const expected = shown.length <= 24 ? shown : '';
+    if (!(card in drawn)) problems.push(`${t.id}: its card ${card} was not drawn`);
+    else if ((drawn[card] ?? '') !== expected) problems.push(`${t.id}: the card says "${drawn[card]}", the page "${shown}"`);
+  }
+  assert.deepEqual(problems, []);
+});

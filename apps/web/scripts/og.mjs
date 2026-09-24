@@ -144,5 +144,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     copyFileSync(cached, out);
   }
   await browser?.close();
+  // What each card says, for the example-parity gate (test/parity.test.mjs):
+  // the attributes it was drawn from are gone from the shipped pages.
+  writeFileSync(join(cache, 'drawn.json'), JSON.stringify(Object.fromEntries([...jobs].map(([path, { card }]) => [path, card.answer ?? null]))));
   console.log(`og: ${jobs.size} cards (${rendered} rendered, ${jobs.size - rendered} from cache)`);
 }

@@ -35,7 +35,10 @@ const jsonld = [webApplication(t), breadcrumbs([['geoprims', '/'], [DOMAIN_TITLE
 const groupName = groupTitle(t.group);
 // The share card shows the worked example's headline answer when it is short
 // enough to read at a glance (search-pages, "Open Graph images").
-const headline = initial.ok ? String(initial.display?.[Object.keys(t.outputs.properties)[0]] ?? '') : '';
+// The first output the result has, as the answer card shows: an optional
+// first output may be absent from the worked example.
+const lead = Object.keys(t.outputs.properties).find((k) => initial.display?.[k] !== undefined);
+const headline = initial.ok && lead !== undefined ? String(initial.display[lead]) : '';
 const og = { eyebrow: `${DOMAIN_TITLES[t.domain] ?? t.domain} / ${groupName}`, title: t.title, answer: headline.length <= 24 ? headline : '', caption: initial.ok ? initial.summary : t.summary };
 // Neighbors in the group, in catalog order, for the [ and ] shortcuts.
 const inGroup = catalog.tools.filter((x) => x.domain === t.domain && x.group === t.group);

@@ -180,7 +180,7 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/": {
-    "hash": "f681bd4a124f0682",
+    "hash": "4f6912ac725b0388",
     "lastmod": "2026-09-24"
   },
   "/geodesy/datum/": {
@@ -344,7 +344,7 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/projection/": {
-    "hash": "28baac02c69d262b",
+    "hash": "23d434795336e294",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/albers-forward/": {
@@ -424,8 +424,8 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/ups/": {
-    "hash": "f88ada9702521cec",
-    "lastmod": "2026-09-23"
+    "hash": "c5df18617de3dbd8",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/ups/forward/": {
     "hash": "d82e146838dec371",
@@ -848,8 +848,8 @@
     "lastmod": "2026-09-23"
   },
   "/learn/utm-coordinates/": {
-    "hash": "279c2dfa4ec554fc",
-    "lastmod": "2026-09-23"
+    "hash": "2ca45e209dbacd2a",
+    "lastmod": "2026-09-24"
   },
   "/learn/vertical-curves/": {
     "hash": "6f52d33ad2457dde",
@@ -1224,7 +1224,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "4dc5205b2cc39873",
+    "hash": "3ba3d48c0d4cd9dd",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1412,7 +1412,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "72b0f62415acf593",
+    "hash": "9a334fd230180c62",
     "lastmod": "2026-09-24"
   }
 }

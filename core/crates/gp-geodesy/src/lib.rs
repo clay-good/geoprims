@@ -1400,7 +1400,7 @@ pub static UPS_FORWARD: ToolDef = ToolDef {
     id: "geodesy.ups.forward",
     title: "Latitude and longitude to UPS",
     summary: "Converts polar coordinates (84° N and beyond, or 80° S and beyond) to Universal Polar Stereographic easting and northing.",
-    aliases: &["UPS converter", "polar stereographic"],
+    aliases: &["UPS converter", "lat long to UPS"],
     keywords: &["UPS", "polar", "stereographic", "arctic", "antarctic"],
     inputs: &[LAT, LON, E[0], E[1], E[2]],
     outputs: UTM_OUTPUTS,
@@ -1464,7 +1464,7 @@ pub static UPS_INVERSE: ToolDef = ToolDef {
     title: "UPS to latitude and longitude",
     summary: "Converts a Universal Polar Stereographic easting and northing back to latitude and longitude.",
     aliases: &["UPS to lat long"],
-    keywords: &["UPS", "polar", "inverse"],
+    keywords: &["UPS inverse", "polar", "inverse"],
     inputs: &[
         Field::new(
             "hemisphere",

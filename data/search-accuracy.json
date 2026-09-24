@@ -1,9 +1,9 @@
 {
   "queries": 1163,
-  "top1": 97.5,
+  "top1": 97.6,
   "top3": 99.8,
   "prefillPrecision": 96.2,
-  "prefillRecall": 36.3,
+  "prefillRecall": 36.2,
   "misses": [
     "100 mph drone with 90 mph 15 mph",
     "3D distance calculator with 40 -105 250 m 40.018012369978514 -105 370 m"

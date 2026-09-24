@@ -451,9 +451,9 @@ pub static WEB_MERCATOR_INVERSE: ToolDef = ToolDef {
     summary: "Converts Web Mercator (EPSG:3857) x and y back to a WGS 84 latitude and longitude.",
     aliases: &["Web Mercator to lat long", "EPSG:3857 to WGS 84"],
     keywords: &[
-        "Web Mercator",
+        "Web Mercator inverse",
         "3857",
-        "pseudo Mercator",
+        "pseudo Mercator inverse",
         "inverse",
         "projection",
     ],
@@ -635,8 +635,8 @@ pub static LCC_INVERSE: ToolDef = ToolDef {
     summary: "Converts an easting and northing on a Lambert Conformal Conic you define back to latitude and longitude.",
     aliases: &["Lambert to lat long", "LCC inverse"],
     keywords: &[
-        "Lambert",
-        "conformal conic",
+        "Lambert inverse",
+        "conformal conic inverse",
         "inverse",
         "projection",
         "9802",
@@ -775,7 +775,13 @@ pub static ALBERS_INVERSE: ToolDef = ToolDef {
     title: "Albers Equal Area to latitude and longitude",
     summary: "Converts an easting and northing on an Albers Equal Area conic you define back to latitude and longitude.",
     aliases: &["Albers to lat long", "Albers inverse"],
-    keywords: &["Albers", "equal area", "inverse", "projection", "9822"],
+    keywords: &[
+        "Albers inverse",
+        "equal area inverse",
+        "inverse",
+        "projection",
+        "9822",
+    ],
     inputs: &[
         EASTING, NORTHING, SP1, SP2, LAT0, LON0, FE, FN, E[0], E[1], E[2],
     ],
@@ -954,7 +960,7 @@ pub static POLAR_INVERSE: ToolDef = ToolDef {
         "polar stereographic inverse",
     ],
     keywords: &[
-        "polar stereographic",
+        "polar stereographic inverse",
         "Arctic",
         "Antarctic",
         "inverse",
@@ -1102,8 +1108,8 @@ pub static EQC_INVERSE: ToolDef = ToolDef {
     summary: "Converts an easting and northing on the ellipsoidal Equidistant Cylindrical back to latitude and longitude.",
     aliases: &["plate carree to lat long", "equirectangular inverse"],
     keywords: &[
-        "equidistant cylindrical",
-        "plate carrée",
+        "equidistant cylindrical inverse",
+        "plate carrée inverse",
         "inverse",
         "projection",
         "1028",
@@ -1279,7 +1285,7 @@ pub static AEQD_INVERSE: ToolDef = ToolDef {
         "azimuthal equidistant inverse",
     ],
     keywords: &[
-        "azimuthal equidistant",
+        "azimuthal equidistant inverse",
         "geodesic",
         "inverse",
         "projection",
@@ -1404,7 +1410,13 @@ pub static GNOMONIC_INVERSE: ToolDef = ToolDef {
     title: "Gnomonic to latitude and longitude",
     summary: "Converts an easting and northing on the ellipsoidal gnomonic you center back to latitude and longitude.",
     aliases: &["gnomonic to lat long", "gnomonic inverse"],
-    keywords: &["gnomonic", "geodesic", "inverse", "projection", "center"],
+    keywords: &[
+        "gnomonic inverse",
+        "geodesic",
+        "inverse",
+        "projection",
+        "center",
+    ],
     inputs: &[
         EASTING, NORTHING, CENTER_LAT, CENTER_LON, FE, FN, E[0], E[1], E[2],
     ],

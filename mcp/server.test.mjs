@@ -249,7 +249,7 @@ test('an untagged checkout without built files explains itself and exits 1', () 
 test('unknown options fail fast; an unknown toolset lists the valid ones', () => {
   const r = spawnSync(process.execPath, [join(here, 'server.mjs'), '--toolsets=bogus'], { input: '' });
   assert.equal(r.status, 2);
-  assert.match(String(r.stderr), /Unknown toolset bogus\. Valid toolsets: geodesy-core, navigation, e6b, atmosphere, drone-mapping, survey-cogo, indexing\./);
+  assert.match(String(r.stderr), /Unknown toolset bogus\. Valid toolsets: geodesy-core, projections, navigation, e6b, atmosphere, drone-mapping, survey-cogo, indexing\./);
   assert.equal(spawnSync(process.execPath, [join(here, 'server.mjs'), '--wat'], { input: '' }).status, 2);
   assert.equal(spawnSync(process.execPath, [join(here, 'server.mjs'), '--no-meta'], { input: '' }).status, 2);
 });

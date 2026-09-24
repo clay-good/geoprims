@@ -845,9 +845,44 @@
       ]
     },
     "geodesy.projection": {
-      "summary": "Corrections for lines drawn on a map projection.",
-      "intro": "This group covers corrections that come from projecting the curved Earth onto a flat grid. The arc-to-chord correction is the small angle between a line's straight grid bearing and the curved line it represents, in UTM or a state plane zone. Surveyors running long traverses or precise azimuths on a grid use it. The pitfall is ignoring it on long lines far from a zone's center, where it grows.",
+      "summary": "Map projections you set up yourself, and corrections for lines drawn on them.",
+      "intro": "This group puts a latitude and longitude on a map grid whose parameters you give, and brings grid coordinates back. Use it when a grid is not UTM or State Plane: a web map, a national or regional conic, an equal-area map, or a polar grid. Each point comes with the grid convergence and the scale there. It also corrects a grid bearing for the curve of a long line. The pitfall is a parameter copied wrong, such as feet taken for meters, which gives a clean but wrong answer.",
       "tasks": [
+        {
+          "want": "put a point on a web map grid (EPSG:3857), or read one back",
+          "tools": [
+            "web-mercator-forward",
+            "web-mercator-inverse"
+          ]
+        },
+        {
+          "want": "convert on a Lambert conformal conic grid you have the parameters for",
+          "tools": [
+            "lcc-forward",
+            "lcc-inverse"
+          ]
+        },
+        {
+          "want": "convert on an equal-area grid, where areas stay true",
+          "tools": [
+            "albers-forward",
+            "albers-inverse"
+          ]
+        },
+        {
+          "want": "convert on a polar grid other than UPS",
+          "tools": [
+            "polar-stereographic-forward",
+            "polar-stereographic-inverse"
+          ]
+        },
+        {
+          "want": "convert on a plate carrée grid, where northing is distance from the equator",
+          "tools": [
+            "equidistant-cylindrical-forward",
+            "equidistant-cylindrical-inverse"
+          ]
+        },
         {
           "want": "correct a grid bearing for the curve of the projected line",
           "tools": [

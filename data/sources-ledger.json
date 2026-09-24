@@ -1756,6 +1756,27 @@
       "editionCheck": true
     },
     {
+      "id": "nga-webmerc",
+      "name": "NGA.SIG.0011 Web Mercator implementation practice",
+      "issuer": "NGA",
+      "currentEdition": "NGA.SIG.0011_1.0.0_WEBMERC",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Edition as NGA's standards list names it; not yet checked at the issuer.",
+      "freeAccessUrl": "https://earth-info.nga.mil/php/download.php?file=wgs-webmerc",
+      "matchTerms": [
+        "NGA.SIG.0011",
+        "Implementation Practice Web Mercator"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "currentReleaseDate": null,
       "cycleMonths": null,
       "nextExpected": null,

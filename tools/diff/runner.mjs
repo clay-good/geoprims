@@ -11,7 +11,7 @@
 // exact -E mode, RhumbSolve, GeoConvert, CartConvert, GeoidEval, IntersectTool). A family whose reference is missing is
 // skipped and says so; the reference container (platform task 6.2) makes them
 // all present in CI.
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../packages/runtime/src/node.mjs';
@@ -66,14 +66,8 @@ function reference(cmd, args, lines) {
   return out.stdout.trim().split('\n').map((l) => l.trim().split(/\s+/).map(Number));
 }
 
-const has = (cmd) => {
-  try {
-    execFileSync(cmd, ['--version'], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-};
+/** Installed if it starts at all: PROJ's `proj` exits 1 on --version. */
+const has = (cmd) => !spawnSync(cmd, ['--version'], { stdio: 'ignore' }).error;
 
 /**
  * The families. Each makes cases, runs its reference on them in one batch,
@@ -357,7 +351,117 @@ export const FAMILIES = [
       return null;
     },
   },
+  ...projFamilies(),
 ];
+
+/**
+ * The projection methods with user-set parameters against PROJ's `proj`
+ * (geodesy/projections, "Round-trip and differential accuracy": 1 mm on
+ * 10,000 points per projection). Each case draws one of twelve parameter
+ * sets; cases sharing a set go to `proj` in one batch.
+ */
+function projFamilies() {
+  const ELL = {
+    wgs84: '+a=6378137 +rf=298.257223563',
+    grs80: '+a=6378137 +rf=298.257222101',
+    clarke1866: '+a=6378206.4 +b=6356583.8',
+    intl1924: '+a=6378388 +rf=297',
+  };
+  const ells = Object.keys(ELL);
+  const r6 = (v) => Number(v.toFixed(6));
+  // Parameter sets from their own seed, so every run tests the same grids.
+  const sets = (make) => {
+    const r = rng(4407);
+    return Array.from({ length: 12 }, () => make(r));
+  };
+  const family = (name, make, point) => {
+    const all = sets(make);
+    return {
+      name: `${name}-forward`,
+      tool: `geodesy.projection.${name}-forward`,
+      needs: 'proj',
+      make(r) {
+        const set = all[Math.floor(r() * all.length)];
+        const [lat, lon] = point(r, set).map(q);
+        return {
+          input: { lat, lon, ...set.input, options: { outputUnits: { easting: 'm', northing: 'm' } } },
+          line: `${fx(lon)} ${fx(lat)}`,
+          set,
+        };
+      },
+      batchKey: (c) => c.set.proj,
+      run: (lines, c) => reference('proj', ['-f', '%.9f', ...c.set.proj.split(' ')], lines),
+      compare(res, [e, n]) {
+        if (Math.abs(res.easting.value - e) > 1e-6) return `easting ${res.easting.value} vs ${e}`;
+        if (Math.abs(res.northing.value - n) > 1e-6) return `northing ${res.northing.value} vs ${n}`;
+        return null;
+      },
+    };
+  };
+  const wrap = (lon) => (lon >= 180 ? lon - 360 : lon < -180 ? lon + 360 : lon);
+  return [
+    family(
+      'web-mercator',
+      () => ({ input: {}, proj: '+proj=webmerc +a=6378137 +b=6378137' }),
+      (r) => [170.1022575596 * r() - 85.0511287798, uniformLon(r)],
+    ),
+    family(
+      'lcc',
+      (r) => {
+        const h = r() < 0.5 ? 1 : -1;
+        const [ell, lon0, fe, fn] = [ells[Math.floor(r() * ells.length)], r6(360 * r() - 180), r6(3e6 * r()), r6(1e6 * r())];
+        if (r() < 0.3) {
+          const [lat0, k0] = [h * r6(15 + 55 * r()), r6(0.999 + 0.001 * r())];
+          return {
+            input: { variant: '1SP', latitude_of_origin: lat0, longitude_of_origin: lon0, scale_factor: k0, false_easting: `${fe} m`, false_northing: `${fn} m`, ellipsoid: ell },
+            proj: `+proj=lcc +lat_1=${lat0} +lat_0=${lat0} +lon_0=${lon0} +k_0=${k0} +x_0=${fe} +y_0=${fn} ${ELL[ell]}`,
+            h,
+          };
+        }
+        const p1 = h * r6(15 + 50 * r());
+        const p2 = r6(p1 + h * (2 + 8 * r()));
+        const lat0 = r6(p1 - h * 10 * r());
+        return {
+          input: { standard_parallel_1: p1, standard_parallel_2: p2, latitude_of_origin: lat0, longitude_of_origin: lon0, false_easting: `${fe} m`, false_northing: `${fn} m`, ellipsoid: ell },
+          proj: `+proj=lcc +lat_1=${p1} +lat_2=${p2} +lat_0=${lat0} +lon_0=${lon0} +x_0=${fe} +y_0=${fn} ${ELL[ell]}`,
+          h,
+        };
+      },
+      (r, s) => [s.h * (5 + 80 * r()), wrap(s.input.longitude_of_origin + 120 * (r() - 0.5))],
+    ),
+    family(
+      'albers',
+      (r) => {
+        const h = r() < 0.5 ? 1 : -1;
+        const [ell, lon0, fe, fn] = [ells[Math.floor(r() * ells.length)], r6(360 * r() - 180), r6(3e6 * r()), r6(1e6 * r())];
+        const p1 = h * r6(10 + 55 * r());
+        const p2 = r6(p1 + h * (2 + 13 * r()));
+        const lat0 = r6(h * 40 * r());
+        return {
+          input: { standard_parallel_1: p1, standard_parallel_2: p2, latitude_of_origin: lat0, longitude_of_origin: lon0, false_easting: `${fe} m`, false_northing: `${fn} m`, ellipsoid: ell },
+          proj: `+proj=aea +lat_1=${p1} +lat_2=${p2} +lat_0=${lat0} +lon_0=${lon0} +x_0=${fe} +y_0=${fn} ${ELL[ell]}`,
+        };
+      },
+      (r, s) => [160 * r() - 80, wrap(s.input.longitude_of_origin + 120 * (r() - 0.5))],
+    ),
+    family(
+      'polar-stereographic',
+      (r) => {
+        const north = r() < 0.5;
+        const pole = north ? 90 : -90;
+        const [ell, lon0, fe, fn] = [ells[Math.floor(r() * ells.length)], r6(360 * r() - 180), r6(6e6 * r()), r6(6e6 * r())];
+        const base = { pole: north ? 'N' : 'S', longitude_of_origin: lon0, false_easting: `${fe} m`, false_northing: `${fn} m`, ellipsoid: ell };
+        if (r() < 0.5) {
+          const k0 = r6(0.99 + 0.01 * r());
+          return { input: { ...base, scale_factor: k0 }, proj: `+proj=stere +lat_0=${pole} +lat_ts=${pole} +lon_0=${lon0} +k_0=${k0} +x_0=${fe} +y_0=${fn} ${ELL[ell]}`, north };
+        }
+        const sp = (north ? 1 : -1) * r6(60 + 29 * r());
+        return { input: { ...base, standard_parallel: sp }, proj: `+proj=stere +lat_0=${pole} +lat_ts=${sp} +lon_0=${lon0} +x_0=${fe} +y_0=${fn} ${ELL[ell]}`, north };
+      },
+      (r, s) => [(s.north ? 1 : -1) * (50 + 40 * r()), uniformLon(r)],
+    ),
+  ];
+}
 
 /** One Planimeter result per polygon: blocks separated by blank lines. */
 function referenceBlocks(blocks) {

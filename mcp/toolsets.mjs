@@ -6,7 +6,22 @@ import { createHash } from 'node:crypto';
 
 /** Each toolset lists id prefixes; members are the stable tools that match, in catalog order. */
 export const TOOLSETS = {
-  'geodesy-core': ['geodesy.'],
+  // Everyday geodesy; the projections with user-set parameters are their own
+  // toolset, since together the two pass the 40-tool cap.
+  'geodesy-core': [
+    'geodesy.parse.',
+    'geodesy.grid-ref.',
+    'geodesy.utm.',
+    'geodesy.ups.',
+    'geodesy.spcs.',
+    'geodesy.datum.',
+    'geodesy.ellipsoid.',
+    'geodesy.frame.',
+    'geodesy.geoid.',
+    'geodesy.height.',
+    'geodesy.magnetic.',
+  ],
+  projections: ['geodesy.projection.', 'geodesy.utm.', 'geodesy.ups.', 'geodesy.spcs.'],
   navigation: ['navigation.', 'geometry.'],
   e6b: ['aviation.airspeed.', 'aviation.altimetry.', 'aviation.wind.', 'aviation.performance.'],
   atmosphere: ['aviation.atmosphere.', 'aviation.altimetry.', 'time.sun.'],

@@ -1,9 +1,9 @@
 {
-  "queries": 1114,
-  "top1": 97.9,
+  "queries": 1149,
+  "top1": 97.7,
   "top3": 99.8,
-  "prefillPrecision": 97,
-  "prefillRecall": 38.8,
+  "prefillPrecision": 96.2,
+  "prefillRecall": 37,
   "misses": [
     "100 mph drone with 90 mph 15 mph",
     "3D distance calculator with 40 -105 250 m 40.018012369978514 -105 370 m"
@@ -13,6 +13,14 @@
     "thermal spot size with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",
     "IFOV calculator with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",
     "thermal camera resolution at distance with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",
+    "Latitude and longitude to Albers Equal Area with 35 -75 29.5 45.5 23 -96: lat = \"29.5 deg\"",
+    "Latitude and longitude to Albers Equal Area with 35 -75 29.5 45.5 23 -96: lon = \"45.5 deg\"",
+    "Albers equal area calculator with 35 -75 29.5 45.5 23 -96: lat = \"29.5 deg\"",
+    "Albers equal area calculator with 35 -75 29.5 45.5 23 -96: lon = \"45.5 deg\"",
+    "Albers projection with 35 -75 29.5 45.5 23 -96: lat = \"29.5 deg\"",
+    "Albers projection with 35 -75 29.5 45.5 23 -96: lon = \"45.5 deg\"",
+    "lat long to Albers with 35 -75 29.5 45.5 23 -96: lat = \"29.5 deg\"",
+    "lat long to Albers with 35 -75 29.5 45.5 23 -96: lon = \"45.5 deg\"",
     "Great-circle destination (spherical) with 40 -74 45 deg 1000 km: lat1 = \"45 deg\"",
     "great circle destination with 40 -74 45 deg 1000 km: lat1 = \"45 deg\"",
     "destination point on a sphere with 40 -74 45 deg 1000 km: lat1 = \"45 deg\"",

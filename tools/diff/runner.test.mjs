@@ -1,7 +1,7 @@
 // The differential runner, in brief: each family with its reference
 // installed agrees on 300 cases, and a deliberately perturbed tool fails.
 // The full run (10,000 cases per family) is `npm run diff`.
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,14 +10,8 @@ import { FAMILIES, runFamily } from './runner.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const host = nodeHost(join(root, 'dist/wasm'));
-const installed = (cmd) => {
-  try {
-    execFileSync(cmd, ['--version'], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-};
+/** Installed if it starts at all: PROJ's `proj` exits 1 on --version. */
+const installed = (cmd) => !spawnSync(cmd, ['--version'], { stdio: 'ignore' }).error;
 
 for (const fam of FAMILIES) {
   test(`${fam.name}: ${fam.tool} agrees with ${fam.needs}`, { skip: !installed(fam.needs) && `${fam.needs} is not installed` }, async () => {

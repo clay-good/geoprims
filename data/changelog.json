@@ -5,6 +5,24 @@
       "date": "2026-09-24",
       "kind": "added",
       "tools": [
+        "geodesy.projection.web-mercator-forward",
+        "geodesy.projection.web-mercator-inverse",
+        "geodesy.projection.lcc-forward",
+        "geodesy.projection.lcc-inverse",
+        "geodesy.projection.albers-forward",
+        "geodesy.projection.albers-inverse",
+        "geodesy.projection.polar-stereographic-forward",
+        "geodesy.projection.polar-stereographic-inverse",
+        "geodesy.projection.equidistant-cylindrical-forward",
+        "geodesy.projection.equidistant-cylindrical-inverse"
+      ],
+      "vectors": [],
+      "summary": "Ten new stable tools project a latitude and longitude with parameters you set, and back: Web Mercator (EPSG:3857), Lambert Conformal Conic with one or two standard parallels, Albers Equal Area, Polar Stereographic by scale at the pole or by standard parallel, and the ellipsoidal Equidistant Cylindrical. Each gives the grid convergence and the scale along the meridian and the parallel. They reproduce the worked examples in IOGP Guidance Note 7-2 and Snyder's Albers example, and agree with PROJ within a micrometer on 10,000 random points per method."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
         "geodesy.parse.coordinates"
       ],
       "vectors": [],

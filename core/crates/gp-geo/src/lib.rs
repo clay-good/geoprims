@@ -14,6 +14,7 @@ pub mod mgrs;
 pub mod nadcon5;
 pub mod plates;
 pub mod point;
+pub mod proj;
 pub mod rhumb;
 pub mod spcs;
 mod spcs83_zones;

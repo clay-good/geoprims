@@ -6,6 +6,7 @@ pub mod frames;
 pub mod geoid;
 pub mod gridref;
 pub mod magnetic;
+pub mod methods;
 pub mod spcs;
 
 use gp_base::ErrorCode;
@@ -1971,6 +1972,16 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::INVERSE,
     &spcs::LOOKUP,
     &spcs::ARC_TO_CHORD,
+    &methods::WEB_MERCATOR_FORWARD,
+    &methods::WEB_MERCATOR_INVERSE,
+    &methods::LCC_FORWARD,
+    &methods::LCC_INVERSE,
+    &methods::ALBERS_FORWARD,
+    &methods::ALBERS_INVERSE,
+    &methods::POLAR_FORWARD,
+    &methods::POLAR_INVERSE,
+    &methods::EQC_FORWARD,
+    &methods::EQC_INVERSE,
     &geoid::GEOID_HEIGHT,
     &geoid::HEIGHT_CONVERT,
     &frames::PARAMETERS,

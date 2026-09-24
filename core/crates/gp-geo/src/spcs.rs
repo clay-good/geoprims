@@ -4,8 +4,9 @@
 //! Lambert Conic Conformal (2SP) and Hotine Oblique Mercator (variant A) follow
 //! IOGP Guidance Note 7-2 (EPSG methods 9802 and 9812).
 
+use crate::proj::{Lcc, dlon, phi_of_t, t_of};
 use crate::tm::Tm;
-use libm::{asin, atan, atan2, cos, exp, log, pow, sin, sqrt, tan};
+use libm::{asin, atan2, cos, exp, log, pow, sin, sqrt, tan};
 
 pub use crate::spcs83_zones::ZONES;
 
@@ -66,91 +67,6 @@ pub struct Grid {
 
 fn e2() -> f64 {
     GRS80_F * (2.0 - GRS80_F)
-}
-
-/// Isometric-latitude helper t(φ) of Guidance Note 7-2.
-fn t_of(phi: f64, e: f64) -> f64 {
-    let s = sin(phi);
-    tan(core::f64::consts::FRAC_PI_4 - phi / 2.0) / pow((1.0 - e * s) / (1.0 + e * s), e / 2.0)
-}
-
-fn m_of(phi: f64, e2: f64) -> f64 {
-    cos(phi) / sqrt(1.0 - e2 * sin(phi) * sin(phi))
-}
-
-/// φ from t by the fixed-point iteration of Guidance Note 7-2 (to 1e-14 rad).
-fn phi_of_t(t: f64, e: f64) -> f64 {
-    let mut phi = core::f64::consts::FRAC_PI_2 - 2.0 * atan(t);
-    for _ in 0..30 {
-        let s = sin(phi);
-        let next = core::f64::consts::FRAC_PI_2
-            - 2.0 * atan(t * pow((1.0 - e * s) / (1.0 + e * s), e / 2.0));
-        let done = (next - phi).abs() < 1e-14;
-        phi = next;
-        if done {
-            break;
-        }
-    }
-    phi
-}
-
-struct Lcc {
-    n: f64,
-    af: f64,
-    rf: f64,
-    lon0: f64,
-    fe: f64,
-    fn_: f64,
-}
-
-fn lcc(lat0: f64, lon0: f64, lat1: f64, lat2: f64, fe: f64, fn_: f64) -> Lcc {
-    let (e2, e) = (e2(), sqrt(e2()));
-    let (p1, p2, p0) = (lat1.to_radians(), lat2.to_radians(), lat0.to_radians());
-    let (m1, m2) = (m_of(p1, e2), m_of(p2, e2));
-    let (t1, t2, t0) = (t_of(p1, e), t_of(p2, e), t_of(p0, e));
-    let n = if (lat1 - lat2).abs() < 1e-12 {
-        sin(p1)
-    } else {
-        (log(m1) - log(m2)) / (log(t1) - log(t2))
-    };
-    let f = m1 / (n * pow(t1, n));
-    let af = GRS80_A * f;
-    Lcc {
-        n,
-        af,
-        rf: af * pow(t0, n),
-        lon0,
-        fe,
-        fn_,
-    }
-}
-
-impl Lcc {
-    fn forward(&self, lat: f64, lon: f64) -> Grid {
-        let (e2, e) = (e2(), sqrt(e2()));
-        let phi = lat.to_radians();
-        let r = self.af * pow(t_of(phi, e), self.n);
-        let theta = self.n * (lon - self.lon0).to_radians();
-        Grid {
-            e: self.fe + r * sin(theta),
-            n: self.fn_ + self.rf - r * cos(theta),
-            convergence: theta.to_degrees(),
-            k: r * self.n / (GRS80_A * m_of(phi, e2)),
-        }
-    }
-
-    fn inverse(&self, x: f64, y: f64) -> (f64, f64) {
-        let e = sqrt(e2());
-        let (dx, dy) = (x - self.fe, self.rf - (y - self.fn_));
-        let s = self.n.signum();
-        let r = s * (dx * dx + dy * dy).sqrt();
-        let t = pow(r / self.af, 1.0 / self.n);
-        let theta = atan2(s * dx, s * dy);
-        (
-            phi_of_t(t, e).to_degrees(),
-            theta.to_degrees() / self.n + self.lon0,
-        )
-    }
 }
 
 struct OmercA {
@@ -264,12 +180,6 @@ impl OmercA {
     }
 }
 
-/// Wraps a longitude difference into [-180, 180).
-fn dlon(lon: f64, lon0: f64) -> f64 {
-    let d = (lon - lon0 + 180.0).rem_euclid(360.0) - 180.0;
-    if d == 180.0 { -180.0 } else { d }
-}
-
 impl Zone {
     pub fn forward(&self, lat: f64, lon: f64) -> Grid {
         match self.proj {
@@ -297,7 +207,16 @@ impl Zone {
                 lat2,
                 fe,
                 fn_,
-            } => lcc(lat0, lon0, lat1, lat2, fe, fn_).forward(lat, lon0 + dlon(lon, lon0)),
+            } => {
+                let g = Lcc::two_sp(GRS80_A, GRS80_F, lat0, lon0, lat1, lat2, fe, fn_)
+                    .forward(lat, lon);
+                Grid {
+                    e: g.e,
+                    n: g.n,
+                    convergence: g.convergence,
+                    k: g.k,
+                }
+            }
             Proj::OmercA {
                 latc,
                 lonc,
@@ -332,7 +251,7 @@ impl Zone {
                 lat2,
                 fe,
                 fn_,
-            } => lcc(lat0, lon0, lat1, lat2, fe, fn_).inverse(e, n),
+            } => Lcc::two_sp(GRS80_A, GRS80_F, lat0, lon0, lat1, lat2, fe, fn_).inverse(e, n),
             Proj::OmercA {
                 latc,
                 lonc,

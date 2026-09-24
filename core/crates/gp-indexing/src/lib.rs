@@ -17,7 +17,8 @@ use codes::Bounds;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::point;
@@ -232,6 +233,12 @@ pub static GEOHASH_ENCODE: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Mean Earth radius for the cell's size in meters, GRS 80's R1 (6371008.7714 m) to 0.1 m",
+        value: "6371008.8",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "The geohash is {geohash}, a cell about {cell_width} wide.",
     limits: &[("batchRows", 10_000)],
     run: run_geohash_encode,
@@ -1053,6 +1060,12 @@ pub static OLC_ENCODE: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Mean Earth radius for the cell's size in meters, GRS 80's R1 (6371008.7714 m) to 0.1 m",
+        value: "6371008.8",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "The Plus Code is {code}.",
     limits: &[("batchRows", 10_000)],
     run: run_olc_encode,

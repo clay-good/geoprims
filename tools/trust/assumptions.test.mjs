@@ -32,6 +32,10 @@ const MUST_DECLARE = [
   'indexing.s2.covering',
   'indexing.s2.lat-lng-to-cell',
   'indexing.s2.cell-info',
+  'navigation.route.cross-track',
+  'geometry.area.polygon',
+  'indexing.geohash.encode',
+  'indexing.plus-code.encode',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

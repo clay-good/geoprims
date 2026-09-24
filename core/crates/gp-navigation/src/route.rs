@@ -10,7 +10,9 @@ use gp_base::ErrorCode;
 use gp_base::angle::wrap_lon;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_geo::point;
 use libm::{acos, asin, atan2, cos, hypot, sin};
@@ -242,6 +244,12 @@ pub static CROSS_TRACK: ToolDef = ToolDef {
             reason: "parent",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Sphere radius for the spherical method, GRS 80's mean radius R1",
+        value: "6371008.771",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "The point is {cross_track} off course, {along_track} along it.{warn FOOT_OUTSIDE_SEGMENT} Its closest point is past the end of the segment.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_cross_track,

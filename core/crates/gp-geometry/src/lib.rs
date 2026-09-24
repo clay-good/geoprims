@@ -19,7 +19,8 @@ use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::ellipsoid::{self, Ellipsoid};
@@ -328,6 +329,12 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Sphere radius for the planar comparison, GRS 80's R1 (6371008.7714 m) to 0.1 m",
+        value: "6371008.8",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "The area is {area}, with a perimeter of {perimeter}.",
     limits: &[("batchRows", 1_000)],
     run: run_polygon_area,

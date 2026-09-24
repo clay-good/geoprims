@@ -2130,6 +2130,7 @@ fn run_heading_groundspeed(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static FIND_WIND: ToolDef = ToolDef {
     id: "aviation.wind.find-wind",
+    stability: gp_base::tool::Stability::Stable,
     title: "Wind triangle: find the wind",
     summary: "The wind aloft from your heading, true airspeed, track, and groundspeed.",
     aliases: &["find wind", "wind from groundspeed"],
@@ -2205,7 +2206,9 @@ pub static FIND_WIND: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(1)),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
+    when_to_use: "Use this in flight, or after one, when you know the heading you held, your true airspeed, and the track and groundspeed you actually made good, from GPS or from timed checkpoints: it gives the wind that must have been blowing. Feed that wind forward to plan the next legs.",
+    limitations: "The answer is the average wind over the time the track and groundspeed were measured, and it is only as good as they are: a groundspeed off by a few knots moves a light wind a long way. Heading and track must share a reference, both true or both magnetic, and the wind comes back in that reference.",
     model: "Wind vector = ground vector − air vector",
     accuracy: "Exact for steady wind. Planning aid, not certified for navigation.",
     references: &[PHAK],
@@ -2220,10 +2223,20 @@ pub static FIND_WIND: ToolDef = ToolDef {
         kind: "vector-diagram",
         map: &[("wind", "wind_direction")],
     }],
-    related: &[Related {
-        id: "aviation.wind.heading-groundspeed",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "aviation.wind.heading-groundspeed",
+            reason: "inverse",
+        },
+        Related {
+            id: "aviation.wind.course-from-heading",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.wind.tas-from-groundspeed",
+            reason: "alternative",
+        },
+    ],
     sentence: "The wind is from {wind_direction} at {wind_speed}.",
     limits: &[("batchRows", 10_000)],
     run: run_find_wind,

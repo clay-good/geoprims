@@ -75,6 +75,7 @@ const WIND_REF: Field = Field::new(
 
 pub static TAS_FROM_GROUNDSPEED: ToolDef = ToolDef {
     id: "aviation.wind.tas-from-groundspeed",
+    stability: gp_base::tool::Stability::Stable,
     title: "Wind triangle: airspeed and heading for a groundspeed",
     summary: "The true airspeed and heading that make good a course at the groundspeed you need, for a known wind.",
     aliases: &[
@@ -129,7 +130,9 @@ pub static TAS_FROM_GROUNDSPEED: ToolDef = ToolDef {
         .angle_range("unbounded"),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
+    when_to_use: "Use this when you have to cover a course at a set groundspeed, to meet a time over a fix or a slot, and want the true airspeed and heading that do it in the forecast wind. It is the wind triangle solved for airspeed rather than for heading.",
+    limitations: "The wind is taken as steady over the leg, and the airspeed returned is true airspeed: convert it to the calibrated or indicated airspeed you fly with the altitude and temperature. The triangle always has an answer, so check the airspeed it gives against what the aircraft can do: a strong headwind can call for more than it has.",
     model: "Air vector = ground vector − wind vector: the ground vector runs along the course at the groundspeed, and the wind vector points where the wind blows to (its direction + 180°). TAS is the air vector's length and the heading its direction",
     accuracy: "Exact for steady wind and flat-earth geometry over a leg. Planning aid, not certified for navigation.",
     references: &[PHAK, AIM],
@@ -151,6 +154,10 @@ pub static TAS_FROM_GROUNDSPEED: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.wind.course-from-heading",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.wind.find-wind",
             reason: "alternative",
         },
     ],
@@ -216,6 +223,7 @@ fn run_tas_from_groundspeed(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static COURSE_FROM_HEADING: ToolDef = ToolDef {
     id: "aviation.wind.course-from-heading",
+    stability: gp_base::tool::Stability::Stable,
     title: "Wind triangle: course and groundspeed from a heading",
     summary: "Where a heading and true airspeed will take you in a known wind: the course over the ground, the groundspeed, and the drift.",
     aliases: &["track from heading", "drift angle", "course made good"],
@@ -269,7 +277,9 @@ pub static COURSE_FROM_HEADING: ToolDef = ToolDef {
         .angle_range("unbounded"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::NoSolution],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
+    when_to_use: "Use this when you know the heading you will hold, your true airspeed, and the forecast wind, and want to know where that heading actually takes you: the course and groundspeed made good and the drift angle. It answers the question the other way from finding a heading for a course.",
+    limitations: "The wind is taken as steady over the whole leg, which a forecast rarely is, so the course made good drifts as the wind changes. Heading, course, and wind must share a reference; the tool converts between true and magnetic only with the variation you give it.",
     model: "Ground vector = air vector + wind vector: the air vector runs along the heading at TAS, and the wind vector points where the wind blows to (its direction + 180°). The course is the ground vector's direction and the groundspeed its length",
     accuracy: "Exact for steady wind and flat-earth geometry over a leg. Planning aid, not certified for navigation.",
     references: &[PHAK, AIM],
@@ -291,6 +301,10 @@ pub static COURSE_FROM_HEADING: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.wind.find-wind",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.wind.tas-from-groundspeed",
             reason: "alternative",
         },
     ],

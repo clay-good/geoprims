@@ -689,3 +689,55 @@ fn a_table_is_never_extrapolated_and_the_refusal_names_the_axis() {
     let w: f64 = cells.iter().map(|c| c["weight"].as_f64().unwrap()).sum();
     assert!((w - 1.0).abs() < 1e-12);
 }
+
+#[test]
+fn wind_triangle_readings_agree() {
+    // The four readings of one triangle agree: solve for heading and
+    // groundspeed, then recover the course, the airspeed, and the wind from
+    // that answer with the other three tools.
+    for (course, tas, wd, ws) in [
+        (90.0, 120.0, 45.0, 40.0),
+        (273.5, 95.0, 190.0, 22.0),
+        (12.0, 180.0, 300.0, 55.0),
+        (181.0, 250.0, 10.0, 5.0),
+    ] {
+        let hg = call(
+            "aviation.wind.heading-groundspeed",
+            &format!(
+                r#"{{"course":"{course} deg","tas":"{tas} kt","wind_direction":"{wd} deg","wind_speed":"{ws} kt"}}"#
+            ),
+        );
+        let (h, gs) = (
+            num(&hg, "result.heading.value"),
+            num(&hg, "result.groundspeed.value"),
+        );
+        let cf = call(
+            "aviation.wind.course-from-heading",
+            &format!(
+                r#"{{"heading":"{h} deg","tas":"{tas} kt","wind_direction":"{wd} deg","wind_speed":"{ws} kt"}}"#
+            ),
+        );
+        assert!(
+            (num(&cf, "result.course.value") - course).abs() < 1e-9,
+            "{cf}"
+        );
+        assert!((num(&cf, "result.groundspeed.value") - gs).abs() < 1e-9);
+        let tg = call(
+            "aviation.wind.tas-from-groundspeed",
+            &format!(
+                r#"{{"course":"{course} deg","groundspeed":"{gs} kt","wind_direction":"{wd} deg","wind_speed":"{ws} kt"}}"#
+            ),
+        );
+        assert!((num(&tg, "result.tas.value") - tas).abs() < 1e-9, "{tg}");
+        assert!((num(&tg, "result.heading.value") - h).abs() < 1e-9);
+        let fw = call(
+            "aviation.wind.find-wind",
+            &format!(r#"{{"heading":{h},"tas":{tas},"track":{course},"groundspeed":{gs}}}"#),
+        );
+        assert!(
+            (num(&fw, "result.wind_direction.value") - wd).abs() < 1e-7,
+            "{fw}"
+        );
+        assert!((num(&fw, "result.wind_speed.value") - ws).abs() < 1e-9);
+    }
+}

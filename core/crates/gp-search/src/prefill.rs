@@ -621,8 +621,44 @@ pub type Ambiguous = Vec<(String, Vec<String>)>;
 pub fn map(slots: &[SlotDef], values: &[Val]) -> (Filled, Ambiguous) {
     let mut filled: Vec<Option<Json>> = vec![None; slots.len()];
     let mut placed = vec![false; values.len()];
+    // 0. Two numbers read as a coordinate, after a word that names two other
+    //    inputs ("standard parallels 29.5 45.5"), fill those inputs instead.
+    let hint = |v: &Val, h: &str| v.near.first().is_some_and(|w| w == h);
+    for vi in 0..values.len().saturating_sub(1) {
+        if !hint(&values[vi], "lat") || !hint(&values[vi + 1], "lon") {
+            continue;
+        }
+        let words = values[vi].near[1..].to_vec();
+        if words.is_empty() {
+            continue;
+        }
+        let as_named = |v: &Val| Val {
+            kind: v.kind.clone(),
+            near: words.clone(),
+        };
+        let (first, second) = (as_named(&values[vi]), as_named(&values[vi + 1]));
+        let slot_for = |v: &Val, skip: Option<usize>| {
+            (0..slots.len()).find(|&si| {
+                Some(si) != skip
+                    && filled[si].is_none()
+                    && names(&slots[si], v)
+                    && fit(&slots[si], v, true).is_some()
+            })
+        };
+        if let Some(a) = slot_for(&first, None)
+            && let Some(b) = slot_for(&second, Some(a))
+        {
+            filled[a] = fit(&slots[a], &first, true);
+            filled[b] = fit(&slots[b], &second, true);
+            placed[vi] = true;
+            placed[vi + 1] = true;
+        }
+    }
     // 1. A value next to a word that names a compatible input fills the first such input.
     for (vi, v) in values.iter().enumerate() {
+        if placed[vi] {
+            continue;
+        }
         if let Some(si) = (0..slots.len()).find(|&si| {
             filled[si].is_none() && names(&slots[si], v) && fit(&slots[si], v, true).is_some()
         }) {

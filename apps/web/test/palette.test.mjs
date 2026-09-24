@@ -138,6 +138,14 @@ test('a question with numbers opens the tool filled in; ambiguous values become 
   assert.ok(placed.every((i) => i.elevation === '5000 ft' && i.altimeter === '29.92 inHg'));
 
   assert.deepEqual(await prefillActions(await top('density altitude'), tools.get('aviation.altimetry.density-altitude'), encode), []);
+
+  // Two decimals after a word naming two inputs are those inputs, not a
+  // latitude and longitude; a pair with no such word is still a point.
+  const albers = await top('albers standard parallels 29.5 45.5');
+  assert.equal(albers.id, 'geodesy.projection.albers-forward');
+  assert.deepEqual(albers.prefill, { standard_parallel_1: '29.5 deg', standard_parallel_2: '45.5 deg' });
+  const inverse = await top('distance between 40.1 -105.2 and 39.7 -104.9');
+  assert.deepEqual(inverse.prefill, { lat1: '40.1 deg', lon1: '-105.2 deg', lat2: '39.7 deg', lon2: '-104.9 deg' });
   assert.equal(placements([{ value: '1', candidates: ['a', 'b', 'c'] }, { value: '2', candidates: ['a', 'b', 'c'] }, { value: '3', candidates: ['a', 'b', 'c'] }]).length, 6);
 });
 

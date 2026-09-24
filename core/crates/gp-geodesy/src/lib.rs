@@ -136,9 +136,9 @@ const ALTERNATIVE_ROW: &[Field] = &[
 pub static PARSE: ToolDef = ToolDef {
     id: "geodesy.parse.coordinates",
     stability: gp_base::tool::Stability::Stable,
-    version: "1.2.0",
+    version: "1.3.0",
     title: "Read any coordinate",
-    summary: "Reads a coordinate in almost any notation (decimal, DMS, DDM, packed aviation, labeled, MGRS, or UTM) and reports what it assumed.",
+    summary: "Reads a coordinate in almost any notation (decimal, DMS, DDM, packed aviation, labeled, MGRS, UTM, UPS, or a grid code) and reports what it assumed.",
     aliases: &[
         "coordinate parser",
         "DMS to decimal",
@@ -152,6 +152,11 @@ pub static PARSE: ToolDef = ToolDef {
         "coordinates",
         "MGRS",
         "UTM",
+        "Maidenhead",
+        "GARS",
+        "GEOREF",
+        "geohash",
+        "Plus Code",
     ],
     inputs: &[Field::new(
         "text",
@@ -195,8 +200,8 @@ pub static PARSE: ToolDef = ToolDef {
     ],
     model: "geoprims coordinate grammar (ISO 6709 notations, NGA MGRS)",
     accuracy: "Exact: every notation converts by exact arithmetic",
-    when_to_use: "Use this when a coordinate arrives as text and you do not want to hand-convert it: decimal degrees, degrees and minutes, degrees, minutes and seconds, packed aviation form, labeled pairs, MGRS, or UTM. It reports what it read, in your chosen output form, and says which assumptions it had to make.",
-    limitations: "Text can be genuinely ambiguous — which number is the latitude, which hemisphere an unsigned pair means, whether a comma is a decimal mark — and this tool reports the ambiguity and its alternatives instead of guessing. It cannot know the datum of a bare pair: coordinates are treated as WGS 84 unless the notation itself carries one.",
+    when_to_use: "Use this when a coordinate arrives as text and you do not want to hand-convert it: decimal degrees, degrees and minutes, degrees, minutes and seconds, packed aviation form, labeled pairs, MGRS, UTM, UPS, or a grid code (Maidenhead, GARS, GEOREF, geohash, or a full Plus Code, read as the center of its cell). It reports what it read, in your chosen output form, and says which assumptions it had to make.",
+    limitations: "Text can be genuinely ambiguous — which number is the latitude, which hemisphere an unsigned pair means, whether a comma is a decimal mark — and this tool reports the ambiguity and its alternatives instead of guessing; a short code like fn20 is both a Maidenhead square and a geohash, and both readings are given. A short Plus Code needs a nearby place to complete it and is refused. It cannot know the datum of a bare pair: coordinates are treated as WGS 84 unless the notation itself carries one.",
     references: &[DMS_REF, NGA_MGRS],
     examples: &[Example {
         id: "primary",
@@ -248,12 +253,100 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         let (la, lo) = grid_center(&d, wgs);
         (la, lo, "MGRS")
+    } else if let Some(((notation, (la, lo), (h, w)), others)) = {
+        // One token only, and only when it is not a coordinate: a grid
+        // reference is never read in place of a number.
+        let token = !text.trim().contains(char::is_whitespace);
+        let found = if token && dms::parse_pair(&text).is_err() {
+            grid_readings(&compact)
+        } else {
+            Ok(Vec::new())
+        };
+        let found = found.map_err(|e| {
+            ToolError::invalid("/text", format!("This looks like a Plus Code, but {e}."))
+        })?;
+        let mut it = found.into_iter();
+        it.next().map(|first| (first, it.collect::<Vec<_>>()))
+    } {
+        // A code names a cell, not a point: the position is its center.
+        let size = |h: f64, w: f64| {
+            let fmt = |d: f64| gp_base::num::format_f64(d).unwrap_or_default();
+            format!("{}° by {}°", fmt(h), fmt(w))
+        };
+        ctx.warnings.push(Warning::new(
+            "INPUT_NORMALIZED",
+            format!("A {notation} code names a cell {} (latitude by longitude); this is its center.", size(h, w)),
+        ).at("/text"));
+        if !others.is_empty() {
+            let names: Vec<&str> = others.iter().map(|o| o.0).collect();
+            ctx.warnings.push(
+                Warning::new(
+                    "AMBIGUOUS_INPUT",
+                    format!(
+                        "{} was read as {notation}; it is also a valid {}.",
+                        compact,
+                        names.join(" and a valid ")
+                    ),
+                )
+                .at("/text"),
+            );
+        }
+        for (other, (ola, olo), _) in others {
+            alternatives.push(Json::obj([
+                ("reading", Json::str(format!("as {other}"))),
+                ("valid", Json::str("yes")),
+                ("lat", deg(ola).to_json()),
+                ("lon", deg(olo).to_json()),
+            ]));
+        }
+        (la, lo, notation)
     } else if let Some(u) = parse_utm_text(&text) {
         let (zone, north, e, n) = u.map_err(|e| ToolError::invalid("/text", e))?;
-        let (la, lo) = utmups::utm_inverse(wgs.a, wgs.f, zone, north, e, n);
-        (la, lo, "UTM")
+        if zone == 0 {
+            let (la, lo) = utmups::ups_inverse(wgs.a, wgs.f, north, e, n);
+            // UPS covers the caps, north of 84 and south of 80 degrees, with
+            // half a degree of overlap with UTM.
+            if (north && la < 83.5) || (!north && la > -79.5) {
+                return Err(ToolError::invalid(
+                    "/text",
+                    format!(
+                        "{text} is outside the UPS polar area; its easting and northing reach {la:.1} degrees of latitude."
+                    ),
+                ));
+            }
+            (la, lo, "UPS")
+        } else {
+            let (la, lo) = utmups::utm_inverse(wgs.a, wgs.f, zone, north, e, n);
+            (la, lo, "UTM")
+        }
     } else {
         let p = dms::parse_pair(&text).map_err(|e| ToolError::invalid("/text", format!("{e}.")))?;
+        // A single token that is also a grid reference: the coordinate reading
+        // stands, and the grid reading is offered.
+        if !text.trim().contains(char::is_whitespace) {
+            let grids = grid_readings(&compact).unwrap_or_default();
+            if !grids.is_empty() {
+                let names: Vec<&str> = grids.iter().map(|g| g.0).collect();
+                ctx.warnings.push(
+                    Warning::new(
+                        "AMBIGUOUS_INPUT",
+                        format!(
+                            "{compact} was read as a coordinate; it is also a valid {}.",
+                            names.join(" and a valid ")
+                        ),
+                    )
+                    .at("/text"),
+                );
+            }
+            for (other, (ola, olo), _) in grids {
+                alternatives.push(Json::obj([
+                    ("reading", Json::str(format!("as {other}"))),
+                    ("valid", Json::str("yes")),
+                    ("lat", deg(ola).to_json()),
+                    ("lon", deg(olo).to_json()),
+                ]));
+            }
+        }
         if let Some(a) = p.ambiguity {
             ctx.warnings
                 .push(Warning::new("AMBIGUOUS_INPUT", a).at("/text"));
@@ -327,6 +420,62 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
+type GridReading = (&'static str, (f64, f64), (f64, f64));
+
+/// Every grid reference the text is a valid code in, with its cell's center
+/// and size: (notation, (lat, lon), (height, width) in degrees). Plus Codes,
+/// Maidenhead locators, GARS, GEOREF, and geohashes. The same characters can
+/// be a valid code in more than one of them, so all are returned.
+fn grid_readings(s: &str) -> Result<Vec<GridReading>, String> {
+    use gp_geo::{codes, gridref};
+    let mut out = Vec::new();
+    if s.is_empty() || s.chars().any(|c| !c.is_ascii_alphanumeric() && c != '+') {
+        return Ok(out);
+    }
+    if s.contains('+') {
+        codes::olc_check(s)?;
+        if !codes::olc_is_full(s) {
+            return Err("this is a short Plus Code: it names a place only near a reference location, so recover the full code with the Plus Code tool first".into());
+        }
+        let ((so, w, n, e), _) = codes::olc_decode(s);
+        out.push((
+            "Plus Code",
+            ((so + n) / 2.0, (w + e) / 2.0),
+            (n - so, e - w),
+        ));
+        return Ok(out);
+    }
+    let cell = |c: gridref::Cell| (c.center(), (c.height, c.width));
+    if let Ok(c) = gridref::maidenhead_decode(s) {
+        let (p, d) = cell(c);
+        out.push(("Maidenhead", p, d));
+    }
+    if let Ok(c) = gridref::gars_decode(s) {
+        let (p, d) = cell(c);
+        out.push(("GARS", p, d));
+    }
+    if let Ok((c, _)) = gridref::georef_decode(s) {
+        let (p, d) = cell(c);
+        out.push(("GEOREF", p, d));
+    }
+    // A geohash needs a letter: digits alone are a number, not a code.
+    if s.len() <= 12
+        && s.chars().any(|c| c.is_ascii_alphabetic())
+        && let Ok((so, w, n, e)) = codes::geohash_decode(s)
+    {
+        out.push(("geohash", ((so + n) / 2.0, (w + e) / 2.0), (n - so, e - w)));
+    }
+    // Upper case reads first as Maidenhead or GEOREF, lower case as a geohash.
+    if s.chars()
+        .filter(|c| c.is_ascii_alphabetic())
+        .take(2)
+        .all(|c| c.is_ascii_lowercase())
+    {
+        out.sort_by_key(|r| r.0 != "geohash");
+    }
+    Ok(out)
+}
+
 fn looks_like_mgrs(s: &str) -> bool {
     let u = s.to_ascii_uppercase();
     let b = u.as_bytes();
@@ -337,7 +486,9 @@ fn looks_like_mgrs(s: &str) -> bool {
         && b[nz + 3..].iter().all(u8::is_ascii_digit)
 }
 
-/// `17N 586309 4477770` or `17T 586309E 4477770N` (zone, hemisphere or band, easting, northing).
+/// `17N 586309 4477770` or `17T 586309E 4477770N` (zone, hemisphere or band,
+/// easting, northing), or UPS as `Z 2426773 1530125` (zone 0; A, B, Y, or Z
+/// as in MGRS, or N or S when both values are grid values, not degrees).
 fn parse_utm_text(s: &str) -> Option<Result<(u8, bool, f64, f64), String>> {
     let w: Vec<String> = s.split_whitespace().map(str::to_ascii_uppercase).collect();
     if w.len() != 3 {
@@ -345,12 +496,21 @@ fn parse_utm_text(s: &str) -> Option<Result<(u8, bool, f64, f64), String>> {
     }
     let zd: String = w[0].chars().take_while(char::is_ascii_digit).collect();
     let letter = w[0][zd.len()..].to_owned();
-    if zd.is_empty() || letter.len() != 1 {
+    if letter.len() != 1 {
         return None;
     }
-    let zone: u8 = zd.parse().ok()?;
     let e: f64 = w[1].trim_end_matches('E').parse().ok()?;
     let n: f64 = w[2].trim_end_matches('N').parse().ok()?;
+    if zd.is_empty() {
+        let north = match letter.as_str() {
+            "Y" | "Z" => true,
+            "A" | "B" => false,
+            "N" | "S" if e >= 100_000.0 && n >= 100_000.0 => letter == "N",
+            _ => return None,
+        };
+        return Some(Ok((0, north, e, n)));
+    }
+    let zone: u8 = zd.parse().ok()?;
     let l = letter.as_bytes()[0];
     // N/S as hemisphere; a band letter (C–X) gives the hemisphere by its position.
     let north = match l {

@@ -104,7 +104,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "992aa734c714bb1b",
+    "hash": "2daeb03615de0b8c",
     "lastmod": "2026-09-24"
   },
   "/disclaimer/": {
@@ -180,8 +180,8 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/": {
-    "hash": "a993018b7e685dd4",
-    "lastmod": "2026-09-23"
+    "hash": "d25207f10962150a",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/datum/": {
     "hash": "1aae9f004539f625",
@@ -324,8 +324,8 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/parse/": {
-    "hash": "151a86554fcd891f",
-    "lastmod": "2026-09-23"
+    "hash": "5bd3becefb9d7a58",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/parse/angle-arithmetic/": {
     "hash": "17164034324cee96",
@@ -336,7 +336,7 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/parse/coordinates/": {
-    "hash": "6ad41c45cbf64483",
+    "hash": "3b2ccfa3c0c5055e",
     "lastmod": "2026-09-24"
   },
   "/geodesy/parse/format/": {
@@ -820,7 +820,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "0b84b67c9dc99e53",
+    "hash": "252ad7adc96f4c35",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -976,7 +976,7 @@
     "lastmod": "2026-09-23"
   },
   "/quality/": {
-    "hash": "f9962dd9e3b65171",
+    "hash": "428db4a4e99ffb3d",
     "lastmod": "2026-09-24"
   },
   "/raster/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "279af76c4c14d840",
+    "hash": "75a29a92d037ccac",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1356,7 +1356,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b1b8c76f86252145",
+    "hash": "16e57ee2d72cf375",
     "lastmod": "2026-09-24"
   }
 }

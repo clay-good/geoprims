@@ -2700,6 +2700,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "leishman-syal-2008",
+      "name": "Figure of Merit Definition for Coaxial Rotors",
+      "issuer": "Leishman, J. G., and Syal, M., Journal of the American Helicopter Society",
+      "currentEdition": "Volume 53, issue 3, page 290 on",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-24",
+      "verificationNote": "Verified at Crossref (DOI 10.4050/JAHS.53.290) on 2026-09-24: title, journal, volume, issue, first page, and 2008. The paper itself was not read; the factor 1.2818 is taken as Cameron, Karpatne, and Sirohi quote it (Journal of Aircraft 53(3), 2016, DOI 10.2514/1.C033442, free at sites.utexas.edu/sirohi), with 1.414 for coplanar rotors and a measured 33.4% mean increase for their coaxial rig.",
+      "freeAccessUrl": "https://doi.org/10.4050/JAHS.53.290",
+      "matchTerms": [
+        "Figure of Merit Definition for Coaxial Rotors"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

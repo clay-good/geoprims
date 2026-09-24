@@ -19,6 +19,14 @@ pub const LEISHMAN: Reference = Reference {
     locator: "Chapter 2 (momentum theory: ideal hover power T^1.5/√(2ρA), figure of merit)",
     url: "https://doi.org/10.1017/CBO9780511809569",
 };
+pub const LEISHMAN_SYAL: Reference = Reference {
+    title: "Figure of Merit Definition for Coaxial Rotors",
+    issuer: "Leishman, J. G., and Syal, M., Journal of the American Helicopter Society",
+    year: 2008,
+    edition: "Volume 53, issue 3",
+    locator: "Momentum theory for a coaxial pair: induced power interference factor 1.2818 for a lower rotor in the fully developed slipstream of the upper rotor",
+    url: "https://doi.org/10.4050/JAHS.53.290",
+};
 pub const ICAO_ATM: Reference = Reference {
     title: "Manual of the ICAO Standard Atmosphere, Doc 7488/3",
     issuer: "International Civil Aviation Organization",
@@ -524,6 +532,7 @@ fn read_hover(ctx: &mut Ctx) -> Result<HoverIn, ToolError> {
 
 pub static HOVER_POWER: ToolDef = ToolDef {
     id: "drone.power.hover-power",
+    version: "1.1.0",
     title: "Multirotor hover power",
     summary: "Electrical hover power for a multirotor from its mass, rotors, and air density, by momentum theory with a figure of merit and motor efficiency, never the ideal power alone.",
     aliases: &[
@@ -555,6 +564,19 @@ pub static HOVER_POWER: ToolDef = ToolDef {
             "Like 10 W; default 0",
             QT::Power,
             "W",
+        ),
+        Field::new(
+            "coaxial",
+            "Coaxial pairs",
+            "yes when the rotors are stacked in pairs, one above the other, like an X8; no (the default) otherwise",
+            Kind::Choice(&["no", "yes"]),
+        ),
+        num(
+            "interference",
+            "Coaxial interference factor",
+            "Induced power of a stacked pair over two separate rotors, like 1.3; default 1.2818 (Leishman and Syal)",
+            1.0,
+            2.0,
         ),
     ],
     outputs: &[
@@ -606,12 +628,21 @@ pub static HOVER_POWER: ToolDef = ToolDef {
             10.0,
         )
         .precision(Precision::Decimals(3)),
+        num(
+            "interference_factor",
+            "Coaxial interference factor",
+            "Applied to the induced power, like 1.2818",
+            1.0,
+            2.0,
+        )
+        .precision(Precision::Decimals(4))
+        .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Momentum theory: P_ideal = (m·g0)^1.5 / √(2ρA); electrical P = P_ideal / (FM·η) + avionics; ISA troposphere density",
+    model: "Momentum theory: P_ideal = (m·g0)^1.5 / √(2ρA); electrical P = P_ideal / (FM·η) + avionics; ISA troposphere density. Rotors in coaxial pairs: the induced power is κ times that of the same rotors apart (κ = 1.2818 for a lower rotor in the fully developed slipstream of the upper one, Leishman and Syal 2008) while the profile share the figure of merit carries is unchanged, so P = P_ideal·(κ + 1/FM − 1)/η + avionics",
     accuracy: "A first estimate. Real power depends on rotor design, frame drag, and wind; calibrate FM·η from a test flight when you can.",
-    references: &[LEISHMAN, ICAO_ATM],
+    references: &[LEISHMAN, ICAO_ATM, LEISHMAN_SYAL],
     examples: &[Example {
         id: "primary",
         title: "A 1.4 kg quadcopter with 9.4 in rotors at sea level",
@@ -649,10 +680,30 @@ fn run_hover(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let r = hover(h.m, h.n, h.d, h.rho, h.fm, h.eta);
-    Ok(Json::obj(vec![
+    let kappa = if ctx.choice("coaxial")? == Some("yes") {
+        if h.n % 2.0 != 0.0 {
+            return Err(ToolError::invalid(
+                "/rotors",
+                "Coaxial rotors come in pairs, so their number is even.",
+            ));
+        }
+        Some(ctx.number("interference")?.unwrap_or(1.2818))
+    } else {
+        if ctx.is_set("interference") {
+            return Err(ToolError::invalid(
+                "/interference",
+                "The interference factor applies to coaxial pairs: set coaxial to yes, or leave it out.",
+            ));
+        }
+        None
+    };
+    // Only the induced share grows: the figure of merit's profile share,
+    // P_ideal (1/FM − 1), stays as it was.
+    let electrical = kappa.map_or(r.electrical, |k| r.ideal * (k + 1.0 / h.fm - 1.0) / h.eta);
+    let mut out = vec![
         (
             "electrical_power",
-            ctx.out("electrical_power", q(r.electrical + av, QT::Power, "W")),
+            ctx.out("electrical_power", q(electrical + av, QT::Power, "W")),
         ),
         (
             "ideal_power",
@@ -668,7 +719,11 @@ fn run_hover(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ctx.out("air_density", q(h.rho, QT::Density, "kg/m3")),
         ),
         ("density_factor", Json::Num(sqrt(RHO0 / h.rho))),
-    ]))
+    ];
+    if let Some(k) = kappa {
+        out.push(("interference_factor", Json::Num(k)));
+    }
+    Ok(Json::obj(out))
 }
 
 // ---------------------------------------------------------------- endurance

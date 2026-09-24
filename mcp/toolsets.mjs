@@ -6,14 +6,13 @@ import { createHash } from 'node:crypto';
 
 /** Each toolset lists id prefixes; members are the stable tools that match, in catalog order. */
 export const TOOLSETS = {
-  // Everyday geodesy; the projections with user-set parameters are their own
-  // toolset, since together the two pass the 40-tool cap.
+  // Everyday geodesy; the projections with user-set parameters, and State
+  // Plane, are their own toolset, since together the two pass the 40-tool cap.
   'geodesy-core': [
     'geodesy.parse.',
     'geodesy.grid-ref.',
     'geodesy.utm.',
     'geodesy.ups.',
-    'geodesy.spcs.',
     'geodesy.datum.',
     'geodesy.ellipsoid.',
     'geodesy.frame.',
@@ -22,14 +21,16 @@ export const TOOLSETS = {
     'geodesy.magnetic.',
   ],
   projections: ['geodesy.projection.', 'geodesy.utm.', 'geodesy.ups.', 'geodesy.spcs.'],
-  navigation: ['navigation.', 'geometry.'],
+  // Navigation and geometry together pass the cap, so each is its own toolset.
+  navigation: ['navigation.'],
+  geometry: ['geometry.'],
   e6b: ['aviation.airspeed.', 'aviation.altimetry.', 'aviation.wind.', 'aviation.performance.'],
   atmosphere: ['aviation.atmosphere.', 'aviation.altimetry.', 'time.sun.'],
   'drone-mapping': ['drone.'],
   'survey-cogo': ['survey.'],
   indexing: ['indexing.'],
 };
-const MAX_PER_TOOLSET = 40;
+export const MAX_PER_TOOLSET = 40;
 const NAME = /^[a-zA-Z0-9_-]{1,64}$/;
 export const DIRECT_OUTPUT_SCHEMA = { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] };
 

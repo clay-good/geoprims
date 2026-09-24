@@ -56,7 +56,7 @@
     "toolsets": {
       "type": "string",
       "title": "Direct toolsets",
-      "description": "Expose the stable tools of these domains as their own tools, beside the six meta-tools. Comma-separated, from: geodesy-core, projections, navigation, e6b, atmosphere, drone-mapping, survey-cogo, indexing. Leave empty for the meta-tools alone.",
+      "description": "Expose the stable tools of these domains as their own tools, beside the six meta-tools. Comma-separated, from: geodesy-core, projections, navigation, geometry, e6b, atmosphere, drone-mapping, survey-cogo, indexing. Leave empty for the meta-tools alone.",
       "required": false,
       "default": ""
     }

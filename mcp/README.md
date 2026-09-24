@@ -128,7 +128,7 @@ Five workflow prompts turn a few arguments into one `geoprims_pipeline` call, wi
 
 | Option | Effect |
 |---|---|
-| `--toolsets=<name,...>` | Also lists each stable tool in the named toolsets as its own MCP tool, named `gp_` plus the id with dots as underscores (`gp_geodesy_utm_forward`). Toolsets: `geodesy-core`, `projections`, `navigation`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`. Only stable tools join, up to 40 per toolset. `projections` holds the projections you set the parameters of (Lambert, Albers, polar stereographic, Web Mercator, and others) beside UTM, UPS, and State Plane. |
+| `--toolsets=<name,...>` | Also lists each stable tool in the named toolsets as its own MCP tool, named `gp_` plus the id with dots as underscores (`gp_geodesy_utm_forward`). Toolsets: `geodesy-core`, `projections`, `navigation`, `geometry`, `e6b`, `atmosphere`, `drone-mapping`, `survey-cogo`, `indexing`. Only stable tools join, up to 40 per toolset. `projections` holds the projections you set the parameters of (Lambert, Albers, polar stereographic, Web Mercator, and others) beside UTM, UPS, and State Plane. |
 | `--no-meta` | With `--toolsets`, lists only the direct tools |
 | `--timeout=<ms>` | Per-call time limit (default 10,000). A call over it returns `LIMIT_EXCEEDED`, and the server keeps serving. |
 | `--debug` | Logs argument values to stderr (off by default) |

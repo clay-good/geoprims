@@ -7,7 +7,7 @@ import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { nodeHost } from '../packages/runtime/src/node.mjs';
 import { TOOLS } from './meta.mjs';
-import { directName } from './toolsets.mjs';
+import { directName, MAX_PER_TOOLSET, TOOLSETS } from './toolsets.mjs';
 
 const here = new URL('.', import.meta.url).pathname;
 const root = join(here, '..');
@@ -249,7 +249,7 @@ test('an untagged checkout without built files explains itself and exits 1', () 
 test('unknown options fail fast; an unknown toolset lists the valid ones', () => {
   const r = spawnSync(process.execPath, [join(here, 'server.mjs'), '--toolsets=bogus'], { input: '' });
   assert.equal(r.status, 2);
-  assert.match(String(r.stderr), /Unknown toolset bogus\. Valid toolsets: geodesy-core, projections, navigation, e6b, atmosphere, drone-mapping, survey-cogo, indexing\./);
+  assert.match(String(r.stderr), /Unknown toolset bogus\. Valid toolsets: geodesy-core, projections, navigation, geometry, e6b, atmosphere, drone-mapping, survey-cogo, indexing\./);
   assert.equal(spawnSync(process.execPath, [join(here, 'server.mjs'), '--wat'], { input: '' }).status, 2);
   assert.equal(spawnSync(process.execPath, [join(here, 'server.mjs'), '--no-meta'], { input: '' }).status, 2);
 });
@@ -564,4 +564,14 @@ test('explain: true shows the work, and the result is the same either way', asyn
     JSON.stringify({ ...JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8')).tools.find((t) => t.id === 'aviation.altimetry.density-altitude').examples[0].input, options: { explain: true } }),
   );
   assert.equal(JSON.stringify(shown.structuredContent.trace), JSON.stringify(JSON.parse(direct).trace));
+});
+
+test('no toolset has more stable tools than it can list', () => {
+  // A toolset lists at most 40 tools, so any member past the cap would drop
+  // out without a word. A promotion that overflows one has to split it.
+  const catalog = JSON.parse(readFileSync(new URL('../dist/catalog/v1.json', import.meta.url), 'utf8'));
+  for (const [name, prefixes] of Object.entries(TOOLSETS)) {
+    const n = catalog.tools.filter((t) => t.stability === 'stable' && prefixes.some((p) => t.id.startsWith(p))).length;
+    assert.ok(n <= MAX_PER_TOOLSET, `toolset ${name} matches ${n} stable tools, over the ${MAX_PER_TOOLSET}-tool cap: split it`);
+  }
 });

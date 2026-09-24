@@ -43,6 +43,8 @@ Refraction at the horizon is the standard 34′. Real refraction varies with the
 - `tools/vectors/gen_usno_sun.py`: regenerates that fixture from the USNO API
 - `core/vectors/time.sun.events.jsonl`: 24 vectors, including USNO day lengths, polar states, the grazing twilight, and the plain words a reader sees
 
+- `core/crates/gp-time/tests/noaa_sun.rs` `sunrise_and_sunset_match_noaa`: the spec's NOAA-agreement scenario, 1,000 random places below 60° latitude and dates from 1950 to 2050 against the astral package's implementation of the NOAA equations (`tools/vectors/gen_noaa_sun.py`), every sunrise and sunset within 1 minute (worst 0.92, with the tool's whole-minute rounding). astral evaluates the equations for the UTC day, which puts an event near 00:00Z two minutes out at 55° in April, so such draws are skipped; `sunrise_at_a_utc_midnight_matches_spa` checks one against NREL SPA's crossing of -0.833° instead, where the tool is right
+
 ## Invariants
 
 - `core/crates/gp-time/tests/time.rs` `sun_events_invariants`: the nine events come in order, solar noon sits midway between sunrise and sunset, and in June the day lengthens with latitude from 60°S to 65°N

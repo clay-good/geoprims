@@ -527,6 +527,7 @@ const BAND_ROW: &[Field] = &[
 
 pub static BANDMATH: ToolDef = ToolDef {
     id: "raster.index.band-math",
+    stability: gp_base::tool::Stability::Stable,
     title: "Band math",
     summary: "Evaluates your own expression over named bands: arithmetic, comparisons, a conditional, and a short list of functions, parsed and evaluated in the core rather than by a JavaScript evaluator.",
     aliases: &[
@@ -603,7 +604,7 @@ pub static BANDMATH: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "The expression is lexed and parsed into a tree, then evaluated in the core; identifiers are the bands given and the functions abs, sqrt, log, exp, min, max, and clamp, and nothing else",
     accuracy: "Exact double-precision arithmetic in the order the expression is written.",
     when_to_use: "Use this for an index the catalog does not have, or a combination of your own: a ratio, a difference, a threshold, or a masked value written as a conditional. It is also the way to try a formula from a paper before deciding whether it deserves a tool of its own.",

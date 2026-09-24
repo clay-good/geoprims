@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f8a371ab43c9c023",
+    "hash": "f6b7a9962b1371a4",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -912,7 +912,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "55689a27d5326024",
+    "hash": "6d5da09911feae3c",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1078,6 +1078,10 @@
   "/raster/index/": {
     "hash": "785cbc33ec1dff3f",
     "lastmod": "2026-09-23"
+  },
+  "/raster/index/band-math/": {
+    "hash": "7d333abcf0eb84d4",
+    "lastmod": "2026-09-24"
   },
   "/raster/index/dnbr/": {
     "hash": "c41675d809cce511",
@@ -1280,7 +1284,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "ee4cd32fddbf6068",
+    "hash": "5716be7af17eef3c",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1468,7 +1472,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "d85a5ade076d59bb",
+    "hash": "35527974f228e045",
     "lastmod": "2026-09-24"
   }
 }

@@ -688,3 +688,82 @@ fn dnbr_invariants() {
     }
     assert!(warns(&run(0.9, -0.6), "SUSPECT_VALUE"));
 }
+
+#[test]
+fn band_math_matches_spyndex_formulas() {
+    // Every formula in the Awesome Spectral Indices catalog that band math can
+    // express, as the catalog writes it (powers of 2 and 0.5 spelled out),
+    // evaluated here and by spyndex on the same bands.
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/data/bandmath_spyndex.json"
+    );
+    let fx: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("JSON");
+    let mut wrong = Vec::new();
+    let mut checked = 0;
+    for idx in fx["indices"].as_array().unwrap() {
+        let expression = idx["expression"].as_str().unwrap();
+        for c in idx["cases"].as_array().unwrap() {
+            checked += 1;
+            let input = serde_json::json!({"expression": expression, "bands": c["bands"]});
+            let r = call("raster.index.band-math", &input.to_string());
+            let want = c["value"].as_f64().unwrap();
+            let got = r["result"]["value"].as_f64();
+            if got.is_none_or(|g| (g - want).abs() > 1e-12 * want.abs().max(1.0)) {
+                wrong.push(format!(
+                    "{} {expression}: {r} vs spyndex {want}",
+                    idx["index"]
+                ));
+            }
+        }
+    }
+    assert!(checked >= 2_500, "{checked}");
+    assert!(
+        wrong.is_empty(),
+        "{} of {checked} differ:\n{}",
+        wrong.len(),
+        wrong[..wrong.len().min(8)].join("\n")
+    );
+}
+
+#[test]
+fn band_math_invariants() {
+    // The value depends on the expression and the band values only: not on
+    // the bands' names, their order, redundant parentheses, or the order of a
+    // sum or product.
+    let eval = |expr: &str, bands: &[(&str, f64)]| {
+        let b: Vec<Value> = bands
+            .iter()
+            .map(|(n, v)| serde_json::json!({"name": n, "value": v}))
+            .collect();
+        let r = call(
+            "raster.index.band-math",
+            &serde_json::json!({"expression": expr, "bands": b}).to_string(),
+        );
+        num(&r, "result.value")
+    };
+    for (n, r, g) in [(0.45, 0.08, 0.12), (0.31, 0.29, 0.05), (0.6, 0.01, 0.33)] {
+        let base = eval(
+            "(nir - red) / (nir + red) + g * 2",
+            &[("nir", n), ("red", r), ("g", g)],
+        );
+        let renamed = eval("(a - b) / (a + b) + c * 2", &[("a", n), ("b", r), ("c", g)]);
+        let reordered = eval(
+            "(nir - red) / (nir + red) + g * 2",
+            &[("g", g), ("red", r), ("nir", n)],
+        );
+        let parens = eval(
+            "((((nir) - (red))) / ((nir + red))) + ((g) * (2))",
+            &[("nir", n), ("red", r), ("g", g)],
+        );
+        let swapped = eval(
+            "(nir - red) / (red + nir) + 2 * g",
+            &[("nir", n), ("red", r), ("g", g)],
+        );
+        assert_eq!(renamed, base);
+        assert_eq!(reordered, base);
+        assert_eq!(parens, base);
+        assert_eq!(swapped, base);
+    }
+}

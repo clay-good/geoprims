@@ -43,7 +43,8 @@ The example is the publisher's own, computed independently of this tool; the too
 ## Differential tests
 
 - `tools/vectors/gen_projections_proj.py`: the northing from GeographicLib's geodesic along the meridian and the easting from the standard parallel's radius, on five ellipsoids; 300 random parameter sets and points in `core/crates/gp-geodesy/tests/data/projections_proj.json`, and vectors after the published examples
-- `core/crates/gp-geodesy/tests/projections.rs`: `projections_match_proj` runs all 300 forward and back, holding the grid to 0.01 mm, the convergence to 1e-7°, and the scales to 1e-8 of themselves
+- `core/crates/gp-geodesy/tests/projections.rs`: `projections_match_proj` runs all 300 forward and back
+- `tools/diff/runner.mjs`: `equidistant-cylindrical-forward`, 10,000 random points and grids, the northing against GeodSolve's distance along the meridian from the equator, within 1 µm, holding the grid to 0.01 mm, the convergence to 1e-7°, and the scales to 1e-8 of themselves
 
 ## Invariants
 

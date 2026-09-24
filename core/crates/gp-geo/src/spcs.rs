@@ -4,9 +4,9 @@
 //! Lambert Conic Conformal (2SP) and Hotine Oblique Mercator (variant A) follow
 //! IOGP Guidance Note 7-2 (EPSG methods 9802 and 9812).
 
-use crate::proj::{Lcc, dlon, phi_of_t, t_of};
+use crate::proj::{Hotine, Lcc, dlon};
 use crate::tm::Tm;
-use libm::{asin, atan2, cos, exp, log, pow, sin, sqrt, tan};
+use libm::{atan2, cos, sin, sqrt};
 
 pub use crate::spcs83_zones::ZONES;
 
@@ -69,114 +69,41 @@ fn e2() -> f64 {
     GRS80_F * (2.0 - GRS80_F)
 }
 
-struct OmercA {
-    a: f64,
-    b: f64,
-    h: f64,
-    g0: f64,
-    lon0: f64,
-    gc: f64,
-    fe: f64,
-    fn_: f64,
+fn omerc_a(latc: f64, lonc: f64, alpha: f64, gamma: f64, k0: f64, fe: f64, fn_: f64) -> Hotine {
+    Hotine::new(
+        GRS80_A, GRS80_F, latc, lonc, alpha, gamma, k0, fe, fn_, false,
+    )
 }
 
-fn omerc_a(latc: f64, lonc: f64, alpha: f64, gamma: f64, k0: f64, fe: f64, fn_: f64) -> OmercA {
-    let (e2, e) = (e2(), sqrt(e2()));
-    let pc = latc.to_radians();
-    let b = sqrt(1.0 + e2 * pow(cos(pc), 4.0) / (1.0 - e2));
-    let a = GRS80_A * b * k0 * sqrt(1.0 - e2) / (1.0 - e2 * sin(pc) * sin(pc));
-    let t0 = t_of(pc, e);
-    let d = (b * sqrt(1.0 - e2) / (cos(pc) * sqrt(1.0 - e2 * sin(pc) * sin(pc)))).max(1.0);
-    let f = d + sqrt(d * d - 1.0) * pc.signum();
-    let h = f * pow(t0, b);
-    let g = (f - 1.0 / f) / 2.0;
-    let g0 = asin(sin(alpha.to_radians()) / d);
-    let lon0 = lonc - (asin(g * tan(g0)) / b).to_degrees();
-    OmercA {
-        a,
-        b,
-        h,
-        g0,
-        lon0,
-        gc: gamma.to_radians(),
-        fe,
-        fn_,
-    }
-}
-
-impl OmercA {
-    fn uv(&self, lat: f64, lon: f64) -> (f64, f64) {
-        let e = sqrt(e2());
-        let q = self.h / pow(t_of(lat.to_radians(), e), self.b);
-        let s = (q - 1.0 / q) / 2.0;
-        let t = (q + 1.0 / q) / 2.0;
-        let dl = self.b * (lon - self.lon0).to_radians();
-        let v = sin(dl);
-        let u_ = (-v * cos(self.g0) + s * sin(self.g0)) / t;
-        let vv = self.a * log((1.0 - u_) / (1.0 + u_)) / (2.0 * self.b);
-        let uu = self.a * atan2(s * cos(self.g0) + v * sin(self.g0), cos(dl)) / self.b;
-        (uu, vv)
-    }
-
-    fn en(&self, lat: f64, lon: f64) -> (f64, f64) {
-        let (u, v) = self.uv(lat, lon);
-        (
-            v * cos(self.gc) + u * sin(self.gc) + self.fe,
-            u * cos(self.gc) - v * sin(self.gc) + self.fn_,
-        )
-    }
-
-    fn forward(&self, lat: f64, lon: f64) -> Grid {
-        let (x, y) = self.en(lat, lon);
-        // Convergence and scale from derivatives by Richardson-extrapolated
-        // central differences: steps of 1e-3° keep cancellation and the O(h⁴)
-        // truncation near 1e-9° (1e-6° steps lost 1e-7° to cancellation).
-        let h = 1e-3;
-        let diff = |dlat: f64, dlon: f64| {
-            let at = |s: f64| {
-                let (xp, yp) = self.en(lat + s * dlat, lon + s * dlon);
-                let (xm, ym) = self.en(lat - s * dlat, lon - s * dlon);
-                ((xp - xm) / (2.0 * s), (yp - ym) / (2.0 * s))
-            };
-            let (x1, y1) = at(h);
-            let (x2, y2) = at(h / 2.0);
-            ((4.0 * x2 - x1) / 3.0, (4.0 * y2 - y1) / 3.0)
+/// A Hotine zone's grid point, with convergence and scale from derivatives
+/// by Richardson-extrapolated central differences: steps of 1e-3° keep
+/// cancellation and the O(h⁴) truncation near 1e-9° (1e-6° steps lost 1e-7°
+/// to cancellation).
+fn omerc_grid(p: &Hotine, lat: f64, lon: f64) -> Grid {
+    let (x, y) = p.en(lat, lon);
+    let h = 1e-3;
+    let diff = |dlat: f64, dlon: f64| {
+        let at = |s: f64| {
+            let (xp, yp) = p.en(lat + s * dlat, lon + s * dlon);
+            let (xm, ym) = p.en(lat - s * dlat, lon - s * dlon);
+            ((xp - xm) / (2.0 * s), (yp - ym) / (2.0 * s))
         };
-        let (xn, yn) = diff(1.0, 0.0);
-        let (xe, ye) = diff(0.0, 1.0);
-        let e2 = e2();
-        let phi = lat.to_radians();
-        let w = sqrt(1.0 - e2 * sin(phi) * sin(phi));
-        // Length of one degree along the parallel on the ellipsoid.
-        let par = 1f64.to_radians() * GRS80_A * cos(phi) / w;
-        Grid {
-            e: x,
-            n: y,
-            convergence: -atan2(xn, yn).to_degrees(),
-            k: xe.hypot(ye) / par,
-        }
-    }
-
-    fn inverse(&self, x: f64, y: f64) -> (f64, f64) {
-        let e2 = e2();
-        let (dx, dy) = (x - self.fe, y - self.fn_);
-        let v = dx * cos(self.gc) - dy * sin(self.gc);
-        let u = dy * cos(self.gc) + dx * sin(self.gc);
-        let q = exp(-(self.b * v / self.a));
-        let s = (q - 1.0 / q) / 2.0;
-        let t = (q + 1.0 / q) / 2.0;
-        let vv = sin(self.b * u / self.a);
-        let uu = (vv * cos(self.g0) + s * sin(self.g0)) / t;
-        let tt = pow(self.h / sqrt((1.0 + uu) / (1.0 - uu)), 1.0 / self.b);
-        // Solve for φ exactly rather than with the truncated series in G7-2.
-        let phi = phi_of_t(tt, sqrt(e2));
-        let lon = self.lon0
-            - (atan2(
-                s * cos(self.g0) - vv * sin(self.g0),
-                cos(self.b * u / self.a),
-            ) / self.b)
-                .to_degrees();
-        (phi.to_degrees(), lon)
+        let (x1, y1) = at(h);
+        let (x2, y2) = at(h / 2.0);
+        ((4.0 * x2 - x1) / 3.0, (4.0 * y2 - y1) / 3.0)
+    };
+    let (xn, yn) = diff(1.0, 0.0);
+    let (xe, ye) = diff(0.0, 1.0);
+    let e2 = e2();
+    let phi = lat.to_radians();
+    let w = sqrt(1.0 - e2 * sin(phi) * sin(phi));
+    // Length of one degree along the parallel on the ellipsoid.
+    let par = 1f64.to_radians() * GRS80_A * cos(phi) / w;
+    Grid {
+        e: x,
+        n: y,
+        convergence: -atan2(xn, yn).to_degrees(),
+        k: xe.hypot(ye) / par,
     }
 }
 
@@ -225,7 +152,7 @@ impl Zone {
                 k0,
                 fe,
                 fn_,
-            } => omerc_a(latc, lonc, alpha, gamma, k0, fe, fn_).forward(lat, lon),
+            } => omerc_grid(&omerc_a(latc, lonc, alpha, gamma, k0, fe, fn_), lat, lon),
         }
     }
 

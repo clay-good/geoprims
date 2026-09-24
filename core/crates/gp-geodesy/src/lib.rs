@@ -1988,6 +1988,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::GNOMONIC_INVERSE,
     &methods::ORTHO_FORWARD,
     &methods::ORTHO_INVERSE,
+    &methods::HOTINE_FORWARD,
+    &methods::HOTINE_INVERSE,
     &geoid::GEOID_HEIGHT,
     &geoid::HEIGHT_CONVERT,
     &frames::PARAMETERS,

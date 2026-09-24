@@ -16,8 +16,8 @@ use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
 use gp_geo::point;
 use gp_geo::proj::{
-    self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Lcc, Orthographic,
-    PolarStereo, WebMercator,
+    self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Hotine, Lcc,
+    Orthographic, PolarStereo, WebMercator,
 };
 
 const G7_2: Reference = Reference {
@@ -1605,4 +1605,232 @@ fn run_ortho_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/easting")),
     }
+}
+
+// ------------------------------------------------------------ Hotine Oblique Mercator
+
+const HOTINE_VARIANT: Field = Field::new(
+    "variant",
+    "Variant",
+    "B (the default): the false easting and northing are at the projection center; A: they are at the natural origin",
+    Kind::Choice(&["B", "A"]),
+);
+const HOTINE_LATC: Field = angle(
+    "latitude_of_center",
+    "Latitude of the projection center",
+    "Like 4",
+    "[-90,90]",
+)
+.required()
+.core();
+const HOTINE_LONC: Field = angle(
+    "longitude_of_center",
+    "Longitude of the projection center",
+    "Like 115",
+    "[-180,180)",
+)
+.required()
+.core();
+const HOTINE_ALPHA: Field = angle(
+    "azimuth",
+    "Azimuth of the initial line",
+    "The central line's direction at the center, clockwise from north, like 53°18'56.9537\"",
+    "[-360,360]",
+)
+.required()
+.core();
+const HOTINE_GAMMA: Field = angle(
+    "rectified_grid_angle",
+    "Angle from the rectified to the skew grid",
+    "Like 53°07'48.3685\"; the azimuth if not given",
+    "[-360,360]",
+);
+const HOTINE_K: Field = Field::new(
+    "scale_factor",
+    "Scale factor on the initial line",
+    "Like 0.99984; 1 if not given",
+    Kind::Number {
+        min: 0.1,
+        max: 10.0,
+    },
+);
+const HOTINE_FE: Field = length(
+    "false_easting",
+    "Easting at the center (B) or false easting (A)",
+    "Like 590476.87 m; 0 if not given",
+);
+const HOTINE_FN: Field = length(
+    "false_northing",
+    "Northing at the center (B) or false northing (A)",
+    "Like 442857.65 m; 0 if not given",
+);
+
+fn hotine(ctx: &mut Ctx) -> Result<Hotine, ToolError> {
+    let e = ellipsoid(ctx)?;
+    let (latc, lonc) = point::read(ctx, "latitude_of_center", "longitude_of_center")?;
+    if latc.abs() >= 90.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The projection center can not be a pole: the initial line needs a direction there.",
+        )
+        .at("/latitude_of_center"));
+    }
+    let alpha = opt_angle(ctx, "azimuth")?.ok_or_else(|| {
+        ToolError::invalid("/azimuth", "The azimuth of the initial line is required.")
+    })?;
+    let gamma = opt_angle(ctx, "rectified_grid_angle")?.unwrap_or(alpha);
+    let k0 = ctx.number("scale_factor")?.unwrap_or(1.0);
+    let (fe, fn_) = (
+        opt_len(ctx, "false_easting")?,
+        opt_len(ctx, "false_northing")?,
+    );
+    let b = ctx.choice("variant")? != Some("A");
+    Ok(Hotine::new(
+        e.a, e.f, latc, lonc, alpha, gamma, k0, fe, fn_, b,
+    ))
+}
+
+pub static HOTINE_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.hotine-forward",
+    title: "Latitude and longitude to Hotine Oblique Mercator",
+    summary: "Projects a latitude and longitude with a Hotine Oblique Mercator you define, a Mercator whose central line runs at any angle, for regions that lie along a slanted band.",
+    aliases: &[
+        "oblique Mercator calculator",
+        "Hotine projection",
+        "lat long to oblique Mercator",
+    ],
+    keywords: &[
+        "Hotine",
+        "oblique Mercator",
+        "rectified skew orthomorphic",
+        "projection",
+        "9815",
+    ],
+    inputs: &[
+        LAT,
+        LON,
+        HOTINE_VARIANT,
+        HOTINE_LATC,
+        HOTINE_LONC,
+        HOTINE_ALPHA,
+        HOTINE_GAMMA,
+        HOTINE_K,
+        HOTINE_FE,
+        HOTINE_FN,
+        E[0],
+        E[1],
+        E[2],
+    ],
+    outputs: FORWARD_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this for grids built on a slanted central line: the Alaska panhandle's state plane zone, the rectified skew orthomorphic grids of Malaysia and Borneo, the Swiss and Hungarian national grids in their Hotine form, and corridor projections for pipelines or railways that run diagonally. Give the center, the azimuth of the line, and the grid's other parameters.",
+    limitations: "It keeps shapes and is true to scale times the scale factor along the central line, but the scale grows away from it, so it suits a band a few hundred kilometers wide. Far from the line, near the two poles of the oblique projection, points run off to infinity and are refused. Variant A and variant B differ only in where the falsings sit, so choosing the wrong one shifts every point by a constant amount. The convergence and scales come from differences of the map, good to about 1e-9.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Hotine Oblique Mercator variants A and B (EPSG methods 9812 and 9815)",
+    accuracy: "Exact to double precision; agrees with PROJ within 1 mm",
+    references: &[G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "The IOGP example: Timbalai 1948 / RSO Borneo",
+        input: r#"{"lat":"5°23'14.1129\"N","lon":"115°48'19.8196\"E","latitude_of_center":4,"longitude_of_center":115,"azimuth":"53°18'56.9537\"","rectified_grid_angle":"53°07'48.3685\"","scale_factor":0.99984,"false_easting":"590476.87 m","false_northing":"442857.65 m","a":"6377298.556 m","inverse_flattening":300.8017}"#,
+        source: "IOGP Guidance Note 7-2, 3.2.4 example (variant B): E = 679,245.73 m, N = 596,562.78 m",
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.hotine-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.spcs.spcs83-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.projection.lcc-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORWARD_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_hotine_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_hotine_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let p = hotine(ctx)?;
+    forward_json(ctx, p.forward(lat, lon))
+}
+
+pub static HOTINE_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.hotine-inverse",
+    title: "Hotine Oblique Mercator to latitude and longitude",
+    summary: "Converts an easting and northing on a Hotine Oblique Mercator you define back to latitude and longitude.",
+    aliases: &["oblique Mercator to lat long", "Hotine inverse"],
+    keywords: &[
+        "Hotine inverse",
+        "oblique Mercator inverse",
+        "inverse",
+        "projection",
+        "9815",
+    ],
+    inputs: &[
+        EASTING,
+        NORTHING,
+        HOTINE_VARIANT,
+        HOTINE_LATC,
+        HOTINE_LONC,
+        HOTINE_ALPHA,
+        HOTINE_GAMMA,
+        HOTINE_K,
+        HOTINE_FE,
+        HOTINE_FN,
+        E[0],
+        E[1],
+        E[2],
+    ],
+    outputs: INVERSE_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn an easting and northing on a Hotine or rectified skew orthomorphic grid back into latitude and longitude: a coordinate from the Alaska panhandle zone, a Malaysian or Borneo grid, or a corridor projection, when you have the grid's parameters.",
+    limitations: "The parameters must be the grid's own and in its units, and the variant must match how the grid places its falsings: the same numbers read with the other variant land a fixed distance away. The latitude is solved exactly rather than by the guidance note's truncated series. The result is on the ellipsoid you choose, which should be the grid's.",
+    warnings: &["UNIT_ASSUMED"],
+    model: "Hotine Oblique Mercator variants A and B (EPSG methods 9812 and 9815)",
+    accuracy: "Exact to double precision; latitude solved by iteration to 1e-14 radians",
+    references: &[G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "Back to the IOGP example",
+        input: r#"{"easting":"679245.73 m","northing":"596562.78 m","latitude_of_center":4,"longitude_of_center":115,"azimuth":"53°18'56.9537\"","rectified_grid_angle":"53°07'48.3685\"","scale_factor":0.99984,"false_easting":"590476.87 m","false_northing":"442857.65 m","a":"6377298.556 m","inverse_flattening":300.8017}"#,
+        source: "IOGP Guidance Note 7-2, 3.2.4 example reversed: 5°23'14.1129\" N, 115°48'19.8196\" E",
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.hotine-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.spcs.spcs83-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+    ],
+    sentence: INVERSE_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_hotine_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_hotine_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (x, y) = grid_in(ctx)?;
+    let p = hotine(ctx)?;
+    let (lat, lon) = p.inverse(x, y);
+    inverse_json(ctx, (lat, proj::dlon(lon, 0.0)))
 }

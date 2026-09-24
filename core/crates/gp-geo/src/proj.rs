@@ -13,7 +13,7 @@
 use crate::tm::Tm;
 use core::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
-use libm::{asin, asinh, atan, atan2, cos, log, pow, sin, sinh, sqrt, tan};
+use libm::{asin, asinh, atan, atan2, cos, exp, log, pow, sin, sinh, sqrt, tan};
 
 /// A projected point: easting and northing (m), convergence (degrees, the
 /// bearing of grid north clockwise from true north), and the point scale
@@ -534,6 +534,134 @@ fn factors(
         rich(h1, h2),
         rich(parallel(dl), parallel(dl / 2.0)),
     )
+}
+
+/// Hotine Oblique Mercator, variant A (EPSG 9812, falsings at the natural
+/// origin) and variant B (EPSG 9815, coordinates given at the projection
+/// center), following Guidance Note 7-2. The inverse solves φ exactly rather
+/// than with the note's truncated series.
+pub struct Hotine {
+    /// Guidance Note 7-2's A, B, H, and γ0.
+    a: f64,
+    b: f64,
+    h: f64,
+    g0: f64,
+    lon0: f64,
+    /// The rectified grid angle γc (radians).
+    gc: f64,
+    fe: f64,
+    fn_: f64,
+    e2: f64,
+    /// Variant B's offset of u to the projection center, |uc|·sign(φc); 0 for A.
+    uoff: f64,
+    geod: Geodesic,
+}
+
+impl Hotine {
+    /// `fe` and `fn_` are the false easting and northing (variant A) or the
+    /// easting and northing at the projection center (variant B).
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        a_ell: f64,
+        f: f64,
+        latc: f64,
+        lonc: f64,
+        alpha: f64,
+        gamma: f64,
+        k0: f64,
+        fe: f64,
+        fn_: f64,
+        variant_b: bool,
+    ) -> Hotine {
+        let (e2, e) = (f * (2.0 - f), sqrt(f * (2.0 - f)));
+        let pc = latc.to_radians();
+        let b = sqrt(1.0 + e2 * pow(cos(pc), 4.0) / (1.0 - e2));
+        let a = a_ell * b * k0 * sqrt(1.0 - e2) / (1.0 - e2 * sin(pc) * sin(pc));
+        let t0 = t_of(pc, e);
+        let d = (b * sqrt(1.0 - e2) / (cos(pc) * sqrt(1.0 - e2 * sin(pc) * sin(pc)))).max(1.0);
+        let f_ = d + sqrt(d * d - 1.0) * pc.signum();
+        let h = f_ * pow(t0, b);
+        let g = (f_ - 1.0 / f_) / 2.0;
+        let g0 = asin(sin(alpha.to_radians()) / d);
+        let lon0 = lonc - (asin(g * tan(g0)) / b).to_degrees();
+        let uoff = if !variant_b {
+            0.0
+        } else if (alpha.abs() - 90.0).abs() < 1e-12 {
+            (a * (lonc - lon0).to_radians()).abs() * pc.signum()
+        } else {
+            (a / b * atan(sqrt(d * d - 1.0) / cos(alpha.to_radians()))).abs() * pc.signum()
+        };
+        Hotine {
+            a,
+            b,
+            h,
+            g0,
+            lon0,
+            gc: gamma.to_radians(),
+            fe,
+            fn_,
+            e2,
+            uoff,
+            geod: Geodesic::new(a_ell, f),
+        }
+    }
+
+    fn uv(&self, lat: f64, lon: f64) -> (f64, f64) {
+        let e = sqrt(self.e2);
+        let q = self.h / pow(t_of(lat.to_radians(), e), self.b);
+        let s = (q - 1.0 / q) / 2.0;
+        let t = (q + 1.0 / q) / 2.0;
+        // Wrapped, so a grid near the antimeridian takes points across it.
+        let dl = self.b * dlon(lon, self.lon0).to_radians();
+        let v = sin(dl);
+        let u_ = (-v * cos(self.g0) + s * sin(self.g0)) / t;
+        let vv = self.a * log((1.0 - u_) / (1.0 + u_)) / (2.0 * self.b);
+        let uu = self.a * atan2(s * cos(self.g0) + v * sin(self.g0), cos(dl)) / self.b;
+        (uu - self.uoff, vv)
+    }
+
+    /// Easting and northing.
+    pub fn en(&self, lat: f64, lon: f64) -> (f64, f64) {
+        let (u, v) = self.uv(lat, lon);
+        (
+            v * cos(self.gc) + u * sin(self.gc) + self.fe,
+            u * cos(self.gc) - v * sin(self.gc) + self.fn_,
+        )
+    }
+
+    /// The grid point, with convergence and scales from differences of the
+    /// map (it is conformal, so the two scales agree to their precision).
+    pub fn forward(&self, lat: f64, lon: f64) -> Grid {
+        let (e, n) = self.en(lat, lon);
+        let (convergence, h, k) = factors(|la, lo| self.en(la, lo), &self.geod, lat, lon);
+        Grid {
+            e,
+            n,
+            convergence,
+            h,
+            k,
+        }
+    }
+
+    pub fn inverse(&self, x: f64, y: f64) -> (f64, f64) {
+        let (dx, dy) = (x - self.fe, y - self.fn_);
+        let v = dx * cos(self.gc) - dy * sin(self.gc);
+        let u = dy * cos(self.gc) + dx * sin(self.gc) + self.uoff;
+        let q = exp(-(self.b * v / self.a));
+        let s = (q - 1.0 / q) / 2.0;
+        let t = (q + 1.0 / q) / 2.0;
+        let vv = sin(self.b * u / self.a);
+        let uu = (vv * cos(self.g0) + s * sin(self.g0)) / t;
+        let tt = pow(self.h / sqrt((1.0 + uu) / (1.0 - uu)), 1.0 / self.b);
+        let phi = phi_of_t(tt, sqrt(self.e2));
+        let lon = self.lon0
+            - (atan2(
+                s * cos(self.g0) - vv * sin(self.g0),
+                cos(self.b * u / self.a),
+            ) / self.b)
+                .to_degrees();
+        (phi.to_degrees(), lon)
+    }
 }
 
 /// Orthographic (EPSG method 9840): the ellipsoid seen from infinitely far

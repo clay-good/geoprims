@@ -3,8 +3,8 @@
 methods with custom parameters" and "Round-trip and differential accuracy").
 
 For Web Mercator, Lambert Conformal Conic (1SP and 2SP), Albers Equal Area,
-Polar Stereographic (variants A and B), and the ellipsoidal Orthographic,
-random parameter sets and points go through PROJ (pyproj). Equidistant Cylindrical is EPSG's ellipsoidal method
+Polar Stereographic (variants A and B), the ellipsoidal Orthographic, and
+Hotine Oblique Mercator (variants A and B), random parameter sets and points go through PROJ (pyproj). Equidistant Cylindrical is EPSG's ellipsoidal method
 1028, which PROJ does not implement (its eqc is the spherical form), so its
 northing is GeographicLib's meridian distance and its easting the standard
 parallel's radius times the longitude difference.
@@ -49,11 +49,12 @@ def transformer(projstr, ell):
     return _cache[key]
 
 
-def factors(project, lat, lon, ell):
+def factors(project, lat, lon, ell, curved=False):
     """Convergence and the meridian and parallel scales, by differences.
 
-    Meridians are straight on the grid in all five methods, so the direction
-    of a 0.01° chord is grid north exactly. The scales are chord ratios over
+    Meridians are straight on the grid in the conics, cylinders, and polar
+    and orthographic azimuthals, so the direction of a 0.01° chord is grid
+    north exactly; Hotine's curve, and its chord is extrapolated too. The scales are chord ratios over
     about 100 m of ground, Richardson-extrapolated so the curvature terms
     cancel: the reference's rounding then costs under 1e-10."""
     a, f = AF[ell]
@@ -62,6 +63,15 @@ def factors(project, lat, lon, ell):
     e1, n1 = project(lat - d, lon)
     e2, n2 = project(lat + d, lon)
     conv = -math.degrees(math.atan2(e2 - e1, n2 - n1))
+    if curved:
+        # Meridians that curve on the grid (Hotine): the chord's direction
+        # over about 100 m, Richardson-extrapolated.
+        def chord_dir(dd):
+            e1, n1 = project(lat - dd, lon)
+            e2, n2 = project(lat + dd, lon)
+            return math.atan2(e2 - e1, n2 - n1)
+        dd = 100 / 111_000
+        conv = -math.degrees((4 * chord_dir(dd / 2) - chord_dir(dd)) / 3)
 
     def h_at(dd):
         e1, n1 = project(lat - dd, lon)
@@ -158,6 +168,24 @@ def orthographic(rng):
     return params, ell, max(-89.0, min(89.0, d["lat2"])), d["lon2"], f"+proj=ortho +lat_0={lat0} +lon_0={lon0} +x_0={fe} +y_0={fn_}"
 
 
+def hotine(rng):
+    ell = rng.choice(list(ELLIPSOIDS))
+    latc = round(rng.uniform(-70, 70), 4)
+    lonc = round(rng.uniform(-180, 180), 4)
+    alpha = round(rng.uniform(-85, 85), 6)
+    gamma = round(alpha + rng.uniform(-2, 2), 6)
+    k0 = round(rng.uniform(0.999, 1.0), 6)
+    fe, fn_ = round(rng.uniform(0, 1e6), 3), round(rng.uniform(0, 1e6), 3)
+    b = rng.random() < 0.5
+    params = {"variant": "B" if b else "A", "latitude_of_center": latc, "longitude_of_center": lonc, "azimuth": alpha,
+              "rectified_grid_angle": gamma, "scale_factor": k0, "false_easting": f"{fe} m", "false_northing": f"{fn_} m"}
+    # Within 15° of the center, the band such a grid serves.
+    lat = max(-85.0, min(85.0, latc + rng.uniform(-15, 15)))
+    lon = lonc + rng.uniform(-15, 15)
+    ps = f"+proj=omerc +lat_0={latc} +lonc={lonc} +alpha={alpha} +gamma={gamma} +k={k0} +x_0={fe} +y_0={fn_}" + ("" if b else " +no_uoff")
+    return params, ell, lat, lon, ps
+
+
 # Methods are drawn in this order from one seed; a new method goes last so
 # the others keep their cases.
 METHODS = [
@@ -167,6 +195,7 @@ METHODS = [
     ("polar-stereographic", polar),
     ("equidistant-cylindrical", None),
     ("orthographic", orthographic),
+    ("hotine", hotine),
 ]
 
 
@@ -208,7 +237,7 @@ def main():
                 src = f"PROJ {proj_version_str} ({ps} {ELLIPSOIDS[ell]})"
             lat, lon = round(lat, 9), round((lon + 180) % 360 - 180, 9)
             e, n = project(lat, lon)
-            conv, h, k = factors(project, lat, lon, ell)
+            conv, h, k = factors(project, lat, lon, ell, curved=(name == "hotine"))
             if name != "web-mercator":
                 params = {**params, "ellipsoid": ell}
             cases.append({"params": params, "lat": lat, "lon": lon, "e": e, "n": n, "convergence": conv, "h": h, "k": k, "source": src})

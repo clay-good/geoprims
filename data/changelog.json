@@ -5,6 +5,16 @@
       "date": "2026-09-24",
       "kind": "added",
       "tools": [
+        "geodesy.projection.hotine-forward",
+        "geodesy.projection.hotine-inverse"
+      ],
+      "vectors": [],
+      "summary": "Two new stable tools convert on a Hotine Oblique Mercator you define, variant A or B: the projection for grids along a slanted band, like the Alaska panhandle's state plane zone and the Malaysian and Borneo grids. They reproduce the RSO Borneo example in IOGP Guidance Note 7-2 and agree with PROJ within a micrometer on 10,000 random points. State Plane's Alaska zone 1 now uses the same code, with its results unchanged."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.orthographic-forward",
         "geodesy.projection.orthographic-inverse"
       ],

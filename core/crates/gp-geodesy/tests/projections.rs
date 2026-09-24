@@ -17,6 +17,7 @@ const FIXTURES: [(&str, &[&str]); 2] = [
             "polar-stereographic",
             "equidistant-cylindrical",
             "orthographic",
+            "hotine",
         ],
     ),
     (
@@ -164,6 +165,10 @@ fn projections_round_trip() {
             "orthographic",
             json!({"latitude_of_origin": 20, "longitude_of_origin": 10}),
         ),
+        (
+            "hotine",
+            json!({"latitude_of_center": 20, "longitude_of_center": 10, "azimuth": 35, "scale_factor": 0.9996}),
+        ),
     ];
     for (m, p) in setups {
         let north_only = m == "polar-stereographic";
@@ -176,6 +181,7 @@ fn projections_round_trip() {
             let cap = match m {
                 "azimuthal-equidistant" => Some(80.0),
                 "gnomonic" | "orthographic" => Some(60.0),
+                "hotine" => Some(30.0),
                 _ => None,
             };
             if let Some(cap) = cap {
@@ -378,6 +384,43 @@ fn projection_invariants() {
     ))
     .unwrap();
     assert_eq!(far["error"]["code"], "OUT_OF_DOMAIN");
+    // Hotine: variant B puts the center at the given easting and northing,
+    // and variant A with its falsings moved by the center's variant-A
+    // coordinates is the same grid; it is conformal.
+    let hot = json!({"latitude_of_center": 46.5, "longitude_of_center": 8.0, "azimuth": 30, "scale_factor": 1});
+    let c = run(
+        "geodesy.projection.hotine-forward",
+        &with(
+            &hot,
+            json!({"lat": 46.5, "lon": 8.0, "false_easting": "600000 m", "false_northing": "200000 m"}),
+        ),
+    );
+    assert!(
+        (val(&c, "easting") - 600000.0).abs() < 1e-8
+            && (val(&c, "northing") - 200000.0).abs() < 1e-8
+    );
+    let a0 = run(
+        "geodesy.projection.hotine-forward",
+        &with(&hot, json!({"lat": 46.5, "lon": 8.0, "variant": "A"})),
+    );
+    let (ea, na) = (val(&a0, "easting"), val(&a0, "northing"));
+    let pa = run(
+        "geodesy.projection.hotine-forward",
+        &with(
+            &hot,
+            json!({"lat": 47.3, "lon": 9.1, "variant": "A", "false_easting": format!("{} m", 600000.0 - ea), "false_northing": format!("{} m", 200000.0 - na)}),
+        ),
+    );
+    let pb = run(
+        "geodesy.projection.hotine-forward",
+        &with(
+            &hot,
+            json!({"lat": 47.3, "lon": 9.1, "false_easting": "600000 m", "false_northing": "200000 m"}),
+        ),
+    );
+    assert!((val(&pa, "easting") - val(&pb, "easting")).abs() < 1e-7);
+    assert!((val(&pa, "northing") - val(&pb, "northing")).abs() < 1e-7);
+    assert!((val(&pb, "scale_meridian") - val(&pb, "scale_parallel")).abs() < 1e-9);
     // Web Mercator's scales on the ellipsoid: a over the two radii of curvature times cos φ.
     let r = run(
         "geodesy.projection.web-mercator-forward",

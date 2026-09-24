@@ -353,6 +353,38 @@ export const FAMILIES = [
   },
   ...projFamilies(),
   ...azimuthalFamilies(),
+  {
+    // EPSG's ellipsoidal Equidistant Cylindrical, which PROJ lacks (its eqc
+    // is the spherical form): the northing is GeodSolve's distance along
+    // the meridian from the equator, the easting the standard parallel's
+    // radius times the longitude difference.
+    name: 'equidistant-cylindrical-forward',
+    tool: 'geodesy.projection.equidistant-cylindrical-forward',
+    needs: 'GeodSolve',
+    make(r) {
+      const [sp, lon0] = [q(140 * r() - 70), q(360 * r() - 180)];
+      const [lat, lon] = [q(178 * r() - 89), q(uniformLon(r))];
+      return {
+        input: { lat, lon, standard_parallel: sp, longitude_of_origin: lon0, options: { outputUnits: { easting: 'm', northing: 'm' } } },
+        line: `0 ${fx(lon0)} ${fx(lat)} ${fx(lon0)}`,
+        sp,
+        dl: (((lon - lon0 + 540) % 360) - 180) * (Math.PI / 180),
+        sign: Math.sign(lat),
+      };
+    },
+    run: (lines) => reference('GeodSolve', ['-i', '-p', '12'], lines),
+    compare(res, [, , s], c) {
+      const f = 1 / 298.257223563;
+      const e2 = f * (2 - f);
+      const p = (c.sp * Math.PI) / 180;
+      const e = ((6378137 * Math.cos(p)) / Math.sqrt(1 - e2 * Math.sin(p) ** 2)) * c.dl;
+      // Longitudes a hair from the cut opposite the central meridian may
+      // land on either side of it.
+      if (Math.abs(Math.abs(c.dl) - Math.PI) > 1e-9 && Math.abs(res.easting.value - e) > 1e-6) return `easting ${res.easting.value} vs ${e}`;
+      if (Math.abs(res.northing.value - c.sign * s) > 1e-6) return `northing ${res.northing.value} vs ${c.sign * s}`;
+      return null;
+    },
+  },
 ];
 
 /**
@@ -478,6 +510,21 @@ function projFamilies() {
         const lon = l0 + Math.atan2(Math.sin(az) * Math.sin(d) * Math.cos(p0), Math.cos(d) - Math.sin(p0) * Math.sin(lat));
         return [(lat * 180) / Math.PI, wrap((lon * 180) / Math.PI)];
       },
+    ),
+    family(
+      'hotine',
+      (r) => {
+        const [ell, latc, lonc, fe, fn] = [ells[Math.floor(r() * ells.length)], r6(140 * r() - 70), r6(360 * r() - 180), r6(1e6 * r()), r6(1e6 * r())];
+        const alpha = r6(170 * r() - 85);
+        const gamma = r6(alpha + 4 * (r() - 0.5));
+        const k0 = r6(0.999 + 0.001 * r());
+        const b = r() < 0.5;
+        return {
+          input: { variant: b ? 'B' : 'A', latitude_of_center: latc, longitude_of_center: lonc, azimuth: alpha, rectified_grid_angle: gamma, scale_factor: k0, false_easting: `${fe} m`, false_northing: `${fn} m`, ellipsoid: ell },
+          proj: `+proj=omerc +lat_0=${latc} +lonc=${lonc} +alpha=${alpha} +gamma=${gamma} +k=${k0} +x_0=${fe} +y_0=${fn}${b ? '' : ' +no_uoff'} ${ELL[ell]}`,
+        };
+      },
+      (r, s) => [Math.max(-85, Math.min(85, s.input.latitude_of_center + 30 * (r() - 0.5))), wrap(s.input.longitude_of_center + 30 * (r() - 0.5))],
     ),
   ];
 }

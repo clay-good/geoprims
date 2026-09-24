@@ -17,6 +17,8 @@ use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, R
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::buffer::seg_dist;
 
+use crate::robust::orient_exact;
+
 const KARNEY: Reference = Reference {
     title: "Algorithms for geodesics",
     issuer: "Karney, C. F. F., Journal of Geodesy",
@@ -115,20 +117,22 @@ const RESULT_ROW: &[Field] = &[
     Field::new(
         "distance",
         "To the boundary",
-        "Geodesic, to the nearest edge",
+        "Geodesic, to the nearest edge; not given with planar edges",
         Kind::Quantity {
             q: QT::Length,
             unit: "m",
         },
     )
-    .precision(Precision::Decimals(3)),
+    .precision(Precision::Decimals(3))
+    .optional(),
 ];
 
 pub static POINT_IN_POLYGON: ToolDef = ToolDef {
     id: "geometry.predicate.point-in-polygon",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Point in polygon",
-    summary: "Whether points are inside a polygon with geodesic edges, by the winding rule and the even-odd rule, with holes, on the boundary within 1 mm, and how far each is from the edge.",
+    summary: "Whether points are inside a polygon with geodesic edges, by the winding rule and the even-odd rule, with holes, on the boundary within 1 mm, and how far each is from the edge; or with straight edges in longitude and latitude, decided exactly.",
     aliases: &[
         "point in polygon",
         "inside polygon test",
@@ -171,6 +175,12 @@ pub static POINT_IN_POLYGON: ToolDef = ToolDef {
         )
         .required()
         .core(),
+        Field::new(
+            "edges",
+            "Edges",
+            "geodesic (the default), or planar: straight in longitude and latitude, as most mapping software draws them",
+            Kind::Choice(&["geodesic", "planar"]),
+        ),
     ],
     outputs: &[
         Field::new(
@@ -199,8 +209,8 @@ pub static POINT_IN_POLYGON: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
     warnings: &[],
-    model: "Winding number = Σ over geodesic edges of the signed turn in azimuth seen from the point, ÷ 360° (azimuths by the geodesic inverse problem, Karney 2013); holes are turned opposite the outline first. Winding rule: inside when the number is not 0. Even-odd: inside when it is odd. On the boundary when the geodesic distance to an edge is under 1 mm",
-    accuracy: "Exact on the ellipsoid for rings smaller than a hemisphere around the point; on-boundary within 1 mm",
+    model: "Winding number = Σ over geodesic edges of the signed turn in azimuth seen from the point, ÷ 360° (azimuths by the geodesic inverse problem, Karney 2013); holes are turned opposite the outline first. Winding rule: inside when the number is not 0. Even-odd: inside when it is odd. On the boundary when the geodesic distance to an edge is under 1 mm. Planar edges (straight in longitude and latitude): the winding number from the crossings of a ray toward increasing longitude, each side-of-edge decision by Shewchuk's exact orientation test, and on the boundary exactly when the point lies on an edge",
+    accuracy: "Exact on the ellipsoid for rings smaller than a hemisphere around the point; on-boundary within 1 mm. Planar: exact for the coordinates as given",
     when_to_use: "Use this to ask whether positions fall inside an area: aircraft in a restricted zone, vehicles in a geofence, sightings in a survey block, addresses in a district. Many points can be asked about at once. It answers by both of the rules in common use — the winding rule and the even-odd rule, which differ for a self-overlapping outline — and gives each point's distance to the nearest edge, so a point that is nearly in can be told from one that is comfortably in.",
     limitations: "Inside is decided on the ellipsoid with geodesic edges, which is not the same question as inside a polygon drawn on a projected map: near a boundary the two can differ, and the difference grows with the length of the edges. A point within a millimetre of an edge is reported as on the boundary rather than forced to one side, because at that range the answer belongs to the data rather than to the arithmetic. An outline that crosses itself has no single meaning of inside, which is why both rules are reported rather than one; where they differ, the shape is the problem. The ring must be smaller than a hemisphere around the point.",
     references: &[KARNEY],
@@ -294,6 +304,93 @@ fn orientation(g: &Geodesic, ring: &[(f64, f64)]) -> f64 {
     area
 }
 
+/// Straight edges in longitude and latitude: the winding number by
+/// crossings of the ray to +longitude, each decided by the exact orientation
+/// test, and on the boundary exactly when the point is on an edge.
+fn run_planar(rings: &[Vec<(f64, f64)>], pts: &[(f64, f64)]) -> Json {
+    // (x, y) = (longitude, latitude), as typed.
+    let rings: Vec<Vec<(f64, f64)>> = rings
+        .iter()
+        .map(|r| r.iter().map(|&(la, lo)| (lo, la)).collect())
+        .collect();
+    let area2 = |r: &[(f64, f64)]| -> f64 {
+        (0..r.len())
+            .map(|i| {
+                let (a, b) = (r[i], r[(i + 1) % r.len()]);
+                a.0 * b.1 - b.0 * a.1
+            })
+            .sum()
+    };
+    // Holes wind against the outline, so the winding rule leaves them out.
+    let sign0 = area2(&rings[0]).signum();
+    let rings: Vec<Vec<(f64, f64)>> = rings
+        .into_iter()
+        .enumerate()
+        .map(|(k, mut r)| {
+            if k > 0 && area2(&r).signum() == sign0 {
+                r.reverse();
+            }
+            r
+        })
+        .collect();
+    let (mut rows, mut inside_count, mut first) = (Vec::new(), 0usize, String::new());
+    for (i, &(la, lo)) in pts.iter().enumerate() {
+        let p = (lo, la);
+        let (mut w, mut on) = (0i64, false);
+        for r in &rings {
+            let n = r.len();
+            for k in 0..n {
+                let (a, b) = (r[k], r[(k + 1) % n]);
+                let o = orient_exact(a, b, p);
+                if o == 0
+                    && p.0 >= a.0.min(b.0)
+                    && p.0 <= a.0.max(b.0)
+                    && p.1 >= a.1.min(b.1)
+                    && p.1 <= a.1.max(b.1)
+                {
+                    on = true;
+                }
+                if a.1 <= p.1 {
+                    if b.1 > p.1 && o > 0 {
+                        w += 1;
+                    }
+                } else if b.1 <= p.1 && o < 0 {
+                    w -= 1;
+                }
+            }
+        }
+        // Count the outline's own direction as positive.
+        let w = w * sign0 as i64;
+        let rule = |inside: bool| {
+            if on {
+                "on-boundary"
+            } else if inside {
+                "inside"
+            } else {
+                "outside"
+            }
+        };
+        let nonzero = rule(w != 0);
+        if nonzero != "outside" {
+            inside_count += 1;
+        }
+        if i == 0 {
+            first = nonzero.to_owned();
+        }
+        rows.push(Json::obj([
+            ("point", Json::Num((i + 1) as f64)),
+            ("winding", Json::Num(w as f64)),
+            ("nonzero", Json::str(nonzero)),
+            ("even_odd", Json::str(rule(w.rem_euclid(2) == 1))),
+        ]));
+    }
+    Json::obj([
+        ("inside_count", Json::Num(inside_count as f64)),
+        ("first", Json::str(first)),
+        ("results", Json::Arr(rows)),
+    ])
+}
+
 fn run_pip(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let mut rings = read(ctx, "polygon", true)?;
     rings.retain(|r| !r.is_empty());
@@ -309,6 +406,9 @@ fn run_pip(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
     }
     let pts: Vec<(f64, f64)> = read(ctx, "points", false)?.into_iter().flatten().collect();
+    if ctx.choice("edges")? == Some("planar") {
+        return Ok(run_planar(&rings, &pts));
+    }
     let g = Geodesic::wgs84();
     // Holes run opposite the outline, so the winding rule leaves them out.
     let sign0 = orientation(&g, &rings[0]).signum();

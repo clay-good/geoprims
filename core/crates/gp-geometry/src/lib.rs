@@ -9,6 +9,7 @@ pub mod mesh;
 pub mod overlay;
 pub mod predicate;
 pub mod relate;
+pub mod robust;
 pub mod shape;
 pub mod simplify;
 pub mod validity;

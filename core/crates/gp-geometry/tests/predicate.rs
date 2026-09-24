@@ -127,3 +127,69 @@ fn point_in_polygon_invariants() {
         last = d;
     }
 }
+
+/// Planar edges against GEOS, exactly: 300 grid polygons (some with a hole)
+/// and 3,600 points on the grid and on half steps, 146 of them on an edge or
+/// a corner (tools/vectors/gen_pip_planar.py).
+#[test]
+fn planar_point_in_polygon_matches_geos() {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/data/pip_planar_geos.json"
+    );
+    let cases: Vec<Value> =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("JSON");
+    let mut wrong = Vec::new();
+    for (i, c) in cases.iter().enumerate() {
+        let mut polygon: Vec<Value> = c["outline"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| json!({"lat": p[0], "lon": p[1]}))
+            .collect();
+        for (k, h) in c["holes"].as_array().unwrap().iter().enumerate() {
+            for p in h.as_array().unwrap() {
+                polygon.push(json!({"lat": p[0], "lon": p[1], "ring": k + 1}));
+            }
+        }
+        let points: Vec<Value> = c["points"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| json!({"lat": p[0], "lon": p[1]}))
+            .collect();
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "geometry.predicate.point-in-polygon",
+            &json!({"polygon": polygon, "points": points, "edges": "planar"}).to_string(),
+        ))
+        .expect("JSON");
+        for (j, want) in c["expect"].as_array().unwrap().iter().enumerate() {
+            let got = &r["result"]["results"][j];
+            if &got["nonzero"] != want || &got["even_odd"] != want {
+                wrong.push(format!("polygon {i} point {j}: {got}, GEOS {want}"));
+            }
+        }
+    }
+    assert!(
+        wrong.is_empty(),
+        "{} differ:\n{}",
+        wrong.len(),
+        wrong[..wrong.len().min(10)].join("\n")
+    );
+    // A pentagram's middle is wound twice: inside by the winding rule, outside
+    // by even-odd, with planar edges as with geodesic ones.
+    let star = json!([{"lat":0.0,"lon":0.0},{"lat":0.0,"lon":10.0},{"lat":-6.0,"lon":2.0},
+                      {"lat":4.0,"lon":5.0},{"lat":-6.0,"lon":8.0}]);
+    let r = pip_planar(&star, &json!([{"lat": -1.5, "lon": 5.0}]));
+    assert_eq!(at(&r, 0, "winding").as_i64().map(i64::abs), Some(2), "{r}");
+    assert_eq!(at(&r, 0, "nonzero"), "inside");
+    assert_eq!(at(&r, 0, "even_odd"), "outside");
+}
+
+fn pip_planar(polygon: &Value, points: &Value) -> Value {
+    serde_json::from_str(&REGISTRY.invoke(
+        "geometry.predicate.point-in-polygon",
+        &json!({"polygon": polygon, "points": points, "edges": "planar"}).to_string(),
+    ))
+    .expect("JSON")
+}

@@ -894,3 +894,60 @@ fn ghilani_citations_match_the_cited_edition() {
     }
     assert!(bad.is_empty(), "{}", bad.join("\n"));
 }
+
+#[test]
+fn inverse_forward_invariants() {
+    // Forward undoes inverse; swapping the points turns the azimuth by 180°
+    // and keeps the distance; shifting both points changes nothing; turning
+    // the pair about the origin adds the turn to the azimuth.
+    let inv = |n1: f64, e1: f64, n2: f64, e2: f64| {
+        let r = call(
+            "survey.cogo.inverse",
+            &serde_json::json!({"northing1": n1, "easting1": e1, "northing2": n2, "easting2": e2})
+                .to_string(),
+        );
+        (
+            num(&r, "result.distance.value"),
+            num(&r, "result.azimuth.value"),
+        )
+    };
+    let fwd = |n: f64, e: f64, az: f64, d: f64| {
+        let r = call(
+            "survey.cogo.forward",
+            &serde_json::json!({"northing": n, "easting": e, "direction": format!("{az}"), "distance": d})
+                .to_string(),
+        );
+        (
+            num(&r, "result.northing.value"),
+            num(&r, "result.easting.value"),
+        )
+    };
+    let turn = |a: f64| a.rem_euclid(360.0);
+    let close = |a: f64, b: f64| {
+        let d = (a - b).rem_euclid(360.0);
+        d.min(360.0 - d)
+    };
+    let pts = [
+        (512_345.678, 2_104_567.891, 513_001.234, 2_103_210.987),
+        (100.0, 100.0, 40.0, 180.0),
+        (0.0, 0.0, -0.37, -1234.5),
+        (8_765.4, 1_000.0, 8_765.4, 1_000.25),
+    ];
+    for (n1, e1, n2, e2) in pts {
+        let (d, az) = inv(n1, e1, n2, e2);
+        let (n, e) = fwd(n1, e1, az, d);
+        assert!((n - n2).abs() < 1e-6 && (e - e2).abs() < 1e-6, "{n} {e}");
+        let (d2, az2) = inv(n2, e2, n1, e1);
+        assert!((d2 - d).abs() <= 1e-12 * d.max(1.0));
+        assert!(close(az2, turn(az + 180.0)) < 1e-9);
+        let (d3, az3) = inv(n1 - 3_000.0, e1 + 7_000.0, n2 - 3_000.0, e2 + 7_000.0);
+        assert!((d3 - d).abs() < 1e-8 && close(az3, az) < 1e-8);
+        let t = 0.7_f64;
+        let rot = |n: f64, e: f64| (n * t.cos() - e * t.sin(), n * t.sin() + e * t.cos());
+        let (rn1, re1) = rot(n1, e1);
+        let (rn2, re2) = rot(n2, e2);
+        let (d4, az4) = inv(rn1, re1, rn2, re2);
+        assert!((d4 - d).abs() < 1e-8 * d.max(1.0));
+        assert!(close(az4, turn(az + t.to_degrees())) < 1e-7);
+    }
+}

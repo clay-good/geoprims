@@ -123,6 +123,7 @@ pub(crate) fn common_unit(values: &[(&str, Q)]) -> Result<&'static Unit, ToolErr
 
 pub static INVERSE: ToolDef = ToolDef {
     id: "survey.cogo.inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Inverse between two coordinates",
     summary: "The bearing, azimuth, and horizontal distance between two plane-survey coordinates (northing, easting).",
     aliases: &["COGO inverse", "bearing and distance between points"],
@@ -168,12 +169,9 @@ pub static INVERSE: ToolDef = ToolDef {
         .angle_range("[0,360)"),
     ],
     errors: &[ErrorCode::UnitMismatch],
-    warnings: &[
-        "LEGACY_UNIT",
-        "AZIMUTH_UNDEFINED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["LEGACY_UNIT", "AZIMUTH_UNDEFINED", "UNIT_ASSUMED"],
+    when_to_use: "Use this when you have two points on a plane grid, such as State Plane, UTM, or a local job grid, and need the bearing and distance between them: to stake a line, check a record call against found monuments, or set up a traverse course from coordinates. It also gives the azimuth in decimal degrees, which is what most data collectors and COGO programs expect when you key in a line by hand.",
+    limitations: "The answer is a grid bearing and grid distance, because the method is plane geometry. It is not a ground distance until the combined factor is applied, and the bearing is referenced to grid north, not true or magnetic north. Latitude and longitude need a geodesic inverse instead.",
     model: "Plane coordinate geometry: azimuth = atan2(ΔE, ΔN), distance = √(ΔN² + ΔE²)",
     accuracy: "Exact for the plane (grid or assumed) coordinates given",
     references: &[GHILANI],
@@ -188,10 +186,20 @@ pub static INVERSE: ToolDef = ToolDef {
         kind: "vector-diagram",
         map: &[("distance", "distance")],
     }],
-    related: &[Related {
-        id: "survey.cogo.forward",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "survey.cogo.forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "next",
+        },
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "next",
+        },
+    ],
     sentence: "The bearing is {bearing} and the distance is {distance}.",
     limits: &[("batchRows", 10_000)],
     run: run_inverse,
@@ -224,6 +232,7 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static FORWARD: ToolDef = ToolDef {
     id: "survey.cogo.forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Coordinates from a bearing and distance",
     summary: "The coordinates of a point from a known point, a bearing or azimuth, and a horizontal distance (a radial sideshot).",
     aliases: &["COGO forward", "traverse point", "radial sideshot"],
@@ -252,7 +261,9 @@ pub static FORWARD: ToolDef = ToolDef {
         len_out("easting", "Easting", "Of the new point"),
     ],
     errors: &[ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
+    when_to_use: "Use this when you know a point on a plane grid and have a bearing or azimuth and a horizontal distance from it: a radial sideshot from an instrument setup, the next corner of a deed or traverse course, or a point to stake from a design bearing and distance. Chain it course by course to rebuild a traverse or deed plot from its calls, one point at a time, in feet or meters.",
+    limitations: "The distance must be horizontal and on the grid: reduce a slope distance first, and scale a ground distance by the combined factor. The bearing is taken as a grid bearing, so a true or magnetic bearing needs its convergence or declination applied first.",
     model: "N2 = N1 + d·cos(az), E2 = E1 + d·sin(az)",
     accuracy: "Exact for plane coordinates",
     references: &[GHILANI],
@@ -267,10 +278,20 @@ pub static FORWARD: ToolDef = ToolDef {
         kind: "point",
         map: &[("northing", "northing"), ("easting", "easting")],
     }],
-    related: &[Related {
-        id: "survey.cogo.inverse",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "next",
+        },
+        Related {
+            id: "survey.cogo.offset-shot",
+            reason: "alternative",
+        },
+    ],
     sentence: "The new point is at northing {northing}, easting {easting}.",
     limits: &[("batchRows", 10_000)],
     run: run_forward,

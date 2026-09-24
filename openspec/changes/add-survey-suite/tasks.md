@@ -42,4 +42,4 @@
 
 - [ ] 5.1 Register all 57 operations with alias slugs with surveyor aliases (COGO, Bowditch, compass rule, lat/dep, cut and fill, AEA); verify catalog counts
 - [ ] 5.2 Write docs per tool and the "Close a traverse" guide; verify the guide chain end to end
-- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report
+- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-24: `survey.cogo.inverse` and `survey.cogo.forward` promoted, each matched to the University of Memphis CIVL 1112 latitudes-and-departures table for all five courses and to a Python differential at ten state-plane-sized cases, with a round-trip, reversal, shift, and rotation invariants test; earlier: area by coordinates, traverse closure, circular and vertical curves, combined factor, and deed plot)

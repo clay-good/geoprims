@@ -48,6 +48,29 @@ def inverse():
         out.append(vec(i, {"northing1": n1, "easting1": e1, "northing2": n2, "easting2": e2},
                        {"result.distance.value": math.hypot(dn, de), "result.azimuth.value": float(az), "result.bearing": bearing(az)}, src, ver))
     out.append(vec(6, {"northing1": "0 ft", "easting1": "0 ftUS", "northing2": 1, "easting2": 1}, {"ok": False, "error.code": "UNIT_MISMATCH"}, SPEC, "2026"))
+    # University of Memphis CIVL 1112, page 4: the printed latitudes and departures of the five
+    # courses, inverted. They are rounded to 0.001 ft, so the course comes back within that rounding.
+    for (b_, az, d), (lat, dep) in zip(MEMPHIS_COURSES, MEMPHIS_LATDEP):
+        out.append(vec(len(out) + 1, {"northing1": 0, "easting1": 0, "northing2": lat, "easting2": dep},
+                       {"result.distance.value": d, "result.azimuth.value": az}, MEMPHIS, MEMPHIS_VER))
+        out[-1]["tolerance"] = {"result.distance.value": {"abs": 0.001}, "result.azimuth.value": {"abs": 0.0005}}
+    # State-plane-sized coordinates in every quadrant, against Python's atan2 and hypot.
+    rng = random.Random(1112)
+    for _ in range(10):
+        n1, e1 = rng.uniform(1e5, 9e5), rng.uniform(1e6, 3e6)
+        n2, e2 = n1 + rng.uniform(-5000, 5000), e1 + rng.uniform(-5000, 5000)
+        n1, e1, n2, e2 = (round(x, 3) for x in (n1, e1, n2, e2))
+        dn, de = n2 - n1, e2 - e1
+        az = math.degrees(math.atan2(de, dn)) % 360
+        out.append(vec(len(out) + 1, {"northing1": n1, "easting1": e1, "northing2": n2, "easting2": e2},
+                       {"result.distance.value": math.hypot(dn, de), "result.azimuth.value": az, "result.bearing": bearing(az)}, rel=1e-9))
+    # Due east and due south, and meters and US survey feet kept in their own unit.
+    for i, (n2, e2, az) in enumerate([(0, 250.0, 90.0), (-250.0, 0, 180.0)]):
+        out.append(vec(len(out) + 1, {"northing1": 0, "easting1": 0, "northing2": n2, "easting2": e2},
+                       {"result.distance.value": 250.0, "result.azimuth.value": az}))
+    for u in ("m", "ftUS"):
+        out.append(vec(len(out) + 1, {"northing1": f"1000 {u}", "easting1": f"2000 {u}", "northing2": f"1300 {u}", "easting2": f"2400 {u}"},
+                       {"result.distance.value": 500.0, "result.distance.unit": u, "result.azimuth.value": math.degrees(math.atan2(400, 300))}))
     return out
 
 
@@ -59,7 +82,36 @@ def forward():
         a = math.radians(az)
         out.append(vec(i, {"northing": n, "easting": e, "direction": d, "distance": dist},
                        {"result.northing.value": n + dist * math.cos(a), "result.easting.value": e + dist * math.sin(a)}, rel=1e-11))
+    # University of Memphis CIVL 1112, page 4: each course from (0, 0) gives its printed latitude and departure.
+    for (b_, az, d), (lat, dep) in zip(MEMPHIS_COURSES, MEMPHIS_LATDEP):
+        out.append(vec(len(out) + 1, {"northing": 0, "easting": 0, "direction": b_, "distance": d},
+                       {"result.northing.value": lat, "result.easting.value": dep}, MEMPHIS, MEMPHIS_VER))
+        out[-1]["tolerance"] = {"result.northing.value": {"abs": 0.0005}, "result.easting.value": {"abs": 0.0005}}
+    # Random quadrant bearings to the second from state-plane-sized points, against Python.
+    rng = random.Random(2112)
+    for _ in range(10):
+        n, e = round(rng.uniform(1e5, 9e5), 3), round(rng.uniform(1e6, 3e6), 3)
+        deg, mnt, sec = rng.randrange(0, 90), rng.randrange(0, 60), rng.randrange(0, 60)
+        ns, ew = rng.choice("NS"), rng.choice("EW")
+        q = deg + mnt / 60 + sec / 3600
+        az = {("N", "E"): q, ("S", "E"): 180 - q, ("S", "W"): 180 + q, ("N", "W"): 360 - q}[(ns, ew)]
+        dist = round(rng.uniform(1, 5000), 3)
+        a = math.radians(az)
+        out.append(vec(len(out) + 1, {"northing": n, "easting": e, "direction": f"{ns} {deg}-{mnt:02d}-{sec:02d} {ew}", "distance": dist},
+                       {"result.northing.value": n + dist * math.cos(a), "result.easting.value": e + dist * math.sin(a)}, rel=1e-11))
+    # Decimal azimuths due north and due west, and a point in meters.
+    for az, (dn, de) in [("0", (100.0, 0.0)), ("270", (0.0, -100.0))]:
+        out.append(vec(len(out) + 1, {"northing": 500, "easting": 500, "direction": az, "distance": 100},
+                       {"result.northing.value": 500 + dn, "result.easting.value": 500 + de}))
+    out.append(vec(len(out) + 1, {"northing": "100 m", "easting": "200 m", "direction": "N 30-00-00 E", "distance": "50 m"},
+                   {"result.northing.value": 100 + 50 * math.cos(math.radians(30)), "result.easting.value": 225.0, "result.northing.unit": "m"}, rel=1e-11))
     return out
+
+
+# University of Memphis CIVL 1112, Surveying - Traverse Calculations, page 4 table: bearing, azimuth, length, then latitude and departure.
+MEMPHIS_COURSES = [("S 6-15 W", 186.25, 189.53), ("S 29-38 E", 180 - (29 + 38 / 60), 175.18), ("N 81-18 W", 360 - 81.3, 197.78),
+                   ("N 12-24 W", 360 - 12.4, 142.39), ("N 42-59 E", 42 + 59 / 60, 234.58)]
+MEMPHIS_LATDEP = [(-188.403, -20.634), (-152.268, 86.617), (29.916, -195.504), (139.068, -30.576), (171.607, 159.933)]
 
 
 def traverse_case(courses, method="compass"):

@@ -995,6 +995,16 @@
       ]
     },
     {
+      "id": "nva",
+      "term": "NVA",
+      "expansion": "non-vegetated vertical accuracy",
+      "definition": "The height accuracy of an elevation product measured at checkpoints on open ground, such as bare soil, short grass, or pavement. It must meet the product's accuracy class.",
+      "source": "asprs-pas",
+      "relatedTools": [
+        "drone.photogrammetry.asprs-accuracy"
+      ]
+    },
+    {
       "id": "nws",
       "term": "NWS",
       "expansion": "National Weather Service",
@@ -1584,6 +1594,16 @@
       "relatedTools": [
         "aviation.airspeed.cas-to-tas",
         "aviation.airspeed.tas-to-cas"
+      ]
+    },
+    {
+      "id": "vva",
+      "term": "VVA",
+      "expansion": "vegetated vertical accuracy",
+      "definition": "The height accuracy of an elevation product measured at checkpoints in vegetation, such as tall weeds, crops, brush, or forest. It is reported as found, with no pass or fail.",
+      "source": "asprs-pas",
+      "relatedTools": [
+        "drone.photogrammetry.asprs-accuracy"
       ]
     },
     {

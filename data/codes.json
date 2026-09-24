@@ -98,6 +98,14 @@
       "severity": "info",
       "message": "The centroid lies outside the shape."
     },
+    "CHECKPOINTS_TOO_COARSE": {
+      "severity": "caution",
+      "message": "The checkpoints are not at least twice as accurate as the product."
+    },
+    "CHECKPOINT_BLUNDER": {
+      "severity": "caution",
+      "message": "A checkpoint error is over three times the target RMSE."
+    },
     "CIVIL_TWILIGHT_APPROXIMATED": {
       "severity": "accuracy",
       "message": "Civil twilight was computed as the sun 6° below the horizon, not read from the Air Almanac."
@@ -217,6 +225,10 @@
     "LOW_ACCURACY_TRANSFORM": {
       "severity": "accuracy",
       "message": "The chosen transformation has low accuracy."
+    },
+    "MEAN_ERROR_HIGH": {
+      "severity": "caution",
+      "message": "A mean error is at least 25% of the target RMSE, which suggests a systematic error."
     },
     "MODEL_EXTRAPOLATED": {
       "severity": "accuracy",

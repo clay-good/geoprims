@@ -153,9 +153,9 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://my.asprs.org/MBRR/iCore/Store/StoreLayouts/Item_Detail.aspx?iProductCode=PAS2024&Category=PUB",
+      "lastVerified": "2026-09-24",
+      "verificationNote": "On 2026-09-24 ASPRS's public document link (publicdocuments.asprs.org) and its store page led to a member sign-in, so the text was read in Edition 2, Version 1.0 (February 2023) as distributed by the Missouri surveyors' association (aagsmo.org): sections 7.2, 7.3, 7.4, 7.11 with Table 7.4, 7.12, and 7.13. Edition 2, Version 2.0 was approved in 2024 (PE&RS, August 2024) and could not be read without an account.",
+      "freeAccessUrl": "https://asprs.org/Main/Main/Standards/Positional-Accuracy-Standards.aspx",
       "matchTerms": [
         "ASPRS Positional Accuracy Standards"
       ],

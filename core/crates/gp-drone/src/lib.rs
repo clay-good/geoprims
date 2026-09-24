@@ -1,7 +1,8 @@
 //! Drone: photogrammetry (add-drone-suite). Camera geometry for aerial mapping,
 //! vendor-neutral: GSD, altitude for a target GSD, footprint and trigger
-//! timing, motion blur, and the ASPRS Edition 2 accuracy calculator.
+//! timing and motion blur; the ASPRS Edition 2 accuracy calculator is in `asprs`.
 
+pub mod asprs;
 pub mod export;
 pub mod facade;
 pub mod geofence;
@@ -21,7 +22,7 @@ use gp_base::tool::{
     Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
-use libm::{hypot, sqrt};
+use libm::hypot;
 
 const WOLF: Reference = Reference {
     title: "Elements of Photogrammetry with Applications in GIS",
@@ -38,14 +39,6 @@ const PIX4D: Reference = Reference {
     edition: "Vendor guidance, not a standard",
     locator: "General case: at least 75% front, 60% side; forest and dense vegetation: at least 85% front and side",
     url: "https://support.pix4d.com/hc/en-us/articles/202557459",
-};
-const ASPRS: Reference = Reference {
-    title: "ASPRS Positional Accuracy Standards for Digital Geospatial Data, Edition 2",
-    issuer: "American Society for Photogrammetry and Remote Sensing",
-    year: 2024,
-    edition: "Edition 2, Version 2.0",
-    locator: "Sections 7.5 to 7.9 (RMSE, checkpoint error, 30-checkpoint minimum)",
-    url: "https://publicdocuments.asprs.org/PositionalAccuracyStd-Ed2-V2",
 };
 const FAA_107: Reference = Reference {
     title: "14 CFR 107.51, Operating limitations for small unmanned aircraft",
@@ -1030,178 +1023,6 @@ fn run_motion_blur(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
-pub static ASPRS_ACCURACY: ToolDef = ToolDef {
-    id: "drone.photogrammetry.asprs-accuracy",
-    title: "ASPRS accuracy (Edition 2)",
-    summary: "Horizontal and vertical accuracy by the ASPRS Positional Accuracy Standards, Edition 2, including the checkpoint survey's own error and the 30-checkpoint minimum.",
-    aliases: &["ASPRS accuracy calculator", "RMSE accuracy class"],
-    keywords: &[
-        "ASPRS",
-        "accuracy",
-        "RMSE",
-        "checkpoints",
-        "NVA",
-        "mapping standard",
-    ],
-    inputs: &[
-        Field::new(
-            "rmse_x",
-            "RMSE x",
-            "Fit to checkpoints, easting, like 1.0 cm",
-            Kind::Quantity {
-                q: QT::Length,
-                unit: "cm",
-            },
-        )
-        .core(),
-        Field::new(
-            "rmse_y",
-            "RMSE y",
-            "Fit to checkpoints, northing, like 1.0 cm",
-            Kind::Quantity {
-                q: QT::Length,
-                unit: "cm",
-            },
-        )
-        .core(),
-        Field::new(
-            "rmse_z",
-            "RMSE z",
-            "Fit to checkpoints, vertical, like 1.0 cm",
-            Kind::Quantity {
-                q: QT::Length,
-                unit: "cm",
-            },
-        )
-        .core(),
-        Field::new(
-            "checkpoint_rmse",
-            "Checkpoint survey RMSE",
-            "Accuracy of the checkpoints themselves, like 2 cm",
-            Kind::Quantity {
-                q: QT::Length,
-                unit: "cm",
-            },
-        )
-        .required()
-        .core(),
-        Field::new(
-            "checkpoints",
-            "Number of checkpoints",
-            "Edition 2 requires at least 30",
-            Kind::Number { min: 0.0, max: 1e6 },
-        )
-        .required()
-        .core(),
-    ],
-    outputs: &[
-        Field::new(
-            "horizontal",
-            "Horizontal accuracy (RMSE_H)",
-            "Product accuracy including checkpoint error",
-            Kind::Quantity {
-                q: QT::Length,
-                unit: "cm",
-            },
-        )
-        .precision(Precision::Significant(3))
-        .optional(),
-        Field::new(
-            "vertical",
-            "Vertical accuracy (RMSE_V)",
-            "Product accuracy including checkpoint error",
-            Kind::Quantity {
-                q: QT::Length,
-                unit: "cm",
-            },
-        )
-        .precision(Precision::Significant(3))
-        .optional(),
-        Field::new(
-            "checkpoint_status",
-            "Checkpoint check",
-            "Whether the checkpoints meet Edition 2",
-            Kind::Text { max_len: 160 },
-        ),
-    ],
-    errors: &[ErrorCode::InvalidInput],
-    warnings: &[
-        "INSUFFICIENT_CHECKPOINTS",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
-    model: "ASPRS Edition 2: product RMSE = √(RMSE_fit² + RMSE_checkpoint²); RMSE_H = √(RMSE_x² + RMSE_y²) per component",
-    accuracy: "Exact to the standard's definitions",
-    references: &[ASPRS],
-    examples: &[Example {
-        id: "primary",
-        title: "1.00 cm fit with 2.0 cm checkpoints",
-        input: r#"{"rmse_z":"1.00 cm","checkpoint_rmse":"2.0 cm","checkpoints":30}"#,
-        source: "add-drone-suite scenario: product accuracy 2.24 cm",
-    }],
-    primary_example: "primary",
-    visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
-    }],
-    sentence: "{if vertical > 0}Vertical accuracy is {vertical} RMSE. {/if}{if horizontal > 0}Horizontal accuracy is {horizontal} RMSE. {/if}{checkpoint_status}",
-    limits: &[("batchRows", 10_000)],
-    run: run_asprs,
-    ..ToolDef::BLANK
-};
-
-fn run_asprs(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let meters = unit(QT::Length, "m");
-    let rx = ctx.quantity("rmse_x")?.map(|q| q.to(meters));
-    let ry = ctx.quantity("rmse_y")?.map(|q| q.to(meters));
-    let rz = ctx.quantity("rmse_z")?.map(|q| q.to(meters));
-    let cp = ctx.req_quantity("checkpoint_rmse")?.to(meters);
-    let n = ctx.number("checkpoints")?.expect("required");
-    if rx.is_none() && ry.is_none() && rz.is_none() {
-        return Err(ToolError::invalid(
-            "/rmse_z",
-            "Give at least one fit RMSE: x and y for horizontal, or z for vertical.",
-        ));
-    }
-    if rx.is_some() != ry.is_some() {
-        return Err(ToolError::invalid(
-            "/rmse_y",
-            "Horizontal accuracy needs both RMSE x and RMSE y.",
-        ));
-    }
-    // Edition 2 adds the checkpoint survey error to each component in quadrature.
-    let with_cp = |r: f64| sqrt(r * r + cp * cp);
-    let mut out = Vec::new();
-    if let (Some(x), Some(y)) = (rx, ry) {
-        let h = hypot(with_cp(x), with_cp(y));
-        out.push(("horizontal", ctx.out("horizontal", m(h))));
-    }
-    if let Some(z) = rz {
-        out.push(("vertical", ctx.out("vertical", m(with_cp(z)))));
-    }
-    let mut notes = Vec::new();
-    if n < 30.0 {
-        ctx.warnings.push(
-            Warning::new(
-                "INSUFFICIENT_CHECKPOINTS",
-                "ASPRS Edition 2 requires at least 30 checkpoints for an accuracy statement.",
-            )
-            .at("/checkpoints"),
-        );
-        notes.push(format!(
-            "{} checkpoints is below the Edition 2 minimum of 30.",
-            display::number(n, Precision::Decimals(0), ctx.options.format)
-        ));
-    }
-    let status = if notes.is_empty() {
-        "The checkpoint count meets the Edition 2 minimum of 30.".to_owned()
-    } else {
-        notes.join(" ")
-    };
-    out.push(("checkpoint_status", Json::str(status)));
-    Ok(Json::obj(out))
-}
-
 pub static TOOLS: &[&ToolDef] = &[
     &GSD,
     &oblique::OBLIQUE_GSD,
@@ -1212,7 +1033,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &ALTITUDE_FOR_GSD,
     &TRIGGER,
     &MOTION_BLUR,
-    &ASPRS_ACCURACY,
+    &asprs::ASPRS_ACCURACY,
     &power::BATTERY_ENERGY,
     &power::HOVER_POWER,
     &power::CALIBRATE_HOVER,

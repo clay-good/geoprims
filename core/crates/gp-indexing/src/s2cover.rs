@@ -423,7 +423,60 @@ fn run_covering(ctx: &mut Ctx) -> Result<Json, ToolError> {
             }
         }
     };
-    let (cells, stopped_early) = cover(&region, min_level, max_level, max_cells);
+    // Rectangles and caps go through S2's own coverer, so the cells are the
+    // ones S2 itself gives; polygons, which S2 covers through S2Polygon, keep
+    // the refinement here.
+    let exact = match region {
+        Region::Rect {
+            south,
+            north,
+            west,
+            east,
+        } => Some((
+            crate::s2exact::Region::Rect {
+                south,
+                north,
+                west,
+                east,
+            },
+            (south.to_radians().sin() - north.to_radians().sin()).abs()
+                * if west <= east {
+                    east - west
+                } else {
+                    east + 360.0 - west
+                }
+                .to_radians(),
+        )),
+        Region::Cap { lat, lon, radius } => Some((
+            crate::s2exact::Region::Cap { lat, lon, radius },
+            2.0 * core::f64::consts::PI * (1.0 - radius.min(core::f64::consts::PI).cos()),
+        )),
+        Region::Polygon { .. } => None,
+    };
+    let (cells, stopped_early) = match exact {
+        Some((r, area)) => {
+            // S2 splits every cell coarser than the lowest level, so a wide
+            // region with a fine lowest level would make millions of them.
+            // Cells at a level vary about twofold around the average, so an
+            // estimate past eight times the budget means at least four times
+            // it, which is refused below anyway; refuse before building them.
+            let estimate = area / crate::s2::average_area_steradians(min_level);
+            if estimate > 8.0 * max_cells as f64 {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    format!(
+                        "Covering this region with cells no coarser than level {min_level} takes about {estimate:.0} of them, far past the {max_cells} asked for. Raise the budget, or lower the lowest level."
+                    ),
+                )
+                .at("/min_level"));
+            }
+            (
+                crate::s2exact::covering(&r, min_level, max_level, max_cells),
+                false,
+            )
+        }
+        None => cover(&region, min_level, max_level, max_cells),
+    };
     if stopped_early {
         ctx.warnings.push(Warning::new(
             "COVERING_OVER_BUDGET",
@@ -634,7 +687,7 @@ const COVER_ROW: &[Field] = &[
 
 pub static COVERING: ToolDef = ToolDef {
     id: "indexing.s2.covering",
-    version: "1.1.0",
+    version: "2.0.0",
     title: "S2 cells covering a region",
     summary: "The S2 cells that cover a latitude and longitude rectangle, a circle around a point, or a polygon with holes, within a level range and a cell budget.",
     aliases: &[

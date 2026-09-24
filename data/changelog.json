@@ -3,6 +3,37 @@
   "entries": [
     {
       "date": "2026-09-24",
+      "kind": "result-change",
+      "tools": [
+        "indexing.s2.covering"
+      ],
+      "vectors": [
+        "indexing.s2.covering v001",
+        "indexing.s2.covering v002",
+        "indexing.s2.covering v003",
+        "indexing.s2.covering v005",
+        "indexing.s2.covering v006",
+        "indexing.s2.covering v007",
+        "indexing.s2.covering v008",
+        "indexing.s2.covering v009",
+        "indexing.s2.covering v010",
+        "indexing.s2.covering v011",
+        "indexing.s2.covering v012",
+        "indexing.s2.covering v013",
+        "indexing.s2.covering v014",
+        "indexing.s2.covering v015",
+        "indexing.s2.covering v016",
+        "indexing.s2.covering v017",
+        "indexing.s2.covering v018",
+        "indexing.s2.covering v019",
+        "indexing.s2.covering v020",
+        "indexing.s2.covering v021",
+        "indexing.s2.covering v022"
+      ],
+      "summary": "S2 coverings of rectangles and circles (version 2.0.0) now come from a port of S2's own RegionCoverer, so they are the same cells S2 itself returns and can be exchanged with other S2 systems. Before, this tool refined from the six cube faces with its own rule, which gave valid but different coverings, often with more cells than needed. The new coverings match s2sphere cell for cell on 400 random regions. Polygon coverings are unchanged. The superseded vectors pinned the old coverings."
+    },
+    {
+      "date": "2026-09-24",
       "kind": "added",
       "tools": [
         "geodesy.grid-ref.mgrs-forward",

@@ -10,6 +10,7 @@ pub mod h3fill;
 pub mod h3outline;
 pub mod s2;
 pub mod s2cover;
+pub mod s2exact;
 pub mod s2tools;
 
 use codes::Bounds;

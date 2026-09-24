@@ -31,7 +31,7 @@ fn ij_to_pos(orientation: u8, ij: u8) -> u8 {
 
 /// The quadratic projection S2 uses: cell areas vary by about 2.1 to 1 across
 /// a face, against 5.2 to 1 for the plain tangent projection.
-fn st_to_uv(s: f64) -> f64 {
+pub(crate) fn st_to_uv(s: f64) -> f64 {
     if s >= 0.5 {
         (1.0 / 3.0) * (4.0 * s * s - 1.0)
     } else {
@@ -39,7 +39,7 @@ fn st_to_uv(s: f64) -> f64 {
     }
 }
 
-fn uv_to_st(u: f64) -> f64 {
+pub(crate) fn uv_to_st(u: f64) -> f64 {
     if u >= 0.0 {
         0.5 * sqrt(1.0 + 3.0 * u)
     } else {

@@ -53,3 +53,15 @@ test('every explainer is linked from /learn/ and from each tool it names', () =>
   }
   assert.deepEqual(problems, []);
 });
+
+// The spec's scenario: "What is density altitude?" embeds a live example and
+// links the density-altitude, pressure-altitude, and ISA tools.
+test('the density-altitude explainer links its three tools and runs a live example', () => {
+  const html = page('learn/density-altitude');
+  assert.match(html, /<title>[^<]*density altitude/i);
+  assert.match(html, /<section class="learn-live"[\s\S]*?<astro-island/);
+  const cards = /<section class="learn-tools"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+  for (const href of ['/aviation/altimetry/density-altitude/', '/aviation/altimetry/pressure-altitude/', '/aviation/atmosphere/isa/']) {
+    assert.ok(cards.includes(`href="${href}"`), `${href} is not among the explainer's tools`);
+  }
+});

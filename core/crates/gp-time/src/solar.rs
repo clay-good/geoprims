@@ -8,7 +8,8 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::point;
@@ -763,6 +764,20 @@ pub static EVENTS: ToolDef = ToolDef {
         Related {
             id: "time.sun.mapping-window",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Sun altitude at sunrise and sunset (radius and refraction)",
+            value: "-0.833",
+            unit: "deg",
+            source: "noaa-solar",
+        },
+        Assumption {
+            name: "Horizon dip per root meter of height (1.76 arcmin)",
+            value: "0.0293",
+            unit: "deg",
+            source: "bowditch",
         },
     ],
     sentence: "{if day_minutes >= 1440}The sun stays up all day, so there is no sunrise or sunset.{else}{if day_minutes <= 0}The sun stays down all day, so there is no sunrise or sunset.{else}Sunrise is {sunrise} and sunset is {sunset}.{/if}{/if}",

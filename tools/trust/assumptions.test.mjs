@@ -42,6 +42,10 @@ const MUST_DECLARE = [
   'aviation.airspeed.cas-to-tas',
   'aviation.airspeed.tas-to-cas',
   'aviation.altimetry.cold-temperature',
+  'geodesy.magnetic.declination',
+  'geodesy.magnetic.true-to-magnetic',
+  'geodesy.magnetic.grivation',
+  'time.sun.events',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

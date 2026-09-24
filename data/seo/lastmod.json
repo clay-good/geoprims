@@ -316,16 +316,16 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "87eb85024d0b03d8",
-    "lastmod": "2026-09-23"
+    "hash": "9ef04a29a90758e1",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/magnetic/grivation/": {
-    "hash": "87e7972caab878b4",
-    "lastmod": "2026-09-23"
+    "hash": "9b999a4b24f2a2cf",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
-    "hash": "03804eeda67c1ab1",
-    "lastmod": "2026-09-23"
+    "hash": "96c99b34915b25bc",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/parse/": {
     "hash": "5bd3becefb9d7a58",
@@ -1240,8 +1240,8 @@
     "lastmod": "2026-09-23"
   },
   "/time/sun/events/": {
-    "hash": "23dba75454e572f3",
-    "lastmod": "2026-09-23"
+    "hash": "a8329921d25eede0",
+    "lastmod": "2026-09-24"
   },
   "/time/sun/hotspot/": {
     "hash": "4544dffaaa922dc0",
@@ -1448,7 +1448,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "46431577ad2526ff",
+    "hash": "13371284d94c5d34",
     "lastmod": "2026-09-24"
   }
 }

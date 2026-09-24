@@ -8,7 +8,8 @@ use gp_base::envelope::AssetRef;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::dms::{self, Axis};
@@ -402,6 +403,26 @@ pub static DECLINATION: ToolDef = ToolDef {
             reason: "parent",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Geomagnetic reference radius",
+            value: "6371.2",
+            unit: "km",
+            source: "wmm",
+        },
+        Assumption {
+            name: "WGS 84 semi-major axis, for the geocentric latitude",
+            value: "6378.137",
+            unit: "km",
+            source: "wmm",
+        },
+        Assumption {
+            name: "WGS 84 flattening",
+            value: "1/298.257223563",
+            unit: "1",
+            source: "wmm",
+        },
+    ],
     sentence: "Magnetic declination is {declination_text}, moving {abs(annual_change)} {if annual_change < 0}west{else}east{/if} each year.{if declination_uncertainty > 0} The model is good to about {declination_uncertainty}.{/if}{warn COMPASS_BLACKOUT_ZONE} A compass is unreliable here.{/warn}{warn COMPASS_CAUTION_ZONE} Compass readings may be poor here.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_declination,
@@ -643,6 +664,26 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Geomagnetic reference radius",
+            value: "6371.2",
+            unit: "km",
+            source: "wmm",
+        },
+        Assumption {
+            name: "WGS 84 semi-major axis, for the geocentric latitude",
+            value: "6378.137",
+            unit: "km",
+            source: "wmm",
+        },
+        Assumption {
+            name: "WGS 84 flattening",
+            value: "1/298.257223563",
+            unit: "1",
+            source: "wmm",
+        },
+    ],
     sentence: "The converted bearing is {result}, using {variation_text} of variation.{if difference > -1000} The model value differs from the chart by {abs(difference)}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_true_to_magnetic,
@@ -817,6 +858,26 @@ pub static GRIVATION: ToolDef = ToolDef {
         Related {
             id: "geodesy.utm.zone",
             reason: "parent",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Geomagnetic reference radius",
+            value: "6371.2",
+            unit: "km",
+            source: "wmm",
+        },
+        Assumption {
+            name: "WGS 84 semi-major axis, for the geocentric latitude",
+            value: "6378.137",
+            unit: "km",
+            source: "wmm",
+        },
+        Assumption {
+            name: "WGS 84 flattening",
+            value: "1/298.257223563",
+            unit: "1",
+            source: "wmm",
         },
     ],
     sentence: "Grid variation is {grivation_text}: magnetic north is that far from grid north.",

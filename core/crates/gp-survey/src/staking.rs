@@ -31,6 +31,7 @@ const GROUND: &[Field] = &[
 
 pub static SLOPE_STAKE: ToolDef = ToolDef {
     id: "survey.earthwork.slope-stake",
+    stability: gp_base::tool::Stability::Stable,
     title: "Slope stake (catch point)",
     summary: "Where a road template's cut or fill slope meets existing ground on one side, its offset and the cut or fill to the shoulder, found by iteration and written in stake notation.",
     aliases: &["slope staking", "catch point", "slope stake notation", "daylight point"],
@@ -52,8 +53,14 @@ pub static SLOPE_STAKE: ToolDef = ToolDef {
         Field::new("stake", "Stake notation", "As marked on the stake: C or F, the depth, and the offset", Kind::Text { max_len: 40 }),
         len_out("ground_at_catch", "Ground elevation at the catch point", "Interpolated from the ground you gave"),
     ],
-    errors: &[gp_base::ErrorCode::UnitMismatch, gp_base::ErrorCode::DidNotConverge],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[
+        gp_base::ErrorCode::UnitMismatch,
+        gp_base::ErrorCode::DidNotConverge,
+        gp_base::ErrorCode::InvalidInput,
+    ],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
+    when_to_use: "Use this to set slope stakes: from the design elevation at the shoulder, the half width, the cut and fill slopes, and ground shots across one side of the line, it finds where the side slope meets the ground, how deep the cut or fill is there, and the stake marking, such as C 5.0 / 39.0 R. It replaces the trial-and-error readings in the field.",
+    limitations: "The ground is taken as straight between the shots you give, so shots at every break in the ground matter: a ridge or ditch between two shots is invisible. The shots must reach from the shoulder past the catch point. Rounded corners, benches, and ditches in the template are not modeled; each side is one straight slope from the shoulder.",
     model: "Design line from the shoulder: grade + (x − w)/s_cut in cut, grade − (x − w)/s_fill in fill; ground linear between the points given; the catch point solves ground(x) = design(x) by Brent's method to 1e-6 of the unit (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "The iteration converges far inside 0.01 of the unit; the answer is as good as the ground points and the template",
     references: &[GHILANI],
@@ -68,6 +75,7 @@ pub static SLOPE_STAKE: ToolDef = ToolDef {
     related: &[
         Related { id: "survey.earthwork.grade", reason: "next" },
         Related { id: "survey.earthwork.average-end-area", reason: "next" },
+        Related { id: "survey.earthwork.section-area", reason: "next" },
     ],
     sentence: "Set the stake at {catch_offset} from the centerline: {stake}.",
     limits: &[("batchRows", 10_000)],

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "db673ee570456e2f",
+    "hash": "77cec279610b1588",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "d5b6ff2e04c521cb",
+    "hash": "b27a5f2679d7564b",
     "lastmod": "2026-09-24"
   },
   "/aviation/": {
@@ -932,7 +932,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "b4799113353982d4",
+    "hash": "526679ec57c2fc60",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1219,6 +1219,10 @@
     "hash": "4d8d20f096da6415",
     "lastmod": "2026-09-24"
   },
+  "/survey/earthwork/slope-stake/": {
+    "hash": "ef883b14b61a883b",
+    "lastmod": "2026-09-24"
+  },
   "/survey/gnss/": {
     "hash": "d9f250159116dcfa",
     "lastmod": "2026-09-23"
@@ -1308,7 +1312,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "6429985f38815589",
+    "hash": "df6247f131c23226",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1496,7 +1500,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "d1cc9229c12007e6",
+    "hash": "1c4dc89483d78ce2",
     "lastmod": "2026-09-24"
   }
 }

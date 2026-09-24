@@ -788,7 +788,41 @@ def slope_stake():
                    {"ok": False, "error.code": "DID_NOT_CONVERGE"}))
     out.append(vec(6, {"grade_elevation": "100 ft", "half_width": "16 ft", "ground": pts_in([(0.0, 98.0), (60.0, 90.0)]), "cut_slope": 2},
                    {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/fill_slope"}))
+    # Indiana DOT Survey Procedures, chapter 6, the slope-stake example: the
+    # second trial on each side reads the same rod as the first, so the ground
+    # is level there; it is given level from the shoulder out past the catch.
+    for G, w, ground, side, stake, x, depth in [(499.0, 22.0, 494.5, "left", "F 4.5 / 35.5 L", 35.5, 4.5),
+                                                (497.0, 29.0, 502.0, "right", "C 5.0 / 39.0 R", 39.0, 5.0)]:
+        out.append(vec(len(out) + 1, {"grade_elevation": f"{G} ft", "half_width": f"{w} ft",
+                                      "ground": pts_in([(w, ground), (w + 30.0, ground)]), "cut_slope": 2, "fill_slope": 3, "side": side},
+                       {"result.catch_offset.value": x, "result.cut_fill.value": depth, "result.stake": stake}, INDOT6, INDOT_VER))
+        out[-1]["tolerance"] = {"result.catch_offset.value": {"abs": 0.05}, "result.cut_fill.value": {"abs": 0.05}}
+    # Random ground: a few breaks, rising or falling, either side, solved in closed form.
+    rng = random.Random(626)
+    while len(out) < 21:
+        G, w = round(rng.uniform(100, 900), 2), round(rng.uniform(8, 30), 1)
+        pts, x0, y0 = [], 0.0, G + rng.uniform(-4, 4)
+        for _ in range(rng.randrange(2, 5)):
+            pts.append((round(x0, 1), round(y0, 2)))
+            x0 += rng.uniform(15, 40)
+            y0 += rng.uniform(-6, 6)
+        pts.append((round(x0 + 120, 1), round(y0 + rng.uniform(-6, 6), 2)))
+        cs, fs = rng.choice([1.5, 2.0, 3.0]), rng.choice([2.0, 3.0, 4.0])
+        try:
+            x, depth, cut = solve(G, w, pts, cs, fs)
+        except (ValueError, StopIteration, ZeroDivisionError):
+            continue
+        if depth < 0.05 or x > pts[-1][0] - 1:
+            continue
+        side = rng.choice(["left", "right"])
+        out.append(vec(len(out) + 1, {"grade_elevation": f"{G} ft", "half_width": f"{w} ft", "ground": pts_in(pts),
+                                      "cut_slope": cs, "fill_slope": fs, "side": side},
+                       {"result.catch_offset.value": x, "result.cut_fill.value": depth,
+                        "result.cut_or_fill": "cut" if cut else "fill"}, rel=1e-6))
     return out
+
+
+INDOT6 = "Indiana Department of Transportation, Survey Procedures, chapter 6 (Slope Stakes), the worked example (figure 6-2)"
 
 
 def section_area():

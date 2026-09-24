@@ -1030,3 +1030,46 @@ fn level_run_invariants() {
         assert!((st(&exact, i, "adjusted") - st(&exact, i, "elevation")).abs() < 1e-9);
     }
 }
+
+#[test]
+fn slope_stake_invariants() {
+    // Raising the grade and the ground together moves nothing; the catch lies
+    // on both the ground and the design slope; and mirroring sides changes
+    // only the letter in the stake.
+    let run = |g: f64, ground: &[(f64, f64)], side: &str| {
+        let pts: Vec<Value> = ground
+            .iter()
+            .map(|(x, y)| serde_json::json!({"offset": format!("{x} ft"), "elevation": format!("{y} ft")}))
+            .collect();
+        let input = serde_json::json!({"grade_elevation": format!("{g} ft"), "half_width": "16 ft", "ground": pts, "cut_slope": 2, "fill_slope": 3, "side": side});
+        call("survey.earthwork.slope-stake", &input.to_string())
+    };
+    for ground in [
+        vec![(0.0, 102.0), (60.0, 108.0)],
+        vec![(0.0, 98.0), (30.0, 95.5), (90.0, 88.0)],
+        vec![(0.0, 101.0), (20.0, 99.0), (70.0, 104.0)],
+    ] {
+        let a = run(100.0, &ground, "right");
+        let up: Vec<_> = ground.iter().map(|(x, y)| (*x, y + 250.0)).collect();
+        let b = run(350.0, &up, "right");
+        let x = num(&a, "result.catch_offset.value");
+        assert!((num(&b, "result.catch_offset.value") - x).abs() < 1e-6);
+        assert!((num(&b, "result.cut_fill.value") - num(&a, "result.cut_fill.value")).abs() < 1e-6);
+        let cut = a["result"]["cut_or_fill"] == "cut";
+        let design = if cut {
+            100.0 + (x - 16.0) / 2.0
+        } else {
+            100.0 - (x - 16.0) / 3.0
+        };
+        assert!(
+            (num(&a, "result.ground_at_catch.value") - design).abs() < 1e-5,
+            "{a}"
+        );
+        let left = run(100.0, &ground, "left");
+        let (ra, la) = (
+            a["result"]["stake"].as_str().unwrap(),
+            left["result"]["stake"].as_str().unwrap(),
+        );
+        assert_eq!(ra.trim_end_matches('R'), la.trim_end_matches('L'));
+    }
+}

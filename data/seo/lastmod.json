@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "a38749b1f98bfcc3",
+    "hash": "c7305141916bb2aa",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "9219a936b0ec3cb3",
+    "hash": "76eeb920cb989d4a",
     "lastmod": "2026-09-24"
   },
   "/aviation/": {
@@ -98,6 +98,10 @@
   "/aviation/wind/runway-components/": {
     "hash": "da7bb97cfc92aa89",
     "lastmod": "2026-09-23"
+  },
+  "/aviation/wind/uv/": {
+    "hash": "05c2cd7cb34327da",
+    "lastmod": "2026-09-24"
   },
   "/changelog/": {
     "hash": "992aa734c714bb1b",
@@ -816,7 +820,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "0802022aef9a52f5",
+    "hash": "ecf7582bff3aa637",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1120,7 +1124,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "0b24bb1c8005a808",
+    "hash": "a6b558b66ec5380b",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1308,7 +1312,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8ef6a1a65b9e9ce2",
+    "hash": "37a7c6f2e17b7df2",
     "lastmod": "2026-09-24"
   }
 }

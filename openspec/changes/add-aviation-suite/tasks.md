@@ -54,4 +54,4 @@
 - [ ] 7.1 Register all 83 operations and 20 generated endpoints, plus alias slugs and pilot vocabulary aliases (E6B, WCA, DA, PA, TOD, W&B, "crosswind calculator"); verify catalog counts and alias fixtures
 - [ ] 7.2 Write docs per tool, the "Preflight performance check" guide, and a "Two pressure-altitude constant sets" explainer; verify the docs build
 - [x] 7.3 Verify the safety notice and dated regulatory references render on every aviation page — the notice was on tool pages only, so a pilot landing on a hub from search never saw it; it now renders on every domain and group hub for aviation, drone, and navigation as well, and a gate checks each of those hubs shows it and that no other hub does. A second gate checks every aviation tool page prints each of its references with the edition it means, since a handbook or a regulation that is cited without an edition is worth little
-- [ ] 7.4 Promote tools meeting the stable bar; verify the verification report
+- [ ] 7.4 Promote tools meeting the stable bar; verify the verification report (2026-09-24: `aviation.wind.uv` promoted, 1,000 conversions against MetPy 1.6.3 within 1e-9 kt and MetPy's documented example)

@@ -40,6 +40,7 @@ fn from_uv(u: f64, v: f64) -> (f64, f64) {
 
 pub static UV: ToolDef = ToolDef {
     id: "aviation.wind.uv",
+    stability: gp_base::tool::Stability::Stable,
     title: "Wind components (u and v)",
     summary: "A wind's east-west (u) and north-south (v) components from its direction and speed, or the direction and speed from u and v, as weather models and forecasts give them.",
     aliases: &[
@@ -115,9 +116,11 @@ pub static UV: ToolDef = ToolDef {
         .precision(Precision::Decimals(2)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Meteorological convention: a wind from direction θ (true) at speed s has u = −s·sin θ (toward east) and v = −s·cos θ (toward north); back, θ = atan2(−u, −v) and s = √(u² + v²). Winds aloft are given from true north (Aviation Weather Handbook §27.2)",
     accuracy: "Exact",
+    when_to_use: "Use this to move between the two ways a wind is written: as a direction and speed, the way pilots, METARs, and winds-aloft forecasts give it, and as u and v components, the way weather models, GRIB files, and most meteorology software store it. Give either and it returns the other, so model output can be read as a wind and a wind can be averaged, interpolated, or added as a vector.",
+    limitations: "The direction is where the wind blows from, measured from true north, as in meteorology; u is positive toward the east and v toward the north, so a wind from the west has a positive u. A magnetic direction, like a runway or tower wind, has to be turned to true first. A calm wind has no direction: with u and v both zero the direction comes back as 0°, which then means nothing, not a north wind. Components that come from a model's grid may be relative to the grid rather than to true north, which this cannot know.",
     references: &[WEATHER_HANDBOOK],
     examples: &[Example {
         id: "primary",
@@ -138,6 +141,10 @@ pub static UV: ToolDef = ToolDef {
         Related {
             id: "aviation.wind.heading-groundspeed",
             reason: "next",
+        },
+        Related {
+            id: "aviation.wind.find-wind",
+            reason: "alternative",
         },
     ],
     sentence: "The wind from {direction} at {speed} is u = {u} and v = {v}.",

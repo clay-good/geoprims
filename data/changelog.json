@@ -3,6 +3,24 @@
   "entries": [
     {
       "date": "2026-09-24",
+      "kind": "fixed",
+      "tools": [
+        "geometry.validity.make-valid"
+      ],
+      "vectors": [],
+      "summary": "Check and repair a polygon could list the problems it found in a different order depending on what had run before it in the same session, so the MCP server and a freshly opened page could disagree. The order now depends only on the input. The problems found, and every repair, were already the same."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "changed",
+      "tools": [
+        "geometry.overlay.boolean"
+      ],
+      "vectors": [],
+      "summary": "The overlap, union, and difference of two polygons (version 1.2.0) can now treat edges as straight in longitude and latitude, as most mapping software draws them, beside the geodesic edges it uses by default. The overlay is then done on the coordinates as written, and the areas follow those straight edges. Results with geodesic edges are unchanged."
+    },
+    {
+      "date": "2026-09-24",
       "kind": "added",
       "tools": [
         "geodesy.projection.tm-forward",

@@ -439,7 +439,13 @@ fn split(
     let mut splits: Vec<Vec<(f64, P)>> = vec![Vec::new(); edges.len()];
     let mut seen = std::collections::HashSet::new();
     let mut hits = Vec::new();
-    for bucket in edge_grid.cells.values() {
+    // The cells in a fixed order. A HashMap's order is not fixed: in Wasm its
+    // hasher's keys step on with every map made, so the order (and with it the
+    // order the problems are listed in) depended on what ran before in the
+    // same instance, and the server and a fresh page could disagree.
+    let mut cells: Vec<&(i64, i64)> = edge_grid.cells.keys().collect();
+    cells.sort_unstable();
+    for bucket in cells.into_iter().map(|k| &edge_grid.cells[k]) {
         for (x, &i) in bucket.iter().enumerate() {
             for &j in &bucket[x + 1..] {
                 let (a, b) = (i.min(j), i.max(j));

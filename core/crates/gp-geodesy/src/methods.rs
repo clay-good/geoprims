@@ -19,6 +19,7 @@ use gp_geo::proj::{
     self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Hotine, Lcc,
     Orthographic, PolarStereo, TmGrid, WebMercator,
 };
+use gp_geo::tmexact::TmExactGrid;
 
 const G7_2: Reference = Reference {
     title: "Coordinate Conversions and Transformations including Formulas, IOGP Publication 373-7-2 (Guidance Note 7-2)",
@@ -2018,4 +2019,158 @@ fn run_tm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     tm_reach_warning(ctx, &p, x, reach, "/easting");
     let (lat, lon) = p.inverse(x, y);
     inverse_json(ctx, (lat, proj::dlon(lon, 0.0)))
+}
+
+// ------------------------------------------------------------ Exact transverse Mercator
+
+fn tm_exact_grid(ctx: &mut Ctx) -> Result<TmExactGrid, ToolError> {
+    let e = ellipsoid(ctx)?;
+    if e.f <= 0.0 || e.f > 0.1 {
+        return Err(ToolError::new(
+            ErrorCode::Unsupported,
+            "The exact transverse Mercator needs an oblate ellipsoid (flattening above 0 and at most 0.1); for a sphere, use the series tool.",
+        )
+        .at("/inverse_flattening"));
+    }
+    let lon0 = opt_angle(ctx, "longitude_of_origin")?.ok_or_else(|| {
+        ToolError::invalid("/longitude_of_origin", "The central meridian is required.")
+    })?;
+    let lat0 = opt_lat(ctx, "latitude_of_origin")?.unwrap_or(0.0);
+    let k0 = ctx.number("scale_factor")?.unwrap_or(1.0);
+    let (fe, fn_) = (
+        opt_len(ctx, "false_easting")?,
+        opt_len(ctx, "false_northing")?,
+    );
+    Ok(TmExactGrid::new(e.a, e.f, lat0, lon0, k0, fe, fn_))
+}
+
+pub static TM_EXACT_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.tm-exact-forward",
+    title: "Latitude and longitude to exact Transverse Mercator",
+    summary: "Projects a latitude and longitude with the exact transverse Mercator, good to nanometers anywhere on the ellipsoid, not just near the central meridian.",
+    aliases: &[
+        "exact transverse Mercator",
+        "Lee transverse Mercator",
+        "transverse Mercator far from the central meridian",
+    ],
+    keywords: &[
+        "transverse Mercator",
+        "exact",
+        "elliptic functions",
+        "projection",
+        "9807",
+    ],
+    inputs: &[LAT, LON, TM_LON0, TM_LAT0, TM_K0, FE, FN, E[0], E[1], E[2]],
+    outputs: FORWARD_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this when a transverse Mercator must hold far from its central meridian: a grid stretched well beyond its zone, a whole-hemisphere map, or a check on the series another program uses. It is the same projection as the series tool, computed with elliptic functions instead of a truncated series, so it stays exact where the series drifts by meters.",
+    limitations: "It is slower than the series, which is already exact to 5 nanometers within 3,900 km of the central meridian, so for ordinary grids the series tool is the better choice. On the equator, 90(1 − e) degrees from the central meridian (82.636 degrees on WGS 84), the projection has a branch point where the map folds and stops being conformal, so near it a small move on the ground can be a large one on the grid. Points more than 90 degrees from the central meridian fold onto the far side of the grid, as the standard domain does.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Exact transverse Mercator (Lee 1976) by Jacobi elliptic functions, ported from GeographicLib's TransverseMercatorExact",
+    accuracy: "Agrees with GeographicLib's TransverseMercatorProj within 0.1 µm anywhere on the ellipsoid",
+    references: &[crate::KARNEY_TM, G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "75 degrees from the central meridian",
+        input: r#"{"lat":30,"lon":75,"longitude_of_origin":0,"scale_factor":0.9996}"#,
+        source: "GeographicLib 2.7 TransverseMercatorProj -l 0 -k 0.9996 (exact), an independent implementation of the same method: E = 7,707,953.714 m, N = 7,322,160.470 m",
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.tm-exact-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.tm-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORWARD_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_tm_exact_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_tm_exact_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let p = tm_exact_grid(ctx)?;
+    let (e, n, gamma, k) = p.forward(lat, lon);
+    forward_json(
+        ctx,
+        Grid {
+            e,
+            n,
+            convergence: gamma,
+            h: k,
+            k,
+        },
+    )
+}
+
+pub static TM_EXACT_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.tm-exact-inverse",
+    title: "Exact Transverse Mercator to latitude and longitude",
+    summary: "Converts an easting and northing on the exact transverse Mercator back to latitude and longitude, to nanometers anywhere on the ellipsoid.",
+    aliases: &[
+        "exact transverse Mercator to lat long",
+        "exact transverse Mercator inverse",
+    ],
+    keywords: &[
+        "transverse Mercator exact inverse",
+        "exact inverse",
+        "inverse",
+        "projection",
+        "9807",
+    ],
+    inputs: &[
+        EASTING, NORTHING, TM_LON0, TM_LAT0, TM_K0, FE, FN, E[0], E[1], E[2],
+    ],
+    outputs: INVERSE_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn a transverse Mercator easting and northing back into latitude and longitude when the point may lie far from the central meridian, where the series loses accuracy, or when a result must be checked against an exact method.",
+    limitations: "The parameters must be the grid's own and in its units. Near the branch point on the equator, 90(1 − e) degrees from the central meridian, where the map folds, the latitude and longitude from an easting and northing are less certain. The latitude and longitude are on the ellipsoid you choose, which should be the grid's; a sphere is not supported, since the series tool is exact for it.",
+    warnings: &["UNIT_ASSUMED"],
+    model: "Exact transverse Mercator (Lee 1976) by Jacobi elliptic functions, inverted by Newton's method as in GeographicLib",
+    accuracy: "Agrees with GeographicLib's TransverseMercatorProj within 0.1 µm; forward and back return the point to about 1e-13 degrees",
+    references: &[crate::KARNEY_TM, G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "Back from 75 degrees out",
+        input: r#"{"easting":"7707953.714163 m","northing":"7322160.469546 m","longitude_of_origin":0,"scale_factor":0.9996}"#,
+        source: "GeographicLib 2.7 TransverseMercatorProj -r -l 0 -k 0.9996 (exact): 30° N, 75° E",
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.tm-exact-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.tm-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+    ],
+    sentence: INVERSE_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_tm_exact_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_tm_exact_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (x, y) = grid_in(ctx)?;
+    let p = tm_exact_grid(ctx)?;
+    inverse_json(ctx, p.inverse(x, y))
 }

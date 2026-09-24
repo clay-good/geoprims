@@ -7,7 +7,7 @@ use gp_geodesy::REGISTRY;
 use serde_json::{Map, Value, json};
 
 /// Each fixture and the methods it holds.
-const FIXTURES: [(&str, &[&str]); 3] = [
+const FIXTURES: [(&str, &[&str]); 4] = [
     (
         "projections_proj.json",
         &[
@@ -25,6 +25,7 @@ const FIXTURES: [(&str, &[&str]); 3] = [
         &["azimuthal-equidistant", "gnomonic"],
     ),
     ("projections_tm.json", &["tm"]),
+    ("projections_tm_exact.json", &["tm-exact"]),
 ];
 
 fn run(tool: &str, input: &Value) -> Value {
@@ -171,6 +172,10 @@ fn projections_round_trip() {
             json!({"longitude_of_origin": 10, "latitude_of_origin": 49, "scale_factor": 0.9996, "false_easting": "500000 m"}),
         ),
         (
+            "tm-exact",
+            json!({"longitude_of_origin": 10, "scale_factor": 0.9996}),
+        ),
+        (
             "hotine",
             json!({"latitude_of_center": 20, "longitude_of_center": 10, "azimuth": 35, "scale_factor": 0.9996}),
         ),
@@ -187,6 +192,8 @@ fn projections_round_trip() {
                 "azimuthal-equidistant" => Some(80.0),
                 "gnomonic" | "orthographic" => Some(60.0),
                 "hotine" | "tm" => Some(30.0),
+                // Clear of the branch point on the equator 82.6° out.
+                "tm-exact" => Some(60.0),
                 _ => None,
             };
             if let Some(cap) = cap {

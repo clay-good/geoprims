@@ -19,5 +19,6 @@ pub mod rhumb;
 pub mod spcs;
 mod spcs83_zones;
 pub mod tm;
+pub mod tmexact;
 pub mod utmups;
 pub mod wind;

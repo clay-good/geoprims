@@ -856,6 +856,13 @@
           ]
         },
         {
+          "want": "use a transverse Mercator far from its central meridian, exactly",
+          "tools": [
+            "tm-exact-forward",
+            "tm-exact-inverse"
+          ]
+        },
+        {
           "want": "put a point on a web map grid (EPSG:3857), or read one back",
           "tools": [
             "web-mercator-forward",

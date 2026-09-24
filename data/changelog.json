@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
+        "geodesy.projection.tm-exact-forward",
+        "geodesy.projection.tm-exact-inverse"
+      ],
+      "vectors": [],
+      "summary": "Two new stable tools compute the transverse Mercator exactly, with elliptic functions, so it holds to nanometers anywhere on the ellipsoid rather than only within 3,900 km of the central meridian. They are a port of GeographicLib's TransverseMercatorExact and agree with it within a micrometer on 10,000 random points over the whole globe."
+    },
+    {
+      "date": "2026-09-24",
       "kind": "changed",
       "tools": [
         "geometry.shape.enclosing"

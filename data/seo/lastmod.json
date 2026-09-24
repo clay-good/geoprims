@@ -332,8 +332,8 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/parse/coordinates/": {
-    "hash": "0c9c8ae0ed9dd89a",
-    "lastmod": "2026-09-23"
+    "hash": "6ad41c45cbf64483",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/parse/format/": {
     "hash": "241e149639b581d7",
@@ -816,7 +816,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "2f3d21aa2138e4cf",
+    "hash": "b52063ae59f26ac4",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1300,7 +1300,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "fcef7d80c9e31f1d",
+    "hash": "ed58cf7c3fb6e0ba",
     "lastmod": "2026-09-24"
   }
 }

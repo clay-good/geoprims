@@ -20,8 +20,18 @@ pub struct Parsed {
     pub lon: f64,
     pub notation: &'static str,
     pub ambiguity: Option<String>,
+    /// The other readings of ambiguous text, valid or not, with why.
+    pub alternatives: Vec<Alternative>,
     /// Longitude was outside [-180, 180) in decimal input and was normalized.
     pub lon_normalized: bool,
+}
+
+/// Another way to read ambiguous text: its coordinates when it gives a valid
+/// pair, and what the reading was.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Alternative {
+    pub reading: String,
+    pub lat_lon: Option<(f64, f64)>,
 }
 
 fn normalize_marks(s: &str) -> String {
@@ -417,6 +427,7 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
             lon,
             notation: "labeled",
             ambiguity: None,
+            alternatives: Vec::new(),
             lon_normalized: false,
         });
     }
@@ -427,6 +438,7 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
             lon,
             notation: "packed",
             ambiguity: None,
+            alternatives: Vec::new(),
             lon_normalized: false,
         });
     }
@@ -449,6 +461,10 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
                 "Commas were read as decimal commas ({} {}); reading them as separators would give four numbers, which is not a coordinate.",
                 fixed[0], fixed[1]
             )),
+            alternatives: vec![Alternative {
+                reading: "commas as separators: four numbers, not a coordinate".into(),
+                lat_lon: None,
+            }],
             lon_normalized: false,
         });
     }
@@ -476,6 +492,7 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
     // turned into a plausible one.
     let (lat, nlat) = value(lat_w, Axis::Lat, lat_s)?;
     let mut ambiguity = None;
+    let mut alternatives = Vec::new();
     let (lat, lon, notation) = if !lettered && lat.abs() > 90.0 {
         let (lo, _) = value(lat_w, Axis::Lon, lat_s)?;
         let (la, nt) = value(lon_w, Axis::Lat, lon_s)?;
@@ -484,6 +501,10 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
             "The order was inferred as longitude, latitude because {} cannot be a latitude.",
             lat_s.trim()
         ));
+        alternatives.push(Alternative {
+            reading: format!("latitude first: {} cannot be a latitude", lat_s.trim()),
+            lat_lon: None,
+        });
         (la, lo, nt)
     } else {
         let (lo, nlo) = value(lon_w, Axis::Lon, lon_s)?;
@@ -495,6 +516,10 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
                 fmt_num(lo),
                 fmt_num(lat)
             ));
+            alternatives.push(Alternative {
+                reading: "longitude first".into(),
+                lat_lon: Some((lo, lat)),
+            });
         }
         (lat, lo, nlat)
     };
@@ -504,6 +529,7 @@ pub fn parse_pair(s: &str) -> Result<Parsed, String> {
         lon,
         notation,
         ambiguity,
+        alternatives,
         lon_normalized,
     })
 }
@@ -654,6 +680,38 @@ mod tests {
         let r = p("40,5 -79,9");
         assert_eq!((r.lat, r.lon), (40.5, -79.9));
         assert!(r.ambiguity.unwrap().contains("four numbers"));
+    }
+
+    #[test]
+    fn alternatives_listed() {
+        // Both orders valid: the other one, with its coordinates.
+        let r = p("40.45 -79.98");
+        assert_eq!(r.alternatives.len(), 1);
+        assert_eq!(r.alternatives[0].lat_lon, Some((-79.98, 40.45)));
+        // The first value cannot be a latitude: that reading, and why not.
+        let r = p("-105.27, 40.01");
+        assert_eq!(r.alternatives.len(), 1);
+        assert_eq!(r.alternatives[0].lat_lon, None);
+        assert!(
+            r.alternatives[0]
+                .reading
+                .contains("-105.27 cannot be a latitude")
+        );
+        // Decimal commas: separators would give four numbers.
+        let r = p("40,5 -79,9");
+        assert_eq!(r.alternatives[0].lat_lon, None);
+        assert!(r.alternatives[0].reading.contains("four numbers"));
+        // Nothing to choose between: no alternatives.
+        for s in [
+            "40.45N 79.98W",
+            "lat=40.4 lon=-79.9",
+            "402646N0795856W",
+            "95.1 40.2",
+        ] {
+            let r = p(s);
+            assert_eq!(r.alternatives.is_empty(), r.ambiguity.is_none(), "{s}");
+        }
+        assert!(p("40.45N 79.98W").alternatives.is_empty());
     }
 
     #[test]

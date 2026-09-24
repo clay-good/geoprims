@@ -116,10 +116,27 @@ const fn lon_out(name: &'static str, title: &'static str) -> Field {
 
 // ---------------------------------------------------------------- parse
 
+const ALTERNATIVE_ROW: &[Field] = &[
+    Field::new(
+        "reading",
+        "Reading",
+        "How the text is read, like longitude first",
+        Kind::Text { max_len: 80 },
+    ),
+    Field::new(
+        "valid",
+        "Valid",
+        "yes when this reading gives a coordinate, no when it cannot",
+        Kind::Text { max_len: 3 },
+    ),
+    lat_out("lat", "Latitude").optional(),
+    lon_out("lon", "Longitude").optional(),
+];
+
 pub static PARSE: ToolDef = ToolDef {
     id: "geodesy.parse.coordinates",
     stability: gp_base::tool::Stability::Stable,
-    version: "1.1.0",
+    version: "1.2.0",
     title: "Read any coordinate",
     summary: "Reads a coordinate in almost any notation (decimal, DMS, DDM, packed aviation, labeled, MGRS, or UTM) and reports what it assumed.",
     aliases: &[
@@ -158,6 +175,16 @@ pub static PARSE: ToolDef = ToolDef {
             "DMS",
             "Degrees, minutes, and seconds",
             Kind::Text { max_len: 60 },
+        ),
+        Field::new(
+            "alternatives",
+            "Other readings",
+            "Each other way the text could be read, and whether it gives a coordinate",
+            Kind::List {
+                items: ALTERNATIVE_ROW,
+                min: 0,
+                max: 4,
+            },
         ),
     ],
     warnings: &[
@@ -206,6 +233,7 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let text = ctx.text("text")?.expect("required");
     let wgs = ellipsoid::CATALOG[0];
     let compact: String = text.chars().filter(|c| !c.is_whitespace()).collect();
+    let mut alternatives = Vec::new();
     let (lat, lon, notation) = if looks_like_mgrs(&compact) {
         let d = mgrs::decode(&text, wgs.a, wgs.f)
             .map_err(|e| ToolError::invalid("/text", format!("This looks like MGRS, but {e}.")))?;
@@ -229,6 +257,20 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         if let Some(a) = p.ambiguity {
             ctx.warnings
                 .push(Warning::new("AMBIGUOUS_INPUT", a).at("/text"));
+        }
+        for alt in &p.alternatives {
+            let mut row = vec![
+                ("reading", Json::str(&alt.reading)),
+                (
+                    "valid",
+                    Json::str(if alt.lat_lon.is_some() { "yes" } else { "no" }),
+                ),
+            ];
+            if let Some((la, lo)) = alt.lat_lon {
+                row.push(("lat", deg(la).to_json()));
+                row.push(("lon", deg(lo).to_json()));
+            }
+            alternatives.push(Json::obj(row));
         }
         let lon = if p.lon_normalized {
             let w = wrap_lon(p.lon);
@@ -281,6 +323,7 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("lon", ctx.out("lon", deg(lon))),
         ("notation", Json::str(notation)),
         ("dms", Json::str(dms_text)),
+        ("alternatives", Json::Arr(alternatives)),
     ]))
 }
 

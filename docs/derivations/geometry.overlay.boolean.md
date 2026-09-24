@@ -45,7 +45,8 @@ The comparison is fair because both sides work on the same plane. The reference 
 
 - `tools/vectors/gen_overlay_geos.py`: ten vectors from GEOS across all four operations, appended to the frozen file
 - `core/crates/gp-geometry/tests/overlay.rs` `overlay_invariants`: the set identities that must hold between the four operations
-- `core/vectors/geometry.overlay.boolean.jsonl`: 22 vectors, the first twelve from Planimeter and Clairaut and the rest from GEOS
+- `core/vectors/geometry.overlay.boolean.jsonl`: 27 vectors, the first twelve from Planimeter and Clairaut and the rest from GEOS; v023 to v027 are regressions for 1.1.0
+- `tools/vectors/gen_overlay_grid.py` and `core/crates/gp-geometry/tests/overlay_parity.rs` `overlay_matches_geos_on_degenerate_shapes`: 400 pairs on a small grid built to be degenerate (shared edges, corners on edges, pieces touching at a point, holes) through all four operations, 4,800 checks: the planar overlay agrees with GEOS exactly on the grid, gives the same answers with every corner moved by up to 0.2 µm, and the geodesic tool at a one-meter step returns GEOS's parts with areas within 2 cm². Version 1.0.0 failed 630 of these checks: a corner a fraction of a micron off an edge (as a corner on an edge is once projected) was nudged across it by the side test, which lost or kept the wrong pieces, and pieces touching at a point came back as one ring touching itself. 1.1.0 puts corners within a millionth of the shapes' size (at most 1 mm) of another ring onto it before the overlay, and joins rings by the sharpest left turn where they meet at a corner
 
 ## Invariants
 

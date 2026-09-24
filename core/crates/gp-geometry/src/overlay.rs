@@ -105,6 +105,7 @@ const fn km2(name: &'static str, title: &'static str, help: &'static str) -> Fie
 pub static BOOLEAN: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     id: "geometry.overlay.boolean",
+    version: "1.1.0",
     title: "Overlap, union, or difference of two polygons",
     summary: "Where two areas overlap, their combined outline, what one has that the other lacks, or both, as valid polygons with geodesic areas, like the overlap of two geofences.",
     aliases: &["polygon intersection", "polygon union", "polygon difference", "overlap of two areas", "clip polygon", "boolean operation"],
@@ -123,7 +124,7 @@ pub static BOOLEAN: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
     warnings: &[],
-    model: "Both polygons' geodesic edges cut into 5 km pieces on one azimuthal equidistant plane at their corners' mean, each read by the even-odd rule; every piece of either boundary is kept exactly when the result's inside differs on its two sides, and the pieces are joined into rings. Areas by Karney's geodesic polygon area (Karney 2013)",
+    model: "Both polygons' geodesic edges cut into 5 km pieces on one azimuthal equidistant plane at their corners' mean, each read by the even-odd rule; corners within a millionth of the shapes' size (at most 1 mm) of another ring are first put on it, so boundaries either meet exactly or stay clearly apart; every piece of either boundary is kept exactly when the result's inside differs on its two sides, and the pieces are joined into rings, taking the sharpest left turn where rings meet at a corner, so pieces that touch at a point come out as separate parts. Areas by Karney's geodesic polygon area (Karney 2013)",
     accuracy: "Edges follow the geodesics to about 1 mm for shapes of a few hundred kilometers; areas exact for the returned corners. Inputs within 5,000 km of their shared center",
     when_to_use: "Use this to ask how two areas relate as areas rather than as outlines: how much of a flight restriction falls inside a planned survey block, what a parcel keeps after a right of way is taken out of it, the combined footprint of two coverage zones, the part of a search area nobody has swept yet. It answers with the polygon itself and with its area on the ellipsoid, so the result can be drawn, measured, or fed straight back in.",
     limitations: "Both polygons and their result must sit within 5,000 km of their shared centre, because the overlay is done on one plane placed there and a plane cannot hold more of the Earth than that faithfully; further apart and the tool refuses rather than distorting. Edges are cut into 5 km pieces before the overlay, so a result boundary follows the geodesic to about a millimetre rather than exactly. A result can be empty, or break into several pieces, or acquire a hole, all of which are reported rather than treated as failure — a difference that leaves nothing is a correct answer. Self-intersecting inputs have no well-defined inside and should be repaired first.",
@@ -246,10 +247,20 @@ fn run_boolean(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
     }
     let mut parts: Vec<(usize, Vec<usize>)> = outers.iter().map(|&o| (o, Vec::new())).collect();
+    // A hole belongs to the outline holding most of its corners: one corner
+    // may be where it touches that outline, and there the test could go
+    // either way.
     for h in holes {
+        let held = |o: usize| {
+            out[h]
+                .iter()
+                .filter(|&&c| buffer::inside_rings(std::slice::from_ref(&out[o]), c))
+                .count()
+        };
         if let Some(p) = parts
             .iter_mut()
-            .find(|(o, _)| buffer::inside_rings(std::slice::from_ref(&out[*o]), out[h][0]))
+            .filter(|(o, _)| held(*o) > 0)
+            .max_by_key(|(o, _)| held(*o))
         {
             p.1.push(h);
         }

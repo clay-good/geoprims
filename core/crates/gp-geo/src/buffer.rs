@@ -416,7 +416,7 @@ pub fn plane(kind: Shape, rings: &[Vec<P>], d: f64, st: &Style, sides: usize) ->
             }
         }
     }
-    stitch(kept, eps, r)
+    stitch(kept, eps, r, false)
 }
 
 fn bits(p: P) -> (u64, u64) {
@@ -569,7 +569,7 @@ pub fn even_odd(rings: &[Vec<P>]) -> Vec<Vec<P>> {
     // Two copies of one piece (rings sharing an edge) would pair up; keep one.
     kept.sort_by(|x, y| bits(x.0).cmp(&bits(y.0)).then(bits(x.1).cmp(&bits(y.1))));
     kept.dedup();
-    stitch(kept, eps, size)
+    stitch(kept, eps, size, false)
 }
 
 /// A set operation on two regions.
@@ -586,10 +586,20 @@ pub enum Op {
 /// boundary is kept exactly when the result's inside differs on its two sides.
 pub fn boolean(a: &[Vec<P>], b: &[Vec<P>], op: Op) -> Vec<Vec<P>> {
     let both: Vec<Vec<P>> = a.iter().chain(b).cloned().collect();
-    let edges = ring_edges(&both);
     let (size, eps, cell) = ring_scale(&both);
+    // Corners that nearly touch the other boundary are put on it, so the two
+    // boundaries either meet exactly or stay apart by more than ten times the
+    // side test's nudge. Without this a corner a hair off an edge (as a corner
+    // on an edge becomes once projected) could be nudged across it, and the
+    // piece beside it read on the wrong side. The tolerance is a millionth of
+    // the shapes' size, and never more than a millimetre.
+    let snap_tol = (1e-6 * size).min(1e-3);
+    let snapped = snap(&both, snap_tol, cell);
+    let (a, b) = snapped.split_at(a.len());
+    let both: Vec<Vec<P>> = snapped.clone();
+    let edges = ring_edges(&both);
     let splits = split(&edges, cell, eps, false, &mut |_, _, _, _, _| {});
-    let nudge = 1e-7 * size;
+    let nudge = snap_tol / 10.0;
     let inside = |p: P| {
         let (ia, ib) = (inside_rings(a, p), inside_rings(b, p));
         match op {
@@ -623,11 +633,147 @@ pub fn boolean(a: &[Vec<P>], b: &[Vec<P>], op: Op) -> Vec<Vec<P>> {
     }
     kept.sort_by(|x, y| bits(x.0).cmp(&bits(y.0)).then(bits(x.1).cmp(&bits(y.1))));
     kept.dedup();
-    stitch(kept, eps, size)
+    stitch(kept, eps, size, true)
 }
 
-/// Joins directed edges end to start into closed rings.
-fn stitch(edges: Vec<(P, P)>, eps: f64, r: f64) -> Vec<Vec<P>> {
+/// Every corner within `tol` of another ring moved onto it: onto that ring's
+/// corner when one is that close, or else onto the nearest edge, which gains
+/// the moved corner as a corner of its own, so the two rings then share it
+/// exactly. Rings of the same polygon count as others (a hole touching its
+/// outline). So that two corners near each other do not each move to where the
+/// other was, a corner moves only onto rings earlier in the list; toward a
+/// later ring it stays put, and is added to that ring's edge when it is near
+/// the edge's middle. Passes repeat until nothing moves, at most four times.
+fn snap(rings: &[Vec<P>], tol: f64, cell: f64) -> Vec<Vec<P>> {
+    let mut rings = rings.to_vec();
+    for _ in 0..4 {
+        let edges = ring_edges(&rings);
+        let boxes: Vec<(P, P)> = edges
+            .iter()
+            .map(|e| {
+                let (lo, hi) = bbox(&[e.0, e.1]);
+                ((lo.0 - tol, lo.1 - tol), (hi.0 + tol, hi.1 + tol))
+            })
+            .collect();
+        let grid = Grid::new(&boxes, cell);
+        let mut inserts: Vec<Vec<(f64, P)>> = vec![Vec::new(); edges.len()];
+        let mut moved = false;
+        let mut next = rings.clone();
+        for (ri, ring) in next.iter_mut().enumerate() {
+            for v in ring.iter_mut() {
+                // Onto the nearest earlier ring first.
+                let mut best: Option<(f64, usize, f64, P)> = None;
+                for &k in grid.at(*v) {
+                    let (p, q, owner) = edges[k];
+                    let d = sub(q, p);
+                    let l2 = dot(d, d);
+                    if owner >= ri || l2 == 0.0 {
+                        continue;
+                    }
+                    let t = (dot(sub(*v, p), d) / l2).clamp(0.0, 1.0);
+                    let foot = add(p, mul(d, t));
+                    let dist = norm(sub(*v, foot));
+                    if dist <= tol && best.is_none_or(|b| dist < b.0) {
+                        best = Some((dist, k, t, foot));
+                    }
+                }
+                if let Some((_, k, t, foot)) = best {
+                    let (p, q, _) = edges[k];
+                    let target = if norm(sub(*v, p)) <= tol {
+                        p
+                    } else if norm(sub(*v, q)) <= tol {
+                        q
+                    } else {
+                        inserts[k].push((t, foot));
+                        foot
+                    };
+                    if *v != target {
+                        *v = target;
+                        moved = true;
+                    }
+                }
+                // Then into the middle of any later ring's edge it is near.
+                for &k in grid.at(*v) {
+                    let (p, q, owner) = edges[k];
+                    let d = sub(q, p);
+                    let l2 = dot(d, d);
+                    if owner <= ri
+                        || l2 == 0.0
+                        || norm(sub(*v, p)) <= tol
+                        || norm(sub(*v, q)) <= tol
+                    {
+                        continue;
+                    }
+                    let t = dot(sub(*v, p), d) / l2;
+                    if (0.0..=1.0).contains(&t) && norm(sub(*v, add(p, mul(d, t)))) <= tol {
+                        inserts[k].push((t, *v));
+                    }
+                }
+            }
+        }
+        let mut k = 0;
+        for ring in &mut next {
+            let mut r = Vec::with_capacity(ring.len());
+            for &corner in ring.iter() {
+                if r.last() != Some(&corner) {
+                    r.push(corner);
+                }
+                let mut here = std::mem::take(&mut inserts[k]);
+                here.sort_by(|x, y| x.0.total_cmp(&y.0));
+                for (_, pt) in here {
+                    if r.last() != Some(&pt) {
+                        r.push(pt);
+                        moved = true;
+                    }
+                }
+                k += 1;
+            }
+            while r.len() > 1 && r.first() == r.last() {
+                r.pop();
+            }
+            *ring = r;
+        }
+        rings = next;
+        if !moved {
+            break;
+        }
+    }
+    rings
+}
+
+/// A ring that passes through one corner twice split there into two rings,
+/// repeatedly, so shapes that touch at a point come out as separate rings,
+/// as valid polygons must (a ring may not touch itself).
+fn unpinch(ring: Vec<P>) -> Vec<Vec<P>> {
+    let mut out = Vec::new();
+    let mut stack = vec![ring];
+    while let Some(r) = stack.pop() {
+        let mut seen: HashMap<(u64, u64), usize> = HashMap::new();
+        let mut cut = None;
+        for (j, p) in r.iter().enumerate() {
+            if let Some(&i) = seen.get(&bits(*p)) {
+                cut = Some((i, j));
+                break;
+            }
+            seen.insert(bits(*p), j);
+        }
+        match cut {
+            None => out.push(r),
+            Some((i, j)) => {
+                let inner: Vec<P> = r[i..j].to_vec();
+                let mut outer: Vec<P> = r[..i].to_vec();
+                outer.extend_from_slice(&r[j..]);
+                stack.push(inner);
+                stack.push(outer);
+            }
+        }
+    }
+    out
+}
+
+/// Joins directed edges end to start into closed rings. With `pinch`, a ring
+/// that passes through one corner twice is split there first (see `unpinch`).
+fn stitch(edges: Vec<(P, P)>, eps: f64, r: f64, pinch: bool) -> Vec<Vec<P>> {
     let mut from: HashMap<(u64, u64), Vec<usize>> = HashMap::new();
     for (i, e) in edges.iter().enumerate() {
         from.entry(bits(e.0)).or_default().push(i);
@@ -648,9 +794,24 @@ fn stitch(edges: Vec<(P, P)>, eps: f64, r: f64) -> Vec<Vec<P>> {
                 break;
             }
             ring.push(cur);
+            let incoming = sub(cur, ring[ring.len() - 2]);
+            // Where rings meet at a corner, the sharpest left turn keeps each
+            // ring around its own face (the result's inside is on the left),
+            // so pieces that touch at a point come out as separate rings.
+            let turn = |k: usize| {
+                let out = sub(edges[k].1, edges[k].0);
+                atan2(cross(incoming, out), dot(incoming, out))
+            };
             let next = from
                 .get(&bits(cur))
-                .and_then(|v| v.iter().copied().find(|&k| !used[k]))
+                .and_then(|v| {
+                    let free = v.iter().copied().filter(|&k| !used[k]);
+                    if pinch {
+                        free.max_by(|&x, &y| turn(x).total_cmp(&turn(y)))
+                    } else {
+                        free.into_iter().next()
+                    }
+                })
                 .or_else(|| {
                     (0..edges.len()).find(|&k| !used[k] && norm(sub(edges[k].0, cur)) <= eps * 1e3)
                 });
@@ -661,9 +822,12 @@ fn stitch(edges: Vec<(P, P)>, eps: f64, r: f64) -> Vec<Vec<P>> {
         if !closed {
             continue;
         }
-        let ring = simplify(ring);
-        if ring.len() >= 3 && area2(&ring).abs() > 1e-9 * r * r {
-            rings.push(ring);
+        let parts = if pinch { unpinch(ring) } else { vec![ring] };
+        for ring in parts {
+            let ring = simplify(ring);
+            if ring.len() >= 3 && area2(&ring).abs() > 1e-9 * r * r {
+                rings.push(ring);
+            }
         }
     }
     rings

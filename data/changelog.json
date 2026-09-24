@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-09-24",
+      "kind": "fixed",
+      "tools": [
+        "geometry.overlay.boolean"
+      ],
+      "vectors": [],
+      "summary": "Overlap, union, or difference of two polygons (version 1.1.0) no longer loses or invents pieces where the polygons touch. A corner lying on the other polygon's edge, or on its own polygon's outline, sits a fraction of a micron off it once projected, and the side test could step across that gap: some unions came back empty and some differences a third too small. Corners within a millionth of the shapes' size (at most 1 mm) of another ring are now put on it first. Pieces that touch at a single point are now separate parts rather than one ring touching itself, which is not a valid polygon. Checked against GEOS on 400 pairs of touching and overlapping shapes through all four operations; results for polygons that do not touch are unchanged, and every earlier vector still passes."
+    },
+    {
+      "date": "2026-09-24",
       "kind": "result-change",
       "tools": [
         "drone.photogrammetry.asprs-accuracy"

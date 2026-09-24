@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c7305141916bb2aa",
+    "hash": "7f7cde09d900e594",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -820,7 +820,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "ecf7582bff3aa637",
+    "hash": "1730daff4911c63f",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -987,6 +987,42 @@
     "hash": "785cbc33ec1dff3f",
     "lastmod": "2026-09-23"
   },
+  "/raster/index/evi/": {
+    "hash": "89718cfe75ab1c66",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/evi2/": {
+    "hash": "7b23db562be83db6",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/mndwi/": {
+    "hash": "f430f6a165b9b044",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/nbr/": {
+    "hash": "ab698043fe44d477",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/ndbi/": {
+    "hash": "56b0ebdda142eb12",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/ndvi/": {
+    "hash": "73fb00f0996e8d69",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/ndwi-gao/": {
+    "hash": "67ef199cfbea7f56",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/ndwi-mcfeeters/": {
+    "hash": "1522dc22d2ceb455",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/index/savi/": {
+    "hash": "737d06b752d3fb3e",
+    "lastmod": "2026-09-24"
+  },
   "/raster/scale/": {
     "hash": "1ed1a50758a73071",
     "lastmod": "2026-09-23"
@@ -1124,7 +1160,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "a6b558b66ec5380b",
+    "hash": "28dc7fa0e6759eac",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1312,7 +1348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "37a7c6f2e17b7df2",
+    "hash": "57cac2a65965f67a",
     "lastmod": "2026-09-24"
   }
 }

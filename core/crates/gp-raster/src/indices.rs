@@ -171,7 +171,8 @@ macro_rules! normalized_tool {
             ],
             outputs: &[index_out($out, $out_title, $formula)],
             errors: &[ErrorCode::InvalidInput],
-            warnings: &["SUSPECT_SCALING", "EXPERIMENTAL_TOOL"],
+            stability: gp_base::tool::Stability::Stable,
+            warnings: &["SUSPECT_SCALING"],
             model: $model,
             accuracy: $accuracy,
             when_to_use: $when,
@@ -290,7 +291,7 @@ normalized_tool!(
     "NDWI = (Green - NIR) / (Green + NIR) on surface reflectance (McFeeters 1996)",
     "Exact arithmetic on the reflectance given.",
     "Use this to pick open water out of an image: water reflects green and absorbs near-infrared, so lakes, rivers, and flooding stand out positive while land goes negative. It is the index to reach for when the question is where the water is.",
-    "It confuses built-up surfaces with water, which is what MNDWI was proposed to fix, and it says nothing about water inside vegetation, which is Gao's index of the same name. A threshold of zero is a starting point rather than a rule: shadows, turbidity, and thin water over bright bottoms all move it.",
+    "It confuses built-up surfaces with water, which is what MNDWI was proposed to fix, and it says nothing about water inside vegetation, which is Gao's index of the same name. A threshold of zero is a starting point rather than a rule: shadows, turbidity, and thin water over bright bottoms all move it. Water that is turbid, or shallow over a bright bottom, reflects more near-infrared, which pulls the value toward zero, so it can be missed at a threshold that works for clear, deep water.",
     &[
         Related {
             id: "raster.index.ndwi-gao",
@@ -349,7 +350,7 @@ normalized_tool!(
     "NDWI = (NIR - SWIR1) / (NIR + SWIR1) on surface reflectance (Gao 1996)",
     "Exact arithmetic on the reflectance given.",
     "Use this for how much water the vegetation itself holds: shortwave-infrared is absorbed by liquid water in leaves, so the index falls as a canopy dries. It is used for drought stress, fuel moisture, and irrigation scheduling, and is the same quantity often published as NDMI.",
-    "It is not an open-water index, despite the shared name: for mapping lakes use the McFeeters or modified index. It responds to canopy structure as well as water, and the shortwave band it needs is missing from sensors that carry only visible and near-infrared bands.",
+    "It is not an open-water index, despite the shared name: for mapping lakes use the McFeeters or modified index. It responds to canopy structure as well as water, and the shortwave band it needs is missing from sensors that carry only visible and near-infrared bands. It also varies with how much leaf there is as well as how wet the leaves are, so compare it over time for the same stand rather than across different kinds of vegetation.",
     &[
         Related {
             id: "raster.index.ndwi-mcfeeters",
@@ -396,7 +397,7 @@ normalized_tool!(
     "MNDWI = (Green - SWIR1) / (Green + SWIR1) on surface reflectance (Xu 2006)",
     "Exact arithmetic on the reflectance given.",
     "Use this where NDWI struggles: in towns and cities, built-up surfaces come out positive under the McFeeters index and get mapped as water. Swapping near-infrared for shortwave-infrared pushes them negative, so water is cleaner to threshold in an urban scene.",
-    "It still needs a threshold chosen for the scene, and shadow from buildings and terrain remains a source of false water. The shortwave band is coarser than the visible bands on some sensors, so a resampled MNDWI is softer at the shoreline than its pixel size suggests.",
+    "It still needs a threshold chosen for the scene, and shadow from buildings and terrain remains a source of false water. The shortwave band is coarser than the visible bands on some sensors, so a resampled MNDWI is softer at the shoreline than its pixel size suggests. Snow and ice also read as water, because they reflect green strongly and absorb shortwave infrared, so a winter scene needs a snow mask before any water threshold means something.",
     &[
         Related {
             id: "raster.index.ndwi-mcfeeters",
@@ -443,7 +444,7 @@ normalized_tool!(
     "NDBI = (SWIR1 - NIR) / (SWIR1 + NIR) on surface reflectance (Zha, Gao, and Ni 2003)",
     "Exact arithmetic on the reflectance given.",
     "Use this to separate built surfaces from vegetation: roofs, pavement, and bare construction reflect shortwave-infrared more than near-infrared, so they come out positive while vegetation is negative. It is usually read beside NDVI rather than alone.",
-    "Bare soil and dry ground behave much like built-up surfaces here, which is the index's main weakness, and the original work paired it with NDVI to tell them apart. It is not a measure of impervious fraction, and the result depends on the sensor's shortwave band.",
+    "Bare soil and dry ground behave much like built-up surfaces here, which is the index's main weakness, and the original work paired it with NDVI to tell them apart. It is not a measure of impervious fraction, and the result depends on the sensor's shortwave band. Mixed pixels at the edge of a town blend roofs, roads, trees, lawns, and soil, so a value there reflects the mixture rather than any one surface, and it shifts with the season as the vegetation in the mix greens and dries.",
     &[
         Related {
             id: "raster.index.ndvi",
@@ -494,7 +495,7 @@ normalized_tool!(
     "NBR = (NIR - SWIR2) / (NIR + SWIR2) on surface reflectance (Key and Benson 2006)",
     "Exact arithmetic on the reflectance given.",
     "Use this on a scene before or after a fire: healthy vegetation reflects near-infrared and absorbs the longer shortwave band, while recently burned ground does the opposite, so NBR falls sharply where a fire has passed. One NBR is a state; the difference between two is what measures severity.",
-    "A single NBR is not a severity: it reads low over water, rock, and bare ground that never burned. Severity comes from dNBR, the pre-fire value minus the post-fire one, and even that needs a pre-fire image of the same season to compare against.",
+    "A single NBR is not a severity: it reads low over water, rock, and bare ground that never burned. Severity comes from dNBR, the pre-fire value minus the post-fire one, and even that needs a pre-fire image of the same season to compare against. Cloud, cloud shadow, and smoke change both bands, so a post-fire image taken through smoke gives a burn ratio that says more about the air than about the ground beneath it.",
     &[
         Related {
             id: "raster.index.dnbr",
@@ -570,11 +571,12 @@ pub static EVI: ToolDef = ToolDef {
         "2.5 (NIR - Red) / (NIR + 6 Red - 7.5 Blue + 1)",
     )],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["SUSPECT_SCALING", "EXPERIMENTAL_TOOL"],
+    stability: gp_base::tool::Stability::Stable,
+    warnings: &["SUSPECT_SCALING"],
     model: "EVI = 2.5 (NIR - Red) / (NIR + 6 Red - 7.5 Blue + 1), the MODIS coefficients (Huete and others 2002)",
     accuracy: "Exact arithmetic on the reflectance given.",
     when_to_use: "Use this over dense vegetation, where NDVI flattens out and stops distinguishing more canopy from a lot of canopy. The blue band lets it correct for aerosol scattering, and the coefficients are the MODIS ones, so values are comparable with published MODIS products.",
-    limitations: "It needs a blue band, which is the noisiest in most sensors and is missing from some, and the aerosol correction it applies is the reason EVI2 exists. The coefficients are tied to the MODIS formulation, so an EVI computed from another sensor's bands is not strictly the same quantity.",
+    limitations: "It needs a blue band, which is the noisiest in most sensors and is missing from some, and the aerosol correction it applies is the reason EVI2 exists. The coefficients are tied to the MODIS formulation, so an EVI computed from another sensor's bands is not strictly the same quantity. Where the blue band is bright, as over cloud, snow, and haze, the denominator shrinks toward zero and EVI can fall outside −1 to 1; mask those pixels rather than reading the value.",
     references: &[HUETE_2002],
     examples: &[Example {
         id: "primary",
@@ -652,11 +654,12 @@ pub static EVI2: ToolDef = ToolDef {
         "2.5 (NIR - Red) / (NIR + 2.4 Red + 1)",
     )],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["SUSPECT_SCALING", "EXPERIMENTAL_TOOL"],
+    stability: gp_base::tool::Stability::Stable,
+    warnings: &["SUSPECT_SCALING"],
     model: "EVI2 = 2.5 (NIR - Red) / (NIR + 2.4 Red + 1) (Jiang and others 2008)",
     accuracy: "Exact arithmetic on the reflectance given. Designed to track EVI closely where atmospheric correction is good.",
     when_to_use: "Use this when you want EVI's behavior over dense canopy but the imagery has no usable blue band, or the blue band is noisy. It was fitted to follow EVI on atmospherically corrected data, so the two can be compared across a long record made of sensors with different bands.",
-    limitations: "Without a blue band it cannot correct for aerosols, so it relies on the surface reflectance product already having done so; over hazy scenes it drifts from EVI. It shares NDVI's sensitivity to soil background where cover is sparse.",
+    limitations: "Without a blue band it cannot correct for aerosols, so it relies on the surface reflectance product already having done so; over hazy scenes it drifts from EVI. It shares NDVI's sensitivity to soil background where cover is sparse. It was fitted to agree with EVI over good-quality observations, so the two can be compared, but they are not interchangeable where the blue band carries real aerosol information.",
     references: &[JIANG],
     examples: &[Example {
         id: "primary",
@@ -742,7 +745,8 @@ pub static SAVI: ToolDef = ToolDef {
         "(1 + L)(NIR - Red) / (NIR + Red + L)",
     )],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["SUSPECT_SCALING", "EXPERIMENTAL_TOOL"],
+    stability: gp_base::tool::Stability::Stable,
+    warnings: &["SUSPECT_SCALING"],
     model: "SAVI = (1 + L)(NIR - Red) / (NIR + Red + L), L = 0.5 unless given (Huete 1988)",
     accuracy: "Exact arithmetic on the reflectance given.",
     when_to_use: "Use this where the ground shows between plants — rangeland, early growth, arid and semi-arid scenes — because soil brightness pushes NDVI around in exactly those conditions. The L factor sets how much of that soil effect is taken out: 1 for very sparse cover, 0.5 in between, 0 for closed canopy, where SAVI becomes NDVI scaled.",

@@ -492,3 +492,124 @@ fn ruggedness_places_the_cell_against_its_neighbours() {
     assert_eq!(num(&level, "result.tri_mean.value"), 0.0, "{level}");
     assert_eq!(num(&level, "result.roughness.value"), 0.0);
 }
+
+/// Nine indices against spyndex, the Python front end of the Awesome Spectral
+/// Indices catalog (Montero and others 2023): 400 reflectance sets each,
+/// within 1e-12 (tools/vectors/gen_indices_spyndex.py).
+#[test]
+fn indices_match_spyndex() {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/data/indices_spyndex.json"
+    );
+    let fx: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("JSON");
+    let mut wrong = Vec::new();
+    let mut checked = 0;
+    for (tool, spec) in fx["tools"].as_object().unwrap() {
+        let out = spec["output"].as_str().unwrap();
+        for c in spec["cases"].as_array().unwrap() {
+            checked += 1;
+            let r = call(tool, &c["input"].to_string());
+            let want = c["value"].as_f64().unwrap();
+            let got = r["result"][out].as_f64();
+            if got.is_none_or(|g| (g - want).abs() > 1e-12 * want.abs().max(1.0)) {
+                wrong.push(format!("{tool} {}: {r} vs spyndex {want}", c["input"]));
+            }
+        }
+    }
+    assert_eq!(checked, 3_600);
+    assert!(
+        wrong.is_empty(),
+        "{} differ:\n{}",
+        wrong.len(),
+        wrong[..wrong.len().min(10)].join("\n")
+    );
+}
+
+/// What every normalized difference must do, and how the adjusted indices
+/// relate to it.
+#[test]
+fn index_invariants() {
+    // (tool, first band, second band, output): index = (a - b) / (a + b).
+    let normalized = [
+        ("raster.index.ndvi", "nir", "red", "ndvi"),
+        ("raster.index.ndwi-mcfeeters", "green", "nir", "ndwi"),
+        ("raster.index.ndwi-gao", "nir", "swir1", "ndwi"),
+        ("raster.index.mndwi", "green", "swir1", "mndwi"),
+        ("raster.index.ndbi", "swir1", "nir", "ndbi"),
+        ("raster.index.nbr", "nir", "swir2", "nbr"),
+    ];
+    let pairs = [
+        (0.45, 0.08),
+        (0.1, 0.3),
+        (0.25, 0.25),
+        (0.02, 0.6),
+        (0.5, 0.49),
+    ];
+    for (tool, a, b, out) in normalized {
+        for (x, y) in pairs {
+            let v = num(
+                &call(tool, &format!(r#"{{"{a}":{x},"{b}":{y}}}"#)),
+                &format!("result.{out}"),
+            );
+            // Bounded, zero for equal bands, and negated by swapping them.
+            assert!((-1.0..=1.0).contains(&v), "{tool} {x} {y}: {v}");
+            let swapped = num(
+                &call(tool, &format!(r#"{{"{a}":{y},"{b}":{x}}}"#)),
+                &format!("result.{out}"),
+            );
+            assert!(
+                (v + swapped).abs() < 1e-12,
+                "{tool}: swapping the bands does not negate"
+            );
+            // Brighter light on both bands, by the same factor, changes nothing.
+            let brighter = num(
+                &call(tool, &format!(r#"{{"{a}":{},"{b}":{}}}"#, x * 1.5, y * 1.5)),
+                &format!("result.{out}"),
+            );
+            assert!((v - brighter).abs() < 1e-12, "{tool}: not scale-invariant");
+            if x == y {
+                assert!(v.abs() < 1e-15);
+            }
+        }
+    }
+    for (nir, red) in pairs {
+        let ndvi = num(
+            &call(
+                "raster.index.ndvi",
+                &format!(r#"{{"nir":{nir},"red":{red}}}"#),
+            ),
+            "result.ndvi",
+        );
+        // SAVI with no soil adjustment is NDVI.
+        let savi0 = num(
+            &call(
+                "raster.index.savi",
+                &format!(r#"{{"nir":{nir},"red":{red},"soil_factor":0}}"#),
+            ),
+            "result.savi",
+        );
+        assert!((savi0 - ndvi).abs() < 1e-12, "SAVI with L = 0 is not NDVI");
+        // EVI2 and EVI with no blue share a sign with NDVI.
+        let evi2 = num(
+            &call(
+                "raster.index.evi2",
+                &format!(r#"{{"nir":{nir},"red":{red}}}"#),
+            ),
+            "result.evi2",
+        );
+        assert!(evi2 * ndvi >= 0.0);
+        // EVI grows with near-infrared, holding the rest.
+        let evi = |n: f64| {
+            num(
+                &call(
+                    "raster.index.evi",
+                    &format!(r#"{{"nir":{n},"red":{red},"blue":0.05}}"#),
+                ),
+                "result.evi",
+            )
+        };
+        assert!(evi(nir + 0.05) > evi(nir), "EVI does not rise with NIR");
+    }
+}

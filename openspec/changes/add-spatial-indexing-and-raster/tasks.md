@@ -41,4 +41,4 @@
 
 - [ ] 5.1 Register all indexing (52/92) and raster (30/40) operations and endpoints with aliases (hexbin, uber h3, s2 cell, slippy tile, open location code, vegetation index); verify catalog counts
 - [ ] 5.2 Write docs per tool and the "Pick an H3 resolution" guide; verify the guide chain end to end
-- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report
+- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-24: nine spectral indices promoted, NDVI, EVI, EVI2, SAVI, both NDWIs, MNDWI, NDBI, and NBR, each matched to spyndex (Awesome Spectral Indices) on 400 reflectance sets within 1e-12)

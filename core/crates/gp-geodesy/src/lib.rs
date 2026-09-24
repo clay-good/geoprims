@@ -2017,6 +2017,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &datum::NAD83,
     &datum::LEGACY_SHIFT,
     &datum::NADCON5,
+    &datum::TRANSFORM,
 ];
 
 pub static REGISTRY: Registry = Registry {

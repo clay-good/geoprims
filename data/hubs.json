@@ -659,6 +659,12 @@
       "intro": "These tools move coordinates between datums, frames, and epochs: NAD 83, the ITRF, WGS 84, NAD 27 and other old datums, and legacy datums worldwide. Surveyors and GIS analysts use them when GNSS data meets older control or a map on a different datum. For modern GNSS positions in the US, start with the NAD 83 transformation. The common pitfall is treating NAD 83(2011) and WGS 84 as the same, which puts a meter or more of error in the data.",
       "tasks": [
         {
+          "want": "move a position between any two ITRF, WGS 84, or NAD 83 frames, with the steps and their accuracy",
+          "tools": [
+            "transform"
+          ]
+        },
+        {
           "want": "move coordinates between NAD 83, ITRF, and WGS 84",
           "tools": [
             "nad83",

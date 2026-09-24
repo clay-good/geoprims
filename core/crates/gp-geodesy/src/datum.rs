@@ -1838,3 +1838,438 @@ fn run_nadcon5(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("dlon", ctx.out("dlon", arcsec(dlon))),
     ]))
 }
+
+// ---------------------------------------------------------------- frame paths
+
+/// How one step between two frames is made.
+#[derive(Clone, Copy, PartialEq)]
+enum Step {
+    /// The IERS 14-parameter transformation, through ITRF2020.
+    Iers,
+    /// A WGS 84 realization aligned with an ITRF: no change in coordinates.
+    Aligned,
+    /// The NGS HTDP 3.6.0 14-parameter sets.
+    Htdp,
+}
+
+/// An edge of the frame graph, with its stated uncertainty (1σ, m).
+struct Edge {
+    a: &'static str,
+    b: &'static str,
+    step: Step,
+    sigma: f64,
+}
+
+/// WGS 84 realizations and the ITRF each is aligned with (NGA.STND.0036 and
+/// NGA's later realization notes).
+const WGS84_ALIGNED: &[(&str, &str)] = &[
+    ("WGS84(G2296)", "ITRF2020"),
+    ("WGS84(G2139)", "ITRF2014"),
+    ("WGS84(G1762)", "ITRF2008"),
+    ("WGS84(G1674)", "ITRF2008"),
+    ("WGS84(G1150)", "ITRF2000"),
+];
+
+const NAD83_REALIZATIONS: &[&str] = &["NAD83(2011)", "NAD83(PA11)", "NAD83(MA11)"];
+
+/// The frames HTDP carries besides NAD 83.
+const HTDP_OTHERS: &[&str] = &[
+    "ITRF2020",
+    "ITRF2014",
+    "ITRF2008",
+    "ITRF2005",
+    "ITRF2000",
+    "WGS84(G1674)",
+    "WGS84(G1150)",
+];
+
+/// The IERS parameters' uncertainty for each realization's link to ITRF2020:
+/// a few millimeters for the recent ones, centimeters for the oldest.
+fn iers_sigma(frame: &str) -> f64 {
+    match frame {
+        "ITRF2014" | "ITRF2008" => 0.003,
+        "ITRF2005" | "ITRF2000" => 0.005,
+        "ITRF97" | "ITRF96" | "ITRF94" => 0.01,
+        _ => 0.02,
+    }
+}
+
+fn frame_edges() -> Vec<Edge> {
+    let mut out = Vec::new();
+    for &f in helmert::ITRF_FRAMES.iter().filter(|f| **f != "ITRF2020") {
+        out.push(Edge {
+            a: "ITRF2020",
+            b: f,
+            step: Step::Iers,
+            sigma: iers_sigma(f),
+        });
+    }
+    for &(w, i) in WGS84_ALIGNED {
+        out.push(Edge {
+            a: w,
+            b: i,
+            step: Step::Aligned,
+            sigma: 0.02,
+        });
+    }
+    for (k, &n) in NAD83_REALIZATIONS.iter().enumerate() {
+        for &o in HTDP_OTHERS.iter().chain(&NAD83_REALIZATIONS[k + 1..]) {
+            out.push(Edge {
+                a: n,
+                b: o,
+                step: Step::Htdp,
+                sigma: 0.02,
+            });
+        }
+    }
+    out
+}
+
+const PATH_FRAMES: &[&str] = &[
+    "ITRF2020",
+    "ITRF2014",
+    "ITRF2008",
+    "ITRF2005",
+    "ITRF2000",
+    "ITRF97",
+    "ITRF96",
+    "ITRF94",
+    "ITRF93",
+    "ITRF92",
+    "ITRF91",
+    "ITRF90",
+    "ITRF89",
+    "ITRF88",
+    "WGS84",
+    "WGS84(G2296)",
+    "WGS84(G2139)",
+    "WGS84(G1762)",
+    "WGS84(G1674)",
+    "WGS84(G1150)",
+    "NAD83(2011)",
+    "NAD83(PA11)",
+    "NAD83(MA11)",
+];
+
+/// The path from one frame to another with the smallest accumulated variance
+/// (Dijkstra's method), as edges in order with their directions.
+fn frame_path(from: &str, to: &str) -> Option<Vec<(&'static str, &'static str, Step, f64)>> {
+    let edges = frame_edges();
+    let nodes: Vec<&'static str> = PATH_FRAMES
+        .iter()
+        .copied()
+        .filter(|f| *f != "WGS84")
+        .collect();
+    let idx = |f: &str| nodes.iter().position(|n| *n == f);
+    let (s, t) = (idx(from)?, idx(to)?);
+    let mut cost = vec![f64::INFINITY; nodes.len()];
+    let mut prev: Vec<Option<(usize, usize)>> = vec![None; nodes.len()];
+    let mut done = vec![false; nodes.len()];
+    cost[s] = 0.0;
+    while let Some(u) = (0..nodes.len())
+        .filter(|&i| !done[i] && cost[i].is_finite())
+        .min_by(|&i, &j| cost[i].total_cmp(&cost[j]).then(i.cmp(&j)))
+    {
+        done[u] = true;
+        if u == t {
+            break;
+        }
+        for (k, e) in edges.iter().enumerate() {
+            let other = if e.a == nodes[u] {
+                e.b
+            } else if e.b == nodes[u] {
+                e.a
+            } else {
+                continue;
+            };
+            let v = idx(other).expect("edges join listed frames");
+            let c = cost[u] + e.sigma * e.sigma;
+            if c < cost[v] {
+                cost[v] = c;
+                prev[v] = Some((u, k));
+            }
+        }
+    }
+    if !cost[t].is_finite() {
+        return None;
+    }
+    let mut steps = Vec::new();
+    let mut at = t;
+    while let Some((u, k)) = prev[at] {
+        let e = &edges[k];
+        steps.push((nodes[u], nodes[at], e.step, e.sigma));
+        at = u;
+    }
+    steps.reverse();
+    Some(steps)
+}
+
+const STEP_ROW: &[Field] = &[
+    Field::new("from", "From", "Frame", Kind::Text { max_len: 20 }),
+    Field::new("to", "To", "Frame", Kind::Text { max_len: 20 }),
+    Field::new(
+        "method",
+        "Method",
+        "How the step is made",
+        Kind::Text { max_len: 80 },
+    ),
+    Field::new(
+        "accuracy",
+        "Accuracy",
+        "The step's stated uncertainty, 1σ",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+];
+
+pub static TRANSFORM: ToolDef = ToolDef {
+    id: "geodesy.datum.transform",
+    stability: gp_base::tool::Stability::Stable,
+    title: "Transform between reference frames",
+    summary: "Moves a position between ITRF, WGS 84, and NAD 83 realizations at one epoch along the chain of published transformations with the least combined uncertainty, and lists each step with its accuracy.",
+    aliases: &[
+        "datum transformation",
+        "frame transformation",
+        "WGS84 to NAD83 transformation",
+        "reference frame converter",
+    ],
+    keywords: &[
+        "datum",
+        "reference frame",
+        "realization",
+        "ITRF",
+        "NAD 83",
+        "WGS 84",
+        "epoch",
+        "transformation path",
+    ],
+    inputs: &[
+        point::lat_field("lat", "Latitude"),
+        point::lon_field("lon", "Longitude"),
+        qty(
+            "height",
+            "Ellipsoidal height",
+            "Like 250 m; 0 if not given",
+            QT::Length,
+            "m",
+        ),
+        Field::new(
+            "from",
+            "From frame",
+            "Like WGS84(G2296), ITRF2014, or NAD83(2011); WGS84 alone means G2296",
+            Kind::Choice(PATH_FRAMES),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "to",
+            "To frame",
+            "Like NAD83(2011)",
+            Kind::Choice(PATH_FRAMES),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "epoch",
+            "Epoch",
+            "The coordinates' date, as a decimal year like 2026.5 or a date like 2026-07-01",
+            Kind::Text { max_len: 32 },
+        )
+        .required()
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "In the target frame",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "In the target frame",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "height",
+            "Ellipsoidal height",
+            "In the target frame",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "shift",
+            "Horizontal shift",
+            "How far the point moves on the ground",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "accuracy",
+            "Path accuracy",
+            "The steps' uncertainties combined, 1σ",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "steps",
+            "Steps",
+            "Each transformation in order",
+            Kind::List {
+                items: STEP_ROW,
+                min: 0,
+                max: 20,
+            },
+        ),
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["REALIZATION_ASSUMED", "INPUT_NORMALIZED"],
+    model: "A graph of frames joined by published transformations: IERS 14-parameter sets through ITRF2020, WGS 84 realizations aligned with their ITRFs, and the NGS HTDP 3.6.0 sets for NAD 83; the path with the least accumulated variance is taken, and its steps' uncertainties are combined by root sum of squares",
+    accuracy: "Each step is exact to its published parameters (matching HTDP within 1 mm and the IERS values); the path's stated accuracy combines the steps' stated uncertainties",
+    when_to_use: "Use this when a position must move between two named frames and you want the tool, not you, to find the chain: WGS 84 from a GPS receiver to NAD 83 (2011) for a US survey, ITRF2014 to ITRF2020 for a processed solution, or NAD 83 (PA11) to WGS 84 in Hawaii. It names each step and how good it is, so the answer carries its own error budget.",
+    limitations: "The frames here are the modern ITRF, WGS 84, and NAD 83 realizations. NAD 27 and the older NAD 83 realizations need the NADCON5 grids and are in the NADCON5 tool, and a legacy datum such as ED50 is in the legacy-datum tool. The epoch is required and is not guessed from the date. The transformation changes the frame, not the epoch: a position's own motion over time is the plate-motion tool. The stated accuracy is the transformations', not the coordinates'.",
+    references: &[IERS_ITRF2020, NGS_HTDP, NGA_WGS84],
+    examples: &[Example {
+        id: "primary",
+        title: "A GPS position in Kansas to NAD 83",
+        input: r#"{"lat":39,"lon":-98,"height":"400 m","from":"WGS84","to":"NAD83(2011)","epoch":"2026.5"}"#,
+        source: "add-geodesy-suite scenario: an unqualified WGS 84 is taken as G2296 with REALIZATION_ASSUMED; the step itself matches NGS HTDP 3.6.0 within 1 mm (geodesy.datum.nad83's golden vectors)",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.nad83",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.plate-motion",
+            reason: "next",
+        },
+    ],
+    sentence: "The point moves {shift} and is good to about {accuracy}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_transform,
+    ..ToolDef::BLANK
+};
+
+fn run_transform(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let frame = |ctx: &mut Ctx, name: &str, field: &str| -> Result<&'static str, ToolError> {
+        let f = ctx.choice(name)?.expect("required");
+        Ok(if f == "WGS84" {
+            ctx.warnings.push(Warning::new("REALIZATION_ASSUMED", format!("\"WGS 84\" names several realizations; {field} was taken as the current one, WGS 84 (G2296).")).at(&format!("/{name}")));
+            "WGS84(G2296)"
+        } else {
+            f
+        })
+    };
+    let from = frame(ctx, "from", "the source frame")?;
+    let to = frame(ctx, "to", "the target frame")?;
+    let t = epoch(ctx, "epoch")?.expect("required");
+    if !(1980.0..=2100.0).contains(&t) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The epoch must be between 1980 and 2100.",
+        )
+        .at("/epoch"));
+    }
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let h = read(ctx, "height", QT::Length, "m")?.unwrap_or(0.0);
+    let grs80 = CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .expect("GRS 80");
+    let (phi, lam) = (lat.to_radians(), lon.to_radians());
+    let p = fr::to_ecef(&grs80, phi, lam, h);
+    let path = frame_path(from, to).expect("every listed frame is joined");
+    let mut v = [p.0, p.1, p.2];
+    let mut rows = Vec::new();
+    let mut var = 0.0;
+    for &(a, b, step, sigma) in &path {
+        v = match step {
+            Step::Iers => helmert::itrf_transform(a, b, v, t).expect("ITRF frames"),
+            Step::Aligned => v,
+            Step::Htdp => gp_geo::htdp::transform(a, b, v, t).expect("HTDP frames"),
+        };
+        var += sigma * sigma;
+        let method = match step {
+            Step::Iers => "IERS 14-parameter transformation",
+            Step::Aligned => "WGS 84 aligned with the ITRF (no change)",
+            Step::Htdp => "NGS HTDP 3.6.0 14-parameter transformation",
+        };
+        rows.push(Json::obj([
+            ("from", Json::str(a)),
+            ("to", Json::str(b)),
+            ("method", Json::str(method)),
+            ("accuracy", m(sigma).to_json()),
+        ]));
+    }
+    let sigma = var.sqrt();
+    let (phi2, lam2, h2) = fr::from_ecef(&grs80, v[0], v[1], v[2]).expect("not the center");
+    let enu = fr::ecef_to_enu(p, phi, lam, (v[0], v[1], v[2]));
+    ctx.context.push(("epoch", Json::Num(t)));
+    if from.starts_with("NAD83") || to.starts_with("NAD83") {
+        ctx.context.push(("nad83ReferenceEpoch", Json::Num(2010.0)));
+    }
+    let pretty = |f: &str| f.replace("WGS84", "WGS 84 ").replace("NAD83", "NAD 83 ");
+    ctx.accuracy = Some(
+        if !path.is_empty() && path.iter().all(|s| s.2 == Step::Aligned) {
+            format!(
+                "No change: {} and {} coincide by NGA's alignment of the WGS 84 realization with its ITRF, stated at the few-centimeter level (about {:.0} cm here).",
+                pretty(from),
+                pretty(to),
+                sigma * 100.0
+            )
+        } else if path.is_empty() {
+            "No change: the frames are the same.".to_owned()
+        } else {
+            format!(
+                "About {:.1} cm (1σ), the root sum of squares of the {} steps' stated uncertainties; the coordinates' own accuracy is not included.",
+                sigma * 100.0,
+                path.len()
+            )
+        },
+    );
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(phi2.to_degrees()))),
+        (
+            "lon",
+            ctx.out("lon", deg(gp_base::angle::wrap_lon(lam2.to_degrees()))),
+        ),
+        ("height", ctx.out("height", m(h2))),
+        ("shift", ctx.out("shift", m(enu[0].hypot(enu[1])))),
+        ("accuracy", ctx.out("accuracy", m(sigma))),
+        ("steps", Json::Arr(rows)),
+    ]))
+}

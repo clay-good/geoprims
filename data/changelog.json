@@ -5,6 +5,15 @@
       "date": "2026-09-24",
       "kind": "added",
       "tools": [
+        "geodesy.datum.transform"
+      ],
+      "vectors": [],
+      "summary": "A new stable tool moves a position between any two ITRF, WGS 84, and NAD 83 realizations at one epoch. It finds the chain of published transformations with the least combined uncertainty (IERS, NGA's WGS 84 alignment, and NGS HTDP) and lists each step with its accuracy and the combined total. Its steps match NGS HTDP within a millimeter and PROJ's IERS parameters."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.tm-exact-forward",
         "geodesy.projection.tm-exact-inverse"
       ],

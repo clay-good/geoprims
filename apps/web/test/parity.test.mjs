@@ -68,3 +68,33 @@ test('a page whose answer drifted from its example is caught', async () => {
   assert.notEqual(pageAnswer(drifted), await coreAnswer(t, primaryOf(t).input));
 });
 
+
+/** An explainer's live tool: its `example`, or else the first of its `tools`. */
+function liveTool(markdown) {
+  const front = /^---\n([\s\S]*?)\n---/.exec(markdown)?.[1] ?? '';
+  const example = /^example:\s*(\S+)/m.exec(front)?.[1];
+  const first = /^tools:\s*\n\s*-\s*(\S+)/m.exec(front)?.[1];
+  return example ?? first;
+}
+
+test("every explainer's live example shows the answer its tool's page shows", async () => {
+  const { readdirSync } = await import('node:fs');
+  const dir = join(web, 'src/content/learn');
+  const problems = [];
+  let checked = 0;
+  for (const f of readdirSync(dir).filter((f) => f.endsWith('.md'))) {
+    const slug = f.replace(/\.md$/, '');
+    const id = liveTool(readFileSync(join(dir, f), 'utf8'));
+    if (!catalog.tools.some((t) => t.id === id)) {
+      problems.push(`${slug}: live tool ${id} is not in the catalog`);
+      continue;
+    }
+    const shown = pageAnswer(page(`/learn/${slug}/`));
+    const onPage = pageAnswer(page(route(id)));
+    checked++;
+    if (shown === undefined) problems.push(`${slug}: the explainer shows no answer`);
+    else if (shown !== onPage) problems.push(`${slug}: the explainer shows "${shown}", ${id}'s page shows "${onPage}"`);
+  }
+  assert.ok(checked >= 25, `only ${checked} explainers checked`);
+  assert.deepEqual(problems, []);
+});

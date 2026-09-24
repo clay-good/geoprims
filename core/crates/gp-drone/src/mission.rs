@@ -745,6 +745,7 @@ const PHOTO_ROW: &[Field] = &[
 pub static SURVEY_GRID: ToolDef = ToolDef {
     id: "drone.mission.survey-grid",
     version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Survey grid (lawnmower pattern)",
     summary: "A serpentine mapping pattern over an area, with no-fly holes routed around, the fewest lines by default, overshoot, and an optional crosshatch: waypoints, line count, path length, turns, photo count, and flight time.",
     aliases: &[
@@ -883,7 +884,9 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
-    warnings: &["OUTPUT_TRUNCATED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["OUTPUT_TRUNCATED", "UNIT_ASSUMED"],
+    when_to_use: "Use this to lay out a mapping flight over an area: parallel lines at your spacing, joined end to end, with photo points along them, routed around no-fly holes, and optionally crossed by a second set for a crosshatch. It gives the waypoints to load and the line count, path length, turns, photos, and flight time to plan batteries around.",
+    limitations: "Lines are laid on a local plane, which is exact enough for a survey block but not for one hundreds of kilometers across. The pattern assumes flat ground and a constant height: over hills the overlap and ground sample distance change along each line. Turns are drawn as corners, so the path length and time leave out how the aircraft actually turns and accelerates.",
     model: "Lines swept on a local transverse Mercator plane, ⌈width / spacing⌉ + 1 of them centered so the outer lines reach the edges (Penn State GEOG 892), each covering its strip of the area and cut at buffered holes, joined in serpentine order; ⌈length / photo spacing⌉ + 1 photos per line plus the extras past each end; transits that would cross a hole follow its buffered boundary",
     accuracy: "Line spacing is true to within 1e-7 across a few kilometers (checked geodesically). Flight time ignores turns, climbs, and wind.",
     references: &[PSU_FLIGHT_ROUTE, PIX4D, KARNEY],
@@ -912,6 +915,10 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         Related {
             id: "drone.photogrammetry.image-count",
             reason: "alternative",
+        },
+        Related {
+            id: "drone.mission.export",
+            reason: "next",
         },
     ],
     sentence: "Fly {lines} {plural lines \"line\" \"lines\"} for {path_length} and about {photos} photos.{if flight_time > 0} That takes about {flight_time}.{/if}",

@@ -41,4 +41,4 @@
 
 - [ ] 5.1 Register all 42 operations with alias slugs and aliases (GSD calculator, overlap calculator, drone flight time); verify catalog counts
 - [ ] 5.2 Write docs per tool and the "Plan a photogrammetry mission" guide; verify the guide chain end to end
-- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report
+- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-24: `drone.mission.survey-grid` promoted, its published counts checked against Penn State GEOG 892 and King Saud University SE 321 and on geographiclib arc lengths at 28 vectors)

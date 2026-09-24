@@ -167,6 +167,26 @@ def survey_grid():
     out.append(ok(SG, next(vid), PSU_RECT, "8400 ft", "2800 ft", PSU, PSU_V, survey=True))
     out.append(ok(SG, next(vid), PSU_RECT, "8400 ft", "2800 ft", PSU + " (390 without the extra images)", PSU_V, extra=0))
     out.append(ok(SG, next(vid), KSU_RECT, "920 m", "460 m", KSU, KSU_V))
+    # Promotion (v014 on): the image-count cases the grid had not flown, the
+    # refusals, and random rectangles wherever the count is safely pinned.
+    out.append(ok(SG, next(vid), PSU_RECT, "8400 ft", "2800 ft", METHOD, METHOD_V, direction="0 deg"))
+    out.append(ok(SG, next(vid), PSU_RECT, "8400 ft", "2800 ft", METHOD, METHOD_V, extra=1, survey=True))
+    out.append(ok(SG, next(vid), KSU_RECT, "1500 m", "700 m", METHOD, METHOD_V, survey=True))
+    out.append(ok(SG, next(vid), PSU_RECT, "30000 ft", "10000 ft", METHOD, METHOD_V, extra=0))
+    out.append(err(next(vid), {**BASE, "end_photos": 1.5}, "INVALID_INPUT", "Extra photos per line end must be a whole number"))
+    out.append(err(next(vid), {**BASE, "line_spacing": "-5 m"}, "INVALID_INPUT", "Line spacing must be positive"))
+    out.append(err(next(vid), {**BASE, "area": BASE["area"][:2]}, "INVALID_INPUT", "An area needs 3 corners"))
+    import random
+    rng = random.Random(892)
+    while len(out) < 23:
+        lat = round(rng.uniform(-60, 60), 4)
+        lon = round(rng.uniform(-170, 170), 4)
+        rect = (lat, round(lat + rng.uniform(0.002, 0.02), 5), lon, round(lon + rng.uniform(0.002, 0.03), 5))
+        sp, ph = f"{round(rng.uniform(20, 120), 1)} m", f"{round(rng.uniform(15, 60), 1)} m"
+        try:
+            out.append(ok(SG, next(vid), rect, sp, ph, METHOD, METHOD_V))
+        except ValueError:
+            continue
     return out
 
 

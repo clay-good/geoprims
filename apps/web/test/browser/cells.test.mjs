@@ -77,8 +77,8 @@ test('a million-cell answer draws its compacted stand-in, whole', { timeout: 300
     const ne = await (await fetch('/ne.json')).json();
     const base = { land: ne.land.map(decode), lakes: ne.lakes.map(decode), borders: ne.borders.map(decode), states: (ne.states ?? []).map(decode), places: [] };
     const rings = await (await fetch('/cells.json')).json();
-    // Each cell is its own layer, as the map builds them, and compacted cells
-    // are dashed, which is the costlier stroke of the two.
+    // Each cell is its own layer, as the map builds them. Compacted cells are
+    // dashed at rest and drawn solid mid-pan, as these frames are.
     const layers = rings.map((ring) => ({ kind: 'polygon', role: 'input', rings: [ring], cell: 'x', compacted: true }));
     const colors = { bg: 'rgb(243, 244, 241)', surface: 'rgb(255, 255, 255)', land: 'rgb(232, 235, 228)', line: 'rgb(201, 205, 196)', graticule: 'rgb(223, 226, 218)', muted: 'rgb(91, 97, 110)', text: 'rgb(21, 23, 28)', accent: 'rgb(181, 60, 10)', shadow: 'rgb(0, 0, 0)', sans: 'sans-serif' };
     const canvas = document.querySelector('canvas');

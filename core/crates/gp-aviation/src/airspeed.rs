@@ -10,7 +10,7 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 use libm::{pow, sqrt};
 
@@ -429,6 +429,32 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Ratio of specific heats for air",
+            value: "1.4",
+            unit: "1",
+            source: "icao-7488",
+        },
+    ],
     sentence: "True airspeed is {tas}, Mach {mach}. The 2% rule gives {rule_of_thumb}, off by {abs(rule_error)}.{warn ABOVE_VNE} Above VNE.{/warn}{warn CAUTION_RANGE} In the caution range.{/warn}{warn CALIBRATION_ASSUMED} Treats IAS as CAS.{/warn}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_cas_to_tas,
@@ -712,6 +738,32 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
         id: "aviation.airspeed.cas-to-tas",
         reason: "inverse",
     }],
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Ratio of specific heats for air",
+            value: "1.4",
+            unit: "1",
+            source: "icao-7488",
+        },
+    ],
     sentence: "Fly {cas} calibrated for Mach {mach}.{if tas > 0} That is {tas} true.{/if}{warn ABOVE_VNE} Above VNE.{/warn}{warn CAUTION_RANGE} In the caution range.{/warn}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_tas_to_cas,

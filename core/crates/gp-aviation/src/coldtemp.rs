@@ -10,7 +10,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::log;
 
@@ -289,6 +291,20 @@ pub static COLD_TEMPERATURE: ToolDef = ToolDef {
         Related {
             id: "aviation.altimetry.pressure-altitude",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Lapse rate L0",
+            value: "-0.0019812",
+            unit: "K/ft",
+            source: "icao-8168",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-8168",
         },
     ],
     sentence: "{if correction > 0}Add {correction}: fly {corrected}.{/if}{if correction < 1}No cold-temperature correction applies.{/if}",

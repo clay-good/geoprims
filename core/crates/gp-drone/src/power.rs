@@ -7,7 +7,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use libm::{pow, sqrt};
 
@@ -664,6 +666,38 @@ pub static HOVER_POWER: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Tropospheric lapse rate",
+            value: "-0.0065",
+            unit: "K/m",
+            source: "icao-7488",
+        },
+    ],
     sentence: "Hovering takes about {electrical_power} from the battery. The ideal minimum is {ideal_power}.",
     limits: &[("batchRows", 10_000)],
     run: run_hover,
@@ -1279,6 +1313,38 @@ pub static MAX_PAYLOAD: ToolDef = ToolDef {
         id: "drone.power.hover-power",
         reason: "alternative",
     }],
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Tropospheric lapse rate",
+            value: "-0.0065",
+            unit: "K/m",
+            source: "icao-7488",
+        },
+    ],
     sentence: "It can carry about {max_payload} more and still hover for the target time.",
     limits: &[("batchRows", 10_000)],
     run: run_max_payload,
@@ -1444,6 +1510,38 @@ pub static CALIBRATE_HOVER: ToolDef = ToolDef {
         Related {
             id: "drone.power.endurance",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Sea-level pressure P0",
+            value: "101325",
+            unit: "Pa",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Sea-level temperature T0",
+            value: "288.15",
+            unit: "K",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Tropospheric lapse rate",
+            value: "-0.0065",
+            unit: "K/m",
+            source: "icao-7488",
         },
     ],
     sentence: "Your flight shows a figure of merit × efficiency of {fm_eta}.",

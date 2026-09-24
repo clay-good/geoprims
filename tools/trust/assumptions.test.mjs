@@ -36,6 +36,12 @@ const MUST_DECLARE = [
   'geometry.area.polygon',
   'indexing.geohash.encode',
   'indexing.plus-code.encode',
+  'drone.power.hover-power',
+  'drone.power.max-payload',
+  'drone.power.calibrate-hover',
+  'aviation.airspeed.cas-to-tas',
+  'aviation.airspeed.tas-to-cas',
+  'aviation.altimetry.cold-temperature',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

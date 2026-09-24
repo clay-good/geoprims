@@ -613,3 +613,36 @@ fn index_invariants() {
         assert!(evi(nir + 0.05) > evi(nir), "EVI does not rise with NIR");
     }
 }
+
+#[test]
+fn reflectance_scaling_invariants() {
+    // Each preset is a straight line in the digital number: a step in DN is a
+    // fixed step in reflectance, the Sentinel-2 baselines differ by exactly
+    // the offset, and inverting the line recovers the digital number.
+    let r = |input: String| {
+        num(
+            &call("raster.scale.reflectance", &input),
+            "result.reflectance",
+        )
+    };
+    for dn in [1_001.0, 2_345.0, 7_777.0, 9_999.0] {
+        let new = r(format!(r#"{{"dn":{dn},"sensor":"sentinel-2-l2a"}}"#));
+        let old = r(format!(
+            r#"{{"dn":{dn},"sensor":"sentinel-2-l2a","baseline":"before-04.00"}}"#
+        ));
+        assert!((old - new - 0.1).abs() < 1e-12, "{dn}: {old} - {new}");
+        let next = r(format!(
+            r#"{{"dn":{},"sensor":"sentinel-2-l2a"}}"#,
+            dn + 1.0
+        ));
+        assert!((next - new - 1e-4).abs() < 1e-12);
+        assert!((new * 10_000.0 + 1_000.0 - dn).abs() < 1e-8);
+    }
+    for dn in [7_273.0, 12_345.0, 30_000.0, 43_636.0] {
+        let v = r(format!(r#"{{"dn":{dn},"sensor":"landsat-c2-l2"}}"#));
+        let next = r(format!(r#"{{"dn":{},"sensor":"landsat-c2-l2"}}"#, dn + 1.0));
+        assert!((next - v - 0.000_027_5).abs() < 1e-12);
+        assert!(((v + 0.2) / 0.000_027_5 - dn).abs() < 1e-6);
+        assert!((-0.2..=1.5).contains(&v));
+    }
+}

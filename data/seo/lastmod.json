@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "a6a5289e121293ca",
+    "hash": "86bc63ccbc672b23",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -912,7 +912,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "317ebbfaa2e52235",
+    "hash": "f54e31049c413a75",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1119,6 +1119,10 @@
     "hash": "1ed1a50758a73071",
     "lastmod": "2026-09-23"
   },
+  "/raster/scale/reflectance/": {
+    "hash": "8d083bd329e08ab9",
+    "lastmod": "2026-09-24"
+  },
   "/raster/terrain/": {
     "hash": "67a8f4ff4c4f9f6f",
     "lastmod": "2026-09-24"
@@ -1272,7 +1276,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "0e447204f9b22b7c",
+    "hash": "5e96b582cc54b076",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1460,7 +1464,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5885dd3f6594ae2a",
+    "hash": "6aeb89e035c0c60c",
     "lastmod": "2026-09-24"
   }
 }

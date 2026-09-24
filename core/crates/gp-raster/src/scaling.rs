@@ -11,7 +11,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef,
+};
 
 pub const S2_PRODUCTS: Reference = Reference {
     title: "Sentinel-2 products (SentiWiki)",
@@ -179,6 +181,7 @@ fn run_scale(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static SCALE: ToolDef = ToolDef {
     id: "raster.scale.reflectance",
+    stability: gp_base::tool::Stability::Stable,
     title: "Digital number to reflectance",
     summary: "Turns a band's stored digital number into surface reflectance with its sensor's own scaling: the Sentinel-2 Level-2A offset and quantification value, or the Landsat Collection 2 gain and offset.",
     aliases: &[
@@ -274,12 +277,38 @@ pub static SCALE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["SUSPECT_SCALING", "EXPERIMENTAL_TOOL"],
+    warnings: &["SUSPECT_SCALING"],
     model: "Sentinel-2 L2A: (DN + BOA_ADD_OFFSET) / QUANTIFICATION_VALUE, offset -1000 and quantification 10000 unless given; Landsat Collection 2 Level-2: DN x 0.0000275 - 0.2",
     accuracy: "Exact arithmetic on the product's own constants. The offset is band-dependent and both values are in the product metadata, which governs.",
     when_to_use: "Use this before any index, when the numbers you have came out of a GeoTIFF rather than out of a reflectance product: bands are stored as integers, and each sensor undoes that differently. It is also the tool to reach for when an NDVI looks wrong by a constant amount, which is usually the Sentinel-2 baseline offset applied or not applied.",
     limitations: "The Sentinel-2 offset is band-dependent and both it and the quantification value come from the product metadata, which governs over the usual values assumed here; pass them when the product says otherwise. The Landsat constants are for Collection 2 Level-2 surface reflectance, not for surface temperature or Collection 1. A digital number of zero is no-data in both products and is refused rather than scaled.",
     references: &[S2_PRODUCTS, LANDSAT_SCALING],
+    assumptions: &[
+        Assumption {
+            name: "Sentinel-2 L2A offset from processing baseline 04.00, unless given",
+            value: "-1000",
+            unit: "1",
+            source: "sentinel2-products",
+        },
+        Assumption {
+            name: "Sentinel-2 L2A quantification value, unless given",
+            value: "10000",
+            unit: "1",
+            source: "sentinel2-products",
+        },
+        Assumption {
+            name: "Landsat Collection 2 surface reflectance scale factor",
+            value: "0.0000275",
+            unit: "1",
+            source: "landsat-scale-factor",
+        },
+        Assumption {
+            name: "Landsat Collection 2 surface reflectance offset",
+            value: "-0.2",
+            unit: "1",
+            source: "landsat-scale-factor",
+        },
+    ],
     examples: &[
         Example {
             id: "primary",

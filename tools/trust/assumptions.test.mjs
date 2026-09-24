@@ -59,6 +59,7 @@ const MUST_DECLARE = [
   'time.scale.gps-week',
   'time.scale.gps-to-utc',
   'aviation.atmosphere.humidity',
+  'raster.scale.reflectance',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

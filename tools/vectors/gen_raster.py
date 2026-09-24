@@ -107,6 +107,26 @@ for dn in (1450, 2000, 1001, 9000, 1200, 3500):
 for dn in (18639, 7273, 43636, 10000, 30000):
     i += 1
     rows.append(vec(i, {"dn": dn, "sensor": "landsat-c2-l2"}, {"result.reflectance": dn * 0.0000275 - 0.2}))
+# USGS's own worked example, as printed: 18,639 x 0.0000275 - 0.2 = 0.313.
+i += 1
+rows.append(vec(i, {"dn": 18639, "sensor": "landsat-c2-l2"}, {"result.reflectance": 0.313}, tol=0.0005))
+rows[-1]["source"] = "USGS, How do I use a scale factor with Landsat Level-2 science products? (worked example: 18,639 gives 0.313)"
+rows[-1]["sourceVersion"] = "retrieved 2026-09-24"
+# Custom metadata values, band names, and what is refused or flagged.
+more = [
+    ({"dn": 5000, "sensor": "sentinel-2-l2a", "offset": -500, "quantification": 20000}, {"result.reflectance": (5000 - 500) / 20000}),
+    ({"dn": 2500, "sensor": "sentinel-2-l2a", "band": "b8a"}, {"result.reflectance": 0.15, "result.band_role": "narrow near-infrared"}),
+    ({"dn": 20000, "sensor": "landsat-c2-l2", "band": "SR_B5"}, {"result.reflectance": 20000 * 0.0000275 - 0.2, "result.band_role": "near-infrared"}),
+    ({"dn": 5000, "sensor": "landsat-c2-l2"}, {"result.reflectance": 5000 * 0.0000275 - 0.2, "meta.warnings.*.code": "SUSPECT_SCALING"}),
+    ({"dn": 30000, "sensor": "sentinel-2-l2a"}, {"result.reflectance": 2.9, "meta.warnings.*.code": "SUSPECT_SCALING"}),
+    ({"dn": 0, "sensor": "landsat-c2-l2"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+    ({"dn": 0, "sensor": "sentinel-2-l2a"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+    ({"dn": 2000, "sensor": "sentinel-2-l2a", "quantification": 0}, {"ok": False, "error.code": "INVALID_INPUT"}),
+    ({"dn": 2000, "sensor": "landsat-c2-l2", "band": "B99"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+]
+for inp, want in more:
+    i += 1
+    rows.append(vec(i, inp, want))
 path = OUT / "raster.scale.reflectance.jsonl"
 path.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
 print(f"{path.name}: {len(rows)}")

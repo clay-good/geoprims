@@ -356,7 +356,34 @@ def aea():
     cases = [(120, 180, 100), (0, 250, 50), (340.5, 290.25, 100), (15, 15, 25), (800, 1200, 100)]
     return [vec(i, {"area1": f"{a} ft2", "area2": f"{b} ft2", "length": f"{l} ft"},
                 {"result.volume_ft3.value": l * (a + b) / 2, "result.volume.value": l * (a + b) / 2 / YD3_FT3}, SPEC if i == 1 else SRC, "2026" if i == 1 else VER, rel=1e-11)
-            for i, (a, b, l) in enumerate(cases, 1)]
+            for i, (a, b, l) in enumerate(cases, 1)] + aea_more(len(cases))
+
+
+# LibreTexts, Fundamentals of Transportation, 7.3 Earthwork, Example 1: sections at 0, 50, 100, and 150 m.
+LIBRE = "LibreTexts Engineering, Fundamentals of Transportation, section 7.3 Earthwork, Example 1 (computing volume)"
+LIBRE_VER = "retrieved 2026-09-24"
+YD3_M3 = 0.9144 ** 3
+
+
+def aea_more(start):
+    out = []
+    for a, b, l, v in [(40, 42, 50, 2050.0), (42, 19, 50, 1525.0), (19, 34, 50, 1325.0)]:
+        out.append(vec(start + len(out) + 1, {"area1": f"{a} m2", "area2": f"{b} m2", "length": f"{l} m"},
+                       {"result.volume.value": v / YD3_M3}, LIBRE, LIBRE_VER))
+    # The whole 150 m in one span is not the published total (4,900 m3): average end area is not
+    # additive across a section whose area is not the average of its neighbors. The sum is pinned above.
+    rng = random.Random(1740)
+    for _ in range(10):
+        a, b = round(rng.uniform(0, 2000), 2), round(rng.uniform(0, 2000), 2)
+        l = round(rng.uniform(1, 200), 2)
+        out.append(vec(start + len(out) + 1, {"area1": f"{a} ft2", "area2": f"{b} ft2", "length": f"{l} ft"},
+                       {"result.volume_ft3.value": l * (a + b) / 2, "result.volume.value": l * (a + b) / 2 / YD3_FT3}, rel=1e-11))
+    for a, b, l in [(12.5, 30.0, 20.0), (0.0, 0.0, 10.0)]:
+        out.append(vec(start + len(out) + 1, {"area1": f"{a} m2", "area2": f"{b} m2", "length": f"{l} m"},
+                       {"result.volume.value": l * (a + b) / 2 / YD3_M3}, rel=1e-11))
+    out.append(vec(start + len(out) + 1, {"area1": "100 ft2", "area2": "120 ft2", "length": "0 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    out.append(vec(start + len(out) + 1, {"area1": "-5 ft2", "area2": "120 ft2", "length": "50 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
 
 
 def prismoidal():

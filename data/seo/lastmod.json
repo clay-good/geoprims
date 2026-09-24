@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "7d2469d9b4bb2a1c",
+    "hash": "a6a5289e121293ca",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "eb60ddc1a9e2a8b9",
+    "hash": "c3d168fff0df2e48",
     "lastmod": "2026-09-24"
   },
   "/aviation/": {
@@ -912,7 +912,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "210d7a34fe65a174",
+    "hash": "317ebbfaa2e52235",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1183,6 +1183,10 @@
     "hash": "9c3d5b6d47bf12e7",
     "lastmod": "2026-09-23"
   },
+  "/survey/earthwork/average-end-area/": {
+    "hash": "4d8d20f096da6415",
+    "lastmod": "2026-09-24"
+  },
   "/survey/gnss/": {
     "hash": "d9f250159116dcfa",
     "lastmod": "2026-09-23"
@@ -1268,7 +1272,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "ed3bdf23a2ea0594",
+    "hash": "05795615047dc19a",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1456,7 +1460,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8b9521bcbc3caacf",
+    "hash": "cc7ef9bb9761742b",
     "lastmod": "2026-09-24"
   }
 }

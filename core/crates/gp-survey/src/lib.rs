@@ -1738,6 +1738,7 @@ const VOLUME_OUT: [Field; 2] = [
 
 pub static AVERAGE_END_AREA: ToolDef = ToolDef {
     id: "survey.earthwork.average-end-area",
+    stability: gp_base::tool::Stability::Stable,
     title: "Average end area volume",
     summary: "Earthwork volume between two cross-sections by the average end area method, in cubic yards and cubic feet.",
     aliases: &["cubic yards calculator", "end area volume"],
@@ -1761,7 +1762,10 @@ pub static AVERAGE_END_AREA: ToolDef = ToolDef {
             .core(),
     ],
     outputs: &[VOLUME_OUT[0], VOLUME_OUT[1]],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED"],
+    when_to_use: "Use this to estimate cut or fill between two cross-sections a known distance apart, such as consecutive stations on a road, ditch, or pad: the method most highway agencies and contractors use for earthwork quantities and pay items. Run it once per pair of sections and add the results, keeping cut and fill separate.",
+    limitations: "The method treats the ground between the sections as changing evenly from one end area to the other, so it overstates the volume when one section is much smaller than the other, as where a cut runs out to a point; the prismoidal formula with a measured middle section is closer there. Each area must already be one kind of material, cut or fill, not a net of both.",
     model: "V = L·(A1 + A2)/2",
     accuracy: "Exact for the method; overestimates for pyramidal sections compared with the prismoidal formula",
     references: &[GHILANI],
@@ -1776,10 +1780,20 @@ pub static AVERAGE_END_AREA: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.earthwork.prismoidal",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "survey.earthwork.prismoidal",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.earthwork.section-area",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.earthwork.shrink-swell",
+            reason: "next",
+        },
+    ],
     sentence: "The volume is {volume} ({volume_ft3}).",
     limits: &[("batchRows", 10_000)],
     run: run_aea,

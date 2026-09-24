@@ -951,3 +951,42 @@ fn inverse_forward_invariants() {
         assert!(close(az4, turn(az + t.to_degrees())) < 1e-7);
     }
 }
+
+#[test]
+fn average_end_area_invariants() {
+    // The end areas may be swapped; the volume scales with the length; units
+    // do not change the answer; and splitting a span at a section whose area
+    // is the average of its ends gives the same total.
+    let vol = |a1: &str, a2: &str, l: &str| {
+        let r = call(
+            "survey.earthwork.average-end-area",
+            &serde_json::json!({"area1": a1, "area2": a2, "length": l}).to_string(),
+        );
+        num(&r, "result.volume_ft3.value")
+    };
+    for (a, b, l) in [(120.0, 180.0, 100.0), (0.0, 915.5, 37.25), (2.5, 2.5, 0.5)] {
+        let v = vol(&format!("{a} ft2"), &format!("{b} ft2"), &format!("{l} ft"));
+        assert!(
+            (vol(&format!("{b} ft2"), &format!("{a} ft2"), &format!("{l} ft")) - v).abs()
+                <= 1e-9 * v.max(1.0)
+        );
+        let v3 = vol(
+            &format!("{a} ft2"),
+            &format!("{b} ft2"),
+            &format!("{} ft", 3.0 * l),
+        );
+        assert!((v3 - 3.0 * v).abs() <= 1e-9 * v.max(1.0));
+        let m2 = 0.3048 * 0.3048;
+        let vm = vol(
+            &format!("{} m2", a * m2),
+            &format!("{} m2", b * m2),
+            &format!("{} m", l * 0.3048),
+        );
+        assert!((vm - v).abs() <= 1e-9 * v.max(1.0));
+        let mid = (a + b) / 2.0;
+        let half = format!("{} ft", l / 2.0);
+        let split = vol(&format!("{a} ft2"), &format!("{mid} ft2"), &half)
+            + vol(&format!("{mid} ft2"), &format!("{b} ft2"), &half);
+        assert!((split - v).abs() <= 1e-9 * v.max(1.0));
+    }
+}

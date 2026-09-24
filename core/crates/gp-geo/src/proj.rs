@@ -536,6 +536,122 @@ fn factors(
     )
 }
 
+/// Orthographic (EPSG method 9840): the ellipsoid seen from infinitely far
+/// above the origin, each point dropped straight onto the plane tangent there.
+pub struct Orthographic {
+    a: f64,
+    e2: f64,
+    lat0: f64,
+    lon0: f64,
+    fe: f64,
+    fn_: f64,
+}
+
+impl Orthographic {
+    pub fn new(a: f64, f: f64, lat0: f64, lon0: f64, fe: f64, fn_: f64) -> Orthographic {
+        Orthographic {
+            a,
+            e2: f * (2.0 - f),
+            lat0,
+            lon0,
+            fe,
+            fn_,
+        }
+    }
+
+    fn nu(&self, phi: f64) -> f64 {
+        self.a / sqrt(1.0 - self.e2 * sin(phi) * sin(phi))
+    }
+
+    /// Easting and northing without the falsings, and the Jacobian's columns
+    /// ∂(E, N)/∂φ and ∂(E, N)/∂λ (per radian).
+    fn map(&self, phi: f64, dl: f64) -> ((f64, f64), (f64, f64), (f64, f64)) {
+        let p0 = self.lat0.to_radians();
+        let (s0, c0) = (sin(p0), cos(p0));
+        let (s, c) = (sin(phi), cos(phi));
+        let (sd, cd) = (sin(dl), cos(dl));
+        let (nu, nu0) = (self.nu(phi), self.nu(p0));
+        let rho = nu * (1.0 - self.e2) / (1.0 - self.e2 * s * s);
+        let x = nu * c * sd;
+        let y = nu * (s * c0 - c * s0 * cd) + self.e2 * (nu0 * s0 - nu * s) * c0;
+        // d(ν cos φ)/dφ = −ρ sin φ and d(ν sin φ)/dφ = ρ cos φ / (1 − e²).
+        let dphi = (-rho * s * sd, rho * (c0 * c + s0 * s * cd));
+        let dlam = (nu * c * cd, nu * c * s0 * sd);
+        ((x, y), dphi, dlam)
+    }
+
+    /// None for a point on the far side, whose vertical is 90° or more from
+    /// the origin's: it would land on top of a point on the near side.
+    pub fn forward(&self, lat: f64, lon: f64) -> Option<Grid> {
+        if normal_dot(self.lat0, self.lon0, lat, lon) < -1e-12 {
+            return None;
+        }
+        let phi = lat.to_radians();
+        let ((x, y), dphi, dlam) = self.map(phi, dlon(lon, self.lon0).to_radians());
+        let s = sin(phi);
+        let w = 1.0 - self.e2 * s * s;
+        let rho = self.a * (1.0 - self.e2) / (w * sqrt(w));
+        let par = self.nu(phi) * cos(phi);
+        Some(Grid {
+            e: self.fe + x,
+            n: self.fn_ + y,
+            convergence: -atan2(dphi.0, dphi.1).to_degrees(),
+            h: dphi.0.hypot(dphi.1) / rho,
+            k: if par > 0.0 {
+                dlam.0.hypot(dlam.1) / par
+            } else {
+                dphi.0.hypot(dphi.1) / rho
+            },
+        })
+    }
+
+    /// Newton's method in φ and λ from the sphere's answer; None off the
+    /// disk the near side covers, or if it does not settle (on the rim, where
+    /// the map folds). Convergence is quadratic, so one step after the update
+    /// falls under 1e-12 radians the error is at the rounding of a double; a
+    /// fixed 1e-15 test could stall there, a couple of ulps from π.
+    pub fn inverse(&self, x: f64, y: f64) -> Option<(f64, f64)> {
+        let (x, y) = (x - self.fe, y - self.fn_);
+        let p0 = self.lat0.to_radians();
+        // The sphere of radius ν0 as the first guess.
+        let r = self.nu(p0);
+        let rr = x.hypot(y) / r;
+        if rr > 1.0 + 1e-9 {
+            return None;
+        }
+        let c = asin(rr.min(1.0));
+        let (mut phi, mut dl) = if rr == 0.0 {
+            (p0, 0.0)
+        } else {
+            (
+                asin(cos(c) * sin(p0) + y * sin(c) * cos(p0) / (rr * r)),
+                atan2(x * sin(c), rr * r * cos(p0) * cos(c) - y * sin(p0) * sin(c)),
+            )
+        };
+        let mut last = false;
+        for _ in 0..50 {
+            let ((fx, fy), (ex, ey), (lx, ly)) = self.map(phi, dl);
+            let (rx, ry) = (x - fx, y - fy);
+            let det = ex * ly - lx * ey;
+            if det == 0.0 {
+                return None;
+            }
+            let dphi = (rx * ly - lx * ry) / det;
+            let dlam = (ex * ry - rx * ey) / det;
+            phi = (phi + dphi).clamp(-FRAC_PI_2, FRAC_PI_2);
+            dl += dlam;
+            if last {
+                let lat = phi.to_degrees();
+                let lon = wrap(self.lon0 + dl.to_degrees());
+                return (normal_dot(self.lat0, self.lon0, lat, lon) >= -1e-12)
+                    .then_some((lat, lon));
+            }
+            last = dphi.abs() < 1e-12 && dlam.abs() < 1e-12;
+        }
+        None
+    }
+}
+
 /// The cosine of the angle between the verticals (ellipsoid normals) at two points.
 fn normal_dot(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     let (p1, p2) = (lat1.to_radians(), lat2.to_radians());

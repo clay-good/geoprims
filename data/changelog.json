@@ -5,6 +5,16 @@
       "date": "2026-09-24",
       "kind": "added",
       "tools": [
+        "geodesy.projection.orthographic-forward",
+        "geodesy.projection.orthographic-inverse"
+      ],
+      "vectors": [],
+      "summary": "Two new stable tools draw the Earth as a globe seen from space above a center you choose, and read points back: the ellipsoidal Orthographic of EPSG. The far side is refused. They agree with PROJ within a micrometer on 10,000 random points, and give the exact convergence and scales."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.azimuthal-equidistant-forward",
         "geodesy.projection.azimuthal-equidistant-inverse",
         "geodesy.projection.gnomonic-forward",

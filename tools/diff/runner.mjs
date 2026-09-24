@@ -461,6 +461,24 @@ function projFamilies() {
       },
       (r, s) => [(s.north ? 1 : -1) * (50 + 40 * r()), uniformLon(r)],
     ),
+    family(
+      'orthographic',
+      (r) => {
+        const [ell, lat0, lon0, fe, fn] = [ells[Math.floor(r() * ells.length)], r6(170 * r() - 85), r6(360 * r() - 180), r6(1e6 * r()), r6(1e6 * r())];
+        return {
+          input: { latitude_of_origin: lat0, longitude_of_origin: lon0, false_easting: `${fe} m`, false_northing: `${fn} m`, ellipsoid: ell },
+          proj: `+proj=ortho +lat_0=${lat0} +lon_0=${lon0} +x_0=${fe} +y_0=${fn} ${ELL[ell]}`,
+        };
+      },
+      // Within 80° of the center on the sphere: the near side, off its rim.
+      (r, s) => {
+        const [p0, l0] = [s.input.latitude_of_origin, s.input.longitude_of_origin].map((v) => (v * Math.PI) / 180);
+        const [az, d] = [2 * Math.PI * r(), ((80 * r()) * Math.PI) / 180];
+        const lat = Math.asin(Math.sin(p0) * Math.cos(d) + Math.cos(p0) * Math.sin(d) * Math.cos(az));
+        const lon = l0 + Math.atan2(Math.sin(az) * Math.sin(d) * Math.cos(p0), Math.cos(d) - Math.sin(p0) * Math.sin(lat));
+        return [(lat * 180) / Math.PI, wrap((lon * 180) / Math.PI)];
+      },
+    ),
   ];
 }
 

@@ -16,8 +16,8 @@ use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
 use gp_geo::point;
 use gp_geo::proj::{
-    self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Lcc, PolarStereo,
-    WebMercator,
+    self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Lcc, Orthographic,
+    PolarStereo, WebMercator,
 };
 
 const G7_2: Reference = Reference {
@@ -1461,4 +1461,148 @@ fn run_gnomonic_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (x, y) = grid_in(ctx)?;
     let p = azimuthal(ctx, Azimuthal::Gnomonic)?;
     inverse_json(ctx, p.inverse(x, y))
+}
+
+// ------------------------------------------------------------ Orthographic
+
+fn orthographic(ctx: &mut Ctx) -> Result<Orthographic, ToolError> {
+    let e = ellipsoid(ctx)?;
+    let (lat0, lon0) = point::read(ctx, "latitude_of_origin", "longitude_of_origin")?;
+    let (fe, fn_) = (
+        opt_len(ctx, "false_easting")?,
+        opt_len(ctx, "false_northing")?,
+    );
+    Ok(Orthographic::new(e.a, e.f, lat0, lon0, fe, fn_))
+}
+
+pub static ORTHO_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.orthographic-forward",
+    title: "Latitude and longitude to Orthographic",
+    summary: "Projects a latitude and longitude onto the ellipsoidal Orthographic, the Earth as seen from far out in space above a center you choose.",
+    aliases: &[
+        "orthographic calculator",
+        "globe view projection",
+        "lat long to orthographic",
+    ],
+    keywords: &[
+        "orthographic",
+        "globe",
+        "view from space",
+        "projection",
+        "9840",
+    ],
+    inputs: &[LAT, LON, CENTER_LAT, CENTER_LON, FE, FN, E[0], E[1], E[2]],
+    outputs: FORWARD_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this to draw the Earth as a globe seen from space, or to place a point on a satellite-view or perspective map centered where you choose. Each point drops straight down onto the flat plane touching the ellipsoid at the center, so the near side keeps its familiar look while its edges foreshorten.",
+    limitations: "Only the half of the Earth facing the viewer has an image: a point whose vertical is 90 degrees or more from the center's is on the far side and is refused. Toward that rim the scale along the direction from the center falls to zero, so shapes flatten and distances there mean little. It keeps neither areas, shapes, nor distances, and suits pictures more than measurement. This is EPSG's ellipsoidal method, not the sphere.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Orthographic (EPSG method 9840), ellipsoidal",
+    accuracy: "Exact to double precision; agrees with PROJ within 1 mm",
+    references: &[G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "Central Europe from above the North Sea",
+        input: r#"{"lat":50,"lon":9,"latitude_of_origin":55,"longitude_of_origin":5}"#,
+        source: "PROJ 9.9 +proj=ortho +lat_0=55 +lon_0=5 +ellps=WGS84: E = 286,550.114 m, N = -547,480.621 m",
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.orthographic-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.gnomonic-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.projection.azimuthal-equidistant-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORWARD_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_ortho_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_ortho_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let p = orthographic(ctx)?;
+    match p.forward(lat, lon) {
+        Some(g) => forward_json(ctx, g),
+        None => Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "This point is on the far side of the Earth from the center, which the orthographic does not show.",
+        )
+        .at("/lat")),
+    }
+}
+
+pub static ORTHO_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.orthographic-inverse",
+    title: "Orthographic to latitude and longitude",
+    summary: "Converts an easting and northing on the ellipsoidal Orthographic you center back to latitude and longitude on the near side.",
+    aliases: &["orthographic to lat long", "orthographic inverse"],
+    keywords: &[
+        "orthographic inverse",
+        "globe",
+        "inverse",
+        "projection",
+        "9840",
+    ],
+    inputs: &[
+        EASTING, NORTHING, CENTER_LAT, CENTER_LON, FE, FN, E[0], E[1], E[2],
+    ],
+    outputs: INVERSE_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this to read a latitude and longitude off an orthographic picture of the globe: a point on a satellite-style view or a perspective map with a known center, back to the ground it shows.",
+    limitations: "Each spot inside the disk the near side covers comes back to the one point on the near side that lands there; the far side, hidden behind it, is never returned. A spot outside that disk, or on its rim where the picture folds, is refused. The point is found by Newton's method from the sphere's answer, to about a nanometer. The center must be the picture's own.",
+    warnings: &["UNIT_ASSUMED"],
+    model: "Orthographic (EPSG method 9840), ellipsoidal, inverted by Newton's method",
+    accuracy: "Agrees with PROJ within 1 mm; forward and back return the point within a nanometer",
+    references: &[G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "Back to Central Europe",
+        input: r#"{"easting":"286550.1136 m","northing":"-547480.6206 m","latitude_of_origin":55,"longitude_of_origin":5}"#,
+        source: "PROJ 9.9 +proj=ortho +lat_0=55 +lon_0=5 +ellps=WGS84, inverse: 50° N, 9° E",
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.orthographic-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.gnomonic-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+    ],
+    sentence: INVERSE_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_ortho_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_ortho_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (x, y) = grid_in(ctx)?;
+    let p = orthographic(ctx)?;
+    match p.inverse(x, y) {
+        Some(ll) => inverse_json(ctx, ll),
+        None => Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "This easting and northing are outside the disk the near side of the Earth covers, or on its rim.",
+        )
+        .at("/easting")),
+    }
 }

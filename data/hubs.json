@@ -898,6 +898,13 @@
           ]
         },
         {
+          "want": "draw the Earth as a globe seen from space",
+          "tools": [
+            "orthographic-forward",
+            "orthographic-inverse"
+          ]
+        },
+        {
           "want": "correct a grid bearing for the curve of the projected line",
           "tools": [
             "arc-to-chord"

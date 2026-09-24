@@ -3,8 +3,8 @@
 methods with custom parameters" and "Round-trip and differential accuracy").
 
 For Web Mercator, Lambert Conformal Conic (1SP and 2SP), Albers Equal Area,
-and Polar Stereographic (variants A and B), random parameter sets and points
-go through PROJ (pyproj). Equidistant Cylindrical is EPSG's ellipsoidal method
+Polar Stereographic (variants A and B), and the ellipsoidal Orthographic,
+random parameter sets and points go through PROJ (pyproj). Equidistant Cylindrical is EPSG's ellipsoidal method
 1028, which PROJ does not implement (its eqc is the spherical form), so its
 northing is GeographicLib's meridian distance and its easting the standard
 parallel's radius times the longitude difference.
@@ -146,12 +146,27 @@ def polar(rng):
     return params, ell, lat, lon, ps
 
 
+def orthographic(rng):
+    ell = rng.choice(list(ELLIPSOIDS))
+    a, fs = AF[ell]
+    lat0 = round(rng.uniform(-85, 85), 4)
+    lon0 = round(rng.uniform(-180, 180), 4)
+    fe, fn_ = round(rng.uniform(0, 1e6), 3), round(rng.uniform(0, 1e6), 3)
+    # Up to 80° of arc from the center: the near side, away from its rim.
+    d = Geodesic(a, fs).ArcDirect(lat0, lon0, rng.uniform(0, 360), rng.uniform(0, 80))
+    params = {"latitude_of_origin": lat0, "longitude_of_origin": lon0, "false_easting": f"{fe} m", "false_northing": f"{fn_} m"}
+    return params, ell, max(-89.0, min(89.0, d["lat2"])), d["lon2"], f"+proj=ortho +lat_0={lat0} +lon_0={lon0} +x_0={fe} +y_0={fn_}"
+
+
+# Methods are drawn in this order from one seed; a new method goes last so
+# the others keep their cases.
 METHODS = [
     ("web-mercator", web_mercator),
     ("lcc", lcc),
     ("albers", albers),
     ("polar-stereographic", polar),
     ("equidistant-cylindrical", None),
+    ("orthographic", orthographic),
 ]
 
 

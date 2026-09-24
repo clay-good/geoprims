@@ -16,6 +16,7 @@ const FIXTURES: [(&str, &[&str]); 2] = [
             "albers",
             "polar-stereographic",
             "equidistant-cylindrical",
+            "orthographic",
         ],
     ),
     (
@@ -159,6 +160,10 @@ fn projections_round_trip() {
             "gnomonic",
             json!({"latitude_of_origin": 20, "longitude_of_origin": 10}),
         ),
+        (
+            "orthographic",
+            json!({"latitude_of_origin": 20, "longitude_of_origin": 10}),
+        ),
     ];
     for (m, p) in setups {
         let north_only = m == "polar-stereographic";
@@ -170,7 +175,7 @@ fn projections_round_trip() {
             // arc for the equidistant and 60° for the gnomonic.
             let cap = match m {
                 "azimuthal-equidistant" => Some(80.0),
-                "gnomonic" => Some(60.0),
+                "gnomonic" | "orthographic" => Some(60.0),
                 _ => None,
             };
             if let Some(cap) = cap {
@@ -353,6 +358,23 @@ fn projection_invariants() {
     let far: Value = serde_json::from_str(&REGISTRY.invoke(
         "geodesy.projection.gnomonic-forward",
         &with(&center, json!({"lat": -50, "lon": -100})).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(far["error"]["code"], "OUT_OF_DOMAIN");
+    // Orthographic: the center lands at the falsings with true scale, and
+    // the far side is refused.
+    let o = run(
+        "geodesy.projection.orthographic-forward",
+        &with(&center, json!({"lat": 40, "lon": -100})),
+    );
+    assert!((val(&o, "easting") - 1000.0).abs() < 1e-9 && val(&o, "northing").abs() < 1e-9);
+    assert!(
+        (val(&o, "scale_meridian") - 1.0).abs() < 1e-15
+            && (val(&o, "scale_parallel") - 1.0).abs() < 1e-15
+    );
+    let far: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.orthographic-forward",
+        &with(&center, json!({"lat": -40, "lon": 80})).to_string(),
     ))
     .unwrap();
     assert_eq!(far["error"]["code"], "OUT_OF_DOMAIN");

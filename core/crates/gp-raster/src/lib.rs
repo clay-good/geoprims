@@ -1,6 +1,7 @@
 //! Raster: spectral indices and terrain analysis.
 
 pub mod bandmath;
+pub mod contour;
 pub mod indices;
 pub mod scaling;
 pub mod terrain;
@@ -28,6 +29,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &bandmath::BANDMATH,
     &terrain::SLOPE,
     &terrain::RUGGEDNESS,
+    &contour::CONTOURS,
 ];
 
 gp_base::export_module!("raster", REGISTRY);

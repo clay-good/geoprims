@@ -2680,6 +2680,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "lorensen-1987",
+      "name": "Marching cubes: A high resolution 3D surface construction algorithm",
+      "issuer": "Lorensen, W. E., and Cline, H. E., ACM SIGGRAPH Computer Graphics",
+      "currentEdition": "Volume 21, issue 4, pages 163-169",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-24",
+      "verificationNote": "Verified at Crossref (DOI 10.1145/37402.37422) on 2026-09-24: title, journal, volume, issue, pages, and August 1987 as cited.",
+      "freeAccessUrl": "https://doi.org/10.1145/37402.37422",
+      "matchTerms": [
+        "Marching cubes"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

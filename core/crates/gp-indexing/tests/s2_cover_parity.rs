@@ -120,3 +120,67 @@ fn every_covering_contains_its_region() {
     assert_eq!(regions, 16, "{regions} regions covered");
     assert_eq!(points, 128, "{points} points checked");
 }
+
+/// Polygons, the same way: sample points inside each (decided by an
+/// independent great-circle winding test, half of them 0.2 m inside an edge)
+/// with s2sphere's ancestor tokens; see tools/vectors/gen_s2_cover_polygon.py.
+#[test]
+fn every_polygon_covering_contains_its_polygon() {
+    let text = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/data/s2_cover_polygon.jsonl"
+    ))
+    .unwrap();
+    let (mut regions, mut points, mut bad) = (0, 0, Vec::new());
+    for line in text
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+    {
+        let row: Value = serde_json::from_str(line).expect("fixture row is JSON");
+        let (lo, hi, budget) = (
+            row["min_level"].as_u64().unwrap(),
+            row["max_level"].as_u64().unwrap(),
+            row["max_cells"].as_u64().unwrap(),
+        );
+        let r = call(
+            &serde_json::json!({"polygon": row["polygon"], "min_level": lo, "max_level": hi, "max_cells": budget})
+                .to_string(),
+        );
+        if r["ok"] != true {
+            bad.push(format!("polygon {regions}: {r}"));
+            continue;
+        }
+        regions += 1;
+        let cells: Vec<&str> = r["result"]["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .map(|c| c["cell"].as_str().expect("cell"))
+            .collect();
+        for c in r["result"]["cells"].as_array().unwrap() {
+            let level = c["level"].as_u64().unwrap();
+            if level < lo || level > hi {
+                bad.push(format!(
+                    "polygon {regions}: a cell at level {level}, outside {lo} to {hi}"
+                ));
+            }
+        }
+        for p in row["points"].as_array().unwrap() {
+            points += 1;
+            let held = p["ancestors"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|a| cells.contains(&a.as_str().unwrap()));
+            if !held {
+                bad.push(format!(
+                    "polygon {regions}: the covering misses {}, {}",
+                    p["lat"], p["lon"]
+                ));
+            }
+        }
+    }
+    assert_eq!(regions, 10, "{bad:?}");
+    assert_eq!(points, 240);
+    assert!(bad.is_empty(), "{}", bad.join("\n"));
+}

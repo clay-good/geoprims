@@ -53,6 +53,8 @@ Building that check found the budget behaviour worth documenting: the core retur
 - `core/crates/gp-indexing/tests/s2_parity.rs`: the cell geometry itself against s2sphere at 400 cases, levels 0 to 30
 - `core/vectors/indexing.s2.covering.jsonl`: 22 vectors pinning this implementation's covering
 
+- `tools/vectors/gen_s2_cover_polygon.py` and `core/crates/gp-indexing/tests/s2_cover_parity.rs` `every_polygon_covering_contains_its_polygon` (1.1.0): ten polygons with great-circle edges (across the antimeridian, on the equator, near a pole, from 200 m to 400 km, four with holes), each with 24 points inside it chosen by a great-circle winding test written separately in Python, half of them 0.2 m inside an edge; every point's s2sphere ancestor token at some allowed level is in the covering. Removing the edge-crossing test from the tool makes the coverings miss 218 of the 240 points
+
 ## Invariants
 
 - `core/crates/gp-indexing/tests/indexing.rs` `s2_covering_invariants`: every cell is within the level range asked for, and the reported coarsest and finest levels match the cells actually returned; the covered area is at least the region's own area, since a covering is a superset; no cell in a covering is an ancestor of another, so the set is not redundant; a wider level range or a larger budget never produces a covering that misses a point the tighter one held; and the count exceeds the budget only when a `COVERING_OVER_BUDGET` warning is present, so the one case where the contract bends is the one case that announces itself

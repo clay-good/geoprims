@@ -492,8 +492,8 @@
     "lastmod": "2026-09-24"
   },
   "/indexing/": {
-    "hash": "6d5c5e58a378b20e",
-    "lastmod": "2026-09-23"
+    "hash": "ce495eb78c282458",
+    "lastmod": "2026-09-24"
   },
   "/indexing/convert/": {
     "hash": "3aeb98dbbb334475",
@@ -604,16 +604,16 @@
     "lastmod": "2026-09-23"
   },
   "/indexing/s2/": {
-    "hash": "5c79661f14f3e496",
-    "lastmod": "2026-09-23"
+    "hash": "9e850fc4a371961f",
+    "lastmod": "2026-09-24"
   },
   "/indexing/s2/cell-info/": {
     "hash": "d7f26e7d7d2bce64",
     "lastmod": "2026-09-23"
   },
   "/indexing/s2/covering/": {
-    "hash": "bf0fa23749a333da",
-    "lastmod": "2026-09-23"
+    "hash": "a492036eb9db3820",
+    "lastmod": "2026-09-24"
   },
   "/indexing/s2/lat-lng-to-cell/": {
     "hash": "8c6c3af7e018f8d5",
@@ -816,7 +816,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "9590a289e99bfd16",
+    "hash": "93c98f539e8d12ef",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1112,7 +1112,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "28ee3a801cf0b0db",
+    "hash": "c4a87b9b7573b1d8",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1300,7 +1300,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "7ccd306c6df56cf9",
+    "hash": "9ec96cf636fb5877",
     "lastmod": "2026-09-24"
   }
 }

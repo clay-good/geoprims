@@ -1,6 +1,6 @@
 //! S2 region covering (indexing/hierarchical-cells, "Region covering"): the
-//! cells that cover a rectangle or a cap, within a level range and a cell
-//! budget.
+//! cells that cover a rectangle, a cap, or a polygon with great-circle edges,
+//! within a level range and a cell budget.
 //!
 //! The covering starts from the six faces and refines, always splitting the
 //! candidate that covers the most ground outside the region, until the budget
@@ -33,6 +33,78 @@ enum Region {
     },
     /// A circle on the sphere: center and angular radius in radians.
     Cap { lat: f64, lon: f64, radius: f64 },
+    /// A polygon with great-circle edges, as S2 draws them: its corners as
+    /// unit vectors, holes as further rings.
+    Polygon { rings: Vec<Vec<V>> },
+}
+
+type V = [f64; 3];
+
+fn unit(lat: f64, lon: f64) -> V {
+    let (a, o) = (lat.to_radians(), lon.to_radians());
+    [cos(a) * cos(o), cos(a) * libm::sin(o), libm::sin(a)]
+}
+
+fn dot3(a: V, b: V) -> f64 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn cross3(a: V, b: V) -> V {
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
+}
+
+/// Which side of the great circle a → b the point c is on (the sign of the
+/// triple product), 0 within rounding.
+fn side(a: V, b: V, c: V) -> i8 {
+    let t = dot3(cross3(a, b), c);
+    if t.abs() < 1e-15 {
+        0
+    } else if t > 0.0 {
+        1
+    } else {
+        -1
+    }
+}
+
+/// Whether the great-circle arcs a → b and c → d (each under 180°) may cross;
+/// a touch within rounding counts, since a covering errs outward.
+fn arcs_meet(a: V, b: V, c: V, d: V) -> bool {
+    let (s1, s2) = (side(a, b, c), side(a, b, d));
+    let (s3, s4) = (side(c, d, a), side(c, d, b));
+    s1 * s2 <= 0 && s3 * s4 <= 0 && dot3(a, c) + dot3(a, d) + dot3(b, c) + dot3(b, d) > 0.0
+}
+
+/// Inside a polygon by winding: the turn of its edges seen from the point, in
+/// the plane tangent there, adds to a full circle around each ring that holds
+/// it; holes wind the other way. Exact on the sphere for rings smaller than a
+/// hemisphere around the point.
+fn in_polygon(rings: &[Vec<V>], p: V) -> bool {
+    let mut turns = 0.0;
+    for (k, ring) in rings.iter().enumerate() {
+        let n = ring.len();
+        let mut sum = 0.0;
+        for i in 0..n {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            let ta = [
+                a[0] - dot3(a, p) * p[0],
+                a[1] - dot3(a, p) * p[1],
+                a[2] - dot3(a, p) * p[2],
+            ];
+            let tb = [
+                b[0] - dot3(b, p) * p[0],
+                b[1] - dot3(b, p) * p[1],
+                b[2] - dot3(b, p) * p[2],
+            ];
+            sum += libm::atan2(dot3(p, cross3(ta, tb)), dot3(ta, tb));
+        }
+        let w = (sum / core::f64::consts::TAU).round().abs();
+        turns += if k == 0 { w } else { -w };
+    }
+    turns > 0.5
 }
 
 fn lon_in(west: f64, east: f64, lon: f64) -> bool {
@@ -57,7 +129,33 @@ impl Region {
                 lon: co,
                 radius,
             } => angle(cl, co, lat, lon) <= radius,
+            Region::Polygon { ref rings } => in_polygon(rings, unit(lat, lon)),
         }
+    }
+
+    /// For a polygon: whether any of its edges crosses or touches an edge of
+    /// the cell, or any of its corners lies in the cell.
+    fn edges_meet(rings: &[Vec<V>], cell: CellId) -> bool {
+        let v = cell.vertices().map(|(la, lo)| unit(la, lo));
+        for ring in rings {
+            let n = ring.len();
+            for i in 0..n {
+                let (a, b) = (ring[i], ring[(i + 1) % n]);
+                if (0..4).any(|k| arcs_meet(a, b, v[k], v[(k + 1) % 4])) {
+                    return true;
+                }
+                // A corner inside the cell, by S2's own rule: the cell at this
+                // level that holds the corner is this one.
+                let (la, lo) = (
+                    libm::asin(a[2].clamp(-1.0, 1.0)).to_degrees(),
+                    libm::atan2(a[1], a[0]).to_degrees(),
+                );
+                if CellId::from_lat_lon(la, lo, cell.level()) == cell {
+                    return true;
+                }
+            }
+        }
+        false
     }
 
     /// The region's center and the angular radius of a circle around it that
@@ -88,6 +186,22 @@ impl Region {
                 (clat, clon, r)
             }
             Region::Cap { lat, lon, radius } => (lat, lon, radius),
+            Region::Polygon { ref rings } => {
+                let s = rings[0]
+                    .iter()
+                    .fold([0.0; 3], |m, v| [m[0] + v[0], m[1] + v[1], m[2] + v[2]]);
+                let l = dot3(s, s).sqrt();
+                let c = [s[0] / l, s[1] / l, s[2] / l];
+                let r = rings[0]
+                    .iter()
+                    .map(|v| libm::acos(dot3(*v, c).clamp(-1.0, 1.0)))
+                    .fold(0.0, f64::max);
+                (
+                    libm::asin(c[2].clamp(-1.0, 1.0)).to_degrees(),
+                    libm::atan2(c[1], c[0]).to_degrees(),
+                    r,
+                )
+            }
         }
     }
 
@@ -100,6 +214,26 @@ impl Region {
     /// a pole or a face edge, and a box test that looks reasonable is exactly
     /// how a covering ends up with holes along its region's edge.
     fn may_intersect(&self, cell: CellId) -> bool {
+        if let Region::Polygon { rings } = self {
+            // Its bounding circle first, then the exact tests: a corner of
+            // the cell inside it, or its boundary meeting the cell.
+            let (rlat, rlon, rrad) = self.bounding_circle();
+            let (clat, clon) = cell.center();
+            let cr = cell
+                .vertices()
+                .iter()
+                .map(|&(la, lo)| angle(clat, clon, la, lo))
+                .fold(0.0, f64::max);
+            if angle(rlat, rlon, clat, clon) > rrad + cr {
+                return false;
+            }
+            return self.contains(clat, clon)
+                || cell
+                    .vertices()
+                    .iter()
+                    .any(|&(la, lo)| self.contains(la, lo))
+                || Region::edges_meet(rings, cell);
+        }
         let v = cell.vertices();
         let center = cell.center();
         if self.contains(center.0, center.1) || v.iter().any(|&(la, lo)| self.contains(la, lo)) {
@@ -119,6 +253,14 @@ impl Region {
     /// Whether the region holds the whole cell, which means it need not be
     /// refined any further.
     fn contains_cell(&self, cell: CellId) -> bool {
+        if let Region::Polygon { rings } = self {
+            // Every corner inside and no part of the boundary in the cell.
+            return cell
+                .vertices()
+                .iter()
+                .all(|&(la, lo)| self.contains(la, lo))
+                && !Region::edges_meet(rings, cell);
+        }
         cell.vertices()
             .iter()
             .all(|&(la, lo)| self.contains(la, lo))
@@ -216,55 +358,69 @@ fn run_covering(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let radius = ctx.quantity("radius")?.map(|r| r.base());
-    let region = match (
-        ctx.quantity("south")?,
-        ctx.quantity("north")?,
-        ctx.quantity("west")?,
-        ctx.quantity("east")?,
-        radius,
-    ) {
-        (Some(s), Some(n), Some(w), Some(e), None) => {
-            let dg = units::by_symbol(QT::Angle, "deg").expect("deg");
-            let (south, north, west, east) = (s.to(dg), n.to(dg), w.to(dg), e.to(dg));
-            if south >= north {
-                return Err(ToolError::invalid(
-                    "/south",
-                    "The south edge must be below the north edge.",
-                ));
-            }
-            Region::Rect {
-                south,
-                north,
-                west,
-                east,
-            }
+    let polygon = read_polygon(ctx)?;
+    let region = if let Some(rings) = polygon {
+        if ["south", "north", "west", "east", "lat", "lon", "radius"]
+            .iter()
+            .any(|k| ctx.is_set(k))
+        {
+            return Err(ToolError::invalid(
+                "/polygon",
+                "Give a polygon, a rectangle, or a circle, not more than one.",
+            ));
         }
-        (None, None, None, None, Some(r)) => {
-            let dg = units::by_symbol(QT::Angle, "deg").expect("deg");
-            let (Some(lat), Some(lon)) = (ctx.quantity("lat")?, ctx.quantity("lon")?) else {
-                return Err(ToolError::invalid(
-                    "/lat",
-                    "A circle needs its center: give lat and lon with the radius.",
-                ));
-            };
-            let (lat, lon) = (lat.to(dg), lon.to(dg));
-            if r <= 0.0 {
+        Region::Polygon { rings }
+    } else {
+        match (
+            ctx.quantity("south")?,
+            ctx.quantity("north")?,
+            ctx.quantity("west")?,
+            ctx.quantity("east")?,
+            radius,
+        ) {
+            (Some(s), Some(n), Some(w), Some(e), None) => {
+                let dg = units::by_symbol(QT::Angle, "deg").expect("deg");
+                let (south, north, west, east) = (s.to(dg), n.to(dg), w.to(dg), e.to(dg));
+                if south >= north {
+                    return Err(ToolError::invalid(
+                        "/south",
+                        "The south edge must be below the north edge.",
+                    ));
+                }
+                Region::Rect {
+                    south,
+                    north,
+                    west,
+                    east,
+                }
+            }
+            (None, None, None, None, Some(r)) => {
+                let dg = units::by_symbol(QT::Angle, "deg").expect("deg");
+                let (Some(lat), Some(lon)) = (ctx.quantity("lat")?, ctx.quantity("lon")?) else {
+                    return Err(ToolError::invalid(
+                        "/lat",
+                        "A circle needs its center: give lat and lon with the radius.",
+                    ));
+                };
+                let (lat, lon) = (lat.to(dg), lon.to(dg));
+                if r <= 0.0 {
+                    return Err(ToolError::invalid(
+                        "/radius",
+                        "The radius must be positive.",
+                    ));
+                }
+                Region::Cap {
+                    lat,
+                    lon,
+                    radius: r / EARTH_RADIUS_M,
+                }
+            }
+            _ => {
                 return Err(ToolError::invalid(
                     "/radius",
-                    "The radius must be positive.",
+                    "Give a rectangle (south, north, west, east), a center with a radius, or a polygon.",
                 ));
             }
-            Region::Cap {
-                lat,
-                lon,
-                radius: r / EARTH_RADIUS_M,
-            }
-        }
-        _ => {
-            return Err(ToolError::invalid(
-                "/radius",
-                "Give either a rectangle (south, north, west, east) or a center with a radius.",
-            ));
         }
     };
     let (cells, stopped_early) = cover(&region, min_level, max_level, max_cells);
@@ -352,6 +508,96 @@ fn run_covering(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
+/// The polygon input, if given: rings of corners as unit vectors, the
+/// outline first.
+fn read_polygon(ctx: &mut Ctx) -> Result<Option<Vec<Vec<V>>>, ToolError> {
+    if !ctx.is_set("polygon") {
+        return Ok(None);
+    }
+    let dg = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let rows = ctx.rows("polygon")?;
+    let mut rings: Vec<Vec<V>> = Vec::new();
+    for (i, r) in rows.iter().enumerate() {
+        let lat = ctx
+            .row_quantity("polygon", i, r, "lat")?
+            .expect("required")
+            .to(dg);
+        let lon = ctx
+            .row_quantity("polygon", i, r, "lon")?
+            .expect("required")
+            .to(dg);
+        if !(-90.0..=90.0).contains(&lat) {
+            return Err(ToolError::invalid(
+                &format!("/polygon/{i}/lat"),
+                "Latitude must be between -90° and 90°.",
+            ));
+        }
+        let ring = r
+            .get("ring")
+            .and_then(serde_json::Value::as_f64)
+            .unwrap_or(0.0);
+        if ring.fract() != 0.0 || !(0.0..=100.0).contains(&ring) {
+            return Err(ToolError::invalid(
+                &format!("/polygon/{i}/ring"),
+                "Ring must be a whole number from 0 (the outline) to 100.",
+            ));
+        }
+        let k = ring as usize;
+        if rings.len() <= k {
+            rings.resize(k + 1, Vec::new());
+        }
+        let v = unit(lat, lon);
+        if rings[k].last() != Some(&v) {
+            rings[k].push(v);
+        }
+    }
+    rings.retain(|r| !r.is_empty());
+    for (k, ring) in rings.iter_mut().enumerate() {
+        if ring.len() > 1 && ring.first() == ring.last() {
+            ring.pop();
+        }
+        if ring.len() < 3 {
+            return Err(ToolError::invalid(
+                "/polygon",
+                format!("Ring {k} needs at least 3 distinct corners."),
+            ));
+        }
+    }
+    Ok(Some(rings))
+}
+
+const POLY_ROW: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Decimal degrees, like 40.44",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Decimal degrees, like -79.99",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+    Field::new(
+        "ring",
+        "Ring",
+        "0 for the outline, 1, 2, … for holes, like 1",
+        Kind::Number {
+            min: 0.0,
+            max: 100.0,
+        },
+    ),
+];
+
 const COVER_ROW: &[Field] = &[
     Field::new("cell", "Cell", "Its token", Kind::Text { max_len: 24 }),
     Field::new(
@@ -388,12 +634,14 @@ const COVER_ROW: &[Field] = &[
 
 pub static COVERING: ToolDef = ToolDef {
     id: "indexing.s2.covering",
+    version: "1.1.0",
     title: "S2 cells covering a region",
-    summary: "The S2 cells that cover a latitude and longitude rectangle, or a circle around a point, within a level range and a cell budget.",
+    summary: "The S2 cells that cover a latitude and longitude rectangle, a circle around a point, or a polygon with holes, within a level range and a cell budget.",
     aliases: &[
         "S2 region coverer",
         "S2 covering",
         "cover a box with S2 cells",
+        "cover a polygon with S2 cells",
     ],
     keywords: &[
         "S2",
@@ -473,6 +721,16 @@ pub static COVERING: ToolDef = ToolDef {
             Kind::Quantity {
                 q: QT::Length,
                 unit: "km",
+            },
+        ),
+        Field::new(
+            "polygon",
+            "Polygon",
+            "Instead of a rectangle or circle: corners in order, like 40.44, -79.99; holes as ring 1, 2, …",
+            Kind::List {
+                items: POLY_ROW,
+                min: 3,
+                max: 2_000,
             },
         ),
         Field::new(
@@ -558,10 +816,10 @@ pub static COVERING: ToolDef = ToolDef {
     errors: &[ErrorCode::InvalidInput],
     stability: Stability::Stable,
     warnings: &["COVERING_OVER_BUDGET", "UNIT_ASSUMED"],
-    model: "Refinement from the six faces: the coarsest candidate that meets the region is split into its four children, keeping any cell the region contains whole, until the budget is reached; a cell that only partly overlaps is kept, so the covering contains the region",
+    model: "Refinement from the six faces: the coarsest candidate that meets the region is split into its four children, keeping any cell the region contains whole, until the budget is reached; a cell that only partly overlaps is kept, so the covering contains the region. A polygon's edges are great circles, as in S2; a cell meets it when its center or a corner is inside (by the winding of the polygon's edges seen from there), an edge of the polygon crosses or touches one of the cell's, or a corner of the polygon lies in the cell, and it is whole inside when its four corners are inside and none of that boundary reaches it",
     accuracy: "The covering always contains the region. It is not the smallest such set: S2's own coverer uses a priority order that can find a tighter cover for the same budget, so treat the cells as a superset rather than a canonical answer.",
     when_to_use: "Use this to turn an area into index keys: the cells of a covering are what you query a cell-indexed store with, then filter the results by the true geometry. The budget and the level range are the two knobs — more cells or finer levels mean a tighter cover and a larger key set.",
-    limitations: "A covering is a superset: every cell overlaps the region but the cells together cover more ground than it, which is why a covering query still needs a second filter. This covers a rectangle or a circle; polygons are not covered yet. The cells are a valid covering rather than S2's own choice, so a set from another library may differ while covering the same ground. The cell budget is not a hard cap: the lowest level wins over it, so a region that needs more cells than the budget just to reach that level gets them, with a warning saying so -- a smaller set would leave part of the region out. Past four times the budget the request is refused instead.",
+    limitations: "A covering is a superset: every cell overlaps the region but the cells together cover more ground than it, which is why a covering query still needs a second filter. A polygon's edges are great circles, as S2 draws them, not lines of constant bearing and not geodesics on the ellipsoid; for edges of more than a few hundred kilometers, add corners if the boundary should follow something else. A polygon must be smaller than a hemisphere. The cells are a valid covering rather than S2's own choice, so a set from another library may differ while covering the same ground. The cell budget is not a hard cap: the lowest level wins over it, so a region that needs more cells than the budget just to reach that level gets them, with a warning saying so -- a smaller set would leave part of the region out. Past four times the budget the request is refused instead.",
     references: &[crate::s2tools::S2_DOCS],
     examples: &[Example {
         id: "primary",

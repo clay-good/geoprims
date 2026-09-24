@@ -1224,7 +1224,7 @@ pub static UTM_INVERSE: ToolDef = ToolDef {
     summary: "Converts a UTM zone, hemisphere, easting, and northing back to latitude and longitude, with the grid convergence and scale factor.",
     aliases: &["UTM to lat long", "UTM to geographic"],
     keywords: &[
-        "UTM",
+        "UTM inverse",
         "easting",
         "northing",
         "inverse",

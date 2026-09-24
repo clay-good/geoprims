@@ -1912,6 +1912,7 @@ pub static TM_FORWARD: ToolDef = ToolDef {
         "central meridian",
         "projection",
         "9807",
+        "British National Grid",
     ],
     inputs: &[LAT, LON, TM_LON0, TM_LAT0, TM_K0, FE, FN, E[0], E[1], E[2]],
     outputs: FORWARD_OUT,

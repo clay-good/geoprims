@@ -12,6 +12,7 @@
 
 use crate::tm::Tm;
 use core::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
 use libm::{asin, asinh, atan, atan2, cos, log, pow, sin, sinh, sqrt, tan};
 
 /// A projected point: easting and northing (m), convergence (degrees, the
@@ -491,6 +492,194 @@ impl EquidistantCylindrical {
             lat,
             wrap(self.lon0 + ((x - self.fe) / self.r1).to_degrees()),
         )
+    }
+}
+
+/// Convergence and the scales along the meridian and the parallel of a map
+/// `f`, from chords of about 100 m of ground each way, Richardson-extrapolated
+/// so the curvature of the images cancels: the chord's direction and length
+/// are then good to about 1e-10. Near a pole the meridian step shrinks so it
+/// never crosses it, and within a millionth of a degree of the pole, where
+/// the parallel has no length, the factors are taken that far from it.
+fn factors(
+    f: impl Fn(f64, f64) -> (f64, f64),
+    g: &Geodesic,
+    lat: f64,
+    lon: f64,
+) -> (f64, f64, f64) {
+    let lat = lat.clamp(-90.0 + 1e-6, 90.0 - 1e-6);
+    let phi = lat.to_radians();
+    let e2 = g.f * (2.0 - g.f);
+    // The parallel's radius, and a step of 100 m along each line.
+    let r = g.a * m_of(phi, e2);
+    let dd = (100.0_f64 / 111_000.0).min((90.0 - lat.abs()) * 0.9);
+    let dl = (100.0 / r).min(0.1);
+    let chord = |(e1, n1): (f64, f64), (e2, n2): (f64, f64)| (e2 - e1, n2 - n1);
+    let meridian = |d: f64| {
+        let (de, dn) = chord(f(lat - d, lon), f(lat + d, lon));
+        let s: f64 = g.inverse(lat - d, lon, lat + d, lon);
+        (-atan2(de, dn), de.hypot(dn) / s)
+    };
+    let parallel = |d: f64| {
+        let (de, dn) = chord(
+            f(lat, lon - (d / 2.0).to_degrees()),
+            f(lat, lon + (d / 2.0).to_degrees()),
+        );
+        de.hypot(dn) / (2.0 * r * sin(d / 2.0))
+    };
+    let rich = |a: f64, b: f64| (4.0 * b - a) / 3.0;
+    let ((c1, h1), (c2, h2)) = (meridian(dd), meridian(dd / 2.0));
+    (
+        dlon(rich(c1, c2).to_degrees(), 0.0),
+        rich(h1, h2),
+        rich(parallel(dl), parallel(dl / 2.0)),
+    )
+}
+
+/// The cosine of the angle between the verticals (ellipsoid normals) at two points.
+fn normal_dot(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+    let (p1, p2) = (lat1.to_radians(), lat2.to_radians());
+    sin(p1) * sin(p2) + cos(p1) * cos(p2) * cos((lon2 - lon1).to_radians())
+}
+
+/// The azimuthal projections built on the geodesic from their center
+/// (Karney 2013, "Algorithms for geodesics", sections 8 and 9, as in
+/// GeographicLib's AzimuthalEquidistant and Gnomonic classes).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Azimuthal {
+    /// Distances and directions from the center are true.
+    Equidistant,
+    /// Every geodesic through the center is a straight line (and, near the
+    /// center, every geodesic is nearly one).
+    Gnomonic,
+}
+
+pub struct AzimuthalProj {
+    kind: Azimuthal,
+    g: Geodesic,
+    lat0: f64,
+    lon0: f64,
+    fe: f64,
+    fn_: f64,
+}
+
+impl AzimuthalProj {
+    pub fn new(
+        kind: Azimuthal,
+        a: f64,
+        f: f64,
+        lat0: f64,
+        lon0: f64,
+        fe: f64,
+        fn_: f64,
+    ) -> AzimuthalProj {
+        AzimuthalProj {
+            kind,
+            g: Geodesic::new(a, f),
+            lat0,
+            lon0,
+            fe,
+            fn_,
+        }
+    }
+
+    /// None for a gnomonic point a quarter of the way round the Earth or
+    /// more from the center, where the geodesic scale M12 is not positive.
+    pub fn forward(&self, lat: f64, lon: f64) -> Option<Grid> {
+        let (s, azi1, azi2, m12, big_m12, _, _): (f64, f64, f64, f64, f64, f64, f64) =
+            self.g.inverse(self.lat0, self.lon0, lat, lon);
+        let (sa, ca) = (sin(azi1.to_radians()), cos(azi1.to_radians()));
+        match self.kind {
+            Azimuthal::Equidistant => {
+                // Distance from the center is true (R = 1) and the scale
+                // across the radius is s/m12. The radius reaches the point
+                // heading azi2, so the meridian is azi2 off it and the
+                // parallel 90 − azi2, each stretched by R along and T across.
+                let t = if m12 > 0.0 && s > 0.0 { s / m12 } else { 1.0 };
+                let (s2, c2) = (sin(azi2.to_radians()), cos(azi2.to_radians()));
+                let north = atan2(-t * s2, c2).to_degrees();
+                Some(Grid {
+                    e: self.fe + s * sa,
+                    n: self.fn_ + s * ca,
+                    convergence: dlon(-(azi1 + north), 0.0),
+                    h: c2.hypot(t * s2),
+                    k: s2.hypot(t * c2),
+                })
+            }
+            Azimuthal::Gnomonic => {
+                // Less than a hemisphere: nothing whose vertical is 90° or
+                // more from the center's (and, on the ellipsoid, nothing
+                // where the geodesic scale is not positive).
+                // A point at 90° to within rounding counts as on the horizon.
+                if big_m12 <= 0.0 || normal_dot(self.lat0, self.lon0, lat, lon) < 1e-12 {
+                    return None;
+                }
+                let rho = m12 / big_m12;
+                let (e, n) = (self.fe + rho * sa, self.fn_ + rho * ca);
+                // On the ellipsoid m12 and M12 depend on the geodesic's
+                // azimuth as well as its length, so the images of the radius
+                // and of the direction across it are not at right angles:
+                // the factors come from the map itself.
+                let (convergence, h, k) = factors(
+                    |la, lo| {
+                        let (_, az, _, m, big_m, _, _): (f64, f64, f64, f64, f64, f64, f64) =
+                            self.g.inverse(self.lat0, self.lon0, la, lo);
+                        let r = m / big_m;
+                        (r * sin(az.to_radians()), r * cos(az.to_radians()))
+                    },
+                    &self.g,
+                    lat,
+                    lon,
+                );
+                Some(Grid {
+                    e,
+                    n,
+                    convergence,
+                    h,
+                    k,
+                })
+            }
+        }
+    }
+
+    pub fn inverse(&self, x: f64, y: f64) -> (f64, f64) {
+        let (dx, dy) = (x - self.fe, y - self.fn_);
+        let azi0 = atan2(dx, dy).to_degrees();
+        let rho = dx.hypot(dy);
+        let (lat, lon) = match self.kind {
+            Azimuthal::Equidistant => self.g.direct(self.lat0, self.lon0, azi0, rho),
+            Azimuthal::Gnomonic => self.gnomonic_inverse(azi0, rho),
+        };
+        (lat, wrap(lon))
+    }
+
+    /// Newton's method on the distance s along the geodesic leaving the
+    /// center at azi0, solving m12/M12 = ρ (or M12/m12 = 1/ρ far out), as
+    /// GeographicLib's Gnomonic::Reverse does.
+    fn gnomonic_inverse(&self, azi0: f64, rho: f64) -> (f64, f64) {
+        let a = self.g.a;
+        let little = rho <= a;
+        let target = if little { rho } else { 1.0 / rho };
+        let mut s = a * atan(rho / a);
+        let mut trip = false;
+        for _ in 0..10 {
+            let (lat, lon, _, m, big_m, _): (f64, f64, f64, f64, f64, f64) =
+                self.g.direct(self.lat0, self.lon0, azi0, s);
+            if trip {
+                return (lat, lon);
+            }
+            let ds = if little {
+                (m - target * big_m) * big_m
+            } else {
+                (target * m - big_m) * m
+            };
+            s -= ds;
+            // A NaN stops the loop too, as GeographicLib's reversed test does.
+            if ds.abs() < 0.01 * f64::EPSILON.sqrt() * a || ds.is_nan() {
+                trip = true;
+            }
+        }
+        (f64::NAN, f64::NAN)
     }
 }
 

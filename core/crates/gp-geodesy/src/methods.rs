@@ -15,7 +15,10 @@ use gp_base::tool::{
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
 use gp_geo::point;
-use gp_geo::proj::{self, Albers, EquidistantCylindrical, Grid, Lcc, PolarStereo, WebMercator};
+use gp_geo::proj::{
+    self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Lcc, PolarStereo,
+    WebMercator,
+};
 
 const G7_2: Reference = Reference {
     title: "Coordinate Conversions and Transformations including Formulas, IOGP Publication 373-7-2 (Guidance Note 7-2)",
@@ -1164,4 +1167,286 @@ fn run_eqc_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/northing")),
     }
+}
+
+// ------------------------------------------------------------ Azimuthal
+
+const KARNEY_GEODESICS: Reference = Reference {
+    title: "Algorithms for geodesics",
+    issuer: "Karney, C. F. F., Journal of Geodesy",
+    year: 2013,
+    edition: "Vol. 87, No. 1",
+    locator: "pp. 43-55, sections 8 (gnomonic) and 9 (azimuthal equidistant)",
+    url: "https://doi.org/10.1007/s00190-012-0578-z",
+};
+const CENTER_LAT: Field = angle(
+    "latitude_of_origin",
+    "Latitude of the center",
+    "The center of the projection, like 40",
+    "[-90,90]",
+)
+.required()
+.core();
+const CENTER_LON: Field = angle(
+    "longitude_of_origin",
+    "Longitude of the center",
+    "The center of the projection, like -100",
+    "[-180,180)",
+)
+.required()
+.core();
+
+fn azimuthal(ctx: &mut Ctx, kind: Azimuthal) -> Result<AzimuthalProj, ToolError> {
+    let e = ellipsoid(ctx)?;
+    e.geodesic()?;
+    let (lat0, lon0) = point::read(ctx, "latitude_of_origin", "longitude_of_origin")?;
+    let (fe, fn_) = (
+        opt_len(ctx, "false_easting")?,
+        opt_len(ctx, "false_northing")?,
+    );
+    Ok(AzimuthalProj::new(kind, e.a, e.f, lat0, lon0, fe, fn_))
+}
+
+pub static AEQD_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.azimuthal-equidistant-forward",
+    title: "Latitude and longitude to Azimuthal Equidistant",
+    summary: "Projects a latitude and longitude onto an Azimuthal Equidistant centered where you choose, so the distance and direction from the center are the true geodesic ones.",
+    aliases: &[
+        "azimuthal equidistant calculator",
+        "distance and bearing map",
+        "lat long to azimuthal equidistant",
+    ],
+    keywords: &[
+        "azimuthal equidistant",
+        "geodesic",
+        "range rings",
+        "projection",
+        "center",
+    ],
+    inputs: &[LAT, LON, CENTER_LAT, CENTER_LON, FE, FN, E[0], E[1], E[2]],
+    outputs: FORWARD_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this for a map centered on one place where every distance and direction from that place must be true: range rings around an airport or a transmitter, a radio or seismic station's map, or a local grid around a survey origin. The easting and northing are the geodesic distance from the center split by its direction.",
+    limitations: "Only distances and directions from the center are true. Between two other points the grid distance is not the ground distance, and away from the center the scale across the radius grows, reaching infinity at the point opposite the center. Grid north is the direction of north at the center, so far from it the convergence is large. The distance comes from the exact geodesic, not a spherical or series approximation, so it agrees with the geodesic distance tool.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Azimuthal equidistant on the ellipsoid by the geodesic (Karney 2013)",
+    accuracy: "Agrees with GeographicLib's GeodesicProj to a nanometer",
+    references: &[KARNEY_GEODESICS, G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "The IOGP example: Yap Islands",
+        input: r#"{"lat":"9°35'47.493\"N","lon":"138°11'34.908\"E","latitude_of_origin":"9°32'48.15\"","longitude_of_origin":"138°10'07.48\"","false_easting":"40000 m","false_northing":"60000 m","ellipsoid":"clarke1866"}"#,
+        source: "IOGP Guidance Note 7-2, 3.4.1 example (Modified Azimuthal Equidistant, which agrees with the exact method to a millimeter this close): E = 42,665.90 m, N = 65,509.82 m",
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.azimuthal-equidistant-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.projection.gnomonic-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORWARD_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_aeqd_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_aeqd_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let p = azimuthal(ctx, Azimuthal::Equidistant)?;
+    match p.forward(lat, lon) {
+        Some(g) => forward_json(ctx, g),
+        None => Err(ToolError::new(ErrorCode::OutOfDomain, "This point has no image.").at("/lat")),
+    }
+}
+
+pub static AEQD_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.azimuthal-equidistant-inverse",
+    title: "Azimuthal Equidistant to latitude and longitude",
+    summary: "Converts an easting and northing on an Azimuthal Equidistant you center back to latitude and longitude: the point at that distance and direction from the center.",
+    aliases: &[
+        "azimuthal equidistant to lat long",
+        "azimuthal equidistant inverse",
+    ],
+    keywords: &[
+        "azimuthal equidistant",
+        "geodesic",
+        "inverse",
+        "projection",
+        "center",
+    ],
+    inputs: &[
+        EASTING, NORTHING, CENTER_LAT, CENTER_LON, FE, FN, E[0], E[1], E[2],
+    ],
+    outputs: INVERSE_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn an azimuthal equidistant easting and northing back into latitude and longitude: a point read off a range-ring map, a radar or station grid, or a local grid built around a survey origin, when you know its center.",
+    limitations: "The center must be the grid's own; the same numbers around another center are another place. The easting and northing are read as a distance and a direction from the center, and the point is found by the exact geodesic, so a distance past half the way around the Earth comes back from the other side. The result is on the ellipsoid you choose, which should be the grid's.",
+    warnings: &["UNIT_ASSUMED"],
+    model: "Azimuthal equidistant on the ellipsoid by the geodesic (Karney 2013)",
+    accuracy: "Agrees with GeographicLib's GeodesicProj to a nanometer",
+    references: &[KARNEY_GEODESICS, G7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "Back to the IOGP example",
+        input: r#"{"easting":"42665.90 m","northing":"65509.82 m","latitude_of_origin":"9°32'48.15\"","longitude_of_origin":"138°10'07.48\"","false_easting":"40000 m","false_northing":"60000 m","ellipsoid":"clarke1866"}"#,
+        source: "IOGP Guidance Note 7-2, 3.4.1 example reversed: 9°35'47.493\" N, 138°11'34.908\" E",
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.azimuthal-equidistant-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "navigation.geodesic.direct",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+    ],
+    sentence: INVERSE_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_aeqd_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_aeqd_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (x, y) = grid_in(ctx)?;
+    let p = azimuthal(ctx, Azimuthal::Equidistant)?;
+    inverse_json(ctx, p.inverse(x, y))
+}
+
+pub static GNOMONIC_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.gnomonic-forward",
+    title: "Latitude and longitude to Gnomonic",
+    summary: "Projects a latitude and longitude onto the ellipsoidal gnomonic centered where you choose, where geodesics through the center are straight lines and all others nearly are.",
+    aliases: &[
+        "gnomonic calculator",
+        "great circle map",
+        "lat long to gnomonic",
+    ],
+    keywords: &[
+        "gnomonic",
+        "geodesic",
+        "straight lines",
+        "projection",
+        "center",
+    ],
+    inputs: &[LAT, LON, CENTER_LAT, CENTER_LON, FE, FN, E[0], E[1], E[2]],
+    outputs: FORWARD_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this when the shortest path must be a straight line on the map: planning great-circle routes on a chart, intersecting geodesics with plane geometry, or testing whether a point lies on the line between two others. Every geodesic through the center is straight, and near the center every geodesic is straight to within a tiny error.",
+    limitations: "The gnomonic shows less than a hemisphere: a point a quarter of the way round the Earth or more from the center has no image and is refused. Toward that horizon the scale grows without bound, so it suits a region a few thousand kilometers across. On the ellipsoid, geodesics that do not pass through the center are only nearly straight: within 1,000 km of the center they bow by well under a millimeter.",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Ellipsoidal gnomonic by the geodesic (Karney 2013, section 8)",
+    accuracy: "Agrees with GeographicLib's GeodesicProj to a nanometer near the center",
+    references: &[KARNEY_GEODESICS],
+    examples: &[Example {
+        id: "primary",
+        title: "The Arctic, seen from the middle of North America",
+        input: r#"{"lat":60,"lon":-30,"latitude_of_origin":40,"longitude_of_origin":-100}"#,
+        source: "GeographicLib 2.x GeodesicProj -g 40 -100: x = 4,371,212.819 m, y = 5,140,517.234 m",
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.gnomonic-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.azimuthal-equidistant-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.inverse",
+            reason: "next",
+        },
+    ],
+    sentence: FORWARD_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_gnomonic_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_gnomonic_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let p = azimuthal(ctx, Azimuthal::Gnomonic)?;
+    match p.forward(lat, lon) {
+        Some(g) => forward_json(ctx, g),
+        None => Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The gnomonic projection shows less than a hemisphere, and this point is 90° or more from the center (the angle between their verticals).",
+        )
+        .at("/lat")
+        .hint("Move the center closer, or use the azimuthal equidistant, which reaches the whole globe.")),
+    }
+}
+
+pub static GNOMONIC_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.gnomonic-inverse",
+    title: "Gnomonic to latitude and longitude",
+    summary: "Converts an easting and northing on the ellipsoidal gnomonic you center back to latitude and longitude.",
+    aliases: &["gnomonic to lat long", "gnomonic inverse"],
+    keywords: &["gnomonic", "geodesic", "inverse", "projection", "center"],
+    inputs: &[
+        EASTING, NORTHING, CENTER_LAT, CENTER_LON, FE, FN, E[0], E[1], E[2],
+    ],
+    outputs: INVERSE_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this to bring a point found on a gnomonic plane back to latitude and longitude: the crossing of two routes drawn as straight lines on a gnomonic chart, or any result of plane geometry done where geodesics are straight, when you know the center.",
+    limitations: "Every easting and northing has a point, but one far from the center lies close to the horizon a quarter of the way round the Earth, where a small move on the grid is a large one on the ground, so the latitude and longitude are less certain there. The point is found by Newton's method on the geodesic from the center, as GeographicLib does, and one that does not settle is refused. The center must be the grid's own.",
+    warnings: &["UNIT_ASSUMED"],
+    model: "Ellipsoidal gnomonic by the geodesic (Karney 2013, section 8), inverted by Newton's method",
+    accuracy: "Agrees with GeographicLib's GeodesicProj to a nanometer near the center",
+    references: &[KARNEY_GEODESICS],
+    examples: &[Example {
+        id: "primary",
+        title: "Back to the Arctic point",
+        input: r#"{"easting":"4371212.818782 m","northing":"5140517.234103 m","latitude_of_origin":40,"longitude_of_origin":-100}"#,
+        source: "GeographicLib 2.x GeodesicProj -g 40 -100 -r: 60° N, 30° W",
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.gnomonic-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.azimuthal-equidistant-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+    ],
+    sentence: INVERSE_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_gnomonic_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_gnomonic_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (x, y) = grid_in(ctx)?;
+    let p = azimuthal(ctx, Azimuthal::Gnomonic)?;
+    inverse_json(ctx, p.inverse(x, y))
 }

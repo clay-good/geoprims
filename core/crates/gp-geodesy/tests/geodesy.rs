@@ -89,6 +89,7 @@ fn catalog_lint_examples_vectors() {
             "aviation.wind.runway-components",
             "geometry.area.polygon",
             "indexing.tile.from-point",
+            "navigation.geodesic.direct",
             "navigation.geodesic.inverse",
             "survey.reduction.combined-factor",
             "units.length.convert",

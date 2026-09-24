@@ -5,6 +5,18 @@
       "date": "2026-09-24",
       "kind": "added",
       "tools": [
+        "geodesy.projection.azimuthal-equidistant-forward",
+        "geodesy.projection.azimuthal-equidistant-inverse",
+        "geodesy.projection.gnomonic-forward",
+        "geodesy.projection.gnomonic-inverse"
+      ],
+      "vectors": [],
+      "summary": "Four new stable tools map points around a center you choose, and back: the azimuthal equidistant, where the distance and direction from the center are the true geodesic ones, and the gnomonic, where geodesics through the center are straight lines. The gnomonic refuses points 90 degrees or more from its center. Both agree with GeographicLib's GeodesicProj within a micrometer on 10,000 random points each, and the azimuthal equidistant reproduces the Yap Islands example in IOGP Guidance Note 7-2."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.web-mercator-forward",
         "geodesy.projection.web-mercator-inverse",
         "geodesy.projection.lcc-forward",

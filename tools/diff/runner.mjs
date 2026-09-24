@@ -352,6 +352,7 @@ export const FAMILIES = [
     },
   },
   ...projFamilies(),
+  ...azimuthalFamilies(),
 ];
 
 /**
@@ -461,6 +462,45 @@ function projFamilies() {
       (r, s) => [(s.north ? 1 : -1) * (50 + 40 * r()), uniformLon(r)],
     ),
   ];
+}
+
+/**
+ * The azimuthal equidistant and gnomonic against GeographicLib's
+ * GeodesicProj (-z and -g), on twelve random centers each: 150° of arc
+ * around the center for the equidistant, 80° for the gnomonic.
+ */
+function azimuthalFamilies() {
+  const centers = (() => {
+    const r = rng(8812);
+    return Array.from({ length: 12 }, () => [Number((178 * r() - 89).toFixed(6)), Number((360 * r() - 180).toFixed(6))]);
+  })();
+  const family = (name, flag, reach) => ({
+    name: `${name}-forward`,
+    tool: `geodesy.projection.${name}-forward`,
+    needs: 'GeodesicProj',
+    make(r) {
+      const c = centers[Math.floor(r() * centers.length)];
+      // A point at a random direction and a random arc from the center, on
+      // the sphere: near enough the geodesic arc for choosing test points.
+      const [p0, l0, az, d] = [c[0], c[1], 2 * Math.PI * r(), (reach * r() * Math.PI) / 180].map((v, i) => (i < 2 ? (v * Math.PI) / 180 : v));
+      const lat = Math.asin(Math.sin(p0) * Math.cos(d) + Math.cos(p0) * Math.sin(d) * Math.cos(az));
+      const lon = l0 + Math.atan2(Math.sin(az) * Math.sin(d) * Math.cos(p0), Math.cos(d) - Math.sin(p0) * Math.sin(lat));
+      const [la, lo] = [(lat * 180) / Math.PI, ((((lon * 180) / Math.PI + 540) % 360) - 180)].map(q);
+      return {
+        input: { lat: la, lon: lo, latitude_of_origin: c[0], longitude_of_origin: c[1], options: { outputUnits: { easting: 'm', northing: 'm' } } },
+        line: `${fx(la)} ${fx(lo)}`,
+        center: c,
+      };
+    },
+    batchKey: (c) => c.center.join(','),
+    run: (lines, c) => reference('GeodesicProj', [flag, fx(c.center[0]), fx(c.center[1]), '-p', '9'], lines),
+    compare(res, [x, y]) {
+      if (Math.abs(res.easting.value - x) > 1e-6) return `easting ${res.easting.value} vs ${x}`;
+      if (Math.abs(res.northing.value - y) > 1e-6) return `northing ${res.northing.value} vs ${y}`;
+      return null;
+    },
+  });
+  return [family('azimuthal-equidistant', '-z', 150), family('gnomonic', '-g', 80)];
 }
 
 /** One Planimeter result per polygon: blocks separated by blank lines. */

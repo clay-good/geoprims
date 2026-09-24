@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c04e4928c00e1049",
+    "hash": "89f8148e66515698",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "264fca80e1e03ef3",
+    "hash": "372527543ee3285a",
     "lastmod": "2026-09-24"
   },
   "/aviation/": {
@@ -104,7 +104,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "0807f0759d7be68b",
+    "hash": "2bead7250311abcb",
     "lastmod": "2026-09-24"
   },
   "/disclaimer/": {
@@ -180,7 +180,7 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/": {
-    "hash": "e39827e3146dda1c",
+    "hash": "f681bd4a124f0682",
     "lastmod": "2026-09-24"
   },
   "/geodesy/datum/": {
@@ -344,7 +344,7 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/projection/": {
-    "hash": "01d08e495040a80c",
+    "hash": "28baac02c69d262b",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/albers-forward/": {
@@ -356,19 +356,35 @@
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/arc-to-chord/": {
-    "hash": "7eba5c4abdf3f725",
+    "hash": "b1a29d3673fc6f43",
+    "lastmod": "2026-09-24"
+  },
+  "/geodesy/projection/azimuthal-equidistant-forward/": {
+    "hash": "40bda3837f99289a",
+    "lastmod": "2026-09-24"
+  },
+  "/geodesy/projection/azimuthal-equidistant-inverse/": {
+    "hash": "d219425c79d38886",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/equidistant-cylindrical-forward/": {
-    "hash": "5750052c864d9113",
+    "hash": "7b4288a4e005ce6f",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/equidistant-cylindrical-inverse/": {
-    "hash": "957379e8070623ff",
+    "hash": "4636955b49647c9b",
+    "lastmod": "2026-09-24"
+  },
+  "/geodesy/projection/gnomonic-forward/": {
+    "hash": "642ef138ac7bc63b",
+    "lastmod": "2026-09-24"
+  },
+  "/geodesy/projection/gnomonic-inverse/": {
+    "hash": "68b290d6bfa6b10d",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/lcc-forward/": {
-    "hash": "5a9e79c8369fdc6c",
+    "hash": "b03b3f7603b71790",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/lcc-inverse/": {
@@ -860,7 +876,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "cb057017da431f10",
+    "hash": "c9f2a25292347679",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1016,7 +1032,7 @@
     "lastmod": "2026-09-23"
   },
   "/quality/": {
-    "hash": "79c70ae16609cc76",
+    "hash": "5112a14ac686b649",
     "lastmod": "2026-09-24"
   },
   "/raster/": {
@@ -1088,7 +1104,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "ee8b5d69fdb34d13",
+    "hash": "cb4e71e948d2f946",
     "lastmod": "2026-09-24"
   },
   "/survey/": {
@@ -1208,7 +1224,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "f0273cd67b6dcb5b",
+    "hash": "4dc5205b2cc39873",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1396,7 +1412,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c15a6a0392960733",
+    "hash": "72b0f62415acf593",
     "lastmod": "2026-09-24"
   }
 }

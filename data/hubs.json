@@ -884,6 +884,20 @@
           ]
         },
         {
+          "want": "map true distances and directions from one place, like range rings",
+          "tools": [
+            "azimuthal-equidistant-forward",
+            "azimuthal-equidistant-inverse"
+          ]
+        },
+        {
+          "want": "make shortest paths straight lines on the map",
+          "tools": [
+            "gnomonic-forward",
+            "gnomonic-inverse"
+          ]
+        },
+        {
           "want": "correct a grid bearing for the curve of the projected line",
           "tools": [
             "arc-to-chord"

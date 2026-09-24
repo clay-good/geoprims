@@ -1,4 +1,4 @@
-//! The projection methods with user-set parameters against PROJ
+//! The projection methods with user-set parameters against PROJ and GeographicLib
 //! (geodesy/projections, "Round-trip and differential accuracy"): 300 random
 //! parameter sets and points per method from tools/vectors/gen_projections_proj.py,
 //! forward and inverse, and the invariants each method must keep.
@@ -6,12 +6,22 @@
 use gp_geodesy::REGISTRY;
 use serde_json::{Map, Value, json};
 
-const METHODS: [&str; 5] = [
-    "web-mercator",
-    "lcc",
-    "albers",
-    "polar-stereographic",
-    "equidistant-cylindrical",
+/// Each fixture and the methods it holds.
+const FIXTURES: [(&str, &[&str]); 2] = [
+    (
+        "projections_proj.json",
+        &[
+            "web-mercator",
+            "lcc",
+            "albers",
+            "polar-stereographic",
+            "equidistant-cylindrical",
+        ],
+    ),
+    (
+        "projections_azimuthal.json",
+        &["azimuthal-equidistant", "gnomonic"],
+    ),
 ];
 
 fn run(tool: &str, input: &Value) -> Value {
@@ -50,54 +60,54 @@ fn ulp(x: f64) -> f64 {
 
 #[test]
 fn projections_match_proj() {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/tests/data/projections_proj.json"
-    );
-    let fx: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
     let mut report = Vec::new();
-    for m in METHODS {
-        let cases = fx["methods"][m].as_array().unwrap();
-        assert_eq!(cases.len(), 300);
-        let (mut en, mut conv, mut scale, mut back) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
-        for c in cases {
-            let (lat, lon) = (c["lat"].as_f64().unwrap(), c["lon"].as_f64().unwrap());
-            let f = run(
-                &format!("geodesy.projection.{m}-forward"),
-                &with(&c["params"], json!({"lat": lat, "lon": lon})),
-            );
-            en = en
-                .max((val(&f, "easting") - c["e"].as_f64().unwrap()).abs())
-                .max((val(&f, "northing") - c["n"].as_f64().unwrap()).abs());
-            conv = conv.max((val(&f, "convergence") - c["convergence"].as_f64().unwrap()).abs());
-            // Relative: Web Mercator's scale passes 11 near its limit.
-            for (k, r) in [("scale_meridian", "h"), ("scale_parallel", "k")] {
-                let want = c[r].as_f64().unwrap();
-                scale = scale.max((val(&f, k) - want).abs() / want);
+    for (file, methods) in FIXTURES {
+        let path = format!("{}/tests/data/{file}", env!("CARGO_MANIFEST_DIR"));
+        let fx: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        for &m in methods {
+            let cases = fx["methods"][m].as_array().unwrap();
+            assert_eq!(cases.len(), 300);
+            let (mut en, mut conv, mut scale, mut back) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
+            for c in cases {
+                let (lat, lon) = (c["lat"].as_f64().unwrap(), c["lon"].as_f64().unwrap());
+                let f = run(
+                    &format!("geodesy.projection.{m}-forward"),
+                    &with(&c["params"], json!({"lat": lat, "lon": lon})),
+                );
+                en = en
+                    .max((val(&f, "easting") - c["e"].as_f64().unwrap()).abs())
+                    .max((val(&f, "northing") - c["n"].as_f64().unwrap()).abs());
+                conv =
+                    conv.max((val(&f, "convergence") - c["convergence"].as_f64().unwrap()).abs());
+                // Relative: Web Mercator's scale passes 11 near its limit.
+                for (k, r) in [("scale_meridian", "h"), ("scale_parallel", "k")] {
+                    let want = c[r].as_f64().unwrap();
+                    scale = scale.max((val(&f, k) - want).abs() / want);
+                }
+                // The reference's easting and northing, back to the point.
+                let i = run(
+                    &format!("geodesy.projection.{m}-inverse"),
+                    &with(
+                        &c["params"],
+                        json!({"easting": format!("{} m", c["e"]), "northing": format!("{} m", c["n"])}),
+                    ),
+                );
+                back = back.max(ground(lat, lon, val(&i, "lat"), val(&i, "lon")));
             }
-            // The reference's easting and northing, back to the point.
-            let i = run(
-                &format!("geodesy.projection.{m}-inverse"),
-                &with(
-                    &c["params"],
-                    json!({"easting": format!("{} m", c["e"]), "northing": format!("{} m", c["n"])}),
-                ),
-            );
-            back = back.max(ground(lat, lon, val(&i, "lat"), val(&i, "lon")));
-        }
-        report.push(format!(
+            report.push(format!(
             "{m}: grid {en:.1e} m, convergence {conv:.1e} deg, scale {scale:.1e}, inverse {back:.1e} m"
         ));
-        // The spec's 1 mm, held here a hundred times tighter. Standard
-        // parallels a fiftieth of a degree apart make the cone's constant a
-        // ratio of two near-cancelling differences, and both sides lose
-        // digits: in the worst case here (14.3234 and 14.342 degrees) a
-        // 50-digit evaluation puts this tool 0.4 µm off and PROJ 0.9 µm.
-        assert!(en < 1e-5, "{m}: easting or northing off by {en} m");
-        assert!(back < 1e-5, "{m}: inverse off by {back} m");
-        // Central differences of the reference carry about 1e-9 of noise.
-        assert!(conv < 1e-7, "{m}: convergence off by {conv} deg");
-        assert!(scale < 1e-8, "{m}: scale off by {scale} of itself");
+            // The spec's 1 mm, held here a hundred times tighter. Standard
+            // parallels a fiftieth of a degree apart make the cone's constant a
+            // ratio of two near-cancelling differences, and both sides lose
+            // digits: in the worst case here (14.3234 and 14.342 degrees) a
+            // 50-digit evaluation puts this tool 0.4 µm off and PROJ 0.9 µm.
+            assert!(en < 1e-5, "{m}: easting or northing off by {en} m");
+            assert!(back < 1e-5, "{m}: inverse off by {back} m");
+            // Central differences of the reference carry about 1e-9 of noise.
+            assert!(conv < 1e-7, "{m}: convergence off by {conv} deg");
+            assert!(scale < 1e-8, "{m}: scale off by {scale} of itself");
+        }
     }
     println!("{}", report.join("\n"));
 }
@@ -141,6 +151,14 @@ fn projections_round_trip() {
             "equidistant-cylindrical",
             json!({"standard_parallel": 30, "longitude_of_origin": 10}),
         ),
+        (
+            "azimuthal-equidistant",
+            json!({"latitude_of_origin": 20, "longitude_of_origin": 10}),
+        ),
+        (
+            "gnomonic",
+            json!({"latitude_of_origin": 20, "longitude_of_origin": 10}),
+        ),
     ];
     for (m, p) in setups {
         let north_only = m == "polar-stereographic";
@@ -148,6 +166,36 @@ fn projections_round_trip() {
         let mut worst = 0.0f64;
         for i in 0..400 {
             let t = f64::from(i);
+            // Azimuthal: points spread over a cap around the center, 80° of
+            // arc for the equidistant and 60° for the gnomonic.
+            let cap = match m {
+                "azimuthal-equidistant" => Some(80.0),
+                "gnomonic" => Some(60.0),
+                _ => None,
+            };
+            if let Some(cap) = cap {
+                let (lat, lon) = (
+                    20.0 + cap / 2.0 * (t * 0.37).sin(),
+                    10.0 + cap * (t * 0.61).sin(),
+                );
+                let f = run(
+                    &format!("geodesy.projection.{m}-forward"),
+                    &with(&p, json!({"lat": lat, "lon": lon})),
+                );
+                let (e, n) = (val(&f, "easting"), val(&f, "northing"));
+                let scale = val(&f, "scale_meridian").min(val(&f, "scale_parallel"));
+                let i = run(
+                    &format!("geodesy.projection.{m}-inverse"),
+                    &with(
+                        &p,
+                        json!({"easting": format!("{e} m"), "northing": format!("{n} m")}),
+                    ),
+                );
+                let floor =
+                    ground(lat, lon, lat + ulp(lat), lon + ulp(180.0)) + (ulp(e) + ulp(n)) / scale;
+                worst = worst.max(ground(lat, lon, val(&i, "lat"), val(&i, "lon")) - 4.0 * floor);
+                continue;
+            }
             let lat = if north_only {
                 1.0 + 88.0 * ((t * 0.37).sin() + 1.0) / 2.0
             } else if south_only {
@@ -268,6 +316,46 @@ fn projection_invariants() {
     );
     assert!((val(&ups, "easting") - val(&ps, "easting")).abs() < 1e-8);
     assert!((val(&ups, "northing") - val(&ps, "northing")).abs() < 1e-8);
+    // Azimuthal equidistant: the grid distance from the center is the
+    // geodesic distance, and the grid bearing from it the geodesic azimuth.
+    let center =
+        json!({"latitude_of_origin": 40, "longitude_of_origin": -100, "false_easting": "1000 m"});
+    for (lat, lon) in [(55.0, 20.0), (-30.0, 60.0), (41.0, -99.0)] {
+        let r = run(
+            "geodesy.projection.azimuthal-equidistant-forward",
+            &with(&center, json!({"lat": lat, "lon": lon})),
+        );
+        let (e, n) = (val(&r, "easting") - 1000.0, val(&r, "northing"));
+        let geod = geographiclib_rs::Geodesic::wgs84();
+        let (s, azi, _, _): (f64, f64, f64, f64) =
+            geographiclib_rs::InverseGeodesic::inverse(&geod, 40.0, -100.0, lat, lon);
+        assert!((e.hypot(n) - s).abs() < 1e-8, "{lat} {lon}");
+        assert!((e.atan2(n).to_degrees() - azi).abs() < 1e-9, "{lat} {lon}");
+    }
+    // Gnomonic: points along one geodesic through the center lie on a
+    // straight line, and the horizon is refused.
+    let geod = geographiclib_rs::Geodesic::wgs84();
+    let line: Vec<(f64, f64)> = [500e3, 2000e3, 5000e3]
+        .iter()
+        .map(|&d| {
+            let (la, lo): (f64, f64) =
+                geographiclib_rs::DirectGeodesic::direct(&geod, 40.0, -100.0, 57.0, d);
+            let r = run(
+                "geodesy.projection.gnomonic-forward",
+                &with(&center, json!({"lat": la, "lon": lo})),
+            );
+            (val(&r, "easting") - 1000.0, val(&r, "northing"))
+        })
+        .collect();
+    for (e, n) in &line {
+        assert!((e.atan2(*n).to_degrees() - 57.0).abs() < 1e-9);
+    }
+    let far: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.gnomonic-forward",
+        &with(&center, json!({"lat": -50, "lon": -100})).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(far["error"]["code"], "OUT_OF_DOMAIN");
     // Web Mercator's scales on the ellipsoid: a over the two radii of curvature times cos φ.
     let r = run(
         "geodesy.projection.web-mercator-forward",

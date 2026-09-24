@@ -370,6 +370,7 @@ fn run_intersection(ctx: &mut Ctx) -> Result<Json, ToolError> {
 pub static INTERCEPT: ToolDef = ToolDef {
     id: "navigation.route.intercept",
     version: "1.0.1",
+    stability: Stability::Stable,
     title: "Intercept a moving target",
     summary: "The course to steer, the time, and the meeting point for reaching a target that is moving on a steady course and speed, or why it cannot be reached.",
     aliases: &[
@@ -433,9 +434,11 @@ pub static INTERCEPT: ToolDef = ToolDef {
         point::lon_field("meet_lon", "Meeting longitude").precision(Precision::Decimals(7)),
     ],
     errors: &[ErrorCode::NoSolution, ErrorCode::InvalidInput],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "On WGS 84, the target runs its geodesic course: T(t) = direct(T0, course, v_T·t). The intercept is the first t where the geodesic range from you to T(t) equals v·t. Steps of f(t) ÷ (v + v_T), with f = range − v·t, never pass the first root because f changes no faster than v + v_T; a Newton step that brackets the root finishes it by regula falsi. You steer the geodesic to the meeting point",
     accuracy: "Solves to a millimeter of range for steady courses and speeds; real targets turn and change speed",
+    when_to_use: "Use this to find the course to steer to meet something that is moving: a boat closing on a vessel on a steady course, an aircraft joining another, a patrol reaching a drifting target, a drone meeting a moving vehicle. Give your position and speed and the target's position, course, and speed, and it returns the course, the time, your run, and the meeting point, or says plainly that the target cannot be reached.",
+    limitations: "It assumes both keep a steady speed and the target a steady geodesic course from now on, which real targets rarely do for long; rerun it as the picture changes. Speeds are over the ground, so wind or current has to be taken out first. You fly the geodesic to the meeting point, the shortest path, not a constant heading, and the answer is the first meeting, not the one that needs the least speed. A target that is opening faster than you can close is never met, and the search stops once the target has run half the Earth's girth or you have run 40,000 km, so a meeting beyond that is reported as unreachable.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
@@ -456,6 +459,10 @@ pub static INTERCEPT: ToolDef = ToolDef {
         Related {
             id: "navigation.route.course-intersection",
             reason: "alternative",
+        },
+        Related {
+            id: "navigation.geodesic.direct",
+            reason: "parent",
         },
     ],
     sentence: "Steer {course} to meet the target in {time}, after {distance}.",

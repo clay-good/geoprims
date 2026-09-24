@@ -45,4 +45,4 @@
 
 - [ ] 5.1 Register all navigation and geometry operations and generated endpoints with practitioner aliases ("as the crow flies", "great circle", "XTE", "loxodrome"); verify catalog counts (46/58 and 38/44)
 - [ ] 5.2 Write docs for each tool, including a "haversine vs ellipsoid" explainer page; verify the docs build
-- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-24: `navigation.route.course-intersection` promoted, 500 pairs against GeographicLib's IntersectTool within 10 µm; `navigation.route.intercept` is the last experimental navigation tool)
+- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-24: `navigation.route.course-intersection` promoted, 500 pairs against GeographicLib's IntersectTool within 10 µm; and `navigation.route.intercept`, 200 cases against the first root found on a fixed grid with GeographicLib's Python package, 59 of them unreachable and refused as such: every navigation tool is now stable)

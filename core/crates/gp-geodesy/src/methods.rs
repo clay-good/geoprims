@@ -10,7 +10,8 @@ use gp_base::angle::check_lat;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
@@ -421,6 +422,20 @@ pub static WEB_MERCATOR_FORWARD: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Sphere radius, the WGS 84 semi-major axis",
+            value: "6378137",
+            unit: "m",
+            source: "nga-webmerc",
+        },
+        Assumption {
+            name: "Latitude limit",
+            value: "85.05112878",
+            unit: "deg",
+            source: "nga-webmerc",
+        },
+    ],
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_web_mercator_forward,
@@ -488,6 +503,20 @@ pub static WEB_MERCATOR_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.utm.inverse",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Sphere radius, the WGS 84 semi-major axis",
+            value: "6378137",
+            unit: "m",
+            source: "nga-webmerc",
+        },
+        Assumption {
+            name: "Latitude limit",
+            value: "85.05112878",
+            unit: "deg",
+            source: "nga-webmerc",
         },
     ],
     sentence: INVERSE_SENTENCE,

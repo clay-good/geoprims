@@ -4,7 +4,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::point;
 
@@ -353,6 +355,12 @@ pub static POINT_TO_CELL: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Mean Earth radius, GRS 80's R1 (6371008.7714 m) to 0.1 m",
+        value: "6371008.8",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "That is S2 cell {cell} at level {level}.",
     limits: &[("batchRows", 10_000)],
     run: run_point_to_cell,
@@ -460,6 +468,12 @@ pub static CELL_INFO: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Mean Earth radius, GRS 80's R1 (6371008.7714 m) to 0.1 m",
+        value: "6371008.8",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "Cell {cell} is at level {level} on face {face}, covering {area}.",
     limits: &[("batchRows", 10_000)],
     run: run_cell_info,

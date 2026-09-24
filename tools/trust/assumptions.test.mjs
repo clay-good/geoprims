@@ -17,7 +17,22 @@ const byId = (id) => catalog.tools.find((t) => t.id === id);
  * grows as constants are declared; it may not shrink, so a tool cannot quietly
  * stop saying what it assumed.
  */
-const MUST_DECLARE = ['aviation.atmosphere.isa', 'aviation.altimetry.pressure-altitude', 'aviation.altimetry.density-altitude'];
+const MUST_DECLARE = [
+  'aviation.atmosphere.isa',
+  'aviation.altimetry.pressure-altitude',
+  'aviation.altimetry.density-altitude',
+  'geodesy.utm.forward',
+  'geodesy.utm.inverse',
+  'geodesy.ups.forward',
+  'geodesy.ups.inverse',
+  'geodesy.grid-ref.mgrs-forward',
+  'geodesy.grid-ref.mgrs-inverse',
+  'geodesy.projection.web-mercator-forward',
+  'geodesy.projection.web-mercator-inverse',
+  'indexing.s2.covering',
+  'indexing.s2.lat-lng-to-cell',
+  'indexing.s2.cell-info',
+];
 
 test('the density-altitude tool says which gas constant it used', () => {
   // The scenario: R = 287.05287 J/(kg·K), cited to ICAO Doc 7488.

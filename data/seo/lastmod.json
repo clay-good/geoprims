@@ -288,11 +288,11 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/grid-ref/mgrs-forward/": {
-    "hash": "2134ac5433ffa534",
+    "hash": "2e04e6c0ee63e803",
     "lastmod": "2026-09-24"
   },
   "/geodesy/grid-ref/mgrs-inverse/": {
-    "hash": "3a293cceaa083623",
+    "hash": "788714345dd4f586",
     "lastmod": "2026-09-24"
   },
   "/geodesy/grid-ref/usng-forward/": {
@@ -436,11 +436,11 @@
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/web-mercator-forward/": {
-    "hash": "9927612139cf4cbb",
+    "hash": "a5c22a8dd1528f2a",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/web-mercator-inverse/": {
-    "hash": "a95e6054f8b06af7",
+    "hash": "a51b6140dc235eab",
     "lastmod": "2026-09-24"
   },
   "/geodesy/spcs/": {
@@ -464,24 +464,24 @@
     "lastmod": "2026-09-24"
   },
   "/geodesy/ups/forward/": {
-    "hash": "d82e146838dec371",
-    "lastmod": "2026-09-23"
+    "hash": "419f0eb61f911db0",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/ups/inverse/": {
-    "hash": "6506e08383d43c33",
-    "lastmod": "2026-09-23"
+    "hash": "0f965d426c4cd955",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/utm/": {
     "hash": "2783eddeae7e966d",
     "lastmod": "2026-09-24"
   },
   "/geodesy/utm/forward/": {
-    "hash": "66c11dc167fd1873",
-    "lastmod": "2026-09-23"
+    "hash": "a2445559d9b8adc0",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/utm/inverse/": {
-    "hash": "16d9d063db4818e4",
-    "lastmod": "2026-09-23"
+    "hash": "7bcfffa3f2508d06",
+    "lastmod": "2026-09-24"
   },
   "/geodesy/utm/zone/": {
     "hash": "75ad640225ffe063",
@@ -704,16 +704,16 @@
     "lastmod": "2026-09-24"
   },
   "/indexing/s2/cell-info/": {
-    "hash": "d7f26e7d7d2bce64",
-    "lastmod": "2026-09-23"
+    "hash": "71e4f3b86ef0930c",
+    "lastmod": "2026-09-24"
   },
   "/indexing/s2/covering/": {
-    "hash": "61e092a6d6e3e421",
+    "hash": "866d2e5d6b2081fd",
     "lastmod": "2026-09-24"
   },
   "/indexing/s2/lat-lng-to-cell/": {
-    "hash": "8c6c3af7e018f8d5",
-    "lastmod": "2026-09-23"
+    "hash": "33415978d2895ccd",
+    "lastmod": "2026-09-24"
   },
   "/indexing/s2/neighbors/": {
     "hash": "5a780178bff44fd2",
@@ -1448,7 +1448,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "49c8ffa4baa5f387",
+    "hash": "d97680a5ba095c4e",
     "lastmod": "2026-09-24"
   }
 }

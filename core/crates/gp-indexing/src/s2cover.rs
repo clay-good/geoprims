@@ -13,7 +13,9 @@ use std::collections::VecDeque;
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Stability, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Stability, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use libm::{cos, sqrt};
 
@@ -899,6 +901,12 @@ pub static COVERING: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Mean Earth radius, GRS 80's R1 (6371008.7714 m) to 0.1 m",
+        value: "6371008.8",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "That region takes {count} S2 {plural count \"cell\" \"cells\"}, from level {coarsest_level} to {finest_level}.",
     limits: &[("batchRows", 1_000)],
     run: run_covering,

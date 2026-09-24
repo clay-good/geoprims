@@ -14,8 +14,8 @@ use gp_base::angle::wrap_lon;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Stability,
-    ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related,
+    Stability, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::dms::{self, Axis, Style};
@@ -1117,6 +1117,26 @@ pub static UTM_FORWARD: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "UTM scale factor on the central meridian k0",
+            value: "0.9996",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false easting",
+            value: "500000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false northing in the southern hemisphere",
+            value: "10000000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+    ],
     sentence: "UTM zone {zone}{hemisphere}: easting {easting}, northing {northing}.{warn NONSTANDARD_ZONE} This is not the point's standard zone.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_utm_forward,
@@ -1331,6 +1351,26 @@ pub static UTM_INVERSE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "UTM scale factor on the central meridian k0",
+            value: "0.9996",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false easting",
+            value: "500000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false northing in the southern hemisphere",
+            value: "10000000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+    ],
     sentence: "That is {lat}, {lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_utm_inverse,
@@ -1437,6 +1477,20 @@ pub static UPS_FORWARD: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "UPS scale factor at the pole k0",
+            value: "0.994",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UPS false easting and northing",
+            value: "2000000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+    ],
     sentence: "UPS {hemisphere}: easting {easting}, northing {northing}.",
     limits: &[("batchRows", 10_000)],
     run: run_ups_forward,
@@ -1532,6 +1586,20 @@ pub static UPS_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.parse.coordinates",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "UPS scale factor at the pole k0",
+            value: "0.994",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UPS false easting and northing",
+            value: "2000000",
+            unit: "m",
+            source: "nga-utmups",
         },
     ],
     sentence: "That is {lat}, {lon}.",
@@ -1753,6 +1821,38 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "UTM scale factor on the central meridian k0",
+            value: "0.9996",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false easting",
+            value: "500000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false northing in the southern hemisphere",
+            value: "10000000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UPS scale factor at the pole k0",
+            value: "0.994",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UPS false easting and northing",
+            value: "2000000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+    ],
     sentence: "The MGRS reference is {mgrs_spaced}{if square_size > 0}, a {square_size} square{/if}.",
     limits: &[("batchRows", 10_000)],
     run: run_mgrs_forward,
@@ -1920,6 +2020,38 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.utm.inverse",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "UTM scale factor on the central meridian k0",
+            value: "0.9996",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false easting",
+            value: "500000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UTM false northing in the southern hemisphere",
+            value: "10000000",
+            unit: "m",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UPS scale factor at the pole k0",
+            value: "0.994",
+            unit: "1",
+            source: "nga-utmups",
+        },
+        Assumption {
+            name: "UPS false easting and northing",
+            value: "2000000",
+            unit: "m",
+            source: "nga-utmups",
         },
     ],
     sentence: "The center of this {square_size} square is {lat}, {lon}.",

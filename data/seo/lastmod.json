@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "7f7cde09d900e594",
+    "hash": "c6db5af24d43b003",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -820,7 +820,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "1730daff4911c63f",
+    "hash": "0b84b67c9dc99e53",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1035,6 +1035,14 @@
     "hash": "dfc92cababa04977",
     "lastmod": "2026-09-24"
   },
+  "/raster/terrain/ruggedness/": {
+    "hash": "8435051d94509ba7",
+    "lastmod": "2026-09-24"
+  },
+  "/raster/terrain/slope-aspect/": {
+    "hash": "8333a26717b081a1",
+    "lastmod": "2026-09-24"
+  },
   "/security/": {
     "hash": "0a13c7160707e976",
     "lastmod": "2026-09-23"
@@ -1160,7 +1168,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "28dc7fa0e6759eac",
+    "hash": "279af76c4c14d840",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1348,7 +1356,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "57cac2a65965f67a",
+    "hash": "b1b8c76f86252145",
     "lastmod": "2026-09-24"
   }
 }

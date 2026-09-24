@@ -1,5 +1,6 @@
 //! MGRS (geodesy/grid-references spec; NGA.STND.0037, NGA.SIG.0012), following
-//! GeographicLib's MGRS: the "AA" lettering for WGS 84/GRS 80, truncation on
+//! GeographicLib's MGRS: the "AA" lettering for WGS 84/GRS 80 (and the "AL"
+//! lettering NGA keeps for the legacy Clarke and Bessel ellipsoids), truncation on
 //! encode, the south-west corner and center on decode, band adjustment at band
 //! edges, and rejection of 100 km squares that do not occur in the zone.
 
@@ -16,6 +17,32 @@ const MIN_UPS_S: i64 = 8;
 const MIN_UPS_N: i64 = 13;
 const UPS_EASTING: i64 = 20;
 const EVEN_ROW_SHIFT: i64 = 5;
+/// The "AL" lettering starts the rows 1,000 km further along than "AA" (NGA
+/// GEOTRANS: row offsets of 1,000 and 1,500 km for odd and even zone sets,
+/// against 0 and 500 km).
+const AL_ROW_SHIFT: i64 = 10;
+
+/// Which 100 km row lettering a reference uses.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Lettering {
+    /// WGS 84, GRS 80, and other modern ellipsoids.
+    Aa,
+    /// The legacy Clarke 1866, Clarke 1880, and Bessel 1841 ellipsoids.
+    Al,
+}
+
+fn row_shift(zone: u8, lettering: Lettering) -> i64 {
+    let even = if zone.is_multiple_of(2) {
+        EVEN_ROW_SHIFT
+    } else {
+        0
+    };
+    even + if lettering == Lettering::Al {
+        AL_ROW_SHIFT
+    } else {
+        0
+    }
+}
 
 /// Precisions: -1 is the grid zone only; 0 is 100 km; 5 is 1 m; 8 is 1 mm.
 pub const MIN_PRECISION: i32 = -1;
@@ -42,6 +69,11 @@ fn digits(v: f64, p: i32) -> String {
 
 /// Encodes a UTM or UPS position at precision `p`. `lat` picks the UTM band.
 pub fn encode(g: &Grid, lat: f64, p: i32) -> Result<String, String> {
+    encode_with(g, lat, p, Lettering::Aa)
+}
+
+/// Like `encode`, with the row lettering chosen.
+pub fn encode_with(g: &Grid, lat: f64, p: i32, lettering: Lettering) -> Result<String, String> {
     let ix = (g.easting / TILE).floor() as i64;
     let iy = (g.northing / TILE).floor() as i64;
     let mut out = String::new();
@@ -57,11 +89,7 @@ pub fn encode(g: &Grid, lat: f64, p: i32) -> Result<String, String> {
             return Err("easting is outside the 100 km columns of this zone".into());
         }
         out.push(set[col as usize] as char);
-        let shift = if g.zone.is_multiple_of(2) {
-            EVEN_ROW_SHIFT
-        } else {
-            0
-        };
+        let shift = row_shift(g.zone, lettering);
         out.push(UTMROW[(iy + shift).rem_euclid(20) as usize] as char);
     } else {
         let east = g.easting >= (UPS_EASTING as f64) * TILE;
@@ -107,6 +135,11 @@ fn pos(set: &[u8], c: u8) -> Option<i64> {
 
 /// Decodes an MGRS string (spaces allowed). Errors are plain-language messages.
 pub fn decode(s: &str, a: f64, f: f64) -> Result<Decoded, String> {
+    decode_with(s, a, f, Lettering::Aa)
+}
+
+/// Like `decode`, with the row lettering chosen.
+pub fn decode_with(s: &str, a: f64, f: f64, lettering: Lettering) -> Result<Decoded, String> {
     let t: Vec<u8> = s
         .bytes()
         .filter(|b| !b.is_ascii_whitespace())
@@ -203,11 +236,7 @@ pub fn decode(s: &str, a: f64, f: f64) -> Result<Decoded, String> {
     let north = bi >= 10;
     let col = pos(UTMCOLS[(usize::from(zone) - 1) % 3], sq[0]).ok_or_else(not_here)?;
     let row = pos(UTMROW, sq[1]).ok_or_else(not_here)?;
-    let shift = if zone.is_multiple_of(2) {
-        EVEN_ROW_SHIFT
-    } else {
-        0
-    };
+    let shift = row_shift(zone, lettering);
     let iy = (row - shift).rem_euclid(20);
     let e = (col + 1) as f64 * TILE + ex;
     let (lo, hi) = (

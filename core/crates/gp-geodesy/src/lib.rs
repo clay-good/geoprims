@@ -1675,6 +1675,7 @@ pub(crate) const PRECISIONS: &[&str] = &[
 ];
 
 pub static MGRS_FORWARD: ToolDef = ToolDef {
+    version: "1.1.0",
     id: "geodesy.grid-ref.mgrs-forward",
     stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to MGRS",
@@ -1691,6 +1692,9 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
             Kind::Choice(PRECISIONS),
         )
         .core(),
+        E[0],
+        E[1],
+        E[2],
     ],
     outputs: &[
         Field::new(
@@ -1719,7 +1723,7 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
-    model: "NGA MGRS (AA lettering) over UTM and UPS on WGS 84",
+    model: "NGA MGRS over UTM and UPS: AA lettering, or AL on the legacy Clarke 1866 and Bessel 1841 ellipsoids",
     accuracy: "Exact; the reference names the square containing the point (truncation)",
     when_to_use: "Use this when a position has to be written the way military and emergency services read it: an MGRS reference at the precision you choose, from a 100 km square down to a meter. It is the form used on ground operations, in search and rescue, and on maps that carry the grid.",
     limitations: "The reference names the square that contains the point, because MGRS truncates rather than rounds: a ten-digit reference is a one-meter square whose south-west corner is the position given, and a shorter one names a larger square. It is defined on UTM and UPS, so it carries their zone structure, and the coordinates here are WGS 84.",
@@ -1773,15 +1777,37 @@ pub(crate) fn spaced(s: &str) -> String {
     out
 }
 
+/// The ellipsoid for an MGRS reference, and its lettering: NGA keeps the
+/// older "AL" row lettering for references on the Clarke 1866 and Bessel
+/// 1841 ellipsoids (and Clarke 1880, not in this catalog).
+fn mgrs_ellipsoid(ctx: &mut Ctx) -> Result<(Ellipsoid, mgrs::Lettering), ToolError> {
+    let e = Ellipsoid::from_ctx(ctx)?;
+    e.geodesic()?;
+    let lettering = if matches!(e.id, "clarke1866" | "bessel1841") {
+        mgrs::Lettering::Al
+    } else {
+        mgrs::Lettering::Aa
+    };
+    ctx.context.push((
+        "lettering",
+        Json::str(if lettering == mgrs::Lettering::Al {
+            "AL"
+        } else {
+            "AA"
+        }),
+    ));
+    Ok((e, lettering))
+}
+
 fn run_mgrs_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let p = PRECISIONS
         .iter()
         .position(|x| Some(*x) == ctx.choice("precision").ok().flatten())
         .map_or(5, |i| i as i32 - 1);
-    let wgs = ellipsoid::CATALOG[0];
-    let g = utmups::forward_auto(wgs.a, wgs.f, lat, lon);
-    let s = mgrs::encode(&g, lat, p).map_err(|e| {
+    let (ell, lettering) = mgrs_ellipsoid(ctx)?;
+    let g = utmups::forward_auto(ell.a, ell.f, lat, lon);
+    let s = mgrs::encode_with(&g, lat, p, lettering).map_err(|e| {
         ToolError::new(
             ErrorCode::OutOfDomain,
             format!("This point cannot be encoded: {e}."),
@@ -1829,20 +1855,26 @@ fn run_mgrs_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 }
 
 pub static MGRS_INVERSE: ToolDef = ToolDef {
+    version: "1.1.0",
     id: "geodesy.grid-ref.mgrs-inverse",
     stability: gp_base::tool::Stability::Stable,
     title: "MGRS to latitude and longitude",
     summary: "Decodes an MGRS or USNG grid reference to the south-west corner and center of the square it names, with the square's size.",
     aliases: &["MGRS to lat long", "decode MGRS"],
     keywords: &["MGRS", "USNG", "decode", "grid reference"],
-    inputs: &[Field::new(
-        "mgrs",
-        "MGRS reference",
-        "Like 17TNE8630977770 or 17T NE 86309 77770",
-        Kind::Text { max_len: 32 },
-    )
-    .required()
-    .core()],
+    inputs: &[
+        Field::new(
+            "mgrs",
+            "MGRS reference",
+            "Like 17TNE8630977770 or 17T NE 86309 77770",
+            Kind::Text { max_len: 32 },
+        )
+        .required()
+        .core(),
+        E[0],
+        E[1],
+        E[2],
+    ],
     outputs: &[
         lat_out("lat", "Center latitude"),
         lon_out("lon", "Center longitude"),
@@ -1860,7 +1892,7 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
         .precision(Precision::Significant(1)),
     ],
     warnings: &["BAND_ADJUSTED", "EXPERIMENTAL_TOOL"],
-    model: "NGA MGRS (AA lettering) over UTM and UPS on WGS 84",
+    model: "NGA MGRS over UTM and UPS: AA lettering, or AL on the legacy Clarke 1866 and Bessel 1841 ellipsoids",
     accuracy: "Exact; the true point is anywhere in the square",
     when_to_use: "Use this when an MGRS or USNG reference arrives by radio, from a report, or off a map and you need to plot it: it returns the south-west corner and the center of the square it names, with the square's size so the precision is explicit. It is also how to check the precision of a reference you were given: the square's size is reported, so an eight-digit reference is visibly a ten-meter square rather than a point.",
     limitations: "The reference is a square and the true point is anywhere within it: at six digits that is a hundred-meter square, at four a kilometer. The center is offered for plotting, not as the reported position. A reference without its grid zone is ambiguous over long distances, and this reports what it assumed. Polar references use UPS rather than UTM and follow different lettering, which this handles but which is worth knowing when a reference looks unusual.",
@@ -1898,8 +1930,8 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
 
 fn run_mgrs_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let s = ctx.text("mgrs")?.expect("required");
-    let wgs = ellipsoid::CATALOG[0];
-    let d = mgrs::decode(&s, wgs.a, wgs.f)
+    let (wgs, lettering) = mgrs_ellipsoid(ctx)?;
+    let d = mgrs::decode_with(&s, wgs.a, wgs.f, lettering)
         .map_err(|e| ToolError::invalid("/mgrs", format!("This reference is not valid: {e}.")))?;
     if d.band_adjusted {
         ctx.warnings.push(Warning::new(

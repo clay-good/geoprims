@@ -41,6 +41,7 @@ None. The corner is exact. The true point is anywhere in the square, which the s
 - `core/crates/gp-geodesy/tests/mgrs_parity.rs`: the corners of 2,000 references against NGA GEOTRANS (mgrs 1.5.4), within 2 cm. GEOTRANS's own projection series is off by up to 1.5 cm near the UPS edge and far out in Svalbard's widened zones, where PROJ puts our corners exactly on the grid (BBB714175 at E 2,171,400.000000 N 917,500.000000; 33XUJ at E 300,000.000000 N 8,800,000.000000; pinned as vectors v023 and v024).
 - `tools/vectors/gen_mgrs_diff.py`: regenerates that fixture
 - `core/vectors/geodesy.grid-ref.mgrs-inverse.jsonl`: 24 vectors, including 16 GEOTRANS corners, the FGDC millimeter reference, the two PROJ-exact corners, and invalid references
+- `core/crates/gp-geodesy/tests/mgrs_al_parity.rs`: the AL lettering (1.1.0) on the Clarke 1866 and Bessel 1841 ellipsoids, 600 references from 10 km to 1 m against NGA GEOTRANS with those ellipsoid codes: grid zone and square letters identical, digits within one in the last place (GEOTRANS's projection series), corners within 2 cm, and each corner re-encoding to GEOTRANS's reference; `tools/vectors/gen_mgrs_al.py` regenerates it
 
 ## Invariants
 

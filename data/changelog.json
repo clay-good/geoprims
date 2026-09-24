@@ -5,6 +5,16 @@
       "date": "2026-09-24",
       "kind": "added",
       "tools": [
+        "geodesy.grid-ref.mgrs-forward",
+        "geodesy.grid-ref.mgrs-inverse"
+      ],
+      "vectors": [],
+      "summary": "MGRS references (version 1.1.0) can now be made and read on the Clarke 1866 and Bessel 1841 ellipsoids, with the older AL row lettering NGA keeps for them, which starts the 100 km rows ten letters later than the AA lettering used on WGS 84. They match NGA GEOTRANS on 600 references. References on WGS 84 are unchanged."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
         "geodesy.datum.transform"
       ],
       "vectors": [],

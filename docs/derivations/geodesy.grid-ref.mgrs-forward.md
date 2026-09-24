@@ -42,6 +42,7 @@ None. The projection is exact to nanometers (checked for the UTM tool), and trun
 - `core/crates/gp-geodesy/tests/mgrs_parity.rs`: 2,000 points against NGA GEOTRANS (the mgrs 1.5.4 package), one in five in the Norway and Svalbard exceptions and one in seven in the UPS caps. All match. In one case GEOTRANS's 1.5 cm polar projection error flips the last digit, and the fixture takes that digit from PROJ's exact grid coordinates.
 - `tools/vectors/gen_mgrs_diff.py`: regenerates that fixture
 - `core/vectors/geodesy.grid-ref.mgrs-forward.jsonl`: 25 vectors, including 16 GEOTRANS references across the exceptions, both poles, the antimeridian, and every precision
+- `core/crates/gp-geodesy/tests/mgrs_al_parity.rs`: the AL lettering (1.1.0) on the Clarke 1866 and Bessel 1841 ellipsoids, 600 references from 10 km to 1 m against NGA GEOTRANS with those ellipsoid codes: grid zone and square letters identical, digits within one in the last place (GEOTRANS's projection series), corners within 2 cm, and each corner re-encoding to GEOTRANS's reference; `tools/vectors/gen_mgrs_al.py` regenerates it
 
 ## Invariants
 

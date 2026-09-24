@@ -224,6 +224,7 @@ fn wrap_lon_deg(x: f64) -> f64 {
 pub static COURSE_INTERSECTION: ToolDef = ToolDef {
     id: "navigation.route.course-intersection",
     version: "1.0.1",
+    stability: Stability::Stable,
     title: "Where two courses cross",
     summary: "The point where two courses from two positions meet, on geodesics or rhumb lines, and how far each has to run to get there.",
     aliases: &[
@@ -277,9 +278,11 @@ pub static COURSE_INTERSECTION: ToolDef = ToolDef {
         point::lon_field("lon", "Crossing longitude").precision(Precision::Decimals(7)),
     ],
     errors: &[ErrorCode::NoSolution, ErrorCode::OutOfDomain],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Geodesic: Newton's method on the two distances, x1(s1) = x2(s2), using each geodesic's direction at its current end (Karney 2013 direct and inverse), started from the great-circle crossing on the mean sphere; of the two crossings the one ahead of both positions is reported. Rhumb: both are straight lines in Mercator coordinates (longitude, isometric latitude) and meet exactly",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Geodesic: Newton's method on the two distances, x1(s1) = x2(s2), using each geodesic's direction at its current end (Karney 2013 direct and inverse), started from the great-circle crossing on the mean sphere. Two courses cross twice, about half the world apart; each run is read within half a circumference either way, and of the two crossings the one behind fewer of the positions is reported, then the nearer. Rhumb: both are straight lines in Mercator coordinates (longitude, isometric latitude) and meet exactly",
     accuracy: "The geodesic crossing closes to under a nanometer; the rhumb crossing is exact to floating point",
+    when_to_use: "Use this to find where two courses from two known positions meet: a two-bearing fix from two stations, where an aircraft's track crosses a ship's, where a survey line run on one bearing meets another, or where two search legs overlap. It gives the crossing point and how far each course must be run to reach it, negative when the crossing lies behind a position, on geodesics or on rhumb lines.",
+    limitations: "Two courses cross twice, about half the world apart, and this reports one of those two: the one behind fewer of the positions, then the nearer, each run read within half a circumference either way. So when the near crossing lies behind one position, it is reported with a negative run rather than replaced by the far one on the other side of the Earth; for a crossing half the world away along a course, ahead and behind name the same place. Courses along the same line, or side by side, have no crossing and are refused. Geodesics and rhumb lines cross in different places, so choose the kind the courses are actually flown on.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
@@ -300,6 +303,10 @@ pub static COURSE_INTERSECTION: ToolDef = ToolDef {
         Related {
             id: "navigation.geodesic.direct",
             reason: "parent",
+        },
+        Related {
+            id: "navigation.geodesic.intersection",
+            reason: "alternative",
         },
     ],
     sentence: "The courses cross {distance1} along the first and {distance2} along the second.",

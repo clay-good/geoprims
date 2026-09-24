@@ -42,6 +42,8 @@ None within the standard: it is a definition. Layer base pressures are computed 
 - `tools/vectors/gen_aviation.py`: 8 vectors from ambiance 1.3.1, a separately written implementation of the ICAO atmosphere, from -2 km to 78 km (pressure and density within 3e-6 relative)
 - `core/vectors/aviation.atmosphere.isa.jsonl`: the defining equations in Python, US 1976 printed table rows, and ambiance, run through the core on every build
 
+- `core/crates/gp-aviation/tests/us76_table.rs`: the US 1976 model at every tabulated kilometer from 0 to 81 km (geometric) against the ambiance package, an independent implementation of the standard (`tools/vectors/gen_us76_ambiance.py`), each value within half a unit of the table's last printed digit: temperature to 0.001 K (to 80 km; above it the table's kinetic temperature carries M/M0, which ambiance leaves out), pressure and density to five significant figures
+
 ## Invariants
 
 - `core/crates/gp-aviation/tests/aviation.rs` `isa_invariants`: the ideal gas law at every level, hydrostatic balance dp/dH = -ρg0, and monotonic pressure and density across the ICAO range

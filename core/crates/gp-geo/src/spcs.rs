@@ -4,8 +4,7 @@
 //! Lambert Conic Conformal (2SP) and Hotine Oblique Mercator (variant A) follow
 //! IOGP Guidance Note 7-2 (EPSG methods 9802 and 9812).
 
-use crate::proj::{Hotine, Lcc, dlon};
-use crate::tm::Tm;
+use crate::proj::{Hotine, Lcc, TmGrid};
 use libm::{atan2, cos, sin, sqrt};
 
 pub use crate::spcs83_zones::ZONES;
@@ -117,14 +116,12 @@ impl Zone {
                 fe,
                 fn_,
             } => {
-                let tm = Tm::new(GRS80_A, GRS80_F, k0);
-                let (x, y, gam, k) = tm.forward(lat, dlon(lon, lon0));
-                let (_, y0, _, _) = tm.forward(lat0, 0.0);
+                let g = TmGrid::new(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).forward(lat, lon);
                 Grid {
-                    e: fe + x,
-                    n: fn_ + y - y0,
-                    convergence: gam,
-                    k,
+                    e: g.e,
+                    n: g.n,
+                    convergence: g.convergence,
+                    k: g.k,
                 }
             }
             Proj::Lcc {
@@ -165,12 +162,7 @@ impl Zone {
                 k0,
                 fe,
                 fn_,
-            } => {
-                let tm = Tm::new(GRS80_A, GRS80_F, k0);
-                let (_, y0, _, _) = tm.forward(lat0, 0.0);
-                let (lat, dl) = tm.inverse(e - fe, n - fn_ + y0);
-                (lat, lon0 + dl)
-            }
+            } => TmGrid::new(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).inverse(e, n),
             Proj::Lcc {
                 lat0,
                 lon0,

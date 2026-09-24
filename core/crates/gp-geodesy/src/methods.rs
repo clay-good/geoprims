@@ -7,7 +7,7 @@
 
 use gp_base::ErrorCode;
 use gp_base::angle::check_lat;
-use gp_base::error::ToolError;
+use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
     Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
@@ -17,7 +17,7 @@ use gp_geo::ellipsoid::{self, Ellipsoid};
 use gp_geo::point;
 use gp_geo::proj::{
     self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Hotine, Lcc,
-    Orthographic, PolarStereo, WebMercator,
+    Orthographic, PolarStereo, TmGrid, WebMercator,
 };
 
 const G7_2: Reference = Reference {
@@ -1831,6 +1831,190 @@ pub static HOTINE_INVERSE: ToolDef = ToolDef {
 fn run_hotine_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (x, y) = grid_in(ctx)?;
     let p = hotine(ctx)?;
+    let (lat, lon) = p.inverse(x, y);
+    inverse_json(ctx, (lat, proj::dlon(lon, 0.0)))
+}
+
+// ------------------------------------------------------------ Transverse Mercator
+
+const TM_LON0: Field = angle(
+    "longitude_of_origin",
+    "Central meridian",
+    "The longitude of the central meridian, like -2",
+    "[-180,180)",
+)
+.required()
+.core();
+const TM_LAT0: Field = angle(
+    "latitude_of_origin",
+    "Latitude of origin",
+    "The latitude the northing counts from, like 49; 0 if not given",
+    "[-90,90]",
+)
+.core();
+const TM_K0: Field = Field::new(
+    "scale_factor",
+    "Scale factor on the central meridian",
+    "Like 0.9996012717; 1 if not given",
+    Kind::Number {
+        min: 0.1,
+        max: 10.0,
+    },
+)
+.core();
+
+fn tm_grid(ctx: &mut Ctx) -> Result<(TmGrid, f64), ToolError> {
+    let e = ellipsoid(ctx)?;
+    e.geodesic()?;
+    let lon0 = opt_angle(ctx, "longitude_of_origin")?.ok_or_else(|| {
+        ToolError::invalid("/longitude_of_origin", "The central meridian is required.")
+    })?;
+    let lat0 = opt_lat(ctx, "latitude_of_origin")?.unwrap_or(0.0);
+    let k0 = ctx.number("scale_factor")?.unwrap_or(1.0);
+    let (fe, fn_) = (
+        opt_len(ctx, "false_easting")?,
+        opt_len(ctx, "false_northing")?,
+    );
+    // The series' reach scales with the ellipsoid.
+    let reach = proj::TM_SERIES_REACH * e.a / proj::WGS84_A;
+    Ok((TmGrid::new(e.a, e.f, lat0, lon0, k0, fe, fn_), reach))
+}
+
+fn tm_reach_warning(ctx: &mut Ctx, g: &TmGrid, e: f64, reach: f64, at: &str) {
+    let off = g.offset(e);
+    if off > reach {
+        ctx.warnings.push(
+            Warning::new(
+                "ACCURACY_DEGRADED",
+                format!(
+                    "This point is {:.0} km from the central meridian; the series is good to 5 nm within {:.0} km and loses accuracy beyond (meters by 70 degrees of longitude).",
+                    off / 1000.0,
+                    reach / 1000.0
+                ),
+            )
+            .at(at),
+        );
+    }
+}
+
+pub static TM_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.tm-forward",
+    title: "Latitude and longitude to Transverse Mercator",
+    summary: "Projects a latitude and longitude with a Transverse Mercator you define: central meridian, latitude of origin, scale factor, and falsings, on any ellipsoid, to nanometers near the central meridian.",
+    aliases: &[
+        "transverse Mercator calculator",
+        "Gauss-Krüger",
+        "lat long to transverse Mercator",
+    ],
+    keywords: &[
+        "transverse Mercator",
+        "Gauss-Krüger",
+        "central meridian",
+        "projection",
+        "9807",
+    ],
+    inputs: &[LAT, LON, TM_LON0, TM_LAT0, TM_K0, FE, FN, E[0], E[1], E[2]],
+    outputs: FORWARD_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this for any transverse Mercator grid that is not UTM: national grids like the British National Grid, Gauss-Krüger zones, state plane and county grids built on it, or a local low-distortion projection. Give the grid's central meridian, latitude of origin, scale factor, and falsings, and get the easting and northing with the convergence and scale.",
+    limitations: "It uses Krüger's series to sixth order, as UTM does: good to 5 nanometers within 3,900 km of the central meridian, and warned beyond, where the error grows to meters. The projection itself suits a band a few hundred kilometers wide, since its scale grows with the square of the distance from the central meridian. Parameters must be the grid's own, and the result is on the ellipsoid you choose; a datum shift is a separate step.",
+    warnings: &["ACCURACY_DEGRADED", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Transverse Mercator (EPSG method 9807) by Krüger's series to sixth order (Karney 2011)",
+    accuracy: "5 nm within 3,900 km of the central meridian; agrees with GeographicLib's series to a nanometer",
+    references: &[G7_2, crate::KARNEY_TM],
+    examples: &[Example {
+        id: "primary",
+        title: "The IOGP example: British National Grid",
+        input: r#"{"lat":"50°30'N","lon":"0°30'E","longitude_of_origin":-2,"latitude_of_origin":49,"scale_factor":0.9996012717,"false_easting":"400000 m","false_northing":"-100000 m","ellipsoid":"airy1830"}"#,
+        source: "IOGP Guidance Note 7-2, 3.2.5 example (OSGB 1936 / British National Grid): E = 577,274.99 m, N = 69,740.50 m",
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.tm-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.spcs.spcs83-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORWARD_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_tm_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_tm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let (p, reach) = tm_grid(ctx)?;
+    let g = p.forward(lat, lon);
+    tm_reach_warning(ctx, &p, g.e, reach, "/lon");
+    forward_json(ctx, g)
+}
+
+pub static TM_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.tm-inverse",
+    title: "Transverse Mercator to latitude and longitude",
+    summary: "Converts an easting and northing on a Transverse Mercator you define back to latitude and longitude.",
+    aliases: &["transverse Mercator to lat long", "Gauss-Krüger inverse"],
+    keywords: &[
+        "transverse Mercator inverse",
+        "Gauss-Krüger inverse",
+        "inverse",
+        "projection",
+        "9807",
+    ],
+    inputs: &[
+        EASTING, NORTHING, TM_LON0, TM_LAT0, TM_K0, FE, FN, E[0], E[1], E[2],
+    ],
+    outputs: INVERSE_OUT,
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
+    stability: Stability::Stable,
+    when_to_use: "Use this to turn an easting and northing on a transverse Mercator grid other than UTM back into latitude and longitude: a British National Grid reference in meters, a Gauss-Krüger coordinate, or a local low-distortion grid, when you have its parameters. For UTM, the UTM tool already knows every zone's.",
+    limitations: "The parameters must be the grid's own and in its units; nothing in the numbers says which grid they came from. Krüger's series is good to 5 nanometers within 3,900 km of the central meridian and is warned beyond. The latitude and longitude are on the ellipsoid you choose, which should be the grid's.",
+    warnings: &["ACCURACY_DEGRADED", "UNIT_ASSUMED"],
+    model: "Transverse Mercator (EPSG method 9807) by Krüger's series to sixth order (Karney 2011)",
+    accuracy: "5 nm within 3,900 km of the central meridian; agrees with GeographicLib's series to a nanometer",
+    references: &[G7_2, crate::KARNEY_TM],
+    examples: &[Example {
+        id: "primary",
+        title: "Back to the IOGP example",
+        input: r#"{"easting":"577274.99 m","northing":"69740.50 m","longitude_of_origin":-2,"latitude_of_origin":49,"scale_factor":0.9996012717,"false_easting":"400000 m","false_northing":"-100000 m","ellipsoid":"airy1830"}"#,
+        source: "IOGP Guidance Note 7-2, 3.2.5 example reversed: 50°30' N, 0°30' E",
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.tm-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.utm.inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+    ],
+    sentence: INVERSE_SENTENCE,
+    limits: &[("batchRows", 10_000)],
+    run: run_tm_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_tm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (x, y) = grid_in(ctx)?;
+    let (p, reach) = tm_grid(ctx)?;
+    tm_reach_warning(ctx, &p, x, reach, "/easting");
     let (lat, lon) = p.inverse(x, y);
     inverse_json(ctx, (lat, proj::dlon(lon, 0.0)))
 }

@@ -849,6 +849,13 @@
       "intro": "This group puts a latitude and longitude on a map grid whose parameters you give, and brings grid coordinates back. Use it when a grid is not UTM or State Plane: a web map, a national or regional conic, an equal-area map, or a polar grid. Each point comes with the grid convergence and the scale there. It also corrects a grid bearing for the curve of a long line. The pitfall is a parameter copied wrong, such as feet taken for meters, which gives a clean but wrong answer.",
       "tasks": [
         {
+          "want": "convert on a transverse Mercator grid other than UTM, like the British National Grid",
+          "tools": [
+            "tm-forward",
+            "tm-inverse"
+          ]
+        },
+        {
           "want": "put a point on a web map grid (EPSG:3857), or read one back",
           "tools": [
             "web-mercator-forward",

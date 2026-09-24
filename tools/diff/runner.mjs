@@ -354,6 +354,39 @@ export const FAMILIES = [
   ...projFamilies(),
   ...azimuthalFamilies(),
   {
+    // Transverse Mercator with its own parameters, against the same series
+    // in GeographicLib (TransverseMercatorProj -s), within 35° of the
+    // central meridian; the latitude of origin enters as the northing of
+    // (lat0, lon0), from a second line in the same batch.
+    name: 'tm-forward',
+    tool: 'geodesy.projection.tm-forward',
+    needs: 'TransverseMercatorProj',
+    sets: (() => {
+      const r = rng(5150);
+      return Array.from({ length: 12 }, () => [q(360 * r() - 180), q(120 * r() - 60), Number((0.999 + 0.001 * r()).toFixed(10))]);
+    })(),
+    make(r) {
+      const set = this.sets[Math.floor(r() * this.sets.length)];
+      const [lat, lon] = [q(170 * r() - 85), q(((set[0] + 70 * (r() - 0.5) + 540) % 360) - 180)];
+      return {
+        input: { lat, lon, longitude_of_origin: set[0], latitude_of_origin: set[1], scale_factor: set[2], options: { outputUnits: { easting: 'm', northing: 'm' } } },
+        line: `${fx(lat)} ${fx(lon)}\n${fx(set[1])} ${fx(set[0])}`,
+        set,
+      };
+    },
+    batchKey: (c) => c.set.join(','),
+    run: (lines, c) => {
+      const rows = reference('TransverseMercatorProj', ['-s', '-l', fx(c.set[0]), '-k', String(c.set[2]), '-p', '9'], lines);
+      // Each case sent two lines: the point, then the origin.
+      return rows.filter((_, i) => i % 2 === 0).map((row, i) => [row[0], row[1] - rows[2 * i + 1][1]]);
+    },
+    compare(res, [x, y]) {
+      if (Math.abs(res.easting.value - x) > 1e-6) return `easting ${res.easting.value} vs ${x}`;
+      if (Math.abs(res.northing.value - y) > 1e-6) return `northing ${res.northing.value} vs ${y}`;
+      return null;
+    },
+  },
+  {
     // EPSG's ellipsoidal Equidistant Cylindrical, which PROJ lacks (its eqc
     // is the spherical form): the northing is GeodSolve's distance along
     // the meridian from the equator, the easting the standard parallel's

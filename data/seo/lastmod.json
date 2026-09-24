@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "d0d5a1892b9ba2c2",
+    "hash": "37eb6d4aa5095c2f",
     "lastmod": "2026-09-24"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "b996cf1dad1e8baa",
+    "hash": "bd0bc2bbf20535bd",
     "lastmod": "2026-09-24"
   },
   "/aviation/": {
@@ -104,7 +104,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "009d6ba9d9f039ba",
+    "hash": "c6e7f21c7627740f",
     "lastmod": "2026-09-24"
   },
   "/disclaimer/": {
@@ -180,7 +180,7 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/": {
-    "hash": "1343e59e282bc539",
+    "hash": "9535f71c411dfe5f",
     "lastmod": "2026-09-24"
   },
   "/geodesy/datum/": {
@@ -344,7 +344,7 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/projection/": {
-    "hash": "fc61580598816da1",
+    "hash": "daa52c3010885d15",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/albers-forward/": {
@@ -412,11 +412,19 @@
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/polar-stereographic-inverse/": {
-    "hash": "7b72337056b21fdf",
+    "hash": "a409387a07aa60c1",
+    "lastmod": "2026-09-24"
+  },
+  "/geodesy/projection/tm-forward/": {
+    "hash": "9060d1886bcafb89",
+    "lastmod": "2026-09-24"
+  },
+  "/geodesy/projection/tm-inverse/": {
+    "hash": "d1e3e37e752be418",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/web-mercator-forward/": {
-    "hash": "9d8272ec75bfd0f4",
+    "hash": "9927612139cf4cbb",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/web-mercator-inverse/": {
@@ -892,7 +900,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "a0a0bbedc54cdd58",
+    "hash": "28b95db9fc06523f",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1048,7 +1056,7 @@
     "lastmod": "2026-09-23"
   },
   "/quality/": {
-    "hash": "4b89a1c9d9299559",
+    "hash": "ab4e0b32eb2d6156",
     "lastmod": "2026-09-24"
   },
   "/raster/": {
@@ -1120,7 +1128,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "1429de1e6911cc4c",
+    "hash": "d09677b9316efe60",
     "lastmod": "2026-09-24"
   },
   "/survey/": {
@@ -1240,7 +1248,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "baba2ecdae7167c4",
+    "hash": "b5e0bfef89c8924e",
     "lastmod": "2026-09-24"
   },
   "/units/": {
@@ -1428,7 +1436,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "805a16b8a83995d5",
+    "hash": "51f65767deb40274",
     "lastmod": "2026-09-24"
   }
 }

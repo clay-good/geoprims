@@ -5,6 +5,16 @@
       "date": "2026-09-24",
       "kind": "added",
       "tools": [
+        "geodesy.projection.tm-forward",
+        "geodesy.projection.tm-inverse"
+      ],
+      "vectors": [],
+      "summary": "Two new stable tools convert on a transverse Mercator you define, for grids other than UTM like the British National Grid and Gauss-Krüger zones. They use the same sixth-order series as UTM, good to 5 nanometers within 3,900 km of the central meridian, and warn beyond. They agree with GeographicLib's own implementation within a micrometer on 10,000 random points. State Plane's transverse Mercator zones now run through the same code, results unchanged."
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.hotine-forward",
         "geodesy.projection.hotine-inverse"
       ],

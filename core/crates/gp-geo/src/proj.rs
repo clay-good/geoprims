@@ -79,6 +79,61 @@ fn wrap(lon: f64) -> f64 {
     dlon(lon, 0.0)
 }
 
+/// Transverse Mercator (EPSG method 9807) by Krüger's series to sixth order
+/// (Karney 2011, `tm`), with an origin, scale factor, and falsings.
+pub struct TmGrid {
+    tm: Tm,
+    lon0: f64,
+    fe: f64,
+    fn_: f64,
+    /// The northing of the latitude of origin, which the grid counts from.
+    y0: f64,
+    k0: f64,
+}
+
+/// Within 3,900 km of the central meridian on an Earth-sized ellipsoid the
+/// series is good to 5 nm (Karney 2011); the reach scales with the
+/// ellipsoid's size.
+pub const TM_SERIES_REACH: f64 = 3_900_000.0;
+
+impl TmGrid {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(a: f64, f: f64, lat0: f64, lon0: f64, k0: f64, fe: f64, fn_: f64) -> TmGrid {
+        let tm = Tm::new(a, f, k0);
+        let (_, y0, _, _) = tm.forward(lat0, 0.0);
+        TmGrid {
+            tm,
+            lon0,
+            fe,
+            fn_,
+            y0,
+            k0,
+        }
+    }
+
+    pub fn forward(&self, lat: f64, lon: f64) -> Grid {
+        let (x, y, gam, k) = self.tm.forward(lat, dlon(lon, self.lon0));
+        Grid {
+            e: self.fe + x,
+            n: self.fn_ + y - self.y0,
+            convergence: gam,
+            h: k,
+            k,
+        }
+    }
+
+    pub fn inverse(&self, e: f64, n: f64) -> (f64, f64) {
+        let (lat, dl) = self.tm.inverse(e - self.fe, n - self.fn_ + self.y0);
+        (lat, self.lon0 + dl)
+    }
+
+    /// How far the easting is from the central meridian on the ground, for
+    /// judging the series' reach.
+    pub fn offset(&self, e: f64) -> f64 {
+        ((e - self.fe) / self.k0).abs()
+    }
+}
+
 /// Lambert Conic Conformal, 1SP (EPSG 9801) and 2SP (EPSG 9802).
 pub struct Lcc {
     a: f64,

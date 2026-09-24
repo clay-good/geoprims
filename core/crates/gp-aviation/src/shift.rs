@@ -60,6 +60,7 @@ fn common(ctx: &mut Ctx) -> Result<(f64, f64), ToolError> {
 
 pub static WEIGHT_SHIFT: ToolDef = ToolDef {
     id: "aviation.loading.weight-shift",
+    stability: gp_base::tool::Stability::Stable,
     title: "Weight shift",
     summary: "How far the CG moves when you move weight from one station to another, or how much weight to move to put the CG where you need it.",
     aliases: &[
@@ -141,7 +142,9 @@ pub static WEIGHT_SHIFT: ToolDef = ToolDef {
         .precision(Precision::Decimals(2)),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::NoSolution],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
+    when_to_use: "Use this when a loading comes out of the CG envelope and you want to fix it by moving something already aboard: how far the CG moves when you shift a bag or a passenger between two stations, or how much weight must move to put the CG where you need it. It saves redoing the whole loading.",
+    limitations: "The total weight stays the same, because nothing is added or removed; to add weight, use ballast or rerun weight and balance. The arms must be the aircraft's own stations from the same datum as the CG, and the new CG still has to be checked against the envelope at every weight the flight will pass through.",
     model: "Weight moved ÷ total weight = CG change ÷ distance moved (FAA-H-8083-1B, chapter 2)",
     accuracy: "Exact for the entered weights and arms",
     references: &[WB_SHIFT],
@@ -163,6 +166,10 @@ pub static WEIGHT_SHIFT: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.loading.ballast",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.loading.fuel-weight",
             reason: "alternative",
         },
     ],
@@ -274,6 +281,7 @@ fn run_shift(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static BALLAST: ToolDef = ToolDef {
     id: "aviation.loading.ballast",
+    stability: gp_base::tool::Stability::Stable,
     title: "Ballast to move the CG",
     summary: "How much ballast at a chosen arm brings the CG to a target, and the new total weight.",
     aliases: &[
@@ -330,7 +338,9 @@ pub static BALLAST: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::NoSolution],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
+    when_to_use: "Use this when an aircraft's CG is out of limits and nothing aboard can be moved to fix it: how much ballast, fixed or temporary, has to go at a given station to bring the CG exactly to a target such as the nearest limit. It is the handbook's ballast formula with the arithmetic shown.",
+    limitations: "The ballast adds weight, so the new total must still be under the maximum weight, and the new CG must be checked at every loading the ballast will fly with, not just this one. Permanent ballast is an alteration to the aircraft and needs the proper maintenance records; the arm must be a real place to mount it.",
     model: "Ballast = total weight × (target CG − CG now) ÷ (ballast arm − target CG), from taking moments about the datum (FAA-H-8083-1B, chapter 2)",
     accuracy: "Exact for the entered weights and arms. Check the new total weight against the maximum, and secure ballast as the aircraft's data requires",
     references: &[WB_SHIFT],
@@ -352,6 +362,10 @@ pub static BALLAST: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.loading.weight-shift",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.loading.fuel-weight",
             reason: "alternative",
         },
     ],

@@ -818,8 +818,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "lastVerified": "2026-09-24",
+      "verificationNote": "Read at the issuer on 2026-09-24: the PDF is FAA-H-8083-1B (2016), which supersedes FAA-H-8083-1A (2007); chapter 10, pages 10-6 and 10-7, holds the weight-shift and ballast examples.",
       "freeAccessUrl": "https://www.faa.gov/sites/faa.gov/files/2023-09/Weight_Balance_Handbook.pdf",
       "matchTerms": [
         "Aircraft Weight and Balance Handbook"

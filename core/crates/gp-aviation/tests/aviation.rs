@@ -741,3 +741,59 @@ fn wind_triangle_readings_agree() {
         assert!((num(&fw, "result.wind_speed.value") - ws).abs() < 1e-9);
     }
 }
+
+#[test]
+fn shift_and_ballast_agree_with_weight_and_balance() {
+    // A loading rebuilt station by station gives the CG the shift and ballast
+    // tools report: move the weight between two stations, or add the ballast
+    // at its arm, and weight and balance lands on the same CG.
+    let wb_cg = |stations: serde_json::Value| {
+        let r = call(
+            "aviation.loading.weight-balance",
+            &serde_json::json!({"stations": stations}).to_string(),
+        );
+        num(&r, "result.cg.value")
+    };
+    for (w, cg, from, to, m) in [
+        (2250.0, 84.3, 150.0, 90.0, 50.0),
+        (4709.0, 180.0, 246.0, 118.0, 50.0),
+        (7800.0, 81.5, 30.0, 150.0, 120.0),
+    ] {
+        let r = call(
+            "aviation.loading.weight-shift",
+            &format!(
+                r#"{{"total_weight":"{w} lb","cg":"{cg} in","from_arm":"{from} in","to_arm":"{to} in","weight":"{m} lb"}}"#
+            ),
+        );
+        let shifted = num(&r, "result.new_cg.value");
+        // The airplane as the rest at its own arm plus the moved weight at its new arm.
+        let rest_arm = (w * cg - m * from) / (w - m);
+        let rebuilt = wb_cg(serde_json::json!([
+            {"name": "rest", "weight": format!("{} lb", w - m), "arm": format!("{rest_arm} in")},
+            {"name": "moved", "weight": format!("{m} lb"), "arm": format!("{to} in")},
+        ]));
+        assert!((shifted - rebuilt).abs() < 1e-9, "{shifted} vs {rebuilt}");
+        // Shifting the same weight back restores the CG.
+        let back = call(
+            "aviation.loading.weight-shift",
+            &format!(
+                r#"{{"total_weight":"{w} lb","cg":"{shifted} in","from_arm":"{to} in","to_arm":"{from} in","weight":"{m} lb"}}"#
+            ),
+        );
+        assert!((num(&back, "result.new_cg.value") - cg).abs() < 1e-9);
+    }
+    for (w, cg, target, arm) in [(1876.0, 32.2, 33.0, 228.0), (2250.0, 84.3, 83.0, 10.0)] {
+        let r = call(
+            "aviation.loading.ballast",
+            &format!(
+                r#"{{"total_weight":"{w} lb","cg":"{cg} in","target_cg":"{target} in","ballast_arm":"{arm} in"}}"#
+            ),
+        );
+        let b = num(&r, "result.ballast.value");
+        let rebuilt = wb_cg(serde_json::json!([
+            {"name": "airplane", "weight": format!("{w} lb"), "arm": format!("{cg} in")},
+            {"name": "ballast", "weight": format!("{b} lb"), "arm": format!("{arm} in")},
+        ]));
+        assert!((rebuilt - target).abs() < 1e-9, "{rebuilt} vs {target}");
+    }
+}

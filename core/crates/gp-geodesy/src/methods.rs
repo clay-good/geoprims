@@ -2054,7 +2054,7 @@ pub static TM_EXACT_FORWARD: ToolDef = ToolDef {
         "transverse Mercator far from the central meridian",
     ],
     keywords: &[
-        "transverse Mercator",
+        "transverse Mercator exact",
         "exact",
         "elliptic functions",
         "projection",

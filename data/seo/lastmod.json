@@ -104,7 +104,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "c6e7f21c7627740f",
+    "hash": "735b5cf6af2efbcb",
     "lastmod": "2026-09-24"
   },
   "/disclaimer/": {
@@ -520,7 +520,7 @@
     "lastmod": "2026-09-23"
   },
   "/geometry/overlay/boolean/": {
-    "hash": "8fd537613103b9b6",
+    "hash": "f2a174434e9e12be",
     "lastmod": "2026-09-24"
   },
   "/geometry/predicate/": {
@@ -900,7 +900,7 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "28b95db9fc06523f",
+    "hash": "70d3be6e95abccb8",
     "lastmod": "2026-09-24"
   },
   "/navigation/": {
@@ -1436,7 +1436,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4251cda35f326d88",
+    "hash": "e08da456e5f33035",
     "lastmod": "2026-09-24"
   }
 }

@@ -105,7 +105,7 @@ const fn km2(name: &'static str, title: &'static str, help: &'static str) -> Fie
 pub static BOOLEAN: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     id: "geometry.overlay.boolean",
-    version: "1.1.1",
+    version: "1.2.0",
     title: "Overlap, union, or difference of two polygons",
     summary: "Where two areas overlap, their combined outline, what one has that the other lacks, or both, as valid polygons with geodesic areas, like the overlap of two geofences.",
     aliases: &["polygon intersection", "polygon union", "polygon difference", "overlap of two areas", "clip polygon", "boolean operation"],
@@ -114,6 +114,7 @@ pub static BOOLEAN: ToolDef = ToolDef {
         Field::new("polygon_a", "First polygon", "Corners in order (ring 0), then any holes, like 40.4406, -80.002", Kind::List { items: VERTEX, min: 3, max: 10_000 }).required().core(),
         Field::new("polygon_b", "Second polygon", "Corners in order (ring 0), then any holes, like 40.4406, -80.002", Kind::List { items: VERTEX, min: 3, max: 10_000 }).required().core(),
         Field::new("operation", "Operation", "intersection (the default), union, difference (first minus second), or symmetric-difference", Kind::Choice(&["intersection", "union", "difference", "symmetric-difference"])).core(),
+        Field::new("edges", "Edges", "geodesic (the default), or planar: straight in longitude and latitude, as most mapping software draws them, with longitudes taken as written", Kind::Choice(&["geodesic", "planar"])),
     ],
     outputs: &[
         km2("area", "Result area", "Geodesic"),
@@ -125,9 +126,9 @@ pub static BOOLEAN: ToolDef = ToolDef {
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
     warnings: &[],
     model: "Both polygons' geodesic edges cut into 5 km pieces on one azimuthal equidistant plane at their corners' mean, each read by the even-odd rule; corners within a millionth of the shapes' size (at most 1 mm) of another ring are first put on it, so boundaries either meet exactly or stay clearly apart; every piece of either boundary is kept exactly when the result's inside differs on its two sides, and the pieces are joined into rings, taking the sharpest left turn where rings meet at a corner, so pieces that touch at a point come out as separate parts. Areas by Karney's geodesic polygon area (Karney 2013)",
-    accuracy: "Edges follow the geodesics to about 1 mm for shapes of a few hundred kilometers; areas exact for the returned corners. Inputs within 5,000 km of their shared center",
+    accuracy: "Edges follow the geodesics to about 1 mm for shapes of a few hundred kilometers; areas exact for the returned corners. Inputs within 5,000 km of their shared center. Planar edges: the overlay is exact on the longitude-latitude plane, and areas follow its straight edges to well under a part in a million",
     when_to_use: "Use this to ask how two areas relate as areas rather than as outlines: how much of a flight restriction falls inside a planned survey block, what a parcel keeps after a right of way is taken out of it, the combined footprint of two coverage zones, the part of a search area nobody has swept yet. It answers with the polygon itself and with its area on the ellipsoid, so the result can be drawn, measured, or fed straight back in.",
-    limitations: "Both polygons and their result must sit within 5,000 km of their shared centre, because the overlay is done on one plane placed there and a plane cannot hold more of the Earth than that faithfully; further apart and the tool refuses rather than distorting. Edges are cut into 5 km pieces before the overlay, so a result boundary follows the geodesic to about a millimetre rather than exactly. A result can be empty, or break into several pieces, or acquire a hole, all of which are reported rather than treated as failure — a difference that leaves nothing is a correct answer. Self-intersecting inputs have no well-defined inside and should be repaired first.",
+    limitations: "Both polygons and their result must sit within 5,000 km of their shared centre, because the overlay is done on one plane placed there and a plane cannot hold more of the Earth than that faithfully; further apart and the tool refuses rather than distorting. Edges are cut into 5 km pieces before the overlay, so a result boundary follows the geodesic to about a millimetre rather than exactly. A result can be empty, or break into several pieces, or acquire a hole, all of which are reported rather than treated as failure — a difference that leaves nothing is a correct answer. Self-intersecting inputs have no well-defined inside and should be repaired first. With planar edges the overlay is done on longitude and latitude as they are written, as GIS software does with such data; a shape crossing the antimeridian must be written with longitudes that run past 180 rather than jumping to -180.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",
@@ -148,7 +149,7 @@ pub static BOOLEAN: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn read(ctx: &mut Ctx, list: &str) -> Result<Vec<Vec<(f64, f64)>>, ToolError> {
+fn read(ctx: &mut Ctx, list: &str, wrap: bool) -> Result<Vec<Vec<(f64, f64)>>, ToolError> {
     let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
     let rows = ctx.rows(list)?;
     let mut rings: Vec<Vec<(f64, f64)>> = Vec::new();
@@ -182,7 +183,11 @@ fn read(ctx: &mut Ctx, list: &str) -> Result<Vec<Vec<(f64, f64)>>, ToolError> {
         if rings.len() <= k {
             rings.resize(k + 1, Vec::new());
         }
-        let lon = (lon + 540.0).rem_euclid(360.0) - 180.0;
+        let lon = if wrap {
+            (lon + 540.0).rem_euclid(360.0) - 180.0
+        } else {
+            lon
+        };
         if rings[k].last() != Some(&(lat, lon)) {
             rings[k].push((lat, lon));
         }
@@ -214,9 +219,33 @@ fn geodesic_area(g: &Geodesic, rings: &[Vec<(f64, f64)>]) -> f64 {
         .sum()
 }
 
+/// A ring with straight edges in longitude and latitude, cut into pieces of
+/// at most 0.01° so its geodesic area is the area those edges enclose (the
+/// pieces bow from the straight line by well under a millimeter).
+fn densify_planar(ring: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let mut out = Vec::new();
+    for i in 0..ring.len() {
+        let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
+        let n = (((b.0 - a.0).abs().max((b.1 - a.1).abs())) / 0.01)
+            .ceil()
+            .max(1.0) as usize;
+        for k in 0..n {
+            let t = k as f64 / n as f64;
+            out.push((a.0 + t * (b.0 - a.0), a.1 + t * (b.1 - a.1)));
+        }
+    }
+    out
+}
+
+fn planar_area(g: &Geodesic, rings: &[Vec<(f64, f64)>]) -> f64 {
+    let dense: Vec<Vec<(f64, f64)>> = rings.iter().map(|r| densify_planar(r)).collect();
+    geodesic_area(g, &dense)
+}
+
 fn run_boolean(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let a = read(ctx, "polygon_a")?;
-    let b = read(ctx, "polygon_b")?;
+    let planar = ctx.choice("edges")? == Some("planar");
+    let a = read(ctx, "polygon_a", !planar)?;
+    let b = read(ctx, "polygon_b", !planar)?;
     let op = match ctx.choice("operation")? {
         Some("union") => Op::Union,
         Some("difference") => Op::Difference,
@@ -224,17 +253,33 @@ fn run_boolean(ctx: &mut Ctx) -> Result<Json, ToolError> {
         _ => Op::Intersection,
     };
     let g = Geodesic::wgs84();
-    let all: Vec<&Vec<(f64, f64)>> = a.iter().chain(b.iter()).collect();
-    let pl = to_plane(&g, &all)?;
-    if pl.far > buffer::REACH * 5.0 {
-        return Err(ToolError::new(
-            ErrorCode::OutOfDomain,
-            "The polygons must lie within 5,000 km of their shared center.",
-        )
-        .at("/polygon_b"));
-    }
-    let (pa, pb) = pl.plane.split_at(a.len());
-    let out = buffer::boolean(pa, pb, op);
+    // Planar edges: the overlay runs on (longitude, latitude) as they are.
+    let flat = |rs: &[Vec<(f64, f64)>]| -> Vec<Vec<(f64, f64)>> {
+        rs.iter()
+            .map(|r| r.iter().map(|&(la, lo)| (lo, la)).collect())
+            .collect()
+    };
+    let pl = if planar {
+        None
+    } else {
+        let all: Vec<&Vec<(f64, f64)>> = a.iter().chain(b.iter()).collect();
+        let pl = to_plane(&g, &all)?;
+        if pl.far > buffer::REACH * 5.0 {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "The polygons must lie within 5,000 km of their shared center.",
+            )
+            .at("/polygon_b"));
+        }
+        Some(pl)
+    };
+    let out = match &pl {
+        Some(pl) => {
+            let (pa, pb) = pl.plane.split_at(a.len());
+            buffer::boolean(pa, pb, op)
+        }
+        None => buffer::boolean(&flat(&a), &flat(&b), op),
+    };
     let (mut outers, mut holes): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for (i, r) in out.iter().enumerate() {
         let a2: f64 = (0..r.len())
@@ -276,8 +321,15 @@ fn run_boolean(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (mut rows, mut area) = (Vec::new(), 0.0);
     for (pi, (o, hs)) in parts.iter().enumerate() {
         for (ri, &idx) in core::iter::once(o).chain(hs.iter()).enumerate() {
-            let ring: Vec<(f64, f64)> = out[idx].iter().map(|&p| pl.map.rev(p)).collect();
-            let r_area = super::ring_area(&g, &ring).0.abs();
+            let ring: Vec<(f64, f64)> = match &pl {
+                Some(pl) => out[idx].iter().map(|&p| pl.map.rev(p)).collect(),
+                None => out[idx].iter().map(|&(x, y)| (y, x)).collect(),
+            };
+            let r_area = if planar {
+                super::ring_area(&g, &densify_planar(&ring)).0.abs()
+            } else {
+                super::ring_area(&g, &ring).0.abs()
+            };
             area += if ri == 0 { r_area } else { -r_area };
             for &(la, lo) in &ring {
                 rows.push(Json::obj([
@@ -294,11 +346,33 @@ fn run_boolean(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("parts", Json::Num(parts.len() as f64)),
         (
             "area_a",
-            ctx.out("area_a", super::q(geodesic_area(&g, &a), "m2", QT::Area)),
+            ctx.out(
+                "area_a",
+                super::q(
+                    if planar {
+                        planar_area(&g, &a)
+                    } else {
+                        geodesic_area(&g, &a)
+                    },
+                    "m2",
+                    QT::Area,
+                ),
+            ),
         ),
         (
             "area_b",
-            ctx.out("area_b", super::q(geodesic_area(&g, &b), "m2", QT::Area)),
+            ctx.out(
+                "area_b",
+                super::q(
+                    if planar {
+                        planar_area(&g, &b)
+                    } else {
+                        geodesic_area(&g, &b)
+                    },
+                    "m2",
+                    QT::Area,
+                ),
+            ),
         ),
         ("result", Json::Arr(rows)),
     ]))

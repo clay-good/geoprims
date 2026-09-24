@@ -9,7 +9,10 @@
 //! 2. with every corner moved by up to 0.2 µm, as a corner on an edge is once
 //!    it is projected, the answers do not change;
 //! 3. the geodesic tool, with the grid placed at 40° N at a step of about a
-//!    meter, returns GEOS's parts, with areas within 2 cm².
+//!    meter, returns GEOS's parts, with areas within 2 cm²;
+//! 4. the tool with planar edges, which overlays longitude and latitude as
+//!    they are, returns GEOS's parts and, read back onto the grid, GEOS's
+//!    area exactly.
 //!
 //! Before 1.1.0 the second and third failed on 261 of the 1,600 overlays: a
 //! corner a fraction of a micron off an edge was nudged across it by the side
@@ -129,11 +132,39 @@ fn overlay_matches_geos_on_degenerate_shapes() {
             if got_parts != parts || (got_m2 - m2).abs() > 2e-4 {
                 wrong.push(format!("pair {i} {name} on the ground: {got_parts} parts, {got_m2} m²; GEOS {parts}, {m2} m²"));
             }
+            let p: Value = serde_json::from_str(&REGISTRY.invoke(
+                "geometry.overlay.boolean",
+                &json!({"polygon_a": ga, "polygon_b": gb, "operation": name, "edges": "planar"}).to_string(),
+            ))
+            .expect("JSON");
+            let p_parts = p["result"]["parts"].as_u64().unwrap_or(u64::MAX) as usize;
+            // The returned rings, back on the grid: (column, row).
+            let mut back: Vec<Vec<(f64, f64)>> = Vec::new();
+            let mut key = (-1.0, -1.0);
+            for row in p["result"]["result"].as_array().into_iter().flatten() {
+                let k = (row["part"].as_f64().unwrap(), row["ring"].as_f64().unwrap());
+                if k != key {
+                    back.push(Vec::new());
+                    key = k;
+                }
+                let (la, lo) = (
+                    row["lat"]["value"].as_f64().unwrap(),
+                    row["lon"]["value"].as_f64().unwrap(),
+                );
+                back.last_mut()
+                    .unwrap()
+                    .push(((lo + 105.0) / 1e-5, (la - 40.0) / 1e-5));
+            }
+            let p_area: f64 = back.iter().map(|r| signed(r)).sum();
+            let p_m2 = p["result"]["area"]["value"].as_f64().unwrap_or(-1.0) * 1e6;
+            if p_parts != parts || (p_area - area).abs() > 1e-6 || (p_m2 - m2).abs() > 2e-4 {
+                wrong.push(format!("pair {i} {name} planar: {p_parts} parts, {p_area} on the grid, {p_m2} m²; GEOS {parts}, {area}, {m2} m²"));
+            }
         }
     }
     assert!(
         wrong.is_empty(),
-        "{} of 4,800 checks differ:\n{}",
+        "{} of 6,400 checks differ:\n{}",
         wrong.len(),
         wrong[..wrong.len().min(10)].join("\n")
     );

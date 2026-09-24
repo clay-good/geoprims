@@ -1140,7 +1140,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "402abee51fcb1cf8",
+    "hash": "9c5e6860c726a4ac",
     "lastmod": "2026-09-24"
   },
   "/survey/": {
@@ -1212,12 +1212,12 @@
     "lastmod": "2026-09-23"
   },
   "/time/scale/gps-to-utc/": {
-    "hash": "36ee17e04180728b",
-    "lastmod": "2026-09-23"
+    "hash": "fad242d114384722",
+    "lastmod": "2026-09-24"
   },
   "/time/scale/gps-week/": {
-    "hash": "e8511a7d78fd6539",
-    "lastmod": "2026-09-23"
+    "hash": "13b31aaa87425072",
+    "lastmod": "2026-09-24"
   },
   "/time/scale/julian-date/": {
     "hash": "4cb193df5f526f8a",
@@ -1448,7 +1448,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "40c77ed92e198670",
+    "hash": "a752b7e88b6f4430",
     "lastmod": "2026-09-24"
   }
 }

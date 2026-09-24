@@ -56,6 +56,8 @@ const MUST_DECLARE = [
   'aviation.performance.pivotal-altitude',
   'aviation.airspeed.tat-sat',
   'survey.reduction.edm-correction',
+  'time.scale.gps-week',
+  'time.scale.gps-to-utc',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

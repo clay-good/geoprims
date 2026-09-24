@@ -325,6 +325,32 @@ pub static GPS_WEEK: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "GPS time epoch",
+            value: "1980-01-06T00:00:00Z",
+            unit: "UTC",
+            source: "is-gps-200",
+        },
+        Assumption {
+            name: "Length of a GPS week",
+            value: "604800",
+            unit: "s",
+            source: "is-gps-200",
+        },
+        Assumption {
+            name: "TAI minus GPS time (TAI - UTC on the GPS epoch)",
+            value: "19",
+            unit: "s",
+            source: "iers-leap-second-history",
+        },
+        Assumption {
+            name: "Weeks in a 10-bit week-number era",
+            value: "1024",
+            unit: "1",
+            source: "is-gps-200",
+        },
+    ],
     sentence: "It is GPS week {gps_week}, second {seconds_of_week}.",
     limits: &[("batchRows", 10_000)],
     run: run_gps_week,
@@ -454,6 +480,32 @@ pub static GPS_TO_UTC: ToolDef = ToolDef {
         Related {
             id: "time.scale.zone-info",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "GPS time epoch",
+            value: "1980-01-06T00:00:00Z",
+            unit: "UTC",
+            source: "is-gps-200",
+        },
+        Assumption {
+            name: "Length of a GPS week",
+            value: "604800",
+            unit: "s",
+            source: "is-gps-200",
+        },
+        Assumption {
+            name: "TAI minus GPS time (TAI - UTC on the GPS epoch)",
+            value: "19",
+            unit: "s",
+            source: "iers-leap-second-history",
+        },
+        Assumption {
+            name: "Weeks in a 10-bit week-number era",
+            value: "1024",
+            unit: "1",
+            source: "is-gps-200",
         },
     ],
     sentence: "That is {utc}.",

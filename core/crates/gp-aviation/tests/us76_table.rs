@@ -15,6 +15,11 @@ fn half_unit(v: f64) -> f64 {
     0.5 * 10f64.powi(v.abs().log10().floor() as i32 - 4)
 }
 
+/// Farther apart than `tol`, or not a number at all.
+fn off(a: f64, b: f64, tol: f64) -> bool {
+    (a - b).abs() > tol || a.is_nan()
+}
+
 #[test]
 fn us76_matches_the_table_to_its_printed_precision() {
     let text = std::fs::read_to_string(concat!(
@@ -40,13 +45,13 @@ fn us76_matches_the_table_to_its_printed_precision() {
         // temperature times M/M0, which the tool applies and ambiance does
         // not (at 81 km they differ by 0.0022 K, the factor 0.999989);
         // pressure and density do not depend on it.
-        if c[0] <= 80.0 && !((t - c[1]).abs() <= 0.0005) {
+        if c[0] <= 80.0 && off(t, c[1], 0.0005) {
             wrong.push(format!("{} km: T {t} against {}", c[0], c[1]));
         }
-        if !((p - c[2]).abs() <= half_unit(c[2])) {
+        if off(p, c[2], half_unit(c[2])) {
             wrong.push(format!("{} km: p {p} against {}", c[0], c[2]));
         }
-        if !((rho - c[3]).abs() <= half_unit(c[3])) {
+        if off(rho, c[3], half_unit(c[3])) {
             wrong.push(format!("{} km: rho {rho} against {}", c[0], c[3]));
         }
     }

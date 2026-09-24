@@ -90,6 +90,28 @@ for i, (pre, post) in enumerate([(0.61, 0.13), (0.7, 0.05), (0.5, 0.45), (0.4, 0
     d = pre - post
     name = next((n for edge, n in CLASSES if d < edge), "high severity")
     rows.append(vec(i, {"nbr_pre": pre, "nbr_post": post}, {"result.dnbr": d, "result.severity": name}))
+# Key and Benson (2006) table LA-2 is read in whole units of dNBR x 1,000:
+# each class edge, from both sides, and the anomaly limits (-550, +1,350).
+LA2 = [(-250, "low post-fire regrowth"), (-100, "unburned"), (100, "low severity"), (270, "moderate-low severity"),
+       (440, "moderate-high severity"), (660, "high severity")]
+def la2(pre, post):
+    k = round((pre - post) * 1000)
+    return next((n for lo, n in reversed(LA2) if k >= lo), "high post-fire regrowth"), k
+edges = [(0.37, 0.27), (0.369, 0.27), (0.57, 0.3), (0.569, 0.3), (0.64, 0.2), (0.859, 0.2), (0.86, 0.2),
+         (0.2, 0.3), (0.2, 0.301), (0.1, 0.35), (0.1, 0.351)]
+for pre, post in edges:
+    i += 1
+    name, k = la2(pre, post)
+    rows.append(vec(i, {"nbr_pre": pre, "nbr_post": post}, {"result.dnbr": pre - post, "result.severity": name}))
+    rows[-1]["source"] = f"Key and Benson (2006), FIREMON LA table LA-2: dNBR x 1,000 = {k:+d} is {name}"
+    rows[-1]["sourceVersion"] = "RMRS-GTR-164-CD (2006)"
+for pre, post in [(0.9, -0.6), (-0.5, 0.3)]:
+    i += 1
+    name, _ = la2(pre, post)
+    rows.append(vec(i, {"nbr_pre": pre, "nbr_post": post},
+                    {"result.dnbr": pre - post, "result.severity": name, "meta.warnings.*.code": "SUSPECT_VALUE"}))
+i += 1
+rows.append(vec(i, {"nbr_pre": 1.5, "nbr_post": 0.2}, {"ok": False, "error.code": "INVALID_INPUT"}))
 write("dnbr", rows)
 
 # Sensor scaling, from each product's published relation:

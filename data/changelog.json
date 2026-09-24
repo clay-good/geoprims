@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-09-24",
+      "kind": "fixed",
+      "tools": [
+        "raster.index.dnbr"
+      ],
+      "vectors": [],
+      "summary": "dNBR (version 1.1.0) now reads the Key and Benson severity table the way it is printed, in whole units of dNBR times 1,000, so a drop of exactly 0.10 (such as 0.37 to 0.27) is low severity, not unburned by a rounding hair; the same holds at every class edge. Values beyond about -550 or +1,350, which the table's authors attribute to clouds or misregistration rather than fire, are now flagged. The tool is now stable."
+    },
+    {
+      "date": "2026-09-24",
       "kind": "result-change",
       "tools": [
         "indexing.s2.covering"

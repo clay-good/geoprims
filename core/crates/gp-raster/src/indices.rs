@@ -81,7 +81,7 @@ pub const KEY_BENSON: Reference = Reference {
     issuer: "Key, C. H., and Benson, N. C., USDA Forest Service, Rocky Mountain Research Station",
     year: 2006,
     edition: "General Technical Report RMRS-GTR-164-CD, pages LA-1 to LA-55",
-    locator: "NBR and dNBR, and the burn-severity ranges offered as a starting point rather than a rule",
+    locator: "NBR and dNBR, and table LA-2: ordinal severity levels and example dNBR ranges (scaled by 1,000), offered as a starting point rather than a rule; values beyond about -550 and +1,350 are likely anomalies",
     url: "https://www.fs.usda.gov/research/treesearch/24066",
 };
 
@@ -782,14 +782,15 @@ pub static SAVI: ToolDef = ToolDef {
 
 /// The Key and Benson severity ranges, offered as a starting point. They are
 /// the published classification, not a rule: severity depends on the ecosystem.
-const SEVERITY: &[(f64, f64, &str)] = &[
-    (f64::NEG_INFINITY, -0.25, "high post-fire regrowth"),
-    (-0.25, -0.1, "low post-fire regrowth"),
-    (-0.1, 0.1, "unburned"),
-    (0.1, 0.27, "low severity"),
-    (0.27, 0.44, "moderate-low severity"),
-    (0.44, 0.66, "moderate-high severity"),
-    (0.66, f64::INFINITY, "high severity"),
+/// Key and Benson (2006) table LA-2, in dNBR scaled by 1,000: each class
+/// starts at its lower bound; the table's ranges are whole numbers.
+const SEVERITY: &[(i64, &str)] = &[
+    (-250, "low post-fire regrowth"),
+    (-100, "unburned"),
+    (100, "low severity"),
+    (270, "moderate-low severity"),
+    (440, "moderate-high severity"),
+    (660, "high severity"),
 ];
 
 fn run_dnbr(ctx: &mut Ctx) -> Result<Json, ToolError> {
@@ -804,10 +805,26 @@ fn run_dnbr(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
     }
     let d = pre - post;
+    // Classed on the table's own scale, dNBR x 1,000 to the nearest whole
+    // number, so 0.37 - 0.27 is +100 (low severity) as the table reads it,
+    // not 0.0999... (unburned) as the subtraction rounds it.
+    let scaled = libm::round(d * 1000.0) as i64;
     let class = SEVERITY
         .iter()
-        .find(|(lo, hi, _)| d >= *lo && d < *hi)
-        .map_or("unburned", |(_, _, name)| *name);
+        .rev()
+        .find(|(lo, _)| scaled >= *lo)
+        .map_or("high post-fire regrowth", |(_, name)| *name);
+    if !(-550..=1350).contains(&scaled) {
+        ctx.warnings.push(
+            Warning::new(
+                "SUSPECT_VALUE",
+                format!(
+                    "A dNBR of {scaled} (scaled by 1,000) is beyond about -550 to +1,350, where Key and Benson find values are usually clouds, misregistration, or missing data rather than fire effects."
+                ),
+            )
+            .at("/nbr_post"),
+        );
+    }
     Ok(Json::obj([
         ("dnbr", Json::Num(d)),
         ("severity", Json::str(class)),
@@ -816,6 +833,8 @@ fn run_dnbr(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static DNBR: ToolDef = ToolDef {
     id: "raster.index.dnbr",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "dNBR (burn severity)",
     summary: "The difference between a pre-fire and a post-fire normalized burn ratio, with the published severity ranges it is usually read against.",
     aliases: &["dNBR calculator", "delta NBR", "burn severity calculator"],
@@ -861,8 +880,8 @@ pub static DNBR: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
-    model: "dNBR = NBR(pre-fire) - NBR(post-fire); classes from the Key and Benson (2006) ranges",
+    warnings: &["SUSPECT_VALUE"],
+    model: "dNBR = NBR(pre-fire) - NBR(post-fire); classes from the Key and Benson (2006) table LA-2 ranges, read on dNBR x 1,000 to the nearest whole number",
     accuracy: "Exact arithmetic. The class ranges are a published starting point, not a determination of severity.",
     when_to_use: "Use this once you have an NBR from before a fire and one from after it: the drop between them is what burn-severity mapping is based on, and it separates ground that burned from ground that was already bare. The class it names is the range the value falls in.",
     limitations: "The ranges come from western US conifer forests and do not transfer unchanged to other ecosystems; severity mapping normally calibrates them against field plots, and often uses the relativized form (RdNBR) where pre-fire cover varies. Both images need the same sensor, season, and processing, or the difference measures the images rather than the fire.",

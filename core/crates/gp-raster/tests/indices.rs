@@ -646,3 +646,45 @@ fn reflectance_scaling_invariants() {
         assert!((-0.2..=1.5).contains(&v));
     }
 }
+
+#[test]
+fn dnbr_invariants() {
+    // Swapping the images negates dNBR; shifting both NBRs together changes
+    // nothing; and the class never falls as dNBR rises, in table LA-2 order.
+    let run = |pre: f64, post: f64| {
+        call(
+            "raster.index.dnbr",
+            &format!(r#"{{"nbr_pre":{pre},"nbr_post":{post}}}"#),
+        )
+    };
+    let order = [
+        "high post-fire regrowth",
+        "low post-fire regrowth",
+        "unburned",
+        "low severity",
+        "moderate-low severity",
+        "moderate-high severity",
+        "high severity",
+    ];
+    let mut last = 0;
+    for k in -540..=1340 {
+        let d = f64::from(k) / 1000.0;
+        let (pre, post) = (d / 2.0, -d / 2.0);
+        let r = run(pre, post);
+        let class = r["result"]["severity"].as_str().unwrap().to_owned();
+        let rank = order.iter().position(|c| *c == class).unwrap();
+        assert!(rank >= last, "{k}: {class} after {}", order[last]);
+        last = rank;
+        assert!(
+            !warns(&r, "SUSPECT_VALUE"),
+            "{k} is inside the table's range"
+        );
+    }
+    for (pre, post) in [(0.61, 0.13), (0.2, 0.5), (0.37, 0.27)] {
+        let a = num(&run(pre, post), "result.dnbr");
+        assert_eq!(num(&run(post, pre), "result.dnbr"), -a);
+        let shifted = num(&run(pre - 0.1, post - 0.1), "result.dnbr");
+        assert!((shifted - a).abs() < 1e-12);
+    }
+    assert!(warns(&run(0.9, -0.6), "SUSPECT_VALUE"));
+}

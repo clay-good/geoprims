@@ -18,6 +18,7 @@
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { assetMessage } from '../lib/messages.js';
   import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
+  import { takesProfile } from '../lib/aircraft.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
   import { csvProjected, csvRows, importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
@@ -126,6 +127,14 @@
   let BatchPanel = $state(null);
   const batchable = Object.entries(tool.inputs.properties).some(([n, s]) => n !== 'options' && s.type !== 'array');
   const loadBatch = async () => (BatchPanel ??= (await import('./BatchPanel.svelte')).default);
+  // Aircraft profiles load only when a reader opens them, on tools that take aircraft data.
+  let AircraftPanel = $state(null);
+  const loadAircraft = async () => (AircraftPanel ??= (await import('./AircraftPanel.svelte')).default);
+  /** Fills the form from a saved profile's inputs, then recomputes. */
+  function setInputs(v) {
+    for (const [k] of fields) if (v[k] !== undefined) values[k] = toText(k, v[k]);
+    edited();
+  }
   let reporting = $state(false);
 
   async function openReport() {
@@ -883,6 +892,12 @@
     <button type="button" class="quiet" onclick={tryExample}>Try the example</button>
     <button type="button" class="quiet" onclick={clearAll}>Clear</button>
   </div>
+  {#if !embedded && takesProfile(tool.id)}
+    <details class="batch" ontoggle={(e) => e.currentTarget.open && loadAircraft()}>
+      <summary>Aircraft profiles</summary>
+      {#if AircraftPanel}<AircraftPanel {tool} getInputs={args} {setInputs} />{:else}<p class="help">Loading…</p>{/if}
+    </details>
+  {/if}
   {#if !embedded && batchable}
     <details class="batch" ontoggle={(e) => e.currentTarget.open && loadBatch()}>
       <summary>Run many at once from a CSV</summary>

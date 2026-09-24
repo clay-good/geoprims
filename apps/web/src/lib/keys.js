@@ -18,7 +18,7 @@ export const SHORTCUTS = [
   ['↑ ↓ or Ctrl+N Ctrl+P', 'Move through palette results'],
   ['Enter', 'Open the selected result'],
   ['Ctrl+Enter or ⌘Enter', 'Open the selected result in a new tab'],
-  ['> in the palette', 'List actions: display modes, erase local data, and more'],
+  ['> in the palette', 'List actions: display modes, units, sounds, and more'],
 ];
 
 /** What a page shortcut says when this page cannot do it. */

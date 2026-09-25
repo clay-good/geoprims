@@ -1,0 +1,29 @@
+---
+// A workflow (add-job-workflows, web/workflows): a job on one page. The chain
+// runs through the core at build time with the worked example, so the answers
+// are in the HTML; WorkflowApp reruns it live as the reader changes an input.
+import Base from '../../../layouts/Base.astro';
+import PageHeader from '../../../components/PageHeader.astro';
+import WorkflowApp from '../../../components/WorkflowApp.svelte';
+import { breadcrumbs, catalog, clientTool, collection, WORKFLOWS, workflowGuides } from '../../../lib/catalog.mjs';
+export function getStaticPaths() {
+  return WORKFLOWS.map((w) => ({ params: { slug: w.slug } }));
+}
+const guide = (await workflowGuides()).find((w) => w.slug === Astro.params.slug);
+const workflow = WORKFLOWS.find((w) => w.slug === Astro.params.slug);
+const ids = [...new Set([...workflow.steps.map((s) => s.tool), ...workflow.inputs.map((i) => i.tool)])];
+const tools = Object.fromEntries(ids.map((id) => [id, clientTool(catalog.tools.find((t) => t.id === id))]));
+const operational = ids.some((id) => ['aviation', 'drone', 'navigation'].includes(id.split('.')[0]));
+const jsonld = [collection(guide.title, guide.route, ids.map((id) => catalog.tools.find((t) => t.id === id))), breadcrumbs([['geoprims', '/'], ['Workflows', '/workflows/'], [guide.title, guide.route]])];
+---
+<Base title={`${guide.title}: a workflow · geoprims`} description={guide.summary} canonical={guide.route} jsonld={jsonld}>
+  <PageHeader title={guide.title} purpose={guide.job}>
+    <p class="guide-meta">For {guide.audience.toLowerCase()} · {guide.steps.length} steps, worked out together from your values</p>
+  </PageHeader>
+  {operational && (
+    <p class="safety" role="note">
+      <span><strong>Planning and education aid. Not for primary navigation.</strong> Check every value before you rely on it. <a href="/disclaimer/">Full disclaimer</a></span>
+    </p>
+  )}
+  <WorkflowApp client:load workflow={workflow} guide={{ steps: guide.steps, assumptions: guide.assumptions }} tools={tools} />
+</Base>

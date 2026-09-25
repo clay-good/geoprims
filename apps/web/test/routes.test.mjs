@@ -24,7 +24,8 @@ test('every route the contract allows classifies', () => {
   assert.equal(classify('/aviation/altimetry/', idx), 'group');
   assert.equal(classify('/aviation/altimetry/density-altitude/', idx), 'tool');
   assert.equal(classify('/learn/what-is-density-altitude/', idx), 'explainer');
-  assert.equal(classify('/journeys/vfr-preflight/', idx), 'journey');
+  assert.equal(classify('/workflows/preflight-check/', idx), 'workflow');
+  assert.equal(classify('/workflows/', idx), 'workflow');
 });
 
 test('a page outside the route map fails the gate, naming the path', () => {

@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "from": "/journeys/vfr-preflight/",
+    "to": "/workflows/preflight-check/",
+    "since": "2026-09-25"
+  },
+  {
+    "from": "/journeys/vfr-cross-country/",
+    "to": "/workflows/vfr-cross-country/",
+    "since": "2026-09-25"
+  },
+  {
+    "from": "/journeys/ifr-approach-brief/",
+    "to": "/workflows/ifr-approach-brief/",
+    "since": "2026-09-25"
+  },
+  {
+    "from": "/journeys/drone-mapping-day/",
+    "to": "/workflows/mapping-flight/",
+    "since": "2026-09-25"
+  },
+  {
+    "from": "/journeys/gnss-to-state-plane/",
+    "to": "/workflows/gnss-to-state-plane/",
+    "since": "2026-09-25"
+  },
+  {
+    "from": "/journeys/boundary-retracement/",
+    "to": "/workflows/boundary-retracement/",
+    "since": "2026-09-25"
+  },
+  {
+    "from": "/journeys/lidar-bid/",
+    "to": "/workflows/lidar-bid/",
+    "since": "2026-09-25"
+  },
+  {
+    "from": "/journeys/index-to-area/",
+    "to": "/workflows/index-to-area/",
+    "since": "2026-09-25"
+  }
+]

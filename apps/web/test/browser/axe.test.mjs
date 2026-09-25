@@ -18,7 +18,7 @@ const PAGES = [
   '/navigation/geodesic/inverse/',
   '/indexing/h3/grid-disk/',
   '/survey/land/deed-plot/',
-  '/journeys/vfr-preflight/',
+  '/workflows/preflight-check/',
   '/sources/',
   '/accuracy/',
   '/404.html',

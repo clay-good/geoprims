@@ -3,7 +3,7 @@
     {
       "name": "geoprims_search",
       "title": "Search geoprims tools",
-      "description": "Find geoprims calculators (geodesy, navigation, aviation, drone, survey, indexing, time, units) by plain words, abbreviations, or tool id. Returns ranked ids with summaries. Numbers in the query fill inputs: prefill on the top result holds args for geoprims_run (\"density altitude 5000 ft 30C 29.80\"), and ambiguous lists values it would not guess. Experimental tools are hidden unless includeExperimental is true; hiddenExperimental counts them.",
+      "description": "Find geoprims calculators (geodesy, navigation, aviation, drone, survey, indexing, time, units) by plain words, abbreviations, or tool id. Returns ranked ids with summaries. Numbers in the query fill inputs: prefill on the top result holds args for geoprims_run (\"density altitude 5000 ft 30C 29.80\"), and ambiguous lists values it would not guess. Experimental tools are hidden unless includeExperimental is true; hiddenExperimental counts them. When the query names a whole job (\"plan a drone mapping flight\"), workflows lists matching workflow ids (workflow.<slug>): each runs several tools as one call through geoprims_run.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -53,7 +53,7 @@
     {
       "name": "geoprims_describe",
       "title": "Describe geoprims tools",
-      "description": "Get manifests for up to 20 tool ids. detail \"summary\" gives title and summary; \"schema\" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, the constants the tool assumes with their sources, and the limitation a simplified tool declares; \"examples\" adds the worked example.",
+      "description": "Get manifests for up to 20 tool or workflow ids. A workflow id (workflow.<slug>) gives its inputs, its steps, and the values it fixes. detail \"summary\" gives title and summary; \"schema\" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, the constants the tool assumes with their sources, and the limitation a simplified tool declares; \"examples\" adds the worked example.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -102,7 +102,7 @@
     {
       "name": "geoprims_run",
       "title": "Run a geoprims tool",
-      "description": "Run one tool by id. args follow the tool's input schema (see geoprims_describe); numbers may carry units as strings, like \"145 kts\". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call's values in it, and each intermediate result, exactly as the website shows it. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.",
+      "description": "Run one tool or workflow by id. For a workflow (workflow.<slug>), args are the workflow's inputs (omit any to use its example) and the result lists every step's tool, input, and result, stopping at a failed step. For a tool, args follow the tool's input schema (see geoprims_describe); numbers may carry units as strings, like \"145 kts\". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call's values in it, and each intermediate result, exactly as the website shows it. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.",
       "inputSchema": {
         "type": "object",
         "properties": {

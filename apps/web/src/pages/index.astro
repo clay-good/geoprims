@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { catalog, DOMAIN_BLURBS, JOURNEYS, DOMAIN_TITLES, exampleResult, route, tool as find } from '../lib/catalog.mjs';
+import { catalog, DOMAIN_BLURBS, WORKFLOWS, DOMAIN_TITLES, exampleResult, route, tool as find, workflowRoute } from '../lib/catalog.mjs';
 import { icon } from '../lib/icons.mjs';
 import { EXPLAINERS } from '../lib/learn.js';
 // One or two explainers per audience on the home page; the rest are a click away on /learn/.
@@ -104,11 +104,12 @@ const panel = await Promise.all(
 
   <section class="journeys" aria-labelledby="journeys-title">
     <div class="section-head">
-      <h2 id="journeys-title">Follow a job end to end</h2>
+      <h2 id="journeys-title">Do a whole job</h2>
+      <a class="section-link" href="/workflows/">All {WORKFLOWS.length} workflows →</a>
     </div>
     <ul class="journey-list">
-      {JOURNEYS.map((j) => (
-        <li><a href={`/journeys/${j.slug}/`}>{j.title}</a><p class="blurb">{j.summary}</p><span class="count">{j.steps.length} steps</span></li>
+      {WORKFLOWS.map((j) => (
+        <li><a href={workflowRoute(j)}>{j.title}</a><p class="blurb">{j.summary}</p><span class="count">{j.steps.length} steps</span></li>
       ))}
     </ul>
   </section>

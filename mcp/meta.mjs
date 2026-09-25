@@ -14,7 +14,7 @@ export const TOOLS = [
     name: 'geoprims_search',
     title: 'Search geoprims tools',
     description:
-      'Find geoprims calculators (geodesy, navigation, aviation, drone, survey, indexing, time, units) by plain words, abbreviations, or tool id. Returns ranked ids with summaries. Numbers in the query fill inputs: prefill on the top result holds args for geoprims_run ("density altitude 5000 ft 30C 29.80"), and ambiguous lists values it would not guess. Experimental tools are hidden unless includeExperimental is true; hiddenExperimental counts them.',
+      'Find geoprims calculators (geodesy, navigation, aviation, drone, survey, indexing, time, units) by plain words, abbreviations, or tool id. Returns ranked ids with summaries. Numbers in the query fill inputs: prefill on the top result holds args for geoprims_run ("density altitude 5000 ft 30C 29.80"), and ambiguous lists values it would not guess. Experimental tools are hidden unless includeExperimental is true; hiddenExperimental counts them. When the query names a whole job ("plan a drone mapping flight"), workflows lists matching workflow ids (workflow.<slug>): each runs several tools as one call through geoprims_run.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -32,7 +32,7 @@ export const TOOLS = [
     name: 'geoprims_describe',
     title: 'Describe geoprims tools',
     description:
-      'Get manifests for up to 20 tool ids. detail "summary" gives title and summary; "schema" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, the constants the tool assumes with their sources, and the limitation a simplified tool declares; "examples" adds the worked example.',
+      'Get manifests for up to 20 tool or workflow ids. A workflow id (workflow.<slug>) gives its inputs, its steps, and the values it fixes. detail "summary" gives title and summary; "schema" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, the constants the tool assumes with their sources, and the limitation a simplified tool declares; "examples" adds the worked example.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -48,7 +48,7 @@ export const TOOLS = [
     name: 'geoprims_run',
     title: 'Run a geoprims tool',
     description:
-      'Run one tool by id. args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call\'s values in it, and each intermediate result, exactly as the website shows it. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
+      'Run one tool or workflow by id. For a workflow (workflow.<slug>), args are the workflow\'s inputs (omit any to use its example) and the result lists every step\'s tool, input, and result, stopping at a failed step. For a tool, args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call\'s values in it, and each intermediate result, exactly as the website shows it. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -183,8 +183,40 @@ function bounds(list) {
 const bindValue = (v) =>
   v && typeof v === 'object' && typeof v.value === 'number' && typeof v.unit === 'string' ? `${v.value} ${v.unit}` : v;
 
-export function metaHandlers({ host, catalog, modules = [], limits }) {
+export function metaHandlers({ host, catalog, modules = [], limits, workflows = [], runChain = null }) {
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
+  // Workflows (add-job-workflows): a job as one call, run by the website's chain runner.
+  const flows = new Map(workflows.map((w) => [`workflow.${w.slug}`, w]));
+  const STOP = new Set(['the', 'and', 'for', 'with', 'from', 'into', 'how', 'what', 'my', 'your', 'our', 'can', 'get']);
+  const words = (text) => String(text ?? '').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !STOP.has(w));
+  /** The workflows a query names, best first: at least half its words, and two of them when it has more than two. */
+  const matchFlows = (query) => {
+    const q = [...new Set(words(query))];
+    if (!q.length) return [];
+    return [...flows.entries()]
+      .map(([id, w]) => {
+        const text = new Set(words(`${w.title} ${w.job} ${w.summary} ${w.audience} ${w.slug.replaceAll('-', ' ')}`));
+        const hit = q.filter((x) => text.has(x) || text.has(x.replace(/s$/, ''))).length;
+        return { id, title: w.title, job: w.job, score: hit / q.length, hit };
+      })
+      .filter((m) => m.score >= 0.5 && (m.hit >= 2 || q.length <= 2))
+      .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
+      .slice(0, 3)
+      .map(({ id, title, job }) => ({ id, title, job }));
+  };
+  const describeFlow = (id, w) => ({
+    id,
+    kind: 'workflow',
+    title: w.title,
+    audience: w.audience,
+    job: w.job,
+    inputs: w.inputs.map((i) => {
+      const f = byId.get(i.tool)?.inputs.properties[i.field] ?? {};
+      return { name: i.name, title: f.title, description: f.description, unit: f['x-unit'], example: i.example, ...(i.advanced ? { advanced: true } : {}) };
+    }),
+    steps: w.steps.map((s) => ({ tool: s.tool, why: s.why })),
+    fixed: w.steps.flatMap((s, step) => Object.entries(s.input ?? {}).filter(([, v]) => !(v && typeof v === 'object' && !Array.isArray(v) && ('from' in v || 'input' in v))).map(([name, value]) => ({ step, tool: s.tool, name, value }))),
+  });
   const run = async (id, args, context) => {
     const out = await host.invoke(id, JSON.stringify(args), context);
     return out === null ? null : JSON.parse(out);
@@ -246,7 +278,12 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
   };
 
   return {
-    geoprims_search: async (a) => searchRaw(a),
+    geoprims_search: async (a) => {
+      const out = await searchRaw(a);
+      const found = out.ok ? matchFlows(a?.query) : [];
+      if (found.length) out.result.workflows = found;
+      return out;
+    },
 
     geoprims_describe: async ({ ids, detail = 'schema' }) => {
       if (!Array.isArray(ids) || ids.length < 1 || ids.length > 20) return fail('INVALID_INPUT', 'ids must list 1 to 20 tool ids.', { field: '/ids' });
@@ -254,12 +291,38 @@ export function metaHandlers({ host, catalog, modules = [], limits }) {
       const tools = [];
       for (const id of ids) {
         const m = byId.get(id);
+        if (flows.has(id)) {
+          tools.push(describeFlow(id, flows.get(id)));
+          continue;
+        }
         tools.push(m ? describe(m, detail) : { id, error: { code: 'UNSUPPORTED', message: `There is no tool with id "${id}".`, suggestions: await suggest(id) } });
       }
       return { ok: true, result: { tools } };
     },
 
     geoprims_run: async ({ id, args, units, output, explain }, context) => {
+      if (flows.has(id) && runChain) {
+        const w = flows.get(id);
+        const known = new Set(w.inputs.map((i) => i.name));
+        const unknown = Object.keys(args ?? {}).filter((k) => !known.has(k));
+        if (unknown.length) return fail('INVALID_INPUT', `${id} takes no input "${unknown[0]}". Its inputs are ${[...known].join(', ')}.`, { field: `/args/${unknown[0]}` });
+        let chain;
+        try {
+          chain = await runChain(w, args ?? {}, (tool, input) => run(tool, input, context));
+        } catch (e) {
+          return fail('INTERNAL', e.message);
+        }
+        const steps = chain.steps.map((s) => ({ tool: s.tool, status: s.status, input: s.input, result: s.result, ...(s.status === 'waiting' ? { waitingOn: s.waitingOn } : {}) }));
+        const said = chain.steps.filter((s) => s.status === 'ok').map((s) => s.result.summary);
+        return chain.ok
+          ? { ok: true, result: { workflow: id, steps }, summary: said.join(' ') }
+          : (() => {
+              // The failed step's own error (its code and field), naming the step.
+              const f = chain.steps[chain.failed];
+              const e = f.result?.error ?? { code: 'INTERNAL', message: 'no result' };
+              return { ok: false, error: { ...e, message: `Step ${chain.failed + 1} (${f.tool}): ${e.message}`, step: chain.failed }, result: { workflow: id, steps } };
+            })();
+      }
       const m = byId.get(id);
       if (!m) {
         return fail('UNSUPPORTED', `There is no tool with id "${id}".`, {

@@ -4,7 +4,7 @@ import PageHeader from '../../../components/PageHeader.astro';
 import ListFilter from '../../../components/ListFilter.astro';
 import ToolCards from '../../../components/ToolCards.astro';
 import { listDescription } from '../../../lib/head.mjs';
-import { breadcrumbs, catalog, groupTitle, collection, DOMAIN_TITLES, hubFor, journeysWith, route } from '../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, groupTitle, collection, DOMAIN_TITLES, hubFor, workflowsWith, workflowRoute, route } from '../../../lib/catalog.mjs';
 export function getStaticPaths() {
   const seen = new Set();
   return catalog.tools
@@ -24,7 +24,7 @@ const lead = tools.find((t) => t.composedOf.length === 0) ?? tools[0];
 const description = hub.summary
   ? listDescription(hub.summary, tools.filter((t) => t.composedOf.length === 0).map((t) => t.title))
   : lead.summary.includes(':') ? `Exact ${noun} conversions${lead.summary.slice(lead.summary.indexOf(':'))}` : `Exact ${noun} conversions. ${lead.summary}`;
-const guides = journeysWith(tools.map((t) => t.id));
+const guides = workflowsWith(tools.map((t) => t.id));
 const jsonld = [collection(name, route(`${domain}.${group}`), tools.filter((t) => t.composedOf.length === 0)), breadcrumbs([['geoprims', '/'], [domainTitle, route(domain)], [name, route(`${domain}.${group}`)]])];
 ---
 <Base title={`${name} ${domain === 'units' ? 'converters' : 'calculators'} · ${domainTitle} · geoprims`} og={{ eyebrow: domainTitle, title: name }} description={description} canonical={route(`${domain}.${group}`)} jsonld={jsonld}>
@@ -52,8 +52,8 @@ const jsonld = [collection(name, route(`${domain}.${group}`), tools.filter((t) =
   )}
   {guides.length > 0 && (
     <section class="hub-journeys" aria-labelledby="journeys-title">
-      <h2 id="journeys-title">Guides that use these tools</h2>
-      <ul>{guides.map((j) => <li><a href={`/journeys/${j.slug}/`}>{j.title}</a>: {j.summary}</li>)}</ul>
+      <h2 id="journeys-title">Workflows that use these tools</h2>
+      <ul>{guides.map((j) => <li><a href={workflowRoute(j)}>{j.title}</a>: {j.summary}</li>)}</ul>
     </section>
   )}
 </Base>

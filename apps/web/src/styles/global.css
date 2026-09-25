@@ -783,6 +783,13 @@ table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color:
 .expect-label { display: block; }
 .journey-step .carried { color: var(--accent); font-size: 0.9rem; }
 .hub-journeys { margin-block-start: 2.5rem; }
+/* Workflows: the steps read as one plan, each answer first and its reason quieter. */
+.workflow-steps { gap: 0.9rem; margin-block-start: 1rem; }
+.workflow-steps .journey-step h3 { margin: 0.1rem 0 0.25rem; font-size: 1.05rem; }
+.workflow-steps .journey-step p { margin: 0.2rem 0; }
+.workflow-steps .journey-step .help { font-size: 0.86rem; color: var(--muted); }
+.workflow-steps .journey-step.waiting { opacity: 0.6; }
+.workflow-answer .actions { display: flex; gap: 0.5rem; margin-block-start: 1rem; }
 
 /* Print, last so it wins over the screen rules: one calculation sheet.
    Smaller type, tight rows, the answer beside the inputs, the proof in two

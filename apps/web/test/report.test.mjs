@@ -83,7 +83,7 @@ test('the slow note: a token older than the window is asked for again', () => {
 test('a page report from any page is one the Worker accepts, and names no GitHub issue', () => {
   const display = { theme: 'paper', unitProfile: 'default', viewportClass: 'desktop' };
   const site = { coreVersion: '0.1.0', buildHash: '0123456789abcdef' };
-  for (const pagePath of ['/', '/privacy/', '/aviation/altimetry/', '/journeys/vfr-preflight/', '/nope/404-path']) {
+  for (const pagePath of ['/', '/privacy/', '/aviation/altimetry/', '/workflows/preflight-check/', '/nope/404-path']) {
     const p = buildSitePayload({ site, note: 'The filter did nothing', kind: 'broken', display, pagePath: `${pagePath}#stale`, token: 't' });
     assert.deepEqual(Object.keys(p), KEYS);
     assert.equal(p.pagePath, pagePath, 'the fragment is dropped');

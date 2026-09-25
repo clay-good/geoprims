@@ -575,3 +575,33 @@ test('no toolset has more stable tools than it can list', () => {
     assert.ok(n <= MAX_PER_TOOLSET, `toolset ${name} matches ${n} stable tools, over the ${MAX_PER_TOOLSET}-tool cap: split it`);
   }
 });
+
+test('workflows: search finds the job, describe lists its inputs, run matches the website byte for byte', async () => {
+  const { runChain } = await import('../packages/runtime/src/chain.mjs');
+  const { workflows } = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8'));
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const invoke = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
+  const s = (await c.call('geoprims_search', { query: 'plan a drone mapping flight' })).structuredContent;
+  assert.equal(s.result.workflows?.[0]?.id, 'workflow.mapping-flight', JSON.stringify(s.result.workflows));
+  const none = (await c.call('geoprims_search', { query: 'knots to mph' })).structuredContent;
+  assert.equal(none.result.workflows, undefined, 'a single-tool query names no workflow');
+  const d = (await c.call('geoprims_describe', { ids: ['workflow.preflight-check'] })).structuredContent;
+  assert.equal(d.result.tools[0].kind, 'workflow');
+  assert.deepEqual(d.result.tools[0].inputs.map((i) => i.name), ['metar', 'elevation', 'runway', 'variation', 'max_crosswind']);
+  let reached = 0;
+  for (const w of workflows) {
+    const web = await runChain(w, {}, invoke);
+    const r = (await c.call('geoprims_run', { id: `workflow.${w.slug}` })).structuredContent;
+    assert.equal(r.ok, true, `${w.slug}: ${JSON.stringify(r.error)}`);
+    assert.equal(JSON.stringify(r.result.steps.map((x) => x.result)), JSON.stringify(web.steps.map((x) => x.result)), `${w.slug}: the agent and the page disagree`);
+    reached++;
+  }
+  assert.equal(reached, workflows.length);
+  const bad = (await c.call('geoprims_run', { id: 'workflow.preflight-check', args: { metar: 'not a metar' } })).structuredContent;
+  assert.equal(bad.ok, false);
+  assert.equal(bad.error.step, 0);
+  assert.match(bad.error.message, /^Step 1 \(aviation\.weather\.metar-decode\): /);
+  assert.equal(bad.result.steps[1].status, 'waiting');
+  const typo = (await c.call('geoprims_run', { id: 'workflow.preflight-check', args: { rwy: '25' } })).structuredContent;
+  assert.equal(typo.error.code, 'INVALID_INPUT');
+});

@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../../../packages/runtime/src/node.mjs';
-import { runJourney } from './journeys.mjs';
+import { assumptions, runChain } from '../../../../packages/runtime/src/chain.mjs';
 import { vectorFor } from './worked.mjs';
 import { readSignoffs, reviewSentence } from '../../../../tools/trust/signoffs.mjs';
 import { entriesFor, KINDS, readChangelog } from '../../../../tools/trust/changelog.mjs';
@@ -295,34 +295,45 @@ export function hubFor(domain, group) {
   };
 }
 
-// Learning guides (web/tool-docs): each journey in data/journeys.json run
-// through the core at build time, every step with the permalink that opens its
-// tool holding those inputs and naming the step it came from. A step that
-// fails stops the build (runJourney throws).
-export const JOURNEYS = JSON.parse(readFileSync(join(root, 'data/journeys.json'), 'utf8')).journeys;
+// Workflows (add-job-workflows): each in data/workflows.json run through the
+// core at build time with its worked example, so the page carries real answers
+// before any script runs, and every step links to its tool holding those
+// inputs and naming the step it came from. A step that fails stops the build.
+export const WORKFLOWS = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8')).workflows;
+/** The eight learning-guide journeys of plan-launch-and-value-proof L3, now workflows. */
+export const JOURNEYS = WORKFLOWS.filter((w) => w.journey);
+export const workflowRoute = (w) => `/workflows/${w.slug}/`;
+/** The permalink fragment that opens `tool` holding `input`, naming the tool it came from. */
+async function toolLink(link, tool, input, came) {
+  const enc = JSON.parse(await link.callString('gp_link_encode', JSON.stringify({ state: { i: input, ...(came ? { c: came } : {}) } })));
+  if (!enc.ok) throw new Error(`${tool}: ${enc.error.message}`);
+  return `${route(tool)}#${enc.result.fragment}`;
+}
 let guides;
-export function journeyGuides() {
+export function workflowGuides() {
   guides ??= (async () => {
     const link = await host.module('link');
     const invoke = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
     const out = [];
-    for (const j of JOURNEYS) {
-      const steps = await runJourney(j, invoke);
-      for (const s of steps) {
-        const came = s.carried.length ? steps[s.carried[0].from].tool : undefined;
-        const enc = JSON.parse(await link.callString('gp_link_encode', JSON.stringify({ state: { i: s.input, ...(came ? { c: came } : {}) } })));
-        if (!enc.ok) throw new Error(`${j.slug}: ${s.tool}: ${enc.error.message}`);
-        s.href = `${route(s.tool)}#${enc.result.fragment}`;
-        s.title = catalog.tools.find((t) => t.id === s.tool).title;
+    for (const w of WORKFLOWS) {
+      const run = await runChain(w, {}, invoke);
+      if (!run.ok) {
+        const f = run.steps[run.failed];
+        throw new Error(`${w.slug} step ${run.failed + 1} (${f.tool}) failed: ${f.result?.error?.message ?? 'no result'}`);
       }
-      out.push({ ...j, steps, route: `/journeys/${j.slug}/` });
+      const steps = [];
+      for (const s of run.steps) {
+        const came = s.carried.length ? run.steps[s.carried[0].from].tool : undefined;
+        steps.push({ ...s, href: await toolLink(link, s.tool, s.input, came), title: catalog.tools.find((t) => t.id === s.tool).title });
+      }
+      out.push({ ...w, steps, route: workflowRoute(w), assumptions: assumptions(w) });
     }
     return out;
   })();
   return guides;
 }
-/** The journeys a tool appears in, for hub and home links. */
-export const journeysWith = (ids) => JOURNEYS.filter((j) => j.steps.some((s) => ids.includes(s.tool)));
+/** The workflows a tool appears in, for hub and home links. */
+export const workflowsWith = (ids) => WORKFLOWS.filter((w) => w.steps.some((s) => ids.includes(s.tool)));
 
 // The golden vector a tool's worked example is, if it is one (9.1); the build
 // gate (scripts/examples.mjs) has already checked the tool agrees with it.

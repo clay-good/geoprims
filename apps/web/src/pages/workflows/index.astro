@@ -1,0 +1,21 @@
+---
+// Every workflow (add-job-workflows, routes-and-urls "Workflow routes"), by audience.
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { breadcrumbs, WORKFLOWS, workflowRoute } from '../../lib/catalog.mjs';
+const audiences = [...new Set(WORKFLOWS.map((w) => w.audience))];
+const jsonld = [breadcrumbs([['geoprims', '/'], ['Workflows', '/workflows/']])];
+---
+<Base title="Workflows: whole jobs, worked out together · geoprims" description="Plan a flight, a mapping mission, or a survey conversion on one page: enter what the job needs and every step is worked out from your values." canonical="/workflows/" jsonld={jsonld}>
+  <PageHeader title="Workflows" purpose="A whole job on one page. Enter what the job needs, and every step is worked out from your values." />
+  {audiences.map((a) => (
+    <section class="group" aria-labelledby={`wf-${a.toLowerCase().replace(/[^a-z]+/g, '-')}`}>
+      <h2 id={`wf-${a.toLowerCase().replace(/[^a-z]+/g, '-')}`}>{a}</h2>
+      <ul class="journey-list">
+        {WORKFLOWS.filter((w) => w.audience === a).map((w) => (
+          <li><a href={workflowRoute(w)}>{w.title}</a><p class="blurb">{w.job}</p><span class="count">{w.steps.length} steps</span></li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>

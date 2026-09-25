@@ -20,4 +20,5 @@ cpSync(join(root, 'core/vectors'), join(dist, 'vectors'), { recursive: true });
 cpSync(join(root, 'assets/registry.json'), join(dist, 'assets/registry.json'));
 cpSync(join(root, 'assets/data'), join(dist, 'assets/data'), { recursive: true });
 cpSync(join(root, 'data/report-limits.json'), join(dist, 'data/report-limits.json'));
+cpSync(join(root, 'data/workflows.json'), join(dist, 'data/workflows.json'));
 console.log(`wrote ${dist}`);

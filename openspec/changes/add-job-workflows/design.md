@@ -37,7 +37,7 @@ A step's own visual stays on its tool page. The workflow draws only the combined
 The chain stops at the failed step. That step shows the tool's own error and field, and later steps show "Waiting for step N". Nothing is guessed.
 
 ### D6. MCP surface
-Workflows are catalog entries of kind `workflow` with id `workflow.<slug>`. They are searchable and describable, and `geoprims_run` runs them. The result lists each step (tool id, input, result) plus the workflow's summary. The default meta-tool surface (`agent/mcp-server`) is unchanged: no new top-level tools.
+Workflows have ids `workflow.<slug>`. `geoprims_search` lists matching ones in its own `workflows` field (so tool ranking and the search-accuracy baseline are unchanged), `geoprims_describe` returns their inputs, steps, and fixed values, and `geoprims_run` runs them. A failed step returns that step's own error code, with the step named. The result lists each step (tool id, input, result) plus the workflow's summary. The default meta-tool surface (`agent/mcp-server`) is unchanged: no new top-level tools.
 
 ## Workflow inventory
 

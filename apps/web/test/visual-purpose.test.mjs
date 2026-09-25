@@ -69,3 +69,18 @@ test('a tool that declares a vector diagram draws one from its example', async (
   assert.deepEqual(missing, [], 'declared a vector diagram but draws none');
   assert.ok(declared.length >= 20, `${declared.length} vector-diagram tools`);
 });
+
+test('every workflow’s visual draws from its example', async () => {
+  const { runChain } = await import('../../../packages/runtime/src/chain.mjs');
+  const { workflows } = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8'));
+  for (const w of workflows) {
+    const run = await runChain(w, {}, invoke);
+    const s = run.steps[w.visual.step];
+    const t = catalog.tools.find((x) => x.id === s.tool);
+    // The page shows the step's diagram when it has one, else its map.
+    const drawn = !!diagram(t.id, s.input, s.result) ||
+      (mapsTool(t) && (await buildLayers(t, s.input, s.result, (i) => invoke('navigation.geodesic.waypoints', i), cells)).length > 0);
+    assert.ok(drawn, `${w.slug}: its visual (step ${w.visual.step + 1}, ${t.id}) draws nothing`);
+  }
+  assert.ok(workflows.length >= 9);
+});

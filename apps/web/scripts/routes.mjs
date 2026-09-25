@@ -34,6 +34,7 @@ export const FIXED = new Map([
   ['/privacy/', 'trust'],
   ['/security/', 'trust'],
   ['/learn/', 'explainer'],
+  ['/workflows/', 'workflow'],
   ['/offline/', 'app'],
 ]);
 
@@ -67,7 +68,7 @@ export function classify(route, idx) {
   if (VERSION_ROUTE.test(route)) return 'verification';
   if (!STYLE.test(route)) return null;
   if (/^\/learn\/[a-z0-9-]+\/$/.test(route)) return 'explainer';
-  if (/^\/journeys\/[a-z0-9-]+\/$/.test(route)) return 'journey';
+  if (/^\/workflows\/[a-z0-9-]+\/$/.test(route)) return 'workflow';
   const path = route.slice(1, -1);
   const depth = path.split('/').length;
   if (depth === 1 && idx.domains.has(path)) return 'domain';

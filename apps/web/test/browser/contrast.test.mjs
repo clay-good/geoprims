@@ -17,7 +17,7 @@ const PAGES = [
   '/geodesy/magnetic/declination/',
   '/indexing/h3/grid-disk/',
   '/survey/curves/vertical-curve/',
-  '/journeys/drone-mapping-day/',
+  '/workflows/mapping-flight/',
   '/sources/',
 ];
 

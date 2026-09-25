@@ -3,7 +3,7 @@
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import { AUDIENCES, EXPLAINERS } from '../../lib/learn.js';
-import { breadcrumbs, JOURNEYS } from '../../lib/catalog.mjs';
+import { breadcrumbs, WORKFLOWS, workflowRoute } from '../../lib/catalog.mjs';
 
 const byAudience = AUDIENCES.map((a) => [a, EXPLAINERS.filter((e) => e.audience === a)]).filter(([, list]) => list.length);
 const jsonld = [
@@ -33,11 +33,11 @@ const jsonld = [
     </section>
   ))}
   <section class="group" aria-labelledby="learn-journeys">
-    <h2 id="learn-journeys">Step-by-step guides</h2>
-    <p class="help">A job from start to finish, each step opening its tool with the values already filled in.</p>
+    <h2 id="learn-journeys">Workflows</h2>
+    <p class="help">A whole job on one page: enter what the job needs, and every step is worked out from your values.</p>
     <ul class="tools">
-      {JOURNEYS.map((j) => (
-        <li><a href={`/journeys/${j.slug}/`}>{j.title}</a><p>{j.summary}</p></li>
+      {WORKFLOWS.map((j) => (
+        <li><a href={workflowRoute(j)}>{j.title}</a><p>{j.summary}</p></li>
       ))}
     </ul>
   </section>

@@ -45,21 +45,23 @@ export function findDist() {
 }
 
 async function loadRuntime() {
-  const bundled = join(here, 'dist', 'runtime', 'worker-host.mjs');
-  const source = join(here, '..', 'packages', 'runtime', 'src', 'worker-host.mjs');
-  return import(existsSync(bundled) ? bundled : source);
+  const bundled = join(here, 'dist', 'runtime');
+  const dir = existsSync(join(bundled, 'worker-host.mjs')) ? bundled : join(here, '..', 'packages', 'runtime', 'src');
+  // The chain runner is the one the website uses, so a workflow's steps match the page's.
+  return { ...(await import(join(dir, 'worker-host.mjs'))), ...(await import(join(dir, 'chain.mjs'))) };
 }
 
 export async function createServer(opts = {}) {
   const dist = findDist();
   if (!dist) return null;
   const catalog = JSON.parse(readFileSync(join(dist, 'catalog', 'v1.json'), 'utf8'));
-  const { workerHost } = await loadRuntime();
+  const { workerHost, runChain } = await loadRuntime();
   const host = workerHost(join(dist, 'wasm'), { timeoutMs: opts.timeoutMs ?? 10_000, maxBytes: MAX_MESSAGE_BYTES });
   await host.searchLoad(JSON.stringify(catalog.tools));
   const modules = JSON.parse(readFileSync(join(dist, 'wasm', 'modules.json'), 'utf8')).modules;
   const limits = JSON.parse(readFileSync(findData(dist, 'report-limits.json'), 'utf8'));
-  const handlers = metaHandlers({ host, catalog, modules, limits });
+  const workflows = JSON.parse(readFileSync(findData(dist, 'workflows.json'), 'utf8')).workflows;
+  const handlers = metaHandlers({ host, catalog, modules, limits, workflows, runChain });
   const direct = opts.toolsets ? directTools(catalog, opts.toolsets, ANNOTATIONS) : [];
   if (opts.toolsets && !direct.length) log(opts, `toolsets ${opts.toolsets.join(', ')} have no stable tools yet`);
   const listed = [...(opts.noMeta ? [] : TOOLS), ...direct.map(({ id, ...t }) => t)];

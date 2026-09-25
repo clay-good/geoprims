@@ -762,6 +762,14 @@ fn run_hover(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- endurance
 
+/// The energy a pack may use and what is left after the reserve, as the
+/// endurance tool computes them: (usable, flyable) = (E × usable share ×
+/// (1 − derating), usable × (1 − reserve)). Shares are fractions.
+pub fn usable_energy(e: f64, usable: f64, derate: f64, reserve: f64) -> (f64, f64) {
+    let avail = e * usable * (1.0 - derate);
+    (avail, avail * (1.0 - reserve))
+}
+
 /// Heuristic cold derating: 0 at or above 20 °C, 20% at 0 °C, linear, capped at 50%.
 pub fn cold_derating(t_c: f64) -> f64 {
     if t_c >= 20.0 {
@@ -1076,8 +1084,7 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         (None, None) => 0.0,
     };
-    let avail = e * usable * (1.0 - derate);
-    let flyable = avail * (1.0 - reserve);
+    let (avail, flyable) = usable_energy(e, usable, derate, reserve);
     let k = ctx.number("peukert")?;
     let rated_time = match ctx.quantity("rated_time")? {
         Some(_) if k.is_none() => {
@@ -1956,6 +1963,15 @@ pub static RTH_BUDGET: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+/// The trip home against a steady headwind `w` (negative for a tailwind), as
+/// the return-to-home tool computes it: (groundspeed, time, energy) =
+/// (V − w, d / (V − w), P × time). The caller checks that V exceeds |w|.
+pub fn return_home(d: f64, v: f64, w: f64, p: f64) -> (f64, f64, f64) {
+    let gs = v - w;
+    let t = d / gs;
+    (gs, t, p * t)
+}
+
 fn run_rth(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let d = positive(ctx, "distance", "Distance")?;
     let v = positive(ctx, "airspeed", "Airspeed")?;
@@ -1974,9 +1990,7 @@ fn run_rth(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/headwind"));
     }
-    let gs = v - w;
-    let t = d / gs;
-    let need = p * t;
+    let (gs, t, need) = return_home(d, v, w, p);
     let j = |x: f64| q(x, QT::Energy, "J");
     let round = (e - res).max(0.0) / (p * (1.0 / (v + w) + 1.0 / (v - w)));
     Ok(Json::obj(vec![

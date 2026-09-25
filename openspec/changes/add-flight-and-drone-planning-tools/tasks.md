@@ -1,12 +1,12 @@
 # Tasks
 
-- [ ] 1 Add the ETP/PNR and wind-profile sources to `data/sources-ledger.json` at their current editions, read in full → verify: the ledger gate passes, and each row's `verificationNote` names the section read
+- [ ] 1 Add the ETP/PNR and wind-profile sources to `data/sources-ledger.json` at their current editions, read in full → verify: the ledger gate passes, and each row's `verificationNote` names the section read (built: the wind-profile half: `nrel-small-wind-site` (NREL/TP-5000-63696, section 5.3.2 and Table 1) and `nrel-wind-resource-handbook` (NREL/SR-440-22223, page 3-3, the 1/7th power law), both read in full at docs.nlr.gov; neither prints a worked numeric example; pending: the ETP/PNR source)
 - [ ] 2 `aviation.flight-plan.nav-log` → verify: PHAK chapter 16 vector; every leg's heading and groundspeed equal `heading-groundspeed` on the same inputs; antimeridian and single-leg cases
 - [ ] 3 `aviation.performance.climb-plan` → verify: PHAK vector; zero-climb (field at cruise) returns zero time with a note
 - [ ] 4 `aviation.performance.etp-pnr` → verify: the source's worked example; with no wind, the ETP is at mid-leg exactly; a headwind moves the ETP toward destination
-- [ ] 5 `drone.mission.sorties` → verify: a hand-worked 3-sortie grid; one sortie when the path fits one battery; an error naming the waypoint when a single leg cannot be flown out and back
-- [ ] 6 `drone.ops.wind-limit` → verify: published power-law example; at report height the wind is unchanged
-- [ ] 7 `drone.ops.vlos-check` → verify: distances match GeographicLib `GeodSolve`; waypoints exactly at the range count as inside
-- [ ] 8 `drone.photogrammetry.gcp-plan` → verify: ASPRS table rows; every suggested point lies inside the polygon
-- [ ] 9 Visuals from the proposal table → verify: `visual-purpose.test.mjs` passes with each new tool reached
-- [ ] 10 Derivation notes, citations, hubs, glossary, search questions for each tool → verify: the full gate sequence, and each tool's own questions rank it first
+- [x] 5 `drone.mission.sorties` → verify: a hand-worked 3-sortie grid; one sortie when the path fits one battery; an error naming the waypoint when a single leg cannot be flown out and back
+- [ ] 6 `drone.ops.wind-limit` → verify: published power-law example; at report height the wind is unchanged (built: the power law with NREL's terrain exponents, gust scaling, the limit from a rating or an airspeed and margin, and the report-height scenario; pending: a published numeric example, since none of the free NREL and NOAA sources read prints one, so the vectors evaluate the printed law in Python)
+- [x] 7 `drone.ops.vlos-check` → verify: distances match GeographicLib `GeodSolve`; waypoints exactly at the range count as inside
+- [x] 8 `drone.photogrammetry.gcp-plan` → verify: ASPRS table rows; every suggested point lies inside the polygon
+- [ ] 9 Visuals from the proposal table → verify: `visual-purpose.test.mjs` passes with each new tool reached (built: the four drone visuals: sorties drawn one line per battery with the swap points marked, the VLOS ring with the waypoints beyond it, the GCP and checkpoint spots over the area, and the wind-limit bar; pending: the three aviation visuals)
+- [ ] 10 Derivation notes, citations, hubs, glossary, search questions for each tool → verify: the full gate sequence, and each tool's own questions rank it first (built: for the four drone tools; pending: the three aviation tools)

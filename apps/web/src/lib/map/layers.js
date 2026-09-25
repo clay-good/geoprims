@@ -69,6 +69,33 @@ export function outputPath(result, field) {
   return pts;
 }
 
+/**
+ * A flight path split into its parts: rows that carry a `part` number (one
+ * battery's sortie, say) break into one line per run of the same part, so
+ * each flight can be drawn apart from its neighbors. Rows without one are a
+ * single part.
+ */
+export function outputParts(result, field) {
+  const rows = result?.result?.[field];
+  if (!Array.isArray(rows) || !rows.some((r) => typeof r?.part === 'number')) {
+    const pts = outputPath(result, field);
+    return pts.length ? [pts] : [];
+  }
+  const parts = [];
+  let key = null;
+  for (const row of rows) {
+    const lat = numberOf(row?.lat?.value ?? row?.lat);
+    const lon = numberOf(row?.lon?.value ?? row?.lon);
+    if (lat === null || lon === null) continue;
+    if (row.part !== key || !parts.length) {
+      parts.push([]);
+      key = row.part;
+    }
+    parts[parts.length - 1].push([lon, lat]);
+  }
+  return parts;
+}
+
 /** The most turn points a path marks; longer paths show direction only. */
 export const MAX_STOPS = 400;
 
@@ -133,21 +160,30 @@ export async function buildLayers(tool, args, result, densify, cells) {
   // A generated flight path (a survey grid, corridor, orbit, or facade scan):
   // the output waypoints in order, with direction arrows and turn points.
   let pathDrawn = false;
+  let inParts = false;
   if (!two) {
     for (const v of tool.visualization ?? []) {
       const field = (v.kind === 'line-geodesic' || v.kind === 'line-rhumb') && mapOf(v.map).path;
-      const pts = field ? outputPath(result, field) : [];
-      if (pts.length < 2) continue;
-      layers.push({ kind: 'line', role: 'result', points: pts, arrows: true, stops: pts.length <= MAX_STOPS });
-      layers.push({ kind: 'point', role: 'result', points: [pts[0]], label: 'Start' });
+      // A path in parts (a mission's sorties) draws each part as its own
+      // line, alternating the accent and the neutral so neighbors stand apart.
+      const parts = (field ? outputParts(result, field) : []).filter((p) => p.length >= 2);
+      if (!parts.length) continue;
+      const n = parts.reduce((k, p) => k + p.length, 0);
+      parts.forEach((pts, i) => layers.push({ kind: 'line', role: i % 2 ? 'input' : 'result', points: pts, arrows: true, stops: n <= MAX_STOPS }));
+      layers.push({ kind: 'point', role: 'result', points: [parts[0][0]], label: 'Start' });
       pathDrawn = true;
+      inParts ||= parts.length > 1;
     }
     // Where the camera fires along that path, when the tool reports it: the
     // photos are the mission's product, so they are drawn as their own points.
+    // Marks are the few points the answer is about (swap points, waypoints
+    // out of sight, ground control), drawn full size.
     for (const v of tool.visualization ?? []) {
-      const field = v.kind === 'point' && mapOf(v.map).points;
-      const shots = field ? outputPath(result, field) : [];
+      const map = v.kind === 'point' ? mapOf(v.map) : {};
+      const shots = map.points ? outputPath(result, map.points) : [];
       if (shots.length) layers.push({ kind: 'point', role: 'detail', points: shots });
+      const marks = map.marks ? outputPath(result, map.marks) : [];
+      if (marks.length) layers.push({ kind: 'point', role: 'result', points: marks });
     }
     // What the path was planned over: an area (rows with rings) or a line (a
     // corridor's centerline, a facade's wall), drawn as the input.
@@ -162,8 +198,9 @@ export async function buildLayers(tool, args, result, densify, cells) {
           const line = args[name].map((r) => [numberOf(r.lon), numberOf(r.lat)]).filter((q) => q.every((x) => x !== null));
           // A route's waypoints are the path itself; drawing them again as the
           // input would lay the same line over itself in two roles.
+          // So are a mission's sorties, which fly every input waypoint.
           const drawn = layers.find((l) => l.kind === 'line' && l.role === 'result')?.points ?? [];
-          const same = drawn.length === line.length && line.every((q, i) => Math.abs(q[0] - drawn[i][0]) < 1e-9 && Math.abs(q[1] - drawn[i][1]) < 1e-9);
+          const same = inParts || (drawn.length === line.length && line.every((q, i) => Math.abs(q[0] - drawn[i][0]) < 1e-9 && Math.abs(q[1] - drawn[i][1]) < 1e-9));
           if (line.length >= 2 && !same) layers.push({ kind: 'line', role: 'input', points: line });
         }
         break;
@@ -232,7 +269,8 @@ export async function buildLayers(tool, args, result, densify, cells) {
   const drawn = (tool.visualization ?? []).find((v) => v.kind === 'polygon' && mapOf(v.map).rings);
   const outRings = drawn ? outputRings(result, mapOf(drawn.map).rings) : [];
   if (outRings.length) {
-    const input = rings(tool, args).filter((r) => r.length >= 3);
+    // Under a flight path the input list is the path, already drawn, not an area.
+    const input = pathDrawn ? [] : rings(tool, args).filter((r) => r.length >= 3);
     if (input.length && args.shape !== 'line') layers.push({ kind: 'polygon', role: 'input', rings: input });
     layers.push({ kind: 'polygon', role: 'result', rings: outRings });
   } else if (kinds.has('polygon')) {

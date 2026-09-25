@@ -74,6 +74,10 @@
       "severity": "caution",
       "message": "Part of the camera's view reaches the horizon, so that part of the footprint is unbounded."
     },
+    "BEYOND_VISUAL_RANGE": {
+      "severity": "caution",
+      "message": "A waypoint is farther from the pilot than the visual range."
+    },
     "BUFFER_ACCURACY": {
       "severity": "caution",
       "message": "The buffer's boundary strays from the distance by more than its tolerance."
@@ -181,6 +185,10 @@
     "GRID_MISMATCH": {
       "severity": "accuracy",
       "message": "The grids do not match."
+    },
+    "GUST_EXCEEDS_RATING": {
+      "severity": "caution",
+      "message": "The gust at flying height is over the drone's wind limit."
     },
     "HEURISTIC_DERATING": {
       "severity": "accuracy",
@@ -373,6 +381,10 @@
     "WEB_MERCATOR_CLAMPED": {
       "severity": "info",
       "message": "Latitude was clamped to the Web Mercator limit."
+    },
+    "WIND_EXCEEDS_RATING": {
+      "severity": "caution",
+      "message": "The wind at flying height is over the drone's wind limit."
     }
   }
 }

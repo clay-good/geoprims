@@ -457,6 +457,16 @@
       ]
     },
     {
+      "id": "gcp",
+      "term": "GCP",
+      "expansion": "ground control point",
+      "definition": "A marked point on the ground whose position is surveyed, used to tie aerial imagery to real-world coordinates. Checkpoints are surveyed the same way but kept out of processing, to test the result.",
+      "source": "asprs-pas",
+      "relatedTools": [
+        "drone.photogrammetry.gcp-plan"
+      ]
+    },
+    {
       "id": "georef",
       "term": "GEOREF",
       "expansion": "World Geographic Reference System",

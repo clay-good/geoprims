@@ -5,6 +5,7 @@
 pub mod asprs;
 pub mod export;
 pub mod facade;
+pub mod gcp;
 pub mod geofence;
 pub mod links;
 pub mod mission;
@@ -12,6 +13,7 @@ pub mod oblique;
 pub mod ops;
 pub mod power;
 pub mod sensing;
+pub mod sorties;
 pub mod terrain;
 
 use gp_base::ErrorCode;
@@ -1046,6 +1048,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &ops::KINETIC_ENERGY,
     &ops::EASA_SUBCATEGORY,
     &ops::VLOS,
+    &ops::WIND_LIMIT,
+    &ops::VLOS_CHECK,
+    &gcp::GCP_PLAN,
     &sensing::DATASET_SIZE,
     &sensing::THERMAL_FOOTPRINT,
     &sensing::LIDAR_PLAN,
@@ -1054,6 +1059,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &mission::IMAGE_COUNT,
     &mission::CORRIDOR,
     &mission::ORBIT,
+    &sorties::SORTIES,
 ];
 
 pub static REGISTRY: Registry = Registry {

@@ -314,3 +314,53 @@ test('layers: a survey grid draws its photo trigger points along the flight path
     assert.ok(lon >= minLon - 1e-6 && lon <= maxLon + 1e-6 && lat >= minLat - 1e-6 && lat <= maxLat + 1e-6, `a trigger point lies off the path's extent`);
   }
 });
+
+test('layers: mission plans draw sorties apart, the swap points, the range ring, and ground control', async () => {
+  // add-flight-and-drone-planning-tools 9: each drone planning tool draws what
+  // its answer is about, from the core's own result.
+  const { buildLayers, outputParts } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const run = async (id) => {
+    const tool = catalog.tools.find((t) => t.id === id);
+    const args = tool.examples[0].input;
+    const result = JSON.parse(await host.invoke(id, JSON.stringify(args)));
+    assert.ok(result.ok, id);
+    return { args, result, layers: await buildLayers(tool, args, result, async () => null, null) };
+  };
+  // Sorties: one line per battery, alternating accent and neutral, each from
+  // home and back; the swap points marked; the input waypoints not drawn again.
+  const s = await run('drone.mission.sorties');
+  const flights = s.layers.filter((l) => l.kind === 'line');
+  assert.equal(flights.length, s.result.result.batteries);
+  assert.deepEqual(flights.map((l) => l.role), ['result', 'input', 'result']);
+  for (const f of flights) assert.deepEqual(f.points[0], f.points.at(-1), 'a sortie starts and ends at home');
+  assert.deepEqual(outputParts(s.result, 'path').map((p) => p.length), flights.map((l) => l.points.length));
+  const swaps = s.layers.find((l) => l.kind === 'point' && l.role === 'result' && !l.label);
+  assert.equal(swaps.points.length, s.result.result.swap_points.length);
+  assert.ok(s.layers.some((l) => l.kind === 'point' && l.role === 'input'), 'home is drawn where it can be dragged');
+  // VLOS: the ring as the answer, the mission path, and the waypoints out of
+  // sight, with no stray polygon made of the waypoint list.
+  const v = await run('drone.ops.vlos-check');
+  assert.deepEqual(v.layers.filter((l) => l.kind === 'polygon').map((l) => [l.role, l.rings[0].length]), [['result', 72]]);
+  const beyond = v.layers.find((l) => l.kind === 'point' && l.role === 'result' && !l.label);
+  assert.equal(beyond.points.length, v.result.result.beyond_count);
+  assert.ok(v.layers.some((l) => l.kind === 'line' && l.role === 'result'));
+  // GCP plan: the area, the ground control marked, the checkpoints as detail.
+  const g = await run('drone.photogrammetry.gcp-plan');
+  assert.equal(g.layers.find((l) => l.kind === 'point' && l.role === 'result').points.length, g.result.result.gcps);
+  assert.equal(g.layers.find((l) => l.kind === 'point' && l.role === 'detail').points.length, g.result.result.checkpoints);
+  assert.ok(g.layers.some((l) => l.kind === 'polygon'));
+});
+
+test('outputParts splits a path by its part column and keeps a plain path whole', async () => {
+  const { outputParts } = await import('../src/lib/map/layers.js');
+  const row = (lat, lon, part) => ({ lat: { value: lat }, lon: { value: lon }, ...(part === undefined ? {} : { part }) });
+  const parts = { ok: true, result: { path: [row(0, 0, 1), row(0, 1, 1), row(0, 0, 1), row(0, 0, 2), row(1, 1, 2), row(0, 0, 2)] } };
+  assert.deepEqual(outputParts(parts, 'path'), [[[0, 0], [1, 0], [0, 0]], [[0, 0], [1, 1], [0, 0]]]);
+  const plain = { ok: true, result: { path: [row(0, 0), row(0, 1)] } };
+  assert.deepEqual(outputParts(plain, 'path'), [[[0, 0], [1, 0]]]);
+  assert.deepEqual(outputParts({ ok: true, result: {} }, 'path'), []);
+});

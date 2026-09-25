@@ -60,7 +60,11 @@ fn catalog_examples_vectors() {
     let mut failures = manifest::lint(
         TOOLS,
         &taxonomy,
-        &["navigation.los.fresnel", "geodesy.geoid.geoid-height"],
+        &[
+            "navigation.los.fresnel",
+            "geodesy.geoid.geoid-height",
+            "aviation.weather.metar-decode",
+        ],
     );
     let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {

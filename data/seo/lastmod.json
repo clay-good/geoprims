@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "9d39a8c95aea5bac",
-    "lastmod": "2026-09-24"
+    "hash": "22fb81709a5568bc",
+    "lastmod": "2026-09-25"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -132,43 +132,43 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "e8dfee9c6c483ff3",
-    "lastmod": "2026-09-24"
+    "hash": "c88bf2d26f3656e1",
+    "lastmod": "2026-09-25"
   },
   "/drone/links/": {
     "hash": "ae23d27627500d3e",
     "lastmod": "2026-09-23"
   },
   "/drone/mission/": {
-    "hash": "25b5130fc3599e7f",
-    "lastmod": "2026-09-23"
+    "hash": "6f8b8596b58fdeb7",
+    "lastmod": "2026-09-25"
   },
   "/drone/mission/survey-grid/": {
-    "hash": "c348dcc134899c41",
-    "lastmod": "2026-09-24"
+    "hash": "8e322730f79cb512",
+    "lastmod": "2026-09-25"
   },
   "/drone/ops/": {
-    "hash": "082dadfef285c97a",
-    "lastmod": "2026-09-23"
+    "hash": "255589103218d949",
+    "lastmod": "2026-09-25"
   },
   "/drone/ops/part107-altitude/": {
-    "hash": "cf2e3111e017bafc",
+    "hash": "fcd1ce7e42e79582",
     "lastmod": "2026-09-25"
   },
   "/drone/photogrammetry/": {
-    "hash": "ffeb69ef09fa8f01",
-    "lastmod": "2026-09-24"
+    "hash": "b8cc7ac0a9a2c4a0",
+    "lastmod": "2026-09-25"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
-    "hash": "54188e007132daf4",
+    "hash": "6a1cbd2b98ae7810",
     "lastmod": "2026-09-25"
   },
   "/drone/photogrammetry/asprs-accuracy/": {
-    "hash": "79146f9b0a8ed774",
-    "lastmod": "2026-09-24"
+    "hash": "59dc369c930fee88",
+    "lastmod": "2026-09-25"
   },
   "/drone/photogrammetry/gsd/": {
-    "hash": "ef1cca91ad2659db",
+    "hash": "8dffeef030de940e",
     "lastmod": "2026-09-25"
   },
   "/drone/photogrammetry/image-count/": {
@@ -936,8 +936,8 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "d230d1f7a2feb4a7",
-    "lastmod": "2026-09-24"
+    "hash": "8d6ad4dc6e184e14",
+    "lastmod": "2026-09-25"
   },
   "/navigation/": {
     "hash": "44ca7ff9080557c8",
@@ -1176,8 +1176,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "2c6c344bb75754b1",
-    "lastmod": "2026-09-24"
+    "hash": "f6aeaa39e0aa064a",
+    "lastmod": "2026-09-25"
   },
   "/survey/": {
     "hash": "6648d2af3de92e59",
@@ -1296,8 +1296,8 @@
     "lastmod": "2026-09-23"
   },
   "/time/sun/aviation-nights/": {
-    "hash": "20749571ba6633e3",
-    "lastmod": "2026-09-23"
+    "hash": "823757e2b65a9b07",
+    "lastmod": "2026-09-25"
   },
   "/time/sun/events/": {
     "hash": "a8329921d25eede0",
@@ -1320,8 +1320,8 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "d80e6f352da7c821",
-    "lastmod": "2026-09-24"
+    "hash": "8ad7aa55e808f0bc",
+    "lastmod": "2026-09-25"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -1508,7 +1508,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4e97a41edc30963c",
+    "hash": "999b49c9b99fff80",
     "lastmod": "2026-09-25"
   }
 }

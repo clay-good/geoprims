@@ -415,6 +415,12 @@
           ]
         },
         {
+          "want": "plan how many batteries a mission takes and where to swap them",
+          "tools": [
+            "sorties"
+          ]
+        },
+        {
           "want": "map a road, pipeline, or river",
           "tools": [
             "corridor"
@@ -447,8 +453,8 @@
       ]
     },
     "drone.ops": {
-      "summary": "Rules checks for Part 107 and the EASA open category.",
-      "intro": "Rules checks for flying under Part 107 in the United States and the EASA open category in Europe: the 400 ft altitude limit and its structure exception, the 87 knot groundspeed limit, which open subcategory a drone fits, and impact energy against the published thresholds. It is for remote pilots checking a plan against the rules. Start with the Part 107 altitude tool. Each tool checks one rule; none grants airspace access, and a waiver, a TFR, or controlled airspace can change what you may fly.",
+      "summary": "Rules checks for Part 107 and the EASA open category, plus the wind and line of sight on the day.",
+      "intro": "Rules checks for flying under Part 107 in the United States and the EASA open category in Europe: the 400 ft altitude limit and its structure exception, the 87 knot groundspeed limit, which open subcategory a drone fits, impact energy against the published thresholds, the wind at your flying height against the drone's limit, and whether every waypoint stays within your visual range. It is for remote pilots checking a plan against the rules. Start with the Part 107 altitude tool. Each tool checks one rule; none grants airspace access, and a waiver, a TFR, or controlled airspace can change what you may fly.",
       "tasks": [
         {
           "want": "check an altitude or speed limit under Part 107",
@@ -467,6 +473,18 @@
           "want": "know the impact energy of my drone",
           "tools": [
             "kinetic-energy"
+          ]
+        },
+        {
+          "want": "check the wind at my flying height against my drone's limit",
+          "tools": [
+            "wind-limit"
+          ]
+        },
+        {
+          "want": "check I can see the drone over the whole mission",
+          "tools": [
+            "vlos-check"
           ]
         }
       ],
@@ -526,6 +544,12 @@
           "want": "check for motion blur",
           "tools": [
             "motion-blur"
+          ]
+        },
+        {
+          "want": "plan ground control and checkpoints",
+          "tools": [
+            "gcp-plan"
           ]
         },
         {

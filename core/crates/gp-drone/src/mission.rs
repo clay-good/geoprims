@@ -78,9 +78,9 @@ impl Plane {
     }
 }
 
-type P = (f64, f64);
+pub(crate) type P = (f64, f64);
 /// The plane, the outer ring, and the holes.
-type Polygon = (Plane, Vec<P>, Vec<Vec<P>>);
+pub(crate) type Polygon = (Plane, Vec<P>, Vec<Vec<P>>);
 
 fn rot(p: P, a: f64) -> P {
     (p.0 * cos(a) - p.1 * sin(a), p.0 * sin(a) + p.1 * cos(a))
@@ -435,7 +435,7 @@ pub fn path_length(pts: &[(P, &str)]) -> f64 {
 
 // ---------------------------------------------------------------- inputs
 
-const VERTEX: &[Field] = &[
+pub(crate) const VERTEX: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",
@@ -485,7 +485,7 @@ fn m(v: f64) -> Q {
 }
 
 /// Reads the polygon rows into the plane: outer ring and holes.
-fn read_polygon(ctx: &mut Ctx) -> Result<Polygon, ToolError> {
+pub(crate) fn read_polygon(ctx: &mut Ctx) -> Result<Polygon, ToolError> {
     let rows = ctx.rows("area")?;
     let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
     let mut rings: Vec<Vec<(f64, f64)>> = Vec::new();
@@ -1281,7 +1281,7 @@ fn run_count(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- corridor
 
-const CENTER_ROW: &[Field] = &[
+pub(crate) const CENTER_ROW: &[Field] = &[
     Field::new(
         "lat",
         "Latitude",

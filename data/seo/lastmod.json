@@ -124,8 +124,8 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "8d1e777002525823",
-    "lastmod": "2026-09-24"
+    "hash": "88d1f9126fd9d463",
+    "lastmod": "2026-09-25"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -152,7 +152,7 @@
     "lastmod": "2026-09-25"
   },
   "/drone/ops/part107-altitude/": {
-    "hash": "cf2e3111e017bafc",
+    "hash": "85e0245410eac934",
     "lastmod": "2026-09-25"
   },
   "/drone/photogrammetry/": {
@@ -272,8 +272,8 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/frame/to-local/": {
-    "hash": "e4d8aeb95f020f9d",
-    "lastmod": "2026-09-23"
+    "hash": "2d4b0e4d659b3762",
+    "lastmod": "2026-09-25"
   },
   "/geodesy/geoid/": {
     "hash": "8ec5ca350127b6a6",
@@ -312,11 +312,11 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/grid-ref/mgrs-forward/": {
-    "hash": "dae17de3aaeae5f0",
+    "hash": "693953f15ded3af5",
     "lastmod": "2026-09-25"
   },
   "/geodesy/grid-ref/mgrs-inverse/": {
-    "hash": "bf423d841f38dc3b",
+    "hash": "65085ece6fdfeed9",
     "lastmod": "2026-09-25"
   },
   "/geodesy/grid-ref/usng-forward/": {
@@ -332,8 +332,8 @@
     "lastmod": "2026-09-25"
   },
   "/geodesy/height/convert/": {
-    "hash": "5837645be2710624",
-    "lastmod": "2026-09-23"
+    "hash": "0a47f4f311121e70",
+    "lastmod": "2026-09-25"
   },
   "/geodesy/magnetic/": {
     "hash": "76758243d4f463cf",
@@ -796,8 +796,8 @@
     "lastmod": "2026-09-23"
   },
   "/learn/geoid-vs-ellipsoid/": {
-    "hash": "5d3e859c35bbc39c",
-    "lastmod": "2026-09-23"
+    "hash": "818c72e7d80330d9",
+    "lastmod": "2026-09-25"
   },
   "/learn/grid-vs-ground/": {
     "hash": "0b7b287b216c35c6",
@@ -816,8 +816,8 @@
     "lastmod": "2026-09-23"
   },
   "/learn/horizontal-curves/": {
-    "hash": "64681411a65b75f8",
-    "lastmod": "2026-09-23"
+    "hash": "537e7b44dfdce25e",
+    "lastmod": "2026-09-25"
   },
   "/learn/how-to-read-a-metar/": {
     "hash": "40fb50be6266f02a",
@@ -832,7 +832,7 @@
     "lastmod": "2026-09-23"
   },
   "/learn/mgrs-coordinates/": {
-    "hash": "e09b7c3bc5ae6b13",
+    "hash": "7d2cc084fb27c1e8",
     "lastmod": "2026-09-25"
   },
   "/learn/nad83-vs-wgs84/": {
@@ -844,7 +844,7 @@
     "lastmod": "2026-09-23"
   },
   "/learn/part-107-altitude-limit/": {
-    "hash": "34556edf7a9b341d",
+    "hash": "6af07add333d1e2b",
     "lastmod": "2026-09-25"
   },
   "/learn/photo-overlap-and-flight-lines/": {
@@ -1060,8 +1060,8 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "6bcd5693b17409a8",
-    "lastmod": "2026-09-24"
+    "hash": "fd0bd530ac6a7452",
+    "lastmod": "2026-09-25"
   },
   "/raster/": {
     "hash": "9801ff90b33e7ac9",
@@ -1180,8 +1180,8 @@
     "lastmod": "2026-09-23"
   },
   "/survey/curves/circular-curve/": {
-    "hash": "d9efc55ce9221813",
-    "lastmod": "2026-09-23"
+    "hash": "839f6d5df3f217ab",
+    "lastmod": "2026-09-25"
   },
   "/survey/curves/vertical-curve/": {
     "hash": "664d52b204c38f9c",
@@ -1276,8 +1276,8 @@
     "lastmod": "2026-09-23"
   },
   "/time/sun/mapping-window/": {
-    "hash": "c11b745400188e28",
-    "lastmod": "2026-09-23"
+    "hash": "70e5dfea5795dec0",
+    "lastmod": "2026-09-25"
   },
   "/time/sun/night-currency/": {
     "hash": "398557a10c138eed",
@@ -1476,7 +1476,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4e97a41edc30963c",
+    "hash": "8bd9e2c5b86dde91",
     "lastmod": "2026-09-25"
   },
   "/workflows/": {
@@ -1488,11 +1488,11 @@
     "lastmod": "2026-09-25"
   },
   "/workflows/convert-coordinate/": {
-    "hash": "3f488c502b206067",
+    "hash": "9f058f51b81e8705",
     "lastmod": "2026-09-25"
   },
   "/workflows/gnss-to-state-plane/": {
-    "hash": "d498c94f5f518366",
+    "hash": "c289816ade1b3547",
     "lastmod": "2026-09-25"
   },
   "/workflows/ifr-approach-brief/": {

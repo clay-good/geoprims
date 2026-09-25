@@ -1742,8 +1742,60 @@ pub(crate) const PRECISIONS: &[&str] = &[
     "0.001m",
 ];
 
+/// A corner of the referenced square's outline.
+const SQUARE_ROW: &[Field] = &[lat_out("lat", "Latitude"), lon_out("lon", "Longitude")];
+
+/// The square's outline in latitude and longitude, from its south-west corner
+/// on the grid: each side sampled at four points along the grid line, so a
+/// large square draws with the curve its sides have on the globe.
+fn square_outline(ell: Ellipsoid, zone: u8, north: bool, e0: f64, n0: f64, size: f64) -> Json {
+    const STEPS: usize = 4;
+    let corners = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0), (0.0, 0.0)];
+    let mut rows = Vec::with_capacity(4 * STEPS);
+    for w in corners.windows(2) {
+        let ((x0, y0), (x1, y1)) = (w[0], w[1]);
+        for k in 0..STEPS {
+            let t = k as f64 / STEPS as f64;
+            let (e, n) = (
+                e0 + size * (x0 + (x1 - x0) * t),
+                n0 + size * (y0 + (y1 - y0) * t),
+            );
+            let (lat, lon) = if zone == 0 {
+                utmups::ups_inverse(ell.a, ell.f, north, e, n)
+            } else {
+                utmups::utm_inverse(ell.a, ell.f, zone, north, e, n)
+            };
+            rows.push(Json::obj([
+                (
+                    "lat",
+                    Json::obj([("value", Json::Num(lat)), ("unit", Json::str("deg"))]),
+                ),
+                (
+                    "lon",
+                    Json::obj([
+                        ("value", Json::Num(wrap_lon(lon))),
+                        ("unit", Json::str("deg")),
+                    ]),
+                ),
+            ]));
+        }
+    }
+    Json::Arr(rows)
+}
+
+const SQUARE_OUT: Field = Field::new(
+    "square",
+    "Square outline",
+    "The referenced square's corners and sides, south-west corner first",
+    Kind::List {
+        items: SQUARE_ROW,
+        min: 16,
+        max: 16,
+    },
+);
+
 pub static MGRS_FORWARD: ToolDef = ToolDef {
-    version: "1.1.0",
+    version: "1.2.0",
     id: "geodesy.grid-ref.mgrs-forward",
     stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to MGRS",
@@ -1788,6 +1840,7 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
         )
         .precision(Precision::Significant(1))
         .optional(),
+        SQUARE_OUT.optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
@@ -1804,8 +1857,8 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "point",
-        map: &[],
+        kind: "polygon",
+        map: &[("rings", "square")],
     }],
     related: &[
         Related {
@@ -1946,16 +1999,20 @@ fn run_mgrs_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("mgrs_spaced", Json::str(spaced(&s))),
     ];
     if p >= 0 {
-        out.push((
-            "square_size",
-            ctx.out("square_size", meters(mgrs::square_size(p))),
-        ));
+        let size = mgrs::square_size(p);
+        out.push(("square_size", ctx.out("square_size", meters(size))));
+        // MGRS truncates, so the square's south-west corner is the position with the dropped digits zeroed.
+        let (e0, n0) = (
+            (g.easting / size).floor() * size,
+            (g.northing / size).floor() * size,
+        );
+        out.push(("square", square_outline(ell, g.zone, g.north, e0, n0, size)));
     }
     Ok(Json::obj(out))
 }
 
 pub static MGRS_INVERSE: ToolDef = ToolDef {
-    version: "1.1.0",
+    version: "1.2.0",
     id: "geodesy.grid-ref.mgrs-inverse",
     stability: gp_base::tool::Stability::Stable,
     title: "MGRS to latitude and longitude",
@@ -1990,6 +2047,7 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
             },
         )
         .precision(Precision::Significant(1)),
+        SQUARE_OUT,
     ],
     warnings: &["BAND_ADJUSTED", "EXPERIMENTAL_TOOL"],
     model: "NGA MGRS over UTM and UPS: AA lettering, or AL on the legacy Clarke 1866 and Bessel 1841 ellipsoids",
@@ -2004,10 +2062,16 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
         source: "add-geodesy-suite scenario: 1 m square, center offset 0.5 m",
     }],
     primary_example: "primary",
-    visualization: &[Layer {
-        kind: "point",
-        map: &[("lat", "lat"), ("lon", "lon")],
-    }],
+    visualization: &[
+        Layer {
+            kind: "point",
+            map: &[("lat", "lat"), ("lon", "lon")],
+        },
+        Layer {
+            kind: "polygon",
+            map: &[("rings", "square")],
+        },
+    ],
     related: &[
         Related {
             id: "geodesy.grid-ref.mgrs-forward",
@@ -2114,6 +2178,10 @@ fn run_mgrs_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("corner_lat", ctx.out("corner_lat", deg(slat))),
         ("corner_lon", ctx.out("corner_lon", deg(wrap_lon(slon)))),
         ("square_size", ctx.out("square_size", meters(d.size))),
+        (
+            "square",
+            square_outline(wgs, d.zone, d.north, d.easting, d.northing, d.size),
+        ),
     ]))
 }
 

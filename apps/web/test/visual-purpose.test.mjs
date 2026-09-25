@@ -84,3 +84,26 @@ test('every workflow’s visual draws from its example', async () => {
   }
   assert.ok(workflows.length >= 9);
 });
+
+test('an MGRS square draws as its grid outline, matching the decoded corner, near a zone edge', async () => {
+  // 40° N, just west of 78° W: the east edge of UTM zone 17.
+  const fwd = catalog.tools.find((t) => t.id === 'geodesy.grid-ref.mgrs-forward');
+  const args = { lat: 40, lon: -78.00005, precision: '1km' };
+  const r = await invoke(fwd.id, args);
+  assert.ok(r.ok, JSON.stringify(r.error));
+  assert.match(r.result.mgrs, /^17T/);
+  const layers = await buildLayers(fwd, args, r, async () => null, cells);
+  const square = layers.find((l) => l.kind === 'polygon' && l.role === 'result');
+  assert.ok(square, 'the square is drawn');
+  assert.equal(square.rings[0].length, 16);
+  // Its south-west corner is the one the decoder gives for the same reference.
+  const inv = await invoke('geodesy.grid-ref.mgrs-inverse', { mgrs: r.result.mgrs });
+  const [lon0, lat0] = square.rings[0][0];
+  assert.ok(Math.abs(lat0 - inv.result.corner_lat.value) < 1e-9 && Math.abs(lon0 - inv.result.corner_lon.value) < 1e-9, `${lat0}, ${lon0}`);
+  // And the point is inside it (a 1 km square: within its latitude and longitude span).
+  const lats = square.rings[0].map((p) => p[1]);
+  const lons = square.rings[0].map((p) => p[0]);
+  assert.ok(Math.min(...lats) <= 40 && 40 <= Math.max(...lats) && Math.min(...lons) <= args.lon && args.lon <= Math.max(...lons));
+  // The inverse draws the same outline around its center.
+  assert.deepEqual(inv.result.square, r.result.square);
+});

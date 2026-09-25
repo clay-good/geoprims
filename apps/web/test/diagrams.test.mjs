@@ -551,9 +551,10 @@ test('the sun path plots the day in the sky, with the usable part marked', async
   const args = { lat: 39.7392, lon: -104.9903, date: '2026-06-21', offset: '-06:00', threshold: '30 deg' };
   const r = JSON.parse(await host.invoke('time.sun.mapping-window', JSON.stringify(args)));
   const d = diagram('time.sun.mapping-window', args, r);
-  const [cx, cy] = [150, 124];
+  // The sky's center as drawn (the horizon ring's), so the read-back follows the drawing.
+  const [cx, cy] = /<circle class="dg-grid" cx="([\d.]+)" cy="([\d.]+)"/.exec(d.markup).slice(1).map(Number);
   // Read a drawn point back: the rim is the horizon, the center overhead.
-  const sky = Math.max(...[...d.markup.matchAll(/<circle class="dg-grid" cx="150" cy="124" r="([\d.]+)"/g)].map((m) => Number(m[1])));
+  const sky = Math.max(...[...d.markup.matchAll(new RegExp(`<circle class="dg-grid" cx="${cx}" cy="${cy}" r="([\\d.]+)"`, 'g'))].map((m) => Number(m[1])));
   const readBack = (x, y) => {
     const rr = Math.hypot(x - cx, y - cy);
     return { az: ((Math.atan2(x - cx, cy - y) * 180) / Math.PI + 360) % 360, el: 90 * (1 - rr / sky) };
@@ -574,7 +575,7 @@ test('the sun path plots the day in the sky, with the usable part marked', async
   }
   // The threshold ring is at the threshold, and the day's highest point is
   // marked with its time, which is the elevation the tool reports.
-  const rings = [...d.markup.matchAll(/<circle class="dg-grid dg-dash" cx="150" cy="124" r="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const rings = [...d.markup.matchAll(new RegExp(`<circle class="dg-grid dg-dash" cx="${cx}" cy="${cy}" r="([\\d.]+)"`, 'g'))].map((m) => Number(m[1]));
   assert.equal(rings.length, 1);
   assert.ok(Math.abs(90 * (1 - rings[0] / sky) - 30) < 0.2, 'the threshold ring is not at the threshold');
   const peak = circles(d.markup).find((c) => c.cls === 'dg-dot-now');

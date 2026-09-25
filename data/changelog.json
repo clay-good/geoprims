@@ -2,6 +2,16 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-09-25",
+      "kind": "added",
+      "tools": [
+        "geodesy.grid-ref.mgrs-forward",
+        "geodesy.grid-ref.mgrs-inverse"
+      ],
+      "vectors": [],
+      "summary": "MGRS results now include the outline of the square the reference names, so the map draws the square instead of a point. Existing outputs are unchanged."
+    },
+    {
       "date": "2026-09-24",
       "kind": "fixed",
       "tools": [

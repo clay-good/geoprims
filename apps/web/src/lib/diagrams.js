@@ -191,7 +191,7 @@ function skyPlot(args, result) {
   const az = val(result, 'azimuth');
   const el = val(result, 'elevation');
   if (![az, el].every(Number.isFinite)) return null;
-  const [cx, cy, R0] = [160, 122, 96];
+  const [cx, cy, R0] = [160, 114, 90];
   const below = el < 0;
   // Radius grows from the zenith (0) to the horizon (R0); below the horizon the dot sits on the rim.
   const r = below ? R0 : (R0 * (90 - el)) / 90;
@@ -604,13 +604,13 @@ function altimetry(args, result) {
     line('dg-grid', [130, 196], [300, 196]),
     `<path class="dg-grid" d="M130 192L160 192L168 186L184 198L192 192L300 192"/>`,
     text('dg-muted-text', 130, 212, `Station${base ? ` ${args.station_elevation}` : ' (sea level)'}, axis cut`),
-    `<line class="dg-muted dg-dash" x1="150" y1="${f1(ti)}" x2="230" y2="${f1(ti)}"/>`,
-    text('dg-muted-text', 234, ti + 4, `Indicated ${args.indicated ?? ''}`),
-    line('dg-accent', [150, tt], [230, tt]),
-    text('dg-label', 234, tt + 4, `True ${disp(result, 'true_altitude')}`),
+    `<line class="dg-muted dg-dash" x1="150" y1="${f1(ti)}" x2="196" y2="${f1(ti)}"/>`,
+    text('dg-muted-text', 200, ti + 4, `Indicated ${args.indicated ?? ''}`),
+    line('dg-accent', [150, tt], [196, tt]),
+    text('dg-label', 200, tt + 4, `True ${disp(result, 'true_altitude')}`),
     // The gap between the two, measured and named.
     arrow(170, ti, 170, tt, 'dg-accent', `${disp(result, 'error')}`, 0.5, err < 0 ? -1 : 1),
-    text('dg-muted-text', 12, 24, `ISA deviation ${args.isa_deviation ?? ''}: true altitude ${err < 0 ? 'below' : 'above'} indicated`),
+    text('dg-muted-text', 12, 24, `ISA ${args.isa_deviation ?? ''}: true ${err < 0 ? 'below' : 'above'} indicated`),
   ].join('');
   const title = `Altimetry: an indicated ${args.indicated} in air ${args.isa_deviation} from standard is a true ${disp(result, 'true_altitude')}, ${disp(result, 'error')} against the altimeter.`;
   return { markup: svg(body, title), desc: title };
@@ -731,14 +731,15 @@ function heightStack(args, result) {
   const [lo, hi] = [Math.min(...marks), Math.max(...marks)];
   const pad = (hi - lo) * 0.15 || 1;
   const Y = (v) => 190 - ((v - lo + pad) / (hi - lo + 2 * pad)) * 150;
-  const rule = (v, cls, label) => `${line(cls, [40, Y(v)], [250, Y(v)])}${text('dg-muted-text', 254, Y(v) + 4, label)}`;
+  // Each surface is named just above its right end, so a long name stays in the drawing.
+  const rule = (v, cls, label) => `${line(cls, [40, Y(v)], [300, Y(v)])}${text('dg-muted-text', 300, Y(v) - 4, label, 'end')}`;
   // The geoid is drawn wavy, because it is: it is an equipotential surface,
   // not a second ellipsoid.
   const wave = (v) => {
     const y = Y(v);
     let d = `M40 ${f1(y)}`;
-    for (let x = 40; x < 250; x += 35) d += `q17.5 ${x % 70 === 40 ? -4 : 4} 35 0`;
-    return `<path class="dg-muted dg-dash" d="${d}"/>${text('dg-muted-text', 254, y + 4, `Geoid, N ${disp(result, 'geoid_height')}`)}`;
+    for (let x = 40; x < 285; x += 35) d += `q17.5 ${x % 70 === 40 ? -4 : 4} 35 0`;
+    return `<path class="dg-muted dg-dash" d="${d}"/>${text('dg-muted-text', 300, y - 7, `Geoid, N ${disp(result, 'geoid_height')}`, 'end')}`;
   };
   const body = [
     rule(0, 'dg-grid', 'Ellipsoid'),
@@ -824,7 +825,7 @@ function sunPath(args, result) {
   if (path.length < 10) return null;
   // A sky plot: north up, azimuth around, the horizon at the rim and the
   // zenith at the center, so the path is read the way the sky is.
-  const [cx, cy, sky] = [150, 124, 100];
+  const [cx, cy, sky] = [150, 114, 94];
   const at = (az, el) => {
     const rr = sky * (1 - Math.max(el, 0) / 90);
     return [cx + rr * Math.sin(az * R), cy - rr * Math.cos(az * R)];
@@ -840,7 +841,7 @@ function sunPath(args, result) {
     ...up.slice(1).map((p, i) => seg(up[i], p)),
     dot(...at(top[0], top[1]), 'dg-dot-now'),
     text('dg-label', ...at(top[0], top[1]).map((q, j) => q + (j ? -10 : 0)), `${top[2]} · ${Math.round(top[1])}\u00b0`, 'middle'),
-    text('dg-muted-text', 12, 228, `Above ${Math.round(threshold)}\u00b0 ${result.result.window} · ${disp(result, 'duration')}`),
+    text('dg-muted-text', 12, 234, `Above ${Math.round(threshold)}\u00b0 ${result.result.window} · ${disp(result, 'duration')}`),
   ].join('');
   const title = `Sun path for the day: highest ${disp(result, 'max_elevation')} at ${top[2]}, above ${Math.round(threshold)}\u00b0 ${result.result.window} (${disp(result, 'duration')}). North is up, the rim is the horizon and the center is overhead.`;
   return { markup: svg(body, title), desc: title };
@@ -873,7 +874,7 @@ function circularCurve(args, result) {
     text('dg-label', px, py - 10, `PI ${args.pi_station ?? ''}`, 'middle'),
     text('dg-label', pt[0] + 6, pt[1] + 4, `PT ${result.result.pt_station ?? ''}`),
     text('dg-muted-text', 12, 214, `R ${disp(result, 'radius')} · \u0394 ${disp(result, 'delta')} · T ${disp(result, 'tangent')} · L ${disp(result, 'length')}`),
-    text('dg-muted-text', 12, 230, `Long chord ${disp(result, 'chord')}, middle ordinate ${disp(result, 'middle_ordinate')}`),
+    text('dg-muted-text', 12, 230, `Chord ${disp(result, 'chord')} · middle ordinate ${disp(result, 'middle_ordinate')}`),
   ].join('');
   const title = `Circular curve in plan: a ${disp(result, 'delta')} deflection on a ${disp(result, 'radius')} radius, tangent ${disp(result, 'tangent')}, arc ${disp(result, 'length')} from PC ${result.result.pc_station ?? ''} to PT ${result.result.pt_station ?? ''}.`;
   return { markup: svg(body, title), desc: title };
@@ -1131,7 +1132,7 @@ function part107Ceiling(args, result) {
     dot(...drone),
     text('dg-label', drone[0] + 8, drone[1] + 4, `Up to ${disp(result, 'max_agl')}`),
     hasStructure ? text('dg-muted-text', (S([0, 0])[0] + drone[0]) / 2, g + 16, `${typed(args.structure_distance, 'ft')} away`, 'middle') : '',
-    text('dg-muted-text', 12, 230, 'Summary of 14 CFR 107.51(b). Not legal advice.'),
+    text('dg-muted-text', 12, 237, 'Summary of 14 CFR 107.51(b). Not legal advice.'),
   ].join('');
   const title = `Here you may fly up to ${disp(result, 'max_agl')} above the ground${hasStructure ? `, ${typed(args.structure_distance, 'ft')} from a ${typed(args.structure_height, 'ft')} structure` : ''}. Not legal advice.`;
   return { markup: svg(body, title), desc: title };

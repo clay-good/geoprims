@@ -433,6 +433,7 @@ figure.map { margin-inline: 0; padding: 0; overflow: hidden; }
 figure.map canvas { display: block; inline-size: 100%; block-size: min(60vh, 460px); touch-action: none; cursor: grab; }
 figure.map canvas:active { cursor: grabbing; }
 figure.map canvas:focus-visible { outline-offset: -3px; }
+.map[hidden] { display: none; }
 .map-stage { position: relative; }
 .map-north { position: absolute; inset-block-start: 0.6rem; inset-inline-end: 0.6rem; display: flex; gap: 0.5rem; pointer-events: none; font: 600 0.7rem/1 var(--mono); color: var(--text); }
 .map-north > span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 5px; background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); border-radius: var(--radius); }
@@ -463,6 +464,8 @@ figure.diagram svg { display: block; inline-size: 100%; block-size: auto; max-bl
 .dg-accent { stroke: var(--accent); stroke-width: 2.5; fill: none; stroke-linecap: round; }
 .dg-muted { stroke: var(--muted); stroke-width: 1.75; fill: none; stroke-linecap: round; }
 .dg-dash { stroke-dasharray: 6 5; }
+/* A footprint or area: a light wash of the accent, so overlaps read darker. */
+.dg-fill { fill: var(--accent); fill-opacity: 0.12; stroke: var(--accent); stroke-width: 1.25; }
 .dg-grid { stroke: var(--graticule); stroke-width: 1; fill: none; }
 .dg-head-accent { fill: var(--accent); }
 .dg-head-muted { fill: var(--muted); }

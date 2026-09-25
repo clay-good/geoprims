@@ -1,0 +1,10 @@
+# Tasks
+
+- [x] 1 Audit every map page by running its primary example through the core and `buildLayers` → verify: the audit listed 9 pages with no layers and 23 that draw only the reader's point (location pickers, kept)
+- [x] 2 Hide the map when the current inputs give it nothing to draw, with a one-line hint on tools that take a location → verify: `visual-purpose.test.mjs` "every page that carries the map draws something of the example on it"
+- [x] 3 Move GSD and the COGO plane tools from the map to diagrams; MGRS inverse draws its point; S2 tools draw their cells → verify: `visual-purpose.test.mjs` "pages whose coordinates are not on the earth carry no map"
+- [x] 4 Diagrams for the 17 drone, flight, direction, and survey tools listed in the proposal → verify: `diagrams.test.mjs` draws each from its worked example with no inline styles or color literals; `visual-purpose.test.mjs` "a tool that declares a vector diagram draws one from its example"
+- [x] 5 One rule for whether a page carries the map (`mapsTool` in `lib/map/layers.js`), used by the page and the gate → verify: `ToolApp.svelte` and the test import the same function
+- [ ] 6 Settle the 20 `gauge` declarations that nothing renders. Draw a gauge only where a limit gives the needle meaning (Part 107 groundspeed against 87 kt, a drone's battery against its reserve). Declare the rest `table-only`. → verify: a gate like task 4 for `gauge` and `profile-chart`
+- [ ] 7 Draw the MGRS forward square as its UTM-grid outline, not only the input point → verify: a layer test for a 1 km square near a zone edge
+- [ ] 8 Browser check at phone width: every new diagram's labels stay inside the 320 × 240 drawing and do not overlap → verify: `npm run test:browser` with a diagram-overlap assertion over `DIAGRAM_TOOLS`

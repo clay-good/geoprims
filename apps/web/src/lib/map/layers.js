@@ -11,6 +11,17 @@ export function numberOf(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+/** The layer kinds the map canvas draws. */
+export const GEO_KINDS = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon', 'bbox', 'cell-set']);
+
+/**
+ * Whether a tool's page carries the map: it declares a geographic layer or
+ * takes a latitude and longitude. The canvas still hides itself when the
+ * current inputs give it nothing to draw.
+ */
+export const mapsTool = (tool) =>
+  (tool.visualization ?? []).some((v) => GEO_KINDS.has(v.kind)) || ('lat' in tool.inputs.properties && 'lon' in tool.inputs.properties);
+
 /** A layer's field mapping: an object in the catalog ({lat: "lat"}), or [key, field] pairs. */
 const mapOf = (m) => (Array.isArray(m) ? Object.fromEntries(m) : (m ?? {}));
 
@@ -98,7 +109,8 @@ export function cellIds(result, field) {
 /**
  * Layers for a result: [{ kind, role, points, rings, label }]. `densify(input)`
  * runs navigation.geodesic.waypoints and returns its result, or null. `cells`
- * (for cell-set layers) gives { boundaries(ids) → [[lon, lat], …] per id, and
+ * (for cell-set layers) gives { boundaries(ids, grid) → [[lon, lat], …] per id
+ * (grid 'h3' or 's2'), and
  * rings(origin, k) → the ids at each grid distance 0…k }, both from the core.
  */
 export async function buildLayers(tool, args, result, densify, cells) {
@@ -203,7 +215,8 @@ export async function buildLayers(tool, args, result, densify, cells) {
     // covering drawn is worse than none: it reads as the answer.
     const ids = full.length ? full.slice(0, MAX_CELLS) : compacted.slice(0, MAX_COMPACTED);
     if (!ids.length) continue;
-    const outlines = await cells.boundaries(ids);
+    // S2 cells come from the S2 tools, H3 cells from H3's; each grid outlines its own.
+    const outlines = await cells.boundaries(ids, tool.id.startsWith('indexing.s2.') ? 's2' : 'h3');
     const k = Number.isInteger(Number(args.k)) ? Number(args.k) : null;
     const origin = typeof args.cell === 'string' && k !== null ? args.cell.trim().toLowerCase() : null;
     const distance = new Map();

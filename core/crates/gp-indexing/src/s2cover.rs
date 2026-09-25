@@ -884,8 +884,8 @@ pub static COVERING: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cells")],
     }],
     related: &[
         Related {

@@ -1804,8 +1804,8 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "bbox",
-        map: &[("size", "square_size")],
+        kind: "point",
+        map: &[],
     }],
     related: &[
         Related {
@@ -2005,8 +2005,8 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "bbox",
-        map: &[("size", "square_size")],
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
     }],
     related: &[
         Related {

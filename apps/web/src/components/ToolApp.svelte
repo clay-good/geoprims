@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { isPinned, numberFormat, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
+  import { mapsTool } from '../lib/map/layers.js';
   import { diagram } from '../lib/diagrams.js';
   import { migrateState } from '../lib/migrate.mjs';
   import { say } from '../lib/keys.js';
@@ -210,8 +211,7 @@
   const facts = $derived(allFacts ? secondary : secondary.slice(0, FACTS));
 
   // The canvas draws geographic tools: lines, points, polygons, or a lat/lon input.
-  const GEO = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon', 'bbox', 'cell-set']);
-  const showMap = (tool.visualization ?? []).some((v) => GEO.has(v.kind)) || ('lat' in tool.inputs.properties && 'lon' in tool.inputs.properties);
+  const showMap = mapsTool(tool);
   let drawnArgs = $state(example);
   const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result) : null);
   // A tool whose meaning is a picture shows a compact one directly under the

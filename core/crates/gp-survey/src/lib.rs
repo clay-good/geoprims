@@ -275,7 +275,7 @@ pub static FORWARD: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "point",
+        kind: "vector-diagram",
         map: &[("northing", "northing"), ("easting", "easting")],
     }],
     related: &[
@@ -477,8 +477,8 @@ pub static TRAVERSE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "polygon",
-        map: &[("ring", "adjusted")],
+        kind: "vector-diagram",
+        map: &[("points", "adjusted")],
     }],
     related: &[
         Related {
@@ -786,8 +786,8 @@ pub static AREA: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "polygon",
-        map: &[("ring", "area")],
+        kind: "vector-diagram",
+        map: &[("value", "area")],
     }],
     related: &[
         Related {

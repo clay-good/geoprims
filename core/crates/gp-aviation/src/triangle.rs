@@ -144,8 +144,8 @@ pub static TAS_FROM_GROUNDSPEED: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "vector-diagram",
+        map: &[("heading", "heading")],
     }],
     related: &[
         Related {
@@ -291,8 +291,8 @@ pub static COURSE_FROM_HEADING: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "vector-diagram",
+        map: &[("course", "course")],
     }],
     related: &[
         Related {

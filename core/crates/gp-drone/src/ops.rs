@@ -198,7 +198,7 @@ pub static PART107_ALTITUDE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "profile-chart",
         map: &[("value", "max_agl")],
     }],
     related: &[

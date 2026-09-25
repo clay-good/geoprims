@@ -318,7 +318,7 @@ pub static GSD: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "polygon",
+        kind: "vector-diagram",
         map: &[("width", "footprint_across")],
     }],
     related: &[
@@ -484,8 +484,8 @@ pub static ALTITUDE_FOR_GSD: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
-        map: &[("value", "height")],
+        kind: "vector-diagram",
+        map: &[("width", "footprint_across")],
     }],
     related: &[
         Related {

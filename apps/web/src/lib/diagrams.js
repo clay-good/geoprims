@@ -879,6 +879,368 @@ function circularCurve(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+// Drawings for the drone, flight, and plane-survey tools whose answer is a
+// shape: what a photo covers, how photos overlap, which way a bearing points.
+// Every length and angle drawn is the core's result or the reader's own input.
+
+/** A result quantity in base units (m, m/s, Wh) through a unit table, or null. */
+const qty = (result, k, table) => {
+  const v = val(result, k);
+  return Number.isFinite(v) ? measure(`${v} ${unitOf(result, k) || ''}`.trim(), table, Object.keys(table)[0]) : null;
+};
+/** An input as typed, with its default unit when it is a bare number. */
+const typed = (v, unit) => (typeof v === 'number' || /^\s*[-+]?[\d.]+\s*$/.test(String(v ?? '')) ? `${v} ${unit}` : String(v ?? ''));
+/** A typed number to 6 significant digits, so 141.421356237 reads 141.421. */
+const tidy = (v) => (typeof v === 'number' ? Number(v.toPrecision(6)) : v);
+const path = (pts, close = false) => pts.map((p, i) => `${i ? 'L' : 'M'}${f1(p[0])} ${f1(p[1])}`).join('') + (close ? 'Z' : '');
+
+/** Camera footprint, side view: the height, the view cone, and the ground one photo spans. */
+function gsdFootprint(args, result) {
+  const h = result.result.height ? qty(result, 'height', LENGTH) : measure(args.height, LENGTH, 'm');
+  const w = qty(result, 'footprint_across', LENGTH);
+  if (!(h > 0) || !(w > 0)) return null;
+  const S = fit([[-w / 2, 0], [w / 2, 0], [0, h]], 240, 140);
+  const [cam, l, r] = [S([0, h]), S([-w / 2, 0]), S([w / 2, 0])];
+  const height = result.result.height ? disp(result, 'height') : typed(args.height, 'm');
+  const gsd = result.result.gsd ? disp(result, 'gsd') : typed(args.target_gsd, 'cm');
+  const body = [
+    line('dg-grid', [12, l[1]], [308, l[1]]),
+    `<path class="dg-fill" d="${path([cam, l, r], true)}"/>`,
+    line('dg-muted dg-dash', cam, [cam[0], l[1]]),
+    text('dg-muted-text', cam[0] + 6, (cam[1] + l[1]) / 2, height),
+    line('dg-casing', l, r), line('dg-accent', l, r),
+    dot(...cam, 'dg-dot-now'),
+    text('dg-label', 12, 22, `1 pixel = ${gsd} of ground`),
+    text('dg-label', 160, l[1] + 18, `One photo spans ${disp(result, 'footprint_across')} across track`, 'middle'),
+    result.result.footprint_along ? text('dg-muted-text', 160, l[1] + 32, `and ${disp(result, 'footprint_along')} along it`, 'middle') : '',
+  ].join('');
+  const title = `Camera ${height} above flat ground: each pixel covers ${gsd}, and one photo spans ${disp(result, 'footprint_across')} across track.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Photo overlap, plan view: frames along two flight lines, overlaps reading darker. */
+function triggerOverlap(args, result) {
+  const [fa, fl, d, s] = ['footprint_across', 'footprint_along', 'trigger_distance', 'line_spacing'].map((k) => qty(result, k, LENGTH));
+  if (![fa, fl, d, s].every((x) => x > 0)) return null;
+  const frames = [[0, 0], [0, d], [0, 2 * d], [s, 0], [s, d]];
+  const corners = ([x, y]) => [[x - fa / 2, y - fl / 2], [x + fa / 2, y - fl / 2], [x + fa / 2, y + fl / 2], [x - fa / 2, y + fl / 2]];
+  const S = fit(frames.flatMap(corners), 220, 150);
+  const pct = (v) => (v === undefined || v === null || v === '' ? '' : `${String(v).replace('%', '').trim()}%`);
+  const front = pct(args.front_overlap);
+  const side = pct(args.side_overlap);
+  const body = [
+    ...frames.map((f, i) => `<path class="${i === 0 ? 'dg-fill dg-accent' : 'dg-fill'}" d="${path(corners(f).map(S), true)}"/>`),
+    arrow(...S([0, -fl / 2]), ...S([0, 2 * d + fl / 2]), 'dg-muted dg-dash', ''),
+    arrow(...S([s, d + fl / 2]), ...S([s, -fl / 2]), 'dg-muted dg-dash', ''),
+    ...frames.slice(0, 3).map((f) => dot(...S(f))),
+    text('dg-label', 12, 22, 'Flight lines, seen from above'),
+    text('dg-muted-text', 12, 214, `Photo every ${disp(result, 'trigger_distance')} (${disp(result, 'trigger_interval')})${front ? `, ${front} front overlap` : ''}`),
+    text('dg-muted-text', 12, 230, `Lines ${disp(result, 'line_spacing')} apart${side ? `, ${side} side overlap` : ''}`),
+  ].join('');
+  const title = `Photos every ${disp(result, 'trigger_distance')} along each line and lines ${disp(result, 'line_spacing')} apart; each photo covers ${disp(result, 'footprint_across')} by ${disp(result, 'footprint_along')}, so neighbors overlap.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Oblique view, side on: the rays to the near edge, center, and far edge, and the ground between. */
+function obliqueFootprint(args, result) {
+  const h = measure(args.height, LENGTH, 'm');
+  const near = qty(result, 'near_distance', LENGTH);
+  const far0 = qty(result, 'far_distance', LENGTH);
+  const tilt = deg(args.pitch);
+  if (!(h > 0) || !Number.isFinite(near) || tilt === null) return null;
+  const center = h * Math.tan(Math.min(Math.abs(tilt), 89) * R);
+  // With the horizon in the frame the far edge never reaches the ground: draw the ray running on.
+  const sky = !(far0 > 0);
+  const far = sky ? Math.max(center * 2.5, near * 4, h) : far0;
+  const S = fit([[-far * 0.18, 0], [far, 0], [0, h]], 270, 130);
+  const [cam, g0, n, c, f] = [S([0, h]), S([0, 0]), S([near, 0]), S([center, 0]), S([far, 0])];
+  const body = [
+    line('dg-grid', [12, g0[1]], [308, g0[1]]),
+    `<path class="dg-fill" d="${path([cam, n, f], true)}"/>`,
+    line('dg-muted dg-dash', cam, g0),
+    line('dg-muted', cam, n), line(sky ? 'dg-muted dg-dash' : 'dg-muted', cam, f),
+    line('dg-casing', cam, c), line('dg-accent', cam, c),
+    line('dg-casing', n, f), line('dg-accent', n, f),
+    dot(...cam, 'dg-dot-now'),
+    text('dg-muted-text', cam[0] - 6, (cam[1] + g0[1]) / 2, typed(args.height, 'm'), 'end'),
+    text('dg-label', 12, 22, `Tilted ${typed(args.pitch, '°').replace(' °', '°')} from straight down`),
+    text('dg-muted-text', n[0], g0[1] + 16, `Near ${disp(result, 'gsd_near')}`, 'middle'),
+    text('dg-label', c[0] + 6, c[1] - 30, `Center ${disp(result, 'gsd_center')}`),
+    text('dg-muted-text', Math.min(f[0], 300), g0[1] + 16, sky ? 'Far edge: sky' : `Far ${disp(result, 'gsd_far')}`, 'end'),
+    text('dg-muted-text', 12, 230, `Straight down: ${disp(result, 'gsd_nadir')} per pixel`),
+  ].join('');
+  const title = `Camera tilted ${typed(args.pitch, '°')}: a pixel covers ${disp(result, 'gsd_near')} at the near edge, ${disp(result, 'gsd_center')} at the center, and ${sky ? 'the top of the frame sees sky' : `${disp(result, 'gsd_far')} at the far edge`}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** A wind triangle from any two of its sides: air vector + wind = ground vector. */
+function triangleFrom({ heading, tas, course, gs }, answer, title) {
+  if ([heading, tas, course, gs].some((x) => x === null || x === undefined || !Number.isFinite(x))) return null;
+  const up = (b, len) => [len * Math.sin(b * R), len * Math.cos(b * R)];
+  const S = fit([[0, 0], up(heading, tas), up(course, gs)]);
+  const [o, a, g] = [S([0, 0]), S(up(heading, tas)), S(up(course, gs))];
+  const cls = (k) => (k === answer.key ? 'dg-accent' : k === 'wind' ? 'dg-muted dg-dash' : 'dg-muted');
+  const body = [
+    `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,
+    arrow(...o, ...a, cls('air'), answer.air, 0.5, -1),
+    arrow(...a, ...g, cls('wind'), answer.wind, 0.5, -1),
+    arrow(...o, ...g, cls('ground'), answer.ground, 0.5, 1),
+    answer.caption ? text('dg-label', 160, 226, answer.caption, 'middle') : '',
+  ].join('');
+  return { markup: svg(body, title), desc: title };
+}
+const kt = (v) => measure(v, SPEED, 'kt');
+const ktOf = (result, k) => (result.result[k] ? measure(`${val(result, k)} ${result.result[k].unit}`, SPEED, 'kt') : null);
+
+function findWind(args, result) {
+  return triangleFrom(
+    { heading: deg(args.heading), tas: kt(args.tas), course: deg(args.track), gs: kt(args.groundspeed) },
+    { key: 'wind', air: 'Heading', wind: 'Wind', ground: 'Track', caption: `Wind from ${disp(result, 'wind_direction')} at ${disp(result, 'wind_speed')}` },
+    `Wind triangle: the difference between where the nose points and where the aircraft goes is a wind from ${disp(result, 'wind_direction')} at ${disp(result, 'wind_speed')}.`,
+  );
+}
+function courseFromHeading(args, result) {
+  return triangleFrom(
+    { heading: deg(args.heading), tas: kt(args.tas), course: val(result, 'course'), gs: ktOf(result, 'groundspeed') },
+    { key: 'ground', air: 'Heading', wind: 'Wind', ground: 'Course', caption: `Course ${disp(result, 'course')} at ${disp(result, 'groundspeed')}` },
+    `Wind triangle: heading ${typed(args.heading, '°')} with this wind makes good a course of ${disp(result, 'course')} at ${disp(result, 'groundspeed')}.`,
+  );
+}
+function tasFromGroundspeed(args, result) {
+  return triangleFrom(
+    { heading: val(result, 'heading'), tas: ktOf(result, 'tas'), course: deg(args.course), gs: kt(args.groundspeed) },
+    { key: 'air', air: 'Heading', wind: 'Wind', ground: 'Course', caption: `Heading ${disp(result, 'heading')} at ${disp(result, 'tas')} true airspeed` },
+    `Wind triangle: to make good the course at that groundspeed, fly heading ${disp(result, 'heading')} at ${disp(result, 'tas')} true airspeed.`,
+  );
+}
+
+/** True and magnetic north, and one bearing measured from each. */
+function magneticCompass(args, result) {
+  const v = val(result, 'variation_used');
+  const out = val(result, 'result');
+  const input = deg(args.bearing);
+  if (![v, out, input].every(Number.isFinite)) return null;
+  const toTrue = args.direction === 'magnetic-to-true';
+  const [t, m] = toTrue ? [out, input] : [input, out];
+  const [cx, cy, r] = [160, 120, 80];
+  const at = (b, len) => [cx + vec(b, len)[0], cy + vec(b, len)[1]];
+  const round = (x) => `${Math.round(((x % 360) + 360) % 360)}°`;
+  const body = [
+    `<circle class="dg-grid" cx="${cx}" cy="${cy}" r="${r}"/>`,
+    arrow(cx, cy, ...at(0, r + 12), 'dg-muted', 'True north', 0.95, 1),
+    arrow(cx, cy, ...at(v, r), 'dg-muted dg-dash', 'Magnetic north', 0.9, v < 0 ? -1 : 1),
+    arrow(cx, cy, ...at(t, r + 18), 'dg-accent', `${round(t)} true · ${round(m)} magnetic`, 0.75, 1),
+    dot(cx, cy, 'dg-dot-now'),
+    text('dg-muted-text', 160, 228, `Variation ${disp(result, 'variation_text')}`, 'middle'),
+  ].join('');
+  const title = `The bearing is ${round(t)} from true north and ${round(m)} from magnetic north, which lies ${disp(result, 'variation_text')} of true.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Plane survey points (northing, easting) in one length unit: [easting, northing] in meters. */
+const plane = (n, e, unit) => [measure(e, LENGTH, unit), measure(n, LENGTH, unit)];
+
+/** COGO forward: from a known point along a direction and distance to the new point. */
+function cogoForward(args, result) {
+  const unit = unitOf(result, 'northing') || 'ft';
+  const a = plane(args.northing, args.easting, unit);
+  const b = plane(val(result, 'northing'), val(result, 'easting'), unit);
+  if (![...a, ...b].every(Number.isFinite)) return null;
+  const S = fit([a, b], 200, 100);
+  const [p, q] = [S(a), S(b)];
+  const body = [
+    text('dg-muted-text', 296, 22, 'N ↑', 'end'),
+    arrow(...p, ...q, 'dg-accent', '', 0.5, 1),
+    dot(...p, 'dg-dot-now'), dot(...q),
+    text('dg-muted-text', p[0], p[1] + 18, 'Start', 'middle'),
+    text('dg-label', q[0], q[1] - 10, 'New point', 'middle'),
+    text('dg-label', 160, 212, `${args.direction ?? ''}, ${typed(tidy(args.distance), unit)}`, 'middle'),
+    text('dg-muted-text', 160, 228, `New point N ${disp(result, 'northing')}, E ${disp(result, 'easting')}`, 'middle'),
+  ].join('');
+  const title = `From the start point, ${args.direction ?? ''} for ${typed(tidy(args.distance), unit)} reaches northing ${disp(result, 'northing')}, easting ${disp(result, 'easting')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** COGO inverse: the bearing and distance between two known points. */
+function cogoInverse(args, result) {
+  const unit = unitOf(result, 'distance') || 'ft';
+  const a = plane(args.northing1, args.easting1, unit);
+  const b = plane(args.northing2, args.easting2, unit);
+  if (![...a, ...b].every(Number.isFinite)) return null;
+  const S = fit([a, b], 200, 100);
+  const [p, q] = [S(a), S(b)];
+  const body = [
+    text('dg-muted-text', 296, 22, 'N ↑', 'end'),
+    arrow(...p, ...q, 'dg-accent', '', 0.5, 1),
+    dot(...p, 'dg-dot-now'), dot(...q),
+    text('dg-muted-text', p[0], p[1] + 18, 'Point 1', 'middle'),
+    text('dg-muted-text', q[0], q[1] - 10, 'Point 2', 'middle'),
+    text('dg-label', 160, 228, `${disp(result, 'bearing')}, ${disp(result, 'distance')}`, 'middle'),
+  ].join('');
+  const title = `From point 1 to point 2: ${disp(result, 'bearing')}, ${disp(result, 'distance')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** A parcel in plan from its corner coordinates, numbered, with its area. */
+function parcelPlan(pts, caption, title) {
+  if (pts.length < 3 || !pts.flat().every(Number.isFinite)) return null;
+  const xy = pts.map(fit(pts, 220, 150));
+  const body = [
+    `<path class="dg-fill" d="${path(xy, true)}"/>`,
+    `<path class="dg-accent" d="${path(xy, true)}"/>`,
+    ...xy.map((p, i) => `${dot(p[0], p[1], i === 0 ? 'dg-dot-now' : 'dg-dot')}${text('dg-muted-text', p[0] + 7, p[1] - 7, String(i + 1))}`),
+    text('dg-muted-text', 296, 22, 'N ↑', 'end'),
+    text('dg-label', 160, 226, caption, 'middle'),
+  ].join('');
+  return { markup: svg(body, title), desc: title };
+}
+function areaPlan(args, result) {
+  const pts = (Array.isArray(args.points) ? args.points : []).map((p) => [Number.parseFloat(p.easting), Number.parseFloat(p.northing)]);
+  return parcelPlan(pts, `${disp(result, 'area')} · ${disp(result, 'acres')} · perimeter ${disp(result, 'perimeter')}`,
+    `Parcel of ${pts.length} corners: ${disp(result, 'area')} (${disp(result, 'acres')}), perimeter ${disp(result, 'perimeter')}.`);
+}
+function traverseClosure(args, result) {
+  const rows = result.result.adjusted ?? [];
+  const pts = rows.map((p) => [val({ result: p }, 'easting'), val({ result: p }, 'northing')]);
+  // The adjusted traverse closes on its first point; draw each corner once.
+  const [a, z] = [pts[0], pts[pts.length - 1]];
+  if (pts.length > 3 && a && z && Math.hypot(a[0] - z[0], a[1] - z[1]) < 1e-6) pts.pop();
+  return parcelPlan(pts, `Precision ${disp(result, 'precision')} · misclosure ${disp(result, 'misclosure')} before adjustment`,
+    `Adjusted traverse of ${pts.length} corners. Before adjustment it missed closing by ${disp(result, 'misclosure')}, a precision of ${disp(result, 'precision')}.`);
+}
+
+/** Part 107 ceiling, side view: the structure, where the drone is, and how high it may go there. */
+function part107Ceiling(args, result) {
+  const top = qty(result, 'max_agl', LENGTH);
+  const sh = args.structure_height === undefined || args.structure_height === '' ? null : measure(args.structure_height, LENGTH, 'ft');
+  const sd = args.structure_distance === undefined || args.structure_distance === '' ? null : measure(args.structure_distance, LENGTH, 'ft');
+  if (!(top > 0)) return null;
+  const base = 400 * 0.3048;
+  const hasStructure = sh > 0 && Number.isFinite(sd);
+  const x = hasStructure ? Math.max(sd, 30) : 0;
+  const S = fit([[-150, 0], [Math.max(x, 60) + 120, 0], [0, Math.max(top, base, sh ?? 0)]], 250, 150);
+  const g = S([0, 0])[1];
+  const drone = S([x, top]);
+  const body = [
+    line('dg-grid', [12, g], [308, g]),
+    line('dg-grid dg-dash', [12, S([0, base])[1]], [308, S([0, base])[1]]),
+    text('dg-muted-text', 12, S([0, base])[1] - 4, '400 ft above ground'),
+    hasStructure ? `<path class="dg-fill" d="${path([S([-8, 0]), S([8, 0]), S([8, sh]), S([-8, sh])], true)}"/>` : '',
+    hasStructure ? text('dg-muted-text', S([0, sh])[0] - 12, S([0, sh])[1] + 4, `Structure ${typed(args.structure_height, 'ft')}`, 'end') : '',
+    line('dg-casing', [drone[0], g], drone), line('dg-accent', [drone[0], g], drone),
+    dot(...drone),
+    text('dg-label', drone[0] + 8, drone[1] + 4, `Up to ${disp(result, 'max_agl')}`),
+    hasStructure ? text('dg-muted-text', (S([0, 0])[0] + drone[0]) / 2, g + 16, `${typed(args.structure_distance, 'ft')} away`, 'middle') : '',
+    text('dg-muted-text', 12, 230, 'Summary of 14 CFR 107.51(b). Not legal advice.'),
+  ].join('');
+  const title = `Here you may fly up to ${disp(result, 'max_agl')} above the ground${hasStructure ? `, ${typed(args.structure_distance, 'ft')} from a ${typed(args.structure_height, 'ft')} structure` : ''}. Not legal advice.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Return-to-home energy: the battery left, split into the trip home, the reserve, and the margin. */
+function rthBudget(args, result) {
+  const ENERGY = { wh: 1, kwh: 1000, j: 1 / 3600, kj: 1 / 3.6 };
+  const e = (v) => measure(v, ENERGY, 'wh');
+  const home = e(`${val(result, 'return_energy')} ${unitOf(result, 'return_energy')}`);
+  const margin = e(`${val(result, 'margin')} ${unitOf(result, 'margin')}`);
+  const left = e(args.remaining_energy);
+  if (![home, margin, left].every(Number.isFinite) || left <= 0) return null;
+  const reserve = Math.max(left - home - margin, 0);
+  const need = home + reserve;
+  const full = Math.max(left, need);
+  const [x0, w, y, hgt] = [20, 280, 96, 34];
+  const X = (v) => x0 + (w * v) / full;
+  const seg = (a, b, cls) => (b > a ? `<path class="${cls}" d="${path([[X(a), y], [X(b), y], [X(b), y + hgt], [X(a), y + hgt]], true)}"/>` : '');
+  const short = margin < 0;
+  const body = [
+    seg(0, home, 'dg-fill dg-accent'),
+    seg(home, need, 'dg-fill'),
+    `<path class="dg-muted" d="${path([[X(0), y], [X(left), y], [X(left), y + hgt], [X(0), y + hgt]], true)}"/>`,
+    text('dg-label', X(0), y - 10, `Trip home ${disp(result, 'return_energy')}`),
+    reserve > 0 ? text('dg-muted-text', X(home) + 4, y + hgt + 16, `Reserve ${typed(args.reserve_energy, 'Wh')}`) : '',
+    text(short ? 'dg-label' : 'dg-muted-text', X(full), y - 10, short ? `Short by ${disp(result, 'margin').replace('-', '')}` : `Margin ${disp(result, 'margin')}`, 'end'),
+    text('dg-muted-text', 20, 190, `Battery left: ${typed(args.remaining_energy, 'Wh')} (outlined)`),
+    text('dg-muted-text', 20, 206, `Home at ${disp(result, 'return_groundspeed')} over the ground, ${disp(result, 'return_time')}`),
+  ].join('');
+  const title = `Of ${typed(args.remaining_energy, 'Wh')} left, the trip home takes ${disp(result, 'return_energy')}${reserve > 0 ? ` and the reserve ${typed(args.reserve_energy, 'Wh')}` : ''}, ${short ? `leaving you short by ${disp(result, 'margin').replace('-', '')}` : `leaving ${disp(result, 'margin')} of margin`}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Bearing difference: the shorter turn from one bearing to the other. */
+function bearingTurn(args, result) {
+  const [a, b, d] = [deg(args.from), deg(args.to), val(result, 'difference')];
+  if (![a, b, d].every(Number.isFinite)) return null;
+  const [cx, cy, r] = [160, 118, 78];
+  const at = (x, len) => [cx + vec(x, len)[0], cy + vec(x, len)[1]];
+  const turn = ((b - a + 540) % 360) - 180;
+  const [p, q] = [at(a, 44), at(a + turn, 44)];
+  const body = [
+    `<circle class="dg-grid" cx="${cx}" cy="${cy}" r="${r}"/>`,
+    text('dg-muted-text', cx, cy - r - 6, 'N', 'middle'),
+    arrow(cx, cy, ...at(a, r), 'dg-muted', `From ${Math.round(a)}°`, 0.8, turn > 0 ? -1 : 1),
+    arrow(cx, cy, ...at(b, r), 'dg-muted', `To ${Math.round(b)}°`, 0.8, turn > 0 ? 1 : -1),
+    `<path class="dg-accent" d="M${f1(p[0])} ${f1(p[1])}A44 44 0 0 ${turn > 0 ? 1 : 0} ${f1(q[0])} ${f1(q[1])}"/>`,
+    dot(cx, cy, 'dg-dot-now'),
+    text('dg-label', 160, 228, result.summary ?? '', 'middle'),
+  ].join('');
+  const title = `From ${Math.round(a)}° to ${Math.round(b)}°: ${result.summary ?? ''}`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Holding wind correction: the racetrack with the headings and outbound time that fly it. */
+function holdTiming(args, result) {
+  const course = deg(args.inbound_course);
+  const wd = deg(args.wind_direction);
+  if (course === null || !Number.isFinite(val(result, 'outbound_heading'))) return null;
+  const left = args.turns === 'left';
+  const side = (course + (left ? 270 : 90)) % 360;
+  const [L, r] = [80, 22];
+  // The fix placed so the whole racetrack is centered, whatever the course.
+  const mid = [vec(course + 180, L / 2)[0] + vec(side, r)[0], vec(course + 180, L / 2)[1] + vec(side, r)[1]];
+  const [fx, fy] = [160 - mid[0], 112 - mid[1]];
+  const at = (b, len, from = [fx, fy]) => [from[0] + vec(b, len)[0], from[1] + vec(b, len)[1]];
+  const A = at(course + 180, L);
+  const C = at(side, 2 * r);
+  const D = at(course + 180, L, C);
+  const sweep = left ? 0 : 1;
+  const arc = (from, to) => `<path class="dg-muted" d="M${from.map(f1).join(' ')}A${r} ${r} 0 0 ${sweep} ${to.map(f1).join(' ')}"/>`;
+  const body = [
+    `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,
+    arc([fx, fy], C),
+    arrow(...C, ...D, 'dg-accent', 'Out', 0.5, left ? -1 : 1),
+    arc(D, A),
+    arrow(...A, fx, fy, 'dg-accent', 'In', 0.5, left ? 1 : -1),
+    // The wind blows from its direction: the arrow starts upwind of its tip.
+    wd === null ? '' : arrow(...at(wd, 40, [56, 186]), 56, 186, 'dg-muted dg-dash', 'Wind', 0.3),
+    dot(fx, fy, 'dg-dot-now'),
+    text('dg-label', 160, 212, `In ${disp(result, 'inbound_heading')} · out ${disp(result, 'outbound_heading')} for ${disp(result, 'outbound_time')}`, 'middle'),
+    text('dg-muted-text', 160, 228, `Groundspeed ${disp(result, 'inbound_groundspeed')} in, ${disp(result, 'outbound_groundspeed')} out`, 'middle'),
+  ].join('');
+  const title = `Hold on the ${Math.round(course)}° inbound course: fly ${disp(result, 'inbound_heading')} inbound and ${disp(result, 'outbound_heading')} outbound for ${disp(result, 'outbound_time')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Dip of the horizon: eye level against the line to the horizon, not to scale. */
+function horizonDip(args, result) {
+  if (!Number.isFinite(val(result, 'dip'))) return null;
+  const g = onEarth(60);
+  const eye = [60, g[1] - 60];
+  const t = onEarth(250);
+  const body = [
+    earthArc(),
+    line('dg-muted', g, eye),
+    line('dg-muted dg-dash', eye, [300, eye[1]]),
+    text('dg-muted-text', 300, eye[1] - 6, 'Eye level', 'end'),
+    line('dg-casing', eye, t), line('dg-accent', eye, t),
+    dot(...eye), dot(t[0], t[1], 'dg-dot-now'),
+    text('dg-muted-text', eye[0] - 6, eye[1] + 30, typed(args.height, 'm'), 'end'),
+    text('dg-label', 160, 40, `The horizon dips ${disp(result, 'dip')} below eye level`, 'middle'),
+    text('dg-muted-text', 160, 226, `Rule of thumb ${disp(result, 'rule')} · off by ${disp(result, 'rule_error')}`, 'middle'),
+  ].join('');
+  const title = `From ${typed(args.height, 'm')} up, the horizon dips ${disp(result, 'dip')} below eye level. Schematic, not to scale.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -907,6 +1269,23 @@ const DIAGRAMS = {
   'navigation.los.fresnel': fresnelZone,
   'survey.earthwork.average-end-area': endAreas,
   'survey.earthwork.prismoidal': endAreas,
+  'drone.photogrammetry.gsd': gsdFootprint,
+  'drone.photogrammetry.altitude-for-gsd': gsdFootprint,
+  'drone.photogrammetry.trigger': triggerOverlap,
+  'drone.photogrammetry.oblique-gsd': obliqueFootprint,
+  'drone.ops.part107-altitude': part107Ceiling,
+  'drone.power.rth-budget': rthBudget,
+  'aviation.wind.find-wind': findWind,
+  'aviation.wind.course-from-heading': courseFromHeading,
+  'aviation.wind.tas-from-groundspeed': tasFromGroundspeed,
+  'aviation.ifr.hold-wind-timing': holdTiming,
+  'geodesy.magnetic.true-to-magnetic': magneticCompass,
+  'geodesy.parse.bearing-difference': bearingTurn,
+  'navigation.los.dip': horizonDip,
+  'survey.cogo.forward': cogoForward,
+  'survey.cogo.inverse': cogoInverse,
+  'survey.cogo.area-by-coordinates': areaPlan,
+  'survey.cogo.traverse-closure': traverseClosure,
 };
 
 /**

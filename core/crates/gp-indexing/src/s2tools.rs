@@ -338,8 +338,8 @@ pub static POINT_TO_CELL: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cell")],
     }],
     related: &[
         Related {
@@ -451,8 +451,8 @@ pub static CELL_INFO: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "cell")],
     }],
     related: &[
         Related {
@@ -524,8 +524,8 @@ pub static NEIGHBORS: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "cell-set",
+        map: &[("cells", "neighbors")],
     }],
     related: &[
         Related {

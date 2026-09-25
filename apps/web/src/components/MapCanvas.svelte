@@ -2,7 +2,7 @@
   // The map canvas (web/map-canvas): the tool's inputs and result drawn over
   // the Natural Earth base layer, as a 2D map or a globe. Drag to pan or spin,
   // scroll or pinch to zoom; arrow keys, + and -, and 0 (reset) do the same.
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { buildLayers, extent } from '../lib/map/layers.js';
   import { decode, forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
@@ -32,6 +32,11 @@
   let readout = $state('');
   let scaleBar = $state({ px: 0, label: '' });
   let legend = $state([]);
+  // A map with nothing of the reader's on it answers nothing, so it stays
+  // hidden until the inputs give it something to draw (an optional location
+  // left blank, a zone looked up by name).
+  let empty = $state(false);
+  const locatable = 'lat' in tool.inputs.properties && 'lon' in tool.inputs.properties;
   const R_EARTH = 6371008.8;
   // Sets an element's width through the CSSOM (the CSP allows no style attributes).
   function width(node, px) {
@@ -110,14 +115,16 @@
     ease();
   }
 
-  // H3 cells for cell-set layers: outlines and grid rings, one batch each, from the core.
+  // The grid a cell-set layer is drawn from, named as the reader knows it.
+  const grid = tool.id.startsWith('indexing.s2.') ? 'S2' : 'H3';
+  // Cells for cell-set layers: outlines and grid rings, one batch each, from the core.
   const batch = async (id, inputs) => {
     const raw = await compute.invokeBatch(id, JSON.stringify(inputs));
     return Array.isArray(raw) ? raw : [];
   };
   const cellSource = {
-    boundaries: async (ids) =>
-      (await batch('indexing.h3.cell-info', ids.map((cell) => ({ cell })))).map((r) => (r?.ok ? r.result.boundary.map((p) => [p.lon, p.lat]) : [])),
+    boundaries: async (ids, grid = 'h3') =>
+      (await batch(`indexing.${grid}.cell-info`, ids.map((cell) => ({ cell })))).map((r) => (r?.ok ? r.result.boundary.map((p) => [p.lon?.value ?? p.lon, p.lat?.value ?? p.lat]) : [])),
     rings: async (origin, k) =>
       (await batch('indexing.h3.grid-ring', Array.from({ length: k + 1 }, (_, d) => ({ cell: origin, k: d })))).map((r) => (r?.ok ? r.result.cells.map((c) => c.cell) : [])),
   };
@@ -133,7 +140,7 @@
     const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
     if (shots) what.push(`${shots.points.length} photo trigger points`);
     const compacted = layers.some((l) => l.compacted);
-    if (cellCount) what.push(`${cellCount} H3 ${cellCount === 1 ? 'cell' : 'cells'}${compacted ? `, drawn dashed because they are the compacted stand-in for the ${result.result?.count ?? 'many'} the answer counts` : ''}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
+    if (cellCount) what.push(`${cellCount} ${grid} ${cellCount === 1 ? 'cell' : 'cells'}${compacted ? `, drawn dashed because they are the compacted stand-in for the ${result.result?.count ?? 'many'} the answer counts` : ''}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
     shown = what.join(', ') || 'the world';
     // What the lines mean: the result path, and the other kind of line for comparison.
     const rhumb = kinds.has('line-rhumb');
@@ -144,12 +151,20 @@
       layers.some((l) => l.kind === 'line' && l.role === 'comparison') && { cls: 'dashed', text: `${named(!rhumb)}, for comparison` },
       layers.some((l) => l.kind === 'point' && l.role === 'detail') && { cls: 'solid', text: 'Photo trigger points' },
       layers.some((l) => l.kind === 'polygon' && !l.cell) && { cls: 'area', text: 'The area' },
-      layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? 'H3 cells: the origin strongest, fading with grid distance' : 'H3 cells' },
+      layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? `${grid} cells: the origin strongest, fading with grid distance` : `${grid} cells` },
     ].filter(Boolean);
     // A result that lands mid-drag was computed for an earlier position:
     // keep the point under the pointer until the drag ends.
     const held = drag?.handle && drag.at && layers.find((l) => l.field === drag.handle.field);
     if (held) held.points = [drag.at];
+    const wasEmpty = empty;
+    empty = layers.length === 0;
+    if (empty) return;
+    // Shown again: lay the figure out before framing, so the frame fits its real size.
+    if (wasEmpty) {
+      keepView = false;
+      await tick();
+    }
     // After the reader has moved a point on the map, keep their view.
     if (keepView) paint();
     else reframe();
@@ -358,7 +373,10 @@
   });
 </script>
 
-<figure class="map card">
+{#if empty && locatable}
+  <p class="help map-hint">Enter a latitude and longitude to see this on the map.</p>
+{/if}
+<figure class="map card" hidden={empty}>
   <div class="map-bar">
     <div class="segmented" role="group" aria-label="View">
       <button type="button" aria-pressed={mode !== 'globe'} onclick={() => setMode(projection)}>Map</button>

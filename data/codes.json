@@ -385,6 +385,10 @@
     "WIND_EXCEEDS_RATING": {
       "severity": "caution",
       "message": "The wind at flying height is over the drone's wind limit."
+    },
+    "WIND_EXCEEDS_TAS": {
+      "severity": "caution",
+      "message": "On at least one leg the wind is too strong for the true airspeed, so that leg cannot be flown."
     }
   }
 }

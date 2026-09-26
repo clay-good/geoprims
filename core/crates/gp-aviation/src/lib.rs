@@ -12,8 +12,10 @@ pub mod heading;
 pub mod humidity;
 pub mod ifr;
 pub mod loading;
+pub mod navlog;
 pub mod offcourse;
 pub mod performance;
+pub mod planning;
 pub mod qcodes;
 pub mod radial;
 pub mod range;
@@ -1917,6 +1919,16 @@ fn run_runway_components(ctx: &mut Ctx) -> Result<Json, ToolError> {
     Ok(obj(out))
 }
 
+/// The wind triangle exactly as `aviation.wind.heading-groundspeed` solves it:
+/// (heading, groundspeed, wind correction angle) for a course already wrapped
+/// to [0, 360), a TAS, and a wind FROM `wd` at `ws`, all in knots and one
+/// reference. None when the crosswind is stronger than the airspeed. The
+/// planning tools call this, so their headings match that tool bit for bit.
+pub(crate) fn wind_triangle(course: f64, tas: f64, wd: f64, ws: f64) -> Option<(f64, f64, f64)> {
+    let (wca, gs) = wind::heading_groundspeed(course, tas, wd, ws)?;
+    Some((gp_base::angle::wrap_azimuth(course + wca), gs, wca))
+}
+
 pub static HEADING_GROUNDSPEED: ToolDef = ToolDef {
     id: "aviation.wind.heading-groundspeed",
     version: "1.0.1",
@@ -2068,7 +2080,7 @@ fn run_heading_groundspeed(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         }
     };
-    let Some((wca, gs)) = wind::heading_groundspeed(course, tas, wd, w.speed) else {
+    let Some((heading, gs, wca)) = wind_triangle(course, tas, wd, w.speed) else {
         return Err(ToolError::new(
             ErrorCode::NoSolution,
             "The crosswind is stronger than the true airspeed, so this course cannot be held.",
@@ -2112,14 +2124,11 @@ fn run_heading_groundspeed(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "Heading to fly",
             "heading = course + WCA",
             format!("{}° + {}°", n(course, 0), n(wca, 1)),
-            format!("{}°", n(gp_base::angle::wrap_azimuth(course + wca), 1)),
+            format!("{}°", n(heading, 1)),
         );
     }
     Ok(obj(vec![
-        (
-            "heading",
-            ctx.out("heading", deg(gp_base::angle::wrap_azimuth(course + wca))),
-        ),
+        ("heading", ctx.out("heading", deg(heading))),
         ("groundspeed", ctx.out("groundspeed", knots(gs))),
         (
             "wind_correction_angle",
@@ -2318,6 +2327,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &shift::BALLAST,
     &radial::RADIAL_FIX,
     &tfr::TFR_AREA,
+    &navlog::NAV_LOG,
+    &planning::CLIMB_PLAN,
+    &planning::ETP_PNR,
 ];
 
 pub static REGISTRY: Registry = Registry {

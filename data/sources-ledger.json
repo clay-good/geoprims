@@ -284,6 +284,26 @@
       "editionCheck": true
     },
     {
+      "id": "casa-ac-91-15",
+      "name": "Guidelines for aircraft fuel requirements, CASA Advisory Circular AC 91-15",
+      "issuer": "Civil Aviation Safety Authority (Australia)",
+      "currentEdition": "AC 91-15 v1.2",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": null,
+      "verificationNote": "Read in full on 2026-09-25: Annex B to AC 91-15 v1.2 (sample fuel calculations, Beechcraft B200; PDF of October 2024), pages B9 and B10, 'Fuel to address critical fuel scenario assuming depressurisation at the most critical point', with Table 9: route 906 NM, TAS 270 kt, wind -20 kt on and +20 kt back, GS 250 and 290 kt, critical point 487 NM from Darwin and 419 NM from Cairns, by distance = total distance x GS back / (GS back + GS forward). The definitions of critical point (an equi-time point) and point of no return read in the AC body (v1.1, September 2021). casa.gov.au refused automated requests, so both were read from the Internet Archive's copies of the CASA files and the current edition is not yet confirmed at the issuer. The annex has no worked point-of-no-return example.",
+      "freeAccessUrl": "https://www.casa.gov.au/guidelines-aircraft-fuel-requirements",
+      "matchTerms": [
+        "AC 91-15"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "cfr-14-1",
       "name": "14 CFR Part 1 definitions",
       "issuer": "FAA (eCFR)",
@@ -798,8 +818,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-19",
-      "verificationNote": "Checked at the issuer on 2026-09-19: the handbook page links faa-h-8083-25c.pdf. Worked examples for pressure altitude, density altitude, runway wind components, and the wind triangle taken from it.",
+      "lastVerified": "2026-09-25",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the handbook page links faa-h-8083-25c.pdf. Worked examples for pressure altitude, density altitude, runway wind components, and the wind triangle taken from it. Read again on 2026-09-25 (faa-h-8083-25c.pdf): chapter 16, Charting the Course and Figure 16-26 (the Chickasha to Guthrie flight log), and chapter 11, Figure 11-25 (fuel, time, and distance to climb) and Figure 11-26, for the nav log and the climb plan.",
       "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
       "matchTerms": [
         "Pilot's Handbook of Aeronautical Knowledge"

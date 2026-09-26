@@ -56,7 +56,8 @@
         "loading",
         "weather",
         "ifr",
-        "airspace"
+        "airspace",
+        "flight-plan"
       ]
     },
     "drone": {

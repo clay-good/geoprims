@@ -310,7 +310,7 @@ label.switch input { inline-size: var(--target); block-size: var(--target); min-
 .stale { opacity: 0.55; transition: opacity 120ms; }
 .inputs-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; margin-block-end: 0.75rem; }
 .inputs-head h2 { margin: 0; font-size: 1rem; }
-.fields { display: grid; gap: 0.9rem 1rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+.fields { display: grid; gap: 0.9rem 1rem; grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr)); }
 label { display: block; font-weight: 600; font-size: 0.9rem; }
 .label-text .optional { font-weight: 400; color: var(--muted); font-size: 0.85em; margin-inline-start: 0.35em; }
 label .help { display: block; font-weight: 400; color: var(--muted); font-size: 0.8rem; margin-block-start: 0.3rem; line-height: 1.4; }
@@ -344,7 +344,7 @@ details.card[open] { padding-block-end: 1rem; }
 
 /* Lists of tools: hairline-separated rows on the page's own surface, never
    filled cards (web/visual-theme "A look of its own"). */
-.tools { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); column-gap: 2rem; border-block-start: 1px solid var(--line); }
+.tools { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr)); column-gap: 2rem; border-block-start: 1px solid var(--line); }
 .tools li { position: relative; padding: 0.7rem 0.2rem; border-block-end: 1px solid var(--line); transition: background 120ms; }
 .tools li:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .tools a { font-weight: 600; color: var(--text); text-decoration: none; }
@@ -411,6 +411,11 @@ dialog.palette li[aria-selected='true'] { background: var(--bg); outline: 2px so
 .palette-keys { margin: 0; padding: 0.5rem 1rem; border-block-start: 1px solid var(--line); color: var(--muted); font-size: 0.8rem; }
 /* Wide tables scroll inside their box, never the page. */
 .table-scroll { overflow-x: auto; max-inline-size: 100%; }
+/* A table in page prose (an explainer, the quality and licenses pages) scrolls within
+   itself on a phone, so the page never scrolls sideways (ux/mobile-and-field). */
+main > table, main :not(.table-scroll) > table { display: block; overflow-x: auto; max-inline-size: 100%; min-inline-size: 0; }
+/* A select never outgrows its column, whatever the text size. */
+main select { max-inline-size: 100%; }
 /* Plain tables on the trust pages (licenses, security). */
 main table:not([class]) { border-collapse: collapse; font-size: 0.9rem; inline-size: 100%; margin-block: 0.75rem 1rem; }
 main table:not([class]) th, main table:not([class]) td { text-align: start; vertical-align: top; padding: 0.45rem 0.6rem; border-block-end: 1px solid var(--line); }
@@ -622,7 +627,9 @@ label.invalid input, label.invalid select, label.invalid textarea { border-color
 .facts dd .copy-row:focus-visible { outline: 2px solid var(--focus); }
 .facts .copied { font: 500 0.8rem var(--sans); color: var(--accent); }
 
-.units-switch select { inline-size: auto; margin: 0; min-block-size: var(--target); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.9rem; padding-inline: 0.6rem; max-inline-size: 15rem; }
+/* The label is capped by its row, so the select's cap has something to be a share of. */
+.units-switch { max-inline-size: 100%; min-inline-size: 0; }
+.units-switch select { inline-size: auto; margin: 0; min-block-size: var(--target); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.9rem; padding-inline: 0.6rem; max-inline-size: min(15rem, 100%); }
 
 /* ------------------------------------------------------------------------
    Field-instrument layer. Loaded last, so it restyles the components above

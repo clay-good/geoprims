@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "dc92f0dec6031965",
+    "hash": "ad14356299250db8",
     "lastmod": "2026-09-26"
   },
   "/accuracy/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/flight-plan/": {
-    "hash": "704e76fb731bd182",
+    "hash": "33b4630823854f30",
     "lastmod": "2026-09-26"
   },
   "/aviation/ifr/": {
@@ -56,8 +56,8 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/loading/": {
-    "hash": "8e7222492e24e4a7",
-    "lastmod": "2026-09-23"
+    "hash": "90f7169a9a646250",
+    "lastmod": "2026-09-26"
   },
   "/aviation/loading/ballast/": {
     "hash": "6c179b619ff27ebe",
@@ -72,7 +72,7 @@
     "lastmod": "2026-09-24"
   },
   "/aviation/performance/": {
-    "hash": "94df88e4f5a0e17c",
+    "hash": "877fdea27c5e8be2",
     "lastmod": "2026-09-26"
   },
   "/aviation/performance/top-of-descent/": {
@@ -84,8 +84,8 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/weather/": {
-    "hash": "c0f31a22b808ec4a",
-    "lastmod": "2026-09-25"
+    "hash": "b75b1b3e22299f39",
+    "lastmod": "2026-09-26"
   },
   "/aviation/weather/fb-winds-decode/": {
     "hash": "d984c8d28e5c0467",
@@ -100,8 +100,8 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/wind/": {
-    "hash": "7f4b75c09bb6318a",
-    "lastmod": "2026-09-25"
+    "hash": "32d30736470cfcb5",
+    "lastmod": "2026-09-26"
   },
   "/aviation/wind/course-from-heading/": {
     "hash": "c4fcb91eb6b8cb88",
@@ -144,7 +144,7 @@
     "lastmod": "2026-09-23"
   },
   "/drone/mission/": {
-    "hash": "4fbf56c9788e0e2e",
+    "hash": "236cbcec2e906bbf",
     "lastmod": "2026-09-26"
   },
   "/drone/mission/survey-grid/": {
@@ -152,7 +152,7 @@
     "lastmod": "2026-09-26"
   },
   "/drone/ops/": {
-    "hash": "8018d36e56597db8",
+    "hash": "a202fc067db451c6",
     "lastmod": "2026-09-26"
   },
   "/drone/ops/part107-altitude/": {
@@ -160,7 +160,7 @@
     "lastmod": "2026-09-26"
   },
   "/drone/photogrammetry/": {
-    "hash": "c6df1253398d11f2",
+    "hash": "cd78dab3eded4c49",
     "lastmod": "2026-09-26"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
@@ -340,8 +340,8 @@
     "lastmod": "2026-09-25"
   },
   "/geodesy/magnetic/": {
-    "hash": "76758243d4f463cf",
-    "lastmod": "2026-09-25"
+    "hash": "9d3931c276f5f6a5",
+    "lastmod": "2026-09-26"
   },
   "/geodesy/magnetic/declination/": {
     "hash": "9ef04a29a90758e1",
@@ -776,8 +776,8 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "22e0f47f5fb24fd9",
-    "lastmod": "2026-09-25"
+    "hash": "cb556684a3158103",
+    "lastmod": "2026-09-26"
   },
   "/learn/crosswind-components/": {
     "hash": "39ae719c291519d1",
@@ -916,8 +916,8 @@
     "lastmod": "2026-09-23"
   },
   "/navigation/geodesic/": {
-    "hash": "88c17314459293ed",
-    "lastmod": "2026-09-25"
+    "hash": "70bcb198f3eb92be",
+    "lastmod": "2026-09-26"
   },
   "/navigation/geodesic/direct/": {
     "hash": "07cffcd54f19970c",
@@ -1000,8 +1000,8 @@
     "lastmod": "2026-09-23"
   },
   "/navigation/route/": {
-    "hash": "7f8253edec3fd3e6",
-    "lastmod": "2026-09-25"
+    "hash": "af77982edff8282a",
+    "lastmod": "2026-09-26"
   },
   "/navigation/route/closest-point/": {
     "hash": "09eb33984f0635f8",
@@ -1264,8 +1264,8 @@
     "lastmod": "2026-09-23"
   },
   "/time/sun/": {
-    "hash": "9a33d2f1242cc467",
-    "lastmod": "2026-09-25"
+    "hash": "91007c6a740dc7d9",
+    "lastmod": "2026-09-26"
   },
   "/time/sun/aviation-nights/": {
     "hash": "823757e2b65a9b07",
@@ -1484,12 +1484,16 @@
     "lastmod": "2026-09-26"
   },
   "/workflows/": {
-    "hash": "608cc2752b5c42bf",
-    "lastmod": "2026-09-25"
+    "hash": "bf26d30960e69c16",
+    "lastmod": "2026-09-26"
   },
   "/workflows/boundary-retracement/": {
     "hash": "d3368a770955cb6b",
     "lastmod": "2026-09-25"
+  },
+  "/workflows/can-i-fly-now/": {
+    "hash": "13075d79b4737cc5",
+    "lastmod": "2026-09-26"
   },
   "/workflows/convert-coordinate/": {
     "hash": "9f058f51b81e8705",
@@ -1507,20 +1511,24 @@
     "hash": "e13a19d8157be53f",
     "lastmod": "2026-09-25"
   },
+  "/workflows/inspection/": {
+    "hash": "094b7b8ea1afadf9",
+    "lastmod": "2026-09-26"
+  },
   "/workflows/lidar-bid/": {
     "hash": "5441d4740d9498ad",
     "lastmod": "2026-09-25"
   },
   "/workflows/mapping-flight/": {
-    "hash": "323fb2841e898046",
-    "lastmod": "2026-09-25"
+    "hash": "3a4cd9b85e028ade",
+    "lastmod": "2026-09-26"
   },
   "/workflows/preflight-check/": {
     "hash": "8c06a973d8945210",
     "lastmod": "2026-09-25"
   },
   "/workflows/vfr-cross-country/": {
-    "hash": "56a503e620b678bb",
-    "lastmod": "2026-09-25"
+    "hash": "95655d6287acd7b7",
+    "lastmod": "2026-09-26"
   }
 }

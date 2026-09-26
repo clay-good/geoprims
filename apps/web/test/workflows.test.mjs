@@ -66,8 +66,8 @@ test('a changed input changes every step that depends on it', async () => {
   const a = await runChain(w, {}, invoke);
   const b = await runChain(w, { target_gsd: '3 cm' }, invoke);
   assert.ok(a.ok && b.ok);
-  for (const i of [0, 2, 3, 4, 5]) assert.notDeepEqual(b.steps[i].result.result, a.steps[i].result.result, `step ${i + 1} did not follow the GSD`);
-  assert.deepEqual(b.steps[6].result.result, a.steps[6].result.result, 'the sun window does not depend on the GSD');
+  for (const i of [0, 2, 3, 4, 5, 6, 7]) assert.notDeepEqual(b.steps[i].result.result, a.steps[i].result.result, `step ${i + 1} did not follow the GSD`);
+  assert.deepEqual(b.steps[8].result.result, a.steps[8].result.result, 'the sun window does not depend on the GSD');
 });
 
 test('a failed step stops the chain: its own error, and later steps wait', async () => {
@@ -136,4 +136,28 @@ test('the copied plan is the inputs and each step’s own sentence, with the lin
   assert.match(text, /Not for primary navigation/);
   const stopped = await runChain(w, { metar: 'nope' }, invoke);
   assert.match(planText({ title: w.title, inputs: [], steps: stopped.steps.map((s) => ({ ...s, title: tool(s.tool).title })), url: 'u', today: 'd' }), /2\. Pressure altitude: Waiting for step 1\./);
+});
+
+test('a carry can reach into a list, count from its end, sit inside a literal, or be optional', async () => {
+  const seen = [];
+  const fake = async (tool, input) => {
+    seen.push(input);
+    return { ok: true, result: { rows: [{ v: { value: 1, unit: 'm' } }, { v: { value: 2, unit: 'm' } }], total: { value: 3, unit: 'h' } } };
+  };
+  const w = {
+    slug: 'z',
+    inputs: [{ name: 'burn', example: '9 gal/h' }],
+    steps: [
+      { tool: 'a', input: {} },
+      { tool: 'b', input: { first: { from: [0, 'rows', 0, 'v'] }, last: { from: [0, 'rows', -1, 'v'] }, gust: { from: [0, 'gust'], optional: true }, legs: [{ time: { from: [0, 'total'] }, burn: { input: 'burn' } }], fixed: 'x' } },
+    ],
+  };
+  const r = await runChain(w, {}, fake);
+  assert.ok(r.ok);
+  assert.deepEqual(seen[1], { first: '1 m', last: '2 m', legs: [{ time: '3 h', burn: '9 gal/h' }], fixed: 'x' });
+  assert.deepEqual(r.steps[1].carried.map((c) => c.name), ['first', 'last', 'legs']);
+  // Only the whole literal counts as an assumption; a literal holding a reference does not.
+  assert.deepEqual(assumptions(w).map((a) => a.name), ['fixed']);
+  // Without "optional", a missing answer is the workflow's bug.
+  await assert.rejects(runChain({ ...w, steps: [w.steps[0], { tool: 'b', input: { gust: { from: [0, 'gust'] } } }] }, {}, fake), /has no output "gust"/);
 });

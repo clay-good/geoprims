@@ -55,13 +55,13 @@ export async function createServer(opts = {}) {
   const dist = findDist();
   if (!dist) return null;
   const catalog = JSON.parse(readFileSync(join(dist, 'catalog', 'v1.json'), 'utf8'));
-  const { workerHost, runChain } = await loadRuntime();
+  const { workerHost, runChain, assumptions } = await loadRuntime();
   const host = workerHost(join(dist, 'wasm'), { timeoutMs: opts.timeoutMs ?? 10_000, maxBytes: MAX_MESSAGE_BYTES });
   await host.searchLoad(JSON.stringify(catalog.tools));
   const modules = JSON.parse(readFileSync(join(dist, 'wasm', 'modules.json'), 'utf8')).modules;
   const limits = JSON.parse(readFileSync(findData(dist, 'report-limits.json'), 'utf8'));
   const workflows = JSON.parse(readFileSync(findData(dist, 'workflows.json'), 'utf8')).workflows;
-  const handlers = metaHandlers({ host, catalog, modules, limits, workflows, runChain });
+  const handlers = metaHandlers({ host, catalog, modules, limits, workflows, runChain, assumptions });
   const direct = opts.toolsets ? directTools(catalog, opts.toolsets, ANNOTATIONS) : [];
   if (opts.toolsets && !direct.length) log(opts, `toolsets ${opts.toolsets.join(', ')} have no stable tools yet`);
   const listed = [...(opts.noMeta ? [] : TOOLS), ...direct.map(({ id, ...t }) => t)];

@@ -135,90 +135,161 @@
       "slug": "vfr-cross-country",
       "title": "VFR cross-country",
       "audience": "Pilots",
-      "summary": "Distance and true course between two airports, the heading to fly into the wind, the magnetic heading, and the time en route.",
-      "job": "Work out the course, heading, groundspeed, and time for a leg from the wind you expect.",
       "journey": "vfr-cross-country",
+      "summary": "From your route and the winds aloft to a nav log, the climb, fuel with reserve, and sunset at the destination.",
+      "job": "Plan a cross-country: heading, groundspeed, time, and fuel for every leg, the climb, the reserve, and whether you land before dark.",
       "inputs": [
         {
-          "name": "lat1",
-          "tool": "navigation.geodesic.inverse",
-          "field": "lat1",
-          "example": 39.5701
-        },
-        {
-          "name": "lon1",
-          "tool": "navigation.geodesic.inverse",
-          "field": "lon1",
-          "example": -104.8493
-        },
-        {
-          "name": "lat2",
-          "tool": "navigation.geodesic.inverse",
-          "field": "lat2",
-          "example": 38.8058
-        },
-        {
-          "name": "lon2",
-          "tool": "navigation.geodesic.inverse",
-          "field": "lon2",
-          "example": -104.7009
+          "name": "waypoints",
+          "tool": "aviation.flight-plan.nav-log",
+          "field": "waypoints",
+          "example": [
+            {
+              "name": "KAPA",
+              "lat": 39.5701,
+              "lon": -104.8493
+            },
+            {
+              "name": "KFLY",
+              "lat": 38.9433,
+              "lon": -104.5698
+            },
+            {
+              "name": "KCOS",
+              "lat": 38.8058,
+              "lon": -104.7009
+            }
+          ]
         },
         {
           "name": "tas",
-          "tool": "aviation.wind.heading-groundspeed",
+          "tool": "aviation.flight-plan.nav-log",
           "field": "tas",
           "example": "110 kt"
         },
         {
           "name": "wind_direction",
-          "tool": "aviation.wind.heading-groundspeed",
+          "tool": "aviation.flight-plan.nav-log",
           "field": "wind_direction",
           "example": "270 deg"
         },
         {
           "name": "wind_speed",
-          "tool": "aviation.wind.heading-groundspeed",
+          "tool": "aviation.flight-plan.nav-log",
           "field": "wind_speed",
           "example": "15 kt"
         },
         {
+          "name": "fuel_burn",
+          "tool": "aviation.flight-plan.nav-log",
+          "field": "fuel_burn",
+          "example": "8.5 gal/h"
+        },
+        {
+          "name": "usable_fuel",
+          "tool": "aviation.loading.fuel-plan",
+          "field": "usable_fuel",
+          "example": "40 gal"
+        },
+        {
           "name": "date",
-          "tool": "geodesy.magnetic.true-to-magnetic",
+          "tool": "aviation.flight-plan.nav-log",
           "field": "date",
           "example": "2026-09-21"
+        },
+        {
+          "name": "cruise_altitude",
+          "tool": "aviation.performance.climb-plan",
+          "field": "cruise_altitude",
+          "example": "9500 ft"
+        },
+        {
+          "name": "field_elevation",
+          "tool": "aviation.performance.climb-plan",
+          "field": "field_elevation",
+          "example": "5885 ft",
+          "advanced": true
+        },
+        {
+          "name": "climb_rate",
+          "tool": "aviation.performance.climb-plan",
+          "field": "climb_rate",
+          "example": "500 fpm",
+          "advanced": true
+        },
+        {
+          "name": "climb_tas",
+          "tool": "aviation.performance.climb-plan",
+          "field": "climb_tas",
+          "example": "80 kt",
+          "advanced": true
+        },
+        {
+          "name": "climb_burn",
+          "tool": "aviation.performance.climb-plan",
+          "field": "climb_burn",
+          "example": "11 gal/h",
+          "advanced": true
+        },
+        {
+          "name": "offset",
+          "tool": "time.sun.events",
+          "field": "offset",
+          "example": "-06:00",
+          "advanced": true
         }
       ],
       "steps": [
         {
-          "tool": "navigation.geodesic.inverse",
-          "why": "Distance and true course from Centennial (KAPA) to Colorado Springs (KCOS).",
+          "tool": "aviation.flight-plan.nav-log",
+          "why": "Each leg: the wind correction, magnetic heading from the WMM on your date, groundspeed, time, and fuel.",
           "input": {
-            "lat1": {
-              "input": "lat1"
+            "waypoints": {
+              "input": "waypoints"
             },
-            "lon1": {
-              "input": "lon1"
+            "tas": {
+              "input": "tas"
             },
-            "lat2": {
-              "input": "lat2"
+            "wind_direction": {
+              "input": "wind_direction"
             },
-            "lon2": {
-              "input": "lon2"
+            "wind_speed": {
+              "input": "wind_speed"
+            },
+            "fuel_burn": {
+              "input": "fuel_burn"
+            },
+            "date": {
+              "input": "date"
             }
           }
         },
         {
-          "tool": "aviation.wind.heading-groundspeed",
-          "why": "Correct the true course for the forecast wind at cruise.",
+          "tool": "aviation.performance.climb-plan",
+          "why": "The climb on the first leg: how long, how far, and how much fuel to reach cruise.",
           "input": {
+            "field_elevation": {
+              "input": "field_elevation"
+            },
+            "cruise_altitude": {
+              "input": "cruise_altitude"
+            },
+            "climb_rate": {
+              "input": "climb_rate"
+            },
+            "climb_tas": {
+              "input": "climb_tas"
+            },
+            "climb_burn": {
+              "input": "climb_burn"
+            },
             "course": {
               "from": [
                 0,
-                "azimuth1"
+                "legs",
+                0,
+                "true_course"
               ]
-            },
-            "tas": {
-              "input": "tas"
             },
             "wind_direction": {
               "input": "wind_direction"
@@ -229,42 +300,59 @@
           }
         },
         {
-          "tool": "geodesy.magnetic.true-to-magnetic",
-          "why": "Turn the true heading into the magnetic heading you will hold.",
+          "tool": "aviation.loading.fuel-plan",
+          "why": "Fuel for the route at your cruise burn plus the climb, against what you carry, with the day VFR reserve of 14 CFR 91.151.",
           "input": {
-            "bearing": {
+            "legs": [
+              {
+                "time": {
+                  "from": [
+                    0,
+                    "total_time"
+                  ]
+                },
+                "burn": {
+                  "input": "fuel_burn"
+                }
+              }
+            ],
+            "climb": {
               "from": [
                 1,
-                "heading"
+                "fuel"
               ]
             },
-            "direction": "true-to-magnetic",
-            "lat": {
-              "input": "lat1"
-            },
-            "lon": {
-              "input": "lon1"
-            },
-            "date": {
-              "input": "date"
+            "reserve": "vfr-day",
+            "usable_fuel": {
+              "input": "usable_fuel"
             }
           }
         },
         {
-          "tool": "navigation.route.time-speed-distance",
-          "why": "Distance over groundspeed gives the time en route.",
+          "tool": "time.sun.events",
+          "why": "Sunset and the end of civil twilight at the destination on your date.",
           "input": {
-            "distance": {
+            "lat": {
               "from": [
                 0,
-                "distance"
+                "path",
+                -1,
+                "lat"
               ]
             },
-            "speed": {
+            "lon": {
               "from": [
-                1,
-                "groundspeed"
+                0,
+                "path",
+                -1,
+                "lon"
               ]
+            },
+            "date": {
+              "input": "date"
+            },
+            "offset": {
+              "input": "offset"
             }
           }
         }
@@ -595,13 +683,13 @@
       "slug": "mapping-flight",
       "title": "Drone mapping day",
       "audience": "Drone operators",
-      "summary": "From the resolution the client wants to the height, overlap, blur check, image count, and the hours of good light.",
-      "job": "Plan a mapping flight from the resolution you need: height, overlap, photo count, and when the light is good.",
       "journey": "drone-mapping-day",
+      "summary": "From the resolution you need to the height, photo count, batteries, where to swap them, and when the light is good.",
+      "job": "Plan a mapping flight from the resolution you need: height, photos, batteries and swap points, line of sight from where you stand, and the light.",
       "inputs": [
         {
           "name": "area",
-          "tool": "drone.photogrammetry.image-count",
+          "tool": "drone.mission.survey-grid",
           "field": "area",
           "example": [
             {
@@ -629,16 +717,22 @@
           "example": "2 cm"
         },
         {
-          "name": "front_overlap",
-          "tool": "drone.photogrammetry.trigger",
-          "field": "front_overlap",
-          "example": 75
+          "name": "lat",
+          "tool": "drone.mission.sorties",
+          "field": "lat",
+          "example": 39.7392
         },
         {
-          "name": "side_overlap",
-          "tool": "drone.photogrammetry.trigger",
-          "field": "side_overlap",
-          "example": 65
+          "name": "lon",
+          "tool": "drone.mission.sorties",
+          "field": "lon",
+          "example": -105.0012
+        },
+        {
+          "name": "flight_time",
+          "tool": "drone.mission.sorties",
+          "field": "flight_time",
+          "example": "22 min"
         },
         {
           "name": "groundspeed",
@@ -657,6 +751,27 @@
           "tool": "time.sun.mapping-window",
           "field": "offset",
           "example": "-06:00"
+        },
+        {
+          "name": "front_overlap",
+          "tool": "drone.photogrammetry.trigger",
+          "field": "front_overlap",
+          "example": 75,
+          "advanced": true
+        },
+        {
+          "name": "side_overlap",
+          "tool": "drone.photogrammetry.trigger",
+          "field": "side_overlap",
+          "example": 65,
+          "advanced": true
+        },
+        {
+          "name": "reserve",
+          "tool": "drone.mission.sorties",
+          "field": "reserve",
+          "example": 25,
+          "advanced": true
         },
         {
           "name": "sensor_width",
@@ -698,20 +813,6 @@
           "tool": "drone.photogrammetry.motion-blur",
           "field": "exposure",
           "example": "0.001 s",
-          "advanced": true
-        },
-        {
-          "name": "lat",
-          "tool": "time.sun.mapping-window",
-          "field": "lat",
-          "example": 39.742,
-          "advanced": true
-        },
-        {
-          "name": "lon",
-          "tool": "time.sun.mapping-window",
-          "field": "lon",
-          "example": -104.997,
           "advanced": true
         }
       ],
@@ -827,8 +928,8 @@
           }
         },
         {
-          "tool": "drone.photogrammetry.image-count",
-          "why": "How many photos and how long the block takes.",
+          "tool": "drone.mission.survey-grid",
+          "why": "The flight lines over your area, the photo count, and the flying time.",
           "input": {
             "area": {
               "input": "area"
@@ -847,12 +948,72 @@
             },
             "groundspeed": {
               "input": "groundspeed"
+            },
+            "height": {
+              "from": [
+                0,
+                "height"
+              ]
             }
           }
         },
         {
+          "tool": "drone.mission.sorties",
+          "why": "How many batteries, and where each flight ends so the next one picks up there, counting the trip home.",
+          "input": {
+            "lat": {
+              "input": "lat"
+            },
+            "lon": {
+              "input": "lon"
+            },
+            "waypoints": {
+              "from": [
+                5,
+                "waypoints"
+              ],
+              "columns": [
+                "lat",
+                "lon"
+              ]
+            },
+            "flight_time": {
+              "input": "flight_time"
+            },
+            "groundspeed": {
+              "input": "groundspeed"
+            },
+            "reserve": {
+              "input": "reserve"
+            }
+          }
+        },
+        {
+          "tool": "drone.ops.vlos-check",
+          "why": "Whether every waypoint stays within sight of where you stand (14 CFR 107.31).",
+          "input": {
+            "lat": {
+              "input": "lat"
+            },
+            "lon": {
+              "input": "lon"
+            },
+            "waypoints": {
+              "from": [
+                5,
+                "waypoints"
+              ],
+              "columns": [
+                "lat",
+                "lon"
+              ]
+            },
+            "characteristic_dimension": "0.35 m"
+          }
+        },
+        {
           "tool": "time.sun.mapping-window",
-          "why": "The hours when the sun is high enough for even light.",
+          "why": "When the sun is high enough for even light and short shadows.",
           "input": {
             "lat": {
               "input": "lat"
@@ -870,7 +1031,7 @@
         }
       ],
       "visual": {
-        "step": 5
+        "step": 6
       }
     },
     {
@@ -1429,6 +1590,298 @@
       ],
       "visual": {
         "step": 4
+      }
+    },
+    {
+      "slug": "can-i-fly-now",
+      "title": "Can I fly now?",
+      "audience": "Drone operators",
+      "summary": "The wind at your flying height against your drone’s limit, the light, and your altitude ceiling, from a METAR.",
+      "job": "Check the wind at your flying height against your drone, the light, and how high you may go, before you launch.",
+      "inputs": [
+        {
+          "name": "metar",
+          "tool": "aviation.weather.metar-decode",
+          "field": "report",
+          "example": "KAPA 211653Z 17012G20KT 10SM FEW120 22/04 A3012"
+        },
+        {
+          "name": "flying_height",
+          "tool": "drone.ops.wind-limit",
+          "field": "flying_height",
+          "example": "100 m"
+        },
+        {
+          "name": "wind_rating",
+          "tool": "drone.ops.wind-limit",
+          "field": "wind_rating",
+          "example": "12 m/s"
+        },
+        {
+          "name": "lat",
+          "tool": "time.sun.events",
+          "field": "lat",
+          "example": 39.5701
+        },
+        {
+          "name": "lon",
+          "tool": "time.sun.events",
+          "field": "lon",
+          "example": -104.8493
+        },
+        {
+          "name": "date",
+          "tool": "time.sun.events",
+          "field": "date",
+          "example": "2026-09-21"
+        },
+        {
+          "name": "offset",
+          "tool": "time.sun.events",
+          "field": "offset",
+          "example": "-06:00"
+        },
+        {
+          "name": "terrain",
+          "tool": "drone.ops.wind-limit",
+          "field": "terrain",
+          "example": "open",
+          "advanced": true
+        },
+        {
+          "name": "structure_height",
+          "tool": "drone.ops.part107-altitude",
+          "field": "structure_height",
+          "example": "",
+          "advanced": true
+        },
+        {
+          "name": "structure_distance",
+          "tool": "drone.ops.part107-altitude",
+          "field": "structure_distance",
+          "example": "",
+          "advanced": true
+        }
+      ],
+      "steps": [
+        {
+          "tool": "aviation.weather.metar-decode",
+          "why": "Read the wind and gusts from the nearest METAR.",
+          "input": {
+            "report": {
+              "input": "metar"
+            }
+          }
+        },
+        {
+          "tool": "drone.ops.wind-limit",
+          "why": "The METAR wind is measured at 10 m; at your flying height it is stronger. Compare it with your drone’s rating.",
+          "input": {
+            "wind_speed": {
+              "from": [
+                0,
+                "wind_speed"
+              ]
+            },
+            "gust": {
+              "from": [
+                0,
+                "wind_gust"
+              ],
+              "optional": true
+            },
+            "flying_height": {
+              "input": "flying_height"
+            },
+            "wind_rating": {
+              "input": "wind_rating"
+            },
+            "terrain": {
+              "input": "terrain"
+            }
+          }
+        },
+        {
+          "tool": "time.sun.events",
+          "why": "Sunrise, sunset, and civil twilight, which 14 CFR 107.29 ties to lighting and night rules.",
+          "input": {
+            "lat": {
+              "input": "lat"
+            },
+            "lon": {
+              "input": "lon"
+            },
+            "date": {
+              "input": "date"
+            },
+            "offset": {
+              "input": "offset"
+            }
+          }
+        },
+        {
+          "tool": "drone.ops.part107-altitude",
+          "why": "How high you may fly here: 400 ft above the ground, or higher within 400 ft of a structure.",
+          "input": {
+            "structure_height": {
+              "input": "structure_height"
+            },
+            "structure_distance": {
+              "input": "structure_distance"
+            }
+          }
+        }
+      ],
+      "visual": {
+        "step": 1
+      }
+    },
+    {
+      "slug": "inspection",
+      "title": "Plan an inspection",
+      "audience": "Drone operators",
+      "summary": "An orbit around a structure: the path and gimbal angle, the detail each photo resolves, and line of sight from where you stand.",
+      "job": "Plan an orbit around a tower or building: the path, the gimbal angle, the detail you will capture, and whether you can see it all.",
+      "inputs": [
+        {
+          "name": "lat",
+          "tool": "drone.mission.orbit",
+          "field": "lat",
+          "example": 40.0
+        },
+        {
+          "name": "lon",
+          "tool": "drone.mission.orbit",
+          "field": "lon",
+          "example": -105.0
+        },
+        {
+          "name": "radius",
+          "tool": "drone.mission.orbit",
+          "field": "radius",
+          "example": "50 m"
+        },
+        {
+          "name": "height",
+          "tool": "drone.mission.orbit",
+          "field": "height",
+          "example": "80 m"
+        },
+        {
+          "name": "target_height",
+          "tool": "drone.mission.orbit",
+          "field": "target_height",
+          "example": "60 m"
+        },
+        {
+          "name": "photos",
+          "tool": "drone.mission.orbit",
+          "field": "photos",
+          "example": 24
+        },
+        {
+          "name": "pilot_lat",
+          "tool": "drone.ops.vlos-check",
+          "field": "lat",
+          "example": 39.9985
+        },
+        {
+          "name": "pilot_lon",
+          "tool": "drone.ops.vlos-check",
+          "field": "lon",
+          "example": -105.0015
+        },
+        {
+          "name": "sensor_width",
+          "tool": "drone.photogrammetry.gsd",
+          "field": "sensor_width",
+          "example": "13.2 mm",
+          "advanced": true
+        },
+        {
+          "name": "focal_length",
+          "tool": "drone.photogrammetry.gsd",
+          "field": "focal_length",
+          "example": "8.8 mm",
+          "advanced": true
+        },
+        {
+          "name": "image_width",
+          "tool": "drone.photogrammetry.gsd",
+          "field": "image_width",
+          "example": 5472,
+          "advanced": true
+        }
+      ],
+      "steps": [
+        {
+          "tool": "drone.mission.orbit",
+          "why": "The circle around the structure, with the heading and gimbal pitch at each photo that keeps the target centered.",
+          "input": {
+            "lat": {
+              "input": "lat"
+            },
+            "lon": {
+              "input": "lon"
+            },
+            "radius": {
+              "input": "radius"
+            },
+            "height": {
+              "input": "height"
+            },
+            "target_height": {
+              "input": "target_height"
+            },
+            "photos": {
+              "input": "photos"
+            }
+          }
+        },
+        {
+          "tool": "drone.photogrammetry.gsd",
+          "why": "The detail each photo resolves on the structure, taking the orbit radius as the distance to it (a level view).",
+          "input": {
+            "height": {
+              "input": "radius"
+            },
+            "sensor_width": {
+              "input": "sensor_width"
+            },
+            "focal_length": {
+              "input": "focal_length"
+            },
+            "image_width": {
+              "input": "image_width"
+            }
+          }
+        },
+        {
+          "tool": "drone.ops.vlos-check",
+          "why": "Whether the whole orbit stays within sight of where you stand (14 CFR 107.31).",
+          "input": {
+            "lat": {
+              "input": "pilot_lat"
+            },
+            "lon": {
+              "input": "pilot_lon"
+            },
+            "waypoints": {
+              "from": [
+                0,
+                "waypoints"
+              ],
+              "columns": [
+                "lat",
+                "lon"
+              ]
+            },
+            "characteristic_dimension": "0.35 m"
+          }
+        }
+      ],
+      "visual": {
+        "step": 0
       }
     }
   ]

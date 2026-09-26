@@ -475,7 +475,7 @@ function etpLine(args, result) {
     dot(x0, y, 'dg-dot-now'),
     dot(xe, y, 'dg-dot-now'),
     text('dg-muted-text', x0, y + 22, 'Departure', 'middle'),
-    text('dg-muted-text', xe, y + 22, 'Destination', 'middle'),
+    text('dg-muted-text', xe, y + 22, 'Destination', 'end'),
     line('dg-accent', [X(etp), y - 18], [X(etp), y + 18]),
     text('dg-label', X(etp), y - 26, `ETP ${disp(result, 'etp_distance')}`, 'middle'),
     pnr !== null && !beyond ? line('dg-accent dg-dash', [X(pnr), y - 18], [X(pnr), y + 40]) : '',
@@ -1319,7 +1319,7 @@ function windLimit(args, result) {
     text(over ? 'dg-label' : 'dg-muted-text', X(lim), y - 34, `Limit ${disp(result, 'rating')}`, 'middle'),
     text('dg-muted-text', 20, 176, `At ${typed(args.flying_height, 'm')}: margin ${disp(result, 'margin_to_rating')}`),
     text('dg-muted-text', 20, 192, reported),
-    text('dg-muted-text', 20, 226, 'Gusts near buildings and trees are not modeled.'),
+    text('dg-muted-text', 20, 226, 'Gusts near buildings are not modeled.'),
   ].join('');
   const title = `At ${typed(args.flying_height, 'm')} the wind is ${disp(result, 'wind_at_height')}${g !== null ? `, gusting ${disp(result, 'gust_at_height')}` : ''}, against a limit of ${disp(result, 'rating')}.`;
   return { markup: svg(body, title), desc: title };

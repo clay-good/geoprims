@@ -183,7 +183,7 @@ function bounds(list) {
 const bindValue = (v) =>
   v && typeof v === 'object' && typeof v.value === 'number' && typeof v.unit === 'string' ? `${v.value} ${v.unit}` : v;
 
-export function metaHandlers({ host, catalog, modules = [], limits, workflows = [], runChain = null }) {
+export function metaHandlers({ host, catalog, modules = [], limits, workflows = [], runChain = null, assumptions = () => [] }) {
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
   // Workflows (add-job-workflows): a job as one call, run by the website's chain runner.
   const flows = new Map(workflows.map((w) => [`workflow.${w.slug}`, w]));
@@ -215,7 +215,7 @@ export function metaHandlers({ host, catalog, modules = [], limits, workflows = 
       return { name: i.name, title: f.title, description: f.description, unit: f['x-unit'], example: i.example, ...(i.advanced ? { advanced: true } : {}) };
     }),
     steps: w.steps.map((s) => ({ tool: s.tool, why: s.why })),
-    fixed: w.steps.flatMap((s, step) => Object.entries(s.input ?? {}).filter(([, v]) => !(v && typeof v === 'object' && !Array.isArray(v) && ('from' in v || 'input' in v))).map(([name, value]) => ({ step, tool: s.tool, name, value }))),
+    fixed: assumptions(w),
   });
   const run = async (id, args, context) => {
     const out = await host.invoke(id, JSON.stringify(args), context);

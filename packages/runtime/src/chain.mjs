@@ -7,7 +7,12 @@
 // A step input is a literal (fixed by the workflow: an assumption), or
 //   {"input": "name"}             the workflow input of that name, or
 //   {"from": [step, "output"]}    an earlier step's output, with "columns" to
-//                                 carry only the list columns the next tool takes.
+//                                 carry only the list columns the next tool takes;
+//                                 more keys after the output reach into it
+//                                 ([2, "legs", 0, "true_course"]; a negative
+//                                 index counts from the end), and "optional":
+//                                 true leaves the input out when the earlier
+//                                 answer has no such value (a METAR without a gust).
 
 /** 12 significant digits: drops binary noise (72.96000000000001), far below any tool's precision. */
 const tidy = (n) => (typeof n === 'number' && Number.isFinite(n) ? Number(n.toPrecision(12)) : n);
@@ -19,6 +24,9 @@ export function asInput(v) {
 }
 
 const isRef = (v, key) => v && typeof v === 'object' && !Array.isArray(v) && key in v;
+const SKIP = Symbol('skip');
+/** Whether a step input holds a reference anywhere inside it. */
+const hasRef = (v) => isRef(v, 'from') || isRef(v, 'input') || (Array.isArray(v) ? v.some(hasRef) : !!v && typeof v === 'object' && Object.values(v).some(hasRef));
 
 /** The workflow inputs' example values: the prefill. */
 export const examples = (workflow) => Object.fromEntries((workflow.inputs ?? []).map((i) => [i.name, i.example]));
@@ -40,26 +48,43 @@ export async function runChain(workflow, values, invoke) {
       steps.push({ tool: step.tool, why: step.why, status: 'waiting', waitingOn: failed, input: null, result: null, carried: [] });
       continue;
     }
-    const input = {};
     const carried = [];
-    for (const [name, v] of Object.entries(step.input ?? {})) {
+    // A value with its references filled in, or SKIP when a blank input or a
+    // missing optional answer leaves it out. References may sit inside a list
+    // or object literal (one fuel leg: [{"time": {"from": ...}, "burn": {"input": ...}}]).
+    const resolve = (v, name) => {
       if (isRef(v, 'from') && Array.isArray(v.from)) {
-        const [at, key] = v.from;
+        const [at, key, ...path] = v.from;
         if (!(at < i)) throw new Error(`${workflow.slug} step ${i + 1}: "${name}" takes from step ${at + 1}, which is not earlier.`);
-        const out = steps[at].result.result[key];
-        if (out === undefined) throw new Error(`${workflow.slug} step ${i + 1}: step ${at + 1} (${steps[at].tool}) has no output "${key}".`);
+        let out = steps[at].result.result[key];
+        for (const k of path) {
+          if (out === undefined || out === null) break;
+          out = Number.isInteger(k) && Array.isArray(out) ? out.at(k) : out[k];
+        }
+        if (out === undefined || out === null) {
+          if (v.optional) return SKIP;
+          throw new Error(`${workflow.slug} step ${i + 1}: step ${at + 1} (${steps[at].tool}) has no output "${[key, ...path].join('.')}".`);
+        }
+        if (!carried.some((c) => c.name === name)) carried.push({ name, from: at });
         // A list carries only the columns the next tool takes, and no empty cells.
-        input[name] = v.columns && Array.isArray(out)
+        return v.columns && Array.isArray(out)
           ? out.map((row) => Object.fromEntries(v.columns.filter((c) => row[c] !== undefined && row[c] !== null && row[c] !== '').map((c) => [c, asInput(row[c])])))
           : asInput(out);
-        carried.push({ name, from: at });
-      } else if (isRef(v, 'input')) {
+      }
+      if (isRef(v, 'input')) {
         if (!(workflow.inputs ?? []).some((x) => x.name === v.input)) throw new Error(`${workflow.slug} step ${i + 1}: "${name}" names no workflow input "${v.input}".`);
         const value = given[v.input];
         // A blank optional input is left out, so the tool applies its own default.
-        if (value === undefined || value === null || value === '') continue;
-        input[name] = value;
-      } else input[name] = v;
+        return value === undefined || value === null || value === '' ? SKIP : value;
+      }
+      if (Array.isArray(v)) return v.map((x) => resolve(x, name)).filter((x) => x !== SKIP);
+      if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, resolve(x, name)]).filter(([, x]) => x !== SKIP));
+      return v;
+    };
+    const input = {};
+    for (const [name, v] of Object.entries(step.input ?? {})) {
+      const value = resolve(v, name);
+      if (value !== SKIP) input[name] = value;
     }
     // The step's index rides along, so a caller can key its requests per step.
     const result = await invoke(step.tool, input, i);
@@ -78,7 +103,7 @@ export function assumptions(workflow) {
   const out = [];
   for (const [i, step] of workflow.steps.entries()) {
     for (const [name, v] of Object.entries(step.input ?? {})) {
-      if (isRef(v, 'from') || isRef(v, 'input')) continue;
+      if (hasRef(v)) continue;
       out.push({ step: i, tool: step.tool, name, value: v });
     }
   }

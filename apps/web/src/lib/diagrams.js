@@ -433,6 +433,59 @@ function climbTriangle(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Climb to cruise, side view: from the runway up to the top of climb, then level. Not to scale vertically. */
+function climbProfile(args, result) {
+  const toc = val(result, 'top_of_climb');
+  if (!Number.isFinite(toc) || toc <= 0) return null;
+  const [x0, x1, xe, yTop, yBot] = [24, 220, 300, 70, 176];
+  const fuel = result.result.fuel ? ` · ${disp(result, 'fuel')}` : '';
+  const body = [
+    line('dg-runway', [x0, yBot], [x0 + 36, yBot]),
+    line('dg-casing', [x0 + 36, yBot], [x1, yTop]),
+    line('dg-accent', [x0 + 36, yBot], [x1, yTop]),
+    `<line class="dg-muted dg-dash" x1="${x1}" y1="${yTop}" x2="${xe}" y2="${yTop}"/>`,
+    dot(x1, yTop),
+    text('dg-label', x1, yTop - 12, 'Top of climb', 'middle'),
+    text('dg-muted-text', x0, yBot + 18, typed(args.field_elevation, 'ft')),
+    text('dg-muted-text', xe, yTop - 12, typed(args.cruise_altitude, 'ft'), 'end'),
+    // The distance to the top of climb, measured along the ground under the climb.
+    line('dg-muted', [x0 + 36, yBot + 32], [x1, yBot + 32]),
+    line('dg-muted', [x0 + 36, yBot + 26], [x0 + 36, yBot + 38]),
+    line('dg-muted', [x1, yBot + 26], [x1, yBot + 38]),
+    text('dg-label', (x0 + 36 + x1) / 2, yBot + 52, disp(result, 'top_of_climb'), 'middle'),
+    text('dg-muted-text', (x0 + 36 + x1) / 2 + 10, (yTop + yBot) / 2 + 26, `${disp(result, 'time')}${fuel}`),
+  ].join('');
+  const title = `Climb from ${typed(args.field_elevation, 'ft')} to ${typed(args.cruise_altitude, 'ft')}: top of climb ${disp(result, 'top_of_climb')} from departure after ${disp(result, 'time')}${result.result.fuel ? `, using ${disp(result, 'fuel')}` : ''}. Not to scale vertically.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** The leg from departure to destination, with the equal time point and the point of no return on it. */
+function etpLine(args, result) {
+  const etp = val(result, 'etp_distance');
+  const rest = val(result, 'etp_to_destination');
+  const pnr = result.result.pnr_distance ? val(result, 'pnr_distance') : null;
+  if (![etp, rest].every(Number.isFinite) || etp + rest <= 0) return null;
+  const total = etp + rest;
+  const [x0, xe, y] = [30, 290, 120];
+  const X = (d) => x0 + ((xe - x0) * Math.min(d, total)) / total;
+  const beyond = pnr !== null && pnr > total;
+  const body = [
+    line('dg-casing', [x0, y], [xe, y]),
+    line('dg-muted', [x0, y], [xe, y]),
+    dot(x0, y, 'dg-dot-now'),
+    dot(xe, y, 'dg-dot-now'),
+    text('dg-muted-text', x0, y + 22, 'Departure', 'middle'),
+    text('dg-muted-text', xe, y + 22, 'Destination', 'middle'),
+    line('dg-accent', [X(etp), y - 18], [X(etp), y + 18]),
+    text('dg-label', X(etp), y - 26, `ETP ${disp(result, 'etp_distance')}`, 'middle'),
+    pnr !== null && !beyond ? line('dg-accent dg-dash', [X(pnr), y - 18], [X(pnr), y + 40]) : '',
+    pnr !== null ? text('dg-label', beyond ? xe : X(pnr), y + 56, beyond ? `PNR ${disp(result, 'pnr_distance')}, past the destination` : `PNR ${disp(result, 'pnr_distance')}`, beyond ? 'end' : 'middle') : '',
+    text('dg-muted-text', x0, 200, `On at ${disp(result, 'groundspeed_out')}, back at ${disp(result, 'groundspeed_back')}`),
+  ].join('');
+  const title = `Equal time point ${disp(result, 'etp_distance')} from departure${pnr !== null ? `, point of no return ${disp(result, 'pnr_distance')} out` : ''}, going on at ${disp(result, 'groundspeed_out')} and back at ${disp(result, 'groundspeed_back')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 /** The earth's curve as an arc across the drawing, and a height above it at x. */
 const EARTH = { cx: 160, cy: 760, r: 600 };
 const onEarth = (x) => [x, EARTH.cy - Math.sqrt(EARTH.r ** 2 - (x - EARTH.cx) ** 2)];
@@ -1264,6 +1317,8 @@ const DIAGRAMS = {
   'time.sun.mapping-window': sunPath,
   'survey.curves.circular-curve': circularCurve,
   'aviation.performance.climb-gradient': climbTriangle,
+  'aviation.performance.climb-plan': climbProfile,
+  'aviation.performance.etp-pnr': etpLine,
   'navigation.los.horizon': horizonSketch,
   'navigation.los.visibility': sightLine,
   'navigation.los.fresnel': fresnelZone,

@@ -716,6 +716,30 @@
     {
       "query": "which leg am i on",
       "expect": "navigation.route.closest-point"
+    },
+    {
+      "query": "navigation log",
+      "expect": "aviation.flight-plan.nav-log"
+    },
+    {
+      "query": "vfr flight log with wind and fuel",
+      "expect": "aviation.flight-plan.nav-log"
+    },
+    {
+      "query": "top of climb",
+      "expect": "aviation.performance.climb-plan"
+    },
+    {
+      "query": "time fuel and distance to climb",
+      "expect": "aviation.performance.climb-plan"
+    },
+    {
+      "query": "equal time point",
+      "expect": "aviation.performance.etp-pnr"
+    },
+    {
+      "query": "point of no return",
+      "expect": "aviation.performance.etp-pnr"
     }
   ]
 }

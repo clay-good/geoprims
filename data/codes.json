@@ -373,6 +373,10 @@
     "WEB_MERCATOR_CLAMPED": {
       "severity": "info",
       "message": "Latitude was clamped to the Web Mercator limit."
+    },
+    "WIND_EXCEEDS_TAS": {
+      "severity": "caution",
+      "message": "On at least one leg the wind is too strong for the true airspeed, so that leg cannot be flown."
     }
   }
 }

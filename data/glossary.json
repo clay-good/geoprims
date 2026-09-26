@@ -1105,6 +1105,7 @@
         "aviation.airspeed.cas-to-tas",
         "aviation.loading.fuel-plan",
         "aviation.loading.weight-balance",
+        "aviation.performance.climb-plan",
         "aviation.performance.glide",
         "aviation.performance.specific-range"
       ]
@@ -1361,6 +1362,7 @@
       "definition": "The aircraft's speed through the air mass. At altitude, where the air is thinner, it is higher than calibrated airspeed.",
       "source": "faa-phak",
       "relatedTools": [
+        "aviation.performance.etp-pnr",
         "aviation.performance.glide"
       ]
     },
@@ -1636,6 +1638,7 @@
       "definition": "The model of the Earth's magnetic field used by charts and GPS units to give magnetic variation for a place and date. It is replaced every five years; WMM2025 runs to 2030.",
       "source": "wmm",
       "relatedTools": [
+        "aviation.flight-plan.nav-log",
         "aviation.ifr.radial-fix"
       ]
     },
@@ -1649,6 +1652,30 @@
         "indexing.tile.bounds",
         "indexing.tile.from-point"
       ]
+    },
+    {
+      "id": "etp",
+      "term": "ETP",
+      "expansion": "equal time point",
+      "definition": "The point on a leg where going on and turning back take the same time. With no wind it is halfway; a headwind on the way out moves it toward the destination. Also called the critical point.",
+      "source": "casa-ac-91-15",
+      "relatedTools": []
+    },
+    {
+      "id": "pnr",
+      "term": "PNR",
+      "expansion": "point of no return",
+      "definition": "The farthest point along a leg from which you can still turn back and reach departure with your reserve fuel left. Past it, you are committed to going on.",
+      "source": "casa-ac-91-15",
+      "relatedTools": []
+    },
+    {
+      "id": "toc",
+      "term": "TOC",
+      "expansion": "top of climb",
+      "definition": "The point where a climb reaches cruise altitude, given as a distance from departure along the route.",
+      "source": "faa-phak",
+      "relatedTools": []
     }
   ],
   "notAbbreviations": [

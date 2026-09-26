@@ -27,7 +27,7 @@ const PHAK_NAV: Reference = Reference {
     ..PHAK
 };
 
-const CARD_ROW: &[Field] = &[
+pub(crate) const CARD_ROW: &[Field] = &[
     qty(
         "heading",
         "For magnetic heading",
@@ -205,17 +205,11 @@ pub fn card_deviation(card: &[(f64, f64)], hdg: f64) -> f64 {
     }
 }
 
-fn run_chain(ctx: &mut Ctx) -> Result<Json, ToolError> {
+/// Reads a `deviation_card` input (magnetic heading and east-positive
+/// deviation per row), sorted by heading; empty when none is given. The nav
+/// log reads its card with this too, so both tools read a card the same way.
+pub(crate) fn read_card(ctx: &mut Ctx) -> Result<Vec<(f64, f64)>, ToolError> {
     let dg = unit(QT::Angle, "deg");
-    let tc = ctx.req_quantity("true_course")?.to(dg);
-    let wca = ctx.quantity("wind_correction")?.map_or(0.0, |q| q.to(dg));
-    let var = ctx.req_quantity("variation")?.to(dg);
-    if wca.abs() >= 90.0 || var.abs() > 180.0 {
-        return Err(ToolError::invalid(
-            "/wind_correction",
-            "A wind correction under 90° and a variation within ±180°, please.",
-        ));
-    }
     let mut card: Vec<(f64, f64)> = Vec::new();
     if ctx.is_set("deviation_card") {
         let rows = ctx.rows("deviation_card")?;
@@ -244,6 +238,21 @@ fn run_chain(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         }
     }
+    Ok(card)
+}
+
+fn run_chain(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let dg = unit(QT::Angle, "deg");
+    let tc = ctx.req_quantity("true_course")?.to(dg);
+    let wca = ctx.quantity("wind_correction")?.map_or(0.0, |q| q.to(dg));
+    let var = ctx.req_quantity("variation")?.to(dg);
+    if wca.abs() >= 90.0 || var.abs() > 180.0 {
+        return Err(ToolError::invalid(
+            "/wind_correction",
+            "A wind correction under 90° and a variation within ±180°, please.",
+        ));
+    }
+    let card = read_card(ctx)?;
     let th = norm(tc + wca);
     let mh = norm(th - var);
     let dev = card_deviation(&card, mh);

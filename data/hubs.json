@@ -153,6 +153,39 @@
         }
       ]
     },
+    "aviation.flight-plan": {
+      "summary": "Plan a flight leg by leg: headings, times, and fuel for the whole route.",
+      "intro": "A navigation log for a whole route, worked the way the planning sheet does it: true course, wind correction, true, magnetic, and compass heading, groundspeed, time, and fuel for every leg, with the totals. Pilots use it to plan a cross-country flight. Start with the nav log and give it your waypoints, true airspeed, the winds aloft, and your fuel burn. Add the climb from the climb plan, and check the fuel with the reserve before you go.",
+      "tasks": [
+        {
+          "want": "plan a flight: the heading, time, and fuel for every leg",
+          "tools": [
+            "nav-log"
+          ]
+        }
+      ],
+      "guide": {
+        "title": "Plan a flight",
+        "steps": [
+          {
+            "text": "Work out the climb: how long, how far, and how much fuel to reach cruise, and where the top of climb falls on the first leg.",
+            "tool": "aviation.performance.climb-plan"
+          },
+          {
+            "text": "Fill in the nav log: the heading to fly, the groundspeed, the time, and the fuel for every leg.",
+            "tool": "nav-log"
+          },
+          {
+            "text": "On a long leg over water or remote country, find the equal time point and the point of no return.",
+            "tool": "aviation.performance.etp-pnr"
+          },
+          {
+            "text": "Add the taxi, the climb, and the legal reserve, and check the total against the fuel you carry.",
+            "tool": "aviation.loading.fuel-plan"
+          }
+        ]
+      }
+    },
     "aviation.ifr": {
       "summary": "Holding, DME, and station geometry for instrument flying.",
       "intro": "Holding entries, holding speeds and wind correction, DME slant range and arcs, radial fixes and intercepts, and time to a station, for instrument pilots planning or reviewing a procedure. Start with the holding entry tool, which picks direct, teardrop, or parallel from your heading and the hold's inbound course, per AIM 5-3-8. Decide the entry from your heading as you reach the fix, not from where you are when the clearance comes. ATC instructions and the published procedure always govern.",
@@ -263,6 +296,18 @@
           "want": "plan a climb gradient or vertical speed",
           "tools": [
             "climb-gradient"
+          ]
+        },
+        {
+          "want": "plan the climb to cruise altitude and find the top of climb",
+          "tools": [
+            "climb-plan"
+          ]
+        },
+        {
+          "want": "find the equal time point and the point of no return on a long leg",
+          "tools": [
+            "etp-pnr"
           ]
         },
         {

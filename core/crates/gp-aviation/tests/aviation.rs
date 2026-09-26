@@ -52,6 +52,7 @@ fn catalog_lint_and_registry() {
         "units.pressure.inhg-to-hpa",
         "navigation.route.cross-track",
         "navigation.route.range-rings",
+        "navigation.route.legs",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));

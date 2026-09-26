@@ -1,12 +1,12 @@
 # Tasks
 
-- [ ] 1 Add the ETP/PNR and wind-profile sources to `data/sources-ledger.json` at their current editions, read in full → verify: the ledger gate passes, and each row's `verificationNote` names the section read
-- [ ] 2 `aviation.flight-plan.nav-log` → verify: PHAK chapter 16 vector; every leg's heading and groundspeed equal `heading-groundspeed` on the same inputs; antimeridian and single-leg cases
-- [ ] 3 `aviation.performance.climb-plan` → verify: PHAK vector; zero-climb (field at cruise) returns zero time with a note
-- [ ] 4 `aviation.performance.etp-pnr` → verify: the source's worked example; with no wind, the ETP is at mid-leg exactly; a headwind moves the ETP toward destination
+- [ ] 1 Add the ETP/PNR and wind-profile sources to `data/sources-ledger.json` at their current editions, read in full → verify: the ledger gate passes, and each row's `verificationNote` names the section read (built: `casa-ac-91-15`, CASA AC 91-15 v1.2 Annex B, pages B9 and B10 and Table 9, the critical point worked example; its note says the annex works no point-of-no-return example and that casa.gov.au refused automated requests, so the edition was read from the Internet Archive's copy and is not yet confirmed at the issuer (lastVerified is null). Pending: the wind-profile source, with drone.ops.wind-limit)
+- [x] 2 `aviation.flight-plan.nav-log` → verify: PHAK chapter 16 vector; every leg's heading and groundspeed equal `heading-groundspeed` on the same inputs; antimeridian and single-leg cases
+- [x] 3 `aviation.performance.climb-plan` → verify: PHAK vector; zero-climb (field at cruise) returns zero time with a note (the PHAK Figure 11-25 text says 4 minutes, but its own readings of 6 and 10.5 minutes subtract to 4.5; the vector takes the readings)
+- [x] 4 `aviation.performance.etp-pnr` → verify: the source's worked example; with no wind, the ETP is at mid-leg exactly; a headwind moves the ETP toward destination (the source works the ETP only; the PNR is checked by its defining property, time out plus time back equals the safe endurance)
 - [ ] 5 `drone.mission.sorties` → verify: a hand-worked 3-sortie grid; one sortie when the path fits one battery; an error naming the waypoint when a single leg cannot be flown out and back
 - [ ] 6 `drone.ops.wind-limit` → verify: published power-law example; at report height the wind is unchanged
 - [ ] 7 `drone.ops.vlos-check` → verify: distances match GeographicLib `GeodSolve`; waypoints exactly at the range count as inside
 - [ ] 8 `drone.photogrammetry.gcp-plan` → verify: ASPRS table rows; every suggested point lies inside the polygon
-- [ ] 9 Visuals from the proposal table → verify: `visual-purpose.test.mjs` passes with each new tool reached
-- [ ] 10 Derivation notes, citations, hubs, glossary, search questions for each tool → verify: the full gate sequence, and each tool's own questions rank it first
+- [ ] 9 Visuals from the proposal table → verify: `visual-purpose.test.mjs` passes with each new tool reached (built: the nav log's route on the map from its `path` output, the climb side profile, and the ETP and PNR line; the map does not yet label each leg with its heading, groundspeed, and time. Pending: the four drone tools)
+- [ ] 10 Derivation notes, citations, hubs, glossary, search questions for each tool → verify: the full gate sequence, and each tool's own questions rank it first (built for the three aviation tools: derivation notes, the aviation.flight-plan hub with the "Plan a flight" guide, ETP, PNR, and TOC glossary entries, and search fixture questions. Pending: the four drone tools)

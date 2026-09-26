@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "9d39a8c95aea5bac",
-    "lastmod": "2026-09-24"
+    "hash": "082e1bf964cbb09a",
+    "lastmod": "2026-09-25"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -12,8 +12,8 @@
     "lastmod": "2026-09-24"
   },
   "/aviation/": {
-    "hash": "8355d18c8cf71e9b",
-    "lastmod": "2026-09-23"
+    "hash": "5688f8bd5124411e",
+    "lastmod": "2026-09-25"
   },
   "/aviation/airspace/": {
     "hash": "4ccf472fb1dd20c9",
@@ -43,6 +43,10 @@
     "hash": "58815723770f8f15",
     "lastmod": "2026-09-23"
   },
+  "/aviation/flight-plan/": {
+    "hash": "704e76fb731bd182",
+    "lastmod": "2026-09-25"
+  },
   "/aviation/ifr/": {
     "hash": "4d896974719f40d9",
     "lastmod": "2026-09-23"
@@ -68,8 +72,8 @@
     "lastmod": "2026-09-24"
   },
   "/aviation/performance/": {
-    "hash": "522373cec5ca9156",
-    "lastmod": "2026-09-23"
+    "hash": "6478bdfcd99cfc4c",
+    "lastmod": "2026-09-25"
   },
   "/aviation/performance/top-of-descent/": {
     "hash": "dab7a26155b59216",
@@ -100,23 +104,23 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/wind/course-from-heading/": {
-    "hash": "97c3e9d3eca09513",
+    "hash": "c4fcb91eb6b8cb88",
     "lastmod": "2026-09-25"
   },
   "/aviation/wind/find-wind/": {
-    "hash": "a121d10a32f7f470",
+    "hash": "05b8c7939e7a5729",
     "lastmod": "2026-09-25"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "ded9ec4a5a8d9757",
-    "lastmod": "2026-09-23"
+    "hash": "d32dad7cfac24d3b",
+    "lastmod": "2026-09-25"
   },
   "/aviation/wind/runway-components/": {
     "hash": "da7bb97cfc92aa89",
     "lastmod": "2026-09-23"
   },
   "/aviation/wind/tas-from-groundspeed/": {
-    "hash": "abe803a841c44ee6",
+    "hash": "2ef3b6faf23af489",
     "lastmod": "2026-09-25"
   },
   "/aviation/wind/uv/": {
@@ -936,8 +940,8 @@
     "lastmod": "2026-09-23"
   },
   "/methodology/": {
-    "hash": "d230d1f7a2feb4a7",
-    "lastmod": "2026-09-24"
+    "hash": "9dbea4b4f057daae",
+    "lastmod": "2026-09-25"
   },
   "/navigation/": {
     "hash": "44ca7ff9080557c8",
@@ -1176,8 +1180,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "2c6c344bb75754b1",
-    "lastmod": "2026-09-24"
+    "hash": "d419efb3869b87c0",
+    "lastmod": "2026-09-25"
   },
   "/survey/": {
     "hash": "6648d2af3de92e59",
@@ -1320,8 +1324,8 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "d80e6f352da7c821",
-    "lastmod": "2026-09-24"
+    "hash": "20a9c12a763a4544",
+    "lastmod": "2026-09-25"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -1508,7 +1512,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4e97a41edc30963c",
+    "hash": "0d505ba45fcb4b25",
     "lastmod": "2026-09-25"
   }
 }

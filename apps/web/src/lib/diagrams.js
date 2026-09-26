@@ -1242,6 +1242,36 @@ function horizonDip(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+// ---- drone mission planning (add-flight-and-drone-planning-tools) ----
+
+/** Wind at flying height: the sustained wind and the gust against the drone's limit, on one scale. */
+function windLimit(args, result) {
+  const w = qty(result, 'wind_at_height', SPEED);
+  const g = result.result.gust_at_height ? qty(result, 'gust_at_height', SPEED) : null;
+  const lim = qty(result, 'rating', SPEED);
+  if (![w, lim].every(Number.isFinite) || lim <= 0 || (g !== null && !Number.isFinite(g))) return null;
+  const top = Math.max(w, g ?? 0, lim) * 1.15;
+  const [x0, wd, y, h] = [20, 280, 84, 30];
+  const X = (v) => x0 + (wd * v) / top;
+  const bar = (a, b, cls) => (b > a ? `<path class="${cls}" d="${path([[X(a), y], [X(b), y], [X(b), y + h], [X(a), y + h]], true)}"/>` : '');
+  const over = (g ?? w) > lim;
+  const reported = `Reported ${typed(args.wind_speed, 'kt')} at ${args.report_height ? typed(args.report_height, 'm') : '10 m'}; α = ${disp(result, 'exponent')}`;
+  const body = [
+    line('dg-grid', [x0, y + h], [x0 + wd, y + h]),
+    bar(0, w, 'dg-fill dg-accent'),
+    g !== null ? bar(w, g, 'dg-fill') : '',
+    text('dg-label', X(0), y - 10, `Wind ${disp(result, 'wind_at_height')}`),
+    g !== null && g > w ? text('dg-muted-text', X(g), y + h + 16, `Gust ${disp(result, 'gust_at_height')}`, 'end') : '',
+    line('dg-muted dg-dash', [X(lim), y - 30], [X(lim), y + h + 30]),
+    text(over ? 'dg-label' : 'dg-muted-text', X(lim), y - 34, `Limit ${disp(result, 'rating')}`, 'middle'),
+    text('dg-muted-text', 20, 176, `At ${typed(args.flying_height, 'm')}: margin ${disp(result, 'margin_to_rating')}`),
+    text('dg-muted-text', 20, 192, reported),
+    text('dg-muted-text', 20, 226, 'Gusts near buildings and trees are not modeled.'),
+  ].join('');
+  const title = `At ${typed(args.flying_height, 'm')} the wind is ${disp(result, 'wind_at_height')}${g !== null ? `, gusting ${disp(result, 'gust_at_height')}` : ''}, against a limit of ${disp(result, 'rating')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -1287,6 +1317,8 @@ const DIAGRAMS = {
   'survey.cogo.inverse': cogoInverse,
   'survey.cogo.area-by-coordinates': areaPlan,
   'survey.cogo.traverse-closure': traverseClosure,
+  // drone mission planning
+  'drone.ops.wind-limit': windLimit,
 };
 
 /**

@@ -716,6 +716,38 @@
     {
       "query": "which leg am i on",
       "expect": "navigation.route.closest-point"
+    },
+    {
+      "query": "how many batteries for my mapping mission",
+      "expect": "drone.mission.sorties"
+    },
+    {
+      "query": "drone battery swap points",
+      "expect": "drone.mission.sorties"
+    },
+    {
+      "query": "is it too windy to fly my drone",
+      "expect": "drone.ops.wind-limit"
+    },
+    {
+      "query": "wind speed at 120 m from metar",
+      "expect": "drone.ops.wind-limit"
+    },
+    {
+      "query": "can I see my drone at every waypoint",
+      "expect": "drone.ops.vlos-check"
+    },
+    {
+      "query": "vlos check mission waypoints",
+      "expect": "drone.ops.vlos-check"
+    },
+    {
+      "query": "how many ground control points do I need",
+      "expect": "drone.photogrammetry.gcp-plan"
+    },
+    {
+      "query": "asprs checkpoints for project area",
+      "expect": "drone.photogrammetry.gcp-plan"
     }
   ]
 }

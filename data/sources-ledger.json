@@ -153,8 +153,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-24",
-      "verificationNote": "On 2026-09-24 ASPRS's public document link (publicdocuments.asprs.org) and its store page led to a member sign-in, so the text was read in Edition 2, Version 1.0 (February 2023) as distributed by the Missouri surveyors' association (aagsmo.org): sections 7.2, 7.3, 7.4, 7.11 with Table 7.4, 7.12, and 7.13. Edition 2, Version 2.0 was approved in 2024 (PE&RS, August 2024) and could not be read without an account.",
+      "lastVerified": "2026-09-25",
+      "verificationNote": "On 2026-09-24 ASPRS's public document link (publicdocuments.asprs.org) and its store page led to a member sign-in, so the text was read in Edition 2, Version 1.0 (February 2023) as distributed by the Missouri surveyors' association (aagsmo.org): sections 7.2, 7.3, 7.4, 7.11 with Table 7.4, 7.12, and 7.13. Edition 2, Version 2.0 was approved in 2024 (PE&RS, August 2024) and could not be read without an account. On 2026-09-25 the same Version 1.0 copy was read again for section 7.9 (ground control accuracy) and Annex C.3 with Table C.1 (recommended number of checkpoints based on area: 30 up to 500 km², 5 more per 250 km², 70 at 2,500 km²).",
       "freeAccessUrl": "https://asprs.org/Main/Main/Standards/Positional-Accuracy-Standards.aspx",
       "matchTerms": [
         "ASPRS Positional Accuracy Standards"
@@ -313,8 +313,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Checked at the issuer on 2026-09-18. Values in data/regulations.json.",
+      "lastVerified": "2026-09-25",
+      "verificationNote": "Checked at the issuer on 2026-09-18; § 107.31 (visual line of sight) read in full through the eCFR versioner API on 2026-09-25, its link checked with the ancestry API (subpart B). Values in data/regulations.json.",
       "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-107",
       "matchTerms": [
         "14 CFR Part 107",
@@ -2777,6 +2777,66 @@
       "freeAccessUrl": "https://doi.org/10.4050/JAHS.53.290",
       "matchTerms": [
         "Figure of Merit Definition for Coaxial Rotors"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "nrel-small-wind-site",
+      "name": "Small Wind Site Assessment Guidelines",
+      "issuer": "NREL (Olsen and Preus)",
+      "currentEdition": "NREL/TP-5000-63696",
+      "currentReleaseDate": "2015-09-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-25",
+      "verificationNote": "Read in full on 2026-09-25 from the laboratory's document server (docs.nlr.gov; the nrel.gov host no longer resolves): section 5.3.2 prints the power law V = Vref × (h / href)^α, and Table 1 (Textbook Versus Measured Wind Shear by Terrain Type) gives the textbook exponents used: calm sea 0.09, cut grass 0.14, crops and tall-grass prairie 0.19, scattered trees and hedges 0.24, city suburbs, villages, and scattered forests 0.31, woodlands 0.43. The report has no worked numeric example of the power law.",
+      "freeAccessUrl": "https://docs.nlr.gov/docs/fy15osti/63696.pdf",
+      "matchTerms": [
+        "Small Wind Site Assessment Guidelines"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nrel-wind-resource-handbook",
+      "name": "Wind Resource Assessment Handbook",
+      "issuer": "AWS Scientific for NREL",
+      "currentEdition": "NREL/SR-440-22223",
+      "currentReleaseDate": "1997-04-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-25",
+      "verificationNote": "Read on 2026-09-25 from docs.nlr.gov: section 3.1, page 3-3, gives the power law v2 = v1 × (z2 / z1)^α and says α is often taken as 0.143, the 1/7th power law, for a well-mixed atmosphere over flat, open terrain, with higher values over vegetation and in light winds; page 9-6 solves the law for α. No worked numeric example.",
+      "freeAccessUrl": "https://docs.nlr.gov/docs/legosti/fy97/22223.pdf",
+      "matchTerms": [
+        "Wind Resource Assessment Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "pix4d-gcp",
+      "name": "Pix4D ground control point guidance",
+      "issuer": "Pix4D",
+      "currentEdition": "Vendor guidance",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-25",
+      "verificationNote": "Checked at the issuer on 2026-09-25: the PIX4Dmapper page \"Getting GCPs on the field or through other sources\" (undated) asks for at least 3 GCPs, recommends at least 5, says 5 to 10 are usually enough even for large projects, and advises placing them evenly, one in the center, and not exactly at the edges of the area.",
+      "freeAccessUrl": "https://support.pix4d.com/hc/en-us/articles/202557489",
+      "matchTerms": [
+        "Getting GCPs on the field"
       ],
       "editionStatus": "current",
       "legalStatus": null,

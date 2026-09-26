@@ -614,3 +614,18 @@ test('the curve plan sets the PC and PT out from the PI, tangent to both legs', 
     if (args.pi_station) assert.ok(d.markup.includes(r.result.pc_station), 'the PC station is not shown');
   }
 });
+
+test('the wind-limit bars end where the core puts the wind, the gust, and the limit', async () => {
+  const args = { wind_speed: '15 kt', gust: '25 kt', flying_height: '120 m', wind_rating: '12 m/s' };
+  const r = JSON.parse(await host.invoke('drone.ops.wind-limit', JSON.stringify(args)));
+  const d = diagram('drone.ops.wind-limit', args, r);
+  for (const k of ['wind_at_height', 'gust_at_height', 'rating']) assert.ok(d.markup.includes(r.display[k]), k);
+  // One scale: the limit line sits at rating / top of the 280-wide bar area.
+  const [w, g, lim] = ['wind_at_height', 'gust_at_height', 'rating'].map((k) => r.result[k].value);
+  const top = Math.max(w, g, lim) * 1.15;
+  const x = (v) => (20 + (280 * v) / top).toFixed(1);
+  assert.ok(d.markup.includes(`x1="${x(lim)}"`), 'limit line');
+  assert.ok(d.markup.includes(`L${x(w)} 84`), 'wind bar');
+  assert.ok(d.markup.includes(`L${x(g)} 84`), 'gust bar');
+  assert.ok(d.desc.includes(r.display.wind_at_height) && d.desc.includes(r.display.rating), d.desc);
+});

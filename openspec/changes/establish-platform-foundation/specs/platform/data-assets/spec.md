@@ -48,7 +48,7 @@ The registry SHALL include at least the following at first release, with the loa
 - **THEN** each asset listed above exists in the registry with a license, attribution, digest, and load policy
 
 ### Requirement: Integrity verification
-Every asset file or tile SHALL be verified against its registry SHA-256 digest (or a per-tile digest listed in a signed tile index) before use. A digest mismatch SHALL produce `ASSET_INTEGRITY`, SHALL discard the cached copy, and SHALL NOT fall back to unverified data.
+Every asset file or tile SHALL be verified against its registry SHA-256 digest (or a per-tile digest listed in a signed tile index) before use. Tile indexes SHALL be canonical JSON signed with Ed25519; the registry SHALL pin the signing key id and public key, so a replacement index and key cannot authenticate each other. A digest or signature mismatch SHALL produce `ASSET_INTEGRITY`, SHALL discard the cached copy, and SHALL NOT fall back to unverified data.
 
 #### Scenario: Corrupted tile
 - **WHEN** a cached geoid tile's bytes do not match its digest

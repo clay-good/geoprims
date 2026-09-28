@@ -22,6 +22,7 @@ Build tooling. No npm dependencies.
 | `codegen/spcs83.py`, `vectors/gen_spcs_diff.py` | Generate the SPCS83 zone table from the EPSG dataset and the PROJ differential fixture and vectors (need `pyproj`) |
 | `vectors/gen_magnetic.py` | Geomagnetism vectors: WMM2025 from the NCEI test values, IGRF-14 from `ppigrf` (scratch virtualenv) at coefficient epochs |
 | `data/magnetic-assets.mjs` | Verify pinned NCEI/IAGA downloads and regenerate WMM2025, WMMHR2025, IGRF-14, and the two official test fixtures |
+| `data/geoid-tiles.mjs` | Verify a pinned GeographicLib PGM source and split it into coarse halo tiles with per-tile SHA-256 digests and an Ed25519-signed canonical index |
 | `vectors/gen_h3_diff.py`, `vectors/gen_tz_diff.py` | Differential fixtures from H3 C (via h3-py) and Python zoneinfo; a small committed fixture runs in CI and a full local run is behind `--ignored` |
 | `vectors/supersede.py` | Run after regenerating a published vector file: `supersede.py origin/main FILE "reason"` keeps each published line, marks changed ones `supersededBy`, and moves the new expectation to a fresh id. `supersede.py BASE --check` lists silent edits |
 | `codegen/spa_tables.py`, `codegen/tzdb.py` | Regenerate the NREL SPA tables (from pvlib) and the embedded IANA tzdb blob (from tzdata plus a matching `zic -b slim`) |

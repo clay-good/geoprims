@@ -125,11 +125,11 @@
       "id": "nadcon5",
       "version": "20160901",
       "title": "NADCON5 first-step grids: each region's old datum to NAD 83",
-      "issuer": "National Geodetic Survey, NOAA; GeoTIFF packaging by the PROJ project",
+      "issuer": "National Geodetic Survey, NOAA",
       "license": "Public domain (US Government work)",
-      "attribution": "NADCON5 by the National Geodetic Survey (NOAA); grids from PROJ-data.",
-      "sourceUrl": "https://cdn.proj.org/",
-      "retrievedAt": "2026-09-19",
+      "attribution": "NADCON5 by the National Geodetic Survey (NOAA).",
+      "sourceUrl": "https://geodesy.noaa.gov/pub/nadcon5/20160901release/Builds/",
+      "retrievedAt": "2026-09-28",
       "files": {
         "nad27_nad83_1986_conus.grid": {
           "sha256": "283ef0131a6e98dde25d167bde2f9d00ab4a5e93b6c0c1bea58f0e3752881464",

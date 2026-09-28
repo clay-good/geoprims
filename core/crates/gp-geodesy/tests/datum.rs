@@ -742,3 +742,30 @@ fn nadcon5_invariants() {
         "the refusal does not name the regions: {msg}"
     );
 }
+
+#[test]
+fn nadcon5_matches_ngs_ncat_samples_in_every_region() {
+    load_nadcon5_grids();
+    // Captured from NGS NCAT's latitude-longitude-height service on 2026-09-28.
+    // NCAT reports 10 decimal places and identifies the model as NADCON 5.0.
+    const SAMPLES: [(f64, f64, f64, f64); 7] = [
+        (39.224, -98.542, 39.2240098139, -98.5423450443),
+        (61.2181, -149.9003, 61.2175440801, -149.9025034473),
+        (21.3069, -157.8583, 21.3037363395, -157.8555576730),
+        (18.4655, -66.1057, 18.4635006442, -66.1053107728),
+        (57.15, -170.25, 57.1506566713, -170.2522929600),
+        (-14.28, -170.7, -14.2750474624, -170.7012164715),
+        (13.4443, 144.7937, 13.4457315598, 144.7961214270),
+    ];
+    for (lat, lon, expected_lat, expected_lon) in SAMPLES {
+        let out = nadcon5("to-nad83", lat, lon);
+        assert!(out["ok"].as_bool().unwrap_or(false), "{lat},{lon}: {out}");
+        let actual_lat = f(&out, "result.lat.value");
+        let actual_lon = f(&out, "result.lon.value");
+        assert!(
+            (actual_lat - expected_lat).abs() <= 5e-11
+                && (actual_lon - expected_lon).abs() <= 5e-11,
+            "{lat},{lon}: {actual_lat},{actual_lon} != {expected_lat},{expected_lon}"
+        );
+    }
+}

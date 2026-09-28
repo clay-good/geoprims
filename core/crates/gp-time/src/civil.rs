@@ -256,6 +256,10 @@ const LEAP: &[(i64, u32, u32, i32)] = &[
 /// The bulletin the table reflects, echoed in `meta.assets`.
 pub const LEAP_TABLE: (&str, &str) = ("leap-seconds", "IERS Bulletin C 72 (2026-07-06)");
 
+/// The issuer file recorded in the asset registry. Keeping it in the module
+/// makes the exact table input available to both release surfaces.
+pub static LEAP_TABLE_SOURCE: &[u8] = include_bytes!("../data/leap-seconds.list");
+
 /// Bulletin C 72 rules out a leap second at the end of December 2026, so the
 /// table is known through 2027-06-30; the next possible insertion follows.
 pub fn leap_table_expires() -> i64 {

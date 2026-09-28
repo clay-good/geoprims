@@ -80,7 +80,7 @@ test('the bundled offline assets stay inside the 6 MB the spec allows', () => {
   // core; nothing is listed that the server cannot reach offline.
   const registry = JSON.parse(readFileSync(join(dir, 'registry.json'), 'utf8'));
   const present = new Set(files.map((f) => f.slice(dir.length + 1)));
-  const compiledIn = new Set(['wmm2025', 'igrf14']);
+  const compiledIn = new Set(['wmm2025', 'igrf14', 'leap-seconds', 'tzdb']);
   for (const asset of registry.assets) {
     if (compiledIn.has(asset.id)) continue;
     for (const name of Object.keys(asset.files)) {

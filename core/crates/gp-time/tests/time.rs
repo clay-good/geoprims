@@ -385,7 +385,7 @@ fn dst_gap_and_overlap() {
 /// (tzdata 2026d, which expires 28 June 2027).
 #[test]
 fn leap_table_matches_iana_list() {
-    let text = repo("core/crates/gp-time/tests/data/leap-seconds.list");
+    let text = repo("core/crates/gp-time/data/leap-seconds.list");
     for line in text
         .lines()
         .filter(|l| !l.starts_with('#') && !l.trim().is_empty())

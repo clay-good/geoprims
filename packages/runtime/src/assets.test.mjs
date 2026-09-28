@@ -50,11 +50,22 @@ test('the default Node host finds the repository assets', async () => {
 
 test('every registry entry is complete and every file matches its digest', async () => {
   const { createHash } = await import('node:crypto');
+  const identities = new Set();
   for (const a of registry.assets) {
     for (const k of ['id', 'version', 'title', 'issuer', 'license', 'attribution', 'sourceUrl', 'retrievedAt', 'tiling', 'loadPolicy']) {
       assert.ok(a[k], `${a.id} needs ${k}`);
     }
+    assert.match(a.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, `${a.id} is not a stable asset id`);
+    const identity = `${a.id}@${a.version}`;
+    assert.ok(!identities.has(identity), `${identity} is duplicated`);
+    identities.add(identity);
+    assert.ok(['bundled', 'on-demand', 'on-demand-tiled', 'offline-pack-only'].includes(a.loadPolicy), `${a.id} has load policy ${a.loadPolicy}`);
+    assert.equal(a.loadPolicy === 'bundled', Boolean(a.bundledIn), `${a.id} bundledIn must match its load policy`);
+    assert.ok(Object.keys(a.files).length > 0, `${a.id} lists no files`);
     for (const [file, meta] of Object.entries(a.files)) {
+      assert.ok(file && !file.includes('/') && file !== '.' && file !== '..', `${a.id} has unsafe file name ${file}`);
+      assert.match(meta.sha256, /^[a-f0-9]{64}$/, `${a.id}/${file} sha256`);
+      assert.ok(Number.isSafeInteger(meta.bytes) && meta.bytes > 0, `${a.id}/${file} bytes`);
       const path = a.bundledIn ? join(root, a.bundledIn) : join(root, 'assets/data', a.id, a.version, file);
       const bytes = readFileSync(path);
       assert.equal(bytes.length, meta.bytes, `${a.id}/${file} size`);
@@ -80,8 +91,6 @@ test('every registry row carries what the licenses page has to show', () => {
     assert.match(a.sourceUrl, /^https:\/\//, `${a.id} needs an https source`);
     assert.match(a.retrievedAt, /^\d{4}-\d{2}-\d{2}$/, `${a.id} needs an ISO retrieval date`);
     assert.ok(['none', 'tiled'].includes(a.tiling) || typeof a.tiling === 'string', `${a.id} tiling`);
-    assert.ok(['eager', 'on-demand', 'bundled'].includes(a.loadPolicy), `${a.id} has load policy ${a.loadPolicy}`);
-    assert.ok(Object.keys(a.files).length > 0, `${a.id} lists no files`);
     // Attribution is what the licence asks be shown, so it cannot be a stub.
     assert.ok(a.attribution.length > 20, `${a.id}'s attribution is too short to be real`);
   }

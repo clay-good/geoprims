@@ -63,6 +63,44 @@
       "bundledIn": "core/crates/gp-geo/data/igrf14coeffs.txt"
     },
     {
+      "id": "leap-seconds",
+      "version": "IERS Bulletin C 72 (2026-07-06)",
+      "title": "IERS leap-second table",
+      "issuer": "International Earth Rotation and Reference Systems Service",
+      "license": "Public domain",
+      "attribution": "Leap-second decisions from IERS Bulletin C 72; machine-readable table distributed with IANA tzdb.",
+      "sourceUrl": "https://hpiers.obspm.fr/iers/bul/bulc/ntp/leap-seconds.list",
+      "retrievedAt": "2026-09-18",
+      "files": {
+        "leap-seconds.list": {
+          "sha256": "db5a895f16853b03bfc865e8d68f9fc8710ef1740e3400c701cd46a5bbbc3433",
+          "bytes": 5065
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "bundled",
+      "bundledIn": "core/crates/gp-time/data/leap-seconds.list"
+    },
+    {
+      "id": "tzdb",
+      "version": "2026d",
+      "title": "IANA Time Zone Database",
+      "issuer": "Internet Assigned Numbers Authority",
+      "license": "Public domain",
+      "attribution": "Time zone rules from the IANA Time Zone Database, release 2026d.",
+      "sourceUrl": "https://data.iana.org/time-zones/releases/tzdata2026d.tar.gz",
+      "retrievedAt": "2026-09-18",
+      "files": {
+        "tzdb.bin": {
+          "sha256": "8fbe9d9ced0003c4a8b3abe5df0c911842aa8dbb5556ad567fbc7d40a2da1456",
+          "bytes": 218039
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "bundled",
+      "bundledIn": "core/crates/gp-time/data/tzdb.bin"
+    },
+    {
       "id": "nadcon5",
       "version": "20160901",
       "title": "NADCON5 first-step grids: each region's old datum to NAD 83",

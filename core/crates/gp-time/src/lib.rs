@@ -300,6 +300,7 @@ pub static GPS_WEEK: ToolDef = ToolDef {
     model: "GPS time = UTC + (TAI − UTC) − 19 s; week = ⌊GPS seconds since 1980-01-06 / 604,800⌋",
     accuracy: "Exact for dates the leap-second table covers",
     references: &[IS_GPS_200, BULLETIN_C],
+    assets: &["leap-seconds"],
     examples: &[Example {
         id: "primary",
         title: "2026-09-18 at 00:00 UTC",
@@ -457,6 +458,7 @@ pub static GPS_TO_UTC: ToolDef = ToolDef {
     model: "UTC = GPS time − (TAI − UTC − 19 s); full week = 10-bit week + 1,024 × era",
     accuracy: "Exact for dates the leap-second table covers; instants inside a leap second print as 23:59:60",
     references: &[IS_GPS_200, BULLETIN_C],
+    assets: &["leap-seconds"],
     examples: &[Example {
         id: "primary",
         title: "Week 2436, second 432018",
@@ -1091,6 +1093,7 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
     when_to_use: "Use this when a time has to be right across zones: filing or reading a flight plan in Zulu, converting a log entry, scheduling an observation, or checking what a local time means in UTC on a date when daylight saving shifts. It takes either a named IANA zone or a plain offset, and shows the date change when one happens.",
     limitations: "The zone rules come from the embedded IANA database, whose release is reported with the result; a change published after that release is not in it. A local time in a spring-forward gap does not exist and one in a fall-back overlap happens twice, and this reports that rather than choosing for you. It does not read your computer's clock or its time zone.",
     references: &[RFC_3339, IANA_TZ],
+    assets: &["tzdb"],
     examples: &[Example {
         id: "primary",
         title: "14:05 in Chicago on a summer date",
@@ -1327,6 +1330,7 @@ pub static ZONE_INFO: ToolDef = ToolDef {
     model: "Embedded IANA tzdb (TZif with POSIX rules past the last listed transition)",
     accuracy: "Exact for the tzdb release echoed in meta.assets; checked against Python zoneinfo at 238,800 instants",
     references: &[IANA_TZ],
+    assets: &["tzdb"],
     examples: &[Example {
         id: "primary",
         title: "Denver in September 2026",

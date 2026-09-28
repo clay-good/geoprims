@@ -17,13 +17,6 @@ const host = nodeHost(join(root, 'dist/wasm'));
 const primary = (t) => t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
 const windowed = registry.assets.filter((a) => a.validTo);
 
-/**
- * Data compiled into the core that the asset registry does not list yet: the
- * leap-second table and the time-zone rules (add-practitioner-essentials 1.2
- * and 1.3 package them). The list may shrink, never grow.
- */
-const UNREGISTERED = new Set(['leap-seconds', 'tzdb']);
-
 /** The ledger row that dates a registry asset: its match term appears in the asset's title. */
 const ledgerRowOf = (asset) => ledger.find((r) => r.validTo && r.matchTerms.some((m) => asset.title.includes(m)));
 
@@ -41,10 +34,7 @@ test('a tool declares every asset its results use, and cites the dated ones', as
     const r = JSON.parse(await host.invoke(t.id, JSON.stringify(ex.input)));
     const used = (r.meta?.assets ?? []).map((a) => a.id);
     for (const id of used) {
-      if (UNREGISTERED.has(id)) {
-        seen.add(id);
-        continue;
-      }
+      seen.add(id);
       if (!t.assets.includes(id)) problems.push(`${t.id} uses ${id} but does not declare it`);
     }
     for (const id of t.assets) {
@@ -57,9 +47,7 @@ test('a tool declares every asset its results use, and cites the dated ones', as
     }
   }
   assert.deepEqual(problems, []);
-  // An exception that is registered now, or no longer used, leaves the list.
-  const registered = new Set(registry.assets.map((a) => a.id));
-  assert.deepEqual([...UNREGISTERED].filter((id) => registered.has(id) || !seen.has(id)), [], 'remove it from UNREGISTERED');
+  assert.ok(seen.size > 0, 'no runtime assets were observed');
 });
 
 test('a date past a model window is refused, naming the window', async () => {

@@ -10,3 +10,5 @@ The asset registry and the on-demand reference data (platform/data-assets).
 How loading works: the core never reads files. A tool that needs data returns `ASSET_UNAVAILABLE` with `{id, version, key}`; the host (`packages/runtime/src/assets.mjs`) finds the file in the registry, checks its SHA-256, supplies it with `gp_asset_put`, and retries. A digest mismatch is `ASSET_INTEGRITY` and the bytes are never used.
 
 Bundled datasets (WMM2025, IGRF-14, tzdb, leap seconds) are compiled into their modules and listed with `bundledIn`.
+
+The registry currently contains 6 verified datasets: EGM96-15, WMM2025, IGRF-14, NADCON5, IERS leap seconds, and IANA tzdb. Each file's recorded byte count and SHA-256 digest is checked against the repository in the runtime test suite. The remaining first-release datasets stay tracked in `openspec/changes/establish-platform-foundation/tasks.md`; they are added only after their real files and build pipelines exist.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Splits a global GeographicLib PGM geoid into coarse, independently verified
-// tiles. The signed index is canonical JSON so every build signs the same bytes.
+// Splits GeographicLib PGM and NGS float32 geoids into coarse, independently
+// verified tiles. Canonical JSON makes every build sign the same index bytes.
 import { createHash, createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -27,6 +27,35 @@ export const sources = {
     member: 'geoids/egm2008-1.pgm',
     pgmBytes: 466_603_604,
     pgmSha256: 'b5b3fd38ba630285d8a0dc76071b5e7c730d9d882d8570efee45cfd58729525a',
+  },
+  'geoid18-conus': {
+    assetId: 'geoid18',
+    region: 'conus',
+    format: 'ngs-float32-be',
+    version: '2019-11-26',
+    url: 'https://geodesy.noaa.gov/PC_PROD/GEOID18/Format_unix/g2018u0.bin',
+    bytes: 34_297_008,
+    sha256: 'c41654f1c3cc485f302e3bc8e6837fefb1db02b923fb3b6e4ded850c18caeabe',
+    checkpoints: [
+      [45 + 13 / 60, 360 - (122 + 46 / 60), -23.076],
+      [48 + 7 / 60, 360 - (96 + 11 / 60), -27.215],
+      [44 + 30 / 60, 360 - (94 + 3 / 60), -28.072],
+      [41 + 34 / 60, 360 - (72 + 39 / 60), -29.591],
+      [39 + 32 / 60, 360 - (121 + 29 / 60), -27.337],
+      [33 + 5 / 60, 360 - (97 + 1 / 60), -26.955],
+      [36 + 15 / 60, 360 - (82 + 46 / 60), -31.341],
+      [38 + 19 / 60, 360 - (77 + 19 / 60), -32.636],
+    ],
+  },
+  'geoid18-prvi': {
+    assetId: 'geoid18',
+    region: 'prvi',
+    format: 'ngs-float32-be',
+    version: '2019-11-26',
+    url: 'https://geodesy.noaa.gov/PC_PROD/GEOID18/Format_unix/g2018p0.bin',
+    bytes: 434_688,
+    sha256: 'e9c5b82348bedd1e3aecf9887e830e6da92f8452cdd42848ff0cb98efee39362',
+    checkpoints: [[18 + 27 / 60, 360 - (67 + 24 / 60), -45.673]],
   },
 };
 
@@ -77,6 +106,48 @@ export function parsePgm(bytes) {
   return { width, height, offset, scale, pixels: bytes.subarray(state.at) };
 }
 
+export function parseNgsGrid(bytes) {
+  if (bytes.length < 44) throw new Error('NGS grid header ended early');
+  const latMin = bytes.readDoubleBE(0);
+  const lonMin = bytes.readDoubleBE(8);
+  const latStep = bytes.readDoubleBE(16);
+  const lonStep = bytes.readDoubleBE(24);
+  const rows = bytes.readInt32BE(32);
+  const cols = bytes.readInt32BE(36);
+  const kind = bytes.readInt32BE(40);
+  if (![latMin, lonMin, latStep, lonStep].every(Number.isFinite)
+    || latMin < -90 || latMin > 90 || lonMin < 0 || lonMin >= 360
+    || latStep <= 0 || lonStep <= 0 || rows < 2 || cols < 2 || kind !== 1) {
+    throw new Error('unsupported NGS big-endian grid header');
+  }
+  const expected = 44 + rows * cols * 4;
+  if (bytes.length !== expected) throw new Error(`NGS grid has ${bytes.length} bytes; expected ${expected}`);
+  const latMax = latMin + latStep * (rows - 1);
+  const lonMax = lonMin + lonStep * (cols - 1);
+  if (latMax > 90 + 1e-9 || lonMax > 360 + 1e-9) throw new Error('NGS grid bounds are outside latitude or longitude limits');
+  return { latMin, lonMin, latStep, lonStep, rows, cols, kind, pixels: bytes.subarray(44) };
+}
+
+function ngsGridValue(grid, latitude, longitude) {
+  const row = Math.round((latitude - grid.latMin) / grid.latStep);
+  const col = Math.round((longitude - grid.lonMin) / grid.lonStep);
+  if (row < 0 || row >= grid.rows || col < 0 || col >= grid.cols
+    || Math.abs(grid.latMin + row * grid.latStep - latitude) > 1e-8
+    || Math.abs(grid.lonMin + col * grid.lonStep - longitude) > 1e-8) {
+    throw new Error(`GEOID18 checkpoint ${latitude},${longitude} is not a grid post`);
+  }
+  return grid.pixels.readFloatBE(4 * (row * grid.cols + col));
+}
+
+export function verifyNgsCheckpoints(grid, checkpoints) {
+  for (const [latitude, longitude, expected] of checkpoints) {
+    const actual = ngsGridValue(grid, latitude, longitude);
+    if (actual.toFixed(3) !== expected.toFixed(3)) {
+      throw new Error(`GEOID18 checkpoint ${latitude},${longitude} is ${actual.toFixed(3)} m; expected ${expected.toFixed(3)} m`);
+    }
+  }
+}
+
 const tileName = (north, west) => `${north >= 0 ? 'n' : 's'}${String(Math.abs(north)).padStart(2, '0')}-${String(west).padStart(3, '0')}.ggt`;
 
 function tileBytes(meta, payload) {
@@ -85,6 +156,86 @@ function tileBytes(meta, payload) {
     Buffer.from(`${JSON.stringify(meta)}\n`),
     payload,
   ]);
+}
+
+const regionalTileName = (region, south, west) => {
+  const latitude = `${south >= 0 ? 'n' : 's'}${String(Math.abs(south)).padStart(2, '0')}`;
+  const longitude = `${west >= 0 ? 'e' : 'w'}${String(Math.abs(west)).padStart(3, '0')}`;
+  return `${region}-${latitude}-${longitude}.ggt`;
+};
+
+export function buildNgsTiles(bytes, options, writeTile) {
+  const { assetId, region, version, sourceSha256, tileDegrees = 10, halo = 2 } = options;
+  if (!assetId || !region || !version || !/^[a-f0-9]{64}$/.test(sourceSha256 ?? '')) {
+    throw new Error('assetId, region, version, and sourceSha256 are required');
+  }
+  const sourceDigest = sha256(bytes);
+  if (sourceDigest !== sourceSha256) throw new Error(`source sha256 ${sourceDigest}, expected ${sourceSha256}`);
+  if (!Number.isInteger(tileDegrees) || tileDegrees < 1) throw new Error('tileDegrees must be a positive whole number');
+  if (!Number.isInteger(halo) || halo < 0) throw new Error('halo must be a nonnegative integer');
+  const grid = parseNgsGrid(bytes);
+  const wholeDegree = (value) => {
+    const rounded = Math.round(value);
+    if (Math.abs(value - rounded) > 1e-8) throw new Error('NGS tile coverage must end on whole degrees');
+    return rounded;
+  };
+  const south = wholeDegree(grid.latMin);
+  const north = wholeDegree(grid.latMin + grid.latStep * (grid.rows - 1));
+  const sourceWest = grid.lonMin > 180 ? grid.lonMin - 360 : grid.lonMin;
+  const west = wholeDegree(sourceWest);
+  const east = wholeDegree(sourceWest + grid.lonStep * (grid.cols - 1));
+  const tiles = [];
+  for (let tileSouth = south; tileSouth < north; tileSouth += tileDegrees) {
+    const tileNorth = Math.min(north, tileSouth + tileDegrees);
+    if (tileNorth - tileSouth < 1) throw new Error('NGS tile latitude span is below 1 degree');
+    const coreRow = Math.round((tileSouth - south) / grid.latStep);
+    const coreRows = Math.round((tileNorth - tileSouth) / grid.latStep);
+    for (let tileWest = west; tileWest < east; tileWest += tileDegrees) {
+      const tileEast = Math.min(east, tileWest + tileDegrees);
+      if (tileEast - tileWest < 1) throw new Error('NGS tile longitude span is below 1 degree');
+      const coreCol = Math.round((tileWest - west) / grid.lonStep);
+      const coreCols = Math.round((tileEast - tileWest) / grid.lonStep);
+      const rows = coreRows + 1 + 2 * halo;
+      const cols = coreCols + 1 + 2 * halo;
+      const payload = Buffer.allocUnsafe(rows * cols * 4);
+      for (let y = 0; y < rows; y++) {
+        const sourceRow = Math.max(0, Math.min(grid.rows - 1, coreRow + y - halo));
+        for (let x = 0; x < cols; x++) {
+          const sourceCol = Math.max(0, Math.min(grid.cols - 1, coreCol + x - halo));
+          const source = 4 * (sourceRow * grid.cols + sourceCol);
+          grid.pixels.copy(payload, 4 * (y * cols + x), source, source + 4);
+        }
+      }
+      const name = regionalTileName(region, tileSouth, tileWest);
+      const meta = {
+        south: tileSouth,
+        north: tileNorth,
+        west: tileWest,
+        east: tileEast,
+        latStep: grid.latStep,
+        lonStep: grid.lonStep,
+        rows,
+        cols,
+        halo,
+        encoding: 'float32-be',
+        interpolation: 'biquadratic',
+      };
+      const file = tileBytes(meta, payload);
+      writeTile(name, file);
+      tiles.push({ file: name, bytes: file.length, sha256: sha256(file), bounds: [tileSouth, tileWest, tileNorth, tileEast] });
+    }
+  }
+  return {
+    schemaVersion: 1,
+    assetId,
+    region,
+    version,
+    source: { file: options.sourceFile ?? 'source.bin', bytes: bytes.length, sha256: sourceDigest },
+    grid: { width: grid.cols, height: grid.rows, south, west, north, east, latStep: grid.latStep, lonStep: grid.lonStep },
+    tiling: { tileDegrees, halo, minimumDegrees: 1 },
+    interpolation: 'biquadratic',
+    tiles,
+  };
 }
 
 export function buildPgmTiles(bytes, options, writeTile) {
@@ -193,19 +344,41 @@ export function readPinnedArchive(archive, source) {
   return pgm;
 }
 
+export function readPinnedFile(file, source) {
+  const bytes = readFileSync(file);
+  if (bytes.length !== source.bytes) throw new Error(`source has ${bytes.length} bytes; expected ${source.bytes}`);
+  const digest = sha256(bytes);
+  if (digest !== source.sha256) throw new Error(`source sha256 ${digest}, expected ${source.sha256}`);
+  return bytes;
+}
+
 export function buildSource(name, archive, output, privateKeyFile, keyId) {
   const source = sources[name];
   if (!source) throw new Error(`unknown geoid source ${name}; choose ${Object.keys(sources).join(' or ')}`);
-  const pgm = readPinnedArchive(archive, source);
   mkdirSync(output, { recursive: true });
-  const index = buildPgmTiles(pgm, { assetId: name, version: source.version, sourceFile: basename(source.member), sourceSha256: source.pgmSha256 }, (file, tile) => writeFileSync(join(output, file), tile));
+  let index;
+  if (source.format === 'ngs-float32-be') {
+    const bytes = readPinnedFile(archive, source);
+    const grid = parseNgsGrid(bytes);
+    verifyNgsCheckpoints(grid, source.checkpoints);
+    index = buildNgsTiles(bytes, {
+      assetId: source.assetId,
+      region: source.region,
+      version: source.version,
+      sourceFile: basename(archive),
+      sourceSha256: source.sha256,
+    }, (file, tile) => writeFileSync(join(output, file), tile));
+  } else {
+    const pgm = readPinnedArchive(archive, source);
+    index = buildPgmTiles(pgm, { assetId: name, version: source.version, sourceFile: basename(source.member), sourceSha256: source.pgmSha256 }, (file, tile) => writeFileSync(join(output, file), tile));
+  }
   const signed = signIndex(index, readFileSync(privateKeyFile), keyId);
   writeFileSync(join(output, 'index.json'), `${JSON.stringify(signed, null, 2)}\n`);
   return signed;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  if (process.argv.length !== 7) throw new Error('usage: geoid-tiles.mjs SOURCE_NAME ARCHIVE.tar.bz2 OUTPUT_DIR PRIVATE_KEY.pem KEY_ID');
+  if (process.argv.length !== 7) throw new Error('usage: geoid-tiles.mjs SOURCE_NAME SOURCE_FILE OUTPUT_DIR PRIVATE_KEY.pem KEY_ID');
   const signed = buildSource(...process.argv.slice(2));
   console.log(`${signed.index.assetId}: ${signed.index.tiles.length} signed tiles written to ${dirname(join(process.argv[4], 'index.json'))}`);
 }

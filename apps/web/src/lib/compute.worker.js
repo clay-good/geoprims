@@ -12,6 +12,7 @@ import { NO_WASM } from './messages.js';
 // Data assets come from the same origin, whole files only, checked against the
 // registry's SHA-256 before use (data-assets "Integrity verification").
 let registry = null;
+let provider = null;
 const repaired = new Set();
 const assetPath = ({ id, version, key }) => `/assets/${id}/${version}/${key}`;
 async function discardCachedAsset(path) {
@@ -26,21 +27,23 @@ async function discardCachedAsset(path) {
 
 const assets = async (want) => {
   registry ??= fetch('/assets/registry.json').then((r) => (r.ok ? r.json() : { assets: [] }));
-  const get = assetProvider(await registry, async (id, version, key) => {
+  provider ??= assetProvider(await registry, async (id, version, key) => {
     const r = await fetch(assetPath({ id, version, key }), { cache: 'reload' });
     return r.ok ? r.arrayBuffer() : null;
+  }, async (asset, bytes) => {
+    const path = assetPath(asset);
+    if (!repaired.delete(path)) return;
+    try { await (await caches.open('gp-pack-verified-assets')).put(path, new Response(bytes)); } catch { /* The result is still verified. */ }
   });
-  const out = await get(want);
-  const path = assetPath(want);
+  const out = await provider(want);
+  const failed = out.error?.asset ?? want;
+  const path = assetPath(failed);
   if (out.error?.code === 'ASSET_INTEGRITY') {
     try {
       await discardCachedAsset(path);
     } catch {
       return { error: { ...out.error, hint: 'Clear offline data before retrying.' } };
     }
-  } else if (out.bytes && repaired.delete(path)) {
-    // The verified replacement remains available offline after the retry.
-    try { await (await caches.open('gp-pack-verified-assets')).put(path, new Response(out.bytes)); } catch { /* The result is still verified. */ }
   }
   return out;
 };

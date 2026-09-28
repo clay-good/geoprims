@@ -92,7 +92,10 @@ export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {
       const key = `${missing.asset.id}@${missing.asset.version}/${missing.asset.key}`;
       if (supplied.has(key)) return out;
       const got = await assets(missing.asset);
-      if (got.error) return Array.isArray(parsed) ? out : JSON.stringify({ ok: false, error: { ...got.error, asset: missing.asset } });
+      if (got.error) return Array.isArray(parsed) ? out : JSON.stringify({
+        ok: false,
+        error: { ...got.error, asset: got.error.asset ?? missing.asset },
+      });
       supply(key, got.bytes);
       supplied.set(key, got.bytes);
     }

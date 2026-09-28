@@ -1,4 +1,4 @@
-//! Geomagnetism: every spec scenario the WMM2025 and IGRF-14 tools cover.
+//! Geomagnetism: every spec scenario the WMM2025, WMMHR2025, and IGRF-14 tools cover.
 
 use gp_geodesy::REGISTRY;
 use serde_json::Value;
@@ -61,6 +61,69 @@ fn every_official_wmm2025_test_value() {
         n += 1;
     }
     assert_eq!(n, 100);
+}
+
+#[test]
+fn wmmhr_requires_its_on_demand_asset() {
+    let r = call(
+        D,
+        r#"{"lat":40,"lon":-105,"date":"2026-01-01","model":"wmmhr2025"}"#,
+    );
+    assert_eq!(r["error"]["code"], "ASSET_UNAVAILABLE", "{r}");
+    assert_eq!(r["error"]["asset"]["id"], "wmmhr2025", "{r}");
+    assert_eq!(r["error"]["asset"]["version"], "2025.0", "{r}");
+}
+
+#[test]
+fn every_official_wmmhr2025_test_value() {
+    let key = gp_base::assets::key("wmmhr2025", "2025.0", "WMMHR.COF");
+    gp_base::assets::put(
+        &key,
+        include_bytes!("../../../../assets/data/wmmhr2025/2025.0/WMMHR.COF"),
+    );
+    let text = include_str!("data/WMMHR2025_TEST_VALUES.txt");
+    let mut n = 0;
+    for l in text
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+    {
+        let f: Vec<&str> = l.split_whitespace().collect();
+        let v: Vec<f64> = f.iter().map(|t| t.parse().unwrap()).collect();
+        let r = call(
+            D,
+            &format!(
+                r#"{{"lat":{},"lon":{},"height":"{} km","date":"{}","model":"wmmhr2025"}}"#,
+                f[2], f[3], f[1], f[0]
+            ),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        for (path, want, tol) in [
+            ("result.declination.value", v[10], 0.005),
+            ("result.inclination.value", v[9], 0.005),
+            ("result.horizontal_intensity", v[7], 0.05),
+            ("result.north", v[4], 0.05),
+            ("result.east", v[5], 0.05),
+            ("result.down", v[6], 0.05),
+            ("result.total_intensity", v[8], 0.05),
+            ("result.annual_change.value", v[18], 0.005),
+            ("result.inclination_rate", v[17], 0.005),
+            ("result.horizontal_rate", v[15], 0.05),
+            ("result.north_rate", v[12], 0.05),
+            ("result.east_rate", v[13], 0.05),
+            ("result.down_rate", v[14], 0.05),
+            ("result.total_rate", v[16], 0.05),
+        ] {
+            assert!(
+                (num(&r, path) - want).abs() <= tol,
+                "{l}\n{path}: {} vs {want}",
+                num(&r, path)
+            );
+        }
+        assert_eq!(r["meta"]["assets"][0]["id"], "wmmhr2025");
+        assert_eq!(r["meta"]["assets"][0]["version"], "2025.0");
+        n += 1;
+    }
+    assert_eq!(n, 12);
 }
 
 #[test]

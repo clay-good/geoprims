@@ -2672,8 +2672,8 @@
       "nextExpected": "2029-12-17",
       "validFrom": "2025-01-01",
       "validTo": "2029-12-31",
-      "lastVerified": null,
-      "verificationNote": "Not cited yet.",
+      "lastVerified": "2026-09-28",
+      "verificationNote": "Checked at the issuer on 2026-09-28. The WMMHR2025 coefficient archive and its 12 published test rows match the pinned files and digests.",
       "freeAccessUrl": "https://www.ncei.noaa.gov/products/world-magnetic-model-high-resolution",
       "matchTerms": [
         "WMMHR"

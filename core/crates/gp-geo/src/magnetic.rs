@@ -1,9 +1,9 @@
-//! Geomagnetic main-field models (geodesy/geomagnetism spec): WMM2025 and
-//! IGRF-14, evaluated by the spherical-harmonic synthesis of the WMM Technical
+//! Geomagnetic field models (geodesy/geomagnetism spec): WMM2025, WMMHR2025,
+//! and IGRF-14, evaluated by the spherical-harmonic synthesis of the WMM Technical
 //! Report (Chulliat et al.): geodetic → geocentric, Schmidt semi-normalized
 //! Legendre functions, the field sum, a pole-safe east component, and the
-//! rotation back to the geodetic frame. The coefficient files are embedded
-//! unchanged from NCEI and IAGA.
+//! rotation back to the geodetic frame. WMM2025 and IGRF-14 are embedded;
+//! callers supply the larger WMMHR2025 file through the asset API.
 
 use libm::{asin, atan2, cos, hypot, sin, sqrt};
 
@@ -90,29 +90,58 @@ impl Coeffs {
     }
 }
 
-fn parse_wmm() -> (f64, Coeffs) {
-    let mut lines = WMM2025_COF.lines();
+/// Parses and advances a WMM-format coefficient file. WMMHR uses the same
+/// columns as WMM, with four decimal places and degrees through 133.
+pub fn wmm_coeffs_at(text: &str, n_max: usize, t: f64) -> Result<Coeffs, String> {
+    let mut lines = text.lines();
     let epoch: f64 = lines
         .next()
         .and_then(|l| l.split_whitespace().next())
         .and_then(|t| t.parse().ok())
-        .expect("WMM header epoch");
-    let mut c = Coeffs::zero(12);
+        .ok_or_else(|| "the header has no model epoch".to_owned())?;
+    let mut c = Coeffs::zero(n_max);
+    let mut rows = 0;
     for l in lines {
         let f: Vec<&str> = l.split_whitespace().collect();
-        if f.len() < 6 || f[0].starts_with("9999") {
+        if f.first().is_some_and(|v| v.starts_with("9999")) {
             break;
         }
-        let n: usize = f[0].parse().expect("n");
-        let m: usize = f[1].parse().expect("m");
-        let v: Vec<f64> = f[2..6]
-            .iter()
-            .map(|t| t.parse().expect("coefficient"))
-            .collect();
+        if f.len() < 6 {
+            return Err(format!(
+                "coefficient row {} has fewer than 6 fields",
+                rows + 1
+            ));
+        }
+        let n: usize = f[0]
+            .parse()
+            .map_err(|_| format!("row {} has a bad degree", rows + 1))?;
+        let m: usize = f[1]
+            .parse()
+            .map_err(|_| format!("row {} has a bad order", rows + 1))?;
+        if n == 0 || n > n_max || m > n {
+            return Err(format!("row {} has invalid degree/order {n}/{m}", rows + 1));
+        }
+        let mut v = [0.0; 4];
+        for (i, value) in f[2..6].iter().enumerate() {
+            v[i] = value
+                .parse()
+                .map_err(|_| format!("row {} has a bad coefficient", rows + 1))?;
+        }
         let i = idx(n, m);
         (c.g[i], c.h[i], c.gd[i], c.hd[i]) = (v[0], v[1], v[2], v[3]);
+        rows += 1;
     }
-    (epoch, c)
+    let expected = n_max * (n_max + 3) / 2;
+    if rows != expected {
+        return Err(format!(
+            "the file has {rows} coefficient rows; expected {expected}"
+        ));
+    }
+    for i in 0..c.g.len() {
+        c.g[i] += c.gd[i] * (t - epoch);
+        c.h[i] += c.hd[i] * (t - epoch);
+    }
+    Ok(c)
 }
 
 /// IGRF-14 table: epochs 1900..2025 by 5 years, then the 2025-30 secular variation.
@@ -173,14 +202,7 @@ fn parse_igrf() -> Igrf {
 /// The coefficients of `model` at decimal year `t`, with their rates of change.
 pub fn coeffs_at(model: Model, t: f64) -> Coeffs {
     match model {
-        Model::Wmm2025 => {
-            let (epoch, mut c) = parse_wmm();
-            for i in 0..c.g.len() {
-                c.g[i] += c.gd[i] * (t - epoch);
-                c.h[i] += c.hd[i] * (t - epoch);
-            }
-            c
-        }
+        Model::Wmm2025 => wmm_coeffs_at(WMM2025_COF, 12, t).expect("embedded WMM2025 coefficients"),
         Model::Igrf14 => {
             let igrf = parse_igrf();
             let e = &igrf.epochs;

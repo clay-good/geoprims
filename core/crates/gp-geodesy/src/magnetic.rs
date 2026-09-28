@@ -1,5 +1,5 @@
 //! Geomagnetism tools (geodesy/geomagnetism spec): the field and declination
-//! from WMM2025 or IGRF-14, and true ↔ magnetic bearing conversion with a
+//! from WMM2025, WMMHR2025, or IGRF-14, and true ↔ magnetic bearing conversion with a
 //! chart variation, the model, or both. The model math lives in gp-geo.
 
 use gp_base::ErrorCode;
@@ -31,6 +31,14 @@ const IGRF_REF: Reference = Reference {
     edition: "IGRF-14 (igrf14coeffs.txt)",
     locator: "Coefficient table, 1900.0-2025.0 main field and 2025-2030 secular variation",
     url: "https://www.ncei.noaa.gov/products/international-geomagnetic-reference-field",
+};
+const WMMHR_REF: Reference = Reference {
+    title: "WMMHR2025 high-resolution geomagnetic model",
+    issuer: "NOAA National Centers for Environmental Information and British Geological Survey",
+    year: 2024,
+    edition: "WMMHR2025, released December 2024",
+    locator: "Degree 133 coefficient file and published test values",
+    url: "https://www.ncei.noaa.gov/products/world-magnetic-model-high-resolution",
 };
 const FAA_VARIATION: Reference = Reference {
     title: "Pilot's Handbook of Aeronautical Knowledge, FAA-H-8083-25C",
@@ -98,9 +106,53 @@ const DATE: Field = Field::new(
 const MODEL: Field = Field::new(
     "model",
     "Model",
-    "wmm2025 (default, 2025-2030) or igrf14 (1900-2030)",
-    Kind::Choice(&["wmm2025", "igrf14"]),
+    "wmm2025 (default), wmmhr2025 (high resolution), or igrf14 (historical)",
+    Kind::Choice(&["wmm2025", "wmmhr2025", "igrf14"]),
 );
+
+const WMMHR_ID: &str = "wmmhr2025";
+const WMMHR_VERSION: &str = "2025.0";
+const WMMHR_FILE: &str = "WMMHR.COF";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SelectedModel {
+    Wmm2025,
+    Wmmhr2025,
+    Igrf14,
+}
+
+impl SelectedModel {
+    fn id(self) -> &'static str {
+        match self {
+            Self::Wmm2025 => "wmm2025",
+            Self::Wmmhr2025 => WMMHR_ID,
+            Self::Igrf14 => "igrf14",
+        }
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Self::Wmm2025 => "WMM2025",
+            Self::Wmmhr2025 => "WMMHR2025",
+            Self::Igrf14 => "IGRF-14",
+        }
+    }
+
+    fn version(self) -> &'static str {
+        match self {
+            Self::Wmm2025 => "WMM2025 (2024-11-13)",
+            Self::Wmmhr2025 => WMMHR_VERSION,
+            Self::Igrf14 => "IGRF-14 (2024-12)",
+        }
+    }
+
+    fn window(self) -> (f64, f64) {
+        match self {
+            Self::Igrf14 => (1900.0, 2030.0),
+            Self::Wmm2025 | Self::Wmmhr2025 => (2025.0, 2030.0),
+        }
+    }
+}
 
 /// Parses `YYYY-MM-DD` or a decimal year.
 pub fn parse_date(s: &str) -> Result<f64, String> {
@@ -109,7 +161,7 @@ pub fn parse_date(s: &str) -> Result<f64, String> {
 
 /// The evaluated model at the caller's point and date.
 struct Eval {
-    model: Model,
+    model: SelectedModel,
     t: f64,
     e: Elements,
 }
@@ -121,8 +173,9 @@ fn evaluate(ctx: &mut Ctx) -> Result<Eval, ToolError> {
         return Err(ToolError::new(ErrorCode::OutOfDomain, "Height must be between -1 km and 850 km above the ellipsoid, the models' stated domain.").at("/height"));
     }
     let model = match ctx.choice("model")? {
-        Some("igrf14") => Model::Igrf14,
-        _ => Model::Wmm2025,
+        Some("igrf14") => SelectedModel::Igrf14,
+        Some("wmmhr2025") => SelectedModel::Wmmhr2025,
+        _ => SelectedModel::Wmm2025,
     };
     let raw = ctx.text("date")?.ok_or_else(|| {
         ToolError::invalid("/date", "Date is required.").hint("Example: 2026-09-18")
@@ -142,7 +195,9 @@ fn evaluate(ctx: &mut Ctx) -> Result<Eval, ToolError> {
         )
         .at("/date");
         return Err(
-            if model == Model::Wmm2025 && (1900.0..2025.0).contains(&t) {
+            if matches!(model, SelectedModel::Wmm2025 | SelectedModel::Wmmhr2025)
+                && (1900.0..2025.0).contains(&t)
+            {
                 err.hint("IGRF-14 covers 1900 to 2030: set model to igrf14 for historical dates.")
             } else if t > hi {
                 err.hint(
@@ -153,11 +208,31 @@ fn evaluate(ctx: &mut Ctx) -> Result<Eval, ToolError> {
             },
         );
     }
-    ctx.assets.push(AssetRef {
-        id: model.id().into(),
-        version: model.version().into(),
-    });
-    let c = mag::coeffs_at(model, t);
+    let c = match model {
+        SelectedModel::Wmm2025 => mag::coeffs_at(Model::Wmm2025, t),
+        SelectedModel::Igrf14 => mag::coeffs_at(Model::Igrf14, t),
+        SelectedModel::Wmmhr2025 => {
+            let bytes = ctx.asset(WMMHR_ID, WMMHR_VERSION, WMMHR_FILE)?;
+            let text = std::str::from_utf8(&bytes).map_err(|_| {
+                ToolError::new(
+                    ErrorCode::AssetIntegrity,
+                    "The WMMHR2025 coefficient file is not UTF-8 text.",
+                )
+            })?;
+            mag::wmm_coeffs_at(text, 133, t).map_err(|e| {
+                ToolError::new(
+                    ErrorCode::AssetIntegrity,
+                    format!("The WMMHR2025 coefficient file could not be read: {e}."),
+                )
+            })?
+        }
+    };
+    if model != SelectedModel::Wmmhr2025 {
+        ctx.assets.push(AssetRef {
+            id: model.id().into(),
+            version: model.version().into(),
+        });
+    }
     let (b, sv) = mag::field(&c, lat, lon, h_km);
     let e = mag::elements(b, sv);
     if e.h < 1.0 {
@@ -191,8 +266,9 @@ fn evaluate(ctx: &mut Ctx) -> Result<Eval, ToolError> {
         ));
     }
     ctx.model = Some(match model {
-        Model::Wmm2025 => "WMM2025 main field, degree 12".into(),
-        Model::Igrf14 => format!("IGRF-14 main field, degree 13, {}", mag::igrf_span(t)),
+        SelectedModel::Wmm2025 => "WMM2025 main field, degree 12".into(),
+        SelectedModel::Wmmhr2025 => "WMMHR2025 core and crustal field, degree 133".into(),
+        SelectedModel::Igrf14 => format!("IGRF-14 main field, degree 13, {}", mag::igrf_span(t)),
     });
     // What an agent should relay with the number (mcp "Descriptions carry caveats").
     let zone = if e.h < 2000.0 {
@@ -206,7 +282,7 @@ fn evaluate(ctx: &mut Ctx) -> Result<Eval, ToolError> {
     ctx.context.push(("epoch", Json::Num(t)));
     ctx.context.push(("validFrom", Json::Num(lo)));
     ctx.context.push(("validTo", Json::Num(hi)));
-    if model == Model::Wmm2025 {
+    if model == SelectedModel::Wmm2025 {
         ctx.context.push((
             "declinationUncertaintyDeg",
             Json::Num(mag::wmm_declination_uncertainty(e.h)),
@@ -239,10 +315,10 @@ fn east_west(v: f64, ctx: &Ctx) -> String {
 
 pub static DECLINATION: ToolDef = ToolDef {
     id: "geodesy.magnetic.declination",
-    version: "1.0.1",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Magnetic declination",
-    summary: "Magnetic declination (variation), inclination, and field strength at any place and date from the World Magnetic Model 2025 or IGRF-14, with the model's uncertainty and compass warning zones.",
+    summary: "Magnetic declination (variation), inclination, and field strength at any place and date from WMM2025, high-resolution WMMHR2025, or historical IGRF-14, with compass warning zones.",
     aliases: &[
         "magnetic declination calculator",
         "magnetic variation calculator",
@@ -256,6 +332,7 @@ pub static DECLINATION: ToolDef = ToolDef {
         "magnetic north",
         "WMM",
         "WMM2025",
+        "WMMHR2025",
         "IGRF",
         "inclination",
         "dip",
@@ -355,7 +432,12 @@ pub static DECLINATION: ToolDef = ToolDef {
             Kind::Text { max_len: 12 },
         ),
     ],
-    errors: &[ErrorCode::OutOfDomain, ErrorCode::DegenerateGeometry],
+    errors: &[
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::AssetUnavailable,
+        ErrorCode::AssetIntegrity,
+    ],
     warnings: &[
         "COMPASS_BLACKOUT_ZONE",
         "COMPASS_CAUTION_ZONE",
@@ -364,11 +446,11 @@ pub static DECLINATION: ToolDef = ToolDef {
         "UNIT_ASSUMED",
         "EXPERIMENTAL_TOOL",
     ],
-    model: "WMM2025 (degree 12) or IGRF-14 (degree 13) spherical-harmonic main field with linear secular variation, on the WGS 84 ellipsoid",
-    accuracy: "Matches all 100 NCEI WMM2025 test values (declination and inclination to their printed 0.01°, intensities within 0.001 nT). The model itself is good to about 0.3° of declination away from the poles; local crustal anomalies of several degrees are not modeled.",
-    when_to_use: "Use this whenever a magnetic direction meets a true one: setting a compass or a heading indicator, converting a runway or a chart bearing, checking the variation for a flight plan or a survey, or seeing how strong and how steep the field is for a magnetometer. It runs WMM2025 or IGRF-14 back to 1900.",
-    limitations: "A model is a smooth global field: local magnetic anomalies, iron structures, and vehicle deviation move a compass off it, and the model carries its own published uncertainty, which grows toward the poles. Declination changes year to year, so the date matters, and a model has a validity window that this tool enforces rather than extrapolating past.",
-    references: &[WMM_REPORT, IGRF_REF],
+    model: "WMM2025 (degree 12), WMMHR2025 (degree 133), or IGRF-14 (degree 13) spherical-harmonic field with linear secular variation, on the WGS 84 ellipsoid",
+    accuracy: "Matches all 100 NCEI WMM2025 test values and all 12 NCEI WMMHR2025 test values to their printed precision. WMM2025 is good to about 0.3° of declination away from the poles; WMMHR2025 also models regional crustal variation.",
+    when_to_use: "Use this whenever a magnetic direction meets a true one: setting a compass or a heading indicator, converting a runway or a chart bearing, checking the variation for a flight plan or a survey, or seeing how strong and how steep the field is for a magnetometer. Use WMMHR2025 when regional crustal variation matters, or IGRF-14 for dates back to 1900.",
+    limitations: "WMM2025 and IGRF-14 are smooth global fields; WMMHR2025 adds regional crustal variation but still cannot account for nearby magnetic rock, iron structures, or vehicle deviation. Declination changes year to year, so the date matters, and each model has a validity window that this tool enforces rather than extrapolating past.",
+    references: &[WMM_REPORT, WMMHR_REF, IGRF_REF],
     examples: &[
         Example {
             id: "primary",
@@ -384,7 +466,7 @@ pub static DECLINATION: ToolDef = ToolDef {
         },
     ],
     primary_example: "primary",
-    assets: &["wmm2025", "igrf14"],
+    assets: &["wmm2025", "wmmhr2025", "igrf14"],
     visualization: &[Layer {
         kind: "point",
         map: &[("value", "declination")],
@@ -461,7 +543,7 @@ fn run_declination(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("declination", ctx.out("declination", deg(e.d))),
         ("declination_text", Json::str(east_west(e.d, ctx))),
     ];
-    if ev.model == Model::Wmm2025 {
+    if ev.model == SelectedModel::Wmm2025 {
         o.push((
             "declination_uncertainty",
             ctx.out(
@@ -624,7 +706,12 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
         .precision(Precision::Decimals(2))
         .optional(),
     ],
-    errors: &[ErrorCode::OutOfDomain, ErrorCode::DegenerateGeometry],
+    errors: &[
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::AssetUnavailable,
+        ErrorCode::AssetIntegrity,
+    ],
     warnings: &[
         "COMPASS_BLACKOUT_ZONE",
         "COMPASS_CAUTION_ZONE",
@@ -637,7 +724,7 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
     limitations: "The variation is the uncertain part, not the arithmetic. The magnetic model carries about half a degree and more near the poles, and it drifts measurably year to year. A chart, a runway number or a navaid uses an assigned epoch variation that was right when it was published and can be a degree or more from today's value -- which is why giving both a chart figure and a place shows the difference rather than reconciling it. Near the magnetic poles the compass is unreliable whatever the number says, and the result warns when you are in that region.",
     model: "Magnetic = true − variation, with east variation positive (east is least, west is best)",
     accuracy: "Exact for the variation used. Charts, runways, and navaids use an assigned epoch variation that can differ from today's model value by a degree or more.",
-    references: &[FAA_VARIATION, WMM_REPORT, IGRF_REF],
+    references: &[FAA_VARIATION, WMM_REPORT, WMMHR_REF, IGRF_REF],
     examples: &[Example {
         id: "primary",
         title: "True course 090° with 12°W variation",
@@ -645,7 +732,7 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
         source: "add-geodesy-suite geomagnetism scenario: magnetic course 102°",
     }],
     primary_example: "primary",
-    assets: &["wmm2025", "igrf14"],
+    assets: &["wmm2025", "wmmhr2025", "igrf14"],
     visualization: &[Layer {
         kind: "vector-diagram",
         map: &[("bearing", "result")],
@@ -820,6 +907,8 @@ pub static GRIVATION: ToolDef = ToolDef {
         ErrorCode::InvalidInput,
         ErrorCode::OutOfDomain,
         ErrorCode::DegenerateGeometry,
+        ErrorCode::AssetUnavailable,
+        ErrorCode::AssetIntegrity,
     ],
     warnings: &[
         "DECLINATION_POLE_CONVENTION",
@@ -833,14 +922,14 @@ pub static GRIVATION: ToolDef = ToolDef {
     limitations: "Three norths, and mixing them is the danger this tool exists to remove: grivation is measured from GRID north, so it is not interchangeable with the declination except on a central meridian, where the convergence is zero. Its accuracy is the declination's -- about half a degree from the model, more near the poles -- since the convergence is exact. And the grid matters: the same point has a different grivation in UTM and in UPS, so the grid used is reported with the answer rather than assumed.",
     model: "Grid variation G = D − γ: the model's declination D minus the grid convergence γ (the bearing of grid north from true north) of the UTM or UPS zone, both east positive",
     accuracy: "As good as the declination (WMM2025: about 0.3° to a few degrees near the poles); the convergence is exact",
-    references: &[WMM_REPORT, IGRF_REF, crate::NGA_UTM],
+    references: &[WMM_REPORT, WMMHR_REF, IGRF_REF, crate::NGA_UTM],
     examples: &[Example {
         id: "primary",
         title: "At 86° N, 45° E in UPS north",
         input: r#"{"lat":86,"lon":45,"date":"2026-09-22","grid":"ups"}"#,
         source: "add-geodesy-suite grivation scenario: WMM2025 declination minus the UPS convergence",
     }],
-    assets: &["wmm2025", "igrf14"],
+    assets: &["wmm2025", "wmmhr2025", "igrf14"],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "point",

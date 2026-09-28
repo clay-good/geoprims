@@ -262,9 +262,15 @@ export function buildPgmTiles(bytes, options, writeTile) {
       const tileCols = cols + 1 + 2 * halo;
       const payload = Buffer.allocUnsafe(tileRows * tileCols * 2);
       for (let y = 0; y < tileRows; y++) {
-        const sourceRow = Math.max(0, Math.min(pgm.height - 1, coreRow + y - halo));
+        let sourceRow = coreRow + y - halo;
+        let oppositeMeridian = 0;
+        if (sourceRow < 0 || sourceRow >= pgm.height) {
+          sourceRow = sourceRow < 0 ? -sourceRow : 2 * (pgm.height - 1) - sourceRow;
+          oppositeMeridian = pgm.width / 2;
+        }
         for (let x = 0; x < tileCols; x++) {
-          const sourceCol = (coreCol + x - halo + pgm.width) % pgm.width;
+          let sourceCol = coreCol + x - halo + oppositeMeridian;
+          sourceCol = (sourceCol + pgm.width) % pgm.width;
           const source = 2 * (sourceRow * pgm.width + sourceCol);
           const target = 2 * (y * tileCols + x);
           payload[target] = pgm.pixels[source];

@@ -1,10 +1,13 @@
 //! EGM96 geoid: GeographicLib GeoidEval parity (cubic and bilinear, 2,010
 //! points including the poles), the asset flow, and height conversion.
 
+use gp_geo::geoid::{Grid, PgmTile, pgm_tile_name};
 use gp_geodesy::REGISTRY;
 use serde_json::Value;
 
 const GRID: &[u8] = include_bytes!("../../../../assets/data/egm96-15/2009-08-29/egm96-15.pgm");
+const MID_TILE: &[u8] = include_bytes!("data/n20-350.ggt");
+const POLAR_TILE: &[u8] = include_bytes!("data/n90-000.ggt");
 
 fn call(id: &str, input: &str) -> Value {
     serde_json::from_str(&REGISTRY.invoke(id, input)).expect("envelope is JSON")
@@ -16,7 +19,7 @@ fn supply() {
 
 #[test]
 fn matches_geoideval_cubic_and_bilinear() {
-    let g = gp_geo::geoid::Grid::parse(GRID).unwrap();
+    let g = Grid::parse(GRID).unwrap();
     let (mut wc, mut wl) = (0.0f64, 0.0f64);
     let mut n = 0;
     for l in include_str!("data/egm96_diff.csv").lines().skip(1) {
@@ -29,6 +32,43 @@ fn matches_geoideval_cubic_and_bilinear() {
     // GeoidEval prints 4 decimals: agreement to half a unit in the last place.
     assert!(wc <= 0.5e-4 + 1e-9, "cubic {wc}");
     assert!(wl <= 0.5e-4 + 1e-9, "bilinear {wl}");
+}
+
+#[test]
+fn tiled_pgm_matches_the_whole_grid_including_polar_reflection() {
+    let whole = Grid::parse(GRID).unwrap();
+    let mid = PgmTile::parse(MID_TILE).unwrap();
+    let polar = PgmTile::parse(POLAR_TILE).unwrap();
+    for (tile, latitudes, longitudes) in [
+        (
+            &mid,
+            &[10.001, 12.25, 19.999][..],
+            &[-9.999, -5.25, -0.001][..],
+        ),
+        (
+            &polar,
+            &[80.001, 89.75, 89.999, 90.0][..],
+            &[0.0, 1.25, 5.5, 9.999][..],
+        ),
+    ] {
+        for &lat in latitudes {
+            for &lon in longitudes {
+                for cubic in [false, true] {
+                    let actual = tile.height(lat, lon, cubic).unwrap();
+                    let expected = whole.height(lat, lon, cubic);
+                    assert!(
+                        (actual - expected).abs() < 1e-9,
+                        "{lat} {lon} {cubic}: {actual} != {expected}"
+                    );
+                }
+            }
+        }
+    }
+    assert_eq!(pgm_tile_name(90.0, 0.0, 10).unwrap(), "n90-000.ggt");
+    assert_eq!(pgm_tile_name(20.0, -0.001, 10).unwrap(), "n20-350.ggt");
+    assert_eq!(pgm_tile_name(-90.0, 180.0, 10).unwrap(), "s80-180.ggt");
+    assert!(mid.height(9.9, -5.0, true).is_err());
+    assert!(PgmTile::parse(&MID_TILE[..MID_TILE.len() - 2]).is_err());
 }
 
 #[test]

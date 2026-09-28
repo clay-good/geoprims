@@ -85,6 +85,7 @@ dependencies = [
  "geographiclib-rs",
  "gp-base",
  "libm",
+ "serde_json",
 ]
 
 [[package]]

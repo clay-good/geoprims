@@ -57,11 +57,27 @@ test('tile payloads preserve source posts exactly, including wrap and polar halo
     const coreRow = Math.round((90 - meta.north) / meta.latStep);
     const coreCol = Math.round(meta.west / meta.lonStep);
     for (const [y, x] of [[0, 0], [meta.halo, meta.halo], [meta.rows - 1, meta.cols - 1]]) {
-      const sourceRow = Math.max(0, Math.min(pgm.height - 1, coreRow + y - meta.halo));
-      const sourceCol = (coreCol + x - meta.halo + pgm.width) % pgm.width;
+      let sourceRow = coreRow + y - meta.halo;
+      let oppositeMeridian = 0;
+      if (sourceRow < 0 || sourceRow >= pgm.height) {
+        sourceRow = sourceRow < 0 ? -sourceRow : 2 * (pgm.height - 1) - sourceRow;
+        oppositeMeridian = pgm.width / 2;
+      }
+      const sourceCol = (coreCol + x - meta.halo + oppositeMeridian + pgm.width) % pgm.width;
       assert.equal(payload.readUInt16BE(2 * (y * meta.cols + x)), pgm.pixels.readUInt16BE(2 * (sourceRow * pgm.width + sourceCol)), `${name} ${y},${x}`);
     }
   }
+});
+
+test('the Rust tiled-grid fixtures are exact current pipeline output', () => {
+  const files = new Map();
+  buildPgmTiles(source, options, (name, bytes) => {
+    if (name === 'n90-000.ggt' || name === 'n20-350.ggt') files.set(name, bytes);
+  });
+  for (const [name, bytes] of files) {
+    assert.deepEqual(bytes, readFileSync(join(root, 'core/crates/gp-geodesy/tests/data', name)), name);
+  }
+  assert.equal(files.size, 2);
 });
 
 test('the privacy floor and source shape are enforced', () => {

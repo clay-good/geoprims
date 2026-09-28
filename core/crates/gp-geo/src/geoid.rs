@@ -1,11 +1,13 @@
-//! Geoid grids in GeographicLib's PGM format (16-bit samples with an offset
-//! and a 3 mm scale), evaluated exactly as GeographicLib's `Geoid::height`:
-//! bilinear, or the 12-point cubic least-squares fit with the pole-adapted
-//! stencils. The bytes come from the host (data-assets); nothing is read here.
+//! Whole grids and geoprims tiles in GeographicLib's PGM format (16-bit
+//! samples with an offset and a 3 mm scale), evaluated exactly as
+//! GeographicLib's `Geoid::height`: bilinear, or the 12-point cubic
+//! least-squares fit with the pole-adapted stencils. The bytes come from the
+//! host (data-assets); nothing is read here.
 //! Interpolation coefficients from GeographicLib `src/Geoid.cpp` (MIT license,
 //! Copyright Charles Karney).
 
 use libm::floor;
+use serde_json::Value;
 
 const C0: f64 = 240.0;
 const C3: [i32; 120] = [
@@ -52,6 +54,52 @@ const C3S: [i32; 120] = [
     -18, 36, -64, 0, 66, 51, 0, 0, -102, 31, //
     18, -36, 2, 0, -66, -51, 0, 0, 102, 31,
 ];
+
+fn interpolate(
+    mut raw: impl FnMut(i64, i64) -> f64,
+    ix: i64,
+    iy: i64,
+    fx: f64,
+    fy: f64,
+    cubic: bool,
+    pole: i8,
+) -> f64 {
+    if !cubic {
+        let (v00, v01) = (raw(ix, iy), raw(ix + 1, iy));
+        let (v10, v11) = (raw(ix, iy + 1), raw(ix + 1, iy + 1));
+        let a = (1.0 - fx) * v00 + fx * v01;
+        let b = (1.0 - fx) * v10 + fx * v11;
+        return (1.0 - fy) * a + fy * b;
+    }
+    let v = [
+        raw(ix, iy - 1),
+        raw(ix + 1, iy - 1),
+        raw(ix - 1, iy),
+        raw(ix, iy),
+        raw(ix + 1, iy),
+        raw(ix + 2, iy),
+        raw(ix - 1, iy + 1),
+        raw(ix, iy + 1),
+        raw(ix + 1, iy + 1),
+        raw(ix + 2, iy + 1),
+        raw(ix, iy + 2),
+        raw(ix + 1, iy + 2),
+    ];
+    let (c3, c0) = match pole {
+        1 => (&C3N, C0N),
+        -1 => (&C3S, C0S),
+        _ => (&C3, C0),
+    };
+    let mut t = [0.0; 10];
+    for (i, ti) in t.iter_mut().enumerate() {
+        for (j, vj) in v.iter().enumerate() {
+            *ti += vj * f64::from(c3[10 * j + i]);
+        }
+        *ti /= c0;
+    }
+    t[0] + fx * (t[1] + fx * (t[3] + fx * t[6]))
+        + fy * (t[2] + fx * (t[4] + fx * t[7]) + fy * (t[5] + fx * t[8] + fy * t[9]))
+}
 
 /// A parsed PGM geoid grid over borrowed bytes.
 pub struct Grid<'a> {
@@ -157,44 +205,177 @@ impl<'a> Grid<'a> {
         } else {
             0
         };
-        let h = if !cubic {
-            let (v00, v01) = (self.raw(ix, iy), self.raw(ix + 1, iy));
-            let (v10, v11) = (self.raw(ix, iy + 1), self.raw(ix + 1, iy + 1));
-            let a = (1.0 - fx) * v00 + fx * v01;
-            let b = (1.0 - fx) * v10 + fx * v11;
-            (1.0 - fy) * a + fy * b
+        let pole = if iy == 0 {
+            1
+        } else if iy == self.height - 2 {
+            -1
         } else {
-            let v = [
-                self.raw(ix, iy - 1),
-                self.raw(ix + 1, iy - 1),
-                self.raw(ix - 1, iy),
-                self.raw(ix, iy),
-                self.raw(ix + 1, iy),
-                self.raw(ix + 2, iy),
-                self.raw(ix - 1, iy + 1),
-                self.raw(ix, iy + 1),
-                self.raw(ix + 1, iy + 1),
-                self.raw(ix + 2, iy + 1),
-                self.raw(ix, iy + 2),
-                self.raw(ix + 1, iy + 2),
-            ];
-            let (c3, c0) = if iy == 0 {
-                (&C3N, C0N)
-            } else if iy == self.height - 2 {
-                (&C3S, C0S)
-            } else {
-                (&C3, C0)
-            };
-            let mut t = [0.0; 10];
-            for (i, ti) in t.iter_mut().enumerate() {
-                for (j, vj) in v.iter().enumerate() {
-                    *ti += vj * f64::from(c3[10 * j + i]);
-                }
-                *ti /= c0;
-            }
-            t[0] + fx * (t[1] + fx * (t[3] + fx * t[6]))
-                + fy * (t[2] + fx * (t[4] + fx * t[7]) + fy * (t[5] + fx * t[8] + fy * t[9]))
+            0
         };
+        let h = interpolate(|x, y| self.raw(x, y), ix, iy, fx, fy, cubic, pole);
         self.offset + self.scale * h
     }
+}
+
+/// One `GEOPRIMS-GEOID-TILE 1` file emitted from a GeographicLib PGM grid.
+pub struct PgmTile<'a> {
+    data: &'a [u8],
+    start: usize,
+    north: f64,
+    south: f64,
+    west: f64,
+    east: f64,
+    lat_step: f64,
+    lon_step: f64,
+    rows: i64,
+    cols: i64,
+    halo: i64,
+    offset: f64,
+    scale: f64,
+}
+
+impl<'a> PgmTile<'a> {
+    pub fn parse(data: &'a [u8]) -> Result<Self, String> {
+        let first = data
+            .iter()
+            .position(|b| *b == b'\n')
+            .ok_or("truncated tile header")?;
+        if &data[..first] != b"GEOPRIMS-GEOID-TILE 1" {
+            return Err("not a geoprims geoid tile".into());
+        }
+        let second = data[first + 1..]
+            .iter()
+            .position(|b| *b == b'\n')
+            .map(|p| p + first + 1)
+            .ok_or("truncated tile metadata")?;
+        let meta: Value = serde_json::from_slice(&data[first + 1..second])
+            .map_err(|_| "invalid tile metadata")?;
+        let number = |name: &str| {
+            meta.get(name)
+                .and_then(Value::as_f64)
+                .ok_or("missing tile number")
+        };
+        let integer = |name: &str| {
+            meta.get(name)
+                .and_then(Value::as_i64)
+                .ok_or("missing tile integer")
+        };
+        if meta.get("encoding").and_then(Value::as_str) != Some("uint16-be") {
+            return Err("geoid tile is not uint16-be".into());
+        }
+        let tile = Self {
+            data,
+            start: second + 1,
+            north: number("north")?,
+            south: number("south")?,
+            west: number("west")?,
+            east: number("east")?,
+            lat_step: number("latStep")?,
+            lon_step: number("lonStep")?,
+            rows: integer("rows")?,
+            cols: integer("cols")?,
+            halo: integer("halo")?,
+            offset: number("offset")?,
+            scale: number("scale")?,
+        };
+        let payload_bytes = tile
+            .rows
+            .checked_mul(tile.cols)
+            .and_then(|n| n.checked_mul(2))
+            .and_then(|n| usize::try_from(n).ok());
+        let twice_halo = tile.halo.checked_mul(2);
+        let core_rows = twice_halo
+            .and_then(|h| tile.rows.checked_sub(h))
+            .unwrap_or(0);
+        let core_cols = twice_halo
+            .and_then(|h| tile.cols.checked_sub(h))
+            .unwrap_or(0);
+        let expected_rows = (tile.north - tile.south) / tile.lat_step + 1.0;
+        let expected_cols = (tile.east - tile.west) / tile.lon_step + 1.0;
+        if tile.north <= tile.south
+            || tile.north > 90.0
+            || tile.south < -90.0
+            || tile.east <= tile.west
+            || tile.west < 0.0
+            || tile.east > 360.0
+            || tile.lat_step <= 0.0
+            || tile.lon_step <= 0.0
+            || tile.scale <= 0.0
+            || tile.halo < 2
+            || core_rows < 2
+            || core_cols < 2
+            || (expected_rows - core_rows as f64).abs() > 1e-8
+            || (expected_cols - core_cols as f64).abs() > 1e-8
+            || payload_bytes != Some(data.len() - tile.start)
+        {
+            return Err("geoid tile shape does not match its metadata".into());
+        }
+        Ok(tile)
+    }
+
+    fn raw(&self, x: i64, y: i64) -> f64 {
+        debug_assert!(x >= 0 && x < self.cols && y >= 0 && y < self.rows);
+        let p = self.start + 2 * (y * self.cols + x) as usize;
+        f64::from(u16::from_be_bytes([self.data[p], self.data[p + 1]]))
+    }
+
+    pub fn height(&self, lat: f64, lon: f64, cubic: bool) -> Result<f64, String> {
+        if !lat.is_finite() || !lon.is_finite() {
+            return Err("geoid tile coordinate is not finite".into());
+        }
+        let mut lon = lon.rem_euclid(360.0);
+        if lon < self.west && self.east == 360.0 {
+            lon += 360.0;
+        }
+        if lat < self.south || lat > self.north || lon < self.west || lon > self.east {
+            return Err("point is outside this geoid tile".into());
+        }
+        let x = (lon - self.west) / self.lon_step;
+        let y = (self.north - lat) / self.lat_step;
+        let core_rows = self.rows - 2 * self.halo;
+        let core_cols = self.cols - 2 * self.halo;
+        let ix = (floor(x) as i64).min(core_cols - 2);
+        let iy = (floor(y) as i64).min(core_rows - 2);
+        let fx = x - ix as f64;
+        let fy = y - iy as f64;
+        let pole = if self.north == 90.0 && iy == 0 {
+            1
+        } else if self.south == -90.0 && iy == core_rows - 2 {
+            -1
+        } else {
+            0
+        };
+        let raw = interpolate(
+            |dx, dy| self.raw(dx + self.halo, dy + self.halo),
+            ix,
+            iy,
+            fx,
+            fy,
+            cubic,
+            pole,
+        );
+        Ok(self.offset + self.scale * raw)
+    }
+}
+
+/// File name for the global tile containing a point.
+pub fn pgm_tile_name(lat: f64, lon: f64, tile_degrees: i32) -> Result<String, String> {
+    if !(-90.0..=90.0).contains(&lat)
+        || tile_degrees < 1
+        || 180 % tile_degrees != 0
+        || 360 % tile_degrees != 0
+    {
+        return Err("invalid global geoid tile coordinate or size".into());
+    }
+    let bands = 180 / tile_degrees;
+    let mut band = floor((90.0 - lat) / f64::from(tile_degrees)) as i32;
+    band = band.min(bands - 1);
+    let north = 90 - band * tile_degrees;
+    let west = floor(lon.rem_euclid(360.0) / f64::from(tile_degrees)) as i32 * tile_degrees;
+    Ok(format!(
+        "{}{:02}-{:03}.ggt",
+        if north >= 0 { 'n' } else { 's' },
+        north.abs(),
+        west
+    ))
 }

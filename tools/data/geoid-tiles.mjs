@@ -2,11 +2,33 @@
 // Splits a global GeographicLib PGM geoid into coarse, independently verified
 // tiles. The signed index is canonical JSON so every build signs the same bytes.
 import { createHash, createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+export const sources = {
+  'egm2008-2.5': {
+    version: '2009-08-31',
+    url: 'https://downloads.sourceforge.net/project/geographiclib/geoids-distrib/egm2008-2_5.tar.bz2',
+    archiveBytes: 34_927_299,
+    archiveSha256: 'd602e13446a4a4a23f39aecfe6a2a0760a1bc6c1b497482c2ebc9f7d513be699',
+    member: 'geoids/egm2008-2_5.pgm',
+    pgmBytes: 74_667_284,
+    pgmSha256: 'fab040a55dfabe782be89a89b2ba7e4a73183513a9813e24a3f80e7b6ed61dbf',
+  },
+  'egm2008-1': {
+    version: '2009-08-31',
+    url: 'https://downloads.sourceforge.net/project/geographiclib/geoids-distrib/egm2008-1.tar.bz2',
+    archiveBytes: 162_388_303,
+    archiveSha256: 'bdb382d0be7ece9142450eacc24b7b7f0889ee3e0ba4f535b04ec383f94c0fb5',
+    member: 'geoids/egm2008-1.pgm',
+    pgmBytes: 466_603_604,
+    pgmSha256: 'b5b3fd38ba630285d8a0dc76071b5e7c730d9d882d8570efee45cfd58729525a',
+  },
+};
 
 export function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
@@ -159,8 +181,31 @@ export function build(input, output, privateKeyFile, assetId, version, keyId, so
   return signed;
 }
 
+export function readPinnedArchive(archive, source) {
+  const archiveBytes = readFileSync(archive);
+  if (archiveBytes.length !== source.archiveBytes) throw new Error(`archive has ${archiveBytes.length} bytes; expected ${source.archiveBytes}`);
+  const digest = sha256(archiveBytes);
+  if (digest !== source.archiveSha256) throw new Error(`archive sha256 ${digest}, expected ${source.archiveSha256}`);
+  const pgm = execFileSync('tar', ['-xOf', archive, source.member], { maxBuffer: source.pgmBytes + 1 });
+  if (pgm.length !== source.pgmBytes) throw new Error(`source PGM has ${pgm.length} bytes; expected ${source.pgmBytes}`);
+  const pgmDigest = sha256(pgm);
+  if (pgmDigest !== source.pgmSha256) throw new Error(`source PGM sha256 ${pgmDigest}, expected ${source.pgmSha256}`);
+  return pgm;
+}
+
+export function buildSource(name, archive, output, privateKeyFile, keyId) {
+  const source = sources[name];
+  if (!source) throw new Error(`unknown geoid source ${name}; choose ${Object.keys(sources).join(' or ')}`);
+  const pgm = readPinnedArchive(archive, source);
+  mkdirSync(output, { recursive: true });
+  const index = buildPgmTiles(pgm, { assetId: name, version: source.version, sourceFile: basename(source.member), sourceSha256: source.pgmSha256 }, (file, tile) => writeFileSync(join(output, file), tile));
+  const signed = signIndex(index, readFileSync(privateKeyFile), keyId);
+  writeFileSync(join(output, 'index.json'), `${JSON.stringify(signed, null, 2)}\n`);
+  return signed;
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  if (process.argv.length !== 9) throw new Error('usage: geoid-tiles.mjs INPUT.pgm OUTPUT_DIR PRIVATE_KEY.pem ASSET_ID VERSION KEY_ID SOURCE_SHA256');
-  const signed = build(...process.argv.slice(2));
-  console.log(`${signed.index.assetId}: ${signed.index.tiles.length} signed tiles written to ${dirname(join(process.argv[3], 'index.json'))}`);
+  if (process.argv.length !== 7) throw new Error('usage: geoid-tiles.mjs SOURCE_NAME ARCHIVE.tar.bz2 OUTPUT_DIR PRIVATE_KEY.pem KEY_ID');
+  const signed = buildSource(...process.argv.slice(2));
+  console.log(`${signed.index.assetId}: ${signed.index.tiles.length} signed tiles written to ${dirname(join(process.argv[4], 'index.json'))}`);
 }

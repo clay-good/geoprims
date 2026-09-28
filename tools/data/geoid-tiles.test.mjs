@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash, generateKeyPairSync } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPgmTiles, canonicalJson, parsePgm, signIndex, verifyIndex } from './geoid-tiles.mjs';
+import { buildPgmTiles, canonicalJson, parsePgm, signIndex, sources, verifyIndex } from './geoid-tiles.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const source = readFileSync(join(root, 'assets/data/egm96-15/2009-08-29/egm96-15.pgm'));
@@ -60,4 +60,16 @@ test('the privacy floor and source shape are enforced', () => {
   assert.throws(() => buildPgmTiles(source, { ...options, sourceSha256: '0'.repeat(64) }, () => {}), /source sha256/);
   const bad = Buffer.from(source.subarray(0, -2));
   assert.throws(() => parsePgm(bad), /pixel bytes/);
+});
+
+test('both official EGM2008 archives and extracted grids are pinned', () => {
+  assert.deepEqual(Object.keys(sources), ['egm2008-2.5', 'egm2008-1']);
+  for (const [name, source] of Object.entries(sources)) {
+    assert.match(source.url, /^https:\/\/downloads\.sourceforge\.net\/project\/geographiclib\/geoids-distrib\//, name);
+    assert.match(source.archiveSha256, /^[a-f0-9]{64}$/, name);
+    assert.match(source.pgmSha256, /^[a-f0-9]{64}$/, name);
+    assert.ok(source.archiveBytes > 30_000_000, name);
+    assert.ok(source.pgmBytes > source.archiveBytes, name);
+    assert.equal(source.version, '2009-08-31');
+  }
 });

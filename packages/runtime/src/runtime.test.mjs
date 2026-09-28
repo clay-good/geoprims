@@ -144,6 +144,37 @@ test('worker host: abort stops a spinning call within 100 ms and keeps serving',
   }
 });
 
+test('worker host: abort stops a real long core call within 100 ms and keeps serving', async () => {
+  const { workerHost } = await import('./worker-host.mjs');
+  const h = workerHost(join(root, 'dist/wasm'), { timeoutMs: 120_000 });
+  try {
+    await h.invoke('units.speed.kt-to-mph', '{"value":1}');
+    const controller = new AbortController();
+    let firstProgress;
+    const progress = new Promise((resolve) => { firstProgress = resolve; });
+    const points = [
+      { lat: 40.0, lon: -80.35 },
+      { lat: 40.0, lon: -79.55 },
+      { lat: 40.5, lon: -79.55 },
+      { lat: 40.5, lon: -80.35 },
+    ];
+    const fill = h.invoke(
+      'indexing.h3.polygon-to-cells',
+      JSON.stringify({ points, resolution: 10 }),
+      { signal: controller.signal, onProgress: firstProgress },
+    );
+    assert.ok(await progress >= 200, 'the real calculation ended before progress was reported');
+    const started = performance.now();
+    controller.abort();
+    assert.equal(await fill, null, 'a canceled core call returned a partial result');
+    assert.ok(performance.now() - started < 100, 'core-call cancellation took longer than 100 ms');
+    const good = JSON.parse(await h.invoke('units.speed.kt-to-mph', '{"value":100}'));
+    assert.equal(good.result.converted.value, 115.07794480235425);
+  } finally {
+    await h.close();
+  }
+});
+
 test('worker host: a queued call can be canceled before it runs', async () => {
   const { workerHost } = await import('./worker-host.mjs');
   const h = workerHost(join(root, 'dist/wasm'), { timeoutMs: 5_000 });

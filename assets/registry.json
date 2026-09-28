@@ -42,6 +42,27 @@
       "bundledIn": "core/crates/gp-geo/data/WMM2025.COF"
     },
     {
+      "id": "wmmhr2025",
+      "version": "2025.0",
+      "title": "World Magnetic Model High Resolution 2025",
+      "issuer": "NOAA NCEI and British Geological Survey",
+      "license": "Public domain (US Government work)",
+      "attribution": "World Magnetic Model High Resolution 2025, NOAA NCEI and BGS.",
+      "sourceUrl": "https://www.ncei.noaa.gov/sites/default/files/2025-01/WMMHR2025COF.zip",
+      "retrievedAt": "2026-09-28",
+      "validFrom": "2025.0",
+      "validTo": "2030.0",
+      "files": {
+        "WMMHR.COF": {
+          "sha256": "8851d40e57a1d948cb56d49b837612844890a941f93a73846a122b6c1182d504",
+          "bytes": 533743
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "consumers": ["web-assets", "mcp-server"]
+    },
+    {
       "id": "igrf14",
       "version": "IGRF-14 (2024-12)",
       "title": "International Geomagnetic Reference Field, 14th generation",

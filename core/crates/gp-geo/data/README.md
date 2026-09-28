@@ -9,4 +9,6 @@ Byte-for-byte copies of the official coefficient files. Replace them only with a
 
 The WMM2025 test values that verify the synthesis are in `core/crates/gp-geodesy/tests/data/WMM2025_TestValues.txt` (same archive). WMM and IGRF are works of the US government and IAGA and are free to redistribute.
 
+Run `node tools/data/magnetic-assets.mjs WMM2025COF.zip WMMHR2025COF.zip igrf14coeffs.txt` to verify the pinned issuer archives and regenerate all three coefficient files plus the WMM and WMMHR test fixtures. WMMHR stays on demand under `assets/data/` because its 533,743-byte degree-133 file is much larger than the embedded main-field models.
+
 `igrf14` is bundled in the geodesy module for now (the data-assets registry lists it as on-demand); it adds about 29 KB before compression.

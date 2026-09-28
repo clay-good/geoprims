@@ -7,3 +7,7 @@
 - Source: https://sourceforge.net/projects/geographiclib/files/testdata/TMcoords.dat.gz (retrieved 2026-09-19)
 - SHA-256 of the downloaded `.gz`: `91fb3a046625426b77e388a371c0a08ec14e8d98614f13cbd91019dd8baa7721`
 - Regenerate: `gunzip -k TMcoords.dat.gz && awk '$2<=3.5 && $1<=84' TMcoords.dat | awk 'NR%11==1' | head -1000 > TMcoords-sample.dat`
+
+## Magnetic model test values
+
+`WMM2025_TestValues.txt` contains NCEI's 100 published WMM2025 cases. `WMMHR2025_TEST_VALUES.txt` contains NCEI's 12 published WMMHR2025 cases. Both come from the pinned coefficient archives and are regenerated with `tools/data/magnetic-assets.mjs`; its test checks their exact byte counts, SHA-256 digests, and row shapes without using the network.

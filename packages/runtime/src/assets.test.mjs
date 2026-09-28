@@ -64,7 +64,7 @@ test('every registry entry is complete and every file matches its digest', async
     if (a.consumers) {
       assert.ok(Array.isArray(a.consumers) && a.consumers.length > 0, `${a.id} consumers`);
       assert.equal(new Set(a.consumers).size, a.consumers.length, `${a.id} repeats a consumer`);
-      for (const consumer of a.consumers) assert.ok(['web-map', 'mcp-server'].includes(consumer), `${a.id} has unknown consumer ${consumer}`);
+      for (const consumer of a.consumers) assert.ok(['web-assets', 'web-map', 'mcp-server'].includes(consumer), `${a.id} has unknown consumer ${consumer}`);
     }
     assert.ok(Object.keys(a.files).length > 0, `${a.id} lists no files`);
     for (const [file, meta] of Object.entries(a.files)) {

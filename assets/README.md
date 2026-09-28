@@ -11,4 +11,4 @@ How loading works: the core never reads files. A tool that needs data returns `A
 
 Bundled datasets (WMM2025, IGRF-14, tzdb, leap seconds) are compiled into their modules and listed with `bundledIn`.
 
-The registry currently contains 7 verified datasets: EGM96-15, WMM2025, IGRF-14, NADCON5, IERS leap seconds, IANA tzdb, and the bundled Natural Earth 110m base map. Each file's recorded byte count and SHA-256 digest is checked against the repository in the runtime test suite. The remaining first-release datasets stay tracked in `openspec/changes/establish-platform-foundation/tasks.md`; they are added only after their real files and build pipelines exist.
+The registry currently contains 8 verified datasets: EGM96-15, WMM2025, WMMHR2025, IGRF-14, NADCON5, IERS leap seconds, IANA tzdb, and the bundled Natural Earth 110m base map. Each file's recorded byte count and SHA-256 digest is checked against the repository in the runtime test suite. The remaining first-release datasets stay tracked in `openspec/changes/establish-platform-foundation/tasks.md`; they are added only after their real files and build pipelines exist.

@@ -165,6 +165,46 @@
       "interpolation": "NADCON5 biquadratic (NOAA TM NOS NGS 84), as PROJ implements it"
     },
     {
+      "id": "crs-registry",
+      "version": "2026-08-27",
+      "title": "Curated coordinate reference system registry",
+      "issuer": "IOGP EPSG and National Geodetic Survey, NOAA",
+      "license": "EPSG Terms of Use; NGS data are public domain",
+      "attribution": "EPSG dataset by IOGP; SPCS2022 beta definitions by the National Geodetic Survey (NOAA).",
+      "sourceUrl": "https://epsg.org/",
+      "retrievedAt": "2026-09-28",
+      "files": {
+        "crs-registry.json": {
+          "sha256": "945b0d93746a97feadc6ab9af188a2a4cb1fdf361d2e403965707b939f794c8a",
+          "bytes": 1031977
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "consumers": ["web-assets", "mcp-server"]
+    },
+    {
+      "id": "spcs2022-beta",
+      "version": "2026-06-01",
+      "title": "State Plane Coordinate System of 2022 beta zone definitions",
+      "issuer": "National Geodetic Survey, NOAA",
+      "license": "Public domain (US Government work)",
+      "attribution": "SPCS2022 beta zone definitions and bounds by the National Geodetic Survey (NOAA).",
+      "sourceUrl": "https://beta.ngs.noaa.gov/SPCS/zone-definitions.shtml",
+      "retrievedAt": "2026-09-28",
+      "files": {
+        "spcs2022-beta.json": {
+          "sha256": "3fc590d080726466a31ce694c66b638e968f4e9ce823d05e3d8b32d187d2f0b2",
+          "bytes": 394848
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "status": "beta",
+      "publishedAt": "2026-06-01",
+      "consumers": ["web-assets", "mcp-server"]
+    },
+    {
       "id": "ne-110m",
       "version": "5.1.2",
       "title": "Natural Earth 1:110m base map",

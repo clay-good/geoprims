@@ -589,6 +589,26 @@
       "editionCheck": true
     },
     {
+      "id": "epsg-crs-registry",
+      "name": "EPSG Geodetic Parameter Dataset for the curated CRS registry",
+      "issuer": "IOGP",
+      "currentEdition": "v13.102, as shipped in PROJ 9.9.0",
+      "currentReleaseDate": "2026-08-27",
+      "cycleMonths": 3,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-28",
+      "verificationNote": "Checked on 2026-09-28: proj.db in PROJ 9.9.0 reports EPSG v13.102 dated 2026-08-27. The curated CRS registry includes full PROJJSON definitions from that database.",
+      "freeAccessUrl": "https://epsg.org/",
+      "matchTerms": [
+        "EPSG v13.102 CRS registry"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "espenak-meeus",
       "name": "Espenak and Meeus Delta T polynomials",
       "issuer": "NASA GSFC",
@@ -2001,15 +2021,15 @@
       "id": "nsrs2022",
       "name": "NSRS 2022 products (NATRF2022, NAPGD2022, GEOID2022, SPCS2022)",
       "issuer": "NOAA NGS",
-      "currentEdition": "beta",
-      "currentReleaseDate": null,
+      "currentEdition": "SPCS2022 beta zone definitions",
+      "currentReleaseDate": "2026-06-01",
       "cycleMonths": null,
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": null,
-      "verificationNote": "Not cited yet; beta until NGS adoption.",
-      "freeAccessUrl": "https://geodesy.noaa.gov/datums/newdatums/",
+      "lastVerified": "2026-09-28",
+      "verificationNote": "Checked at the NGS beta site on 2026-09-28. The zone definition page reports 953 zones and was last updated on 2026-06-01; NGS still labels the data preliminary beta products for testing.",
+      "freeAccessUrl": "https://beta.ngs.noaa.gov/SPCS/zone-definitions.shtml",
       "matchTerms": [
         "NATRF2022",
         "NAPGD2022",

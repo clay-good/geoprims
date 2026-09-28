@@ -14,3 +14,5 @@ The internal, unpublished Wasm loader shared by the website and the MCP server. 
 The site and MCP release integrity gates check every shipped module's SHA-256 digest against the build. `apps/web/test/browser/determinism.test.mjs` compares exact result bytes for every live golden vector across Chromium, Firefox, WebKit, and Node, including asset-backed calculations. The Wasm import lint rejects host `Math` calls before a module can reach any surface.
 
 The browser worker host is in `apps/web/src/lib/compute.worker.js`. The web client and Node worker host can interrupt a running invocation by replacing its worker; the MCP stdio server forwards progress and cancellation. Core-level cooperative cancellation remains open under platform task 4.4.
+
+Closing the Node worker host cancels running and queued calls with `null`, clears their timers and abort listeners, and waits for worker termination. Later calls return `null`; repeated `close()` calls share the same termination promise. `src/shutdown.test.mjs` verifies shutdown without requiring built Wasm modules.

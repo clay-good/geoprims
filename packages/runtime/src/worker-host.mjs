@@ -12,6 +12,8 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
   let worker;
   let seq = 0;
   let pending = null;
+  let closed = false;
+  let closing;
   const queue = [];
   let searchIndex = null; // re-sent to a fresh worker after a restart
 
@@ -26,7 +28,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     worker = current;
     current.unref();
     current.on('message', ({ id, out }) => {
-      if (worker !== current) return;
+      if (closed || worker !== current) return;
       if (!pending || pending.id !== id) return;
       const job = pending;
       pending = null;
@@ -34,7 +36,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
       pump();
     });
     current.on('error', () => {
-      if (worker === current) fail(envelope('INTERNAL', 'The compute worker failed. It has been restarted. Please report it.'));
+      if (!closed && worker === current) fail(envelope('INTERNAL', 'The compute worker failed. It has been restarted. Please report it.'));
     });
   };
   const fail = (out) => {
@@ -49,7 +51,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     pump();
   };
   const pump = () => {
-    if (pending || !queue.length) return;
+    if (closed || pending || !queue.length) return;
     const job = queue.shift();
     if (job.signal?.aborted) {
       settle(job, null);
@@ -67,7 +69,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
   };
   const submit = (method, args, { signal, onProgress } = {}) =>
     new Promise((resolve) => {
-      if (signal?.aborted) return resolve(null);
+      if (closed || signal?.aborted) return resolve(null);
       const job = { method, args, resolve, signal, onProgress };
       job.abort = () => {
         if (pending === job) {
@@ -102,7 +104,17 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     search: (request) => call('search', request),
     /** Calls a one-string export of any module, e.g. ('link', 'gp_link_encode', json). */
     callExport: (module, exportName, input) => call('callExport', module, exportName, input),
-    close: () => worker.terminate(),
+    close: () => {
+      if (closed) return closing;
+      closed = true;
+      if (pending) {
+        settle(pending, null);
+        pending = null;
+      }
+      for (const job of queue.splice(0)) settle(job, null);
+      closing = worker.terminate();
+      return closing;
+    },
     /** For tests: call any worker method by name. */
     _call: call,
     _callWithOptions: submit,

@@ -51,6 +51,11 @@ Tools whose declared worst case exceeds 100 ms SHALL report progress at least ev
 - **WHEN** a user changes an input while a long polyfill is running
 - **THEN** the running invocation stops within 100 ms (measured from the input event), no partial result from it is displayed or returned, and a new invocation starts with the new input
 
+#### Scenario: Node host shuts down
+- **WHEN** the Node worker host is closed with running or queued calls
+- **THEN** those calls resolve to `null` without partial results, their timers and abort listeners are cleared, and the worker is terminated without restarting
+- **AND** later calls resolve to `null` and repeated closes share the same termination promise
+
 ### Requirement: Performance budgets
 For single (non-batch) invocations on a reference mid-tier device (defined in the verification capability), the p95 execution time SHALL be at most 2 ms for closed-form tools, 10 ms for iterative tools (geodesic inverse, projection inverse, airspeed inversions), and SHALL be declared per tool for data-proportional tools. Cold module instantiation SHALL be at most 150 ms for any domain module.
 

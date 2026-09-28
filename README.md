@@ -36,6 +36,8 @@ node mcp/server.mjs
 
 To contribute, start with [AGENTS.md](AGENTS.md).
 
+Run `npm test` after building to check Rust and JavaScript behavior. Runtime cancellation and shutdown behavior is documented in [packages/runtime/README.md](packages/runtime/README.md).
+
 ## Disclaimer
 
 geoprims is a planning and education aid. It is not certified for navigation and is not a legal survey. Check operational values against official sources, your aircraft's POH/AFM, and current regulations.

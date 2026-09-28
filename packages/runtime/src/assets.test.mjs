@@ -61,6 +61,11 @@ test('every registry entry is complete and every file matches its digest', async
     identities.add(identity);
     assert.ok(['bundled', 'on-demand', 'on-demand-tiled', 'offline-pack-only'].includes(a.loadPolicy), `${a.id} has load policy ${a.loadPolicy}`);
     assert.equal(a.loadPolicy === 'bundled', Boolean(a.bundledIn), `${a.id} bundledIn must match its load policy`);
+    if (a.consumers) {
+      assert.ok(Array.isArray(a.consumers) && a.consumers.length > 0, `${a.id} consumers`);
+      assert.equal(new Set(a.consumers).size, a.consumers.length, `${a.id} repeats a consumer`);
+      for (const consumer of a.consumers) assert.ok(['web-map', 'mcp-server'].includes(consumer), `${a.id} has unknown consumer ${consumer}`);
+    }
     assert.ok(Object.keys(a.files).length > 0, `${a.id} lists no files`);
     for (const [file, meta] of Object.entries(a.files)) {
       assert.ok(file && !file.includes('/') && file !== '.' && file !== '..', `${a.id} has unsafe file name ${file}`);
@@ -81,7 +86,9 @@ test('the registry and the catalog agree about which datasets exist', () => {
   const problems = [];
   for (const id of declared) if (!registered.has(id)) problems.push(`${id} is used by a tool but not in the registry`);
   // An unused row is dead weight a reader would see on /licenses/.
-  for (const id of registered) if (!declared.has(id)) problems.push(`${id} is registered but no tool uses it`);
+  for (const a of registry.assets) {
+    if (!declared.has(a.id) && !a.consumers?.length) problems.push(`${a.id} is registered but no tool or platform surface uses it`);
+  }
   assert.deepEqual(problems, []);
   assert.ok(registered.size > 0, 'the registry is empty');
 });

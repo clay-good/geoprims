@@ -142,6 +142,26 @@
       "tiling": "one file per region",
       "loadPolicy": "on-demand",
       "interpolation": "NADCON5 biquadratic (NOAA TM NOS NGS 84), as PROJ implements it"
+    },
+    {
+      "id": "ne-110m",
+      "version": "5.1.2",
+      "title": "Natural Earth 1:110m base map",
+      "issuer": "Natural Earth",
+      "license": "Public domain",
+      "attribution": "Made with Natural Earth. Free vector and raster map data at naturalearthdata.com.",
+      "sourceUrl": "https://github.com/nvkelso/natural-earth-vector/tree/v5.1.2/geojson",
+      "retrievedAt": "2026-09-18",
+      "files": {
+        "ne-110m.json": {
+          "sha256": "58f56938442fdd4f8178a3281cb8a0c624c4bad58b22b0d36661be90a4e5a725",
+          "bytes": 76008
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "bundled",
+      "bundledIn": "apps/web/public/basemap/ne-110m.json",
+      "consumers": ["web-map", "mcp-server"]
     }
   ]
 }

@@ -5,6 +5,15 @@
       "date": "2026-09-28",
       "kind": "changed",
       "tools": [
+        "aviation.performance.climb-plan"
+      ],
+      "vectors": [],
+      "summary": "The climb planner is now stable. Its climb time, wind-adjusted top-of-climb distance, fuel, and taxi total match an independent Python calculation across 20 golden vectors, including the FAA handbook table example. No calculated results changed."
+    },
+    {
+      "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
         "aviation.flight-plan.nav-log"
       ],
       "vectors": [],

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "afb2d0894a8b2c7a",
+    "hash": "f3acef07e0e83647",
     "lastmod": "2026-09-29"
   },
   "/accuracy/": {
@@ -8,8 +8,8 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "60ca7f85a3ddc811",
-    "lastmod": "2026-09-28"
+    "hash": "f16973862f4ab02e",
+    "lastmod": "2026-09-29"
   },
   "/aviation/": {
     "hash": "5688f8bd5124411e",
@@ -79,6 +79,10 @@
     "hash": "877fdea27c5e8be2",
     "lastmod": "2026-09-26"
   },
+  "/aviation/performance/climb-plan/": {
+    "hash": "bbaa6952aba24244",
+    "lastmod": "2026-09-29"
+  },
   "/aviation/performance/top-of-descent/": {
     "hash": "dab7a26155b59216",
     "lastmod": "2026-09-23"
@@ -132,7 +136,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "c1b107d19d6f9c73",
+    "hash": "61ddd0404f9c5837",
     "lastmod": "2026-09-29"
   },
   "/disclaimer/": {
@@ -920,7 +924,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "849d6ff8a3fa10ef",
+    "hash": "c6adaa60422edf1a",
     "lastmod": "2026-09-29"
   },
   "/navigation/": {
@@ -1304,7 +1308,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "330dbffae9d5f1a0",
+    "hash": "862297c0acd15e6b",
     "lastmod": "2026-09-29"
   },
   "/units/": {
@@ -1492,7 +1496,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "06d818347053603f",
+    "hash": "0637ee84f7d02b6c",
     "lastmod": "2026-09-29"
   },
   "/workflows/": {
@@ -1540,7 +1544,7 @@
     "lastmod": "2026-09-25"
   },
   "/workflows/vfr-cross-country/": {
-    "hash": "f5d28321d02496f0",
+    "hash": "8d455e2d406bc9b7",
     "lastmod": "2026-09-29"
   }
 }

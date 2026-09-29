@@ -28,11 +28,11 @@
     "lastmod": "2026-09-25"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "af13dd4a3aaa1b1e",
+    "hash": "fd4c40c4248c2b7f",
     "lastmod": "2026-09-29"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "a8a5ae4c5078089f",
+    "hash": "a26f9008c558d229",
     "lastmod": "2026-09-29"
   },
   "/aviation/atmosphere/": {
@@ -40,15 +40,15 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "58815723770f8f15",
-    "lastmod": "2026-09-23"
+    "hash": "344490dc25206f98",
+    "lastmod": "2026-09-29"
   },
   "/aviation/flight-plan/": {
     "hash": "33b4630823854f30",
     "lastmod": "2026-09-26"
   },
   "/aviation/flight-plan/nav-log/": {
-    "hash": "a6b6051f0ef292c6",
+    "hash": "073a05541df44d25",
     "lastmod": "2026-09-29"
   },
   "/aviation/ifr/": {
@@ -56,88 +56,88 @@
     "lastmod": "2026-09-25"
   },
   "/aviation/ifr/hold-entry/": {
-    "hash": "a3532ef32f8f8870",
-    "lastmod": "2026-09-23"
+    "hash": "da50b84fc6dee387",
+    "lastmod": "2026-09-29"
   },
   "/aviation/loading/": {
     "hash": "90f7169a9a646250",
     "lastmod": "2026-09-26"
   },
   "/aviation/loading/ballast/": {
-    "hash": "6c179b619ff27ebe",
-    "lastmod": "2026-09-24"
+    "hash": "3c559750ab87d213",
+    "lastmod": "2026-09-29"
   },
   "/aviation/loading/weight-balance/": {
-    "hash": "d7ad78158af70630",
-    "lastmod": "2026-09-24"
+    "hash": "bb8c96971b709883",
+    "lastmod": "2026-09-29"
   },
   "/aviation/loading/weight-shift/": {
-    "hash": "5b9da7d516656f4f",
-    "lastmod": "2026-09-24"
+    "hash": "831afb503c1e0cda",
+    "lastmod": "2026-09-29"
   },
   "/aviation/performance/": {
     "hash": "877fdea27c5e8be2",
     "lastmod": "2026-09-26"
   },
   "/aviation/performance/climb-plan/": {
-    "hash": "bbaa6952aba24244",
+    "hash": "bd14d3580af1c53b",
     "lastmod": "2026-09-29"
   },
   "/aviation/performance/etp-pnr/": {
-    "hash": "20fb0fe9147aa2d6",
+    "hash": "4ac29bb626d66b19",
     "lastmod": "2026-09-29"
   },
   "/aviation/performance/top-of-descent/": {
-    "hash": "dab7a26155b59216",
-    "lastmod": "2026-09-23"
+    "hash": "abe51124ced04bf5",
+    "lastmod": "2026-09-29"
   },
   "/aviation/performance/vdp/": {
-    "hash": "0b87df8728896dea",
-    "lastmod": "2026-09-23"
+    "hash": "e27decc5b0949099",
+    "lastmod": "2026-09-29"
   },
   "/aviation/weather/": {
     "hash": "b75b1b3e22299f39",
     "lastmod": "2026-09-26"
   },
   "/aviation/weather/fb-winds-decode/": {
-    "hash": "d984c8d28e5c0467",
-    "lastmod": "2026-09-23"
+    "hash": "cfb888f4012a697c",
+    "lastmod": "2026-09-29"
   },
   "/aviation/weather/metar-decode/": {
-    "hash": "03d18009349c4aec",
-    "lastmod": "2026-09-23"
+    "hash": "b5101e8da1f53f49",
+    "lastmod": "2026-09-29"
   },
   "/aviation/weather/taf-decode/": {
-    "hash": "e37e6f99e642f380",
-    "lastmod": "2026-09-23"
+    "hash": "2540766f6398463e",
+    "lastmod": "2026-09-29"
   },
   "/aviation/wind/": {
     "hash": "32d30736470cfcb5",
     "lastmod": "2026-09-26"
   },
   "/aviation/wind/course-from-heading/": {
-    "hash": "c4fcb91eb6b8cb88",
-    "lastmod": "2026-09-26"
+    "hash": "50db16b2e9b08488",
+    "lastmod": "2026-09-29"
   },
   "/aviation/wind/find-wind/": {
-    "hash": "05b8c7939e7a5729",
-    "lastmod": "2026-09-26"
+    "hash": "f8bf3fd9dbdedf27",
+    "lastmod": "2026-09-29"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "d32dad7cfac24d3b",
-    "lastmod": "2026-09-26"
+    "hash": "9d55e32b39c271f2",
+    "lastmod": "2026-09-29"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "da7bb97cfc92aa89",
-    "lastmod": "2026-09-23"
+    "hash": "edcf7826b1b674f3",
+    "lastmod": "2026-09-29"
   },
   "/aviation/wind/tas-from-groundspeed/": {
-    "hash": "2ef3b6faf23af489",
-    "lastmod": "2026-09-26"
+    "hash": "6a50a66cb7c9bdda",
+    "lastmod": "2026-09-29"
   },
   "/aviation/wind/uv/": {
-    "hash": "05c2cd7cb34327da",
-    "lastmod": "2026-09-24"
+    "hash": "657c4e479db62882",
+    "lastmod": "2026-09-29"
   },
   "/changelog/": {
     "hash": "f667a3a29fa65fe0",
@@ -160,59 +160,59 @@
     "lastmod": "2026-09-26"
   },
   "/drone/mission/survey-grid/": {
-    "hash": "8e322730f79cb512",
-    "lastmod": "2026-09-26"
+    "hash": "8a0524af0feba923",
+    "lastmod": "2026-09-29"
   },
   "/drone/ops/": {
     "hash": "a202fc067db451c6",
     "lastmod": "2026-09-26"
   },
   "/drone/ops/part107-altitude/": {
-    "hash": "f8adb9afade3dae1",
-    "lastmod": "2026-09-26"
+    "hash": "c25686535ed07813",
+    "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/": {
     "hash": "cd78dab3eded4c49",
     "lastmod": "2026-09-26"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
-    "hash": "6a1cbd2b98ae7810",
-    "lastmod": "2026-09-26"
+    "hash": "d213a70f5174f584",
+    "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/asprs-accuracy/": {
-    "hash": "59dc369c930fee88",
-    "lastmod": "2026-09-26"
+    "hash": "a7fc626174d81a99",
+    "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/gcp-plan/": {
-    "hash": "d71efba71e9b5cab",
+    "hash": "b4a4d9ab82330a6d",
     "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/gsd/": {
-    "hash": "8dffeef030de940e",
-    "lastmod": "2026-09-26"
+    "hash": "bc9b703da86259d9",
+    "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/image-count/": {
-    "hash": "e460307349f72f68",
-    "lastmod": "2026-09-23"
+    "hash": "95c2586ccd2b2d86",
+    "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/terrain-overlap/": {
-    "hash": "9b5eff9f1bfa3ab2",
-    "lastmod": "2026-09-23"
+    "hash": "eb03a160c01f157e",
+    "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/trigger/": {
-    "hash": "6ded8a0a5aedbae4",
-    "lastmod": "2026-09-25"
+    "hash": "6253dcd2aacc41ce",
+    "lastmod": "2026-09-29"
   },
   "/drone/power/": {
     "hash": "c803bb6f7bf4c5cb",
     "lastmod": "2026-09-25"
   },
   "/drone/power/battery-energy/": {
-    "hash": "e1eb8b3b691f616d",
+    "hash": "3ca3e293ab2ba10f",
     "lastmod": "2026-09-29"
   },
   "/drone/power/endurance/": {
-    "hash": "b7925915ff0ee200",
+    "hash": "d8c8bfb755a4f01a",
     "lastmod": "2026-09-29"
   },
   "/drone/sensors/": {
@@ -220,7 +220,7 @@
     "lastmod": "2026-09-23"
   },
   "/drone/sensors/vlos/": {
-    "hash": "ef69e208d506ba9d",
+    "hash": "7a5cf6bc5ec43785",
     "lastmod": "2026-09-29"
   },
   "/geodesy/": {
@@ -232,143 +232,143 @@
     "lastmod": "2026-09-25"
   },
   "/geodesy/datum/helmert/": {
-    "hash": "497f9c0fefb5b3af",
-    "lastmod": "2026-09-23"
+    "hash": "62967a5dd92fc891",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/datum/itrf/": {
-    "hash": "0a473f8deb0e0835",
-    "lastmod": "2026-09-23"
+    "hash": "bef1a9ec03ab432e",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/datum/legacy/": {
-    "hash": "62843e95476e6f45",
-    "lastmod": "2026-09-23"
+    "hash": "d198030acba592b9",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/datum/nad83/": {
-    "hash": "1d8de41b0591c19b",
-    "lastmod": "2026-09-23"
+    "hash": "b6b11381553b08fe",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/datum/nadcon5/": {
-    "hash": "917f332defd996a4",
-    "lastmod": "2026-09-23"
+    "hash": "7b1e0b1137df6dac",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/datum/plate-motion/": {
-    "hash": "f6f38ab4fee514d5",
-    "lastmod": "2026-09-24"
+    "hash": "e8f39c40966afadf",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/datum/transform/": {
-    "hash": "1a338082e7bce916",
-    "lastmod": "2026-09-24"
+    "hash": "d24f5a3d5873aae2",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/ellipsoid/": {
     "hash": "155e9caed2bd7d22",
     "lastmod": "2026-09-23"
   },
   "/geodesy/ellipsoid/auxiliary-latitude/": {
-    "hash": "8dddf193868ce0ac",
-    "lastmod": "2026-09-23"
+    "hash": "d87a47cf7c5a1370",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/ellipsoid/parameters/": {
-    "hash": "e9ff56e19789a20b",
-    "lastmod": "2026-09-23"
+    "hash": "4a7f4f9279adcc39",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/ellipsoid/radii/": {
-    "hash": "2835f5356efabacd",
-    "lastmod": "2026-09-23"
+    "hash": "fce51ef1dd215e95",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/frame/": {
     "hash": "39fbeafda9b3eddf",
     "lastmod": "2026-09-23"
   },
   "/geodesy/frame/ecef-to-geodetic/": {
-    "hash": "2cb6adabcafb19f2",
-    "lastmod": "2026-09-23"
+    "hash": "ff162bc088aba966",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/frame/from-local/": {
-    "hash": "88c6e0b2fffc07c5",
-    "lastmod": "2026-09-23"
+    "hash": "6d18d773426a3bd7",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/frame/geodetic-to-ecef/": {
-    "hash": "6a7905d1b826ced1",
-    "lastmod": "2026-09-23"
+    "hash": "21ec5ceb955c0aa6",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/frame/to-local/": {
-    "hash": "2d4b0e4d659b3762",
-    "lastmod": "2026-09-25"
+    "hash": "3e47ae459dd7ec35",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/geoid/": {
     "hash": "8ec5ca350127b6a6",
     "lastmod": "2026-09-23"
   },
   "/geodesy/geoid/geoid-height/": {
-    "hash": "5748142f1459910c",
-    "lastmod": "2026-09-23"
+    "hash": "17ed36b512a6874e",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/": {
     "hash": "26feeb479b570f9b",
     "lastmod": "2026-09-25"
   },
   "/geodesy/grid-ref/gars-forward/": {
-    "hash": "bfcb7d0ffe3a3821",
-    "lastmod": "2026-09-23"
+    "hash": "06f6bc60a26bf65e",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/gars-inverse/": {
-    "hash": "afa2f5ea41bfeb8f",
-    "lastmod": "2026-09-23"
+    "hash": "6a198040e56ad933",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/georef-forward/": {
-    "hash": "646064d9403764a9",
-    "lastmod": "2026-09-23"
+    "hash": "cf8a625ad0c2b2be",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/georef-inverse/": {
-    "hash": "f84b4f07c99411f1",
-    "lastmod": "2026-09-23"
+    "hash": "f92879130f3729f5",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/maidenhead-forward/": {
-    "hash": "91dad06eff78f2b9",
-    "lastmod": "2026-09-23"
+    "hash": "3d88bde4b9503911",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/maidenhead-inverse/": {
-    "hash": "67c2d173c67df4a6",
-    "lastmod": "2026-09-23"
+    "hash": "cef9bfd406be8e94",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/mgrs-forward/": {
-    "hash": "693953f15ded3af5",
-    "lastmod": "2026-09-25"
+    "hash": "b6b79ac3a25b30af",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/mgrs-inverse/": {
-    "hash": "65085ece6fdfeed9",
-    "lastmod": "2026-09-25"
+    "hash": "742a21e658185faa",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/usng-forward/": {
-    "hash": "fb736e36b006c366",
-    "lastmod": "2026-09-23"
+    "hash": "e434b1ba3ae5c86d",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/usng-inverse/": {
-    "hash": "a9e85c03eef70bd5",
-    "lastmod": "2026-09-23"
+    "hash": "2b9f16d21805b1de",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/height/": {
     "hash": "b1a2caabff12c24f",
     "lastmod": "2026-09-25"
   },
   "/geodesy/height/convert/": {
-    "hash": "0a47f4f311121e70",
-    "lastmod": "2026-09-25"
+    "hash": "574cd71e40049e27",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/magnetic/": {
     "hash": "9a97f537f0cfdfd3",
     "lastmod": "2026-09-28"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "5a58541ec52e4159",
+    "hash": "25ee53c684e9bcaa",
     "lastmod": "2026-09-29"
   },
   "/geodesy/magnetic/grivation/": {
-    "hash": "88e32cf06069155c",
+    "hash": "69c274400c4e443b",
     "lastmod": "2026-09-29"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
-    "hash": "a94d052bb913643c",
+    "hash": "410be5c016c32668",
     "lastmod": "2026-09-29"
   },
   "/geodesy/parse/": {
@@ -376,168 +376,168 @@
     "lastmod": "2026-09-25"
   },
   "/geodesy/parse/angle-arithmetic/": {
-    "hash": "17164034324cee96",
-    "lastmod": "2026-09-23"
+    "hash": "47f86a938c234d0b",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/parse/bearing-difference/": {
-    "hash": "960d122531b119f4",
-    "lastmod": "2026-09-25"
+    "hash": "d638350cc2cc907f",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/parse/coordinates/": {
-    "hash": "3b2ccfa3c0c5055e",
-    "lastmod": "2026-09-24"
+    "hash": "cc99f62e6a4a9ad4",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/parse/format/": {
-    "hash": "241e149639b581d7",
-    "lastmod": "2026-09-23"
+    "hash": "9060910ff34431d2",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/": {
     "hash": "0bbf01fad39ecf9b",
     "lastmod": "2026-09-24"
   },
   "/geodesy/projection/albers-forward/": {
-    "hash": "0bdacc11cebd8cf2",
-    "lastmod": "2026-09-24"
+    "hash": "f5465e955a9a65e8",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/albers-inverse/": {
-    "hash": "8c8e65b2e9203ae0",
-    "lastmod": "2026-09-24"
+    "hash": "b345cc3ed5e8aab6",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/arc-to-chord/": {
-    "hash": "b1a29d3673fc6f43",
-    "lastmod": "2026-09-24"
+    "hash": "90e4a3d99c5be7a4",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/azimuthal-equidistant-forward/": {
-    "hash": "40bda3837f99289a",
-    "lastmod": "2026-09-24"
+    "hash": "ed673e3292f69ba8",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/azimuthal-equidistant-inverse/": {
-    "hash": "d219425c79d38886",
-    "lastmod": "2026-09-24"
+    "hash": "72c1dc772050169e",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/equidistant-cylindrical-forward/": {
-    "hash": "7b4288a4e005ce6f",
-    "lastmod": "2026-09-24"
+    "hash": "f5b327d4e646a1b5",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/equidistant-cylindrical-inverse/": {
-    "hash": "4636955b49647c9b",
-    "lastmod": "2026-09-24"
+    "hash": "bd127fd14a599f76",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/gnomonic-forward/": {
-    "hash": "642ef138ac7bc63b",
-    "lastmod": "2026-09-24"
+    "hash": "5966a239fe93bbdb",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/gnomonic-inverse/": {
-    "hash": "75cb101c9fa1c75c",
-    "lastmod": "2026-09-24"
+    "hash": "8408ec0cd0f55581",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/hotine-forward/": {
-    "hash": "5e691a6d396b0fdd",
-    "lastmod": "2026-09-24"
+    "hash": "abbd9e973e8eebbf",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/hotine-inverse/": {
-    "hash": "5cda268703c7b82d",
-    "lastmod": "2026-09-24"
+    "hash": "5442ae0c204ce9f3",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/lcc-forward/": {
-    "hash": "890d6586f1a964ee",
-    "lastmod": "2026-09-24"
+    "hash": "c21c6f4b72d24306",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/lcc-inverse/": {
-    "hash": "943922994c644a2e",
-    "lastmod": "2026-09-24"
+    "hash": "98d9f7d1cee1fd75",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/orthographic-forward/": {
-    "hash": "9dfa364220fb3bbb",
-    "lastmod": "2026-09-24"
+    "hash": "c616e24981793fc9",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/orthographic-inverse/": {
-    "hash": "5922ebc1bf5ab048",
-    "lastmod": "2026-09-24"
+    "hash": "d396903abe3d6b2c",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/polar-stereographic-forward/": {
-    "hash": "38355f7227a048ba",
-    "lastmod": "2026-09-24"
+    "hash": "b6dc708fb2f7c1ac",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/polar-stereographic-inverse/": {
-    "hash": "e01f772c12e85570",
-    "lastmod": "2026-09-24"
+    "hash": "c81da6e2e4420b22",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/tm-exact-forward/": {
-    "hash": "d915d91e74e795dc",
-    "lastmod": "2026-09-24"
+    "hash": "5d4f4d03016687cb",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/tm-exact-inverse/": {
-    "hash": "fe74d243dbeb3310",
-    "lastmod": "2026-09-24"
+    "hash": "64939b8c557fd577",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/tm-forward/": {
-    "hash": "4277616acfdc99b0",
-    "lastmod": "2026-09-24"
+    "hash": "6c0160fed8458519",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/tm-inverse/": {
-    "hash": "d1e3e37e752be418",
-    "lastmod": "2026-09-24"
+    "hash": "069d9db520ef367c",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/web-mercator-forward/": {
-    "hash": "a5c22a8dd1528f2a",
-    "lastmod": "2026-09-24"
+    "hash": "5fcc7f368db3e5d8",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/projection/web-mercator-inverse/": {
-    "hash": "a51b6140dc235eab",
-    "lastmod": "2026-09-24"
+    "hash": "058bf3bfdd131afc",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/spcs/": {
     "hash": "f6729c36da111af7",
     "lastmod": "2026-09-28"
   },
   "/geodesy/spcs/spcs2022-forward/": {
-    "hash": "0fa7b7777913622c",
-    "lastmod": "2026-09-28"
+    "hash": "52139357e248d932",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/spcs/spcs2022-inverse/": {
-    "hash": "89b2e0da9567c1ec",
-    "lastmod": "2026-09-28"
+    "hash": "c4f58635c1338e82",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "3d727508901b235d",
-    "lastmod": "2026-09-28"
+    "hash": "ae5a15cfeae94ed3",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "05072c5d4a0fcd0c",
-    "lastmod": "2026-09-23"
+    "hash": "edfbdc52522ebf21",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/spcs/zone-lookup/": {
-    "hash": "8b5b01693ea2426c",
-    "lastmod": "2026-09-23"
+    "hash": "477f6e64ab7074e3",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/ups/": {
     "hash": "c5df18617de3dbd8",
     "lastmod": "2026-09-24"
   },
   "/geodesy/ups/forward/": {
-    "hash": "419f0eb61f911db0",
-    "lastmod": "2026-09-24"
+    "hash": "e1e353d757cddf83",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/ups/inverse/": {
-    "hash": "0f965d426c4cd955",
-    "lastmod": "2026-09-24"
+    "hash": "51857c0e298b4740",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/utm/": {
     "hash": "98023492dcb4db56",
     "lastmod": "2026-09-25"
   },
   "/geodesy/utm/forward/": {
-    "hash": "a2445559d9b8adc0",
-    "lastmod": "2026-09-24"
+    "hash": "7b01a014f9e2281a",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/utm/inverse/": {
-    "hash": "7bcfffa3f2508d06",
-    "lastmod": "2026-09-24"
+    "hash": "0d6975fe89bd44f8",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/utm/zone/": {
-    "hash": "75ad640225ffe063",
-    "lastmod": "2026-09-23"
+    "hash": "58a9522fee5b02f9",
+    "lastmod": "2026-09-29"
   },
   "/geometry/": {
     "hash": "fdd56d5e27835bc8",
@@ -548,96 +548,96 @@
     "lastmod": "2026-09-25"
   },
   "/geometry/area/polygon/": {
-    "hash": "bb0740a3fb8ed255",
-    "lastmod": "2026-09-24"
+    "hash": "8122974f057cd855",
+    "lastmod": "2026-09-29"
   },
   "/geometry/buffer/": {
     "hash": "386dc79efbd71798",
     "lastmod": "2026-09-23"
   },
   "/geometry/buffer/geodesic/": {
-    "hash": "8034d48cf362c81e",
-    "lastmod": "2026-09-23"
+    "hash": "242f4391e6100c40",
+    "lastmod": "2026-09-29"
   },
   "/geometry/distance/": {
     "hash": "5774ff35ec7ea784",
     "lastmod": "2026-09-23"
   },
   "/geometry/distance/tracks/": {
-    "hash": "63a6e6aec5d028fb",
-    "lastmod": "2026-09-23"
+    "hash": "254c3e97eaf3745c",
+    "lastmod": "2026-09-29"
   },
   "/geometry/mesh/": {
     "hash": "ea7b4bb3d6b6ab0b",
     "lastmod": "2026-09-23"
   },
   "/geometry/mesh/delaunay/": {
-    "hash": "444dfa24455a7d21",
-    "lastmod": "2026-09-23"
+    "hash": "aadfbc9600978a13",
+    "lastmod": "2026-09-29"
   },
   "/geometry/mesh/voronoi/": {
-    "hash": "f0dadf15e9f1bbf4",
-    "lastmod": "2026-09-23"
+    "hash": "76e25eb2a5566d95",
+    "lastmod": "2026-09-29"
   },
   "/geometry/overlay/": {
     "hash": "db3d23320fed671f",
     "lastmod": "2026-09-23"
   },
   "/geometry/overlay/boolean/": {
-    "hash": "f2a174434e9e12be",
-    "lastmod": "2026-09-24"
+    "hash": "360dca7aea146771",
+    "lastmod": "2026-09-29"
   },
   "/geometry/predicate/": {
     "hash": "38969addefae37f6",
     "lastmod": "2026-09-24"
   },
   "/geometry/predicate/point-in-polygon/": {
-    "hash": "5b9c70273c085a2b",
-    "lastmod": "2026-09-24"
+    "hash": "364d9ff737fbba6c",
+    "lastmod": "2026-09-29"
   },
   "/geometry/predicate/relate/": {
-    "hash": "77c8a74b9e3620bd",
-    "lastmod": "2026-09-24"
+    "hash": "a801bc6e66229261",
+    "lastmod": "2026-09-29"
   },
   "/geometry/shape/": {
     "hash": "c7b16b462e49990a",
     "lastmod": "2026-09-23"
   },
   "/geometry/shape/bbox/": {
-    "hash": "d476f7d9e6a4e22a",
-    "lastmod": "2026-09-23"
+    "hash": "4d9298c8d7ff8ddf",
+    "lastmod": "2026-09-29"
   },
   "/geometry/shape/centroid/": {
-    "hash": "cbfa9c5358063709",
-    "lastmod": "2026-09-23"
+    "hash": "f6eea1249970248d",
+    "lastmod": "2026-09-29"
   },
   "/geometry/shape/densify/": {
-    "hash": "d8b701c46706db85",
-    "lastmod": "2026-09-23"
+    "hash": "d62ffcc4b3047f12",
+    "lastmod": "2026-09-29"
   },
   "/geometry/shape/enclosing/": {
-    "hash": "9dc07d8b0451580c",
-    "lastmod": "2026-09-24"
+    "hash": "ceb553d3eea2a54c",
+    "lastmod": "2026-09-29"
   },
   "/geometry/simplify/": {
     "hash": "c5bb6837edc600c7",
     "lastmod": "2026-09-23"
   },
   "/geometry/simplify/rdp/": {
-    "hash": "fc904b99be87cffc",
-    "lastmod": "2026-09-23"
+    "hash": "4635ee97b84a52cc",
+    "lastmod": "2026-09-29"
   },
   "/geometry/simplify/visvalingam/": {
-    "hash": "7e9b4f3f2bc1786d",
-    "lastmod": "2026-09-23"
+    "hash": "cf23090db22438c9",
+    "lastmod": "2026-09-29"
   },
   "/geometry/validity/": {
     "hash": "8d59011e3e868a3e",
     "lastmod": "2026-09-23"
   },
   "/geometry/validity/make-valid/": {
-    "hash": "312b140a4e89536a",
-    "lastmod": "2026-09-24"
+    "hash": "6f7dbbd3e15f57bd",
+    "lastmod": "2026-09-29"
   },
   "/indexing/": {
     "hash": "ce495eb78c282458",
@@ -648,152 +648,152 @@
     "lastmod": "2026-09-25"
   },
   "/indexing/convert/cross-index/": {
-    "hash": "e9040497b98b34a2",
-    "lastmod": "2026-09-23"
+    "hash": "da71d486115f70fa",
+    "lastmod": "2026-09-29"
   },
   "/indexing/geohash/": {
     "hash": "75b8ddd00e63ef47",
     "lastmod": "2026-09-23"
   },
   "/indexing/geohash/cover/": {
-    "hash": "80d2505c3e387403",
-    "lastmod": "2026-09-23"
+    "hash": "afb9acce8aba444f",
+    "lastmod": "2026-09-29"
   },
   "/indexing/geohash/decode/": {
-    "hash": "3d3780a492bb7397",
-    "lastmod": "2026-09-23"
+    "hash": "85edef97dce60955",
+    "lastmod": "2026-09-29"
   },
   "/indexing/geohash/encode/": {
-    "hash": "0fb32806eafe4a2b",
-    "lastmod": "2026-09-24"
+    "hash": "23adcd4e8c6db1bb",
+    "lastmod": "2026-09-29"
   },
   "/indexing/geohash/neighbors/": {
-    "hash": "41f8e515edae8d33",
-    "lastmod": "2026-09-23"
+    "hash": "abe977f9a1efc94b",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/": {
     "hash": "455554831c06bce5",
     "lastmod": "2026-09-25"
   },
   "/indexing/h3/cell-info/": {
-    "hash": "c6cf8f3388f3ca0b",
-    "lastmod": "2026-09-23"
+    "hash": "dec44b3df871fe1b",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/cell-to-local-ij/": {
-    "hash": "6d4c44c79e111144",
-    "lastmod": "2026-09-23"
+    "hash": "d4d4358a076b3bdc",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/cells-to-polygon/": {
-    "hash": "2f7adf0530758ff7",
-    "lastmod": "2026-09-23"
+    "hash": "7898420a1a41feac",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/children/": {
-    "hash": "4be97ff74860efa5",
-    "lastmod": "2026-09-23"
+    "hash": "44343836024dafe0",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/compact/": {
-    "hash": "b8009f15c1d881c5",
-    "lastmod": "2026-09-23"
+    "hash": "794d6ad959bda90e",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/edges/": {
-    "hash": "81b65ad6ec7ecd7a",
-    "lastmod": "2026-09-23"
+    "hash": "838d4217e1c0f456",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/grid-disk/": {
-    "hash": "12bb5e7d28316348",
-    "lastmod": "2026-09-23"
+    "hash": "46ef9880ac93989a",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/grid-path/": {
-    "hash": "33ddfaa0962067bf",
-    "lastmod": "2026-09-23"
+    "hash": "4a03adc839bdd88a",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/grid-ring/": {
-    "hash": "e407442598268b32",
-    "lastmod": "2026-09-23"
+    "hash": "1f8c27d527deaa34",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "afc344db330ed466",
-    "lastmod": "2026-09-23"
+    "hash": "1ad150c6067e6242",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/local-ij-to-cell/": {
-    "hash": "a9a8a89d3663cbe6",
-    "lastmod": "2026-09-23"
+    "hash": "9719d3ecd46ebeda",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/parent/": {
-    "hash": "7c7f273ca89c22b1",
-    "lastmod": "2026-09-23"
+    "hash": "06acb3f207b66b2f",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "34f12ec3aa220048",
-    "lastmod": "2026-09-23"
+    "hash": "a759b6d7c23b86e2",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/resolution-chooser/": {
-    "hash": "00f414db7a786598",
-    "lastmod": "2026-09-23"
+    "hash": "0d769b00cca98c06",
+    "lastmod": "2026-09-29"
   },
   "/indexing/h3/uncompact/": {
-    "hash": "5edf2d82c222db11",
-    "lastmod": "2026-09-23"
+    "hash": "9e16b0ca67c79753",
+    "lastmod": "2026-09-29"
   },
   "/indexing/plus-code/": {
     "hash": "33fb8efd7d6efd57",
     "lastmod": "2026-09-23"
   },
   "/indexing/plus-code/decode/": {
-    "hash": "92aa3943ac235f2c",
-    "lastmod": "2026-09-23"
+    "hash": "1ea34d0b7d01602b",
+    "lastmod": "2026-09-29"
   },
   "/indexing/plus-code/encode/": {
-    "hash": "057a843471da6b13",
-    "lastmod": "2026-09-24"
+    "hash": "167abda46344e0f0",
+    "lastmod": "2026-09-29"
   },
   "/indexing/plus-code/shorten/": {
-    "hash": "27c520aa1fd7eb75",
-    "lastmod": "2026-09-23"
+    "hash": "52f10397f6911818",
+    "lastmod": "2026-09-29"
   },
   "/indexing/s2/": {
     "hash": "9e850fc4a371961f",
     "lastmod": "2026-09-24"
   },
   "/indexing/s2/cell-info/": {
-    "hash": "3e19297081c4c90d",
-    "lastmod": "2026-09-25"
+    "hash": "a4154088b1ba91ac",
+    "lastmod": "2026-09-29"
   },
   "/indexing/s2/covering/": {
-    "hash": "843852655abc5e79",
-    "lastmod": "2026-09-25"
+    "hash": "77692d48dd663d32",
+    "lastmod": "2026-09-29"
   },
   "/indexing/s2/lat-lng-to-cell/": {
-    "hash": "eb2120e2ecd75db2",
-    "lastmod": "2026-09-25"
+    "hash": "3f4d106ff703f5e1",
+    "lastmod": "2026-09-29"
   },
   "/indexing/s2/neighbors/": {
-    "hash": "097f8af9f26ff0a5",
-    "lastmod": "2026-09-25"
+    "hash": "3870c0d8f8776240",
+    "lastmod": "2026-09-29"
   },
   "/indexing/tile/": {
     "hash": "0c441c1e4718cf76",
     "lastmod": "2026-09-23"
   },
   "/indexing/tile/bounds/": {
-    "hash": "6f34d93d192de9cc",
-    "lastmod": "2026-09-23"
+    "hash": "117d15bad4a90261",
+    "lastmod": "2026-09-29"
   },
   "/indexing/tile/cover/": {
-    "hash": "36b1234cd87182e8",
-    "lastmod": "2026-09-24"
+    "hash": "834e29ab44151d68",
+    "lastmod": "2026-09-29"
   },
   "/indexing/tile/family/": {
-    "hash": "636dcf5720ec09a7",
-    "lastmod": "2026-09-23"
+    "hash": "aef1a1af8e2c0b7d",
+    "lastmod": "2026-09-29"
   },
   "/indexing/tile/from-point/": {
-    "hash": "d19767e278640df4",
-    "lastmod": "2026-09-24"
+    "hash": "993ea02c4ad0fe67",
+    "lastmod": "2026-09-29"
   },
   "/indexing/tile/ground-resolution/": {
-    "hash": "2c99792dfc998d3d",
-    "lastmod": "2026-09-24"
+    "hash": "413ff068254130fc",
+    "lastmod": "2026-09-29"
   },
   "/known-issues/": {
     "hash": "ec03a40c42e7b3ab",
@@ -944,144 +944,144 @@
     "lastmod": "2026-09-26"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "07cffcd54f19970c",
-    "lastmod": "2026-09-23"
+    "hash": "b5cdc034e17eabde",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/haversine/": {
-    "hash": "1b30c15fa7d7da22",
-    "lastmod": "2026-09-23"
+    "hash": "2e2c2bc7e49a8106",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/intermediate-point/": {
-    "hash": "ad2b46c10ca39f60",
-    "lastmod": "2026-09-23"
+    "hash": "4eaaf69236b93e40",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/intersection/": {
-    "hash": "08f7c2bc6ba665ae",
-    "lastmod": "2026-09-23"
+    "hash": "fd13f486db3b7b87",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "f8a7b1f67c84d276",
-    "lastmod": "2026-09-24"
+    "hash": "fe7925ed58b7db9e",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/midpoint/": {
-    "hash": "bb8da0b5d9bc8519",
-    "lastmod": "2026-09-23"
+    "hash": "25c8c909c20b4f99",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/spherical-direct/": {
-    "hash": "c90f8a6cfa24fdde",
-    "lastmod": "2026-09-23"
+    "hash": "84c011066ddaf952",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/spherical-inverse/": {
-    "hash": "49cdb8ade6efdcd5",
-    "lastmod": "2026-09-23"
+    "hash": "070db7b9e8d96c29",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/vertex/": {
-    "hash": "296a962cab4fe134",
-    "lastmod": "2026-09-23"
+    "hash": "b1e42b7a5b8e0a20",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/vincenty-direct/": {
-    "hash": "a1bdd82e353f518d",
-    "lastmod": "2026-09-23"
+    "hash": "2f23989db8a87a8b",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/vincenty-inverse/": {
-    "hash": "b42aab3185bd2b19",
-    "lastmod": "2026-09-23"
+    "hash": "e25c6cf078907128",
+    "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/waypoints/": {
-    "hash": "d01dda4c01ef9e1a",
-    "lastmod": "2026-09-23"
+    "hash": "a24948d410cac303",
+    "lastmod": "2026-09-29"
   },
   "/navigation/los/": {
     "hash": "237922b2713f8fc5",
     "lastmod": "2026-09-23"
   },
   "/navigation/los/dip/": {
-    "hash": "3d3337b522f5a8bb",
-    "lastmod": "2026-09-25"
+    "hash": "16884a77068baedb",
+    "lastmod": "2026-09-29"
   },
   "/navigation/los/fresnel/": {
-    "hash": "ff669f6381aa434c",
-    "lastmod": "2026-09-23"
+    "hash": "16a98e7091cf1843",
+    "lastmod": "2026-09-29"
   },
   "/navigation/los/horizon/": {
-    "hash": "ddf3a221cf7087c0",
-    "lastmod": "2026-09-23"
+    "hash": "7e43fdc71389896a",
+    "lastmod": "2026-09-29"
   },
   "/navigation/los/visibility/": {
-    "hash": "bed8f8e6d69522f6",
-    "lastmod": "2026-09-23"
+    "hash": "fe783f52983ddc5d",
+    "lastmod": "2026-09-29"
   },
   "/navigation/rhumb/": {
     "hash": "526410bd52abbbd0",
     "lastmod": "2026-09-23"
   },
   "/navigation/rhumb/direct/": {
-    "hash": "0fc4286f205a0995",
-    "lastmod": "2026-09-23"
+    "hash": "107197b736f12b96",
+    "lastmod": "2026-09-29"
   },
   "/navigation/rhumb/inverse/": {
-    "hash": "eb6451a123ecc1cf",
-    "lastmod": "2026-09-23"
+    "hash": "4c5d6e533d537e6f",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/": {
     "hash": "af77982edff8282a",
     "lastmod": "2026-09-26"
   },
   "/navigation/route/closest-point/": {
-    "hash": "09eb33984f0635f8",
-    "lastmod": "2026-09-23"
+    "hash": "8c1797ec8bd5208a",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/course-intersection/": {
-    "hash": "c535b6dcd2e08d11",
-    "lastmod": "2026-09-24"
+    "hash": "1d98451ccb622b15",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/cpa/": {
-    "hash": "6523c2909328310d",
-    "lastmod": "2026-09-23"
+    "hash": "7350565477e48dc4",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/cross-track/": {
-    "hash": "865e056a15d2f7ba",
-    "lastmod": "2026-09-24"
+    "hash": "344d2d20c96fe4dc",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/fly-by/": {
-    "hash": "ff0e57e1818b24b3",
-    "lastmod": "2026-09-23"
+    "hash": "ec75896e3ba86cdd",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/intercept/": {
-    "hash": "d6e4015849ae385a",
-    "lastmod": "2026-09-24"
+    "hash": "ec68f412c3651125",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/legs/": {
-    "hash": "22dbd036d6728abf",
-    "lastmod": "2026-09-23"
+    "hash": "4968515777757676",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/range-rings/": {
-    "hash": "f8cc75875e663331",
-    "lastmod": "2026-09-23"
+    "hash": "13922ed2ebd74bc0",
+    "lastmod": "2026-09-29"
   },
   "/navigation/route/time-speed-distance/": {
-    "hash": "68cb900c94804ea2",
-    "lastmod": "2026-09-23"
+    "hash": "a8517d1daf259835",
+    "lastmod": "2026-09-29"
   },
   "/navigation/vector/": {
     "hash": "b4632ebf29994bf8",
     "lastmod": "2026-09-23"
   },
   "/navigation/vector/distance-3d/": {
-    "hash": "cce72f5d95186e3c",
-    "lastmod": "2026-09-23"
+    "hash": "62d2f6490adfdcce",
+    "lastmod": "2026-09-29"
   },
   "/navigation/vector/look-angles/": {
-    "hash": "403eebe5abcbdaa3",
-    "lastmod": "2026-09-23"
+    "hash": "48a24ca2fac21870",
+    "lastmod": "2026-09-29"
   },
   "/navigation/vector/operations/": {
-    "hash": "851c4083330720da",
-    "lastmod": "2026-09-23"
+    "hash": "4623bcd28891d3e5",
+    "lastmod": "2026-09-29"
   },
   "/navigation/vector/polar-cartesian/": {
-    "hash": "7d8e43dab28b7435",
-    "lastmod": "2026-09-23"
+    "hash": "d1af9a00ba05a3ea",
+    "lastmod": "2026-09-29"
   },
   "/privacy/": {
     "hash": "bbadf53d01b529c6",
@@ -1100,72 +1100,72 @@
     "lastmod": "2026-09-23"
   },
   "/raster/index/band-math/": {
-    "hash": "7d333abcf0eb84d4",
-    "lastmod": "2026-09-24"
+    "hash": "db1d44e159ffda84",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/dnbr/": {
-    "hash": "c41675d809cce511",
-    "lastmod": "2026-09-24"
+    "hash": "6e4674fec0e937fb",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/evi/": {
-    "hash": "89718cfe75ab1c66",
-    "lastmod": "2026-09-24"
+    "hash": "126fae4f8cfa6f24",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/evi2/": {
-    "hash": "7b23db562be83db6",
-    "lastmod": "2026-09-24"
+    "hash": "2dfe912d6a2ec2e5",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/mndwi/": {
-    "hash": "f430f6a165b9b044",
-    "lastmod": "2026-09-24"
+    "hash": "2ad4b701de378ae4",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/nbr/": {
-    "hash": "1f0de9239e3199e5",
-    "lastmod": "2026-09-24"
+    "hash": "1dc371467843e424",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/ndbi/": {
-    "hash": "56b0ebdda142eb12",
-    "lastmod": "2026-09-24"
+    "hash": "ca7d61e7506e1e9f",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/ndvi/": {
-    "hash": "73fb00f0996e8d69",
-    "lastmod": "2026-09-24"
+    "hash": "3fd9a93239bc845f",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/ndwi-gao/": {
-    "hash": "67ef199cfbea7f56",
-    "lastmod": "2026-09-24"
+    "hash": "753489b30b6bd151",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/ndwi-mcfeeters/": {
-    "hash": "1522dc22d2ceb455",
-    "lastmod": "2026-09-24"
+    "hash": "6e959e1a6d59d33a",
+    "lastmod": "2026-09-29"
   },
   "/raster/index/savi/": {
-    "hash": "737d06b752d3fb3e",
-    "lastmod": "2026-09-24"
+    "hash": "6d56228183f8edcf",
+    "lastmod": "2026-09-29"
   },
   "/raster/scale/": {
     "hash": "1ed1a50758a73071",
     "lastmod": "2026-09-23"
   },
   "/raster/scale/reflectance/": {
-    "hash": "8d083bd329e08ab9",
-    "lastmod": "2026-09-24"
+    "hash": "6cbb3437da3a6b7e",
+    "lastmod": "2026-09-29"
   },
   "/raster/terrain/": {
     "hash": "67a8f4ff4c4f9f6f",
     "lastmod": "2026-09-24"
   },
   "/raster/terrain/contours/": {
-    "hash": "dfc92cababa04977",
-    "lastmod": "2026-09-24"
+    "hash": "190231d7071b4115",
+    "lastmod": "2026-09-29"
   },
   "/raster/terrain/ruggedness/": {
-    "hash": "8435051d94509ba7",
-    "lastmod": "2026-09-24"
+    "hash": "cafc00135a4db68f",
+    "lastmod": "2026-09-29"
   },
   "/raster/terrain/slope-aspect/": {
-    "hash": "8333a26717b081a1",
-    "lastmod": "2026-09-24"
+    "hash": "2f975cd62b41166a",
+    "lastmod": "2026-09-29"
   },
   "/security/": {
     "hash": "0a13c7160707e976",
@@ -1184,48 +1184,48 @@
     "lastmod": "2026-09-23"
   },
   "/survey/cogo/area-by-coordinates/": {
-    "hash": "cb1554de03dd09c4",
-    "lastmod": "2026-09-25"
+    "hash": "cd6115d1505de88f",
+    "lastmod": "2026-09-29"
   },
   "/survey/cogo/forward/": {
-    "hash": "b8c2ccafc26a6a55",
-    "lastmod": "2026-09-25"
+    "hash": "78e5f43e57b427c9",
+    "lastmod": "2026-09-29"
   },
   "/survey/cogo/intersection/": {
-    "hash": "42d381c893ed1c62",
-    "lastmod": "2026-09-24"
+    "hash": "1d749f57f368c4e4",
+    "lastmod": "2026-09-29"
   },
   "/survey/cogo/inverse/": {
-    "hash": "095b843aae99c038",
-    "lastmod": "2026-09-25"
+    "hash": "eabf32a93a46de49",
+    "lastmod": "2026-09-29"
   },
   "/survey/cogo/traverse-closure/": {
-    "hash": "882d4cfb7d57da10",
-    "lastmod": "2026-09-25"
+    "hash": "dd38da91a966af8b",
+    "lastmod": "2026-09-29"
   },
   "/survey/curves/": {
     "hash": "34cd350ac6372c6a",
     "lastmod": "2026-09-23"
   },
   "/survey/curves/circular-curve/": {
-    "hash": "839f6d5df3f217ab",
-    "lastmod": "2026-09-25"
+    "hash": "8a35c5c47d9ebbd5",
+    "lastmod": "2026-09-29"
   },
   "/survey/curves/vertical-curve/": {
-    "hash": "664d52b204c38f9c",
-    "lastmod": "2026-09-23"
+    "hash": "27f081b3a6e4a600",
+    "lastmod": "2026-09-29"
   },
   "/survey/earthwork/": {
     "hash": "9c3d5b6d47bf12e7",
     "lastmod": "2026-09-23"
   },
   "/survey/earthwork/average-end-area/": {
-    "hash": "4d8d20f096da6415",
-    "lastmod": "2026-09-24"
+    "hash": "eec18e83736e2f33",
+    "lastmod": "2026-09-29"
   },
   "/survey/earthwork/slope-stake/": {
-    "hash": "ef883b14b61a883b",
-    "lastmod": "2026-09-24"
+    "hash": "071c31810129b24f",
+    "lastmod": "2026-09-29"
   },
   "/survey/gnss/": {
     "hash": "d9f250159116dcfa",
@@ -1236,20 +1236,20 @@
     "lastmod": "2026-09-25"
   },
   "/survey/land/deed-plot/": {
-    "hash": "9ca61a95fe13f40c",
-    "lastmod": "2026-09-23"
+    "hash": "b50ceca8ddd98d45",
+    "lastmod": "2026-09-29"
   },
   "/survey/reduction/": {
     "hash": "41ac0bdc3e2f4870",
     "lastmod": "2026-09-25"
   },
   "/survey/reduction/combined-factor/": {
-    "hash": "2f8f47320fb1c2bb",
-    "lastmod": "2026-09-23"
+    "hash": "d7253f394df65e75",
+    "lastmod": "2026-09-29"
   },
   "/survey/reduction/level-run/": {
-    "hash": "39a86a8fe9caf7f1",
-    "lastmod": "2026-09-24"
+    "hash": "73505eb896354b5d",
+    "lastmod": "2026-09-29"
   },
   "/time/": {
     "hash": "f64b582d4b6a53d9",
@@ -1260,60 +1260,60 @@
     "lastmod": "2026-09-23"
   },
   "/time/scale/block-time/": {
-    "hash": "b0772a5f6c2b3cb1",
-    "lastmod": "2026-09-23"
+    "hash": "d8c634c107341945",
+    "lastmod": "2026-09-29"
   },
   "/time/scale/decimal-hours/": {
-    "hash": "35a090f201aecc36",
-    "lastmod": "2026-09-23"
+    "hash": "4eb79b3386bfed86",
+    "lastmod": "2026-09-29"
   },
   "/time/scale/gps-to-utc/": {
-    "hash": "fad242d114384722",
-    "lastmod": "2026-09-24"
+    "hash": "254b20cd445d9a49",
+    "lastmod": "2026-09-29"
   },
   "/time/scale/gps-week/": {
-    "hash": "13b31aaa87425072",
-    "lastmod": "2026-09-24"
+    "hash": "63391d196d3c46b5",
+    "lastmod": "2026-09-29"
   },
   "/time/scale/julian-date/": {
-    "hash": "4cb193df5f526f8a",
-    "lastmod": "2026-09-24"
+    "hash": "732c170b64f5509d",
+    "lastmod": "2026-09-29"
   },
   "/time/scale/utc-offset/": {
-    "hash": "da73e507ef6b7104",
-    "lastmod": "2026-09-23"
+    "hash": "db726abd78c5ced1",
+    "lastmod": "2026-09-29"
   },
   "/time/scale/zone-info/": {
-    "hash": "2b01b4d2cc9a0143",
-    "lastmod": "2026-09-23"
+    "hash": "c6524cb9a2dd4d51",
+    "lastmod": "2026-09-29"
   },
   "/time/sun/": {
     "hash": "91007c6a740dc7d9",
     "lastmod": "2026-09-26"
   },
   "/time/sun/aviation-nights/": {
-    "hash": "823757e2b65a9b07",
-    "lastmod": "2026-09-26"
+    "hash": "d65664eda26ee7ed",
+    "lastmod": "2026-09-29"
   },
   "/time/sun/events/": {
-    "hash": "a8329921d25eede0",
-    "lastmod": "2026-09-24"
+    "hash": "adf991cd6fa27020",
+    "lastmod": "2026-09-29"
   },
   "/time/sun/hotspot/": {
-    "hash": "4544dffaaa922dc0",
-    "lastmod": "2026-09-23"
+    "hash": "2c9eb0b2d3b6385b",
+    "lastmod": "2026-09-29"
   },
   "/time/sun/mapping-window/": {
-    "hash": "70e5dfea5795dec0",
-    "lastmod": "2026-09-25"
+    "hash": "ec3d992736fed0dd",
+    "lastmod": "2026-09-29"
   },
   "/time/sun/night-currency/": {
-    "hash": "398557a10c138eed",
-    "lastmod": "2026-09-23"
+    "hash": "3c6f94166b531d8b",
+    "lastmod": "2026-09-29"
   },
   "/time/sun/position/": {
-    "hash": "ce1dbf26bb2410a5",
-    "lastmod": "2026-09-23"
+    "hash": "2f97f20dae6b6b2b",
+    "lastmod": "2026-09-29"
   },
   "/tools/": {
     "hash": "a5bd92c4b9ba8721",
@@ -1328,176 +1328,176 @@
     "lastmod": "2026-09-23"
   },
   "/units/acceleration/convert/": {
-    "hash": "d3a8d284a28a22c8",
-    "lastmod": "2026-09-23"
+    "hash": "257e8b97902e5742",
+    "lastmod": "2026-09-29"
   },
   "/units/angle/": {
     "hash": "df08c9ecebf9d920",
     "lastmod": "2026-09-23"
   },
   "/units/angle/convert/": {
-    "hash": "5424cfb73703ad7b",
-    "lastmod": "2026-09-23"
+    "hash": "41f6ea1cd6e5ce9c",
+    "lastmod": "2026-09-29"
   },
   "/units/angular-rate/": {
     "hash": "8659bffc1cd232fa",
     "lastmod": "2026-09-23"
   },
   "/units/angular-rate/convert/": {
-    "hash": "b3a474b2db8513c1",
-    "lastmod": "2026-09-23"
+    "hash": "8434bebe5dea7aee",
+    "lastmod": "2026-09-29"
   },
   "/units/area/": {
     "hash": "b8262ae9b9eaf267",
     "lastmod": "2026-09-23"
   },
   "/units/area/convert/": {
-    "hash": "18afbc7c69729e6a",
-    "lastmod": "2026-09-23"
+    "hash": "3cc8e47e50cce06b",
+    "lastmod": "2026-09-29"
   },
   "/units/charge/": {
     "hash": "80a782edff2abcdc",
     "lastmod": "2026-09-23"
   },
   "/units/charge/convert/": {
-    "hash": "706b0ac893105e58",
-    "lastmod": "2026-09-23"
+    "hash": "e1071241a701cafb",
+    "lastmod": "2026-09-29"
   },
   "/units/data-rate/": {
     "hash": "627f31c622ab0307",
     "lastmod": "2026-09-23"
   },
   "/units/data-rate/convert/": {
-    "hash": "559653d0ad2be27d",
-    "lastmod": "2026-09-23"
+    "hash": "09d5f0dfe1844557",
+    "lastmod": "2026-09-29"
   },
   "/units/density/": {
     "hash": "af4621bc48679733",
     "lastmod": "2026-09-23"
   },
   "/units/density/convert/": {
-    "hash": "573d3595f1d5fc7d",
-    "lastmod": "2026-09-23"
+    "hash": "529498bca4a9a7af",
+    "lastmod": "2026-09-29"
   },
   "/units/energy/": {
     "hash": "3c12a2676373b6ce",
     "lastmod": "2026-09-23"
   },
   "/units/energy/convert/": {
-    "hash": "aa37f111ea6707cc",
-    "lastmod": "2026-09-23"
+    "hash": "c4c67b54a2517262",
+    "lastmod": "2026-09-29"
   },
   "/units/frequency/": {
     "hash": "d9229df0a7403428",
     "lastmod": "2026-09-23"
   },
   "/units/frequency/convert/": {
-    "hash": "41dfa7572fd1533b",
-    "lastmod": "2026-09-23"
+    "hash": "f751313e097c529f",
+    "lastmod": "2026-09-29"
   },
   "/units/fuel/": {
     "hash": "d98d5c0a5ce391af",
     "lastmod": "2026-09-23"
   },
   "/units/fuel/convert/": {
-    "hash": "f6f9c9ee1cc8bf61",
-    "lastmod": "2026-09-23"
+    "hash": "53f8e8e19fc1e4b9",
+    "lastmod": "2026-09-29"
   },
   "/units/length/": {
     "hash": "2fcd7908f3d2c07d",
     "lastmod": "2026-09-23"
   },
   "/units/length/convert/": {
-    "hash": "7c3762b5c5c72976",
-    "lastmod": "2026-09-23"
+    "hash": "3b838e12777ef191",
+    "lastmod": "2026-09-29"
   },
   "/units/mass/": {
     "hash": "3509e8f59b238eb7",
     "lastmod": "2026-09-23"
   },
   "/units/mass/convert/": {
-    "hash": "8c7e34bdba1f7b12",
-    "lastmod": "2026-09-23"
+    "hash": "496ec03b95f9a011",
+    "lastmod": "2026-09-29"
   },
   "/units/power/": {
     "hash": "f126f756d30693fc",
     "lastmod": "2026-09-23"
   },
   "/units/power/convert/": {
-    "hash": "b323909284869a26",
-    "lastmod": "2026-09-23"
+    "hash": "8c9c062c60f3e3d6",
+    "lastmod": "2026-09-29"
   },
   "/units/pressure/": {
     "hash": "e9f1f39e2ee8cfc5",
     "lastmod": "2026-09-23"
   },
   "/units/pressure/convert/": {
-    "hash": "da3fe7960d94a0d4",
-    "lastmod": "2026-09-23"
+    "hash": "ff68e359e674c05b",
+    "lastmod": "2026-09-29"
   },
   "/units/quantity/": {
     "hash": "b4d36ae8f3a23bce",
     "lastmod": "2026-09-23"
   },
   "/units/quantity/normalize/": {
-    "hash": "c553cb32cdeb732e",
-    "lastmod": "2026-09-23"
+    "hash": "47a11f11a800b2c1",
+    "lastmod": "2026-09-29"
   },
   "/units/slope/": {
     "hash": "c0f09ab85f311d35",
     "lastmod": "2026-09-23"
   },
   "/units/slope/convert/": {
-    "hash": "6c287213cb3978ff",
-    "lastmod": "2026-09-23"
+    "hash": "c9e7749901ea4e04",
+    "lastmod": "2026-09-29"
   },
   "/units/speed/": {
     "hash": "051b65442cc60c5c",
     "lastmod": "2026-09-23"
   },
   "/units/speed/convert/": {
-    "hash": "a7a96d6858aedf12",
-    "lastmod": "2026-09-23"
+    "hash": "a149d52f7d7a3b47",
+    "lastmod": "2026-09-29"
   },
   "/units/temperature-difference/": {
     "hash": "c5b99315ea052dd4",
     "lastmod": "2026-09-23"
   },
   "/units/temperature-difference/convert/": {
-    "hash": "12848b805e6a13e8",
-    "lastmod": "2026-09-23"
+    "hash": "bdc8c3bf5c67d031",
+    "lastmod": "2026-09-29"
   },
   "/units/temperature/": {
     "hash": "75237464456ad540",
     "lastmod": "2026-09-23"
   },
   "/units/temperature/convert/": {
-    "hash": "b9947bf8e87514d7",
-    "lastmod": "2026-09-23"
+    "hash": "eea5854496082530",
+    "lastmod": "2026-09-29"
   },
   "/units/time/": {
     "hash": "87caa488aaea967a",
     "lastmod": "2026-09-23"
   },
   "/units/time/convert/": {
-    "hash": "3303d14185f5b1c0",
-    "lastmod": "2026-09-23"
+    "hash": "16f5243b06b45ff0",
+    "lastmod": "2026-09-29"
   },
   "/units/vertical-speed/": {
     "hash": "a7efafc85cabf6f0",
     "lastmod": "2026-09-23"
   },
   "/units/vertical-speed/convert/": {
-    "hash": "cc08b92252e54b5d",
-    "lastmod": "2026-09-23"
+    "hash": "cdacbd7e4e1d7bff",
+    "lastmod": "2026-09-29"
   },
   "/units/volume/": {
     "hash": "b89f8ab94a585ce5",
     "lastmod": "2026-09-23"
   },
   "/units/volume/convert/": {
-    "hash": "eef898dc2c50222f",
-    "lastmod": "2026-09-23"
+    "hash": "a75ada69757a9dbd",
+    "lastmod": "2026-09-29"
   },
   "/verification/": {
     "hash": "7a85d65f9b0db7a4",

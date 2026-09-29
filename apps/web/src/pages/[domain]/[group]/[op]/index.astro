@@ -213,6 +213,7 @@ const purpose = markTerms(t.summary, terms);
     // the model, and the sources (web/visual-theme, "Print"); the panel goes
     // back as it was afterwards.
     const proof = document.querySelector('details.proof');
+    if (proof) proof.open = matchMedia('(min-width: 64rem)').matches;
     let wasOpen = null;
     addEventListener('beforeprint', () => {
       if (!proof) return;

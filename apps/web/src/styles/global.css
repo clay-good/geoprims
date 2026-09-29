@@ -113,11 +113,11 @@
   input, select, textarea { border: 0; padding: 0; min-block-size: 0; background: none; }
   details.card, details.card[open] > summary { break-inside: avoid; }
   details.card:not(.terms):not(.proof) > *:not(summary) { display: none; }
-  /* The proof panel prints its formulas, model, constants, and sources. The
-     substituted steps and the worked example belong to the example, not to
-     the values on this sheet, so they stay off it. */
+  /* The proof panel prints its formulas, substituted steps, model, constants,
+     and sources. The separate worked-example table stays on screen because
+     the sheet already carries the values the reader entered and received. */
   details.card.proof { break-inside: auto; }
-  details.card.proof > summary .summary-note, .no-print, .trace-sub { display: none !important; }
+  details.card.proof > summary .summary-note, .no-print { display: none !important; }
   /* The map prints as drawn: a snapshot of the view, without its controls. */
   .map-bar, .map-readout > span:nth-child(2), .diagram-actions, .related { display: none !important; }
   a[href]::after { content: ''; }
@@ -825,6 +825,9 @@ table.batch-map .optional { margin-inline-start: 0.4em; font-weight: 400; color:
   details.card.proof { column-count: 2; column-gap: 14px; font-size: 10px; }
   details.card.proof > summary { column-span: all; font-size: 12px; }
   details.card.proof p, details.card.proof li, details.card.proof code { font-size: 10px; }
+  details.card.proof h3 { margin-block: 5px 2px; }
+  details.card.proof .trace { margin-block: 2px; padding-inline-start: 18px; }
+  details.card.proof .trace p { margin-block: 0; }
   .trace li, .sources li { margin-block: 1px; break-inside: avoid; }
   footer.site { padding-block: 2px; font-size: 9px; }
 }

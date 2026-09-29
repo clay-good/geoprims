@@ -70,6 +70,20 @@ test('a tool that declares a vector diagram draws one from its example', async (
   assert.ok(declared.length >= 20, `${declared.length} vector-diagram tools`);
 });
 
+test('every gauge and profile chart declaration draws its worked example', async () => {
+  const byKind = (kind) => catalog.tools.filter((t) => (t.visualization ?? []).some((v) => v.kind === kind));
+  const gauges = byKind('gauge');
+  assert.deepEqual(gauges.map((t) => t.id), ['drone.ops.speed-check', 'drone.power.battery-energy']);
+  const declared = [...gauges, ...byKind('profile-chart')];
+  const missing = [];
+  for (const t of declared) {
+    const ex = primary(t);
+    if (!diagram(t.id, ex, await invoke(t.id, ex))) missing.push(t.id);
+  }
+  assert.deepEqual(missing, [], 'declared a gauge or profile chart but draws none');
+  assert.ok(declared.length >= 15, `${declared.length} gauge and profile-chart tools`);
+});
+
 test('every workflow’s visual draws from its example', async () => {
   const { runChain } = await import('../../../packages/runtime/src/chain.mjs');
   const { workflows } = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8'));

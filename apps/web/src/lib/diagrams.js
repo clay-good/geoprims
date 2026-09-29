@@ -1325,6 +1325,48 @@ function windLimit(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Part 107 groundspeed against the rule's fixed 87 kt limit. */
+function speedLimitGauge(args, result) {
+  const speed = qty(result, 'groundspeed', SPEED);
+  const limit = qty(result, 'limit', SPEED);
+  if (![speed, limit].every(Number.isFinite) || limit <= 0) return null;
+  const [x0, x1, y] = [30, 290, 112];
+  const top = Math.max(limit * 1.2, speed * 1.08);
+  const X = (v) => x0 + ((x1 - x0) * v) / top;
+  const body = [
+    line('dg-grid', [x0, y], [x1, y]),
+    line('dg-accent', [x0, y], [X(speed), y]),
+    line('dg-arc-red', [X(limit), y - 34], [X(limit), y + 34]),
+    `<circle class="dg-dot-now" cx="${f1(X(speed))}" cy="${y}" r="6"/>`,
+    text('dg-label', X(speed), y - 18, disp(result, 'groundspeed'), 'middle'),
+    text('dg-muted-text', X(limit), y + 54, `Part 107 limit ${disp(result, 'limit')}`, 'middle'),
+    text('dg-muted-text', 160, 198, `Margin ${disp(result, 'margin')}`, 'middle'),
+  ].join('');
+  const title = `Groundspeed ${disp(result, 'groundspeed')} against the Part 107 limit of ${disp(result, 'limit')}; margin ${disp(result, 'margin')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Battery capacity with the usable share ending before the landing reserve. */
+function batteryReserveGauge(args, result) {
+  const energy = val(result, 'energy');
+  const usable = val(result, 'usable_energy');
+  if (![energy, usable].every(Number.isFinite) || energy <= 0 || usable < 0) return null;
+  const [x0, x1, y] = [30, 290, 112];
+  const X = (v) => x0 + ((x1 - x0) * v) / energy;
+  const reserve = Math.max(0, Number(args.reserve ?? 0));
+  const body = [
+    `<rect class="dg-grid" x="${x0}" y="${y - 18}" width="${x1 - x0}" height="36"/>`,
+    `<rect class="dg-fill" x="${x0}" y="${y - 18}" width="${f1(Math.max(0, X(usable) - x0))}" height="36"/>`,
+    line('dg-muted dg-dash', [X(usable), y - 30], [X(usable), y + 30]),
+    text('dg-label', X(usable), y - 40, `Usable ${disp(result, 'usable_energy')}`, usable / energy > 0.78 ? 'end' : 'middle'),
+    text('dg-muted-text', x0, y + 52, '0'),
+    text('dg-muted-text', x1, y + 52, `Pack ${disp(result, 'energy')}`, 'end'),
+    text('dg-muted-text', 160, 198, `${reserve}% landing reserve`, 'middle'),
+  ].join('');
+  const title = `Battery capacity ${disp(result, 'energy')}, with ${disp(result, 'usable_energy')} usable after the discharge limit and ${reserve}% landing reserve.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
   'aviation.wind.heading-groundspeed': windTriangle,
@@ -1374,6 +1416,8 @@ const DIAGRAMS = {
   'survey.cogo.traverse-closure': traverseClosure,
   // drone mission planning
   'drone.ops.wind-limit': windLimit,
+  'drone.ops.speed-check': speedLimitGauge,
+  'drone.power.battery-energy': batteryReserveGauge,
 };
 
 /**

@@ -653,7 +653,7 @@ pub static HOVER_POWER: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "electrical_power")],
     }],
     related: &[
@@ -988,7 +988,7 @@ pub static ENDURANCE: ToolDef = ToolDef {
     ],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "hover_time")],
     }],
     related: &[
@@ -1313,7 +1313,7 @@ pub static MAX_PAYLOAD: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "max_payload")],
     }],
     related: &[Related {
@@ -1744,7 +1744,7 @@ pub static PAYLOAD_IMPACT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "hover_time_with")],
     }],
     related: &[
@@ -1950,7 +1950,7 @@ pub static RTH_BUDGET: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "vector-diagram",
         map: &[("value", "margin")],
     }],
     related: &[Related {

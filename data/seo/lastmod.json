@@ -28,12 +28,12 @@
     "lastmod": "2026-09-25"
   },
   "/aviation/altimetry/density-altitude/": {
-    "hash": "e43d1062339716c6",
-    "lastmod": "2026-09-23"
+    "hash": "af13dd4a3aaa1b1e",
+    "lastmod": "2026-09-29"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "053f44352af67457",
-    "lastmod": "2026-09-23"
+    "hash": "a8a5ae4c5078089f",
+    "lastmod": "2026-09-29"
   },
   "/aviation/atmosphere/": {
     "hash": "2e08612288f04a2b",
@@ -140,7 +140,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "7c1bc11e358037fe",
+    "hash": "f667a3a29fa65fe0",
     "lastmod": "2026-09-29"
   },
   "/disclaimer/": {
@@ -208,20 +208,20 @@
     "lastmod": "2026-09-25"
   },
   "/drone/power/battery-energy/": {
-    "hash": "b13c6557cc7d19bb",
-    "lastmod": "2026-09-23"
+    "hash": "e1eb8b3b691f616d",
+    "lastmod": "2026-09-29"
   },
   "/drone/power/endurance/": {
-    "hash": "8137537d927c4a6a",
-    "lastmod": "2026-09-24"
+    "hash": "b7925915ff0ee200",
+    "lastmod": "2026-09-29"
   },
   "/drone/sensors/": {
     "hash": "44fef6d3f679b713",
     "lastmod": "2026-09-23"
   },
   "/drone/sensors/vlos/": {
-    "hash": "f4b32c8ffe0fef8f",
-    "lastmod": "2026-09-23"
+    "hash": "ef69e208d506ba9d",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/": {
     "hash": "af11155dd78f0f89",
@@ -808,12 +808,12 @@
     "lastmod": "2026-09-23"
   },
   "/learn/density-altitude/": {
-    "hash": "c89f5f93ee50268c",
-    "lastmod": "2026-09-23"
+    "hash": "9cb4e40f31067a9c",
+    "lastmod": "2026-09-29"
   },
   "/learn/drone-flight-time/": {
-    "hash": "e2511364e42d4b90",
-    "lastmod": "2026-09-24"
+    "hash": "e666415327668034",
+    "lastmod": "2026-09-29"
   },
   "/learn/geodesic-vs-haversine/": {
     "hash": "3c377ff3004f1a9c",
@@ -880,8 +880,8 @@
     "lastmod": "2026-09-25"
   },
   "/learn/pressure-altitude/": {
-    "hash": "74cd904981747e07",
-    "lastmod": "2026-09-23"
+    "hash": "73116dae06a79a45",
+    "lastmod": "2026-09-29"
   },
   "/learn/state-plane-coordinates/": {
     "hash": "2104267f84395654",
@@ -912,8 +912,8 @@
     "lastmod": "2026-09-23"
   },
   "/learn/visual-line-of-sight/": {
-    "hash": "cff84d7cd0386b1c",
-    "lastmod": "2026-09-23"
+    "hash": "561f13d8bb548cf6",
+    "lastmod": "2026-09-29"
   },
   "/learn/wind-triangle/": {
     "hash": "f8be0b2dd13c736b",
@@ -1088,7 +1088,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "be18e63246a8301d",
+    "hash": "c78afbcd415577a8",
     "lastmod": "2026-09-29"
   },
   "/raster/": {
@@ -1504,7 +1504,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f1b029cd64650e04",
+    "hash": "65448f8797146342",
     "lastmod": "2026-09-29"
   },
   "/workflows/": {
@@ -1528,8 +1528,8 @@
     "lastmod": "2026-09-25"
   },
   "/workflows/ifr-approach-brief/": {
-    "hash": "c2297807d993e617",
-    "lastmod": "2026-09-28"
+    "hash": "ecbd75d2e8ccfb08",
+    "lastmod": "2026-09-29"
   },
   "/workflows/index-to-area/": {
     "hash": "e13a19d8157be53f",
@@ -1540,16 +1540,16 @@
     "lastmod": "2026-09-26"
   },
   "/workflows/lidar-bid/": {
-    "hash": "5441d4740d9498ad",
-    "lastmod": "2026-09-25"
+    "hash": "8c30a1fd00b04649",
+    "lastmod": "2026-09-29"
   },
   "/workflows/mapping-flight/": {
-    "hash": "3a4cd9b85e028ade",
-    "lastmod": "2026-09-26"
+    "hash": "22c8aeee07c02db2",
+    "lastmod": "2026-09-29"
   },
   "/workflows/preflight-check/": {
-    "hash": "8c06a973d8945210",
-    "lastmod": "2026-09-25"
+    "hash": "2367d253b68b7670",
+    "lastmod": "2026-09-29"
   },
   "/workflows/vfr-cross-country/": {
     "hash": "8d455e2d406bc9b7",

@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-09-28",
+      "kind": "fixed",
+      "tools": [
+        "drone.ops.speed-check",
+        "drone.power.battery-energy"
+      ],
+      "vectors": [],
+      "summary": "The Part 107 speed check now draws groundspeed against the 87 kt limit, and the battery calculator draws usable energy against the full pack and landing reserve. Unsupported gauge declarations were removed, and a build gate now requires every declared gauge and profile chart to render its worked example. Results are unchanged."
+    },
+    {
+      "date": "2026-09-28",
       "kind": "changed",
       "tools": [
         "drone.photogrammetry.gcp-plan"

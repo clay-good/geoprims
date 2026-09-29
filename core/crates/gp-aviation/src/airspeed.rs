@@ -412,7 +412,7 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
     ],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "vector-diagram",
         map: &[("value", "tas")],
     }],
     related: &[
@@ -731,7 +731,7 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "vector-diagram",
         map: &[("value", "cas")],
     }],
     related: &[Related {

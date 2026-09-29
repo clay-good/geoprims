@@ -244,7 +244,7 @@ pub static TURN: ToolDef = ToolDef {
     ],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "bank")],
     }],
     related: &[
@@ -1231,7 +1231,7 @@ pub static GLIDE: ToolDef = ToolDef {
             map: &[("rings", "rings")],
         },
         Layer {
-            kind: "gauge",
+            kind: "table-only",
             map: &[("value", "wind_range")],
         },
     ],
@@ -1378,7 +1378,7 @@ pub static PIVOTAL_ALTITUDE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "pivotal_altitude")],
     }],
     related: &[Related {

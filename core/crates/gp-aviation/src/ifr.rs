@@ -455,7 +455,7 @@ pub static HOLD_SPEED: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "max_ias")],
     }],
     related: &[Related {

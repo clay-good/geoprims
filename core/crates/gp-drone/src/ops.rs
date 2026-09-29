@@ -493,7 +493,7 @@ pub static KINETIC_ENERGY: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "energy")],
     }],
     related: &[Related {
@@ -849,7 +849,7 @@ pub static VLOS: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "vlos")],
     }],
     related: &[

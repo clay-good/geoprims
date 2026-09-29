@@ -981,7 +981,7 @@ pub static MOTION_BLUR: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "blur")],
     }],
     related: &[Related {

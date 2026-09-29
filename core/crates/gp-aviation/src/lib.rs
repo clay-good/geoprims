@@ -746,7 +746,7 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "pressure_altitude")],
     }],
     related: &[
@@ -1016,7 +1016,7 @@ pub static DENSITY_ALTITUDE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "gauge",
+        kind: "table-only",
         map: &[("value", "density_altitude")],
     }],
     related: &[

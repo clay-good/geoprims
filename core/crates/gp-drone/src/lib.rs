@@ -21,7 +21,8 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot, ToolDef,
+    Comparison, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use libm::hypot;
@@ -41,6 +42,14 @@ const PIX4D: Reference = Reference {
     edition: "Vendor guidance, not a standard",
     locator: "General case: at least 75% front, 60% side; forest and dense vegetation: at least 85% front and side",
     url: "https://support.pix4d.com/hc/en-us/articles/202557459",
+};
+const ISPRS_UAV_GSD: Reference = Reference {
+    title: "Evaluating the Accuracy of DEM Generation Algorithms from UAV Imagery",
+    issuer: "Ruiz, J. J., Diaz-Mas, L., Perez, F., and Viguria, A.; ISPRS Archives",
+    year: 2013,
+    edition: "Volume XL-1/W2",
+    locator: "Table 2: typical real-flight mapping parameters, including approximately 1–5 cm GSD",
+    url: "https://doi.org/10.5194/isprsarchives-XL-1-W2-333-2013",
 };
 const FAA_107: Reference = Reference {
     title: "14 CFR 107.51, Operating limitations for small unmanned aircraft",
@@ -311,7 +320,7 @@ pub static GSD: ToolDef = ToolDef {
     accuracy: "Exact for a nadir view over flat ground at the given height; real GSD varies with terrain and lens distortion",
     when_to_use: "Use this when you know the height you can fly and want to know what resolution the imagery will have: it gives the ground each pixel covers and the footprint of one image, across and along track. That footprint is what overlap, line spacing, and photo interval are computed from, so it is the starting point for the rest of the mission plan.",
     limitations: "It describes a nadir view over flat ground at one height with an undistorted lens. Terrain relief changes the ground sampling distance across the frame, oblique views change it more, and lens distortion and the processing pipeline move the final product's resolution away from this number. The sensor width and true focal length are the camera's own; a 35 mm-equivalent focal length entered here is caught rather than used.",
-    references: &[WOLF],
+    references: &[WOLF, ISPRS_UAV_GSD],
     examples: &[Example {
         id: "primary",
         title: "A 1-inch 20 MP camera at 100 m",
@@ -338,6 +347,10 @@ pub static GSD: ToolDef = ToolDef {
         },
     ],
     sentence: "Each pixel covers {gsd} of ground, and one image spans {footprint_across} across track.{warn EQUIVALENT_FOCAL_LENGTH} Check the focal length: it looks like a 35 mm-equivalent value.{/warn}",
+    comparison: Comparison {
+        kind: "vs-typical-range",
+        text: "{gsd}/px: {if gsd > 5}coarser than{else}{if gsd < 1}finer than{else}within{/if}{/if} typical mapping work (1–5 cm/px). Basis: Ruiz et al. (2013), Table 2.",
+    },
     limits: &[("batchRows", 10_000)],
     slots: &[
         Slot::new("height", &["height", "agl", "altitude", "alt", "flying"]).range(1.0, 10_000.0),

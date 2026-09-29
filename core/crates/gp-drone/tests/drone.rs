@@ -107,6 +107,27 @@ fn one_inch_at_100_m() {
 }
 
 #[test]
+fn gsd_context_band_is_cited_and_not_a_verdict() {
+    let r = call(
+        "drone.photogrammetry.gsd",
+        &format!(r#"{{"height":"437.76 m",{CAM}}}"#),
+    );
+    assert_eq!(
+        r["comparison"],
+        "12 cm/px: coarser than typical mapping work (1–5 cm/px). Basis: Ruiz et al. (2013), Table 2."
+    );
+    let references = r["meta"]["references"].as_array().unwrap();
+    assert!(references.iter().any(|reference| {
+        reference["issuer"]
+            .as_str()
+            .is_some_and(|text| text.contains("Ruiz"))
+            && reference["locator"]
+                .as_str()
+                .is_some_and(|text| text.contains("Table 2"))
+    }));
+}
+
+#[test]
 fn equivalent_focal_length_suspected() {
     let r = call(
         "drone.photogrammetry.gsd",

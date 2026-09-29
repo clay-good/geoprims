@@ -1392,6 +1392,26 @@
       "editionCheck": true
     },
     {
+      "id": "isprs-uav-dem-2013",
+      "name": "Evaluating the Accuracy of DEM Generation Algorithms from UAV Imagery",
+      "issuer": "ISPRS Archives",
+      "currentEdition": "Volume XL-1/W2 (2013)",
+      "currentReleaseDate": "2013-08-16",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-09-28",
+      "verificationNote": "Checked at the ISPRS article page on 2026-09-28: Table 2 labels approximately 1–5 cm GSD as typical for a real UAV mapping flight.",
+      "freeAccessUrl": "https://isprs-archives.copernicus.org/articles/XL-1-W2/333/2013/",
+      "matchTerms": [
+        "Evaluating the Accuracy of DEM Generation Algorithms from UAV Imagery"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "iso6709",
       "name": "ISO 6709 Geographic point location",
       "issuer": "ISO",

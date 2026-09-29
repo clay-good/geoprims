@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
+        "drone.photogrammetry.gsd"
+      ],
+      "vectors": [],
+      "summary": "The GSD answer now says whether its resolution is finer than, within, or coarser than the approximately 1–5 cm/px range published as typical for a real UAV mapping flight. The answer cites Ruiz et al. (2013), Table 2, and does not present the range as a safety limit. Calculated results are unchanged."
+    },
+    {
+      "date": "2026-09-28",
       "kind": "fixed",
       "tools": [
         "drone.ops.speed-check",

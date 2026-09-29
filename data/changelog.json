@@ -5,6 +5,16 @@
       "date": "2026-09-28",
       "kind": "changed",
       "tools": [
+        "drone.sensors.dataset-size",
+        "drone.sensors.lidar-plan"
+      ],
+      "vectors": [],
+      "summary": "The dataset estimator now shows the LAS 1.4 header, point-record sizes, and default format behind its point-cloud estimates. The lidar planner now shows the USGS QL1, QL2, and QL3 pulse-density thresholds behind its quality label. Calculated results are unchanged."
+    },
+    {
+      "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
         "drone.mission.facade",
         "drone.sensors.thermal-footprint"
       ],

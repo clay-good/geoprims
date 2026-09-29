@@ -65,6 +65,8 @@ const MUST_DECLARE = [
   'drone.photogrammetry.trigger',
   'drone.mission.facade',
   'drone.sensors.thermal-footprint',
+  'drone.sensors.dataset-size',
+  'drone.sensors.lidar-plan',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -113,6 +115,22 @@ test('the facade and thermal defaults cite the guidance they apply', () => {
   const thermal = byId('drone.sensors.thermal-footprint')['x-assumptions'];
   assert.deepEqual(thermal.map(({ value, unit, source }) => [value, unit, source]), [
     ['3', 'px', 'flir-3x3'],
+  ]);
+});
+
+test('the sensing tools expose their published LAS and USGS tables', () => {
+  const dataset = byId('drone.sensors.dataset-size')['x-assumptions'];
+  assert.deepEqual(dataset.map(({ value, unit, source }) => [value, unit, source]), [
+    ['375', 'bytes', 'asprs-las-1-4'],
+    ['20, 28, 26, 34, 57, 63, 30, 36, 38, 59, 67', 'bytes', 'asprs-las-1-4'],
+    ['6', '1', 'asprs-las-1-4'],
+  ]);
+
+  const lidar = byId('drone.sensors.lidar-plan')['x-assumptions'];
+  assert.deepEqual(lidar.map(({ value, unit, source }) => [value, unit, source]), [
+    ['8.0', 'pulses/m2', 'usgs-lbs'],
+    ['2.0', 'pulses/m2', 'usgs-lbs'],
+    ['0.5', 'pulses/m2', 'usgs-lbs'],
   ]);
 });
 

@@ -219,6 +219,26 @@ pub static DATASET_SIZE: ToolDef = ToolDef {
         },
     ],
     sentence: "{if ortho_gb > 0}The orthomosaic is about {ortho_gb} GB uncompressed, {ortho_high_gb} to {ortho_low_gb} GB compressed.{/if}{if las_gb > 0} The point cloud is about {las_gb} GB as LAS and {laz_gb} GB as LAZ.{/if}",
+    assumptions: &[
+        Assumption {
+            name: "LAS 1.4 public header block",
+            value: "375",
+            unit: "bytes",
+            source: "asprs-las-1-4",
+        },
+        Assumption {
+            name: "LAS 1.4 minimum point-record sizes for formats 0 through 10",
+            value: "20, 28, 26, 34, 57, 63, 30, 36, 38, 59, 67",
+            unit: "bytes",
+            source: "asprs-las-1-4",
+        },
+        Assumption {
+            name: "Default LAS point format",
+            value: "6",
+            unit: "1",
+            source: "asprs-las-1-4",
+        },
+    ],
     limits: &[("batchRows", 10_000)],
     run: run_dataset,
     ..ToolDef::BLANK
@@ -784,6 +804,26 @@ pub static LIDAR_PLAN: ToolDef = ToolDef {
         },
     ],
     sentence: "Each line is {swath} wide; all lines together give {aggregate_density} pulses per square meter.",
+    assumptions: &[
+        Assumption {
+            name: "Minimum aggregate nominal pulse density for USGS QL1",
+            value: "8.0",
+            unit: "pulses/m2",
+            source: "usgs-lbs",
+        },
+        Assumption {
+            name: "Minimum aggregate nominal pulse density for USGS QL2",
+            value: "2.0",
+            unit: "pulses/m2",
+            source: "usgs-lbs",
+        },
+        Assumption {
+            name: "Minimum aggregate nominal pulse density for USGS QL3",
+            value: "0.5",
+            unit: "pulses/m2",
+            source: "usgs-lbs",
+        },
+    ],
     limits: &[("batchRows", 10_000)],
     run: run_lidar,
     ..ToolDef::BLANK

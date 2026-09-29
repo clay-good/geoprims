@@ -63,6 +63,8 @@ const MUST_DECLARE = [
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
+  'drone.mission.facade',
+  'drone.sensors.thermal-footprint',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -99,6 +101,19 @@ test('the photogrammetry defaults name their published values', () => {
     trigger.filter((a) => a.source === 'pix4d-overlap').map((a) => [a.value, a.unit]),
     [['75', '%'], ['60', '%'], ['85', '%'], ['85', '%']],
   );
+});
+
+test('the facade and thermal defaults cite the guidance they apply', () => {
+  const facade = byId('drone.mission.facade')['x-assumptions'];
+  assert.deepEqual(facade.map(({ value, unit, source }) => [value, unit, source]), [
+    ['75', '%', 'pix4d-overlap'],
+    ['60', '%', 'pix4d-overlap'],
+  ]);
+
+  const thermal = byId('drone.sensors.thermal-footprint')['x-assumptions'];
+  assert.deepEqual(thermal.map(({ value, unit, source }) => [value, unit, source]), [
+    ['3', 'px', 'flir-3x3'],
+  ]);
 });
 
 test('every tool that rests on constants declares them', () => {

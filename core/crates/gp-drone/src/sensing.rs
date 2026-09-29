@@ -7,7 +7,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 
 use crate::unit;
@@ -494,6 +496,12 @@ pub static THERMAL_FOOTPRINT: ToolDef = ToolDef {
         },
     ],
     sentence: "Each pixel covers {footprint}, so the smallest target you can measure reliably is {min_target}.",
+    assumptions: &[Assumption {
+        name: "Default pixels across a target for reliable temperature measurement",
+        value: "3",
+        unit: "px",
+        source: "flir-3x3",
+    }],
     limits: &[("batchRows", 10_000)],
     run: run_thermal,
     ..ToolDef::BLANK

@@ -7,12 +7,14 @@ use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::{ceil, hypot};
 
 use crate::mission::KARNEY;
-use crate::{mm_field, unit};
+use crate::{PIX4D, mm_field, unit};
 
 const WOLF: Reference = Reference {
     title: "Elements of Photogrammetry with Applications in GIS",
@@ -223,7 +225,7 @@ pub static FACADE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Photo footprint on the wall = sensor size × standoff / focal length; GSD = pixel pitch × standoff / focal length (Wolf, Dewitt & Wilkinson 2014, ch. 6). Passes and photos: n = 1 when the span fits one photo, else ⌈(span − footprint)/(footprint × (1 − overlap))⌉ + 1, centered and evenly spaced. Stations by the geodesic direct problem along the facade, offset square to it by the standoff (Karney 2013)",
     accuracy: "Exact for a flat, vertical facade and a level camera; heights are above the facade's base, not MSL",
-    references: &[WOLF, KARNEY],
+    references: &[WOLF, KARNEY, PIX4D],
     examples: &[Example {
         id: "primary",
         title: "A 50 m wall, 25 m tall, from 30 m away",
@@ -246,6 +248,20 @@ pub static FACADE: ToolDef = ToolDef {
         },
     ],
     sentence: "Fly {passes} {plural passes \"pass\" \"passes\"} of {photos_per_pass} photos at {standoff} from the wall.{if gsd > 0} Each pixel covers {gsd} of the facade.{/if}",
+    assumptions: &[
+        Assumption {
+            name: "Default overlap along each pass",
+            value: "75",
+            unit: "%",
+            source: "pix4d-overlap",
+        },
+        Assumption {
+            name: "Default overlap between passes",
+            value: "60",
+            unit: "%",
+            source: "pix4d-overlap",
+        },
+    ],
     limits: &[("batchRows", 100)],
     run: run_facade,
     ..ToolDef::BLANK

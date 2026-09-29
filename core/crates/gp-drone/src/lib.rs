@@ -35,7 +35,7 @@ const WOLF: Reference = Reference {
     locator: "Chapter 6 (vertical photographs: scale and ground coverage)",
     url: "https://www.accessengineeringlibrary.com/content/book/9780071761123",
 };
-const PIX4D: Reference = Reference {
+pub(crate) const PIX4D: Reference = Reference {
     title: "Selecting the image acquisition plan type (overlap guidance)",
     issuer: "Pix4D support documentation",
     year: 2024,

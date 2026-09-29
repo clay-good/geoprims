@@ -5,6 +5,16 @@
       "date": "2026-09-28",
       "kind": "changed",
       "tools": [
+        "drone.mission.facade",
+        "drone.sensors.thermal-footprint"
+      ],
+      "vectors": [],
+      "summary": "The facade scan now shows the Pix4D guidance behind its 75% and 60% overlap defaults, and the thermal footprint tool shows the FLIR 3 × 3 pixel rule behind its default target size. Calculated results are unchanged."
+    },
+    {
+      "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
         "drone.photogrammetry.gsd",
         "drone.photogrammetry.altitude-for-gsd",
         "drone.photogrammetry.trigger"

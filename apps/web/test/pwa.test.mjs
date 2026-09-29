@@ -110,14 +110,20 @@ test('the web app manifest is installable', () => {
   assert.match(home, /<link rel="apple-touch-icon" href="\/icons\/apple-touch-icon.png"/);
 });
 
-test('the precache holds every page, module, and asset, within 12 MB compressed', () => {
+test('the precache holds every page, module, and calculation asset, within 12 MB compressed', () => {
   const precache = vm.runInNewContext(`${readFileSync(join(dist, 'sw.js'), 'utf8').split('\n\n')[0]}; PRECACHE`);
   const set = new Set(precache);
   for (const t of catalog.tools) assert.ok(set.has(route(t.id)), `${t.id} page`);
   for (const f of readdirSync(join(dist, 'wasm'))) assert.ok(set.has(`/wasm/${f}`), f);
   for (const u of ['/', '/offline/', '/catalog/v1.json', '/manifest.webmanifest', '/methodology/']) assert.ok(set.has(u), u);
   const registry = JSON.parse(readFileSync(join(dist, 'assets/registry.json'), 'utf8'));
-  for (const a of registry.assets.filter((x) => x.loadPolicy === "on-demand")) for (const f of Object.keys(a.files)) assert.ok(set.has(`/assets/${a.id}/${a.version}/${f}`), f);
+  for (const a of registry.assets.filter((x) => x.loadPolicy === 'on-demand')) {
+    for (const f of Object.keys(a.files)) {
+      const path = `/assets/${a.id}/${a.version}/${f}`;
+      if (a.consumers?.every((consumer) => consumer === 'web-map')) assert.ok(!set.has(path), `${f} loads on demand`);
+      else assert.ok(set.has(path), f);
+    }
+  }
   assert.ok(!precache.some((u) => u.startsWith('/vectors/') || u === '/sw.js'), 'downloads and the worker itself are not precached');
   let bytes = 0;
   for (const u of precache) {
@@ -145,6 +151,19 @@ test('airplane mode: after one visit, tool pages, modules, and assets load offli
   const unknown = await sw.get('/no/such/page/', 'navigate');
   assert.match(await unknown.text(), /You(&#39;|')re offline/);
   assert.deepEqual(sw.net.requests.filter((p) => p !== '/no/such/page/'), [], 'nothing else touched the network');
+});
+
+test('on-demand map detail is cached as one whole file after its first use', async () => {
+  const sw = worker();
+  await sw.install();
+  await sw.activate();
+  const path = '/assets/ne-50m/5.1.2/ne-50m.json';
+  assert.equal((await sw.get(path)).status, 200);
+  assert.deepEqual(sw.net.requests.filter((request) => request === path), [path]);
+  sw.net.online = false;
+  sw.net.requests.length = 0;
+  assert.equal((await sw.get(path)).status, 200);
+  assert.deepEqual(sw.net.requests, []);
 });
 
 test('updates wait for the user, and activation keeps offline packs', async () => {

@@ -223,6 +223,25 @@
       "loadPolicy": "bundled",
       "bundledIn": "apps/web/public/basemap/ne-110m.json",
       "consumers": ["web-map", "mcp-server"]
+    },
+    {
+      "id": "ne-50m",
+      "version": "5.1.2",
+      "title": "Natural Earth 1:50m base map",
+      "issuer": "Natural Earth",
+      "license": "Public domain",
+      "attribution": "Made with Natural Earth. Free vector and raster map data at naturalearthdata.com.",
+      "sourceUrl": "https://github.com/nvkelso/natural-earth-vector/tree/v5.1.2/geojson",
+      "retrievedAt": "2026-09-28",
+      "files": {
+        "ne-50m.json": {
+          "sha256": "1789ec6097e622dfa78b4426c2864c26b193abbdcca03704f52f91d4210e3605",
+          "bytes": 684709
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "consumers": ["web-map"]
     }
   ]
 }

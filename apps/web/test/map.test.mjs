@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createBasemapLoader } from '../src/lib/map/basemap.js';
 import { decode, forward, frame, inverse, unwrap } from '../src/lib/map/projection.js';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -34,14 +35,43 @@ test('framing a set across the antimeridian centers on it, not on Greenwich', ()
   assert.deepEqual(unwrap([[170, 0], [-170, 0], [-160, 0]]).map(([l]) => l), [170, 190, 200]);
 });
 
-test('Natural Earth 110m decodes to land, borders, and lakes', () => {
+test('both Natural Earth files decode, and 50m stays within its budget', () => {
   const ne = JSON.parse(readFileSync(join(web, 'public/basemap/ne-110m.json'), 'utf8'));
+  const detailedPath = join(web, '../../assets/data/ne-50m/5.1.2/ne-50m.json');
+  const detailed = JSON.parse(readFileSync(detailedPath, 'utf8'));
   assert.match(ne.source, /Natural Earth 5\.1\.2/);
   const land = ne.land.map(decode);
   assert.ok(land.length > 100 && ne.borders.length > 100 && ne.lakes.length > 10);
+  assert.ok(detailed.land.length > ne.land.length && detailed.borders.length > ne.borders.length && detailed.lakes.length > ne.lakes.length);
+  assert.ok(readFileSync(detailedPath).length <= 5_000_000);
   for (const ring of land) for (const [lon, lat] of ring) assert.ok(Math.abs(lon) <= 180.01 && Math.abs(lat) <= 90.01);
   // A ring around Australia's east coast reaches past 150° E.
   assert.ok(land.some((r) => r.some(([lon, lat]) => lon > 150 && lat < -30 && lat > -40)));
+});
+
+test('the base-map loader verifies both files and requests 50m as one whole file', async () => {
+  const root = join(web, '../..');
+  const paths = {
+    '/assets/registry.json': join(root, 'assets/registry.json'),
+    '/basemap/ne-110m.json': join(web, 'public/basemap/ne-110m.json'),
+    '/assets/ne-50m/5.1.2/ne-50m.json': join(root, 'assets/data/ne-50m/5.1.2/ne-50m.json'),
+  };
+  const requested = [];
+  const fetcher = async (path) => {
+    requested.push(path);
+    return paths[path] ? new Response(readFileSync(paths[path])) : new Response('', { status: 404 });
+  };
+  const load = createBasemapLoader(fetcher);
+  const coarse = await load('110m');
+  const detailed = await load('50m');
+  assert.ok(detailed.land.length > coarse.land.length);
+  assert.deepEqual(requested, ['/assets/registry.json', '/basemap/ne-110m.json', '/assets/ne-50m/5.1.2/ne-50m.json']);
+
+  const corrupt = createBasemapLoader(async (path) => {
+    const bytes = readFileSync(paths[path]);
+    return new Response(path.includes('ne-50m') ? Buffer.concat([bytes, Buffer.from(' ')]) : bytes);
+  });
+  await assert.rejects(corrupt('50m'), /ASSET_INTEGRITY/);
 });
 
 test('on the globe, far-side points of a filled ring land on the limb', async () => {

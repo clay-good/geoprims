@@ -1,6 +1,7 @@
 // geoprims service worker (web/offline-pwa). scripts/pwa.mjs prepends
 // `const VERSION = '…'` and `const PRECACHE = […]` (every page, module, the
-// catalog, and data assets) at build time.
+// catalog, and calculation data assets) at build time. Optional map detail is
+// cached the first time it is requested.
 //
 // - Install caches the whole release, then waits: a new release never takes
 //   over mid-session. It activates when every tab has closed, or when the page
@@ -69,7 +70,11 @@ self.addEventListener('fetch', (event) => {
       const cached = await lookup(path);
       if (cached) return cached;
       try {
-        return await fetch(req);
+        const response = await fetch(req);
+        if (response.ok && path.startsWith('/assets/')) {
+          await (await caches.open(APP)).put(path, response.clone());
+        }
+        return response;
       } catch (err) {
         if (req.mode === 'navigate') {
           const page = await lookup(OFFLINE);

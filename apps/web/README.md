@@ -82,6 +82,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `data/hubs.json`, `test/hubs.test.mjs` | Group hub pages: tools listed under "I want to…" tasks, each once, and a short guide where tools form a sequence |
 | `src/lib/crs.mjs`, `test/crs.test.mjs` | Projected coordinates on import: UTM and State Plane CSVs, and GeoJSON in a WGS 84 UTM zone, converted by the core's inverse tools; other declared systems refused |
 | `src/lib/map/projection.js`, `test/projections.test.mjs` | The map's projections: Web Mercator, equirectangular, polar azimuthal equidistant, and the globe, each inverting what it draws; the polar-cap scenario |
+| `src/lib/map/basemap.js`, `test/browser/basemap.test.mjs` | The verified Natural Earth base map: bundled 110m data for the installed offline site, one 50m file loaded and cached after deep zoom, and a network check proving map and globe interaction makes no tile or map-service requests |
 | `src/lib/audio.js`, `src/lib/sound.js`, `test/audio.test.mjs` | Optional interface sounds: off by default, synthesized (no audio files), rate limited, muted by `m` or the header control |
 | `src/lib/map/handles.js`, `test/handles.test.mjs` | Canvas input: drag A, B, or a single point on the map (the fields follow), and click to set a single-point tool's point |
 | `src/lib/map/readout.js`, `test/readout.test.mjs` | The map's cursor readout in the chosen coordinate format (degrees, DMS, MGRS, and UTM from the core), and the magnetic north indicator |
@@ -106,4 +107,4 @@ The first command runs at the repository root and builds the Wasm modules and ca
 
 Generated endpoints (like `/units/speed/kt-to-mph/`) canonicalize to their parent operation. Experimental tools are `noindex` until they have their full content.
 
-The map canvas, animated scenes, import and export, and core offline cache are present. Offline packs, the pack manager, and dedicated docs pages remain open. The browser suite covers long-calculation cancellation in Chromium and full golden-vector parity across three browsers; mobile layout checks remain open. `node scripts/serve.mjs` serves the build with its production headers and CSP.
+The map canvas, animated scenes, import and export, and core offline cache are present. The map uses only same-origin Natural Earth vectors: 110m data for world and regional views and verified 50m data after deep zoom. Offline packs, the pack manager, and dedicated docs pages remain open. The browser suite covers long-calculation cancellation, 320 px reflow and enlarged text, and full golden-vector parity across Chromium, Firefox, and WebKit. `node scripts/serve.mjs` serves the build with its production headers and CSP.

@@ -4,7 +4,8 @@
   // scroll or pinch to zoom; arrow keys, + and -, and 0 (reset) do the same.
   import { onMount, tick } from 'svelte';
   import { buildLayers, extent } from '../lib/map/layers.js';
-  import { decode, forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
+  import { createBasemapLoader, DETAIL_AT, GENERALIZED_AT } from '../lib/map/basemap.js';
+  import { forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
   import { magneticNorth, readoutText } from '../lib/map/readout.js';
   import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
@@ -23,6 +24,9 @@
   let projection = $state('map');
   let canvas;
   let base = null;
+  let baseScale = $state('');
+  const loadBasemap = createBasemapLoader();
+  let detailTried = false;
   let layers = [];
   let view = null;
   let target = null;
@@ -83,6 +87,21 @@
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw(g, { ...view, width: w, height: h, moving }, base, layers, colors(canvas));
     scaleBar = measure(view);
+    requestDetail();
+  }
+
+  // The detailed map is one whole-file request. Failure leaves the bundled
+  // 110m map in place, which keeps the canvas useful offline.
+  function requestDetail() {
+    if (detailTried || baseScale !== '110m' || view.scale * (Math.PI / 180) <= DETAIL_AT) return;
+    detailTried = true;
+    loadBasemap('50m')
+      .then((detailed) => {
+        base = detailed;
+        baseScale = '50m';
+        paint();
+      })
+      .catch(() => {});
   }
 
   // Eases the camera to `target` in at most 500 ms (instantly with reduced motion).
@@ -317,8 +336,10 @@
     saveBlob(new Blob([text], { type: 'application/geo+json' }), `${tool.id}.geojson`);
   }
 
-  // Detail beyond Natural Earth 1:110m: say the base map is generalized.
-  const generalized = $derived(view && readout !== undefined && view.scale * (Math.PI / 180) > 60);
+  // At the limit of the map resolution, keep exact tool layers and disclose
+  // that only the base map has run out of detail.
+  const generalized = $derived(view && readout !== undefined
+    && view.scale * (Math.PI / 180) > (baseScale === '50m' ? GENERALIZED_AT : DETAIL_AT));
 
   // North is up at the center of every view here: the Mercator map and the
   // globe are both drawn north-up. Magnetic north shows when the tool's
@@ -344,16 +365,10 @@
     const onPrefs = () => (fmt = coordFormat());
     addEventListener('gp-prefs', onPrefs);
     reduced = reducedMotion();
-    fetch('/basemap/ne-110m.json')
-      .then((r) => r.json())
-      .then((ne) => {
-        base = {
-          land: ne.land.map(decode),
-          lakes: ne.lakes.map(decode),
-          borders: ne.borders.map(decode),
-          states: (ne.states ?? []).map(decode),
-          places: (ne.places ?? []).map(([name, lon, lat, minZoom]) => ({ name, lon: lon / 100, lat: lat / 100, minZoom })),
-        };
+    loadBasemap('110m')
+      .then((bundled) => {
+        base = bundled;
+        baseScale = '110m';
         paint();
       })
       .catch(() => {});
@@ -428,6 +443,6 @@
   <p class="map-readout" aria-hidden="true">
     <span class="scale">{#if scaleBar.px > 0}<span class="scale-bar" use:width={scaleBar.px}></span>{scaleBar.label}{/if}</span>
     <span>{readout || (canDrag && clickTarget(tool) ? 'Click to set the point, or drag it' : canDrag && tool.inputs.properties.lat1 ? 'Drag A or B to move them' : mode === 'globe' ? 'Drag to turn the globe' : 'Drag to pan, scroll to zoom')}</span>
-    <span>{PROJECTION_NAMES[mode]} · Natural Earth{generalized ? ' (generalized at this zoom)' : ''}</span>
+    <span>{PROJECTION_NAMES[mode]} · Natural Earth {baseScale || '110m'}{generalized ? ' · Base map generalized at this zoom' : ''}</span>
   </p>
 </figure>

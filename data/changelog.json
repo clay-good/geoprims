@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
+        "aviation.flight-plan.nav-log"
+      ],
+      "vectors": [],
+      "summary": "The navigation log is now stable. Its route totals, wind corrections, headings, times, fuel, compass wrap, and geodesic legs match an independent Python and GeographicLib calculation across 20 golden vectors, including the FAA handbook example. No calculated results changed."
+    },
+    {
+      "date": "2026-09-28",
       "kind": "added",
       "tools": [
         "geodesy.magnetic.declination",

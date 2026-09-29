@@ -142,6 +142,44 @@ def nav_log():
                    {"ok": False, "error.code": "INVALID_INPUT"}))
     out.append(vec(8, {"legs": [{"course": "90 deg", "distance": "10 NM"}], "tas": "100 kt", "date": "2026-09-25"},
                    {"ok": False, "error.code": "INVALID_INPUT"}))
+    # Broad independent coverage for promotion: compass wrap, calm air,
+    # headwinds, tailwinds, crosswinds, route totals, fuel, and geodesic legs.
+    cases = [
+        (0.0, 12.5, 100.0, (0.0, 0.0)),
+        (359.9, 35.0, 105.0, (45.0, 18.0)),
+        (15.0, 60.0, 90.0, (195.0, 20.0)),
+        (72.5, 18.0, 125.0, (250.0, 32.0)),
+        (120.0, 85.0, 140.0, (300.0, 25.0)),
+        (180.0, 44.0, 110.0, (180.0, 30.0)),
+        (245.0, 27.0, 95.0, (65.0, 22.0)),
+        (315.0, 130.0, 160.0, (90.0, 38.0)),
+    ]
+    for tc, nm, tas, wind in cases:
+        inp = {"legs": [{"course": f"{tc} deg", "distance": f"{nm} NM"}], "tas": f"{tas} kt",
+               "wind_direction": f"{wind[0]} deg", "wind_speed": f"{wind[1]} kt"}
+        out.append(vec(len(out) + 1, inp, log_expect([(tc, nm)], tas, wind)))
+
+    legs = [(5.0, 23.0), (142.0, 47.5), (278.0, 31.0)]
+    out.append(vec(len(out) + 1,
+                   {"legs": [{"course": f"{tc} deg", "distance": f"{nm} NM"} for tc, nm in legs],
+                    "tas": "118 kt", "wind_direction": "330 deg", "wind_speed": "24 kt"},
+                   log_expect(legs, 118.0, (330.0, 24.0))))
+    legs = [(88.0, 52.0), (201.0, 39.0)]
+    e = log_expect(legs, 132.0, (20.0, 17.0), var=-8.5, burn=9.4)
+    e["result.total_fuel.value"] = e["result.total_time.value"] / 60.0 * 9.4
+    out.append(vec(len(out) + 1,
+                   {"legs": [{"course": f"{tc} deg", "distance": f"{nm} NM"} for tc, nm in legs],
+                    "tas": "132 kt", "wind_direction": "20 deg", "wind_speed": "17 kt",
+                    "variation": "-8.5 deg", "fuel_burn": "9.4 gal/h"}, e))
+    for points, tas, wind in [
+        ([(47.4489, -122.3094), (45.5887, -122.5975)], 145.0, (220.0, 28.0)),
+        ([(-33.9461, 151.1772), (-36.0678, 146.9581), (-37.6733, 144.8433)], 155.0, (310.0, 35.0)),
+    ]:
+        legs = [inverse(*a, *b) for a, b in zip(points, points[1:])]
+        out.append(vec(len(out) + 1,
+                       {"waypoints": [{"lat": lat, "lon": lon} for lat, lon in points], "tas": f"{tas} kt",
+                        "wind_direction": f"{wind[0]} deg", "wind_speed": f"{wind[1]} kt"},
+                       log_expect(legs, tas, wind)))
     return out
 
 

@@ -391,11 +391,11 @@ pub static NAV_LOG: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    stability: gp_base::tool::Stability::Stable,
     warnings: &[
         "WIND_EXCEEDS_TAS",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     when_to_use: "Use this to fill in a navigation log for a cross-country flight: give the waypoints (or the course and distance of each leg from the chart), your true airspeed, the winds aloft, and the fuel burn, and it works every leg the way the planning sheet does, from true course to compass heading, with the time and fuel for each leg and the totals.",
     limitations: "Each leg is flown at cruise true airspeed in a steady wind, so the climb, the descent, and any wind change inside a leg are not in it: add the climb from the climb plan and plan the fuel reserve with the fuel planner. The winds are true, as forecast. The course from waypoints is the geodesic’s course leaving each waypoint, which drifts along a long leg. Planning aid, not for primary navigation.",

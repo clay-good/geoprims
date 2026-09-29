@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "29976fa16423af52",
-    "lastmod": "2026-09-28"
+    "hash": "afb2d0894a8b2c7a",
+    "lastmod": "2026-09-29"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -46,6 +46,10 @@
   "/aviation/flight-plan/": {
     "hash": "33b4630823854f30",
     "lastmod": "2026-09-26"
+  },
+  "/aviation/flight-plan/nav-log/": {
+    "hash": "a6b6051f0ef292c6",
+    "lastmod": "2026-09-29"
   },
   "/aviation/ifr/": {
     "hash": "cd0c7cde212a887c",
@@ -128,7 +132,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "4eb9123dffe87220",
+    "hash": "c1b107d19d6f9c73",
     "lastmod": "2026-09-29"
   },
   "/disclaimer/": {
@@ -916,7 +920,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "bea5147a24761f37",
+    "hash": "849d6ff8a3fa10ef",
     "lastmod": "2026-09-29"
   },
   "/navigation/": {
@@ -1300,8 +1304,8 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "985ba47f2cfb5a76",
-    "lastmod": "2026-09-28"
+    "hash": "330dbffae9d5f1a0",
+    "lastmod": "2026-09-29"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -1488,7 +1492,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "835d819ecfba6e59",
+    "hash": "06d818347053603f",
     "lastmod": "2026-09-29"
   },
   "/workflows/": {
@@ -1536,7 +1540,7 @@
     "lastmod": "2026-09-25"
   },
   "/workflows/vfr-cross-country/": {
-    "hash": "95655d6287acd7b7",
-    "lastmod": "2026-09-26"
+    "hash": "f5d28321d02496f0",
+    "lastmod": "2026-09-29"
   }
 }

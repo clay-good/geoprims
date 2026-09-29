@@ -62,6 +62,7 @@ The first command runs at the repository root and builds the Wasm modules and ca
 | `test/worker.test.mjs` | The browser compute worker driven as the page drives it: every message gets exactly one envelope back |
 | `test/compute-cancel.test.mjs`, `test/browser/cancellation.test.mjs` | A stuck calculation cancels within 100 ms, another request survives the worker restart, and elapsed-time updates stop after cancellation; Chromium checks cancellation during a real H3 calculation and the replacement answer |
 | `test/browser/determinism.test.mjs` | Every live golden vector returns byte-identical JSON in Chromium, Firefox, WebKit, and Node, including tools that load assets |
+| `test/browser/mobile.test.mjs` | Every hero page at 320 px and at the 200% text equivalent in WebKit, including the no-overflow header and its reachable 48 × 48 px theme toggle |
 | `test/browser/egress.test.mjs` | Chromium visits every tool page with a unique sentinel input and captures all requests, including compute-worker fetches; an injected leaking fetch proves the detector works |
 | `test/browser/csp.test.mjs` | Runtime CSP and third-party request report for the 87 non-tool routes and both report-dialog states; an injected inline script is blocked, and the Turnstile script loads only after the dialog opens |
 | `test/browser/asset-recovery.test.mjs` | A corrupt service-worker geoid asset is rejected and evicted; retry fetches verified bytes, which a fresh worker can use offline |

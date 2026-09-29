@@ -37,6 +37,7 @@ test('hero pages reflow at 320 px in WebKit, and no control shrinks further', { 
   const routes = heroRoutes();
   assert.ok(routes.length > 25, `${routes.length} hero routes`);
   const scrolls = [];
+  const headerProblems = [];
   const small = new Map();
   for (const width of [320, 640]) {
     const context = await browser.newContext({ viewport: { width, height: 800 } });
@@ -62,15 +63,29 @@ test('hero pages reflow at 320 px in WebKit, and no control shrinks further', { 
             tiny.push(`${e.tagName.toLowerCase()}${e.className ? `.${String(e.className).trim().split(/\s+/)[0]}` : ''}`);
           }
         }
-        return { over: d.scrollWidth > d.clientWidth + 1 ? `${d.scrollWidth} > ${d.clientWidth}` : null, tiny };
+        const header = document.querySelector('header.site');
+        const toggle = header?.querySelector('[data-theme-toggle]');
+        const box = toggle?.getBoundingClientRect();
+        const headerProblem = !header || !box
+          ? 'header or theme toggle is missing'
+          : header.scrollWidth > header.clientWidth + 1
+            ? `header scrolls ${header.scrollWidth} > ${header.clientWidth}`
+            : box.left < 0 || box.right > innerWidth
+              ? `theme toggle lies outside 0–${innerWidth}: ${box.left}–${box.right}`
+              : box.width < 48 || box.height < 48
+                ? `theme toggle is ${box.width} × ${box.height}`
+                : null;
+        return { over: d.scrollWidth > d.clientWidth + 1 ? `${d.scrollWidth} > ${d.clientWidth}` : null, tiny, headerProblem };
       }, MEASURE);
       if (seen.over) scrolls.push(`${path} at ${width} px scrolls sideways: ${seen.over}`);
+      if (width === 320 && seen.headerProblem) headerProblems.push(`${path}: ${seen.headerProblem}`);
       for (const k of new Set(seen.tiny)) small.set(k, (small.get(k) ?? 0) + 1);
     }
     await context.close();
   }
   t.diagnostic(`controls under 48 x 48: ${[...small.keys()].sort().join(', ') || 'none'}`);
   assert.deepEqual(scrolls, [], scrolls.join('\n'));
+  assert.deepEqual(headerProblems, [], headerProblems.join('\n'));
   assert.ok(
     small.size <= SMALL_CONTROLS,
     `${small.size} kinds of control are under 48 x 48, up from ${SMALL_CONTROLS}: ${[...small.keys()].join(', ')}`,

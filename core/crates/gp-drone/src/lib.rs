@@ -21,8 +21,8 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Comparison, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot,
-    ToolDef,
+    Assumption, Comparison, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry,
+    Related, Slot, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use libm::hypot;
@@ -150,6 +150,20 @@ const CAMERA: [Field; 7] = [
 
 /// Diagonal of a 36 × 24 mm full frame.
 const FULL_FRAME_DIAGONAL: f64 = 43.266_615_305_567_87;
+const FULL_FRAME_ASSUMPTIONS: &[Assumption] = &[
+    Assumption {
+        name: "35 mm full-frame width used to derive a crop factor",
+        value: "36",
+        unit: "mm",
+        source: "wolf-photogrammetry",
+    },
+    Assumption {
+        name: "35 mm full-frame height used to derive a crop factor",
+        value: "24",
+        unit: "mm",
+        source: "wolf-photogrammetry",
+    },
+];
 
 /// Camera geometry in meters and pixels.
 struct Camera {
@@ -351,6 +365,7 @@ pub static GSD: ToolDef = ToolDef {
         kind: "vs-typical-range",
         text: "{gsd}/px: {if gsd > 5}coarser than{else}{if gsd < 1}finer than{else}within{/if}{/if} typical mapping work (1–5 cm/px). Basis: Ruiz et al. (2013), Table 2.",
     },
+    assumptions: FULL_FRAME_ASSUMPTIONS,
     limits: &[("batchRows", 10_000)],
     slots: &[
         Slot::new("height", &["height", "agl", "altitude", "alt", "flying"]).range(1.0, 10_000.0),
@@ -517,6 +532,16 @@ pub static ALTITUDE_FOR_GSD: ToolDef = ToolDef {
         },
     ],
     sentence: "Fly at {height} above ground for that GSD.{warn ABOVE_ALTITUDE_CEILING} That is above your altitude ceiling.{/warn}",
+    assumptions: &[
+        FULL_FRAME_ASSUMPTIONS[0],
+        FULL_FRAME_ASSUMPTIONS[1],
+        Assumption {
+            name: "Default altitude ceiling when none is given",
+            value: "400",
+            unit: "ft",
+            source: "cfr-14-107",
+        },
+    ],
     limits: &[("batchRows", 10_000)],
     run: run_altitude_for_gsd,
     // A target GSD is centimetres per pixel, so "gsd 120 m" is a flight
@@ -792,6 +817,34 @@ pub static TRIGGER: ToolDef = ToolDef {
         },
     ],
     sentence: "Take a photo every {trigger_interval} ({trigger_distance}) and space flight lines {line_spacing} apart.{warn TRIGGER_TOO_FAST} The camera cannot shoot that fast: slow to {max_groundspeed}.{/warn}",
+    assumptions: &[
+        FULL_FRAME_ASSUMPTIONS[0],
+        FULL_FRAME_ASSUMPTIONS[1],
+        Assumption {
+            name: "General preset front overlap",
+            value: "75",
+            unit: "%",
+            source: "pix4d-overlap",
+        },
+        Assumption {
+            name: "General preset side overlap",
+            value: "60",
+            unit: "%",
+            source: "pix4d-overlap",
+        },
+        Assumption {
+            name: "Forest preset front overlap",
+            value: "85",
+            unit: "%",
+            source: "pix4d-overlap",
+        },
+        Assumption {
+            name: "Forest preset side overlap",
+            value: "85",
+            unit: "%",
+            source: "pix4d-overlap",
+        },
+    ],
     limits: &[("batchRows", 10_000)],
     run: run_trigger,
     ..ToolDef::BLANK

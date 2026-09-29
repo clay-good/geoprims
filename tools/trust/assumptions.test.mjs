@@ -60,6 +60,9 @@ const MUST_DECLARE = [
   'time.scale.gps-to-utc',
   'aviation.atmosphere.humidity',
   'raster.scale.reflectance',
+  'drone.photogrammetry.gsd',
+  'drone.photogrammetry.altitude-for-gsd',
+  'drone.photogrammetry.trigger',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -79,6 +82,23 @@ test('the humidity model is declared too, since it changes the answer', () => {
   const magnus = (t['x-assumptions'] ?? []).filter((a) => a.source === 'alduchov');
   assert.equal(magnus.length, 3, 'the Magnus coefficients are not all declared');
   assert.deepEqual(magnus.map((a) => a.value).sort(), ['17.625', '243.04', '6.1094'].sort());
+});
+
+test('the photogrammetry defaults name their published values', () => {
+  const gsd = byId('drone.photogrammetry.gsd')['x-assumptions'];
+  assert.deepEqual(gsd.map(({ value, unit, source }) => [value, unit, source]), [
+    ['36', 'mm', 'wolf-photogrammetry'],
+    ['24', 'mm', 'wolf-photogrammetry'],
+  ]);
+
+  const altitude = byId('drone.photogrammetry.altitude-for-gsd')['x-assumptions'];
+  assert.ok(altitude.some((a) => a.value === '400' && a.unit === 'ft' && a.source === 'cfr-14-107'));
+
+  const trigger = byId('drone.photogrammetry.trigger')['x-assumptions'];
+  assert.deepEqual(
+    trigger.filter((a) => a.source === 'pix4d-overlap').map((a) => [a.value, a.unit]),
+    [['75', '%'], ['60', '%'], ['85', '%'], ['85', '%']],
+  );
 });
 
 test('every tool that rests on constants declares them', () => {

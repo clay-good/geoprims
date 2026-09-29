@@ -5,6 +5,17 @@
       "date": "2026-09-28",
       "kind": "changed",
       "tools": [
+        "drone.photogrammetry.gsd",
+        "drone.photogrammetry.altitude-for-gsd",
+        "drone.photogrammetry.trigger"
+      ],
+      "vectors": [],
+      "summary": "The GSD, height-for-GSD, and trigger tools now show the sourced camera and mission defaults used when the caller omits them: the 36 × 24 mm full-frame basis, the 400 ft altitude ceiling, and Pix4D's general and forest overlap presets. Calculated results are unchanged."
+    },
+    {
+      "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
         "drone.photogrammetry.gsd"
       ],
       "vectors": [],

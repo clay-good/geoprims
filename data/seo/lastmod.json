@@ -140,7 +140,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "a099fdb076db90b1",
+    "hash": "4a0c81c3515620d3",
     "lastmod": "2026-09-29"
   },
   "/disclaimer/": {
@@ -176,7 +176,7 @@
     "lastmod": "2026-09-26"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
-    "hash": "d213a70f5174f584",
+    "hash": "74fdb7cf19d325ae",
     "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/asprs-accuracy/": {
@@ -188,7 +188,7 @@
     "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/gsd/": {
-    "hash": "dad286f2cecd65ea",
+    "hash": "921d16b2202d7bad",
     "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/image-count/": {
@@ -200,7 +200,7 @@
     "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/trigger/": {
-    "hash": "6253dcd2aacc41ce",
+    "hash": "ad74862ac64b2856",
     "lastmod": "2026-09-29"
   },
   "/drone/power/": {
@@ -1504,7 +1504,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "cb5bec6f395bc711",
+    "hash": "65c8e5bfad103332",
     "lastmod": "2026-09-29"
   },
   "/workflows/": {

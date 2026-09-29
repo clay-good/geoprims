@@ -917,6 +917,8 @@
       "definition": "The NOAA office that defines the US National Spatial Reference System: datums, geoid models, and state plane coordinates.",
       "source": "spcs83",
       "relatedTools": [
+        "geodesy.spcs.spcs2022-forward",
+        "geodesy.spcs.spcs2022-inverse",
         "geodesy.spcs.spcs83-forward",
         "geodesy.spcs.spcs83-inverse",
         "survey.gnss.opus-plan",

@@ -1009,8 +1009,8 @@
       ]
     },
     "geodesy.spcs": {
-      "summary": "State plane coordinates (SPCS83).",
-      "intro": "These tools convert between NAD 83 latitude and longitude and State Plane Coordinate System of 1983 eastings and northings, and find which zone covers a place. US surveyors, engineers, and county GIS staff use them for deeds, plats, and project control. Start with the zone lookup, then convert. The costly pitfall is the foot: US survey feet and international feet differ by 2 parts per million, which is feet on a state plane coordinate.",
+      "summary": "State plane coordinates in SPCS83 and the SPCS2022 beta.",
+      "intro": "These tools convert latitude and longitude to State Plane coordinates and back. SPCS83 uses NAD 83 and legal state units. The SPCS2022 beta uses the zone's named 2022 terrestrial reference frame and meters or international feet. US surveyors, engineers, and county GIS staff use State Plane coordinates for deeds, plats, and project control. Start with the SPCS83 zone lookup for current work. Confirm both the zone and reference frame before testing SPCS2022.",
       "tasks": [
         {
           "want": "find the state plane zone for a place",
@@ -1023,6 +1023,13 @@
           "tools": [
             "spcs83-forward",
             "spcs83-inverse"
+          ]
+        },
+        {
+          "want": "test an SPCS2022 beta zone",
+          "tools": [
+            "spcs2022-forward",
+            "spcs2022-inverse"
           ]
         }
       ],

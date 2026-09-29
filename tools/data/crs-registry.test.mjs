@@ -58,6 +58,13 @@ test('all 953 SPCS2022 zones have definitions, bounds, frames, and beta status',
   }
 });
 
+test('the asset registry and calculation data agree on beta status and date', () => {
+  const assets = JSON.parse(readFileSync(join(root, 'assets/registry.json')));
+  const row = assets.assets.find((asset) => asset.id === 'spcs2022-beta');
+  assert.equal(row.status, spcs.source.status);
+  assert.equal(row.publishedAt, spcs.source.publishedAt);
+});
+
 test('the registry stays within its on-demand asset budget', () => {
   assert.ok(statSync(registryPath).size <= 1_500_000, `${statSync(registryPath).size} exceeds 1.5 MB`);
 });

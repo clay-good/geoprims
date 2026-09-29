@@ -30,11 +30,26 @@ pub enum Proj {
         fe: f64,
         fn_: f64,
     },
+    Lcc1 {
+        lat0: f64,
+        lon0: f64,
+        k0: f64,
+        fe: f64,
+        fn_: f64,
+    },
     OmercA {
         latc: f64,
         lonc: f64,
         alpha: f64,
         gamma: f64,
+        k0: f64,
+        fe: f64,
+        fn_: f64,
+    },
+    OmercB {
+        latc: f64,
+        lonc: f64,
+        alpha: f64,
         k0: f64,
         fe: f64,
         fn_: f64,
@@ -74,6 +89,12 @@ fn omerc_a(latc: f64, lonc: f64, alpha: f64, gamma: f64, k0: f64, fe: f64, fn_: 
     )
 }
 
+fn omerc_b(latc: f64, lonc: f64, alpha: f64, k0: f64, fe: f64, fn_: f64) -> Hotine {
+    Hotine::new(
+        GRS80_A, GRS80_F, latc, lonc, alpha, alpha, k0, fe, fn_, true,
+    )
+}
+
 /// A Hotine zone's grid point, with convergence and scale from derivatives
 /// by Richardson-extrapolated central differences: steps of 1e-3° keep
 /// cancellation and the O(h⁴) truncation near 1e-9° (1e-6° steps lost 1e-7°
@@ -106,81 +127,138 @@ fn omerc_grid(p: &Hotine, lat: f64, lon: f64) -> Grid {
     }
 }
 
+fn omerc_b_grid(p: &Hotine, lat: f64, lon: f64) -> Grid {
+    let grid = p.forward(lat, lon);
+    Grid {
+        e: grid.e,
+        n: grid.n,
+        convergence: grid.convergence,
+        k: grid.k,
+    }
+}
+
+pub fn forward(proj: Proj, lat: f64, lon: f64) -> Grid {
+    match proj {
+        Proj::Tm {
+            lat0,
+            lon0,
+            k0,
+            fe,
+            fn_,
+        } => {
+            let g = TmGrid::new(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).forward(lat, lon);
+            Grid {
+                e: g.e,
+                n: g.n,
+                convergence: g.convergence,
+                k: g.k,
+            }
+        }
+        Proj::Lcc {
+            lat0,
+            lon0,
+            lat1,
+            lat2,
+            fe,
+            fn_,
+        } => {
+            let g =
+                Lcc::two_sp(GRS80_A, GRS80_F, lat0, lon0, lat1, lat2, fe, fn_).forward(lat, lon);
+            Grid {
+                e: g.e,
+                n: g.n,
+                convergence: g.convergence,
+                k: g.k,
+            }
+        }
+        Proj::Lcc1 {
+            lat0,
+            lon0,
+            k0,
+            fe,
+            fn_,
+        } => {
+            let g = Lcc::one_sp(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).forward(lat, lon);
+            Grid {
+                e: g.e,
+                n: g.n,
+                convergence: g.convergence,
+                k: g.k,
+            }
+        }
+        Proj::OmercA {
+            latc,
+            lonc,
+            alpha,
+            gamma,
+            k0,
+            fe,
+            fn_,
+        } => omerc_grid(&omerc_a(latc, lonc, alpha, gamma, k0, fe, fn_), lat, lon),
+        Proj::OmercB {
+            latc,
+            lonc,
+            alpha,
+            k0,
+            fe,
+            fn_,
+        } => omerc_b_grid(&omerc_b(latc, lonc, alpha, k0, fe, fn_), lat, lon),
+    }
+}
+
+/// (lat, lon) in degrees from easting and northing in meters.
+pub fn inverse(proj: Proj, e: f64, n: f64) -> (f64, f64) {
+    match proj {
+        Proj::Tm {
+            lat0,
+            lon0,
+            k0,
+            fe,
+            fn_,
+        } => TmGrid::new(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).inverse(e, n),
+        Proj::Lcc {
+            lat0,
+            lon0,
+            lat1,
+            lat2,
+            fe,
+            fn_,
+        } => Lcc::two_sp(GRS80_A, GRS80_F, lat0, lon0, lat1, lat2, fe, fn_).inverse(e, n),
+        Proj::Lcc1 {
+            lat0,
+            lon0,
+            k0,
+            fe,
+            fn_,
+        } => Lcc::one_sp(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).inverse(e, n),
+        Proj::OmercA {
+            latc,
+            lonc,
+            alpha,
+            gamma,
+            k0,
+            fe,
+            fn_,
+        } => omerc_a(latc, lonc, alpha, gamma, k0, fe, fn_).inverse(e, n),
+        Proj::OmercB {
+            latc,
+            lonc,
+            alpha,
+            k0,
+            fe,
+            fn_,
+        } => omerc_b(latc, lonc, alpha, k0, fe, fn_).inverse(e, n),
+    }
+}
+
 impl Zone {
     pub fn forward(&self, lat: f64, lon: f64) -> Grid {
-        match self.proj {
-            Proj::Tm {
-                lat0,
-                lon0,
-                k0,
-                fe,
-                fn_,
-            } => {
-                let g = TmGrid::new(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).forward(lat, lon);
-                Grid {
-                    e: g.e,
-                    n: g.n,
-                    convergence: g.convergence,
-                    k: g.k,
-                }
-            }
-            Proj::Lcc {
-                lat0,
-                lon0,
-                lat1,
-                lat2,
-                fe,
-                fn_,
-            } => {
-                let g = Lcc::two_sp(GRS80_A, GRS80_F, lat0, lon0, lat1, lat2, fe, fn_)
-                    .forward(lat, lon);
-                Grid {
-                    e: g.e,
-                    n: g.n,
-                    convergence: g.convergence,
-                    k: g.k,
-                }
-            }
-            Proj::OmercA {
-                latc,
-                lonc,
-                alpha,
-                gamma,
-                k0,
-                fe,
-                fn_,
-            } => omerc_grid(&omerc_a(latc, lonc, alpha, gamma, k0, fe, fn_), lat, lon),
-        }
+        forward(self.proj, lat, lon)
     }
 
     /// (lat, lon) in degrees from easting and northing in meters.
     pub fn inverse(&self, e: f64, n: f64) -> (f64, f64) {
-        match self.proj {
-            Proj::Tm {
-                lat0,
-                lon0,
-                k0,
-                fe,
-                fn_,
-            } => TmGrid::new(GRS80_A, GRS80_F, lat0, lon0, k0, fe, fn_).inverse(e, n),
-            Proj::Lcc {
-                lat0,
-                lon0,
-                lat1,
-                lat2,
-                fe,
-                fn_,
-            } => Lcc::two_sp(GRS80_A, GRS80_F, lat0, lon0, lat1, lat2, fe, fn_).inverse(e, n),
-            Proj::OmercA {
-                latc,
-                lonc,
-                alpha,
-                gamma,
-                k0,
-                fe,
-                fn_,
-            } => omerc_a(latc, lonc, alpha, gamma, k0, fe, fn_).inverse(e, n),
-        }
+        inverse(self.proj, e, n)
     }
 
     pub fn contains(&self, lat: f64, lon: f64) -> bool {

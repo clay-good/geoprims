@@ -45,6 +45,84 @@ fn warns(r: &Value, code: &str) -> bool {
         .is_some_and(|w| w.iter().any(|w| w["code"] == code))
 }
 
+fn load_spcs2022() {
+    gp_base::assets::put(
+        "spcs2022-beta@2026-06-01/spcs2022-beta.json",
+        include_bytes!("../../../../assets/data/spcs2022-beta/2026-06-01/spcs2022-beta.json"),
+    );
+}
+
+#[test]
+fn spcs2022_beta_runs_all_three_projections_and_labels_the_result() {
+    load_spcs2022();
+    let cases = [
+        ("001001", 27.34, -88.825, 1_716_431.051, 460_849.831),
+        ("002104", 26.7325, -96.1475, 783_775.648, 2_959_778.143),
+        ("021001", 58.3025, -134.42, 1_651_768.315, 1_173_833.896),
+    ];
+    for (zone, lat, lon, easting, northing) in cases {
+        let result = call(
+            "geodesy.spcs.spcs2022-forward",
+            &format!(r#"{{"lat":{lat},"lon":{lon},"zone":"{zone}"}}"#),
+        );
+        assert_eq!(result["ok"], true, "{result}");
+        assert!((result["result"]["easting"]["value"].as_f64().unwrap() - easting).abs() <= 0.001);
+        assert!(
+            (result["result"]["northing"]["value"].as_f64().unwrap() - northing).abs() <= 0.001
+        );
+        assert_eq!(result["result"]["status"], "beta");
+        assert_eq!(result["result"]["definition_date"], "2026-06-01");
+        assert!(warns(&result, "NON_OFFICIAL_DATUM"), "{result}");
+        let warning = result["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|warning| warning["code"] == "NON_OFFICIAL_DATUM")
+            .unwrap();
+        assert!(warning["message"].as_str().unwrap().contains("2026-06-01"));
+        assert_eq!(result["meta"]["assets"][0]["id"], "spcs2022-beta");
+    }
+
+    let inverse = call(
+        "geodesy.spcs.spcs2022-inverse",
+        r#"{"zone":"021001","easting":1651768.315,"northing":1173833.896}"#,
+    );
+    assert!((inverse["result"]["lat"]["value"].as_f64().unwrap() - 58.3025).abs() < 1e-8);
+    assert!((inverse["result"]["lon"]["value"].as_f64().unwrap() + 134.42).abs() < 1e-8);
+    assert!(warns(&inverse, "NON_OFFICIAL_DATUM"), "{inverse}");
+
+    let feet = call(
+        "geodesy.spcs.spcs2022-forward",
+        r#"{"lat":27.34,"lon":-88.825,"zone":"001001","unit":"ft"}"#,
+    );
+    assert_eq!(feet["result"]["easting"]["unit"], "ft", "{feet}");
+    let easting = feet["result"]["easting"]["value"].as_f64().unwrap();
+    let northing = feet["result"]["northing"]["value"].as_f64().unwrap();
+    assert!((easting - 5_631_335.469).abs() <= 0.002, "{feet}");
+    assert!((northing - 1_511_974.511).abs() <= 0.002, "{feet}");
+    let back = call(
+        "geodesy.spcs.spcs2022-inverse",
+        &format!(r#"{{"zone":"001001","easting":{easting},"northing":{northing},"unit":"ft"}}"#),
+    );
+    assert!((back["result"]["lat"]["value"].as_f64().unwrap() - 27.34).abs() < 1e-11);
+    assert!((back["result"]["lon"]["value"].as_f64().unwrap() + 88.825).abs() < 1e-11);
+}
+
+#[test]
+fn spcs2022_rejects_a_damaged_registry_asset() {
+    gp_base::assets::put(
+        "spcs2022-beta@2026-06-01/spcs2022-beta.json",
+        br#"{"source":{"status":"beta","publishedAt":"2026-06-01"},"zones":[]}"#,
+    );
+    let result = call(
+        "geodesy.spcs.spcs2022-forward",
+        r#"{"lat":27.34,"lon":-88.825,"zone":"001001"}"#,
+    );
+    assert_eq!(result["error"]["code"], "ASSET_INTEGRITY", "{result}");
+    assert_eq!(result["error"]["asset"]["key"], "spcs2022-beta.json");
+    load_spcs2022();
+}
+
 #[test]
 fn pennsylvania_south_in_us_survey_feet() {
     let r = call(

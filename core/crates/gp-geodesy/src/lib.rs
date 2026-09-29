@@ -8,6 +8,7 @@ pub mod gridref;
 pub mod magnetic;
 pub mod methods;
 pub mod spcs;
+pub mod spcs2022;
 
 use gp_base::ErrorCode;
 use gp_base::angle::wrap_lon;
@@ -2203,6 +2204,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::FORWARD,
     &spcs::INVERSE,
     &spcs::LOOKUP,
+    &spcs2022::FORWARD,
+    &spcs2022::INVERSE,
     &spcs::ARC_TO_CHORD,
     &methods::WEB_MERCATOR_FORWARD,
     &methods::WEB_MERCATOR_INVERSE,

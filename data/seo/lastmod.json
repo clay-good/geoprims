@@ -1,15 +1,15 @@
 {
   "/": {
-    "hash": "ad14356299250db8",
-    "lastmod": "2026-09-26"
+    "hash": "29976fa16423af52",
+    "lastmod": "2026-09-28"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "24da424460b765ed",
-    "lastmod": "2026-09-24"
+    "hash": "60ca7f85a3ddc811",
+    "lastmod": "2026-09-28"
   },
   "/aviation/": {
     "hash": "5688f8bd5124411e",
@@ -128,8 +128,8 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "88d1f9126fd9d463",
-    "lastmod": "2026-09-25"
+    "hash": "4ffd9cd368d478ac",
+    "lastmod": "2026-09-28"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -208,8 +208,8 @@
     "lastmod": "2026-09-23"
   },
   "/geodesy/": {
-    "hash": "5841ce737688cd9b",
-    "lastmod": "2026-09-24"
+    "hash": "af11155dd78f0f89",
+    "lastmod": "2026-09-28"
   },
   "/geodesy/datum/": {
     "hash": "743eda4eec8711de",
@@ -340,20 +340,20 @@
     "lastmod": "2026-09-25"
   },
   "/geodesy/magnetic/": {
-    "hash": "9d3931c276f5f6a5",
-    "lastmod": "2026-09-26"
+    "hash": "9a97f537f0cfdfd3",
+    "lastmod": "2026-09-28"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "9ef04a29a90758e1",
-    "lastmod": "2026-09-24"
+    "hash": "6fb6a86cf2fc5d4f",
+    "lastmod": "2026-09-28"
   },
   "/geodesy/magnetic/grivation/": {
-    "hash": "9b999a4b24f2a2cf",
-    "lastmod": "2026-09-24"
+    "hash": "df43df4cc5877ba8",
+    "lastmod": "2026-09-28"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
-    "hash": "0445a000ddb766df",
-    "lastmod": "2026-09-25"
+    "hash": "6c93dee76ad9b81f",
+    "lastmod": "2026-09-28"
   },
   "/geodesy/parse/": {
     "hash": "795c05026ac162e1",
@@ -472,12 +472,20 @@
     "lastmod": "2026-09-24"
   },
   "/geodesy/spcs/": {
-    "hash": "630874984ec9999e",
-    "lastmod": "2026-09-25"
+    "hash": "f6729c36da111af7",
+    "lastmod": "2026-09-28"
+  },
+  "/geodesy/spcs/spcs2022-forward/": {
+    "hash": "0fa7b7777913622c",
+    "lastmod": "2026-09-28"
+  },
+  "/geodesy/spcs/spcs2022-inverse/": {
+    "hash": "89b2e0da9567c1ec",
+    "lastmod": "2026-09-28"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "acaa8f57e050c43b",
-    "lastmod": "2026-09-24"
+    "hash": "3d727508901b235d",
+    "lastmod": "2026-09-28"
   },
   "/geodesy/spcs/spcs83-inverse/": {
     "hash": "05072c5d4a0fcd0c",
@@ -876,8 +884,8 @@
     "lastmod": "2026-09-25"
   },
   "/learn/true-vs-magnetic-north/": {
-    "hash": "d5867dc68e0a3c62",
-    "lastmod": "2026-09-23"
+    "hash": "7b908d690c2ead49",
+    "lastmod": "2026-09-28"
   },
   "/learn/utm-coordinates/": {
     "hash": "f71df334715a2932",
@@ -904,12 +912,12 @@
     "lastmod": "2026-09-23"
   },
   "/licenses/": {
-    "hash": "31e7f2390141bc4e",
-    "lastmod": "2026-09-23"
+    "hash": "f3607584f5b4ca09",
+    "lastmod": "2026-09-28"
   },
   "/methodology/": {
-    "hash": "6ca44bb7d64f195d",
-    "lastmod": "2026-09-26"
+    "hash": "a2dc26cda8378ec7",
+    "lastmod": "2026-09-28"
   },
   "/navigation/": {
     "hash": "44ca7ff9080557c8",
@@ -1064,8 +1072,8 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "fd0bd530ac6a7452",
-    "lastmod": "2026-09-25"
+    "hash": "d0baccf2e2ccb800",
+    "lastmod": "2026-09-28"
   },
   "/raster/": {
     "hash": "9801ff90b33e7ac9",
@@ -1148,8 +1156,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "f62a8c3a225b72c1",
-    "lastmod": "2026-09-26"
+    "hash": "e90a1e32e2766554",
+    "lastmod": "2026-09-28"
   },
   "/survey/": {
     "hash": "6648d2af3de92e59",
@@ -1292,8 +1300,8 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "45e2f0110bf8efc1",
-    "lastmod": "2026-09-26"
+    "hash": "985ba47f2cfb5a76",
+    "lastmod": "2026-09-28"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -1480,8 +1488,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4f9a321145f236c7",
-    "lastmod": "2026-09-26"
+    "hash": "ed127671fd0490ad",
+    "lastmod": "2026-09-28"
   },
   "/workflows/": {
     "hash": "bf26d30960e69c16",
@@ -1504,8 +1512,8 @@
     "lastmod": "2026-09-25"
   },
   "/workflows/ifr-approach-brief/": {
-    "hash": "440a05b5c9fef37c",
-    "lastmod": "2026-09-25"
+    "hash": "c2297807d993e617",
+    "lastmod": "2026-09-28"
   },
   "/workflows/index-to-area/": {
     "hash": "e13a19d8157be53f",

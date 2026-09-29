@@ -12,6 +12,7 @@ const EPSG_VERSION = 'v13.102';
 const NGS_INPUTS = {
   definitions: { bytes: 632927, sha256: 'f222dac669503c8e25eb41d477bbb129b813b894b43e7d012effb9dc00bbc06a' },
   bounds: { bytes: 654390, sha256: '040f9d5a6e4af2587cb8306d05829a0efefd17a482b37f55678e4ea861f48b66' },
+  coordinates: { bytes: 810931, sha256: '90ed9bff3d2395f146e6533d7805e234e736193d09906372852df40abaf457a3' },
 };
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -22,6 +23,13 @@ export function angle(value) {
   if (!match) throw new Error(`invalid NGS angle: ${value}`);
   const result = Number(match[1]) + Number(match[2]) / 60 + Number(match[3] ?? 0) / 3600;
   return 'SW'.includes(match[4]) ? -result : result;
+}
+
+function signedAngle(value) {
+  const match = String(value).trim().match(/^([+-]?)(\d+)°(\d+)'(\d+(?:\.\d+)?)"$/);
+  if (!match) throw new Error(`invalid signed NGS angle: ${value}`);
+  const result = Number(match[2]) + Number(match[3]) / 60 + Number(match[4]) / 3600;
+  return match[1] === '-' ? -result : result;
 }
 
 export function normalizeSpcs2022(definitions, bounds) {
@@ -114,10 +122,79 @@ function writeJson(path, value) {
   console.error(`wrote ${path} (${bytes.length} bytes, ${sha256(bytes)})`);
 }
 
+function writeChecks(path, rows) {
+  if (rows.length !== 953 || new Set(rows.map((row) => row['Zone code'])).size !== 953) {
+    throw new Error(`expected 953 unique SPCS2022 checks, got ${rows.length}`);
+  }
+  const lines = ['code,lat,lon,easting,northing,scale,convergence'];
+  for (const row of rows.sort((a, b) => a['Zone code'].localeCompare(b['Zone code']))) {
+    lines.push([
+      row['Zone code'], number(row['Latitude (deg)']), number(row['Longitude west (deg)']),
+      number(row['Easting (m)']), number(row['Northing (m)']), number(row['Point scale factor']),
+      signedAngle(row['Convergence angle']),
+    ].join(','));
+  }
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${lines.join('\n')}\n`);
+  const bytes = readFileSync(path);
+  console.error(`wrote ${path} (${bytes.length} bytes, ${sha256(bytes)})`);
+}
+
+function wrapLongitude(value) {
+  return ((value + 180) % 360 + 360) % 360 - 180;
+}
+
+function writeVectors(path, rows, inverse) {
+  const picked = Array.from({ length: 20 }, (_, index) => rows[Math.round(index * (rows.length - 1) / 19)]);
+  const vectors = picked.map((row, index) => {
+    const code = row['Zone code'];
+    const lat = number(row['Latitude (deg)']);
+    const lon = wrapLongitude(number(row['Longitude west (deg)']));
+    const easting = number(row['Easting (m)']);
+    const northing = number(row['Northing (m)']);
+    return JSON.stringify({
+      id: `v${String(index + 1).padStart(3, '0')}`,
+      input: inverse ? { zone: code, easting, northing } : { lat, lon, zone: code },
+      expect: inverse ? {
+        ok: true,
+        'result.lat.value': lat,
+        'result.lon.value': lon,
+        'result.zone_code': code,
+        'result.status': 'beta',
+        'meta.warnings.*.code': 'NON_OFFICIAL_DATUM',
+      } : {
+        ok: true,
+        'result.easting.value': easting,
+        'result.northing.value': northing,
+        'result.scale_factor': number(row['Point scale factor']),
+        'result.convergence.value': signedAngle(row['Convergence angle']),
+        'result.zone_code': code,
+        'result.status': 'beta',
+        'meta.warnings.*.code': 'NON_OFFICIAL_DATUM',
+      },
+      source: 'NGS SPCS2022 Example Coordinates and Distortion Values',
+      sourceVersion: 'beta, 2026-06-01',
+      tolerance: inverse ? {
+        'result.lat.value': { abs: 1e-8 },
+        'result.lon.value': { abs: 1e-8 },
+      } : {
+        'result.easting.value': { abs: 0.001 },
+        'result.northing.value': { abs: 0.001 },
+        'result.scale_factor': { abs: 2.1e-9 },
+        'result.convergence.value': { abs: 2.78e-6 },
+      },
+    });
+  });
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${vectors.join('\n')}\n`);
+  const bytes = readFileSync(path);
+  console.error(`wrote ${path} (${bytes.length} bytes, ${sha256(bytes)})`);
+}
+
 function main() {
-  const [definitionsPath, boundsPath] = process.argv.slice(2);
-  if (!definitionsPath || !boundsPath) {
-    throw new Error('usage: node tools/data/crs-registry.mjs zoneDefinitions.json zoneBounds.json');
+  const [definitionsPath, boundsPath, coordinatesPath] = process.argv.slice(2);
+  if (!definitionsPath || !boundsPath || !coordinatesPath) {
+    throw new Error('usage: node tools/data/crs-registry.mjs zoneDefinitions.json zoneBounds.json coordinates.json');
   }
   const zones = normalizeSpcs2022(
     verifyInput(definitionsPath, NGS_INPUTS.definitions),
@@ -138,6 +215,13 @@ function main() {
   };
   writeJson(join(ROOT, 'assets/data/spcs2022-beta', NGS_VERSION, 'spcs2022-beta.json'), spcsAsset);
   writeJson(join(ROOT, 'assets/data/crs-registry', VERSION, 'crs-registry.json'), registryAsset);
+  const coordinates = verifyInput(coordinatesPath, NGS_INPUTS.coordinates);
+  writeChecks(
+    join(ROOT, 'core/crates/gp-geodesy/tests/data/spcs2022_checks.csv'),
+    coordinates,
+  );
+  writeVectors(join(ROOT, 'core/vectors/geodesy.spcs.spcs2022-forward.jsonl'), coordinates, false);
+  writeVectors(join(ROOT, 'core/vectors/geodesy.spcs.spcs2022-inverse.jsonl'), coordinates, true);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();

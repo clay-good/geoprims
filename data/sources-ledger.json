@@ -600,7 +600,7 @@
       "validTo": null,
       "lastVerified": "2026-09-28",
       "verificationNote": "Checked on 2026-09-28: proj.db in PROJ 9.9.0 reports EPSG v13.102 dated 2026-08-27. The curated CRS registry includes full PROJJSON definitions from that database.",
-      "freeAccessUrl": "https://epsg.org/",
+      "freeAccessUrl": "https://epsg.org/search/by-name",
       "matchTerms": [
         "EPSG v13.102 CRS registry"
       ],

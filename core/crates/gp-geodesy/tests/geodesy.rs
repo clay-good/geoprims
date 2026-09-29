@@ -40,6 +40,10 @@ fn catalog_lint_examples_vectors() {
         "egm96-15@2009-08-29/egm96-15.pgm",
         include_bytes!("../../../../assets/data/egm96-15/2009-08-29/egm96-15.pgm"),
     );
+    gp_base::assets::put(
+        "spcs2022-beta@2026-06-01/spcs2022-beta.json",
+        include_bytes!("../../../../assets/data/spcs2022-beta/2026-06-01/spcs2022-beta.json"),
+    );
     for g in [
         "nad27_nad83_1986_conus",
         "nad27_nad83_1986_alaska",

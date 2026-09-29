@@ -655,7 +655,9 @@ fn run_lookup(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     Json::str(match z.proj {
                         spcs::Proj::Tm { .. } => "transverse Mercator",
                         spcs::Proj::Lcc { .. } => "Lambert conformal conic",
+                        spcs::Proj::Lcc1 { .. } => "Lambert conformal conic",
                         spcs::Proj::OmercA { .. } => "oblique Mercator",
+                        spcs::Proj::OmercB { .. } => "oblique Mercator",
                     }),
                 ),
                 (

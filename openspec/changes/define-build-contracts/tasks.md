@@ -5,7 +5,7 @@
 
 ## 2. Platform topology
 
-- [ ] 2.1 Configure the single Worker with static assets, `run_worker_first` for `/api/reports*`, D1 binding, secrets, cron, and observability off; verify that static requests never invoke the Worker and API requests do (fall back to a route-bound Worker if not)
+- [x] 2.1 Configure the single Worker with static assets, `run_worker_first` for `/api/reports*`, D1 binding, secrets, cron, and observability off; verify that static requests never invoke the Worker and API requests do (the permitted route-bound fallback is deployed: the production static-assets custom domain has no application entry point, while the report Worker owns only `geoprims.com/api/reports*`. It binds the reports D1 database, names both secrets, runs daily retention at 03:17 UTC, and disables observability and logpush. The topology gate reads both Wrangler configs, proves their routes do not overlap outside the API, and drives an API request through the Worker.)
 - [ ] 2.2 Configure R2 on `assets.geoprims.com` with CORS limited to the site origin; verify a cross-origin request from another origin is refused
 - [x] 2.3 Configure the enumerated CSP with build-computed script hashes and `inlineStylesheets: 'never'`; verify the header smoke test and a zero-violation CSP report in end-to-end runs (the header gate checks the enumerated policy and inline hashes on every built page. Playwright captures runtime CSP violations across all 205 tool pages, 87 other routes, and both paused and enabled report-dialog states; an injected inline script is blocked and reported, while the shipped pages and the allowed Turnstile load report zero violations)
 - [ ] 2.4 Disable Bot Fight Mode features and add the WAF rule; verify the no-cookie scenario

@@ -13,6 +13,7 @@ if (!existsSync(join(root, 'worker/src/catalog-tools.json'))) execFileSync('node
 const { default: worker, cleanup, CEILINGS } = await import('../src/index.mjs');
 const { LIMITS, validate } = await import('../src/report.mjs');
 const MIGRATION = readFileSync(join(root, 'worker/migrations/0001_problem_reports.sql'), 'utf8');
+const jsonc = (path) => JSON.parse(readFileSync(path, 'utf8').replace(/^\s*\/\/.*$/gm, ''));
 
 /** A minimal D1: prepare/bind/first/all/run and an atomic batch. */
 function d1() {
@@ -248,8 +249,7 @@ test('security headers on every response, and no cookies', async () => {
 });
 
 test('wrangler config keeps logging off, and reporting on only after the launch checklist', () => {
-  const text = readFileSync(join(root, 'worker/wrangler.jsonc'), 'utf8').replace(/^\s*\/\/.*$/gm, '');
-  const cfg = JSON.parse(text);
+  const cfg = jsonc(join(root, 'worker/wrangler.jsonc'));
   assert.equal(cfg.observability.enabled, false);
   assert.equal(cfg.observability.logs.enabled, false);
   assert.equal(cfg.observability.logs.invocation_logs, false);
@@ -263,6 +263,32 @@ test('wrangler config keeps logging off, and reporting on only after the launch 
     for (const r of rows) assert.ok(r.split('|')[3].trim(), `no recorded result: ${r}`);
   }
   assert.deepEqual(cfg.routes.map((r) => r.pattern), ['geoprims.com/api/reports*']);
+});
+
+test('production routes static assets around the report Worker and only the report API through it', async () => {
+  const site = jsonc(join(root, 'apps/web/wrangler.production.jsonc'));
+  const reports = jsonc(join(root, 'worker/wrangler.jsonc'));
+  assert.equal(site.main, undefined, 'the production static deployment runs no application code');
+  assert.deepEqual(site.routes, [{ pattern: 'geoprims.com', custom_domain: true }]);
+  assert.equal(site.assets.directory, './dist');
+  assert.equal(site.observability.enabled, false);
+
+  assert.equal(reports.main, 'src/index.mjs');
+  assert.deepEqual(reports.routes, [{ pattern: 'geoprims.com/api/reports*', zone_name: 'geoprims.com' }]);
+  assert.deepEqual(reports.d1_databases.map(({ binding, database_name, migrations_dir }) => ({ binding, database_name, migrations_dir })), [
+    { binding: 'DB', database_name: 'geoprims-reports', migrations_dir: 'migrations' },
+  ]);
+  assert.deepEqual(reports.triggers.crons, ['17 3 * * *']);
+  assert.equal(reports.observability.enabled, false);
+  const setup = readFileSync(join(root, 'worker/README.md'), 'utf8');
+  for (const secret of ['TURNSTILE_SECRET', 'REPORTER_KEY_SECRET']) {
+    assert.match(setup, new RegExp(`wrangler secret put ${secret}`), `${secret} setup is documented`);
+  }
+
+  const reached = await worker.fetch(new Request('https://geoprims.com/api/reports/config'), env());
+  assert.equal(reached.status, 200, 'an API route reaches the report Worker');
+  const staticRequest = await worker.fetch(new Request('https://geoprims.com/geodesy/'), env());
+  assert.equal(staticRequest.status, 404, 'the report Worker would reject a static path if routing regressed');
 });
 
 test('the migration is generated from the limits file', () => {

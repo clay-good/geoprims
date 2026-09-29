@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 import { buildLayers, mapsTool } from '../src/lib/map/layers.js';
+import { unwrap } from '../src/lib/map/projection.js';
 import { DIAGRAM_TOOLS, diagram } from '../src/lib/diagrams.js';
 
 const root = join(new URL('..', import.meta.url).pathname, '../..');
@@ -99,8 +100,9 @@ test('every workflow’s visual draws from its example', async () => {
   assert.ok(workflows.length >= 9);
 });
 
-test('an MGRS square draws as its grid outline, matching the decoded corner, near a zone edge', async () => {
-  // 40° N, just west of 78° W: the east edge of UTM zone 17.
+test('MGRS squares draw whole across UTM zone edges and the antimeridian', async () => {
+  // 40° N, just west of 78° W: this 1 km grid square crosses from UTM zone 17
+  // into zone 18. Its outline still belongs to zone 17's projected grid.
   const fwd = catalog.tools.find((t) => t.id === 'geodesy.grid-ref.mgrs-forward');
   const args = { lat: 40, lon: -78.00005, precision: '1km' };
   const r = await invoke(fwd.id, args);
@@ -118,6 +120,25 @@ test('an MGRS square draws as its grid outline, matching the decoded corner, nea
   const lats = square.rings[0].map((p) => p[1]);
   const lons = square.rings[0].map((p) => p[0]);
   assert.ok(Math.min(...lats) <= 40 && 40 <= Math.max(...lats) && Math.min(...lons) <= args.lon && args.lon <= Math.max(...lons));
+  assert.ok(Math.min(...lons) < -78 && Math.max(...lons) > -78, 'the square was clipped at the zone 17/18 boundary');
   // The inverse draws the same outline around its center.
   assert.deepEqual(inv.result.square, r.result.square);
+
+  // The 100 km square 60NZF crosses the antimeridian. Wrapped longitudes must
+  // remain one short continuous ring, rather than drawing across the world.
+  const dateline = await invoke('geodesy.grid-ref.mgrs-inverse', { mgrs: '60NZF' });
+  assert.ok(dateline.ok, JSON.stringify(dateline.error));
+  const dlLayers = await buildLayers(
+    catalog.tools.find((t) => t.id === 'geodesy.grid-ref.mgrs-inverse'),
+    { mgrs: '60NZF' },
+    dateline,
+    async () => null,
+    cells,
+  );
+  const dlSquare = dlLayers.find((l) => l.kind === 'polygon' && l.role === 'result');
+  assert.ok(dlSquare, 'the antimeridian square is drawn');
+  const wrapped = dlSquare.rings[0].map(([lon]) => lon);
+  assert.ok(wrapped.some((lon) => lon < -179) && wrapped.some((lon) => lon > 179), 'the square does not cross the antimeridian');
+  const continuous = unwrap(dlSquare.rings[0]).map(([lon]) => lon);
+  assert.ok(Math.max(...continuous) - Math.min(...continuous) < 2, 'the square spans the world instead of crossing the antimeridian');
 });

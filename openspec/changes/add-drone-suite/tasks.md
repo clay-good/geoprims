@@ -41,4 +41,4 @@
 
 - [ ] 5.1 Register all 42 operations with alias slugs and aliases (GSD calculator, overlap calculator, drone flight time); verify catalog counts
 - [ ] 5.2 Write docs per tool and the "Plan a photogrammetry mission" guide; verify the guide chain end to end
-- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-24: `drone.mission.survey-grid` promoted, its published counts checked against Penn State GEOG 892 and King Saud University SE 321 and on geographiclib arc lengths at 28 vectors)
+- [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-28: `drone.photogrammetry.gcp-plan` promoted with the ASPRS Edition 2 Annex C.3 worked example, all Table C.1 area bands, split land cover, accuracy-class branches, and independent point-placement invariants across 20 vectors. Earlier: `drone.mission.survey-grid`, with published counts from Penn State GEOG 892 and King Saud University SE 321 and GeographicLib arc lengths across 28 vectors)

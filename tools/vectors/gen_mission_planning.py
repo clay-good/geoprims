@@ -266,6 +266,62 @@ def gcp_vectors():
     ring = square(35.0, -100.0, 52_000)
     vecs.append({"input": {"area": [{"lat": round(x, 7), "lon": round(y, 7)} for x, y in ring]}, "expect": {"ok": False, "error.code": "OUT_OF_DOMAIN"},
                  "source": f"{src}: Table C.1 ends at 2,500 km2", "sourceVersion": ver})
+
+    # Cover every table band, both accuracy-class branches, and split land cover.
+    more = [
+        (32.0, -110.0, 5, 0, 5, 10, "a 25 km2 site with horizontal and vertical classes"),
+        (45.0, -93.0, 10, 0, None, 12, "a 100 km2 elevation-only site"),
+        (-33.0, 18.0, 15, 0, 7.5, None, "a 225 km2 planimetric site"),
+        (52.0, 0.0, 26, 0, 10, 20, "about 675 km2"),
+        (10.0, 120.0, 30, 0, 8, 15, "about 900 km2"),
+        (-20.0, 130.0, 34, 0, 12, 24, "about 1,150 km2"),
+        (60.0, 10.0, 37, 0, 15, 30, "about 1,370 km2"),
+        (0.0, -75.0, 40, 0, 20, 40, "about 1,600 km2"),
+        (25.0, 55.0, 43, 0, 25, 50, "about 1,850 km2"),
+        (-35.0, 149.0, 46, 0, 30, 60, "about 2,120 km2"),
+        (42.0, -72.0, 48, 0, 40, 80, "about 2,300 km2"),
+        (35.0, -100.0, 30, 30, 10, 20, "a 30 percent vegetated site"),
+        (35.0, -100.0, 40, 50, 10, 20, "a site split evenly between open ground and vegetation"),
+    ]
+    for lat, lon, side_km, veg, h_cm, v_cm, note in more:
+        ring = square(lat, lon, side_km * 1000)
+        a = planimeter(ring) / 1e6
+        open_n = table_c1(a * (1 - veg / 100))
+        veg_n = table_c1(a * veg / 100) if veg else None
+        assert open_n is not None and (veg_n is not None if veg else True)
+        inp = {"area": [{"lat": x, "lon": y} for x, y in ring]}
+        if veg:
+            inp["vegetated"] = veg
+        if h_cm is not None:
+            inp["horizontal_class"] = f"{h_cm} cm"
+        if v_cm is not None:
+            inp["vertical_class"] = f"{v_cm} cm"
+        exp = {
+            "result.checkpoints": float(open_n + (veg_n or 0)),
+            "result.checkpoints_open": float(open_n),
+            "result.area_size.value": a,
+            "ok": True,
+        }
+        if veg_n is not None:
+            exp["result.checkpoints_vegetated"] = float(veg_n)
+        if h_cm is not None:
+            exp["result.gcp_rmse_h.value"] = h_cm / 2
+            exp["result.checkpoint_rmse_h.value"] = h_cm / 2
+            exp["result.gcp_rmse_v.value"] = v_cm / 2 if v_cm is not None else h_cm
+        elif v_cm is not None:
+            exp["result.gcp_rmse_v.value"] = v_cm / 2
+        if v_cm is not None:
+            exp["result.checkpoint_rmse_v.value"] = v_cm / 2
+        vecs.append({
+            "input": inp,
+            "expect": exp,
+            "source": f"{src}: {note}",
+            "sourceVersion": ver,
+            "tolerance": {
+                **tol([k for k in exp if isinstance(exp[k], float) and "area" not in k], 0, 1e-9),
+                "result.area_size.value": {"rel": 1e-6, "abs": 1e-9},
+            },
+        })
     return vecs
 
 

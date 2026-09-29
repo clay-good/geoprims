@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f56f64b0b5dbef2f",
+    "hash": "872e07924863952d",
     "lastmod": "2026-09-29"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "b6b82e41b0d83347",
+    "hash": "2f661a493300b091",
     "lastmod": "2026-09-29"
   },
   "/aviation/": {
@@ -140,7 +140,7 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "fb6945f1e1269902",
+    "hash": "7c1bc11e358037fe",
     "lastmod": "2026-09-29"
   },
   "/disclaimer/": {
@@ -182,6 +182,10 @@
   "/drone/photogrammetry/asprs-accuracy/": {
     "hash": "59dc369c930fee88",
     "lastmod": "2026-09-26"
+  },
+  "/drone/photogrammetry/gcp-plan/": {
+    "hash": "d71efba71e9b5cab",
+    "lastmod": "2026-09-29"
   },
   "/drone/photogrammetry/gsd/": {
     "hash": "8dffeef030de940e",
@@ -928,7 +932,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "fae950a5f7b8cf5f",
+    "hash": "140f52d148f79a66",
     "lastmod": "2026-09-29"
   },
   "/navigation/": {
@@ -1312,7 +1316,7 @@
     "lastmod": "2026-09-23"
   },
   "/tools/": {
-    "hash": "45a2032ac6257b30",
+    "hash": "a5bd92c4b9ba8721",
     "lastmod": "2026-09-29"
   },
   "/units/": {
@@ -1500,7 +1504,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b0c358436f7658cf",
+    "hash": "f1b029cd64650e04",
     "lastmod": "2026-09-29"
   },
   "/workflows/": {

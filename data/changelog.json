@@ -5,6 +5,15 @@
       "date": "2026-09-28",
       "kind": "changed",
       "tools": [
+        "drone.photogrammetry.gcp-plan"
+      ],
+      "vectors": [],
+      "summary": "The GCP and checkpoint planner is now stable. Its 20 golden vectors cover every ASPRS Table C.1 area band, open and vegetated land, horizontal and vertical accuracy classes, the standard's published 1,500 km² example, and the table's upper limit. No calculated results changed."
+    },
+    {
+      "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
         "aviation.performance.etp-pnr"
       ],
       "vectors": [],

@@ -40,10 +40,10 @@ The area and layout are on a local transverse Mercator plane, true to about 1e-7
 
 ## Differential tests
 
-- `tools/vectors/gen_mission_planning.py`: Table C.1 typed from the standard, with areas from GeographicLib's Planimeter (geodesic polygon area) for squares of about 16 ha, 400, 600, 1,100, and 2,400 km², and the C.3 case; each asserted to sit at least 2 km² inside its table row; and a 2,700 km² square refused.
+- `tools/vectors/gen_mission_planning.py`: Table C.1 typed from the standard, with areas from GeographicLib's Planimeter (geodesic polygon area) across every table band, the C.3 split-land-cover case, horizontal-only, vertical-only, and combined accuracy classes; and a 2,700 km² square refused.
 - `core/crates/gp-drone/tests/planning.rs` `gcp_table_c1_rows`: every row boundary of Table C.1 (500, 501, 750, 751, … 2,500) and the refusal past it.
 
 ## Invariants
 
-- `gcp_points_inside_an_l_shape`: on an L-shaped area, with no grid, a 60 m grid, and a 25 m grid, every ground control point and all 30 checkpoints fall inside the L by a ray test written apart from the core's, and none in the notch; the test counts the points it checked.
-- `gcp_holes_are_outside`: no point falls in a hole.
+- `core/crates/gp-drone/tests/planning.rs` `gcp_points_inside_an_l_shape`: on an L-shaped area, with no grid, a 60 m grid, and a 25 m grid, every ground control point and all 30 checkpoints fall inside the L by a ray test written apart from the core's, and none in the notch; the test counts the points it checked.
+- `core/crates/gp-drone/tests/planning.rs` `gcp_holes_are_outside`: no point falls in a hole.

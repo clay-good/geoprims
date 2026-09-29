@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Golden vectors for the geomagnetism tools (core/vectors/geodesy.magnetic.*.jsonl).
 
-WMM2025 expectations are the NCEI test values (WMM2025_TestValues.txt, shipped
-with the coefficients). IGRF-14 expectations come from ppigrf 2.1 (an
+WMM2025 and WMMHR2025 expectations are the NCEI test values shipped with
+their coefficients. IGRF-14 expectations come from ppigrf 2.1 (an
 independent pure-Python IGRF), evaluated on January 1 of coefficient epochs,
 where its calendar-time interpolation and IGRF's decimal-year interpolation
 agree exactly. Needs `ppigrf` in a scratch virtualenv. Rerunning must
@@ -15,8 +15,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TEST_VALUES = ROOT / "core/crates/gp-geodesy/tests/data/WMM2025_TestValues.txt"
+WMMHR_TEST_VALUES = ROOT / "core/crates/gp-geodesy/tests/data/WMMHR2025_TEST_VALUES.txt"
 WMM_SRC = "NCEI WMM2025 test values (WMM2025_TestValues.txt, released with the WMM2025 coefficients)"
 WMM_VER = "WMM2025 (2024-11-13)"
+WMMHR_SRC = "NCEI WMMHR2025 test values (WMMHR2025_TEST_VALUES.txt, released with the WMMHR2025 coefficients)"
+WMMHR_VER = "WMMHR2025 (2024-11-13)"
 IGRF_SRC = "ppigrf 2.1.0 (independent pure-Python IGRF-14 synthesis), on January 1 of coefficient epochs (tools/vectors/gen_magnetic.py)"
 IGRF_VER = "IGRF-14 (2024-12)"
 
@@ -41,6 +44,29 @@ def wmm_vectors(offset=0, start=1):
                "result.horizontal_intensity": {"abs": 0.001}, "result.total_intensity": {"abs": 0.001}}
         out.append(vec(i, inp, exp, tol, WMM_SRC, WMM_VER))
     return out
+
+
+def wmmhr_vectors(start):
+    rows = [l.split() for l in WMMHR_TEST_VALUES.read_text().splitlines() if l.strip() and not l.startswith("#")]
+    out = []
+    # One official point at each test latitude exercises the on-demand degree-133
+    # asset across the northern polar, equatorial, and southern polar regions.
+    for i, r in enumerate(rows[:3], start):
+        v = list(map(float, r))
+        inp = {"lat": v[2], "lon": v[3], "height": f"{r[1]} km", "date": r[0], "model": "wmmhr2025"}
+        exp = {"result.declination.value": v[10], "result.inclination.value": v[9],
+               "result.horizontal_intensity": v[7], "result.total_intensity": v[8]}
+        tol = {"result.declination.value": {"abs": 0.005}, "result.inclination.value": {"abs": 0.005},
+               "result.horizontal_intensity": {"abs": 0.05}, "result.total_intensity": {"abs": 0.05}}
+        out.append(vec(i, inp, exp, tol, WMMHR_SRC, WMMHR_VER))
+    return out
+
+
+def decimal_year_regression():
+    return {"id": "v029", "input": {"lat": 40, "lon": -105, "date": "2026-09-17"},
+            "expect": {"ok": True, "display.decimal_year": "2026.71"},
+            "source": "Regression for a reported defect (2026-09-23 fix-geodesy-indexing): The decimal year shows without digit grouping (was 2,026.71).",
+            "sourceVersion": "core 0.1.0"}
 
 
 def igrf_vectors(start):
@@ -82,6 +108,8 @@ def main():
     decl = wmm_vectors()
     decl += igrf_vectors(len(decl) + 1)
     decl += wmm_vectors(offset=5, start=len(decl) + 1)
+    decl.append(decimal_year_regression())
+    decl += wmmhr_vectors(len(decl) + 1)
     files = {"geodesy.magnetic.declination": decl, "geodesy.magnetic.true-to-magnetic": variation_vectors()}
     for tool, vs in files.items():
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))

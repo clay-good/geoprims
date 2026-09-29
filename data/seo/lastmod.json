@@ -128,8 +128,8 @@
     "lastmod": "2026-09-24"
   },
   "/changelog/": {
-    "hash": "4ffd9cd368d478ac",
-    "lastmod": "2026-09-28"
+    "hash": "4eb9123dffe87220",
+    "lastmod": "2026-09-29"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -344,16 +344,16 @@
     "lastmod": "2026-09-28"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "6fb6a86cf2fc5d4f",
-    "lastmod": "2026-09-28"
+    "hash": "5a58541ec52e4159",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/magnetic/grivation/": {
-    "hash": "df43df4cc5877ba8",
-    "lastmod": "2026-09-28"
+    "hash": "88e32cf06069155c",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
-    "hash": "6c93dee76ad9b81f",
-    "lastmod": "2026-09-28"
+    "hash": "a94d052bb913643c",
+    "lastmod": "2026-09-29"
   },
   "/geodesy/parse/": {
     "hash": "795c05026ac162e1",
@@ -916,8 +916,8 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "a2dc26cda8378ec7",
-    "lastmod": "2026-09-28"
+    "hash": "bea5147a24761f37",
+    "lastmod": "2026-09-29"
   },
   "/navigation/": {
     "hash": "44ca7ff9080557c8",
@@ -1072,8 +1072,8 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "d0baccf2e2ccb800",
-    "lastmod": "2026-09-28"
+    "hash": "be18e63246a8301d",
+    "lastmod": "2026-09-29"
   },
   "/raster/": {
     "hash": "9801ff90b33e7ac9",
@@ -1488,8 +1488,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ed127671fd0490ad",
-    "lastmod": "2026-09-28"
+    "hash": "835d819ecfba6e59",
+    "lastmod": "2026-09-29"
   },
   "/workflows/": {
     "hash": "bf26d30960e69c16",

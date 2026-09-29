@@ -1,5 +1,5 @@
 <!-- Derivation note (trust/correctness-program layer A). The promotion gate checks these sections. -->
-# Magnetic declination (WMM2025 and IGRF-14) (`geodesy.magnetic.declination`)
+# Magnetic declination (WMM2025, WMMHR2025, and IGRF-14) (`geodesy.magnetic.declination`)
 
 ## Method
 
@@ -19,7 +19,7 @@ Spherical-harmonic synthesis of the geomagnetic main field from Gauss coefficien
 
 ## Domain
 
-Heights -1 km to 850 km above the WGS 84 ellipsoid. WMM2025: 2025.0 to 2030.0. IGRF-14: 1900.0 to 2030.0. H under 1 nT is refused as undefined declination.
+Heights -1 km to 850 km above the WGS 84 ellipsoid. WMM2025 and WMMHR2025: 2025.0 to 2030.0. IGRF-14: 1900.0 to 2030.0. H under 1 nT is refused as undefined declination. WMMHR2025 loads its pinned degree-133 coefficient file on demand.
 
 ## Approximations
 
@@ -40,8 +40,8 @@ Main field only: crustal anomalies of several degrees are not modeled. Linear se
 
 ## Differential tests
 
-- `core/crates/gp-geodesy/tests/magnetic.rs`: all 100 NCEI WMM2025 test values, every element and rate
-- `core/vectors/geodesy.magnetic.declination.jsonl`: IGRF-14 against ppigrf 2.1 at coefficient epochs
+- `core/crates/gp-geodesy/tests/magnetic.rs`: all 100 NCEI WMM2025 rows and all 12 WMMHR2025 rows, every element and rate
+- `core/vectors/geodesy.magnetic.declination.jsonl`: WMMHR2025 against official NCEI rows on every runtime surface, and IGRF-14 against ppigrf 2.1 at coefficient epochs
 
 ## Invariants
 

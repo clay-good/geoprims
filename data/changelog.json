@@ -5,6 +5,17 @@
       "date": "2026-09-28",
       "kind": "added",
       "tools": [
+        "geodesy.magnetic.declination",
+        "geodesy.magnetic.true-to-magnetic",
+        "geodesy.magnetic.grivation"
+      ],
+      "vectors": [],
+      "summary": "The magnetic tools can now use WMMHR2025, the degree-133 high-resolution World Magnetic Model, from 2025.0 through 2030.0. Its pinned 533 KB coefficient file loads only when selected. Every field element and annual rate matches all 12 official NCEI test rows, and official cases also run through the website and MCP asset loaders."
+    },
+    {
+      "date": "2026-09-28",
+      "kind": "added",
+      "tools": [
         "geodesy.spcs.spcs2022-forward",
         "geodesy.spcs.spcs2022-inverse"
       ],

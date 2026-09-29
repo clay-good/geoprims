@@ -5,6 +5,15 @@
       "date": "2026-09-28",
       "kind": "changed",
       "tools": [
+        "aviation.performance.etp-pnr"
+      ],
+      "vectors": [],
+      "summary": "The equal time point and point of no return planner is now stable. Direct groundspeeds, wind-derived groundspeeds, safe endurance, and fuel-derived endurance match an independent Python calculation across 20 golden vectors, including the CASA worked example. No calculated results changed."
+    },
+    {
+      "date": "2026-09-28",
+      "kind": "changed",
+      "tools": [
         "aviation.performance.climb-plan"
       ],
       "vectors": [],

@@ -272,6 +272,45 @@ def etp_pnr():
     out.append(vec(6, {"distance": "100 NM", "tas": "40 kt", "course": "090 deg", "wind_direction": "090 deg", "wind_speed": "45 kt"},
                    {"ok": False, "error.code": "NO_SOLUTION"}))
     out.append(vec(7, {"distance": "100 NM", "groundspeed_out": "100 kt"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    for d, go, gb, endurance in [
+        (420.0, 175.0, 205.0, None),
+        (85.0, 92.0, 118.0, 2.5),
+        (1200.0, 410.0, 365.0, 5.2),
+        (37.5, 75.0, 75.0, 1.0),
+    ]:
+        inp = {"distance": f"{d} NM", "groundspeed_out": f"{go} kt", "groundspeed_back": f"{gb} kt"}
+        if endurance is not None:
+            inp["safe_endurance"] = f"{endurance} h"
+        out.append(vec(len(out) + 1, inp, solve(d, go, gb, endurance)))
+
+    for d, tas, course, wind, endurance in [
+        (640.0, 210.0, 25.0, (310.0, 45.0), None),
+        (275.0, 145.0, 359.0, (40.0, 28.0), 3.1),
+        (510.0, 180.0, 135.0, (315.0, 35.0), None),
+        (90.0, 105.0, 270.0, (180.0, 22.0), 1.8),
+        (980.0, 260.0, 82.0, (250.0, 55.0), 4.7),
+        (160.0, 125.0, 205.0, (25.0, 30.0), None),
+    ]:
+        go = tri(course, tas, wind)
+        gb = tri((course + 180.0) % 360.0, tas, wind)
+        inp = {"distance": f"{d} NM", "tas": f"{tas} kt", "course": f"{course} deg",
+               "wind_direction": f"{wind[0]} deg", "wind_speed": f"{wind[1]} kt"}
+        if endurance is not None:
+            inp["safe_endurance"] = f"{endurance} h"
+        out.append(vec(len(out) + 1, inp, solve(d, go, gb, endurance)))
+
+    for d, tas, course, wind, usable, reserve, burn in [
+        (350.0, 155.0, 90.0, (60.0, 25.0), 62.0, 12.0, 11.5),
+        (725.0, 230.0, 300.0, (120.0, 40.0), 140.0, 25.0, 24.0),
+        (115.0, 98.0, 12.0, (280.0, 18.0), 38.0, 8.0, 7.5),
+    ]:
+        go = tri(course, tas, wind)
+        gb = tri((course + 180.0) % 360.0, tas, wind)
+        endurance = (usable - reserve) / burn
+        inp = {"distance": f"{d} NM", "tas": f"{tas} kt", "course": f"{course} deg",
+               "wind_direction": f"{wind[0]} deg", "wind_speed": f"{wind[1]} kt",
+               "usable_fuel": f"{usable} gal", "reserve_fuel": f"{reserve} gal", "fuel_burn": f"{burn} gal/h"}
+        out.append(vec(len(out) + 1, inp, solve(d, go, gb, endurance)))
     return out
 
 

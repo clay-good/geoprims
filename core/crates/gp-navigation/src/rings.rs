@@ -27,7 +27,7 @@ const RFC7946: Reference = Reference {
     year: 2016,
     edition: "RFC 7946",
     locator: "Sections 3.1.6 (polygon rings counterclockwise) and 3.1.9 (cutting at the antimeridian)",
-    url: "https://www.rfc-editor.org/rfc/rfc7946",
+    url: "https://www.rfc-editor.org/rfc/rfc7946.html",
 };
 
 const RADIUS_ROW: &[Field] = &[Field::new(

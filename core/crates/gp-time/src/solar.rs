@@ -32,7 +32,7 @@ const MEEUS: Reference = Reference {
     year: 1998,
     edition: "2nd edition",
     locator: "Chapters 25 (solar coordinates) and 28 (equation of time)",
-    url: "https://www.willbell.com/math/mc1.htm",
+    url: "https://web.archive.org/web/20210114204037/https://www.willbell.com/math/mc1.HTM",
 };
 const CFR_1_1_NIGHT: Reference = Reference {
     title: "14 CFR 1.1, General definitions (night)",
@@ -156,7 +156,7 @@ const NREL_SPA: Reference = Reference {
     year: 2008,
     edition: "Revised January 2008",
     locator: "Sections 3.1 to 3.15 and Tables A4.2, A4.3; worked example in Table A5.1",
-    url: "https://www.nrel.gov/docs/fy08osti/34302.pdf",
+    url: "https://www.osti.gov/biblio/15003974",
 };
 const ESPENAK_MEEUS: Reference = Reference {
     title: "Polynomial Expressions for Delta T",

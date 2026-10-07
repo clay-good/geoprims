@@ -82,7 +82,7 @@ pub const KEY_BENSON: Reference = Reference {
     year: 2006,
     edition: "General Technical Report RMRS-GTR-164-CD, pages LA-1 to LA-55",
     locator: "NBR and dNBR, and table LA-2: ordinal severity levels and example dNBR ranges (scaled by 1,000), offered as a starting point rather than a rule; values beyond about -550 and +1,350 are likely anomalies",
-    url: "https://www.fs.usda.gov/research/treesearch/24066",
+    url: "https://research.fs.usda.gov/treesearch/24066",
 };
 
 /// Reflectance outside this range is not reflectance: raw DNs, a missing

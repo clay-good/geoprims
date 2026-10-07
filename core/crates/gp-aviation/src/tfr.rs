@@ -31,7 +31,7 @@ const RFC7946: Reference = Reference {
     year: 2016,
     edition: "RFC 7946",
     locator: "Section 3.1.6 (Polygon, counterclockwise exterior rings) and 3.2 (Feature properties)",
-    url: "https://www.rfc-editor.org/rfc/rfc7946",
+    url: "https://www.rfc-editor.org/rfc/rfc7946.html",
 };
 
 const POINT_ROW: &[Field] = &[Field::new(

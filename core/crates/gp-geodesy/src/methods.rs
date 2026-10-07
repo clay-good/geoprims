@@ -28,7 +28,7 @@ const G7_2: Reference = Reference {
     year: 2019,
     edition: "Revised September 2019",
     locator: "Sections 3.2.1 (Lambert Conic Conformal), 3.2.2 (Polar Stereographic), 3.2.4 (Albers Equal Area), 3.3.3 (Equidistant Cylindrical), and 3.4.5 (Popular Visualisation Pseudo Mercator)",
-    url: "https://www.iogp.org/bookstore/product/coordinate-conversions-and-transformation-including-formulas/",
+    url: "https://idms.iogp.org/Documents/474",
 };
 const SNYDER: Reference = Reference {
     title: "Map Projections: A Working Manual, U.S. Geological Survey Professional Paper 1395",
@@ -44,7 +44,7 @@ const NGA_WM: Reference = Reference {
     year: 2014,
     edition: "NGA.SIG.0011_1.0.0_WEBMERC",
     locator: "Sections 2 and 3 (the pseudo-Mercator on the WGS 84 ellipsoid and its limits)",
-    url: "https://earth-info.nga.mil/php/download.php?file=wgs-webmerc",
+    url: "https://web.archive.org/web/20201114220929/https://earth-info.nga.mil/GandG/wgs84/web_mercator/(U)%20NGA_SIG_0011_1.0.0_WEBMERC.pdf",
 };
 
 fn unit(q: QT, s: &str) -> &'static Unit {

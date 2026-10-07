@@ -25,7 +25,7 @@ const RFC7946: Reference = Reference {
     year: 2016,
     edition: "RFC 7946",
     locator: "Section 5.2 (the antimeridian: a bounding box with west greater than east)",
-    url: "https://www.rfc-editor.org/rfc/rfc7946",
+    url: "https://www.rfc-editor.org/rfc/rfc7946.html",
 };
 
 const VERTEX: &[Field] = &[

@@ -26,7 +26,7 @@ const EPSG_G7_2: Reference = Reference {
     year: 2019,
     edition: "Revised September 2019",
     locator: "Sections 3.2.1.1 (Lambert Conic Conformal 2SP, EPSG 9802) and 3.2.4 (Hotine Oblique Mercator variant A, EPSG 9812)",
-    url: "https://www.iogp.org/bookstore/product/coordinate-conversions-and-transformation-including-formulas/",
+    url: "https://idms.iogp.org/Documents/474",
 };
 const KARNEY_TM: Reference = Reference {
     title: "Transverse Mercator with an accuracy of a few nanometers",

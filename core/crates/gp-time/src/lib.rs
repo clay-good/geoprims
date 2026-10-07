@@ -52,7 +52,7 @@ const RFC_3339: Reference = Reference {
     year: 2002,
     edition: "Proposed standard",
     locator: "Section 5.6 (timestamp format with a numeric UTC offset or Z)",
-    url: "https://www.rfc-editor.org/rfc/rfc3339",
+    url: "https://www.rfc-editor.org/rfc/rfc3339.html",
 };
 const IANA_TZ: Reference = Reference {
     title: "Time Zone Database (tzdb)",

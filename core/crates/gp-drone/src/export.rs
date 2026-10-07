@@ -24,7 +24,7 @@ const GEOJSON: Reference = Reference {
     year: 2016,
     edition: "RFC 7946",
     locator: "Sections 3.1 (geometry: longitude, latitude, altitude) and 6.1 (foreign members)",
-    url: "https://www.rfc-editor.org/rfc/rfc7946",
+    url: "https://www.rfc-editor.org/rfc/rfc7946.html",
 };
 
 const CSV: Reference = Reference {
@@ -33,7 +33,7 @@ const CSV: Reference = Reference {
     year: 2005,
     edition: "RFC 4180",
     locator: "Section 2 (quoting fields that hold commas, quotes, or line breaks)",
-    url: "https://www.rfc-editor.org/rfc/rfc4180",
+    url: "https://www.rfc-editor.org/rfc/rfc4180.html",
 };
 
 const NOTICE: &str = "Planning aid only, not for navigation. Check every waypoint before flight.";

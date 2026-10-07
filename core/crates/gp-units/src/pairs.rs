@@ -109,7 +109,7 @@ pair!(
     "kmh-to-kt",
     "km/h",
     "kt",
-    "Km/h to knots",
+    "km/h to knots",
     "50",
     "Converting drone and wind speeds given in km/h to aviation knots."
 );
@@ -313,7 +313,7 @@ pair!(
     "hpa-to-inhg",
     "hPa",
     "inHg",
-    "HPa to inHg",
+    "hPa to inHg",
     "1013.25",
     "Pilots flying abroad convert QNH in hPa to inHg for US altimeters."
 );
@@ -457,7 +457,7 @@ pair!(
     "fpm-to-mps",
     "ft/min",
     "m/s",
-    "Ft/min to m/s",
+    "ft/min to m/s",
     "500",
     "Climb rates in ft/min are compared with drone and glider climb rates in m/s."
 );

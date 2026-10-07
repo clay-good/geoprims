@@ -1,0 +1,52 @@
+name: link-probe
+
+# The monthly free-access link probe (trust/freshness "Free-access link
+# probe"): every sources-ledger freeAccessUrl and citation URL is requested,
+# and one issue lists the broken and redirected ones with their citations,
+# tools, and HTTP status. It runs apart from ci, so a dead link elsewhere on
+# the web never fails a build.
+
+on:
+  schedule:
+    - cron: '17 9 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Install pinned wasm-opt
+        run: |
+          v=$(node -p "require('./tools/toolchain.json').wasmOpt")
+          curl -fsSL "https://github.com/WebAssembly/binaryen/releases/download/version_${v}/binaryen-version_${v}-x86_64-linux.tar.gz" | tar xz
+          echo "$PWD/binaryen-version_${v}/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the catalog the citations come from
+        run: npm run build
+      - name: Probe every link
+        run: node tools/trust/link-probe.mjs --out probe.md
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Citation links to check"
+          existing=$(gh issue list --state open --label link-probe --json number --jq '.[0].number // empty')
+          if [ ! -s probe.md ]; then
+            if [ -n "$existing" ]; then gh issue close "$existing" --comment "Every link answered on $(date -u +%F)."; fi
+            exit 0
+          fi
+          gh label create link-probe --color BFD4F2 --description "Monthly free-access link probe" --force
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file probe.md
+          else
+            gh issue create --title "$title" --label link-probe --body-file probe.md
+          fi

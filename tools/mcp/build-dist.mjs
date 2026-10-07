@@ -4,7 +4,7 @@
 // vectors. Release tags commit this directory (add-local-mcp-server 1.1a).
 //
 // Usage: node tools/mcp/build-dist.mjs   (after build:wasm and build:catalog)
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 const root = new URL('../..', import.meta.url).pathname;
@@ -17,12 +17,20 @@ cpSync(join(root, 'dist/wasm'), join(dist, 'wasm'), { recursive: true });
 cpSync(join(root, 'dist/catalog'), join(dist, 'catalog'), { recursive: true });
 cpSync(join(root, 'packages/runtime/src'), join(dist, 'runtime'), { recursive: true, filter: (p) => !p.endsWith('.test.mjs') });
 cpSync(join(root, 'core/vectors'), join(dist, 'vectors'), { recursive: true });
-cpSync(join(root, 'assets/registry.json'), join(dist, 'assets/registry.json'));
-cpSync(join(root, 'assets/data'), join(dist, 'assets/data'), { recursive: true });
+// Only the assets the server can use: one whose consumers leave out the MCP
+// server (the web map's 50m coastline) stays out of the bundle, which the
+// spec caps at 6 MB, and out of the registry the server reads.
+const full = JSON.parse(readFileSync(join(root, 'assets/registry.json'), 'utf8'));
+const registry = { ...full, assets: full.assets.filter((a) => !a.consumers || a.consumers.includes('mcp-server')) };
+mkdirSync(join(dist, 'assets'), { recursive: true });
+writeFileSync(join(dist, 'assets/registry.json'), `${JSON.stringify(registry, null, 2)}\n`);
+for (const asset of registry.assets) {
+  const from = join(root, 'assets/data', asset.id);
+  if (existsSync(from)) cpSync(from, join(dist, 'assets/data', asset.id), { recursive: true });
+}
 // Bundled files outside assets/data (the Natural Earth base map) are copied
 // into the package's uniform asset path. Files under core/ are already inside
 // their Wasm module and must not be duplicated here.
-const registry = JSON.parse(readFileSync(join(root, 'assets/registry.json'), 'utf8'));
 for (const asset of registry.assets.filter((a) => a.loadPolicy === 'bundled' && a.bundledIn && !a.bundledIn.startsWith('core/'))) {
   const files = Object.keys(asset.files);
   if (files.length !== 1) throw new Error(`${asset.id}: an external bundledIn entry must name exactly one file`);

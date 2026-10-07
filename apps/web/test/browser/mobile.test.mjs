@@ -3,15 +3,11 @@
 // page and the index, at 320 CSS px and at 640 (which is 1280 at 200% zoom),
 // in WebKit, since that is the engine the bar names.
 //
-// Reflow is asserted: no page may scroll sideways. Target size is counted
-// rather than asserted, because the bar the spec sets -- 48 x 48 CSS px, above
-// WCAG 2.5.8's 24, for field and gloved use -- is not met yet by the chips,
-// the copy buttons, or the unit pickers, and deciding what counts as a tap
-// target rather than an affordance inside a line of text is a design call, not
-// a test's. The header button, the theme toggle, and the search button were
-// simply set shorter than the --target the styles already define, which was an
-// oversight rather than a decision, and now use it. The three that are left are
-// held where they are so the count cannot quietly grow.
+// Reflow is asserted: no page may scroll sideways. So is target size: every
+// control is at least 48 x 48 CSS px, the bar the spec sets above WCAG 2.5.8's
+// 24, for field and gloved use. The chips, the copy buttons, and the selects
+// were the last ones under it; WebKit draws a native select at 23 px whatever
+// its min-height says, so selects drop the native look to reach the bar.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -28,9 +24,8 @@ function heroRoutes() {
 
 /** Controls that are too small to tap with a glove, by CSS px. */
 const MEASURE = 'button, input:not([type=hidden]), select, textarea, summary, [role=button]';
-const SMALL_CONTROLS = 3;
 
-test('hero pages reflow at 320 px in WebKit, and no control shrinks further', { timeout: 300_000 }, async (t) => {
+test('hero pages reflow at 320 px in WebKit, and every control is 48 x 48', { timeout: 300_000 }, async (t) => {
   const origin = await serveBuiltSite(t);
   const browser = await webkit.launch({ headless: true });
   t.after(() => browser.close());
@@ -86,8 +81,5 @@ test('hero pages reflow at 320 px in WebKit, and no control shrinks further', { 
   t.diagnostic(`controls under 48 x 48: ${[...small.keys()].sort().join(', ') || 'none'}`);
   assert.deepEqual(scrolls, [], scrolls.join('\n'));
   assert.deepEqual(headerProblems, [], headerProblems.join('\n'));
-  assert.ok(
-    small.size <= SMALL_CONTROLS,
-    `${small.size} kinds of control are under 48 x 48, up from ${SMALL_CONTROLS}: ${[...small.keys()].join(', ')}`,
-  );
+  assert.deepEqual([...small.keys()].sort(), [], 'controls under 48 x 48');
 });

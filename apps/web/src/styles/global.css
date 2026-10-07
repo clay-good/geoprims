@@ -209,7 +209,7 @@ main { padding-block: 1.75rem 4rem; }
 .facts { margin: 1rem 0 0; display: grid; gap: 0; border-block-start: 1px solid var(--line); }
 .facts div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-block-end: 1px solid var(--line); }
 .facts dt { color: var(--muted); font-size: 0.92rem; }
-.facts dd { margin: 0; font: 500 0.95rem var(--mono); font-variant-numeric: tabular-nums; text-align: end; overflow-wrap: anywhere; }
+.facts dd { margin: 0; display: flex; align-items: center; justify-content: flex-end; min-inline-size: 0; font: 500 0.95rem var(--mono); font-variant-numeric: tabular-nums; text-align: end; overflow-wrap: anywhere; }
 .facts dd.words { font-family: var(--sans); }
 .report .digest code { font-size: 0.78rem; word-break: break-all; }
 
@@ -487,7 +487,8 @@ figure.diagram svg { display: block; inline-size: 100%; block-size: auto; max-bl
 .dg-arc-red { stroke: var(--danger); stroke-width: 4; }
 .timeline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding-block-start: 0.5rem; border-block-start: 1px solid var(--line); }
 .timeline input[type='range'] { flex: 1 1 12rem; min-block-size: var(--target); accent-color: var(--accent); }
-.timeline button, .timeline select { min-block-size: var(--target); min-inline-size: var(--target); background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; padding-inline: 0.75rem; }
+.timeline button, .timeline select { min-block-size: var(--target); min-inline-size: var(--target); background-color: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; padding-inline: 0.75rem; }
+.timeline select { padding-inline-end: 2rem; }
 .timeline label { display: inline-flex; align-items: center; gap: 0.35rem; }
 pre.snippet { margin: 0.5rem 0 1rem; padding: 0.75rem 1rem; overflow-x: auto; font: 0.85rem/1.5 var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 section.client h3 { margin-block-end: 0.1rem; }
@@ -604,7 +605,7 @@ section.client .where { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.9rem 0 0; }
 .chips-label { font-size: 0.85rem; color: var(--muted); margin-inline-end: 0.2rem; }
-.chip-button { inline-size: auto; margin: 0; display: inline-flex; align-items: center; gap: 0.35rem; min-block-size: 36px; padding: 0 0.8rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; font-size: 0.88rem; text-decoration: none; cursor: pointer; }
+.chip-button { inline-size: auto; margin: 0; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; min-block-size: var(--target); min-inline-size: var(--target); padding: 0 0.8rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; font-size: 0.88rem; text-decoration: none; cursor: pointer; }
 .chip-button:hover { border-color: var(--accent); color: var(--accent); }
 .chip-button .count { font: 600 0.72rem var(--mono); color: var(--muted); }
 nav.chips { margin-block: 0 0.5rem; }
@@ -622,14 +623,15 @@ label.invalid input, label.invalid select, label.invalid textarea { border-color
 .field-error { display: block; color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-block-start: 0.3rem; }
 .answer .error + .hint + .actions, .answer .error + .actions { margin-block-start: 0.75rem; }
 
-.facts dd .copy-row { all: unset; cursor: copy; border-radius: 4px; padding: 0.05rem 0.25rem; margin-inline-end: -0.25rem; }
+.facts dd .copy-row { all: unset; box-sizing: border-box; display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; min-block-size: var(--target); min-inline-size: var(--target); cursor: copy; border-radius: 4px; padding: 0 0.25rem; margin-inline-end: -0.25rem; }
+.facts dd .copy-row .copied { margin-inline-start: 0.3em; }
 .facts dd .copy-row:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .facts dd .copy-row:focus-visible { outline: 2px solid var(--focus); }
 .facts .copied { font: 500 0.8rem var(--sans); color: var(--accent); }
 
 /* The label is capped by its row, so the select's cap has something to be a share of. */
 .units-switch { max-inline-size: 100%; min-inline-size: 0; }
-.units-switch select { inline-size: auto; margin: 0; min-block-size: var(--target); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.9rem; padding-inline: 0.6rem; max-inline-size: min(15rem, 100%); }
+.units-switch select { inline-size: auto; margin: 0; min-block-size: var(--target); border: 1px solid var(--line); border-radius: 6px; background-color: var(--surface); color: var(--text); font: inherit; font-size: 0.9rem; padding-inline: 0.6rem 2rem; max-inline-size: min(15rem, 100%); }
 
 /* ------------------------------------------------------------------------
    Field-instrument layer. Loaded last, so it restyles the components above
@@ -681,6 +683,15 @@ main { padding-block: 1.75rem 4rem; }
 label > .label-text { font: 600 0.74rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
 .label-text .optional { font: 500 0.7rem var(--sans); letter-spacing: 0; text-transform: none; }
 input, select, textarea { background: var(--surface); border: 1.5px solid var(--line); }
+/* WebKit draws a native select at its own 23 px height whatever the CSS says,
+   so selects drop the native look to reach the 48 px --target, and draw their
+   own chevron from --muted so it follows the theme. */
+select { appearance: none; -webkit-appearance: none; padding-inline-end: 2rem; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 1.15rem) 52%, calc(100% - 0.8rem) 52%; background-size: 0.35rem 0.35rem; background-repeat: no-repeat; }
+/* The sheet keeps its print look: these come after the rules they undo. */
+@media print {
+  .facts dd .copy-row { min-block-size: 0; }
+  select { padding-inline-end: 0; background-image: none; }
+}
 input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--text) 35%, var(--line)); }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 22%, transparent); outline-offset: 0; border-color: var(--accent); }
 input { font-weight: 600; letter-spacing: 0.01em; }

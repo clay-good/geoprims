@@ -40,6 +40,8 @@ jobs:
         run: node tools/codegen/catalog.mjs
       - name: Build the MCP release directory (so the integrity gate checks it too)
         run: node tools/mcp/build-dist.mjs
+      - name: MCP Inspector CLI against the golden surface (fails with the diff on drift)
+        run: node tools/mcp/inspector-check.mjs
       - name: Install the website's dependencies and browsers (share cards render in Chromium; cross-host checks use all three)
         run: |
           npm ci --prefix apps/web

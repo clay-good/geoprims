@@ -4,7 +4,7 @@ Build tooling. No npm dependencies.
 
 | Path | What |
 |---|---|
-| `toolchain.json` | Pinned rustc and wasm-opt versions, and module size budgets |
+| `toolchain.json` | Pinned rustc, wasm-opt, and MCP Inspector versions, and module size budgets |
 | `wasm/build.mjs` | Builds every module to `dist/wasm/`, enforces pins, the import lint, and Brotli budgets, and writes SHA-256 digests |
 | `wasm/*.test.mjs` | Gate tests against bad fixtures, and module smoke tests |
 | `wasm/integrity.test.mjs` | The recorded digests match the modules on disk, and the website and the MCP release ship those exact bytes |
@@ -14,12 +14,15 @@ Build tooling. No npm dependencies.
 | `perf/bench.mjs` | Benchmarks every tool's primary example in Node after warm-up, reports p50/p95 from 1,000 calls, and compares with a supplied same-profile release baseline |
 | `trust/related.mjs` | The related-tools gate: lists resolve, give a recognised reason, agree about inverses, and stay within six; the count short of three is a ratchet |
 | `trust/status.mjs` | The status-phrase gate: every `x-status` output must read as Within/Near/Beyond or Meets/Does not meet, and may never say safe, unsafe, legal, or approved |
+| `mcp/inspector-check.mjs` | CI runs the server through the pinned MCP Inspector CLI: what it lists must be `mcp/surface.json` (keys in any order), or the step fails with a line diff; one `geoprims_run` call must answer |
+| `trust/link-probe.mjs` | The monthly free-access probe (`.github/workflows/link-probe.yml`): every citation and ledger link, sorted into broken, moved, and not checked, written as one issue |
 | `mcp/eval.mjs` | The agent evaluation: 637 tasks from the worked examples, measuring tool selection, answers end to end, and tokens per task, with a 3-point regression gate |
 | `repo/suites.test.mjs` | Holds the test scripts to every test file in the tree, and CI to those scripts, so a directory of tests cannot sit unrun |
 | `codegen/catalog.mjs` | Builds `dist/catalog/v1.json` from the manifests the built modules report, with vector counts and operation and endpoint counts |
 | `vectors/gen_units.py` | Generates the units golden vectors from the published definitions, using exact rational arithmetic |
 | `vectors/gen_*.py` | One generator per domain (aviation, navigation, geodesy, drone, survey, time, sun, indexing, H3). `gen_sun.py` and `gen_h3.py` need `pvlib` and `h3` in a scratch virtualenv |
 | `codegen/spcs83.py`, `vectors/gen_spcs_diff.py` | Generate the SPCS83 zone table from the EPSG dataset and the PROJ differential fixture and vectors (need `pyproj`) |
+| `vectors/gen_waypoints_sphere.py` | Great-circle waypoint vectors from GeodSolve on a sphere of radius R1, appended without touching frozen ones |
 | `vectors/gen_magnetic.py` | Geomagnetism vectors: WMM2025 from the NCEI test values, IGRF-14 from `ppigrf` (scratch virtualenv) at coefficient epochs |
 | `data/magnetic-assets.mjs` | Verify pinned NCEI/IAGA downloads and regenerate WMM2025, WMMHR2025, IGRF-14, and the two official test fixtures |
 | `data/geoid-tiles.mjs` | Verify a pinned GeographicLib PGM or NGS float32 geoid and split it into coarse halo tiles with per-tile SHA-256 digests and an Ed25519-signed canonical index |

@@ -1,5 +1,6 @@
 {
   "rustc": "1.98.0",
   "wasmOpt": "132",
+  "mcpInspector": "2.8.0",
   "budgets": { "base": 122880, "domain": 409600 }
 }

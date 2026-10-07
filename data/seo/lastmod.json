@@ -260,8 +260,8 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "86f48227cce60f36",
-    "lastmod": "2026-09-29"
+    "hash": "8f3063ceaca02393",
+    "lastmod": "2026-10-07"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1140,7 +1140,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "cf1bf52a39887f45",
+    "hash": "feb6c4a13c9825fd",
     "lastmod": "2026-10-07"
   },
   "/navigation/": {
@@ -1168,8 +1168,8 @@
     "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "fe7925ed58b7db9e",
-    "lastmod": "2026-09-29"
+    "hash": "644784faa786458c",
+    "lastmod": "2026-10-07"
   },
   "/navigation/geodesic/midpoint/": {
     "hash": "25c8c909c20b4f99",
@@ -1196,8 +1196,8 @@
     "lastmod": "2026-09-29"
   },
   "/navigation/geodesic/waypoints/": {
-    "hash": "a24948d410cac303",
-    "lastmod": "2026-09-29"
+    "hash": "1a3e1912dc3cd912",
+    "lastmod": "2026-10-07"
   },
   "/navigation/los/": {
     "hash": "237922b2713f8fc5",
@@ -1296,8 +1296,8 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "c78afbcd415577a8",
-    "lastmod": "2026-09-29"
+    "hash": "101361013b3ff34e",
+    "lastmod": "2026-10-07"
   },
   "/raster/": {
     "hash": "9801ff90b33e7ac9",
@@ -1380,7 +1380,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "34dabcac801a3596",
+    "hash": "92c56d472552596d",
     "lastmod": "2026-10-07"
   },
   "/survey/": {
@@ -1912,7 +1912,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e13a85fb21b07dbd",
+    "hash": "41898a28924ea7e1",
     "lastmod": "2026-10-07"
   },
   "/workflows/": {

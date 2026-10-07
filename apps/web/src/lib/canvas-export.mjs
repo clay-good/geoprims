@@ -35,7 +35,7 @@ export const caption = (tool, result) =>
 export function layersGeoJson(layers, tool) {
   const features = [];
   for (const l of layers ?? []) {
-    const properties = { role: l.role, tool: tool.id, toolVersion: tool.version, ...(l.label ? { label: l.label } : {}) };
+    const properties = { role: l.role, tool: tool.id, toolVersion: tool.version, ...(l.label ? { label: l.label } : {}), ...(l.path ? { path: l.path } : {}) };
     if (l.kind === 'line' && l.points?.length > 1) {
       features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: l.points }, properties });
     } else if (l.kind === 'point') {

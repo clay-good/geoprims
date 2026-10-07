@@ -142,3 +142,30 @@ test('MGRS squares draw whole across UTM zone edges and the antimeridian', async
   const continuous = unwrap(dlSquare.rings[0]).map(([lon]) => lon);
   assert.ok(Math.max(...continuous) - Math.min(...continuous) < 2, 'the square spans the world instead of crossing the antimeridian');
 });
+
+test('compare methods draws the geodesic, rhumb line, and great circle, each with its length', async () => {
+  // navigation/geodesic "Comparison overlay".
+  const t = catalog.tools.find((x) => x.id === 'navigation.geodesic.inverse');
+  const ex = primary(t);
+  const result = await invoke(t.id, ex);
+  const densify = (i) => invoke('navigation.geodesic.waypoints', i);
+  const plain = await buildLayers(t, ex, result, densify, cells);
+  assert.deepEqual(plain.filter((l) => l.kind === 'line').map((l) => l.path), ['geodesic', 'rhumb'], 'great circle only on request');
+  const lines = (await buildLayers(t, ex, result, densify, cells, { compare: true })).filter((l) => l.kind === 'line');
+  assert.deepEqual(lines.map((l) => [l.path, l.role]), [['geodesic', 'result'], ['rhumb', 'comparison'], ['great-circle', 'comparison']]);
+  const km = (s) => Number(String(s).replace(/[^\d.]/g, ''));
+  for (const l of lines) {
+    assert.ok(l.points.length > 100, `${l.path} is densified`);
+    assert.ok(km(l.length) > 1000, `${l.path} has a length: ${l.length}`);
+  }
+  // The great circle is the haversine distance on the same sphere, and both
+  // ends sit on the inputs.
+  const hav = await invoke('navigation.geodesic.haversine', { lat1: ex.lat1, lon1: ex.lon1, lat2: ex.lat2, lon2: ex.lon2 });
+  const gc = lines.find((l) => l.path === 'great-circle');
+  assert.ok(Math.abs(km(gc.length) - hav.result.distance.value * (hav.result.distance.unit === 'm' ? 1e-3 : 1)) < 0.001, `${gc.length} vs ${hav.display.distance}`);
+  const [lon0, lat0] = gc.points[0];
+  const [lon1, lat1] = gc.points.at(-1);
+  assert.ok(Math.abs(lat0 - ex.lat1) < 1e-9 && Math.abs(lon0 - ex.lon1) < 1e-9 && Math.abs(lat1 - ex.lat2) < 1e-9 && Math.abs(lon1 - ex.lon2) < 1e-9);
+  const geo = lines.find((l) => l.path === 'geodesic');
+  assert.notEqual(km(geo.length), km(gc.length), 'the sphere and the ellipsoid differ');
+});

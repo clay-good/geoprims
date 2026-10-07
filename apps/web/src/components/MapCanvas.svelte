@@ -36,6 +36,10 @@
   let readout = $state('');
   let scaleBar = $state({ px: 0, label: '' });
   let legend = $state([]);
+  // "Compare methods": adds the spherical great circle beside the geodesic and
+  // the rhumb line, each with its length in the legend.
+  const comparable = (kinds.has('line-geodesic') || kinds.has('line-rhumb')) && 'lat2' in tool.inputs.properties;
+  let compare = $state(false);
   // A map with nothing of the reader's on it answers nothing, so it stays
   // hidden until the inputs give it something to draw (an optional location
   // left blank, a zone looked up by name).
@@ -153,9 +157,10 @@
     layers = await buildLayers(tool, args, result, (input) =>
       compute.invoke('navigation.geodesic.waypoints', input, 'densify'),
       cellSource,
+      { compare },
     );
     const cellCount = layers.filter((l) => l.cell).length;
-    const what = layers.filter((l) => !l.cell).map((l) => (l.kind === 'line' ? (l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
+    const what = layers.filter((l) => !l.cell).map((l) => (l.kind === 'line' ? (l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
     if (shots) what.push(`${shots.points.length} photo trigger points`);
     const compacted = layers.some((l) => l.compacted);
@@ -164,10 +169,16 @@
     // What the lines mean: the result path, and the other kind of line for comparison.
     const rhumb = kinds.has('line-rhumb');
     const named = (r) => (r ? 'Rhumb line: constant heading' : 'Geodesic: the shortest path');
+    const lengthOf = (path) => {
+      const l = layers.find((x) => x.kind === 'line' && x.path === path)?.length;
+      return l ? ` · ${l}` : '';
+    };
+    const [own, other] = rhumb ? ['rhumb', 'geodesic'] : ['geodesic', 'rhumb'];
     legend = [
       layers.some((l) => l.kind === 'line' && l.role === 'result' && l.arrows) && { cls: 'solid', text: 'Flight path, in order' },
-      layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows) && { cls: 'solid', text: named(rhumb) },
-      layers.some((l) => l.kind === 'line' && l.role === 'comparison') && { cls: 'dashed', text: `${named(!rhumb)}, for comparison` },
+      layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows) && { cls: 'solid', text: `${named(rhumb)}${lengthOf(own)}` },
+      layers.some((l) => l.kind === 'line' && l.role === 'comparison' && l.path === other) && { cls: 'dashed', text: `${named(!rhumb)}, for comparison${lengthOf(other)}` },
+      layers.some((l) => l.path === 'great-circle') && { cls: 'dotted', text: `Great circle on a sphere, for comparison${lengthOf('great-circle')}` },
       layers.some((l) => l.kind === 'point' && l.role === 'detail') && { cls: 'solid', text: 'Photo trigger points' },
       layers.some((l) => l.kind === 'polygon' && !l.cell) && { cls: 'area', text: 'The area' },
       layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? `${grid} cells: the origin strongest, fading with grid distance` : `${grid} cells` },
@@ -191,6 +202,7 @@
 
   $effect(() => {
     result;
+    compare;
     rebuild();
   });
 
@@ -411,6 +423,9 @@
       <button type="button" onclick={() => zoom(1.5)} aria-label="Zoom in">+</button>
       <button type="button" onclick={() => { keepView = false; reframe(); }} aria-label="Fit the result in view">Fit</button>
     </div>
+    {#if comparable}
+      <button type="button" class="map-compare" aria-pressed={compare} onclick={() => (compare = !compare)}>Compare methods</button>
+    {/if}
     <div class="map-tools" role="group" aria-label="Export">
       <button type="button" onclick={exportPng} aria-label="Download the view as PNG, with attribution">PNG</button>
       <button type="button" onclick={exportGeoJson} aria-label="Download the layers as GeoJSON">GeoJSON</button>

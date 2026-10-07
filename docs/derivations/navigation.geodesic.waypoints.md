@@ -5,12 +5,15 @@
 
 The route between two points is solved once as an inverse geodesic problem, which gives its length and the azimuth it leaves on. Each waypoint is then placed by the direct problem: travel that azimuth from the start for a given distance, and report where you arrive. Asking for n intervals places n + 1 points, the first and last being the route's own ends; asking for a spacing places as many as fit, and asking for fractions places them where you say.
 
+With `path` set to `great-circle` the same steps run on a sphere of the IUGG mean radius R1 instead of the ellipsoid. That line is for comparison: the map's "Compare methods" draws it beside the geodesic and the rhumb line, so a reader can see how far a spherical answer strays.
+
 ## Equations
 
 - Inverse problem between the ends: s₁₂ and α₁.
 - Waypoint k of n: the direct problem from (φ₁, λ₁) on azimuth α₁ for distance k·s₁₂/n.
 - By spacing d: k runs while k·d ≤ s₁₂, with the far end added so the line is closed.
 - By fraction f: distance f·s₁₂, with f from 0 to 1.
+- Great circle: central angle σ and initial course α₁ from the spherical inverse, s₁₂ = R1·σ; waypoint k is the spherical direct problem for angle k·σ/n, and the course there is atan2(sin α₁ cos φ₁, cos σₖ cos φ₁ cos α₁ − sin φ₁ sin σₖ).
 
 ## Symbols and units
 
@@ -22,7 +25,7 @@ Any two points on any ellipsoid in the registry, including across the antimeridi
 
 ## Approximations
 
-None: every point comes from Karney's direct geodesic solver, good to nanometres, rather than from interpolating between the ends. Interpolating would put the points off the line, which is the error this tool exists to avoid — on New York to London the straight-line midpoint in latitude and longitude misses the true one by several hundred kilometres.
+None on the ellipsoid: every point comes from Karney's direct geodesic solver, good to nanometres, rather than from interpolating between the ends. Interpolating would put the points off the line, which is the error this tool exists to avoid — on New York to London the straight-line midpoint in latitude and longitude misses the true one by several hundred kilometres. The great-circle path is exact on its sphere, but the sphere is itself the approximation: New York to London is 5,540.019 km on it against 5,554.909 km on the ellipsoid.
 
 ## Worked example
 
@@ -40,7 +43,8 @@ None: every point comes from Karney's direct geodesic solver, good to nanometres
 ## Differential tests
 
 - `tools/vectors/gen_route.py`: Karney's geographiclib for Python, placing points along random routes by the direct problem
-- `core/vectors/navigation.geodesic.waypoints.jsonl`: 22 vectors from that reference, run through the core on every build
+- `tools/vectors/gen_waypoints_sphere.py`: GeographicLib's GeodSolve on a sphere of radius R1 (`-e 6371008.771 0`), where the geodesic is the great circle, for the `great-circle` path
+- `core/vectors/navigation.geodesic.waypoints.jsonl`: 26 vectors from those references (v023–v026 on the great circle), run through the core on every build
 
 ## Invariants
 

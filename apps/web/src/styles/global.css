@@ -448,6 +448,7 @@ figure.map canvas:focus-visible { outline-offset: -3px; }
 .map-bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; padding: 0.6rem; border-block-end: 1px solid var(--line); }
 .map-bar button { margin: 0; min-block-size: var(--target); min-inline-size: var(--target); padding-inline: 0.8rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 0.88rem; cursor: pointer; }
 .map-bar button:hover { border-color: color-mix(in srgb, var(--muted) 45%, var(--line)); }
+.map-bar .map-compare[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }
 .segmented, .map-tools { display: flex; gap: 0.35rem; }
 .map-projection select { margin: 0; min-block-size: var(--target); font-size: 0.88rem; }
 .segmented { padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg); gap: 2px; }
@@ -457,6 +458,7 @@ figure.map canvas:focus-visible { outline-offset: -3px; }
 .map-legend li { display: inline-flex; align-items: center; gap: 0.5rem; }
 .swatch { display: inline-block; inline-size: 26px; block-size: 0; border-block-start: 3px solid var(--accent); }
 .swatch.dashed { border-block-start: 2px dashed var(--muted); }
+.swatch.dotted { border-block-start: 2px dotted var(--muted); }
 .swatch.area { block-size: 12px; border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); border-radius: 3px; }
 .map-readout { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; margin: 0; padding: 0.45rem 0.9rem; font: 0.75rem var(--mono); color: var(--muted); border-block-start: 1px solid var(--line); }
 .map-readout .scale { display: inline-flex; align-items: center; gap: 0.5rem; }

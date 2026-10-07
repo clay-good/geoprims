@@ -139,8 +139,10 @@ export function cellIds(result, field) {
  * (for cell-set layers) gives { boundaries(ids, grid) → [[lon, lat], …] per id
  * (grid 'h3' or 's2'), and
  * rings(origin, k) → the ids at each grid distance 0…k }, both from the core.
+ * `compare` (navigation/geodesic "Comparison overlay") adds the spherical
+ * great circle to a two-point line; every such line carries its path and length.
  */
-export async function buildLayers(tool, args, result, densify, cells) {
+export async function buildLayers(tool, args, result, densify, cells, { compare = false } = {}) {
   const kinds = new Set((tool.visualization ?? []).map((v) => v.kind));
   const layers = [];
   const p1 = [numberOf(args.lon1), numberOf(args.lat1)];
@@ -149,13 +151,14 @@ export async function buildLayers(tool, args, result, densify, cells) {
   const line = async (path, role) => {
     const r = await densify({ lat1: p1[1], lon1: p1[0], lat2: p2[1], lon2: p2[0], intervals: 128, path });
     const pts = r?.ok ? r.result.points.map((q) => [q.lon.value, q.lat.value]) : [p1, p2];
-    layers.push({ kind: 'line', role, points: pts });
+    layers.push({ kind: 'line', role, points: pts, path, length: r?.ok ? r.display?.length : undefined });
   };
   if (two && (kinds.has('line-geodesic') || kinds.has('line-rhumb'))) {
     const rhumb = kinds.has('line-rhumb');
     await line(rhumb ? 'rhumb' : 'geodesic', 'result');
     // The geodesic tools show the rhumb line as a dashed comparison, and the other way round.
     await line(rhumb ? 'geodesic' : 'rhumb', 'comparison');
+    if (compare) await line('great-circle', 'comparison');
   }
   // A generated flight path (a survey grid, corridor, orbit, or facade scan):
   // the output waypoints in order, with direction arrows and turn points.

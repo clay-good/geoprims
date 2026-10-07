@@ -1,6 +1,6 @@
-//! Points along a geodesic or rhumb line: at N equal intervals, at a fixed
-//! spacing, or at given fractions, with cumulative distance and azimuth, and
-//! the same points as a GPX route and GeoJSON.
+//! Points along a geodesic, rhumb line, or spherical great circle: at N equal
+//! intervals, at a fixed spacing, or at given fractions, with cumulative
+//! distance and azimuth, and the same points as a GPX route and GeoJSON.
 
 use geographiclib_rs::{DirectGeodesic, InverseGeodesic};
 use gp_base::ErrorCode;
@@ -10,8 +10,10 @@ use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_geo::rhumb::Rhumb;
+use libm::{atan2, cos, sin};
 
-use crate::{E, KARNEY, LAT1, LAT2, LON1, LON2, setup, two_points};
+use crate::sphere::{sphere_direct, sphere_inverse};
+use crate::{E, IUGG_MEAN_RADIUS, KARNEY, LAT1, LAT2, LON1, LON2, R1, setup, two_points};
 
 /// At most this many points, so the GPX and GeoJSON stay a sensible size.
 pub const MAX_POINTS: usize = 10_000;
@@ -69,7 +71,7 @@ const POINT_ROW: &[Field] = &[
 
 pub static WAYPOINTS: ToolDef = ToolDef {
     id: "navigation.geodesic.waypoints",
-    version: "1.0.1",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Waypoints along a route line",
     summary: "Points along the geodesic (or rhumb line) from A to B at N equal intervals, a fixed spacing, or given fractions, with distance and course at each, as a table, a GPX route, and GeoJSON.",
@@ -121,8 +123,8 @@ pub static WAYPOINTS: ToolDef = ToolDef {
         Field::new(
             "path",
             "Line",
-            "geodesic (default) or rhumb",
-            Kind::Choice(&["geodesic", "rhumb"]),
+            "geodesic (default), rhumb, or great-circle (on a sphere, for comparison)",
+            Kind::Choice(&["geodesic", "rhumb", "great-circle"]),
         ),
         E[0],
         E[1],
@@ -177,10 +179,10 @@ pub static WAYPOINTS: ToolDef = ToolDef {
     ],
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     when_to_use: "Use this to lay points along a route: evenly spaced marks for a flight log, a track to draw on a map, a line to sample terrain or weather along, or a GPX or GeoJSON file to load somewhere else. The points sit on the geodesic, which is the line the route actually follows.",
-    limitations: "The points are on the shortest path, so drawn on a Mercator chart they curve; a line that holds one heading is the rhumb tool instead. Spacing is even in distance along the line, not in latitude or longitude, and not in time unless the speed is constant. Between two nearly antipodal points the shortest path is poorly determined, so a small change in either end can swing the whole line to the other side of the globe.",
+    limitations: "The points are on the shortest path, so drawn on a Mercator chart they curve; a line that holds one heading is the rhumb tool instead. The great-circle line is on a sphere of the IUGG mean radius R1, for comparison only: it is not the path over the ellipsoid, and its length differs from the geodesic's by up to about 0.5%. Spacing is even in distance along the line, not in latitude or longitude, and not in time unless the speed is constant. Between two nearly antipodal points the shortest path is poorly determined, so a small change in either end can swing the whole line to the other side of the globe.",
     model: "Karney (2013) geodesic on WGS 84",
-    accuracy: "Points on the geodesic to nanometers",
-    references: &[KARNEY],
+    accuracy: "Points on the geodesic to nanometers; great-circle points are exact on their sphere, which is a model of the Earth, not the Earth",
+    references: &[KARNEY, IUGG_MEAN_RADIUS],
     examples: &[Example {
         id: "primary",
         title: "JFK to London Heathrow in 10 equal intervals",
@@ -214,11 +216,16 @@ pub static WAYPOINTS: ToolDef = ToolDef {
 
 fn run_waypoints(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (la1, lo1, la2, lo2) = two_points(ctx)?;
-    let rhumb = ctx.choice("path")? == Some("rhumb");
+    let path = ctx.choice("path")?;
+    let rhumb = path == Some("rhumb");
+    let sphere = path == Some("great-circle");
     let (e, g) = setup(ctx)?;
     let rh = Rhumb::new(e.a, e.f);
     let (len, azi) = if rhumb {
         rh.inverse(la1, lo1, la2, lo2)
+    } else if sphere {
+        let (sigma, c) = sphere_inverse(la1, lo1, la2, lo2);
+        (sigma * R1, c)
     } else {
         let (s, a1, _, _): (f64, f64, f64, f64) = g.inverse(la1, lo1, la2, lo2);
         (s, a1)
@@ -308,6 +315,17 @@ fn run_waypoints(ctx: &mut Ctx) -> Result<Json, ToolError> {
         let (lat, lon, az) = if rhumb {
             let end = rh.direct(la1, lo1, azi, *s);
             (end.lat, end.lon, azi)
+        } else if sphere {
+            // The course along the arc: the forward azimuth at central angle
+            // d from the start on initial course `azi`.
+            let d = *s / R1;
+            let (lat, lon) = sphere_direct(la1, lo1, azi, d);
+            let (p1, th) = (la1.to_radians(), azi.to_radians());
+            let az = atan2(
+                sin(th) * cos(p1),
+                cos(d) * cos(p1) * cos(th) - sin(p1) * sin(d),
+            );
+            (lat, lon, az.to_degrees())
         } else {
             let (lat, lon, az2): (f64, f64, f64) = g.direct(la1, lo1, azi, *s);
             (lat, lon, az2)
@@ -341,15 +359,19 @@ fn run_waypoints(ctx: &mut Ctx) -> Result<Json, ToolError> {
             .collect::<Vec<_>>()
             .join(",")
     );
-    ctx.model = Some(format!(
-        "{} on {}",
-        if rhumb {
-            "Rhumb line"
-        } else {
-            "Karney (2013) geodesic"
-        },
-        e.describe()
-    ));
+    ctx.model = Some(if sphere {
+        "Great circle on a sphere of the IUGG mean radius R1 = 6,371,008.771 m".to_owned()
+    } else {
+        format!(
+            "{} on {}",
+            if rhumb {
+                "Rhumb line"
+            } else {
+                "Karney (2013) geodesic"
+            },
+            e.describe()
+        )
+    });
     Ok(Json::obj([
         ("count", Json::Num(rows.len() as f64)),
         ("length", ctx.out("length", crate::meters(len))),

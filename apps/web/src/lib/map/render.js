@@ -464,8 +464,11 @@ export function draw(g, view, base, layers, c) {
   }
   // Tool layers: inputs and comparisons in neutrals, the result in the accent,
   // each over a light casing so it reads over land and water alike.
+  // The great circle runs within a few kilometers of the geodesic, so its
+  // dots go on top, where they show along the result line instead of under it.
   const order = { comparison: 0, input: 1, result: 2 };
-  for (const layer of [...layers].sort((a, b) => order[a.role] - order[b.role])) {
+  const rank = (l) => (l.path === 'great-circle' ? 3 : order[l.role]);
+  for (const layer of [...layers].sort((a, b) => rank(a) - rank(b))) {
     const stroke = layer.role === 'result' ? c.accent : c.muted;
     if (layer.kind === 'polygon' && layer.cell) {
       // A grid cell: the origin strong, the rest fading with grid distance.
@@ -504,12 +507,16 @@ export function draw(g, view, base, layers, c) {
       g.beginPath();
       trace(g, view, layer.points, false);
       g.setLineDash([]);
-      g.strokeStyle = c.surface;
-      g.lineWidth = layer.role === 'result' ? 8 : 4;
-      g.stroke();
-      g.setLineDash(layer.role === 'comparison' ? [6, 5] : []);
+      // No casing under the great circle's dots, or it would hide the line they lie on.
+      const dotted = layer.path === 'great-circle';
+      if (!dotted) {
+        g.strokeStyle = c.surface;
+        g.lineWidth = layer.role === 'result' ? 8 : 4;
+        g.stroke();
+      }
+      g.setLineDash(dotted ? [2, 4] : layer.role === 'comparison' ? [6, 5] : []);
       g.strokeStyle = stroke;
-      g.lineWidth = layer.role === 'result' ? 3 : 1.5;
+      g.lineWidth = layer.role === 'result' ? 3 : dotted ? 2 : 1.5;
       g.stroke();
       g.setLineDash([]);
       if (layer.arrows || layer.stops) marks(g, view, layer, stroke, c.surface);

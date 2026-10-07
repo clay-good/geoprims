@@ -44,6 +44,10 @@ fn catalog_lint_examples_vectors() {
         "spcs2022-beta@2026-06-01/spcs2022-beta.json",
         include_bytes!("../../../../assets/data/spcs2022-beta/2026-06-01/spcs2022-beta.json"),
     );
+    gp_base::assets::put(
+        &gp_base::assets::key("wmmhr2025", "2025.0", "WMMHR.COF"),
+        include_bytes!("../../../../assets/data/wmmhr2025/2025.0/WMMHR.COF"),
+    );
     for g in [
         "nad27_nad83_1986_conus",
         "nad27_nad83_1986_alaska",

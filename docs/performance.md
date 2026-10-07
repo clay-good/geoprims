@@ -112,7 +112,10 @@ CPU setting, 50 warm-up calls, and 1,000 timed calls per tool. The timer is
 inside the shared loader around the synchronous Wasm ABI call; it excludes
 worker messages, async scheduling, and asset downloads. CDP does not throttle
 a dedicated worker. The report also records cold module initialization
-after download. CI uploads the table and JSON; a previous-release Chromium
+after download. It then runs every workflow's whole chain through the
+shared chain runner, 5 warm-up and 50 timed runs each, and fails when the
+mapping-flight chain's p95 is over 300 ms (add-job-workflows); on 2026-10-07
+it was 65 ms for all nine steps. `--workflows-only` skips the per-tool pass. CI uploads the table and JSON; a previous-release Chromium
 baseline and per-tool budget declarations are still needed for a release gate.
 Cold module instantiation already has a 150 ms gate in the Chromium benchmark.
 Local 4× runs show some simple calls with p50 near 0.2 ms and p95 above 3 ms;

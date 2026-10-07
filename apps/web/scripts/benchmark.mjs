@@ -15,6 +15,11 @@ const root = join(web, '../..');
 const WARMUP = 50;
 const SAMPLES = 1000;
 const COLD_INIT_BUDGET_MS = 150; // platform/compute-core
+const CHAIN_WARMUP = 5;
+const CHAIN_SAMPLES = 50;
+// add-job-workflows "Performance": the whole mapping-flight chain, every step,
+// within 300 ms on the reference profile.
+const CHAIN_BUDGETS_MS = { 'mapping-flight': 300 };
 
 function option(name) {
   const at = process.argv.indexOf(name);
@@ -42,7 +47,8 @@ async function main() {
   const benchPath = `_benchmark-${process.pid}`;
   const benchDir = join(web, 'dist', benchPath);
   mkdirSync(benchDir);
-  for (const name of ['module.mjs', 'harden.mjs', 'assets.mjs']) {
+  const { workflows } = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8'));
+  for (const name of ['module.mjs', 'harden.mjs', 'assets.mjs', 'chain.mjs']) {
     copyFileSync(join(root, 'packages/runtime/src', name), join(benchDir, name));
   }
   writeFileSync(join(benchDir, 'index.html'), '<!doctype html><html lang="en"><title>geoprims benchmark</title></html>');
@@ -87,7 +93,8 @@ async function main() {
     }, benchPath);
     const tools = [];
     const modules = new Map();
-    for (const [index, tool] of catalog.tools.entries()) {
+    const onlyWorkflows = process.argv.includes('--workflows-only');
+    for (const [index, tool] of (onlyWorkflows ? [] : catalog.tools).entries()) {
       const example = tool.examples.find((e) => e.id === tool['x-primary-example']) ?? tool.examples[0];
       const stats = await page.evaluate(async ({ id, moduleName, input, warmup, samples }) => {
         const { module, initMs } = await window.__benchmark.get(moduleName);
@@ -108,15 +115,48 @@ async function main() {
       modules.set(tool.module, stats.initMs);
       if ((index + 1) % 25 === 0) console.error(`measured ${index + 1}/${catalog.tools.length} tools`);
     }
+    // Each workflow's whole chain, through the same chain runner the pages and
+    // the MCP server use, on its example inputs.
+    const moduleOf = Object.fromEntries(catalog.tools.map((t) => [t.id, t.module]));
+    const chains = [];
+    for (const w of workflows) {
+      const times = await page.evaluate(async ({ path, workflow, moduleOf, warmup, samples }) => {
+        const { runChain } = await import(`/${path}/chain.mjs`);
+        const invoke = async (id, input) => JSON.parse(await (await window.__benchmark.get(moduleOf[id])).module.invoke(id, JSON.stringify(input)));
+        const once = async () => {
+          const run = await runChain(workflow, {}, invoke);
+          if (!run.ok) throw new Error(`${workflow.slug} fails on its example at step ${run.failed + 1}`);
+        };
+        for (let i = 0; i < warmup; i++) await once();
+        const out = [];
+        for (let i = 0; i < samples; i++) {
+          const start = performance.now();
+          await once();
+          out.push(performance.now() - start);
+        }
+        window.__benchmark.durations.clear();
+        return out;
+      }, { path: benchPath, workflow: w, moduleOf, warmup: CHAIN_WARMUP, samples: CHAIN_SAMPLES });
+      times.sort((a, b) => a - b);
+      chains.push({ slug: w.slug, steps: w.steps.length, p50Ms: percentile(times, 0.5), p95Ms: percentile(times, 0.95), budgetMs: CHAIN_BUDGETS_MS[w.slug] ?? null });
+    }
     const report = {
       profile: profile.version, host: 'chromium-main-thread', measurement: 'synchronous-abi', cpuTarget: profile.cpu.targetBenchmarkIndex, cpuSlowdown: cpu.rate, hostBenchmarkIndex: cpu.hostIndex,
       warmup: WARMUP, samples: SAMPLES,
-      modules: [...modules].map(([name, initMs]) => ({ name, initMs })), tools,
+      modules: [...modules].map(([name, initMs]) => ({ name, initMs })), tools, chains,
     };
     const baseline = option('--baseline');
     const rows = baseline ? compare(report, JSON.parse(readFileSync(baseline, 'utf8'))) : tools;
     console.log(`Chromium benchmark: profile ${profile.version}, ${cpu.rate}× CPU slowdown (host BenchmarkIndex ${cpu.hostIndex}, target ${profile.cpu.targetBenchmarkIndex}), ${WARMUP} warm-up and ${SAMPLES} measured calls per tool`);
-    console.log(table(rows));
+    if (tools.length) console.log(table(rows));
+    console.log(`\nWorkflow chains (${CHAIN_WARMUP} warm-up and ${CHAIN_SAMPLES} measured runs each)\n`);
+    console.log('| Workflow | Steps | p50 ms | p95 ms | Budget |\n|---|---|---|---|---|');
+    for (const c of chains) console.log(`| ${c.slug} | ${c.steps} | ${c.p50Ms.toFixed(2)} | ${c.p95Ms.toFixed(2)} | ${c.budgetMs ? `${c.budgetMs} ms` : ''} |`);
+    const slowChains = chains.filter((c) => c.budgetMs && c.p95Ms > c.budgetMs);
+    if (slowChains.length > 0) {
+      console.error(`${slowChains.map((c) => `${c.slug} p95 ${c.p95Ms.toFixed(1)} ms over ${c.budgetMs} ms`).join('; ')}`);
+      process.exitCode = 1;
+    }
     const output = option('--output');
     if (output) writeFileSync(output, JSON.stringify(report, null, 2) + '\n');
     const slowModules = report.modules.filter((m) => m.initMs > COLD_INIT_BUDGET_MS);

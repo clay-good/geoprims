@@ -125,6 +125,8 @@ pub static RADIAL_FIX: ToolDef = ToolDef {
     ],
     model: "True course = radial + station variation (east positive); the fix is the Karney geodesic direct on WGS 84 from the station. With a date, WMM2025 declination at the station at sea level is compared with the station variation",
     accuracy: "Exact geometry for the entered ground distance (convert a DME reading with the slant-range tool first). The station variation governs the radial, even when the Earth's field has moved since",
+    when_to_use: "Use this when you need the latitude and longitude of a point given as a radial and distance from a VOR, such as a fix in a clearance or a NOTAM. Enter the station position, the radial, the ground distance, and the station's published variation. It returns the fix's position and the true course from the station. Add a date to compare that variation with today's magnetic field.",
+    limitations: "Radials follow the station's own published variation, not today's field, so a wrong variation moves the fix. The distance must be over the ground; a DME reading is slant range, so convert it first with the slant-range tool. The WMM comparison is at sea level and only flags a gap over 1°. The position is for planning and does not replace the charted fix.",
     references: &[IFH_VOR, gp_geo::magnetic::WMM_REPORT],
     examples: &[Example {
         id: "primary",

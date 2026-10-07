@@ -187,6 +187,8 @@ pub static TABLE: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "Linear interpolation along each variable between the listed values that bracket the query: 2 cells for one variable, 4 (bilinear) for two, 8 (trilinear) for three, each weighted by the product of its distances. No extrapolation. Corrections apply in order: percent (× (1 + p/100)), add, or multiply (PHAK, aircraft performance)",
     accuracy: "Exact interpolation of the table as entered; real performance between table rows is not linear, and the table is only as good as the book it came from",
+    when_to_use: "Use this when a POH or AFM table lists performance at set values and your conditions fall between them, such as takeoff distance at 3,000 ft and 25 °C. Enter the table cells, the point to look up, and any corrections the book gives, like a percent off for headwind. It shows the cells it used, their weights, and each correction as a step.",
+    limitations: "It reads only the table you enter and will not guess beyond its edges, so a lookup outside the table is refused. Reading in straight lines between rows is an approximation, since real performance between rows is not linear. It has no built-in aircraft data. Check each number you typed against the book, which governs.",
     references: &[PHAK_PERF],
     examples: &[Example {
         id: "primary",

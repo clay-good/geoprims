@@ -218,6 +218,8 @@ pub static GEOFENCE: ToolDef = ToolDef {
     warnings: &["WAYPOINT_OUTSIDE_GEOFENCE", "EXPERIMENTAL_TOOL"],
     model: "The fence is the round geodesic buffer of the area (geometry.buffer.geodesic): every point within the distance of it. A waypoint is outside when its geodesic distance to the area exceeds the fence distance, and by exactly the difference (Karney 2013)",
     accuracy: "The fence is within 0.1% of the distance or 0.5 m, as measured; waypoint distances are exact geodesic distances to the area",
+    when_to_use: "Use this to draw a keep-in boundary a set distance around a job site, a route, or a single point, with an optional inner warning fence. It gives the fence outline, its area and perimeter, and checks your mission waypoints, listing any that fall past a fence and by how far. The outline can go into your flight app's fence settings, if it has them, or onto a site briefing map.",
+    limitations: "The fence is drawn in plan only; it sets no height limit and does not check airspace, terrain, or obstacles. Waypoints are tested as points, so a straight leg between two inside points can still cut across a concave edge of the fence. GPS error and wind drift are not included, so leave room for them in the distance you choose. Whether the drone obeys a fence depends on its own software.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",

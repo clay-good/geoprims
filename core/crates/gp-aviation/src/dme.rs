@@ -93,6 +93,8 @@ pub static SLANT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "DME measures the straight-line (slant) distance; over flat ground the horizontal distance is √(DME² − h²) with h the height above the station in nautical miles (6,076.1 ft each). Error is largest close in and high up (Instrument Flying Handbook, ch. 9)",
     accuracy: "Exact geometry; ignores the Earth's curvature, which is under 0.01 NM inside 60 NM at 10,000 ft",
+    when_to_use: "Use this when you are high and close to a DME station and the reading looks too big. Enter the DME reading and your height above the station, which is your altitude minus the station's elevation. It returns the distance over the ground, how much the DME overstates it, and the angle up from the station to you. Use the ground distance when you plot a position on a chart.",
+    limitations: "The geometry is a flat right triangle and ignores the Earth's curve, which matters little inside 60 NM. It assumes your height is right, so a wrong station elevation moves the answer. When the reading is less than your height, you are close to overhead and the tool stops. Close in and high up the error is large, so treat any answer there with care.",
     references: &[IFH_NAV],
     examples: &[Example {
         id: "primary",
@@ -260,6 +262,8 @@ pub static TIME_TO_STATION: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Flying square to the station, which is abeam when the timing starts, the track flown and the two bearings make a right triangle: from where the timing ends the station is (GS × t) ÷ sin Δ away, so the time is t ÷ sin Δ. The rule, 60 × t ÷ Δ, takes sin Δ ≈ Δ/60 (Instrument Flying Handbook, ch. 9)",
     accuracy: "Exact for a steady wind-free track square to the station; the rule reads about 5% long near 10° and grows with the change",
+    when_to_use: "Use this to estimate how far away a VOR or NDB is when you have no DME. Turn so the station is off your wingtip, time how long the bearing takes to change by a few degrees, and enter the minutes and degrees. It returns the time to the station, and the distance if you add your groundspeed, both exactly and by the 60-times rule.",
+    limitations: "The math assumes you flew a straight track square to the station, with no wind pushing you off it. Wind, a turn, or a sloppy start all move the answer. Small bearing changes, from 5° to 20°, work well; changes of 90° or more are refused. Treat the result as an estimate and confirm your position another way.",
     references: &[IFH_NAV],
     examples: &[Example {
         id: "primary",
@@ -439,6 +443,8 @@ pub static ARC_LEAD: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "A standard-rate turn (3°/s) at groundspeed GS has radius GS ÷ (60π) NM. Turning 90° from a radial onto the arc, start one turn radius r short of the arc. Turning 90° from the arc onto an inbound radial, the turn circle sits inside the arc, tangent to it and to the radial, so the lead is asin(r ÷ (R − r)); the rule of thumb is 60 × r ÷ R radials (Instrument Flying Handbook, ch. 9)",
     accuracy: "Exact for a steady turn in still air; wind moves the lead points",
+    when_to_use: "Use this when a procedure or a clearance has you join or leave a DME arc. Enter the arc's DME and your groundspeed, or your own turn radius. It gives how far before the arc to start the turn when you fly in on a radial, and how many radials early to roll out onto the inbound course. The rule-of-thumb lead is shown next to the exact one.",
+    limitations: "The leads assume a steady turn in still air, at standard rate unless you set a radius. Wind pushes the turn and moves both lead points, so expect to adjust. Slant range is ignored, and a turn too wide for the arc is refused. The published procedure, any lead radial printed on the chart, and ATC come first.",
     references: &[IFH_NAV],
     examples: &[Example {
         id: "primary",
@@ -642,6 +648,8 @@ pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Course = the radial outbound, or the radial + 180° inbound. The heading is the course turned toward the radial by the intercept angle: by default twice the angle off course, kept between 20° and 90° (a common training technique), or your own",
     accuracy: "Geometry only: correct the heading for wind, and follow the procedure or ATC's assigned heading when there is one",
+    when_to_use: "Use this when you are on one VOR radial and need to get onto another. Enter the radial you are on, the radial you want, and whether you will track it inbound or outbound. It gives a magnetic heading to fly, the course once you are on the radial, and the intercept angle, which is double the angle off course by default. You can set your own angle instead.",
+    limitations: "The heading has no wind correction, so add your own. The default angle is a common training method, kept between 20° and 90°, and other methods work too. If you are on the far side of the station, it tells you to fly toward it first. An assigned heading from ATC or the procedure comes before this answer.",
     references: &[IFH_INTERCEPT],
     examples: &[Example {
         id: "primary",

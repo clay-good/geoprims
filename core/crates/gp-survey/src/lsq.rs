@@ -306,6 +306,8 @@ pub static LEAST_SQUARES: ToolDef = ToolDef {
     ],
     model: "Weighted Gauss-Newton least squares (weights 1/σ²) on linearized distance, angle, and direction equations, each direction set with its own orientation unknown. Reference variance vᵀWv / r; two-tailed χ² test at 95%; 95% error ellipses scaled by √(2 F(0.05; 2, r)), or by 2.4477 without redundancy",
     accuracy: "Converges to the least-squares solution for well-conditioned networks with approximate coordinates near the truth. Experimental: check it against your adjustment software before relying on it",
+    when_to_use: "Use this when a small control or boundary network has more measurements than it strictly needs and you want one adjusted set of coordinates. Enter the fixed control, rough coordinates for the new points, and the distances, angles, and direction sets with their standard deviations. It returns adjusted points, 95% error ellipses, residuals, and a chi-square test. The ellipses can then feed a relative precision check.",
+    limitations: "This is a two-dimensional plane adjustment. It does not handle heights, GNSS vectors, or latitude and longitude, and distances must already be horizontal and on your grid. It needs starting coordinates close to the truth, or it may not converge. A passed test means the standard deviations fit the data; it does not prove there is no blunder. The tool is experimental, so check it against your adjustment software before you rely on it.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

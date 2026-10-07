@@ -148,6 +148,8 @@ pub static UNEQUAL: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Two parabolas, PVC to the point under the PVI and on to the PVT, sharing the grade g_c = (L1 g1 + L2 g2)/(L1 + L2) where they meet; the curve passes L1·L2·(g2 − g1)/(200(L1 + L2)) from the PVI (Ghilani & Wolf 2021, ch. 25)",
     accuracy: "Exact for the parabolas",
+    when_to_use: "Use this when a vertical curve must have a shorter tangent on one side of the PVI than the other, often to fit a fixed point such as a driveway, a bridge, or a crossing road. Enter both grades, the two lengths, and the PVI station and elevation. It gives the PVC and PVT, the curve elevation under the PVI, the high or low point, and the elevation at any station you ask for, ready for grade stakes or a profile check.",
+    limitations: "The curve is built as two parabolas that meet under the PVI and share one grade there. It is geometry, not design: sight distance, drainage, and comfort limits are not checked, and your design manual sets those. When both grades run the same way there may be no high or low point on the curve, and the result says so instead of making one up.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

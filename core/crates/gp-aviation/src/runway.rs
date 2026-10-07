@@ -144,6 +144,8 @@ pub static BEST_RUNWAY: ToolDef = ToolDef {
     ],
     model: "Each runway end's headwind = W·cos θ and crosswind = W·sin θ, θ the wind's angle off the runway heading (10 × its number). Runways within every limit you gave come first, then by headwind, most first, then by crosswind, least first. A variable wind is judged by its worst case",
     accuracy: "Exact for the entered wind. Runway numbers round the heading to 10°, so components can be off by up to W·sin 5°; a close call between two runways may need the published headings. Planning aid: the runway in use is the one ATC or local procedures assign",
+    when_to_use: "Use this when you arrive at an airport with more than one runway and want to see which end the wind favors. Enter the runway pairs and the wind, as a direction and speed or a METAR group, with gusts if any. It ranks every runway end by headwind, lists the crosswind on each, and moves runways past your crosswind or tailwind limit to the bottom.",
+    limitations: "Each runway heading is taken as ten times its number, so a close call can flip with the real heading. It does not know runway length, surface, slope, obstacles, noise rules, or traffic. A variable wind is judged by its worst case. The runway in use is the one ATC or local procedures assign, and the ranking only shows what the wind favors.",
     references: &[PHAK, AC_150_5340, AIM],
     examples: &[Example {
         id: "primary",

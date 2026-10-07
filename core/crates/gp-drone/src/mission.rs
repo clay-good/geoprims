@@ -1399,6 +1399,8 @@ pub static CORRIDOR: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Offset polylines on a local transverse Mercator plane, mitered at bends (miter length limited to 4× the offset), offsets (k − (n − 1)/2)·spacing",
     accuracy: "Offsets are exact on the plane, true to within 1e-7 across a few kilometers.",
+    when_to_use: "Use this to plan a mapping flight along something long and narrow, like a pipeline, road, river, or power line. Give the centerline points in order, the corridor width, and your line spacing, and it lays parallel lines that follow the bends, flown back and forth. It returns each line's offset and waypoints, the centerline length, and the total path, so you can plan batteries and flight time around it.",
+    limitations: "The lines are offsets on a local flat plane, so a corridor must stay within 50 km of its middle point; split a longer one. At sharp bends the offset corners are capped at four times the offset, so lines there may not keep an even distance from the centerline. It places no photo points, sets no height, and assumes flat ground. The lines are centered at your spacing, so check that the outer images still cover the full width.",
     references: &[PIX4D],
     examples: &[Example {
         id: "primary",
@@ -1714,6 +1716,8 @@ pub static ORBIT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Geodesic direct from the center at equal azimuth steps (Karney 2013); heading = reverse azimuth; pitch = −atan(Δh / r)",
     accuracy: "Exact geodesic positions; heights are relative to the center's ground level.",
+    when_to_use: "Use this to plan a circle around a tower, chimney, statue, or building for inspection photos or a 3D model. Give the center, the radius, your flight height, and the height you want centered in the frame, and it returns evenly spaced waypoints with the heading toward the center and the gimbal pitch at each one. It also gives the length of the circle and the spacing between photos.",
+    limitations: "Every waypoint shares one height and one gimbal pitch, so a tall object may need several orbits at different heights. Heights are above the ground at the center, and ground that slopes under the circle changes your real clearance. Positions are geodesic on the WGS84 ellipsoid, but nothing checks for guy wires, trees, or other obstacles along the path. It plans no speed or flight time.",
     references: &[KARNEY],
     examples: &[Example {
         id: "primary",

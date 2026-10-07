@@ -212,6 +212,8 @@ pub static OBLIQUE_GSD: ToolDef = ToolDef {
     warnings: &["BEYOND_HORIZON", "EXPERIMENTAL_TOOL"],
     model: "Pinhole camera pitched θ from nadir over flat ground: each sensor point's ray, f·a + y·u + x·r with a the optical axis, meets the ground at height H; GSD is the ground span of one pixel step there, along and across (Wolf, Dewitt & Wilkinson 2014, ch. 10)",
     accuracy: "Exact for a pinhole camera over flat ground; lens distortion and terrain change it",
+    when_to_use: "Use this when the camera will be tilted forward instead of pointing straight down, as for oblique mapping or inspection shots. Give the height, the tilt, and the camera, and it gives the ground per pixel at the image center, across and along the view, and at the near and far edges, next to the straight-down value. It also gives the four corners of the area the image covers on the ground.",
+    limitations: "It models an ideal pinhole camera over flat ground, tilted forward with no roll. The far edge of a tilted image covers more ground per pixel than the near edge, and once the top of the frame reaches the horizon the far edge and footprint have no finite size, so it warns instead. Lens distortion, hills, and buildings change the real numbers. Earth's curvature and haze at long range are not included.",
     references: &[WOLF],
     examples: &[Example {
         id: "primary",

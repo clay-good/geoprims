@@ -220,6 +220,8 @@ pub static STOCKPILE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Delaunay TIN (Bowyer–Watson) over the base vertices and surface shots; base plane z = a + bx + cy by least squares through the base vertices; volume = Σ triangle area × mean height above the plane, over triangles inside the outline (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "Exact for the TIN; a real pile's volume depends on how densely its surface was shot, especially along ridges and breaks",
+    when_to_use: "Use this when you have shot a stockpile with a total station, GNSS, or drone points and need its volume for an inventory or a pay quantity. Enter the toe of the pile in order around it, then the shots on the pile surface, all as easting, northing, and elevation. It builds a TIN, measures it above a plane fit to the toe, and gives the volume, cubic yards, base area, and peak height.",
+    limitations: "The floor is a flat plane fit through the toe points, so a pile sitting in a hollow or on a mound gets the wrong floor. The surface is straight between shots, and missed ridges and breaks change the answer. Triangles that fall outside the toe outline are left out. Density and moisture are not part of it, so tonnage needs a density from another source.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -467,6 +469,8 @@ pub static SOLID: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Cone πr²h/3; frustum πh(R² + Rr + r²)/3; prism A·h; a conical pile's height r·tan(angle of repose)",
     accuracy: "Exact for the shape; real piles are rarely perfect cones",
+    when_to_use: "Use this when a pile or pit is close to a simple shape and you need a quick volume: a cone for a conveyor pile, a frustum for a flat-topped pile or tank, or a prism for a trench or berm of even section. Enter the radius and height, or for a cone the base and an angle of repose you measured or looked up, with its source. It returns the volume in your units and in cubic yards.",
+    limitations: "Real piles are rarely true cones or frustums, so the answer is an estimate. Sagging sides, an uneven top, or a pile pushed against a wall change the volume. The angle of repose depends on the material and how it was dumped, and the value you enter sets the height. For a pile you can shoot, a TIN volume from field shots is usually closer.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

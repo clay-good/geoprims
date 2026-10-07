@@ -150,6 +150,8 @@ pub static ANGULAR: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "Required sum (n − 2)·180° for interior angles and (n + 2)·180° for exterior; misclosure = Σ measured − required; allowable = K·√n; each angle corrected by −misclosure/n (Ghilani & Wolf 2021, ch. 10)",
     accuracy: "Exact; the allowable depends on the standard, entered as K",
+    when_to_use: "Use this when you have turned all the angles of a closed loop traverse and want to check them before you work out any coordinates. Enter the angles in order, say whether they are interior or exterior, and give the K your job standard uses. You get the misclosure, the allowable K√n, and each angle balanced by an equal share. The balanced angles then feed the bearings for the traverse closure.",
+    limitations: "The tool splits the misclosure evenly across every angle. That assumes each angle was read with the same care, which may not hold when some sights are short. It cannot find a blunder; a large miss usually means one bad angle or a skipped station. It checks only the angle sum, not distances or the linear closure. The K value comes from the standard your contract or agency names, not from this tool.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

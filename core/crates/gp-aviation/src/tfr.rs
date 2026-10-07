@@ -315,6 +315,8 @@ pub static TFR_AREA: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "A circle is 72 points at 5° steps of the geodesic direct problem from the center (Karney 2013); a fix-radial-distance center is the navaid's position carried along radial + variation for the distance. Area by Karney's geodesic polygon area; the GeoJSON ring runs counterclockwise and closes on its first point (RFC 7946)",
     accuracy: "Points exact on WGS 84; the 72-point circle's chords sag under 0.1% of the radius. Check the NOTAM itself: this draws what you enter",
+    when_to_use: "Use this when a TFR or other NOTAM describes its area in text and you want to see the shape. Enter packed coordinates and a radius, a fix-radial-distance with the navaid's position and variation, or a list of corner points. It returns the area, its north, south, east, and west edges, and a GeoJSON file you can load into a map app to check your route against it.",
+    limitations: "It draws only what you type. It does not fetch NOTAMs, read their times, or know if a TFR is active, so check the current NOTAM text before you fly. The circle is 72 short straight edges, and the floor and ceiling ride along as text, not as a 3D shape. An area that crosses the 180° meridian is refused.",
     references: &[NOTAM_ORDER, RFC7946],
     examples: &[Example {
         id: "primary",

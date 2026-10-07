@@ -271,6 +271,8 @@ pub static COLD_TEMPERATURE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "ΔH = (−ΔT_std ÷ L0) · ln(1 + L0·H ÷ (T0 + L0·H_aerodrome)), with L0 = −0.0019812 K/ft, T0 = 288.15 K, ΔT_std the airport temperature minus ISA at its elevation, and H the height above the airport (ICAO Doc 8168 Vol II, 2020; not the 2018 Vol III form). Approximations shown beside it: 4% of H per 10 °C below ISA, and AIM Table 7-3-1 read by bilinear interpolation",
     accuracy: "The equation is the ICAO standard for procedure design corrections. Transport Canada AC 500-020 (Issue 04, 2025) prints the same equation with T0 written as 273 + 15, which moves a correction by about 0.1 ft. The 4% rule and the table (built for a sea-level airport) run higher. Use the correction method your procedure and the FAA Cold Temperature Airports list in AIM 7-3 call for; this is a planning aid",
+    when_to_use: "Use this before an instrument approach to a cold airport. Enter the airport elevation, the reported temperature, and each procedure altitude you plan to correct, such as the final approach fix and the MDA. It returns how much to add to each altitude by the ICAO equation, so you keep your terrain clearance when the altimeter reads high. The 4% rule and the AIM table are shown for comparison.",
+    limitations: "It assumes the temperature drop below standard holds from the airport up to each altitude, as the ICAO formula does, and real air layers can differ. No correction is given when the airport is at or above ISA. The tool does not know which segments of your approach need correcting. The FAA Cold Temperature Airports list in AIM 7-3, your procedure, and your operator decide which altitudes and which method apply.",
     references: &[PANS_OPS, AIM_COLD],
     examples: &[Example {
         id: "primary",
@@ -501,6 +503,8 @@ pub static TRUE_ALTITUDE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "True − indicated = (ΔT ÷ L0) · ln(1 + L0·H ÷ (T0 + L0·H_station)) with L0 = −0.0019812 K/ft, T0 = 288.15 K, ΔT the ISA deviation, and H the indicated height above the altimeter-setting station: the ICAO Doc 8168 temperature relation, applied both colder and warmer than ISA. The 4% rule is shown beside it",
     accuracy: "Assumes the deviation holds from the station to the aircraft, as the ICAO relation does; real temperature profiles vary. For procedure altitudes, use the cold-temperature correction tool",
+    when_to_use: "Use this when the air is colder or warmer than standard and you want to know how high you really are. Enter your indicated altitude on the local altimeter setting, the ISA deviation, and the elevation of the station the setting comes from if it is not sea level. It returns your true altitude and the gap from what the altimeter shows. In cold air the gap is negative, which matters for terrain clearance on a winter flight.",
+    limitations: "It assumes the same ISA deviation from the altimeter-setting station up to you, and real air rarely holds one value. It does not know the terrain, and it is not the method for correcting procedure altitudes on an approach; use the cold temperature correction tool for that. The 4% rule beside it is a rough check, not a second answer.",
     references: &[PANS_OPS, PHAK],
     examples: &[Example {
         id: "primary",

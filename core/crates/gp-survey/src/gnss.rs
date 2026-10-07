@@ -150,6 +150,8 @@ pub static RTK_BUDGET: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Precision = a + b × 10⁻⁶ × baseline, the way receiver specifications state it (1σ, ideal conditions); at 95% the horizontal value is multiplied by 2.448 (the two-dimensional factor) and the vertical by 1.96",
     accuracy: "Manufacturer specifications assume open sky, good geometry, and no multipath; field results are often worse. A root-sum-square of the two terms would read lower",
+    when_to_use: "Use this when you need to know if an RTK or PPK setup can meet a job's tolerance before you go to the field. Enter the receiver's a mm plus b ppm spec, the baseline to the base or network, and your target. It returns horizontal and, if given, vertical precision at 1 sigma or 95%, and says whether you are within, near, or beyond the target.",
+    limitations: "The answer is what the maker's spec promises under open sky with good satellite geometry and no multipath. Real work under trees, near buildings, or with poor geometry is often worse. The two terms are added straight, as specs state them. It does not model antenna height errors, setup errors, or the accuracy of the base coordinates.",
     references: &[NGS_RT],
     examples: &[Example {
         id: "primary",
@@ -374,6 +376,8 @@ pub static OPUS_PLAN: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "OPUS accepts 15 minutes to 48 hours of data; files of 15 minutes to 2 hours go to RSGPS rapid-static processing and 2 to 48 hours to PAGES static processing (NGS OPUS page, last modified 2026-09-09). The RINEX 2 short name is the 4-character station, the day of year, session 0, the two-digit year, and o for observations",
     accuracy: "NGS guidance as of the date shown; check the OPUS page before a job. Rapid-static processing needs continuous data and good geometry and may not work in remote areas",
+    when_to_use: "Use this when you are planning a static GNSS session to send to NGS OPUS. Enter the session length, the UTC start date, and the four-character station name. It tells you whether OPUS will run it as rapid static or static, which NGS software handles it, and the data rules NGS lists. It also builds the RINEX 2 file name and the day of year, so the file is named right before upload.",
+    limitations: "The rules come from the NGS OPUS page as of the date shown, and NGS can change them, so check that page before a job. The tool checks length only. It cannot tell whether your data is continuous, has enough satellites, or will solve, and rapid static may fail in remote areas. File names use the RINEX 2 short form, not the longer RINEX 3 form.",
     references: &[NGS_OPUS],
     examples: &[Example {
         id: "primary",
@@ -540,6 +544,8 @@ pub static ANTENNA_HEIGHT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "The slant, the radius, and the vertical make a right triangle: vertical to the measurement point = √(slant² − radius²), plus the vertical offset from that point to the ARP",
     accuracy: "Exact geometry; as good as the tape and the antenna's published radius and offset",
+    when_to_use: "Use this when you measure a GNSS antenna height with a tape on a slant, from the mark to the edge of the antenna, and need the vertical height. Enter the slant, the antenna radius from NGS ANTINFO or the maker's manual, and the offset from that edge point to the antenna reference point. It returns the vertical height to the ARP and how much the raw slant would have added.",
+    limitations: "The math is one right triangle, so it assumes the pole or tripod is set over the mark and that the radius and offset match your exact antenna model. A wrong model, a slant taken to a different notch, or a bad tape read carries straight into every height. Phase center corrections are not added here; your processing software applies those later, starting from the ARP.",
     references: &[NGS_ANTENNA],
     examples: &[Example {
         id: "primary",
@@ -726,6 +732,8 @@ pub static ALTA_RPP: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Allowable = 2 cm (0.07 ft when the distance is in feet) + 50 × 10⁻⁶ × distance (ALTA/NSPS 2026, 3.E.v). RPP is the semi-major axis of the 95% error ellipse of the line between the corners: 2.448 × √(largest eigenvalue of the east-north covariance) when a covariance is given",
     accuracy: "The allowable value is exact; the comparison is as good as the adjustment's weighting. Misclosure is not RPP and is refused",
+    when_to_use: "Use this when you are checking an ALTA/NSPS land title survey against the 2026 standards. Enter the distance between two adjacent boundary corners and either the 95% ellipse semi-major axis from your least-squares adjustment or the standard errors and covariance. It returns the allowable relative positional precision, 2 cm plus 50 ppm, and says whether your result is within, near, or beyond it.",
+    limitations: "It checks one pair of corners at a time. The result is only as good as the adjustment behind it, including the weights you gave each measurement. A traverse misclosure is not relative positional precision, and the tool will not treat it as one. The standard's own text, the client's contract, and the surveyor in charge decide whether the survey complies.",
     references: &[ALTA_2026],
     examples: &[Example {
         id: "primary",

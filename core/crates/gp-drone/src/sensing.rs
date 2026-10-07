@@ -196,6 +196,8 @@ pub static DATASET_SIZE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Orthomosaic bytes = area ÷ GSD² × bands × bits ÷ 8, then divided by an assumed compression range; raw = images × MB each; LAS = 375 + points × the LAS 1.4 record size of the chosen point format; LAZ = LAS ÷ an assumed ratio. 1 GB = 10⁹ bytes",
     accuracy: "An estimate: compression depends on the content, and processing software adds overviews and tiles. The ratios shown are assumptions you can change, not measurements",
+    when_to_use: "Use this when you quote or plan a mapping job and need to know how much storage it takes. Give the area and ground sampling distance for the orthomosaic, the image count and size for the raw capture, or the lidar point count, and it estimates each in gigabytes. Use the numbers to size memory cards, drives, upload time, and cloud storage before the flight.",
+    limitations: "The orthomosaic is figured from pixel count, bands, and bit depth, then divided by an assumed compression range that your data may not match. Processing software adds overviews, tiles, and side products such as surface models that are not counted. The LAZ size uses an assumed ratio to LAS. A gigabyte here is a billion bytes, which some systems show differently.",
     references: &[LAS14],
     examples: &[Example {
         id: "primary",
@@ -493,6 +495,8 @@ pub static THERMAL_FOOTPRINT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "IFOV = pixel pitch ÷ focal length when not given; footprint = IFOV × distance; the smallest reliable target spans the rule's pixels (3 × 3 by default, FLIR guidance), and the farthest distance for a target is its size ÷ (pixels × IFOV)",
     accuracy: "Geometry only. Atmosphere, optics blur, and emissivity also limit what a thermal camera reads; the 3 × 3 rule is industry guidance, not a standard",
+    when_to_use: "Use this when you plan a thermal inspection, such as solar panels, roofs, or power lines, and need to know how close to fly. Give the camera's IFOV, or its pixel pitch and focal length, and the distance, and it gives the size one pixel covers and the smallest target you can measure, three pixels across by default. Give a target size to get the farthest distance that still measures it.",
+    limitations: "This is geometry only. Haze, lens blur, the target's emissivity, and reflected heat all affect the reading, and none are modeled. The three-pixel rule is guidance from a camera maker, not a standard, so a client or procedure may ask for more. The distance is along the line of sight, so viewing a surface at an angle stretches the footprint on it.",
     references: &[FLIR_3X3],
     examples: &[Example {
         id: "primary",
@@ -781,6 +785,8 @@ pub static LIDAR_PLAN: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Swath = 2H tan(FOV/2); line spacing = swath (1 − side overlap); nominal pulse density = pulse rate ÷ (speed × swath) for one line, and ÷ (speed × line spacing) for the aggregate over overlapping lines; points = pulses × returns per pulse. Quality levels by aggregate nominal pulse density (USGS Lidar Base Specification 2025 rev. A, table 1)",
     accuracy: "Nominal and averaged across the swath: oscillating and non-repetitive scan patterns spread pulses unevenly, denser at the swath edges or center. Quality levels also set accuracy requirements that density alone does not meet; QL0 has QL1's density with tighter accuracy",
+    when_to_use: "Use this to set up a lidar flight for a target point density. Give the pulse rate, the scan angle, the height, the speed, and the side overlap, and it gives the swath width, the line spacing, and the pulse density for one line and for all lines together. It names the USGS 3DEP quality level that density meets, so you can tune height and speed before you fly.",
+    limitations: "Densities are nominal averages that assume every pulse comes back from flat ground. Real scan patterns crowd pulses toward the edges or the center, and water, dark surfaces, and range limits drop returns. A quality level also sets accuracy rules that density alone cannot meet, so this check is not a 3DEP compliance finding. The sensor maker's specs and the USGS text govern.",
     references: &[USGS_LBS],
     examples: &[Example {
         id: "primary",

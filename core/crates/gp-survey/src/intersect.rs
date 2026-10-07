@@ -413,6 +413,8 @@ pub static RESECTION: ToolDef = ToolDef {
     ],
     model: "Tienstra: with the triangle's angles A′, B′, C′ and the station's opposite angles α = ∠BPC, β = ∠CPA, γ = ∠APB, P = (K₁A + K₂B + K₃C)/(K₁ + K₂ + K₃), Kᵢ = 1/(cot of the triangle angle − cot of the station angle) (Ghilani & Wolf 2021, ch. 11)",
     accuracy: "Exact for the geometry; unstable near the circle through the three points, where every station on it sees the same angles",
+    when_to_use: "Use this when you set up a total station on an unknown point and can see three known control points. Turn the clockwise angle from A to B and from B to C, enter the three points in that order, and it finds the station's northing and easting by Tienstra's method. That position then lets you orient the instrument and start staking or a traverse.",
+    limitations: "Only two angles and three points go in, so there is no extra measurement to catch a mistake, and no error estimate comes out. If the station sits near the circle through the three points, the answer becomes unstable; the tool warns when it is close. Coordinates must be on a plane grid. Use a least-squares network when you have more shots.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

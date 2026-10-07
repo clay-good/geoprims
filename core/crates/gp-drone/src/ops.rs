@@ -373,6 +373,8 @@ pub static SPEED_CHECK: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Groundspeed = airspeed + along-track wind, compared with 87 kt",
     accuracy: "Exact for a steady wind along the track.",
+    when_to_use: "Use this before a fast flight, or on a windy day, to check your speed against the Part 107 limit of 87 knots, about 100 mph. The rule caps groundspeed, not airspeed, so a strong tailwind can push a drone that is legal in still air over the line. Enter the airspeed and the wind along your track, and it gives the groundspeed, the limit, the margin left, and whether you are within it.",
+    limitations: "It adds one steady wind straight along your track; a crosswind, gusts, or wind that changes with height are not modeled. Enter a headwind as a negative number. The airspeed is whatever you give it, and a speed shown in a flight app may already be groundspeed. The check covers only the speed limit in 14 CFR 107.51(a), not other limits, waivers, or local rules, and the current text of the regulation governs.",
     references: &[PART_107],
     examples: &[Example {
         id: "primary",
@@ -484,6 +486,8 @@ pub static KINETIC_ENERGY: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "KE = ½·m·v²; C1 needs MTOM under 900 g or under 80 J transferred in a head-on impact at terminal velocity; category 2 is set by 11 ft-lb of transferred energy",
     accuracy: "Exact kinetic energy. Both regulations judge transferred energy under a test method, so this is a screening value, not a compliance finding.",
+    when_to_use: "Use this to screen a drone against the energy limits that some drone rules set. Give its mass and maximum speed, and it works out the kinetic energy in joules and foot-pounds. It then compares that number with the EASA class C1 test of under 900 g or under 80 J, and with the FAA threshold of 11 ft-lb for category 2 operations over people, so you know which way a design leans.",
+    limitations: "Kinetic energy here is half the mass times the speed squared, at the speed you enter. Both rules judge the energy passed to a person on impact under a test method, and C1 asks about a head-on impact at terminal velocity, which may not match your top speed. A drone that tumbles, breaks, or has guards can pass on less. So a result under a limit is a screening value, not a compliance finding.",
     references: &[EU_945, PART_107],
     examples: &[Example {
         id: "primary",
@@ -631,6 +635,8 @@ pub static EASA_SUBCATEGORY: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Regulation (EU) 2019/947 UAS.OPEN.020-.040: A1 for C0, C1, and under-250 g legacy drones; A2 for C2; A3 for C0-C4 and legacy drones under 25 kg; C5 and C6 belong to the specific category",
     accuracy: "A summary of the regulation as of the review date; national rules and zones also apply.",
+    when_to_use: "Use this when you fly in the EU open category and want to know where your drone may go. Pick its class mark, or none for a legacy or home-built drone, and give its takeoff mass, and it lists the open subcategories it may use, A1, A2, or A3, with the distance rule for each. It also notes conditions tied to the class, so you know which certificate or rule to read next.",
+    limitations: "This sums up Regulations (EU) 2019/947 and 2019/945 as of the review date. It trusts the class mark you pick and does not check it against the mass, except that the open category ends at 25 kg and C5 and C6 belong to the specific category. It does not check the height limit, pilot age, geographical zones, or national rules. The current regulation and your national aviation authority govern, not this summary.",
     references: &[EU_947, EU_945],
     examples: &[Example {
         id: "primary",

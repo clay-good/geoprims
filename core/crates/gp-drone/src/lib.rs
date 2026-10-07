@@ -1038,6 +1038,8 @@ pub static MOTION_BLUR: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Blur = groundspeed × exposure / GSD",
     accuracy: "Exact for straight, level flight; vibration adds blur",
+    when_to_use: "Use this when you set the camera for a mapping flight and want sharp images at the speed you plan to fly. Give the groundspeed, shutter time, and ground sampling distance, and it tells you how many pixels the image smears during each exposure. It also gives the slowest shutter that keeps the smear under your limit, half a pixel unless you set one, as a fraction you can dial in on the camera.",
+    limitations: "It counts only the drone's straight, level motion over the ground while the shutter is open. Vibration, gimbal shake, turns, and gusts add blur it does not see. The ground sampling distance is taken as given, so where the terrain rises toward the drone the real smear in pixels is larger. The shutter fraction is rounded, and cameras offer set steps, so pick the next faster one. Your processing software may want a tighter limit.",
     references: &[WOLF],
     examples: &[Example {
         id: "primary",

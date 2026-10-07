@@ -228,6 +228,8 @@ pub static LOCALIZATION: ToolDef = ToolDef {
     ],
     model: "Least squares on centroid-reduced coordinates. Similarity: E = a·e + b·n + tE, N = c·e + d·n + tN with d = a and b = −c, scale √(a² + c²), rotation atan2(c, a). Affine: E = a·e + b·n + tE, N = c·e + d·n + tN, scale √|ad − bc|. Local and grid values are compared in meters",
     accuracy: "Exact least squares; the transform is only as good as the control points and holds within their extent",
+    when_to_use: "Use this when a job runs on local site coordinates and you need to tie it to State Plane or another grid using control points you have in both. Enter each point's local and grid northing and easting, pick a similarity or affine fit, and add the combined factor you expect. It returns scale, rotation, shifts, residuals, and their RMS, and it flags a scale that looks like a feet and meters mix-up.",
+    limitations: "The fit is horizontal only. It does not tie heights, a geoid, or a vertical shift. It holds inside the area the control covers and gets weaker outside it. The fewest points a fit needs give no check, so add more to see residuals that mean something. A large residual points to a bad control point, not to a fit that should be forced.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

@@ -151,6 +151,8 @@ pub static CURVE_LAYOUT: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Arc definition: T = R tan(Δ/2), L = RΔ; deflection from the PC δ = s/(2R) for arc s; chord 2R sin δ; coordinates from the PC along the back tangent rotated by δ (Ghilani & Wolf 2021, ch. 24)",
     accuracy: "Exact for the elements given",
+    when_to_use: "Use this when you need to stake a simple circular curve with a total station or a transit and tape. Enter the radius, the deflection, the PI station, and a station interval. It gives the PC and PT stations, the tangent and arc length, and a row for each full station with its deflection from the PC and chords. Add the PI coordinates and the back tangent direction to get coordinates for each stake as well.",
+    limitations: "The curve is one circular arc, with stations measured along the arc. It does not handle spirals, compound or reverse curves, or the vertical alignment. Deflections are turned from the PC, so a setup elsewhere on the curve needs its own numbers. Coordinates are plane grid values, and the stakes are only as good as the PI, radius, and deflection you enter.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

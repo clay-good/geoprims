@@ -250,6 +250,8 @@ pub static ALOFT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Between the two forecast levels that bracket the altitude, u, v, and temperature vary linearly with altitude; the wind is read back from u and v. No extrapolation above the highest or below the lowest level. Forecast winds are true (Aviation Weather Handbook §27.2)",
     accuracy: "Exact for the linear model; the forecast's own error is larger",
+    when_to_use: "Use this when you plan to cruise between the levels a winds aloft forecast gives, such as 7,500 ft between the 6,000 and 9,000 ft winds. Enter the forecast levels and your altitude. It returns the wind direction and speed at your altitude, and the temperature when both levels give one. Use that wind in the heading, groundspeed, and fuel plan for the leg.",
+    limitations: "It blends the levels in a straight line by altitude, and the forecast itself is often off by more than that. When the wind turns sharply between levels, the vector blend can give a speed lower than either level. Altitudes outside the levels you give are refused. Forecast directions are true, so convert to magnetic before you fly them.",
     references: &[WEATHER_HANDBOOK],
     examples: &[Example {
         id: "primary",

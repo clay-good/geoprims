@@ -1302,6 +1302,8 @@ pub static ISA_TEMPERATURE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "ICAO Standard Atmosphere layer temperatures",
     accuracy: "Exact to the ISA definition",
+    when_to_use: "Use this when you need the standard temperature at an altitude, or how far today's air is from it. Enter a pressure altitude, such as a flight level, and the outside air temperature if you have it. It returns the ISA temperature and the ISA deviation, like ISA +10. Many POH cruise and climb tables are laid out by ISA deviation, and the true altitude tool takes it as an input.",
+    limitations: "This is only the temperature side of the standard atmosphere. It does not give pressure, density, or the speed of sound; the ISA tool does. The standard falls about 1.98 °C per 1,000 ft up to 36,089 ft and then holds at -56.5 °C up to about 65,600 ft, so a real sounding often differs. Use a pressure altitude here, not the altitude on your local altimeter setting.",
     references: &[ICAO_7488, PHAK],
     examples: &[Example {
         id: "primary",

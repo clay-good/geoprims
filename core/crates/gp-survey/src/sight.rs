@@ -143,6 +143,8 @@ pub static SIGHT_DISTANCE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Crest: L = AS²/(200(√h1 + √h2)²) when S < L, else L = 2S − 200(√h1 + √h2)²/A. Sag (headlight): L = AS²/(200(H + S tan β)) when S < L, else L = 2S − 200(H + S tan β)/A (Ghilani & Wolf 2021, ch. 25). Design values are inputs: no design table is reproduced",
     accuracy: "Exact for the formulas; the design values, and whether they apply to your road, come from your design manual",
+    when_to_use: "Use this when you are checking or setting the length of a crest or sag vertical curve on a road profile. Enter the sight distance and grade change from your design work, plus the eye and object heights for a crest, or the headlight height and beam spread for a sag. It returns the shortest curve length, which case applies, and the K value, and it can compare a design K you cite.",
+    limitations: "It works the standard formulas only. It holds no design tables, so the sight distance, heights, and design K all come from your design manual, and that manual governs. Sag curves are checked for headlight sight only, not for rider comfort, drainage, or overhead structures. It does not check horizontal sight lines around curves or cuts.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

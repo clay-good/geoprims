@@ -281,6 +281,8 @@ pub static LEGACY_UNITS: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "EXPERIMENTAL_TOOL"],
     model: "Gunter's chain of 66 US survey feet (100 links), rod of 16.5 ft, furlong of 660 ft; jurisdictional varas and arpents",
     accuracy: "Exact for the stated definitions. Old records sometimes used local variants; check the survey's own statement of units.",
+    when_to_use: "Use this when an old deed, plat, or field note gives lengths in chains and links, rods, furlongs, varas, or arpents. Enter the length as written and, for varas or arpents, the state that sets the definition. It returns US survey feet, international feet, and meters, with the definition it used, so you can compare record calls with modern measurements.",
+    limitations: "The answer uses the standard definition, such as a Gunter's chain of 66 US survey feet. Old surveyors sometimes used a worn chain or a local vara, and the record may say so. The record's own statement of units governs. Varas and arpents are offered only for the states listed. It converts lengths only, not areas.",
     references: &[BLM_MANUAL, VARA_SOURCES],
     examples: &[Example {
         id: "primary",
@@ -754,6 +756,8 @@ pub static DEED_PARSE: ToolDef = ToolDef {
     warnings: &["CURVE_CALL_INCOMPLETE", "NON_METRIC_CALL", "EXPERIMENTAL_TOOL"],
     model: "Calls split at each \"thence\"; quadrant bearings in symbols or words, lengths in feet, chains and links, rods, varas, or meters; curves by radius, arc, delta, chord bearing and chord",
     accuracy: "A parser, not an interpreter: every call must be confirmed against the deed. Nothing is computed until you confirm the table.",
+    when_to_use: "Use this when you have a metes-and-bounds description as text and want its calls in a table instead of retyping them. Paste the deed, and set the jurisdiction if it uses varas or arpents. It splits the text at each thence and lists bearings, distances in US survey feet, curve data, and monuments. You confirm or edit each row, then send the table on to the deed plot.",
+    limitations: "This is a reader, not an interpreter. It can misread odd wording, typos, or unusual units, so check every row against the deed. Calls to a creek, an adjoiner, or a monument with no bearing and distance are kept as text and cannot be plotted. Which call controls when calls conflict is a legal question for a licensed surveyor.",
     references: &[BROWN, BLM_MANUAL],
     examples: &[Example {
         id: "primary",
@@ -1682,6 +1686,8 @@ pub static PLSS_PARSE: ToolDef = ToolDef {
     warnings: &["NOMINAL_VALUE_USED", "EXPERIMENTAL_TOOL"],
     model: "Aliquot parts in words (NE¼ SW¼ is the northeast quarter of the southwest quarter); nominal area = 640 acres × the product of the fractions",
     accuracy: "Nominal only: real sections vary from 640 acres, and fractional sections and lots are not nominal. Locating the parcel needs the BLM section geometry.",
+    when_to_use: "Use this when a title, tax, or lease record gives land in Public Land Survey System form and you need it in plain words. Paste a description like NE¼ SW¼ Sec 12, T3N R4W, 6th PM. It reads the aliquot parts, names the section and principal meridian with its BLM code, and gives the nominal acres of the part in a standard section.",
+    limitations: "The area is nominal, based on an ideal 640-acre section. Real sections are often larger or smaller, and lots and fractional sections do not follow the nominal split. It does not map the parcel or find its corners; that needs BLM section data and a licensed surveyor. The official plats and field notes govern.",
     references: &[BLM_MANUAL],
     examples: &[Example {
         id: "primary",
@@ -1873,6 +1879,8 @@ pub static BASIS_ROTATION: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "Rotation = new azimuth − record azimuth; each bearing's azimuth plus the rotation",
     accuracy: "Exact. The rotation is only as good as the common line's two bearings.",
+    when_to_use: "Use this when old deed or plat bearings sit on a different basis than your survey, such as record north versus State Plane grid north. Pick one line whose bearing you know on both bases, often a line between two found monuments. Enter both bearings for that line and the list of record bearings. It returns the rotation angle and each bearing turned onto the new basis, ready to compare or plot.",
+    limitations: "One common line sets the rotation for every bearing, so any error in that line's two bearings moves all of them. It turns bearings only; it does not change distances or scale. A real retracement may find that record bearings do not share one basis. Which bearing controls is a call for the licensed surveyor and the record, not the arithmetic.",
     references: &[GHILANI, BROWN],
     examples: &[Example {
         id: "primary",

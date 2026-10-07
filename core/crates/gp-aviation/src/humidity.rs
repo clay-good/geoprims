@@ -186,6 +186,8 @@ pub static HUMIDITY: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "e_s(T) = 6.1094 hPa × exp(17.625·T ÷ (T + 243.04)) (Alduchov and Eskridge 1996, over water); e = e_s(dew point) or RH × e_s(T); dew point by inverting the same form; mixing ratio = 622 × e ÷ (p − e) g/kg; virtual temperature T ÷ (1 − 0.378·e ÷ p); densities p ÷ (287.05287 × T)",
     accuracy: "The saturation pressure is within 0.4% from -40 °C to 50 °C, over liquid water; below freezing over ice it reads high. The densities follow from the ideal-gas law",
+    when_to_use: "Use this when you have a temperature and either a dew point or a relative humidity and want the rest of the moisture picture. Add the station pressure if it is not near standard. It returns vapor pressure, the mixing ratio, virtual temperature, and how much lighter the moist air is than dry air. That last number explains why a muggy day costs you climb and takeoff performance.",
+    limitations: "The saturation formula is for air over liquid water from -40 °C to 50 °C, and the tool refuses temperatures outside that range. Below freezing over ice it reads high. Densities come from the ideal-gas law for the air you describe and are not a performance number. For takeoff and climb, take density altitude to your POH or AFM charts.",
     references: &[ALDUCHOV, crate::refs::ICAO_7488, METEO300],
     examples: &[Example {
         id: "primary",

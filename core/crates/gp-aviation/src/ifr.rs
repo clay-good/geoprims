@@ -446,6 +446,8 @@ pub static HOLD_SPEED: ToolDef = ToolDef {
     ],
     model: "AIM table 5-3-1: 200 KIAS through 6,000 ft, 230 KIAS from 6,001 to 14,000 ft, 265 KIAS above; a published limit on the chart overrides",
     accuracy: "Reference data as of the AIM edition cited. Military fields and some procedures use other limits; the chart and ATC govern.",
+    when_to_use: "Use this before you reach a holding fix, to check that your planned speed fits the limit. Enter the holding altitude and, if you like, the speed you plan to fly. It gives the maximum holding airspeed from the AIM table, 200, 230, or 265 knots indicated, or the limit printed on the chart if you enter one. It flags a planned speed above the limit so you can slow down about 3 minutes before the fix, as the AIM says.",
+    limitations: "This covers the civil limits in the AIM table only. Some procedures and military fields use other limits, and a speed printed on the chart replaces the table. It does not check your aircraft's own speeds, turbulence penetration speed, or an ATC request for a different speed. The chart and ATC instructions govern.",
     references: &[AIM_HOLDING],
     examples: &[Example {
         id: "primary",
@@ -623,6 +625,8 @@ pub static HOLD_WIND: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Straight-leg wind triangle on each leg; outbound time = inbound GS × inbound time / outbound GS; the triple-the-drift heading (FAA-H-8083-15B) allows for the turns and is a rule of thumb",
     accuracy: "Exact for straight legs in a steady wind. Wind drift in the turns is not modeled; adjust on the next circuit.",
+    when_to_use: "Use this when you are about to hold in a wind and want headings and timing before you start. Enter the inbound course, your true airspeed, and the wind. It returns the inbound heading, the outbound heading by the triple-the-drift method, the plain outbound heading that holds the track, and the outbound time that gives a one-minute inbound leg, or the leg time you set.",
+    limitations: "Each leg is solved as a straight line in a steady wind. Drift in the turns is not modeled, which is why the triple-the-drift heading is a rule of thumb, not an exact answer. Time the first inbound leg and adjust on the next circuit. The wind and course must use the same north reference, and ATC or the published hold sets the legs.",
     references: &[IFH, AIM_HOLDING, PHAK],
     examples: &[Example {
         id: "primary",

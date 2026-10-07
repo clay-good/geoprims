@@ -152,6 +152,8 @@ pub static HEADING_CHAIN: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "True heading = true course + wind correction; magnetic = true − variation (east positive: \"east is least\"); compass = magnetic − deviation, the deviation read from the card by linear interpolation between its two nearest headings, around the circle (PHAK, navigation)",
     accuracy: "Exact arithmetic; the deviation is as good as the card",
+    when_to_use: "Use this when you fill in a navigation log by hand and need the compass heading for a leg. Enter the true course, your wind correction angle, the variation from the chart, and your compass deviation card if you have one. It walks each step, true heading, then magnetic, then compass, so you can check your work line by line. It reads between the headings listed on the card.",
+    limitations: "The tool does no wind math; the wind correction angle comes from the wind triangle tool or your E6B. The variation is the value you enter, east positive, and is not looked up for you. The deviation is read in a straight line between the two nearest card entries, so it is only as good as the card in the airplane. Planning aid, not a compass swing.",
     references: &[PHAK_NAV],
     examples: &[Example {
         id: "primary",
@@ -310,6 +312,8 @@ pub static CLOUD_BASE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Rule of thumb: base ≈ (temperature − dew point) × 400 ft per °C. Lifting condensation level: Bolton (1980) eq. 15, T_L = 1/(1/(T_d − 56) + ln(T/T_d)/800) + 56 in kelvins, reached at (T − T_L) ÷ (g/c_p) above the surface, with g/c_p = 9.77 K per km. Freezing level: surface temperature ÷ lapse rate above the field (standard 1.98 °C per 1,000 ft)",
     accuracy: "Estimates for well-mixed surface air forming convective cloud: the LCL is within about 0.1 K in temperature by Bolton's fit; real bases vary with mixing and terrain",
+    when_to_use: "Use this on a warm afternoon when you want a rough idea where puffy cumulus will form, or how high the freezing level sits. Enter the surface temperature and dew point, and the field elevation for heights above sea level. It gives a cloud base by the 400 ft per degree rule and by the lifting condensation level. Compare the result with the reported ceilings before a VFR flight.",
+    limitations: "These are estimates for well-mixed air that forms convective cloud. They say nothing about stratus, fog, or layers that move in from elsewhere, and real bases change with terrain and time of day. The freezing level uses one steady lapse rate and is left out when the surface is at or below freezing. Reported ceilings and forecasts govern.",
     references: &[BOLTON, WEATHER_HANDBOOK],
     examples: &[Example {
         id: "primary",

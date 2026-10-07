@@ -644,6 +644,8 @@ pub static HOVER_POWER: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Momentum theory: P_ideal = (m·g0)^1.5 / √(2ρA); electrical P = P_ideal / (FM·η) + avionics; ISA troposphere density. Rotors in coaxial pairs: the induced power is κ times that of the same rotors apart (κ = 1.2818 for a lower rotor in the fully developed slipstream of the upper one, Leishman and Syal 2008) while the profile share the figure of merit carries is unchanged, so P = P_ideal·(κ + 1/FM − 1)/η + avionics",
     accuracy: "A first estimate. Real power depends on rotor design, frame drag, and wind; calibrate FM·η from a test flight when you can.",
+    when_to_use: "Use this when you design or load a multirotor and want to know how many watts it needs just to stay in the air. Give the takeoff mass, the number of rotors, and their diameter, with the site altitude and temperature if you fly high or hot, and it gives the electrical hover power, the ideal minimum, the disk loading, and the air density. That power then feeds the flight time tools.",
+    limitations: "It is a first estimate from momentum theory, with a figure of merit of 0.6 and an efficiency of 0.85 unless you set them. Real power depends on the rotor design, frame drag, and wind, and forward flight draws a different amount. Rotors count as separate disks, or as stacked pairs if you say so. A test flight run through the calibration tool gives a better figure for your drone.",
     references: &[LEISHMAN, ICAO_ATM, LEISHMAN_SYAL],
     examples: &[Example {
         id: "primary",
@@ -1304,6 +1306,8 @@ pub static MAX_PAYLOAD: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Solve (m·g0)^1.5 / √(2ρA) / (FM·η) + avionics = usable energy / target time for m",
     accuracy: "Momentum-theory estimate; it ignores the motors' thrust limit, so check the maximum takeoff mass in the manual.",
+    when_to_use: "Use this when a job needs a camera, sensor, or delivery load and you must know how much the drone can carry and still hover for the time the job takes. Give its mass, rotors, rotor size, the usable battery energy after your reserve, and the target time, and it gives the most payload, the takeoff mass that implies, and the hover time with no payload at all.",
+    limitations: "It answers by power alone. It does not know the motors' maximum thrust, the frame's strength, or the maker's maximum takeoff mass, and any of these can be the real limit, so the manual governs. It assumes a steady hover; forward flight, wind, and climbs change the draw. The usable energy is taken as given, so a cold or worn pack will fall short. Power the payload draws goes in as avionics power.",
     references: &[LEISHMAN],
     examples: &[Example {
         id: "primary",
@@ -1497,6 +1501,8 @@ pub static CALIBRATE_HOVER: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Measured power = energy used / hover time; lift power = measured − avionics; FM·η = (m·g0)^1.5 / √(2ρA) / lift power; FM = FM·η / η",
     accuracy: "As good as the measurement: use a steady hover in calm air, and the energy the log or charger reports for that hover alone, not the whole flight.",
+    when_to_use: "Use this after a test flight to make the hover power and flight time tools match your own drone. Give its mass, rotors, and rotor size, plus the energy it drew and how long it hovered, and it works back to the combined figure of merit and motor efficiency, and to the figure of merit alone at the efficiency you assume. Enter those in the hover power tool in place of its defaults.",
+    limitations: "The answer is only as good as the test. Use a steady hover in calm air, and the energy for that hover alone, not for takeoff, climb, and landing too. The split between figure of merit and efficiency rests on the efficiency you enter, 0.85 unless you set one. It uses momentum theory, so a value found at one mass and air density may not hold exactly at another.",
     references: &[LEISHMAN],
     examples: &[Example {
         id: "primary",
@@ -1735,6 +1741,8 @@ pub static PAYLOAD_IMPACT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Lift power = (m·g0)^1.5 / √(2ρA) / (FM·η), so it grows with mass to the power 1.5; hover power = lift power + avionics (+ payload draw when carried); time = usable energy / power",
     accuracy: "Momentum-theory estimate. It ignores the motors' thrust limit and any drag the payload adds in forward flight, so check the maximum takeoff mass in the manual.",
+    when_to_use: "Use this before you mount a new gimbal, sensor, or light on a multirotor to see what it costs in hover time. Give the drone's mass, rotors, and rotor size, the payload's mass and any power it draws from the flight battery, and the usable energy, and it gives the hover time with and without the payload, the minutes lost, and the extra power in watts and as a percent.",
+    limitations: "Lift power grows with mass to the power 1.5 by momentum theory, at a figure of merit and motor efficiency you can set. It covers hover only, not the drag a bulky payload adds in forward flight. It cannot tell when the motors run out of thrust or when the load passes the maker's maximum takeoff mass, so check the manual before you fly with it.",
     references: &[LEISHMAN],
     examples: &[Example {
         id: "primary",
@@ -1941,6 +1949,8 @@ pub static RTH_BUDGET: ToolDef = ToolDef {
     ],
     model: "Steady wind along the track: return GS = V − w, outbound GS = V + w; energy = power × time; round trip d = E / (P·(1/(V+w) + 1/(V−w)))",
     accuracy: "Exact for a steady along-track wind and constant power. Gusts, climbs, and cold packs need more margin.",
+    when_to_use: "Use this while planning, or during a long flight, to check that the battery can bring the drone home against the wind. Give the distance home, airspeed, headwind, cruise power, the energy left, and the reserve you want to land with, and it gives the groundspeed and time home, the energy that takes, and the margin left. It also gives how far out you could fly on the energy left and still return with the reserve.",
+    limitations: "It uses one steady wind straight along the track and the same power both ways, so it ignores gusts, crosswind, climbs, the descent, and the landing. The trip home is a straight line at constant airspeed. If the wind is at least as fast as the airspeed, it gives no answer, since the drone could not make headway on one leg. Cold packs, aging cells, and voltage sag can leave less energy than the figure you enter.",
     references: &[LEISHMAN],
     examples: &[Example {
         id: "primary",

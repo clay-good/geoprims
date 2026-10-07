@@ -222,6 +222,8 @@ pub static SLOPE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "HD = SD·sin Z and VD = SD·cos Z (Ghilani & Wolf 2021, ch. 6); two-face mean Z = (FL + 360° − FR)/2 with index error (FL + FR − 360°)/2; curvature and refraction (1 − k)·HD²/(2R) with R = 6,371,000 m",
     accuracy: "Exact for the reduction; the curvature and refraction correction carries the uncertainty of k, which varies with the air near the ground",
+    when_to_use: "Use this when a total station gives you a slope distance and a zenith or vertical angle and you need the horizontal distance and the height change. Add the instrument and target heights for the elevation difference. Enter a face-right reading to get the two-face mean zenith and the index error. For long sights, set a distance beyond which curvature and refraction are added.",
+    limitations: "The reduction is plane math over one sight. It does not apply the atmospheric ppm, the prism constant, or the grid and elevation factors; those are separate steps. The curvature and refraction term uses one earth radius and a single coefficient, which real air does not hold to. Heights depend on the instrument and target heights being measured right.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -407,6 +409,8 @@ pub static CURVATURE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "h = (1 − k)·D²/(2R), the curvature D²/(2R) less the refraction k·D²/(2R) (Ghilani & Wolf 2021, ch. 4); R = 6,371,000 m and k = 0.13 by default",
     accuracy: "Exact for the given k and R; k itself varies with the air near the ground, most at low sights and midday",
+    when_to_use: "Use this when you level or run trig heights over long sights and need to know how much the earth's curve and the bending of the sight line change the reading. Enter the horizontal sight distance and, if you like, a refraction coefficient and an earth radius. It returns the combined correction, curvature and refraction apart, and the coefficient per square kilometer to use in your notes.",
+    limitations: "It uses a sphere of one radius and a single refraction coefficient. Real refraction shifts with heat near the ground, time of day, and how high the sight runs, so long low sights at midday carry the most doubt. Balanced backsights and foresights cancel most of this in leveling, so equal sight lengths are the first defense.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -544,6 +548,8 @@ pub static STADIA: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Inclined stadia sight: H = K·s·sin²Z + C·sin Z and V = K·s·sin Z·cos Z + C·cos Z (Ghilani & Wolf 2021, stadia); K = 100 and C = 0 by default",
     accuracy: "Stadia distances are good to about 1 part in 300 to 1 in 1,000, set by reading the rod interval; the arithmetic is exact",
+    when_to_use: "Use this when you need to reduce stadia readings from a transit, a level, or an older field book. Enter the rod interval between the upper and lower hairs, the zenith or vertical angle, the instrument height, and the middle hair reading. It returns the horizontal distance, vertical difference, and elevation difference, with the stadia multiplier set to 100 and the additive constant to zero unless you change them.",
+    limitations: "Stadia is a rough method. Distances are good to about one part in 300 to one in 1,000, set mostly by how well the rod interval is read. That suits topo detail and quick checks, not boundary or control work. The rod must be held plumb, and the constants must match your instrument.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -733,6 +739,8 @@ pub static INACCESSIBLE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "One station: height = D·(cot Z_top − cot Z_base). Two stations in line: D = b·cot Z_far / (cot Z_near − cot Z_far) from the near station, then as for one station (Ghilani & Wolf 2021, trigonometric leveling); curvature and refraction (1 − k)·D²/(2R) when D exceeds the threshold",
     accuracy: "Exact for the geometry; the result carries the angle and distance errors, and assumes the top is plumb over the base",
+    when_to_use: "Use this when you need the height of a tower, tree, or building you cannot tape or reach. Measure zenith angles to the top and base and a horizontal distance, or if you cannot get to the object, sight the top from two stations in line with it and give the baseline between them. It returns the height, the top above the instrument, and the distance used.",
+    limitations: "It assumes the top is plumb over the base, which is often untrue for a tree or a leaning pole. The two-station method needs both stations in a straight line with the object. Small angle errors grow large when sights are steep or the distance is short. Curvature and refraction are added only beyond the distance you set.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -962,6 +970,8 @@ pub static OFFSET: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Distance offset: out moves along the line of sight and right at 90° to it. Angle offset: the center lies at the measured distance plus the radius, along the direction turned to the center (Ghilani & Wolf 2021, total-station field practice)",
     accuracy: "Exact for the geometry; an angle offset assumes the shot was taken to the side of a round object at the same distance as its face",
+    when_to_use: "Use this when the prism cannot sit on the point you need, such as a building corner, a fence post, or the center of a tree or pole. Shoot beside it, then enter the station coordinates, the direction and horizontal distance, and either the left, right, in, or out offsets or an angle to the center with the radius. It returns the point's northing and easting and its bearing and distance from the station.",
+    limitations: "The math is plane geometry on a grid, so the distance must already be horizontal. Offsets are taken square to the line of sight or along it, so a tape held at a skew gives a wrong point. An angle offset treats the object as round and assumes the shot hit its side at the same distance as its face. Odd shapes need a different method.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

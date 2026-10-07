@@ -194,6 +194,8 @@ pub static EDM_CORRECTION: ToolDef = ToolDef {
     warnings: &["DRY_AIR_ASSUMED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "N_G = 287.6155 + 4.88660 ÷ λ² + 0.06800 ÷ λ⁴ (λ in µm); N_L = (273.15 ÷ 1013.25) · N_G · p ÷ T − 11.27 · e ÷ T, with p and e in hPa and T in kelvins (IAG 1999 Resolution 3); ppm = N_ref − N_L; corrected = D + ppm · 10⁻⁶ · D + prism constant. Vapor pressure from humidity by the Magnus form",
     accuracy: "The closed formula is within 0.25 ppm of the full Ciddor and Hill procedure for ordinary survey conditions; use the instrument's own N_ref and wavelength. Instruments that apply ppm internally need no second correction",
+    when_to_use: "Use this when you need to correct an EDM distance for the air and the prism, such as when the ppm was not set in the instrument. Enter the measured distance, the prism constant, and either the ppm or the temperature, pressure, and humidity, with the instrument's wavelength and reference refractivity. It returns the corrected distance with each correction listed.",
+    limitations: "If the instrument already applied ppm, do not apply it again. Temperature and pressure are taken at one spot, while the air along the line may differ. The tool does not reduce slope to horizontal or apply elevation or grid scale factors; those come next. The closed formula is within 0.25 ppm of the full method for ordinary conditions.",
     references: &[LANDGATE],
     examples: &[Example {
         id: "primary",

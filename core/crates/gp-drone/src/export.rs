@@ -124,6 +124,8 @@ pub static EXPORT: ToolDef = ToolDef {
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "KML altitude mode follows the height reference: AGL is relativeToGround; MSL is absolute; takeoff heights become absolute by adding the takeoff's MSL elevation; HAE becomes absolute by subtracting the geoid height N (OGC KML 2.3 §9.20; KML's absolute is above sea level). GeoJSON carries [longitude, latitude, height] with the reference in each waypoint's properties (RFC 7946); CSV has one row per waypoint",
     accuracy: "Coordinates to 7 decimal places (about 1 cm) and heights to 0.01 m; no conversion beyond the stated offsets",
+    when_to_use: "Use this when you have a list of waypoints and need a file another program can open: KML for map viewers, GeoJSON for GIS work, or CSV for a spreadsheet. It writes heights in the KML altitude mode that matches the reference you choose, turning takeoff and ellipsoid heights into sea-level heights when you give the offsets. Every file is labeled with its height reference and a not-for-navigation notice.",
+    limitations: "It only formats what you give it. It does not look up ground heights, so terrain-following heights must already come from a surface model, and such a model counts trees and buildings unevenly; it adds a clearance margin, 15 m unless you set one. Heading, gimbal pitch, and actions are written as notes or properties that a flight app may ignore. It writes no vendor mission format, so check every waypoint in your flight app before you fly.",
     references: &[KML, GEOJSON, CSV],
     examples: &[Example {
         id: "primary",

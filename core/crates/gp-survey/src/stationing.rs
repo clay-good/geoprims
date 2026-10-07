@@ -124,6 +124,8 @@ pub static STATION_OFFSET: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "With the line's unit direction t = (cos α, sin α) in (N, E): station = start + (P − S)·t, offset = (P − S) × t positive to the right; and back, P = S + along·t + offset·n with n the right-hand normal (Ghilani & Wolf 2021, ch. 11)",
     accuracy: "Exact",
+    when_to_use: "Use this when you need to tie a point to a straight baseline or centerline by station and offset, or set out a point from a station and offset. Give the line's start point and station, plus a direction or an end point. Then enter a point to get its station, its offset right or left, and the foot of the perpendicular, or enter a station and offset to get coordinates. It suits as-built checks, utility locates, and staking off a tangent.",
+    limitations: "The line is one straight tangent. It does not follow curves, spirals, or a full alignment with many PIs, so a point beside a curve needs the curve tools. Use plane grid values, not latitude and longitude. A point before the start or past the end still gets a station by extending the line, so check that it falls where you expect.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

@@ -183,6 +183,8 @@ pub static LINK_BUDGET: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "FSPL = 20 log₁₀ d_km + 20 log₁₀ f_MHz + 32.44 dB (ITU-R P.525); received power = transmit power + both antenna gains − cable losses − FSPL; fade margin = received power − sensitivity; EIRP = transmit power + transmit gain − half the cable loss, taken as the transmit side. 2.4 GHz limits from dated reference data",
     accuracy: "Free space only: terrain, the ground reflection, bodies, and vegetation add loss, so check the Fresnel zone and line of sight too. Planning aid; your equipment's certification governs",
+    when_to_use: "Use this when you set up a control or video link and want to know if it will hold at the range you plan to fly. Enter the frequency, distance, transmit power, receiver sensitivity, and antenna gains, and it gives the free-space path loss, the received power, and the fade margin left over. It also checks the transmitter's EIRP against the 2.4 GHz limit under US or EU rules.",
+    limitations: "This is free-space loss only, the ideal case for a clear path. Terrain, the ground reflection, trees, buildings, and the pilot's own body all add loss it does not count, so check the Fresnel zone and line of sight too. The EIRP check knows only the 2.4 GHz band, and it takes half the cable loss as the transmit side. Your radio's certification and the rule's own text govern what you may transmit.",
     references: &[ITU_525],
     examples: &[Example {
         id: "primary",

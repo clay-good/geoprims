@@ -133,6 +133,8 @@ pub static PROFILE_GRADES: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Grade of each segment = Δelevation / Δdistance × 100; average = (last − first elevation) / total distance × 100; climb and descent are the sums of positive and negative Δelevation",
     accuracy: "Exact for the points given; grades between them are assumed uniform",
+    when_to_use: "Use this when you have a ground or design profile as distance and elevation pairs and need to know where it gets too steep, such as for a trail, ramp, haul road, or driveway. Enter the points in order and a grade limit in percent. It returns each segment's grade, the steepest and average grade, total climb and descent, and the count of segments over your limit, which shows you where to regrade or reroute.",
+    limitations: "The grade is figured only between the points you give, and the ground between them is taken as a straight line. A short steep pitch between two shots will not show, so shoot every break. Distances are read as horizontal stations along the line, not lengths along the slope. The limit is the number you enter; the rule that sets it, such as an accessibility or road standard, governs.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

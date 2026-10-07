@@ -185,6 +185,8 @@ pub static GRADE: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Grade g = rise / run; percent = 100·g, per mille = 1,000·g, angle = atan g, ratio H:V = (1/g):1 and V:H = g:1; slope length = √(rise² + run²)",
     accuracy: "Exact",
+    when_to_use: "Use this when a plan, spec, or field note gives a slope one way and you need it another, such as a 3H:1V side slope as a percent or an angle for a grade stake or a machine control setting. Enter the grade as a percent, ratio, angle, or per mille. Add any two of rise, run, and slope length to get the third. The ratio comes back labeled both H:V and V:H, so no one reads it backwards.",
+    limitations: "A bare ratio like 3:1 is refused until you say which number is the run, because the two readings give very different slopes. The grade is one straight slope; it does not handle curves, benches, or slopes that change along the way. It gives no design advice: the slope a cut or fill can hold comes from your plans, spec, or soils engineer.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

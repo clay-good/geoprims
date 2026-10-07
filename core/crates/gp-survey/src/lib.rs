@@ -1885,6 +1885,8 @@ pub static PRISMOIDAL: ToolDef = ToolDef {
     ],
     model: "V = L/6·(A1 + 4·Am + A2)",
     accuracy: "Exact for prismoids; needs a measured middle area",
+    when_to_use: "Use this when you need a closer earthwork volume between two cross-sections than average end areas give, and you have measured the section halfway between them. Enter the two end areas, the middle area, and the distance between the ends. It returns the volume in your units and in cubic feet, and how far the average end area result differs from it. That difference helps you judge when the extra field shot is worth it on pay items.",
+    limitations: "The middle area must be measured in the field, not averaged from the two ends; an averaged middle gives almost the same answer as average end areas, and the tool warns when the middle looks averaged. The formula assumes the ground changes smoothly between sections. Each area must be all cut or all fill. Which method a job pays by is set by its contract, not by this tool.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",
@@ -2029,6 +2031,8 @@ pub static SHRINK_SWELL: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Loose = bank × (1 + swell); compacted = bank × (1 − shrink)",
     accuracy: "Exact for the factors given; real factors vary with soil and moisture",
+    when_to_use: "Use this when you know the bank volume of soil in place and need to plan the haul and the fill it will make. Enter the bank volume, your swell and shrink percents, and the loose capacity of one truck. It returns the loose volume after digging, the compacted volume after placing, and the number of truck loads rounded up. Those numbers feed haul bids, truck schedules, and checks on how much borrow a job needs.",
+    limitations: "The factors are yours, and real swell and shrink change with soil type, moisture, and how hard the fill is worked, so values from tests or past jobs on the same soil deserve the most trust. Both factors apply to the same bank volume. Truck loads count volume only; a load of wet clay or rock may reach the weight limit first. The tool does not price or time the haul.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

@@ -133,6 +133,8 @@ pub static Q_CODES: ToolDef = ToolDef {
     warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "QFE = p_ISA(elevation + PA(QNH)): an altimeter set to QNH reads the field elevation on the ground, which is the relation that defines QNH, and QNH from QFE the other way; QNE is the ISA altitude of QFE. From QFE the NWS formula is also shown: (P − 0.3) × (1 + (1013.25^0.190284 × 0.0065 ÷ 288) × h ÷ (P − 0.3)^0.190284)^(1/0.190284), P in hPa and h in m",
     accuracy: "Exact for the ISA relation. The NWS formula is the same relation with its own constants, less 0.3 hPa for the barometer's height, so it reads about 0.3 hPa (0.01 inHg) lower",
+    when_to_use: "Use this when a briefing, a foreign ATIS, or a barometer gives you pressure in a form you do not use. Enter the field elevation and either QNH, the altimeter setting, or QFE, the station pressure. It returns the other one and QNE, the field's pressure altitude. From a barometer reading it also gives the altimeter setting the way US weather stations work it out.",
+    limitations: "The math follows the standard atmosphere and ignores today's temperature, the same way an altimeter setting is defined. The NWS formula is shown beside it and reads about 0.3 hPa lower, since it allows for the barometer's height. Use the setting from ATIS, the tower, or the METAR when one is given; a home or handheld barometer is only as good as its calibration.",
     references: &[ICAO_7488, NWS_ALTIMETER],
     examples: &[Example {
         id: "primary",
@@ -330,6 +332,8 @@ pub static FLIGHT_LEVEL: ToolDef = ToolDef {
     warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "A flight level is a pressure altitude in hundreds of feet. On a QNH the altimeter reads that pressure altitude less PA(QNH), the pressure altitude of the setting itself (the altimeter-setting relation that defines QNH). The US lowest usable flight level is FL180 at 29.92 inHg or higher and 500 ft higher for each 0.50 inHg lower, to FL210 at 26.92 (14 CFR 91.121(b))",
     accuracy: "Exact for ISA; real temperature moves the true altitude (see the cold-temperature tool). The US table covers settings down to 26.92 inHg",
+    when_to_use: "Use this when you fly near the change from altitudes to flight levels, or when the altimeter setting is low. Enter the local altimeter setting. It gives the US lowest usable flight level from the 14 CFR 91.121 table and the transition altitude. Add a flight level to see the altitude it puts you at on that setting, or an altitude to see its flight level.",
+    limitations: "The math uses the standard atmosphere, so it does not show the extra error from cold or hot air; the true altitude tool covers that. The lowest usable flight level table is the US rule, and other countries set their own transition altitudes and levels. Below 26.92 inHg the table ends, and you get the level from ATC. Rules are shown with the date they were checked.",
     references: &[CFR_91_121, ICAO_7488],
     examples: &[Example {
         id: "primary",

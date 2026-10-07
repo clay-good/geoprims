@@ -107,6 +107,8 @@ pub static SPECIFIC_RANGE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Specific range = speed ÷ fuel flow: through the air with TAS, over the ground with groundspeed (PHAK, aircraft performance). Fuel per 100 NM is its reciprocal times 100",
     accuracy: "Exact for the entered speed and flow; as good as the POH or gauge flow you enter. Wind changes the ground figure, not the air one",
+    when_to_use: "Use this when you want to compare cruise power settings or altitudes by how far each gallon takes you. Enter your true airspeed and fuel flow from the POH cruise table or the gauge. It returns nautical miles per gallon through the air and the fuel each 100 NM takes. Add your groundspeed to see the same figures over the ground with the wind.",
+    limitations: "It divides speed by fuel flow and nothing more. It does not search for the setting that goes farthest, and it does not include the climb, the descent, or the reserve; the fuel planner handles those. The figures are only as good as the fuel flow you enter, and a gauge or a book value can be off.",
     references: &[PHAK_RANGE],
     examples: &[Example {
         id: "primary",

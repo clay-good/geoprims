@@ -93,6 +93,8 @@ pub static FUEL_WEIGHT: ToolDef = ToolDef {
     warnings: &["NOMINAL_VALUE_USED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Weight = volume × density",
     accuracy: "Exact for the density used. Real fuel density varies with temperature and batch by a few percent.",
+    when_to_use: "Use this when you load fuel by volume but your weight and balance needs pounds, or the reverse. Enter gallons or pounds and choose 100LL or Jet A, or type your own measured density. It returns the weight, the volume, and the density it used. It also tells you how many gallons fit under a weight you must stay below. Carry the fuel weight into the weight and balance sheet and the fuel plan.",
+    limitations: "The nominal densities, 6.0 lb/gal for avgas and 6.7 lb/gal for Jet A, are textbook values. Real fuel changes with temperature and from batch to batch by a few percent, which can matter when you are close to a weight limit. Volumes are US gallons unless you enter another unit. The tool does not know your tank capacity or unusable fuel; the POH lists both.",
     references: &[WB_HANDBOOK],
     examples: &[Example {
         id: "primary",

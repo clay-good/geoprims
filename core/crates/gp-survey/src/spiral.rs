@@ -155,6 +155,8 @@ pub static SPIRAL: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Clothoid: θs = Ls/(2R); X = Ls(1 − θ²/10 + θ⁴/216 − θ⁶/9360), Y = Ls(θ/3 − θ³/42 + θ⁵/1320 − θ⁷/75600), four terms each; p = Y − R(1 − cos θs), k = X − R sin θs, Ts = (R + p) tan(Δ/2) + k, arc = R(Δ − 2θs) (Ghilani & Wolf 2021, ch. 24)",
     accuracy: "The four-term series is good to far better than 0.001 of the unit for spiral angles up to about 30°",
+    when_to_use: "Use this when a highway or rail curve has clothoid spiral transitions on both ends. Enter the spiral length, the circular radius, the total deflection, and the PI station. You get the spiral angle, X, Y, p, k, the tangents, and the TS, SC, CS, and ST stations, with deflections along the spiral at your interval. These feed the stakeout notes and a check of the plan sheet.",
+    limitations: "Both spirals must be the same length, and the elements come from a four-term series that holds well for spiral angles up to about 30 degrees. Deflections are listed for the spiral only; the circular arc between SC and CS is laid out with the curve layout tool. Superelevation and agency rules on spiral length are not part of it and come from your design manual.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

@@ -395,6 +395,8 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
     ],
     model: "CAS → impact pressure (sea-level ISA relation) → Mach at the static pressure of the pressure altitude → TAS at the outside air temperature; Rayleigh pitot formula above Mach 1",
     accuracy: "Exact compressible-flow relations for γ = 1.4 air to double precision; the Rayleigh branch is iterated to 1e-12. Planning aid, not certified for navigation.",
+    when_to_use: "Use this in cruise planning or in flight when you know the calibrated or indicated airspeed and want the true airspeed. Give the pressure altitude and the outside air temperature. It returns true airspeed, Mach, and equivalent airspeed, beside the 2% per 1,000 ft rule. Feed the true airspeed into the wind triangle for heading, groundspeed, and fuel.",
+    limitations: "Indicated airspeed is treated as calibrated unless you enter the calibration table from your POH or AFM, and the table is not extended past its ends. The temperature should be the static outside air temperature, not a probe reading with ram rise in it. The V-speed checks only compare against the numbers you type; the airspeed indicator markings and the POH govern.",
     references: &[GRACEY, ICAO_7488, PHAK],
     examples: &[
         Example {
@@ -722,6 +724,8 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
     ],
     model: "TAS → Mach at the outside air temperature → impact pressure at the static pressure → CAS by the sea-level relation; Rayleigh pitot formula above Mach 1",
     accuracy: "Exact compressible-flow relations for γ = 1.4 air to double precision. Planning aid, not certified for navigation.",
+    when_to_use: "Use this when a plan gives you a true airspeed or a Mach number and you need the calibrated airspeed to fly at your altitude. Enter the pressure altitude and the outside air temperature, or Mach alone. It returns the calibrated airspeed with equivalent airspeed, impact pressure, and the compressibility correction. Run it at a few altitudes to see how the same Mach gives a lower calibrated airspeed as you climb.",
+    limitations: "The answer is calibrated airspeed, not indicated. There is no calibration table here, so the position and instrument error between the two is up to you and your POH or AFM. With Mach alone, the true airspeed is left out because it needs the temperature. The air is treated as a standard dry gas, and the V-speed flags only compare against the speeds you enter.",
     references: &[GRACEY, ICAO_7488],
     examples: &[Example {
         id: "primary",
@@ -882,6 +886,8 @@ pub static TAT_SAT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "SAT = TAT / (1 + 0.2·r·M²)",
     accuracy: "Exact for the stated recovery factor; real probes have r from about 0.75 to 1.0",
+    when_to_use: "Use this when your temperature gauge reads total air temperature, which is warmed by the air ramming into the probe, and you need the real outside air temperature. Give the reading and your Mach number. It returns the static air temperature and the ram rise. Run it the other way to predict what the probe will show. The static temperature is the one the true airspeed and density altitude tools need.",
+    limitations: "The answer is only as good as the recovery factor. It defaults to 1.0, a full recovery, but real probes recover from about 0.75 to 1.0, so enter your probe's value if you know it. The tool does not know your probe type, its heating, or any correction your flight manual or air data computer already applies. At light-airplane speeds the ram rise is only a degree or two.",
     references: &[GRACEY],
     examples: &[Example {
         id: "primary",

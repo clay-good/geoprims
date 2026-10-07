@@ -131,6 +131,8 @@ pub static ONE_IN_SIXTY: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Track error = atan(off ÷ flown); closing angle = atan(off ÷ remaining); turning by the track error parallels the course, and by the sum reaches the destination. The 1-in-60 rule takes 1 NM off in 60 NM as 1°, so each angle ≈ 60 × off ÷ distance (PHAK, navigation)",
     accuracy: "The exact angles are flat-plane geometry, fine for legs of a few hundred miles. The rule reads small (tan θ ≈ θ in radians, and 60 ≈ 57.3): about 5% high under 10°, and further off above 20°",
+    when_to_use: "Use this when a checkpoint shows you are off course on a dead reckoning leg. Enter the distance flown, how far off course you are, and the distance left to go. It gives the turn to parallel the course and the turn to reach the destination, both exactly and by the 1-in-60 rule, so you can see how close the mental math is.",
+    limitations: "It uses flat-plane geometry and assumes you flew a straight track from the start. A wind that changed partway will make the new heading wrong again. The rule reads a little high for small angles and worse past 20°. Confirm the correction at the next checkpoint and recheck the wind.",
     references: &[PHAK_NAV],
     examples: &[Example {
         id: "primary",

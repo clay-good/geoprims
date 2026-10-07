@@ -120,6 +120,8 @@ pub static SECTION_AREA: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Both lines are linear between their points; over the span both cover, the area between them is integrated interval by interval, each interval split where the difference changes sign (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "Exact for the lines given; the areas are as good as the ground shots and the template",
+    when_to_use: "Use this when you have ground shots across one station and a design template, and you need the cut and fill areas for that cross-section. Enter both lines as offset and elevation pairs from left to right, with the template's side slopes included. It splits the areas where the ground crosses the template and lists those grade points. The areas then go into average end area or prismoidal volumes.",
+    limitations: "Both lines are taken as straight between their points, so a missed break in the ground changes the area. Area is counted only over the offsets that both lines cover, so the shots should reach past the ends of the template. It does not find catch points for you; the slope stake tool does that. Topsoil, pavement layers, and benches are left out unless you draw them into the template.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

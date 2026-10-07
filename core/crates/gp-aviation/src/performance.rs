@@ -227,6 +227,8 @@ pub static TURN: ToolDef = ToolDef {
     warnings: &["LOAD_LIMIT_EXCEEDED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Coordinated level turn: r = V²/(g0·tan φ), ω = g0·tan φ/V, n = 1/cos φ. In feet and knots r = V²/(11.294·tan φ), from g0 = 9.80665 m/s² (the textbook 11.26 is a rounded variant).",
     accuracy: "Exact for a coordinated, level turn at constant true airspeed. Planning aid, not certified for navigation.",
+    when_to_use: "Use this to see what a turn asks of the airplane. Enter your true airspeed and a bank angle, or a turn rate, or neither for a standard-rate turn. It returns the bank, the rate, the turn radius, the load factor, and the time for a heading change. Add your stall speed to see how much it rises in the bank, and your limit load factor for the steepest bank it allows.",
+    limitations: "The math assumes a coordinated, level turn at constant true airspeed. A climbing, descending, or slipping turn differs, and wind changes the path over the ground but not these numbers. The stall speed in the turn scales your 1 g stall speed and is not a POH figure. The POH or AFM limits govern, and the bank rule of thumb is a rough guide.",
     references: &[AFH, PHAK],
     examples: &[
         Example {
@@ -738,6 +740,8 @@ pub static CLIMB_GRADIENT: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Vertical speed = groundspeed × gradient (rise over horizontal run); 1 ft/NM = 0.3048/1852",
     accuracy: "Exact. Planning aid, not certified for navigation.",
+    when_to_use: "Use this when a departure procedure or missed approach lists a required climb gradient in feet per nautical mile and you need the climb rate that meets it. Enter the gradient, a percent, or an angle, and your groundspeed. It returns the vertical speed in feet per minute. Run it the other way to see what gradient your usual climb rate gives at that speed, before you accept the departure.",
+    limitations: "It converts units and nothing more. It does not know your aircraft's climb ability, so check the rate against your POH climb data at the real weight, altitude, and temperature. Use groundspeed, not airspeed: a tailwind raises the rate you need. The answer is a steady average and does not cover the turns, level-offs, or obstacles of a real departure.",
     references: &[IPH],
     examples: &[Example {
         id: "primary",
@@ -1209,6 +1213,8 @@ pub static GLIDE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Steady glide at the given glide ratio, with TAS taken as the horizontal airspeed (under 1% error for glide ratios of 7 or more) and a steady along-track wind; the ring is 72 points at 5° steps of the geodesic direct problem (Karney 2013), each at that bearing\'s range with the wind component along it",
     accuracy: "Exact for the model. Real glides lose height in turns and with a windmilling propeller. Planning aid, not certified for navigation.",
+    when_to_use: "Use this to plan for an engine failure and see how far you can glide from where you are. Enter your height above the terrain, your glide ratio from the POH, and your glide speed as true airspeed. Add a headwind or tailwind for the range with wind, and your position and the wind direction to draw a reachable ring on the map. It also gives the sink rate and time aloft.",
+    limitations: "The ring and range assume a steady straight glide at one glide ratio. Turns, a windmilling propeller, flaps, and a wind that changes with height all cut the distance. The height must be above the ground you will land on, not above sea level. Keep a margin, and pick fields well inside the ring.",
     references: &[AFH, PHAK],
     examples: &[
         Example {
@@ -1369,6 +1375,8 @@ pub static PIVOTAL_ALTITUDE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "h = V²/g0 (the line of sight to the pylon is parallel to the lateral axis)",
     accuracy: "Exact for level flight at a steady groundspeed. It changes with groundspeed around the pylon.",
+    when_to_use: "Use this when you practice eights on pylons. Enter your groundspeed and it gives the pivotal altitude above the ground, the height where the line of sight to the pylon stays fixed as you turn around it. The knots squared over 11.3 rule is shown beside it, with its error. Add the pylons' ground elevation yourself to get the altitude to read on the altimeter.",
+    limitations: "The answer holds for one groundspeed. Around the pylon your groundspeed changes with the wind, so the pivotal altitude rises on the downwind side and drops on the upwind side, and you adjust as you fly. It assumes level flight and does not pick a safe height above obstacles or people. Your instructor and the Airplane Flying Handbook describe how to fly the maneuver.",
     references: &[AFH],
     examples: &[Example {
         id: "primary",

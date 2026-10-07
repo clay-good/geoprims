@@ -146,6 +146,8 @@ pub static BORROW_PIT: ToolDef = ToolDef {
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Depth h = existing − proposed at each node. Net V = A/4 · Σ(w·h), w = 1 at corners, 2 on edges, 4 inside. Four-point: each cell's V = A·mean(h), or for a cell with both cut and fill, cut = A·(Σh⁺)²/(4Σ|h|) and fill = A·(Σh⁻)²/(4Σ|h|). Balance points by linear interpolation along cell edges (Ghilani & Wolf 2021, ch. 26)",
     accuracy: "Exact for the grid; the volume is as good as the grid spacing is fine against the ground's shape",
+    when_to_use: "Use this when you have shot a site on a square grid and need cut and fill against a flat finished grade or a matching grid of proposed elevations, such as for a building pad or a pond. Enter the existing elevations row by row and the cell size. It returns net volume by corner weights, cut and fill by the four-point method, and the balance line, which feed haul and shrink-swell estimates.",
+    limitations: "The ground is treated as straight between grid points, so ridges, ditches, and breaks inside a cell are missed, and a coarse grid on rough ground can be well off. Cells must be square and the same size, and every row needs the same number of points. The two methods can differ a little, and the volumes are bank measure before any swell or shrink.",
     references: &[GHILANI],
     examples: &[Example {
         id: "primary",

@@ -225,6 +225,8 @@ pub static FACADE: ToolDef = ToolDef {
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Photo footprint on the wall = sensor size × standoff / focal length; GSD = pixel pitch × standoff / focal length (Wolf, Dewitt & Wilkinson 2014, ch. 6). Passes and photos: n = 1 when the span fits one photo, else ⌈(span − footprint)/(footprint × (1 − overlap))⌉ + 1, centered and evenly spaced. Stations by the geodesic direct problem along the facade, offset square to it by the standoff (Karney 2013)",
     accuracy: "Exact for a flat, vertical facade and a level camera; heights are above the facade's base, not MSL",
+    when_to_use: "Use this to plan photos of one side of a building, wall, or dam for an inspection or a 3D model. Give the two ends of the wall, its height, your standoff, and the camera, and it stacks level passes up the face with the overlap you set. It returns waypoints with headings that face the wall, the photo count, the path length, and, with the image width, the ground sampling distance on the facade.",
+    limitations: "It treats the wall as one straight, flat, vertical face between two points, with the camera held level. Balconies, setbacks, and curved walls change the distance to the surface, and so the detail and overlap you get. Heights are above the base of the wall, not sea level or the takeoff point, so sloping ground needs care. It does not check for trees, wires, or other obstacles near the wall, or for the airspace you fly in.",
     references: &[WOLF, KARNEY, PIX4D],
     examples: &[Example {
         id: "primary",

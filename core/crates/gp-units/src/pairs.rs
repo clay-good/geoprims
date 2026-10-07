@@ -85,7 +85,7 @@ pair!(
     "mph-to-kt",
     "mph",
     "kt",
-    "Mph to knots",
+    "mph to knots",
     "120",
     "Older US aircraft manuals (pre-1976 POHs) state speeds in mph; pilots convert them to knots."
 );
@@ -121,7 +121,7 @@ pair!(
     "mps-to-kt",
     "m/s",
     "kt",
-    "M/s to knots",
+    "m/s to knots",
     "10",
     "METARs in many countries and drone specs give wind in m/s; pilots think in knots."
 );
@@ -301,7 +301,7 @@ pair!(
     "inhg-to-hpa",
     "inHg",
     "hPa",
-    "InHg to hPa",
+    "inHg to hPa",
     "29.92",
     "US altimeter settings are in inHg; most of the world uses hPa."
 );
@@ -325,7 +325,7 @@ pair!(
     "psi-to-kpa",
     "psi",
     "kPa",
-    "Psi to kPa",
+    "psi to kPa",
     "30",
     "Tire and oxygen pressures are specified in psi and kPa."
 );
@@ -337,7 +337,7 @@ pair!(
     "kpa-to-psi",
     "kPa",
     "psi",
-    "KPa to psi",
+    "kPa to psi",
     "200",
     "Converting metric pressure specs to psi."
 );

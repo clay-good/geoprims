@@ -1091,6 +1091,34 @@ function magneticCompass(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/**
+ * Datum shift: where the same point's coordinates land in the target frame,
+ * drawn from the source frame's position as east and north parts, head to tail.
+ */
+function datumShift(args, result) {
+  const [e, n, u, s, az] = ['east', 'north', 'up', 'shift', 'azimuth'].map((k) => val(result, k));
+  if (![e, n, u, s, az].every(Number.isFinite) || s < 1e-6) return null;
+  // Scaled so the shift is 110 units long, centered on its midpoint.
+  const k = 110 / s;
+  const [cx, cy] = [160 - (e * k) / 2, 118 + (n * k) / 2];
+  const [ex, ny] = [cx + e * k, cy - n * k];
+  const abs = (key) => disp(result, key).replace(/^-/, '');
+  const ew = `${abs('east')} ${e >= 0 ? 'east' : 'west'}`;
+  const ns = `${abs('north')} ${n >= 0 ? 'north' : 'south'}`;
+  const ud = `${abs('up')} ${u >= 0 ? 'up' : 'down'}`;
+  const [from, to] = [String(args.from ?? 'the first frame'), String(args.to ?? 'the second frame')];
+  const body = [
+    `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,
+    arrow(cx, cy, ex, cy, 'dg-muted dg-dash', ew, 0.5, n >= 0 ? 1 : -1),
+    arrow(ex, cy, ex, ny, 'dg-muted dg-dash', ns, 0.5, e >= 0 ? -1 : 1),
+    arrow(cx, cy, ex, ny, 'dg-accent', `${disp(result, 'shift')} toward ${disp(result, 'azimuth')}`, 0.45, e * n >= 0 ? -1 : 1),
+    dot(cx, cy),
+    text('dg-muted-text', 160, 228, `${from} → ${to} · ${ud}`, 'middle'),
+  ].join('');
+  const title = `The ${to} coordinates lie ${disp(result, 'shift')} from the ${from} ones, toward ${disp(result, 'azimuth')}: ${ew}, ${ns}, and ${ud}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 /** Plane survey points (northing, easting) in one length unit: [easting, northing] in meters. */
 const plane = (n, e, unit) => [measure(e, LENGTH, unit), measure(n, LENGTH, unit)];
 
@@ -1408,6 +1436,7 @@ const DIAGRAMS = {
   'aviation.wind.tas-from-groundspeed': tasFromGroundspeed,
   'aviation.ifr.hold-wind-timing': holdTiming,
   'geodesy.magnetic.true-to-magnetic': magneticCompass,
+  'geodesy.datum.nad83': datumShift,
   'geodesy.parse.bearing-difference': bearingTurn,
   'navigation.los.dip': horizonDip,
   'survey.cogo.forward': cogoForward,

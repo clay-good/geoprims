@@ -67,7 +67,7 @@ NGS publishes the relationship as a 14-parameter Helmert transformation in its H
 3. Rotate, scale, and shift X, Y, Z into the other frame.
 4. Turn the result back into latitude, longitude, and height.
 
-The [NAD 83 transformation tool](/geodesy/datum/nad83/) follows HTDP's route through ITRF94 and reports the difference as east, north, and up.
+The [NAD 83 transformation tool](/geodesy/datum/nad83/) follows HTDP's route through ITRF94 and reports the difference as east, north, and up. Its page draws the shift as an arrow, so you can see which way the coordinates move.
 
 ## A worked example
 

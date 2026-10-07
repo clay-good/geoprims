@@ -1028,10 +1028,16 @@ pub static NAD83: ToolDef = ToolDef {
         source: "NGS HTDP 3.6.0 compiled from htdp.f, menu option 4, and independently PROJ 9.3.0 through pyproj on EPSG:9988 to EPSG:6319, which agrees with the tool to 9.5 nanometres in latitude, 1.2 in longitude and 0.2 in height",
     }],
     primary_example: "primary",
-    visualization: &[Layer {
-        kind: "point",
-        map: &[("lat", "lat"), ("lon", "lon")],
-    }],
+    visualization: &[
+        Layer {
+            kind: "point",
+            map: &[("lat", "lat"), ("lon", "lon")],
+        },
+        Layer {
+            kind: "vector-diagram",
+            map: &[("east", "east"), ("north", "north")],
+        },
+    ],
     related: &[
         Related {
             id: "geodesy.datum.itrf",

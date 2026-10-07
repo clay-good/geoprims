@@ -629,3 +629,21 @@ test('the wind-limit bars end where the core puts the wind, the gust, and the li
   assert.ok(d.markup.includes(`L${x(g)} 84`), 'gust bar');
   assert.ok(d.desc.includes(r.display.wind_at_height) && d.desc.includes(r.display.rating), d.desc);
 });
+
+test('the datum shift arrow points where NAD 83 puts a Kansas point, meters from WGS 84', async () => {
+  // datums-and-transformations "Meter-level difference shown": epoch 2026.7.
+  const args = { from: 'WGS84(G2296)', to: 'NAD83(2011)', epoch: '2026.7', lat: 38.5, lon: -98, height: 500 };
+  const r = JSON.parse(await host.invoke('geodesy.datum.nad83', JSON.stringify(args)));
+  assert.ok(r.result.shift.value > 1 && r.result.shift.value < 2, r.display.shift);
+  const d = diagram('geodesy.datum.nad83', args, r);
+  assert.ok(d.desc.includes(`${r.display.shift} from the WGS84(G2296) ones, toward ${r.display.azimuth}`), d.desc);
+  assert.ok(d.desc.includes('east') && d.desc.includes('south') && d.desc.includes('up'), d.desc);
+  // The accent arrow runs from the start dot along the core's azimuth.
+  const [x1, y1, x2, y2] = /<line class="dg-accent" x1="([\d.-]+)" y1="([\d.-]+)" x2="([\d.-]+)" y2="([\d.-]+)"/.exec(d.markup).slice(1).map(Number);
+  const az = ((Math.atan2(x2 - x1, y1 - y2) * 180) / Math.PI + 360) % 360;
+  assert.ok(Math.abs(az - r.result.azimuth.value) < 0.5, `${az} vs ${r.result.azimuth.value}`);
+  for (const v of [x1, y1, x2, y2]) assert.ok(v > 0 && v < 320, `${v} lies outside the drawing`);
+  // The same frame on both sides has nothing to draw.
+  const same = JSON.parse(await host.invoke('geodesy.datum.nad83', JSON.stringify({ ...args, to: 'WGS84(G2296)' })));
+  assert.equal(diagram('geodesy.datum.nad83', args, same), null);
+});

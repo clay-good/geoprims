@@ -318,19 +318,27 @@ function verticalCurve(args, result) {
 function traverseSketch(args, result) {
   const pts = (result.result.points ?? []).map((p) => [val({ result: p }, 'easting'), val({ result: p }, 'northing')]);
   if (pts.length < 3 || !pts.flat().every(Number.isFinite)) return null;
-  const S = fit(pts, 220, 150);
+  const [a, z] = [pts[0], pts[pts.length - 1]];
+  // The misclosure runs from the point of beginning to where the last call
+  // ends. It is usually far smaller than a pixel, so it is drawn larger by a
+  // stated round factor (cogo-and-traverse "Misclosure exaggeration").
+  const [dx, dy] = [z[0] - a[0], z[1] - a[1]];
+  const miss = Math.hypot(dx, dy) > 1e-12 * (val(result, 'total_length') || 1);
+  const box = [220, 140];
+  const { factor, end: far, S } = miss ? misclosureFrame(pts, a, [dx, dy], box) : { factor: 1, S: fit(pts, ...box) };
   const xy = pts.map(S);
   const path = xy.map((p, i) => `${i ? 'L' : 'M'}${p.map(f1).join(' ')}`).join('');
-  const [first, last] = [xy[0], xy[xy.length - 1]];
+  const o = S(a);
+  const end = miss ? S(far) : o;
   const body = [
     `<path class="dg-casing" fill="none" d="${path}"/><path class="dg-accent" d="${path}"/>`,
     ...xy.slice(0, -1).map((p, i) => `${dot(p[0], p[1], i === 0 ? 'dg-dot-now' : 'dg-dot')}${text('dg-muted-text', p[0] + 7, p[1] - 7, String(i + 1))}`),
-    // The misclosure is usually far smaller than a pixel: ring it so it can be found.
-    `<circle class="dg-muted dg-dash" cx="${f1((first[0] + last[0]) / 2)}" cy="${f1((first[1] + last[1]) / 2)}" r="12"/>`,
+    miss ? arrow(o[0], o[1], end[0], end[1], 'dg-muted', factor > 1 ? `Misclosure ×${group(factor)}` : 'Misclosure', 0.9, dx >= 0 ? 1 : -1) : '',
     text('dg-label', 160, 226, `Misclosure ${disp(result, 'misclosure')} · ${result.result.precision ?? ''}`, 'middle'),
     text('dg-muted-text', 296, 30, 'N ↑', 'end'),
   ].join('');
-  const title = `Traverse sketch of ${pts.length - 1} courses; it misses closing by ${disp(result, 'misclosure')} (${result.result.precision ?? ''}), ringed at the point of beginning.`;
+  const scale = miss ? (factor > 1 ? `, drawn ${group(factor)} times its size from the point of beginning` : ', drawn from the point of beginning') : '';
+  const title = `Traverse sketch of ${pts.length - 1} courses; it misses closing by ${disp(result, 'misclosure')} (${result.result.precision ?? ''})${scale}.`;
   return { markup: svg(body, title), desc: title };
 }
 
@@ -1164,17 +1172,39 @@ function cogoInverse(args, result) {
 }
 
 /** A parcel in plan from its corner coordinates, numbered, with its area. */
-function parcelPlan(pts, caption, title) {
+function parcelPlan(pts, caption, title, extra = () => [], box = [220, 150], frame = pts) {
   if (pts.length < 3 || !pts.flat().every(Number.isFinite)) return null;
-  const xy = pts.map(fit(pts, 220, 150));
+  const xy = pts.map(fit(frame, ...box));
   const body = [
     `<path class="dg-fill" d="${path(xy, true)}"/>`,
     `<path class="dg-accent" d="${path(xy, true)}"/>`,
     ...xy.map((p, i) => `${dot(p[0], p[1], i === 0 ? 'dg-dot-now' : 'dg-dot')}${text('dg-muted-text', p[0] + 7, p[1] - 7, String(i + 1))}`),
     text('dg-muted-text', 296, 22, 'N ↑', 'end'),
     text('dg-label', 160, 226, caption, 'middle'),
+    ...extra(xy),
   ].join('');
   return { markup: svg(body, title), desc: title };
+}
+
+/**
+ * The drawing of a traverse whose misclosure (dx, dy) leaves point `a`: the
+ * round factor that makes it visible, and a mapper framed around both the
+ * figure and the arrow's far end, so the arrow never runs off the drawing.
+ */
+function misclosureFrame(pts, a, [dx, dy], box) {
+  const S0 = fit(pts, ...box);
+  const k = Math.abs(S0([a[0] + 1, a[1]])[0] - S0(a)[0]);
+  const factor = exaggeration(Math.hypot(dx, dy) * k, 40);
+  const end = [a[0] + dx * factor, a[1] + dy * factor];
+  const frame = [...pts, end];
+  return { factor, end, frame, S: fit(frame, ...box) };
+}
+
+/** The round factor (1, 2, or 5 × 10^n) that draws `len` drawing units at most `target` long; 1 when it needs none. */
+export function exaggeration(len, target = 50) {
+  if (!(len > 0) || len >= target) return 1;
+  const p = 10 ** Math.floor(Math.log10(target / len));
+  return [5, 2, 1].map((m) => m * p).find((f) => len * f <= target) ?? p;
 }
 function areaPlan(args, result) {
   const pts = (Array.isArray(args.points) ? args.points : []).map((p) => [Number.parseFloat(p.easting), Number.parseFloat(p.northing)]);
@@ -1187,9 +1217,40 @@ function traverseClosure(args, result) {
   // The adjusted traverse closes on its first point; draw each corner once.
   const [a, z] = [pts[0], pts[pts.length - 1]];
   if (pts.length > 3 && a && z && Math.hypot(a[0] - z[0], a[1] - z[1]) < 1e-6) pts.pop();
+  // The misclosure: where the unadjusted traverse ended, from the point of
+  // beginning, by the core's sums of departures and latitudes. It is far
+  // smaller than the figure, so it is drawn larger by a stated round factor.
+  const [dep, lat] = [val(result, 'sum_departures'), val(result, 'sum_latitudes')];
+  // Closed to within 1e-12 of the length is a perfect closure (cogo-and-traverse).
+  const miss = [dep, lat].every(Number.isFinite) && Math.hypot(dep, lat) > 1e-12 * (val(result, 'total_length') || 1);
+  if (pts.length < 3 || !pts.flat().every(Number.isFinite)) return null;
+  // Shorter than the area plan's box, so the leg labels clear the caption.
+  const box = [220, 128];
+  const { factor, end: far, frame, S } = miss ? misclosureFrame(pts, a, [dep, lat], box) : { factor: 1, frame: pts, S: fit(pts, ...box) };
+  const extra = (xy) => {
+    // Each course's adjusted length, set just outside the figure beside its leg.
+    const c = [xy.reduce((t, p) => t + p[0], 0) / xy.length, xy.reduce((t, p) => t + p[1], 0) / xy.length];
+    const legs = rows.length <= 13 ? rows.slice(1).map((r, i) => {
+      const d = val({ result: r }, 'distance');
+      const [p, q] = [xy[i], xy[(i + 1) % xy.length]];
+      if (!Number.isFinite(d) || !p || !q) return '';
+      const m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+      const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+      let n = [-(q[1] - p[1]) / len, (q[0] - p[0]) / len];
+      if (n[0] * (m[0] - c[0]) + n[1] * (m[1] - c[1]) < 0) n = [-n[0], -n[1]];
+      const anchor = Math.abs(n[0]) > Math.abs(n[1]) ? (n[0] > 0 ? 'start' : 'end') : 'middle';
+      return text('dg-muted-text', m[0] + n[0] * 8, m[1] + n[1] * 8 + (n[1] > 0.5 ? 9 : Math.abs(n[1]) <= 0.5 ? 4 : 0), String(Number(d.toFixed(2))), anchor);
+    }) : [];
+    if (!miss) return legs;
+    const [o, end] = [S(a), S(far)];
+    return [...legs, arrow(o[0], o[1], end[0], end[1], 'dg-muted', factor > 1 ? `Misclosure ×${group(factor)}` : 'Misclosure', 0.9, dep >= 0 ? 1 : -1)];
+  };
+  const scale = factor > 1 ? `, drawn ${group(factor)} times its size` : '';
   return parcelPlan(pts, `Precision ${disp(result, 'precision')} · misclosure ${disp(result, 'misclosure')} before adjustment`,
-    `Adjusted traverse of ${pts.length} corners. Before adjustment it missed closing by ${disp(result, 'misclosure')}, a precision of ${disp(result, 'precision')}.`);
+    `Adjusted traverse of ${pts.length} corners. Before adjustment it missed closing by ${disp(result, 'misclosure')} toward ${disp(result, 'misclosure_bearing')}${scale}, a precision of ${disp(result, 'precision')}.`, extra, box, frame);
 }
+
+const group = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 /** Part 107 ceiling, side view: the structure, where the drone is, and how high it may go there. */
 function part107Ceiling(args, result) {

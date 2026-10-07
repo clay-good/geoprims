@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
-import { DIAGRAM_TOOLS, diagram, measure } from '../src/lib/diagrams.js';
+import { DIAGRAM_TOOLS, diagram, exaggeration, measure } from '../src/lib/diagrams.js';
 
 const web = new URL('..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(web, '../../dist/catalog/v1.json'), 'utf8'));
@@ -646,4 +646,39 @@ test('the datum shift arrow points where NAD 83 puts a Kansas point, meters from
   // The same frame on both sides has nothing to draw.
   const same = JSON.parse(await host.invoke('geodesy.datum.nad83', JSON.stringify({ ...args, to: 'WGS84(G2296)' })));
   assert.equal(diagram('geodesy.datum.nad83', args, same), null);
+});
+
+test('the traverse sketch draws the misclosure larger by a labeled round factor', async () => {
+  // cogo-and-traverse "Misclosure exaggeration".
+  const t = catalog.tools.find((x) => x.id === 'survey.cogo.traverse-closure');
+  const args = t.examples.find((e) => e.id === t['x-primary-example']).input;
+  const r = JSON.parse(await host.invoke(t.id, JSON.stringify(args)));
+  const d = diagram(t.id, args, r);
+  const factor = Number(/Misclosure ×([\d,]+)/.exec(d.markup)[1].replace(/,/g, ''));
+  assert.ok([1, 2, 5].includes(factor / 10 ** Math.floor(Math.log10(factor))), `${factor} is a round factor`);
+  assert.ok(d.desc.includes(`drawn ${factor.toLocaleString('en-US')} times its size`), d.desc);
+  assert.ok(d.desc.includes(r.display.misclosure_bearing), d.desc);
+  // The arrow leaves the point of beginning on the core's misclosure bearing.
+  const lines = [...d.markup.matchAll(/<line class="dg-muted" x1="([\d.-]+)" y1="([\d.-]+)" x2="([\d.-]+)" y2="([\d.-]+)"/g)];
+  assert.equal(lines.length, 1);
+  const [x1, y1, x2, y2] = lines[0].slice(1).map(Number);
+  const az = ((Math.atan2(x2 - x1, y1 - y2) * 180) / Math.PI + 360) % 360;
+  const want = (Math.atan2(r.result.sum_departures.value, r.result.sum_latitudes.value) * 180) / Math.PI;
+  assert.ok(Math.abs(az - want) < 1.5, `${az} vs ${want}`);
+  // Each course is labeled with its adjusted length.
+  for (const p of r.result.adjusted.slice(1)) assert.ok(d.markup.includes(`>${Number(p.distance.value.toFixed(2))}<`), `course to ${p.point}`);
+  // A traverse that closes exactly has no misclosure to draw.
+  const square = { courses: [0, 90, 180, 270].map((b) => ({ direction: String(b), distance: 100 })) };
+  const closed = JSON.parse(await host.invoke(t.id, JSON.stringify(square)));
+  const c = diagram(t.id, square, closed);
+  assert.ok(c && !c.markup.includes('Misclosure ×') && !/<line class="dg-muted"/.test(c.markup), 'no arrow for a perfect closure');
+});
+
+test('the exaggeration factor is the largest round number that fits', () => {
+  assert.equal(exaggeration(0.1), 500);
+  assert.equal(exaggeration(0.03), 1000);
+  assert.equal(exaggeration(1), 50);
+  assert.equal(exaggeration(30), 1);
+  assert.equal(exaggeration(80), 1);
+  assert.equal(exaggeration(0), 1);
 });

@@ -79,7 +79,15 @@ test('the calculation sheet carries what an audit file needs', async () => {
   assert.match(sheet, /Made 2026-09-20T12:00:00Z/);
   assert.match(sheet, /not a legal survey determination/i);
   // Every value the card shows is in the sheet.
-  for (const v of Object.values(result.display)) assert.ok(sheet.includes(String(v)), `${v} is missing`);
+  for (const v of Object.values(result.display)) assert.ok(sheet.includes(String(v)), `${v} is missing`);  // io-formats "Calculation sheet": every input, each course of the list
+  // included, the adjusted coordinates, and the adjustment the tool applied.
+  assert.doesNotMatch(sheet, /\[object Object\]/);
+  for (const c of args.courses) assert.ok(sheet.includes(`| ${c.direction} | ${c.distance} ft |`), `course ${c.direction} is missing`);
+  assert.match(sheet, /\| Adjustment \| Not given \(.*compass \(Bowditch, default\)/);
+  assert.ok(sheet.includes('### Adjusted points'), 'no adjusted points');
+  for (const p of result.result.adjusted) {
+    assert.ok(sheet.includes(`${p.northing.value.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })} ft`), `northing of point ${p.point} is missing`);
+  }
 });
 
 test('CSV quotes what would otherwise break a row', () => {

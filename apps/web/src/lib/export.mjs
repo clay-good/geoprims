@@ -6,6 +6,8 @@
 // pair (lat, lon) or a row of a list output with those fields, which is how
 // the tool contract writes coordinates everywhere else.
 
+import { cellText } from './rows.js';
+
 const num = (v) => (v !== null && typeof v === 'object' && 'value' in v ? v.value : v);
 const isFinite_ = (v) => typeof v === 'number' && Number.isFinite(v);
 
@@ -135,17 +137,59 @@ export function toText(tool, result, display = {}) {
   return `${lines.join('\n')}\n`;
 }
 
+/** A Markdown table cell: a pipe or a line break would end the cell early. */
+const mdCell = (v) => String(v ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+
+/** Rows of objects as a Markdown table under a heading, columns titled from the item schema. */
+function rowsTable(heading, rows, items = {}, show = cellText) {
+  const columns = [...new Set(rows.flatMap((r) => Object.keys(r ?? {})))];
+  return [
+    `### ${heading}`,
+    '',
+    `| ${columns.map((c) => mdCell(items[c]?.title ?? c)).join(' | ')} |`,
+    `|${columns.map(() => '---').join('|')}|`,
+    ...rows.map((r) => `| ${columns.map((c) => mdCell(show(r?.[c], items[c]))).join(' | ')} |`),
+    '',
+  ];
+}
+
+/** An input as entered, with the unit a plain number is read in (`x-unit`). */
+const entered = (v, schema) => {
+  const unit = schema?.['x-unit'];
+  return typeof v === 'number' && unit && unit !== '1' ? `${v} ${unit}` : cellText(v, schema);
+};
+
+const isRowList = (v) => Array.isArray(v) && v.length > 0 && v.every((r) => r !== null && typeof r === 'object' && !Array.isArray(r));
+
 /**
  * A calculation sheet for field notes or an audit file: what was entered, what
  * came out, the method, the sources with their locators, the versions, and
- * when it was made. `today` is an ISO 8601 UTC instant, passed in because a
- * result never reads a clock.
+ * when it was made. Every input appears, a blank one with the tool's own note
+ * on what it means, and list inputs and outputs (a traverse's courses and its
+ * adjusted points) as tables of their own. `today` is an ISO 8601 UTC instant,
+ * passed in because a result never reads a clock.
  */
 export function toSheet(tool, args, result, { display = {}, today } = {}) {
   const meta = result.meta ?? {};
-  const line = (k, v) => `| ${k} | ${v} |`;
-  const inputs = Object.entries(args ?? {}).map(([k, v]) => line(tool.inputs.properties[k]?.title ?? k, num(v)));
+  const line = (k, v) => `| ${mdCell(k)} | ${mdCell(v)} |`;
+  const props = tool.inputs.properties ?? {};
+  const given = args ?? {};
+  const inputs = [];
+  const inputTables = [];
+  // `options` is the call envelope (explain, units), not something entered.
+  for (const k of [...new Set([...Object.keys(props), ...Object.keys(given)])].filter((k) => k !== 'options')) {
+    const title = props[k]?.title ?? k;
+    const v = given[k];
+    if (v === undefined || v === null || v === '') inputs.push(line(title, `Not given (${props[k]?.description ?? 'optional'})`));
+    else if (isRowList(v)) {
+      inputs.push(line(title, `${v.length} rows, below`));
+      inputTables.push(...rowsTable(title, v, props[k]?.items?.properties, entered));
+    } else inputs.push(line(title, Array.isArray(v) ? v.map((x) => entered(num(x), props[k]?.items)).join(', ') : entered(num(v), props[k])));
+  }
   const outputs = Object.entries(display).map(([k, v]) => line(tool.outputs.properties[k]?.title ?? k, v));
+  const outputTables = Object.entries(result.result ?? {})
+    .filter(([k, v]) => !(k in display) && isRowList(v))
+    .flatMap(([k, v]) => rowsTable(tool.outputs.properties[k]?.title ?? k, v, tool.outputs.properties[k]?.items?.properties));
   const sources = (meta.references ?? []).map(
     (r) => `- ${[r.issuer, r.title, r.edition].filter(Boolean).join(', ')}. ${r.locator}`,
   );
@@ -160,12 +204,14 @@ export function toSheet(tool, args, result, { display = {}, today } = {}) {
     '|---|---|',
     ...inputs,
     '',
+    ...inputTables,
     '## Results',
     '',
     '| Result | Value |',
     '|---|---|',
     ...outputs,
     '',
+    ...outputTables,
     '## Method',
     '',
     meta.model ?? '',

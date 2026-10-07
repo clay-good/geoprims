@@ -1,6 +1,6 @@
 ---
 title: What is density altitude?
-description: Density altitude is the altitude your airplane performs at. How to work it out from field elevation, altimeter setting, and temperature, and where the rules of thumb drift.
+description: Density altitude is the altitude your airplane performs at. Work it out from elevation, altimeter setting, and temperature, and see where shortcuts drift.
 summary: The altitude the airplane feels, why hot and high days lengthen the takeoff roll, and how to work it out exactly.
 audience: Pilots
 published: 2026-09-23

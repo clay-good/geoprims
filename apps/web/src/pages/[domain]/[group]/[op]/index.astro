@@ -58,7 +58,7 @@ const terms = termsFor(t.id);
 const purpose = markTerms(t.summary, terms);
 
 ---
-<Base title={pageTitle(t.title, 'free calculator')} og={og} description={t.summary} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
+<Base title={pageTitle(t.title, 'free calculator')} og={og} description={[t.summary, t.whenToUse].filter(Boolean).join(' ')} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
   <PageHeader
     title={t.title}
     crumbs={[[DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [groupName, route(`${t.domain}.${t.group}`)]]}

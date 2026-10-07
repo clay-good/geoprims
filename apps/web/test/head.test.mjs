@@ -42,13 +42,21 @@ test('the title cap drops the qualifier before shortening the name', () => {
   const veryLong = title('A tool with an extremely long name that will not fit inside the cap at all');
   assert.ok(veryLong.length <= TITLE_MAX, veryLong);
   assert.ok(veryLong.endsWith('… · geoprims'));
+  // A name that fits without the site name keeps every word rather than
+  // ending in an ellipsis.
+  const name = 'State plane (SPCS2022 beta) to latitude and longitude';
+  assert.equal(title(name, 'free calculator'), name);
+  assert.equal(capTitle(`${name} · geoprims`), name);
 });
 
 test('capTitle holds a title a template composed itself', () => {
   assert.equal(capTitle('Short · geoprims'), 'Short · geoprims');
   const capped = capTitle('Move a position between epochs (ITRF2020 plate motion) · geoprims');
   assert.ok(capped.length <= TITLE_MAX, capped);
-  assert.ok(capped.endsWith(' · geoprims'));
+  // The name fits on its own, so the site name goes rather than any of its words.
+  assert.equal(capped, 'Move a position between epochs (ITRF2020 plate motion)');
+  const long = capTitle(`${'Word '.repeat(14)}end · geoprims`);
+  assert.ok(long.length <= TITLE_MAX && long.endsWith('… · geoprims'), long);
 });
 
 test('a description is cut at a sentence, then at a word', () => {
@@ -60,6 +68,14 @@ test('a description is cut at a sentence, then at a word', () => {
   assert.ok(cut.length <= DESCRIPTION_MAX, `${cut.length}`);
   assert.ok(cut.endsWith('…'));
   assert.ok(!cut.endsWith(' …'), 'no space before the ellipsis');
+});
+
+test('a description keeps whole sentences while they fit, and abbreviations do not end one', () => {
+  // "Decodes a U.S." once shipped as the USNG decoder's whole description.
+  const usng = description(`Decodes a U.S. National Grid reference to the center of its square. ${'z'.repeat(120)}.`);
+  assert.equal(usng, 'Decodes a U.S. National Grid reference to the center of its square.');
+  const kept = description(`GSD is how much ground one pixel covers. It sets what you can see, e.g. a crack. ${'z'.repeat(120)}.`);
+  assert.equal(kept, 'GSD is how much ground one pixel covers. It sets what you can see, e.g. a crack.');
 });
 
 test('the lint rejects a page that promises more than the build can prove', () => {

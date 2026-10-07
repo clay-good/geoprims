@@ -1,6 +1,6 @@
 ---
 title: Zulu time (UTC) explained
-description: Zulu time is UTC, the one clock aviation runs on. How to convert local time to Zulu, how daylight saving time changes the offset, and the traps at midnight.
+description: Zulu time is UTC, the one clock aviation runs on. How to convert local time to Zulu, how daylight saving changes the offset, and the traps at midnight.
 summary: What Zulu time is, why weather reports and flight plans use it, and how to convert local time to UTC and back without the daylight saving slip.
 audience: Pilots
 published: 2026-09-23

@@ -59,6 +59,7 @@ JSON-LD SHALL be limited to:
 - `CollectionPage` with `ItemList` plus `BreadcrumbList` on hub pages
 - `Article` on concept explainers
 - `Dataset` only on pages offering downloadable data (test vectors, geoid tiles)
+- `WebSite` (with `name`, `url`, and a `publisher` `Organization`) on the home page only, so search engines show the site's own name beside its results
 
 A gate SHALL fail on any other type, on invalid JSON-LD, and on unescaped `<` in JSON-LD.
 

@@ -152,8 +152,8 @@ export const tool = (id) => catalog.tools.find((t) => t.id === id);
 export const canonicalOf = (t) =>
   t.deprecation ? route(t.deprecation.replacement) : t.composedOf.length ? route(t.composedOf[0]) : route(t.id);
 
-/** Only stable tools are indexable (experimental and deprecated pages are not). */
-export const indexable = (t) => t.stability === 'stable' && t.composedOf.length === 0 && !t.deprecation;
+/** Stable tools, and experimental ones with full content, are indexable (head.mjs). */
+export { indexableTool as indexable } from './head.mjs';
 
 export const primaryExample = (t) => t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0];
 

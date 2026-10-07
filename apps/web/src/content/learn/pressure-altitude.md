@@ -1,6 +1,6 @@
 ---
 title: What is pressure altitude?
-description: Pressure altitude is what your altimeter reads set to 29.92 inHg. How to work it out from field elevation and the altimeter setting, and where the 1,000 ft rule drifts.
+description: Pressure altitude is what your altimeter reads at 29.92 inHg. Work it out from elevation and altimeter setting, and see where the 1,000 ft rule drifts.
 summary: The altitude on a standard altimeter setting, why 29.92 matters, and how QNH, QFE, and QNE fit together.
 audience: Pilots
 published: 2026-09-23

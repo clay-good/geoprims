@@ -26,14 +26,16 @@ function clip(text, max) {
 
 /**
  * A page title: the name, an optional qualifier saying what it answers, then
- * the site. Over the cap the qualifier goes first, and only then is the name
- * itself shortened, so the name always survives.
+ * the site. Over the cap the qualifier goes first, then the site name (search
+ * engines show the site beside the result anyway), and only then is the name
+ * itself shortened, so the name survives whole whenever it fits at all.
  */
 export function title(name, qualifier = '') {
   const withQualifier = qualifier ? `${name} — ${qualifier}${SUFFIX}` : '';
   if (withQualifier && withQualifier.length <= TITLE_MAX) return withQualifier;
   const plain = `${name}${SUFFIX}`;
   if (plain.length <= TITLE_MAX) return plain;
+  if (name.length <= TITLE_MAX) return name;
   return `${clip(name, TITLE_MAX - SUFFIX.length)}${SUFFIX}`;
 }
 
@@ -50,19 +52,35 @@ export function capTitle(full) {
   const name = body.split(' — ')[0];
   const dropped = `${name}${suffix}`;
   if (dropped.length <= TITLE_MAX) return dropped;
+  if (name.length <= TITLE_MAX) return name;
   return `${clip(name, TITLE_MAX - suffix.length)}${suffix}`;
 }
 
 /**
- * A meta description: the first sentence of the text, shortened to the cap at
- * a word boundary when that sentence is still too long.
+ * The text's sentences. A period ends one only when a space follows and it
+ * does not close an initial or an abbreviation like "U.S." or "e.g.", so
+ * "a U.S. National Grid reference" stays one sentence.
+ */
+function sentences(text) {
+  return text.split(/(?<=(?<!(?:^|[\s.(])[A-Za-z])[.!?])\s+/);
+}
+
+/**
+ * A meta description: as many whole sentences of the text as fit under the
+ * cap, so a short lead sentence keeps the one after it; the first sentence
+ * shortened at a word boundary when even it is too long.
  */
 export function description(text) {
   const trimmed = String(text ?? '').replace(/\s+/g, ' ').trim();
   if (trimmed.length <= DESCRIPTION_MAX) return trimmed;
-  const stop = trimmed.search(/\.\s/);
-  const first = stop > 0 ? trimmed.slice(0, stop + 1) : trimmed;
-  return first.length <= DESCRIPTION_MAX ? first : clip(first, DESCRIPTION_MAX);
+  const parts = sentences(trimmed);
+  let kept = parts[0];
+  if (kept.length > DESCRIPTION_MAX) return clip(kept, DESCRIPTION_MAX);
+  for (const next of parts.slice(1)) {
+    if (`${kept} ${next}`.length > DESCRIPTION_MAX) break;
+    kept = `${kept} ${next}`;
+  }
+  return kept;
 }
 
 /**
@@ -80,6 +98,18 @@ export function listDescription(lead, names) {
   }
   return picked.length ? `${text} Includes ${picked.join(', ')}.` : text;
 }
+
+/**
+ * Whether a tool's page is indexable (contracts/routes-and-urls route map):
+ * a stable tool, or an experimental one with full content, meaning it carries
+ * its own "when to use this" and "limitations". The content gates then hold
+ * every indexable page to the same minimums, whatever its stability. A
+ * generated endpoint or a deprecated tool points elsewhere instead.
+ */
+export const indexableTool = (t) =>
+  t.composedOf.length === 0 &&
+  !t.deprecation &&
+  (t.stability === 'stable' || (t.stability === 'experimental' && Boolean(t.whenToUse) && Boolean(t.limitations)));
 
 /** The superlative a string uses, if any. */
 export function superlative(text) {

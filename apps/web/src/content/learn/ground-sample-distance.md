@@ -1,6 +1,6 @@
 ---
 title: What is ground sample distance (GSD)?
-description: GSD is how much ground one image pixel covers. How to work it out from sensor width, focal length, image width, and height, and what it does and does not say about accuracy.
+description: GSD is how much ground one image pixel covers. Work it out from sensor width, focal length, image width, and height, and see why GSD is not accuracy.
 summary: How much ground one pixel covers, how to work it out, the height for a target GSD, and why GSD is not accuracy.
 audience: Drone operators
 published: 2026-09-23

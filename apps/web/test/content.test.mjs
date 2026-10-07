@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { indexableTool } from '../src/lib/head.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const root = join(web, '../..');
@@ -13,7 +14,19 @@ const dist = join(web, 'dist');
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
 const route = (id) => '/' + id.split('.').join('/') + '/';
 const page = (r) => readFileSync(join(dist, r, 'index.html'), 'utf8');
-const indexable = catalog.tools.filter((t) => t.stability === 'stable' && t.composedOf.length === 0);
+const indexable = catalog.tools.filter(indexableTool);
+
+test('a tool page is noindex exactly when the indexable rule says so', () => {
+  // Experimental tools with full content are indexable too (contracts/
+  // routes-and-urls); 87 of them once shipped noindex because the page
+  // checked stability alone.
+  const problems = [];
+  for (const t of catalog.tools.filter((x) => x.composedOf.length === 0)) {
+    const noindex = /<meta name="robots" content="noindex">/.test(page(route(t.id)));
+    if (noindex === indexableTool(t)) problems.push(`${t.id}: noindex is ${noindex}, but indexable is ${indexableTool(t)}`);
+  }
+  assert.deepEqual(problems, []);
+});
 
 test('every indexable page states a purpose no other page states', () => {
   const seen = new Map();

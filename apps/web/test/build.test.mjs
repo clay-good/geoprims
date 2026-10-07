@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { indexableTool } from '../src/lib/head.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const dist = join(web, 'dist');
@@ -34,12 +35,16 @@ test('every tool page carries the worked example answer in its HTML', () => {
   }
 });
 
-test('generated endpoints canonicalize to their parent; experimental pages are noindex', () => {
+test('generated endpoints canonicalize to their parent; experimental pages are noindex until they have full content', () => {
   const pair = page('/units/speed/kt-to-mph/');
   assert.match(pair, /<link rel="canonical" href="https:\/\/geoprims\.com\/units\/speed\/convert\/">/);
+  // contracts/routes-and-urls: a tool page is indexable when stable, or
+  // experimental with full content (its own when-to-use and limitations).
   for (const t of catalog.tools.filter((x) => x.stability === 'experimental')) {
-    assert.match(page(route(t.id)), /<meta name="robots" content="noindex">/, t.id);
+    const noindex = /<meta name="robots" content="noindex">/.test(page(route(t.id)));
+    assert.equal(noindex, !indexableTool(t), t.id);
   }
+  assert.ok(!indexableTool({ ...catalog.tools.find((x) => x.id === 'aviation.airspeed.cas-to-tas'), whenToUse: '' }), 'an experimental tool without its prose stays out');
 });
 
 test('no third-party scripts, styles, or fonts', () => {
@@ -73,7 +78,7 @@ test('the known-issues page is published', () => {
   assert.match(page('/known-issues/'), /<h1>Known issues<\/h1>/);
 });
 
-const ALLOWED_LD = new Set(['WebApplication', 'BreadcrumbList', 'CollectionPage', 'Article', 'Dataset']);
+const ALLOWED_LD = new Set(['WebApplication', 'BreadcrumbList', 'CollectionPage', 'Article', 'Dataset', 'WebSite']);
 
 test('structured data: only allowlisted JSON-LD types, valid, with < escaped', () => {
   for (const f of htmlFiles(dist)) {
@@ -82,6 +87,7 @@ test('structured data: only allowlisted JSON-LD types, valid, with < escaped', (
       assert.ok(!m[1].includes('<'), `${f.slice(dist.length)}: unescaped < in JSON-LD`);
       const o = JSON.parse(m[1]);
       assert.ok(ALLOWED_LD.has(o['@type']), `${f.slice(dist.length)}: ${o['@type']} is not allowlisted`);
+      if (o['@type'] === 'WebSite') assert.equal(f.slice(dist.length), '/index.html', 'WebSite is for the home page only');
       if (o['@type'] === 'WebApplication') {
         assert.equal(o.isAccessibleForFree, true);
         assert.equal(o.offers.price, 0);
@@ -89,6 +95,7 @@ test('structured data: only allowlisted JSON-LD types, valid, with < escaped', (
       }
     }
   }
+  assert.match(page('/'), /"@type":"WebSite","name":"geoprims"/);
   assert.match(page('/aviation/altimetry/density-altitude/'), /"@type":"WebApplication"/);
   assert.match(page('/aviation/'), /"@type":"CollectionPage"/);
   assert.match(page('/aviation/altimetry/'), /"@type":"CollectionPage"/);

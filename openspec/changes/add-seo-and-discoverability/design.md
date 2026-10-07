@@ -29,7 +29,7 @@ Research: `docs/research/05` §2 and `docs/research/06` §2, §5, §6. Key facts
 
 ### S1. Indexable pages are curated, not enumerated
 The catalog holds about 834 tool ids. Indexable pages are only:
-- stable operations with full content
+- operations with full content: stable ones, and experimental ones that carry their own "when to use this" and "limitations" (as the route map in define-build-contracts allows). Thin content is kept out by the content gates, which hold every indexable page to the same minimums whatever its stability; the page still says the tool is experimental.
 - up to 60 high-intent conversion pages
 - explainers, hubs, journeys, and trust pages
 

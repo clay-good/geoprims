@@ -49,8 +49,25 @@ const panel = await Promise.all(
     return { id, title: t.title, domain: t.domain, label: t.outputs.properties[out]?.title ?? out, value, unit };
   }),
 );
+// The site's own name for search results (search-pages, "Structured data
+// allowlist": WebSite on the home page only).
+const website = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'geoprims',
+  url: 'https://geoprims.com/',
+  description: 'Free, cited geospatial, aviation, drone, and surveying calculators that run on your device.',
+  inLanguage: 'en-US',
+  publisher: {
+    '@type': 'Organization',
+    name: 'geoprims',
+    url: 'https://geoprims.com/',
+    logo: 'https://geoprims.com/icons/icon-512.png',
+    sameAs: ['https://github.com/clay-good/geoprims'],
+  },
+};
 ---
-<Base title="geoprims: field-grade geospatial and aerospace calculators" description="Precise, cited calculators for drone mapping, surveying, aviation, and geodesy. Ask with your numbers; it opens the right tool. Runs on your device." canonical="/">
+<Base title="geoprims: free aviation, drone, survey, and GIS calculators" description={`Free, cited calculators for aviation, drone mapping, surveying, and GIS: ${ops} tools, each showing its formula and sources. Runs on your device.`} canonical="/" jsonld={[website]}>
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-bg" aria-hidden="true">
       <canvas class="terrain"></canvas>

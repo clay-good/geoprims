@@ -9,9 +9,9 @@ import { ledger, ledgerRowFor as rowFor } from '../../../../lib/catalog.mjs';
 import { toMathML } from '../../../../lib/mathml.mjs';
 import { noticesFor, split } from '../../../../lib/notices.mjs';
 import { buildDate } from '../../../../lib/build-date.mjs';
-import { title as pageTitle } from '../../../../lib/head.mjs';
+import { HIGH_INTENT, title as pageTitle, withPageProse } from '../../../../lib/head.mjs';
 import { explainersFor } from '../../../../lib/learn.js';
-import { breadcrumbs, catalog, groupTitle, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, workedVector, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
+import { breadcrumbs, catalog, commonValues, groupTitle, clientTool, webApplication, canonicalOf, DOMAIN_TITLES, exampleResult, indexable, primaryExample, reviewLine, route, changesFor, CHANGE_KINDS, exampleGroups, exampleTrace, lastVerifiedFor, workedVector, sourceRow, sourceRowsFor, termsFor, youEnterYouGet, tool as find } from '../../../../lib/catalog.mjs';
 
 export function getStaticPaths() {
   return catalog.tools.map((t) => {
@@ -19,7 +19,12 @@ export function getStaticPaths() {
     return { params: { domain, group, op }, props: { id: t.id } };
   });
 }
-const t = find(Astro.props.id);
+// A listed conversion pair brings its own prose and table (head.mjs).
+const t = withPageProse(find(Astro.props.id));
+const common = await commonValues(t);
+const [fromName, toName] = t.title.split(' to ');
+// A converter links the listed pairs it presets, so each has a way in.
+const pairPages = catalog.tools.filter((x) => HIGH_INTENT.has(x.id) && x.composedOf[0] === t.id);
 const ex = primaryExample(t);
 const initial = await exampleResult(t);
 const issue = openIssue(t.id);
@@ -58,7 +63,7 @@ const terms = termsFor(t.id);
 const purpose = markTerms(t.summary, terms);
 
 ---
-<Base title={pageTitle(t.title, 'free calculator')} og={og} description={[t.summary, t.whenToUse].filter(Boolean).join(' ')} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
+<Base title={pageTitle(t.title, t.domain === 'units' ? 'free converter' : 'free calculator')} og={og} description={[t.summary, common.length > 0 && initial.ok ? initial.summary : '', t.whenToUse].filter(Boolean).join(' ')} canonical={canonicalOf(t)} noindex={!indexable(t)} jsonld={jsonld}>
   <PageHeader
     title={t.title}
     crumbs={[[DOMAIN_TITLES[t.domain] ?? t.domain, route(t.domain)], [groupName, route(`${t.domain}.${t.group}`)]]}
@@ -82,6 +87,16 @@ const purpose = markTerms(t.summary, terms);
   )}
   <noscript><p class="card notice" role="note">Computing your own values needs JavaScript and WebAssembly. The worked example below was computed when this page was built, and the documentation under "How we got this" applies.</p></noscript>
   <ToolApp client:load tool={client} example={ex.input} initial={initial} />
+  {common.length > 0 && (
+    <section class="common-values" aria-labelledby="common-title">
+      <h2 id="common-title">Common conversions</h2>
+      <table>
+        <thead><tr><th scope="col">{fromName}</th><th scope="col">{toName}</th></tr></thead>
+        <tbody>{common.map((r) => <tr><td>{r.from}</td><td>{r.to}</td></tr>)}</tbody>
+      </table>
+      <p class="help">Each row is computed by the same core as the converter above, from the exact unit definitions.</p>
+    </section>
+  )}
   <details class="card proof">
     <summary>How we got this<span class="summary-note">Formula, worked example, sources, and proof</span></summary>
     <p><strong>Model:</strong> {t.model}</p>
@@ -197,6 +212,7 @@ const purpose = markTerms(t.summary, terms);
       {sourceOf(e, { get: sourceRow }) && <p class="def-source">Source: {sourceOf(e, { get: sourceRow }).name}</p>}
     </div>
   ))}
+  {pairPages.length > 0 && <p class="learn-links">Common conversions: {pairPages.map((x, i) => <>{i > 0 && ', '}<a href={route(x.id)}>{x.title}</a></>)}</p>}
   {learn.length > 0 && <p class="learn-links">Learn the concept: {learn.map((e, i) => <>{i > 0 && ', '}<a href={e.route}>{e.title}</a></>)}</p>}
   {related.length > 0 && (
     <section class="related" aria-labelledby="related-title">

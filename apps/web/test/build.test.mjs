@@ -36,8 +36,8 @@ test('every tool page carries the worked example answer in its HTML', () => {
 });
 
 test('generated endpoints canonicalize to their parent; experimental pages are noindex until they have full content', () => {
-  const pair = page('/units/speed/kt-to-mph/');
-  assert.match(pair, /<link rel="canonical" href="https:\/\/geoprims\.com\/units\/speed\/convert\/">/);
+  const pair = page('/units/mass/kg-to-lb/');
+  assert.match(pair, /<link rel="canonical" href="https:\/\/geoprims\.com\/units\/mass\/convert\/">/);
   // contracts/routes-and-urls: a tool page is indexable when stable, or
   // experimental with full content (its own when-to-use and limitations).
   for (const t of catalog.tools.filter((x) => x.stability === 'experimental')) {

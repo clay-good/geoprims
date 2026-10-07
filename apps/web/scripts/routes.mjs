@@ -45,8 +45,11 @@ export const NOINDEX_CLASSES = new Set(['app', 'not-found']);
 const STYLE = /^\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)*$/;
 const VERSION_ROUTE = /^\/verification\/\d+\.\d+\.\d+\/$/;
 
+/** Generated endpoints with a page of their own (data/seo/high-intent-pages.json). */
+const listedEndpoints = () => new Set(JSON.parse(readFileSync(join(root, 'data/seo/high-intent-pages.json'), 'utf8')).pages.map((p) => p.id));
+
 /** The domains, groups, and tool ids the catalog gives pages to. */
-export function index(catalog) {
+export function index(catalog, highIntent = listedEndpoints()) {
   const domains = new Set();
   const groups = new Set();
   const tools = new Map();
@@ -56,12 +59,13 @@ export function index(catalog) {
     groups.add(`${domain}/${group}`);
     tools.set(t.id.split('.').join('/'), t);
   }
-  return { domains, groups, tools };
+  return { domains, groups, tools, highIntent };
 }
 
 /**
  * The route class of a built path, or null when it falls outside the map.
- * `endpoint` is a generated pair page; `tool` is a plain operation.
+ * `endpoint` is a generated pair page, `high-intent` one listed for a page of
+ * its own; `tool` is a plain operation.
  */
 export function classify(route, idx) {
   if (FIXED.has(route)) return FIXED.get(route);
@@ -74,7 +78,7 @@ export function classify(route, idx) {
   if (depth === 1 && idx.domains.has(path)) return 'domain';
   if (depth === 2 && idx.groups.has(path)) return 'group';
   const t = idx.tools.get(path);
-  if (t) return t.composedOf.length > 0 ? 'endpoint' : 'tool';
+  if (t) return t.composedOf.length === 0 ? 'tool' : idx.highIntent.has(t.id) ? 'high-intent' : 'endpoint';
   return null;
 }
 
@@ -100,6 +104,8 @@ export function check(pages, idx) {
     } else if (kind === 'endpoint') {
       const parent = `${SITE}/${idx.tools.get(route.slice(1, -1)).composedOf[0].split('.').join('/')}/`;
       if (canonical !== parent) problems.push(`${route} is a generated endpoint and must canonicalize to ${parent}, not ${canonical}`);
+    } else if (kind === 'high-intent' && canonical !== SITE + route) {
+      problems.push(`${route} is on the high-intent list and must canonicalize to itself, not ${canonical}`);
     }
   }
   return problems;

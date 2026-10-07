@@ -60,8 +60,8 @@
     "lastmod": "2026-10-07"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "a26f9008c558d229",
-    "lastmod": "2026-09-29"
+    "hash": "685a1a348c8386ee",
+    "lastmod": "2026-10-07"
   },
   "/aviation/altimetry/q-codes/": {
     "hash": "7501fd77ffb5b692",
@@ -1140,7 +1140,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "2a7ed0336a2c7d8f",
+    "hash": "cf1bf52a39887f45",
     "lastmod": "2026-10-07"
   },
   "/navigation/": {
@@ -1380,7 +1380,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "279f3494de762fc9",
+    "hash": "34dabcac801a3596",
     "lastmod": "2026-10-07"
   },
   "/survey/": {
@@ -1683,9 +1683,21 @@
     "hash": "b8262ae9b9eaf267",
     "lastmod": "2026-09-23"
   },
+  "/units/area/ac-to-ha/": {
+    "hash": "6322c7a569499be2",
+    "lastmod": "2026-10-07"
+  },
   "/units/area/convert/": {
-    "hash": "3cc8e47e50cce06b",
-    "lastmod": "2026-09-29"
+    "hash": "c5394ca4d8e31e4a",
+    "lastmod": "2026-10-07"
+  },
+  "/units/area/ft2-to-ac/": {
+    "hash": "b52e9c53bafeb515",
+    "lastmod": "2026-10-07"
+  },
+  "/units/area/ha-to-ac/": {
+    "hash": "d65e531656d0e0c7",
+    "lastmod": "2026-10-07"
   },
   "/units/charge/": {
     "hash": "80a782edff2abcdc",
@@ -1740,8 +1752,36 @@
     "lastmod": "2026-09-23"
   },
   "/units/length/convert/": {
-    "hash": "3b838e12777ef191",
-    "lastmod": "2026-09-29"
+    "hash": "0e5b3b6bfc97e50a",
+    "lastmod": "2026-10-07"
+  },
+  "/units/length/ftus-to-ft/": {
+    "hash": "84e3362751a84326",
+    "lastmod": "2026-10-07"
+  },
+  "/units/length/ftus-to-m/": {
+    "hash": "cf5d51e5d0e58182",
+    "lastmod": "2026-10-07"
+  },
+  "/units/length/km-to-nm/": {
+    "hash": "07a6e16b49688e51",
+    "lastmod": "2026-10-07"
+  },
+  "/units/length/m-to-ftus/": {
+    "hash": "4c03f1d7453c6143",
+    "lastmod": "2026-10-07"
+  },
+  "/units/length/mi-to-nm/": {
+    "hash": "9f67be1743681d3f",
+    "lastmod": "2026-10-07"
+  },
+  "/units/length/nm-to-km/": {
+    "hash": "4ca1004a59b5e11e",
+    "lastmod": "2026-10-07"
+  },
+  "/units/length/nm-to-mi/": {
+    "hash": "a1354dd2b9e79d63",
+    "lastmod": "2026-10-07"
   },
   "/units/mass/": {
     "hash": "3509e8f59b238eb7",
@@ -1760,12 +1800,20 @@
     "lastmod": "2026-09-29"
   },
   "/units/pressure/": {
-    "hash": "b228af55a7a92ab2",
+    "hash": "a714aede4aa13f06",
     "lastmod": "2026-10-07"
   },
   "/units/pressure/convert/": {
-    "hash": "ff68e359e674c05b",
-    "lastmod": "2026-09-29"
+    "hash": "3ed3349022bbc83e",
+    "lastmod": "2026-10-07"
+  },
+  "/units/pressure/hpa-to-inhg/": {
+    "hash": "e90f359a62b8ba2c",
+    "lastmod": "2026-10-07"
+  },
+  "/units/pressure/inhg-to-hpa/": {
+    "hash": "f9c963852336f019",
+    "lastmod": "2026-10-07"
   },
   "/units/quantity/": {
     "hash": "b4d36ae8f3a23bce",
@@ -1784,12 +1832,36 @@
     "lastmod": "2026-09-29"
   },
   "/units/speed/": {
-    "hash": "72e2cd5e91ea7022",
+    "hash": "9305b164918a6fc2",
     "lastmod": "2026-10-07"
   },
   "/units/speed/convert/": {
-    "hash": "a149d52f7d7a3b47",
-    "lastmod": "2026-09-29"
+    "hash": "f103127fdb5f49b1",
+    "lastmod": "2026-10-07"
+  },
+  "/units/speed/kmh-to-kt/": {
+    "hash": "0f56473d6103c39d",
+    "lastmod": "2026-10-07"
+  },
+  "/units/speed/kt-to-kmh/": {
+    "hash": "23aae774e4d677c7",
+    "lastmod": "2026-10-07"
+  },
+  "/units/speed/kt-to-mph/": {
+    "hash": "ec0d1af045b79b62",
+    "lastmod": "2026-10-07"
+  },
+  "/units/speed/kt-to-mps/": {
+    "hash": "1d4f1da49d25fcdc",
+    "lastmod": "2026-10-07"
+  },
+  "/units/speed/mph-to-kt/": {
+    "hash": "11edec4613c899cb",
+    "lastmod": "2026-10-07"
+  },
+  "/units/speed/mps-to-kt/": {
+    "hash": "e4e65128af457511",
+    "lastmod": "2026-10-07"
   },
   "/units/temperature-difference/": {
     "hash": "c5b99315ea052dd4",
@@ -1820,8 +1892,12 @@
     "lastmod": "2026-10-07"
   },
   "/units/vertical-speed/convert/": {
-    "hash": "cdacbd7e4e1d7bff",
-    "lastmod": "2026-09-29"
+    "hash": "5d9a8619cf6406a5",
+    "lastmod": "2026-10-07"
+  },
+  "/units/vertical-speed/fpm-to-mps/": {
+    "hash": "5dcafbb084e19a35",
+    "lastmod": "2026-10-07"
   },
   "/units/volume/": {
     "hash": "b89f8ab94a585ce5",
@@ -1836,7 +1912,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "6ca015beb7cdf127",
+    "hash": "9c382c3b0967a6f5",
     "lastmod": "2026-10-07"
   },
   "/workflows/": {

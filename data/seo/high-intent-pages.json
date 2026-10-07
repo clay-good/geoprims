@@ -1,6 +1,395 @@
 {
-  "note": "Generated conversion endpoints are tool ids, search aliases, and MCP endpoints. An endpoint gets its own indexable page only when it is listed here (discovery/search-pages, 'Page-versus-endpoint rule'). Every other endpoint renders the parent tool with the pair's preset, canonicalizes to the parent, and stays out of the sitemaps. Checked by tools/seo/high-intent.test.mjs.",
+  "note": "Generated conversion endpoints are tool ids, search aliases, and MCP endpoints. An endpoint gets its own indexable page only when it is listed here (discovery/search-pages, 'Page-versus-endpoint rule'). Every other endpoint renders the parent tool with the pair's preset, canonicalizes to the parent, and stays out of the sitemaps. Checked by tools/seo/high-intent.test.mjs. A listed page carries its own prose (whenToUse, limitations) and the values for its table of common conversions here, not in the core: the page needs them, the Wasm every page downloads does not.",
   "maxPages": 60,
-  "justificationRequired": "Recorded query demand: the source that measured it and the date it was read. Search Console is not connected yet (add-seo-and-discoverability 6.1), so nothing is promoted on a guess — the list is empty until there are numbers to point at.",
-  "pages": []
+  "justificationRequired": "Either recorded query demand (the source that measured it and the date it was read) or an owner decision (who decided, the date, and when it is to be checked against Search Console). An owner decision is not a measurement and is never described as one; it is for pairs where geoprims adds field context a generic converter does not, and it is reviewed once Search Console has data (add-seo-and-discoverability 6.1).",
+  "pages": [
+    {
+      "id": "units.speed.kt-to-mph",
+      "justification": "Pilots compare airspeed with ground vehicles and older US aircraft manuals in mph.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a speed in knots has to make sense to someone who thinks in miles per hour: a wind forecast for a ground crew, a boat or aircraft speed for a news story, or a drone wind limit for a pilot used to road speeds. One knot is one nautical mile per hour, so the answer is about 15% larger than the number of knots you start with.",
+      "limitations": "The factor is exact, about 1.15078 mph per knot, because both units are defined in meters: the knot as 1,852 m per hour and the mile as 1,609.344 m. That precision belongs to the units, not to your reading. An indicated airspeed is not a ground speed, and a wind forecast is only good to a few knots, so round the answer to match what you measured.",
+      "table": [
+        1,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        40,
+        50,
+        100,
+        150,
+        200,
+        250
+      ]
+    },
+    {
+      "id": "units.speed.mph-to-kt",
+      "justification": "Older US aircraft manuals (pre-1976 POHs) state speeds in mph; pilots convert them to knots.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when an older aircraft manual, a road speed, or a weather report gives you miles per hour and your charts and airspeed indicator work in knots. Many older US light aircraft list their speeds in mph, and those numbers have to be in knots before they go into a flight plan, a wind triangle, or a fuel calculation.",
+      "limitations": "Each mile per hour is about 0.869 knots, an exact ratio of the two unit definitions. Check what an old manual's numbers are: some airspeed indicators were marked in mph, and the numbers on the dial are indicated speeds, not true speeds. Converting the unit does not correct for altitude or temperature; use the airspeed tools for that, and treat the manual's limits as the governing values.",
+      "table": [
+        1,
+        5,
+        10,
+        20,
+        30,
+        50,
+        60,
+        80,
+        100,
+        120,
+        150,
+        200
+      ]
+    },
+    {
+      "id": "units.speed.kt-to-kmh",
+      "justification": "Drone and glider operators outside the US plan in km/h against forecasts in knots.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when you plan in kilometers per hour but your weather comes in knots, as it does in aviation forecasts and METARs. Glider pilots, paraglider pilots, and drone operators in much of the world read wind and speed limits in km/h, so a wind of 20 knots needs to become about 37 km/h before it means anything against those limits.",
+      "limitations": "One knot is exactly 1.852 km/h, since the nautical mile is defined as 1,852 m. The conversion adds no error, but it adds none of the context either: a forecast wind is an average with gusts on top, and wind at the surface is usually lighter than wind at flying height. Compare the converted value with your aircraft or drone limits, which govern.",
+      "table": [
+        1,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        40,
+        50,
+        100
+      ]
+    },
+    {
+      "id": "units.speed.kmh-to-kt",
+      "justification": "Converting drone and wind speeds given in km/h to aviation knots.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a drone's maximum wind rating, a vehicle speed, or a European weather source gives km/h and you need knots for aviation work. Air traffic control, METARs, and winds aloft forecasts all use knots, so converting a drone's published wind limit from km/h lets you hold it against the reported wind directly, without doing the arithmetic in your head.",
+      "limitations": "Each km/h is about 0.54 knots, from the exact definitions of the kilometer and the nautical mile. A maker's wind rating is usually a tested or claimed figure for steady wind, not gusts, and wind grows with height above the ground. The conversion cannot tell you how the drone will handle real air; the manufacturer's limits and your own judgment decide that.",
+      "table": [
+        1,
+        5,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        80,
+        100
+      ]
+    },
+    {
+      "id": "units.speed.kt-to-mps",
+      "justification": "Drone wind limits are published in m/s while aviation forecasts use knots.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a forecast or METAR gives wind in knots and your drone, weather model, or engineering formula expects meters per second. Many drone makers publish wind resistance in m/s, and most physics and engineering equations use SI units, so the knot value has to change before it can be compared or plugged in. A quick check: the answer is a little more than half the knots.",
+      "limitations": "One knot is exactly 1,852 m per hour, about 0.514 m/s, so the result is exact to the unit definitions. It is still the same measured or forecast wind, with the same uncertainty, and a gust is not the steady wind a drone's rating usually assumes. Wind direction does not change with the unit; this converts the speed only.",
+      "table": [
+        1,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        40,
+        50
+      ]
+    },
+    {
+      "id": "units.speed.mps-to-kt",
+      "justification": "METARs in many countries and drone specs give wind in m/s; pilots think in knots.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a METAR from a country that reports wind in meters per second, a drone spec sheet, or an anemometer reading in m/s needs to become knots. Pilots and controllers think in knots, and crosswind figures in flight manuals are given in knots, so 10 m/s becomes about 19.4 knots before it can be judged against them. Doubling the m/s value gets you close.",
+      "limitations": "Each m/s is about 1.944 knots, exact to the unit definitions; the doubling rule is about 3% high. The result is only as good as the reading: an averaged wind hides gusts, and a hand-held anemometer near the ground reads lower than the wind at pattern altitude. Use the runway wind tool to split the converted wind into headwind and crosswind.",
+      "table": [
+        1,
+        2,
+        5,
+        8,
+        10,
+        12,
+        15,
+        20,
+        25
+      ]
+    },
+    {
+      "id": "units.pressure.hpa-to-inhg",
+      "justification": "Pilots flying abroad convert QNH in hPa to inHg for US altimeters.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a QNH or altimeter setting is given in hectopascals and your altimeter's setting window reads in inches of mercury, as many US-built altimeters do. Pilots flying outside North America get QNH in hPa from the ATIS, METARs, and controllers, and must set it correctly to read altitude. Standard pressure, 1013.25 hPa, comes out as 29.92 inHg.",
+      "limitations": "One inch of mercury is taken as 3,386.389 pascals, the conventional value at 0 °C and standard gravity, so 1 hPa is about 0.02953 inHg. Altimeter settings are read to 0.01 inHg, so round to that. A setting is only valid near the station that issued it and drifts as the weather changes; use the current report, and check the altimeter against field elevation.",
+      "table": [
+        950,
+        970,
+        980,
+        990,
+        1000,
+        1005,
+        1010,
+        1013.25,
+        1015,
+        1020,
+        1030,
+        1040
+      ]
+    },
+    {
+      "id": "units.pressure.inhg-to-hpa",
+      "justification": "US altimeter settings are in inHg; most of the world uses hPa.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a US altimeter setting in inches of mercury needs to be in hectopascals: for an altimeter scaled in hPa, a European flight plan or weather model, or a performance calculation that takes pressure in SI units. The standard setting of 29.92 inHg becomes 1013.2 hPa, and each 0.01 inHg is about a third of a hectopascal.",
+      "limitations": "The factor uses the conventional inch of mercury, 3,386.389 Pa, so 1 inHg is about 33.864 hPa. A US altimeter setting is reduced to sea level, not the pressure at the field, and converting units does not change what kind of pressure it is. Round to the whole hectopascal that ATC and METARs use, and take the settings controllers give as the governing ones.",
+      "table": [
+        28.5,
+        29,
+        29.5,
+        29.8,
+        29.92,
+        30,
+        30.1,
+        30.2,
+        30.5,
+        31
+      ]
+    },
+    {
+      "id": "units.length.km-to-nm",
+      "justification": "Converting metric map distances to aviation and marine nautical miles.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a distance from a map, a road atlas, or a GIS layer in kilometers has to go onto an aeronautical or nautical chart, where distances, visibility rings, and leg lengths are in nautical miles. Fuel and time plans in aviation run on knots and nautical miles, so a 100 km leg becomes about 54 NM before ground speed and endurance can work on it.",
+      "limitations": "The nautical mile is exactly 1,852 m, so each kilometer is about 0.54 NM, with no rounding beyond the last digit shown. The distance itself is only as good as how it was measured: a straight line on a map is not the route you fly, and a projected map can stretch distances. For the distance between two coordinates, use the geodesic tools.",
+      "table": [
+        1,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000
+      ]
+    },
+    {
+      "id": "units.length.nm-to-km",
+      "justification": "Converting aviation and marine distances for metric maps.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a distance from an aeronautical chart, a flight plan, or a marine chart in nautical miles needs to be in kilometers: for a drone's range, a map in metric units, or a report to someone outside aviation. One nautical mile is 1.852 km, so a 100 NM leg is 185.2 km, and a rough check is to almost double the number of nautical miles.",
+      "limitations": "The factor is exact by definition, since the international nautical mile was set at 1,852 m. Some very old charts and documents used a nautical mile of a slightly different length; this tool uses only the international one. Converting the unit does not make a chart distance more accurate, so keep the same precision you started with.",
+      "table": [
+        1,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000
+      ]
+    },
+    {
+      "id": "units.length.mi-to-nm",
+      "justification": "Converting road or statute distances to nautical miles for flight planning.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a distance in statute miles, from a road sign, a US land map, or an older aviation document, has to be in nautical miles for a chart or flight plan. US visibility is still reported in statute miles, but legs, ranges, and airspace radii are in nautical miles, so it helps to see the two side by side. Each statute mile is about 0.87 NM.",
+      "limitations": "The statute mile here is the international mile of exactly 1,609.344 m, and the nautical mile is 1,852 m, so the ratio is exact. Do not convert reported visibility to compare it against a rule written in statute miles; the rule and the report already share a unit. A distance taken from a road map follows roads, not the straight line a chart measures.",
+      "table": [
+        1,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000
+      ]
+    },
+    {
+      "id": "units.length.nm-to-mi",
+      "justification": "Visibility is in statute miles while distances are in nautical miles on US charts.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a range, a leg, or a radius from an aviation or marine chart in nautical miles needs to be read in statute miles: for a passenger briefing, a road comparison, or a US land map. A nautical mile is about 1.15 statute miles, so a 30 NM airspace radius is about 34.5 statute miles, and a 100 NM leg is about 115 miles.",
+      "limitations": "The ratio is exact, since both miles are defined in meters: 1,852 m for the nautical mile and 1,609.344 m for the statute mile. Distances on a chart are straight lines, while a statute-mile figure from a road map usually follows roads, so the two rarely match. Airspace and procedure limits are published in nautical miles, and those published values govern.",
+      "table": [
+        1,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000
+      ]
+    },
+    {
+      "id": "units.length.ftus-to-ft",
+      "justification": "The 2 ppm survey-foot difference causes real errors on large coordinates after the 2023 deprecation.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a coordinate, elevation, or distance recorded in US survey feet has to be compared with or entered as international feet. Many older State Plane coordinates, deeds, and county records use the survey foot, while new work since 2023 uses the international foot. The two differ by two parts per million, which is about 2 ft on a northing of 1,000,000 ft.",
+      "limitations": "The survey foot is exactly 1200/3937 m and the international foot exactly 0.3048 m, so the ratio is exact. The hard part is knowing which foot a record used, and this tool cannot tell; the record's metadata, its datum and zone, or the surveyor who made it can. The survey foot was retired for new work at the end of 2022 and is kept for old records.",
+      "table": [
+        1,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "units.length.ftus-to-m",
+      "justification": "Legacy State Plane coordinates in US survey feet must be converted to meters.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a legacy record in US survey feet, such as a State Plane coordinate, a benchmark elevation, or a plat distance, has to be in meters for GIS, a GNSS data collector, or a modern datum. The survey foot is slightly longer than the international foot, so using the wrong factor puts a coordinate near 1,000,000 ft off by about 2 ft, enough to matter on a boundary.",
+      "limitations": "One survey foot is exactly 1200/3937 m, about 0.3048006 m, and that exact fraction is what is used here. Converting the unit does not change the datum: a NAD 27 or NAD 83 coordinate is still on that datum in meters. Make sure the record really is in survey feet; the project's datum and zone documentation says which foot applies.",
+      "table": [
+        1,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "units.length.m-to-ftus",
+      "justification": "Writing legacy deliverables that still require US survey feet.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a value in meters has to be given in US survey feet to match existing records: a coordinate going back into an older State Plane project, a distance on a plat that was drawn in survey feet, or an elevation tied to a legacy benchmark. Keeping one foot throughout a project avoids the two-parts-per-million mismatch that mixing the two feet creates.",
+      "limitations": "Each meter is exactly 3937/1200, about 3.2808333, survey feet. The survey foot was withdrawn for new work at the end of 2022, so use it only to match records that already use it, and say which foot you used on anything you deliver. The conversion keeps the datum and zone of the value you enter; it does not move coordinates between systems.",
+      "table": [
+        1,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        3000000
+      ]
+    },
+    {
+      "id": "units.vertical-speed.fpm-to-mps",
+      "justification": "Climb rates in ft/min are compared with drone and glider climb rates in m/s.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a climb or descent rate in feet per minute, from a vertical speed indicator, a performance chart, or an approach plate, has to be in meters per second for a glider variometer, a drone setting, or an engineering formula. A 500 ft/min descent, a common rate on an approach, is 2.54 m/s, and a 1,000 ft/min climb is 5.08 m/s.",
+      "limitations": "One foot per minute is exactly 0.00508 m/s, so the result is exact to the unit definitions. A vertical speed indicator lags and fluctuates, and a variometer may be compensated for total energy, so the numbers you convert can mean slightly different things. This converts rate only; the climb gradient tool relates a rate to a gradient at your ground speed.",
+      "table": [
+        100,
+        200,
+        300,
+        500,
+        700,
+        1000,
+        1500,
+        2000,
+        3000
+      ]
+    },
+    {
+      "id": "units.area.ac-to-ha",
+      "justification": "Land and survey areas convert between acres and hectares.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a parcel, field, or survey area in acres has to be stated in hectares, for an international buyer, a metric map, a crop or drone mapping job priced by the hectare, or a report that needs SI units. An acre is about 0.4047 hectares, so 40 acres, a quarter-quarter section of land, is about 16.19 hectares.",
+      "limitations": "The acre here is the international acre, exactly 4,046.8564224 m². Some US land records use the US survey acre, defined from the survey foot, which is larger by about four parts per million; the area converter has both. A converted area is no more accurate than the measured one, and a deed area may be a rounded or record figure rather than a measurement.",
+      "table": [
+        0.25,
+        0.5,
+        1,
+        5,
+        10,
+        20,
+        40,
+        80,
+        160,
+        640
+      ]
+    },
+    {
+      "id": "units.area.ha-to-ac",
+      "justification": "Converting metric parcel areas to acres.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when an area in hectares, from a GIS layer, a drone mapping report, or a property listing abroad, has to be in acres for a US client, a farm plan, or a land record. One hectare is 10,000 square meters, about 2.471 acres, so a 10-hectare field is about 24.7 acres and a 100-hectare block is about 247 acres.",
+      "limitations": "The result uses the international acre of exactly 4,046.8564224 m², so the ratio to the hectare is exact. If the area must match a legacy US land record kept in survey acres, use the area converter, which keeps the two acres apart. The conversion changes the unit only; an area measured from imagery or GNSS carries its own error into the answer.",
+      "table": [
+        0.1,
+        0.5,
+        1,
+        2,
+        5,
+        10,
+        50,
+        100,
+        1000
+      ]
+    },
+    {
+      "id": "units.area.ft2-to-ac",
+      "justification": "Parcel areas computed in square feet are reported in acres on deeds and plats.",
+      "decision": "owner",
+      "decided": "2026-10-07",
+      "reviewBy": "2027-01-05",
+      "whenToUse": "Use this when a lot, a building footprint, or a site plan area in square feet needs to be in acres, as for a zoning check, a listing, a stormwater calculation, or an earthwork estimate. An acre is 43,560 square feet, so a 10,000 ft² lot is about 0.23 acres and a 100,000 ft² site is about 2.3 acres.",
+      "limitations": "Both units here are international: the square foot is exactly 0.09290304 m², and the acre is 43,560 of those square feet. A record in US survey square feet and survey acres converts by the same 43,560, but the two systems differ slightly in size; the area converter keeps them apart. The area itself still depends on how the lot was measured.",
+      "table": [
+        1000,
+        5000,
+        10000,
+        20000,
+        43560,
+        50000,
+        100000,
+        500000,
+        1000000
+      ]
+    }
+  ]
 }

@@ -1,8 +1,8 @@
 // The page-versus-endpoint rule (discovery/search-pages). A generated
 // conversion endpoint is a tool id and a search alias; it becomes a page of
-// its own only with recorded demand behind it, because a site full of
-// near-identical conversion pages is exactly what scaled-content policies are
-// aimed at.
+// its own only with recorded demand or a dated owner decision behind it,
+// because a site full of near-identical conversion pages is exactly what
+// scaled-content policies are aimed at.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -25,8 +25,18 @@ export function listProblems({ pages, maxPages }, ids) {
     if (seen.has(p.id)) problems.push(`${p.id} is listed twice`);
     seen.add(p.id);
     if (!p.justification) problems.push(`${p.id}: no justification`);
-    if (!p.source) problems.push(`${p.id}: no source for the demand`);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(p.measured ?? '')) problems.push(`${p.id}: no date the demand was measured`);
+    const date = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d ?? '');
+    if (p.decision !== undefined) {
+      // An owner decision stands in for a measurement only as itself: dated,
+      // and due to be checked against Search Console.
+      if (p.decision !== 'owner') problems.push(`${p.id}: a decision is made by the owner`);
+      if (p.source || p.measured) problems.push(`${p.id}: a decision is not a measurement; give one or the other`);
+      if (!date(p.decided)) problems.push(`${p.id}: no date the decision was made`);
+      if (!date(p.reviewBy) || !(p.reviewBy > p.decided)) problems.push(`${p.id}: no review date after the decision`);
+    } else {
+      if (!p.source) problems.push(`${p.id}: no source for the demand`);
+      if (!date(p.measured)) problems.push(`${p.id}: no date the demand was measured`);
+    }
   }
   return problems;
 }
@@ -36,11 +46,19 @@ test('the list is well formed and within its cap', () => {
   assert.deepEqual(listProblems(list, new Set(endpoints.map((t) => t.id))), []);
 });
 
-test('nothing is promoted without numbers to point at', () => {
-  // Deliberately empty: Search Console is not connected yet, so there is no
-  // measurement to justify a page. This is a floor, not a ratchet — the rule
-  // that matters is the one below.
-  assert.deepEqual(list.pages, []);
+test('a listed endpoint is a page of its own: self-canonical, indexable, and in its sitemap', () => {
+  const dir = join(root, 'apps/web/dist/sitemaps');
+  const all = readdirSync(dir).map((f) => readFileSync(join(dir, f), 'utf8')).join('');
+  const problems = [];
+  for (const id of listed) {
+    const url = `https://geoprims.com/${id.split('.').join('/')}/`;
+    const html = page(id);
+    const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
+    if (canonical !== url) problems.push(`${id}: canonical ${canonical}, expected ${url}`);
+    if (/<meta name="robots" content="noindex">/.test(html)) problems.push(`${id}: noindex`);
+    if (!all.includes(`<loc>${url}</loc>`)) problems.push(`${id}: not in a sitemap`);
+  }
+  assert.deepEqual(problems, []);
   assert.match(list.justificationRequired, /Search Console/);
 });
 
@@ -90,6 +108,13 @@ test('the rule bites', () => {
     'units.length.ft-to-m: no justification',
     'units.length.ft-to-m: no source for the demand',
     'units.length.ft-to-m: no date the demand was measured',
+  ]);
+  const decided = { id: 'units.length.ft-to-m', justification: 'a', decision: 'owner', decided: '2026-10-07', reviewBy: '2027-01-05' };
+  assert.deepEqual(listProblems({ maxPages: 60, pages: [decided] }, ids), []);
+  assert.deepEqual(listProblems({ maxPages: 60, pages: [{ ...decided, decision: 'agent', measured: '2026-10-07', reviewBy: '2026-10-01' }] }, ids), [
+    'units.length.ft-to-m: a decision is made by the owner',
+    'units.length.ft-to-m: a decision is not a measurement; give one or the other',
+    'units.length.ft-to-m: no review date after the decision',
   ]);
   assert.deepEqual(listProblems({ maxPages: 1, pages: [{ id: 'units.length.ft-to-m', justification: 'a', source: 'b', measured: '2026-09-20' }, { id: 'units.length.ft-to-m', justification: 'a', source: 'b', measured: '2026-09-20' }] }, ids), [
     '2 pages listed (at most 1)',

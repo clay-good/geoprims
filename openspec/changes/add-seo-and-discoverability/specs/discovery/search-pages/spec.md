@@ -26,7 +26,7 @@ The build SHALL fail if two indexable pages share a purpose statement or worked 
 - **THEN** the worked-example answer is visible in the HTML
 
 ### Requirement: Page-versus-endpoint rule
-Generated conversion-pair endpoints SHALL remain tool ids, search aliases, and MCP endpoints. They SHALL get an indexable page only when listed in `data/seo/high-intent-pages.json` (at most 60 entries site-wide, each with a query-demand justification) and when they carry distinct content under the content minimums. Every other generated endpoint route SHALL render the parent tool with the pair's preset and SHALL declare `rel="canonical"` to the parent tool page. They SHALL be excluded from sitemaps.
+Generated conversion-pair endpoints SHALL remain tool ids, search aliases, and MCP endpoints. They SHALL get an indexable page only when listed in `data/seo/high-intent-pages.json` (at most 60 entries site-wide, each with a query-demand justification, or with a dated owner decision that names a date to review it against Search Console and is never described as a measurement) and when they carry distinct content under the content minimums. A listed page SHALL also show a table of common values computed by the core. Every other generated endpoint route SHALL render the parent tool with the pair's preset and SHALL declare `rel="canonical"` to the parent tool page. They SHALL be excluded from sitemaps.
 
 #### Scenario: Non-listed pair
 - **WHEN** a crawler requests `/geodesy/convert/utm-to-ecef`

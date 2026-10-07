@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { indexableTool } from '../src/lib/head.mjs';
+import { indexableTool, withPageProse } from '../src/lib/head.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const root = join(web, '../..');
@@ -14,7 +14,8 @@ const dist = join(web, 'dist');
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
 const route = (id) => '/' + id.split('.').join('/') + '/';
 const page = (r) => readFileSync(join(dist, r, 'index.html'), 'utf8');
-const indexable = catalog.tools.filter(indexableTool);
+// Listed endpoints carry their page prose in data/seo/high-intent-pages.json.
+const indexable = catalog.tools.filter(indexableTool).map(withPageProse);
 
 test('a tool page is noindex exactly when the indexable rule says so', () => {
   // Experimental tools with full content are indexable too (contracts/

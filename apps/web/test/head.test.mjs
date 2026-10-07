@@ -76,6 +76,8 @@ test('a description keeps whole sentences while they fit, and abbreviations do n
   assert.equal(usng, 'Decodes a U.S. National Grid reference to the center of its square.');
   const kept = description(`GSD is how much ground one pixel covers. It sets what you can see, e.g. a crack. ${'z'.repeat(120)}.`);
   assert.equal(kept, 'GSD is how much ground one pixel covers. It sets what you can see, e.g. a crack.');
+  const unit = description(`Converts ftUS to m. 1,000,000 US survey ft is 304,800.6096 m. ${'z'.repeat(120)}.`);
+  assert.equal(unit, 'Converts ftUS to m. 1,000,000 US survey ft is 304,800.6096 m.', 'a unit symbol can end a sentence');
 });
 
 test('the lint rejects a page that promises more than the build can prove', () => {

@@ -10,6 +10,7 @@ import { entriesFor, KINDS, readChangelog } from '../../../../tools/trust/change
 import { verificationReport } from '../../../../tools/trust/verification.mjs';
 import { readLedger, rowFor } from '../../../../tools/trust/ledger.mjs';
 import { buildDate } from './build-date.mjs';
+import { HIGH_INTENT } from './head.mjs';
 
 const root = join(process.cwd(), '../..');
 export const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -147,10 +148,15 @@ export const tool = (id) => catalog.tools.find((t) => t.id === id);
 
 /**
  * A tool's canonical page: a deprecated tool points at its replacement, and a
- * generated endpoint at the operation it composes.
+ * generated endpoint at the operation it composes, unless it is on the
+ * high-intent list and so has a page of its own.
  */
 export const canonicalOf = (t) =>
-  t.deprecation ? route(t.deprecation.replacement) : t.composedOf.length ? route(t.composedOf[0]) : route(t.id);
+  t.deprecation
+    ? route(t.deprecation.replacement)
+    : t.composedOf.length && !HIGH_INTENT.has(t.id)
+      ? route(t.composedOf[0])
+      : route(t.id);
 
 /** Stable tools, and experimental ones with full content, are indexable (head.mjs). */
 export { indexableTool as indexable } from './head.mjs';
@@ -160,6 +166,21 @@ export const primaryExample = (t) => t.examples.find((e) => e.id === t['x-primar
 /** Runs the tool's primary example so the answer is in the HTML. */
 export async function exampleResult(t) {
   return JSON.parse(await host.invoke(t.id, JSON.stringify(primaryExample(t).input)));
+}
+
+/**
+ * A listed conversion pair's table of common values (search-pages,
+ * "Page-versus-endpoint rule"): each row is the core's own answer for that
+ * value, as the input and the result display it.
+ */
+export async function commonValues(t) {
+  const rows = [];
+  for (const value of t.table ?? []) {
+    const r = JSON.parse(await host.invoke(t.id, JSON.stringify({ value })));
+    if (!r.ok) throw new Error(`${t.id}: the table value ${value} failed: ${r.error?.message}`);
+    rows.push({ from: r.display.input, to: r.display.converted });
+  }
+  return rows;
 }
 
 /**

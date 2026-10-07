@@ -4,7 +4,23 @@
 // caps live here rather than in each template, and no page may promise
 // something the build cannot prove.
 
+import highIntent from '../../../../data/seo/high-intent-pages.json' with { type: 'json' };
+
 export const SITE = 'geoprims';
+
+/** Generated endpoints listed for a page of their own (search-pages, "Page-versus-endpoint rule"). */
+export const HIGH_INTENT = new Set(highIntent.pages.map((p) => p.id));
+const listing = new Map(highIntent.pages.map((p) => [p.id, p]));
+
+/**
+ * A tool as its page shows it. A listed endpoint's own prose and table values
+ * live in its listing rather than in the core, since only its page needs
+ * them; every other tool is returned as it is.
+ */
+export function withPageProse(t) {
+  const entry = listing.get(t.id);
+  return entry ? { ...t, whenToUse: entry.whenToUse, limitations: entry.limitations, table: entry.table } : t;
+}
 export const TITLE_MAX = 60;
 export const DESCRIPTION_MAX = 155;
 
@@ -58,11 +74,12 @@ export function capTitle(full) {
 
 /**
  * The text's sentences. A period ends one only when a space follows and it
- * does not close an initial or an abbreviation like "U.S." or "e.g.", so
- * "a U.S. National Grid reference" stays one sentence.
+ * does not close an abbreviation like "U.S." or "e.g." or a capital initial,
+ * so "a U.S. National Grid reference" stays one sentence while a sentence
+ * ending on a unit symbol, "is 304,800.6096 m.", still ends.
  */
 function sentences(text) {
-  return text.split(/(?<=(?<!(?:^|[\s.(])[A-Za-z])[.!?])\s+/);
+  return text.split(/(?<=(?<!\.[A-Za-z]|(?:^|[\s(])[A-Z])[.!?])\s+/);
 }
 
 /**
@@ -104,12 +121,17 @@ export function listDescription(lead, names) {
  * a stable tool, or an experimental one with full content, meaning it carries
  * its own "when to use this" and "limitations". The content gates then hold
  * every indexable page to the same minimums, whatever its stability. A
- * generated endpoint or a deprecated tool points elsewhere instead.
+ * generated endpoint is indexable only when it is on the high-intent list;
+ * every other one, and a deprecated tool, points elsewhere instead.
  */
-export const indexableTool = (t) =>
-  t.composedOf.length === 0 &&
-  !t.deprecation &&
-  (t.stability === 'stable' || (t.stability === 'experimental' && Boolean(t.whenToUse) && Boolean(t.limitations)));
+export const indexableTool = (t) => {
+  const page = withPageProse(t);
+  return (
+    !t.deprecation &&
+    (t.composedOf.length === 0 || HIGH_INTENT.has(t.id)) &&
+    (t.stability === 'stable' || (t.stability === 'experimental' && Boolean(page.whenToUse) && Boolean(page.limitations)))
+  );
+};
 
 /** The superlative a string uses, if any. */
 export function superlative(text) {

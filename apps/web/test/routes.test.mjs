@@ -51,6 +51,15 @@ test('a generated endpoint must canonicalize to the operation it composes', () =
   assert.match(check([{ route, html: wrong }], idx)[0], /must canonicalize to/);
 });
 
+test('a generated endpoint on the high-intent list must canonicalize to itself', () => {
+  const route = '/units/speed/kt-to-mph/';
+  assert.ok(idx.highIntent.has('units.speed.kt-to-mph'), 'the example pair is listed');
+  assert.equal(classify(route, idx), 'high-intent');
+  assert.deepEqual(check([ok(route)], idx), []);
+  const toParent = page(route).replace(/<link rel="canonical" href="[^"]*"/, `<link rel="canonical" href="${SITE}/units/speed/convert/"`);
+  assert.match(check([{ route, html: toParent }], idx)[0], /must canonicalize to itself/);
+});
+
 test('app routes must carry noindex', () => {
   assert.deepEqual(check([ok('/offline/')], idx), []);
   assert.match(check([{ route: '/offline/', html: '' }], idx)[0], /must carry noindex/);

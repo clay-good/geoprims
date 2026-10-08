@@ -429,9 +429,14 @@ export function draw(g, view, base, layers, c) {
     for (const ring of base.land) trace(g, view, ring, true, view.moving);
     g.fillStyle = c.land;
     g.fill('evenodd');
-    g.strokeStyle = c.line;
-    g.lineWidth = 0.75;
-    g.stroke();
+    // The coastline waits for the view to stop, like the state lines: mid-pan
+    // the land's own edge shows the coast, and leaving the stroke out took
+    // about 0.5 ms (5%) off a turning globe's p95 frame at 4x CPU.
+    if (!view.moving) {
+      g.strokeStyle = c.line;
+      g.lineWidth = 0.75;
+      g.stroke();
+    }
     g.beginPath();
     for (const ring of base.lakes) trace(g, view, ring, true, view.moving);
     g.fillStyle = c.bg;

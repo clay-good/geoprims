@@ -10,7 +10,7 @@ Density altitude before a flight. Ground sample distance for a drone survey. A t
 ## Why trust it
 
 - **Accurate.** Reference methods (Karney geodesics, not haversine), tested against GeographicLib, PROJ, H3, S2, and published worked examples.
-- **Cited.** Every result names its source, edition, and section. The build fails if a source goes out of date.
+- **Cited.** Every result names its source, edition, and section. The build fails if a source goes out of date. Every citation link is checked monthly, and a dead or moved one opens an issue.
 - **Honest.** Assumptions like datum, true vs. magnetic north, and rules of thumb show up as warnings, not fine print.
 - **Private.** No ads, accounts, tracking, or server-side math. Your inputs never leave your device.
 

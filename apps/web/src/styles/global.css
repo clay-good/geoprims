@@ -461,6 +461,7 @@ figure.map canvas:focus-visible { outline-offset: -3px; }
 .swatch { display: inline-block; inline-size: 26px; block-size: 0; border-block-start: 3px solid var(--accent); }
 .swatch.dashed { border-block-start: 2px dashed var(--muted); }
 .swatch.dotted { border-block-start: 2px dotted var(--muted); }
+.swatch.input { border-block-start: 2px solid var(--muted); }
 .swatch.area { block-size: 12px; border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); border-radius: 3px; }
 .map-readout { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; margin: 0; padding: 0.45rem 0.9rem; font: 0.75rem var(--mono); color: var(--muted); border-block-start: 1px solid var(--line); }
 .map-readout .scale { display: inline-flex; align-items: center; gap: 0.5rem; }

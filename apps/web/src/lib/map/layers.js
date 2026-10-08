@@ -224,6 +224,26 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
     const q = [at(result, map.lon), at(result, map.lat)];
     if (q.every((x) => typeof x === 'number')) layers.push({ kind: 'point', role: 'result', points: [q], label: '' });
   }
+  // A cross-track offset (route-geometry "Route visualization"): the track the
+  // point is measured from, and the line from the point to its foot on the
+  // track. The shortest line to a track meets it square, so that line is the
+  // perpendicular marker. A spherical answer is drawn on the great circle.
+  const footOf = (tool.visualization ?? []).map((v) => (v.kind === 'point' ? mapOf(v.map) : {})).find((m) => /^(foot|closest)_lat$/.test(m.lat ?? ''));
+  const foot = footOf ? [at(result, footOf.lon), at(result, footOf.lat)] : [];
+  if (footOf && p.every((x) => x !== null) && foot.every((x) => typeof x === 'number')) {
+    const path = args.method === 'spherical' ? 'great-circle' : 'geodesic';
+    const leg = async (a, b, intervals = 64) => {
+      const r = await densify({ lat1: a[1], lon1: a[0], lat2: b[1], lon2: b[0], intervals, path });
+      return r?.ok ? r.result.points.map((q) => [q.lon.value, q.lat.value]) : [a, b];
+    };
+    const corners = two ? [p1, p2] : (Array.isArray(args.route) ? args.route.map((r) => [numberOf(r.lon), numberOf(r.lat)]).filter((q) => q.every((x) => x !== null)) : []);
+    if (corners.length >= 2 && corners.length <= 200) {
+      const track = [];
+      for (let i = 0; i + 1 < corners.length; i++) track.push(...(await leg(corners[i], corners[i + 1])).slice(i ? 1 : 0));
+      layers.unshift({ kind: 'line', role: 'input', points: track, track: true });
+    }
+    layers.push({ kind: 'line', role: 'result', points: await leg(p, foot, 16), offset: true });
+  }
   // A cell (bbox): its edges follow parallels and meridians, so they are
   // sampled along latitude and longitude rather than drawn as geodesics.
   for (const v of tool.visualization ?? []) {

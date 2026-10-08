@@ -169,3 +169,34 @@ test('compare methods draws the geodesic, rhumb line, and great circle, each wit
   const geo = lines.find((l) => l.path === 'geodesic');
   assert.notEqual(km(geo.length), km(gc.length), 'the sphere and the ellipsoid differ');
 });
+
+test('a cross-track answer draws the track and the offset from the point to its foot', async () => {
+  // route-geometry "Route visualization": cross-track offsets as perpendicular markers.
+  const densify = (i) => invoke('navigation.geodesic.waypoints', i);
+  for (const id of ['navigation.route.cross-track', 'navigation.route.closest-point']) {
+    const t = catalog.tools.find((x) => x.id === id);
+    const ex = primary(t);
+    const result = await invoke(id, ex);
+    const layers = await buildLayers(t, ex, result, densify, cells);
+    const track = layers.find((l) => l.track);
+    const offset = layers.find((l) => l.offset);
+    assert.ok(track && offset, `${id}: track and offset are drawn`);
+    // The offset runs from the input point to the core's foot of the perpendicular.
+    const footLat = result.result.foot_lat ?? result.result.closest_lat;
+    const footLon = result.result.foot_lon ?? result.result.closest_lon;
+    const [start, end] = [offset.points[0], offset.points.at(-1)];
+    assert.ok(Math.abs(start[0] - ex.lon) < 1e-9 && Math.abs(start[1] - ex.lat) < 1e-9, `${id}: starts at the point`);
+    assert.ok(Math.abs(end[0] - footLon.value) < 1e-9 && Math.abs(end[1] - footLat.value) < 1e-9, `${id}: ends at the foot`);
+    // And its length is the cross-track distance the core reports.
+    const len = await invoke('navigation.geodesic.inverse', { lat1: start[1], lon1: start[0], lat2: end[1], lon2: end[0] });
+    const xt = Math.abs(result.result.cross_track.value) * ({ m: 1, km: 1000, NM: 1852 }[result.result.cross_track.unit] ?? NaN);
+    const s = len.result.distance.value * ({ m: 1, km: 1000, NM: 1852 }[len.result.distance.unit] ?? NaN);
+    assert.ok(Math.abs(s - xt) < 1e-3 * Math.max(1, xt), `${id}: offset ${s} m vs cross-track ${xt} m`);
+  }
+  // Spherical cross-track is measured from the great circle, so the track is drawn on one.
+  const t = catalog.tools.find((x) => x.id === 'navigation.route.cross-track');
+  const ex = { ...primary(t), method: 'spherical' };
+  let asked = null;
+  await buildLayers(t, ex, await invoke(t.id, ex), (i) => ((asked ??= i.path), invoke('navigation.geodesic.waypoints', i)), cells);
+  assert.equal(asked, 'great-circle');
+});

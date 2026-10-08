@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "11c2bdbd021f9a04",
+    "hash": "e333f620096f5bc1",
     "lastmod": "2026-10-08"
   },
   "/accuracy/": {
@@ -8,8 +8,8 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "2f661a493300b091",
-    "lastmod": "2026-09-29"
+    "hash": "4425d77d866e00fe",
+    "lastmod": "2026-10-08"
   },
   "/aviation/": {
     "hash": "347de36ebe296a4d",
@@ -64,7 +64,7 @@
     "lastmod": "2026-10-08"
   },
   "/aviation/altimetry/pressure-per-height/": {
-    "hash": "03bbbe24e263384f",
+    "hash": "8ceeb243e4abcdcb",
     "lastmod": "2026-10-08"
   },
   "/aviation/altimetry/q-codes/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "4958deb6a5c6d1e5",
+    "hash": "1f337a150d24eb8e",
     "lastmod": "2026-10-08"
   },
   "/disclaimer/": {
@@ -1148,7 +1148,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "ba3106108dfc2c91",
+    "hash": "7844aa58999697bf",
     "lastmod": "2026-10-08"
   },
   "/navigation/": {
@@ -1656,7 +1656,7 @@
     "lastmod": "2026-10-07"
   },
   "/tools/": {
-    "hash": "0e474e5629d707ec",
+    "hash": "6a4a98fe24f07f23",
     "lastmod": "2026-10-08"
   },
   "/units/": {
@@ -1920,7 +1920,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1c8b96eb61a2a709",
+    "hash": "4eca625b9a072291",
     "lastmod": "2026-10-08"
   },
   "/workflows/": {

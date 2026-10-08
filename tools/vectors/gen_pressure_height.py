@@ -27,18 +27,27 @@ def p_at(H):
     return float(Atmosphere(z).pressure[0]), float(Atmosphere(z).temperature[0])
 
 
+# ambiance's pressure jumps by a fraction of a pascal at its layer bases, so a
+# difference must stay inside one layer (found at the 11 km tropopause).
+LAYER_BASES = [11000.0, 20000.0, 32000.0, 47000.0, 51000.0, 71000.0]
+
+
 def dH_dp(H):
     d = 0.25
-    if H < 2 * d:
-        p0, p1, p2 = p_at(H)[0], p_at(H + d)[0], p_at(H + 2 * d)[0]
-        dpdh = (-3 * p0 + 4 * p1 - p2) / (2 * d)
+    if H < 2 * d or any(H < b <= H + 2 * d for b in LAYER_BASES):
+        # One-sided, upward from sea level or downward below a layer base.
+        k = 1 if H < 2 * d else -1
+        p0, p1, p2 = p_at(H)[0], p_at(H + k * d)[0], p_at(H + 2 * k * d)[0]
+        dpdh = k * (-3 * p0 + 4 * p1 - p2) / (2 * d)
     else:
         dpdh = (p_at(H + d)[0] - p_at(H - d)[0]) / (2 * d)
     return -1.0 / dpdh
 
 
 CASES = [(0, None), (5000, None), (10000, None), (18000, None), (30000, None), (40000, None), (50000, None),
-         (0, 30.0), (18000, -30.0), (5000, 0.0)]
+         (0, 30.0), (18000, -30.0), (5000, 0.0),
+         (-1000, None), (2000, None), (8000, None), (15000, None), (25000, None), (36089, None),
+         (45000, None), (60000, None), (12000, 25.0), (30000, -60.0), (1000, -20.0), (7000, 35.0)]
 rows = []
 for i, (ft, oat) in enumerate(CASES, 1):
     H = ft * FT

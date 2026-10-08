@@ -1366,6 +1366,7 @@ fn run_isa_temperature(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static PRESSURE_PER_HEIGHT: ToolDef = ToolDef {
     id: "aviation.altimetry.pressure-per-height",
+    stability: gp_base::tool::Stability::Stable,
     title: "Height per hectopascal and per inch of mercury",
     summary: "How much height one hectopascal and one inch of mercury of pressure span at a pressure altitude, from the standard atmosphere, with the 27 ft per hPa and 1,000 ft per inHg rules of thumb beside it.",
     aliases: &[
@@ -1458,11 +1459,11 @@ pub static PRESSURE_PER_HEIGHT: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Hydrostatic pressure-height relation dh/dp = R·T/(g₀·p) in the ICAO Standard Atmosphere, with the given temperature in place of ISA when there is one",
     accuracy: "Exact for the standard atmosphere's hydrostatic relation; the real column departs from it with weather",
     when_to_use: "Use this to turn a pressure difference into height: how far an altimeter reads off when its setting is wrong by a few hectopascals, how much a QNH change moves your indicated altitude, or how tall a pressure layer is. The 27 ft per hPa and 1,000 ft per inHg rules hold near sea level; this gives the real figure at any altitude, and the rule's error beside it.",
-    limitations: "The answer is the height per unit of pressure right at this altitude; over a big pressure change the figure itself changes, so a large altimeter error is better worked as two pressure altitudes. It uses the standard atmosphere's pressure for the pressure altitude and only lets the temperature differ, which is how real columns mostly differ; it does not model humidity, which adds well under 1%.",
+    limitations: "The answer is the height per unit of pressure right at this altitude; over a big pressure change the figure itself changes, so a large altimeter error is better worked as two pressure altitudes. It uses the standard atmosphere's pressure for the pressure altitude and only lets the temperature differ, which is how real columns mostly differ; it does not model humidity, which can add about 1% in warm, humid air.",
     references: &[ICAO_7488, PHAK],
     examples: &[
         Example {

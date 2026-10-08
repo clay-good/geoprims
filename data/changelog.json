@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-07",
+      "kind": "changed",
+      "tools": [
+        "aviation.altimetry.pressure-per-height"
+      ],
+      "vectors": [],
+      "summary": "Height per hectopascal is now stable: its derivation note, 22 vectors from the ambiance package's independent standard atmosphere, and an invariants test are in place, so its results no longer carry the EXPERIMENTAL_TOOL warning. No numbers changed."
+    },
+    {
+      "date": "2026-10-07",
       "kind": "fixed",
       "tools": [
         "geodesy.projection.arc-to-chord"

@@ -798,3 +798,37 @@ fn shift_and_ballast_agree_with_weight_and_balance() {
         assert!((rebuilt - target).abs() < 1e-9, "{rebuilt} vs {target}");
     }
 }
+
+#[test]
+fn pressure_per_height_invariants() {
+    // Height per hPa grows as the air thins, from -1,000 ft up to 60,000 ft;
+    // 1 inHg is always 33.8639 hPa of it; and a warmer column stretches it by
+    // exactly T / T_ISA, the hydrostatic relation at the same pressure.
+    let per = |input: &str| {
+        let r = call("aviation.altimetry.pressure-per-height", input);
+        assert_eq!(r["ok"], true, "{r}");
+        (
+            num(&r, "result.height_per_hpa.value"),
+            num(&r, "result.height_per_inhg.value"),
+            num(&r, "result.temperature_used.value"),
+        )
+    };
+    let mut last = 0.0;
+    for ft in (-1000..=60000).step_by(1000) {
+        let (hpa, inhg, _) = per(&format!(r#"{{"pressure_altitude":"{ft} ft"}}"#));
+        assert!(hpa > last, "{ft} ft: {hpa} after {last}");
+        assert!((inhg / hpa - 33.863_886_403_41).abs() < 1e-9, "{ft} ft");
+        last = hpa;
+    }
+    for (ft, oat) in [(0, 30.0), (10000, -30.0), (30000, -40.0)] {
+        let (isa, _, t_isa) = per(&format!(r#"{{"pressure_altitude":"{ft} ft"}}"#));
+        let (warm, _, t) = per(&format!(
+            r#"{{"pressure_altitude":"{ft} ft","temperature":"{oat} degC"}}"#
+        ));
+        assert!((t - oat).abs() < 1e-9);
+        assert!(
+            (warm / isa - (t + 273.15) / (t_isa + 273.15)).abs() < 1e-12,
+            "{ft} ft at {oat} °C"
+        );
+    }
+}

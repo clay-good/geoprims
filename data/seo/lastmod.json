@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "f557d32b6e82dcdb",
+    "hash": "dad235d86892dafc",
     "lastmod": "2026-10-08"
   },
   "/disclaimer/": {
@@ -520,24 +520,24 @@
     "lastmod": "2026-09-25"
   },
   "/geodesy/grid-ref/gars-forward/": {
-    "hash": "06f6bc60a26bf65e",
-    "lastmod": "2026-09-29"
+    "hash": "5e1dd97a6613d7eb",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/grid-ref/gars-inverse/": {
     "hash": "6a198040e56ad933",
     "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/georef-forward/": {
-    "hash": "cf8a625ad0c2b2be",
-    "lastmod": "2026-09-29"
+    "hash": "bb47fdc5f3e0ef0f",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/grid-ref/georef-inverse/": {
     "hash": "f92879130f3729f5",
     "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/maidenhead-forward/": {
-    "hash": "3d88bde4b9503911",
-    "lastmod": "2026-09-29"
+    "hash": "d0d2293e27b54fab",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/grid-ref/maidenhead-inverse/": {
     "hash": "cef9bfd406be8e94",
@@ -740,8 +740,8 @@
     "lastmod": "2026-09-25"
   },
   "/geodesy/utm/forward/": {
-    "hash": "7b01a014f9e2281a",
-    "lastmod": "2026-09-29"
+    "hash": "5ec6fd81de8fbbdb",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/utm/inverse/": {
     "hash": "0d6975fe89bd44f8",
@@ -1116,8 +1116,8 @@
     "lastmod": "2026-09-28"
   },
   "/learn/utm-coordinates/": {
-    "hash": "f71df334715a2932",
-    "lastmod": "2026-09-24"
+    "hash": "89d24638b23e36b5",
+    "lastmod": "2026-10-08"
   },
   "/learn/vertical-curves/": {
     "hash": "63fe9571522f5e9a",
@@ -1144,7 +1144,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "7b80f92613f6ad3a",
+    "hash": "24bcc782c9e1f055",
     "lastmod": "2026-10-08"
   },
   "/navigation/": {
@@ -1300,7 +1300,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "2761307dceb90c0f",
+    "hash": "972b134d06711f9e",
     "lastmod": "2026-10-08"
   },
   "/raster/": {
@@ -1916,7 +1916,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bcd03d6dfb01e6c1",
+    "hash": "f42b082b45afe76e",
     "lastmod": "2026-10-08"
   },
   "/workflows/": {
@@ -1932,7 +1932,7 @@
     "lastmod": "2026-09-26"
   },
   "/workflows/convert-coordinate/": {
-    "hash": "7c1a6ac4b36af687",
+    "hash": "f1119d70a480c516",
     "lastmod": "2026-10-08"
   },
   "/workflows/gnss-to-state-plane/": {

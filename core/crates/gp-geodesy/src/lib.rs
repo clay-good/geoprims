@@ -1055,8 +1055,129 @@ const UTM_OUTPUTS: &[Field] = &[
     ),
 ];
 
+/// The forward tool's outputs: the shared ones, then the grid zone the
+/// point falls in, which the map draws (grid-references "Grid overlays").
+const UTM_FORWARD_OUTPUTS: &[Field] = &[
+    Field::new(
+        "zone",
+        "Zone",
+        "UTM zone number",
+        Kind::Number {
+            min: 1.0,
+            max: 60.0,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "hemisphere",
+        "Hemisphere",
+        "N or S",
+        Kind::Text { max_len: 1 },
+    ),
+    Field::new(
+        "easting",
+        "Easting",
+        "Meters, with the 500,000 m false easting",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(M_P),
+    Field::new(
+        "northing",
+        "Northing",
+        "Meters; 10,000,000 m false northing in the south",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(M_P),
+    Field::new(
+        "convergence",
+        "Grid convergence",
+        "Bearing of grid north clockwise from true north",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7))
+    .angle_range("unbounded"),
+    Field::new(
+        "scale",
+        "Point scale factor",
+        "Grid distance over ellipsoid distance here",
+        Kind::Number { min: 0.0, max: 2.0 },
+    )
+    .precision(Precision::Decimals(9)),
+    Field::new(
+        "formatted",
+        "UTM",
+        "Zone, hemisphere, easting, northing",
+        Kind::Text { max_len: 60 },
+    ),
+    Field::new(
+        "band",
+        "Latitude band",
+        "The MGRS band letter, C to X; with the zone it names the grid zone",
+        Kind::Text { max_len: 1 },
+    )
+    .optional(),
+    Field::new(
+        "zone_west",
+        "Zone west edge",
+        "Longitude where the standard zone begins",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(0))
+    .angle_range("[-180,180]")
+    .optional(),
+    Field::new(
+        "zone_east",
+        "Zone east edge",
+        "Longitude where the standard zone ends",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(0))
+    .angle_range("[-180,180]")
+    .optional(),
+    Field::new(
+        "band_south",
+        "Band south edge",
+        "Latitude where the band begins",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(0))
+    .angle_range("[-90,90]")
+    .optional(),
+    Field::new(
+        "band_north",
+        "Band north edge",
+        "Latitude where the band ends",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(0))
+    .angle_range("[-90,90]")
+    .optional(),
+];
+
 pub static UTM_FORWARD: ToolDef = ToolDef {
     id: "geodesy.utm.forward",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to UTM",
     summary: "Converts a latitude and longitude to UTM zone, easting, and northing, with the Norway and Svalbard zone exceptions, an optional forced zone, and the grid convergence and scale factor.",
@@ -1085,7 +1206,7 @@ pub static UTM_FORWARD: ToolDef = ToolDef {
         E[1],
         E[2],
     ],
-    outputs: UTM_OUTPUTS,
+    outputs: UTM_FORWARD_OUTPUTS,
     errors: &[ErrorCode::OutOfDomain, ErrorCode::Unsupported],
     warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
     model: "Transverse Mercator, 6th-order Krüger series (Karney 2011), k0 = 0.9996",
@@ -1100,10 +1221,21 @@ pub static UTM_FORWARD: ToolDef = ToolDef {
         source: "add-geodesy-suite scenario: 17N 586,309.953 m E, 4,477,770.428 m N (±1 mm)",
     }],
     primary_example: "primary",
-    visualization: &[Layer {
-        kind: "point",
-        map: &[("easting", "easting"), ("northing", "northing")],
-    }],
+    visualization: &[
+        Layer {
+            kind: "point",
+            map: &[("easting", "easting"), ("northing", "northing")],
+        },
+        Layer {
+            kind: "bbox",
+            map: &[
+                ("south", "band_south"),
+                ("west", "zone_west"),
+                ("north", "band_north"),
+                ("east", "zone_east"),
+            ],
+        },
+    ],
     related: &[
         Related {
             id: "geodesy.utm.inverse",
@@ -1235,7 +1367,17 @@ fn run_utm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
         "Transverse Mercator, 6th-order Krüger series (Karney 2011), k0 = 0.9996, on {}",
         e.describe()
     ));
-    Ok(Json::obj(utm_json(ctx, &g)))
+    let mut out = utm_json(ctx, &g);
+    // The grid zone the point is in, when it is in its standard zone.
+    if zone == standard {
+        let (w, e, so, no) = utmups::zone_band_bounds(lat, lon);
+        out.push(("band", Json::str(utmups::band_letter(lat).to_string())));
+        out.push(("zone_west", ctx.out("zone_west", deg(w))));
+        out.push(("zone_east", ctx.out("zone_east", deg(e))));
+        out.push(("band_south", ctx.out("band_south", deg(so))));
+        out.push(("band_north", ctx.out("band_north", deg(no))));
+    }
+    Ok(Json::obj(out))
 }
 
 pub static UTM_INVERSE: ToolDef = ToolDef {

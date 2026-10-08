@@ -46,6 +46,34 @@ pub fn standard_zone(lat: f64, lon: f64) -> u8 {
     zone as u8
 }
 
+/// The standard zone's cell at a point, as (west, east, south, north) in
+/// degrees: the zone's longitude span with the Norway and Svalbard
+/// exceptions, and the MGRS latitude band (8° tall; X runs 72° to 84° N).
+pub fn zone_band_bounds(lat: f64, lon: f64) -> (f64, f64, f64, f64) {
+    let zone = standard_zone(lat, lon);
+    let (mut west, mut east) = (central_meridian(zone) - 3.0, central_meridian(zone) + 3.0);
+    if (56.0..64.0).contains(&lat) && (0.0..12.0).contains(&lon) {
+        (west, east) = if zone == 31 { (0.0, 3.0) } else { (3.0, 12.0) };
+    }
+    if (72.0..=84.0).contains(&lat) && (0.0..42.0).contains(&lon) {
+        (west, east) = match zone {
+            31 => (0.0, 9.0),
+            33 => (9.0, 21.0),
+            35 => (21.0, 33.0),
+            _ => (33.0, 42.0),
+        };
+    }
+    let band = ((lat + 80.0) / 8.0).floor().clamp(0.0, 19.0);
+    let south = band * 8.0 - 80.0;
+    let north = if band >= 19.0 { 84.0 } else { south + 8.0 };
+    (west, east, south, north)
+}
+
+/// The MGRS latitude band letter at a latitude (C to X, skipping I and O).
+pub fn band_letter(lat: f64) -> char {
+    b"CDEFGHJKLMNPQRSTUVWX"[((lat + 80.0) / 8.0).floor().clamp(0.0, 19.0) as usize] as char
+}
+
 /// True when latitude is inside the UTM domain (80° S to 84° N).
 pub fn in_utm_domain(lat: f64) -> bool {
     (-80.0..=84.0).contains(&lat)

@@ -267,6 +267,19 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
     for (let i = 1; i <= steps; i++) ring.push([e - ((e - w) * i) / steps, n]);
     for (let i = 1; i < steps; i++) ring.push([w, n - ((n - s) * i) / steps]);
     layers.push({ kind: 'polygon', role: 'result', rings: [ring] });
+    // A latitude-longitude grid reference (Maidenhead, GARS, GEOREF) names one
+    // cell of a regular grid, so the grid around it (grid-references "Grid
+    // overlays on the canvas") is the cell's own edges three cells out.
+    if (tool.id?.startsWith('geodesy.grid-ref.')) {
+      const [dw, dh] = [e - w, n - s];
+      const [lo0, lo1, la0, la1] = [w - 3 * dw, e + 3 * dw, Math.max(-90, s - 3 * dh), Math.min(90, n + 3 * dh)];
+      const along = (a, b) => Array.from({ length: 17 }, (_, i) => [a[0] + ((b[0] - a[0]) * i) / 16, a[1] + ((b[1] - a[1]) * i) / 16]);
+      for (let k = -3; k <= 4; k++) {
+        layers.unshift({ kind: 'line', role: 'input', points: along([w + k * dw, la0], [w + k * dw, la1]), grid: true });
+        const lat = s + k * dh;
+        if (lat >= -90 && lat <= 90) layers.unshift({ kind: 'line', role: 'input', points: along([lo0, lat], [lo1, lat]), grid: true });
+      }
+    }
   }
   // A set of H3 cells: each cell's outline from the core. Around an origin
   // (a k-ring or ring), each cell carries its grid distance, so the drawing

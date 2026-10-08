@@ -237,3 +237,24 @@ test('an MGRS square at 1 km is drawn with the 1 km grid and its 100 km square a
   const lats = extent(layers).map((p) => p[1]);
   assert.ok(Math.max(...lats) - Math.min(...lats) < 0.02, 'framed on the 1 km square');
 });
+
+test('a latitude-longitude grid cell is drawn with the grid of its own size around it', async () => {
+  // grid-references "Grid overlays on the canvas": Maidenhead, GARS, and GEOREF.
+  for (const id of ['geodesy.grid-ref.maidenhead-forward', 'geodesy.grid-ref.gars-forward', 'geodesy.grid-ref.georef-forward']) {
+    const t = catalog.tools.find((x) => x.id === id);
+    const ex = primary(t);
+    const r = await invoke(id, ex);
+    const layers = await buildLayers(t, ex, r, async () => null, cells);
+    const grid = layers.filter((l) => l.grid);
+    assert.equal(grid.length, 16, `${id}: 8 meridians and 8 parallels`);
+    const { south: s, west: w, north: n, east: e } = Object.fromEntries(['south', 'west', 'north', 'east'].map((k) => [k, r.result[k].value]));
+    // The lines fall on the cell's own edges, repeated by its size.
+    const lons = grid.filter((l) => l.points[0][0] === l.points.at(-1)[0]).map((l) => l.points[0][0]);
+    for (const lon of lons) {
+      const k = (lon - w) / (e - w);
+      assert.ok(Math.abs(k - Math.round(k)) < 1e-9, `${id}: meridian ${lon} is a cell edge`);
+    }
+    assert.ok(lons.some((lon) => Math.abs(lon - w) < 1e-12) && lons.some((lon) => Math.abs(lon - e) < 1e-12), `${id}: the cell's own sides are grid lines`);
+    assert.ok(n > s);
+  }
+});

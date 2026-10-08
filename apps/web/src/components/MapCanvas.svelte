@@ -178,7 +178,7 @@
       layers.some((l) => l.kind === 'line' && l.role === 'result' && l.arrows) && { cls: 'solid', text: 'Flight path, in order' },
       layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows && !l.offset) && { cls: 'solid', text: `${named(rhumb)}${lengthOf(own)}` },
       layers.some((l) => l.track) && { cls: 'input', text: 'The track' },
-      layers.some((l) => l.grid) && { cls: 'input', text: 'Grid lines: the square size (at least 1 km) three squares out, and the 100 km square' },
+      layers.some((l) => l.grid) && { cls: 'input', text: tool.id.includes('mgrs') ? 'Grid lines: the square size (at least 1 km) three squares out, and the 100 km square' : 'Grid lines: cells of the same size, three out' },
       layers.some((l) => l.kind === 'sky') && { cls: 'solid', text: `Sun path: the ring is the horizon, the site overhead; bold above ${layers.find((l) => l.kind === 'sky').threshold}°` },
       layers.some((l) => l.offset) && { cls: 'solid', text: `Cross-track offset${result?.display?.cross_track ? ` · ${result.display.cross_track}` : ''}` },
       layers.some((l) => l.kind === 'line' && l.role === 'comparison' && l.path === other) && { cls: 'dashed', text: `${named(!rhumb)}, for comparison${lengthOf(other)}` },

@@ -5,6 +5,18 @@
       "date": "2026-10-07",
       "kind": "added",
       "tools": [
+        "geodesy.utm.forward",
+        "geodesy.grid-ref.maidenhead-forward",
+        "geodesy.grid-ref.gars-forward",
+        "geodesy.grid-ref.georef-forward"
+      ],
+      "vectors": [],
+      "summary": "UTM results now name the latitude band and the edges of the grid zone, with the Norway and Svalbard exceptions, and the map highlights that zone. Maidenhead, GARS, and GEOREF maps draw the grid of the same cell size around the highlighted cell. Coordinates are unchanged."
+    },
+    {
+      "date": "2026-10-07",
+      "kind": "added",
+      "tools": [
         "geodesy.grid-ref.mgrs-forward"
       ],
       "vectors": [],

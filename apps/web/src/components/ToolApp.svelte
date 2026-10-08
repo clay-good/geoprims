@@ -18,7 +18,7 @@
   import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { assetMessage } from '../lib/messages.js';
-  import { cameFrom, chainHref, chainState, chainTargets } from '../lib/chain.mjs';
+  import { cameFrom, chainHref, chainState, chainTargets, routeOf, windHandoff } from '../lib/chain.mjs';
   import { takesProfile } from '../lib/aircraft.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
@@ -482,6 +482,16 @@
     }
     sendLinks = { ...sendLinks, [name]: links };
   }
+  // A decoded wind goes to the runway tool still marked true.
+  let handoff = $state(null);
+  $effect(() => {
+    const h = windHandoff(tool.id, result);
+    if (!h || !compute) {
+      handoff = null;
+      return;
+    }
+    compute.encodeLink(h.state).then((enc) => (handoff = enc?.ok ? { ...h, href: `${routeOf(h.id)}#${enc.result.fragment}` } : null));
+  });
   async function copyRow(k, v) {
     await navigator.clipboard.writeText(v);
     copiedRow = k;
@@ -697,6 +707,7 @@
         </dl>
       </details>
     {/if}
+    {#if handoff}<p class="handoff"><a href={handoff.href}>{handoff.title} →</a> <span class="help">The wind stays true north; the runway tool asks for the magnetic variation.</span></p>{/if}
     <div class="actions">
       <button type="button" class="primary" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
       <button type="button" class="quiet" onclick={() => copy('reference')} title="The answer with its inputs, method, sources, versions, and the notice">{copied === 'reference' ? 'Copied ✓' : 'Copy with reference'}</button>

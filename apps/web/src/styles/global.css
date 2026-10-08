@@ -242,6 +242,8 @@ button.term:hover { color: var(--accent); }
 /* "Send to": where a value came from, and where it can go next. */
 .came-from { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--muted); }
 .facts dd .send-open { inline-size: auto; min-block-size: var(--target); min-inline-size: var(--target); margin: 0 0 0 0.25rem; padding: 0 0.4rem; border: 0; background: none; color: var(--muted); font-size: 1rem; }
+.handoff { margin: 0.75rem 0 0; font-size: 0.9rem; }
+.handoff a { display: inline-flex; align-items: center; min-block-size: var(--target); font-weight: 600; }
 .facts dd .send-open:hover, .facts dd .send-open[aria-expanded='true'] { color: var(--accent); }
 .send-to { grid-column: 1 / -1; margin-block: 0.25rem 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
 .send-to ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cameFrom, chainHref, chainState, chainTargets, MAX_TARGETS, routeOf } from '../src/lib/chain.mjs';
+import { cameFrom, chainHref, chainState, chainTargets, MAX_TARGETS, routeOf, windHandoff } from '../src/lib/chain.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -97,4 +97,34 @@ test('the page offers the control and knows what to do with it', () => {
 
 test('routeOf turns a tool id into its path', () => {
   assert.equal(routeOf('aviation.wind.heading-groundspeed'), '/aviation/wind/heading-groundspeed/');
+});
+
+test('a METAR wind goes to the runway tool marked true, and the runway tool asks for the variation', async () => {
+  // aviation/weather-decoding "Hand-off to runway components".
+  const invoke = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
+  const metar = await invoke('aviation.weather.metar-decode', { report: 'KDEN 181753Z 30015G25KT 10SM FEW080 30/08 A2980' });
+  const h = windHandoff('aviation.weather.metar-decode', metar);
+  assert.equal(h.id, 'aviation.wind.runway-components');
+  assert.deepEqual(h.state.i, { wind_direction: '300 deg', wind_speed: '15 kt', gust: '25 kt', wind_reference: 'true' });
+  // The link carries it intact.
+  const enc = await link(h.state);
+  assert.ok(enc.ok);
+  assert.deepEqual((await unlink(enc.result.fragment)).result.state.i, h.state.i);
+  // With a magnetic runway number the runway tool asks for the variation, then answers.
+  const asks = await invoke(h.id, { ...h.state.i, runway: '26' });
+  assert.equal(asks.ok, false);
+  assert.match(asks.error.message, /variation/);
+  const answers = await invoke(h.id, { ...h.state.i, runway: '26', variation: '8' });
+  assert.ok(answers.ok, JSON.stringify(answers.error));
+  // A variable wind has no direction to hand off; other tools hand off nothing.
+  const vrb = await invoke('aviation.weather.metar-decode', { report: 'KDEN 181753Z VRB03KT 10SM FEW080 30/08 A2980' });
+  assert.equal(windHandoff('aviation.weather.metar-decode', vrb), null);
+  assert.equal(windHandoff('aviation.wind.runway-components', metar), null);
+  // One winds-aloft level goes to the wind triangle, also marked true.
+  const fb = await invoke('aviation.weather.fb-winds-decode', { report: '731960', level: '34000 ft' });
+  const w = windHandoff('aviation.weather.fb-winds-decode', fb);
+  assert.equal(w.id, 'aviation.wind.heading-groundspeed');
+  assert.deepEqual(w.state.i, { wind_direction: '230 deg', wind_speed: '119 kt', wind_reference: 'true' });
+  const triangle = await invoke(w.id, { ...w.state.i, course: '090 deg', tas: '450 kt' });
+  assert.ok(triangle.ok, JSON.stringify(triangle.error));
 });

@@ -260,7 +260,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "0298e0edd148f149",
+    "hash": "c5df27e0219e2904",
     "lastmod": "2026-10-08"
   },
   "/disclaimer/": {
@@ -368,8 +368,8 @@
     "lastmod": "2026-10-07"
   },
   "/drone/photogrammetry/oblique-gsd/": {
-    "hash": "e7f113da3ede0d09",
-    "lastmod": "2026-10-07"
+    "hash": "143b80cdc17a0897",
+    "lastmod": "2026-10-08"
   },
   "/drone/photogrammetry/terrain-overlap/": {
     "hash": "eb03a160c01f157e",
@@ -1140,7 +1140,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "b12335f74222379e",
+    "hash": "1167cb288847f39e",
     "lastmod": "2026-10-08"
   },
   "/navigation/": {
@@ -1912,7 +1912,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8dd03c0b954c317d",
+    "hash": "c67a6c0767f88b0c",
     "lastmod": "2026-10-08"
   },
   "/workflows/": {

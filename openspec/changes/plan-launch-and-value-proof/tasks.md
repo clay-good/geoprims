@@ -19,4 +19,4 @@
 
 ## 4. Inventory restatement
 
-- [ ] 4.1 Update the foundation rollup table and README counts to design L6; verify the claims-honesty gate passes
+- [x] 4.1 Update the foundation rollup table and README counts to design L6; verify the claims-honesty gate passes (verified 2026-10-07: the endpoint rollup in `establish-platform-foundation/design.md` carries L6's per-domain targets, 514 operations and 834 tool ids, as targets; the README states no counts, so it claims nothing the build must prove; the public figures come from the catalog, 322 operations and 357 tool ids built, 239 and 274 of them stable, and `apps/web/test/claims.test.mjs` passes: public claims match the build and an overclaim is caught)

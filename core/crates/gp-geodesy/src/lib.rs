@@ -2451,6 +2451,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &magnetic::DECLINATION,
     &magnetic::TRUE_TO_MAGNETIC,
     &magnetic::GRIVATION,
+    &magnetic::ISOGONIC,
     &spcs::FORWARD,
     &spcs::INVERSE,
     &spcs::LOOKUP,

@@ -1047,3 +1047,383 @@ fn run_grivation(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// ---------------------------------------------------------------- isogonic
+
+const ISO_ROW: &[Field] = &[
+    Field::new(
+        "line",
+        "Line",
+        "Which contour line the point is on",
+        Kind::Number { min: 1.0, max: 1e5 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "level",
+        "Declination",
+        "The declination along this line, east positive",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(1))
+    .angle_range("[-180,180]"),
+    point::lat_field("lat", "Latitude"),
+    point::lon_field("lon", "Longitude"),
+];
+
+const ZONE_ROW: &[Field] = &[
+    Field::new(
+        "line",
+        "Line",
+        "Which boundary line the point is on",
+        Kind::Number { min: 1.0, max: 1e5 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "zone",
+        "Zone",
+        "blackout (H under 2,000 nT) or caution (H under 6,000 nT)",
+        Kind::Text { max_len: 8 },
+    ),
+    point::lat_field("lat", "Latitude"),
+    point::lon_field("lon", "Longitude"),
+];
+
+/// The most grid points one overlay evaluates, and the most line points it returns.
+const MAX_GRID: usize = 8_000;
+const MAX_POINTS: usize = 40_000;
+
+const fn edge(
+    name: &'static str,
+    title: &'static str,
+    help: &'static str,
+    range: &'static str,
+) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .angle_range(range)
+}
+
+pub static ISOGONIC: ToolDef = ToolDef {
+    id: "geodesy.magnetic.isogonic",
+    title: "Isogonic lines and compass zones",
+    summary: "Lines of equal magnetic declination at a chosen interval over an area and date, the agonic line where declination is zero, and the WMM blackout and caution zone boundaries, from WMM2025 or IGRF-14.",
+    aliases: &[
+        "isogonic lines",
+        "agonic line",
+        "declination map",
+        "magnetic variation map",
+    ],
+    keywords: &[
+        "isogonic",
+        "agonic",
+        "declination",
+        "variation",
+        "WMM",
+        "compass",
+        "blackout zone",
+    ],
+    inputs: &[
+        DATE.required().core(),
+        Field::new(
+            "model",
+            "Model",
+            "wmm2025 (default) or igrf14 (historical)",
+            Kind::Choice(&["wmm2025", "igrf14"]),
+        )
+        .core(),
+        Field::new(
+            "interval",
+            "Interval",
+            "Degrees between lines, like 2 (the default)",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .core()
+        .angle_range("unbounded"),
+        edge(
+            "south",
+            "South edge",
+            "Optional, like 20; the whole globe if the edges are left out",
+            "[-90,90]",
+        ),
+        edge("west", "West edge", "Optional, like -130", "[-180,180]"),
+        edge("north", "North edge", "Optional, like 55", "[-90,90]"),
+        edge("east", "East edge", "Optional, like -60", "[-180,180]"),
+    ],
+    outputs: &[
+        Field::new(
+            "lines",
+            "Isogonic lines",
+            "Each line's points in order, with its declination",
+            Kind::List {
+                items: ISO_ROW,
+                min: 0,
+                max: MAX_POINTS,
+            },
+        ),
+        Field::new(
+            "zones",
+            "Compass zone boundaries",
+            "Where the horizontal field falls to 6,000 nT (caution) and 2,000 nT (blackout)",
+            Kind::List {
+                items: ZONE_ROW,
+                min: 0,
+                max: MAX_POINTS,
+            },
+        ),
+        Field::new(
+            "line_count",
+            "Lines",
+            "Isogonic lines drawn",
+            Kind::Number { min: 0.0, max: 1e5 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "interval",
+            "Interval",
+            "Degrees between lines",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("unbounded"),
+        Field::new(
+            "grid_step",
+            "Grid step",
+            "The model was evaluated on a grid this fine",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .angle_range("unbounded"),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "WMM2025 or IGRF-14 main field evaluated on a latitude-longitude grid at sea level, contoured by marching squares; declination is left out where the horizontal field is under 6,000 nT or declination is near ±180°",
+    accuracy: "Each line point is the model's declination to within the grid's interpolation, a few tenths of a degree at the default step away from the poles; the model itself is good to about 0.5° at mid latitudes",
+    when_to_use: "Use this to see how magnetic variation changes across a region: the isogonic lines on a sectional chart, the agonic line where a compass reads true, or where the compass blackout and caution zones begin. For the variation at one place, use the declination tool.",
+    limitations: "The lines are contoured from a grid, so they are smooth where the field is and approximate between grid points; for one exact value use the declination tool. Lines stop where the horizontal field is weaker than 6,000 nT, inside the caution zone, because declination there is not a usable compass correction, and where declination nears ±180°, where it wraps. The zone boundaries are the WMM's own definitions. Heights are at sea level; the main field model leaves out local crustal anomalies.",
+    references: &[WMM_REPORT, IGRF_REF],
+    examples: &[Example {
+        id: "primary",
+        title: "Colorado, every 1°, on 2026-09-18",
+        input: r#"{"date":"2026-09-18","interval":"1 deg","south":37,"west":-109,"north":41,"east":-102}"#,
+        source: "add-geodesy-suite isogonic overlay scenario; points on each line checked against the declination tool",
+    }],
+    assets: &["wmm2025", "igrf14"],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[Related {
+        id: "geodesy.magnetic.declination",
+        reason: "parent",
+    }],
+    sentence: "{line_count} isogonic lines, every {interval}, from a {grid_step} grid.",
+    limits: &[("batchRows", 10)],
+    run: run_isogonic,
+    ..ToolDef::BLANK
+};
+
+fn run_isogonic(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let deg_u = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let raw = ctx.text("date")?.ok_or_else(|| {
+        ToolError::invalid("/date", "Date is required.").hint("Example: 2026-09-18")
+    })?;
+    let t = parse_date(&raw).map_err(|m| ToolError::invalid("/date", m))?;
+    let model = if ctx.choice("model")? == Some("igrf14") {
+        SelectedModel::Igrf14
+    } else {
+        SelectedModel::Wmm2025
+    };
+    let (lo, hi) = model.window();
+    if !(lo..=hi).contains(&t) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!(
+                "{} is valid from {lo} to {hi}; {} is outside it.",
+                model.name(),
+                raw.trim()
+            ),
+        )
+        .at("/date"));
+    }
+    let interval = ctx.quantity("interval")?.map_or(2.0, |q| q.to(deg_u));
+    if !(0.5..=30.0).contains(&interval) {
+        return Err(ToolError::invalid(
+            "/interval",
+            "The interval is 0.5° to 30°, like 2.",
+        ));
+    }
+    let edges = ["south", "west", "north", "east"];
+    let given: Vec<Option<f64>> = edges
+        .iter()
+        .map(|e| ctx.quantity(e).map(|q| q.map(|q| q.to(deg_u))))
+        .collect::<Result<_, _>>()?;
+    let (s, w, n, e) = match given.as_slice() {
+        [None, None, None, None] => (-89.0, -180.0, 89.0, 180.0),
+        [Some(s), Some(w), Some(n), Some(e)] => (*s, *w, *n, *e),
+        _ => {
+            return Err(ToolError::invalid(
+                "/south",
+                "Give all four edges, or none for the whole globe.",
+            ));
+        }
+    };
+    if n <= s || e <= w {
+        return Err(ToolError::invalid(
+            "/north",
+            "North must be above south, and east of west (no area may cross 180°).",
+        ));
+    }
+    // A grid of at most MAX_GRID points, no finer than 0.25°.
+    let step = (((n - s) * (e - w) / MAX_GRID as f64).sqrt()).max(0.25);
+    let (rows, cols) = (
+        ((n - s) / step).ceil() as usize + 1,
+        ((e - w) / step).ceil() as usize + 1,
+    );
+    if rows * cols > 2 * MAX_GRID {
+        return Err(
+            ToolError::new(ErrorCode::LimitExceeded, "That area needs too fine a grid.")
+                .at("/south"),
+        );
+    }
+    let c = match model {
+        SelectedModel::Igrf14 => mag::coeffs_at(Model::Igrf14, t),
+        _ => mag::coeffs_at(Model::Wmm2025, t),
+    };
+    ctx.assets.push(AssetRef {
+        id: model.id().into(),
+        version: model.version().into(),
+    });
+    // Rows run north to south and columns west to east, as the contour plane expects.
+    let at = |i: usize, j: usize| ((n - i as f64 * step).max(s), (w + j as f64 * step).min(e));
+    let mut d = vec![vec![0.0; cols]; rows];
+    let mut hz = vec![vec![0.0; cols]; rows];
+    for i in 0..rows {
+        for j in 0..cols {
+            let (la, lo_) = at(i, j);
+            let (b, sv) = mag::field(&c, la, lo_, 0.0);
+            let el = mag::elements(b, sv);
+            hz[i][j] = el.h;
+            // Declination means nothing to a compass where the field is weak,
+            // and it wraps at ±180°: those points are left out of the lines.
+            d[i][j] = if el.h < 6000.0 || el.d.abs() > 170.0 {
+                f64::NAN
+            } else {
+                el.d
+            };
+        }
+    }
+    let place = |p: gp_base::contour::P| ((n - p.1).clamp(s, n), (w + p.0).clamp(w, e));
+    let dj = |v: f64| {
+        Q {
+            value: v,
+            unit: deg_u,
+        }
+        .to_json()
+    };
+    let (dmin, dmax) = d
+        .iter()
+        .flatten()
+        .filter(|v| v.is_finite())
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), &v| {
+            (a.min(v), b.max(v))
+        });
+    let mut lines = Vec::new();
+    let mut count = 0usize;
+    if dmin.is_finite() {
+        let mut level = (dmin / interval).ceil() * interval;
+        while level <= dmax {
+            for (pts, _) in gp_base::contour::join(&gp_base::contour::pieces(&d, step, level)) {
+                count += 1;
+                for p in pts {
+                    let (la, lo_) = place(p);
+                    lines.push(Json::obj([
+                        ("line", Json::Num(count as f64)),
+                        ("level", dj(level)),
+                        ("lat", dj(la)),
+                        ("lon", dj(lo_)),
+                    ]));
+                }
+            }
+            level += interval;
+        }
+    }
+    let mut zones = Vec::new();
+    let mut zcount = 0usize;
+    for (name, level) in [("caution", 6000.0), ("blackout", 2000.0)] {
+        for (pts, _) in gp_base::contour::join(&gp_base::contour::pieces(&hz, step, level)) {
+            zcount += 1;
+            for p in pts {
+                let (la, lo_) = place(p);
+                zones.push(Json::obj([
+                    ("line", Json::Num(zcount as f64)),
+                    ("zone", Json::str(name)),
+                    ("lat", dj(la)),
+                    ("lon", dj(lo_)),
+                ]));
+            }
+        }
+    }
+    if lines.len() + zones.len() > MAX_POINTS {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            format!(
+                "That is {} line points, over the {MAX_POINTS} limit: use a wider interval.",
+                lines.len() + zones.len()
+            ),
+        )
+        .at("/interval"));
+    }
+    ctx.model = Some(format!(
+        "{} main field on a {step:.2}° grid at sea level, contoured by marching squares",
+        model.name()
+    ));
+    Ok(Json::obj([
+        ("lines", Json::Arr(lines)),
+        ("zones", Json::Arr(zones)),
+        ("line_count", Json::Num(count as f64)),
+        (
+            "interval",
+            ctx.out(
+                "interval",
+                Q {
+                    value: interval,
+                    unit: deg_u,
+                },
+            ),
+        ),
+        (
+            "grid_step",
+            ctx.out(
+                "grid_step",
+                Q {
+                    value: step,
+                    unit: deg_u,
+                },
+            ),
+        ),
+    ]))
+}

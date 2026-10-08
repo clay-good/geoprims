@@ -324,3 +324,82 @@ fn meta_carries_the_magnetic_caveats() {
     let polar = call(D, r#"{"lat":86,"lon":150,"date":"2026-09-19"}"#);
     assert_ne!(polar["meta"]["context"]["compassZone"], "normal", "{polar}");
 }
+
+#[test]
+fn isogonic_lines_lie_where_the_model_has_their_declination() {
+    // geomagnetism "Isogonic overlay": every point of every line, evaluated
+    // by the declination tool itself, has the line's declination, to within
+    // the grid's interpolation (a 0.44° grid over the conterminous US).
+    let r = call(
+        "geodesy.magnetic.isogonic",
+        r#"{"date":"2026-09-18","south":24,"west":-125,"north":50,"east":-66}"#,
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    let lines = r["result"]["lines"].as_array().unwrap();
+    assert!(lines.len() > 500, "{} points", lines.len());
+    let levels: std::collections::BTreeSet<i64> = lines
+        .iter()
+        .map(|p| p["level"]["value"].as_f64().unwrap() as i64)
+        .collect();
+    assert!(levels.contains(&0), "the agonic line crosses the US");
+    let mut worst = 0.0f64;
+    for p in lines.iter().step_by(7) {
+        let (lat, lon) = (
+            p["lat"]["value"].as_f64().unwrap(),
+            p["lon"]["value"].as_f64().unwrap(),
+        );
+        let d = call(
+            "geodesy.magnetic.declination",
+            &format!(r#"{{"lat":{lat},"lon":{lon},"date":"2026-09-18"}}"#),
+        );
+        let off =
+            (num(&d, "result.declination.value") - p["level"]["value"].as_f64().unwrap()).abs();
+        worst = worst.max(off);
+    }
+    assert!(worst < 0.05, "a line point is {worst}° off its level");
+    // Every level is a multiple of the interval, and the zones are empty here.
+    assert!(levels.iter().all(|l| l % 2 == 0));
+    assert_eq!(r["result"]["zones"].as_array().unwrap().len(), 0);
+}
+
+#[test]
+fn isogonic_zones_ring_the_magnetic_poles_and_lines_stop_there() {
+    let r = call(
+        "geodesy.magnetic.isogonic",
+        r#"{"date":"2026-09-18","interval":"10 deg"}"#,
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    let zones = r["result"]["zones"].as_array().unwrap();
+    let kinds: std::collections::BTreeSet<&str> =
+        zones.iter().map(|z| z["zone"].as_str().unwrap()).collect();
+    assert_eq!(kinds, ["blackout", "caution"].into_iter().collect());
+    // The zones are at high latitude, near the magnetic poles.
+    assert!(
+        zones
+            .iter()
+            .all(|z| z["lat"]["value"].as_f64().unwrap().abs() > 50.0)
+    );
+    // No isogonic line point lies where the field is weaker than 6,000 nT.
+    for p in r["result"]["lines"].as_array().unwrap().iter().step_by(25) {
+        let (lat, lon) = (
+            p["lat"]["value"].as_f64().unwrap(),
+            p["lon"]["value"].as_f64().unwrap(),
+        );
+        let d = call(
+            "geodesy.magnetic.declination",
+            &format!(r#"{{"lat":{lat},"lon":{lon},"date":"2026-09-18"}}"#),
+        );
+        assert!(
+            num(&d, "result.horizontal_intensity") > 5_000.0,
+            "{lat}, {lon}"
+        );
+    }
+    // Partial edges and out-of-range dates are refused.
+    let partial = call(
+        "geodesy.magnetic.isogonic",
+        r#"{"date":"2026-09-18","south":20}"#,
+    );
+    assert_eq!(partial["error"]["code"], "INVALID_INPUT");
+    let early = call("geodesy.magnetic.isogonic", r#"{"date":"2020-01-01"}"#);
+    assert_eq!(early["error"]["code"], "OUT_OF_DOMAIN");
+}

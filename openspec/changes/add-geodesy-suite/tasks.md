@@ -60,7 +60,7 @@
 - [x] 7.3 Implement uncertainty and blackout/caution zones; verify both zone scenarios
 - [x] 7.4 Implement true ↔ magnetic conversion with chart variation parsing and model comparison; verify the chart-variation scenarios
 - [x] 7.5 Implement grivation; verify the UPS scenario (`geodesy.magnetic.grivation`: G = D − γ with the sign convention stated, UTM or UPS chosen by latitude or forced within their legal ranges; 9 vectors from the NCEI WMM2025 test values and GeographicLib GeoConvert convergence, including 89° N in UPS north)
-- [ ] 7.6 Implement isogonic overlays in a worker; verify the overlay visual fixture
+- [x] 7.6 Implement isogonic overlays in a worker; verify the overlay visual fixture (`geodesy.magnetic.isogonic`: WMM2025 or IGRF-14 on a grid of at most 8,000 points, contoured by the marching squares now shared with the raster contours in `gp_base::contour`, at a chosen interval (2° by default), with the agonic line, lines left out where the field is under 6,000 nT or declination nears ±180°, and the 6,000 and 2,000 nT zone edges. The declination map's Isogonic lines button runs it in the compute worker for the page's date and model, without moving the view. A crate test re-evaluates line points with the declination tool (within 0.05° over the US), and `apps/web/test/visual-purpose.test.mjs` checks the overlay layers)
 
 ## 8. Catalog, docs, and promotion
 

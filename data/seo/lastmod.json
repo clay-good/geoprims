@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "6d973aa499572cd0",
+    "hash": "11c2bdbd021f9a04",
     "lastmod": "2026-10-08"
   },
   "/accuracy/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "dad235d86892dafc",
+    "hash": "4958deb6a5c6d1e5",
     "lastmod": "2026-10-08"
   },
   "/disclaimer/": {
@@ -436,8 +436,8 @@
     "lastmod": "2026-09-29"
   },
   "/geodesy/": {
-    "hash": "af11155dd78f0f89",
-    "lastmod": "2026-09-28"
+    "hash": "fced4b36b6ad30b3",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/datum/": {
     "hash": "743eda4eec8711de",
@@ -568,19 +568,23 @@
     "lastmod": "2026-10-08"
   },
   "/geodesy/magnetic/": {
-    "hash": "9a97f537f0cfdfd3",
-    "lastmod": "2026-09-28"
+    "hash": "2c3c9299083e65a5",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/magnetic/declination/": {
-    "hash": "25ee53c684e9bcaa",
-    "lastmod": "2026-09-29"
+    "hash": "98b16e12f198bbef",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/magnetic/grivation/": {
-    "hash": "69c274400c4e443b",
-    "lastmod": "2026-09-29"
+    "hash": "a656d39a23f76653",
+    "lastmod": "2026-10-08"
+  },
+  "/geodesy/magnetic/isogonic/": {
+    "hash": "c8f8f503b57bdf50",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
-    "hash": "f7c5cb1f3f161ddf",
+    "hash": "4d957931e7e74752",
     "lastmod": "2026-10-08"
   },
   "/geodesy/parse/": {
@@ -616,8 +620,8 @@
     "lastmod": "2026-10-07"
   },
   "/geodesy/projection/arc-to-chord/": {
-    "hash": "8f3f600a83b9bda8",
-    "lastmod": "2026-10-07"
+    "hash": "6a818c85f2290b2e",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/projection/azimuthal-equidistant-forward/": {
     "hash": "d3692717da932d96",
@@ -1144,7 +1148,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "24bcc782c9e1f055",
+    "hash": "ba3106108dfc2c91",
     "lastmod": "2026-10-08"
   },
   "/navigation/": {
@@ -1300,7 +1304,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "972b134d06711f9e",
+    "hash": "d1ebccd607f5f311",
     "lastmod": "2026-10-08"
   },
   "/raster/": {
@@ -1384,7 +1388,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "8914825f78ac9b63",
+    "hash": "c882aac7b2408dbe",
     "lastmod": "2026-10-08"
   },
   "/survey/": {
@@ -1652,7 +1656,7 @@
     "lastmod": "2026-10-07"
   },
   "/tools/": {
-    "hash": "f3982ba37da66a7f",
+    "hash": "0e474e5629d707ec",
     "lastmod": "2026-10-08"
   },
   "/units/": {
@@ -1916,7 +1920,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f42b082b45afe76e",
+    "hash": "1c8b96eb61a2a709",
     "lastmod": "2026-10-08"
   },
   "/workflows/": {

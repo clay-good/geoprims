@@ -14,6 +14,16 @@
       "date": "2026-10-07",
       "kind": "added",
       "tools": [
+        "geodesy.magnetic.isogonic",
+        "geodesy.magnetic.declination"
+      ],
+      "vectors": [],
+      "summary": "New: isogonic lines, lines of equal magnetic declination at a chosen interval over an area and date, with the agonic line and the WMM compass caution and blackout zone edges. The declination map has an Isogonic lines button that draws them around your point."
+    },
+    {
+      "date": "2026-10-07",
+      "kind": "added",
+      "tools": [
         "geodesy.utm.forward",
         "geodesy.grid-ref.maidenhead-forward",
         "geodesy.grid-ref.gars-forward",

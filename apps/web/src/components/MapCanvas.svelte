@@ -3,7 +3,7 @@
   // the Natural Earth base layer, as a 2D map or a globe. Drag to pan or spin,
   // scroll or pinch to zoom; arrow keys, + and -, and 0 (reset) do the same.
   import { onMount, tick } from 'svelte';
-  import { buildLayers, extent } from '../lib/map/layers.js';
+  import { buildLayers, extent, isogonicLayers } from '../lib/map/layers.js';
   import { createBasemapLoader, DETAIL_AT, GENERALIZED_AT } from '../lib/map/basemap.js';
   import { forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
@@ -40,6 +40,10 @@
   // the rhumb line, each with its length in the legend.
   const comparable = (kinds.has('line-geodesic') || kinds.has('line-rhumb')) && 'lat2' in tool.inputs.properties;
   let compare = $state(false);
+  // "Isogonic lines": the declination field around the reader's point, from
+  // geodesy.magnetic.isogonic for the same date and model.
+  const isogonicTool = tool.id === 'geodesy.magnetic.declination';
+  let isogonic = $state(false);
   // A map with nothing of the reader's on it answers nothing, so it stays
   // hidden until the inputs give it something to draw (an optional location
   // left blank, a zone looked up by name).
@@ -159,8 +163,12 @@
       cellSource,
       { compare },
     );
+    if (isogonic && args.date) {
+      const iso = await compute.invoke('geodesy.magnetic.isogonic', { date: args.date, ...(args.model === 'igrf14' ? { model: 'igrf14' } : {}) }, 'isogonic');
+      layers = [...isogonicLayers(iso), ...layers];
+    }
     const cellCount = layers.filter((l) => l.cell).length;
-    const what = layers.filter((l) => !l.cell).map((l) => (l.kind === 'sky' ? "the sun's path through the sky around the site, the ring its horizon" : l.kind === 'line' ? (l.grid ? 'a grid line' : l.offset ? 'the cross-track offset from the point to the track' : l.track ? 'the track' : l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
+    const what = layers.filter((l) => !l.cell).map((l) => (l.iso ? (l.zone ? 'a compass zone edge' : 'an isogonic line') : l.kind === 'sky' ? "the sun's path through the sky around the site, the ring its horizon" : l.kind === 'line' ? (l.grid ? 'a grid line' : l.offset ? 'the cross-track offset from the point to the track' : l.track ? 'the track' : l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
     if (shots) what.push(`${shots.points.length} photo trigger points`);
     const compacted = layers.some((l) => l.compacted);
@@ -176,8 +184,10 @@
     const [own, other] = rhumb ? ['rhumb', 'geodesic'] : ['geodesic', 'rhumb'];
     legend = [
       layers.some((l) => l.kind === 'line' && l.role === 'result' && l.arrows) && { cls: 'solid', text: 'Flight path, in order' },
-      layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows && !l.offset) && { cls: 'solid', text: `${named(rhumb)}${lengthOf(own)}` },
+      layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows && !l.offset && !l.iso) && { cls: 'solid', text: `${named(rhumb)}${lengthOf(own)}` },
       layers.some((l) => l.track) && { cls: 'input', text: 'The track' },
+      layers.some((l) => l.iso && l.level !== undefined) && { cls: 'input', text: 'Isogonic lines every 2°; the agonic line (0°) in the accent' },
+      layers.some((l) => l.iso && l.zone) && { cls: 'dashed', text: 'Compass caution (under 6,000 nT) and blackout (under 2,000 nT) zone edges' },
       layers.some((l) => l.grid) && { cls: 'input', text: tool.id.includes('mgrs') ? 'Grid lines: the square size (at least 1 km) three squares out, and the 100 km square' : 'Grid lines: cells of the same size, three out' },
       layers.some((l) => l.kind === 'sky') && { cls: 'solid', text: `Sun path: the ring is the horizon, the site overhead; bold above ${layers.find((l) => l.kind === 'sky').threshold}°` },
       layers.some((l) => l.offset) && { cls: 'solid', text: `Cross-track offset${result?.display?.cross_track ? ` · ${result.display.cross_track}` : ''}` },
@@ -207,6 +217,7 @@
   $effect(() => {
     result;
     compare;
+    isogonic;
     rebuild();
   });
 
@@ -427,6 +438,9 @@
       <button type="button" onclick={() => zoom(1.5)} aria-label="Zoom in">+</button>
       <button type="button" onclick={() => { keepView = false; reframe(); }} aria-label="Fit the result in view">Fit</button>
     </div>
+    {#if isogonicTool}
+      <button type="button" class="map-compare" aria-pressed={isogonic} onclick={() => (isogonic = !isogonic)}>Isogonic lines</button>
+    {/if}
     {#if comparable}
       <button type="button" class="map-compare" aria-pressed={compare} onclick={() => (compare = !compare)}>Compare methods</button>
     {/if}

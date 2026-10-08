@@ -355,5 +355,30 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
 export function extent(layers) {
   // Grid lines are context around the answer: the view frames the square, not
   // the 100 km square around it.
-  return layers.filter((l) => !l.grid).flatMap((l) => (l.kind === 'polygon' ? l.rings.flat() : l.points));
+  return layers.filter((l) => !l.grid && !l.iso).flatMap((l) => (l.kind === 'polygon' ? l.rings.flat() : l.points));
 }
+
+/**
+ * The isogonic overlay (geomagnetism "Isogonic overlay") from a
+ * geodesy.magnetic.isogonic result: one line per isogonic line, the agonic
+ * line marked, and the compass zone edges dashed. Context, not the answer,
+ * so the view still frames the reader's point.
+ */
+export function isogonicLayers(result) {
+  if (!result?.ok) return [];
+  const group = (rows, keyOf) => {
+    const out = new Map();
+    for (const r of rows ?? []) {
+      const [lat, lon] = [numberOf(r.lat?.value ?? r.lat), numberOf(r.lon?.value ?? r.lon)];
+      if (lat === null || lon === null) continue;
+      if (!out.has(r.line)) out.set(r.line, { key: keyOf(r), points: [] });
+      out.get(r.line).points.push([lon, lat]);
+    }
+    return [...out.values()].filter((l) => l.points.length >= 2);
+  };
+  return [
+    ...group(result.result.lines, (r) => r.level?.value ?? r.level).map((l) => ({ kind: 'line', role: l.key === 0 ? 'result' : 'input', points: l.points, iso: true, level: l.key })),
+    ...group(result.result.zones, (r) => r.zone).map((l) => ({ kind: 'line', role: 'comparison', points: l.points, iso: true, zone: l.key })),
+  ];
+}
+

@@ -882,6 +882,12 @@
           ]
         },
         {
+          "want": "see how variation changes across a region, or where the agonic line runs",
+          "tools": [
+            "isogonic"
+          ]
+        },
+        {
           "want": "convert a bearing between true and magnetic",
           "tools": [
             "true-to-magnetic"

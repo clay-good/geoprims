@@ -258,3 +258,18 @@ test('a latitude-longitude grid cell is drawn with the grid of its own size arou
     assert.ok(n > s);
   }
 });
+
+test('the isogonic overlay turns the core lines into map lines, the agonic line marked', async () => {
+  // geomagnetism "Isogonic overlay".
+  const { isogonicLayers, extent } = await import('../src/lib/map/layers.js');
+  const r = await invoke('geodesy.magnetic.isogonic', { date: '2026-09-18' });
+  assert.ok(r.ok, JSON.stringify(r.error));
+  const ls = isogonicLayers(r);
+  assert.equal(ls.filter((l) => l.level !== undefined).length, r.result.line_count);
+  assert.ok(ls.some((l) => l.level === 0 && l.role === 'result'), 'the agonic line');
+  assert.ok(ls.some((l) => l.zone === 'blackout') && ls.some((l) => l.zone === 'caution'), 'both zone edges');
+  assert.ok(ls.every((l) => l.iso && l.points.length >= 2));
+  // Context, not the answer: it never moves the view.
+  assert.deepEqual(extent(ls), []);
+  assert.deepEqual(isogonicLayers({ ok: false }), []);
+});

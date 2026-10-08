@@ -10,6 +10,7 @@
   import { diagram } from '../lib/diagrams.js';
   import { isNumeric } from '../lib/fields.mjs';
   import { planText } from '../lib/plan.mjs';
+  import { workflowExport } from '../lib/export.mjs';
 
   // `workflow` is the data file's entry; `guide` its build-time run (steps with
   // results and links); `tools` the slice of each step's tool the page needs.
@@ -153,6 +154,16 @@
     setTimeout(() => (copied = ''), 3000);
   }
 
+  // The workflow's one file: the mission KML, the nav log CSV.
+  const file = $derived(workflow.export ? workflowExport(workflow, steps, tools) : null);
+  function downloadFile() {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([file.text], { type: file.type }));
+    a.download = file.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+  }
+
   const shownValue = (v) => (Array.isArray(v) ? `${v.length} rows` : typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v));
   const fieldTitle = (tool, name) => tools[tool].inputs.properties[name]?.title ?? name.replaceAll('_', ' ');
 </script>
@@ -218,6 +229,7 @@
   </ol>
   <div class="actions">
     <button type="button" onclick={copyPlan}>Copy the plan</button>
+    {#if workflow.export}<button type="button" onclick={downloadFile} disabled={!file}>Download {workflow.export.label}</button>{/if}
     <span role="status" class="help">{copied}</span>
   </div>
 </section>

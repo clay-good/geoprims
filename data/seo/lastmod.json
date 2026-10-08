@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "872e07924863952d",
-    "lastmod": "2026-09-29"
+    "hash": "1f1175dd87a4bd41",
+    "lastmod": "2026-10-08"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -260,8 +260,8 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "8f3063ceaca02393",
-    "lastmod": "2026-10-07"
+    "hash": "0298e0edd148f149",
+    "lastmod": "2026-10-08"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -308,8 +308,8 @@
     "lastmod": "2026-10-07"
   },
   "/drone/mission/survey-grid/": {
-    "hash": "8a0524af0feba923",
-    "lastmod": "2026-09-29"
+    "hash": "a9e292812c9409cd",
+    "lastmod": "2026-10-08"
   },
   "/drone/ops/": {
     "hash": "a202fc067db451c6",
@@ -1140,8 +1140,8 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "feb6c4a13c9825fd",
-    "lastmod": "2026-10-07"
+    "hash": "b12335f74222379e",
+    "lastmod": "2026-10-08"
   },
   "/navigation/": {
     "hash": "44ca7ff9080557c8",
@@ -1912,12 +1912,12 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1ec5992c9f8c5f5f",
-    "lastmod": "2026-10-07"
+    "hash": "8dd03c0b954c317d",
+    "lastmod": "2026-10-08"
   },
   "/workflows/": {
-    "hash": "bf26d30960e69c16",
-    "lastmod": "2026-09-26"
+    "hash": "0f9f933e71dbfe9a",
+    "lastmod": "2026-10-08"
   },
   "/workflows/boundary-retracement/": {
     "hash": "2e85e44404c6e5ac",
@@ -1948,19 +1948,19 @@
     "lastmod": "2026-09-29"
   },
   "/workflows/lidar-bid/": {
-    "hash": "8c30a1fd00b04649",
-    "lastmod": "2026-09-29"
+    "hash": "bd3c00cc1391e22a",
+    "lastmod": "2026-10-08"
   },
   "/workflows/mapping-flight/": {
-    "hash": "f03b4691dd9f18dc",
-    "lastmod": "2026-09-29"
+    "hash": "447324f0a4e56c2c",
+    "lastmod": "2026-10-08"
   },
   "/workflows/preflight-check/": {
     "hash": "2367d253b68b7670",
     "lastmod": "2026-09-29"
   },
   "/workflows/vfr-cross-country/": {
-    "hash": "8d455e2d406bc9b7",
-    "lastmod": "2026-09-29"
+    "hash": "28197e38c4e4c894",
+    "lastmod": "2026-10-08"
   }
 }

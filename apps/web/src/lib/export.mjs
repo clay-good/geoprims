@@ -76,7 +76,10 @@ export function toCsv(tool, result) {
   if (list) {
     const [, rows] = list;
     const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
-    return [columns.join(','), ...rows.map((row) => columns.map((c) => csvCell(row[c])).join(','))].join('\n') + '\n';
+    // A quantity column carries its unit in the header, since its cells are bare numbers.
+    const unitOf = (c) => rows.find((row) => row[c] && typeof row[c] === 'object' && 'unit' in row[c])?.[c].unit;
+    const header = columns.map((c) => (unitOf(c) && unitOf(c) !== '1' ? csvCell(`${c} (${unitOf(c)})`) : c));
+    return [header.join(','), ...rows.map((row) => columns.map((c) => csvCell(row[c])).join(','))].join('\n') + '\n';
   }
   const names = scalars.map(([k]) => k);
   return `${names.join(',')}\n${names.map((k) => csvCell(r[k])).join(',')}\n`;
@@ -265,3 +268,21 @@ export function exportText(id, { tool, args, result, display, today }) {
 
 /** The file name a download gets: the tool id and the format's extension. */
 export const fileName = (tool, id) => `${tool.id}.${FORMATS.find((f) => f.id === id)?.extension ?? 'txt'}`;
+
+/**
+ * A workflow's one export (add-job-workflows "Exports"): its `export` names a
+ * step and either that step's file output (a mission KML the export tool
+ * wrote) or a format to write the step's result in (the nav log as CSV).
+ * Returns { name, type, text }, or null while that step has no answer.
+ */
+export function workflowExport(workflow, steps, tools) {
+  const e = workflow.export;
+  const s = e && steps[e.step];
+  if (!s || s.status !== 'ok' || !s.result?.ok) return null;
+  if (e.output) {
+    const r = s.result.result;
+    return { name: r.filename ?? `${workflow.slug}.txt`, type: r.media_type ?? 'text/plain', text: r[e.output] };
+  }
+  const f = FORMATS.find((x) => x.id === e.format);
+  return { name: `${workflow.slug}.${f.extension}`, type: f.type, text: exportText(e.format, { tool: tools[s.tool], args: s.input, result: s.result }) };
+}

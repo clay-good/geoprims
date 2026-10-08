@@ -664,7 +664,49 @@ const WAYPOINT: &[Field] = &[
     ),
 ];
 
-fn waypoints(plane: &Plane, pts: &[(P, &str)]) -> Json {
+/// The survey grid's waypoints, which carry the flight height when one is given.
+const GRID_WAYPOINT: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "kind",
+        "Kind",
+        "line_start, line_end, or transit",
+        Kind::Text { max_len: 12 },
+    ),
+    Field::new(
+        "height",
+        "Height",
+        "Above ground level, when a flight height is given, like 120 m",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(1))
+    .optional(),
+];
+
+/// The waypoints in flight order, each at `height` (meters above ground) when one is given.
+fn waypoints(plane: &Plane, pts: &[(P, &str)], height: Option<f64>) -> Json {
     let deg = |v: f64| {
         Q {
             value: v,
@@ -676,7 +718,11 @@ fn waypoints(plane: &Plane, pts: &[(P, &str)]) -> Json {
         pts.iter()
             .map(|((x, y), k)| {
                 let (la, lo) = plane.inv(*x, *y);
-                Json::obj([("lat", deg(la)), ("lon", deg(lo)), ("kind", Json::str(*k))])
+                let mut row = vec![("lat", deg(la)), ("lon", deg(lo)), ("kind", Json::str(*k))];
+                if let Some(h) = height {
+                    row.push(("height", m(h).to_json()));
+                }
+                Json::obj(row)
             })
             .collect(),
     )
@@ -744,7 +790,7 @@ const PHOTO_ROW: &[Field] = &[
 
 pub static SURVEY_GRID: ToolDef = ToolDef {
     id: "drone.mission.survey-grid",
-    version: "1.1.0",
+    version: "1.2.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Survey grid (lawnmower pattern)",
     summary: "A serpentine mapping pattern over an area, with no-fly holes routed around, the fewest lines by default, overshoot, and an optional crosshatch: waypoints, line count, path length, turns, photo count, and flight time.",
@@ -877,7 +923,7 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
             "Waypoints",
             "In flight order",
             Kind::List {
-                items: WAYPOINT,
+                items: GRID_WAYPOINT,
                 min: 0,
                 max: 100_000,
             },
@@ -1053,6 +1099,7 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
             },
         ),
     ));
+    let height = ctx.quantity("height")?.map(|h| h.base());
     if let Some(h) = ctx.quantity("height")? {
         o.push((
             "height_reference",
@@ -1062,7 +1109,7 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )),
         ));
     }
-    o.push(("waypoints", waypoints(&plane, &pts)));
+    o.push(("waypoints", waypoints(&plane, &pts, height)));
     let (triggers, dropped) = trigger_points(&plane, &shots, 2_000);
     if dropped > 0 {
         ctx.warnings.push(Warning::new(
@@ -1534,7 +1581,7 @@ fn run_corridor(ctx: &mut Ctx) -> Result<Json, ToolError> {
         flown.extend(wp.iter().copied());
         lines.push(Json::obj([
             ("offset", m(off).to_json()),
-            ("waypoints", waypoints(&plane, &wp)),
+            ("waypoints", waypoints(&plane, &wp, None)),
         ]));
     }
     Ok(Json::obj(vec![

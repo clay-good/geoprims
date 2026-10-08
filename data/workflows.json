@@ -359,6 +359,11 @@
       ],
       "visual": {
         "step": 0
+      },
+      "export": {
+        "step": 0,
+        "format": "csv",
+        "label": "Nav log CSV"
       }
     },
     {
@@ -1028,10 +1033,33 @@
               "input": "offset"
             }
           }
+        },
+        {
+          "tool": "drone.mission.export",
+          "why": "The flight lines as a KML file for your planning app, every waypoint at the flight height above ground.",
+          "input": {
+            "waypoints": {
+              "from": [
+                5,
+                "waypoints"
+              ],
+              "columns": [
+                "lat",
+                "lon",
+                "height"
+              ]
+            },
+            "height_reference": "agl"
+          }
         }
       ],
       "visual": {
         "step": 6
+      },
+      "export": {
+        "step": 9,
+        "output": "file",
+        "label": "Mission KML"
       }
     },
     {

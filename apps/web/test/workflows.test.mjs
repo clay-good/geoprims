@@ -161,3 +161,25 @@ test('a carry can reach into a list, count from its end, sit inside a literal, o
   // Without "optional", a missing answer is the workflow's bug.
   await assert.rejects(runChain({ ...w, steps: [w.steps[0], { tool: 'b', input: { gust: { from: [0, 'gust'] } } }] }, {}, fake), /has no output "gust"/);
 });
+
+test('each workflow export writes the prefill\'s file, byte for byte', async () => {
+  // add-job-workflows "Exports": the mapping day's mission KML and the
+  // cross-country nav log CSV, from the worked example, against committed
+  // files. Run with UPDATE_EXPORTS=1 to rewrite them after a deliberate change.
+  const { workflowExport } = await import('../src/lib/export.mjs');
+  const { writeFileSync } = await import('node:fs');
+  const exporting = WORKFLOWS.filter((w) => w.export);
+  assert.deepEqual(exporting.map((w) => w.slug).sort(), ['mapping-flight', 'vfr-cross-country']);
+  for (const w of exporting) {
+    const run = await runChain(w, {}, invoke);
+    assert.ok(run.ok, `${w.slug} runs`);
+    const tools = Object.fromEntries(w.steps.map((s) => [s.tool, tool(s.tool)]));
+    const file = workflowExport(w, run.steps, tools);
+    const fixture = join(web, 'test/fixtures/workflow-exports', file.name);
+    if (process.env.UPDATE_EXPORTS) writeFileSync(fixture, file.text);
+    assert.equal(file.text, readFileSync(fixture, 'utf8'), `${file.name} changed`);
+  }
+  // Nothing to download while the step has no answer.
+  const m = WORKFLOWS.find((w) => w.slug === 'mapping-flight');
+  assert.equal(workflowExport(m, m.steps.map(() => ({ status: 'waiting' })), {}), null);
+});

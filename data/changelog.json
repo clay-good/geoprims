@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-07",
+      "kind": "changed",
+      "tools": [
+        "drone.mission.survey-grid"
+      ],
+      "vectors": [],
+      "summary": "Survey grid waypoints now carry the flight height when one is given, so they can go straight into a mission export; the drone mapping workflow ends with a mission KML to download, and the VFR cross-country workflow offers its nav log as CSV. Existing results are unchanged."
+    },
+    {
+      "date": "2026-10-07",
       "kind": "added",
       "tools": [
         "navigation.geodesic.waypoints",

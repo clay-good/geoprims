@@ -201,6 +201,7 @@ fn winding(ring: &[(f64, f64)]) -> f64 {
 
 pub static POLYGON_AREA: ToolDef = ToolDef {
     id: "geometry.area.polygon",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Polygon area and perimeter on the ellipsoid",
     summary: "The area and perimeter of a polygon with geodesic edges on WGS 84 (or any ellipsoid), with holes, across the antimeridian or around a pole, and its ring orientation.",
@@ -228,6 +229,12 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
             "Edges are",
             "geodesic (shortest paths, default), rhumb (constant course), or planar (flat shoelace, a rough check only)",
             Kind::Choice(&["geodesic", "rhumb", "planar"]),
+        ),
+        Field::new(
+            "interior",
+            "Interior",
+            "smaller (the smaller of the two regions the ring divides the Earth into, default) or orientation (counterclockwise encloses, as in GeoJSON)",
+            Kind::Choice(&["smaller", "orientation"]),
         ),
         E[0],
         E[1],
@@ -259,6 +266,12 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
             "Outline orientation",
             "clockwise or counterclockwise, seen from above",
             Kind::Text { max_len: 20 },
+        ),
+        Field::new(
+            "interior_rule",
+            "Interior rule",
+            "Which side of the outline was measured",
+            Kind::Text { max_len: 120 },
         ),
         Field::new(
             "pole",
@@ -300,16 +313,24 @@ pub static POLYGON_AREA: ToolDef = ToolDef {
         "EXPERIMENTAL_TOOL",
     ],
     when_to_use: "Use this for the area and perimeter of ground: a parcel, a burn scar, a survey boundary, a service area, or any ring of latitudes and longitudes, measured on the ellipsoid rather than on a flat picture of it. It also says which way the ring is wound and whether it takes in a pole, both of which change what the number means.",
-    limitations: "The edges are geodesics, which is what a boundary on the ground is, and not straight lines on a projection or arcs along a parallel: a ring whose corners all sit on one parallel still encloses real area, because every edge bows towards the pole and the longer ones bow further. A ring that crosses or touches itself has no single area and is refused rather than answered, with make-valid named as the way out. The area comes back positive whichever way the ring is wound, with the winding reported beside it, so a hole has to be given as a hole rather than as a ring walked backwards.",
+    limitations: "The edges are geodesics, which is what a boundary on the ground is, and not straight lines on a projection or arcs along a parallel: a ring whose corners all sit on one parallel still encloses real area, because every edge bows towards the pole and the longer ones bow further. A ring that crosses or touches itself has no single area and is refused rather than answered, with make-valid named as the way out. By default the area is the smaller of the two regions the ring divides the Earth into, whichever way it is wound, with the winding reported beside it, so a hole has to be given as a hole rather than as a ring walked backwards. With interior set to orientation, the ring's direction decides instead, as GeoJSON does: counterclockwise encloses, and a clockwise ring around a field measures the rest of the world.",
     model: "Karney (2013) geodesic polygon area on WGS 84; rhumb edges by Karney (2024); planar by the shoelace formula on a local flat map",
     accuracy: "Geodesic and rhumb edges match GeographicLib Planimeter (with -R for rhumbs) within 1e-8 relative. Planar mode is a rough check that grows wrong with size",
     references: &[KARNEY, KARNEY_RHUMB, PLANIMETER],
-    examples: &[Example {
-        id: "primary",
-        title: "A Colorado-shaped rectangle",
-        input: r#"{"polygon":[{"lat":37,"lon":-109.05},{"lat":41,"lon":-109.05},{"lat":41,"lon":-102.05},{"lat":37,"lon":-102.05}]}"#,
-        source: "add-navigation-and-geometry area scenario: 269,154.55 km², perimeter 2,099.854 km, clockwise",
-    }],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "A Colorado-shaped rectangle",
+            input: r#"{"polygon":[{"lat":37,"lon":-109.05},{"lat":41,"lon":-109.05},{"lat":41,"lon":-102.05},{"lat":37,"lon":-102.05}]}"#,
+            source: "add-navigation-and-geometry area scenario: 269,154.55 km², perimeter 2,099.854 km, clockwise",
+        },
+        Example {
+            id: "orientation",
+            title: "The same clockwise ring by the orientation rule: the rest of the world",
+            input: r#"{"polygon":[{"lat":37,"lon":-109.05},{"lat":41,"lon":-109.05},{"lat":41,"lon":-102.05},{"lat":37,"lon":-102.05}],"interior":"orientation"}"#,
+            source: "add-navigation-and-geometry hemisphere-plus scenario; GeographicLib Planimeter -s gives the Earth's area minus the ring's",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "polygon",
@@ -380,13 +401,30 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
         _ => ring_area(&g, ring),
     };
     let (outline, mut perimeter) = measure(&rings[0]);
+    // The ring divides the Earth in two. By default the smaller part is the
+    // polygon; by the orientation rule (RFC 7946) it is the part on the left
+    // as the ring is walked, so a clockwise ring around a field encloses the
+    // rest of the world. The signed area lies in (-A/2, A/2]: the left part
+    // is that, or the Earth's area A plus it when it is negative.
+    let oriented = ctx.choice("interior")? == Some("orientation");
+    if oriented && edges == "planar" {
+        return Err(ToolError::invalid(
+            "/interior",
+            "The orientation rule needs geodesic or rhumb edges: a flat map has no other side.",
+        ));
+    }
+    let outline_area = if oriented && outline < 0.0 {
+        g.area() + outline
+    } else {
+        outline.abs()
+    };
     let mut holes_area = 0.0;
     for hole in &rings[1..] {
         let (a, p) = measure(hole);
         holes_area += a.abs();
         perimeter += p;
     }
-    let area = outline.abs() - holes_area;
+    let area = outline_area - holes_area;
     if area < 0.0 {
         return Err(ToolError::invalid(
             "/polygon",
@@ -446,10 +484,18 @@ fn run_polygon_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
             }),
         ),
         ("pole", Json::str(pole)),
+        (
+            "interior_rule",
+            Json::str(if oriented {
+                "orientation: the region on the left of the outline as it is walked"
+            } else {
+                "smaller: the smaller of the two regions the outline divides the Earth into"
+            }),
+        ),
         ("holes", Json::Num((rings.len() - 1) as f64)),
         (
             "outline_area",
-            ctx.out("outline_area", q(outline.abs(), "m2", QT::Area)),
+            ctx.out("outline_area", q(outline_area, "m2", QT::Area)),
         ),
     ]))
 }

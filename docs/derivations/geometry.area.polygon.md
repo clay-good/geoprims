@@ -8,7 +8,8 @@ The area a ring of points encloses on the ellipsoid, with each edge taken as the
 ## Equations
 
 - Each edge contributes the area of the quadrilateral between it, the equator, and the two meridians through its ends, from the geodesic's own parameters.
-- The signed total is the enclosed area; its magnitude is reported with the winding beside it.
+- The signed total S lies in (−A/2, A/2], A the ellipsoid's whole area. By default the area is |S|, the smaller of the two regions the ring divides the Earth into, with the winding beside it.
+- By the orientation rule (`interior: orientation`, as RFC 7946 has it), the area is the region on the left of the ring as it is walked: S when S ≥ 0, and A + S otherwise, so a clockwise ring around a field measures the rest of the world.
 - Pole enclosure: the ring's total change in longitude is ±360° when a pole is inside, and the area is completed by adding the remaining spherical excess.
 - Perimeter: the sum of the geodesic distances, each from the inverse geodesic problem.
 
@@ -41,7 +42,7 @@ None beyond the geodesic solver itself, which is exact to the precision of a dou
 
 - `tools/vectors/gen_area_diff.py`: 500 polygons against Planimeter, from fields to continents, both windings, across the antimeridian, and around the poles
 - `core/crates/gp-geometry/tests/area.rs`: that fixture, run on every build
-- `core/vectors/geometry.area.polygon.jsonl`: 29 vectors from the same reference
+- `core/vectors/geometry.area.polygon.jsonl`: 32 vectors from the same reference; v032–v034 check the orientation rule against `Planimeter -s` (and `-R -s` for rhumb edges), which reports the area to the left of the ring
 
 ## Invariants
 

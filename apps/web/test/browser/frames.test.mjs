@@ -49,14 +49,14 @@ test('100,000-vertex scenes pan at p95 within one 60 Hz frame', { timeout: 300_0
     const out = {};
     for (const mode of ['map', 'globe']) {
       const v0 = frame(mode, [...route.filter((_, i) => i % 1000 === 0), ...ring.filter((_, i) => i % 1000 === 0)], 1280, 800);
-      // The same 60 frames three times over, keeping the best pass. What is
+      // The same 60 frames five times over, keeping the best pass. What is
       // being asked is whether the renderer can draw this inside a frame, and
       // a machine that is busy with something else for a moment answers a
       // different question: the same build measured 13.5 ms and 24.6 ms on two
       // runs a minute apart. The best pass is the one where the renderer had
       // the processor to itself, which is the one that measures the code.
       let best = null;
-      for (let pass = 0; pass < 3; pass++) {
+      for (let pass = 0; pass < 5; pass++) {
         const times = [];
         for (let f = 0; f < 60; f++) {
           // A pan: MapCanvas draws these frames with view.moving, as the app does mid-gesture.

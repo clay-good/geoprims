@@ -9,7 +9,10 @@ import { captureCsp, serveBuiltSite } from './site.mjs';
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const tools = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8')).tools;
 
-test('sentinel inputs from every tool stay out of browser requests', { timeout: 180_000 }, async (t) => {
+// A privacy check, not a speed check: the budget grows with the catalog
+// (about half a second a page on a quiet machine), so a new tool never makes
+// it fail for time.
+test('sentinel inputs from every tool stay out of browser requests', { timeout: Math.max(180_000, tools.length * 1_000) }, async (t) => {
   const origin = await serveBuiltSite(t);
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());

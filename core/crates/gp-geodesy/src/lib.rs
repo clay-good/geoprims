@@ -1784,6 +1784,112 @@ fn square_outline(ell: Ellipsoid, zone: u8, north: bool, e0: f64, n0: f64, size:
     Json::Arr(rows)
 }
 
+/// One point of a grid line: the line it belongs to, then where it is.
+const GRID_ROW: &[Field] = &[
+    Field::new(
+        "line",
+        "Line",
+        "Which grid line the point is on",
+        Kind::Number {
+            min: 1.0,
+            max: 64.0,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+    lat_out("lat", "Latitude"),
+    lon_out("lon", "Longitude"),
+];
+
+/// The grid around a square (grid-references "Grid overlays on the canvas"):
+/// the lines of the square's own size, or of 1 km for a smaller square (a
+/// 1 m grid is invisible at any zoom that shows the map), three squares
+/// either side, and, for a square smaller than 100 km, the 100 km square
+/// that holds it. Each line is
+/// straight on the grid and sampled every half square, so it curves as it
+/// should in latitude and longitude. The lines run on past a zone edge, where
+/// the next zone's grid takes over.
+fn grid_lines(ell: Ellipsoid, zone: u8, north: bool, e0: f64, n0: f64, size: f64) -> Json {
+    let size = size.max(1_000.0);
+    let (e0, n0) = ((e0 / size).floor() * size, (n0 / size).floor() * size);
+    let at = |e: f64, n: f64| {
+        let (lat, lon) = if zone == 0 {
+            utmups::ups_inverse(ell.a, ell.f, north, e, n)
+        } else {
+            utmups::utm_inverse(ell.a, ell.f, zone, north, e, n)
+        };
+        (lat, wrap_lon(lon))
+    };
+    let mut lines: Vec<Vec<(f64, f64)>> = Vec::new();
+    let mut straight = |a: (f64, f64), b: (f64, f64), step: f64| {
+        let n = ((b.0 - a.0).abs().max((b.1 - a.1).abs()) / step)
+            .ceil()
+            .max(1.0) as usize;
+        lines.push(
+            (0..=n)
+                .map(|k| {
+                    let t = k as f64 / n as f64;
+                    at(a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t)
+                })
+                .collect(),
+        );
+    };
+    let (lo, hi) = (-3.0, 4.0);
+    for k in (lo as i32)..=(hi as i32) {
+        let k = k as f64;
+        straight(
+            (e0 + k * size, n0 + lo * size),
+            (e0 + k * size, n0 + hi * size),
+            size / 2.0,
+        );
+        straight(
+            (e0 + lo * size, n0 + k * size),
+            (e0 + hi * size, n0 + k * size),
+            size / 2.0,
+        );
+    }
+    if size < 100_000.0 {
+        let (e1, n1) = ((e0 / 1e5).floor() * 1e5, (n0 / 1e5).floor() * 1e5);
+        let c = [
+            (e1, n1),
+            (e1 + 1e5, n1),
+            (e1 + 1e5, n1 + 1e5),
+            (e1, n1 + 1e5),
+            (e1, n1),
+        ];
+        for w in c.windows(2) {
+            straight(w[0], w[1], 5_000.0);
+        }
+    }
+    let mut rows = Vec::new();
+    for (i, line) in lines.iter().enumerate() {
+        for &(lat, lon) in line {
+            rows.push(Json::obj([
+                ("line", Json::Num((i + 1) as f64)),
+                (
+                    "lat",
+                    Json::obj([("value", Json::Num(lat)), ("unit", Json::str("deg"))]),
+                ),
+                (
+                    "lon",
+                    Json::obj([("value", Json::Num(lon)), ("unit", Json::str("deg"))]),
+                ),
+            ]));
+        }
+    }
+    Json::Arr(rows)
+}
+
+const GRID_OUT: Field = Field::new(
+    "grid",
+    "Grid lines",
+    "The grid around the square: its own size (at least 1 km) three squares out, and the 100 km square that holds it",
+    Kind::List {
+        items: GRID_ROW,
+        min: 0,
+        max: 2_000,
+    },
+);
+
 const SQUARE_OUT: Field = Field::new(
     "square",
     "Square outline",
@@ -1796,7 +1902,7 @@ const SQUARE_OUT: Field = Field::new(
 );
 
 pub static MGRS_FORWARD: ToolDef = ToolDef {
-    version: "1.2.0",
+    version: "1.3.0",
     id: "geodesy.grid-ref.mgrs-forward",
     stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to MGRS",
@@ -1842,6 +1948,7 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
         .precision(Precision::Significant(1))
         .optional(),
         SQUARE_OUT.optional(),
+        GRID_OUT.optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
     warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
@@ -1859,7 +1966,7 @@ pub static MGRS_FORWARD: ToolDef = ToolDef {
     primary_example: "primary",
     visualization: &[Layer {
         kind: "polygon",
-        map: &[("rings", "square")],
+        map: &[("rings", "square"), ("grid", "grid")],
     }],
     related: &[
         Related {
@@ -2008,6 +2115,7 @@ fn run_mgrs_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
             (g.northing / size).floor() * size,
         );
         out.push(("square", square_outline(ell, g.zone, g.north, e0, n0, size)));
+        out.push(("grid", grid_lines(ell, g.zone, g.north, e0, n0, size)));
     }
     Ok(Json::obj(out))
 }

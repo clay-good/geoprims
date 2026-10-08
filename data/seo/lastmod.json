@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "2155d537c19ee6d3",
+    "hash": "f557d32b6e82dcdb",
     "lastmod": "2026-10-08"
   },
   "/disclaimer/": {
@@ -544,8 +544,8 @@
     "lastmod": "2026-09-29"
   },
   "/geodesy/grid-ref/mgrs-forward/": {
-    "hash": "b6b79ac3a25b30af",
-    "lastmod": "2026-09-29"
+    "hash": "58f25a99b97eb0c9",
+    "lastmod": "2026-10-08"
   },
   "/geodesy/grid-ref/mgrs-inverse/": {
     "hash": "742a21e658185faa",
@@ -1072,8 +1072,8 @@
     "lastmod": "2026-09-23"
   },
   "/learn/mgrs-coordinates/": {
-    "hash": "7d2cc084fb27c1e8",
-    "lastmod": "2026-09-25"
+    "hash": "989dacc5e7edcba2",
+    "lastmod": "2026-10-08"
   },
   "/learn/nad83-vs-wgs84/": {
     "hash": "ae5ecf78e9cae3e6",
@@ -1144,7 +1144,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "398f217721cf4223",
+    "hash": "7b80f92613f6ad3a",
     "lastmod": "2026-10-08"
   },
   "/navigation/": {
@@ -1300,7 +1300,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "d5a1a7d980810ca5",
+    "hash": "2761307dceb90c0f",
     "lastmod": "2026-10-08"
   },
   "/raster/": {
@@ -1916,7 +1916,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4ddf100fc48376d9",
+    "hash": "bcd03d6dfb01e6c1",
     "lastmod": "2026-10-08"
   },
   "/workflows/": {
@@ -1932,8 +1932,8 @@
     "lastmod": "2026-09-26"
   },
   "/workflows/convert-coordinate/": {
-    "hash": "9f058f51b81e8705",
-    "lastmod": "2026-09-25"
+    "hash": "7c1a6ac4b36af687",
+    "lastmod": "2026-10-08"
   },
   "/workflows/gnss-to-state-plane/": {
     "hash": "14354379c39caa1e",

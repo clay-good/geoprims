@@ -218,3 +218,22 @@ test('the mapping window lays the sun path over the site on the map', async () =
   // The highest sample is the core's highest sun.
   assert.ok(Math.abs(Math.max(...sky.samples.map((q) => q[1])) - result.result.max_elevation.value) < 1, 'the path reaches the highest sun');
 });
+
+test('an MGRS square at 1 km is drawn with the 1 km grid and its 100 km square around it', async () => {
+  // grid-references "MGRS overlay".
+  const t = catalog.tools.find((x) => x.id === 'geodesy.grid-ref.mgrs-forward');
+  const args = { lat: 40.446111, lon: -79.982222, precision: '1km' };
+  const r = await invoke(t.id, args);
+  assert.ok(r.ok, JSON.stringify(r.error));
+  const layers = await buildLayers(t, args, r, async () => null, cells);
+  const grid = layers.filter((l) => l.grid);
+  assert.equal(grid.length, 20, '8 + 8 kilometer lines and the 4 sides of the 100 km square');
+  assert.ok(layers.some((l) => l.kind === 'polygon' && l.role === 'result'), 'the square itself is highlighted');
+  // The first line runs north on a whole kilometer of easting in the square's zone.
+  const inv = await invoke('geodesy.utm.forward', { lat: grid[0].points[3][1], lon: grid[0].points[3][0], zone: Number(r.result.mgrs.slice(0, 2)) });
+  assert.ok(Math.abs(inv.result.easting.value / 1000 - Math.round(inv.result.easting.value / 1000)) < 1e-6, `easting ${inv.result.easting.value} is on a kilometer line`);
+  // The view frames the square, not the grid around it.
+  const { extent } = await import('../src/lib/map/layers.js');
+  const lats = extent(layers).map((p) => p[1]);
+  assert.ok(Math.max(...lats) - Math.min(...lats) < 0.02, 'framed on the 1 km square');
+});

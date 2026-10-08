@@ -5,6 +5,15 @@
       "date": "2026-10-07",
       "kind": "added",
       "tools": [
+        "geodesy.grid-ref.mgrs-forward"
+      ],
+      "vectors": [],
+      "summary": "The MGRS map now draws the grid around the referenced square: the square's size (at least 1 km) three squares out, and the 100 km square that holds it. The lines follow the zone's grid, so they lean by the grid convergence. The reference and the square are unchanged."
+    },
+    {
+      "date": "2026-10-07",
+      "kind": "added",
+      "tools": [
         "aviation.altimetry.pressure-per-height"
       ],
       "vectors": [],

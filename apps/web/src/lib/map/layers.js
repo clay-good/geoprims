@@ -300,6 +300,19 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
   // lat/lon rows grouped by part and ring, drawn over the input it came from.
   const drawn = (tool.visualization ?? []).find((v) => v.kind === 'polygon' && mapOf(v.map).rings);
   const outRings = drawn ? outputRings(result, mapOf(drawn.map).rings) : [];
+  // The grid around a grid square (grid-references "Grid overlays on the
+  // canvas"): rows of {line, lat, lon}, one line each, drawn under the square.
+  const gridRows = drawn && mapOf(drawn.map).grid ? result?.result?.[mapOf(drawn.map).grid] : null;
+  if (Array.isArray(gridRows)) {
+    const lines = new Map();
+    for (const r of gridRows) {
+      const [lat, lon] = [numberOf(r.lat?.value ?? r.lat), numberOf(r.lon?.value ?? r.lon)];
+      if (lat === null || lon === null) continue;
+      if (!lines.has(r.line)) lines.set(r.line, []);
+      lines.get(r.line).push([lon, lat]);
+    }
+    for (const pts of lines.values()) if (pts.length >= 2) layers.push({ kind: 'line', role: 'input', points: pts, grid: true });
+  }
   if (outRings.length) {
     // Under a flight path the input list is the path, already drawn, not an area.
     const input = pathDrawn ? [] : rings(tool, args).filter((r) => r.length >= 3);
@@ -327,5 +340,7 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
 
 /** Every [lon, lat] a set of layers touches, for framing the view. */
 export function extent(layers) {
-  return layers.flatMap((l) => (l.kind === 'polygon' ? l.rings.flat() : l.points));
+  // Grid lines are context around the answer: the view frames the square, not
+  // the 100 km square around it.
+  return layers.filter((l) => !l.grid).flatMap((l) => (l.kind === 'polygon' ? l.rings.flat() : l.points));
 }

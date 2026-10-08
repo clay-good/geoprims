@@ -682,3 +682,27 @@ test('the exaggeration factor is the largest round number that fits', () => {
   assert.equal(exaggeration(80), 1);
   assert.equal(exaggeration(0), 1);
 });
+
+test('a vector sum with an up component turns and tilts, and the plan view is the default', async () => {
+  // vector-3d "Vector diagrams": 3D results in a rotatable ENU view.
+  const args = { vectors: [{ x: 3, y: 4, z: 2 }, { x: -1, y: 2, z: 1 }] };
+  const r = JSON.parse(await host.invoke('navigation.vector.operations', JSON.stringify(args)));
+  const plan = diagram('navigation.vector.operations', args, r);
+  assert.equal(plan.rotatable, true);
+  assert.deepEqual(diagram('navigation.vector.operations', args, r, '', { turn: 0, tilt: 90 }).markup, plan.markup, 'plan view by default');
+  const turned = diagram('navigation.vector.operations', args, r, '', { turn: 90, tilt: 30 });
+  assert.notEqual(turned.markup, plan.markup);
+  assert.match(turned.markup, />Up</, 'the up axis is drawn and labeled once the view leaves plan');
+  assert.match(turned.desc, /east, north, and up/);
+  // Seen from straight down after a quarter turn, north points left and east
+  // up the page: the resultant (2, 6 east and north) runs left and up.
+  const [x1, y1, x2, y2] = /<line class="dg-accent" x1="([\d.-]+)" y1="([\d.-]+)" x2="([\d.-]+)" y2="([\d.-]+)"/
+    .exec(diagram('navigation.vector.operations', args, r, '', { turn: 90, tilt: 90 }).markup).slice(1).map(Number);
+  assert.ok(x2 < x1 && y2 < y1 && x1 - x2 > 2 * (y1 - y2), `${x1},${y1} → ${x2},${y2}`);
+  // A flat sum is not rotatable and ignores a view.
+  const flatArgs = { vectors: [{ x: 3, y: 4 }, { x: -1, y: 2 }] };
+  const fr = JSON.parse(await host.invoke('navigation.vector.operations', JSON.stringify(flatArgs)));
+  const f = diagram('navigation.vector.operations', flatArgs, fr, '', { turn: 45, tilt: 20 });
+  assert.equal(f.rotatable, false);
+  assert.equal(f.markup, diagram('navigation.vector.operations', flatArgs, fr).markup);
+});

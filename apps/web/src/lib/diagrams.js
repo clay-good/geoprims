@@ -678,27 +678,51 @@ function altimetry(args, result) {
 }
 
 /** Vector sum: the vectors head to tail in the east-north plane, and the resultant from the origin. */
-function vectorSum(args, result) {
+/**
+ * Vectors head to tail (vector-3d "Vector diagrams"). A result with an up
+ * component can be turned and tilted (`view`: turn about up, and the tilt
+ * the scene is seen from, 90° straight down); the default is the plan view.
+ */
+function vectorSum(args, result, view = {}) {
   const num = (v) => (typeof v === 'number' ? v : Number.parseFloat(String(v ?? '')));
   const rows = (Array.isArray(args.vectors) ? args.vectors : []).map((r) => [num(r.x), num(r.y), num(r.z) || 0]);
   if (rows.length < 1 || !rows.every((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]))) return null;
-  const sum = [val(result, 'x'), val(result, 'y')];
-  if (!sum.every(Number.isFinite)) return null;
-  // Head to tail: each vector starts where the last one ended.
-  const chain = [[0, 0]];
-  for (const [x, y] of rows) chain.push([chain.at(-1)[0] + x, chain.at(-1)[1] + y]);
-  const S = fit([...chain, sum, [0, 0]]);
-  const pts = chain.map(S);
+  const sum = [val(result, 'x'), val(result, 'y'), val(result, 'z') || 0];
+  if (!sum.slice(0, 2).every(Number.isFinite)) return null;
   const flat = rows.every((p) => p[2] === 0);
+  const turn = flat ? 0 : (view.turn ?? 0);
+  const tilt = flat ? 90 : (view.tilt ?? 90);
+  const plan = turn === 0 && tilt === 90;
+  // East, north, up onto the drawing: turn about up, then look down at the tilt.
+  const [ct, st, sv, cv] = [Math.cos(turn * R), Math.sin(turn * R), Math.sin(tilt * R), Math.cos(tilt * R)];
+  const P = ([e, n, u]) => [e * ct - n * st, (e * st + n * ct) * sv + u * cv];
+  // Head to tail: each vector starts where the last one ended.
+  const chain = [[0, 0, 0]];
+  for (const [x, y, z] of rows) chain.push([chain.at(-1)[0] + x, chain.at(-1)[1] + y, chain.at(-1)[2] + z]);
+  const ext = Math.max(...chain.flat().map(Math.abs), 1e-9);
+  const axes = flat ? [[1, 0, 0], [0, 1, 0]] : [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  const S = fit([...chain.map(P), P(sum), [0, 0], ...(plan ? [] : axes.map((a) => P(a.map((c) => c * ext))))]);
+  const pts = chain.map((q) => S(P(q)));
+  const o = S([0, 0]);
   const body = [
-    line('dg-grid', S([Math.min(...chain.map((p) => p[0])), 0]), S([Math.max(...chain.map((p) => p[0])), 0])),
-    line('dg-grid', S([0, Math.min(...chain.map((p) => p[1]))]), S([0, Math.max(...chain.map((p) => p[1]))])),
+    ...(plan
+      ? [
+          line('dg-grid', S([Math.min(...chain.map((p) => p[0])), 0]), S([Math.max(...chain.map((p) => p[0])), 0])),
+          line('dg-grid', S([0, Math.min(...chain.map((p) => p[1]))]), S([0, Math.max(...chain.map((p) => p[1]))])),
+        ]
+      : axes.flatMap((a, k) => {
+          const end = S(P(a.map((c) => c * ext)));
+          // The label sits just past the axis's end, along it, clear of the arrows.
+          const d = Math.hypot(end[0] - o[0], end[1] - o[1]) || 1;
+          const [lx, ly] = [end[0] + ((end[0] - o[0]) / d) * 12, end[1] + ((end[1] - o[1]) / d) * 12 + 4];
+          return [line('dg-grid', o, end), text('dg-muted-text', lx, ly, ['E', 'N', 'Up'][k], 'middle')];
+        })),
     ...rows.map((v, i) => arrow(...pts[i], ...pts[i + 1], 'dg-muted', `(${v[0]}, ${v[1]}${flat ? '' : `, ${v[2]}`})`, 0.5, -1)),
-    arrow(...S([0, 0]), ...S(sum), 'dg-accent', `Sum ${disp(result, 'magnitude')} at ${disp(result, 'direction')}`, 0.6, 1),
-    text('dg-muted-text', 12, 22, flat ? 'East →, north ↑' : 'East →, north ↑, up in the labels'),
+    arrow(...o, ...S(P(sum)), 'dg-accent', `Sum ${disp(result, 'magnitude')} at ${disp(result, 'direction')}`, 0.6, 1),
+    text('dg-muted-text', 12, 22, flat ? 'East →, north ↑' : plan ? 'East →, north ↑, up in the labels; turn or tilt to see up' : `Turned ${Math.round(turn)}°, seen from ${Math.round(tilt)}° above`),
   ].join('');
-  const title = `${rows.length} vectors head to tail in the east-north plane: the sum is ${disp(result, 'magnitude')} at ${disp(result, 'direction')}, components ${disp(result, 'x')} east and ${disp(result, 'y')} north.`;
-  return { markup: svg(body, title), desc: title };
+  const title = `${rows.length} vectors head to tail ${flat || plan ? 'in the east-north plane' : 'in east, north, and up'}: the sum is ${disp(result, 'magnitude')} at ${disp(result, 'direction')}, components ${disp(result, 'x')} east and ${disp(result, 'y')} north${flat ? '' : ` and ${disp(result, 'z')} up`}.`;
+  return { markup: svg(body, title), desc: title, rotatable: !flat };
 }
 
 /** Ground profile: elevation against distance, with the segments over the grade limit called out. */
@@ -1515,12 +1539,12 @@ const DIAGRAMS = {
  * `at` names this drawing, so a second copy of the same diagram on one page
  * carries its own marker ids.
  */
-export function diagram(id, args, result, at = '') {
+export function diagram(id, args, result, at = '', view = {}) {
   const f = DIAGRAMS[id];
   if (!f || !result?.ok) return null;
   scope = at ? `-${at}` : '';
   try {
-    return f(args, result);
+    return f(args, result, view);
   } catch {
     return null;
   } finally {

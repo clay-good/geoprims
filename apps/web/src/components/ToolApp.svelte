@@ -213,7 +213,9 @@
   // The canvas draws geographic tools: lines, points, polygons, or a lat/lon input.
   const showMap = mapsTool(tool);
   let drawnArgs = $state(example);
-  const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result) : null);
+  // A 3D drawing's view: turned about up, and seen from a tilt (90° is straight down).
+  let dgView = $state({ turn: 0, tilt: 90 });
+  const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result, '', dgView) : null);
   // A tool whose meaning is a picture shows a compact one directly under the
   // answer, as well as the full canvas in its place below (contracts/page-chrome,
   // "Fixed tool-page anatomy"). The full one carries the description; this copy
@@ -922,6 +924,10 @@
   <figure class="diagram card">
     {@html dg.markup}
     <div class="diagram-actions">
+      {#if dg.rotatable}
+        <label class="diagram-view">Turn <input type="range" min="0" max="359" step="1" bind:value={dgView.turn} aria-valuetext={`${dgView.turn}°`} /></label>
+        <label class="diagram-view">Tilt <input type="range" min="10" max="90" step="1" bind:value={dgView.tilt} aria-valuetext={`seen from ${dgView.tilt}° above`} /></label>
+      {/if}
       <button type="button" class="quiet" onclick={exportSvg}>Download SVG</button>
     </div>
     {#if tl && sceneEnd > 0}

@@ -224,6 +224,15 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
     const q = [at(result, map.lon), at(result, map.lat)];
     if (q.every((x) => typeof x === 'number')) layers.push({ kind: 'point', role: 'result', points: [q], label: '' });
   }
+  // The sun's path through the day (ux sun path "map overlay"): a sky plot
+  // laid over the site, azimuth around it and elevation inward from a horizon
+  // ring, with the part above the mapping threshold marked.
+  const sunRows = result?.result?.path;
+  if (p.every((x) => x !== null) && Array.isArray(sunRows) && sunRows.length > 1 && sunRows.every((r) => r?.azimuth && r?.elevation)) {
+    const threshold = numberOf(args.threshold) ?? 30;
+    const samples = sunRows.map((r) => [r.azimuth.value ?? r.azimuth, r.elevation.value ?? r.elevation]);
+    layers.push({ kind: 'sky', role: 'result', points: [p], samples, threshold });
+  }
   // A cross-track offset (route-geometry "Route visualization"): the track the
   // point is measured from, and the line from the point to its foot on the
   // track. The shortest line to a track meets it square, so that line is the

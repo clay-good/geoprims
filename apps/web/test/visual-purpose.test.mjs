@@ -200,3 +200,21 @@ test('a cross-track answer draws the track and the offset from the point to its 
   await buildLayers(t, ex, await invoke(t.id, ex), (i) => ((asked ??= i.path), invoke('navigation.geodesic.waypoints', i)), cells);
   assert.equal(asked, 'great-circle');
 });
+
+test('the mapping window lays the sun path over the site on the map', async () => {
+  // practitioner-essentials 2.6, the sun path's map overlay.
+  const t = catalog.tools.find((x) => x.id === 'time.sun.mapping-window');
+  const ex = primary(t);
+  const result = await invoke(t.id, ex);
+  const sky = (await buildLayers(t, ex, result, (i) => invoke('navigation.geodesic.waypoints', i), cells)).find((l) => l.kind === 'sky');
+  assert.ok(sky, 'a sky layer');
+  assert.deepEqual(sky.points, [[ex.lon, ex.lat]], 'centered on the site');
+  assert.equal(sky.threshold, 30);
+  assert.equal(sky.samples.length, result.result.path.length);
+  sky.samples.forEach(([az, el], i) => {
+    assert.equal(az, result.result.path[i].azimuth.value);
+    assert.equal(el, result.result.path[i].elevation.value);
+  });
+  // The highest sample is the core's highest sun.
+  assert.ok(Math.abs(Math.max(...sky.samples.map((q) => q[1])) - result.result.max_elevation.value) < 1, 'the path reaches the highest sun');
+});

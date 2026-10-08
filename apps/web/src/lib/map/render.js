@@ -525,6 +525,44 @@ export function draw(g, view, base, layers, c) {
       g.stroke();
       g.setLineDash([]);
       if (layer.arrows || layer.stops) marks(g, view, layer, stroke, c.surface);
+    } else if (layer.kind === 'sky') {
+      // A sky plot around the site: the horizon ring, the threshold ring, and
+      // the sun's path, azimuth measured from north as the projection shows
+      // north at the site, elevation inward to the site itself overhead.
+      const [lon, lat] = layer.points[0];
+      const o = forward(view, lon, lat);
+      const up = forward(view, lon, Math.min(lat + 0.01, 89.99));
+      if (o && up) {
+        const len = Math.hypot(up[0] - o[0], up[1] - o[1]) || 1;
+        const n = [(up[0] - o[0]) / len, (up[1] - o[1]) / len];
+        const e = [-n[1], n[0]];
+        const R = 72;
+        const at = (az, el) => {
+          const r = R * (1 - Math.max(el, 0) / 90);
+          const [s1, c1] = [Math.sin(az * RAD), Math.cos(az * RAD)];
+          return [o[0] + r * (s1 * e[0] + c1 * n[0]), o[1] + r * (s1 * e[1] + c1 * n[1])];
+        };
+        g.setLineDash([3, 4]);
+        g.strokeStyle = c.muted;
+        g.lineWidth = 1;
+        for (const el of [0, layer.threshold]) {
+          g.beginPath();
+          g.arc(o[0], o[1], R * (1 - el / 90), 0, 2 * Math.PI);
+          g.stroke();
+        }
+        g.setLineDash([]);
+        const above = layer.samples.filter((q) => q[1] >= 0);
+        for (let k = 1; k < above.length; k++) {
+          const [a0, a1] = [above[k - 1], above[k]];
+          const marked = Math.min(a0[1], a1[1]) >= layer.threshold;
+          g.beginPath();
+          g.moveTo(...at(a0[0], a0[1]));
+          g.lineTo(...at(a1[0], a1[1]));
+          g.strokeStyle = marked ? c.accent : c.muted;
+          g.lineWidth = marked ? 3 : 1.5;
+          g.stroke();
+        }
+      }
     } else if (layer.kind === 'point') {
       for (const [lon, lat] of layer.points) {
         // forward() places a point at its copy nearest the view center.

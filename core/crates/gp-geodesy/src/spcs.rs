@@ -852,6 +852,20 @@ fn run_arc_to_chord(ctx: &mut Ctx) -> Result<Json, ToolError> {
         })?;
         let z = zone_by_key(&key)?;
         let (a, b) = (z.forward(la1, lo1), z.forward(la2, lo2));
+        // A point far enough from the zone (the opposite pole of a Lambert
+        // zone) has no place on its grid: refuse it rather than return infinity.
+        for (p, at) in [(&a, "/lat1"), (&b, "/lat2")] {
+            if !(p.e.is_finite() && p.n.is_finite() && p.convergence.is_finite()) {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    format!(
+                        "This point is too far outside {} to place on its grid.",
+                        z.short_name()
+                    ),
+                )
+                .at(at));
+            }
+        }
         (
             (a.e, a.n, a.convergence),
             (b.e, b.n, b.convergence),

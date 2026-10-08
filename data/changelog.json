@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-07",
+      "kind": "fixed",
+      "tools": [
+        "geodesy.projection.arc-to-chord"
+      ],
+      "vectors": [],
+      "summary": "A point too far from a state plane zone to have a place on its grid, such as the opposite pole of a Lambert zone, is now refused with OUT_OF_DOMAIN naming the point, instead of failing with an internal error."
+    },
+    {
+      "date": "2026-10-07",
       "kind": "added",
       "tools": [
         "geodesy.utm.forward",

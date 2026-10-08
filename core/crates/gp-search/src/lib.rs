@@ -148,6 +148,9 @@ fn strs(v: &Value) -> Vec<String> {
 struct Vocab {
     words: Vec<String>,
     ids: HashMap<String, u32>,
+    /// Numbers that name a tool, with the word before them: "plane 2022",
+    /// "part 107", from an id, title, alias, or keyword, not a summary.
+    names: std::collections::HashSet<(String, String)>,
 }
 
 impl Vocab {
@@ -177,6 +180,18 @@ impl Entry {
         }
         let aliases = strs(&m["aliases"]);
         let keywords = strs(&m["keywords"]);
+        for name in [id.clone(), s("title")]
+            .iter()
+            .chain(&aliases)
+            .chain(&keywords)
+        {
+            let ws = tokens(name);
+            for pair in ws.windows(2) {
+                if pair[1].len() >= 2 && pair[1].chars().all(|c| c.is_ascii_digit()) {
+                    vocab.names.insert((pair[0].clone(), pair[1].clone()));
+                }
+            }
+        }
         let mut t = |words: Vec<String>| vocab.intern(words);
         let fields = vec![
             (W_ID, t(tokens(&id))),
@@ -405,16 +420,7 @@ pub fn search(json: &str) -> String {
     // Quantities fill inputs; the words that remain rank the tools.
     let parsed = prefill::parse(query);
     let words = parsed.words.join(" ");
-    let ranked = if parsed.values.is_empty() || tokens(&words).is_empty() {
-        query
-    } else {
-        words.as_str()
-    };
-    let q: Vec<String> = tokens(ranked)
-        .into_iter()
-        .filter(|t| !STOPWORDS.contains(&t.as_str()))
-        .collect();
-    let q = if q.is_empty() { tokens(ranked) } else { q };
+    let use_words = !parsed.values.is_empty() && !tokens(&words).is_empty();
     let raw_id = query.trim().to_lowercase();
     // A pasted report or code decides its own tool: the numbers inside a METAR
     // are not a question about ellipsoid radii.
@@ -422,6 +428,35 @@ pub fn search(json: &str) -> String {
     INDEX.with(|index| {
         let index = index.borrow();
         let (vocab, entries) = &*index;
+        // The words that rank the tools: the query less the quantities that
+        // fill inputs. A number that follows the word it follows in a tool's
+        // name stays, in its place, since it is part of the name rather than
+        // a value: the 2022 of "state plane 2022 to lat long", the 107 of
+        // "Part 107 altitude". "with 90" names nothing and goes to prefill.
+        let ranked: Vec<String> = if use_words {
+            let mut left: Vec<String> = tokens(&words);
+            let all = tokens(query);
+            all.iter()
+                .enumerate()
+                .filter(|(i, t)| {
+                    if let Some(k) = left.iter().position(|w| w == *t) {
+                        left.remove(k);
+                        true
+                    } else {
+                        *i > 0 && vocab.names.contains(&(all[i - 1].clone(), (*t).clone()))
+                    }
+                })
+                .map(|(_, t)| t.clone())
+                .collect()
+        } else {
+            tokens(query)
+        };
+        let q: Vec<String> = ranked
+            .iter()
+            .filter(|t| !STOPWORDS.contains(&t.as_str()))
+            .cloned()
+            .collect();
+        let q = if q.is_empty() { ranked } else { q };
         let table: Vec<Vec<u8>> = q
             .iter()
             .map(|qt| {
@@ -716,6 +751,29 @@ mod tests {
         assert_eq!(
             top("Point in polygon")[0],
             "geometry.predicate.point-in-polygon"
+        );
+    }
+
+    #[test]
+    fn a_number_that_names_the_tool_still_ranks_it() {
+        // "2022" reads as a value to fill, but it is a word of one tool's
+        // alias: without it the query is the 1983 tool's alias word for word.
+        let manifests = serde_json::json!([
+            {"id":"geodesy.spcs.spcs83-inverse","title":"State plane (SPCS 83) to latitude and longitude","summary":"s","domain":"geodesy","group":"spcs","aliases":["state plane to lat long"],"keywords":[],"stability":"stable"},
+            {"id":"geodesy.spcs.spcs2022-inverse","title":"State plane (SPCS2022) to latitude and longitude","summary":"s","domain":"geodesy","group":"spcs","aliases":["state plane 2022 to lat long"],"keywords":[],"stability":"stable"}
+        ]);
+        load(&manifests.to_string());
+        assert_eq!(
+            top("state plane 2022 to lat long")[0],
+            "geodesy.spcs.spcs2022-inverse"
+        );
+        assert_eq!(
+            top("state plane 2022 to lat long with 001001 1716431.051 460849.831")[0],
+            "geodesy.spcs.spcs2022-inverse"
+        );
+        assert_eq!(
+            top("state plane to lat long")[0],
+            "geodesy.spcs.spcs83-inverse"
         );
     }
 

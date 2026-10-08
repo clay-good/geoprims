@@ -5,6 +5,15 @@
       "date": "2026-10-07",
       "kind": "changed",
       "tools": [
+        "drone.photogrammetry.oblique-gsd"
+      ],
+      "vectors": [],
+      "summary": "The oblique GSD tool takes an optional location and camera heading, and then gives each footprint corner a latitude and longitude, so the page draws the trapezoid the image covers on the map. Results without a location are unchanged."
+    },
+    {
+      "date": "2026-10-07",
+      "kind": "changed",
+      "tools": [
         "drone.mission.survey-grid"
       ],
       "vectors": [],

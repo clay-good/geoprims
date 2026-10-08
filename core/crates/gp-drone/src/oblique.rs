@@ -3,12 +3,13 @@
 //! center and at its near and far edges, the trapezoid it covers on flat
 //! ground, and a flag when the far edge reaches the horizon.
 
+use geographiclib_rs::{DirectGeodesic, Geodesic};
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::Quantity as QT;
-use gp_geo::point::plain_angle;
-use libm::{cos, hypot, sin};
+use gp_geo::point::{self, plain_angle};
+use libm::{atan2, cos, hypot, sin};
 
 use crate::{HEIGHT, mm_field, unit};
 
@@ -48,10 +49,33 @@ const CORNER: &[Field] = &[
         },
     )
     .precision(Precision::Decimals(2)),
+    Field::new(
+        "lat",
+        "Latitude",
+        "Where the corner falls, when the camera's location is given",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7))
+    .optional(),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Where the corner falls, when the camera's location is given",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7))
+    .optional(),
 ];
 
 pub static OBLIQUE_GSD: ToolDef = ToolDef {
     id: "drone.photogrammetry.oblique-gsd",
+    version: "1.1.0",
     title: "Oblique GSD and footprint",
     summary: "For a camera tilted off straight down, the ground each pixel covers at the image center and its near and far edges, the trapezoid the image covers, and a warning when the view reaches the horizon.",
     aliases: &[
@@ -117,6 +141,36 @@ pub static OBLIQUE_GSD: ToolDef = ToolDef {
             "Pixels on the short side, like 3648, for square pixels",
             Kind::Number { min: 1.0, max: 1e6 },
         ),
+        Field::new(
+            "lat",
+            "Latitude",
+            "Of the point below the camera, like 40.0, to place the footprint on the map",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "Of the point below the camera, like -105.0",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("[-180,180)"),
+        Field::new(
+            "heading",
+            "Camera heading",
+            "The direction the camera looks, degrees true, like 90 (0, north, if left out)",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("[0,360)"),
     ],
     outputs: &[
         Field::new(
@@ -215,17 +269,31 @@ pub static OBLIQUE_GSD: ToolDef = ToolDef {
     when_to_use: "Use this when the camera will be tilted forward instead of pointing straight down, as for oblique mapping or inspection shots. Give the height, the tilt, and the camera, and it gives the ground per pixel at the image center, across and along the view, and at the near and far edges, next to the straight-down value. It also gives the four corners of the area the image covers on the ground.",
     limitations: "It models an ideal pinhole camera over flat ground, tilted forward with no roll. The far edge of a tilted image covers more ground per pixel than the near edge, and once the top of the frame reaches the horizon the far edge and footprint have no finite size, so it warns instead. Lens distortion, hills, and buildings change the real numbers. Earth's curvature and haze at long range are not included.",
     references: &[WOLF],
-    examples: &[Example {
-        id: "primary",
-        title: "Tilted 45° at 100 m with a 1-inch, 8.8 mm camera",
-        input: r#"{"height":"100 m","pitch":"45 deg","sensor_width":"13.2 mm","focal_length":"8.8 mm","image_width":5472,"image_height":3648}"#,
-        source: "add-drone-suite 45° oblique scenario",
-    }],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "Tilted 45° at 100 m with a 1-inch, 8.8 mm camera",
+            input: r#"{"height":"100 m","pitch":"45 deg","sensor_width":"13.2 mm","focal_length":"8.8 mm","image_width":5472,"image_height":3648}"#,
+            source: "add-drone-suite 45° oblique scenario",
+        },
+        Example {
+            id: "on-the-map",
+            title: "The same shot from a site, looking east",
+            input: r#"{"height":"100 m","pitch":"45 deg","sensor_width":"13.2 mm","focal_length":"8.8 mm","image_width":5472,"image_height":3648,"lat":40.0,"lon":-105.0,"heading":"90 deg"}"#,
+            source: "add-drone-suite 45° oblique scenario, with each corner placed from the site by GeographicLib GeodSolve's direct problem",
+        },
+    ],
     primary_example: "primary",
-    visualization: &[Layer {
-        kind: "vector-diagram",
-        map: &[("value", "gsd_center")],
-    }],
+    visualization: &[
+        Layer {
+            kind: "vector-diagram",
+            map: &[("value", "gsd_center")],
+        },
+        Layer {
+            kind: "polygon",
+            map: &[("rings", "footprint")],
+        },
+    ],
     related: &[
         Related {
             id: "drone.photogrammetry.gsd",
@@ -316,6 +384,15 @@ fn run_oblique(ctx: &mut Ctx) -> Result<Json, ToolError> {
         return Err(beyond());
     };
     let far = ground(0.0, half_h);
+    // A site places the footprint on the earth: each corner is reached from
+    // the point below the camera along the heading turned by its bearing.
+    let site = if ctx.raw("lat").is_some() || ctx.raw("lon").is_some() {
+        Some(point::read(ctx, "lat", "lon")?)
+    } else {
+        None
+    };
+    let heading = plain_angle(ctx, "heading")?.unwrap_or(0.0);
+    let geod = Geodesic::wgs84();
     let cm = unit(QT::Length, "cm");
     let q = |v: f64| Q { value: v, unit: m };
     let corners = [
@@ -351,11 +428,33 @@ fn run_oblique(ctx: &mut Ctx) -> Result<Json, ToolError> {
         pts.iter()
             .map(|(n, g)| {
                 let (x, y) = g.expect("all corners on the ground");
-                Json::obj(vec![
+                let mut row = vec![
                     ("corner", Json::Str((*n).into())),
                     ("ahead", ctx.emit("ahead", q(x), m)),
                     ("right", ctx.emit("right", q(y), m)),
-                ])
+                ];
+                if let Some((la, lo)) = site {
+                    let az = heading + atan2(y, x).to_degrees();
+                    let (cla, clo): (f64, f64) = geod.direct(la, lo, az, hypot(x, y));
+                    let deg = unit(QT::Angle, "deg");
+                    row.push((
+                        "lat",
+                        Q {
+                            value: cla,
+                            unit: deg,
+                        }
+                        .to_json(),
+                    ));
+                    row.push((
+                        "lon",
+                        Q {
+                            value: gp_base::angle::wrap_lon(clo),
+                            unit: deg,
+                        }
+                        .to_json(),
+                    ));
+                }
+                Json::obj(row)
             })
             .collect()
     } else {

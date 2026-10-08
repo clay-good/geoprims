@@ -5,6 +5,15 @@
       "date": "2026-10-07",
       "kind": "added",
       "tools": [
+        "aviation.altimetry.pressure-per-height"
+      ],
+      "vectors": [],
+      "summary": "New: how much height one hectopascal and one inch of mercury span at a pressure altitude, from the standard atmosphere, with the 27 ft per hPa rule of thumb beside it. At sea level 1 hPa is 27.31 ft; at 18,000 ft it is 47.92 ft. Search also keeps a number that is part of a tool's name, so \"state plane 2022 to lat long\" finds the 2022 tool."
+    },
+    {
+      "date": "2026-10-07",
+      "kind": "added",
+      "tools": [
         "geometry.area.polygon"
       ],
       "vectors": [],

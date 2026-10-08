@@ -44,6 +44,17 @@ Tools SHALL compute ISA temperature at a pressure altitude (15 − 1.98 °C per 
 - **WHEN** ISA temperature is requested at FL410
 - **THEN** the result is -56.5 °C
 
+### Requirement: Height per unit of pressure
+A tool SHALL give the height that one hectopascal and one inch of mercury span at a pressure altitude, from the standard atmosphere's pressure-height relation (dh/dp = R·T/(g₀·p)), using the outside air temperature when given and the ISA temperature otherwise, and SHALL show the 27 ft per hPa and 1,000 ft per inHg rules of thumb beside the answer.
+
+#### Scenario: Sea level, standard day
+- **WHEN** the pressure altitude is 0 ft with no temperature given
+- **THEN** 1 hPa spans 27.31 ft (8.324 m) and 1 inHg spans 924.8 ft
+
+#### Scenario: Higher and colder
+- **WHEN** the pressure altitude is 18,000 ft
+- **THEN** 1 hPa spans more height than at sea level (about 48 ft), because the air is thinner
+
 ### Requirement: Q-code conversions
 Tools SHALL convert between QNH, QFE, and QNE/standard pressure given aerodrome elevation, and SHALL compute an altimeter setting from station pressure and elevation.
 

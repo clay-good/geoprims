@@ -1364,6 +1364,212 @@ fn run_isa_temperature(ctx: &mut Ctx) -> Result<Json, ToolError> {
     Ok(obj(out))
 }
 
+pub static PRESSURE_PER_HEIGHT: ToolDef = ToolDef {
+    id: "aviation.altimetry.pressure-per-height",
+    title: "Height per hectopascal and per inch of mercury",
+    summary: "How much height one hectopascal and one inch of mercury of pressure span at a pressure altitude, from the standard atmosphere, with the 27 ft per hPa and 1,000 ft per inHg rules of thumb beside it.",
+    aliases: &[
+        "feet per hPa",
+        "feet per millibar",
+        "feet per inch of mercury",
+        "pressure lapse rate",
+    ],
+    keywords: &[
+        "hPa",
+        "inHg",
+        "altimeter setting",
+        "pressure gradient",
+        "barometric",
+        "QNH error",
+    ],
+    inputs: &[
+        Field::new(
+            "pressure_altitude",
+            "Pressure altitude",
+            "Like 18000 ft, or 0 ft for sea level",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "temperature",
+            "Outside air temperature",
+            "Optional, like -20 degC; ISA if left out",
+            Kind::Quantity {
+                q: QT::Temperature,
+                unit: "degC",
+            },
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "height_per_hpa",
+            "Height for 1 hPa",
+            "How far you climb for the pressure to fall 1 hPa",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "height_per_inhg",
+            "Height for 1 inHg",
+            "How far you climb for the pressure to fall 1 inHg",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "pressure",
+            "Pressure here",
+            "The ISA pressure at this pressure altitude",
+            Kind::Quantity {
+                q: QT::Pressure,
+                unit: "hPa",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "temperature_used",
+            "Temperature used",
+            "The outside air temperature, or ISA when none is given",
+            Kind::Quantity {
+                q: QT::Temperature,
+                unit: "degC",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "rule_hpa_error",
+            "27 ft per hPa rule, off by",
+            "The rule of thumb minus the answer",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "ft",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Hydrostatic pressure-height relation dh/dp = R·T/(g₀·p) in the ICAO Standard Atmosphere, with the given temperature in place of ISA when there is one",
+    accuracy: "Exact for the standard atmosphere's hydrostatic relation; the real column departs from it with weather",
+    when_to_use: "Use this to turn a pressure difference into height: how far an altimeter reads off when its setting is wrong by a few hectopascals, how much a QNH change moves your indicated altitude, or how tall a pressure layer is. The 27 ft per hPa and 1,000 ft per inHg rules hold near sea level; this gives the real figure at any altitude, and the rule's error beside it.",
+    limitations: "The answer is the height per unit of pressure right at this altitude; over a big pressure change the figure itself changes, so a large altimeter error is better worked as two pressure altitudes. It uses the standard atmosphere's pressure for the pressure altitude and only lets the temperature differ, which is how real columns mostly differ; it does not model humidity, which adds well under 1%.",
+    references: &[ICAO_7488, PHAK],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "Sea level on a standard day",
+            input: r#"{"pressure_altitude":"0 ft"}"#,
+            source: "add-aviation-suite altimetry scenario: 27.31 ft (8.324 m) per hPa and 924.8 ft per inHg, against the ambiance package's independent ICAO atmosphere",
+        },
+        Example {
+            id: "high",
+            title: "At 18,000 ft",
+            input: r#"{"pressure_altitude":"18000 ft"}"#,
+            source: "add-aviation-suite altimetry scenario: thinner air spans more height per hPa",
+        },
+    ],
+    primary_example: "primary",
+    visualization: TABLE,
+    related: &[
+        Related {
+            id: "aviation.altimetry.pressure-altitude",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.altimetry.q-codes",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.isa-temperature",
+            reason: "alternative",
+        },
+    ],
+    sentence: "At {pressure_altitude}, 1 hPa of pressure spans {height_per_hpa} of height and 1 inHg spans {height_per_inhg}.",
+    comparison: Comparison {
+        kind: "vs-rule-of-thumb",
+        text: "The 27 ft per hPa rule of thumb is {abs(rule_hpa_error)} {if rule_hpa_error < 0}short{else}long{/if} here.",
+    },
+    assumptions: &[
+        Assumption {
+            name: "Gas constant for dry air R",
+            value: "287.05287",
+            unit: "J/(kg K)",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+    ],
+    limits: &[("batchRows", 10_000)],
+    run: run_pressure_per_height,
+    ..ToolDef::BLANK
+};
+
+fn run_pressure_per_height(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let h = ctx.req_quantity("pressure_altitude")?.base();
+    if !(isa::H_MIN..=isa::Model::Icao.h_max()).contains(&h) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The ICAO standard atmosphere covers -5 km to 80 km.",
+        )
+        .at("/pressure_altitude"));
+    }
+    let st = isa::at(h);
+    let t = match ctx.quantity("temperature")? {
+        Some(oat) => oat.base(),
+        None => st.t,
+    };
+    if t <= 150.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "That temperature is colder than any real air column; check it, like -20 degC.",
+        )
+        .at("/temperature"));
+    }
+    // Meters of geopotential height per pascal.
+    let dh_dp = isa::R * t / (isa::G0 * st.p);
+    let m = unit(QT::Length, "m");
+    let per = |pa: f64| Q {
+        value: dh_dp * pa,
+        unit: m,
+    };
+    const INHG_PA: f64 = 3_386.388_640_341;
+    let per_hpa = per(100.0);
+    let rule = Q {
+        value: 27.0 * 0.3048 - per_hpa.value,
+        unit: m,
+    };
+    Ok(obj(vec![
+        ("height_per_hpa", ctx.out("height_per_hpa", per_hpa)),
+        ("height_per_inhg", ctx.out("height_per_inhg", per(INHG_PA))),
+        (
+            "pressure",
+            ctx.out(
+                "pressure",
+                Q {
+                    value: st.p,
+                    unit: unit(QT::Pressure, "Pa"),
+                },
+            ),
+        ),
+        ("temperature_used", ctx.out("temperature_used", kelvin(t))),
+        ("rule_hpa_error", ctx.out("rule_hpa_error", rule)),
+    ]))
+}
+
 // ---------------------------------------------------------------- wind
 
 const REFS: &[&str] = &["magnetic", "true"];
@@ -2285,6 +2491,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &PRESSURE_ALTITUDE,
     &DENSITY_ALTITUDE,
     &ISA_TEMPERATURE,
+    &PRESSURE_PER_HEIGHT,
     &RUNWAY_COMPONENTS,
     &HEADING_GROUNDSPEED,
     &FIND_WIND,

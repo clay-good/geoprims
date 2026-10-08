@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "1f1175dd87a4bd41",
+    "hash": "6d973aa499572cd0",
     "lastmod": "2026-10-08"
   },
   "/accuracy/": {
@@ -12,8 +12,8 @@
     "lastmod": "2026-09-29"
   },
   "/aviation/": {
-    "hash": "5688f8bd5124411e",
-    "lastmod": "2026-09-26"
+    "hash": "347de36ebe296a4d",
+    "lastmod": "2026-10-08"
   },
   "/aviation/airspace/": {
     "hash": "4ccf472fb1dd20c9",
@@ -40,8 +40,8 @@
     "lastmod": "2026-10-07"
   },
   "/aviation/altimetry/": {
-    "hash": "64f4d0091fdf77a8",
-    "lastmod": "2026-09-25"
+    "hash": "a648e128255fc7d8",
+    "lastmod": "2026-10-08"
   },
   "/aviation/altimetry/cold-temperature/": {
     "hash": "d08c3b25096d53d7",
@@ -60,12 +60,16 @@
     "lastmod": "2026-10-07"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "685a1a348c8386ee",
-    "lastmod": "2026-10-07"
+    "hash": "f3924f71c26ddcc7",
+    "lastmod": "2026-10-08"
+  },
+  "/aviation/altimetry/pressure-per-height/": {
+    "hash": "03bbbe24e263384f",
+    "lastmod": "2026-10-08"
   },
   "/aviation/altimetry/q-codes/": {
-    "hash": "7501fd77ffb5b692",
-    "lastmod": "2026-10-07"
+    "hash": "c31847f02afe6a2c",
+    "lastmod": "2026-10-08"
   },
   "/aviation/altimetry/true-altitude/": {
     "hash": "08c13658ef583359",
@@ -260,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "c5df27e0219e2904",
+    "hash": "2155d537c19ee6d3",
     "lastmod": "2026-10-08"
   },
   "/disclaimer/": {
@@ -756,8 +760,8 @@
     "lastmod": "2026-09-25"
   },
   "/geometry/area/polygon/": {
-    "hash": "8122974f057cd855",
-    "lastmod": "2026-09-29"
+    "hash": "af9974cc4fd5b077",
+    "lastmod": "2026-10-08"
   },
   "/geometry/buffer/": {
     "hash": "386dc79efbd71798",
@@ -1140,7 +1144,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "1167cb288847f39e",
+    "hash": "398f217721cf4223",
     "lastmod": "2026-10-08"
   },
   "/navigation/": {
@@ -1296,8 +1300,8 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "101361013b3ff34e",
-    "lastmod": "2026-10-07"
+    "hash": "d5a1a7d980810ca5",
+    "lastmod": "2026-10-08"
   },
   "/raster/": {
     "hash": "9801ff90b33e7ac9",
@@ -1380,8 +1384,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "e924f145c59b73ab",
-    "lastmod": "2026-10-07"
+    "hash": "8914825f78ac9b63",
+    "lastmod": "2026-10-08"
   },
   "/survey/": {
     "hash": "6648d2af3de92e59",
@@ -1648,8 +1652,8 @@
     "lastmod": "2026-10-07"
   },
   "/tools/": {
-    "hash": "a5bd92c4b9ba8721",
-    "lastmod": "2026-09-29"
+    "hash": "f3982ba37da66a7f",
+    "lastmod": "2026-10-08"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -1912,7 +1916,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c67a6c0767f88b0c",
+    "hash": "4ddf100fc48376d9",
     "lastmod": "2026-10-08"
   },
   "/workflows/": {
@@ -1948,7 +1952,7 @@
     "lastmod": "2026-09-29"
   },
   "/workflows/lidar-bid/": {
-    "hash": "bd3c00cc1391e22a",
+    "hash": "2857f442a3aea2f2",
     "lastmod": "2026-10-08"
   },
   "/workflows/mapping-flight/": {

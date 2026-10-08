@@ -75,6 +75,12 @@
           ]
         },
         {
+          "want": "turn a pressure difference into feet, like an altimeter set a few hPa wrong",
+          "tools": [
+            "pressure-per-height"
+          ]
+        },
+        {
           "want": "find the lowest usable flight level or a flight level's altitude",
           "tools": [
             "flight-level"

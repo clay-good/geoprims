@@ -69,6 +69,7 @@ const ROW: &[Field] = &[
 
 pub static SEARCH: ToolDef = ToolDef {
     id: "geodesy.crs.search",
+    stability: gp_base::tool::Stability::Stable,
     title: "Coordinate system finder",
     summary: "Finds coordinate reference systems by EPSG code, by name, or by a point inside their area of use: UTM, State Plane 1983 and 2022, and geographic, each with its unit, its status, and the tool that converts to it.",
     aliases: &[
@@ -144,7 +145,7 @@ pub static SEARCH: ToolDef = ToolDef {
     ],
     errors: &[gp_base::ErrorCode::InvalidInput],
     assets: &[spcs2022::ASSET_ID],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Code or name match against the CRS index from EPSG v13.102 and the SPCS2022 beta zones, or the area-of-use box of each",
     accuracy: "Areas of use are EPSG's and NGS's rectangular boxes, so near a zone line more than one zone covers a point",
     when_to_use: "Use this when you have coordinates and a code or a name but are not sure what they are, or when you need the right system for a place: give an EPSG code from a file’s metadata, a name like Colorado Central, or a point, and it lists the UTM zones, State Plane zones in meters and feet, and geographic systems that fit, with each one’s unit, whether it is current, legacy, or still beta, and which tool here converts to it.",
@@ -371,6 +372,7 @@ const fn len(name: &'static str, title: &'static str, help: &'static str) -> Fie
 
 pub static TRANSFORM: ToolDef = ToolDef {
     id: "geodesy.crs.transform",
+    stability: gp_base::tool::Stability::Stable,
     title: "Coordinate system to coordinate system",
     summary: "Converts coordinates from one EPSG coordinate system to another, such as State Plane to UTM, through every step between: the inverse projection, the datum and frame changes at an epoch, and the forward projection, each with its accuracy.",
     aliases: &[
@@ -514,7 +516,6 @@ pub static TRANSFORM: ToolDef = ToolDef {
         "LEGACY_UNIT",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Inverse projection on the source system's ellipsoid, the frame path of the datum transformation tool at the epoch, and the forward projection, applied in turn",
     accuracy: "The projections are exact formulas; the frame steps carry their published uncertainties, summed as a root sum of squares. The coordinates' own accuracy is not included.",

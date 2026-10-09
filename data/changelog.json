@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
+        "geodesy.crs.search",
+        "geodesy.crs.transform"
+      ],
+      "vectors": [],
+      "summary": "Coordinate system search and coordinate system transform are now stable: each has a derivation note, an independent worked example from PROJ 9.9 with the EPSG dataset, at least 20 golden vectors, and invariant tests."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "fixed",
       "tools": [
         "geometry.overlay.boolean",

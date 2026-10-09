@@ -105,7 +105,7 @@ const fn km2(name: &'static str, title: &'static str, help: &'static str) -> Fie
 pub static BOOLEAN: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     id: "geometry.overlay.boolean",
-    version: "1.2.0",
+    version: "1.2.1",
     title: "Overlap, union, or difference of two polygons",
     summary: "Where two areas overlap, their combined outline, what one has that the other lacks, or both, as valid polygons with geodesic areas, like the overlap of two geofences.",
     aliases: &["polygon intersection", "polygon union", "polygon difference", "overlap of two areas", "clip polygon", "boolean operation"],
@@ -182,6 +182,16 @@ fn read(ctx: &mut Ctx, list: &str, wrap: bool) -> Result<Vec<Vec<(f64, f64)>>, T
         let k = ring as usize;
         if rings.len() <= k {
             rings.resize(k + 1, Vec::new());
+        }
+        // Planar longitudes are taken as written, and may run past 180 to cross
+        // the antimeridian, but not past a second turn of the globe: values
+        // far beyond that only overwhelm the overlay's arithmetic.
+        if !wrap && !(-540.0..=540.0).contains(&lon) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "With planar edges, longitude must be between -540° and 540°.",
+            )
+            .at(&format!("/{list}/{i}/lon")));
         }
         let lon = if wrap {
             (lon + 540.0).rem_euclid(360.0) - 180.0

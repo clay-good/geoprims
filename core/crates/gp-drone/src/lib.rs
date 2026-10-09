@@ -962,6 +962,7 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MOTION_BLUR: ToolDef = ToolDef {
     id: "drone.photogrammetry.motion-blur",
+    errors: &[ErrorCode::NoSolution],
     title: "Motion blur and slowest shutter",
     summary: "How many pixels the image smears at your speed and shutter, and the slowest shutter that keeps blur under a limit.",
     aliases: &["motion blur calculator", "shutter speed for mapping"],

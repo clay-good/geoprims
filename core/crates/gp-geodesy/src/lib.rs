@@ -1,6 +1,7 @@
 //! Geodesy: coordinate parsing and formatting, UTM, UPS, and MGRS
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
+pub mod crs;
 pub mod datum;
 pub mod frames;
 pub mod geoid;
@@ -2455,6 +2456,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::FORWARD,
     &spcs::INVERSE,
     &spcs::LOOKUP,
+    &crs::SEARCH,
     &spcs2022::FORWARD,
     &spcs2022::INVERSE,
     &spcs::ARC_TO_CHORD,

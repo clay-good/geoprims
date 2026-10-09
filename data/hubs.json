@@ -729,6 +729,18 @@
     "geodesy": {
       "intro": "Geodesy is the math of where things are on the Earth: datums, heights, map projections, grid references, and the Earth's shape and magnetic field. These tools convert coordinates between systems, turn GPS heights into elevations, and write positions as UTM, state plane, or MGRS. Surveyors, GIS analysts, and developers use them to make data from different sources line up. If the terms are new, the Learn pages on datums and on geoid heights are a good first stop."
     },
+    "geodesy.crs": {
+      "summary": "Finding a coordinate system by EPSG code, by name, or by a point.",
+      "intro": "The coordinate system finder looks up a coordinate reference system by its EPSG code, by words in its name, or by a point inside its area of use. It covers what the converters here produce: UTM zones and State Plane zones on WGS 84, NAD 83, and NAD 83 (2011), in meters and feet, the SPCS2022 beta zones, and the geographic systems. GIS staff and surveyors use it to read an unfamiliar code in a file's metadata or to pick a system for a site. Start with a point or the code you have. One pitfall: the same zone exists in meters, US survey feet, and sometimes international feet, each with its own code, so match the unit as well as the zone.",
+      "tasks": [
+        {
+          "want": "find out what an EPSG code is, or which systems cover a place",
+          "tools": [
+            "search"
+          ]
+        }
+      ]
+    },
     "geodesy.datum": {
       "summary": "Moving coordinates between datums, frames, and epochs.",
       "intro": "These tools move coordinates between datums, frames, and epochs: NAD 83, the ITRF, WGS 84, NAD 27 and other old datums, and legacy datums worldwide. Surveyors and GIS analysts use them when GNSS data meets older control or a map on a different datum. For modern GNSS positions in the US, start with the NAD 83 transformation. The common pitfall is treating NAD 83(2011) and WGS 84 as the same, which puts a meter or more of error in the data.",

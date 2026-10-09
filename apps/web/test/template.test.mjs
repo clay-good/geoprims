@@ -31,7 +31,16 @@ test('every page has one page header with exactly one h1', () => {
 });
 
 test('lists of more than eight tools have a filter; topic pages have jump chips', () => {
-  assert.match(page('/geodesy/'), /aria-label="Jump to a group"/);
+  // Jump chips appear on a topic page with 2 to 12 groups; past that the filter does the job.
+  const domains = [...new Set(catalog.tools.map((t) => t.domain))];
+  let withChips = 0;
+  for (const d of domains) {
+    const groups = new Set(catalog.tools.filter((t) => t.domain === d).map((t) => t.group)).size;
+    const chips = /aria-label="Jump to a group"/.test(page(`/${d}/`));
+    assert.equal(chips, groups > 1 && groups <= 12, `/${d}/ has ${groups} groups`);
+    withChips += chips;
+  }
+  assert.ok(withChips >= 3, `${withChips} topic pages with jump chips`);
   const units = page('/units/');
   assert.match(units, /class="filter"/);
   assert.match(units, /class="filter-empty card" hidden/);

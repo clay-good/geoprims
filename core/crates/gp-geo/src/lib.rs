@@ -2,6 +2,8 @@
 pub mod buffer;
 pub mod civil;
 pub mod codes;
+pub mod crs;
+mod crs_registry;
 pub mod dms;
 pub mod ellipsoid;
 pub mod exact;

@@ -371,6 +371,7 @@
       "definition": "The IOGP registry of coordinate reference systems and transformations, each with a code such as EPSG:4326.",
       "source": "epsg",
       "relatedTools": [
+        "geodesy.crs.search",
         "geodesy.datum.helmert",
         "geodesy.spcs.spcs83-forward"
       ]

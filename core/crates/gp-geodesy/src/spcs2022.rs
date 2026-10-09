@@ -13,7 +13,7 @@ use gp_geo::point;
 use gp_geo::spcs::{self, Proj};
 use serde_json::Value;
 
-const ASSET_ID: &str = "spcs2022-beta";
+pub(crate) const ASSET_ID: &str = "spcs2022-beta";
 const ASSET_VERSION: &str = "2026-06-01";
 const ASSET_FILE: &str = "spcs2022-beta.json";
 
@@ -72,18 +72,18 @@ fn deg(value: f64) -> Q {
 }
 
 #[derive(Debug)]
-struct Dataset {
-    status: String,
+pub(crate) struct Dataset {
+    pub(crate) status: String,
     published_at: String,
-    zones: Vec<Zone>,
+    pub(crate) zones: Vec<Zone>,
 }
 
 #[derive(Debug)]
-struct Zone {
-    code: String,
-    name: String,
+pub(crate) struct Zone {
+    pub(crate) code: String,
+    pub(crate) name: String,
     frame: String,
-    status: String,
+    pub(crate) status: String,
     published_at: String,
     bounds: [f64; 4],
     proj: Proj,
@@ -241,7 +241,7 @@ fn wrap_lon(lon: f64) -> f64 {
     (lon + 180.0).rem_euclid(360.0) - 180.0
 }
 
-fn contains(zone: &Zone, lat: f64, lon: f64) -> bool {
+pub(crate) fn contains(zone: &Zone, lat: f64, lon: f64) -> bool {
     let [west, south, east, north] = zone.bounds;
     let (west, east, lon) = (wrap_lon(west), wrap_lon(east), wrap_lon(lon));
     lat >= south
@@ -253,7 +253,7 @@ fn contains(zone: &Zone, lat: f64, lon: f64) -> bool {
         }
 }
 
-fn load(ctx: &mut Ctx) -> Result<Dataset, ToolError> {
+pub(crate) fn load(ctx: &mut Ctx) -> Result<Dataset, ToolError> {
     let bytes = ctx.asset(ASSET_ID, ASSET_VERSION, ASSET_FILE)?;
     parse_dataset(&bytes)
 }

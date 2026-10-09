@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0495b70beaafb4e3",
+    "hash": "bbd67fe4d6b5e8f9",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "ebee4d545feb4501",
+    "hash": "266447b2641dfee3",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -436,8 +436,16 @@
     "lastmod": "2026-09-29"
   },
   "/geodesy/": {
-    "hash": "fced4b36b6ad30b3",
-    "lastmod": "2026-10-08"
+    "hash": "4a95dac408b8285e",
+    "lastmod": "2026-10-09"
+  },
+  "/geodesy/crs/": {
+    "hash": "d0a4e65d35dc7f75",
+    "lastmod": "2026-10-09"
+  },
+  "/geodesy/crs/search/": {
+    "hash": "fd9283425c8c75b0",
+    "lastmod": "2026-10-09"
   },
   "/geodesy/datum/": {
     "hash": "743eda4eec8711de",
@@ -716,16 +724,16 @@
     "lastmod": "2026-09-29"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "6492b5f6539bd4cf",
-    "lastmod": "2026-10-07"
+    "hash": "3389f4be7696ba70",
+    "lastmod": "2026-10-09"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "5a0e711d4bc198de",
-    "lastmod": "2026-10-07"
+    "hash": "869eccf328819041",
+    "lastmod": "2026-10-09"
   },
   "/geodesy/spcs/zone-lookup/": {
-    "hash": "477f6e64ab7074e3",
-    "lastmod": "2026-09-29"
+    "hash": "71873e9bb56f5c61",
+    "lastmod": "2026-10-09"
   },
   "/geodesy/ups/": {
     "hash": "c5df18617de3dbd8",
@@ -1100,8 +1108,8 @@
     "lastmod": "2026-09-29"
   },
   "/learn/state-plane-coordinates/": {
-    "hash": "2104267f84395654",
-    "lastmod": "2026-09-24"
+    "hash": "94e653897b782b27",
+    "lastmod": "2026-10-09"
   },
   "/learn/sunrise-and-twilight/": {
     "hash": "0a87f42181cbbca6",
@@ -1148,7 +1156,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "33e954b52740cda7",
+    "hash": "23c41caeb076c33f",
     "lastmod": "2026-10-09"
   },
   "/navigation/": {
@@ -1304,7 +1312,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "6e13b7f7ce783b4d",
+    "hash": "f0c4ff5cc67d9359",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
@@ -1396,7 +1404,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "cb3c22cb7de9f7a2",
+    "hash": "f1db07e3956e6493",
     "lastmod": "2026-10-09"
   },
   "/survey/": {
@@ -1668,7 +1676,7 @@
     "lastmod": "2026-10-07"
   },
   "/tools/": {
-    "hash": "2deb1e0484f583f6",
+    "hash": "412d38874a9eb27c",
     "lastmod": "2026-10-09"
   },
   "/units/": {
@@ -1932,7 +1940,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e97eb91823c265d3",
+    "hash": "93e589dc8a91dafd",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {
@@ -1948,12 +1956,12 @@
     "lastmod": "2026-09-26"
   },
   "/workflows/convert-coordinate/": {
-    "hash": "f1119d70a480c516",
-    "lastmod": "2026-10-08"
+    "hash": "b21a801caa50b6f4",
+    "lastmod": "2026-10-09"
   },
   "/workflows/gnss-to-state-plane/": {
-    "hash": "14354379c39caa1e",
-    "lastmod": "2026-10-07"
+    "hash": "774e98d2425b28cd",
+    "lastmod": "2026-10-09"
   },
   "/workflows/ifr-approach-brief/": {
     "hash": "ecbd75d2e8ccfb08",

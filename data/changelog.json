@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
+        "geodesy.crs.search"
+      ],
+      "vectors": [],
+      "summary": "New: a coordinate system finder. Give an EPSG code from a file's metadata, a name like Colorado Central, or a point, and it lists the UTM zones, State Plane 1983 zones in meters and feet, SPCS2022 beta zones, and geographic systems that fit, with each one's unit, status, and the tool that converts to it. Its index comes from EPSG v13.102."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "fixed",
       "tools": [
         "geodesy.spcs.spcs83-forward",

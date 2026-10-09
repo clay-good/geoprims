@@ -76,6 +76,9 @@ const MUST_DECLARE = [
   'raster.terrain.slope-aspect',
   'raster.terrain.ruggedness',
   'raster.terrain.curvature',
+  'survey.reduction.slope',
+  'survey.reduction.curvature-refraction',
+  'survey.reduction.inaccessible-height',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

@@ -5,7 +5,9 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Bare, Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef};
+use gp_base::tool::{
+    Assumption, Bare, Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_geo::dms::{self, Axis, Style};
 use gp_geo::point::plain_angle;
@@ -250,6 +252,12 @@ pub static SLOPE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+        value: "6371000",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "The horizontal distance is {horizontal_distance} and the vertical difference {vertical_difference}.{if mean_zenith > 0} The two-face mean zenith is {mean_zenith_dms}, with an index error of {index_error}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_slope,
@@ -427,6 +435,20 @@ pub static CURVATURE: ToolDef = ToolDef {
         id: "survey.reduction.slope",
         reason: "parent",
     }],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        Assumption {
+            name: "Combined curvature and refraction rule of thumb, with k = 0.14",
+            value: "0.0675",
+            unit: "m/km2",
+            source: "ghilani",
+        },
+    ],
     sentence: "Curvature and refraction lower a level sight by {correction} at this distance, a coefficient of {coefficient_label}.",
     limits: &[("batchRows", 10_000)],
     slots: &[
@@ -763,6 +785,12 @@ pub static INACCESSIBLE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+        value: "6371000",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "The object is {height} tall, measured {distance_used} away.",
     limits: &[("batchRows", 10_000)],
     run: run_inaccessible,

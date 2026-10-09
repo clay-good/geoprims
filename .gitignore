@@ -16,3 +16,6 @@ node_modules/
 
 # wrangler local state
 .wrangler/
+
+# Python bytecode from the vector generators
+__pycache__/

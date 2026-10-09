@@ -516,6 +516,21 @@ export function draw(g, view, base, layers, c) {
       g.stroke();
       g.setLineDash([]);
       g.globalAlpha = 1;
+    } else if (layer.kind === 'polygon' && layer.role === 'coverage') {
+      // Each footprint filled on its own, so where photos overlap the wash
+      // builds up and reads darker; a hairline marks each edge.
+      g.fillStyle = c.accent;
+      g.strokeStyle = c.accent;
+      g.lineWidth = 0.75;
+      for (const ring of layer.rings) {
+        g.beginPath();
+        trace(g, view, ring, true);
+        g.globalAlpha = 0.07;
+        g.fill();
+        g.globalAlpha = 0.25;
+        g.stroke();
+      }
+      g.globalAlpha = 1;
     } else if (layer.kind === 'polygon') {
       g.beginPath();
       for (const ring of layer.rings) trace(g, view, ring, true);

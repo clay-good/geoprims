@@ -3,17 +3,18 @@
 
 ## Method
 
-The area is projected onto a local transverse Mercator plane centered on it. Parallel flight lines are swept across it at the line spacing: ⌈width / spacing⌉ + 1 of them, centered so the outer lines reach the edges, as published flight planning counts them. The direction is the one with the fewest lines unless given. Each line is cut to its strip of the area, and at buffered no-fly holes. The lines are joined in serpentine order, and a transit that would cross a hole follows the hole's buffered boundary. Photo points fall at the photo spacing along each line, with the extra photos past each end. An optional crosshatch adds a second, perpendicular set. The waypoints are projected back to latitude and longitude.
+The area is projected onto a local transverse Mercator plane centered on it. Parallel flight lines are swept across it at the line spacing: ⌈width / spacing⌉ + 1 of them, centered so the outer lines reach the edges, as published flight planning counts them. The direction is the one with the fewest lines unless given. Each line is cut to its strip of the area, and at buffered no-fly holes. The lines are joined in serpentine order, and a transit that would cross a hole follows the hole's buffered boundary. Photo points fall at the photo spacing along each line, with the extra photos past each end. An optional crosshatch adds a second, perpendicular set. The waypoints are projected back to latitude and longitude. Given the camera's ground footprint across and along the line, each photo's footprint is laid on the plane as a rectangle centered on its trigger point and turned to its line's azimuth, and the overlaps follow from the spacings.
 
 ## Equations
 
 - Lines = ⌈W / S⌉ + 1, centered on the area's width W across the flight direction
 - Photos per line = ⌈L / B⌉ + 1 + 2e, with L the line's length, B the photo spacing, and e the extra photos per end
 - Path length = the sum of the line and transit lengths; flight time = path length ÷ groundspeed
+- Forward overlap = 100 (1 − B / F_along); side overlap = 100 (1 − S / F_across), negative where the photos leave gaps (COVERAGE_GAP)
 
 ## Symbols and units
 
-S line spacing and B photo spacing (air base), in meters or feet; W and L on the local plane in the same unit; e a whole number from 0 to 10.
+S line spacing and B photo spacing (air base), in meters or feet; F_across and F_along the photo's ground footprint across and along the line; W and L on the local plane in the same unit; e a whole number from 0 to 10.
 
 ## Domain
 
@@ -45,4 +46,4 @@ The King Saud University SE 321 example (60 by 40 km, 920 m lines, 460 m air bas
 
 ## Invariants
 
-- `core/crates/gp-drone/tests/mission.rs` `image_count_invariants`: on plane rectangles the lines are ⌈W / S⌉ + 1 and the photos match the published count, the grid and the image count agree, closer spacing never means fewer lines or photos, and overshoot changes the path but not the photos; `line_spacing_is_true_geodesically`, `auto_direction_minimizes_lines`, `polygon_with_a_hole`, and `image_count_matches_the_pattern` (20 random polygons) cover the rest
+- `core/crates/gp-drone/tests/mission.rs` `image_count_invariants`: on plane rectangles the lines are ⌈W / S⌉ + 1 and the photos match the published count, the grid and the image count agree, closer spacing never means fewer lines or photos, and overshoot changes the path but not the photos; `line_spacing_is_true_geodesically`, `auto_direction_minimizes_lines`, `polygon_with_a_hole`, and `image_count_matches_the_pattern` (20 random polygons) cover the rest; `photo_footprints_have_the_camera_size_and_follow_the_lines` measures every footprint's sides geodesically against the footprint given and checks its azimuth, both ways in a crosshatch, and `a_footprint_smaller_than_the_spacing_leaves_gaps` the gap warning

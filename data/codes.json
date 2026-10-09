@@ -122,6 +122,10 @@
       "severity": "caution",
       "message": "Magnetic compasses may be unreliable here: the horizontal field is weak."
     },
+    "COVERAGE_GAP": {
+      "severity": "caution",
+      "message": "The photos leave gaps between them."
+    },
     "COVERING_OVER_BUDGET": {
       "severity": "info",
       "message": "The covering needs more cells than the budget allows."

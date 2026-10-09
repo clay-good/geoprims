@@ -425,6 +425,33 @@ test('layers: mission plans draw sorties apart, the swap points, the range ring,
   assert.ok(g.layers.some((l) => l.kind === 'polygon'));
 });
 
+test('layers: a survey grid with a camera footprint draws one footprint per photo, under the path', async () => {
+  // add-drone-suite 2.8, the coverage-overlay scenario.
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const catalog = JSON.parse(readFileSync(join(web, '../../dist/catalog/v1.json'), 'utf8'));
+  const host = nodeHost(join(web, '../../dist/wasm'));
+  const tool = catalog.tools.find((t) => t.id === 'drone.mission.survey-grid');
+  const args = { ...tool.examples[0].input, footprint_across: '75 m', footprint_along: '50 m' };
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  const layers = await buildLayers(tool, args, result, null, null);
+  const cover = layers.filter((l) => l.role === 'coverage');
+  assert.equal(cover.length, 1, 'one coverage layer');
+  assert.equal(cover[0].rings.length, result.result.photos, 'a footprint per photo');
+  assert.ok(cover[0].rings.every((r) => r.length === 4), 'four corners each');
+  // Drawn first, so the path and trigger points sit on top of it.
+  assert.equal(layers[0], cover[0]);
+  // Each footprint is centered on its trigger point.
+  for (const [i, ring] of cover[0].rings.entries()) {
+    const p = result.result.photo_points[i];
+    const [lon, lat] = [ring.reduce((a, q) => a + q[0], 0) / 4, ring.reduce((a, q) => a + q[1], 0) / 4];
+    assert.ok(Math.abs(lon - p.lon.value) < 1e-7 && Math.abs(lat - p.lat.value) < 1e-7, `photo ${i + 1} centered`);
+  }
+  // Without a footprint there is no coverage layer.
+  const plain = await buildLayers(tool, tool.examples[0].input, JSON.parse(await host.invoke(tool.id, JSON.stringify(tool.examples[0].input))), null, null);
+  assert.ok(!plain.some((l) => l.role === 'coverage'));
+});
+
 test('outputParts splits a path by its part column and keeps a plain path whole', async () => {
   const { outputParts } = await import('../src/lib/map/layers.js');
   const row = (lat, lon, part) => ({ lat: { value: lat }, lon: { value: lon }, ...(part === undefined ? {} : { part }) });

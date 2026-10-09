@@ -790,7 +790,7 @@ const PHOTO_ROW: &[Field] = &[
 
 pub static SURVEY_GRID: ToolDef = ToolDef {
     id: "drone.mission.survey-grid",
-    version: "1.2.0",
+    version: "1.3.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Survey grid (lawnmower pattern)",
     summary: "A serpentine mapping pattern over an area, with no-fly holes routed around, the fewest lines by default, overshoot, and an optional crosshatch: waypoints, line count, path length, turns, photo count, and flight time.",
@@ -842,6 +842,20 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
             "height",
             "Height above ground",
             "Like 120 m AGL (constant)",
+            QT::Length,
+            "m",
+        ),
+        qty(
+            "footprint_across",
+            "Photo footprint across the line",
+            "Ground width one photo covers, from the ground sample distance tool, like 75 m",
+            QT::Length,
+            "m",
+        ),
+        qty(
+            "footprint_along",
+            "Photo footprint along the line",
+            "Ground length one photo covers in the direction of flight, like 50 m",
             QT::Length,
             "m",
         ),
@@ -919,6 +933,39 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
             },
         ),
         Field::new(
+            "forward_overlap",
+            "Forward overlap",
+            "Percent of each photo the next one on the line repeats, with a footprint",
+            Kind::Number {
+                min: -1e9,
+                max: 100.0,
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        Field::new(
+            "side_overlap",
+            "Side overlap",
+            "Percent of each photo the next line's repeats, with a footprint",
+            Kind::Number {
+                min: -1e9,
+                max: 100.0,
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        Field::new(
+            "footprints",
+            "Photo footprints",
+            "Each photo's ground rectangle, four corners per photo, with a footprint",
+            Kind::List {
+                items: FOOTPRINT_ROW,
+                min: 0,
+                max: 8_000,
+            },
+        )
+        .optional(),
+        Field::new(
             "waypoints",
             "Waypoints",
             "In flight order",
@@ -930,8 +977,8 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
-    warnings: &["OUTPUT_TRUNCATED", "UNIT_ASSUMED"],
-    when_to_use: "Use this to lay out a mapping flight over an area: parallel lines at your spacing, joined end to end, with photo points along them, routed around no-fly holes, and optionally crossed by a second set for a crosshatch. It gives the waypoints to load and the line count, path length, turns, photos, and flight time to plan batteries around.",
+    warnings: &["OUTPUT_TRUNCATED", "COVERAGE_GAP", "UNIT_ASSUMED"],
+    when_to_use: "Use this to lay out a mapping flight over an area: parallel lines at your spacing, joined end to end, with photo points along them, routed around no-fly holes, and optionally crossed by a second set for a crosshatch. It gives the waypoints to load and the line count, path length, turns, photos, and flight time to plan batteries around. Add the camera’s ground footprint to see each photo on the map, darker where photos overlap, with the forward and side overlap the spacing gives.",
     limitations: "Lines are laid on a local plane, which is exact enough for a survey block but not for one hundreds of kilometers across. The pattern assumes flat ground and a constant height: over hills the overlap and ground sample distance change along each line. Turns are drawn as corners, so the path length and time leave out how the aircraft actually turns and accelerates.",
     model: "Lines swept on a local transverse Mercator plane, ⌈width / spacing⌉ + 1 of them centered so the outer lines reach the edges (Penn State GEOG 892), each covering its strip of the area and cut at buffered holes, joined in serpentine order; ⌈length / photo spacing⌉ + 1 photos per line plus the extras past each end; transits that would cross a hole follow its buffered boundary",
     accuracy: "Line spacing is true to within 1e-7 across a few kilometers (checked geodesically). Flight time ignores turns, climbs, and wind.",
@@ -951,6 +998,10 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         Layer {
             kind: "line-geodesic",
             map: &[("path", "waypoints")],
+        },
+        Layer {
+            kind: "polygon",
+            map: &[("coverage", "footprints")],
         },
     ],
     related: &[
@@ -1120,8 +1171,117 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     o.push(("photo_points", triggers));
+    let across = ctx.quantity("footprint_across")?.map(|q| q.base());
+    let along = ctx.quantity("footprint_along")?.map(|q| q.base());
+    match (across, along) {
+        (None, None) => {}
+        (Some(across), Some(along)) => {
+            if !(across > 0.0 && along > 0.0 && across <= 50_000.0 && along <= 50_000.0) {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    "A photo footprint must be more than 0 and at most 50 km.",
+                )
+                .at("/footprint_across"));
+            }
+            let s = ctx.req_quantity("line_spacing")?.base();
+            let p = ctx.req_quantity("photo_spacing")?.base();
+            let (fwd, side) = (100.0 * (1.0 - p / along), 100.0 * (1.0 - s / across));
+            if fwd < 0.0 || side < 0.0 {
+                ctx.warnings.push(Warning::new(
+                    "COVERAGE_GAP",
+                    format!(
+                        "The photos leave gaps: the {} is wider than the footprint {}.",
+                        if fwd < 0.0 {
+                            "photo spacing"
+                        } else {
+                            "line spacing"
+                        },
+                        if fwd < 0.0 {
+                            "along the line"
+                        } else {
+                            "across it"
+                        }
+                    ),
+                ));
+            }
+            o.push(("forward_overlap", Json::Num(fwd)));
+            o.push(("side_overlap", Json::Num(side)));
+            // Each path's lines run at the grid's azimuth; a crosshatch's
+            // second set runs a quarter turn from it.
+            let mut rows = Vec::new();
+            let mut n = 0usize;
+            'paths: for (i, path) in paths.iter().enumerate() {
+                let a = (az + 90.0 * i as f64).to_radians();
+                let (u, v) = ((sin(a), cos(a)), (cos(a), -sin(a)));
+                for &(x, y) in &path.shots {
+                    if n == 2_000 {
+                        break 'paths;
+                    }
+                    n += 1;
+                    for (ku, kv) in [(1.0, 1.0), (1.0, -1.0), (-1.0, -1.0), (-1.0, 1.0)] {
+                        let (cx, cy) = (
+                            x + ku * along / 2.0 * u.0 + kv * across / 2.0 * v.0,
+                            y + ku * along / 2.0 * u.1 + kv * across / 2.0 * v.1,
+                        );
+                        let (la, lo) = plane.inv(cx, cy);
+                        rows.push(Json::obj([
+                            ("part", Json::Num(n as f64)),
+                            ("lat", deg_json(la)),
+                            ("lon", deg_json(lo)),
+                        ]));
+                    }
+                }
+            }
+            o.push(("footprints", Json::Arr(rows)));
+        }
+        _ => {
+            return Err(ToolError::invalid(
+                "/footprint_along",
+                "Give the footprint both across and along the line, or neither.",
+            ));
+        }
+    }
     Ok(Json::obj(o))
 }
+
+fn deg_json(v: f64) -> Json {
+    Q {
+        value: v,
+        unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
+    }
+    .to_json()
+}
+
+/// A corner of a photo's ground footprint, grouped by photo.
+const FOOTPRINT_ROW: &[Field] = &[
+    Field::new(
+        "part",
+        "Photo",
+        "In flight order",
+        Kind::Number { min: 1.0, max: 1e9 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "lat",
+        "Latitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Degrees",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+];
 
 // ---------------------------------------------------------------- image count
 

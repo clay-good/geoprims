@@ -572,3 +572,91 @@ fn field_example_titles_match_their_geometry() {
         assert!(ex.title.contains("602 m by 150 m"), "{id}: {}", ex.title);
     }
 }
+
+#[test]
+fn photo_footprints_have_the_camera_size_and_follow_the_lines() {
+    // add-drone-suite 2.8, the coverage-overlay scenario: each photo's ground
+    // rectangle, its sides measured geodesically, along the line it was taken on.
+    let g = Geodesic::wgs84();
+    let rect = area(&[(0.0, 0.0), (600.0, 0.0), (600.0, 300.0), (0.0, 300.0)], 0);
+    for (crosshatch, direction) in [("no", "0 deg"), ("no", "35 deg"), ("yes", "0 deg")] {
+        let r = call(
+            "drone.mission.survey-grid",
+            &json!({"area": rect, "line_spacing": "50 m", "photo_spacing": "30 m",
+                "direction": direction, "crosshatch": crosshatch,
+                "footprint_across": "75 m", "footprint_along": "50 m"}),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        let res = &r["result"];
+        assert!((num(res, "forward_overlap") - 40.0).abs() < 1e-9);
+        assert!((num(res, "side_overlap") - 100.0 / 3.0).abs() < 1e-9);
+        let corners = res["footprints"].as_array().unwrap();
+        let photos = res["photos"].as_f64().unwrap() as usize;
+        assert_eq!(corners.len(), 4 * photos.min(2_000));
+        let base = direction.trim_end_matches(" deg").parse::<f64>().unwrap();
+        let (mut on_base, mut turned) = (0, 0);
+        for (k, quad) in corners.chunks(4).enumerate() {
+            let pt = |i: usize| {
+                (
+                    quad[i]["lat"]["value"].as_f64().unwrap(),
+                    quad[i]["lon"]["value"].as_f64().unwrap(),
+                )
+            };
+            let side = |i: usize, j: usize| -> (f64, f64) {
+                let ((a, b), (c, d)) = (pt(i), pt(j));
+                let (s, az, _, _) = g.inverse(a, b, c, d);
+                (s, az)
+            };
+            // Corners go +along +across, +along −across, −along −across, −along +across.
+            let (across, _) = side(0, 1);
+            let (along, az) = side(2, 1);
+            assert!((across - 75.0).abs() < 1e-3, "{across}");
+            assert!((along - 50.0).abs() < 1e-3, "{along}");
+            // Along the grid's azimuth, or for a crosshatch's second set a
+            // quarter turn from it.
+            let off = ((az - base).rem_euclid(180.0) + 90.0).rem_euclid(180.0) - 90.0;
+            if off.abs() < 0.01 {
+                on_base += 1;
+            } else {
+                assert!(
+                    crosshatch == "yes" && (off.abs() - 90.0).abs() < 0.01,
+                    "photo {k}: {az} against {base}"
+                );
+                turned += 1;
+            }
+            assert_eq!(quad[0]["part"].as_f64(), Some((k + 1) as f64));
+        }
+        assert!(on_base > 0);
+        assert_eq!(turned > 0, crosshatch == "yes");
+    }
+}
+
+#[test]
+fn a_footprint_smaller_than_the_spacing_leaves_gaps() {
+    let rect = area(&[(0.0, 0.0), (400.0, 0.0), (400.0, 200.0), (0.0, 200.0)], 0);
+    let r = call(
+        "drone.mission.survey-grid",
+        &json!({"area": rect, "line_spacing": "60 m", "photo_spacing": "30 m",
+            "footprint_across": "50 m", "footprint_along": "40 m"}),
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    assert!(num(&r["result"], "side_overlap") < 0.0);
+    assert!(
+        r["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|w| w["code"] == "COVERAGE_GAP")
+    );
+    // One without the other is refused, and without either nothing changes.
+    let half = call(
+        "drone.mission.survey-grid",
+        &json!({"area": rect, "line_spacing": "60 m", "photo_spacing": "30 m", "footprint_across": "50 m"}),
+    );
+    assert_eq!(half["error"]["field"], "/footprint_along");
+    let none = call(
+        "drone.mission.survey-grid",
+        &json!({"area": rect, "line_spacing": "60 m", "photo_spacing": "30 m"}),
+    );
+    assert!(none["result"].get("footprints").is_none());
+}

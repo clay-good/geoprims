@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
+        "drone.mission.survey-grid"
+      ],
+      "vectors": [],
+      "summary": "Survey grids take the camera's ground footprint across and along the line, as the ground sample distance tool gives it. The map then draws every photo's footprint, darker where photos overlap, and the result gives the forward and side overlap the spacings make, with a warning when the photos leave gaps. Without a footprint nothing changes."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "changed",
       "tools": [
         "survey.gnss.dop"

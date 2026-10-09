@@ -165,7 +165,9 @@ export function cellIds(result, field) {
  * great circle to a two-point line; every such line carries its path and length.
  */
 export async function buildLayers(tool, args, result, densify, cells, { compare = false } = {}) {
-  const kinds = new Set((tool.visualization ?? []).map((v) => v.kind));
+  // A footprint coverage layer is drawn on its own, so it does not make the
+  // tool a polygon tool.
+  const kinds = new Set((tool.visualization ?? []).filter((v) => !(v.kind === 'polygon' && mapOf(v.map).coverage)).map((v) => v.kind));
   const layers = [];
   const p1 = [numberOf(args.lon1), numberOf(args.lat1)];
   const p2 = [numberOf(args.lon2), numberOf(args.lat2)];
@@ -334,6 +336,11 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
       layers.push({ kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id, ...(compacted.length ? { compacted: true } : {}), ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}) });
     });
   }
+  // Photo footprints under a flight path (a survey grid with a camera
+  // footprint): one ring per photo, drawn faintly so overlaps read darker.
+  const cover = (tool.visualization ?? []).find((v) => v.kind === 'polygon' && mapOf(v.map).coverage);
+  const footprints = cover ? outputRings(result, mapOf(cover.map).coverage).filter((r) => r.length >= 3) : [];
+  if (footprints.length) layers.unshift({ kind: 'polygon', role: 'coverage', rings: footprints });
   // A polygon the tool computes (a buffer, a geofence): an output list of
   // lat/lon rows grouped by part and ring, drawn over the input it came from.
   const drawn = (tool.visualization ?? []).find((v) => v.kind === 'polygon' && mapOf(v.map).rings);

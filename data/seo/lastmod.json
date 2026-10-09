@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "33c21303fd0f94a5",
+    "hash": "e24c3dca46377599",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -40,8 +40,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/": {
-    "hash": "a648e128255fc7d8",
-    "lastmod": "2026-10-08"
+    "hash": "c2167e96e69d9cb4",
+    "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/cold-temperature/": {
     "hash": "25c3e3ccc4bbc885",
@@ -136,8 +136,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/loading/": {
-    "hash": "90f7169a9a646250",
-    "lastmod": "2026-09-26"
+    "hash": "5f01b0f6f1b2b3b5",
+    "lastmod": "2026-10-09"
   },
   "/aviation/loading/ballast/": {
     "hash": "d9d79a03f4385f0f",
@@ -204,8 +204,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/weather/": {
-    "hash": "b75b1b3e22299f39",
-    "lastmod": "2026-09-26"
+    "hash": "71fc3736a9674207",
+    "lastmod": "2026-10-09"
   },
   "/aviation/weather/fb-winds-decode/": {
     "hash": "5d64096ec6df909a",
@@ -220,8 +220,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/wind/": {
-    "hash": "32d30736470cfcb5",
-    "lastmod": "2026-09-26"
+    "hash": "a43e4d8a6d72f89b",
+    "lastmod": "2026-10-09"
   },
   "/aviation/wind/aloft-interpolate/": {
     "hash": "9da34e4ec3ec231f",
@@ -264,7 +264,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "045d6e91a0662085",
+    "hash": "02b6e6f7c62464d3",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -1028,7 +1028,7 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "91c1a3fbcc3d115d",
+    "hash": "873802f6a015afa6",
     "lastmod": "2026-10-09"
   },
   "/learn/crosswind-components/": {
@@ -1320,7 +1320,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "a417930f6b91e222",
+    "hash": "aa7f570a8545c3bf",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
@@ -1952,8 +1952,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/": {
-    "hash": "0f9f933e71dbfe9a",
-    "lastmod": "2026-10-08"
+    "hash": "771d1b48987fd366",
+    "lastmod": "2026-10-09"
   },
   "/workflows/boundary-retracement/": {
     "hash": "5cf1c3bb315d1ebb",
@@ -1993,6 +1993,10 @@
   },
   "/workflows/preflight-check/": {
     "hash": "f4d8e5fed7a60131",
+    "lastmod": "2026-10-09"
+  },
+  "/workflows/preflight-performance/": {
+    "hash": "7217ff4e03070d44",
     "lastmod": "2026-10-09"
   },
   "/workflows/vfr-cross-country/": {

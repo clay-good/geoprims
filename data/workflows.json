@@ -1911,6 +1911,213 @@
       "visual": {
         "step": 0
       }
+    },
+    {
+      "slug": "preflight-performance",
+      "title": "Preflight performance check",
+      "audience": "Pilots",
+      "summary": "From the METAR and your POH takeoff table to today's takeoff distance, read at the pressure altitude and temperature, with the wind on your runway.",
+      "job": "Find how much runway the airplane needs today, from the weather and the takeoff table in your POH, before you commit to the departure.",
+      "inputs": [
+        {
+          "name": "metar",
+          "tool": "aviation.weather.metar-decode",
+          "field": "report",
+          "example": "KDEN 181753Z 30015G25KT 10SM FEW080 SCT200 30/08 A2980 RMK AO2 SLP052 T03000083"
+        },
+        {
+          "name": "elevation",
+          "tool": "aviation.altimetry.pressure-altitude",
+          "field": "elevation",
+          "example": "5434 ft"
+        },
+        {
+          "name": "takeoff_table",
+          "tool": "aviation.loading.table-interpolate",
+          "field": "table",
+          "example": [
+            {
+              "a": 4000,
+              "b": 20,
+              "value": 1450
+            },
+            {
+              "a": 4000,
+              "b": 30,
+              "value": 1550
+            },
+            {
+              "a": 4000,
+              "b": 40,
+              "value": 1660
+            },
+            {
+              "a": 6000,
+              "b": 20,
+              "value": 1690
+            },
+            {
+              "a": 6000,
+              "b": 30,
+              "value": 1810
+            },
+            {
+              "a": 6000,
+              "b": 40,
+              "value": 1940
+            },
+            {
+              "a": 8000,
+              "b": 20,
+              "value": 1990
+            },
+            {
+              "a": 8000,
+              "b": 30,
+              "value": 2130
+            },
+            {
+              "a": 8000,
+              "b": 40,
+              "value": 2280
+            }
+          ]
+        },
+        {
+          "name": "runway",
+          "tool": "aviation.wind.runway-components",
+          "field": "runway",
+          "example": "25"
+        },
+        {
+          "name": "variation",
+          "tool": "aviation.wind.runway-components",
+          "field": "variation",
+          "example": 8
+        },
+        {
+          "name": "max_crosswind",
+          "tool": "aviation.wind.runway-components",
+          "field": "max_crosswind",
+          "example": "15 kt",
+          "advanced": true
+        }
+      ],
+      "steps": [
+        {
+          "tool": "aviation.weather.metar-decode",
+          "why": "Read the weather: wind, temperature, dew point, and altimeter setting.",
+          "input": {
+            "report": {
+              "input": "metar"
+            }
+          }
+        },
+        {
+          "tool": "aviation.altimetry.pressure-altitude",
+          "why": "Field elevation and the altimeter setting give pressure altitude, the altitude a POH table is read at.",
+          "input": {
+            "elevation": {
+              "input": "elevation"
+            },
+            "altimeter": {
+              "from": [
+                0,
+                "altimeter"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "aviation.altimetry.density-altitude",
+          "why": "Add the temperature and dew point for density altitude: how high the airplane will feel it is.",
+          "input": {
+            "elevation": {
+              "input": "elevation"
+            },
+            "altimeter": {
+              "from": [
+                0,
+                "altimeter"
+              ]
+            },
+            "temperature": {
+              "from": [
+                0,
+                "temperature"
+              ]
+            },
+            "dew_point": {
+              "from": [
+                0,
+                "dew_point"
+              ]
+            }
+          }
+        },
+        {
+          "tool": "aviation.loading.table-interpolate",
+          "why": "Read the takeoff table at this pressure altitude in feet and temperature in °C, between its rows and columns, as you would on the chart. The example table is made up for illustration; enter the one from your own POH.",
+          "input": {
+            "table": {
+              "input": "takeoff_table"
+            },
+            "at_a": {
+              "from": [
+                1,
+                "pressure_altitude",
+                "value"
+              ]
+            },
+            "at_b": {
+              "from": [
+                0,
+                "temperature",
+                "value"
+              ]
+            },
+            "names": "pressure altitude, temperature"
+          }
+        },
+        {
+          "tool": "aviation.wind.runway-components",
+          "why": "Split the wind on your runway. A headwind shortens the roll and a tailwind lengthens it; apply your POH's wind correction to the distance above.",
+          "input": {
+            "runway": {
+              "input": "runway"
+            },
+            "wind_direction": {
+              "from": [
+                0,
+                "wind_direction"
+              ]
+            },
+            "wind_speed": {
+              "from": [
+                0,
+                "wind_speed"
+              ]
+            },
+            "gust": {
+              "from": [
+                0,
+                "wind_gust"
+              ],
+              "optional": true
+            },
+            "wind_reference": "true",
+            "variation": {
+              "input": "variation"
+            },
+            "max_crosswind": {
+              "input": "max_crosswind"
+            }
+          }
+        }
+      ],
+      "visual": {
+        "step": 4
+      }
     }
   ]
 }

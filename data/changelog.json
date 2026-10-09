@@ -4,6 +4,13 @@
     {
       "date": "2026-10-09",
       "kind": "added",
+      "tools": [],
+      "vectors": [],
+      "summary": "A new workflow, Preflight performance check, goes from the METAR to pressure and density altitude, reads your POH takeoff table at today's pressure altitude and temperature, and splits the wind on your runway."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "added",
       "tools": [
         "aviation.altimetry.pressure-altitude"
       ],

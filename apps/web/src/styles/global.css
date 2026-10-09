@@ -486,6 +486,8 @@ figure.diagram svg { display: block; inline-size: 100%; block-size: auto; max-bl
 .dg-label { fill: var(--text); font: 600 11px var(--sans); paint-order: stroke; stroke: var(--surface); stroke-width: 3; }
 .dg-muted-text { fill: var(--muted); font: 11px var(--mono); }
 .dg-dot-now { fill: var(--text); stroke: var(--surface); stroke-width: 2; }
+/* Left out (a satellite under the mask): an outline, so the difference is in the shape, not only the color. */
+.dg-hollow { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
 /* Airspeed indicator arcs. The colors are the instrument's own convention; the
    gauge also labels each arc in words, so nothing is carried by color alone. */
 .dg-arc-white { stroke: var(--text); stroke-width: 5; fill: none; }

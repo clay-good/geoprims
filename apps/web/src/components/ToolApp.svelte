@@ -55,6 +55,8 @@
   const columns = (schema) => Object.keys(schema.items?.properties ?? {});
   const lastField = fields.at(-1)?.[0];
   const isList = (schema) => schema.type === 'array';
+  // Long free text (a deed, a GeoJSON file, an almanac) keeps its line breaks.
+  const isLongText = (schema) => schema.type === 'string' && (schema.maxLength ?? 0) >= 10_000;
   const NUMBER = /^[-+]?[\d.]+(e[-+]?\d+)?$/i;
   function toText(k, v) {
     if (v === undefined) return '';
@@ -784,6 +786,18 @@
             e.preventDefault();
             importInto(name, e.dataTransfer.files[0]);
           }}
+        ></textarea>
+      {:else if isLongText(schema)}
+        <textarea
+          id={`field-${name}`}
+          aria-invalid={badField === name}
+          aria-describedby={badField === name ? 'field-error' : undefined}
+          bind:value={values[name]}
+          oninput={edited}
+          rows="6"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
         ></textarea>
       {:else}
         <span class="entry">

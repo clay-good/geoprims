@@ -57,7 +57,11 @@ fn catalog_examples_vectors() {
         .collect();
     // Tools in other crates that survey tools point at; this crate cannot see
     // them, so they are named here.
-    let mut failures = manifest::lint(TOOLS, &taxonomy, &["geodesy.spcs.spcs83-forward"]);
+    let mut failures = manifest::lint(
+        TOOLS,
+        &taxonomy,
+        &["geodesy.spcs.spcs83-forward", "time.scale.gps-week"],
+    );
     let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {
         failures.extend(

@@ -14,8 +14,9 @@ const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf
 const route = (id) => '/' + id.split('.').join('/') + '/';
 const page = (r) => readFileSync(join(dist, r, 'index.html'), 'utf8');
 
-/** The control a schema should get: a select for a choice, a textarea for a list. */
-const expected = (schema) => (schema.enum ? 'select' : schema.type === 'array' ? 'textarea' : 'input');
+/** The control a schema should get: a select for a choice, a textarea for a list or long free text. */
+const expected = (schema) =>
+  schema.enum ? 'select' : schema.type === 'array' || (schema.type === 'string' && (schema.maxLength ?? 0) >= 10_000) ? 'textarea' : 'input';
 
 test('every manifest renders, with one control per input', () => {
   const problems = [];

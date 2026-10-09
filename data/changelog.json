@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
+        "survey.gnss.dop"
+      ],
+      "vectors": [],
+      "summary": "New: GPS satellite visibility and DOP. Paste this week's YUMA almanac from the Coast Guard, give a site and a time window, and see how many satellites are above your elevation mask and how PDOP, HDOP, and VDOP move through the window, with a sky plot. Enter the skyline where trees or buildings block the sky. Long text fields, such as an almanac, a deed, or GeoJSON, now get a multi-line box that keeps their line breaks."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "changed",
       "tools": [
         "aviation.flight-plan.nav-log"

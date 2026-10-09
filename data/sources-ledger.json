@@ -2921,6 +2921,46 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "gps-sps-ps",
+      "name": "Global Positioning System Standard Positioning Service Performance Standard",
+      "issuer": "US Department of Defense",
+      "currentEdition": "5th Edition, April 2020",
+      "currentReleaseDate": "2020-04",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "legalStatus": null,
+      "lastVerified": "2026-10-09",
+      "verificationNote": "Read at the issuer on 2026-10-09 (gps.gov, 2020-SPS-performance-standard.pdf): 5th Edition, April 2020. Section 3.8.1 and Table 3.8-1 commit to a global PDOP of 6 or less at least 98% of the time with a 5° mask.",
+      "freeAccessUrl": "https://www.gps.gov/sites/default/files/2025-07/2020-SPS-performance-standard.pdf",
+      "matchTerms": [
+        "Standard Positioning Service Performance Standard"
+      ],
+      "editionStatus": "current",
+      "editionCheck": true
+    },
+    {
+      "id": "navcen-almanacs",
+      "name": "GPS almanacs (YUMA format)",
+      "issuer": "US Coast Guard Navigation Center",
+      "currentEdition": "Current almanac, published weekly",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "legalStatus": null,
+      "lastVerified": "2026-10-09",
+      "verificationNote": "Checked at the issuer on 2026-10-09: the GPS NANUs, Almanacs, OPS Advisories, and SOF page links current_yuma.alm; that week's file (week 392) parsed with every field the tool reads.",
+      "freeAccessUrl": "https://www.navcen.uscg.gov/gps-nanus-almanacs-opsadvisories-sof",
+      "matchTerms": [
+        "GPS almanacs (YUMA format)"
+      ],
+      "editionStatus": "current",
+      "editionCheck": false
     }
   ]
 }

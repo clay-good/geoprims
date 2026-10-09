@@ -1825,9 +1825,15 @@
       ]
     },
     "survey.gnss": {
-      "summary": "GNSS field work: precision budgets, OPUS sessions, and antenna heights.",
-      "intro": "GNSS field work: the precision a receiver's millimeters-plus-ppm specification promises over your baseline, planning an NGS OPUS session and naming its RINEX file, reducing a slant antenna height to the antenna reference point, and site localization that fits local coordinates to the grid. It is for surveyors running RTK, PPK, and static sessions. Start with the RTK and PPK precision budget. A slant height measured to the edge of the antenna is not the vertical height to the reference point, so reduce it before processing.",
+      "summary": "GNSS field work: satellite visibility and DOP, precision budgets, OPUS sessions, and antenna heights.",
+      "intro": "GNSS field work: when the satellites are well placed over a site, from a pasted GPS almanac, the precision a receiver's millimeters-plus-ppm specification promises over your baseline, planning an NGS OPUS session and naming its RINEX file, reducing a slant antenna height to the antenna reference point, and site localization that fits local coordinates to the grid. It is for surveyors running RTK, PPK, and static sessions. Start with the RTK and PPK precision budget. A slant height measured to the edge of the antenna is not the vertical height to the reference point, so reduce it before processing.",
       "tasks": [
+        {
+          "want": "pick the hours with the most satellites and the best PDOP",
+          "tools": [
+            "dop"
+          ]
+        },
         {
           "want": "estimate RTK or PPK precision from a receiver's spec",
           "tools": [

@@ -5,6 +5,7 @@
 pub mod borrow;
 pub mod closure;
 pub mod direction;
+pub mod dop;
 pub mod edm;
 pub mod gnss;
 pub mod grade;
@@ -2330,6 +2331,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &gnss::RTK_BUDGET,
     &gnss::OPUS_PLAN,
     &gnss::ANTENNA_HEIGHT,
+    &dop::DOP,
     &gnss::ALTA_RPP,
     &localize::LOCALIZATION,
     &lsq::LEAST_SQUARES,

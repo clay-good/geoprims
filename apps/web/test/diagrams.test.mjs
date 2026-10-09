@@ -448,6 +448,33 @@ test('the terrain sight line is drawn at the heights the core worked out', async
   }
 });
 
+test('the GNSS sky plot puts each satellite where the core does, and PDOP on its time axis', async () => {
+  // add-practitioner-essentials 5.6 fixture.
+  const t = catalog.tools.find((x) => x.id === 'survey.gnss.dop');
+  const base = t.examples[0].input;
+  for (const args of [base, { ...base, mask: '20 deg', horizon: [{ azimuth: '90 deg', elevation: '30 deg' }, { azimuth: '270 deg', elevation: '5 deg' }] }]) {
+    const r = JSON.parse(await host.invoke('survey.gnss.dop', JSON.stringify(args)));
+    const d = diagram('survey.gnss.dop', args, r);
+    const sats = r.result.satellites;
+    const marks = circles(d.markup).filter((c) => c.cls === 'dg-dot' || c.cls === 'dg-hollow');
+    const steps = r.result.timeline.filter((s) => typeof s.pdop === 'number');
+    assert.equal(marks.length, sats.length + steps.length, 'a mark per satellite and per PDOP sample');
+    // Zenith at (92, 112), horizon 72 out, north up and east to the right.
+    for (const [i, s] of sats.entries()) {
+      const m = marks[i];
+      const rr = (72 * (90 - s.elevation.value)) / 90;
+      const az = (s.azimuth.value * Math.PI) / 180;
+      assert.ok(Math.hypot(m.x - (92 + rr * Math.sin(az)), m.y - (112 - rr * Math.cos(az))) < 0.2, `PRN ${s.prn} placed`);
+      assert.equal(m.cls === 'dg-dot', s.used === 'yes', `PRN ${s.prn} filled only when used`);
+    }
+    // PDOP rises up the chart: the highest sample is the highest mark.
+    const pd = marks.slice(sats.length);
+    const hi = steps.reduce((k, s, i) => (s.pdop > steps[k].pdop ? i : k), 0);
+    assert.equal(Math.min(...pd.map((m) => m.y)), pd[hi].y);
+    assert.match(d.desc, new RegExp(`${sats.filter((s) => s.used === 'yes').length} satellites used`));
+  }
+});
+
 test('the borrow pit draws the balance line through every crossing', async () => {
   // add-survey-suite 3.3 fixture.
   const args = {

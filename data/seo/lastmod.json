@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f396f1cda497b716",
+    "hash": "0495b70beaafb4e3",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "216d3c8186bf9b40",
+    "hash": "ebee4d545feb4501",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -940,8 +940,8 @@
     "lastmod": "2026-09-29"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "a759b6d7c23b86e2",
-    "lastmod": "2026-09-29"
+    "hash": "7a8a8f91fb8d0815",
+    "lastmod": "2026-10-09"
   },
   "/indexing/h3/resolution-chooser/": {
     "hash": "0d769b00cca98c06",
@@ -1148,7 +1148,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "5bfc19d14f2d355c",
+    "hash": "33e954b52740cda7",
     "lastmod": "2026-10-09"
   },
   "/navigation/": {
@@ -1304,7 +1304,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "b1239bf498df4fcb",
+    "hash": "6e13b7f7ce783b4d",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
@@ -1396,12 +1396,12 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "2f41140defd638d5",
+    "hash": "cb3c22cb7de9f7a2",
     "lastmod": "2026-10-09"
   },
   "/survey/": {
-    "hash": "6648d2af3de92e59",
-    "lastmod": "2026-09-23"
+    "hash": "5129de433b171264",
+    "lastmod": "2026-10-09"
   },
   "/survey/cogo/": {
     "hash": "c4630e7649524703",
@@ -1520,16 +1520,20 @@
     "lastmod": "2026-10-07"
   },
   "/survey/gnss/": {
-    "hash": "d9f250159116dcfa",
-    "lastmod": "2026-09-23"
+    "hash": "d96028d18906d272",
+    "lastmod": "2026-10-09"
   },
   "/survey/gnss/antenna-height/": {
-    "hash": "db5a2e70caf8a814",
-    "lastmod": "2026-10-07"
+    "hash": "58eb369b2762f490",
+    "lastmod": "2026-10-09"
+  },
+  "/survey/gnss/dop/": {
+    "hash": "faf55cebc3ecc0e1",
+    "lastmod": "2026-10-09"
   },
   "/survey/gnss/localization/": {
-    "hash": "6ce611ad8b68ffb3",
-    "lastmod": "2026-10-07"
+    "hash": "e3f2d7d4da452d18",
+    "lastmod": "2026-10-09"
   },
   "/survey/gnss/opus-plan/": {
     "hash": "f6bf7fa22102bb5d",
@@ -1552,8 +1556,8 @@
     "lastmod": "2026-10-07"
   },
   "/survey/land/deed-parse/": {
-    "hash": "4f30095759d106be",
-    "lastmod": "2026-10-07"
+    "hash": "d78d39a05931917a",
+    "lastmod": "2026-10-09"
   },
   "/survey/land/deed-plot/": {
     "hash": "e4e7315175d60ce9",
@@ -1664,7 +1668,7 @@
     "lastmod": "2026-10-07"
   },
   "/tools/": {
-    "hash": "a121e19b9a1b8973",
+    "hash": "2deb1e0484f583f6",
     "lastmod": "2026-10-09"
   },
   "/units/": {
@@ -1928,7 +1932,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4d8d3ed459fa050a",
+    "hash": "e97eb91823c265d3",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {

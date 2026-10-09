@@ -267,6 +267,16 @@
       "relatedTools": []
     },
     {
+      "id": "dop",
+      "term": "DOP",
+      "expansion": "dilution of precision",
+      "definition": "How much the satellites' geometry magnifies ranging error into position error. Lower is better; it grows when the satellites bunch together in the sky.",
+      "source": "gps-sps-ps",
+      "relatedTools": [
+        "survey.gnss.dop"
+      ]
+    },
+    {
       "id": "dut1",
       "term": "DUT1",
       "expansion": "UT1 minus UTC",
@@ -467,6 +477,16 @@
       ]
     },
     {
+      "id": "gdop",
+      "term": "GDOP",
+      "expansion": "geometric dilution of precision",
+      "definition": "Dilution of precision for position and receiver clock together, the largest of the DOP family.",
+      "source": "gps-sps-ps",
+      "relatedTools": [
+        "survey.gnss.dop"
+      ]
+    },
+    {
       "id": "georef",
       "term": "GEOREF",
       "expansion": "World Geographic Reference System",
@@ -484,6 +504,7 @@
       "definition": "The US satellite navigation system. Its time scale runs a fixed number of seconds ahead of UTC (18 s since 2017) because it never adds leap seconds.",
       "source": "is-gps-200",
       "relatedTools": [
+        "survey.gnss.dop",
         "time.scale.gps-to-utc",
         "time.scale.gps-week"
       ]
@@ -567,6 +588,16 @@
       "source": "faa-iph",
       "relatedTools": [
         "aviation.performance.vdp"
+      ]
+    },
+    {
+      "id": "hdop",
+      "term": "HDOP",
+      "expansion": "horizontal dilution of precision",
+      "definition": "Dilution of precision for horizontal position: how much ranging error grows into error east and north.",
+      "source": "gps-sps-ps",
+      "relatedTools": [
+        "survey.gnss.dop"
       ]
     },
     {
@@ -1078,6 +1109,16 @@
       ]
     },
     {
+      "id": "pdop",
+      "term": "PDOP",
+      "expansion": "position dilution of precision",
+      "definition": "Dilution of precision for 3D position. The GPS performance standard plans for 6 or less almost everywhere with a 5° mask.",
+      "source": "gps-sps-ps",
+      "relatedTools": [
+        "survey.gnss.dop"
+      ]
+    },
+    {
       "id": "pi",
       "term": "PI",
       "expansion": "point of intersection",
@@ -1536,6 +1577,16 @@
       ]
     },
     {
+      "id": "vdop",
+      "term": "VDOP",
+      "expansion": "vertical dilution of precision",
+      "definition": "Dilution of precision for height. It is usually larger than HDOP because every satellite is above the horizon.",
+      "source": "gps-sps-ps",
+      "relatedTools": [
+        "survey.gnss.dop"
+      ]
+    },
+    {
       "id": "vdp",
       "term": "VDP",
       "expansion": "visual descent point",
@@ -1688,6 +1739,16 @@
       "definition": "The point where a climb reaches cruise altitude, given as a distance from departure along the route.",
       "source": "faa-phak",
       "relatedTools": []
+    },
+    {
+      "id": "yuma",
+      "term": "YUMA",
+      "expansion": "the Coast Guard's plain-text GPS almanac format",
+      "definition": "A plain-text GPS almanac format: one block of labeled orbit values per satellite, published weekly by the Coast Guard Navigation Center.",
+      "source": "navcen-almanacs",
+      "relatedTools": [
+        "survey.gnss.dop"
+      ]
     }
   ],
   "notAbbreviations": [

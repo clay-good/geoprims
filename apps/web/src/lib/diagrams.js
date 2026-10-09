@@ -222,6 +222,65 @@ const line = (cls, a, b) => `<line class="${cls}" x1="${f1(a[0])}" y1="${f1(a[1]
 const text = (cls, x, y, t, anchor = 'start') => `<text class="${cls}" text-anchor="${anchor}" x="${f1(x)}" y="${f1(y)}">${esc(t)}</text>`;
 const dot = (x, y, cls = 'dg-dot') => `<circle class="${cls}" cx="${f1(x)}" cy="${f1(y)}" r="4.5"/>`;
 
+/**
+ * GNSS planning: the sky at the start (zenith in the middle, the horizon the
+ * rim) with each satellite as the core placed it, filled when it is used and
+ * hollow when the mask or the skyline leaves it out, beside PDOP through the
+ * window on the same time axis the table lists.
+ */
+function gnssSky(args, result) {
+  const r = result.result;
+  const sats = r.satellites ?? [];
+  const steps = r.timeline ?? [];
+  if (!steps.length) return null;
+  const [cx, cy, R0] = [92, 112, 72];
+  const mask = deg(args.mask) ?? 10;
+  const ring = (e) => (R0 * (90 - e)) / 90;
+  const sky = (az, el) => { const [dx, dy] = vec(az, ring(Math.max(el, 0))); return [cx + dx, cy + dy]; };
+  const parts = [
+    `<circle class="dg-muted" cx="${cx}" cy="${cy}" r="${R0}" fill="none"/>`,
+    ...[30, 60].map((e) => `<circle class="dg-grid" cx="${cx}" cy="${cy}" r="${f1(ring(e))}" fill="none"/>`),
+    `<circle class="dg-grid dg-dash" cx="${cx}" cy="${cy}" r="${f1(ring(mask))}" fill="none"/>`,
+    ...[['N', 0], ['E', 90], ['S', 180], ['W', 270]].map(([t, b]) => { const [tx, ty] = vec(b, R0 + 10); return text('dg-muted-text', cx + tx, cy + ty + 4, t, 'middle'); }),
+  ];
+  const skyline = (Array.isArray(args.horizon) ? args.horizon : []).map((h) => [deg(h.azimuth), deg(h.elevation)]).filter((p) => p.every(Number.isFinite)).sort((a, b) => a[0] - b[0]);
+  if (skyline.length > 1) {
+    const pts = [];
+    for (let az = 0; az <= 360; az += 5) {
+      const k = skyline.findIndex((p) => p[0] > (az % 360));
+      const [a, b] = k <= 0 ? [skyline.at(-1), skyline[0]] : [skyline[k - 1], skyline[k]];
+      const span = ((b[0] - a[0]) % 360 + 360) % 360 || 360;
+      const x = ((((az % 360) - a[0]) % 360) + 360) % 360 / span;
+      pts.push(sky(az, a[1] + (b[1] - a[1]) * x));
+    }
+    parts.push(`<path class="dg-muted" fill="none" d="M${pts.map((p) => `${f1(p[0])} ${f1(p[1])}`).join('L')}Z"/>`);
+  }
+  for (const s of sats) {
+    const [x, y] = sky(val({ result: s }, 'azimuth'), val({ result: s }, 'elevation'));
+    const used = s.used === 'yes';
+    parts.push(`<circle class="${used ? 'dg-dot' : 'dg-hollow'}" cx="${f1(x)}" cy="${f1(y)}" r="${used ? 4.5 : 3.5}"/>`);
+    parts.push(text('dg-muted-text', x + 6, y - 5, String(s.prn)));
+  }
+  // PDOP through the window, 0 at the bottom, at least 6 at the top.
+  const [x0, x1, y0, y1] = [196, 306, 186, 52];
+  const pd = steps.map((t) => (typeof t.pdop === 'number' ? t.pdop : null));
+  const top = Math.max(6, ...pd.filter((p) => p !== null).map((p) => Math.ceil(p)));
+  const X = (i) => (steps.length === 1 ? (x0 + x1) / 2 : x0 + ((x1 - x0) * i) / (steps.length - 1));
+  const Y = (p) => y0 - ((y0 - y1) * Math.min(p, top)) / top;
+  parts.push(line('dg-grid', [x0, y0], [x1, y0]), line('dg-grid', [x0, y0], [x0, y1]));
+  parts.push(text('dg-muted-text', x0 - 3, y1 + 4, String(top), 'end'), text('dg-muted-text', x0 - 3, y0 + 4, '0', 'end'));
+  if (top >= 6) parts.push(line('dg-grid dg-dash', [x0, Y(6)], [x1, Y(6)]), text('dg-muted-text', x1, Y(6) + 11, 'GPS standard: 6 or less', 'end'));
+  for (let i = 1; i < pd.length; i++) if (pd[i - 1] !== null && pd[i] !== null) parts.push(line('dg-accent', [X(i - 1), Y(pd[i - 1])], [X(i), Y(pd[i])]));
+  pd.forEach((p, i) => { if (p !== null) parts.push(dot(X(i), Y(p))); });
+  parts.push(text('dg-muted-text', x0, y0 + 14, steps[0].time.slice(11, 16)), text('dg-muted-text', x1, y0 + 14, steps.at(-1).time.slice(11, 16), 'end'));
+  parts.push(text('dg-label', (x0 + x1) / 2, 36, 'PDOP, UTC', 'middle'));
+  const used = sats.filter((s) => s.used === 'yes').length;
+  parts.push(text('dg-label', 160, 226, `${used} of ${sats.length} in the sky used · hollow: masked`, 'middle'));
+  const title = `Sky plot at the start: ${used} satellites used of ${sats.length} above the horizon, with a ${mask}° mask${skyline.length > 1 ? ' and the skyline drawn' : ''}. ` +
+    `PDOP through the window${r.worst_pdop ? `, worst ${disp(result, 'worst_pdop')} at ${r.worst_at.slice(11, 16)} UTC` : ''}.`;
+  return { markup: svg(parts.join(''), title), desc: title };
+}
+
 /** Descent profile: cruise, then a straight descent from the top of descent to the target altitude. */
 function descentProfile(args, result) {
   const d = val(result, 'distance');
@@ -1532,6 +1591,7 @@ function batteryReserveGauge(args, result) {
 
 const DIAGRAMS = {
   'geodesy.frame.to-local': skyPlot,
+  'survey.gnss.dop': gnssSky,
   'aviation.wind.heading-groundspeed': windTriangle,
   'aviation.wind.runway-components': runwayComponents,
   'navigation.route.cpa': cpa,

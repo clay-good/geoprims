@@ -3,6 +3,17 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "fixed",
+      "tools": [
+        "geodesy.spcs.spcs83-forward",
+        "geodesy.spcs.spcs83-inverse",
+        "geodesy.spcs.zone-lookup"
+      ],
+      "vectors": [],
+      "summary": "The State Plane 1983 zones now use EPSG's current areas of use (v13.102). Five had been revised since the older copy: Louisiana Offshore now covers the Gulf (25.58° to 29.35° N) instead of a mostly onshore box, and the Arkansas and Georgia zones moved by up to 0.19°. A point in those slivers can now get a different zone from the zone lookup, a different automatic zone, or a different outside-the-zone warning. Projection parameters did not change. State plane forward also refuses a point too far from its zone to place on the grid, such as the opposite pole of a Lambert zone, instead of failing with an internal error."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "added",
       "tools": [
         "survey.gnss.dop"

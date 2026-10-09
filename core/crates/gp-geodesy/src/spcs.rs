@@ -162,7 +162,7 @@ const SPCS_OUTPUTS: &[Field] = &[
 
 pub static FORWARD: ToolDef = ToolDef {
     id: "geodesy.spcs.spcs83-forward",
-    version: "1.0.1",
+    version: "1.0.2",
     stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to state plane (SPCS83)",
     summary: "Converts NAD83 latitude and longitude to State Plane Coordinate System of 1983 easting and northing in any of the 124 zones, in meters, international feet, or US survey feet, with convergence and scale factor.",
@@ -255,6 +255,18 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     warn_outside(ctx, z, lat, lon);
     let g = z.forward(lat, lon);
+    // The opposite pole of a Lambert zone has no place on its grid: refuse it
+    // rather than return infinity.
+    if !(g.e.is_finite() && g.n.is_finite() && g.convergence.is_finite() && g.k.is_finite()) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!(
+                "This point is too far outside {} to place on its grid.",
+                z.short_name()
+            ),
+        )
+        .at("/lat"));
+    }
     let u = chosen_unit(ctx, z)?;
     let m = len_unit("m");
     if ctx.explaining() {
@@ -321,6 +333,7 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static INVERSE: ToolDef = ToolDef {
     id: "geodesy.spcs.spcs83-inverse",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "State plane (SPCS83) to latitude and longitude",
     summary: "Converts SPCS83 easting and northing in any of the 124 zones back to NAD83 latitude and longitude, with convergence and scale factor.",
@@ -518,7 +531,7 @@ const ZONE_ROW: &[Field] = &[
 
 pub static LOOKUP: ToolDef = ToolDef {
     id: "geodesy.spcs.zone-lookup",
-    version: "1.0.1",
+    version: "1.0.2",
     title: "State plane zone lookup",
     summary: "Finds SPCS83 zones by state or zone name, or the zones whose area of use covers a point, with each zone's NGS code, EPSG code, projection, and feet unit.",
     aliases: &[

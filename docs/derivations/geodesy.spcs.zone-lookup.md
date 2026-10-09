@@ -25,6 +25,8 @@ The SPCS83 zones of the United States and its territories. A point outside them 
 
 The point lookup uses each zone's published rectangular area of use, not the state boundary. A rectangle around an irregular state includes ground the zone is not meant for, so a point just outside a state can match its zone, and a point near a zone boundary matches both. The count is a shortlist, not a decision.
 
+The rectangles are EPSG v13.102's (through PROJ 9.9.0) since 2026-10-09; EPSG revised five of them after v10.094, most of all Louisiana Offshore, which now covers the Gulf rather than a mostly onshore box. The golden vectors were set against v10.094 and none lies in a revised sliver, so they hold under both.
+
 ## Worked example
 
 - sourcePublisher: IOGP (the EPSG registry); PROJ contributors

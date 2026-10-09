@@ -14,11 +14,11 @@ SPEC = "add-spatial-indexing-and-raster scenarios"
 PTS = [(40.446111, -79.982222, 9), (-33.8688, 151.2093, 7), (51.5074, -0.1278, 12), (64.8378, -147.7164, 5), (-0.5, 179.999, 3), (89.9, 45.0, 6)]
 
 
-def vec(i, inp, exp, src=SRC, ver=VER, tol=5e-11):
+def vec(i, inp, exp, src=SRC, ver=VER, tol=5e-11, rel=1e-11):
     e = dict(exp)
     e.setdefault("ok", True)
     # h3o and H3 C agree within 1e-12° below 88° latitude, 5e-11° nearer the poles.
-    t = {k: {"rel": 1e-11, "abs": tol} for k, v in e.items() if isinstance(v, float)}
+    t = {k: {"rel": rel, "abs": tol} for k, v in e.items() if isinstance(v, float)}
     return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": ver, "tolerance": t}
 
 
@@ -61,7 +61,7 @@ def main():
         uncompact.append(vec(i, {"cells": [{"cell": c}], "resolution": cr}, {"result.count": float(len(kids))}))
         es = h3.origin_to_directed_edges(c)
         edges.append(vec(i, {"cell": c}, {"result.edge_count": float(len(es)), "result.edges.0.edge": es[0],
-                                          "result.edges.0.length.value": h3.edge_length(es[0], "m")}, tol=1e-6))
+                                          "result.edges.0.length.value": h3.edge_length(es[0], "m")}, tol=1e-9, rel=1e-10))
     pent = "85080003fffffff"
     disk.append(vec(7, {"cell": pent, "k": 1}, {"result.count": 6.0, "meta.warnings.0.code": "PENTAGON_DISTORTION"}, SPEC, "2026"))
     to_cell.append(vec(7, {"lat": 0, "lon": 0, "resolution": 16}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))

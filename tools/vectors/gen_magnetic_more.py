@@ -121,8 +121,8 @@ def griv_rows(start):
                       "result.declination.value": d, "result.convergence.value": g},
                      # Two WMM implementations agree to about 3e-6 deg; PROJ and
                      # the core's convergence to about 1e-9.
-                     {"result.grivation.value": {"abs": 1e-4},
-                      "result.declination.value": {"abs": 1e-4},
+                     {"result.grivation.value": {"abs": 1e-7},
+                      "result.declination.value": {"abs": 1e-7},
                       "result.convergence.value": {"abs": 1e-6}}))
     return rows
 
@@ -158,8 +158,8 @@ def t2m_rows(start):
                      {"ok": True, "result.result.value": want,
                       "result.variation_used.value": d,
                       "result.variation_source": "model"},
-                     {"result.result.value": {"abs": 1e-4},
-                      "result.variation_used.value": {"abs": 1e-4},
+                     {"result.result.value": {"abs": 1e-7},
+                      "result.variation_used.value": {"abs": 1e-7},
                       "result.variation_source": {"abs": 0}}))
     for bearing, direction, chart, lat, lon, date in CHART_CASES:
         i += 1
@@ -181,9 +181,9 @@ def t2m_rows(start):
                      {"result.result.value": {"abs": 1e-9},
                       "result.variation_used.value": {"abs": 1e-9},
                       "result.variation_source": {"abs": 0},
-                      "result.model_declination.value": {"abs": 1e-4},
-                      "result.model_result.value": {"abs": 1e-4},
-                      "result.difference.value": {"abs": 1e-4}}))
+                      "result.model_declination.value": {"abs": 1e-7},
+                      "result.model_result.value": {"abs": 1e-7},
+                      "result.difference.value": {"abs": 1e-7}}))
     return rows
 
 

@@ -172,7 +172,7 @@ def main():
         tol = {}
         for k, v in exp.items():
             if isinstance(v, float):
-                tol[k] = ({"abs": 1e-6} if k.endswith(("northing.value", "easting.value")) else {"abs": 0.02} if "orientation" in k
+                tol[k] = ({"abs": 1e-6} if k.endswith(("northing.value", "easting.value")) else {"abs": 1e-6} if "orientation" in k
                           else {"rel": 1e-5, "abs": 1e-6} if ("semi" in k or "sd_" in k or "variance" in k) else {"abs": 0})
         out.append({"id": f"v{i:03d}", "input": inp, "expect": exp, "source": src, "sourceVersion": VER, "tolerance": tol})
     # 6. One distance cannot fix a point.

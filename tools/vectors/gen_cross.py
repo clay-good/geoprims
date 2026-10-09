@@ -65,7 +65,7 @@ def build(cases, start=0):
              "result.cells.3.cell_size.value": tile[1],
              "result.cells.5.cell_size.value": s2[1],
              "ok": True}
-        t = {k: {"rel": 1e-9, "abs": 1e-6} for k, v in e.items() if isinstance(v, float)}
+        t = {k: {"rel": 1e-9, "abs": 1e-9} for k, v in e.items() if isinstance(v, float)}
         rows.append({"id": f"v{i:03d}", "input": {"lat": lat, "lon": lon, "target_size": f"{target:g} m"},
                      "expect": e, "source": SRC, "sourceVersion": VER, "tolerance": t})
     return rows

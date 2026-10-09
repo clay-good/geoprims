@@ -1,0 +1,225 @@
+{
+  "note": "Per-domain tolerance ceilings for golden vectors (add-trust-and-proof design T5). A field looser than its domain's ceiling needs a justification below, matched by the start of the vector's source; checked by tools/trust/tolerance.test.mjs. Indexing's 'exact' is read as: integers exact, computed coordinates, lengths, and areas to double-precision rounding (1e-8 relative).",
+  "ceilings": {
+    "geodesy": {
+      "lengthMeters": 0.001,
+      "angleDegrees": 1e-06
+    },
+    "aviation": {
+      "relative": 0.001
+    },
+    "drone": {
+      "relative": 0.005,
+      "zero": 1e-06
+    },
+    "survey": {
+      "absolute": 0.001
+    },
+    "indexing": {
+      "relative": 1e-08,
+      "absolute": 1e-09
+    }
+  },
+  "justified": [
+    {
+      "tool": "aviation.altimetry.density-altitude",
+      "source": "FAA Pilot's Handbook of Aeronautical Knowledge",
+      "reason": "The handbook reads density altitude off its chart, which resolves no finer than about 100 ft."
+    },
+    {
+      "tool": "aviation.loading.weight-balance",
+      "source": "FAA Aircraft Weight and Balance Handbook",
+      "reason": "The handbook prints the center of gravity to a tenth of an inch, so the tolerance is half of that."
+    },
+    {
+      "tool": "aviation.performance.etp-pnr",
+      "source": "CASA AC 91-15",
+      "reason": "CASA's table prints distances to the whole nautical mile, so the tolerance is half a mile."
+    },
+    {
+      "tool": "aviation.wind.course-from-heading",
+      "source": "FAA Pilot's Handbook of Aeronautical Knowledge",
+      "reason": "The handbook's flight-computer example gives whole degrees and knots, worked graphically, so the tolerance is one unit."
+    },
+    {
+      "tool": "aviation.wind.find-wind",
+      "source": "FAA Pilot's Handbook of Aeronautical Knowledge",
+      "reason": "The handbook's flight-computer example gives whole degrees and knots, worked graphically, so the tolerance is one unit."
+    },
+    {
+      "tool": "aviation.wind.heading-groundspeed",
+      "source": "FAA Pilot's Handbook of Aeronautical Knowledge",
+      "reason": "The handbook's flight-computer example gives whole degrees and knots, worked graphically, so the tolerance is one unit."
+    },
+    {
+      "tool": "aviation.wind.runway-components",
+      "source": "FAA Pilot's Handbook of Aeronautical Knowledge",
+      "reason": "The handbook's crosswind chart example gives whole knots read from the chart, so the tolerance is one unit."
+    },
+    {
+      "tool": "aviation.wind.tas-from-groundspeed",
+      "source": "FAA Pilot's Handbook of Aeronautical Knowledge",
+      "reason": "The handbook's flight-computer example gives whole degrees and knots, worked graphically, so the tolerance is one unit."
+    },
+    {
+      "tool": "drone.mission.geofence",
+      "source": "Geodesic distance on the equator and a meridian in closed form",
+      "reason": "The field is the tool's own measured fence error, ideally 0; the vector holds it within the accuracy the tool states, 0.1% of the distance or 0.5 m."
+    },
+    {
+      "tool": "geodesy.datum.helmert",
+      "source": "IOGP Guidance Note 7-2 worked example",
+      "reason": "The guidance note prints the example's coordinates to the centimeter, so the tolerance is one centimeter."
+    },
+    {
+      "tool": "geodesy.datum.nad83",
+      "source": "NGS HTDP",
+      "reason": "HTDP prints heights to the millimeter; the tolerance is that rounding plus a millimeter for HTDP's own arithmetic."
+    },
+    {
+      "tool": "geodesy.datum.transform",
+      "source": "NGS HTDP",
+      "reason": "HTDP prints heights to the millimeter; the tolerance is that rounding plus a millimeter for HTDP's own arithmetic."
+    },
+    {
+      "tool": "geodesy.frame.ecef-to-geodetic",
+      "source": "IOGP Geomatics Guidance Note 7-2, sections 4.1.1",
+      "reason": "The guidance note prints the example's height to a tenth of a meter, so the tolerance is half of that."
+    },
+    {
+      "tool": "geodesy.frame.from-local",
+      "source": "IOGP Geomatics Guidance Note 7-2, sections 4.1.1",
+      "reason": "The guidance note prints the example's height to a tenth of a meter, so the tolerance is half of that."
+    },
+    {
+      "tool": "geodesy.grid-ref.georef-inverse",
+      "source": "Wikipedia, World Geographic Reference System",
+      "reason": "The article gives the point, and a one-minute GEOREF cell returns its center, up to half a minute (0.0083°) away."
+    },
+    {
+      "tool": "geodesy.grid-ref.maidenhead-inverse",
+      "source": "Wikipedia, Maidenhead Locator System",
+      "reason": "The article gives the station's point, and its six-character subsquare returns its center, up to half the subsquare away."
+    },
+    {
+      "tool": "geodesy.grid-ref.mgrs-inverse",
+      "source": "NGA GEOTRANS MGRS (C) via the mgrs",
+      "reason": "The longitude tolerance is 2e-7° times sec(latitude), a constant ground distance; near the poles a degree of longitude is short."
+    },
+    {
+      "tool": "geodesy.grid-ref.mgrs-inverse",
+      "source": "add-geodesy-suite scenarios (GeographicLib values)",
+      "reason": "The scenario point was written to a 1 m MGRS square, whose center can sit half a meter (about 5e-6°) from it."
+    },
+    {
+      "tool": "geodesy.magnetic.declination",
+      "source": "NCEI WMM2025 test values",
+      "reason": "NCEI prints the test values' declination and inclination to 0.01°, so the tolerance is half of that."
+    },
+    {
+      "tool": "geodesy.magnetic.declination",
+      "source": "NCEI WMMHR2025 test values",
+      "reason": "NCEI prints the test values' declination and inclination to 0.01°, so the tolerance is half of that."
+    },
+    {
+      "tool": "geodesy.magnetic.grivation",
+      "source": "NCEI WMM2025 test values (declination)",
+      "reason": "NCEI prints the test values' declination to 0.01°, so the declination and the grivation built on it carry half of that."
+    },
+    {
+      "tool": "geodesy.parse.coordinates",
+      "source": "Wikipedia, Decimal degrees",
+      "reason": "The article rounds its worked example's decimal degrees, so the tolerance covers that rounding."
+    },
+    {
+      "tool": "geodesy.parse.format",
+      "source": "add-geodesy-suite scenarios (GeographicLib values)",
+      "reason": "The scenario quotes GeographicLib's resolution figure rounded to the centimeter, so the tolerance covers that rounding."
+    },
+    {
+      "tool": "geodesy.projection.albers-forward",
+      "source": "Snyder (1987)",
+      "reason": "Snyder works the example on a 10-digit calculator and prints meters to one decimal, so it agrees within a few centimeters."
+    },
+    {
+      "tool": "geodesy.projection.azimuthal-equidistant-forward",
+      "source": "IOGP Guidance Note 7-2",
+      "reason": "The guidance note prints the example's easting and northing to the centimeter, so the tolerance is one centimeter."
+    },
+    {
+      "tool": "geodesy.projection.equidistant-cylindrical-forward",
+      "source": "IOGP Guidance Note 7-2",
+      "reason": "The guidance note prints the example's easting and northing to the centimeter, so the tolerance is one centimeter."
+    },
+    {
+      "tool": "geodesy.projection.hotine-forward",
+      "source": "IOGP Guidance Note 7-2",
+      "reason": "The guidance note prints the example's easting and northing to the centimeter, so the tolerance is one centimeter."
+    },
+    {
+      "tool": "geodesy.projection.lcc-forward",
+      "source": "IOGP Guidance Note 7-2",
+      "reason": "The guidance note prints the examples' eastings and northings to the centimeter, so the tolerance is one centimeter."
+    },
+    {
+      "tool": "geodesy.projection.polar-stereographic-forward",
+      "source": "IOGP Guidance Note 7-2",
+      "reason": "The guidance note prints the examples' eastings and northings to the centimeter, so the tolerance is one centimeter."
+    },
+    {
+      "tool": "geodesy.projection.tm-forward",
+      "source": "IOGP Guidance Note 7-2",
+      "reason": "The guidance note prints to the centimeter and uses a shorter series that is some millimeters off the exact projection."
+    },
+    {
+      "tool": "geodesy.projection.web-mercator-forward",
+      "source": "IOGP Guidance Note 7-2",
+      "reason": "The guidance note prints the example's easting and northing to the centimeter, so the tolerance is one centimeter."
+    },
+    {
+      "tool": "geodesy.spcs.spcs2022-forward",
+      "source": "NGS SPCS2022 Example Coordinates",
+      "reason": "NGS prints each example's convergence to a hundredth of an arc-second (2.8e-6°), so the tolerance is that rounding."
+    },
+    {
+      "tool": "geodesy.ups.inverse",
+      "source": "PROJ through pyproj: EPSG:32661",
+      "reason": "The longitude tolerance is 1e-9° times sec(latitude), a constant ground distance; near the poles a degree of longitude is short."
+    },
+    {
+      "tool": "indexing.geohash.decode",
+      "source": "Wikipedia, Geohash",
+      "reason": "The article rounds the decoded latitude and longitude it prints, so the tolerance covers that rounding."
+    },
+    {
+      "tool": "indexing.tile.ground-resolution",
+      "source": "Microsoft, Bing Maps Tile System",
+      "reason": "Microsoft's table prints each ground resolution rounded to a few decimals, so the tolerance covers that rounding."
+    },
+    {
+      "tool": "survey.cogo.traverse-closure",
+      "source": "University of Memphis CIVL 1112",
+      "reason": "The course prints latitudes and departures to 0.001 ft and sums the rounded values, so its totals drift slightly."
+    },
+    {
+      "tool": "survey.curves.circular-curve",
+      "source": "Headquarters, Department of the Army, FM 5-233",
+      "reason": "The field manual works the curve from rounded intermediate values, so its tangent and external differ by about 0.01 ft."
+    },
+    {
+      "tool": "survey.earthwork.slope-stake",
+      "source": "Indiana Department of Transportation",
+      "reason": "The procedures manual prints the slope stake to a tenth of a foot, so the tolerance is half of that."
+    },
+    {
+      "tool": "survey.land.deed-plot",
+      "source": "University of Memphis CIVL 1112",
+      "reason": "The course prints the area to the whole square foot, from rounded latitudes and departures, so the tolerance is half a square foot."
+    },
+    {
+      "tool": "survey.reduction.level-run",
+      "source": "Indiana Department of Transportation",
+      "reason": "The procedures manual prints rod readings and elevations to a hundredth of a foot, so the tolerance is half of that."
+    }
+  ]
+}

@@ -340,6 +340,7 @@ const OUTPUTS: &[Field] = &[
 
 pub static FORWARD: ToolDef = ToolDef {
     id: "geodesy.spcs.spcs2022-forward",
+    version: "1.0.1",
     title: "Latitude and longitude to state plane (SPCS2022 beta)",
     summary: "Converts a 2022 terrestrial-reference-frame latitude and longitude to easting and northing in any of the 953 NGS SPCS2022 beta zones.",
     aliases: &["SPCS2022 converter", "lat long to state plane 2022"],
@@ -409,6 +410,22 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
     warn_status(ctx, zone);
     warn_outside(ctx, zone, lat, lon);
     let grid = spcs::forward(zone.proj, lat, lon);
+    // The opposite pole of a Lambert zone has no place on its grid: refuse it
+    // rather than return infinity.
+    if !(grid.e.is_finite()
+        && grid.n.is_finite()
+        && grid.convergence.is_finite()
+        && grid.k.is_finite())
+    {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!(
+                "This point is too far outside {} to place on its grid.",
+                zone.name
+            ),
+        )
+        .at("/lat"));
+    }
     let unit = chosen_unit(ctx)?;
     let meters = len_unit("m");
     if ctx.explaining() {

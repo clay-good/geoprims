@@ -1432,6 +1432,7 @@ const ESTIMATE_LIMIT: f64 = 5_000_000.0;
 
 pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     id: "indexing.h3.polygon-to-cells",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "H3 polygon fill (polygonToCells)",
     summary: "The H3 cells that fill a polygon (with holes, across the antimeridian) at a resolution, by an explicit containment mode: cell centers inside, whole cells inside, or any overlap.",
@@ -1463,7 +1464,7 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     model: "H3 C polygonToCells containment tests (point in polygon on latitude and longitude, boundary crossings), breadth-first fill from cells along every edge",
     accuracy: "Identical cell sets to H3 C 4.4.1 in center, full, and overlapping modes on 1,000 random polygons with holes and antimeridian crossings",
     when_to_use: "Use this to turn an area into cells: the H3 cells that fill a polygon, with holes and across the antimeridian, at a resolution you choose. It is how a region, a service area, or an administrative boundary becomes a set of keys that rows can be joined on.",
-    limitations: "Which cells count as inside is a choice, not a fact, so the containment mode has to be stated: centers inside, whole cells inside, or any overlap all give different sets, and the difference is largest at coarse resolutions relative to the polygon. A fine resolution over a large area produces very many cells. A polygon cannot take in a pole: H3 reads a ring in latitude and longitude with straight edges, so a ring at one latitude encloses no area and comes back with nothing rather than with the cap it looks like.",
+    limitations: "Which cells count as inside is a choice, not a fact, so the containment mode has to be stated: centers inside, whole cells inside, or any overlap all give different sets, and the difference is largest at coarse resolutions relative to the polygon. A fine resolution over a large area produces very many cells, and long edges at a fine resolution are refused, since the cost grows with the perimeter as well as the area. A polygon cannot take in a pole: H3 reads a ring in latitude and longitude with straight edges, so a ring at one latitude encloses no area and comes back with nothing rather than with the cap it looks like.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -1660,9 +1661,10 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .at("/resolution")
         .hint("Choose a coarser resolution, or fill in pieces and compact the result."));
     }
-    // Long edges at a fine resolution cost time even when the area is small
-    // (about 2 µs per sample); 2,000,000 samples keeps a call to a few seconds.
-    if total_samples > 2_000_000.0 {
+    // Long edges at a fine resolution cost time even when the area is small:
+    // about 2 µs per sample natively but 8 to 24 µs in the browser's Wasm, so
+    // 250,000 samples keeps a call to a few seconds there.
+    if total_samples > 250_000.0 {
         return Err(ToolError::new(
             ErrorCode::LimitExceeded,
             "The polygon's edges are too long for this resolution.",

@@ -14,7 +14,9 @@ use gp_base::ErrorCode;
 use gp_base::envelope::AssetRef;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_geo::civil;
 use gp_geo::ellipsoid;
@@ -594,6 +596,26 @@ pub static DOP: ToolDef = ToolDef {
         Related {
             id: "time.scale.gps-week",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Earth's gravitational constant for GPS, μ",
+            value: "3.986005 × 10^14",
+            unit: "m3/s2",
+            source: "is-gps-200",
+        },
+        Assumption {
+            name: "Earth's rotation rate for GPS, Ω̇e",
+            value: "7.2921151467 × 10^-5",
+            unit: "rad/s",
+            source: "is-gps-200",
+        },
+        Assumption {
+            name: "PDOP the GPS performance standard plans for, the chart's reference line",
+            value: "6",
+            unit: "1",
+            source: "gps-sps-ps",
         },
     ],
     sentence: "At the start {visible} {plural visible \"satellite is\" \"satellites are\"} above the mask{if pdop > 0}, with a PDOP of {pdop}{/if}.{if worst_pdop > 0} The worst PDOP in the window is {worst_pdop}, at {worst_at}.{/if}{if fewest < 4} At times fewer than four are in view, too few for a position.{/if}",

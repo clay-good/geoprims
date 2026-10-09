@@ -16,7 +16,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use libm::{cos, sin, sqrt};
 use serde_json::{Map, Value};
@@ -287,6 +289,20 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
         Related {
             id: "survey.earthwork.profile-grades",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        Assumption {
+            name: "Radio refraction, the median effective Earth radius factor of 4/3 (k = 0.25)",
+            value: "4/3",
+            unit: "1",
+            source: "itu-r-p530",
         },
     ],
     sentence: "{if obstructions == 0}The target is in sight, with at least {clearance} to spare at {clearance_at}.{/if}{if obstructions > 0}The ground at {clearance_at} blocks the view, rising {obstruction_height} above the sight line. An observer {observer_height_needed} up would see over it.{/if}{if fresnel_short > 0} {fresnel_short} {plural fresnel_short \"point is\" \"points are\"} inside 60% of the Fresnel zone.{/if}",

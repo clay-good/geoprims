@@ -7,7 +7,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::{acos, sqrt};
 
@@ -240,6 +242,20 @@ pub static HORIZON: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        Assumption {
+            name: "Radio refraction, the median effective Earth radius factor of 4/3 (k = 0.25)",
+            value: "4/3",
+            unit: "1",
+            source: "itu-r-p530",
+        },
+    ],
     sentence: "From that height the visible horizon is {optical} away ({geometric} with no refraction, {radio} for radio).",
     limits: &[("batchRows", 10_000)],
     run: run_horizon,
@@ -425,6 +441,12 @@ pub static VISIBILITY: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+        value: "6371000",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "They can see each other up to {max_range} apart.",
     limits: &[("batchRows", 10_000)],
     run: run_visibility,
@@ -569,6 +591,12 @@ pub static DIP: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+        value: "6371000",
+        unit: "m",
+        source: "grs80",
+    }],
     sentence: "The horizon dips {dip} below eye level.",
     limits: &[("batchRows", 10_000)],
     run: run_dip,
@@ -736,6 +764,20 @@ pub static FRESNEL: ToolDef = ToolDef {
         Related {
             id: "drone.links.link-budget",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        Assumption {
+            name: "Radio refraction, the median effective Earth radius factor of 4/3 (k = 0.25)",
+            value: "4/3",
+            unit: "1",
+            source: "itu-r-p530",
         },
     ],
     sentence: "At that point the link needs {required_clearance} of clearance above a smooth Earth.",

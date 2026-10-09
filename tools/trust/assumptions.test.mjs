@@ -67,6 +67,12 @@ const MUST_DECLARE = [
   'drone.sensors.thermal-footprint',
   'drone.sensors.dataset-size',
   'drone.sensors.lidar-plan',
+  'navigation.los.horizon',
+  'navigation.los.visibility',
+  'navigation.los.dip',
+  'navigation.los.fresnel',
+  'raster.terrain.line-of-sight',
+  'survey.gnss.dop',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

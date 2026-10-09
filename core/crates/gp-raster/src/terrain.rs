@@ -11,7 +11,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use libm::{atan, atan2, cos, sin, sqrt};
 
@@ -487,6 +489,20 @@ pub static SLOPE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "WGS 84 semi-major axis, for cell sizes given in degrees",
+            value: "6378137",
+            unit: "m",
+            source: "nga-wgs84",
+        },
+        Assumption {
+            name: "WGS 84 inverse flattening, for cell sizes given in degrees",
+            value: "298.257223563",
+            unit: "1",
+            source: "nga-wgs84",
+        },
+    ],
     sentence: "The slope is {slope} ({slope_percent}%), facing {aspect_text}.",
     limits: &[("batchRows", 10_000)],
     run: run_slope,
@@ -592,6 +608,20 @@ pub static RUGGEDNESS: ToolDef = ToolDef {
         Related {
             id: "raster.index.ndvi",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "WGS 84 semi-major axis, for cell sizes given in degrees",
+            value: "6378137",
+            unit: "m",
+            source: "nga-wgs84",
+        },
+        Assumption {
+            name: "WGS 84 inverse flattening, for cell sizes given in degrees",
+            value: "298.257223563",
+            unit: "1",
+            source: "nga-wgs84",
         },
     ],
     sentence: "Ruggedness is {tri} by Riley, or {tri_mean} as a mean difference, and the cell sits {position}.",
@@ -718,6 +748,20 @@ pub static CURVATURE: ToolDef = ToolDef {
         Related {
             id: "raster.terrain.contours",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "WGS 84 semi-major axis, for cell sizes given in degrees",
+            value: "6378137",
+            unit: "m",
+            source: "nga-wgs84",
+        },
+        Assumption {
+            name: "WGS 84 inverse flattening, for cell sizes given in degrees",
+            value: "298.257223563",
+            unit: "1",
+            source: "nga-wgs84",
         },
     ],
     sentence: "The total curvature is {curvature} per 100 m.{if profile != 0} Downhill the ground {profile_text}.{/if}{if plan != 0} Across the slope the {plan_text}.{/if}",

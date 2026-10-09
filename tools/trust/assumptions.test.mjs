@@ -73,6 +73,9 @@ const MUST_DECLARE = [
   'navigation.los.fresnel',
   'raster.terrain.line-of-sight',
   'survey.gnss.dop',
+  'raster.terrain.slope-aspect',
+  'raster.terrain.ruggedness',
+  'raster.terrain.curvature',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

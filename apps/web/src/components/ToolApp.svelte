@@ -5,7 +5,7 @@
   import { isPinned, numberFormat, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { mapsTool } from '../lib/map/layers.js';
-  import { diagram } from '../lib/diagrams.js';
+  import { loadDiagram } from '../lib/diagram-loader.js';
   import { migrateState } from '../lib/migrate.mjs';
   import { say } from '../lib/keys.js';
   import { sound } from '../lib/sound.js';
@@ -27,7 +27,14 @@
   import { exportText, fileName, FORMATS as EXPORTS, pointsOf } from '../lib/export.mjs';
   // `embedded` is the home page's featured copy: it leaves the page URL alone,
   // stays out of the recent list, and links out to the tool's own page instead.
-  let { tool, example, initial, embedded = false } = $props();
+  // `firstDiagram` and `firstInline` are the example's drawings, made at build
+  // time; the tool's own diagram code loads on demand (`hasDiagram`) and draws
+  // from then on, so a page carries only its domain's drawings.
+  let { tool, example, initial, embedded = false, hasDiagram = false, firstDiagram = null, firstInline = null } = $props();
+  let draw = $state(null);
+  onMount(() => {
+    if (hasDiagram) loadDiagram(tool.id).then((f) => (draw = f), () => {});
+  });
 
   const fields = Object.entries(tool.inputs.properties).filter(([k]) => k !== 'options');
   const required = new Set(tool.inputs.required);
@@ -217,12 +224,12 @@
   let drawnArgs = $state(example);
   // A 3D drawing's view: turned about up, and seen from a tilt (90° is straight down).
   let dgView = $state({ turn: 0, tilt: 90 });
-  const dg = $derived(result?.ok ? diagram(tool.id, drawnArgs, result, '', dgView) : null);
+  const dg = $derived(result?.ok ? (draw ? draw(drawnArgs, result, '', dgView) : firstDiagram) : null);
   // A tool whose meaning is a picture shows a compact one directly under the
   // answer, as well as the full canvas in its place below (contracts/page-chrome,
   // "Fixed tool-page anatomy"). The full one carries the description; this copy
   // is the same picture, so it is decoration.
-  const inlineDg = $derived(tool['x-diagram-inline'] && result?.ok ? diagram(tool.id, drawnArgs, result, 'inline') : null);
+  const inlineDg = $derived(tool['x-diagram-inline'] && result?.ok ? (draw ? draw(drawnArgs, result, 'inline') : firstInline) : null);
 
   // Scene playback (map-canvas "Animated scenes"): the playhead is the tool's
   // timeline input, so every frame is a core result and the permalink keeps it.

@@ -1,6 +1,7 @@
 ---
 import Base from '../../../../layouts/Base.astro';
 import ToolApp from '../../../../components/ToolApp.svelte';
+import { firstDrawings } from '../../../../lib/first-drawings.mjs';
 import PageHeader from '../../../../components/PageHeader.astro';
 import { openIssue } from '../../../../lib/known-issues.mjs';
 import { defId, markTerms, sourceOf } from '../../../../lib/terms.mjs';
@@ -86,7 +87,7 @@ const purpose = markTerms(t.summary, terms);
     </details>
   )}
   <noscript><p class="card notice" role="note">Computing your own values needs JavaScript and WebAssembly. The worked example below was computed when this page was built, and the documentation under "How we got this" applies.</p></noscript>
-  <ToolApp client:load tool={client} example={ex.input} initial={initial} />
+  <ToolApp client:load tool={client} example={ex.input} initial={initial} {...firstDrawings(t, ex.input, initial)} />
   {common.length > 0 && (
     <section class="common-values" aria-labelledby="common-title">
       <h2 id="common-title">Common conversions</h2>

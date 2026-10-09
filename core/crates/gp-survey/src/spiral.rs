@@ -36,6 +36,22 @@ const ROW: &[Field] = &[
     ),
 ];
 
+/// A point of the layout in plan.
+const PLAN: &[Field] = &[
+    len_out("x", "Along", "Along the back tangent from the TS"),
+    len_out(
+        "y",
+        "Across",
+        "Off the back tangent, toward the inside of the curve",
+    ),
+    Field::new(
+        "point",
+        "Point",
+        "TS, SC, CS, or ST where it is one",
+        Kind::Text { max_len: 2 },
+    ),
+];
+
 /// X and Y at spiral length l with angle θ = l²/(2R·Ls), each to four series terms.
 fn xy(l: f64, th: f64) -> (f64, f64) {
     let (t2, t3) = (th * th, th * th * th);
@@ -150,6 +166,16 @@ pub static SPIRAL: ToolDef = ToolDef {
             },
         )
         .optional(),
+        Field::new(
+            "layout",
+            "Layout in plan",
+            "Points from the TS to the ST: x along the back tangent, y toward the inside",
+            Kind::List {
+                items: PLAN,
+                min: 0,
+                max: 200,
+            },
+        ),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
     warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
@@ -166,7 +192,7 @@ pub static SPIRAL: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[
@@ -242,6 +268,59 @@ fn run_spiral(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("cs_station", Json::Str(fmt_station(s_cs, metric))),
         ("st_station", Json::Str(fmt_station(s_st, metric))),
     ];
+    // The whole alignment in plan, on the back tangent's frame: the entry
+    // spiral from the series, the arc about its center, and the exit spiral
+    // laid back from the ST along the ahead tangent.
+    const N: usize = 24;
+    let mut plan: Vec<(f64, f64, &str)> = (0..=N)
+        .map(|i| {
+            let l = ls * i as f64 / N as f64;
+            let (xi, yi) = xy(l, l * l / (2.0 * r * ls));
+            (xi, yi, if i == 0 { "TS" } else { "" })
+        })
+        .collect();
+    let (cx, cy) = (x - r * sin(ths), y + r * cos(ths));
+    let m = ((delta - 2.0 * ths) / 2f64.to_radians()).ceil().max(2.0) as usize;
+    for j in 0..=m {
+        let phi = ths + (delta - 2.0 * ths) * j as f64 / m as f64;
+        let name = if j == 0 {
+            "SC"
+        } else if j == m {
+            "CS"
+        } else {
+            ""
+        };
+        if j == 0 {
+            plan.last_mut().expect("spiral").2 = name;
+            continue;
+        }
+        plan.push((cx + r * sin(phi), cy - r * cos(phi), name));
+    }
+    let (dx, dy) = (cos(delta), sin(delta));
+    let (sx, sy) = (ts + ts * dx, ts * dy);
+    for i in (0..N).rev() {
+        let l = ls * i as f64 / N as f64;
+        let (xi, yi) = xy(l, l * l / (2.0 * r * ls));
+        plan.push((
+            sx - xi * dx - yi * dy,
+            sy - xi * dy + yi * dx,
+            if i == 0 { "ST" } else { "" },
+        ));
+    }
+    out.push((
+        "layout",
+        Json::Arr(
+            plan.iter()
+                .map(|&(px, py, name)| {
+                    Json::obj(vec![
+                        ("x", ctx.emit("x", q(px), u)),
+                        ("y", ctx.emit("y", q(py), u)),
+                        ("point", Json::Str(name.to_owned())),
+                    ])
+                })
+                .collect(),
+        ),
+    ));
     if let Some(step) = step.map(|s| s.to(u)) {
         if step <= 0.0 || ls / step > 10_000.0 {
             return Err(ToolError::invalid(

@@ -475,6 +475,32 @@ test('the GNSS sky plot puts each satellite where the core does, and PDOP on its
   }
 });
 
+test('the spiral plan draws the core layout to one scale, tangent to both tangents', async () => {
+  // add-survey-suite 4.6 fixture: spirals in plan.
+  const args = { spiral_length: '200 ft', radius: '1000 ft', delta: '40 deg', pi_station: '50+00' };
+  const r = JSON.parse(await host.invoke('survey.curves.spiral', JSON.stringify(args)));
+  const d = diagram('survey.curves.spiral', args, r);
+  const paths = [...d.markup.matchAll(/<path class="([^"]*)" d="([^"]*)"/g)].map((m) => ({ cls: m[1], pts: [...m[2].matchAll(/[ML]([-\d.]+) ([-\d.]+)/g)].map((q) => [Number(q[1]), Number(q[2])]) })).filter((p) => !p.cls.startsWith('dg-head'));
+  assert.deepEqual(paths.map((p) => p.cls), ['dg-accent dg-dash', 'dg-accent', 'dg-accent dg-dash'], 'spiral, arc, spiral');
+  const layout = r.result.layout;
+  assert.equal(paths.reduce((n, p) => n + p.pts.length, 0), layout.length + 2, 'every layout point, SC and CS shared');
+  // The pieces join: the arc starts where the entry spiral ends, and so on.
+  const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.2;
+  assert.ok(near(paths[0].pts.at(-1), paths[1].pts[0]) && near(paths[1].pts.at(-1), paths[2].pts[0]));
+  // One scale: the drawn TS-to-ST span against the layout's, both ways.
+  const [first, last] = [paths[0].pts[0], paths[2].pts.at(-1)];
+  const [L0, L1] = [layout[0], layout.at(-1)];
+  const k = Math.hypot(last[0] - first[0], last[1] - first[1]) / Math.hypot(L1.x.value - L0.x.value, L1.y.value - L0.y.value);
+  assert.ok(Math.abs((last[0] - first[0]) - k * (L1.x.value - L0.x.value)) < 0.3, 'x to scale');
+  assert.ok(Math.abs((first[1] - last[1]) - k * (L1.y.value - L0.y.value)) < 0.3, 'y to scale, up the page');
+  // The tangents meet at the PI, a total tangent from the TS.
+  const pi = circles(d.markup).find((c) => c.cls === 'dg-dot-now');
+  const T = r.result.total_tangent.value;
+  assert.ok(Math.abs(Math.hypot(pi.x - first[0], pi.y - first[1]) - k * T) < 0.3, 'PI a tangent from the TS');
+  assert.ok(Math.abs(Math.hypot(pi.x - last[0], pi.y - last[1]) - k * T) < 0.3, 'and from the ST');
+  for (const p of ['TS', 'SC', 'CS', 'ST']) assert.match(d.markup, new RegExp(`${p} ${r.result[`${p.toLowerCase()}_station`].replace('+', '\\+')}`));
+});
+
 test('the borrow pit draws the balance line through every crossing', async () => {
   // add-survey-suite 3.3 fixture.
   const args = {

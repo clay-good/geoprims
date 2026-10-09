@@ -5,6 +5,7 @@
 import Base from '../../../layouts/Base.astro';
 import PageHeader from '../../../components/PageHeader.astro';
 import ToolApp from '../../../components/ToolApp.svelte';
+import { firstDrawings } from '../../../lib/first-drawings.mjs';
 import ToolCards from '../../../components/ToolCards.astro';
 import { EXPLAINERS } from '../../../lib/learn.js';
 import { breadcrumbs, clientTool, exampleResult, primaryExample, route, tool as find } from '../../../lib/catalog.mjs';
@@ -57,7 +58,7 @@ const jsonld = [
   <section class="learn-live" aria-labelledby="live-title">
     <h2 id="live-title">Try it: {live.title}</h2>
     <p class="help">The calculator below is the real tool, running its worked example. Change any value; nothing leaves your device.</p>
-    <ToolApp client:visible tool={clientTool(live)} example={primaryExample(live).input} initial={initial} embedded />
+    <ToolApp client:visible tool={clientTool(live)} example={primaryExample(live).input} initial={initial} embedded {...firstDrawings(live, primaryExample(live).input, initial)} />
   </section>
   <section class="learn-tools" aria-labelledby="tools-title">
     <h2 id="tools-title">Tools for this</h2>

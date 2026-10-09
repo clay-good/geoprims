@@ -7,7 +7,7 @@
   import { runChain } from '../../../../packages/runtime/src/chain.mjs';
   import MapCanvas from './MapCanvas.svelte';
   import { mapsTool } from '../lib/map/layers.js';
-  import { diagram } from '../lib/diagrams.js';
+  import { loadDiagram } from '../lib/diagram-loader.js';
   import { isNumeric } from '../lib/fields.mjs';
   import { planText } from '../lib/plan.mjs';
   import { workflowExport } from '../lib/export.mjs';
@@ -55,7 +55,12 @@
   const done = $derived(steps.filter((s) => s.status === 'ok').length);
   const visual = $derived(steps[workflow.visual.step]);
   const visualTool = tools[workflow.steps[workflow.visual.step].tool];
-  const dg = $derived(visual?.status === 'ok' ? diagram(visualTool.id, visual.input, visual.result) : null);
+  // The visual step's diagram code loads on demand; the steps compute in the browser anyway.
+  let draw = $state(null);
+  $effect(() => {
+    loadDiagram(visualTool.id).then((f) => (draw = f), () => {});
+  });
+  const dg = $derived(visual?.status === 'ok' && draw ? draw(visual.input, visual.result) : null);
   const onMap = mapsTool(visualTool);
 
   /** The step a failure belongs to, named for the reader. */

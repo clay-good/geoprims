@@ -3,6 +3,22 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [],
+      "vectors": [],
+      "summary": "Tool pages load less: a page now carries only its own tool's drawings, loaded when needed, instead of every diagram on the site, so a tool page's JavaScript fell from about 90 KB to 71 KB compressed (76 to 79 KB with a diagram). The first drawing is still in the page as it loads."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
+        "survey.curves.spiral"
+      ],
+      "vectors": [],
+      "summary": "The spiral-curve-spiral tool draws the curve in plan: both tangents into the PI, the entry and exit spirals and the circular arc between, each point named with its station. The result also lists the alignment's points along the back tangent and toward the inside of the curve."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "added",
       "tools": [
         "drone.mission.survey-grid"

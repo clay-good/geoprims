@@ -599,3 +599,176 @@ pub static RUGGEDNESS: ToolDef = ToolDef {
     run: run_ruggedness,
     ..ToolDef::BLANK
 };
+
+pub const ZEVENBERGEN_THORNE: Reference = Reference {
+    title: "Quantitative analysis of land surface topography",
+    issuer: "Zevenbergen, L. W., and Thorne, C. R., Earth Surface Processes and Landforms",
+    year: 1987,
+    edition: "Volume 12, issue 1, pages 47-56",
+    locator: "The partial quartic fitted through a 3 x 3 window, and profile and plan curvature from its coefficients",
+    url: "https://doi.org/10.1002/esp.3290120107",
+};
+
+/// Curvatures are reported per 100 m, where a value of 1 means the slope
+/// changes by 1% over a meter (a tenth of a degree, roughly, every 10 m).
+const PER_100M: f64 = 100.0;
+
+pub static CURVATURE: ToolDef = ToolDef {
+    id: "raster.terrain.curvature",
+    title: "Terrain curvature",
+    summary: "Total, profile, and plan curvature for the center of a 3 x 3 elevation window by Zevenbergen and Thorne’s method, with what each means for water running over the cell.",
+    aliases: &[
+        "curvature calculator",
+        "profile curvature",
+        "plan curvature",
+        "planform curvature",
+    ],
+    keywords: &[
+        "curvature",
+        "convex",
+        "concave",
+        "terrain",
+        "DEM",
+        "Zevenbergen",
+        "flow",
+        "ridge",
+        "hollow",
+    ],
+    inputs: &[
+        WINDOW_INPUTS[0],
+        WINDOW_INPUTS[1],
+        WINDOW_INPUTS[2],
+        WINDOW_INPUTS[3],
+    ],
+    outputs: &[
+        Field::new(
+            "curvature",
+            "Total curvature",
+            "Per 100 m; positive where the ground bulges up like a hilltop, negative where it dips like a hollow",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "profile",
+            "Profile curvature",
+            "Per 100 m, down the slope; positive where the slope steepens downhill",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        )
+        .precision(Precision::Decimals(4))
+        .optional(),
+        Field::new(
+            "plan",
+            "Plan curvature",
+            "Per 100 m, across the slope; positive where the contours bow outward, as on a spur",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        )
+        .precision(Precision::Decimals(4))
+        .optional(),
+        Field::new(
+            "profile_text",
+            "Down the slope",
+            "What the profile curvature does to running water",
+            Kind::Text { max_len: 64 },
+        )
+        .optional(),
+        Field::new(
+            "plan_text",
+            "Across the slope",
+            "What the plan curvature does to running water",
+            Kind::Text { max_len: 64 },
+        )
+        .optional(),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["FLAT_CELL", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Zevenbergen and Thorne (1987): D = ((z4 + z6)/2 − z5)/dx², E = ((z2 + z8)/2 − z5)/dy², F = (z3 + z7 − z1 − z9)/(4 dx dy), G = (z6 − z4)/(2 dx), H = (z2 − z8)/(2 dy); total = −2(D + E), profile = −2(DG² + EH² + FGH)/(G² + H²), plan = −2(DH² + EG² − FGH)/(G² + H²), each times 100, positive for convex",
+    accuracy: "Exact evaluation of the formulas; exact for any surface that is quadratic across the window.",
+    when_to_use: "Use this to see how the ground bends at a cell, which slope alone does not say: whether a slope steepens or flattens downhill, which speeds up or slows down running water, and whether the contours bow out over a spur, where water spreads, or curl into a hollow, where it gathers. These are the measures behind erosion, landslide, and soil-moisture mapping, and checking one cell by hand is how a GIS layer of them is tested.",
+    limitations: "Programs disagree on the sign and the scale of these measures: some multiply by 100 as this does, some do not, and some flip the sign of profile curvature so that negative means convex. Here positive is convex in all three, so check the convention before comparing numbers. The values depend strongly on the cell size and on noise in the elevation model, since they are second differences: a small error in one elevation moves them a lot. On flat ground there is no downhill direction, so profile and plan curvature are not given.",
+    references: &[ZEVENBERGEN_THORNE],
+    examples: &[Example {
+        id: "primary",
+        title: "A slope steepening into a hollow, 10 m cells",
+        input: r#"{"elevations":[{"row":"105.35, 105.3, 105.85"},{"row":"103.1, 103.0, 103.5"},{"row":"100.45, 100.3, 100.75"}],"cell_size":"10 m"}"#,
+        source: "Analytic derivatives of the surface the nine elevations were sampled from (tools/vectors/gen_curvature.py, v001)",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "raster.terrain.slope-aspect",
+            reason: "parent",
+        },
+        Related {
+            id: "raster.terrain.ruggedness",
+            reason: "alternative",
+        },
+        Related {
+            id: "raster.terrain.contours",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The total curvature is {curvature} per 100 m.{if profile != 0} Downhill the ground {profile_text}.{/if}{if plan != 0} Across the slope the {plan_text}.{/if}",
+    limits: &[("batchRows", 10_000)],
+    run: run_curvature,
+    ..ToolDef::BLANK
+};
+
+fn run_curvature(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let w = read_window(ctx)?;
+    let z = &w.z;
+    let (dx, dy) = (w.dx, w.dy);
+    // z1 … z9 row by row from the north-west, so z2 is north and z4 west.
+    let d = ((z[3] + z[5]) / 2.0 - z[4]) / (dx * dx);
+    let e = ((z[1] + z[7]) / 2.0 - z[4]) / (dy * dy);
+    let f = (z[2] + z[6] - z[0] - z[8]) / (4.0 * dx * dy);
+    let g = (z[5] - z[3]) / (2.0 * dx);
+    let h = (z[1] - z[7]) / (2.0 * dy);
+    let total = -2.0 * (d + e) * PER_100M;
+    let mut out = vec![("curvature", Json::Num(total))];
+    let g2h2 = g * g + h * h;
+    if g2h2 == 0.0 {
+        ctx.warnings.push(Warning::new(
+            "FLAT_CELL",
+            "The window has no gradient, so there is no downhill direction to measure profile and plan curvature along.",
+        ));
+        return Ok(Json::obj(out));
+    }
+    let profile = -2.0 * (d * g * g + e * h * h + f * g * h) / g2h2 * PER_100M;
+    let plan = -2.0 * (d * h * h + e * g * g - f * g * h) / g2h2 * PER_100M;
+    out.push(("profile", Json::Num(profile)));
+    out.push(("plan", Json::Num(plan)));
+    out.push((
+        "profile_text",
+        Json::str(if profile > 0.0 {
+            "steepens, so water speeds up"
+        } else if profile < 0.0 {
+            "flattens, so water slows down"
+        } else {
+            "keeps an even grade"
+        }),
+    ));
+    out.push((
+        "plan_text",
+        Json::str(if plan > 0.0 {
+            "contours bow outward, so water spreads"
+        } else if plan < 0.0 {
+            "contours curl inward, so water gathers"
+        } else {
+            "contours run straight"
+        }),
+    ));
+    Ok(Json::obj(out))
+}

@@ -2901,6 +2901,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "zevenbergen-thorne-1987",
+      "name": "Quantitative analysis of land surface topography",
+      "issuer": "Zevenbergen, L. W., and Thorne, C. R., Earth Surface Processes and Landforms",
+      "currentEdition": "Volume 12, issue 1, pages 47-56",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-09",
+      "verificationNote": "Verified at the DOI registry (Crossref) on 2026-10-09: title, journal, volume, issue, pages, year, and authors as cited. The paper itself is behind the publisher's paywall and was not re-read; the formulas are the widely reproduced ones.",
+      "freeAccessUrl": "https://doi.org/10.1002/esp.3290120107",
+      "matchTerms": [
+        "Quantitative analysis of land surface topography"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

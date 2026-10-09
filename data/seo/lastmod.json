@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "01d76d6396e2e687",
+    "hash": "f396f1cda497b716",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "71398aba0d35a40d",
+    "hash": "7e580071116e6709",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -1148,7 +1148,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "db2e2a948740b3cc",
+    "hash": "5bfc19d14f2d355c",
     "lastmod": "2026-10-09"
   },
   "/navigation/": {
@@ -1304,11 +1304,11 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "6134a2e181299c50",
+    "hash": "b1239bf498df4fcb",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
-    "hash": "2841de34e109be60",
+    "hash": "ad6967a3c98fbe01",
     "lastmod": "2026-10-09"
   },
   "/raster/index/": {
@@ -1368,15 +1368,19 @@
     "lastmod": "2026-09-29"
   },
   "/raster/terrain/": {
-    "hash": "30f5a861f66fd07b",
+    "hash": "057a2188d1e9e100",
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/contours/": {
-    "hash": "ac390c4f1f509972",
+    "hash": "2e625240a6b55f10",
+    "lastmod": "2026-10-09"
+  },
+  "/raster/terrain/curvature/": {
+    "hash": "f6a3381f0a932f5e",
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/line-of-sight/": {
-    "hash": "81f04af147d54c12",
+    "hash": "3d4646049f05502a",
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/ruggedness/": {
@@ -1392,7 +1396,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "9f4f1c3a8aae802c",
+    "hash": "2f41140defd638d5",
     "lastmod": "2026-10-09"
   },
   "/survey/": {
@@ -1660,7 +1664,7 @@
     "lastmod": "2026-10-07"
   },
   "/tools/": {
-    "hash": "86ea31105da8dada",
+    "hash": "a121e19b9a1b8973",
     "lastmod": "2026-10-09"
   },
   "/units/": {
@@ -1924,7 +1928,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c4460a928b85f7de",
+    "hash": "3bb5c46296723f82",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {

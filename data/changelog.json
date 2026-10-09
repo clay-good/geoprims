@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "added",
       "tools": [
+        "raster.terrain.curvature"
+      ],
+      "vectors": [],
+      "summary": "New: terrain curvature for one cell of an elevation model, by Zevenbergen and Thorne's method. It gives total, profile, and plan curvature per 100 m, positive where the ground is convex, and says in words whether water running over the cell speeds up or slows down and spreads or gathers."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
         "raster.terrain.line-of-sight"
       ],
       "vectors": [],

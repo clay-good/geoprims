@@ -30,6 +30,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &bandmath::BANDMATH,
     &terrain::SLOPE,
     &terrain::RUGGEDNESS,
+    &terrain::CURVATURE,
     &contour::CONTOURS,
     &sightline::LINE_OF_SIGHT,
 ];

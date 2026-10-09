@@ -399,6 +399,55 @@ test('the ground profile flags the steep segments and states the exaggeration', 
   assert.ok(Math.abs(rise / run - stated) < 0.1, `states ×${stated}, draws ×${(rise / run).toFixed(1)}`);
 });
 
+test('the terrain sight line is drawn at the heights the core worked out', async () => {
+  // add-spatial-indexing-and-raster 4.5 fixture: the ridge and Fresnel scenarios.
+  const points = [[0, 300], [4, 340], [8, 395], [12, 330], [16, 310]].map(([d, e]) => ({ distance: `${d} km`, elevation: `${e} m` }));
+  for (const [ho, ht] of [[2, 30], [160, 60]]) {
+    const args = { points, observer_height: `${ho} m`, target_height: `${ht} m`, frequency: '5.8 GHz' };
+    const r = JSON.parse(await host.invoke('raster.terrain.line-of-sight', JSON.stringify(args)));
+    const d = diagram('raster.terrain.line-of-sight', args, r);
+    const visible = r.result.visible === 'yes';
+    const all = lines(d.markup);
+    const masts = all.filter((l) => l.cls === 'dg-muted' && Math.abs(l.x1 - l.x2) < 0.05);
+    const ground = all.filter((l) => l.cls === 'dg-muted' && !masts.includes(l));
+    const sight = all.filter((l) => l.cls === (visible ? 'dg-accent' : 'dg-accent dg-dash'));
+    const floor = all.filter((l) => l.cls === 'dg-grid dg-dash');
+    assert.equal(ground.length, points.length - 1, 'one ground segment per gap');
+    assert.equal(masts.length, 2, 'a mast at each end');
+    assert.equal(sight.length, points.length - 1, 'the sight line spans the profile');
+    assert.equal(floor.length, points.length - 1, 'the Fresnel floor spans the profile');
+    // The sight line runs from the top of one mast to the top of the other.
+    const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.2;
+    assert.ok(near([sight[0].x1, sight[0].y1], [masts[0].x2, masts[0].y2]), 'starts at the observer');
+    assert.ok(near([sight.at(-1).x2, sight.at(-1).y2], [masts[1].x2, masts[1].y2]), 'ends at the target');
+    // Heights are drawn to one scale, masts included, and the stated
+    // exaggeration is the one drawn.
+    const run = (ground[0].x2 - ground[0].x1) / 4000;
+    const rise = (ground[0].y1 - ground[0].y2) / 40;
+    const stated = Number(/heights ×(\d+)/.exec(d.markup)[1]);
+    assert.ok(Math.abs(rise / run - stated) < 1, `states ×${stated}, draws ×${(rise / run).toFixed(1)}`);
+    const perMeter = rise;
+    assert.ok(Math.abs((masts[0].y1 - masts[0].y2) / (ho * perMeter) - 1) < 0.02, 'the observer mast is drawn to the height scale');
+    assert.ok(Math.abs((masts[1].y1 - masts[1].y2) / (ht * perMeter) - 1) < 0.02, 'the target mast is drawn to the height scale');
+    // Each interior ground vertex sits above the sight line exactly where the
+    // core counts the ground in the way, and the Fresnel floor lies below it.
+    let above = 0;
+    for (let i = 1; i < points.length - 1; i++) {
+      const g = ground[i].y1;
+      const line = sight[i].y1;
+      if (g < line) above++;
+      assert.ok(floor[i].y1 > line, `the 60% floor is below the sight line at point ${i}`);
+    }
+    assert.equal(above, r.result.obstructions, 'the points drawn above the line are the ones the core counted');
+    // The closest point is marked on the ground where the core puts it, in words.
+    const mark = circles(d.markup).find((c) => c.cls === 'dg-dot-now');
+    const i = r.result.profile.findIndex((w) => w.distance.value === r.result.clearance_at.value);
+    assert.ok(near([mark.x, mark.y], [ground[i + 1].x1, ground[i + 1].y1]), 'the mark is on the closest ground point');
+    assert.match(d.markup, visible ? /Closest: / : new RegExp(`Blocks the view by ${r.display.obstruction_height}`));
+    assert.match(d.desc, visible ? /in sight/ : /blocks the view/);
+  }
+});
+
 test('the borrow pit draws the balance line through every crossing', async () => {
   // add-survey-suite 3.3 fixture.
   const args = {

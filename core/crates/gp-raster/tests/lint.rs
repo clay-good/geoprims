@@ -44,6 +44,7 @@ fn catalog_lint_and_registry() {
     let known = [
         "survey.earthwork.profile-grades",
         "navigation.los.visibility",
+        "navigation.los.fresnel",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));

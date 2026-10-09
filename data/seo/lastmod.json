@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "e333f620096f5bc1",
-    "lastmod": "2026-10-08"
+    "hash": "01d76d6396e2e687",
+    "lastmod": "2026-10-09"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -264,8 +264,8 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "1f337a150d24eb8e",
-    "lastmod": "2026-10-08"
+    "hash": "71398aba0d35a40d",
+    "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1148,8 +1148,8 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "7844aa58999697bf",
-    "lastmod": "2026-10-08"
+    "hash": "db2e2a948740b3cc",
+    "lastmod": "2026-10-09"
   },
   "/navigation/": {
     "hash": "44ca7ff9080557c8",
@@ -1304,12 +1304,12 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "d1ebccd607f5f311",
-    "lastmod": "2026-10-08"
+    "hash": "6134a2e181299c50",
+    "lastmod": "2026-10-09"
   },
   "/raster/": {
-    "hash": "9801ff90b33e7ac9",
-    "lastmod": "2026-09-24"
+    "hash": "2841de34e109be60",
+    "lastmod": "2026-10-09"
   },
   "/raster/index/": {
     "hash": "785cbc33ec1dff3f",
@@ -1368,16 +1368,20 @@
     "lastmod": "2026-09-29"
   },
   "/raster/terrain/": {
-    "hash": "67a8f4ff4c4f9f6f",
-    "lastmod": "2026-09-24"
+    "hash": "30f5a861f66fd07b",
+    "lastmod": "2026-10-09"
   },
   "/raster/terrain/contours/": {
-    "hash": "190231d7071b4115",
-    "lastmod": "2026-09-29"
+    "hash": "ac390c4f1f509972",
+    "lastmod": "2026-10-09"
+  },
+  "/raster/terrain/line-of-sight/": {
+    "hash": "81f04af147d54c12",
+    "lastmod": "2026-10-09"
   },
   "/raster/terrain/ruggedness/": {
-    "hash": "cafc00135a4db68f",
-    "lastmod": "2026-09-29"
+    "hash": "f97e316d52bac5a9",
+    "lastmod": "2026-10-09"
   },
   "/raster/terrain/slope-aspect/": {
     "hash": "2f975cd62b41166a",
@@ -1388,8 +1392,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c882aac7b2408dbe",
-    "lastmod": "2026-10-08"
+    "hash": "9f4f1c3a8aae802c",
+    "lastmod": "2026-10-09"
   },
   "/survey/": {
     "hash": "6648d2af3de92e59",
@@ -1656,8 +1660,8 @@
     "lastmod": "2026-10-07"
   },
   "/tools/": {
-    "hash": "6a4a98fe24f07f23",
-    "lastmod": "2026-10-08"
+    "hash": "86ea31105da8dada",
+    "lastmod": "2026-10-09"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -1920,8 +1924,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4eca625b9a072291",
-    "lastmod": "2026-10-08"
+    "hash": "c4460a928b85f7de",
+    "lastmod": "2026-10-09"
   },
   "/workflows/": {
     "hash": "0f9f933e71dbfe9a",

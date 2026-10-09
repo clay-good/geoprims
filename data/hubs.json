@@ -1590,7 +1590,7 @@
       ]
     },
     "raster": {
-      "intro": "Raster tools work on the numbers in one pixel or a small window of a satellite image or elevation model: scaling bands to reflectance, spectral indices such as NDVI, and terrain measures such as slope and ruggedness. They are for checking a formula or a pixel by hand, not for processing whole scenes. Start by scaling a band to reflectance, then compute an index from it. All of the raster tools are still experimental."
+      "intro": "Raster tools work on the numbers in one pixel or a small window of a satellite image or elevation model: scaling bands to reflectance, spectral indices such as NDVI, and terrain measures such as slope and ruggedness. They are for checking a formula or a pixel by hand, not for processing whole scenes. Start by scaling a band to reflectance, then compute an index from it. Each tool's page says whether it is stable or still experimental."
     },
     "raster.index": {
       "summary": "Spectral indices from surface reflectance: vegetation, water, built-up, and burn severity, each with the paper it comes from.",
@@ -1643,7 +1643,7 @@
     },
     "raster.terrain": {
       "summary": "What a digital elevation model says about a cell and the ground around it: how steep it is, which way it faces, how broken it is, and where its contours run.",
-      "intro": "Terrain tools read a 3 x 3 window of a digital elevation model and describe its center cell: slope, aspect, and hillshade by Horn's method, and the terrain ruggedness index, topographic position index, and roughness. A contour tool turns a whole grid of elevations into contour lines at an interval. GIS analysts, hydrologists, and site planners use them to check a cell by hand or to test the numbers a GIS reports. Start with slope, aspect, and hillshade. One pitfall: on a grid in degrees, a cell is narrower east to west than north to south away from the equator, so its size must be corrected for latitude, which the slope tool does.",
+      "intro": "Terrain tools read a 3 x 3 window of a digital elevation model and describe its center cell: slope, aspect, and hillshade by Horn's method, and the terrain ruggedness index, topographic position index, and roughness. A contour tool turns a whole grid of elevations into contour lines at an interval, and a line-of-sight tool checks a ground profile between two points for what blocks the view or a radio link. GIS analysts, hydrologists, and site planners use them to check a cell by hand or to test the numbers a GIS reports. Start with slope, aspect, and hillshade. One pitfall: on a grid in degrees, a cell is narrower east to west than north to south away from the equator, so its size must be corrected for latitude, which the slope tool does.",
       "tasks": [
         {
           "want": "find the slope, aspect, and hillshade of a cell",
@@ -1661,6 +1661,12 @@
           "want": "draw contour lines from a grid of elevations",
           "tools": [
             "contours"
+          ]
+        },
+        {
+          "want": "check whether the ground blocks the view or a radio link between two points",
+          "tools": [
+            "line-of-sight"
           ]
         }
       ]

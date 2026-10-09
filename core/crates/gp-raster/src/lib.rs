@@ -4,6 +4,7 @@ pub mod bandmath;
 pub mod contour;
 pub mod indices;
 pub mod scaling;
+pub mod sightline;
 pub mod terrain;
 
 use gp_base::tool::Registry;
@@ -30,6 +31,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &terrain::SLOPE,
     &terrain::RUGGEDNESS,
     &contour::CONTOURS,
+    &sightline::LINE_OF_SIGHT,
 ];
 
 gp_base::export_module!("raster", REGISTRY);

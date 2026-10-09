@@ -9,7 +9,7 @@ Density altitude before a flight. Ground sample distance for a drone survey. A t
 
 ## Why trust it
 
-- **Accurate.** Reference methods (Karney geodesics, not haversine), tested against GeographicLib, PROJ, H3, S2, and published worked examples.
+- **Accurate.** Reference methods (Karney geodesics, not haversine), tested against GeographicLib, PROJ, H3, S2, and published worked examples, each held to a per-domain tolerance (1 mm in geodesy, for example) unless the source itself prints coarser.
 - **Cited.** Every result names its source, edition, and section. The build fails if a source goes out of date. Every citation link is checked monthly, and a dead or moved one opens an issue.
 - **Honest.** Assumptions like datum, true vs. magnetic north, and rules of thumb show up as warnings, not fine print.
 - **Private.** No ads, accounts, tracking, or server-side math. Your inputs never leave your device.
@@ -36,7 +36,7 @@ node mcp/server.mjs
 
 To contribute, start with [AGENTS.md](AGENTS.md).
 
-Run `npm test` after building to check Rust and JavaScript behavior. Runtime cancellation and shutdown behavior is documented in [packages/runtime/README.md](packages/runtime/README.md).
+Run `npm test` after building to check Rust and JavaScript behavior. The website has two more suites, both run in CI: `npm test` and `npm run test:browser` in `apps/web`, after `npm run build` there. The browser suite checks what unit tests cannot, such as diagram labels inside their frames and each page's JavaScript budget. Runtime cancellation and shutdown behavior is documented in [packages/runtime/README.md](packages/runtime/README.md).
 
 ## Disclaimer
 

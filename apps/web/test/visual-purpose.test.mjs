@@ -85,6 +85,34 @@ test('every gauge and profile chart declaration draws its worked example', async
   assert.ok(declared.length >= 15, `${declared.length} gauge and profile-chart tools`);
 });
 
+test('a road curve draws plan and profile on one station scale, each point joined at its station', async () => {
+  // alignment-curves "Alignment visualization", scenario "Plan and profile".
+  const { runChain } = await import('../../../packages/runtime/src/chain.mjs');
+  const { planProfile } = await import('../src/lib/diagrams/survey.js');
+  const { workflows } = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8'));
+  const w = workflows.find((x) => x.slug === 'road-curve');
+  const run = await runChain(w, {}, invoke);
+  assert.ok(run.ok);
+  const [plan, prof] = [run.steps[w.visual.step], run.steps[w.visual.profile]];
+  const d = planProfile(plan.input, plan.result, prof.input, prof.result);
+  assert.ok(d, 'draws');
+  const joins = [...d.markup.matchAll(/data-station="([^"]+)" x1="([^"]+)" y1="([^"]+)" x2="([^"]+)" y2="([^"]+)"/g)].map((m) => m.slice(1).map(Number));
+  const station = (s) => { const [a, b] = String(s).split('+'); return Number(a) * 100 + Number(b); };
+  const want = [plan.result.result.pc_station, plan.result.result.pt_station, prof.result.result.pvc_station, prof.result.result.pvt_station].map(station);
+  assert.deepEqual(joins.map((j) => j[0]), want, 'PC, PT, PVC, and PVT each joined at the core\'s station');
+  for (const [s, x1, y1, x2, y2] of joins) {
+    assert.ok(y1 < 130 && y2 > 150, `${s}: runs from the plan down to the profile`);
+    // The plan is true to shape, so off the PC a point sits a little short of
+    // its station across the page: by the chord's shortening, a few feet here.
+    assert.ok(Math.abs(x1 - x2) < 3, `${s}: plan x ${x1} and profile x ${x2} are one station apart`);
+  }
+  assert.ok(Math.abs(joins[0][1] - joins[0][3]) < 0.05, 'the PC lines up exactly');
+  // Stations increase left to right in both views.
+  const xs = [...joins].sort((a, b) => a[0] - b[0]);
+  for (let i = 1; i < xs.length; i++) assert.ok(xs[i][1] > xs[i - 1][1] && xs[i][3] > xs[i - 1][3]);
+  assert.match(d.desc, /exaggerated \d+ times/);
+});
+
 test('every workflow’s visual draws from its example', async () => {
   const { runChain } = await import('../../../packages/runtime/src/chain.mjs');
   const { workflows } = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8'));

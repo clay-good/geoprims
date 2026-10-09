@@ -6,6 +6,13 @@
       "kind": "added",
       "tools": [],
       "vectors": [],
+      "summary": "A new workflow, Lay out a road curve, works a circular curve and a vertical curve together and draws them as one plan-and-profile sheet on a shared station scale, with each curve point joined to the other view at its station."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "added",
+      "tools": [],
+      "vectors": [],
       "summary": "A new workflow, Preflight performance check, goes from the METAR to pressure and density altitude, reads your POH takeoff table at today's pressure altitude and temperature, and splits the wind on your runway."
     },
     {

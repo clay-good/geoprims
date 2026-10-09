@@ -57,8 +57,8 @@ export function fit(points, w = 220, h = 150) {
   return ([x, y]) => [160 + (x - mx) * k, 128 - (y - my) * k];
 }
 
-export function svg(body, title) {
-  return `<svg viewBox="0 0 320 240" class="dg" role="img" aria-label="${esc(title)}" xmlns="http://www.w3.org/2000/svg"><defs>` +
+export function svg(body, title, height = 240) {
+  return `<svg viewBox="0 0 320 ${height}" class="dg" role="img" aria-label="${esc(title)}" xmlns="http://www.w3.org/2000/svg"><defs>` +
     `<marker id="dg-head-accent${scope}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head-accent" d="M0 0L10 5L0 10z"/></marker>` +
     `<marker id="dg-head-muted${scope}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head-muted" d="M0 0L10 5L0 10z"/></marker>` +
     `</defs>${body}</svg>`;

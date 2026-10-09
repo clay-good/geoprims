@@ -2118,6 +2118,105 @@
       "visual": {
         "step": 4
       }
+    },
+    {
+      "slug": "road-curve",
+      "title": "Lay out a road curve",
+      "audience": "Surveyors",
+      "summary": "A horizontal curve and a vertical curve over the same stations, drawn in plan and profile on one station scale.",
+      "job": "Work out the circular curve and the vertical curve of a road together, and see where each begins and ends against the other.",
+      "inputs": [
+        {
+          "name": "pi_station",
+          "tool": "survey.curves.circular-curve",
+          "field": "pi_station",
+          "example": "12+34.56"
+        },
+        {
+          "name": "delta",
+          "tool": "survey.curves.circular-curve",
+          "field": "delta",
+          "example": "30 deg"
+        },
+        {
+          "name": "radius",
+          "tool": "survey.curves.circular-curve",
+          "field": "radius",
+          "example": "500 ft"
+        },
+        {
+          "name": "pvi_station",
+          "tool": "survey.curves.vertical-curve",
+          "field": "pvi_station",
+          "example": "12+00"
+        },
+        {
+          "name": "pvi_elevation",
+          "tool": "survey.curves.vertical-curve",
+          "field": "pvi_elevation",
+          "example": "100 ft"
+        },
+        {
+          "name": "g1",
+          "tool": "survey.curves.vertical-curve",
+          "field": "g1",
+          "example": 2
+        },
+        {
+          "name": "g2",
+          "tool": "survey.curves.vertical-curve",
+          "field": "g2",
+          "example": -3
+        },
+        {
+          "name": "length",
+          "tool": "survey.curves.vertical-curve",
+          "field": "length",
+          "example": "400 ft"
+        }
+      ],
+      "steps": [
+        {
+          "tool": "survey.curves.circular-curve",
+          "why": "The horizontal curve from its PI station, deflection, and radius: tangent, arc length, and the PC and PT stations.",
+          "input": {
+            "pi_station": {
+              "input": "pi_station"
+            },
+            "delta": {
+              "input": "delta"
+            },
+            "radius": {
+              "input": "radius"
+            }
+          }
+        },
+        {
+          "tool": "survey.curves.vertical-curve",
+          "why": "The vertical curve from its PVI, grades, and length: the PVC and PVT, and the high or low point.",
+          "input": {
+            "pvi_station": {
+              "input": "pvi_station"
+            },
+            "pvi_elevation": {
+              "input": "pvi_elevation"
+            },
+            "g1": {
+              "input": "g1"
+            },
+            "g2": {
+              "input": "g2"
+            },
+            "length": {
+              "input": "length"
+            }
+          }
+        }
+      ],
+      "visual": {
+        "step": 0,
+        "profile": 1
+      }
     }
   ]
 }

@@ -57,10 +57,19 @@
   const visualTool = tools[workflow.steps[workflow.visual.step].tool];
   // The visual step's diagram code loads on demand; the steps compute in the browser anyway.
   let draw = $state(null);
+  // A plan step with a profile step draws both on one station scale.
+  const profileAt = workflow.visual.profile;
+  const profile = $derived(Number.isInteger(profileAt) ? steps[profileAt] : null);
+  let linked = $state(null);
   $effect(() => {
     loadDiagram(visualTool.id).then((f) => (draw = f), () => {});
+    if (Number.isInteger(profileAt)) import('../lib/diagrams/survey.js').then((m) => (linked = m.planProfile), () => {});
   });
-  const dg = $derived(visual?.status === 'ok' && draw ? draw(visual.input, visual.result) : null);
+  const dg = $derived(
+    visual?.status === 'ok' && profile?.status === 'ok' && linked
+      ? linked(visual.input, visual.result, profile.input, profile.result)
+      : visual?.status === 'ok' && draw ? draw(visual.input, visual.result) : null,
+  );
   const onMap = mapsTool(visualTool);
 
   /** The step a failure belongs to, named for the reader. */

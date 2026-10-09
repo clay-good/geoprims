@@ -419,6 +419,94 @@ function traverseClosure(args, result) {
     `Adjusted traverse of ${pts.length} corners. Before adjustment it missed closing by ${disp(result, 'misclosure')} toward ${disp(result, 'misclosure_bearing')}${scale}, a precision of ${disp(result, 'precision')}.`, extra, box, frame);
 }
 
+/** A full station on the axis, like 12+00. */
+const stationText = (s) => `${Math.floor(s / 100)}+00`;
+
+/**
+ * A road curve in plan and profile, linked by station (alignment-curves
+ * "Alignment visualization"): the circular curve above, drawn true to shape
+ * with its long chord along the page, and the vertical curve below on the
+ * same horizontal scale, so one station sits at one x in both. Each named
+ * point is joined to the other view at its own station. The plan's arc is a
+ * little shorter across the page than along the road (its chord, not its
+ * length), so a join on the curve leans by at most that difference.
+ */
+export function planProfile(planArgs, plan, profArgs, prof) {
+  const [rad, delta, T, L, C] = ['radius', 'delta', 'tangent', 'length', 'chord'].map((k) => val(plan, k));
+  const [pc, pt] = [station(plan.result.pc_station), station(plan.result.pt_station)];
+  const [sc, st] = [station(prof.result.pvc_station), station(prof.result.pvt_station)];
+  const [yc, yt] = [val(prof, 'pvc_elevation'), val(prof, 'pvt_elevation')];
+  const [g1, g2] = [Number(profArgs.g1), Number(profArgs.g2)];
+  if (![rad, delta, T, L, C, pc, pt, sc, st, yc, yt, g1, g2].every(Number.isFinite) || delta <= 0 || delta >= 180 || st <= sc) return null;
+  const half = (delta / 2) * R;
+  // The plan in feet (or the curve's own unit), PC at the origin, chord along x, y up.
+  const center = [C / 2, -rad * Math.cos(half)];
+  const back = [Math.cos(half), Math.sin(half)];
+  const ahead = [Math.cos(half), -Math.sin(half)];
+  const onPlan = (s) => {
+    if (s <= pc) return [-(pc - s) * back[0], -(pc - s) * back[1]];
+    if (s >= pt) return [C + (s - pt) * ahead[0], (s - pt) * ahead[1]];
+    const th = Math.PI / 2 + half - (s - pc) / rad;
+    return [center[0] + rad * Math.cos(th), center[1] + rad * Math.sin(th)];
+  };
+  const len = st - sc;
+  const elevation = (s) => (s <= sc ? yc + (g1 / 100) * (s - sc) : s >= st ? yt + (g2 / 100) * (s - st) : yc + (g1 / 100) * (s - sc) + ((g2 - g1) / (200 * len)) * (s - sc) ** 2);
+  // One station scale for both views.
+  const [lo, hi] = [Math.min(pc, sc), Math.max(pt, st)];
+  const pad = (hi - lo) * 0.1;
+  const [s0, s1] = [lo - pad, hi + pad];
+  const k = 268 / (s1 - s0);
+  const X = (s) => 34 + (s - s0) * k;
+  // Plan: the PC at its station, true to shape, centered in its band.
+  const ys = [s0, s1, pc, pt, (pc + pt) / 2].map((s) => onPlan(s)[1]).concat(T * Math.sin(half));
+  const mid = (Math.max(...ys) + Math.min(...ys)) / 2;
+  const P = ([x, y]) => [X(pc) + x * k, 70 - (y - mid) * k];
+  // Profile: the grades a few percent, so height is exaggerated and says so.
+  const samples = Array.from({ length: 81 }, (_, i) => s0 + ((s1 - s0) * i) / 80);
+  // The PVI, where the grade lines meet, sits off the curve: keep it in the band too.
+  const zs = [...samples.map(elevation), yc + (g1 / 100) * (len / 2)];
+  const [zmin, zmax] = [Math.min(...zs), Math.max(...zs)];
+  const kz = 100 / Math.max(zmax - zmin, 1e-9);
+  const Z = (s) => [X(s), 260 - (elevation(s) - zmin) * kz];
+  const times = Math.round(kz / k);
+  const planLine = path(samples.map((s) => P(onPlan(s))));
+  const profileLine = path(samples.map(Z));
+  const pi = P([T * back[0], T * back[1]]);
+  const pviAt = sc + len / 2;
+  const pvi = [X(pviAt), 260 - (yc + (g1 / 100) * (len / 2) - zmin) * kz];
+  const named = [['PC', pc, 'plan'], ['PT', pt, 'plan'], ['PVC', sc, 'profile'], ['PVT', st, 'profile']];
+  const joins = named.map(([name, s, from]) => {
+    const [a, b] = [P(onPlan(s)), Z(s)];
+    // Profile labels sit just above the axis, below the lowest point drawn.
+    const label = from === 'plan' ? text('dg-label', a[0], a[1] - 9, name, 'middle') : text('dg-label', b[0], 271, name, 'middle');
+    return [`<line class="dg-grid dg-dash" data-station="${s}" x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(b[0])}" y2="${f1(b[1])}"/>`, `${dot(...a)}${dot(...b)}${label}`];
+  });
+  const ticks = [];
+  for (let s = Math.ceil(s0 / 100) * 100; s <= s1; s += 100) {
+    ticks.push(line('dg-muted', [X(s), 274], [X(s), 280]), text('dg-muted-text', X(s), 292, stationText(s), 'middle'));
+  }
+  const body = [
+    text('dg-muted-text', 6, 16, 'Plan'),
+    text('dg-muted-text', 6, 146, `Profile, height ×${times}`),
+    line('dg-grid', [X(s0), 276], [X(s1), 276]),
+    line('dg-grid dg-dash', P(onPlan(pc)), pi),
+    line('dg-grid dg-dash', pi, P(onPlan(pt))),
+    text('dg-muted-text', pi[0], pi[1] - 8, 'PI', 'middle'),
+    line('dg-grid dg-dash', Z(sc), pvi),
+    line('dg-grid dg-dash', pvi, Z(st)),
+    text('dg-muted-text', pvi[0], pvi[1] - 8, 'PVI', 'middle'),
+    ...joins.map((j) => j[0]),
+    `<path class="dg-casing" fill="none" d="${planLine}"/><path class="dg-accent" fill="none" d="${planLine}"/>`,
+    `<path class="dg-casing" fill="none" d="${profileLine}"/><path class="dg-accent" fill="none" d="${profileLine}"/>`,
+    ...joins.map((j) => j[1]),
+    ...ticks,
+    text('dg-muted-text', 6, 314, `R ${disp(plan, 'radius')} · Δ ${disp(plan, 'delta')} · PC ${plan.result.pc_station} to PT ${plan.result.pt_station}`),
+    text('dg-muted-text', 6, 330, `${g1 > 0 ? '+' : ''}${g1}% to ${g2 > 0 ? '+' : ''}${g2}% · PVC ${prof.result.pvc_station} to PVT ${prof.result.pvt_station}`),
+  ].join('');
+  const title = `Plan and profile on one station scale: the ${disp(plan, 'delta')} curve from PC ${plan.result.pc_station} to PT ${plan.result.pt_station} above, the vertical curve from PVC ${prof.result.pvc_station} to PVT ${prof.result.pvt_station} below, each point joined to the other view at its station. Profile height exaggerated ${times} times.`;
+  return { markup: svg(body, title, 340), desc: title };
+}
+
 const group = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 export const DIAGRAMS = {

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "e24c3dca46377599",
+    "hash": "7fca5af78e65ce1a",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "02b6e6f7c62464d3",
+    "hash": "b48f01ee75c126f8",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -1028,7 +1028,7 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "873802f6a015afa6",
+    "hash": "718245ed4f5eec45",
     "lastmod": "2026-10-09"
   },
   "/learn/crosswind-components/": {
@@ -1320,7 +1320,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "aa7f570a8545c3bf",
+    "hash": "18cba9958c05c0ba",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
@@ -1464,8 +1464,8 @@
     "lastmod": "2026-10-09"
   },
   "/survey/curves/": {
-    "hash": "34cd350ac6372c6a",
-    "lastmod": "2026-09-23"
+    "hash": "5d7ac442a355f6f4",
+    "lastmod": "2026-10-09"
   },
   "/survey/curves/circular-curve/": {
     "hash": "1f6d474d119f0a34",
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/": {
-    "hash": "771d1b48987fd366",
+    "hash": "ae01dae8923fdd1d",
     "lastmod": "2026-10-09"
   },
   "/workflows/boundary-retracement/": {
@@ -1997,6 +1997,10 @@
   },
   "/workflows/preflight-performance/": {
     "hash": "7217ff4e03070d44",
+    "lastmod": "2026-10-09"
+  },
+  "/workflows/road-curve/": {
+    "hash": "006318e7c2e9dbbc",
     "lastmod": "2026-10-09"
   },
   "/workflows/vfr-cross-country/": {

@@ -1388,7 +1388,7 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/curvature/": {
-    "hash": "b7f77e9d00f83729",
+    "hash": "b2914a4c5de9362f",
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/line-of-sight/": {
@@ -1396,11 +1396,11 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/ruggedness/": {
-    "hash": "ba04f2ac38bd3d1c",
+    "hash": "ef29a1d06c1b387a",
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/slope-aspect/": {
-    "hash": "f92886093b3f4957",
+    "hash": "19dad99b5330c11f",
     "lastmod": "2026-10-09"
   },
   "/security/": {
@@ -1592,7 +1592,7 @@
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/curvature-refraction/": {
-    "hash": "6a40a3e43476e985",
+    "hash": "392aea90d13504f9",
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/edm-correction/": {
@@ -1600,7 +1600,7 @@
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/inaccessible-height/": {
-    "hash": "56916e5f084d6ac8",
+    "hash": "95d909975715dab4",
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/level-run/": {
@@ -1608,7 +1608,7 @@
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/slope/": {
-    "hash": "d43dc7066faff35e",
+    "hash": "47a5b4727482b7f3",
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/stadia/": {
@@ -1944,7 +1944,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5cc8ecbbed2453ed",
+    "hash": "5334ecae8c8adeb2",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {

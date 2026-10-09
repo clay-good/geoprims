@@ -772,6 +772,18 @@
     {
       "query": "point of no return",
       "expect": "aviation.performance.etp-pnr"
+    },
+    {
+      "query": "DA",
+      "expect": "aviation.altimetry.density-altitude"
+    },
+    {
+      "query": "PA",
+      "expect": "aviation.altimetry.pressure-altitude"
+    },
+    {
+      "query": "TOD",
+      "expect": "aviation.performance.top-of-descent"
     }
   ]
 }

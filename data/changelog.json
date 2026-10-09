@@ -4,6 +4,25 @@
     {
       "date": "2026-10-09",
       "kind": "fixed",
+      "tools": [
+        "geometry.overlay.boolean",
+        "drone.photogrammetry.motion-blur"
+      ],
+      "vectors": [],
+      "summary": "The polygon overlap tool, with planar edges, stopped with an internal error when a longitude was absurdly large; it now refuses longitudes past 540° with a clear message. The motion-blur tool now lists the no-solution answer it gives at zero groundspeed among its errors. Both found by the fuzzer."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
+        "aviation.loading.burn-rate"
+      ],
+      "vectors": [],
+      "summary": "A fuel burn rate tool: the fuel a flight used and its time give the average burn, and the fuel on board gives the endurance at that rate. 28 gal over 2.5 h is 11.2 gal/h."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "fixed",
       "tools": [],
       "vectors": [],
       "summary": "Each tool's list of error codes, which agents read through the MCP server, now names every refusal the tool can give. Tools that take a measurement now list OUT_OF_DOMAIN, which any of them returns for an impossible magnitude, and five tools gained a code they returned without listing it. A new check holds every refusal in the test vectors and every one the fuzzer finds to the tool's list."

@@ -173,6 +173,146 @@ fn run_fuel_weight(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
+// ---------------------------------------------------------------- burn rate
+
+pub static BURN_RATE: ToolDef = ToolDef {
+    id: "aviation.loading.burn-rate",
+    title: "Fuel burn rate",
+    summary: "The fuel burn rate a flight actually achieved, from the fuel it used and the time it took, with the endurance that rate leaves on the fuel you have.",
+    aliases: &[
+        "fuel burn calculator",
+        "fuel flow from fuel used",
+        "gallons per hour",
+    ],
+    keywords: &[
+        "fuel",
+        "burn rate",
+        "fuel flow",
+        "gph",
+        "endurance",
+        "gallons per hour",
+    ],
+    inputs: &[
+        qty(
+            "fuel_used",
+            "Fuel used",
+            "Like 28 gal, from the fuel receipt or the totalizer",
+            QT::Volume,
+            "galUS",
+        )
+        .required()
+        .core(),
+        qty(
+            "time",
+            "Flight time",
+            "Like 2.5 h (Hobbs or tach)",
+            QT::Time,
+            "h",
+        )
+        .required()
+        .core(),
+        qty(
+            "usable_fuel",
+            "Usable fuel on board",
+            "Optional, like 40 gal, for the endurance at this rate",
+            QT::Volume,
+            "galUS",
+        )
+        .core(),
+    ],
+    outputs: &[
+        qty(
+            "burn_rate",
+            "Burn rate",
+            "Fuel used / time",
+            QT::VolumeFlow,
+            "galUS/h",
+        )
+        .precision(Precision::Decimals(1)),
+        qty(
+            "endurance",
+            "Endurance at this rate",
+            "Usable fuel / burn rate",
+            QT::Time,
+            "h",
+        )
+        .precision(Precision::Decimals(2))
+        .optional(),
+    ],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Burn rate = fuel used / time; endurance = usable fuel / burn rate",
+    accuracy: "Exact arithmetic. The answer is an average over the whole flight, taxi and climb included.",
+    when_to_use: "Use this after a flight to learn what your airplane really burns: enter the fuel it took to top off and the Hobbs or tach time, and it returns the average burn rate. Add the usable fuel on board to see how long that rate lets you fly. Compare it with the POH cruise figure, and plan the next trip with whichever is higher.",
+    limitations: "It averages the whole flight, so taxi, run-up, and climb, which burn faster than cruise, raise the figure on short flights. Hobbs time runs from engine start and tach time runs slower at low power, so say which you used. It does not add a reserve; the fuel plan does that.",
+    references: &[WB_HANDBOOK],
+    examples: &[Example {
+        id: "primary",
+        title: "28 gal over 2.5 h, 40 gal left",
+        input: r#"{"fuel_used":"28 gal","time":"2.5 h","usable_fuel":"40 gal"}"#,
+        source: "add-aviation-suite fuel scenario: 11.2 gal/h, endurance about 3.57 h",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.loading.fuel-plan",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.loading.fuel-weight",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.performance.specific-range",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The flight burned {burn_rate}.{if endurance > 0} At that rate the fuel on board lasts {endurance}.{/if}",
+    limits: &[("batchRows", 10_000)],
+    run: run_burn_rate,
+    ..ToolDef::BLANK
+};
+
+fn run_burn_rate(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let used = ctx.req_quantity("fuel_used")?.base();
+    let time = ctx.req_quantity("time")?.base();
+    let usable = ctx.quantity("usable_fuel")?.map(|q| q.base());
+    if used <= 0.0 {
+        return Err(ToolError::invalid(
+            "/fuel_used",
+            "Fuel used must be more than zero.",
+        ));
+    }
+    if time <= 0.0 {
+        return Err(ToolError::invalid(
+            "/time",
+            "Flight time must be more than zero.",
+        ));
+    }
+    if usable.is_some_and(|u| u < 0.0) {
+        return Err(ToolError::invalid(
+            "/usable_fuel",
+            "Usable fuel cannot be negative.",
+        ));
+    }
+    let rate = used / time;
+    let base = |q: QT, x: f64| Q {
+        value: x,
+        unit: gp_base::units::base_unit(q),
+    };
+    let mut out = vec![(
+        "burn_rate",
+        ctx.out("burn_rate", base(QT::VolumeFlow, rate)),
+    )];
+    if let Some(u) = usable {
+        out.push(("endurance", ctx.out("endurance", base(QT::Time, u / rate))));
+    }
+    Ok(obj(out))
+}
+
 // ---------------------------------------------------------------- weight and balance
 
 const STATION: &[Field] = &[

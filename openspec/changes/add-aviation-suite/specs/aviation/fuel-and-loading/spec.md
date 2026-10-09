@@ -11,6 +11,10 @@ Tools SHALL compute fuel required (burn rate × time plus taxi, climb increments
 - **WHEN** 40 US gal of 100LL is converted with the nominal preset (6.0 lb/gal)
 - **THEN** the result is 240 lb, labeled nominal
 
+#### Scenario: Burn rate from a flight
+- **WHEN** a flight of 2.5 h used 28 US gal and 40 US gal of usable fuel remain
+- **THEN** the burn rate is 11.2 gal/h and the endurance on the remaining fuel at that rate is about 3.57 h (3 h 34 min)
+
 ### Requirement: Reserve requirements as dated reference data
 Fuel reserve presets SHALL cite their regulation and "rules as of" date and SHALL depend on an aircraft-category input (airplane or rotorcraft): for rotorcraft, 14 CFR 91.151 requires 20 min VFR and 91.167 requires 30 min after the alternate. For airplanes they SHALL include at minimum 14 CFR 91.151 (VFR day 30 min, VFR night 45 min) and 14 CFR 91.167 (IFR: to the destination, then the alternate, then 45 min at normal cruise). The tool SHALL show that operators may have stricter rules, and SHALL allow a custom reserve.
 

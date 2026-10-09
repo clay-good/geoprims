@@ -2579,6 +2579,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &performance::GLIDE,
     &performance::PIVOTAL_ALTITUDE,
     &loading::FUEL_WEIGHT,
+    &loading::BURN_RATE,
     &loading::WEIGHT_BALANCE,
     &weather::METAR,
     &weather::FB_WINDS,

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "7fca5af78e65ce1a",
+    "hash": "cae2658f20a75602",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-08"
   },
   "/aviation/": {
-    "hash": "9f0609911967dbd2",
+    "hash": "429347ebf243360f",
     "lastmod": "2026-10-09"
   },
   "/aviation/airspace/": {
@@ -136,15 +136,19 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/loading/": {
-    "hash": "5f01b0f6f1b2b3b5",
+    "hash": "73a38039a967b4fe",
     "lastmod": "2026-10-09"
   },
   "/aviation/loading/ballast/": {
-    "hash": "d9d79a03f4385f0f",
+    "hash": "1cc6389fac2dc8bb",
+    "lastmod": "2026-10-09"
+  },
+  "/aviation/loading/burn-rate/": {
+    "hash": "a32b430ec5c490dd",
     "lastmod": "2026-10-09"
   },
   "/aviation/loading/fuel-plan/": {
-    "hash": "05cc73d6aaa7656c",
+    "hash": "1a0181b7567f13e5",
     "lastmod": "2026-10-09"
   },
   "/aviation/loading/fuel-weight/": {
@@ -264,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "fa7e13a86baf39ca",
+    "hash": "455406f1ce70ae21",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -368,7 +372,7 @@
     "lastmod": "2026-10-09"
   },
   "/drone/photogrammetry/motion-blur/": {
-    "hash": "f949e1f3624257e3",
+    "hash": "d343f82507f339e2",
     "lastmod": "2026-10-09"
   },
   "/drone/photogrammetry/oblique-gsd/": {
@@ -812,7 +816,7 @@
     "lastmod": "2026-09-23"
   },
   "/geometry/overlay/boolean/": {
-    "hash": "42b87f76162c58cb",
+    "hash": "8e262e83cc1a3f4d",
     "lastmod": "2026-10-09"
   },
   "/geometry/predicate/": {
@@ -1164,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "f6b2d2f61e4f98f3",
+    "hash": "23bc3db73603a9e8",
     "lastmod": "2026-10-09"
   },
   "/navigation/": {
@@ -1320,7 +1324,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "6a8bc1afeb1960cb",
+    "hash": "e45b2def14099083",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
@@ -1412,7 +1416,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "a80941e437fa8773",
+    "hash": "a65bd53e79e05a73",
     "lastmod": "2026-10-09"
   },
   "/survey/": {
@@ -1684,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "ba5e4b81607ad0d4",
+    "hash": "87f9b17416c42a32",
     "lastmod": "2026-10-09"
   },
   "/units/": {
@@ -1948,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a46c2283eaafecc1",
+    "hash": "d6f2ffef2c16acaa",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {

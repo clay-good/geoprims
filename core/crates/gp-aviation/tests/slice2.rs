@@ -531,3 +531,18 @@ fn the_glide_ring_reaches_farther_downwind() {
         "{plain}"
     );
 }
+
+#[test]
+fn burn_rate_from_a_flight() {
+    let r = call(
+        "aviation.loading.burn-rate",
+        r#"{"fuel_used":"28 gal","time":"2.5 h","usable_fuel":"40 gal"}"#,
+    );
+    near(&r, "result.burn_rate.value", 11.2, 1e-9);
+    near(&r, "result.endurance.value", 40.0 / 11.2, 1e-9);
+    let none = call(
+        "aviation.loading.burn-rate",
+        r#"{"fuel_used":"28 gal","time":"2.5 h"}"#,
+    );
+    assert!(none["result"].get("endurance").is_none(), "{none}");
+}

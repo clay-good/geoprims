@@ -350,9 +350,11 @@
         "aviation.loading.fuel-plan",
         "legs"
       ],
-      "burn-rate": {
-        "pending": "The spec names burn rate only as an input to fuel required (fuel-and-loading spec, Fuel planning); computing it from fuel used and time needs a scenario first."
-      },
+      "burn-rate": [
+        "aviation.loading.burn-rate",
+        "burn_rate",
+        "endurance"
+      ],
       "cg": [
         "aviation.loading.weight-balance",
         "cg"

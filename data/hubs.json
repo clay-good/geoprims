@@ -297,6 +297,12 @@
           "tools": [
             "table-interpolate"
           ]
+        },
+        {
+          "want": "find what my airplane really burns from the fuel it used on a flight",
+          "tools": [
+            "burn-rate"
+          ]
         }
       ]
     },

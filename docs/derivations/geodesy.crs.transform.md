@@ -26,18 +26,18 @@ The projections are exact to well under a millimeter; the frame transformations 
 
 ## Worked example
 
-- sourcePublisher: geoprims (computed, not published)
-- sourceTitle: the add-geodesy-suite composite-path scenario, checked against the State Plane inverse, the datum transformation, and UTM forward run in turn
-- sourceEdition: 2026
-- sourceLocator: core/crates/gp-geodesy/tests/crs.rs, a_frame_change_is_the_three_tools_in_turn
-- independent: no
-- inputs: EPSG:6427 (NAD83(2011) / Colorado Central) E 953,000 m, N 515,000 m, ellipsoid height 1,600 m, epoch 2026.0, to EPSG:32613 (WGS 84 / UTM zone 13N)
-- outputs: E 495,731.771 m, N 4,397,345.388 m; steps: inverse projection, NAD83(2011) → ITRF2020 (HTDP, 0.02 m), ITRF2020 → WGS 84 (G2296) (aligned, 0.02 m), forward projection; about 0.028 m in all
-- tolerance: 1 mm against the three tools in turn
-- verifiedBy: the invariant test named above
+- sourcePublisher: PROJ (OSGeo), EPSG dataset
+- sourceTitle: PROJ 9.9.0 cs2cs EPSG:6427 → EPSG:6342 (NAD83(2011) / Colorado Central to NAD83(2011) / UTM zone 13N)
+- sourceEdition: PROJ 9.9.0 with EPSG v13.102
+- sourceLocator: golden vector v001 of core/vectors/geodesy.crs.transform.jsonl, from tools/vectors/gen_crs_transform.py
+- independent: yes
+- inputs: E 953,000 m, N 515,000 m on EPSG:6427
+- outputs: E 495,733.106 m, N 4,397,344.871 m on EPSG:6342, datum accuracy 0 (one frame)
+- tolerance: 1 µm
+- verifiedBy: golden vector v001, run by the core on every build
 - verifiedOn: 2026-10-09
 
-For the same coordinates on one frame, NAD83(2011) UTM 13N, PROJ 9.9 gives E 495,733.106 m, N 4,397,344.871 m, and so does this tool: the 1.3 m difference is the frame change. PROJ is no oracle for that part, because between NAD83(2011) and WGS 84 it applies a near-null ballpark step rather than the frame chain, so the frame-changing case is checked against the separately verified tools it is built from.
+PROJ is the oracle only where it is one: for pairs on a single frame it joins the two systems by conversions alone, so its answer is the projections' and nothing else. Between NAD83(2011) and WGS 84 it applies a near-null ballpark step rather than the frame chain, so the frame-changing path is checked against the separately verified tools it is built from: the add-geodesy-suite composite-path scenario, Colorado Central at E 953,000 m, N 515,000 m, 1,600 m, epoch 2026.0 to WGS 84 UTM 13N, gives E 495,731.771 m, N 4,397,345.388 m, within 1 mm of the State Plane inverse, the datum transformation, and UTM forward run in turn (the first invariant below). The 1.3 m between that and the one-frame answer is the frame change.
 
 ## Differential tests
 

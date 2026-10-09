@@ -19,7 +19,10 @@
       "definition": "The FAA-approved manual of an aircraft's limitations and performance. For many light aircraft the POH serves as the AFM.",
       "source": "faa-phak",
       "relatedTools": [
-        "aviation.airspeed.cas-to-tas"
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.ias-to-eas",
+        "aviation.airspeed.ias-to-mach",
+        "aviation.airspeed.ias-to-tas"
       ]
     },
     {
@@ -150,7 +153,10 @@
       "definition": "Indicated airspeed corrected for instrument and position error. It measures dynamic pressure, which governs how the aircraft flies.",
       "source": "faa-phak",
       "relatedTools": [
-        "aviation.airspeed.cas-to-tas"
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.ias-to-eas",
+        "aviation.airspeed.ias-to-mach",
+        "aviation.airspeed.ias-to-tas"
       ]
     },
     {
@@ -287,6 +293,16 @@
       ]
     },
     {
+      "id": "eas",
+      "term": "EAS",
+      "expansion": "equivalent airspeed",
+      "definition": "The sea-level airspeed that gives the same dynamic pressure as the true airspeed at altitude: TAS times the square root of the density ratio. Structural and gust limits are stated in it.",
+      "source": "gracey",
+      "relatedTools": [
+        "aviation.airspeed.tas-to-cas"
+      ]
+    },
+    {
       "id": "easa",
       "term": "EASA",
       "expansion": "European Union Aviation Safety Agency",
@@ -376,6 +392,14 @@
         "geodesy.datum.helmert",
         "geodesy.spcs.spcs83-forward"
       ]
+    },
+    {
+      "id": "etp",
+      "term": "ETP",
+      "expansion": "equal time point",
+      "definition": "The point on a leg where going on and turning back take the same time. With no wind it is halfway; a headwind on the way out moves it toward the destination. Also called the critical point.",
+      "source": "casa-ac-91-15",
+      "relatedTools": []
     },
     {
       "id": "etsi",
@@ -640,7 +664,10 @@
       "definition": "The airspeed read directly from the airspeed indicator, before any correction.",
       "source": "faa-phak",
       "relatedTools": [
-        "aviation.airspeed.cas-to-tas"
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.ias-to-eas",
+        "aviation.airspeed.ias-to-mach",
+        "aviation.airspeed.ias-to-tas"
       ]
     },
     {
@@ -682,7 +709,11 @@
       "source": "icao-7488",
       "relatedTools": [
         "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.eas-to-tas",
+        "aviation.airspeed.ias-to-mach",
+        "aviation.airspeed.ias-to-tas",
         "aviation.airspeed.tas-to-cas",
+        "aviation.airspeed.tas-to-eas",
         "aviation.altimetry.cold-temperature",
         "aviation.altimetry.density-altitude",
         "aviation.altimetry.isa-temperature",
@@ -1151,6 +1182,14 @@
       "relatedTools": []
     },
     {
+      "id": "pnr",
+      "term": "PNR",
+      "expansion": "point of no return",
+      "definition": "The farthest point along a leg from which you can still turn back and reach departure with your reserve fuel left. Past it, you are committed to going on.",
+      "source": "casa-ac-91-15",
+      "relatedTools": []
+    },
+    {
       "id": "poh",
       "term": "POH",
       "expansion": "Pilot's Operating Handbook",
@@ -1158,6 +1197,9 @@
       "source": "faa-phak",
       "relatedTools": [
         "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.ias-to-eas",
+        "aviation.airspeed.ias-to-mach",
+        "aviation.airspeed.ias-to-tas",
         "aviation.loading.fuel-plan",
         "aviation.loading.weight-balance",
         "aviation.performance.climb-plan",
@@ -1463,6 +1505,14 @@
       ]
     },
     {
+      "id": "toc",
+      "term": "TOC",
+      "expansion": "top of climb",
+      "definition": "The point where a climb reaches cruise altitude, given as a distance from departure along the route.",
+      "source": "faa-phak",
+      "relatedTools": []
+    },
+    {
       "id": "tpi",
       "term": "TPI",
       "expansion": "topographic position index",
@@ -1727,30 +1777,6 @@
         "indexing.tile.bounds",
         "indexing.tile.from-point"
       ]
-    },
-    {
-      "id": "etp",
-      "term": "ETP",
-      "expansion": "equal time point",
-      "definition": "The point on a leg where going on and turning back take the same time. With no wind it is halfway; a headwind on the way out moves it toward the destination. Also called the critical point.",
-      "source": "casa-ac-91-15",
-      "relatedTools": []
-    },
-    {
-      "id": "pnr",
-      "term": "PNR",
-      "expansion": "point of no return",
-      "definition": "The farthest point along a leg from which you can still turn back and reach departure with your reserve fuel left. Past it, you are committed to going on.",
-      "source": "casa-ac-91-15",
-      "relatedTools": []
-    },
-    {
-      "id": "toc",
-      "term": "TOC",
-      "expansion": "top of climb",
-      "definition": "The point where a climb reaches cruise altitude, given as a distance from departure along the route.",
-      "source": "faa-phak",
-      "relatedTools": []
     },
     {
       "id": "yuma",

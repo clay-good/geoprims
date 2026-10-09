@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "85ab06e1560dda32",
+    "hash": "3c07b36bb069a5c5",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -12,8 +12,8 @@
     "lastmod": "2026-10-08"
   },
   "/aviation/": {
-    "hash": "347de36ebe296a4d",
-    "lastmod": "2026-10-08"
+    "hash": "9f0609911967dbd2",
+    "lastmod": "2026-10-09"
   },
   "/aviation/airspace/": {
     "hash": "4ccf472fb1dd20c9",
@@ -24,19 +24,19 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/airspeed/": {
-    "hash": "efb9aa4a490366f6",
-    "lastmod": "2026-09-23"
+    "hash": "f23541a29e1d4d32",
+    "lastmod": "2026-10-09"
   },
   "/aviation/airspeed/cas-to-tas/": {
-    "hash": "8e5343df4bf97a48",
+    "hash": "7dc3863ab64979be",
     "lastmod": "2026-10-09"
   },
   "/aviation/airspeed/tas-to-cas/": {
-    "hash": "98b1e96e400c3cd1",
+    "hash": "88c43519182d0e40",
     "lastmod": "2026-10-09"
   },
   "/aviation/airspeed/tat-sat/": {
-    "hash": "e014d4ec801f932f",
+    "hash": "059eb70c1cad3811",
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "e9de24d5a1b03951",
+    "hash": "ec4213d6d25f025f",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -720,7 +720,7 @@
     "lastmod": "2026-09-28"
   },
   "/geodesy/spcs/spcs2022-forward/": {
-    "hash": "a3e4255134a597e1",
+    "hash": "6baaee8082845a8f",
     "lastmod": "2026-10-09"
   },
   "/geodesy/spcs/spcs2022-inverse/": {
@@ -952,7 +952,7 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "7929235777bdc8e1",
+    "hash": "54361265334119af",
     "lastmod": "2026-10-09"
   },
   "/indexing/h3/resolution-chooser/": {
@@ -1160,7 +1160,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "20de197b6af6abbc",
+    "hash": "a1a610699d6c9ad3",
     "lastmod": "2026-10-09"
   },
   "/navigation/": {
@@ -1316,7 +1316,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "487c757cbf351b9b",
+    "hash": "9ef4f8786e0df944",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
@@ -1408,7 +1408,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "bc90f50160f16bb2",
+    "hash": "0e161e8251d0473c",
     "lastmod": "2026-10-09"
   },
   "/survey/": {
@@ -1680,7 +1680,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "8f80162117ce18a1",
+    "hash": "ba5e4b81607ad0d4",
     "lastmod": "2026-10-09"
   },
   "/units/": {
@@ -1944,7 +1944,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5334ecae8c8adeb2",
+    "hash": "d3486abe54d5d8f3",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {
@@ -1972,8 +1972,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/index-to-area/": {
-    "hash": "e13a19d8157be53f",
-    "lastmod": "2026-09-25"
+    "hash": "c6962976f1442990",
+    "lastmod": "2026-10-09"
   },
   "/workflows/inspection/": {
     "hash": "61884cdd332eaa76",

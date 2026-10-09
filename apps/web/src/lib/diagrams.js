@@ -73,6 +73,13 @@ const DIAGRAMS = Object.fromEntries(
     'drone.ops.wind-limit',
     'drone.ops.speed-check',
     'drone.power.battery-energy',
+    'aviation.airspeed.ias-to-tas',
+    'aviation.airspeed.ias-to-mach',
+    'aviation.airspeed.ias-to-eas',
+    'aviation.airspeed.eas-to-tas',
+    'aviation.airspeed.eas-to-mach',
+    'aviation.airspeed.mach-to-eas',
+    'aviation.airspeed.tas-to-eas',
   ].map((id) => [id, PARTS[id.split('.')[0]][id]]),
 );
 

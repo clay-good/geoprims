@@ -159,6 +159,17 @@ const CAL_ROW: &[Field] = &[
     qty("calibrated", "Calibrated", "KCAS, like 62", QT::Speed, "kt").required(),
 ];
 
+const CALIBRATION: Field = Field::new(
+    "calibration",
+    "Calibration table",
+    "From the POH/AFM: indicated and calibrated airspeed pairs, in increasing order, like 70 kt indicated and 73 kt calibrated",
+    Kind::List {
+        items: CAL_ROW,
+        min: 2,
+        max: 100,
+    },
+);
+
 const fn speed_out(name: &'static str, title: &'static str, help: &'static str) -> Field {
     qty(name, title, help, QT::Speed, "kt").precision(Precision::Decimals(1))
 }
@@ -346,16 +357,7 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
         PRESSURE_ALTITUDE,
         TEMPERATURE,
         TEMPERATURE_SOURCE,
-        Field::new(
-            "calibration",
-            "Calibration table",
-            "From the POH/AFM: indicated and calibrated airspeed pairs, in increasing order, like 70 kt indicated and 73 kt calibrated",
-            Kind::List {
-                items: CAL_ROW,
-                min: 2,
-                max: 100,
-            },
-        ),
+        CALIBRATION,
         V_SPEEDS[0],
         V_SPEEDS[1],
         V_SPEEDS[2],
@@ -669,9 +671,10 @@ fn run_cas_to_tas(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TAS_TO_CAS: ToolDef = ToolDef {
     id: "aviation.airspeed.tas-to-cas",
-    title: "Calibrated airspeed from true airspeed or Mach",
-    summary: "The calibrated airspeed to fly for a true airspeed or Mach number at a pressure altitude and temperature, with Mach, EAS, and impact pressure.",
-    aliases: &["TAS to CAS", "Mach to CAS", "Mach to TAS"],
+    version: "1.1.0",
+    title: "Calibrated airspeed from true airspeed, Mach, or EAS",
+    summary: "The calibrated airspeed to fly for a true airspeed, Mach number, or equivalent airspeed at a pressure altitude and temperature, with Mach, EAS, and impact pressure.",
+    aliases: &["TAS to CAS", "Mach to CAS", "Mach to TAS", "EAS to CAS"],
     keywords: &["CAS", "TAS", "Mach", "EAS", "airspeed", "crossover"],
     inputs: &[
         qty(
@@ -689,6 +692,13 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
             Kind::Number { min: 0.0, max: 5.0 },
         )
         .core(),
+        qty(
+            "eas",
+            "Equivalent airspeed",
+            "Like 248.1 kt; or give TAS or Mach instead",
+            QT::Speed,
+            "kt",
+        ),
         PRESSURE_ALTITUDE,
         TEMPERATURE,
         TEMPERATURE_SOURCE,
@@ -724,8 +734,8 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
     ],
     model: "TAS → Mach at the outside air temperature → impact pressure at the static pressure → CAS by the sea-level relation; Rayleigh pitot formula above Mach 1",
     accuracy: "Exact compressible-flow relations for γ = 1.4 air to double precision. Planning aid, not certified for navigation.",
-    when_to_use: "Use this when a plan gives you a true airspeed or a Mach number and you need the calibrated airspeed to fly at your altitude. Enter the pressure altitude and the outside air temperature, or Mach alone. It returns the calibrated airspeed with equivalent airspeed, impact pressure, and the compressibility correction. Run it at a few altitudes to see how the same Mach gives a lower calibrated airspeed as you climb.",
-    limitations: "The answer is calibrated airspeed, not indicated. There is no calibration table here, so the position and instrument error between the two is up to you and your POH or AFM. With Mach alone, the true airspeed is left out because it needs the temperature. The air is treated as a standard dry gas, and the V-speed flags only compare against the speeds you enter.",
+    when_to_use: "Use this when a plan gives you a true airspeed, a Mach number, or an equivalent airspeed and you need the calibrated airspeed to fly at your altitude. Enter the pressure altitude and the outside air temperature, or Mach or EAS alone. It returns the calibrated airspeed with equivalent airspeed, impact pressure, and the compressibility correction. Run it at a few altitudes to see how the same Mach gives a lower calibrated airspeed as you climb.",
+    limitations: "The answer is calibrated airspeed, not indicated. There is no calibration table here, so the position and instrument error between the two is up to you and your POH or AFM. With Mach or EAS alone, the true airspeed is left out because it needs the temperature. The air is treated as a standard dry gas, and the V-speed flags only compare against the speeds you enter.",
     references: &[GRACEY, ICAO_7488],
     examples: &[Example {
         id: "primary",
@@ -777,9 +787,10 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
 fn run_tas_to_cas(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let tas = ctx.quantity("tas")?;
     let mach = ctx.number("mach")?;
+    let eas = ctx.quantity("eas")?;
     let p = static_pressure(ctx)?;
-    let s = match (tas, mach) {
-        (Some(v), None) => {
+    let s = match (tas, mach, eas) {
+        (Some(v), None, None) => {
             let v = v.base();
             if v <= 0.0 {
                 return Err(ToolError::invalid(
@@ -790,17 +801,29 @@ fn run_tas_to_cas(ctx: &mut Ctx) -> Result<Json, ToolError> {
             let t = static_temperature(ctx, true)?.expect("required");
             from_mach(v / isa::speed_of_sound(t), p, Some(t))
         }
-        (None, Some(mm)) => {
+        (None, Some(mm), None) => {
             if mm <= 0.0 {
                 return Err(ToolError::invalid("/mach", "Mach must be positive."));
             }
             let t = static_temperature(ctx, false)?;
             from_mach(mm, p, t)
         }
+        (None, None, Some(v)) => {
+            let v = v.base();
+            if v <= 0.0 {
+                return Err(ToolError::invalid(
+                    "/eas",
+                    "Equivalent airspeed must be positive.",
+                ));
+            }
+            // EAS = M·a0·√(p/P0), so Mach needs no temperature.
+            let t = static_temperature(ctx, false)?;
+            from_mach(v / (a0() * sqrt(p / isa::P0)), p, t)
+        }
         _ => {
             return Err(ToolError::invalid(
                 "/tas",
-                "Give either true airspeed or Mach, not both and not neither.",
+                "Give one of true airspeed, Mach, or equivalent airspeed.",
             ));
         }
     };
@@ -951,3 +974,191 @@ fn run_tat_sat(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// ---------------------------------------------------------------- generated pairs
+
+// Allow-listed airspeed pairs (tool-catalog "Generated endpoints must be
+// meaningful"; add-aviation-suite design, "Tool inventory"). Each is its
+// parent with a narrower form and, for indicated airspeed, the airspeed type
+// preset: same run, same vectors' arithmetic, no separate math.
+
+const IAS_IN: Field = qty(
+    "airspeed",
+    "Indicated airspeed",
+    "Like 120 kt",
+    QT::Speed,
+    "kt",
+)
+.required()
+.core();
+
+macro_rules! pair {
+    ($name:ident, $parent:ident, $parent_id:literal, $slug:literal, $title:literal, $summary:literal,
+     $inputs:expr, $preset:expr, $example_title:literal, $example:expr, $sentence:literal, $why:literal) => {
+        pub static $name: ToolDef = ToolDef {
+            id: concat!("aviation.airspeed.", $slug),
+            title: $title,
+            summary: $summary,
+            keywords: $parent.keywords,
+            inputs: $inputs,
+            outputs: $parent.outputs,
+            stability: $parent.stability,
+            errors: $parent.errors,
+            warnings: $parent.warnings,
+            model: $parent.model,
+            accuracy: $parent.accuracy,
+            limitations: $parent.limitations,
+            references: $parent.references,
+            examples: &[Example {
+                id: "primary",
+                title: $example_title,
+                input: $example,
+                source: "The parent tool's chain (Gracey RP-1046 equations) with this pair's preset",
+            }],
+            primary_example: "primary",
+            visualization: $parent.visualization,
+            related: &[Related {
+                id: $parent_id,
+                reason: "parent",
+            }],
+            composed_of: &[$parent_id],
+            parent: Some(&$parent),
+            preset: $preset,
+            justification: $why,
+            assumptions: $parent.assumptions,
+            sentence: $sentence,
+            limits: $parent.limits,
+            run: $parent.run,
+            ..ToolDef::BLANK
+        };
+    };
+}
+
+const IAS_INPUTS: &[Field] = &[
+    IAS_IN,
+    PRESSURE_ALTITUDE,
+    TEMPERATURE,
+    TEMPERATURE_SOURCE,
+    CALIBRATION,
+];
+const INDICATED: &[(&str, &str)] = &[("airspeed_type", "\"indicated\"")];
+const IAS_EXAMPLE: &str = r#"{"airspeed":"120 kt","pressure_altitude":"8000 ft","temperature":"0 degC","calibration":[{"indicated":"60 kt","calibrated":"63 kt"},{"indicated":"100 kt","calibrated":"101 kt"},{"indicated":"140 kt","calibrated":"139 kt"}]}"#;
+const EAS_IN: Field = qty(
+    "eas",
+    "Equivalent airspeed",
+    "Like 248.1 kt",
+    QT::Speed,
+    "kt",
+)
+.required()
+.core();
+const MACH_IN: Field = Field::new(
+    "mach",
+    "Mach",
+    "Like 0.78",
+    Kind::Number { min: 0.0, max: 5.0 },
+)
+.required()
+.core();
+const TAS_IN: Field = qty("tas", "True airspeed", "Like 288.6 kt", QT::Speed, "kt")
+    .required()
+    .core();
+
+pair!(
+    IAS_TO_TAS,
+    CAS_TO_TAS,
+    "aviation.airspeed.cas-to-tas",
+    "ias-to-tas",
+    "Indicated to true airspeed",
+    "True airspeed from the indicated airspeed on the dial, through the POH calibration table, pressure altitude, and outside air temperature.",
+    IAS_INPUTS,
+    INDICATED,
+    "120 KIAS at 8,000 ft with a calibration table",
+    IAS_EXAMPLE,
+    "True airspeed is {tas} from {cas} calibrated.{warn CALIBRATION_ASSUMED} Treats IAS as CAS.{/warn}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
+    "Pilots read indicated airspeed off the dial and plan with true airspeed; the chain runs through the POH calibration table."
+);
+pair!(
+    IAS_TO_MACH,
+    CAS_TO_TAS,
+    "aviation.airspeed.cas-to-tas",
+    "ias-to-mach",
+    "Indicated airspeed to Mach",
+    "The Mach number for an indicated airspeed at a pressure altitude, through the POH calibration table, with true airspeed beside it.",
+    IAS_INPUTS,
+    INDICATED,
+    "120 KIAS at 8,000 ft with a calibration table",
+    IAS_EXAMPLE,
+    "Mach {mach}, {tas} true.{warn CALIBRATION_ASSUMED} Treats IAS as CAS.{/warn}{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
+    "Turbine crews climb on indicated airspeed and change to Mach at the crossover altitude."
+);
+pair!(
+    IAS_TO_EAS,
+    CAS_TO_TAS,
+    "aviation.airspeed.cas-to-tas",
+    "ias-to-eas",
+    "Indicated to equivalent airspeed",
+    "Equivalent airspeed for an indicated airspeed at a pressure altitude, through the POH calibration table, with the compressibility correction.",
+    IAS_INPUTS,
+    INDICATED,
+    "120 KIAS at 8,000 ft with a calibration table",
+    IAS_EXAMPLE,
+    "Equivalent airspeed is {eas}, {compressibility_correction} below {cas} calibrated.{warn CALIBRATION_ASSUMED} Treats IAS as CAS.{/warn}",
+    "Structural and gust limits are stated in equivalent airspeed; pilots check them against the indicated airspeed they fly."
+);
+pair!(
+    EAS_TO_TAS,
+    TAS_TO_CAS,
+    "aviation.airspeed.tas-to-cas",
+    "eas-to-tas",
+    "Equivalent to true airspeed",
+    "True airspeed for an equivalent airspeed at a pressure altitude and outside air temperature, with the calibrated airspeed to fly.",
+    &[EAS_IN, PRESSURE_ALTITUDE, TEMPERATURE, TEMPERATURE_SOURCE],
+    &[],
+    "248.1 KEAS at 10,000 ft",
+    r#"{"eas":"248.1 kt","pressure_altitude":"10000 ft","temperature":"-5 degC"}"#,
+    "True airspeed is {tas}; fly {cas} calibrated.{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
+    "Engineers give flight-test and load points in equivalent airspeed; the flight plan needs true airspeed."
+);
+pair!(
+    EAS_TO_MACH,
+    TAS_TO_CAS,
+    "aviation.airspeed.tas-to-cas",
+    "eas-to-mach",
+    "Equivalent airspeed to Mach",
+    "The Mach number for an equivalent airspeed at a pressure altitude, with the calibrated airspeed. It needs no temperature.",
+    &[EAS_IN, PRESSURE_ALTITUDE],
+    &[],
+    "248.1 KEAS at 10,000 ft",
+    r#"{"eas":"248.1 kt","pressure_altitude":"10000 ft"}"#,
+    "Mach {mach}; fly {cas} calibrated.",
+    "Design speeds such as VD are given in equivalent airspeed up to the altitude where a Mach limit takes over."
+);
+pair!(
+    MACH_TO_EAS,
+    TAS_TO_CAS,
+    "aviation.airspeed.tas-to-cas",
+    "mach-to-eas",
+    "Mach to equivalent airspeed",
+    "Equivalent airspeed and calibrated airspeed for a Mach number at a pressure altitude. It needs no temperature.",
+    &[MACH_IN, PRESSURE_ALTITUDE],
+    &[],
+    "Mach 0.78 at FL350",
+    r#"{"mach":0.78,"pressure_altitude":"35000 ft"}"#,
+    "Mach {mach} is {eas} equivalent and {cas} calibrated.",
+    "Buffet and gust-penetration speeds are checked in equivalent airspeed against a cruise Mach."
+);
+pair!(
+    TAS_TO_EAS,
+    TAS_TO_CAS,
+    "aviation.airspeed.tas-to-cas",
+    "tas-to-eas",
+    "True to equivalent airspeed",
+    "Equivalent airspeed for a true airspeed at a pressure altitude and outside air temperature, with Mach and calibrated airspeed.",
+    &[TAS_IN, PRESSURE_ALTITUDE, TEMPERATURE, TEMPERATURE_SOURCE],
+    &[],
+    "288.6 KTAS at 10,000 ft",
+    r#"{"tas":"288.6 kt","pressure_altitude":"10000 ft","temperature":"-5 degC"}"#,
+    "Equivalent airspeed is {eas}; fly {cas} calibrated.{warn ISA_TEMPERATURE_ASSUMED} Assumes ISA temperature.{/warn}",
+    "Drone and glider designers size structure for a true airspeed and need the equivalent airspeed the loads follow."
+);

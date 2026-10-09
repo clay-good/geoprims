@@ -1,0 +1,406 @@
+{
+  "note": "The 83 aviation operations planned in openspec/changes/add-aviation-suite/design.md, each with the tool that answers it and the fields that carry the answer. Several operations share one tool: one form answers both directions, or reports a whole family at once. tools/trust/aviation-operations.test.mjs checks every tool and field against the catalog. A field written visualization:<kind> is a drawing the tool makes; an operation still to build says why under pending.",
+  "groups": {
+    "atmosphere": {
+      "isa": [
+        "aviation.atmosphere.isa",
+        "temperature",
+        "pressure",
+        "density"
+      ],
+      "us76": [
+        "aviation.atmosphere.isa",
+        "model"
+      ],
+      "geometric-geopotential": [
+        "aviation.atmosphere.isa",
+        "geopotential_altitude",
+        "geometric_altitude"
+      ],
+      "nonstandard-day": [
+        "aviation.atmosphere.isa",
+        "temperature_deviation"
+      ],
+      "speed-of-sound": [
+        "aviation.atmosphere.isa",
+        "speed_of_sound"
+      ],
+      "viscosity": [
+        "aviation.atmosphere.isa",
+        "dynamic_viscosity",
+        "kinematic_viscosity"
+      ],
+      "ratios": [
+        "aviation.atmosphere.isa",
+        "theta",
+        "delta",
+        "sigma"
+      ],
+      "rh-dewpoint": [
+        "aviation.atmosphere.humidity",
+        "relative_humidity",
+        "dew_point"
+      ],
+      "vapor-pressure": [
+        "aviation.atmosphere.humidity",
+        "vapor_pressure",
+        "saturation_vapor_pressure"
+      ],
+      "virtual-temperature": [
+        "aviation.atmosphere.humidity",
+        "virtual_temperature"
+      ],
+      "moist-density": [
+        "aviation.atmosphere.humidity",
+        "moist_density"
+      ],
+      "cloud-base": [
+        "aviation.atmosphere.cloud-base",
+        "cloud_base_lcl",
+        "cloud_base_rule"
+      ],
+      "freezing-level": [
+        "aviation.atmosphere.cloud-base",
+        "freezing_level"
+      ],
+      "profile": [
+        "aviation.atmosphere.isa",
+        "visualization:profile-chart"
+      ]
+    },
+    "airspeed": {
+      "ias-to-cas": [
+        "aviation.airspeed.cas-to-tas",
+        "airspeed_type",
+        "calibration",
+        "cas"
+      ],
+      "cas-to-eas": [
+        "aviation.airspeed.cas-to-tas",
+        "eas"
+      ],
+      "eas-to-cas": [
+        "aviation.airspeed.tas-to-cas",
+        "eas",
+        "cas"
+      ],
+      "cas-to-tas": [
+        "aviation.airspeed.cas-to-tas",
+        "tas"
+      ],
+      "tas-to-cas": [
+        "aviation.airspeed.tas-to-cas",
+        "cas"
+      ],
+      "tas-to-mach": [
+        "aviation.airspeed.tas-to-cas",
+        "tas",
+        "mach"
+      ],
+      "mach-to-tas": [
+        "aviation.airspeed.tas-to-cas",
+        "mach",
+        "tas"
+      ],
+      "cas-to-mach": [
+        "aviation.airspeed.cas-to-tas",
+        "mach"
+      ],
+      "mach-to-cas": [
+        "aviation.airspeed.tas-to-cas",
+        "mach",
+        "cas"
+      ],
+      "impact-pressure": [
+        "aviation.airspeed.cas-to-tas",
+        "impact_pressure"
+      ],
+      "tat-sat": [
+        "aviation.airspeed.tat-sat",
+        "sat",
+        "tat"
+      ],
+      "dynamic-pressure": [
+        "aviation.airspeed.cas-to-tas",
+        "dynamic_pressure"
+      ]
+    },
+    "altimetry": {
+      "pressure-altitude": [
+        "aviation.altimetry.pressure-altitude",
+        "pressure_altitude"
+      ],
+      "station-pressure": [
+        "aviation.altimetry.pressure-altitude",
+        "station_pressure"
+      ],
+      "altimeter-setting": [
+        "aviation.altimetry.q-codes",
+        "station_pressure",
+        "qnh"
+      ],
+      "density-altitude": [
+        "aviation.altimetry.density-altitude",
+        "density_altitude"
+      ],
+      "isa-temperature": [
+        "aviation.altimetry.isa-temperature",
+        "isa_temperature"
+      ],
+      "isa-deviation": [
+        "aviation.altimetry.isa-temperature",
+        "isa_deviation"
+      ],
+      "qnh-qfe": [
+        "aviation.altimetry.q-codes",
+        "qfe"
+      ],
+      "qfe-qnh": [
+        "aviation.altimetry.q-codes",
+        "qnh"
+      ],
+      "flight-level": [
+        "aviation.altimetry.flight-level",
+        "altitude_of_fl",
+        "fl_of_altitude"
+      ],
+      "lowest-usable-fl": [
+        "aviation.altimetry.flight-level",
+        "lowest_usable_fl"
+      ],
+      "cold-temp-correction": [
+        "aviation.altimetry.cold-temperature",
+        "correction",
+        "corrected"
+      ],
+      "cold-temp-segments": [
+        "aviation.altimetry.cold-temperature",
+        "altitudes"
+      ],
+      "true-altitude": [
+        "aviation.altimetry.true-altitude",
+        "true_altitude"
+      ],
+      "pressure-per-height": [
+        "aviation.altimetry.pressure-per-height",
+        "height_per_hpa",
+        "height_per_inhg"
+      ]
+    },
+    "wind": {
+      "heading-groundspeed": [
+        "aviation.wind.heading-groundspeed",
+        "heading",
+        "groundspeed"
+      ],
+      "find-wind": [
+        "aviation.wind.find-wind",
+        "wind_direction",
+        "wind_speed"
+      ],
+      "tas-from-groundspeed": [
+        "aviation.wind.tas-from-groundspeed",
+        "tas"
+      ],
+      "course-from-heading": [
+        "aviation.wind.course-from-heading",
+        "course",
+        "groundspeed"
+      ],
+      "runway-components": [
+        "aviation.wind.runway-components",
+        "crosswind",
+        "headwind"
+      ],
+      "gust-components": [
+        "aviation.wind.runway-components",
+        "gust_crosswind",
+        "gust_headwind"
+      ],
+      "best-runway": [
+        "aviation.wind.best-runway",
+        "best"
+      ],
+      "crosswind-limit-check": [
+        "aviation.wind.runway-components",
+        "max_crosswind",
+        "crosswind_status",
+        "tailwind_status"
+      ],
+      "heading-chain": [
+        "aviation.wind.heading-chain",
+        "compass_heading"
+      ],
+      "deviation-card": [
+        "aviation.wind.heading-chain",
+        "deviation_card",
+        "deviation"
+      ],
+      "one-in-sixty": [
+        "aviation.wind.one-in-sixty",
+        "to_destination",
+        "track_error"
+      ],
+      "drift-angle": [
+        "aviation.wind.course-from-heading",
+        "drift_angle"
+      ],
+      "uv-to-direction-speed": [
+        "aviation.wind.uv",
+        "u",
+        "v",
+        "direction",
+        "speed"
+      ],
+      "winds-aloft-interpolation": [
+        "aviation.wind.aloft-interpolate",
+        "direction",
+        "speed",
+        "temperature"
+      ]
+    },
+    "performance": {
+      "turn-radius": [
+        "aviation.performance.turn",
+        "radius"
+      ],
+      "turn-rate": [
+        "aviation.performance.turn",
+        "turn_rate"
+      ],
+      "bank-for-rate": [
+        "aviation.performance.turn",
+        "bank",
+        "rule_of_thumb_bank"
+      ],
+      "load-factor": [
+        "aviation.performance.turn",
+        "load_factor"
+      ],
+      "stall-in-turn": [
+        "aviation.performance.turn",
+        "stall_speed_in_turn"
+      ],
+      "time-to-turn": [
+        "aviation.performance.turn",
+        "turn_time"
+      ],
+      "climb-gradient": [
+        "aviation.performance.climb-gradient",
+        "gradient",
+        "vertical_speed"
+      ],
+      "descent-gradient": [
+        "aviation.performance.top-of-descent",
+        "gradient"
+      ],
+      "top-of-descent": [
+        "aviation.performance.top-of-descent",
+        "distance"
+      ],
+      "descent-angle": [
+        "aviation.performance.top-of-descent",
+        "descent_angle"
+      ],
+      "glide-range": [
+        "aviation.performance.glide",
+        "still_air_range",
+        "wind_range"
+      ],
+      "glide-ring": [
+        "aviation.performance.glide",
+        "rings"
+      ],
+      "pivotal-altitude": [
+        "aviation.performance.pivotal-altitude",
+        "pivotal_altitude"
+      ],
+      "visual-descent-point": [
+        "aviation.performance.vdp",
+        "distance"
+      ],
+      "specific-range": [
+        "aviation.performance.specific-range",
+        "air_range",
+        "ground_range"
+      ]
+    },
+    "loading": {
+      "fuel-required": [
+        "aviation.loading.fuel-plan",
+        "total",
+        "trip"
+      ],
+      "endurance": [
+        "aviation.loading.fuel-plan",
+        "endurance"
+      ],
+      "fuel-weight": [
+        "aviation.loading.fuel-weight",
+        "weight",
+        "volume"
+      ],
+      "reserve-preset": [
+        "aviation.loading.fuel-plan",
+        "category",
+        "reserve_rule",
+        "reserve_fuel"
+      ],
+      "fuel-per-leg": [
+        "aviation.loading.fuel-plan",
+        "legs"
+      ],
+      "burn-rate": {
+        "pending": "The spec names burn rate only as an input to fuel required (fuel-and-loading spec, Fuel planning); computing it from fuel used and time needs a scenario first."
+      },
+      "cg": [
+        "aviation.loading.weight-balance",
+        "cg"
+      ],
+      "percent-mac": [
+        "aviation.loading.weight-balance",
+        "cg_mac"
+      ],
+      "envelope-check": [
+        "aviation.loading.weight-balance",
+        "envelope",
+        "takeoff_status"
+      ],
+      "weight-shift": [
+        "aviation.loading.weight-shift",
+        "new_cg"
+      ],
+      "ballast": [
+        "aviation.loading.ballast",
+        "ballast"
+      ],
+      "table-1d": [
+        "aviation.loading.table-interpolate",
+        "at_a",
+        "value"
+      ],
+      "table-2d": [
+        "aviation.loading.table-interpolate",
+        "at_b",
+        "value"
+      ],
+      "table-3d": [
+        "aviation.loading.table-interpolate",
+        "at_c",
+        "value"
+      ]
+    }
+  },
+  "endpoints": {
+    "note": "Generated endpoints, each allow-listed with the task it serves (tool-catalog, 'Generated endpoints must be meaningful'). The design targeted 20, including altimeter unit forms such as qnh-hpa-to-pressure-altitude; those are not built, because every altimeter field already takes 29.92 inHg, 1013 hPa, A2992, or Q1013 as typed, so a unit form would be the same form under a second name.",
+    "built": [
+      "aviation.airspeed.ias-to-tas",
+      "aviation.airspeed.ias-to-mach",
+      "aviation.airspeed.ias-to-eas",
+      "aviation.airspeed.eas-to-tas",
+      "aviation.airspeed.eas-to-mach",
+      "aviation.airspeed.mach-to-eas",
+      "aviation.airspeed.tas-to-eas"
+    ]
+  }
+}

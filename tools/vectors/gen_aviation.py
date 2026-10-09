@@ -296,6 +296,16 @@ def tas_to_cas_vectors():
         out.append(vec(i, {"mach": m, "pressure_altitude": f"{ft} ft", "temperature": f"{oat} degC"},
                        {"result.cas.value": cas_from_mach(m, p),
                         "result.tas.value": m * math.sqrt(1.4 * R * (oat + 273.15)) / KT}, 1e-9, AS_SRC, AS_VER))
+    # Equivalent airspeed in: EAS = M·a0·√(p/P0), so Mach needs no temperature.
+    for eas, ft, oat in [(248.1, 10000, None), (300, 35000, -54.3), (150, 0, None), (420, 25000, -35)]:
+        p = isa(ft * FT)[1]
+        m = eas * KT / (A0 * math.sqrt(p / P0))
+        inp = {"eas": f"{eas} kt", "pressure_altitude": f"{ft} ft"}
+        exp = {"result.cas.value": cas_from_mach(m, p), "result.mach": m}
+        if oat is not None:
+            inp["temperature"] = f"{oat} degC"
+            exp["result.tas.value"] = m * math.sqrt(1.4 * R * (oat + 273.15)) / KT
+        out.append(vec(len(out) + 1, inp, exp, 1e-9, AS_SRC, AS_VER))
     return out
 
 

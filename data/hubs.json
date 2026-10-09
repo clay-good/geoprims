@@ -27,9 +27,21 @@
           ]
         },
         {
-          "want": "find the calibrated airspeed to fly for a true airspeed or Mach",
+          "want": "find the calibrated airspeed to fly for a true airspeed, Mach, or equivalent airspeed",
           "tools": [
             "tas-to-cas"
+          ]
+        },
+        {
+          "want": "go straight from one airspeed to another, such as indicated to Mach or equivalent to true",
+          "tools": [
+            "ias-to-tas",
+            "ias-to-mach",
+            "ias-to-eas",
+            "eas-to-tas",
+            "eas-to-mach",
+            "mach-to-eas",
+            "tas-to-eas"
           ]
         },
         {

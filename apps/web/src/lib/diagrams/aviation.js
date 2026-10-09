@@ -106,11 +106,17 @@ function approachProfile(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
-/** Airspeed gauge: calibrated and true airspeed on one dial, with the Mach number. */
+/**
+ * Airspeed gauge: calibrated and true airspeed on one dial, with the Mach
+ * number. Without a temperature there is no true airspeed, so the second
+ * needle is the equivalent airspeed, which needs none.
+ */
 function airspeedGauge(args, result) {
-  const [cas, tas] = [val(result, 'cas'), val(result, 'tas')];
+  const key = Number.isFinite(val(result, 'tas')) ? 'tas' : 'eas';
+  const [cas, tas] = [val(result, 'cas'), val(result, key)];
   if (!Number.isFinite(cas) || !Number.isFinite(tas) || tas <= 0) return null;
-  const unit = result.result.tas.unit;
+  const unit = result.result[key].unit;
+  const name = key === 'tas' ? 'true' : 'equivalent';
   // A round top, so the ten ticks land on round numbers.
   // The V-speeds the pilot entered, as the marked arcs of an airspeed
   // indicator. Each is named in words as well as drawn, so the meaning never
@@ -152,10 +158,10 @@ function airspeedGauge(args, result) {
     needle(tas, 'dg-accent'),
     `<circle class="dg-dot-now" cx="${cx}" cy="${cy}" r="4"/>`,
     text('dg-muted-text', cx, cy + 24, unit, 'middle'),
-    text('dg-label', cx, 216, `TAS ${disp(result, 'tas')}`, 'middle'),
+    text('dg-label', cx, 216, `${key.toUpperCase()} ${disp(result, key)}`, 'middle'),
     text('dg-muted-text', cx, 232, `CAS ${disp(result, 'cas')} · Mach ${disp(result, 'mach')}`, 'middle'),
   ].join('');
-  const title = `Airspeed dial: calibrated airspeed ${disp(result, 'cas')} and true airspeed ${disp(result, 'tas')}, Mach ${disp(result, 'mach')}.`;
+  const title = `Airspeed dial: calibrated airspeed ${disp(result, 'cas')} and ${name} airspeed ${disp(result, key)}, Mach ${disp(result, 'mach')}.`;
   return { markup: svg(body, title), desc: title };
 }
 
@@ -495,6 +501,7 @@ export const DIAGRAMS = {
   'aviation.performance.vdp': approachProfile,
   'aviation.airspeed.cas-to-tas': airspeedGauge,
   'aviation.airspeed.tas-to-cas': airspeedGauge,
+  ...Object.fromEntries(['ias-to-tas', 'ias-to-mach', 'ias-to-eas', 'eas-to-tas', 'eas-to-mach', 'mach-to-eas', 'tas-to-eas'].map((p) => [`aviation.airspeed.${p}`, airspeedGauge])),
   'aviation.atmosphere.isa': isaProfile,
   'aviation.loading.weight-balance': cgEnvelope,
   'aviation.altimetry.true-altitude': altimetry,

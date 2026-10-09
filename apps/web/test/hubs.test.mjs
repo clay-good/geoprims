@@ -50,7 +50,7 @@ test('group index: /aviation/airspeed lists every airspeed tool with its summary
   const guide = html.slice(html.indexOf('id="guide-title"'));
   const at = ['calibrated airspeed (CAS)', 'equivalent airspeed (EAS)', 'true airspeed (TAS)', 'Mach number'].map((w) => guide.indexOf(w));
   assert.ok(at.every((i) => i > 0) && at.every((i, k) => k === 0 || i > at[k - 1]), `guide order: ${at}`);
-  assert.equal((html.match(/I want to<\/span>/g) ?? []).length, 3);
+  assert.equal((html.match(/I want to<\/span>/g) ?? []).length, 4);
 });
 
 test('every domain and group hub carries a CollectionPage of exactly its tools, breadcrumbs, and working links', () => {

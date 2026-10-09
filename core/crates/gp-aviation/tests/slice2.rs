@@ -104,8 +104,32 @@ fn round_trip_and_compressibility_sign() {
                 ),
             );
             near(&back, "result.cas.value", cas, 1e-8 * cas);
+            // EAS back to CAS needs no temperature.
+            let eas = num(&r, "result.eas.value");
+            let back = call(
+                "aviation.airspeed.tas-to-cas",
+                &format!(r#"{{"eas":"{eas} kt","pressure_altitude":"{ft} ft"}}"#),
+            );
+            near(&back, "result.cas.value", cas, 1e-8 * cas);
+            assert!(back["result"].get("tas").is_none(), "{back}");
         }
     }
+}
+
+#[test]
+fn give_one_speed_to_convert() {
+    for input in [
+        r#"{"tas":"300 kt","eas":"250 kt","pressure_altitude":"10000 ft","temperature":"-5 degC"}"#,
+        r#"{"pressure_altitude":"10000 ft"}"#,
+    ] {
+        let r = call("aviation.airspeed.tas-to-cas", input);
+        assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+    }
+    let r = call(
+        "aviation.airspeed.tas-to-cas",
+        r#"{"eas":"-5 kt","pressure_altitude":"0 ft"}"#,
+    );
+    assert_eq!(r["error"]["field"], "/eas", "{r}");
 }
 
 #[test]

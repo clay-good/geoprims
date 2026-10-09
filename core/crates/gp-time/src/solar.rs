@@ -734,7 +734,7 @@ pub static EVENTS: ToolDef = ToolDef {
         ),
     ],
     outputs: &EVENT_OUT,
-    errors: &[],
+    errors: &[ErrorCode::Unsupported],
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Geometric sun from the NREL Solar Position Algorithm; each crossing found by bisection between the day's highest and lowest points, which also decide polar states; sunrise and sunset at −0.833° (minus horizon dip when a height is given); solar noon from the NOAA equation of time",
     accuracy: "Within 1 minute of USNO on 1,200 events (300 places and dates, 94% to the same minute), including twilights that graze their altitude",

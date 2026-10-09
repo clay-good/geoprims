@@ -53,7 +53,7 @@
     {
       "name": "geoprims_describe",
       "title": "Describe geoprims tools",
-      "description": "Get manifests for up to 20 tool or workflow ids. A workflow id (workflow.<slug>) gives its inputs, its steps, and the values it fixes. detail \"summary\" gives title and summary; \"schema\" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, the constants the tool assumes with their sources, and the limitation a simplified tool declares; \"examples\" adds the worked example.",
+      "description": "Get manifests for up to 20 tool or workflow ids. A workflow id (workflow.<slug>) gives its inputs, its steps, and the values it fixes. detail \"summary\" gives title and summary; \"schema\" adds input and output JSON Schemas, units, accuracy, model, references, warnings, related tools, the constants the tool assumes with their sources, and the limitation a simplified tool declares; \"examples\" adds the worked example. errors lists the codes a tool refuses with; any tool can also return INVALID_INPUT, UNIT_MISMATCH, or LIMIT_EXCEEDED.",
       "inputSchema": {
         "type": "object",
         "properties": {

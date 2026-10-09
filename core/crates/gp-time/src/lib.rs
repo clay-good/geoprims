@@ -1086,7 +1086,7 @@ pub static UTC_OFFSET: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(0)),
     ],
-    errors: &[],
+    errors: &[ErrorCode::Unsupported],
     warnings: &["AMBIGUOUS_INPUT", "EXPERIMENTAL_TOOL"],
     model: "UTC = local − offset; named zones from the embedded IANA tzdb (TZif with POSIX rules)",
     accuracy: "Exact for the tzdb release echoed in meta.assets",

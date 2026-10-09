@@ -941,6 +941,7 @@ const QUANTITY_IDS: &[&str] = &[
 
 pub static NORMALIZE: ToolDef = ToolDef {
     id: "units.quantity.normalize",
+    errors: &[ErrorCode::UnitMismatch],
     title: "Normalize a unit-tagged value",
     summary: "Reads any value with a unit, like “145 kts”, and returns it in canonical units (SI; degrees for angles).",
     aliases: &["unit parser", "to si units"],

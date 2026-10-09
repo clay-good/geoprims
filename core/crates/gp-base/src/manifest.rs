@@ -2,6 +2,7 @@
 //! `contracts/manifest-extensions`) and the catalog lint that fails the build on
 //! malformed definitions.
 
+use crate::ErrorCode;
 use crate::json::Json;
 use crate::profile::Profile;
 use crate::tool::{Field, Kind, Precision, Stability, ToolDef};
@@ -303,7 +304,7 @@ pub fn manifest(def: &ToolDef) -> Json {
     put("outputs", object_schema(def.outputs, false, def));
     put(
         "errors",
-        Json::Arr(def.errors.iter().map(|c| Json::str(c.as_str())).collect()),
+        Json::Arr(published_errors(def).map(Json::str).collect()),
     );
     // A stable tool never emits EXPERIMENTAL_TOOL, so it does not advertise it.
     let warnings: Vec<&str> = def
@@ -919,6 +920,29 @@ pub fn lint(tools: &[&ToolDef], taxonomy: Taxonomy, known_ids: &[&str]) -> Vec<S
         }
     }
     errs
+}
+
+/// Whether any input, or any column of a list input, is a quantity.
+fn takes_quantity(fields: &[Field]) -> bool {
+    fields.iter().any(|f| match f.kind {
+        Kind::Quantity { .. } | Kind::AnyQuantity => true,
+        Kind::List { items, .. } => takes_quantity(items),
+        _ => false,
+    })
+}
+
+/// The error codes a tool publishes: the ones it declares, plus
+/// OUT_OF_DOMAIN when it takes a quantity, because the runtime refuses an
+/// absurd magnitude on any quantity input with it ("far outside any
+/// meaningful range") whatever the tool's own domain.
+pub fn published_errors(def: &ToolDef) -> impl Iterator<Item = &'static str> {
+    let implied = (takes_quantity(def.inputs) && !def.errors.contains(&ErrorCode::OutOfDomain))
+        .then_some(ErrorCode::OutOfDomain);
+    def.errors
+        .iter()
+        .copied()
+        .chain(implied)
+        .map(ErrorCode::as_str)
 }
 
 #[cfg(test)]

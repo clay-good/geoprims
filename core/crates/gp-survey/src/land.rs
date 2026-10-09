@@ -1090,7 +1090,11 @@ pub static DEED_PLOT: ToolDef = ToolDef {
             Kind::Text { max_len: 200 },
         ),
     ],
-    errors: &[ErrorCode::InvalidInput, ErrorCode::DegenerateGeometry],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::UnitMismatch,
+    ],
     warnings: &[
         "PERFECT_CLOSURE",
         "CURVE_CALL_INCOMPLETE",

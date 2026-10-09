@@ -3,6 +3,13 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "fixed",
+      "tools": [],
+      "vectors": [],
+      "summary": "Each tool's list of error codes, which agents read through the MCP server, now names every refusal the tool can give. Tools that take a measurement now list OUT_OF_DOMAIN, which any of them returns for an impossible magnitude, and five tools gained a code they returned without listing it. A new check holds every refusal in the test vectors and every one the fuzzer finds to the tool's list."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "added",
       "tools": [],
       "vectors": [],

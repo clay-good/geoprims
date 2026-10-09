@@ -868,7 +868,7 @@ pub static COVERING: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(0)),
     ],
-    errors: &[ErrorCode::InvalidInput],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     stability: Stability::Stable,
     warnings: &["COVERING_OVER_BUDGET", "UNIT_ASSUMED"],
     model: "Refinement from the six faces: the coarsest candidate that meets the region is split into its four children, keeping any cell the region contains whole, until the budget is reached; a cell that only partly overlaps is kept, so the covering contains the region. A polygon's edges are great circles, as in S2; a cell meets it when its center or a corner is inside (by the winding of the polygon's edges seen from there), an edge of the polygon crosses or touches one of the cell's, or a corner of the polygon lies in the cell, and it is whole inside when its four corners are inside and none of that boundary reaches it",

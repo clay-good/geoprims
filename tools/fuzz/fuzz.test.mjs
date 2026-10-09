@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { workerHost } from '../../packages/runtime/src/worker-host.mjs';
+import { undeclared } from '../trust/error-codes.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -97,7 +98,7 @@ async function problem(t, input) {
     if (r.error?.code === 'LIMIT_EXCEEDED' && r.error.message.includes('timeout')) return 'hung past the 10 s timeout';
     if (!r.error || !CODES.has(r.error.code)) return `error code ${r.error?.code}: ${r.error?.message}`;
     if (!r.error.message) return 'an error without a message';
-    return null;
+    return undeclared(t, r.error.code);
   }
   return 'an envelope without ok';
 }
@@ -182,6 +183,7 @@ test('fuzzer regressions return structured errors', async () => {
     for (const [id, input, code] of cases) {
       const r = JSON.parse(await quick.invoke(id, JSON.stringify(input)));
       assert.equal(r.error?.code, code, `${id} ${JSON.stringify(input)} → ${JSON.stringify(r.error ?? r.summary)}`);
+      assert.equal(undeclared(catalog.tools.find((t) => t.id === id), code), null);
     }
     for (const [id, input] of fixed) {
       const r = JSON.parse(await quick.invoke(id, JSON.stringify(input)));

@@ -286,6 +286,46 @@ test('layers: a route draws its legs in order, once, with a start marker', async
   assert.deepEqual(start.points[0], [args.waypoints[0].lon, args.waypoints[0].lat]);
 });
 
+test('layers: a nav log labels each leg with its heading, groundspeed, and time', async () => {
+  // add-flight-and-drone-planning-tools 9: the log's own rows, on the legs they describe.
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const catalog = JSON.parse(readFileSync(join(web, '../../dist/catalog/v1.json'), 'utf8'));
+  const host = nodeHost(join(web, '../../dist/wasm'));
+  const tool = catalog.tools.find((t) => t.id === 'aviation.flight-plan.nav-log');
+  const args = tool.examples[0].input;
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  const layers = await buildLayers(tool, args, result, null, null);
+  const route = layers.find((l) => l.kind === 'line' && l.legLabels);
+  assert.ok(route, 'the route carries leg labels');
+  assert.equal(route.legLabels.length, route.points.length - 1, 'one label per leg drawn');
+  assert.equal(route.legLabels.length, result.result.legs.length);
+  for (const [i, leg] of result.result.legs.entries()) {
+    const label = route.legLabels[i];
+    const hdg = String(Math.round(leg.magnetic_heading.value) % 360 || 360).padStart(3, '0');
+    assert.ok(label.startsWith(`MH ${hdg}°`), `${label}: heading`);
+    assert.ok(label.includes(`${Math.round(leg.groundspeed.value)} kt`), `${label}: groundspeed`);
+    assert.ok(label.endsWith(`${Math.round(leg.time.value)} min`), `${label}: time`);
+  }
+  // A path with no legs table (a survey grid) carries none.
+  const grid = catalog.tools.find((t) => t.id === 'drone.mission.survey-grid');
+  const g = JSON.parse(await host.invoke(grid.id, JSON.stringify(grid.examples[0].input)));
+  const gl = await buildLayers(grid, grid.examples[0].input, g, null, null);
+  assert.ok(!gl.some((l) => l.legLabels));
+});
+
+test('leg labels format long legs in hours and fall back to true heading', async () => {
+  const { legLabels } = await import('../src/lib/map/layers.js');
+  const q = (value, unit) => ({ value, unit });
+  const r = { result: { legs: [
+    { true_heading: q(359.6, 'deg'), groundspeed: q(142.4, 'kt'), time: q(1.5, 'h') },
+    { true_heading: q(4.2, 'deg'), groundspeed: q(98, 'kt'), time: q(65, 'min') },
+  ] } };
+  assert.deepEqual(legLabels(r, 'legs'), ['TH 360° · 142 kt · 1 h 30 min', 'TH 004° · 98 kt · 1 h 05 min']);
+  assert.deepEqual(legLabels({ result: { legs: [{ true_heading: q(10, 'deg') }] } }, 'legs'), [], 'a row without its numbers labels nothing');
+  assert.deepEqual(legLabels(r, undefined), []);
+});
+
 test('h3 pentagon: a ring around a pentagon draws five neighbours, not six', async () => {
   // add-spatial-indexing-and-raster 1.4: the twelve pentagons are the cases
   // that break a hexagon assumption, so the drawing is pinned on one.

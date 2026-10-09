@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
+        "aviation.flight-plan.nav-log"
+      ],
+      "vectors": [],
+      "summary": "The navigation log's map labels each leg with its magnetic heading, groundspeed, and time, and maps of a planned flight path (a nav log, a corridor, an orbit) now open framed on the path instead of a wide regional view."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "added",
       "tools": [
         "raster.terrain.curvature"

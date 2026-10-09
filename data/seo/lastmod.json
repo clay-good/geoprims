@@ -96,8 +96,8 @@
     "lastmod": "2026-09-26"
   },
   "/aviation/flight-plan/nav-log/": {
-    "hash": "073a05541df44d25",
-    "lastmod": "2026-09-29"
+    "hash": "6bdff4587c0d0dca",
+    "lastmod": "2026-10-09"
   },
   "/aviation/ifr/": {
     "hash": "cd0c7cde212a887c",
@@ -264,7 +264,7 @@
     "lastmod": "2026-09-29"
   },
   "/changelog/": {
-    "hash": "7e580071116e6709",
+    "hash": "216d3c8186bf9b40",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -1928,7 +1928,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "3bb5c46296723f82",
+    "hash": "4d8d3ed459fa050a",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-29"
   },
   "/workflows/vfr-cross-country/": {
-    "hash": "28197e38c4e4c894",
-    "lastmod": "2026-10-08"
+    "hash": "b49f09f2105f4e25",
+    "lastmod": "2026-10-09"
   }
 }

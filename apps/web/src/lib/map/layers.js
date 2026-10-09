@@ -75,6 +75,28 @@ export function outputPath(result, field) {
  * each flight can be drawn apart from its neighbors. Rows without one are a
  * single part.
  */
+/**
+ * One label per row of a legs table: magnetic (or true) heading, groundspeed,
+ * and time, like "MH 021° · 106 kt · 17 min". Empty when a row lacks them.
+ */
+export function legLabels(result, field) {
+  const rows = field ? result?.result?.[field] : null;
+  if (!Array.isArray(rows)) return [];
+  const labels = rows.map((row) => {
+    const [mh, th] = [row?.magnetic_heading, row?.true_heading];
+    const hdg = mh ?? th;
+    const gs = row?.groundspeed;
+    const t = row?.time;
+    const mins = t && { min: 1, h: 60, s: 1 / 60 }[t.unit] ? t.value * { min: 1, h: 60, s: 1 / 60 }[t.unit] : null;
+    if (!Number.isFinite(hdg?.value) || !Number.isFinite(gs?.value) || mins === null || !Number.isFinite(mins)) return null;
+    const deg = ((Math.round(hdg.value) % 360) + 360) % 360 || 360;
+    const m = Math.round(mins);
+    const time = m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`;
+    return `${mh ? 'MH' : 'TH'} ${String(deg).padStart(3, '0')}° · ${Math.round(gs.value)} ${gs.unit} · ${time}`;
+  });
+  return labels.every(Boolean) ? labels : [];
+}
+
 export function outputParts(result, field) {
   const rows = result?.result?.[field];
   if (!Array.isArray(rows) || !rows.some((r) => typeof r?.part === 'number')) {
@@ -172,7 +194,10 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
       const parts = (field ? outputParts(result, field) : []).filter((p) => p.length >= 2);
       if (!parts.length) continue;
       const n = parts.reduce((k, p) => k + p.length, 0);
-      parts.forEach((pts, i) => layers.push({ kind: 'line', role: i % 2 ? 'input' : 'result', points: pts, arrows: true, stops: n <= MAX_STOPS }));
+      // A nav log names its legs table: each leg is labeled on the map with
+      // what the pilot flies it by, as the log's own row gives it.
+      const legs = parts.length === 1 ? legLabels(result, mapOf(v.map).legs) : [];
+      parts.forEach((pts, i) => layers.push({ kind: 'line', role: i % 2 ? 'input' : 'result', points: pts, arrows: true, stops: n <= MAX_STOPS, ...(legs.length === pts.length - 1 ? { legLabels: legs } : {}) }));
       layers.push({ kind: 'point', role: 'result', points: [parts[0][0]], label: 'Start' });
       pathDrawn = true;
       inParts ||= parts.length > 1;

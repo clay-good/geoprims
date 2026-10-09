@@ -138,7 +138,8 @@
 
   function reframe() {
     const [w, h] = size();
-    target = frame(mode, extent(layers), w, h, { tight: layers.some((l) => l.kind === 'polygon') });
+    // An area or a planned flight path is the answer itself, so it is framed on itself.
+    target = frame(mode, extent(layers), w, h, { tight: layers.some((l) => l.kind === 'polygon' || l.arrows) });
     ease();
   }
 
@@ -171,6 +172,8 @@
     const what = layers.filter((l) => !l.cell).map((l) => (l.iso ? (l.zone ? 'a compass zone edge' : 'an isogonic line') : l.kind === 'sky' ? "the sun's path through the sky around the site, the ring its horizon" : l.kind === 'line' ? (l.grid ? 'a grid line' : l.offset ? 'the cross-track offset from the point to the track' : l.track ? 'the track' : l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
     if (shots) what.push(`${shots.points.length} photo trigger points`);
+    const legged = layers.find((l) => l.legLabels);
+    if (legged) what.push(`each leg labeled with its heading, groundspeed, and time: ${legged.legLabels.join('; ')}`);
     const compacted = layers.some((l) => l.compacted);
     if (cellCount) what.push(`${cellCount} ${grid} ${cellCount === 1 ? 'cell' : 'cells'}${compacted ? `, drawn dashed because they are the compacted stand-in for the ${result.result?.count ?? 'many'} the answer counts` : ''}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
     shown = [...new Set(what)].join(', ') || 'the world';
@@ -194,6 +197,7 @@
       layers.some((l) => l.kind === 'line' && l.role === 'comparison' && l.path === other) && { cls: 'dashed', text: `${named(!rhumb)}, for comparison${lengthOf(other)}` },
       layers.some((l) => l.path === 'great-circle') && { cls: 'dotted', text: `Great circle on a sphere, for comparison${lengthOf('great-circle')}` },
       layers.some((l) => l.kind === 'point' && l.role === 'detail') && { cls: 'solid', text: 'Photo trigger points' },
+      layers.some((l) => l.legLabels) && { cls: 'solid', text: 'Each leg: heading (MH magnetic, TH true), groundspeed, and time' },
       layers.some((l) => l.kind === 'polygon' && !l.cell) && { cls: 'area', text: 'The area' },
       layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? `${grid} cells: the origin strongest, fading with grid distance` : `${grid} cells` },
     ].filter(Boolean);

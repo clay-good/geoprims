@@ -412,7 +412,11 @@ pub static NAV_LOG: ToolDef = ToolDef {
     primary_example: "primary",
     visualization: &[Layer {
         kind: "line-geodesic",
-        map: &[("path", "path"), ("distance", "total_distance")],
+        map: &[
+            ("path", "path"),
+            ("distance", "total_distance"),
+            ("legs", "legs"),
+        ],
     }],
     related: &[
         Related {

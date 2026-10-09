@@ -327,7 +327,7 @@ function places(g, view, list, c) {
  * A path's direction and turns: a chevron at the middle of each leg long
  * enough to hold one, and a small dot at each turn point.
  */
-function marks(g, view, layer, stroke, surface) {
+function marks(g, view, layer, stroke, surface, c) {
   const pts = layer.points.map(([lon, lat]) => forward(view, lon, lat));
   for (let i = 0; i + 1 < pts.length; i++) {
     const [a, b] = [pts[i], pts[i + 1]];
@@ -347,6 +347,27 @@ function marks(g, view, layer, stroke, surface) {
       g.strokeStyle = stroke;
       g.lineWidth = 2;
       g.stroke();
+    }
+    // A nav log's leg label beside the leg's middle, on the left of travel,
+    // when the leg is long enough on screen to carry it.
+    const label = layer.legLabels?.[i];
+    if (label && len >= 90) {
+      g.font = `600 12px ${c.sans}`;
+      const w = g.measureText(label).width + 12;
+      // The normal on the left of travel, and far enough along it that the
+      // pill's nearest edge clears the line whatever the leg's angle.
+      const [nx, ny] = [dy / len, -dx / len];
+      const off = 8 + Math.abs(nx) * (w / 2) + Math.abs(ny) * 10;
+      const [cx, cy] = [(a[0] + b[0]) / 2 + nx * off, (a[1] + b[1]) / 2 + ny * off];
+      g.beginPath();
+      g.roundRect(cx - w / 2, cy - 10, w, 20, 10);
+      g.fillStyle = surface;
+      g.fill();
+      g.strokeStyle = c.line;
+      g.lineWidth = 1;
+      g.stroke();
+      g.fillStyle = c.text;
+      g.fillText(label, cx - w / 2 + 6, cy + 4);
     }
   }
   if (!layer.stops) return;
@@ -524,7 +545,7 @@ export function draw(g, view, base, layers, c) {
       g.lineWidth = layer.role === 'result' ? 3 : dotted ? 2 : 1.5;
       g.stroke();
       g.setLineDash([]);
-      if (layer.arrows || layer.stops) marks(g, view, layer, stroke, c.surface);
+      if (layer.arrows || layer.stops) marks(g, view, layer, stroke, c.surface, c);
     } else if (layer.kind === 'sky') {
       // A sky plot around the site: the horizon ring, the threshold ring, and
       // the sun's path, azimuth measured from north as the projection shows

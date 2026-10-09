@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "3c07b36bb069a5c5",
+    "hash": "33c21303fd0f94a5",
     "lastmod": "2026-10-09"
   },
   "/accuracy/": {
@@ -60,7 +60,7 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/pressure-altitude/": {
-    "hash": "51d9a8d785d36ad2",
+    "hash": "43313a03fb38c338",
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/pressure-per-height/": {
@@ -68,7 +68,7 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/q-codes/": {
-    "hash": "a60d4205cf5e0b2e",
+    "hash": "ed961c85630eca90",
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/true-altitude/": {
@@ -88,7 +88,7 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "66c5f1b756ba0c84",
+    "hash": "6f1d68f4555b6183",
     "lastmod": "2026-10-09"
   },
   "/aviation/flight-plan/": {
@@ -264,7 +264,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "ec4213d6d25f025f",
+    "hash": "045d6e91a0662085",
     "lastmod": "2026-10-09"
   },
   "/disclaimer/": {
@@ -1028,8 +1028,8 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "cb556684a3158103",
-    "lastmod": "2026-09-26"
+    "hash": "91c1a3fbcc3d115d",
+    "lastmod": "2026-10-09"
   },
   "/learn/crosswind-components/": {
     "hash": "754fb39b841311bb",
@@ -1107,8 +1107,12 @@
     "hash": "eaa75f64b688e2a8",
     "lastmod": "2026-10-09"
   },
+  "/learn/pressure-altitude-constants/": {
+    "hash": "794e658f6b841a72",
+    "lastmod": "2026-10-09"
+  },
   "/learn/pressure-altitude/": {
-    "hash": "6d2c3c331b65bfc5",
+    "hash": "2eb0c252f0a7b63e",
     "lastmod": "2026-10-09"
   },
   "/learn/state-plane-coordinates/": {
@@ -1160,7 +1164,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "a1a610699d6c9ad3",
+    "hash": "f6b2d2f61e4f98f3",
     "lastmod": "2026-10-09"
   },
   "/navigation/": {
@@ -1316,7 +1320,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "9ef4f8786e0df944",
+    "hash": "a417930f6b91e222",
     "lastmod": "2026-10-09"
   },
   "/raster/": {
@@ -1408,7 +1412,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "0e161e8251d0473c",
+    "hash": "a80941e437fa8773",
     "lastmod": "2026-10-09"
   },
   "/survey/": {
@@ -1944,7 +1948,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "d3486abe54d5d8f3",
+    "hash": "46c5e80a8cf75af5",
     "lastmod": "2026-10-09"
   },
   "/workflows/": {
@@ -1988,7 +1992,7 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/preflight-check/": {
-    "hash": "f324ce3b37ca869b",
+    "hash": "f4d8e5fed7a60131",
     "lastmod": "2026-10-09"
   },
   "/workflows/vfr-cross-country/": {

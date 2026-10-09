@@ -183,6 +183,22 @@ fn pressure_altitude_5000_ft() {
 }
 
 #[test]
+fn pressure_altitude_nws_constants() {
+    // The NWS WxCalc chain lands within a few feet of ISA here, and the two
+    // agree exactly at sea level on the standard setting.
+    let nws = call(
+        "aviation.altimetry.pressure-altitude",
+        r#"{"elevation":"5000 ft","altimeter":"29.80 inHg","constants":"nws"}"#,
+    );
+    assert!((num(&nws, "result.pressure_altitude.value") - 5109.16).abs() <= 0.05);
+    let zero = call(
+        "aviation.altimetry.pressure-altitude",
+        r#"{"elevation":"0 ft","altimeter":"1013.25 hPa","constants":"nws"}"#,
+    );
+    assert!(num(&zero, "result.pressure_altitude.value").abs() <= 1e-6);
+}
+
+#[test]
 fn pressure_altitude_standard_setting() {
     let r = call(
         "aviation.altimetry.pressure-altitude",

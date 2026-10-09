@@ -24,7 +24,7 @@ test('10,000 rows with 12 bad ones: 9,988 results, 12 errors by row, an error co
   for (let i = 0; i < 10_000; i++) lines.push(bad.has(i) ? 'not-a-height,29.92' : `${i % 9000},${(28.5 + (i % 300) / 100).toFixed(2)}`);
   const parsed = readDelimited(lines.join('\n'));
   const mapping = suggestMapping(t, parsed.headers);
-  assert.deepEqual(mapping, { elevation: 0, altimeter: 1 });
+  assert.deepEqual(mapping, { elevation: 0, altimeter: 1, constants: -1 });
   const args = rowArgs(t, parsed.rows, mapping);
   assert.equal(args[1].elevation, '1 ft', 'a bare number takes the input unit');
   const progress = [];

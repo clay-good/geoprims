@@ -74,6 +74,22 @@ pub mod refs {
         locator: "Section 8.4 (altimetry), section 3.4.2.14 and tables 3-17 and 3-18 (flight categories), section 24.4 (METAR and SPECI), section 27.2 (FB winds and temperatures aloft), and section 27.4 (TAF)",
         url: "https://www.faa.gov/sites/faa.gov/files/FAA-H-8083-28B.pdf",
     };
+    pub const NWS_STATION_PRESSURE: Reference = Reference {
+        title: "Station Pressure (WxCalc)",
+        issuer: "National Weather Service, El Paso",
+        year: 2024,
+        edition: "Web calculator documentation",
+        locator: "Station pressure from altimeter setting (inHg) and elevation (m), exponent 5.2561",
+        url: "https://www.weather.gov/media/epz/wxcalc/stationPressure.pdf",
+    };
+    pub const NWS_PRESSURE_ALTITUDE: Reference = Reference {
+        title: "Pressure Altitude (WxCalc)",
+        issuer: "National Weather Service, El Paso",
+        year: 2024,
+        edition: "Web calculator documentation",
+        locator: "Pressure altitude from station pressure (mb): 145366.45 ft and exponent 0.190284",
+        url: "https://www.weather.gov/media/epz/wxcalc/pressureAltitude.pdf",
+    };
     pub const ALDUCHOV: Reference = Reference {
         title: "Improved Magnus form approximation of saturation vapor pressure",
         issuer: "Alduchov, O. A., and Eskridge, R. E., Journal of Applied Meteorology",
@@ -677,7 +693,7 @@ const ALTIMETER: Field = Field::new(
 
 pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.altimetry.pressure-altitude",
-    version: "1.1.0",
+    version: "1.2.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Pressure altitude",
     summary: "Pressure altitude from field elevation and the altimeter setting, exact from the standard atmosphere, with the 1,000 ft per inch rule of thumb beside it.",
@@ -689,7 +705,16 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
         "QNH",
         "29.92",
     ],
-    inputs: &[ELEVATION, ALTIMETER],
+    inputs: &[
+        ELEVATION,
+        ALTIMETER,
+        Field::new(
+            "constants",
+            "Constant set",
+            "isa (default) for the standard atmosphere, or nws to match National Weather Service calculators",
+            Kind::Choice(&["isa", "nws"]),
+        ),
+    ],
     outputs: &[
         Field::new(
             "pressure_altitude",
@@ -733,11 +758,17 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
         .precision(Precision::Decimals(0)),
     ],
     warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "ISA pressure-height relation (ISA-derived constants 145,442.16 ft and 0.190263), layered above 36,089 ft",
-    accuracy: "Exact to the ISA definition. The NWS constant set (145,366.45 ft, 0.190284) differs by up to about 12 ft. Planning aid, not certified for navigation.",
+    model: "ISA pressure-height relation (ISA-derived constants 145,442.16 ft and 0.190263), layered above 36,089 ft; or, on request, the NWS WxCalc station-pressure and pressure-altitude formulas (5.2561; 145,366.45 ft and 0.190284)",
+    accuracy: "Exact to the ISA definition. The NWS constants (145,366.45 ft, 0.190284) alone move the answer by under 8 ft below 18,000 ft; the NWS station-pressure formula, which scales the setting by a standard pressure ratio, adds more at a high field with a setting far from 29.92 inHg (58 ft at 9,000 ft and 28.90 inHg). Choose nws to cross-check a weather.gov answer. Planning aid, not certified for navigation.",
     when_to_use: "Use this when a performance chart, a flight level, or another calculation asks for pressure altitude rather than field elevation: it is the altitude the airplane would read with the altimeter set to 29.92 inHg, which is what the standard atmosphere is indexed by. It is also the first step into density altitude, true airspeed, and the airspeed and altimetry tools here.",
-    limitations: "It converts an altimeter setting to a height in the standard atmosphere and nothing more: it does not know the temperature, so it is not the true altitude, and it does not apply the cold-temperature correction an approach needs. Two constant sets are in use and they differ by about 12 ft; this reports the ISA-derived set unless you ask for the NWS one.",
-    references: &[ICAO_7488, WEATHER_HANDBOOK, PHAK],
+    limitations: "It converts an altimeter setting to a height in the standard atmosphere and nothing more: it does not know the temperature, so it is not the true altitude, and it does not apply the cold-temperature correction an approach needs. Two constant sets are in use; this reports the ISA-derived set unless you choose nws, which reproduces the National Weather Service calculator, shortcuts included.",
+    references: &[
+        ICAO_7488,
+        WEATHER_HANDBOOK,
+        PHAK,
+        NWS_STATION_PRESSURE,
+        NWS_PRESSURE_ALTITUDE,
+    ],
     examples: &[Example {
         id: "primary",
         title: "A 5,000 ft field with the altimeter at 29.80 inHg",
@@ -801,6 +832,24 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
             unit: "m",
             source: "icao-7488",
         },
+        Assumption {
+            name: "NWS pressure-altitude scale (nws only)",
+            value: "145366.45",
+            unit: "ft",
+            source: "nws-wxcalc-pressure-altitude",
+        },
+        Assumption {
+            name: "NWS pressure-altitude exponent (nws only)",
+            value: "0.190284",
+            unit: "1",
+            source: "nws-wxcalc-pressure-altitude",
+        },
+        Assumption {
+            name: "NWS station-pressure exponent (nws only)",
+            value: "5.2561",
+            unit: "1",
+            source: "nws-wxcalc-station-pressure",
+        },
     ],
     limits: &[("batchRows", 10_000)],
     slots: &[
@@ -818,9 +867,18 @@ pub static PRESSURE_ALTITUDE: ToolDef = ToolDef {
 fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let elev = field_elevation(ctx)?;
     let qnh = altimeter(ctx)?;
-    let p = station_pressure(qnh, elev.base());
-    let pa_m = isa::altitude_for_pressure(p);
+    let nws = ctx.choice("constants")? == Some("nws");
     let ft = unit(QT::Length, "ft");
+    let (p, pa_m) = if nws {
+        // NWS WxCalc: station pressure, then pressure altitude, by their own
+        // published constants, so the answer matches weather.gov's calculator.
+        let p = qnh.base() * libm::pow((288.0 - 0.0065 * elev.base()) / 288.0, 5.2561);
+        let pa_ft = (1.0 - libm::pow(p / 101_325.0, 0.190_284)) * 145_366.45;
+        (p, pa_ft * 0.3048)
+    } else {
+        let p = station_pressure(qnh, elev.base());
+        (p, isa::altitude_for_pressure(p))
+    };
     let rule_ft = elev.to(ft) + (29.92 - qnh.to(unit(QT::Pressure, "inHg"))) * 1000.0;
     let rule_m = Q {
         value: rule_ft,
@@ -833,7 +891,11 @@ fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
         let inhg = qnh.to(unit(QT::Pressure, "inHg"));
         ctx.step(
             "Station pressure",
-            "p = 1013.25 × ((QNH/1013.25)^0.190284 − elevation × 6.8756e-6)^(1/0.190284)",
+            if nws {
+                "p = QNH × ((288 − 0.0065 × elevation in m) / 288)^5.2561 (NWS)"
+            } else {
+                "p = the ISA pressure at elevation + PA(QNH): the field reads its elevation with QNH set"
+            },
             format!(
                 "p from QNH {} inHg at {} ft",
                 display::number(inhg, Precision::Fixed(2), fmt),
@@ -843,7 +905,11 @@ fn run_pressure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
         );
         ctx.step(
             "Pressure altitude",
-            "PA = the ISA altitude whose pressure is p",
+            if nws {
+                "PA = (1 − (p / 1013.25 hPa)^0.190284) × 145,366.45 ft (NWS)"
+            } else {
+                "PA = the ISA altitude whose pressure is p"
+            },
             format!("PA for p = {} hPa", n(p / 100.0, 2)),
             format!("{} ft", n(m(pa_m).to(ft), 0)),
         );

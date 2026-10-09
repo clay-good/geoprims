@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
+        "aviation.altimetry.pressure-altitude"
+      ],
+      "vectors": [],
+      "summary": "Pressure altitude can now use the National Weather Service constants, to check an answer against weather.gov's calculator, and a new explainer shows why the two disagree: by a few feet from the constants, and by up to tens of feet at a high field from the NWS station-pressure shortcut. The tool's accuracy note had said about 12 ft at most; it now gives the larger figure."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "changed",
       "tools": [
         "indexing.h3.polygon-to-cells"

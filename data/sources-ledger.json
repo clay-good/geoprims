@@ -2081,6 +2081,46 @@
       "editionCheck": false
     },
     {
+      "id": "nws-wxcalc-pressure-altitude",
+      "name": "Pressure Altitude (WxCalc)",
+      "issuer": "National Weather Service, El Paso",
+      "currentEdition": "Web calculator documentation",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-09",
+      "verificationNote": "Formula read from the NWS PDF on 2026-10-09.",
+      "freeAccessUrl": "https://www.weather.gov/media/epz/wxcalc/pressureAltitude.pdf",
+      "matchTerms": [
+        "Pressure Altitude (WxCalc)"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "nws-wxcalc-station-pressure",
+      "name": "Station Pressure (WxCalc)",
+      "issuer": "National Weather Service, El Paso",
+      "currentEdition": "Web calculator documentation",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-09",
+      "verificationNote": "Formula read from the NWS PDF on 2026-10-09.",
+      "freeAccessUrl": "https://www.weather.gov/media/epz/wxcalc/stationPressure.pdf",
+      "matchTerms": [
+        "Station Pressure (WxCalc)"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "ogc-kml",
       "name": "OGC KML 2.3",
       "issuer": "Open Geospatial Consortium",

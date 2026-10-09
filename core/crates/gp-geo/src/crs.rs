@@ -5,7 +5,7 @@
 
 pub use crate::crs_registry::REGISTRY;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CrsKind {
     Geographic,
     WebMercator,
@@ -13,9 +13,13 @@ pub enum CrsKind {
         zone: u8,
         north: bool,
     },
-    /// An SPCS83 zone, by its NGS code in the zone table.
+    /// An SPCS83 zone, by its NGS code in the zone table, with this system's
+    /// own false easting and northing in meters: EPSG rounds the feet twins'
+    /// origins in feet, so they differ from the metric zone's by up to 0.1 mm.
     Spcs83 {
         fips: &'static str,
+        fe: f64,
+        fn_: f64,
     },
 }
 

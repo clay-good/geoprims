@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "added",
       "tools": [
+        "geodesy.crs.transform"
+      ],
+      "vectors": [],
+      "summary": "New: convert coordinates between two EPSG coordinate systems, such as State Plane on NAD 83 (2011) to UTM on WGS 84. It undoes the source projection, moves the position between frames at the epoch you give, and applies the target projection, listing each step with its accuracy. It follows each EPSG code's own definition, including the feet versions of State Plane zones."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "added",
+      "tools": [
         "geodesy.crs.search"
       ],
       "vectors": [],

@@ -730,13 +730,19 @@
       "intro": "Geodesy is the math of where things are on the Earth: datums, heights, map projections, grid references, and the Earth's shape and magnetic field. These tools convert coordinates between systems, turn GPS heights into elevations, and write positions as UTM, state plane, or MGRS. Surveyors, GIS analysts, and developers use them to make data from different sources line up. If the terms are new, the Learn pages on datums and on geoid heights are a good first stop."
     },
     "geodesy.crs": {
-      "summary": "Finding a coordinate system by EPSG code, by name, or by a point.",
-      "intro": "The coordinate system finder looks up a coordinate reference system by its EPSG code, by words in its name, or by a point inside its area of use. It covers what the converters here produce: UTM zones and State Plane zones on WGS 84, NAD 83, and NAD 83 (2011), in meters and feet, the SPCS2022 beta zones, and the geographic systems. GIS staff and surveyors use it to read an unfamiliar code in a file's metadata or to pick a system for a site. Start with a point or the code you have. One pitfall: the same zone exists in meters, US survey feet, and sometimes international feet, each with its own code, so match the unit as well as the zone.",
+      "summary": "Finding a coordinate system by EPSG code, by name, or by a point, and converting between two of them.",
+      "intro": "The coordinate system finder looks up a coordinate reference system by its EPSG code, by words in its name, or by a point inside its area of use: UTM and State Plane zones on WGS 84, NAD 83, and NAD 83 (2011), in meters and feet, the SPCS2022 beta zones, and geographic systems. The transform tool then converts coordinates from one system to another, the datum change at an epoch included. GIS staff and surveyors use them to read an unfamiliar code in a file's metadata, to pick a system for a site, and to move data between systems. Start with a point or the code you have. One pitfall: the same zone exists in meters, US survey feet, and sometimes international feet, each with its own code, so match the unit as well as the zone.",
       "tasks": [
         {
           "want": "find out what an EPSG code is, or which systems cover a place",
           "tools": [
             "search"
+          ]
+        },
+        {
+          "want": "convert coordinates from one EPSG system to another, like State Plane to UTM",
+          "tools": [
+            "transform"
           ]
         }
       ]

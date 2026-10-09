@@ -7,7 +7,7 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_geo::crs::{self, Crs, CrsKind};
 use gp_geo::point;
@@ -329,4 +329,538 @@ fn run_search(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("count", Json::Num(count as f64)),
         ("note", Json::str(note)),
     ]))
+}
+
+// ---------------------------------------------------------------- transform
+
+const IOGP_G7_2: Reference = Reference {
+    title: "Coordinate Conversions and Transformations including Formulas, IOGP Publication 373-7-2 (Guidance Note 7-2)",
+    issuer: "IOGP",
+    year: 2019,
+    edition: "Revised September 2019",
+    locator: "Concatenated operations: a conversion, a transformation, and a conversion applied in turn",
+    url: "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+};
+
+const STEP: &[Field] = &[
+    text("step", "Step", "What is done", 40),
+    text("method", "Method", "How", 120),
+    Field::new(
+        "accuracy",
+        "Accuracy",
+        "Its stated uncertainty (1σ); 0 for an exact formula",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+];
+
+const fn len(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+}
+
+pub static TRANSFORM: ToolDef = ToolDef {
+    id: "geodesy.crs.transform",
+    title: "Coordinate system to coordinate system",
+    summary: "Converts coordinates from one EPSG coordinate system to another, such as State Plane to UTM, through every step between: the inverse projection, the datum and frame changes at an epoch, and the forward projection, each with its accuracy.",
+    aliases: &[
+        "convert between EPSG codes",
+        "state plane to UTM",
+        "CRS to CRS",
+        "reproject coordinates",
+        "cs2cs",
+    ],
+    keywords: &[
+        "EPSG",
+        "CRS",
+        "transform",
+        "reproject",
+        "state plane",
+        "UTM",
+        "NAD83",
+        "WGS 84",
+        "datum",
+        "epoch",
+    ],
+    inputs: &[
+        text(
+            "from",
+            "From",
+            "EPSG code of the coordinates you have, like 6427",
+            24,
+        )
+        .required()
+        .core(),
+        text("to", "To", "EPSG code you want them in, like 32613", 24)
+            .required()
+            .core(),
+        Field::new(
+            "easting",
+            "Easting",
+            "For a projected system, in its unit unless you say, like 3,140,000",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .core(),
+        Field::new(
+            "northing",
+            "Northing",
+            "For a projected system, like 1,700,000",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .core(),
+        Field::new(
+            "lat",
+            "Latitude",
+            "For a geographic system, like 39.74",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "For a geographic system, like -104.99",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("[-180,180)"),
+        text(
+            "epoch",
+            "Epoch",
+            "When the coordinates are for, needed when the frames differ: a date or decimal year, like 2026.0",
+            40,
+        ),
+        len(
+            "height",
+            "Ellipsoid height",
+            "Optional, like 1600 m; it barely moves a horizontal answer",
+        ),
+    ],
+    outputs: &[
+        text("coordinates", "Coordinates", "In the target system", 120),
+        len("easting", "Easting", "In the target system's unit")
+            .precision(Precision::Decimals(3))
+            .optional(),
+        len("northing", "Northing", "In the target system's unit")
+            .precision(Precision::Decimals(3))
+            .optional(),
+        Field::new(
+            "lat",
+            "Latitude",
+            "In a geographic target",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .optional(),
+        Field::new(
+            "lon",
+            "Longitude",
+            "In a geographic target",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .optional(),
+        len(
+            "accuracy",
+            "Accuracy",
+            "Root sum of squares of the steps' stated uncertainties (1σ)",
+        )
+        .precision(Precision::Decimals(3)),
+        text("target", "Target system", "Its EPSG name", 120),
+        Field::new(
+            "steps",
+            "Steps",
+            "In order",
+            Kind::List {
+                items: STEP,
+                min: 1,
+                max: 20,
+            },
+        ),
+    ],
+    errors: &[
+        gp_base::ErrorCode::InvalidInput,
+        gp_base::ErrorCode::OutOfDomain,
+    ],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_ZONE_EXTENT",
+        "LEGACY_UNIT",
+        "INPUT_NORMALIZED",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Inverse projection on the source system's ellipsoid, the frame path of the datum transformation tool at the epoch, and the forward projection, applied in turn",
+    accuracy: "The projections are exact formulas; the frame steps carry their published uncertainties, summed as a root sum of squares. The coordinates' own accuracy is not included.",
+    when_to_use: "Use this when coordinates come in one system and are needed in another and the two may sit on different datums: State Plane on NAD 83 (2011) to UTM on WGS 84 for a drone or GIS layer, UTM to geographic, or feet to meters between the same zone’s twins. Give both EPSG codes, the coordinates, and the epoch they are for, and it lists every step it took and how sure each is.",
+    limitations: "It works between the systems the coordinate system finder lists on WGS 84 and NAD 83 (2011). NAD 27 and the original NAD 83 move by the NADCON5 grids, which this does not chain yet, so convert them with the NADCON5 tool first; the SPCS2022 beta zones sit on frames not in the chain. WGS 84 is taken as its current realization, G2296. Heights are ellipsoid heights and are not converted to or from orthometric heights. A point far outside the target zone is computed with a warning, and one the zone cannot hold is refused.",
+    references: &[IOGP_G7_2, EPSG],
+    examples: &[Example {
+        id: "primary",
+        title: "Colorado Central on NAD 83 (2011) to UTM 13N on WGS 84",
+        input: r#"{"from":"6427","to":"32613","easting":"953000 m","northing":"515000 m","epoch":"2026.0","height":"1600 m"}"#,
+        source: "add-geodesy-suite composite-path scenario: inverse projection, the frame steps at the epoch, and the forward projection, each with its accuracy",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.crs.search",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.datum.transform",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.spcs.spcs83-inverse",
+            reason: "alternative",
+        },
+    ],
+    sentence: "In {target} that is {coordinates}, to about {accuracy} from the datum steps.",
+    limits: &[("batchRows", 10_000)],
+    run: run_transform,
+    ..ToolDef::BLANK
+};
+
+/// The datum frame a system's coordinates are in, by its EPSG name.
+fn frame_of(c: &Crs) -> Option<&'static str> {
+    if c.name.starts_with("WGS 84") {
+        Some("WGS84(G2296)")
+    } else if c.name.starts_with("NAD83(2011)") {
+        Some("NAD83(2011)")
+    } else {
+        None
+    }
+}
+
+fn ellipsoid_of(frame: &str) -> gp_geo::ellipsoid::Ellipsoid {
+    let id = if frame.starts_with("WGS84") {
+        "wgs84"
+    } else {
+        "grs80"
+    };
+    *gp_geo::ellipsoid::CATALOG
+        .iter()
+        .find(|e| e.id == id)
+        .expect("catalog ellipsoid")
+}
+
+fn unit_of(c: &Crs) -> &'static gp_base::units::Unit {
+    gp_base::units::by_symbol(QT::Length, if c.unit == "deg" { "m" } else { c.unit })
+        .expect("registered unit")
+}
+
+fn describe(c: &Crs) -> String {
+    match c.kind {
+        CrsKind::Geographic => format!("{} geographic coordinates", c.name),
+        CrsKind::WebMercator => "Popular Visualisation Pseudo Mercator (EPSG 1024)".to_owned(),
+        CrsKind::Utm { zone, north } => format!(
+            "UTM zone {zone}{}, transverse Mercator (Krüger series)",
+            if north { "N" } else { "S" }
+        ),
+        CrsKind::Spcs83 { fips, .. } => {
+            let z = gp_geo::spcs::find(fips).expect("zone in the table");
+            format!(
+                "SPCS83 {} ({}), {}",
+                z.short_name(),
+                fips,
+                match z.proj {
+                    gp_geo::spcs::Proj::Tm { .. } => "transverse Mercator",
+                    gp_geo::spcs::Proj::Lcc { .. } | gp_geo::spcs::Proj::Lcc1 { .. } =>
+                        "Lambert conformal conic",
+                    _ => "oblique Mercator",
+                }
+            )
+        }
+    }
+}
+
+fn system(ctx: &mut Ctx, name: &str) -> Result<&'static Crs, ToolError> {
+    let at = format!("/{name}");
+    let raw = ctx.text(name)?.expect("required");
+    let code = crs::epsg_code(&raw).ok_or_else(|| {
+        ToolError::invalid(&at, format!("\"{raw}\" is not an EPSG code."))
+            .hint("Like 6427 or EPSG:32613; the coordinate system finder looks codes up by name")
+    })?;
+    let c = crs::by_code(code).ok_or_else(|| {
+        ToolError::new(
+            gp_base::ErrorCode::OutOfDomain,
+            format!("EPSG:{code} is not one of the systems this tool converts."),
+        )
+        .at(&at)
+        .hint("It works with the UTM, State Plane, Web Mercator, and geographic systems the coordinate system finder lists")
+    })?;
+    if frame_of(c).is_none() {
+        return Err(ToolError::new(
+            gp_base::ErrorCode::OutOfDomain,
+            format!(
+                "{} moves by the NADCON5 grids, which this tool does not chain yet.",
+                c.name
+            ),
+        )
+        .at(&at)
+        .hint("Convert it to NAD 83 (2011) with the NADCON5 tool first"));
+    }
+    Ok(c)
+}
+
+/// A coordinate in the system's own unit: a bare number is taken in that unit.
+fn coordinate(
+    ctx: &mut Ctx,
+    name: &str,
+    unit: &'static gp_base::units::Unit,
+) -> Result<f64, ToolError> {
+    let bare = match ctx.raw(name) {
+        Some(serde_json::Value::Number(n)) => n.as_f64(),
+        Some(serde_json::Value::String(s)) => s.trim().replace(',', "").parse::<f64>().ok(),
+        _ => None,
+    };
+    match bare {
+        Some(v) if v.is_finite() => Ok(gp_base::units::to_base(v, unit)),
+        _ => Ok(ctx.req_quantity(name)?.base()),
+    }
+}
+
+fn run_transform(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let src = system(ctx, "from")?;
+    let dst = system(ctx, "to")?;
+    let (f0, f1) = (
+        frame_of(src).expect("checked"),
+        frame_of(dst).expect("checked"),
+    );
+    if f0.starts_with("WGS84") || f1.starts_with("WGS84") {
+        ctx.warnings.push(gp_base::error::Warning::new(
+            "REALIZATION_ASSUMED",
+            "EPSG's WGS 84 names several realizations; it was taken as the current one, WGS 84 (G2296).",
+        ));
+    }
+    let h = ctx.quantity("height")?.map_or(0.0, |q| q.base());
+    // 1. To latitude and longitude on the source system's ellipsoid.
+    let (lat, lon) = match src.kind {
+        CrsKind::Geographic => point::read(ctx, "lat", "lon")?,
+        kind => {
+            let u = unit_of(src);
+            let (e, n) = (
+                coordinate(ctx, "easting", u)?,
+                coordinate(ctx, "northing", u)?,
+            );
+            let ell = ellipsoid_of(f0);
+            let (la, lo) = match kind {
+                CrsKind::Utm { zone, north } => {
+                    gp_geo::utmups::utm_inverse(ell.a, ell.f, zone, north, e, n)
+                }
+                CrsKind::WebMercator => gp_geo::proj::WebMercator::inverse(e, n),
+                CrsKind::Spcs83 { fips, fe, fn_ } => {
+                    // This system's own false origin, not the metric zone's.
+                    let z = gp_geo::spcs::find(fips).expect("zone");
+                    let (zfe, zfn) = z.false_origin();
+                    z.inverse(e - fe + zfe, n - fn_ + zfn)
+                }
+                CrsKind::Geographic => unreachable!(),
+            };
+            if !(la.is_finite() && lo.is_finite() && la.abs() <= 90.0) {
+                return Err(ToolError::new(
+                    gp_base::ErrorCode::OutOfDomain,
+                    format!("Those coordinates are not on the {} grid.", src.name),
+                )
+                .at("/easting"));
+            }
+            (la, lo)
+        }
+    };
+    let mut steps = Vec::new();
+    let mut row = |step: &str, method: String, sigma: f64| {
+        steps.push(Json::obj([
+            ("step", Json::str(step)),
+            ("method", Json::str(method)),
+            (
+                "accuracy",
+                Q {
+                    value: sigma,
+                    unit: gp_base::units::by_symbol(QT::Length, "m").expect("m"),
+                }
+                .to_json(),
+            ),
+        ]));
+    };
+    if !matches!(src.kind, CrsKind::Geographic) {
+        row("Inverse projection", describe(src), 0.0);
+    }
+    // 2. The frame path, at the epoch, through ECEF.
+    let path = crate::datum::frame_path(f0, f1).expect("both frames are in the chain");
+    let (mut lat2, mut lon2) = (lat, lon);
+    let mut var = 0.0;
+    if !path.is_empty() {
+        let t = crate::datum::epoch(ctx, "epoch")?.ok_or_else(|| {
+            ToolError::invalid(
+                "/epoch",
+                "These systems are on different frames, so the epoch is needed.",
+            )
+            .hint("A date or decimal year, like 2026-01-01 or 2026.0")
+        })?;
+        if !(1980.0..=2100.0).contains(&t) {
+            return Err(ToolError::new(
+                gp_base::ErrorCode::OutOfDomain,
+                "The epoch must be between 1980 and 2100.",
+            )
+            .at("/epoch"));
+        }
+        let (e0, e1) = (ellipsoid_of(f0), ellipsoid_of(f1));
+        let p = gp_geo::frames::to_ecef(&e0, lat.to_radians(), lon.to_radians(), h);
+        let mut v = [p.0, p.1, p.2];
+        for &(a, b, step, sigma) in &path {
+            v = crate::datum::apply_step(a, b, step, v, t);
+            var += sigma * sigma;
+            row(
+                "Frame transformation",
+                format!("{} → {} at {t}: {}", a, b, crate::datum::step_method(step)),
+                sigma,
+            );
+        }
+        let (phi, lam, _) =
+            gp_geo::frames::from_ecef(&e1, v[0], v[1], v[2]).expect("not the center");
+        (lat2, lon2) = (phi.to_degrees(), gp_base::angle::wrap_lon(lam.to_degrees()));
+    }
+    // 3. Onto the target grid.
+    if !dst.covers(lat2, lon2) {
+        ctx.warnings.push(
+            gp_base::error::Warning::new(
+                "OUTSIDE_ZONE_EXTENT",
+                format!(
+                    "The point is outside the area of use of {}; distortion grows quickly outside it.",
+                    dst.name
+                ),
+            )
+            .at("/to"),
+        );
+    }
+    let u = unit_of(dst);
+    let sigma = var.sqrt();
+    let mut out = Vec::new();
+    let coordinates;
+    match dst.kind {
+        CrsKind::Geographic => {
+            coordinates = format!("{lat2:.9}°, {lon2:.9}°");
+            out.push(("coordinates", Json::str(coordinates)));
+            out.push(("lat", ctx.out("lat", deg(lat2))));
+            out.push(("lon", ctx.out("lon", deg(lon2))));
+        }
+        kind => {
+            let (e, n) = match kind {
+                CrsKind::Utm { zone, north } => {
+                    let ell = ellipsoid_of(f1);
+                    let tm = gp_geo::tm::Tm::new(ell.a, ell.f, gp_geo::utmups::UTM_K0);
+                    let dl =
+                        gp_base::angle::wrap_lon(lon2 - gp_geo::utmups::central_meridian(zone));
+                    let (x, y, _, _) = tm.forward(lat2, dl);
+                    (
+                        x + gp_geo::utmups::UTM_FE,
+                        y + if north {
+                            0.0
+                        } else {
+                            gp_geo::utmups::UTM_FN_SOUTH
+                        },
+                    )
+                }
+                CrsKind::WebMercator => {
+                    let g = gp_geo::proj::WebMercator::forward(lat2, lon2);
+                    (g.e, g.n)
+                }
+                CrsKind::Spcs83 { fips, fe, fn_ } => {
+                    let z = gp_geo::spcs::find(fips).expect("zone");
+                    let (zfe, zfn) = z.false_origin();
+                    let g = z.forward(lat2, lon2);
+                    (g.e - zfe + fe, g.n - zfn + fn_)
+                }
+                CrsKind::Geographic => unreachable!(),
+            };
+            if !(e.is_finite() && n.is_finite()) {
+                return Err(ToolError::new(
+                    gp_base::ErrorCode::OutOfDomain,
+                    format!(
+                        "This point is too far outside {} to place on its grid.",
+                        dst.name
+                    ),
+                )
+                .at("/to"));
+            }
+            let m = gp_base::units::by_symbol(QT::Length, "m").expect("m");
+            let (ej, nj) = (
+                ctx.emit("easting", Q { value: e, unit: m }, u),
+                ctx.emit("northing", Q { value: n, unit: m }, u),
+            );
+            let fmt = ctx.options.format;
+            let show = |v: f64| {
+                gp_base::display::quantity(
+                    gp_base::units::convert(v, m, u),
+                    u.symbol,
+                    Precision::Decimals(3),
+                    fmt,
+                )
+            };
+            coordinates = format!("{} E, {} N", show(e), show(n));
+            out.push(("coordinates", Json::str(coordinates)));
+            out.push(("easting", ej));
+            out.push(("northing", nj));
+            row("Forward projection", describe(dst), 0.0);
+        }
+    }
+    ctx.accuracy = Some(if path.is_empty() {
+        "Exact: the two systems share a frame, so only projection formulas are applied.".to_owned()
+    } else {
+        format!(
+            "About {:.1} cm (1σ), the root sum of squares of the frame steps' stated uncertainties; the projections are exact and the coordinates' own accuracy is not included.",
+            sigma * 100.0
+        )
+    });
+    out.push((
+        "accuracy",
+        ctx.out(
+            "accuracy",
+            Q {
+                value: sigma,
+                unit: gp_base::units::by_symbol(QT::Length, "m").expect("m"),
+            },
+        ),
+    ));
+    out.push(("target", Json::str(dst.name)));
+    out.push(("steps", Json::Arr(steps)));
+    Ok(Json::obj(out))
+}
+
+fn deg(v: f64) -> Q {
+    Q {
+        value: v,
+        unit: gp_base::units::by_symbol(QT::Angle, "deg").expect("deg"),
+    }
 }

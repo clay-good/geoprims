@@ -78,7 +78,7 @@ const fn mm_out(name: &'static str, title: &'static str, help: &'static str) -> 
 }
 
 /// The coordinate epoch: an ISO date or a decimal year.
-fn epoch(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
+pub(crate) fn epoch(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
     match ctx.text(name)? {
         Some(s) => super::magnetic::parse_date(&s)
             .map(Some)
@@ -1849,7 +1849,7 @@ fn run_nadcon5(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 /// How one step between two frames is made.
 #[derive(Clone, Copy, PartialEq)]
-enum Step {
+pub(crate) enum Step {
     /// The IERS 14-parameter transformation, through ITRF2020.
     Iers,
     /// A WGS 84 realization aligned with an ITRF: no change in coordinates.
@@ -1959,7 +1959,10 @@ const PATH_FRAMES: &[&str] = &[
 
 /// The path from one frame to another with the smallest accumulated variance
 /// (Dijkstra's method), as edges in order with their directions.
-fn frame_path(from: &str, to: &str) -> Option<Vec<(&'static str, &'static str, Step, f64)>> {
+pub(crate) fn frame_path(
+    from: &str,
+    to: &str,
+) -> Option<Vec<(&'static str, &'static str, Step, f64)>> {
     let edges = frame_edges();
     let nodes: Vec<&'static str> = PATH_FRAMES
         .iter()
@@ -2189,6 +2192,23 @@ pub static TRANSFORM: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+/// ECEF coordinates (m) carried across one step of a frame path at epoch `t`.
+pub(crate) fn apply_step(a: &str, b: &str, step: Step, v: [f64; 3], t: f64) -> [f64; 3] {
+    match step {
+        Step::Iers => helmert::itrf_transform(a, b, v, t).expect("ITRF frames"),
+        Step::Aligned => v,
+        Step::Htdp => gp_geo::htdp::transform(a, b, v, t).expect("HTDP frames"),
+    }
+}
+
+pub(crate) fn step_method(step: Step) -> &'static str {
+    match step {
+        Step::Iers => "IERS 14-parameter transformation",
+        Step::Aligned => "WGS 84 aligned with the ITRF (no change)",
+        Step::Htdp => "NGS HTDP 3.6.0 14-parameter transformation",
+    }
+}
+
 fn run_transform(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let frame = |ctx: &mut Ctx, name: &str, field: &str| -> Result<&'static str, ToolError> {
         let f = ctx.choice(name)?.expect("required");
@@ -2223,17 +2243,9 @@ fn run_transform(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let mut rows = Vec::new();
     let mut var = 0.0;
     for &(a, b, step, sigma) in &path {
-        v = match step {
-            Step::Iers => helmert::itrf_transform(a, b, v, t).expect("ITRF frames"),
-            Step::Aligned => v,
-            Step::Htdp => gp_geo::htdp::transform(a, b, v, t).expect("HTDP frames"),
-        };
+        v = apply_step(a, b, step, v, t);
         var += sigma * sigma;
-        let method = match step {
-            Step::Iers => "IERS 14-parameter transformation",
-            Step::Aligned => "WGS 84 aligned with the ITRF (no change)",
-            Step::Htdp => "NGS HTDP 3.6.0 14-parameter transformation",
-        };
+        let method = step_method(step);
         rows.push(Json::obj([
             ("from", Json::str(a)),
             ("to", Json::str(b)),

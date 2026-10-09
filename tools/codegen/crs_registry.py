@@ -82,14 +82,35 @@ def main():
     # code; its twins differ only in datum label and unit suffix.
     fips_of = {int(e): f for f, e in re.findall(r'fips: "(\d+)", epsg: (\d+)', ZONES.read_text())}
     assert len(fips_of) == 124, len(fips_of)
+    # Each twin keeps its own false origin: EPSG defines the feet twins with
+    # an origin rounded in feet (3,000,000 ftUS for Colorado Central), which
+    # is not the metric zone's 914,401.8289 m converted. Every other
+    # parameter must equal the metric zone's.
+    to_m = {"metre": 1.0, "US survey foot": 1200 / 3937, "foot": 0.3048}
+
+    def params(code):
+        out = []
+        for x in definition(code)["conversion"]["parameters"]:
+            u = x.get("unit")
+            u = u if isinstance(u, str) else u["name"]
+            out.append((x["name"], x["value"] * to_m.get(u, 1.0), "easting" in x["name"].lower() or "northing" in x["name"].lower()))
+        return out
+
     for epsg, fips in sorted(fips_of.items()):
         base = definition(epsg)["name"].removeprefix("NAD83 / ")
+        metric = params(epsg)
         found = 0
         for datum in ("NAD83", "NAD83(2011)"):
             for suffix in ("", " (ftUS)", " (ft)"):
                 code = infos.get(f"{datum} / {base}{suffix}")
                 if code:
-                    add(code, f'CrsKind::Spcs83 {{ fips: "{fips}" }}')
+                    own = params(code)
+                    assert [(n, o) for n, _, o in own] == [(n, o) for n, _, o in metric], code
+                    for (n, v, origin), (_, w, _) in zip(own, metric):
+                        if not origin:
+                            assert abs(v - w) <= 1e-9 * max(1.0, abs(w)), (code, n, v, w)
+                    fe, fn_ = [v for n, v, origin in own if origin]
+                    add(code, f'CrsKind::Spcs83 {{ fips: "{fips}", fe: {lit(fe)}, fn_: {lit(fn_)} }}')
                     found += 1
         assert found >= 1, (epsg, base, found)
 

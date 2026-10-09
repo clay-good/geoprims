@@ -2457,6 +2457,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::INVERSE,
     &spcs::LOOKUP,
     &crs::SEARCH,
+    &crs::TRANSFORM,
     &spcs2022::FORWARD,
     &spcs2022::INVERSE,
     &spcs::ARC_TO_CHORD,

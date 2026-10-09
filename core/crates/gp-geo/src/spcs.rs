@@ -272,6 +272,17 @@ impl Zone {
             }
     }
 
+    /// The zone's false easting and northing, meters.
+    pub fn false_origin(&self) -> (f64, f64) {
+        match self.proj {
+            Proj::Tm { fe, fn_, .. }
+            | Proj::Lcc { fe, fn_, .. }
+            | Proj::Lcc1 { fe, fn_, .. }
+            | Proj::OmercA { fe, fn_, .. }
+            | Proj::OmercB { fe, fn_, .. } => (fe, fn_),
+        }
+    }
+
     /// "Pennsylvania South" (without the trailing "zone").
     pub fn short_name(&self) -> &'static str {
         self.name.strip_suffix(" zone").unwrap_or(self.name)

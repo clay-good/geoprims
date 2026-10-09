@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
+        "survey.gnss.dop"
+      ],
+      "vectors": [],
+      "summary": "GPS satellite visibility and DOP now also reads SEM almanacs, the Coast Guard's other almanac format, telling the two apart by themselves. The same week's SEM and YUMA files give the same answer."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "added",
       "tools": [
         "geodesy.crs.transform"

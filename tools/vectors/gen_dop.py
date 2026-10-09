@@ -86,6 +86,35 @@ def yuma(sats):
     return "".join(out)
 
 
+def sem(sats):
+    """The same constellation as a SEM almanac: semicircles, and the
+    inclination as an offset from 0.30 semicircles."""
+    pi = math.pi
+    out = [f"{len(sats)}  CURRENT.ALM", f" {sats[0]['week']} {int(sats[0]['toa'])}", ""]
+    for s in sats:
+        row = lambda *xs: " ".join(f"{x: .14E}" for x in xs)
+        out += [str(s["prn"]), str(s["prn"] + 40), "0",
+                row(s["e"], s["i0"] / pi - 0.30, s["omega_dot"] / pi),
+                row(s["sqrt_a"], s["omega0"] / pi, s["w"] / pi),
+                row(s["m0"] / pi, 0.0, 0.0),
+                str(s["health"]), "11", ""]
+    return "\n".join(out)
+
+
+def reparse_sem(text):
+    """The values as the core reads them back from a SEM text."""
+    lines = [l for l in text.splitlines() if l.strip()]
+    week, toa = (float(x) for x in lines[1].split())
+    toks = " ".join(lines[2:]).split()
+    out = []
+    for k in range(0, len(toks), 14):
+        v = [float(x) for x in toks[k:k + 14]]
+        out.append({"prn": int(v[0]), "health": int(v[12]), "e": v[3], "toa": toa, "i0": (0.30 + v[4]) * math.pi,
+                    "omega_dot": v[5] * math.pi, "sqrt_a": v[6], "omega0": v[7] * math.pi, "w": v[8] * math.pi,
+                    "m0": v[9] * math.pi, "week": int(week)})
+    return out
+
+
 def reparse(text):
     """The values as the core will read them back from the printed text."""
     sats, cur = [], {}
@@ -199,9 +228,9 @@ def solve(sats, lat, lon, h, start_utc, hours, step_min, mask, skyline):
     return rows, (t0 - ref) / 86400, sats0, used, len(healthy)
 
 
-def case(sats, lat, lon, start, hours, step, mask=None, h=None, skyline=None, note=""):
-    text = yuma(sats)
-    parsed = reparse(text)
+def case(sats, lat, lon, start, hours, step, mask=None, h=None, skyline=None, note="", fmt="yuma"):
+    text = yuma(sats) if fmt == "yuma" else sem(sats)
+    parsed = reparse(text) if fmt == "yuma" else reparse_sem(text)
     start_utc = datetime.fromisoformat(start.replace("Z", "+00:00"))
     rows, age, sky0, used, nh = solve(parsed, lat, lon, h or 0.0, start_utc, hours, step,
                                       10.0 if mask is None else mask, skyline or [])
@@ -285,6 +314,12 @@ if __name__ == "__main__":
              skyline=[(200, 30), (340, 35)], note="Seattle, a 20° mask and trees to the south and north"),
         case(full, -1.3, 36.8, "2026-10-05T12:00Z", 6, 60, note="Nairobi, two days after the almanac"),
         case(full, 39.74, -104.99, "2026-10-03T07:00-07:00", 2, 30, note="the same instant as the first case, given in MST"),
+        # Appended 2026-10-09: the same constellation as a SEM almanac.
+        case(full, 39.74, -104.99, "2026-10-03T14:00Z", 6, 30, note="the example's constellation as a SEM almanac", fmt="sem"),
+        case(full, -33.87, 151.21, "2026-10-04T00:00Z", 12, 60, note="Sydney, from a SEM almanac", fmt="sem"),
+        case(constellation(unhealthy=(3, 7, 11, 15, 19)), 39.74, -104.99, "2026-10-03T14:00Z", 6, 60,
+             note="a SEM almanac with five satellites marked unhealthy", fmt="sem"),
+        case(full, 39.74, -104.99, "2026-10-13T14:00Z", 4, 60, note="a SEM almanac ten days old: ALMANAC_OLD", fmt="sem"),
     ]
     with OUT.open("w") as f:
         for i, row in enumerate(CASES, 1):

@@ -1348,6 +1348,16 @@
       ]
     },
     {
+      "id": "sem",
+      "term": "SEM",
+      "expansion": "System Effectiveness Model",
+      "definition": "A GPS almanac format of bare numbers, angles in semicircles, published weekly by the Coast Guard beside the YUMA format.",
+      "source": "navcen-almanacs",
+      "relatedTools": [
+        "survey.gnss.dop"
+      ]
+    },
+    {
       "id": "soam",
       "term": "SOAM",
       "expansion": "South American plate",

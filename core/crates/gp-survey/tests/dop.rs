@@ -1,7 +1,7 @@
 //! GPS visibility and DOP: the properties every answer must have.
 
 use gp_survey::REGISTRY;
-use gp_survey::dop::{EXAMPLE_INPUT, parse_yuma};
+use gp_survey::dop::{EXAMPLE_INPUT, parse_almanac, parse_sem, parse_yuma};
 use serde_json::{Value, json};
 
 fn example() -> Value {
@@ -84,6 +84,65 @@ fn a_coast_guard_almanac_parses() {
     );
     let broken = NAVCEN.replace("Mean Anom(rad):            -0.2591553807E+001\n", "");
     assert!(parse_yuma(&broken).unwrap_err().contains("PRN 2"));
+}
+
+/// The header and first two records of the Coast Guard's SEM almanac for the
+/// same week 392, verbatim but for the record count, set to 2.
+const NAVCEN_SEM: &str = "2  CURRENT.ALM
+ 392 61440
+
+1
+80
+0
+ 2.05898284912109E-03  4.34875488281250E-03 -2.60843080468476E-09
+ 5.15368847656250E+03 -2.78079032897949E-01  5.07532358169556E-02
+ 7.67284631729126E-01  1.51634216308594E-04 -7.27595761418343E-12
+0
+12
+
+2
+61
+0
+ 1.71442031860352E-02  5.81550598144531E-03 -2.61570676229894E-09
+ 5.15364355468750E+03 -3.29516768455505E-01 -2.21939921379089E-01
+-8.24917197227478E-01  1.91688537597656E-04  7.27595761418343E-12
+0
+9
+
+";
+
+#[test]
+fn a_sem_almanac_reads_as_the_same_orbits() {
+    let (sem, yuma) = (parse_sem(NAVCEN_SEM).unwrap(), parse_yuma(NAVCEN).unwrap());
+    assert_eq!(sem.len(), 2);
+    for (s, y) in sem.iter().zip(&yuma) {
+        assert_eq!(
+            (s.prn, s.week, s.health, s.toa),
+            (y.prn, y.week, y.health, y.toa)
+        );
+        // YUMA prints ten significant digits (nine decimals for the perigee);
+        // SEM prints fifteen, in semicircles.
+        for (a, b) in [
+            (s.e, y.e),
+            (s.i0, y.i0),
+            (s.omega_dot, y.omega_dot),
+            (s.sqrt_a, y.sqrt_a),
+            (s.omega0, y.omega0),
+            (s.w, y.w),
+            (s.m0, y.m0),
+        ] {
+            assert!(
+                (a - b).abs() <= 2e-8 * b.abs().max(1e-3),
+                "PRN {}: {a} vs {b}",
+                s.prn
+            );
+        }
+    }
+    // The format is told apart by its labels, and a short file is refused.
+    assert_eq!(parse_almanac(NAVCEN_SEM).unwrap().len(), 2);
+    assert_eq!(parse_almanac(NAVCEN).unwrap().len(), 2);
+    let short = NAVCEN_SEM.replacen("2  CURRENT.ALM", "3  CURRENT.ALM", 1);
+    assert!(parse_sem(&short).unwrap_err().contains("3 satellites"));
 }
 
 #[test]

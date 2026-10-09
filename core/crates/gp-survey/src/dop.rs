@@ -109,14 +109,7 @@ pub fn parse_yuma(text: &str) -> Result<Vec<Almanac>, String> {
             m0: need("mean anom", "Mean Anom")?,
             week: need("week", "week")? as u32,
         };
-        if !(1..=63).contains(&a.prn)
-            || !(0.0..0.1).contains(&a.e)
-            || !(4000.0..6000.0).contains(&a.sqrt_a)
-        {
-            return Err(format!(
-                "The record for PRN {id} does not look like a GPS almanac (PRN 1 to 63, eccentricity under 0.1, SQRT(A) near 5,153)."
-            ));
-        }
+        plausible(&a)?;
         out.push(a);
         cur.clear();
         Ok(())
@@ -143,15 +136,106 @@ pub fn parse_yuma(text: &str) -> Result<Vec<Almanac>, String> {
         cur.push((key, val));
     }
     finish(&mut cur, &mut out)?;
-    // In PRN order, so the answer does not depend on how the file is ordered.
+    in_order(out)
+}
+
+fn plausible(a: &Almanac) -> Result<(), String> {
+    if !(1..=63).contains(&a.prn)
+        || !(0.0..0.1).contains(&a.e)
+        || !(4000.0..6000.0).contains(&a.sqrt_a)
+    {
+        return Err(format!(
+            "The record for PRN {} does not look like a GPS almanac (PRN 1 to 63, eccentricity under 0.1, SQRT(A) near 5,153).",
+            a.prn
+        ));
+    }
+    Ok(())
+}
+
+/// In PRN order, so the answer does not depend on how the file is ordered.
+fn in_order(mut out: Vec<Almanac>) -> Result<Vec<Almanac>, String> {
     out.sort_by_key(|a| a.prn);
     if let Some(w) = out.windows(2).find(|w| w[0].prn == w[1].prn) {
         return Err(format!("PRN {} appears twice in the almanac.", w[0].prn));
     }
     if out.is_empty() {
-        return Err("No almanac records were found. Paste a YUMA almanac, the text with a block of lines like \"ID: 01\" and \"Eccentricity: 0.1166667938E-001\" for each satellite.".into());
+        return Err("No almanac records were found. Paste a YUMA almanac (a block of lines like \"ID: 01\" for each satellite) or a SEM almanac (a count and name, then the week and time of applicability).".into());
     }
     Ok(out)
+}
+
+/// Parses a SEM almanac: a header line with the record count and a name, a
+/// line with the ten-bit week and the time of applicability, then per
+/// satellite its PRN, SVN, and URA, nine orbit and clock values, its health,
+/// and its configuration. Angles are in semicircles and the inclination is an
+/// offset from 0.30 semicircles (IS-GPS-200 Table 20-VI).
+pub fn parse_sem(text: &str) -> Result<Vec<Almanac>, String> {
+    let mut lines = text.lines().map(str::trim).filter(|l| !l.is_empty());
+    let bad = |what: &str| format!("This does not read as a SEM almanac: {what}.");
+    let count: usize = lines
+        .next()
+        .and_then(|l| l.split_whitespace().next())
+        .and_then(|t| t.parse().ok())
+        .ok_or_else(|| bad("the first line should start with the number of satellites"))?;
+    let head: Vec<f64> = lines
+        .next()
+        .map(|l| {
+            l.split_whitespace()
+                .filter_map(|t| t.parse().ok())
+                .collect()
+        })
+        .unwrap_or_default();
+    let [week, toa] = head[..] else {
+        return Err(bad(
+            "the second line should be the week and the time of applicability",
+        ));
+    };
+    let tokens: Vec<&str> = lines.flat_map(str::split_whitespace).collect();
+    if count == 0 || count > 63 || tokens.len() != count * 14 {
+        return Err(bad(&format!(
+            "the header lists {count} satellites, and each takes 14 values, but {} values follow",
+            tokens.len()
+        )));
+    }
+    let pi = core::f64::consts::PI;
+    let mut out = Vec::with_capacity(count);
+    for rec in tokens.chunks(14) {
+        let v: Vec<f64> = rec
+            .iter()
+            .map(|t| {
+                t.parse::<f64>()
+                    .map_err(|_| format!("\"{t}\" is not a number."))
+            })
+            .collect::<Result<_, _>>()?;
+        let a = Almanac {
+            prn: v[0] as u32,
+            health: v[12] as u32,
+            e: v[3],
+            toa,
+            i0: (0.30 + v[4]) * pi,
+            omega_dot: v[5] * pi,
+            sqrt_a: v[6],
+            omega0: v[7] * pi,
+            w: v[8] * pi,
+            m0: v[9] * pi,
+            week: week as u32,
+        };
+        plausible(&a)?;
+        out.push(a);
+    }
+    in_order(out)
+}
+
+/// A YUMA almanac when it has labeled lines like "ID:", otherwise SEM.
+pub fn parse_almanac(text: &str) -> Result<Vec<Almanac>, String> {
+    if text
+        .lines()
+        .any(|l| l.trim_start().to_ascii_lowercase().starts_with("id:"))
+    {
+        parse_yuma(text)
+    } else {
+        parse_sem(text)
+    }
 }
 
 /// ECEF position (m) of a satellite at `t`, GPS seconds since the GPS epoch,
@@ -344,8 +428,8 @@ pub static DOP: ToolDef = ToolDef {
     inputs: &[
         Field::new(
             "almanac",
-            "GPS almanac (YUMA)",
-            "Paste the YUMA almanac text, like the current file from navcen.uscg.gov",
+            "GPS almanac (YUMA or SEM)",
+            "Paste the almanac text, like the current YUMA or SEM file from navcen.uscg.gov",
             Kind::Text { max_len: 200_000 },
         )
         .required()
@@ -544,7 +628,7 @@ fn iso_utc(gps_secs: f64) -> String {
 
 fn run_dop(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let text = ctx.text("almanac")?.expect("required");
-    let alm = parse_yuma(&text).map_err(|m| ToolError::invalid("/almanac", m))?;
+    let alm = parse_almanac(&text).map_err(|m| ToolError::invalid("/almanac", m))?;
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let start = ctx.text("start")?.expect("required");
     let st = civil::parse_stamp(&start).map_err(|m| ToolError::invalid("/start", m))?;

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "725cac23c12a81c9",
+    "hash": "c85809220ade6716",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "006aa8a8e8673082",
+    "hash": "f5c0885a3dbd636b",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -232,8 +232,8 @@
     "lastmod": "2026-10-10"
   },
   "/aviation/wind/best-runway/": {
-    "hash": "cf2e24fb2e1f986c",
-    "lastmod": "2026-10-09"
+    "hash": "d16c12c7a46a5369",
+    "lastmod": "2026-10-10"
   },
   "/aviation/wind/course-from-heading/": {
     "hash": "a6d87b01a26aaba8",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "94f7abef9bce17ae",
+    "hash": "86376e7905989fb3",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "fa16efd0db3975e6",
+    "hash": "a690ebc57e067a79",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "2369d29969fcfa84",
+    "hash": "aa8b5b21ba8cefbd",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "83a53f4d85aebbbe",
+    "hash": "247ae5e1957d63be",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

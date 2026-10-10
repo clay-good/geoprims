@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.wind.best-runway"
+      ],
+      "vectors": [],
+      "summary": "The runway ranking tool is now stable. Its headwind and crosswind on every runway end agree with the wind resolved by MetPy at 14 airports, with winds from 7 to 40 kt and with crosswind and tailwind limits. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.wind.aloft-interpolate"
       ],
       "vectors": [],

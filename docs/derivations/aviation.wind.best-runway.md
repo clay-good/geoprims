@@ -29,23 +29,26 @@ Each runway is taken as ten times its number, so components can be off by up to 
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite wind-and-navigation spec, scenario "Ranking"
-- sourceEdition: openspec/changes/add-aviation-suite/specs/aviation/wind-and-navigation/spec.md
-- sourceLocator: Requirement "Best runway selection": with runways 09/27 and 18/36 and the wind 200° at 12 kt, runway 18 ranks first and every runway is listed; the components are computed
-- independent: no
+- sourcePublisher: Unidata MetPy
+- sourceTitle: MetPy 1.6.3, metpy.calc.wind_components
+- sourceEdition: MetPy 1.6.3, run 2026-10-10
+- sourceLocator: tools/vectors/gen_runway_metpy.py, first case: wind_components(12 kt, 200°), resolved along and across headings 090°, 270°, 180°, and 360°
+- independent: yes
 - inputs: runways 09/27, 18/36; wind 200° at 12 kt
-- outputs: order 18, 27, 09, 36; runway 18 headwind 11.28 kt and crosswind 4.10 kt from the right; 27 headwind 4.10 kt; 09 tailwind 4.10 kt; 36 tailwind 11.28 kt
+- outputs: order 18, 27, 09, 36; runway 18 headwind 11.28 kt and crosswind 4.10 kt; 27 headwind 4.10 kt; 09 tailwind 4.10 kt; 36 tailwind 11.28 kt
 - tolerance: 1e-9 kt
-- verifiedBy: golden vector v001
-- verifiedOn: 2026-10-09
+- verifiedBy: golden vector v010, run by the core on every build
+- verifiedOn: 2026-10-10
+
+MetPy gives the wind as eastward and northward parts, and the generator takes each runway's headwind and crosswind from them by two dot products with the runway's heading; the tool works from the angle between wind and runway. The ranking in the generator follows the rule stated above, so the library checks the components and the rule is checked by being written twice and by the invariants below. 13 more airports follow, v011 through v023.
 
 ## Differential tests
 
+- `tools/vectors/gen_runway_metpy.py`: 14 airports of one to three strips with winds from every quarter at 7 to 40 kt, with and without crosswind and tailwind limits; components from MetPy (within 1e-9 kt), the full order, and the count beyond limits. No two ends are within 0.01 kt on the ranking keys
 - `tools/vectors/gen_runway.py`: components and ranking written again in Python, sorting on (beyond, −headwind, crosswind, input order), at six airports including parallel runways and crosswind and tailwind limits, plus the variable-wind scenario and two refused inputs (within 1e-9)
-- `core/vectors/aviation.wind.best-runway.jsonl`: those nine vectors, run through the core on every build
+- `core/vectors/aviation.wind.best-runway.jsonl`: those vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `wind_invariants`: checks the shared runway-wind calculation through `aviation.wind.runway-components`, not this tool: at five runways and six wind angles, headwind² + crosswind² equals the wind speed² within 1e-9, and a wind mirrored about the runway gives the same components from the other side. No test checks this tool's ranking beyond its golden vectors.
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: runs this tool's nine golden vectors, among every aviation tool's, through the registry
+- `core/crates/gp-aviation/tests/slice3.rs` `best_runway_invariants`: for three strips, 16 wind directions, and three speeds, every end is listed once with the most headwind first, the two ends of a strip have opposite headwinds, the best end's headwind² + crosswind² is the wind speed², it keeps at least cos 35° of the wind, a crosswind limit above every crosswind changes nothing, and one just under the best end's crosswind puts at least one end beyond limits
+- `core/crates/gp-aviation/tests/aviation.rs` `wind_invariants`: the shared runway-wind calculation through `aviation.wind.runway-components`: headwind² + crosswind² equals the wind speed² within 1e-9, and a wind mirrored about the runway gives the same components from the other side

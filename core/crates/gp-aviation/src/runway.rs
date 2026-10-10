@@ -57,6 +57,7 @@ const MAX_ENDS: usize = 24;
 
 pub static BEST_RUNWAY: ToolDef = ToolDef {
     id: "aviation.wind.best-runway",
+    stability: gp_base::tool::Stability::Stable,
     title: "Rank runways for the wind",
     summary: "Headwind and crosswind on every runway at an airport for one wind, ranked by headwind, with runways beyond your limits flagged.",
     aliases: &[
@@ -140,7 +141,6 @@ pub static BEST_RUNWAY: ToolDef = ToolDef {
         "RUNWAY_HEADING_APPROXIMATE",
         "VARIABLE_WIND",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Each runway end's headwind = W·cos θ and crosswind = W·sin θ, θ the wind's angle off the runway heading (10 × its number). Runways within every limit you gave come first, then by headwind, most first, then by crosswind, least first. A variable wind is judged by its worst case",
     accuracy: "Exact for the entered wind. Runway numbers round the heading to 10°, so components can be off by up to W·sin 5°; a close call between two runways may need the published headings. Planning aid: the runway in use is the one ATC or local procedures assign",
@@ -166,6 +166,10 @@ pub static BEST_RUNWAY: ToolDef = ToolDef {
         Related {
             id: "aviation.weather.metar-decode",
             reason: "next",
+        },
+        Related {
+            id: "aviation.wind.uv",
+            reason: "alternative",
         },
     ],
     sentence: "Runway {best} ranks first, with {abs(best_headwind)} {if best_headwind < 0}tailwind{else}headwind{/if} and {best_crosswind} crosswind.{warn VARIABLE_WIND} These are the worst case for the variable wind.{/warn}",

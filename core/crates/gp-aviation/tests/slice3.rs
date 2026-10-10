@@ -1192,3 +1192,66 @@ fn aloft_invariants() {
         assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
     }
 }
+
+#[test]
+fn best_runway_invariants() {
+    let run = |wd: f64, ws: f64, limits: &str| {
+        let r = call(
+            "aviation.wind.best-runway",
+            &format!(
+                r#"{{"runways":"03/21, 08/26, 14/32","wind_direction":"{wd} deg","wind_speed":"{ws} kt"{limits}}}"#
+            ),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    let list = |r: &Value| -> Vec<(String, f64)> {
+        r["result"]["runways"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|e| {
+                (
+                    e["runway"].as_str().unwrap().to_owned(),
+                    e["headwind"]["value"].as_f64().unwrap(),
+                )
+            })
+            .collect()
+    };
+    for wd in (5..360).step_by(23) {
+        let wd = f64::from(wd);
+        for ws in [6.0, 17.0, 33.0] {
+            let r = run(wd, ws, "");
+            let rows = list(&r);
+            // Every end is listed once, most headwind first, and the two ends
+            // of a strip have opposite headwinds.
+            assert_eq!(rows.len(), 6);
+            assert!(rows.windows(2).all(|p| p[0].1 >= p[1].1 - 1e-9), "{r}");
+            for (a, b) in [("03", "21"), ("08", "26"), ("14", "32")] {
+                let h = |n: &str| rows.iter().find(|e| e.0 == n).unwrap().1;
+                assert!((h(a) + h(b)).abs() < 1e-9);
+                // No end has more headwind than the wind itself.
+                assert!(h(a).abs() <= ws + 1e-9);
+            }
+            assert_eq!(r["result"]["best"], rows[0].0.as_str());
+            let (bh, bx) = (
+                num(&r, "result.best_headwind.value"),
+                num(&r, "result.best_crosswind.value"),
+            );
+            assert!((bh - rows[0].1).abs() < 1e-12);
+            assert!((bh * bh + bx * bx - ws * ws).abs() < 1e-9 * ws * ws);
+            // The ends are at most 70° apart, so the best is never more than
+            // 35° off the wind and keeps at least cos 35° of it.
+            assert!(bh >= ws * 35f64.to_radians().cos() - 1e-9, "{r}");
+            // A crosswind limit below the best end's crosswind pushes it
+            // down; one above every crosswind changes nothing.
+            let loose = run(wd, ws, r#","max_crosswind":"100 kt""#);
+            assert_eq!(list(&loose), rows);
+            assert_eq!(num(&loose, "result.beyond_limits"), 0.0);
+            if bx > 1.0 {
+                let tight = run(wd, ws, &format!(r#","max_crosswind":"{} kt""#, bx - 0.5));
+                assert!(num(&tight, "result.beyond_limits") >= 1.0, "{tight}");
+            }
+        }
+    }
+}

@@ -538,9 +538,16 @@ export function draw(g, view, base, layers, c) {
       g.globalAlpha = 0.14;
       g.fill('evenodd');
       g.globalAlpha = 1;
-      g.strokeStyle = c.surface;
-      g.lineWidth = 4;
-      g.stroke();
+      // The light casing waits for the view to stop, like the coastline and
+      // the state lines: it is a second, wider stroke of the whole outline,
+      // and mid-pan the outline alone reads. With the line's casing below,
+      // leaving it out took 1.3 ms (20%) off a turning globe's frame with two
+      // 100,000-vertex layers at 3.25x CPU.
+      if (!view.moving) {
+        g.strokeStyle = c.surface;
+        g.lineWidth = 4;
+        g.stroke();
+      }
       g.strokeStyle = stroke;
       g.lineWidth = 2;
       g.stroke();
@@ -548,9 +555,10 @@ export function draw(g, view, base, layers, c) {
       g.beginPath();
       trace(g, view, layer.points, false);
       g.setLineDash([]);
-      // No casing under the great circle's dots, or it would hide the line they lie on.
+      // No casing under the great circle's dots, or it would hide the line they
+      // lie on; and none while the view moves (see the polygon's, above).
       const dotted = layer.path === 'great-circle';
-      if (!dotted) {
+      if (!dotted && !view.moving) {
         g.strokeStyle = c.surface;
         g.lineWidth = layer.role === 'result' ? 8 : 4;
         g.stroke();

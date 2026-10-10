@@ -3,6 +3,13 @@
   "entries": [
     {
       "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [],
+      "vectors": [],
+      "summary": "Dragging or zooming a map with a long route or a large area on it is smoother: while the view moves, the light outline under result lines waits, as the coastline and state lines already do, and comes back when the view stops. A turning globe with two 100,000-point shapes draws each frame about 20% faster."
+    },
+    {
+      "date": "2026-10-10",
       "kind": "result-change",
       "tools": [
         "drone.links.link-budget"

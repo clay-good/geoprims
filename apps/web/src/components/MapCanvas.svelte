@@ -77,7 +77,8 @@
   // While the view moves (a drag, a wheel zoom, an eased camera), frames are
   // drawn with the base map lighter (render.js, view.moving) so pans hold 60
   // frames a second on a mid-tier phone; the full detail comes back 120 ms
-  // after the motion stops. Tool results are always drawn in full.
+  // after the motion stops. Tool results keep their line and fill throughout;
+  // only the light casing under them waits for the view to stop.
   let still = null;
   function motion() {
     paint(true);

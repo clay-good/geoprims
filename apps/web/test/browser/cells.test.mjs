@@ -119,7 +119,7 @@ test('a million-cell answer draws its compacted stand-in, whole', { timeout: 300
     }
     return out;
   });
-  t.diagnostic(`${(await cpuRate(browser, profile)).rate}x CPU (host BenchmarkIndex ${(await cpuRate(browser, profile)).hostIndex}, target ${profile.cpu.targetBenchmarkIndex}): map p50 ${result.map.p50.toFixed(1)} ms, p95 ${result.map.p95.toFixed(1)} ms · globe p50 ${result.globe.p50.toFixed(1)} ms, p95 ${result.globe.p95.toFixed(1)} ms`);
+  t.diagnostic(`${(await cpuRate(browser, profile)).rate}x CPU (host BenchmarkIndex ${(await cpuRate(browser, profile)).hostIndex}, canvas index ${(await cpuRate(browser, profile)).canvasIndex}, target ${profile.cpu.targetBenchmarkIndex}): map p50 ${result.map.p50.toFixed(1)} ms, p95 ${result.map.p95.toFixed(1)} ms · globe p50 ${result.globe.p50.toFixed(1)} ms, p95 ${result.globe.p95.toFixed(1)} ms`);
   for (const mode of ['map', 'globe']) {
     assert.ok(result[mode].p95 <= CEILING, `${mode}: p95 ${result[mode].p95.toFixed(1)} ms, over the ${CEILING} ms this is held to`);
   }

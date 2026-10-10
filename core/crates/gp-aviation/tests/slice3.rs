@@ -994,3 +994,55 @@ fn humidity_invariants() {
         }
     }
 }
+
+#[test]
+fn q_codes_invariants() {
+    let run = |input: String| {
+        let r = call("aviation.altimetry.q-codes", &input);
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    for elev in [-1000.0, 0.0, 1500.0, 5000.0, 9000.0, 14000.0] {
+        let mut last_qfe = 0.0;
+        for qnh in [960.0, 995.0, 1013.25, 1030.0, 1050.0] {
+            let r = run(format!(
+                r#"{{"elevation":"{elev} ft","altimeter":"{qnh} hPa"}}"#
+            ));
+            let (qfe, qne) = (num(&r, "result.qfe.value"), num(&r, "result.qne.value"));
+            // A higher setting means more pressure at the field.
+            assert!(qfe > last_qfe, "{r}");
+            last_qfe = qfe;
+            // At the standard setting the field's pressure altitude is its
+            // elevation; a higher setting puts it below, a lower one above.
+            if qnh == 1013.25 {
+                assert!((qne - elev).abs() < 1e-6, "{r}");
+            } else {
+                assert_eq!(qne < elev, qnh > 1013.25, "{r}");
+            }
+            // At sea level QFE is QNH; above it QFE is lower, below it higher.
+            if elev == 0.0 {
+                assert!((qfe - qnh).abs() < 1e-9, "{r}");
+            } else {
+                assert_eq!(qfe < qnh, elev > 0.0, "{r}");
+            }
+            // The station pressure given back returns the same setting.
+            let back = run(format!(
+                r#"{{"elevation":"{elev} ft","station_pressure":"{qfe} hPa"}}"#
+            ));
+            assert!(
+                (num(&back, "result.qnh.value") * 33.863_89 - qnh).abs() < 1e-8,
+                "{back}"
+            );
+            assert!(
+                (num(&back, "result.qne.value") - qne).abs() < 1e-6,
+                "{back}"
+            );
+            // The NWS setting reads a little lower, by its 0.3 hPa offset and
+            // its own constants: within 0.02 inHg up to 9,000 ft.
+            let gap = num(&back, "result.qnh.value") - num(&back, "result.qnh_nws.value");
+            if elev <= 9000.0 {
+                assert!(gap > 0.0 && gap < 0.02, "{elev} {qnh}: {gap}");
+            }
+        }
+    }
+}

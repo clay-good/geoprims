@@ -57,6 +57,7 @@ pub fn nws_altimeter(p_hpa: f64, h_m: f64) -> f64 {
 pub static Q_CODES: ToolDef = ToolDef {
     id: "aviation.altimetry.q-codes",
     version: "1.1.1",
+    stability: gp_base::tool::Stability::Stable,
     title: "QNH, QFE, and QNE",
     summary: "Converts between the altimeter setting (QNH) and station pressure (QFE) at an airport, gives the field's pressure altitude (QNE), and works out the altimeter setting from a barometer reading.",
     aliases: &[
@@ -130,7 +131,7 @@ pub static Q_CODES: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED"],
     model: "QFE = p_ISA(elevation + PA(QNH)): an altimeter set to QNH reads the field elevation on the ground, which is the relation that defines QNH, and QNH from QFE the other way; QNE is the ISA altitude of QFE. From QFE the NWS formula is also shown: (P − 0.3) × (1 + (1013.25^0.190284 × 0.0065 ÷ 288) × h ÷ (P − 0.3)^0.190284)^(1/0.190284), P in hPa and h in m",
     accuracy: "Exact for the ISA relation. The NWS formula is the same relation with its own constants, less 0.3 hPa for the barometer's height, so it reads about 0.3 hPa (0.01 inHg) lower",
     when_to_use: "Use this when a briefing, a foreign ATIS, or a barometer gives you pressure in a form you do not use. Enter the field elevation and either QNH, the altimeter setting, or QFE, the station pressure. It returns the other one and QNE, the field's pressure altitude. From a barometer reading it also gives the altimeter setting the way US weather stations work it out.",
@@ -154,6 +155,10 @@ pub static Q_CODES: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.altimetry.flight-level",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.pressure-per-height",
             reason: "next",
         },
     ],

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c499772c90b6145c",
+    "hash": "73ad5f8f75fcd289",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "55b617d7e5fb5abc",
+    "hash": "9b5be2b4cc3af409",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -68,8 +68,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/q-codes/": {
-    "hash": "ed961c85630eca90",
-    "lastmod": "2026-10-09"
+    "hash": "955c0ea9078cc00a",
+    "lastmod": "2026-10-10"
   },
   "/aviation/altimetry/true-altitude/": {
     "hash": "52457b834c2ba847",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "83fc31b40629570d",
+    "hash": "4f67f313548f575e",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "1f1e28598a81c34c",
+    "hash": "29410fb4cb29a7c7",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "8963abb25da3f304",
+    "hash": "a4f295ee20121020",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "653029372dec8e4e",
+    "hash": "31e269a8e7befb96",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

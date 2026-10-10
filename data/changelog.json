@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.altimetry.q-codes"
+      ],
+      "vectors": [],
+      "summary": "The QNH, QFE, and QNE tool is now stable. It was checked against ambiance, a separate implementation of the ICAO standard atmosphere, at 14 fields from 1,300 ft below sea level to 13,325 ft, and its NWS altimeter setting against MetPy, within 0.001 inHg. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.atmosphere.humidity"
       ],
       "vectors": [],

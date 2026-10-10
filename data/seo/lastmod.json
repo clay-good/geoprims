@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "11b5af61cc6520c9",
+    "hash": "16d64068fcd2f48c",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "8fb2f084bd47c811",
+    "hash": "49802e40d7f70a80",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "c65d4b6f277f650a",
+    "hash": "746f59265a7735e0",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -308,8 +308,8 @@
     "lastmod": "2026-10-09"
   },
   "/drone/mission/orbit/": {
-    "hash": "e036fbdb262d437e",
-    "lastmod": "2026-10-09"
+    "hash": "22d2dce52e396b1d",
+    "lastmod": "2026-10-10"
   },
   "/drone/mission/sorties/": {
     "hash": "b85b0d186d779e31",
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "7091df0d6109c183",
+    "hash": "0eeed4a5d61dde96",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "0631838fa6dcabc7",
+    "hash": "c336d300d684e6d4",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "868656913060bda3",
+    "hash": "688e1d9b718eb357",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {
@@ -1984,8 +1984,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/inspection/": {
-    "hash": "61884cdd332eaa76",
-    "lastmod": "2026-09-29"
+    "hash": "12174cb21c4b4be2",
+    "lastmod": "2026-10-10"
   },
   "/workflows/lidar-bid/": {
     "hash": "8727bb30d7ce325a",

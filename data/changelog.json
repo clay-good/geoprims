@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "drone.mission.orbit"
+      ],
+      "vectors": [],
+      "summary": "The orbit pattern is now stable. Its waypoints and headings agree with GeographicLib for Python, the original implementation of the geodesic method, at 15 orbits from near both poles to the equator and across the antimeridian."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.altimetry.isa-temperature"
       ],
       "vectors": [],

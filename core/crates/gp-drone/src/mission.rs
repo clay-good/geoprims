@@ -1805,6 +1805,7 @@ const ORBIT_ROW: &[Field] = &[
 
 pub static ORBIT: ToolDef = ToolDef {
     id: "drone.mission.orbit",
+    stability: gp_base::tool::Stability::Stable,
     title: "Orbit around a point of interest",
     summary: "Waypoints on a geodesic circle around a point, each with the heading toward the center and the gimbal pitch that keeps a target height centered, like the top of a tower.",
     aliases: &[
@@ -1920,7 +1921,7 @@ pub static ORBIT: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Geodesic direct from the center at equal azimuth steps (Karney 2013); heading = reverse azimuth; pitch = −atan(Δh / r)",
     accuracy: "Exact geodesic positions; heights are relative to the center's ground level.",
     when_to_use: "Use this to plan a circle around a tower, chimney, statue, or building for inspection photos or a 3D model. Give the center, the radius, your flight height, and the height you want centered in the frame, and it returns evenly spaced waypoints with the heading toward the center and the gimbal pitch at each one. It also gives the length of the circle and the spacing between photos.",
@@ -1937,10 +1938,20 @@ pub static ORBIT: ToolDef = ToolDef {
         kind: "line-geodesic",
         map: &[("path", "waypoints")],
     }],
-    related: &[Related {
-        id: "drone.mission.survey-grid",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.mission.facade",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.mission.export",
+            reason: "next",
+        },
+    ],
     sentence: "Point the camera {gimbal_pitch} and fly the {circumference} circle.",
     limits: &[("batchRows", 100)],
     run: run_orbit,

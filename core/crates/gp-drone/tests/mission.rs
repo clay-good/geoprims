@@ -660,3 +660,68 @@ fn a_footprint_smaller_than_the_spacing_leaves_gaps() {
     );
     assert!(none["result"].get("footprints").is_none());
 }
+
+#[test]
+fn orbit_invariants() {
+    // Every waypoint stands the radius from the center, measured back with the
+    // geodesic inverse; its heading is the way to the center; the waypoints
+    // are evenly spaced; counterclockwise is the same ring in reverse; and the
+    // circumference is the photo spacing times the count.
+    let g = Geodesic::wgs84();
+    for (lat, lon, radius, photos) in [
+        (40.0, -105.0, 50.0, 12),
+        (-33.86, 151.21, 250.0, 36),
+        (70.0, 25.0, 30.0, 8),
+    ] {
+        let run = |extra: &str| {
+            call(
+                "drone.mission.orbit",
+                &json!({"lat": lat, "lon": lon, "radius": format!("{radius} m"), "height": "80 m", "photos": photos, "rotation": extra}),
+            )
+        };
+        let cw = run("clockwise");
+        let w = cw["result"]["waypoints"].as_array().unwrap();
+        assert_eq!(w.len(), photos);
+        let at = |p: &Value| {
+            (
+                p["lat"]["value"].as_f64().unwrap(),
+                p["lon"]["value"].as_f64().unwrap(),
+            )
+        };
+        let mut steps = Vec::new();
+        for (k, p) in w.iter().enumerate() {
+            let (la, lo) = at(p);
+            let (d, to_center, _, _): (f64, f64, f64, f64) = g.inverse(la, lo, lat, lon);
+            assert!((d - radius).abs() < 1e-6, "waypoint {k} is {d} m out");
+            let heading = p["heading"]["value"].as_f64().unwrap();
+            assert!(
+                ((heading - to_center + 540.0).rem_euclid(360.0) - 180.0).abs() < 1e-6,
+                "waypoint {k}"
+            );
+            let (nla, nlo) = at(&w[(k + 1) % photos]);
+            let step: f64 = g.inverse(la, lo, nla, nlo);
+            steps.push(step);
+        }
+        let (lo_step, hi_step) = steps
+            .iter()
+            .fold((f64::MAX, 0.0_f64), |(a, b), s| (a.min(*s), b.max(*s)));
+        assert!(
+            hi_step - lo_step < 1e-3 * radius,
+            "uneven: {lo_step} to {hi_step}"
+        );
+        let ccw = run("counterclockwise");
+        let v = ccw["result"]["waypoints"].as_array().unwrap();
+        for k in 1..photos {
+            let ((a, b), (c, d)) = (at(&w[k]), at(&v[photos - k]));
+            assert!(
+                (a - c).abs() < 1e-9 && (b - d).abs() < 1e-9,
+                "waypoint {k} mirrored"
+            );
+        }
+        let circumference = num(&cw, "result.circumference.value");
+        assert!(
+            (circumference - num(&cw, "result.photo_spacing.value") * photos as f64).abs() < 1e-9
+        );
+        assert!((circumference / (2.0 * std::f64::consts::PI * radius) - 1.0).abs() < 1e-6);
+    }
+}

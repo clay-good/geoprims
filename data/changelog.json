@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
+        "aviation.altimetry.flight-level"
+      ],
+      "vectors": [],
+      "summary": "The flight level tool is now stable. Its lowest usable flight level is checked against both ends of every row of the 14 CFR 91.121(b) table, read from the eCFR."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "fixed",
       "tools": [
         "aviation.ifr.time-to-station",

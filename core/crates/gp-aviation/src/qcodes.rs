@@ -235,6 +235,7 @@ pub fn lowest_usable_fl(inhg: f64) -> Option<u32> {
 
 pub static FLIGHT_LEVEL: ToolDef = ToolDef {
     id: "aviation.altimetry.flight-level",
+    stability: gp_base::tool::Stability::Stable,
     version: "1.1.0",
     title: "Flight level and altitude",
     summary: "The altitude on the local altimeter setting that a flight level puts you at, or the other way round, with the US lowest usable flight level and transition altitude.",
@@ -329,7 +330,7 @@ pub static FLIGHT_LEVEL: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["SUSPECT_VALUE", "UNIT_ASSUMED"],
     model: "A flight level is a pressure altitude in hundreds of feet. On a QNH the altimeter reads that pressure altitude less PA(QNH), the pressure altitude of the setting itself (the altimeter-setting relation that defines QNH). The US lowest usable flight level is FL180 at 29.92 inHg or higher and 500 ft higher for each 0.50 inHg lower, to FL210 at 26.92 (14 CFR 91.121(b))",
     accuracy: "Exact for ISA; real temperature moves the true altitude (see the cold-temperature tool). The US table covers settings down to 26.92 inHg",
     when_to_use: "Use this when you fly near the change from altitudes to flight levels, or when the altimeter setting is low. Enter the local altimeter setting. It gives the US lowest usable flight level from the 14 CFR 91.121 table and the transition altitude. Add a flight level to see the altitude it puts you at on that setting, or an altitude to see its flight level.",
@@ -347,6 +348,10 @@ pub static FLIGHT_LEVEL: ToolDef = ToolDef {
         map: &[],
     }],
     related: &[
+        Related {
+            id: "aviation.atmosphere.isa",
+            reason: "alternative",
+        },
         Related {
             id: "aviation.altimetry.q-codes",
             reason: "alternative",

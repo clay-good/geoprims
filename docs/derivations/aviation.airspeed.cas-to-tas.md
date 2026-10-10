@@ -28,19 +28,22 @@ Air is a perfect gas with γ = 1.4, and the static pressure is the standard atmo
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite airspeed spec, scenario "CAS 250 kt at FL100"
-- sourceEdition: openspec/changes/add-aviation-suite/specs/aviation/airspeed/spec.md
-- sourceLocator: Requirement "CAS ↔ TAS ↔ Mach via impact pressure"; numbers computed from the Gracey relations, not taken from a published table
-- independent: no
-- inputs: CAS 250 kt, pressure altitude 10,000 ft, OAT −5 °C
-- outputs: Mach 0.4523, TAS 288.6 kt, EAS 248.1 kt; rule of thumb 300 kt
-- tolerance: 0.1 kt for TAS and EAS; 0.00005 for Mach
-- verifiedBy: golden vector v001 and `cas_250_at_fl100` in core/crates/gp-aviation/tests/slice2.rs
-- verifiedOn: 2026-10-09
+- sourcePublisher: flightcondition (open-source Python library, from PyPI)
+- sourceTitle: flightcondition 26.4.20, FlightCondition given a pressure and a calibrated airspeed
+- sourceEdition: 26.4.20, run 2026-10-10
+- sourceLocator: tools/vectors/gen_airspeed_fc.py: the ISA pressure of the pressure altitude and the CAS go in; Mach, TAS, and EAS come out at the standard temperature for that pressure
+- independent: yes
+- inputs: CAS 250 kt at a pressure altitude of 10,000 ft, ISA temperature; and 13 more from 65 kt at sea level to 230 kt at 39,000 ft, all subsonic
+- outputs: Mach 0.45228, TAS 288.70 kt, EAS 248.10 kt for the first
+- tolerance: 2e-6 in Mach and 0.001 kt in TAS and EAS (agreement is 1e-9 at low speed and 5e-7 in Mach near 0.95, where the library iterates)
+- verifiedBy: golden vectors v008 through v021, run by the core on every build
+- verifiedOn: 2026-10-10
+
+The library is a reference below Mach 1 only: above it, it applies the subsonic relation (520 kt CAS at FL410 gives it Mach 1.53, where the Rayleigh pitot formula gives 1.61), so the supersonic branch rests on the Python bisection in gen_aviation.py and the round trips below. The spec's own scenario, 250 kt at 10,000 ft and −5 °C, gives Mach 0.4523, TAS 288.6 kt, and EAS 248.1 kt (vector v001).
 
 ## Differential tests
 
+- `tools/vectors/gen_airspeed_fc.py`: flightcondition 26.4.20, a separately written library, at 14 subsonic cases; it needs the library installed and replaces only its own rows
 - `tools/vectors/gen_aviation.py`: a separate Python implementation of the same Gracey relations and ISA, which finds Mach by bisection on the monotonic qc/p curve instead of the core's closed form and fixed point; seven cases from sea level to 40,000 ft, one supersonic (within 1e-9 relative)
 - `core/vectors/aviation.airspeed.cas-to-tas.jsonl`: those seven vectors, run through the core on every build
 

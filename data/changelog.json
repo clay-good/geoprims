@@ -4,6 +4,23 @@
     {
       "date": "2026-10-10",
       "kind": "changed",
+      "tools": [
+        "aviation.airspeed.cas-to-tas",
+        "aviation.airspeed.tas-to-cas",
+        "aviation.airspeed.ias-to-tas",
+        "aviation.airspeed.ias-to-mach",
+        "aviation.airspeed.ias-to-eas",
+        "aviation.airspeed.eas-to-tas",
+        "aviation.airspeed.eas-to-mach",
+        "aviation.airspeed.mach-to-eas",
+        "aviation.airspeed.tas-to-eas"
+      ],
+      "vectors": [],
+      "summary": "The two airspeed tools, and the seven airspeed pairs built on them, are now stable. Below Mach 1 they agree with flightcondition, a separately written Python library, to within 0.001 kt and 2 parts in a million of Mach at 26 points from sea level to 41,000 ft. Above Mach 1 that library is not a reference, so the supersonic branch still rests on this project's own second implementation and round-trip tests."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
       "tools": [],
       "vectors": [],
       "summary": "Dragging or zooming a map with a long route or a large area on it is smoother: while the view moves, the light outline under result lines waits, as the coastline and state lines already do, and comes back when the view stops. A turning globe with two 100,000-point shapes draws each frame about 20% faster."

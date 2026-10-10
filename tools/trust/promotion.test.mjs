@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { nodeHost } from '../../packages/runtime/src/node.mjs';
 import { lintDimensions } from './dimensions.mjs';
-import { MIN_VECTORS, derivationProblems, promotionProblems } from './promotion.mjs';
+import { MIN_VECTORS, derivationProblems, narrows, promotionProblems } from './promotion.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -20,7 +20,8 @@ test('every stable tool meets the stable bar', async () => {
   assert.ok(stable.length > 0, 'no stable tools');
   const failures = [];
   for (const tool of stable) {
-    for (const p of await promotionProblems({ root, tool, host })) failures.push(`${tool.id}: ${p}`);
+    const parent = catalog.tools.find((t) => t.id === tool.composedOf?.[0]) ?? null;
+    for (const p of await promotionProblems({ root, tool, host, parent })) failures.push(`${tool.id}: ${p}`);
   }
   assert.deepEqual(failures, []);
 });
@@ -79,4 +80,16 @@ test('a tool still advertising the experimental warning cannot be stable', async
   const flagged = { ...passing, warnings: [...(passing.warnings ?? []), 'EXPERIMENTAL_TOOL'] };
   const problems = await promotionProblems({ root, tool: flagged, host });
   assert.ok(problems.includes('geoprims_describe still advertises the EXPERIMENTAL_TOOL warning'), problems.join('\n'));
+});
+
+test('a narrower form of a stable tool rests on its parent, and only when it really is one', () => {
+  const parent = catalog.tools.find((t) => t.id === 'aviation.airspeed.tas-to-cas');
+  const child = catalog.tools.find((t) => t.id === 'aviation.airspeed.eas-to-mach');
+  assert.equal(narrows(child, parent), true);
+  // An input the parent does not take, an output it does not return, or the
+  // wrong parent, and it stands on its own.
+  assert.equal(narrows({ ...child, inputs: { properties: { ...child.inputs.properties, extra: {} } } }, parent), false);
+  assert.equal(narrows({ ...child, outputs: { properties: { cas: {} } } }, parent), false);
+  assert.equal(narrows(child, catalog.tools.find((t) => t.id === 'aviation.airspeed.cas-to-tas')), false);
+  assert.equal(narrows(parent, parent), false);
 });

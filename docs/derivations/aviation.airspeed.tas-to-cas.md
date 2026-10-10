@@ -29,19 +29,22 @@ The air is a dry ideal gas with γ = 1.4, and the static pressure is the ICAO st
 
 ## Worked example
 
-- sourcePublisher: geoprims (round trip of the add-aviation-suite FL350 airspeed scenario, computed)
-- sourceTitle: add-aviation-suite airspeed spec, scenario "High altitude", run backward with the Gracey (NASA RP-1046) relations
-- sourceEdition: add-aviation-suite change; NASA RP-1046 (1980)
-- sourceLocator: openspec/changes/add-aviation-suite/specs/aviation/airspeed/spec.md, scenario "High altitude"; tool example "primary"
-- independent: no
-- inputs: Mach 0.78, pressure altitude 35,000 ft, temperature −54.3 °C
-- outputs: CAS 264.42 kt, TAS 449.65 kt (from the independent Python generator, not a published table)
-- tolerance: 1e-9 relative
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- sourcePublisher: flightcondition (open-source Python library, from PyPI)
+- sourceTitle: flightcondition 26.4.20, FlightCondition given a pressure and a Mach number or a true airspeed
+- sourceEdition: 26.4.20, run 2026-10-10
+- sourceLocator: tools/vectors/gen_airspeed_fc.py: the ISA pressure of the pressure altitude and the Mach number or TAS go in; CAS and EAS come out
+- independent: yes
+- inputs: Mach 0.78 at a pressure altitude of 35,000 ft; and 11 more, six by Mach and six by TAS at ISA temperature, all subsonic
+- outputs: CAS 264.42 kt and EAS 250.28 kt for the first
+- tolerance: 0.001 kt in CAS and EAS, 2e-6 in Mach
+- verifiedBy: golden vectors v011 through v022, run by the core on every build
+- verifiedOn: 2026-10-10
+
+The library is a reference below Mach 1 only: above it, it applies the subsonic relation (520 kt CAS at FL410 gives it Mach 1.53, where the Rayleigh pitot formula gives 1.61), so the supersonic branch rests on the Python bisection in gen_aviation.py and the round trips below.
 
 ## Differential tests
 
+- `tools/vectors/gen_airspeed_fc.py`: flightcondition 26.4.20, a separately written library, at 12 subsonic cases by Mach and by TAS; it needs the library installed and replaces only its own rows
 - `tools/vectors/gen_aviation.py`: a separate Python implementation of the Gracey relations that finds Mach from qc/p by bisection rather than the core's fixed point, at six Mach inputs (one supersonic, Mach 1.6) and four EAS inputs (within 1e-9 relative)
 - `core/vectors/aviation.airspeed.tas-to-cas.jsonl`: those ten vectors, run through the core on every build
 

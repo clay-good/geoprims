@@ -323,6 +323,7 @@ const COMMON_OUT: [Field; 6] = [
 
 pub static CAS_TO_TAS: ToolDef = ToolDef {
     id: "aviation.airspeed.cas-to-tas",
+    stability: gp_base::tool::Stability::Stable,
     title: "True airspeed from indicated or calibrated airspeed",
     summary: "True airspeed, Mach, and equivalent airspeed from IAS or CAS, pressure altitude, and outside air temperature, by the exact compressible-flow path, with the 2% per 1,000 ft rule beside it.",
     aliases: &[
@@ -393,7 +394,6 @@ pub static CAS_TO_TAS: ToolDef = ToolDef {
         "CALIBRATION_ASSUMED",
         "ISA_TEMPERATURE_ASSUMED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "CAS → impact pressure (sea-level ISA relation) → Mach at the static pressure of the pressure altitude → TAS at the outside air temperature; Rayleigh pitot formula above Mach 1",
     accuracy: "Exact compressible-flow relations for γ = 1.4 air to double precision; the Rayleigh branch is iterated to 1e-12. Planning aid, not certified for navigation.",
@@ -671,6 +671,7 @@ fn run_cas_to_tas(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TAS_TO_CAS: ToolDef = ToolDef {
     id: "aviation.airspeed.tas-to-cas",
+    stability: gp_base::tool::Stability::Stable,
     version: "1.1.0",
     title: "Calibrated airspeed from true airspeed, Mach, or EAS",
     summary: "The calibrated airspeed to fly for a true airspeed, Mach number, or equivalent airspeed at a pressure altitude and temperature, with Mach, EAS, and impact pressure.",
@@ -730,7 +731,6 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
         "BELOW_STALL_SPEED",
         "ISA_TEMPERATURE_ASSUMED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "TAS → Mach at the outside air temperature → impact pressure at the static pressure → CAS by the sea-level relation; Rayleigh pitot formula above Mach 1",
     accuracy: "Exact compressible-flow relations for γ = 1.4 air to double precision. Planning aid, not certified for navigation.",
@@ -748,10 +748,20 @@ pub static TAS_TO_CAS: ToolDef = ToolDef {
         kind: "vector-diagram",
         map: &[("value", "cas")],
     }],
-    related: &[Related {
-        id: "aviation.airspeed.cas-to-tas",
-        reason: "inverse",
-    }],
+    related: &[
+        Related {
+            id: "aviation.airspeed.cas-to-tas",
+            reason: "inverse",
+        },
+        Related {
+            id: "aviation.airspeed.tat-sat",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.atmosphere.isa",
+            reason: "alternative",
+        },
+    ],
     assumptions: &[
         Assumption {
             name: "Sea-level pressure P0",

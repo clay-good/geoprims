@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "7d3ae0035b2907c9",
+    "hash": "ea17e2f9639aa5af",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "dbf6d4b06b1c2317",
+    "hash": "7d4c8837b5c3c7e1",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -28,12 +28,12 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/airspeed/cas-to-tas/": {
-    "hash": "7dc3863ab64979be",
-    "lastmod": "2026-10-09"
+    "hash": "85738987b8c1c803",
+    "lastmod": "2026-10-10"
   },
   "/aviation/airspeed/tas-to-cas/": {
-    "hash": "88c43519182d0e40",
-    "lastmod": "2026-10-09"
+    "hash": "2f7344fe6b7d9042",
+    "lastmod": "2026-10-10"
   },
   "/aviation/airspeed/tat-sat/": {
     "hash": "059eb70c1cad3811",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "75efd84ea337ea8a",
+    "hash": "020d98c1b1d0cd5b",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "420389933830a91b",
+    "hash": "4111a3fb2eb8d21d",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "08fced15d04b27e0",
+    "hash": "091494304f44927f",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "95b201b63f77ef04",
+    "hash": "1353d6751e98947e",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

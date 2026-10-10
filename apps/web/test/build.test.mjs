@@ -44,7 +44,8 @@ test('generated endpoints canonicalize to their parent; experimental pages are n
     const noindex = /<meta name="robots" content="noindex">/.test(page(route(t.id)));
     assert.equal(noindex, !indexableTool(t), t.id);
   }
-  assert.ok(!indexableTool({ ...catalog.tools.find((x) => x.id === 'aviation.airspeed.cas-to-tas'), whenToUse: '' }), 'an experimental tool without its prose stays out');
+  // Any tool will do as the fixture: marked experimental here, whatever it is today.
+  assert.ok(!indexableTool({ ...catalog.tools.find((x) => x.id === 'aviation.airspeed.cas-to-tas'), stability: 'experimental', whenToUse: '' }), 'an experimental tool without its prose stays out');
 });
 
 test('no third-party scripts, styles, or fonts', () => {

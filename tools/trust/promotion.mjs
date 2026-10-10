@@ -63,7 +63,19 @@ export function derivationProblems(root, id) {
  * Every problem keeping `tool` from stable. `host` is a nodeHost with the
  * search index loaded; both surfaces rank with the same core search.
  */
-export async function promotionProblems({ root, tool, host }) {
+/**
+ * Whether `tool` is its parent under a narrower form: an endpoint that takes
+ * only inputs its parent takes and returns exactly its parent's outputs. Its
+ * correctness is then the parent's, as a preset's is.
+ */
+export function narrows(tool, parent) {
+  if (!parent || !(tool.composedOf?.length > 0) || tool.composedOf[0] !== parent.id) return false;
+  const keys = (schema) => Object.keys(schema?.properties ?? {});
+  const [mine, theirs] = [keys(tool.outputs), keys(parent.outputs)];
+  return keys(tool.inputs).every((k) => k in parent.inputs.properties) && mine.length === theirs.length && mine.every((k, i) => k === theirs[i]);
+}
+
+export async function promotionProblems({ root, tool, host, parent = null }) {
   // A preset is one call of another tool with an input fixed -- units.speed
   // .kt-to-mph is units.speed.convert with `to` set. It runs the same code
   // over the same vectors and its correctness claim is entirely its parent's,
@@ -76,7 +88,13 @@ export async function promotionProblems({ root, tool, host }) {
   // not carry; the field is `preset`. So it never fired, and the moment
   // presets began inheriting their parent's stability, 34 of them were asked
   // for derivation notes they should never have needed.
-  const preset = Boolean(tool.preset);
+  //
+  // An endpoint with no preset can be the same thing: aviation.airspeed
+  // .eas-to-mach is aviation.airspeed.tas-to-cas with only the EAS and
+  // altitude fields shown. It is exempt on the same ground, but only when it
+  // is checked to be so (narrows): the parent's inputs and no others, the
+  // parent's outputs exactly, and a parent that is itself stable.
+  const preset = Boolean(tool.preset) || (narrows(tool, parent) && parent.stability === 'stable');
   const problems = preset ? [] : derivationProblems(root, tool.id);
   for (const p of lintDimensions({ tools: [tool] })) problems.push(`(C) ${p}`);
   if (!preset && tool.vectorCount < MIN_VECTORS) problems.push(`needs at least ${MIN_VECTORS} golden vectors (has ${tool.vectorCount})`);

@@ -302,9 +302,21 @@ def speed_vectors():
 
 def ke_vectors():
     cases = [(0.9, 19), (0.249, 16), (2.0, 20), (0.5, 12), (25.0, 23)]
-    return [fvec(i, {"mass": f"{m} kg", "speed": f"{v} m/s"}, {"result.energy.value": 0.5 * m * v * v,
-                                                                "result.energy_ft_lbf.value": 0.5 * m * v * v / (0.3048 * 4.4482216152605)}, OPS_SRC, OPS_VER)
-            for i, (m, v) in enumerate(cases, 1)]
+    out = [fvec(i, {"mass": f"{m} kg", "speed": f"{v} m/s"}, {"result.energy.value": 0.5 * m * v * v,
+                                                               "result.energy_ft_lbf.value": 0.5 * m * v * v / (0.3048 * 4.4482216152605)}, OPS_SRC, OPS_VER)
+           for i, (m, v) in enumerate(cases, 1)]
+    # Other units, and energies either side of the two thresholds: 80 J
+    # (Regulation (EU) 2019/945, Annex Part 2) and 11 ft-lb (14 CFR 107.120(a)(1)).
+    kg = {"kg": 1.0, "g": 0.001, "lb": 0.45359237}
+    mps = {"m/s": 1.0, "km/h": 1 / 3.6, "mph": 0.44704, "kt": 1852 / 3600}
+    more = [(900, "g", 13.3, "m/s"), (900, "g", 13.4, "m/s"), (1.0, "kg", 12.6, "m/s"), (1.0, "kg", 12.7, "m/s"), (0.3, "kg", 9.9, "m/s"), (0.3, "kg", 10.0, "m/s"),
+            (250, "g", 19, "m/s"), (899, "g", 19, "m/s"), (4.0, "kg", 5.4, "m/s"), (4.0, "kg", 6.4, "m/s"), (2.2, "lb", 30, "mph"), (55, "lb", 87, "kt"),
+            (1.5, "kg", 36, "km/h"), (0.5, "lb", 15, "mph"), (10, "kg", 0, "m/s")]
+    for m, um, v, uv in more:
+        ke = 0.5 * (m * kg[um]) * (v * mps[uv]) ** 2
+        out.append(fvec(len(out) + 1, {"mass": f"{m} {um}", "speed": f"{v} {uv}"},
+                        {"result.energy.value": ke, "result.energy_ft_lbf.value": ke / (0.3048 * 4.4482216152605)}, OPS_SRC, OPS_VER))
+    return out
 
 
 def easa_vectors():

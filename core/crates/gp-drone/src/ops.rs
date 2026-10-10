@@ -440,6 +440,7 @@ fn run_speed(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static KINETIC_ENERGY: ToolDef = ToolDef {
     id: "drone.ops.kinetic-energy",
+    stability: gp_base::tool::Stability::Stable,
     title: "Drone impact kinetic energy",
     summary: "Kinetic energy ½mv² in joules and foot-pounds, compared with the EASA C1 80 J threshold and the FAA category 2 operations-over-people 11 ft-lb threshold, each cited.",
     aliases: &[
@@ -494,7 +495,7 @@ pub static KINETIC_ENERGY: ToolDef = ToolDef {
         ),
         NOTICE,
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "KE = ½·m·v²; C1 needs MTOM under 900 g or under 80 J transferred in a head-on impact at terminal velocity; category 2 is set by 11 ft-lb of transferred energy",
     accuracy: "Exact kinetic energy. Both regulations judge transferred energy under a test method, so this is a screening value, not a compliance finding.",
     when_to_use: "Use this to screen a drone against the energy limits that some drone rules set. Give its mass and maximum speed, and it works out the kinetic energy in joules and foot-pounds. It then compares that number with the EASA class C1 test of under 900 g or under 80 J, and with the FAA threshold of 11 ft-lb for category 2 operations over people, so you know which way a design leans.",
@@ -511,10 +512,20 @@ pub static KINETIC_ENERGY: ToolDef = ToolDef {
         kind: "table-only",
         map: &[("value", "energy")],
     }],
-    related: &[Related {
-        id: "drone.ops.easa-subcategory",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "drone.ops.easa-subcategory",
+            reason: "next",
+        },
+        Related {
+            id: "drone.ops.speed-check",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.power.max-payload",
+            reason: "alternative",
+        },
+    ],
     sentence: "At that speed it carries {energy} ({energy_ft_lbf}). Not legal advice.",
     limits: &[("batchRows", 10_000)],
     run: run_ke,

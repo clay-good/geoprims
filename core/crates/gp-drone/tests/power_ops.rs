@@ -635,3 +635,43 @@ fn speed_check_invariants() {
         }
     }
 }
+
+#[test]
+fn kinetic_energy_invariants() {
+    // Energy is half the mass times the speed squared: linear in mass,
+    // quadratic in speed, the same in joules and foot-pounds. The C1 screen
+    // turns on 900 g and then on 80 J, and the category 2 screen on 11 ft-lb.
+    let ke = |mass: f64, speed: f64| {
+        call(
+            "drone.ops.kinetic-energy",
+            &format!(r#"{{"mass":"{mass} kg","speed":"{speed} m/s"}}"#),
+        )
+    };
+    let base = num(&ke(1.2, 10.0), "result.energy.value");
+    assert!((base - 60.0).abs() < 1e-9);
+    assert!((num(&ke(2.4, 10.0), "result.energy.value") - 2.0 * base).abs() < 1e-9);
+    assert!((num(&ke(1.2, 20.0), "result.energy.value") - 4.0 * base).abs() < 1e-9);
+    let r = ke(1.2, 10.0);
+    assert!((num(&r, "result.energy_ft_lbf.value") * 1.355_817_948_331_400_4 - base).abs() < 1e-9);
+    let c1 = |mass: f64, speed: f64| {
+        ke(mass, speed)["result"]["easa_c1"]
+            .as_str()
+            .unwrap()
+            .to_owned()
+    };
+    assert!(
+        c1(0.899, 30.0).starts_with("Under 900 g"),
+        "light, whatever the energy"
+    );
+    assert!(c1(0.9, 13.3).contains("is under"), "900 g at 79.6 J");
+    assert!(c1(0.9, 13.4).contains("cannot meet C1"), "900 g at 80.8 J");
+    let cat2 = |mass: f64, speed: f64| {
+        ke(mass, speed)["result"]["faa_category_2"]
+            .as_str()
+            .unwrap()
+            .to_owned()
+    };
+    // 11 ft-lb is 14.914 J: 0.3 kg reaches it between 9.9 and 10.0 m/s.
+    assert!(cat2(0.3, 9.9).contains("at or under"));
+    assert!(cat2(0.3, 10.0).contains("above"));
+}

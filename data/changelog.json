@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "drone.ops.kinetic-energy"
+      ],
+      "vectors": [],
+      "summary": "The drone kinetic energy tool is now stable. Its two thresholds are held to the rules' own words: under 80 J or under 900 g for EASA class C1 (Regulation (EU) 2019/945), and 11 foot-pounds for FAA category 2 operations over people (14 CFR 107.120). It remains a screen, not a compliance finding."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "drone.mission.export"
       ],
       "vectors": [],

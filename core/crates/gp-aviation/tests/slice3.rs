@@ -843,3 +843,96 @@ fn radial_fix_invariants() {
         );
     }
 }
+
+#[test]
+fn tfr_area_invariants() {
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    let g = Geodesic::wgs84();
+    let ring = |r: &Value| -> Vec<(f64, f64)> {
+        r["result"]["rings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| {
+                (
+                    p["lat"]["value"].as_f64().unwrap(),
+                    p["lon"]["value"].as_f64().unwrap(),
+                )
+            })
+            .collect()
+    };
+    // A circle: every point is the radius from the center, the area is that
+    // of a 72-sided polygon inscribed in the circle (the ellipsoid moves it
+    // under 0.1% at these sizes), and the bounds hold every point.
+    let gon = 36.0 * 5f64.to_radians().sin();
+    for (center, nm) in [
+        ("393400N1224330W", 3.0),
+        ("3356S15110E", 10.0),
+        ("0000N00000E", 0.5),
+        ("6500N02000W", 60.0),
+        ("4500S07000W", 150.0),
+    ] {
+        let r = call(
+            "aviation.airspace.tfr-area",
+            &format!(r#"{{"center":"{center}","radius":"{nm} NM"}}"#),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        let (clat, clon) = (
+            num(&r, "result.center_lat.value"),
+            num(&r, "result.center_lon.value"),
+        );
+        let pts = ring(&r);
+        assert!(pts.len() == 72 || pts.len() == 73, "{}", pts.len());
+        for &(la, lo) in &pts {
+            let s: f64 = g.inverse(clat, clon, la, lo);
+            assert!((s - nm * 1852.0).abs() < 1e-6, "{center}: {s}");
+            assert!(la >= num(&r, "result.south.value") && la <= num(&r, "result.north.value"));
+            assert!(lo >= num(&r, "result.west.value") && lo <= num(&r, "result.east.value"));
+        }
+        let area = num(&r, "result.area.value");
+        assert!(
+            (area / (gon * nm * nm) - 1.0).abs() < 1e-3,
+            "{center}: {area}"
+        );
+        // The GeoJSON ring is closed and counterclockwise (RFC 7946).
+        let f: Value = serde_json::from_str(r["result"]["file"].as_str().unwrap()).unwrap();
+        let c = f["geometry"]["coordinates"][0].as_array().unwrap();
+        assert_eq!(c.first(), c.last(), "{center}");
+        let twice: f64 = c
+            .windows(2)
+            .map(|w| {
+                let x = |v: &Value, i: usize| v[i].as_f64().unwrap();
+                x(&w[0], 0) * x(&w[1], 1) - x(&w[1], 0) * x(&w[0], 1)
+            })
+            .sum();
+        assert!(twice > 0.0, "{center}: clockwise");
+    }
+    // A point list has the same area and bounds entered either way round, or
+    // closed on its first point.
+    let corners = [
+        "393000N1050000W",
+        "393000N1043000W",
+        "400000N1043000W",
+        "394500N1044500W",
+        "400000N1050000W",
+    ];
+    let list = |c: &[&str]| {
+        let rows: Vec<String> = c.iter().map(|p| format!(r#"{{"point":"{p}"}}"#)).collect();
+        let r = call(
+            "aviation.airspace.tfr-area",
+            &format!(r#"{{"points":[{}]}}"#, rows.join(",")),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        ["area", "south", "north", "west", "east"].map(|k| num(&r, &format!("result.{k}.value")))
+    };
+    let a = list(&corners);
+    let mut rev = corners;
+    rev.reverse();
+    let mut closed = corners.to_vec();
+    closed.push(corners[0]);
+    for other in [list(&rev), list(&closed)] {
+        for (x, y) in a.iter().zip(other) {
+            assert!((x - y).abs() <= 1e-9 * x.abs().max(1.0), "{x} vs {y}");
+        }
+    }
+}

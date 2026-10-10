@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ebe1596c47a8e536",
+    "hash": "53fdf6aa59adf189",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -20,8 +20,8 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/airspace/tfr-area/": {
-    "hash": "ca17b689c4970dc3",
-    "lastmod": "2026-10-09"
+    "hash": "d8007b557cd6a1ff",
+    "lastmod": "2026-10-10"
   },
   "/aviation/airspeed/": {
     "hash": "f23541a29e1d4d32",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "56cf20cd1dfe0094",
+    "hash": "c2d6cc3af142821d",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "c93bcba95accf8fb",
+    "hash": "4ea5316988b3ace9",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "055553b1efebe7bf",
+    "hash": "ca09a9238b226c23",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "679317390946cb0d",
+    "hash": "5e146cbe7c32c49a",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

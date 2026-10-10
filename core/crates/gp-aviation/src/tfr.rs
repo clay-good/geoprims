@@ -168,6 +168,7 @@ fn limit(s: &str, field: &str) -> Result<String, ToolError> {
 
 pub static TFR_AREA: ToolDef = ToolDef {
     id: "aviation.airspace.tfr-area",
+    stability: gp_base::tool::Stability::Stable,
     title: "TFR and NOTAM area",
     summary: "Draws the area a TFR or NOTAM describes, a circle around packed coordinates or a fix-radial-distance, or a list of points, with its area, bounds, and altitude limits, ready to download as GeoJSON.",
     aliases: &[
@@ -312,7 +313,7 @@ pub static TFR_AREA: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "A circle is 72 points at 5° steps of the geodesic direct problem from the center (Karney 2013); a fix-radial-distance center is the navaid's position carried along radial + variation for the distance. Area by Karney's geodesic polygon area; the GeoJSON ring runs counterclockwise and closes on its first point (RFC 7946)",
     accuracy: "Points exact on WGS 84; the 72-point circle's chords sag under 0.1% of the radius. Check the NOTAM itself: this draws what you enter",
     when_to_use: "Use this when a TFR or other NOTAM describes its area in text and you want to see the shape. Enter packed coordinates and a radius, a fix-radial-distance with the navaid's position and variation, or a list of corner points. It returns the area, its north, south, east, and west edges, and a GeoJSON file you can load into a map app to check your route against it.",
@@ -337,6 +338,10 @@ pub static TFR_AREA: ToolDef = ToolDef {
         Related {
             id: "aviation.ifr.radial-fix",
             reason: "parent",
+        },
+        Related {
+            id: "navigation.route.cross-track",
+            reason: "next",
         },
     ],
     sentence: "The area covers {area}, from {south} to {north} and {west} to {east}.",

@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
+        "aviation.airspace.tfr-area"
+      ],
+      "vectors": [],
+      "summary": "The TFR and NOTAM area tool is now stable. Its circles, fix-radial-distance centers, and point-list areas agree with GeographicLib in both its C++ and Python forms, for circles from 0.5 to 400 NM between 71° N and 55° S. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
       "kind": "result-change",
       "tools": [
         "aviation.ifr.radial-fix"

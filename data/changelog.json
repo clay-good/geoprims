@@ -3,6 +3,17 @@
   "entries": [
     {
       "date": "2026-10-09",
+      "kind": "fixed",
+      "tools": [
+        "aviation.ifr.time-to-station",
+        "aviation.altimetry.isa-temperature",
+        "aviation.ifr.hold-wind-timing"
+      ],
+      "vectors": [],
+      "summary": "Three tools' own descriptions are corrected: time-to-station's 60-times rule reads about 4% long at a 10° change, not 5%; ISA temperature no longer lists an Earth radius among its constants, because it never uses one; and the holding wind tool now says the turn direction only places the drawing, since the headings and times are the same for left and right turns."
+    },
+    {
+      "date": "2026-10-09",
       "kind": "changed",
       "tools": [
         "geodesy.crs.search",

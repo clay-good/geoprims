@@ -56,8 +56,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/isa-temperature/": {
-    "hash": "db0cdc11396c28e7",
-    "lastmod": "2026-10-09"
+    "hash": "cc65bda368750a93",
+    "lastmod": "2026-10-10"
   },
   "/aviation/altimetry/pressure-altitude/": {
     "hash": "43313a03fb38c338",
@@ -120,8 +120,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/ifr/hold-wind-timing/": {
-    "hash": "a9ba52b5fd49d9be",
-    "lastmod": "2026-10-09"
+    "hash": "e0ec506933cd348c",
+    "lastmod": "2026-10-10"
   },
   "/aviation/ifr/radial-fix/": {
     "hash": "84d6ec35f3aadeab",
@@ -132,8 +132,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/ifr/time-to-station/": {
-    "hash": "96fd17848c55f42b",
-    "lastmod": "2026-10-09"
+    "hash": "95a5b8cd8e63b2d5",
+    "lastmod": "2026-10-10"
   },
   "/aviation/loading/": {
     "hash": "73a38039a967b4fe",
@@ -268,8 +268,8 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "4b13e7a88541349e",
-    "lastmod": "2026-10-09"
+    "hash": "edef4b163f9dfbbd",
+    "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1324,8 +1324,8 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "e45b2def14099083",
-    "lastmod": "2026-10-09"
+    "hash": "e40774e1efd15ef2",
+    "lastmod": "2026-10-10"
   },
   "/raster/": {
     "hash": "ad6967a3c98fbe01",
@@ -1952,8 +1952,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "3f63e2c0c3d181b0",
-    "lastmod": "2026-10-09"
+    "hash": "cf9d56095a90c83a",
+    "lastmod": "2026-10-10"
   },
   "/workflows/": {
     "hash": "ae01dae8923fdd1d",

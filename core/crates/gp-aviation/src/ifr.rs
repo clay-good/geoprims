@@ -626,7 +626,7 @@ pub static HOLD_WIND: ToolDef = ToolDef {
     model: "Straight-leg wind triangle on each leg; outbound time = inbound GS × inbound time / outbound GS; the triple-the-drift heading (FAA-H-8083-15B) allows for the turns and is a rule of thumb",
     accuracy: "Exact for straight legs in a steady wind. Wind drift in the turns is not modeled; adjust on the next circuit.",
     when_to_use: "Use this when you are about to hold in a wind and want headings and timing before you start. Enter the inbound course, your true airspeed, and the wind. It returns the inbound heading, the outbound heading by the triple-the-drift method, the plain outbound heading that holds the track, and the outbound time that gives a one-minute inbound leg, or the leg time you set.",
-    limitations: "Each leg is solved as a straight line in a steady wind. Drift in the turns is not modeled, which is why the triple-the-drift heading is a rule of thumb, not an exact answer. Time the first inbound leg and adjust on the next circuit. The wind and course must use the same north reference, and ATC or the published hold sets the legs.",
+    limitations: "Each leg is solved as a straight line in a steady wind. Drift in the turns is not modeled, which is why the triple-the-drift heading is a rule of thumb, not an exact answer. Time the first inbound leg and adjust on the next circuit. The wind and course must use the same north reference, and ATC or the published hold sets the legs. The turn direction only places the hold in the drawing: the headings and times are the same for left and right turns.",
     references: &[IFH, AIM_HOLDING, PHAK],
     examples: &[Example {
         id: "primary",

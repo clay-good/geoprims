@@ -261,7 +261,7 @@ pub static TIME_TO_STATION: ToolDef = ToolDef {
     errors: &[ErrorCode::InvalidInput],
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Flying square to the station, which is abeam when the timing starts, the track flown and the two bearings make a right triangle: from where the timing ends the station is (GS × t) ÷ sin Δ away, so the time is t ÷ sin Δ. The rule, 60 × t ÷ Δ, takes sin Δ ≈ Δ/60 (Instrument Flying Handbook, ch. 9)",
-    accuracy: "Exact for a steady wind-free track square to the station; the rule reads about 5% long near 10° and grows with the change",
+    accuracy: "Exact for a steady wind-free track square to the station; the rule reads about 4% long at 10° and grows with the change",
     when_to_use: "Use this to estimate how far away a VOR or NDB is when you have no DME. Turn so the station is off your wingtip, time how long the bearing takes to change by a few degrees, and enter the minutes and degrees. It returns the time to the station, and the distance if you add your groundspeed, both exactly and by the 60-times rule.",
     limitations: "The math assumes you flew a straight track square to the station, with no wind pushing you off it. Wind, a turn, or a sloppy start all move the answer. Small bearing changes, from 5° to 20°, work well; changes of 90° or more are refused. Treat the result as an estimate and confirm your position another way.",
     references: &[IFH_NAV],

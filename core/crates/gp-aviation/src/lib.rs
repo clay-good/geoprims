@@ -1396,12 +1396,6 @@ pub static ISA_TEMPERATURE: ToolDef = ToolDef {
             unit: "K/m",
             source: "icao-7488",
         },
-        Assumption {
-            name: "Earth radius for geopotential altitude",
-            value: "6356766",
-            unit: "m",
-            source: "icao-7488",
-        },
     ],
     sentence: "The standard temperature at {pressure_altitude} is {isa_temperature}.{if isa_deviation > -1000} The outside air is ISA {isa_deviation}.{/if}",
     limits: &[("batchRows", 10_000)],

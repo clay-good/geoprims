@@ -21,6 +21,14 @@ const BLM_MANUAL: Reference = Reference {
     locator: "Chapter 1 (units: chain of 66 feet, link of 0.66 feet) and Chapter 3 (subdivision of sections, aliquot parts)",
     url: "https://www.blm.gov/sites/default/files/Manual_Of_Surveying_Instructions_2009.pdf",
 };
+const NIST_HB44: Reference = Reference {
+    title: "Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices, NIST Handbook 44",
+    issuer: "National Institute of Standards and Technology",
+    year: 2026,
+    edition: "2026 edition",
+    locator: "Appendix C, section 2, Gunter's or Surveyors Chain Units of Measurement (link, rod, chain, furlong), and its note on the U.S. survey foot in legacy applications",
+    url: "https://www.nist.gov/document/2026-nist-handbook-44-appendix-c",
+};
 const BROWN: Reference = Reference {
     title: "Brown's Boundary Control and Legal Principles",
     issuer: "Robillard, W. G., and Wilson, D. A., Wiley",
@@ -200,6 +208,7 @@ pub fn parse_length(s: &str, j: Option<&str>) -> Result<(f64, Vec<&'static str>)
 
 pub static LEGACY_UNITS: ToolDef = ToolDef {
     id: "survey.land.legacy-units",
+    stability: gp_base::tool::Stability::Stable,
     title: "Legacy land units",
     summary: "Converts chains and links, rods, furlongs, varas, and arpents from old deeds and plats to US survey feet, feet, and meters, with the definition used; varas and arpents need a jurisdiction.",
     aliases: &[
@@ -278,12 +287,12 @@ pub static LEGACY_UNITS: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["LEGACY_UNIT", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT"],
     model: "Gunter's chain of 66 US survey feet (100 links), rod of 16.5 ft, furlong of 660 ft; jurisdictional varas and arpents",
     accuracy: "Exact for the stated definitions. Old records sometimes used local variants; check the survey's own statement of units.",
     when_to_use: "Use this when an old deed, plat, or field note gives lengths in chains and links, rods, furlongs, varas, or arpents. Enter the length as written and, for varas or arpents, the state that sets the definition. It returns US survey feet, international feet, and meters, with the definition it used, so you can compare record calls with modern measurements.",
     limitations: "The answer uses the standard definition, such as a Gunter's chain of 66 US survey feet. Old surveyors sometimes used a worn chain or a local vara, and the record may say so. The record's own statement of units governs. Varas and arpents are offered only for the states listed. It converts lengths only, not areas.",
-    references: &[BLM_MANUAL, VARA_SOURCES],
+    references: &[BLM_MANUAL, NIST_HB44, VARA_SOURCES],
     examples: &[Example {
         id: "primary",
         title: "12 chains 34 links",
@@ -295,10 +304,20 @@ pub static LEGACY_UNITS: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.land.deed-parse",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "survey.land.deed-parse",
+            reason: "next",
+        },
+        Related {
+            id: "survey.land.deed-plot",
+            reason: "next",
+        },
+        Related {
+            id: "units.length.convert",
+            reason: "alternative",
+        },
+    ],
     sentence: "That is {us_survey_feet}, or {meters}.",
     limits: &[("batchRows", 10_000)],
     run: run_units,

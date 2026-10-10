@@ -1967,8 +1967,8 @@
       "nextExpected": "2027-01-31",
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "lastVerified": "2026-10-09",
+      "verificationNote": "2026 edition confirmed at nist.gov on 2026-10-09; Appendix C, section 2 read in the PDF.",
       "freeAccessUrl": "https://www.nist.gov/pml/owm/nist-handbook-44-current-edition",
       "matchTerms": [
         "Specifications, Tolerances, and Other Technical Requirements"

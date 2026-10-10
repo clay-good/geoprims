@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "changed",
       "tools": [
+        "survey.land.legacy-units"
+      ],
+      "vectors": [],
+      "summary": "The legacy survey units tool is now stable. Its chains, links, rods, and furlongs are held to each line of the surveyor's chain table in NIST Handbook 44 (2026), Appendix C. The vara and arpent values are the commonly cited ones for each state and were not re-checked against the statutes."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
         "survey.land.alta-rpp"
       ],
       "vectors": [],

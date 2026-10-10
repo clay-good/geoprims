@@ -302,3 +302,32 @@ fn alta_rpp_invariants() {
         );
     }
 }
+
+#[test]
+fn legacy_units_invariants() {
+    // The chain family is one ladder: a chain is 100 links, 4 rods, and a
+    // tenth of a furlong; a length is linear in its count; a mixed length is
+    // the sum of its parts; and the three outputs are one length in three units.
+    let ft = |text: &str| {
+        num(
+            &call(
+                "survey.land.legacy-units",
+                &format!(r#"{{"length":"{text}"}}"#),
+            ),
+            "result.us_survey_feet.value",
+        )
+    };
+    assert!((ft("100 links") - ft("1 chain")).abs() < 1e-9);
+    assert!((ft("4 rods") - ft("1 chain")).abs() < 1e-9);
+    assert!((ft("10 chains") - ft("1 furlong")).abs() < 1e-9);
+    assert!((ft("80 chains") - 5280.0).abs() < 1e-9);
+    for n in [1.0, 2.5, 17.0, 320.0] {
+        assert!((ft(&format!("{n} chains")) - n * 66.0).abs() < 1e-9);
+        assert!((ft(&format!("{n} rods")) - n * 16.5).abs() < 1e-9);
+    }
+    assert!((ft("12 chains 34 links") - (ft("12 chains") + ft("34 links"))).abs() < 1e-9);
+    let r = call("survey.land.legacy-units", r#"{"length":"7 chains"}"#);
+    let us = num(&r, "result.us_survey_feet.value");
+    assert!((num(&r, "result.meters.value") - us * 1200.0 / 3937.0).abs() < 1e-9);
+    assert!((num(&r, "result.feet.value") * 0.3048 - num(&r, "result.meters.value")).abs() < 1e-9);
+}

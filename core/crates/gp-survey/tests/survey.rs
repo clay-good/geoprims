@@ -60,7 +60,11 @@ fn catalog_examples_vectors() {
     let mut failures = manifest::lint(
         TOOLS,
         &taxonomy,
-        &["geodesy.spcs.spcs83-forward", "time.scale.gps-week"],
+        &[
+            "geodesy.spcs.spcs83-forward",
+            "time.scale.gps-week",
+            "units.length.convert",
+        ],
     );
     let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
     for t in TOOLS {

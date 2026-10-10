@@ -546,3 +546,43 @@ fn burn_rate_from_a_flight() {
     );
     assert!(none["result"].get("endurance").is_none(), "{none}");
 }
+
+#[test]
+fn fuel_plan_invariants() {
+    // The total is the sum of its parts, the reserve is its time at the cruise
+    // burn, and the reserve times are the regulation's: 30 and 45 minutes for
+    // airplanes under VFR, 45 under IFR; 20 and 30 for rotorcraft.
+    for (category, reserve, minutes) in [
+        ("airplane", "vfr-day", 30.0),
+        ("airplane", "vfr-night", 45.0),
+        ("airplane", "ifr", 45.0),
+        ("rotorcraft", "vfr-day", 20.0),
+        ("rotorcraft", "vfr-night", 20.0),
+        ("rotorcraft", "ifr", 30.0),
+    ] {
+        for (burn, taxi, climb, alternate) in [(8.0, 0.0, 0.0, 0.0), (12.5, 1.5, 2.0, 0.5)] {
+            let r = call(
+                "aviation.loading.fuel-plan",
+                &format!(
+                    r#"{{"legs":[{{"time":"1.25 h","burn":"{burn} gph"}},{{"time":"0.5 h","burn":"{burn} gph"}}],"reserve":"{reserve}","category":"{category}","taxi":"{taxi} gal","climb":"{climb} gal","alternate_time":"{alternate} h"}}"#
+                ),
+            );
+            let trip = 1.75 * burn;
+            near(&r, "result.reserve_time.value", minutes, 1e-9);
+            near(&r, "result.trip.value", trip, 1e-9);
+            near(&r, "result.reserve_fuel.value", minutes / 60.0 * burn, 1e-9);
+            // Left out when there is no alternate.
+            if alternate > 0.0 {
+                near(&r, "result.alternate_fuel.value", alternate * burn, 1e-9);
+            } else {
+                assert!(r["result"].get("alternate_fuel").is_none(), "{r}");
+            }
+            near(
+                &r,
+                "result.total.value",
+                taxi + climb + trip + alternate * burn + minutes / 60.0 * burn,
+                1e-9,
+            );
+        }
+    }
+}

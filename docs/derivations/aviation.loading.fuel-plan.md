@@ -30,22 +30,24 @@ None in the arithmetic: the answer is as good as the times and burns entered. Th
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite fuel-and-loading spec, scenario "VFR night reserve"
-- sourceEdition: openspec/changes/add-aviation-suite/specs/aviation/fuel-and-loading/spec.md
-- sourceLocator: Requirement on fuel reserve presets; the spec requires a 45-minute reserve at the entered cruise burn, cited to 14 CFR 91.151(a)(2); the legs and fuel numbers are the project's example, worked by hand
-- independent: no
-- inputs: legs 1.5 h at 9.5 gal/h and 0.75 h at 9 gal/h; VFR night reserve; taxi 1.4 gal; usable fuel 53 gal
-- outputs: trip 21.0 gal (14.25 + 6.75); reserve 45 min, 6.75 gal at 9 gal/h; total 29.15 gal; margin 23.85 gal; endurance 5.73 h
-- tolerance: 1e-9 gal
-- verifiedBy: golden vector v013 (it supersedes v001, which carried the old eCFR link)
+- sourcePublisher: Federal Aviation Administration (14 CFR, via eCFR)
+- sourceTitle: 14 CFR Part 91, General Operating and Flight Rules
+- sourceEdition: eCFR, as in force on 2026-09-01, read 2026-10-09
+- sourceLocator: § 91.151(a)(1) and (2): airplanes under VFR, "at least 30 minutes" by day and "at least 45 minutes" at night; § 91.151(b): rotorcraft, "at least 20 minutes"; § 91.167(a)(3): IFR, "45 minutes at normal cruising speed or, for helicopters, ... 30 minutes"
+- independent: yes
+- inputs: one leg of 2 h at 10 gal/h, for each of airplane and rotorcraft with the VFR day, VFR night, and IFR reserves
+- outputs: reserve times 30, 45, and 45 minutes for the airplane and 20, 20, and 30 for the rotorcraft; reserve fuel 5, 7.5, 7.5, 3.33, 3.33, and 5 gal; trip 20 gal each
+- tolerance: exact for the reserve times; 1e-9 gal for the fuel
+- verifiedBy: golden vectors v014 through v019, run by the core on every build
 - verifiedOn: 2026-10-09
+
+The regulation gives the reserve times. The fuel is that time at the cruise burn, which is arithmetic. The spec's own scenario, a VFR night flight of 1.5 h at 9.5 gal/h and 0.75 h at 9 gal/h with 1.4 gal of taxi fuel and 53 gal usable, gives trip 21.0 gal, reserve 6.75 gal, total 29.15 gal, and margin 23.85 gal (vector v013).
 
 ## Differential tests
 
 - `tools/vectors/gen_fuel.py`: the same arithmetic and reserve table written again in Python: VFR day and night, rotorcraft, IFR with an alternate for airplane and helicopter, a custom reserve, no reserve, a liters-per-hour burn, a shortfall, and four refused inputs (within 1e-9)
-- `core/vectors/aviation.loading.fuel-plan.jsonl`: those vectors, run through the core on every build
+- `core/vectors/aviation.loading.fuel-plan.jsonl`: those vectors, and ten that hold each reserve preset to the minutes 14 CFR 91.151 and 91.167 state, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no invariant test is written for this tool yet. This is the closest test: it lints and runs every aviation tool's golden vectors through the registry, including the ones above, and fails if any tool has fewer than five
+- `core/crates/gp-aviation/tests/slice2.rs` `fuel_plan_invariants`: for each category and reserve, with and without taxi, climb, and alternate fuel, the reserve time is the regulation's, the reserve and alternate fuel are their times at the cruise burn, and the total is the sum of its parts

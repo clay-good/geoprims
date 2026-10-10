@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "changed",
       "tools": [
+        "aviation.loading.fuel-plan"
+      ],
+      "vectors": [],
+      "summary": "The fuel plan is now stable. Each reserve preset is held to the minutes 14 CFR 91.151 and 91.167 state, read from the eCFR: 30 and 45 minutes for airplanes under VFR, 45 under IFR, and 20 and 30 for rotorcraft."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
         "drone.ops.speed-check"
       ],
       "vectors": [],

@@ -62,6 +62,7 @@ const RESERVES: &[&str] = &["vfr-day", "vfr-night", "ifr", "custom", "none"];
 
 pub static FUEL_PLAN: ToolDef = ToolDef {
     id: "aviation.loading.fuel-plan",
+    stability: gp_base::tool::Stability::Stable,
     version: "1.1.0",
     title: "Fuel planning",
     summary: "Fuel for a trip by leg, with taxi and climb allowances, fuel to an alternate, and a reserve from the 14 CFR 91.151 or 91.167 minimum, checked against your usable fuel.",
@@ -241,7 +242,7 @@ pub static FUEL_PLAN: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Trip = Σ time × burn over the legs; alternate and reserve = time × cruise burn; total = taxi + climb + trip + alternate + reserve. Reserve minimums: airplane VFR 30 min by day and 45 min at night (14 CFR 91.151(a)), rotorcraft VFR 20 min (91.151(b)), IFR 45 min, or 30 min for helicopters, after the alternate (91.167(a)(3))",
     accuracy: "Arithmetic on your times and burns. The reserves are the regulatory minimums as of the review date shown; operators and good judgment often carry more. Summary, not legal advice.",
     when_to_use: "Use this before a flight to total the fuel you need. Enter each leg's time and burn, the reserve type, and any taxi, climb, and alternate fuel. It returns trip fuel, reserve fuel, and the total, with the reserve time drawn from 14 CFR 91.151 for VFR or 91.167 for IFR. Add your usable fuel to see your margin and endurance.",
@@ -259,6 +260,10 @@ pub static FUEL_PLAN: ToolDef = ToolDef {
         map: &[],
     }],
     related: &[
+        Related {
+            id: "aviation.loading.burn-rate",
+            reason: "alternative",
+        },
         Related {
             id: "aviation.loading.fuel-weight",
             reason: "next",

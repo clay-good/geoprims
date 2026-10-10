@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2dcf0c24befe7fb8",
+    "hash": "54965bb05632dc1b",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -148,8 +148,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/loading/fuel-plan/": {
-    "hash": "1a0181b7567f13e5",
-    "lastmod": "2026-10-09"
+    "hash": "a86148185a2e59ff",
+    "lastmod": "2026-10-10"
   },
   "/aviation/loading/fuel-weight/": {
     "hash": "9575c6cdac004305",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "5de6989795af417f",
+    "hash": "227adfc6f97bc0c1",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "82ebf1f686ef0b69",
+    "hash": "e53baa53e002c405",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "86318bde1ed6ac0a",
+    "hash": "703f37af8d640b71",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8d145f6323163a25",
+    "hash": "d4f9dfa194bebac1",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {
@@ -2008,7 +2008,7 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/vfr-cross-country/": {
-    "hash": "b49f09f2105f4e25",
-    "lastmod": "2026-10-09"
+    "hash": "bb056817b520237d",
+    "lastmod": "2026-10-10"
   }
 }

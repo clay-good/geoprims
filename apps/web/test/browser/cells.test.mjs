@@ -53,7 +53,15 @@ async function scene() {
   return { count: fill.result.count, rings };
 }
 
-const CEILING = 140;
+// The ceiling has to clear what unchanged code measures across CI runners, or
+// it fails on the runner and not on a regression. On 2026-10-09 and 10 the same
+// renderer measured a p95 of 92 to 128 ms on runners with a BenchmarkIndex near
+// 2,600 (throttled 3.2x) and 128 to 159 ms on runners near 4,200 (5.3x): the
+// calibration's benchmark is strings and arrays, and a machine that much
+// faster at those is not that much faster at 6,256 canvas fills, so the
+// harder throttle overshoots. 200 ms is twice the usual figure, which a
+// regression worth catching would pass and the runner spread does not reach.
+const CEILING = 200;
 
 test('a million-cell answer draws its compacted stand-in, whole', { timeout: 300_000 }, async (t) => {
   const { count, rings } = await scene();

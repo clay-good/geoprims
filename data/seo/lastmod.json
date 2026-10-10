@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "16d64068fcd2f48c",
+    "hash": "03d1e81a1fc67e72",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "49802e40d7f70a80",
+    "hash": "fac4a9e9833c4156",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "746f59265a7735e0",
+    "hash": "25a4624d2119ff64",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -596,8 +596,8 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/magnetic/isogonic/": {
-    "hash": "858f87f8e15d405a",
-    "lastmod": "2026-10-09"
+    "hash": "135a5d3ece3c72bf",
+    "lastmod": "2026-10-10"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
     "hash": "870e8f3378f8c351",
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "0eeed4a5d61dde96",
+    "hash": "d44d85ece47be21b",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "c336d300d684e6d4",
+    "hash": "174c8ac5f9d7d463",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "688e1d9b718eb357",
+    "hash": "52f92ad7e5b6b86c",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

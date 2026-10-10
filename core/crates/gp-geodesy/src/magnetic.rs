@@ -1115,6 +1115,7 @@ const fn edge(
 
 pub static ISOGONIC: ToolDef = ToolDef {
     id: "geodesy.magnetic.isogonic",
+    stability: Stability::Stable,
     title: "Isogonic lines and compass zones",
     summary: "Lines of equal magnetic declination at a chosen interval over an area and date, the agonic line where declination is zero, and the WMM blackout and caution zone boundaries, from WMM2025 or IGRF-14.",
     aliases: &[
@@ -1218,9 +1219,9 @@ pub static ISOGONIC: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::LimitExceeded,
     ],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "WMM2025 or IGRF-14 main field evaluated on a latitude-longitude grid at sea level, contoured by marching squares; declination is left out where the horizontal field is under 6,000 nT or declination is near ±180°",
-    accuracy: "Each line point is the model's declination to within the grid's interpolation, a few tenths of a degree at the default step away from the poles; the model itself is good to about 0.5° at mid latitudes",
+    accuracy: "Each line point is the model's declination to within the grid's interpolation. Against an independent WMM2025 implementation, lines over a region were within 0.12° everywhere; on the whole globe half the points were within 0.02° and 95% within 0.21°, with the worst, beside the magnetic poles, 0.8° off. The model itself is good to about 0.5° at mid latitudes",
     when_to_use: "Use this to see how magnetic variation changes across a region: the isogonic lines on a sectional chart, the agonic line where a compass reads true, or where the compass blackout and caution zones begin. For the variation at one place, use the declination tool.",
     limitations: "The lines are contoured from a grid, so they are smooth where the field is and approximate between grid points; for one exact value use the declination tool. Lines stop where the horizontal field is weaker than 6,000 nT, inside the caution zone, because declination there is not a usable compass correction, and where declination nears ±180°, where it wraps. The zone boundaries are the WMM's own definitions. Heights are at sea level; the main field model leaves out local crustal anomalies.",
     references: &[WMM_REPORT, IGRF_REF],
@@ -1236,10 +1237,20 @@ pub static ISOGONIC: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "geodesy.magnetic.declination",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "geodesy.magnetic.declination",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.magnetic.true-to-magnetic",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.magnetic.grivation",
+            reason: "alternative",
+        },
+    ],
     sentence: "{line_count} isogonic lines, every {interval}, from a {grid_step} grid.",
     limits: &[("batchRows", 10)],
     run: run_isogonic,

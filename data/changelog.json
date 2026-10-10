@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "geodesy.magnetic.isogonic"
+      ],
+      "vectors": [],
+      "summary": "The isogonic lines tool is now stable, the last geodesy tool to be. Every point on its lines was checked against a separate implementation of the World Magnetic Model: within 0.12° over a region, and on a whole-globe map within 0.21° for 95% of points and 0.8° at worst, beside the magnetic poles. Its accuracy note now gives those figures."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "drone.mission.orbit"
       ],
       "vectors": [],

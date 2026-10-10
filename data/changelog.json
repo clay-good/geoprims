@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.performance.glide"
+      ],
+      "vectors": [],
+      "summary": "The glide range tool is now stable. The points of its reachable ring agree with GeographicLib for Python at 15 glides from 60° S to 70° N, with winds up to 60% of the airspeed. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.wind.best-runway"
       ],
       "vectors": [],

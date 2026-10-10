@@ -27,21 +27,24 @@ TAS stands in for the horizontal airspeed, which is under 1% off for glide ratio
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite flight-performance spec, scenario "Glide into headwind"
-- sourceEdition: add-aviation-suite change; method from FAA-H-8083-3C (2021)
-- sourceLocator: openspec/changes/add-aviation-suite/specs/aviation/flight-performance/spec.md, requirement "Glide range" (still-air range ≈ 7.41 NM, headwind range ≈ 5.29 NM); glide angle, sink rate, and time computed in Python from the equations above
-- independent: no
-- inputs: height 5,000 ft AGL, glide ratio 9, TAS 70 kt, headwind 20 kt
-- outputs: still-air range 7.41 NM, range with wind 5.29 NM, glide angle 6.34°, sink rate 788 ft/min, time aloft 6.3 min
-- tolerance: 0.005 NM on the ranges (spec); 1e-9 relative in the golden vector
-- verifiedBy: golden vector v001 and `core/crates/gp-aviation/tests/slice2.rs` `glide_into_headwind`
-- verifiedOn: 2026-10-09
+- sourcePublisher: C. F. F. Karney, GeographicLib
+- sourceTitle: geographiclib 2.1 for Python, Geodesic.WGS84.Direct
+- sourceEdition: geographiclib 2.1, run 2026-10-10
+- sourceLocator: tools/vectors/gen_glide_ring.py, first case: Direct from 39.86°, −104.67° at bearings 0° to 330° for the range each bearing allows
+- independent: yes
+- inputs: height 5,000 ft AGL, glide ratio 9, TAS 70 kt, headwind 20 kt from 270°, at 39.86°, −104.67°
+- outputs: still-air range 7.41 NM, range with wind 5.29 NM, glide angle 6.34°, sink rate 788 ft/min; the ring reaches 39.98353°, −104.67000° due north (the still-air range, across the wind), 39.85982°, −104.46391° due east (9.52 NM downwind), and 39.85994°, −104.78450° due west (5.29 NM upwind)
+- tolerance: 1e-9° for each ring point; 1e-9 relative for the ranges, angle, and sink rate
+- verifiedBy: golden vector v006, run by the core on every build
+- verifiedOn: 2026-10-10
+
+GeographicLib for Python places twelve points of the ring, every 30° of bearing, in each of 15 glides, v006 through v020: from 60° S to 70° N and across the 180° meridian, heights of 1,500 to 35,000 ft, glide ratios of 7 to 45, winds up to 60% of the airspeed, and still air. The range along each bearing, and the glide angle and sink rate, are worked in the generator from the equations above; the library checks where the tool puts a point at a given range and bearing.
 
 ## Differential tests
 
+- `tools/vectors/gen_glide_ring.py`: twelve ring points per glide from GeographicLib for Python, with the ranges, glide angle, and sink rate, at 15 glides (within 1e-9° and 1e-9 relative)
 - `tools/vectors/gen_aviation.py`: the same glide relations written separately in Python, at five cases with headwind, tailwind, and calm, checking still-air range, range with wind, and sink rate (within 1e-9 relative). It checks the code against the stated equations, not against a separate method
-- `core/vectors/aviation.performance.glide.jsonl`: those five vectors, run through the core on every build
+- `core/vectors/aviation.performance.glide.jsonl`: those vectors, run through the core on every build
 
 ## Invariants
 

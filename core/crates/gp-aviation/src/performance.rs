@@ -1078,6 +1078,7 @@ const GLIDE_RING_ROW: &[Field] = &[
 
 pub static GLIDE: ToolDef = ToolDef {
     id: "aviation.performance.glide",
+    stability: gp_base::tool::Stability::Stable,
     title: "Glide range with wind",
     summary: "How far you can glide from a height with your aircraft's glide ratio, in still air and with a headwind or tailwind.",
     aliases: &[
@@ -1210,7 +1211,7 @@ pub static GLIDE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Steady glide at the given glide ratio, with TAS taken as the horizontal airspeed (under 1% error for glide ratios of 7 or more) and a steady along-track wind; the ring is 72 points at 5° steps of the geodesic direct problem (Karney 2013), each at that bearing\'s range with the wind component along it",
     accuracy: "Exact for the model. Real glides lose height in turns and with a windmilling propeller. Planning aid, not certified for navigation.",
     when_to_use: "Use this to plan for an engine failure and see how far you can glide from where you are. Enter your height above the terrain, your glide ratio from the POH, and your glide speed as true airspeed. Add a headwind or tailwind for the range with wind, and your position and the wind direction to draw a reachable ring on the map. It also gives the sink rate and time aloft.",
@@ -1241,10 +1242,20 @@ pub static GLIDE: ToolDef = ToolDef {
             map: &[("value", "wind_range")],
         },
     ],
-    related: &[Related {
-        id: "aviation.performance.turn",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.performance.turn",
+            reason: "alternative",
+        },
+        Related {
+            id: "navigation.route.range-rings",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.wind.heading-groundspeed",
+            reason: "next",
+        },
+    ],
     sentence: "You can glide about {wind_range} with this wind, or {still_air_range} in still air, for {time_aloft}.",
     limits: &[("batchRows", 10_000)],
     run: run_glide,

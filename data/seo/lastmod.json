@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c85809220ade6716",
+    "hash": "64bb0ad75157f2e5",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "f5c0885a3dbd636b",
+    "hash": "a055e85277036c65",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -184,8 +184,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/performance/glide/": {
-    "hash": "ea08cd16707f7e6d",
-    "lastmod": "2026-10-09"
+    "hash": "ee1966237e899bd0",
+    "lastmod": "2026-10-10"
   },
   "/aviation/performance/pivotal-altitude/": {
     "hash": "9b8a2af75c536049",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "86376e7905989fb3",
+    "hash": "aef4df08229a5f8a",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "a690ebc57e067a79",
+    "hash": "2e14ed26f1c5e6ad",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "aa8b5b21ba8cefbd",
+    "hash": "b3c8140272fae67c",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "247ae5e1957d63be",
+    "hash": "591aa6f91af54472",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

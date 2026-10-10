@@ -675,3 +675,43 @@ fn kinetic_energy_invariants() {
     assert!(cat2(0.3, 9.9).contains("at or under"));
     assert!(cat2(0.3, 10.0).contains("above"));
 }
+
+#[test]
+fn easa_subcategory_invariants() {
+    // The answer depends on the class mark alone for labeled drones, turns at
+    // 250 g for unlabeled ones, always includes A3 inside the open category,
+    // lists one rule per subcategory, and stops at 25 kg and at C5 and C6.
+    let run = |mass: &str, class: &str| {
+        call(
+            "drone.ops.easa-subcategory",
+            &format!(r#"{{"mass":"{mass}","class_mark":"{class}"}}"#),
+        )
+    };
+    for (class, want) in [
+        ("c0", "A1 and A3"),
+        ("c1", "A1 and A3"),
+        ("c2", "A2 and A3"),
+        ("c3", "A3"),
+        ("c4", "A3"),
+    ] {
+        for mass in ["0.1 kg", "0.8 kg", "3 kg", "20 kg"] {
+            let r = run(mass, class);
+            assert_eq!(r["result"]["available"], want, "{class} at {mass}");
+            let rules = r["result"]["rules"].as_array().unwrap();
+            assert_eq!(rules.len(), want.split(" and ").count());
+            assert_eq!(rules.last().unwrap()["subcategory"], "A3");
+        }
+    }
+    assert_eq!(run("249.9 g", "none")["result"]["available"], "A1 and A3");
+    assert_eq!(run("250 g", "none")["result"]["available"], "A3");
+    for (mass, class, field) in [
+        ("25 kg", "none", "/mass"),
+        ("25 kg", "c3", "/mass"),
+        ("1 kg", "c5", "/class_mark"),
+        ("1 kg", "c6", "/class_mark"),
+    ] {
+        let r = run(mass, class);
+        assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{mass} {class}: {r}");
+        assert_eq!(r["error"]["field"], field);
+    }
+}

@@ -321,7 +321,19 @@ def ke_vectors():
 
 def easa_vectors():
     cases = [("2 kg", "none", "A3"), ("0.2 kg", "none", "A1 and A3"), ("0.8 kg", "c1", "A1 and A3"), ("3.5 kg", "c2", "A2 and A3"), ("12 kg", "c3", "A3"), ("0.24 kg", "c0", "A1 and A3")]
-    return [fvec(i, {"mass": m, "class_mark": c}, {"result.available": a}, OPS_SRC, OPS_VER) for i, (m, c, a) in enumerate(cases, 1)]
+    out = [fvec(i, {"mass": m, "class_mark": c}, {"result.available": a}, OPS_SRC, OPS_VER) for i, (m, c, a) in enumerate(cases, 1)]
+    # Every row of EASA's class label table (open category page, read
+    # 2026-10-10), the 250 g and 25 kg lines for drones without a label
+    # (Regulation (EU) 2019/947, Article 20), and what the open category excludes.
+    easa = "EASA, Open category: low risk civil drones, class label table (read 2026-10-10), with Regulation (EU) 2019/947 Article 20 and Article 4(1)(b)"
+    more = [("200 g", "c0", "A1 and A3"), ("0.5 lb", "c0", "A1 and A3"), ("899 g", "c1", "A1 and A3"), ("1.2 kg", "c2", "A2 and A3"), ("3.9 kg", "c2", "A2 and A3"),
+            ("5 kg", "c3", "A3"), ("24 kg", "c3", "A3"), ("8 kg", "c4", "A3"), ("249 g", "none", "A1 and A3"), ("250 g", "none", "A3"), ("24.9 kg", "none", "A3")]
+    for m, c, a in more:
+        out.append(fvec(len(out) + 1, {"mass": m, "class_mark": c}, {"result.available": a}, easa, "2026-10-10"))
+    for inp, code, field in [({"mass": "25 kg", "class_mark": "none"}, "OUT_OF_DOMAIN", "/mass"), ({"mass": "10 kg", "class_mark": "c5"}, "OUT_OF_DOMAIN", "/class_mark"),
+                             ({"mass": "10 kg", "class_mark": "c6"}, "OUT_OF_DOMAIN", "/class_mark")]:
+        out.append(fvec(len(out) + 1, inp, {"ok": False, "error.code": code, "error.field": field}, easa, "2026-10-10"))
+    return out
 
 
 def vlos_vectors():

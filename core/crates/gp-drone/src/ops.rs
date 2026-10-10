@@ -53,6 +53,14 @@ const EASA_GUIDE: Reference = Reference {
     locator: "Part A, chapter I, VLOS distance: ALOS = 327 × CD + 20 m (multirotor), 490 × CD + 30 m (fixed wing); DLOS = 0.3 × ground visibility",
     url: "https://www.easa.europa.eu/en/downloads/139435/en",
 };
+const EASA_OPEN: Reference = Reference {
+    title: "Open category: low risk civil drones",
+    issuer: "European Union Aviation Safety Agency",
+    year: 2026,
+    edition: "Web page, read 2026-10-10",
+    locator: "The class label table: C0 and C1, and drones under 250 g without a label, in A1 (can also fly in subcategory A3); C2 in A2 (can also fly in A3); C3, C4, and drones under 25 kg without a label in A3",
+    url: "https://www.easa.europa.eu/en/domains/drones-air-mobility/operating-drone/open-category-low-risk-civil-drones",
+};
 const LBA_GUIDE: Reference = Reference {
     title: "Guidance for Dimensioning of Flight Geography, Contingency Volume and Ground Risk Buffer",
     issuer: "Luftfahrt-Bundesamt (LBA)",
@@ -599,6 +607,7 @@ const RULE_ROW: &[Field] = &[
 
 pub static EASA_SUBCATEGORY: ToolDef = ToolDef {
     id: "drone.ops.easa-subcategory",
+    stability: gp_base::tool::Stability::Stable,
     title: "EASA open subcategory",
     summary: "Which EU open-category subcategories (A1, A2, A3) your drone may fly in, from its class mark and mass, with each subcategory's distance rule.",
     aliases: &[
@@ -654,12 +663,12 @@ pub static EASA_SUBCATEGORY: ToolDef = ToolDef {
         NOTICE,
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Regulation (EU) 2019/947 UAS.OPEN.020-.040: A1 for C0, C1, and under-250 g legacy drones; A2 for C2; A3 for C0-C4 and legacy drones under 25 kg; C5 and C6 belong to the specific category",
+    warnings: &["UNIT_ASSUMED"],
+    model: "Regulation (EU) 2019/947 UAS.OPEN.020-.040 and Article 20: A1 for C0, C1, and under-250 g legacy drones; A2 for C2; A3 for C2, C3, C4, and privately built or legacy drones under 25 kg. That a drone allowed in A1 or A2 may also fly under the stricter A3 conditions is EASA's published reading of the open category, not a line of the regulation. C5 and C6 belong to the specific category",
     accuracy: "A summary of the regulation as of the review date; national rules and zones also apply.",
     when_to_use: "Use this when you fly in the EU open category and want to know where your drone may go. Pick its class mark, or none for a legacy or home-built drone, and give its takeoff mass, and it lists the open subcategories it may use, A1, A2, or A3, with the distance rule for each. It also notes conditions tied to the class, so you know which certificate or rule to read next.",
     limitations: "This sums up Regulations (EU) 2019/947 and 2019/945 as of the review date. It trusts the class mark you pick and does not check it against the mass, except that the open category ends at 25 kg and C5 and C6 belong to the specific category. It does not check the height limit, pilot age, geographical zones, or national rules. The current regulation and your national aviation authority govern, not this summary.",
-    references: &[EU_947, EU_945],
+    references: &[EU_947, EU_945, EASA_OPEN],
     examples: &[Example {
         id: "primary",
         title: "A legacy 2 kg drone with no class mark",
@@ -671,10 +680,20 @@ pub static EASA_SUBCATEGORY: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "drone.ops.kinetic-energy",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "drone.ops.kinetic-energy",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.ops.part107-altitude",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.ops.vlos-check",
+            reason: "next",
+        },
+    ],
     sentence: "This drone may fly in {available}. Not legal advice.",
     limits: &[("batchRows", 10_000)],
     run: run_easa,

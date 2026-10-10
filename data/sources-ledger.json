@@ -508,6 +508,26 @@
       "editionCheck": true
     },
     {
+      "id": "easa-open-category",
+      "name": "EASA open category page",
+      "issuer": "EASA",
+      "currentEdition": "Web page",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-10",
+      "verificationNote": "Read at the issuer on 2026-10-10: the class label table gives C0, C1, and unlabeled drones under 250 g as \"A1 (can also fly in subcategory A3)\", C2 as \"A2 (can also fly in subcategory A3)\", and C3, C4, and unlabeled drones under 25 kg as A3.",
+      "freeAccessUrl": "https://www.easa.europa.eu/en/domains/drones-air-mobility/operating-drone/open-category-low-risk-civil-drones",
+      "matchTerms": [
+        "Open category: low risk civil drones"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "egm2008",
       "name": "EGM2008 geoid",
       "issuer": "NGA",

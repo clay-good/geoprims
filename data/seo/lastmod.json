@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f611368d0649977d",
+    "hash": "4444cf37b6b2568e",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "ce7fdf4a0302d4ff",
+    "hash": "714f4808476676c3",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "838ac176bba21343",
+    "hash": "7bbf5d029ab0ba8f",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -324,8 +324,8 @@
     "lastmod": "2026-09-26"
   },
   "/drone/ops/easa-subcategory/": {
-    "hash": "25673606beadca2a",
-    "lastmod": "2026-10-09"
+    "hash": "246d6a4bc44c0b40",
+    "lastmod": "2026-10-10"
   },
   "/drone/ops/kinetic-energy/": {
     "hash": "32561072ed7dbf1b",
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "159963b61101ab32",
+    "hash": "6157223f9349cb81",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "f3a53d990b237c45",
+    "hash": "d5958a54198da99a",
     "lastmod": "2026-10-10"
   },
   "/survey/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "fea51454b034b12f",
+    "hash": "65f0541f9f6277c8",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "accb6059f52103df",
+    "hash": "f0f95878b6ace655",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "drone.ops.easa-subcategory"
+      ],
+      "vectors": [],
+      "summary": "The EASA open subcategory tool is now stable, held to every row of EASA's class label table. Its description is also corrected: the regulation's own list for A3 does not name C0 or C1 drones, and that they may also fly there is EASA's published reading, which the tool now cites as such."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "drone.ops.kinetic-energy"
       ],
       "vectors": [],

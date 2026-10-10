@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "1b706deb19bb6cf2",
+    "hash": "ebe1596c47a8e536",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -124,8 +124,8 @@
     "lastmod": "2026-10-10"
   },
   "/aviation/ifr/radial-fix/": {
-    "hash": "84d6ec35f3aadeab",
-    "lastmod": "2026-10-09"
+    "hash": "9fde3068c52407be",
+    "lastmod": "2026-10-10"
   },
   "/aviation/ifr/radial-intercept/": {
     "hash": "36ea7c8daf04aad0",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "4c4d4ff6613c0b3b",
+    "hash": "56cf20cd1dfe0094",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "403559da4d761ed0",
+    "hash": "c93bcba95accf8fb",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1324,7 +1324,7 @@
     "lastmod": "2026-09-24"
   },
   "/quality/": {
-    "hash": "ee7799971c1077b7",
+    "hash": "17ca5870faf71b59",
     "lastmod": "2026-10-10"
   },
   "/raster/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "520bd6455ca62e6a",
+    "hash": "055553b1efebe7bf",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "6d38cafad7882e8a",
+    "hash": "679317390946cb0d",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

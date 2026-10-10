@@ -773,3 +773,73 @@ fn taf_temperature_extremes_and_stray_periods() {
         "{r}"
     );
 }
+
+#[test]
+fn radial_fix_invariants() {
+    // The fix is the station's variation east of the radial, at the distance
+    // entered: the geodesic back from the fix to the station has that length,
+    // a 0 distance is the station, and the radial and variation only enter as
+    // their sum.
+    use geographiclib_rs::{Geodesic, InverseGeodesic};
+    let fix = |lat: f64, lon: f64, radial: f64, nm: f64, var: f64| {
+        let r = call(
+            "aviation.ifr.radial-fix",
+            &format!(
+                r#"{{"lat":{lat},"lon":{lon},"radial":"{radial} deg","distance":"{nm} NM","variation":"{var} deg"}}"#
+            ),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        assert!(r["result"]["wmm_declination"].is_null(), "{r}");
+        (
+            num(&r, "result.fix_lat.value"),
+            num(&r, "result.fix_lon.value"),
+            num(&r, "result.true_course.value"),
+        )
+    };
+    let g = Geodesic::wgs84();
+    for (i, &(lat, lon)) in [
+        (39.8, -104.7),
+        (-45.0, 170.0),
+        (0.0, 0.0),
+        (70.0, -179.5),
+        (-80.0, 30.0),
+    ]
+    .iter()
+    .enumerate()
+    {
+        for (j, &nm) in [0.0, 1.0, 12.5, 100.0, 539.0].iter().enumerate() {
+            let radial = (i * 73 + j * 41) as f64 % 360.0;
+            let var = (i as f64 - 2.0) * 9.5;
+            let (flat, flon, tc) = fix(lat, lon, radial, nm, var);
+            assert!((tc - (radial + var).rem_euclid(360.0)).abs() < 1e-12);
+            let (s, az, _, _): (f64, f64, f64, f64) = g.inverse(lat, lon, flat, flon);
+            assert!((s - nm * 1852.0).abs() < 1e-6, "{lat} {lon} {nm}: {s}");
+            if nm > 0.0 {
+                let d = (az - tc + 540.0).rem_euclid(360.0) - 180.0;
+                assert!(d.abs() < 1e-6, "{lat} {lon} {nm}: {az} vs {tc}");
+            }
+            // Moving 7° from the radial to the variation leaves the fix alone.
+            let (lat2, lon2, tc2) = fix(lat, lon, (radial - 7.0).rem_euclid(360.0), nm, var + 7.0);
+            assert!((tc2 - tc).abs() < 1e-9);
+            assert!((lat2 - flat).abs() < 1e-9 && (lon2 - flon).abs() < 1e-9);
+        }
+    }
+    // The warning turns on past 1° between the station's variation and WMM,
+    // and the reported difference is the variation less the declination.
+    for var in [-20.0, 0.0, 7.0, 8.0, 11.0, 30.0] {
+        let r = call(
+            "aviation.ifr.radial-fix",
+            &format!(
+                r#"{{"lat":39.8,"lon":-104.7,"radial":"98 deg","distance":"12.5 NM","variation":"{var} deg","date":"2026-09-22"}}"#
+            ),
+        );
+        let d = num(&r, "result.wmm_declination.value");
+        let diff = num(&r, "result.variation_difference.value");
+        assert!((diff - (var - d)).abs() < 1e-12);
+        assert_eq!(
+            warns(&r, "STATION_VARIATION_DIFFERS"),
+            diff.abs() > 1.0,
+            "{r}"
+        );
+    }
+}

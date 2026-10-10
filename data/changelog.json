@@ -5,6 +5,18 @@
       "date": "2026-10-10",
       "kind": "result-change",
       "tools": [
+        "aviation.ifr.radial-fix"
+      ],
+      "vectors": [
+        "aviation.ifr.radial-fix v001",
+        "aviation.ifr.radial-fix v002"
+      ],
+      "summary": "The fix from a radial and distance tool is now stable. Its answers are unchanged. The fix was checked against GeographicLib for Python and the magnetic declination against pygeomag, a separate implementation of the World Magnetic Model, at 14 stations around the world: the fix agrees within a billionth of a degree and the declination within a millionth. Promotion removed the experimental warning, which moved the station-variation warning from second to first in the list; the two test vectors that pinned its old place are superseded."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "result-change",
+      "tools": [
         "drone.mission.geofence"
       ],
       "vectors": [

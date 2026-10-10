@@ -37,6 +37,7 @@ const fn angle(name: &'static str, title: &'static str, help: &'static str) -> F
 
 pub static RADIAL_FIX: ToolDef = ToolDef {
     id: "aviation.ifr.radial-fix",
+    stability: gp_base::tool::Stability::Stable,
     title: "Fix from a radial and distance",
     summary: "The position on a VOR radial at a distance from the station, using the station's published variation, with a warning when today's magnetic field differs from it by more than 1°.",
     aliases: &[
@@ -121,7 +122,6 @@ pub static RADIAL_FIX: ToolDef = ToolDef {
         "STATION_VARIATION_DIFFERS",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "True course = radial + station variation (east positive); the fix is the Karney geodesic direct on WGS 84 from the station. With a date, WMM2025 declination at the station at sea level is compared with the station variation",
     accuracy: "Exact geometry for the entered ground distance (convert a DME reading with the slant-range tool first). The station variation governs the radial, even when the Earth's field has moved since",
@@ -148,6 +148,10 @@ pub static RADIAL_FIX: ToolDef = ToolDef {
         Related {
             id: "aviation.ifr.dme-arc-lead",
             reason: "alternative",
+        },
+        Related {
+            id: "aviation.airspace.tfr-area",
+            reason: "next",
         },
     ],
     sentence: "The fix is at {fix_lat}, {fix_lon}, {true_course} true from the station.",

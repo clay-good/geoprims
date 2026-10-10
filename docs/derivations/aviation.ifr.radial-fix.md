@@ -25,22 +25,25 @@ The fix is exact geometry on WGS 84 for the distance entered. The distance must 
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario; fix by GeographicLib GeodSolve, declination by geoprims' own WMM2025 tool)
-- sourceTitle: add-practitioner-essentials, aviation/instrument-procedures spec, "Station magnetic variation"
-- sourceEdition: 2026
-- sourceLocator: Scenario "Variation mismatch" (the fix uses the station's 11° E and warns about the difference from WMM); tool example at 39.8°, −104.7°, radial 098, 12.5 NM, date 2026-09-22
-- independent: no
+- sourcePublisher: GeographicLib for Python (Karney) and pygeomag (an open-source Python implementation of the World Magnetic Model)
+- sourceTitle: geographiclib 2.1, Geodesic.WGS84.Direct; pygeomag 1.1.0, GeoMag.calculate with the WMM2025 coefficients
+- sourceEdition: geographiclib 2.1 and pygeomag 1.1.0, run 2026-10-10
+- sourceLocator: tools/vectors/gen_radial_ref.py, first case: Direct(39.8, -104.7, 109, 23150) and calculate(glat=39.8, glon=-104.7, alt=0, time=2026.7233)
+- independent: yes
 - inputs: station 39.8°, −104.7°; radial 98°; distance 12.5 NM; variation 11° E; date 2026-09-22
-- outputs: true course 109°; fix 39.7318374°, −104.4446687°; WMM2025 declination 7.35° E; difference 3.65°, with STATION_VARIATION_DIFFERS
-- tolerance: 1e-9° for the fix, course, and declination
-- verifiedBy: golden vector v001
-- verifiedOn: 2026-10-09
+- outputs: true course 109°; fix 39.7318374°, −104.4446687°; WMM2025 declination 7.3536° E; difference 3.6464°, with STATION_VARIATION_DIFFERS
+- tolerance: 1e-9° for the fix and course; 1e-6° for the declination and the difference
+- verifiedBy: golden vector v009, run by the core on every build
+- verifiedOn: 2026-10-10
+
+The same two libraries give 13 more cases, v010 through v022, at stations on six continents, in the Pacific, and in the Arctic, with one fix across the antimeridian.
 
 ## Differential tests
 
-- `tools/vectors/gen_radial.py`: the fix from GeographicLib's GeodSolve (C++), independent of the core's geographiclib-rs, at four stations and radials (within 1e-9°); the WMM2025 declinations in it are copied from geoprims' own `geodesy.magnetic.declination` tool, so they are not an independent check of the field
+- `tools/vectors/gen_radial_ref.py`: the fix from GeographicLib for Python and the declination from pygeomag, neither of which the core uses, at 14 stations, radials, and dates across the WMM2025 window (fix within 1e-9°, declination within 1e-6°); no case sits within 0.05° of the 1° warning line
+- `tools/vectors/gen_radial.py`: the fix from GeographicLib's GeodSolve (C++) at four stations; the declinations in these four are copied from geoprims' own declination tool, so they hold the answer steady rather than check the field
 - `core/vectors/aviation.ifr.radial-fix.jsonl`: those vectors, a run without a date, and a date outside WMM2025, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no test checks an invariant of this tool; this is the closest test that exercises it, and it runs every vector in the tool's file, including the warning code and the refused date, through the core and fails on any value outside its tolerance
+- `core/crates/gp-aviation/tests/slice3.rs` `radial_fix_invariants`: at 25 stations and distances from 0 to 539 NM the true course is the radial plus the variation, the geodesic from the station to the fix has the entered length and leaves on the true course, moving 7° from the radial to the variation leaves the fix alone, and the warning appears exactly when the variation and WMM differ by more than 1°

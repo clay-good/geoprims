@@ -46,6 +46,17 @@ def cases():
     out.append(vec(len(out) + 1, {"lat": 39.8, "lon": -104.7, "radial": "98 deg", "distance": "12.5 NM", "variation": "11 deg"},
                    {"result.fix_lat.value": flat, "result.fix_lon.value": flon, "result.true_course.value": 109.0}))
     out.append(vec(len(out) + 1, {"lat": 39.8, "lon": -104.7, "radial": "98 deg", "distance": "12.5 NM", "variation": "11 deg", "date": "2035-01-01"}, {"ok": False, "error.code": "OUT_OF_DOMAIN"}))
+    # Two vectors pinned STATION_VARIATION_DIFFERS second in the list, after
+    # EXPERIMENTAL_TOOL. A stable tool carries no such warning, so each case is
+    # held again by the code alone, wherever it sits.
+    reason = "Promotion to stable removed EXPERIMENTAL_TOOL from the tool's warnings, which moved STATION_VARIATION_DIFFERS from index 1 to index 0; this vector pinned the old index. The answer is unchanged."
+    for old in out[:2]:
+        new = json.loads(json.dumps(old))
+        new["id"] = f"v{len(out) + 1:03d}"
+        del new["expect"]["meta.warnings.1.code"]
+        new["expect"]["meta.warnings.*.code"] = "STATION_VARIATION_DIFFERS"
+        old["supersededBy"], old["reason"] = new["id"], reason
+        out.append(new)
     return out
 
 

@@ -861,3 +861,100 @@ fn corridor_invariants() {
         }
     }
 }
+
+#[test]
+fn facade_invariants() {
+    // Every station looks square at the wall from the standoff: carried along
+    // its heading by the standoff it lands on the wall between the two ends.
+    // The photos cover the wall end to end and bottom to top with at least the
+    // overlap asked for, and the other side of the wall is the mirror image.
+    // The heading is the bearing from the wall turned about, which differs from
+    // the true bearing back by the meridians' convergence over the standoff:
+    // under 0.003° here, a few millimeters along the wall.
+    const TOL: f64 = 0.01;
+    let g = Geodesic::wgs84();
+    let direct = |la: f64, lo: f64, az: f64, s: f64| -> (f64, f64) {
+        geographiclib_rs::DirectGeodesic::direct(&g, la, lo, az, s)
+    };
+    let dist = |a: (f64, f64), b: (f64, f64)| -> f64 { g.inverse(a.0, a.1, b.0, b.1) };
+    for (lat, lon, brg, len, standoff, top, bottom, oh, ov) in [
+        (40.0, -105.0, 73.0, 120.0, 25.0, 40.0, 0.0, 75.0, 60.0),
+        (-45.0, 170.0, 200.0, 60.0, 12.0, 30.0, 5.0, 80.0, 70.0),
+        (70.0, 25.0, 0.0, 300.0, 80.0, 90.0, 10.0, 65.0, 55.0),
+        (0.5, -60.0, 315.0, 18.0, 30.0, 15.0, 0.0, 75.0, 60.0),
+    ] {
+        let a = (lat, lon);
+        let b = direct(lat, lon, brg, len);
+        let run = |side: &str| {
+            let r = call(
+                "drone.mission.facade",
+                &json!({"facade": [{"lat": a.0, "lon": a.1}, {"lat": b.0, "lon": b.1}], "standoff": format!("{standoff} m"),
+                    "top_height": format!("{top} m"), "bottom_height": format!("{bottom} m"), "sensor_width": "13.2 mm",
+                    "sensor_height": "8.8 mm", "focal_length": "8.8 mm", "horizontal_overlap": oh, "vertical_overlap": ov, "side": side}),
+            );
+            assert_eq!(r["ok"], true, "{r}");
+            r
+        };
+        let r = run("right");
+        let (w, h) = (
+            num(&r, "result.footprint_width.value"),
+            num(&r, "result.footprint_height.value"),
+        );
+        assert!((w - 1.5 * standoff).abs() < 1e-9 && (h - standoff).abs() < 1e-9);
+        let (passes, per) = (
+            num(&r, "result.passes") as usize,
+            num(&r, "result.photos_per_pass") as usize,
+        );
+        assert_eq!(num(&r, "result.photos") as usize, passes * per);
+        assert!((num(&r, "result.facade_length.value") - len).abs() < 1e-6);
+        let wps = r["result"]["waypoints"].as_array().unwrap();
+        assert_eq!(wps.len(), passes * per);
+        let f = |p: &Value, k: &str| p[k]["value"].as_f64().unwrap();
+        let mut along = Vec::new();
+        for p in wps {
+            let foot = direct(f(p, "lat"), f(p, "lon"), f(p, "heading"), standoff);
+            let (da, db) = (dist(a, foot), dist(foot, b));
+            assert!(
+                (da + db - len).abs() < 1e-6,
+                "{lat}: off the wall by {}",
+                da + db - len
+            );
+            along.push(da);
+        }
+        // The first pass runs from the start of the wall; the next comes back.
+        let first = &along[..per];
+        assert!(first.windows(2).all(|p| p[1] > p[0]));
+        if passes > 1 {
+            assert!(along[per..2 * per].windows(2).all(|p| p[1] < p[0]));
+        }
+        let (ps, zs) = (
+            num(&r, "result.photo_spacing.value"),
+            num(&r, "result.pass_spacing.value"),
+        );
+        if per > 1 {
+            assert!(
+                (first[0] - w / 2.0).abs() < TOL && (first[per - 1] - (len - w / 2.0)).abs() < TOL
+            );
+            assert!(first.windows(2).all(|p| (p[1] - p[0] - ps).abs() < TOL));
+            assert!(ps <= w * (1.0 - oh / 100.0) + 1e-9, "{ps}");
+        } else {
+            assert!((first[0] - len / 2.0).abs() < TOL && ps == 0.0);
+        }
+        let heights: Vec<f64> = (0..passes).map(|k| f(&wps[k * per], "height")).collect();
+        if passes > 1 {
+            assert!((heights[0] - (bottom + h / 2.0)).abs() < 1e-9);
+            assert!((heights[passes - 1] - (top - h / 2.0)).abs() < 1e-9);
+            assert!(heights.windows(2).all(|p| (p[1] - p[0] - zs).abs() < 1e-9));
+            assert!(zs <= h * (1.0 - ov / 100.0) + 1e-9, "{zs}");
+        } else {
+            assert!((heights[0] - (bottom + top) / 2.0).abs() < 1e-9 && zs == 0.0);
+        }
+        // The other side: the same stations, twice the standoff away.
+        let l = run("left");
+        for (p, q) in wps.iter().zip(l["result"]["waypoints"].as_array().unwrap()) {
+            let d = dist((f(p, "lat"), f(p, "lon")), (f(q, "lat"), f(q, "lon")));
+            assert!((d - 2.0 * standoff).abs() < 1e-5, "{d}");
+            assert_eq!(f(p, "height"), f(q, "height"));
+        }
+    }
+}

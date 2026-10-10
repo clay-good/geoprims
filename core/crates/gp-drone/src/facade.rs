@@ -69,6 +69,7 @@ const ROW: &[Field] = &[
 
 pub static FACADE: ToolDef = ToolDef {
     id: "drone.mission.facade",
+    stability: gp_base::tool::Stability::Stable,
     title: "Facade scan",
     summary: "Waypoints for photographing a building face: level passes at a fixed standoff, stacked up the wall with the overlap you set, and the GSD on the facade.",
     aliases: &[
@@ -222,7 +223,7 @@ pub static FACADE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Photo footprint on the wall = sensor size × standoff / focal length; GSD = pixel pitch × standoff / focal length (Wolf, Dewitt & Wilkinson 2014, ch. 6). Passes and photos: n = 1 when the span fits one photo, else ⌈(span − footprint)/(footprint × (1 − overlap))⌉ + 1, centered and evenly spaced. Stations by the geodesic direct problem along the facade, offset square to it by the standoff (Karney 2013)",
     accuracy: "Exact for a flat, vertical facade and a level camera; heights are above the facade's base, not MSL",
     when_to_use: "Use this to plan photos of one side of a building, wall, or dam for an inspection or a 3D model. Give the two ends of the wall, its height, your standoff, and the camera, and it stacks level passes up the face with the overlap you set. It returns waypoints with headings that face the wall, the photo count, the path length, and, with the image width, the ground sampling distance on the facade.",
@@ -247,6 +248,10 @@ pub static FACADE: ToolDef = ToolDef {
         Related {
             id: "drone.photogrammetry.gsd",
             reason: "parent",
+        },
+        Related {
+            id: "drone.mission.export",
+            reason: "next",
         },
     ],
     sentence: "Fly {passes} {plural passes \"pass\" \"passes\"} of {photos_per_pass} photos at {standoff} from the wall.{if gsd > 0} Each pixel covers {gsd} of the facade.{/if}",

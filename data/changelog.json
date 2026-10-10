@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "drone.mission.facade"
+      ],
+      "vectors": [],
+      "summary": "The facade scan tool is now stable. Every photo station of 12 scans, on walls from 12 to 400 m long between 55° S and 78° N, agrees with GeographicLib for Python to a hundredth of a millimeter. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "drone.mission.corridor"
       ],
       "vectors": [],

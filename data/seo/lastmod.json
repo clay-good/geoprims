@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ec59f4f26e5137a3",
+    "hash": "bf61064483a42f90",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "e36a1fc8ce711013",
+    "hash": "8913a773e905c626",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "da30c6e182f93672",
+    "hash": "2d494be998c38d3b",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -300,8 +300,8 @@
     "lastmod": "2026-10-10"
   },
   "/drone/mission/facade/": {
-    "hash": "ec5de56e99095c6d",
-    "lastmod": "2026-10-09"
+    "hash": "fc3dd0c510b99d44",
+    "lastmod": "2026-10-10"
   },
   "/drone/mission/geofence/": {
     "hash": "9ee4ba6bda1d3c51",
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "2a92d9e13de73ceb",
+    "hash": "9e574a2d03c49a70",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "22311532fc7f7015",
+    "hash": "88791c53e5dd9064",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "42ac924430c9d5e0",
+    "hash": "8e8af31c8ebae44b",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

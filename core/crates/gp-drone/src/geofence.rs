@@ -83,6 +83,7 @@ const FLAG_ROW: &[Field] = &[
 
 pub static GEOFENCE: ToolDef = ToolDef {
     id: "drone.mission.geofence",
+    stability: gp_base::tool::Stability::Stable,
     title: "Geofence around an area",
     summary: "A fence a set distance around a point, route, or area, with an optional inner warning fence, its area and perimeter, and any waypoint that falls outside.",
     aliases: &[
@@ -215,7 +216,7 @@ pub static GEOFENCE: ToolDef = ToolDef {
         gp_base::ErrorCode::OutOfDomain,
         gp_base::ErrorCode::LimitExceeded,
     ],
-    warnings: &["WAYPOINT_OUTSIDE_GEOFENCE", "EXPERIMENTAL_TOOL"],
+    warnings: &["WAYPOINT_OUTSIDE_GEOFENCE"],
     model: "The fence is the round geodesic buffer of the area (geometry.buffer.geodesic): every point within the distance of it. A waypoint is outside when its geodesic distance to the area exceeds the fence distance, and by exactly the difference (Karney 2013)",
     accuracy: "The fence is within 0.1% of the distance or 0.5 m, as measured; waypoint distances are exact geodesic distances to the area",
     when_to_use: "Use this to draw a keep-in boundary a set distance around a job site, a route, or a single point, with an optional inner warning fence. It gives the fence outline, its area and perimeter, and checks your mission waypoints, listing any that fall past a fence and by how far. The outline can go into your flight app's fence settings, if it has them, or onto a site briefing map.",
@@ -240,6 +241,10 @@ pub static GEOFENCE: ToolDef = ToolDef {
         Related {
             id: "drone.mission.corridor",
             reason: "alternative",
+        },
+        Related {
+            id: "drone.mission.export",
+            reason: "next",
         },
     ],
     sentence: "The fence encloses {area_enclosed}.{if outside_count > 0} {outside_count} {plural outside_count \"waypoint is\" \"waypoints are\"} outside it.{/if}{if outside_count < 1} Every waypoint is inside it.{/if}",

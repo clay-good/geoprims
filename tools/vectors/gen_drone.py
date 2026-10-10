@@ -606,6 +606,17 @@ def geofence_vectors():
     # Found by the fuzzer: an area pasted 15 times over took 8 s and enclosed 300 times its size.
     sq = [{"lat": 0, "lon": 0}, {"lat": 0, "lon": dlon(300)}, {"lat": dlat(200), "lon": dlon(300)}, {"lat": dlat(200), "lon": 0}]
     out.append(fvec(len(out) + 1, {"area": sq * 15, "distance": "50 m"}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    # The scenario vector pinned the warning's place in the list, second after
+    # EXPERIMENTAL_TOOL. A stable tool carries no such warning, so the same
+    # case is held again by the code alone, wherever it sits.
+    old = out[7]
+    new = json.loads(json.dumps(old))
+    new["id"] = f"v{len(out) + 1:03d}"
+    del new["expect"]["meta.warnings.1.code"]
+    new["expect"]["meta.warnings.*.code"] = "WAYPOINT_OUTSIDE_GEOFENCE"
+    old["supersededBy"] = new["id"]
+    old["reason"] = "Promotion to stable removed EXPERIMENTAL_TOOL from the tool's warnings, which moved WAYPOINT_OUTSIDE_GEOFENCE from index 1 to index 0; this vector pinned the old index. The answer is unchanged."
+    out.append(new)
     return out
 
 

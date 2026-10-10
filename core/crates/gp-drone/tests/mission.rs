@@ -725,3 +725,58 @@ fn orbit_invariants() {
         assert!((circumference / (2.0 * std::f64::consts::PI * radius) - 1.0).abs() < 1e-6);
     }
 }
+
+#[test]
+fn geofence_invariants() {
+    // A waypoint placed a known geodesic distance straight out from the middle
+    // of a field's south edge is outside the fence by that distance less the
+    // fence's, at any latitude; one inside the field or inside the fence is
+    // not flagged; and a wider fence encloses more ground and flags fewer.
+    let g = Geodesic::wgs84();
+    for lat0 in [-60.0, -10.0, 35.0, 68.0] {
+        let lon0 = 20.0;
+        // A field about 200 m square with its south-west corner at (lat0, lon0).
+        let (north, _, _): (f64, f64, f64) =
+            geographiclib_rs::DirectGeodesic::direct(&g, lat0, lon0, 0.0, 200.0);
+        let (_, east, _): (f64, f64, f64) =
+            geographiclib_rs::DirectGeodesic::direct(&g, lat0, lon0, 90.0, 200.0);
+        let field = json!([{"lat": lat0, "lon": lon0}, {"lat": lat0, "lon": east}, {"lat": north, "lon": east}, {"lat": north, "lon": lon0}]);
+        let mid = (lon0 + east) / 2.0;
+        let mut wps = vec![json!({"lat": (lat0 + north) / 2.0, "lon": mid})];
+        let out = [10.0, 49.0, 51.0, 80.0, 140.0];
+        for d in out {
+            let (la, lo, _): (f64, f64, f64) =
+                geographiclib_rs::DirectGeodesic::direct(&g, lat0, mid, 180.0, d);
+            wps.push(json!({"lat": la, "lon": lo}));
+        }
+        let run = |fence: f64| {
+            call(
+                "drone.mission.geofence",
+                &json!({"area": field, "distance": format!("{fence} m"), "waypoints": wps}),
+            )
+        };
+        let r = run(50.0);
+        let flagged = r["result"]["flagged"].as_array().unwrap();
+        // The field's edge is the geodesic between its corners, and the test
+        // starts from the parallel through them, a few millimeters off it over
+        // 200 m at 68 degrees: hence the centimeter allowed below.
+        let want: Vec<(usize, f64)> = out
+            .iter()
+            .enumerate()
+            .filter(|(_, d)| **d > 50.0)
+            .map(|(i, d)| (i + 2, d - 50.0))
+            .collect();
+        assert_eq!(flagged.len(), want.len(), "{lat0}: {r}");
+        for (f, (index, beyond)) in flagged.iter().zip(&want) {
+            assert_eq!(f["waypoint"].as_f64().unwrap() as usize, *index);
+            assert!(
+                (f["beyond"]["value"].as_f64().unwrap() - beyond).abs() < 0.01,
+                "{lat0}: {f}"
+            );
+        }
+        assert_eq!(r["result"]["outside_count"], want.len() as f64);
+        let wide = run(100.0);
+        assert_eq!(wide["result"]["outside_count"], 1.0);
+        assert!(num(&wide, "result.area_enclosed.value") > num(&r, "result.area_enclosed.value"));
+    }
+}

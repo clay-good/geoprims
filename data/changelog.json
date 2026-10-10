@@ -3,6 +3,17 @@
   "entries": [
     {
       "date": "2026-10-10",
+      "kind": "result-change",
+      "tools": [
+        "drone.mission.geofence"
+      ],
+      "vectors": [
+        "drone.mission.geofence v008"
+      ],
+      "summary": "The geofence tool is now stable. Its answers are unchanged. Which waypoints fall outside a fence, and by how far, were checked against GEOS and PROJ for ten irregular fields from 55° S to 69° N, to within 2 mm. Promotion removed the experimental warning, which moved the outside-the-fence warning from second to first in the list; the one test vector that pinned its old place is superseded."
+    },
+    {
+      "date": "2026-10-10",
       "kind": "changed",
       "tools": [
         "geodesy.magnetic.isogonic"

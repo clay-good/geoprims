@@ -1095,3 +1095,45 @@ fn cloud_base_invariants() {
         }
     }
 }
+
+#[test]
+fn tat_sat_invariants() {
+    let run = |t: f64, kind: &str, mach: f64, r: f64| {
+        let v = call(
+            "aviation.airspeed.tat-sat",
+            &format!(
+                r#"{{"temperature":"{t} K","temperature_kind":"{kind}","mach":{mach},"recovery_factor":{r}}}"#
+            ),
+        );
+        assert_eq!(v["ok"], true, "{v}");
+        (
+            num(&v, "result.sat.value") + 273.15,
+            num(&v, "result.tat.value") + 273.15,
+            num(&v, "result.ram_rise.value"),
+        )
+    };
+    for t in [200.0, 216.65, 250.0, 288.15, 320.0] {
+        for r in [0.5, 0.75, 0.9, 1.0] {
+            let mut last = -1.0;
+            for mach in [0.0, 0.2, 0.5, 0.8, 0.95, 2.0] {
+                let (sat, tat, rise) = run(t, "total", mach, r);
+                // The probe reading is handed back, the ram rise is the gap,
+                // and still air has none.
+                assert!((tat - t).abs() < 1e-9 && (rise - (tat - sat)).abs() < 1e-9);
+                assert!((sat - t / (1.0 + 0.2 * r * mach * mach)).abs() < 1e-9);
+                if mach == 0.0 {
+                    assert!(rise.abs() < 1e-12);
+                }
+                // Faster air and a fuller recovery both widen it.
+                assert!(rise > last);
+                last = rise;
+                if r < 1.0 && mach > 0.0 {
+                    assert!(rise < run(t, "total", mach, 1.0).2);
+                }
+                // The static temperature given back returns the reading.
+                let (sat2, tat2, _) = run(sat, "static", mach, r);
+                assert!((sat2 - sat).abs() < 1e-9 && (tat2 - t).abs() < 1e-9);
+            }
+        }
+    }
+}

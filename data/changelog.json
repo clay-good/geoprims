@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.airspeed.tat-sat"
+      ],
+      "vectors": [],
+      "summary": "The total and static air temperature tool is now stable. It agrees with flightcondition, a separately written Python library, at 16 heights and Mach numbers from sea level to 51,000 ft, in both directions. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.atmosphere.cloud-base"
       ],
       "vectors": [],

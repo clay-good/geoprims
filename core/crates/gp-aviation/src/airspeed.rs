@@ -847,6 +847,7 @@ fn run_tas_to_cas(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TAT_SAT: ToolDef = ToolDef {
     id: "aviation.airspeed.tat-sat",
+    stability: gp_base::tool::Stability::Stable,
     title: "Total and static air temperature",
     summary: "Static (outside) air temperature from the total air temperature a probe reads, or the reverse, with the ram rise at your Mach number.",
     aliases: &["TAT to SAT", "SAT to TAT", "ram rise", "RAT"],
@@ -916,7 +917,7 @@ pub static TAT_SAT: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(2)),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "SAT = TAT / (1 + 0.2·r·M²)",
     accuracy: "Exact for the stated recovery factor; real probes have r from about 0.75 to 1.0",
     when_to_use: "Use this when your temperature gauge reads total air temperature, which is warmed by the air ramming into the probe, and you need the real outside air temperature. Give the reading and your Mach number. It returns the static air temperature and the ram rise. Run it the other way to predict what the probe will show. The static temperature is the one the true airspeed and density altitude tools need.",
@@ -933,10 +934,20 @@ pub static TAT_SAT: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "aviation.airspeed.cas-to-tas",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "aviation.airspeed.cas-to-tas",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.isa-temperature",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.density-altitude",
+            reason: "next",
+        },
+    ],
     assumptions: &[Assumption {
         name: "Ratio of specific heats for air",
         value: "1.4",

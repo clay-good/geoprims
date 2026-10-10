@@ -27,22 +27,26 @@ The relation assumes a perfect gas with γ = 1.4 and a single recovery factor fo
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite, aviation/airspeed spec, "Total and static air temperature"
-- sourceEdition: 2026
-- sourceLocator: Scenario "Ram rise at Mach 0.8" (TAT −20 °C, M 0.8, r 1.0)
-- independent: no
-- inputs: temperature −20 °C (total), Mach 0.8, recovery factor 1.0 (default)
-- outputs: SAT ≈ −48.73 °C, ram rise ≈ 28.73 K (computed: 253.15 / 1.128 − 273.15 = −48.7262 °C)
-- tolerance: 0.005 °C against the spec's rounded values; 1e-6 against the computed value
-- verifiedBy: golden vector v001 and `tat_to_sat_ram_rise`
-- verifiedOn: 2026-10-09
+- sourcePublisher: flightcondition (open-source Python library by Matthew C. Jones)
+- sourceTitle: flightcondition 26.4.20, FlightCondition(h, M): static temperature T and total temperature T0
+- sourceEdition: flightcondition 26.4.20, run 2026-10-10
+- sourceLocator: tools/vectors/gen_tat_sat_fc.py, first case: FlightCondition(h=35000 ft, M=0.8)
+- independent: yes
+- inputs: total temperature 246.94647 K (−26.20 °C), Mach 0.8, recovery factor 1.0 (default)
+- outputs: the library's static temperature at that height, 218.92418 K (−54.23 °C); ram rise 28.02 K
+- tolerance: 1e-9 K
+- verifiedBy: golden vector v006, run by the core on every build
+- verifiedOn: 2026-10-10
+
+The library gives 15 more cases, v007 through v021, from sea level to 51,000 ft and Mach 0.2 to 0.92, in both directions. In seven of them the probe temperature is the library's wall recovery temperature in turbulent or laminar flow, and the recovery factor entered is the library's own, (Tr − T) ÷ (T0 − T), 0.888 or 0.837. Those seven show that the tool scales the ram rise by the recovery factor the same way the library does; they do not test any particular probe's factor.
 
 ## Differential tests
 
+- `tools/vectors/gen_tat_sat_fc.py`: static temperature from total or recovery temperature, and the reverse, against flightcondition at 16 heights and Mach numbers (within 1e-9 K)
 - `tools/vectors/gen_aviation.py`: a Python evaluation of the same relation, SAT = TAT / (1 + 0.2 r M²) in kelvins, at five temperatures, Mach numbers, and recovery factors; it restates the formula rather than deriving it another way
 - `core/vectors/aviation.airspeed.tat-sat.jsonl`: those vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/slice2.rs` `tat_to_sat_ram_rise`: the spec scenario gives SAT −48.73 °C and ram rise 28.73 K (within 0.005), and feeding that SAT back as a static temperature at the same Mach returns TAT −20 °C within 1e-9 (the two directions invert each other)
+- `core/crates/gp-aviation/tests/slice3.rs` `tat_sat_invariants`: over five temperatures, four recovery factors, and six Mach numbers up to 2, the reading is handed back, the ram rise is the gap between the two temperatures and is zero in still air, it grows with Mach and with the recovery factor, and the static temperature given back returns the reading
+- `core/crates/gp-aviation/tests/slice2.rs` `tat_to_sat_ram_rise`: the spec scenario gives SAT −48.73 °C and ram rise 28.73 K (within 0.005), and feeding that SAT back as a static temperature at the same Mach returns TAT −20 °C within 1e-9

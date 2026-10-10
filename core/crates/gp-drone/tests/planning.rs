@@ -411,3 +411,42 @@ fn gcp_table_c1_rows() {
     }
     assert_eq!(table_c1(2501.0), None);
 }
+
+#[test]
+fn dataset_size_invariants() {
+    // A LAS file is its 375-byte header plus one record per point, at the
+    // record size LAS 1.4 gives each point format; LAZ is LAS over the ratio;
+    // an orthomosaic scales with area, inversely with GSD squared, and with
+    // bands and bits; and each part appears only when its inputs are given.
+    let sizes = [
+        20.0, 28.0, 26.0, 34.0, 57.0, 63.0, 30.0, 36.0, 38.0, 59.0, 67.0,
+    ];
+    for (format, size) in sizes.iter().enumerate() {
+        for points in [1.0, 1e6, 2.5e8] {
+            let r = call(
+                "drone.sensors.dataset-size",
+                &format!(r#"{{"point_count":{points},"point_format":{format},"laz_ratio":5}}"#),
+            );
+            let las = (375.0 + points * size) / 1e9;
+            assert!((num(&r, "result.las_gb") - las).abs() < 1e-12, "{r}");
+            assert!((num(&r, "result.laz_gb") - las / 5.0).abs() < 1e-12, "{r}");
+            assert!(r["result"].get("ortho_gb").is_none() && r["result"].get("raw_gb").is_none());
+        }
+    }
+    let ortho = |input: &str| {
+        num(
+            &call("drone.sensors.dataset-size", input),
+            "result.ortho_gb",
+        )
+    };
+    let base = ortho(r#"{"area":"1 km2","gsd":"2 cm"}"#);
+    assert!((base - 7.5).abs() < 1e-9);
+    assert!((ortho(r#"{"area":"2 km2","gsd":"2 cm"}"#) - 2.0 * base).abs() < 1e-9);
+    assert!((ortho(r#"{"area":"1 km2","gsd":"4 cm"}"#) - base / 4.0).abs() < 1e-9);
+    assert!(
+        (ortho(r#"{"area":"1 km2","gsd":"2 cm","bands":4,"bit_depth":16}"#)
+            - base * 4.0 / 3.0 * 2.0)
+            .abs()
+            < 1e-9
+    );
+}

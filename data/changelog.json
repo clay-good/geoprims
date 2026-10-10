@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "changed",
       "tools": [
+        "drone.sensors.dataset-size"
+      ],
+      "vectors": [],
+      "summary": "The dataset size tool is now stable. Its LAS point cloud size is held to the header and record sizes the LAS 1.4 specification gives for each of the 11 point formats. Its compression figures remain assumptions you can change."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
         "survey.land.legacy-units"
       ],
       "vectors": [],

@@ -56,6 +56,7 @@ const fn gb(name: &'static str, title: &'static str, help: &'static str) -> Fiel
 
 pub static DATASET_SIZE: ToolDef = ToolDef {
     id: "drone.sensors.dataset-size",
+    stability: gp_base::tool::Stability::Stable,
     version: "1.0.1",
     title: "Dataset size estimate",
     summary: "An estimate of how much storage a mapping job needs: the raw images, the orthomosaic (uncompressed and over a compression range), and a lidar point cloud as LAS and LAZ.",
@@ -193,7 +194,7 @@ pub static DATASET_SIZE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Orthomosaic bytes = area ÷ GSD² × bands × bits ÷ 8, then divided by an assumed compression range; raw = images × MB each; LAS = 375 + points × the LAS 1.4 record size of the chosen point format; LAZ = LAS ÷ an assumed ratio. 1 GB = 10⁹ bytes",
     accuracy: "An estimate: compression depends on the content, and processing software adds overviews and tiles. The ratios shown are assumptions you can change, not measurements",
     when_to_use: "Use this when you quote or plan a mapping job and need to know how much storage it takes. Give the area and ground sampling distance for the orthomosaic, the image count and size for the raw capture, or the lidar point count, and it estimates each in gigabytes. Use the numbers to size memory cards, drives, upload time, and cloud storage before the flight.",
@@ -211,6 +212,10 @@ pub static DATASET_SIZE: ToolDef = ToolDef {
         map: &[],
     }],
     related: &[
+        Related {
+            id: "drone.sensors.lidar-plan",
+            reason: "alternative",
+        },
         Related {
             id: "drone.photogrammetry.image-count",
             reason: "parent",

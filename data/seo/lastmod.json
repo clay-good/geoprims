@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0b8592cfb7b547f2",
+    "hash": "c774ace74feaceed",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "250b38a896caba42",
+    "hash": "983b790e9bce80f6",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "16c9f19f02c0108b",
+    "hash": "5610a861bbea44fe",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -424,8 +424,8 @@
     "lastmod": "2026-09-23"
   },
   "/drone/sensors/dataset-size/": {
-    "hash": "575e02fb17e4796d",
-    "lastmod": "2026-10-09"
+    "hash": "4f639dc8888238a1",
+    "lastmod": "2026-10-10"
   },
   "/drone/sensors/lidar-plan/": {
     "hash": "3d011371e318793b",
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "71e9d3951276dccb",
+    "hash": "731837cbbbf0c174",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "55b52207179df337",
+    "hash": "a41d87dda37cddd4",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b9bbf4b61a523d0c",
+    "hash": "f599dcd19baecffb",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

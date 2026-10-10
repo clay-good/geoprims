@@ -97,6 +97,7 @@ const WAYPOINT: &[Field] = &[
 
 pub static EXPORT: ToolDef = ToolDef {
     id: "drone.mission.export",
+    stability: gp_base::tool::Stability::Stable,
     title: "Export a mission (KML, GeoJSON, CSV)",
     summary: "Waypoints written as a KML file with the right altitude mode, GeoJSON with each waypoint's details, or CSV, labeled with the height reference and a not-for-navigation notice.",
     aliases: &["export waypoints", "mission to KML", "waypoints to GeoJSON", "waypoint CSV", "KML altitude mode"],
@@ -121,7 +122,7 @@ pub static EXPORT: ToolDef = ToolDef {
         Field::new("clearance_margin", "Clearance margin added", "To every terrain-following waypoint", Kind::Quantity { q: QT::Length, unit: "m" }).precision(Precision::Decimals(1)).optional(),
     ],
     errors: &[],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "KML altitude mode follows the height reference: AGL is relativeToGround; MSL is absolute; takeoff heights become absolute by adding the takeoff's MSL elevation; HAE becomes absolute by subtracting the geoid height N (OGC KML 2.3 §9.20; KML's absolute is above sea level). GeoJSON carries [longitude, latitude, height] with the reference in each waypoint's properties (RFC 7946); CSV has one row per waypoint",
     accuracy: "Coordinates to 7 decimal places (about 1 cm) and heights to 0.01 m; no conversion beyond the stated offsets",
     when_to_use: "Use this when you have a list of waypoints and need a file another program can open: KML for map viewers, GeoJSON for GIS work, or CSV for a spreadsheet. It writes heights in the KML altitude mode that matches the reference you choose, turning takeoff and ellipsoid heights into sea-level heights when you give the offsets. Every file is labeled with its height reference and a not-for-navigation notice.",
@@ -137,6 +138,7 @@ pub static EXPORT: ToolDef = ToolDef {
     visualization: &[Layer { kind: "table-only", map: &[] }],
     related: &[
         Related { id: "drone.mission.survey-grid", reason: "parent" },
+        Related { id: "drone.mission.corridor", reason: "parent" },
         Related { id: "drone.mission.geofence", reason: "alternative" },
     ],
     sentence: "The file has {waypoint_count} {plural waypoint_count \"waypoint\" \"waypoints\"}, with heights {heights}.",

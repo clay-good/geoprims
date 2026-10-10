@@ -616,6 +616,11 @@ def export_vectors():
         out.append(fvec(len(out) + 1, inp, {"result.altitude_mode": "absolute", "result.clearance_margin.value": expect, "result.waypoint_count": 3}, SPEC, "2026"))
     out.append(fvec(len(out) + 1, {"waypoints": wps, "height_reference": "terrain", "surface_model_acknowledged": "yes", "format": "csv"},
                     {"result.altitude_mode": "terrain-following MSL in the reference column", "result.clearance_margin.value": 15.0}, SPEC, "2026"))
+    # Each file's registered media type: KML's from OGC KML 2.3, GeoJSON's from
+    # RFC 7946 section 12, CSV's from RFC 4180 section 3.
+    for fmt, media in [("kml", "application/vnd.google-earth.kml+xml"), ("geojson", "application/geo+json"), ("csv", "text/csv")]:
+        out.append(fvec(len(out) + 1, {"waypoints": wps, "height_reference": "msl", "format": fmt},
+                        {"result.media_type": media, "result.waypoint_count": 3}, "OGC KML 2.3, RFC 7946 section 12, and RFC 4180 section 3: the media type each registers", "2026"))
     return out
 
 

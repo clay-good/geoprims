@@ -5,10 +5,19 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.atmosphere.humidity"
+      ],
+      "vectors": [],
+      "summary": "The humidity and moist air tool is now stable. It was checked against MetPy, Unidata's meteorology library, at 16 cases from −40 °C to 45 °C: air density agrees within 2 parts in 100,000, and vapor pressure, relative humidity, and mixing ratio within 0.31%, which is the difference between the two libraries' saturation formulas. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "drone.mission.facade"
       ],
       "vectors": [],
-      "summary": "The facade scan tool is now stable. Every photo station of 12 scans, on walls from 12 to 400 m long between 55° S and 78° N, agrees with GeographicLib for Python to a hundredth of a millimeter. Its answers are unchanged."
+      "summary": "The facade scan tool is now stable. Every photo station of 12 scans, on walls from 12 to 400 m long between 55° S and 78° N, agrees with GeographicLib for Python to a tenth of a millimeter. Its answers are unchanged."
     },
     {
       "date": "2026-10-10",

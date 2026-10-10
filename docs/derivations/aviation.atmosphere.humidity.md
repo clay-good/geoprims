@@ -29,23 +29,27 @@ The Magnus form is a fit: within 0.4% from −40 °C to 50 °C over liquid water
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite atmosphere spec, scenario "Humid density"
-- sourceEdition: openspec/changes/add-aviation-suite/specs/aviation/atmosphere/spec.md
-- sourceLocator: Requirement "Humidity and moist-air effects"; the spec states only that moist density is below dry density, and the numbers are the equations above worked in Python by tools/vectors/gen_humidity.py
-- independent: no
+- sourcePublisher: Unidata (University Corporation for Atmospheric Research), MetPy
+- sourceTitle: MetPy 1.6.3, metpy.calc: saturation_vapor_pressure, relative_humidity_from_dewpoint, mixing_ratio, virtual_temperature, density
+- sourceEdition: MetPy 1.6.3, run 2026-10-10
+- sourceLocator: tools/vectors/gen_humidity_metpy.py, first case: 30 °C, dew point 24 °C, 1,000 hPa
+- independent: yes
 - inputs: temperature 30 °C, dew point 24 °C, pressure 1,000 hPa
-- outputs: moist density 1.1362 kg/m³, dry density 1.1492 kg/m³; RH 70.3%; vapor pressure 29.78 hPa; saturation 42.37 hPa; mixing ratio 19.09 g/kg; virtual temperature 33.45 °C
-- tolerance: 1e-9 relative
-- verifiedBy: golden vector v001
-- verifiedOn: 2026-10-09
+- outputs: MetPy gives moist density 1.13622 kg/m³, dry density 1.14918 kg/m³, RH 70.27%, vapor pressure 29.83 hPa, saturation 42.46 hPa, mixing ratio 19.13 g/kg, virtual temperature 33.46 °C; the tool gives 1.13622, 1.14916, 70.29%, 29.78, 42.37, 19.09, and 33.45
+- tolerance: 5 parts in 100,000 for the densities; 0.4% for the vapor pressures, RH, and mixing ratio; 0.02 °C for virtual temperature; 0.05 °C for the dew point
+- verifiedBy: golden vector v011, run by the core on every build
+- verifiedOn: 2026-10-10
+
+MetPy takes saturation vapor pressure from Bolton (1980), a different fit from the tool's Alduchov and Eskridge (1996). The two differ by up to 0.31% between −40 °C and 45 °C, which is the whole of the gap in the vapor figures above; it is a check that the tool's formula and constants are sound, not that they match to the last digit. The densities, which are what a pilot uses, differ by 2 parts in 100,000 at most.
 
 ## Differential tests
 
-- `tools/vectors/gen_humidity.py`: the same moist-air relations written again in Python, at six cases from −20 °C to 45 °C and 700 to 1,013.25 hPa, from both the dew point and the relative humidity, plus four refused inputs. It checks the arithmetic, not the choice of formula.
-- `core/vectors/aviation.atmosphere.humidity.jsonl`: those ten vectors, run through the core on every build
+- `tools/vectors/gen_humidity_metpy.py`: 16 cases from MetPy, ten from a dew point and six from a relative humidity, from −40 °C to 45 °C and 500 to 1,020 hPa, including saturated air, at the tolerances above
+- `tools/vectors/gen_humidity.py`: the tool's own relations written again in Python at six cases, to 1e-9, plus four refused inputs. It checks the arithmetic, not the choice of formula.
+- `core/vectors/aviation.atmosphere.humidity.jsonl`: those vectors, run through the core on every build
 
 ## Invariants
 
+- `core/crates/gp-aviation/tests/slice3.rs` `humidity_invariants`: at five temperatures and pressures and five dew-point spreads, vapor pressure rises with the dew point and never passes saturation, saturated air reads 100%, the mixing ratio, virtual temperature, and both densities follow the stated relations from the reported vapor pressure, moist air is thinner than dry, and the relative humidity given back returns the same dew point and density
 - `core/crates/gp-aviation/src/humidity.rs` `agrees_with_the_nws_tetens_form`: from 0 °C to 50 °C the saturation vapor pressure agrees within 0.5% with the Tetens form the NWS uses, a check on the constants by a different formula
 - `core/crates/gp-aviation/src/humidity.rs` `dew_point_inverts_the_vapor_pressure`: the dew point of the saturation pressure at T_d gives back T_d within 1e-9 °C at four dew points from −30 °C to 24 °C

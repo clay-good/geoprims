@@ -27,6 +27,11 @@
       "reason": "The handbook reads density altitude off its chart, which resolves no finer than about 100 ft."
     },
     {
+      "tool": "aviation.atmosphere.humidity",
+      "source": "MetPy",
+      "reason": "MetPy takes saturation vapor pressure from Bolton (1980) and the tool from Alduchov and Eskridge (1996); the two fits differ by up to 0.31% from -40 to 45 °C, so the vapor figures are held to 0.4%, the dew point to 0.05 °C, and the virtual temperature to 0.02 °C. The densities are held to 5 parts in 100,000."
+    },
+    {
       "tool": "aviation.loading.weight-balance",
       "source": "FAA Aircraft Weight and Balance Handbook",
       "reason": "The handbook prints the center of gravity to a tenth of an inch, so the tolerance is half of that."

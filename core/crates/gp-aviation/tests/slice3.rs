@@ -936,3 +936,61 @@ fn tfr_area_invariants() {
         }
     }
 }
+
+#[test]
+fn humidity_invariants() {
+    let run = |input: String| {
+        let r = call("aviation.atmosphere.humidity", &input);
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    for (t, p) in [
+        (-30.0, 600.0),
+        (0.0, 900.0),
+        (15.0, 1013.25),
+        (30.0, 1000.0),
+        (45.0, 1020.0),
+    ] {
+        let mut last_e = 0.0;
+        for spread in [20.0, 10.0, 5.0, 1.0, 0.0] {
+            let td = t - spread;
+            let r = run(format!(
+                r#"{{"temperature":"{t} degC","dew_point":"{td} degC","pressure":"{p} hPa"}}"#
+            ));
+            let (e, es, rh, w, tv) = (
+                num(&r, "result.vapor_pressure.value"),
+                num(&r, "result.saturation_vapor_pressure.value"),
+                num(&r, "result.relative_humidity"),
+                num(&r, "result.mixing_ratio"),
+                num(&r, "result.virtual_temperature.value"),
+            );
+            let (moist, dry) = (
+                num(&r, "result.moist_density.value"),
+                num(&r, "result.dry_density.value"),
+            );
+            // A higher dew point holds more vapor; saturated air is at 100%.
+            assert!(e > last_e && e <= es * (1.0 + 1e-12), "{r}");
+            last_e = e;
+            assert!((rh - 100.0 * e / es).abs() < 1e-9);
+            if spread == 0.0 {
+                assert!((rh - 100.0).abs() < 1e-9);
+            }
+            // The stated relations hold among the outputs.
+            assert!((w - 622.0 * e / (p - e)).abs() < 1e-9 * w.max(1.0));
+            assert!((tv + 273.15 - (t + 273.15) / (1.0 - 0.378 * e / p)).abs() < 1e-9);
+            assert!((dry - p * 100.0 / (287.052_87 * (t + 273.15))).abs() < 1e-12);
+            assert!((moist - p * 100.0 / (287.052_87 * (tv + 273.15))).abs() < 1e-12);
+            // Vapor is lighter than air: moist air is thinner and reads warmer.
+            assert!(moist < dry && tv > t, "{r}");
+            // The relative humidity given back returns the same dew point.
+            let back = run(format!(
+                r#"{{"temperature":"{t} degC","relative_humidity":{rh},"pressure":"{p} hPa"}}"#
+            ));
+            assert!(
+                (num(&back, "result.dew_point.value") - td).abs() < 1e-9,
+                "{back}"
+            );
+            assert!((num(&back, "result.moist_density.value") - moist).abs() < 1e-12);
+        }
+    }
+}

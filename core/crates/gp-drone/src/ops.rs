@@ -325,6 +325,7 @@ fn run_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static SPEED_CHECK: ToolDef = ToolDef {
     id: "drone.ops.speed-check",
+    stability: gp_base::tool::Stability::Stable,
     title: "Part 107 groundspeed check",
     summary: "Checks your groundspeed, including the wind, against the Part 107 limit of 87 kt (100 mph). A tailwind can push a legal airspeed over the limit.",
     aliases: &["drone speed limit", "Part 107 speed limit", "100 mph drone"],
@@ -370,7 +371,7 @@ pub static SPEED_CHECK: ToolDef = ToolDef {
         text("status", "Status", "Within or over the limit", 40),
         NOTICE,
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Groundspeed = airspeed + along-track wind, compared with 87 kt",
     accuracy: "Exact for a steady wind along the track.",
     when_to_use: "Use this before a fast flight, or on a windy day, to check your speed against the Part 107 limit of 87 knots, about 100 mph. The rule caps groundspeed, not airspeed, so a strong tailwind can push a drone that is legal in still air over the line. Enter the airspeed and the wind along your track, and it gives the groundspeed, the limit, the margin left, and whether you are within it.",
@@ -387,10 +388,20 @@ pub static SPEED_CHECK: ToolDef = ToolDef {
         kind: "gauge",
         map: &[("value", "groundspeed")],
     }],
-    related: &[Related {
-        id: "drone.ops.kinetic-energy",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "drone.ops.kinetic-energy",
+            reason: "next",
+        },
+        Related {
+            id: "drone.ops.wind-limit",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.ops.part107-altitude",
+            reason: "next",
+        },
+    ],
     sentence: "Your groundspeed is {groundspeed}, {status} of {limit}. Not legal advice.",
     limits: &[("batchRows", 10_000)],
     run: run_speed,

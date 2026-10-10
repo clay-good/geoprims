@@ -605,3 +605,33 @@ fn endurance_invariants() {
         1e-9,
     );
 }
+
+#[test]
+fn speed_check_invariants() {
+    // Groundspeed is the airspeed plus the wind along the track, the margin is
+    // the limit less the groundspeed, and the status turns over exactly where
+    // the margin changes sign: 87 kt is within the limit, anything more is over.
+    for airspeed in [0.0, 20.0, 60.0, 86.9, 87.0, 87.1, 120.0] {
+        for tailwind in [-30.0, -5.0, 0.0, 0.05, 12.0] {
+            let r = call(
+                "drone.ops.speed-check",
+                &format!(r#"{{"airspeed":"{airspeed} kt","tailwind":"{tailwind} kt"}}"#),
+            );
+            let gs = (airspeed + tailwind) * 1852.0 / 1609.344;
+            let limit = 87.0 * 1852.0 / 1609.344;
+            near(&r, "result.limit.value", limit, 1e-9);
+            near(&r, "result.margin.value", limit - gs, 1e-9);
+            near(&r, "result.groundspeed.value", gs.max(0.0), 1e-9);
+            let over = airspeed + tailwind > 87.0;
+            assert_eq!(
+                r["result"]["status"],
+                if over {
+                    "over the limit"
+                } else {
+                    "within the limit"
+                },
+                "{airspeed} kt with {tailwind} kt"
+            );
+        }
+    }
+}

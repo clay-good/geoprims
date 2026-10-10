@@ -282,9 +282,22 @@ def altitude_vectors():
 def speed_vectors():
     lim = 87 * 1852 / 1609.344
     cases = [(90, 15), (60, 20), (100, 0), (80, -10), (95, 6)]
-    return [fvec(i, {"airspeed": f"{a} mph", "tailwind": f"{w} mph"}, {"result.margin.value": lim - (a + w),
-                                                                         "result.status": "over the limit" if a + w > lim else "within the limit"}, OPS_SRC, OPS_VER)
-            for i, (a, w) in enumerate(cases, 1)]
+    out = [fvec(i, {"airspeed": f"{a} mph", "tailwind": f"{w} mph"}, {"result.margin.value": lim - (a + w),
+                                                                        "result.status": "over the limit" if a + w > lim else "within the limit"}, OPS_SRC, OPS_VER)
+           for i, (a, w) in enumerate(cases, 1)]
+    # In other units, at the limit itself, and with no wind given. The margin is in mph.
+    mph = {"mph": 1.0, "kt": 1852 / 1609.344, "m/s": 3600 / 1609.344, "km/h": 1000 / 1609.344}
+    more = [(87, "kt", None, None), (87.01, "kt", None, None), (86, "kt", 1, "kt"), (86, "kt", 2, "kt"), (40, "m/s", 0, "m/s"),
+            (38, "m/s", 1.5, "m/s"), (150, "km/h", 12, "km/h"), (160, "km/h", 5, "km/h"), (20, "mph", None, None), (0, "mph", 30, "mph"),
+            (70, "mph", 30, "mph"), (70, "mph", 31, "mph"), (45, "kt", -20, "kt"), (100.1, "mph", 0, "mph"), (100.2, "mph", 0, "mph")]
+    for a, ua, w, uw in more:
+        gs = a * mph[ua] + (w * mph[uw] if w is not None else 0)
+        inp = {"airspeed": f"{a} {ua}"}
+        if w is not None:
+            inp["tailwind"] = f"{w} {uw}"
+        out.append(fvec(len(out) + 1, inp, {"result.margin.value": lim - gs, "result.groundspeed.value": gs,
+                                            "result.status": "over the limit" if gs > lim else "within the limit"}, OPS_SRC, OPS_VER))
+    return out
 
 
 def ke_vectors():

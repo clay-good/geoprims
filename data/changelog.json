@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "changed",
       "tools": [
+        "drone.ops.speed-check"
+      ],
+      "vectors": [],
+      "summary": "The Part 107 groundspeed check is now stable, held to the limit as 14 CFR 107.51(a) states it, 87 knots (100 miles per hour), in mph, knots, m/s, and km/h, on both sides of the limit and exactly on it."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
         "aviation.altimetry.flight-level"
       ],
       "vectors": [],

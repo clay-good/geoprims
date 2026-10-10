@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "53fdf6aa59adf189",
+    "hash": "ec59f4f26e5137a3",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "feb6017f6d72af79",
+    "hash": "e36a1fc8ce711013",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "c2d6cc3af142821d",
+    "hash": "da30c6e182f93672",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -292,8 +292,8 @@
     "lastmod": "2026-09-26"
   },
   "/drone/mission/corridor/": {
-    "hash": "9828025a6c58d717",
-    "lastmod": "2026-10-09"
+    "hash": "533e363c8130381c",
+    "lastmod": "2026-10-10"
   },
   "/drone/mission/export/": {
     "hash": "16bc5186ce2e7735",
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "4ea5316988b3ace9",
+    "hash": "2a92d9e13de73ceb",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "ca09a9238b226c23",
+    "hash": "22311532fc7f7015",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5e146cbe7c32c49a",
+    "hash": "42ac924430c9d5e0",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

@@ -780,3 +780,84 @@ fn geofence_invariants() {
         assert!(num(&wide, "result.area_enclosed.value") > num(&r, "result.area_enclosed.value"));
     }
 }
+
+#[test]
+fn corridor_invariants() {
+    // Along a straight centerline every line end is its offset from the
+    // matching centerline end, measured geodesically and square to the line;
+    // the offsets are centered and one spacing apart; the lines are flown back
+    // and forth; and the path is the lines plus the hops between them.
+    let g = Geodesic::wgs84();
+    for (lat0, lon0, az) in [
+        (40.0, -105.0, 30.0),
+        (-55.0, 20.0, 100.0),
+        (2.0, 100.0, 0.0),
+        (68.0, -150.0, 250.0),
+    ] {
+        let (lat1, lon1, _): (f64, f64, f64) =
+            geographiclib_rs::DirectGeodesic::direct(&g, lat0, lon0, az, 1500.0);
+        for (width, spacing) in [(120.0, 52.5), (30.0, 40.0), (200.0, 40.0), (90.0, 30.0)] {
+            let r = call(
+                "drone.mission.corridor",
+                &json!({"centerline": [{"lat": lat0, "lon": lon0}, {"lat": lat1, "lon": lon1}], "width": format!("{width} m"), "line_spacing": format!("{spacing} m")}),
+            );
+            assert_eq!(r["ok"], true, "{r}");
+            let n = num(&r, "result.line_count");
+            assert_eq!(n, (width / spacing - 1e-9_f64).ceil().max(1.0));
+            assert!((num(&r, "result.centerline_length.value") - 1.5).abs() < 1e-9);
+            let lines = r["result"]["lines"].as_array().unwrap();
+            assert_eq!(lines.len() as f64, n);
+            let mut flown = 0.0;
+            let mut last: Option<(f64, f64)> = None;
+            for (k, line) in lines.iter().enumerate() {
+                let off = line["offset"]["value"].as_f64().unwrap();
+                assert!((off - (k as f64 - (n - 1.0) / 2.0) * spacing).abs() < 1e-9);
+                let w: Vec<(f64, f64)> = line["waypoints"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|p| {
+                        (
+                            p["lat"]["value"].as_f64().unwrap(),
+                            p["lon"]["value"].as_f64().unwrap(),
+                        )
+                    })
+                    .collect();
+                assert_eq!(w.len(), 2);
+                assert_eq!(line["waypoints"][0]["kind"], "line_start");
+                assert_eq!(line["waypoints"][1]["kind"], "line_end");
+                // Odd lines run back toward the start of the centerline.
+                let (near_start, near_end) = if k % 2 == 0 {
+                    (w[0], w[1])
+                } else {
+                    (w[1], w[0])
+                };
+                for (c, p, course) in [((lat0, lon0), near_start, az), ((lat1, lon1), near_end, az)]
+                {
+                    let (s, a1, _, _): (f64, f64, f64, f64) = g.inverse(c.0, c.1, p.0, p.1);
+                    assert!((s - off.abs()).abs() < 1e-4, "{lat0} {off}: {s}");
+                    if off != 0.0 {
+                        // Right of the line for a positive offset. The far end's
+                        // course has turned a little along the geodesic.
+                        let side =
+                            (a1 - course - 90.0 * off.signum() + 540.0).rem_euclid(360.0) - 180.0;
+                        assert!(side.abs() < 0.05, "{lat0} {off}: {side}");
+                    }
+                }
+                let leg: f64 = g.inverse(w[0].0, w[0].1, w[1].0, w[1].1);
+                assert!((leg - 1500.0).abs() < 1e-3, "{leg}");
+                flown += leg;
+                if let Some(prev) = last {
+                    let hop: f64 = g.inverse(prev.0, prev.1, w[0].0, w[0].1);
+                    assert!((hop - spacing).abs() < 1e-4, "{hop}");
+                    flown += hop;
+                }
+                last = Some(w[1]);
+            }
+            assert!(
+                (num(&r, "result.path_length.value") * 1000.0 - flown).abs() < 1e-2,
+                "{r}"
+            );
+        }
+    }
+}

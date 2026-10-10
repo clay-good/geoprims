@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "drone.mission.corridor"
+      ],
+      "vectors": [],
+      "summary": "The corridor mapping tool is now stable. Every waypoint of its offset lines agrees with GEOS and PROJ within about 2 mm for 18 corridors from 55° S to 69° N, with bends up to 120° and up to six lines. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.airspace.tfr-area"
       ],
       "vectors": [],

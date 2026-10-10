@@ -1534,6 +1534,7 @@ const LINE_ROW: &[Field] = &[
 
 pub static CORRIDOR: ToolDef = ToolDef {
     id: "drone.mission.corridor",
+    stability: gp_base::tool::Stability::Stable,
     title: "Corridor mapping lines",
     summary: "Parallel flight lines that follow a centerline (a pipeline, road, or river) across a corridor width, with the line count from your spacing, flown back and forth.",
     aliases: &[
@@ -1603,7 +1604,7 @@ pub static CORRIDOR: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::DegenerateGeometry],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Offset polylines on a local transverse Mercator plane, mitered at bends (miter length limited to 4× the offset), offsets (k − (n − 1)/2)·spacing",
     accuracy: "Offsets are exact on the plane, true to within 1e-7 across a few kilometers.",
     when_to_use: "Use this to plan a mapping flight along something long and narrow, like a pipeline, road, river, or power line. Give the centerline points in order, the corridor width, and your line spacing, and it lays parallel lines that follow the bends, flown back and forth. It returns each line's offset and waypoints, the centerline length, and the total path, so you can plan batteries and flight time around it.",
@@ -1620,10 +1621,20 @@ pub static CORRIDOR: ToolDef = ToolDef {
         kind: "line-geodesic",
         map: &[("path", "lines")],
     }],
-    related: &[Related {
-        id: "drone.mission.survey-grid",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.mission.geofence",
+            reason: "next",
+        },
+        Related {
+            id: "drone.mission.export",
+            reason: "next",
+        },
+    ],
     sentence: "Fly {line_count} {plural line_count \"line\" \"lines\"} along {centerline_length} of centerline, {path_length} in all.",
     limits: &[("batchRows", 100)],
     run: run_corridor,

@@ -229,6 +229,7 @@ const LEVEL: &[Field] = &[
 
 pub static ALOFT: ToolDef = ToolDef {
     id: "aviation.wind.aloft-interpolate",
+    stability: gp_base::tool::Stability::Stable,
     title: "Winds aloft between levels",
     summary: "The wind and temperature at your cruising altitude from the forecast levels above and below it, interpolated as a vector so a turning wind turns smoothly.",
     aliases: &["winds aloft interpolation", "wind at altitude", "interpolate winds aloft", "FB winds between levels"],
@@ -247,7 +248,7 @@ pub static ALOFT: ToolDef = ToolDef {
         qty("above", "Level above", "Used for the interpolation", QT::Length, "ft").precision(Precision::Decimals(0)),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Between the two forecast levels that bracket the altitude, u, v, and temperature vary linearly with altitude; the wind is read back from u and v. No extrapolation above the highest or below the lowest level. Forecast winds are true (Aviation Weather Handbook §27.2)",
     accuracy: "Exact for the linear model; the forecast's own error is larger",
     when_to_use: "Use this when you plan to cruise between the levels a winds aloft forecast gives, such as 7,500 ft between the 6,000 and 9,000 ft winds. Enter the forecast levels and your altitude. It returns the wind direction and speed at your altitude, and the temperature when both levels give one. Use that wind in the heading, groundspeed, and fuel plan for the leg.",
@@ -264,6 +265,7 @@ pub static ALOFT: ToolDef = ToolDef {
     related: &[
         Related { id: "aviation.weather.fb-winds-decode", reason: "parent" },
         Related { id: "aviation.wind.uv", reason: "alternative" },
+        Related { id: "aviation.wind.heading-groundspeed", reason: "next" },
     ],
     sentence: "At {altitude} expect wind from {direction} at {speed}.",
     limits: &[("batchRows", 10_000)],

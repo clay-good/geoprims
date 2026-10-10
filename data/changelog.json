@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.wind.aloft-interpolate"
+      ],
+      "vectors": [],
+      "summary": "The winds aloft between levels tool is now stable. Its wind and temperature agree with MetPy and NumPy at 16 altitudes between forecast levels from 3,000 to 39,000 ft, including winds that swing through north. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.airspeed.tat-sat"
       ],
       "vectors": [],

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2dd9169b52e6da22",
+    "hash": "725cac23c12a81c9",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "7a7f73413697164f",
+    "hash": "006aa8a8e8673082",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -228,8 +228,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/wind/aloft-interpolate/": {
-    "hash": "9da34e4ec3ec231f",
-    "lastmod": "2026-10-09"
+    "hash": "f297fe52ec3c013d",
+    "lastmod": "2026-10-10"
   },
   "/aviation/wind/best-runway/": {
     "hash": "cf2e24fb2e1f986c",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "2fb73fb7b2751637",
+    "hash": "94f7abef9bce17ae",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "35e4308a856dc092",
+    "hash": "fa16efd0db3975e6",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "3fe3f1c0c92a7c2b",
+    "hash": "2369d29969fcfa84",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "6e1c940e6d1a641b",
+    "hash": "83a53f4d85aebbbe",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

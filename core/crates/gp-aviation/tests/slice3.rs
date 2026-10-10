@@ -1137,3 +1137,58 @@ fn tat_sat_invariants() {
         }
     }
 }
+
+#[test]
+fn aloft_invariants() {
+    let run = |levels: &str, alt: f64| {
+        let r = call(
+            "aviation.wind.aloft-interpolate",
+            &format!(r#"{{"levels":[{levels}],"altitude":"{alt} ft"}}"#),
+        );
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    let lo =
+        r#"{"altitude":"6000 ft","direction":"350 deg","speed":"15 kt","temperature":"4 degC"}"#;
+    let hi =
+        r#"{"altitude":"9000 ft","direction":"40 deg","speed":"35 kt","temperature":"-5 degC"}"#;
+    let top =
+        r#"{"altitude":"12000 ft","direction":"90 deg","speed":"20 kt","temperature":"-12 degC"}"#;
+    let three = format!("{lo},{hi},{top}");
+    let uv = |r: &Value| (num(r, "result.u.value"), num(r, "result.v.value"));
+    // At a level the answer is that level's wind and temperature.
+    let at = run(&three, 9000.0);
+    assert!((num(&at, "result.direction.value") - 40.0).abs() < 1e-9);
+    assert!((num(&at, "result.speed.value") - 35.0).abs() < 1e-9);
+    assert!((num(&at, "result.temperature.value") + 5.0).abs() < 1e-9);
+    let (u0, v0) = uv(&run(&three, 6000.0));
+    let (u1, v1) = uv(&at);
+    for k in 1..12 {
+        let f = f64::from(k) / 12.0;
+        let alt = 6000.0 + 3000.0 * f;
+        let r = run(&three, alt);
+        let (u, v) = uv(&r);
+        // Straight-line in u, v, and temperature between the two levels.
+        assert!((u - (u0 + f * (u1 - u0))).abs() < 1e-9 && (v - (v0 + f * (v1 - v0))).abs() < 1e-9);
+        assert!((num(&r, "result.temperature.value") - (4.0 - 9.0 * f)).abs() < 1e-9);
+        assert!((num(&r, "result.speed.value") - u.hypot(v)).abs() < 1e-9);
+        assert_eq!(num(&r, "result.below.value"), 6000.0);
+        assert_eq!(num(&r, "result.above.value"), 9000.0);
+        // The wind swings the short way, through north, never through south.
+        let d = num(&r, "result.direction.value");
+        assert!(!(40.0..=350.0).contains(&d), "{alt}: {d}");
+        // The order the levels are given in does not matter, and a level
+        // outside the bracket changes nothing.
+        let other = run(&format!("{top},{hi},{lo}"), alt);
+        assert_eq!(uv(&other), (u, v));
+        assert_eq!(uv(&run(&format!("{lo},{hi}"), alt)), (u, v));
+    }
+    // No extrapolation past either end.
+    for alt in [5999.0, 12001.0] {
+        let r = call(
+            "aviation.wind.aloft-interpolate",
+            &format!(r#"{{"levels":[{three}],"altitude":"{alt} ft"}}"#),
+        );
+        assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+    }
+}

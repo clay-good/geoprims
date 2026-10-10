@@ -263,3 +263,42 @@ fn deed_plot_invariants() {
         "{t}"
     );
 }
+
+#[test]
+fn alta_rpp_invariants() {
+    // The allowable is the standard's constant plus 50 ppm of the distance, in
+    // feet (0.07 ft) or meters (2 cm) as the distance is given; a covariance
+    // with no correlation gives 2.4477 times the larger sigma; and the status
+    // follows the ellipse against the allowable.
+    for d in [0.0, 120.0, 1000.0, 5280.0] {
+        let r = call(
+            "survey.land.alta-rpp",
+            &format!(r#"{{"distance":"{d} ft"}}"#),
+        );
+        assert!((num(&r, "result.allowable.value") - (0.07 + 50e-6 * d)).abs() < 1e-9);
+        assert!(
+            r["result"].get("status").is_none(),
+            "no ellipse, no verdict"
+        );
+        let m = call(
+            "survey.land.alta-rpp",
+            &format!(r#"{{"distance":"{d} m"}}"#),
+        );
+        assert!((num(&m, "result.allowable.value") * 0.3048 - (0.02 + 50e-6 * d)).abs() < 1e-9);
+    }
+    let r = call(
+        "survey.land.alta-rpp",
+        r#"{"distance":"1000 ft","sigma_e":"0.01 ft","sigma_n":"0.02 ft"}"#,
+    );
+    assert!((num(&r, "result.semi_major_95.value") - 2.447_746_830_680_816 * 0.02).abs() < 1e-9);
+    for (ellipse, word) in [(0.02, "Within"), (0.5, "Beyond")] {
+        let r = call(
+            "survey.land.alta-rpp",
+            &format!(r#"{{"distance":"1000 ft","semi_major":"{ellipse} ft"}}"#),
+        );
+        assert!(
+            r["result"]["status"].as_str().unwrap().starts_with(word),
+            "{r}"
+        );
+    }
+}

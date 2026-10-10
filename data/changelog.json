@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "changed",
       "tools": [
+        "survey.land.alta-rpp"
+      ],
+      "vectors": [],
+      "summary": "The ALTA/NSPS relative positional precision check is now stable, its allowable held to the 2026 standard's own words, 2 cm (0.07 feet) plus 50 parts per million, at distances in feet and meters."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
         "aviation.loading.fuel-plan"
       ],
       "vectors": [],

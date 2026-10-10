@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "54965bb05632dc1b",
+    "hash": "9107ceebff720149",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "8f88a119083446db",
+    "hash": "a42c314b63ff4f29",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "227adfc6f97bc0c1",
+    "hash": "3a2e119190cd1f06",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "e53baa53e002c405",
+    "hash": "f4fee4b5b41ccf4d",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1568,8 +1568,8 @@
     "lastmod": "2026-09-25"
   },
   "/survey/land/alta-rpp/": {
-    "hash": "445db8bec029bc63",
-    "lastmod": "2026-10-09"
+    "hash": "8774b2f77852239e",
+    "lastmod": "2026-10-10"
   },
   "/survey/land/basis-rotation/": {
     "hash": "bc8abd22868b009f",
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "703f37af8d640b71",
+    "hash": "7e9021e44dbe8fce",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "d4f9dfa194bebac1",
+    "hash": "575011c001b81a27",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

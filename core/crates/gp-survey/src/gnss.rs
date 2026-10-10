@@ -619,6 +619,7 @@ const K95: f64 = 2.447_746_830_680_816;
 
 pub static ALTA_RPP: ToolDef = ToolDef {
     id: "survey.land.alta-rpp",
+    stability: gp_base::tool::Stability::Stable,
     title: "ALTA/NSPS relative positional precision",
     summary: "The allowable relative positional precision between two adjacent boundary corners under the 2026 ALTA/NSPS standards, compared with the 95% error ellipse from your adjustment.",
     aliases: &[
@@ -729,7 +730,7 @@ pub static ALTA_RPP: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Allowable = 2 cm (0.07 ft when the distance is in feet) + 50 × 10⁻⁶ × distance (ALTA/NSPS 2026, 3.E.v). RPP is the semi-major axis of the 95% error ellipse of the line between the corners: 2.448 × √(largest eigenvalue of the east-north covariance) when a covariance is given",
     accuracy: "The allowable value is exact; the comparison is as good as the adjustment's weighting. Misclosure is not RPP and is refused",
     when_to_use: "Use this when you are checking an ALTA/NSPS land title survey against the 2026 standards. Enter the distance between two adjacent boundary corners and either the 95% ellipse semi-major axis from your least-squares adjustment or the standard errors and covariance. It returns the allowable relative positional precision, 2 cm plus 50 ppm, and says whether your result is within, near, or beyond it.",
@@ -746,10 +747,20 @@ pub static ALTA_RPP: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.cogo.traverse-closure",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.cogo.least-squares-2d",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "next",
+        },
+    ],
     sentence: "The standard allows {allowable} between these corners.",
     limits: &[("batchRows", 10_000)],
     run: run_alta,

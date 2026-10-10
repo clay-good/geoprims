@@ -848,3 +848,36 @@ fn pressure_per_height_invariants() {
         );
     }
 }
+
+#[test]
+fn isa_temperature_invariants() {
+    // The standard temperature falls 1.9812 degC per 1,000 ft (6.5 K per km) to
+    // the tropopause at 36,089 ft, holds at -56.5 degC to 65,617 ft, and the
+    // deviation is the outside air temperature less the standard one.
+    let isa = |ft: f64| {
+        num(
+            &call(
+                "aviation.altimetry.isa-temperature",
+                &format!(r#"{{"pressure_altitude":"{ft} ft"}}"#),
+            ),
+            "result.isa_temperature.value",
+        )
+    };
+    for ft in [0.0, 1000.0, 9000.0, 20000.0, 35000.0] {
+        let step = isa(ft + 1000.0) - isa(ft);
+        assert!((step + 6.5 * 0.3048).abs() < 1e-9, "{ft}: {step}");
+    }
+    assert!((isa(0.0) - 15.0).abs() < 1e-9);
+    for ft in [36_090.0, 41_000.0, 55_000.0, 65_616.0] {
+        assert!((isa(ft) + 56.5).abs() < 1e-6, "{ft}");
+    }
+    assert!(isa(70_000.0) > -56.5, "warming above 20 km");
+    for oat in [-20.0, 0.0, 31.5] {
+        let r = call(
+            "aviation.altimetry.isa-temperature",
+            &format!(r#"{{"pressure_altitude":"8000 ft","temperature":"{oat} degC"}}"#),
+        );
+        let dev = num(&r, "result.isa_deviation.value");
+        assert!((dev - (oat - isa(8000.0))).abs() < 1e-9);
+    }
+}

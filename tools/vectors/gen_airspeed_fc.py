@@ -28,11 +28,28 @@ OUT = Path(__file__).resolve().parents[2] / "core/vectors"
 P0, T0, G0, R = 101325.0, 288.15, 9.80665, 287.05287
 
 
+LAYERS = [(0, -0.0065, 288.15), (11000, 0.0, 216.65), (20000, 0.001, 216.65), (32000, 0.0028, 228.65)]
+
+
 def isa_p(h):
+    """ISA pressure (Pa) to 20 km, as the airspeed vectors were first worked."""
     if h <= 11000:
         return P0 * (1 - 0.0065 * h / T0) ** (G0 / (R * 0.0065))
     p11 = P0 * (1 - 0.0065 * 11000 / T0) ** (G0 / (R * 0.0065))
     return p11 * math.exp(-G0 * (h - 11000) / (R * 216.65))
+
+
+def isa_p_layers(h):
+    """ISA pressure (Pa) at a geopotential altitude (m), layer by layer to 47 km."""
+    p = P0
+    for i, (hb, lapse, tb) in enumerate(LAYERS):
+        top = LAYERS[i + 1][0] if i + 1 < len(LAYERS) else 47000
+        hh = min(h, top)
+        t = tb + lapse * (hh - hb)
+        p = p * math.exp(-G0 * (hh - hb) / (R * tb)) if lapse == 0 else p * (t / tb) ** (-G0 / (R * lapse))
+        if h <= top:
+            return p
+    raise ValueError(h)
 
 
 def at(ft, **speed):
@@ -43,14 +60,14 @@ def at(ft, **speed):
 
 # The library solves for Mach by iteration: agreement is 1e-9 at low speed and
 # 5e-7 in Mach near 0.95, so the tolerances sit a little above that.
-TOL = {"result.mach": {"abs": 2e-6}, "result.tas.value": {"abs": 1e-3}, "result.eas.value": {"abs": 1e-3}, "result.cas.value": {"abs": 1e-3}}
+TOL = {"result.isa_temperature.value": {"abs": 1e-4}, "result.isa_deviation.value": {"abs": 1e-4}, "result.mach": {"abs": 2e-6}, "result.tas.value": {"abs": 1e-3}, "result.eas.value": {"abs": 1e-3}, "result.cas.value": {"abs": 1e-3}}
 
 
-def write(tool, rows):
+def write(tool, rows, src=None):
     path = OUT / f"{tool}.jsonl"
     kept = [r for r in map(json.loads, path.read_text().splitlines()) if "flightcondition" not in r["source"]]
     for inp, exp in rows:
-        kept.append({"id": f"v{len(kept) + 1:03d}", "input": inp, "expect": {"ok": True, **exp}, "source": SRC,
+        kept.append({"id": f"v{len(kept) + 1:03d}", "input": inp, "expect": {"ok": True, **exp}, "source": src or SRC,
                      "sourceVersion": f"flightcondition {VER}", "tolerance": {k: TOL[k] for k in exp}})
     path.write_text("".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n" for r in kept))
     print(f"{path.name}: {len(kept)} vectors")
@@ -73,3 +90,20 @@ for tas, ft in [(288.7, 10000), (450, 35000), (130, 5000), (480, 39000), (200, 1
     back.append(({"tas": f"{tas} kt", "pressure_altitude": f"{ft} ft", "temperature_source": "isa"},
                  {"result.cas.value": cas, "result.mach": m, "result.eas.value": eas}))
 write("aviation.airspeed.tas-to-cas", back)
+
+# The standard temperature at a pressure altitude: the library's temperature
+# at that altitude's ISA pressure (it inverts pressure to height itself, and
+# agrees to about 1e-5 K). With an outside air temperature, the deviation.
+from flightcondition import Atmosphere  # noqa: E402
+
+temps = []
+for ft, oat in [(0, None), (2500, 20), (5000, None), (8000, -3), (12000, None), (18000, -30), (25000, None), (31000, -40), (36000, None),
+                (39000, -60), (45000, None), (-1000, 25), (65000, None), (80000, None)]:
+    t_c = float(Atmosphere(p=isa_p_layers(ft * 0.3048) * unit("Pa")).T.to("K").magnitude) - 273.15
+    inp, exp = {"pressure_altitude": f"{ft} ft"}, {"result.isa_temperature.value": t_c}
+    if oat is not None:
+        inp["temperature"] = f"{oat} degC"
+        exp["result.isa_deviation.value"] = oat - t_c
+    temps.append((inp, exp))
+write("aviation.altimetry.isa-temperature", temps,
+      f"flightcondition {VER} (independent Python library): its standard temperature at the ISA pressure of the pressure altitude (tools/vectors/gen_airspeed_fc.py)")

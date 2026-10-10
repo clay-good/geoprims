@@ -27,19 +27,22 @@ None beyond the standard atmosphere's definition; the layers are exact by defini
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario; the value is the ICAO-defined tropopause temperature)
-- sourceTitle: add-aviation-suite, aviation/altimetry spec, "ISA deviation and temperature at altitude"
-- sourceEdition: 2026
-- sourceLocator: Scenario "Above the tropopause" (FL410 gives −56.5 °C)
-- independent: no
-- inputs: pressure altitude 41,000 ft
-- outputs: ISA temperature −56.5 °C (216.65 K)
-- tolerance: 1e-6 °C
-- verifiedBy: golden vector v005 and `isa_temperature_fl410`
-- verifiedOn: 2026-10-09
+- sourcePublisher: flightcondition (open-source Python library, from PyPI)
+- sourceTitle: flightcondition 26.4.20, Atmosphere given a pressure
+- sourceEdition: 26.4.20, run 2026-10-10
+- sourceLocator: tools/vectors/gen_airspeed_fc.py: the ISA pressure of the pressure altitude goes in, and the library's standard temperature there comes out
+- independent: yes
+- inputs: pressure altitudes of 0, 12,000, 36,000, 45,000, and 80,000 ft, and nine more from −1,000 ft up, six with an outside air temperature
+- outputs: 15.00, −8.77, −56.32, −56.50, and −52.12 °C
+- tolerance: 0.0001 °C (the library inverts pressure to height itself and agrees to about 0.00002 K)
+- verifiedBy: golden vectors v007 through v020, run by the core on every build
+- verifiedOn: 2026-10-10
+
+The spec's own scenario, FL410 at −56.5 °C, is the tropopause temperature the standard defines (vector v005).
 
 ## Differential tests
 
+- `tools/vectors/gen_airspeed_fc.py`: flightcondition 26.4.20, a separately written library, at 14 pressure altitudes through four layers of the standard atmosphere; it needs the library installed and replaces only its own rows
 - `tools/vectors/gen_aviation.py`: a separate Python implementation of the ICAO Doc 7488/3 layer table, evaluated at 0, 10,000, 30,000, 36,089, 41,000, and 60,000 ft (within 1e-12 relative); it uses the same defining constants, so it checks the code, not the standard
 - `core/vectors/aviation.altimetry.isa-temperature.jsonl`: those vectors, run through the core on every build
 
@@ -47,3 +50,4 @@ None beyond the standard atmosphere's definition; the layers are exact by defini
 
 - `core/crates/gp-aviation/tests/aviation.rs` `altimetry_invariants`: for five field elevations and six altimeter settings, the ISA temperature this tool gives at the field's pressure altitude, used as the outside air temperature in the density-altitude tool, makes the density altitude equal the pressure altitude within 1e-3 ft (a cross-check of the two tools' standard atmospheres)
 - `core/crates/gp-aviation/tests/aviation.rs` `isa_temperature_fl410`: FL410 gives exactly −56.5 °C
+- `core/crates/gp-aviation/tests/aviation.rs` `isa_temperature_invariants`: the temperature falls 6.5 K per kilometer to the tropopause, holds at −56.5 °C to 65,617 ft, warms above, and the deviation is the outside air temperature less the standard one

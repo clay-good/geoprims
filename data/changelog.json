@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.altimetry.isa-temperature"
+      ],
+      "vectors": [],
+      "summary": "The ISA temperature tool is now stable. Its standard temperature agrees with flightcondition, a separately written Python library, within 0.0001 °C at 14 pressure altitudes from 1,000 ft below sea level to 80,000 ft."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.airspeed.cas-to-tas",
         "aviation.airspeed.tas-to-cas",
         "aviation.airspeed.ias-to-tas",

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ea17e2f9639aa5af",
+    "hash": "11b5af61cc6520c9",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "7d4c8837b5c3c7e1",
+    "hash": "8fb2f084bd47c811",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -56,7 +56,7 @@
     "lastmod": "2026-10-10"
   },
   "/aviation/altimetry/isa-temperature/": {
-    "hash": "cc65bda368750a93",
+    "hash": "efa48c4effab2a20",
     "lastmod": "2026-10-10"
   },
   "/aviation/altimetry/pressure-altitude/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "020d98c1b1d0cd5b",
+    "hash": "c65d4b6f277f650a",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "4111a3fb2eb8d21d",
+    "hash": "7091df0d6109c183",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "091494304f44927f",
+    "hash": "0631838fa6dcabc7",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1353d6751e98947e",
+    "hash": "868656913060bda3",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

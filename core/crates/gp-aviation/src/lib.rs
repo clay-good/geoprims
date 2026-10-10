@@ -1309,6 +1309,7 @@ fn run_density_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ISA_TEMPERATURE: ToolDef = ToolDef {
     id: "aviation.altimetry.isa-temperature",
+    stability: gp_base::tool::Stability::Stable,
     title: "ISA temperature and deviation",
     summary: "The standard temperature at a pressure altitude (15 °C falling 1.98 °C per 1,000 ft to -56.5 °C), and the ISA deviation of an outside air temperature.",
     aliases: &["ISA deviation calculator", "standard temperature"],
@@ -1365,7 +1366,7 @@ pub static ISA_TEMPERATURE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "ICAO Standard Atmosphere layer temperatures",
     accuracy: "Exact to the ISA definition",
     when_to_use: "Use this when you need the standard temperature at an altitude, or how far today's air is from it. Enter a pressure altitude, such as a flight level, and the outside air temperature if you have it. It returns the ISA temperature and the ISA deviation, like ISA +10. Many POH cruise and climb tables are laid out by ISA deviation, and the true altitude tool takes it as an input.",
@@ -1379,10 +1380,20 @@ pub static ISA_TEMPERATURE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: TABLE,
-    related: &[Related {
-        id: "aviation.atmosphere.isa",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.atmosphere.isa",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.altimetry.density-altitude",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.true-altitude",
+            reason: "next",
+        },
+    ],
     assumptions: &[
         Assumption {
             name: "Sea-level temperature T0",

@@ -5,6 +5,15 @@
       "date": "2026-10-09",
       "kind": "changed",
       "tools": [
+        "drone.sensors.lidar-plan"
+      ],
+      "vectors": [],
+      "summary": "The lidar flight plan is now stable. The quality level it names is held to the minimum pulse densities in table 1 of the USGS Lidar Base Specification 2025 rev. A, with plans placed just above and just below each one."
+    },
+    {
+      "date": "2026-10-09",
+      "kind": "changed",
+      "tools": [
         "drone.sensors.dataset-size"
       ],
       "vectors": [],

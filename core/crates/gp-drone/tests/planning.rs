@@ -450,3 +450,58 @@ fn dataset_size_invariants() {
             < 1e-9
     );
 }
+
+#[test]
+fn lidar_plan_invariants() {
+    // Density falls in proportion as speed or height rises, side overlap
+    // raises only the aggregate, points are pulses times returns, and the
+    // quality level turns over at the USGS minimums: 8, 2, and 0.5 per m².
+    let run = |extra: &str| {
+        call(
+            "drone.sensors.lidar-plan",
+            &format!(r#"{{"pulse_rate":"100 kHz","fov":"60 deg"{extra}}}"#),
+        )
+    };
+    let base = run(r#","height":"100 m","speed":"10 m/s""#);
+    let d = num(&base, "result.aggregate_density");
+    assert!(
+        (num(&base, "result.pulse_density") - d).abs() < 1e-9,
+        "no overlap, one density"
+    );
+    let fast = run(r#","height":"100 m","speed":"20 m/s""#);
+    assert!((num(&fast, "result.aggregate_density") - d / 2.0).abs() < 1e-9);
+    let high = run(r#","height":"200 m","speed":"10 m/s""#);
+    assert!((num(&high, "result.aggregate_density") - d / 2.0).abs() < 1e-9);
+    assert!(
+        (num(&high, "result.swath.value") - 2.0 * num(&base, "result.swath.value")).abs() < 1e-9
+    );
+    let lapped = run(r#","height":"100 m","speed":"10 m/s","side_overlap":50,"returns":2"#);
+    assert!((num(&lapped, "result.pulse_density") - d).abs() < 1e-9);
+    assert!((num(&lapped, "result.aggregate_density") - 2.0 * d).abs() < 1e-9);
+    assert!((num(&lapped, "result.point_density") - 4.0 * d).abs() < 1e-9);
+    // A 90 degree scanner at 50 m sweeps about 100 m, so the density is the
+    // pulse rate over 100 times the speed, here 1,000: pick rates either side
+    // of each line.
+    for (hz, level) in [
+        (8100, "QL1"),
+        (7900, "QL2"),
+        (2100, "QL2"),
+        (1900, "QL3"),
+        (510, "QL3"),
+        (490, "below QL3"),
+    ] {
+        let r = call(
+            "drone.sensors.lidar-plan",
+            &format!(
+                r#"{{"pulse_rate":"{hz} Hz","fov":"90 deg","height":"50 m","speed":"10 m/s"}}"#
+            ),
+        );
+        assert!(
+            r["result"]["quality_level"]
+                .as_str()
+                .unwrap()
+                .starts_with(level),
+            "{hz}: {r}"
+        );
+    }
+}

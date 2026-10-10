@@ -38,6 +38,11 @@ def dataset():
         out.append(vec(len(out) + 1, inp, {"result.las_gb": las, "result.laz_gb": las / (ratio or 7)}))
     for inp in [{}, {"area": "1 km2"}, {"image_count": 10}, {"area": "1 km2", "gsd": "2 cm", "compression_low": 5, "compression_high": 2}]:
         out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT"}))
+    # Each point format against the specification's own record size.
+    las14 = "LAS Specification 1.4 R15 (ASPRS, 2019): Public Header Block 375 bytes and the Minimum PDRF Size of each point data record format, read in the specification on 2026-10-09"
+    for fmt, size in enumerate(PDRF):
+        out.append({"id": f"v{len(out) + 1:03d}", "input": {"point_count": 1000000, "point_format": fmt}, "expect": {"ok": True, "result.las_gb": (375 + 1000000 * size) / 1e9},
+                    "source": f"{las14}: format {fmt}, {size} bytes", "sourceVersion": "LAS 1.4 R15", "tolerance": {"result.las_gb": {"abs": 1e-12}}})
     return out
 
 
@@ -98,6 +103,24 @@ def lidar():
                                            "result.aggregate_density": agg, "result.point_density": agg * ret, "result.quality_level": ql}))
     out[0]["source"] = SPEC + " (swath about 140.0 m, 171 pulses per m², beyond QL1)"
     out.append(vec(len(out) + 1, {"pulse_rate": "240 kHz", "fov": "180 deg", "height": "100 m", "speed": "10 m/s"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    # Either side of each USGS quality-level minimum (Lidar Base Specification
+    # 2025 rev. A, table 1: QL0 and QL1 at least 8.0, QL2 2.0, QL3 0.5 pulses
+    # per m²), with the pulse rate chosen in whole hertz to land there.
+    usgs = "USGS Lidar Base Specification 2025 rev. A, table 1 (aggregate nominal pulse density: QL1 at least 8.0, QL2 2.0, QL3 0.5 pulses per m²), read 2026-10-09; densities worked in Python (tools/vectors/gen_sensing.py)"
+    for target, fov, h, v, ov in [(8.4, 70, 100, 10, 0), (7.6, 70, 100, 10, 0), (8.2, 60, 120, 15, 30), (7.8, 60, 120, 15, 30), (2.1, 90, 300, 30, 20),
+                                  (1.9, 90, 300, 30, 20), (2.05, 40, 250, 25, 0), (1.95, 40, 250, 25, 0), (0.55, 75, 500, 40, 10), (0.45, 75, 500, 40, 10),
+                                  (0.51, 50, 800, 60, 0), (0.49, 50, 800, 60, 0), (25.0, 80, 60, 5, 50), (0.1, 30, 1000, 70, 0)]:
+        swath = 2 * h * math.tan(math.radians(fov / 2))
+        spacing = swath * (1 - ov / 100)
+        prr = round(target * v * spacing)
+        one, agg = prr / (v * swath), prr / (v * spacing)
+        ql = next((f"{q} (at least {m:g} pulses per m²)" for q, m in [("QL1", 8.0), ("QL2", 2.0), ("QL3", 0.5)] if agg >= m), "below QL3 (0.5 pulses per m²)")
+        inp = {"pulse_rate": f"{prr} Hz", "fov": f"{fov} deg", "height": f"{h} m", "speed": f"{v} m/s"}
+        if ov:
+            inp["side_overlap"] = ov
+        row = vec(len(out) + 1, inp, {"result.pulse_density": one, "result.aggregate_density": agg, "result.quality_level": ql})
+        row["source"], row["sourceVersion"] = usgs, "USGS Lidar Base Specification 2025 rev. A"
+        out.append(row)
     return out
 
 

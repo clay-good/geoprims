@@ -663,6 +663,7 @@ const fn density(name: &'static str, title: &'static str, help: &'static str) ->
 
 pub static LIDAR_PLAN: ToolDef = ToolDef {
     id: "drone.sensors.lidar-plan",
+    stability: gp_base::tool::Stability::Stable,
     version: "1.0.1",
     title: "Lidar mission planning",
     summary: "Swath, line spacing, and pulse density for a lidar flight, with the aggregate density over overlapping lines checked against the USGS 3DEP quality levels.",
@@ -787,7 +788,7 @@ pub static LIDAR_PLAN: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Swath = 2H tan(FOV/2); line spacing = swath (1 − side overlap); nominal pulse density = pulse rate ÷ (speed × swath) for one line, and ÷ (speed × line spacing) for the aggregate over overlapping lines; points = pulses × returns per pulse. Quality levels by aggregate nominal pulse density (USGS Lidar Base Specification 2025 rev. A, table 1)",
     accuracy: "Nominal and averaged across the swath: oscillating and non-repetitive scan patterns spread pulses unevenly, denser at the swath edges or center. Quality levels also set accuracy requirements that density alone does not meet; QL0 has QL1's density with tighter accuracy",
     when_to_use: "Use this to set up a lidar flight for a target point density. Give the pulse rate, the scan angle, the height, the speed, and the side overlap, and it gives the swath width, the line spacing, and the pulse density for one line and for all lines together. It names the USGS 3DEP quality level that density meets, so you can tune height and speed before you fly.",
@@ -805,6 +806,10 @@ pub static LIDAR_PLAN: ToolDef = ToolDef {
         map: &[],
     }],
     related: &[
+        Related {
+            id: "drone.mission.corridor",
+            reason: "next",
+        },
         Related {
             id: "drone.sensors.dataset-size",
             reason: "next",

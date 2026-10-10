@@ -2,7 +2,7 @@
 """Golden vectors for dataset size, thermal footprint, and the link budget,
 worked by hand: orthomosaic bytes = area / GSD^2 x bands x bits / 8; LAS =
 375 + points x the LAS 1.4 R15 record size; footprint = IFOV x distance with
-the 3 x 3 rule; FSPL = 20 log d_km + 20 log f_MHz + 32.44 (ITU-R P.525)."""
+the 3 x 3 rule; FSPL = 20 log(4 pi d f / c) (ITU-R P.525-5, equation 5)."""
 import json
 import math
 import sys
@@ -83,6 +83,54 @@ def link():
     out.append(vec(4, {"frequency": "5800 MHz", "distance": "1.5 km", "tx_power": 20, "jurisdiction": "eu"},
                    {"result.fspl": L3, "result.eirp_status": "No EIRP limit on file for this band; check the rules for your frequency"}))
     out.append(vec(5, {"frequency": "2400 MHz", "distance": "0 km"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    # Version 1.1.0 uses the exact constant of ITU-R P.525 equation 5,
+    # 20 log10(4 pi d f / c), in place of the rounded 32.44: 0.008 dB more.
+    # The four vectors above pinned the rounded figure, so each is superseded
+    # by the same case worked from the exact form, in meters and hertz.
+    C = 299792458.0
+
+    def exact(f_mhz, d_km):
+        return 20 * math.log10(4 * math.pi * (d_km * 1000) * (f_mhz * 1e6) / C)
+
+    reason = "Version 1.1.0 computes free-space loss from ITU-R P.525 equation 5 with the speed of light, 32.4478 dB for kilometers and megahertz, where 1.0 used the rounded 32.44: every loss is 0.008 dB higher."
+    for old in out[:4]:
+        new = json.loads(json.dumps(old))
+        new["id"] = f"v{len(out) + 1:03d}"
+        f_mhz = {"2400 MHz": 2400, "2.44 GHz": 2440, "5800 MHz": 5800}[old["input"]["frequency"]]
+        d_km = float(old["input"]["distance"].split()[0])
+        shift = exact(f_mhz, d_km) - old["expect"]["result.fspl"]
+        for k in ("result.fspl",):
+            new["expect"][k] = exact(f_mhz, d_km)
+        for k in ("result.rx_power", "result.fade_margin"):
+            if k in new["expect"]:
+                new["expect"][k] = old["expect"][k] - shift
+        new["source"] = "ITU-R P.525-5 equation 5, worked in meters and hertz in Python (tools/vectors/gen_sensing.py)"
+        old["supersededBy"], old["reason"] = new["id"], reason
+        out.append(new)
+    # The 2.4 GHz EIRP limits, either side of each: 36 dBm in the US (47 CFR
+    # 15.247(b)(3) and (b)(4): 1 W into up to 6 dBi) and 20 dBm in the EU (ETSI
+    # EN 300 328 V2.2.2, clause 4.3.2.2.3), both read 2026-10-10. "Near" is
+    # within 10% of the limit in milliwatts, about 0.46 dB.
+    fcc = "36 dBm EIRP limit (47 CFR 15.247(b)(3) and (b)(4), rules as of 2026-09-22)"
+    etsi = "20 dBm EIRP limit (ETSI EN 300 328 V2.2.2 (2019-07), clauses 4.3.1.2.3 and 4.3.2.2.3, rules as of 2026-09-22)"
+    limits = "ITU-R P.525-5 equation 5, with the 2.4 GHz limits of 47 CFR 15.247 and ETSI EN 300 328 as read 2026-10-10 (tools/vectors/gen_sensing.py)"
+    for j, label, limit in [("us", fcc, 36.0), ("eu", etsi, 20.0)]:
+        for pt, gt, loss in [(limit - 6, 6, 0), (limit - 6, 5, 0), (limit - 6, 6.2, 0), (limit - 10, 4, 2), (limit - 3, 3.5, 0)]:
+            eirp = pt + gt - loss / 2
+            ratio = 10 ** ((eirp - limit) / 10)
+            word = "Beyond" if ratio > 1 else "Near" if ratio >= 0.9 else "Within"
+            L = exact(2450, 1.2)
+            inp = {"frequency": "2450 MHz", "distance": "1.2 km", "tx_power": pt, "tx_gain": gt, "jurisdiction": j}
+            if loss:
+                inp["cable_loss"] = loss
+            row = vec(len(out) + 1, inp, {"result.fspl": L, "result.rx_power": pt + gt - loss - L, "result.eirp": eirp, "result.eirp_status": f"{word} your {label}"})
+            row["source"] = limits
+            out.append(row)
+    # Other bands and units: the loss alone.
+    for f_txt, f_mhz, d_txt, d_km in [("915 MHz", 915, "10 km", 10), ("5.8 GHz", 5800, "800 m", 0.8), ("433 MHz", 433, "3 NM", 5.556), ("1.2 GHz", 1200, "20 km", 20), ("2400 MHz", 2400, "100 m", 0.1)]:
+        row = vec(len(out) + 1, {"frequency": f_txt, "distance": d_txt}, {"result.fspl": exact(f_mhz, d_km)})
+        row["source"] = "ITU-R P.525-5 equation 5, worked in meters and hertz in Python (tools/vectors/gen_sensing.py)"
+        out.append(row)
     return out
 
 

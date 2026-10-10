@@ -62,6 +62,7 @@ fn catalog_examples_vectors() {
         &taxonomy,
         &[
             "navigation.los.fresnel",
+            "navigation.los.horizon",
             "geodesy.geoid.geoid-height",
             "aviation.weather.metar-decode",
         ],

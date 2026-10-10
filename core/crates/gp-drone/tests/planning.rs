@@ -505,3 +505,59 @@ fn lidar_plan_invariants() {
         );
     }
 }
+
+#[test]
+fn link_budget_invariants() {
+    // Free-space loss rises 6.02 dB for each doubling of distance or of
+    // frequency, and is 20 log10(4 pi d f / c); the received power is the sum
+    // of the gains less the losses; and the EIRP verdict turns at 36 dBm in
+    // the US and 20 dBm in the EU, in the 2.4 GHz band only.
+    let run = |extra: &str| {
+        call(
+            "drone.links.link-budget",
+            &format!(r#"{{"frequency":"2450 MHz"{extra}}}"#),
+        )
+    };
+    let base = num(&run(r#","distance":"1 km""#), "result.fspl");
+    let exact = 20.0 * (4.0 * std::f64::consts::PI * 1000.0 * 2.45e9 / 299_792_458.0).log10();
+    assert!((base - exact).abs() < 1e-9, "{base} vs {exact}");
+    let double = 20.0 * 2.0_f64.log10();
+    assert!((num(&run(r#","distance":"2 km""#), "result.fspl") - base - double).abs() < 1e-9);
+    let twice = call(
+        "drone.links.link-budget",
+        r#"{"frequency":"4900 MHz","distance":"1 km"}"#,
+    );
+    assert!((num(&twice, "result.fspl") - base - double).abs() < 1e-9);
+    let r = run(
+        r#","distance":"1 km","tx_power":20,"tx_gain":3,"rx_gain":5,"cable_loss":2,"rx_sensitivity":-92"#,
+    );
+    let rx = 20.0 + 3.0 + 5.0 - 2.0 - base;
+    assert!((num(&r, "result.rx_power") - rx).abs() < 1e-9);
+    assert!((num(&r, "result.fade_margin") - (rx + 92.0)).abs() < 1e-9);
+    assert!((num(&r, "result.eirp") - 22.0).abs() < 1e-9);
+    for (jurisdiction, limit) in [("us", 36.0), ("eu", 20.0)] {
+        for (over, word) in [(-3.0, "Within"), (0.0, "Near"), (0.5, "Beyond")] {
+            let r = run(&format!(
+                r#","distance":"1 km","tx_power":{},"jurisdiction":"{jurisdiction}""#,
+                limit + over
+            ));
+            assert!(
+                r["result"]["eirp_status"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with(word),
+                "{jurisdiction} {over}: {r}"
+            );
+        }
+    }
+    let other = call(
+        "drone.links.link-budget",
+        r#"{"frequency":"915 MHz","distance":"1 km","tx_power":30,"jurisdiction":"us"}"#,
+    );
+    assert!(
+        other["result"]["eirp_status"]
+            .as_str()
+            .unwrap()
+            .starts_with("No EIRP limit on file")
+    );
+}

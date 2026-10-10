@@ -16,13 +16,18 @@ use libm::log10;
 use crate::unit;
 
 const ITU_525: Reference = Reference {
-    title: "Recommendation ITU-R P.525-4: Calculation of free-space attenuation",
+    title: "Recommendation ITU-R P.525-5: Calculation of free-space attenuation",
     issuer: "International Telecommunication Union",
-    year: 2019,
-    edition: "P.525-4 (08/2019)",
-    locator: "Equation 6: L = 32.4 + 20 log f + 20 log d, with f in MHz and d in km",
-    url: "https://www.itu.int/rec/R-REC-P.525-4-201908-I/en",
+    year: 2024,
+    edition: "P.525-5 (11/2024)",
+    locator: "Equation 5: L = 20 log (4πd/λ); equation 6, the same rounded: L = 32.4 + 20 log f + 20 log d, with f in MHz and d in km",
+    url: "https://www.itu.int/rec/R-REC-P.525-5-202411-I/en",
 };
+
+/// 20 log₁₀(4π × 10⁹ ÷ c) with c = 299,792,458 m/s: the constant of equation 5
+/// for a distance in kilometers and a frequency in megahertz. ITU prints it as
+/// 32.4; textbooks round it to 32.44 or 32.45.
+const FSPL_KM_MHZ: f64 = 32.447_783_221_883_38;
 
 const fn db(
     name: &'static str,
@@ -37,7 +42,8 @@ const fn db(
 
 pub static LINK_BUDGET: ToolDef = ToolDef {
     id: "drone.links.link-budget",
-    version: "1.0.1",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Radio link budget",
     summary: "Free-space path loss, received signal, and fade margin for a control or video link, with the transmitter's EIRP checked against the dated 2.4 GHz limit where you fly.",
     aliases: &[
@@ -134,7 +140,7 @@ pub static LINK_BUDGET: ToolDef = ToolDef {
         db(
             "fspl",
             "Free-space path loss",
-            "20 log d(km) + 20 log f(MHz) + 32.44",
+            "20 log d(km) + 20 log f(MHz) + 32.45",
             0.0,
             400.0,
             "dB",
@@ -180,8 +186,8 @@ pub static LINK_BUDGET: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "FSPL = 20 log₁₀ d_km + 20 log₁₀ f_MHz + 32.44 dB (ITU-R P.525); received power = transmit power + both antenna gains − cable losses − FSPL; fade margin = received power − sensitivity; EIRP = transmit power + transmit gain − half the cable loss, taken as the transmit side. 2.4 GHz limits from dated reference data",
+    warnings: &["UNIT_ASSUMED"],
+    model: "FSPL = 20 log₁₀(4πdf ÷ c) = 20 log₁₀ d_km + 20 log₁₀ f_MHz + 32.45 dB (ITU-R P.525, equation 5); received power = transmit power + both antenna gains − cable losses − FSPL; fade margin = received power − sensitivity; EIRP = transmit power + transmit gain − half the cable loss, taken as the transmit side. 2.4 GHz limits from dated reference data",
     accuracy: "Free space only: terrain, the ground reflection, bodies, and vegetation add loss, so check the Fresnel zone and line of sight too. Planning aid; your equipment's certification governs",
     when_to_use: "Use this when you set up a control or video link and want to know if it will hold at the range you plan to fly. Enter the frequency, distance, transmit power, receiver sensitivity, and antenna gains, and it gives the free-space path loss, the received power, and the fade margin left over. It also checks the transmitter's EIRP against the 2.4 GHz limit under US or EU rules.",
     limitations: "This is free-space loss only, the ideal case for a clear path. Terrain, the ground reflection, trees, buildings, and the pilot's own body all add loss it does not count, so check the Fresnel zone and line of sight too. The EIRP check knows only the 2.4 GHz band, and it takes half the cable loss as the transmit side. Your radio's certification and the rule's own text govern what you may transmit.",
@@ -206,6 +212,10 @@ pub static LINK_BUDGET: ToolDef = ToolDef {
             id: "drone.sensors.vlos",
             reason: "alternative",
         },
+        Related {
+            id: "navigation.los.horizon",
+            reason: "next",
+        },
     ],
     sentence: "The path loses {fspl} dB.{if fade_margin > -1000} The link keeps {fade_margin} dB of fade margin.{/if}",
     limits: &[("batchRows", 10_000)],
@@ -224,7 +234,7 @@ fn run_link(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "Give a frequency above 0 (up to 1 THz) and a distance above 0 (up to 100,000 km).",
         ));
     }
-    let fspl = 20.0 * log10(d) + 20.0 * log10(f) + 32.44;
+    let fspl = 20.0 * log10(d) + 20.0 * log10(f) + FSPL_KM_MHZ;
     let (gt, gr) = (
         ctx.number("tx_gain")?.unwrap_or(0.0),
         ctx.number("rx_gain")?.unwrap_or(0.0),
@@ -242,9 +252,9 @@ fn run_link(ctx: &mut Ctx) -> Result<Json, ToolError> {
         );
         ctx.step(
             "Free-space path loss",
-            "20 log₁₀ d_km + 20 log₁₀ f_MHz + 32.44",
+            "20 log₁₀ d_km + 20 log₁₀ f_MHz + 32.45",
             format!(
-                "{} + {} + 32.44",
+                "{} + {} + 32.45",
                 n(20.0 * log10(d), 2),
                 n(20.0 * log10(f), 2)
             ),

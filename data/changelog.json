@@ -3,6 +3,20 @@
   "entries": [
     {
       "date": "2026-10-10",
+      "kind": "result-change",
+      "tools": [
+        "drone.links.link-budget"
+      ],
+      "vectors": [
+        "drone.links.link-budget v001",
+        "drone.links.link-budget v002",
+        "drone.links.link-budget v003",
+        "drone.links.link-budget v004"
+      ],
+      "summary": "The radio link budget (version 1.1.0) now works free-space loss from the exact form, 20 log(4πdf/c), where it used a rounded constant of 32.44: every loss is 0.008 dB higher, and received power and fade margin 0.008 dB lower. Its citation moves to the current edition of the ITU recommendation, P.525-5 of November 2024. The tool is now stable, with its 2.4 GHz power limits checked against 47 CFR 15.247 and ETSI EN 300 328."
+    },
+    {
+      "date": "2026-10-10",
       "kind": "changed",
       "tools": [
         "drone.ops.easa-subcategory"

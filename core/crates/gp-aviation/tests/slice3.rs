@@ -1046,3 +1046,52 @@ fn q_codes_invariants() {
         }
     }
 }
+
+#[test]
+fn cloud_base_invariants() {
+    let run = |input: String| {
+        let r = call("aviation.atmosphere.cloud-base", &input);
+        assert_eq!(r["ok"], true, "{r}");
+        r
+    };
+    for t in [-10.0, 0.0, 15.0, 30.0, 45.0] {
+        let mut last = -1.0;
+        for spread in [0.0, 0.5, 2.0, 5.0, 10.0, 20.0, 30.0] {
+            let td = t - spread;
+            let r = run(format!(
+                r#"{{"temperature":"{t} degC","dew_point":"{td} degC","elevation":"3000 ft"}}"#
+            ));
+            let (rule, lcl) = (
+                num(&r, "result.cloud_base_rule.value"),
+                num(&r, "result.cloud_base_lcl.value"),
+            );
+            // The rule is 400 ft for each degree of spread; saturated air
+            // has its base on the ground by both.
+            assert!((rule - 400.0 * spread).abs() < 1e-9, "{r}");
+            if spread == 0.0 {
+                assert!(lcl.abs() < 1e-6, "{r}");
+            } else {
+                // The rule is a round form of the LCL: within 7% of it.
+                assert!(
+                    (lcl / rule - 1.0).abs() < 0.07,
+                    "{t} {spread}: {lcl} vs {rule}"
+                );
+            }
+            // A wider spread lifts the base.
+            assert!(lcl > last, "{r}");
+            last = lcl;
+            assert!((num(&r, "result.cloud_base_msl.value") - lcl - 3000.0).abs() < 1e-9);
+            // The freezing level is the surface temperature over the standard
+            // lapse rate, above the field, and is left out at or below 0 °C.
+            if t > 0.0 {
+                assert!(
+                    (num(&r, "result.freezing_level.value") - (3000.0 + t / 1.98 * 1000.0)).abs()
+                        < 1e-6,
+                    "{r}"
+                );
+            } else {
+                assert!(r["result"]["freezing_level"].is_null(), "{r}");
+            }
+        }
+    }
+}

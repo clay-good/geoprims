@@ -5,6 +5,15 @@
       "date": "2026-10-10",
       "kind": "changed",
       "tools": [
+        "aviation.atmosphere.cloud-base"
+      ],
+      "vectors": [],
+      "summary": "The cloud base and freezing level tool is now stable. Its lifting condensation level agrees with MetPy, Unidata's meteorology library, within 0.08% at 16 surface readings from −20 °C to 45 °C. Its answers are unchanged."
+    },
+    {
+      "date": "2026-10-10",
+      "kind": "changed",
+      "tools": [
         "aviation.altimetry.q-codes"
       ],
       "vectors": [],

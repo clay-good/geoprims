@@ -292,6 +292,7 @@ const BOLTON: Reference = Reference {
 
 pub static CLOUD_BASE: ToolDef = ToolDef {
     id: "aviation.atmosphere.cloud-base",
+    stability: gp_base::tool::Stability::Stable,
     title: "Cloud base and freezing level",
     summary: "An estimate of the base of convective clouds from the temperature and dew point, by the 400 ft per degree rule and by the lifting condensation level, and of the freezing level.",
     aliases: &["cloud base", "cloud base calculator", "freezing level", "lifting condensation level", "LCL"],
@@ -309,7 +310,7 @@ pub static CLOUD_BASE: ToolDef = ToolDef {
         qty("freezing_level", "Freezing level", "Where the temperature reaches 0 °C at the lapse rate, above sea level when the field elevation is given", QT::Length, "ft").precision(Precision::Decimals(0)).optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Rule of thumb: base ≈ (temperature − dew point) × 400 ft per °C. Lifting condensation level: Bolton (1980) eq. 15, T_L = 1/(1/(T_d − 56) + ln(T/T_d)/800) + 56 in kelvins, reached at (T − T_L) ÷ (g/c_p) above the surface, with g/c_p = 9.77 K per km. Freezing level: surface temperature ÷ lapse rate above the field (standard 1.98 °C per 1,000 ft)",
     accuracy: "Estimates for well-mixed surface air forming convective cloud: the LCL is within about 0.1 K in temperature by Bolton's fit; real bases vary with mixing and terrain",
     when_to_use: "Use this on a warm afternoon when you want a rough idea where puffy cumulus will form, or how high the freezing level sits. Enter the surface temperature and dew point, and the field elevation for heights above sea level. It gives a cloud base by the 400 ft per degree rule and by the lifting condensation level. Compare the result with the reported ceilings before a VFR flight.",
@@ -326,6 +327,7 @@ pub static CLOUD_BASE: ToolDef = ToolDef {
     related: &[
         Related { id: "aviation.altimetry.density-altitude", reason: "alternative" },
         Related { id: "aviation.weather.metar-decode", reason: "parent" },
+        Related { id: "aviation.atmosphere.humidity", reason: "alternative" },
     ],
     sentence: "Convective clouds should form about {cloud_base_lcl} above the field; the rule of thumb says {cloud_base_rule}.",
     limits: &[("batchRows", 10_000)],

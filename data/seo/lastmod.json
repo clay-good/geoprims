@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "73ad5f8f75fcd289",
+    "hash": "7fb8ad51b5547c3c",
     "lastmod": "2026-10-10"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "9b5be2b4cc3af409",
+    "hash": "e48b286940795715",
     "lastmod": "2026-10-10"
   },
   "/aviation/": {
@@ -80,8 +80,8 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/atmosphere/cloud-base/": {
-    "hash": "ea3cf4e615aac484",
-    "lastmod": "2026-10-09"
+    "hash": "1839e53ad26d75ac",
+    "lastmod": "2026-10-10"
   },
   "/aviation/atmosphere/humidity/": {
     "hash": "93c65c259708517c",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "4f67f313548f575e",
+    "hash": "1b98b77ea88f570f",
     "lastmod": "2026-10-10"
   },
   "/disclaimer/": {
@@ -1168,7 +1168,7 @@
     "lastmod": "2026-09-29"
   },
   "/methodology/": {
-    "hash": "29410fb4cb29a7c7",
+    "hash": "28450e7340a20fde",
     "lastmod": "2026-10-10"
   },
   "/navigation/": {
@@ -1688,7 +1688,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "a4f295ee20121020",
+    "hash": "25f408c71e9a399d",
     "lastmod": "2026-10-10"
   },
   "/units/": {
@@ -1952,7 +1952,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "31e269a8e7befb96",
+    "hash": "c288b2566738b19d",
     "lastmod": "2026-10-10"
   },
   "/workflows/": {

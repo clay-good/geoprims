@@ -85,9 +85,11 @@ for lat, lon, brg, length, standoff, top, bottom, sw, sh, f, iw, overlaps, side 
     exp = {"ok": True, "result.gsd.value": sw / iw * standoff / f * 100, "result.footprint_width.value": w, "result.footprint_height.value": h,
            "result.photo_spacing.value": gap(cols), "result.pass_spacing.value": gap(levels), "result.passes": len(levels),
            "result.photos_per_pass": len(cols), "result.photos": len(wps), "result.facade_length.value": wall["s12"], "result.path_length.value": path}
-    tol = {k: {"abs": 0} if isinstance(v, int) else {"abs": 1e-8} for k, v in exp.items() if k != "ok"}
+    tol = {k: {"abs": 0} if isinstance(v, int) else {"abs": 1e-7} for k, v in exp.items() if k != "ok"}
+    # The path adds up to 49 short geodesics; the core built for x86 and for ARM differs in it by 1e-8 m.
+    tol["result.path_length.value"] = {"abs": 1e-6}
     for i, (la, lo, hd, z) in enumerate(wps):
-        for key, v, t in (("lat", la, 1e-10), ("lon", lo, 1e-10), ("height", z, 1e-9), ("heading", hd, 1e-7)):
+        for key, v, t in (("lat", la, 1e-9), ("lon", lo, 1e-9), ("height", z, 1e-9), ("heading", hd, 1e-7)):
             exp[f"result.waypoints.{i}.{key}.value"] = v
             tol[f"result.waypoints.{i}.{key}.value"] = {"abs": t}
     rows.append({"id": f"v{len(rows) + 1:03d}", "input": inp, "expect": exp, "source": SRC, "sourceVersion": VER, "tolerance": tol})

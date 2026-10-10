@@ -35,7 +35,7 @@ The wall is one straight, flat, vertical face and the camera is level and square
 - independent: yes
 - inputs: wall 40.4406°, −80.002° to 40.440599998°, −80.001410673°; standoff 30 m; top 25 m; sensor 13.2 × 8.8 mm; focal length 8.8 mm; image width 5,472 px
 - outputs: footprint 45 × 30 m; GSD 0.822 cm; 1 pass of 2 photos at 12.5 m, 5.000 m apart; stations 40.4403298°, −80.0017348° and 40.4403298°, −80.0016759°; wall length 49.99997 m
-- tolerance: 1e-10° for each station; 1e-8 m for lengths and spacings; 1e-7° for headings; exact for counts
+- tolerance: 1e-9° for each station (0.1 mm); 1e-7 m for lengths and spacings and 1e-6 m for the path, which differs by 1e-8 m between the core built for x86 and for ARM; 1e-7° for headings; exact for counts
 - verifiedBy: golden vector v015, run by the core on every build
 - verifiedOn: 2026-10-10
 

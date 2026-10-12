@@ -79,6 +79,9 @@ const MUST_DECLARE = [
   'survey.reduction.slope',
   'survey.reduction.curvature-refraction',
   'survey.reduction.inaccessible-height',
+  'aviation.ifr.hold-entry',
+  'aviation.ifr.hold-speed-limit',
+  'aviation.ifr.hold-wind-timing',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -143,6 +146,32 @@ test('the sensing tools expose their published LAS and USGS tables', () => {
     ['8.0', 'pulses/m2', 'usgs-lbs'],
     ['2.0', 'pulses/m2', 'usgs-lbs'],
     ['0.5', 'pulses/m2', 'usgs-lbs'],
+  ]);
+});
+
+test('the holding tools expose their published sectors, limits, and defaults', () => {
+  const entry = byId('aviation.ifr.hold-entry')['x-assumptions'];
+  assert.deepEqual(entry.map(({ value, unit, source }) => [value, unit, source]), [
+    ['180', 'deg', 'aim'],
+    ['70', 'deg', 'aim'],
+    ['110', 'deg', 'aim'],
+    ['30', 'deg', 'faa-ifh'],
+    ['5', 'deg', 'icao-8168'],
+  ]);
+
+  const speed = byId('aviation.ifr.hold-speed-limit')['x-assumptions'];
+  assert.deepEqual(speed.map(({ value, unit, source }) => [value, unit, source]), [
+    ['6000', 'ft', 'aim'],
+    ['14000', 'ft', 'aim'],
+    ['200', 'KIAS', 'aim'],
+    ['230', 'KIAS', 'aim'],
+    ['265', 'KIAS', 'aim'],
+  ]);
+
+  const wind = byId('aviation.ifr.hold-wind-timing')['x-assumptions'];
+  assert.deepEqual(wind.map(({ value, unit, source }) => [value, unit, source]), [
+    ['1', 'min', 'aim'],
+    ['3', '1', 'faa-ifh'],
   ]);
 });
 

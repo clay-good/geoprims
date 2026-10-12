@@ -7,7 +7,9 @@ use crate::{deg, knots, obj, unit};
 use gp_base::angle::wrap_azimuth;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_base::{ErrorCode, display};
 use libm::{asin, cos, sin};
@@ -267,6 +269,38 @@ pub static HOLD_ENTRY: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Direct-entry sector",
+            value: "180",
+            unit: "deg",
+            source: "aim",
+        },
+        Assumption {
+            name: "Teardrop-entry sector",
+            value: "70",
+            unit: "deg",
+            source: "aim",
+        },
+        Assumption {
+            name: "Parallel-entry sector",
+            value: "110",
+            unit: "deg",
+            source: "aim",
+        },
+        Assumption {
+            name: "Teardrop heading offset from the outbound course",
+            value: "30",
+            unit: "deg",
+            source: "faa-ifh",
+        },
+        Assumption {
+            name: "Zone of flexibility at an entry-sector boundary",
+            value: "5",
+            unit: "deg",
+            source: "icao-8168",
+        },
+    ],
     sentence: "Fly a {entry} entry. {explanation}",
     limits: &[("batchRows", 10_000)],
     run: run_hold_entry,
@@ -471,6 +505,38 @@ pub static HOLD_SPEED: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "First holding-altitude band ceiling",
+            value: "6000",
+            unit: "ft",
+            source: "aim",
+        },
+        Assumption {
+            name: "Second holding-altitude band ceiling",
+            value: "14000",
+            unit: "ft",
+            source: "aim",
+        },
+        Assumption {
+            name: "Maximum holding airspeed through 6,000 ft",
+            value: "200",
+            unit: "KIAS",
+            source: "aim",
+        },
+        Assumption {
+            name: "Maximum holding airspeed from 6,001 through 14,000 ft",
+            value: "230",
+            unit: "KIAS",
+            source: "aim",
+        },
+        Assumption {
+            name: "Maximum holding airspeed above 14,000 ft",
+            value: "265",
+            unit: "KIAS",
+            source: "aim",
+        },
+    ],
     sentence: "The maximum holding speed is {max_ias} ({basis}).{warn ABOVE_MAX_HOLDING_SPEED} Your planned speed is above it.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_hold_speed,
@@ -650,6 +716,20 @@ pub static HOLD_WIND: ToolDef = ToolDef {
         id: "aviation.ifr.hold-entry",
         reason: "alternative",
     }],
+    assumptions: &[
+        Assumption {
+            name: "Default inbound leg time",
+            value: "1",
+            unit: "min",
+            source: "aim",
+        },
+        Assumption {
+            name: "Outbound wind-correction multiplier",
+            value: "3",
+            unit: "1",
+            source: "faa-ifh",
+        },
+    ],
     sentence: "Fly {inbound_heading} inbound and {outbound_heading} outbound for {outbound_time}.",
     limits: &[("batchRows", 10_000)],
     run: run_hold_wind,

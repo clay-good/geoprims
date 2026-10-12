@@ -112,16 +112,16 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/ifr/hold-entry/": {
-    "hash": "042136255c5c9fe1",
-    "lastmod": "2026-10-09"
+    "hash": "9d11f3119a686e8c",
+    "lastmod": "2026-10-12"
   },
   "/aviation/ifr/hold-speed-limit/": {
-    "hash": "829f1149dc6703f4",
+    "hash": "41104434f29e9c3f",
     "lastmod": "2026-10-12"
   },
   "/aviation/ifr/hold-wind-timing/": {
-    "hash": "e0ec506933cd348c",
-    "lastmod": "2026-10-10"
+    "hash": "158d5d1468cab7a5",
+    "lastmod": "2026-10-12"
   },
   "/aviation/ifr/radial-fix/": {
     "hash": "9fde3068c52407be",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "9094dffcdfb25fe0",
+    "hash": "b344f1bae2d41088",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

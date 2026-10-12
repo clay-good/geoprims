@@ -4,6 +4,7 @@ pub mod bandmath;
 pub mod contour;
 pub mod geotiff;
 pub mod indices;
+pub mod processing;
 pub mod scaling;
 pub mod sightline;
 pub mod terrain;

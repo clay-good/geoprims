@@ -139,8 +139,7 @@ fn refl(ctx: &mut Ctx, name: &str) -> Result<f64, ToolError> {
 
 /// A normalized difference (a - b) / (a + b), refusing a zero denominator.
 fn normalized(a: f64, b: f64, names: (&str, &str)) -> Result<f64, ToolError> {
-    let sum = a + b;
-    if sum == 0.0 {
+    let Some(value) = normalized_value(a, b) else {
         return Err(ToolError::invalid(
             &format!("/{}", names.0),
             format!(
@@ -149,8 +148,14 @@ fn normalized(a: f64, b: f64, names: (&str, &str)) -> Result<f64, ToolError> {
             ),
         )
         .hint("Check the bands are reflectance and that this pixel is not masked."));
-    }
-    Ok((a - b) / sum)
+    };
+    Ok(value)
+}
+
+/// The normalized-difference kernel shared by scalar and raster execution.
+pub(crate) fn normalized_value(a: f64, b: f64) -> Option<f64> {
+    let sum = a + b;
+    (sum != 0.0).then_some((a - b) / sum)
 }
 
 macro_rules! normalized_tool {

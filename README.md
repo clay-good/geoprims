@@ -21,6 +21,8 @@ Geodesy, navigation, geometry, aviation, drones, surveying, spatial indexing, ra
 
 Spatial indexing includes H3 polygon fills with all four H3 v4 containment modes, including holes, antimeridian crossings, and the library's polar edge cases. The map renders fills approaching 1,000,000 cells through view-selected H3 parent levels, then restores finer detail as you zoom. The experimental tools for A5, pinned to version 0.10.1, index points into equal-area pentagons and expose their boundaries and hierarchy.
 
+Geometry includes planar and geodesic-edge polygon intersection, union, difference, and symmetric difference. The planar engine matches GEOS across 400 generated degenerate pairs and 48 polygon pairs from JTS 1.20.0's canonical area-overlay suites, through all four operations.
+
 ## Status
 
 Live at [geoprims.com](https://geoprims.com) since September 23, 2026, and still growing. Tools that pass full verification are marked stable; the rest are labeled experimental. The plan and specs live in [`openspec/changes/`](openspec/changes/).

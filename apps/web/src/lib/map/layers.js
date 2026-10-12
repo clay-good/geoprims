@@ -25,6 +25,43 @@ export const mapsTool = (tool) =>
 /** A layer's field mapping: an object in the catalog ({lat: "lat"}), or [key, field] pairs. */
 const mapOf = (m) => (Array.isArray(m) ? Object.fromEntries(m) : (m ?? {}));
 
+const along = (a, b) => Array.from({ length: 17 }, (_, i) => [a[0] + ((b[0] - a[0]) * i) / 16, a[1] + ((b[1] - a[1]) * i) / 16]);
+
+const UTM_BANDS = Array.from({ length: 20 }, (_, i) => -80 + i * 8).concat(84);
+
+/** UTM meridian edges in one latitude band, including the Norway and Svalbard exceptions. */
+function utmEdges(lat) {
+  const edges = Array.from({ length: 61 }, (_, i) => -180 + i * 6);
+  if (lat >= 56 && lat < 64) return edges.filter((lon) => lon !== 6).concat(3).sort((a, b) => a - b);
+  if (lat >= 72) return edges.filter((lon) => lon <= 0 || lon >= 42).concat(9, 21, 33).sort((a, b) => a - b);
+  return edges;
+}
+
+/** The UTM zone and latitude-band lines three bands and about three zones around a result. */
+export function utmGrid(south, west, north, east) {
+  const selected = UTM_BANDS.findIndex((lat) => Math.abs(lat - south) < 1e-9);
+  if (selected < 0 || Math.abs(UTM_BANDS[selected + 1] - north) >= 1e-9) return [];
+  const lo = west - 18;
+  const hi = east + 18;
+  const first = Math.max(0, selected - 3);
+  const last = Math.min(UTM_BANDS.length - 2, selected + 3);
+  const lines = [];
+  for (let band = first; band <= last; band++) {
+    const [a, b] = [UTM_BANDS[band], UTM_BANDS[band + 1]];
+    const meridians = new Set();
+    for (const edge of utmEdges((a + b) / 2)) {
+      for (const shift of [-360, 0, 360]) {
+        const lon = edge + shift;
+        if (lon >= lo - 1e-9 && lon <= hi + 1e-9) meridians.add(lon);
+      }
+    }
+    for (const lon of meridians) lines.push(along([lon, a], [lon, b]));
+    lines.push(along([lo, a], [hi, a]));
+  }
+  lines.push(along([lo, UTM_BANDS[last + 1]], [hi, UTM_BANDS[last + 1]]));
+  return lines;
+}
+
 const at = (result, field) => {
   const v = result?.result?.[field];
   return typeof v === 'number' ? v : v?.value;
@@ -294,13 +331,15 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
     for (let i = 1; i <= steps; i++) ring.push([e - ((e - w) * i) / steps, n]);
     for (let i = 1; i < steps; i++) ring.push([w, n - ((n - s) * i) / steps]);
     layers.push({ kind: 'polygon', role: 'result', rings: [ring] });
+    if (tool.id === 'geodesy.utm.forward') {
+      for (const points of utmGrid(s, w, n, e)) layers.unshift({ kind: 'line', role: 'input', points, grid: true, gridKind: 'utm' });
+    }
     // A latitude-longitude grid reference (Maidenhead, GARS, GEOREF) names one
     // cell of a regular grid, so the grid around it (grid-references "Grid
     // overlays on the canvas") is the cell's own edges three cells out.
     if (tool.id?.startsWith('geodesy.grid-ref.')) {
       const [dw, dh] = [e - w, n - s];
       const [lo0, lo1, la0, la1] = [w - 3 * dw, e + 3 * dw, Math.max(-90, s - 3 * dh), Math.min(90, n + 3 * dh)];
-      const along = (a, b) => Array.from({ length: 17 }, (_, i) => [a[0] + ((b[0] - a[0]) * i) / 16, a[1] + ((b[1] - a[1]) * i) / 16]);
       for (let k = -3; k <= 4; k++) {
         layers.unshift({ kind: 'line', role: 'input', points: along([w + k * dw, la0], [w + k * dw, la1]), grid: true });
         const lat = s + k * dh;

@@ -118,6 +118,40 @@ test('layers: a grid cell (bbox) draws as its outline along parallels and meridi
   assert.deepEqual(await buildLayers(mgrs, {}, { ok: true, result: { square_size: { value: 1 } } }, async () => null), []);
 });
 
+test('UTM grid overlay draws surrounding bands and the Norway and Svalbard exceptions', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const tool = catalog.tools.find((t) => t.id === 'geodesy.utm.forward');
+  const run = async (lat, lon) => {
+    const args = { lat, lon };
+    const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+    const layers = await buildLayers(tool, args, result, async () => null, null);
+    return { result, grid: layers.filter((layer) => layer.gridKind === 'utm') };
+  };
+  const vertical = (line, lon, south, north) => line.points.every((point) => Math.abs(point[0] - lon) < 1e-9)
+    && Math.abs(line.points[0][1] - south) < 1e-9 && Math.abs(line.points.at(-1)[1] - north) < 1e-9;
+
+  const ordinary = await run(40.4406, -79.9959);
+  assert.equal(ordinary.result.result.zone, 17);
+  assert.ok(ordinary.grid.some((line) => vertical(line, -84, 40, 48)), 'the west edge of zone 17T');
+  assert.ok(ordinary.grid.some((line) => vertical(line, -78, 40, 48)), 'the east edge of zone 17T');
+  assert.ok(ordinary.grid.some((line) => line.points.every((point) => Math.abs(point[1] - 40) < 1e-9)), 'the south edge of band T');
+
+  const norway = await run(60, 6);
+  assert.equal(norway.result.result.zone, 32);
+  assert.ok(norway.grid.some((line) => vertical(line, 3, 56, 64)), 'Norway moves the 31V/32V edge to 3° E');
+  assert.ok(!norway.grid.some((line) => vertical(line, 6, 56, 64)), 'Norway has no 6° E edge in band V');
+
+  const svalbard = await run(78, 15);
+  assert.equal(svalbard.result.result.zone, 33);
+  assert.ok(svalbard.grid.some((line) => vertical(line, 9, 72, 84)), 'Svalbard zone 33X starts at 9° E');
+  assert.ok(svalbard.grid.some((line) => vertical(line, 21, 72, 84)), 'Svalbard zone 33X ends at 21° E');
+  assert.ok(!svalbard.grid.some((line) => vertical(line, 12, 72, 84)), 'Svalbard has no zone edge at 12° E');
+});
+
 test('layers: every catalog tool builds its layers from its example without throwing', async () => {
   const { buildLayers } = await import('../src/lib/map/layers.js');
   const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');

@@ -212,7 +212,7 @@
       layers.some((l) => l.track) && { cls: 'input', text: 'The track' },
       layers.some((l) => l.iso && l.level !== undefined) && { cls: 'input', text: 'Isogonic lines every 2°; the agonic line (0°) in the accent' },
       layers.some((l) => l.iso && l.zone) && { cls: 'dashed', text: 'Compass caution (under 6,000 nT) and blackout (under 2,000 nT) zone edges' },
-      layers.some((l) => l.grid) && { cls: 'input', text: tool.id.includes('mgrs') ? 'Grid lines: the square size (at least 1 km) three squares out, and the 100 km square' : 'Grid lines: cells of the same size, three out' },
+      layers.some((l) => l.grid) && { cls: 'input', text: tool.id.includes('mgrs') ? 'Grid lines: the square size (at least 1 km) three squares out, and the 100 km square' : layers.some((l) => l.gridKind === 'utm') ? 'Grid lines: UTM zones and latitude bands around the result' : 'Grid lines: cells of the same size, three out' },
       layers.some((l) => l.kind === 'sky') && { cls: 'solid', text: `Sun path: the ring is the horizon, the site overhead; bold above ${layers.find((l) => l.kind === 'sky').threshold}°` },
       layers.some((l) => l.offset) && { cls: 'solid', text: `Cross-track offset${result?.display?.cross_track ? ` · ${result.display.cross_track}` : ''}` },
       layers.some((l) => l.kind === 'line' && l.role === 'comparison' && l.path === other) && { cls: 'dashed', text: `${named(!rhumb)}, for comparison${lengthOf(other)}` },

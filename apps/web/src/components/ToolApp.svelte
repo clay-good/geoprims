@@ -18,6 +18,7 @@
   import { isNumeric, isSigned, flipped, stepLabel, stepped, stepsOf } from '../lib/fields.mjs';
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { assetMessage } from '../lib/messages.js';
+  import { publicInputs } from '../lib/private.mjs';
   import { cameFrom, chainHref, chainState, chainTargets, routeOf, windHandoff } from '../lib/chain.mjs';
   import { takesProfile } from '../lib/aircraft.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
@@ -300,7 +301,7 @@
     stale = false;
     elapsedMs = null;
     if (settingsOnly) return;
-    const enc = await compute.encodeLink({ i: a });
+    const enc = await compute.encodeLink({ i: publicInputs(tool, a) });
     if (!enc?.ok) return;
     if (embedded) fragment = `#${enc.result.fragment}`;
     else history.replaceState(null, '', `#${enc.result.fragment}`);

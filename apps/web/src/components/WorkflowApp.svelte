@@ -9,6 +9,7 @@
   import { mapsTool } from '../lib/map/layers.js';
   import { loadDiagram } from '../lib/diagram-loader.js';
   import { isNumeric } from '../lib/fields.mjs';
+  import { publicInputs } from '../lib/private.mjs';
   import { planText } from '../lib/plan.mjs';
   import { workflowExport } from '../lib/export.mjs';
 
@@ -110,7 +111,7 @@
         continue;
       }
       const came = s.carried.length ? out.steps[s.carried[0].from].tool : undefined;
-      const enc = await compute.encodeLink({ i: s.input, ...(came ? { c: came } : {}) });
+      const enc = await compute.encodeLink({ i: publicInputs(t, s.input), ...(came ? { c: came } : {}) });
       if (id !== runId) return;
       s.href = enc?.ok ? `${t.route}#${enc.result.fragment}` : t.route;
       s.title = t.title;

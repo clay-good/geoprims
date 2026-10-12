@@ -216,12 +216,12 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/weather/metar-decode/": {
-    "hash": "fd577494837d1116",
-    "lastmod": "2026-10-09"
+    "hash": "0490c16401573730",
+    "lastmod": "2026-10-12"
   },
   "/aviation/weather/taf-decode/": {
-    "hash": "c84f8f0a1818f6c0",
-    "lastmod": "2026-10-09"
+    "hash": "e9f16277c49a2887",
+    "lastmod": "2026-10-12"
   },
   "/aviation/wind/": {
     "hash": "a43e4d8a6d72f89b",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b344f1bae2d41088",
+    "hash": "3001c25edfbf9fa5",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

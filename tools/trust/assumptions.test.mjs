@@ -82,6 +82,8 @@ const MUST_DECLARE = [
   'aviation.ifr.hold-entry',
   'aviation.ifr.hold-speed-limit',
   'aviation.ifr.hold-wind-timing',
+  'aviation.weather.metar-decode',
+  'aviation.weather.taf-decode',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -173,6 +175,21 @@ test('the holding tools expose their published sectors, limits, and defaults', (
     ['1', 'min', 'aim'],
     ['3', '1', 'faa-ifh'],
   ]);
+});
+
+test('the weather decoders expose the FAA flight-category boundaries', () => {
+  const expected = [
+    ['500', 'ft', 'faa-awh'],
+    ['1', 'mi', 'faa-awh'],
+    ['1000', 'ft', 'faa-awh'],
+    ['3', 'mi', 'faa-awh'],
+    ['3000', 'ft', 'faa-awh'],
+    ['5', 'mi', 'faa-awh'],
+  ];
+  for (const id of ['aviation.weather.metar-decode', 'aviation.weather.taf-decode']) {
+    const assumptions = byId(id)['x-assumptions'];
+    assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), expected, id);
+  }
 });
 
 test('every tool that rests on constants declares them', () => {

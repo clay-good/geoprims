@@ -8,7 +8,9 @@ use crate::{obj, unit};
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 
 pub const JO_7900_5: Reference = Reference {
@@ -500,6 +502,45 @@ pub fn flight_category(ceiling: Option<f64>, vis: Option<f64>) -> &'static str {
     }
 }
 
+const FLIGHT_CATEGORY_ASSUMPTIONS: &[Assumption] = &[
+    Assumption {
+        name: "LIFR ceiling boundary",
+        value: "500",
+        unit: "ft",
+        source: "faa-awh",
+    },
+    Assumption {
+        name: "LIFR visibility boundary",
+        value: "1",
+        unit: "mi",
+        source: "faa-awh",
+    },
+    Assumption {
+        name: "IFR ceiling boundary",
+        value: "1000",
+        unit: "ft",
+        source: "faa-awh",
+    },
+    Assumption {
+        name: "IFR visibility boundary",
+        value: "3",
+        unit: "mi",
+        source: "faa-awh",
+    },
+    Assumption {
+        name: "MVFR ceiling boundary",
+        value: "3000",
+        unit: "ft",
+        source: "faa-awh",
+    },
+    Assumption {
+        name: "MVFR visibility boundary",
+        value: "5",
+        unit: "mi",
+        source: "faa-awh",
+    },
+];
+
 fn note(g: &str, m: String, groups: &mut Vec<Json>) {
     groups.push(Json::obj([
         ("group", Json::str(g)),
@@ -731,6 +772,7 @@ pub static METAR: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: FLIGHT_CATEGORY_ASSUMPTIONS,
     sentence: "{station} is {flight_category} with wind {wind} and visibility {visibility_text}.{if ceiling > 0} The ceiling is {ceiling}.{/if}{warn OBSERVATION_OLD} This report is old.{/warn} Get a current official briefing before flight.",
     limits: &[("batchRows", 1_000)],
     run: run_metar,
@@ -1904,6 +1946,7 @@ pub static TAF: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: FLIGHT_CATEGORY_ASSUMPTIONS,
     sentence: "{station} forecast from {valid_from} to {valid_to}, {count} {plural count \"period\" \"periods\"}. Get a current official briefing before flight.",
     limits: &[("batchRows", 1_000)],
     run: run_taf,

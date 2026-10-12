@@ -809,6 +809,12 @@ details.batch > summary { font-size: 0.92rem; color: var(--data); }
 .raster-summary div { padding: 0.55rem; border: 1px solid var(--line); border-radius: var(--radius); }
 .raster-summary dt { color: var(--muted); font-size: 0.78rem; }
 .raster-summary dd { margin: 0.2rem 0 0; font-variant-numeric: tabular-nums; }
+.raster-grids { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin: 0; }
+.raster-grids div { padding: 0.55rem; border: 1px solid var(--line); border-radius: var(--radius); }
+.raster-grids dt { color: var(--muted); font-size: 0.78rem; }
+.raster-grids dd { margin: 0.2rem 0 0; font-variant-numeric: tabular-nums; }
+.raster-resample { display: grid; gap: 0.55rem; margin: 0; padding: 0.75rem; border: 1px solid var(--line); border-radius: var(--radius); }
+.raster-resample label { font-size: 0.82rem; color: var(--muted); }
 .cursor-readout { min-block-size: 1.5rem; margin: 0; font-variant-numeric: tabular-nums; }
 table.batch-map { border-collapse: collapse; font-size: 0.88rem; inline-size: 100%; }
 table.batch-map th, table.batch-map td { text-align: start; padding: 0.3rem 0.4rem; border-block-end: 1px solid var(--line); vertical-align: middle; }

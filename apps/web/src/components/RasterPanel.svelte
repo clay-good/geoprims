@@ -16,6 +16,7 @@
   let total = $state(0);
   let outcome = $state.raw(null);
   let cursor = $state('');
+  let resampling = $state({ method: 'nearest', target: 'left' });
   let controller = null;
 
   const selected = (role) => sources[assignments[role]?.source];
@@ -25,6 +26,12 @@
       const band = assignments[name]?.band;
       return source && Number.isInteger(band) && band >= 0 && band < source.metadata.bands;
     }),
+  );
+  const canResample = $derived(
+    outcome?.error?.code === 'GRID_MISMATCH'
+      && outcome.error.details?.reason !== 'CRS'
+      && outcome.error.details?.left?.transform
+      && outcome.error.details?.right?.transform,
   );
 
   async function remove(handles = sources) {
@@ -79,12 +86,13 @@
     outcome = null;
   }
 
-  async function start() {
+  async function start(resample = null) {
     if (!ready || roles.length !== 2) return;
     const [leftRole, rightRole] = roles;
     const left = selected(leftRole.name);
     const right = selected(rightRole.name);
-    const preview = rasterPreview(left.metadata.width, left.metadata.height);
+    const target = resample?.target === 'right' ? right : left;
+    const preview = rasterPreview(target.metadata.width, target.metadata.height);
     controller = new AbortController();
     running = true;
     completed = 0;
@@ -101,6 +109,7 @@
         windowWidth: 512,
         windowHeight: 256,
         maxSamples: 4 * 1024 * 1024,
+        resampling: resample,
         signal: controller.signal,
         accept: (window) => preview.add(window),
         onProgress: (progress) => {
@@ -112,6 +121,7 @@
         const sampled = preview.value();
         outcome = out.ok ? {
           ...out,
+          resampling: resample,
           preview: sampled,
           histogram: previewHistogram(sampled, out.summary.min, out.summary.max),
         } : out;
@@ -134,6 +144,7 @@
   }
 
   const number = (value) => value?.toLocaleString('en-US', { maximumSignificantDigits: 7 }) ?? 'no valid pixels';
+  const grid = (value) => `${value.width.toLocaleString('en-US')} × ${value.height.toLocaleString('en-US')} px`;
 
   function readPixel(event) {
     if (!outcome?.ok) return;
@@ -194,7 +205,7 @@
       {#if running}
         <button type="button" class="quiet" onclick={() => controller?.abort()}>Cancel</button>
       {:else}
-        <button type="button" class="primary" disabled={!ready} onclick={start}>Process raster</button>
+        <button type="button" class="primary" disabled={!ready} onclick={() => start()}>Process raster</button>
       {/if}
     </div>
     {#if running || total}
@@ -204,8 +215,34 @@
 
   {#if outcome && !outcome.ok}
     <p class="import-note bad" role="status">{outcome.error.message}</p>
-    {#if outcome.error.code === 'GRID_MISMATCH'}<p class="help">Choose bands on matching grids. Resampling controls are not connected yet.</p>{/if}
+    {#if outcome.error.code === 'GRID_MISMATCH'}
+      <dl class="raster-grids">
+        <div><dt>{roles[0].title}</dt><dd>{grid(outcome.error.details.left)}</dd></div>
+        <div><dt>{roles[1].title}</dt><dd>{grid(outcome.error.details.right)}</dd></div>
+      </dl>
+      {#if canResample}
+        <fieldset class="raster-resample">
+          <legend>Align the grids locally</legend>
+          <label>Method
+            <select value={resampling.method} onchange={(event) => (resampling.method = event.currentTarget.value)}>
+              <option value="nearest">Nearest neighbor</option>
+              <option value="bilinear">Bilinear</option>
+            </select>
+          </label>
+          <label>Output grid
+            <select value={resampling.target} onchange={(event) => (resampling.target = event.currentTarget.value)}>
+              <option value="left">{selected(roles[0].name).file.name} — {grid(outcome.error.details.left)}</option>
+              <option value="right">{selected(roles[1].name).file.name} — {grid(outcome.error.details.right)}</option>
+            </select>
+          </label>
+          <button type="button" class="primary" onclick={() => start({ ...resampling })}>Resample and process</button>
+        </fieldset>
+      {:else}
+        <p class="help">These grids cannot be aligned locally because their coordinate systems differ or georeferencing is missing.</p>
+      {/if}
+    {/if}
   {:else if outcome?.ok}
+    {#if outcome.resampling}<p class="import-note" role="status">Processed with {outcome.resampling.method === 'nearest' ? 'nearest-neighbor' : 'bilinear'} resampling on the {outcome.resampling.target === 'left' ? roles[0].title : roles[1].title} grid.</p>{/if}
     <figure class="raster-preview">
       <canvas
         use:paint={{ preview: outcome.preview, min: outcome.summary.min, max: outcome.summary.max }}

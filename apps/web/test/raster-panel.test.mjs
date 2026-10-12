@@ -37,3 +37,13 @@ test('the preview includes numeric legend ticks and an accessible sampled histog
   assert.match(component, /<dl class="sr-only">/);
   assert.match(component, /Preview histogram values/);
 });
+
+test('a repairable grid mismatch offers both Rust resampling methods and target grids', () => {
+  assert.match(component, /outcome\.error\.details\?\.reason !== 'CRS'/);
+  assert.match(component, /<option value="nearest">Nearest neighbor<\/option>/);
+  assert.match(component, /<option value="bilinear">Bilinear<\/option>/);
+  assert.match(component, /<option value="left">/);
+  assert.match(component, /<option value="right">/);
+  assert.match(component, /Resample and process/);
+  assert.match(component, /resampling: resample/);
+});

@@ -92,6 +92,7 @@ const MUST_DECLARE = [
   'drone.sensors.vlos',
   'drone.ops.vlos-check',
   'drone.ops.wind-limit',
+  'drone.links.link-budget',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -279,6 +280,16 @@ test('the wind-limit tool exposes every terrain exponent and its report height',
     ['0.31', '1', 'nrel-small-wind-site'],
     ['0.43', '1', 'nrel-small-wind-site'],
     ['10', 'm', 'nrel-small-wind-site'],
+  ]);
+});
+
+test('the link budget exposes its physical constant and both regulatory limits', () => {
+  const assumptions = byId('drone.links.link-budget')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['299792458', 'm/s', 'nist-sp-811'],
+    ['32.44778322188338', 'dB', 'itu-r-p525'],
+    ['36', 'dBm EIRP', 'cfr-47-15'],
+    ['20', 'dBm EIRP', 'etsi-en-300-328'],
   ]);
 });
 

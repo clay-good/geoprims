@@ -284,8 +284,8 @@
     "lastmod": "2026-09-23"
   },
   "/drone/links/link-budget/": {
-    "hash": "8e2e20bfcecdd857",
-    "lastmod": "2026-10-10"
+    "hash": "65f7ab1ff5ded5b2",
+    "lastmod": "2026-10-12"
   },
   "/drone/mission/": {
     "hash": "236cbcec2e906bbf",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4b1d06afb2f6aaf4",
+    "hash": "1288103a819a7275",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

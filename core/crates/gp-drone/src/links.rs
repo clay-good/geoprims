@@ -9,7 +9,9 @@ use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::regulation::rule;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::log10;
 
@@ -215,6 +217,32 @@ pub static LINK_BUDGET: ToolDef = ToolDef {
         Related {
             id: "navigation.los.horizon",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Speed of light in vacuum",
+            value: "299792458",
+            unit: "m/s",
+            source: "nist-sp-811",
+        },
+        Assumption {
+            name: "FSPL constant for kilometers and megahertz",
+            value: "32.44778322188338",
+            unit: "dB",
+            source: "itu-r-p525",
+        },
+        Assumption {
+            name: "US 2.4 GHz maximum EIRP",
+            value: "36",
+            unit: "dBm EIRP",
+            source: "cfr-47-15",
+        },
+        Assumption {
+            name: "EU 2.4 GHz maximum EIRP",
+            value: "20",
+            unit: "dBm EIRP",
+            source: "etsi-en-300-328",
         },
     ],
     sentence: "The path loses {fspl} dB.{if fade_margin > -1000} The link keeps {fade_margin} dB of fade margin.{/if}",

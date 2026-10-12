@@ -774,6 +774,12 @@ pub static FRESNEL: ToolDef = ToolDef {
             source: "grs80",
         },
         Assumption {
+            name: "Speed of light in vacuum",
+            value: "299792458",
+            unit: "m/s",
+            source: "nist-sp-811",
+        },
+        Assumption {
             name: "Radio refraction, the median effective Earth radius factor of 4/3 (k = 0.25)",
             value: "4/3",
             unit: "1",

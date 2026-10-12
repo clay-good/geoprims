@@ -1260,8 +1260,8 @@
     "lastmod": "2026-10-09"
   },
   "/navigation/los/fresnel/": {
-    "hash": "e38d1a61df123ee2",
-    "lastmod": "2026-10-09"
+    "hash": "470b88d6c605e9a9",
+    "lastmod": "2026-10-12"
   },
   "/navigation/los/horizon/": {
     "hash": "2896b9ed63c98b7c",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "3028d3d1e77d667e",
+    "hash": "35151c5d72f0cc6d",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

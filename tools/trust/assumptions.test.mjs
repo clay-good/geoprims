@@ -162,6 +162,15 @@ test('the sensing tools expose their published LAS and USGS tables', () => {
   ]);
 });
 
+test('the Fresnel tool exposes every physical constant in its model', () => {
+  const assumptions = byId('navigation.los.fresnel')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['6371000', 'm', 'grs80'],
+    ['299792458', 'm/s', 'nist-sp-811'],
+    ['4/3', '1', 'itu-r-p530'],
+  ]);
+});
+
 test('the holding tools expose their published sectors, limits, and defaults', () => {
   const entry = byId('aviation.ifr.hold-entry')['x-assumptions'];
   assert.deepEqual(entry.map(({ value, unit, source }) => [value, unit, source]), [

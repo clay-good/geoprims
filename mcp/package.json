@@ -16,6 +16,7 @@
   },
   "files": [
     "server.mjs",
+    "verify.mjs",
     "meta.mjs",
     "toolsets.mjs",
     "prompts.mjs",

@@ -18,6 +18,12 @@ Each release on [GitHub](https://github.com/clay-good/geoprims/releases) also ha
 
 Without built files, the server prints how to get them and exits with code 1.
 
+Before running a release clone, verify every bundled Wasm module against its recorded build digest:
+
+```bash
+node geoprims/mcp/verify.mjs
+```
+
 ## Add it to a client
 
 Replace `/abs/path/geoprims` with your clone's path. The same snippets are on [geoprims.com/agents](https://geoprims.com/agents/), and a test launches the server exactly as each one says.

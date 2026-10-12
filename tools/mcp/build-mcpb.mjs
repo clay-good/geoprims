@@ -16,7 +16,7 @@ const mcp = join(root, 'mcp');
 
 /** The files a bundle carries: the manifest, the server's own modules, and dist. */
 export function bundleFiles() {
-  const files = ['manifest.json', 'README.md', 'server.mjs', 'meta.mjs', 'toolsets.mjs', 'prompts.mjs', 'clients.mjs', 'package.json'];
+  const files = ['manifest.json', 'README.md', 'server.mjs', 'verify.mjs', 'meta.mjs', 'toolsets.mjs', 'prompts.mjs', 'clients.mjs', 'package.json'];
   const walk = (dir) => {
     for (const name of readdirSync(join(mcp, dir)).sort()) {
       const path = join(dir, name);

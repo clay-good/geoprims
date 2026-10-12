@@ -51,6 +51,10 @@ jobs:
         run: node tools/mcp/build-dist.mjs
       - name: MCP Inspector CLI against the golden surface (fails with the diff on drift)
         run: node tools/mcp/inspector-check.mjs
+      - name: Clone-and-run smoke in a Node-only image
+        run: |
+          docker build -f mcp/Dockerfile.release-test -t geoprims-mcp-release .
+          docker run --rm --network none geoprims-mcp-release
       - name: Install the website's dependencies and browsers (share cards render in Chromium; cross-host checks use all three)
         run: |
           npm ci --prefix apps/web

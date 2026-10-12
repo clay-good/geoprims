@@ -169,6 +169,39 @@ test('h3 k-ring: k = 2 on a resolution 7 cell draws 19 cell outlines, the origin
   assert.deepEqual(cellIds({ result: { cells: [{ cell: 'a' }, 'b'] } }, 'cells'), ['a', 'b']);
 });
 
+test('every S2 tool draws the exact cell boundaries returned by the core', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const batch = async (id, inputs) => JSON.parse(await host.invokeBatch(id, JSON.stringify(inputs)));
+  const requested = [];
+  const cells = {
+    boundaries: async (ids, grid) => {
+      requested.push({ ids, grid });
+      return (await batch(`indexing.${grid}.cell-info`, ids.map((cell) => ({ cell })))).map((r) =>
+        r.result.boundary.map((p) => [p.lon.value, p.lat.value]));
+    },
+    rings: async () => [],
+  };
+
+  for (const id of ['indexing.s2.cell-info', 'indexing.s2.covering', 'indexing.s2.lat-lng-to-cell', 'indexing.s2.neighbors']) {
+    const tool = catalog.tools.find((t) => t.id === id);
+    const args = (tool.examples.find((e) => e.id === tool['x-primary-example']) ?? tool.examples[0]).input;
+    const result = JSON.parse(await host.invoke(id, JSON.stringify(args)));
+    const layers = (await buildLayers(tool, args, result, async () => null, cells)).filter((l) => l.cell);
+    const field = tool.visualization[0].map.cells;
+    const expected = typeof result.result[field] === 'string'
+      ? [result.result[field]]
+      : result.result[field].map((row) => row.cell);
+    assert.deepEqual(layers.map((l) => l.cell), expected, `${id}: one outline per result cell, in result order`);
+    assert.ok(layers.every((l) => l.rings[0].length === 4), `${id}: S2 quadrilateral boundaries`);
+  }
+  assert.equal(requested.length, 4);
+  assert.ok(requested.every((call) => call.grid === 's2'), 'S2 tools never fall through to H3');
+});
+
 test('a fill too large to list draws its compacted stand-in, dashed', async () => {
   // A fill past the 10,000-cell listing limit comes back as `compacted`
   // instead of `cells`; without the fallback the map drew nothing at all.

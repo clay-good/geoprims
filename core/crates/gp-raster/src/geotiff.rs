@@ -7,6 +7,7 @@
 use std::io::{Cursor, Read, Seek};
 
 use tiff::decoder::{ChunkType, Decoder, DecodingResult, Limits};
+use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
 
 /// The GeoTIFF raster-space convention (GeoKey 1025).
@@ -14,6 +15,13 @@ use tiff::tags::Tag;
 pub enum RasterType {
     PixelIsArea,
     PixelIsPoint,
+}
+
+/// The GeoTIFF key family that defines an EPSG code.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CrsType {
+    Geographic,
+    Projected,
 }
 
 /// The affine mapping from TIFF raster coordinates to model coordinates.
@@ -36,6 +44,7 @@ pub struct Grid {
     pub height: u32,
     pub transform: Option<Transform>,
     pub epsg: Option<u16>,
+    pub crs_type: Option<CrsType>,
     pub raster_type: Option<RasterType>,
 }
 
@@ -170,7 +179,18 @@ fn metadata<R: Read + Seek>(decoder: &mut Decoder<R>) -> Result<Metadata, Error>
     let (width, height) = decoder.dimensions().map_err(invalid)?;
     let bands = decoder.colortype().map_err(invalid)?.num_samples();
     let keys = geokeys(decoder)?;
-    let epsg = inline_key(&keys, 3072).or_else(|| inline_key(&keys, 2048));
+    let projected_epsg = inline_key(&keys, 3072);
+    let geographic_epsg = inline_key(&keys, 2048);
+    let (epsg, crs_type) = match (projected_epsg, geographic_epsg) {
+        (Some(_), Some(_)) => {
+            return Err(Error::Invalid(
+                "GeoTIFF cannot declare both projected and geographic EPSG codes.".into(),
+            ));
+        }
+        (Some(epsg), None) => (Some(epsg), Some(CrsType::Projected)),
+        (None, Some(epsg)) => (Some(epsg), Some(CrsType::Geographic)),
+        (None, None) => (None, None),
+    };
     let raster_type = match inline_key(&keys, 1025) {
         Some(1) => Some(RasterType::PixelIsArea),
         Some(2) => Some(RasterType::PixelIsPoint),
@@ -199,11 +219,139 @@ fn metadata<R: Read + Seek>(decoder: &mut Decoder<R>) -> Result<Metadata, Error>
             height,
             transform: transform(decoder)?,
             epsg,
+            crs_type,
             raster_type,
         },
         bands,
         nodata,
     })
+}
+
+/// Encodes one single-band result as a 64-bit floating-point GeoTIFF.
+pub fn encode(raster: &Raster) -> Result<Vec<u8>, Error> {
+    if raster.metadata.bands != 1 {
+        return Err(Error::Invalid(
+            "GeoTIFF result export currently requires one output band.".into(),
+        ));
+    }
+    let count = sample_count(
+        raster.metadata.grid.width,
+        raster.metadata.grid.height,
+        1,
+        usize::MAX,
+    )?;
+    if raster.samples.len() != count || raster.valid.len() != count {
+        return Err(Error::Invalid(
+            "Raster samples do not match its dimensions and band count.".into(),
+        ));
+    }
+    let has_invalid = raster.valid.iter().any(|valid| !valid);
+    let nodata = raster
+        .metadata
+        .nodata
+        .or_else(|| has_invalid.then_some(f64::NAN));
+    if let Some(nodata) = nodata
+        && raster
+            .samples
+            .iter()
+            .zip(&raster.valid)
+            .any(|(sample, valid)| *valid && *sample == nodata)
+    {
+        return Err(Error::Invalid(
+            "A valid output sample equals the no-data sentinel.".into(),
+        ));
+    }
+    let values: Vec<f64> = raster
+        .samples
+        .iter()
+        .zip(&raster.valid)
+        .map(|(sample, valid)| if *valid { *sample } else { nodata.unwrap() })
+        .collect();
+
+    let mut out = Cursor::new(Vec::new());
+    {
+        let mut encoder = TiffEncoder::new(&mut out).map_err(invalid)?;
+        let mut image = encoder
+            .new_image::<colortype::Gray64Float>(
+                raster.metadata.grid.width,
+                raster.metadata.grid.height,
+            )
+            .map_err(invalid)?;
+        if let Some(transform) = raster.metadata.grid.transform {
+            image
+                .encoder()
+                .write_tag(
+                    Tag::ModelTransformationTag,
+                    &[
+                        transform.dx,
+                        transform.rx,
+                        0.0,
+                        transform.x0,
+                        transform.ry,
+                        transform.dy,
+                        0.0,
+                        transform.y0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                    ][..],
+                )
+                .map_err(invalid)?;
+        }
+        let mut key_entries = Vec::new();
+        match (raster.metadata.grid.epsg, raster.metadata.grid.crs_type) {
+            (Some(epsg), Some(CrsType::Projected)) => {
+                key_entries.extend_from_slice(&[1024, 0, 1, 1, 3072, 0, 1, epsg]);
+            }
+            (Some(epsg), Some(CrsType::Geographic)) => {
+                key_entries.extend_from_slice(&[1024, 0, 1, 2, 2048, 0, 1, epsg]);
+            }
+            (None, None) => {}
+            _ => {
+                return Err(Error::Invalid(
+                    "An EPSG code and its geographic or projected type must be given together."
+                        .into(),
+                ));
+            }
+        }
+        if let Some(raster_type) = raster.metadata.grid.raster_type {
+            key_entries.extend_from_slice(&[
+                1025,
+                0,
+                1,
+                match raster_type {
+                    RasterType::PixelIsArea => 1,
+                    RasterType::PixelIsPoint => 2,
+                },
+            ]);
+        }
+        if !key_entries.is_empty() {
+            let mut keys = vec![1_u16, 1, 0, (key_entries.len() / 4) as u16];
+            keys.extend(key_entries);
+            image
+                .encoder()
+                .write_tag(Tag::GeoKeyDirectoryTag, keys.as_slice())
+                .map_err(invalid)?;
+        }
+        if let Some(nodata) = nodata {
+            let text = if nodata.is_nan() {
+                "nan".to_owned()
+            } else {
+                nodata.to_string()
+            };
+            image
+                .encoder()
+                .write_tag(Tag::GdalNodata, text.as_str())
+                .map_err(invalid)?;
+        }
+        image.write_data(&values).map_err(invalid)?;
+    }
+    Ok(out.into_inner())
 }
 
 fn samples_as_f64(result: DecodingResult) -> Vec<f64> {
@@ -469,7 +617,7 @@ pub fn decode_file_window(
 pub fn same_grid(left: &Grid, right: &Grid) -> Result<(), GridMismatch> {
     let reason = if left.width != right.width || left.height != right.height {
         Some("dimensions")
-    } else if left.epsg != right.epsg {
+    } else if left.epsg != right.epsg || left.crs_type != right.crs_type {
         Some("CRS")
     } else if left.raster_type != right.raster_type {
         Some("raster type")

@@ -1,4 +1,4 @@
-use gp_raster::geotiff::{Grid, Metadata, Raster, RasterType, Transform};
+use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform};
 use std::io::Cursor;
 
 use gp_raster::processing::{Error, normalized_difference, normalized_difference_scene};
@@ -18,6 +18,7 @@ fn grid(width: u32) -> Grid {
             dy: -10.0,
         }),
         epsg: Some(32617),
+        crs_type: Some(CrsType::Projected),
         raster_type: Some(RasterType::PixelIsArea),
     }
 }

@@ -1,8 +1,8 @@
 use std::io::{self, Cursor, Read, Seek, SeekFrom};
 
 use gp_raster::geotiff::{
-    Error, RasterType, Transform, Window, decode, decode_file, decode_file_window, decode_window,
-    decode_window_reader, inspect, inspect_file, same_grid,
+    CrsType, Error, RasterType, Transform, Window, decode, decode_file, decode_file_window,
+    decode_window, decode_window_reader, encode, inspect, inspect_file, same_grid,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -152,6 +152,7 @@ fn reads_pixels_nodata_crs_and_geotransform() {
     assert_eq!(metadata.bands, 1);
     assert_eq!(metadata.nodata, Some(-9999.0));
     assert_eq!(metadata.grid.epsg, Some(32617));
+    assert_eq!(metadata.grid.crs_type, Some(CrsType::Projected));
     assert_eq!(metadata.grid.raster_type, Some(RasterType::PixelIsArea));
     assert_eq!(
         metadata.grid.transform,
@@ -168,6 +169,43 @@ fn reads_pixels_nodata_crs_and_geotransform() {
     let raster = decode(&bytes, 4).unwrap();
     assert_eq!(raster.samples, [1.0, -9999.0, 3.5, 4.0]);
     assert_eq!(raster.valid, [true, false, true, true]);
+}
+
+#[test]
+fn exported_result_round_trips_pixels_nodata_crs_and_transform() {
+    let source = decode(&fixture(10.0, 32617), 4).unwrap();
+    let encoded = encode(&source).unwrap();
+    let output = decode(&encoded, 4).unwrap();
+    assert_eq!(output, source);
+}
+
+#[test]
+fn export_keeps_geographic_epsg_keys_distinct_from_projected_ones() {
+    let mut source = decode(&fixture(0.01, 32617), 4).unwrap();
+    source.metadata.grid.epsg = Some(4326);
+    source.metadata.grid.crs_type = Some(CrsType::Geographic);
+    let output = decode(&encode(&source).unwrap(), 4).unwrap();
+    assert_eq!(output.metadata.grid.epsg, Some(4326));
+    assert_eq!(output.metadata.grid.crs_type, Some(CrsType::Geographic));
+}
+
+#[test]
+fn export_uses_nan_when_new_invalid_pixels_have_no_source_sentinel() {
+    let mut source = decode(&fixture(10.0, 32617), 4).unwrap();
+    source.metadata.nodata = None;
+    source.valid[1] = false;
+    let output = decode(&encode(&source).unwrap(), 4).unwrap();
+    assert!(output.metadata.nodata.unwrap().is_nan());
+    assert!(output.samples[1].is_nan());
+    assert_eq!(output.valid, [true, false, true, true]);
+}
+
+#[test]
+fn export_refuses_a_nodata_sentinel_that_collides_with_valid_output() {
+    let mut source = decode(&fixture(10.0, 32617), 4).unwrap();
+    source.metadata.nodata = Some(1.0);
+    let error = encode(&source).unwrap_err();
+    assert!(matches!(error, Error::Invalid(message) if message.contains("sentinel")));
 }
 
 #[test]

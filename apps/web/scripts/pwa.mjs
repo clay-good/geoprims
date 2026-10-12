@@ -35,6 +35,19 @@ const registry = JSON.parse(readFileSync(join(web, '../../assets/registry.json')
 const optionalMapFiles = new Set(registry.assets
   .filter((asset) => asset.loadPolicy === 'on-demand' && asset.consumers?.every((consumer) => consumer === 'web-map'))
   .flatMap((asset) => Object.keys(asset.files).map((file) => `/assets/${asset.id}/${asset.version}/${file}`)));
+const packs = registry.assets
+  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.consumers?.every((consumer) => consumer === 'web-map'))
+  .map((asset) => ({
+    id: asset.id,
+    version: asset.version,
+    title: asset.title,
+    bytes: Object.values(asset.files).reduce((sum, file) => sum + file.bytes, 0),
+    files: Object.entries(asset.files).map(([name, file]) => ({
+      path: `/assets/${asset.id}/${asset.version}/${name}`,
+      bytes: file.bytes,
+      sha256: file.sha256,
+    })),
+  }));
 const list = files(dist).filter((p) => !optionalMapFiles.has(urlOf(p))).sort();
 
 // The version names the release's content, computed before it is stamped in.
@@ -57,5 +70,5 @@ if (compressed > PRECACHE_BUDGET) {
 
 const urls = list.map(urlOf);
 const source = readFileSync(join(web, 'sw/sw.js'), 'utf8');
-writeFileSync(join(dist, 'sw.js'), `const VERSION = '${version}';\nconst PRECACHE = ${JSON.stringify(urls)};\n\n${source}`);
+writeFileSync(join(dist, 'sw.js'), `const VERSION = '${version}';\nconst PRECACHE = ${JSON.stringify(urls)};\nconst PACKS = ${JSON.stringify(packs)};\n\n${source}`);
 console.log(`pwa: sw.js version ${version}, ${urls.length} files, ${(compressed / 1e6).toFixed(2)} MB compressed (budget ${PRECACHE_BUDGET / 1e6} MB)`);

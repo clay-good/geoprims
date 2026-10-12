@@ -23,7 +23,7 @@ function served(path) {
 /** Loads dist/sw.js into a fake worker scope with Cache Storage and a switchable network. */
 function worker(source = readFileSync(join(dist, 'sw.js'), 'utf8'), shared = { caches: new Map() }) {
   const listeners = {};
-  const net = { online: true, requests: [] };
+  const net = { online: true, requests: [], overrides: new Map() };
   const store = shared.caches;
   const key = (r) => new URL(typeof r === 'string' ? r : r.url, ORIGIN).href;
   const cacheOf = (name) => {
@@ -32,6 +32,7 @@ function worker(source = readFileSync(join(dist, 'sw.js'), 'utf8'), shared = { c
     return {
       match: async (r) => m.get(key(r))?.clone() ?? undefined,
       put: async (r, res) => void m.set(key(r), res),
+      delete: async (r) => m.delete(key(r)),
       addAll: async (reqs) => {
         for (const r of reqs) {
           const res = await scope.fetch(r);
@@ -49,7 +50,7 @@ function worker(source = readFileSync(join(dist, 'sw.js'), 'utf8'), shared = { c
   };
   const scope = {
     location: new URL(`${ORIGIN}/sw.js`),
-    URL, Request: WorkerRequest, Response, Promise, console, JSON,
+    URL, Request: WorkerRequest, Response, Promise, console, JSON, crypto: globalThis.crypto, Uint8Array, Error,
     skipped: false,
     skipWaiting() { this.skipped = true; },
     clients: { claim: async () => {} },
@@ -62,6 +63,7 @@ function worker(source = readFileSync(join(dist, 'sw.js'), 'utf8'), shared = { c
       const url = new URL(typeof r === 'string' ? r : r.url, ORIGIN);
       net.requests.push(url.pathname);
       if (!net.online) throw new TypeError('Failed to fetch');
+      if (net.overrides.has(url.pathname)) return new Response(net.overrides.get(url.pathname), { status: 200 });
       const body = served(url.pathname);
       return body ? new Response(body, { status: 200 }) : new Response('not found', { status: 404 });
     },
@@ -80,7 +82,7 @@ function worker(source = readFileSync(join(dist, 'sw.js'), 'utf8'), shared = { c
     scope, net, store,
     install: () => dispatch('install'),
     activate: () => dispatch('activate'),
-    message: (data) => dispatch('message', { data }),
+    message: (data, messages = []) => dispatch('message', { data, source: { postMessage: (message) => messages.push(message) } }),
     get: async (path, mode = 'no-cors') => {
       const request = new Request(`${ORIGIN}${path}`);
       const r = await dispatch('fetch', { request: { url: request.url, method: 'GET', mode } });
@@ -149,7 +151,7 @@ test('airplane mode: after one visit, tool pages, modules, and assets load offli
   assert.equal((await sw.get('/catalog/v1.json')).status, 200);
   assert.equal((await sw.get('/assets/registry.json')).status, 200);
   const unknown = await sw.get('/no/such/page/', 'navigate');
-  assert.match(await unknown.text(), /You(&#39;|')re offline/);
+  assert.match(await unknown.text(), /Offline data/);
   assert.deepEqual(sw.net.requests.filter((p) => p !== '/no/such/page/'), [], 'nothing else touched the network');
 });
 
@@ -164,6 +166,66 @@ test('on-demand map detail is cached as one whole file after its first use', asy
   sw.net.requests.length = 0;
   assert.equal((await sw.get(path)).status, 200);
   assert.deepEqual(sw.net.requests, []);
+});
+
+test('offline packs report their exact size, verify downloads, resume, and delete', async () => {
+  const sw = worker();
+  await sw.install();
+  await sw.activate();
+  const path = '/assets/ne-50m/5.1.2/ne-50m.json';
+  const messages = [];
+  await sw.message({ type: 'PACK_INSTALL', id: 'ne-50m' }, messages);
+  const progress = messages.find((message) => message.type === 'PACK_PROGRESS');
+  assert.equal(progress.type, 'PACK_PROGRESS');
+  assert.equal(progress.id, 'ne-50m');
+  assert.equal(progress.done, 684709);
+  assert.equal(progress.total, 684709);
+  assert.equal(messages.at(-1).ok, true);
+  assert.equal(messages.at(-1).packs[0].installed, true);
+  assert.ok(sw.store.has('gp-pack-ne-50m-5.1.2'));
+
+  sw.net.online = false;
+  sw.net.requests.length = 0;
+  const resumed = [];
+  await sw.message({ type: 'PACK_INSTALL', id: 'ne-50m' }, resumed);
+  assert.equal(resumed.at(-1).ok, true, 'a verified file is reused without the network');
+  assert.deepEqual(sw.net.requests, []);
+  assert.equal((await sw.get(path)).status, 200);
+
+  const removed = [];
+  await sw.message({ type: 'PACK_DELETE', id: 'ne-50m' }, removed);
+  assert.equal(removed.at(-1).packs[0].installed, false);
+  assert.ok(!sw.store.has('gp-pack-ne-50m-5.1.2'));
+});
+
+test('a damaged pack download is not marked complete', async () => {
+  const sw = worker();
+  await sw.install();
+  await sw.activate();
+  sw.net.overrides.set('/assets/ne-50m/5.1.2/ne-50m.json', 'damaged');
+  const messages = [];
+  await sw.message({ type: 'PACK_INSTALL', id: 'ne-50m' }, messages);
+  assert.equal(messages.at(-1).ok, false);
+  assert.match(messages.at(-1).error, /checksum/);
+  assert.equal(messages.at(-1).packs[0].installed, false);
+  assert.equal(messages.at(-1).packs[0].partial, true);
+});
+
+test('a superseded pack stays available until its verified update replaces it', async () => {
+  const shared = { caches: new Map() };
+  shared.caches.set('gp-pack-ne-50m-5.0.0', new Map([
+    [`${ORIGIN}/_gp-pack-complete`, new Response(JSON.stringify({ id: 'ne-50m', version: '5.0.0' }))],
+  ]));
+  const sw = worker(undefined, shared);
+  const before = [];
+  await sw.message({ type: 'PACK_STATUS' }, before);
+  assert.equal(before.at(-1).packs[0].updateAvailable, true);
+  assert.ok(shared.caches.has('gp-pack-ne-50m-5.0.0'));
+
+  const installed = [];
+  await sw.message({ type: 'PACK_INSTALL', id: 'ne-50m' }, installed);
+  assert.equal(installed.at(-1).packs[0].installed, true);
+  assert.ok(!shared.caches.has('gp-pack-ne-50m-5.0.0'));
 });
 
 test('updates wait for the user, and activation keeps offline packs', async () => {

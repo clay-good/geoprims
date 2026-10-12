@@ -43,6 +43,7 @@ function actions() {
     page('Go to methodology', '/methodology/', 'how checked verification'),
     page('Go to changelog', '/changelog/', 'changes history results'),
     page('Go to sources', '/sources/', 'references standards citations'),
+    page('Manage offline data', '/offline/', 'pack packs download storage maps'),
     page('Go to known issues', '/known-issues/', 'bugs problems'),
     page('Go to disclaimer', '/disclaimer/', 'safety legal'),
   ];

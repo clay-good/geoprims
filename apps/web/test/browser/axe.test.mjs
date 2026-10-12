@@ -20,6 +20,7 @@ const PAGES = [
   '/survey/land/deed-plot/',
   '/workflows/preflight-check/',
   '/sources/',
+  '/offline/',
   '/accuracy/',
   '/404.html',
 ];

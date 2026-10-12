@@ -1,7 +1,50 @@
 ---
 import Base from '../layouts/Base.astro';
 import PageHeader from '../components/PageHeader.astro';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const registry = JSON.parse(readFileSync(join(process.cwd(), '../../assets/registry.json'), 'utf8'));
+const packs = registry.assets
+  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.consumers?.every((consumer) => consumer === 'web-map'))
+  .map((asset) => ({ ...asset, bytes: Object.values(asset.files).reduce((sum, file) => sum + file.bytes, 0) }));
+const size = (bytes) => bytes < 1_000_000 ? `${Math.round(bytes / 1_000)} KB` : `${(bytes / 1_000_000).toFixed(1)} MB`;
 ---
-<Base title="Offline · geoprims" description="This page is not available offline yet." canonical="/offline/" noindex>
-  <PageHeader title="You're offline" purpose={`This page isn't saved on this device yet. Every calculator that was saved on your first visit still works: go to the <a href="/">home page</a> or a <a href="/units/">tool list</a>.`} />
+<Base title="Offline data · geoprims" description="Download and manage optional geoprims map data for use without a connection." canonical="/offline/" noindex>
+  <PageHeader title="Offline data" purpose={`Every calculator and its required reference data are saved after your first visit. Optional packs add more map detail without making the initial download larger.`} />
+
+  <p class="safety" data-offline-now hidden><strong>You’re offline.</strong> Installed packs are available; connect before downloading another one.</p>
+
+  <section class="card offline-storage" aria-labelledby="storage-title">
+    <h2 id="storage-title">Storage</h2>
+    <p data-storage>Checking this browser’s storage…</p>
+    <meter data-storage-meter min="0" max="1" value="0" hidden aria-label="Site storage used"></meter>
+    <div class="actions"><button type="button" class="quiet" data-persist>Ask this browser to keep offline data</button></div>
+  </section>
+
+  <h2>Optional packs</h2>
+  <div class="offline-packs">
+    {packs.map((pack) => (
+      <section class="card offline-pack" data-pack={pack.id}>
+        <div>
+          <h3>{pack.title}</h3>
+          <p>Higher-detail boundaries and coastlines for map views. {size(pack.bytes)} · version {pack.version}</p>
+          <p class="offline-pack-status" role="status" aria-live="polite" data-pack-status>Checking…</p>
+        </div>
+        <progress max={pack.bytes} value="0" hidden aria-label={`${pack.title} download progress`}></progress>
+        <div class="actions">
+          <button type="button" class="primary" data-pack-install>Download</button>
+          <button type="button" class="quiet" data-pack-remove hidden>Remove</button>
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <p class="safety" data-safari-warning hidden><strong>Keep this pack:</strong> Safari may remove website data after 7 days without a visit. Add geoprims to your home screen to keep its offline data.</p>
+  <p class="notice">Pack downloads are checked against the published file size and SHA-256 checksum before they are marked ready. If a download stops, starting it again keeps any files already checked.</p>
+
+  <script>
+    import { wireOfflinePacks } from '../lib/offline-packs.js';
+    wireOfflinePacks();
+  </script>
 </Base>

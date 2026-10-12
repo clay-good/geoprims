@@ -399,6 +399,16 @@ dialog.report pre.payload { max-height: 16rem; overflow: auto; font-size: 0.8rem
 .update p { margin: 0; }
 .update button { min-block-size: var(--target); margin: 0; }
 .update .later { border-color: var(--line); color: var(--muted); }
+/* Offline pack manager. */
+.offline-storage { padding: 1rem; margin-block-end: 2rem; }
+.offline-storage h2, .offline-pack h3 { margin-block-start: 0; }
+.offline-storage meter, .offline-pack progress { inline-size: 100%; block-size: 0.75rem; accent-color: var(--accent); }
+.offline-packs { display: grid; gap: 1rem; }
+.offline-pack { padding: 1rem; }
+.offline-pack p { color: var(--muted); }
+.offline-pack-status { font: 600 0.85rem var(--mono); }
+.offline-pack[aria-busy='true'] { opacity: 0.8; }
+.offline-pack button[hidden] { display: none; }
 /* Command palette. */
 .palette-keys kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding-inline: 0.3em; color: var(--muted); }
 dialog.palette { inline-size: min(40rem, calc(100vw - 2rem)); max-block-size: min(32rem, calc(100vh - 4rem)); margin-block-start: 10vh; padding: 0; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-lg); }

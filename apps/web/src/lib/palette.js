@@ -10,7 +10,7 @@ import { ask } from './ask.js';
 import { personalize } from './boost.js';
 import { audioOn, setAudioOn, sound } from './sound.js';
 import { openSheet, setSingleKeys, singleKeysOn } from './keys.js';
-import { pins, PROFILES, recents, setProfile } from './prefs.js';
+import { isPinned, pins, PROFILES, recents, setProfile, togglePin } from './prefs.js';
 
 const LIMIT = 8;
 
@@ -185,11 +185,22 @@ function go(i, newTab) {
   }
 }
 
+function pin(i) {
+  const result = results[i];
+  if (!result?.id || result.run) return;
+  togglePin({ id: result.id, title: result.title, route: result.href ?? route(result.id) });
+  const pinned = isPinned(result.id);
+  result.summary = pinned ? 'Pinned' : 'Unpinned';
+  status.textContent = `${result.title} ${pinned ? 'pinned' : 'unpinned'}`;
+  render();
+}
+
 function onKey(e) {
   const ctrl = e.ctrlKey && !e.metaKey && !e.altKey;
   if (e.key === 'ArrowDown' || (ctrl && e.key === 'n')) move(1);
   else if (e.key === 'ArrowUp' || (ctrl && e.key === 'p')) move(-1);
   else if (e.key === 'Enter') go(active, e.ctrlKey || e.metaKey);
+  else if (e.key === 'Tab') pin(active);
   else return;
   e.preventDefault();
 }

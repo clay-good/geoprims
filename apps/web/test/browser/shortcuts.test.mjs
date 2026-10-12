@@ -21,6 +21,40 @@ test('each global shortcut acts on a real page', { timeout: 180_000 }, async (t)
   await page.goto(`${origin}/navigation/geodesic/inverse/`);
   await page.waitForSelector('figure.map canvas');
   await page.waitForTimeout(800);
+
+  await press('/');
+  const palette = page.locator('dialog.palette');
+  await palette.waitFor();
+  const search = palette.locator('input[type="search"]');
+  await search.fill('>theme');
+  await page.waitForTimeout(300);
+  assert.ok(await palette.getByText(/^Display:/).count(), '> filters the palette to actions');
+  assert.equal(await palette.locator('[role="option"]:not(:has-text("Display:"))').count(), 0, 'only theme actions remain');
+  await page.keyboard.press('Escape');
+
+  await press('Control+k');
+  await palette.waitFor();
+  await page.keyboard.press('Escape');
+
+  await press('/');
+  await search.fill('density altitude');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Tab');
+  assert.ok((await page.evaluate(() => JSON.parse(localStorage.getItem('gp-pins') ?? '[]'))).some((tool) => tool.id === 'aviation.altimetry.density-altitude'), 'Tab pins the selected tool');
+  await page.keyboard.press('Escape');
+
+  await press('?');
+  assert.ok(await page.getByRole('heading', { name: 'Keyboard shortcuts' }).isVisible(), '? opens the shortcut sheet');
+  await page.keyboard.press('Escape');
+
+  await page.evaluate(() => {
+    localStorage.setItem('gp-audio', 'true');
+    localStorage.setItem('gp-audio-muted', 'false');
+  });
+  await press('m');
+  assert.match(await toast(), /Audio muted/, 'm mutes audio once it is enabled');
+  assert.equal(await page.evaluate(() => localStorage.getItem('gp-audio-muted')), 'true');
+
   const before = await page.inputValue('#field-lat1');
   const beforeB = await page.inputValue('#field-lat2');
 
@@ -70,4 +104,10 @@ test('each global shortcut acts on a real page', { timeout: 180_000 }, async (t)
   const v = await page.inputValue('#field-lat1');
   await page.keyboard.press('s');
   assert.equal(await page.inputValue('#field-lat1'), `${v}s`, 'typing an s types an s');
+
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('g');
+  await page.keyboard.press('h');
+  await page.waitForURL(`${origin}/`);
+  assert.equal(new URL(page.url()).pathname, '/', 'g h goes home');
 });

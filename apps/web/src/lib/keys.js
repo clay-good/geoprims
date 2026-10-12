@@ -18,6 +18,7 @@ export const SHORTCUTS = [
   ['↑ ↓ or Ctrl+N Ctrl+P', 'Move through palette results'],
   ['Enter', 'Open the selected result'],
   ['Ctrl+Enter or ⌘Enter', 'Open the selected result in a new tab'],
+  ['Tab in the palette', 'Pin or unpin the selected tool'],
   ['> in the palette', 'List actions: display modes, units, sounds, and more'],
 ];
 

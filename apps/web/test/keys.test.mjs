@@ -37,7 +37,7 @@ test('single-key shortcuts can be turned off (WCAG 2.1.4)', () => {
 
 test('the shortcut sheet lists every shortcut, and the palette offers actions', () => {
   const keys = SHORTCUTS.map(([k]) => k).join(' ');
-  for (const k of ['/', 'Ctrl+K', '?', 'g then h', 'Esc', 'Enter', '>']) assert.ok(keys.includes(k), k);
+  for (const k of ['/', 'Ctrl+K', '?', 'g then h', 'Esc', 'Enter', 'Tab', '>']) assert.ok(keys.includes(k), k);
   const src = readFileSync(join(new URL('..', import.meta.url).pathname, 'src/lib/palette.js'), 'utf8');
   for (const a of ['Display: ', 'Turn single-key shortcuts', 'Show keyboard shortcuts']) assert.ok(src.includes(a), a);
 });

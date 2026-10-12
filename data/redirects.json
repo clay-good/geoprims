@@ -1,5 +1,29 @@
 [
   {
+    "from": "/aviation/crosswind-calculator/",
+    "to": "/aviation/wind/runway-components/",
+    "since": "2026-10-12",
+    "aliasOf": "aviation.wind.runway-components"
+  },
+  {
+    "from": "/drone/flight-time-calculator/",
+    "to": "/drone/power/endurance/",
+    "since": "2026-10-12",
+    "aliasOf": "drone.power.endurance"
+  },
+  {
+    "from": "/drone/gsd-calculator/",
+    "to": "/drone/photogrammetry/gsd/",
+    "since": "2026-10-12",
+    "aliasOf": "drone.photogrammetry.gsd"
+  },
+  {
+    "from": "/drone/overlap-calculator/",
+    "to": "/drone/photogrammetry/trigger/",
+    "since": "2026-10-12",
+    "aliasOf": "drone.photogrammetry.trigger"
+  },
+  {
     "from": "/journeys/vfr-preflight/",
     "to": "/workflows/preflight-check/",
     "since": "2026-09-25"

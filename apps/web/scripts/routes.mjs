@@ -143,6 +143,21 @@ export function checkRedirects(list, builtRoutes) {
   return problems;
 }
 
+/** Alias redirects must name a live tool and resolve to that tool's canonical route. */
+export function checkAliases(list, catalog) {
+  const ids = new Set(catalog.tools.map((tool) => tool.id));
+  const problems = [];
+  for (const { from, to, aliasOf } of list.filter((entry) => entry.aliasOf)) {
+    if (!ids.has(aliasOf)) {
+      problems.push(`alias ${from} names unknown tool ${aliasOf}`);
+      continue;
+    }
+    const canonical = `/${aliasOf.split('.').join('/')}/`;
+    if (to !== canonical) problems.push(`alias ${from} must route to ${canonical}, not ${to}`);
+  }
+  return problems;
+}
+
 /**
  * Every redirect the build writes: the listed ones, then each page's address
  * without its trailing slash. Cloudflare's own trailing-slash handling answers
@@ -181,7 +196,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     ...JSON.parse(readFileSync(join(root, 'data/redirects.json'), 'utf8')),
     ...deprecationRedirects(catalog),
   ];
-  const problems = [...check(pages, idx), ...checkRedirects(list, new Set(pages.map((p) => p.route)))];
+  const problems = [
+    ...check(pages, idx),
+    ...checkRedirects(list, new Set(pages.map((p) => p.route))),
+    ...checkAliases(list, catalog),
+  ];
   if (problems.length > 0) {
     console.error(`routes: ${problems.length} problem(s)\n${problems.map((m) => `  ${m}`).join('\n')}`);
     process.exit(1);

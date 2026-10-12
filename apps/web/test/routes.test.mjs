@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { check, checkRedirects, classify, deprecationRedirects, index, redirectRules, serialize, SITE } from '../scripts/routes.mjs';
+import { check, checkAliases, checkRedirects, classify, deprecationRedirects, index, redirectRules, serialize, SITE } from '../scripts/routes.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const dist = join(web, 'dist');
@@ -77,6 +77,25 @@ test('the redirects file keeps renamed routes resolvable', () => {
   assert.match(checkRedirects([{ ...good[0], to: '/aviation/gone/' }], built)[0], /is not a page this build emits/);
   assert.match(checkRedirects([{ ...good[0], from: '/aviation/altimetry/density-altitude/' }], built)[0], /shadows a page/);
   assert.match(checkRedirects([{ ...good[0], since: 'January' }], built).at(-1), /no ISO since date/);
+});
+
+test('alias slugs redirect to their named parent without becoming tools', () => {
+  const list = JSON.parse(readFileSync(join(web, '../../data/redirects.json'), 'utf8'));
+  const aliases = list.filter((entry) => entry.aliasOf);
+  assert.deepEqual(checkAliases(list, catalog), []);
+  assert.deepEqual(aliases.map((entry) => entry.from), [
+    '/aviation/crosswind-calculator/',
+    '/drone/flight-time-calculator/',
+    '/drone/gsd-calculator/',
+    '/drone/overlap-calculator/',
+  ]);
+  for (const alias of aliases) {
+    assert.ok(!catalog.tools.some((tool) => `/${tool.id.split('.').join('/')}/` === alias.from), `${alias.from} became a tool`);
+    assert.equal(alias.to, `/${alias.aliasOf.split('.').join('/')}/`);
+  }
+  const bad = [{ ...aliases[0], aliasOf: 'aviation.wind.no-such-tool' }];
+  assert.match(checkAliases(bad, catalog)[0], /unknown tool/);
+  assert.match(checkAliases([{ ...aliases[0], to: '/aviation/wind/wind-triangle/' }], catalog)[0], /must route to/);
 });
 
 test('the build writes the redirects file from data/redirects.json and the catalog', () => {

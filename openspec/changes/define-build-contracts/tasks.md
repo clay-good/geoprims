@@ -1,6 +1,6 @@
 ## 1. Routes and permalinks
 
-- [x] 1.1 Implement the route-map gate and the redirects file; verify the out-of-map and alias-canonical scenarios (apps/web/scripts/routes.mjs runs in the web build: it classifies all 289 pages against the route map, fails naming anything outside it, enforces the canonical-to-parent and noindex rules per class, and writes dist/_redirects from data/redirects.json. The out-of-map scenario is verified; the canonical half of the alias scenario is verified on generated endpoints, since alias slug routes are not built yet)
+- [x] 1.1 Implement the route-map gate and the redirects file; verify the out-of-map and alias-canonical scenarios (`apps/web/scripts/routes.mjs` runs in the web build: it classifies every page against the closed route map, fails naming anything outside it, enforces canonical and noindex rules per class, and writes `dist/_redirects` from `data/redirects.json`. Alias slugs are permanent redirects to their named parent tool, validated against the catalog; they create no tool id or indexable page. The contract's crosswind alias and the drone suite's GSD, overlap, and flight-time aliases are pinned in `apps/web/test/routes.test.mjs`.)
 - [x] 1.2 Implement the fragment encoder/decoder in the core with the shared vector file used by web and MCP tests; verify the shared-encoding and unknown-version scenarios
 
 ## 2. Platform topology

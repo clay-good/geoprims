@@ -91,6 +91,7 @@ const MUST_DECLARE = [
   'drone.ops.easa-subcategory',
   'drone.sensors.vlos',
   'drone.ops.vlos-check',
+  'drone.ops.wind-limit',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -266,6 +267,19 @@ test('both VLOS tools expose the shared EASA and LBA guidance constants', () => 
     const assumptions = byId(id)['x-assumptions'];
     assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), expected, id);
   }
+});
+
+test('the wind-limit tool exposes every terrain exponent and its report height', () => {
+  const assumptions = byId('drone.ops.wind-limit')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['0.09', '1', 'nrel-small-wind-site'],
+    ['1/7', '1', 'nrel-wind-resource-handbook'],
+    ['0.19', '1', 'nrel-small-wind-site'],
+    ['0.24', '1', 'nrel-small-wind-site'],
+    ['0.31', '1', 'nrel-small-wind-site'],
+    ['0.43', '1', 'nrel-small-wind-site'],
+    ['10', 'm', 'nrel-small-wind-site'],
+  ]);
 });
 
 test('every tool that rests on constants declares them', () => {

@@ -352,8 +352,8 @@
     "lastmod": "2026-10-12"
   },
   "/drone/ops/wind-limit/": {
-    "hash": "6ad91f018f64dd2e",
-    "lastmod": "2026-10-09"
+    "hash": "7576d2baefa12c2c",
+    "lastmod": "2026-10-12"
   },
   "/drone/photogrammetry/": {
     "hash": "cd78dab3eded4c49",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "83ee8b079b43eb99",
+    "hash": "4b1d06afb2f6aaf4",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

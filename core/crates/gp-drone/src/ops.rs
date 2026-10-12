@@ -1597,10 +1597,40 @@ pub static WIND_LIMIT: ToolDef = ToolDef {
     sentence: "At your height the wind is about {wind_at_height}{if gust_at_height > 0}, gusting {gust_at_height}{/if}, against a limit of {rating}.{warn WIND_EXCEEDS_RATING} That is over the limit.{/warn}{warn GUST_EXCEEDS_RATING} The gusts are over the limit.{/warn} Gusts near buildings, trees, and hills are not modeled.",
     assumptions: &[
         Assumption {
-            name: "Shear exponent over open terrain (1/7th power law)",
-            value: "0.143",
+            name: "Shear exponent over calm sea",
+            value: "0.09",
+            unit: "1",
+            source: "nrel-small-wind-site",
+        },
+        Assumption {
+            name: "Shear exponent over open terrain",
+            value: "1/7",
             unit: "1",
             source: "nrel-wind-resource-handbook",
+        },
+        Assumption {
+            name: "Shear exponent over crops or tall-grass prairie",
+            value: "0.19",
+            unit: "1",
+            source: "nrel-small-wind-site",
+        },
+        Assumption {
+            name: "Shear exponent around scattered trees and hedges",
+            value: "0.24",
+            unit: "1",
+            source: "nrel-small-wind-site",
+        },
+        Assumption {
+            name: "Shear exponent around suburbs and villages",
+            value: "0.31",
+            unit: "1",
+            source: "nrel-small-wind-site",
+        },
+        Assumption {
+            name: "Shear exponent over woodland",
+            value: "0.43",
+            unit: "1",
+            source: "nrel-small-wind-site",
         },
         Assumption {
             name: "Report height when none is given (a METAR's)",

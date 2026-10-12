@@ -75,6 +75,21 @@ pub struct Window {
     pub height: u32,
 }
 
+/// A sequential BigTIFF export: write `header`, then one fixed-size tile for
+/// every row-major image tile. Offsets are complete before pixel work starts,
+/// so the destination needs `Write` but not `Seek` and never holds the scene.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TiledExportPlan {
+    pub header: Vec<u8>,
+    pub tile_width: u32,
+    pub tile_height: u32,
+    pub tiles_across: u32,
+    pub tiles_down: u32,
+    pub tile_bytes: usize,
+    pub file_size: u64,
+    pub nodata: f64,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
     Invalid(String),
@@ -185,6 +200,337 @@ where
             .map_err(invalid)?;
     }
     Ok(())
+}
+
+#[derive(Clone)]
+struct BigTiffEntry {
+    tag: u16,
+    field_type: u16,
+    count: u64,
+    data: Vec<u8>,
+}
+
+fn bytes_u16(values: &[u16]) -> Vec<u8> {
+    values
+        .iter()
+        .flat_map(|value| value.to_le_bytes())
+        .collect()
+}
+
+fn bytes_u64(values: &[u64]) -> Vec<u8> {
+    values
+        .iter()
+        .flat_map(|value| value.to_le_bytes())
+        .collect()
+}
+
+fn bytes_f64(values: &[f64]) -> Vec<u8> {
+    values
+        .iter()
+        .flat_map(|value| value.to_le_bytes())
+        .collect()
+}
+
+fn repeated_u64(value: u64, count: u64) -> Result<Vec<u8>, Error> {
+    let capacity = count
+        .checked_mul(8)
+        .and_then(|bytes| usize::try_from(bytes).ok())
+        .ok_or_else(|| Error::Invalid("GeoTIFF export table is too large.".into()))?;
+    let mut out = Vec::with_capacity(capacity);
+    for _ in 0..count {
+        out.extend_from_slice(&value.to_le_bytes());
+    }
+    Ok(out)
+}
+
+/// Plans an uncompressed, single-band, float64 tiled BigTIFF whose bytes can
+/// be written strictly from start to finish.
+pub fn tiled_export_plan(
+    metadata: &Metadata,
+    tile_width: u32,
+    tile_height: u32,
+) -> Result<TiledExportPlan, Error> {
+    if metadata.bands != 1 {
+        return Err(Error::Invalid(
+            "GeoTIFF result export currently requires one output band.".into(),
+        ));
+    }
+    if tile_width == 0 || tile_height == 0 {
+        return Err(Error::Invalid(
+            "GeoTIFF export tile dimensions must be greater than zero.".into(),
+        ));
+    }
+    if metadata.grid.width == 0 || metadata.grid.height == 0 {
+        return Err(Error::Invalid(
+            "GeoTIFF export dimensions must be greater than zero.".into(),
+        ));
+    }
+    let tile_samples = u64::from(tile_width)
+        .checked_mul(u64::from(tile_height))
+        .ok_or_else(|| Error::Invalid("GeoTIFF export tile dimensions overflowed.".into()))?;
+    const MAX_TILE_SAMPLES: u64 = 4 * 1024 * 1024;
+    if tile_samples > MAX_TILE_SAMPLES {
+        return Err(Error::LimitExceeded {
+            samples: tile_samples,
+            limit: MAX_TILE_SAMPLES as usize,
+        });
+    }
+    let tile_bytes_u64 = tile_samples
+        .checked_mul(8)
+        .ok_or_else(|| Error::Invalid("GeoTIFF export tile size overflowed.".into()))?;
+    let tile_bytes = usize::try_from(tile_bytes_u64)
+        .map_err(|_| Error::Invalid("GeoTIFF export tile does not fit in memory.".into()))?;
+    let tiles_across = metadata.grid.width.div_ceil(tile_width);
+    let tiles_down = metadata.grid.height.div_ceil(tile_height);
+    let tile_count = u64::from(tiles_across)
+        .checked_mul(u64::from(tiles_down))
+        .ok_or_else(|| Error::Invalid("GeoTIFF export tile count overflowed.".into()))?;
+    if tile_count > 1_000_000 {
+        return Err(Error::Invalid(
+            "GeoTIFF export needs more than 1,000,000 tiles; choose larger tiles.".into(),
+        ));
+    }
+    let nodata = metadata.nodata.unwrap_or(f64::NAN);
+
+    let inline_u16 = |tag, value| BigTiffEntry {
+        tag,
+        field_type: 3,
+        count: 1,
+        data: bytes_u16(&[value]),
+    };
+    let inline_u32 = |tag, value: u32| BigTiffEntry {
+        tag,
+        field_type: 4,
+        count: 1,
+        data: value.to_le_bytes().to_vec(),
+    };
+    let mut entries = vec![
+        inline_u32(256, metadata.grid.width),
+        inline_u32(257, metadata.grid.height),
+        inline_u16(258, 64),
+        inline_u16(259, 1),
+        inline_u16(262, 1),
+        inline_u16(277, 1),
+        inline_u16(284, 1),
+        inline_u32(322, tile_width),
+        inline_u32(323, tile_height),
+        BigTiffEntry {
+            tag: 324,
+            field_type: 16,
+            count: tile_count,
+            data: vec![
+                0;
+                usize::try_from(tile_count.checked_mul(8).ok_or_else(|| {
+                    Error::Invalid("GeoTIFF export offset table overflowed.".into())
+                })?)
+                .map_err(|_| Error::Invalid(
+                    "GeoTIFF export offset table is too large.".into()
+                ))?
+            ],
+        },
+        BigTiffEntry {
+            tag: 325,
+            field_type: 16,
+            count: tile_count,
+            data: repeated_u64(tile_bytes_u64, tile_count)?,
+        },
+        inline_u16(339, 3),
+    ];
+    if let Some(transform) = metadata.grid.transform {
+        entries.push(BigTiffEntry {
+            tag: 34264,
+            field_type: 12,
+            count: 16,
+            data: bytes_f64(&[
+                transform.dx,
+                transform.rx,
+                0.0,
+                transform.x0,
+                transform.ry,
+                transform.dy,
+                0.0,
+                transform.y0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+            ]),
+        });
+    }
+    let mut key_entries = Vec::new();
+    match (metadata.grid.epsg, metadata.grid.crs_type) {
+        (Some(epsg), Some(CrsType::Projected)) => {
+            key_entries.extend_from_slice(&[1024, 0, 1, 1, 3072, 0, 1, epsg]);
+        }
+        (Some(epsg), Some(CrsType::Geographic)) => {
+            key_entries.extend_from_slice(&[1024, 0, 1, 2, 2048, 0, 1, epsg]);
+        }
+        (None, None) => {}
+        _ => {
+            return Err(Error::Invalid(
+                "An EPSG code and its geographic or projected type must be given together.".into(),
+            ));
+        }
+    }
+    if let Some(raster_type) = metadata.grid.raster_type {
+        key_entries.extend_from_slice(&[
+            1025,
+            0,
+            1,
+            match raster_type {
+                RasterType::PixelIsArea => 1,
+                RasterType::PixelIsPoint => 2,
+            },
+        ]);
+    }
+    if !key_entries.is_empty() {
+        let mut keys = vec![1_u16, 1, 0, (key_entries.len() / 4) as u16];
+        keys.extend(key_entries);
+        entries.push(BigTiffEntry {
+            tag: 34735,
+            field_type: 3,
+            count: keys.len() as u64,
+            data: bytes_u16(&keys),
+        });
+    }
+    let mut nodata_text = if nodata.is_nan() {
+        b"nan".to_vec()
+    } else {
+        nodata.to_string().into_bytes()
+    };
+    nodata_text.push(0);
+    entries.push(BigTiffEntry {
+        tag: 42113,
+        field_type: 2,
+        count: nodata_text.len() as u64,
+        data: nodata_text,
+    });
+    entries.sort_by_key(|entry| entry.tag);
+
+    let entry_bytes = 20_u64
+        .checked_mul(entries.len() as u64)
+        .ok_or_else(|| Error::Invalid("GeoTIFF export directory overflowed.".into()))?;
+    let ifd_bytes = 16_u64
+        .checked_add(entry_bytes)
+        .ok_or_else(|| Error::Invalid("GeoTIFF export directory overflowed.".into()))?;
+    let mut external_offset = 16_u64
+        .checked_add(ifd_bytes)
+        .ok_or_else(|| Error::Invalid("GeoTIFF export header overflowed.".into()))?;
+    let mut external_offsets = Vec::with_capacity(entries.len());
+    for entry in &entries {
+        if entry.data.len() <= 8 {
+            external_offsets.push(None);
+        } else {
+            external_offset = external_offset.next_multiple_of(8);
+            external_offsets.push(Some(external_offset));
+            external_offset = external_offset
+                .checked_add(entry.data.len() as u64)
+                .ok_or_else(|| Error::Invalid("GeoTIFF export header overflowed.".into()))?;
+        }
+    }
+    let data_offset = external_offset.next_multiple_of(8);
+    let file_size = data_offset
+        .checked_add(
+            tile_count
+                .checked_mul(tile_bytes_u64)
+                .ok_or_else(|| Error::Invalid("GeoTIFF export file size overflowed.".into()))?,
+        )
+        .ok_or_else(|| Error::Invalid("GeoTIFF export file size overflowed.".into()))?;
+    let offsets = (0..tile_count)
+        .map(|index| data_offset + index * tile_bytes_u64)
+        .collect::<Vec<_>>();
+    entries
+        .iter_mut()
+        .find(|entry| entry.tag == 324)
+        .expect("tile offsets entry")
+        .data = bytes_u64(&offsets);
+
+    let mut header = Vec::with_capacity(
+        usize::try_from(data_offset)
+            .map_err(|_| Error::Invalid("GeoTIFF export header is too large.".into()))?,
+    );
+    header.extend_from_slice(b"II");
+    header.extend_from_slice(&43_u16.to_le_bytes());
+    header.extend_from_slice(&8_u16.to_le_bytes());
+    header.extend_from_slice(&0_u16.to_le_bytes());
+    header.extend_from_slice(&16_u64.to_le_bytes());
+    header.extend_from_slice(&(entries.len() as u64).to_le_bytes());
+    for (entry, offset) in entries.iter().zip(&external_offsets) {
+        header.extend_from_slice(&entry.tag.to_le_bytes());
+        header.extend_from_slice(&entry.field_type.to_le_bytes());
+        header.extend_from_slice(&entry.count.to_le_bytes());
+        if let Some(offset) = offset {
+            header.extend_from_slice(&offset.to_le_bytes());
+        } else {
+            header.extend_from_slice(&entry.data);
+            header.resize(header.len() + (8 - entry.data.len()), 0);
+        }
+    }
+    header.extend_from_slice(&0_u64.to_le_bytes());
+    for (entry, offset) in entries.iter().zip(external_offsets) {
+        if let Some(offset) = offset {
+            header.resize(offset as usize, 0);
+            header.extend_from_slice(&entry.data);
+        }
+    }
+    header.resize(data_offset as usize, 0);
+    Ok(TiledExportPlan {
+        header,
+        tile_width,
+        tile_height,
+        tiles_across,
+        tiles_down,
+        tile_bytes,
+        file_size,
+        nodata,
+    })
+}
+
+/// Encodes one image window into its fixed-size uncompressed float64 tile.
+pub fn encode_export_tile(raster: &Raster, plan: &TiledExportPlan) -> Result<Vec<u8>, Error> {
+    if raster.metadata.bands != 1
+        || raster.metadata.grid.width == 0
+        || raster.metadata.grid.height == 0
+        || raster.metadata.grid.width > plan.tile_width
+        || raster.metadata.grid.height > plan.tile_height
+    {
+        return Err(Error::Invalid(
+            "GeoTIFF export tile dimensions do not match the plan.".into(),
+        ));
+    }
+    let samples = usize::try_from(
+        u64::from(raster.metadata.grid.width) * u64::from(raster.metadata.grid.height),
+    )
+    .map_err(|_| Error::Invalid("GeoTIFF export tile dimensions overflowed.".into()))?;
+    if raster.samples.len() != samples || raster.valid.len() != samples {
+        return Err(Error::Invalid(
+            "Raster samples do not match its dimensions and band count.".into(),
+        ));
+    }
+    validate_nodata(raster, Some(plan.nodata))?;
+    let mut bytes = vec![0; plan.tile_bytes];
+    let fill = plan.nodata.to_le_bytes();
+    for chunk in bytes.as_chunks_mut::<8>().0 {
+        chunk.copy_from_slice(&fill);
+    }
+    let width = raster.metadata.grid.width as usize;
+    for row in 0..raster.metadata.grid.height as usize {
+        for column in 0..width {
+            let source = row * width + column;
+            let target = (row * plan.tile_width as usize + column) * 8;
+            let value = if raster.valid[source] {
+                raster.samples[source]
+            } else {
+                plan.nodata
+            };
+            bytes[target..target + 8].copy_from_slice(&value.to_le_bytes());
+        }
+    }
+    Ok(bytes)
 }
 
 #[derive(Clone, Debug, PartialEq)]

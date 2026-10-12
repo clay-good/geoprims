@@ -1,8 +1,9 @@
 use std::io::{self, Cursor, Read, Seek, SeekFrom};
 
 use gp_raster::geotiff::{
-    CrsType, Error, RasterType, Transform, Window, decode, decode_file, decode_file_window,
-    decode_window, decode_window_reader, encode, inspect, inspect_file, same_grid,
+    CrsType, Error, Raster, RasterType, Transform, Window, decode, decode_file, decode_file_window,
+    decode_window, decode_window_reader, encode, encode_export_tile, inspect, inspect_file,
+    same_grid, tiled_export_plan,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -189,6 +190,50 @@ fn exported_result_round_trips_pixels_nodata_crs_and_transform() {
     let source = decode(&fixture(10.0, 32617), 4).unwrap();
     let encoded = encode(&source).unwrap();
     let output = decode(&encoded, 4).unwrap();
+    assert_eq!(output, source);
+}
+
+#[test]
+fn sequential_bigtiff_tiles_round_trip_pixels_nodata_crs_and_transform() {
+    let mut source = decode(&fixture(10.0, 32617), 4).unwrap();
+    source.metadata.grid.width = 3;
+    source.metadata.grid.height = 2;
+    source.samples = vec![1.0, 2.0, 3.0, 4.0, -9999.0, 6.0];
+    source.valid = vec![true, true, true, true, false, true];
+    let plan = tiled_export_plan(&source.metadata, 2, 2).unwrap();
+    assert_eq!((plan.tiles_across, plan.tiles_down), (2, 1));
+
+    let left = Raster {
+        metadata: gp_raster::geotiff::Metadata {
+            grid: gp_raster::geotiff::Grid {
+                width: 2,
+                height: 2,
+                ..source.metadata.grid.clone()
+            },
+            bands: 1,
+            nodata: source.metadata.nodata,
+        },
+        samples: vec![1.0, 2.0, 4.0, -9999.0],
+        valid: vec![true, true, true, false],
+    };
+    let right = Raster {
+        metadata: gp_raster::geotiff::Metadata {
+            grid: gp_raster::geotiff::Grid {
+                width: 1,
+                height: 2,
+                ..source.metadata.grid.clone()
+            },
+            bands: 1,
+            nodata: source.metadata.nodata,
+        },
+        samples: vec![3.0, 6.0],
+        valid: vec![true, true],
+    };
+    let mut bytes = plan.header.clone();
+    bytes.extend(encode_export_tile(&left, &plan).unwrap());
+    bytes.extend(encode_export_tile(&right, &plan).unwrap());
+    assert_eq!(bytes.len() as u64, plan.file_size);
+    let output = decode(&bytes, 6).unwrap();
     assert_eq!(output, source);
 }
 

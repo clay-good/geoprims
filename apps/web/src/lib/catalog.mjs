@@ -290,6 +290,7 @@ export const clientTool = (t) => ({
   statusSources: statusSources(t),
   coreVersion: catalog.coreVersion,
   buildHash: buildHashOf(t),
+  ...(t['x-raster'] ? { 'x-raster': t['x-raster'] } : {}),
   // Whether the answer carries a compact picture of itself.
   'x-diagram-inline': t['x-diagram-inline'] ?? false,
 });

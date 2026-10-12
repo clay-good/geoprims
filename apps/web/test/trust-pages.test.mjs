@@ -74,6 +74,8 @@ test('the privacy page says what is kept, what is sent, and what never is', () =
   assert.match(html, /only while the report dialog is open/);
   assert.match(html, /does not store your IP address/);
   assert.match(html, /gp-/, 'names the local-storage keys');
+  assert.match(html, /GeoTIFF files you choose are read locally/);
+  assert.match(html, /not put in local storage,\s*caches, links, or problem reports/);
   // The note cap comes from the shared limits file, not a number typed twice.
   const limits = JSON.parse(readFileSync(join(root, 'data/report-limits.json'), 'utf8'));
   assert.ok(html.includes(`up to ${limits.noteChars} characters`), 'the note cap is the shared one');

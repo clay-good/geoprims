@@ -138,6 +138,9 @@
   let BatchPanel = $state(null);
   const batchable = Object.entries(tool.inputs.properties).some(([n, s]) => n !== 'options' && s.type !== 'array');
   const loadBatch = async () => (BatchPanel ??= (await import('./BatchPanel.svelte')).default);
+  // Local GeoTIFF mode is present only when the manifest names its band roles.
+  let RasterPanel = $state(null);
+  const loadRaster = async () => (RasterPanel ??= (await import('./RasterPanel.svelte')).default);
   // Aircraft profiles load only when a reader opens them, on tools that take aircraft data.
   let AircraftPanel = $state(null);
   const loadAircraft = async () => (AircraftPanel ??= (await import('./AircraftPanel.svelte')).default);
@@ -949,6 +952,12 @@
     <details class="batch" ontoggle={(e) => e.currentTarget.open && loadAircraft()}>
       <summary>Aircraft profiles</summary>
       {#if AircraftPanel}<AircraftPanel {tool} getInputs={args} {setInputs} />{:else}<p class="help">Loading…</p>{/if}
+    </details>
+  {/if}
+  {#if !embedded && tool['x-raster']}
+    <details class="batch" ontoggle={(e) => e.currentTarget.open && loadRaster()}>
+      <summary>Process local GeoTIFF files</summary>
+      {#if RasterPanel && compute}<RasterPanel {tool} {compute} />{:else}<p class="help">Loading…</p>{/if}
     </details>
   {/if}
   {#if !embedded && batchable}

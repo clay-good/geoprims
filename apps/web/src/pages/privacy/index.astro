@@ -36,6 +36,11 @@ import { LIMITS } from '../../lib/report.js';
     again, a service worker keeps a copy of the pages, modules, and data files so the tools work offline. That cache
     holds the site's own files, not your inputs.
   </p>
+  <p>
+    GeoTIFF files you choose are read locally in a calculation worker. Large files are read in small ranges from the
+    file you selected. Their bytes, names, and private handles stay in memory: they are not put in local storage,
+    caches, links, or problem reports, and they are released when you replace them or leave the page.
+  </p>
 
   <h2>Problem reports, the one thing that is sent</h2>
   <p>

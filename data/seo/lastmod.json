@@ -1328,8 +1328,8 @@
     "lastmod": "2026-10-09"
   },
   "/privacy/": {
-    "hash": "bbadf53d01b529c6",
-    "lastmod": "2026-09-24"
+    "hash": "88d6ce3cc38046e5",
+    "lastmod": "2026-10-12"
   },
   "/quality/": {
     "hash": "17ca5870faf71b59",
@@ -1360,28 +1360,28 @@
     "lastmod": "2026-10-09"
   },
   "/raster/index/mndwi/": {
-    "hash": "e6cfc944c5d8ea07",
-    "lastmod": "2026-10-09"
+    "hash": "33749dae54b8bad8",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/nbr/": {
-    "hash": "3fdad286e1e8e0f5",
-    "lastmod": "2026-10-09"
+    "hash": "af4c277b31a22161",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/ndbi/": {
-    "hash": "d45e058a52f1168c",
-    "lastmod": "2026-10-09"
+    "hash": "04a8ff483daf5bcb",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/ndvi/": {
-    "hash": "c206ad85b2cb439b",
-    "lastmod": "2026-10-09"
+    "hash": "ed012100c74bf5b1",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/ndwi-gao/": {
-    "hash": "afeed19bf7ab8b03",
-    "lastmod": "2026-10-09"
+    "hash": "81ccee10b38a68f6",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/ndwi-mcfeeters/": {
-    "hash": "be70b032a7f9aaea",
-    "lastmod": "2026-10-09"
+    "hash": "24a218ab49ff8da4",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/savi/": {
     "hash": "f4d6d61f10a5ba26",
@@ -1960,7 +1960,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8be37d249dc8eeca",
+    "hash": "74093c515b591441",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

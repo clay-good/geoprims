@@ -40,6 +40,12 @@ test('axe finds no WCAG 2.2 A or AA violation on representative pages, in both m
   for (const mode of ['paper', 'ink']) {
     const context = await browser.newContext({ serviceWorkers: 'block', reducedMotion: 'reduce' });
     await context.addInitScript((m) => localStorage.setItem('gp-theme', m), mode);
+    await context.route('**/api/reports/config', (route) => route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({ enabled: true, sitekey: 'test' }),
+    }));
+    await context.route(/^https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/api\.js/, (route) => route.fulfill({
+      status: 200, contentType: 'text/javascript', body: 'window.turnstile={render(){return "test"},reset(){}};',
+    }));
     const page = await context.newPage();
     for (const path of PAGES) {
       await page.goto(origin + path);
@@ -58,6 +64,12 @@ test('axe finds no WCAG 2.2 A or AA violation on representative pages, in both m
     await page.evaluate(() => document.querySelectorAll('details').forEach((d) => (d.open = true)));
     await page.waitForTimeout(300);
     for (const v of await check(page)) found.push({ mode, path: 'panels open', ...v });
+    // The lazily loaded report dialog, including its payload preview and input
+    // exclusion control, is a separate interactive surface.
+    await page.locator('.report-button').click();
+    await page.locator('dialog[open]').waitFor();
+    await page.waitForFunction(() => document.querySelector('dialog button[type="submit"]')?.disabled === false);
+    for (const v of await check(page)) found.push({ mode, path: 'report dialog', ...v });
     await context.close();
   }
   if (found.length) t.diagnostic(JSON.stringify(found, null, 1).slice(0, 6000));

@@ -156,7 +156,7 @@
       {#if tool}<label class="check"><input type="checkbox" bind:checked={includeInputs} /> Include my inputs and results</label>{/if}
       <details open>
         <summary>Exactly what will be sent</summary>
-        <pre class="payload">{preview}</pre>
+        <pre class="payload" tabindex="0" aria-label="Report payload preview">{preview}</pre>
       </details>
       <div id="report-check"></div>
       <p role="status" aria-live="polite">

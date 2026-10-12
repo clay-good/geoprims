@@ -252,14 +252,14 @@ export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {
         JSON.stringify({ handle, ...window, maxSamples }),
       ));
     },
-    /** Runs Rust's normalized-difference kernel on one bounded pair of file windows. */
-    processFileWindow(leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling) {
+    /** Runs a fixed Rust index kernel on one bounded pair of file windows. */
+    processFileWindow(tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling, parameters) {
       if (typeof inst.exports.gp_raster_file_normalized_difference !== 'function') {
         throw new TypeError(`The ${name} module does not process raster windows.`);
       }
       return withFileRanges(() => callString(
         'gp_raster_file_normalized_difference',
-        JSON.stringify({ leftHandle, leftBand, rightHandle, rightBand, ...window, maxSamples, ...(resampling ? { resampling } : {}) }),
+        JSON.stringify({ tool, leftHandle, leftBand, rightHandle, rightBand, ...window, maxSamples, ...(resampling ? { resampling } : {}), ...(parameters ? { parameters } : {}) }),
       ));
     },
     /** Returns the result envelope as a JSON string (the exact core bytes). */

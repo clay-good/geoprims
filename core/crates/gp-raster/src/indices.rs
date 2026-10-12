@@ -619,15 +619,19 @@ pub static EVI: ToolDef = ToolDef {
 
 fn run_evi2(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (nir, red) = (refl(ctx, "nir")?, refl(ctx, "red")?);
-    let den = nir + 2.4 * red + 1.0;
-    if den == 0.0 {
+    let Some(v) = evi2_value(nir, red) else {
         return Err(ToolError::invalid(
             "/nir",
             "NIR + 2.4 Red + 1 is zero, so the index is undefined here; in an image this pixel is no-data.",
         ));
-    }
-    let v = 2.5 * (nir - red) / den;
+    };
     Ok(Json::obj([("evi2", Json::Num(v))]))
+}
+
+/// The EVI2 kernel shared by scalar and raster execution.
+pub(crate) fn evi2_value(nir: f64, red: f64) -> Option<f64> {
+    let denominator = nir + 2.4 * red + 1.0;
+    (denominator != 0.0).then_some(2.5 * (nir - red) / denominator)
 }
 
 pub static EVI2: ToolDef = ToolDef {
@@ -695,6 +699,10 @@ pub static EVI2: ToolDef = ToolDef {
         },
     ],
     sentence: "EVI2 is {evi2}.",
+    raster: Some(RasterMode {
+        bands: &["nir", "red"],
+        output: "evi2",
+    }),
     limits: &[("batchRows", 100_000)],
     run: run_evi2,
     ..ToolDef::BLANK
@@ -703,15 +711,19 @@ pub static EVI2: ToolDef = ToolDef {
 fn run_savi(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (nir, red) = (refl(ctx, "nir")?, refl(ctx, "red")?);
     let l = ctx.number("soil_factor")?.unwrap_or(0.5);
-    let den = nir + red + l;
-    if den == 0.0 {
+    let Some(v) = savi_value(nir, red, l) else {
         return Err(ToolError::invalid(
             "/nir",
             "NIR + Red + L is zero, so the index is undefined here; in an image this pixel is no-data.",
         ));
-    }
-    let v = (1.0 + l) * (nir - red) / den;
+    };
     Ok(Json::obj([("savi", Json::Num(v))]))
+}
+
+/// The SAVI kernel shared by scalar and raster execution.
+pub(crate) fn savi_value(nir: f64, red: f64, soil_factor: f64) -> Option<f64> {
+    let denominator = nir + red + soil_factor;
+    (denominator != 0.0).then_some((1.0 + soil_factor) * (nir - red) / denominator)
 }
 
 pub static SAVI: ToolDef = ToolDef {
@@ -786,6 +798,10 @@ pub static SAVI: ToolDef = ToolDef {
         },
     ],
     sentence: "SAVI is {savi}.",
+    raster: Some(RasterMode {
+        bands: &["nir", "red"],
+        output: "savi",
+    }),
     limits: &[("batchRows", 100_000)],
     run: run_savi,
     ..ToolDef::BLANK
@@ -815,7 +831,7 @@ fn run_dnbr(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         }
     }
-    let d = pre - post;
+    let d = dnbr_value(pre, post);
     // Classed on the table's own scale, dNBR x 1,000 to the nearest whole
     // number, so 0.37 - 0.27 is +100 (low severity) as the table reads it,
     // not 0.0999... (unburned) as the subtraction rounds it.
@@ -840,6 +856,12 @@ fn run_dnbr(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("dnbr", Json::Num(d)),
         ("severity", Json::str(class)),
     ]))
+}
+
+/// The numeric dNBR kernel shared by scalar and raster execution. Severity is
+/// a scalar interpretation and is not written into a numeric output raster.
+pub(crate) fn dnbr_value(pre: f64, post: f64) -> f64 {
+    pre - post
 }
 
 pub static DNBR: ToolDef = ToolDef {
@@ -920,6 +942,10 @@ pub static DNBR: ToolDef = ToolDef {
         },
     ],
     sentence: "dNBR is {dnbr}, in the {severity} range.",
+    raster: Some(RasterMode {
+        bands: &["nbr_pre", "nbr_post"],
+        output: "dnbr",
+    }),
     limits: &[("batchRows", 100_000)],
     run: run_dnbr,
     ..ToolDef::BLANK

@@ -48,7 +48,7 @@ mod file_exports {
         CrsType, Error as GeotiffError, Grid, Metadata, Raster, RasterType, Window,
     };
     use crate::processing::Error as ProcessingError;
-    use crate::processing::{Resampling, TargetGrid};
+    use crate::processing::{Kernel, Resampling, TargetGrid};
 
     const MAX_WINDOW_SAMPLES: usize = 4 * 1024 * 1024;
 
@@ -207,6 +207,37 @@ mod file_exports {
         Ok(Some((method, target)))
     }
 
+    fn kernel(input: &Value) -> Result<Kernel, Value> {
+        let tool = input.get("tool").and_then(Value::as_str).ok_or_else(|| {
+            json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "tool must be a string."}})
+        })?;
+        match tool {
+            "raster.index.ndvi"
+            | "raster.index.ndwi-mcfeeters"
+            | "raster.index.ndwi-gao"
+            | "raster.index.mndwi"
+            | "raster.index.ndbi"
+            | "raster.index.nbr" => Ok(Kernel::NormalizedDifference),
+            "raster.index.evi2" => Ok(Kernel::Evi2),
+            "raster.index.dnbr" => Ok(Kernel::Dnbr),
+            "raster.index.savi" => {
+                let soil_factor = input
+                    .get("parameters")
+                    .and_then(|parameters| parameters.get("soil_factor"))
+                    .map_or(Some(0.5), Value::as_f64)
+                    .filter(|value| (0.0..=1.0).contains(value))
+                    .ok_or_else(|| {
+                        json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "parameters.soil_factor must be a number from 0 to 1."}})
+                    })?;
+                Ok(Kernel::Savi { soil_factor })
+            }
+            _ => Err(json!({
+                "ok": false,
+                "error": {"code": "UNSUPPORTED", "message": format!("{tool} has no 2-band raster kernel.")},
+            })),
+        }
+    }
+
     unsafe fn request(input: *const u8, input_len: usize) -> Result<Value, Value> {
         let text = unsafe { gp_base::abi::read_str(input, input_len) }.map_err(|_| {
             json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be UTF-8."}})
@@ -275,8 +306,9 @@ mod file_exports {
             let right_band = field_u32(&value, "rightBand")? as usize;
             let window = window(&value)?;
             let max_samples = max_samples(&value)?;
+            let kernel = kernel(&value)?;
             match resampling(&value)? {
-                Some((method, target)) => crate::processing::normalized_difference_resampled_file_window(
+                Some((method, target)) => crate::processing::index_resampled_file_window(
                     left_handle,
                     left_band,
                     right_handle,
@@ -285,14 +317,16 @@ mod file_exports {
                     max_samples,
                     method,
                     target,
+                    kernel,
                 ),
-                None => crate::processing::normalized_difference_file_window(
+                None => crate::processing::index_file_window(
                     left_handle,
                     left_band,
                     right_handle,
                     right_band,
                     window,
                     max_samples,
+                    kernel,
                 ),
             }
             .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))

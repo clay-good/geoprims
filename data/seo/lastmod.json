@@ -1348,16 +1348,16 @@
     "lastmod": "2026-10-09"
   },
   "/raster/index/dnbr/": {
-    "hash": "aadd4a24492cf0b8",
-    "lastmod": "2026-10-09"
+    "hash": "d4ce92516cf56ee2",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/evi/": {
     "hash": "98ee78212a86dec9",
     "lastmod": "2026-10-09"
   },
   "/raster/index/evi2/": {
-    "hash": "180f90c1b9d8b1b9",
-    "lastmod": "2026-10-09"
+    "hash": "a0158ecc3110f410",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/mndwi/": {
     "hash": "33749dae54b8bad8",
@@ -1384,8 +1384,8 @@
     "lastmod": "2026-10-12"
   },
   "/raster/index/savi/": {
-    "hash": "f4d6d61f10a5ba26",
-    "lastmod": "2026-10-09"
+    "hash": "53fd25bd3286b74d",
+    "lastmod": "2026-10-12"
   },
   "/raster/scale/": {
     "hash": "1ed1a50758a73071",
@@ -1960,7 +1960,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4d3813357791f2f2",
+    "hash": "13621bf8a4c8e0e5",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

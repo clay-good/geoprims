@@ -4,7 +4,7 @@
   import { onDestroy } from 'svelte';
   import { previewHistogram, previewPixels, previewReadout, rasterPreview } from '../lib/raster-preview.mjs';
 
-  let { tool, compute } = $props();
+  let { tool, compute, getInputs } = $props();
   const roles = tool['x-raster'].bands.map((name) => ({ name, title: tool.inputs.properties[name].title }));
 
   let sources = $state([]);
@@ -109,6 +109,7 @@
         windowWidth: 512,
         windowHeight: 256,
         maxSamples: 4 * 1024 * 1024,
+        parameters: getInputs(),
         resampling: resample,
         signal: controller.signal,
         accept: (window) => preview.add(window),

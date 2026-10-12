@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { processNormalizedDifferenceScene } from './raster.mjs';
+import { processRasterScene } from './raster.mjs';
 
 function host({ failAt } = {}) {
   const calls = [];
@@ -35,7 +35,7 @@ test('a raster scene is consumed one successful window at a time in row-major or
   const runtime = host();
   const accepted = [];
   const progress = [];
-  const out = await processNormalizedDifferenceScene(runtime, {
+  const out = await processRasterScene(runtime, {
     ...options,
     accept: (window) => accepted.push(window),
     onProgress: (state) => progress.push(state),
@@ -73,7 +73,7 @@ test('a resampled scene uses the chosen target dimensions and forwards the metho
     },
   };
   const resampling = { method: 'bilinear', target: 'right' };
-  const out = await processNormalizedDifferenceScene(runtime, {
+  const out = await processRasterScene(runtime, {
     ...options,
     windowWidth: 2,
     windowHeight: 1,
@@ -81,8 +81,27 @@ test('a resampled scene uses the chosen target dimensions and forwards the metho
     accept() {},
   });
   assert.deepEqual(inspected, ['red']);
-  assert.deepEqual(calls[0].at(-1), resampling);
+  assert.deepEqual(calls[0].at(-2), resampling);
   assert.equal(out.metadata.width, 2);
+});
+
+test('a scene forwards scalar kernel parameters with every window', async () => {
+  const parametersSeen = [];
+  const runtime = {
+    inspectFile: async () => ({ ok: true, metadata: { width: 2, height: 1, bands: 1 } }),
+    processFileWindow: async (...args) => {
+      parametersSeen.push(args[8]);
+      return { ok: true, raster: { samples: [0.4, 0.5], valid: [true, true] } };
+    },
+  };
+  await processRasterScene(runtime, {
+    ...options,
+    windowWidth: 1,
+    windowHeight: 1,
+    parameters: { soil_factor: 0.25 },
+    accept() {},
+  });
+  assert.deepEqual(parametersSeen, [{ soil_factor: 0.25 }, { soil_factor: 0.25 }]);
 });
 
 test('scene statistics stream across windows and exclude no-data pixels', async () => {
@@ -96,7 +115,7 @@ test('scene statistics stream across windows and exclude no-data pixels', async 
         : { ok: true, raster: { samples: [-1e16, -9999], valid: [true, false] } };
     },
   };
-  const out = await processNormalizedDifferenceScene(runtime, {
+  const out = await processRasterScene(runtime, {
     ...options,
     windowWidth: 2,
     windowHeight: 1,
@@ -119,7 +138,7 @@ test('an all-no-data scene has counts but no numeric statistics', async () => {
       raster: { samples: [-9999], valid: [false] },
     }),
   };
-  const out = await processNormalizedDifferenceScene(runtime, {
+  const out = await processRasterScene(runtime, {
     ...options,
     windowWidth: 1,
     windowHeight: 1,
@@ -137,7 +156,7 @@ test('an all-no-data scene has counts but no numeric statistics', async () => {
 test('a failed or canceled scene emits no later windows', async () => {
   const failedHost = host({ failAt: 3 });
   const accepted = [];
-  const failed = await processNormalizedDifferenceScene(failedHost, {
+  const failed = await processRasterScene(failedHost, {
     ...options,
     accept: (window) => accepted.push(window),
   });
@@ -147,7 +166,7 @@ test('a failed or canceled scene emits no later windows', async () => {
 
   const controller = new AbortController();
   const canceledHost = host();
-  const canceled = await processNormalizedDifferenceScene(canceledHost, {
+  const canceled = await processRasterScene(canceledHost, {
     ...options,
     signal: controller.signal,
     accept: () => controller.abort(),
@@ -158,11 +177,11 @@ test('a failed or canceled scene emits no later windows', async () => {
 
 test('scene bounds and the required consumer are validated before processing', async () => {
   await assert.rejects(
-    () => processNormalizedDifferenceScene(host(), { ...options, windowWidth: 0, accept() {} }),
+    () => processRasterScene(host(), { ...options, windowWidth: 0, accept() {} }),
     /windowWidth must be a positive integer/,
   );
   await assert.rejects(
-    () => processNormalizedDifferenceScene(host(), options),
+    () => processRasterScene(host(), options),
     /accept must consume/,
   );
 });
@@ -173,7 +192,7 @@ test('scene dimensions and window counts are bounded before pixel work starts', 
     ok: true,
     metadata: { width: 500_000_001, height: 1, bands: 1 },
   });
-  const size = await processNormalizedDifferenceScene(tooLarge, { ...options, accept() {} });
+  const size = await processRasterScene(tooLarge, { ...options, accept() {} });
   assert.equal(size.error.code, 'LIMIT_EXCEEDED');
   assert.match(size.error.message, /500000001 pixels/);
   assert.equal(tooLarge.calls.length, 0);
@@ -183,7 +202,7 @@ test('scene dimensions and window counts are bounded before pixel work starts', 
     ok: true,
     metadata: { width: 1_000_001, height: 1, bands: 1 },
   });
-  const windows = await processNormalizedDifferenceScene(tooMany, {
+  const windows = await processRasterScene(tooMany, {
     ...options,
     windowWidth: 1,
     windowHeight: 1,

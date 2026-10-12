@@ -164,6 +164,47 @@ test('range-backed file windows run the Rust index kernel without JavaScript pix
   await host.removeFile('raster.index.ndvi', 'right-cog');
 });
 
+test('range-backed file windows select each fixed 2-band Rust kernel', async () => {
+  const left = sparseTiledTiff();
+  const right = sparseTiledTiff(() => 16);
+  await host.openFile('raster.index.evi2', 'kernel-left', left);
+  await host.openFile('raster.index.evi2', 'kernel-right', right);
+  const window = { x: 16, y: 1, width: 2, height: 2 };
+  const run = async (tool, parameters) => JSON.parse(await host.processFileWindow(
+    tool,
+    'kernel-left', 0,
+    'kernel-right', 0,
+    window,
+    256,
+    undefined,
+    parameters,
+  ));
+
+  const evi2 = await run('raster.index.evi2');
+  assert.equal(evi2.ok, true, JSON.stringify(evi2));
+  assert.equal(evi2.raster.samples[0], 2.5 * (48 - 16) / (48 + 2.4 * 16 + 1));
+
+  const savi = await run('raster.index.savi', { soil_factor: 0.25 });
+  assert.equal(savi.ok, true, JSON.stringify(savi));
+  assert.equal(savi.raster.samples[0], 1.25 * (48 - 16) / (48 + 16 + 0.25));
+
+  await host.openFile('raster.index.dnbr', 'dnbr-pre', sparseTiledTiff(() => 1));
+  await host.openFile('raster.index.dnbr', 'dnbr-post', sparseTiledTiff(() => 0));
+  const dnbr = JSON.parse(await host.processFileWindow(
+    'raster.index.dnbr',
+    'dnbr-pre', 0,
+    'dnbr-post', 0,
+    window,
+    256,
+  ));
+  assert.equal(dnbr.ok, true, JSON.stringify(dnbr));
+  assert.deepEqual(dnbr.raster.samples, [1, 1, 1, 1]);
+  await host.removeFile('raster.index.evi2', 'kernel-left');
+  await host.removeFile('raster.index.evi2', 'kernel-right');
+  await host.removeFile('raster.index.dnbr', 'dnbr-pre');
+  await host.removeFile('raster.index.dnbr', 'dnbr-post');
+});
+
 test('range-backed index windows compare the complete source grids', async () => {
   await host.openFile('raster.index.ndvi', 'wide-cog', sparseTiledTiff());
   await host.openFile('raster.index.ndvi', 'narrow-cog', sparseTiledTiff((value) => value, 31));

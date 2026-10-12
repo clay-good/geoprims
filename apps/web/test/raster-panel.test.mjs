@@ -10,6 +10,9 @@ test('only tools with a raster manifest contract load the local-file panel', () 
   assert.match(toolApp, /tool\['x-raster'\]/);
   assert.match(toolApp, /import\('\.\/RasterPanel\.svelte'\)/);
   assert.deepEqual(clientTool(tool('raster.index.ndvi'))['x-raster'], { bands: ['nir', 'red'], output: 'ndvi' });
+  assert.deepEqual(clientTool(tool('raster.index.evi2'))['x-raster'], { bands: ['nir', 'red'], output: 'evi2' });
+  assert.deepEqual(clientTool(tool('raster.index.savi'))['x-raster'], { bands: ['nir', 'red'], output: 'savi' });
+  assert.deepEqual(clientTool(tool('raster.index.dnbr'))['x-raster'], { bands: ['nbr_pre', 'nbr_post'], output: 'dnbr' });
 });
 
 test('the panel accepts one multiband TIFF or separate TIFFs and maps every role', () => {
@@ -17,6 +20,7 @@ test('the panel accepts one multiband TIFF or separate TIFFs and maps every role
   assert.match(component, /tool\['x-raster'\]\.bands/);
   assert.match(component, /Band number/);
   assert.match(component, /processFileScene/);
+  assert.match(component, /parameters: getInputs\(\)/);
 });
 
 test('private raster state is not persisted or sent', () => {

@@ -2,9 +2,9 @@ use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform,
 use std::io::{self, Cursor, Seek, SeekFrom, Write};
 
 use gp_raster::processing::{
-    Error, Resampling, TargetGrid, normalized_difference, normalized_difference_file_window,
-    normalized_difference_resampled_window, normalized_difference_scene, resample,
-    write_normalized_difference_geotiff,
+    Error, Kernel, Resampling, TargetGrid, index, normalized_difference,
+    normalized_difference_file_window, normalized_difference_resampled_window,
+    normalized_difference_scene, resample, write_normalized_difference_geotiff,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -41,6 +41,24 @@ fn raster(grid: Grid, bands: u16, nodata: Option<f64>, samples: Vec<f64>) -> Ras
         samples,
         valid,
     }
+}
+
+#[test]
+fn fixed_two_band_kernels_match_the_scalar_equations() {
+    let left = raster(grid(2), 1, Some(-9999.0), vec![0.45, -9999.0, 0.61, 1.1]);
+    let right = raster(grid(2), 1, None, vec![0.08, 0.08, 0.13, 0.27]);
+
+    let evi2 = index(&left, 0, &right, 0, Kernel::Evi2).unwrap();
+    assert!((evi2.samples[0] - 2.5 * (0.45 - 0.08) / (0.45 + 2.4 * 0.08 + 1.0)).abs() < 1e-15);
+    assert!(!evi2.valid[1]);
+    assert_eq!(evi2.samples[1], -9999.0);
+
+    let savi = index(&left, 0, &right, 0, Kernel::Savi { soil_factor: 0.5 }).unwrap();
+    assert!((savi.samples[0] - 0.538_834_951_456_310_6).abs() < 1e-15);
+
+    let dnbr = index(&left, 0, &right, 0, Kernel::Dnbr).unwrap();
+    assert!((dnbr.samples[2] - 0.48).abs() < 1e-15);
+    assert!(!dnbr.valid[3]);
 }
 
 fn tiff_fixture(width: u32, values: &[f32], nodata: f64) -> Vec<u8> {

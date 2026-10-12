@@ -11,7 +11,7 @@ use tiff::encoder::{TiffEncoder, colortype};
 use crate::geotiff::{
     self, Grid, GridMismatch, Metadata, Raster, RasterType, Window, WindowDecoder, same_grid,
 };
-use crate::indices::normalized_value;
+use crate::indices::{dnbr_value, evi2_value, normalized_value, savi_value};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
@@ -34,6 +34,29 @@ pub enum Resampling {
 pub enum TargetGrid {
     Left,
     Right,
+}
+
+/// A fixed 2-band index formula exposed by both scalar and raster tools.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Kernel {
+    NormalizedDifference,
+    Evi2,
+    Savi { soil_factor: f64 },
+    Dnbr,
+}
+
+impl Kernel {
+    fn value(self, left: f64, right: f64) -> Option<f64> {
+        match self {
+            Self::NormalizedDifference => normalized_value(left, right),
+            Self::Evi2 => evi2_value(left, right),
+            Self::Savi { soil_factor } => savi_value(left, right, soil_factor),
+            Self::Dnbr if (-1.0..=1.0).contains(&left) && (-1.0..=1.0).contains(&right) => {
+                Some(dnbr_value(left, right))
+            }
+            Self::Dnbr => None,
+        }
+    }
 }
 
 fn validate_band(metadata: &Metadata, band: usize) -> Result<(), Error> {
@@ -110,6 +133,28 @@ pub fn normalized_difference_file_window(
     window: Window,
     max_samples: usize,
 ) -> Result<Raster, Error> {
+    index_file_window(
+        left_handle,
+        left_band,
+        right_handle,
+        right_band,
+        window,
+        max_samples,
+        Kernel::NormalizedDifference,
+    )
+}
+
+/// Decodes and processes one 2-band index window from private local-file handles.
+#[allow(clippy::too_many_arguments)]
+pub fn index_file_window(
+    left_handle: &str,
+    left_band: usize,
+    right_handle: &str,
+    right_band: usize,
+    window: Window,
+    max_samples: usize,
+    kernel: Kernel,
+) -> Result<Raster, Error> {
     let missing = || {
         Error::Decode(geotiff::Error::Invalid(
             "The selected local file is no longer loaded.".into(),
@@ -124,7 +169,7 @@ pub fn normalized_difference_file_window(
     validate_band(right.metadata(), right_band)?;
     let left = left.decode(window).map_err(Error::Decode)?;
     let right = right.decode(window).map_err(Error::Decode)?;
-    normalized_difference(&left, left_band, &right, right_band)
+    index(&left, left_band, &right, right_band, kernel)
 }
 
 /// Decodes one target window and only the source pixels needed to resample the
@@ -140,6 +185,37 @@ pub fn normalized_difference_resampled_window<L, R>(
     max_samples: usize,
     method: Resampling,
     target: TargetGrid,
+) -> Result<Raster, Error>
+where
+    L: Read + Seek,
+    R: Read + Seek,
+{
+    index_resampled_window(
+        left_reader,
+        left_band,
+        right_reader,
+        right_band,
+        window,
+        max_samples,
+        method,
+        target,
+        Kernel::NormalizedDifference,
+    )
+}
+
+/// Decodes a target window and only the source pixels required to evaluate a
+/// fixed 2-band kernel after local resampling.
+#[allow(clippy::too_many_arguments)]
+pub fn index_resampled_window<L, R>(
+    left_reader: L,
+    left_band: usize,
+    right_reader: R,
+    right_band: usize,
+    window: Window,
+    max_samples: usize,
+    method: Resampling,
+    target: TargetGrid,
+    kernel: Kernel,
 ) -> Result<Raster, Error>
 where
     L: Read + Seek,
@@ -180,9 +256,9 @@ where
         max_samples,
     )?;
     let mut output = if source_is_left {
-        normalized_difference(&resampled, left_band, &target_raster, right_band)?
+        index(&resampled, left_band, &target_raster, right_band, kernel)?
     } else {
-        normalized_difference(&target_raster, left_band, &resampled, right_band)?
+        index(&target_raster, left_band, &resampled, right_band, kernel)?
     };
     let fill = target_nodata.unwrap_or(f64::NAN);
     for (sample, valid) in output.samples.iter_mut().zip(&output.valid) {
@@ -205,12 +281,37 @@ pub fn normalized_difference_resampled_file_window(
     method: Resampling,
     target: TargetGrid,
 ) -> Result<Raster, Error> {
+    index_resampled_file_window(
+        left_handle,
+        left_band,
+        right_handle,
+        right_band,
+        window,
+        max_samples,
+        method,
+        target,
+        Kernel::NormalizedDifference,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn index_resampled_file_window(
+    left_handle: &str,
+    left_band: usize,
+    right_handle: &str,
+    right_band: usize,
+    window: Window,
+    max_samples: usize,
+    method: Resampling,
+    target: TargetGrid,
+    kernel: Kernel,
+) -> Result<Raster, Error> {
     let missing = || {
         Error::Decode(geotiff::Error::Invalid(
             "The selected local file is no longer loaded.".into(),
         ))
     };
-    normalized_difference_resampled_window(
+    index_resampled_window(
         gp_base::files::reader(left_handle).ok_or_else(missing)?,
         left_band,
         gp_base::files::reader(right_handle).ok_or_else(missing)?,
@@ -219,6 +320,7 @@ pub fn normalized_difference_resampled_file_window(
         max_samples,
         method,
         target,
+        kernel,
     )
 }
 
@@ -439,6 +541,23 @@ pub fn normalized_difference(
     right: &Raster,
     right_band: usize,
 ) -> Result<Raster, Error> {
+    index(
+        left,
+        left_band,
+        right,
+        right_band,
+        Kernel::NormalizedDifference,
+    )
+}
+
+/// Applies one fixed 2-band kernel to matching raster windows.
+pub fn index(
+    left: &Raster,
+    left_band: usize,
+    right: &Raster,
+    right_band: usize,
+    kernel: Kernel,
+) -> Result<Raster, Error> {
     same_grid(&left.metadata.grid, &right.metadata.grid).map_err(Error::GridMismatch)?;
     let pixels = validate(left, left_band)?;
     if validate(right, right_band)? != pixels {
@@ -456,7 +575,8 @@ pub fn normalized_difference(
         let left_index = pixel * left_bands + left_band;
         let right_index = pixel * right_bands + right_band;
         let value = if left.valid[left_index] && right.valid[right_index] {
-            normalized_value(left.samples[left_index], right.samples[right_index])
+            kernel
+                .value(left.samples[left_index], right.samples[right_index])
                 .filter(|value| value.is_finite())
         } else {
             None

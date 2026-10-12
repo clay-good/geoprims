@@ -158,7 +158,7 @@ test('raster metadata and windows use dedicated worker messages', async () => {
   );
   i = current.sent.length - 1;
   assert.deepEqual(current.sent[i].args, [
-    'raster.index.ndvi', 'nir', 0, 'red', 0, window, 256,
+    'raster.index.ndvi', 'nir', 0, 'red', 0, window, 256, null, null,
   ]);
   current.reply(i, { ok: true, raster: { samples: [0.5] } });
   assert.deepEqual((await index).raster.samples, [0.5]);
@@ -169,7 +169,7 @@ test('raster metadata and windows use dedicated worker messages', async () => {
   );
   i = current.sent.length - 1;
   assert.deepEqual(current.sent[i].args, [
-    'raster.index.ndvi', 'nir', 0, 'red', 0, window, 256, resampling,
+    'raster.index.ndvi', 'nir', 0, 'red', 0, window, 256, resampling, null,
   ]);
   current.reply(i, { ok: true, raster: { samples: [0.6] } });
   assert.deepEqual((await resampled).raster.samples, [0.6]);

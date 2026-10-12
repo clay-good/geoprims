@@ -15,17 +15,20 @@ test('the catalog carries only contract extensions, well formed', () => {
   assert.deepEqual(metaschemaProblems(catalog, sourceIds), []);
 });
 
-test('normalized-difference raster tools publish their band roles and output', () => {
+test('raster index tools publish their band roles and output', () => {
   const modes = Object.fromEntries(
     catalog.tools.filter((tool) => tool['x-raster']).map((tool) => [tool.id, tool['x-raster']]),
   );
   assert.deepEqual(modes, {
+    'raster.index.dnbr': { bands: ['nbr_pre', 'nbr_post'], output: 'dnbr' },
+    'raster.index.evi2': { bands: ['nir', 'red'], output: 'evi2' },
     'raster.index.mndwi': { bands: ['green', 'swir1'], output: 'mndwi' },
     'raster.index.nbr': { bands: ['nir', 'swir2'], output: 'nbr' },
     'raster.index.ndbi': { bands: ['swir1', 'nir'], output: 'ndbi' },
     'raster.index.ndvi': { bands: ['nir', 'red'], output: 'ndvi' },
     'raster.index.ndwi-gao': { bands: ['nir', 'swir1'], output: 'ndwi' },
     'raster.index.ndwi-mcfeeters': { bands: ['green', 'nir'], output: 'ndwi' },
+    'raster.index.savi': { bands: ['nir', 'red'], output: 'savi' },
   });
 });
 

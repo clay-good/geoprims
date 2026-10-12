@@ -51,7 +51,7 @@ function positiveInteger(value, name) {
  * windows. `accept` consumes each successful Rust result before the next
  * window starts, so neither source size nor output size becomes a memory bound.
  */
-export async function processNormalizedDifferenceScene(host, options) {
+export async function processRasterScene(host, options) {
   const {
     tool,
     leftHandle,
@@ -62,6 +62,7 @@ export async function processNormalizedDifferenceScene(host, options) {
     signal,
     onProgress,
     resampling,
+    parameters,
   } = options;
   const windowWidth = positiveInteger(options.windowWidth, 'windowWidth');
   const windowHeight = positiveInteger(options.windowHeight, 'windowHeight');
@@ -115,6 +116,7 @@ export async function processNormalizedDifferenceScene(host, options) {
         window,
         maxSamples,
         resampling,
+        parameters,
       ));
       if (!out.ok) return out;
       await accept({ window, raster: out.raster });

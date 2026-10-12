@@ -957,7 +957,7 @@
   {#if !embedded && tool['x-raster']}
     <details class="batch" ontoggle={(e) => e.currentTarget.open && loadRaster()}>
       <summary>Process local GeoTIFF files</summary>
-      {#if RasterPanel && compute}<RasterPanel {tool} {compute} />{:else}<p class="help">Loading…</p>{/if}
+      {#if RasterPanel && compute}<RasterPanel {tool} {compute} getInputs={args} />{:else}<p class="help">Loading…</p>{/if}
     </details>
   {/if}
   {#if !embedded && batchable}

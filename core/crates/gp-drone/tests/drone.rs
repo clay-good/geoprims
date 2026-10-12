@@ -89,8 +89,9 @@ fn catalog_examples_vectors() {
         let text = repo(&format!("core/vectors/{}.jsonl", t.id));
         failures.extend(vectors::lint(t.id, &text));
         failures.extend(vectors::run(&REGISTRY, t.id, &text));
-        if vectors::count(&text) < 5 {
-            failures.push(format!("{} has fewer than 5 vectors", t.id));
+        let minimum = if t.inputs.is_empty() { 1 } else { 5 };
+        if vectors::count(&text) < minimum {
+            failures.push(format!("{} has fewer than {minimum} vectors", t.id));
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));

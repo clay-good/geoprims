@@ -68,6 +68,30 @@ fn is_h3(s: &str) -> bool {
         && u8::from_str_radix(&s[1..2], 16).is_ok_and(|r| r <= 15)
 }
 
+fn valid_s2_id(id: u64) -> bool {
+    id != 0 && id >> 61 < 6 && id.trailing_zeros() <= 60 && id.trailing_zeros().is_multiple_of(2)
+}
+
+/// An S2 token is one to sixteen hexadecimal digits with the cell id's
+/// sentinel bit in a valid level position. Decimal cell ids are also accepted
+/// by the inspector, and are recognizable once they are longer than a token.
+fn is_s2(s: &str) -> bool {
+    let t = s.trim();
+    if is_h3(t) {
+        return false;
+    }
+    if t.len() > 16 && t.len() <= 20 && t.bytes().all(|b| b.is_ascii_digit()) {
+        return t.parse().is_ok_and(valid_s2_id);
+    }
+    if t.is_empty() || t.len() > 16 || !t.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return false;
+    }
+    u64::from_str_radix(t, 16)
+        .ok()
+        .and_then(|id| id.checked_shl(4 * (16 - t.len()) as u32))
+        .is_some_and(valid_s2_id)
+}
+
 /// Short all-letter words ("utm", "tas") are valid geohashes too, so a
 /// geohash must contain a digit unless it is at least 7 characters long.
 fn is_geohash(s: &str) -> bool {
@@ -130,6 +154,24 @@ fn is_mgrs(s: &str) -> bool {
         && digits.len().is_multiple_of(2)
         && digits.len() <= 10
         && digits.iter().all(u8::is_ascii_digit)
+}
+
+/// The common four- through ten-character Maidenhead forms. Two-character
+/// fields are valid too, but look exactly like ordinary short words, so the
+/// palette leaves those to an explicit tool search rather than guessing.
+fn is_maidenhead(s: &str) -> bool {
+    let b = s.trim().as_bytes();
+    if !matches!(b.len(), 4 | 6 | 8 | 10) {
+        return false;
+    }
+    b.chunks_exact(2).enumerate().all(|(pair, chars)| {
+        chars.iter().all(|c| match pair {
+            0 => (b'A'..=b'R').contains(&c.to_ascii_uppercase()),
+            1 | 3 => c.is_ascii_digit(),
+            2 | 4 => (b'A'..=b'X').contains(&c.to_ascii_uppercase()),
+            _ => false,
+        })
+    })
 }
 
 fn mgrs(v: &str) -> Vec<(&'static str, Json)> {
@@ -249,6 +291,25 @@ const KINDS: &[Kind] = &[
         ],
     },
     Kind {
+        kind: "s2",
+        label: "S2 cell",
+        matches: is_s2,
+        decoder: "indexing.s2.cell-info",
+        decode: cell,
+        offers: &[
+            Offer {
+                id: "indexing.s2.cell-info",
+                input: cell,
+                from: &[],
+            },
+            Offer {
+                id: "indexing.s2.neighbors",
+                input: cell,
+                from: &[],
+            },
+        ],
+    },
+    Kind {
         kind: "quadkey",
         label: "Map tile quadkey",
         matches: is_quadkey,
@@ -304,6 +365,40 @@ const KINDS: &[Kind] = &[
         ],
     },
     Kind {
+        kind: "maidenhead",
+        label: "Maidenhead locator",
+        matches: is_maidenhead,
+        decoder: "geodesy.grid-ref.maidenhead-inverse",
+        decode: locator,
+        offers: &[
+            Offer {
+                id: "geodesy.grid-ref.maidenhead-inverse",
+                input: locator,
+                from: &[],
+            },
+            Offer {
+                id: "geodesy.utm.forward",
+                input: none,
+                from: LATLON,
+            },
+            Offer {
+                id: "geodesy.magnetic.declination",
+                input: none,
+                from: LATLON,
+            },
+            Offer {
+                id: "geodesy.geoid.geoid-height",
+                input: none,
+                from: LATLON,
+            },
+            Offer {
+                id: "time.sun.position",
+                input: none,
+                from: LATLON,
+            },
+        ],
+    },
+    Kind {
         kind: "mgrs",
         label: "MGRS reference",
         matches: is_mgrs,
@@ -338,6 +433,9 @@ fn geohash(v: &str) -> Vec<(&'static str, Json)> {
 }
 fn cell(v: &str) -> Vec<(&'static str, Json)> {
     vec![("cell", Json::str(v.to_ascii_lowercase()))]
+}
+fn locator(v: &str) -> Vec<(&'static str, Json)> {
+    vec![("locator", Json::str(v))]
 }
 fn tile(v: &str) -> Vec<(&'static str, Json)> {
     vec![("tile", Json::str(v))]
@@ -402,7 +500,7 @@ pub fn candidates(query: &str) -> Json {
         if !(k.matches)(v) {
             continue;
         }
-        let value = if k.kind == "h3" {
+        let value = if matches!(k.kind, "h3" | "s2") {
             v.to_ascii_lowercase()
         } else {
             v.to_owned()
@@ -493,11 +591,14 @@ mod tests {
     #[test]
     fn recognizes_each_kind() {
         assert_eq!(kinds("8928308280fffff"), ["h3"]);
+        assert_eq!(kinds("8834f3dec"), ["geohash", "s2"]);
+        assert_eq!(kinds("9814737625976668160"), ["s2"]);
         assert_eq!(kinds("9q8yy"), ["geohash"]);
-        assert_eq!(kinds("0231"), ["geohash", "quadkey"]);
+        assert_eq!(kinds("0231"), ["geohash", "s2", "quadkey"]);
         assert_eq!(kinds("12/1137/2551"), ["xyz", "coordinates"]);
         assert_eq!(kinds("849VCWC8+R9"), ["plus-code"]);
         assert_eq!(kinds("A2992"), ["altimeter"]);
+        assert_eq!(kinds("FN00ak"), ["maidenhead"]);
         assert_eq!(
             kinds("KDEN 181753Z 23012KT 10SM FEW120 28/03 A3012"),
             ["metar", "coordinates"] // the host drops readings its decoder rejects
@@ -508,6 +609,11 @@ mod tests {
         assert_eq!(kinds("18T WL 80669 23543"), ["mgrs", "coordinates"]);
         assert!(kinds("density altitude").is_empty());
         assert!(kinds("utm").is_empty() && kinds("gps").is_empty());
+        assert!(
+            kinds("AS").is_empty(),
+            "a two-letter word is not guessed as a locator"
+        );
+        assert!(kinds("FN0Aak").is_empty());
         assert!(kinds("").is_empty());
     }
 }

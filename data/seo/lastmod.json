@@ -336,11 +336,11 @@
     "lastmod": "2026-10-12"
   },
   "/drone/ops/part108-proposed-reference/": {
-    "hash": "7522834e56f43dcd",
+    "hash": "8a7eab42055ad5dc",
     "lastmod": "2026-10-12"
   },
   "/drone/ops/remote-id-reference/": {
-    "hash": "0e6d85f641a1cfc7",
+    "hash": "77b165bb1d0038ac",
     "lastmod": "2026-10-12"
   },
   "/drone/ops/speed-check/": {
@@ -1424,7 +1424,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "7934237ab721a939",
+    "hash": "98d6a653215fab37",
     "lastmod": "2026-10-12"
   },
   "/survey/": {
@@ -1960,7 +1960,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5450185772773b00",
+    "hash": "cfbb014aa76be518",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

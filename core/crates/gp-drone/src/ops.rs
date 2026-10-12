@@ -186,6 +186,10 @@ pub static REMOTE_ID_REFERENCE: ToolDef = ToolDef {
         source: "14 CFR Part 89 entry reviewed in data/regulations.json",
     }],
     primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[("value", "status")],
+    }],
     related: &[
         Related {
             id: "drone.ops.part107-altitude",
@@ -253,6 +257,10 @@ pub static PART108_PROPOSED_REFERENCE: ToolDef = ToolDef {
         source: "90 FR 38212 entry reviewed in data/regulations.json",
     }],
     primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[("value", "status")],
+    }],
     related: &[
         Related {
             id: "drone.ops.remote-id-reference",

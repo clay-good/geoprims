@@ -66,7 +66,7 @@ test('every page offers the palette by button, / and Ctrl/Cmd+K', () => {
   }
 });
 
-test('paste-to-detect: H3, ambiguous geohash, coordinates, MGRS, and altimeter groups', async () => {
+test('paste-to-detect: spatial cells, coordinates, and aviation codes', async () => {
   const { detectValues } = await import('../src/lib/detect.js');
   const host = nodeHost(join(root, 'dist/wasm'));
   const search = await host.module('search');
@@ -86,6 +86,14 @@ test('paste-to-detect: H3, ambiguous geohash, coordinates, MGRS, and altimeter g
   assert.deepEqual(h3.actions.map((a) => a.id).slice(0, 3), ['indexing.h3.cell-info', 'indexing.h3.grid-disk', 'indexing.h3.parent']);
   assert.equal(h3.actions[0].input.cell, '8928308280fffff');
 
+  const s2Readings = await found('8834f3dec');
+  assert.equal(s2Readings[0].kind, 'geohash', 'the existing ambiguous-code rule keeps geohash first');
+  const s2 = s2Readings.find((reading) => reading.kind === 's2');
+  assert.equal(s2.label, 'S2 cell');
+  assert.match(s2.summary, /level 15/);
+  assert.deepEqual(s2.actions.map((a) => a.id), ['indexing.s2.cell-info', 'indexing.s2.neighbors']);
+  assert.equal(s2.actions[0].input.cell, '8834f3dec');
+
   const ambiguous = await found('9q8yy');
   assert.equal(ambiguous[0].kind, 'geohash', 'geohash first');
 
@@ -102,6 +110,11 @@ test('paste-to-detect: H3, ambiguous geohash, coordinates, MGRS, and altimeter g
   const grid = await found('18T WL 80669 23543');
   assert.equal(grid[0]?.kind, 'mgrs', 'MGRS is read as MGRS');
   assert.ok(grid.some((g) => g.kind === 'coordinates'), 'the coordinate parser still reads it too');
+  const [maidenhead] = await found('FN00ak');
+  assert.equal(maidenhead.label, 'Maidenhead locator');
+  assert.match(maidenhead.summary, /40\.4375°, -79\.958333333°/);
+  assert.equal(maidenhead.actions[0].id, 'geodesy.grid-ref.maidenhead-inverse');
+  assert.equal(maidenhead.actions[0].input.locator, 'FN00ak');
   const [alt] = await found('A2992');
   assert.match(alt.summary, /1,013/);
   assert.equal(alt.actions[0].input.altimeter, 'A2992');

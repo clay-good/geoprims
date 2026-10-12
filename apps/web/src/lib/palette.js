@@ -1,10 +1,11 @@
 // The command palette (web/command-palette): a WAI-ARIA combobox over the core
 // search, loaded on first use. `/` or Ctrl/Cmd+K opens it, arrows or
 // Ctrl+N/Ctrl+P move, Enter opens, Ctrl/Cmd+Enter opens in a new tab, and Esc
-// closes it and returns focus to where it was. A pasted value (an H3 cell,
-// geohash, tile, Plus Code, MGRS, coordinates, METAR, or altimeter group) is
-// detected first, with the tools worth opening pre-filled with it. Starting
-// the query with ">" lists actions instead of tools. A question with numbers
+// closes it and returns focus to where it was. A pasted value (an H3 or S2
+// cell, geohash, tile, Plus Code, Maidenhead or MGRS reference,
+// coordinates, METAR, or altimeter group) is detected first, with the tools
+// worth opening pre-filled with it. Starting the query with ">" lists actions
+// instead of tools. A question with numbers
 // ("density altitude 5000 ft 30C 29.80") offers the top tool filled in.
 import { ask } from './ask.js';
 import { personalize } from './boost.js';

@@ -9,7 +9,7 @@ is what the gates read; this page explains it and records its history.
 
 ## The profile
 
-| Aspect | Profile 1.0.0 |
+| Aspect | Profile 1.1.0 |
 |---|---|
 | CPU | Chromium on the CI runner, throttled to Lighthouse BenchmarkIndex 800 (the top of Lighthouse's mid-tier mobile range), a proxy for a mid-tier 2024 Android phone, plus a quarterly manual check on a real mid-tier Android device and a 3-year-old iPhone |
 | Network, cold load | 9 Mbps down, 1.5 Mbps up, 150 ms round trip, no cache |
@@ -37,6 +37,9 @@ Text zoom is checked at 200% at 375 px wide.
 | Budget | Hard | Target |
 |---|---|---|
 | Cold Wasm module instantiation | 150 ms | |
+| Closed-form tool, p95 | 2 ms | |
+| Iterative tool, p95 | 10 ms | |
+| Data-proportional tool, p95 | Per tool in `data/performance-budgets.json` | |
 | Largest contentful paint | 2.0 s | 1.5 s |
 | Interactive | 2.5 s | |
 | Interaction to next paint | 200 ms | 100 ms |
@@ -79,11 +82,11 @@ track and a 100,000-vertex polygon at 4× CPU. Locally the p95 frame is
 (16.7 ms); a path that zig-zags every few pixels along its whole length still
 takes about 36 ms, since every one of its pixels has to be drawn.
 
-These are local numbers. The profile names the CI runner, and CI is not running
-yet, so no release baseline exists; the same gate runs there once it is.
-Chromium only: WebKit and Firefox page metrics are still to come.
+These are local page-load numbers. Chromium only: WebKit and Firefox page
+metrics are still to come.
 
-The Chromium calculator benchmark applies the profile's 4× CPU setting and
+The Chromium calculator benchmark calibrates the CPU slowdown to the profile's
+BenchmarkIndex 800 target and
 reports each tool's p50 and p95. The following checks run without a browser:
 
 | Check | Where | Today |
@@ -106,23 +109,25 @@ and fail when it rises by more than 20%. Reports from different profile versions
 or hosts cannot be compared; new tools have no previous value. There is no published Node release baseline yet;
 local results vary with the machine and do not establish the browser budgets.
 
-The browser counterpart is `npm run bench:browser --prefix apps/web -- --output /tmp/geoprims-chromium.json`.
-It runs the same Wasm modules on a blank Chromium page with the profile's 4×
-CPU setting, 50 warm-up calls, and 1,000 timed calls per tool. The timer is
+The browser counterpart is `npm run bench:browser --prefix apps/web -- --baseline ../../data/performance-baselines/chromium-1.1.0.json --output /tmp/geoprims-chromium.json`.
+It runs the same Wasm modules on a blank Chromium page with CPU slowdown
+calibrated to the profile target, 50 warm-up calls, and 1,000 timed calls per
+tool. The timer is
 inside the shared loader around the synchronous Wasm ABI call; it excludes
 worker messages, async scheduling, and asset downloads. CDP does not throttle
 a dedicated worker. The report also records cold module initialization
 after download. It then runs every workflow's whole chain through the
 shared chain runner, 5 warm-up and 50 timed runs each, and fails when the
 mapping-flight chain's p95 is over 300 ms (add-job-workflows); on 2026-10-07
-it was 65 ms for all nine steps. `--workflows-only` skips the per-tool pass. CI uploads the table and JSON; a previous-release Chromium
-baseline and per-tool budget declarations are still needed for a release gate.
-Cold module instantiation already has a 150 ms gate in the Chromium benchmark.
-Local 4× runs show some simple calls with p50 near 0.2 ms and p95 above 3 ms;
-the ordered timings include irregular 3 ms stalls in about 9% of repeated
-identical calls. The 2 ms closed-form limit cannot be claimed as passing from
-these local runs. A reference runner or device check must resolve that before
-turning on the per-tool gate.
+it was 65 ms for all nine steps. `--workflows-only` skips the per-tool pass.
+CI compares every tool with the checked-in artifact from successful run
+38069366698 at commit `ddc1bfa8`, and uploads the new table and JSON. A p95
+increase over 20% and 0.5 ms fails, so timer granularity cannot turn a 0.1 ms
+call into a false regression. The same run enforces `data/performance-budgets.json`:
+2 ms by default for closed-form tools, 10 ms for iterative tools, and an
+explicit ceiling and scaling input for every list or data-proportional tool.
+It also holds cold module instantiation to 150 ms. The 2026-10-10 baseline has
+372 tools; all pass their execution budgets.
 
 ## Changing the profile
 

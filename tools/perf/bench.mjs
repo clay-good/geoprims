@@ -10,6 +10,8 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const WARMUP = 50;
 const SAMPLES = 1000;
 const REGRESSION_PERCENT = 20;
+const REGRESSION_FLOOR_MS = 0.5;
+const BUDGET_KINDS = new Set(['closed-form', 'iterative', 'data-proportional']);
 
 export function percentile(sorted, percent) {
   return sorted[Math.ceil(percent * sorted.length) - 1];
@@ -41,15 +43,67 @@ export function compare(report, baseline) {
   return report.tools.map((row) => {
     const old = previous.get(row.id);
     const change = old?.p95Ms > 0 ? (row.p95Ms / old.p95Ms - 1) * 100 : null;
-    return { ...row, previousP95Ms: old?.p95Ms ?? null, changePercent: change, regression: change !== null && change > REGRESSION_PERCENT };
+    const absoluteChange = old ? row.p95Ms - old.p95Ms : null;
+    return {
+      ...row,
+      previousP95Ms: old?.p95Ms ?? null,
+      changePercent: change,
+      regression: change !== null && change > REGRESSION_PERCENT && absoluteChange > REGRESSION_FLOOR_MS,
+    };
+  });
+}
+
+function arrayInputs(tool) {
+  const found = [];
+  const visit = (schema, prefix = '') => {
+    for (const [name, field] of Object.entries(schema?.properties ?? {})) {
+      const path = `${prefix}${name}`;
+      if (field.type === 'array') found.push(path);
+      if (field.properties) visit(field, `${path}.`);
+      if (field.items?.properties) visit(field.items, `${path}[].`);
+    }
+  };
+  visit(tool.inputs);
+  return found;
+}
+
+export function applyBudgets(report, budgets, catalog) {
+  for (const field of ['profile', 'host', 'measurement']) {
+    if (report[field] !== budgets[field]) throw new Error(`budgets have a different ${field}`);
+  }
+  const tools = new Map(catalog.tools.map((tool) => [tool.id, tool]));
+  const declared = budgets.tools ?? {};
+  const checkBudget = (id, budget) => {
+    if (!BUDGET_KINDS.has(budget?.kind)) throw new Error(`${id}: unknown performance kind ${budget?.kind}`);
+    if (!(typeof budget.p95Ms === 'number' && Number.isFinite(budget.p95Ms) && budget.p95Ms > 0)) {
+      throw new Error(`${id}: p95Ms must be a positive number`);
+    }
+    if (budget.kind === 'data-proportional' && !budget.scalesWith) {
+      throw new Error(`${id}: data-proportional budget must name scalesWith`);
+    }
+  };
+  checkBudget('default', budgets.default);
+  for (const [id, budget] of Object.entries(declared)) {
+    if (!tools.has(id)) throw new Error(`${id}: performance budget names no catalog tool`);
+    checkBudget(id, budget);
+  }
+  for (const tool of tools.values()) {
+    const arrays = arrayInputs(tool);
+    if (arrays.length && declared[tool.id]?.kind !== 'data-proportional') {
+      throw new Error(`${tool.id}: array inputs ${arrays.join(', ')} need a data-proportional budget`);
+    }
+  }
+  return report.tools.map((row) => {
+    const budget = declared[row.id] ?? budgets.default;
+    return { ...row, performanceKind: budget.kind, budgetMs: budget.p95Ms, overBudget: row.p95Ms > budget.p95Ms };
   });
 }
 
 export function table(rows) {
   return [
-    '| Tool | p50 ms | p95 ms | Previous p95 ms | Change |',
-    '|---|---:|---:|---:|---:|',
-    ...rows.map((r) => `| ${r.id} | ${r.p50Ms.toFixed(3)} | ${r.p95Ms.toFixed(3)} | ${r.previousP95Ms?.toFixed(3) ?? '—'} | ${r.changePercent === null || r.changePercent === undefined ? '—' : `${r.changePercent >= 0 ? '+' : ''}${r.changePercent.toFixed(1)}%`} |`),
+    '| Tool | p50 ms | p95 ms | Budget | Previous p95 ms | Change |',
+    '|---|---:|---:|---:|---:|---:|',
+    ...rows.map((r) => `| ${r.id} | ${r.p50Ms.toFixed(3)} | ${r.p95Ms.toFixed(3)} | ${r.budgetMs?.toFixed(3) ?? '—'} | ${r.previousP95Ms?.toFixed(3) ?? '—'} | ${r.changePercent === null || r.changePercent === undefined ? '—' : `${r.changePercent >= 0 ? '+' : ''}${r.changePercent.toFixed(1)}%`} |`),
   ].join('\n');
 }
 

@@ -49,11 +49,11 @@ test('the profile says how it is measured, so a report can name it', () => {
 
 test('docs/performance.md is honest about what is measured today', () => {
   assert.match(doc, /Playwright suite checks cancellation and cross-host result equality/);
-  assert.match(doc, /Chromium calculator benchmark applies the profile's 4× CPU setting/);
+  assert.match(doc, /Chromium calculator benchmark calibrates the CPU slowdown/);
   assert.equal(JSON.parse(readFileSync(join(root, 'apps/web/package.json'), 'utf8')).scripts['bench:browser'], 'node scripts/benchmark.mjs');
-  // The page budgets have a gate now; what it has not got is a CI baseline.
   assert.match(doc, /page budgets now have a gate: `apps\/web\/test\/browser\/perf\.test\.mjs`/);
-  assert.match(doc, /These are local numbers/);
-  assert.match(doc, /no release baseline exists/);
+  assert.match(doc, /These are local page-load numbers/);
+  assert.match(doc, /checked-in artifact from successful run/);
+  assert.match(doc, /data\/performance-budgets\.json/);
   assert.match(doc, /What is measured today/);
 });

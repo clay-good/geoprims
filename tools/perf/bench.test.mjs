@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { compare, measure, percentile, table } from './bench.mjs';
+import { applyBudgets, compare, measure, percentile, table } from './bench.mjs';
 
 test('benchmark warms up, then reports nearest-rank p50 and p95 from 1,000 calls', async () => {
   let calls = 0;
@@ -17,8 +17,9 @@ test('a slowed tool fails the baseline comparison and appears in the output tabl
   const report = { profile: '1.0.0', host: 'node', samples: 1000, tools: [{ id: 'navigation.geodesic.inverse', p50Ms: 8, p95Ms: 14 }] };
   const [row] = compare(report, baseline);
   assert.equal(row.regression, true);
-  assert.match(table([row]), /navigation\.geodesic\.inverse \| 8\.000 \| 14\.000 \| 10\.000 \| \+40\.0%/);
+  assert.match(table([row]), /navigation\.geodesic\.inverse \| 8\.000 \| 14\.000 \| — \| 10\.000 \| \+40\.0%/);
   assert.equal(compare({ ...report, tools: [{ ...report.tools[0], p95Ms: 11 }] }, baseline)[0].regression, false);
+  assert.equal(compare({ ...report, tools: [{ ...report.tools[0], p95Ms: 0.7 }] }, { ...baseline, tools: [{ id: 'navigation.geodesic.inverse', p95Ms: 0.5 }] })[0].regression, false);
   assert.throws(() => compare({ ...report, profile: '2.0.0' }, baseline), /different reference profile/);
   assert.throws(() => compare({ ...report, measurement: 'synchronous-abi' }, baseline), /different timing method/);
   assert.throws(() => compare({ ...report, cpuTarget: 800 }, baseline), /different CPU target/);
@@ -26,4 +27,38 @@ test('a slowed tool fails the baseline comparison and appears in the output tabl
   const [newTool] = compare({ ...report, tools: [{ id: 'new.tool.id', p50Ms: 1, p95Ms: 2 }] }, baseline);
   assert.equal(newTool.changePercent, null);
   assert.equal(newTool.regression, false);
+});
+
+test('every list tool declares a data-proportional p95 budget', () => {
+  const catalog = {
+    tools: [
+      { id: 'fixture.closed', inputs: { properties: { value: { type: 'number' } } } },
+      { id: 'fixture.list', inputs: { properties: { points: { type: 'array' } } } },
+    ],
+  };
+  const report = {
+    profile: '1.1.0', host: 'chromium-main-thread', measurement: 'synchronous-abi',
+    tools: [
+      { id: 'fixture.closed', p50Ms: 1, p95Ms: 1.5 },
+      { id: 'fixture.list', p50Ms: 4, p95Ms: 12 },
+    ],
+  };
+  const budgets = {
+    profile: '1.1.0', host: 'chromium-main-thread', measurement: 'synchronous-abi',
+    default: { kind: 'closed-form', p95Ms: 2 },
+    tools: { 'fixture.list': { kind: 'data-proportional', p95Ms: 10, scalesWith: 'points' } },
+  };
+  const rows = applyBudgets(report, budgets, catalog);
+  assert.deepEqual(rows.map((r) => [r.id, r.budgetMs, r.overBudget]), [
+    ['fixture.closed', 2, false],
+    ['fixture.list', 10, true],
+  ]);
+  assert.throws(
+    () => applyBudgets(report, { ...budgets, tools: {} }, catalog),
+    /fixture\.list: array inputs points need a data-proportional budget/,
+  );
+  assert.throws(
+    () => applyBudgets(report, { ...budgets, tools: { missing: { kind: 'iterative', p95Ms: 10 } } }, catalog),
+    /missing: performance budget names no catalog tool/,
+  );
 });

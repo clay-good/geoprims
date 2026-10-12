@@ -69,7 +69,7 @@ jobs:
       - name: Browser checks
         run: npm run test:browser --prefix apps/web
       - name: Chromium reference benchmark
-        run: npm run bench:browser --prefix apps/web -- --output ../../chromium-benchmark.json > chromium-benchmark.md
+        run: npm run bench:browser --prefix apps/web -- --baseline ../../data/performance-baselines/chromium-1.1.0.json --output ../../chromium-benchmark.json > chromium-benchmark.md
       - uses: actions/upload-artifact@v4
         with:
           name: chromium-benchmark

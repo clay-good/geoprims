@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { cpuRate } from './cpu.mjs';
-import { compare, percentile, table } from '../../../tools/perf/bench.mjs';
+import { applyBudgets, compare, percentile, table } from '../../../tools/perf/bench.mjs';
 
 const web = fileURLToPath(new URL('..', import.meta.url));
 const root = join(web, '../..');
@@ -146,7 +146,9 @@ async function main() {
       modules: [...modules].map(([name, initMs]) => ({ name, initMs })), tools, chains,
     };
     const baseline = option('--baseline');
-    const rows = baseline ? compare(report, JSON.parse(readFileSync(baseline, 'utf8'))) : tools;
+    const compared = baseline ? compare(report, JSON.parse(readFileSync(baseline, 'utf8'))) : tools;
+    const budgetPath = option('--budgets') ?? join(root, 'data/performance-budgets.json');
+    const rows = applyBudgets({ ...report, tools: compared }, JSON.parse(readFileSync(budgetPath, 'utf8')), catalog);
     console.log(`Chromium benchmark: profile ${profile.version}, ${cpu.rate}× CPU slowdown (host BenchmarkIndex ${cpu.hostIndex}, target ${profile.cpu.targetBenchmarkIndex}), ${WARMUP} warm-up and ${SAMPLES} measured calls per tool`);
     if (tools.length) console.log(table(rows));
     console.log(`\nWorkflow chains (${CHAIN_WARMUP} warm-up and ${CHAIN_SAMPLES} measured runs each)\n`);
@@ -167,6 +169,11 @@ async function main() {
     const regressions = rows.filter((r) => r.regression);
     if (regressions.length > 0) {
       console.error(`${regressions.length} tool(s) exceed the 20% p95 regression limit; see the table above`);
+      process.exitCode = 1;
+    }
+    const overBudget = rows.filter((r) => r.overBudget);
+    if (overBudget.length > 0) {
+      console.error(`${overBudget.length} tool(s) exceed their p95 execution budget: ${overBudget.map((r) => `${r.id} ${r.p95Ms.toFixed(1)} ms over ${r.budgetMs} ms`).join('; ')}`);
       process.exitCode = 1;
     }
   } finally {

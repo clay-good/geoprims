@@ -1,6 +1,7 @@
 // Main-thread client for the compute worker. Only the latest request per key
 // resolves; older ones are dropped as stale (web "stale-result" behavior).
 import { fileBytes, rangeSource } from '../../../../packages/runtime/src/files.mjs';
+import { processNormalizedDifferenceScene } from '../../../../packages/runtime/src/raster.mjs';
 
 let worker;
 let seq = 0;
@@ -108,6 +109,9 @@ export const readFileWindow = (tool, handle, window, maxSamples) => (
 );
 export const processFileWindow = (tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples) => (
   call('processFileWindow', [tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples])
+);
+export const processFileScene = (options) => (
+  processNormalizedDifferenceScene({ inspectFile, processFileWindow }, options)
 );
 export async function removeFile(tool, handle) {
   const out = await call('removeFile', [tool, handle]);

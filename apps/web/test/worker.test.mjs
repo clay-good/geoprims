@@ -74,6 +74,23 @@ test('the worker routes paired raster windows to the Rust processor', async () =
   assert.match(out.error.message, /no longer loaded/i);
 });
 
+test('the worker routes ordered raster band sources to the Rust processor', async () => {
+  const out = await send('processFileSources', [
+    'raster.index.evi',
+    [
+      { handle: 'missing-nir', band: 0 },
+      { handle: 'missing-red', band: 0 },
+      { handle: 'missing-blue', band: 0 },
+    ],
+    { x: 0, y: 0, width: 1, height: 1 },
+    3,
+    null,
+  ]);
+  assert.equal(out.ok, false);
+  assert.equal(out.error.code, 'INVALID_INPUT');
+  assert.match(out.error.message, /no longer loaded/i);
+});
+
 test('an unknown tool is an envelope, not a thrown error', async () => {
   const out = await send('invoke', ['no.such.tool', '{}']);
   assert.equal(out.ok, false);

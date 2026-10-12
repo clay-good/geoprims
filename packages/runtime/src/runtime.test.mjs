@@ -205,6 +205,27 @@ test('range-backed file windows select each fixed 2-band Rust kernel', async () 
   await host.removeFile('raster.index.dnbr', 'dnbr-post');
 });
 
+test('range-backed file windows run the 3-band EVI kernel in Rust', async () => {
+  await host.openFile('raster.index.evi', 'evi-nir', sparseTiledTiff(() => 45));
+  await host.openFile('raster.index.evi', 'evi-red', sparseTiledTiff(() => 8));
+  await host.openFile('raster.index.evi', 'evi-blue', sparseTiledTiff(() => 4));
+  const out = JSON.parse(await host.processFileSources(
+    'raster.index.evi',
+    [
+      { handle: 'evi-nir', band: 0 },
+      { handle: 'evi-red', band: 0 },
+      { handle: 'evi-blue', band: 0 },
+    ],
+    { x: 0, y: 0, width: 2, height: 2 },
+    256,
+  ));
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.deepEqual(out.raster.samples, Array(4).fill(2.5 * (45 - 8) / (45 + 6 * 8 - 7.5 * 4 + 1)));
+  await host.removeFile('raster.index.evi', 'evi-nir');
+  await host.removeFile('raster.index.evi', 'evi-red');
+  await host.removeFile('raster.index.evi', 'evi-blue');
+});
+
 test('range-backed index windows compare the complete source grids', async () => {
   await host.openFile('raster.index.ndvi', 'wide-cog', sparseTiledTiff());
   await host.openFile('raster.index.ndvi', 'narrow-cog', sparseTiledTiff((value) => value, 31));
@@ -301,7 +322,7 @@ test('worker host: a runaway call times out and the host keeps serving', async (
   await h.close();
 });
 
-test('worker host forwards raster kernel parameters', async () => {
+test('worker host forwards raster kernel parameters and ordered sources', async () => {
   const { workerHost } = await import('./worker-host.mjs');
   const h = workerHost(join(root, 'dist/wasm'));
   try {
@@ -320,6 +341,21 @@ test('worker host forwards raster kernel parameters', async () => {
     ));
     assert.equal(out.ok, true, JSON.stringify(out));
     assert.equal(out.raster.samples[0], 1.25 * (45 - 8) / (45 + 8 + 0.25));
+
+    const blue = sparseTiledTiff(() => 4);
+    await h.putFile('raster.index.evi', 'worker-blue', blue.slice(0, blue.size));
+    const evi = JSON.parse(await h.processFileSources(
+      'raster.index.evi',
+      [
+        { handle: 'worker-nir', band: 0 },
+        { handle: 'worker-red', band: 0 },
+        { handle: 'worker-blue', band: 0 },
+      ],
+      { x: 0, y: 0, width: 1, height: 1 },
+      256,
+    ));
+    assert.equal(evi.ok, true, JSON.stringify(evi));
+    assert.equal(evi.raster.samples[0], 2.5 * (45 - 8) / (45 + 6 * 8 - 7.5 * 4 + 1));
   } finally {
     await h.close();
   }

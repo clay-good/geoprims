@@ -21,6 +21,7 @@ test('raster index tools publish their band roles and output', () => {
   );
   assert.deepEqual(modes, {
     'raster.index.dnbr': { bands: ['nbr_pre', 'nbr_post'], output: 'dnbr' },
+    'raster.index.evi': { bands: ['nir', 'red', 'blue'], output: 'evi' },
     'raster.index.evi2': { bands: ['nir', 'red'], output: 'evi2' },
     'raster.index.mndwi': { bands: ['green', 'swir1'], output: 'mndwi' },
     'raster.index.nbr': { bands: ['nir', 'swir2'], output: 'nbr' },

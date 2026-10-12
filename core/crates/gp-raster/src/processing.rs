@@ -11,7 +11,7 @@ use tiff::encoder::{TiffEncoder, colortype};
 use crate::geotiff::{
     self, Grid, GridMismatch, Metadata, Raster, RasterType, Window, WindowDecoder, same_grid,
 };
-use crate::indices::{dnbr_value, evi2_value, normalized_value, savi_value};
+use crate::indices::{dnbr_value, evi_value, evi2_value, normalized_value, savi_value};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
@@ -40,21 +40,32 @@ pub enum TargetGrid {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Kernel {
     NormalizedDifference,
+    Evi,
     Evi2,
     Savi { soil_factor: f64 },
     Dnbr,
 }
 
 impl Kernel {
-    fn value(self, left: f64, right: f64) -> Option<f64> {
+    fn value(self, values: &[f64]) -> Option<f64> {
         match self {
-            Self::NormalizedDifference => normalized_value(left, right),
-            Self::Evi2 => evi2_value(left, right),
-            Self::Savi { soil_factor } => savi_value(left, right, soil_factor),
-            Self::Dnbr if (-1.0..=1.0).contains(&left) && (-1.0..=1.0).contains(&right) => {
-                Some(dnbr_value(left, right))
+            Self::NormalizedDifference => normalized_value(values[0], values[1]),
+            Self::Evi => evi_value(values[0], values[1], values[2]),
+            Self::Evi2 => evi2_value(values[0], values[1]),
+            Self::Savi { soil_factor } => savi_value(values[0], values[1], soil_factor),
+            Self::Dnbr
+                if (-1.0..=1.0).contains(&values[0]) && (-1.0..=1.0).contains(&values[1]) =>
+            {
+                Some(dnbr_value(values[0], values[1]))
             }
             Self::Dnbr => None,
+        }
+    }
+
+    fn bands(self) -> usize {
+        match self {
+            Self::Evi => 3,
+            _ => 2,
         }
     }
 }
@@ -170,6 +181,51 @@ pub fn index_file_window(
     let left = left.decode(window).map_err(Error::Decode)?;
     let right = right.decode(window).map_err(Error::Decode)?;
     index(&left, left_band, &right, right_band, kernel)
+}
+
+/// Decodes and processes one fixed-formula index window from ordered private
+/// local-file band sources.
+pub fn index_file_sources_window(
+    sources: &[(&str, usize)],
+    window: Window,
+    max_samples: usize,
+    kernel: Kernel,
+) -> Result<Raster, Error> {
+    if sources.len() != kernel.bands() {
+        return Err(Error::InvalidRaster(
+            "The raster kernel received the wrong number of band sources.",
+        ));
+    }
+    let missing = || {
+        Error::Decode(geotiff::Error::Invalid(
+            "The selected local file is no longer loaded.".into(),
+        ))
+    };
+    let mut decoders = sources
+        .iter()
+        .map(|(handle, _)| {
+            WindowDecoder::new(
+                gp_base::files::reader(handle).ok_or_else(missing)?,
+                max_samples,
+            )
+            .map_err(Error::Decode)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let target = decoders[0].metadata().grid.clone();
+    for (decoder, (_, band)) in decoders.iter().zip(sources) {
+        same_grid(&target, &decoder.metadata().grid).map_err(Error::GridMismatch)?;
+        validate_band(decoder.metadata(), *band)?;
+    }
+    let rasters = decoders
+        .iter_mut()
+        .map(|decoder| decoder.decode(window).map_err(Error::Decode))
+        .collect::<Result<Vec<_>, _>>()?;
+    let bands = rasters
+        .iter()
+        .zip(sources)
+        .map(|(raster, (_, band))| (raster, *band))
+        .collect::<Vec<_>>();
+    index_sources(&bands, kernel)
 }
 
 /// Decodes one target window and only the source pixels needed to resample the
@@ -558,38 +614,50 @@ pub fn index(
     right_band: usize,
     kernel: Kernel,
 ) -> Result<Raster, Error> {
-    same_grid(&left.metadata.grid, &right.metadata.grid).map_err(Error::GridMismatch)?;
-    let pixels = validate(left, left_band)?;
-    if validate(right, right_band)? != pixels {
+    index_sources(&[(left, left_band), (right, right_band)], kernel)
+}
+
+/// Applies one fixed-formula kernel to matching raster windows.
+pub fn index_sources(sources: &[(&Raster, usize)], kernel: Kernel) -> Result<Raster, Error> {
+    if sources.len() != kernel.bands() {
         return Err(Error::InvalidRaster(
-            "Matching raster grids must have the same pixel count.",
+            "The raster kernel received the wrong number of band sources.",
         ));
     }
-
-    let left_bands = usize::from(left.metadata.bands);
-    let right_bands = usize::from(right.metadata.bands);
-    let fill = left.metadata.nodata.unwrap_or(f64::NAN);
+    let (target, target_band) = sources[0];
+    let pixels = validate(target, target_band)?;
+    for (raster, band) in &sources[1..] {
+        same_grid(&target.metadata.grid, &raster.metadata.grid).map_err(Error::GridMismatch)?;
+        if validate(raster, *band)? != pixels {
+            return Err(Error::InvalidRaster(
+                "Matching raster grids must have the same pixel count.",
+            ));
+        }
+    }
+    let fill = target.metadata.nodata.unwrap_or(f64::NAN);
     let mut samples = Vec::with_capacity(pixels);
     let mut valid = Vec::with_capacity(pixels);
+    let mut values = Vec::with_capacity(sources.len());
     for pixel in 0..pixels {
-        let left_index = pixel * left_bands + left_band;
-        let right_index = pixel * right_bands + right_band;
-        let value = if left.valid[left_index] && right.valid[right_index] {
-            kernel
-                .value(left.samples[left_index], right.samples[right_index])
-                .filter(|value| value.is_finite())
-        } else {
-            None
-        };
+        values.clear();
+        let mut all_valid = true;
+        for (raster, band) in sources {
+            let index = pixel * usize::from(raster.metadata.bands) + band;
+            all_valid &= raster.valid[index];
+            values.push(raster.samples[index]);
+        }
+        let value = all_valid
+            .then(|| kernel.value(&values))
+            .flatten()
+            .filter(|value| value.is_finite());
         samples.push(value.unwrap_or(fill));
         valid.push(value.is_some());
     }
-
     Ok(Raster {
         metadata: Metadata {
-            grid: left.metadata.grid.clone(),
+            grid: target.metadata.grid.clone(),
             bands: 1,
-            nodata: left.metadata.nodata,
+            nodata: target.metadata.nodata,
         },
         samples,
         valid,

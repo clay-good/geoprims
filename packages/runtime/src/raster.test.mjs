@@ -104,6 +104,32 @@ test('a scene forwards scalar kernel parameters with every window', async () => 
   assert.deepEqual(parametersSeen, [{ soil_factor: 0.25 }, { soil_factor: 0.25 }]);
 });
 
+test('a scene forwards 3 ordered band sources to the multi-source host method', async () => {
+  const calls = [];
+  const runtime = {
+    inspectFile: async () => ({ ok: true, metadata: { width: 1, height: 1, bands: 1 } }),
+    processFileSources: async (...args) => {
+      calls.push(args);
+      return { ok: true, raster: { samples: [0.5], valid: [true] } };
+    },
+  };
+  const sources = [
+    { handle: 'nir', band: 0 },
+    { handle: 'red', band: 1 },
+    { handle: 'blue', band: 2 },
+  ];
+  const out = await processRasterScene(runtime, {
+    tool: 'raster.index.evi',
+    sources,
+    windowWidth: 1,
+    windowHeight: 1,
+    maxSamples: 8,
+    accept() {},
+  });
+  assert.equal(out.ok, true);
+  assert.deepEqual(calls[0].slice(0, 2), ['raster.index.evi', sources]);
+});
+
 test('scene statistics stream across windows and exclude no-data pixels', async () => {
   let window = 0;
   const runtime = {

@@ -94,6 +94,9 @@ export function nodeHost(wasmDir, opts = {}) {
     processFileWindow: (id, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling, parameters) => (
       route(id, 'processFileWindow', id, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling, parameters)
     ),
+    processFileSources: (id, sources, window, maxSamples, parameters) => (
+      route(id, 'processFileSources', id, sources, window, maxSamples, parameters)
+    ),
     removeFile: async (id, handle) => {
       (await get(moduleFor(id))).removeFile(handle);
       return ok;

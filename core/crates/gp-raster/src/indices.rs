@@ -528,15 +528,19 @@ normalized_tool!(
 
 fn run_evi(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (nir, red, blue) = (refl(ctx, "nir")?, refl(ctx, "red")?, refl(ctx, "blue")?);
-    let den = nir + 6.0 * red - 7.5 * blue + 1.0;
-    if den == 0.0 {
+    let Some(v) = evi_value(nir, red, blue) else {
         return Err(ToolError::invalid(
             "/nir",
             "NIR + 6 Red - 7.5 Blue + 1 is zero, so the index is undefined here; in an image this pixel is no-data.",
         ));
-    }
-    let v = 2.5 * (nir - red) / den;
+    };
     Ok(Json::obj([("evi", Json::Num(v))]))
+}
+
+/// The EVI kernel shared by scalar and raster execution.
+pub(crate) fn evi_value(nir: f64, red: f64, blue: f64) -> Option<f64> {
+    let denominator = nir + 6.0 * red - 7.5 * blue + 1.0;
+    (denominator != 0.0).then_some(2.5 * (nir - red) / denominator)
 }
 
 pub static EVI: ToolDef = ToolDef {
@@ -612,6 +616,10 @@ pub static EVI: ToolDef = ToolDef {
         },
     ],
     sentence: "EVI is {evi}.",
+    raster: Some(RasterMode {
+        bands: &["nir", "red", "blue"],
+        output: "evi",
+    }),
     limits: &[("batchRows", 100_000)],
     run: run_evi,
     ..ToolDef::BLANK

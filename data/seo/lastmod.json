@@ -1352,8 +1352,8 @@
     "lastmod": "2026-10-12"
   },
   "/raster/index/evi/": {
-    "hash": "98ee78212a86dec9",
-    "lastmod": "2026-10-09"
+    "hash": "4c9a803a639c4985",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/evi2/": {
     "hash": "a0158ecc3110f410",
@@ -1960,7 +1960,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "13621bf8a4c8e0e5",
+    "hash": "9ee0cf6b2a785634",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

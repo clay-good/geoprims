@@ -14,6 +14,9 @@ const methods = {
   processFileWindow: (id, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling, parameters) => (
     host.processFileWindow(id, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling, parameters)
   ),
+  processFileSources: (id, sources, window, maxSamples, parameters) => (
+    host.processFileSources(id, sources, window, maxSamples, parameters)
+  ),
   removeFile: (id, handle) => host.removeFile(id, handle),
   clearFiles: (id) => host.clearFiles(id),
   searchLoad: async (index) => (await host.module('search')).callString('gp_search_load', index),

@@ -28,7 +28,8 @@
     }),
   );
   const canResample = $derived(
-    outcome?.error?.code === 'GRID_MISMATCH'
+    roles.length === 2
+      && outcome?.error?.code === 'GRID_MISMATCH'
       && outcome.error.details?.reason !== 'CRS'
       && outcome.error.details?.left?.transform
       && outcome.error.details?.right?.transform,
@@ -87,11 +88,12 @@
   }
 
   async function start(resample = null) {
-    if (!ready || roles.length !== 2) return;
-    const [leftRole, rightRole] = roles;
-    const left = selected(leftRole.name);
-    const right = selected(rightRole.name);
-    const target = resample?.target === 'right' ? right : left;
+    if (!ready) return;
+    const bandSources = roles.map((role) => ({
+      handle: selected(role.name).handle,
+      band: assignments[role.name].band,
+    }));
+    const target = resample?.target === 'right' ? selected(roles[1].name) : selected(roles[0].name);
     const preview = rasterPreview(target.metadata.width, target.metadata.height);
     controller = new AbortController();
     running = true;
@@ -102,10 +104,7 @@
     try {
       const out = await compute.processFileScene({
         tool: tool.id,
-        leftHandle: left.handle,
-        leftBand: assignments[leftRole.name].band,
-        rightHandle: right.handle,
-        rightBand: assignments[rightRole.name].band,
+        sources: bandSources,
         windowWidth: 512,
         windowHeight: 256,
         maxSamples: 4 * 1024 * 1024,
@@ -217,10 +216,12 @@
   {#if outcome && !outcome.ok}
     <p class="import-note bad" role="status">{outcome.error.message}</p>
     {#if outcome.error.code === 'GRID_MISMATCH'}
-      <dl class="raster-grids">
-        <div><dt>{roles[0].title}</dt><dd>{grid(outcome.error.details.left)}</dd></div>
-        <div><dt>{roles[1].title}</dt><dd>{grid(outcome.error.details.right)}</dd></div>
-      </dl>
+      {#if roles.length === 2}
+        <dl class="raster-grids">
+          <div><dt>{roles[0].title}</dt><dd>{grid(outcome.error.details.left)}</dd></div>
+          <div><dt>{roles[1].title}</dt><dd>{grid(outcome.error.details.right)}</dd></div>
+        </dl>
+      {/if}
       {#if canResample}
         <fieldset class="raster-resample">
           <legend>Align the grids locally</legend>
@@ -239,7 +240,7 @@
           <button type="button" class="primary" onclick={() => start({ ...resampling })}>Resample and process</button>
         </fieldset>
       {:else}
-        <p class="help">These grids cannot be aligned locally because their coordinate systems differ or georeferencing is missing.</p>
+        <p class="help">{roles.length > 2 ? 'All selected grids must match for this index.' : 'These grids cannot be aligned locally because their coordinate systems differ or georeferencing is missing.'}</p>
       {/if}
     {/if}
   {:else if outcome?.ok}

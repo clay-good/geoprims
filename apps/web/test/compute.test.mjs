@@ -173,6 +173,17 @@ test('raster metadata and windows use dedicated worker messages', async () => {
   ]);
   current.reply(i, { ok: true, raster: { samples: [0.6] } });
   assert.deepEqual((await resampled).raster.samples, [0.6]);
+
+  const sources = [
+    { handle: 'nir', band: 0 },
+    { handle: 'red', band: 0 },
+    { handle: 'blue', band: 0 },
+  ];
+  const evi = compute.processFileSources('raster.index.evi', sources, window, 256);
+  i = current.sent.length - 1;
+  assert.deepEqual(current.sent[i].args, ['raster.index.evi', sources, window, 256, null]);
+  current.reply(i, { ok: true, raster: { samples: [0.7] } });
+  assert.deepEqual((await evi).raster.samples, [0.7]);
 });
 
 test('clearing one raster tool releases files for the whole raster module', async () => {

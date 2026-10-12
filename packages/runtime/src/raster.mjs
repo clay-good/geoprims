@@ -64,12 +64,18 @@ export async function processRasterScene(host, options) {
     resampling,
     parameters,
   } = options;
+  const sources = options.sources ?? [
+    { handle: leftHandle, band: leftBand },
+    { handle: rightHandle, band: rightBand },
+  ];
   const windowWidth = positiveInteger(options.windowWidth, 'windowWidth');
   const windowHeight = positiveInteger(options.windowHeight, 'windowHeight');
   const maxSamples = positiveInteger(options.maxSamples, 'maxSamples');
   if (typeof accept !== 'function') throw new TypeError('accept must consume each processed raster window.');
 
-  const targetHandle = resampling?.target === 'right' ? rightHandle : leftHandle;
+  if (sources.length < 2) throw new TypeError('sources must contain at least 2 raster bands.');
+  if (sources.length > 2 && resampling) throw new TypeError('resampling is available only for 2-band scenes.');
+  const targetHandle = resampling?.target === 'right' ? sources[1].handle : sources[0].handle;
   const inspected = resultObject(await host.inspectFile(tool, targetHandle));
   if (!inspected.ok) return inspected;
   const { width, height } = inspected.metadata;
@@ -109,15 +115,17 @@ export async function processRasterScene(host, options) {
         width: Math.min(windowWidth, width - x),
         height: Math.min(windowHeight, height - y),
       };
-      const out = resultObject(await host.processFileWindow(
-        tool,
-        leftHandle, leftBand,
-        rightHandle, rightBand,
-        window,
-        maxSamples,
-        resampling,
-        parameters,
-      ));
+      const out = resultObject(sources.length === 2
+        ? await host.processFileWindow(
+            tool,
+            sources[0].handle, sources[0].band,
+            sources[1].handle, sources[1].band,
+            window,
+            maxSamples,
+            resampling,
+            parameters,
+          )
+        : await host.processFileSources(tool, sources, window, maxSamples, parameters));
       if (!out.ok) return out;
       await accept({ window, raster: out.raster });
       summary.add(out.raster);

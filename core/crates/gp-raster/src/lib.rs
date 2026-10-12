@@ -218,6 +218,7 @@ mod file_exports {
             | "raster.index.mndwi"
             | "raster.index.ndbi"
             | "raster.index.nbr" => Ok(Kernel::NormalizedDifference),
+            "raster.index.evi" => Ok(Kernel::Evi),
             "raster.index.evi2" => Ok(Kernel::Evi2),
             "raster.index.dnbr" => Ok(Kernel::Dnbr),
             "raster.index.savi" => {
@@ -236,6 +237,32 @@ mod file_exports {
                 "error": {"code": "UNSUPPORTED", "message": format!("{tool} has no 2-band raster kernel.")},
             })),
         }
+    }
+
+    fn sources(input: &Value) -> Result<Option<Vec<(&str, usize)>>, Value> {
+        let Some(sources) = input.get("sources") else {
+            return Ok(None);
+        };
+        let sources = sources.as_array().ok_or_else(|| {
+            json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "sources must be an array."}})
+        })?;
+        sources
+            .iter()
+            .map(|source| {
+                let handle = source.get("handle").and_then(Value::as_str).ok_or_else(|| {
+                    json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Each source handle must be a string."}})
+                })?;
+                let band = source
+                    .get("band")
+                    .and_then(Value::as_u64)
+                    .and_then(|value| usize::try_from(value).ok())
+                    .ok_or_else(|| {
+                        json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Each source band must be a nonnegative integer."}})
+                    })?;
+                Ok((handle, band))
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .map(Some)
     }
 
     unsafe fn request(input: *const u8, input_len: usize) -> Result<Value, Value> {
@@ -295,6 +322,22 @@ mod file_exports {
     ) -> *const u8 {
         let out = (|| {
             let value = unsafe { request(input, input_len) }?;
+            let window = window(&value)?;
+            let max_samples = max_samples(&value)?;
+            let kernel = kernel(&value)?;
+            if let Some(sources) = sources(&value)? {
+                if value.get("resampling").is_some() {
+                    return Err(json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Multi-band raster resampling is not available yet; align all source grids first."}}));
+                }
+                return crate::processing::index_file_sources_window(
+                    &sources,
+                    window,
+                    max_samples,
+                    kernel,
+                )
+                .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
+                .map_err(processing_failure);
+            }
             let string = |name| {
                 value.get(name).and_then(Value::as_str).ok_or_else(|| {
                     json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": format!("{name} must be a string.")}})
@@ -304,9 +347,6 @@ mod file_exports {
             let left_band = field_u32(&value, "leftBand")? as usize;
             let right_handle = string("rightHandle")?;
             let right_band = field_u32(&value, "rightBand")? as usize;
-            let window = window(&value)?;
-            let max_samples = max_samples(&value)?;
-            let kernel = kernel(&value)?;
             match resampling(&value)? {
                 Some((method, target)) => crate::processing::index_resampled_file_window(
                     left_handle,

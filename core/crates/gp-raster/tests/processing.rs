@@ -2,7 +2,7 @@ use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform,
 use std::io::{self, Cursor, Seek, SeekFrom, Write};
 
 use gp_raster::processing::{
-    Error, Kernel, Resampling, TargetGrid, index, normalized_difference,
+    Error, Kernel, Resampling, TargetGrid, index, index_sources, normalized_difference,
     normalized_difference_file_window, normalized_difference_resampled_window,
     normalized_difference_scene, resample, write_normalized_difference_geotiff,
 };
@@ -59,6 +59,20 @@ fn fixed_two_band_kernels_match_the_scalar_equations() {
     let dnbr = index(&left, 0, &right, 0, Kernel::Dnbr).unwrap();
     assert!((dnbr.samples[2] - 0.48).abs() < 1e-15);
     assert!(!dnbr.valid[3]);
+}
+
+#[test]
+fn evi_kernel_combines_three_matching_band_sources() {
+    let nir = raster(grid(2), 1, Some(-9999.0), vec![0.45, 0.5, -9999.0, 0.6]);
+    let red = raster(grid(2), 1, None, vec![0.08, 0.1, 0.1, 0.2]);
+    let blue = raster(grid(2), 1, None, vec![0.04, 0.05, 0.05, 0.1]);
+    let output = index_sources(&[(&nir, 0), (&red, 0), (&blue, 0)], Kernel::Evi).unwrap();
+    assert!(
+        (output.samples[0] - 2.5 * (0.45 - 0.08) / (0.45 + 6.0 * 0.08 - 7.5 * 0.04 + 1.0)).abs()
+            < 1e-15
+    );
+    assert!(!output.valid[2]);
+    assert_eq!(output.samples[2], -9999.0);
 }
 
 fn tiff_fixture(width: u32, values: &[f32], nodata: f64) -> Vec<u8> {

@@ -111,8 +111,11 @@ export const processFileWindow = (tool, leftHandle, leftBand, rightHandle, right
   const args = [tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples];
   return call('processFileWindow', [...args, resampling ?? null, parameters ?? null]);
 };
+export const processFileSources = (tool, sources, window, maxSamples, parameters) => (
+  call('processFileSources', [tool, sources, window, maxSamples, parameters ?? null])
+);
 export const processFileScene = (options) => (
-  processRasterScene({ inspectFile, processFileWindow }, options)
+  processRasterScene({ inspectFile, processFileWindow, processFileSources }, options)
 );
 export async function removeFile(tool, handle) {
   const out = await call('removeFile', [tool, handle]);

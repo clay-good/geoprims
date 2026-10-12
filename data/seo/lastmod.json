@@ -348,8 +348,8 @@
     "lastmod": "2026-10-12"
   },
   "/drone/ops/vlos-check/": {
-    "hash": "b5ad30369a47ae13",
-    "lastmod": "2026-10-09"
+    "hash": "64ef7fdfda06975a",
+    "lastmod": "2026-10-12"
   },
   "/drone/ops/wind-limit/": {
     "hash": "6ad91f018f64dd2e",
@@ -444,8 +444,8 @@
     "lastmod": "2026-10-09"
   },
   "/drone/sensors/vlos/": {
-    "hash": "3fb3b097396007ab",
-    "lastmod": "2026-10-09"
+    "hash": "421f0ffae9159a72",
+    "lastmod": "2026-10-12"
   },
   "/geodesy/": {
     "hash": "50126421d245c9b0",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "cb9804baa1fd954a",
+    "hash": "83ee8b079b43eb99",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

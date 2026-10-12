@@ -1071,6 +1071,57 @@ fn run_easa(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- VLOS
 
+const VLOS_ASSUMPTIONS: &[Assumption] = &[
+    Assumption {
+        name: "Multirotor ALOS coefficient",
+        value: "327",
+        unit: "1",
+        source: "easa-guidelines",
+    },
+    Assumption {
+        name: "Multirotor ALOS offset",
+        value: "20",
+        unit: "m",
+        source: "easa-guidelines",
+    },
+    Assumption {
+        name: "Fixed-wing ALOS coefficient",
+        value: "490",
+        unit: "1",
+        source: "easa-guidelines",
+    },
+    Assumption {
+        name: "Fixed-wing ALOS offset",
+        value: "30",
+        unit: "m",
+        source: "easa-guidelines",
+    },
+    Assumption {
+        name: "DLOS visibility factor",
+        value: "0.3",
+        unit: "1",
+        source: "easa-guidelines",
+    },
+    Assumption {
+        name: "Recommended minimum ground visibility",
+        value: "5",
+        unit: "km",
+        source: "easa-guidelines",
+    },
+    Assumption {
+        name: "Ground visibility when none is given",
+        value: "5",
+        unit: "km",
+        source: "easa-guidelines",
+    },
+    Assumption {
+        name: "Maximum ground visibility counted for DLOS",
+        value: "5",
+        unit: "km",
+        source: "lba-flight-geography",
+    },
+];
+
 pub static VLOS: ToolDef = ToolDef {
     id: "drone.sensors.vlos",
     stability: gp_base::tool::Stability::Stable,
@@ -1210,6 +1261,7 @@ pub static VLOS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: VLOS_ASSUMPTIONS,
     sentence: "You can keep it in sight to about {vlos}.{if margin < 0} The mission goes {abs(margin)} beyond that.{/if}{if margin >= 0} The mission stays within it.{/if}{warn VISIBILITY_BELOW_MINIMUM} The visibility is below the 5 km EASA recommends.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_vlos,
@@ -1980,6 +2032,7 @@ pub static VLOS_CHECK: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: VLOS_ASSUMPTIONS,
     sentence: "The farthest waypoint is {farthest_distance} from you.{if beyond_count > 0} {beyond_count} {plural beyond_count \"is\" \"are\"} past your {visual_range_used} range.{/if}{if beyond_count == 0} All are within your {visual_range_used} range.{/if} Seeing the drone is your call on the day. Not legal advice.",
     limits: &[("batchRows", 1_000)],
     run: run_vlos_check,

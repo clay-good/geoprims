@@ -89,6 +89,8 @@ const MUST_DECLARE = [
   'drone.ops.speed-check',
   'drone.ops.kinetic-energy',
   'drone.ops.easa-subcategory',
+  'drone.sensors.vlos',
+  'drone.ops.vlos-check',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -247,6 +249,23 @@ test('the EASA classifier exposes its complete regulatory decision table', () =>
     ['2024-01-01', 'ISO date', 'eu-2019-947'],
     ['2025-12-31', 'ISO date', 'eu-2019-947'],
   ]);
+});
+
+test('both VLOS tools expose the shared EASA and LBA guidance constants', () => {
+  const expected = [
+    ['327', '1', 'easa-guidelines'],
+    ['20', 'm', 'easa-guidelines'],
+    ['490', '1', 'easa-guidelines'],
+    ['30', 'm', 'easa-guidelines'],
+    ['0.3', '1', 'easa-guidelines'],
+    ['5', 'km', 'easa-guidelines'],
+    ['5', 'km', 'easa-guidelines'],
+    ['5', 'km', 'lba-flight-geography'],
+  ];
+  for (const id of ['drone.sensors.vlos', 'drone.ops.vlos-check']) {
+    const assumptions = byId(id)['x-assumptions'];
+    assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), expected, id);
+  }
 });
 
 test('every tool that rests on constants declares them', () => {

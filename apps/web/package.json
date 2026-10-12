@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "test": "node --test 'test/*.test.mjs'",
     "test:browser": "node --test --test-concurrency=1 'test/browser/*.test.mjs'",
-    "bench:browser": "node scripts/benchmark.mjs"
+    "bench:browser": "node scripts/benchmark.mjs",
+    "smoke:headers": "node scripts/header-smoke.mjs"
   },
   "devDependencies": {
     "@astrojs/svelte": "9.0.1",

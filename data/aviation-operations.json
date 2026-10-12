@@ -394,7 +394,7 @@
     }
   },
   "endpoints": {
-    "note": "Generated endpoints, each allow-listed with the task it serves (tool-catalog, 'Generated endpoints must be meaningful'). The design targeted 20, including altimeter unit forms such as qnh-hpa-to-pressure-altitude; those are not built, because every altimeter field already takes 29.92 inHg, 1013 hPa, A2992, or Q1013 as typed, so a unit form would be the same form under a second name.",
+    "note": "Generated endpoints, each allow-listed with the task it serves (tool-catalog, 'Generated endpoints must be meaningful'). Altimeter unit forms are not endpoints because every altimeter field already takes 29.92 inHg, 1013 hPa, A2992, or Q1013 as typed; a unit form would be the same form under a second name.",
     "built": [
       "aviation.airspeed.ias-to-tas",
       "aviation.airspeed.ias-to-mach",

@@ -44,8 +44,10 @@ Calibration tables, deviation cards, envelopes, and performance tables are user-
 | `performance` | 15 | turn-radius, turn-rate, bank-for-rate, load-factor, stall-in-turn, time-to-turn, climb-gradient, descent-gradient, top-of-descent, descent-angle, glide-range, glide-ring, pivotal-altitude, visual-descent-point, specific-range |
 | `loading` | 14 | fuel-required, endurance, fuel-weight, reserve-preset, fuel-per-leg, burn-rate, cg, percent-mac, envelope-check, weight-shift, ballast, table-1d, table-2d, table-3d |
 | **Operations** | **83** | |
-| Generated endpoints | 20 | composed airspeed pairs (e.g. `ias-to-mach`, `eas-to-tas`, `ias-to-tas`) and altimeter unit forms (`qnh-hpa-to-pressure-altitude`). Search slugs such as `crosswind-calculator` are aliases, not tool ids |
-| **Endpoints** | **103** | |
+| Generated endpoints | 7 | composed airspeed pairs: `ias-to-tas`, `ias-to-mach`, `ias-to-eas`, `eas-to-tas`, `eas-to-mach`, `mach-to-eas`, and `tas-to-eas`. Search slugs such as `crosswind-calculator` are aliases, not tool ids |
+| **Endpoints** | **90** | 83 operations plus 7 generated endpoints |
+
+The earlier target of 20 generated endpoints included altimeter unit forms such as `qnh-hpa-to-pressure-altitude`. Those forms are not separate endpoints: every altimeter input already accepts inHg, hPa, `A` groups, and `Q` groups in one field. Giving the same form another id would violate the catalog requirement that a generated endpoint narrow or compose an operation meaningfully. The seven airspeed endpoints above each remove a real source-type choice or the IAS calibration step while reusing the parent's math.
 
 ## Risks / Trade-offs
 

@@ -46,6 +46,12 @@ test('every built operation names a real tool and the fields that carry it', () 
 });
 
 test('the generated aviation endpoints are exactly the listed ones, each a narrowed parent', () => {
+  const row = design.match(/^\| Generated endpoints \| (\d+) \|/m);
+  const total = design.match(/^\| \*\*Endpoints\*\* \| \*\*(\d+)\*\* \|/m);
+  assert.ok(row, 'the design has no generated-endpoint count');
+  assert.ok(total, 'the design has no total endpoint count');
+  assert.equal(endpoints.built.length, Number(row[1]), "the design's generated-endpoint count");
+  assert.equal(83 + endpoints.built.length, Number(total[1]), "the design's total endpoint count");
   const generated = catalog.tools.filter((t) => t.domain === 'aviation' && t.composedOf.length).map((t) => t.id);
   assert.deepEqual(generated.sort(), [...endpoints.built].sort());
   for (const id of endpoints.built) {

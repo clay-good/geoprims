@@ -2,8 +2,8 @@ use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform,
 use std::io::{self, Cursor, Seek, SeekFrom, Write};
 
 use gp_raster::processing::{
-    Error, Resampling, normalized_difference, normalized_difference_scene, resample,
-    write_normalized_difference_geotiff,
+    Error, Resampling, normalized_difference, normalized_difference_file_window,
+    normalized_difference_scene, resample, write_normalized_difference_geotiff,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -240,6 +240,32 @@ fn scene_grid_mismatch_is_reported_before_any_output() {
         error,
         Error::GridMismatch(mismatch) if mismatch.reason == "dimensions"
     ));
+}
+
+#[test]
+fn file_window_checks_the_complete_source_grids_before_decoding_pixels() {
+    gp_base::files::clear();
+    gp_base::files::put("left-grid", &tiff_fixture(4, &[0.8; 16], -9999.0)).unwrap();
+    gp_base::files::put("right-grid", &tiff_fixture(5, &[0.2; 20], -9999.0)).unwrap();
+    let error = normalized_difference_file_window(
+        "left-grid",
+        0,
+        "right-grid",
+        0,
+        gp_raster::geotiff::Window {
+            x: 0,
+            y: 0,
+            width: 2,
+            height: 1,
+        },
+        10,
+    )
+    .unwrap_err();
+    assert!(matches!(
+        error,
+        Error::GridMismatch(mismatch) if mismatch.reason == "dimensions"
+    ));
+    gp_base::files::clear();
 }
 
 #[test]

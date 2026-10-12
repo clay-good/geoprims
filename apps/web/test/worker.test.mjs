@@ -61,6 +61,19 @@ test('the worker registers and releases a range-backed raster', async () => {
   assert.deepEqual(await send('removeFile', [tool, 'large-raster']), { ok: true });
 });
 
+test('the worker routes paired raster windows to the Rust processor', async () => {
+  const out = await send('processFileWindow', [
+    'raster.index.ndvi',
+    'missing-nir', 0,
+    'missing-red', 0,
+    { x: 0, y: 0, width: 1, height: 1 },
+    2,
+  ]);
+  assert.equal(out.ok, false);
+  assert.equal(out.error.code, 'INVALID_INPUT');
+  assert.match(out.error.message, /no longer loaded/i);
+});
+
 test('an unknown tool is an envelope, not a thrown error', async () => {
   const out = await send('invoke', ['no.such.tool', '{}']);
   assert.equal(out.ok, false);

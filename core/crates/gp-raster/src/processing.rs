@@ -95,6 +95,32 @@ where
     )
 }
 
+/// Decodes and processes one window from two private local-file handles.
+pub fn normalized_difference_file_window(
+    left_handle: &str,
+    left_band: usize,
+    right_handle: &str,
+    right_band: usize,
+    window: Window,
+    max_samples: usize,
+) -> Result<Raster, Error> {
+    let missing = || {
+        Error::Decode(geotiff::Error::Invalid(
+            "The selected local file is no longer loaded.".into(),
+        ))
+    };
+    let left_reader = gp_base::files::reader(left_handle).ok_or_else(missing)?;
+    let right_reader = gp_base::files::reader(right_handle).ok_or_else(missing)?;
+    let mut left = WindowDecoder::new(left_reader, max_samples).map_err(Error::Decode)?;
+    let mut right = WindowDecoder::new(right_reader, max_samples).map_err(Error::Decode)?;
+    same_grid(&left.metadata().grid, &right.metadata().grid).map_err(Error::GridMismatch)?;
+    validate_band(left.metadata(), left_band)?;
+    validate_band(right.metadata(), right_band)?;
+    let left = left.decode(window).map_err(Error::Decode)?;
+    let right = right.decode(window).map_err(Error::Decode)?;
+    normalized_difference(&left, left_band, &right, right_band)
+}
+
 #[allow(clippy::too_many_arguments)]
 fn process_scene<L, R, F>(
     left: &mut WindowDecoder<L>,

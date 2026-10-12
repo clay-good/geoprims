@@ -26,6 +26,7 @@ for (const { module, sha256 } of modules) {
       'gp_file_clear',
       'gp_raster_file_inspect',
       'gp_raster_file_window',
+      'gp_raster_file_normalized_difference',
     ]) {
       assert.equal(typeof instance.exports[name], module === 'raster' ? 'function' : 'undefined');
     }

@@ -11,6 +11,9 @@ const methods = {
   openFilePath: (id, handle, path) => host.openFilePath(id, handle, path),
   inspectFile: (id, handle) => host.inspectFile(id, handle),
   readFileWindow: (id, handle, window, maxSamples) => host.readFileWindow(id, handle, window, maxSamples),
+  processFileWindow: (id, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples) => (
+    host.processFileWindow(id, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples)
+  ),
   removeFile: (id, handle) => host.removeFile(id, handle),
   clearFiles: (id) => host.clearFiles(id),
   searchLoad: async (index) => (await host.module('search')).callString('gp_search_load', index),

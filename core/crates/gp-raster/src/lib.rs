@@ -44,16 +44,19 @@ gp_base::export_file_bridge!();
 mod file_exports {
     use serde_json::{Value, json};
 
-    use crate::geotiff::{CrsType, Error, Metadata, RasterType, Window};
+    use crate::geotiff::{
+        CrsType, Error as GeotiffError, Grid, Metadata, Raster, RasterType, Window,
+    };
+    use crate::processing::Error as ProcessingError;
 
     const MAX_WINDOW_SAMPLES: usize = 4 * 1024 * 1024;
 
-    fn failure(error: Error) -> Value {
+    fn failure(error: GeotiffError) -> Value {
         match error {
-            Error::Invalid(message) => {
+            GeotiffError::Invalid(message) => {
                 json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": message}})
             }
-            Error::LimitExceeded { samples, limit } => json!({
+            GeotiffError::LimitExceeded { samples, limit } => json!({
                 "ok": false,
                 "error": {
                     "code": "LIMIT_EXCEEDED",
@@ -63,26 +66,86 @@ mod file_exports {
         }
     }
 
-    fn metadata_value(metadata: &Metadata) -> Value {
-        let transform = metadata.grid.transform.map(
+    fn grid_value(grid: &Grid) -> Value {
+        let transform = grid.transform.map(
             |t| json!({"x0": t.x0, "dx": t.dx, "rx": t.rx, "y0": t.y0, "ry": t.ry, "dy": t.dy}),
         );
         json!({
-            "width": metadata.grid.width,
-            "height": metadata.grid.height,
-            "bands": metadata.bands,
-            "nodata": metadata.nodata,
-            "epsg": metadata.grid.epsg,
-            "crsType": metadata.grid.crs_type.map(|kind| match kind {
+            "width": grid.width,
+            "height": grid.height,
+            "epsg": grid.epsg,
+            "crsType": grid.crs_type.map(|kind| match kind {
                 CrsType::Geographic => "geographic",
                 CrsType::Projected => "projected",
             }),
-            "rasterType": metadata.grid.raster_type.map(|kind| match kind {
+            "rasterType": grid.raster_type.map(|kind| match kind {
                 RasterType::PixelIsArea => "area",
                 RasterType::PixelIsPoint => "point",
             }),
             "transform": transform,
         })
+    }
+
+    fn metadata_value(metadata: &Metadata) -> Value {
+        let grid = &metadata.grid;
+        let transform = grid.transform.map(
+            |t| json!({"x0": t.x0, "dx": t.dx, "rx": t.rx, "y0": t.y0, "ry": t.ry, "dy": t.dy}),
+        );
+        json!({
+            "width": grid.width,
+            "height": grid.height,
+            "bands": metadata.bands,
+            "nodata": metadata.nodata,
+            "epsg": grid.epsg,
+            "crsType": grid.crs_type.map(|kind| match kind {
+                CrsType::Geographic => "geographic",
+                CrsType::Projected => "projected",
+            }),
+            "rasterType": grid.raster_type.map(|kind| match kind {
+                RasterType::PixelIsArea => "area",
+                RasterType::PixelIsPoint => "point",
+            }),
+            "transform": transform,
+        })
+    }
+
+    fn raster_value(raster: Raster) -> Value {
+        let metadata = metadata_value(&raster.metadata);
+        json!({"metadata": metadata, "samples": raster.samples, "valid": raster.valid})
+    }
+
+    fn processing_failure(error: ProcessingError) -> Value {
+        let (code, message, details) = match error {
+            ProcessingError::Decode(error) | ProcessingError::Export(error) => {
+                return failure(error);
+            }
+            ProcessingError::GridMismatch(mismatch) => (
+                "GRID_MISMATCH",
+                format!("The input raster grids differ in {}.", mismatch.reason),
+                Some(json!({
+                    "reason": mismatch.reason,
+                    "left": grid_value(&mismatch.left),
+                    "right": grid_value(&mismatch.right),
+                })),
+            ),
+            ProcessingError::InvalidBand { band, bands } => (
+                "INVALID_INPUT",
+                format!("Band index {band} is outside a raster with {bands} bands."),
+                None,
+            ),
+            ProcessingError::InvalidRaster(message) => ("INVALID_INPUT", message.into(), None),
+            ProcessingError::InvalidWindowSize => (
+                "INVALID_INPUT",
+                "The raster window must have nonzero width and height.".into(),
+                None,
+            ),
+            ProcessingError::LimitExceeded { samples, limit } => (
+                "LIMIT_EXCEEDED",
+                format!("The raster needs {samples} samples; this operation allows {limit}."),
+                None,
+            ),
+        };
+        json!({"ok": false, "error": {"code": code, "message": message, "details": details}})
     }
 
     fn field_u32(input: &Value, name: &str) -> Result<u32, Value> {
@@ -94,6 +157,35 @@ mod file_exports {
                 "ok": false,
                 "error": {"code": "INVALID_INPUT", "message": format!("{name} must be a nonnegative 32-bit integer.")},
             }))
+    }
+
+    fn window(input: &Value) -> Result<Window, Value> {
+        Ok(Window {
+            x: field_u32(input, "x")?,
+            y: field_u32(input, "y")?,
+            width: field_u32(input, "width")?,
+            height: field_u32(input, "height")?,
+        })
+    }
+
+    fn max_samples(input: &Value) -> Result<usize, Value> {
+        let max_samples = field_u32(input, "maxSamples")? as usize;
+        if max_samples == 0 || max_samples > MAX_WINDOW_SAMPLES {
+            return Err(json!({
+                "ok": false,
+                "error": {"code": "LIMIT_EXCEEDED", "message": format!("maxSamples must be from 1 to {MAX_WINDOW_SAMPLES}.")},
+            }));
+        }
+        Ok(max_samples)
+    }
+
+    unsafe fn request(input: *const u8, input_len: usize) -> Result<Value, Value> {
+        let text = unsafe { gp_base::abi::read_str(input, input_len) }.map_err(|_| {
+            json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be UTF-8."}})
+        })?;
+        serde_json::from_str(text).map_err(|_| {
+            json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be valid JSON."}})
+        })
     }
 
     /// # Safety
@@ -123,38 +215,42 @@ mod file_exports {
         input_len: usize,
     ) -> *const u8 {
         let out = (|| {
-            let text = unsafe { gp_base::abi::read_str(input, input_len) }.map_err(|_| {
-                json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be UTF-8."}})
-            })?;
-            let value: Value = serde_json::from_str(text).map_err(|_| {
-                json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be valid JSON."}})
-            })?;
+            let value = unsafe { request(input, input_len) }?;
             let handle = value.get("handle").and_then(Value::as_str).ok_or_else(|| {
                 json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "handle must be a string."}})
             })?;
-            let window = Window {
-                x: field_u32(&value, "x")?,
-                y: field_u32(&value, "y")?,
-                width: field_u32(&value, "width")?,
-                height: field_u32(&value, "height")?,
-            };
-            let max_samples = field_u32(&value, "maxSamples")? as usize;
-            if max_samples == 0 || max_samples > MAX_WINDOW_SAMPLES {
-                return Err(json!({
-                    "ok": false,
-                    "error": {"code": "LIMIT_EXCEEDED", "message": format!("maxSamples must be from 1 to {MAX_WINDOW_SAMPLES}.")},
-                }));
-            }
-            crate::geotiff::decode_file_window(handle, window, max_samples)
-                .map(|raster| json!({
-                    "ok": true,
-                    "raster": {
-                        "metadata": metadata_value(&raster.metadata),
-                        "samples": raster.samples,
-                        "valid": raster.valid,
-                    }
-                }))
+            crate::geotiff::decode_file_window(handle, window(&value)?, max_samples(&value)?)
+                .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
                 .map_err(failure)
+        })()
+        .unwrap_or_else(|error| error);
+        gp_base::abi::set_out(&out.to_string())
+    }
+
+    /// # Safety
+    /// The input range must be readable UTF-8 from `gp_alloc`.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn gp_raster_file_normalized_difference(
+        input: *const u8,
+        input_len: usize,
+    ) -> *const u8 {
+        let out = (|| {
+            let value = unsafe { request(input, input_len) }?;
+            let string = |name| {
+                value.get(name).and_then(Value::as_str).ok_or_else(|| {
+                    json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": format!("{name} must be a string.")}})
+                })
+            };
+            crate::processing::normalized_difference_file_window(
+                string("leftHandle")?,
+                field_u32(&value, "leftBand")? as usize,
+                string("rightHandle")?,
+                field_u32(&value, "rightBand")? as usize,
+                window(&value)?,
+                max_samples(&value)?,
+            )
+            .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
+            .map_err(processing_failure)
         })()
         .unwrap_or_else(|error| error);
         gp_base::abi::set_out(&out.to_string())

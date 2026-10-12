@@ -72,13 +72,13 @@ test('private file bytes cross the raw ABI and can be released', async () => {
   assert.throws(() => checkFileSize(MAX_WHOLE_FILE_BYTES + 1), /at most/);
 });
 
-function sparseTiledTiff() {
+function sparseTiledTiff(sample = (value) => value, width = 32) {
   const header = [];
   const u16 = (value) => header.push(value & 255, value >>> 8);
   const u32 = (value) => header.push(value & 255, value >>> 8 & 255, value >>> 16 & 255, value >>> 24);
   const entry = (tag, type, count, value) => { u16(tag); u16(type); u32(count); u32(value); };
   header.push(0x49, 0x49); u16(42); u32(8); u16(11);
-  entry(256, 4, 1, 32);
+  entry(256, 4, 1, width);
   entry(257, 4, 1, 16);
   entry(258, 3, 1, 8);
   entry(259, 3, 1, 1);
@@ -95,8 +95,8 @@ function sparseTiledTiff() {
   assert.equal(header.length, 162);
   const parts = [
     [0, Uint8Array.from(header)],
-    [100_000, Uint8Array.from({ length: 256 }, (_, i) => (Math.floor(i / 16) * 32 + i % 16) & 255)],
-    [200_000, Uint8Array.from({ length: 256 }, (_, i) => (Math.floor(i / 16) * 32 + 16 + i % 16) & 255)],
+    [100_000, Uint8Array.from({ length: 256 }, (_, i) => sample(Math.floor(i / 16) * 32 + i % 16) & 255)],
+    [200_000, Uint8Array.from({ length: 256 }, (_, i) => sample(Math.floor(i / 16) * 32 + 16 + i % 16) & 255)],
   ];
   const reads = [];
   return {
@@ -141,6 +141,45 @@ test('range-backed file sources enforce logical and returned lengths', async () 
   assert.throws(() => rangeSource({ size: MAX_SPARSE_FILE_BYTES + 1, slice() {} }), /range-backed file size/i);
   assert.throws(() => rangeSource({ size: 4 }), /provide slice/i);
   await assert.rejects(() => sourceRange({ size: 4, slice: () => new Uint8Array(1) }, 0, 4), /1 bytes; 4 were requested/);
+});
+
+test('range-backed file windows run the Rust index kernel without JavaScript pixel math', async () => {
+  const left = sparseTiledTiff();
+  const right = sparseTiledTiff(() => 16);
+  await host.openFile('raster.index.ndvi', 'left-cog', left);
+  await host.openFile('raster.index.ndvi', 'right-cog', right);
+  const out = JSON.parse(await host.processFileWindow(
+    'raster.index.ndvi',
+    'left-cog', 0,
+    'right-cog', 0,
+    { x: 16, y: 1, width: 2, height: 2 },
+    256,
+  ));
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.deepEqual(out.raster.samples, [0.5, 33 / 65, 2 / 3, 65 / 97]);
+  assert.deepEqual(out.raster.valid, [true, true, true, true]);
+  assert.deepEqual(left.reads, [[0, 65_536], [196_608, 200_256]]);
+  assert.deepEqual(right.reads, [[0, 65_536], [196_608, 200_256]]);
+  await host.removeFile('raster.index.ndvi', 'left-cog');
+  await host.removeFile('raster.index.ndvi', 'right-cog');
+});
+
+test('range-backed index windows compare the complete source grids', async () => {
+  await host.openFile('raster.index.ndvi', 'wide-cog', sparseTiledTiff());
+  await host.openFile('raster.index.ndvi', 'narrow-cog', sparseTiledTiff((value) => value, 31));
+  const out = JSON.parse(await host.processFileWindow(
+    'raster.index.ndvi',
+    'wide-cog', 0,
+    'narrow-cog', 0,
+    { x: 16, y: 1, width: 2, height: 2 },
+    256,
+  ));
+  assert.equal(out.error.code, 'GRID_MISMATCH');
+  assert.equal(out.error.details.reason, 'dimensions');
+  assert.equal(out.error.details.left.width, 32);
+  assert.equal(out.error.details.right.width, 31);
+  await host.removeFile('raster.index.ndvi', 'wide-cog');
+  await host.removeFile('raster.index.ndvi', 'narrow-cog');
 });
 
 test('unknown tool ids', async () => {

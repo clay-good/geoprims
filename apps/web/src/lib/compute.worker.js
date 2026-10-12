@@ -129,6 +129,8 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
       out = await (await get(moduleFor(args[0]))).inspectFile(args[1]);
     } else if (method === 'readFileWindow') {
       out = await (await get(moduleFor(args[0]))).readFileWindow(args[1], args[2], args[3]);
+    } else if (method === 'processFileWindow') {
+      out = await (await get(moduleFor(args[0]))).processFileWindow(...args.slice(1));
     } else if (method === 'removeFile') {
       (await get(moduleFor(args[0]))).removeFile(args[1]);
       out = JSON.stringify({ ok: true });

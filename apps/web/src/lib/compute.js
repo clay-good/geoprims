@@ -106,6 +106,9 @@ export const inspectFile = (tool, handle) => call('inspectFile', [tool, handle])
 export const readFileWindow = (tool, handle, window, maxSamples) => (
   call('readFileWindow', [tool, handle, window, maxSamples])
 );
+export const processFileWindow = (tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples) => (
+  call('processFileWindow', [tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples])
+);
 export async function removeFile(tool, handle) {
   const out = await call('removeFile', [tool, handle]);
   files.delete(fileKey(tool, handle));

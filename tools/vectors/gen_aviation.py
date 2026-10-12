@@ -464,7 +464,7 @@ WX_SRC = "Hand-decoded per FAA Order JO 7900.5E Change 1 (METAR body and remarks
 WX_VER = "JO 7900.5E Chg 1 (2022)"
 FB_SRC = "Hand-decoded per the FAA Aviation Weather Handbook FB coding rules (FAA-H-8083-28)"
 FB_VER = "FAA-H-8083-28 (2022)"
-HOLD_SRC = "AIM 5-3-8 figure 5-3-2 sectors and table 5-3-1 speeds, applied by hand"
+HOLD_SRC = "FAA AIM 5-3-8j holding procedures and maximum holding airspeeds, applied by hand"
 HOLD_VER = "AIM (2026)"
 
 
@@ -571,8 +571,21 @@ def hold_entry_vectors():
 
 
 def hold_speed_vectors():
-    cases = [(3000, 200), (6000, 200), (6001, 230), (14000, 230), (14001, 265), (35000, 265)]
-    return [svec(i, {"altitude": f"{a} ft"}, {"result.max_ias.value": v}, HOLD_SRC, HOLD_VER) for i, (a, v) in enumerate(cases, 1)]
+    cases = [
+        (0, 200), (1, 200), (3000, 200), (5999.9, 200), (6000, 200),
+        (6000.0001, 230), (6000.5, 230), (6001, 230), (8000, 230),
+        (13999.9, 230), (14000, 230), (14000.0001, 265), (14000.5, 265),
+        (14001, 265), (18000, 265), (35000, 265), (60000, 265),
+    ]
+    out = [svec(i, {"altitude": f"{a} ft"}, {"result.max_ias.value": v}, HOLD_SRC, HOLD_VER) for i, (a, v) in enumerate(cases, 1)]
+    overrides = [
+        ({"altitude": "5000 ft", "planned_ias": "175 kt", "published_limit": "175 kt"}, {"result.max_ias.value": 175, "result.status": "within the limit"}),
+        ({"altitude": "5000 ft", "planned_ias": "176 kt", "published_limit": "175 kt"}, {"result.max_ias.value": 175, "result.status": "above the limit", "meta.warnings.*.code": "ABOVE_MAX_HOLDING_SPEED"}),
+        ({"altitude": "8000 ft", "published_limit": "210 kt"}, {"result.max_ias.value": 210}),
+        ({"altitude": "16000 ft", "published_limit": "230 kt"}, {"result.max_ias.value": 230}),
+    ]
+    out.extend(svec(len(out) + 1, inp, expect, HOLD_SRC, HOLD_VER) for inp, expect in overrides)
+    return out
 
 
 def hold_wind_vectors():

@@ -28,7 +28,7 @@ None: this is reference data, applied as written. The band edges are inclusive a
 - sourcePublisher: Federal Aviation Administration
 - sourceTitle: Aeronautical Information Manual
 - sourceEdition: Current edition (rules as of 2026-09-18)
-- sourceLocator: Chapter 5, Section 3, paragraph 5-3-8j, maximum holding airspeeds table: 230 KIAS from 6,001 ft through 14,000 ft MSL
+- sourceLocator: Chapter 5, Section 3, paragraph 5-3-8j(2)(a), maximum holding airspeeds: 230 KIAS from 6,001 ft through 14,000 ft MSL
 - independent: yes
 - inputs: holding altitude 8,000 ft, planned 240 KIAS
 - outputs: maximum 230 KIAS; planned speed above the limit, with ABOVE_MAX_HOLDING_SPEED
@@ -38,8 +38,8 @@ None: this is reference data, applied as written. The band edges are inclusive a
 
 ## Differential tests
 
-- `tools/vectors/gen_aviation.py`: the AIM table applied by hand at six altitudes, on and either side of both band edges (3,000, 6,000, 6,001, 14,000, 14,001, and 35,000 ft)
-- `core/vectors/aviation.ifr.hold-speed-limit.jsonl`: those six vectors, run through the core on every build
+- `tools/vectors/gen_aviation.py`: the AIM bands applied by hand at 17 altitudes, including fractional values on both sides of both band edges, plus four charted-limit overrides
+- `core/vectors/aviation.ifr.hold-speed-limit.jsonl`: those 21 vectors, run through the core on every build
 
 ## Invariants
 

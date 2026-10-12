@@ -54,8 +54,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-23",
-      "verificationNote": "Checked at the issuer on 2026-09-23: the basic AIM with Changes 1, 2, and 3 (Change 3 dated July 9, 2026). Holding paragraph 5-3-8j: entry procedures FIG 5-3-4, maximum holding airspeeds TBL 5-3-24.",
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked at the issuer on 2026-10-12. Holding paragraph 5-3-8j still gives 200 KIAS through 6,000 ft, 230 KIAS from 6,001 through 14,000 ft, and 265 KIAS above, with charted limits overriding the standard bands.",
       "freeAccessUrl": "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/",
       "matchTerms": [
         "Aeronautical Information Manual"

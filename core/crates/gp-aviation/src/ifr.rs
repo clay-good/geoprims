@@ -357,7 +357,7 @@ fn run_hold_entry(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- speed limit
 
-/// AIM table 5-3-1 maximum holding airspeeds (KIAS) by altitude band (ft MSL).
+/// AIM 5-3-8j maximum holding airspeeds (KIAS) by altitude band (ft MSL).
 pub const HOLD_SPEEDS: &[(f64, f64, &str)] = &[
     (6_000.0, 200.0, "minimum holding altitude through 6,000 ft"),
     (14_000.0, 230.0, "6,001 ft through 14,000 ft"),
@@ -374,6 +374,7 @@ fn max_hold_speed(alt_ft: f64) -> (f64, &'static str) {
 
 pub static HOLD_SPEED: ToolDef = ToolDef {
     id: "aviation.ifr.hold-speed-limit",
+    stability: gp_base::tool::Stability::Stable,
     title: "Maximum holding airspeed",
     summary: "The maximum holding airspeed for your altitude from the AIM table (200, 230, or 265 KIAS), or a published limit, with a flag when your planned speed is above it.",
     aliases: &[
@@ -439,12 +440,8 @@ pub static HOLD_SPEED: ToolDef = ToolDef {
         )
         .optional(),
     ],
-    warnings: &[
-        "ABOVE_MAX_HOLDING_SPEED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
-    model: "AIM table 5-3-1: 200 KIAS through 6,000 ft, 230 KIAS from 6,001 to 14,000 ft, 265 KIAS above; a published limit on the chart overrides",
+    warnings: &["ABOVE_MAX_HOLDING_SPEED", "UNIT_ASSUMED"],
+    model: "AIM 5-3-8j: 200 KIAS through 6,000 ft, 230 KIAS from 6,001 to 14,000 ft, 265 KIAS above; a published limit on the chart overrides",
     accuracy: "Reference data as of the AIM edition cited. Military fields and some procedures use other limits; the chart and ATC govern.",
     when_to_use: "Use this before you reach a holding fix, to check that your planned speed fits the limit. Enter the holding altitude and, if you like, the speed you plan to fly. It gives the maximum holding airspeed from the AIM table, 200, 230, or 265 knots indicated, or the limit printed on the chart if you enter one. It flags a planned speed above the limit so you can slow down about 3 minutes before the fix, as the AIM says.",
     limitations: "This covers the civil limits in the AIM table only. Some procedures and military fields use other limits, and a speed printed on the chart replaces the table. It does not check your aircraft's own speeds, turbulence penetration speed, or an ATC request for a different speed. The chart and ATC instructions govern.",
@@ -453,17 +450,27 @@ pub static HOLD_SPEED: ToolDef = ToolDef {
         id: "primary",
         title: "Holding at 8,000 ft planning 240 KIAS",
         input: r#"{"altitude":"8000 ft","planned_ias":"240 kt"}"#,
-        source: "AIM 5-3-8 table 5-3-1: 230 KIAS from 6,001 ft through 14,000 ft",
+        source: "AIM 5-3-8j: 230 KIAS from 6,001 ft through 14,000 ft",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[("value", "max_ias")],
     }],
-    related: &[Related {
-        id: "aviation.ifr.hold-entry",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.ifr.hold-entry",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.ifr.hold-wind-timing",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.performance.turn",
+            reason: "alternative",
+        },
+    ],
     sentence: "The maximum holding speed is {max_ias} ({basis}).{warn ABOVE_MAX_HOLDING_SPEED} Your planned speed is above it.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_hold_speed,
@@ -483,7 +490,7 @@ fn run_hold_speed(ctx: &mut Ctx) -> Result<Json, ToolError> {
         Some(p) => (p.to(kt), "published on the chart".to_owned()),
         None => {
             let (v, band) = max_hold_speed(alt);
-            (v, format!("AIM table 5-3-1, {band}"))
+            (v, format!("AIM 5-3-8j, {band}"))
         }
     };
     let mut o = vec![

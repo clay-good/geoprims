@@ -5,6 +5,22 @@
       "date": "2026-10-12",
       "kind": "result-change",
       "tools": [
+        "aviation.ifr.hold-speed-limit"
+      ],
+      "vectors": [
+        "aviation.ifr.hold-speed-limit v001",
+        "aviation.ifr.hold-speed-limit v002",
+        "aviation.ifr.hold-speed-limit v003",
+        "aviation.ifr.hold-speed-limit v004",
+        "aviation.ifr.hold-speed-limit v005",
+        "aviation.ifr.hold-speed-limit v006"
+      ],
+      "summary": "The maximum holding airspeed tool is now stable, so it no longer carries the experimental warning. Twenty-one live vectors hold its unchanged speed-limit answers to the current FAA AIM bands at and around both altitude boundaries and to the charted-limit override. The six original vectors are superseded because their source locator named obsolete AIM figure and table labels; their replacements cite paragraph 5-3-8j."
+    },
+    {
+      "date": "2026-10-12",
+      "kind": "result-change",
+      "tools": [
         "aviation.atmosphere.isa"
       ],
       "vectors": [

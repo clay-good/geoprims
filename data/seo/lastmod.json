@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f2e53f44bb4180b1",
+    "hash": "6401e1b8223bf123",
     "lastmod": "2026-10-12"
   },
   "/accuracy/": {
@@ -44,8 +44,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/cold-temperature/": {
-    "hash": "25c3e3ccc4bbc885",
-    "lastmod": "2026-10-09"
+    "hash": "73aeccf3c02299ba",
+    "lastmod": "2026-10-12"
   },
   "/aviation/altimetry/density-altitude/": {
     "hash": "496c05170a605b41",
@@ -116,8 +116,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/ifr/hold-speed-limit/": {
-    "hash": "81af68225b398579",
-    "lastmod": "2026-10-09"
+    "hash": "829f1149dc6703f4",
+    "lastmod": "2026-10-12"
   },
   "/aviation/ifr/hold-wind-timing/": {
     "hash": "e0ec506933cd348c",
@@ -236,8 +236,8 @@
     "lastmod": "2026-10-10"
   },
   "/aviation/wind/course-from-heading/": {
-    "hash": "a6d87b01a26aaba8",
-    "lastmod": "2026-10-09"
+    "hash": "a4dfef3d643e0f68",
+    "lastmod": "2026-10-12"
   },
   "/aviation/wind/find-wind/": {
     "hash": "cc8a9d31da4e990e",
@@ -248,8 +248,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "9a3b6f70c3f862f4",
-    "lastmod": "2026-10-09"
+    "hash": "7f8eb98bb7d2a3da",
+    "lastmod": "2026-10-12"
   },
   "/aviation/wind/one-in-sixty/": {
     "hash": "b715d94055d72655",
@@ -260,15 +260,15 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/wind/tas-from-groundspeed/": {
-    "hash": "156f2074b4ef87e7",
-    "lastmod": "2026-10-09"
+    "hash": "cb7d62a301b7da9a",
+    "lastmod": "2026-10-12"
   },
   "/aviation/wind/uv/": {
     "hash": "eeadecf0ffa16798",
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "b117f20556a87a36",
+    "hash": "0eefa3b93a7f61a2",
     "lastmod": "2026-10-12"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-12"
   },
   "/methodology/": {
-    "hash": "2f9dc01e97709de0",
+    "hash": "0077f38309552306",
     "lastmod": "2026-10-12"
   },
   "/navigation/": {
@@ -1348,7 +1348,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "b38bb3fe7bdbb73c",
+    "hash": "8627fab72c01c193",
     "lastmod": "2026-10-12"
   },
   "/raster/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "8c2be559fb4bd8c5",
+    "hash": "5fb5b2b6546d5995",
     "lastmod": "2026-10-12"
   },
   "/survey/": {
@@ -1712,7 +1712,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "52c6770a6326d6d0",
+    "hash": "bc2955d4f99ea9c4",
     "lastmod": "2026-10-12"
   },
   "/units/": {
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0008be236952d6b1",
+    "hash": "9094dffcdfb25fe0",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {
@@ -2000,8 +2000,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/ifr-approach-brief/": {
-    "hash": "3424ed8360b58bb3",
-    "lastmod": "2026-10-09"
+    "hash": "f89a36b03ab5758e",
+    "lastmod": "2026-10-12"
   },
   "/workflows/index-to-area/": {
     "hash": "506c59e4a19fa00b",

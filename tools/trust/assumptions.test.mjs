@@ -85,6 +85,8 @@ const MUST_DECLARE = [
   'aviation.weather.metar-decode',
   'aviation.weather.taf-decode',
   'aviation.loading.fuel-plan',
+  'drone.ops.part107-altitude',
+  'drone.ops.speed-check',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -201,6 +203,20 @@ test('the fuel planner exposes every regulatory reserve duration', () => {
     ['20', 'min', 'cfr-14-91'],
     ['45', 'min', 'cfr-14-91'],
     ['30', 'min', 'cfr-14-91'],
+  ]);
+});
+
+test('the Part 107 tools expose the regulatory altitude and speed limits', () => {
+  const altitude = byId('drone.ops.part107-altitude')['x-assumptions'];
+  assert.deepEqual(altitude.map(({ value, unit, source }) => [value, unit, source]), [
+    ['400', 'ft', 'cfr-14-107'],
+    ['400', 'ft', 'cfr-14-107'],
+    ['400', 'ft', 'cfr-14-107'],
+  ]);
+
+  const speed = byId('drone.ops.speed-check')['x-assumptions'];
+  assert.deepEqual(speed.map(({ value, unit, source }) => [value, unit, source]), [
+    ['87', 'kt', 'cfr-14-107'],
   ]);
 });
 

@@ -92,7 +92,7 @@ assets/               Asset registry, build scripts, tilers (outputs not committ
 packages/runtime/     Internal (unpublished) Wasm loader, validation, asset providers
                       (browser, Node); shared by the website and the MCP server
 mcp/                  Local MCP server: zero-dependency server.mjs; release tags carry
-                      prebuilt dist/ so a clone runs with Node alone (also published to npm)
+                      prebuilt dist/ so a clone runs with Node alone (repository-only distribution)
 apps/web/             Static site + PWA
 worker/               The single Cloudflare Worker: static-asset config, /api/reports*
                       handler, D1 migrations, cron (per define-build-contracts B1)
@@ -161,7 +161,7 @@ Tool ids are not all indexable pages. About 300 tool pages are indexable. Other 
 
 ## Migration Plan
 
-Not applicable (greenfield). Release process: tag → reproducible CI build → verification report → deploy static site and assets → publish the MCP server to npm with provenance → publish MCPB bundle and registry entry.
+Not applicable (greenfield). Release process: tag → reproducible CI build → verification report → deploy static site and assets → attach the repository-only MCP server and MCPB bundle to the GitHub release with digests and provenance attestations. npm and MCP Registry publication were superseded by the owner decision recorded in `add-local-mcp-server` on 2026-09-23.
 
 ## Open Questions
 

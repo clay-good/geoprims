@@ -18,7 +18,7 @@ Depends on: `establish-platform-foundation`. It serves whatever domain tools are
 - **Opt-in direct toolsets** (≤ 40 tools each) for clients with native tool search or focused workflows.
 - **Catalog resources and workflow prompts.**
 - **Offline by default.** A single opt-in flag allows verified downloads of large data tiles.
-- **Distribution:** npm (`npx -y @geoprims/mcp`, trusted publishing with provenance), an MCPB bundle for one-click desktop install, and the MCP Registry (`com.geoprims/mcp`).
+- **Distribution:** repository release tags plus an MCPB bundle for one-click desktop install. npm and MCP Registry publication were dropped by owner decision on 2026-09-23.
 - **An agent-evaluation benchmark** that gates releases.
 
 ## Capabilities
@@ -40,6 +40,6 @@ None.
 
 ## Impact
 
-- New directory: `mcp/` (zero-dependency server, also published to npm). It uses the internal, unpublished `packages/runtime` from the foundation change.
-- New release artifacts: the npm package, a `.mcpb` bundle, and a `server.json` registry entry.
+- New directory: `mcp/` (zero-dependency, repository-only server). It uses the internal, unpublished `packages/runtime` from the foundation change.
+- New release artifact: a `.mcpb` bundle attached to each GitHub release with its digest and provenance attestation.
 - Adds MCP conformance and agent-evaluation jobs to CI.

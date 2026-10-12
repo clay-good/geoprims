@@ -6,8 +6,7 @@ Motivation is in `proposal.md`. Research is in `docs/research/04-mcp-competitors
 - **TypeScript SDK.** v2 is split into packages (`@modelcontextprotocol/server`, `/node`, and others at 2.0.0). The monolithic `@modelcontextprotocol/sdk` 1.30.x is still maintained.
 - **Many tools cost context and accuracy.** Anthropic measured 58 tools at about 55K tokens. Tool search with detail levels is the published pattern for large catalogs and raised selection accuracy substantially in Anthropic's evaluation.
 - **Client caps.** VS Code allows 128 tools per request; Cursor's cap is reportedly 40.
-- **Registry and bundles.** The MCP Registry is in preview (`server.json` schema `2025-12-11`). MCPB manifest is v0.3.
-- **npm.** Trusted publishing (OIDC) with provenance is the norm.
+- **Bundles.** MCPB manifest is v0.3. npm and MCP Registry distribution were dropped by owner decision on 2026-09-23.
 
 ## Goals / Non-Goals
 
@@ -50,7 +49,7 @@ Why not the official SDK:
 
 Conformance comes from the MCP Inspector CLI in CI, plus recorded handshakes from real clients.
 
-Release tags carry CI-built artifacts (`mcp/dist/`: Wasm modules, catalog, bundled assets), so clone users need no Rust toolchain. The npm package and MCPB bundle are built from the same tag.
+Release tags carry CI-built artifacts (`mcp/dist/`: Wasm modules, catalog, bundled assets), so clone users need no Rust toolchain. The MCPB bundle is built from the same tag and attached to its GitHub release.
 
 Fallback: if protocol churn makes the hand-rolled layer costly, adopt the SDK behind the same surface. The golden surface file keeps it identical.
 
@@ -73,14 +72,14 @@ A fixed set of 100+ tasks, each with an expected tool id and answer tolerance, r
 ## Risks / Trade-offs
 
 - **[MCP spec churn (the stateless model is new; clients lag)]** → Support three protocol versions through the hand-rolled negotiation layer. Run the conformance suite against recorded client handshakes.
-- **[MCP Registry is preview; data may reset]** → npm and MCPB work without it.
+- **[Repository distribution is less discoverable than a registry]** → Keep copy-paste setup for major clients on the site and attach the one-click MCPB bundle to every GitHub release.
 - **[Meta-tool indirection costs an extra round trip]** → `describe` accepts up to 20 ids. `search` summaries often suffice to run simple tools. `pipeline` removes round trips for chains.
 - **[Agents drop caveats]** → Caveats live in `meta` (model, epoch, accuracy, not-for-navigation), which travels with every result.
 - **[Users who want scripting miss a CLI]** → Document calling the MCP server from scripts via any MCP client library. Revisit a CLI only on demonstrated demand.
 
 ## Migration Plan
 
-Not applicable (greenfield). Release order: MCP server on npm → MCPB bundle → registry entry.
+Not applicable (greenfield). Release order: tag with committed `mcp/dist/` → GitHub release → attested MCPB bundle and digests.
 
 ## Open Questions
 

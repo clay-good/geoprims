@@ -472,9 +472,9 @@ test('every setup snippet launches the server; README and package agree', async 
   const { CLIENTS, parseSnippet, snippet } = await import('./clients.mjs');
   const readme = readFileSync(join(here, 'README.md'), 'utf8');
   const pkg = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8'));
-  assert.equal(pkg.private, undefined, 'the MCP server must remain publishable');
-  assert.equal(pkg.publishConfig.access, 'public');
-  assert.deepEqual(pkg.dependencies, {}, 'the published server must keep zero runtime dependencies');
+  assert.equal(pkg.private, true, 'the repository-only server must not be publishable by accident');
+  assert.equal(pkg.publishConfig, undefined, 'the repository-only server must have no registry target');
+  assert.deepEqual(pkg.dependencies, {}, 'the server must keep zero runtime dependencies');
   assert.ok(pkg.bin['geoprims-mcp']);
   // mcp "VS Code key": VS Code reads "servers", the others "mcpServers".
   const vscode = JSON.parse(snippet(CLIENTS.find((x) => x.id === 'vscode')));

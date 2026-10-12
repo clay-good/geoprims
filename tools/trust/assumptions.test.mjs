@@ -66,6 +66,7 @@ const MUST_DECLARE = [
   'raster.index.evi',
   'raster.index.evi2',
   'raster.index.savi',
+  'raster.index.dnbr',
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
@@ -157,6 +158,21 @@ test('the vegetation indices expose every published coefficient and default', ()
   const savi = byId('raster.index.savi')['x-assumptions'];
   assert.deepEqual(savi.map(({ value, unit, source }) => [value, unit, source]), [
     ['0.5', '1', 'huete-1988'],
+  ]);
+});
+
+test('the dNBR tool exposes its complete published classification', () => {
+  const assumptions = byId('raster.index.dnbr')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['1000', '1', 'key-benson-2006'],
+    ['-250', 'scaled dNBR', 'key-benson-2006'],
+    ['-100', 'scaled dNBR', 'key-benson-2006'],
+    ['100', 'scaled dNBR', 'key-benson-2006'],
+    ['270', 'scaled dNBR', 'key-benson-2006'],
+    ['440', 'scaled dNBR', 'key-benson-2006'],
+    ['660', 'scaled dNBR', 'key-benson-2006'],
+    ['-550', 'scaled dNBR', 'key-benson-2006'],
+    ['1350', 'scaled dNBR', 'key-benson-2006'],
   ]);
 });
 

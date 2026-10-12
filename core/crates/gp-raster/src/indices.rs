@@ -1006,6 +1006,62 @@ pub static DNBR: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "dNBR classification scale",
+            value: "1000",
+            unit: "1",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "High-to-low post-fire regrowth threshold",
+            value: "-250",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "Low-regrowth-to-unburned threshold",
+            value: "-100",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "Unburned-to-low-severity threshold",
+            value: "100",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "Low-to-moderate-low severity threshold",
+            value: "270",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "Moderate-low-to-moderate-high severity threshold",
+            value: "440",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "Moderate-high-to-high severity threshold",
+            value: "660",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "Lower suspect-value bound",
+            value: "-550",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+        Assumption {
+            name: "Upper suspect-value bound",
+            value: "1350",
+            unit: "scaled dNBR",
+            source: "key-benson-2006",
+        },
+    ],
     sentence: "dNBR is {dnbr}, in the {severity} range.",
     raster: Some(RasterMode {
         bands: &["nbr_pre", "nbr_post"],

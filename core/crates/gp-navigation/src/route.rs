@@ -530,6 +530,20 @@ pub static FLY_BY: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard-rate turn",
+            value: "3",
+            unit: "deg/s",
+            source: "faa-ifh",
+        },
+    ],
     sentence: "Start the {direction} turn {lead_distance} before the waypoint; the radius is {radius}.{warn FLY_OVER_RECOMMENDED} A course change this large is better flown as a fly-over.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_fly_by,

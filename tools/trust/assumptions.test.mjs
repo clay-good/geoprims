@@ -71,6 +71,7 @@ const MUST_DECLARE = [
   'navigation.los.visibility',
   'navigation.los.dip',
   'navigation.los.fresnel',
+  'navigation.route.fly-by',
   'raster.terrain.line-of-sight',
   'survey.gnss.dop',
   'raster.terrain.slope-aspect',
@@ -168,6 +169,14 @@ test('the Fresnel tool exposes every physical constant in its model', () => {
     ['6371000', 'm', 'grs80'],
     ['299792458', 'm/s', 'nist-sp-811'],
     ['4/3', '1', 'itu-r-p530'],
+  ]);
+});
+
+test('the fly-by tool exposes its gravity and standard-rate defaults', () => {
+  const assumptions = byId('navigation.route.fly-by')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['9.80665', 'm/s2', 'icao-7488'],
+    ['3', 'deg/s', 'faa-ifh'],
   ]);
 });
 

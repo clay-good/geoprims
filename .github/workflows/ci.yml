@@ -9,6 +9,15 @@ permissions:
   contents: read
 
 jobs:
+  reference-container:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned differential references
+        run: docker build -f verify/Dockerfile -t geoprims-references .
+      - name: Smoke every reference binary
+        run: docker run --rm geoprims-references
+
   core:
     runs-on: ubuntu-24.04
     steps:

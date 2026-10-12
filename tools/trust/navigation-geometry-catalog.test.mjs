@@ -43,6 +43,21 @@ test('every registered navigation and geometry operation has derivation document
   assert.deepEqual(missing, []);
 });
 
+test('every registered navigation and geometry operation is stable', () => {
+  const operations = catalog.tools.filter(
+    (tool) => ['navigation', 'geometry'].includes(tool.domain) && tool.composedOf.length === 0,
+  );
+  assert.ok(operations.length > 0);
+  assert.deepEqual(
+    operations.filter((tool) => tool.stability !== 'stable').map((tool) => tool.id),
+    [],
+  );
+  assert.deepEqual(
+    operations.filter((tool) => tool.vectorCount < 20).map((tool) => tool.id),
+    [],
+  );
+});
+
 test('the haversine versus ellipsoid explainer covers each method it compares', () => {
   const explainer = readFileSync(
     join(root, 'apps/web/src/content/learn/geodesic-vs-haversine.md'),

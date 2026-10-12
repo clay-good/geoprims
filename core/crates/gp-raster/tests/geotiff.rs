@@ -82,6 +82,19 @@ fn tiled_fixture(planar_configuration: u16) -> Vec<u8> {
     out
 }
 
+fn sparse_tiled_fixture() -> Vec<u8> {
+    const FIRST_TILE: usize = 100_000;
+    const SECOND_TILE: usize = 200_000;
+    let compact = tiled_fixture(1);
+    let mut sparse = compact[..162].to_vec();
+    sparse[146..150].copy_from_slice(&(FIRST_TILE as u32).to_le_bytes());
+    sparse[150..154].copy_from_slice(&(SECOND_TILE as u32).to_le_bytes());
+    sparse.resize(SECOND_TILE + 256, 0);
+    sparse[FIRST_TILE..FIRST_TILE + 256].copy_from_slice(&compact[162..418]);
+    sparse[SECOND_TILE..SECOND_TILE + 256].copy_from_slice(&compact[418..674]);
+    sparse
+}
+
 struct RefuseRange {
     inner: Cursor<Vec<u8>>,
     start: u64,
@@ -297,6 +310,35 @@ fn a_window_does_not_read_unselected_tile_pixels() {
     )
     .unwrap();
     assert_eq!(raster.samples, [206.0, 207.0, 238.0, 239.0]);
+}
+
+#[test]
+fn sparse_file_retries_request_only_the_selected_tile_range() {
+    let handle = "sparse-tiled-cog";
+    let bytes = sparse_tiled_fixture();
+    gp_base::files::open_sparse(handle, bytes.len() as u64).unwrap();
+    let window = Window {
+        x: 16,
+        y: 14,
+        width: 2,
+        height: 2,
+    };
+    let mut requested = Vec::new();
+    let raster = loop {
+        match decode_file_window(handle, window, 256) {
+            Ok(raster) => break raster,
+            Err(_) => {
+                let missing = gp_base::files::missing_range().expect("missing range");
+                requested.push(missing.offset);
+                let start = missing.offset as usize;
+                let end = start + missing.length;
+                gp_base::files::put_range(handle, missing.offset, &bytes[start..end]).unwrap();
+            }
+        }
+    };
+    assert_eq!(requested, [0, 196_608]);
+    assert_eq!(raster.samples, [208.0, 209.0, 240.0, 241.0]);
+    gp_base::files::remove(handle);
 }
 
 #[test]

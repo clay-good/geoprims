@@ -23,8 +23,12 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
   const fileKey = (tool, handle) => `${moduleFor(tool)}\0${handle}`;
   const restoreState = () => {
     if (searchIndex) worker.postMessage({ id: -1, method: 'searchLoad', args: [searchIndex] });
-    for (const { tool, handle, bytes } of files.values()) {
-      worker.postMessage({ id: -1, method: 'putFile', args: [tool, handle, bytes] });
+    for (const file of files.values()) {
+      worker.postMessage({
+        id: -1,
+        method: file.path ? 'openFilePath' : 'putFile',
+        args: file.path ? [file.tool, file.handle, file.path] : [file.tool, file.handle, file.bytes],
+      });
     }
   };
 
@@ -114,6 +118,15 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
       if (out && JSON.parse(out).ok) files.set(fileKey(tool, handle), { module: moduleFor(tool), tool, handle, bytes });
       return out;
     },
+    openFilePath: async (tool, handle, path) => {
+      const out = await call('openFilePath', tool, handle, path);
+      if (out && JSON.parse(out).ok) files.set(fileKey(tool, handle), { module: moduleFor(tool), tool, handle, path });
+      return out;
+    },
+    inspectFile: (tool, handle, options) => submit('inspectFile', [tool, handle], options),
+    readFileWindow: (tool, handle, window, maxSamples, options) => (
+      submit('readFileWindow', [tool, handle, window, maxSamples], options)
+    ),
     removeFile: async (tool, handle) => {
       const out = await call('removeFile', tool, handle);
       files.delete(fileKey(tool, handle));

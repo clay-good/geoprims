@@ -50,6 +50,8 @@ The host gives each user-selected file an opaque handle and supplies its bytes t
 
 The first bridge accepts whole files up to 64 MiB, which covers ordinary local GeoTIFFs without base64 expansion or a second decoder. Large COGs and the 500-megapixel case use a range-fed extension of the same handle model: the host reads only requested `File.slice` ranges and the Rust decoder remains the sole TIFF parser. Node reads only a path the user explicitly supplies; neither host follows a URL from file content.
 
+The range extension is a bounded request/retry protocol, not a synchronous callback from Wasm. The host first declares the opaque handle and total byte length without copying file contents. Metadata inspection and each pixel window are separate, side-effect-free steps. If the Rust seekable reader reaches bytes not in its 64 MiB private cache, it records one aligned byte range and returns control; the host reads exactly that range from the already selected `File` or explicit Node path, supplies it through the binary ABI, and retries the same step. Completed output windows are consumed before the next begins, so source and output scene size never becomes the Wasm memory bound. A retry may repeat parsing or arithmetic, but it must not append output or update summary state until the window succeeds.
+
 Alternative: base64 inside the tool JSON. Rejected because it expands files by about 33%, copies them through the request parser, and makes it too easy for private bytes to leak into links and reports.
 
 ## Tool inventory (targets)

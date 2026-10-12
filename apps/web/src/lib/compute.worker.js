@@ -122,6 +122,13 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
     else if (method === 'putFile') {
       (await get(moduleFor(args[0]))).putFile(args[1], args[2]);
       out = JSON.stringify({ ok: true });
+    } else if (method === 'openFile') {
+      (await get(moduleFor(args[0]))).openFile(args[1], args[2]);
+      out = JSON.stringify({ ok: true });
+    } else if (method === 'inspectFile') {
+      out = await (await get(moduleFor(args[0]))).inspectFile(args[1]);
+    } else if (method === 'readFileWindow') {
+      out = await (await get(moduleFor(args[0]))).readFileWindow(args[1], args[2], args[3]);
     } else if (method === 'removeFile') {
       (await get(moduleFor(args[0]))).removeFile(args[1]);
       out = JSON.stringify({ ok: true });

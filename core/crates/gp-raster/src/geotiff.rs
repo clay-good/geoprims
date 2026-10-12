@@ -446,9 +446,9 @@ pub fn inspect_reader<R: Read + Seek>(reader: R) -> Result<Metadata, Error> {
 
 /// Inspects bytes supplied through the private local-file ABI.
 pub fn inspect_file(handle: &str) -> Result<Metadata, Error> {
-    let bytes = gp_base::files::get(handle)
+    let reader = gp_base::files::reader(handle)
         .ok_or_else(|| Error::Invalid("The selected local file is no longer loaded.".into()))?;
-    inspect(&bytes)
+    inspect_reader(reader)
 }
 
 /// Decodes one TIFF image after enforcing the caller's sample allocation cap.
@@ -623,9 +623,9 @@ impl<R: Read + Seek> WindowDecoder<R> {
 
 /// Decodes bytes supplied through the private local-file ABI.
 pub fn decode_file(handle: &str, max_samples: usize) -> Result<Raster, Error> {
-    let bytes = gp_base::files::get(handle)
+    let reader = gp_base::files::reader(handle)
         .ok_or_else(|| Error::Invalid("The selected local file is no longer loaded.".into()))?;
-    decode(&bytes, max_samples)
+    decode_reader(reader, max_samples)
 }
 
 /// Decodes a window from bytes supplied through the private local-file ABI.
@@ -634,9 +634,9 @@ pub fn decode_file_window(
     window: Window,
     max_samples: usize,
 ) -> Result<Raster, Error> {
-    let bytes = gp_base::files::get(handle)
+    let reader = gp_base::files::reader(handle)
         .ok_or_else(|| Error::Invalid("The selected local file is no longer loaded.".into()))?;
-    decode_window(&bytes, window, max_samples)
+    decode_window_reader(reader, window, max_samples)
 }
 
 /// Refuses bands whose dimensions, CRS, pixel convention, or transform differ.

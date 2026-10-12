@@ -55,6 +55,12 @@ test('the worker supplies and releases private raster bytes', async () => {
   assert.deepEqual(await send('clearFiles', [tool]), { ok: true });
 });
 
+test('the worker registers and releases a range-backed raster', async () => {
+  const tool = 'raster.index.ndvi';
+  assert.deepEqual(await send('openFile', [tool, 'large-raster', new Blob([new Uint8Array(200_000)])]), { ok: true });
+  assert.deepEqual(await send('removeFile', [tool, 'large-raster']), { ok: true });
+});
+
 test('an unknown tool is an envelope, not a thrown error', async () => {
   const out = await send('invoke', ['no.such.tool', '{}']);
   assert.equal(out.ok, false);

@@ -4,8 +4,8 @@
 //! - `gp_invoke(id, idLen, input, inputLen)`, `gp_invoke_batch(…)`, `gp_manifest()`,
 //!   and `gp_version()` return JSON (or the version string).
 //! - `gp_alloc(len) -> ptr` / `gp_free(ptr, len)`: host-owned input buffers.
-//! - The raster module also exports `gp_file_put`, `gp_file_remove`, and
-//!   `gp_file_clear` for ephemeral bytes from files the user selected.
+//! - The raster module also exports a `gp_file_*` bridge for ephemeral whole
+//!   files or sparse ranges from files the user selected.
 //! - Calls that return a string return a pointer to a core-owned buffer and set
 //!   its length, read with `gp_out_len()`. The buffer lives until the next call.
 //!
@@ -196,6 +196,87 @@ macro_rules! export_file_bridge {
                     Ok(()) => 0,
                     Err($crate::files::PutError::InvalidHandle) => 2,
                     Err($crate::files::PutError::LimitExceeded) => 3,
+                    Err(
+                        $crate::files::PutError::NotSparse | $crate::files::PutError::OutOfBounds,
+                    ) => 4,
+                }
+            }
+
+            /// Declares a sparse private file by logical length without
+            /// allocating its contents. The length is `(high << 32) | low`.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_file_open(
+                handle: *const u8,
+                handle_len: usize,
+                length_low: u32,
+                length_high: u32,
+            ) -> i32 {
+                let Ok(handle) = (unsafe { $crate::abi::read_str(handle, handle_len) }) else {
+                    return 1;
+                };
+                let length = (u64::from(length_high) << 32) | u64::from(length_low);
+                match $crate::files::open_sparse(handle, length) {
+                    Ok(()) => 0,
+                    Err($crate::files::PutError::InvalidHandle) => 2,
+                    Err($crate::files::PutError::LimitExceeded) => 3,
+                    Err(_) => 4,
+                }
+            }
+
+            /// Supplies one requested range to a declared sparse file.
+            /// The offset is `(high << 32) | low`.
+            ///
+            /// # Safety
+            /// Both pointer ranges must be readable buffers from `gp_alloc`.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_file_put_range(
+                handle: *const u8,
+                handle_len: usize,
+                offset_low: u32,
+                offset_high: u32,
+                data: *const u8,
+                data_len: usize,
+            ) -> i32 {
+                let Ok(handle) = (unsafe { $crate::abi::read_str(handle, handle_len) }) else {
+                    return 1;
+                };
+                let offset = (u64::from(offset_high) << 32) | u64::from(offset_low);
+                // SAFETY: the host passes a buffer it allocated with gp_alloc.
+                let bytes = unsafe { core::slice::from_raw_parts(data, data_len) };
+                match $crate::files::put_range(handle, offset, bytes) {
+                    Ok(()) => 0,
+                    Err($crate::files::PutError::InvalidHandle) => 2,
+                    Err($crate::files::PutError::LimitExceeded) => 3,
+                    Err($crate::files::PutError::NotSparse) => 4,
+                    Err($crate::files::PutError::OutOfBounds) => 5,
+                }
+            }
+
+            /// Returns the current missing range as JSON, or `null`.
+            #[unsafe(no_mangle)]
+            pub extern "C" fn gp_file_missing() -> *const u8 {
+                let out = match $crate::files::missing_range() {
+                    Some(missing) => format!(
+                        "{{\"handle\":\"{}\",\"offset\":{},\"length\":{}}}",
+                        missing.handle, missing.offset, missing.length
+                    ),
+                    None => "null".to_owned(),
+                };
+                $crate::abi::set_out(&out)
+            }
+
+            /// Drops cached ranges while retaining a sparse file declaration.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_file_clear_ranges(
+                handle: *const u8,
+                handle_len: usize,
+            ) -> i32 {
+                match unsafe { $crate::abi::read_str(handle, handle_len) } {
+                    Ok(handle) => {
+                        $crate::files::clear_ranges(handle);
+                        0
+                    }
+                    Err(_) => 1,
                 }
             }
 

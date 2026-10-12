@@ -1,6 +1,6 @@
 // Main-thread client for the compute worker. Only the latest request per key
 // resolves; older ones are dropped as stale (web "stale-result" behavior).
-import { fileBytes } from '../../../../packages/runtime/src/files.mjs';
+import { fileBytes, rangeSource } from '../../../../packages/runtime/src/files.mjs';
 
 let worker;
 let seq = 0;
@@ -14,8 +14,12 @@ function ensure() {
   if (!worker) {
     const current = new Worker(new URL('./compute.worker.js', import.meta.url), { type: 'module' });
     worker = current;
-    for (const { tool, handle, bytes } of files.values()) {
-      current.postMessage({ seq: 0, method: 'putFile', args: [tool, handle, bytes] });
+    for (const { tool, handle, bytes, source } of files.values()) {
+      current.postMessage({
+        seq: 0,
+        method: source ? 'openFile' : 'putFile',
+        args: source ? [tool, handle, source] : [tool, handle, bytes],
+      });
     }
     current.onmessage = ({ data: { seq: s, out } }) => {
       if (worker !== current) return; // an interrupted worker may have queued a reply
@@ -91,6 +95,17 @@ export async function putFile(tool, handle, bytes) {
   if (out?.ok) files.set(fileKey(tool, handle), { module: moduleFor(tool), tool, handle, bytes });
   return out;
 }
+/** Keeps a user-selected large file available for bounded range reads. */
+export async function openFile(tool, handle, source) {
+  source = rangeSource(source);
+  const out = await call('openFile', [tool, handle, source]);
+  if (out?.ok) files.set(fileKey(tool, handle), { module: moduleFor(tool), tool, handle, source });
+  return out;
+}
+export const inspectFile = (tool, handle) => call('inspectFile', [tool, handle]);
+export const readFileWindow = (tool, handle, window, maxSamples) => (
+  call('readFileWindow', [tool, handle, window, maxSamples])
+);
 export async function removeFile(tool, handle) {
   const out = await call('removeFile', [tool, handle]);
   files.delete(fileKey(tool, handle));

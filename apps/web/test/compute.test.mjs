@@ -110,6 +110,50 @@ test('private raster bytes are restored after cancellation replaces the worker',
   assert.deepEqual(await removed, { ok: true });
 });
 
+test('a range-backed raster is restored after cancellation replaces the worker', async () => {
+  const source = new Blob([new Uint8Array(200_000)]);
+  const original = StubWorker.last;
+  const stored = compute.openFile('raster.index.ndvi', 'large-raster', source);
+  const opened = original.sent.length - 1;
+  original.reply(opened, { ok: true });
+  assert.deepEqual(await stored, { ok: true });
+
+  const running = compute.invoke('raster.index.ndvi', { file: 'large-raster' });
+  compute.cancel();
+  assert.equal(await running, null);
+
+  const warmed = compute.warm('raster.index.ndvi');
+  const replacement = StubWorker.last;
+  assert.notEqual(replacement, original);
+  assert.deepEqual(replacement.sent[0], {
+    seq: 0,
+    method: 'openFile',
+    args: ['raster.index.ndvi', 'large-raster', source],
+  });
+  replacement.reply(1, { ok: true });
+  await warmed;
+
+  const removed = compute.removeFile('raster.index.ndvi', 'large-raster');
+  replacement.reply(2, { ok: true });
+  assert.deepEqual(await removed, { ok: true });
+});
+
+test('raster metadata and windows use dedicated worker messages', async () => {
+  const current = StubWorker.last;
+  const metadata = compute.inspectFile('raster.index.ndvi', 'large-raster');
+  let i = current.sent.length - 1;
+  assert.deepEqual(current.sent[i].args, ['raster.index.ndvi', 'large-raster']);
+  current.reply(i, { ok: true, metadata: { width: 32 } });
+  assert.equal((await metadata).metadata.width, 32);
+
+  const window = { x: 16, y: 1, width: 2, height: 2 };
+  const pixels = compute.readFileWindow('raster.index.ndvi', 'large-raster', window, 256);
+  i = current.sent.length - 1;
+  assert.deepEqual(current.sent[i].args, ['raster.index.ndvi', 'large-raster', window, 256]);
+  current.reply(i, { ok: true, raster: { samples: [48, 49, 80, 81] } });
+  assert.deepEqual((await pixels).raster.samples, [48, 49, 80, 81]);
+});
+
 test('clearing one raster tool releases files for the whole raster module', async () => {
   let current = StubWorker.last;
   const stored = compute.putFile('raster.index.ndvi', 'shared-raster', new Uint8Array([1]));

@@ -1,6 +1,6 @@
 // Node host: loads modules from a directory of .wasm files (dist/wasm in a
 // clone, mcp/dist/wasm in a release).
-import { existsSync, readFileSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, readSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { assetProvider } from './assets.mjs';
 import { loadModule } from './module.mjs';
@@ -25,6 +25,28 @@ const MODULE_FOR_DOMAIN = { units: 'base' };
 export function moduleFor(toolId) {
   const domain = toolId.split('.')[0];
   return MODULE_FOR_DOMAIN[domain] ?? domain;
+}
+
+function pathRangeSource(path) {
+  const size = statSync(path).size;
+  return {
+    size,
+    slice(start, end) {
+      const bytes = new Uint8Array(end - start);
+      const descriptor = openSync(path, 'r');
+      try {
+        let read = 0;
+        while (read < bytes.length) {
+          const count = readSync(descriptor, bytes, read, bytes.length - read, start + read);
+          if (count === 0) break;
+          read += count;
+        }
+        return bytes.subarray(0, read);
+      } finally {
+        closeSync(descriptor);
+      }
+    },
+  };
 }
 
 /** A lazy set of modules: each loads on first use. */
@@ -59,6 +81,16 @@ export function nodeHost(wasmDir, opts = {}) {
       (await get(moduleFor(id))).putFile(handle, bytes);
       return ok;
     },
+    openFile: async (id, handle, source) => {
+      (await get(moduleFor(id))).openFile(handle, source);
+      return ok;
+    },
+    openFilePath: async (id, handle, path) => {
+      (await get(moduleFor(id))).openFile(handle, pathRangeSource(path));
+      return ok;
+    },
+    inspectFile: (id, handle) => route(id, 'inspectFile', handle),
+    readFileWindow: (id, handle, window, maxSamples) => route(id, 'readFileWindow', handle, window, maxSamples),
     removeFile: async (id, handle) => {
       (await get(moduleFor(id))).removeFile(handle);
       return ok;

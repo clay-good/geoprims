@@ -4,7 +4,13 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkJson } from './harden.mjs';
-import { checkFileSize, MAX_WHOLE_FILE_BYTES } from './files.mjs';
+import {
+  checkFileSize,
+  MAX_SPARSE_FILE_BYTES,
+  MAX_WHOLE_FILE_BYTES,
+  rangeSource,
+  sourceRange,
+} from './files.mjs';
 import { loadModule } from './module.mjs';
 import { nodeHost } from './node.mjs';
 
@@ -64,6 +70,77 @@ test('private file bytes cross the raw ABI and can be released', async () => {
   assert.throws(() => base.putFile('not-raster', new Uint8Array()), /does not accept local files/);
   assert.doesNotThrow(() => checkFileSize(MAX_WHOLE_FILE_BYTES));
   assert.throws(() => checkFileSize(MAX_WHOLE_FILE_BYTES + 1), /at most/);
+});
+
+function sparseTiledTiff() {
+  const header = [];
+  const u16 = (value) => header.push(value & 255, value >>> 8);
+  const u32 = (value) => header.push(value & 255, value >>> 8 & 255, value >>> 16 & 255, value >>> 24);
+  const entry = (tag, type, count, value) => { u16(tag); u16(type); u32(count); u32(value); };
+  header.push(0x49, 0x49); u16(42); u32(8); u16(11);
+  entry(256, 4, 1, 32);
+  entry(257, 4, 1, 16);
+  entry(258, 3, 1, 8);
+  entry(259, 3, 1, 1);
+  entry(262, 3, 1, 1);
+  entry(277, 3, 1, 1);
+  entry(284, 3, 1, 1);
+  entry(322, 4, 1, 16);
+  entry(323, 4, 1, 16);
+  entry(324, 4, 2, 146);
+  entry(325, 4, 2, 154);
+  u32(0);
+  u32(100_000); u32(200_000);
+  u32(256); u32(256);
+  assert.equal(header.length, 162);
+  const parts = [
+    [0, Uint8Array.from(header)],
+    [100_000, Uint8Array.from({ length: 256 }, (_, i) => (Math.floor(i / 16) * 32 + i % 16) & 255)],
+    [200_000, Uint8Array.from({ length: 256 }, (_, i) => (Math.floor(i / 16) * 32 + 16 + i % 16) & 255)],
+  ];
+  const reads = [];
+  return {
+    size: 200_256,
+    reads,
+    slice(start, end) {
+      reads.push([start, end]);
+      const out = new Uint8Array(end - start);
+      for (const [offset, bytes] of parts) {
+        const from = Math.max(start, offset);
+        const to = Math.min(end, offset + bytes.length);
+        if (from < to) out.set(bytes.subarray(from - offset, to - offset), from - start);
+      }
+      return out;
+    },
+  };
+}
+
+test('range-backed TIFF windows retry only the Rust-requested source pages', async () => {
+  const source = sparseTiledTiff();
+  await host.openFile('raster.index.ndvi', 'large-cog', source);
+  const metadata = JSON.parse(await host.inspectFile('raster.index.ndvi', 'large-cog'));
+  assert.equal(metadata.metadata.width, 32);
+  assert.equal(metadata.metadata.height, 16);
+  assert.deepEqual(source.reads, [[0, 65_536]]);
+
+  source.reads.length = 0;
+  const out = JSON.parse(await host.readFileWindow(
+    'raster.index.ndvi',
+    'large-cog',
+    { x: 16, y: 1, width: 2, height: 2 },
+    256,
+  ));
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.deepEqual(out.raster.samples, [48, 49, 80, 81]);
+  assert.deepEqual(source.reads, [[0, 65_536], [196_608, 200_256]]);
+  await host.removeFile('raster.index.ndvi', 'large-cog');
+});
+
+test('range-backed file sources enforce logical and returned lengths', async () => {
+  assert.equal(rangeSource({ size: MAX_SPARSE_FILE_BYTES, slice() {} }).size, MAX_SPARSE_FILE_BYTES);
+  assert.throws(() => rangeSource({ size: MAX_SPARSE_FILE_BYTES + 1, slice() {} }), /range-backed file size/i);
+  assert.throws(() => rangeSource({ size: 4 }), /provide slice/i);
+  await assert.rejects(() => sourceRange({ size: 4, slice: () => new Uint8Array(1) }, 0, 4), /1 bytes; 4 were requested/);
 });
 
 test('unknown tool ids', async () => {

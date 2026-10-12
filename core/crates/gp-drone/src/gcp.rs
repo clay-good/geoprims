@@ -308,14 +308,50 @@ pub static GCP_PLAN: ToolDef = ToolDef {
     sentence: "Survey {checkpoints} checkpoints and about {gcps} ground control points.{if gcp_rmse_h > 0} Set the control to {gcp_rmse_h} horizontally or better.{/if} The layout is a rule of thumb.",
     assumptions: &[
         Assumption {
-            name: "Checkpoints for an area of 500 km² or less (Table C.1)",
+            name: "Base checkpoint count (Table C.1)",
             value: "30",
+            unit: "checkpoints",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Base area ceiling (Table C.1)",
+            value: "500",
+            unit: "km2",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Checkpoint increment (Table C.1)",
+            value: "5",
+            unit: "checkpoints",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Area per checkpoint increment (Table C.1)",
+            value: "250",
+            unit: "km2",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Maximum tabulated checkpoint count (Table C.1)",
+            value: "70",
+            unit: "checkpoints",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Maximum tabulated area (Table C.1)",
+            value: "2500",
+            unit: "km2",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Required GCP-to-product accuracy ratio",
+            value: "2",
             unit: "1",
             source: "asprs-pas",
         },
         Assumption {
-            name: "Checkpoints added per further 250 km², to 2,500 km² (Table C.1)",
-            value: "5",
+            name: "Required checkpoint-to-product accuracy ratio",
+            value: "2",
             unit: "1",
             source: "asprs-pas",
         },

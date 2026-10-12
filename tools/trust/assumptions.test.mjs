@@ -94,6 +94,7 @@ const MUST_DECLARE = [
   'drone.ops.wind-limit',
   'drone.links.link-budget',
   'drone.photogrammetry.asprs-accuracy',
+  'drone.photogrammetry.gcp-plan',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -300,6 +301,20 @@ test('the ASPRS accuracy tool exposes every acceptance threshold', () => {
     ['30', 'checkpoints', 'asprs-pas'],
     ['25', '%', 'asprs-pas'],
     ['3', 'times target RMSE', 'asprs-pas'],
+    ['2', '1', 'asprs-pas'],
+  ]);
+});
+
+test('the GCP planner exposes its complete ASPRS count and accuracy table', () => {
+  const assumptions = byId('drone.photogrammetry.gcp-plan')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['30', 'checkpoints', 'asprs-pas'],
+    ['500', 'km2', 'asprs-pas'],
+    ['5', 'checkpoints', 'asprs-pas'],
+    ['250', 'km2', 'asprs-pas'],
+    ['70', 'checkpoints', 'asprs-pas'],
+    ['2500', 'km2', 'asprs-pas'],
+    ['2', '1', 'asprs-pas'],
     ['2', '1', 'asprs-pas'],
   ]);
 });

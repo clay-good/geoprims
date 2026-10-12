@@ -8,6 +8,7 @@ use std::io::{Read, Seek, Write};
 
 use tiff::encoder::{TiffEncoder, colortype};
 
+use crate::bandmath;
 use crate::geotiff::{
     self, Grid, GridMismatch, Metadata, Raster, RasterType, Window, WindowDecoder, same_grid,
 };
@@ -196,6 +197,48 @@ pub fn index_file_sources_window(
             "The raster kernel received the wrong number of band sources.",
         ));
     }
+    let rasters = decode_file_sources_window(sources, window, max_samples)?;
+    let bands = rasters
+        .iter()
+        .zip(sources)
+        .map(|(raster, (_, band))| (raster, *band))
+        .collect::<Vec<_>>();
+    index_sources(&bands, kernel)
+}
+
+pub fn band_math_file_sources_window(
+    sources: &[(&str, usize)],
+    names: &[String],
+    expression: &str,
+    window: Window,
+    max_samples: usize,
+) -> Result<Raster, Error> {
+    let compiled = bandmath::compile(expression, names)
+        .map_err(|message| Error::Decode(geotiff::Error::Invalid(message)))?;
+    let rasters = decode_file_sources_window(sources, window, max_samples)?;
+    let bands = rasters
+        .iter()
+        .zip(sources)
+        .map(|(raster, (_, band))| (raster, *band))
+        .collect::<Vec<_>>();
+    evaluate_sources(&bands, names.len(), |values| compiled.evaluate(values))
+}
+
+pub fn band_math_sources(
+    sources: &[(&Raster, usize)],
+    names: &[String],
+    expression: &str,
+) -> Result<Raster, Error> {
+    let compiled = bandmath::compile(expression, names)
+        .map_err(|message| Error::Decode(geotiff::Error::Invalid(message)))?;
+    evaluate_sources(sources, names.len(), |values| compiled.evaluate(values))
+}
+
+fn decode_file_sources_window(
+    sources: &[(&str, usize)],
+    window: Window,
+    max_samples: usize,
+) -> Result<Vec<Raster>, Error> {
     let missing = || {
         Error::Decode(geotiff::Error::Invalid(
             "The selected local file is no longer loaded.".into(),
@@ -216,16 +259,10 @@ pub fn index_file_sources_window(
         same_grid(&target, &decoder.metadata().grid).map_err(Error::GridMismatch)?;
         validate_band(decoder.metadata(), *band)?;
     }
-    let rasters = decoders
+    decoders
         .iter_mut()
         .map(|decoder| decoder.decode(window).map_err(Error::Decode))
-        .collect::<Result<Vec<_>, _>>()?;
-    let bands = rasters
-        .iter()
-        .zip(sources)
-        .map(|(raster, (_, band))| (raster, *band))
-        .collect::<Vec<_>>();
-    index_sources(&bands, kernel)
+        .collect()
 }
 
 /// Decodes one target window and only the source pixels needed to resample the
@@ -619,7 +656,15 @@ pub fn index(
 
 /// Applies one fixed-formula kernel to matching raster windows.
 pub fn index_sources(sources: &[(&Raster, usize)], kernel: Kernel) -> Result<Raster, Error> {
-    if sources.len() != kernel.bands() {
+    evaluate_sources(sources, kernel.bands(), |values| kernel.value(values))
+}
+
+fn evaluate_sources(
+    sources: &[(&Raster, usize)],
+    expected: usize,
+    evaluate: impl Fn(&[f64]) -> Option<f64>,
+) -> Result<Raster, Error> {
+    if sources.len() != expected {
         return Err(Error::InvalidRaster(
             "The raster kernel received the wrong number of band sources.",
         ));
@@ -647,7 +692,7 @@ pub fn index_sources(sources: &[(&Raster, usize)], kernel: Kernel) -> Result<Ras
             values.push(raster.samples[index]);
         }
         let value = all_valid
-            .then(|| kernel.value(&values))
+            .then(|| evaluate(&values))
             .flatten()
             .filter(|value| value.is_finite());
         samples.push(value.unwrap_or(fill));

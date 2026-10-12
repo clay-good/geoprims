@@ -127,4 +127,15 @@ test('a user can process local GeoTIFF bands into a preview and exact statistics
   await page.locator('.raster-preview canvas').waitFor();
   assert.equal(await page.locator('.raster-panel .bad').count(), 0);
   assert.equal(await page.locator('.raster-summary dd').first().innerText(), '1.445313');
+
+  await page.goto(`${origin}/raster/index/band-math/`);
+  await page.getByText('Process local GeoTIFF files', { exact: true }).click();
+  await page.locator('.raster-panel input[type="file"]').setInputFiles([
+    { name: 'nir.tif', mimeType: 'image/tiff', buffer: tiledTiff(() => 45) },
+    { name: 'red.tif', mimeType: 'image/tiff', buffer: tiledTiff(() => 8) },
+  ]);
+  await page.getByRole('button', { name: 'Process raster' }).click();
+  await page.locator('.raster-preview canvas').waitFor();
+  assert.equal(await page.locator('.raster-panel .bad').count(), 0);
+  assert.equal(await page.locator('.raster-summary dd').first().innerText(), '0.6981132');
 });

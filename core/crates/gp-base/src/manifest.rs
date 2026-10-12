@@ -523,13 +523,14 @@ pub fn manifest(def: &ToolDef) -> Json {
         put("x-diagram-inline", Json::Bool(true));
     }
     if let Some(raster) = def.raster {
-        put(
-            "x-raster",
-            Json::obj([
-                ("bands", strs(raster.bands)),
-                ("output", Json::str(raster.output)),
-            ]),
-        );
+        let mut fields = vec![
+            ("bands", strs(raster.bands)),
+            ("output", Json::str(raster.output)),
+        ];
+        if !raster.band_list.is_empty() {
+            fields.push(("bandList", Json::str(raster.band_list)));
+        }
+        put("x-raster", Json::obj(fields));
     }
     put("x-clock-default", Json::str("forbidden"));
     put("x-primary-example", Json::str(def.primary_example));

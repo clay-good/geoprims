@@ -130,6 +130,28 @@ test('a scene forwards 3 ordered band sources to the multi-source host method', 
   assert.deepEqual(calls[0].slice(0, 2), ['raster.index.evi', sources]);
 });
 
+test('a dynamic 2-band scene uses the ordered-source host method', async () => {
+  let called = false;
+  const runtime = {
+    inspectFile: async () => ({ ok: true, metadata: { width: 1, height: 1, bands: 1 } }),
+    processFileSources: async () => {
+      called = true;
+      return { ok: true, raster: { samples: [0.5], valid: [true] } };
+    },
+  };
+  const out = await processRasterScene(runtime, {
+    tool: 'raster.index.band-math',
+    sources: [{ handle: 'nir', band: 0 }, { handle: 'red', band: 0 }],
+    dynamicBands: true,
+    windowWidth: 1,
+    windowHeight: 1,
+    maxSamples: 2,
+    accept() {},
+  });
+  assert.equal(out.ok, true);
+  assert.equal(called, true);
+});
+
 test('scene statistics stream across windows and exclude no-data pixels', async () => {
   let window = 0;
   const runtime = {

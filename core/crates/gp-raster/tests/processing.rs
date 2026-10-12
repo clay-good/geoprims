@@ -2,9 +2,10 @@ use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform,
 use std::io::{self, Cursor, Seek, SeekFrom, Write};
 
 use gp_raster::processing::{
-    Error, Kernel, Resampling, TargetGrid, index, index_sources, normalized_difference,
-    normalized_difference_file_window, normalized_difference_resampled_window,
-    normalized_difference_scene, resample, write_normalized_difference_geotiff,
+    Error, Kernel, Resampling, TargetGrid, band_math_sources, index, index_sources,
+    normalized_difference, normalized_difference_file_window,
+    normalized_difference_resampled_window, normalized_difference_scene, resample,
+    write_normalized_difference_geotiff,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -73,6 +74,22 @@ fn evi_kernel_combines_three_matching_band_sources() {
     );
     assert!(!output.valid[2]);
     assert_eq!(output.samples[2], -9999.0);
+}
+
+#[test]
+fn band_math_uses_the_capped_core_expression_for_each_pixel() {
+    let nir = raster(grid(2), 1, Some(-9999.0), vec![0.45, 0.0, -9999.0, 0.6]);
+    let red = raster(grid(2), 1, None, vec![0.08, 0.0, 0.1, 0.2]);
+    let names = vec!["nir".to_owned(), "red".to_owned()];
+    let output = band_math_sources(
+        &[(&nir, 0), (&red, 0)],
+        &names,
+        "nir + red > 0 ? (nir - red) / (nir + red) : -999",
+    )
+    .unwrap();
+    assert!((output.samples[0] - (0.45 - 0.08) / (0.45 + 0.08)).abs() < 1e-15);
+    assert_eq!(output.samples[1], -999.0);
+    assert!(!output.valid[2]);
 }
 
 fn tiff_fixture(width: u32, values: &[f32], nodata: f64) -> Vec<u8> {

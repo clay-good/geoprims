@@ -1336,16 +1336,16 @@
     "lastmod": "2026-10-10"
   },
   "/raster/": {
-    "hash": "ad6967a3c98fbe01",
-    "lastmod": "2026-10-09"
+    "hash": "29d2a1871b1687a7",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/": {
-    "hash": "785cbc33ec1dff3f",
-    "lastmod": "2026-09-23"
+    "hash": "f9069ec60629cce0",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/band-math/": {
-    "hash": "36d3eb5c0d4f104a",
-    "lastmod": "2026-10-09"
+    "hash": "10111c6ab9d5153a",
+    "lastmod": "2026-10-12"
   },
   "/raster/index/dnbr/": {
     "hash": "d4ce92516cf56ee2",
@@ -1696,7 +1696,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "a6dcd6249729544e",
+    "hash": "d3535cce46655848",
     "lastmod": "2026-10-12"
   },
   "/units/": {
@@ -1960,7 +1960,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "9ee0cf6b2a785634",
+    "hash": "8603a1da9a43f1b1",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

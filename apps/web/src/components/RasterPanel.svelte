@@ -5,7 +5,16 @@
   import { previewHistogram, previewPixels, previewReadout, rasterPreview } from '../lib/raster-preview.mjs';
 
   let { tool, compute, getInputs } = $props();
-  const roles = tool['x-raster'].bands.map((name) => ({ name, title: tool.inputs.properties[name].title }));
+  const roles = $derived.by(() => {
+    const raster = tool['x-raster'];
+    if (raster.bandList) {
+      return (getInputs()[raster.bandList] ?? []).map((row) => ({
+        name: String(row.name ?? '').trim(),
+        title: String(row.name ?? '').trim() || 'Unnamed band',
+      }));
+    }
+    return raster.bands.map((name) => ({ name, title: tool.inputs.properties[name].title }));
+  });
 
   let sources = $state([]);
   let assignments = $state({});
@@ -28,7 +37,8 @@
     }),
   );
   const canResample = $derived(
-    roles.length === 2
+    !tool['x-raster'].bandList
+      && roles.length === 2
       && outcome?.error?.code === 'GRID_MISMATCH'
       && outcome.error.details?.reason !== 'CRS'
       && outcome.error.details?.left?.transform
@@ -105,6 +115,7 @@
       const out = await compute.processFileScene({
         tool: tool.id,
         sources: bandSources,
+        dynamicBands: Boolean(tool['x-raster'].bandList),
         windowWidth: 512,
         windowHeight: 256,
         maxSamples: 4 * 1024 * 1024,

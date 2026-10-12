@@ -71,13 +71,21 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
     }
     const raster = t['x-raster'];
     if (raster) {
-      const { bands, output, ...rest } = raster;
-      if (!Array.isArray(bands) || bands.length === 0 || bands.some((name) => typeof name !== 'string')) {
-        problems.push(`${t.id}: x-raster needs one or more band input names`);
-      } else {
+      const { bands, bandList, output, ...rest } = raster;
+      if (!Array.isArray(bands) || bands.some((name) => typeof name !== 'string')) {
+        problems.push(`${t.id}: x-raster bands must be an array of input names`);
+      } else if (bands.length) {
+        if (bandList !== undefined) problems.push(`${t.id}: x-raster cannot use bands and bandList together`);
         if (new Set(bands).size !== bands.length) problems.push(`${t.id}: x-raster band names must be unique`);
         for (const name of bands) {
           if (t.inputs?.properties?.[name]?.type !== 'number') problems.push(`${t.id}: x-raster band ${name} is not a numeric input`);
+        }
+      } else {
+        const rows = t.inputs?.properties?.[bandList];
+        if (typeof bandList !== 'string' || rows?.type !== 'array'
+          || rows.items?.properties?.name?.type !== 'string'
+          || rows.items?.properties?.value?.type !== 'number') {
+          problems.push(`${t.id}: x-raster bandList must name a row input with text name and numeric value fields`);
         }
       }
       if (typeof output !== 'string' || t.outputs?.properties?.[output]?.type !== 'number') {

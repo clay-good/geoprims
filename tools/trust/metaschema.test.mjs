@@ -20,6 +20,7 @@ test('raster index tools publish their band roles and output', () => {
     catalog.tools.filter((tool) => tool['x-raster']).map((tool) => [tool.id, tool['x-raster']]),
   );
   assert.deepEqual(modes, {
+    'raster.index.band-math': { bands: [], output: 'value', bandList: 'bands' },
     'raster.index.dnbr': { bands: ['nbr_pre', 'nbr_post'], output: 'dnbr' },
     'raster.index.evi': { bands: ['nir', 'red', 'blue'], output: 'evi' },
     'raster.index.evi2': { bands: ['nir', 'red'], output: 'evi2' },
@@ -110,6 +111,11 @@ test('raster mode names real numeric band inputs and one numeric output', () => 
     outputs: { properties: { ndvi: { type: 'number' }, label: { type: 'string' } } },
   };
   assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-raster': { bands: ['nir', 'red'], output: 'ndvi' } }] }), []);
+  const dynamic = {
+    ...base,
+    inputs: { properties: { bands: { type: 'array', items: { properties: { name: { type: 'string' }, value: { type: 'number' } } } } } },
+  };
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...dynamic, 'x-raster': { bands: [], bandList: 'bands', output: 'ndvi' } }] }), []);
   assert.deepEqual(metaschemaProblems({ tools: [{
     ...base,
     'x-raster': { bands: ['nir', 'nir', 'missing'], output: 'label', palette: 'green' },

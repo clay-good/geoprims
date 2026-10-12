@@ -14,11 +14,13 @@ test('only tools with a raster manifest contract load the local-file panel', () 
   assert.deepEqual(clientTool(tool('raster.index.evi'))['x-raster'], { bands: ['nir', 'red', 'blue'], output: 'evi' });
   assert.deepEqual(clientTool(tool('raster.index.savi'))['x-raster'], { bands: ['nir', 'red'], output: 'savi' });
   assert.deepEqual(clientTool(tool('raster.index.dnbr'))['x-raster'], { bands: ['nbr_pre', 'nbr_post'], output: 'dnbr' });
+  assert.deepEqual(clientTool(tool('raster.index.band-math'))['x-raster'], { bands: [], output: 'value', bandList: 'bands' });
 });
 
 test('the panel accepts one multiband TIFF or separate TIFFs and maps every role', () => {
   assert.match(component, /accept="\.tif,\.tiff,image\/tiff" multiple/);
-  assert.match(component, /tool\['x-raster'\]\.bands/);
+  assert.match(component, /raster\.bands/);
+  assert.match(component, /raster\.bandList/);
   assert.match(component, /Band number/);
   assert.match(component, /processFileScene/);
   assert.match(component, /parameters: getInputs\(\)/);
@@ -45,6 +47,7 @@ test('the preview includes numeric legend ticks and an accessible sampled histog
 });
 
 test('a repairable grid mismatch offers both Rust resampling methods and target grids', () => {
+  assert.match(component, /!tool\['x-raster'\]\.bandList/);
   assert.match(component, /outcome\.error\.details\?\.reason !== 'CRS'/);
   assert.match(component, /<option value="nearest">Nearest neighbor<\/option>/);
   assert.match(component, /<option value="bilinear">Bilinear<\/option>/);

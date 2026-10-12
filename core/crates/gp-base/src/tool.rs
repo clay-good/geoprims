@@ -127,6 +127,8 @@ pub struct Limitation {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct RasterMode {
     pub bands: &'static [&'static str],
+    /// List-of-rows input whose `name` fields define dynamic raster roles.
+    pub band_list: &'static str,
     pub output: &'static str,
 }
 

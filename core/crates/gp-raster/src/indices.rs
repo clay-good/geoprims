@@ -197,6 +197,7 @@ macro_rules! normalized_tool {
             sentence: $sentence,
             raster: Some(RasterMode {
                 bands: &[$a, $b],
+                band_list: "",
                 output: $out,
             }),
             limits: &[("batchRows", 100_000)],
@@ -618,6 +619,7 @@ pub static EVI: ToolDef = ToolDef {
     sentence: "EVI is {evi}.",
     raster: Some(RasterMode {
         bands: &["nir", "red", "blue"],
+        band_list: "",
         output: "evi",
     }),
     limits: &[("batchRows", 100_000)],
@@ -709,6 +711,7 @@ pub static EVI2: ToolDef = ToolDef {
     sentence: "EVI2 is {evi2}.",
     raster: Some(RasterMode {
         bands: &["nir", "red"],
+        band_list: "",
         output: "evi2",
     }),
     limits: &[("batchRows", 100_000)],
@@ -808,6 +811,7 @@ pub static SAVI: ToolDef = ToolDef {
     sentence: "SAVI is {savi}.",
     raster: Some(RasterMode {
         bands: &["nir", "red"],
+        band_list: "",
         output: "savi",
     }),
     limits: &[("batchRows", 100_000)],
@@ -952,6 +956,7 @@ pub static DNBR: ToolDef = ToolDef {
     sentence: "dNBR is {dnbr}, in the {severity} range.",
     raster: Some(RasterMode {
         bands: &["nbr_pre", "nbr_post"],
+        band_list: "",
         output: "dnbr",
     }),
     limits: &[("batchRows", 100_000)],

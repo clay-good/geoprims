@@ -68,6 +68,7 @@ export async function processRasterScene(host, options) {
     { handle: leftHandle, band: leftBand },
     { handle: rightHandle, band: rightBand },
   ];
+  const useSourceList = sources.length !== 2 || options.dynamicBands;
   const windowWidth = positiveInteger(options.windowWidth, 'windowWidth');
   const windowHeight = positiveInteger(options.windowHeight, 'windowHeight');
   const maxSamples = positiveInteger(options.maxSamples, 'maxSamples');
@@ -115,7 +116,7 @@ export async function processRasterScene(host, options) {
         width: Math.min(windowWidth, width - x),
         height: Math.min(windowHeight, height - y),
       };
-      const out = resultObject(sources.length === 2
+      const out = resultObject(!useSourceList
         ? await host.processFileWindow(
             tool,
             sources[0].handle, sources[0].band,

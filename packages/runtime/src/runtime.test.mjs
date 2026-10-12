@@ -226,6 +226,36 @@ test('range-backed file windows run the 3-band EVI kernel in Rust', async () => 
   await host.removeFile('raster.index.evi', 'evi-blue');
 });
 
+test('range-backed file windows evaluate band math through the core AST', async () => {
+  await host.openFile('raster.index.band-math', 'math-nir', sparseTiledTiff(() => 45));
+  await host.openFile('raster.index.band-math', 'math-red', sparseTiledTiff(() => 8));
+  const out = JSON.parse(await host.processFileSources(
+    'raster.index.band-math',
+    [{ handle: 'math-nir', band: 0 }, { handle: 'math-red', band: 0 }],
+    { x: 0, y: 0, width: 2, height: 2 },
+    256,
+    {
+      expression: '(nir - red) / (nir + red)',
+      bands: [{ name: 'nir', value: 0.45 }, { name: 'red', value: 0.08 }],
+    },
+  ));
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.deepEqual(out.raster.samples, Array(4).fill((45 - 8) / (45 + 8)));
+  const rejected = JSON.parse(await host.processFileSources(
+    'raster.index.band-math',
+    [{ handle: 'math-nir', band: 0 }, { handle: 'math-red', band: 0 }],
+    { x: 0, y: 0, width: 1, height: 1 },
+    256,
+    {
+      expression: 'window.location',
+      bands: [{ name: 'nir', value: 0.45 }, { name: 'red', value: 0.08 }],
+    },
+  ));
+  assert.equal(rejected.error.code, 'INVALID_INPUT');
+  await host.removeFile('raster.index.band-math', 'math-nir');
+  await host.removeFile('raster.index.band-math', 'math-red');
+});
+
 test('range-backed index windows compare the complete source grids', async () => {
   await host.openFile('raster.index.ndvi', 'wide-cog', sparseTiledTiff());
   await host.openFile('raster.index.ndvi', 'narrow-cog', sparseTiledTiff((value) => value, 31));

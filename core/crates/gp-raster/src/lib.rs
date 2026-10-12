@@ -265,6 +265,37 @@ mod file_exports {
             .map(Some)
     }
 
+    fn band_math(input: &Value) -> Result<(&str, Vec<String>), Value> {
+        let parameters = input.get("parameters").ok_or_else(|| {
+            json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Band math parameters are missing."}})
+        })?;
+        let expression = parameters
+            .get("expression")
+            .and_then(Value::as_str)
+            .ok_or_else(|| {
+                json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "parameters.expression must be a string."}})
+            })?;
+        let rows = parameters
+            .get("bands")
+            .and_then(Value::as_array)
+            .ok_or_else(|| {
+                json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "parameters.bands must be an array."}})
+            })?;
+        let names = rows
+            .iter()
+            .map(|row| {
+                row.get("name")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .map(str::to_owned)
+                    .ok_or_else(|| {
+                        json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Every band-math row needs a name."}})
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok((expression, names))
+    }
+
     unsafe fn request(input: *const u8, input_len: usize) -> Result<Value, Value> {
         let text = unsafe { gp_base::abi::read_str(input, input_len) }.map_err(|_| {
             json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be UTF-8."}})
@@ -324,11 +355,23 @@ mod file_exports {
             let value = unsafe { request(input, input_len) }?;
             let window = window(&value)?;
             let max_samples = max_samples(&value)?;
-            let kernel = kernel(&value)?;
             if let Some(sources) = sources(&value)? {
                 if value.get("resampling").is_some() {
                     return Err(json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Multi-band raster resampling is not available yet; align all source grids first."}}));
                 }
+                if value.get("tool").and_then(Value::as_str) == Some("raster.index.band-math") {
+                    let (expression, names) = band_math(&value)?;
+                    return crate::processing::band_math_file_sources_window(
+                        &sources,
+                        &names,
+                        expression,
+                        window,
+                        max_samples,
+                    )
+                    .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
+                    .map_err(processing_failure);
+                }
+                let kernel = kernel(&value)?;
                 return crate::processing::index_file_sources_window(
                     &sources,
                     window,
@@ -347,6 +390,7 @@ mod file_exports {
             let left_band = field_u32(&value, "leftBand")? as usize;
             let right_handle = string("rightHandle")?;
             let right_band = field_u32(&value, "rightBand")? as usize;
+            let kernel = kernel(&value)?;
             match resampling(&value)? {
                 Some((method, target)) => crate::processing::index_resampled_file_window(
                     left_handle,

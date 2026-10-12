@@ -12,7 +12,7 @@ use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::tool::Reference;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, RasterMode, Related, ToolDef};
 use libm::{exp, log, sqrt};
 
 /// The arithmetic the expression is evaluated in. The tool's accuracy claim is
@@ -410,6 +410,69 @@ fn count_nodes(node: &Node) -> usize {
     }
 }
 
+pub(crate) struct CompiledExpression {
+    tree: Node,
+    names: Vec<String>,
+}
+
+impl CompiledExpression {
+    pub(crate) fn evaluate(&self, values: &[f64]) -> Option<f64> {
+        if values.len() != self.names.len() {
+            return None;
+        }
+        let value = |name: &str| {
+            self.names
+                .iter()
+                .position(|candidate| candidate == name)
+                .map_or(f64::NAN, |index| values[index])
+        };
+        let result = eval(&self.tree, &value);
+        result.is_finite().then_some(result)
+    }
+}
+
+pub(crate) fn compile(expression: &str, names: &[String]) -> Result<CompiledExpression, String> {
+    if names.is_empty() || names.len() > 64 {
+        return Err("Band math needs from 1 to 64 named bands.".into());
+    }
+    for (index, name) in names.iter().enumerate() {
+        if !valid_name(name) {
+            return Err(format!(
+                "{name} is not a usable band name: use letters, digits, and underscores, starting with a letter."
+            ));
+        }
+        if names[..index].contains(name) {
+            return Err(format!("{name} is given twice."));
+        }
+    }
+    let toks = lex(expression)?;
+    if toks.is_empty() {
+        return Err("The expression is empty.".into());
+    }
+    let mut parser = Parser {
+        toks: &toks,
+        at: 0,
+        nodes: 0,
+        depth: 0,
+        bands: names,
+    };
+    let tree = parser.expr()?;
+    if parser.at != toks.len() {
+        return Err("The expression has something left over after it ends.".into());
+    }
+    Ok(CompiledExpression {
+        tree,
+        names: names.to_vec(),
+    })
+}
+
+fn valid_name(name: &str) -> bool {
+    name.chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
 fn run_bandmath(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let expression = ctx.text("expression")?.expect("required");
     let rows = ctx.rows("bands")?;
@@ -425,12 +488,7 @@ fn run_bandmath(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 ToolError::invalid(&format!("/bands/{i}/name"), "Every band needs a name.")
             })?
             .to_owned();
-        if !name
-            .chars()
-            .next()
-            .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
-            || !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
-        {
+        if !valid_name(&name) {
             return Err(ToolError::invalid(
                 &format!("/bands/{i}/name"),
                 format!(
@@ -457,49 +515,21 @@ fn run_bandmath(ctx: &mut Ctx) -> Result<Json, ToolError> {
         names.push(name);
         values.push(value);
     }
-    let toks = lex(&expression)
-        .map_err(|m| ToolError::invalid("/expression", m).hint("The language is numbers, the bands you name, + - * /, comparisons, a ? b : c, and abs, sqrt, log, exp, min, max, clamp."))?;
-    if toks.is_empty() {
-        return Err(ToolError::invalid(
-            "/expression",
-            "The expression is empty.",
-        ));
-    }
-    let mut parser = Parser {
-        toks: &toks,
-        at: 0,
-        nodes: 0,
-        depth: 0,
-        bands: &names,
-    };
-    let tree = parser
-        .expr()
-        .map_err(|m| ToolError::invalid("/expression", m))?;
-    if parser.at != toks.len() {
-        return Err(ToolError::invalid(
-            "/expression",
-            "The expression has something left over after it ends.",
-        ));
-    }
-    let value = |name: &str| {
-        names
-            .iter()
-            .position(|n| n == name)
-            .map_or(f64::NAN, |i| values[i])
-    };
-    let v = eval(&tree, &value);
-    if !v.is_finite() {
+    let compiled = compile(&expression, &names).map_err(|m| {
+        ToolError::invalid("/expression", m).hint("The language is numbers, the bands you name, + - * /, comparisons, a ? b : c, and abs, sqrt, log, exp, min, max, clamp.")
+    })?;
+    let Some(v) = compiled.evaluate(&values) else {
         return Err(ToolError::new(
             ErrorCode::OutOfDomain,
             "The expression does not give a finite value here: it divides by zero, or takes a root or a logarithm of a negative number. In an image this pixel is no-data.",
         )
         .at("/expression"));
-    }
+    };
     let mut mentioned = Vec::new();
-    used(&tree, &mut mentioned);
+    used(&compiled.tree, &mut mentioned);
     Ok(Json::obj([
         ("value", Json::Num(v)),
-        ("nodes", Json::Num(count_nodes(&tree) as f64)),
+        ("nodes", Json::Num(count_nodes(&compiled.tree) as f64)),
         (
             "bands_used",
             Json::Arr(mentioned.into_iter().map(Json::str).collect()),
@@ -529,7 +559,7 @@ pub static BANDMATH: ToolDef = ToolDef {
     id: "raster.index.band-math",
     stability: gp_base::tool::Stability::Stable,
     title: "Band math",
-    summary: "Evaluates your own expression over named bands: arithmetic, comparisons, a conditional, and a short list of functions, parsed and evaluated in the core rather than by a JavaScript evaluator.",
+    summary: "Evaluates your own expression over named bands or local GeoTIFFs: arithmetic, comparisons, a conditional, and a short list of functions, parsed and evaluated in the core rather than by a JavaScript evaluator.",
     aliases: &[
         "band math",
         "raster calculator",
@@ -556,7 +586,7 @@ pub static BANDMATH: ToolDef = ToolDef {
         Field::new(
             "bands",
             "Bands",
-            "Each band's name and its value at this pixel, like nir and 0.45",
+            "Each band's name and its value at this pixel, like nir and 0.45; the names also label local raster inputs",
             Kind::List {
                 items: BAND_ROW,
                 min: 1,
@@ -608,7 +638,7 @@ pub static BANDMATH: ToolDef = ToolDef {
     model: "The expression is lexed and parsed into a tree, then evaluated in the core; identifiers are the bands given and the functions abs, sqrt, log, exp, min, max, and clamp, and nothing else",
     accuracy: "Exact double-precision arithmetic in the order the expression is written.",
     when_to_use: "Use this for an index the catalog does not have, or a combination of your own: a ratio, a difference, a threshold, or a masked value written as a conditional. It is also the way to try a formula from a paper before deciding whether it deserves a tool of its own.",
-    limitations: "It evaluates one pixel's values, not an image, and it has no no-data handling beyond refusing a result that is not finite. The language is deliberately small: no assignment, no loops, no user functions, and no way to reach anything outside the bands you pass, which is the point. An expression over about a thousand nodes is refused rather than evaluated.",
+    limitations: "Local raster inputs must share one grid; unlike the two-band index tools, band math does not resample mismatched files. Source no-data and non-finite expression results become no-data pixels. The language is deliberately small: no assignment, no loops, no user functions, and no way to reach anything outside the bands you pass, which is the point. An expression over about a thousand nodes is refused rather than evaluated.",
     references: &[IEEE754],
     examples: &[
         Example {
@@ -644,6 +674,11 @@ pub static BANDMATH: ToolDef = ToolDef {
         },
     ],
     sentence: "The expression comes to {value}.",
+    raster: Some(RasterMode {
+        bands: &[],
+        band_list: "bands",
+        output: "value",
+    }),
     limits: &[("batchRows", 10_000)],
     run: run_bandmath,
     ..ToolDef::BLANK

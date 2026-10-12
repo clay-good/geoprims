@@ -324,8 +324,8 @@
     "lastmod": "2026-10-12"
   },
   "/drone/ops/easa-subcategory/": {
-    "hash": "246d6a4bc44c0b40",
-    "lastmod": "2026-10-10"
+    "hash": "0114dbf57ff87f99",
+    "lastmod": "2026-10-12"
   },
   "/drone/ops/kinetic-energy/": {
     "hash": "92fae8bb4a40381f",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "90a7fac4f4392e1d",
+    "hash": "cb9804baa1fd954a",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

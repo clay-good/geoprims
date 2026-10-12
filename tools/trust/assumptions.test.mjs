@@ -88,6 +88,7 @@ const MUST_DECLARE = [
   'drone.ops.part107-altitude',
   'drone.ops.speed-check',
   'drone.ops.kinetic-energy',
+  'drone.ops.easa-subcategory',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -227,6 +228,24 @@ test('the drone energy screener exposes both regulatory comparisons', () => {
     ['900', 'g', 'eu-2019-945'],
     ['80', 'J', 'eu-2019-945'],
     ['11', 'ft*lbf', 'cfr-14-107'],
+  ]);
+});
+
+test('the EASA classifier exposes its complete regulatory decision table', () => {
+  const assumptions = byId('drone.ops.easa-subcategory')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['25', 'kg', 'eu-2019-947'],
+    ['250', 'g', 'eu-2019-945'],
+    ['900', 'g', 'eu-2019-945'],
+    ['80', 'J', 'eu-2019-945'],
+    ['4', 'kg', 'eu-2019-945'],
+    ['25', 'kg', 'eu-2019-945'],
+    ['250', 'g', 'easa-open-category'],
+    ['30', 'm', 'eu-2019-947'],
+    ['5', 'm', 'eu-2019-947'],
+    ['150', 'm', 'eu-2019-947'],
+    ['2024-01-01', 'ISO date', 'eu-2019-947'],
+    ['2025-12-31', 'ISO date', 'eu-2019-947'],
   ]);
 });
 

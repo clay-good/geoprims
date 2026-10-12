@@ -259,12 +259,20 @@ pub static TURN: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Standard gravity g0",
-        value: "9.80665",
-        unit: "m/s2",
-        source: "icao-7488",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Standard gravity g0",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Standard-rate turn",
+            value: "3",
+            unit: "deg/s",
+            source: "faa-ifh",
+        },
+    ],
     sentence: "Bank {bank} for {turn_rate} at {tas}. The turn radius is {radius} and the load factor is {load_factor} g.{if stall_speed_in_turn > 0} Stall speed rises to {stall_speed_in_turn}.{/if}{warn LOAD_LIMIT_EXCEEDED} This is past the load limit.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_turn,

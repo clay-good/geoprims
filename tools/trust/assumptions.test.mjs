@@ -189,6 +189,14 @@ test('the DME arc tool exposes its published standard-rate and lead rule', () =>
   ]);
 });
 
+test('the turn tool exposes gravity and its standard-rate default', () => {
+  const assumptions = byId('aviation.performance.turn')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['9.80665', 'm/s2', 'icao-7488'],
+    ['3', 'deg/s', 'faa-ifh'],
+  ]);
+});
+
 test('the holding tools expose their published sectors, limits, and defaults', () => {
   const entry = byId('aviation.ifr.hold-entry')['x-assumptions'];
   assert.deepEqual(entry.map(({ value, unit, source }) => [value, unit, source]), [

@@ -55,6 +55,56 @@ test('a raster scene is consumed one successful window at a time in row-major or
     ok: true,
     metadata: { width: 5, height: 3, bands: 1, epsg: 32617 },
     windows: 6,
+    summary: { validPixels: 6, noDataPixels: 0, min: 1, max: 6, mean: 3.5 },
+  });
+});
+
+test('scene statistics stream across windows and exclude no-data pixels', async () => {
+  let window = 0;
+  const runtime = {
+    inspectFile: async () => ({ ok: true, metadata: { width: 4, height: 1, bands: 1 } }),
+    processFileWindow: async () => {
+      window++;
+      return window === 1
+        ? { ok: true, raster: { samples: [1e16, 1], valid: [true, true] } }
+        : { ok: true, raster: { samples: [-1e16, -9999], valid: [true, false] } };
+    },
+  };
+  const out = await processNormalizedDifferenceScene(runtime, {
+    ...options,
+    windowWidth: 2,
+    windowHeight: 1,
+    accept() {},
+  });
+  assert.deepEqual(out.summary, {
+    validPixels: 3,
+    noDataPixels: 1,
+    min: -1e16,
+    max: 1e16,
+    mean: 1 / 3,
+  });
+});
+
+test('an all-no-data scene has counts but no numeric statistics', async () => {
+  const runtime = {
+    inspectFile: async () => ({ ok: true, metadata: { width: 1, height: 1, bands: 1 } }),
+    processFileWindow: async () => ({
+      ok: true,
+      raster: { samples: [-9999], valid: [false] },
+    }),
+  };
+  const out = await processNormalizedDifferenceScene(runtime, {
+    ...options,
+    windowWidth: 1,
+    windowHeight: 1,
+    accept() {},
+  });
+  assert.deepEqual(out.summary, {
+    validPixels: 0,
+    noDataPixels: 1,
+    min: null,
+    max: null,
+    mean: null,
   });
 });
 

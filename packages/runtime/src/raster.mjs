@@ -2,6 +2,45 @@ const resultObject = (value) => (typeof value === 'string' ? JSON.parse(value) :
 export const MAX_SCENE_PIXELS = 500_000_000;
 export const MAX_SCENE_WINDOWS = 1_000_000;
 
+function sceneSummary() {
+  let validPixels = 0;
+  let noDataPixels = 0;
+  let min = Infinity;
+  let max = -Infinity;
+  let sum = 0;
+  let compensation = 0;
+  return {
+    add(raster) {
+      for (let i = 0; i < raster.samples.length; i++) {
+        if (!raster.valid[i]) {
+          noDataPixels++;
+          continue;
+        }
+        const value = raster.samples[i];
+        validPixels++;
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+        // Neumaier summation keeps the mean stable when values have very
+        // different magnitudes, without retaining any scene pixels.
+        const next = sum + value;
+        compensation += Math.abs(sum) >= Math.abs(value)
+          ? (sum - next) + value
+          : (value - next) + sum;
+        sum = next;
+      }
+    },
+    value() {
+      return {
+        validPixels,
+        noDataPixels,
+        min: validPixels ? min : null,
+        max: validPixels ? max : null,
+        mean: validPixels ? (sum + compensation) / validPixels : null,
+      };
+    },
+  };
+}
+
 function positiveInteger(value, name) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError(`${name} must be a positive integer.`);
   return value;
@@ -56,6 +95,7 @@ export async function processNormalizedDifferenceScene(host, options) {
     };
   }
   let completed = 0;
+  const summary = sceneSummary();
 
   for (let y = 0; y < height; y += windowHeight) {
     for (let x = 0; x < width; x += windowWidth) {
@@ -75,6 +115,7 @@ export async function processNormalizedDifferenceScene(host, options) {
       ));
       if (!out.ok) return out;
       await accept({ window, raster: out.raster });
+      summary.add(out.raster);
       completed++;
       onProgress?.({ completed, total, window });
     }
@@ -83,5 +124,6 @@ export async function processNormalizedDifferenceScene(host, options) {
     ok: true,
     metadata: { ...inspected.metadata, bands: 1 },
     windows: completed,
+    summary: summary.value(),
   };
 }

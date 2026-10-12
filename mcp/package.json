@@ -1,6 +1,5 @@
 {
   "name": "@geoprims/mcp",
-  "private": true,
   "version": "0.1.0",
   "description": "Local MCP server for geoprims: exact, cited geospatial, aviation, drone, survey, and unit calculations. Offline, zero dependencies.",
   "type": "module",
@@ -21,6 +20,9 @@
     "prompts.mjs",
     "dist/"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=22"
   },

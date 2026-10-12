@@ -4,7 +4,7 @@ A local, offline MCP server that runs the same WebAssembly calculators as geopri
 
 ## Run it
 
-Release tags carry the prebuilt calculators in `mcp/dist/`, so a clone of a tag runs with Node 22 or newer and nothing else. The server is not published to npm; the repository is the way to get it.
+Release tags carry the prebuilt calculators in `mcp/dist/`, so a clone of a tag runs with Node 22 or newer and nothing else. npm publication is staged but not live yet; until the first trusted-publisher release, the repository is the way to get it.
 
 ```bash
 git clone --branch v0.1.0 --depth 1 https://github.com/clay-good/geoprims
@@ -134,9 +134,9 @@ Five workflow prompts turn a few arguments into one `geoprims_pipeline` call, wi
 | `--debug` | Logs argument values to stderr (off by default) |
 | `--allow-asset-download` | Accepted. No downloadable assets exist yet. |
 
-## Not built yet
+## Release status
 
-npm and MCPB packaging, and the MCP Inspector CI job. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
+The npm package and MCPB bundle both have dry-run packaging gates, and CI runs the MCP Inspector against the golden surface. npm trusted publishing still needs the first package and its npm-side GitHub publisher record before a real publish. Protocol negotiation is tested with synthetic handshakes for `2025-06-18`, `2025-11-25`, and `2026-07-28` but not yet against recorded real clients.
 
 ## Tests
 

@@ -55,6 +55,10 @@ jobs:
         run: |
           npm ci --prefix apps/web
           npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
+      - name: Audit npm advisories and licenses
+        run: |
+          npm audit --prefix apps/web --audit-level=high
+          node tools/repo/npm-licenses.mjs
       # The website is built before the JS tests: several of them compare the
       # built pages with the MCP server (both-surfaces, presets, sitemaps) and
       # read the asset registry the build copies in.

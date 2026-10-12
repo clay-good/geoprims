@@ -983,6 +983,20 @@ pub static VDP: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Default visual descent path angle",
+            value: "3",
+            unit: "deg",
+            source: "faa-iph",
+        },
+        Assumption {
+            name: "Visual descent point rule gradient",
+            value: "300",
+            unit: "ft/NM",
+            source: "faa-iph",
+        },
+    ],
     sentence: "Start down from the MDA {distance} from the threshold.{if vertical_speed > 0} Descend at about {vertical_speed}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_vdp,

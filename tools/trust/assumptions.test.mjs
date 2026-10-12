@@ -55,6 +55,7 @@ const MUST_DECLARE = [
   'aviation.performance.turn',
   'aviation.performance.top-of-descent',
   'aviation.performance.pivotal-altitude',
+  'aviation.performance.vdp',
   'aviation.airspeed.tat-sat',
   'survey.reduction.edm-correction',
   'time.scale.gps-week',
@@ -204,6 +205,14 @@ test('the top-of-descent tool exposes its published planning rules', () => {
     ['3', 'deg', 'faa-iph'],
     ['3', 'NM per 1,000 ft', 'faa-iph'],
     ['5', 'ft/min per kt', 'faa-iph'],
+  ]);
+});
+
+test('the VDP tool exposes its published three-degree rule', () => {
+  const assumptions = byId('aviation.performance.vdp')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['3', 'deg', 'faa-iph'],
+    ['300', 'ft/NM', 'faa-iph'],
   ]);
 });
 

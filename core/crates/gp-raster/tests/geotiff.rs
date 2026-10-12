@@ -1,8 +1,8 @@
-use std::io::Cursor;
+use std::io::{self, Cursor, Read, Seek, SeekFrom};
 
 use gp_raster::geotiff::{
     Error, RasterType, Transform, Window, decode, decode_file, decode_file_window, decode_window,
-    inspect, inspect_file, same_grid,
+    decode_window_reader, inspect, inspect_file, same_grid,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -80,6 +80,32 @@ fn tiled_fixture(planar_configuration: u16) -> Vec<u8> {
         }
     }
     out
+}
+
+struct RefuseRange {
+    inner: Cursor<Vec<u8>>,
+    start: u64,
+    end: u64,
+}
+
+impl Read for RefuseRange {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        let position = self.inner.position();
+        let requested_end = position.saturating_add(buffer.len() as u64);
+        if position < self.end && requested_end > self.start {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "test blocked an unselected tile",
+            ));
+        }
+        self.inner.read(buffer)
+    }
+}
+
+impl Seek for RefuseRange {
+    fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
+        self.inner.seek(position)
+    }
 }
 
 fn fixture_with_orientation(scale: f64, epsg: u16, orientation: u16) -> Vec<u8> {
@@ -212,6 +238,27 @@ fn assembles_a_window_across_tiled_chunks() {
     .unwrap();
     assert_eq!(raster.samples, [207.0, 208.0, 239.0, 240.0]);
     assert_eq!(raster.valid, [true; 4]);
+}
+
+#[test]
+fn a_window_does_not_read_unselected_tile_pixels() {
+    let reader = RefuseRange {
+        inner: Cursor::new(tiled_fixture(1)),
+        start: 418,
+        end: 674,
+    };
+    let raster = decode_window_reader(
+        reader,
+        Window {
+            x: 14,
+            y: 14,
+            width: 2,
+            height: 2,
+        },
+        256,
+    )
+    .unwrap();
+    assert_eq!(raster.samples, [206.0, 207.0, 238.0, 239.0]);
 }
 
 #[test]

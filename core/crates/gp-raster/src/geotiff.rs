@@ -4,7 +4,7 @@
 //! bounded byte slice; the decoder returns numeric samples, a no-data mask,
 //! and the grid definition needed to compare or preserve georeferencing.
 
-use std::io::Cursor;
+use std::io::{Cursor, Read, Seek};
 
 use tiff::decoder::{ChunkType, Decoder, DecodingResult, Limits};
 use tiff::tags::Tag;
@@ -82,7 +82,7 @@ fn invalid(error: impl std::fmt::Display) -> Error {
     Error::Invalid(error.to_string())
 }
 
-fn geokeys(decoder: &mut Decoder<Cursor<&[u8]>>) -> Result<Vec<u16>, Error> {
+fn geokeys<R: Read + Seek>(decoder: &mut Decoder<R>) -> Result<Vec<u16>, Error> {
     decoder
         .find_tag(Tag::GeoKeyDirectoryTag)
         .map_err(invalid)?
@@ -102,7 +102,7 @@ fn inline_key(keys: &[u16], wanted: u16) -> Option<u16> {
         })
 }
 
-fn transform(decoder: &mut Decoder<Cursor<&[u8]>>) -> Result<Option<Transform>, Error> {
+fn transform<R: Read + Seek>(decoder: &mut Decoder<R>) -> Result<Option<Transform>, Error> {
     if let Some(value) = decoder
         .find_tag(Tag::ModelTransformationTag)
         .map_err(invalid)?
@@ -148,7 +148,7 @@ fn transform(decoder: &mut Decoder<Cursor<&[u8]>>) -> Result<Option<Transform>, 
     }
 }
 
-fn metadata(decoder: &mut Decoder<Cursor<&[u8]>>) -> Result<Metadata, Error> {
+fn metadata<R: Read + Seek>(decoder: &mut Decoder<R>) -> Result<Metadata, Error> {
     let orientation = decoder
         .find_tag_unsigned::<u16>(Tag::Orientation)
         .map_err(invalid)?
@@ -261,7 +261,12 @@ fn pixel_offset(x: u32, y: u32, width: u32) -> Result<usize, Error> {
 /// Reads dimensions, band count, no-data, CRS, and the affine transform
 /// without allocating a pixel buffer.
 pub fn inspect(bytes: &[u8]) -> Result<Metadata, Error> {
-    let mut decoder = Decoder::new(Cursor::new(bytes)).map_err(invalid)?;
+    inspect_reader(Cursor::new(bytes))
+}
+
+/// Reads metadata from any seekable source, including a range-backed reader.
+pub fn inspect_reader<R: Read + Seek>(reader: R) -> Result<Metadata, Error> {
+    let mut decoder = Decoder::new(reader).map_err(invalid)?;
     metadata(&mut decoder)
 }
 
@@ -275,7 +280,12 @@ pub fn inspect_file(handle: &str) -> Result<Metadata, Error> {
 /// Decodes one TIFF image after enforcing the caller's sample allocation cap.
 /// Large rasters will use the tiled path rather than this whole-image helper.
 pub fn decode(bytes: &[u8], max_samples: usize) -> Result<Raster, Error> {
-    let mut decoder = Decoder::new(Cursor::new(bytes)).map_err(invalid)?;
+    decode_reader(Cursor::new(bytes), max_samples)
+}
+
+/// Decodes one TIFF image from any seekable source.
+pub fn decode_reader<R: Read + Seek>(reader: R, max_samples: usize) -> Result<Raster, Error> {
+    let mut decoder = Decoder::new(reader).map_err(invalid)?;
     let metadata = metadata(&mut decoder)?;
     let count = sample_count(
         metadata.grid.width,
@@ -304,7 +314,18 @@ pub fn decode(bytes: &[u8], max_samples: usize) -> Result<Raster, Error> {
 /// `max_samples` must fit both the returned window and one decoded source
 /// chunk, so a small window cannot conceal an unexpectedly large strip.
 pub fn decode_window(bytes: &[u8], window: Window, max_samples: usize) -> Result<Raster, Error> {
-    let mut decoder = Decoder::new(Cursor::new(bytes)).map_err(invalid)?;
+    decode_window_reader(Cursor::new(bytes), window, max_samples)
+}
+
+/// Decodes a window from any seekable source without reading other pixel
+/// chunks. TIFF directory bytes may still be read wherever the file stores
+/// them.
+pub fn decode_window_reader<R: Read + Seek>(
+    reader: R,
+    window: Window,
+    max_samples: usize,
+) -> Result<Raster, Error> {
+    let mut decoder = Decoder::new(reader).map_err(invalid)?;
     let mut metadata = metadata(&mut decoder)?;
     let x_end = window.x.checked_add(window.width);
     let y_end = window.y.checked_add(window.height);

@@ -33,4 +33,8 @@ jobs:
           node tools/repo/npm-licenses.mjs
       - name: Verify package contents and provenance
         working-directory: mcp
-        run: npm publish --dry-run --provenance --access public
+        run: |
+          provenance=$(npm config get provenance --provenance)
+          test "$provenance" = true
+          echo "npm provenance: $provenance"
+          npm publish --dry-run --provenance --access public

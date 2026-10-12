@@ -4,10 +4,11 @@
 //! bounded byte slice; the decoder returns numeric samples, a no-data mask,
 //! and the grid definition needed to compare or preserve georeferencing.
 
-use std::io::{Cursor, Read, Seek};
+use std::io::{Cursor, Read, Seek, Write};
 
 use tiff::decoder::{ChunkType, Decoder, DecodingResult, Limits};
-use tiff::encoder::{TiffEncoder, colortype};
+use tiff::encoder::colortype::ColorType;
+use tiff::encoder::{ImageEncoder, TiffEncoder, TiffKind, colortype};
 use tiff::tags::Tag;
 
 /// The GeoTIFF raster-space convention (GeoKey 1025).
@@ -80,6 +81,112 @@ pub enum Error {
     LimitExceeded { samples: u64, limit: usize },
 }
 
+pub(crate) fn validate_nodata(raster: &Raster, nodata: Option<f64>) -> Result<(), Error> {
+    if let Some(nodata) = nodata
+        && raster
+            .samples
+            .iter()
+            .zip(&raster.valid)
+            .any(|(sample, valid)| {
+                *valid
+                    && if nodata.is_nan() {
+                        sample.is_nan()
+                    } else {
+                        *sample == nodata
+                    }
+            })
+    {
+        return Err(Error::Invalid(
+            "A valid output sample equals the no-data sentinel.".into(),
+        ));
+    }
+    Ok(())
+}
+
+pub(crate) fn write_metadata_tags<W, C, K>(
+    image: &mut ImageEncoder<'_, W, C, K>,
+    metadata: &Metadata,
+    nodata: Option<f64>,
+) -> Result<(), Error>
+where
+    W: Write + Seek,
+    C: ColorType,
+    K: TiffKind,
+{
+    if let Some(transform) = metadata.grid.transform {
+        image
+            .encoder()
+            .write_tag(
+                Tag::ModelTransformationTag,
+                &[
+                    transform.dx,
+                    transform.rx,
+                    0.0,
+                    transform.x0,
+                    transform.ry,
+                    transform.dy,
+                    0.0,
+                    transform.y0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                ][..],
+            )
+            .map_err(invalid)?;
+    }
+    let mut key_entries = Vec::new();
+    match (metadata.grid.epsg, metadata.grid.crs_type) {
+        (Some(epsg), Some(CrsType::Projected)) => {
+            key_entries.extend_from_slice(&[1024, 0, 1, 1, 3072, 0, 1, epsg]);
+        }
+        (Some(epsg), Some(CrsType::Geographic)) => {
+            key_entries.extend_from_slice(&[1024, 0, 1, 2, 2048, 0, 1, epsg]);
+        }
+        (None, None) => {}
+        _ => {
+            return Err(Error::Invalid(
+                "An EPSG code and its geographic or projected type must be given together.".into(),
+            ));
+        }
+    }
+    if let Some(raster_type) = metadata.grid.raster_type {
+        key_entries.extend_from_slice(&[
+            1025,
+            0,
+            1,
+            match raster_type {
+                RasterType::PixelIsArea => 1,
+                RasterType::PixelIsPoint => 2,
+            },
+        ]);
+    }
+    if !key_entries.is_empty() {
+        let mut keys = vec![1_u16, 1, 0, (key_entries.len() / 4) as u16];
+        keys.extend(key_entries);
+        image
+            .encoder()
+            .write_tag(Tag::GeoKeyDirectoryTag, keys.as_slice())
+            .map_err(invalid)?;
+    }
+    if let Some(nodata) = nodata {
+        let text = if nodata.is_nan() {
+            "nan".to_owned()
+        } else {
+            nodata.to_string()
+        };
+        image
+            .encoder()
+            .write_tag(Tag::GdalNodata, text.as_str())
+            .map_err(invalid)?;
+    }
+    Ok(())
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct GridMismatch {
     pub reason: &'static str,
@@ -87,7 +194,7 @@ pub struct GridMismatch {
     pub right: Box<Grid>,
 }
 
-fn invalid(error: impl std::fmt::Display) -> Error {
+pub(crate) fn invalid(error: impl std::fmt::Display) -> Error {
     Error::Invalid(error.to_string())
 }
 
@@ -250,17 +357,7 @@ pub fn encode(raster: &Raster) -> Result<Vec<u8>, Error> {
         .metadata
         .nodata
         .or_else(|| has_invalid.then_some(f64::NAN));
-    if let Some(nodata) = nodata
-        && raster
-            .samples
-            .iter()
-            .zip(&raster.valid)
-            .any(|(sample, valid)| *valid && *sample == nodata)
-    {
-        return Err(Error::Invalid(
-            "A valid output sample equals the no-data sentinel.".into(),
-        ));
-    }
+    validate_nodata(raster, nodata)?;
     let values: Vec<f64> = raster
         .samples
         .iter()
@@ -277,78 +374,7 @@ pub fn encode(raster: &Raster) -> Result<Vec<u8>, Error> {
                 raster.metadata.grid.height,
             )
             .map_err(invalid)?;
-        if let Some(transform) = raster.metadata.grid.transform {
-            image
-                .encoder()
-                .write_tag(
-                    Tag::ModelTransformationTag,
-                    &[
-                        transform.dx,
-                        transform.rx,
-                        0.0,
-                        transform.x0,
-                        transform.ry,
-                        transform.dy,
-                        0.0,
-                        transform.y0,
-                        0.0,
-                        0.0,
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0,
-                    ][..],
-                )
-                .map_err(invalid)?;
-        }
-        let mut key_entries = Vec::new();
-        match (raster.metadata.grid.epsg, raster.metadata.grid.crs_type) {
-            (Some(epsg), Some(CrsType::Projected)) => {
-                key_entries.extend_from_slice(&[1024, 0, 1, 1, 3072, 0, 1, epsg]);
-            }
-            (Some(epsg), Some(CrsType::Geographic)) => {
-                key_entries.extend_from_slice(&[1024, 0, 1, 2, 2048, 0, 1, epsg]);
-            }
-            (None, None) => {}
-            _ => {
-                return Err(Error::Invalid(
-                    "An EPSG code and its geographic or projected type must be given together."
-                        .into(),
-                ));
-            }
-        }
-        if let Some(raster_type) = raster.metadata.grid.raster_type {
-            key_entries.extend_from_slice(&[
-                1025,
-                0,
-                1,
-                match raster_type {
-                    RasterType::PixelIsArea => 1,
-                    RasterType::PixelIsPoint => 2,
-                },
-            ]);
-        }
-        if !key_entries.is_empty() {
-            let mut keys = vec![1_u16, 1, 0, (key_entries.len() / 4) as u16];
-            keys.extend(key_entries);
-            image
-                .encoder()
-                .write_tag(Tag::GeoKeyDirectoryTag, keys.as_slice())
-                .map_err(invalid)?;
-        }
-        if let Some(nodata) = nodata {
-            let text = if nodata.is_nan() {
-                "nan".to_owned()
-            } else {
-                nodata.to_string()
-            };
-            image
-                .encoder()
-                .write_tag(Tag::GdalNodata, text.as_str())
-                .map_err(invalid)?;
-        }
+        write_metadata_tags(&mut image, &raster.metadata, nodata)?;
         image.write_data(&values).map_err(invalid)?;
     }
     Ok(out.into_inner())

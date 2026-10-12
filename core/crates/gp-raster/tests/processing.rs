@@ -1,8 +1,9 @@
-use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform};
-use std::io::Cursor;
+use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform, decode};
+use std::io::{self, Cursor, Seek, SeekFrom, Write};
 
 use gp_raster::processing::{
     Error, Resampling, normalized_difference, normalized_difference_scene, resample,
+    write_normalized_difference_geotiff,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -68,6 +69,34 @@ fn tiff_fixture(width: u32, values: &[f32], nodata: f64) -> Vec<u8> {
         image.write_data(values).unwrap();
     }
     out.into_inner()
+}
+
+#[derive(Debug)]
+struct FailingWriter {
+    inner: Cursor<Vec<u8>>,
+    remaining: usize,
+}
+
+impl Write for FailingWriter {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+        if self.remaining == 0 {
+            return Err(io::Error::other("test output failed"));
+        }
+        let length = buffer.len().min(self.remaining);
+        let written = self.inner.write(&buffer[..length])?;
+        self.remaining -= written;
+        Ok(written)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.inner.flush()
+    }
+}
+
+impl Seek for FailingWriter {
+    fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
+        self.inner.seek(position)
+    }
 }
 
 #[test]
@@ -155,7 +184,10 @@ fn processes_a_scene_in_bounded_row_major_windows() {
         2,
         1,
         8,
-        |window, raster| windows.push((window, raster)),
+        |window, raster| {
+            windows.push((window, raster));
+            Ok(())
+        },
     )
     .unwrap();
 
@@ -197,13 +229,91 @@ fn scene_grid_mismatch_is_reported_before_any_output() {
         2,
         1,
         10,
-        |_, _| called = true,
+        |_, _| {
+            called = true;
+            Ok(())
+        },
     )
     .unwrap_err();
     assert!(!called);
     assert!(matches!(
         error,
         Error::GridMismatch(mismatch) if mismatch.reason == "dimensions"
+    ));
+}
+
+#[test]
+fn a_scene_consumer_error_stops_before_the_next_window() {
+    let left = vec![0.8_f32; 16];
+    let right = vec![0.2_f32; 16];
+    let mut calls = 0;
+    let error = normalized_difference_scene(
+        Cursor::new(tiff_fixture(4, &left, -9999.0)),
+        0,
+        Cursor::new(tiff_fixture(4, &right, -9999.0)),
+        0,
+        2,
+        1,
+        8,
+        |_, _| {
+            calls += 1;
+            Err(Error::InvalidRaster("test stopped output"))
+        },
+    )
+    .unwrap_err();
+    assert_eq!(calls, 1);
+    assert_eq!(error, Error::InvalidRaster("test stopped output"));
+}
+
+#[test]
+fn streams_a_complete_georeferenced_result_by_strip() {
+    let mut left = vec![0.8_f32; 16];
+    left[9] = -9999.0;
+    let right = vec![0.2_f32; 16];
+    let output = write_normalized_difference_geotiff(
+        Cursor::new(tiff_fixture(4, &left, -9999.0)),
+        0,
+        Cursor::new(tiff_fixture(4, &right, -32768.0)),
+        0,
+        1,
+        8,
+        Cursor::new(Vec::new()),
+    )
+    .unwrap()
+    .into_inner();
+    let result = decode(&output, 16).unwrap();
+    assert_eq!(result.metadata.grid.width, 4);
+    assert_eq!(result.metadata.grid.height, 4);
+    assert_eq!(result.metadata.grid.transform, grid(4).transform);
+    assert_eq!(result.metadata.nodata, Some(-9999.0));
+    assert_eq!(result.valid.iter().filter(|valid| **valid).count(), 15);
+    for (&sample, &valid) in result.samples.iter().zip(&result.valid) {
+        if valid {
+            assert!((sample - 0.6).abs() < 1e-7);
+        }
+    }
+}
+
+#[test]
+fn streaming_export_returns_the_first_writer_failure() {
+    let left = vec![0.8_f32; 16];
+    let right = vec![0.2_f32; 16];
+    let error = write_normalized_difference_geotiff(
+        Cursor::new(tiff_fixture(4, &left, -9999.0)),
+        0,
+        Cursor::new(tiff_fixture(4, &right, -9999.0)),
+        0,
+        1,
+        8,
+        FailingWriter {
+            inner: Cursor::new(Vec::new()),
+            remaining: 64,
+        },
+    )
+    .unwrap_err();
+    assert!(matches!(
+        error,
+        Error::Export(geotiff_error) if matches!(&geotiff_error, gp_raster::geotiff::Error::Invalid(message) if message.contains("test output failed"))
     ));
 }
 

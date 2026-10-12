@@ -4,7 +4,9 @@
 //! before advancing. This keeps scene size out of the memory bound while the
 //! same arithmetic serves local files in the web and MCP hosts.
 
-use std::io::{Read, Seek};
+use std::io::{Read, Seek, Write};
+
+use tiff::encoder::{TiffEncoder, colortype};
 
 use crate::geotiff::{
     self, Grid, GridMismatch, Metadata, Raster, RasterType, Window, WindowDecoder, same_grid,
@@ -19,6 +21,7 @@ pub enum Error {
     InvalidRaster(&'static str),
     InvalidWindowSize,
     LimitExceeded { samples: u64, limit: usize },
+    Export(geotiff::Error),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -72,18 +75,44 @@ pub fn normalized_difference_scene<L, R, F>(
     window_width: u32,
     window_height: u32,
     max_samples: usize,
+    accept: F,
+) -> Result<(), Error>
+where
+    L: Read + Seek,
+    R: Read + Seek,
+    F: FnMut(Window, Raster) -> Result<(), Error>,
+{
+    let mut left = WindowDecoder::new(left_reader, max_samples).map_err(Error::Decode)?;
+    let mut right = WindowDecoder::new(right_reader, max_samples).map_err(Error::Decode)?;
+    process_scene(
+        &mut left,
+        left_band,
+        &mut right,
+        right_band,
+        window_width,
+        window_height,
+        accept,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn process_scene<L, R, F>(
+    left: &mut WindowDecoder<L>,
+    left_band: usize,
+    right: &mut WindowDecoder<R>,
+    right_band: usize,
+    window_width: u32,
+    window_height: u32,
     mut accept: F,
 ) -> Result<(), Error>
 where
     L: Read + Seek,
     R: Read + Seek,
-    F: FnMut(Window, Raster),
+    F: FnMut(Window, Raster) -> Result<(), Error>,
 {
     if window_width == 0 || window_height == 0 {
         return Err(Error::InvalidWindowSize);
     }
-    let mut left = WindowDecoder::new(left_reader, max_samples).map_err(Error::Decode)?;
-    let mut right = WindowDecoder::new(right_reader, max_samples).map_err(Error::Decode)?;
     same_grid(&left.metadata().grid, &right.metadata().grid).map_err(Error::GridMismatch)?;
     validate_band(left.metadata(), left_band)?;
     validate_band(right.metadata(), right_band)?;
@@ -104,12 +133,82 @@ where
             let left_window = left.decode(window).map_err(Error::Decode)?;
             let right_window = right.decode(window).map_err(Error::Decode)?;
             let output = normalized_difference(&left_window, left_band, &right_window, right_band)?;
-            accept(window, output);
+            accept(window, output)?;
             x += width;
         }
         y += height;
     }
     Ok(())
+}
+
+/// Writes a complete normalized-difference result to a seekable GeoTIFF sink,
+/// one full-width strip at a time. The returned writer is available only after
+/// every strip and the final directory have been written successfully.
+#[allow(clippy::too_many_arguments)]
+pub fn write_normalized_difference_geotiff<L, R, W>(
+    left_reader: L,
+    left_band: usize,
+    right_reader: R,
+    right_band: usize,
+    rows_per_strip: u32,
+    max_samples: usize,
+    mut output: W,
+) -> Result<W, Error>
+where
+    L: Read + Seek,
+    R: Read + Seek,
+    W: Write + Seek,
+{
+    if rows_per_strip == 0 {
+        return Err(Error::InvalidWindowSize);
+    }
+    let mut left = WindowDecoder::new(left_reader, max_samples).map_err(Error::Decode)?;
+    let mut right = WindowDecoder::new(right_reader, max_samples).map_err(Error::Decode)?;
+    same_grid(&left.metadata().grid, &right.metadata().grid).map_err(Error::GridMismatch)?;
+    validate_band(left.metadata(), left_band)?;
+    validate_band(right.metadata(), right_band)?;
+    let grid = left.metadata().grid.clone();
+    let nodata = Some(left.metadata().nodata.unwrap_or(f64::NAN));
+    let metadata = Metadata {
+        grid: grid.clone(),
+        bands: 1,
+        nodata,
+    };
+
+    {
+        let mut encoder = TiffEncoder::new(&mut output)
+            .map_err(geotiff::invalid)
+            .map_err(Error::Export)?;
+        let mut image = encoder
+            .new_image::<colortype::Gray64Float>(grid.width, grid.height)
+            .map_err(geotiff::invalid)
+            .map_err(Error::Export)?;
+        image
+            .rows_per_strip(rows_per_strip)
+            .map_err(geotiff::invalid)
+            .map_err(Error::Export)?;
+        geotiff::write_metadata_tags(&mut image, &metadata, nodata).map_err(Error::Export)?;
+        process_scene(
+            &mut left,
+            left_band,
+            &mut right,
+            right_band,
+            grid.width,
+            rows_per_strip,
+            |_, raster| {
+                geotiff::validate_nodata(&raster, nodata).map_err(Error::Export)?;
+                image
+                    .write_strip(&raster.samples)
+                    .map_err(geotiff::invalid)
+                    .map_err(Error::Export)
+            },
+        )?;
+        image
+            .finish()
+            .map_err(geotiff::invalid)
+            .map_err(Error::Export)?;
+    }
+    Ok(output)
 }
 
 /// Computes `(a - b) / (a + b)` for one pair of matching raster windows.

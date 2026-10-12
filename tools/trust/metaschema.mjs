@@ -6,7 +6,7 @@
 export const TOOL_EXTENSIONS = new Set([
   'x-sentence', 'x-comparison', 'x-near-margin', 'x-clock-default', 'x-primary-example',
   'x-limitation', 'x-glossary-terms', 'x-related', 'x-diagram-inline', 'x-high-intent',
-  'x-assumptions',
+  'x-assumptions', 'x-raster',
 ]);
 export const FIELD_EXTENSIONS = new Set([
   'x-quantity', 'x-unit', 'x-angle-range', 'x-display-precision', 'x-step', 'x-private',
@@ -68,6 +68,22 @@ export function metaschemaProblems(catalog, sourceIds = new Set()) {
       for (const k of Object.keys(limitation)) {
         if (!(k in LIMITATION_CAPS)) problems.push(`${t.id}: x-limitation has no field ${k}`);
       }
+    }
+    const raster = t['x-raster'];
+    if (raster) {
+      const { bands, output, ...rest } = raster;
+      if (!Array.isArray(bands) || bands.length === 0 || bands.some((name) => typeof name !== 'string')) {
+        problems.push(`${t.id}: x-raster needs one or more band input names`);
+      } else {
+        if (new Set(bands).size !== bands.length) problems.push(`${t.id}: x-raster band names must be unique`);
+        for (const name of bands) {
+          if (t.inputs?.properties?.[name]?.type !== 'number') problems.push(`${t.id}: x-raster band ${name} is not a numeric input`);
+        }
+      }
+      if (typeof output !== 'string' || t.outputs?.properties?.[output]?.type !== 'number') {
+        problems.push(`${t.id}: x-raster output ${output ?? '(missing)'} is not a numeric output`);
+      }
+      for (const k of Object.keys(rest)) problems.push(`${t.id}: x-raster has no field ${k}`);
     }
     for (const a of t['x-assumptions'] ?? []) {
       const { name, value, unit, source, ...rest } = a;

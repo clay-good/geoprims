@@ -10,7 +10,9 @@
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Ctx, Example, Field, Kind, Layer, Precision, RasterMode, Reference, Related, ToolDef,
+};
 
 pub const ROUSE: Reference = Reference {
     title: "Monitoring vegetation systems in the Great Plains with ERTS",
@@ -193,6 +195,10 @@ macro_rules! normalized_tool {
             visualization: &[TABLE],
             related: $related,
             sentence: $sentence,
+            raster: Some(RasterMode {
+                bands: &[$a, $b],
+                output: $out,
+            }),
             limits: &[("batchRows", 100_000)],
             run: $run,
             ..ToolDef::BLANK

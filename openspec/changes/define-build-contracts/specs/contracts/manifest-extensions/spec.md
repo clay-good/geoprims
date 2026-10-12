@@ -25,6 +25,7 @@ The manifest meta-schema SHALL define, and accept only, these extension fields.
 - `x-limitation` (`{simplification, instead, governs}`, capped at 80, 240, and 120 characters), `x-glossary-terms` (term ids)
 - `x-assumptions` (`[{name, value, unit, source}]`: every numeric constant or default the tool uses that the reader does not supply, each citing a sources-ledger id, per `trust/citations`)
 - `x-related` (`[{id, reason}]`), `x-diagram-inline` (boolean)
+- `x-raster` (`{bands, output}`: a nonempty list of unique numeric input fields supplied from local raster bands, and the numeric output written per pixel; selected files and handles remain private session state)
 - `x-high-intent` (boolean, generated endpoints only)
 
 Unknown `x-` fields SHALL fail the build.

@@ -122,6 +122,14 @@ pub struct Limitation {
     pub governs: &'static str,
 }
 
+/// A tool's scalar band fields and numeric output when it also runs over a
+/// local raster scene (`contracts/manifest-extensions`, `x-raster`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RasterMode {
+    pub bands: &'static [&'static str],
+    pub output: &'static str,
+}
+
 /// The caps the contract puts on each line of a limitation banner.
 pub const LIMITATION_CAPS: (usize, usize, usize) = (80, 240, 120);
 
@@ -370,6 +378,9 @@ pub struct ToolDef {
     /// `x-diagram-inline`: the tool's meaning is a picture, so the page shows a
     /// compact one directly under the answer as well as the full canvas below.
     pub diagram_inline: bool,
+    /// `x-raster`: scalar input fields supplied from selected raster bands and
+    /// the scalar output written for each pixel.
+    pub raster: Option<RasterMode>,
     /// The constants this tool uses that the reader does not supply
     /// (`x-assumptions`), each citing a sources-ledger id.
     pub assumptions: &'static [Assumption],
@@ -423,6 +434,7 @@ impl ToolDef {
         comparison: Comparison::NONE,
         limitation: None,
         diagram_inline: false,
+        raster: None,
         assumptions: &[],
         limits: &[],
         words: &[],

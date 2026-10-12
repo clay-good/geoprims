@@ -15,6 +15,20 @@ test('the catalog carries only contract extensions, well formed', () => {
   assert.deepEqual(metaschemaProblems(catalog, sourceIds), []);
 });
 
+test('normalized-difference raster tools publish their band roles and output', () => {
+  const modes = Object.fromEntries(
+    catalog.tools.filter((tool) => tool['x-raster']).map((tool) => [tool.id, tool['x-raster']]),
+  );
+  assert.deepEqual(modes, {
+    'raster.index.mndwi': { bands: ['green', 'swir1'], output: 'mndwi' },
+    'raster.index.nbr': { bands: ['nir', 'swir2'], output: 'nbr' },
+    'raster.index.ndbi': { bands: ['swir1', 'nir'], output: 'ndbi' },
+    'raster.index.ndvi': { bands: ['nir', 'red'], output: 'ndvi' },
+    'raster.index.ndwi-gao': { bands: ['nir', 'swir1'], output: 'ndwi' },
+    'raster.index.ndwi-mcfeeters': { bands: ['green', 'nir'], output: 'ndwi' },
+  });
+});
+
 test('an unknown extension fails, naming the field', () => {
   const t = structuredClone(catalog.tools[0]);
   t['x-color'] = 'orange';
@@ -81,6 +95,25 @@ test('a limitation banner must carry all three lines, within their caps', () => 
   ]);
   assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-limitation': { ...good, colour: 'orange' } }] }, sourceIds), [
     'fixture.l: x-limitation has no field colour',
+  ]);
+});
+
+test('raster mode names real numeric band inputs and one numeric output', () => {
+  const base = {
+    id: 'fixture.raster',
+    examples: [],
+    inputs: { properties: { nir: { type: 'number' }, red: { type: 'number' } } },
+    outputs: { properties: { ndvi: { type: 'number' }, label: { type: 'string' } } },
+  };
+  assert.deepEqual(metaschemaProblems({ tools: [{ ...base, 'x-raster': { bands: ['nir', 'red'], output: 'ndvi' } }] }), []);
+  assert.deepEqual(metaschemaProblems({ tools: [{
+    ...base,
+    'x-raster': { bands: ['nir', 'nir', 'missing'], output: 'label', palette: 'green' },
+  }] }), [
+    'fixture.raster: x-raster band names must be unique',
+    'fixture.raster: x-raster band missing is not a numeric input',
+    'fixture.raster: x-raster output label is not a numeric output',
+    'fixture.raster: x-raster has no field palette',
   ]);
 });
 

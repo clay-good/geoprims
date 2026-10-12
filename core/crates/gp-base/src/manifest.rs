@@ -522,6 +522,15 @@ pub fn manifest(def: &ToolDef) -> Json {
     if def.diagram_inline {
         put("x-diagram-inline", Json::Bool(true));
     }
+    if let Some(raster) = def.raster {
+        put(
+            "x-raster",
+            Json::obj([
+                ("bands", strs(raster.bands)),
+                ("output", Json::str(raster.output)),
+            ]),
+        );
+    }
     put("x-clock-default", Json::str("forbidden"));
     put("x-primary-example", Json::str(def.primary_example));
     Json::Obj(o)

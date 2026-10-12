@@ -325,94 +325,126 @@ pub fn decode_window_reader<R: Read + Seek>(
     window: Window,
     max_samples: usize,
 ) -> Result<Raster, Error> {
-    let mut decoder = Decoder::new(reader).map_err(invalid)?;
-    let mut metadata = metadata(&mut decoder)?;
-    let x_end = window.x.checked_add(window.width);
-    let y_end = window.y.checked_add(window.height);
-    let (Some(x_end), Some(y_end)) = (x_end, y_end) else {
-        return Err(Error::Invalid(
-            "The requested window must be non-empty and inside the TIFF dimensions.".into(),
-        ));
-    };
-    if window.width == 0
-        || window.height == 0
-        || x_end > metadata.grid.width
-        || y_end > metadata.grid.height
-    {
-        return Err(Error::Invalid(
-            "The requested window must be non-empty and inside the TIFF dimensions.".into(),
-        ));
+    WindowDecoder::new(reader, max_samples)?.decode(window)
+}
+
+/// A reusable decoder for processing one bounded window at a time.
+pub struct WindowDecoder<R: Read + Seek> {
+    decoder: Decoder<R>,
+    metadata: Metadata,
+    max_samples: usize,
+}
+
+impl<R: Read + Seek> WindowDecoder<R> {
+    pub fn new(reader: R, max_samples: usize) -> Result<Self, Error> {
+        let mut decoder = Decoder::new(reader).map_err(invalid)?;
+        let metadata = metadata(&mut decoder)?;
+        let mut limits = Limits::default();
+        limits.decoding_buffer_size = max_samples.saturating_mul(std::mem::size_of::<f64>());
+        Ok(Self {
+            decoder: decoder.with_limits(limits),
+            metadata,
+            max_samples,
+        })
     }
-    let count = sample_count(window.width, window.height, metadata.bands, max_samples)?;
-    let mut limits = Limits::default();
-    limits.decoding_buffer_size = max_samples.saturating_mul(std::mem::size_of::<f64>());
-    decoder = decoder.with_limits(limits);
 
-    let (chunk_width, chunk_height) = decoder.chunk_dimensions();
-    let chunks_across = metadata.grid.width.div_ceil(chunk_width);
-    let chunk_count = match decoder.get_chunk_type() {
-        ChunkType::Strip => decoder.strip_count().map_err(invalid)?,
-        ChunkType::Tile => decoder.tile_count().map_err(invalid)?,
-    };
-    let first_chunk_x = window.x / chunk_width;
-    let last_chunk_x = (x_end - 1) / chunk_width;
-    let first_chunk_y = window.y / chunk_height;
-    let last_chunk_y = (y_end - 1) / chunk_height;
-    let bands = usize::from(metadata.bands);
-    let mut samples = vec![0.0; count];
+    pub fn metadata(&self) -> &Metadata {
+        &self.metadata
+    }
 
-    for chunk_y in first_chunk_y..=last_chunk_y {
-        for chunk_x in first_chunk_x..=last_chunk_x {
-            let chunk_index = chunk_y
-                .checked_mul(chunks_across)
-                .and_then(|n| n.checked_add(chunk_x))
-                .ok_or_else(|| Error::Invalid("TIFF chunk index overflowed.".into()))?;
-            if chunk_index >= chunk_count {
-                return Err(Error::Invalid("TIFF chunk index is out of range.".into()));
-            }
-            let (data_width, data_height) = decoder.chunk_data_dimensions(chunk_index);
-            let expected = sample_count(data_width, data_height, metadata.bands, max_samples)?;
-            let chunk = samples_as_f64(decoder.read_chunk(chunk_index).map_err(invalid)?);
-            if chunk.len() != expected {
-                return Err(Error::Invalid(
-                    "Decoded chunk sample count does not match its TIFF dimensions.".into(),
-                ));
-            }
-            let chunk_origin_x = chunk_x * chunk_width;
-            let chunk_origin_y = chunk_y * chunk_height;
-            let copy_x0 = window.x.max(chunk_origin_x);
-            let copy_y0 = window.y.max(chunk_origin_y);
-            let copy_x1 = x_end.min(chunk_origin_x.saturating_add(data_width));
-            let copy_y1 = y_end.min(chunk_origin_y.saturating_add(data_height));
-            for image_y in copy_y0..copy_y1 {
-                for image_x in copy_x0..copy_x1 {
-                    let source_pixel = pixel_offset(
-                        image_x - chunk_origin_x,
-                        image_y - chunk_origin_y,
-                        data_width,
-                    )?;
-                    let target_pixel =
-                        pixel_offset(image_x - window.x, image_y - window.y, window.width)?;
-                    let source = source_pixel * bands;
-                    let target = target_pixel * bands;
-                    samples[target..target + bands].copy_from_slice(&chunk[source..source + bands]);
+    pub fn decode(&mut self, window: Window) -> Result<Raster, Error> {
+        let mut metadata = self.metadata.clone();
+        let x_end = window.x.checked_add(window.width);
+        let y_end = window.y.checked_add(window.height);
+        let (Some(x_end), Some(y_end)) = (x_end, y_end) else {
+            return Err(Error::Invalid(
+                "The requested window must be non-empty and inside the TIFF dimensions.".into(),
+            ));
+        };
+        if window.width == 0
+            || window.height == 0
+            || x_end > metadata.grid.width
+            || y_end > metadata.grid.height
+        {
+            return Err(Error::Invalid(
+                "The requested window must be non-empty and inside the TIFF dimensions.".into(),
+            ));
+        }
+        let count = sample_count(
+            window.width,
+            window.height,
+            metadata.bands,
+            self.max_samples,
+        )?;
+
+        let (chunk_width, chunk_height) = self.decoder.chunk_dimensions();
+        let chunks_across = metadata.grid.width.div_ceil(chunk_width);
+        let chunk_count = match self.decoder.get_chunk_type() {
+            ChunkType::Strip => self.decoder.strip_count().map_err(invalid)?,
+            ChunkType::Tile => self.decoder.tile_count().map_err(invalid)?,
+        };
+        let first_chunk_x = window.x / chunk_width;
+        let last_chunk_x = (x_end - 1) / chunk_width;
+        let first_chunk_y = window.y / chunk_height;
+        let last_chunk_y = (y_end - 1) / chunk_height;
+        let bands = usize::from(metadata.bands);
+        let mut samples = vec![0.0; count];
+
+        for chunk_y in first_chunk_y..=last_chunk_y {
+            for chunk_x in first_chunk_x..=last_chunk_x {
+                let chunk_index = chunk_y
+                    .checked_mul(chunks_across)
+                    .and_then(|n| n.checked_add(chunk_x))
+                    .ok_or_else(|| Error::Invalid("TIFF chunk index overflowed.".into()))?;
+                if chunk_index >= chunk_count {
+                    return Err(Error::Invalid("TIFF chunk index is out of range.".into()));
+                }
+                let (data_width, data_height) = self.decoder.chunk_data_dimensions(chunk_index);
+                let expected =
+                    sample_count(data_width, data_height, metadata.bands, self.max_samples)?;
+                let chunk = samples_as_f64(self.decoder.read_chunk(chunk_index).map_err(invalid)?);
+                if chunk.len() != expected {
+                    return Err(Error::Invalid(
+                        "Decoded chunk sample count does not match its TIFF dimensions.".into(),
+                    ));
+                }
+                let chunk_origin_x = chunk_x * chunk_width;
+                let chunk_origin_y = chunk_y * chunk_height;
+                let copy_x0 = window.x.max(chunk_origin_x);
+                let copy_y0 = window.y.max(chunk_origin_y);
+                let copy_x1 = x_end.min(chunk_origin_x.saturating_add(data_width));
+                let copy_y1 = y_end.min(chunk_origin_y.saturating_add(data_height));
+                for image_y in copy_y0..copy_y1 {
+                    for image_x in copy_x0..copy_x1 {
+                        let source_pixel = pixel_offset(
+                            image_x - chunk_origin_x,
+                            image_y - chunk_origin_y,
+                            data_width,
+                        )?;
+                        let target_pixel =
+                            pixel_offset(image_x - window.x, image_y - window.y, window.width)?;
+                        let source = source_pixel * bands;
+                        let target = target_pixel * bands;
+                        samples[target..target + bands]
+                            .copy_from_slice(&chunk[source..source + bands]);
+                    }
                 }
             }
         }
-    }
 
-    if let Some(transform) = metadata.grid.transform.as_mut() {
-        transform.x0 += f64::from(window.x) * transform.dx + f64::from(window.y) * transform.rx;
-        transform.y0 += f64::from(window.x) * transform.ry + f64::from(window.y) * transform.dy;
+        if let Some(transform) = metadata.grid.transform.as_mut() {
+            transform.x0 += f64::from(window.x) * transform.dx + f64::from(window.y) * transform.rx;
+            transform.y0 += f64::from(window.x) * transform.ry + f64::from(window.y) * transform.dy;
+        }
+        metadata.grid.width = window.width;
+        metadata.grid.height = window.height;
+        let valid = validity(&samples, metadata.nodata);
+        Ok(Raster {
+            metadata,
+            samples,
+            valid,
+        })
     }
-    metadata.grid.width = window.width;
-    metadata.grid.height = window.height;
-    let valid = validity(&samples, metadata.nodata);
-    Ok(Raster {
-        metadata,
-        samples,
-        valid,
-    })
 }
 
 /// Decodes bytes supplied through the private local-file ABI.

@@ -2,8 +2,9 @@
 // 50 sampled routes, each loaded cold three times under the reference profile
 // (CPU throttled to the target BenchmarkIndex; 9 Mbps down, 1.5 Mbps up, 150 ms round trip; no cache) at
 // the typical-phone viewport, with the median held to the hard budgets:
-// LCP 2.0 s, interactive 2.5 s, INP 200 ms, CLS 0.1, and shell JavaScript
-// 90 KB compressed. PERF_SAMPLE=n measures only the first n routes.
+// LCP 2.0 s, interactive 2.5 s, INP 200 ms, CLS 0.05, and shell JavaScript
+// 90 KB compressed. PERF_SAMPLE=n measures only the first n routes;
+// PERF_ROUTE=/path/ measures one named route for diagnosis.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -16,7 +17,7 @@ import { serveBuiltSite, web } from './site.mjs';
 const root = join(web, '../..');
 const profile = JSON.parse(readFileSync(join(root, 'data/reference-profile.json'), 'utf8'));
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
-export const BUDGET = { lcp: 2000, interactive: 2500, inp: 200, cls: 0.1, shellJsKb: 90 };
+export const BUDGET = { lcp: 2000, interactive: 2500, inp: 200, cls: 0.05, shellJsKb: 90 };
 const phone = profile.viewports.find((v) => v.aboveTheFold);
 
 /** 50 routes: the home page, the index, every domain, a few groups, and tools spread over the catalog. */
@@ -47,18 +48,44 @@ async function measure(browser, origin, path) {
     uploadThroughput: (profile.network.upKbps * 1000) / 8,
   });
   await page.addInitScript(() => {
-    const p = (window.__perf = { lcp: 0, cls: 0, inp: 0 });
-    new PerformanceObserver((l) => l.getEntries().forEach((e) => (p.lcp = e.startTime))).observe({ type: 'largest-contentful-paint', buffered: true });
+    const p = (window.__perf = { lcp: 0, lcpElement: '', answerAtLcp: false, cls: 0, inp: 0 });
+    new PerformanceObserver((l) => l.getEntries().forEach((e) => {
+      p.lcp = e.startTime;
+      p.lcpElement = `${e.element?.tagName?.toLowerCase() ?? '?'}${e.element?.className ? `.${String(e.element.className).split(/\s+/).join('.')}` : ''}`;
+      const answer = document.querySelector('.card.answer .value');
+      if (answer) {
+        const box = answer.getBoundingClientRect();
+        const style = getComputedStyle(answer);
+        p.answerAtLcp = style.visibility !== 'hidden' && style.display !== 'none' && box.bottom > 0 && box.top < innerHeight;
+      }
+    })).observe({ type: 'largest-contentful-paint', buffered: true });
     new PerformanceObserver((l) => l.getEntries().forEach((e) => !e.hadRecentInput && (p.cls += e.value))).observe({ type: 'layout-shift', buffered: true });
     new PerformanceObserver((l) => l.getEntries().forEach((e) => e.interactionId && (p.inp = Math.max(p.inp, e.duration)))).observe({ type: 'event', buffered: true, durationThreshold: 16 });
   });
   // Shell JavaScript: every script the page loads, compressed as a host would.
   const scripts = [];
+  const wasmRequests = [];
+  let resolveWasm;
+  let wasmTimer;
+  page.on('request', (request) => {
+    if (!request.url().endsWith('.wasm')) return;
+    wasmRequests.push(Date.now());
+    if (resolveWasm) {
+      clearTimeout(wasmTimer);
+      resolveWasm();
+      resolveWasm = null;
+    }
+  });
   page.on('response', async (res) => {
     if (res.request().resourceType() === 'script' && res.url().startsWith(origin)) scripts.push(res.body().then((b) => gzipSync(b).length, () => 0));
   });
   await page.goto(origin + path, { waitUntil: 'load' });
   await page.waitForFunction(() => !document.querySelector('astro-island[ssr]') && (window.__perf.interactive ??= performance.now()), null, { timeout: 30_000 });
+  const toolPage = await page.$('.card.answer .report-button') !== null;
+  if (toolPage && wasmRequests.length === 0) await new Promise((resolve) => {
+    resolveWasm = resolve;
+    wasmTimer = setTimeout(resolve, 10_000);
+  });
   await page.waitForTimeout(300);
   const lcp = await page.evaluate(() => window.__perf.lcp);
   // One interaction: type into the first field of a tool, or press the mode toggle elsewhere.
@@ -75,27 +102,48 @@ async function measure(browser, origin, path) {
   }
   await page.waitForTimeout(500);
   const m = await page.evaluate(() => window.__perf);
+  const firstPaintAt = await page.evaluate(() => performance.timeOrigin + (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? 0));
+  const wasmAfterPaint = !toolPage || (wasmRequests.length > 0 && wasmRequests[0] >= firstPaintAt);
   const shellJs = (await Promise.all(scripts)).reduce((a, b) => a + b, 0) / 1024;
   await context.close();
-  return { lcp, interactive: m.interactive, inp: m.inp, cls: m.cls, shellJsKb: shellJs };
+  return {
+    lcp,
+    interactive: m.interactive,
+    inp: m.inp,
+    cls: m.cls,
+    shellJsKb: shellJs,
+    lcpElement: m.lcpElement,
+    wasmAfterFcpMs: toolPage && wasmRequests.length ? wasmRequests[0] - firstPaintAt : null,
+    answerBeforeLcp: !toolPage || m.answerAtLcp,
+    wasmAfterPaint,
+  };
 }
 
 test(`performance budgets on sampled routes under reference profile ${profile.version}`, { timeout: 3_600_000 }, async (t) => {
   const origin = await serveBuiltSite(t);
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
-  const routes = sampleRoutes().slice(0, Number(process.env.PERF_SAMPLE) || undefined);
+  const routes = process.env.PERF_ROUTE ? [process.env.PERF_ROUTE] : sampleRoutes().slice(0, Number(process.env.PERF_SAMPLE) || undefined);
   const rows = [];
   for (const path of routes) {
     const runs = [];
     for (let i = 0; i < profile.measurement.runsPerRoute; i++) runs.push(await measure(browser, origin, path));
-    const row = { path, ...Object.fromEntries(Object.keys(BUDGET).map((k) => [k, median(runs.map((r) => r[k]))])) };
+    const deltas = runs.map((r) => r.wasmAfterFcpMs).filter((v) => v !== null);
+    const row = {
+      path,
+      ...Object.fromEntries(Object.keys(BUDGET).map((k) => [k, median(runs.map((r) => r[k]))])),
+      lcpElement: runs[Math.floor(runs.length / 2)].lcpElement,
+      wasmAfterFcpMs: deltas.length ? median(deltas) : null,
+      answerBeforeLcp: runs.every((r) => r.answerBeforeLcp),
+      wasmAfterPaint: runs.every((r) => r.wasmAfterPaint),
+    };
     rows.push(row);
-    t.diagnostic(`${path} lcp ${Math.round(row.lcp)} ms · interactive ${Math.round(row.interactive)} ms · inp ${Math.round(row.inp)} ms · cls ${row.cls.toFixed(3)} · js ${row.shellJsKb.toFixed(1)} KB`);
+    t.diagnostic(`${path} lcp ${Math.round(row.lcp)} ms (${row.lcpElement}) · wasm ${row.wasmAfterFcpMs === null ? 'n/a' : `${Math.round(row.wasmAfterFcpMs)} ms after FCP`} · interactive ${Math.round(row.interactive)} ms · inp ${Math.round(row.inp)} ms · cls ${row.cls.toFixed(3)} · js ${row.shellJsKb.toFixed(1)} KB`);
   }
   const over = rows.flatMap((r) => Object.entries(BUDGET).filter(([k, b]) => r[k] > b).map(([k, b]) => `${r.path}: ${k} ${Math.round(r[k] * 1000) / 1000} over ${b}`));
+  over.push(...rows.flatMap((r) => [!r.answerBeforeLcp && `${r.path}: pre-rendered answer painted after LCP`, !r.wasmAfterPaint && `${r.path}: Wasm started before first contentful paint`].filter(Boolean)));
   const worst = Object.fromEntries(Object.keys(BUDGET).map((k) => [k, Math.max(...rows.map((r) => r[k]))]));
   t.diagnostic(`worst: ${JSON.stringify(worst)}`);
-  assert.equal(routes.length, Number(process.env.PERF_SAMPLE) || 50);
+  assert.equal(routes.length, process.env.PERF_ROUTE ? 1 : Number(process.env.PERF_SAMPLE) || 50);
   assert.deepEqual(over, []);
 });

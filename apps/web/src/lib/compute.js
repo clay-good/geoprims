@@ -58,6 +58,8 @@ function call(method, args, key, onProgress) {
 
 // `key` groups requests: only the latest per key resolves (the map uses its own).
 export const invoke = (id, args, key = 'invoke', onProgress) => call('invoke', [id, JSON.stringify(args)], key, onProgress);
+/** Compiles this tool's module in the worker without running a calculation. */
+export const warm = (id) => call('warm', [id]);
 /** A quick call where only the newest answer matters (the map readout): an
  *  older one resolves null, and nothing is cancelled, so the worker stays warm. */
 export const invokeLatest = (id, args, key) => call('invokeLatest', [id, JSON.stringify(args)], key);

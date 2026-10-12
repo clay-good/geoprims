@@ -620,6 +620,16 @@
       result = { ok: false, error: { code: 'UNSUPPORTED', message: NO_WASM } };
     }
     compute = await import('../lib/compute.js');
+    // Keep the server-rendered answer as the first useful paint. Compile this
+    // tool's module afterward in the worker, so the first edit is ready without
+    // putting Wasm on the rendering path.
+    const warmAfterPaint = () => {
+      const warm = () => compute.warm(tool.id).catch(() => {});
+      setTimeout(warm, 0);
+    };
+    // A callback queued from the first animation frame runs before the second
+    // frame, after the first one has painted the server-rendered answer.
+    if (!embedded) requestAnimationFrame(() => requestAnimationFrame(warmAfterPaint));
     if (embedded) {
       if (toolOptions()) run(true);
       return;

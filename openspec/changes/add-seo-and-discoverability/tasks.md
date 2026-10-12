@@ -22,7 +22,7 @@
 
 ## 4. Performance
 
-- [ ] 4.1 Ensure the pre-rendered answer is or precedes LCP, with background Wasm compile, worker compute, and reserved canvas space; verify the CLS scenario and LCP/INP budgets on 50 sampled pages
+- [x] 4.1 Ensure the pre-rendered answer is or precedes LCP, with background Wasm compile, worker compute, and reserved canvas space; verify the CLS scenario and LCP/INP budgets on 50 sampled pages (`apps/web/test/browser/perf.test.mjs` runs 3 cold loads of 50 routes under the pinned reference CPU, network, and phone viewport. A tool's server-rendered answer must already be visible at every LCP event; each tool's Wasm module is warmed in its worker after the first painted frame, and the gate observes the worker request after FCP. The canvas has a reserved block size, and the CLS ceiling is 0.05. On 2026-10-12, the full 150-load run passed: worst LCP 576 ms, interactive 1,046 ms, INP 72 ms, CLS 0.000, and compressed shell JavaScript 79.8 KB.)
 
 ## 5. Natural-language prefill
 

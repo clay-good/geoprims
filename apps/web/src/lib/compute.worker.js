@@ -115,7 +115,10 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
   if (typeof WebAssembly !== 'object') return self.postMessage({ seq, out: failure(NO_WASM) });
   try {
     let out;
-    if (method === 'invoke' || method === 'invokeLatest') out = await (await get(moduleFor(args[0]))).invoke(args[0], args[1]);
+    if (method === 'warm') {
+      await get(moduleFor(args[0]));
+      out = JSON.stringify({ ok: true });
+    } else if (method === 'invoke' || method === 'invokeLatest') out = await (await get(moduleFor(args[0]))).invoke(args[0], args[1]);
     else if (method === 'search') out = await searchWithPrefill(args[0]);
     else if (method === 'detect') out = await detect(args[0]);
     else if (method === 'readCoordinate') out = await readAnyCoordinate(args[0]);

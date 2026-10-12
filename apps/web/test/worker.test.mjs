@@ -44,6 +44,10 @@ test('the worker answers a real call with the real answer', async () => {
   assert.equal(out.result.converted.value, 115.07794480235425);
 });
 
+test('the worker can compile a tool module without running it', async () => {
+  assert.deepEqual(await send('warm', ['units.speed.kt-to-mph']), { ok: true });
+});
+
 test('an unknown tool is an envelope, not a thrown error', async () => {
   const out = await send('invoke', ['no.such.tool', '{}']);
   assert.equal(out.ok, false);

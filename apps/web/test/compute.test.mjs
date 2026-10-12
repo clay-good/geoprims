@@ -73,6 +73,15 @@ test('the worker is reused when no call needs interruption', async () => {
   await answer;
 });
 
+test('warm-up asks the worker to compile the tool module', async () => {
+  const w = StubWorker.last;
+  const warmed = compute.warm('aviation.wind.runway-components');
+  const i = w.sent.length - 1;
+  assert.deepEqual(w.sent[i], { seq: w.sent[i].seq, method: 'warm', args: ['aviation.wind.runway-components'] });
+  w.reply(i, { ok: true });
+  assert.deepEqual(await warmed, { ok: true });
+});
+
 test('the page waits before recomputing, so typing is not a request per keystroke', () => {
   const src = readFileSync(new URL('../src/components/ToolApp.svelte', import.meta.url), 'utf8');
   const debounce = /setTimeout\(run, (\d+)\)/.exec(src);

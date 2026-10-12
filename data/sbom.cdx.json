@@ -31,6 +31,25 @@
   "components": [
     {
       "type": "library",
+      "bom-ref": "pkg:cargo/a5@0.10.1",
+      "name": "a5",
+      "version": "0.10.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/a5@0.10.1",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:cargo/accurate@0.3.1",
       "name": "accurate",
       "version": "0.3.1",
@@ -325,6 +344,25 @@
         }
       ],
       "purl": "pkg:cargo/itoa@1.0.18",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/lazy_static@1.5.1",
+      "name": "lazy_static",
+      "version": "1.5.1",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/lazy_static@1.5.1",
       "scope": "required",
       "properties": [
         {

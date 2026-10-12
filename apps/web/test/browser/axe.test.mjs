@@ -17,6 +17,7 @@ const PAGES = [
   '/aviation/altimetry/density-altitude/',
   '/navigation/geodesic/inverse/',
   '/indexing/h3/grid-disk/',
+  '/indexing/a5/lon-lat-to-cell/',
   '/survey/land/deed-plot/',
   '/workflows/preflight-check/',
   '/sources/',

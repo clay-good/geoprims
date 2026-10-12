@@ -18,6 +18,7 @@ gp-base.workspace = true
 gp-geo = { path = "../gp-geo" }
 libm.workspace = true
 h3o = { version = "0.11.0", default-features = false }
+a5 = "=0.10.1"
 serde_json.workspace = true
 
 

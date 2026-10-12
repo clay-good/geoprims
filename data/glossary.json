@@ -2,6 +2,18 @@
   "note": "Plain-language definitions for every abbreviation in a tool's title, labels, help, or sentence (define-build-contracts manifest-extensions: glossary schema). Checked by tools/trust/glossary.test.mjs; relatedTools are filled from the catalog by tools/trust/glossary.mjs --write.",
   "entries": [
     {
+      "id": "a5",
+      "term": "A5",
+      "expansion": "A5 pentagonal geospatial index",
+      "definition": "A global equal-area grid of pentagonal cells at 31 resolutions, named by a 64-bit index and arranged in a logical parent-child hierarchy.",
+      "source": "a5",
+      "relatedTools": [
+        "indexing.a5.cell-boundary",
+        "indexing.a5.hierarchy",
+        "indexing.a5.lon-lat-to-cell"
+      ]
+    },
+    {
       "id": "aer",
       "term": "AER",
       "expansion": "azimuth, elevation, range",

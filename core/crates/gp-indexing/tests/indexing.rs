@@ -133,6 +133,39 @@ fn scenarios() {
 }
 
 #[test]
+fn a5_scenarios_and_experimental_contract() {
+    let indexed = call(
+        "indexing.a5.lon-lat-to-cell",
+        r#"{"lat":51.5074,"lon":-0.1276,"resolution":10}"#,
+    );
+    assert_eq!(indexed["result"]["cell"], "63611a8000000000");
+    assert!(codes(&indexed).contains(&"EXPERIMENTAL_TOOL".to_owned()));
+
+    let boundary = call(
+        "indexing.a5.cell-boundary",
+        r#"{"cell":"63611a8000000000"}"#,
+    );
+    assert_eq!(boundary["result"]["resolution"], 10);
+    assert_eq!(boundary["result"]["boundary"].as_array().unwrap().len(), 6);
+
+    let hierarchy = call("indexing.a5.hierarchy", r#"{"cell":"63611a8000000000"}"#);
+    assert_eq!(hierarchy["result"]["parent"], "63611a0000000000");
+    assert_eq!(hierarchy["result"]["children"].as_array().unwrap().len(), 4);
+
+    for tool in TOOLS
+        .iter()
+        .filter(|tool| tool.id.starts_with("indexing.a5."))
+    {
+        assert_eq!(tool.stability, gp_base::tool::Stability::Experimental);
+        assert!(
+            tool.model.contains("0.10.1"),
+            "{} does not name the pinned version",
+            tool.id
+        );
+    }
+}
+
+#[test]
 fn geohash_antimeridian_and_poles() {
     let e = call(
         "indexing.geohash.encode",

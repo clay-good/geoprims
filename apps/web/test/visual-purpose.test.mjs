@@ -19,7 +19,8 @@ const primary = (t) => (t.examples.find((e) => e.id === t['x-primary-example']) 
 const cells = {
   boundaries: (ids, grid = 'h3') =>
     Promise.all(ids.map(async (cell) => {
-      const r = await invoke(`indexing.${grid}.cell-info`, { cell });
+      const id = grid === 'a5' ? 'indexing.a5.cell-boundary' : `indexing.${grid}.cell-info`;
+      const r = await invoke(id, { cell });
       return r.ok ? r.result.boundary.map((p) => [p.lon?.value ?? p.lon, p.lat?.value ?? p.lat]) : [];
     })),
   rings: (origin, k) =>

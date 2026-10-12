@@ -19,7 +19,7 @@ Density altitude before a flight. Ground sample distance for a drone survey. A t
 
 Geodesy, navigation, geometry, aviation, drones, surveying, spatial indexing, raster and terrain, time, and units.
 
-Spatial indexing includes H3 polygon fills with all four H3 v4 containment modes, including holes, antimeridian crossings, and the library's polar edge cases. The map renders fills approaching 1,000,000 cells through view-selected H3 parent levels, then restores finer detail as you zoom.
+Spatial indexing includes H3 polygon fills with all four H3 v4 containment modes, including holes, antimeridian crossings, and the library's polar edge cases. The map renders fills approaching 1,000,000 cells through view-selected H3 parent levels, then restores finer detail as you zoom. The experimental tools for A5, pinned to version 0.10.1, index points into equal-area pentagons and expose their boundaries and hierarchy.
 
 ## Status
 

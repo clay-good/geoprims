@@ -172,15 +172,17 @@
   }
 
   // The grid a cell-set layer is drawn from, named as the reader knows it.
-  const grid = tool.id.startsWith('indexing.s2.') ? 'S2' : 'H3';
+  const grid = tool.id.startsWith('indexing.s2.') ? 'S2' : tool.id.startsWith('indexing.a5.') ? 'A5' : 'H3';
   // Cells for cell-set layers: outlines, neighbors, and grid rings from the core.
   const batch = async (id, inputs) => {
     const raw = await compute.invokeBatch(id, JSON.stringify(inputs));
     return Array.isArray(raw) ? raw : [];
   };
   const cellSource = {
-    boundaries: async (ids, grid = 'h3') =>
-      (await batch(`indexing.${grid}.cell-info`, ids.map((cell) => ({ cell })))).map((r) => (r?.ok ? r.result.boundary.map((p) => [p.lon?.value ?? p.lon, p.lat?.value ?? p.lat]) : [])),
+    boundaries: async (ids, grid = 'h3') => {
+      const tool = grid === 'a5' ? 'indexing.a5.cell-boundary' : `indexing.${grid}.cell-info`;
+      return (await batch(tool, ids.map((cell) => ({ cell })))).map((r) => (r?.ok ? r.result.boundary.map((p) => [p.lon?.value ?? p.lon, p.lat?.value ?? p.lat]) : []));
+    },
     rings: async (origin, k) =>
       (await batch('indexing.h3.grid-ring', Array.from({ length: k + 1 }, (_, d) => ({ cell: origin, k: d })))).map((r) => (r?.ok ? r.result.cells.map((c) => c.cell) : [])),
     neighbors: async (origin, grid = 'h3') => {

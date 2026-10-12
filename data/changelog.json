@@ -3,6 +3,17 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "added",
+      "tools": [
+        "indexing.a5.lon-lat-to-cell",
+        "indexing.a5.cell-boundary",
+        "indexing.a5.hierarchy"
+      ],
+      "vectors": [],
+      "summary": "Three experimental A5 0.10.1 tools now index a point into an equal-area pentagonal cell, inspect its center, area, and boundary, and move through its immediate parent and children. Their indexes, hierarchy, areas, centers, and boundary vertices match pinned a5-js 0.10.1 across 120 cases at every resolution."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "changed",
       "tools": [
         "indexing.h3.polygon-to-cells"

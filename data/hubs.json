@@ -1286,7 +1286,26 @@
       ]
     },
     "indexing": {
-      "intro": "Spatial indexes turn a location into a short key you can store, join, and search. This section covers H3 hexagons, S2 cells, geohashes, Plus Codes, and web map tiles, and converts one place between them. Developers and GIS analysts use them to bucket points, join datasets by cell, and plan map caches. If you are not sure which system fits, start with the cross-index tool, which shows one place in each at a matched cell size. Pitfall: every key names an area, not a point, and its size depends on the resolution you choose."
+      "intro": "Spatial indexes turn a location into a short key you can store, join, and search. This section covers H3 hexagons, A5 pentagons, S2 cells, geohashes, Plus Codes, and web map tiles, and converts one place between them. Developers and GIS analysts use them to bucket points, join datasets by cell, and plan map caches. If you are not sure which system fits, start with the cross-index tool, which shows one place in each at a matched cell size. Pitfall: every key names an area, not a point, and its size depends on the resolution you choose."
+    },
+    "indexing.a5": {
+      "summary": "A5 equal-area pentagonal cells, their boundaries, and their hierarchy.",
+      "intro": "A5 divides the globe into equal-area pentagonal cells at 31 resolutions. These experimental tools turn a point into a cell, draw a cell's boundary, and move to its immediate parent or children. Developers and GIS analysts can use A5 when equal area matters for counts or summaries across latitude. Start with point to cell, then inspect the boundary. Pitfall: A5's hierarchy is logical, so the children do not exactly tile the parent polygon, and the pinned pre-1.0 encoding can still change.",
+      "tasks": [
+        {
+          "want": "turn a point into an equal-area A5 cell or inspect its boundary",
+          "tools": [
+            "lon-lat-to-cell",
+            "cell-boundary"
+          ]
+        },
+        {
+          "want": "move to an A5 cell's parent or children",
+          "tools": [
+            "hierarchy"
+          ]
+        }
+      ]
     },
     "indexing.convert": {
       "summary": "Moving between indexing systems: one place in each, at resolutions chosen to match a cell size.",

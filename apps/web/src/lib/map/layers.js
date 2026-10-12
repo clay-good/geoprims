@@ -387,7 +387,7 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
       }
     }
   }
-  // A set of H3 or S2 cells: each cell's outline from the core. Around an
+  // A set of H3, S2, or A5 cells: each cell's outline from the core. Around an
   // origin (a k-ring or ring), each cell carries its grid distance, so the
   // drawing can fade with distance and mark the origin. A point-to-cell
   // lookup also outlines its same-level neighbors as grid context.
@@ -403,8 +403,8 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
     // would make a partial covering read as the whole answer.
     const sourceIds = full.length ? full.slice(0, MAX_CELLS) : compacted.slice(0, MAX_COMPACTED);
     if (!sourceIds.length) continue;
-    // S2 cells come from the S2 tools, H3 cells from H3's; each grid outlines its own.
-    const grid = tool.id.startsWith('indexing.s2.') ? 's2' : 'h3';
+    // Each grid's tools request boundaries from that same grid.
+    const grid = tool.id.startsWith('indexing.s2.') ? 's2' : tool.id.startsWith('indexing.a5.') ? 'a5' : 'h3';
     const visible = compacted.length ? await visibleCells(sourceIds, grid, view, cells) : { ids: sourceIds, resolution: null, aggregated: false };
     const ids = visible.ids;
     const outlines = await cells.boundaries(ids, grid);
@@ -427,7 +427,7 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
         ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}),
       });
     });
-    if (tool.id.endsWith('.lat-lng-to-cell') && ids.length === 1 && cells.neighbors) {
+    if (grid !== 'a5' && tool.id.endsWith('.lat-lng-to-cell') && ids.length === 1 && cells.neighbors) {
       const neighborIds = (await cells.neighbors(ids[0], grid)).filter((id) => id !== ids[0]);
       const neighborOutlines = await cells.boundaries(neighborIds, grid);
       neighborOutlines.forEach((ring) => {

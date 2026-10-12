@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "e3b221b09c0a237a",
+    "hash": "f2e53f44bb4180b1",
     "lastmod": "2026-10-12"
   },
   "/accuracy/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "04c5bbfc5c7ef26a",
+    "hash": "2a1222853f91e172",
     "lastmod": "2026-10-12"
   },
   "/disclaimer/": {
@@ -880,7 +880,23 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/": {
-    "hash": "00c7633236585458",
+    "hash": "d3a823cd230f8127",
+    "lastmod": "2026-10-12"
+  },
+  "/indexing/a5/": {
+    "hash": "485835a9ea583266",
+    "lastmod": "2026-10-12"
+  },
+  "/indexing/a5/cell-boundary/": {
+    "hash": "c3eeb3747a43e912",
+    "lastmod": "2026-10-12"
+  },
+  "/indexing/a5/hierarchy/": {
+    "hash": "585fb8af7c665c65",
+    "lastmod": "2026-10-12"
+  },
+  "/indexing/a5/lon-lat-to-cell/": {
+    "hash": "f269cf83ffa23fae",
     "lastmod": "2026-10-12"
   },
   "/indexing/convert/": {
@@ -1172,11 +1188,11 @@
     "lastmod": "2026-10-09"
   },
   "/licenses/": {
-    "hash": "e2fa1c0ffe64b3b5",
+    "hash": "6f3cb1ed79938d24",
     "lastmod": "2026-10-12"
   },
   "/methodology/": {
-    "hash": "d86428986ec7feca",
+    "hash": "4f58b260b20ed1fa",
     "lastmod": "2026-10-12"
   },
   "/navigation/": {
@@ -1332,7 +1348,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "a4ca5490584eac1b",
+    "hash": "e537782c9eed2ec9",
     "lastmod": "2026-10-12"
   },
   "/raster/": {
@@ -1424,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "98d6a653215fab37",
+    "hash": "56724fe760a1c413",
     "lastmod": "2026-10-12"
   },
   "/survey/": {
@@ -1696,7 +1712,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "3c2b0579ff412e15",
+    "hash": "6af1b9d597dab5f9",
     "lastmod": "2026-10-12"
   },
   "/units/": {
@@ -1960,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "784e585ca2746119",
+    "hash": "833f85ebc3361528",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

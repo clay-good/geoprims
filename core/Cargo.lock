@@ -3,6 +3,15 @@
 version = 4
 
 [[package]]
+name = "a5"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecf0fdafcaa236433fd5f43c069c403c51a9efbfd788b9819c88ab4cdbf20b67"
+dependencies = [
+ "lazy_static",
+]
+
+[[package]]
 name = "accurate"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -152,6 +161,7 @@ dependencies = [
 name = "gp-indexing"
 version = "0.1.0"
 dependencies = [
+ "a5",
  "gp-base",
  "gp-geo",
  "h3o",
@@ -266,6 +276,12 @@ name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+
+[[package]]
+name = "lazy_static"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20870f649af7073d53e38067b2a84312175d56ea15217e1b15bc83506ec50afb"
 
 [[package]]
 name = "libm"

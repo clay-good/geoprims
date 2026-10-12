@@ -2,6 +2,7 @@
 //! (add-spatial-indexing-and-raster, hierarchical-cells spec). H3, S2, and A5
 //! follow.
 
+pub mod a5tools;
 pub mod codes;
 pub mod cover;
 pub mod cross;
@@ -1403,6 +1404,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &h3::CELLS_TO_POLYGON,
     &h3::CELL_TO_LOCAL_IJ,
     &h3::LOCAL_IJ_TO_CELL,
+    &a5tools::LON_LAT_TO_CELL,
+    &a5tools::CELL_BOUNDARY,
+    &a5tools::HIERARCHY,
     &s2tools::POINT_TO_CELL,
     &s2tools::CELL_INFO,
     &s2tools::NEIGHBORS,

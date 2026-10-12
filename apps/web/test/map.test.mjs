@@ -236,6 +236,36 @@ test('every S2 tool draws the exact cell boundaries returned by the core', async
   assert.ok(requested.every((call) => call.grid === 's2'), 'S2 tools never fall through to H3');
 });
 
+test('A5 point lookup draws the exact A5 boundary returned by the core', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const tool = catalog.tools.find((candidate) => candidate.id === 'indexing.a5.lon-lat-to-cell');
+  const args = { lat: 51.5074, lon: -0.1276, resolution: 10 };
+  const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+  const requested = [];
+  const cells = {
+    boundaries: async (ids, grid) => {
+      requested.push({ ids, grid });
+      return Promise.all(ids.map(async (cell) => {
+        const response = JSON.parse(await host.invoke('indexing.a5.cell-boundary', JSON.stringify({ cell })));
+        return response.result.boundary.map((point) => [point.lon, point.lat]);
+      }));
+    },
+    rings: async () => [],
+  };
+  const layers = (await buildLayers(tool, args, result, async () => null, cells)).filter((layer) => layer.cell);
+  const boundary = JSON.parse(await host.invoke('indexing.a5.cell-boundary', JSON.stringify({ cell: result.result.cell }))).result.boundary;
+
+  assert.deepEqual(requested, [{ ids: [result.result.cell], grid: 'a5' }]);
+  assert.equal(layers.length, 1);
+  assert.equal(layers[0].cell, result.result.cell);
+  assert.deepEqual(layers[0].rings[0], boundary.map((point) => [point.lon, point.lat]));
+  assert.deepEqual(layers[0].rings[0][0], layers[0].rings[0].at(-1), 'the cell boundary is closed');
+});
+
 test('H3 and S2 point lookups outline their same-level neighbors as grid context', async () => {
   const { buildLayers } = await import('../src/lib/map/layers.js');
   const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');

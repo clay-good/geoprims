@@ -15,12 +15,14 @@ export const datasets = JSON.parse(readFileSync(join(root, 'assets/registry.json
   .map(({ id, title, issuer, license, attribution, sourceUrl }) => ({ id, title, issuer, license, attribution, sourceUrl }))
   .sort((a, b) => a.title.localeCompare(b.title));
 
-/** The build dependencies, read from the website's own package.json. */
-export const buildTools = Object.entries(
-  JSON.parse(readFileSync(join(web, 'package.json'), 'utf8')).devDependencies ?? {},
-)
-  .map(([name, version]) => ({ name, version, license: 'MIT' }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+/** Every locked third-party package, generated as a CycloneDX SBOM. */
+export const sbom = JSON.parse(readFileSync(join(root, 'data/sbom.cdx.json'), 'utf8'));
+export const dependencies = sbom.components.map((entry) => ({
+  ecosystem: entry.properties.find((property) => property.name === 'geoprims:ecosystem').value,
+  name: entry.name,
+  version: entry.version,
+  license: entry.licenses[0].expression,
+}));
 
 /**
  * Datasets deliberately not used, with the reason

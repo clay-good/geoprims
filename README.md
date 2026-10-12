@@ -13,6 +13,7 @@ Density altitude before a flight. Ground sample distance for a drone survey. A t
 - **Cited.** Every result names its source, edition, and section. The build fails if a source goes out of date. Every citation link is checked monthly, and a dead or moved one opens an issue.
 - **Honest.** Assumptions like datum, true vs. magnetic north, and rules of thumb show up as warnings, not fine print.
 - **Private.** No ads, accounts, tracking, or server-side math. Your inputs never leave your device.
+- **Auditable.** The [CycloneDX software bill of materials](data/sbom.cdx.json) lists every locked Cargo and npm dependency and its license. The build fails when either lockfile and the inventory disagree.
 
 ## What it covers
 
@@ -37,6 +38,8 @@ node mcp/server.mjs
 To contribute, start with [AGENTS.md](AGENTS.md).
 
 Run `npm test` after building to check Rust and JavaScript behavior. The website has two more suites, both run in CI: `npm test` and `npm run test:browser` in `apps/web`, after `npm run build` there. The browser suite checks what unit tests cannot, such as diagram labels inside their frames and each page's JavaScript budget. Runtime cancellation and shutdown behavior is documented in [packages/runtime/README.md](packages/runtime/README.md).
+
+After changing a dependency lockfile, run `npm run build:sbom` to regenerate the dependency inventory used by the site’s licenses page.
 
 ## Disclaimer
 

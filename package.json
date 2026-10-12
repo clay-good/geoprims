@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "npm run build:wasm && npm run build:catalog",
+    "build:sbom": "node tools/codegen/sbom.mjs",
     "build:wasm": "node tools/wasm/build.mjs",
     "build:catalog": "node tools/codegen/catalog.mjs",
     "build:mcp": "node tools/mcp/build-dist.mjs",

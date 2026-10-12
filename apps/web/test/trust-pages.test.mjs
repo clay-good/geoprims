@@ -92,6 +92,17 @@ test('the licenses page lists every registered dataset with its attribution', ()
   for (const left of ['what3words', 'Enhanced Magnetic Model', 'Natural Earth']) assert.ok(html.includes(left), left);
 });
 
+test('the licenses page is generated from the complete CycloneDX SBOM', () => {
+  const html = page('/licenses/').replaceAll('&amp;', '&');
+  const sbom = JSON.parse(readFileSync(join(root, 'data/sbom.cdx.json'), 'utf8'));
+  assert.match(html, new RegExp(`>${sbom.components.length} locked third-party packages are listed\\.`));
+  for (const dependency of sbom.components) {
+    const ecosystem = dependency.properties.find((property) => property.name === 'geoprims:ecosystem').value;
+    const row = `<tr><td>${dependency.name}</td><td>${ecosystem}</td><td>${dependency.version}</td><td>${dependency.licenses[0].expression}</td></tr>`;
+    assert.ok(html.includes(row), `${dependency['bom-ref']} is not listed with its version and license`);
+  }
+});
+
 test('every page links privacy and licenses in its footer', () => {
   for (const route of ['/', '/tools/', '/aviation/', '/aviation/altimetry/density-altitude/', '/security/']) {
     const html = page(route);

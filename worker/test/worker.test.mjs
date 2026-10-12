@@ -294,3 +294,11 @@ test('production routes static assets around the report Worker and only the repo
 test('the migration is generated from the limits file', () => {
   execFileSync('node', [join(root, 'tools/codegen/d1-migration.mjs'), '--check']);
 });
+
+test('CI applies the real migration through local D1', () => {
+  const ci = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
+  assert.match(
+    ci,
+    /npm exec --prefix apps\/web -- wrangler d1 migrations apply geoprims-reports --local --config worker\/wrangler\.jsonc --persist-to/,
+  );
+});

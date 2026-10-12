@@ -59,6 +59,8 @@ jobs:
         run: |
           npm audit --prefix apps/web --audit-level=high
           node tools/repo/npm-licenses.mjs
+      - name: Apply the problem-report migration to local D1
+        run: npm exec --prefix apps/web -- wrangler d1 migrations apply geoprims-reports --local --config worker/wrangler.jsonc --persist-to "${{ runner.temp }}/geoprims-d1"
       # The website is built before the JS tests: several of them compare the
       # built pages with the MCP server (both-surfaces, presets, sitemaps) and
       # read the asset registry the build copies in.

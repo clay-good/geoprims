@@ -8,7 +8,7 @@
 
 ## 2. Worker and D1
 
-- [ ] 2.1 Create the D1 database and migration `0001_problem_reports.sql` per design R6; verify with `wrangler d1 migrations apply --local` in CI (built: the migration, generated from data/report-limits.json and applied to Node's SQLite in the Worker tests; pending: wrangler in CI)
+- [x] 2.1 Create the D1 database and migration `0001_problem_reports.sql` per design R6; verify with `wrangler d1 migrations apply --local` in CI (the migration is generated from data/report-limits.json, its Worker tests exercise the same SQL through Node's SQLite, and CI now uses the pinned Wrangler 4.149.0 to apply it to a fresh local D1 database. The real command applied all 5 statements successfully on 2026-10-12.)
 - [x] 2.2 Implement the Worker (config endpoint, POST validation order, 24 KB streaming cap, catalog import, uniform 202, security headers, logging disabled); verify the unknown-tool, oversized, and logging scenarios
 - [x] 2.3 Implement the keyed daily reporter hash, attempt and accepted caps, dedupe, and the atomic batch insert; verify the uniform-response and no-address scenarios
 - [ ] 2.4 Implement Turnstile siteverify with action and hostname checks and timeout; verify with Turnstile test keys (built: siteverify with action and hostname checks and a 5 s timeout, tested with a stubbed siteverify; pending: Cloudflare's test keys against a deployed Worker)

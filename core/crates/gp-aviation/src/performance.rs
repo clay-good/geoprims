@@ -558,6 +558,26 @@ pub static DESCENT: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "Default descent path angle",
+            value: "3",
+            unit: "deg",
+            source: "faa-iph",
+        },
+        Assumption {
+            name: "Top-of-descent 3-to-1 rule",
+            value: "3",
+            unit: "NM per 1,000 ft",
+            source: "faa-iph",
+        },
+        Assumption {
+            name: "Three-degree-path vertical-speed rule",
+            value: "5",
+            unit: "ft/min per kt",
+            source: "faa-iph",
+        },
+    ],
     sentence: "Start down {distance} out and descend at {vertical_speed}, taking {time}.{if rule_3_to_1 > 0} The 3-to-1 rule says {rule_3_to_1}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_descent,

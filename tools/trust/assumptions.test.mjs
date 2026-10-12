@@ -53,6 +53,7 @@ const MUST_DECLARE = [
   'aviation.altimetry.true-altitude',
   'time.scale.julian-date',
   'aviation.performance.turn',
+  'aviation.performance.top-of-descent',
   'aviation.performance.pivotal-altitude',
   'aviation.airspeed.tat-sat',
   'survey.reduction.edm-correction',
@@ -194,6 +195,15 @@ test('the turn tool exposes gravity and its standard-rate default', () => {
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['9.80665', 'm/s2', 'icao-7488'],
     ['3', 'deg/s', 'faa-ifh'],
+  ]);
+});
+
+test('the top-of-descent tool exposes its published planning rules', () => {
+  const assumptions = byId('aviation.performance.top-of-descent')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['3', 'deg', 'faa-iph'],
+    ['3', 'NM per 1,000 ft', 'faa-iph'],
+    ['5', 'ft/min per kt', 'faa-iph'],
   ]);
 });
 

@@ -8,6 +8,23 @@ import { readFileSync } from 'node:fs';
 const reg = JSON.parse(readFileSync(new URL('../../data/regulations.json', import.meta.url)));
 const ledger = JSON.parse(readFileSync(new URL('../../data/sources-ledger.json', import.meta.url))).sources;
 const STATUSES = new Set(['in-force', 'proposed', 'guidance']);
+const DRONE_REFERENCE_IDS = [
+  'faa-107-altitude',
+  'faa-89-remote-id',
+  'faa-108-nprm',
+  'easa-open-height',
+  'easa-open-mtom',
+  'easa-open-a1',
+  'easa-open-a2',
+  'easa-open-a3',
+  'easa-c1-energy',
+  'easa-sts-classes',
+];
+
+const staleReviewEntries = (entries, now = Date.now()) => {
+  const cutoff = now - 365 * 86_400_000;
+  return entries.filter((entry) => Date.parse(entry.reviewed) < cutoff);
+};
 
 test('every regulation entry is complete and dated', () => {
   const ids = new Set();
@@ -40,9 +57,18 @@ test('Part 108 stays proposed until a final rule is published', () => {
   assert.match(e.citation, /90 FR 38212/);
 });
 
+test('the initial drone regulation set covers FAA and every EASA class family', () => {
+  const ids = new Set(reg.entries.map((entry) => entry.id));
+  for (const id of DRONE_REFERENCE_IDS) assert.ok(ids.has(id), `missing required regulation entry ${id}`);
+  assert.match(reg.entries.find((entry) => entry.id === 'easa-open-a1').meaning, /C0 and C1/);
+  assert.match(reg.entries.find((entry) => entry.id === 'easa-open-a2').meaning, /C2/);
+  assert.match(reg.entries.find((entry) => entry.id === 'easa-open-a3').meaning, /C2, C3, and C4/);
+  assert.match(reg.entries.find((entry) => entry.id === 'easa-sts-classes').meaning, /C5.*C6/);
+});
+
 test('stale review dates are listed for re-verification', () => {
-  const cutoff = Date.now() - 365 * 86_400_000;
-  const stale = reg.entries.filter((e) => Date.parse(e.reviewed) < cutoff).map((e) => `${e.id} (reviewed ${e.reviewed})`);
+  const stale = staleReviewEntries(reg.entries).map((e) => `${e.id} (reviewed ${e.reviewed})`);
   if (stale.length) console.warn(`Re-verify these regulation entries (review older than 12 months):\n  ${stale.join('\n  ')}`);
-  assert.ok(true);
+  const fixture = staleReviewEntries([{ id: 'old-rule', reviewed: '2025-10-11' }], Date.parse('2026-10-12T00:00:00Z'));
+  assert.deepEqual(fixture.map((entry) => entry.id), ['old-rule']);
 });

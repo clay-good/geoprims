@@ -11,7 +11,7 @@
 
 ## 2. Mission patterns
 
-- [ ] 2.1 Implement the survey grid (auto direction, overshoot, holes, crosshatch) with geodesic spacing verification; verify the thin-rectangle and hole scenarios (built: serpentine sweep on a local TM plane, auto direction by minimum hull width, overshoot, crosshatch, and transits routed around buffered holes; both scenarios pass and line spacing checks geodesically to 1 mm)
+- [x] 2.1 Implement the survey grid (auto direction, overshoot, holes, crosshatch) with geodesic spacing verification; verify the thin-rectangle and hole scenarios (the serpentine sweep uses a local TM plane, auto direction by minimum hull width, overshoot, crosshatch, and transits routed around buffered holes. The thin-rectangle and hole scenarios pass, and line spacing checks geodesically to 1 mm in `core/crates/gp-drone/tests/mission.rs`.)
 - [x] 2.2 Implement corridor patterns; verify the pipeline scenario (`drone.mission.corridor` is stable: 18 corridors agree with GEOS offsets on a PROJ plane, `tools/vectors/gen_corridor.py`)
 - [x] 2.3 Implement orbits with heading and gimbal pitch; verify the tower scenario
 - [x] 2.4 Implement facade scans; verify the facade GSD scenario (stable: 12 scans agree with GeographicLib for Python station by station, `tools/vectors/gen_facade.py`; `drone.mission.facade`: level passes parallel to a facade line at a fixed standoff, on the chosen side, stacked from a bottom to a top height with horizontal and vertical overlap (default 75/60), stations evenly spread and serpentine, each waypoint with latitude, longitude, height above the facade's base, and the heading facing the wall; the facade GSD and photo size use the standoff as the object distance. The 30 m scenario and 12 more golden vectors, 10 of them on the equator where the geodesic positions are closed form)
@@ -31,7 +31,7 @@
 
 ## 4. Operations reference
 
-- [ ] 4.1 Create the dated regulatory reference-data file with Part 107, Part 89, the Part 108 NPRM, and EASA entries, plus the stale-review CI warning; verify the Part 108 and stale-entry scenarios (built: data/regulations.json with Part 107, Part 89, the Part 108 NPRM (90 FR 38212, labeled proposed), and EASA entries, and tools/data/regulations.test.mjs listing entries reviewed more than 12 months ago)
+- [x] 4.1 Create the dated regulatory reference-data file with Part 107, Part 89, the Part 108 NPRM, and EASA entries, plus the stale-review CI warning; verify the Part 108 and stale-entry scenarios (`data/regulations.json` covers Part 107, Part 89, the Part 108 NPRM (90 FR 38212, labeled proposed), and the EASA A1/A2/A3 mappings for C0-C4 plus C5/C6 standard scenarios. `tools/data/regulations.test.mjs` pins the required rows, Part 108's proposed status, source-ledger links, and a stale-entry fixture.)
 - [ ] 4.2 Implement the altitude limit calculator with structure exception and height conversions; verify the tower and MSL scenarios (built: structure exception and MSL, and HAE from a user-entered geoid height; both scenarios pass; pending: DEM ground elevation and the geoid tool hand-off)
 - [x] 4.3 Implement speed and kinetic-energy checks; verify the C1 energy scenario
 - [x] 4.4 Implement the EASA subcategory helper; verify the legacy 2 kg scenario

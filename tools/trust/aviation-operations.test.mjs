@@ -1,7 +1,7 @@
 // The aviation suite's 83 planned operations (add-aviation-suite design,
 // "Tool inventory"), each held to the tool and fields that answer it, so
 // the count in tasks.md 7.1 is checked rather than estimated.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,6 +11,7 @@ const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf
 const { groups, endpoints } = JSON.parse(readFileSync(join(root, 'data/aviation-operations.json'), 'utf8'));
 const design = readFileSync(join(root, 'openspec/changes/add-aviation-suite/design.md'), 'utf8');
 const tools = new Map(catalog.tools.map((t) => [t.id, t]));
+const operations = Object.values(groups).flatMap((group) => Object.values(group)).filter(Array.isArray);
 
 test('the inventory lists exactly the operations the design plans', () => {
   for (const [group, ops] of Object.entries(groups)) {
@@ -61,4 +62,26 @@ test('the generated aviation endpoints are exactly the listed ones, each a narro
     for (const f of Object.keys(t.inputs.properties)) assert.ok(f in parent.inputs.properties, `${id}: ${f} is not a parent input`);
     assert.deepEqual(Object.keys(t.outputs.properties), Object.keys(parent.outputs.properties), id);
   }
+});
+
+test('every aviation operation and the two suite guides have documentation', () => {
+  const operationIds = new Set(operations.map(([id]) => id));
+  const missing = [...operationIds].filter((id) => !existsSync(join(root, 'docs/derivations', `${id}.md`)));
+  assert.deepEqual(missing, []);
+
+  const workflows = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8')).workflows;
+  const preflight = workflows.find((workflow) => workflow.slug === 'preflight-performance');
+  assert.ok(preflight, 'the preflight performance workflow is missing');
+  assert.deepEqual(preflight.steps.map((step) => step.tool), [
+    'aviation.weather.metar-decode',
+    'aviation.altimetry.pressure-altitude',
+    'aviation.altimetry.density-altitude',
+    'aviation.loading.table-interpolate',
+    'aviation.wind.runway-components',
+  ]);
+
+  const explainer = readFileSync(join(root, 'apps/web/src/content/learn/pressure-altitude-constants.md'), 'utf8');
+  assert.match(explainer, /^title: Why two calculators disagree on pressure altitude$/m);
+  assert.match(explainer, /145,442\.16 ft/);
+  assert.match(explainer, /145,366\.45 ft/);
 });

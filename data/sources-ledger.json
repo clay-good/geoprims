@@ -1012,6 +1012,26 @@
       "editionCheck": true
     },
     {
+      "id": "geocue-sun-angle",
+      "name": "GeoCue Flight Planning – Sun Angle",
+      "issuer": "GeoCue Support",
+      "currentEdition": "November 27, 2025",
+      "currentReleaseDate": "2025-11-27",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the current GeoCue support article on 2026-10-12: its general rule recommends capturing photogrammetry photos with the sun angle greater than 30° above the horizon.",
+      "freeAccessUrl": "https://support.geocue.com/flight-planning-sun-angle/",
+      "matchTerms": [
+        "Flight Planning – Sun Angle"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "geohash",
       "name": "Geohash",
       "issuer": "G. Niemeyer",

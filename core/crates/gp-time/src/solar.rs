@@ -66,6 +66,14 @@ const CFR_107_29: Reference = Reference {
     locator: "§107.29(c): civil twilight is 30 minutes before official sunrise and after official sunset, except in Alaska (the Air Almanac period)",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-107/subpart-B/section-107.29",
 };
+const GEOCUE_SUN_ANGLE: Reference = Reference {
+    title: "Flight Planning – Sun Angle",
+    issuer: "GeoCue Support",
+    year: 2025,
+    edition: "November 27, 2025",
+    locator: "Recommended Sun Angle for Photogrammetry: greater than 30° above the horizon",
+    url: "https://support.geocue.com/flight-planning-sun-angle/",
+};
 
 const LAT: Field = point::lat_field("lat", "Latitude");
 const LON: Field = point::lon_field("lon", "Longitude");
@@ -1313,7 +1321,7 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Times the geometric sun (NREL SPA) crosses the threshold, by bisection between the day's highest and lowest points; the highest sun and the path are the same SPA sun, apparent (refracted), every 20 minutes of local clock time",
     accuracy: "About 1 minute",
-    references: &[NREL_SPA, NOAA],
+    references: &[NREL_SPA, NOAA, GEOCUE_SUN_ANGLE],
     assets: &["tzdb"],
     examples: &[Example {
         id: "primary",
@@ -1340,6 +1348,12 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Default minimum sun elevation for photogrammetry",
+        value: "30",
+        unit: "deg",
+        source: "geocue-sun-angle",
+    }],
     sentence: "The sun is high enough {window}.",
     limits: &[("batchRows", 1_000)],
     run: run_mapping,

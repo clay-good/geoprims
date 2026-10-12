@@ -3,7 +3,7 @@
 
 ## Method
 
-Photogrammetry wants the sun high. Low sun means long shadows, which hide detail and confuse matching, so vendor guidance is generally to fly with the sun above about 30°. This tool answers when that holds on a given day at a given place.
+Photogrammetry wants the sun high. Low sun means long shadows, which hide detail and confuse matching, so GeoCue's flight-planning guidance says to capture photos with the sun more than 30° above the horizon. This tool uses 30° as its default and answers when that holds on a given day at a given place.
 
 The sun's elevation over a day is a single smooth arc with one maximum, so finding when it crosses a threshold is a bracketed root-find, not a search. The day's highest point is the solar transit; the lowest is half a day away. If the peak is below the threshold there is no window at all; if the trough is above it, the window is the whole day. Otherwise one crossing lies between the trough and the peak on each side, and bisection finds both.
 

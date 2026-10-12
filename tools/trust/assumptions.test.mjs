@@ -68,6 +68,7 @@ const MUST_DECLARE = [
   'raster.index.savi',
   'raster.index.dnbr',
   'geometry.buffer.geodesic',
+  'time.sun.mapping-window',
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
@@ -181,6 +182,13 @@ test('the geodesic buffer exposes its published default mitre limit', () => {
   const assumptions = byId('geometry.buffer.geodesic')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['5', '1', 'jts-buffer-parameters'],
+  ]);
+});
+
+test('the mapping window exposes its published minimum sun elevation', () => {
+  const assumptions = byId('time.sun.mapping-window')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['30', 'deg', 'geocue-sun-angle'],
   ]);
 });
 

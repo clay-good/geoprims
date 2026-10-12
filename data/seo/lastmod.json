@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "37af2c8b40a2f6f1",
+    "hash": "1974e08c3cc9b391",
     "lastmod": "2026-10-12"
   },
   "/survey/": {
@@ -1700,8 +1700,8 @@
     "lastmod": "2026-10-09"
   },
   "/time/sun/mapping-window/": {
-    "hash": "d9cd8303cec1b9d8",
-    "lastmod": "2026-10-09"
+    "hash": "430ef8416ac3899f",
+    "lastmod": "2026-10-12"
   },
   "/time/sun/night-currency/": {
     "hash": "75a23ac893088612",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a753e5e3436f066e",
+    "hash": "38e886e16f727d2e",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {
@@ -2016,8 +2016,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/mapping-flight/": {
-    "hash": "17bc4915e5854af0",
-    "lastmod": "2026-10-10"
+    "hash": "da2df28e7c33d0a2",
+    "lastmod": "2026-10-12"
   },
   "/workflows/preflight-check/": {
     "hash": "f4d8e5fed7a60131",

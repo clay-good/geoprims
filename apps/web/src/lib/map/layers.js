@@ -85,6 +85,15 @@ function rings(tool, args) {
   return [];
 }
 
+/** Input geometry that can frame a view before result-cell boundaries exist. */
+export function inputExtent(tool, args) {
+  const rs = rings(tool, args).flat();
+  if (rs.length) return rs;
+  const lon = numberOf(args.lon);
+  const lat = numberOf(args.lat);
+  return lon === null || lat === null ? [] : [[lon, lat]];
+}
+
 /**
  * A flight path from an output list, in order: rows of {lat, lon}, or rows
  * that hold such a list (a corridor's lines, each with its waypoints).
@@ -178,12 +187,43 @@ export function outputRings(result, field) {
 export const MAX_CELLS = 1000;
 
 /**
- * The most cells a compacted stand-in draws. The core sends one only when it
- * fits its 10,000-cell listing limit, so this is a backstop rather than a cut:
- * the 889,954-cell fill that compacts to 6,256 costs 270 ms of boundaries and
- * 37,536 vertices, which the renderer draws well inside a frame.
+ * The most cells accepted from a compacted stand-in. The core sends one only
+ * when it fits its 10,000-cell listing limit; view LOD reduces it before any
+ * boundaries are requested.
  */
 export const MAX_COMPACTED = 10_000;
+
+const h3Resolution = (cell) => Number.parseInt(cell?.[1] ?? '', 16);
+
+/**
+ * Finest H3 resolution whose average cell is still visible in this view.
+ * H3 has 2 + 120 * 7^r cells at resolution r. The square root of their
+ * average solid angle is a stable screen-size proxy without copying a cell
+ * size table into the web app. Four pixels keeps the grid legible while
+ * avoiding thousands of sub-pixel fills.
+ */
+export function h3LodResolution(view) {
+  if (!view || !Number.isFinite(view.scale) || view.scale <= 0) return null;
+  for (let resolution = 15; resolution >= 0; resolution--) {
+    const angularSize = Math.sqrt((4 * Math.PI) / (2 + 120 * 7 ** resolution));
+    if (angularSize * view.scale >= 4) return resolution;
+  }
+  return 0;
+}
+
+export async function visibleCells(ids, grid, view, cells) {
+  if (grid !== 'h3' || !view || !cells.parents) return { ids, resolution: null, aggregated: false };
+  const target = h3LodResolution(view);
+  const fine = ids.filter((id) => h3Resolution(id) > target);
+  if (!fine.length) return { ids, resolution: target, aggregated: false };
+  const parents = await cells.parents(fine, target);
+  const byFine = new Map(fine.map((id, i) => [id, parents[i]]));
+  return {
+    ids: [...new Set(ids.map((id) => byFine.get(id) ?? id).filter(Boolean))],
+    resolution: target,
+    aggregated: true,
+  };
+}
 
 /** The cell ids a cell-set layer names: one output field holding an id or a list of {cell}. */
 export function cellIds(result, field) {
@@ -201,7 +241,7 @@ export function cellIds(result, field) {
  * `compare` (navigation/geodesic "Comparison overlay") adds the spherical
  * great circle to a two-point line; every such line carries its path and length.
  */
-export async function buildLayers(tool, args, result, densify, cells, { compare = false } = {}) {
+export async function buildLayers(tool, args, result, densify, cells, { compare = false, view = null } = {}) {
   // A footprint coverage layer is drawn on its own, so it does not make the
   // tool a polygon tool.
   const kinds = new Set((tool.visualization ?? []).filter((v) => !(v.kind === 'polygon' && mapOf(v.map).coverage)).map((v) => v.kind));
@@ -359,22 +399,33 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
     // like, rather than an empty map.
     const full = cellIds(result, map.cells ?? map.cell);
     const compacted = full.length ? [] : cellIds(result, map.compacted);
-    // A compacted set is drawn whole. The core only sends one when it fits
-    // inside its own listing limit, so it is already small, and half of a
-    // covering drawn is worse than none: it reads as the answer.
-    const ids = full.length ? full.slice(0, MAX_CELLS) : compacted.slice(0, MAX_COMPACTED);
-    if (!ids.length) continue;
+    // Keep the complete compacted covering as the LOD source. Truncating it
+    // would make a partial covering read as the whole answer.
+    const sourceIds = full.length ? full.slice(0, MAX_CELLS) : compacted.slice(0, MAX_COMPACTED);
+    if (!sourceIds.length) continue;
     // S2 cells come from the S2 tools, H3 cells from H3's; each grid outlines its own.
     const grid = tool.id.startsWith('indexing.s2.') ? 's2' : 'h3';
+    const visible = compacted.length ? await visibleCells(sourceIds, grid, view, cells) : { ids: sourceIds, resolution: null, aggregated: false };
+    const ids = visible.ids;
     const outlines = await cells.boundaries(ids, grid);
     const k = Number.isInteger(Number(args.k)) ? Number(args.k) : null;
     const origin = typeof args.cell === 'string' && k !== null ? args.cell.trim().toLowerCase() : null;
     const distance = new Map();
     if (origin && k <= 10) (await cells.rings(origin, k)).forEach((ring, d) => ring.forEach((id) => distance.set(id, d)));
+    const resolutions = grid === 'h3' ? [...new Set(ids.map(h3Resolution).filter(Number.isInteger))].sort((a, b) => a - b) : [];
+    const resolutionWeight = new Map(resolutions.map((resolution, i) => [resolution, 1 + (0.7 * (resolutions.length - i - 1)) / Math.max(1, resolutions.length - 1)]));
     ids.forEach((id, i) => {
       if (!outlines[i]?.length) return;
       const d = distance.get(id);
-      layers.push({ kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id, ...(compacted.length ? { compacted: true } : {}), ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}) });
+      const resolution = grid === 'h3' ? h3Resolution(id) : null;
+      layers.push({
+        kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id,
+        ...(compacted.length ? { compacted: true } : {}),
+        ...(visible.aggregated ? { aggregated: true } : {}),
+        ...(visible.resolution !== null ? { lodResolution: visible.resolution } : {}),
+        ...(Number.isInteger(resolution) ? { resolution, resolutionWeight: resolutionWeight.get(resolution) } : {}),
+        ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}),
+      });
     });
     if (tool.id.endsWith('.lat-lng-to-cell') && ids.length === 1 && cells.neighbors) {
       const neighborIds = (await cells.neighbors(ids[0], grid)).filter((id) => id !== ids[0]);

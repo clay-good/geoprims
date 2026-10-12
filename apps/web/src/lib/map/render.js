@@ -518,7 +518,7 @@ export function draw(g, view, base, layers, c) {
       g.fill();
       g.globalAlpha = 0.3 + 0.7 * w;
       g.strokeStyle = c.accent;
-      g.lineWidth = origin ? 3 : 1.5;
+      g.lineWidth = origin ? 3 : 1.5 * (layer.resolutionWeight ?? 1);
       // Mid-pan the dash waits for the view to stop: dashing thousands of
       // small outlines was a fifth of a million-cell frame.
       if (layer.compacted && !view.moving) g.setLineDash([5, 3]);

@@ -295,6 +295,7 @@ test('a fill too large to list draws its compacted stand-in, dashed', async () =
   const cells = {
     boundaries: async (ids) => (await batch('indexing.h3.cell-info', ids.map((cell) => ({ cell })))).map((r) => r.result.boundary.map((p) => [p.lon, p.lat])),
     rings: async () => [],
+    parents: async (ids, resolution) => (await batch('indexing.h3.parent', ids.map((cell) => ({ cell, resolution })))).map((r) => r.result.parent),
   };
   const drawn = (await buildLayers(tool, args, result, async () => null, cells)).filter((l) => l.cell);
   assert.ok(drawn.length > 0, 'the compacted set is drawn');
@@ -305,6 +306,15 @@ test('a fill too large to list draws its compacted stand-in, dashed', async () =
   // Mixed resolutions are what compaction produces, and what the drawing shows.
   const resolutions = new Set(drawn.map((l) => l.cell.length));
   assert.ok(resolutions.size >= 1);
+
+  const view = frame('map', args.points.map((point) => [point.lon, point.lat]), 1280, 800, { tight: true });
+  const lod = (await buildLayers(tool, args, result, async () => null, cells, { view })).filter((l) => l.cell);
+  assert.ok(lod.length < drawn.length, `${drawn.length} compacted cells aggregate to ${lod.length} visible cells`);
+  assert.equal(new Set(lod.map((layer) => layer.cell)).size, lod.length, 'parents are deduplicated');
+  assert.ok(lod.every((layer) => layer.compacted && layer.aggregated && Number.isInteger(layer.lodResolution)));
+  const weights = new Map(lod.map((layer) => [layer.resolution, layer.resolutionWeight]));
+  assert.equal(weights.size, new Set(lod.map((layer) => layer.resolution)).size, 'each visible resolution has one outline weight');
+  assert.equal(new Set(weights.values()).size, weights.size, 'mixed resolutions have distinct outline weights');
 });
 
 test('geohash, Plus Code, and tile cells draw as their bounds', async () => {

@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "changed",
+      "tools": [
+        "indexing.h3.polygon-to-cells"
+      ],
+      "vectors": [],
+      "summary": "Large H3 fills now choose a visible parent resolution from the map or globe view instead of drawing thousands of sub-pixel outlines. An 889,954-cell fill compacts to 6,256 cells, then draws 541 view-level cells at its fitted view; p95 pan frames stayed below 12.7 ms at the reference CPU profile. Zooming restores finer levels. Mixed-resolution sets use a different outline weight and a named legend entry for every resolution. Results are unchanged."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "result-change",
       "tools": [
         "indexing.h3.polygon-to-cells"

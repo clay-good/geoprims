@@ -3,7 +3,7 @@
   // the Natural Earth base layer, as a 2D map or a globe. Drag to pan or spin,
   // scroll or pinch to zoom; arrow keys, + and -, and 0 (reset) do the same.
   import { onMount, tick } from 'svelte';
-  import { buildLayers, extent, isogonicLayers } from '../lib/map/layers.js';
+  import { buildLayers, extent, h3LodResolution, inputExtent, isogonicLayers } from '../lib/map/layers.js';
   import { createBasemapLoader, DETAIL_AT, GENERALIZED_AT } from '../lib/map/basemap.js';
   import { forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
@@ -88,7 +88,16 @@
   function motion() {
     paint(true);
     clearTimeout(still);
-    still = setTimeout(() => paint(), 120);
+    still = setTimeout(refreshLod, 120);
+  }
+
+  function refreshLod() {
+    const current = layers.find((layer) => layer.lodResolution !== undefined)?.lodResolution;
+    const next = h3LodResolution(view);
+    if (current !== undefined && next !== current) {
+      keepView = true;
+      rebuild();
+    } else paint();
   }
 
   function paint(moving = false) {
@@ -181,14 +190,20 @@
       const rows = grid === 's2' ? response?.result?.neighbors : response?.result?.cells;
       return response?.ok && Array.isArray(rows) ? rows.map((row) => row.cell).filter((cell) => cell && cell !== origin) : [];
     },
+    parents: async (ids, resolution) =>
+      (await batch('indexing.h3.parent', ids.map((cell) => ({ cell, resolution })))).map((response) => response?.result?.parent?.cell ?? response?.result?.parent),
   };
 
   async function rebuild() {
     if (!result?.ok) return;
+    const [w, h] = size();
+    const layerView = keepView && view
+      ? { ...view, width: w, height: h }
+      : frame(mode, inputExtent(tool, args), w, h, { tight: true });
     layers = await buildLayers(tool, args, result, (input) =>
       compute.invoke('navigation.geodesic.waypoints', input, 'densify'),
       cellSource,
-      { compare },
+      { compare, view: layerView },
     );
     if (isogonic && args.date) {
       const iso = await compute.invoke('geodesy.magnetic.isogonic', { date: args.date, ...(args.model === 'igrf14' ? { model: 'igrf14' } : {}) }, 'isogonic');
@@ -203,7 +218,8 @@
     const legged = layers.find((l) => l.legLabels);
     if (legged) what.push(`each leg labeled with its heading, groundspeed, and time: ${legged.legLabels.join('; ')}`);
     const compacted = layers.some((l) => l.compacted);
-    if (cellCount) what.push(`${cellCount} ${grid} ${cellCount === 1 ? 'cell' : 'cells'}${compacted ? `, drawn dashed because they are the compacted stand-in for the ${result.result?.count ?? 'many'} the answer counts` : ''}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
+    const aggregated = layers.some((l) => l.aggregated);
+    if (cellCount) what.push(`${cellCount} ${grid} ${cellCount === 1 ? 'cell' : 'cells'}${compacted ? `, drawn dashed because they are the ${aggregated ? 'view-level aggregate of the compacted' : 'compacted'} stand-in for the ${result.result?.count ?? 'many'} the answer counts` : ''}${layers.some((l) => l.cell && l.role === 'result') ? ', the origin highlighted and the rest fading with grid distance' : ''}`);
     shown = [...new Set(what)].join(', ') || 'the world';
     // What the lines mean: the result path, and the other kind of line for comparison.
     const rhumb = kinds.has('line-rhumb');
@@ -213,6 +229,7 @@
       return l ? ` · ${l}` : '';
     };
     const [own, other] = rhumb ? ['rhumb', 'geodesic'] : ['geodesic', 'rhumb'];
+    const cellResolutions = [...new Set(layers.filter((l) => Number.isInteger(l.resolution)).map((l) => l.resolution))].sort((a, b) => a - b);
     legend = [
       layers.some((l) => l.kind === 'line' && l.role === 'result' && l.arrows) && { cls: 'solid', text: 'Flight path, in order' },
       layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows && !l.offset && !l.iso) && { cls: 'solid', text: `${named(rhumb)}${lengthOf(own)}` },
@@ -228,7 +245,8 @@
       layers.some((l) => l.role === 'coverage') && { cls: 'area', text: 'Photo footprints: darker where photos overlap' },
       layers.some((l) => l.legLabels) && { cls: 'solid', text: 'Each leg: heading (MH magnetic, TH true), groundspeed, and time' },
       layers.some((l) => l.kind === 'polygon' && !l.cell && !l.grid && l.role !== 'coverage') && { cls: 'area', text: 'The area' },
-      layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? `${grid} cells: the origin strongest, fading with grid distance` : `${grid} cells` },
+      ...cellResolutions.map((resolution, i) => ({ cls: `area cell-weight-${Math.min(i, 2)}`, text: `${grid} resolution ${resolution} cells` })),
+      layers.some((l) => l.cell && !Number.isInteger(l.resolution)) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? `${grid} cells: the origin strongest, fading with grid distance` : `${grid} cells` },
     ].filter(Boolean);
     // A result that lands mid-drag was computed for an earlier position:
     // keep the point under the pointer until the drag ends.

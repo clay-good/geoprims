@@ -40,7 +40,7 @@ export function nodeHost(wasmDir, opts = {}) {
       ok: false,
       error: { code: 'UNSUPPORTED', message: `There is no tool with id "${id}".`, hint: 'Search the catalog for the right id.' },
     });
-  const route = async (id, method, input) => {
+  const route = async (id, method, ...args) => {
     let mod;
     try {
       mod = await get(moduleFor(id));
@@ -48,11 +48,24 @@ export function nodeHost(wasmDir, opts = {}) {
       loaded.delete(moduleFor(id));
       return unsupported(id);
     }
-    return mod[method](id, input);
+    return mod[method](...args);
   };
+  const ok = '{"ok":true}';
   return {
     module: get,
-    invoke: (id, input) => route(id, 'invoke', input),
-    invokeBatch: (id, inputs) => route(id, 'invokeBatch', inputs),
+    invoke: (id, input) => route(id, 'invoke', id, input),
+    invokeBatch: (id, inputs) => route(id, 'invokeBatch', id, inputs),
+    putFile: async (id, handle, bytes) => {
+      (await get(moduleFor(id))).putFile(handle, bytes);
+      return ok;
+    },
+    removeFile: async (id, handle) => {
+      (await get(moduleFor(id))).removeFile(handle);
+      return ok;
+    },
+    clearFiles: async (id) => {
+      (await get(moduleFor(id))).clearFiles();
+      return ok;
+    },
   };
 }

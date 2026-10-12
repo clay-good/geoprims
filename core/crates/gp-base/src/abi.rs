@@ -4,6 +4,8 @@
 //! - `gp_invoke(id, idLen, input, inputLen)`, `gp_invoke_batch(…)`, `gp_manifest()`,
 //!   and `gp_version()` return JSON (or the version string).
 //! - `gp_alloc(len) -> ptr` / `gp_free(ptr, len)`: host-owned input buffers.
+//! - The raster module also exports `gp_file_put`, `gp_file_remove`, and
+//!   `gp_file_clear` for ephemeral bytes from files the user selected.
 //! - Calls that return a string return a pointer to a core-owned buffer and set
 //!   its length, read with `gp_out_len()`. The buffer lives until the next call.
 //!
@@ -161,6 +163,60 @@ macro_rules! export_module {
                     _ => $crate::abi::bad_utf8(),
                 };
                 $crate::abi::set_out(&out)
+            }
+        }
+    };
+}
+
+/// Adds the private local-file ABI to the one domain that consumes files.
+#[macro_export]
+macro_rules! export_file_bridge {
+    () => {
+        #[cfg(target_arch = "wasm32")]
+        mod __gp_file_exports {
+            /// Supplies one user-selected file under an opaque private handle.
+            /// Returns 0 on success, 1 for bad UTF-8, 2 for an invalid handle,
+            /// and 3 when the whole-file bridge limit is exceeded.
+            ///
+            /// # Safety
+            /// Both ranges must be readable buffers from `gp_alloc`.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_file_put(
+                handle: *const u8,
+                handle_len: usize,
+                data: *const u8,
+                data_len: usize,
+            ) -> i32 {
+                let Ok(handle) = (unsafe { $crate::abi::read_str(handle, handle_len) }) else {
+                    return 1;
+                };
+                // SAFETY: the host passes a buffer it allocated with gp_alloc.
+                let bytes = unsafe { core::slice::from_raw_parts(data, data_len) };
+                match $crate::files::put(handle, bytes) {
+                    Ok(()) => 0,
+                    Err($crate::files::PutError::InvalidHandle) => 2,
+                    Err($crate::files::PutError::LimitExceeded) => 3,
+                }
+            }
+
+            /// Removes one user-selected file from module memory.
+            ///
+            /// # Safety
+            /// The handle range must be a readable buffer from `gp_alloc`.
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn gp_file_remove(handle: *const u8, handle_len: usize) -> i32 {
+                match unsafe { $crate::abi::read_str(handle, handle_len) } {
+                    Ok(handle) => {
+                        $crate::files::remove(handle);
+                        0
+                    }
+                    Err(_) => 1,
+                }
+            }
+
+            #[unsafe(no_mangle)]
+            pub extern "C" fn gp_file_clear() {
+                $crate::files::clear()
             }
         }
     };

@@ -195,6 +195,13 @@ pub fn inspect(bytes: &[u8]) -> Result<Metadata, Error> {
     metadata(&mut decoder)
 }
 
+/// Inspects bytes supplied through the private local-file ABI.
+pub fn inspect_file(handle: &str) -> Result<Metadata, Error> {
+    let bytes = gp_base::files::get(handle)
+        .ok_or_else(|| Error::Invalid("The selected local file is no longer loaded.".into()))?;
+    inspect(&bytes)
+}
+
 /// Decodes one TIFF image after enforcing the caller's sample allocation cap.
 /// Large rasters will use the tiled path rather than this whole-image helper.
 pub fn decode(bytes: &[u8], max_samples: usize) -> Result<Raster, Error> {
@@ -247,6 +254,13 @@ pub fn decode(bytes: &[u8], max_samples: usize) -> Result<Raster, Error> {
         samples,
         valid,
     })
+}
+
+/// Decodes bytes supplied through the private local-file ABI.
+pub fn decode_file(handle: &str, max_samples: usize) -> Result<Raster, Error> {
+    let bytes = gp_base::files::get(handle)
+        .ok_or_else(|| Error::Invalid("The selected local file is no longer loaded.".into()))?;
+    decode(&bytes, max_samples)
 }
 
 /// Refuses bands whose dimensions, CRS, pixel convention, or transform differ.

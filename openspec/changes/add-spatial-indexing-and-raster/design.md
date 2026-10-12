@@ -45,6 +45,13 @@ R2-style radial sweep with a documented error bound, validated against brute-for
 ### IR6. Raster decoding in Rust
 Decode GeoTIFF/COG in the raster module (`tiff` crate plus GeoKey parsing) to keep one deterministic path shared with the MCP server. Tiled reads keep memory under the declared caps.
 
+### IR7. Local files cross the Wasm boundary by private handle
+The host gives each user-selected file an opaque handle and supplies its bytes through a raw binary ABI, separate from JSON inputs and verified public assets. Tool inputs carry only the handle, marked private; file bytes and names never enter permalinks, reports, preferences, or caches. The module keeps supplied bytes only in memory and exposes remove and clear operations so the host can release them when a file is replaced or the file-backed session ends. A worker restart restores the in-memory file so canceling one calculation does not make the user select it again.
+
+The first bridge accepts whole files up to 64 MiB, which covers ordinary local GeoTIFFs without base64 expansion or a second decoder. Large COGs and the 500-megapixel case use a range-fed extension of the same handle model: the host reads only requested `File.slice` ranges and the Rust decoder remains the sole TIFF parser. Node reads only a path the user explicitly supplies; neither host follows a URL from file content.
+
+Alternative: base64 inside the tool JSON. Rejected because it expands files by about 33%, copies them through the request parser, and makes it too easy for private bytes to leak into links and reports.
+
 ## Tool inventory (targets)
 
 | Domain | Group | Operations | Examples |

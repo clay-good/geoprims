@@ -1,14 +1,22 @@
 // Main-thread client for the compute worker. Only the latest request per key
 // resolves; older ones are dropped as stale (web "stale-result" behavior).
+import { fileBytes } from '../../../../packages/runtime/src/files.mjs';
+
 let worker;
 let seq = 0;
 const waiting = new Map();
 const latest = new Map();
+const files = new Map();
+const moduleFor = (tool) => (tool.startsWith('units.') ? 'base' : tool.split('.')[0]);
+const fileKey = (tool, handle) => `${moduleFor(tool)}\0${handle}`;
 
 function ensure() {
   if (!worker) {
     const current = new Worker(new URL('./compute.worker.js', import.meta.url), { type: 'module' });
     worker = current;
+    for (const { tool, handle, bytes } of files.values()) {
+      current.postMessage({ seq: 0, method: 'putFile', args: [tool, handle, bytes] });
+    }
     current.onmessage = ({ data: { seq: s, out } }) => {
       if (worker !== current) return; // an interrupted worker may have queued a reply
       const w = waiting.get(s);
@@ -76,3 +84,21 @@ export const readFileBytes = (name, bytes) => call('readFileBytes', [name, bytes
 /** One chunk of a batch: the core's array of envelopes, in row order. No key,
  *  so a keystroke on the form never supersedes or cancels a running batch. */
 export const invokeBatch = (id, inputsJson) => call('invokeBatch', [id, inputsJson]);
+/** Keeps a user-selected file in memory under a private handle. */
+export async function putFile(tool, handle, bytes) {
+  bytes = fileBytes(bytes);
+  const out = await call('putFile', [tool, handle, bytes]);
+  if (out?.ok) files.set(fileKey(tool, handle), { module: moduleFor(tool), tool, handle, bytes });
+  return out;
+}
+export async function removeFile(tool, handle) {
+  const out = await call('removeFile', [tool, handle]);
+  files.delete(fileKey(tool, handle));
+  return out;
+}
+export async function clearFiles(tool) {
+  const out = await call('clearFiles', [tool]);
+  const module = moduleFor(tool);
+  for (const [key, file] of files) if (file.module === module) files.delete(key);
+  return out;
+}

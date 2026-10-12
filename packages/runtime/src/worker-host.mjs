@@ -3,6 +3,7 @@
 // LIMIT_EXCEEDED, and later calls keep working (MCP "Resource limits and
 // robustness"). Calls run one at a time, in order.
 import { Worker } from 'node:worker_threads';
+import { fileBytes } from './files.mjs';
 
 const workerUrl = new URL('./worker-main.mjs', import.meta.url);
 
@@ -16,6 +17,16 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
   let closing;
   const queue = [];
   let searchIndex = null; // re-sent to a fresh worker after a restart
+  const files = new Map(); // private file bytes re-sent after a worker restart
+
+  const moduleFor = (tool) => (tool.startsWith('units.') ? 'base' : tool.split('.')[0]);
+  const fileKey = (tool, handle) => `${moduleFor(tool)}\0${handle}`;
+  const restoreState = () => {
+    if (searchIndex) worker.postMessage({ id: -1, method: 'searchLoad', args: [searchIndex] });
+    for (const { tool, handle, bytes } of files.values()) {
+      worker.postMessage({ id: -1, method: 'putFile', args: [tool, handle, bytes] });
+    }
+  };
 
   const settle = (job, out) => {
     clearTimeout(job.timer);
@@ -47,7 +58,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     }
     worker.terminate();
     start();
-    if (searchIndex) worker.postMessage({ id: -1, method: 'searchLoad', args: [searchIndex] });
+    restoreState();
     pump();
   };
   const pump = () => {
@@ -77,7 +88,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
           settle(job, null);
           worker.terminate();
           start();
-          if (searchIndex) worker.postMessage({ id: -1, method: 'searchLoad', args: [searchIndex] });
+          restoreState();
           pump();
         } else {
           const index = queue.indexOf(job);
@@ -97,6 +108,23 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
   return {
     invoke: (id, input, options) => submit('invoke', [id, input], options),
     invokeBatch: (id, inputs, options) => submit('invokeBatch', [id, inputs], options),
+    putFile: async (tool, handle, bytes) => {
+      bytes = fileBytes(bytes);
+      const out = await call('putFile', tool, handle, bytes);
+      if (out && JSON.parse(out).ok) files.set(fileKey(tool, handle), { module: moduleFor(tool), tool, handle, bytes });
+      return out;
+    },
+    removeFile: async (tool, handle) => {
+      const out = await call('removeFile', tool, handle);
+      files.delete(fileKey(tool, handle));
+      return out;
+    },
+    clearFiles: async (tool) => {
+      const out = await call('clearFiles', tool);
+      const module = moduleFor(tool);
+      for (const [key, file] of files) if (file.module === module) files.delete(key);
+      return out;
+    },
     searchLoad: (index) => {
       searchIndex = index;
       return call('searchLoad', index);
@@ -112,6 +140,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
         pending = null;
       }
       for (const job of queue.splice(0)) settle(job, null);
+      files.clear();
       closing = worker.terminate();
       return closing;
     },

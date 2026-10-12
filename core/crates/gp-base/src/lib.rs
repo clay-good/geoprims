@@ -8,6 +8,7 @@ pub mod contour;
 pub mod display;
 pub mod envelope;
 pub mod error;
+pub mod files;
 pub mod json;
 pub mod manifest;
 pub mod num;

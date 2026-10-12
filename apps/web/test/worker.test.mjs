@@ -48,6 +48,13 @@ test('the worker can compile a tool module without running it', async () => {
   assert.deepEqual(await send('warm', ['units.speed.kt-to-mph']), { ok: true });
 });
 
+test('the worker supplies and releases private raster bytes', async () => {
+  const tool = 'raster.index.ndvi';
+  assert.deepEqual(await send('putFile', [tool, 'raster-1', new Uint8Array([0x49, 0x49, 0x2a, 0])]), { ok: true });
+  assert.deepEqual(await send('removeFile', [tool, 'raster-1']), { ok: true });
+  assert.deepEqual(await send('clearFiles', [tool]), { ok: true });
+});
+
 test('an unknown tool is an envelope, not a thrown error', async () => {
   const out = await send('invoke', ['no.such.tool', '{}']);
   assert.equal(out.ok, false);

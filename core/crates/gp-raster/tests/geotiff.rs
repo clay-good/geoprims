@@ -1,6 +1,8 @@
 use std::io::Cursor;
 
-use gp_raster::geotiff::{Error, RasterType, Transform, decode, inspect, same_grid};
+use gp_raster::geotiff::{
+    Error, RasterType, Transform, decode, decode_file, inspect, inspect_file, same_grid,
+};
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
 
@@ -79,6 +81,21 @@ fn checks_the_sample_limit_before_allocating_pixels() {
             samples: 4,
             limit: 3
         }
+    );
+}
+
+#[test]
+fn reads_the_same_bytes_through_a_private_file_handle() {
+    let handle = "geotiff-test-32617";
+    gp_base::files::put(handle, &fixture(10.0, 32617)).unwrap();
+    assert_eq!(inspect_file(handle).unwrap().grid.epsg, Some(32617));
+    assert_eq!(
+        decode_file(handle, 4).unwrap().samples,
+        [1.0, -9999.0, 3.5, 4.0]
+    );
+    gp_base::files::remove(handle);
+    assert!(
+        matches!(inspect_file(handle), Err(Error::Invalid(message)) if message.contains("no longer loaded"))
     );
 }
 

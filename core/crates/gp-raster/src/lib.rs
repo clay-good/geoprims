@@ -37,3 +37,4 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
 ];
 
 gp_base::export_module!("raster", REGISTRY);
+gp_base::export_file_bridge!();

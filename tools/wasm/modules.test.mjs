@@ -16,5 +16,8 @@ for (const { module, sha256 } of modules) {
     const text = new TextDecoder().decode(new Uint8Array(memory.buffer, ptr, gp_out_len()));
     assert.match(text, new RegExp(`^${module}@\\d+\\.\\d+\\.\\d+$`));
     assert.equal(sha256.length, 64);
+    for (const name of ['gp_file_put', 'gp_file_remove', 'gp_file_clear']) {
+      assert.equal(typeof instance.exports[name], module === 'raster' ? 'function' : 'undefined');
+    }
   });
 }

@@ -1,6 +1,7 @@
 // Loads one geoprims Wasm module and wraps its raw ABI (design D1). The same
 // code runs in browsers and Node: it needs only WebAssembly and TextEncoder.
 import { checkJson } from './harden.mjs';
+import { fileBytes, MAX_WHOLE_FILE_BYTES } from './files.mjs';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -34,12 +35,33 @@ export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {
       inst.exports.gp_free(dp, data.length);
     }
   };
+  // Private user files supplied so far, re-supplied if a trap forces a fresh
+  // instance. Values are Uint8Array views retained only in this host object.
+  const files = new Map();
+  const supplyFile = (handle, data) => {
+    if (typeof inst.exports.gp_file_put !== 'function') {
+      throw new TypeError(`The ${name} module does not accept local files.`);
+    }
+    const [hp, hl] = put(handle);
+    const dp = inst.exports.gp_alloc(data.length);
+    new Uint8Array(inst.exports.memory.buffer, dp, data.length).set(data);
+    try {
+      const status = inst.exports.gp_file_put(hp, hl, dp, data.length);
+      if (status === 2) throw new TypeError('A file handle must be 1 to 128 letters, digits, periods, underscores, or hyphens.');
+      if (status === 3) throw new RangeError(`A whole file must be at most ${MAX_WHOLE_FILE_BYTES} bytes.`);
+      if (status !== 0) throw new TypeError('A file handle must be UTF-8.');
+    } finally {
+      inst.exports.gp_free(hp, hl);
+      inst.exports.gp_free(dp, data.length);
+    }
+  };
   const guarded = async (id, fn) => {
     try {
       return fn();
     } catch (e) {
       inst = await WebAssembly.instantiate(compiled, {});
       for (const [k, d] of supplied) supply(k, d);
+      for (const [handle, data] of files) supplyFile(handle, data);
       return JSON.stringify({
         ok: false,
         error: {
@@ -107,6 +129,29 @@ export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {
     callString,
     version: () => text(inst.exports.gp_version()),
     manifest: () => JSON.parse(text(inst.exports.gp_manifest())),
+    /** Supplies bytes from a file the user explicitly selected. */
+    putFile(handle, value) {
+      const data = fileBytes(value);
+      supplyFile(handle, data);
+      files.set(handle, data);
+    },
+    removeFile(handle) {
+      if (typeof inst.exports.gp_file_remove !== 'function') {
+        throw new TypeError(`The ${name} module does not accept local files.`);
+      }
+      const [hp, hl] = put(handle);
+      try {
+        if (inst.exports.gp_file_remove(hp, hl) !== 0) throw new TypeError('A file handle must be UTF-8.');
+      } finally {
+        inst.exports.gp_free(hp, hl);
+      }
+      files.delete(handle);
+    },
+    clearFiles() {
+      if (typeof inst.exports.gp_file_clear !== 'function') return;
+      inst.exports.gp_file_clear();
+      files.clear();
+    },
     /** Returns the result envelope as a JSON string (the exact core bytes). */
     async invoke(id, inputJson) {
       const bad = checkJson(inputJson, maxBytes);

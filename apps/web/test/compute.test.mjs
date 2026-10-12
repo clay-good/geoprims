@@ -82,6 +82,53 @@ test('warm-up asks the worker to compile the tool module', async () => {
   assert.deepEqual(await warmed, { ok: true });
 });
 
+test('private raster bytes are restored after cancellation replaces the worker', async () => {
+  const bytes = new Uint8Array([0x49, 0x49, 0x2a, 0]);
+  const original = StubWorker.last;
+  const stored = compute.putFile('raster.index.ndvi', 'raster-1', bytes);
+  const put = original.sent.length - 1;
+  original.reply(put, { ok: true });
+  assert.deepEqual(await stored, { ok: true });
+
+  const running = compute.invoke('raster.index.ndvi', { file: 'raster-1' });
+  compute.cancel();
+  assert.equal(await running, null);
+
+  const warmed = compute.warm('raster.index.ndvi');
+  const replacement = StubWorker.last;
+  assert.notEqual(replacement, original);
+  assert.deepEqual(replacement.sent[0], {
+    seq: 0,
+    method: 'putFile',
+    args: ['raster.index.ndvi', 'raster-1', bytes],
+  });
+  replacement.reply(1, { ok: true });
+  await warmed;
+
+  const removed = compute.removeFile('raster.index.ndvi', 'raster-1');
+  replacement.reply(2, { ok: true });
+  assert.deepEqual(await removed, { ok: true });
+});
+
+test('clearing one raster tool releases files for the whole raster module', async () => {
+  let current = StubWorker.last;
+  const stored = compute.putFile('raster.index.ndvi', 'shared-raster', new Uint8Array([1]));
+  current.reply(current.sent.length - 1, { ok: true });
+  await stored;
+  const cleared = compute.clearFiles('raster.index.nbr');
+  current.reply(current.sent.length - 1, { ok: true });
+  await cleared;
+
+  const running = compute.invoke('raster.index.ndvi', { file: 'shared-raster' });
+  compute.cancel();
+  assert.equal(await running, null);
+  const warmed = compute.warm('raster.index.ndvi');
+  current = StubWorker.last;
+  assert.equal(current.sent[0].method, 'warm', 'a cleared file was restored');
+  current.reply(0, { ok: true });
+  await warmed;
+});
+
 test('the page waits before recomputing, so typing is not a request per keystroke', () => {
   const src = readFileSync(new URL('../src/components/ToolApp.svelte', import.meta.url), 'utf8');
   const debounce = /setTimeout\(run, (\d+)\)/.exec(src);

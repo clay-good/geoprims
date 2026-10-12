@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkJson } from './harden.mjs';
+import { checkFileSize, MAX_WHOLE_FILE_BYTES } from './files.mjs';
 import { loadModule } from './module.mjs';
 import { nodeHost } from './node.mjs';
 
@@ -50,6 +51,19 @@ test('the optional invocation timer observes the ABI without changing the answer
   assert.ok(Number.isFinite(seen[0].ms) && seen[0].ms >= 0);
   await module.invoke('units.speed.kt-to-mph', '{"value":1e400}');
   assert.equal(seen.length, 1, 'a refused input did not reach the ABI');
+});
+
+test('private file bytes cross the raw ABI and can be released', async () => {
+  const module = await loadModule(readFileSync(join(root, 'dist/wasm/raster.wasm')), 'raster');
+  module.putFile('local-raster-1', new Uint8Array([0x49, 0x49, 0x2a, 0]));
+  module.putFile('local-raster-1', new Uint8Array([0x4d, 0x4d, 0, 0x2a]));
+  module.removeFile('local-raster-1');
+  module.clearFiles();
+  assert.throws(() => module.putFile('../not-private', new Uint8Array()), /file handle/i);
+  const base = await loadModule(readFileSync(join(root, 'dist/wasm/base.wasm')), 'base');
+  assert.throws(() => base.putFile('not-raster', new Uint8Array()), /does not accept local files/);
+  assert.doesNotThrow(() => checkFileSize(MAX_WHOLE_FILE_BYTES));
+  assert.throws(() => checkFileSize(MAX_WHOLE_FILE_BYTES + 1), /at most/);
 });
 
 test('unknown tool ids', async () => {

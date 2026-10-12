@@ -35,7 +35,7 @@ async function send(method, args) {
   await handler({ data: { seq, method, args } });
   const reply = replies.find((r) => r.seq === seq);
   assert.ok(reply, `no reply to ${method}`);
-  return JSON.parse(reply.out);
+  return typeof reply.out === 'string' ? JSON.parse(reply.out) : reply.out;
 }
 
 test('the worker answers a real call with the real answer', async () => {
@@ -89,6 +89,25 @@ test('the worker routes ordered raster band sources to the Rust processor', asyn
   assert.equal(out.ok, false);
   assert.equal(out.error.code, 'INVALID_INPUT');
   assert.match(out.error.message, /no longer loaded/i);
+});
+
+test('the worker routes binary raster export plans and tiles', async () => {
+  const plan = await send('exportFilePlan', ['raster.index.ndvi', 'missing-nir', 16, 16]);
+  assert.equal(plan.error.code, 'INVALID_INPUT');
+  assert.match(plan.error.message, /no longer loaded/i);
+  const tile = await send('exportFileTile', ['raster.index.ndvi', {
+    tool: 'raster.index.ndvi',
+    sources: [{ handle: 'missing-nir', band: 0 }, { handle: 'missing-red', band: 0 }],
+    x: 0,
+    y: 0,
+    width: 1,
+    height: 1,
+    maxSamples: 2,
+    tileWidth: 16,
+    tileHeight: 16,
+  }]);
+  assert.equal(tile.error.code, 'INVALID_INPUT');
+  assert.match(tile.error.message, /no longer loaded/i);
 });
 
 test('an unknown tool is an envelope, not a thrown error', async () => {

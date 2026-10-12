@@ -296,6 +296,84 @@ mod file_exports {
         Ok((expression, names))
     }
 
+    fn process_file(input: &Value) -> Result<Raster, Value> {
+        let window = window(input)?;
+        let max_samples = max_samples(input)?;
+        if let Some(sources) = sources(input)? {
+            if input.get("resampling").is_some() {
+                return Err(
+                    json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Multi-band raster resampling is not available yet; align all source grids first."}}),
+                );
+            }
+            if input.get("tool").and_then(Value::as_str) == Some("raster.index.band-math") {
+                let (expression, names) = band_math(input)?;
+                return crate::processing::band_math_file_sources_window(
+                    &sources,
+                    &names,
+                    expression,
+                    window,
+                    max_samples,
+                )
+                .map_err(processing_failure);
+            }
+            return crate::processing::index_file_sources_window(
+                &sources,
+                window,
+                max_samples,
+                kernel(input)?,
+            )
+            .map_err(processing_failure);
+        }
+        let string = |name| {
+            input.get(name).and_then(Value::as_str).ok_or_else(|| {
+                json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": format!("{name} must be a string.")}})
+            })
+        };
+        let left_handle = string("leftHandle")?;
+        let left_band = field_u32(input, "leftBand")? as usize;
+        let right_handle = string("rightHandle")?;
+        let right_band = field_u32(input, "rightBand")? as usize;
+        let kernel = kernel(input)?;
+        match resampling(input)? {
+            Some((method, target)) => crate::processing::index_resampled_file_window(
+                left_handle,
+                left_band,
+                right_handle,
+                right_band,
+                window,
+                max_samples,
+                method,
+                target,
+                kernel,
+            ),
+            None => crate::processing::index_file_window(
+                left_handle,
+                left_band,
+                right_handle,
+                right_band,
+                window,
+                max_samples,
+                kernel,
+            ),
+        }
+        .map_err(processing_failure)
+    }
+
+    fn binary_out(result: Result<Vec<u8>, Value>) -> *const u8 {
+        let mut out = Vec::new();
+        match result {
+            Ok(bytes) => {
+                out.push(0);
+                out.extend(bytes);
+            }
+            Err(error) => {
+                out.push(1);
+                out.extend(error.to_string().as_bytes());
+            }
+        }
+        gp_base::abi::set_out_bytes(&out)
+    }
+
     unsafe fn request(input: *const u8, input_len: usize) -> Result<Value, Value> {
         let text = unsafe { gp_base::abi::read_str(input, input_len) }.map_err(|_| {
             json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be UTF-8."}})
@@ -353,70 +431,67 @@ mod file_exports {
     ) -> *const u8 {
         let out = (|| {
             let value = unsafe { request(input, input_len) }?;
-            let window = window(&value)?;
-            let max_samples = max_samples(&value)?;
-            if let Some(sources) = sources(&value)? {
-                if value.get("resampling").is_some() {
-                    return Err(json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "Multi-band raster resampling is not available yet; align all source grids first."}}));
-                }
-                if value.get("tool").and_then(Value::as_str) == Some("raster.index.band-math") {
-                    let (expression, names) = band_math(&value)?;
-                    return crate::processing::band_math_file_sources_window(
-                        &sources,
-                        &names,
-                        expression,
-                        window,
-                        max_samples,
-                    )
-                    .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
-                    .map_err(processing_failure);
-                }
-                let kernel = kernel(&value)?;
-                return crate::processing::index_file_sources_window(
-                    &sources,
-                    window,
-                    max_samples,
-                    kernel,
-                )
-                .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
-                .map_err(processing_failure);
-            }
-            let string = |name| {
-                value.get(name).and_then(Value::as_str).ok_or_else(|| {
-                    json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": format!("{name} must be a string.")}})
-                })
-            };
-            let left_handle = string("leftHandle")?;
-            let left_band = field_u32(&value, "leftBand")? as usize;
-            let right_handle = string("rightHandle")?;
-            let right_band = field_u32(&value, "rightBand")? as usize;
-            let kernel = kernel(&value)?;
-            match resampling(&value)? {
-                Some((method, target)) => crate::processing::index_resampled_file_window(
-                    left_handle,
-                    left_band,
-                    right_handle,
-                    right_band,
-                    window,
-                    max_samples,
-                    method,
-                    target,
-                    kernel,
-                ),
-                None => crate::processing::index_file_window(
-                    left_handle,
-                    left_band,
-                    right_handle,
-                    right_band,
-                    window,
-                    max_samples,
-                    kernel,
-                ),
-            }
-            .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
-            .map_err(processing_failure)
+            process_file(&value).map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
         })()
         .unwrap_or_else(|error| error);
         gp_base::abi::set_out(&out.to_string())
+    }
+
+    /// Returns a binary export plan. Byte 0 is 0 on success, followed by a
+    /// 32-byte little-endian descriptor and the complete BigTIFF header. On
+    /// failure byte 0 is 1 and the remaining bytes are a JSON error envelope.
+    ///
+    /// # Safety
+    /// The input range must be readable UTF-8 from `gp_alloc`.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn gp_raster_file_export_plan(
+        input: *const u8,
+        input_len: usize,
+    ) -> *const u8 {
+        let result = (|| {
+            let value = unsafe { request(input, input_len) }?;
+            let handle = value.get("handle").and_then(Value::as_str).ok_or_else(|| {
+                json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "handle must be a string."}})
+            })?;
+            let tile_width = field_u32(&value, "tileWidth")?;
+            let tile_height = field_u32(&value, "tileHeight")?;
+            let mut metadata = crate::geotiff::inspect_file(handle).map_err(failure)?;
+            metadata.bands = 1;
+            let plan = crate::geotiff::tiled_export_plan(&metadata, tile_width, tile_height)
+                .map_err(failure)?;
+            let mut out = Vec::with_capacity(32 + plan.header.len());
+            out.extend_from_slice(b"GPR1");
+            out.extend_from_slice(&plan.tile_width.to_le_bytes());
+            out.extend_from_slice(&plan.tile_height.to_le_bytes());
+            out.extend_from_slice(&plan.tiles_across.to_le_bytes());
+            out.extend_from_slice(&plan.tiles_down.to_le_bytes());
+            out.extend_from_slice(&(plan.tile_bytes as u32).to_le_bytes());
+            out.extend_from_slice(&plan.file_size.to_le_bytes());
+            out.extend(plan.header);
+            Ok(out)
+        })();
+        binary_out(result)
+    }
+
+    /// Returns one fixed-size binary BigTIFF tile under the same byte-0 result
+    /// protocol as `gp_raster_file_export_plan`.
+    ///
+    /// # Safety
+    /// The input range must be readable UTF-8 from `gp_alloc`.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn gp_raster_file_export_tile(
+        input: *const u8,
+        input_len: usize,
+    ) -> *const u8 {
+        let result = (|| {
+            let value = unsafe { request(input, input_len) }?;
+            let tile_width = field_u32(&value, "tileWidth")?;
+            let tile_height = field_u32(&value, "tileHeight")?;
+            let raster = process_file(&value)?;
+            let plan = crate::geotiff::tiled_export_plan(&raster.metadata, tile_width, tile_height)
+                .map_err(failure)?;
+            crate::geotiff::encode_export_tile(&raster, &plan).map_err(failure)
+        })();
+        binary_out(result)
     }
 }

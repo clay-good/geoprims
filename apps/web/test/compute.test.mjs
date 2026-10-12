@@ -184,6 +184,25 @@ test('raster metadata and windows use dedicated worker messages', async () => {
   assert.deepEqual(current.sent[i].args, ['raster.index.evi', sources, window, 256, null]);
   current.reply(i, { ok: true, raster: { samples: [0.7] } });
   assert.deepEqual((await evi).raster.samples, [0.7]);
+
+  const plan = compute.exportFilePlan('raster.index.ndvi', 'nir', 512, 512);
+  i = current.sent.length - 1;
+  assert.deepEqual(current.sent[i].args, ['raster.index.ndvi', 'nir', 512, 512]);
+  current.onmessage({ data: {
+    seq: current.sent[i].seq,
+    out: { ok: true, bytes: Uint8Array.of(71, 80, 82, 49) },
+  } });
+  assert.deepEqual([...((await plan).bytes)], [71, 80, 82, 49]);
+
+  const request = { tool: 'raster.index.ndvi', x: 0, y: 0 };
+  const tile = compute.exportFileTile('raster.index.ndvi', request);
+  i = current.sent.length - 1;
+  assert.deepEqual(current.sent[i].args, ['raster.index.ndvi', request]);
+  current.onmessage({ data: {
+    seq: current.sent[i].seq,
+    out: { ok: true, bytes: Uint8Array.of(1, 2, 3) },
+  } });
+  assert.deepEqual([...((await tile).bytes)], [1, 2, 3]);
 });
 
 test('clearing one raster tool releases files for the whole raster module', async () => {

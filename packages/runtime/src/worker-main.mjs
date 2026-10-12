@@ -17,6 +17,10 @@ const methods = {
   processFileSources: (id, sources, window, maxSamples, parameters) => (
     host.processFileSources(id, sources, window, maxSamples, parameters)
   ),
+  exportFilePlan: (id, handle, tileWidth, tileHeight) => (
+    host.exportFilePlan(id, handle, tileWidth, tileHeight)
+  ),
+  exportFileTile: (id, request) => host.exportFileTile(id, request),
   removeFile: (id, handle) => host.removeFile(id, handle),
   clearFiles: (id) => host.clearFiles(id),
   searchLoad: async (index) => (await host.module('search')).callString('gp_search_load', index),

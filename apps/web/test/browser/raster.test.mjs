@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
+import { loadModule } from '../../../../packages/runtime/src/module.mjs';
 import { serveBuiltSite } from './site.mjs';
 
 const axeSource = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
@@ -55,6 +56,9 @@ test('a user can process local GeoTIFF bands into a preview and exact statistics
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
   const page = await browser.newPage();
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'showSaveFilePicker', { configurable: true, value: undefined });
+  });
   await page.goto(`${origin}/raster/index/ndvi/`);
 
   await page.getByText('Process local GeoTIFF files', { exact: true }).click();
@@ -82,6 +86,29 @@ test('a user can process local GeoTIFF bands into a preview and exact statistics
 
   await page.locator('.raster-preview canvas').hover({ position: { x: 20, y: 20 } });
   assert.match(await page.locator('.cursor-readout').innerText(), / at .+, .+$/);
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Download GeoTIFF' }).click(),
+  ]);
+  assert.equal(download.suggestedFilename(), 'raster.index.ndvi.tif');
+  const downloaded = readFileSync(await download.path());
+  assert.deepEqual([...downloaded.subarray(0, 4)], [0x49, 0x49, 0x2b, 0]);
+  const raster = await loadModule(readFileSync(new URL('../../../../dist/wasm/raster.wasm', import.meta.url)), 'raster');
+  raster.putFile('downloaded-index', downloaded);
+  const inspected = JSON.parse(await raster.inspectFile('downloaded-index'));
+  assert.deepEqual(
+    [inspected.metadata.width, inspected.metadata.height, inspected.metadata.bands],
+    [32, 16, 1],
+  );
+  const decoded = JSON.parse(await raster.readFileWindow(
+    'downloaded-index',
+    { x: 0, y: 0, width: 2, height: 1 },
+    512 * 512,
+  ));
+  assert.equal(decoded.ok, true, JSON.stringify(decoded));
+  assert.deepEqual(decoded.raster.valid, [true, true]);
+  assert.deepEqual(decoded.raster.samples, [-1, -15 / 17]);
 
   await page.evaluate(axeSource);
   const violations = await page.evaluate(async () => (await window.axe.run(document, {

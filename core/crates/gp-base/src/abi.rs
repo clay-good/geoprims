@@ -34,10 +34,15 @@ pub unsafe fn free(ptr: *mut u8, len: usize) {
 
 /// Stores `s` as the current output and returns its pointer.
 pub fn set_out(s: &str) -> *const u8 {
+    set_out_bytes(s.as_bytes())
+}
+
+/// Stores arbitrary bytes as the current output and returns their pointer.
+pub fn set_out_bytes(bytes: &[u8]) -> *const u8 {
     OUT.with(|o| {
         let mut o = o.borrow_mut();
         o.clear();
-        o.extend_from_slice(s.as_bytes());
+        o.extend_from_slice(bytes);
         o.as_ptr()
     })
 }

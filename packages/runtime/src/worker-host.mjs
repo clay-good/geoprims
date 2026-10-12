@@ -133,6 +133,10 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     processFileSources: (tool, sources, window, maxSamples, parameters, options) => (
       submit('processFileSources', [tool, sources, window, maxSamples, parameters], options)
     ),
+    exportFilePlan: (tool, handle, tileWidth, tileHeight, options) => (
+      submit('exportFilePlan', [tool, handle, tileWidth, tileHeight], options)
+    ),
+    exportFileTile: (tool, request, options) => submit('exportFileTile', [tool, request], options),
     removeFile: async (tool, handle) => {
       const out = await call('removeFile', tool, handle);
       files.delete(fileKey(tool, handle));

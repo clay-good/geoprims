@@ -256,6 +256,61 @@ test('range-backed file windows evaluate band math through the core AST', async 
   await host.removeFile('raster.index.band-math', 'math-red');
 });
 
+test('range-backed index windows stream a complete BigTIFF through binary Wasm results', async () => {
+  await host.openFile('raster.index.ndvi', 'export-nir', sparseTiledTiff());
+  await host.openFile('raster.index.ndvi', 'export-red', sparseTiledTiff(() => 16));
+  const planned = await host.exportFilePlan('raster.index.ndvi', 'export-nir', 16, 16);
+  assert.equal(planned.ok, true, JSON.stringify(planned));
+  assert.equal(new TextDecoder().decode(planned.bytes.subarray(0, 4)), 'GPR1');
+  const descriptor = new DataView(planned.bytes.buffer, planned.bytes.byteOffset, 32);
+  assert.equal(descriptor.getUint32(4, true), 16);
+  assert.equal(descriptor.getUint32(8, true), 16);
+  assert.equal(descriptor.getUint32(12, true), 2);
+  assert.equal(descriptor.getUint32(16, true), 1);
+  assert.equal(descriptor.getUint32(20, true), 16 * 16 * 8);
+  const fileSize = Number(descriptor.getBigUint64(24, true));
+  const parts = [planned.bytes.subarray(32)];
+  for (const x of [0, 16]) {
+    const tile = await host.exportFileTile('raster.index.ndvi', {
+      tool: 'raster.index.ndvi',
+      sources: [{ handle: 'export-nir', band: 0 }, { handle: 'export-red', band: 0 }],
+      x,
+      y: 0,
+      width: 16,
+      height: 16,
+      maxSamples: 256,
+      tileWidth: 16,
+      tileHeight: 16,
+    });
+    assert.equal(tile.ok, true, JSON.stringify(tile));
+    parts.push(tile.bytes);
+  }
+  const output = new Uint8Array(fileSize);
+  let at = 0;
+  for (const part of parts) {
+    output.set(part, at);
+    at += part.length;
+  }
+  assert.equal(at, fileSize);
+  await host.putFile('raster.index.ndvi', 'export-output', output);
+  const inspected = JSON.parse(await host.inspectFile('raster.index.ndvi', 'export-output'));
+  assert.deepEqual(
+    [inspected.metadata.width, inspected.metadata.height, inspected.metadata.bands],
+    [32, 16, 1],
+  );
+  const decoded = JSON.parse(await host.readFileWindow(
+    'raster.index.ndvi',
+    'export-output',
+    { x: 0, y: 0, width: 2, height: 1 },
+    256,
+  ));
+  assert.equal(decoded.ok, true, JSON.stringify(decoded));
+  assert.deepEqual(decoded.raster.samples, [-1, -15 / 17]);
+  await host.removeFile('raster.index.ndvi', 'export-nir');
+  await host.removeFile('raster.index.ndvi', 'export-red');
+  await host.removeFile('raster.index.ndvi', 'export-output');
+});
+
 test('range-backed index windows compare the complete source grids', async () => {
   await host.openFile('raster.index.ndvi', 'wide-cog', sparseTiledTiff());
   await host.openFile('raster.index.ndvi', 'narrow-cog', sparseTiledTiff((value) => value, 31));
@@ -386,6 +441,27 @@ test('worker host forwards raster kernel parameters and ordered sources', async 
     ));
     assert.equal(evi.ok, true, JSON.stringify(evi));
     assert.equal(evi.raster.samples[0], 2.5 * (45 - 8) / (45 + 6 * 8 - 7.5 * 4 + 1));
+
+    const plan = await h.exportFilePlan('raster.index.savi', 'worker-nir', 16, 16);
+    assert.equal(plan.ok, true, JSON.stringify(plan));
+    assert.deepEqual([...plan.bytes.subarray(0, 4)], [...new TextEncoder().encode('GPR1')]);
+    const tile = await h.exportFileTile('raster.index.savi', {
+      tool: 'raster.index.savi',
+      leftHandle: 'worker-nir',
+      leftBand: 0,
+      rightHandle: 'worker-red',
+      rightBand: 0,
+      x: 0,
+      y: 0,
+      width: 16,
+      height: 16,
+      maxSamples: 256,
+      tileWidth: 16,
+      tileHeight: 16,
+      parameters: { soil_factor: 0.25 },
+    });
+    assert.equal(tile.ok, true, JSON.stringify(tile));
+    assert.equal(tile.bytes.length, 16 * 16 * 8);
   } finally {
     await h.close();
   }

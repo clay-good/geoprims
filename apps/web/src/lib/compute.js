@@ -1,7 +1,7 @@
 // Main-thread client for the compute worker. Only the latest request per key
 // resolves; older ones are dropped as stale (web "stale-result" behavior).
 import { fileBytes, rangeSource } from '../../../../packages/runtime/src/files.mjs';
-import { processRasterScene } from '../../../../packages/runtime/src/raster.mjs';
+import { exportRasterScene, processRasterScene } from '../../../../packages/runtime/src/raster.mjs';
 
 let worker;
 let seq = 0;
@@ -62,7 +62,7 @@ function call(method, args, key, onProgress) {
       resolve: (out) => {
         if (timer !== undefined) clearInterval(timer);
         if (key && latest.get(key) !== s) return resolve(null); // superseded
-        resolve(out === null ? null : JSON.parse(out));
+        resolve(out === null ? null : (typeof out === 'string' ? JSON.parse(out) : out));
       },
     });
     ensure().postMessage({ seq: s, method, args });
@@ -114,8 +114,15 @@ export const processFileWindow = (tool, leftHandle, leftBand, rightHandle, right
 export const processFileSources = (tool, sources, window, maxSamples, parameters) => (
   call('processFileSources', [tool, sources, window, maxSamples, parameters ?? null])
 );
+export const exportFilePlan = (tool, handle, tileWidth, tileHeight) => (
+  call('exportFilePlan', [tool, handle, tileWidth, tileHeight])
+);
+export const exportFileTile = (tool, request) => call('exportFileTile', [tool, request]);
 export const processFileScene = (options) => (
   processRasterScene({ inspectFile, processFileWindow, processFileSources }, options)
+);
+export const exportFileScene = (options) => (
+  exportRasterScene({ inspectFile, exportFilePlan, exportFileTile }, options)
 );
 export async function removeFile(tool, handle) {
   const out = await call('removeFile', [tool, handle]);

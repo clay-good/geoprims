@@ -1,7 +1,25 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { processRasterScene } from './raster.mjs';
+import { exportRasterScene, parseRasterExportPlan, processRasterScene } from './raster.mjs';
+
+function exportPlan({ width = 3, height = 2, tileWidth = 2, tileHeight = 2 } = {}) {
+  const across = Math.ceil(width / tileWidth);
+  const down = Math.ceil(height / tileHeight);
+  const tileBytes = tileWidth * tileHeight * 8;
+  const header = Uint8Array.of(73, 73, 43, 0);
+  const bytes = new Uint8Array(32 + header.length);
+  bytes.set(new TextEncoder().encode('GPR1'));
+  const view = new DataView(bytes.buffer);
+  view.setUint32(4, tileWidth, true);
+  view.setUint32(8, tileHeight, true);
+  view.setUint32(12, across, true);
+  view.setUint32(16, down, true);
+  view.setUint32(20, tileBytes, true);
+  view.setBigUint64(24, BigInt(header.length + across * down * tileBytes), true);
+  bytes.set(header, 32);
+  return bytes;
+}
 
 function host({ failAt } = {}) {
   const calls = [];
@@ -150,6 +168,63 @@ test('a dynamic 2-band scene uses the ordered-source host method', async () => {
   });
   assert.equal(out.ok, true);
   assert.equal(called, true);
+});
+
+test('a GeoTIFF export emits its header and bounded Rust tiles in row-major order', async () => {
+  const requests = [];
+  const chunks = [];
+  const progress = [];
+  const runtime = {
+    inspectFile: async () => ({ ok: true, metadata: { width: 3, height: 2, bands: 1 } }),
+    exportFilePlan: async () => ({ ok: true, bytes: exportPlan() }),
+    exportFileTile: async (_tool, request) => {
+      requests.push(request);
+      return { ok: true, bytes: new Uint8Array(32).fill(request.x + 1) };
+    },
+  };
+  const out = await exportRasterScene(runtime, {
+    ...options,
+    tileWidth: 2,
+    tileHeight: 2,
+    accept: (chunk) => chunks.push(chunk),
+    onProgress: (state) => progress.push(state),
+  });
+  assert.deepEqual(requests.map(({ x, y, width, height }) => ({ x, y, width, height })), [
+    { x: 0, y: 0, width: 2, height: 2 },
+    { x: 2, y: 0, width: 1, height: 2 },
+  ]);
+  assert.deepEqual([...chunks[0]], [73, 73, 43, 0]);
+  assert.equal(chunks.length, 3);
+  assert.deepEqual(progress.at(-1), {
+    completed: 2,
+    total: 2,
+    window: { x: 2, y: 0, width: 1, height: 2 },
+  });
+  assert.deepEqual(out, {
+    ok: true,
+    metadata: { width: 3, height: 2, bands: 1 },
+    windows: 2,
+    fileSize: 68,
+  });
+});
+
+test('a malformed GeoTIFF export plan is refused before a tile is requested', async () => {
+  const bytes = exportPlan();
+  bytes[0] = 0;
+  assert.throws(() => parseRasterExportPlan(bytes), /unknown version/);
+  let requested = false;
+  const runtime = {
+    inspectFile: async () => ({ ok: true, metadata: { width: 3, height: 2, bands: 1 } }),
+    exportFilePlan: async () => ({ ok: true, bytes }),
+    exportFileTile: async () => { requested = true; },
+  };
+  await assert.rejects(() => exportRasterScene(runtime, {
+    ...options,
+    tileWidth: 2,
+    tileHeight: 2,
+    accept() {},
+  }), /unknown version/);
+  assert.equal(requested, false);
 });
 
 test('scene statistics stream across windows and exclude no-data pixels', async () => {

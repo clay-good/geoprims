@@ -133,6 +133,10 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
       out = await (await get(moduleFor(args[0]))).processFileWindow(...args);
     } else if (method === 'processFileSources') {
       out = await (await get(moduleFor(args[0]))).processFileSources(...args);
+    } else if (method === 'exportFilePlan') {
+      out = await (await get(moduleFor(args[0]))).exportFilePlan(...args.slice(1));
+    } else if (method === 'exportFileTile') {
+      out = await (await get(moduleFor(args[0]))).exportFileTile(args[1]);
     } else if (method === 'removeFile') {
       (await get(moduleFor(args[0]))).removeFile(args[1]);
       out = JSON.stringify({ ok: true });
@@ -151,12 +155,14 @@ self.onmessage = async ({ data: { seq, method, args } }) => {
     // Batch mode: one chunk of rows through the core's own batch entry point.
     else if (method === 'invokeBatch') out = await (await get(moduleFor(args[0]))).invokeBatch(args[0], args[1]);
     else out = await (await get(args[0])).callString(args[1], args[2]);
-    self.postMessage({ seq, out });
+    if (out?.bytes instanceof Uint8Array) self.postMessage({ seq, out }, [out.bytes.buffer]);
+    else self.postMessage({ seq, out });
   } catch (e) {
     modules.clear();
     searchIndex = null;
     // A policy can leave WebAssembly defined but refuse to compile it.
     const blocked = e instanceof WebAssembly.CompileError || /WebAssembly|wasm-unsafe-eval/i.test(String(e?.message));
-    self.postMessage({ seq, out: blocked ? failure(NO_WASM) : failure(`The calculator could not load: ${e.message}`, 'INTERNAL') });
+    const failed = blocked ? failure(NO_WASM) : failure(`The calculator could not load: ${e.message}`, 'INTERNAL');
+    self.postMessage({ seq, out: method.startsWith('exportFile') ? JSON.parse(failed) : failed });
   }
 };

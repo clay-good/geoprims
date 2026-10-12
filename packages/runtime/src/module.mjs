@@ -144,6 +144,24 @@ export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {
       }
     });
 
+  // Binary raster exports use a one-byte envelope: 0 + bytes on success, or
+  // 1 + a UTF-8 JSON error. Copy before the next ABI call can replace OUT.
+  const callBinary = async (exportName, input) => {
+    const raw = await guarded(exportName, () => {
+      const [p, l] = put(input);
+      try {
+        const out = inst.exports[exportName](p, l);
+        return new Uint8Array(inst.exports.memory.buffer, out, inst.exports.gp_out_len()).slice();
+      } finally {
+        inst.exports.gp_free(p, l);
+      }
+    });
+    if (typeof raw === 'string') return JSON.parse(raw);
+    if (raw[0] === 0) return { ok: true, bytes: raw.subarray(1) };
+    if (raw[0] === 1) return JSON.parse(dec.decode(raw.subarray(1)));
+    return { ok: false, error: { code: 'INTERNAL', message: `The ${name} module returned a malformed binary result.` } };
+  };
+
   /**
    * Runs a call; when the core reports ASSET_UNAVAILABLE for a named asset and
    * a provider is configured, fetches and verifies it, supplies it, and retries.
@@ -195,6 +213,10 @@ export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {
     } finally {
       for (const handle of touched) clearRanges(handle);
     }
+  };
+  const withBinaryFileRanges = async (run) => {
+    const out = await withFileRanges(run);
+    return typeof out === 'string' ? JSON.parse(out) : out;
   };
 
   return {
@@ -270,6 +292,26 @@ export async function loadModule(bytes, name, { maxBytes, assets, onInvoke } = {
       return withFileRanges(() => callString(
         'gp_raster_file_normalized_difference',
         JSON.stringify({ tool, sources, ...window, maxSamples, ...(parameters ? { parameters } : {}) }),
+      ));
+    },
+    /** Builds the fixed BigTIFF descriptor and header for one output grid. */
+    exportFilePlan(handle, tileWidth, tileHeight) {
+      if (typeof inst.exports.gp_raster_file_export_plan !== 'function') {
+        throw new TypeError(`The ${name} module does not export raster files.`);
+      }
+      return withBinaryFileRanges(() => callBinary(
+        'gp_raster_file_export_plan',
+        JSON.stringify({ handle, tileWidth, tileHeight }),
+      ));
+    },
+    /** Computes and encodes one fixed-size BigTIFF tile in Rust. */
+    exportFileTile(request) {
+      if (typeof inst.exports.gp_raster_file_export_tile !== 'function') {
+        throw new TypeError(`The ${name} module does not export raster files.`);
+      }
+      return withBinaryFileRanges(() => callBinary(
+        'gp_raster_file_export_tile',
+        JSON.stringify(request),
       ));
     },
     /** Returns the result envelope as a JSON string (the exact core bytes). */

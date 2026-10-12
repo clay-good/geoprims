@@ -26,7 +26,11 @@
   let outcome = $state.raw(null);
   let cursor = $state('');
   let resampling = $state({ method: 'nearest', target: 'left' });
+  let exporting = $state(false);
+  let exportCompleted = $state(0);
+  let exportTotal = $state(0);
   let controller = null;
+  let exportController = null;
 
   const selected = (role) => sources[assignments[role]?.source];
   const ready = $derived(
@@ -53,6 +57,7 @@
     const files = [...(list ?? [])];
     if (!files.length) return;
     controller?.abort();
+    exportController?.abort();
     problem = '';
     outcome = null;
     cursor = '';
@@ -144,6 +149,74 @@
     }
   }
 
+  async function download() {
+    if (!outcome?.ok || exporting) return;
+    const bandSources = roles.map((role) => ({
+      handle: selected(role.name).handle,
+      band: assignments[role.name].band,
+    }));
+    let writable = null;
+    let parts = null;
+    let finished = false;
+    exporting = true;
+    exportCompleted = 0;
+    exportTotal = 0;
+    problem = '';
+    exportController = new AbortController();
+    try {
+      if (typeof window.showSaveFilePicker === 'function') {
+        const file = await window.showSaveFilePicker({
+          suggestedName: `${tool.id}.tif`,
+          types: [{ description: 'GeoTIFF', accept: { 'image/tiff': ['.tif', '.tiff'] } }],
+        });
+        writable = await file.createWritable();
+      } else {
+        parts = [];
+      }
+      const out = await compute.exportFileScene({
+        tool: tool.id,
+        sources: bandSources,
+        dynamicBands: Boolean(tool['x-raster'].bandList),
+        tileWidth: 512,
+        tileHeight: 512,
+        maxSamples: 4 * 1024 * 1024,
+        parameters: getInputs(),
+        resampling: outcome.resampling,
+        signal: exportController.signal,
+        accept: writable
+          ? (chunk) => writable.write(chunk)
+          : (chunk) => parts.push(chunk.slice()),
+        onProgress: (progress) => {
+          exportCompleted = progress.completed;
+          exportTotal = progress.total;
+        },
+      });
+      if (!out) return;
+      if (!out.ok) {
+        problem = out.error.message;
+        return;
+      }
+      if (writable) {
+        await writable.close();
+      } else {
+        const url = URL.createObjectURL(new Blob(parts, { type: 'image/tiff' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${tool.id}.tif`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+      }
+      finished = true;
+    } catch (error) {
+      if (error?.name !== 'AbortError') problem = error.message;
+    } finally {
+      if (writable && !finished) {
+        try { await writable.abort(); } catch { /* The incomplete file is already closed or unavailable. */ }
+      }
+      exporting = false;
+    }
+  }
+
   function paint(node, value) {
     const draw = ({ preview, min, max }) => {
       node.width = preview.width;
@@ -171,6 +244,7 @@
 
   onDestroy(() => {
     controller?.abort();
+    exportController?.abort();
     remove();
   });
 </script>
@@ -216,7 +290,7 @@
       {#if running}
         <button type="button" class="quiet" onclick={() => controller?.abort()}>Cancel</button>
       {:else}
-        <button type="button" class="primary" disabled={!ready} onclick={() => start()}>Process raster</button>
+        <button type="button" class="primary" disabled={!ready || exporting} onclick={() => start()}>Process raster</button>
       {/if}
     </div>
     {#if running || total}
@@ -288,6 +362,16 @@
       <div><dt>No-data pixels</dt><dd>{outcome.summary.noDataPixels.toLocaleString('en-US')}</dd></div>
     </dl>
     <p class="cursor-readout" aria-live="polite">{cursor || 'Point at the preview to read a pixel value and coordinate.'}</p>
-    <p class="help">The preview and histogram sample at most 512 × 512 pixels. Statistics use every valid output pixel. GeoTIFF download is not connected yet.</p>
+    <div class="actions">
+      {#if exporting}
+        <button type="button" class="quiet" onclick={() => exportController?.abort()}>Cancel download</button>
+      {:else}
+        <button type="button" class="primary" onclick={download}>Download GeoTIFF</button>
+      {/if}
+    </div>
+    {#if exporting}
+      <progress class="batch-progress" max={exportTotal || 1} value={exportCompleted} aria-label="GeoTIFF tiles written">{exportCompleted} of {exportTotal}</progress>
+    {/if}
+    <p class="help">The preview and histogram sample at most 512 × 512 pixels. Statistics use every valid output pixel. The download preserves the output grid and writes one bounded tile at a time; browsers without direct file writing assemble the file in memory.</p>
   {/if}
 </div>

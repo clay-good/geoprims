@@ -43,6 +43,6 @@
 
 ## 5. Catalog and docs
 
-- [ ] 5.1 Register all navigation and geometry operations and generated endpoints with practitioner aliases ("as the crow flies", "great circle", "XTE", "loxodrome"); verify catalog counts (46/58 and 38/44)
+- [ ] 5.1 Register all navigation and geometry operations and generated endpoints with practitioner aliases ("as the crow flies", "great circle", "XTE", "loxodrome"); verify catalog counts (46/58 and 38/44) (2026-10-12: all 4 named aliases are registered and pinned by a catalog test. The honest built counts are 31/31 for navigation and 15/15 for geometry. Cross-module endpoints such as `mgrs-distance` still need a page-contract decision: they require their own chain-shaped example, while the current non-indexable endpoint contract requires the parent's incompatible latitude/longitude example.)
 - [ ] 5.2 Write docs for each tool, including a "haversine vs ellipsoid" explainer page; verify the docs build
 - [ ] 5.3 Promote tools meeting the stable bar; verify the verification report (2026-09-24: `navigation.route.course-intersection` promoted, 500 pairs against GeographicLib's IntersectTool within 10 µm; and `navigation.route.intercept`, 200 cases against the first root found on a fixed grid with GeographicLib's Python package, 59 of them unreachable and refused as such: every navigation tool is now stable)

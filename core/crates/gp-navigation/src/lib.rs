@@ -149,6 +149,7 @@ pub static INVERSE: ToolDef = ToolDef {
         "geodesic distance",
         "great circle distance calculator",
         "inverse geodesic",
+        "as the crow flies",
         "how far",
         "how far apart",
     ],

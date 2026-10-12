@@ -128,6 +128,7 @@ pub static SPHERICAL_INVERSE: ToolDef = ToolDef {
     title: "Great-circle distance and course (spherical)",
     summary: "Distance and initial and final courses along the great circle on a sphere, with the difference from the ellipsoidal geodesic shown.",
     aliases: &[
+        "great circle",
         "great circle course",
         "great circle bearing",
         "initial bearing",

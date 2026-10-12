@@ -7,6 +7,7 @@
   import { createBasemapLoader, DETAIL_AT, GENERALIZED_AT } from '../lib/map/basemap.js';
   import { forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
+  import { createGpuPresenter } from '../lib/map/gpu-presenter.js';
   import { magneticNorth, readoutText } from '../lib/map/readout.js';
   import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
   import { canvasDefault, coordFormat, reducedMotion } from '../lib/prefs.js';
@@ -23,6 +24,10 @@
   // The 2D projection the Map button shows: Web Mercator, equirectangular, or polar.
   let projection = $state('map');
   let canvas;
+  let gpuCanvas;
+  let presenter = null;
+  let renderer = $state('canvas2d');
+  let reducedRenderer = $state(false);
   let base = null;
   let baseScale = $state('');
   const loadBasemap = createBasemapLoader();
@@ -95,6 +100,19 @@
     const g = canvas.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw(g, { ...view, width: w, height: h, moving }, base, layers, colors(canvas));
+    if (presenter) {
+      try {
+        presenter.present();
+        gpuCanvas.hidden = false;
+      } catch (error) {
+        console.warn('GPU map renderer failed; using Canvas2D.', error);
+        presenter.destroy();
+        presenter = null;
+        renderer = 'canvas2d';
+        reducedRenderer = true;
+        gpuCanvas.hidden = true;
+      }
+    }
     scaleBar = measure(view);
     requestDetail();
   }
@@ -418,12 +436,25 @@
     const mo = new MutationObserver(() => paint());
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] });
     canvas.addEventListener('wheel', wheel, { passive: false });
+    createGpuPresenter(gpuCanvas, canvas)
+      .then((next) => {
+        presenter = next;
+        renderer = next.backend;
+        reducedRenderer = false;
+        paint();
+      })
+      .catch((error) => {
+        console.warn('GPU map renderer unavailable; using Canvas2D.', error);
+        renderer = 'canvas2d';
+        reducedRenderer = true;
+      });
     return () => {
       removeEventListener('gp-shortcut', onShortcut);
       removeEventListener('gp-prefs', onPrefs);
       ro.disconnect();
       mo.disconnect();
       canvas.removeEventListener('wheel', wheel);
+      presenter?.destroy();
     };
   });
 </script>
@@ -465,6 +496,7 @@
   </div>
   <div class="map-stage">
     <canvas
+      data-renderer={renderer}
       bind:this={canvas}
       role="img"
       aria-label={desc || 'Map'}
@@ -475,6 +507,7 @@
       onpointercancel={up}
       onkeydown={key}
     ></canvas>
+    <canvas class="map-gpu" bind:this={gpuCanvas} hidden aria-hidden="true"></canvas>
     <div class="map-north" aria-hidden="true">
       <span class="north-true"><svg viewBox="0 0 16 24" width="16" height="24"><path d="M8 1 L14 21 L8 17 L2 21 Z" /></svg>N</span>
       {#if magnetic !== null}
@@ -482,6 +515,7 @@
       {/if}
     </div>
   </div>
+  {#if reducedRenderer}<p class="help map-capability">This browser is using the reduced 2D map renderer.</p>{/if}
   {#if legend.length}
     <ul class="map-legend">
       {#each legend as l}<li><span class={`swatch ${l.cls}`} aria-hidden="true"></span>{l.text}</li>{/each}

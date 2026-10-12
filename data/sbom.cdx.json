@@ -2501,6 +2501,139 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/%40luma.gl/core@9.4.2",
+      "name": "@luma.gl/core",
+      "version": "9.4.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40luma.gl/core@9.4.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40luma.gl/engine@9.4.2",
+      "name": "@luma.gl/engine",
+      "version": "9.4.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40luma.gl/engine@9.4.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40luma.gl/shadertools@9.4.2",
+      "name": "@luma.gl/shadertools",
+      "version": "9.4.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40luma.gl/shadertools@9.4.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40luma.gl/webgl@9.4.2",
+      "name": "@luma.gl/webgl",
+      "version": "9.4.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40luma.gl/webgl@9.4.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40luma.gl/webgpu@9.4.2",
+      "name": "@luma.gl/webgpu",
+      "version": "9.4.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40luma.gl/webgpu@9.4.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40math.gl/core@4.1.0",
+      "name": "@math.gl/core",
+      "version": "4.1.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40math.gl/core@4.1.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40math.gl/types@4.1.0",
+      "name": "@math.gl/types",
+      "version": "4.1.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40math.gl/types@4.1.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/%40napi-rs/wasm-runtime@1.2.4",
       "name": "@napi-rs/wasm-runtime",
       "version": "1.2.4",
@@ -2605,6 +2738,63 @@
         }
       ],
       "purl": "pkg:npm/%40poppinss/exception@1.2.3",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40probe.gl/env@4.1.2",
+      "name": "@probe.gl/env",
+      "version": "4.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40probe.gl/env@4.1.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40probe.gl/log@4.1.2",
+      "name": "@probe.gl/log",
+      "version": "4.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40probe.gl/log@4.1.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40probe.gl/stats@4.1.2",
+      "name": "@probe.gl/stats",
+      "version": "4.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40probe.gl/stats@4.1.2",
       "scope": "excluded",
       "properties": [
         {
@@ -3261,6 +3451,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/%40types/offscreencanvas@2019.7.3",
+      "name": "@types/offscreencanvas",
+      "version": "2019.7.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40types/offscreencanvas@2019.7.3",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/%40types/unist@3.0.3",
       "name": "@types/unist",
       "version": "3.0.3",
@@ -3289,6 +3498,25 @@
         }
       ],
       "purl": "pkg:npm/%40ungap/structured-clone@1.4.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40webgpu/types@0.1.74",
+      "name": "@webgpu/types",
+      "version": "0.1.74",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "purl": "pkg:npm/%40webgpu/types@0.1.74",
       "scope": "excluded",
       "properties": [
         {

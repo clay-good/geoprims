@@ -452,7 +452,11 @@ figure.map canvas:active { cursor: grabbing; }
 figure.map canvas:focus-visible { outline-offset: -3px; }
 .map[hidden] { display: none; }
 .map-stage { position: relative; }
-.map-north { position: absolute; inset-block-start: 0.6rem; inset-inline-end: 0.6rem; display: flex; gap: 0.5rem; pointer-events: none; font: 600 0.7rem/1 var(--mono); color: var(--text); }
+.map-stage .map-gpu { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.map-stage .map-gpu[hidden] { display: none; }
+.map-stage:focus-within .map-gpu:not([hidden]) { outline: 3px solid var(--focus); outline-offset: -3px; }
+.map-capability { margin: 0; padding: 0.45rem 0.9rem; border-block-start: 1px solid var(--line); }
+.map-north { position: absolute; z-index: 2; inset-block-start: 0.6rem; inset-inline-end: 0.6rem; display: flex; gap: 0.5rem; pointer-events: none; font: 600 0.7rem/1 var(--mono); color: var(--text); }
 .map-north > span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 5px; background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); border-radius: var(--radius); }
 .north-true path { fill: var(--text); }
 .north-mag { color: var(--muted); }

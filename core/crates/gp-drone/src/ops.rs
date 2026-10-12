@@ -21,6 +21,15 @@ fn notice(r: &Rule) -> String {
     )
 }
 
+fn legal_status(r: &Rule) -> &'static str {
+    match r.status.as_str() {
+        "in-force" => "In force",
+        "proposed" => "Proposed",
+        "guidance" => "Guidance",
+        status => panic!("unknown regulation status {status}"),
+    }
+}
+
 const PART_107: Reference = Reference {
     title: "14 CFR Part 107, Small Unmanned Aircraft Systems",
     issuer: "Federal Aviation Administration",
@@ -28,6 +37,22 @@ const PART_107: Reference = Reference {
     edition: "eCFR, current text (dated on the page as \"Rules as of\")",
     locator: "§107.51 (operating limitations) and §107.120 (operations over people, category 2)",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-107",
+};
+const PART_89: Reference = Reference {
+    title: "14 CFR Part 89 Remote ID",
+    issuer: "Federal Aviation Administration",
+    year: 2021,
+    edition: "eCFR, current text (dated on the page as \"Rules as of\")",
+    locator: "Part 89, Remote Identification of Unmanned Aircraft",
+    url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-89",
+};
+const PART_108: Reference = Reference {
+    title: "Normalizing Unmanned Aircraft Systems Beyond Visual Line of Sight Operations",
+    issuer: "Federal Aviation Administration and Transportation Security Administration",
+    year: 2025,
+    edition: "Notice of proposed rulemaking, 90 FR 38212",
+    locator: "Docket FAA-2025-1908, published August 7, 2025",
+    url: "https://www.federalregister.gov/documents/2025/08/07/2025-14992/normalizing-unmanned-aircraft-systems-beyond-visual-line-of-sight-operations",
 };
 const EU_947: Reference = Reference {
     title: "Commission Implementing Regulation (EU) 2019/947 on the rules and procedures for the operation of unmanned aircraft",
@@ -108,6 +133,150 @@ const NOTICE: Field = text(
     "Rules as of the review date; not legal advice",
     400,
 );
+
+// ------------------------------------------------------- Dated rule references
+
+pub static REMOTE_ID_REFERENCE: ToolDef = ToolDef {
+    id: "drone.ops.remote-id-reference",
+    title: "FAA Remote ID reference",
+    summary: "The current Part 89 Remote ID compliance date and authority link, read from the dated regulation file rather than treated as a flight check.",
+    aliases: &[
+        "drone Remote ID rules",
+        "Part 89 Remote ID",
+        "FAA Remote ID date",
+    ],
+    keywords: &[
+        "Remote ID",
+        "Part 89",
+        "compliance",
+        "FAA",
+        "drone identification",
+    ],
+    outputs: &[
+        text(
+            "status",
+            "Rule status",
+            "Whether the cited rule is in force",
+            40,
+        ),
+        text(
+            "effective_date",
+            "Compliance date",
+            "The date in the dated regulation entry",
+            20,
+        ),
+        text(
+            "requirement",
+            "What the entry says",
+            "A short summary of the dated rule entry",
+            300,
+        ),
+        text("citation", "Citation", "The authority citation", 160),
+        NOTICE,
+    ],
+    model: "A direct rendering of the faa-89-remote-id entry in the dated regulation file; no compliance decision is calculated",
+    accuracy: "The text, status, and date come directly from the reviewed Part 89 ledger entry. The tool does no rounding or calculation. Its answer is current only through the review date in the notice, so the linked eCFR remains the authority.",
+    when_to_use: "Use this reference when a flight plan, manual, training note, or review needs the FAA Remote ID compliance date and a link to Part 89. It helps confirm which dated authority the plan cites. It does not decide whether a particular aircraft, broadcast module, identification area, or operation complies.",
+    limitations: "This page summarizes one dated ledger entry. It does not inspect registration, aircraft equipment, broadcast performance, standard Remote ID hardware, add-on modules, FAA-recognized identification areas, exceptions, deviations, enforcement policy, or local limits. The rule or FAA guidance may have changed since the review date, so open the authority link before relying on it. Not legal advice.",
+    references: &[PART_89],
+    examples: &[Example {
+        id: "primary",
+        title: "Current Part 89 entry",
+        input: r#"{}"#,
+        source: "14 CFR Part 89 entry reviewed in data/regulations.json",
+    }],
+    primary_example: "primary",
+    related: &[
+        Related {
+            id: "drone.ops.part107-altitude",
+            reason: "next",
+        },
+        Related {
+            id: "drone.ops.part108-proposed-reference",
+            reason: "next",
+        },
+    ],
+    sentence: "Remote ID is {status}; the compliance date in this reference is {effective_date}. Not legal advice.",
+    run: run_remote_id_reference,
+    ..ToolDef::BLANK
+};
+
+fn run_remote_id_reference(_: &mut Ctx) -> Result<Json, ToolError> {
+    let r = rule("faa-89-remote-id");
+    Ok(Json::obj([
+        ("status", Json::str(legal_status(&r))),
+        ("effective_date", Json::str(r.effective.clone())),
+        ("requirement", Json::str(r.meaning.clone())),
+        ("citation", Json::str(r.citation.clone())),
+        ("notice", Json::str(notice(&r))),
+    ]))
+}
+
+pub static PART108_PROPOSED_REFERENCE: ToolDef = ToolDef {
+    id: "drone.ops.part108-proposed-reference",
+    title: "FAA Part 108 proposed-rule reference",
+    summary: "The FAA's proposed Part 108 BVLOS rule, clearly labeled proposed and linked to 90 FR 38212; it never acts as a compliance check.",
+    aliases: &["Part 108", "BVLOS proposed rule", "FAA BVLOS NPRM"],
+    keywords: &[
+        "Part 108",
+        "BVLOS",
+        "proposed",
+        "NPRM",
+        "90 FR 38212",
+        "FAA-2025-1908",
+    ],
+    outputs: &[
+        text(
+            "status",
+            "Rule status",
+            "Proposed until a final rule is published",
+            40,
+        ),
+        text(
+            "proposal",
+            "What is proposed",
+            "A short summary of the dated proposal entry",
+            320,
+        ),
+        text("citation", "Citation", "The Federal Register citation", 220),
+        NOTICE,
+    ],
+    model: "A direct rendering of the faa-108-nprm entry in the dated regulation file; proposed text is not applied as law and no compliance decision is calculated",
+    accuracy: "The status, citation, and summary come directly from the reviewed Part 108 NPRM ledger entry. The tool does no calculation or legal interpretation. Its answer is current only through the review date in the notice, so the Federal Register remains the authority.",
+    when_to_use: "Use this reference when research, a planning note, or a policy discussion needs the FAA's Part 108 BVLOS proposal and its Federal Register notice. It helps distinguish the proposal from rules that are already in force. It does not provide present operating authority for a flight.",
+    limitations: "Part 108 is proposed, not in force as of the shown review date. This page does not summarize every proposed provision, track later docket filings, predict what a final rule will say, or replace current Part 107 requirements, a waiver, an exemption, or another authorization. Check the linked docket for changes before relying on the summary. Not legal advice.",
+    references: &[PART_108],
+    examples: &[Example {
+        id: "primary",
+        title: "Current Part 108 proposal status",
+        input: r#"{}"#,
+        source: "90 FR 38212 entry reviewed in data/regulations.json",
+    }],
+    primary_example: "primary",
+    related: &[
+        Related {
+            id: "drone.ops.remote-id-reference",
+            reason: "next",
+        },
+        Related {
+            id: "drone.ops.vlos-check",
+            reason: "next",
+        },
+    ],
+    sentence: "Part 108 is {status}: {citation}. It is not an in-force compliance rule. Not legal advice.",
+    run: run_part108_reference,
+    ..ToolDef::BLANK
+};
+
+fn run_part108_reference(_: &mut Ctx) -> Result<Json, ToolError> {
+    let r = rule("faa-108-nprm");
+    Ok(Json::obj([
+        ("status", Json::str(legal_status(&r))),
+        ("proposal", Json::str(r.meaning.clone())),
+        ("citation", Json::str(r.citation.clone())),
+        ("notice", Json::str(notice(&r))),
+    ]))
+}
 
 // ---------------------------------------------------------------- Part 107 altitude
 

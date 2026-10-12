@@ -17,14 +17,15 @@ test('a tool opened cold is filled with its example and says so', () => {
   const problems = [];
   for (const t of catalog.tools) {
     const html = page(t.id);
-    if (!html.includes('Showing an example. Change anything.')) problems.push(`${t.id}: no example label`);
+    const inputs = Object.keys(t.inputs.properties).filter((k) => k !== 'options');
+    if (inputs.length && !html.includes('Showing an example. Change anything.')) problems.push(`${t.id}: no example label`);
+    if (!inputs.length && html.includes('Showing an example. Change anything.')) problems.push(`${t.id}: fixed reference has an example label`);
     // A value sits in an input's value, in a select's chosen option, or as
     // the rows inside a list's textarea.
     const filled =
       [...html.matchAll(/<input[^>]*\bid="field-[^"]*"[^>]*\bvalue="([^"]*)"/g)].some((m) => m[1] !== '') ||
       [...html.matchAll(/<textarea[^>]*\bid="field-[^"]*"[^>]*>([\s\S]*?)<\/textarea>/g)].some((m) => m[1].trim() !== '') ||
       html.includes('<select id="field-');
-    const inputs = Object.keys(t.inputs.properties).filter((k) => k !== 'options');
     if (inputs.length && !filled) problems.push(`${t.id}: no field carries an example value`);
   }
   assert.deepEqual(problems, []);

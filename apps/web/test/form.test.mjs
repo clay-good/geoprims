@@ -89,6 +89,12 @@ test('at most five inputs are shown before "More options"', () => {
   const known = new Set();
   for (const t of catalog.tools) {
     const html = page(route(t.id));
+    const inputCount = Object.keys(t.inputs.properties).filter((name) => name !== 'options').length;
+    if (inputCount === 0) {
+      assert.match(html, /<h2>No values to enter<\/h2>/, `${t.id} does not explain its fixed reference`);
+      assert.doesNotMatch(html, /id="field-[^"]+"/, `${t.id} renders an input it does not accept`);
+      continue;
+    }
     // Everything before the "More options" summary is what a reader sees first;
     // nested markup makes a div-matching regex unreliable, so cut on that.
     const start = html.indexOf('<div class="fields">');

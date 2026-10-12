@@ -1112,6 +1112,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &power::MAX_PAYLOAD,
     &power::PAYLOAD_IMPACT,
     &power::RTH_BUDGET,
+    &ops::REMOTE_ID_REFERENCE,
+    &ops::PART108_PROPOSED_REFERENCE,
     &ops::PART107_ALTITUDE,
     &ops::SPEED_CHECK,
     &ops::KINETIC_ENERGY,

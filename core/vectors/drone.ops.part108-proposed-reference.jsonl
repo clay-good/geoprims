@@ -1,0 +1,1 @@
+{"id":"v001","input":{},"expect":{"ok":true,"result.status":"Proposed","result.citation":"Normalizing Unmanned Aircraft Systems Beyond Visual Line of Sight Operations, 90 FR 38212 (August 7, 2025), docket FAA-2025-1908"},"source":"FAA and TSA notice of proposed rulemaking, 90 FR 38212, as recorded in data/regulations.json","sourceVersion":"Reviewed 2026-09-18","tolerance":{}}

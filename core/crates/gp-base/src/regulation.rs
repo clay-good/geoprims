@@ -11,6 +11,8 @@ static REGULATIONS: &str = include_str!("../../../../data/regulations.json");
 pub struct Rule {
     pub value: f64,
     pub citation: String,
+    pub effective: String,
+    pub meaning: String,
     pub reviewed: String,
     pub status: String,
     pub url: String,
@@ -27,6 +29,8 @@ pub fn rule(id: &str) -> Rule {
     Rule {
         value: e["value"].as_f64().unwrap_or(f64::NAN),
         citation: s("citation"),
+        effective: s("effective"),
+        meaning: s("meaning"),
         reviewed: s("reviewed"),
         status: s("status"),
         url: s("url"),

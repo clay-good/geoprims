@@ -268,6 +268,8 @@ fn msl_and_hae() {
 #[test]
 fn disclaimer_everywhere() {
     for (id, input) in [
+        ("drone.ops.remote-id-reference", r#"{}"#),
+        ("drone.ops.part108-proposed-reference", r#"{}"#),
         ("drone.ops.part107-altitude", r#"{}"#),
         ("drone.ops.speed-check", r#"{"airspeed":"40 mph"}"#),
         (
@@ -292,6 +294,34 @@ fn disclaimer_everywhere() {
             "{id}"
         );
     }
+}
+
+#[test]
+fn dated_faa_references_keep_their_legal_status() {
+    let remote_id = call("drone.ops.remote-id-reference", r#"{}"#);
+    assert_eq!(remote_id["result"]["status"], "In force");
+    assert_eq!(remote_id["result"]["effective_date"], "2024-03-16");
+    assert!(
+        remote_id["result"]["citation"]
+            .as_str()
+            .unwrap()
+            .contains("Part 89")
+    );
+
+    let part_108 = call("drone.ops.part108-proposed-reference", r#"{}"#);
+    assert_eq!(part_108["result"]["status"], "Proposed");
+    assert!(
+        part_108["result"]["citation"]
+            .as_str()
+            .unwrap()
+            .contains("90 FR 38212")
+    );
+    assert!(
+        part_108["summary"]
+            .as_str()
+            .unwrap()
+            .contains("not an in-force compliance rule")
+    );
 }
 
 #[test]

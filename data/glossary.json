@@ -448,7 +448,9 @@
       "definition": "The US civil aviation authority.",
       "source": "cfr-14-1",
       "relatedTools": [
-        "drone.ops.kinetic-energy"
+        "drone.ops.kinetic-energy",
+        "drone.ops.part108-proposed-reference",
+        "drone.ops.remote-id-reference"
       ]
     },
     {

@@ -126,6 +126,9 @@ test('every tool survives bounds fuzzing', { timeout: Number(process.env.FUZZ_TI
   for (const [ti, t] of catalog.tools.entries()) {
     const example = (t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0]).input;
     const fields = Object.entries(t.inputs.properties).filter(([k]) => k !== 'options');
+    // A fixed reference with no inputs has no boundary to mutate. Its worked
+    // example and golden vector still run through the shared runtime gates.
+    if (fields.length === 0) continue;
     const r = rng(1000 + ti);
     for (let c = 0; c < CASES; c++) {
       const input = structuredClone(example);

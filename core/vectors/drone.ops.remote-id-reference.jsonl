@@ -1,0 +1,1 @@
+{"id":"v001","input":{},"expect":{"ok":true,"result.status":"In force","result.effective_date":"2024-03-16","result.citation":"14 CFR Part 89 (Remote Identification)"},"source":"14 CFR Part 89 entry in data/regulations.json","sourceVersion":"Reviewed 2026-09-18","tolerance":{}}

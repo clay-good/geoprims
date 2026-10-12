@@ -522,14 +522,21 @@
       ]
     },
     "drone.ops": {
-      "summary": "Rules checks for Part 107 and the EASA open category, plus the wind and line of sight on the day.",
-      "intro": "Rules checks for flying under Part 107 in the United States and the EASA open category in Europe: the 400 ft altitude limit and its structure exception, the 87 knot groundspeed limit, which open subcategory a drone fits, impact energy against the published thresholds, the wind at your flying height against the drone's limit, and whether every waypoint stays within your visual range. It is for remote pilots checking a plan against the rules. Start with the Part 107 altitude tool. Each tool checks one rule; none grants airspace access, and a waiver, a TFR, or controlled airspace can change what you may fly.",
+      "summary": "Dated FAA and EASA references, rules checks, wind limits, and line-of-sight planning for drone flights.",
+      "intro": "Dated references and rules checks for flying under Part 107 in the United States and the EASA open category in Europe: Remote ID and the proposed Part 108 rule, the 400 ft altitude limit and its structure exception, the 87 knot groundspeed limit, which open subcategory a drone fits, impact energy against the published thresholds, the wind at your flying height against the drone's limit, and whether every waypoint stays within your visual range. It is for remote pilots checking a plan against the rules. Start with the Part 107 altitude tool. Each tool checks or summarizes one rule; none grants airspace access, and a waiver, a TFR, or controlled airspace can change what you may fly.",
       "tasks": [
         {
           "want": "check an altitude or speed limit under Part 107",
           "tools": [
             "part107-altitude",
             "speed-check"
+          ]
+        },
+        {
+          "want": "look up Remote ID or the proposed Part 108 rule",
+          "tools": [
+            "remote-id-reference",
+            "part108-proposed-reference"
           ]
         },
         {

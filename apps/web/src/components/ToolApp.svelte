@@ -775,8 +775,12 @@
 
 <form class="card inputs" onsubmit={(e) => e.preventDefault()}>
   <div class="inputs-head">
-    <h2>Your values</h2>
-    {#if isExample}<span class="chip">Showing an example. Change anything.</span>{/if}
+    {#if fields.length}
+      <h2>Your values</h2>
+      {#if isExample}<span class="chip">Showing an example. Change anything.</span>{/if}
+    {:else}
+      <h2>No values to enter</h2>
+    {/if}
   </div>
   {#snippet field([name, schema])}
     <label class:invalid={badField === name}>
@@ -896,7 +900,9 @@
       </div>
     {/if}
   {/snippet}
-  {#if pair}
+  {#if !fields.length}
+    <p class="help">This fixed reference reads its dated source entry directly.</p>
+  {:else if pair}
     <div class="coordinate-field">
       <label>
         <span class="label-text">Paste a coordinate<span class="optional"> any notation</span></span>
@@ -921,21 +927,23 @@
       {/if}
     </div>
   {/if}
-  <div class="fields">
-    {#each coreFields as f}{@render field(f)}{/each}
-  </div>
-  {#if moreFields.length}
-    <details class="more-options" open={moreFields.some(([k]) => values[k] !== '' || k === badField)}>
-      <summary>More options <span class="count">{moreFields.length}</span></summary>
-      <div class="fields">
-        {#each moreFields as f}{@render field(f)}{/each}
-      </div>
-    </details>
+  {#if fields.length}
+    <div class="fields">
+      {#each coreFields as f}{@render field(f)}{/each}
+    </div>
+    {#if moreFields.length}
+      <details class="more-options" open={moreFields.some(([k]) => values[k] !== '' || k === badField)}>
+        <summary>More options <span class="count">{moreFields.length}</span></summary>
+        <div class="fields">
+          {#each moreFields as f}{@render field(f)}{/each}
+        </div>
+      </details>
+    {/if}
+    <div class="actions">
+      <button type="button" class="quiet" onclick={tryExample}>Try the example</button>
+      <button type="button" class="quiet" onclick={clearAll}>Clear</button>
+    </div>
   {/if}
-  <div class="actions">
-    <button type="button" class="quiet" onclick={tryExample}>Try the example</button>
-    <button type="button" class="quiet" onclick={clearAll}>Clear</button>
-  </div>
   {#if !embedded && takesProfile(tool.id)}
     <details class="batch" ontoggle={(e) => e.currentTarget.open && loadAircraft()}>
       <summary>Aircraft profiles</summary>

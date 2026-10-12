@@ -84,6 +84,7 @@ const MUST_DECLARE = [
   'aviation.ifr.hold-wind-timing',
   'aviation.weather.metar-decode',
   'aviation.weather.taf-decode',
+  'aviation.loading.fuel-plan',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -190,6 +191,17 @@ test('the weather decoders expose the FAA flight-category boundaries', () => {
     const assumptions = byId(id)['x-assumptions'];
     assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), expected, id);
   }
+});
+
+test('the fuel planner exposes every regulatory reserve duration', () => {
+  const assumptions = byId('aviation.loading.fuel-plan')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['30', 'min', 'cfr-14-91'],
+    ['45', 'min', 'cfr-14-91'],
+    ['20', 'min', 'cfr-14-91'],
+    ['45', 'min', 'cfr-14-91'],
+    ['30', 'min', 'cfr-14-91'],
+  ]);
 });
 
 test('every tool that rests on constants declares them', () => {

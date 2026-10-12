@@ -9,7 +9,9 @@ use crate::{obj, unit};
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::regulation::rule;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_base::{ErrorCode, display};
 
@@ -271,6 +273,38 @@ pub static FUEL_PLAN: ToolDef = ToolDef {
         Related {
             id: "aviation.loading.weight-balance",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Airplane VFR day reserve, 14 CFR 91.151(a)(1)",
+            value: "30",
+            unit: "min",
+            source: "cfr-14-91",
+        },
+        Assumption {
+            name: "Airplane VFR night reserve, 14 CFR 91.151(a)(2)",
+            value: "45",
+            unit: "min",
+            source: "cfr-14-91",
+        },
+        Assumption {
+            name: "Rotorcraft VFR reserve, 14 CFR 91.151(b)",
+            value: "20",
+            unit: "min",
+            source: "cfr-14-91",
+        },
+        Assumption {
+            name: "Airplane IFR reserve, 14 CFR 91.167(a)(3)",
+            value: "45",
+            unit: "min",
+            source: "cfr-14-91",
+        },
+        Assumption {
+            name: "Helicopter IFR reserve, 14 CFR 91.167(a)(3)",
+            value: "30",
+            unit: "min",
+            source: "cfr-14-91",
         },
     ],
     sentence: "You need {total} of fuel, including {reserve_fuel} of reserve.{if margin < 0} That is more than you carry.{/if}",

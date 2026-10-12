@@ -148,8 +148,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/loading/fuel-plan/": {
-    "hash": "a86148185a2e59ff",
-    "lastmod": "2026-10-10"
+    "hash": "2ad7c30c83f70830",
+    "lastmod": "2026-10-12"
   },
   "/aviation/loading/fuel-weight/": {
     "hash": "9575c6cdac004305",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "3001c25edfbf9fa5",
+    "hash": "d6d12a7767aa9e96",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

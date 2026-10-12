@@ -83,6 +83,7 @@ const MUST_DECLARE = [
   'aviation.ifr.hold-entry',
   'aviation.ifr.hold-speed-limit',
   'aviation.ifr.hold-wind-timing',
+  'aviation.ifr.dme-arc-lead',
   'aviation.weather.metar-decode',
   'aviation.weather.taf-decode',
   'aviation.loading.fuel-plan',
@@ -177,6 +178,14 @@ test('the fly-by tool exposes its gravity and standard-rate defaults', () => {
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['9.80665', 'm/s2', 'icao-7488'],
     ['3', 'deg/s', 'faa-ifh'],
+  ]);
+});
+
+test('the DME arc tool exposes its published standard-rate and lead rule', () => {
+  const assumptions = byId('aviation.ifr.dme-arc-lead')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['3', 'deg/s', 'faa-ifh'],
+    ['60', 'deg', 'faa-ifh'],
   ]);
 });
 

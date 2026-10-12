@@ -104,8 +104,8 @@
     "lastmod": "2026-09-25"
   },
   "/aviation/ifr/dme-arc-lead/": {
-    "hash": "a43567d1b07e2418",
-    "lastmod": "2026-10-09"
+    "hash": "32ef444ec39fc621",
+    "lastmod": "2026-10-12"
   },
   "/aviation/ifr/dme-slant-range/": {
     "hash": "9c147b1787aaefda",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ea3418f00cd95e26",
+    "hash": "9bfb8cead9bd8a9a",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

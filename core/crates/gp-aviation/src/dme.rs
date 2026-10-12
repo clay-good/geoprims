@@ -9,7 +9,9 @@ use crate::{obj, unit};
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::{asin, sin, sqrt};
 
@@ -465,6 +467,20 @@ pub static ARC_LEAD: ToolDef = ToolDef {
         Related {
             id: "aviation.ifr.time-to-station",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Standard-rate turn",
+            value: "3",
+            unit: "deg/s",
+            source: "faa-ifh",
+        },
+        Assumption {
+            name: "DME arc lead-radial rule coefficient",
+            value: "60",
+            unit: "deg",
+            source: "faa-ifh",
         },
     ],
     sentence: "Turn onto the arc {onto_arc_lead} before it, and off it {lead_radials} before the inbound course.",

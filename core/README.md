@@ -7,7 +7,7 @@ The Rust compute core. One Cargo workspace; each domain crate compiles to its ow
 | `gp-base` | (linked into every module) | Units, angles, errors and warnings, ECMAScript-format JSON, result envelope, tool runtime and manifests, golden-vector runner, Wasm ABI |
 | `gp-units` | `base` | The units domain: 22 operations and 35 pair endpoints |
 | `gp-geodesy`, `gp-navigation`, `gp-geometry`, `gp-aviation`, `gp-drone`, `gp-survey`, `gp-indexing`, `gp-time` | one each | Domain tools (being built) |
-| `gp-raster` | `raster` | Spectral indices, terrain analysis, bounded GeoTIFF window decoding and per-window index processing, plus single-band result export that retains no-data, EPSG, pixel convention, and affine grid metadata |
+| `gp-raster` | `raster` | Spectral indices, terrain analysis, bounded GeoTIFF window decoding and per-window index processing, nearest/bilinear grid resampling, and single-band result export that retains no-data and georeferencing |
 
 `vectors/` holds the golden vectors, one JSON Lines file per tool id (format in `gp-base/src/vectors.rs`).
 

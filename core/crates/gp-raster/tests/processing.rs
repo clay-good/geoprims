@@ -1,7 +1,9 @@
 use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform};
 use std::io::Cursor;
 
-use gp_raster::processing::{Error, normalized_difference, normalized_difference_scene};
+use gp_raster::processing::{
+    Error, Resampling, normalized_difference, normalized_difference_scene, resample,
+};
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
 
@@ -203,4 +205,84 @@ fn scene_grid_mismatch_is_reported_before_any_output() {
         error,
         Error::GridMismatch(mismatch) if mismatch.reason == "dimensions"
     ));
+}
+
+#[test]
+fn nearest_resampling_repeats_pixels_on_a_finer_area_grid() {
+    let source = raster(grid(2), 1, None, vec![1.0, 2.0, 3.0, 4.0]);
+    let mut target = grid(4);
+    target.height = 4;
+    target.transform.as_mut().unwrap().dx = 5.0;
+    target.transform.as_mut().unwrap().dy = -5.0;
+    let output = resample(&source, target.clone(), Resampling::Nearest, 16).unwrap();
+    assert_eq!(
+        output.samples,
+        [
+            1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 3.0, 3.0, 4.0, 4.0,
+        ]
+    );
+    assert_eq!(output.metadata.grid, target);
+}
+
+#[test]
+fn bilinear_resampling_uses_pixel_centers_and_propagates_nodata() {
+    let mut source_grid = grid(2);
+    source_grid.raster_type = Some(RasterType::PixelIsPoint);
+    let source = raster(
+        source_grid.clone(),
+        1,
+        Some(-9999.0),
+        vec![1.0, 2.0, 3.0, 4.0],
+    );
+    let mut target = source_grid;
+    target.width = 1;
+    target.height = 1;
+    target.transform.as_mut().unwrap().x0 += 5.0;
+    target.transform.as_mut().unwrap().y0 -= 5.0;
+    let output = resample(&source, target.clone(), Resampling::Bilinear, 1).unwrap();
+    assert_eq!(output.samples, [2.5]);
+    assert_eq!(output.valid, [true]);
+
+    let mut masked = source;
+    masked.valid[3] = false;
+    let output = resample(&masked, target, Resampling::Bilinear, 1).unwrap();
+    assert_eq!(output.samples, [-9999.0]);
+    assert_eq!(output.valid, [false]);
+}
+
+#[test]
+fn resampling_refuses_other_crs_and_enforces_the_output_cap() {
+    let source = raster(grid(2), 1, None, vec![1.0, 2.0, 3.0, 4.0]);
+    let mut other_crs = grid(2);
+    other_crs.epsg = Some(32618);
+    assert!(matches!(
+        resample(&source, other_crs, Resampling::Nearest, 4),
+        Err(Error::GridMismatch(mismatch)) if mismatch.reason == "CRS"
+    ));
+    assert_eq!(
+        resample(&source, grid(2), Resampling::Nearest, 3).unwrap_err(),
+        Error::LimitExceeded {
+            samples: 4,
+            limit: 3,
+        }
+    );
+}
+
+#[test]
+fn resampling_round_trips_a_rotated_grid_exactly() {
+    let mut rotated = grid(2);
+    rotated.transform = Some(Transform {
+        x0: 10.0,
+        dx: 2.0,
+        rx: 0.5,
+        y0: 20.0,
+        ry: -0.25,
+        dy: -3.0,
+    });
+    let source = raster(rotated.clone(), 1, None, vec![1.0, 2.0, 3.0, 4.0]);
+    for method in [Resampling::Nearest, Resampling::Bilinear] {
+        let output = resample(&source, rotated.clone(), method, 4).unwrap();
+        assert_eq!(output.samples, source.samples);
+        assert_eq!(output.valid, source.valid);
+    }
 }

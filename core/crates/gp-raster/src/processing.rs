@@ -6,7 +6,9 @@
 
 use std::io::{Read, Seek};
 
-use crate::geotiff::{self, GridMismatch, Metadata, Raster, Window, WindowDecoder, same_grid};
+use crate::geotiff::{
+    self, Grid, GridMismatch, Metadata, Raster, RasterType, Window, WindowDecoder, same_grid,
+};
 use crate::indices::normalized_value;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -16,6 +18,13 @@ pub enum Error {
     InvalidBand { band: usize, bands: u16 },
     InvalidRaster(&'static str),
     InvalidWindowSize,
+    LimitExceeded { samples: u64, limit: usize },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Resampling {
+    Nearest,
+    Bilinear,
 }
 
 fn validate_band(metadata: &Metadata, band: usize) -> Result<(), Error> {
@@ -29,6 +38,11 @@ fn validate_band(metadata: &Metadata, band: usize) -> Result<(), Error> {
 }
 
 fn validate(raster: &Raster, band: usize) -> Result<usize, Error> {
+    if raster.metadata.grid.width == 0 || raster.metadata.grid.height == 0 {
+        return Err(Error::InvalidRaster(
+            "Raster dimensions must be greater than zero.",
+        ));
+    }
     validate_band(&raster.metadata, band)?;
     let bands = usize::from(raster.metadata.bands);
     let pixels = u64::from(raster.metadata.grid.width)
@@ -145,4 +159,154 @@ pub fn normalized_difference(
         samples,
         valid,
     })
+}
+
+fn raster_offset(raster_type: Option<RasterType>) -> f64 {
+    match raster_type {
+        Some(RasterType::PixelIsPoint) => 0.0,
+        Some(RasterType::PixelIsArea) | None => 0.5,
+    }
+}
+
+/// Resamples every band onto a chosen target grid in the same CRS.
+pub fn resample(
+    source: &Raster,
+    target: Grid,
+    method: Resampling,
+    max_samples: usize,
+) -> Result<Raster, Error> {
+    validate(source, 0)?;
+    if target.width == 0 || target.height == 0 {
+        return Err(Error::InvalidRaster(
+            "Target grid dimensions must be greater than zero.",
+        ));
+    }
+    if source.metadata.grid.epsg != target.epsg || source.metadata.grid.crs_type != target.crs_type
+    {
+        return Err(Error::GridMismatch(GridMismatch {
+            reason: "CRS",
+            left: Box::new(source.metadata.grid.clone()),
+            right: Box::new(target),
+        }));
+    }
+    let source_transform = source
+        .metadata
+        .grid
+        .transform
+        .ok_or(Error::InvalidRaster("Source grid has no affine transform."))?;
+    let target_transform = target
+        .transform
+        .ok_or(Error::InvalidRaster("Target grid has no affine transform."))?;
+    let determinant =
+        source_transform.dx * source_transform.dy - source_transform.rx * source_transform.ry;
+    if determinant == 0.0 || !determinant.is_finite() {
+        return Err(Error::InvalidRaster(
+            "Source grid affine transform is not invertible.",
+        ));
+    }
+    let count = u64::from(target.width)
+        .checked_mul(u64::from(target.height))
+        .and_then(|n| n.checked_mul(u64::from(source.metadata.bands)))
+        .ok_or(Error::LimitExceeded {
+            samples: u64::MAX,
+            limit: max_samples,
+        })?;
+    if count > max_samples as u64 {
+        return Err(Error::LimitExceeded {
+            samples: count,
+            limit: max_samples,
+        });
+    }
+
+    let bands = usize::from(source.metadata.bands);
+    let fill = source.metadata.nodata.unwrap_or(f64::NAN);
+    let mut samples = Vec::with_capacity(count as usize);
+    let mut valid = Vec::with_capacity(count as usize);
+    let target_offset = raster_offset(target.raster_type);
+    let source_offset = raster_offset(source.metadata.grid.raster_type);
+    for row in 0..target.height {
+        for column in 0..target.width {
+            let target_x = f64::from(column) + target_offset;
+            let target_y = f64::from(row) + target_offset;
+            let model_x = target_transform.x0
+                + target_x * target_transform.dx
+                + target_y * target_transform.rx;
+            let model_y = target_transform.y0
+                + target_x * target_transform.ry
+                + target_y * target_transform.dy;
+            let delta_x = model_x - source_transform.x0;
+            let delta_y = model_y - source_transform.y0;
+            let source_x = (source_transform.dy * delta_x - source_transform.rx * delta_y)
+                / determinant
+                - source_offset;
+            let source_y = (-source_transform.ry * delta_x + source_transform.dx * delta_y)
+                / determinant
+                - source_offset;
+            for band in 0..bands {
+                let value = match method {
+                    Resampling::Nearest => nearest(source, source_x, source_y, band),
+                    Resampling::Bilinear => bilinear(source, source_x, source_y, band),
+                };
+                samples.push(value.unwrap_or(fill));
+                valid.push(value.is_some());
+            }
+        }
+    }
+    Ok(Raster {
+        metadata: Metadata {
+            grid: target,
+            bands: source.metadata.bands,
+            nodata: source.metadata.nodata,
+        },
+        samples,
+        valid,
+    })
+}
+
+fn source_sample(source: &Raster, x: u32, y: u32, band: usize) -> Option<f64> {
+    let bands = usize::from(source.metadata.bands);
+    let pixel =
+        usize::try_from(u64::from(y) * u64::from(source.metadata.grid.width) + u64::from(x))
+            .ok()?;
+    let index = pixel.checked_mul(bands)?.checked_add(band)?;
+    (source.valid[index] && source.samples[index].is_finite()).then_some(source.samples[index])
+}
+
+fn nearest(source: &Raster, x: f64, y: f64, band: usize) -> Option<f64> {
+    if !x.is_finite() || !y.is_finite() {
+        return None;
+    }
+    let x = x.round();
+    let y = y.round();
+    if x < 0.0
+        || y < 0.0
+        || x >= f64::from(source.metadata.grid.width)
+        || y >= f64::from(source.metadata.grid.height)
+    {
+        return None;
+    }
+    source_sample(source, x as u32, y as u32, band)
+}
+
+fn bilinear(source: &Raster, x: f64, y: f64, band: usize) -> Option<f64> {
+    if !x.is_finite()
+        || !y.is_finite()
+        || x < 0.0
+        || y < 0.0
+        || x > f64::from(source.metadata.grid.width.saturating_sub(1))
+        || y > f64::from(source.metadata.grid.height.saturating_sub(1))
+    {
+        return None;
+    }
+    let x0 = x.floor() as u32;
+    let y0 = y.floor() as u32;
+    let x1 = (x0 + 1).min(source.metadata.grid.width - 1);
+    let y1 = (y0 + 1).min(source.metadata.grid.height - 1);
+    let x_weight = x - f64::from(x0);
+    let y_weight = y - f64::from(y0);
+    let top = source_sample(source, x0, y0, band)? * (1.0 - x_weight)
+        + source_sample(source, x1, y0, band)? * x_weight;
+    let bottom = source_sample(source, x0, y1, band)? * (1.0 - x_weight)
+        + source_sample(source, x1, y1, band)? * x_weight;
+    Some(top * (1.0 - y_weight) + bottom * y_weight)
 }

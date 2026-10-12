@@ -19,6 +19,7 @@ export const ALLOWED = new Set([
   'ISC',
   'LGPL-3.0-or-later',
   'MIT',
+  'MIT OR Apache-2.0',
   'MPL-2.0',
   'Python-2.0',
 ]);

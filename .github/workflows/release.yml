@@ -1,0 +1,153 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.contract.outputs.version }}
+      prerelease: ${{ steps.contract.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require a version-bound, clone-and-run tag on main
+        id: contract
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          node tools/release/contract.mjs "$GITHUB_REF_NAME"
+      - name: Install pinned Rust (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Install pinned wasm-opt
+        run: |
+          v=$(node -p "require('./tools/toolchain.json').wasmOpt")
+          curl -fsSL "https://github.com/WebAssembly/binaryen/releases/download/version_${v}/binaryen-version_${v}-x86_64-linux.tar.gz" | tar xz
+          echo "$PWD/binaryen-version_${v}/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Pin the build date to this commit
+        run: echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
+      - name: Install the locked website and deployment tools
+        run: npm ci --prefix apps/web
+      - name: Audit dependencies
+        run: |
+          npm audit --prefix apps/web --audit-level=high
+          node tools/repo/npm-licenses.mjs
+          node tools/codegen/sbom.mjs --check
+      - name: Verify and build the core
+        run: |
+          cargo fmt --all --manifest-path core/Cargo.toml --check
+          cargo clippy --manifest-path core/Cargo.toml --all-targets -- -D warnings
+          cargo test --manifest-path core/Cargo.toml
+          npm run build
+      - name: Rebuild the repository-only MCP payload
+        run: |
+          npm run build:mcp
+          git diff --exit-code -- mcp/dist
+          node tools/mcp/inspector-check.mjs
+          npm run eval:mcp
+      - name: Install browsers
+        run: npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
+      - name: Build and verify the website
+        run: |
+          npm run build --prefix apps/web
+          npm run test:js
+          npm test --prefix apps/web
+          npm run test:browser --prefix apps/web
+      - name: Assemble release assets
+        run: node tools/release/package.mjs
+      - name: Attest every release asset
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            dist/release/*.mcpb
+            dist/release/*.json
+            dist/release/*.txt
+            dist/release/SHA256SUMS
+      - name: Verify the MCPB attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh attestation verify "dist/release/geoprims-${{ steps.contract.outputs.version }}.mcpb" -R "$GITHUB_REPOSITORY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: dist/release
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-site
+          path: apps/web/dist
+          if-no-files-found: error
+
+  deploy:
+    needs: build-and-verify
+    runs-on: ubuntu-24.04
+    environment: ${{ needs.build-and-verify.outputs.prerelease == 'true' && 'staging' || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci --prefix apps/web
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-site
+          path: apps/web/dist
+      - name: Deploy release candidate to staging
+        if: needs.build-and-verify.outputs.prerelease == 'true'
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm exec -- wrangler deploy --config wrangler.jsonc
+      - name: Smoke staging headers
+        if: needs.build-and-verify.outputs.prerelease == 'true'
+        run: node apps/web/scripts/header-smoke.mjs https://geoprims-preview.hi-6b2.workers.dev
+      - name: Deploy stable release to production
+        if: needs.build-and-verify.outputs.prerelease != 'true'
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm exec -- wrangler deploy --config wrangler.production.jsonc
+      - name: Smoke production headers
+        if: needs.build-and-verify.outputs.prerelease != 'true'
+        run: node apps/web/scripts/header-smoke.mjs https://geoprims.com --production
+
+  publish:
+    needs: [build-and-verify, deploy]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: dist/release
+      - name: Publish GitHub prerelease
+        if: needs.build-and-verify.outputs.prerelease == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/release/*.mcpb dist/release/*.json dist/release/*.txt dist/release/SHA256SUMS --verify-tag --prerelease --latest=false --notes-file dist/release/RELEASE_NOTES.md --title "geoprims $GITHUB_REF_NAME"
+      - name: Publish stable GitHub release
+        if: needs.build-and-verify.outputs.prerelease != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/release/*.mcpb dist/release/*.json dist/release/*.txt dist/release/SHA256SUMS --verify-tag --notes-file dist/release/RELEASE_NOTES.md --title "geoprims $GITHUB_REF_NAME"

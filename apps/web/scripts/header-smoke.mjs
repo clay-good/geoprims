@@ -14,7 +14,8 @@ function expectedFor(rules, path) {
   return Object.assign({}, ...rules.filter(([pattern]) => matches(pattern, path)).map(([, headers]) => headers));
 }
 
-export async function smoke(origin, fetchImpl = fetch) {
+export async function smoke(origin, fetchImpl = fetch, mode = 'preview') {
+  if (!['preview', 'production'].includes(mode)) throw new Error(`unknown deployment mode: ${mode}`);
   const base = new URL(origin);
   if (base.protocol !== 'https:') throw new Error('preview origin must use HTTPS');
   const asset = readdirSync(join(dist, '_astro')).find((name) => name.endsWith('.js'));
@@ -38,8 +39,12 @@ export async function smoke(origin, fetchImpl = fetch) {
     if (expected['Cache-Control'] && response.headers.get('Cache-Control') !== expected['Cache-Control']) {
       throw new Error(`${path}: Cache-Control differs from dist/_headers`);
     }
-    if (response.headers.get('X-Robots-Tag') !== 'noindex, nofollow, noarchive') {
+    const robots = response.headers.get('X-Robots-Tag');
+    if (mode === 'preview' && robots !== 'noindex, nofollow, noarchive') {
       throw new Error(`${path}: preview is missing X-Robots-Tag`);
+    }
+    if (mode === 'production' && robots) {
+      throw new Error(`${path}: production must not send X-Robots-Tag`);
     }
     if (response.headers.has('Set-Cookie')) throw new Error(`${path}: response sets a cookie`);
     if (html) {
@@ -56,11 +61,12 @@ export async function smoke(origin, fetchImpl = fetch) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const origin = process.argv[2];
   if (!origin) {
-    console.error('usage: node scripts/header-smoke.mjs https://preview.example');
+    console.error('usage: node scripts/header-smoke.mjs https://deployment.example [--production]');
     process.exitCode = 2;
   } else {
-    smoke(origin)
-      .then((paths) => console.log(`header smoke: ${paths.length} preview routes passed`))
+    const mode = process.argv.includes('--production') ? 'production' : 'preview';
+    smoke(origin, fetch, mode)
+      .then((paths) => console.log(`header smoke: ${paths.length} ${mode} routes passed`))
       .catch((error) => { console.error(error.message); process.exitCode = 1; });
   }
 }

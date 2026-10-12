@@ -41,6 +41,8 @@ Run `npm test` after building to check Rust and JavaScript behavior. The website
 
 After changing a dependency lockfile, run `npm run build:sbom` to regenerate the dependency inventory used by the site’s licenses page.
 
+Maintainers prepare and verify tagged deployments with the [release runbook](docs/runbooks/releases.md). The release workflow deploys first, then publishes attested GitHub assets; the MCP server is never sent to a package registry.
+
 ## Disclaimer
 
 geoprims is a planning and education aid. It is not certified for navigation and is not a legal survey. Check operational values against official sources, your aircraft's POH/AFM, and current regulations.

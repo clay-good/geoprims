@@ -1114,6 +1114,158 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/%40cloudflare/kv-asset-handler@0.5.0",
+      "name": "@cloudflare/kv-asset-handler",
+      "version": "0.5.0",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/%40cloudflare/kv-asset-handler@0.5.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40cloudflare/unenv-preset@2.16.2",
+      "name": "@cloudflare/unenv-preset",
+      "version": "2.16.2",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/%40cloudflare/unenv-preset@2.16.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20261006.1",
+      "name": "@cloudflare/workerd-darwin-64",
+      "version": "1.20261006.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20261006.1",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20261006.1",
+      "name": "@cloudflare/workerd-darwin-arm64",
+      "version": "1.20261006.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20261006.1",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-64@1.20261006.1",
+      "name": "@cloudflare/workerd-linux-64",
+      "version": "1.20261006.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20261006.1",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20261006.1",
+      "name": "@cloudflare/workerd-linux-arm64",
+      "version": "1.20261006.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20261006.1",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-windows-64@1.20261006.1",
+      "name": "@cloudflare/workerd-windows-64",
+      "version": "1.20261006.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20261006.1",
+      "scope": "optional",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40cspotcode/source-map-support@0.8.1",
+      "name": "@cspotcode/source-map-support",
+      "version": "0.8.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40cspotcode/source-map-support@0.8.1",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/%40emnapi/core@1.11.1",
       "name": "@emnapi/core",
       "version": "1.11.1",
@@ -1731,7 +1883,7 @@
         }
       ],
       "purl": "pkg:npm/%40img/colour@1.1.0",
-      "scope": "optional",
+      "scope": "excluded",
       "properties": [
         {
           "name": "geoprims:ecosystem",
@@ -2330,6 +2482,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/%40jridgewell/trace-mapping@0.3.9",
+      "name": "@jridgewell/trace-mapping",
+      "version": "0.3.9",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40jridgewell/trace-mapping@0.3.9",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/%40napi-rs/wasm-runtime@1.2.4",
       "name": "@napi-rs/wasm-runtime",
       "version": "1.2.4",
@@ -2377,6 +2548,63 @@
         }
       ],
       "purl": "pkg:npm/%40oxc-project/types@0.150.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40poppinss/colors@4.1.6",
+      "name": "@poppinss/colors",
+      "version": "4.1.6",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40poppinss/colors@4.1.6",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40poppinss/dumper@0.6.5",
+      "name": "@poppinss/dumper",
+      "version": "0.6.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40poppinss/dumper@0.6.5",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40poppinss/exception@1.2.3",
+      "name": "@poppinss/exception",
+      "version": "1.2.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40poppinss/exception@1.2.3",
       "scope": "excluded",
       "properties": [
         {
@@ -2843,6 +3071,44 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/%40sindresorhus/is@7.2.0",
+      "name": "@sindresorhus/is",
+      "version": "7.2.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/%40sindresorhus/is@7.2.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40speed-highlight/core@1.2.24",
+      "name": "@speed-highlight/core",
+      "version": "1.2.24",
+      "licenses": [
+        {
+          "expression": "CC0-1.0"
+        }
+      ],
+      "purl": "pkg:npm/%40speed-highlight/core@1.2.24",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/%40sveltejs/acorn-typescript@1.0.13",
       "name": "@sveltejs/acorn-typescript",
       "version": "1.0.13",
@@ -3223,6 +3489,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/blake3-wasm@2.1.5",
+      "name": "blake3-wasm",
+      "version": "2.1.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/blake3-wasm@2.1.5",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/boolbase@1.0.0",
       "name": "boolbase",
       "version": "1.0.0",
@@ -3403,6 +3688,25 @@
         }
       ],
       "purl": "pkg:npm/common-ancestor-path@2.0.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/cookie@1.1.1",
+      "name": "cookie",
+      "version": "1.1.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/cookie@1.1.1",
       "scope": "excluded",
       "properties": [
         {
@@ -3840,6 +4144,25 @@
         }
       ],
       "purl": "pkg:npm/entities@4.5.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/error-stack-parser-es@1.0.5",
+      "name": "error-stack-parser-es",
+      "version": "1.0.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/error-stack-parser-es@1.0.5",
       "scope": "excluded",
       "properties": [
         {
@@ -4420,6 +4743,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/kleur@4.1.5",
+      "name": "kleur",
+      "version": "4.1.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/kleur@4.1.5",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/lightningcss@1.33.0",
       "name": "lightningcss",
       "version": "1.33.0",
@@ -4895,6 +5237,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/miniflare@5.20261006.1-alpha",
+      "name": "miniflare",
+      "version": "5.20261006.1-alpha",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/miniflare@5.20261006.1-alpha",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/mrmime@2.0.1",
       "name": "mrmime",
       "version": "2.0.1",
@@ -5208,6 +5569,44 @@
         }
       ],
       "purl": "pkg:npm/package-manager-detector@1.8.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/path-to-regexp@6.3.0",
+      "name": "path-to-regexp",
+      "version": "6.3.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/path-to-regexp@6.3.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/pathe@2.0.3",
+      "name": "pathe",
+      "version": "2.0.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/pathe@2.0.3",
       "scope": "excluded",
       "properties": [
         {
@@ -5626,7 +6025,7 @@
         }
       ],
       "purl": "pkg:npm/semver@7.8.5",
-      "scope": "optional",
+      "scope": "excluded",
       "properties": [
         {
           "name": "geoprims:ecosystem",
@@ -5645,7 +6044,7 @@
         }
       ],
       "purl": "pkg:npm/sharp@0.35.5",
-      "scope": "optional",
+      "scope": "excluded",
       "properties": [
         {
           "name": "geoprims:ecosystem",
@@ -5759,6 +6158,25 @@
         }
       ],
       "purl": "pkg:npm/stringify-entities@4.0.4",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/supports-color@10.2.2",
+      "name": "supports-color",
+      "version": "10.2.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/supports-color@10.2.2",
       "scope": "excluded",
       "properties": [
         {
@@ -6035,6 +6453,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/undici@7.29.1",
+      "name": "undici",
+      "version": "7.29.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/undici@7.29.1",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/undici@8.10.2",
       "name": "undici",
       "version": "8.10.2",
@@ -6044,6 +6481,25 @@
         }
       ],
       "purl": "pkg:npm/undici@8.10.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/unenv@2.0.0-rc.24",
+      "name": "unenv",
+      "version": "2.0.0-rc.24",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/unenv@2.0.0-rc.24",
       "scope": "excluded",
       "properties": [
         {
@@ -6301,6 +6757,63 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/workerd@1.20261006.1",
+      "name": "workerd",
+      "version": "1.20261006.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/workerd@1.20261006.1",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/wrangler@4.149.0",
+      "name": "wrangler",
+      "version": "4.149.0",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:npm/wrangler@4.149.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/ws@8.21.0",
+      "name": "ws",
+      "version": "8.21.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/ws@8.21.0",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/xxhash-wasm@1.1.0",
       "name": "xxhash-wasm",
       "version": "1.1.0",
@@ -6348,6 +6861,44 @@
         }
       ],
       "purl": "pkg:npm/yocto-queue@1.2.2",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/youch@4.1.0-beta.10",
+      "name": "youch",
+      "version": "4.1.0-beta.10",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/youch@4.1.0-beta.10",
+      "scope": "excluded",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "npm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/youch-core@0.3.3",
+      "name": "youch-core",
+      "version": "0.3.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:npm/youch-core@0.3.3",
       "scope": "excluded",
       "properties": [
         {

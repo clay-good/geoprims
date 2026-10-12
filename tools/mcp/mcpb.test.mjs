@@ -19,7 +19,7 @@ const pkg = JSON.parse(readFileSync(join(root, 'mcp/package.json'), 'utf8'));
 test('the MCPB manifest is v0.3 and describes the server that exists', () => {
   assert.equal(manifest.manifest_version, '0.3');
   assert.equal(manifest.server.type, 'node');
-  assert.equal(manifest.version, pkg.version, 'the bundle and the npm package are the same release');
+  assert.equal(manifest.version, pkg.version, 'the bundle and the package metadata are the same release');
   // The entry point is a file the bundle carries, and the command runs it.
   assert.ok(bundleFiles().includes(manifest.server.entry_point), 'the entry point is not in the bundle');
   assert.equal(manifest.server.mcp_config.command, 'node');

@@ -737,6 +737,26 @@ pub static KINETIC_ENERGY: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "EASA C1 maximum takeoff mass criterion",
+            value: "900",
+            unit: "g",
+            source: "eu-2019-945",
+        },
+        Assumption {
+            name: "EASA C1 transferred-energy criterion",
+            value: "80",
+            unit: "J",
+            source: "eu-2019-945",
+        },
+        Assumption {
+            name: "FAA category 2 transferred-energy threshold",
+            value: "11",
+            unit: "ft*lbf",
+            source: "cfr-14-107",
+        },
+    ],
     sentence: "At that speed it carries {energy} ({energy_ft_lbf}). Not legal advice.",
     limits: &[("batchRows", 10_000)],
     run: run_ke,

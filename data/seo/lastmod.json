@@ -328,8 +328,8 @@
     "lastmod": "2026-10-10"
   },
   "/drone/ops/kinetic-energy/": {
-    "hash": "32561072ed7dbf1b",
-    "lastmod": "2026-10-10"
+    "hash": "92fae8bb4a40381f",
+    "lastmod": "2026-10-12"
   },
   "/drone/ops/part107-altitude/": {
     "hash": "bca776e3ed8b3e76",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "825e40e67e48aafe",
+    "hash": "90a7fac4f4392e1d",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

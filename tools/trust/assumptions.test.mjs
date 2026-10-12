@@ -87,6 +87,7 @@ const MUST_DECLARE = [
   'aviation.loading.fuel-plan',
   'drone.ops.part107-altitude',
   'drone.ops.speed-check',
+  'drone.ops.kinetic-energy',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -217,6 +218,15 @@ test('the Part 107 tools expose the regulatory altitude and speed limits', () =>
   const speed = byId('drone.ops.speed-check')['x-assumptions'];
   assert.deepEqual(speed.map(({ value, unit, source }) => [value, unit, source]), [
     ['87', 'kt', 'cfr-14-107'],
+  ]);
+});
+
+test('the drone energy screener exposes both regulatory comparisons', () => {
+  const assumptions = byId('drone.ops.kinetic-energy')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['900', 'g', 'eu-2019-945'],
+    ['80', 'J', 'eu-2019-945'],
+    ['11', 'ft*lbf', 'cfr-14-107'],
   ]);
 });
 

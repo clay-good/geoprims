@@ -48,6 +48,7 @@ mod file_exports {
         CrsType, Error as GeotiffError, Grid, Metadata, Raster, RasterType, Window,
     };
     use crate::processing::Error as ProcessingError;
+    use crate::processing::{Resampling, TargetGrid};
 
     const MAX_WINDOW_SAMPLES: usize = 4 * 1024 * 1024;
 
@@ -179,6 +180,33 @@ mod file_exports {
         Ok(max_samples)
     }
 
+    fn resampling(input: &Value) -> Result<Option<(Resampling, TargetGrid)>, Value> {
+        let Some(options) = input.get("resampling") else {
+            return Ok(None);
+        };
+        let method = match options.get("method").and_then(Value::as_str) {
+            Some("nearest") => Resampling::Nearest,
+            Some("bilinear") => Resampling::Bilinear,
+            _ => {
+                return Err(json!({
+                    "ok": false,
+                    "error": {"code": "INVALID_INPUT", "message": "resampling.method must be nearest or bilinear."},
+                }));
+            }
+        };
+        let target = match options.get("target").and_then(Value::as_str) {
+            Some("left") => TargetGrid::Left,
+            Some("right") => TargetGrid::Right,
+            _ => {
+                return Err(json!({
+                    "ok": false,
+                    "error": {"code": "INVALID_INPUT", "message": "resampling.target must be left or right."},
+                }));
+            }
+        };
+        Ok(Some((method, target)))
+    }
+
     unsafe fn request(input: *const u8, input_len: usize) -> Result<Value, Value> {
         let text = unsafe { gp_base::abi::read_str(input, input_len) }.map_err(|_| {
             json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": "The window request must be UTF-8."}})
@@ -241,14 +269,32 @@ mod file_exports {
                     json!({"ok": false, "error": {"code": "INVALID_INPUT", "message": format!("{name} must be a string.")}})
                 })
             };
-            crate::processing::normalized_difference_file_window(
-                string("leftHandle")?,
-                field_u32(&value, "leftBand")? as usize,
-                string("rightHandle")?,
-                field_u32(&value, "rightBand")? as usize,
-                window(&value)?,
-                max_samples(&value)?,
-            )
+            let left_handle = string("leftHandle")?;
+            let left_band = field_u32(&value, "leftBand")? as usize;
+            let right_handle = string("rightHandle")?;
+            let right_band = field_u32(&value, "rightBand")? as usize;
+            let window = window(&value)?;
+            let max_samples = max_samples(&value)?;
+            match resampling(&value)? {
+                Some((method, target)) => crate::processing::normalized_difference_resampled_file_window(
+                    left_handle,
+                    left_band,
+                    right_handle,
+                    right_band,
+                    window,
+                    max_samples,
+                    method,
+                    target,
+                ),
+                None => crate::processing::normalized_difference_file_window(
+                    left_handle,
+                    left_band,
+                    right_handle,
+                    right_band,
+                    window,
+                    max_samples,
+                ),
+            }
             .map(|raster| json!({"ok": true, "raster": raster_value(raster)}))
             .map_err(processing_failure)
         })()

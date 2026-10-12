@@ -30,6 +30,12 @@ pub enum Resampling {
     Bilinear,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TargetGrid {
+    Left,
+    Right,
+}
+
 fn validate_band(metadata: &Metadata, band: usize) -> Result<(), Error> {
     if band >= usize::from(metadata.bands) {
         return Err(Error::InvalidBand {
@@ -119,6 +125,190 @@ pub fn normalized_difference_file_window(
     let left = left.decode(window).map_err(Error::Decode)?;
     let right = right.decode(window).map_err(Error::Decode)?;
     normalized_difference(&left, left_band, &right, right_band)
+}
+
+/// Decodes one target window and only the source pixels needed to resample the
+/// other input onto it. The normalized-difference output inherits the chosen
+/// target's grid and no-data value.
+#[allow(clippy::too_many_arguments)]
+pub fn normalized_difference_resampled_window<L, R>(
+    left_reader: L,
+    left_band: usize,
+    right_reader: R,
+    right_band: usize,
+    window: Window,
+    max_samples: usize,
+    method: Resampling,
+    target: TargetGrid,
+) -> Result<Raster, Error>
+where
+    L: Read + Seek,
+    R: Read + Seek,
+{
+    let mut left = WindowDecoder::new(left_reader, max_samples).map_err(Error::Decode)?;
+    let mut right = WindowDecoder::new(right_reader, max_samples).map_err(Error::Decode)?;
+    validate_band(left.metadata(), left_band)?;
+    validate_band(right.metadata(), right_band)?;
+    if left.metadata().grid.epsg != right.metadata().grid.epsg
+        || left.metadata().grid.crs_type != right.metadata().grid.crs_type
+    {
+        return Err(Error::GridMismatch(GridMismatch {
+            reason: "CRS",
+            left: Box::new(left.metadata().grid.clone()),
+            right: Box::new(right.metadata().grid.clone()),
+        }));
+    }
+
+    let (target_raster, source_raster, target_nodata, source_is_left) = match target {
+        TargetGrid::Left => {
+            let target_raster = left.decode(window).map_err(Error::Decode)?;
+            let source_raster =
+                decode_resampling_source(&mut right, &target_raster.metadata.grid, method)?;
+            (target_raster, source_raster, left.metadata().nodata, false)
+        }
+        TargetGrid::Right => {
+            let target_raster = right.decode(window).map_err(Error::Decode)?;
+            let source_raster =
+                decode_resampling_source(&mut left, &target_raster.metadata.grid, method)?;
+            (target_raster, source_raster, right.metadata().nodata, true)
+        }
+    };
+    let resampled = resample(
+        &source_raster,
+        target_raster.metadata.grid.clone(),
+        method,
+        max_samples,
+    )?;
+    let mut output = if source_is_left {
+        normalized_difference(&resampled, left_band, &target_raster, right_band)?
+    } else {
+        normalized_difference(&target_raster, left_band, &resampled, right_band)?
+    };
+    let fill = target_nodata.unwrap_or(f64::NAN);
+    for (sample, valid) in output.samples.iter_mut().zip(&output.valid) {
+        if !valid {
+            *sample = fill;
+        }
+    }
+    output.metadata.nodata = target_nodata;
+    Ok(output)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn normalized_difference_resampled_file_window(
+    left_handle: &str,
+    left_band: usize,
+    right_handle: &str,
+    right_band: usize,
+    window: Window,
+    max_samples: usize,
+    method: Resampling,
+    target: TargetGrid,
+) -> Result<Raster, Error> {
+    let missing = || {
+        Error::Decode(geotiff::Error::Invalid(
+            "The selected local file is no longer loaded.".into(),
+        ))
+    };
+    normalized_difference_resampled_window(
+        gp_base::files::reader(left_handle).ok_or_else(missing)?,
+        left_band,
+        gp_base::files::reader(right_handle).ok_or_else(missing)?,
+        right_band,
+        window,
+        max_samples,
+        method,
+        target,
+    )
+}
+
+fn decode_resampling_source<R: Read + Seek>(
+    source: &mut WindowDecoder<R>,
+    target: &Grid,
+    method: Resampling,
+) -> Result<Raster, Error> {
+    let window = resampling_source_window(&source.metadata().grid, target, method)?;
+    source.decode(window).map_err(Error::Decode)
+}
+
+fn resampling_source_window(
+    source: &Grid,
+    target: &Grid,
+    method: Resampling,
+) -> Result<Window, Error> {
+    let source_transform = source
+        .transform
+        .ok_or(Error::InvalidRaster("Source grid has no affine transform."))?;
+    let target_transform = target
+        .transform
+        .ok_or(Error::InvalidRaster("Target grid has no affine transform."))?;
+    let determinant =
+        source_transform.dx * source_transform.dy - source_transform.rx * source_transform.ry;
+    if determinant == 0.0 || !determinant.is_finite() {
+        return Err(Error::InvalidRaster(
+            "Source grid affine transform is not invertible.",
+        ));
+    }
+    let target_offset = raster_offset(target.raster_type);
+    let source_offset = raster_offset(source.raster_type);
+    let mut xs = [0.0; 4];
+    let mut ys = [0.0; 4];
+    for (i, (column, row)) in [
+        (0, 0),
+        (target.width.saturating_sub(1), 0),
+        (0, target.height.saturating_sub(1)),
+        (
+            target.width.saturating_sub(1),
+            target.height.saturating_sub(1),
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let x = f64::from(column) + target_offset;
+        let y = f64::from(row) + target_offset;
+        let model_x = target_transform.x0 + x * target_transform.dx + y * target_transform.rx;
+        let model_y = target_transform.y0 + x * target_transform.ry + y * target_transform.dy;
+        let delta_x = model_x - source_transform.x0;
+        let delta_y = model_y - source_transform.y0;
+        xs[i] = (source_transform.dy * delta_x - source_transform.rx * delta_y) / determinant
+            - source_offset;
+        ys[i] = (-source_transform.ry * delta_x + source_transform.dx * delta_y) / determinant
+            - source_offset;
+    }
+    if !xs.iter().chain(&ys).all(|value| value.is_finite()) {
+        return Err(Error::InvalidRaster(
+            "The raster transforms do not produce finite coordinates.",
+        ));
+    }
+    let padding = match method {
+        Resampling::Nearest => 0.5,
+        Resampling::Bilinear => 0.0,
+    };
+    let bounds = |values: &[f64; 4], limit: u32| {
+        let minimum = values.iter().copied().fold(f64::INFINITY, f64::min);
+        let maximum = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let start = (minimum.floor() - padding)
+            .max(0.0)
+            .min(f64::from(limit - 1)) as u32;
+        let end = (maximum.ceil() + padding + 1.0)
+            .max(1.0)
+            .min(f64::from(limit)) as u32;
+        (start, end.max(start + 1))
+    };
+    if source.width == 0 || source.height == 0 || target.width == 0 || target.height == 0 {
+        return Err(Error::InvalidRaster(
+            "Raster dimensions must be greater than zero.",
+        ));
+    }
+    let (x, x_end) = bounds(&xs, source.width);
+    let (y, y_end) = bounds(&ys, source.height);
+    Ok(Window {
+        x,
+        y,
+        width: x_end - x,
+        height: y_end - y,
+    })
 }
 
 #[allow(clippy::too_many_arguments)]

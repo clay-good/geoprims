@@ -182,6 +182,23 @@ test('range-backed index windows compare the complete source grids', async () =>
   await host.removeFile('raster.index.ndvi', 'narrow-cog');
 });
 
+test('range-backed index windows forward explicit resampling to Rust', async () => {
+  await host.openFile('raster.index.ndvi', 'resample-left', sparseTiledTiff());
+  await host.openFile('raster.index.ndvi', 'resample-right', sparseTiledTiff(() => 16));
+  const out = JSON.parse(await host.processFileWindow(
+    'raster.index.ndvi',
+    'resample-left', 0,
+    'resample-right', 0,
+    { x: 0, y: 0, width: 2, height: 2 },
+    256,
+    { method: 'nearest', target: 'right' },
+  ));
+  assert.equal(out.error.code, 'INVALID_INPUT');
+  assert.match(out.error.message, /affine transform/);
+  await host.removeFile('raster.index.ndvi', 'resample-left');
+  await host.removeFile('raster.index.ndvi', 'resample-right');
+});
+
 test('unknown tool ids', async () => {
   assert.equal((await run('units.speed.warp', '{}')).error.code, 'UNSUPPORTED');
   assert.equal((await run('nosuch.domain.tool', '{}')).error.code, 'UNSUPPORTED');

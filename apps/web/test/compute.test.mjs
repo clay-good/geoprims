@@ -162,6 +162,17 @@ test('raster metadata and windows use dedicated worker messages', async () => {
   ]);
   current.reply(i, { ok: true, raster: { samples: [0.5] } });
   assert.deepEqual((await index).raster.samples, [0.5]);
+
+  const resampling = { method: 'bilinear', target: 'right' };
+  const resampled = compute.processFileWindow(
+    'raster.index.ndvi', 'nir', 0, 'red', 0, window, 256, resampling,
+  );
+  i = current.sent.length - 1;
+  assert.deepEqual(current.sent[i].args, [
+    'raster.index.ndvi', 'nir', 0, 'red', 0, window, 256, resampling,
+  ]);
+  current.reply(i, { ok: true, raster: { samples: [0.6] } });
+  assert.deepEqual((await resampled).raster.samples, [0.6]);
 });
 
 test('clearing one raster tool releases files for the whole raster module', async () => {

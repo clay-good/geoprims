@@ -61,13 +61,15 @@ export async function processNormalizedDifferenceScene(host, options) {
     accept,
     signal,
     onProgress,
+    resampling,
   } = options;
   const windowWidth = positiveInteger(options.windowWidth, 'windowWidth');
   const windowHeight = positiveInteger(options.windowHeight, 'windowHeight');
   const maxSamples = positiveInteger(options.maxSamples, 'maxSamples');
   if (typeof accept !== 'function') throw new TypeError('accept must consume each processed raster window.');
 
-  const inspected = resultObject(await host.inspectFile(tool, leftHandle));
+  const targetHandle = resampling?.target === 'right' ? rightHandle : leftHandle;
+  const inspected = resultObject(await host.inspectFile(tool, targetHandle));
   if (!inspected.ok) return inspected;
   const { width, height } = inspected.metadata;
   positiveInteger(width, 'raster width');
@@ -112,6 +114,7 @@ export async function processNormalizedDifferenceScene(host, options) {
         rightHandle, rightBand,
         window,
         maxSamples,
+        resampling,
       ));
       if (!out.ok) return out;
       await accept({ window, raster: out.raster });

@@ -127,8 +127,8 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     readFileWindow: (tool, handle, window, maxSamples, options) => (
       submit('readFileWindow', [tool, handle, window, maxSamples], options)
     ),
-    processFileWindow: (tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, options) => (
-      submit('processFileWindow', [tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples], options)
+    processFileWindow: (tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling, options) => (
+      submit('processFileWindow', [tool, leftHandle, leftBand, rightHandle, rightBand, window, maxSamples, resampling], options)
     ),
     removeFile: async (tool, handle) => {
       const out = await call('removeFile', tool, handle);

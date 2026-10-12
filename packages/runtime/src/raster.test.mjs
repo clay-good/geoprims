@@ -59,6 +59,32 @@ test('a raster scene is consumed one successful window at a time in row-major or
   });
 });
 
+test('a resampled scene uses the chosen target dimensions and forwards the method', async () => {
+  const inspected = [];
+  const calls = [];
+  const runtime = {
+    inspectFile: async (_tool, handle) => {
+      inspected.push(handle);
+      return { ok: true, metadata: { width: 2, height: 1, bands: 1 } };
+    },
+    processFileWindow: async (...args) => {
+      calls.push(args);
+      return { ok: true, raster: { samples: [0.5, 0.6], valid: [true, true] } };
+    },
+  };
+  const resampling = { method: 'bilinear', target: 'right' };
+  const out = await processNormalizedDifferenceScene(runtime, {
+    ...options,
+    windowWidth: 2,
+    windowHeight: 1,
+    resampling,
+    accept() {},
+  });
+  assert.deepEqual(inspected, ['red']);
+  assert.deepEqual(calls[0].at(-1), resampling);
+  assert.equal(out.metadata.width, 2);
+});
+
 test('scene statistics stream across windows and exclude no-data pixels', async () => {
   let window = 0;
   const runtime = {

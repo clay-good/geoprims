@@ -2,8 +2,9 @@ use gp_raster::geotiff::{CrsType, Grid, Metadata, Raster, RasterType, Transform,
 use std::io::{self, Cursor, Seek, SeekFrom, Write};
 
 use gp_raster::processing::{
-    Error, Resampling, normalized_difference, normalized_difference_file_window,
-    normalized_difference_scene, resample, write_normalized_difference_geotiff,
+    Error, Resampling, TargetGrid, normalized_difference, normalized_difference_file_window,
+    normalized_difference_resampled_window, normalized_difference_scene, resample,
+    write_normalized_difference_geotiff,
 };
 use tiff::encoder::{TiffEncoder, colortype};
 use tiff::tags::Tag;
@@ -43,6 +44,10 @@ fn raster(grid: Grid, bands: u16, nodata: Option<f64>, samples: Vec<f64>) -> Ras
 }
 
 fn tiff_fixture(width: u32, values: &[f32], nodata: f64) -> Vec<u8> {
+    tiff_fixture_with_scale(width, values, nodata, 10.0)
+}
+
+fn tiff_fixture_with_scale(width: u32, values: &[f32], nodata: f64, scale: f64) -> Vec<u8> {
     let mut out = Cursor::new(Vec::new());
     let nodata = nodata.to_string();
     {
@@ -53,7 +58,7 @@ fn tiff_fixture(width: u32, values: &[f32], nodata: f64) -> Vec<u8> {
         image.rows_per_strip(2).unwrap();
         image
             .encoder()
-            .write_tag(Tag::ModelPixelScaleTag, &[10.0, 10.0, 0.0][..])
+            .write_tag(Tag::ModelPixelScaleTag, &[scale, 10.0, 0.0][..])
             .unwrap();
         image
             .encoder()
@@ -69,6 +74,68 @@ fn tiff_fixture(width: u32, values: &[f32], nodata: f64) -> Vec<u8> {
         image.write_data(values).unwrap();
     }
     out.into_inner()
+}
+
+#[test]
+fn resampled_file_windows_use_the_chosen_grid_and_nodata() {
+    let left = tiff_fixture_with_scale(2, &[0.8; 8], -9999.0, 20.0);
+    let right = tiff_fixture_with_scale(4, &[0.2; 16], -32768.0, 10.0);
+    let coarse = normalized_difference_resampled_window(
+        Cursor::new(&left),
+        0,
+        Cursor::new(&right),
+        0,
+        gp_raster::geotiff::Window {
+            x: 0,
+            y: 0,
+            width: 2,
+            height: 2,
+        },
+        64,
+        Resampling::Nearest,
+        TargetGrid::Left,
+    )
+    .unwrap();
+    assert_eq!(coarse.metadata.grid.width, 2);
+    assert_eq!(coarse.metadata.grid.transform.unwrap().dx, 20.0);
+    assert_eq!(coarse.metadata.nodata, Some(-9999.0));
+    assert!(
+        coarse
+            .samples
+            .iter()
+            .all(|value| (*value - 0.6).abs() < 1e-7)
+    );
+
+    let fine = normalized_difference_resampled_window(
+        Cursor::new(left),
+        0,
+        Cursor::new(right),
+        0,
+        gp_raster::geotiff::Window {
+            x: 0,
+            y: 0,
+            width: 4,
+            height: 2,
+        },
+        64,
+        Resampling::Bilinear,
+        TargetGrid::Right,
+    )
+    .unwrap();
+    assert_eq!(fine.metadata.grid.width, 4);
+    assert_eq!(fine.metadata.grid.transform.unwrap().dx, 10.0);
+    assert_eq!(fine.metadata.nodata, Some(-32768.0));
+    assert_eq!(
+        fine.valid,
+        [false, true, true, false, false, true, true, false]
+    );
+    for (&sample, &valid) in fine.samples.iter().zip(&fine.valid) {
+        if valid {
+            assert!((sample - 0.6).abs() < 1e-7);
+        } else {
+            assert_eq!(sample, -32768.0);
+        }
+    }
 }
 
 #[derive(Debug)]

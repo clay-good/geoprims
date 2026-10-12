@@ -301,6 +301,30 @@ test('worker host: a runaway call times out and the host keeps serving', async (
   await h.close();
 });
 
+test('worker host forwards raster kernel parameters', async () => {
+  const { workerHost } = await import('./worker-host.mjs');
+  const h = workerHost(join(root, 'dist/wasm'));
+  try {
+    const nir = sparseTiledTiff(() => 45);
+    const red = sparseTiledTiff(() => 8);
+    await h.putFile('raster.index.savi', 'worker-nir', nir.slice(0, nir.size));
+    await h.putFile('raster.index.savi', 'worker-red', red.slice(0, red.size));
+    const out = JSON.parse(await h.processFileWindow(
+      'raster.index.savi',
+      'worker-nir', 0,
+      'worker-red', 0,
+      { x: 0, y: 0, width: 1, height: 1 },
+      256,
+      undefined,
+      { soil_factor: 0.25 },
+    ));
+    assert.equal(out.ok, true, JSON.stringify(out));
+    assert.equal(out.raster.samples[0], 1.25 * (45 - 8) / (45 + 8 + 0.25));
+  } finally {
+    await h.close();
+  }
+});
+
 test('worker host: abort stops a spinning call within 100 ms and keeps serving', async () => {
   const { workerHost } = await import('./worker-host.mjs');
   const h = workerHost(join(root, 'dist/wasm'), { timeoutMs: 5_000 });

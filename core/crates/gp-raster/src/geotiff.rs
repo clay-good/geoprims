@@ -6,7 +6,7 @@
 
 use std::io::Cursor;
 
-use tiff::decoder::{Decoder, DecodingResult, Limits};
+use tiff::decoder::{ChunkType, Decoder, DecodingResult, Limits};
 use tiff::tags::Tag;
 
 /// The GeoTIFF raster-space convention (GeoKey 1025).
@@ -54,6 +54,15 @@ pub struct Raster {
     pub metadata: Metadata,
     pub samples: Vec<f64>,
     pub valid: Vec<bool>,
+}
+
+/// A pixel-aligned rectangle within one TIFF image.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Window {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -149,6 +158,15 @@ fn metadata(decoder: &mut Decoder<Cursor<&[u8]>>) -> Result<Metadata, Error> {
             "TIFF orientation {orientation} is not supported; write rows from top to bottom."
         )));
     }
+    let planar_configuration = decoder
+        .find_tag_unsigned::<u16>(Tag::PlanarConfiguration)
+        .map_err(invalid)?
+        .unwrap_or(1);
+    if planar_configuration != 1 {
+        return Err(Error::Invalid(
+            "Planar TIFF storage is not supported; write samples interleaved by pixel.".into(),
+        ));
+    }
     let (width, height) = decoder.dimensions().map_err(invalid)?;
     let bands = decoder.colortype().map_err(invalid)?.num_samples();
     let keys = geokeys(decoder)?;
@@ -188,6 +206,58 @@ fn metadata(decoder: &mut Decoder<Cursor<&[u8]>>) -> Result<Metadata, Error> {
     })
 }
 
+fn samples_as_f64(result: DecodingResult) -> Vec<f64> {
+    match result {
+        DecodingResult::U8(v) => v.into_iter().map(f64::from).collect(),
+        DecodingResult::U16(v) => v.into_iter().map(f64::from).collect(),
+        DecodingResult::U32(v) => v.into_iter().map(f64::from).collect(),
+        DecodingResult::U64(v) => v.into_iter().map(|x| x as f64).collect(),
+        DecodingResult::I8(v) => v.into_iter().map(f64::from).collect(),
+        DecodingResult::I16(v) => v.into_iter().map(f64::from).collect(),
+        DecodingResult::I32(v) => v.into_iter().map(f64::from).collect(),
+        DecodingResult::I64(v) => v.into_iter().map(|x| x as f64).collect(),
+        DecodingResult::F16(v) => v.into_iter().map(|x| x.to_f64()).collect(),
+        DecodingResult::F32(v) => v.into_iter().map(f64::from).collect(),
+        DecodingResult::F64(v) => v,
+    }
+}
+
+fn validity(samples: &[f64], nodata: Option<f64>) -> Vec<bool> {
+    samples
+        .iter()
+        .map(|sample| match nodata {
+            Some(nodata) if nodata.is_nan() => !sample.is_nan(),
+            Some(nodata) => *sample != nodata,
+            None => true,
+        })
+        .collect()
+}
+
+fn sample_count(width: u32, height: u32, bands: u16, limit: usize) -> Result<usize, Error> {
+    let count = u64::from(width)
+        .checked_mul(u64::from(height))
+        .and_then(|n| n.checked_mul(u64::from(bands)))
+        .ok_or(Error::LimitExceeded {
+            samples: u64::MAX,
+            limit,
+        })?;
+    if count > limit as u64 {
+        return Err(Error::LimitExceeded {
+            samples: count,
+            limit,
+        });
+    }
+    Ok(count as usize)
+}
+
+fn pixel_offset(x: u32, y: u32, width: u32) -> Result<usize, Error> {
+    let offset = u64::from(y)
+        .checked_mul(u64::from(width))
+        .and_then(|n| n.checked_add(u64::from(x)))
+        .ok_or_else(|| Error::Invalid("TIFF pixel offset overflowed.".into()))?;
+    usize::try_from(offset).map_err(invalid)
+}
+
 /// Reads dimensions, band count, no-data, CRS, and the affine transform
 /// without allocating a pixel buffer.
 pub fn inspect(bytes: &[u8]) -> Result<Metadata, Error> {
@@ -207,48 +277,116 @@ pub fn inspect_file(handle: &str) -> Result<Metadata, Error> {
 pub fn decode(bytes: &[u8], max_samples: usize) -> Result<Raster, Error> {
     let mut decoder = Decoder::new(Cursor::new(bytes)).map_err(invalid)?;
     let metadata = metadata(&mut decoder)?;
-    let count = u64::from(metadata.grid.width)
-        .checked_mul(u64::from(metadata.grid.height))
-        .and_then(|n| n.checked_mul(u64::from(metadata.bands)))
-        .ok_or(Error::LimitExceeded {
-            samples: u64::MAX,
-            limit: max_samples,
-        })?;
-    if count > max_samples as u64 {
-        return Err(Error::LimitExceeded {
-            samples: count,
-            limit: max_samples,
-        });
-    }
+    let count = sample_count(
+        metadata.grid.width,
+        metadata.grid.height,
+        metadata.bands,
+        max_samples,
+    )?;
     let mut limits = Limits::default();
     limits.decoding_buffer_size = max_samples.saturating_mul(std::mem::size_of::<f64>());
     decoder = decoder.with_limits(limits);
-    let samples = match decoder.read_image().map_err(invalid)? {
-        DecodingResult::U8(v) => v.into_iter().map(f64::from).collect(),
-        DecodingResult::U16(v) => v.into_iter().map(f64::from).collect(),
-        DecodingResult::U32(v) => v.into_iter().map(f64::from).collect(),
-        DecodingResult::U64(v) => v.into_iter().map(|x| x as f64).collect(),
-        DecodingResult::I8(v) => v.into_iter().map(f64::from).collect(),
-        DecodingResult::I16(v) => v.into_iter().map(f64::from).collect(),
-        DecodingResult::I32(v) => v.into_iter().map(f64::from).collect(),
-        DecodingResult::I64(v) => v.into_iter().map(|x| x as f64).collect(),
-        DecodingResult::F16(v) => v.into_iter().map(|x| x.to_f64()).collect(),
-        DecodingResult::F32(v) => v.into_iter().map(f64::from).collect(),
-        DecodingResult::F64(v) => v,
-    };
-    if samples.len() as u64 != count {
+    let samples = samples_as_f64(decoder.read_image().map_err(invalid)?);
+    if samples.len() != count {
         return Err(Error::Invalid(
             "Decoded sample count does not match the TIFF dimensions.".into(),
         ));
     }
-    let valid = samples
-        .iter()
-        .map(|sample| match metadata.nodata {
-            Some(nodata) if nodata.is_nan() => !sample.is_nan(),
-            Some(nodata) => *sample != nodata,
-            None => true,
-        })
-        .collect();
+    let valid = validity(&samples, metadata.nodata);
+    Ok(Raster {
+        metadata,
+        samples,
+        valid,
+    })
+}
+
+/// Decodes only strips or tiles that intersect a pixel-aligned window.
+/// `max_samples` must fit both the returned window and one decoded source
+/// chunk, so a small window cannot conceal an unexpectedly large strip.
+pub fn decode_window(bytes: &[u8], window: Window, max_samples: usize) -> Result<Raster, Error> {
+    let mut decoder = Decoder::new(Cursor::new(bytes)).map_err(invalid)?;
+    let mut metadata = metadata(&mut decoder)?;
+    let x_end = window.x.checked_add(window.width);
+    let y_end = window.y.checked_add(window.height);
+    let (Some(x_end), Some(y_end)) = (x_end, y_end) else {
+        return Err(Error::Invalid(
+            "The requested window must be non-empty and inside the TIFF dimensions.".into(),
+        ));
+    };
+    if window.width == 0
+        || window.height == 0
+        || x_end > metadata.grid.width
+        || y_end > metadata.grid.height
+    {
+        return Err(Error::Invalid(
+            "The requested window must be non-empty and inside the TIFF dimensions.".into(),
+        ));
+    }
+    let count = sample_count(window.width, window.height, metadata.bands, max_samples)?;
+    let mut limits = Limits::default();
+    limits.decoding_buffer_size = max_samples.saturating_mul(std::mem::size_of::<f64>());
+    decoder = decoder.with_limits(limits);
+
+    let (chunk_width, chunk_height) = decoder.chunk_dimensions();
+    let chunks_across = metadata.grid.width.div_ceil(chunk_width);
+    let chunk_count = match decoder.get_chunk_type() {
+        ChunkType::Strip => decoder.strip_count().map_err(invalid)?,
+        ChunkType::Tile => decoder.tile_count().map_err(invalid)?,
+    };
+    let first_chunk_x = window.x / chunk_width;
+    let last_chunk_x = (x_end - 1) / chunk_width;
+    let first_chunk_y = window.y / chunk_height;
+    let last_chunk_y = (y_end - 1) / chunk_height;
+    let bands = usize::from(metadata.bands);
+    let mut samples = vec![0.0; count];
+
+    for chunk_y in first_chunk_y..=last_chunk_y {
+        for chunk_x in first_chunk_x..=last_chunk_x {
+            let chunk_index = chunk_y
+                .checked_mul(chunks_across)
+                .and_then(|n| n.checked_add(chunk_x))
+                .ok_or_else(|| Error::Invalid("TIFF chunk index overflowed.".into()))?;
+            if chunk_index >= chunk_count {
+                return Err(Error::Invalid("TIFF chunk index is out of range.".into()));
+            }
+            let (data_width, data_height) = decoder.chunk_data_dimensions(chunk_index);
+            let expected = sample_count(data_width, data_height, metadata.bands, max_samples)?;
+            let chunk = samples_as_f64(decoder.read_chunk(chunk_index).map_err(invalid)?);
+            if chunk.len() != expected {
+                return Err(Error::Invalid(
+                    "Decoded chunk sample count does not match its TIFF dimensions.".into(),
+                ));
+            }
+            let chunk_origin_x = chunk_x * chunk_width;
+            let chunk_origin_y = chunk_y * chunk_height;
+            let copy_x0 = window.x.max(chunk_origin_x);
+            let copy_y0 = window.y.max(chunk_origin_y);
+            let copy_x1 = x_end.min(chunk_origin_x.saturating_add(data_width));
+            let copy_y1 = y_end.min(chunk_origin_y.saturating_add(data_height));
+            for image_y in copy_y0..copy_y1 {
+                for image_x in copy_x0..copy_x1 {
+                    let source_pixel = pixel_offset(
+                        image_x - chunk_origin_x,
+                        image_y - chunk_origin_y,
+                        data_width,
+                    )?;
+                    let target_pixel =
+                        pixel_offset(image_x - window.x, image_y - window.y, window.width)?;
+                    let source = source_pixel * bands;
+                    let target = target_pixel * bands;
+                    samples[target..target + bands].copy_from_slice(&chunk[source..source + bands]);
+                }
+            }
+        }
+    }
+
+    if let Some(transform) = metadata.grid.transform.as_mut() {
+        transform.x0 += f64::from(window.x) * transform.dx + f64::from(window.y) * transform.rx;
+        transform.y0 += f64::from(window.x) * transform.ry + f64::from(window.y) * transform.dy;
+    }
+    metadata.grid.width = window.width;
+    metadata.grid.height = window.height;
+    let valid = validity(&samples, metadata.nodata);
     Ok(Raster {
         metadata,
         samples,
@@ -261,6 +399,17 @@ pub fn decode_file(handle: &str, max_samples: usize) -> Result<Raster, Error> {
     let bytes = gp_base::files::get(handle)
         .ok_or_else(|| Error::Invalid("The selected local file is no longer loaded.".into()))?;
     decode(&bytes, max_samples)
+}
+
+/// Decodes a window from bytes supplied through the private local-file ABI.
+pub fn decode_file_window(
+    handle: &str,
+    window: Window,
+    max_samples: usize,
+) -> Result<Raster, Error> {
+    let bytes = gp_base::files::get(handle)
+        .ok_or_else(|| Error::Invalid("The selected local file is no longer loaded.".into()))?;
+    decode_window(&bytes, window, max_samples)
 }
 
 /// Refuses bands whose dimensions, CRS, pixel convention, or transform differ.

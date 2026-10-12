@@ -948,12 +948,20 @@ pub static TAT_SAT: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Ratio of specific heats for air",
-        value: "1.4",
-        unit: "1",
-        source: "icao-7488",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Ratio of specific heats for air",
+            value: "1.4",
+            unit: "1",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Default probe recovery factor, full recovery",
+            value: "1",
+            unit: "1",
+            source: "gracey",
+        },
+    ],
     sentence: "The static air temperature is {sat}. Ram heating adds {ram_rise}.",
     limits: &[("batchRows", 10_000)],
     run: run_tat_sat,

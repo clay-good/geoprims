@@ -208,6 +208,14 @@ test('the top-of-descent tool exposes its published planning rules', () => {
   ]);
 });
 
+test('the TAT-to-SAT tool exposes its gas and probe defaults', () => {
+  const assumptions = byId('aviation.airspeed.tat-sat')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['1.4', '1', 'icao-7488'],
+    ['1', '1', 'gracey'],
+  ]);
+});
+
 test('the VDP tool exposes its published three-degree rule', () => {
   const assumptions = byId('aviation.performance.vdp')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [

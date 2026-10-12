@@ -36,8 +36,8 @@
     "lastmod": "2026-10-10"
   },
   "/aviation/airspeed/tat-sat/": {
-    "hash": "2e0c731e236479f4",
-    "lastmod": "2026-10-10"
+    "hash": "211f7295df755e32",
+    "lastmod": "2026-10-12"
   },
   "/aviation/altimetry/": {
     "hash": "c2167e96e69d9cb4",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0bdc4055ed0c8250",
+    "hash": "372b48f3b78aa1a1",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

@@ -87,6 +87,7 @@ const MUST_DECLARE = [
   'aviation.ifr.hold-wind-timing',
   'aviation.ifr.dme-arc-lead',
   'aviation.ifr.time-to-station',
+  'aviation.ifr.radial-intercept',
   'aviation.weather.metar-decode',
   'aviation.weather.taf-decode',
   'aviation.loading.fuel-plan',
@@ -196,6 +197,15 @@ test('the time-to-station tool exposes its published 60-times rule', () => {
   const assumptions = byId('aviation.ifr.time-to-station')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['60', 'deg', 'faa-ifh'],
+  ]);
+});
+
+test('the radial-intercept tool exposes its published default technique', () => {
+  const assumptions = byId('aviation.ifr.radial-intercept')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['2', '1', 'dubuque-instrument-sop'],
+    ['20', 'deg', 'dubuque-instrument-sop'],
+    ['90', 'deg', 'dubuque-instrument-sop'],
   ]);
 });
 

@@ -3,7 +3,7 @@
 
 ## Method
 
-Plane geometry around the station, as in the Instrument Flying Handbook's course interception. The course on the wanted radial is the radial itself outbound, or its reciprocal inbound. The angle off course is the signed difference between the radial you are on and the one you want. The intercept heading is the course turned toward the wanted radial by the intercept angle. By default that angle is twice the angle off course, kept between 20° and 90°, a common training technique; you can set your own from 10° to 90°. The tool refuses a radial more than 90° away (you are on the far side of the station) and an inbound intercept too shallow to reach the radial before the station.
+Plane geometry around the station follows the Instrument Flying Handbook's course-interception method. The course on the wanted radial is the radial itself outbound, or its reciprocal inbound. The angle off course is the signed difference between the radial you are on and the one you want. The intercept heading is the course turned toward the wanted radial by the intercept angle. By default that angle follows the University of Dubuque instrument SOP: twice the angle off course, kept between 20° and 90°. You can set your own from 10° to 90°. The tool refuses a radial more than 90° away (you are on the far side of the station) and an inbound intercept too shallow to reach the radial before the station.
 
 ## Equations
 
@@ -27,10 +27,10 @@ Geometry only, in a flat plane around the station. The heading has no wind corre
 
 ## Worked example
 
-- sourcePublisher: geoprims (hand check of the IFH technique, computed)
-- sourceTitle: Instrument Flying Handbook (FAA-H-8083-15B), applied by hand
-- sourceEdition: FAA-H-8083-15B
-- sourceLocator: Chapter 9, intercepting a radial; the handbook describes the technique, and the numbers here are the project's own hand check (30° off, so a 60° intercept: heading 180 + 60 = 240), not a figure printed in the handbook
+- sourcePublisher: geoprims (hand check of the cited technique, computed)
+- sourceTitle: Instrument Flying Handbook (FAA-H-8083-15B) and University of Dubuque Cessna 172S Instrument Standard Operating Procedures
+- sourceEdition: FAA-H-8083-15B; University of Dubuque SOP dated September 4, 2015
+- sourceLocator: FAA handbook chapter 9 for VOR interception geometry; university SOP p. 24, steps 4-5, for doubling the radial difference and keeping the result from 20° through 90°. The numbers here are the project's own hand check (30° off, so a 60° intercept: heading 180 + 60 = 240), not a figure printed in either source
 - independent: no
 - inputs: on the 030 radial, intercept the 360 radial inbound
 - outputs: heading 240°, course 180°, angle off 30°, intercept angle 60°

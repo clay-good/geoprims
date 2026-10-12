@@ -490,6 +490,26 @@
       "editionCheck": true
     },
     {
+      "id": "dubuque-instrument-sop",
+      "name": "Cessna 172S Nav III Skyhawk Instrument Standard Operating Procedures",
+      "issuer": "University of Dubuque Aviation",
+      "currentEdition": "September 4, 2015",
+      "currentReleaseDate": "2015-09-04",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the university-hosted PDF on 2026-10-12. Page 24 says to double the difference between the current and assigned radial and keep the intercept angle from 20° through 90°.",
+      "freeAccessUrl": "https://www.dbq.edu/media/Academics/VPAcademicAffairs/AcademicDepartments/Aviation/C172S-Instrument-SOP.pdf",
+      "matchTerms": [
+        "Cessna 172S Nav III Skyhawk Instrument Standard Operating Procedures"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "easa-guidelines",
       "name": "EASA Guidelines for UAS operations in the open and specific category",
       "issuer": "EASA",

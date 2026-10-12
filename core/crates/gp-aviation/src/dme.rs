@@ -566,6 +566,15 @@ const IFH_INTERCEPT: Reference = Reference {
     ..IFH
 };
 
+const DUBUQUE_INTERCEPT: Reference = Reference {
+    title: "Cessna 172S Nav III Skyhawk Instrument Standard Operating Procedures",
+    issuer: "University of Dubuque Aviation",
+    year: 2015,
+    edition: "September 4, 2015",
+    locator: "p. 24, Intercepting and Tracking VOR Radials, steps 4-5",
+    url: "https://www.dbq.edu/media/Academics/VPAcademicAffairs/AcademicDepartments/Aviation/C172S-Instrument-SOP.pdf",
+};
+
 pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
     id: "aviation.ifr.radial-intercept",
     title: "Heading to intercept a radial",
@@ -672,7 +681,7 @@ pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
     accuracy: "Geometry only: correct the heading for wind, and follow the procedure or ATC's assigned heading when there is one",
     when_to_use: "Use this when you are on one VOR radial and need to get onto another. Enter the radial you are on, the radial you want, and whether you will track it inbound or outbound. It gives a magnetic heading to fly, the course once you are on the radial, and the intercept angle, which is double the angle off course by default. You can set your own angle instead.",
     limitations: "The heading has no wind correction, so add your own. The default angle is a common training method, kept between 20° and 90°, and other methods work too. If you are on the far side of the station, it tells you to fly toward it first. An assigned heading from ATC or the procedure comes before this answer.",
-    references: &[IFH_INTERCEPT],
+    references: &[IFH_INTERCEPT, DUBUQUE_INTERCEPT],
     examples: &[Example {
         id: "primary",
         title: "On the 030 radial, intercept the 360 radial inbound",
@@ -692,6 +701,26 @@ pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
         Related {
             id: "aviation.ifr.radial-fix",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Default intercept multiplier",
+            value: "2",
+            unit: "1",
+            source: "dubuque-instrument-sop",
+        },
+        Assumption {
+            name: "Minimum default intercept angle",
+            value: "20",
+            unit: "deg",
+            source: "dubuque-instrument-sop",
+        },
+        Assumption {
+            name: "Maximum default intercept angle",
+            value: "90",
+            unit: "deg",
+            source: "dubuque-instrument-sop",
         },
     ],
     sentence: "Fly heading {heading} to intercept, a {intercept_angle} intercept onto course {course}.",

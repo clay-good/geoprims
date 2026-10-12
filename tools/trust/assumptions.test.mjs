@@ -93,6 +93,7 @@ const MUST_DECLARE = [
   'drone.ops.vlos-check',
   'drone.ops.wind-limit',
   'drone.links.link-budget',
+  'drone.photogrammetry.asprs-accuracy',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -290,6 +291,16 @@ test('the link budget exposes its physical constant and both regulatory limits',
     ['32.44778322188338', 'dB', 'itu-r-p525'],
     ['36', 'dBm EIRP', 'cfr-47-15'],
     ['20', 'dBm EIRP', 'etsi-en-300-328'],
+  ]);
+});
+
+test('the ASPRS accuracy tool exposes every acceptance threshold', () => {
+  const assumptions = byId('drone.photogrammetry.asprs-accuracy')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['30', 'checkpoints', 'asprs-pas'],
+    ['25', '%', 'asprs-pas'],
+    ['3', 'times target RMSE', 'asprs-pas'],
+    ['2', '1', 'asprs-pas'],
   ]);
 });
 

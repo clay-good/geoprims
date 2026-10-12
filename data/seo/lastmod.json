@@ -364,8 +364,8 @@
     "lastmod": "2026-10-09"
   },
   "/drone/photogrammetry/asprs-accuracy/": {
-    "hash": "498051e4e08ddbfc",
-    "lastmod": "2026-10-09"
+    "hash": "2ad59ec216f0708d",
+    "lastmod": "2026-10-12"
   },
   "/drone/photogrammetry/gcp-plan/": {
     "hash": "4776c8f7a5b2480c",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "1288103a819a7275",
+    "hash": "edd8468a679c0559",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

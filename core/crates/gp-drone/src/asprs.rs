@@ -14,7 +14,9 @@
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::sqrt;
 
@@ -259,6 +261,32 @@ pub static ASPRS_ACCURACY: ToolDef = ToolDef {
         Related {
             id: "drone.mission.survey-grid",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Minimum number of checkpoints",
+            value: "30",
+            unit: "checkpoints",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Maximum absolute mean error as a share of target RMSE",
+            value: "25",
+            unit: "%",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Component blunder threshold",
+            value: "3",
+            unit: "times target RMSE",
+            source: "asprs-pas",
+        },
+        Assumption {
+            name: "Required checkpoint-to-product accuracy ratio",
+            value: "2",
+            unit: "1",
+            source: "asprs-pas",
         },
     ],
     sentence: "{if vertical > 0}Vertical accuracy is {vertical} RMSE. {/if}{if horizontal > 0}Horizontal accuracy is {horizontal} RMSE. {/if}{checkpoint_status}",

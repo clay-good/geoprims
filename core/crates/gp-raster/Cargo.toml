@@ -17,6 +17,7 @@ crate-type = ["cdylib", "rlib"]
 gp-base.workspace = true
 libm.workspace = true
 serde_json.workspace = true
+tiff.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true

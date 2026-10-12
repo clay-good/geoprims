@@ -50,6 +50,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:cargo/adler2@2.0.1",
+      "name": "adler2",
+      "version": "2.0.1",
+      "licenses": [
+        {
+          "expression": "0BSD OR MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/adler2@2.0.1",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:cargo/autocfg@1.5.1",
       "name": "autocfg",
       "version": "1.5.1",
@@ -88,6 +107,44 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:cargo/crc32fast@1.5.2",
+      "name": "crc32fast",
+      "version": "1.5.2",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/crc32fast@1.5.2",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/crunchy@0.2.4",
+      "name": "crunchy",
+      "version": "0.2.4",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:cargo/crunchy@0.2.4",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:cargo/either@1.18.0",
       "name": "either",
       "version": "1.18.0",
@@ -97,6 +154,44 @@
         }
       ],
       "purl": "pkg:cargo/either@1.18.0",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/fax@0.2.7",
+      "name": "fax",
+      "version": "0.2.7",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:cargo/fax@0.2.7",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/flate2@1.1.10",
+      "name": "flate2",
+      "version": "1.1.10",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/flate2@1.1.10",
       "scope": "required",
       "properties": [
         {
@@ -183,6 +278,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:cargo/half@2.7.1",
+      "name": "half",
+      "version": "2.7.1",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/half@2.7.1",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:cargo/ieee754@0.2.6",
       "name": "ieee754",
       "version": "0.2.6",
@@ -259,6 +373,25 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:cargo/miniz_oxide@0.9.1",
+      "name": "miniz_oxide",
+      "version": "0.9.1",
+      "licenses": [
+        {
+          "expression": "MIT OR Zlib OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/miniz_oxide@0.9.1",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:cargo/num-traits@0.2.19",
       "name": "num-traits",
       "version": "0.2.19",
@@ -306,6 +439,25 @@
         }
       ],
       "purl": "pkg:cargo/proc-macro2@1.0.107",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/quick-error@2.0.1",
+      "name": "quick-error",
+      "version": "2.0.1",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/quick-error@2.0.1",
       "scope": "required",
       "properties": [
         {
@@ -430,6 +582,44 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:cargo/simd-adler32@0.3.10",
+      "name": "simd-adler32",
+      "version": "0.3.10",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:cargo/simd-adler32@0.3.10",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/syn@2.0.119",
+      "name": "syn",
+      "version": "2.0.119",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/syn@2.0.119",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:cargo/syn@3.0.6",
       "name": "syn",
       "version": "3.0.6",
@@ -439,6 +629,25 @@
         }
       ],
       "purl": "pkg:cargo/syn@3.0.6",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/tiff@0.11.3",
+      "name": "tiff",
+      "version": "0.11.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:cargo/tiff@0.11.3",
       "scope": "required",
       "properties": [
         {
@@ -468,6 +677,82 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:cargo/weezl@0.1.12",
+      "name": "weezl",
+      "version": "0.1.12",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/weezl@0.1.12",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/zerocopy@0.8.62",
+      "name": "zerocopy",
+      "version": "0.8.62",
+      "licenses": [
+        {
+          "expression": "BSD-2-Clause OR Apache-2.0 OR MIT"
+        }
+      ],
+      "purl": "pkg:cargo/zerocopy@0.8.62",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/zerocopy-derive@0.8.62",
+      "name": "zerocopy-derive",
+      "version": "0.8.62",
+      "licenses": [
+        {
+          "expression": "BSD-2-Clause OR Apache-2.0 OR MIT"
+        }
+      ],
+      "purl": "pkg:cargo/zerocopy-derive@0.8.62",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/zlib-rs@0.6.8",
+      "name": "zlib-rs",
+      "version": "0.6.8",
+      "licenses": [
+        {
+          "expression": "Zlib"
+        }
+      ],
+      "purl": "pkg:cargo/zlib-rs@0.6.8",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:cargo/zmij@1.0.23",
       "name": "zmij",
       "version": "1.0.23",
@@ -477,6 +762,44 @@
         }
       ],
       "purl": "pkg:cargo/zmij@1.0.23",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/zune-core@0.5.3",
+      "name": "zune-core",
+      "version": "0.5.3",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0 OR Zlib"
+        }
+      ],
+      "purl": "pkg:cargo/zune-core@0.5.3",
+      "scope": "required",
+      "properties": [
+        {
+          "name": "geoprims:ecosystem",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/zune-jpeg@0.5.15",
+      "name": "zune-jpeg",
+      "version": "0.5.15",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0 OR Zlib"
+        }
+      ],
+      "purl": "pkg:cargo/zune-jpeg@0.5.15",
       "scope": "required",
       "properties": [
         {

@@ -14,6 +14,7 @@ gp-base = { path = "crates/gp-base" }
 libm = "0.2"
 ryu = "1"
 serde_json = { version = "1", features = ["float_roundtrip"] }
+tiff = "=0.11.3"
 
 [profile.release]
 opt-level = "z"

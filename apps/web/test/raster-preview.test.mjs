@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { previewPixels, previewReadout, rasterPreview } from '../src/lib/raster-preview.mjs';
+import { previewHistogram, previewPixels, previewReadout, rasterPreview } from '../src/lib/raster-preview.mjs';
 
 test('a scene preview samples bounded pixels across window edges', () => {
   const preview = rasterPreview(4, 2, 2);
@@ -33,6 +33,18 @@ test('preview colors center a signed range and mark no-data', () => {
     30, 125, 95, 255,
     218, 218, 218, 255,
   ]);
+});
+
+test('the preview histogram is bounded, bins edge values, and excludes no-data', () => {
+  const histogram = previewHistogram({
+    samples: new Float64Array([-1, -0.5, 0, 0.5, 1, 999]),
+    valid: new Uint8Array([1, 1, 1, 1, 1, 0]),
+  }, -1, 1, 4);
+  assert.deepEqual([...histogram.counts], [1, 1, 1, 2]);
+  assert.deepEqual([...histogram.edges], [-1, -0.5, 0, 0.5, 1]);
+  assert.equal(histogram.sampledPixels, 5);
+  assert.equal(histogram.maxCount, 2);
+  assert.throws(() => previewHistogram({ samples: [], valid: [] }, 0, 1, 1), /2 through 256/);
 });
 
 test('cursor readout uses the source pixel center and affine transform', () => {

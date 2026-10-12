@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
 import { serveBuiltSite } from './site.mjs';
+
+const axeSource = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
 
 function tiledTiff(sample) {
   const header = [];
@@ -62,7 +66,17 @@ test('a user can process local GeoTIFF bands into a preview and exact statistics
     const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
     return pixels.some((channel, index) => index % 4 !== 3 && channel !== 181);
   }), 'preview contains computed colors rather than only no-data gray');
+  assert.equal(await page.locator('.histogram-bars span').count(), 32);
+  assert.match(await page.locator('.raster-histogram figcaption').innerText(), /512 preview pixels/);
+  assert.equal(await page.locator('.raster-histogram > p.sr-only').innerText(), 'Preview histogram values');
 
   await page.locator('.raster-preview canvas').hover({ position: { x: 20, y: 20 } });
   assert.match(await page.locator('.cursor-readout').innerText(), / at column \d+, row \d+$/);
+
+  await page.evaluate(axeSource);
+  const violations = await page.evaluate(async () => (await window.axe.run(document, {
+    runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] },
+    resultTypes: ['violations'],
+  })).violations.map(({ id, help, nodes }) => ({ id, help, targets: nodes.map((node) => node.target) })));
+  assert.deepEqual(violations, []);
 });

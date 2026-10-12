@@ -30,3 +30,10 @@ test('the completed scene shows a bounded preview, exact statistics, and cursor 
   assert.match(component, /Statistics use every valid output pixel/);
   assert.match(component, /previewReadout/);
 });
+
+test('the preview includes numeric legend ticks and an accessible sampled histogram', () => {
+  assert.match(component, /previewHistogram/);
+  assert.match(component, /role="img" aria-label={`Histogram/);
+  assert.match(component, /<dl class="sr-only">/);
+  assert.match(component, /Preview histogram values/);
+});

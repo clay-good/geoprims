@@ -40,7 +40,45 @@ export function rasterPreview(width, height, maxSide = MAX_PREVIEW_SIDE) {
   };
 }
 
-const mix = (a, b, t) => Math.round(a + (b - a) * t);
+const linear = (channel) => {
+  const value = channel / 255;
+  return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+};
+
+const oklab = ([red, green, blue]) => {
+  const r = linear(red);
+  const g = linear(green);
+  const b = linear(blue);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+};
+
+const srgb = (value) => {
+  const channel = value <= 0.0031308 ? 12.92 * value : 1.055 * value ** (1 / 2.4) - 0.055;
+  return Math.round(Math.max(0, Math.min(1, channel)) * 255);
+};
+
+const perceptualMix = (from, to, t) => {
+  const a = oklab(from);
+  const b = oklab(to);
+  const L = a[0] + (b[0] - a[0]) * t;
+  const A = a[1] + (b[1] - a[1]) * t;
+  const B = a[2] + (b[2] - a[2]) * t;
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
+  return [
+    srgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    srgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    srgb(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+  ];
+};
 
 /** Color-vision-safe blue-to-neutral-to-green pixels for the preview canvas. */
 export function previewPixels(preview, min, max) {
@@ -61,12 +99,36 @@ export function previewPixels(preview, min, max) {
     const q = left ? t * 2 : (t - 0.5) * 2;
     const from = left ? [35, 90, 160] : [240, 240, 235];
     const to = left ? [240, 240, 235] : [30, 125, 95];
-    rgba[p] = mix(from[0], to[0], q);
-    rgba[p + 1] = mix(from[1], to[1], q);
-    rgba[p + 2] = mix(from[2], to[2], q);
+    const color = perceptualMix(from, to, q);
+    rgba[p] = color[0];
+    rgba[p + 1] = color[1];
+    rgba[p + 2] = color[2];
     rgba[p + 3] = 255;
   }
   return rgba;
+}
+
+/** A bounded histogram of the pixels retained for the visual preview. */
+export function previewHistogram(preview, min, max, binCount = 32) {
+  if (!Number.isSafeInteger(binCount) || binCount < 2 || binCount > 256) {
+    throw new TypeError('Raster histogram bins must be an integer from 2 through 256.');
+  }
+  const counts = new Uint32Array(binCount);
+  let sampledPixels = 0;
+  const extent = max - min;
+  for (let i = 0; i < preview.samples.length; i++) {
+    if (!preview.valid[i]) continue;
+    const raw = extent === 0 ? 0 : (preview.samples[i] - min) / extent;
+    const bin = Math.min(binCount - 1, Math.max(0, Math.floor(raw * binCount)));
+    counts[bin]++;
+    sampledPixels++;
+  }
+  return {
+    counts,
+    sampledPixels,
+    maxCount: counts.reduce((largest, count) => Math.max(largest, count), 0),
+    edges: Float64Array.from({ length: binCount + 1 }, (_, i) => min + (extent * i) / binCount),
+  };
 }
 
 /** The source pixel and model coordinate under one preview pixel. */

@@ -2,7 +2,7 @@
   // Local raster mode: files stay behind opaque worker handles. The shared
   // runtime streams Rust-produced windows into a bounded preview and summary.
   import { onDestroy } from 'svelte';
-  import { previewPixels, previewReadout, rasterPreview } from '../lib/raster-preview.mjs';
+  import { previewHistogram, previewPixels, previewReadout, rasterPreview } from '../lib/raster-preview.mjs';
 
   let { tool, compute } = $props();
   const roles = tool['x-raster'].bands.map((name) => ({ name, title: tool.inputs.properties[name].title }));
@@ -108,7 +108,14 @@
           total = progress.total;
         },
       });
-      if (out) outcome = out.ok ? { ...out, preview: preview.value() } : out;
+      if (out) {
+        const sampled = preview.value();
+        outcome = out.ok ? {
+          ...out,
+          preview: sampled,
+          histogram: previewHistogram(sampled, out.summary.min, out.summary.max),
+        } : out;
+      }
     } catch (error) {
       problem = error.message;
     } finally {
@@ -161,26 +168,28 @@
         <li><strong>{source.file.name}</strong>: {source.metadata.width.toLocaleString('en-US')} × {source.metadata.height.toLocaleString('en-US')} px, {source.metadata.bands} {source.metadata.bands === 1 ? 'band' : 'bands'}{source.metadata.epsg ? `, EPSG:${source.metadata.epsg}` : ''}</li>
       {/each}
     </ul>
-    <table class="raster-map">
-      <thead><tr><th scope="col">Input band</th><th scope="col">File</th><th scope="col">Band number</th></tr></thead>
-      <tbody>
-        {#each roles as role}
-          <tr>
-            <th scope="row">{role.title}</th>
-            <td>
-              <select aria-label={`File for ${role.title}`} value={assignments[role.name]?.source} onchange={(event) => setSource(role.name, event.currentTarget.value)}>
-                {#each sources as source, i}<option value={i}>{source.file.name}</option>{/each}
-              </select>
-            </td>
-            <td>
-              <select aria-label={`Band number for ${role.title}`} value={assignments[role.name]?.band} onchange={(event) => setBand(role.name, event.currentTarget.value)}>
-                {#each Array(selected(role.name)?.metadata.bands ?? 0) as _, i}<option value={i}>{i + 1}</option>{/each}
-              </select>
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Raster band mapping">
+      <table class="raster-map">
+        <thead><tr><th scope="col">Input band</th><th scope="col">File</th><th scope="col">Band number</th></tr></thead>
+        <tbody>
+          {#each roles as role}
+            <tr>
+              <th scope="row">{role.title}</th>
+              <td>
+                <select aria-label={`File for ${role.title}`} value={assignments[role.name]?.source} onchange={(event) => setSource(role.name, event.currentTarget.value)}>
+                  {#each sources as source, i}<option value={i}>{source.file.name}</option>{/each}
+                </select>
+              </td>
+              <td>
+                <select aria-label={`Band number for ${role.title}`} value={assignments[role.name]?.band} onchange={(event) => setBand(role.name, event.currentTarget.value)}>
+                  {#each Array(selected(role.name)?.metadata.bands ?? 0) as _, i}<option value={i}>{i + 1}</option>{/each}
+                </select>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
     <div class="actions">
       {#if running}
         <button type="button" class="quiet" onclick={() => controller?.abort()}>Cancel</button>
@@ -206,10 +215,22 @@
         aria-label={`${tool['x-raster'].output} preview from ${number(outcome.summary.min)} to ${number(outcome.summary.max)}`}
       ></canvas>
       <figcaption>
-        <span>{number(outcome.summary.min)} minimum</span>
-        <span>{outcome.summary.min < 0 && outcome.summary.max > 0 ? '0 centered' : 'low to high'}</span>
-        <span>{number(outcome.summary.max)} maximum</span>
+        <span>{number(outcome.summary.min)}</span>
+        <span>{number(outcome.summary.min === null ? null : outcome.summary.min < 0 && outcome.summary.max > 0 ? 0 : (outcome.summary.min + outcome.summary.max) / 2)}</span>
+        <span>{number(outcome.summary.max)}</span>
       </figcaption>
+    </figure>
+    <figure class="raster-histogram">
+      <figcaption>Distribution of {outcome.histogram.sampledPixels.toLocaleString('en-US')} preview pixels</figcaption>
+      <div class="histogram-bars" role="img" aria-label={`Histogram from ${number(outcome.summary.min)} to ${number(outcome.summary.max)} in ${outcome.histogram.counts.length} equal-width bins`}>
+        {#each outcome.histogram.counts as count}<span style={`--bar: ${outcome.histogram.maxCount ? count / outcome.histogram.maxCount : 0}`} aria-hidden="true"></span>{/each}
+      </div>
+      <p class="sr-only">Preview histogram values</p>
+      <dl class="sr-only">
+        {#each outcome.histogram.counts as count, i}
+          <dt>{number(outcome.histogram.edges[i])} to {number(outcome.histogram.edges[i + 1])}</dt><dd>{count.toLocaleString('en-US')} sampled pixels</dd>
+        {/each}
+      </dl>
     </figure>
     <dl class="raster-summary">
       <div><dt>Mean</dt><dd>{number(outcome.summary.mean)}</dd></div>
@@ -217,6 +238,6 @@
       <div><dt>No-data pixels</dt><dd>{outcome.summary.noDataPixels.toLocaleString('en-US')}</dd></div>
     </dl>
     <p class="cursor-readout" aria-live="polite">{cursor || 'Point at the preview to read a pixel value and coordinate.'}</p>
-    <p class="help">The preview samples at most 512 × 512 pixels. Statistics use every valid output pixel. GeoTIFF download is not connected yet.</p>
+    <p class="help">The preview and histogram sample at most 512 × 512 pixels. Statistics use every valid output pixel. GeoTIFF download is not connected yet.</p>
   {/if}
 </div>

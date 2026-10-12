@@ -8,7 +8,9 @@ use crate::{obj, unit};
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::log;
 
@@ -290,6 +292,24 @@ const BOLTON: Reference = Reference {
     url: "https://doi.org/10.1175/1520-0493(1980)108%3C1046:TCOEPT%3E2.0.CO;2",
 };
 
+const BALLOON_HANDBOOK: Reference = Reference {
+    title: "Balloon Flying Handbook, FAA-H-8083-11B",
+    issuer: "Federal Aviation Administration",
+    year: 2024,
+    edition: "FAA-H-8083-11B",
+    locator: "Chapter 4, p. 4-24 (temperature-dew point convergence rate and approximate cloud-base height)",
+    url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/Balloon_Flying_Handbook_FAA-H-8083-11B/bfh_chapter_4.pdf",
+};
+
+const NWS_FORECASTER_REFERENCE: Reference = Reference {
+    title: "Forecasters Reference Book",
+    issuer: "National Weather Service",
+    year: 1997,
+    edition: "1997 edition",
+    locator: "Appendix A, p. A-6 (specific heat of dry air at constant pressure)",
+    url: "https://www.weather.gov/media/zhu/ZHU_Training_Page/Met_Tutorials/Forecasters_Reference_Book_1997.pdf",
+};
+
 pub static CLOUD_BASE: ToolDef = ToolDef {
     id: "aviation.atmosphere.cloud-base",
     stability: gp_base::tool::Stability::Stable,
@@ -315,7 +335,13 @@ pub static CLOUD_BASE: ToolDef = ToolDef {
     accuracy: "Estimates for well-mixed surface air forming convective cloud: the LCL is within about 0.1 K in temperature by Bolton's fit; real bases vary with mixing and terrain",
     when_to_use: "Use this on a warm afternoon when you want a rough idea where puffy cumulus will form, or how high the freezing level sits. Enter the surface temperature and dew point, and the field elevation for heights above sea level. It gives a cloud base by the 400 ft per degree rule and by the lifting condensation level. Compare the result with the reported ceilings before a VFR flight.",
     limitations: "These are estimates for well-mixed air that forms convective cloud. They say nothing about stratus, fog, or layers that move in from elsewhere, and real bases change with terrain and time of day. The freezing level uses one steady lapse rate and is left out when the surface is at or below freezing. Reported ceilings and forecasts govern.",
-    references: &[BOLTON, WEATHER_HANDBOOK],
+    references: &[
+        BOLTON,
+        WEATHER_HANDBOOK,
+        BALLOON_HANDBOOK,
+        ICAO_7488,
+        NWS_FORECASTER_REFERENCE,
+    ],
     examples: &[Example {
         id: "primary",
         title: "25 °C with a 15 °C dew point",
@@ -328,6 +354,44 @@ pub static CLOUD_BASE: ToolDef = ToolDef {
         Related { id: "aviation.altimetry.density-altitude", reason: "alternative" },
         Related { id: "aviation.weather.metar-decode", reason: "parent" },
         Related { id: "aviation.atmosphere.humidity", reason: "alternative" },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Rounded temperature-dew point cloud-base rule",
+            value: "400",
+            unit: "ft/degC",
+            source: "faa-balloon-handbook",
+        },
+        Assumption {
+            name: "Bolton equation temperature offset",
+            value: "56",
+            unit: "K",
+            source: "bolton-1980",
+        },
+        Assumption {
+            name: "Bolton equation logarithm scale",
+            value: "800",
+            unit: "K",
+            source: "bolton-1980",
+        },
+        Assumption {
+            name: "Standard gravity",
+            value: "9.80665",
+            unit: "m/s2",
+            source: "icao-7488",
+        },
+        Assumption {
+            name: "Specific heat of dry air at constant pressure",
+            value: "1004",
+            unit: "J/(kg K)",
+            source: "nws-forecasters-reference",
+        },
+        Assumption {
+            name: "Rounded standard environmental lapse rate",
+            value: "1.98",
+            unit: "degC/1,000 ft",
+            source: "icao-7488",
+        },
     ],
     sentence: "Convective clouds should form about {cloud_base_lcl} above the field; the rule of thumb says {cloud_base_rule}.",
     limits: &[("batchRows", 10_000)],

@@ -791,6 +791,26 @@
       "editionCheck": true
     },
     {
+      "id": "faa-balloon-handbook",
+      "name": "Balloon Flying Handbook, FAA-H-8083-11B",
+      "issuer": "Federal Aviation Administration",
+      "currentEdition": "FAA-H-8083-11B",
+      "currentReleaseDate": "2024-12-26",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked at the issuer on 2026-10-12. Chapter 4, p. 4-24 gives a 4.4°F-per-1,000-ft temperature-dew point convergence rate and the corresponding approximate cloud-base calculation; the FAA's December 2024 advisory says 11B supersedes 11A.",
+      "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/Balloon_Flying_Handbook",
+      "matchTerms": [
+        "Balloon Flying Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "faa-awh",
       "name": "Aviation Weather Handbook",
       "issuer": "FAA",
@@ -2097,6 +2117,26 @@
         "NAPGD2022",
         "GEOID2022",
         "SPCS2022"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "nws-forecasters-reference",
+      "name": "Forecasters Reference Book",
+      "issuer": "National Weather Service",
+      "currentEdition": "1997 edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the weather.gov-hosted 1997 edition on 2026-10-12. Appendix A, p. A-6 lists the specific heat of dry air at constant pressure as 1,004 J/(kg K).",
+      "freeAccessUrl": "https://www.weather.gov/media/zhu/ZHU_Training_Page/Met_Tutorials/Forecasters_Reference_Book_1997.pdf",
+      "matchTerms": [
+        "Forecasters Reference Book"
       ],
       "editionStatus": "current",
       "legalStatus": null,

@@ -3,7 +3,7 @@
 
 ## Method
 
-A parcel of surface air lifted without mixing cools at the dry adiabatic rate until it saturates at the lifting condensation level (LCL), where convective cloud forms. The tool finds the temperature there with Bolton's (1980) equation 15 and divides the cooling by the dry adiabatic rate to get the height. The pilot's rule of thumb, 400 ft per degree Celsius of temperature–dew point spread, is shown beside it. The freezing level is the surface temperature divided by a steady lapse rate, the standard 1.98 °C per 1,000 ft by default.
+A parcel of surface air lifted without mixing cools at the dry adiabatic rate until it saturates at the lifting condensation level (LCL), where convective cloud forms. The tool finds the temperature there with Bolton's (1980) equation 15 and divides the cooling by the dry adiabatic rate to get the height. The pilot's rule of thumb, 400 ft per degree Celsius of temperature–dew point spread, rounds the FAA Balloon Flying Handbook's 4.4 °F per 1,000 ft convergence calculation. The freezing level is the surface temperature divided by a steady lapse rate, the standard 1.98 °C per 1,000 ft by default.
 
 ## Equations
 
@@ -15,7 +15,7 @@ A parcel of surface air lifted without mixing cools at the dry adiabatic rate un
 
 ## Symbols and units
 
-T surface temperature and T_d dew point in °C (T_K, T_dK in kelvins, +273.15); Γ lapse rate in °C per 1,000 ft (0.1 to 5.0, default 1.98); g = 9.80665 m/s²; c_p = 1,004 J/(kg·K); heights in feet (1 ft = 0.3048 m).
+T surface temperature and T_d dew point in °C (T_K, T_dK in kelvins, +273.15); Γ lapse rate in °C per 1,000 ft (0.1 to 5.0, default 1.98 from the rounded ICAO standard-atmosphere rate); g = 9.80665 m/s² from ICAO Doc 7488; c_p = 1,004 J/(kg·K) from the NWS Forecasters Reference Book; heights in feet (1 ft = 0.3048 m).
 
 ## Domain
 

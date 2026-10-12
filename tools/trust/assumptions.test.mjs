@@ -61,6 +61,7 @@ const MUST_DECLARE = [
   'time.scale.gps-week',
   'time.scale.gps-to-utc',
   'aviation.atmosphere.humidity',
+  'aviation.atmosphere.cloud-base',
   'raster.scale.reflectance',
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
@@ -120,6 +121,18 @@ test('the humidity model is declared too, since it changes the answer', () => {
   const magnus = (t['x-assumptions'] ?? []).filter((a) => a.source === 'alduchov');
   assert.equal(magnus.length, 3, 'the Magnus coefficients are not all declared');
   assert.deepEqual(magnus.map((a) => a.value).sort(), ['17.625', '243.04', '6.1094'].sort());
+});
+
+test('the cloud-base tool exposes every published rule and physical constant', () => {
+  const assumptions = byId('aviation.atmosphere.cloud-base')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['400', 'ft/degC', 'faa-balloon-handbook'],
+    ['56', 'K', 'bolton-1980'],
+    ['800', 'K', 'bolton-1980'],
+    ['9.80665', 'm/s2', 'icao-7488'],
+    ['1004', 'J/(kg K)', 'nws-forecasters-reference'],
+    ['1.98', 'degC/1,000 ft', 'icao-7488'],
+  ]);
 });
 
 test('the photogrammetry defaults name their published values', () => {

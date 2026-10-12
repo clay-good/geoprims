@@ -63,6 +63,9 @@ const MUST_DECLARE = [
   'aviation.atmosphere.humidity',
   'aviation.atmosphere.cloud-base',
   'raster.scale.reflectance',
+  'raster.index.evi',
+  'raster.index.evi2',
+  'raster.index.savi',
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
@@ -132,6 +135,28 @@ test('the cloud-base tool exposes every published rule and physical constant', (
     ['9.80665', 'm/s2', 'icao-7488'],
     ['1004', 'J/(kg K)', 'nws-forecasters-reference'],
     ['1.98', 'degC/1,000 ft', 'icao-7488'],
+  ]);
+});
+
+test('the vegetation indices expose every published coefficient and default', () => {
+  const evi = byId('raster.index.evi')['x-assumptions'];
+  assert.deepEqual(evi.map(({ value, unit, source }) => [value, unit, source]), [
+    ['2.5', '1', 'huete-2002'],
+    ['6', '1', 'huete-2002'],
+    ['7.5', '1', 'huete-2002'],
+    ['1', '1', 'huete-2002'],
+  ]);
+
+  const evi2 = byId('raster.index.evi2')['x-assumptions'];
+  assert.deepEqual(evi2.map(({ value, unit, source }) => [value, unit, source]), [
+    ['2.5', '1', 'jiang-2008'],
+    ['2.4', '1', 'jiang-2008'],
+    ['1', '1', 'jiang-2008'],
+  ]);
+
+  const savi = byId('raster.index.savi')['x-assumptions'];
+  assert.deepEqual(savi.map(({ value, unit, source }) => [value, unit, source]), [
+    ['0.5', '1', 'huete-1988'],
   ]);
 });
 

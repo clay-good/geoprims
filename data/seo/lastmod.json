@@ -1368,11 +1368,11 @@
     "lastmod": "2026-10-12"
   },
   "/raster/index/evi/": {
-    "hash": "4c9a803a639c4985",
+    "hash": "e960ff8b155f3b2c",
     "lastmod": "2026-10-12"
   },
   "/raster/index/evi2/": {
-    "hash": "a0158ecc3110f410",
+    "hash": "9d63534365a9f1df",
     "lastmod": "2026-10-12"
   },
   "/raster/index/mndwi/": {
@@ -1400,7 +1400,7 @@
     "lastmod": "2026-10-12"
   },
   "/raster/index/savi/": {
-    "hash": "53fd25bd3286b74d",
+    "hash": "35077961bfded01a",
     "lastmod": "2026-10-12"
   },
   "/raster/scale/": {
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4d85bf60ab8e3d6c",
+    "hash": "be60388550fd683f",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

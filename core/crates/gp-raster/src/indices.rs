@@ -11,7 +11,8 @@ use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, RasterMode, Reference, Related, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, RasterMode, Reference, Related,
+    ToolDef,
 };
 
 pub const ROUSE: Reference = Reference {
@@ -616,6 +617,32 @@ pub static EVI: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        Assumption {
+            name: "EVI gain coefficient G",
+            value: "2.5",
+            unit: "1",
+            source: "huete-2002",
+        },
+        Assumption {
+            name: "EVI red aerosol-resistance coefficient C1",
+            value: "6",
+            unit: "1",
+            source: "huete-2002",
+        },
+        Assumption {
+            name: "EVI blue aerosol-resistance coefficient C2",
+            value: "7.5",
+            unit: "1",
+            source: "huete-2002",
+        },
+        Assumption {
+            name: "EVI canopy-background adjustment L",
+            value: "1",
+            unit: "1",
+            source: "huete-2002",
+        },
+    ],
     sentence: "EVI is {evi}.",
     raster: Some(RasterMode {
         bands: &["nir", "red", "blue"],
@@ -706,6 +733,26 @@ pub static EVI2: ToolDef = ToolDef {
         Related {
             id: "raster.index.savi",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "EVI2 gain coefficient G",
+            value: "2.5",
+            unit: "1",
+            source: "jiang-2008",
+        },
+        Assumption {
+            name: "EVI2 red-band coefficient",
+            value: "2.4",
+            unit: "1",
+            source: "jiang-2008",
+        },
+        Assumption {
+            name: "EVI2 canopy-background adjustment L",
+            value: "1",
+            unit: "1",
+            source: "jiang-2008",
         },
     ],
     sentence: "EVI2 is {evi2}.",
@@ -808,6 +855,12 @@ pub static SAVI: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Default soil adjustment factor L for intermediate cover",
+        value: "0.5",
+        unit: "1",
+        source: "huete-1988",
+    }],
     sentence: "SAVI is {savi}.",
     raster: Some(RasterMode {
         bands: &["nir", "red"],

@@ -23,7 +23,7 @@ Spatial indexing includes H3 polygon fills with all four H3 v4 containment modes
 
 Geometry includes planar and geodesic-edge polygon intersection, union, difference, and symmetric difference. The planar engine matches GEOS across 400 generated degenerate pairs and 48 polygon pairs from JTS 1.20.0's canonical area-overlay suites, through all four operations.
 
-The generated catalog currently exposes 31 navigation operations and 15 geometry operations. The remaining navigation and geometry catalog expansion is tracked in [`add-navigation-and-geometry`](openspec/changes/add-navigation-and-geometry/tasks.md); its practitioner terms include “as the crow flies,” “great circle,” “XTE,” and “loxodrome.”
+The generated catalog currently exposes 31 navigation operations and 15 geometry operations, each with a source-backed derivation and generated tool page. The [haversine vs. geodesic explainer](https://geoprims.com/learn/geodesic-vs-haversine/) compares spherical, ellipsoidal, Vincenty, and rhumb methods with worked examples. The remaining catalog expansion is tracked in [`add-navigation-and-geometry`](openspec/changes/add-navigation-and-geometry/tasks.md); its practitioner terms include “as the crow flies,” “great circle,” “XTE,” and “loxodrome.”
 
 ## Status
 

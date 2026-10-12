@@ -1,7 +1,7 @@
 // The practitioner vocabulary promised by add-navigation-and-geometry must
 // remain an addressable catalog alias, not merely wording buried in prose.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 
@@ -31,4 +31,32 @@ test('navigation and geometry catalog progress is counted by the operation/endpo
   };
   assert.deepEqual(count('navigation'), { operations: 31, endpoints: 31 });
   assert.deepEqual(count('geometry'), { operations: 15, endpoints: 15 });
+});
+
+test('every registered navigation and geometry operation has derivation documentation', () => {
+  const operations = catalog.tools.filter(
+    (tool) => ['navigation', 'geometry'].includes(tool.domain) && tool.composedOf.length === 0,
+  );
+  const missing = operations
+    .filter((tool) => !existsSync(join(root, 'docs/derivations', `${tool.id}.md`)))
+    .map((tool) => tool.id);
+  assert.deepEqual(missing, []);
+});
+
+test('the haversine versus ellipsoid explainer covers each method it compares', () => {
+  const explainer = readFileSync(
+    join(root, 'apps/web/src/content/learn/geodesic-vs-haversine.md'),
+    'utf8',
+  );
+  for (const id of [
+    'navigation.geodesic.haversine',
+    'navigation.geodesic.inverse',
+    'navigation.geodesic.spherical-inverse',
+    'navigation.geodesic.vincenty-inverse',
+    'navigation.rhumb.inverse',
+  ]) {
+    assert.match(explainer, new RegExp(`^  - ${id}$`, 'm'), `${id}: not listed by the explainer`);
+  }
+  assert.match(explainer, /^## Why the two differ$/m);
+  assert.match(explainer, /^## Worked examples$/m);
 });

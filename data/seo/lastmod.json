@@ -1072,8 +1072,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/geodesic-vs-haversine/": {
-    "hash": "0bf2a754476441bc",
-    "lastmod": "2026-10-09"
+    "hash": "7210647d772837a1",
+    "lastmod": "2026-10-12"
   },
   "/learn/geohash-explained/": {
     "hash": "258a7a1bb336889f",
@@ -1196,12 +1196,12 @@
     "lastmod": "2026-10-12"
   },
   "/navigation/": {
-    "hash": "44ca7ff9080557c8",
-    "lastmod": "2026-09-23"
+    "hash": "3384cfbf14d9fbdc",
+    "lastmod": "2026-10-12"
   },
   "/navigation/geodesic/": {
-    "hash": "70bcb198f3eb92be",
-    "lastmod": "2026-09-26"
+    "hash": "927429e8c69ee6c2",
+    "lastmod": "2026-10-12"
   },
   "/navigation/geodesic/direct/": {
     "hash": "e4f225524cee9d87",
@@ -1712,7 +1712,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "6af1b9d597dab5f9",
+    "hash": "52c6770a6326d6d0",
     "lastmod": "2026-10-12"
   },
   "/units/": {
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "833f85ebc3361528",
+    "hash": "379a5c42a7ee2c21",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

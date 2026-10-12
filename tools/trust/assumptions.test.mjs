@@ -86,6 +86,7 @@ const MUST_DECLARE = [
   'aviation.ifr.hold-speed-limit',
   'aviation.ifr.hold-wind-timing',
   'aviation.ifr.dme-arc-lead',
+  'aviation.ifr.time-to-station',
   'aviation.weather.metar-decode',
   'aviation.weather.taf-decode',
   'aviation.loading.fuel-plan',
@@ -187,6 +188,13 @@ test('the DME arc tool exposes its published standard-rate and lead rule', () =>
   const assumptions = byId('aviation.ifr.dme-arc-lead')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['3', 'deg/s', 'faa-ifh'],
+    ['60', 'deg', 'faa-ifh'],
+  ]);
+});
+
+test('the time-to-station tool exposes its published 60-times rule', () => {
+  const assumptions = byId('aviation.ifr.time-to-station')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['60', 'deg', 'faa-ifh'],
   ]);
 });

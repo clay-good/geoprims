@@ -132,8 +132,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/ifr/time-to-station/": {
-    "hash": "95a5b8cd8e63b2d5",
-    "lastmod": "2026-10-10"
+    "hash": "7e0ff641e8e2bf04",
+    "lastmod": "2026-10-12"
   },
   "/aviation/loading/": {
     "hash": "73a38039a967b4fe",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "372b48f3b78aa1a1",
+    "hash": "f840f66499b1c586",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

@@ -288,6 +288,12 @@ pub static TIME_TO_STATION: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Time-to-station rule coefficient",
+        value: "60",
+        unit: "deg",
+        source: "faa-ifh",
+    }],
     sentence: "The station is {time} away, {time_rule} by the rule.",
     limits: &[("batchRows", 10_000)],
     run: run_time_to_station,

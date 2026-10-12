@@ -25,6 +25,8 @@ Geometry includes planar and geodesic-edge polygon intersection, union, differen
 
 The generated catalog currently exposes 31 navigation operations and 15 geometry operations. All 46 are stable, with a source-backed derivation, at least 20 golden vectors, and a generated tool page. The [haversine vs. geodesic explainer](https://geoprims.com/learn/geodesic-vs-haversine/) compares spherical, ellipsoidal, Vincenty, and rhumb methods with worked examples. The remaining catalog expansion is tracked in [`add-navigation-and-geometry`](openspec/changes/add-navigation-and-geometry/tasks.md); its practitioner terms include “as the crow flies,” “great circle,” “XTE,” and “loxodrome.”
 
+The US 1976 atmosphere is verified through its 86 km ceiling: every kilometer through 81 km is cross-checked against an independent implementation, and every printed 0.5 km row from 82 to 86 km is checked against NOAA-S/T 76-1562 Table I.
+
 ## Status
 
 Live at [geoprims.com](https://geoprims.com) since September 23, 2026, and still growing. Tools that pass full verification are marked stable; the rest are labeled experimental. The plan and specs live in [`openspec/changes/`](openspec/changes/).

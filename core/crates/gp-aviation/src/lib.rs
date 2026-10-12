@@ -202,6 +202,7 @@ pub(crate) fn obj(pairs: Vec<(&str, Json)>) -> Json {
 
 pub static ISA: ToolDef = ToolDef {
     id: "aviation.atmosphere.isa",
+    version: "1.0.1",
     stability: gp_base::tool::Stability::Stable,
     title: "Standard atmosphere",
     summary: "Temperature, pressure, density, speed of sound, and viscosity of the ICAO or US 1976 standard atmosphere at any altitude, on a standard or non-standard day.",
@@ -426,10 +427,16 @@ pub static ISA: ToolDef = ToolDef {
             source: "icao-7488",
         },
         Assumption {
-            name: "Gas constant for dry air R",
+            name: "ICAO gas constant for dry air R",
             value: "287.05287",
             unit: "J/(kg K)",
             source: "icao-7488",
+        },
+        Assumption {
+            name: "US76 gas constant for dry air R*/M0",
+            value: "287.05307204706463",
+            unit: "J/(kg K)",
+            source: "us76",
         },
         Assumption {
             name: "Tropospheric lapse rate",
@@ -488,16 +495,17 @@ fn run_isa(ctx: &mut Ctx) -> Result<Json, ToolError> {
             err
         });
     }
-    let s = isa::at(h);
+    let s = isa::at_for_model(h, model);
     let z = if geometric {
         alt
     } else {
         isa::geopotential_to_geometric(h)
     };
-    // US 1976 reports kinetic temperature: TM × M/M0 above 80 km geometric.
-    let kinetic = match model {
-        isa::Model::Us76 => s.t * isa::us76_molecular_weight_ratio(z),
-        isa::Model::Icao => s.t,
+    // US 1976 reports kinetic temperature: TM below 86 km, and the upper-
+    // atmosphere boundary value at exactly 86 km.
+    let kinetic = match (model, z >= 86_000.0) {
+        (isa::Model::Us76, true) => 186.87,
+        _ => s.t,
     };
     let dt = ctx
         .quantity("temperature_deviation")?
@@ -517,7 +525,7 @@ fn run_isa(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     // Density follows the molecular-scale temperature (identical to ISA on a standard day).
-    let rho = s.p / (isa::R * (s.t + dt));
+    let rho = s.p / (model.gas_constant() * (s.t + dt));
     let mu = isa::dynamic_viscosity(t);
     Ok(obj(vec![
         ("temperature", ctx.out("temperature", kelvin(t))),
@@ -534,13 +542,13 @@ fn run_isa(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
         ("theta", Json::Num(t / isa::T0)),
         ("delta", Json::Num(s.p / isa::P0)),
-        ("sigma", Json::Num(rho / isa::RHO0)),
+        ("sigma", Json::Num(rho / model.sea_level_density())),
         (
             "speed_of_sound",
             ctx.out(
                 "speed_of_sound",
                 Q {
-                    value: isa::speed_of_sound(t),
+                    value: isa::speed_of_sound_for_model(t, model),
                     unit: unit(QT::Speed, "m/s"),
                 },
             ),

@@ -3,6 +3,20 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "result-change",
+      "tools": [
+        "aviation.atmosphere.isa"
+      ],
+      "vectors": [
+        "aviation.atmosphere.isa v011",
+        "aviation.atmosphere.isa v012",
+        "aviation.atmosphere.isa v013",
+        "aviation.atmosphere.isa v014"
+      ],
+      "summary": "The US 1976 atmosphere (version 1.0.1) now keeps molecular weight constant below its 86 km upper-atmosphere boundary, as NOAA-S/T 76-1562 specifies, instead of applying a correction from 80.5 to 85.5 km. Temperatures in that band rise by up to 0.068 K. US76 pressure, density, and speed of sound now use its adopted R*/M0 gas constant; pressure and density move by less than 0.001%. All nine printed rows from 82 to 86 km now match Table I within its final printed digits. ICAO results are unchanged."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "added",
       "tools": [
         "indexing.a5.lon-lat-to-cell",

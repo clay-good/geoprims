@@ -3,18 +3,18 @@
 
 ## Method
 
-Direct evaluation of the defining equations of the ICAO Standard Atmosphere (Doc 7488/3), or the US Standard Atmosphere 1976 to 86 km: temperature is linear in geopotential altitude within each layer, and pressure follows from hydrostatic balance and the ideal gas law. Geometric and geopotential altitude convert with the standard's radius r0 = 6,356,766 m.
+Direct evaluation of the defining equations of the ICAO Standard Atmosphere (Doc 7488/3), or the US Standard Atmosphere 1976 to 86 km: molecular-scale temperature is linear in geopotential altitude within each layer, and pressure follows from hydrostatic balance and the ideal gas law. Geometric and geopotential altitude convert with the standard's radius r0 = 6,356,766 m. US76 uses its adopted R*/M0 = 287.053072047 J/(kg·K), while ICAO uses 287.05287 J/(kg·K). In the US76 lower-atmosphere tables, kinetic and molecular-scale temperature are equal below 86 km; at the 86 km boundary the reported kinetic temperature is 186.87 K.
 
 ## Equations
 
 - H = r0 z / (r0 + z) (geopotential from geometric altitude).
-- Gradient layers: T = Tb + L (H − Hb), p = pb (T/Tb)^(−g0/(R L)).
-- Isothermal layers: p = pb exp(−g0 (H − Hb)/(R Tb)).
-- ρ = p/(R T), a = √(γ R T), μ = β T^1.5/(T + S), ν = μ/ρ, g = g0 (r0/(r0 + z))².
+- Gradient layers: TM = TM,b + L (H − Hb), p = pb (TM/TM,b)^(−g0/(R L)).
+- Isothermal layers: p = pb exp(−g0 (H − Hb)/(R TM,b)).
+- ρ = p/(R TM), a = √(γ R T), μ = β T^1.5/(T + S), ν = μ/ρ, g = g0 (r0/(r0 + z))².
 
 ## Symbols and units
 
-H geopotential altitude (m′), z geometric altitude (m), T temperature (K), p pressure (Pa), ρ density (kg/m³), L lapse rate (K/m′), R = 287.05287 J/(kg·K), g0 = 9.80665 m/s², γ = 1.4, β = 1.458e-6 kg/(m·s·K^0.5), S = 110.4 K, a speed of sound, μ dynamic and ν kinematic viscosity.
+H geopotential altitude (m′), z geometric altitude (m), T kinetic temperature (K), TM molecular-scale temperature (K), p pressure (Pa), ρ density (kg/m³), L lapse rate (K/m′), R the selected standard's dry-air gas constant, g0 = 9.80665 m/s², γ = 1.4, β = 1.458e-6 kg/(m·s·K^0.5), S = 110.4 K, a speed of sound, μ dynamic and ν kinematic viscosity.
 
 ## Domain
 
@@ -42,7 +42,7 @@ None within the standard: it is a definition. Layer base pressures are computed 
 - `tools/vectors/gen_aviation.py`: 8 vectors from ambiance 1.3.1, a separately written implementation of the ICAO atmosphere, from -2 km to 78 km (pressure and density within 3e-6 relative)
 - `core/vectors/aviation.atmosphere.isa.jsonl`: the defining equations in Python, US 1976 printed table rows, and ambiance, run through the core on every build
 
-- `core/crates/gp-aviation/tests/us76_table.rs`: the US 1976 model at every tabulated kilometer from 0 to 81 km (geometric) against the ambiance package, an independent implementation of the standard (`tools/vectors/gen_us76_ambiance.py`), each value within half a unit of the table's last printed digit: temperature to 0.001 K (to 80 km; above it the table's kinetic temperature carries M/M0, which ambiance leaves out), pressure and density to five significant figures
+- `core/crates/gp-aviation/tests/us76_table.rs`: the US 1976 model at every kilometer from 0 to 81 km (geometric) against ambiance (`tools/vectors/gen_us76_ambiance.py`) within 1 part in 100,000, plus all nine 0.5 km rows from 82 to 86 km against NOAA-S/T 76-1562 Table I, printed pages 67–68, within at most two units of the final printed digit
 
 ## Invariants
 

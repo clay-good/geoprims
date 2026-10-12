@@ -88,8 +88,8 @@
     "lastmod": "2026-10-10"
   },
   "/aviation/atmosphere/isa/": {
-    "hash": "6f1d68f4555b6183",
-    "lastmod": "2026-10-09"
+    "hash": "1b34eb3a031725d5",
+    "lastmod": "2026-10-12"
   },
   "/aviation/flight-plan/": {
     "hash": "33b4630823854f30",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "2a1222853f91e172",
+    "hash": "b117f20556a87a36",
     "lastmod": "2026-10-12"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-12"
   },
   "/methodology/": {
-    "hash": "4f58b260b20ed1fa",
+    "hash": "2f9dc01e97709de0",
     "lastmod": "2026-10-12"
   },
   "/navigation/": {
@@ -1348,7 +1348,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "e537782c9eed2ec9",
+    "hash": "b38bb3fe7bdbb73c",
     "lastmod": "2026-10-12"
   },
   "/raster/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "56724fe760a1c413",
+    "hash": "8c2be559fb4bd8c5",
     "lastmod": "2026-10-12"
   },
   "/survey/": {
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "379a5c42a7ee2c21",
+    "hash": "0008be236952d6b1",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

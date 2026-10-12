@@ -10,6 +10,8 @@ pub const P0: f64 = 101_325.0;
 pub const T0: f64 = 288.15;
 pub const G0: f64 = 9.806_65;
 pub const R: f64 = 287.052_87;
+/// US Standard Atmosphere 1976 dry-air gas constant, R*/M0.
+pub const US76_R: f64 = 8_314.32 / 28.9644;
 pub const GAMMA: f64 = 1.4;
 /// Earth radius for geopotential conversion (ICAO Doc 7488).
 pub const R0: f64 = 6_356_766.0;
@@ -39,6 +41,17 @@ impl Model {
             Model::Us76 => "US Standard Atmosphere 1976",
         }
     }
+
+    pub fn gas_constant(self) -> f64 {
+        match self {
+            Model::Icao => R,
+            Model::Us76 => US76_R,
+        }
+    }
+
+    pub fn sea_level_density(self) -> f64 {
+        P0 / (self.gas_constant() * T0)
+    }
 }
 
 /// (base geopotential altitude m, lapse rate K/m, layer name). Base
@@ -58,23 +71,27 @@ const BASE_T: [f64; 7] = [288.15, 216.65, 216.65, 228.65, 270.65, 270.65, 214.65
 
 /// Base temperature and pressure of each layer; pressures integrated from P0.
 fn bases() -> [(f64, f64); 7] {
+    bases_with_r(R)
+}
+
+fn bases_with_r(r: f64) -> [(f64, f64); 7] {
     let mut out = [(T0, P0); 7];
     for i in 1..LAYERS.len() {
         let (hb, l, _) = LAYERS[i - 1];
         let dh = LAYERS[i].0 - hb;
         out[i] = (
             BASE_T[i],
-            layer_pressure(out[i - 1].1, BASE_T[i - 1], l, dh),
+            layer_pressure(out[i - 1].1, BASE_T[i - 1], l, dh, r),
         );
     }
     out
 }
 
-fn layer_pressure(pb: f64, tb: f64, l: f64, dh: f64) -> f64 {
+fn layer_pressure(pb: f64, tb: f64, l: f64, dh: f64, r: f64) -> f64 {
     if l == 0.0 {
-        pb * exp(-G0 * dh / (R * tb))
+        pb * exp(-G0 * dh / (r * tb))
     } else {
-        pb * pow((tb + l * dh) / tb, -G0 / (R * l))
+        pb * pow((tb + l * dh) / tb, -G0 / (r * l))
     }
 }
 
@@ -95,16 +112,24 @@ pub struct State {
 /// ISA temperature, pressure, and density at geopotential altitude `h` (m).
 /// The caller checks the model's range.
 pub fn at(h: f64) -> State {
+    at_with_r(h, R)
+}
+
+pub fn at_for_model(h: f64, model: Model) -> State {
+    at_with_r(h, model.gas_constant())
+}
+
+fn at_with_r(h: f64, r: f64) -> State {
     let i = layer_of(h);
     let (hb, l, name) = LAYERS[i];
-    let (tb, pb) = bases()[i];
+    let (tb, pb) = bases_with_r(r)[i];
     let t = tb + l * (h - hb);
-    let p = layer_pressure(pb, tb, l, h - hb);
+    let p = layer_pressure(pb, tb, l, h - hb, r);
     State {
         h,
         t,
         p,
-        rho: p / (R * t),
+        rho: p / (r * t),
         layer: name,
     }
 }
@@ -152,6 +177,10 @@ pub fn speed_of_sound(t: f64) -> f64 {
     sqrt(GAMMA * R * t)
 }
 
+pub fn speed_of_sound_for_model(t: f64, model: Model) -> f64 {
+    sqrt(GAMMA * model.gas_constant() * t)
+}
+
 /// Dynamic viscosity by Sutherland's law (ICAO Doc 7488 constants).
 pub fn dynamic_viscosity(t: f64) -> f64 {
     1.458e-6 * pow(t, 1.5) / (t + 110.4)
@@ -161,25 +190,6 @@ pub fn dynamic_viscosity(t: f64) -> f64 {
 pub fn gravity(z: f64) -> f64 {
     let k = R0 / (R0 + z);
     G0 * k * k
-}
-
-/// US 1976 molecular-weight ratio M/M0 from 80 to 86 km geometric (Table 8),
-/// every 0.5 km. Kinetic temperature T = TM · (M/M0); pressure and density use
-/// the molecular-scale temperature TM and are unaffected.
-const US76_M_RATIO: [f64; 13] = [
-    1.000_000, 0.999_996, 0.999_989, 0.999_971, 0.999_941, 0.999_909, 0.999_870, 0.999_829,
-    0.999_786, 0.999_741, 0.999_694, 0.999_641, 0.999_579,
-];
-
-/// M/M0 at geometric altitude `z` (m), linearly interpolated; 1 below 80 km.
-pub fn us76_molecular_weight_ratio(z: f64) -> f64 {
-    if z <= 80_000.0 {
-        return 1.0;
-    }
-    let x = ((z - 80_000.0) / 500.0).min(12.0);
-    let i = (x as usize).min(11);
-    let f = x - i as f64;
-    US76_M_RATIO[i] + f * (US76_M_RATIO[i + 1] - US76_M_RATIO[i])
 }
 
 /// Saturation vapor pressure over water (Pa) at `t_c` °C: the Magnus form with

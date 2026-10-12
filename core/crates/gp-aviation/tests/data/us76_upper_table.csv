@@ -1,0 +1,14 @@
+# U.S. Standard Atmosphere, 1976, NOAA-S/T 76-1562, Table I,
+# Geometric Altitude, Metric Units, printed pages 67-68 (PDF pages 82-83).
+# z_km,T_K,T_tolerance_K,p_Pa,p_tolerance_Pa,rho_kg_m3,rho_tolerance_kg_m3
+# Tolerances are at most two units of the final printed digit; a few rows in
+# the source table do not round from its defining equations to the nearest digit.
+82,194.739,0.001,0.75009,0.00001,1.3418e-5,0.000000001
+82.5,193.764,0.001,0.68848,0.00001,1.2378e-5,0.000000001
+83,192.790,0.001,0.63167,0.00001,1.1414e-5,0.000000001
+83.5,191.815,0.001,0.57930,0.00001,1.0521e-5,0.000000001
+84,190.841,0.001,0.53105,0.00001,9.6940e-6,0.0000000002
+84.5,189.867,0.001,0.48660,0.00001,8.9282e-6,0.0000000002
+85,188.893,0.001,0.44568,0.00001,8.2196e-6,0.0000000002
+85.5,187.920,0.001,0.40802,0.00001,7.5641e-6,0.0000000002
+86,186.87,0.01,0.37338,0.00001,6.958e-6,0.000000001

@@ -2594,9 +2594,9 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
-      "freeAccessUrl": "https://ntrs.nasa.gov/citations/19770009539",
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked against NOAA-S/T 76-1562 at NOAA on 2026-10-12; Table I, printed pages 67-68, supplies the 82-86 km regression rows.",
+      "freeAccessUrl": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf",
       "matchTerms": [
         "U.S. Standard Atmosphere, 1976"
       ],

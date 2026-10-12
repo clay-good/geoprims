@@ -109,3 +109,40 @@ for (const [name, engine] of [['Chromium', chromium], ['WebKit', webkit]]) {
     assert.deepEqual(problems, [], problems.join('\n'));
   });
 }
+
+test('crosswind workspace is visible on a landscape iPad', { timeout: 120_000 }, async (t) => {
+  const origin = await serveBuiltSite(t);
+  const browser = await webkit.launch({ headless: true });
+  t.after(() => browser.close());
+  const context = await browser.newContext({
+    viewport: { width: 1180, height: 820 },
+    isMobile: true,
+    hasTouch: true,
+    deviceScaleFactor: 2,
+  });
+  const page = await context.newPage();
+  const response = await page.goto(`${origin}/aviation/wind/runway-components/`, { waitUntil: 'load' });
+  assert.ok(response?.ok(), `page answered ${response?.status()}`);
+  await page.locator('.inline-diagram svg').waitFor();
+
+  const layout = await page.evaluate(() => {
+    const box = (selector) => {
+      const { x, y, width, height } = document.querySelector(selector).getBoundingClientRect();
+      return { x, y, width, height, right: x + width, bottom: y + height };
+    };
+    return {
+      scrollY,
+      viewport: { width: innerWidth, height: innerHeight },
+      inputs: box('.card.inputs'),
+      answer: box('.card.answer'),
+      diagram: box('.inline-diagram svg'),
+    };
+  });
+  const { inputs, answer, diagram, viewport } = layout;
+  assert.equal(layout.scrollY, 0, JSON.stringify(layout));
+  assert.ok(inputs.right <= answer.x, `inputs and answer are not side by side: ${JSON.stringify(layout)}`);
+  assert.ok(inputs.y < viewport.height && inputs.bottom > 0, `inputs are off screen: ${JSON.stringify(layout)}`);
+  assert.ok(answer.y < viewport.height && answer.bottom > 0, `answer is off screen: ${JSON.stringify(layout)}`);
+  assert.ok(diagram.x >= 0 && diagram.y >= 0 && diagram.right <= viewport.width && diagram.bottom <= viewport.height,
+    `runway diagram is not fully visible: ${JSON.stringify(layout)}`);
+});

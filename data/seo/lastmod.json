@@ -268,8 +268,8 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "aef4df08229a5f8a",
-    "lastmod": "2026-10-10"
+    "hash": "87a211584be70b3c",
+    "lastmod": "2026-10-12"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -880,8 +880,8 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/": {
-    "hash": "ce495eb78c282458",
-    "lastmod": "2026-09-24"
+    "hash": "00c7633236585458",
+    "lastmod": "2026-10-12"
   },
   "/indexing/convert/": {
     "hash": "ff702d1ddbd1acfb",
@@ -912,8 +912,8 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/h3/": {
-    "hash": "455554831c06bce5",
-    "lastmod": "2026-09-25"
+    "hash": "53a927719721a547",
+    "lastmod": "2026-10-12"
   },
   "/indexing/h3/cell-info/": {
     "hash": "85d9afbc00e5b4ff",
@@ -964,8 +964,8 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "54361265334119af",
-    "lastmod": "2026-10-09"
+    "hash": "a8b814e9dbe8bb37",
+    "lastmod": "2026-10-12"
   },
   "/indexing/h3/resolution-chooser/": {
     "hash": "bf91f0e34e7b157f",
@@ -1332,8 +1332,8 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "17ca5870faf71b59",
-    "lastmod": "2026-10-10"
+    "hash": "a4ca5490584eac1b",
+    "lastmod": "2026-10-12"
   },
   "/raster/": {
     "hash": "29d2a1871b1687a7",
@@ -1696,7 +1696,7 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "d3535cce46655848",
+    "hash": "3c2b0579ff412e15",
     "lastmod": "2026-10-12"
   },
   "/units/": {
@@ -1960,7 +1960,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ec3840dafdc7c4a4",
+    "hash": "784e585ca2746119",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {
@@ -1988,8 +1988,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/index-to-area/": {
-    "hash": "c6962976f1442990",
-    "lastmod": "2026-10-09"
+    "hash": "506c59e4a19fa00b",
+    "lastmod": "2026-10-12"
   },
   "/workflows/inspection/": {
     "hash": "12174cb21c4b4be2",

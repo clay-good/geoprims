@@ -16,7 +16,12 @@ import h3
 
 out, count, seed = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 rng = random.Random(seed)
-MODES = ["center", "full", "overlap"]
+MODES = {
+    "center": "center",
+    "full": "full",
+    "overlap": "overlap",
+    "overlap-bbox": "bbox_overlap",
+}
 # Rings that enclose a pole, and bands that reach towards one over most of the
 # longitudes. H3 reads a ring in latitude and longitude with straight edges, so
 # a ring at one latitude encloses no area at all and the cap cases return
@@ -27,6 +32,10 @@ POLES = [
     [(-85.0, 0.0), (-85.0, -90.0), (-85.0, 180.0), (-85.0, 90.0)],
     [(85.0, -180.0), (85.0, -90.0), (85.0, 0.0), (85.0, 90.0), (89.9, 90.0), (89.9, -180.0)],
     [(-80.0, -180.0), (-80.0, -60.0), (-80.0, 60.0), (-89.5, 60.0), (-89.5, -60.0), (-89.5, -180.0)],
+]
+LOW_RES = [
+    [(-30.0, -60.0), (-30.0, 60.0), (30.0, 60.0), (30.0, -60.0)],
+    [(5.0, -170.0), (6.0, 170.0), (7.0, 170.0), (6.0, -170.0)],
 ]
 
 
@@ -55,8 +64,31 @@ with open(out, "w") as f:
         holes = [star(clat, clng, radius * 0.3, rng.randint(3, 6), 0.2)] if i % 3 == 0 else []
         poly = h3.LatLngPoly(outer, *holes)
         rec = {"res": res, "outer": outer, "holes": holes}
-        for m in MODES:
-            rec[m] = sorted(h3.polygon_to_cells_experimental(poly, res, contain=m))
+        for name, contain in MODES.items():
+            rec[name] = sorted(h3.polygon_to_cells_experimental(poly, res, contain=contain))
+        f.write(json.dumps(rec) + "\n")
+
+    # The hierarchical traversal starts at resolution 0. Pin both its target
+    # behavior and its first descent before the higher-resolution cases below.
+    for outer in LOW_RES:
+        for res in (0, 1):
+            poly = h3.LatLngPoly(outer)
+            rec = {"res": res, "outer": outer, "holes": [], "low_resolution": True}
+            for name, contain in MODES.items():
+                rec[name] = sorted(h3.polygon_to_cells_experimental(poly, res, contain=contain))
+            f.write(json.dumps(rec) + "\n")
+
+    for i in range(40):
+        res = i % 2
+        radius = rng.uniform(0.25, 25.0)
+        clat = rng.uniform(-60.0, 60.0)
+        clng = rng.uniform(-180.0, 180.0)
+        outer = star(clat, clng, radius, rng.randint(3, 10), rng.uniform(0.0, 0.5))
+        holes = [star(clat, clng, radius * 0.25, 4, 0.2)] if i % 3 == 0 else []
+        poly = h3.LatLngPoly(outer, *holes)
+        rec = {"res": res, "outer": outer, "holes": holes, "low_resolution": True}
+        for name, contain in MODES.items():
+            rec[name] = sorted(h3.polygon_to_cells_experimental(poly, res, contain=contain))
         f.write(json.dumps(rec) + "\n")
 
     # Polygons enclosing a pole, where longitude stops ordering the corners and
@@ -66,6 +98,6 @@ with open(out, "w") as f:
         for res in (2, 3, 4):
             poly = h3.LatLngPoly(outer)
             rec = {"res": res, "outer": outer, "holes": [], "pole": True}
-            for m in MODES:
-                rec[m] = sorted(h3.polygon_to_cells_experimental(poly, res, contain=m))
+            for name, contain in MODES.items():
+                rec[name] = sorted(h3.polygon_to_cells_experimental(poly, res, contain=contain))
             f.write(json.dumps(rec) + "\n")

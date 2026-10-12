@@ -1432,17 +1432,17 @@ const ESTIMATE_LIMIT: f64 = 5_000_000.0;
 
 pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     id: "indexing.h3.polygon-to-cells",
-    version: "1.1.0",
+    version: "1.2.0",
     stability: gp_base::tool::Stability::Stable,
     title: "H3 polygon fill (polygonToCells)",
-    summary: "The H3 cells that fill a polygon (with holes, across the antimeridian) at a resolution, by an explicit containment mode: cell centers inside, whole cells inside, or any overlap.",
+    summary: "The H3 cells that fill a polygon (with holes, across the antimeridian) at a resolution, by an explicit containment mode: centers, full cells, overlap, or buffered bounding-box overlap.",
     aliases: &["polygonToCells", "polyfill", "H3 polygon to cells", "h3shape_to_cells"],
     keywords: &["H3", "polyfill", "polygonToCells", "polygon", "containment", "coverage", "GeoJSON"],
     inputs: &[
         Field::new("points", "Polygon", "Corners in order, one per row (lat, lon), like 40.4406, -80.002", Kind::List { items: POINT_ROW, min: 3, max: 10_000 }).core(),
         Field::new("geojson", "GeoJSON", "Instead of points: a Polygon or MultiPolygon (holes allowed), like a Polygon with its corners as [lon, lat] pairs", Kind::Text { max_len: 1_000_000 }),
         RES_IN,
-        Field::new("containment", "Containment", "center (default: cell centers inside), full (whole cells inside), or overlapping (any overlap)", Kind::Choice(&["center", "full", "overlapping"])).core(),
+        Field::new("containment", "Containment", "center (default: cell centers inside), full (whole cells inside), overlapping (any overlap), or overlapping-bbox (H3's buffered cell box overlaps)", Kind::Choice(&["center", "full", "overlapping", "overlapping-bbox"])).core(),
         Field::new("offset", "List from", "For paging: position of the first cell to list, in index order, like 0", Kind::Number { min: 0.0, max: FILL_LIMIT as f64 }),
         Field::new("limit", "List at most", "For paging: most cells to list (up to 10,000)", Kind::Number { min: 1.0, max: LIST_LIMIT as f64 }),
     ],
@@ -1461,10 +1461,10 @@ pub static POLYGON_TO_CELLS: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::LimitExceeded],
     warnings: &["EXPERIMENTAL_TOOL"],
-    model: "H3 C polygonToCells containment tests (point in polygon on latitude and longitude, boundary crossings), breadth-first fill from cells along every edge",
-    accuracy: "Identical cell sets to H3 C 4.4.1 in center, full, and overlapping modes on 1,000 random polygons with holes and antimeridian crossings",
+    model: "H3 C polygonToCellsExperimental: hierarchical traversal from the 122 base cells, with point, boundary, crossing, and buffered bounding-box tests in latitude and longitude",
+    accuracy: "Identical cell sets to H3 C 4.4.1 in all four containment modes on 1,000 random polygons with holes, antimeridian crossings, and polar edge cases",
     when_to_use: "Use this to turn an area into cells: the H3 cells that fill a polygon, with holes and across the antimeridian, at a resolution you choose. It is how a region, a service area, or an administrative boundary becomes a set of keys that rows can be joined on.",
-    limitations: "Which cells count as inside is a choice, not a fact, so the containment mode has to be stated: centers inside, whole cells inside, or any overlap all give different sets, and the difference is largest at coarse resolutions relative to the polygon. A fine resolution over a large area produces very many cells, and long edges at a fine resolution are refused, since the cost grows with the perimeter as well as the area. A polygon cannot take in a pole: H3 reads a ring in latitude and longitude with straight edges, so a ring at one latitude encloses no area and comes back with nothing rather than with the cap it looks like.",
+    limitations: "Which cells count as inside is a choice, not a fact, so the containment mode has to be stated: centers inside, whole cells inside, actual overlap, and overlap with H3's deliberately buffered cell box all give different sets. Overlapping-bbox is conservative and can include a cell whose own boundary does not touch the polygon. A fine resolution over a large area produces very many cells, and long edges at a fine resolution are refused. A polygon cannot take in a pole: H3 reads a ring in latitude and longitude with straight edges, so a ring at one latitude encloses no area and comes back with nothing rather than with the cap it looks like.",
     references: &[H3_DOCS, H3O],
     examples: &[Example {
         id: "primary",
@@ -1586,6 +1586,7 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let mode = match ctx.choice("containment")?.unwrap_or("center") {
         "full" => Mode::Full,
         "overlapping" => Mode::Overlap,
+        "overlapping-bbox" => Mode::OverlapBbox,
         _ => Mode::Center,
     };
     let polys: Vec<Rings> = match (ctx.is_set("points"), ctx.is_set("geojson")) {
@@ -1690,6 +1691,7 @@ fn run_polygon_to_cells(ctx: &mut Ctx) -> Result<Json, ToolError> {
         Mode::Center => "center",
         Mode::Full => "full",
         Mode::Overlap => "overlapping",
+        Mode::OverlapBbox => "overlapping-bbox",
     };
     let mut out = vec![
         ("count", Json::Num(cells.len() as f64)),

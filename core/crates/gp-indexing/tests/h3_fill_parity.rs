@@ -10,9 +10,11 @@ fn check(text: &str) -> Vec<(String, usize, usize, usize, usize)> {
         "center",
         "full",
         "overlap",
+        "overlap-bbox",
         "center at a pole",
         "full at a pole",
         "overlap at a pole",
+        "overlap-bbox at a pole",
     ]
     .iter()
     .map(|m| (m.to_string(), 0, 0, 0, 0))
@@ -30,11 +32,11 @@ fn check(text: &str) -> Vec<(String, usize, usize, usize, usize)> {
         rings.extend(r["holes"].as_array().unwrap().iter().map(ring));
         let poly = Polygon::new(&rings);
         let res = Resolution::try_from(r["res"].as_u64().unwrap() as u8).unwrap();
-        for (i, mode) in [Mode::Center, Mode::Full, Mode::Overlap]
+        for (i, mode) in [Mode::Center, Mode::Full, Mode::Overlap, Mode::OverlapBbox]
             .into_iter()
             .enumerate()
         {
-            let want: Vec<String> = r[["center", "full", "overlap"][i]]
+            let want: Vec<String> = r[["center", "full", "overlap", "overlap-bbox"][i]]
                 .as_array()
                 .unwrap()
                 .iter()
@@ -45,10 +47,9 @@ fn check(text: &str) -> Vec<(String, usize, usize, usize, usize)> {
                 .iter()
                 .map(|c| c.to_string())
                 .collect();
-            // A ring that reaches a pole is counted apart: H3 reads rings in
-            // latitude and longitude with straight edges, so those shapes are
-            // degenerate and overlap disagrees there by a cell or two.
-            let s = &mut stats[i + if r["pole"] == true { 3 } else { 0 }];
+            // A ring that reaches a pole is counted apart so the fixture proves
+            // every mode against both ordinary and degenerate polar rings.
+            let s = &mut stats[i + if r["pole"] == true { 4 } else { 0 }];
             s.1 += 1;
             if got != want {
                 s.2 += 1;
@@ -69,25 +70,11 @@ fn committed_fixture() {
     .unwrap();
     let stats = check(&text);
     println!("{stats:?}");
-    for i in 0..3 {
-        assert_eq!(
-            stats[i].2, 0,
-            "{} must match H3 C exactly: {stats:?}",
-            stats[i].0
-        );
-    }
-    // At a pole only the two containment tests that ask where a point or a
-    // whole boundary falls still agree; overlap, which asks whether an edge is
-    // crossed, differs by a cell or two on these degenerate rings.
-    for i in 3..5 {
-        assert_eq!(
-            stats[i].2, 0,
-            "{} must match H3 C exactly: {stats:?}",
-            stats[i].0
-        );
+    for s in &stats {
+        assert_eq!(s.2, 0, "{} must match H3 C exactly: {stats:?}", s.0);
     }
     assert!(
-        stats[5].1 > 0,
+        stats[4].1 > 0,
         "the fixture carries rings that reach a pole"
     );
 }
@@ -97,5 +84,7 @@ fn committed_fixture() {
 fn full_differential() {
     let stats = check(&std::fs::read_to_string(std::env::var("H3_FILL").unwrap()).unwrap());
     println!("{stats:?}");
-    assert_eq!(stats[0].2, 0, "{stats:?}");
+    for s in stats {
+        assert_eq!(s.2, 0, "{s:?}");
+    }
 }

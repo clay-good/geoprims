@@ -341,7 +341,12 @@ fn polygon_fill_scenarios() {
         "indexing.h3.polygon-to-cells",
         &format!(r#"{{{square},"containment":"full"}}"#),
     );
-    let (c, o, f) = (cells(&center), cells(&over), cells(&full));
+    let bbox = call(
+        "indexing.h3.polygon-to-cells",
+        &format!(r#"{{{square},"containment":"overlapping-bbox"}}"#),
+    );
+    assert_eq!(bbox["result"]["containment"], "overlapping-bbox");
+    let (c, o, f, b) = (cells(&center), cells(&over), cells(&full), cells(&bbox));
     assert!(
         c.iter().all(|x| o.contains(x)) && o.len() > c.len(),
         "overlapping is a superset of center"
@@ -349,6 +354,10 @@ fn polygon_fill_scenarios() {
     assert!(
         f.iter().all(|x| c.contains(x)) && f.len() < c.len(),
         "full is a subset of center"
+    );
+    assert!(
+        o.iter().all(|x| b.contains(x)),
+        "overlapping is a subset of overlapping-bbox"
     );
     // A continent at resolution 12 is refused from the estimate, quickly.
     let t = std::time::Instant::now();

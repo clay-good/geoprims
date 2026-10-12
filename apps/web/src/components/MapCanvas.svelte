@@ -164,7 +164,7 @@
 
   // The grid a cell-set layer is drawn from, named as the reader knows it.
   const grid = tool.id.startsWith('indexing.s2.') ? 'S2' : 'H3';
-  // Cells for cell-set layers: outlines and grid rings, one batch each, from the core.
+  // Cells for cell-set layers: outlines, neighbors, and grid rings from the core.
   const batch = async (id, inputs) => {
     const raw = await compute.invokeBatch(id, JSON.stringify(inputs));
     return Array.isArray(raw) ? raw : [];
@@ -174,6 +174,13 @@
       (await batch(`indexing.${grid}.cell-info`, ids.map((cell) => ({ cell })))).map((r) => (r?.ok ? r.result.boundary.map((p) => [p.lon?.value ?? p.lon, p.lat?.value ?? p.lat]) : [])),
     rings: async (origin, k) =>
       (await batch('indexing.h3.grid-ring', Array.from({ length: k + 1 }, (_, d) => ({ cell: origin, k: d })))).map((r) => (r?.ok ? r.result.cells.map((c) => c.cell) : [])),
+    neighbors: async (origin, grid = 'h3') => {
+      const id = grid === 's2' ? 'indexing.s2.neighbors' : 'indexing.h3.grid-disk';
+      const input = grid === 's2' ? { cell: origin } : { cell: origin, k: 1 };
+      const response = await compute.invoke(id, input, 'cell-grid');
+      const rows = grid === 's2' ? response?.result?.neighbors : response?.result?.cells;
+      return response?.ok && Array.isArray(rows) ? rows.map((row) => row.cell).filter((cell) => cell && cell !== origin) : [];
+    },
   };
 
   async function rebuild() {
@@ -188,7 +195,7 @@
       layers = [...isogonicLayers(iso), ...layers];
     }
     const cellCount = layers.filter((l) => l.cell).length;
-    const what = layers.filter((l) => !l.cell && l.role !== 'coverage').map((l) => (l.iso ? (l.zone ? 'a compass zone edge' : 'an isogonic line') : l.kind === 'sky' ? "the sun's path through the sky around the site, the ring its horizon" : l.kind === 'line' ? (l.grid ? 'a grid line' : l.offset ? 'the cross-track offset from the point to the track' : l.track ? 'the track' : l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
+    const what = layers.filter((l) => !l.cell && l.role !== 'coverage').map((l) => (l.grid ? `the ${l.gridKind ? `${l.gridKind.toUpperCase()} ` : ''}grid around the result` : l.iso ? (l.zone ? 'a compass zone edge' : 'an isogonic line') : l.kind === 'sky' ? "the sun's path through the sky around the site, the ring its horizon" : l.kind === 'line' ? (l.offset ? 'the cross-track offset from the point to the track' : l.track ? 'the track' : l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
     if (shots) what.push(`${shots.points.length} photo trigger points`);
     const cover = layers.find((l) => l.role === 'coverage');
@@ -212,7 +219,7 @@
       layers.some((l) => l.track) && { cls: 'input', text: 'The track' },
       layers.some((l) => l.iso && l.level !== undefined) && { cls: 'input', text: 'Isogonic lines every 2°; the agonic line (0°) in the accent' },
       layers.some((l) => l.iso && l.zone) && { cls: 'dashed', text: 'Compass caution (under 6,000 nT) and blackout (under 2,000 nT) zone edges' },
-      layers.some((l) => l.grid) && { cls: 'input', text: tool.id.includes('mgrs') ? 'Grid lines: the square size (at least 1 km) three squares out, and the 100 km square' : layers.some((l) => l.gridKind === 'utm') ? 'Grid lines: UTM zones and latitude bands around the result' : 'Grid lines: cells of the same size, three out' },
+      layers.some((l) => l.grid) && { cls: 'input', text: tool.id.includes('mgrs') ? 'Grid lines: the square size (at least 1 km) three squares out, and the 100 km square' : layers.some((l) => l.gridKind === 'utm') ? 'Grid lines: UTM zones and latitude bands around the result' : layers.some((l) => ['h3', 's2'].includes(l.gridKind)) ? `Grid lines: neighboring ${grid} cells at the same level` : 'Grid lines: cells of the same size, three out' },
       layers.some((l) => l.kind === 'sky') && { cls: 'solid', text: `Sun path: the ring is the horizon, the site overhead; bold above ${layers.find((l) => l.kind === 'sky').threshold}°` },
       layers.some((l) => l.offset) && { cls: 'solid', text: `Cross-track offset${result?.display?.cross_track ? ` · ${result.display.cross_track}` : ''}` },
       layers.some((l) => l.kind === 'line' && l.role === 'comparison' && l.path === other) && { cls: 'dashed', text: `${named(!rhumb)}, for comparison${lengthOf(other)}` },
@@ -220,7 +227,7 @@
       layers.some((l) => l.kind === 'point' && l.role === 'detail') && { cls: 'solid', text: 'Photo trigger points' },
       layers.some((l) => l.role === 'coverage') && { cls: 'area', text: 'Photo footprints: darker where photos overlap' },
       layers.some((l) => l.legLabels) && { cls: 'solid', text: 'Each leg: heading (MH magnetic, TH true), groundspeed, and time' },
-      layers.some((l) => l.kind === 'polygon' && !l.cell && l.role !== 'coverage') && { cls: 'area', text: 'The area' },
+      layers.some((l) => l.kind === 'polygon' && !l.cell && !l.grid && l.role !== 'coverage') && { cls: 'area', text: 'The area' },
       layers.some((l) => l.cell) && { cls: 'area', text: layers.some((l) => l.cell && l.role === 'result') ? `${grid} cells: the origin strongest, fading with grid distance` : `${grid} cells` },
     ].filter(Boolean);
     // A result that lands mid-drag was computed for an earlier position:

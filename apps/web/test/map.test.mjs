@@ -236,6 +236,38 @@ test('every S2 tool draws the exact cell boundaries returned by the core', async
   assert.ok(requested.every((call) => call.grid === 's2'), 'S2 tools never fall through to H3');
 });
 
+test('H3 and S2 point lookups outline their same-level neighbors as grid context', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const host = nodeHost(join(root, 'dist/wasm'));
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const batch = async (id, inputs) => JSON.parse(await host.invokeBatch(id, JSON.stringify(inputs)));
+  const cells = {
+    boundaries: async (ids, grid) => (await batch(`indexing.${grid}.cell-info`, ids.map((cell) => ({ cell })))).map((r) =>
+      r.result.boundary.map((p) => [p.lon?.value ?? p.lon, p.lat?.value ?? p.lat])),
+    rings: async () => [],
+    neighbors: async (origin, grid) => {
+      const id = grid === 's2' ? 'indexing.s2.neighbors' : 'indexing.h3.grid-disk';
+      const input = grid === 's2' ? { cell: origin } : { cell: origin, k: 1 };
+      const response = JSON.parse(await host.invoke(id, JSON.stringify(input)));
+      const rows = grid === 's2' ? response.result.neighbors : response.result.cells;
+      return rows.map((row) => row.cell).filter((cell) => cell !== origin);
+    },
+  };
+
+  for (const [grid, expected] of [['h3', 6], ['s2', 4]]) {
+    const tool = catalog.tools.find((candidate) => candidate.id === `indexing.${grid}.lat-lng-to-cell`);
+    const args = (tool.examples.find((example) => example.id === tool['x-primary-example']) ?? tool.examples[0]).input;
+    const result = JSON.parse(await host.invoke(tool.id, JSON.stringify(args)));
+    const layers = await buildLayers(tool, args, result, async () => null, cells);
+    assert.deepEqual(layers.filter((layer) => layer.cell).map((layer) => layer.cell), [result.result.cell], `${grid}: only the answer counts as a result cell`);
+    const context = layers.filter((layer) => layer.gridKind === grid);
+    assert.equal(context.length, expected, `${grid}: one outline for every edge neighbor`);
+    assert.ok(context.every((layer) => layer.grid && !layer.cell && layer.role === 'input' && layer.rings[0].length >= 4));
+  }
+});
+
 test('a fill too large to list draws its compacted stand-in, dashed', async () => {
   // A fill past the 10,000-cell listing limit comes back as `compacted`
   // instead of `cells`; without the fallback the map drew nothing at all.

@@ -347,9 +347,10 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
       }
     }
   }
-  // A set of H3 cells: each cell's outline from the core. Around an origin
-  // (a k-ring or ring), each cell carries its grid distance, so the drawing
-  // can fade with distance and mark the origin.
+  // A set of H3 or S2 cells: each cell's outline from the core. Around an
+  // origin (a k-ring or ring), each cell carries its grid distance, so the
+  // drawing can fade with distance and mark the origin. A point-to-cell
+  // lookup also outlines its same-level neighbors as grid context.
   for (const v of tool.visualization ?? []) {
     if (v.kind !== 'cell-set' || !cells) continue;
     const map = mapOf(v.map);
@@ -364,7 +365,8 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
     const ids = full.length ? full.slice(0, MAX_CELLS) : compacted.slice(0, MAX_COMPACTED);
     if (!ids.length) continue;
     // S2 cells come from the S2 tools, H3 cells from H3's; each grid outlines its own.
-    const outlines = await cells.boundaries(ids, tool.id.startsWith('indexing.s2.') ? 's2' : 'h3');
+    const grid = tool.id.startsWith('indexing.s2.') ? 's2' : 'h3';
+    const outlines = await cells.boundaries(ids, grid);
     const k = Number.isInteger(Number(args.k)) ? Number(args.k) : null;
     const origin = typeof args.cell === 'string' && k !== null ? args.cell.trim().toLowerCase() : null;
     const distance = new Map();
@@ -374,6 +376,13 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
       const d = distance.get(id);
       layers.push({ kind: 'polygon', role: id === origin ? 'result' : 'input', rings: [outlines[i]], cell: id, ...(compacted.length ? { compacted: true } : {}), ...(d !== undefined ? { distance: d, weight: k ? 1 - (0.7 * d) / k : 1 } : {}) });
     });
+    if (tool.id.endsWith('.lat-lng-to-cell') && ids.length === 1 && cells.neighbors) {
+      const neighborIds = (await cells.neighbors(ids[0], grid)).filter((id) => id !== ids[0]);
+      const neighborOutlines = await cells.boundaries(neighborIds, grid);
+      neighborOutlines.forEach((ring) => {
+        if (ring?.length) layers.unshift({ kind: 'polygon', role: 'input', rings: [ring], grid: true, gridKind: grid });
+      });
+    }
   }
   // Photo footprints under a flight path (a survey grid with a camera
   // footprint): one ring per photo, drawn faintly so overlaps read darker.

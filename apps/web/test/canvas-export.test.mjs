@@ -91,6 +91,7 @@ test('a 2D map exports as vectors with its base, layers, caption, and attributio
   };
   const layers = [
     { kind: 'line', role: 'result', points: [[175, 0], [-175, 0]], path: 'geodesic' },
+    { kind: 'polygon', role: 'input', rings: [[[176, -3], [177, -3], [177, -2], [176, -2]]], grid: true, gridKind: 'h3' },
     { kind: 'polygon', role: 'input', rings: [[[178, -2], [-178, -2], [-178, 2], [178, 2]]] },
     { kind: 'point', role: 'result', points: [[180, 0]], label: 'P' },
   ];
@@ -99,6 +100,7 @@ test('a 2D map exports as vectors with its base, layers, caption, and attributio
   assert.match(out, /^<svg[^>]*viewBox="0 0 640 \d+"/);
   assert.match(out, /data-layer="land"/);
   assert.match(out, /data-layer="line"/);
+  assert.match(out, /fill="none"[^>]+data-layer="grid"/, 'grid context exports as an outline');
   assert.match(out, /data-layer="polygon"/);
   assert.match(out, /data-layer="point"/);
   assert.match(out, />Across the antimeridian\.<\/text>/);

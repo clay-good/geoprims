@@ -496,7 +496,16 @@ export function draw(g, view, base, layers, c) {
   const rank = (l) => (l.path === 'great-circle' ? 3 : order[l.role]);
   for (const layer of [...layers].sort((a, b) => rank(a) - rank(b))) {
     const stroke = layer.role === 'result' ? c.accent : c.muted;
-    if (layer.kind === 'polygon' && layer.cell) {
+    if (layer.kind === 'polygon' && layer.grid) {
+      // Neighbor cells are context, not additional results: outline only.
+      g.beginPath();
+      for (const ring of layer.rings) trace(g, view, ring, true);
+      g.globalAlpha = 0.65;
+      g.strokeStyle = c.muted;
+      g.lineWidth = 1;
+      g.stroke();
+      g.globalAlpha = 1;
+    } else if (layer.kind === 'polygon' && layer.cell) {
       // A grid cell: the origin strong, the rest fading with grid distance.
       // A compacted cell stands for a group of finer ones, so it is drawn
       // dashed: the ground is right, the edges inside it are not being shown.

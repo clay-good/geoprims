@@ -183,6 +183,10 @@ export function mapSvg(view, base, layers, colors, captionText, attribution) {
     if (layer.kind === 'polygon') {
       const d = (layer.rings ?? []).map((ring) => mapPath({ ...view, width, height }, ring, true)).join('');
       if (!d) continue;
+      if (layer.grid) {
+        out.push(`<path d="${d}" fill="none" stroke="${xml(colors.muted)}" stroke-opacity="0.65" stroke-width="1" data-layer="grid"/>`);
+        continue;
+      }
       const opacity = layer.cell ? (layer.role === 'result' ? 0.28 : 0.1 * (layer.weight ?? 0.8)) : layer.role === 'coverage' ? 0.07 : 0.14;
       const dash = layer.compacted ? ' stroke-dasharray="5 3"' : '';
       out.push(`<path d="${d}" fill="${xml(stroke)}" fill-opacity="${opacity}" fill-rule="evenodd" stroke="${xml(stroke)}" stroke-width="${layer.role === 'result' ? 2 : 1.5}"${dash} data-layer="polygon"/>`);

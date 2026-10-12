@@ -9,7 +9,7 @@ A buffer is the set of points within a distance of the input, and that set is th
 
 - The buffer of a set S at distance d: { p : min over q in S of geodesic(p, q) = d } as a boundary, the union of the pieces below.
 - Round corner of interior angle θ: an arc of radius d, so the boundary stays at d throughout.
-- Mitre corner: the two offset edges extended to meet, at d / cos(θ/2) from the corner — farther out than d, which is what a mitre is. Beyond the mitre limit the corner is beveled instead.
+- Mitre corner: the two offset edges extended to meet, at d / cos(θ/2) from the corner — farther out than d, which is what a mitre is. Beyond the mitre limit the corner is beveled instead. When the caller does not choose a limit, the tool uses JTS 1.20.0's published default ratio of 5.
 - Corner count on a round part: enough that the chord between vertices sags less than the stated tolerance, the sag of a chord subtending Δ being d(1 − cos(Δ/2)).
 - Steiner, for a convex polygon in the plane: area(buffer) = A + P·d + π d², which the vectors use as a closed form.
 

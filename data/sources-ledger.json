@@ -1574,6 +1574,26 @@
       "editionCheck": false
     },
     {
+      "id": "jts-buffer-parameters",
+      "name": "JTS BufferParameters API",
+      "issuer": "Eclipse Foundation, LocationTech JTS",
+      "currentEdition": "JTS 1.20.0",
+      "currentReleaseDate": "2024-09-04",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the official JTS 1.20.0 API and release page on 2026-10-12: DEFAULT_MITRE_LIMIT is 5.0, and setMitreLimit documents beveling corners whose mitre ratio exceeds the limit. The 1.21 version history still labels that release TBD.",
+      "freeAccessUrl": "https://locationtech.github.io/jts/javadoc/org/locationtech/jts/operation/buffer/BufferParameters.html",
+      "matchTerms": [
+        "JTS BufferParameters"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "karney-geod",
       "name": "Karney (2013) Algorithms for geodesics",
       "issuer": "Journal of Geodesy",

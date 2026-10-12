@@ -67,6 +67,7 @@ const MUST_DECLARE = [
   'raster.index.evi2',
   'raster.index.savi',
   'raster.index.dnbr',
+  'geometry.buffer.geodesic',
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
@@ -173,6 +174,13 @@ test('the dNBR tool exposes its complete published classification', () => {
     ['660', 'scaled dNBR', 'key-benson-2006'],
     ['-550', 'scaled dNBR', 'key-benson-2006'],
     ['1350', 'scaled dNBR', 'key-benson-2006'],
+  ]);
+});
+
+test('the geodesic buffer exposes its published default mitre limit', () => {
+  const assumptions = byId('geometry.buffer.geodesic')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['5', '1', 'jts-buffer-parameters'],
   ]);
 });
 

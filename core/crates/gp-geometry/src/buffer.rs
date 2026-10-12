@@ -9,7 +9,9 @@ use gp_geo::buffer::{Cap, Join, Shape, Style, geodesic};
 
 use gp_base::error::Warning;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 
 const KARNEY: Reference = Reference {
@@ -19,6 +21,15 @@ const KARNEY: Reference = Reference {
     edition: "Vol. 87, No. 1",
     locator: "pp. 43-55 (direct and inverse problems; azimuthal equidistant projection, section 8)",
     url: "https://doi.org/10.1007/s00190-012-0578-z",
+};
+
+const JTS_BUFFER: Reference = Reference {
+    title: "JTS BufferParameters API",
+    issuer: "Eclipse Foundation, LocationTech JTS",
+    year: 2024,
+    edition: "JTS 1.20.0",
+    locator: "DEFAULT_MITRE_LIMIT constant; setMitreLimit",
+    url: "https://locationtech.github.io/jts/javadoc/org/locationtech/jts/operation/buffer/BufferParameters.html",
 };
 
 const VERTEX: &[Field] = &[
@@ -119,7 +130,7 @@ pub static BUFFER: ToolDef = ToolDef {
     accuracy: "Round parts within 0.1% of the distance or 0.5 m, whichever is larger, as measured on every result; mitre and square corners sit at d / cos(θ/2) by construction. Input and buffer must fit within 1,000 km of their center",
     when_to_use: "Use this to draw the zone within a distance of something on the ground: a geofence around a field, a setback from a property line, a corridor either side of a route, a noise or buffer zone around a runway, an exclusion radius around a point. A negative distance shrinks a polygon instead, which is how a setback inside a parcel is drawn. The corner style matters for a legal or regulatory setback — round follows the true distance, mitre carries the corner out to the intersection the way a surveyor draws it — and the result reports the area, the perimeter, and how far any measured point strayed from the distance asked for.",
     limitations: "The buffer and its input must fit within 1,000 km of their common center, because the construction runs on an azimuthal equidistant plane placed there and the plane stops being faithful beyond that; a larger shape is refused rather than quietly distorted. Round parts are drawn as a polygon, so the boundary is a chord inside the true curve between vertices — the vertices themselves sit on the distance, and the reported deviation is the worst sag in between, not an error in placing them. Mitre and square corners sit at the distance over the cosine of half the corner angle, which is farther out than the distance asked for; that is what a mitre is, and the mitre limit bevels a corner too sharp for it. A shrink can collapse a polygon to nothing or split it into pieces, which is reported rather than treated as failure. Shrinking a round buffer back by its own distance is one such collapse and is not a mistake: a round corner is drawn as a polygon inscribed in its arc, so it is short of the distance by the reported deviation, and eroding by more than that empties it. Use mitre corners if a buffer needs to be undone exactly. Areas and perimeters are on the ellipsoid, but the union is computed in the plane, so a self-touching or repeated input should be made valid first.",
-    references: &[KARNEY],
+    references: &[KARNEY, JTS_BUFFER],
     examples: &[Example {
         id: "primary",
         title: "A 500 m geofence around a field",
@@ -133,6 +144,12 @@ pub static BUFFER: ToolDef = ToolDef {
         Related { id: "navigation.geodesic.inverse", reason: "alternative" },
         Related { id: "geometry.shape.densify", reason: "alternative" },
     ],
+    assumptions: &[Assumption {
+        name: "Default mitre ratio limit; sharper corners are beveled",
+        value: "5",
+        unit: "1",
+        source: "jts-buffer-parameters",
+    }],
     sentence: "{if parts > 0}The buffer covers {area} in {parts} {plural parts \"part\" \"parts\"}, every checked point within {max_deviation} of the distance.{/if}{if parts < 1}Nothing is left: the buffer collapsed.{/if}",
     limits: &[("batchRows", 20)],
     run: run_buffer,

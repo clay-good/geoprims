@@ -1,4 +1,6 @@
 const resultObject = (value) => (typeof value === 'string' ? JSON.parse(value) : value);
+export const MAX_SCENE_PIXELS = 500_000_000;
+export const MAX_SCENE_WINDOWS = 1_000_000;
 
 function positiveInteger(value, name) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError(`${name} must be a positive integer.`);
@@ -29,9 +31,30 @@ export async function processNormalizedDifferenceScene(host, options) {
   const inspected = resultObject(await host.inspectFile(tool, leftHandle));
   if (!inspected.ok) return inspected;
   const { width, height } = inspected.metadata;
+  positiveInteger(width, 'raster width');
+  positiveInteger(height, 'raster height');
+  const pixels = width * height;
+  if (!Number.isSafeInteger(pixels) || pixels > MAX_SCENE_PIXELS) {
+    return {
+      ok: false,
+      error: {
+        code: 'LIMIT_EXCEEDED',
+        message: `The raster has ${Number.isSafeInteger(pixels) ? pixels : 'too many'} pixels; this surface allows ${MAX_SCENE_PIXELS}.`,
+      },
+    };
+  }
   const across = Math.ceil(width / windowWidth);
   const down = Math.ceil(height / windowHeight);
   const total = across * down;
+  if (!Number.isSafeInteger(total) || total > MAX_SCENE_WINDOWS) {
+    return {
+      ok: false,
+      error: {
+        code: 'LIMIT_EXCEEDED',
+        message: `The selected window size would require ${Number.isSafeInteger(total) ? total : 'too many'} windows; this surface allows ${MAX_SCENE_WINDOWS}.`,
+      },
+    };
+  }
   let completed = 0;
 
   for (let y = 0; y < height; y += windowHeight) {

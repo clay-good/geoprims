@@ -90,3 +90,30 @@ test('scene bounds and the required consumer are validated before processing', a
     /accept must consume/,
   );
 });
+
+test('scene dimensions and window counts are bounded before pixel work starts', async () => {
+  const tooLarge = host();
+  tooLarge.inspectFile = async () => ({
+    ok: true,
+    metadata: { width: 500_000_001, height: 1, bands: 1 },
+  });
+  const size = await processNormalizedDifferenceScene(tooLarge, { ...options, accept() {} });
+  assert.equal(size.error.code, 'LIMIT_EXCEEDED');
+  assert.match(size.error.message, /500000001 pixels/);
+  assert.equal(tooLarge.calls.length, 0);
+
+  const tooMany = host();
+  tooMany.inspectFile = async () => ({
+    ok: true,
+    metadata: { width: 1_000_001, height: 1, bands: 1 },
+  });
+  const windows = await processNormalizedDifferenceScene(tooMany, {
+    ...options,
+    windowWidth: 1,
+    windowHeight: 1,
+    accept() {},
+  });
+  assert.equal(windows.error.code, 'LIMIT_EXCEEDED');
+  assert.match(windows.error.message, /1000001 windows/);
+  assert.equal(tooMany.calls.length, 0);
+});

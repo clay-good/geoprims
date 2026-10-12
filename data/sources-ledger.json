@@ -431,14 +431,14 @@
       "id": "copernicus-dem",
       "name": "Copernicus DEM GLO-30",
       "issuer": "ESA and European Commission",
-      "currentEdition": "GLO-30",
-      "currentReleaseDate": null,
+      "currentEdition": "GLO-30 release 2024_1",
+      "currentReleaseDate": "2024-07-01",
       "cycleMonths": null,
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": null,
-      "verificationNote": "Not cited yet.",
+      "lastVerified": "2026-10-12",
+      "verificationNote": "The official collection page and Product Handbook version 5.0 were checked for the 2024_1 release, DGED float32 one-degree grid, WGS 84-G1150 horizontal CRS, EGM2008 vertical datum, RasterPixelIsPoint alignment, DSM status, and published accuracy. Article 6 of the official GLO-30 licence was checked for the adapted-data attribution and liability sentence.",
       "freeAccessUrl": "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM",
       "matchTerms": [
         "Copernicus DEM"

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { attributionLines, BASEMAP_ATTRIBUTION, caption, layersGeoJson, svgWithFooter, wrap } from '../src/lib/canvas-export.mjs';
+import { attributionLines, BASEMAP_ATTRIBUTION, caption, layersGeoJson, mapSvg, svgWithFooter, wrap } from '../src/lib/canvas-export.mjs';
 import { buildLayers } from '../src/lib/map/layers.js';
 import { diagram } from '../src/lib/diagrams.js';
 
@@ -81,4 +81,46 @@ test('footer text wraps at spaces to the width, so no caption runs off the edge'
   assert.ok(texts.length >= 3, 'the long caption takes more than one line');
   for (const t of texts) assert.ok(t.length * 5.5 <= 304, `too long for the width: ${t}`);
   assert.equal(texts.join(' ').replace(' Base map: Natural Earth (public domain)', ''), long);
+});
+
+test('a 2D map exports as vectors with its base, layers, caption, and attribution', () => {
+  const view = { mode: 'map', lon: 180, lat: 0, scale: 180, width: 640, height: 360 };
+  const base = {
+    land: [[[170, -10], [-170, -10], [-170, 10], [170, 10]]],
+    lakes: [], states: [], borders: [[[179, -8], [-179, 8]]],
+  };
+  const layers = [
+    { kind: 'line', role: 'result', points: [[175, 0], [-175, 0]], path: 'geodesic' },
+    { kind: 'polygon', role: 'input', rings: [[[178, -2], [-178, -2], [-178, 2], [178, 2]]] },
+    { kind: 'point', role: 'result', points: [[180, 0]], label: 'P' },
+  ];
+  const colors = { bg: '#fff', surface: '#fff', land: '#ddd', line: '#555', graticule: '#eee', text: '#111', muted: '#777', accent: '#c40' };
+  const out = mapSvg(view, base, layers, colors, 'Across the antimeridian.', [BASEMAP_ATTRIBUTION]);
+  assert.match(out, /^<svg[^>]*viewBox="0 0 640 \d+"/);
+  assert.match(out, /data-layer="land"/);
+  assert.match(out, /data-layer="line"/);
+  assert.match(out, /data-layer="polygon"/);
+  assert.match(out, /data-layer="point"/);
+  assert.match(out, />Across the antimeridian\.<\/text>/);
+  assert.match(out, />Base map: Natural Earth \(public domain\)<\/text>/);
+  assert.ok(!out.includes('<image'), 'the SVG is vector, not a wrapped raster');
+  assert.ok(out.length < 500_000, 'the export stays practical');
+});
+
+test('SVG export is limited to the 2D modes the contract names', () => {
+  assert.throws(() => mapSvg({ mode: 'globe' }, null, [], {}, '', []), /2D map views/);
+});
+
+test('SVG export reduces a 100,000-vertex track to what its pixels can show', () => {
+  const points = Array.from({ length: 100_000 }, (_, i) => [-10 + i / 5_000, Math.sin(i / 2_000)]);
+  const colors = { bg: '#fff', surface: '#fff', land: '#ddd', line: '#555', graticule: '#eee', text: '#111', muted: '#777', accent: '#c40' };
+  const out = mapSvg(
+    { mode: 'equirect', lon: 0, lat: 0, scale: 500, width: 800, height: 500 },
+    null,
+    [{ kind: 'line', role: 'result', points }],
+    colors,
+    '',
+    [],
+  );
+  assert.ok(out.length < 100_000, `${out.length} bytes`);
 });

@@ -1,6 +1,7 @@
 // Natural Earth base map (web/map-canvas): zooming swaps one whole 50m file,
 // and map or globe interaction never asks for location-revealing tiles.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
 import { serveBuiltSite } from './site.mjs';
@@ -35,4 +36,24 @@ test('zooming loads one detailed Natural Earth file and no map tiles', { timeout
   assert.equal(detail.length, 1, 'the detailed base map is one whole-file request');
   assert.deepEqual(requests.filter((path) => /\/tiles?\//i.test(path)), [], 'no basemap tile request');
   assert.deepEqual(requests.filter((path) => /naturalearthdata|mapbox|google|esri/i.test(path)), [], 'no map service request');
+});
+
+test('a 2D map downloads as a standalone vector SVG', { timeout: 120_000 }, async (t) => {
+  const origin = await serveBuiltSite(t);
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.goto(`${origin}/navigation/geodesic/inverse/`);
+  await page.waitForFunction(() => document.querySelector('.map-readout')?.textContent.includes('Natural Earth 110m'));
+  await page.getByRole('button', { name: 'Map', exact: true }).click();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download the map as SVG, with attribution' }).click();
+  const download = await pending;
+  assert.equal(download.suggestedFilename(), 'navigation.geodesic.inverse.svg');
+  const svg = readFileSync(await download.path(), 'utf8');
+  assert.match(svg, /^<svg[^>]*viewBox=/);
+  assert.match(svg, /data-layer="land"/);
+  assert.match(svg, /data-layer="line"/);
+  assert.match(svg, /Base map: Natural Earth \(public domain\)/);
+  assert.ok(!svg.includes('<image'), 'the download contains vectors, not a raster screenshot');
 });

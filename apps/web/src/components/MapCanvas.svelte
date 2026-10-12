@@ -12,7 +12,7 @@
   import { canvasDefault, coordFormat, reducedMotion } from '../lib/prefs.js';
   import { say } from '../lib/keys.js';
   import { sound } from '../lib/sound.js';
-  import { attributionLines, caption, layersGeoJson, loadRegistry, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
+  import { attributionLines, caption, layersGeoJson, loadRegistry, mapSvg, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
 
   let { tool, args, result, compute, onmove } = $props();
 
@@ -366,6 +366,11 @@
     const lines = attributionLines(result, await loadRegistry());
     saveBlob(await pngWithFooter(canvas, caption(tool, result), lines), `${tool.id}.png`);
   }
+  async function exportSvg() {
+    const lines = attributionLines(result, await loadRegistry());
+    const text = mapSvg({ ...view, width: size()[0], height: size()[1] }, base, layers, colors(canvas), caption(tool, result), lines);
+    saveBlob(new Blob([text], { type: 'image/svg+xml' }), `${tool.id}.svg`);
+  }
   function exportGeoJson() {
     const text = `${JSON.stringify(layersGeoJson(layers, tool), null, 2)}\n`;
     saveBlob(new Blob([text], { type: 'application/geo+json' }), `${tool.id}.geojson`);
@@ -454,6 +459,7 @@
     {/if}
     <div class="map-tools" role="group" aria-label="Export">
       <button type="button" onclick={exportPng} aria-label="Download the view as PNG, with attribution">PNG</button>
+      {#if mode !== 'globe'}<button type="button" onclick={exportSvg} aria-label="Download the map as SVG, with attribution">SVG</button>{/if}
       <button type="button" onclick={exportGeoJson} aria-label="Download the layers as GeoJSON">GeoJSON</button>
     </div>
   </div>

@@ -699,6 +699,12 @@ pub static HOVER_POWER: ToolDef = ToolDef {
             unit: "K/m",
             source: "icao-7488",
         },
+        Assumption {
+            name: "Default induced-power interference factor for a coaxial pair",
+            value: "1.2818",
+            unit: "1",
+            source: "leishman-syal-2008",
+        },
     ],
     sentence: "Hovering takes about {electrical_power} from the battery. The ideal minimum is {ideal_power}.",
     limits: &[("batchRows", 10_000)],

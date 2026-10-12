@@ -412,8 +412,8 @@
     "lastmod": "2026-10-09"
   },
   "/drone/power/hover-power/": {
-    "hash": "cc553ec3422fa428",
-    "lastmod": "2026-10-09"
+    "hash": "3cdead1959335b97",
+    "lastmod": "2026-10-12"
   },
   "/drone/power/max-payload/": {
     "hash": "2c8bb389b814f86c",
@@ -1976,7 +1976,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "38e886e16f727d2e",
+    "hash": "7006a0d13907fb1c",
     "lastmod": "2026-10-12"
   },
   "/workflows/": {

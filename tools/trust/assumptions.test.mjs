@@ -192,6 +192,13 @@ test('the mapping window exposes its published minimum sun elevation', () => {
   ]);
 });
 
+test('the hover-power tool exposes its published coaxial interference default', () => {
+  const assumptions = byId('drone.power.hover-power')['x-assumptions'];
+  assert.ok(assumptions.some((a) =>
+    a.value === '1.2818' && a.unit === '1' && a.source === 'leishman-syal-2008'
+  ));
+});
+
 test('the photogrammetry defaults name their published values', () => {
   const gsd = byId('drone.photogrammetry.gsd')['x-assumptions'];
   assert.deepEqual(gsd.map(({ value, unit, source }) => [value, unit, source]), [

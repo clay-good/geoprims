@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const reg = JSON.parse(readFileSync(new URL('../../data/regulations.json', import.meta.url)));
+const ledger = JSON.parse(readFileSync(new URL('../../data/sources-ledger.json', import.meta.url))).sources;
 const STATUSES = new Set(['in-force', 'proposed', 'guidance']);
 
 test('every regulation entry is complete and dated', () => {
@@ -19,6 +20,17 @@ test('every regulation entry is complete and dated', () => {
     assert.ok(STATUSES.has(e.status), `${e.id}: unknown status ${e.status}`);
     assert.match(e.reviewed, /^\d{4}-\d{2}-\d{2}$/, `${e.id}: reviewed must be YYYY-MM-DD`);
     assert.ok(e.url.startsWith('https://'), `${e.id}: authority link must be https`);
+  }
+});
+
+test('every regulation entry links to one sources-ledger row', () => {
+  const rows = new Map(ledger.map((row) => [row.id, row]));
+  assert.deepEqual(Object.keys(reg.sourceLinks).sort(), reg.entries.map((entry) => entry.id).sort());
+  for (const entry of reg.entries) {
+    const source = reg.sourceLinks[entry.id];
+    const row = rows.get(source);
+    assert.ok(row, `${entry.id}: unknown ledger source ${source}`);
+    if (entry.status !== 'guidance') assert.equal(entry.status, row.legalStatus, `${entry.id}: status differs from ${source}`);
   }
 });
 

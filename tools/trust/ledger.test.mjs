@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { check as checkWith, readLedger } from './ledger.mjs';
+import { check as checkWith, readLedger, sourceMap } from './ledger.mjs';
 
 const root = new URL('../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -44,6 +44,23 @@ test('the spec-required sources are all in the ledger', () => {
     assert.ok(ids.has(id), id);
   }
   assert.equal(ledger.find((r) => r.id === 'part-108').legalStatus, 'proposed');
+});
+
+test('a finalized Part 108 drops the proposed label and names affected tools', async () => {
+  const { ruleStatus } = await import('../../apps/web/src/lib/citation.mjs');
+  const proposed = ledger.find((row) => row.id === 'part-108');
+  const final = { ...proposed, legalStatus: 'in-force', lastVerified: '2026-10-12' };
+  assert.equal(ruleStatus(proposed).kind, 'proposed');
+  assert.deepEqual(ruleStatus(final), {
+    kind: 'in-force',
+    label: 'Rules as of',
+    text: 'Rules as of 2026-10-12',
+    url: proposed.freeAccessUrl,
+  });
+  const fixture = {
+    tools: [{ id: 'drone.ops.bvlos-review', references: [{ title: 'Normalizing Unmanned Aircraft Systems Beyond Visual Line of Sight Operations' }] }],
+  };
+  assert.deepEqual([...sourceMap([final], fixture).get('part-108').tools], ['drone.ops.bvlos-review']);
 });
 
 test('verification stamps only move forward against the base branch', () => {

@@ -2230,8 +2230,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Checked at the issuer on 2026-09-18. Still at OIRA; no final rule published.",
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the FAA's current BVLOS rule page and Federal Register docket on 2026-10-12. The FAA still describes Part 108 as proposed; no final rule is published.",
       "freeAccessUrl": "https://www.federalregister.gov/documents/2025/08/07/2025-14992/normalizing-unmanned-aircraft-systems-beyond-visual-line-of-sight-operations",
       "matchTerms": [
         "Part 108",

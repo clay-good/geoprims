@@ -2,7 +2,7 @@
 """Golden vectors for the GNSS field tools, worked by hand: precision = (a +
 b 1e-6 d) x the confidence factor (1, or 2.448 horizontal and 1.96 vertical
 at 95%); OPUS rapid-static below 2 hours and static from 2 to 48 hours with
-the RINEX 2 name ssssddd0.yyo; antenna height sqrt(s^2 - r^2) + offset."""
+the RINEX 2 name ssssdddh.yyo; antenna height sqrt(s^2 - r^2) + offset."""
 import datetime as dt
 import json
 import math
@@ -34,17 +34,58 @@ def rtk():
 
 def opus():
     out = []
-    for mins, date, st in [(60, "2026-09-22", "base"), (240, "2024-12-31", "p123"), (15, "2026-01-01", "ab12"), (119, None, None)]:
-        inp = {"session": f"{mins} min"}
-        exp = {"result.processing": "rapid static" if mins < 120 else "static", "result.software": "RSGPS rapid-static software" if mins < 120 else "PAGES static software"}
+    ngs_name = "NOAA NGS OPUS Projects User Guide v2.0, section 5.1"
+
+    def success(session, date=None, station=None, hour=None, source=SRC):
+        minutes = session * 60 if isinstance(session, float) else session
+        inp = {"session": f"{session} h" if isinstance(session, float) else f"{session} min"}
+        exp = {
+            "result.processing": "rapid static" if minutes < 120 else "static",
+            "result.software": "RSGPS rapid-static software" if minutes < 120 else "PAGES static software",
+        }
         if date:
-            inp.update({"date": date, "station": st.upper() if st == "ab12" else st})
+            inp["date"] = date
+            if station is not None:
+                inp["station"] = station
+            if hour is not None:
+                inp["start_hour"] = hour
             doy = dt.date.fromisoformat(date).timetuple().tm_yday
-            exp.update({"result.day_of_year": doy, "result.rinex": f"{st.lower()}{doy:03d}0.{int(date[2:4]):02d}o"})
-        out.append(vec(len(out) + 1, inp, exp))
-    out[0]["source"] = SPEC + " (a one-hour session gets rapid-static processing)"
-    out.append(vec(len(out) + 1, {"session": "10 min"}, {"ok": False, "error.code": "OUT_OF_DOMAIN"}))
-    out.append(vec(len(out) + 1, {"session": "60 min", "date": "2026-02-30", "station": "base"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+            mark = (station or "site").lower()
+            code = "0" if minutes == 1440 else chr(ord("a") + hour)
+            exp.update({"result.day_of_year": doy, "result.rinex": f"{mark}{doy:03d}{code}.{int(date[2:4]):02d}o"})
+        out.append(vec(len(out) + 1, inp, exp, source))
+
+    success(60, "2023-01-09", "g287", 16, ngs_name + " (published example g287009q.23o)")
+    out[-1]["sourceVersion"] = "Version 2.0"
+    success(240, "2024-12-31", "p123", 23)
+    success(15, "2026-01-01", "AB12", 0)
+    success(119)
+    out.append(vec(5, {"session": "10 min"}, {"ok": False, "error.code": "OUT_OF_DOMAIN"}))
+    out.append(vec(6, {"session": "60 min", "date": "2026-02-30", "station": "base"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    success(120)
+    success(2880)
+    out.append(vec(9, {"session": "2880.001 min"}, {"ok": False, "error.code": "OUT_OF_DOMAIN", "error.field": "/session"}))
+    success(15)
+    out.append(vec(11, {"session": "14.999 min"}, {"ok": False, "error.code": "OUT_OF_DOMAIN", "error.field": "/session"}))
+    success(0.25)
+    success(2.0)
+    success(24.0, "2026-09-22", "base")
+    success(60, "2024-02-29", "leap", 12)
+    success(60, "2025-12-31", "z9z9", 1)
+    success(60, "2026-04-10", None, 8)
+    failures = [
+        ({"session": "60 min", "date": "2026-01-01", "station": "bad!", "start_hour": 0}, "/station"),
+        ({"session": "60 min", "date": "2026-01-01", "station": "base", "start_hour": 12.5}, "/start_hour"),
+        ({"session": "60 min", "date": "2026-01-01", "station": "base", "start_hour": 24}, "/start_hour"),
+        ({"session": "60 min", "date": "2026-01-01", "station": "base"}, "/start_hour"),
+        ({"session": "60 min", "station": "base"}, "/station"),
+        ({"session": "60 min", "start_hour": 8}, "/start_hour"),
+    ]
+    for inp, field in failures:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT", "error.field": field}))
+    success(60, "1980-01-01", "a000", 0)
+    success(60, "2079-12-31", "x999", 23)
+    assert len(out) == 25
     return out
 
 
@@ -139,7 +180,10 @@ def alta():
 
 def main():
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
+    selected = set(sys.argv[2:])
     for name, vs in [("survey.gnss.rtk-budget", rtk()), ("survey.gnss.opus-plan", opus()), ("survey.gnss.antenna-height", antenna()), ("survey.land.alta-rpp", alta())]:
+        if selected and name not in selected:
+            continue
         (dest / f"{name}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 

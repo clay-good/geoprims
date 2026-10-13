@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "dff9654bc6b67020",
+    "hash": "f78fb9f187ddc2b5",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "d3c9a7e02a0b834e",
+    "hash": "997b082d617f7479",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "a91b2f749f465ed1",
+    "hash": "13a63f8ef7db5ca8",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "9092695a97edea82",
+    "hash": "f49c62d93cd90343",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1348,7 +1348,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "29ca9fb9f4c93740",
+    "hash": "25b974c63c4d85f4",
     "lastmod": "2026-10-13"
   },
   "/raster/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c2e50d27c41a3008",
+    "hash": "564754fd209f83b0",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1580,8 +1580,8 @@
     "lastmod": "2026-10-13"
   },
   "/survey/gnss/opus-plan/": {
-    "hash": "9d9edf32a83fe2d0",
-    "lastmod": "2026-10-09"
+    "hash": "114354c5be6fc483",
+    "lastmod": "2026-10-13"
   },
   "/survey/gnss/rtk-budget/": {
     "hash": "c6fb0977092ca1bf",
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "7da6956a11470b8b",
+    "hash": "9d05176315d69d99",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "73bb744cc768909f",
+    "hash": "ba6898f4bba329d0",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

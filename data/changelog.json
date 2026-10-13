@@ -3,6 +3,19 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "result-change",
+      "tools": [
+        "survey.gnss.opus-plan"
+      ],
+      "vectors": [
+        "survey.gnss.opus-plan v001",
+        "survey.gnss.opus-plan v002",
+        "survey.gnss.opus-plan v003"
+      ],
+      "summary": "OPUS session planning (version 1.1.0) is now stable and fixes partial-day RINEX 2 names. The old result used `0`, which NGS reserves for a 24-hour data set; partial sessions now require the UTC start hour and use `a` through `x`. The tool reproduces NGS's published `g287009q.23o` example, and 25 live vectors plus five invariant tests cover processing boundaries, calendars, units, hour codes, and incomplete inputs."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "fixed",
       "tools": [
         "survey.gnss.antenna-height"

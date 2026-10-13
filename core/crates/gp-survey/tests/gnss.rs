@@ -6,6 +6,11 @@ fn call(input: &str) -> Value {
         .expect("envelope is JSON")
 }
 
+fn opus(input: &str) -> Value {
+    serde_json::from_str(&REGISTRY.invoke("survey.gnss.opus-plan", input))
+        .expect("envelope is JSON")
+}
+
 fn num(result: &Value, field: &str) -> f64 {
     result["result"][field]["value"]
         .as_f64()
@@ -64,6 +69,71 @@ fn antenna_height_invalid_inputs_name_the_field() {
         ),
     ] {
         let result = call(input);
+        assert_eq!(result["error"]["field"], field, "{result}");
+    }
+}
+
+#[test]
+fn opus_plan_matches_the_ngs_rinex_example() {
+    let result =
+        opus(r#"{"session":"60 min","date":"2023-01-09","station":"g287","start_hour":16}"#);
+    assert_eq!(result["ok"], true, "{result}");
+    assert_eq!(result["result"]["processing"], "rapid static");
+    assert_eq!(result["result"]["rinex"], "g287009q.23o");
+    assert_eq!(result["result"]["day_of_year"], 9.0);
+}
+
+#[test]
+fn opus_plan_switches_to_static_at_two_hours() {
+    for (session, processing, software) in [
+        ("15 min", "rapid static", "RSGPS rapid-static software"),
+        ("119.999 min", "rapid static", "RSGPS rapid-static software"),
+        ("2 h", "static", "PAGES static software"),
+        ("48 h", "static", "PAGES static software"),
+    ] {
+        let result = opus(&format!(r#"{{"session":"{session}"}}"#));
+        assert_eq!(result["result"]["processing"], processing, "{result}");
+        assert_eq!(result["result"]["software"], software, "{result}");
+    }
+}
+
+#[test]
+fn opus_plan_maps_utc_hours_and_calendar_days() {
+    for (date, hour, expected) in [
+        ("2024-02-29", 0, "base060a.24o"),
+        ("2025-12-31", 12, "base365m.25o"),
+        ("2079-12-31", 23, "base365x.79o"),
+    ] {
+        let result = opus(&format!(
+            r#"{{"session":"60 min","date":"{date}","station":"BASE","start_hour":{hour}}}"#
+        ));
+        assert_eq!(result["result"]["rinex"], expected, "{result}");
+    }
+}
+
+#[test]
+fn opus_plan_uses_zero_only_for_a_24_hour_file() {
+    let daily = opus(r#"{"session":"24 h","date":"2026-09-22","station":"base"}"#);
+    let partial = opus(r#"{"session":"23 h","date":"2026-09-22","station":"base","start_hour":6}"#);
+    assert_eq!(daily["result"]["rinex"], "base2650.26o", "{daily}");
+    assert_eq!(partial["result"]["rinex"], "base265g.26o", "{partial}");
+}
+
+#[test]
+fn opus_plan_invalid_inputs_name_the_field() {
+    for (input, field) in [
+        (
+            r#"{"session":"60 min","date":"2026-01-01","station":"base"}"#,
+            "/start_hour",
+        ),
+        (
+            r#"{"session":"60 min","date":"2026-01-01","station":"base","start_hour":12.5}"#,
+            "/start_hour",
+        ),
+        (r#"{"session":"60 min","station":"base"}"#, "/station"),
+        (r#"{"session":"60 min","start_hour":8}"#, "/start_hour"),
+    ] {
+        let result = opus(input);
         assert_eq!(result["error"]["field"], field, "{result}");
     }
 }

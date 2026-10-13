@@ -22,6 +22,15 @@ const NGS_OPUS: Reference = Reference {
     url: "https://geodesy.noaa.gov/OPUS/about.jsp",
 };
 
+const NGS_RINEX: Reference = Reference {
+    title: "OPUS Projects User Guide: RINEX Files Naming Convention for GNSS Observations",
+    issuer: "NOAA National Geodetic Survey",
+    year: 2026,
+    edition: "Version 2.0",
+    locator: "Section 5.1: a four-character mark ID, day of year, UTC start-hour letter (a = 00 through x = 23, or 0 for a 24-hour data set), two-digit year, and observation-file suffix; published example g287009q.23o",
+    url: "https://geodesy.noaa.gov/OPUS-Projects/user_guide/section5.1.html",
+};
+
 const NGS_ANTENNA: Reference = Reference {
     title: "GPS Antenna Calibration: antenna reference point and slant heights",
     issuer: "NOAA National Geodetic Survey",
@@ -298,6 +307,8 @@ fn day_of_year(s: &str) -> Option<(u32, u32)> {
 
 pub static OPUS_PLAN: ToolDef = ToolDef {
     id: "survey.gnss.opus-plan",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "OPUS session planning",
     summary: "Which NGS OPUS processing a planned GNSS session gets (rapid-static or static), whether its length qualifies, and the RINEX file name for the day.",
     aliases: &[
@@ -342,6 +353,17 @@ pub static OPUS_PLAN: ToolDef = ToolDef {
             Kind::Text { max_len: 4 },
         )
         .core(),
+        Field::new(
+            "start_hour",
+            "Start hour",
+            "Whole hour from 0 to 23, like 16",
+            Kind::Number {
+                min: 0.0,
+                max: 23.0,
+            },
+        )
+        .precision(Precision::Decimals(0))
+        .core(),
     ],
     outputs: &[
         Field::new(
@@ -365,7 +387,7 @@ pub static OPUS_PLAN: ToolDef = ToolDef {
         Field::new(
             "rinex",
             "RINEX 2 file name",
-            "ssssddd0.yyo for the day",
+            "ssssdddh.yyo, where h is the UTC start-hour letter or 0 for 24 hours",
             Kind::Text { max_len: 12 },
         )
         .optional(),
@@ -382,27 +404,37 @@ pub static OPUS_PLAN: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
-    model: "OPUS accepts 15 minutes to 48 hours of data; files of 15 minutes to 2 hours go to RSGPS rapid-static processing and 2 to 48 hours to PAGES static processing (NGS OPUS page, last modified 2026-09-09). The RINEX 2 short name is the 4-character station, the day of year, session 0, the two-digit year, and o for observations",
+    warnings: &[],
+    model: "OPUS accepts 15 minutes to 48 hours of data; files under 2 hours go to RSGPS rapid-static processing and files from 2 to 48 hours go to PAGES static processing (NGS OPUS page, last modified 2026-09-09). The RINEX 2 short name is the 4-character station, day of year, UTC start-hour letter (a = 00 through x = 23, or 0 for a 24-hour data set), two-digit year, and o for observations",
     accuracy: "NGS guidance as of the date shown; check the OPUS page before a job. Rapid-static processing needs continuous data and good geometry and may not work in remote areas",
-    when_to_use: "Use this when you are planning a static GNSS session to send to NGS OPUS. Enter the session length, the UTC start date, and the four-character station name. It tells you whether OPUS will run it as rapid static or static, which NGS software handles it, and the data rules NGS lists. It also builds the RINEX 2 file name and the day of year, so the file is named right before upload.",
+    when_to_use: "Use this when you are planning a static GNSS session to send to NGS OPUS. Enter the session length. To build the RINEX 2 short name, also enter the UTC start date, four-character station name, and UTC start hour. The tool tells you whether OPUS will run the file as rapid static or static, which NGS software handles it, and the data rules NGS lists.",
     limitations: "The rules come from the NGS OPUS page as of the date shown, and NGS can change them, so check that page before a job. The tool checks length only. It cannot tell whether your data is continuous, has enough satellites, or will solve, and rapid static may fail in remote areas. File names use the RINEX 2 short form, not the longer RINEX 3 form.",
-    references: &[NGS_OPUS],
+    references: &[NGS_OPUS, NGS_RINEX],
     examples: &[Example {
         id: "primary",
-        title: "A 60-minute session on 2026-09-22",
-        input: r#"{"session":"60 min","date":"2026-09-22","station":"base"}"#,
-        source: "add-practitioner-essentials OPUS scenario: a one-hour session gets rapid-static processing, with NGS's requirements stated",
+        title: "The NGS RINEX naming example in a 60-minute session",
+        input: r#"{"session":"60 min","date":"2023-01-09","station":"g287","start_hour":16}"#,
+        source: "NOAA NGS OPUS Projects User Guide v2.0, section 5.1: the published file-name example is g287009q.23o",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.gnss.rtk-budget",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "survey.gnss.antenna-height",
+            reason: "next",
+        },
+        Related {
+            id: "survey.gnss.rtk-budget",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.gnss.dop",
+            reason: "next",
+        },
+    ],
     sentence: "OPUS runs a session this long as {processing}.",
     limits: &[("batchRows", 10_000)],
     run: run_opus,
@@ -437,14 +469,31 @@ fn run_opus(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ),
         ),
     ];
-    if let Some(d) = ctx.text("date")? {
+    let date = ctx.text("date")?;
+    let station = ctx.text("station")?;
+    let start_hour = ctx.number("start_hour")?;
+    if date.is_none() {
+        if station.is_some() {
+            return Err(ToolError::invalid(
+                "/station",
+                "Enter the UTC start date when you enter a station name.",
+            ));
+        }
+        if start_hour.is_some() {
+            return Err(ToolError::invalid(
+                "/start_hour",
+                "Enter the UTC start date when you enter a start hour.",
+            ));
+        }
+    }
+    if let Some(d) = date {
         let (doy, yy) = day_of_year(&d).ok_or_else(|| {
             ToolError::invalid(
                 "/date",
                 format!("\"{d}\" is not a date like 2026-09-22 between 1980 and 2079."),
             )
         })?;
-        let station = ctx.text("station")?.unwrap_or_else(|| "site".into());
+        let station = station.unwrap_or_else(|| "site".into());
         let st = station.trim().to_ascii_lowercase();
         if st.len() != 4 || !st.bytes().all(|b| b.is_ascii_alphanumeric()) {
             return Err(ToolError::invalid(
@@ -452,7 +501,27 @@ fn run_opus(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 "A RINEX 2 station name is four letters or digits, like base.",
             ));
         }
-        out.push(("rinex", Json::str(format!("{st}{doy:03}0.{yy:02}o"))));
+        let session_code = if minutes == 1440.0 {
+            '0'
+        } else {
+            let hour = start_hour.ok_or_else(|| {
+                ToolError::invalid(
+                    "/start_hour",
+                    "Enter the whole UTC hour from 0 to 23 to name a partial-day RINEX file.",
+                )
+            })?;
+            if hour.fract() != 0.0 || !(0.0..=23.0).contains(&hour) {
+                return Err(ToolError::invalid(
+                    "/start_hour",
+                    "The start hour must be a whole UTC hour from 0 to 23.",
+                ));
+            }
+            char::from(b'a' + hour as u8)
+        };
+        out.push((
+            "rinex",
+            Json::str(format!("{st}{doy:03}{session_code}.{yy:02}o")),
+        ));
         out.push(("day_of_year", Json::Num(f64::from(doy))));
     }
     if ctx.explaining() {

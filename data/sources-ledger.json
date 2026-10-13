@@ -2453,11 +2453,31 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "Data requirements read on 2026-09-22; the page had changed from the spec's OPUS-S and OPUS-RS windows, which the tool follows the page on.",
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Data requirements and processing windows read on 2026-10-13; the page had changed from the spec's former OPUS-S and OPUS-RS overlap, which the tool now follows.",
       "freeAccessUrl": "https://geodesy.noaa.gov/OPUS/about.jsp",
       "matchTerms": [
         "OPUS: Online Positioning User Service"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "ngs-opus-rinex-naming",
+      "name": "OPUS Projects User Guide: RINEX Files Naming Convention for GNSS Observations",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "Version 2.0",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Section 5.1 read at the issuer: the short name uses the mark ID, day of year, UTC start-hour letter a through x (or 0 only for a 24-hour data set), two-digit year, and o suffix; it publishes g287009q.23o as an example.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/OPUS-Projects/user_guide/section5.1.html",
+      "matchTerms": [
+        "RINEX Files Naming Convention for GNSS Observations"
       ],
       "editionStatus": "current",
       "legalStatus": null,

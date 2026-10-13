@@ -23,11 +23,15 @@ Given the receiver's published horizontal and vertical specifications (a mm + b 
 - **THEN** the expected horizontal precision is 23 mm (a + b·d, as manufacturers state it)
 
 ### Requirement: OPUS session planning
-A tool SHALL recommend the NGS OPUS service and minimum session length for a goal: OPUS-RS for sessions of 15 minutes to 4 hours, and OPUS-S for 2 to 48 hours (NGS guidance, cited and dated; both accept 2 to 4 hours, where the tool explains the trade-off). It SHALL generate the expected RINEX file naming for the day of year.
+A tool SHALL report the processing path NGS OPUS currently assigns by file duration: RSGPS rapid-static below 2 hours and PAGES static from 2 through 48 hours, with 15 minutes as the minimum accepted duration (NGS guidance, cited and dated). It SHALL generate the RINEX 2 short name from the four-character mark ID, UTC start date, and UTC start hour. The session character SHALL be `a` through `x` for start hours 00 through 23 and `0` only for a 24-hour data set.
 
 #### Scenario: One-hour session
 - **WHEN** the planned session is 60 minutes
-- **THEN** the tool recommends OPUS-RS and states the service's documented requirements
+- **THEN** the tool reports RSGPS rapid-static processing and states the service's documented requirements
+
+#### Scenario: Name a partial-day observation file
+- **WHEN** the user enters mark `g287`, January 9, 2023, and a 16:00 UTC start
+- **THEN** the tool returns `g287009q.23o`, the example published in the NGS OPUS Projects User Guide
 
 ### Requirement: Antenna height reduction
 Given a measured slant height to the antenna's measurement mark, the antenna radius to that mark, and the ARP offset (from the optional NGS ANTINFO asset or typed), the tool SHALL compute the vertical height to the antenna reference point (ARP). It SHALL show the geometry.

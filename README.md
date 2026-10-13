@@ -35,6 +35,8 @@ GPS satellite visibility and DOP planning is stable for pasted YUMA or SEM alman
 
 GNSS site localization is stable for 4-parameter similarity and 6-parameter affine fits. It recovers IOGP Guidance Note 7-2's published method 9621 scale and rotation, and 24 live vectors plus coefficient and translation invariants cover residuals, mixed units, suspect scale, degenerate control, and compact networks at large coordinate origins.
 
+OPUS session planning is stable for the current NGS rapid-static and static duration windows. It generates RINEX 2 short names with the correct UTC start-hour letter, reserves `0` for a 24-hour data set, reproduces NGS's published `g287009q.23o` example, and has 25 live vectors plus five invariants covering boundaries, calendars, units, and incomplete naming inputs.
+
 GNSS slant antenna height is stable for a measured slant, antenna radius, and signed measurement-point-to-ARP offset. It reproduces both worked examples in the iGage iG9 manual, and 26 vectors plus five invariants cover the right-triangle identity, unit conversions, geometric boundaries, and field-specific invalid inputs.
 
 Mission sortie planning is stable for ordered waypoint paths. It counts every trip from home and back before choosing battery-swap waypoints, and 22 vectors cover flight-time and battery-energy inputs, reserves, wind, distinct survey and transit speeds, and an unreachable-path refusal.

@@ -20,6 +20,15 @@ const IFH_NAV: Reference = Reference {
     ..IFH
 };
 
+const CNATRA_INSTRUMENT: Reference = Reference {
+    title: "Primary Instrument Navigation, T-6B",
+    issuer: "Chief of Naval Air Training",
+    year: 2023,
+    edition: "CNATRA P-765 (Rev. 08-16), Change 4",
+    locator: "Chapter 6, section 607, pp. 6-12 to 6-13 (12 DME at 180 kt: 0.9 NM turn radius and 4.5 lead radials)",
+    url: "https://www.cnatra.navy.mil/tip.asp",
+};
+
 const FAA_TERPS: Reference = Reference {
     title: "United States Standard for Terminal Instrument Procedures (TERPS), Order 8260.3G",
     issuer: "Federal Aviation Administration",
@@ -407,6 +416,8 @@ fn run_time_to_station(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ARC_LEAD: ToolDef = ToolDef {
     id: "aviation.ifr.dme-arc-lead",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "DME arc lead points",
     summary: "Where to start the turn onto a DME arc from a radial, and how many radials early to turn off the arc onto an inbound course, from the arc's DME and your standard-rate turn.",
     aliases: &[
@@ -480,17 +491,17 @@ pub static ARC_LEAD: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::NoSolution, ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "A standard-rate turn (3°/s) at groundspeed GS has radius GS ÷ (60π) NM. Turning 90° from a radial onto the arc, start one turn radius r short of the arc. Turning 90° from the arc onto an inbound radial, the turn circle sits inside the arc, tangent to it and to the radial, so the lead is asin(r ÷ (R − r)); the rule of thumb is 60 × r ÷ R radials (Instrument Flying Handbook, ch. 9)",
     accuracy: "Exact for a steady turn in still air; wind moves the lead points",
     when_to_use: "Use this when a procedure or a clearance has you join or leave a DME arc. Enter the arc's DME and your groundspeed, or your own turn radius. It gives how far before the arc to start the turn when you fly in on a radial, and how many radials early to roll out onto the inbound course. The rule-of-thumb lead is shown next to the exact one.",
     limitations: "The leads assume a steady turn in still air, at standard rate unless you set a radius. Wind pushes the turn and moves both lead points, so expect to adjust. Slant range is ignored, and a turn too wide for the arc is refused. The published procedure, any lead radial printed on the chart, and ATC come first.",
-    references: &[IFH_NAV],
+    references: &[IFH_NAV, CNATRA_INSTRUMENT],
     examples: &[Example {
         id: "primary",
-        title: "A 10 DME arc at 120 kt",
-        input: r#"{"arc":"10 NM","groundspeed":"120 kt"}"#,
-        source: "Hand check: radius 120 ÷ (60π) = 0.64 NM; lead asin(0.64 ÷ 9.36) = 3.9°, rule 3.8°",
+        title: "A 12 DME arc at 180 kt",
+        input: r#"{"arc":"12 NM","groundspeed":"180 kt","turn_radius":"0.9 NM"}"#,
+        source: "CNATRA P-765 Change 4, section 607: 0.5% of 180 kt is 0.9 NM; 60 ÷ 12 × 0.9 is 4.5 lead radials",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -505,6 +516,10 @@ pub static ARC_LEAD: ToolDef = ToolDef {
         Related {
             id: "aviation.ifr.time-to-station",
             reason: "alternative",
+        },
+        Related {
+            id: "aviation.performance.turn",
+            reason: "parent",
         },
     ],
     assumptions: &[
@@ -535,10 +550,16 @@ fn run_arc_lead(ctx: &mut Ctx) -> Result<Json, ToolError> {
     );
     let big_r = ctx.req_quantity("arc")?.to(nm);
     let gs = ctx.req_quantity("groundspeed")?.to(kt);
-    if big_r <= 0.0 || gs <= 0.0 {
+    if big_r <= 0.0 {
         return Err(ToolError::invalid(
             "/arc",
-            "The arc's DME and the groundspeed must be positive.",
+            "The arc's DME must be positive.",
+        ));
+    }
+    if gs <= 0.0 {
+        return Err(ToolError::invalid(
+            "/groundspeed",
+            "The groundspeed must be positive.",
         ));
     }
     let r = match ctx.quantity("turn_radius")? {

@@ -26,22 +26,22 @@ A steady 90° turn in still air, at standard rate unless a radius is given. Wind
 
 ## Worked example
 
-- sourcePublisher: geoprims (hand check, computed)
-- sourceTitle: tool example "A 10 DME arc at 120 kt", worked from the equations above
-- sourceEdition: 2026
-- sourceLocator: example "primary" in core/crates/gp-aviation/src/dme.rs ("radius 120 ÷ (60π) = 0.64 NM; lead asin(0.64 ÷ 9.36) = 3.9°, rule 3.8°"); method from FAA-H-8083-15B chapter 9
-- independent: no
-- inputs: arc 10 NM, groundspeed 120 kt
-- outputs: turn radius 0.64 NM, lead onto the arc 0.64 NM, lead off the arc 3.9° (rule 3.8°)
+- sourcePublisher: Chief of Naval Air Training
+- sourceTitle: Primary Instrument Navigation, T-6B
+- sourceEdition: CNATRA P-765 (Rev. 08-16), Change 4
+- sourceLocator: Chapter 6, section 607, pp. 6-12 to 6-13
+- independent: yes
+- inputs: 12 DME arc, 180 kt groundspeed, and the manual's 0.5%-of-groundspeed turn-radius rule
+- outputs: 0.9 NM turn radius; 60 / 12 = 5 radials per NM; 0.9 × 5 = 4.5 lead radials
 - tolerance: 1e-9 absolute
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- verifiedBy: golden vector v008, run by the core on every build
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_dme.py`: the same turn-radius and tangent-circle relations written separately in Python, at six arcs from 7 to 20 NM (one with a given radius) and one turn too wide for its arc that must fail (within 1e-9). It checks the code against the stated equations, not against a separate method
-- `core/vectors/aviation.ifr.dme-arc-lead.jsonl`: those seven vectors, run through the core on every build
+- `tools/vectors/gen_dme.py`: the same turn-radius and tangent-circle relations written separately in Python at 16 arcs from 7 to 40 NM, including given radii and equivalent metric units, plus four refused inputs (within 1e-9). It checks the code against the stated equations, while the CNATRA vector independently checks the published training rule
+- `core/vectors/aviation.ifr.dme-arc-lead.jsonl`: those 20 vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no test checks an invariant of this tool directly. This test runs the vectors above through the core and requires at least five per tool; in them the lead onto the arc always equals the turn radius and the exact lead off the arc is always larger than the rule's
+- `core/crates/gp-aviation/tests/aviation.rs` `dme_arc_lead_invariants`: scaling the arc and groundspeed together scales both distance outputs and leaves both angles unchanged; a given radius overrides groundspeed; equivalent metric inputs agree; and the exact lead satisfies the tangent-circle equation

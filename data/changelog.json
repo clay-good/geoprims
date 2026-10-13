@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.ifr.dme-arc-lead"
+      ],
+      "vectors": [],
+      "summary": "DME arc lead points (version 1.1.0) is now stable. Its primary example matches the Naval Air Training Command's published 12 DME, 180-knot result, and it now has 20 vectors plus scaling, override, equivalent-unit, and tangent-circle invariants. Nonpositive groundspeed now identifies the groundspeed field; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.loading.table-interpolate"
       ],
       "vectors": [],

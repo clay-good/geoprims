@@ -131,6 +131,29 @@ def arc():
         out.append(vec(len(out) + 1, inp, {"result.turn_radius.value": rr, "result.onto_arc_lead.value": rr,
                                            "result.lead_radials.value": math.degrees(math.asin(rr / (big_r - rr))), "result.lead_radials_rule.value": 60 * rr / big_r}))
     out.append(vec(len(out) + 1, {"arc": "1 NM", "groundspeed": "200 kt"}, {"ok": False, "error.code": "NO_SOLUTION"}))
+    out.append(vec(len(out) + 1, {"arc": "12 NM", "groundspeed": "180 kt", "turn_radius": "0.9 NM"},
+                   {"result.turn_radius.value": 0.9, "result.onto_arc_lead.value": 0.9,
+                    "result.lead_radials.value": math.degrees(math.asin(0.9 / 11.1)), "result.lead_radials_rule.value": 4.5},
+                   "CNATRA P-765 Change 4, chapter 6 section 607 (0.9 NM turn radius and 4.5 lead radials)", 1e-9))
+    for big_r, gs, r, units in [
+        (8, 100, None, False), (9, 135, None, False), (12, 180, None, False),
+        (18, 210, None, False), (25, 300, None, False), (40, 240, None, False),
+        (14, 160, 0.75, False), (30, 220, 1.4, False), (10, 120, None, True),
+    ]:
+        rr = r if r is not None else gs / (60 * math.pi)
+        inp = {"arc": f"{big_r * 1.852} km" if units else f"{big_r} NM",
+               "groundspeed": f"{gs * 0.5144444444444445} m/s" if units else f"{gs} kt"}
+        if r is not None:
+            inp["turn_radius"] = f"{r} NM"
+        out.append(vec(len(out) + 1, inp, {"result.turn_radius.value": rr, "result.onto_arc_lead.value": rr,
+                                           "result.lead_radials.value": math.degrees(math.asin(rr / (big_r - rr))),
+                                           "result.lead_radials_rule.value": 60 * rr / big_r}))
+    out.append(vec(len(out) + 1, {"arc": "0 NM", "groundspeed": "120 kt"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/arc"}))
+    out.append(vec(len(out) + 1, {"arc": "10 NM", "groundspeed": "0 kt"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/groundspeed"}))
+    out.append(vec(len(out) + 1, {"arc": "10 NM", "groundspeed": "120 kt", "turn_radius": "0 NM"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/turn_radius"}))
     return out
 
 

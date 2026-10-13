@@ -430,6 +430,26 @@
       "editionCheck": false
     },
     {
+      "id": "cnatra-p-765",
+      "name": "Primary Instrument Navigation, T-6B",
+      "issuer": "Chief of Naval Air Training",
+      "currentEdition": "CNATRA P-765 (Rev. 08-16), Change 4",
+      "currentReleaseDate": "2023-08-22",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Checked the issuer's indexed Change 4 publication on 2026-10-13. Chapter 6, section 607 works a 12 DME, 180 kt example: 0.5% of groundspeed gives a 0.9 NM turn radius, 60/12 gives 5 radials per NM, and their product is 4.5 lead radials. The command moved its public issuances to the current TIP catalog.",
+      "freeAccessUrl": "https://www.cnatra.navy.mil/tip.asp",
+      "matchTerms": [
+        "Primary Instrument Navigation, T-6B"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "copernicus-dem",
       "name": "Copernicus DEM GLO-30",
       "issuer": "ESA and European Commission",

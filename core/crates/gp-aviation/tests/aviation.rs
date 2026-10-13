@@ -511,6 +511,56 @@ fn dme_slant_range_invariants() {
 }
 
 #[test]
+fn dme_arc_lead_invariants() {
+    let base = call(
+        "aviation.ifr.dme-arc-lead",
+        r#"{"arc":"10 NM","groundspeed":"120 kt"}"#,
+    );
+    let scaled = call(
+        "aviation.ifr.dme-arc-lead",
+        r#"{"arc":"20 NM","groundspeed":"240 kt"}"#,
+    );
+    for path in ["result.turn_radius.value", "result.onto_arc_lead.value"] {
+        assert!((num(&scaled, path) - 2.0 * num(&base, path)).abs() < 1e-12);
+    }
+    for path in [
+        "result.lead_radials.value",
+        "result.lead_radials_rule.value",
+    ] {
+        assert!((num(&scaled, path) - num(&base, path)).abs() < 1e-12);
+    }
+
+    // A supplied turn radius governs, so groundspeed no longer changes the
+    // result. The exact angle must make the turn circle tangent to the radial.
+    let given = call(
+        "aviation.ifr.dme-arc-lead",
+        r#"{"arc":"12 NM","groundspeed":"80 kt","turn_radius":"0.9 NM"}"#,
+    );
+    let faster = call(
+        "aviation.ifr.dme-arc-lead",
+        r#"{"arc":"12 NM","groundspeed":"250 kt","turn_radius":"0.9 NM"}"#,
+    );
+    assert_eq!(given["result"], faster["result"]);
+    let radius = num(&given, "result.turn_radius.value");
+    let lead = num(&given, "result.lead_radials.value").to_radians();
+    assert!(((12.0 - radius) * lead.sin() - radius).abs() < 1e-12);
+    assert!((num(&given, "result.lead_radials_rule.value") - 4.5).abs() < 1e-12);
+
+    let metric = call(
+        "aviation.ifr.dme-arc-lead",
+        r#"{"arc":"18.52 km","groundspeed":"61.73333333333333 m/s"}"#,
+    );
+    for path in [
+        "result.turn_radius.value",
+        "result.onto_arc_lead.value",
+        "result.lead_radials.value",
+        "result.lead_radials_rule.value",
+    ] {
+        assert!((num(&metric, path) - num(&base, path)).abs() < 1e-12);
+    }
+}
+
+#[test]
 fn time_to_station_invariants() {
     for (minutes, change, groundspeed) in [
         (1.25, 10.0_f64, 120.0),

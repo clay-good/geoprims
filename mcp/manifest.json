@@ -3,8 +3,8 @@
   "name": "geoprims",
   "display_name": "geoprims",
   "version": "0.1.0",
-  "description": "Exact, cited geospatial, aviation, drone, survey, and unit calculations. Offline, with no network access at all.",
-  "long_description": "geoprims answers the calculations practitioners actually do — geodesics and datums, airspeed and density altitude, ground sampling distance and mission plans, traverses and curves, grid references and cell indexes — from one local server that never reaches the network. Every answer carries its units, its method, its accuracy, and the source it comes from, and every tool is checked against golden vectors and, where a reference implementation exists, against that implementation on tens of thousands of cases.\n\nThe six meta-tools let an agent find a tool, read its contract, run it, chain several, convert units, and report a problem. Optional direct toolsets expose the stable tools of a domain as their own tools when an agent works in one area.",
+  "description": "Exact, cited geospatial, aviation, drone, survey, and unit calculations. Offline by default, with optional verified data downloads.",
+  "long_description": "geoprims answers the calculations practitioners actually do — geodesics and datums, airspeed and density altitude, ground sampling distance and mission plans, traverses and curves, grid references and cell indexes — from one local server that stays offline by default. Every answer carries its units, its method, its accuracy, and the source it comes from, and every tool is checked against golden vectors and, where a reference implementation exists, against that implementation on tens of thousands of cases. An explicit launch flag can fetch missing registered data only from the geoprims asset origin; every file is verified and cached for offline reuse.\n\nThe six meta-tools let an agent find a tool, read its contract, run it, chain several, convert units, and report a problem. Optional direct toolsets expose the stable tools of a domain as their own tools when an agent works in one area.",
   "author": {
     "name": "Clay Good",
     "url": "https://github.com/clay-good"
@@ -24,7 +24,10 @@
       "args": [
         "${__dirname}/server.mjs",
         "--toolsets=${user_config.toolsets}"
-      ]
+      ],
+      "env": {
+        "GEOPRIMS_ALLOW_ASSET_DOWNLOAD": "${user_config.allow_asset_download}"
+      }
     }
   },
   "tools": [
@@ -53,6 +56,13 @@
     }
   },
   "user_config": {
+    "allow_asset_download": {
+      "type": "boolean",
+      "title": "Allow verified data downloads",
+      "description": "Let tools download missing registered data files only from the geoprims asset origin, verify them, and cache them for offline reuse.",
+      "required": false,
+      "default": false
+    },
     "toolsets": {
       "type": "string",
       "title": "Direct toolsets",

@@ -3,6 +3,13 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "added",
+      "tools": [],
+      "vectors": [],
+      "summary": "The local MCP server's --allow-asset-download option now works. When a tool needs a registered file that is not installed, the opt-in server downloads it only from the geoprims asset origin, verifies its size and digest or signed tile index, and caches it for offline reuse. The default remains fully offline and names the missing file, its size, and the opt-in flag."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "changed",
       "tools": [
         "drone.mission.survey-grid"

@@ -54,12 +54,13 @@ async function verifySignedIndex(bytes, entry) {
 export function assetProvider(registry, read, verified = async () => {}) {
   const entries = new Map(registry.assets.map((a) => [`${a.id}@${a.version}`, a]));
   const indexes = new Map();
-  const unavailable = (id, version, key) => ({
+  const unavailable = (id, version, key, file) => ({
     error: {
       code: 'ASSET_UNAVAILABLE',
       message: `The ${id} data (${version}, ${key}) could not be loaded.`,
       hint: 'Check the connection, or install the offline data, then try again.',
       asset: { id, version, key },
+      ...(file?.bytes ? { bytes: file.bytes } : {}),
     },
   });
   const integrity = (id, version, key) => ({
@@ -72,11 +73,11 @@ export function assetProvider(registry, read, verified = async () => {}) {
   const load = async (entry, key, file) => {
     let bytes = null;
     try {
-      bytes = await read(entry.id, entry.version, key);
+      bytes = await read(entry.id, entry.version, key, file);
     } catch {
       bytes = null;
     }
-    if (!bytes) return unavailable(entry.id, entry.version, key);
+    if (!bytes) return unavailable(entry.id, entry.version, key, file);
     bytes = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
     if (bytes.length !== file.bytes || hex(await crypto.subtle.digest('SHA-256', bytes)) !== file.sha256) {
       return integrity(entry.id, entry.version, key);

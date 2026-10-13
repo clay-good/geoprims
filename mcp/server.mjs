@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// geoprims local MCP server: zero dependencies, stdio only, no network.
+// geoprims local MCP server: zero dependencies and stdio only. Network access
+// is disabled unless --allow-asset-download is passed.
 //
 //   node mcp/server.mjs [--toolsets=<name,...>] [--no-meta] [--timeout=<ms>] [--debug]
 //
@@ -25,7 +26,7 @@ function parseArgs(argv) {
     const [k, v] = a.split('=');
     if (k === '--timeout' && /^\d+$/.test(v ?? '')) opts.timeoutMs = Number(v);
     else if (k === '--debug') opts.debug = true;
-    else if (k === '--allow-asset-download') opts.allowAssetDownload = true; // no downloadable assets exist yet
+    else if (k === '--allow-asset-download') opts.allowAssetDownload = true;
     else if (k === '--toolsets') opts.toolsets = parseToolsets(v);
     else if (k === '--no-meta') opts.noMeta = true;
     else {
@@ -33,6 +34,12 @@ function parseArgs(argv) {
     }
   }
   if (opts.noMeta && !opts.toolsets) throw new Error('--no-meta needs --toolsets, or no tools would be listed.');
+  return opts;
+}
+
+export function launchOptions(argv, env = {}) {
+  const opts = parseArgs(argv);
+  if (env.GEOPRIMS_ALLOW_ASSET_DOWNLOAD === 'true') opts.allowAssetDownload = true;
   return opts;
 }
 
@@ -64,7 +71,10 @@ export async function createServer(opts = {}) {
   const host = workerHost(join(dist, 'wasm'), {
     timeoutMs: opts.timeoutMs ?? 10_000,
     maxBytes: MAX_MESSAGE_BYTES,
-    assetDir: repoAssets,
+    assetDir: opts.assetDir ?? repoAssets,
+    allowAssetDownload: opts.allowAssetDownload,
+    assetOrigin: opts.assetOrigin,
+    assetCacheDir: opts.assetCacheDir,
   });
   await host.searchLoad(JSON.stringify(catalog.tools));
   const modules = JSON.parse(readFileSync(join(dist, 'wasm', 'modules.json'), 'utf8')).modules;
@@ -225,7 +235,7 @@ function log(opts, text) {
 async function main() {
   let opts;
   try {
-    opts = parseArgs(process.argv.slice(2));
+    opts = launchOptions(process.argv.slice(2), process.env);
   } catch (e) {
     process.stderr.write(`geoprims-mcp: ${e.message}\n`);
     process.exit(2);

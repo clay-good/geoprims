@@ -5,6 +5,9 @@ import { nodeHost } from './node.mjs';
 const host = nodeHost(workerData.wasmDir, {
   maxBytes: workerData.maxBytes,
   assetDir: workerData.assetDir,
+  allowAssetDownload: workerData.allowAssetDownload,
+  assetOrigin: workerData.assetOrigin,
+  assetCacheDir: workerData.assetCacheDir,
 });
 
 const methods = {

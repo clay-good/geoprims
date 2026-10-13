@@ -5,7 +5,7 @@
 Density altitude before a flight. Ground sample distance for a drone survey. A traverse closure, a UTM conversion, an H3 cell, sunrise at a field site. geoprims answers questions like these in a plain sentence, then shows how it got there.
 
 - **For people:** a fast, free website. The answer comes first, with a map or diagram and a "How we got this" panel showing the formula with your numbers and its sources.
-- **For AI agents:** a local MCP server that runs the same calculators and returns the same results, byte for byte. No dependencies, no network. See [mcp/README.md](mcp/README.md).
+- **For AI agents:** a local MCP server that runs the same calculators and returns the same results, byte for byte. It has no dependencies and stays offline unless optional verified asset downloads are explicitly enabled. See [mcp/README.md](mcp/README.md).
 
 ## Why trust it
 

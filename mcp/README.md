@@ -1,6 +1,6 @@
 # geoprims MCP server
 
-A local, offline MCP server that runs the same WebAssembly calculators as geoprims.com. It has zero npm dependencies, uses stdio only, and makes no network requests.
+A local, offline-by-default MCP server that runs the same WebAssembly calculators as geoprims.com. It has zero npm dependencies and uses stdio only. It makes no network requests unless you start it with `--allow-asset-download`; that option can fetch only registered data files from the geoprims asset origin.
 
 ## Run it
 
@@ -14,7 +14,7 @@ git clone --branch v0.1.0 --depth 1 https://github.com/clay-good/geoprims
 node geoprims/mcp/server.mjs
 ```
 
-Each release on [GitHub](https://github.com/clay-good/geoprims/releases) also has a zip of the same files and a `.mcpb` bundle that Claude Desktop installs in one click. To build from source instead, clone `main` and run `npm run build` (Rust via rustup, binaryen `wasm-opt`, and Node 22 or newer).
+Each release on [GitHub](https://github.com/clay-good/geoprims/releases) also has a zip of the same files and a `.mcpb` bundle that Claude Desktop installs in one click. The bundle exposes verified asset downloads as an off-by-default setting. To build from source instead, clone `main` and run `npm run build` (Rust via rustup, binaryen `wasm-opt`, and Node 22 or newer).
 
 Without built files, the server prints how to get them and exits with code 1.
 
@@ -138,7 +138,7 @@ Five workflow prompts turn a few arguments into one `geoprims_pipeline` call, wi
 | `--no-meta` | With `--toolsets`, lists only the direct tools |
 | `--timeout=<ms>` | Per-call time limit (default 10,000). A call over it returns `LIMIT_EXCEEDED`, and the server keeps serving. |
 | `--debug` | Logs argument values to stderr (off by default) |
-| `--allow-asset-download` | Accepted. No downloadable assets exist yet. |
+| `--allow-asset-download` | Lets a tool fetch a missing registered data file from the geoprims asset origin. The server checks its size and SHA-256 digest (or signed tile index) before use, writes it atomically to the operating system's cache directory, and reuses it offline. A corrupt cache entry is discarded and downloaded again. Without this flag, a missing file returns `ASSET_UNAVAILABLE` with its name, size, and this restart instruction. |
 
 ## Release status
 

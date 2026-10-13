@@ -28,10 +28,13 @@ test('the MCPB manifest is v0.3 and describes the server that exists', () => {
   const names = new Set(META_TOOLS.map((t) => t.name));
   assert.deepEqual(manifest.tools.map((t) => t.name).filter((n) => !names.has(n)), []);
   assert.equal(manifest.tools.length, names.size, 'the manifest lists every meta-tool');
-  // The one user setting is the server's own --toolsets, and it names the
-  // toolsets that exist rather than a list that can drift.
-  assert.deepEqual(Object.keys(manifest.user_config), ['toolsets']);
+  // User settings map to the server's own launch configuration. The toolset
+  // setting names what exists rather than carrying a list that can drift.
+  assert.deepEqual(Object.keys(manifest.user_config).sort(), ['allow_asset_download', 'toolsets']);
   assert.ok(manifest.server.mcp_config.args.some((a) => a.includes('${user_config.toolsets}')));
+  assert.equal(manifest.user_config.allow_asset_download.type, 'boolean');
+  assert.equal(manifest.user_config.allow_asset_download.default, false);
+  assert.equal(manifest.server.mcp_config.env.GEOPRIMS_ALLOW_ASSET_DOWNLOAD, '${user_config.allow_asset_download}');
   for (const name of Object.keys(TOOLSETS)) {
     assert.ok(manifest.user_config.toolsets.description.includes(name), `${name} is not offered in the bundle's settings`);
   }

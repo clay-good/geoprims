@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { nodeHost } from '../packages/runtime/src/node.mjs';
+import { launchOptions } from './server.mjs';
 import { TOOLS } from './meta.mjs';
 import { directName, MAX_PER_TOOLSET, TOOLSETS } from './toolsets.mjs';
 
@@ -68,6 +69,13 @@ test('negotiates protocol versions', async () => {
   assert.equal(old.result.protocolVersion, '2025-11-25');
   const d = await c.request('server/discover', {});
   assert.deepEqual(d.result.supportedVersions, ['2026-07-28', '2025-11-25', '2025-06-18']);
+});
+
+test('asset downloads stay off unless the launch flag or bundle setting enables them', () => {
+  assert.equal(launchOptions([]).allowAssetDownload, undefined);
+  assert.equal(launchOptions(['--allow-asset-download']).allowAssetDownload, true);
+  assert.equal(launchOptions([], { GEOPRIMS_ALLOW_ASSET_DOWNLOAD: 'true' }).allowAssetDownload, true);
+  assert.equal(launchOptions([], { GEOPRIMS_ALLOW_ASSET_DOWNLOAD: 'false' }).allowAssetDownload, undefined);
 });
 
 test('lists the meta-tools in order, annotated, within the token budget', async () => {

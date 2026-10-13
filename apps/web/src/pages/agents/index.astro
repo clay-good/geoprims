@@ -17,7 +17,7 @@ const toolsets = Object.keys(TOOLSETS).map((name) => ({ name, tools: directTools
   <PageHeader title="Use with agents">
     <p class="purpose">
     geoprims runs as a local MCP server, so an AI agent gets the same calculators and the same answers as this site. It runs on
-    your machine over stdio, has no npm dependencies, and makes no network requests.
+    your machine over stdio, has no npm dependencies, and stays offline unless you explicitly allow verified optional-data downloads.
   </p>
   </PageHeader>
 
@@ -67,7 +67,7 @@ const toolsets = Object.keys(TOOLSETS).map((name) => ({ name, tools: directTools
         <tr><td><code>--no-meta</code></td><td>With <code>--toolsets</code>, lists only those tools.</td></tr>
         <tr><td><code>--timeout=&lt;ms&gt;</code></td><td>Per-call time limit (default 10,000).</td></tr>
         <tr><td><code>--debug</code></td><td>Logs argument values to stderr (off by default).</td></tr>
-        <tr><td><code>--allow-asset-download</code></td><td>Reserved for verified optional-data downloads. The server accepts it, but downloading is not implemented yet.</td></tr>
+        <tr><td><code>--allow-asset-download</code></td><td>Fetches a missing registered data file only from the geoprims asset origin, verifies it, and keeps it in the operating system's cache for offline reuse. Without the flag, the server names the missing file and its size.</td></tr>
       </tbody>
     </table>
   </div>

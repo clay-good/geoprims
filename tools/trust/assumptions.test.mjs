@@ -76,6 +76,7 @@ const MUST_DECLARE = [
   'drone.photogrammetry.trigger',
   'drone.photogrammetry.image-count',
   'drone.mission.survey-grid',
+  'drone.power.endurance',
   'drone.mission.facade',
   'drone.sensors.thermal-footprint',
   'drone.sensors.dataset-size',
@@ -268,6 +269,17 @@ test('the photogrammetry defaults name their published values', () => {
       ['2', 'photos per end', 'psu-geog892'],
     ], id);
   }
+});
+
+test('the endurance tool exposes every product-defined heuristic value', () => {
+  const assumptions = byId('drone.power.endurance')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['20', 'degC', 'geoprims-endurance-spec'],
+    ['20', '%', 'geoprims-endurance-spec'],
+    ['1', '%/degC', 'geoprims-endurance-spec'],
+    ['50', '%', 'geoprims-endurance-spec'],
+    ['1', 'h', 'geoprims-endurance-spec'],
+  ]);
 });
 
 test('the facade and thermal defaults cite the guidance they apply', () => {

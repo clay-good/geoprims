@@ -1072,6 +1072,26 @@
       "editionCheck": true
     },
     {
+      "id": "geoprims-endurance-spec",
+      "name": "GeoPrims endurance and power specification",
+      "issuer": "GeoPrims",
+      "currentEdition": "repository specification",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "The repository specification is the authority for the explicitly product-defined cold-battery heuristic and the fallback rated discharge time. It is not an external validation of battery behavior.",
+      "freeAccessUrl": "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/endurance-and-power/spec.md",
+      "matchTerms": [
+        "GeoPrims endurance and power specification"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "geohash",
       "name": "Geohash",
       "issuer": "G. Niemeyer",

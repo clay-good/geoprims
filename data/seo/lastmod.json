@@ -408,8 +408,8 @@
     "lastmod": "2026-10-09"
   },
   "/drone/power/endurance/": {
-    "hash": "0a87e92704a16c8b",
-    "lastmod": "2026-10-09"
+    "hash": "580620527ba612a4",
+    "lastmod": "2026-10-13"
   },
   "/drone/power/hover-power/": {
     "hash": "3cdead1959335b97",
@@ -1068,8 +1068,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/drone-flight-time/": {
-    "hash": "60548ad5d0c2b601",
-    "lastmod": "2026-10-09"
+    "hash": "328302ba0b3bdafa",
+    "lastmod": "2026-10-13"
   },
   "/learn/geodesic-vs-haversine/": {
     "hash": "7210647d772837a1",
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "a459dd90bf8bf7b9",
+    "hash": "85ef047c893e9d5a",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "cb3584b3d39dc380",
+    "hash": "52738e0df77db92e",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2016,7 +2016,7 @@
     "lastmod": "2026-10-10"
   },
   "/workflows/lidar-bid/": {
-    "hash": "a53206e2a37e7c76",
+    "hash": "3c1cd45e390c8e83",
     "lastmod": "2026-10-13"
   },
   "/workflows/mapping-flight/": {

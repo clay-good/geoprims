@@ -46,6 +46,14 @@ pub const BAUERSFELD: Reference = Reference {
     locator: "Sec. VII-E, step 6 (endurance = effective capacity × nominal voltage / electrical power)",
     url: "https://arxiv.org/abs/2109.04741",
 };
+const GEOPRIMS_ENDURANCE_SPEC: Reference = Reference {
+    title: "GeoPrims endurance and power specification",
+    issuer: "GeoPrims",
+    year: 2026,
+    edition: "repository specification, accessed 2026-10-12",
+    locator: "Endurance and range; Peukert and other battery models are labeled",
+    url: "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/endurance-and-power/spec.md",
+};
 
 const G0: f64 = 9.806_65;
 const R: f64 = 287.052_87;
@@ -979,7 +987,7 @@ pub static ENDURANCE: ToolDef = ToolDef {
     accuracy: "Only as good as the power figure. Wind, climbs, and aging packs shorten real flights.",
     when_to_use: "Use this when you know, or have estimated, the power a drone draws and want to know how long a pack will keep it in the air: it takes the usable share of the battery, removes a cold-weather derating and the reserve you land with, and divides by the power, for hover and cruise, and turns the cruise time into a range at your groundspeed.",
     limitations: "It is energy divided by power at a steady draw, so it is exactly as good as the power figure you give it. Climbs, wind, gusts, and payload changes raise the draw; a pack’s voltage sags as it empties and its capacity falls with age and at high current. The reserve here is a share of the usable energy, not of the whole pack, so 80% usable with a 20% reserve flies on 64%. The cold-battery derating is a rule of thumb. Range with wind assumes the same wind and power the whole way, one way along one course; for an out-and-back trip use the return-to-home tool, since a headwind costs more on the way back than a tailwind gives on the way out.",
-    references: &[LEISHMAN, BAUERSFELD],
+    references: &[LEISHMAN, BAUERSFELD, GEOPRIMS_ENDURANCE_SPEC],
     examples: &[
         Example {
             id: "primary",
@@ -1023,6 +1031,38 @@ pub static ENDURANCE: ToolDef = ToolDef {
     ],
     sentence: "Hover time is about {hover_time}{if reserve_energy > 0}, keeping {reserve_energy} in reserve{/if}.{warn HEURISTIC_DERATING} This includes a cold-battery estimate.{/warn}",
     limits: &[("batchRows", 10_000)],
+    assumptions: &[
+        Assumption {
+            name: "Cold-derating warm threshold (product heuristic)",
+            value: "20",
+            unit: "degC",
+            source: "geoprims-endurance-spec",
+        },
+        Assumption {
+            name: "Cold derating at 0 °C (product heuristic)",
+            value: "20",
+            unit: "%",
+            source: "geoprims-endurance-spec",
+        },
+        Assumption {
+            name: "Cold-derating slope below 20 °C (product heuristic)",
+            value: "1",
+            unit: "%/degC",
+            source: "geoprims-endurance-spec",
+        },
+        Assumption {
+            name: "Maximum automatic cold derating (product heuristic)",
+            value: "50",
+            unit: "%",
+            source: "geoprims-endurance-spec",
+        },
+        Assumption {
+            name: "Default rated discharge time when Peukert is enabled",
+            value: "1",
+            unit: "h",
+            source: "geoprims-endurance-spec",
+        },
+    ],
     run: run_endurance,
     ..ToolDef::BLANK
 };

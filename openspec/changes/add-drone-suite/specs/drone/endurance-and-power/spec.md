@@ -27,7 +27,7 @@ The hover-power tool SHALL compute ideal induced power P_ideal = T^1.5 / √(2ρ
 - **THEN** hover power increases by the factor √(ρ0/ρ) ≈ 1.128 relative to sea level
 
 ### Requirement: Endurance and range
-The endurance tool SHALL compute hover endurance = usable energy / total power, and a cruise estimate from user-entered cruise power (or a labeled generic multiplier of hover power). It SHALL apply a temperature derating (user-entered, with a labeled heuristic default of 0% at or above 20 °C, rising to 20% at 0 °C) and SHALL report endurance with and without reserve. Range SHALL be endurance × groundspeed, with wind effects via the aviation wind tools.
+The endurance tool SHALL compute hover endurance = usable energy / total power, and a cruise estimate from user-entered cruise power (or a labeled generic multiplier of hover power). It SHALL apply a temperature derating (user-entered, with a labeled product heuristic default of 0% at or above 20 °C, rising linearly by 1 percentage point per °C below 20 °C to 20% at 0 °C, capped at 50%) and SHALL report endurance with and without reserve. Range SHALL be endurance × groundspeed, with wind effects via the aviation wind tools.
 
 #### Scenario: Endurance with reserve
 - **WHEN** the 150.6 W hover power is combined with the 90.4 Wh pack and 80% usable energy
@@ -56,7 +56,7 @@ Given the current position, home position, groundspeed capability, wind, and rem
 - **THEN** the result is `NO_SOLUTION` with warning `CANNOT_RETURN_INTO_WIND`
 
 ### Requirement: Peukert and other battery models are labeled
-If a Peukert-style correction is offered, it SHALL be labeled as a weak model for lithium chemistries and SHALL be off by default.
+If a Peukert-style correction is offered, it SHALL be labeled as a weak model for lithium chemistries and SHALL be off by default. If the caller supplies an exponent but no rated discharge time, the product-defined fallback SHALL be 1 h.
 
 #### Scenario: Peukert off by default
 - **WHEN** a user opens the endurance tool

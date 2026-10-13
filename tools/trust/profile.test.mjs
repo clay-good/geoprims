@@ -53,7 +53,7 @@ test('docs/performance.md is honest about what is measured today', () => {
   assert.equal(JSON.parse(readFileSync(join(root, 'apps/web/package.json'), 'utf8')).scripts['bench:browser'], 'node scripts/benchmark.mjs');
   assert.match(doc, /page budgets now have a gate: `apps\/web\/test\/browser\/perf\.test\.mjs`/);
   assert.match(doc, /These are local page-load numbers/);
-  assert.match(doc, /checked-in artifact from successful run/);
+  assert.match(doc, /checked-in artifact from run\n?\d+/);
   assert.match(doc, /data\/performance-budgets\.json/);
   assert.match(doc, /What is measured today/);
 });

@@ -25,6 +25,19 @@ test('the eight launch journeys are workflows, in the L3 order', () => {
   assert.deepEqual(JOURNEYS.map((j) => j.title), listed, 'data/workflows.json keeps the L3 journeys, in order');
 });
 
+test('every launch journey runs its published prefill through every core step', async () => {
+  assert.equal(JOURNEYS.length, 8);
+  for (const journey of JOURNEYS) {
+    const run = await runChain(journey, {}, invoke);
+    assert.ok(run.ok, `${journey.slug}: ${run.steps[run.failed]?.result?.error?.message ?? 'workflow failed'}`);
+    assert.equal(run.steps.length, journey.steps.length, `${journey.slug}: not every step ran`);
+    for (const [index, step] of run.steps.entries()) {
+      assert.equal(step.status, 'ok', `${journey.slug} step ${index + 1}`);
+      assert.ok(step.result?.summary, `${journey.slug} step ${index + 1}: no answer sentence`);
+    }
+  }
+});
+
 test('every workflow input names a real tool field, and at most eight show before More options', () => {
   let reached = 0;
   for (const w of WORKFLOWS) {

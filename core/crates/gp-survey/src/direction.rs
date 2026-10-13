@@ -115,6 +115,52 @@ pub static PARSE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static AZIMUTH_BEARING: ToolDef = ToolDef {
+    id: "survey.cogo.azimuth-bearing",
+    title: "Azimuth and bearing converter",
+    summary: "Converts a north azimuth, quadrant bearing, or gon value into equivalent azimuth, DMS, bearing, and gon notation.",
+    aliases: &[
+        "azimuth bearing converter",
+        "bearing azimuth conversion",
+        "azimuth to quadrant bearing",
+    ],
+    keywords: &["COGO", "azimuth", "bearing", "quadrant", "DMS", "gons"],
+    inputs: PARSE.inputs,
+    outputs: PARSE.outputs,
+    errors: PARSE.errors,
+    warnings: PARSE.warnings,
+    when_to_use: "Use this when a plan, deed, traverse sheet, or data collector expresses a direction in a different notation than the next calculation expects. Enter a north azimuth, quadrant bearing, or gon value and the operation writes every equivalent form. Keep the entered reference label so grid, geodetic, or assumed directions do not lose their context while the notation changes.",
+    limitations: "This is a notation conversion, not a rotation between north references. It does not apply convergence, magnetic declination, a basis-of-bearing correction, or a datum transformation. The same numeric direction can mean different lines under different references, so select the reference from the source record. DMS output is rounded to 0.01 arcsecond and decimal outputs to 8 places.",
+    model: PARSE.model,
+    accuracy: PARSE.accuracy,
+    references: PARSE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Northwest quadrant bearing",
+        input: r#"{"direction":"N 10°15'30\" W","reference":"assumed"}"#,
+        source: "Ghilani and Wolf direction notation",
+    }],
+    primary_example: "primary",
+    visualization: PARSE.visualization,
+    related: &[
+        Related {
+            id: "survey.cogo.direction-parse",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.cogo.forward",
+            reason: "next",
+        },
+        Related {
+            id: "survey.land.basis-rotation",
+            reason: "alternative",
+        },
+    ],
+    sentence: PARSE.sentence,
+    run: run_parse,
+    ..ToolDef::BLANK
+};
+
 pub static DEFLECTION: ToolDef = ToolDef {
     id: "survey.cogo.deflection-angle",
     title: "Survey deflection angle",

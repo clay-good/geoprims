@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cb7cd47ea958a408",
+    "hash": "c484bf91a0521135",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -1100,8 +1100,8 @@
     "lastmod": "2026-10-13"
   },
   "/learn/horizontal-curves/": {
-    "hash": "40caae5910538539",
-    "lastmod": "2026-10-09"
+    "hash": "a89255105d1b276b",
+    "lastmod": "2026-10-13"
   },
   "/learn/how-to-read-a-metar/": {
     "hash": "0999f5c427712dff",
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "e0512126e86c0cac",
+    "hash": "4c11a0a1cb85c3d7",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,15 +1440,15 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "becc5757f92378f8",
+    "hash": "cae14b2bcce045af",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
-    "hash": "c7eba48106fb585f",
+    "hash": "4452e83a3c139d81",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/": {
-    "hash": "d57a94a6cddf4071",
+    "hash": "25fb8d79e6694610",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/angular-closure/": {
@@ -1456,11 +1456,15 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/area-by-coordinates/": {
-    "hash": "7b3422627fc7b945",
+    "hash": "6bd14e0712e69ad2",
+    "lastmod": "2026-10-13"
+  },
+  "/survey/cogo/azimuth-bearing/": {
+    "hash": "166c6f1bf425f24a",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/bearing-bearing/": {
-    "hash": "0e34132323f73452",
+    "hash": "726bd84ee87c35b5",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/bearing-distance/": {
@@ -1504,11 +1508,19 @@
     "lastmod": "2026-10-09"
   },
   "/survey/cogo/offset-shot/": {
-    "hash": "9d5ac0f9600430c7",
+    "hash": "4dacadd95a299276",
+    "lastmod": "2026-10-13"
+  },
+  "/survey/cogo/perpendicular-foot/": {
+    "hash": "16ae1727ad18b5de",
+    "lastmod": "2026-10-13"
+  },
+  "/survey/cogo/point-from-station-offset/": {
+    "hash": "a3ed290917388525",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/radial-sideshots/": {
-    "hash": "123f0483fcc6153b",
+    "hash": "e39bc7890366f720",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/resection/": {
@@ -1516,7 +1528,7 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/station-offset/": {
-    "hash": "284a19b997d65179",
+    "hash": "5b9bf62880972631",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/transit/": {
@@ -1752,7 +1764,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "08e826419d4203d1",
+    "hash": "905904f8d8ea1a57",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -2016,7 +2028,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "617292813d315e1d",
+    "hash": "c53a19c9e3893561",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

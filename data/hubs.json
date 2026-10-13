@@ -1749,7 +1749,8 @@
         {
           "want": "convert a quadrant bearing, azimuth, or gon direction into another notation",
           "tools": [
-            "direction-parse"
+            "direction-parse",
+            "azimuth-bearing"
           ]
         },
         {
@@ -1795,7 +1796,9 @@
         {
           "want": "find a point's station and offset from a line, or set one out",
           "tools": [
-            "station-offset"
+            "station-offset",
+            "perpendicular-foot",
+            "point-from-station-offset"
           ]
         },
         {

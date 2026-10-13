@@ -95,6 +95,15 @@ def direction_parse():
     return out
 
 
+def azimuth_bearing():
+    rows = direction_parse()
+    primary = rows.pop(10)
+    rows.insert(0, primary)
+    for i, row in enumerate(rows, 1):
+        row["id"] = f"v{i:03d}"
+    return rows
+
+
 def deflection_angle():
     cases = [
         ("S 30 W", "N 80 E", "shortest", 50.0, 50.0, "right"),
@@ -1849,6 +1858,123 @@ def station_offset():
     return out
 
 
+def named_station_offset(mode):
+    rng = random.Random({"perpendicular-foot": 44101, "point-from-station-offset": 44102}[mode])
+
+    def fmt(value, metric=False):
+        per, decimals = (1000, 3) if metric else (100, 2)
+        scale = 10 ** decimals
+        total = round(value * scale)
+        whole = total // (per * scale)
+        rest = (total - whole * per * scale) / scale
+        width = 7 if metric else 5
+        return f"{whole}+{rest:0{width}.{decimals}f}"
+
+    def fmt_result(value, metric=False):
+        per, decimals = (1000, 3) if metric else (100, 2)
+        scale = 10 ** decimals
+        total = round(abs(value) * scale)
+        whole = total // (per * scale)
+        rest = (total - whole * per * scale) / scale
+        width = 7 if metric else 5
+        return f"{'-' if value < 0 else ''}{whole}+{rest:0{width}.{decimals}f}"
+
+    def station_value(value, metric=False):
+        decimals = 3 if metric else 2
+        return round(value, decimals)
+
+    def solve(sn, se, s0, azimuth, along, offset, metric=False):
+        angle = math.radians(azimuth)
+        tn, te = math.cos(angle), math.sin(angle)
+        rn, re = -te, tn
+        offset = float(offset)
+        return {
+            "result.station": fmt_result(s0 + along, metric),
+            "result.offset.value": offset,
+            "result.side": "right" if offset > 0 else "left" if offset < 0 else "on the line",
+            "result.foot_northing.value": sn + along * tn,
+            "result.foot_easting.value": se + along * te,
+            "result.northing.value": sn + along * tn + offset * rn,
+            "result.easting.value": se + along * te + offset * re,
+        }
+
+    out = []
+    if mode == "perpendicular-foot":
+        out.append(vec(1, {"start_northing": "0 ft", "start_easting": "0 ft", "start_station": "0+00", "direction": "0",
+                           "northing": "50 ft", "easting": "-20 ft"}, solve(0, 0, 0, 0, 50, -20.0)))
+    else:
+        out.append(vec(1, {"start_northing": "5000 ft", "start_easting": "5000 ft", "start_station": "10+00", "direction": "60",
+                           "station": "13+50", "offset": "-12.5 ft"}, solve(5000, 5000, 1000, 60, 350, -12.5)))
+
+    while len(out) < 20:
+        sn, se = round(rng.uniform(-5000, 9000), 3), round(rng.uniform(-5000, 9000), 3)
+        s0 = rng.uniform(-500, 3000)
+        azimuth = round(rng.uniform(0, 360), 9)
+        along = round(rng.uniform(-1000, 2500), 6)
+        offset = round(rng.uniform(-250, 250), 6)
+        if abs(offset) < 1:
+            offset = 0.0
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        metric = unit_name == "m"
+        s0 = station_value(s0, metric)
+        angle = math.radians(azimuth)
+        inp = {
+            "start_northing": f"{sn} {unit_name}",
+            "start_easting": f"{se} {unit_name}",
+            "start_station": fmt(s0, metric),
+        }
+        if len(out) % 2:
+            inp["direction"] = f"{azimuth}"
+            azimuth_used = azimuth
+        else:
+            line_length = 1000.0
+            end_northing = sn + line_length * math.cos(angle)
+            end_easting = se + line_length * math.sin(angle)
+            inp["end_northing"] = f"{end_northing} {unit_name}"
+            inp["end_easting"] = f"{end_easting} {unit_name}"
+            azimuth_used = math.degrees(math.atan2(end_easting - se, end_northing - sn)) % 360
+        if mode == "perpendicular-foot":
+            point = solve(sn, se, s0, azimuth_used, along, offset, metric)
+            point_northing = point["result.northing.value"]
+            point_easting = point["result.easting.value"]
+            inp["northing"] = f"{point_northing} {unit_name}"
+            inp["easting"] = f"{point_easting} {unit_name}"
+            used_angle = math.radians(azimuth_used)
+            dn, de = point_northing - sn, point_easting - se
+            along_used = dn * math.cos(used_angle) + de * math.sin(used_angle)
+            offset_used = -dn * math.sin(used_angle) + de * math.cos(used_angle)
+            expected = solve(sn, se, s0, azimuth_used, along_used, offset_used, metric)
+        else:
+            target_station = station_value(s0 + along, metric)
+            inp["station"] = fmt(target_station, metric)
+            inp["offset"] = f"{offset} {unit_name}"
+            expected = solve(sn, se, s0, azimuth_used, target_station - s0, offset, metric)
+        out.append(vec(len(out) + 1, inp, expected, rel=1e-9))
+
+    common_invalid = [
+        ({"start_northing": "0 ft", "start_easting": "0 ft", "direction": "bad"}, "INVALID_INPUT", "/direction"),
+        ({"start_northing": "0 ft", "start_easting": "0 ft", "end_northing": "0 ft", "end_easting": "0 ft"}, "INVALID_INPUT", "/end_northing"),
+    ]
+    if mode == "perpendicular-foot":
+        invalid = [
+            ({**inp, "northing": "10 ft", "easting": "5 ft"}, code, field)
+            for inp, code, field in common_invalid
+        ]
+        invalid.append(({"start_northing": "0 ft", "start_easting": "0 ft", "direction": "0", "northing": "10 ftUS", "easting": "5 ftUS"}, "UNIT_MISMATCH", None))
+    else:
+        invalid = [
+            ({**inp, "station": "1+00", "offset": "5 ft"}, code, field)
+            for inp, code, field in common_invalid
+        ]
+        invalid.append(({"start_northing": "0 ft", "start_easting": "0 ft", "direction": "0", "station": "1+00", "offset": "5 ftUS"}, "UNIT_MISMATCH", None))
+    for inp, code, field in invalid:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
 def unequal_vertical():
     """Checked two ways: equal halves must reproduce the spec's crest scenario, and every
     case must meet each tangent and itself smoothly under the PVI."""
@@ -2068,6 +2194,7 @@ def main():
     selected = set(sys.argv[2:])
     files = {
         "survey.cogo.direction-parse": direction_parse(),
+        "survey.cogo.azimuth-bearing": azimuth_bearing(),
         "survey.cogo.deflection-angle": deflection_angle(),
         "survey.cogo.radial-sideshots": radial_sideshots(),
         "survey.cogo.inverse": inverse(), "survey.cogo.forward": forward(), "survey.cogo.traverse-closure": traverse(),
@@ -2086,6 +2213,8 @@ def main():
         "survey.cogo.bearing-distance": named_intersection("bearing-distance"),
         "survey.cogo.distance-distance": named_intersection("distance-distance"),
         "survey.cogo.angular-closure": angular_closure(), "survey.cogo.station-offset": station_offset(), "survey.earthwork.slope-stake": slope_stake(),
+        "survey.cogo.perpendicular-foot": named_station_offset("perpendicular-foot"),
+        "survey.cogo.point-from-station-offset": named_station_offset("point-from-station-offset"),
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
         "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(), "survey.curves.unequal-vertical-curve": unequal_vertical(),
         "survey.curves.sight-distance": sight_distance(), "survey.earthwork.profile-grades": profile_grades(),

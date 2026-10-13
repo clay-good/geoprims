@@ -273,6 +273,7 @@
       "relatedTools": [
         "geodesy.parse.angle-arithmetic",
         "geodesy.parse.coordinates",
+        "survey.cogo.azimuth-bearing",
         "survey.cogo.deflection-angle",
         "survey.cogo.direction-parse",
         "survey.reduction.slope"

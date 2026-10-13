@@ -20,16 +20,92 @@ const GHILANI: Reference = Reference {
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 
+const START_NORTHING: Field = len("start_northing", "Line start northing", "Like 5000.00 ft")
+    .required()
+    .core();
+const START_EASTING: Field = len("start_easting", "Line start easting", "Like 5000.00 ft")
+    .required()
+    .core();
+const START_STATION: Field = Field::new(
+    "start_station",
+    "Start station",
+    "Like 10+00 (default 0+00)",
+    Kind::Text { max_len: 16 },
+);
+const LINE_DIRECTION: Field = Field::new(
+    "direction",
+    "Line direction",
+    "Bearing or azimuth of stationing, like N 60°00'00\" E",
+    Kind::Text { max_len: 32 },
+)
+.core();
+const END_NORTHING: Field = len(
+    "end_northing",
+    "Line end northing",
+    "Instead of a direction, like 5500.00 ft",
+);
+const END_EASTING: Field = len(
+    "end_easting",
+    "Line end easting",
+    "Instead of a direction, like 5866.03 ft",
+);
+const POINT_NORTHING: Field = len(
+    "northing",
+    "Point northing",
+    "To find its station and offset, like 5300.00 ft",
+)
+.core();
+const POINT_EASTING: Field = len("easting", "Point easting", "Like 5400.00 ft").core();
+const TARGET_STATION: Field = Field::new(
+    "station",
+    "Station",
+    "The station to set out, like 13+50",
+    Kind::Text { max_len: 16 },
+);
+const OFFSET: Field = len(
+    "offset",
+    "Offset",
+    "Right positive, left negative, like -12.5 ft",
+);
+
+const STATION_OFFSET_INPUTS: &[Field] = &[
+    START_NORTHING,
+    START_EASTING,
+    START_STATION,
+    LINE_DIRECTION,
+    END_NORTHING,
+    END_EASTING,
+    POINT_NORTHING,
+    POINT_EASTING,
+    TARGET_STATION,
+    OFFSET,
+];
+const PERPENDICULAR_FOOT_INPUTS: &[Field] = &[
+    START_NORTHING,
+    START_EASTING,
+    START_STATION,
+    LINE_DIRECTION,
+    END_NORTHING,
+    END_EASTING,
+    POINT_NORTHING.required(),
+    POINT_EASTING.required(),
+];
+const POINT_FROM_STATION_INPUTS: &[Field] = &[
+    START_NORTHING,
+    START_EASTING,
+    START_STATION,
+    LINE_DIRECTION,
+    END_NORTHING,
+    END_EASTING,
+    TARGET_STATION.required().core(),
+    OFFSET.required(),
+];
+
 pub static STATION_OFFSET: ToolDef = ToolDef {
     id: "survey.cogo.station-offset",
     title: "Station and offset from a line",
     summary: "A point's station and offset from a straight alignment, with the foot of its perpendicular, or the point at a given station and offset. Offsets are positive to the right.",
-    aliases: &[
-        "station offset",
-        "perpendicular offset",
-        "point from station and offset",
-        "foot of perpendicular",
-    ],
+    aliases: &["station offset", "station offset calculator"],
     keywords: &[
         "station",
         "offset",
@@ -40,55 +116,7 @@ pub static STATION_OFFSET: ToolDef = ToolDef {
         "right",
         "COGO",
     ],
-    inputs: &[
-        len("start_northing", "Line start northing", "Like 5000.00 ft")
-            .required()
-            .core(),
-        len("start_easting", "Line start easting", "Like 5000.00 ft")
-            .required()
-            .core(),
-        Field::new(
-            "start_station",
-            "Start station",
-            "Like 10+00 (default 0+00)",
-            Kind::Text { max_len: 16 },
-        ),
-        Field::new(
-            "direction",
-            "Line direction",
-            "Bearing or azimuth of stationing, like N 60°00'00\" E",
-            Kind::Text { max_len: 32 },
-        )
-        .core(),
-        len(
-            "end_northing",
-            "Line end northing",
-            "Instead of a direction, like 5500.00 ft",
-        ),
-        len(
-            "end_easting",
-            "Line end easting",
-            "Instead of a direction, like 5866.03 ft",
-        ),
-        len(
-            "northing",
-            "Point northing",
-            "To find its station and offset, like 5300.00 ft",
-        )
-        .core(),
-        len("easting", "Point easting", "Like 5400.00 ft").core(),
-        Field::new(
-            "station",
-            "Station",
-            "Instead of a point: the station to set out, like 13+50",
-            Kind::Text { max_len: 16 },
-        ),
-        len(
-            "offset",
-            "Offset",
-            "With the station: right positive, left negative, like -12.5 ft",
-        ),
-    ],
+    inputs: STATION_OFFSET_INPUTS,
     outputs: &[
         Field::new(
             "station",
@@ -154,31 +182,181 @@ pub static STATION_OFFSET: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn run_station_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let names = [
-        "start_northing",
-        "start_easting",
-        "end_northing",
-        "end_easting",
-        "northing",
-        "easting",
+macro_rules! station_method {
+    ($name:ident, $run:ident, $id:literal, $title:literal, $summary:literal,
+     $aliases:expr, $keywords:expr, $inputs:expr, $model:literal, $when:literal,
+     $limitations:literal, $example_title:literal, $example:literal, $source:literal,
+     $sentence:literal, $related:expr) => {
+        pub static $name: ToolDef = ToolDef {
+            id: concat!("survey.cogo.", $id),
+            title: $title,
+            summary: $summary,
+            aliases: $aliases,
+            keywords: $keywords,
+            inputs: $inputs,
+            outputs: STATION_OFFSET.outputs,
+            errors: STATION_OFFSET.errors,
+            warnings: STATION_OFFSET.warnings,
+            model: $model,
+            accuracy: STATION_OFFSET.accuracy,
+            when_to_use: $when,
+            limitations: $limitations,
+            references: STATION_OFFSET.references,
+            examples: &[Example {
+                id: "primary",
+                title: $example_title,
+                input: $example,
+                source: $source,
+            }],
+            primary_example: "primary",
+            visualization: STATION_OFFSET.visualization,
+            related: $related,
+            sentence: $sentence,
+            limits: STATION_OFFSET.limits,
+            run: $run,
+            ..ToolDef::BLANK
+        };
+    };
+}
+
+station_method!(
+    PERPENDICULAR_FOOT,
+    run_perpendicular_foot,
+    "perpendicular-foot",
+    "Perpendicular foot and station",
+    "Projects a point onto a straight alignment and reports the foot, station, signed offset, and side.",
+    &[
+        "foot of perpendicular",
+        "perpendicular offset",
+        "point to line station offset"
+    ],
+    &[
+        "COGO",
+        "perpendicular",
+        "foot",
+        "station",
         "offset",
+        "alignment"
+    ],
+    PERPENDICULAR_FOOT_INPUTS,
+    "Orthogonal projection onto a plane line: along = (P − S)·t and signed offset = (P − S)·n, with n to the right (Ghilani & Wolf 2021, ch. 11)",
+    "Use this to tie a surveyed point to a straight centerline or baseline. Enter the line start and its station, define the direction by bearing or a second point, and enter the point to project. The result gives the station, signed right-or-left offset, and coordinates of the perpendicular foot on the line for as-built checks, utility ties, and tangent staking.",
+    "The alignment is one infinite straight line, so points before its start or beyond a supplied end still project onto its extension. It does not follow circular curves, spirals, or a multi-segment route. Coordinates must be on one plane grid or local system. The sign is positive to the right while facing in the direction of increasing station.",
+    "Point beside a north line",
+    r#"{"start_northing":"0 ft","start_easting":"0 ft","start_station":"0+00","direction":"0","northing":"50 ft","easting":"-20 ft"}"#,
+    "add-survey-suite station-offset geometry",
+    "The perpendicular foot is at station {station}; the point is {offset} from the line ({side}).",
+    &[
+        Related {
+            id: "survey.cogo.station-offset",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.point-from-station-offset",
+            reason: "inverse"
+        },
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "alternative"
+        },
+    ]
+);
+
+station_method!(
+    POINT_FROM_STATION_OFFSET,
+    run_point_from_station_offset,
+    "point-from-station-offset",
+    "Point from station and offset",
+    "Computes plane coordinates at a station and signed offset from a straight alignment.",
+    &[
+        "point from station and offset",
+        "station offset to coordinates",
+        "stake point from baseline"
+    ],
+    &[
+        "COGO",
+        "station",
+        "offset",
+        "coordinates",
+        "stakeout",
+        "alignment"
+    ],
+    POINT_FROM_STATION_INPUTS,
+    "Plane tangent setout: P = S + along·t + offset·n, with along = target station − start station and n to the right (Ghilani & Wolf 2021, ch. 11)",
+    "Use this to compute the coordinate of a stakeout or design point described by station and offset from a straight centerline or baseline. Define the line from its start and a bearing or second point, state the starting station, then enter the target station and signed offset. Positive offsets are right and negative offsets are left while facing ahead on stationing.",
+    "The calculation extends one straight line without clipping to a supplied end point. It does not place points along circular curves, spirals, or a full route alignment. All coordinates and offsets must use compatible plane units, and the station notation must match the project's metric or US stationing convention. Check the sign convention before staking the result.",
+    "Point 12.5 ft left at station 13+50",
+    r#"{"start_northing":"5000 ft","start_easting":"5000 ft","start_station":"10+00","direction":"60","station":"13+50","offset":"-12.5 ft"}"#,
+    "add-survey-suite station-offset geometry",
+    "The station-offset point is northing {northing}, easting {easting} ({side}).",
+    &[
+        Related {
+            id: "survey.cogo.station-offset",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.perpendicular-foot",
+            reason: "inverse"
+        },
+        Related {
+            id: "survey.cogo.forward",
+            reason: "alternative"
+        },
+    ]
+);
+
+#[derive(Clone, Copy)]
+enum StationMode {
+    PerpendicularFoot,
+    PointFromStationOffset,
+}
+
+fn run_station_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_station_offset_with(ctx, None)
+}
+
+fn run_perpendicular_foot(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_station_offset_with(ctx, Some(StationMode::PerpendicularFoot))
+}
+
+fn run_point_from_station_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_station_offset_with(ctx, Some(StationMode::PointFromStationOffset))
+}
+
+fn run_station_offset_with(ctx: &mut Ctx, mode: Option<StationMode>) -> Result<Json, ToolError> {
+    let start_northing = ctx.req_quantity("start_northing")?;
+    let start_easting = ctx.req_quantity("start_easting")?;
+    let end_northing = ctx.quantity("end_northing")?;
+    let end_easting = ctx.quantity("end_easting")?;
+    let (northing, easting) = match mode {
+        Some(StationMode::PointFromStationOffset) => (None, None),
+        _ => (ctx.quantity("northing")?, ctx.quantity("easting")?),
+    };
+    let offset = match mode {
+        Some(StationMode::PerpendicularFoot) => None,
+        _ => ctx.quantity("offset")?,
+    };
+    let named = [
+        ("start_northing", Some(start_northing)),
+        ("start_easting", Some(start_easting)),
+        ("end_northing", end_northing),
+        ("end_easting", end_easting),
+        ("northing", northing),
+        ("easting", easting),
+        ("offset", offset),
     ];
-    let mut vals = Vec::new();
-    for n in names {
-        vals.push(ctx.quantity(n)?);
-    }
-    let qs: Vec<(&str, Q)> = names
+    let qs: Vec<(&str, Q)> = named
         .iter()
-        .zip(&vals)
-        .filter_map(|(n, q)| q.map(|q| (*n, q)))
+        .filter_map(|(name, value)| value.map(|value| (*name, value)))
         .collect();
     let u = common_unit(&qs)?;
-    let v: Vec<Option<f64>> = vals.iter().map(|q| q.map(|q| q.to(u))).collect();
-    let (sn, se) = (v[0].expect("required"), v[1].expect("required"));
+    let (sn, se) = (start_northing.to(u), start_easting.to(u));
+    let (en, ee) = (end_northing.map(|q| q.to(u)), end_easting.map(|q| q.to(u)));
+    let (point_northing, point_easting) = (northing.map(|q| q.to(u)), easting.map(|q| q.to(u)));
+    let offset = offset.map(|q| q.to(u));
     let s0 = station(ctx, "start_station")?.unwrap_or(0.0);
     let dir = ctx.text("direction")?;
-    let az = match (dir, v[2], v[3]) {
+    let az = match (dir, en, ee) {
         (Some(d), None, None) => direction::parse(&d)
             .map_err(|m| ToolError::invalid("/direction", m))?
             .to_radians(),
@@ -207,8 +385,11 @@ fn run_station_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (tn, te) = (cos(az), sin(az));
     // The right-hand normal, in (N, E): a quarter turn clockwise.
     let (rn, re) = (-te, tn);
-    let st_in = station(ctx, "station")?;
-    let (along, off, pn, pe) = match (v[4], v[5], st_in, v[6]) {
+    let target_station = match mode {
+        Some(StationMode::PerpendicularFoot) => None,
+        _ => station(ctx, "station")?,
+    };
+    let (along, off, pn, pe) = match (point_northing, point_easting, target_station, offset) {
         (Some(pn), Some(pe), None, None) => {
             let (dn, de) = (pn - sn, pe - se);
             (dn * tn + de * te, dn * rn + de * re, pn, pe)

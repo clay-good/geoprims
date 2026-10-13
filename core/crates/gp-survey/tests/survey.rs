@@ -157,6 +157,46 @@ fn inverse_and_bearings() {
 }
 
 #[test]
+fn named_direction_and_station_modes_match_their_general_tools() {
+    let direction_input = serde_json::json!({
+        "direction": "N 10°15'30\" W",
+        "reference": "assumed"
+    });
+    let named = call("survey.cogo.azimuth-bearing", &direction_input.to_string());
+    let general = call("survey.cogo.direction-parse", &direction_input.to_string());
+    assert_eq!(named["result"], general["result"]);
+    assert_eq!(named["display"], general["display"]);
+    assert_eq!(named["meta"]["warnings"], general["meta"]["warnings"]);
+
+    let cases = [
+        (
+            "survey.cogo.perpendicular-foot",
+            serde_json::json!({
+                "start_northing": "0 ft", "start_easting": "0 ft", "start_station": "0+00",
+                "direction": "0", "northing": "50 ft", "easting": "-20 ft"
+            }),
+        ),
+        (
+            "survey.cogo.point-from-station-offset",
+            serde_json::json!({
+                "start_northing": "5000 ft", "start_easting": "5000 ft", "start_station": "10+00",
+                "direction": "60", "station": "13+50", "offset": "-12.5 ft"
+            }),
+        ),
+    ];
+    for (tool, input) in cases {
+        let named = call(tool, &input.to_string());
+        let general = call("survey.cogo.station-offset", &input.to_string());
+        assert_eq!(named["result"], general["result"], "{tool}");
+        assert_eq!(named["display"], general["display"], "{tool}");
+        assert_eq!(
+            named["meta"]["warnings"], general["meta"]["warnings"],
+            "{tool}"
+        );
+    }
+}
+
+#[test]
 fn deflection_angle_conventions() {
     let right = call(
         "survey.cogo.deflection-angle",

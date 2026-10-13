@@ -21,6 +21,16 @@ test('the direction parser is an addressable survey operation', () => {
   assert.ok(tool.vectorCount >= 20, `direction parser has only ${tool.vectorCount} vectors`);
 });
 
+test('azimuth and bearing conversion is an addressable survey operation', () => {
+  const tool = byId.get('survey.cogo.azimuth-bearing');
+  assert.ok(tool, 'survey.cogo.azimuth-bearing is missing');
+  for (const alias of ['azimuth bearing converter', 'bearing azimuth conversion', 'azimuth to quadrant bearing']) {
+    assert.ok(tool.aliases.includes(alias), `azimuth-bearing is missing alias "${alias}"`);
+  }
+  assert.ok(existsSync(join(root, 'docs/derivations/survey.cogo.azimuth-bearing.md')));
+  assert.ok(tool.vectorCount >= 20, `azimuth-bearing has only ${tool.vectorCount} vectors`);
+});
+
 test('deflection angle is an addressable survey operation', () => {
   const tool = byId.get('survey.cogo.deflection-angle');
   assert.ok(tool, 'survey.cogo.deflection-angle is missing');
@@ -73,6 +83,20 @@ test('each intersection method is an addressable survey operation', () => {
   assert.equal(byId.get('survey.cogo.bearing-bearing').stability, 'stable');
 });
 
+test('each station-offset direction is an addressable survey operation', () => {
+  const expected = new Map([
+    ['survey.cogo.perpendicular-foot', ['foot of perpendicular', 'perpendicular offset']],
+    ['survey.cogo.point-from-station-offset', ['point from station and offset', 'station offset to coordinates']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 53, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 56, `survey operation count regressed to ${survey.length}`);
 });

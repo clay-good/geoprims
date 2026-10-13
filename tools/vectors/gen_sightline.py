@@ -139,6 +139,32 @@ CASES = [
     case([(0, 200), (100, 2000), (200, 200)], 10, 10, note="a 2,000 m mountain 100 km out"),
 ]
 
+# GRASS GIS 8.5.0 publishes this 10 m DEM row and the corresponding
+# r.viewshed output from a 1.72 m observer. The target 70 m east is null
+# (hidden); the next target, 80 m east, is visible at 81.352478 degrees.
+# The circular geoprims model uses k = 0 here. Its sub-millimeter curvature
+# over this short path does not change either independent classification.
+GRASS_ELEVATIONS = [
+    99.661240, 98.713676, 97.548599, 96.310646, 94.935608,
+    93.522522, 92.027649, 90.406349, 89.214500,
+]
+for end, visibility in [(8, "hidden"), (9, "visible at 81.352478 degrees")]:
+    row = case(
+        [(i * 10, z) for i, z in enumerate(GRASS_ELEVATIONS[:end])],
+        1.72,
+        0,
+        du="m",
+        eu="m",
+        k=0,
+        note=f"the GRASS GIS reference fixture marks this target {visibility}",
+    )
+    row["source"] = (
+        "OSGeo GRASS GIS 8.5.0 r.viewshed reference fixture, observer "
+        "(634720, 216180), zero-based row 81 eastward; expected visibility independently published"
+    )
+    row["sourceVersion"] = "GRASS GIS 8.5.0"
+    CASES.append(row)
+
 with OUT.open("w") as f:
     for i, row in enumerate(CASES, 1):
         f.write(json.dumps({"id": f"v{i:03d}", **row}) + "\n")

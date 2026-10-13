@@ -2606,6 +2606,26 @@
       "editionCheck": true
     },
     {
+      "id": "osgeo-grass-viewshed",
+      "name": "GRASS GIS r.viewshed reference fixture",
+      "issuer": "Open Source Geospatial Foundation",
+      "currentEdition": "GRASS GIS 8.5.0",
+      "currentReleaseDate": "2026-05-08",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read the released 8.5.0 test source, elevation raster, and expected viewshed raster on 2026-10-13. From the fixture observer at (634720, 216180), zero-based elevation row 81 eastward makes the target 70 m away hidden and the target 80 m away visible at 81.352478 degrees.",
+      "freeAccessUrl": "https://github.com/OSGeo/grass/tree/8.5.0/raster/r.viewshed/testsuite",
+      "matchTerms": [
+        "r.viewshed reference fixture"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "osm-tiles",
       "name": "Slippy map tilenames",
       "issuer": "OpenStreetMap Wiki",

@@ -39,6 +39,14 @@ const ESRI_VIEWSHED: Reference = Reference {
     locator: "Refractivity coefficient parameter: visible-light default 0.13",
     url: "https://pro.arcgis.com/en/pro-app/3.6/tool-reference/spatial-analyst/viewshed-2.htm",
 };
+const GRASS_VIEWSHED_FIXTURE: Reference = Reference {
+    title: "r.viewshed reference fixture",
+    issuer: "Open Source Geospatial Foundation",
+    year: 2026,
+    edition: "GRASS GIS 8.5.0",
+    locator: "raster/r.viewshed/testsuite: observer (634720, 216180), zero-based row 81 eastward; the 70 m target is hidden and the 80 m target is visible at 81.352478 degrees",
+    url: "https://github.com/OSGeo/grass/tree/8.5.0/raster/r.viewshed/testsuite",
+};
 
 /// Mean Earth radius, meters.
 const R_DEFAULT: f64 = 6_371_000.0;
@@ -110,6 +118,8 @@ const ROW: &[Field] = &[
 
 pub static LINE_OF_SIGHT: ToolDef = ToolDef {
     id: "raster.terrain.line-of-sight",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Line of sight over a ground profile",
     summary: "Whether an observer can see a target over the ground between them, with the Earth's curve and refraction: the point that blocks the view, the height that would clear it, and the Fresnel zone clearance of a radio link.",
     aliases: &[
@@ -268,18 +278,26 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Spherical Earth of effective radius R/(1 − k), the sight line as the straight chord between the antennas, clearance along the local vertical, and the first Fresnel radius √(λ d1 d2 / d)",
     accuracy: "Exact for the model at the points given; the ground between points is not checked, and real refraction varies with the weather",
     when_to_use: "Use this when there is ground between two points and the question is whether it gets in the way: a ridge between a pilot and a drone, a hill between a tower and a receiver, or the path of a radio link across a valley. Enter the ground profile from the observer to the target with both heights above the ground. It says whether the target is in sight, where the ground comes closest to the sight line, how high the observer would have to be to see over it, and, with a frequency, whether the path meets ITU-R P.530's 60% free-space clearance screen and where it does not.",
     limitations: "Only the points you give are checked, and the ground between them is not, so a narrow peak missed by the profile can still block the view; sample at least every break in the ground. Buildings, trees, and towers are not part of the ground unless you add their heights to it. Refraction enters only through k, and real air varies: plan a radio link against a lower k as well. The 60% figure is a screen, not a universal antenna-height criterion; ITU-R P.530's detailed procedure varies clearance with frequency, climate, path length, obstruction type, and diversity. The Fresnel check is not a diffraction-loss calculation, so it does not say how much signal an obstruction costs.",
-    references: &[ITU_P530, ESRI_VIEWSHED],
-    examples: &[Example {
-        id: "primary",
-        title: "A ridge between a hilltop and a tower",
-        input: r#"{"points":[{"distance":"0 km","elevation":"300 m"},{"distance":"4 km","elevation":"340 m"},{"distance":"8 km","elevation":"395 m"},{"distance":"12 km","elevation":"330 m"},{"distance":"16 km","elevation":"310 m"}],"observer_height":"2 m","target_height":"30 m","frequency":"5.8 GHz"}"#,
-        source: "add-spatial-indexing-and-raster ridge scenario; the exact circular geometry worked independently in Python (tools/vectors/gen_sightline.py)",
-    }],
+    references: &[ITU_P530, ESRI_VIEWSHED, GRASS_VIEWSHED_FIXTURE],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "The visible target in the GRASS GIS fixture",
+            input: r#"{"points":[{"distance":"0 m","elevation":"99.661240 m"},{"distance":"10 m","elevation":"98.713676 m"},{"distance":"20 m","elevation":"97.548599 m"},{"distance":"30 m","elevation":"96.310646 m"},{"distance":"40 m","elevation":"94.935608 m"},{"distance":"50 m","elevation":"93.522522 m"},{"distance":"60 m","elevation":"92.027649 m"},{"distance":"70 m","elevation":"90.406349 m"},{"distance":"80 m","elevation":"89.214500 m"}],"observer_height":"1.72 m","target_height":"0 m","k":0}"#,
+            source: "GRASS GIS 8.5.0 r.viewshed reference fixture: the target 80 m east is visible at 81.352478 degrees",
+        },
+        Example {
+            id: "ridge",
+            title: "A ridge between a hilltop and a tower",
+            input: r#"{"points":[{"distance":"0 km","elevation":"300 m"},{"distance":"4 km","elevation":"340 m"},{"distance":"8 km","elevation":"395 m"},{"distance":"12 km","elevation":"330 m"},{"distance":"16 km","elevation":"310 m"}],"observer_height":"2 m","target_height":"30 m","frequency":"5.8 GHz"}"#,
+            source: "add-spatial-indexing-and-raster ridge scenario; the exact circular geometry worked independently in Python (tools/vectors/gen_sightline.py)",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "profile-chart",

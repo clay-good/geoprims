@@ -29,22 +29,22 @@ The geometry is exact on the sphere: no small-angle or parabolic step is taken, 
 
 ## Worked example
 
-- sourcePublisher: geoprims (computed, not published)
-- sourceTitle: the ridge scenario of add-spatial-indexing-and-raster, worked in Python with the polar equation of a line (tools/vectors/gen_sightline.py)
-- sourceEdition: 2026
-- sourceLocator: core/vectors/raster.terrain.line-of-sight.jsonl, v001
-- independent: no
-- inputs: ground 300, 340, 395, 330, 310 m at 0, 4, 8, 12, 16 km; observer 2 m, target 30 m above the ground; 5.8 GHz; k = 0.13
-- outputs: not visible; the ridge at 8 km (395 m) rises 78.37 m above the sight line; an observer 158.74 m up would see over it; no point clears 60% of the Fresnel zone
-- tolerance: 1e-9 relative, 1 µm absolute
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- sourcePublisher: Open Source Geospatial Foundation
+- sourceTitle: GRASS GIS r.viewshed reference fixture
+- sourceEdition: GRASS GIS 8.5.0
+- sourceLocator: raster/r.viewshed/testsuite, observer (634720, 216180), zero-based row 81 and columns 99 through 107 of elevation.ascii and lake_viewshed.ascii
+- independent: yes
+- inputs: 10 m profile elevations 99.661240, 98.713676, 97.548599, 96.310646, 94.935608, 93.522522, 92.027649, 90.406349, and 89.214500 m; observer height 1.72 m; target height 0 m; no refraction
+- outputs: the target 70 m east is hidden and the target 80 m east is visible at a vertical-angle raster value of 81.352478°; geoprims gives the same two visibility results and 0.2284 m minimum clearance for the visible target
+- tolerance: exact agreement on visible or hidden; the published angle is reproduced from the fixture heights within 0.000002°
+- verifiedBy: golden vectors v023 and v024, run by the core on every build
+- verifiedOn: 2026-10-13
 
-This is not independent in the sense the stable bar asks for: the profile was chosen here and the answer worked here, in a second formulation (the polar equation of a line rather than the Cartesian chord). No published worked example of a terrain profile with these outputs has been found yet; ITU-R P.530 gives the clearance criterion but no worked path.
+The GRASS fixture does not enable Earth-curvature correction. Geoprims uses its spherical model with k = 0; over 80 m its curvature term is less than 0.0002 m and does not change either classification. The published 81.352478° is 90° plus the elevation angle from the observer top to the target, and the fixture uses null for the blocked 70 m cell.
 
 ## Differential tests
 
-- `tools/vectors/gen_sightline.py`: 22 vectors from the polar equation of a line through the two antennas, a different formulation from the core's Cartesian chord, across refraction, radius, units, and frequency
+- `tools/vectors/gen_sightline.py`: 24 vectors from the polar equation of a line through the two antennas, a different formulation from the core's Cartesian chord, across refraction, radius, units, and frequency; the final two carry the independent GRASS hidden/visible boundary
 
 ## Invariants
 

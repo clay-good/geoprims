@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "raster.terrain.line-of-sight"
+      ],
+      "vectors": [],
+      "summary": "Line of sight over a ground profile (version 1.1.0) is now stable. Two new vectors reproduce the hidden-to-visible boundary in the published GRASS GIS 8.5.0 r.viewshed fixture, alongside 22 spherical-geometry vectors and five invariant tests. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "survey.reduction.slope"
       ],
       "vectors": [],

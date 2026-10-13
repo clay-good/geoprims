@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "6dfb5b29707af656",
+    "hash": "be9a4fa008ce8240",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -112,15 +112,15 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/ifr/hold-entry/": {
-    "hash": "9d11f3119a686e8c",
-    "lastmod": "2026-10-12"
+    "hash": "bc4f57d6718b238f",
+    "lastmod": "2026-10-13"
   },
   "/aviation/ifr/hold-speed-limit/": {
-    "hash": "fbbcaf852b9f07f1",
+    "hash": "bd1044259135f4bd",
     "lastmod": "2026-10-13"
   },
   "/aviation/ifr/hold-wind-timing/": {
-    "hash": "ea1b18bd35d066c4",
+    "hash": "7c3ce0a431d013c6",
     "lastmod": "2026-10-13"
   },
   "/aviation/ifr/radial-fix/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "7b4acdce1be682a9",
+    "hash": "dbc3d8171feff673",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1096,8 +1096,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/holding-pattern-entries/": {
-    "hash": "236bd71187725ea7",
-    "lastmod": "2026-10-09"
+    "hash": "b22d136396e2569e",
+    "lastmod": "2026-10-13"
   },
   "/learn/horizontal-curves/": {
     "hash": "40caae5910538539",
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "04078a902c0dcfda",
+    "hash": "a2ea4849882d7192",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c63a6a3cdd28d66f",
+    "hash": "f6876f89b7363009",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "59f6632965a9819f",
+    "hash": "7efa93eff47dc862",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "20c346c23f91ae1c",
+    "hash": "db1ec2caabe015c6",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2004,7 +2004,7 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/ifr-approach-brief/": {
-    "hash": "b91a129e44fbe835",
+    "hash": "2785a1f257faaf37",
     "lastmod": "2026-10-13"
   },
   "/workflows/index-to-area/": {

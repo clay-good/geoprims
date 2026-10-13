@@ -603,6 +603,62 @@ def hold_wind_vectors():
                 {"result.inbound_wca.value": w_in, "result.outbound_heading.value": (oc - 3 * w_in) % 360,
                  "result.outbound_time.value": gs_in * 60 / gs_out}, 1e-9, PERF_SRC.replace("turn, gradient, glide, and pivotal-altitude relations in FAA-H-8083-3C and FAA-H-8083-16B", "holding wind triangle and triple-the-drift rule in FAA-H-8083-15B"), "FAA-H-8083-15B (2012)")
         out.append(v)
+
+    def add_case(ic, tas, wd, ws, t_in=60, inp=None, source=None, version=None):
+        def leg(c):
+            a = math.radians(wd - c)
+            w = math.asin(ws / tas * math.sin(a))
+            return math.degrees(w), tas * math.cos(w) - ws * math.cos(a)
+        oc = (ic + 180) % 360
+        w_in, gs_in = leg(ic)
+        w_out, gs_out = leg(oc)
+        if inp is None:
+            inp = {"inbound_course": f"{ic} deg", "tas": f"{tas} kt", "wind_direction": f"{wd} deg", "wind_speed": f"{ws} kt"}
+            if t_in != 60:
+                inp["inbound_time"] = f"{t_in} s"
+        expected = {
+            "result.inbound_heading.value": (ic + w_in) % 360,
+            "result.inbound_wca.value": w_in,
+            "result.outbound_heading.value": (oc - 3 * w_in) % 360,
+            "result.outbound_track_heading.value": (oc + w_out) % 360,
+            "result.inbound_groundspeed.value": gs_in,
+            "result.outbound_groundspeed.value": gs_out,
+            "result.outbound_time.value": gs_in * t_in / gs_out,
+        }
+        out.append(vec(len(out) + 1, inp, expected, 1e-9, source or "Independent Python holding wind triangle (tools/vectors/gen_aviation.py)", version or "2026"))
+
+    published_ws = 120 * math.sin(math.radians(8))
+    add_case(
+        360, 120, 270, published_ws,
+        source="FAA Aeronautical Information Manual, paragraph 5-3-8j (8° left inbound becomes 24° right outbound)",
+        version="current, verified 2026-10-13",
+    )
+    # The AIM prints the two corrections; keep those expectations at the printed precision.
+    out[5]["expect"]["result.inbound_wca.value"] = -8
+    out[5]["expect"]["result.inbound_heading.value"] = 352
+    out[5]["expect"]["result.outbound_heading.value"] = 204
+    add_case(360, 120, 360, 0)
+    add_case(90, 150, 90, 20)
+    add_case(270, 100, 90, 25)
+    add_case(359, 100, 45, 15, 90)
+    add_case(1, 200, 315, 40, inp={"inbound_course": "1 deg", "turns": "left", "tas": "200 kt", "wind_direction": "315 deg", "wind_speed": "40 kt"})
+    add_case(180, 250, 270, 50)
+    add_case(45, 80, 225, 10)
+    add_case(225, 95, 135, 20)
+    add_case(
+        360, 120, 270, published_ws,
+        inp={"inbound_course": "6.283185307179586 rad", "tas": "61.73333333333333 m/s", "wind_direction": "4.71238898038469 rad", "wind_speed": "8.591619432601373 m/s", "inbound_time": "1 min"},
+    )
+    add_case(30, 140, 330, 18, inp={"inbound_course": "30 deg", "tas": "140 kt", "wind_direction": "330 deg", "wind_speed": "18 kt", "at_time": "0 s"})
+
+    out.append(vec(len(out) + 1, {"inbound_course": "360 deg", "tas": "0 kt", "wind_direction": "270 deg", "wind_speed": "10 kt"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/tas"}, 0))
+    out.append(vec(len(out) + 1, {"inbound_course": "360 deg", "tas": "120 kt", "wind_direction": "270 deg", "wind_speed": "-1 kt"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/wind_speed"}, 0))
+    out.append(vec(len(out) + 1, {"inbound_course": "360 deg", "tas": "120 kt", "wind_direction": "270 deg", "wind_speed": "10 kt", "inbound_time": "0 s"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/inbound_time"}, 0))
+    out.append(vec(len(out) + 1, {"inbound_course": "360 deg", "tas": "100 kt", "wind_direction": "270 deg", "wind_speed": "101 kt"},
+                   {"ok": False, "error.code": "NO_SOLUTION", "error.field": "/wind_speed"}, 0))
     return out
 
 

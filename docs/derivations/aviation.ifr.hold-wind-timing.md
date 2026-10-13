@@ -27,22 +27,22 @@ Straight legs in a steady wind; drift in the turns is not modeled. The triple-th
 
 ## Worked example
 
-- sourcePublisher: geoprims (tool example, computed)
-- sourceTitle: tool example "Inbound 360°, 120 KTAS, wind 300° at 20 kt", worked from the equations above
-- sourceEdition: 2026; method from FAA-H-8083-15B (2012)
-- sourceLocator: example "primary" in core/crates/gp-aviation/src/ifr.rs; method from FAA-H-8083-15B chapter 10 (correct into the wind inbound, triple it outbound); the handbook gives the method, not these numbers
-- independent: no
-- inputs: inbound course 360°, TAS 120 kt, wind from 300° at 20 kt
-- outputs: inbound correction −8.3° (heading 351.7°), outbound heading 204.9° by triple the drift (188.3° to hold the track), groundspeed 108.7 kt inbound and 128.7 kt outbound, outbound time 50.7 s
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Aeronautical Information Manual
+- sourceEdition: current edition, checked 2026-10-13
+- sourceLocator: paragraph 5-3-8j, pilot action, wind correction
+- independent: yes
+- inputs: the AIM gives an 8° left inbound correction and calls for 24° right outbound; the primary tool example uses an inbound course of 360°, 120 KTAS, and a 16.700772 kt crosswind from 270° to produce that 8° correction
+- outputs: inbound correction 8° left (heading 352°) and outbound heading 204°, which is 24° right of the 180° outbound course; the tool also derives 118.83 kt on both legs and 60 seconds outbound
 - tolerance: 1e-9 relative
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- verifiedBy: golden vector v006, run by the core on every build
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_aviation.py`: the same per-leg wind triangle and triple-the-drift rule written separately in Python, at five holds with headwind, tailwind, and crosswind cases (within 1e-9 relative). It checks the code against the stated equations, not against a separate method
-- `core/vectors/aviation.ifr.hold-wind-timing.jsonl`: those five vectors, run through the core on every build
+- `tools/vectors/gen_aviation.py`: the FAA worked relationship plus 15 additional successful cases evaluated with a separate Python wind triangle and four refusal cases. They cover calm air, headwind, tailwind, crosswind from both sides, course wrap, longer timing, equivalent units, left turns, the animation start, and every refusal branch. Only the FAA row is an independent check
+- `core/vectors/aviation.ifr.hold-wind-timing.jsonl`: those 20 vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/slice3.rs` `holding_wind_timing`: a wind straight down the inbound course gives no correction and an outbound time of 60 × 100 ÷ 140 s; a crosswind from the left gives a left (negative) inbound correction, and the outbound heading is 180° − 3 × that correction (within 1e-9)
+- `core/crates/gp-aviation/tests/slice3.rs` `holding_wind_timing`: the published 8°/24° relationship holds; a direct headwind has no drift and gives the groundspeed-ratio timing; rotating the course and wind rotates only the headings; scaling airspeed and wind together scales groundspeeds but preserves angles and timing; doubling inbound time doubles outbound time; equivalent units agree; and turn direction leaves the operational outputs unchanged

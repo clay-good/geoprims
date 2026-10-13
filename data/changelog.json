@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.ifr.hold-wind-timing"
+      ],
+      "vectors": [],
+      "summary": "Holding wind correction and timing (version 1.1.0) is now stable. Its primary example matches the current FAA AIM's 8-degree-left inbound and 24-degree-right outbound relationship, and it now has 20 vectors plus rotation, scaling, timing, equivalent-unit, and turn-direction invariants. Negative wind speed now identifies the wind-speed field; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.ifr.time-to-station"
       ],
       "vectors": [],

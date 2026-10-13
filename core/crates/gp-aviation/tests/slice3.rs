@@ -405,6 +405,94 @@ fn holding_wind_timing() {
     let w = num(&r, "result.inbound_wca.value");
     assert!(w < 0.0);
     assert!((num(&r, "result.outbound_heading.value") - (180.0 - 3.0 * w)).abs() < 1e-9);
+
+    // The current AIM's worked relationship: 8° left inbound becomes 24° right outbound.
+    let aim = call(
+        "aviation.ifr.hold-wind-timing",
+        r#"{"inbound_course":"360 deg","tas":"120 kt","wind_direction":"270 deg","wind_speed":"16.70077211520785 kt"}"#,
+    );
+    assert!((num(&aim, "result.inbound_wca.value") + 8.0).abs() < 1e-12);
+    assert!((num(&aim, "result.inbound_heading.value") - 352.0).abs() < 1e-12);
+    assert!((num(&aim, "result.outbound_heading.value") - 204.0).abs() < 1e-12);
+
+    // Rotating the course and wind together rotates headings only.
+    let rotated = call(
+        "aviation.ifr.hold-wind-timing",
+        r#"{"inbound_course":"90 deg","tas":"120 kt","wind_direction":"0 deg","wind_speed":"16.70077211520785 kt"}"#,
+    );
+    for path in [
+        "result.inbound_wca.value",
+        "result.inbound_groundspeed.value",
+        "result.outbound_groundspeed.value",
+        "result.outbound_time.value",
+    ] {
+        assert!(
+            (num(&aim, path) - num(&rotated, path)).abs() < 1e-12,
+            "{path}"
+        );
+    }
+    assert!((num(&rotated, "result.inbound_heading.value") - 82.0).abs() < 1e-12);
+    assert!((num(&rotated, "result.outbound_heading.value") - 294.0).abs() < 1e-12);
+
+    // Scaling both airspeed and wind preserves angles and times, scaling groundspeeds.
+    let scaled = call(
+        "aviation.ifr.hold-wind-timing",
+        r#"{"inbound_course":"360 deg","tas":"240 kt","wind_direction":"270 deg","wind_speed":"33.4015442304157 kt"}"#,
+    );
+    for path in [
+        "result.inbound_wca.value",
+        "result.inbound_heading.value",
+        "result.outbound_heading.value",
+        "result.outbound_time.value",
+    ] {
+        assert!(
+            (num(&aim, path) - num(&scaled, path)).abs() < 1e-12,
+            "{path}"
+        );
+    }
+    assert!(
+        (num(&scaled, "result.inbound_groundspeed.value")
+            - 2.0 * num(&aim, "result.inbound_groundspeed.value"))
+        .abs()
+            < 1e-10
+    );
+    assert!(
+        (num(&scaled, "result.outbound_groundspeed.value")
+            - 2.0 * num(&aim, "result.outbound_groundspeed.value"))
+        .abs()
+            < 1e-10
+    );
+
+    // Unit choices and turn direction do not change the operational answer.
+    let metric_left = call(
+        "aviation.ifr.hold-wind-timing",
+        r#"{"inbound_course":"6.283185307179586 rad","turns":"left","tas":"61.73333333333333 m/s","wind_direction":"4.71238898038469 rad","wind_speed":"8.591619432601373 m/s","inbound_time":"1 min"}"#,
+    );
+    for path in [
+        "result.inbound_heading.value",
+        "result.inbound_wca.value",
+        "result.outbound_heading.value",
+        "result.outbound_track_heading.value",
+        "result.inbound_groundspeed.value",
+        "result.outbound_groundspeed.value",
+        "result.outbound_time.value",
+    ] {
+        assert!(
+            (num(&aim, path) - num(&metric_left, path)).abs() < 1e-10,
+            "{path}"
+        );
+    }
+
+    let longer = call(
+        "aviation.ifr.hold-wind-timing",
+        r#"{"inbound_course":"360 deg","tas":"120 kt","wind_direction":"270 deg","wind_speed":"16.70077211520785 kt","inbound_time":"2 min"}"#,
+    );
+    assert!(
+        (num(&longer, "result.outbound_time.value")
+            - 2.0 * num(&aim, "result.outbound_time.value"))
+        .abs()
+            < 1e-12
+    );
 }
 
 #[test]

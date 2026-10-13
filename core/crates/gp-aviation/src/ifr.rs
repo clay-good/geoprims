@@ -19,7 +19,7 @@ pub const AIM_HOLDING: Reference = Reference {
     issuer: "Federal Aviation Administration",
     year: 2026,
     edition: "Current edition (rules as of 2026-09-18)",
-    locator: "Chapter 5, Section 3, paragraph 5-3-8j (holding: entry procedures, FIG 5-3-4, and maximum holding airspeeds, TBL 5-3-24)",
+    locator: "Chapter 5, Section 3, paragraph 5-3-8j (holding: entry procedures, maximum airspeeds, timing, and the example that triples 8° left inbound to 24° right outbound)",
     url: "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/chap5_section_3.html",
 };
 pub const IFH: Reference = Reference {
@@ -589,6 +589,8 @@ fn run_hold_speed(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HOLD_WIND: ToolDef = ToolDef {
     id: "aviation.ifr.hold-wind-timing",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Holding wind correction and timing",
     summary: "Inbound and outbound headings for the wind, the outbound time that gives a 1-minute inbound leg, and the triple-the-drift rule of thumb beside the exact values.",
     aliases: &[
@@ -740,7 +742,7 @@ pub static HOLD_WIND: ToolDef = ToolDef {
         .angle_range("[0,360)"),
     ],
     errors: &[ErrorCode::NoSolution, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Straight-leg wind triangle on each leg; outbound time = inbound GS × inbound time / outbound GS; the triple-the-drift heading (FAA-H-8083-15B) allows for the turns and is a rule of thumb",
     accuracy: "Exact for straight legs in a steady wind. Wind drift in the turns is not modeled; adjust on the next circuit.",
     when_to_use: "Use this when you are about to hold in a wind and want headings and timing before you start. Enter the inbound course, your true airspeed, and the wind. It returns the inbound heading, the outbound heading by the triple-the-drift method, the plain outbound heading that holds the track, and the outbound time that gives a one-minute inbound leg, or the leg time you set.",
@@ -748,19 +750,29 @@ pub static HOLD_WIND: ToolDef = ToolDef {
     references: &[IFH, AIM_HOLDING, PHAK],
     examples: &[Example {
         id: "primary",
-        title: "Inbound 360°, 120 KTAS, wind 300° at 20 kt",
-        input: r#"{"inbound_course":"360 deg","tas":"120 kt","wind_direction":"300 deg","wind_speed":"20 kt"}"#,
-        source: "FAA-H-8083-15B chapter 10 method: correct into the wind inbound, triple it outbound",
+        title: "Triple an 8° left inbound correction",
+        input: r#"{"inbound_course":"360 deg","tas":"120 kt","wind_direction":"270 deg","wind_speed":"16.70077211520785 kt"}"#,
+        source: "FAA AIM 5-3-8j: 8° left inbound becomes 24° right outbound",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "vector-diagram",
         map: &[("heading", "outbound_heading")],
     }],
-    related: &[Related {
-        id: "aviation.ifr.hold-entry",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.ifr.hold-entry",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.ifr.hold-speed-limit",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.wind.heading-groundspeed",
+            reason: "next",
+        },
+    ],
     assumptions: &[
         Assumption {
             name: "Default inbound leg time",
@@ -810,10 +822,16 @@ fn run_hold_wind(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let tas = ctx.req_quantity("tas")?.to(kt);
     let wd = dg(ctx, "wind_direction")?.expect("required");
     let ws = ctx.req_quantity("wind_speed")?.to(kt);
-    if tas <= 0.0 || ws < 0.0 {
+    if tas <= 0.0 {
         return Err(ToolError::invalid(
             "/tas",
-            "True airspeed must be positive and wind speed cannot be negative.",
+            "True airspeed must be positive.",
+        ));
+    }
+    if ws < 0.0 {
+        return Err(ToolError::invalid(
+            "/wind_speed",
+            "Wind speed cannot be negative.",
         ));
     }
     let t_in = ctx.quantity("inbound_time")?.map_or(60.0, |t| t.base());

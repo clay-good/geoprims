@@ -220,6 +220,64 @@ fn gimbal_pitch_for_a_tower_top() {
 }
 
 #[test]
+fn orbit_accepts_a_maximum_angular_step() {
+    let base = json!({
+        "lat": 40.0,
+        "lon": -105.0,
+        "radius": "50 m",
+        "height": "80 m",
+        "target_height": "60 m"
+    });
+    let by_step = call(
+        "drone.mission.orbit",
+        &json!({
+            "lat": 40.0,
+            "lon": -105.0,
+            "radius": "50 m",
+            "height": "80 m",
+            "target_height": "60 m",
+            "angular_step": "14 deg"
+        }),
+    );
+    assert_eq!(num(&by_step, "result.photo_count"), 26.0, "{by_step}");
+    assert_eq!(by_step["result"]["waypoints"].as_array().unwrap().len(), 26);
+    assert!((num(&by_step, "result.angular_step_used.value") - 360.0 / 26.0).abs() < 1e-12);
+
+    let defaulted = call("drone.mission.orbit", &base);
+    assert_eq!(num(&defaulted, "result.photo_count"), 36.0);
+    assert_eq!(num(&defaulted, "result.angular_step_used.value"), 10.0);
+
+    let both = call(
+        "drone.mission.orbit",
+        &json!({
+            "lat": 40.0,
+            "lon": -105.0,
+            "radius": "50 m",
+            "height": "80 m",
+            "photos": 12,
+            "angular_step": "30 deg"
+        }),
+    );
+    assert_eq!(both["error"]["code"], "INVALID_INPUT");
+    assert_eq!(both["error"]["field"], "/angular_step");
+
+    for step in ["0.09 deg", "121 deg"] {
+        let bad = call(
+            "drone.mission.orbit",
+            &json!({
+                "lat": 40.0,
+                "lon": -105.0,
+                "radius": "50 m",
+                "height": "80 m",
+                "angular_step": step
+            }),
+        );
+        assert_eq!(bad["error"]["code"], "INVALID_INPUT", "{bad}");
+        assert_eq!(bad["error"]["field"], "/angular_step", "{bad}");
+    }
+}
+
+#[test]
 fn hull_and_width() {
     let pts = [(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0), (5.0, 0.5)];
     assert_eq!(mission::hull(&pts).len(), 4);

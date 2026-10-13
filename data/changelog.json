@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "added",
+      "tools": [
+        "drone.mission.orbit"
+      ],
+      "vectors": [],
+      "summary": "Orbit planning (version 1.1.0) now accepts a maximum angular step instead of a photo count. It rounds up to enough waypoints to close the circle with equal gaps no larger than requested, and reports the photo count and actual angular step. Existing calls and waypoint positions are unchanged."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "changed",
       "tools": [],
       "vectors": [],

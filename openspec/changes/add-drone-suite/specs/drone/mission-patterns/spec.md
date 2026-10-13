@@ -23,7 +23,7 @@ Given a centerline polyline and a corridor width, the tool SHALL generate a set 
 - **THEN** three offset lines are generated (at -52.5, 0, +52.5 m), covering the corridor
 
 ### Requirement: Orbit and point of interest
-Given a center, radius, height, direction (clockwise or counterclockwise), and number of photos or angular step, the tool SHALL generate an orbit (geodesic circle) with a camera heading and gimbal pitch per waypoint that keeps a target at a given height centered. When no photo count or angular step is given, the product-defined default SHALL be 36 photos.
+Given a center, radius, height, direction (clockwise or counterclockwise), and number of photos or angular step, the tool SHALL generate an orbit (geodesic circle) with a camera heading and gimbal pitch per waypoint that keeps a target at a given height centered. A caller SHALL give no more than one of photo count and angular step. An angular step is the largest permitted gap: the tool SHALL use `ceil(360° / angular step)` waypoints at equal angles and report the resulting step. It SHALL accept 0.1° to 120°, matching the photo-count limit of 3 to 3,600 waypoints. When no photo count or angular step is given, the product-defined default SHALL be 36 photos.
 
 #### Scenario: Gimbal pitch for a tower top
 - **WHEN** orbiting a 60 m tower at radius 50 m and height 80 m, targeting the tower top

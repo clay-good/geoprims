@@ -2035,6 +2035,7 @@ const ORBIT_ROW: &[Field] = &[
 
 pub static ORBIT: ToolDef = ToolDef {
     id: "drone.mission.orbit",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Orbit around a point of interest",
     summary: "Waypoints on a geodesic circle around a point, each with the heading toward the center and the gimbal pitch that keeps a target height centered, like the top of a tower.",
@@ -2101,12 +2102,20 @@ pub static ORBIT: ToolDef = ToolDef {
         Field::new(
             "photos",
             "Photos",
-            "Waypoints around the circle, default 36",
+            "Waypoints around the circle; use this or angular step; default 36",
             Kind::Number {
                 min: 3.0,
                 max: 3600.0,
             },
         ),
+        qty(
+            "angular_step",
+            "Angular step",
+            "Largest angle between waypoints; use this or photos, 0.1 to 120 deg",
+            QT::Angle,
+            "deg",
+        )
+        .angle_range("[0.1,120]"),
         Field::new(
             "rotation",
             "Direction",
@@ -2140,6 +2149,24 @@ pub static ORBIT: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(1)),
         Field::new(
+            "photo_count",
+            "Photo count",
+            "Number of waypoints and photos",
+            Kind::Number {
+                min: 3.0,
+                max: 3600.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        qty(
+            "angular_step_used",
+            "Angular step used",
+            "Equal angle between waypoints",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
             "waypoints",
             "Waypoints",
             "In flight order",
@@ -2150,7 +2177,7 @@ pub static ORBIT: ToolDef = ToolDef {
             },
         ),
     ],
-    errors: &[ErrorCode::OutOfDomain],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     warnings: &["UNIT_ASSUMED"],
     model: "Geodesic direct from the center at equal azimuth steps (Karney 2013); heading = reverse azimuth; pitch = −atan(Δh / r)",
     accuracy: "Exact geodesic positions; heights are relative to the center's ground level.",
@@ -2208,7 +2235,28 @@ fn run_orbit(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let r = positive(ctx, "radius", "Radius")?;
     let h = ctx.req_quantity("height")?.base();
     let t = ctx.quantity("target_height")?.map_or(0.0, |q| q.base());
-    let n = ctx.number("photos")?.unwrap_or(36.0).round() as usize;
+    let photos = ctx.number("photos")?;
+    let angular_step = ctx.quantity("angular_step")?;
+    let n = match (photos, angular_step) {
+        (Some(_), Some(_)) => {
+            return Err(ToolError::invalid(
+                "/angular_step",
+                "Give the photo count or the angular step, not both.",
+            ));
+        }
+        (Some(photos), None) => photos.round() as usize,
+        (None, Some(step)) => {
+            let step = step.to(deg);
+            if !(0.1..=120.0).contains(&step) {
+                return Err(ToolError::invalid(
+                    "/angular_step",
+                    "The angular step must be between 0.1° and 120°.",
+                ));
+            }
+            (360.0 / step).ceil() as usize
+        }
+        (None, None) => 36,
+    };
     let cw = ctx.choice("rotation")? != Some("counterclockwise");
     let pitch = -atan((h - t) / r).to_degrees();
     let geod = Geodesic::wgs84();
@@ -2259,6 +2307,17 @@ fn run_orbit(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
         ("circumference", ctx.out("circumference", m(arc))),
         ("photo_spacing", ctx.out("photo_spacing", m(arc / n as f64))),
+        ("photo_count", Json::Num(n as f64)),
+        (
+            "angular_step_used",
+            ctx.out(
+                "angular_step_used",
+                Q {
+                    value: 360.0 / n as f64,
+                    unit: deg,
+                },
+            ),
+        ),
         ("waypoints", Json::Arr(wps)),
     ]))
 }

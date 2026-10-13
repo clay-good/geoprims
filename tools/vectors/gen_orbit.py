@@ -52,5 +52,19 @@ for lat, lon, r, h, t, n, cw in CASES:
             exp[f"result.waypoints.{k}.{key}.value"] = val
             tol[f"result.waypoints.{k}.{key}.value"] = {"abs": eps}
     rows.append({"id": f"v{len(rows) + 1:03d}", "input": inp, "expect": exp, "source": SRC, "sourceVersion": f"geographiclib {VER}", "tolerance": tol})
+
+# The 30° input must select the same 12-point orbit as an explicit count of 12.
+lat, lon, r, h, t, step, cw = (40.0, -105.0, 50, 80, 60, 30, True)
+n = math.ceil(360 / step)
+pts, arc = orbit(lat, lon, r, n, cw)
+inp = {"lat": lat, "lon": lon, "radius": f"{r} m", "height": f"{h} m", "target_height": f"{t} m", "angular_step": f"{step} deg"}
+exp = {"ok": True, "result.gimbal_pitch.value": -math.degrees(math.atan((h - t) / r)), "result.circumference.value": arc, "result.photo_spacing.value": arc / n, "result.photo_count": n, "result.angular_step_used.value": 360 / n}
+tol = {"result.gimbal_pitch.value": {"abs": 1e-9}, "result.circumference.value": {"abs": 1e-6}, "result.photo_spacing.value": {"abs": 1e-6}, "result.photo_count": {"abs": 0}, "result.angular_step_used.value": {"abs": 1e-12}}
+for k in sorted({0, 1, n // 2, n - 1}):
+    la, lo, hd = pts[k]
+    for key, val, eps in [("lat", la, 1e-9), ("lon", lo, 1e-9), ("heading", hd, 1e-6)]:
+        exp[f"result.waypoints.{k}.{key}.value"] = val
+        tol[f"result.waypoints.{k}.{key}.value"] = {"abs": eps}
+rows.append({"id": f"v{len(rows) + 1:03d}", "input": inp, "expect": exp, "source": SRC, "sourceVersion": f"geographiclib {VER}", "tolerance": tol})
 OUT.write_text("".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n" for r in rows))
 print(f"{OUT.name}: {len(rows)} vectors")

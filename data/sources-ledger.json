@@ -951,6 +951,26 @@
       "editionCheck": true
     },
     {
+      "id": "faa-safety-briefing-2014-03",
+      "name": "What's Your True Altitude?",
+      "issuer": "Federal Aviation Administration",
+      "currentEdition": "FAA Safety Briefing, March/April 2014",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Checked in the FAA-hosted issue on 2026-10-13. Pages 25-26 say that at a sea-level airport and -30 °C, raising a 200 ft decision altitude to 240 ft makes the missed approach occur at 200 ft true altitude.",
+      "freeAccessUrl": "https://www.faa.gov/sites/faa.gov/files/2022-01/MarApr2014.pdf",
+      "matchTerms": [
+        "What's Your True Altitude?"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "faa-wbh",
       "name": "Aircraft Weight and Balance Handbook",
       "issuer": "FAA",

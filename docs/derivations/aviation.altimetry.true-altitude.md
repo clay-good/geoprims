@@ -26,22 +26,24 @@ The ISA deviation is taken as the same from the station up to the aircraft, whic
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite altimetry spec, scenario "Flying into colder air"
-- sourceEdition: add-aviation-suite change; ICAO Doc 8168 Vol II, 7th edition (2020) relation
-- sourceLocator: openspec/changes/add-aviation-suite/specs/aviation/altimetry/spec.md, requirement "True altitude from indicated altitude"; the scenario states only that true altitude is below indicated, and the numbers are worked from the equation above in tools/vectors/gen_coldtemp.py
-- independent: no
-- inputs: indicated 8,000 ft, ISA deviation −20 °C, station elevation 0 ft
-- outputs: true altitude 7,428.9 ft, error −571.1 ft, 4% rule −640 ft
-- tolerance: 1e-6 relative
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: What's Your True Altitude?
+- sourceEdition: FAA Safety Briefing, March/April 2014
+- sourceLocator: Pages 25-26, sea-level airport at −30 °C; increasing the indicated decision altitude from 200 ft to 240 ft makes the missed approach occur at 200 ft true altitude
+- independent: yes
+- inputs: indicated altitude 240 ft, station elevation 0 ft, ISA deviation −45 °C (the source's −30 °C sea-level temperature minus the 15 °C ISA temperature)
+- outputs: source 200 ft true altitude; equation 202.489 ft true altitude, or −37.511 ft error
+- tolerance: 10 ft, one increment in the source's printed cold-temperature table
+- verifiedBy: golden vector v008 and `core/crates/gp-aviation/tests/slice2.rs` `true_altitude_matches_faa_safety_briefing_example`
+- verifiedOn: 2026-10-13
+
+The source obtains its rounded value from the printed cold-temperature table. It does not use the equation, so the agreement checks the tool independently at the table's precision.
 
 ## Differential tests
 
-- `tools/vectors/gen_coldtemp.py`: the same ICAO equation and 4% rule written separately in Python, at six cases (cold and warm, sea-level and raised stations, zero deviation, FL350) plus one indicated altitude below the station that must fail (within 1e-6 relative). It checks the code against the stated equation, not against a separate method
-- `core/vectors/aviation.altimetry.true-altitude.jsonl`: those seven vectors, run through the core on every build
+- `tools/vectors/gen_coldtemp.py`: the same ICAO equation and 4% rule written separately in Python across 14 cold, warm, zero-height, boundary, sea-level, raised-station, and below-sea-level cases, plus five invalid cases. It checks the code against the stated equation, not against a separate method
+- `core/vectors/aviation.altimetry.true-altitude.jsonl`: those cases and the independently published FAA example, 20 vectors in all, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no test checks an invariant of this tool directly. This test runs the vectors above, which include ±20 °C giving errors of equal size and opposite sign (±571.1 ft) and a zero deviation giving zero error, and it requires at least five vectors per tool
+- `core/crates/gp-aviation/tests/slice2.rs` `true_altitude_invariants`: true altitude equals indicated altitude plus error; reversing the ISA deviation reverses the error; equivalent metric and Fahrenheit-difference inputs reproduce the outputs; zero ISA deviation gives exactly zero error

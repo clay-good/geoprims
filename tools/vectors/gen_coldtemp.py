@@ -11,6 +11,7 @@ from pathlib import Path
 SRC = "ICAO 2020 equation and AIM Table 7-3-1 worked in Python (tools/vectors/gen_coldtemp.py)"
 SPEC = "add-aviation-suite cold-temperature scenarios"
 FAA = "FAA Aeronautical Information Manual, 7-3-1 and Table 7-3-1"
+FAA_TRUE = "FAA Safety Briefing, March/April 2014, pp. 25-26"
 L0, T0 = -0.0019812, 288.15
 H = [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 3000, 4000, 5000]
 T = [10, 0, -10, -20, -30, -40, -50]
@@ -98,6 +99,7 @@ def cases():
 
 
 def true_altitude():
+    # Preserve the seven originally published vectors byte for byte.
     out = []
     for ind, dev, stn in [(8000, -20, None), (8000, 20, None), (12000, -10, 3000), (5500, 0, 1500), (35000, -15, None), (3000, -35, 2500)]:
         h = ind - (stn or 0)
@@ -108,6 +110,28 @@ def true_altitude():
         out.append(vec(len(out) + 1, inp, {"result.true_altitude.value": ind + err, "result.error.value": err, "result.rule_error.value": 0.04 * dev / 10 * h}))
     out[0]["source"] = SPEC + " (ISA -20 °C at 8,000 ft indicated: true altitude below indicated)"
     out.append(vec(len(out) + 1, {"indicated": "1000 ft", "isa_deviation": "-10 degC", "station_elevation": "2000 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(8, {"indicated": "240 ft", "isa_deviation": "-45 degC"}, {"result.true_altitude.value": 200.0}, FAA_TRUE, "March/April 2014", tol=10.0))
+    for ind, dev, stn in [
+        (0, -80, 0),
+        (60000, 60, 0),
+        (-2000, -20, -2000),
+        (60000, 12, 15000),
+        (10000, -1, 5000),
+        (5000, 1, -500),
+        (25000, -40, 10000),
+        (1000, 30, -2000),
+    ]:
+        h = ind - stn
+        err = (dev / L0) * math.log(1 + L0 * h / (T0 + L0 * stn))
+        inp = {"indicated": f"{ind} ft", "isa_deviation": f"{dev} degC", "station_elevation": f"{stn} ft"}
+        out.append(vec(len(out) + 1, inp, {"result.true_altitude.value": ind + err, "result.error.value": err, "result.rule_error.value": 0.04 * dev / 10 * h}))
+    out.extend([
+        vec(17, {"indicated": "1000 ft", "isa_deviation": "-81 degC"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+        vec(18, {"indicated": "1000 ft", "isa_deviation": "61 degC"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+        vec(19, {"indicated": "0 ft", "isa_deviation": "-10 degC", "station_elevation": "-2001 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+        vec(20, {"indicated": "59000 ft", "isa_deviation": "-10 degC", "station_elevation": "-2000 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+    ])
+    assert len(out) == 20
     return out
 
 

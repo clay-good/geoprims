@@ -582,6 +582,54 @@ fn cold_temperature_invariants() {
     );
 }
 
+#[test]
+fn true_altitude_matches_faa_safety_briefing_example() {
+    let r = call(
+        "aviation.altimetry.true-altitude",
+        r#"{"indicated":"240 ft","isa_deviation":"-45 degC"}"#,
+    );
+    near(&r, "result.true_altitude.value", 200.0, 10.0);
+}
+
+#[test]
+fn true_altitude_invariants() {
+    let cold = call(
+        "aviation.altimetry.true-altitude",
+        r#"{"indicated":"12000 ft","isa_deviation":"-10 degC","station_elevation":"3000 ft"}"#,
+    );
+    let indicated = 12_000.0;
+    let error = num(&cold, "result.error.value");
+    near(&cold, "result.true_altitude.value", indicated + error, 1e-9);
+    assert!(error < 0.0, "{cold}");
+
+    let warm = call(
+        "aviation.altimetry.true-altitude",
+        r#"{"indicated":"12000 ft","isa_deviation":"10 degC","station_elevation":"3000 ft"}"#,
+    );
+    near(&warm, "result.error.value", -error, 1e-9);
+    assert!(num(&warm, "result.error.value") > 0.0, "{warm}");
+
+    let metric = call(
+        "aviation.altimetry.true-altitude",
+        r#"{"indicated":"3657.6 m","isa_deviation":"-18 degF","station_elevation":"914.4 m"}"#,
+    );
+    for path in [
+        "result.true_altitude.value",
+        "result.error.value",
+        "result.rule_error.value",
+    ] {
+        near(&metric, path, num(&cold, path), 1e-9);
+    }
+
+    let standard = call(
+        "aviation.altimetry.true-altitude",
+        r#"{"indicated":"5500 ft","isa_deviation":"0 degC","station_elevation":"1500 ft"}"#,
+    );
+    near(&standard, "result.true_altitude.value", 5500.0, 0.0);
+    near(&standard, "result.error.value", 0.0, 0.0);
+    near(&standard, "result.rule_error.value", 0.0, 0.0);
+}
+
 // loading
 
 #[test]

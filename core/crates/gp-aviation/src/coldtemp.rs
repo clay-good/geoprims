@@ -41,6 +41,15 @@ const AIM_COLD: Reference = Reference {
     ..AIM
 };
 
+const FAA_SAFETY_BRIEFING_TRUE_ALTITUDE: Reference = Reference {
+    title: "What's Your True Altitude?",
+    issuer: "Federal Aviation Administration",
+    year: 2014,
+    edition: "FAA Safety Briefing, March/April 2014",
+    locator: "Pages 25-26 (sea-level airport at -30 °C: 240 ft indicated gives 200 ft true altitude)",
+    url: "https://www.faa.gov/sites/faa.gov/files/2022-01/MarApr2014.pdf",
+};
+
 /// Lapse rate L0 in K per ft (ICAO: −0.0019812).
 const L0: f64 = -0.001_981_2;
 const T0: f64 = 288.15;
@@ -434,6 +443,8 @@ fn run_cold(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TRUE_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.altimetry.true-altitude",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "True altitude",
     summary: "Your true height above sea level from the altimeter reading when the air is colder or warmer than standard: high to low, look out below.",
     aliases: &[
@@ -506,17 +517,17 @@ pub static TRUE_ALTITUDE: ToolDef = ToolDef {
         .precision(Precision::Decimals(0)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "True − indicated = (ΔT ÷ L0) · ln(1 + L0·H ÷ (T0 + L0·H_station)) with L0 = −0.0019812 K/ft, T0 = 288.15 K, ΔT the ISA deviation, and H the indicated height above the altimeter-setting station: the ICAO Doc 8168 temperature relation, applied both colder and warmer than ISA. The 4% rule is shown beside it",
     accuracy: "Assumes the deviation holds from the station to the aircraft, as the ICAO relation does; real temperature profiles vary. For procedure altitudes, use the cold-temperature correction tool",
     when_to_use: "Use this when the air is colder or warmer than standard and you want to know how high you really are. Enter your indicated altitude on the local altimeter setting, the ISA deviation, and the elevation of the station the setting comes from if it is not sea level. It returns your true altitude and the gap from what the altimeter shows. In cold air the gap is negative, which matters for terrain clearance on a winter flight.",
     limitations: "It assumes the same ISA deviation from the altimeter-setting station up to you, and real air rarely holds one value. It does not know the terrain, and it is not the method for correcting procedure altitudes on an approach; use the cold temperature correction tool for that. The 4% rule beside it is a rough check, not a second answer.",
-    references: &[PANS_OPS, PHAK],
+    references: &[PANS_OPS, PHAK, FAA_SAFETY_BRIEFING_TRUE_ALTITUDE],
     examples: &[Example {
         id: "primary",
-        title: "8,000 ft indicated in air 20 °C colder than standard",
-        input: r#"{"indicated":"8000 ft","isa_deviation":"-20 degC"}"#,
-        source: "add-aviation-suite true-altitude scenario: in colder air the true altitude is below the indicated one, and the difference is reported",
+        title: "FAA example: 240 ft indicated gives about 200 ft true altitude",
+        input: r#"{"indicated":"240 ft","isa_deviation":"-45 degC"}"#,
+        source: "FAA Safety Briefing, March/April 2014, pp. 25-26: at a sea-level airport and -30 °C (ISA -45 °C), 240 ft indicated corresponds to 200 ft true altitude",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -531,6 +542,10 @@ pub static TRUE_ALTITUDE: ToolDef = ToolDef {
         Related {
             id: "aviation.altimetry.isa-temperature",
             reason: "parent",
+        },
+        Related {
+            id: "aviation.altimetry.pressure-altitude",
+            reason: "alternative",
         },
     ],
     assumptions: &[

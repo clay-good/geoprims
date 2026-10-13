@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.altimetry.true-altitude"
+      ],
+      "vectors": [],
+      "summary": "True altitude (version 1.1.0) is now stable. Its primary example matches the FAA Safety Briefing's sea-level, -30 °C example at the source table's precision. The tool now has 20 vectors plus identity, sign, symmetry, equivalent-unit, and standard-temperature invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.altimetry.cold-temperature"
       ],
       "vectors": [],

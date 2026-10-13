@@ -69,6 +69,20 @@ function computeCanvasIndex() {
   return Math.round(drawn / (performance.now() - start));
 }
 
+/**
+ * A measured frame time, restated as the time the reference profile's device
+ * would have taken. The throttle is calibrated on BenchmarkIndex, which does
+ * not track canvas drawing (see computeCanvasIndex): a host throttled to the
+ * target index can still draw well under it, and a frame budget then measures
+ * the runner rather than the renderer. One CI runner drew at 625 against a
+ * target of 800 and missed a 16.7 ms ceiling by 0.4 ms that a laptop at 975
+ * cleared, on the same commit. Scaling by canvasIndex ÷ target makes the
+ * verdict the renderer's, and cuts both ways: a host that draws faster than
+ * the target is held to the same reference time. With GP_CPU_RATE there is no
+ * canvas measurement, so the time stands as measured.
+ */
+export const onTarget = (ms, { canvasIndex }, target) => (canvasIndex ? (ms * canvasIndex) / target : ms);
+
 /** The throttling rate for a host BenchmarkIndex: host ÷ target, held to 1–10. */
 export const rateFor = (hostIndex, target) => Math.min(10, Math.max(1, hostIndex / target));
 

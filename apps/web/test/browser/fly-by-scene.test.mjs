@@ -31,7 +31,11 @@ test('the fly-by playhead scrubs, persists, and still works with reduced motion'
 
   const permalink = page.url();
   await page.reload();
-  await page.waitForSelector('.diagram polygon.dg-dot-now');
+  // The built page ships the example's own scene, so the aircraft and the
+  // range are in the static HTML at the end of the leg, before any script
+  // runs. Waiting for the dot alone reads that page, not the restored one:
+  // the restored frame is the one that turns onto the new course.
+  await page.waitForFunction(() => /t = [\d.]+ s · course 45°/.test(document.querySelector('.diagram')?.textContent ?? ''));
   assert.equal(page.url(), permalink);
   assert.ok(Math.abs(Number(await page.locator('.timeline input[type="range"]').inputValue()) - scrubbed) < 0.11);
   assert.equal(await page.locator('.timeline button').getAttribute('aria-pressed'), 'false');

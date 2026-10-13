@@ -891,6 +891,27 @@
       "editionCheck": true
     },
     {
+      "id": "faa-order-8260-3",
+      "name": "United States Standard for Terminal Instrument Procedures (TERPS)",
+      "issuer": "Federal Aviation Administration",
+      "currentEdition": "Order 8260.3G",
+      "currentReleaseDate": "2024-07-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": "2024-07-01",
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Checked the active order at the FAA on 2026-10-13. Paragraph 16-4-1 gives the 5 NM at 13,000 ft example as 4.52 NM horizontally, and Formula 16-14-7 gives the same right-triangle relation used by the DME slant-range tool.",
+      "freeAccessUrl": "https://www.faa.gov/documentLibrary/media/Order/Order_8260.3G.pdf",
+      "matchTerms": [
+        "United States Standard for Terminal Instrument Procedures",
+        "Order 8260.3G"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "faa-iph",
       "name": "Instrument Procedures Handbook",
       "issuer": "FAA",

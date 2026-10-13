@@ -26,22 +26,22 @@ Flat-earth right triangle. The Earth's curvature is ignored, which the manifest 
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-practitioner-essentials, aviation/instrument-procedures spec, "DME geometry"
-- sourceEdition: 2026
-- sourceLocator: Scenario "Slant range" (DME 5.0 NM at 6,000 ft above the station gives about 4.902 NM, ±0.001 NM)
-- independent: no
-- inputs: DME 5.0 NM, height 6,000 ft
-- outputs: ground distance 4.902 NM (4.901519873468377); slant error 0.0985 NM and elevation angle 11.39° computed from the equations above
-- tolerance: 1e-9 NM and 1e-9° (the spec allows ±0.001 NM)
-- verifiedBy: golden vector v001
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: United States Standard for Terminal Instrument Procedures (TERPS)
+- sourceEdition: Order 8260.3G, effective 2024-07-01
+- sourceLocator: paragraph 16-4-1 and Formula 16-14-7
+- independent: yes
+- inputs: DME reading 5 NM, height 13,000 ft above the NAVAID
+- outputs: 4.52 NM horizontally; the tool gives 4.5191 NM before rounding, a 0.4809 NM slant error, and a 25.33° elevation angle
+- tolerance: 0.1% relative on horizontal distance, covering the source's hundredth-nautical-mile rounding; 1e-9 on the computed companion outputs
+- verifiedBy: golden vector v008
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_dme.py`: a Python evaluation of the same right triangle at six readings and heights (within 1e-9), plus the spec's overhead case; it restates the formula, so it checks the code's unit handling and arithmetic
+- `tools/vectors/gen_dme.py`: the FAA's printed 5 NM/13,000 ft example plus 18 successful right-triangle cases evaluated separately in Python, followed by three refusal cases. The generated cases cover varied readings, heights, equivalent units, zero height, and overhead; they restate the formula, so only the FAA row is an independent check
 - `core/vectors/aviation.ifr.dme-slant-range.jsonl`: those vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no test checks an invariant of this tool; this is the closest test that exercises it, and it runs every vector in the tool's file, including the overhead NO_SOLUTION case, through the core and fails on any value outside its tolerance
+- `core/crates/gp-aviation/tests/aviation.rs` `dme_slant_range_invariants`: the distances close the right triangle, ground distance plus slant error recovers the reading, and the reported angle recovers the height ratio; scaling both legs scales both distances but not the angle, equivalent metric and aviation units agree, and zero height has zero slant error

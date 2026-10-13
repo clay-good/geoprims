@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.ifr.dme-slant-range"
+      ],
+      "vectors": [],
+      "summary": "DME slant range (version 1.1.0) is now stable. Its primary example matches FAA Order 8260.3G's published 5 NM at 13,000 ft result, and it now has 22 vectors plus right-triangle, scaling, equivalent-unit, and zero-height invariants. Negative heights now identify the height field; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.altimetry.true-altitude"
       ],
       "vectors": [],

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "08d860811d4781a0",
+    "hash": "0d685fa13c018fbb",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -108,8 +108,8 @@
     "lastmod": "2026-10-12"
   },
   "/aviation/ifr/dme-slant-range/": {
-    "hash": "9c147b1787aaefda",
-    "lastmod": "2026-10-09"
+    "hash": "309ed5dfc2bea8cc",
+    "lastmod": "2026-10-13"
   },
   "/aviation/ifr/hold-entry/": {
     "hash": "9d11f3119a686e8c",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "0aac10957bd47477",
+    "hash": "4bc05733a1866394",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "68da9f8e583b2526",
+    "hash": "279e96e3ef5ce48d",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "aa3591b17b2d3e97",
+    "hash": "3752e47f8fdf9097",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "7a4abe2479a18c04",
+    "hash": "62c4c3a2949da1f9",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "dd1aed70b20f488d",
+    "hash": "91c2d2ee6bda2f6f",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

@@ -20,6 +20,15 @@ const IFH_NAV: Reference = Reference {
     ..IFH
 };
 
+const FAA_TERPS: Reference = Reference {
+    title: "United States Standard for Terminal Instrument Procedures (TERPS), Order 8260.3G",
+    issuer: "Federal Aviation Administration",
+    year: 2024,
+    edition: "Order 8260.3G",
+    locator: "Paragraph 16-4-1 (5 NM at 13,000 ft gives 4.52 NM horizontally) and Formula 16-14-7 (slant-range/geographic distance)",
+    url: "https://www.faa.gov/documentLibrary/media/Order/Order_8260.3G.pdf",
+};
+
 const fn qty(
     name: &'static str,
     title: &'static str,
@@ -34,6 +43,8 @@ const FT_PER_NM: f64 = 1852.0 / 0.3048;
 
 pub static SLANT: ToolDef = ToolDef {
     id: "aviation.ifr.dme-slant-range",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "DME slant range to ground distance",
     summary: "The distance over the ground to a DME station from the DME reading and your height above the station, and how much the reading overstates it.",
     aliases: &[
@@ -92,17 +103,17 @@ pub static SLANT: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::NoSolution, ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "DME measures the straight-line (slant) distance; over flat ground the horizontal distance is √(DME² − h²) with h the height above the station in nautical miles (6,076.1 ft each). Error is largest close in and high up (Instrument Flying Handbook, ch. 9)",
     accuracy: "Exact geometry; ignores the Earth's curvature, which is under 0.01 NM inside 60 NM at 10,000 ft",
     when_to_use: "Use this when you are high and close to a DME station and the reading looks too big. Enter the DME reading and your height above the station, which is your altitude minus the station's elevation. It returns the distance over the ground, how much the DME overstates it, and the angle up from the station to you. Use the ground distance when you plot a position on a chart.",
     limitations: "The geometry is a flat right triangle and ignores the Earth's curve, which matters little inside 60 NM. It assumes your height is right, so a wrong station elevation moves the answer. When the reading is less than your height, you are close to overhead and the tool stops. Close in and high up the error is large, so treat any answer there with care.",
-    references: &[IFH_NAV],
+    references: &[FAA_TERPS, IFH_NAV],
     examples: &[Example {
         id: "primary",
-        title: "DME 5.0 at 6,000 ft above the station",
-        input: r#"{"dme":"5.0 NM","height":"6000 ft"}"#,
-        source: "add-practitioner-essentials slant-range scenario (4.902 NM)",
+        title: "DME 5.0 at 13,000 ft above the station",
+        input: r#"{"dme":"5.0 NM","height":"13000 ft"}"#,
+        source: "FAA Order 8260.3G, paragraph 16-4-1 (4.52 NM horizontally)",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -118,6 +129,10 @@ pub static SLANT: ToolDef = ToolDef {
             id: "aviation.ifr.dme-arc-lead",
             reason: "next",
         },
+        Related {
+            id: "aviation.ifr.radial-fix",
+            reason: "next",
+        },
     ],
     sentence: "You are {ground_distance} from the station over the ground; the DME reads {slant_error} long.",
     limits: &[("batchRows", 10_000)],
@@ -129,10 +144,16 @@ fn run_slant(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (nm, ft) = (unit(QT::Distance, "NM"), unit(QT::Length, "ft"));
     let dme = ctx.req_quantity("dme")?.to(nm);
     let h = ctx.req_quantity("height")?.to(ft) / FT_PER_NM;
-    if dme < 0.0 || h < 0.0 {
+    if dme < 0.0 {
         return Err(ToolError::invalid(
             "/dme",
-            "The DME reading and the height cannot be negative.",
+            "The DME reading cannot be negative.",
+        ));
+    }
+    if h < 0.0 {
+        return Err(ToolError::invalid(
+            "/height",
+            "The height above the station cannot be negative.",
         ));
     }
     if h > dme {

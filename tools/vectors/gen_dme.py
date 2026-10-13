@@ -23,13 +23,59 @@ def vec(i, inp, exp, src=SRC, tol=1e-9):
 
 def slant():
     out = []
-    for dme, ft in [(5.0, 6000), (10, 3000), (2.5, 10000), (30, 35000), (1.2, 7000), (20, 0)]:
+    cases = [
+        (5.0, 6000),
+        (10, 3000),
+        (2.5, 10000),
+        (30, 35000),
+        (1.2, 7000),
+        (20, 0),
+    ]
+    for dme, ft in cases:
         h = ft * FT_NM
         g = math.sqrt(dme * dme - h * h)
         out.append(vec(len(out) + 1, {"dme": f"{dme} NM", "height": f"{ft} ft"},
                        {"result.ground_distance.value": g, "result.slant_error.value": dme - g, "result.elevation_angle.value": math.degrees(math.asin(h / dme))}))
     out[0]["source"] = SPEC + " (slant range: 4.902 NM)"
     out.append(vec(len(out) + 1, {"dme": "0.8 NM", "height": "6000 ft"}, {"ok": False, "error.code": "NO_SOLUTION"}, SPEC + " (overhead)"))
+
+    cases = [
+        (5.0, 13000),
+        (40, 10000),
+        (60, 10000),
+        (15, 15000),
+        (8, 20000),
+        (25, 5000),
+        (3, 12000),
+        (12, 25000),
+        (50, 45000),
+        (6, 18000),
+    ]
+    for dme, ft in cases:
+        h = ft * FT_NM
+        g = math.sqrt(dme * dme - h * h)
+        out.append(vec(len(out) + 1, {"dme": f"{dme} NM", "height": f"{ft} ft"},
+                       {"result.ground_distance.value": g, "result.slant_error.value": dme - g, "result.elevation_angle.value": math.degrees(math.asin(h / dme))}))
+    out[7]["expect"]["result.ground_distance.value"] = 4.52
+    out[7]["source"] = "FAA Order 8260.3G paragraph 16-4-1 (5 NM at 13,000 ft gives 4.52 NM horizontally)"
+    out[7]["sourceVersion"] = "FAA Order 8260.3G (2024)"
+    out[7]["tolerance"]["result.ground_distance.value"] = {"rel": 0.001}
+
+    # The same FAA case in metric units checks input conversion separately.
+    dme, height_m = 9.26, 3962.4
+    h = height_m / 1852
+    g = math.sqrt((dme / 1.852) ** 2 - h * h)
+    out.append(vec(len(out) + 1, {"dme": f"{dme} km", "height": f"{height_m} m"},
+                   {"result.ground_distance.value": g, "result.slant_error.value": dme / 1.852 - g,
+                    "result.elevation_angle.value": math.degrees(math.asin(h / (dme / 1.852)))}))
+    out.append(vec(len(out) + 1, {"dme": "1852 m", "height": "1852 m"},
+                   {"result.ground_distance.value": 0, "result.slant_error.value": 1, "result.elevation_angle.value": 90}))
+    out.append(vec(len(out) + 1, {"dme": "0 NM", "height": "0 ft"},
+                   {"result.ground_distance.value": 0, "result.slant_error.value": 0, "result.elevation_angle.value": 90}))
+    out.append(vec(len(out) + 1, {"dme": "-1 NM", "height": "0 ft"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/dme"}))
+    out.append(vec(len(out) + 1, {"dme": "5 NM", "height": "-1 ft"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/height"}))
     return out
 
 

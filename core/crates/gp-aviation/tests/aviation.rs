@@ -457,6 +457,60 @@ fn isa_invariants() {
 }
 
 #[test]
+fn dme_slant_range_invariants() {
+    const FT_PER_NM: f64 = 1852.0 / 0.3048;
+    for (dme, height_ft) in [(5.0, 13_000.0), (10.0, 3_000.0), (60.0, 10_000.0)] {
+        let r = call(
+            "aviation.ifr.dme-slant-range",
+            &format!(r#"{{"dme":"{dme} NM","height":"{height_ft} ft"}}"#),
+        );
+        let ground = num(&r, "result.ground_distance.value");
+        let error = num(&r, "result.slant_error.value");
+        let angle = num(&r, "result.elevation_angle.value");
+        let height_nm = height_ft / FT_PER_NM;
+        assert!((ground * ground + height_nm * height_nm - dme * dme).abs() < 1e-10);
+        assert!((ground + error - dme).abs() < 1e-12);
+        assert!((angle.to_radians().sin() - height_nm / dme).abs() < 1e-12);
+
+        let scaled = call(
+            "aviation.ifr.dme-slant-range",
+            &format!(
+                r#"{{"dme":"{} NM","height":"{} ft"}}"#,
+                dme * 2.0,
+                height_ft * 2.0
+            ),
+        );
+        assert!((num(&scaled, "result.ground_distance.value") - 2.0 * ground).abs() < 1e-11);
+        assert!((num(&scaled, "result.slant_error.value") - 2.0 * error).abs() < 1e-11);
+        assert!((num(&scaled, "result.elevation_angle.value") - angle).abs() < 1e-12);
+    }
+
+    let customary = call(
+        "aviation.ifr.dme-slant-range",
+        r#"{"dme":"5 NM","height":"13000 ft"}"#,
+    );
+    let metric = call(
+        "aviation.ifr.dme-slant-range",
+        r#"{"dme":"9.26 km","height":"3962.4 m"}"#,
+    );
+    for path in [
+        "result.ground_distance.value",
+        "result.slant_error.value",
+        "result.elevation_angle.value",
+    ] {
+        assert!((num(&customary, path) - num(&metric, path)).abs() < 1e-12);
+    }
+
+    let level = call(
+        "aviation.ifr.dme-slant-range",
+        r#"{"dme":"20 NM","height":"0 ft"}"#,
+    );
+    assert_eq!(num(&level, "result.ground_distance.value"), 20.0);
+    assert_eq!(num(&level, "result.slant_error.value"), 0.0);
+    assert_eq!(num(&level, "result.elevation_angle.value"), 0.0);
+}
+
+#[test]
 fn altimetry_invariants() {
     // At the standard setting (1013.25 hPa) pressure altitude equals the field
     // elevation; it falls monotonically as the setting rises; and dry air at

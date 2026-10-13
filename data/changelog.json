@@ -5,6 +5,15 @@
       "date": "2026-10-12",
       "kind": "changed",
       "tools": [
+        "navigation.route.legs"
+      ],
+      "vectors": [],
+      "summary": "The route-legs tool now plays the route at the entered groundspeed. The core returns the playhead time, route duration, flown path, and aircraft position; the map shows the remaining plan and the completed route separately, and scrubbed permalinks reopen paused. Distance, course, time, and arrival answers are unchanged."
+    },
+    {
+      "date": "2026-10-12",
+      "kind": "changed",
+      "tools": [
         "time.sun.position"
       ],
       "vectors": [],

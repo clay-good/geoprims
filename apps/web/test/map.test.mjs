@@ -451,6 +451,26 @@ test('layers: a route draws its legs in order, once, with a start marker', async
   assert.deepEqual(start.points[0], [args.waypoints[0].lon, args.waypoints[0].lat]);
 });
 
+test('route playback draws the planned route, core-flown path, and core position', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const q = (value) => ({ value, unit: 'deg' });
+  const result = { ok: true, result: {
+    path: [{ lat: q(0), lon: q(0) }, { lat: q(0), lon: q(1) }, { lat: q(1), lon: q(1) }],
+    flown_path: [{ lat: q(0), lon: q(0) }, { lat: q(0), lon: q(1) }, { lat: q(0.4), lon: q(1) }],
+    position_at: [{ lat: q(0.4), lon: q(1) }],
+  } };
+  const tool = {
+    id: 'navigation.route.legs',
+    inputs: { properties: { waypoints: { type: 'array', items: { properties: { lat: {}, lon: {} } } } } },
+    visualization: [{ kind: 'line-geodesic', map: { path: 'path', flown: 'flown_path', position: 'position_at' } }],
+  };
+  const layers = await buildLayers(tool, {}, result, async () => null);
+  assert.deepEqual(layers.find((layer) => layer.planned).points, [[0, 0], [1, 0], [1, 1]]);
+  assert.deepEqual(layers.find((layer) => layer.flown).points, [[0, 0], [1, 0], [1, 0.4]]);
+  assert.deepEqual(layers.find((layer) => layer.aircraft).points, [[1, 0.4]]);
+  assert.equal(layers.find((layer) => layer.aircraft).label, 'Aircraft');
+});
+
 test('layers: a nav log labels each leg with its heading, groundspeed, and time', async () => {
   // add-flight-and-drone-planning-tools 9: the log's own rows, on the legs they describe.
   const { buildLayers } = await import('../src/lib/map/layers.js');

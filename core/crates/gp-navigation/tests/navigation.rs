@@ -603,6 +603,78 @@ fn route_legs_scenario() {
 }
 
 #[test]
+fn route_legs_scene_positions_come_from_the_core() {
+    let input = r#"{"waypoints":[{"name":"A","lat":0,"lon":0},{"name":"B","lat":0,"lon":1},{"name":"C","lat":1,"lon":1}],"groundspeed":"100 m/s"}"#;
+    let end = call("navigation.route.legs", input);
+    let scene_end = num(&end, "result.scene_end.value");
+    assert_eq!(num(&end, "result.scene_time.value"), scene_end);
+    assert_eq!(end["result"]["position_at"][0]["name"], "C");
+    assert_eq!(end["result"]["flown_path"].as_array().unwrap().len(), 3);
+
+    let first_seconds = end["result"]["legs"][0]["distance"]["value"]
+        .as_f64()
+        .unwrap()
+        * 1852.0
+        / 100.0;
+    let boundary = call(
+        "navigation.route.legs",
+        &format!(
+            r#"{{"waypoints":[{{"name":"A","lat":0,"lon":0}},{{"name":"B","lat":0,"lon":1}},{{"name":"C","lat":1,"lon":1}}],"groundspeed":"100 m/s","at_time":"{first_seconds} s"}}"#
+        ),
+    );
+    assert!(
+        boundary["result"]["position_at"][0]["lat"]["value"]
+            .as_f64()
+            .unwrap()
+            .abs()
+            < 1e-12
+    );
+    assert!(
+        (boundary["result"]["position_at"][0]["lon"]["value"]
+            .as_f64()
+            .unwrap()
+            - 1.0)
+            .abs()
+            < 1e-12
+    );
+    assert_eq!(
+        boundary["result"]["flown_path"].as_array().unwrap().len(),
+        2,
+        "{first_seconds} {boundary}"
+    );
+
+    let halfway = call(
+        "navigation.route.legs",
+        &format!(
+            r#"{{"waypoints":[{{"lat":0,"lon":0}},{{"lat":0,"lon":1}},{{"lat":1,"lon":1}}],"groundspeed":"100 m/s","at_time":"{} s"}}"#,
+            first_seconds / 2.0
+        ),
+    );
+    assert!(
+        (halfway["result"]["position_at"][0]["lon"]["value"]
+            .as_f64()
+            .unwrap()
+            - 0.5)
+            .abs()
+            < 1e-10
+    );
+    assert_eq!(halfway["result"]["position_at"][0]["name"], "Aircraft");
+
+    let no_speed = call(
+        "navigation.route.legs",
+        r#"{"waypoints":[{"lat":0,"lon":0},{"lat":0,"lon":1}],"at_time":"1 s"}"#,
+    );
+    assert_eq!(no_speed["error"]["code"], "INVALID_INPUT");
+    assert_eq!(no_speed["error"]["field"], "/at_time");
+
+    let timeline = gp_navigation::route::LEGS.timeline.expect("timeline");
+    assert_eq!(
+        (timeline.input, timeline.end, timeline.key),
+        ("at_time", "scene_end", "scene_end")
+    );
+}
+
+#[test]
 fn line_of_sight_scenarios() {
     // 100 m: geometric 35.70 km, optical (k = 0.13) 38.27 km, radio 41.22 km (±0.01 km).
     let h = call("navigation.los.horizon", r#"{"height":"100 m"}"#);

@@ -274,6 +274,18 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
         continue;
       }
       const field = map.path;
+      const flown = map.flown ? outputPath(result, map.flown) : [];
+      if (flown.length) {
+        const planned = field ? outputPath(result, field) : [];
+        const complete = planned.length === flown.length && planned.every((point, i) => point[0] === flown[i][0] && point[1] === flown[i][1]);
+        if (!complete && planned.length >= 2) layers.push({ kind: 'line', role: 'input', points: planned, planned: true });
+        if (flown.length >= 2) layers.push({ kind: 'line', role: 'result', points: flown, arrows: true, flown: true });
+        const position = map.position ? outputPath(result, map.position) : [];
+        if (position.length) layers.push({ kind: 'point', role: 'result', points: [position.at(-1)], label: 'Aircraft', aircraft: true });
+        layers.push({ kind: 'point', role: 'result', points: [planned[0] ?? flown[0]], label: 'Start' });
+        pathDrawn = true;
+        continue;
+      }
       // A path in parts (a mission's sorties) draws each part as its own
       // line, alternating the accent and the neutral so neighbors stand apart.
       const parts = (field ? outputParts(result, field) : []).filter((p) => p.length >= 2);

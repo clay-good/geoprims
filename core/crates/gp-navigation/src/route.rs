@@ -1478,6 +1478,13 @@ pub static LEGS: ToolDef = ToolDef {
             "kt",
         )
         .core(),
+        qty_field(
+            "at_time",
+            "Scene time",
+            "Time after departure, like 30 min; drives the route animation",
+            QT::Time,
+            "s",
+        ),
         Field::new(
             "departure",
             "Departure time",
@@ -1554,6 +1561,46 @@ pub static LEGS: ToolDef = ToolDef {
                 max: 100,
             },
         ),
+        qty_field(
+            "scene_end",
+            "Route time",
+            "Time to fly the route at the entered groundspeed",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        qty_field(
+            "scene_time",
+            "Scene time",
+            "Time after departure shown on the map",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        Field::new(
+            "flown_path",
+            "Route flown",
+            "The route from the start through the playhead position",
+            Kind::List {
+                items: PATH_ROW,
+                min: 1,
+                max: 100,
+            },
+        )
+        .optional(),
+        Field::new(
+            "position_at",
+            "Position at scene time",
+            "The core-computed position at the playhead",
+            Kind::List {
+                items: PATH_ROW,
+                min: 1,
+                max: 1,
+            },
+        )
+        .optional(),
     ],
     errors: &[
         ErrorCode::InvalidInput,
@@ -1576,8 +1623,19 @@ pub static LEGS: ToolDef = ToolDef {
     primary_example: "primary",
     visualization: &[Layer {
         kind: "line-geodesic",
-        map: &[("path", "path"), ("distance", "total_distance")],
+        map: &[
+            ("path", "path"),
+            ("flown", "flown_path"),
+            ("position", "position_at"),
+            ("legs", "legs"),
+            ("distance", "total_distance"),
+        ],
     }],
+    timeline: Some(gp_base::tool::Timeline {
+        input: "at_time",
+        end: "scene_end",
+        key: "scene_end",
+    }),
     related: &[
         Related {
             id: "navigation.route.time-speed-distance",
@@ -1694,6 +1752,7 @@ fn run_legs(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let total_unit = ctx.output_unit("total_distance");
     let (mut cum, mut hours) = (0.0, 0.0);
     let mut legs = Vec::new();
+    let mut geometry = Vec::new();
     for w in pts.windows(2) {
         let ((n1, la1, lo1), (n2, la2, lo2)) = (&w[0], &w[1]);
         let (s, tc, fc) = if rhumb {
@@ -1703,6 +1762,7 @@ fn run_legs(ctx: &mut Ctx) -> Result<Json, ToolError> {
             let (s, a1, a2, _): (f64, f64, f64, f64) = g.inverse(*la1, *lo1, *la2, *lo2);
             (s, a1, a2)
         };
+        geometry.push((s, tc));
         cum += s;
         let wrap = |a: f64| a.rem_euclid(360.0);
         let len = |ctx: &mut Ctx, v: f64| ctx.emit("total_distance", meters(v), total_unit);
@@ -1790,6 +1850,71 @@ fn run_legs(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 .collect(),
         ),
     ));
+    if let Some(speed) = gs {
+        let scene_end = cum / speed;
+        let scene_time = ctx.quantity("at_time")?.map_or(scene_end, |q| q.base());
+        if !(0.0..=scene_end).contains(&scene_time) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                format!("The scene time must be between 0 and {scene_end} s."),
+            )
+            .at("/at_time"));
+        }
+        let mut flown = vec![pts[0].clone()];
+        let mut remaining = speed * scene_time;
+        for (i, &(distance, course)) in geometry.iter().enumerate() {
+            // A playhead reconstructed from a displayed leg distance can land
+            // a few floating-point ulps either side of the waypoint.
+            if remaining >= distance || distance - remaining <= distance.max(1.0) * 1e-9 {
+                flown.push(pts[i + 1].clone());
+                remaining = (remaining - distance).max(0.0);
+                if remaining <= distance.max(1.0) * 1e-9 {
+                    break;
+                }
+                continue;
+            }
+            if remaining > 0.0 {
+                let (_, lat, lon) = &pts[i];
+                let (next_lat, next_lon) = if rhumb {
+                    let end = rh.direct(*lat, *lon, course, remaining);
+                    (end.lat, end.lon)
+                } else {
+                    let (lat, lon, _): (f64, f64, f64) = g.direct(*lat, *lon, course, remaining);
+                    (lat, lon)
+                };
+                flown.push(("Aircraft".to_owned(), next_lat, next_lon));
+            }
+            break;
+        }
+        let position = flown.last().expect("route starts with one point").clone();
+        let rows = |points: &[(String, f64, f64)]| {
+            Json::Arr(
+                points
+                    .iter()
+                    .map(|(name, lat, lon)| {
+                        Json::obj([
+                            ("lat", deg(*lat).to_json()),
+                            ("lon", deg(*lon).to_json()),
+                            ("name", Json::str(name)),
+                        ])
+                    })
+                    .collect(),
+            )
+        };
+        let seconds = |value| Q {
+            value,
+            unit: crate::unit(QT::Time, "s"),
+        };
+        out.push(("scene_end", ctx.out("scene_end", seconds(scene_end))));
+        out.push(("scene_time", ctx.out("scene_time", seconds(scene_time))));
+        out.push(("flown_path", rows(&flown)));
+        out.push(("position_at", rows(&[position])));
+    } else if ctx.quantity("at_time")?.is_some() {
+        return Err(ToolError::invalid(
+            "/at_time",
+            "Give a groundspeed to place the route at a scene time.",
+        ));
+    }
     ctx.model = Some(format!(
         "{} legs on {}{}",
         if rhumb {

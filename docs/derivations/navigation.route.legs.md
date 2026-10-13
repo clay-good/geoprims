@@ -11,6 +11,7 @@ A list of waypoints becomes the table a navigation log is filled in from. Each c
 - True course of a leg is α₁ reduced to [0°, 360°); the final course is α₂, which differs from it because a geodesic's heading changes along the way.
 - Running total after leg i: Σ s from the first leg to that one; the route's total is the last of these.
 - Time for a leg: s / groundspeed. Arrival: departure + the total time, carried through the UTC offset given.
+- With a groundspeed, the scene duration is the total distance divided by that speed. At playhead time t, the core consumes groundspeed × t along complete legs, then solves the direct geodesic or rhumb problem for the distance left on the current leg. The returned flown path and aircraft position therefore come from the same route model as the leg table.
 
 ## Symbols and units
 
@@ -45,3 +46,4 @@ None in the geometry: each leg is the true geodesic, from Karney's solver, which
 ## Invariants
 
 - `core/crates/gp-navigation/tests/navigation.rs` `route_legs_invariants`: over three routes, one of them across the antimeridian, there is one fewer leg than waypoints and `legs_count` agrees; the legs sum to the total and the last running total is the total; each leg's distance and course are the geodesic between its own two waypoints, checked against `navigation.geodesic.inverse` rather than against itself; flying the route backwards covers the same ground; and the written time is the distance at the speed given, to the minute it is rounded to
+- `core/crates/gp-navigation/tests/navigation.rs` `route_legs_scene_positions_come_from_the_core`: the scene opens at the route end, lands exactly on a leg boundary reconstructed from the published distance, interpolates halfway along a geodesic, refuses a playhead without groundspeed, and declares the timeline fields the web app consumes

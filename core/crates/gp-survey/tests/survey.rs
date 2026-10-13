@@ -106,6 +106,22 @@ fn catalog_examples_vectors() {
 
 #[test]
 fn inverse_and_bearings() {
+    let parsed = call(
+        "survey.cogo.direction-parse",
+        r#"{"direction":"S 44°30'00\" W","reference":"grid"}"#,
+    );
+    assert_eq!(num(&parsed, "result.azimuth.value"), 224.5);
+    assert_eq!(parsed["result"]["azimuth_dms"], "224°30'00.00\"");
+    assert_eq!(parsed["result"]["bearing"], "S 44°30'00.00\" W");
+    assert_eq!(parsed["result"]["reference"], "grid");
+    assert!((num(&parsed, "result.gons.value") - 224.5 / 0.9).abs() < 1e-12);
+    let invalid = call(
+        "survey.cogo.direction-parse",
+        r#"{"direction":"N 95°00'00\" E"}"#,
+    );
+    assert_eq!(invalid["error"]["code"], "INVALID_INPUT");
+    assert_eq!(invalid["error"]["field"], "/direction");
+
     let r = call(
         "survey.cogo.inverse",
         r#"{"northing1":1000,"easting1":1000,"northing2":1100,"easting2":1100}"#,

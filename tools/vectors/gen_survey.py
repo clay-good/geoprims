@@ -49,6 +49,29 @@ def bearing(az):
     return f"N {dms(360 - az)} W"
 
 
+def direction_parse():
+    cases = [
+        ("N 0 E", 0.0), ("N 45 E", 45.0), ("N 90 E", 90.0),
+        ("S 90 E", 90.0), ("S 44°30'00\" E", 135.5), ("S 0 E", 180.0),
+        ("S 0 W", 180.0), ("S 44-30-00 W", 224.5), ("S 90 W", 270.0),
+        ("N 90 W", 270.0), ("N 10°15'30\" W", 349.7416666666667),
+        ("N 0 W", 0.0), ("224°30'", 224.5), ("359.999", 359.999),
+        ("360", 0.0), ("0", 0.0), ("100 gon", 90.0), ("200g", 180.0),
+        ("300 grad", 270.0), ("400 gon", 0.0), ("123.4567 gon", 111.11103),
+    ]
+    out = []
+    for i, (text, az) in enumerate(cases, 1):
+        inp = {"direction": text, "reference": ["grid", "geodetic", "assumed"][i % 3]}
+        out.append(vec(i, inp, {
+            "result.azimuth.value": float(az),
+            "result.gons.value": float(az / 0.9),
+            "result.reference": inp["reference"],
+        }, src="Ghilani and Wolf, Elementary Surveying, direction notation and azimuth conversion", ver="16th edition (2021)"))
+    for text in ("N 95 E", "S W", "401 gon", "361", "not a direction"):
+        out.append(vec(len(out) + 1, {"direction": text}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
+
+
 def inverse():
     cases = [(1000, 1000, 1100, 1100), (5000, 5000, 4800, 4900), (0, 0, -120.5, 300.25), (250, 800, 900, 100), (10, 10, 10, 20)]
     out = []
@@ -1691,6 +1714,7 @@ def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     selected = set(sys.argv[2:])
     files = {
+        "survey.cogo.direction-parse": direction_parse(),
         "survey.cogo.inverse": inverse(), "survey.cogo.forward": forward(), "survey.cogo.traverse-closure": traverse(),
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),

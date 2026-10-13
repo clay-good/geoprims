@@ -1,0 +1,26 @@
+// Survey-suite catalog progress and the practitioner search language promised
+// by add-survey-suite. The 57-operation target stays in the spec until every
+// planned operation is independently addressable.
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import test from 'node:test';
+
+const root = new URL('../..', import.meta.url).pathname;
+const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+const survey = catalog.tools.filter((tool) => tool.domain === 'survey' && tool.composedOf.length === 0);
+const byId = new Map(survey.map((tool) => [tool.id, tool]));
+
+test('the direction parser is an addressable survey operation', () => {
+  const tool = byId.get('survey.cogo.direction-parse');
+  assert.ok(tool, 'survey.cogo.direction-parse is missing');
+  for (const alias of ['bearing to azimuth', 'azimuth to bearing', 'quadrant bearing converter']) {
+    assert.ok(tool.aliases.includes(alias), `direction parser is missing alias "${alias}"`);
+  }
+  assert.ok(existsSync(join(root, 'docs/derivations/survey.cogo.direction-parse.md')));
+  assert.ok(tool.vectorCount >= 20, `direction parser has only ${tool.vectorCount} vectors`);
+});
+
+test('the survey catalog does not lose registered operations', () => {
+  assert.ok(survey.length >= 45, `survey operation count regressed to ${survey.length}`);
+});

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "96052c2093956a45",
+    "hash": "3f31a6b709e3dd54",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "d4c5b820f8589314",
+    "hash": "c7ff737d4d1da009",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,28 +1440,32 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c137caf53645a1b0",
+    "hash": "49783b5e6a4ba3bd",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
-    "hash": "bd829a58b4267f0b",
+    "hash": "ed104f69f461d7e9",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/": {
-    "hash": "c4630e7649524703",
-    "lastmod": "2026-09-23"
+    "hash": "2a606ee1a44afaee",
+    "lastmod": "2026-10-13"
   },
   "/survey/cogo/angular-closure/": {
     "hash": "9d76b64c01bfc227",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/area-by-coordinates/": {
-    "hash": "cac00b1f45e9b94a",
-    "lastmod": "2026-10-09"
+    "hash": "3e98b9a106a9842d",
+    "lastmod": "2026-10-13"
+  },
+  "/survey/cogo/direction-parse/": {
+    "hash": "dc1379827c950fbc",
+    "lastmod": "2026-10-13"
   },
   "/survey/cogo/forward/": {
-    "hash": "2af57b6c64588321",
-    "lastmod": "2026-10-09"
+    "hash": "c3b36d62ddadab4c",
+    "lastmod": "2026-10-13"
   },
   "/survey/cogo/intersection/": {
     "hash": "22a968e92f1505e3",
@@ -1716,7 +1720,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "55158efdbc543152",
+    "hash": "8b65855d528b6830",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1984,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "93dc040cd04d4869",
+    "hash": "43c3a8722172f5bf",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

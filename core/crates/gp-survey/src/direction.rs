@@ -3,7 +3,132 @@
 //! azimuths in decimal degrees, DMS, or gons (`123.4567 gon`, 400 to the
 //! circle), and formatting back to bearings.
 
+use gp_base::ErrorCode;
+use gp_base::error::ToolError;
+use gp_base::json::Json;
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, ToolDef};
+use gp_base::units::Quantity as QT;
 use gp_geo::dms::{self, Axis, Style};
+
+use crate::{GHILANI, deg, unit};
+
+pub static PARSE: ToolDef = ToolDef {
+    id: "survey.cogo.direction-parse",
+    title: "Survey bearing and azimuth converter",
+    summary: "Reads a quadrant bearing, north azimuth, or gon value and writes the same direction as an azimuth, bearing, and gons.",
+    aliases: &[
+        "bearing to azimuth",
+        "azimuth to bearing",
+        "quadrant bearing converter",
+        "bearing converter",
+    ],
+    keywords: &["COGO", "direction", "DMS", "gons", "grads", "north azimuth"],
+    inputs: &[
+        Field::new(
+            "direction",
+            "Direction",
+            "Like S 44°30'00\" W, 224°30'00\", or 249.444444 gon",
+            Kind::Text { max_len: 48 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "reference",
+            "Direction reference",
+            "grid, geodetic, or assumed (default)",
+            Kind::Choice(&["grid", "geodetic", "assumed"]),
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "azimuth",
+            "North azimuth",
+            "Degrees clockwise from north",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(8))
+        .angle_range("[0,360)"),
+        Field::new(
+            "azimuth_dms",
+            "North azimuth (DMS)",
+            "Degrees, minutes, and seconds clockwise from north",
+            Kind::Text { max_len: 32 },
+        ),
+        Field::new(
+            "bearing",
+            "Quadrant bearing",
+            "North or south, then the acute angle toward east or west",
+            Kind::Text { max_len: 32 },
+        ),
+        Field::new(
+            "gons",
+            "Gons",
+            "The north azimuth with 400 gons to a circle",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "gon",
+            },
+        )
+        .precision(Precision::Decimals(8))
+        .angle_range("[0,400)"),
+        Field::new(
+            "reference",
+            "Direction reference",
+            "The reference supplied with the direction",
+            Kind::Text { max_len: 16 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    when_to_use: "Use this before entering a record bearing in software that expects a north azimuth, or when field notes and a data collector use different direction notation. It accepts quadrant bearings, decimal or DMS north azimuths, and gons, then shows all three forms without changing the stated direction reference. It is also useful for checking a hand conversion before a traverse, forward calculation, stakeout, or plan annotation. State the same reference that the source document or job grid uses.",
+    limitations: "This changes notation only. It does not rotate between grid, geodetic, assumed, or magnetic north, and it does not determine which reference a record intended. Supply the reference from the survey record, coordinate system, or instrument setup. A direction labeled with the wrong reference can still be formatted correctly but point the wrong way. Use convergence, declination, or basis-rotation tools before this one when the north reference itself must change.",
+    model: "Quadrant bearings map their acute angle into the matching north-azimuth quadrant; 400 gon = 360°",
+    accuracy: "Exact apart from displaying DMS to 0.01 arcsecond and decimal values to eight places",
+    references: &[GHILANI],
+    examples: &[Example {
+        id: "primary",
+        title: "Southwest quadrant bearing",
+        input: r#"{"direction":"S 44°30'00\" W","reference":"grid"}"#,
+        source: "add-survey-suite quadrant-bearing scenario",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.cogo.forward",
+            reason: "next",
+        },
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "next",
+        },
+    ],
+    sentence: "The {reference} direction is azimuth {azimuth}, or {bearing}.",
+    run: run_parse,
+    ..ToolDef::BLANK
+};
+
+fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let text = ctx
+        .text("direction")?
+        .ok_or_else(|| ToolError::invalid("/direction", "Direction is required."))?;
+    let az = parse(&text).map_err(|message| ToolError::invalid("/direction", message))?;
+    let reference = ctx.choice("reference")?.unwrap_or("assumed");
+    Ok(Json::obj([
+        ("azimuth", ctx.out("azimuth", deg(az))),
+        ("azimuth_dms", Json::str(azimuth(az, 2))),
+        ("bearing", Json::str(bearing(az, 2))),
+        ("gons", ctx.emit("gons", deg(az), unit(QT::Angle, "gon"))),
+        ("reference", Json::str(reference)),
+    ]))
+}
 
 /// Parses a direction to a north azimuth in degrees [0, 360).
 pub fn parse(s: &str) -> Result<f64, String> {

@@ -2335,6 +2335,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &gnss::ALTA_RPP,
     &localize::LOCALIZATION,
     &lsq::LEAST_SQUARES,
+    &direction::PARSE,
     &INVERSE,
     &FORWARD,
     &TRAVERSE,

@@ -1747,6 +1747,12 @@
       "intro": "Coordinate geometry on plane survey coordinates: inverse and forward, intersections, resection, offset shots, station and offset, traverse closure and adjustment, least-squares networks, and area by coordinates. It is for surveyors reducing field work and checking plats. Start with the inverse tool for a bearing and distance, or traverse closure for a loop. Check angular closure before linear closure: the compass and transit rules spread a blunder across every course instead of finding it.",
       "tasks": [
         {
+          "want": "convert a quadrant bearing, azimuth, or gon direction into another notation",
+          "tools": [
+            "direction-parse"
+          ]
+        },
+        {
           "want": "find bearing and distance between two points, or a point from them",
           "tools": [
             "inverse",

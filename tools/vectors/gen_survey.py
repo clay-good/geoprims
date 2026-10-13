@@ -17,6 +17,8 @@ FHWA_GRADE = "Federal Highway Administration, Noise Barrier Design: Terminology,
 FHWA_GRADE_VER = "Web page read 2026-10-13"
 FHWA_SIGHT = "Federal Highway Administration, FHWA-HRT-04-103, chapter 7, table 20"
 FHWA_SIGHT_VER = "October 2004"
+GHILANI_UNEQUAL = "Ghilani and Wolf, Elementary Surveying, 15th edition, solution 25.15"
+GHILANI_UNEQUAL_VER = "15th edition (2015)"
 FT = 0.3048
 YD3_FT3 = 27.0
 
@@ -1380,10 +1382,13 @@ def unequal_vertical():
     case must meet each tangent and itself smoothly under the PVI."""
     out = []
 
-    def fmt(v):
-        tot = round(v * 100)
-        whole = tot // 10000
-        return f"{whole}+{(tot - whole * 10000) / 100:05.2f}"
+    def fmt(v, metric=False):
+        dec, per = (3, 1000) if metric else (2, 100)
+        scale = 10 ** dec
+        tot = round(abs(v) * scale)
+        whole = tot // (per * scale)
+        rest = (tot - whole * per * scale) / scale
+        return f"{'-' if v < 0 else ''}{whole}+{rest:0{7 if metric else 5}.{dec}f}"
 
     def solve(g1, g2, l1, l2, pvi, e):
         g1, g2 = g1 / 100, g2 / 100
@@ -1397,6 +1402,22 @@ def unequal_vertical():
                 turn = (s0 + x, e0 + g * x + r * x * x / 2)
                 break
         return gc * 100, epvc, ecvc, e + g2 * l2, turn
+
+    def elevation(g1, g2, l1, l2, pvi, e, station):
+        g1, g2 = g1 / 100, g2 / 100
+        gc = (l1 * g1 + l2 * g2) / (l1 + l2)
+        epvc = e - g1 * l1
+        ecvc = e + l1 * l2 * (g2 - g1) / (2 * (l1 + l2))
+        if station <= pvi - l1:
+            return epvc + g1 * (station - (pvi - l1))
+        if station <= pvi:
+            x = station - (pvi - l1)
+            return epvc + g1 * x + (gc - g1) / l1 * x * x / 2
+        if station <= pvi + l2:
+            x = station - pvi
+            return ecvc + gc * x + (g2 - gc) / l2 * x * x / 2
+        epvt = e + g2 * l2
+        return epvt + g2 * (station - (pvi + l2))
 
     # Equal halves: the spec scenario (PVC 7+00 at 94.00, high point 9+40 at 96.40).
     gc, epvc, ecvc, epvt, turn = solve(2, -3, 300, 300, 1000, 100)
@@ -1418,6 +1439,65 @@ def unequal_vertical():
     out.append(vec(5, {"g1": 2, "g2": -3, "length1": "200 ft", "length2": "400 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft", "at_station": "11+50"},
                    {"result.elevation.value": ecvc + gc / 100 * x + ((-0.03 - gc / 100) / 400) * x * x / 2}, rel=1e-11))
     out.append(vec(6, {"g1": 2, "g2": -3, "length1": "0 ft", "length2": "400 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+
+    # Preserve the hand-worked curve-under-PVI regression added after the
+    # first generator pass.
+    out.append(vec(7, {"g1": 2, "g2": -3, "length1": "300 ft", "length2": "300 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft"},
+                   {"result.cvc_elevation.value": 96.25,
+                    "summary": "The curve runs PVC 7+00.00 to PVT 13+00.00. At the PVI station it is at 96.25 ft, and the PVI is at 100 ft; the high point is on the curve."},
+                   "Worked by hand: curve elevation at the PVI station = 100 + 300 x 300 x (-0.03 - 0.02) / (2 x 600) = 96.25 ft, 3.75 ft below the PVI (Ghilani and Wolf 2021, ch. 25)",
+                   "Elementary Surveying, 16th edition (2021)"))
+
+    # Published problem 25.15: +2.50% to -1.25% at 60+00 and 3310.00 ft,
+    # with 600 ft before and 400 ft after. The source prints 61+00 as
+    # 3306.219 ft; the unrounded equation gives 3306.21875 ft.
+    gc, epvc, ecvc, epvt, turn = solve(2.5, -1.25, 600, 400, 6000, 3310)
+    out.append(vec(8, {"g1": 2.5, "g2": -1.25, "length1": "600 ft", "length2": "400 ft", "pvi_station": "60+00",
+                       "pvi_elevation": "3310 ft", "at_station": "61+00"},
+                   {"result.pvc_station": "54+00.00", "result.pvc_elevation.value": epvc,
+                    "result.cvc_elevation.value": ecvc, "result.pvt_station": "64+00.00",
+                    "result.pvt_elevation.value": epvt, "result.elevation.value": elevation(2.5, -1.25, 600, 400, 6000, 3310, 6100)},
+                   GHILANI_UNEQUAL, GHILANI_UNEQUAL_VER))
+    out[-1]["tolerance"]["result.elevation.value"] = {"rel": 0.0, "abs": 0.001}
+
+    # Independent equation evaluations span crest, sag, monotone, straight,
+    # endpoint turning points, metric stationing, and tangent extensions.
+    cases = [
+        (-2, 3, 250, 450, 1200, 500, 1100, "ft"),
+        (3, -1, 200, 350, 4300, 268.473, 4400, "m"),
+        (-1, -3, 150, 250, 2000, 100, 2200, "ft"),
+        (1, 1, 100, 300, 500, 50, 600, "ft"),
+        (-4, 2, 500, 100, 1000, 300, 950, "ft"),
+        (0, 3, 100, 200, 500, 50, 500, "ft"),
+        (2, 0, 200, 100, 800, 80, 900, "ft"),
+        (-1.5, 2.5, 180, 420, 2300, 150, 2750, "m"),
+    ]
+    for g1, g2, l1, l2, pvi, e, at, unit in cases:
+        metric = unit == "m"
+        gc, epvc, ecvc, epvt, turn = solve(g1, g2, l1, l2, pvi, e)
+        exp = {"result.pvc_station": fmt(pvi - l1, metric), "result.pvc_elevation.value": epvc,
+               "result.pvt_station": fmt(pvi + l2, metric), "result.pvt_elevation.value": epvt,
+               "result.cvc_elevation.value": ecvc, "result.cvc_grade": gc,
+               "result.elevation.value": elevation(g1, g2, l1, l2, pvi, e, at)}
+        if turn:
+            exp["result.turning_station"] = fmt(turn[0], metric)
+            exp["result.turning_elevation.value"] = turn[1]
+        else:
+            exp["result.turning"] = "no high or low point lies on the curve"
+        out.append(vec(len(out) + 1, {"g1": g1, "g2": g2, "length1": f"{l1} {unit}", "length2": f"{l2} {unit}",
+                                      "pvi_station": fmt(pvi, metric), "pvi_elevation": f"{e} {unit}", "at_station": fmt(at, metric)}, exp, rel=1e-11))
+
+    invalid = [
+        ({"g1": 2, "g2": -3, "length1": "300 ft", "length2": "0 ft", "pvi_elevation": "100 ft"}, "INVALID_INPUT", "/length2"),
+        ({"g1": 2, "g2": -3, "length1": "-1 ft", "length2": "300 ft", "pvi_elevation": "100 ft"}, "INVALID_INPUT", "/length1"),
+        ({"g1": 2, "g2": -3, "length1": "300 ft", "length2": "300 ftUS", "pvi_elevation": "100 ft"}, "UNIT_MISMATCH", None),
+        ({"g1": 2, "g2": -3, "length1": "300 ft", "length2": "300 ft", "pvi_station": "ten plus zero", "pvi_elevation": "100 ft"}, "INVALID_INPUT", "/pvi_station"),
+    ]
+    for inp, code, field in invalid:
+        exp = {"ok": False, "error.code": code}
+        if field:
+            exp["error.field"] = field
+        out.append(vec(len(out) + 1, inp, exp))
     return out
 
 

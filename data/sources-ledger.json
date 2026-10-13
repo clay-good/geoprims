@@ -1334,6 +1334,26 @@
       "editionCheck": true
     },
     {
+      "id": "ghilani-solutions-15",
+      "name": "Solutions to Problems, Elementary Surveying: An Introduction to Geomatics",
+      "issuer": "Pearson Education",
+      "currentEdition": "15th edition (2015)",
+      "currentReleaseDate": "2015-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read in the University of Utah course copy on 2026-10-13. Problem 25.15 gives the unequal-tangent inputs, stations, and full-station elevations used by the golden fixture.",
+      "freeAccessUrl": "https://my.civil.utah.edu/~bartlett/CVEEN%202410/homework/Homwork%20Solutions%20Edition%2015.pdf",
+      "matchTerms": [
+        "Solutions to Problems, Elementary Surveying"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "gpx",
       "name": "GPX: the GPS Exchange Format",
       "issuer": "TopoGrafix",

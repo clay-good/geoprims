@@ -41,6 +41,8 @@ Side slope and grade conversion is stable across percent, per mille, degrees, de
 
 Vertical-curve sight distance is stable for crest and headlight-sag geometry, including both the sight-line-within-curve and sight-line-beyond-curve cases. It reproduces FHWA's published 49.8 m crest-curve result within the source's rounded-input tolerance, and 28 vectors cover metric and US units, cited design K comparisons, physical bounds, and required inputs.
 
+Unequal-tangent vertical curves are stable for two parabolas that meet smoothly under the PVI, including crest, sag, monotone, straight, and tangent-extension cases. The tool reproduces Pearson's published problem 25.15 elevations, and 20 vectors cover metric and US stationing, endpoint turning points, unit guards, and invalid lengths.
+
 The aviation catalog covers all 83 planned operations through 90 tool ids: 83 operation tools and 7 narrower airspeed endpoints. Altimeter inputs accept inHg, hPa, `A` groups, and `Q` groups directly rather than multiplying identical pages by unit.
 
 ## Status

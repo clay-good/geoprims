@@ -616,6 +616,62 @@ fn vertical_curve_invariants() {
 }
 
 #[test]
+fn unequal_vertical_curve_invariants() {
+    // Equal halves are the same parabola as the stable equal-tangent tool.
+    let equal = call(
+        "survey.curves.vertical-curve",
+        r#"{"g1":2,"g2":-3,"length":"600 ft","pvi_station":"10+00","pvi_elevation":"100 ft"}"#,
+    );
+    let unequal = call(
+        "survey.curves.unequal-vertical-curve",
+        r#"{"g1":2,"g2":-3,"length1":"300 ft","length2":"300 ft","pvi_station":"10+00","pvi_elevation":"100 ft"}"#,
+    );
+    for field in ["pvc_elevation", "pvt_elevation", "turning_elevation"] {
+        assert!(
+            (num(&equal, &format!("result.{field}.value"))
+                - num(&unequal, &format!("result.{field}.value")))
+            .abs()
+                < 1e-12,
+            "{field}"
+        );
+    }
+    assert_eq!(
+        equal["result"]["pvc_station"],
+        unequal["result"]["pvc_station"]
+    );
+    assert_eq!(
+        equal["result"]["pvt_station"],
+        unequal["result"]["pvt_station"]
+    );
+    assert_eq!(
+        equal["result"]["turning_station"],
+        unequal["result"]["turning_station"]
+    );
+    assert!((num(&unequal, "result.cvc_elevation.value") - 96.25).abs() < 1e-12);
+
+    // The two parabolas meet continuously under the PVI with the same grade.
+    let at = |station: &str| {
+        let r = call(
+            "survey.curves.unequal-vertical-curve",
+            &format!(
+                r#"{{"g1":2,"g2":-3,"length1":"200 ft","length2":"400 ft","pvi_station":"10+00","pvi_elevation":"100 ft","at_station":"{station}"}}"#
+            ),
+        );
+        num(&r, "result.elevation.value")
+    };
+    let (left, center, right) = (at("9+99.99"), at("10+00"), at("10+00.01"));
+    let (left_grade, right_grade) = ((center - left) / 0.01, (right - center) / 0.01);
+    assert!((left_grade - right_grade).abs() < 2e-6);
+
+    // Pearson's problem 25.15 prints the 61+00 elevation as 3306.219 ft.
+    let published = call(
+        "survey.curves.unequal-vertical-curve",
+        r#"{"g1":2.5,"g2":-1.25,"length1":"600 ft","length2":"400 ft","pvi_station":"60+00","pvi_elevation":"3310 ft","at_station":"61+00"}"#,
+    );
+    assert!((num(&published, "result.elevation.value") - 3306.219).abs() < 0.001);
+}
+
+#[test]
 fn area_by_coordinates_invariants() {
     // Area does not change when the parcel is shifted, rotated, or started
     // at another corner; reversing the order flips only the orientation.

@@ -5,7 +5,7 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef, Q};
 
 use crate::{common_unit, fmt_station, is_metric, len, len_out, station};
 
@@ -17,10 +17,19 @@ const GHILANI: Reference = Reference {
     locator: "Chapter 25 (vertical curves: unequal-tangent curves)",
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
+const GHILANI_SOLUTIONS: Reference = Reference {
+    title: "Solutions to Problems, Elementary Surveying: An Introduction to Geomatics",
+    issuer: "Pearson Education",
+    year: 2015,
+    edition: "15th edition",
+    locator: "Problem 25.15 (unequal-tangent vertical curve)",
+    url: "https://my.civil.utah.edu/~bartlett/CVEEN%202410/homework/Homwork%20Solutions%20Edition%2015.pdf",
+};
 
 pub static UNEQUAL: ToolDef = ToolDef {
     id: "survey.curves.unequal-vertical-curve",
-    version: "1.0.1",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Unequal-tangent vertical curve",
     summary: "A vertical curve with different tangent lengths each side of the PVI: PVC, PVT, and the point under the PVI, the high or low point, and the elevation at any station.",
     aliases: &[
@@ -145,12 +154,12 @@ pub static UNEQUAL: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "Two parabolas, PVC to the point under the PVI and on to the PVT, sharing the grade g_c = (L1 g1 + L2 g2)/(L1 + L2) where they meet; the curve passes L1·L2·(g2 − g1)/(200(L1 + L2)) from the PVI (Ghilani & Wolf 2021, ch. 25)",
     accuracy: "Exact for the parabolas",
     when_to_use: "Use this when a vertical curve must have a shorter tangent on one side of the PVI than the other, often to fit a fixed point such as a driveway, a bridge, or a crossing road. Enter both grades, the two lengths, and the PVI station and elevation. It gives the PVC and PVT, the curve elevation under the PVI, the high or low point, and the elevation at any station you ask for, ready for grade stakes or a profile check.",
     limitations: "The curve is built as two parabolas that meet under the PVI and share one grade there. It is geometry, not design: sight distance, drainage, and comfort limits are not checked, and your design manual sets those. When both grades run the same way there may be no high or low point on the curve, and the result says so instead of making one up.",
-    references: &[GHILANI],
+    references: &[GHILANI, GHILANI_SOLUTIONS],
     examples: &[Example {
         id: "primary",
         title: "g1 = +2%, g2 = −3%, 200 ft before and 400 ft after a PVI at 10+00",
@@ -171,6 +180,10 @@ pub static UNEQUAL: ToolDef = ToolDef {
             id: "survey.curves.sight-distance",
             reason: "next",
         },
+        Related {
+            id: "survey.earthwork.profile-grades",
+            reason: "next",
+        },
     ],
     sentence: "The curve runs PVC {pvc_station} to PVT {pvt_station}. At the PVI station it is at {cvc_elevation}, and the PVI is at {pvi_elevation}; {turning}.",
     limits: &[("batchRows", 10_000)],
@@ -186,10 +199,16 @@ fn run_unequal(ctx: &mut Ctx) -> Result<Json, ToolError> {
     );
     let u = common_unit(&[("length1", l1q), ("length2", l2q), ("pvi_elevation", eq)])?;
     let (l1, l2, e) = (l1q.to(u), l2q.to(u), eq.to(u));
-    if l1 <= 0.0 || l2 <= 0.0 {
+    if !(l1 > 0.0) {
         return Err(ToolError::invalid(
             "/length1",
-            "Both tangent lengths must be positive.",
+            "The tangent length before the PVI must be positive.",
+        ));
+    }
+    if !(l2 > 0.0) {
+        return Err(ToolError::invalid(
+            "/length2",
+            "The tangent length after the PVI must be positive.",
         ));
     }
     let g1 = ctx.number("g1")?.expect("required") / 100.0;

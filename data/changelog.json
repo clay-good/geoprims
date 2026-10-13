@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "survey.curves.unequal-vertical-curve"
+      ],
+      "vectors": [],
+      "summary": "Unequal-tangent vertical curve (version 1.1.0) is now stable. It reproduces Pearson's published problem 25.15 stations and elevations, and 20 vectors plus equal-curve, join-continuity, and published-example invariants cover crest, sag, monotone, straight, endpoint-turning, and tangent-extension cases. A nonpositive second tangent now points to length2 instead of length1; valid-input calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "survey.curves.sight-distance"
       ],
       "vectors": [],

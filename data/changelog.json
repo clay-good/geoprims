@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "fixed",
+      "tools": [
+        "navigation.route.fly-by"
+      ],
+      "vectors": [],
+      "summary": "The animated fly-by diagram now keeps its time and course readout clear of the inbound-leg label at phone width. The route calculation and animation are unchanged."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "changed",
       "tools": [
         "raster.terrain.contours"

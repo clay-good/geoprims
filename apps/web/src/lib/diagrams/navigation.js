@@ -79,7 +79,7 @@ function flyBy(args, result) {
     const left = vec(course + 145, 7);
     const rightWing = vec(course - 145, 7);
     const points = [nose, left, rightWing].map(([x, y]) => `${f1(now[0] + x)},${f1(now[1] + y)}`).join(' ');
-    aircraft = `<polygon class="dg-dot-now" points="${points}"/>${text('dg-muted-text', 12, 228, `t = ${disp(result, 'scene_time')} · course ${disp(result, 'course_at')}`)}`;
+    aircraft = `<polygon class="dg-dot-now" points="${points}"/>${text('dg-muted-text', 318, 228, `t = ${disp(result, 'scene_time')} · course ${disp(result, 'course_at')}`, 'end')}`;
   }
   const body = [
     `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,

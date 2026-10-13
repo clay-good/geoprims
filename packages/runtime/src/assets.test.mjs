@@ -78,6 +78,10 @@ test('every registry entry is complete and every file matches its digest', async
     identities.add(identity);
     assert.ok(['bundled', 'on-demand', 'on-demand-tiled', 'offline-pack-only'].includes(a.loadPolicy), `${a.id} has load policy ${a.loadPolicy}`);
     assert.equal(a.loadPolicy === 'bundled', Boolean(a.bundledIn), `${a.id} bundledIn must match its load policy`);
+    if (a.offlinePack) {
+      assert.equal(a.loadPolicy, 'on-demand', `${a.id} offline packs must load on demand`);
+      assert.equal(typeof a.offlinePack, 'string', `${a.id} offline pack needs a description`);
+    }
     if (typeof a.tiling === 'object') {
       assert.equal(a.loadPolicy, 'on-demand-tiled', `${a.id} signed tiles must load on demand`);
       assert.match(a.tiling.index, /^[^/]+\.json$/, `${a.id} needs a safe tile index name`);

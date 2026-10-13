@@ -122,7 +122,7 @@ test('the precache holds every page, module, and calculation asset, within 12 MB
   for (const a of registry.assets.filter((x) => x.loadPolicy === 'on-demand')) {
     for (const f of Object.keys(a.files)) {
       const path = `/assets/${a.id}/${a.version}/${f}`;
-      if (a.consumers?.every((consumer) => consumer === 'web-map')) assert.ok(!set.has(path), `${f} loads on demand`);
+      if (a.offlinePack) assert.ok(!set.has(path), `${f} loads on demand`);
       else assert.ok(set.has(path), f);
     }
   }
@@ -181,7 +181,7 @@ test('offline packs report their exact size, verify downloads, resume, and delet
   assert.equal(progress.done, 684709);
   assert.equal(progress.total, 684709);
   assert.equal(messages.at(-1).ok, true);
-  assert.equal(messages.at(-1).packs[0].installed, true);
+  assert.equal(messages.at(-1).packs.find((pack) => pack.id === 'ne-50m').installed, true);
   assert.ok(sw.store.has('gp-pack-ne-50m-5.1.2'));
 
   sw.net.online = false;
@@ -194,7 +194,7 @@ test('offline packs report their exact size, verify downloads, resume, and delet
 
   const removed = [];
   await sw.message({ type: 'PACK_DELETE', id: 'ne-50m' }, removed);
-  assert.equal(removed.at(-1).packs[0].installed, false);
+  assert.equal(removed.at(-1).packs.find((pack) => pack.id === 'ne-50m').installed, false);
   assert.ok(!sw.store.has('gp-pack-ne-50m-5.1.2'));
 });
 
@@ -207,8 +207,8 @@ test('a damaged pack download is not marked complete', async () => {
   await sw.message({ type: 'PACK_INSTALL', id: 'ne-50m' }, messages);
   assert.equal(messages.at(-1).ok, false);
   assert.match(messages.at(-1).error, /checksum/);
-  assert.equal(messages.at(-1).packs[0].installed, false);
-  assert.equal(messages.at(-1).packs[0].partial, true);
+  assert.equal(messages.at(-1).packs.find((pack) => pack.id === 'ne-50m').installed, false);
+  assert.equal(messages.at(-1).packs.find((pack) => pack.id === 'ne-50m').partial, true);
 });
 
 test('a superseded pack stays available until its verified update replaces it', async () => {
@@ -219,12 +219,12 @@ test('a superseded pack stays available until its verified update replaces it', 
   const sw = worker(undefined, shared);
   const before = [];
   await sw.message({ type: 'PACK_STATUS' }, before);
-  assert.equal(before.at(-1).packs[0].updateAvailable, true);
+  assert.equal(before.at(-1).packs.find((pack) => pack.id === 'ne-50m').updateAvailable, true);
   assert.ok(shared.caches.has('gp-pack-ne-50m-5.0.0'));
 
   const installed = [];
   await sw.message({ type: 'PACK_INSTALL', id: 'ne-50m' }, installed);
-  assert.equal(installed.at(-1).packs[0].installed, true);
+  assert.equal(installed.at(-1).packs.find((pack) => pack.id === 'ne-50m').installed, true);
   assert.ok(!shared.caches.has('gp-pack-ne-50m-5.0.0'));
 });
 

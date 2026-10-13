@@ -38,6 +38,24 @@ test('the bundled time assets are pinned to current freshness rows', () => {
   }
 });
 
+test('the optional practitioner assets are pinned to current freshness rows', () => {
+  const cases = [
+    ['tz-boundaries', 'timezone-boundary-builder', 'timezones.geojson.zip'],
+    ['ngs-antinfo', 'ngs-antinfo', 'ngs20.003'],
+  ];
+  for (const [assetId, ledgerId, file] of cases) {
+    const asset = registry.assets.find((a) => a.id === assetId);
+    const row = ledger.find((r) => r.id === ledgerId);
+    assert.ok(asset, `${assetId} is missing from the asset registry`);
+    assert.ok(row, `${ledgerId} is missing from the sources ledger`);
+    assert.equal(asset.loadPolicy, 'on-demand');
+    assert.ok(asset.offlinePack, `${assetId} is not offered before download`);
+    assert.ok(asset.files[file], `${assetId} does not pin ${file}`);
+    assert.ok(asset.version.includes(row.currentEdition), `${assetId} ${asset.version} does not match ${row.currentEdition}`);
+    assert.equal(asset.retrievedAt, row.lastVerified);
+  }
+});
+
 test('every dated model has a dated ledger row', () => {
   assert.ok(windowed.length >= 2, 'no dated models in the registry');
   for (const a of windowed) assert.ok(ledgerRowOf(a), `${a.id} has no ledger row with a validTo`);

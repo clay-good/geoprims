@@ -16,6 +16,12 @@ test('pack size comes from the registry and is shown on the manager', () => {
   assert.match(html, /Natural Earth 1:50m base map/);
   assert.match(html, /685 KB/);
   assert.match(html, /version 5\.1\.2/);
+  assert.match(html, /IANA time zone boundaries/);
+  assert.match(html, /52\.0 MB/);
+  assert.match(html, /version 2026e/);
+  assert.match(html, /NGS GNSS antenna calibrations/);
+  assert.match(html, /494 KB/);
+  assert.match(html, /version IGS20_2437/);
 });
 
 test('Safari tab warning applies only outside an installed app', () => {

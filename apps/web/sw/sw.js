@@ -1,6 +1,6 @@
 // geoprims service worker (web/offline-pwa). scripts/pwa.mjs prepends
 // `const VERSION = '…'` and `const PRECACHE = […]` (every page, module, the
-// catalog, and calculation data assets) at build time. Optional map detail is
+// catalog, and calculation data assets) at build time. Optional data packs are
 // cached the first time it is requested.
 //
 // - Install caches the whole release, then waits: a new release never takes

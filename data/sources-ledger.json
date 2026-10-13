@@ -1989,8 +1989,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-22",
-      "verificationNote": "The page answered on 2026-09-22; antenna radii and ARP offsets come from its ANTINFO records.",
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the NGS antenna calibration pages on 2026-10-12; antenna radii and ARP offsets come from the antenna records and diagrams.",
       "freeAccessUrl": "https://geodesy.noaa.gov/ANTCAL/",
       "matchTerms": [
         "GPS Antenna Calibration"
@@ -1998,6 +1998,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "ngs-antinfo",
+      "name": "NGS IGS20 ANTINFO composite",
+      "issuer": "NOAA National Geodetic Survey",
+      "currentEdition": "IGS20_2437",
+      "currentReleaseDate": "2026-09-29",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Downloaded the current IGS20 ANTINFO composite from NGS on 2026-10-12. Its header identifies IGS20_2437 and the NGS publication date 2026-09-29.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/ANTCAL/LoadFile?file=ngs20.003",
+      "matchTerms": [
+        "IGS20 ANTINFO composite"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     },
     {
       "currentReleaseDate": "2025-04-07",
@@ -2679,6 +2699,27 @@
       "freeAccessUrl": "https://www.iana.org/time-zones",
       "matchTerms": [
         "Time Zone Database"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "timezone-boundary-builder",
+      "name": "timezone-boundary-builder",
+      "issuer": "timezone-boundary-builder contributors and OpenStreetMap contributors",
+      "currentEdition": "2026e",
+      "currentReleaseDate": "2026-10-11",
+      "cycleMonths": 3,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the upstream 2026e release on 2026-10-12 and pinned its comprehensive GeoJSON archive, published SHA-256 digest, and ODbL data license.",
+      "freeAccessUrl": "https://github.com/evansiroky/timezone-boundary-builder/releases/tag/2026e",
+      "matchTerms": [
+        "timezone-boundary-builder",
+        "time zone boundaries"
       ],
       "editionStatus": "current",
       "legalStatus": null,

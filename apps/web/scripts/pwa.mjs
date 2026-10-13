@@ -2,7 +2,7 @@
 // Post-build offline step (web/offline-pwa): lists every page, script, style,
 // Wasm module, the catalog, and calculation data assets for the service worker
 // to precache, stamps the release version into the pages, and writes dist/sw.js.
-// Optional map-only detail stays out of the install and is cached after use.
+// Optional packs stay out of the install and are cached after use.
 // Downloads (test vectors), share cards, and crawler files are left out. Fails the build if
 // the precache exceeds 12 MB of Brotli-compressed transfer.
 import { createHash } from 'node:crypto';
@@ -32,11 +32,11 @@ function files(dir, out = []) {
 
 const urlOf = (p) => '/' + relative(dist, p).replace(/(^|\/)index\.html$/, '$1');
 const registry = JSON.parse(readFileSync(join(web, '../../assets/registry.json'), 'utf8'));
-const optionalMapFiles = new Set(registry.assets
-  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.consumers?.every((consumer) => consumer === 'web-map'))
+const optionalPackFiles = new Set(registry.assets
+  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.offlinePack)
   .flatMap((asset) => Object.keys(asset.files).map((file) => `/assets/${asset.id}/${asset.version}/${file}`)));
 const packs = registry.assets
-  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.consumers?.every((consumer) => consumer === 'web-map'))
+  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.offlinePack)
   .map((asset) => ({
     id: asset.id,
     version: asset.version,
@@ -48,7 +48,7 @@ const packs = registry.assets
       sha256: file.sha256,
     })),
   }));
-const list = files(dist).filter((p) => !optionalMapFiles.has(urlOf(p))).sort();
+const list = files(dist).filter((p) => !optionalPackFiles.has(urlOf(p))).sort();
 
 // The version names the release's content, computed before it is stamped in.
 const h = createHash('sha256');

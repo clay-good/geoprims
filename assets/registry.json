@@ -122,6 +122,54 @@
       "bundledIn": "core/crates/gp-time/data/tzdb.bin"
     },
     {
+      "id": "tz-boundaries",
+      "version": "2026e",
+      "title": "IANA time zone boundaries",
+      "issuer": "timezone-boundary-builder contributors; boundary data from OpenStreetMap",
+      "license": "ODbL-1.0",
+      "attribution": "Contains information from timezone-boundary-builder (https://github.com/evansiroky/timezone-boundary-builder), which is made available under the Open Database License (ODbL). Contains OpenStreetMap data © OpenStreetMap contributors.",
+      "sourceUrl": "https://github.com/evansiroky/timezone-boundary-builder/releases/download/2026e/timezones.geojson.zip",
+      "retrievedAt": "2026-10-12",
+      "files": {
+        "timezones.geojson.zip": {
+          "sha256": "a75361c760d6de2fc95c63e97e0b1086d5dfe6fdb2bc6d96efeb3a94673aaa01",
+          "bytes": 51940158
+        },
+        "timezone-names.json": {
+          "sha256": "2584551f8c9af23a19bc8b197bf46ad458d9fa8c78d4df056f0408c67fd315ff",
+          "bytes": 7734
+        },
+        "DATA_LICENSE": {
+          "sha256": "064dbcd9fdd0ffdf36742c40718a23596be8a51838cb43b397f45d383ba42440",
+          "bytes": 26030
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "offlinePack": "Look up an IANA time zone from a coordinate. Includes the upstream ODbL license.",
+      "consumers": ["web-assets", "mcp-server"]
+    },
+    {
+      "id": "ngs-antinfo",
+      "version": "IGS20_2437",
+      "title": "NGS GNSS antenna calibrations",
+      "issuer": "National Geodetic Survey, NOAA",
+      "license": "Public domain (US Government work)",
+      "attribution": "GNSS antenna calibration data from the National Geodetic Survey (NOAA), IGS20 composite ANTINFO file.",
+      "sourceUrl": "https://geodesy.noaa.gov/ANTCAL/LoadFile?file=ngs20.003",
+      "retrievedAt": "2026-10-12",
+      "files": {
+        "ngs20.003": {
+          "sha256": "81cad5dd9223fdff761f7ce403ed606a9022852722cbc4d15507c3a5a0d1bab7",
+          "bytes": 494277
+        }
+      },
+      "tiling": "none",
+      "loadPolicy": "on-demand",
+      "offlinePack": "Use the NGS IGS20 antenna calibration catalog offline.",
+      "consumers": ["web-assets", "mcp-server"]
+    },
+    {
       "id": "nadcon5",
       "version": "20160901",
       "title": "NADCON5 first-step grids: each region's old datum to NAD 83",
@@ -241,6 +289,7 @@
       },
       "tiling": "none",
       "loadPolicy": "on-demand",
+      "offlinePack": "Add higher-detail boundaries and coastlines for map views.",
       "consumers": ["web-map"]
     }
   ]

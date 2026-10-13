@@ -68,7 +68,7 @@ test('the bundle carries every file it declares, and unpacks to the same bytes',
   assert.equal(build(mkdtempSync(join(tmpdir(), 'mcpb-'))).digest, r.digest);
 });
 
-test('the bundled offline assets stay inside the 6 MB the spec allows', () => {
+test('bundled assets stay under 6 MB and optional packs stay out', () => {
   // add-local-mcp-server 4.2: the bundle is what makes the server work with
   // no network, and it is also what a desktop user downloads, so it is capped.
   const dir = join(root, 'mcp/dist/assets');
@@ -76,15 +76,18 @@ test('the bundled offline assets stay inside the 6 MB the spec allows', () => {
   const files = walk(dir);
   const bytes = files.reduce((n, f) => n + statSync(f).size, 0);
   assert.ok(bytes <= 6e6, `bundled assets are ${(bytes / 1e6).toFixed(1)} MB, over the 6 MB cap`);
-  // Every asset the registry lists is either bundled or compiled into the
-  // core; nothing is listed that the server cannot reach offline.
+  // Every non-optional asset the registry lists is either bundled or compiled
+  // into the core. Optional pack rows remain available for the opt-in
+  // downloader, but their large payloads must not inflate the release.
   const registry = JSON.parse(readFileSync(join(dir, 'registry.json'), 'utf8'));
   const present = new Set(files.map((f) => f.slice(dir.length + 1)));
   const compiledIn = new Set(['wmm2025', 'igrf14', 'leap-seconds', 'tzdb']);
   for (const asset of registry.assets) {
     if (compiledIn.has(asset.id)) continue;
     for (const name of Object.keys(asset.files)) {
-      assert.ok(present.has(join('data', asset.id, asset.version, name)), `${asset.id}/${name} is listed but not bundled`);
+      const path = join('data', asset.id, asset.version, name);
+      if (asset.offlinePack) assert.ok(!present.has(path), `${asset.id}/${name} is optional but bundled`);
+      else assert.ok(present.has(path), `${asset.id}/${name} is listed but not bundled`);
     }
   }
   // A compiled-in asset really is reachable with no files on disk: its tool

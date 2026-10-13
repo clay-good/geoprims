@@ -17,14 +17,14 @@ cpSync(join(root, 'dist/wasm'), join(dist, 'wasm'), { recursive: true });
 cpSync(join(root, 'dist/catalog'), join(dist, 'catalog'), { recursive: true });
 cpSync(join(root, 'packages/runtime/src'), join(dist, 'runtime'), { recursive: true, filter: (p) => !p.endsWith('.test.mjs') });
 cpSync(join(root, 'core/vectors'), join(dist, 'vectors'), { recursive: true });
-// Only the assets the server can use: one whose consumers leave out the MCP
-// server (the web map's 50m coastline) stays out of the bundle, which the
-// spec caps at 6 MB, and out of the registry the server reads.
+// Keep the registry rows for optional MCP downloads, but not their payloads:
+// the release bundle is capped at 6 MB. Assets that do not name the MCP server
+// as a consumer stay out of both the bundle and the registry it reads.
 const full = JSON.parse(readFileSync(join(root, 'assets/registry.json'), 'utf8'));
 const registry = { ...full, assets: full.assets.filter((a) => !a.consumers || a.consumers.includes('mcp-server')) };
 mkdirSync(join(dist, 'assets'), { recursive: true });
 writeFileSync(join(dist, 'assets/registry.json'), `${JSON.stringify(registry, null, 2)}\n`);
-for (const asset of registry.assets) {
+for (const asset of registry.assets.filter((a) => !a.offlinePack)) {
   const from = join(root, 'assets/data', asset.id);
   if (existsSync(from)) cpSync(from, join(dist, 'assets/data', asset.id), { recursive: true });
 }

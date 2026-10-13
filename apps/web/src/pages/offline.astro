@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 const registry = JSON.parse(readFileSync(join(process.cwd(), '../../assets/registry.json'), 'utf8'));
 const packs = registry.assets
-  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.consumers?.every((consumer) => consumer === 'web-map'))
+  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.offlinePack)
   .map((asset) => ({ ...asset, bytes: Object.values(asset.files).reduce((sum, file) => sum + file.bytes, 0) }));
 const size = (bytes) => bytes < 1_000_000 ? `${Math.round(bytes / 1_000)} KB` : `${(bytes / 1_000_000).toFixed(1)} MB`;
 ---
@@ -28,7 +28,7 @@ const size = (bytes) => bytes < 1_000_000 ? `${Math.round(bytes / 1_000)} KB` : 
       <section class="card offline-pack" data-pack={pack.id}>
         <div>
           <h3>{pack.title}</h3>
-          <p>Higher-detail boundaries and coastlines for map views. {size(pack.bytes)} · version {pack.version}</p>
+          <p>{pack.offlinePack} {size(pack.bytes)} · version {pack.version}</p>
           <p class="offline-pack-status" role="status" aria-live="polite" data-pack-status>Checking…</p>
         </div>
         <progress max={pack.bytes} value="0" hidden aria-label={`${pack.title} download progress`}></progress>

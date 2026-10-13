@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "fixed",
+      "tools": [
+        "survey.gnss.rtk-budget"
+      ],
+      "vectors": [],
+      "summary": "The RTK and PPK precision budget (version 1.1.0) is now stable. It reproduces Tersus's published 40 km example at 48 mm horizontal and 55 mm vertical, and 25 vectors plus five invariant tests cover ppm scaling, confidence factors, units, targets, boundaries, and invalid inputs. Valid calculation results are unchanged; negative vertical constants and targets are now refused, and incomplete or invalid terms identify the field that needs correction."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "result-change",
       "tools": [
         "survey.gnss.opus-plan"

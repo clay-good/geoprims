@@ -58,6 +58,15 @@ const NGS_RT: Reference = Reference {
     url: "https://geodesy.noaa.gov/PUBS_LIB/UserGuidelinesForSingleBaseRealTimeGNSSPositioningv.3.1APR2014-1.pdf",
 };
 
+const TERSUS_LONG_RTK: Reference = Reference {
+    title: "How does Tersus handle long-range single baseline RTK positioning?",
+    issuer: "Tersus GNSS Inc.",
+    year: 2023,
+    edition: "Technical blog, April 6, 2023",
+    locator: "Oscar receiver worked example: at a 40 km baseline, 8 mm + 1 ppm horizontal gives 48 mm and 15 mm + 1 ppm vertical gives 55 mm",
+    url: "https://www.tersus-gnss.com/tech_blog/how-does-tersus-handle-long-range-single-baseline-rtk-positioning",
+};
+
 const fn mm(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
@@ -74,6 +83,8 @@ const fn mm(name: &'static str, title: &'static str, help: &'static str) -> Fiel
 
 pub static RTK_BUDGET: ToolDef = ToolDef {
     id: "survey.gnss.rtk-budget",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "RTK and PPK precision budget",
     summary: "The precision a receiver's a mm + b ppm specification promises over your baseline, horizontal and vertical, scaled to a confidence level and compared with your target.",
     aliases: &[
@@ -165,17 +176,17 @@ pub static RTK_BUDGET: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Precision = a + b × 10⁻⁶ × baseline, the way receiver specifications state it (1σ, ideal conditions); at 95% the horizontal value is multiplied by 2.448 (the two-dimensional factor) and the vertical by 1.96",
     accuracy: "Manufacturer specifications assume open sky, good geometry, and no multipath; field results are often worse. A root-sum-square of the two terms would read lower",
-    when_to_use: "Use this when you need to know if an RTK or PPK setup can meet a job's tolerance before you go to the field. Enter the receiver's a mm plus b ppm spec, the baseline to the base or network, and your target. It returns horizontal and, if given, vertical precision at 1 sigma or 95%, and says whether you are within, near, or beyond the target.",
-    limitations: "The answer is what the maker's spec promises under open sky with good satellite geometry and no multipath. Real work under trees, near buildings, or with poor geometry is often worse. The two terms are added straight, as specs state them. It does not model antenna height errors, setup errors, or the accuracy of the base coordinates.",
-    references: &[NGS_RT],
+    when_to_use: "Use this when you need to know if an RTK or PPK setup can meet a job's tolerance before you go to the field. Enter the receiver's a mm plus b ppm spec, the baseline to the base or network, and your target. It returns horizontal and, if given, vertical precision as stated or scaled from one sigma to 95%, and says whether you are within, near, or beyond the target.",
+    limitations: "The answer is what the maker's spec promises under open sky with good satellite geometry and no multipath. Real work under trees, near buildings, or with poor geometry is often worse. The two terms are added straight, as specs state them. The 95% option assumes the entered terms are one-sigma values; do not apply it to a specification already stated as RMS, 95%, or another confidence basis. The tool does not model antenna height errors, setup errors, or the accuracy of the base coordinates.",
+    references: &[NGS_RT, TERSUS_LONG_RTK],
     examples: &[Example {
         id: "primary",
-        title: "8 mm + 1 ppm over a 15 km baseline",
-        input: r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"15 km"}"#,
-        source: "add-practitioner-essentials RTK scenario: 23 mm horizontal (a + b·d, as manufacturers state it)",
+        title: "Tersus Oscar over a 40 km baseline",
+        input: r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"40 km","v_constant":"15 mm","v_ppm":1}"#,
+        source: "Tersus GNSS technical blog (April 6, 2023): its Oscar receiver example gives 48 mm horizontal and 55 mm vertical over 40 km",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -191,6 +202,10 @@ pub static RTK_BUDGET: ToolDef = ToolDef {
             id: "survey.gnss.antenna-height",
             reason: "next",
         },
+        Related {
+            id: "survey.gnss.dop",
+            reason: "next",
+        },
     ],
     sentence: "The spec gives {horizontal} across at this range.",
     limits: &[("batchRows", 10_000)],
@@ -203,10 +218,16 @@ fn run_rtk(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let a = ctx.req_quantity("h_constant")?.to(m);
     let b = ctx.number("h_ppm")?.expect("required");
     let d = ctx.req_quantity("baseline")?.to(m);
-    if a.is_nan() || a < 0.0 || d.is_nan() || !(0.0..=10_000_000.0).contains(&d) {
+    if !a.is_finite() || a < 0.0 {
+        return Err(ToolError::invalid(
+            "/h_constant",
+            "The horizontal constant term must be 0 or more.",
+        ));
+    }
+    if !d.is_finite() || !(0.0..=10_000_000.0).contains(&d) {
         return Err(ToolError::invalid(
             "/baseline",
-            "Give a constant term of 0 or more and a baseline of 0 to 10,000 km.",
+            "The baseline must be from 0 to 10,000 km.",
         ));
     }
     let ninety_five = ctx.choice("confidence")? == Some("95");
@@ -219,19 +240,40 @@ fn run_rtk(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let q = |v: f64| Q { value: v, unit: m };
     let mut out = vec![("horizontal", ctx.out("horizontal", q(h)))];
     match (ctx.quantity("v_constant")?, ctx.number("v_ppm")?) {
-        (Some(va), Some(vb)) => out.push((
-            "vertical",
-            ctx.out("vertical", q((va.to(m) + vb * 1e-6 * d) * kv)),
-        )),
+        (Some(va), Some(vb)) => {
+            let va = va.to(m);
+            if !va.is_finite() || va < 0.0 {
+                return Err(ToolError::invalid(
+                    "/v_constant",
+                    "The vertical constant term must be 0 or more.",
+                ));
+            }
+            out.push((
+                "vertical",
+                ctx.out("vertical", q((va + vb * 1e-6 * d) * kv)),
+            ));
+        }
         (None, None) => {}
-        _ => {
+        (Some(_), None) => {
             return Err(ToolError::invalid(
                 "/v_ppm",
                 "Give both vertical terms, or neither.",
             ));
         }
+        (None, Some(_)) => {
+            return Err(ToolError::invalid(
+                "/v_constant",
+                "Give both vertical terms, or neither.",
+            ));
+        }
     }
     if let Some(t) = ctx.quantity("target")? {
+        if !t.value.is_finite() || t.to(m) < 0.0 {
+            return Err(ToolError::invalid(
+                "/target",
+                "The target must be 0 or more.",
+            ));
+        }
         let text = format!(
             "{} target",
             display::quantity(

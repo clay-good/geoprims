@@ -29,6 +29,34 @@ def rtk():
     out.append(vec(4, {"h_constant": "5 mm", "h_ppm": 0.5, "baseline": "2 km", "target": "10 mm", "confidence": "95"},
                    {"result.horizontal.value": 6 * 2.448, "result.target_status": "Beyond your 10 mm target"}))
     out.append(vec(5, {"h_constant": "8 mm", "h_ppm": 1, "baseline": "15 km", "v_constant": "15 mm"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    tersus = "Tersus GNSS, How does Tersus handle long-range single baseline RTK positioning?, 2023-04-06"
+    out.append(vec(6, {"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "v_constant": "15 mm", "v_ppm": 1},
+                   {"result.horizontal.value": 48.0, "result.vertical.value": 55.0}, tersus + " (published Oscar receiver worked example)"))
+    out[-1]["sourceVersion"] = "2023-04-06"
+    cases = [
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "0 km"}, {"result.horizontal.value": 8.0}),
+        ({"h_constant": "8 mm", "h_ppm": 0.1, "baseline": "10000 km"}, {"result.horizontal.value": 1008.0}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "10000.001 km"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/baseline"}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "-1 m"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/baseline"}),
+        ({"h_constant": "0 mm", "h_ppm": 0, "baseline": "0 km"}, {"result.horizontal.value": 0.0}),
+        ({"h_constant": "-0.1 mm", "h_ppm": 1, "baseline": "1 km"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/h_constant"}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "target": "60 mm"}, {"result.horizontal.value": 48.0, "result.target_status": "Within your 60 mm target"}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "target": "48 mm"}, {"result.horizontal.value": 48.0, "result.target_status": "Near your 48 mm target"}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "target": "40 mm"}, {"result.horizontal.value": 48.0, "result.target_status": "Beyond your 40 mm target"}),
+        ({"h_constant": "0.8 cm", "h_ppm": 1, "baseline": "40000 m", "v_constant": "1.5 cm", "v_ppm": 1}, {"result.horizontal.value": 48.0, "result.vertical.value": 55.0}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 mi"}, {"result.horizontal.value": 9.609344}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "v_constant": "15 mm", "v_ppm": 1, "confidence": "95"}, {"result.horizontal.value": 117.504, "result.vertical.value": 107.8}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "v_constant": "15 mm", "v_ppm": 1, "confidence": "1sigma"}, {"result.horizontal.value": 48.0, "result.vertical.value": 55.0}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 km", "v_ppm": 1}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/v_constant"}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 km", "v_constant": "-1 mm", "v_ppm": 1}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/v_constant"}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 km", "target": "-1 mm"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/target"}),
+        ({"h_constant": "0 mm", "h_ppm": 1000, "baseline": "1 km"}, {"result.horizontal.value": 1000.0}),
+        ({"h_constant": "8 mm", "h_ppm": 1000.001, "baseline": "1 km"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/h_ppm"}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 km", "v_constant": "15 mm", "v_ppm": 1000.001}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/v_ppm"}),
+    ]
+    for inp, exp in cases:
+        out.append(vec(len(out) + 1, inp, exp))
+    assert len(out) == 25
     return out
 
 

@@ -11,6 +11,11 @@ fn opus(input: &str) -> Value {
         .expect("envelope is JSON")
 }
 
+fn rtk(input: &str) -> Value {
+    serde_json::from_str(&REGISTRY.invoke("survey.gnss.rtk-budget", input))
+        .expect("envelope is JSON")
+}
+
 fn num(result: &Value, field: &str) -> f64 {
     result["result"][field]["value"]
         .as_f64()
@@ -134,6 +139,74 @@ fn opus_plan_invalid_inputs_name_the_field() {
         (r#"{"session":"60 min","start_hour":8}"#, "/start_hour"),
     ] {
         let result = opus(input);
+        assert_eq!(result["error"]["field"], field, "{result}");
+    }
+}
+
+#[test]
+fn rtk_budget_matches_the_tersus_worked_example() {
+    let result =
+        rtk(r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"40 km","v_constant":"15 mm","v_ppm":1}"#);
+    assert_eq!(result["ok"], true, "{result}");
+    assert_eq!(num(&result, "horizontal"), 48.0);
+    assert_eq!(num(&result, "vertical"), 55.0);
+}
+
+#[test]
+fn rtk_budget_one_ppm_is_one_millimeter_per_kilometer() {
+    for (baseline, expected) in [("0 km", 0.0), ("1 km", 1.0), ("40 km", 40.0)] {
+        let result = rtk(&format!(
+            r#"{{"h_constant":"0 mm","h_ppm":1,"baseline":"{baseline}"}}"#
+        ));
+        assert!((num(&result, "horizontal") - expected).abs() < 1e-12);
+    }
+}
+
+#[test]
+fn rtk_budget_applies_the_documented_confidence_factors() {
+    let one_sigma =
+        rtk(r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"40 km","v_constant":"15 mm","v_ppm":1}"#);
+    let ninety_five = rtk(
+        r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"40 km","v_constant":"15 mm","v_ppm":1,"confidence":"95"}"#,
+    );
+    assert!(
+        (num(&ninety_five, "horizontal") / num(&one_sigma, "horizontal") - 2.448).abs() < 1e-12
+    );
+    assert!((num(&ninety_five, "vertical") / num(&one_sigma, "vertical") - 1.96).abs() < 1e-12);
+}
+
+#[test]
+fn rtk_budget_is_unit_invariant() {
+    let millimeters =
+        rtk(r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"40 km","v_constant":"15 mm","v_ppm":1}"#);
+    let mixed = rtk(
+        r#"{"h_constant":"0.8 cm","h_ppm":1,"baseline":"40000 m","v_constant":"1.5 cm","v_ppm":1}"#,
+    );
+    assert!((num(&millimeters, "horizontal") - num(&mixed, "horizontal")).abs() < 1e-12);
+    assert!((num(&millimeters, "vertical") - num(&mixed, "vertical")).abs() < 1e-12);
+}
+
+#[test]
+fn rtk_budget_invalid_inputs_name_the_field() {
+    for (input, field) in [
+        (
+            r#"{"h_constant":"-1 mm","h_ppm":1,"baseline":"1 km"}"#,
+            "/h_constant",
+        ),
+        (
+            r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"1 km","v_constant":"-1 mm","v_ppm":1}"#,
+            "/v_constant",
+        ),
+        (
+            r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"1 km","v_ppm":1}"#,
+            "/v_constant",
+        ),
+        (
+            r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"1 km","target":"-1 mm"}"#,
+            "/target",
+        ),
+    ] {
+        let result = rtk(input);
         assert_eq!(result["error"]["field"], field, "{result}");
     }
 }

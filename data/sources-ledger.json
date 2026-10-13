@@ -3149,6 +3149,26 @@
       "editionCheck": true
     },
     {
+      "id": "tersus-long-range-rtk",
+      "name": "How does Tersus handle long-range single baseline RTK positioning?",
+      "issuer": "Tersus GNSS Inc.",
+      "currentEdition": "Technical blog, April 6, 2023",
+      "currentReleaseDate": "2023-04-06",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read at the issuer: the Oscar receiver example applies 8 mm + 1 ppm horizontal and 15 mm + 1 ppm vertical to a 40 km baseline and publishes 48 mm and 55 mm.",
+      "freeAccessUrl": "https://www.tersus-gnss.com/tech_blog/how-does-tersus-handle-long-range-single-baseline-rtk-positioning",
+      "matchTerms": [
+        "long-range single baseline RTK positioning"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "trimble-access",
       "name": "Trimble Access General Survey Help: Instrument corrections",
       "issuer": "Trimble",

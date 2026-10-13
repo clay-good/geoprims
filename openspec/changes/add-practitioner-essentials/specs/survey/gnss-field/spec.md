@@ -16,11 +16,15 @@ Given a pasted GPS almanac (YUMA or SEM), optional other-constellation almanacs,
 - **THEN** satellites below the terrain horizon are excluded and the mask is drawn on the sky plot
 
 ### Requirement: RTK and PPK error budget
-Given the receiver's published horizontal and vertical specifications (a mm + b ppm) and the baseline length, the tool SHALL compute the expected 1σ horizontal and vertical precision (and a stated confidence scaling). It SHALL compare the result to a user target, stating that manufacturer specifications assume ideal conditions.
+Given the receiver's published horizontal and vertical specifications (a mm + b ppm) and the baseline length, the tool SHALL compute the expected 1σ horizontal and vertical precision (and a stated confidence scaling). It SHALL compare the result to a user target, stating that manufacturer specifications assume ideal conditions and that 95% scaling applies only when the entered specification is one sigma.
 
 #### Scenario: 15 km baseline
 - **WHEN** the spec is 8 mm + 1 ppm horizontal and the baseline is 15 km
 - **THEN** the expected horizontal precision is 23 mm (a + b·d, as manufacturers state it)
+
+#### Scenario: Published long-baseline example
+- **WHEN** the spec is 8 mm + 1 ppm horizontal and 15 mm + 1 ppm vertical over 40 km
+- **THEN** the tool returns 48 mm horizontal and 55 mm vertical, matching the Tersus Oscar example
 
 ### Requirement: OPUS session planning
 A tool SHALL report the processing path NGS OPUS currently assigns by file duration: RSGPS rapid-static below 2 hours and PAGES static from 2 through 48 hours, with 15 minutes as the minimum accepted duration (NGS guidance, cited and dated). It SHALL generate the RINEX 2 short name from the four-character mark ID, UTC start date, and UTC start hour. The session character SHALL be `a` through `x` for start hours 00 through 23 and `0` only for a 24-hour data set.

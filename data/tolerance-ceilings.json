@@ -87,6 +87,11 @@
       "reason": "The source program prints GSD to 0.1 cm, so the tolerance is half of that rounding interval."
     },
     {
+      "tool": "drone.sensors.thermal-footprint",
+      "source": "Teledyne FLIR, Understanding Distance:Size Ratio",
+      "reason": "FLIR prints the one-pixel footprint and 3 x 3 measurement spot to 0.01 in, so each tolerance covers that published rounding interval."
+    },
+    {
       "tool": "geodesy.datum.helmert",
       "source": "IOGP Guidance Note 7-2 worked example",
       "reason": "The guidance note prints the example's coordinates to the centimeter, so the tolerance is one centimeter."

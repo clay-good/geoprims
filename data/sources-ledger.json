@@ -1114,6 +1114,26 @@
       "editionCheck": false
     },
     {
+      "id": "flir-distance-size",
+      "name": "Understanding Distance:Size Ratio",
+      "issuer": "Teledyne FLIR",
+      "currentEdition": "Web article (2020-05-08)",
+      "currentReleaseDate": "2020-05-08",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read at the issuer on 2026-10-13. The FLIR E8 example at 10 ft gives 0.31 in for one pixel and 0.93 in across the recommended 3 x 3 pixels.",
+      "freeAccessUrl": "https://www.flir.com/en-ca/discover/professional-tools/understanding-distancesize-ratio/",
+      "matchTerms": [
+        "Understanding Distance:Size Ratio"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "gao-1996",
       "name": "NDWI - A normalized difference water index for remote sensing of vegetation liquid water from space",
       "issuer": "Gao, B.-C., Remote Sensing of Environment",

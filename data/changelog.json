@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
+        "drone.sensors.thermal-footprint"
+      ],
+      "vectors": [],
+      "summary": "Thermal pixel footprint (version 1.1.0) is now stable. It reproduces FLIR's published E8 example at 10 ft, and 26 vectors plus four invariant tests cover direct IFOV, pixel pitch and focal length, unit conversions, pixel rules, inverse target distance, domain boundaries, and invalid camera inputs. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "result-change",
       "tools": [
         "survey.gnss.localization"

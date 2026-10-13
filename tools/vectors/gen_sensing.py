@@ -60,6 +60,56 @@ def thermal():
     out.append(vec(len(out) + 1, {"pixel_pitch": "12 um", "focal_length": "9 mm", "distance": "50 m", "pixels": 5},
                    {"result.footprint.value": 12e-6 / 9e-3 * 50 * 1000, "result.min_target.value": 5 * 12e-6 / 9e-3 * 50 * 1000}))
     out.append(vec(len(out) + 1, {"distance": "30 m"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+
+    # FLIR's published E8 example gives a 0.31 in one-pixel footprint and a
+    # 0.93 in 3 × 3 measurement spot at 10 ft. The equivalent angular IFOV is
+    # 0.31 / 120 rad.
+    flir = vec(len(out) + 1, {"ifov": f"{0.31 / 120 * 1000:.12f} mrad", "distance": "10 ft"},
+               {"result.footprint.value": 0.31 * 25.4, "result.min_target.value": 0.93 * 25.4},
+               "Teledyne FLIR, Understanding Distance:Size Ratio (2020-05-08), FLIR E8 worked example")
+    flir["sourceVersion"] = "Web article, 2020-05-08"
+    flir["tolerance"] = {"result.footprint.value": {"abs": 0.254}, "result.min_target.value": {"abs": 0.762}}
+    out.append(flir)
+
+    def angular(ifov_mrad, distance_m, pixels=3, target_mm=None, ifov_text=None, distance_text=None):
+        foot_mm = ifov_mrad * distance_m
+        inp = {"ifov": ifov_text or f"{ifov_mrad} mrad", "distance": distance_text or f"{distance_m} m", "pixels": pixels}
+        exp = {"result.footprint.value": foot_mm, "result.min_target.value": pixels * foot_mm}
+        if target_mm is not None:
+            inp["target_size"] = f"{target_mm} mm"
+            exp["result.max_distance.value"] = target_mm / (pixels * ifov_mrad)
+        return vec(len(out) + 1, inp, exp)
+
+    for args in [
+        (1.3, 25, 3, None, "0.0013 rad", None),
+        (1.3, 25, 3, None, f"{math.degrees(0.0013)} deg", None),
+        (0.9, 30.48, 3, None, None, "100 ft"),
+        (1.1, 40, 1, None, None, None),
+        (1.1, 40, 20, None, None, None),
+        (0.8, 50, 3, 25.4, None, None),
+        (0.2, 100000, 3, 60000, None, None),
+        (3.0, 2.5, 4, 30, None, None),
+    ]:
+        out.append(angular(*args))
+    for pitch_um, focal_mm, distance_m, pixels, target_mm in [(17, 13, 80, 3, None), (12, 19, 15, 4, 50), (25, 50, 200, 3, 300)]:
+        ifov = pitch_um / 1000 / focal_mm
+        inp = {"pixel_pitch": f"{pitch_um} um", "focal_length": f"{focal_mm} mm", "distance": f"{distance_m} m", "pixels": pixels}
+        exp = {"result.footprint.value": ifov * distance_m * 1000, "result.min_target.value": pixels * ifov * distance_m * 1000}
+        if target_mm is not None:
+            inp["target_size"] = f"{target_mm} mm"
+            exp["result.max_distance.value"] = target_mm / 1000 / (pixels * ifov)
+        out.append(vec(len(out) + 1, inp, exp))
+    failures = [
+        {"ifov": "1 mrad", "pixel_pitch": "12 um", "focal_length": "9 mm", "distance": "30 m"},
+        {"pixel_pitch": "12 um", "distance": "30 m"},
+        {"focal_length": "9 mm", "distance": "30 m"},
+        {"ifov": "0 mrad", "distance": "30 m"},
+        {"ifov": "1 mrad", "distance": "0 m"},
+        {"ifov": "1 mrad", "distance": "100001 m"},
+        {"ifov": "1 mrad", "distance": "30 m", "target_size": "0 mm"},
+        {"ifov": "1 mrad", "distance": "30 m", "pixels": 0},
+    ]
+    out.extend(vec(len(out) + i + 1, inp, {"ok": False, "error.code": "INVALID_INPUT"}) for i, inp in enumerate(failures))
     return out
 
 

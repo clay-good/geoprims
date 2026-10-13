@@ -3,14 +3,14 @@
 //! a thermal camera's pixel footprint with the smallest target it can
 //! measure reliably.
 
-use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::tool::{
-    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef, Q,
 };
 use gp_base::units::Quantity as QT;
+use gp_base::ErrorCode;
 
 use crate::unit;
 
@@ -30,6 +30,15 @@ const FLIR_3X3: Reference = Reference {
     edition: "Web article, 2023-09-12",
     locator: "At least 3 × 3 pixels on a target for an accurate temperature measurement",
     url: "https://www.flir.com/discover/professional-tools/how-far-can-you-measure-with-a-thermal-camera/",
+};
+
+const FLIR_DISTANCE_SIZE: Reference = Reference {
+    title: "Understanding Distance:Size Ratio",
+    issuer: "Teledyne FLIR",
+    year: 2020,
+    edition: "Web article, 2020-05-08",
+    locator: "FLIR E8 worked example at 10 ft: 0.31 in IFOV and 0.93 in for 3 × 3 pixels",
+    url: "https://www.flir.com/en-ca/discover/professional-tools/understanding-distancesize-ratio/",
 };
 
 /// LAS 1.4 minimum point data record sizes, formats 0 to 10, in bytes.
@@ -388,6 +397,8 @@ fn run_dataset(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static THERMAL_FOOTPRINT: ToolDef = ToolDef {
     id: "drone.sensors.thermal-footprint",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Thermal pixel footprint",
     summary: "How much ground or surface one thermal pixel covers at a distance, the smallest target you can measure reliably, and how far away you can be for a target size.",
     aliases: &[
@@ -497,18 +508,26 @@ pub static THERMAL_FOOTPRINT: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "IFOV = pixel pitch ÷ focal length when not given; footprint = IFOV × distance; the smallest reliable target spans the rule's pixels (3 × 3 by default, FLIR guidance), and the farthest distance for a target is its size ÷ (pixels × IFOV)",
     accuracy: "Geometry only. Atmosphere, optics blur, and emissivity also limit what a thermal camera reads; the 3 × 3 rule is industry guidance, not a standard",
     when_to_use: "Use this when you plan a thermal inspection, such as solar panels, roofs, or power lines, and need to know how close to fly. Give the camera's IFOV, or its pixel pitch and focal length, and the distance, and it gives the size one pixel covers and the smallest target you can measure, three pixels across by default. Give a target size to get the farthest distance that still measures it.",
     limitations: "This is geometry only. Haze, lens blur, the target's emissivity, and reflected heat all affect the reading, and none are modeled. The three-pixel rule is guidance from a camera maker, not a standard, so a client or procedure may ask for more. The distance is along the line of sight, so viewing a surface at an angle stretches the footprint on it.",
-    references: &[FLIR_3X3],
-    examples: &[Example {
-        id: "primary",
-        title: "A 1.3 mrad camera at 30 m",
-        input: r#"{"ifov":"1.3 mrad","distance":"30 m"}"#,
-        source: "add-practitioner-essentials solar-panel scenario: 39 mm pixel footprint, 117 mm smallest target by the 3 × 3 rule",
-    }],
+    references: &[FLIR_3X3, FLIR_DISTANCE_SIZE],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "A 1.3 mrad camera at 30 m",
+            input: r#"{"ifov":"1.3 mrad","distance":"30 m"}"#,
+            source: "add-practitioner-essentials solar-panel scenario: 39 mm pixel footprint, 117 mm smallest target by the 3 × 3 rule",
+        },
+        Example {
+            id: "flir-e8",
+            title: "FLIR E8 at 10 ft",
+            input: r#"{"ifov":"2.583333333333 mrad","distance":"10 ft"}"#,
+            source: "FLIR Understanding Distance:Size Ratio (2020): 0.31 in for one pixel and 0.93 in across 3 × 3 pixels at 10 ft",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
@@ -522,6 +541,10 @@ pub static THERMAL_FOOTPRINT: ToolDef = ToolDef {
         Related {
             id: "drone.sensors.dataset-size",
             reason: "next",
+        },
+        Related {
+            id: "drone.sensors.lidar-plan",
+            reason: "alternative",
         },
     ],
     sentence: "Each pixel covers {footprint}, so the smallest target you can measure reliably is {min_target}.",

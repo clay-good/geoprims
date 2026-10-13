@@ -7,13 +7,11 @@
   import { createBasemapLoader, DETAIL_AT, GENERALIZED_AT } from '../lib/map/basemap.js';
   import { forward, frame, inverse, PROJECTION_NAMES } from '../lib/map/projection.js';
   import { colors, draw } from '../lib/map/render.js';
-  import { createGpuPresenter } from '../lib/map/gpu-presenter.js';
   import { magneticNorth, readoutText } from '../lib/map/readout.js';
   import { clickTarget, dragDegrees, handleAt, handlesOf } from '../lib/map/handles.js';
   import { canvasDefault, coordFormat, reducedMotion } from '../lib/prefs.js';
   import { say } from '../lib/keys.js';
   import { sound } from '../lib/sound.js';
-  import { attributionLines, caption, layersGeoJson, loadRegistry, mapSvg, pngWithFooter, saveBlob } from '../lib/canvas-export.mjs';
 
   let { tool, args, result, compute, onmove } = $props();
 
@@ -25,7 +23,11 @@
   let projection = $state('map');
   let canvas;
   let gpuCanvas;
+  let figure;
   let presenter = null;
+  let gpuStarted = false;
+  let gpuTimer;
+  let mounted = false;
   let renderer = $state('canvas2d');
   let reducedRenderer = $state(false);
   let base = null;
@@ -412,16 +414,19 @@
   // Export (web/map-canvas, "Export"): the view as drawn, with the caption and
   // every attribution it owes in a footer strip, or its layers as GeoJSON.
   async function exportPng() {
+    const { attributionLines, caption, loadRegistry, pngWithFooter, saveBlob } = await import('../lib/canvas-export.mjs');
     paint();
     const lines = attributionLines(result, await loadRegistry());
     saveBlob(await pngWithFooter(canvas, caption(tool, result), lines), `${tool.id}.png`);
   }
   async function exportSvg() {
+    const { attributionLines, caption, loadRegistry, mapSvg, saveBlob } = await import('../lib/canvas-export.mjs');
     const lines = attributionLines(result, await loadRegistry());
     const text = mapSvg({ ...view, width: size()[0], height: size()[1] }, base, layers, colors(canvas), caption(tool, result), lines);
     saveBlob(new Blob([text], { type: 'image/svg+xml' }), `${tool.id}.svg`);
   }
-  function exportGeoJson() {
+  async function exportGeoJson() {
+    const { layersGeoJson, saveBlob } = await import('../lib/canvas-export.mjs');
     const text = `${JSON.stringify(layersGeoJson(layers, tool), null, 2)}\n`;
     saveBlob(new Blob([text], { type: 'application/geo+json' }), `${tool.id}.geojson`);
   }
@@ -449,7 +454,30 @@
     say(mode === 'globe' ? 'Globe' : PROJECTION_NAMES[mode]);
   }
 
+  // Canvas2D gives the first useful map without a large dependency download.
+  // Upgrade it when the reader engages with the map, or once startup is clear.
+  async function startGpu() {
+    if (gpuStarted) return;
+    gpuStarted = true;
+    clearTimeout(gpuTimer);
+    try {
+      const { createGpuPresenter } = await import('../lib/map/gpu-presenter.js');
+      const next = await createGpuPresenter(gpuCanvas, canvas);
+      if (!mounted) return next.destroy();
+      presenter = next;
+      renderer = next.backend;
+      reducedRenderer = false;
+      paint();
+    } catch (error) {
+      if (!mounted) return;
+      console.warn('GPU map renderer unavailable; using Canvas2D.', error);
+      renderer = 'canvas2d';
+      reducedRenderer = true;
+    }
+  }
+
   onMount(() => {
+    mounted = true;
     addEventListener('gp-shortcut', onShortcut);
     fmt = coordFormat();
     const onPrefs = () => {
@@ -470,24 +498,19 @@
     const mo = new MutationObserver(() => paint());
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] });
     canvas.addEventListener('wheel', wheel, { passive: false });
-    createGpuPresenter(gpuCanvas, canvas)
-      .then((next) => {
-        presenter = next;
-        renderer = next.backend;
-        reducedRenderer = false;
-        paint();
-      })
-      .catch((error) => {
-        console.warn('GPU map renderer unavailable; using Canvas2D.', error);
-        renderer = 'canvas2d';
-        reducedRenderer = true;
-      });
+    figure.addEventListener('pointerdown', startGpu, { once: true });
+    figure.addEventListener('focusin', startGpu, { once: true });
+    gpuTimer = setTimeout(startGpu, 3_000);
     return () => {
+      mounted = false;
+      clearTimeout(gpuTimer);
       removeEventListener('gp-shortcut', onShortcut);
       removeEventListener('gp-prefs', onPrefs);
       ro.disconnect();
       mo.disconnect();
       canvas.removeEventListener('wheel', wheel);
+      figure.removeEventListener('pointerdown', startGpu);
+      figure.removeEventListener('focusin', startGpu);
       presenter?.destroy();
     };
   });
@@ -496,7 +519,7 @@
 {#if empty && locatable}
   <p class="help map-hint">Enter a latitude and longitude to see this on the map.</p>
 {/if}
-<figure class="map card" hidden={empty}>
+<figure class="map card" hidden={empty} bind:this={figure}>
   <div class="map-bar">
     <div class="segmented" role="group" aria-label="View">
       <button type="button" aria-pressed={mode !== 'globe'} onclick={() => setMode(projection)}>Map</button>

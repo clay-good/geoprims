@@ -12,7 +12,6 @@
   import { sound } from '../lib/sound.js';
   import { provenanceRows } from '../lib/provenance.js';
   import linkMigrations from '../../../../data/link-migrations.json';
-  import { attributionLines, caption, inlineStyles, loadRegistry, saveBlob, svgWithFooter } from '../lib/canvas-export.mjs';
   import { copyText, sharePayload } from '../lib/copy.js';
   import { cellText, rowTables } from '../lib/rows.js';
 
@@ -125,6 +124,7 @@
   });
   // The diagram as a file, with the caption and any data attribution written in.
   async function exportSvg() {
+    const { attributionLines, caption, inlineStyles, loadRegistry, saveBlob, svgWithFooter } = await import('../lib/canvas-export.mjs');
     const lines = attributionLines(result, await loadRegistry(), { basemap: false });
     const css = getComputedStyle(document.documentElement);
     const markup = svgWithFooter(dg.markup, caption(tool, result), lines, {

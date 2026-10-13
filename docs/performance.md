@@ -65,16 +65,22 @@ is the moment every island has hydrated, INP is the longest event after typing
 into a tool's first field (or pressing the mode toggle on other pages), and
 shell JavaScript is every script the page loads, gzip-compressed.
 
-The last local run (2026-09-21, on a developer Mac, served over plain HTTP on
+The last local run (2026-10-12, on a developer Mac, served over plain HTTP on
 localhost, so without TLS) passed every route. Worst medians:
 
 | Budget | Worst of 50 routes | Hard budget |
 |---|---|---|
-| Largest contentful paint | 564 ms | 2.0 s |
-| Interactive | 939 ms | 2.5 s |
+| Largest contentful paint | 584 ms | 2.0 s |
+| Interactive | 1,060 ms | 2.5 s |
 | Interaction to next paint | 72 ms | 200 ms |
-| Cumulative layout shift | 0.030 | 0.1 |
-| JavaScript (tool page, gzip) | 63.8 KB | 90 KB |
+| Cumulative layout shift | 0.000 | 0.1 |
+| JavaScript (tool page, gzip) | 87.9 KB | 90 KB |
+
+Export serializers load only when a reader requests a download. A geographic
+page paints its complete Canvas2D map first, then loads the optional luma.gl
+WebGPU or WebGL2 compositor after the first map interaction or after the
+3-second startup window. Before that split, sampled map pages loaded about
+229 KB and failed the shell budget; the same pages now load 79.2 KB initially.
 
 Map frames: `apps/web/test/browser/frames.test.mjs` pans a 100,000-vertex
 track and a 100,000-vertex polygon at 4× CPU. Locally the p95 frame is
@@ -98,7 +104,7 @@ reports each tool's p50 and p95. The following checks run without a browser:
 | Agent round trip | `tools/mcp/eval.test.mjs` | 406 tokens per task |
 
 The browser suite separately checks that a long H3 calculation stops within
-100 ms of an edit and that all 2,705 live golden vectors serialize identically
+100 ms of an edit and that all live golden vectors serialize identically
 in Chromium, Firefox, WebKit, and Node. These are functional checks, not
 performance measurements against profile 1.0.0.
 

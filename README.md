@@ -49,7 +49,7 @@ node mcp/server.mjs
 
 To contribute, start with [AGENTS.md](AGENTS.md).
 
-Run `npm test` after building to check Rust and JavaScript behavior. The website has two more suites, both run in CI: `npm test` and `npm run test:browser` in `apps/web`, after `npm run build` there. The browser suite checks what unit tests cannot, such as diagram labels inside their frames and each page's JavaScript budget. Runtime cancellation and shutdown behavior is documented in [packages/runtime/README.md](packages/runtime/README.md).
+Run `npm test` after building to check Rust and JavaScript behavior. The website has two more suites, both run in CI: `npm test` and `npm run test:browser` in `apps/web`, after `npm run build` there. The browser suite checks what unit tests cannot, such as diagram labels inside their frames and each page's JavaScript budget. The 50-route cold-load sweep currently tops out at 87.9 KB of compressed shell JavaScript against the 90 KB limit; export code loads on demand, and maps paint with Canvas2D before the optional GPU compositor loads. Runtime cancellation and shutdown behavior is documented in [packages/runtime/README.md](packages/runtime/README.md).
 
 After changing a dependency lockfile, run `npm run build:sbom` to regenerate the dependency inventory used by the site’s licenses page.
 

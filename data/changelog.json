@@ -3,6 +3,13 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "changed",
+      "tools": [],
+      "vectors": [],
+      "summary": "Tool pages now load diagram and map export code only when a download is requested. Maps draw their useful Canvas2D view first, then load the optional WebGPU or WebGL2 compositor after map interaction or the startup window. All 50 sampled routes are back under the 90 KB compressed JavaScript budget; map behavior and export formats are unchanged."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "fixed",
       "tools": [
         "navigation.route.fly-by"

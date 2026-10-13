@@ -400,6 +400,54 @@ fn sun_position_extras() {
 }
 
 #[test]
+fn sun_position_scene_uses_utc_playhead_and_core_terminator() {
+    let r = call(
+        "time.sun.position",
+        r#"{"lat":39.7392,"lon":-104.9903,"time":"2026-06-21T12:00-06:00","at_time":"67200 s"}"#,
+    );
+    assert_eq!(
+        r["result"]["scene_timestamp"], "2026-06-21T18:40:00Z",
+        "{r}"
+    );
+    assert_eq!(num(&r, "result.scene_time.value"), 67_200.0, "{r}");
+    assert_eq!(num(&r, "result.scene_key.value"), 64_800.0, "{r}");
+    assert_eq!(num(&r, "result.scene_end.value"), 86_400.0, "{r}");
+
+    let term = r["result"]["terminator"].as_array().unwrap();
+    assert_eq!(term.len(), 181);
+    let sub_lat = num(&r, "result.subsolar_latitude.value").to_radians();
+    let sub_lon = num(&r, "result.subsolar_longitude.value").to_radians();
+    for point in term {
+        let lat = point["lat"]["value"].as_f64().unwrap().to_radians();
+        let lon = point["lon"]["value"].as_f64().unwrap().to_radians();
+        let sun_dot = lat.sin() * sub_lat.sin() + lat.cos() * sub_lat.cos() * (lon - sub_lon).cos();
+        assert!(
+            sun_dot.abs() < 1e-12,
+            "terminator point is not 90° from the sun: {point}"
+        );
+    }
+
+    let default = call(
+        "time.sun.position",
+        r#"{"lat":39.7392,"lon":-104.9903,"time":"2026-06-21T12:00-06:00"}"#,
+    );
+    assert_eq!(default["result"]["scene_timestamp"], "2026-06-21T18:00:00Z");
+    assert_eq!(num(&default, "result.scene_time.value"), 64_800.0);
+
+    let late = call(
+        "time.sun.position",
+        r#"{"lat":0,"lon":0,"time":"2026-06-21T12:00Z","at_time":"86401 s"}"#,
+    );
+    assert_eq!(late["error"]["code"], "OUT_OF_DOMAIN", "{late}");
+    assert_eq!(late["error"]["field"], "/at_time", "{late}");
+
+    let timeline = gp_time::solar::POSITION.timeline.expect("timeline");
+    assert_eq!(timeline.input, "at_time");
+    assert_eq!(timeline.end, "scene_end");
+    assert_eq!(timeline.key, "scene_key");
+}
+
+#[test]
 fn dst_gap_and_overlap() {
     let gap = call(
         "time.scale.utc-offset",

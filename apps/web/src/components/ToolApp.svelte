@@ -995,7 +995,7 @@
           type="range"
           min="0"
           max={sceneEnd}
-          step={sceneEnd / 200}
+          step={Math.min(sceneEnd / 200, 60)}
           value={playhead}
           aria-label="Scene time"
           aria-valuetext={`${Math.round(playhead)} seconds of ${Math.round(sceneEnd)}`}
@@ -1014,6 +1014,32 @@
       </div>
     {/if}
   </figure>
+{/if}
+
+{#if !dg && tl && sceneEnd > 0}
+  <div class="timeline card" role="group" aria-label="Scene playback">
+    <button type="button" aria-pressed={playing} onclick={togglePlay}>{playing ? 'Pause' : 'Play'}</button>
+    <input
+      type="range"
+      min="0"
+      max={sceneEnd}
+      step={Math.min(sceneEnd / 200, 60)}
+      value={playhead}
+      aria-label="Scene time"
+      aria-valuetext={`${Math.round(playhead)} seconds of ${Math.round(sceneEnd)}`}
+      oninput={(e) => {
+        playing = false;
+        setPlayhead(Number(e.currentTarget.value));
+      }}
+    />
+    <select aria-label="Speed" bind:value={speed}>
+      <option value={0.5}>0.5×</option>
+      <option value={1}>1×</option>
+      <option value={2}>2×</option>
+      <option value={4}>4×</option>
+    </select>
+    <label><input type="checkbox" bind:checked={loop} /> Loop</label>
+  </div>
 {/if}
 
 {#if showMap && compute && result?.ok}

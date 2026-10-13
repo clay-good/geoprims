@@ -268,8 +268,8 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "0eefa3b93a7f61a2",
-    "lastmod": "2026-10-12"
+    "hash": "b8faadb924af9be4",
+    "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1712,8 +1712,8 @@
     "lastmod": "2026-10-13"
   },
   "/time/sun/position/": {
-    "hash": "f6535aec50219fe5",
-    "lastmod": "2026-10-09"
+    "hash": "918ffc523649b447",
+    "lastmod": "2026-10-13"
   },
   "/tools/": {
     "hash": "4f0d9794cd748e32",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5ca128f8fb4b35a8",
+    "hash": "da304e19f104a783",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

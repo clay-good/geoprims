@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "changed",
+      "tools": [
+        "time.sun.position"
+      ],
+      "vectors": [],
+      "summary": "The sun-position tool now has a 24-hour UTC scene. It opens paused at the entered instant, returns the UTC playhead, subsolar point, and a core-computed day-night boundary, and restores a scrubbed time from its permalink. The globe and map draw that boundary directly from the core samples. Solar-position answers are unchanged."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "result-change",
       "tools": [
         "aviation.ifr.hold-speed-limit"

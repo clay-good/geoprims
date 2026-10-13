@@ -212,7 +212,7 @@
       layers = [...isogonicLayers(iso), ...layers];
     }
     const cellCount = layers.filter((l) => l.cell).length;
-    const what = layers.filter((l) => !l.cell && l.role !== 'coverage').map((l) => (l.grid ? `the ${l.gridKind ? `${l.gridKind.toUpperCase()} ` : ''}grid around the result` : l.iso ? (l.zone ? 'a compass zone edge' : 'an isogonic line') : l.kind === 'sky' ? "the sun's path through the sky around the site, the ring its horizon" : l.kind === 'line' ? (l.offset ? 'the cross-track offset from the point to the track' : l.track ? 'the track' : l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
+    const what = layers.filter((l) => !l.cell && l.role !== 'coverage').map((l) => (l.grid ? `the ${l.gridKind ? `${l.gridKind.toUpperCase()} ` : ''}grid around the result` : l.iso ? (l.zone ? 'a compass zone edge' : 'an isogonic line') : l.kind === 'sky' ? "the sun's path through the sky around the site, the ring its horizon" : l.kind === 'line' ? (l.terminator ? `the day-night boundary at ${l.timestamp}` : l.offset ? 'the cross-track offset from the point to the track' : l.track ? 'the track' : l.path === 'great-circle' ? 'a dotted great circle on a sphere' : l.role === 'comparison' ? 'a dashed comparison line' : l.arrows ? 'the flight path with its direction' : l.role === 'input' ? 'the input line' : 'the route line') : l.kind === 'polygon' ? 'the polygon' : l.label ? `point ${l.label}` : `the ${l.role === 'result' ? 'result' : 'input'} point`));
     const shots = layers.find((l) => l.kind === 'point' && l.role === 'detail');
     if (shots) what.push(`${shots.points.length} photo trigger points`);
     const cover = layers.find((l) => l.role === 'coverage');
@@ -234,7 +234,8 @@
     const cellResolutions = [...new Set(layers.filter((l) => Number.isInteger(l.resolution)).map((l) => l.resolution))].sort((a, b) => a - b);
     legend = [
       layers.some((l) => l.kind === 'line' && l.role === 'result' && l.arrows) && { cls: 'solid', text: 'Flight path, in order' },
-      layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows && !l.offset && !l.iso) && { cls: 'solid', text: `${named(rhumb)}${lengthOf(own)}` },
+      layers.some((l) => l.terminator) && { cls: 'solid', text: `Day-night boundary · ${result.result.scene_timestamp}` },
+      layers.some((l) => l.kind === 'line' && l.role === 'result' && !l.arrows && !l.offset && !l.iso && !l.terminator) && { cls: 'solid', text: `${named(rhumb)}${lengthOf(own)}` },
       layers.some((l) => l.track) && { cls: 'input', text: 'The track' },
       layers.some((l) => l.iso && l.level !== undefined) && { cls: 'input', text: 'Isogonic lines every 2°; the agonic line (0°) in the accent' },
       layers.some((l) => l.iso && l.zone) && { cls: 'dashed', text: 'Compass caution (under 6,000 nT) and blackout (under 2,000 nT) zone edges' },

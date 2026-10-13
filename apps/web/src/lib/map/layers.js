@@ -267,7 +267,13 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
   let inParts = false;
   if (!two) {
     for (const v of tool.visualization ?? []) {
-      const field = (v.kind === 'line-geodesic' || v.kind === 'line-rhumb') && mapOf(v.map).path;
+      const map = (v.kind === 'line-geodesic' || v.kind === 'line-rhumb') ? mapOf(v.map) : {};
+      const terminator = map.terminator ? outputPath(result, map.terminator) : [];
+      if (terminator.length >= 2) {
+        layers.push({ kind: 'line', role: 'result', points: terminator, terminator: true, timestamp: result?.result?.scene_timestamp });
+        continue;
+      }
+      const field = map.path;
       // A path in parts (a mission's sorties) draws each part as its own
       // line, alternating the accent and the neutral so neighbors stand apart.
       const parts = (field ? outputParts(result, field) : []).filter((p) => p.length >= 2);

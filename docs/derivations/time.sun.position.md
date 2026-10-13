@@ -10,6 +10,7 @@ The NREL Solar Position Algorithm (Reda and Andreas 2008): heliocentric Earth po
 - Julian ephemeris day JDE = JD + ΔT/86400; heliocentric L, B, R from the periodic-term tables.
 - Geocentric λ = L + 180° + Δψ + Δτ; apparent right ascension and declination from ε.
 - Topocentric α′, δ′ by parallax; elevation e = e₀ + Δe (Bennett refraction with pressure and temperature).
+- The scene playhead is seconds after 00:00 UTC on the input's UTC date. The subsolar point comes from the solar declination and equation of time at that instant. The terminator is the great circle perpendicular to the subsolar unit vector, sampled every 2° in the core.
 
 ## Symbols and units
 
@@ -43,3 +44,4 @@ Stated SPA uncertainty ±0.0003°. Refraction uses standard atmosphere unless pr
 ## Invariants
 
 - `core/crates/gp-time/tests/time.rs` `sun_position_invariants`: zenith + elevation = 90°, refraction only raises the sun, azimuth in [0°, 360°), and the equation of time is location-independent
+- `core/crates/gp-time/tests/time.rs` `sun_position_scene_uses_utc_playhead_and_core_terminator`: a playhead of 67,200 s is 18:40 UTC, the original instant is the paused key moment, all 181 terminator samples are 90° from the subsolar point, and an out-of-day playhead is refused

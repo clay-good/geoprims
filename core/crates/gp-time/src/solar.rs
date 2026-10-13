@@ -14,7 +14,7 @@ use gp_base::tool::{
 };
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::point;
-use libm::{cos, sin, tan};
+use libm::{asin, atan2, cos, sin, tan};
 
 use crate::sun::{self, Crossing, SUNRISE_ALTITUDE};
 use crate::{ZoneSpec, civil, text};
@@ -95,6 +95,29 @@ fn deg(v: f64) -> Q {
         unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
     }
 }
+
+const TERMINATOR_POINT: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Point on the day-night boundary",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(4)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Point on the day-night boundary",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(4)),
+];
 
 /// The local date as a day number.
 fn local_date(ctx: &Ctx) -> Result<i64, ToolError> {
@@ -221,6 +244,13 @@ pub static POSITION: ToolDef = ToolDef {
         )
         .required()
         .core(),
+        opt_q(
+            "at_time",
+            "Scene time",
+            "Seconds after 00:00 UTC on that UTC date, like 67,200 s for 18:40Z",
+            QT::Time,
+            "s",
+        ),
         Field::new(
             "object_height",
             "Object height",
@@ -437,8 +467,61 @@ pub static POSITION: ToolDef = ToolDef {
         .precision(Precision::Decimals(1))
         .angle_range("[0,180]")
         .optional(),
+        opt_q("scene_end", "Scene duration", "One UTC day", QT::Time, "s")
+            .precision(Precision::Decimals(0)),
+        opt_q(
+            "scene_key",
+            "Original time of day",
+            "The key moment where the scene opens",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(0)),
+        opt_q(
+            "scene_time",
+            "Scene time",
+            "The playhead as seconds after 00:00 UTC",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(0)),
+        text(
+            "scene_timestamp",
+            "UTC at playhead",
+            "The instant shown by the globe",
+        ),
+        Field::new(
+            "subsolar_latitude",
+            "Subsolar latitude",
+            "Latitude where the sun is overhead",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "subsolar_longitude",
+            "Subsolar longitude",
+            "Longitude where the sun is overhead",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "terminator",
+            "Day-night boundary",
+            "Core-computed points on the terminator at the playhead",
+            Kind::List {
+                items: TERMINATOR_POINT,
+                min: 181,
+                max: 181,
+            },
+        ),
     ],
-    errors: &[],
+    errors: &[ErrorCode::OutOfDomain],
     warnings: &[
         "SUN_BELOW_HORIZON",
         "UT1_APPROXIMATED",
@@ -459,8 +542,8 @@ pub static POSITION: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "line-geodesic",
+        map: &[("terminator", "terminator")],
     }],
     related: &[
         Related {
@@ -478,6 +561,11 @@ pub static POSITION: ToolDef = ToolDef {
     ],
     sentence: "The sun is {elevation} up, at azimuth {azimuth}.{warn SUN_BELOW_HORIZON} It is below the horizon.{/warn}",
     limits: &[("batchRows", 10_000)],
+    timeline: Some(gp_base::tool::Timeline {
+        input: "at_time",
+        end: "scene_end",
+        key: "scene_key",
+    }),
     run: run_position,
     ..ToolDef::BLANK
 };
@@ -492,8 +580,21 @@ fn run_position(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "Add Z for UTC or the UTC offset, like 2026-06-21T12:00-06:00.",
         ));
     }
-    let (d, s) = crate::to_utc(st);
+    let (base_day, base_secs) = crate::to_utc(st);
     let secs = |q: Option<Q>| q.map(|q| q.to(units::by_symbol(QT::Time, "s").expect("s")));
+    let scene_time = secs(ctx.quantity("at_time")?).unwrap_or(base_secs);
+    if !(0.0..=86_400.0).contains(&scene_time) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The scene time must be between 0 and 86,400 s.",
+        )
+        .at("/at_time"));
+    }
+    let (d, s) = if scene_time == 86_400.0 {
+        (base_day + 1, 0.0)
+    } else {
+        (base_day, scene_time)
+    };
     let dut1 = secs(ctx.quantity("dut1")?);
     if let Some(v) = dut1
         && v.abs() > 0.9
@@ -543,6 +644,8 @@ fn run_position(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let noaa = sun::position(lat, lon, jd_utc);
+    let (subsolar_latitude, eot) = sun::declination_eot(jd_ut1);
+    let subsolar_longitude = ((720.0 - s / 60.0 - eot) / 4.0 + 180.0).rem_euclid(360.0) - 180.0;
     let ha = (p.hour_angle + 180.0).rem_euclid(360.0) - 180.0;
     let mut out = vec![
         ("elevation", ctx.out("elevation", deg(apparent))),
@@ -579,7 +682,61 @@ fn run_position(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ctx.out("noaa_elevation", deg(noaa.elevation + noaa.refraction)),
         ),
         ("noaa_azimuth", ctx.out("noaa_azimuth", deg(noaa.azimuth))),
+        (
+            "scene_end",
+            ctx.out(
+                "scene_end",
+                Q {
+                    value: 86_400.0,
+                    unit: units::by_symbol(QT::Time, "s").expect("s"),
+                },
+            ),
+        ),
+        (
+            "scene_key",
+            ctx.out(
+                "scene_key",
+                Q {
+                    value: base_secs,
+                    unit: units::by_symbol(QT::Time, "s").expect("s"),
+                },
+            ),
+        ),
+        (
+            "scene_time",
+            ctx.out(
+                "scene_time",
+                Q {
+                    value: scene_time,
+                    unit: units::by_symbol(QT::Time, "s").expect("s"),
+                },
+            ),
+        ),
+        ("scene_timestamp", Json::str(civil::iso(d, s, "Z"))),
+        (
+            "subsolar_latitude",
+            ctx.out("subsolar_latitude", deg(subsolar_latitude)),
+        ),
+        (
+            "subsolar_longitude",
+            ctx.out("subsolar_longitude", deg(subsolar_longitude)),
+        ),
     ];
+    let rad = core::f64::consts::PI / 180.0;
+    let (declination, longitude) = (subsolar_latitude * rad, subsolar_longitude * rad);
+    let terminator = (0..=180)
+        .map(|k| {
+            let theta = f64::from(k) * 2.0 * rad;
+            let x = -sin(longitude) * cos(theta) - sin(declination) * cos(longitude) * sin(theta);
+            let y = cos(longitude) * cos(theta) - sin(declination) * sin(longitude) * sin(theta);
+            let z = cos(declination) * sin(theta);
+            Json::obj([
+                ("lat", deg(asin(z.clamp(-1.0, 1.0)) / rad).to_json()),
+                ("lon", deg(atan2(y, x) / rad).to_json()),
+            ])
+        })
+        .collect();
+    out.push(("terminator", Json::Arr(terminator)));
     if let Some(h) = ctx.quantity("object_height")?
         && apparent > 0.0
     {

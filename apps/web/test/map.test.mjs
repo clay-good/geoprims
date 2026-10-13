@@ -401,6 +401,32 @@ test('a flight path draws from output waypoints, flattening a corridor’s lines
   assert.ok(layers.some((l) => l.kind === 'line' && l.role === 'input' && l.points.length === 2));
 });
 
+test('the sun-position layer draws the core terminator at the core UTC playhead', async () => {
+  const { buildLayers } = await import('../src/lib/map/layers.js');
+  const q = (value) => ({ value, unit: 'deg' });
+  const result = {
+    ok: true,
+    result: {
+      scene_timestamp: '2026-06-21T18:40:00Z',
+      terminator: [
+        { lat: q(-66.56), lon: q(-100) },
+        { lat: q(0), lon: q(-10) },
+        { lat: q(66.56), lon: q(80) },
+      ],
+    },
+  };
+  const tool = {
+    inputs: { properties: { lat: {}, lon: {} } },
+    visualization: [{ kind: 'line-geodesic', map: { terminator: 'terminator' } }],
+  };
+  const layers = await buildLayers(tool, { lat: 39.7392, lon: -104.9903 }, result, async () => null);
+  const boundary = layers.find((layer) => layer.terminator);
+  assert.deepEqual(boundary.points, [[-100, -66.56], [-10, 0], [80, 66.56]]);
+  assert.equal(boundary.timestamp, '2026-06-21T18:40:00Z');
+  assert.equal(boundary.arrows, undefined, 'a terminator is not a flight path');
+  assert.ok(!layers.some((layer) => layer.label === 'Start'), 'a terminator has no route start');
+});
+
 test('layers: a route draws its legs in order, once, with a start marker', async () => {
   // add-navigation-and-geometry 2.8: the route the legs table describes is
   // drawn on the map, and the waypoints are not laid down twice.

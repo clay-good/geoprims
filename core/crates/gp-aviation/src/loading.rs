@@ -6,7 +6,7 @@ use crate::refs::*;
 use crate::{obj, unit};
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::{Quantity as QT, Unit};
 use gp_base::{ErrorCode, display};
 use serde_json::Value;
@@ -175,8 +175,15 @@ fn run_fuel_weight(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- burn rate
 
+const PHAK_FUEL: Reference = Reference {
+    locator: "Chapter 16, Fuel Consumption: 400 NM at 100 kt takes 4 h; at 5 gal/h, the flight uses 20 gal",
+    ..PHAK
+};
+
 pub static BURN_RATE: ToolDef = ToolDef {
     id: "aviation.loading.burn-rate",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Fuel burn rate",
     summary: "The fuel burn rate a flight actually achieved, from the fuel it used and the time it took, with the endurance that rate leaves on the fuel you have.",
     aliases: &[
@@ -239,17 +246,17 @@ pub static BURN_RATE: ToolDef = ToolDef {
         .precision(Precision::Decimals(2))
         .optional(),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Burn rate = fuel used / time; endurance = usable fuel / burn rate",
     accuracy: "Exact arithmetic. The answer is an average over the whole flight, taxi and climb included.",
     when_to_use: "Use this after a flight to learn what your airplane really burns: enter the fuel it took to top off and the Hobbs or tach time, and it returns the average burn rate. Add the usable fuel on board to see how long that rate lets you fly. Compare it with the POH cruise figure, and plan the next trip with whichever is higher.",
     limitations: "It averages the whole flight, so taxi, run-up, and climb, which burn faster than cruise, raise the figure on short flights. Hobbs time runs from engine start and tach time runs slower at low power, so say which you used. It does not add a reserve; the fuel plan does that.",
-    references: &[WB_HANDBOOK],
+    references: &[PHAK_FUEL],
     examples: &[Example {
         id: "primary",
-        title: "28 gal over 2.5 h, 40 gal left",
-        input: r#"{"fuel_used":"28 gal","time":"2.5 h","usable_fuel":"40 gal"}"#,
-        source: "add-aviation-suite fuel scenario: 11.2 gal/h, endurance about 3.57 h",
+        title: "20 gal over 4 h",
+        input: r#"{"fuel_used":"20 gal","time":"4 h"}"#,
+        source: "FAA-H-8083-25C chapter 16: 5 gal/h for 4 h uses 20 gal",
     }],
     primary_example: "primary",
     visualization: &[Layer {

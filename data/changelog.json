@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.loading.burn-rate"
+      ],
+      "vectors": [],
+      "summary": "Fuel burn rate (version 1.1.0) is now stable. The primary example reverses the FAA Pilot's Handbook's 4-hour, 20-gallon, 5-gallon-per-hour calculation, and three more vectors reproduce exact rows from the FAA Middle Aviation Curriculum Guide. The tool now has 20 vectors plus scaling and unit invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "drone.photogrammetry.oblique-gsd"
       ],
       "vectors": [],

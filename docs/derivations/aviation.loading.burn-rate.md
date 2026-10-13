@@ -24,21 +24,24 @@ None in the arithmetic. The rate is an average over the whole flight, so taxi, r
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite, aviation/fuel-and-loading spec, "Fuel planning"
-- sourceEdition: 2026
-- sourceLocator: Scenario "Burn rate from a flight" (2.5 h, 28 US gal used, 40 US gal usable)
-- independent: no
-- inputs: fuel used 28 gal, time 2.5 h, usable fuel 40 gal
-- outputs: burn rate 11.2 gal/h; endurance about 3.57 h (3.5714285714285716)
-- tolerance: 1e-9
-- verifiedBy: golden vector v001 and `burn_rate_from_a_flight`
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
+- sourceEdition: FAA-H-8083-25C (2023)
+- sourceLocator: Chapter 16, Fuel Consumption: a 400 NM flight at 100 kt takes 4 h, and at 5 gal/h it uses 20 gal
+- independent: yes
+- inputs: fuel used 20 gal, time 4 h
+- outputs: burn rate 5 gal/h
+- tolerance: exact to the printed values
+- verifiedBy: golden vector v007, run by the core on every build
+- verifiedOn: 2026-10-13
+
+The handbook multiplies the printed rate and time to get the fuel used. The tool runs the same example in reverse, dividing its 20 gal by 4 h to recover the handbook's 5 gal/h. Three more vectors use exact rows from the FAA Middle Aviation Curriculum Guide's fuel-consumption answer table.
 
 ## Differential tests
 
-- `core/vectors/aviation.loading.burn-rate.jsonl`: the spec scenario and four more flights worked by hand from the two definitions, and a refused zero fuel, run through the core on every build; there is no generator script and no independent implementation, since the tool is a single division
+- `tools/vectors/gen_burn_rate.py`: a separate Python evaluation at 13 additional rates in gallons and liters, hours and minutes, with and without usable fuel, plus three refused inputs
+- `core/vectors/aviation.loading.burn-rate.jsonl`: those cases and four FAA printed examples, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/slice2.rs` `burn_rate_from_a_flight`: the spec scenario gives 11.2 gal/h and an endurance of 40 / 11.2 h within 1e-9, and without usable fuel no endurance is returned
+- `core/crates/gp-aviation/tests/slice2.rs` `burn_rate_invariants`: scaling fuel used and usable fuel together scales the rate but leaves endurance alone; doubling time halves the rate and doubles endurance; equivalent gallons/hours and liters/minutes agree

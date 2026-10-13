@@ -548,6 +548,29 @@ fn burn_rate_from_a_flight() {
 }
 
 #[test]
+fn burn_rate_invariants() {
+    let call_rate = |fuel: &str, time: &str, usable: &str| {
+        call(
+            "aviation.loading.burn-rate",
+            &format!(r#"{{"fuel_used":"{fuel}","time":"{time}","usable_fuel":"{usable}"}}"#),
+        )
+    };
+    let base = call_rate("12 gal", "1.5 h", "48 gal");
+    let scaled = call_rate("24 gal", "1.5 h", "96 gal");
+    let slower = call_rate("12 gal", "3 h", "48 gal");
+    let metric = call_rate("45.424941408 L", "90 min", "181.699765632 L");
+
+    near(&base, "result.burn_rate.value", 8.0, 1e-12);
+    near(&base, "result.endurance.value", 6.0, 1e-12);
+    near(&scaled, "result.burn_rate.value", 16.0, 1e-12);
+    near(&scaled, "result.endurance.value", 6.0, 1e-12);
+    near(&slower, "result.burn_rate.value", 4.0, 1e-12);
+    near(&slower, "result.endurance.value", 12.0, 1e-12);
+    near(&metric, "result.burn_rate.value", 8.0, 1e-12);
+    near(&metric, "result.endurance.value", 6.0, 1e-12);
+}
+
+#[test]
 fn fuel_plan_invariants() {
     // The total is the sum of its parts, the reserve is its time at the cruise
     // burn, and the reserve times are the regulation's: 30 and 45 minutes for

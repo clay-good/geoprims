@@ -368,6 +368,7 @@ def calibrate_vectors():
 
 def payload_vectors():
     out = []
+    rho0 = P0 / (R_AIR * T0)
     cases = [(1.4, 4, 9.4, 72, 20), (0.9, 4, 7.0, 45, 25), (6.5, 6, 22.0, 400, 25), (2.5, 4, 13.0, 90, 30), (4.0, 4, 15.0, 160, 20)]
     for i, (m, n, d_in, e, t) in enumerate(cases, 1):
         d = d_in * 0.0254
@@ -378,6 +379,67 @@ def payload_vectors():
         exp = {"result.max_payload.value": mmax - m} if mmax > m else {"ok": False, "error.code": "NO_SOLUTION"}
         out.append(fvec(i, {"mass": f"{m} kg", "rotors": n, "rotor_diameter": f"{d_in} in", "usable_energy": f"{e} Wh", "target_time": f"{t} min"},
                         exp, PW_SRC, PW_VER))
+
+    def success(inp, mass_kg, rotors, diameter_m, energy_wh, target_s, avionics_w=0,
+                figure_of_merit=0.6, efficiency=0.85, rho=rho0, source=PW_SRC, version=PW_VER):
+        area = rotors * math.pi * diameter_m ** 2 / 4
+        lift_budget = energy_wh * 3600 / target_s - avionics_w
+        max_mass = (lift_budget * figure_of_merit * efficiency * math.sqrt(2 * rho * area)) ** (2 / 3) / G0
+        base_power = (mass_kg * G0) ** 1.5 / math.sqrt(2 * rho * area) / (figure_of_merit * efficiency) + avionics_w
+        vector = fvec(len(out) + 1, inp,
+                      {"result.max_payload.value": max_mass - mass_kg, "result.max_mass.value": max_mass,
+                       "result.base_hover_time.value": energy_wh * 60 / base_power}, source, version)
+        out.append(vector)
+        return vector
+
+    # Invert Van Mulders et al.'s measured payload-hover fit at 0.25 kg.
+    coefficient = 12.88
+    fm, eta = 0.6, 0.85
+    area = 1 / (2 * rho0 * (coefficient * fm * eta) ** 2)
+    diameter = math.sqrt(area / math.pi)  # four rotors: A = pi D^2
+    payload_power = 10.6 + coefficient * (0.25 * G0) ** 1.5
+    published = success(
+        {"mass": "0.2 kg", "rotors": 4, "rotor_diameter": f"{diameter:.17g} m", "usable_energy": "20 Wh",
+         "target_time": f"{20 * 60 / payload_power:.17g} min", "avionics_power": "10.6 W"},
+        0.2, 4, diameter, 20, 20 * 3600 / payload_power, 10.6,
+        source="Van Mulders et al., Sensors 23(4), 2291 (2023), section 2.4.1 equation 6 and figure 4a payload-hover fit",
+        version="Sensors 23(4), article 2291 (2023)")
+    published["tolerance"] = {k: {"rel": 0.001} for k in published["expect"] if k != "ok"}
+
+    success({"mass": "1400 g", "rotors": 4, "rotor_diameter": "23.876 cm", "usable_energy": "259200 J", "target_time": "1200 s"},
+            1.4, 4, 0.23876, 72, 1200)
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "18 min", "avionics_power": "25 W"},
+            1.4, 4, 9.4 * 0.0254, 72, 18 * 60, 25)
+    success({"mass": "2 kg", "rotors": 4, "rotor_diameter": "12 in", "usable_energy": "100 Wh", "target_time": "20 min", "altitude": "-1000 m"},
+            2, 4, 12 * 0.0254, 100, 20 * 60, rho=rho_at(-1000))
+    success({"mass": "2 kg", "rotors": 4, "rotor_diameter": "12 in", "usable_energy": "180 Wh", "target_time": "20 min", "altitude": "11000 m"},
+            2, 4, 12 * 0.0254, 180, 20 * 60, rho=rho_at(11000))
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "90 Wh", "target_time": "20 min", "density_altitude": "8000 ft"},
+            1.4, 4, 9.4 * 0.0254, 90, 20 * 60, rho=rho_at(8000 * 0.3048))
+    success({"mass": "3 kg", "rotors": 6, "rotor_diameter": "15 in", "usable_energy": "220 Wh", "target_time": "20 min", "altitude": "5000 ft", "temperature": "30 degC"},
+            3, 6, 15 * 0.0254, 220, 20 * 60, rho=rho_at(5000 * 0.3048, 303.15))
+    success({"mass": "6 kg", "rotors": 8, "rotor_diameter": "20 in", "usable_energy": "600 Wh", "target_time": "20 min", "figure_of_merit": 0.4, "efficiency": 0.5},
+            6, 8, 20 * 0.0254, 600, 20 * 60, figure_of_merit=0.4, efficiency=0.5)
+    success({"mass": "2 kg", "rotors": 32, "rotor_diameter": "5 in", "usable_energy": "100 Wh", "target_time": "30 min", "figure_of_merit": 0.8, "efficiency": 1},
+            2, 32, 5 * 0.0254, 100, 30 * 60, figure_of_merit=0.8, efficiency=1)
+    success({"mass": "25 kg", "rotors": 8, "rotor_diameter": "30 in", "usable_energy": "1800 Wh", "target_time": "20 min", "avionics_power": "30 W"},
+            25, 8, 30 * 0.0254, 1800, 20 * 60, 30)
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "144 Wh", "target_time": "20 min"},
+            1.4, 4, 9.4 * 0.0254, 144, 20 * 60)
+
+    failures = [
+        ({"mass": "1.4 kg", "rotors": 4.5, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "20 min"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "0 Wh", "target_time": "20 min"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "0 min"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "20 min", "avionics_power": "-1 W"}, "INVALID_INPUT"),
+        ({"mass": "0 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "20 min"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "20 min", "altitude": "5000 ft", "density_altitude": "8000 ft"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "20 min", "altitude": "11001 m"}, "OUT_OF_DOMAIN"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "72 Wh", "target_time": "20 min", "temperature": "-273.15 degC"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "usable_energy": "20 Wh", "target_time": "20 min"}, "NO_SOLUTION"),
+    ]
+    for inp, code in failures:
+        out.append(fvec(len(out) + 1, inp, {"ok": False, "error.code": code}, PW_SRC, PW_VER))
     return out
 
 

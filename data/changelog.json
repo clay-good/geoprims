@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "fixed",
+      "tools": [
+        "drone.power.max-payload"
+      ],
+      "vectors": [],
+      "summary": "Maximum payload (version 1.1.0) is now stable. It inverts Van Mulders et al.'s measured payload-hover fit to recover a 50 g load, and 25 vectors plus five invariant tests cover the inverse power model, units, energy and time scaling, atmosphere and loss inputs, boundaries, invalid inputs, and infeasible targets. Valid calculation results are unchanged; negative avionics power is now refused instead of inflating the payload budget."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "changed",
       "tools": [
         "drone.power.payload-impact"

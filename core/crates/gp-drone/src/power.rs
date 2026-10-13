@@ -1298,6 +1298,8 @@ fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MAX_PAYLOAD: ToolDef = ToolDef {
     id: "drone.power.max-payload",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Maximum payload for a flight time",
     summary: "The most payload a multirotor can carry and still hover for a target time, from its mass, rotors, battery energy, and air density by momentum theory.",
     aliases: &["drone payload calculator", "max payload for flight time"],
@@ -1369,28 +1371,50 @@ pub static MAX_PAYLOAD: ToolDef = ToolDef {
             1,
         ),
     ],
-    errors: &[ErrorCode::NoSolution, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::NoSolution,
+        ErrorCode::OutOfDomain,
+    ],
+    warnings: &["UNIT_ASSUMED"],
     model: "Solve (m·g0)^1.5 / √(2ρA) / (FM·η) + avionics = usable energy / target time for m",
     accuracy: "Momentum-theory estimate; it ignores the motors' thrust limit, so check the maximum takeoff mass in the manual.",
     when_to_use: "Use this when a job needs a camera, sensor, or delivery load and you must know how much the drone can carry and still hover for the time the job takes. Give its mass, rotors, rotor size, the usable battery energy after your reserve, and the target time, and it gives the most payload, the takeoff mass that implies, and the hover time with no payload at all.",
     limitations: "It answers by power alone. It does not know the motors' maximum thrust, the frame's strength, or the maker's maximum takeoff mass, and any of these can be the real limit, so the manual governs. It assumes a steady hover; forward flight, wind, and climbs change the draw. The usable energy is taken as given, so a cold or worn pack will fall short. Power the payload draws goes in as avionics power.",
-    references: &[LEISHMAN],
-    examples: &[Example {
-        id: "primary",
-        title: "The 1.4 kg quad, 72 Wh usable, 20 minutes",
-        input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","usable_energy":"72 Wh","target_time":"20 min"}"#,
-        source: "Momentum theory (Leishman 2006, chapter 2) solved for mass",
-    }],
+    references: &[LEISHMAN, VAN_MULDERS, ICAO_ATM],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "The 1.4 kg quad, 72 Wh usable, 20 minutes",
+            input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","usable_energy":"72 Wh","target_time":"20 min"}"#,
+            source: "Momentum theory (Leishman 2006, chapter 2) solved for mass",
+        },
+        Example {
+            id: "published-payload-fit-inverse",
+            title: "Recover the 50 g payload in the published hover-power fit",
+            input: r#"{"mass":"0.2 kg","rotors":4,"rotor_diameter":"0.054872655656933694 m","usable_energy":"20 Wh","target_time":"19.985598289204738 min","avionics_power":"10.6 W"}"#,
+            source: "Van Mulders et al. (2023), equation 6 and figure 4a: inverse of the measured payload-hover fit from 0.20 kg to 0.25 kg",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[("value", "max_payload")],
     }],
-    related: &[Related {
-        id: "drone.power.hover-power",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "drone.power.hover-power",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.power.payload-impact",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.power.endurance",
+            reason: "alternative",
+        },
+    ],
     assumptions: &[
         Assumption {
             name: "Sea-level pressure P0",
@@ -1434,6 +1458,12 @@ fn run_max_payload(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let e = positive(ctx, "usable_energy", "Usable energy")?;
     let t = positive(ctx, "target_time", "Target hover time")?;
     let av = ctx.quantity("avionics_power")?.map_or(0.0, |x| x.base());
+    if av < 0.0 {
+        return Err(ToolError::invalid(
+            "/avionics_power",
+            "Avionics and payload power cannot be negative.",
+        ));
+    }
     let area = h.n * core::f64::consts::PI * h.d * h.d / 4.0;
     let budget = e / t - av; // W available for lift
     let base = hover(h.m, h.n, h.d, h.rho, h.fm, h.eta).electrical + av;

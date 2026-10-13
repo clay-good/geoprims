@@ -165,6 +165,78 @@ fn maximum_payload() {
 }
 
 #[test]
+fn maximum_payload_inverts_the_published_payload_hover_fit() {
+    let r = call(
+        "drone.power.max-payload",
+        r#"{"mass":"0.2 kg","rotors":4,"rotor_diameter":"0.054872655656933694 m","usable_energy":"20 Wh","target_time":"19.985598289204738 min","avionics_power":"10.6 W"}"#,
+    );
+    near(&r, "result.max_payload.value", 0.05, 1e-12);
+    near(&r, "result.max_mass.value", 0.25, 1e-12);
+    near(
+        &r,
+        "result.base_hover_time.value",
+        20.0 * 60.0 / (10.6 + 12.88 * (0.2_f64 * 9.80665).powf(1.5)),
+        1e-12,
+    );
+}
+
+#[test]
+fn maximum_mass_scales_with_available_power_to_two_thirds() {
+    let run = |energy: f64| {
+        call(
+            "drone.power.max-payload",
+            &format!(
+                r#"{{"mass":"0.1 kg","rotors":4,"rotor_diameter":"12 in","usable_energy":"{energy} Wh","target_time":"20 min"}}"#
+            ),
+        )
+    };
+    let one = run(40.0);
+    let two = run(80.0);
+    near(
+        &two,
+        "result.max_mass.value",
+        num(&one, "result.max_mass.value") * 2.0_f64.powf(2.0 / 3.0),
+        1e-12,
+    );
+}
+
+#[test]
+fn maximum_payload_is_unchanged_by_equivalent_units_and_energy_time_scaling() {
+    let base = call(
+        "drone.power.max-payload",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","usable_energy":"72 Wh","target_time":"20 min"}"#,
+    );
+    let equivalent = call(
+        "drone.power.max-payload",
+        r#"{"mass":"1400 g","rotors":4,"rotor_diameter":"23.876 cm","usable_energy":"259200 J","target_time":"1200 s"}"#,
+    );
+    let doubled = call(
+        "drone.power.max-payload",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","usable_energy":"144 Wh","target_time":"40 min"}"#,
+    );
+    for path in ["result.max_payload.value", "result.max_mass.value"] {
+        near(&equivalent, path, num(&base, path), 1e-12);
+        near(&doubled, path, num(&base, path), 1e-12);
+    }
+}
+
+#[test]
+fn lower_air_density_reduces_maximum_payload() {
+    let sea = call(
+        "drone.power.max-payload",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","usable_energy":"90 Wh","target_time":"20 min"}"#,
+    );
+    let high = call(
+        "drone.power.max-payload",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","usable_energy":"90 Wh","target_time":"20 min","density_altitude":"8000 ft"}"#,
+    );
+    assert!(
+        num(&high, "result.max_payload.value") < num(&sea, "result.max_payload.value"),
+        "sea={sea}; high={high}"
+    );
+}
+
+#[test]
 fn headwind_return_and_cannot_return() {
     let r = call(
         "drone.power.rth-budget",

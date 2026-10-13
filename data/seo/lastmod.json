@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "c900c2b1ab61e645",
+    "hash": "ea6c9eb7f59a5e4c",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "e96266e7975f5229",
+    "hash": "a1195912e2cd0f37",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "3622c445516e8409",
+    "hash": "44098a8c9d1b3d2d",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -416,8 +416,8 @@
     "lastmod": "2026-10-13"
   },
   "/drone/power/max-payload/": {
-    "hash": "2c8bb389b814f86c",
-    "lastmod": "2026-10-09"
+    "hash": "65819fe10895e2e0",
+    "lastmod": "2026-10-13"
   },
   "/drone/power/payload-impact/": {
     "hash": "5e1bcd09df39772b",
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "758aee5d7102365b",
+    "hash": "2d156e34daae0f01",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1348,7 +1348,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "ddccf5b7166928ab",
+    "hash": "107ad39e02e1ba59",
     "lastmod": "2026-10-13"
   },
   "/raster/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "7a185ca441a8ca59",
+    "hash": "dcea8fbebe223a4f",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "62084acf730abec2",
+    "hash": "5ab5e9eb0d3a7e5b",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b671fe86ea3131c6",
+    "hash": "6d7298d5ac3e2f51",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

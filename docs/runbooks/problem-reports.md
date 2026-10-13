@@ -41,6 +41,16 @@ Before confirming, reproduce the report. The script restores the inputs from its
 node worker/scripts/reproduce.mjs REPORT_ID --remote
 ```
 
+### Optional GitHub mirror
+
+Mirror only a confirmed report, and only after a maintainer decides that a public issue is useful. Create a fine-grained personal access token with Issues write access to the destination repository, keep it in `GEOPRIMS_GITHUB_TOKEN` for this command only, and write a new summary from the verified facts. The command requires `--approve` every time:
+
+```bash
+GEOPRIMS_GITHUB_TOKEN=github_pat_... node worker/scripts/mirror-github.mjs REPORT_ID --remote --summary "Maintainer-written explanation of the confirmed problem" --approve
+```
+
+The destination defaults to `clay-good/geoprims`. For an isolated test repository, pass `--repository OWNER/REPOSITORY`. The script reads only the structured report fields from D1, refuses reports outside the `confirmed` status, and never queries or copies the reporter's note. It creates one issue containing the permalink, versions, inputs, outputs, and maintainer summary. It prints the new issue URL on success and exits nonzero on any GitHub error.
+
 `list` shows open reports with wrong results first, oldest first, and `overdue = 1` on wrong results older than 24 hours and anything older than 72. A fix for a confirmed defect adds a golden vector with the reported inputs and its source, bumps the tool version, and, if results move beyond tolerance, adds a `result-change` entry to `data/changelog.json` with the old and new values.
 
 ## Queries

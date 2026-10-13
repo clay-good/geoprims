@@ -9,6 +9,7 @@ The one piece of server code in geoprims: a Cloudflare Worker bound to `/api/rep
 | `src/catalog-tools.json` | Tool ids and versions from the site's catalog build (`node worker/scripts/prepare.mjs`) |
 | `migrations/` | D1 migrations; `0001` is generated from `data/report-limits.json` by `tools/codegen/d1-migration.mjs` |
 | `wrangler.jsonc` | Route, D1 binding, cron, logging off, and the kill switch (`REPORTS_ENABLED`) |
+| `scripts/` | Manual triage, reproduction, and approval-gated GitHub mirroring; see the [problem-report runbook](../docs/runbooks/problem-reports.md) |
 | `test/` | Tests on Node's built-in SQLite through a D1-shaped shim, so the real migration's CHECKs and batches run; the topology gate also checks that the static deployment bypasses this Worker and only `/api/reports*` reaches it |
 
 Every acceptable request gets the same `202 {"ok": true}`, whether stored, duplicate, over quota, or invalid; only non-JSON or oversized bodies get `400`, and other methods `405`.

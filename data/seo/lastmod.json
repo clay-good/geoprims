@@ -252,8 +252,8 @@
     "lastmod": "2026-10-12"
   },
   "/aviation/wind/one-in-sixty/": {
-    "hash": "b715d94055d72655",
-    "lastmod": "2026-10-09"
+    "hash": "c036a77793fd52ed",
+    "lastmod": "2026-10-13"
   },
   "/aviation/wind/runway-components/": {
     "hash": "5ae8099a114c9821",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "2e468b4485937249",
+    "hash": "bbe683126559505e",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

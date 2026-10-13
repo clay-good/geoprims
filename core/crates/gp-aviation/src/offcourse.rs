@@ -9,7 +9,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::atan;
 
@@ -159,6 +161,12 @@ pub static ONE_IN_SIXTY: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "1-in-60 angular factor",
+        value: "60",
+        unit: "deg",
+        source: "faa-phak",
+    }],
     sentence: "Turn {to_destination} back toward the course to reach your destination, or {track_error} to parallel it.",
     limits: &[("batchRows", 10_000)],
     run: run_one_in_sixty,

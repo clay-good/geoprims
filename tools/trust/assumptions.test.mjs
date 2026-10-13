@@ -96,6 +96,7 @@ const MUST_DECLARE = [
   'aviation.ifr.dme-arc-lead',
   'aviation.ifr.time-to-station',
   'aviation.ifr.radial-intercept',
+  'aviation.wind.one-in-sixty',
   'aviation.weather.metar-decode',
   'aviation.weather.taf-decode',
   'aviation.loading.fuel-plan',
@@ -320,6 +321,13 @@ test('the time-to-station tool exposes its published 60-times rule', () => {
   const assumptions = byId('aviation.ifr.time-to-station')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['60', 'deg', 'faa-ifh'],
+  ]);
+});
+
+test('the off-course tool exposes its published 1-in-60 factor', () => {
+  const assumptions = byId('aviation.wind.one-in-sixty')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['60', 'deg', 'faa-phak'],
   ]);
 });
 

@@ -570,6 +570,18 @@ test('the fly-by turn arc leaves the inbound leg and meets the outbound one', as
   }
 });
 
+test('the fly-by scene draws the core playhead and only the flown arc', async () => {
+  const args = { inbound: '360 deg', outbound: '090 deg', speed: '120 kt', turn_rate: '3 deg/s', at_time: '15 s' };
+  const r = JSON.parse(await host.invoke('navigation.route.fly-by', JSON.stringify(args)));
+  const d = diagram('navigation.route.fly-by', args, r);
+  assert.match(d.markup, /<polygon class="dg-dot-now"/, 'the aircraft is not at the playhead');
+  assert.ok(d.markup.includes(`t = 15 s · course ${r.display.course_at}`), 'the core course is not labeled');
+  assert.equal((d.markup.match(/<path class="dg-accent"/g) ?? []).length, 1, 'the flown arc is not one path');
+  assert.equal((d.markup.match(/<path class="dg-muted dg-dash"/g) ?? []).length, 1, 'the arc ahead is not distinct');
+  const flyBy = catalog.tools.find((t) => t.id === 'navigation.route.fly-by');
+  assert.deepEqual(flyBy.timeline, { input: 'at_time', end: 'turn_time', key: 'turn_time' });
+});
+
 test('the height diagram stacks the references in the order they stand', async () => {
   // add-geodesy-suite 6.4 fixture, including the drone scenario.
   const drone = { lat: -33.8688, lon: 151.2093, height: '120 m', terrain: '250 m' };

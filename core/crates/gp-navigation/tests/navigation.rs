@@ -771,6 +771,55 @@ fn cpa_scene_positions_come_from_the_core() {
 }
 
 #[test]
+fn fly_by_scene_progress_comes_from_the_core() {
+    let end = call(
+        "navigation.route.fly-by",
+        r#"{"inbound":"360 deg","outbound":"090 deg","speed":"120 kt","turn_rate":"3 deg/s"}"#,
+    );
+    assert!(
+        (num(&end, "result.scene_time.value") - 30.0).abs() < 1e-12,
+        "{end}"
+    );
+    assert!(
+        (num(&end, "result.turn_progress.value") - 90.0).abs() < 1e-12,
+        "{end}"
+    );
+    assert!(
+        (num(&end, "result.course_at.value") - 90.0).abs() < 1e-12,
+        "{end}"
+    );
+
+    let r = call(
+        "navigation.route.fly-by",
+        r#"{"inbound":"360 deg","outbound":"090 deg","speed":"120 kt","turn_rate":"3 deg/s","at_time":"15 s"}"#,
+    );
+    assert!(
+        (num(&r, "result.turn_time.value") - 30.0).abs() < 1e-12,
+        "{r}"
+    );
+    assert!(
+        (num(&r, "result.turn_progress.value") - 45.0).abs() < 1e-12,
+        "{r}"
+    );
+    assert!(
+        (num(&r, "result.course_at.value") - 45.0).abs() < 1e-12,
+        "{r}"
+    );
+    let m = gp_navigation::route::FLY_BY.timeline.expect("a timeline");
+    assert_eq!(
+        (m.input, m.end, m.key),
+        ("at_time", "turn_time", "turn_time")
+    );
+
+    let late = call(
+        "navigation.route.fly-by",
+        r#"{"inbound":"360 deg","outbound":"090 deg","speed":"120 kt","turn_rate":"3 deg/s","at_time":"31 s"}"#,
+    );
+    assert_eq!(late["error"]["code"], "OUT_OF_DOMAIN", "{late}");
+    assert_eq!(late["error"]["field"], "/at_time", "{late}");
+}
+
+#[test]
 fn haversine_matches_independent_implementations() {
     // tests/data/haversine_diff.csv (tools/vectors/gen_dev_diff.py): 1,000
     // short, regional, and global lines with the haversine distance from a

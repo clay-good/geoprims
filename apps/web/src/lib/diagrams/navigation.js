@@ -58,15 +58,40 @@ function flyBy(args, result) {
   const [ox, oy] = vec(outb, L);
   const [sx, sy] = vec(inb + 180, lead);
   const [ex, ey] = vec(outb, lead);
+  const start = [wx + sx, wy + sy];
+  const end = [wx + ex, wy + ey];
+  const sweep = right ? 1 : 0;
+  const arc = (a, b, cls) => `<path class="${cls}" d="M${a.map(f1).join(' ')} A${f1(radius)} ${f1(radius)} 0 0 ${sweep} ${b.map(f1).join(' ')}"/>`;
+  const progress = val(result, 'turn_progress');
+  const course = val(result, 'course_at');
+  let turnPath = arc(start, end, 'dg-accent');
+  let aircraft = '';
+  if (Number.isFinite(progress) && Number.isFinite(course)) {
+    const p = Math.max(0, Math.min(turn, progress));
+    const [cx0, cy0] = vec(inb + (right ? 90 : -90), radius);
+    const center = [start[0] + cx0, start[1] + cy0];
+    const [px, py] = vec(inb + (right ? -90 + p : 90 - p), radius);
+    const now = [center[0] + px, center[1] + py];
+    turnPath = arc(start, end, 'dg-casing')
+      + (p > 1e-9 ? arc(start, now, 'dg-accent') : '')
+      + (p < turn - 1e-9 ? arc(now, end, 'dg-muted dg-dash') : '');
+    const nose = vec(course, 9);
+    const left = vec(course + 145, 7);
+    const rightWing = vec(course - 145, 7);
+    const points = [nose, left, rightWing].map(([x, y]) => `${f1(now[0] + x)},${f1(now[1] + y)}`).join(' ');
+    aircraft = `<polygon class="dg-dot-now" points="${points}"/>${text('dg-muted-text', 12, 228, `t = ${disp(result, 'scene_time')} · course ${disp(result, 'course_at')}`)}`;
+  }
   const body = [
     `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,
     arrow(wx + ix, wy + iy, wx, wy, 'dg-muted', 'Inbound', 0.2),
     arrow(wx, wy, wx + ox, wy + oy, 'dg-muted', 'Outbound', 0.8),
-    `<path class="dg-accent" d="M${(wx + sx).toFixed(1)} ${(wy + sy).toFixed(1)} A${radius.toFixed(1)} ${radius.toFixed(1)} 0 0 ${right ? 1 : 0} ${(wx + ex).toFixed(1)} ${(wy + ey).toFixed(1)}"/>`,
+    turnPath,
+    aircraft,
     `<circle class="dg-dot" cx="${wx}" cy="${wy}" r="4"/>`,
     `<text class="dg-label" x="${(wx + sx + 8).toFixed(1)}" y="${(wy + sy + 16).toFixed(1)}">Start turn ${esc(disp(result, 'lead_distance'))} before</text>`,
   ].join('');
-  const title = `Fly-by turn of ${disp(result, 'turn_angle')} to the ${result.result.direction}: start ${disp(result, 'lead_distance')} before the waypoint, radius ${disp(result, 'radius')}.`;
+  const title = `Fly-by turn of ${disp(result, 'turn_angle')} to the ${result.result.direction}: start ${disp(result, 'lead_distance')} before the waypoint, radius ${disp(result, 'radius')}.` +
+    (aircraft ? ` At the scene time the aircraft has completed ${disp(result, 'turn_progress')} and is on course ${disp(result, 'course_at')}.` : '');
   return { markup: svg(body, title), desc: title };
 }
 

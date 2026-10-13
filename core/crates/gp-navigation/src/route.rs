@@ -447,6 +447,13 @@ pub static FLY_BY: ToolDef = ToolDef {
             QT::AngularRate,
             "deg/s",
         ),
+        qty_field(
+            "at_time",
+            "Scene time",
+            "This long after starting the turn, like 10 s; drives the animation",
+            QT::Time,
+            "s",
+        ),
     ],
     outputs: &[
         qty_field(
@@ -497,6 +504,25 @@ pub static FLY_BY: ToolDef = ToolDef {
             "deg",
         )
         .precision(Precision::Decimals(2)),
+        qty_field("scene_time", "Scene time", "At the playhead", QT::Time, "s")
+            .precision(Precision::Decimals(1)),
+        qty_field(
+            "turn_progress",
+            "Turn completed",
+            "At the scene time",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(1)),
+        qty_field(
+            "course_at",
+            "Course at scene time",
+            "The aircraft's course at the playhead",
+            QT::Angle,
+            "deg",
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("[0,360)"),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     warnings: &["FLY_OVER_RECOMMENDED", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
@@ -544,6 +570,11 @@ pub static FLY_BY: ToolDef = ToolDef {
             source: "faa-ifh",
         },
     ],
+    timeline: Some(gp_base::tool::Timeline {
+        input: "at_time",
+        end: "turn_time",
+        key: "turn_time",
+    }),
     sentence: "Start the {direction} turn {lead_distance} before the waypoint; the radius is {radius}.{warn FLY_OVER_RECOMMENDED} A course change this large is better flown as a fly-over.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_fly_by,
@@ -604,7 +635,8 @@ fn run_fly_by(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let m = crate::unit(QT::Length, "m");
     let q = |value: f64, unit| gp_base::tool::Q { value, unit };
-    Ok(Json::obj([
+    let turn_time = arc / v;
+    let mut out = vec![
         ("lead_distance", ctx.out("lead_distance", q(lead, m))),
         ("radius", ctx.out("radius", q(radius, m))),
         ("turn_angle", ctx.out("turn_angle", deg(turn))),
@@ -615,10 +647,37 @@ fn run_fly_by(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("arc_length", ctx.out("arc_length", q(arc, m))),
         (
             "turn_time",
-            ctx.out("turn_time", q(arc / v, crate::unit(QT::Time, "s"))),
+            ctx.out("turn_time", q(turn_time, crate::unit(QT::Time, "s"))),
         ),
         ("bank_used", ctx.out("bank_used", deg(bank))),
-    ]))
+    ];
+    let at = ctx
+        .quantity("at_time")?
+        .map(|x| x.base())
+        .unwrap_or(turn_time);
+    if at < 0.0 || at > turn_time {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!("The scene time must be between 0 and {turn_time:.1} s."),
+        )
+        .at("/at_time"));
+    }
+    let progress = if turn_time == 0.0 {
+        0.0
+    } else {
+        turn * at / turn_time
+    };
+    let signed = if dpsi >= 0.0 { progress } else { -progress };
+    out.push((
+        "scene_time",
+        ctx.out("scene_time", q(at, crate::unit(QT::Time, "s"))),
+    ));
+    out.push(("turn_progress", ctx.out("turn_progress", deg(progress))));
+    out.push((
+        "course_at",
+        ctx.out("course_at", deg((inbound + signed).rem_euclid(360.0))),
+    ));
+    Ok(Json::obj(out))
 }
 
 // ---------------------------------------------------------------- time, speed, distance

@@ -193,6 +193,45 @@ fn deflection_angle_conventions() {
 }
 
 #[test]
+fn radial_sideshots_share_the_forward_result() {
+    let radial = call(
+        "survey.cogo.radial-sideshots",
+        r#"{"station_northing":"5000 ft","station_easting":"10000 ft","shots":[{"point":"A","direction":"N 35-15-20 E","distance":"185.42 ft"},{"point":"B","direction":"S 70 E","distance":"240 ft"},{"point":"C","direction":"270","distance":"95.5 ft"}]}"#,
+    );
+    assert_eq!(num(&radial, "result.count"), 3.0);
+    for (i, (direction, distance)) in [("N 35-15-20 E", 185.42), ("S 70 E", 240.0), ("270", 95.5)]
+        .iter()
+        .enumerate()
+    {
+        let forward = call(
+            "survey.cogo.forward",
+            &format!(
+                r#"{{"northing":"5000 ft","easting":"10000 ft","direction":"{direction}","distance":"{distance} ft"}}"#
+            ),
+        );
+        assert_eq!(
+            radial["result"]["points"][i]["northing"]["value"]
+                .as_f64()
+                .unwrap(),
+            num(&forward, "result.northing.value")
+        );
+        assert_eq!(
+            radial["result"]["points"][i]["easting"]["value"]
+                .as_f64()
+                .unwrap(),
+            num(&forward, "result.easting.value")
+        );
+    }
+
+    let bad = call(
+        "survey.cogo.radial-sideshots",
+        r#"{"station_northing":"0 ft","station_easting":"0 ft","shots":[{"point":"A","direction":"N 0 E","distance":"0 ft"}]}"#,
+    );
+    assert_eq!(bad["error"]["code"], "INVALID_INPUT");
+    assert_eq!(bad["error"]["field"], "/shots/0/distance");
+}
+
+#[test]
 fn mixed_feet_are_refused() {
     let r = call(
         "survey.cogo.forward",

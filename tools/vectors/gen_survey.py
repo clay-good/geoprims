@@ -153,6 +153,86 @@ def deflection_angle():
     return out
 
 
+def radial_sideshots():
+    out = []
+
+    def add_case(northing, easting, unit_name, shots, source=SRC, version=VER):
+        suffix = f" {unit_name}" if unit_name else ""
+        rows = []
+        expected = {
+            "result.count": float(len(shots)),
+            "result.station_northing.value": float(northing),
+            "result.station_easting.value": float(easting),
+        }
+        if unit_name:
+            expected["result.station_northing.unit"] = unit_name
+        for i, (name, direction, distance) in enumerate(shots):
+            azimuth = parse_direction(direction)
+            angle = math.radians(azimuth)
+            rows.append({
+                "point": name,
+                "direction": direction,
+                "distance": f"{distance}{suffix}" if unit_name else distance,
+            })
+            expected[f"result.points.{i}.point"] = name
+            expected[f"result.points.{i}.azimuth.value"] = azimuth
+            expected[f"result.points.{i}.distance.value"] = float(distance)
+            expected[f"result.points.{i}.northing.value"] = northing + distance * math.cos(angle)
+            expected[f"result.points.{i}.easting.value"] = easting + distance * math.sin(angle)
+        out.append(vec(len(out) + 1, {
+            "station_northing": f"{northing}{suffix}" if unit_name else northing,
+            "station_easting": f"{easting}{suffix}" if unit_name else easting,
+            "shots": rows,
+        }, expected, source, version, rel=1e-11))
+
+    add_case(5000.0, 10000.0, "ft", [
+        ("CP 12", "N 35°15'20\" E", 185.42),
+        ("EP 4", "S 70°00'00\" E", 240.0),
+        ("TBM", "270", 95.5),
+    ], SPEC, "2026")
+    add_case(1000.0, 2000.0, "m", [
+        ("N", "0", 100.0), ("E", "90", 100.0),
+        ("S", "180", 100.0), ("W", "270", 100.0),
+    ])
+    add_case(250000.0, 1500000.0, "ftUS", [
+        ("NE", "N 45 E", 141.421356237),
+        ("SW", "S 45 W", 141.421356237),
+    ])
+    add_case(0.0, 0.0, "m", [
+        ("G100", "100 gon", 50.0),
+        ("G300", "300 gon", 50.0),
+    ])
+    add_case(500.0, 500.0, "ft", [
+        ("NW", "359.75", 400.0),
+        ("SE", "180.25", 400.0),
+    ])
+
+    rng = random.Random(1204)
+    for case in range(15):
+        northing = round(rng.uniform(-10000, 900000), 3)
+        easting = round(rng.uniform(-10000, 3000000), 3)
+        shots = []
+        for row in range(1 + case % 5):
+            azimuth = round(rng.uniform(0, 360), 8)
+            distance = round(rng.uniform(0.01, 5000), 3)
+            shots.append((f"P{case + 1}-{row + 1}", str(azimuth), distance))
+        add_case(northing, easting, None, shots)
+
+    invalid = [
+        ({"station_northing": "0 ft", "station_easting": "0 ft", "shots": [{"point": "A", "direction": "0", "distance": "10 ftUS"}]}, "UNIT_MISMATCH", "/shots/0/distance"),
+        ({"station_northing": 0, "station_easting": 0, "shots": [{"point": "A", "direction": "N 95 E", "distance": 10}]}, "INVALID_INPUT", "/shots/0/direction"),
+        ({"station_northing": 0, "station_easting": 0, "shots": [{"point": "A", "direction": "0", "distance": 0}]}, "INVALID_INPUT", "/shots/0/distance"),
+        ({"station_northing": 0, "station_easting": 0, "shots": [{"point": "A", "direction": "0", "distance": -1}]}, "INVALID_INPUT", "/shots/0/distance"),
+        ({"station_northing": 0, "station_easting": 0, "shots": []}, "INVALID_INPUT", None),
+    ]
+    for inp, code, field in invalid:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
 def inverse():
     cases = [(1000, 1000, 1100, 1100), (5000, 5000, 4800, 4900), (0, 0, -120.5, 300.25), (250, 800, 900, 100), (10, 10, 10, 20)]
     out = []
@@ -1797,6 +1877,7 @@ def main():
     files = {
         "survey.cogo.direction-parse": direction_parse(),
         "survey.cogo.deflection-angle": deflection_angle(),
+        "survey.cogo.radial-sideshots": radial_sideshots(),
         "survey.cogo.inverse": inverse(), "survey.cogo.forward": forward(), "survey.cogo.traverse-closure": traverse(),
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),

@@ -31,6 +31,16 @@ test('deflection angle is an addressable survey operation', () => {
   assert.ok(tool.vectorCount >= 20, `deflection-angle has only ${tool.vectorCount} vectors`);
 });
 
+test('radial sideshots are an addressable survey operation', () => {
+  const tool = byId.get('survey.cogo.radial-sideshots');
+  assert.ok(tool, 'survey.cogo.radial-sideshots is missing');
+  for (const alias of ['radial survey calculator', 'multiple sideshots', 'total station sideshots']) {
+    assert.ok(tool.aliases.includes(alias), `radial-sideshots is missing alias "${alias}"`);
+  }
+  assert.ok(existsSync(join(root, 'docs/derivations/survey.cogo.radial-sideshots.md')));
+  assert.ok(tool.vectorCount >= 20, `radial-sideshots has only ${tool.vectorCount} vectors`);
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 46, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 47, `survey operation count regressed to ${survey.length}`);
 });

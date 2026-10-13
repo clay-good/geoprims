@@ -16,6 +16,7 @@ pub mod leveling;
 pub mod localize;
 pub mod lsq;
 pub mod profile;
+pub mod radial;
 pub mod reduction;
 pub mod section;
 pub mod sight;
@@ -305,10 +306,8 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let d = ctx.req_quantity("distance")?;
     let u = common_unit(&[("/northing", n), ("/easting", e), ("/distance", d)])?;
     let dir = ctx.text("direction")?.expect("required");
-    let az = direction::parse(&dir)
-        .map_err(|m| ToolError::invalid("/direction", m))?
-        .to_radians();
-    let (n2, e2) = (n.to(u) + d.to(u) * cos(az), e.to(u) + d.to(u) * sin(az));
+    let az = direction::parse(&dir).map_err(|m| ToolError::invalid("/direction", m))?;
+    let (n2, e2) = forward_point(n.to(u), e.to(u), az, d.to(u));
     Ok(Json::obj([
         (
             "northing",
@@ -316,6 +315,19 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
         ("easting", ctx.emit("easting", Q { value: e2, unit: u }, u)),
     ]))
+}
+
+pub(crate) fn forward_point(
+    northing: f64,
+    easting: f64,
+    azimuth: f64,
+    distance: f64,
+) -> (f64, f64) {
+    let angle = azimuth.to_radians();
+    (
+        northing + distance * cos(angle),
+        easting + distance * sin(angle),
+    )
 }
 
 // ---------------------------------------------------------------- traverse
@@ -2339,6 +2351,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &direction::DEFLECTION,
     &INVERSE,
     &FORWARD,
+    &radial::SIDESHOTS,
     &TRAVERSE,
     &AREA,
     &CIRCULAR_CURVE,

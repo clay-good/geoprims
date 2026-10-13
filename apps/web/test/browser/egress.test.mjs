@@ -51,6 +51,11 @@ test('sentinel inputs from every tool stay out of browser requests', { timeout: 
     await page.waitForFunction(() => [...document.querySelectorAll('astro-island')]
       .some((island) => island.getAttribute('component-url')?.includes('ToolApp') && !island.hasAttribute('ssr')));
     const field = page.locator('astro-island input[id^="field-"], astro-island textarea[id^="field-"]').first();
+    const hasInputs = Object.keys(tool.inputs?.properties ?? {}).some((key) => key !== 'options');
+    if (!hasInputs) {
+      assert.equal(await field.count(), 0, `${tool.id} declares no inputs but renders an editable text input`);
+      continue;
+    }
     assert.ok(await field.count(), `${tool.id} has no editable text input`);
     await field.evaluate((element) => { if (element.closest('details')) element.closest('details').open = true; });
     const sentinel = `ZZQQEGRESS${index}X9187`;

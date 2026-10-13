@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.ifr.radial-intercept"
+      ],
+      "vectors": [],
+      "summary": "Heading to intercept a radial (version 1.1.0) is now stable. Its primary example matches the FAA Instrument Flying Handbook's published 160-to-205 radial intercept on heading 295 degrees, and it now has 20 vectors plus rotation, bound, mirror, override, and on-course invariants. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.ifr.dme-arc-lead"
       ],
       "vectors": [],

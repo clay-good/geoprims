@@ -27,22 +27,22 @@ Geometry only, in a flat plane around the station. The heading has no wind corre
 
 ## Worked example
 
-- sourcePublisher: geoprims (hand check of the cited technique, computed)
-- sourceTitle: Instrument Flying Handbook (FAA-H-8083-15B) and University of Dubuque Cessna 172S Instrument Standard Operating Procedures
-- sourceEdition: FAA-H-8083-15B; University of Dubuque SOP dated September 4, 2015
-- sourceLocator: FAA handbook chapter 9 for VOR interception geometry; university SOP p. 24, steps 4-5, for doubling the radial difference and keeping the result from 20° through 90°. The numbers here are the project's own hand check (30° off, so a 60° intercept: heading 180 + 60 = 240), not a figure printed in either source
-- independent: no
-- inputs: on the 030 radial, intercept the 360 radial inbound
-- outputs: heading 240°, course 180°, angle off 30°, intercept angle 60°
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Instrument Flying Handbook
+- sourceEdition: FAA-H-8083-15B
+- sourceLocator: Chapter 9, Course Interception and Figure 9-16
+- independent: yes
+- inputs: present position on the 160 radial; intercept the 205 radial inbound, course 025°
+- outputs: radial difference 45°; doubled intercept angle 90°; intercept heading 295°; track inbound on the 205 radial
 - tolerance: 1e-9°
-- verifiedBy: golden vector v001
-- verifiedOn: 2026-10-09
+- verifiedBy: golden vector v010
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_dme.py`: picks the heading a different way. It places the aircraft 10 NM out on the current radial and keeps whichever of course ± angle has a track that actually crosses the wanted radial's ray (not its extension past the station). Eight cases inbound and outbound, across north, with given and default angles and on the radial, plus two that must be refused (exact, within 1e-9°)
-- `core/vectors/aviation.ifr.radial-intercept.jsonl`: those nine vectors, run through the core on every build
+- `tools/vectors/gen_dme.py`: picks the heading a different way. It places the aircraft 10 NM out on the current radial and keeps whichever of course ± angle has a track that actually crosses the wanted radial's ray (not its extension past the station). Sixteen cases cover inbound and outbound, both sides, north wrapping, given and default angles, and being on the radial; four invalid or unreachable cases are refused (exact, within 1e-9°)
+- `core/vectors/aviation.ifr.radial-intercept.jsonl`: those 20 vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no invariant test is written for this tool yet. This is the closest test: it lints and runs every aviation tool's golden vectors through the registry, including the nine above, and fails if any tool has fewer than five
+- `core/crates/gp-aviation/tests/aviation.rs` `radial_intercept_invariants`: adding full turns to either radial changes nothing; default intercept angles double the radial difference within the published 20° to 90° bounds; mirroring the current radial across the desired radial mirrors the intercept heading and side; an explicit angle overrides the default; and a point already on the radial stays on its course

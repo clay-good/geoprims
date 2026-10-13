@@ -561,6 +561,63 @@ fn dme_arc_lead_invariants() {
 }
 
 #[test]
+fn radial_intercept_invariants() {
+    let intercept = |current: f64, desired: f64, direction: &str, angle: Option<f64>| {
+        let mut input = serde_json::json!({
+            "current_radial": format!("{current} deg"),
+            "desired_radial": format!("{desired} deg"),
+            "direction": direction,
+        });
+        if let Some(angle) = angle {
+            input["intercept_angle"] = Value::String(format!("{angle} deg"));
+        }
+        call("aviation.ifr.radial-intercept", &input.to_string())
+    };
+
+    let base = intercept(30.0, 0.0, "inbound", None);
+    assert_eq!(num(&base, "result.heading.value"), 240.0);
+    assert_eq!(num(&base, "result.course.value"), 180.0);
+    assert_eq!(num(&base, "result.angle_off.value"), 30.0);
+    assert_eq!(num(&base, "result.intercept_angle.value"), 60.0);
+    assert_eq!(base["result"]["side"], "left of the course");
+
+    // Radials repeat every full turn, whether one or both inputs are outside
+    // the usual range.
+    for rotated in [
+        intercept(390.0, 0.0, "inbound", None),
+        intercept(30.0, 360.0, "inbound", None),
+        intercept(-330.0, -360.0, "inbound", None),
+    ] {
+        assert_eq!(rotated["result"], base["result"]);
+    }
+
+    // The default doubles the difference but is bounded to 20° through 90°.
+    for (off, expected) in [(5.0, 20.0), (20.0, 40.0), (45.0, 90.0)] {
+        let r = intercept(off, 0.0, "inbound", None);
+        assert_eq!(num(&r, "result.intercept_angle.value"), expected);
+    }
+
+    let mirror = intercept(330.0, 0.0, "inbound", None);
+    assert_eq!(num(&mirror, "result.heading.value"), 120.0);
+    assert_eq!(mirror["result"]["side"], "right of the course");
+    assert_eq!(
+        num(&mirror, "result.intercept_angle.value"),
+        num(&base, "result.intercept_angle.value")
+    );
+
+    let explicit = intercept(30.0, 0.0, "inbound", Some(45.0));
+    assert_eq!(num(&explicit, "result.heading.value"), 225.0);
+    assert_eq!(num(&explicit, "result.intercept_angle.value"), 45.0);
+
+    let established = intercept(205.0, 205.0, "inbound", None);
+    assert_eq!(
+        num(&established, "result.heading.value"),
+        num(&established, "result.course.value")
+    );
+    assert_eq!(established["result"]["side"], "on the radial");
+}
+
+#[test]
 fn time_to_station_invariants() {
     for (minutes, change, groundspeed) in [
         (1.25, 10.0_f64, 120.0),

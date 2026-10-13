@@ -615,7 +615,7 @@ fn run_arc_lead(ctx: &mut Ctx) -> Result<Json, ToolError> {
 // ---------------------------------------------------------------- radial intercept
 
 const IFH_INTERCEPT: Reference = Reference {
-    locator: "Chapter 9 (VOR navigation: intercepting a radial, inbound and outbound, with an intercept angle no more than 90°)",
+    locator: "Chapter 9, Course Interception and Figure 9-16 (160 radial to 205 radial inbound: 45° difference, 90° intercept, heading 295°)",
     ..IFH
 };
 
@@ -630,6 +630,8 @@ const DUBUQUE_INTERCEPT: Reference = Reference {
 
 pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
     id: "aviation.ifr.radial-intercept",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Heading to intercept a radial",
     summary: "The heading to fly to intercept a VOR radial inbound or outbound from the radial you are on now, with the intercept angle doubled from the angle off course or set by you.",
     aliases: &[
@@ -729,7 +731,7 @@ pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::NoSolution],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Course = the radial outbound, or the radial + 180° inbound. The heading is the course turned toward the radial by the intercept angle: by default twice the angle off course, kept between 20° and 90° (a common training technique), or your own",
     accuracy: "Geometry only: correct the heading for wind, and follow the procedure or ATC's assigned heading when there is one",
     when_to_use: "Use this when you are on one VOR radial and need to get onto another. Enter the radial you are on, the radial you want, and whether you will track it inbound or outbound. It gives a magnetic heading to fly, the course once you are on the radial, and the intercept angle, which is double the angle off course by default. You can set your own angle instead.",
@@ -737,9 +739,9 @@ pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
     references: &[IFH_INTERCEPT, DUBUQUE_INTERCEPT],
     examples: &[Example {
         id: "primary",
-        title: "On the 030 radial, intercept the 360 radial inbound",
-        input: r#"{"current_radial":"030 deg","desired_radial":"360 deg","direction":"inbound"}"#,
-        source: "FAA-H-8083-15B chapter 9 course interception; 30° off, so a 60° intercept: heading 180 + 60 = 240",
+        title: "From the 160 radial, intercept the 205 radial inbound",
+        input: r#"{"current_radial":"160 deg","desired_radial":"205 deg","direction":"inbound"}"#,
+        source: "FAA-H-8083-15B chapter 9, Figure 9-16: 45° off, doubled to a 90° intercept, heading 295°",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -754,6 +756,10 @@ pub static RADIAL_INTERCEPT: ToolDef = ToolDef {
         Related {
             id: "aviation.ifr.radial-fix",
             reason: "alternative",
+        },
+        Related {
+            id: "aviation.wind.heading-groundspeed",
+            reason: "next",
         },
     ],
     assumptions: &[

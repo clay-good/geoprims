@@ -190,6 +190,40 @@ def intercept():
                                            "result.intercept_angle.value": float(angle), "result.angle_off.value": float(abs(off))},
                        "Plane geometry: the heading of course ± the angle whose track crosses the radial (tools/vectors/gen_dme.py)"))
     out.append(vec(len(out) + 1, {"current_radial": "200 deg", "desired_radial": "360 deg"}, {"ok": False, "error.code": "NO_SOLUTION"}))
+    # FAA-H-8083-15B chapter 9, Figure 9-16: on the 160 radial,
+    # intercept the 205 radial inbound with a 90° angle on heading 295°.
+    out.append(vec(len(out) + 1,
+                   {"current_radial": "160 deg", "desired_radial": "205 deg", "direction": "inbound"},
+                   {"result.heading.value": 295.0, "result.course.value": 25.0,
+                    "result.intercept_angle.value": 90.0, "result.angle_off.value": 45.0},
+                   "FAA-H-8083-15B chapter 9, Figure 9-16 (heading 295° to intercept the 205 radial inbound)"))
+    more = [
+        (10, 350, True, 45), (45, 60, False, None), (359, 1, True, None),
+        (1, 359, True, None), (90, 120, False, 90), (270, 225, True, 60),
+        (0, 0, False, None),
+    ]
+    for now, want, inbound, given in more:
+        course = (want + 180) % 360 if inbound else want % 360
+        off = (now - want + 180) % 360 - 180
+        angle = given if given is not None else min(90, max(20, 2 * abs(off)))
+        heading = course if off == 0 else (course + (1 if off > 0 else -1) * angle if inbound
+                                          else course - (1 if off > 0 else -1) * angle) % 360
+        inp = {"current_radial": f"{now} deg", "desired_radial": f"{want} deg",
+               "direction": "inbound" if inbound else "outbound"}
+        if given is not None:
+            inp["intercept_angle"] = f"{given} deg"
+        out.append(vec(len(out) + 1, inp, {"result.heading.value": float(heading),
+                                           "result.course.value": float(course),
+                                           "result.intercept_angle.value": float(angle),
+                                           "result.angle_off.value": float(abs(off))}))
+    out.append(vec(len(out) + 1, {"current_radial": "100 deg", "desired_radial": "90 deg",
+                                  "direction": "inbound", "intercept_angle": "10 deg"},
+                   {"ok": False, "error.code": "NO_SOLUTION", "error.field": "/intercept_angle"}))
+    out.append(vec(len(out) + 1, {"current_radial": "0 deg", "desired_radial": "90 deg", "direction": "inbound"},
+                   {"ok": False, "error.code": "NO_SOLUTION", "error.field": "/intercept_angle"}))
+    out.append(vec(len(out) + 1, {"current_radial": "0 deg", "desired_radial": "0 deg",
+                                  "direction": "outbound", "intercept_angle": "5 deg"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/intercept_angle"}))
     return out
 
 

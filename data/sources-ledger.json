@@ -900,8 +900,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Re-checked against the FAA-hosted FAA-H-8083-15B PDF on 2026-10-13. Chapter 9, Course Interception and Figure 9-16 publish the 160-radial to 205-radial inbound example: 45 degrees off, a 90-degree intercept, and heading 295 degrees.",
       "freeAccessUrl": "https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/FAA-H-8083-15B.pdf",
       "matchTerms": [
         "Instrument Flying Handbook"

@@ -19,6 +19,14 @@ const GHILANI: Reference = Reference {
     locator: "Grades and slopes in route surveying and construction layout",
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
+const FHWA_TERMINOLOGY: Reference = Reference {
+    title: "Noise Barrier Design: Terminology",
+    issuer: "Federal Highway Administration",
+    year: 2026,
+    edition: "Web page, read 2026-10-13",
+    locator: "Grade: a 20 m rise over a 400 m roadway is 5%, calculated as 20 / 400 × 100",
+    url: "https://www.fhwa.dot.gov/Environment/noise/noise_barriers/design_construction/design/design02.cfm",
+};
 
 /// A grade as rise over run, from its written form. A bare `a:b` needs a
 /// convention; `3H:1V` and `1V:3H` carry their own.
@@ -96,6 +104,7 @@ fn parse(text: &str, convention: Option<&str>) -> Result<f64, ToolError> {
 
 pub static GRADE: ToolDef = ToolDef {
     id: "survey.earthwork.grade",
+    stability: gp_base::tool::Stability::Stable,
     title: "Side slope and grade (H:V)",
     summary: "A construction side slope or grade with its ratio labeled H:V and V:H, refusing an unlabeled 3:1, with rise, run, or slope length from any two; for a plain unit conversion of a slope, use the slope converter.",
     aliases: &["side slope ratio", "H:V slope", "rise run slope length"],
@@ -182,12 +191,12 @@ pub static GRADE: ToolDef = ToolDef {
         len_out("slope_length", "Slope length", "Along the slope").optional(),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "Grade g = rise / run; percent = 100·g, per mille = 1,000·g, angle = atan g, ratio H:V = (1/g):1 and V:H = g:1; slope length = √(rise² + run²)",
     accuracy: "Exact",
     when_to_use: "Use this when a plan, spec, or field note gives a slope one way and you need it another, such as a 3H:1V side slope as a percent or an angle for a grade stake or a machine control setting. Enter the grade as a percent, ratio, angle, or per mille. Add any two of rise, run, and slope length to get the third. The ratio comes back labeled both H:V and V:H, so no one reads it backwards.",
     limitations: "A bare ratio like 3:1 is refused until you say which number is the run, because the two readings give very different slopes. The grade is one straight slope; it does not handle curves, benches, or slopes that change along the way. It gives no design advice: the slope a cut or fill can hold comes from your plans, spec, or soils engineer.",
-    references: &[GHILANI],
+    references: &[GHILANI, FHWA_TERMINOLOGY],
     examples: &[Example {
         id: "primary",
         title: "A 3H:1V side slope",
@@ -207,6 +216,10 @@ pub static GRADE: ToolDef = ToolDef {
         Related {
             id: "survey.earthwork.average-end-area",
             reason: "next",
+        },
+        Related {
+            id: "units.slope.convert",
+            reason: "alternative",
         },
     ],
     sentence: "That grade is {percent}%, a slope of {degrees}, or {ratio_hv}.",
@@ -236,6 +249,18 @@ fn run_grade(ctx: &mut Ctx) -> Result<Json, ToolError> {
         run.map(|q| q.to(u)),
         slope.map(|q| q.to(u)),
     );
+    if h.is_some_and(|v| v <= 0.0) {
+        return Err(ToolError::invalid(
+            "/run",
+            "The horizontal run must be positive.",
+        ));
+    }
+    if s.is_some_and(|v| v <= 0.0) {
+        return Err(ToolError::invalid(
+            "/slope_length",
+            "The slope length must be positive.",
+        ));
+    }
     // The grade, from itself or from two lengths; then the lengths it leaves open.
     let g = match (grade, r, h, s) {
         (Some(g), ..) => g,

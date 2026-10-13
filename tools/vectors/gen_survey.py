@@ -13,6 +13,8 @@ VER = "15th edition (2018)"
 SPEC = "add-survey-suite scenarios"
 USGS_TRIG = "USGS Techniques and Methods 11-D3, section 5 example reduction table"
 USGS_TRIG_VER = "2020"
+FHWA_GRADE = "Federal Highway Administration, Noise Barrier Design: Terminology, Grade"
+FHWA_GRADE_VER = "Web page read 2026-10-13"
 FT = 0.3048
 YD3_FT3 = 27.0
 
@@ -614,7 +616,39 @@ def grade():
     out.append(vec(7, {"grade": "3:1", "convention": "V:H"}, {"result.percent": 300.0}))
     out.append(vec(8, {"grade": "3:1"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/convention"}, SPEC, "2026"))
     out.append(vec(9, {"rise": "5 ft", "run": "100 ft"}, {"result.percent": 5.0, "result.slope_length.value": math.hypot(5, 100)}))
-    out.append(vec(10, {"grade": "2%", "run": "250 m"}, {"result.rise.value": 5.0, "result.slope_length.value": math.hypot(5, 250)}))
+    # Preserve the published v010 serialization from the Python runtime that
+    # first generated it; the difference from today's hypot is 3e-14 m.
+    out.append(vec(10, {"grade": "2%", "run": "250 m"}, {"result.rise.value": 5.0, "result.slope_length.value": 250.04999500099973}))
+    # FHWA's published definition works a 20 m elevation gain over 400 m as
+    # 5%. The remaining cases exercise each notation and length pair.
+    out.append(vec(11, {"rise": "20 m", "run": "400 m"}, {"result.percent": 5.0}, FHWA_GRADE, FHWA_GRADE_VER))
+    for text, gr in [("-4%", -0.04), ("60%", 0.6), ("1V:2H", 0.5), ("2H:1V", 0.5)]:
+        out.append(vec(len(out) + 1, {"grade": text}, {
+            "result.percent": gr * 100,
+            "result.degrees.value": math.degrees(math.atan(gr)),
+            "result.per_mille": gr * 1000,
+        }))
+    out.append(vec(len(out) + 1, {"grade": "3:1", "convention": "H:V"}, {"result.percent": 100 / 3}))
+    out.append(vec(len(out) + 1, {"rise": "-12 m", "run": "240 m"}, {
+        "result.percent": -5.0,
+        "result.slope_length.value": math.hypot(12, 240),
+    }))
+    out.append(vec(len(out) + 1, {"rise": "9 ft", "slope_length": "15 ft"}, {
+        "result.percent": 75.0,
+        "result.run.value": 12.0,
+    }))
+    out.append(vec(len(out) + 1, {"run": "12 m", "slope_length": "13 m"}, {
+        "result.percent": 100 * 5 / 12,
+        "result.rise.value": 5.0,
+    }))
+    run = 100 / math.hypot(1, 0.1)
+    out.append(vec(len(out) + 1, {"grade": "10%", "slope_length": "100 ft"}, {
+        "result.rise.value": run * 0.1,
+        "result.run.value": run,
+    }))
+    out.append(vec(len(out) + 1, {"grade": "90°"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(len(out) + 1, {"rise": "10 ft", "slope_length": "5 ft"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(len(out) + 1, {"grade": "5%", "run": "-100 ft"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/run"}))
     return out
 
 
@@ -1415,6 +1449,7 @@ def deed_parse():
 
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
+    selected = set(sys.argv[2:])
     files = {
         "survey.cogo.inverse": inverse(), "survey.cogo.forward": forward(), "survey.cogo.traverse-closure": traverse(),
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
@@ -1434,6 +1469,8 @@ def main():
         "survey.land.basis-rotation": rotation(), "survey.land.deed-parse": deed_parse(),
     }
     for tool, vs in files.items():
+        if selected and tool not in selected:
+            continue
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 

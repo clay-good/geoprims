@@ -64,6 +64,7 @@ fn catalog_examples_vectors() {
             "geodesy.spcs.spcs83-forward",
             "time.scale.gps-week",
             "units.length.convert",
+            "units.slope.convert",
         ],
     );
     let reg: Value = serde_json::from_str(&repo("data/codes.json")).unwrap();
@@ -811,6 +812,38 @@ fn ambiguous_ratio_shows_both_readings() {
     let r = call("survey.earthwork.grade", r#"{"grade":"3H:1V"}"#);
     assert_eq!(r["result"]["ratio_hv"], "3H:1V", "{r}");
     assert_eq!(r["display"]["percent"], "33.333", "{r}");
+}
+
+#[test]
+fn grade_forms_and_length_invariants() {
+    for input in [
+        r#"{"grade":"5%"}"#,
+        r#"{"grade":"50‰"}"#,
+        r#"{"grade":"0.05"}"#,
+        r#"{"grade":"1V:20H"}"#,
+        r#"{"grade":"20H:1V"}"#,
+    ] {
+        let r = call("survey.earthwork.grade", input);
+        assert!((num(&r, "result.percent") - 5.0).abs() < 1e-12, "{r}");
+    }
+
+    let rise_run = call("survey.earthwork.grade", r#"{"rise":"3 m","run":"4 m"}"#);
+    let rise_slope = call(
+        "survey.earthwork.grade",
+        r#"{"rise":"3 m","slope_length":"5 m"}"#,
+    );
+    let run_slope = call(
+        "survey.earthwork.grade",
+        r#"{"run":"4 m","slope_length":"5 m"}"#,
+    );
+    for r in [&rise_run, &rise_slope, &run_slope] {
+        assert!((num(r, "result.rise.value") - 3.0).abs() < 1e-12, "{r}");
+        assert!((num(r, "result.run.value") - 4.0).abs() < 1e-12, "{r}");
+        assert!(
+            (num(r, "result.slope_length.value") - 5.0).abs() < 1e-12,
+            "{r}"
+        );
+    }
 }
 
 #[test]

@@ -1053,6 +1053,26 @@
       ]
     },
     {
+      "id": "fhwa-noise-terminology",
+      "name": "Noise Barrier Design: Terminology",
+      "issuer": "Federal Highway Administration",
+      "currentEdition": "Web page, read 2026-10-13",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read at the issuer on 2026-10-13. The Grade entry defines roadway grade as a percent and works a 20 m elevation gain over 400 m as 20 / 400 × 100 = 5%.",
+      "freeAccessUrl": "https://www.fhwa.dot.gov/Environment/noise/noise_barriers/design_construction/design/design02.cfm",
+      "matchTerms": [
+        "Noise Barrier Design: Terminology"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "flir-3x3",
       "name": "How Far Can You Measure with a Thermal Camera?",
       "issuer": "Teledyne FLIR",

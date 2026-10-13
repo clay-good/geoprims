@@ -37,6 +37,8 @@ Mission sortie planning is stable for ordered waypoint paths. It counts every tr
 
 Multirotor hover power is stable for separate or coaxial rotors, explicit aerodynamic and electrical losses, and site air density. Its momentum-theory result is checked against the 2026 Embry-Riddle aerospace textbook's 45,000 lb tiltrotor example and 19 additional vectors.
 
+Side slope and grade conversion is stable across percent, per mille, degrees, decimal grades, and explicitly labeled H:V or V:H ratios. It reconstructs rise, run, or slope length, refuses ambiguous bare ratios, and reproduces FHWA's 20 m over 400 m roadway example across 23 vectors.
+
 The aviation catalog covers all 83 planned operations through 90 tool ids: 83 operation tools and 7 narrower airspeed endpoints. Altimeter inputs accept inHg, hPa, `A` groups, and `Q` groups directly rather than multiplying identical pages by unit.
 
 ## Status

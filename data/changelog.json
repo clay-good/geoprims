@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "survey.earthwork.grade"
+      ],
+      "vectors": [],
+      "summary": "Side slope and grade (version 1.0.0) is now stable. It reproduces FHWA's published 20 m over 400 m roadway example, and 23 vectors plus representation and 3-4-5 triangle invariants cover every notation, both ratio conventions, descending grades, length reconstruction, and refusal cases. Nonpositive distances are now refused; valid-input calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "drone.power.hover-power"
       ],
       "vectors": [],

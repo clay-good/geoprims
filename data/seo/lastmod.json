@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f9f8d1971d687ee6",
+    "hash": "df841b536dbffe7e",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "0697671588e2e424",
+    "hash": "d4b6bb7c7d240b42",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "c2d7e4fa5486f09b",
+    "hash": "18abbd1ec514e85a",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "0d574bb5a042ae49",
+    "hash": "5f7bc67d2e9ed660",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "e04ddb196479fe3d",
+    "hash": "bef1f0a3aef9d035",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1532,8 +1532,8 @@
     "lastmod": "2026-10-09"
   },
   "/survey/earthwork/grade/": {
-    "hash": "78e5f817b911b83e",
-    "lastmod": "2026-10-09"
+    "hash": "5a17a9282cbbebd9",
+    "lastmod": "2026-10-13"
   },
   "/survey/earthwork/prismoidal/": {
     "hash": "65b5daa98365640d",
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "9753edf7f5c3b0ca",
+    "hash": "85fb6b67b6a6fe54",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ab20e5563c63be5d",
+    "hash": "46d6105b0ed0b492",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

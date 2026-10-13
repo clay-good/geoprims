@@ -5,6 +5,15 @@
       "date": "2026-10-12",
       "kind": "changed",
       "tools": [
+        "drone.mission.survey-grid"
+      ],
+      "vectors": [],
+      "summary": "The survey-grid tool now plays the mission at the entered groundspeed. The core returns the playhead, flown path, aircraft position, and the photo triggers and footprints captured so far; the map keeps the remaining plan visible and fills coverage as the aircraft advances. Scrubbed permalinks reopen paused. Planning answers are unchanged."
+    },
+    {
+      "date": "2026-10-12",
+      "kind": "changed",
+      "tools": [
         "navigation.route.legs"
       ],
       "vectors": [],

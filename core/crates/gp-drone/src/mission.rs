@@ -433,6 +433,63 @@ pub fn path_length(pts: &[(P, &str)]) -> f64 {
         .sum()
 }
 
+/// Distance along a flight path for samples already ordered along it.
+fn distances_along_path(pts: &[(P, &str)], samples: &[P]) -> Vec<f64> {
+    let (mut segment, mut before) = (0usize, 0.0);
+    samples
+        .iter()
+        .map(|&(x, y)| {
+            loop {
+                let (a, b) = (pts[segment].0, pts[segment + 1].0);
+                let (dx, dy) = (b.0 - a.0, b.1 - a.1);
+                let length2 = dx * dx + dy * dy;
+                let length = hypot(dx, dy);
+                if length == 0.0 {
+                    segment += 1;
+                    assert!(segment + 1 < pts.len(), "photo is not on its flight path");
+                    continue;
+                }
+                let t = ((x - a.0) * dx + (y - a.1) * dy) / length2;
+                let u = t.clamp(0.0, 1.0);
+                let off = hypot(x - (a.0 + u * dx), y - (a.1 + u * dy));
+                if (-1e-9..=1.0 + 1e-9).contains(&t) && off <= 1e-6 {
+                    break before + u * length;
+                }
+                before += length;
+                segment += 1;
+                assert!(segment + 1 < pts.len(), "photo is not on its flight path");
+            }
+        })
+        .collect()
+}
+
+/// The path prefix and point at a distance from its start, all on the local plane.
+fn path_at(pts: &[(P, &'static str)], distance: f64) -> Vec<(P, &'static str)> {
+    let mut out = vec![pts[0]];
+    let mut remaining = distance;
+    for window in pts.windows(2) {
+        let (a, b) = (window[0].0, window[1].0);
+        let length = hypot(b.0 - a.0, b.1 - a.1);
+        if length == 0.0 {
+            continue;
+        }
+        if remaining >= length || length - remaining <= length.max(1.0) * 1e-9 {
+            out.push(window[1]);
+            remaining = (remaining - length).max(0.0);
+            if remaining <= length.max(1.0) * 1e-9 {
+                break;
+            }
+            continue;
+        }
+        if remaining > 0.0 {
+            let t = remaining / length;
+            out.push(((a.0 + t * (b.0 - a.0), a.1 + t * (b.1 - a.1)), "aircraft"));
+        }
+        break;
+    }
+    out
+}
+
 // ---------------------------------------------------------------- inputs
 
 pub(crate) const VERTEX: &[Field] = &[
@@ -839,6 +896,13 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
         )
         .core(),
         qty(
+            "at_time",
+            "Scene time",
+            "Time after launch, like 2 min; drives the mission animation",
+            QT::Time,
+            "s",
+        ),
+        qty(
             "height",
             "Height above ground",
             "Like 120 m AGL (constant)",
@@ -975,6 +1039,76 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
                 max: 100_000,
             },
         ),
+        qty(
+            "scene_end",
+            "Mission time",
+            "Time to fly the path at the entered groundspeed",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        qty(
+            "scene_time",
+            "Scene time",
+            "Time after launch shown on the map",
+            QT::Time,
+            "s",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        Field::new(
+            "photos_at",
+            "Photos captured",
+            "Photos reached by the playhead",
+            Kind::Number { min: 0.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0))
+        .optional(),
+        Field::new(
+            "flown_path",
+            "Path flown",
+            "The mission path through the playhead position",
+            Kind::List {
+                items: GRID_WAYPOINT,
+                min: 1,
+                max: 100_000,
+            },
+        )
+        .optional(),
+        Field::new(
+            "position_at",
+            "Position at scene time",
+            "The core-computed aircraft position at the playhead",
+            Kind::List {
+                items: GRID_WAYPOINT,
+                min: 1,
+                max: 1,
+            },
+        )
+        .optional(),
+        Field::new(
+            "photo_points_at",
+            "Photos captured",
+            "Trigger points reached by the playhead",
+            Kind::List {
+                items: PHOTO_ROW,
+                min: 0,
+                max: 2_000,
+            },
+        )
+        .optional(),
+        Field::new(
+            "footprints_at",
+            "Footprints captured",
+            "Photo footprints reached by the playhead",
+            Kind::List {
+                items: FOOTPRINT_ROW,
+                min: 0,
+                max: 8_000,
+            },
+        )
+        .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::LimitExceeded],
     warnings: &["OUTPUT_TRUNCATED", "COVERAGE_GAP", "UNIT_ASSUMED"],
@@ -993,17 +1127,26 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
     visualization: &[
         Layer {
             kind: "point",
-            map: &[("points", "photo_points")],
+            map: &[("points", "photo_points_at")],
         },
         Layer {
             kind: "line-geodesic",
-            map: &[("path", "waypoints")],
+            map: &[
+                ("path", "waypoints"),
+                ("flown", "flown_path"),
+                ("position", "position_at"),
+            ],
         },
         Layer {
             kind: "polygon",
-            map: &[("coverage", "footprints")],
+            map: &[("coverage", "footprints_at")],
         },
     ],
+    timeline: Some(gp_base::tool::Timeline {
+        input: "at_time",
+        end: "scene_end",
+        key: "scene_end",
+    }),
     related: &[
         Related {
             id: "drone.photogrammetry.trigger",
@@ -1114,6 +1257,43 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let photos = shots.len();
     let length = path_length(&pts);
     let turns = pts.len().saturating_sub(2);
+    let groundspeed = ctx.quantity("groundspeed")?.map(|q| q.base());
+    if groundspeed.is_some_and(|speed| speed <= 0.0) {
+        return Err(ToolError::invalid(
+            "/groundspeed",
+            "Groundspeed must be positive.",
+        ));
+    }
+    if groundspeed.is_none() && ctx.quantity("at_time")?.is_some() {
+        return Err(ToolError::invalid(
+            "/at_time",
+            "Give a groundspeed to place the mission at a scene time.",
+        ));
+    }
+    let scene_end = groundspeed.map(|speed| length / speed);
+    let scene_time = match scene_end {
+        Some(end) => {
+            let time = ctx.quantity("at_time")?.map_or(end, |q| q.base());
+            if !(0.0..=end).contains(&time) {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    format!("The scene time must be between 0 and {end} s."),
+                )
+                .at("/at_time"));
+            }
+            Some(time)
+        }
+        None => None,
+    };
+    let flown_distance = groundspeed
+        .zip(scene_time)
+        .map_or(length, |(speed, time)| speed * time);
+    let flown = path_at(&pts, flown_distance);
+    let shot_distances = distances_along_path(&pts, &shots);
+    let captured = shot_distances
+        .iter()
+        .take_while(|&&distance| distance <= flown_distance + 1e-6)
+        .count();
     let mut o = vec![
         ("lines", Json::Num(lines as f64)),
         ("photos", Json::Num(photos as f64)),
@@ -1121,14 +1301,7 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("survey_length", ctx.out("survey_length", m(survey))),
         ("turns", Json::Num(turns as f64)),
     ];
-    if let Some(gs) = ctx.quantity("groundspeed")? {
-        let gs = gs.base();
-        if gs <= 0.0 {
-            return Err(ToolError::invalid(
-                "/groundspeed",
-                "Groundspeed must be positive.",
-            ));
-        }
+    if let Some(gs) = groundspeed {
         o.push((
             "flight_time",
             ctx.out(
@@ -1161,6 +1334,24 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     o.push(("waypoints", waypoints(&plane, &pts, height)));
+    o.push(("flown_path", waypoints(&plane, &flown, height)));
+    o.push((
+        "position_at",
+        waypoints(
+            &plane,
+            &[*flown.last().expect("mission starts with one point")],
+            height,
+        ),
+    ));
+    if let (Some(end), Some(time)) = (scene_end, scene_time) {
+        let seconds = |value| Q {
+            value,
+            unit: units::by_symbol(QT::Time, "s").expect("s"),
+        };
+        o.push(("scene_end", ctx.out("scene_end", seconds(end))));
+        o.push(("scene_time", ctx.out("scene_time", seconds(time))));
+    }
+    o.push(("photos_at", Json::Num(captured as f64)));
     let (triggers, dropped) = trigger_points(&plane, &shots, 2_000);
     if dropped > 0 {
         ctx.warnings.push(Warning::new(
@@ -1171,6 +1362,10 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     o.push(("photo_points", triggers));
+    o.push((
+        "photo_points_at",
+        trigger_points(&plane, &shots[..captured], 2_000).0,
+    ));
     let across = ctx.quantity("footprint_across")?.map(|q| q.base());
     let along = ctx.quantity("footprint_along")?.map(|q| q.base());
     match (across, along) {
@@ -1232,6 +1427,8 @@ fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     }
                 }
             }
+            let shown = captured.min(2_000) * 4;
+            o.push(("footprints_at", Json::Arr(rows[..shown].to_vec())));
             o.push(("footprints", Json::Arr(rows)));
         }
         _ => {

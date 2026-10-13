@@ -475,6 +475,89 @@ fn trigger_points_sit_on_the_lines_at_the_photo_spacing() {
 }
 
 #[test]
+fn survey_grid_scene_comes_from_the_core_path_and_triggers() {
+    let rect = area(&[(0.0, 0.0), (600.0, 0.0), (600.0, 150.0), (0.0, 150.0)], 0);
+    let input = |at: Option<f64>| {
+        let mut value = json!({
+            "area": rect,
+            "line_spacing": "52.5 m",
+            "photo_spacing": "30 m",
+            "groundspeed": "10 m/s",
+            "footprint_across": "75 m",
+            "footprint_along": "50 m"
+        });
+        if let Some(time) = at {
+            value["at_time"] = json!(format!("{time} s"));
+        }
+        value
+    };
+    let end = call("drone.mission.survey-grid", &input(None));
+    let duration = num(&end, "result.scene_end.value");
+    assert_eq!(num(&end, "result.scene_time.value"), duration);
+    assert_eq!(num(&end, "result.photos_at"), num(&end, "result.photos"));
+    assert_eq!(end["result"]["flown_path"], end["result"]["waypoints"]);
+    assert_eq!(
+        end["result"]["photo_points_at"],
+        end["result"]["photo_points"]
+    );
+    assert_eq!(end["result"]["footprints_at"], end["result"]["footprints"]);
+
+    let start = call("drone.mission.survey-grid", &input(Some(0.0)));
+    assert_eq!(num(&start, "result.scene_time.value"), 0.0);
+    assert_eq!(start["result"]["flown_path"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        start["result"]["position_at"],
+        start["result"]["flown_path"]
+    );
+    assert_eq!(num(&start, "result.photos_at"), 1.0);
+    assert_eq!(
+        start["result"]["photo_points_at"].as_array().unwrap().len(),
+        1
+    );
+    assert_eq!(
+        start["result"]["footprints_at"].as_array().unwrap().len(),
+        4
+    );
+
+    let middle = call("drone.mission.survey-grid", &input(Some(duration / 2.0)));
+    let captured = num(&middle, "result.photos_at") as usize;
+    let total = num(&middle, "result.photos") as usize;
+    assert!((1..total).contains(&captured), "{middle}");
+    assert_eq!(
+        middle["result"]["photo_points_at"]
+            .as_array()
+            .unwrap()
+            .len(),
+        captured
+    );
+    assert_eq!(
+        middle["result"]["footprints_at"].as_array().unwrap().len(),
+        captured * 4
+    );
+    assert_eq!(
+        middle["result"]["position_at"][0],
+        *middle["result"]["flown_path"]
+            .as_array()
+            .unwrap()
+            .last()
+            .unwrap()
+    );
+
+    let no_speed = call(
+        "drone.mission.survey-grid",
+        &json!({"area": rect, "line_spacing": "52.5 m", "photo_spacing": "30 m", "at_time": "1 s"}),
+    );
+    assert_eq!(no_speed["error"]["code"], "INVALID_INPUT");
+    assert_eq!(no_speed["error"]["field"], "/at_time");
+
+    let timeline = gp_drone::mission::SURVEY_GRID.timeline.expect("timeline");
+    assert_eq!(
+        (timeline.input, timeline.end, timeline.key),
+        ("at_time", "scene_end", "scene_end")
+    );
+}
+
+#[test]
 fn image_count_invariants() {
     // Plane rectangles (m) around (40, -105), lines along x (direction 90°).
     let rect = |w: f64, l: f64| area(&[(0.0, 0.0), (l, 0.0), (l, w), (0.0, w)], 0);

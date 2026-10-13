@@ -10,6 +10,7 @@ The area is projected onto a local transverse Mercator plane centered on it. Par
 - Lines = ⌈W / S⌉ + 1, centered on the area's width W across the flight direction
 - Photos per line = ⌈L / B⌉ + 1 + 2e, with L the line's length, B the photo spacing, and e the extra photos per end
 - Path length = the sum of the line and transit lengths; flight time = path length ÷ groundspeed
+- With a groundspeed, the scene duration is path length ÷ groundspeed. At playhead time t, the core walks groundspeed × t along the local-plane path, returns that path prefix and aircraft position, and includes only trigger points and photo footprints whose along-path distances have been reached.
 - Forward overlap = 100 (1 − B / F_along); side overlap = 100 (1 − S / F_across), negative where the photos leave gaps (COVERAGE_GAP)
 
 ## Symbols and units
@@ -47,3 +48,4 @@ The King Saud University SE 321 example (60 by 40 km, 920 m lines, 460 m air bas
 ## Invariants
 
 - `core/crates/gp-drone/tests/mission.rs` `image_count_invariants`: on plane rectangles the lines are ⌈W / S⌉ + 1 and the photos match the published count, the grid and the image count agree, closer spacing never means fewer lines or photos, and overshoot changes the path but not the photos; `line_spacing_is_true_geodesically`, `auto_direction_minimizes_lines`, `polygon_with_a_hole`, and `image_count_matches_the_pattern` (20 random polygons) cover the rest; `photo_footprints_have_the_camera_size_and_follow_the_lines` measures every footprint's sides geodesically against the footprint given and checks its azimuth, both ways in a crosshatch, and `a_footprint_smaller_than_the_spacing_leaves_gaps` the gap warning
+- `core/crates/gp-drone/tests/mission.rs` `survey_grid_scene_comes_from_the_core_path_and_triggers`: the scene opens complete; launch, midpoint, and end return the matching path prefix, aircraft, trigger count, and footprint count; a playhead without groundspeed is refused; and the timeline names the fields consumed by the web app

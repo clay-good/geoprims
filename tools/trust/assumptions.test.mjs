@@ -89,6 +89,7 @@ const MUST_DECLARE = [
   'survey.reduction.slope',
   'survey.reduction.curvature-refraction',
   'survey.reduction.inaccessible-height',
+  'survey.reduction.stadia',
   'aviation.ifr.hold-entry',
   'aviation.ifr.hold-speed-limit',
   'aviation.ifr.hold-wind-timing',
@@ -197,6 +198,14 @@ test('the hover-power tool exposes its published coaxial interference default', 
   assert.ok(assumptions.some((a) =>
     a.value === '1.2818' && a.unit === '1' && a.source === 'leishman-syal-2008'
   ));
+});
+
+test('the stadia tool exposes both conventional instrument defaults', () => {
+  const assumptions = byId('survey.reduction.stadia')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['100', '1', 'ghilani'],
+    ['0', 'm', 'ghilani'],
+  ]);
 });
 
 test('the photogrammetry defaults name their published values', () => {

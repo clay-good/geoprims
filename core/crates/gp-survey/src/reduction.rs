@@ -27,6 +27,15 @@ const GHILANI: Reference = Reference {
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 
+const GHILANI_STADIA: Reference = Reference {
+    title: "Elementary Surveying: An Introduction to Geomatics",
+    issuer: "Ghilani, C. D., and Wolf, P. R., Pearson",
+    year: 2021,
+    edition: "16th edition",
+    locator: "Chapter 6 (stadia equations, multiplying constant K, and additive constant C)",
+    url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
+};
+
 const fn angle(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
@@ -545,7 +554,7 @@ pub static STADIA: ToolDef = ToolDef {
         len(
             "additive_constant",
             "Additive constant C",
-            "0 for internal-focusing instruments",
+            "Default 0, as for an instrument with an anallactic lens; otherwise use the instrument's calibrated value",
         ),
     ],
     outputs: &[
@@ -572,7 +581,7 @@ pub static STADIA: ToolDef = ToolDef {
     accuracy: "Stadia distances are good to about 1 part in 300 to 1 in 1,000, set by reading the rod interval; the arithmetic is exact",
     when_to_use: "Use this when you need to reduce stadia readings from a transit, a level, or an older field book. Enter the rod interval between the upper and lower hairs, the zenith or vertical angle, the instrument height, and the middle hair reading. It returns the horizontal distance, vertical difference, and elevation difference, with the stadia multiplier set to 100 and the additive constant to zero unless you change them.",
     limitations: "Stadia is a rough method. Distances are good to about one part in 300 to one in 1,000, set mostly by how well the rod interval is read. That suits topo detail and quick checks, not boundary or control work. The rod must be held plumb, and the constants must match your instrument.",
-    references: &[GHILANI],
+    references: &[GHILANI_STADIA],
     examples: &[Example {
         id: "primary",
         title: "A 1.234 m interval at a zenith of 88°30'",
@@ -592,6 +601,20 @@ pub static STADIA: ToolDef = ToolDef {
         Related {
             id: "survey.reduction.inaccessible-height",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "Default stadia multiplying constant K",
+            value: "100",
+            unit: "1",
+            source: "ghilani",
+        },
+        Assumption {
+            name: "Default additive constant C for an anallactic telescope",
+            value: "0",
+            unit: "m",
+            source: "ghilani",
         },
     ],
     sentence: "The horizontal distance is {horizontal_distance} and the vertical difference {vertical_difference}.",

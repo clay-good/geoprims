@@ -3,6 +3,28 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "result-change",
+      "tools": [
+        "survey.gnss.localization"
+      ],
+      "vectors": [
+        "survey.gnss.localization v002",
+        "survey.gnss.localization v004",
+        "survey.gnss.localization v005"
+      ],
+      "summary": "Promoting site localization to stable removed the EXPERIMENTAL_TOOL warning, so NO_REDUNDANCY and SCALE_SUSPECT moved from warning index 1 to index 0. Calculation results are unchanged. v002, v004, and v005 are superseded by v025, v026, and v027, which match each warning by code instead of list position."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "fixed",
+      "tools": [
+        "survey.gnss.localization"
+      ],
+      "vectors": [],
+      "summary": "Site localization (version 1.1.0) is now stable. It recovers IOGP Guidance Note 7-2 method 9621's published scale and rotation, and 24 live vectors plus three invariant tests cover similarity, genuine affine fits, residuals, mixed units, invalid geometry, and the documented rotation sign. Compact control networks are no longer incorrectly rejected merely because their coordinate origin is large; previously accepted calculation results are unchanged within tolerance."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "changed",
       "tools": [
         "survey.curves.unequal-vertical-curve"

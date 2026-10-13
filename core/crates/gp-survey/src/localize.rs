@@ -9,11 +9,20 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 use libm::{atan2, hypot, sqrt};
 
 use crate::{GHILANI, len, unit};
+
+const IOGP_GUIDANCE_NOTE: Reference = Reference {
+    title: "IOGP Publication 373-7-2: Coordinate Conversions and Transformations",
+    issuer: "International Association of Oil & Gas Producers",
+    year: 2019,
+    edition: "Revised September 2019",
+    locator: "Section 2.4.3.2, Similarity transformation (method code 9621), including the worked example",
+    url: "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+};
 
 const PAIR: &[Field] = &[
     Field::new(
@@ -82,6 +91,8 @@ const fn number(name: &'static str, title: &'static str, help: &'static str, d: 
 
 pub static LOCALIZATION: ToolDef = ToolDef {
     id: "survey.gnss.localization",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Site localization (calibration)",
     summary: "Fits local site coordinates to grid coordinates through control points seen in both, by a similarity (scale, rotation, shift) or affine transform, with residuals, their root mean square, and a check for a feet-and-meters mix-up.",
     aliases: &[
@@ -220,23 +231,26 @@ pub static LOCALIZATION: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::DegenerateGeometry],
-    warnings: &[
-        "NO_REDUNDANCY",
-        "SCALE_SUSPECT",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["NO_REDUNDANCY", "SCALE_SUSPECT", "UNIT_ASSUMED"],
     model: "Least squares on centroid-reduced coordinates. Similarity: E = a·e + b·n + tE, N = c·e + d·n + tN with d = a and b = −c, scale √(a² + c²), rotation atan2(c, a). Affine: E = a·e + b·n + tE, N = c·e + d·n + tN, scale √|ad − bc|. Local and grid values are compared in meters",
     accuracy: "Exact least squares; the transform is only as good as the control points and holds within their extent",
     when_to_use: "Use this when a job runs on local site coordinates and you need to tie it to State Plane or another grid using control points you have in both. Enter each point's local and grid northing and easting, pick a similarity or affine fit, and add the combined factor you expect. It returns scale, rotation, shifts, residuals, and their RMS, and it flags a scale that looks like a feet and meters mix-up.",
     limitations: "The fit is horizontal only. It does not tie heights, a geoid, or a vertical shift. It holds inside the area the control covers and gets weaker outside it. The fewest points a fit needs give no check, so add more to see residuals that mean something. A large residual points to a bad control point, not to a fit that should be forced.",
-    references: &[GHILANI],
-    examples: &[Example {
-        id: "primary",
-        title: "Four control points, similarity",
-        input: r#"{"pairs":[{"name":"CP1","local_n":"5000 ft","local_e":"5000 ft","grid_n":"1520129.021 ft","grid_e":"3139867.253 ft"},{"name":"CP2","local_n":"6000 ft","local_e":"5200 ft","grid_n":"1521133.878 ft","grid_e":"3140041.010 ft"},{"name":"CP3","local_n":"5400 ft","local_e":"6100 ft","grid_n":"1520557.663 ft","grid_e":"3140956.371 ft"},{"name":"CP4","local_n":"4700 ft","local_e":"5800 ft","grid_n":"1519850.067 ft","grid_e":"3140674.813 ft"}],"expected_scale":0.99997}"#,
-        source: "Built at scale 0.99997 and 1.5° rotation with a few millimeters of noise; least squares after Ghilani and Wolf (2021)",
-    }],
+    references: &[GHILANI, IOGP_GUIDANCE_NOTE],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "Four control points, similarity",
+            input: r#"{"pairs":[{"name":"CP1","local_n":"5000 ft","local_e":"5000 ft","grid_n":"1520129.021 ft","grid_e":"3139867.253 ft"},{"name":"CP2","local_n":"6000 ft","local_e":"5200 ft","grid_n":"1521133.878 ft","grid_e":"3140041.010 ft"},{"name":"CP3","local_n":"5400 ft","local_e":"6100 ft","grid_n":"1520557.663 ft","grid_e":"3140956.371 ft"},{"name":"CP4","local_n":"4700 ft","local_e":"5800 ft","grid_n":"1519850.067 ft","grid_e":"3140674.813 ft"}],"expected_scale":0.99997}"#,
+            source: "Built at scale 0.99997 and 1.5° rotation with a few millimeters of noise; least squares after Ghilani and Wolf (2021)",
+        },
+        Example {
+            id: "iogp-method-9621",
+            title: "IOGP method 9621 parameters",
+            input: r#"{"pairs":[{"name":"P1","local_n":"4500000 m","local_e":"300000 m","grid_n":"4499796.513609 m","grid_e":"299905.059920 m"},{"name":"P2","local_n":"4500000 m","local_e":"301000 m","grid_n":"4499796.506021 m","grid_e":"300905.061470 m"},{"name":"P3","local_n":"4501000 m","local_e":"300000 m","grid_n":"4500796.515158 m","grid_e":"299905.067508 m"},{"name":"P4","local_n":"4501000 m","local_e":"301000 m","grid_n":"4500796.507571 m","grid_e":"300905.069058 m"}],"expected_scale":1.00000155}"#,
+            source: "IOGP Guidance Note 7-2 (2019), section 2.4.3.2, method 9621; controls generated from its published transform parameters",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
@@ -250,6 +264,10 @@ pub static LOCALIZATION: ToolDef = ToolDef {
         Related {
             id: "survey.gnss.rtk-budget",
             reason: "alternative",
+        },
+        Related {
+            id: "survey.cogo.least-squares-2d",
+            reason: "next",
         },
     ],
     sentence: "The fit has a scale of {scale}, and its residuals average {rms} (root mean square).",
@@ -295,14 +313,24 @@ fn run_localization(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let nf = n as f64;
-    let mean = pts.iter().fold((0.0, 0.0, 0.0, 0.0), |m, p| {
+    // Subtract one observed point before averaging. This keeps a compact
+    // control network numerically compact even when its coordinate origin is
+    // large (for example, State Plane false coordinates).
+    let origin = pts[0];
+    let delta_mean = pts.iter().fold((0.0, 0.0, 0.0, 0.0), |m, p| {
         (
-            m.0 + p.0 / nf,
-            m.1 + p.1 / nf,
-            m.2 + p.2 / nf,
-            m.3 + p.3 / nf,
+            m.0 + (p.0 - origin.0) / nf,
+            m.1 + (p.1 - origin.1) / nf,
+            m.2 + (p.2 - origin.2) / nf,
+            m.3 + (p.3 - origin.3) / nf,
         )
     });
+    let mean = (
+        origin.0 + delta_mean.0,
+        origin.1 + delta_mean.1,
+        origin.2 + delta_mean.2,
+        origin.3 + delta_mean.3,
+    );
     let c: Vec<(f64, f64, f64, f64)> = pts
         .iter()
         .map(|p| (p.0 - mean.0, p.1 - mean.1, p.2 - mean.2, p.3 - mean.3))
@@ -311,7 +339,12 @@ fn run_localization(ctx: &mut Ctx) -> Result<Json, ToolError> {
         (s.0 + p.0 * p.0, s.1 + p.1 * p.1, s.2 + p.0 * p.1)
     });
     let spread = sxx + syy;
-    if spread <= 1e-12 * (1.0 + mean.0.abs() + mean.1.abs()).powi(2) {
+    let local_magnitude = pts
+        .iter()
+        .map(|p| p.0.abs().max(p.1.abs()))
+        .fold(0.0, f64::max);
+    let coordinate_resolution = 64.0 * f64::EPSILON * (1.0 + local_magnitude);
+    if spread <= nf * coordinate_resolution * coordinate_resolution {
         return Err(ToolError::new(
             ErrorCode::DegenerateGeometry,
             "The local points coincide, so they fix no scale or rotation.",

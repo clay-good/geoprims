@@ -33,6 +33,8 @@ The US 1976 atmosphere is verified through its 86 km ceiling: every kilometer th
 
 GPS satellite visibility and DOP planning is stable for pasted YUMA or SEM almanacs. Its almanac propagation and geometry are covered by 27 golden vectors, including Orekit 13.1.9's published comparison with Trimble Planning.
 
+GNSS site localization is stable for 4-parameter similarity and 6-parameter affine fits. It recovers IOGP Guidance Note 7-2's published method 9621 scale and rotation, and 24 live vectors plus coefficient and translation invariants cover residuals, mixed units, suspect scale, degenerate control, and compact networks at large coordinate origins.
+
 Mission sortie planning is stable for ordered waypoint paths. It counts every trip from home and back before choosing battery-swap waypoints, and 22 vectors cover flight-time and battery-energy inputs, reserves, wind, distinct survey and transit speeds, and an unreachable-path refusal.
 
 Multirotor hover power is stable for separate or coaxial rotors, explicit aerodynamic and electrical losses, and site air density. Its momentum-theory result is checked against the 2026 Embry-Riddle aerospace textbook's 45,000 lb tiltrotor example and 19 additional vectors.

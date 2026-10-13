@@ -651,6 +651,102 @@ fn calibration_subtracts_non_lift_power_before_back_solving() {
 }
 
 #[test]
+fn payload_impact_matches_the_published_payload_hover_fit() {
+    let result = call(
+        "drone.power.payload-impact",
+        r#"{"mass":"0.2 kg","rotors":4,"rotor_diameter":"0.054872655656933694 m","payload_mass":"0.05 kg","usable_energy":"20 Wh","avionics_power":"10.6 W"}"#,
+    );
+    let fitted_power = |mass: f64| 10.6 + 12.88 * (mass * 9.80665).powf(1.5);
+    let p0 = fitted_power(0.2);
+    let p1 = fitted_power(0.25);
+    near(&result, "result.power_with.value", p1, 1e-12);
+    near(&result, "result.power_increase.value", p1 - p0, 1e-12);
+    near(
+        &result,
+        "result.hover_time_without.value",
+        20.0 * 60.0 / p0,
+        1e-12,
+    );
+    near(
+        &result,
+        "result.hover_time_with.value",
+        20.0 * 60.0 / p1,
+        1e-12,
+    );
+}
+
+#[test]
+fn payload_lift_power_follows_mass_to_the_three_halves_power() {
+    for (mass, payload) in [(0.8_f64, 0.2), (1.4, 0.3), (6.5, 1.5)] {
+        let result = call(
+            "drone.power.payload-impact",
+            &format!(
+                r#"{{"mass":"{mass} kg","rotors":4,"rotor_diameter":"12 in","payload_mass":"{payload} kg","usable_energy":"100 Wh"}}"#
+            ),
+        );
+        let with = num(&result, "result.power_with.value");
+        let without = with - num(&result, "result.power_increase.value");
+        assert!((with / without - ((mass + payload) / mass).powf(1.5)).abs() < 1e-12);
+    }
+}
+
+#[test]
+fn payload_electrical_draw_is_added_separately() {
+    let no_draw = call(
+        "drone.power.payload-impact",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0.3 kg","usable_energy":"72 Wh"}"#,
+    );
+    let draw = call(
+        "drone.power.payload-impact",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0.3 kg","usable_energy":"72 Wh","payload_power":"25 W"}"#,
+    );
+    near(
+        &draw,
+        "result.power_with.value",
+        num(&no_draw, "result.power_with.value") + 25.0,
+        1e-12,
+    );
+    near(
+        &draw,
+        "result.power_increase.value",
+        num(&no_draw, "result.power_increase.value") + 25.0,
+        1e-12,
+    );
+    near(
+        &draw,
+        "result.hover_time_without.value",
+        num(&no_draw, "result.hover_time_without.value"),
+        1e-12,
+    );
+}
+
+#[test]
+fn payload_time_scales_with_energy_and_zero_payload_has_zero_cost() {
+    let base = call(
+        "drone.power.payload-impact",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0.3 kg","usable_energy":"72 Wh"}"#,
+    );
+    let doubled = call(
+        "drone.power.payload-impact",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0.3 kg","usable_energy":"144 Wh"}"#,
+    );
+    for path in [
+        "result.hover_time_with.value",
+        "result.hover_time_without.value",
+        "result.time_lost.value",
+    ] {
+        near(&doubled, path, 2.0 * num(&base, path), 1e-12);
+    }
+    let zero = call(
+        "drone.power.payload-impact",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0 kg","usable_energy":"72 Wh"}"#,
+    );
+    near(&zero, "result.time_lost.value", 0.0, 0.0);
+    near(&zero, "result.power_increase.value", 0.0, 0.0);
+    near(&zero, "result.power_increase_percent", 0.0, 0.0);
+}
+
+#[test]
 fn endurance_invariants() {
     // Time is energy over power: linear in energy, inverse in power, and the
     // usable share, derating, and reserve each scale it by their own factor.

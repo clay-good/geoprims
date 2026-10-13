@@ -54,6 +54,14 @@ pub const BAUERSFELD: Reference = Reference {
     locator: "Sec. VII-E, step 6 (endurance = effective capacity × nominal voltage / electrical power)",
     url: "https://arxiv.org/abs/2109.04741",
 };
+pub const VAN_MULDERS: Reference = Reference {
+    title: "UAV-Based Servicing of IoT Nodes: Assessment of Ecological Impact",
+    issuer: "Van Mulders et al., Sensors",
+    year: 2023,
+    edition: "Volume 23, issue 4, article 2291",
+    locator: "Section 2.4.1, equation 6 and figure 4a: measured payload-hover fit P = 10.6 W + 12.88(mg)^1.5",
+    url: "https://doi.org/10.3390/s23042291",
+};
 const GEOPRIMS_ENDURANCE_SPEC: Reference = Reference {
     title: "GeoPrims endurance and power specification",
     issuer: "GeoPrims",
@@ -1702,6 +1710,8 @@ fn run_calibrate(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static PAYLOAD_IMPACT: ToolDef = ToolDef {
     id: "drone.power.payload-impact",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "What a payload costs in flight time",
     summary: "The extra hover power and the flight time lost when a multirotor carries a payload, from its mass and any electrical draw, by momentum theory.",
     aliases: &[
@@ -1810,19 +1820,27 @@ pub static PAYLOAD_IMPACT: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(1)),
     ],
-    errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED"],
     model: "Lift power = (m·g0)^1.5 / √(2ρA) / (FM·η), so it grows with mass to the power 1.5; hover power = lift power + avionics (+ payload draw when carried); time = usable energy / power",
     accuracy: "Momentum-theory estimate. It ignores the motors' thrust limit and any drag the payload adds in forward flight, so check the maximum takeoff mass in the manual.",
     when_to_use: "Use this before you mount a new gimbal, sensor, or light on a multirotor to see what it costs in hover time. Give the drone's mass, rotors, and rotor size, the payload's mass and any power it draws from the flight battery, and the usable energy, and it gives the hover time with and without the payload, the minutes lost, and the extra power in watts and as a percent.",
     limitations: "Lift power grows with mass to the power 1.5 by momentum theory, at a figure of merit and motor efficiency you can set. It covers hover only, not the drag a bulky payload adds in forward flight. It cannot tell when the motors run out of thrust or when the load passes the maker's maximum takeoff mass, so check the manual before you fly with it.",
-    references: &[LEISHMAN],
-    examples: &[Example {
-        id: "primary",
-        title: "The 1.4 kg quad with a 0.3 kg, 8 W payload on 72 Wh",
-        input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0.3 kg","usable_energy":"72 Wh","payload_power":"8 W"}"#,
-        source: "Momentum theory (Leishman 2006, chapter 2) at both masses",
-    }],
+    references: &[LEISHMAN, VAN_MULDERS, ICAO_ATM],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "The 1.4 kg quad with a 0.3 kg, 8 W payload on 72 Wh",
+            input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","payload_mass":"0.3 kg","usable_energy":"72 Wh","payload_power":"8 W"}"#,
+            source: "Momentum theory (Leishman 2006, chapter 2) at both masses",
+        },
+        Example {
+            id: "published-payload-fit",
+            title: "A 50 g payload on the published 200 g test-aircraft model",
+            input: r#"{"mass":"0.2 kg","rotors":4,"rotor_diameter":"0.054872655656933694 m","payload_mass":"0.05 kg","usable_energy":"20 Wh","avionics_power":"10.6 W"}"#,
+            source: "Van Mulders et al. (2023), equation 6 and figure 4a: payload-hover fit P = 10.6 W + 12.88(mg)^1.5",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
@@ -1836,6 +1854,10 @@ pub static PAYLOAD_IMPACT: ToolDef = ToolDef {
         Related {
             id: "drone.power.endurance",
             reason: "next",
+        },
+        Related {
+            id: "drone.power.hover-power",
+            reason: "parent",
         },
     ],
     sentence: "With the payload it hovers for about {hover_time_with}, {time_lost} less than without it.",

@@ -41,6 +41,8 @@ Multirotor hover power is stable for separate or coaxial rotors, explicit aerody
 
 Test-flight hover calibration is stable for measured energy and time, avionics draw, assumed electrical efficiency, and site air density. It back-solves the hover model's figure of merit, reverses Embry-Riddle's published tiltrotor example, and has 25 vectors plus four round-trip and unit invariants.
 
+Payload impact is stable for payload mass, payload electrical draw, usable energy, aircraft losses, and site air density. Its mass-to-power relationship reproduces a published fit to measured payload-hover tests, and 25 vectors plus four invariants cover power, endurance, units, boundaries, and invalid loads.
+
 Thermal pixel footprint is stable for direct IFOV or pixel-pitch and focal-length inputs, with an inverse range for a target size. It reproduces FLIR's published E8 example at 10 ft, and 26 vectors plus four invariants cover units, pixel rules, inverse geometry, domain boundaries, and invalid camera inputs.
 
 Side slope and grade conversion is stable across percent, per mille, degrees, decimal grades, and explicitly labeled H:V or V:H ratios. It reconstructs rise, run, or slope length, refuses ambiguous bare ratios, and reproduces FHWA's 20 m over 400 m roadway example across 23 vectors.

@@ -403,6 +403,74 @@ def payload_impact_vectors():
             inp["altitude"] = f"{alt_ft} ft"
         out.append(fvec(i, inp, {"result.hover_time_with.value": t1, "result.hover_time_without.value": t0,
                                   "result.power_increase.value": p1 - p0}, PW_SRC, PW_VER))
+
+    # Van Mulders et al. fit measured payload-hover data to
+    # P = 10.6 W + 12.88(mg)^1.5. Choose the equivalent disk area at the
+    # default FM × efficiency so the tool expresses the same fitted model.
+    coefficient = 12.88
+    fm, eta = 0.6, 0.85
+    area = 1 / (2 * rho0 * (coefficient * fm * eta) ** 2)
+    diameter = math.sqrt(area / math.pi)  # four rotors: A = πD²
+    p0 = 10.6 + coefficient * (0.2 * G0) ** 1.5
+    p1 = 10.6 + coefficient * (0.25 * G0) ** 1.5
+    published = fvec(len(out) + 1,
+                     {"mass": "0.2 kg", "rotors": 4, "rotor_diameter": f"{diameter:.17g} m", "payload_mass": "0.05 kg",
+                      "usable_energy": "20 Wh", "avionics_power": "10.6 W"},
+                     {"result.hover_time_with.value": 20 * 60 / p1, "result.hover_time_without.value": 20 * 60 / p0,
+                      "result.time_lost.value": 20 * 60 / p0 - 20 * 60 / p1, "result.power_with.value": p1,
+                      "result.power_increase.value": p1 - p0, "result.power_increase_percent": (p1 - p0) / p0 * 100},
+                     "Van Mulders et al., Sensors 23(4), 2291 (2023), section 2.4.1 equation 6 and figure 4a payload-hover fit",
+                     "Sensors 23(4), article 2291 (2023)")
+    published["tolerance"] = {k: {"rel": 0.001} for k in published["expect"] if k != "ok"}
+    out.append(published)
+
+    def success(inp, mass_kg, rotors, diameter_m, payload_kg, energy_wh, payload_w=0, avionics_w=0,
+                figure_of_merit=0.6, efficiency=0.85, rho=rho0):
+        disk_area = rotors * math.pi * diameter_m ** 2 / 4
+        lift = lambda mass: (mass * G0) ** 1.5 / math.sqrt(2 * rho * disk_area) / (figure_of_merit * efficiency)
+        power_without = lift(mass_kg) + avionics_w
+        power_with = lift(mass_kg + payload_kg) + avionics_w + payload_w
+        time_without = energy_wh * 60 / power_without
+        time_with = energy_wh * 60 / power_with
+        out.append(fvec(len(out) + 1, inp,
+                        {"result.hover_time_with.value": time_with, "result.hover_time_without.value": time_without,
+                         "result.time_lost.value": time_without - time_with, "result.power_with.value": power_with,
+                         "result.power_increase.value": power_with - power_without,
+                         "result.power_increase_percent": (power_with - power_without) / power_without * 100}, PW_SRC, PW_VER))
+
+    success({"mass": "1400 g", "rotors": 4, "rotor_diameter": "23.876 cm", "payload_mass": "300 g", "usable_energy": "259200 J", "payload_power": "8 W"},
+            1.4, 4, 0.23876, 0.3, 72, 8)
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0 kg", "usable_energy": "72 Wh", "payload_power": "20 W"},
+            1.4, 4, 9.4 * 0.0254, 0, 72, 20)
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0 kg", "usable_energy": "72 Wh"},
+            1.4, 4, 9.4 * 0.0254, 0, 72)
+    success({"mass": "2 kg", "rotors": 4, "rotor_diameter": "12 in", "payload_mass": "0.4 kg", "usable_energy": "100 Wh", "altitude": "-1000 m"},
+            2, 4, 12 * 0.0254, 0.4, 100, rho=rho_at(-1000))
+    success({"mass": "2 kg", "rotors": 4, "rotor_diameter": "12 in", "payload_mass": "0.4 kg", "usable_energy": "100 Wh", "altitude": "11000 m"},
+            2, 4, 12 * 0.0254, 0.4, 100, rho=rho_at(11000))
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "72 Wh", "density_altitude": "8000 ft"},
+            1.4, 4, 9.4 * 0.0254, 0.3, 72, rho=rho_at(8000 * 0.3048))
+    success({"mass": "3 kg", "rotors": 6, "rotor_diameter": "15 in", "payload_mass": "0.5 kg", "usable_energy": "150 Wh", "altitude": "5000 ft", "temperature": "30 degC"},
+            3, 6, 15 * 0.0254, 0.5, 150, rho=rho_at(5000 * 0.3048, 303.15))
+    success({"mass": "6 kg", "rotors": 8, "rotor_diameter": "20 in", "payload_mass": "1 kg", "usable_energy": "300 Wh", "figure_of_merit": 0.4, "efficiency": 0.5},
+            6, 8, 20 * 0.0254, 1, 300, figure_of_merit=0.4, efficiency=0.5)
+    success({"mass": "2 kg", "rotors": 32, "rotor_diameter": "5 in", "payload_mass": "0.2 kg", "usable_energy": "80 Wh", "figure_of_merit": 0.8, "efficiency": 1},
+            2, 32, 5 * 0.0254, 0.2, 80, figure_of_merit=0.8, efficiency=1)
+    success({"mass": "25 kg", "rotors": 8, "rotor_diameter": "30 in", "payload_mass": "5 kg", "usable_energy": "1000 Wh", "payload_power": "100 W", "avionics_power": "30 W"},
+            25, 8, 30 * 0.0254, 5, 1000, 100, 30)
+
+    failures = [
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "-0.1 kg", "usable_energy": "72 Wh"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "72 Wh", "payload_power": "-1 W"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "72 Wh", "avionics_power": "-1 W"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "0 Wh"}, "INVALID_INPUT"),
+        ({"mass": "0 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "72 Wh"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4.5, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "72 Wh"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "72 Wh", "altitude": "5000 ft", "density_altitude": "8000 ft"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "payload_mass": "0.3 kg", "usable_energy": "72 Wh", "altitude": "11001 m"}, "OUT_OF_DOMAIN"),
+    ]
+    for inp, code in failures:
+        out.append(fvec(len(out) + 1, inp, {"ok": False, "error.code": code}, PW_SRC, PW_VER))
     return out
 
 

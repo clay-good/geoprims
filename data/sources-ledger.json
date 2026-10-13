@@ -3270,6 +3270,26 @@
       "editionCheck": false
     },
     {
+      "id": "van-mulders-uav-iot",
+      "name": "UAV-Based Servicing of IoT Nodes: Assessment of Ecological Impact",
+      "issuer": "Van Mulders et al., Sensors",
+      "currentEdition": "Volume 23, issue 4, article 2291",
+      "currentReleaseDate": "2023-02-18",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read at the publisher on 2026-10-13. Section 2.4.1 and figure 4a fit measured hover tests with calibrated payloads to P = P_avio + (c1 + c2)(mg)^1.5, with P_avio = 10.6 W and c1 + c2 = 12.88.",
+      "freeAccessUrl": "https://doi.org/10.3390/s23042291",
+      "matchTerms": [
+        "UAV-Based Servicing of IoT Nodes"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "vara-arpent",
       "name": "Vara and arpent definitions",
       "issuer": "Texas GLO and compiled references",

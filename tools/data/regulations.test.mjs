@@ -20,6 +20,12 @@ const DRONE_REFERENCE_IDS = [
   'easa-c1-energy',
   'easa-sts-classes',
 ];
+const AVIATION_NIGHT_RULES = {
+  'faa-1-1-night': ['cfr-14-1', 6, 'deg solar depression'],
+  'faa-61-57-b-night-window': ['cfr-14-61', 60, 'min'],
+  'faa-91-209-position-lights': ['cfr-14-91', 0, 'min from sunset or sunrise'],
+  'faa-107-29-civil-twilight': ['cfr-14-107', 30, 'min'],
+};
 
 const staleReviewEntries = (entries, now = Date.now()) => {
   const cutoff = now - 365 * 86_400_000;
@@ -64,6 +70,18 @@ test('the initial drone regulation set covers FAA and every EASA class family', 
   assert.match(reg.entries.find((entry) => entry.id === 'easa-open-a2').meaning, /C2/);
   assert.match(reg.entries.find((entry) => entry.id === 'easa-open-a3').meaning, /C2, C3, and C4/);
   assert.match(reg.entries.find((entry) => entry.id === 'easa-sts-classes').meaning, /C5.*C6/);
+});
+
+test('the four aviation-night boundaries are dated reference data', () => {
+  const rows = new Map(reg.entries.map((entry) => [entry.id, entry]));
+  for (const [id, [source, value, unit]] of Object.entries(AVIATION_NIGHT_RULES)) {
+    const entry = rows.get(id);
+    assert.ok(entry, `missing aviation-night rule ${id}`);
+    assert.equal(reg.sourceLinks[id], source, `${id}: wrong sources-ledger row`);
+    assert.equal(entry.value, value, `${id}: wrong boundary value`);
+    assert.equal(entry.unit, unit, `${id}: wrong boundary unit`);
+    assert.equal(entry.reviewed, '2026-10-12', `${id}: review date drifted`);
+  }
 });
 
 test('stale review dates are listed for re-verification', () => {

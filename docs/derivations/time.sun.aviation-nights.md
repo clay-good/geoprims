@@ -3,11 +3,11 @@
 
 ## Method
 
-For the evening of the local date and the next morning, find sunset and sunrise (−0.833°) and the end and beginning of civil twilight (−6°) with the same SPA-based crossing solver as the sunrise tool, one side each. Then apply each regulation's definition. A landing time, if given, is checked against logging night and passenger currency. A time before local noon is read as the next morning.
+For the evening of the local date and the next morning, find sunset and sunrise (−0.833°) and the end and beginning of civil twilight with the same SPA-based crossing solver as the sunrise tool, one side each. Then apply each regulation's boundary from `data/regulations.json`. A landing time, if given, is checked against logging night and passenger currency. A time before local noon is read as the next morning.
 
 ## Equations
 
-- Position lights (14 CFR 91.209): sunset to sunrise.
+- Position lights (14 CFR 91.209): sunset to sunrise outside Alaska. The tool does not determine Alaska's visibility alternative under §91.209(a).
 - Logging night (14 CFR 1.1): end of evening civil twilight to beginning of morning civil twilight.
 - Passenger currency (14 CFR 61.57(b)): sunset + 1 h to sunrise − 1 h, or none when the night is shorter than 2 hours.
 - Part 107 civil twilight (14 CFR 107.29(c)): 30 minutes after sunset and 30 minutes before sunrise. With `alaska: yes`, the civil twilight period instead.
@@ -23,6 +23,8 @@ Any place and date. When the sun does not set, does not rise, or civil twilight 
 ## Approximations
 
 Civil twilight is the sun's center 6° below the horizon (the CIVIL_TWILIGHT_APPROXIMATED warning). The Air Almanac is the legal source for 14 CFR 1.1 and can differ by a minute. Sunrise and sunset use standard refraction.
+
+The 6° logging boundary, 60-minute passenger-currency offset, 0-minute position-light offset outside Alaska, and 30-minute Part 107 duration outside Alaska are source-linked, dated records in `data/regulations.json`. The calculator reads those values rather than repeating them in its arithmetic. The records and their eCFR sources were reviewed on 2026-10-12.
 
 ## Worked example
 

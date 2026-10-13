@@ -7,6 +7,7 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
+use gp_base::regulation::rule;
 use gp_base::tool::{
     Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability,
     ToolDef,
@@ -38,7 +39,7 @@ const CFR_1_1_NIGHT: Reference = Reference {
     title: "14 CFR 1.1, General definitions (night)",
     issuer: "Federal Aviation Administration",
     year: 2024,
-    edition: "Reviewed 2026-09-18",
+    edition: "Reviewed 2026-10-12",
     locator: "\"Night\": end of evening civil twilight to beginning of morning civil twilight, as published in the Air Almanac",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-A/part-1/section-1.1",
 };
@@ -46,7 +47,7 @@ pub(crate) const CFR_61_57: Reference = Reference {
     title: "14 CFR 61.57(b), Night takeoff and landing experience",
     issuer: "Federal Aviation Administration",
     year: 2024,
-    edition: "Reviewed 2026-09-18",
+    edition: "Reviewed 2026-10-12",
     locator: "Three takeoffs and three full-stop landings from 1 hour after sunset to 1 hour before sunrise, within the preceding 90 days",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61/subpart-A/section-61.57",
 };
@@ -54,15 +55,15 @@ const CFR_91_209: Reference = Reference {
     title: "14 CFR 91.209, Aircraft lights",
     issuer: "Federal Aviation Administration",
     year: 2024,
-    edition: "Reviewed 2026-09-18",
-    locator: "Lighted position lights from sunset to sunrise (in Alaska, during the period a prominent unlighted object cannot be seen from 3 statute miles)",
+    edition: "Reviewed 2026-10-12",
+    locator: "Lighted position lights from sunset to sunrise; in Alaska, while a prominent unlighted object cannot be seen from 3 statute miles or the sun is more than 6° below the horizon",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91/subpart-C/section-91.209",
 };
 const CFR_107_29: Reference = Reference {
     title: "14 CFR 107.29, Operation at night",
     issuer: "Federal Aviation Administration",
     year: 2021,
-    edition: "Reviewed 2026-09-18",
+    edition: "Reviewed 2026-10-12",
     locator: "§107.29(c): civil twilight is 30 minutes before official sunrise and after official sunset, except in Alaska (the Air Almanac period)",
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-107/subpart-B/section-107.29",
 };
@@ -995,8 +996,34 @@ pub static AVIATION_NIGHTS: ToolDef = ToolDef {
     model: "Sunrise and sunset (−0.833°) and civil twilight (−6°) from the NREL SPA geometric sun, for the evening of the date and the next morning",
     accuracy: "Within 1 minute of the windows built from USNO times at 100 places (491 windows); the Air Almanac, the legal source for twilight, tabulates to the minute",
     when_to_use: "Use this when a regulation turns on which night it is: logging night flight, carrying passengers on night currency, when position lights are required, and the civil-twilight window a Part 107 operation works to. All four are computed for one place and date, each shown beside the regulation that defines it, because they start and end at different times.",
-    limitations: "These are the US definitions for the place and date you enter. The Air Almanac is the legal source for twilight and tabulates to the minute; this computes the same events from the sun's geometry and agrees within a minute. It does not know your aircraft's equipment, your currency record, or any waiver, and it does not decide whether a flight is legal.",
+    limitations: "These are the US definitions for the place and date you enter. The Air Almanac is the legal source for twilight and tabulates to the minute; this computes the same events from the sun's geometry and agrees within a minute. The position-light window is the rule outside Alaska; in Alaska, §91.209(a) instead uses a visibility-or-solar-depression test this tool cannot determine. It does not know your aircraft's equipment, your currency record, or any waiver, and it does not decide whether a flight is legal.",
     references: &[CFR_1_1_NIGHT, CFR_61_57, CFR_91_209, CFR_107_29],
+    assumptions: &[
+        Assumption {
+            name: "Civil-twilight solar depression",
+            value: "6",
+            unit: "deg",
+            source: "cfr-14-1",
+        },
+        Assumption {
+            name: "Passenger-currency offset",
+            value: "60",
+            unit: "min",
+            source: "cfr-14-61",
+        },
+        Assumption {
+            name: "Position-light offset outside Alaska",
+            value: "0",
+            unit: "min",
+            source: "cfr-14-91",
+        },
+        Assumption {
+            name: "Part 107 civil-twilight duration outside Alaska",
+            value: "30",
+            unit: "min",
+            source: "cfr-14-107",
+        },
+    ],
     assets: &["tzdb"],
     examples: &[Example {
         id: "primary",
@@ -1042,7 +1069,14 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let alaska = ctx.choice("alaska")?.unwrap_or("no") == "yes";
     let today = local_noon(lon, day, off);
     let tomorrow = local_noon(lon, day + 1, off);
-    let hour = 1.0 / 24.0;
+    let logging = rule("faa-1-1-night");
+    let currency = rule("faa-61-57-b-night-window");
+    let lights = rule("faa-91-209-position-lights");
+    let part107 = rule("faa-107-29-civil-twilight");
+    let logging_depression = logging.value;
+    let currency_offset = currency.value / 1_440.0;
+    let lights_offset = lights.value / 1_440.0;
+    let part107_duration = part107.value / 1_440.0;
     // Only this evening's side and tomorrow morning's side matter, each on its own.
     let side = |noon: f64, alt: f64, sign: f64| match sun::crossing(lat, lon, noon, alt, sign) {
         sun::Side::At(t) => Crossing::Times(t, t),
@@ -1051,8 +1085,8 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let set = side(today, SUNRISE_ALTITUDE, 1.0);
     let rise = side(tomorrow, SUNRISE_ALTITUDE, -1.0);
-    let dusk = side(today, -6.0, 1.0);
-    let dawn = side(tomorrow, -6.0, -1.0);
+    let dusk = side(today, -logging_depression, 1.0);
+    let dawn = side(tomorrow, -logging_depression, -1.0);
     ctx.warnings.push(Warning::new(
         "CIVIL_TWILIGHT_APPROXIMATED",
         "Logging night uses the sun at 6° below the horizon; the Air Almanac is the legal source and can differ by a minute.",
@@ -1099,8 +1133,8 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "Passenger currency",
             "one hour after sunset to one hour before sunrise",
             format!("an hour inside {}", window(s, r, off)),
-            if r - s > 2.0 * hour {
-                window(s + hour, r - hour, off)
+            if r - s > 2.0 * currency_offset {
+                window(s + currency_offset, r - currency_offset, off)
             } else {
                 none("the night is shorter than 2 hours")
             },
@@ -1111,13 +1145,16 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
         (Some(s), Some(r)) => {
             out.push((
                 "passenger_currency",
-                Json::str(if r - s > 2.0 * hour {
-                    window(s + hour, r - hour, off)
+                Json::str(if r - s > 2.0 * currency_offset {
+                    window(s + currency_offset, r - currency_offset, off)
                 } else {
                     none("the night is shorter than 2 hours")
                 }),
             ));
-            out.push(("position_lights", Json::str(window(s, r, off))));
+            out.push((
+                "position_lights",
+                Json::str(window(s + lights_offset, r - lights_offset, off)),
+            ));
             if alaska {
                 out.push((
                     "part107_evening",
@@ -1134,13 +1171,19 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     )),
                 ));
             } else {
-                out.push(("part107_evening", Json::str(window(s, s + hour / 2.0, off))));
-                out.push(("part107_morning", Json::str(window(r - hour / 2.0, r, off))));
+                out.push((
+                    "part107_evening",
+                    Json::str(window(s, s + part107_duration, off)),
+                ));
+                out.push((
+                    "part107_morning",
+                    Json::str(window(r - part107_duration, r, off)),
+                ));
             }
             out.push((
                 "currency_from",
-                Json::str(if r - s > 2.0 * hour {
-                    local_clock(s + hour, off)
+                Json::str(if r - s > 2.0 * currency_offset {
+                    local_clock(s + currency_offset, off)
                 } else {
                     "not tonight".into()
                 }),
@@ -1196,7 +1239,7 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
             _ => matches!(dusk, Crossing::AlwaysBelow),
         };
         let counts = match (sunset, sunrise) {
-            (Some(s), Some(r)) => at >= s + hour && at <= r - hour,
+            (Some(s), Some(r)) => at >= s + currency_offset && at <= r - currency_offset,
             _ => matches!(set_state, Crossing::AlwaysBelow),
         };
         let yn = |b: bool| Json::str(if b { "yes" } else { "no" });

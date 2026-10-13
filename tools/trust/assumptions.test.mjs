@@ -193,6 +193,16 @@ test('the mapping window exposes its published minimum sun elevation', () => {
   ]);
 });
 
+test('the aviation-nights tool exposes its four regulatory boundaries', () => {
+  const assumptions = byId('time.sun.aviation-nights')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['6', 'deg', 'cfr-14-1'],
+    ['60', 'min', 'cfr-14-61'],
+    ['0', 'min', 'cfr-14-91'],
+    ['30', 'min', 'cfr-14-107'],
+  ]);
+});
+
 test('the hover-power tool exposes its published coaxial interference default', () => {
   const assumptions = byId('drone.power.hover-power')['x-assumptions'];
   assert.ok(assumptions.some((a) =>

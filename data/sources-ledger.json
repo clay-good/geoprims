@@ -2200,6 +2200,26 @@
       "editionCheck": true
     },
     {
+      "id": "pvlib-solar-position",
+      "name": "pvlib solar-position API documentation",
+      "issuer": "pvlib python Development Team",
+      "currentEdition": "pvlib 0.16.1 API documentation",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the official stable API documentation on 2026-10-12. spa_python defaults to 0 m altitude, 101325 Pa annual average pressure, and 12 degrees Celsius annual average temperature.",
+      "freeAccessUrl": "https://pvlib-python.readthedocs.io/en/stable/reference/generated/pvlib.solarposition.spa_python.html",
+      "matchTerms": [
+        "pvlib.solarposition.spa_python"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "nsrs2022",
       "name": "NSRS 2022 products (NATRF2022, NAPGD2022, GEOID2022, SPCS2022)",
       "issuer": "NOAA NGS",

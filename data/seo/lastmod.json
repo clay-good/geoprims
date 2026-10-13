@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "50a129e47866cecb",
+    "hash": "a459dd90bf8bf7b9",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1700,19 +1700,19 @@
     "lastmod": "2026-10-09"
   },
   "/time/sun/hotspot/": {
-    "hash": "ccb3a5e6fa88451d",
+    "hash": "bdd60ab53d159f4b",
     "lastmod": "2026-10-13"
   },
   "/time/sun/mapping-window/": {
-    "hash": "430ef8416ac3899f",
-    "lastmod": "2026-10-12"
+    "hash": "3cb59913120ff129",
+    "lastmod": "2026-10-13"
   },
   "/time/sun/night-currency/": {
     "hash": "56cca9d979aab4f2",
     "lastmod": "2026-10-13"
   },
   "/time/sun/position/": {
-    "hash": "918ffc523649b447",
+    "hash": "ef448922ad3fa172",
     "lastmod": "2026-10-13"
   },
   "/tools/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ff7cfe6a24f54f38",
+    "hash": "cb3584b3d39dc380",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2020,7 +2020,7 @@
     "lastmod": "2026-10-13"
   },
   "/workflows/mapping-flight/": {
-    "hash": "752e1b5a9eb8fe21",
+    "hash": "9e2a74410929717b",
     "lastmod": "2026-10-13"
   },
   "/workflows/preflight-check/": {

@@ -26,7 +26,7 @@ Any place, any time, any camera attitude. A nadir camera's hotspot angle is exac
 
 ## Approximations
 
-The sun direction is the SPA's, good to about 0.0003°. The cone is the approximation that matters: a real frame is a rectangle, so a hotspot just outside the cone but within the diagonal corner is reported out of frame when it might clip a corner. The cone is the conservative reading at the edges and the exact one at the corners.
+The sun direction is the SPA's, good to about 0.0003°. It uses pvlib's SPA defaults of 0 m, 101,325 Pa, and 12 °C, plus the SPA's typical 0.5667° refraction-at-the-horizon value. The cone is the approximation that matters: a real frame is a rectangle, so a hotspot just outside the cone but within the diagonal corner is reported out of frame when it might clip a corner. The cone is the conservative reading at the edges and the exact one at the corners.
 
 ## Worked example
 

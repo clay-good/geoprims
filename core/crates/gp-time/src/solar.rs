@@ -190,6 +190,14 @@ const NREL_SPA: Reference = Reference {
     locator: "Sections 3.1 to 3.15 and Tables A4.2, A4.3; worked example in Table A5.1",
     url: "https://www.osti.gov/biblio/15003974",
 };
+const PVLIB_SOLAR_POSITION: Reference = Reference {
+    title: "pvlib.solarposition.spa_python",
+    issuer: "pvlib python Development Team",
+    year: 2026,
+    edition: "pvlib 0.16.1 API documentation",
+    locator: "Function signature and altitude, pressure, and temperature parameters",
+    url: "https://pvlib-python.readthedocs.io/en/stable/reference/generated/pvlib.solarposition.spa_python.html",
+};
 const DJI_PHANTOM_4_PRO: Reference = Reference {
     title: "Phantom 4 Pro specifications",
     issuer: "DJI",
@@ -541,7 +549,7 @@ pub static POSITION: ToolDef = ToolDef {
     accuracy: "±0.0003° (SPA, −2000 to 6000) with UT1; taking UT1 as UTC adds up to about 0.004° of azimuth",
     when_to_use: "Use this when you need where the sun is at a moment: the azimuth and elevation for shadow studies, solar panel aiming, camera and survey planning, glare and hotspot checks, or the incidence angle on a sloping surface. It also gives the shadow an object of a given height casts, with its direction.",
     limitations: "Refraction near the horizon depends on the pressure and temperature you give it, and a low sun is where that matters most. Taking UT1 as UTC costs up to about four thousandths of a degree of azimuth, which is only a concern for survey work, where DUT1 from IERS belongs in the input. It is the sun's geometry, not the weather: cloud, haze, and terrain are yours to account for.",
-    references: &[NREL_SPA, ESPENAK_MEEUS, NOAA],
+    references: &[NREL_SPA, PVLIB_SOLAR_POSITION, ESPENAK_MEEUS, NOAA],
     examples: &[Example {
         id: "primary",
         title: "Denver at 12:00 MDT on the June solstice",
@@ -574,6 +582,32 @@ pub static POSITION: ToolDef = ToolDef {
         end: "scene_end",
         key: "scene_key",
     }),
+    assumptions: &[
+        Assumption {
+            name: "Default observer elevation",
+            value: "0",
+            unit: "m",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Default annual average air pressure",
+            value: "1013.25",
+            unit: "hPa",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Default annual average air temperature",
+            value: "12",
+            unit: "degC",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Typical atmospheric refraction at sunrise and sunset",
+            value: "0.5667",
+            unit: "deg",
+            source: "nrel-spa",
+        },
+    ],
     run: run_position,
     ..ToolDef::BLANK
 };
@@ -1529,7 +1563,7 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Times the geometric sun (NREL SPA) crosses the threshold, by bisection between the day's highest and lowest points; the highest sun and the path are the same SPA sun, apparent (refracted), every 20 minutes of local clock time",
     accuracy: "About 1 minute",
-    references: &[NREL_SPA, NOAA, GEOCUE_SUN_ANGLE],
+    references: &[NREL_SPA, PVLIB_SOLAR_POSITION, NOAA, GEOCUE_SUN_ANGLE],
     assets: &["tzdb"],
     examples: &[Example {
         id: "primary",
@@ -1556,12 +1590,38 @@ pub static MAPPING_WINDOW: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Default minimum sun elevation for photogrammetry",
-        value: "30",
-        unit: "deg",
-        source: "geocue-sun-angle",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Default minimum sun elevation for photogrammetry",
+            value: "30",
+            unit: "deg",
+            source: "geocue-sun-angle",
+        },
+        Assumption {
+            name: "Observer elevation used for the apparent sun path",
+            value: "0",
+            unit: "m",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Annual average air pressure used for the apparent sun path",
+            value: "1013.25",
+            unit: "hPa",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Annual average air temperature used for the apparent sun path",
+            value: "12",
+            unit: "degC",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Typical atmospheric refraction at sunrise and sunset",
+            value: "0.5667",
+            unit: "deg",
+            source: "nrel-spa",
+        },
+    ],
     sentence: "The sun is high enough {window}.",
     limits: &[("batchRows", 1_000)],
     run: run_mapping,
@@ -1823,7 +1883,7 @@ pub static HOTSPOT: ToolDef = ToolDef {
     ],
     model: "Sun azimuth and apparent elevation by the NREL SPA (standard atmosphere, sea level); the antisolar point is opposite the sun, at −elevation. The hotspot angle is the angle between the camera's look vector (heading, pitch) and the antisolar direction; it is in frame when within half the diagonal field of view",
     accuracy: "Sun direction to about 0.0003°; the frame test treats the field of view as a cone around the look direction, so a hotspot near a frame corner is borderline",
-    references: &[NREL_SPA, DJI_PHANTOM_4_PRO],
+    references: &[NREL_SPA, PVLIB_SOLAR_POSITION, DJI_PHANTOM_4_PRO],
     examples: &[Example {
         id: "primary",
         title: "A nadir camera at noon near the June solstice in Denver",
@@ -1849,12 +1909,38 @@ pub static HOTSPOT: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Default diagonal field of view, matching the DJI Phantom 4 Pro camera",
-        value: "84",
-        unit: "deg",
-        source: "dji-phantom-4-pro",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Default diagonal field of view, matching the DJI Phantom 4 Pro camera",
+            value: "84",
+            unit: "deg",
+            source: "dji-phantom-4-pro",
+        },
+        Assumption {
+            name: "Observer elevation used for the sun direction",
+            value: "0",
+            unit: "m",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Annual average air pressure used for the sun direction",
+            value: "1013.25",
+            unit: "hPa",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Annual average air temperature used for the sun direction",
+            value: "12",
+            unit: "degC",
+            source: "pvlib-solar-position",
+        },
+        Assumption {
+            name: "Typical atmospheric refraction at sunrise and sunset",
+            value: "0.5667",
+            unit: "deg",
+            source: "nrel-spa",
+        },
+    ],
     sentence: "The hotspot is {hotspot_angle} from where the camera points: in frame, {in_frame}.",
     limits: &[("batchRows", 10_000)],
     run: run_hotspot,

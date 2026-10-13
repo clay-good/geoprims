@@ -28,7 +28,7 @@ Any place and date. Thresholds from −18° (astronomical twilight) to 89°. At 
 
 ## Approximations
 
-Times are good to about a minute, which is the accuracy the crossing solver and the SPA together support and is far finer than the decision needs. Elevations are the SPA's, to about 0.0003°, with the standard sea-level refraction model applied for the apparent value; refraction varies with pressure and temperature by a few hundredths of a degree, which moves a crossing time by seconds.
+Times are good to about a minute, which is the accuracy the crossing solver and the SPA together support and is far finer than the decision needs. Elevations are the SPA's, to about 0.0003°. The apparent peak and path use pvlib's SPA defaults of 0 m, 101,325 Pa, and 12 °C, plus the SPA's typical 0.5667° refraction-at-the-horizon value. The window crossings use geometric elevation, so these refraction defaults do not change the reported start and end times.
 
 ## Worked example
 

@@ -22,7 +22,7 @@ Years -2000 to 6000 per the SPA. Refraction is applied only above -0.8333° appa
 
 ## Approximations
 
-Stated SPA uncertainty ±0.0003°. Refraction uses standard atmosphere unless pressure and temperature are given.
+Stated SPA uncertainty ±0.0003°. Unless the caller provides local values, the observer elevation, annual average pressure, and annual average temperature use pvlib's SPA defaults of 0 m, 101,325 Pa, and 12 °C. The SPA's typical 0.5667° refraction-at-the-horizon value sets the lower limit for applying its correction.
 
 ## Worked example
 

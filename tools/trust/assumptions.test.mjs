@@ -68,6 +68,7 @@ const MUST_DECLARE = [
   'raster.index.savi',
   'raster.index.dnbr',
   'geometry.buffer.geodesic',
+  'time.sun.position',
   'time.sun.mapping-window',
   'time.sun.hotspot',
   'drone.photogrammetry.gsd',
@@ -190,17 +191,33 @@ test('the geodesic buffer exposes its published default mitre limit', () => {
   ]);
 });
 
-test('the mapping window exposes its published minimum sun elevation', () => {
+test('the solar tools expose every default that affects their sun direction', () => {
+  const position = byId('time.sun.position')['x-assumptions'];
+  assert.deepEqual(position.map(({ value, unit, source }) => [value, unit, source]), [
+    ['0', 'm', 'pvlib-solar-position'],
+    ['1013.25', 'hPa', 'pvlib-solar-position'],
+    ['12', 'degC', 'pvlib-solar-position'],
+    ['0.5667', 'deg', 'nrel-spa'],
+  ]);
+
   const assumptions = byId('time.sun.mapping-window')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['30', 'deg', 'geocue-sun-angle'],
+    ['0', 'm', 'pvlib-solar-position'],
+    ['1013.25', 'hPa', 'pvlib-solar-position'],
+    ['12', 'degC', 'pvlib-solar-position'],
+    ['0.5667', 'deg', 'nrel-spa'],
   ]);
 });
 
-test('the hotspot tool names the camera behind its field-of-view default', () => {
+test('the hotspot tool names both the camera and solar defaults', () => {
   const assumptions = byId('time.sun.hotspot')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['84', 'deg', 'dji-phantom-4-pro'],
+    ['0', 'm', 'pvlib-solar-position'],
+    ['1013.25', 'hPa', 'pvlib-solar-position'],
+    ['12', 'degC', 'pvlib-solar-position'],
+    ['0.5667', 'deg', 'nrel-spa'],
   ]);
 });
 

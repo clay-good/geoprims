@@ -30,24 +30,27 @@ The turn is level, coordinated, and at constant true airspeed. Climbing, descend
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite flight-performance spec, scenario "Standard-rate bank at 100 kt"
-- sourceEdition: add-aviation-suite change; relations from FAA-H-8083-3C (2021)
-- sourceLocator: openspec/changes/add-aviation-suite/specs/aviation/flight-performance/spec.md, requirement "Turn performance" (bank ≈ 15.36°, rule of thumb 17°); radius, load factor, and time computed in Python from the equations above
-- independent: no
-- inputs: TAS 100 kt (standard rate)
-- outputs: bank 15.36°, turn rate 3°/s, radius 3,223 ft, load factor 1.037, 360° in 120 s, rule of thumb 17° (1.64° high)
-- tolerance: 0.005° on the bank (spec); 1e-9 relative in the golden vector
-- verifiedBy: golden vector v001 and `core/crates/gp-aviation/tests/slice2.rs` `standard_rate_at_100_kt`
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
+- sourceEdition: FAA-H-8083-25C (2023)
+- sourceLocator: Chapter 5, Figure 5-56, rate of turn for a given true airspeed and bank angle
+- independent: yes
+- inputs: TAS 120 kt, bank 30°
+- outputs: turn rate 5.25°/s
+- tolerance: 0.005°/s, the half-unit of the source's second decimal place
+- verifiedBy: golden vector v007 and `core/crates/gp-aviation/tests/slice2.rs` `turn_matches_phak_example`
+- verifiedOn: 2026-10-13
+
+The handbook also prints a 2,215 ft radius from its rounded 11.26 constant. The tool uses standard gravity and exact unit definitions, producing 2,208 ft; the model and accuracy text disclose that difference, so the rounded radius is not used as an expected value.
 
 ## Differential tests
 
-- `tools/vectors/gen_aviation.py`: the same turn relations written separately in Python, at six cases (two standard-rate, four given banks from 25° to 60°), checking bank, radius, and load factor (within 1e-9 relative). It checks the code against the stated equations, not against a separate method
-- `core/vectors/aviation.performance.turn.jsonl`: those six vectors, run through the core on every build
+- `tools/vectors/gen_turn.py`: the turn relations written separately in Python across standard-rate, given-bank, given-rate, inverse-speed, heading-change, stall-speed, and load-limit cases, plus refused invalid inputs. It checks the code against the stated equations, not against a separate method
+- `core/vectors/aviation.performance.turn.jsonl`: those cases and the independently printed FAA turn rate, 20 vectors in all, run through the core on every build
 
 ## Invariants
 
+- `core/crates/gp-aviation/tests/slice2.rs` `turn_matches_phak_example`: 120 KTAS at 30° bank gives 5.25°/s within the source's printed precision and a 360° turn in 68.6 seconds within 0.1 second
 - `core/crates/gp-aviation/tests/slice2.rs` `turn_solves_for_tas`: the bank from a standard-rate turn at 100 kt, given back with a 3°/s rate, solves to 100 kt (within 1e-6)
 - `core/crates/gp-aviation/tests/slice2.rs` `sixty_degree_bank`: a 60° bank gives a load factor of 2 (within 1e-12), a 50 kt stall speed rises to 70.7 kt, the radius matches the 11.294 feet-and-knots form, and no bank rule is shown for a non-standard turn
 - `core/crates/gp-aviation/tests/slice2.rs` `load_limit_exceeded`: at a 3.8 g limit the maximum bank is acos(1 ÷ 3.8), a 77° bank warns, and a 45° bank does not

@@ -206,6 +206,16 @@ fn standard_rate_at_100_kt() {
 }
 
 #[test]
+fn turn_matches_phak_example() {
+    let r = call(
+        "aviation.performance.turn",
+        r#"{"tas":"120 kt","bank":"30 deg"}"#,
+    );
+    near(&r, "result.turn_rate.value", 5.25, 0.005);
+    near(&r, "result.turn_time.value", 68.6, 0.1);
+}
+
+#[test]
 fn sixty_degree_bank() {
     let r = call(
         "aviation.performance.turn",

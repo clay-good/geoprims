@@ -81,8 +81,15 @@ fn positive(ctx: &mut Ctx, name: &str, what: &str) -> Result<f64, ToolError> {
 
 // ---------------------------------------------------------------- turn
 
+const PHAK_TURN: Reference = Reference {
+    locator: "Chapter 5, Figure 5-56 (120 KTAS at 30° bank gives 5.25°/s)",
+    ..PHAK
+};
+
 pub static TURN: ToolDef = ToolDef {
     id: "aviation.performance.turn",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Turn performance and load factor",
     summary: "Bank angle, rate of turn, turn radius, load factor, and stall speed in the turn, from true airspeed and a bank angle or turn rate (standard rate by default).",
     aliases: &[
@@ -223,19 +230,19 @@ pub static TURN: ToolDef = ToolDef {
         )
         .optional(),
     ],
-    errors: &[ErrorCode::OutOfDomain],
-    warnings: &["LOAD_LIMIT_EXCEEDED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["LOAD_LIMIT_EXCEEDED", "UNIT_ASSUMED"],
     model: "Coordinated level turn: r = V²/(g0·tan φ), ω = g0·tan φ/V, n = 1/cos φ. In feet and knots r = V²/(11.294·tan φ), from g0 = 9.80665 m/s² (the textbook 11.26 is a rounded variant).",
     accuracy: "Exact for a coordinated, level turn at constant true airspeed. Planning aid, not certified for navigation.",
     when_to_use: "Use this to see what a turn asks of the airplane. Enter your true airspeed and a bank angle, or a turn rate, or neither for a standard-rate turn. It returns the bank, the rate, the turn radius, the load factor, and the time for a heading change. Add your stall speed to see how much it rises in the bank, and your limit load factor for the steepest bank it allows.",
     limitations: "The math assumes a coordinated, level turn at constant true airspeed. A climbing, descending, or slipping turn differs, and wind changes the path over the ground but not these numbers. The stall speed in the turn scales your 1 g stall speed and is not a POH figure. The POH or AFM limits govern, and the bank rule of thumb is a rough guide.",
-    references: &[AFH, PHAK],
+    references: &[AFH, PHAK_TURN],
     examples: &[
         Example {
             id: "primary",
-            title: "A standard-rate turn at 100 KTAS",
-            input: r#"{"tas":"100 kt"}"#,
-            source: "add-aviation-suite turn scenario: bank 15.36°, rule of thumb 17°",
+            title: "120 KTAS at 30° bank",
+            input: r#"{"tas":"120 kt","bank":"30 deg"}"#,
+            source: "FAA-H-8083-25C chapter 5, Figure 5-56: 5.25° per second",
         },
         Example {
             id: "steep",
@@ -256,6 +263,10 @@ pub static TURN: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.airspeed.cas-to-tas",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.ifr.hold-speed-limit",
             reason: "next",
         },
     ],

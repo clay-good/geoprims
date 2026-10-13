@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.performance.turn"
+      ],
+      "vectors": [],
+      "summary": "Turn performance (version 1.1.0) is now stable. Its primary example reproduces the FAA Pilot's Handbook's printed 120-knot, 30-degree-bank turn rate. The tool now has 20 vectors across direct, inverse, stall-speed, load-limit, and invalid-input cases; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.performance.pivotal-altitude"
       ],
       "vectors": [],

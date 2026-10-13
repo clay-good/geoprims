@@ -31,6 +31,14 @@ const ITU_P530: Reference = Reference {
     locator: "Section 2.2.2, path clearance: the first Fresnel ellipsoid over the path profile with the effective Earth radius factor",
     url: "https://www.itu.int/rec/R-REC-P.530",
 };
+const ESRI_VIEWSHED: Reference = Reference {
+    title: "Geodesic Viewshed (Spatial Analyst)",
+    issuer: "Esri",
+    year: 2026,
+    edition: "ArcGIS Pro 3.6",
+    locator: "Refractivity coefficient parameter: visible-light default 0.13",
+    url: "https://pro.arcgis.com/en/pro-app/3.6/tool-reference/spatial-analyst/viewshed-2.htm",
+};
 
 /// Mean Earth radius, meters.
 const R_DEFAULT: f64 = 6_371_000.0;
@@ -265,7 +273,7 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
     accuracy: "Exact for the model at the points given; the ground between points is not checked, and real refraction varies with the weather",
     when_to_use: "Use this when there is ground between two points and the question is whether it gets in the way: a ridge between a pilot and a drone, a hill between a tower and a receiver, or the path of a radio link across a valley. Enter the ground profile from the observer to the target with both heights above the ground. It says whether the target is in sight, where the ground comes closest to the sight line, how high the observer would have to be to see over it, and, with a frequency, whether 60% of the first Fresnel zone is clear and where it is not.",
     limitations: "Only the points you give are checked, and the ground between them is not, so a narrow peak missed by the profile can still block the view; sample at least every break in the ground. Buildings, trees, and towers are not part of the ground unless you add their heights to it. Refraction enters only through k, and real air varies: plan a radio link against a lower k as well. The Fresnel check is a clearance rule, not a diffraction loss, so it does not say how much signal an obstruction costs.",
-    references: &[ITU_P530],
+    references: &[ITU_P530, ESRI_VIEWSHED],
     examples: &[Example {
         id: "primary",
         title: "A ridge between a hilltop and a tower",
@@ -297,6 +305,12 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
             value: "6371000",
             unit: "m",
             source: "grs80",
+        },
+        Assumption {
+            name: "Default visible-light refraction coefficient k",
+            value: "0.13",
+            unit: "1",
+            source: "esri-viewshed",
         },
         Assumption {
             name: "Radio refraction, the median effective Earth radius factor of 4/3 (k = 0.25)",

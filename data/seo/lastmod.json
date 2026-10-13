@@ -1256,20 +1256,20 @@
     "lastmod": "2026-09-23"
   },
   "/navigation/los/dip/": {
-    "hash": "dbb8b820de853424",
-    "lastmod": "2026-10-09"
+    "hash": "0e3dc18155faea1a",
+    "lastmod": "2026-10-13"
   },
   "/navigation/los/fresnel/": {
     "hash": "470b88d6c605e9a9",
     "lastmod": "2026-10-12"
   },
   "/navigation/los/horizon/": {
-    "hash": "2896b9ed63c98b7c",
-    "lastmod": "2026-10-09"
+    "hash": "af3542cbe7daddb3",
+    "lastmod": "2026-10-13"
   },
   "/navigation/los/visibility/": {
-    "hash": "df8cba7e70ea8983",
-    "lastmod": "2026-10-09"
+    "hash": "502ed3148f3d7b4c",
+    "lastmod": "2026-10-13"
   },
   "/navigation/rhumb/": {
     "hash": "526410bd52abbbd0",
@@ -1424,8 +1424,8 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/line-of-sight/": {
-    "hash": "b8a839185f398e33",
-    "lastmod": "2026-10-09"
+    "hash": "3a02ffae1a44fcb7",
+    "lastmod": "2026-10-13"
   },
   "/raster/terrain/ruggedness/": {
     "hash": "ef29a1d06c1b387a",
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "9a616144eff013f0",
+    "hash": "171abf0b83f2dfe1",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1624,24 +1624,24 @@
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/curvature-refraction/": {
-    "hash": "392aea90d13504f9",
-    "lastmod": "2026-10-09"
+    "hash": "ae44cefeeb4d4311",
+    "lastmod": "2026-10-13"
   },
   "/survey/reduction/edm-correction/": {
     "hash": "395317f81a0e07f1",
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/inaccessible-height/": {
-    "hash": "95d909975715dab4",
-    "lastmod": "2026-10-09"
+    "hash": "b395ababeb40b3bd",
+    "lastmod": "2026-10-13"
   },
   "/survey/reduction/level-run/": {
     "hash": "271e1bfd75729ed8",
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/slope/": {
-    "hash": "47a5b4727482b7f3",
-    "lastmod": "2026-10-09"
+    "hash": "1646a20c1f46058c",
+    "lastmod": "2026-10-13"
   },
   "/survey/reduction/stadia/": {
     "hash": "0ce983f8f041b3f4",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "843945df05d5ed36",
+    "hash": "842530cb0fc2a74c",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

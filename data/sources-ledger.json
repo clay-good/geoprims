@@ -671,6 +671,26 @@
       "editionCheck": true
     },
     {
+      "id": "esri-viewshed",
+      "name": "Geodesic Viewshed (Spatial Analyst)",
+      "issuer": "Esri",
+      "currentEdition": "ArcGIS Pro 3.6",
+      "currentReleaseDate": null,
+      "cycleMonths": 12,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the ArcGIS Pro 3.6 Geodesic Viewshed documentation on 2026-10-12. The refractivity-coefficient parameter describes visible-light refraction and gives 0.13 as its default.",
+      "freeAccessUrl": "https://pro.arcgis.com/en/pro-app/3.6/tool-reference/spatial-analyst/viewshed-2.htm",
+      "matchTerms": [
+        "Geodesic Viewshed"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "etsi-en-300-328",
       "name": "ETSI EN 300 328",
       "issuer": "ETSI",
@@ -2679,6 +2699,26 @@
       "freeAccessUrl": "https://tc.canada.ca/en/aviation/publications/transport-canada-aeronautical-information-manual-tc-aim-tp-14371",
       "matchTerms": [
         "Transport Canada Aeronautical Information Manual"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "trimble-access",
+      "name": "Trimble Access General Survey Help: Instrument corrections",
+      "issuer": "Trimble",
+      "currentEdition": "Trimble Access 2026.10",
+      "currentReleaseDate": "2026-10-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked Trimble's current Access help on 2026-10-12. Instrument corrections describes 0.13, 0.142, and 0.2 as typical terrestrial-refraction coefficients and cautions that the correct value depends on atmospheric and ground conditions.",
+      "freeAccessUrl": "https://help.fieldsystems.trimble.com/trimble-access/latest/en/Instrument-corrections.htm",
+      "matchTerms": [
+        "Trimble Access General Survey Help"
       ],
       "editionStatus": "current",
       "legalStatus": null,

@@ -36,6 +36,21 @@ const GHILANI_STADIA: Reference = Reference {
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 
+const TRIMBLE_ACCESS: Reference = Reference {
+    title: "Trimble Access General Survey Help: Instrument corrections",
+    issuer: "Trimble",
+    year: 2026,
+    edition: "Trimble Access 2026.10",
+    locator: "Curvature and refraction corrections; 0.13 listed as a typical coefficient",
+    url: "https://help.fieldsystems.trimble.com/trimble-access/latest/en/Instrument-corrections.htm",
+};
+const TERRESTRIAL_REFRACTION: Assumption = Assumption {
+    name: "Default terrestrial refraction coefficient k",
+    value: "0.13",
+    unit: "1",
+    source: "trimble-access",
+};
+
 const fn angle(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
@@ -235,7 +250,7 @@ pub static SLOPE: ToolDef = ToolDef {
     accuracy: "Exact for the reduction; the curvature and refraction correction carries the uncertainty of k, which varies with the air near the ground",
     when_to_use: "Use this when a total station gives you a slope distance and a zenith or vertical angle and you need the horizontal distance and the height change. Add the instrument and target heights for the elevation difference. Enter a face-right reading to get the two-face mean zenith and the index error. For long sights, set a distance beyond which curvature and refraction are added.",
     limitations: "The reduction is plane math over one sight. It does not apply the atmospheric ppm, the prism constant, or the grid and elevation factors; those are separate steps. The curvature and refraction term uses one earth radius and a single coefficient, which real air does not hold to. Heights depend on the instrument and target heights being measured right.",
-    references: &[GHILANI],
+    references: &[GHILANI, TRIMBLE_ACCESS],
     examples: &[Example {
         id: "primary",
         title: "500 m at a zenith of 85°",
@@ -261,12 +276,15 @@ pub static SLOPE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
-        value: "6371000",
-        unit: "m",
-        source: "grs80",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        TERRESTRIAL_REFRACTION,
+    ],
     sentence: "The horizontal distance is {horizontal_distance} and the vertical difference {vertical_difference}.{if mean_zenith > 0} The two-face mean zenith is {mean_zenith_dms}, with an index error of {index_error}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_slope,
@@ -428,7 +446,7 @@ pub static CURVATURE: ToolDef = ToolDef {
     accuracy: "Exact for the given k and R; k itself varies with the air near the ground, most at low sights and midday",
     when_to_use: "Use this when you level or run trig heights over long sights and need to know how much the earth's curve and the bending of the sight line change the reading. Enter the horizontal sight distance and, if you like, a refraction coefficient and an earth radius. It returns the combined correction, curvature and refraction apart, and the coefficient per square kilometer to use in your notes.",
     limitations: "It uses a sphere of one radius and a single refraction coefficient. Real refraction shifts with heat near the ground, time of day, and how high the sight runs, so long low sights at midday carry the most doubt. Balanced backsights and foresights cancel most of this in leveling, so equal sight lengths are the first defense.",
-    references: &[GHILANI],
+    references: &[GHILANI, TRIMBLE_ACCESS],
     examples: &[Example {
         id: "primary",
         title: "A 1 km sight with k = 0.14",
@@ -451,6 +469,7 @@ pub static CURVATURE: ToolDef = ToolDef {
             unit: "m",
             source: "grs80",
         },
+        TERRESTRIAL_REFRACTION,
         Assumption {
             name: "Combined curvature and refraction rule of thumb, with k = 0.14",
             value: "0.0675",
@@ -786,7 +805,7 @@ pub static INACCESSIBLE: ToolDef = ToolDef {
     accuracy: "Exact for the geometry; the result carries the angle and distance errors, and assumes the top is plumb over the base",
     when_to_use: "Use this when you need the height of a tower, tree, or building you cannot tape or reach. Measure zenith angles to the top and base and a horizontal distance, or if you cannot get to the object, sight the top from two stations in line with it and give the baseline between them. It returns the height, the top above the instrument, and the distance used.",
     limitations: "It assumes the top is plumb over the base, which is often untrue for a tree or a leaning pole. The two-station method needs both stations in a straight line with the object. Small angle errors grow large when sights are steep or the distance is short. Curvature and refraction are added only beyond the distance you set.",
-    references: &[GHILANI],
+    references: &[GHILANI, TRIMBLE_ACCESS],
     examples: &[Example {
         id: "primary",
         title: "A tower 120 m away, zenith 70° to the top and 92° to the base",
@@ -808,12 +827,15 @@ pub static INACCESSIBLE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
-        value: "6371000",
-        unit: "m",
-        source: "grs80",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        TERRESTRIAL_REFRACTION,
+    ],
     sentence: "The object is {height} tall, measured {distance_used} away.",
     limits: &[("batchRows", 10_000)],
     run: run_inaccessible,

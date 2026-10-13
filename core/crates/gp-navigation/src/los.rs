@@ -31,6 +31,20 @@ const ITU_P530: Reference = Reference {
     locator: "Fresnel ellipsoid clearance and the effective Earth radius factor",
     url: "https://www.itu.int/rec/R-REC-P.530",
 };
+const ESRI_VIEWSHED: Reference = Reference {
+    title: "Geodesic Viewshed (Spatial Analyst)",
+    issuer: "Esri",
+    year: 2026,
+    edition: "ArcGIS Pro 3.6",
+    locator: "Refractivity coefficient parameter: visible-light default 0.13",
+    url: "https://pro.arcgis.com/en/pro-app/3.6/tool-reference/spatial-analyst/viewshed-2.htm",
+};
+const OPTICAL_REFRACTION: Assumption = Assumption {
+    name: "Default visible-light refraction coefficient k",
+    value: "0.13",
+    unit: "1",
+    source: "esri-viewshed",
+};
 
 /// Mean Earth radius the tools default to, meters.
 pub const R_DEFAULT: f64 = 6_371_000.0;
@@ -216,7 +230,7 @@ pub static HORIZON: ToolDef = ToolDef {
     accuracy: "Exact for the model; real refraction varies with the weather, often by 10% or more near the surface",
     when_to_use: "Use this when the question is how far away something can be seen or reached from a height: the horizon from a tower or an aircraft, the range at which a light or a landmark comes into view, or the radio horizon for a line-of-sight link, which is longer because the atmosphere bends the signal. The familiar rules of thumb are shown with their errors.",
     limitations: "It is a smooth sphere with a refraction factor: no terrain, no buildings, and no obstacle between you and the horizon. Real refraction changes with the weather and can move the answer by ten percent or more near the surface, and ducting can carry a signal far past it. For a specific obstacle or a terrain profile, use the visibility and profile tools.",
-    references: &[BOWDITCH],
+    references: &[BOWDITCH, ESRI_VIEWSHED],
     examples: &[Example {
         id: "primary",
         title: "From 100 m up",
@@ -249,6 +263,7 @@ pub static HORIZON: ToolDef = ToolDef {
             unit: "m",
             source: "grs80",
         },
+        OPTICAL_REFRACTION,
         Assumption {
             name: "Radio refraction, the median effective Earth radius factor of 4/3 (k = 0.25)",
             value: "4/3",
@@ -415,7 +430,7 @@ pub static VISIBILITY: ToolDef = ToolDef {
     accuracy: "Exact for the model; real refraction varies with the weather",
     when_to_use: "Use this to ask whether the curve of the Earth alone puts something out of sight: a light or a landmark from a bridge wing, a tower from a receiver, an aircraft from a ground station, a drone from its pilot. Give both heights for the range at which they lose each other, and add a distance to be told whether they can see each other at it, how much of the far object is cut off below the horizon, and how much room the sightline has over the bulge halfway between them.",
     limitations: "This is the curve of the Earth and nothing else. There is no terrain in it, no buildings, no trees: a hill between the two points blocks a sightline this tool calls clear, which is why every answer carries the terrain warning. It is geometry rather than propagation, so it says nothing about whether a radio link closes or a light is bright enough to see at the range it gives — for a radio path the first Fresnel zone wants more clearance than a bare sightline, which is the neighbouring tool. Refraction enters only through the coefficient k, held at a nominal 0.13; real air varies, and a temperature inversion over water can lift a target well beyond the range given here.",
-    references: &[BOWDITCH],
+    references: &[BOWDITCH, ESRI_VIEWSHED],
     examples: &[Example {
         id: "primary",
         title: "From 2 m, a target 30 km away",
@@ -441,12 +456,15 @@ pub static VISIBILITY: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
-        value: "6371000",
-        unit: "m",
-        source: "grs80",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        OPTICAL_REFRACTION,
+    ],
     sentence: "They can see each other up to {max_range} apart.",
     limits: &[("batchRows", 10_000)],
     run: run_visibility,
@@ -565,7 +583,7 @@ pub static DIP: ToolDef = ToolDef {
     accuracy: "Exact for the model; abnormal refraction over water can change dip by several arcminutes",
     when_to_use: "Use this to correct a sextant altitude taken against the sea horizon: the horizon is below true horizontal by this angle, so it is subtracted from every observed altitude. It also answers how far below level the horizon sits from a bridge wing, a lookout, a lighthouse, or a cabin window, which is the angle a camera or a sight has to be depressed to put the horizon on the crosshair.",
     limitations: "It assumes a clear sea horizon and a uniform atmosphere. Over land the visible horizon is terrain rather than the sea, and this answer does not apply; the tool says so rather than guessing. Abnormal refraction over water — a temperature inversion, a cold sea under warm air — moves the real dip by several arcminutes, which is far larger than any rounding here, and no coefficient known in advance captures it. Read the rule difference carefully: most of it is the refraction coefficient, not the rule. The default k is 0.13, while the navigator's 1.76′√h assumes about 0.169, and at that coefficient the rule is within a quarter of a percent of the exact dip.",
-    references: &[BOWDITCH],
+    references: &[BOWDITCH, ESRI_VIEWSHED],
     examples: &[Example {
         id: "primary",
         title: "Height of eye 10 m",
@@ -591,12 +609,15 @@ pub static DIP: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
-    assumptions: &[Assumption {
-        name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
-        value: "6371000",
-        unit: "m",
-        source: "grs80",
-    }],
+    assumptions: &[
+        Assumption {
+            name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
+            value: "6371000",
+            unit: "m",
+            source: "grs80",
+        },
+        OPTICAL_REFRACTION,
+    ],
     sentence: "The horizon dips {dip} below eye level.",
     limits: &[("batchRows", 10_000)],
     run: run_dip,

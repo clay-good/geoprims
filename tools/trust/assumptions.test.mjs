@@ -273,6 +273,23 @@ test('the Fresnel tool exposes every physical constant in its model', () => {
   ]);
 });
 
+test('every default optical refraction coefficient names its source', () => {
+  const expected = new Map([
+    ['navigation.los.horizon', 'esri-viewshed'],
+    ['navigation.los.visibility', 'esri-viewshed'],
+    ['navigation.los.dip', 'esri-viewshed'],
+    ['raster.terrain.line-of-sight', 'esri-viewshed'],
+    ['survey.reduction.slope', 'trimble-access'],
+    ['survey.reduction.curvature-refraction', 'trimble-access'],
+    ['survey.reduction.inaccessible-height', 'trimble-access'],
+  ]);
+  for (const [id, source] of expected) {
+    const assumption = byId(id)['x-assumptions'].find((a) => a.value === '0.13' && a.unit === '1');
+    assert.ok(assumption, `${id} does not declare its default k = 0.13`);
+    assert.equal(assumption.source, source, id);
+  }
+});
+
 test('the fly-by tool exposes its gravity and standard-rate defaults', () => {
   const assumptions = byId('navigation.route.fly-by')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [

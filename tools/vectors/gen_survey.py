@@ -15,6 +15,8 @@ USGS_TRIG = "USGS Techniques and Methods 11-D3, section 5 example reduction tabl
 USGS_TRIG_VER = "2020"
 FHWA_GRADE = "Federal Highway Administration, Noise Barrier Design: Terminology, Grade"
 FHWA_GRADE_VER = "Web page read 2026-10-13"
+FHWA_SIGHT = "Federal Highway Administration, FHWA-HRT-04-103, chapter 7, table 20"
+FHWA_SIGHT_VER = "October 2004"
 FT = 0.3048
 YD3_FT3 = 27.0
 
@@ -1201,6 +1203,68 @@ def sight_distance():
     # A design K is only taken with the source it came from (trust/citations).
     out.append(vec(7, {"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "3.5 ft", "object_height": "2.0 ft", "design_k": 44},
                    {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/design_k_source"}))
+
+    # FHWA table 20 publishes 38.7 m of sight, 1.5 m eye height, a zero-height
+    # object, A = 10%, and 49.8 m of curve for its AASHTO-bicycle row. Rounded
+    # source inputs give 49.923 m, within 0.2 m of the published result.
+    L, case = crest(38.7, 10, 1.5, 0.0)
+    out.append(vec(8, {"curve": "crest", "sight_distance": "38.7 m", "grade_change": 10, "eye_height": "1.5 m", "object_height": "0 m"},
+                   {"result.min_length.value": L, "result.case": case, "result.k": L / 10}, FHWA_SIGHT, FHWA_SIGHT_VER))
+    out[-1]["tolerance"]["result.min_length.value"] = {"rel": 0.0, "abs": 0.2}
+
+    # Both crest regimes, both unit systems, a zero-height object, and the
+    # nonnegative minimum when the short-curve equation falls below zero.
+    crest_cases = [
+        (33.2, 10, 1.2, 0.0, "m"),
+        (120.0, 4.0, 1.08, 0.6, "m"),
+        (250.0, 2.0, 3.5, 2.0, "ft"),
+        (1000.0, 10.0, 3.5, 2.0, "ft"),
+        (20.0, 1.0, 3.5, 2.0, "ft"),
+    ]
+    for S, A, h1, h2, unit in crest_cases:
+        L, case = crest(S, A, h1, h2)
+        L = max(0.0, L)
+        out.append(vec(len(out) + 1, {"curve": "crest", "sight_distance": f"{S} {unit}", "grade_change": A,
+                                      "eye_height": f"{h1} {unit}", "object_height": f"{h2} {unit}"},
+                       {"result.min_length.value": L, "result.case": case, "result.k": L / A}))
+
+    # Sag cases span the S < L and S > L branches and metric and US units.
+    for S, A, H, beta, unit in [
+        (300.0, 4.0, 2.0, 1.0, "ft"),
+        (1000.0, 8.0, 2.0, 1.0, "ft"),
+        (120.0, 5.0, 0.6, 1.0, "m"),
+        (60.0, 1.0, 0.75, 0.5, "m"),
+    ]:
+        L, case = sag(S, A, H, beta)
+        out.append(vec(len(out) + 1, {"curve": "sag", "sight_distance": f"{S} {unit}", "grade_change": A,
+                                      "headlight_height": f"{H} {unit}", "divergence": f"{beta} deg"},
+                       {"result.min_length.value": L, "result.case": case, "result.k": L / A}))
+
+    L, case = sag(500, 6, 2.0, 1.0)
+    out.append(vec(len(out) + 1, {"curve": "sag", "sight_distance": "500 ft", "grade_change": 6,
+                                  "headlight_height": "2 ft", "divergence": "1 deg", "design_k": 80,
+                                  "design_k_source": "Agency design manual, current edition, sag K table"},
+                   {"result.min_length.value": L, "result.case": case, "result.design_length.value": 480.0,
+                    "result.design_source": "Agency design manual, current edition, sag K table"}))
+
+    # Every required input and every explicit physical-domain guard is pinned.
+    invalid = [
+        ({"curve": "crest", "sight_distance": "0 ft", "grade_change": 5, "eye_height": "3.5 ft", "object_height": "2 ft"}, "/sight_distance"),
+        ({"curve": "crest", "sight_distance": "400 ft", "grade_change": 0, "eye_height": "3.5 ft", "object_height": "2 ft"}, "/grade_change"),
+        ({"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "0 ft", "object_height": "2 ft"}, "/eye_height"),
+        ({"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "3.5 ft", "object_height": "-1 ft"}, "/object_height"),
+        ({"curve": "sag", "sight_distance": "400 ft", "grade_change": 5, "headlight_height": "0 ft", "divergence": "1 deg"}, "/headlight_height"),
+        ({"curve": "sag", "sight_distance": "400 ft", "grade_change": 5, "headlight_height": "2 ft", "divergence": "0 deg"}, "/divergence"),
+        ({"curve": "sag", "sight_distance": "400 ft", "grade_change": 5, "headlight_height": "2 ft", "divergence": "90 deg"}, "/divergence"),
+        ({"curve": "sag", "sight_distance": "400 ft", "grade_change": 5, "divergence": "1 deg"}, "/headlight_height"),
+        ({"curve": "sag", "sight_distance": "400 ft", "grade_change": 5, "headlight_height": "2 ft"}, "/divergence"),
+        ({"curve": "crest", "sight_distance": "400 ft", "grade_change": 5, "eye_height": "3.5 ftUS", "object_height": "2 ftUS"}, None),
+    ]
+    for inp, field in invalid:
+        exp = {"ok": False, "error.code": "UNIT_MISMATCH" if field is None else "INVALID_INPUT"}
+        if field is not None:
+            exp["error.field"] = field
+        out.append(vec(len(out) + 1, inp, exp))
     return out
 
 

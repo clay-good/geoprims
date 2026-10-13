@@ -5,7 +5,7 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef, Q};
 use gp_base::units::Quantity as QT;
 use gp_geo::point::plain_angle;
 use libm::{sqrt, tan};
@@ -20,9 +20,19 @@ const GHILANI: Reference = Reference {
     locator: "Chapter 25 (vertical curves: sight distance on crest and sag curves)",
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
+const FHWA_TRAIL_USERS: Reference = Reference {
+    title: "Characteristics of Emerging Road and Trail Users and Their Safety",
+    issuer: "Federal Highway Administration",
+    year: 2004,
+    edition: "FHWA-HRT-04-103",
+    locator: "Chapter 7, equations 9 and 10 and table 20 (minimum crest vertical-curve lengths)",
+    url: "https://www.fhwa.dot.gov/publications/research/safety/04103/07.cfm",
+};
 
 pub static SIGHT_DISTANCE: ToolDef = ToolDef {
     id: "survey.curves.sight-distance",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Vertical curve length for sight distance",
     summary: "The shortest crest or sag vertical curve that gives a sight distance, from the standard formulas with your eye, object, or headlight heights, stating which case applies; design values come from your design manual.",
     aliases: &[
@@ -140,12 +150,12 @@ pub static SIGHT_DISTANCE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "Crest: L = AS²/(200(√h1 + √h2)²) when S < L, else L = 2S − 200(√h1 + √h2)²/A. Sag (headlight): L = AS²/(200(H + S tan β)) when S < L, else L = 2S − 200(H + S tan β)/A (Ghilani & Wolf 2021, ch. 25). Design values are inputs: no design table is reproduced",
     accuracy: "Exact for the formulas; the design values, and whether they apply to your road, come from your design manual",
     when_to_use: "Use this when you are checking or setting the length of a crest or sag vertical curve on a road profile. Enter the sight distance and grade change from your design work, plus the eye and object heights for a crest, or the headlight height and beam spread for a sag. It returns the shortest curve length, which case applies, and the K value, and it can compare a design K you cite.",
     limitations: "It works the standard formulas only. It holds no design tables, so the sight distance, heights, and design K all come from your design manual, and that manual governs. Sag curves are checked for headlight sight only, not for rider comfort, drainage, or overhead structures. It does not check horizontal sight lines around curves or cuts.",
-    references: &[GHILANI],
+    references: &[GHILANI, FHWA_TRAIL_USERS],
     examples: &[Example {
         id: "primary",
         title: "A crest curve for 400 ft of sight with A = 5%",
@@ -157,10 +167,20 @@ pub static SIGHT_DISTANCE: ToolDef = ToolDef {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.curves.vertical-curve",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "survey.curves.vertical-curve",
+            reason: "next",
+        },
+        Related {
+            id: "survey.curves.unequal-vertical-curve",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.earthwork.profile-grades",
+            reason: "next",
+        },
+    ],
     sentence: "The curve must be at least {min_length} long ({case}).",
     limits: &[("batchRows", 10_000)],
     run: run_sight,
@@ -185,10 +205,16 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let u = common_unit(&qs)?;
     let s = s.to(u);
     let a = ctx.number("grade_change")?.expect("required");
-    if s <= 0.0 || a <= 0.0 {
+    if !(s > 0.0) {
+        return Err(ToolError::invalid(
+            "/sight_distance",
+            "The sight distance must be positive.",
+        ));
+    }
+    if !(a > 0.0) {
         return Err(ToolError::invalid(
             "/grade_change",
-            "The sight distance and the grade change must be positive.",
+            "The grade change must be positive.",
         ));
     }
     let crest = ctx.choice("curve")? == Some("crest");
@@ -200,7 +226,20 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 "A crest curve needs the eye and object heights from your design manual.",
             ));
         };
-        let r = sqrt(h1.to(u)) + sqrt(h2.to(u));
+        let (h1, h2) = (h1.to(u), h2.to(u));
+        if !(h1 > 0.0) {
+            return Err(ToolError::invalid(
+                "/eye_height",
+                "The eye height must be positive.",
+            ));
+        }
+        if !(h2 >= 0.0) {
+            return Err(ToolError::invalid(
+                "/object_height",
+                "The object height cannot be negative.",
+            ));
+        }
+        let r = sqrt(h1) + sqrt(h2);
         r * r
     } else {
         let Some(h) = hl else {
@@ -215,9 +254,22 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 "A sag curve needs the headlight divergence from your design manual.",
             )
         })?;
-        h.to(u) + s * tan(beta.to_radians())
+        let h = h.to(u);
+        if !(h > 0.0) {
+            return Err(ToolError::invalid(
+                "/headlight_height",
+                "The headlight height must be positive.",
+            ));
+        }
+        if !(0.0 < beta && beta < 90.0) {
+            return Err(ToolError::invalid(
+                "/divergence",
+                "The upward headlight divergence must be between 0° and 90°.",
+            ));
+        }
+        h + s * tan(beta.to_radians())
     };
-    // Zero or negative heights leave no sight line to design for.
+    // Invalid or non-finite inputs cannot define a usable sight line.
     if !(c > 0.0 && c.is_finite()) {
         return Err(ToolError::invalid(
             if crest {
@@ -225,7 +277,7 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
             } else {
                 "/headlight_height"
             },
-            "The heights must be positive, like a 3.5 ft eye and a 2.0 ft object.",
+            "The sight-line height term must be positive and finite.",
         ));
     }
     let long = a * s * s / (200.0 * c); // S < L

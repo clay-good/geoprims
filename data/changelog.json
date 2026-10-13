@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "survey.curves.sight-distance"
+      ],
+      "vectors": [],
+      "summary": "Vertical curve length for sight distance (version 1.1.0) is now stable. Its crest calculation reproduces FHWA-HRT-04-103 table 20's published 49.8 m result within 0.2 m from the rounded source inputs, and 28 vectors plus scale, symmetry, domain, and zero-height-object invariants cover both crest and headlight-sag cases. Invalid eye, headlight, and beam-angle inputs are now refused; valid-input calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "survey.earthwork.grade"
       ],
       "vectors": [],

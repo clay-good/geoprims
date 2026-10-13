@@ -1073,6 +1073,27 @@
       "editionCheck": false
     },
     {
+      "id": "fhwa-sight-distance-trail-users",
+      "name": "Characteristics of Emerging Road and Trail Users and Their Safety",
+      "issuer": "Federal Highway Administration",
+      "currentEdition": "FHWA-HRT-04-103 (October 2004)",
+      "currentReleaseDate": "2004-10-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read at the issuer on 2026-10-13. Chapter 7 publishes the crest sight-distance equations and table 20; its AASHTO bicycle row gives S = 38.7 m, h1 = 1.5 m, h2 = 0 m, A = 10%, and L = 49.8 m.",
+      "freeAccessUrl": "https://www.fhwa.dot.gov/publications/research/safety/04103/07.cfm",
+      "matchTerms": [
+        "Characteristics of Emerging Road and Trail Users and Their Safety",
+        "FHWA-HRT-04-103"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "flir-3x3",
       "name": "How Far Can You Measure with a Thermal Camera?",
       "issuer": "Teledyne FLIR",

@@ -916,14 +916,69 @@ fn tin_stockpile_approaches_an_analytic_cone() {
 }
 
 #[test]
-fn zero_sight_heights_are_refused_not_infinite() {
-    // Found by the fuzzer: zero eye and object heights divided by zero.
-    let r: serde_json::Value = serde_json::from_str(&gp_survey::REGISTRY.invoke(
+fn sight_distance_invariants() {
+    // Scaling every length scales L and K by the same factor. Swapping the
+    // crest eye and object heights leaves the symmetric height term unchanged.
+    let crest = call(
         "survey.curves.sight-distance",
-        r#"{"curve":"crest","eye_height":0,"grade_change":5,"object_height":0,"sight_distance":"400 ft"}"#,
-    ))
-    .unwrap();
-    assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+        r#"{"curve":"crest","eye_height":"1.5 m","grade_change":10,"object_height":"0 m","sight_distance":"38.7 m"}"#,
+    );
+    assert!((num(&crest, "result.min_length.value") - 49.923).abs() < 1e-12);
+    let crest_scaled = call(
+        "survey.curves.sight-distance",
+        r#"{"curve":"crest","eye_height":"3 m","grade_change":10,"object_height":"0 m","sight_distance":"77.4 m"}"#,
+    );
+    assert!(
+        (num(&crest_scaled, "result.min_length.value")
+            - 2.0 * num(&crest, "result.min_length.value"))
+        .abs()
+            < 1e-12
+    );
+    let a = call(
+        "survey.curves.sight-distance",
+        r#"{"curve":"crest","eye_height":"3.5 ft","grade_change":5,"object_height":"2 ft","sight_distance":"400 ft"}"#,
+    );
+    let b = call(
+        "survey.curves.sight-distance",
+        r#"{"curve":"crest","eye_height":"2 ft","grade_change":5,"object_height":"3.5 ft","sight_distance":"400 ft"}"#,
+    );
+    assert!(
+        (num(&a, "result.min_length.value") - num(&b, "result.min_length.value")).abs() < 1e-12
+    );
+
+    let sag = call(
+        "survey.curves.sight-distance",
+        r#"{"curve":"sag","headlight_height":"2 ft","grade_change":6,"divergence":"1 deg","sight_distance":"500 ft"}"#,
+    );
+    let sag_scaled = call(
+        "survey.curves.sight-distance",
+        r#"{"curve":"sag","headlight_height":"4 ft","grade_change":6,"divergence":"1 deg","sight_distance":"1000 ft"}"#,
+    );
+    assert!(
+        (num(&sag_scaled, "result.min_length.value") - 2.0 * num(&sag, "result.min_length.value"))
+            .abs()
+            < 1e-9
+    );
+
+    // Zero object height is a valid FHWA case; zero eye and headlight heights
+    // are not, and invalid beam angles must not reach tan().
+    for (input, field) in [
+        (
+            r#"{"curve":"crest","eye_height":0,"grade_change":5,"object_height":"2 ft","sight_distance":"400 ft"}"#,
+            "/eye_height",
+        ),
+        (
+            r#"{"curve":"sag","headlight_height":0,"grade_change":5,"divergence":"1 deg","sight_distance":"400 ft"}"#,
+            "/headlight_height",
+        ),
+        (
+            r#"{"curve":"sag","headlight_height":"2 ft","grade_change":5,"divergence":"90 deg","sight_distance":"400 ft"}"#,
+            "/divergence",
+        ),
+    ] {
+        let r = call("survey.curves.sight-distance", input);
+        assert_eq!(r["error"]["field"], field, "{r}");
+    }
 }
 
 #[test]

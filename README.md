@@ -39,6 +39,8 @@ Multirotor hover power is stable for separate or coaxial rotors, explicit aerody
 
 Side slope and grade conversion is stable across percent, per mille, degrees, decimal grades, and explicitly labeled H:V or V:H ratios. It reconstructs rise, run, or slope length, refuses ambiguous bare ratios, and reproduces FHWA's 20 m over 400 m roadway example across 23 vectors.
 
+Vertical-curve sight distance is stable for crest and headlight-sag geometry, including both the sight-line-within-curve and sight-line-beyond-curve cases. It reproduces FHWA's published 49.8 m crest-curve result within the source's rounded-input tolerance, and 28 vectors cover metric and US units, cited design K comparisons, physical bounds, and required inputs.
+
 The aviation catalog covers all 83 planned operations through 90 tool ids: 83 operation tools and 7 narrower airspeed endpoints. Altimeter inputs accept inHg, hPa, `A` groups, and `Q` groups directly rather than multiplying identical pages by unit.
 
 ## Status

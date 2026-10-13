@@ -1799,7 +1799,10 @@
           "want": "check and adjust a traverse, angles and distances",
           "tools": [
             "traverse-closure",
-            "angular-closure"
+            "angular-closure",
+            "bowditch",
+            "transit",
+            "crandall"
           ]
         },
         {

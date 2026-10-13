@@ -573,4 +573,7 @@ export const DIAGRAMS = {
   'survey.cogo.inverse': cogoInverse,
   'survey.cogo.area-by-coordinates': areaPlan,
   'survey.cogo.traverse-closure': traverseClosure,
+  'survey.cogo.bowditch': traverseClosure,
+  'survey.cogo.transit': traverseClosure,
+  'survey.cogo.crandall': traverseClosure,
 };

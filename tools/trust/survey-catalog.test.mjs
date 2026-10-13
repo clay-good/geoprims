@@ -41,6 +41,22 @@ test('radial sideshots are an addressable survey operation', () => {
   assert.ok(tool.vectorCount >= 20, `radial-sideshots has only ${tool.vectorCount} vectors`);
 });
 
+test('each traverse adjustment method is an addressable survey operation', () => {
+  const expected = new Map([
+    ['survey.cogo.bowditch', ['Bowditch adjustment', 'compass rule']],
+    ['survey.cogo.transit', ['transit rule', 'transit traverse adjustment']],
+    ['survey.cogo.crandall', ['Crandall rule', 'bearing-held traverse adjustment']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+  assert.equal(byId.get('survey.cogo.bowditch').stability, 'stable');
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 47, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 50, `survey operation count regressed to ${survey.length}`);
 });

@@ -347,6 +347,38 @@ const COURSE: &[Field] = &[
     )
     .required(),
 ];
+const TRAVERSE_COURSES: Field = Field::new(
+    "courses",
+    "Courses",
+    "Direction and distance for each leg, in order around the loop, like N 0°00'00\" E and 300 ft",
+    Kind::List {
+        items: COURSE,
+        min: 2,
+        max: 2000,
+    },
+)
+.required()
+.core();
+const TRAVERSE_ADJUSTMENT: Field = Field::new(
+    "adjustment",
+    "Adjustment",
+    "none, compass (Bowditch, default), transit, or crandall (bearings held)",
+    Kind::Choice(&["none", "compass", "transit", "crandall"]),
+)
+.core();
+const TRAVERSE_START_NORTHING: Field = len("start_northing", "Start northing", "Default 5000");
+const TRAVERSE_START_EASTING: Field = len("start_easting", "Start easting", "Default 5000");
+const TRAVERSE_INPUTS: &[Field] = &[
+    TRAVERSE_COURSES,
+    TRAVERSE_ADJUSTMENT,
+    TRAVERSE_START_NORTHING,
+    TRAVERSE_START_EASTING,
+];
+const TRAVERSE_METHOD_INPUTS: &[Field] = &[
+    TRAVERSE_COURSES,
+    TRAVERSE_START_NORTHING,
+    TRAVERSE_START_EASTING,
+];
 const ADJUSTED: &[Field] = &[
     Field::new(
         "point",
@@ -373,8 +405,7 @@ pub static TRAVERSE: ToolDef = ToolDef {
     summary: "Latitudes, departures, linear misclosure, and precision ratio for a closed loop traverse, adjusted by the compass (Bowditch), transit, or Crandall rule.",
     aliases: &[
         "traverse closure calculator",
-        "Bowditch adjustment",
-        "compass rule",
+        "traverse adjustment calculator",
     ],
     keywords: &[
         "traverse",
@@ -388,29 +419,7 @@ pub static TRAVERSE: ToolDef = ToolDef {
         "latitudes",
         "departures",
     ],
-    inputs: &[
-        Field::new(
-            "courses",
-            "Courses",
-            "Direction and distance for each leg, in order around the loop, like N 0°00'00\" E and 300 ft",
-            Kind::List {
-                items: COURSE,
-                min: 2,
-                max: 2000,
-            },
-        )
-        .required()
-        .core(),
-        Field::new(
-            "adjustment",
-            "Adjustment",
-            "none, compass (Bowditch, default), transit, or crandall (bearings held)",
-            Kind::Choice(&["none", "compass", "transit", "crandall"]),
-        )
-        .core(),
-        len("start_northing", "Start northing", "Default 5000"),
-        len("start_easting", "Start easting", "Default 5000"),
-    ],
+    inputs: TRAVERSE_INPUTS,
     outputs: &[
         Field::new(
             "precision",
@@ -514,6 +523,10 @@ pub static TRAVERSE: ToolDef = ToolDef {
 };
 
 fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_traverse_with(ctx, None)
+}
+
+fn run_traverse_with(ctx: &mut Ctx, fixed_method: Option<&'static str>) -> Result<Json, ToolError> {
     let rows: Vec<Map<String, Value>> = ctx.rows("courses")?;
     let mut legs = Vec::with_capacity(rows.len());
     let mut qs = Vec::with_capacity(rows.len());
@@ -624,7 +637,10 @@ fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     } else {
         out.push(("precision_ratio", Json::Num(ratio)));
     }
-    let method = ctx.choice("adjustment")?.unwrap_or("compass");
+    let method = match fixed_method {
+        Some(method) => method,
+        None => ctx.choice("adjustment")?.unwrap_or("compass"),
+    };
     if method == "transit" {
         out.push(("note", Json::str("Transit-rule corrections depend on the orientation of the coordinate axes; rotate the grid and the adjustment changes.")));
     }
@@ -644,7 +660,7 @@ fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 ErrorCode::DegenerateGeometry,
                 "The Crandall rule needs courses in at least two directions; use the compass rule for a traverse along one line.",
             )
-            .at("/adjustment"));
+            .at(if fixed_method.is_some() { "/courses" } else { "/adjustment" }));
         }
         k1 = (b * sd - c * sl) / det;
         k2 = (b * sl - a * sd) / det;
@@ -706,6 +722,189 @@ fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     Ok(Json::obj(out))
 }
+
+macro_rules! traverse_adjustment {
+    ($name:ident, $run:ident, $slug:literal, $title:literal, $summary:literal,
+     $aliases:expr, $keywords:expr, $method:literal, $model:literal,
+     $when_to_use:literal, $limitations:literal, $example_title:literal,
+     $example:literal, $source:literal, $sentence:literal, $stability:expr,
+     $warnings:expr, $related:expr) => {
+        pub static $name: ToolDef = ToolDef {
+            id: concat!("survey.cogo.", $slug),
+            title: $title,
+            summary: $summary,
+            aliases: $aliases,
+            keywords: $keywords,
+            inputs: TRAVERSE_METHOD_INPUTS,
+            outputs: TRAVERSE.outputs,
+            errors: TRAVERSE.errors,
+            warnings: $warnings,
+            model: $model,
+            accuracy: TRAVERSE.accuracy,
+            when_to_use: $when_to_use,
+            limitations: $limitations,
+            references: TRAVERSE.references,
+            examples: &[Example {
+                id: "primary",
+                title: $example_title,
+                input: $example,
+                source: $source,
+            }],
+            primary_example: "primary",
+            visualization: TRAVERSE.visualization,
+            related: $related,
+            stability: $stability,
+            sentence: $sentence,
+            limits: TRAVERSE.limits,
+            run: $run,
+            ..ToolDef::BLANK
+        };
+
+        fn $run(ctx: &mut Ctx) -> Result<Json, ToolError> {
+            run_traverse_with(ctx, Some($method))
+        }
+    };
+}
+
+traverse_adjustment!(
+    BOWDITCH,
+    run_bowditch,
+    "bowditch",
+    "Bowditch traverse adjustment",
+    "Adjusts a closed traverse by distributing latitude and departure misclosure in proportion to each course length.",
+    &[
+        "Bowditch adjustment",
+        "compass rule",
+        "compass rule traverse"
+    ],
+    &[
+        "traverse",
+        "Bowditch",
+        "compass rule",
+        "latitude",
+        "departure",
+        "closure"
+    ],
+    "compass",
+    "Compass (Bowditch) rule: each latitude and departure correction is proportional to course length",
+    "Use the Bowditch adjustment when the governing survey specification calls for the compass rule, or when angles and distances were observed with roughly comparable relative precision. It is the common hand-computation rule for a closed plane traverse: inspect the unadjusted misclosure and precision first, then distribute that error by course length and carry the adjusted coordinates from the entered starting point.",
+    "The compass rule is a conventional balancing method, not a way to find or repair a blunder. It assumes the selected rule is appropriate for the observations and spreads the closure error through every course. Directions and distances must already be reduced to one plane grid or local ground system, and all distances must use one linear unit. Legal boundary decisions still require the survey record and professional judgment.",
+    "University of Memphis five-course compass adjustment",
+    r#"{"courses":[{"direction":"S 6-15 W","distance":189.53},{"direction":"S 29-38 E","distance":175.18},{"direction":"N 81-18 W","distance":197.78},{"direction":"N 12-24 W","distance":142.39},{"direction":"N 42-59 E","distance":234.58}],"start_northing":0,"start_easting":0}"#,
+    "University of Memphis CIVL 1112, Surveying - Traverse Calculations, page 4 balanced table",
+    "The Bowditch-adjusted traverse closes at its start after a misclosure of {misclosure} over {total_length}.",
+    gp_base::tool::Stability::Stable,
+    &["PERFECT_CLOSURE", "LEGACY_UNIT", "UNIT_ASSUMED"],
+    &[
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.transit",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.crandall",
+            reason: "alternative"
+        },
+    ]
+);
+
+traverse_adjustment!(
+    TRANSIT,
+    run_transit,
+    "transit",
+    "Transit-rule traverse adjustment",
+    "Adjusts a closed traverse directly by distributing latitude and departure misclosure in proportion to the corresponding component magnitudes.",
+    &["transit rule", "transit traverse adjustment"],
+    &[
+        "traverse",
+        "transit rule",
+        "latitude",
+        "departure",
+        "closure",
+        "orientation"
+    ],
+    "transit",
+    "Transit rule: latitude corrections are proportional to |latitude| and departure corrections to |departure|",
+    "Use the transit rule when the governing survey specification calls for it and angular observations are treated as more precise than distances. The operation reports the same closure evidence as the general traverse tool, fixes the adjustment method so it cannot be selected incorrectly, and carries the adjusted coordinates from the entered starting point.",
+    "Transit-rule corrections depend on the orientation of the coordinate axes; rotating the same measured traverse changes how its latitude and departure corrections are divided. This is a conventional balance, not a blunder detector or a least-squares adjustment. All courses must already be horizontal plane distances in one unit and directions referenced to one grid or assumed north.",
+    "Four-course transit adjustment",
+    r#"{"courses":[{"direction":"45","distance":1000},{"direction":"135","distance":1000},{"direction":"225","distance":999.7},{"direction":"315.01","distance":1000.2}]}"#,
+    "add-survey-suite transit-rule scenario",
+    "The transit-rule adjustment closes at its start after a misclosure of {misclosure} over {total_length}.",
+    gp_base::tool::Stability::Experimental,
+    &[
+        "PERFECT_CLOSURE",
+        "LEGACY_UNIT",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL"
+    ],
+    &[
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.bowditch",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.crandall",
+            reason: "alternative"
+        },
+    ]
+);
+
+traverse_adjustment!(
+    CRANDALL,
+    run_crandall,
+    "crandall",
+    "Crandall-rule traverse adjustment",
+    "Adjusts a closed traverse by holding every measured bearing and applying the closure correction through course distances only.",
+    &[
+        "Crandall rule",
+        "Crandall traverse adjustment",
+        "bearing-held traverse adjustment"
+    ],
+    &[
+        "traverse",
+        "Crandall rule",
+        "bearing held",
+        "distance correction",
+        "closure"
+    ],
+    "crandall",
+    "Crandall rule: bearings are held and distance corrections are solved by weighted least squares with weights proportional to 1/length",
+    "Use the Crandall rule when the governing survey specification says to hold the measured bearings and place the entire correction into course distances. The operation reports the unadjusted closure and precision, solves the 2 × 2 distance-correction system, and carries the adjusted coordinates from the entered starting point without exposing an unrelated method selector.",
+    "The Crandall rule needs courses in at least 2 directions; a traverse along one line is degenerate. It assumes the bearings should be held and does not identify blunders or replace a full network least-squares adjustment. Distances must already be horizontal plane values in one unit, and all bearings must use the same grid or assumed north reference.",
+    "Six-course bearing-held adjustment",
+    r#"{"courses":[{"direction":"15","distance":120},{"direction":"75","distance":95},{"direction":"130","distance":140},{"direction":"200","distance":180},{"direction":"260","distance":90},{"direction":"320","distance":110}]}"#,
+    "add-survey-suite Crandall-rule requirement",
+    "The Crandall adjustment holds every bearing and closes at its start after a misclosure of {misclosure} over {total_length}.",
+    gp_base::tool::Stability::Experimental,
+    &[
+        "PERFECT_CLOSURE",
+        "LEGACY_UNIT",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL"
+    ],
+    &[
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.bowditch",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.transit",
+            reason: "alternative"
+        },
+    ]
+);
 
 // ---------------------------------------------------------------- area
 
@@ -2353,6 +2552,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &FORWARD,
     &radial::SIDESHOTS,
     &TRAVERSE,
+    &BOWDITCH,
+    &TRANSIT,
+    &CRANDALL,
     &AREA,
     &CIRCULAR_CURVE,
     &VERTICAL_CURVE,

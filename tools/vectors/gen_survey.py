@@ -406,6 +406,64 @@ MEMPHIS = "University of Memphis CIVL 1112, Surveying - Traverse Calculations (l
 MEMPHIS_VER = "course notes, retrieved 2026-09-19"
 
 
+def named_traverse(method):
+    base = [
+        [(0, 300.00), (90, 400.02), (180, 299.95), (270.01, 400.00)],
+        [(10.5, 500.0), (100.25, 350.0), (190.6, 499.8), (280.2, 350.3)],
+        [(30, 200.0), (150, 200.05), (270.02, 199.9)],
+        [(45, 1000.0), (135, 1000.0), (225, 999.7), (315.01, 1000.2)],
+        [(0, 100.0), (72, 100.01), (144, 99.98), (216, 100.02), (288.01, 100.0)],
+    ] + MORE_LOOPS
+    memphis = [("S 6-15 W", 189.53), ("S 29-38 E", 175.18), ("N 81-18 W", 197.78),
+               ("N 12-24 W", 142.39), ("N 42-59 E", 234.58)]
+    primary = {
+        "compass": memphis,
+        "transit": base[3],
+        "crandall": MORE_LOOPS[10],
+    }[method]
+    cases = [primary] + [case for case in base if case != primary]
+    if method != "compass":
+        cases.append(memphis)
+
+    out = []
+    for i, courses in enumerate(cases):
+        numeric = [(parse_direction(str(direction)), distance) for direction, distance in courses]
+        inp = {"courses": [{"direction": str(direction), "distance": distance} for direction, distance in courses]}
+        exp = traverse_case(numeric, method)
+        source, version = SRC, VER
+        if method == "compass" and i == 0:
+            inp.update({"start_northing": 0, "start_easting": 0})
+            exp.update({
+                "result.precision": "1:5,175",
+                "result.misclosure.value": 0.182,
+                "result.sum_latitudes.value": -0.079,
+                "result.sum_departures.value": -0.163,
+                "result.total_length.value": 939.46,
+            })
+            for n, (lat, dep) in enumerate([(-188.388, -20.601), (-340.641, 66.047), (-310.708, -129.423), (-171.628, -159.974)], 1):
+                exp[f"result.adjusted.{n}.northing.value"] = lat
+                exp[f"result.adjusted.{n}.easting.value"] = dep
+            source, version = MEMPHIS, MEMPHIS_VER
+        row = vec(len(out) + 1, inp, exp, source, version, rel=1e-9)
+        if method == "compass" and i == 0:
+            row["tolerance"] = {key: {"abs": 0.0015} for key, value in exp.items() if isinstance(value, float)}
+        out.append(row)
+
+    invalid = [
+        ({"courses": [{"direction": "0", "distance": "10 ft"}, {"direction": "180", "distance": "10 ftUS"}]}, "UNIT_MISMATCH", None),
+        ({"courses": [{"direction": "0", "distance": 10}, {"direction": "bad", "distance": 10}]}, "INVALID_INPUT", "/courses/1/direction"),
+        ({"courses": [{"direction": "0", "distance": 10}, {"direction": "180", "distance": 0}]}, "INVALID_INPUT", "/courses"),
+    ]
+    if method == "crandall":
+        invalid.append(({"courses": [{"direction": "0", "distance": 100}, {"direction": "180", "distance": 100.02}]}, "DEGENERATE_GEOMETRY", "/courses"))
+    for inp, code, field in invalid:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
 def area():
     polys = [
         [(0, 0), (0, 100), (50, 100), (50, 0)],
@@ -1879,6 +1937,9 @@ def main():
         "survey.cogo.deflection-angle": deflection_angle(),
         "survey.cogo.radial-sideshots": radial_sideshots(),
         "survey.cogo.inverse": inverse(), "survey.cogo.forward": forward(), "survey.cogo.traverse-closure": traverse(),
+        "survey.cogo.bowditch": named_traverse("compass"),
+        "survey.cogo.transit": named_traverse("transit"),
+        "survey.cogo.crandall": named_traverse("crandall"),
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),
         "survey.reduction.combined-factor": combined(),

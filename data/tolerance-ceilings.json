@@ -227,6 +227,11 @@
       "reason": "The course prints latitudes and departures to 0.001 ft and sums the rounded values, so its totals drift slightly."
     },
     {
+      "tool": "survey.cogo.bowditch",
+      "source": "University of Memphis CIVL 1112",
+      "reason": "The course prints latitudes and departures to 0.001 ft and sums the rounded values, so its adjusted coordinates need a 0.0015 ft comparison allowance."
+    },
+    {
       "tool": "survey.curves.circular-curve",
       "source": "Headquarters, Department of the Army, FM 5-233",
       "reason": "The field manual works the curve from rounded intermediate values, so its tangent and external differ by about 0.01 ft."

@@ -283,6 +283,57 @@ fn traverse_closure_scenario() {
 }
 
 #[test]
+fn named_traverse_adjustments_match_the_general_tool() {
+    let courses = serde_json::json!([
+        {"direction": "15", "distance": 120},
+        {"direction": "75", "distance": 95},
+        {"direction": "130", "distance": 140},
+        {"direction": "200", "distance": 180},
+        {"direction": "260", "distance": 90},
+        {"direction": "320", "distance": 110}
+    ]);
+    for (tool, method) in [
+        ("survey.cogo.bowditch", "compass"),
+        ("survey.cogo.transit", "transit"),
+        ("survey.cogo.crandall", "crandall"),
+    ] {
+        let named = call(
+            tool,
+            &serde_json::json!({
+                "courses": courses,
+                "start_northing": "1200 ft",
+                "start_easting": "3400 ft"
+            })
+            .to_string(),
+        );
+        let general = call(
+            "survey.cogo.traverse-closure",
+            &serde_json::json!({
+                "courses": courses,
+                "adjustment": method,
+                "start_northing": "1200 ft",
+                "start_easting": "3400 ft"
+            })
+            .to_string(),
+        );
+        assert_eq!(named["result"], general["result"], "{tool}");
+        assert_eq!(named["display"], general["display"], "{tool}");
+        let named_warnings: Vec<&Value> = named["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|warning| warning["code"] != "EXPERIMENTAL_TOOL")
+            .collect();
+        let general_warnings: Vec<&Value> = general["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .collect();
+        assert_eq!(named_warnings, general_warnings, "{tool}");
+    }
+}
+
+#[test]
 fn traverse_row_errors_point_at_the_row() {
     let r = call(
         "survey.cogo.traverse-closure",

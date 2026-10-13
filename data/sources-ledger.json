@@ -941,7 +941,7 @@
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-10-13",
-      "verificationNote": "Checked at the issuer on 2026-09-19: the handbook page links faa-h-8083-25c.pdf. Worked examples for pressure altitude, density altitude, runway wind components, and the wind triangle taken from it. Read again on 2026-09-25 (faa-h-8083-25c.pdf): chapter 16, Charting the Course and Figure 16-26 (the Chickasha to Guthrie flight log), and chapter 11, Figure 11-25 (fuel, time, and distance to climb) and Figure 11-26, for the nav log and the climb plan. On 2026-10-13, rechecked chapter 16's fuel-consumption example: 400 NM at 100 kt takes 4 hours, and 5 gal/h uses 20 gal.",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the handbook page links faa-h-8083-25c.pdf. Worked examples for pressure altitude, density altitude, runway wind components, and the wind triangle taken from it. Read again on 2026-09-25 (faa-h-8083-25c.pdf): chapter 16, Charting the Course and Figure 16-26 (the Chickasha to Guthrie flight log), and chapter 11, Figure 11-25 (fuel, time, and distance to climb) and Figure 11-26, for the nav log and the climb plan. On 2026-10-13, rechecked chapter 16's fuel-consumption example (400 NM at 100 kt takes 4 hours, and 5 gal/h uses 20 gal) and chapter 10's Figures 10-5 and 10-6 (75 gal of avgas weighs 450 lb; 40 gal weighs 240 lb).",
       "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
       "matchTerms": [
         "Pilot's Handbook of Aeronautical Knowledge"

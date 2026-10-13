@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "6341c23e5fdb53bb",
+    "hash": "0a8311f9b990eda8",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -152,8 +152,8 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/loading/fuel-weight/": {
-    "hash": "9575c6cdac004305",
-    "lastmod": "2026-10-09"
+    "hash": "3863d6a28030000c",
+    "lastmod": "2026-10-13"
   },
   "/aviation/loading/table-interpolate/": {
     "hash": "f05e2d7fd883ab6c",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "c01df2182a903ff5",
+    "hash": "83b4defa8a856a83",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "bfdb584cbdf26e01",
+    "hash": "315a147af91398a8",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "3872d0e380fbfbaf",
+    "hash": "afacf5a56a8efb90",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "7f838c0219e3e56d",
+    "hash": "ea57cfabe8fc79a5",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "40969de1efdd6e98",
+    "hash": "29f6d0ebfe3c9e47",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

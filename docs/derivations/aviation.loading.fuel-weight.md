@@ -25,22 +25,24 @@ The nominal densities are textbook values. Real fuel density varies with tempera
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed from the handbook's nominal density)
-- sourceTitle: add-aviation-suite fuel-and-loading spec, scenario "Fuel weight"
-- sourceEdition: add-aviation-suite change; density from FAA-H-8083-1B (2016)
-- sourceLocator: openspec/changes/add-aviation-suite/specs/aviation/fuel-and-loading/spec.md, scenario "Fuel weight" (40 US gal of 100LL at the nominal 6.0 lb/gal is 240 lb, labeled nominal); the 6.0 lb/gal density is from FAA-H-8083-1B chapter 2, and the 240 lb product is the spec's
-- independent: no
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
+- sourceEdition: FAA-H-8083-25C (2023)
+- sourceLocator: Chapter 10, Figure 10-6, sample loading problem, usable fuel row
+- independent: yes
 - inputs: volume 40 US gal, fuel 100LL
-- outputs: weight 240 lb, density 6.0 lb/gal, basis nominal
-- tolerance: 1e-9 lb
-- verifiedBy: golden vector v001 and `core/crates/gp-aviation/tests/slice2.rs` `fuel_weight_nominal`
-- verifiedOn: 2026-10-09
+- outputs: weight 240 lb at 6 lb/gal, labeled nominal by the tool
+- tolerance: exact to the printed values
+- verifiedBy: golden vector v006 and `core/crates/gp-aviation/tests/slice2.rs` `fuel_weight_nominal`
+- verifiedOn: 2026-10-13
+
+Figure 10-5 independently gives a second row: 75 gal of avgas weighs 450 lb. Both printed products are golden vectors.
 
 ## Differential tests
 
-- `tools/vectors/gen_aviation.py`: the same products written in Python at four volumes (100LL, Jet A, and an entered density) and one weight back to volume (within 1e-12 relative). The arithmetic is trivial, so this checks unit handling and the density table, not a separate method
-- `core/vectors/aviation.loading.fuel-weight.jsonl`: those five vectors, run through the core on every build
+- `tools/vectors/gen_fuel_weight.py`: a separate Python evaluation of volume × density and its inverse across both nominal fuels, an entered-density override, zero fuel, and three refused inputs; the arithmetic is trivial, so this checks unit handling and the density table, not a separate method
+- `core/vectors/aviation.loading.fuel-weight.jsonl`: those cases and the two printed FAA products, 20 vectors in all, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/slice2.rs` `fuel_weight_nominal`: no test checks an invariant of this tool directly. This test runs the spec scenario and asserts 240 lb (within 1e-9), the "nominal" basis, the NOMINAL_VALUE_USED warning, and that the summary says "nominal"
+- `core/crates/gp-aviation/tests/slice2.rs` `fuel_weight_invariants`: doubling volume doubles weight; equivalent gallons and liters give the same weight and density; converting 240 lb back gives 40 gal; an entered density overrides the selected nominal fuel and removes the nominal-value warning

@@ -334,6 +334,51 @@ fn fuel_weight_nominal() {
     assert!(r["summary"].as_str().unwrap().contains("nominal"));
 }
 
+#[test]
+fn fuel_weight_invariants() {
+    let volume = |value: &str, fuel: &str| {
+        call(
+            "aviation.loading.fuel-weight",
+            &format!(r#"{{"volume":"{value}","fuel":"{fuel}"}}"#),
+        )
+    };
+    let base = volume("40 gal", "100ll");
+    let scaled = volume("80 gal", "100ll");
+    let metric = volume("151.41647136 L", "100ll");
+    near(
+        &scaled,
+        "result.weight.value",
+        2.0 * num(&base, "result.weight.value"),
+        1e-9,
+    );
+    near(
+        &metric,
+        "result.weight.value",
+        num(&base, "result.weight.value"),
+        1e-9,
+    );
+    near(
+        &metric,
+        "result.density.value",
+        num(&base, "result.density.value"),
+        1e-12,
+    );
+
+    let back = call(
+        "aviation.loading.fuel-weight",
+        r#"{"weight":"240 lb","fuel":"100ll"}"#,
+    );
+    near(&back, "result.volume.value", 40.0, 1e-12);
+
+    let entered = call(
+        "aviation.loading.fuel-weight",
+        r#"{"volume":"40 gal","fuel":"100ll","density":"5.8 lb/gal"}"#,
+    );
+    near(&entered, "result.weight.value", 232.0, 1e-9);
+    assert_eq!(entered["result"]["density_basis"], "entered");
+    assert!(!warns(&entered, "NOMINAL_VALUE_USED"));
+}
+
 const STATIONS: &str = r#"[{"name":"Empty","weight":"1500 lb","arm":"85 in"},{"name":"Front seats","weight":"340 lb","arm":"90 in"},{"name":"Rear seats","weight":"170 lb","arm":"118 in"},{"name":"Fuel","weight":"240 lb","arm":"48 in"}]"#;
 const ENVELOPE: &str = r#"[{"arm":"82 in","weight":"1500 lb"},{"arm":"93 in","weight":"1500 lb"},{"arm":"93 in","weight":"2300 lb"},{"arm":"84 in","weight":"2300 lb"},{"arm":"82 in","weight":"1950 lb"}]"#;
 

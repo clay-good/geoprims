@@ -26,8 +26,15 @@ const fn qty(
 /// Nominal fuel densities (lb per US gallon), FAA-H-8083-1B chapter 2.
 pub const FUELS: &[(&str, &str, f64)] = &[("100ll", "100LL avgas", 6.0), ("jet-a", "Jet A", 6.7)];
 
+const PHAK_FUEL_WEIGHT: Reference = Reference {
+    locator: "Chapter 10, Figure 10-5 (75 gal of avgas weighs 450 lb) and Figure 10-6 (40 gal weighs 240 lb)",
+    ..PHAK
+};
+
 pub static FUEL_WEIGHT: ToolDef = ToolDef {
     id: "aviation.loading.fuel-weight",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Fuel weight",
     summary: "Fuel weight from volume, or volume from weight, for avgas or jet fuel at a nominal density or one you enter.",
     aliases: &[
@@ -90,27 +97,38 @@ pub static FUEL_WEIGHT: ToolDef = ToolDef {
             Kind::Text { max_len: 40 },
         ),
     ],
-    warnings: &["NOMINAL_VALUE_USED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["NOMINAL_VALUE_USED", "UNIT_ASSUMED"],
     model: "Weight = volume × density",
     accuracy: "Exact for the density used. Real fuel density varies with temperature and batch by a few percent.",
     when_to_use: "Use this when you load fuel by volume but your weight and balance needs pounds, or the reverse. Enter gallons or pounds and choose 100LL or Jet A, or type your own measured density. It returns the weight, the volume, and the density it used. It also tells you how many gallons fit under a weight you must stay below. Carry the fuel weight into the weight and balance sheet and the fuel plan.",
     limitations: "The nominal densities, 6.0 lb/gal for avgas and 6.7 lb/gal for Jet A, are textbook values. Real fuel changes with temperature and from batch to batch by a few percent, which can matter when you are close to a weight limit. Volumes are US gallons unless you enter another unit. The tool does not know your tank capacity or unusable fuel; the POH lists both.",
-    references: &[WB_HANDBOOK],
+    references: &[WB_HANDBOOK, PHAK_FUEL_WEIGHT],
     examples: &[Example {
         id: "primary",
         title: "40 US gal of 100LL",
         input: r#"{"volume":"40 gal","fuel":"100ll"}"#,
-        source: "add-aviation-suite fuel scenario: 240 lb at the nominal 6.0 lb/gal (FAA-H-8083-1B chapter 2)",
+        source: "FAA-H-8083-25C chapter 10, Figure 10-6: 40 gal of avgas at 6 lb/gal weighs 240 lb",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "aviation.loading.weight-balance",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "aviation.loading.weight-balance",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.loading.burn-rate",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.loading.fuel-plan",
+            reason: "next",
+        },
+    ],
     sentence: "{volume} of fuel weighs {weight}.{warn NOMINAL_VALUE_USED} This uses a nominal density.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_fuel_weight,

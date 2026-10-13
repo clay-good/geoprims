@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.loading.fuel-weight"
+      ],
+      "vectors": [],
+      "summary": "Fuel weight (version 1.1.0) is now stable. Two vectors reproduce the FAA Pilot's Handbook's printed 40-gallon/240-pound and 75-gallon/450-pound avgas rows. The tool now has 20 vectors plus scaling, inverse, unit, and density-override invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.wind.one-in-sixty"
       ],
       "vectors": [],

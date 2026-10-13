@@ -28,7 +28,7 @@ const ITU_P530: Reference = Reference {
     issuer: "International Telecommunication Union",
     year: 2025,
     edition: "P.530-19 (09/2025)",
-    locator: "Section 2.2.2, path clearance: the first Fresnel ellipsoid over the path profile with the effective Earth radius factor",
+    locator: "Sections 2.2.1–2.2.2, first Fresnel radius, effective Earth radius, and path-clearance planning criteria",
     url: "https://www.itu.int/rec/R-REC-P.530",
 };
 const ESRI_VIEWSHED: Reference = Reference {
@@ -233,7 +233,7 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
         Field::new(
             "fresnel_worst_percent",
             "Least Fresnel clearance, percent",
-            "Clearance as a percent of the first Fresnel radius at the worst point; 60 is the usual minimum",
+            "Clearance as a percent of the first Fresnel radius at the worst point; 60 is the free-space propagation screen",
             Kind::Number {
                 min: -1e12,
                 max: 1e12,
@@ -271,8 +271,8 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
     warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Spherical Earth of effective radius R/(1 − k), the sight line as the straight chord between the antennas, clearance along the local vertical, and the first Fresnel radius √(λ d1 d2 / d)",
     accuracy: "Exact for the model at the points given; the ground between points is not checked, and real refraction varies with the weather",
-    when_to_use: "Use this when there is ground between two points and the question is whether it gets in the way: a ridge between a pilot and a drone, a hill between a tower and a receiver, or the path of a radio link across a valley. Enter the ground profile from the observer to the target with both heights above the ground. It says whether the target is in sight, where the ground comes closest to the sight line, how high the observer would have to be to see over it, and, with a frequency, whether 60% of the first Fresnel zone is clear and where it is not.",
-    limitations: "Only the points you give are checked, and the ground between them is not, so a narrow peak missed by the profile can still block the view; sample at least every break in the ground. Buildings, trees, and towers are not part of the ground unless you add their heights to it. Refraction enters only through k, and real air varies: plan a radio link against a lower k as well. The Fresnel check is a clearance rule, not a diffraction loss, so it does not say how much signal an obstruction costs.",
+    when_to_use: "Use this when there is ground between two points and the question is whether it gets in the way: a ridge between a pilot and a drone, a hill between a tower and a receiver, or the path of a radio link across a valley. Enter the ground profile from the observer to the target with both heights above the ground. It says whether the target is in sight, where the ground comes closest to the sight line, how high the observer would have to be to see over it, and, with a frequency, whether the path meets ITU-R P.530's 60% free-space clearance screen and where it does not.",
+    limitations: "Only the points you give are checked, and the ground between them is not, so a narrow peak missed by the profile can still block the view; sample at least every break in the ground. Buildings, trees, and towers are not part of the ground unless you add their heights to it. Refraction enters only through k, and real air varies: plan a radio link against a lower k as well. The 60% figure is a screen, not a universal antenna-height criterion; ITU-R P.530's detailed procedure varies clearance with frequency, climate, path length, obstruction type, and diversity. The Fresnel check is not a diffraction-loss calculation, so it does not say how much signal an obstruction costs.",
     references: &[ITU_P530, ESRI_VIEWSHED],
     examples: &[Example {
         id: "primary",
@@ -316,6 +316,18 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
             name: "Radio refraction, the median effective Earth radius factor of 4/3 (k = 0.25)",
             value: "4/3",
             unit: "1",
+            source: "itu-r-p530",
+        },
+        Assumption {
+            name: "Speed of light in vacuum",
+            value: "299792458",
+            unit: "m/s",
+            source: "nist-sp-811",
+        },
+        Assumption {
+            name: "Free-space propagation clearance screen, as a share of the first Fresnel radius",
+            value: "60",
+            unit: "%",
             source: "itu-r-p530",
         },
     ],

@@ -1196,8 +1196,8 @@
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
-    "hash": "3384cfbf14d9fbdc",
-    "lastmod": "2026-10-12"
+    "hash": "43588b842e94b597",
+    "lastmod": "2026-10-13"
   },
   "/navigation/geodesic/": {
     "hash": "927429e8c69ee6c2",
@@ -1252,16 +1252,16 @@
     "lastmod": "2026-10-09"
   },
   "/navigation/los/": {
-    "hash": "237922b2713f8fc5",
-    "lastmod": "2026-09-23"
+    "hash": "18f73030c59d75a0",
+    "lastmod": "2026-10-13"
   },
   "/navigation/los/dip/": {
     "hash": "0e3dc18155faea1a",
     "lastmod": "2026-10-13"
   },
   "/navigation/los/fresnel/": {
-    "hash": "470b88d6c605e9a9",
-    "lastmod": "2026-10-12"
+    "hash": "e0a747bf42fce589",
+    "lastmod": "2026-10-13"
   },
   "/navigation/los/horizon/": {
     "hash": "af3542cbe7daddb3",
@@ -1424,7 +1424,7 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/line-of-sight/": {
-    "hash": "3a02ffae1a44fcb7",
+    "hash": "1af994e9319bca3e",
     "lastmod": "2026-10-13"
   },
   "/raster/terrain/ruggedness/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "4f0d9794cd748e32",
+    "hash": "83657e80d77cc8b4",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "842530cb0fc2a74c",
+    "hash": "2e468b4485937249",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

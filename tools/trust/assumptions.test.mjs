@@ -264,12 +264,22 @@ test('the sensing tools expose their published LAS and USGS tables', () => {
   ]);
 });
 
-test('the Fresnel tool exposes every physical constant in its model', () => {
-  const assumptions = byId('navigation.los.fresnel')['x-assumptions'];
-  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+test('the Fresnel tools expose every physical constant and clearance screen in their models', () => {
+  const point = byId('navigation.los.fresnel')['x-assumptions'];
+  assert.deepEqual(point.map(({ value, unit, source }) => [value, unit, source]), [
     ['6371000', 'm', 'grs80'],
     ['299792458', 'm/s', 'nist-sp-811'],
     ['4/3', '1', 'itu-r-p530'],
+    ['60', '%', 'itu-r-p530'],
+  ]);
+
+  const terrain = byId('raster.terrain.line-of-sight')['x-assumptions'];
+  assert.deepEqual(terrain.map(({ value, unit, source }) => [value, unit, source]), [
+    ['6371000', 'm', 'grs80'],
+    ['0.13', '1', 'esri-viewshed'],
+    ['4/3', '1', 'itu-r-p530'],
+    ['299792458', 'm/s', 'nist-sp-811'],
+    ['60', '%', 'itu-r-p530'],
   ]);
 });
 

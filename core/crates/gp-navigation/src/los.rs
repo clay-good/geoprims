@@ -28,7 +28,7 @@ const ITU_P530: Reference = Reference {
     issuer: "International Telecommunication Union",
     year: 2025,
     edition: "P.530-19 (09/2025)",
-    locator: "Fresnel ellipsoid clearance and the effective Earth radius factor",
+    locator: "Sections 2.2.1–2.2.2, first Fresnel radius, effective Earth radius, and path-clearance planning criteria",
     url: "https://www.itu.int/rec/R-REC-P.530",
 };
 const ESRI_VIEWSHED: Reference = Reference {
@@ -673,7 +673,7 @@ pub static FRESNEL: ToolDef = ToolDef {
     id: "navigation.los.fresnel",
     stability: gp_base::tool::Stability::Stable,
     title: "Fresnel zone and radio link clearance",
-    summary: "The first Fresnel zone radius at a point on a radio link, the 60% clearance it needs, and the Earth's bulge there, summed into the clearance above a smooth Earth.",
+    summary: "The first Fresnel zone radius at a point on a radio link, its 60% free-space clearance screen, and the Earth's bulge there, summed into the clearance above a smooth Earth.",
     aliases: &[
         "fresnel zone",
         "radio link clearance",
@@ -725,7 +725,7 @@ pub static FRESNEL: ToolDef = ToolDef {
         qf(
             "required_clearance",
             "Required clearance",
-            "60% of the first Fresnel radius plus the Earth bulge",
+            "The 60% free-space clearance screen plus the Earth bulge",
             QT::Length,
             "m",
         )
@@ -741,7 +741,7 @@ pub static FRESNEL: ToolDef = ToolDef {
         qf(
             "clearance_60",
             "60% of the Fresnel radius",
-            "The usual minimum",
+            "ITU-R P.530's free-space propagation screen",
             QT::Length,
             "m",
         )
@@ -759,8 +759,8 @@ pub static FRESNEL: ToolDef = ToolDef {
     warnings: &["TERRAIN_NOT_CONSIDERED", "INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "First Fresnel zone √(λ d1 d2 / d) and Earth bulge on an effective radius R/(1 − k)",
     accuracy: "Exact for the model; the effective Earth radius varies with the weather, so plan margin for lower k",
-    when_to_use: "Use this when planning a radio path rather than a sightline: a drone control link, a point-to-point backhaul, a repeater shot across a valley. A radio link needs more room than a bare line of sight, because the signal travels in a zone around the straight path and an obstacle intruding into that zone costs signal even when nothing blocks the view. This gives the first Fresnel zone's radius at a point along the path, the 60% of it that is the usual planning rule, the Earth's bulge there, and the two added: the height a smooth Earth path has to clear.",
-    limitations: "This is clearance above a smooth Earth, not above the ground you are actually shooting over, so a terrain profile still has to be laid under it. It is one zone at one point on the path, not a diffraction loss: an obstacle inside the 60% figure degrades the link by an amount this does not compute. The Earth bulge depends on the refractive K factor, held at the standard 4/3; real air departs from it, and a sub-refractive day flattens the effective Earth and raises the bulge, which is why margin is planned against lower K rather than the nominal. Frequency is treated as a single wavelength, so a wideband or frequency-hopping link should be planned at its lowest frequency, where the zone is widest.",
+    when_to_use: "Use this when planning a radio path rather than a sightline: a drone control link, a point-to-point backhaul, a repeater shot across a valley. A radio link needs more room than a bare line of sight, because the signal travels in a zone around the straight path and an obstacle intruding into that zone costs signal even when nothing blocks the view. This gives the first Fresnel zone's radius at a point along the path, ITU-R P.530's 60% screen for free-space propagation conditions, the Earth's bulge there, and the two added: the height a smooth Earth path has to clear.",
+    limitations: "This is clearance above a smooth Earth, not above the ground you are actually shooting over, so a terrain profile still has to be laid under it. It is one zone at one point on the path, not a diffraction loss: an obstacle inside the 60% figure degrades the link by an amount this does not compute. The 60% figure is a screen, not a universal antenna-height criterion; ITU-R P.530's detailed procedure varies clearance with frequency, climate, path length, obstruction type, and diversity. The Earth bulge depends on the refractive K factor, held at the standard 4/3; real air departs from it, and a sub-refractive day flattens the effective Earth and raises the bulge, which is why margin is planned against lower K rather than the nominal. Frequency is treated as a single wavelength, so a wideband or frequency-hopping link should be planned at its lowest frequency, where the zone is widest.",
     references: &[ITU_P530],
     examples: &[Example {
         id: "primary",
@@ -806,8 +806,14 @@ pub static FRESNEL: ToolDef = ToolDef {
             unit: "1",
             source: "itu-r-p530",
         },
+        Assumption {
+            name: "Free-space propagation clearance screen, as a share of the first Fresnel radius",
+            value: "60",
+            unit: "%",
+            source: "itu-r-p530",
+        },
     ],
-    sentence: "At that point the link needs {required_clearance} of clearance above a smooth Earth.",
+    sentence: "At that point the 60% screen calls for {required_clearance} of clearance above a smooth Earth.",
     limits: &[("batchRows", 10_000)],
     run: run_fresnel,
     ..ToolDef::BLANK

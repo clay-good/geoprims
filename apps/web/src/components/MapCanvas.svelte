@@ -72,7 +72,9 @@
     const label = nice >= 1000 ? `${(nice / 1000).toLocaleString('en-US')} km` : `${nice.toLocaleString('en-US')} m`;
     return { px: nice / perPx, label };
   }
-  let reduced = false;
+  // Read this before the first reactive rebuild. `onMount` runs too late to
+  // guarantee that the first camera move honors reduced motion.
+  let reduced = reducedMotion();
 
   const size = () => {
     const r = canvas.getBoundingClientRect();
@@ -448,9 +450,11 @@
   onMount(() => {
     addEventListener('gp-shortcut', onShortcut);
     fmt = coordFormat();
-    const onPrefs = () => (fmt = coordFormat());
+    const onPrefs = () => {
+      fmt = coordFormat();
+      reduced = reducedMotion();
+    };
     addEventListener('gp-prefs', onPrefs);
-    reduced = reducedMotion();
     loadBasemap('110m')
       .then((bundled) => {
         base = bundled;

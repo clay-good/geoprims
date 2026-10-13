@@ -11,6 +11,7 @@ from pathlib import Path
 
 SRC = "Heading arithmetic and Bolton (1980) eq. 15 worked in Python (tools/vectors/gen_heading.py)"
 SPEC = "add-aviation-suite scenarios"
+FAA = "FAA Pilot's Handbook of Aeronautical Knowledge (FAA-H-8083-25C), chapter 16, Figure 16-26"
 
 
 def n360(a):
@@ -29,14 +30,15 @@ def card_dev(card, h):
     return a[1] + ((h - a[0]) % 360.0) / span * (b[1] - a[1])
 
 
-def vec(i, inp, exp, src=SRC, tol=1e-9):
+def vec(i, inp, exp, src=SRC, version="2026", tol=1e-9):
     e = dict(exp)
     e.setdefault("ok", True)
     t = {k: {"rel": 0, "abs": tol} for k, v in e.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
-    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": "2026", "tolerance": t}
+    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": version, "tolerance": t}
 
 
 def chain():
+    # Preserve the eight originally published vectors byte for byte.
     out = []
     card = [(30, 1), (60, 2), (90, -1), (120, -2), (180, 0), (270, 1.5), (330, 0.5)]
     cases = [(70, -5, -10, card[:4]), (70, -5, -10, card), (180, 8, 12, card), (350, 12, -3, card), (0, 0, 0, []), (255, -3, 7.5, card), (20, 0, 14, card)]
@@ -51,6 +53,50 @@ def chain():
         out.append(vec(len(out) + 1, inp, {"result.true_heading.value": th, "result.magnetic_heading.value": mh, "result.deviation.value": dev, "result.compass_heading.value": ch},
                        SPEC if len(out) == 0 else SRC))
     out.append(vec(len(out) + 1, {"true_course": "70 deg", "variation": "0 deg", "deviation_card": [{"heading": "60 deg", "deviation": "40 deg"}]}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(9, {
+        "true_course": "31 deg",
+        "wind_correction": "-3 deg",
+        "variation": "7 deg",
+        "deviation_card": [{"heading": "21 deg", "deviation": "-2 deg"}],
+    }, {
+        "result.true_heading.value": 28.0,
+        "result.magnetic_heading.value": 21.0,
+        "result.deviation.value": -2.0,
+        "result.compass_heading.value": 23.0,
+    }, FAA, "FAA-H-8083-25C (2023)"))
+    extra = [
+        (90, 0, 9, []),
+        (90, 0, -9, []),
+        (350, 15, 0, []),
+        (5, -15, 0, []),
+        (200, 5, 12, [(180, -1)]),
+        (350, 5, 0, [(330, 0.5), (30, 1)]),
+        (60, 0, 0, [(30, 1), (60, 2), (90, -1)]),
+        (70, -5, -10, [(120, -2), (30, 1), (90, -1), (60, 2)]),
+    ]
+    for tc, wca, var, cd in extra:
+        th = n360(tc + wca)
+        mh = n360(th - var)
+        dev = card_dev(cd, mh)
+        ch = n360(mh - dev)
+        inp = {"true_course": f"{tc} deg", "wind_correction": f"{wca} deg", "variation": f"{var} deg"}
+        if cd:
+            inp["deviation_card"] = [{"heading": f"{h} deg", "deviation": f"{d} deg"} for h, d in cd]
+        out.append(vec(len(out) + 1, inp, {
+            "result.true_heading.value": th,
+            "result.magnetic_heading.value": mh,
+            "result.deviation.value": dev,
+            "result.compass_heading.value": ch,
+        }))
+    out.extend([
+        vec(18, {"true_course": "70 deg", "wind_correction": "90 deg", "variation": "0 deg"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+        vec(19, {"true_course": "70 deg", "variation": "181 deg"}, {"ok": False, "error.code": "INVALID_INPUT"}),
+        vec(20, {"true_course": "70 deg", "variation": "0 deg", "deviation_card": [
+            {"heading": "60 deg", "deviation": "1 deg"},
+            {"heading": "420 deg", "deviation": "2 deg"},
+        ]}, {"ok": False, "error.code": "INVALID_INPUT"}),
+    ])
+    assert len(out) == 20
     return out
 
 

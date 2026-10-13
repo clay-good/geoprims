@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "4dd60d51e3046056",
+    "hash": "fad2c9fed4e32527",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "98809b452a056629",
+    "hash": "a0259e5d6279e35c",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -244,7 +244,7 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/heading-chain/": {
-    "hash": "ac44de253cdf7101",
+    "hash": "4a9cb4ce31ab691d",
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/heading-groundspeed/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "124532387a7882c8",
+    "hash": "4abe7e5b14af71f3",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "ad677c8840c59f5d",
+    "hash": "7290616d7983f09c",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "0cc1c2033460a064",
+    "hash": "7dc0e237141be259",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "47f77998629b777a",
+    "hash": "45545427ac642a15",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

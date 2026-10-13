@@ -25,7 +25,7 @@ const fn qty(
 }
 
 const PHAK_NAV: Reference = Reference {
-    locator: "Navigation chapter (magnetic variation, compass deviation and the deviation card, and the compass heading)",
+    locator: "Chapter 16, Figure 16-26 and page 16-20 (TC 031°, WCA 3° left, TH 028°, 7° E variation, MH 021°, +2° compass correction, CH 023°)",
     ..PHAK
 };
 
@@ -55,6 +55,8 @@ const STEP_ROW: &[Field] = &[
 
 pub static HEADING_CHAIN: ToolDef = ToolDef {
     id: "aviation.wind.heading-chain",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "True course to compass heading",
     summary: "From true course through the wind correction, variation, and your compass deviation card to the heading to fly on the compass, each step shown.",
     aliases: &[
@@ -151,7 +153,7 @@ pub static HEADING_CHAIN: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "True heading = true course + wind correction; magnetic = true − variation (east positive: \"east is least\"); compass = magnetic − deviation, the deviation read from the card by linear interpolation between its two nearest headings, around the circle (PHAK, navigation)",
     accuracy: "Exact arithmetic; the deviation is as good as the card",
     when_to_use: "Use this when you fill in a navigation log by hand and need the compass heading for a leg. Enter the true course, your wind correction angle, the variation from the chart, and your compass deviation card if you have one. It walks each step, true heading, then magnetic, then compass, so you can check your work line by line. It reads between the headings listed on the card.",
@@ -159,9 +161,9 @@ pub static HEADING_CHAIN: ToolDef = ToolDef {
     references: &[PHAK_NAV],
     examples: &[Example {
         id: "primary",
-        title: "Course 070° true, 5° left wind correction, 10° W variation, and a card",
-        input: r#"{"true_course":"070 deg","wind_correction":"-5 deg","variation":"-10 deg","deviation_card":[{"heading":"030 deg","deviation":"1 deg"},{"heading":"060 deg","deviation":"2 deg"},{"heading":"090 deg","deviation":"-1 deg"},{"heading":"120 deg","deviation":"-2 deg"}]}"#,
-        source: "add-aviation-suite deviation-card scenario: magnetic 075°, between +2° at 060° and -1° at 090°, reads +0.5°; compass 074.5°",
+        title: "FAA Chickasha-to-Guthrie flight log",
+        input: r#"{"true_course":"031 deg","wind_correction":"-3 deg","variation":"7 deg","deviation_card":[{"heading":"021 deg","deviation":"-2 deg"}]}"#,
+        source: "FAA-H-8083-25C Figure 16-26: TC 031°, WCA 3° left, TH 028°, MH 021°, and CH 023°",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -176,6 +178,10 @@ pub static HEADING_CHAIN: ToolDef = ToolDef {
         Related {
             id: "aviation.wind.uv",
             reason: "alternative",
+        },
+        Related {
+            id: "aviation.flight-plan.nav-log",
+            reason: "next",
         },
     ],
     sentence: "Fly {compass_heading} on the compass: {magnetic_heading} magnetic, with {deviation} of deviation.",

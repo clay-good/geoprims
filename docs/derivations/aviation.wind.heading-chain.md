@@ -27,22 +27,25 @@ The deviation between card entries is a straight-line interpolation, so it is on
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite wind-and-navigation spec, scenario "Deviation card interpolation"
-- sourceEdition: add-aviation-suite change; method from FAA-H-8083-25C (2023)
-- sourceLocator: openspec/changes/add-aviation-suite/specs/aviation/wind-and-navigation/spec.md, requirement "Heading chain" (+2° at 060° and −1° at 090° read +0.5° at 075°); the tool example's course, wind correction, and variation that lead to 075° are the project's own
-- independent: no
-- inputs: true course 070°, wind correction −5°, variation −10° (10° W), card 030° +1°, 060° +2°, 090° −1°, 120° −2°
-- outputs: true heading 065°, magnetic heading 075°, deviation +0.5°, compass heading 074.5°
-- tolerance: 1e-9 degree
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
+- sourceEdition: FAA-H-8083-25C (2023)
+- sourceLocator: Chapter 16, Figure 16-26 and page 16-20, Chickasha Airport to Guthrie Airport flight log
+- independent: yes
+- inputs: true course 031°, wind correction 3° left, variation 7° E, compass correction +2°
+- outputs: true heading 028°, magnetic heading 021°, compass heading 023°
+- tolerance: 1e-12° for the printed whole-degree values
+- verifiedBy: golden vector v009 and `core/crates/gp-aviation/tests/slice2.rs` `heading_chain_matches_phak_flight_log`
+- verifiedOn: 2026-10-13
+
+The handbook's flight log records the amount to add to magnetic heading as a +2° compass correction. This tool's input is the physical deviation with east positive, which is subtracted, so the same correction is entered as −2° deviation. The resulting 023° compass heading is unchanged.
 
 ## Differential tests
 
-- `tools/vectors/gen_heading.py`: the same chain and card interpolation written separately in Python, at six cases, including a card read across north (MH 005° between 330° and 030°) and no card, plus one card with a 40° deviation that must fail. It checks the code against the stated method, not against a separate one
-- `core/vectors/aviation.wind.heading-chain.jsonl`: those vectors and the spec scenario, run through the core on every build
+- `tools/vectors/gen_heading.py`: the same chain and card interpolation written separately in Python across direct, east- and west-variation, north-wrapping, one-entry, exact-entry, unsorted-card, and cross-north interpolation cases, plus invalid wind correction, variation, duplicate-heading, and deviation cases. It checks the code against the stated method, not against a separate one
+- `core/vectors/aviation.wind.heading-chain.jsonl`: those cases and the independently published FAA flight log, 20 vectors in all, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no test checks an invariant of this tool directly. This test runs the vectors above through the core and requires at least five per tool; among them, the same heading with a four-entry and a seven-entry card gives the same deviation, and zero course, correction, and variation with no card gives 000°
+- `core/crates/gp-aviation/tests/slice2.rs` `heading_chain_matches_phak_flight_log`: the full FAA chain reproduces 028° true, 021° magnetic, and 023° compass
+- `core/crates/gp-aviation/tests/slice2.rs` `heading_chain_invariants`: adding 360° to true course leaves every output unchanged; east variation subtracts from true heading; an empty card leaves magnetic and compass headings equal; interpolation across north follows the same signed-deviation equation

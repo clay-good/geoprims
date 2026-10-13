@@ -477,6 +477,55 @@ fn specific_range_invariants() {
     }
 }
 
+#[test]
+fn heading_chain_matches_phak_flight_log() {
+    let r = call(
+        "aviation.wind.heading-chain",
+        r#"{"true_course":"031 deg","wind_correction":"-3 deg","variation":"7 deg","deviation_card":[{"heading":"021 deg","deviation":"-2 deg"}]}"#,
+    );
+    near(&r, "result.true_heading.value", 28.0, 1e-12);
+    near(&r, "result.magnetic_heading.value", 21.0, 1e-12);
+    near(&r, "result.deviation.value", -2.0, 1e-12);
+    near(&r, "result.compass_heading.value", 23.0, 1e-12);
+}
+
+#[test]
+fn heading_chain_invariants() {
+    let run = |course: &str, variation: &str, card: &str| {
+        call(
+            "aviation.wind.heading-chain",
+            &format!(
+                r#"{{"true_course":"{course}","wind_correction":"5 deg","variation":"{variation}","deviation_card":{card}}}"#
+            ),
+        )
+    };
+    let card = r#"[{"heading":"330 deg","deviation":"0.5 deg"},{"heading":"030 deg","deviation":"1 deg"}]"#;
+    let base = run("350 deg", "0 deg", card);
+    let wrapped = run("710 deg", "0 deg", card);
+    for path in [
+        "result.true_heading.value",
+        "result.magnetic_heading.value",
+        "result.deviation.value",
+        "result.compass_heading.value",
+    ] {
+        near(&wrapped, path, num(&base, path), 1e-12);
+    }
+
+    let east = run("350 deg", "10 deg", "[]");
+    near(&east, "result.true_heading.value", 355.0, 1e-12);
+    near(&east, "result.magnetic_heading.value", 345.0, 1e-12);
+    near(&east, "result.deviation.value", 0.0, 1e-12);
+    near(&east, "result.compass_heading.value", 345.0, 1e-12);
+
+    near(&base, "result.deviation.value", 0.7083333333333334, 1e-12);
+    near(
+        &base,
+        "result.compass_heading.value",
+        num(&base, "result.magnetic_heading.value") - num(&base, "result.deviation.value"),
+        1e-12,
+    );
+}
+
 // loading
 
 #[test]

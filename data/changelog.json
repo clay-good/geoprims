@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.wind.heading-chain"
+      ],
+      "vectors": [],
+      "summary": "The true-course-to-compass-heading chain (version 1.1.0) is now stable. Its primary example reproduces every heading in the FAA Pilot's Handbook's Chickasha-to-Guthrie flight log. The tool now has 20 vectors plus wrap, sign, empty-card, and cross-north interpolation invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.performance.specific-range"
       ],
       "vectors": [],

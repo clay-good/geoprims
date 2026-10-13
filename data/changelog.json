@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "drone.ops.wind-limit"
+      ],
+      "vectors": [],
+      "summary": "Wind limit at flying height (version 1.1.0) is now stable. Its NREL power-law model and NYSERDA worked example are covered by 22 golden vectors across every terrain class, both rating paths, height and unit boundaries, and both warning branches. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "drone.photogrammetry.motion-blur"
       ],
       "vectors": [],

@@ -162,6 +162,19 @@ def wind_vectors():
         ({"wind_speed": "10 kt", "flying_height": "400 ft", "terrain": "suburbs", "airspeed": "16 m/s", "margin": 50}, 10 * KT, None, 10, 400 * 0.3048, "suburbs", 8, 16),
         ({"wind_speed": "4 m/s", "flying_height": "80 m", "report_height": "30 m", "terrain": "crops", "wind_rating": "10 m/s"}, 4, None, 30, 80, "crops", 10, None),
         ({"wind_speed": "4 m/s", "flying_height": "50 m", "terrain": "hedges", "wind_rating": "10 m/s"}, 4, None, 10, 50, "hedges", 10, None),
+        ({"wind_speed": "12 mph", "flying_height": "200 ft", "report_height": "33 ft", "terrain": "water", "wind_rating": "20 mph"}, 12 * 0.44704, None, 33 * 0.3048, 200 * 0.3048, "water", 20 * 0.44704, None),
+        ({"wind_speed": "0 m/s", "flying_height": "1000 m", "wind_rating": "5 m/s"}, 0, None, 10, 1000, "open", 5, None),
+        ({"wind_speed": "7 m/s", "gust": "8 m/s", "flying_height": "5 m", "report_height": "10 m", "terrain": "crops", "wind_rating": "10 m/s"}, 7, 8, 10, 5, "crops", 10, None),
+        ({"wind_speed": "10 kt", "gust": "12 kt", "flying_height": "30 m", "report_height": "30 m", "terrain": "hedges", "wind_rating": "6 m/s"}, 10 * KT, 12 * KT, 30, 30, "hedges", 6, None),
+        ({"wind_speed": "9 m/s", "flying_height": "100 m", "terrain": "suburbs", "wind_rating": "10 m/s"}, 9, None, 10, 100, "suburbs", 10, None),
+        ({"wind_speed": "2 m/s", "gust": "3 m/s", "flying_height": "15 m", "report_height": "50 m", "terrain": "woodland", "wind_rating": "8 m/s"}, 2, 3, 50, 15, "woodland", 8, None),
+        ({"wind_speed": "15 kt", "flying_height": "1000 m", "terrain": "water", "wind_rating": "20 m/s"}, 15 * KT, None, 10, 1000, "water", 20, None),
+        ({"wind_speed": "5 m/s", "flying_height": "20 m", "report_height": "40 m", "wind_rating": "10 m/s"}, 5, None, 40, 20, "open", 10, None),
+        ({"wind_speed": "6 m/s", "flying_height": "120 m", "report_height": "20 m", "terrain": "crops", "airspeed": "20 m/s", "margin": 25}, 6, None, 20, 120, "crops", 15, 20),
+        ({"wind_speed": "6 m/s", "gust": "7 m/s", "flying_height": "120 m", "report_height": "20 m", "terrain": "hedges", "airspeed": "16 m/s", "margin": 25}, 6, 7, 20, 120, "hedges", 12, 16),
+        ({"wind_speed": "4 m/s", "flying_height": "50 m", "report_height": "5 m", "terrain": "suburbs", "wind_rating": "15 m/s"}, 4, None, 5, 50, "suburbs", 15, None),
+        ({"wind_speed": "1 m/s", "flying_height": "500 m", "terrain": "woodland", "airspeed": "25 m/s", "margin": 40}, 1, None, 10, 500, "woodland", 15, 25),
+        ({"wind_speed": "7.5 m/s", "gust": "7.5 m/s", "flying_height": "80 m", "terrain": "open", "wind_rating": "10 m/s"}, 7.5, 7.5, 10, 80, "open", 10, None),
     ]
     vecs = []
     for inp, v, g, href, h, terr, rating, air in cases:
@@ -190,6 +203,15 @@ def wind_vectors():
         "source": "NYSERDA Customer Sited Wind Handbook, Final Report 10-08, section 6.2, page 33: 11.7 mph at 100 ft with alpha 0.230 gives 12.0 mph at 110 ft",
         "sourceVersion": "Final Report 10-08 (August 2010)",
         "tolerance": {"result.wind_at_height.value": {"rel": 0, "abs": 0.05 * mph}, "result.exponent": {"rel": 0, "abs": 1e-12}},
+    })
+    # A reader-supplied zero exponent makes the wind constant with height and
+    # checks that equality with the rating remains within the limit.
+    vecs.append({
+        "input": {"wind_speed": "6 m/s", "gust": "6 m/s", "flying_height": "750 m", "report_height": "2 m", "exponent": 0, "wind_rating": "6 m/s"},
+        "expect": {"result.wind_at_height.value": 6.0, "result.gust_at_height.value": 6.0, "result.exponent": 0.0, "result.rating.value": 6.0, "result.margin_to_rating.value": 0.0, "result.status": "within the limit", "ok": True},
+        "source": f"{src}: alpha = 0 makes the power-law height factor exactly 1",
+        "sourceVersion": ver,
+        "tolerance": tol(["result.wind_at_height.value", "result.gust_at_height.value", "result.exponent", "result.rating.value", "result.margin_to_rating.value"], 0, 1e-12),
     })
     return vecs
 

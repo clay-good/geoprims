@@ -48,7 +48,7 @@ The power law describes a steady, well-mixed wind over even ground. The guidelin
 
 ## Differential tests
 
-- `tools/vectors/gen_mission_planning.py`: the power law in Python at seven computed cases, one per terrain class, the report height itself, a report height of 30 m, feet and knots, and a limit from an airspeed and a 50% margin (within 1e-12 relative), plus NYSERDA's published 12.0 mph example at its printed precision.
+- `tools/vectors/gen_mission_planning.py`: the power law in Python at 21 computed cases across all six terrain classes, heights below, at, and above the report height through the 1,000 m boundary, a reader-supplied zero exponent, zero wind, feet, knots, and miles per hour, both rating paths, and the sustained-wind and gust warning branches (within 1e-12 relative), plus NYSERDA's published 12.0 mph example at its printed precision.
 
 ## Invariants
 

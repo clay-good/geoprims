@@ -1419,6 +1419,8 @@ pub fn wind_at_height(v: f64, h_ref: f64, h: f64, alpha: f64) -> f64 {
 
 pub static WIND_LIMIT: ToolDef = ToolDef {
     id: "drone.ops.wind-limit",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Wind limit at flying height",
     summary: "The wind and gust at your flying height from a reported wind, by the power law for your terrain, against the drone’s wind rating, with the margin left and your groundspeed into the wind.",
     aliases: &[
@@ -1566,12 +1568,7 @@ pub static WIND_LIMIT: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &[
-        "WIND_EXCEEDS_RATING",
-        "GUST_EXCEEDS_RATING",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["WIND_EXCEEDS_RATING", "GUST_EXCEEDS_RATING", "UNIT_ASSUMED"],
     model: "Power law V(h) = V_ref × (h / h_ref)^α (NREL/TP-5000-63696, section 5.3.2), with α = 1/7 over open terrain (NREL/SR-440-22223) or the terrain's textbook exponent from NREL Table 1; the gust is scaled by the same factor. Limit = wind rating, or maximum airspeed × (1 − margin); margin = limit − the stronger of wind and gust at height; groundspeed into the wind = maximum airspeed − wind at height",
     accuracy: "The power law is a planning estimate for a steady, well-mixed wind over even terrain. Real profiles vary with stability, time of day, and obstacles; light winds often shear more than the exponent says.",
     when_to_use: "Use this before a flight when the wind is reported at a weather station, usually 10 m above the ground, and you will fly higher, where it blows harder. It estimates the wind and gust at your height for your kind of terrain and sets them against your drone’s wind rating, so you can see the margin, and how fast the drone can still make progress into the wind.",

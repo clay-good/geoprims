@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0d685fa13c018fbb",
+    "hash": "6dfb5b29707af656",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -132,8 +132,8 @@
     "lastmod": "2026-10-12"
   },
   "/aviation/ifr/time-to-station/": {
-    "hash": "7e0ff641e8e2bf04",
-    "lastmod": "2026-10-12"
+    "hash": "ee85c44cb10218e8",
+    "lastmod": "2026-10-13"
   },
   "/aviation/loading/": {
     "hash": "73a38039a967b4fe",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "4bc05733a1866394",
+    "hash": "7b4acdce1be682a9",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "279e96e3ef5ce48d",
+    "hash": "04078a902c0dcfda",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "3752e47f8fdf9097",
+    "hash": "c63a6a3cdd28d66f",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "62c4c3a2949da1f9",
+    "hash": "59f6632965a9819f",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "91c2d2ee6bda2f6f",
+    "hash": "20c346c23f91ae1c",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

@@ -5,7 +5,7 @@
 //! not navigation.
 
 use crate::ifr::IFH;
-use crate::{obj, unit};
+use crate::{obj, refs::PHAK, unit};
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
@@ -27,6 +27,11 @@ const FAA_TERPS: Reference = Reference {
     edition: "Order 8260.3G",
     locator: "Paragraph 16-4-1 (5 NM at 13,000 ft gives 4.52 NM horizontally) and Formula 16-14-7 (slant-range/geographic distance)",
     url: "https://www.faa.gov/documentLibrary/media/Order/Order_8260.3G.pdf",
+};
+
+const PHAK_TIME_DISTANCE: Reference = Reference {
+    locator: "Chapter 16, Figure 16-33 and the following distance example (75 seconds over 10° gives 7.5 minutes; at 120 kt, 15 NM)",
+    ..PHAK
 };
 
 const fn qty(
@@ -199,6 +204,8 @@ fn run_slant(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TIME_TO_STATION: ToolDef = ToolDef {
     id: "aviation.ifr.time-to-station",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Time and distance to a station",
     summary: "How far and how long to a VOR or NDB from the time a bearing takes to change while you fly square to it, exactly and by the 60-times rule.",
     aliases: &[
@@ -282,17 +289,17 @@ pub static TIME_TO_STATION: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Flying square to the station, which is abeam when the timing starts, the track flown and the two bearings make a right triangle: from where the timing ends the station is (GS × t) ÷ sin Δ away, so the time is t ÷ sin Δ. The rule, 60 × t ÷ Δ, takes sin Δ ≈ Δ/60 (Instrument Flying Handbook, ch. 9)",
-    accuracy: "Exact for a steady wind-free track square to the station; the rule reads about 4% long at 10° and grows with the change",
+    accuracy: "Exact for a steady wind-free track square to the station; across the recommended 5° to 20° change, the rule reads about 3% to 5% long",
     when_to_use: "Use this to estimate how far away a VOR or NDB is when you have no DME. Turn so the station is off your wingtip, time how long the bearing takes to change by a few degrees, and enter the minutes and degrees. It returns the time to the station, and the distance if you add your groundspeed, both exactly and by the 60-times rule.",
     limitations: "The math assumes you flew a straight track square to the station, with no wind pushing you off it. Wind, a turn, or a sloppy start all move the answer. Small bearing changes, from 5° to 20°, work well; changes of 90° or more are refused. Treat the result as an estimate and confirm your position another way.",
-    references: &[IFH_NAV],
+    references: &[PHAK_TIME_DISTANCE, IFH_NAV],
     examples: &[Example {
         id: "primary",
-        title: "A 10° change in 2 minutes at 120 kt",
-        input: r#"{"minutes":"2 min","bearing_change":"10 deg","groundspeed":"120 kt"}"#,
-        source: "Hand check: rule 60 × 2 ÷ 10 = 12 min; exact 2 ÷ sin 10° = 11.52 min",
+        title: "A 10° change in 75 seconds at 120 kt",
+        input: r#"{"minutes":"75 s","bearing_change":"10 deg","groundspeed":"120 kt"}"#,
+        source: "FAA Pilot's Handbook of Aeronautical Knowledge, chapter 16 (7.5 minutes and 15 NM by the rule)",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -306,6 +313,10 @@ pub static TIME_TO_STATION: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.ifr.dme-arc-lead",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.ifr.radial-intercept",
             reason: "next",
         },
     ],

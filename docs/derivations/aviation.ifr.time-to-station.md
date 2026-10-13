@@ -21,26 +21,26 @@ t > 0; 0° < Δ < 90° (otherwise INVALID_INPUT; 5° to 20° works best); GS > 0
 
 ## Approximations
 
-The track is taken as straight, wind-free, and square to the station when the timing starts. Wind, a turn, or a late start move the answer. The rule reads long: about 4% at 10° (12 min against 11.52 min), growing with the change.
+The track is taken as straight, wind-free, and square to the station when the timing starts. Wind, a turn, or a late start move the answer. Across the recommended 5° to 20° bearing change, the rule reads about 3% to 5% long; at 10° it gives 12 min against the exact 11.52 min.
 
 ## Worked example
 
-- sourcePublisher: geoprims (hand check, computed)
-- sourceTitle: tool example "A 10° change in 2 minutes at 120 kt", worked from the equations above
-- sourceEdition: 2026
-- sourceLocator: example "primary" in core/crates/gp-aviation/src/dme.rs ("rule 60 × 2 ÷ 10 = 12 min; exact 2 ÷ sin 10° = 11.52 min"); method from FAA-H-8083-15B chapter 9
-- independent: no
-- inputs: 2 min, bearing change 10°, groundspeed 120 kt
-- outputs: time 11.52 min (rule 12 min), distance 23.04 NM (rule 24 NM)
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
+- sourceEdition: FAA-H-8083-25C
+- sourceLocator: chapter 16, Figure 16-33 and the paragraph immediately following it
+- independent: yes
+- inputs: 75 seconds, bearing change 10°, groundspeed 120 kt
+- outputs: 7.5 min and 15 NM by the published rule; the tool also gives 7.1985 min and 14.3969 NM from the exact right triangle
 - tolerance: 1e-9 absolute
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- verifiedBy: golden vector v008, run by the core on every build
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_dme.py`: the same right-triangle relation and 60-times rule written separately in Python, at six cases from 1° to 20° (one without a groundspeed) and one 95° change that must fail (within 1e-9). It checks the code against the stated equations, not against a separate method
-- `core/vectors/aviation.ifr.time-to-station.jsonl`: those seven vectors, run through the core on every build
+- `tools/vectors/gen_dme.py`: the FAA worked example plus 15 additional successful cases evaluated separately in Python and four refusal cases. They cover bearing changes from 0.1° to 89°, equivalent units, the optional groundspeed, and each invalid input. The generator restates the equations, so only the FAA row is an independent check
+- `core/vectors/aviation.ifr.time-to-station.jsonl`: those 20 vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no test checks an invariant of this tool directly. This test runs the vectors above through the core and requires at least five per tool; the vectors show the rule reading longer than the exact time at every change from 1° to 20°
+- `core/crates/gp-aviation/tests/aviation.rs` `time_to_station_invariants`: the exact time recovers the timed leg through sine, the rule recovers its 60-times relation, and both distances equal groundspeed times time. Doubling elapsed time doubles time and distance; doubling groundspeed doubles distance without changing time; equivalent time, angle, and speed units agree; and omitting groundspeed omits both distance outputs

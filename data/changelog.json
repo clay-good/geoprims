@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.ifr.time-to-station"
+      ],
+      "vectors": [],
+      "summary": "Time and distance to a station (version 1.1.0) is now stable. Its primary example matches the FAA Pilot's Handbook's published 75-second, 10-degree, 120-knot result, and it now has 20 vectors plus equation, scaling, equivalent-unit, and optional-output invariants. Its accuracy note now bounds the rule's overstatement to the recommended 5- to 20-degree range; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.ifr.dme-slant-range"
       ],
       "vectors": [],

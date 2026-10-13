@@ -511,6 +511,80 @@ fn dme_slant_range_invariants() {
 }
 
 #[test]
+fn time_to_station_invariants() {
+    for (minutes, change, groundspeed) in [
+        (1.25, 10.0_f64, 120.0),
+        (1.5, 15.0, 180.0),
+        (3.0, 45.0, 75.0),
+    ] {
+        let r = call(
+            "aviation.ifr.time-to-station",
+            &format!(
+                r#"{{"minutes":"{minutes} min","bearing_change":"{change} deg","groundspeed":"{groundspeed} kt"}}"#
+            ),
+        );
+        let time = num(&r, "result.time.value");
+        let time_rule = num(&r, "result.time_rule.value");
+        let distance = num(&r, "result.distance.value");
+        let distance_rule = num(&r, "result.distance_rule.value");
+        assert!((time * change.to_radians().sin() - minutes).abs() < 1e-12);
+        assert!((time_rule * change - 60.0 * minutes).abs() < 1e-12);
+        assert!((distance - groundspeed * time / 60.0).abs() < 1e-12);
+        assert!((distance_rule - groundspeed * time_rule / 60.0).abs() < 1e-12);
+        if change <= 20.0 {
+            assert!(time_rule > time);
+        }
+
+        let longer = call(
+            "aviation.ifr.time-to-station",
+            &format!(
+                r#"{{"minutes":"{} min","bearing_change":"{change} deg","groundspeed":"{groundspeed} kt"}}"#,
+                minutes * 2.0
+            ),
+        );
+        assert!((num(&longer, "result.time.value") - 2.0 * time).abs() < 1e-12);
+        assert!((num(&longer, "result.distance.value") - 2.0 * distance).abs() < 1e-12);
+
+        let faster = call(
+            "aviation.ifr.time-to-station",
+            &format!(
+                r#"{{"minutes":"{minutes} min","bearing_change":"{change} deg","groundspeed":"{} kt"}}"#,
+                groundspeed * 2.0
+            ),
+        );
+        assert!((num(&faster, "result.time.value") - time).abs() < 1e-12);
+        assert!((num(&faster, "result.distance.value") - 2.0 * distance).abs() < 1e-12);
+    }
+
+    let customary = call(
+        "aviation.ifr.time-to-station",
+        r#"{"minutes":"2 min","bearing_change":"10 deg","groundspeed":"120 kt"}"#,
+    );
+    let metric = call(
+        "aviation.ifr.time-to-station",
+        r#"{"minutes":"120 s","bearing_change":"0.17453292519943295 rad","groundspeed":"61.73333333333333 m/s"}"#,
+    );
+    for path in [
+        "result.time.value",
+        "result.time_rule.value",
+        "result.distance.value",
+        "result.distance_rule.value",
+    ] {
+        assert!((num(&customary, path) - num(&metric, path)).abs() < 1e-12);
+    }
+
+    let no_speed = call(
+        "aviation.ifr.time-to-station",
+        r#"{"minutes":"75 s","bearing_change":"10 deg"}"#,
+    );
+    assert!(no_speed["result"].get("distance").is_none(), "{no_speed}");
+    assert!(
+        no_speed["result"].get("distance_rule").is_none(),
+        "{no_speed}"
+    );
+}
+
+#[test]
 fn altimetry_invariants() {
     // At the standard setting (1013.25 hPa) pressure altitude equals the field
     // elevation; it falls monotonically as the setting rises; and dry air at

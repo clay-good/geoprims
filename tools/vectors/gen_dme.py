@@ -90,6 +90,34 @@ def tts():
             exp.update({"result.distance.value": gs * exact / 60, "result.distance_rule.value": gs * rule / 60})
         out.append(vec(len(out) + 1, inp, exp))
     out.append(vec(len(out) + 1, {"minutes": "2 min", "bearing_change": "95 deg"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+
+    cases = [
+        (1.25, 10, 120, {"minutes": "75 s", "bearing_change": "10 deg", "groundspeed": "120 kt"}),
+        (0.5, 5, 60, {"minutes": "30 s", "bearing_change": "5 deg", "groundspeed": "60 kt"}),
+        (1.5, 15, 180, {"minutes": "90 s", "bearing_change": "15 deg", "groundspeed": "180 kt"}),
+        (2.5, 20, 110, {"minutes": "2.5 min", "bearing_change": "20 deg", "groundspeed": "110 kt"}),
+        (0.75, 8, None, {"minutes": "45 s", "bearing_change": "8 deg"}),
+        (1, 30, 200, {"minutes": "1 min", "bearing_change": "30 deg", "groundspeed": "200 kt"}),
+        (3, 45, 75, {"minutes": "3 min", "bearing_change": "45 deg", "groundspeed": "75 kt"}),
+        (0.5, 89, 100, {"minutes": "0.5 min", "bearing_change": "89 deg", "groundspeed": "100 kt"}),
+        (2, 10, 120, {"minutes": "120 s", "bearing_change": "0.17453292519943295 rad", "groundspeed": "61.73333333333333 m/s"}),
+        (1 / 60, 0.1, 1, {"minutes": "1 s", "bearing_change": "0.1 deg", "groundspeed": "1 kt"}),
+    ]
+    for t, d, gs, inp in cases:
+        exact, rule = t / math.sin(math.radians(d)), 60 * t / d
+        exp = {"result.time.value": exact, "result.time_rule.value": rule}
+        if gs is not None:
+            exp.update({"result.distance.value": gs * exact / 60, "result.distance_rule.value": gs * rule / 60})
+        out.append(vec(len(out) + 1, inp, exp))
+    out[7]["source"] = "FAA Pilot's Handbook of Aeronautical Knowledge FAA-H-8083-25C, chapter 16, Figure 16-33 and following text (75 seconds over 10° gives 7.5 minutes; at 120 kt, 15 NM)"
+    out[7]["sourceVersion"] = "FAA-H-8083-25C (2023)"
+
+    out.append(vec(len(out) + 1, {"minutes": "0 min", "bearing_change": "10 deg"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/minutes"}))
+    out.append(vec(len(out) + 1, {"minutes": "1 min", "bearing_change": "0 deg"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/bearing_change"}))
+    out.append(vec(len(out) + 1, {"minutes": "1 min", "bearing_change": "10 deg", "groundspeed": "0 kt"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/groundspeed"}))
     return out
 
 

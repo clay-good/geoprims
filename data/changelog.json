@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "survey.reduction.curvature-refraction"
+      ],
+      "vectors": [],
+      "summary": "Curvature and refraction correction (version 1.1.0) is now stable. It reproduces the U.S. Geological Survey's published 500 ft correction table, and 25 vectors plus five invariant tests cover quadratic distance scaling, separated components, refraction coefficients, Earth radii, units, and invalid inputs. Valid calculation results are unchanged; nonfinite distances and radii are now refused explicitly."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "survey.cogo.angular-closure"
       ],
       "vectors": [],

@@ -865,6 +865,100 @@ fn curvature_refraction_scenario() {
 }
 
 #[test]
+fn curvature_refraction_matches_the_usgs_table() {
+    let result = call(
+        "survey.reduction.curvature-refraction",
+        r#"{"distance":"500 ft","refraction":0.14285714285714285}"#,
+    );
+    assert_eq!(result["ok"], true, "{result}");
+    assert!((num(&result, "result.curvature.value") - 0.0060).abs() <= 0.00005);
+    assert!((num(&result, "result.refraction_part.value").abs() - 0.0009).abs() <= 0.00005);
+    assert!((num(&result, "result.correction.value") - 0.0051).abs() <= 0.00005);
+}
+
+#[test]
+fn curvature_refraction_grows_with_distance_squared() {
+    let run = |distance| {
+        call(
+            "survey.reduction.curvature-refraction",
+            &format!(r#"{{"distance":"{distance} m","refraction":0.13}}"#),
+        )
+    };
+    let near = run(250);
+    let far = run(500);
+    for field in ["correction", "curvature", "refraction_part"] {
+        let ratio = num(&far, &format!("result.{field}.value"))
+            / num(&near, &format!("result.{field}.value"));
+        assert!((ratio - 4.0).abs() < 1e-12, "{field}: {near} {far}");
+    }
+}
+
+#[test]
+fn curvature_refraction_parts_recombine() {
+    for (distance, k) in [(0.0, 0.13), (150.0, 0.0), (1000.0, 0.142), (5000.0, 0.2)] {
+        let result = call(
+            "survey.reduction.curvature-refraction",
+            &format!(r#"{{"distance":"{distance} m","refraction":{k}}}"#),
+        );
+        let combined = num(&result, "result.correction.value");
+        let parts =
+            num(&result, "result.curvature.value") + num(&result, "result.refraction_part.value");
+        assert!((combined - parts).abs() < 1e-12, "{result}");
+    }
+}
+
+#[test]
+fn curvature_refraction_coefficient_endpoints_are_consistent() {
+    let run = |k| {
+        call(
+            "survey.reduction.curvature-refraction",
+            &format!(r#"{{"distance":"1 km","refraction":{k}}}"#),
+        )
+    };
+    let none = run(0.0);
+    let half = run(0.5);
+    let full = run(1.0);
+    assert!(
+        (num(&none, "result.correction.value") - num(&none, "result.curvature.value")).abs()
+            < 1e-12
+    );
+    assert!(num(&full, "result.correction.value").abs() < 1e-12);
+    assert!(
+        (num(&full, "result.refraction_part.value") + num(&full, "result.curvature.value")).abs()
+            < 1e-12
+    );
+    assert!(
+        (num(&half, "result.correction.value") * 2.0 - num(&none, "result.correction.value")).abs()
+            < 1e-12
+    );
+}
+
+#[test]
+fn curvature_refraction_is_unit_invariant_and_names_invalid_fields() {
+    let miles = call(
+        "survey.reduction.curvature-refraction",
+        r#"{"distance":"1 mi","radius":"20906000 ft"}"#,
+    );
+    let meters = call(
+        "survey.reduction.curvature-refraction",
+        r#"{"distance":"1609.344 m","radius":"6372148.8 m"}"#,
+    );
+    assert!(
+        (num(&miles, "result.correction.value") * 1609.344
+            - num(&meters, "result.correction.value"))
+        .abs()
+            < 1e-12
+    );
+    for (input, field) in [
+        (r#"{"distance":"-1 m"}"#, "/distance"),
+        (r#"{"distance":"1 km","radius":"0 m"}"#, "/radius"),
+    ] {
+        let result = call("survey.reduction.curvature-refraction", input);
+        assert_eq!(result["error"]["field"], field, "{result}");
+    }
+}
+
+#[test]
 fn ambiguous_ratio_shows_both_readings() {
     let r = call("survey.earthwork.grade", r#"{"grade":"3:1"}"#);
     assert_eq!(r["error"]["field"], "/convention", "{r}");

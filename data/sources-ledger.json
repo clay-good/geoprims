@@ -3300,7 +3300,7 @@
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-10-13",
-      "verificationNote": "Read at the issuer on 2026-10-13. Section 5's example reduction table gives section 1 to 2 as a mean 127.531 ft slope distance at zenith 90°04′27″, with HI 4.850 ft and SH 4.830 ft, and a mark-to-mark vertical difference of −0.145 ft.",
+      "verificationNote": "Read at the issuer on 2026-10-13. Section 5's example reduction table gives section 1 to 2 as a mean 127.531 ft slope distance at zenith 90°04′27″, with HI 4.850 ft and SH 4.830 ft, and a mark-to-mark vertical difference of −0.145 ft. Equation 10 and table 4 give the combined curvature-and-refraction rule and printed curvature, refraction, and combined corrections at seven distances; the 500 ft row is the independent example for the dedicated correction tool.",
       "freeAccessUrl": "https://pubs.usgs.gov/tm/11d3/tm11d3.pdf",
       "matchTerms": [
         "Procedures and Best Practices for Trigonometric Leveling in the U.S. Geological Survey"

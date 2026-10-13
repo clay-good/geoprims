@@ -13,6 +13,7 @@ VER = "15th edition (2018)"
 SPEC = "add-survey-suite scenarios"
 USGS_TRIG = "USGS Techniques and Methods 11-D3, section 5 example reduction table"
 USGS_TRIG_VER = "2020"
+USGS_CURVATURE = "USGS Techniques and Methods 11-D3, equation 10 and table 4"
 FHWA_GRADE = "Federal Highway Administration, Noise Barrier Design: Terminology, Grade"
 FHWA_GRADE_VER = "Web page read 2026-10-13"
 FHWA_SIGHT = "Federal Highway Administration, FHWA-HRT-04-103, chapter 7, table 20"
@@ -534,6 +535,16 @@ def slope():
 def curvature():
     R = 6371000.0
     out = []
+
+    def expected(dm, k=0.13, radius=R, unit_m=1.0):
+        curvature = dm * dm / (2 * radius)
+        return {
+            "result.correction.value": (1 - k) * curvature / unit_m,
+            "result.curvature.value": curvature / unit_m,
+            "result.refraction_part.value": -k * curvature / unit_m,
+            "result.coefficient": (1 - k) * 1e6 / (2 * radius),
+        }
+
     # The spec scenario: 1 km with k = 0.14 is 0.0675 m; with k = 0.13, 0.0683 m.
     for i, (d, dm, k) in enumerate([("1 km", 1000.0, 0.14), ("1 km", 1000.0, 0.13), ("150 m", 150.0, 0.13), ("5 km", 5000.0, 0.0), ("2 km", 2000.0, 0.2)], 1):
         c = (1 - k) * dm * dm / (2 * R)
@@ -545,6 +556,37 @@ def curvature():
         src, ver = (SPEC, "2026") if i <= 2 else (SRC, VER)
         out.append(vec(i, {"distance": d, "refraction": k}, exp, src, ver))
     out.append(vec(6, {"distance": "500 ft"}, {"result.correction.value": (1 - 0.13) * (500 * FT) ** 2 / (2 * R) / FT}))
+
+    # USGS TM 11-D3 equation 10 and table 4 use refraction as one seventh of
+    # curvature. At 500 ft the table prints 0.0060 ft curvature, 0.0009 ft
+    # refraction, and 0.0051 ft combined.
+    k7 = 1 / 7
+    out.append(vec(7, {"distance": "500 ft", "refraction": k7}, expected(500 * FT, k7, unit_m=FT),
+                   USGS_CURVATURE, USGS_TRIG_VER))
+    # The remaining published table distances exercise the same independent equation.
+    for distance in [100, 200, 1000, 2500, 5280, 10560]:
+        out.append(vec(len(out) + 1, {"distance": f"{distance} ft", "refraction": k7},
+                       expected(distance * FT, k7, unit_m=FT), USGS_CURVATURE, USGS_TRIG_VER))
+    # Coefficient endpoints and values named by Trimble as typical.
+    for k in [0.0, 1.0, 0.142, 0.2]:
+        out.append(vec(len(out) + 1, {"distance": "1 km", "refraction": k},
+                       expected(1000, k, unit_m=1000)))
+    # Alternate radii and equivalent metric, international-foot, and mile inputs.
+    for distance, dm, radius_text, radius, unit_m in [
+        ("1 km", 1000.0, "6371008.771 m", 6371008.771, 1000.0),
+        ("1 km", 1000.0, "6378137 m", 6378137.0, 1000.0),
+        ("1 mi", 1609.344, "20906000 ft", 20906000 * FT, 1609.344),
+        ("1609.344 m", 1609.344, "6371000 m", R, 1.0),
+    ]:
+        out.append(vec(len(out) + 1, {"distance": distance, "radius": radius_text},
+                       expected(dm, radius=radius, unit_m=unit_m)))
+    out.append(vec(len(out) + 1, {"distance": "10 km"}, expected(10000, unit_m=1000)))
+    for inp, field in [
+        ({"distance": "-1 m"}, "/distance"),
+        ({"distance": "1 km", "radius": "0 m"}, "/radius"),
+        ({"distance": "1 km", "radius": "-1 m"}, "/radius"),
+    ]:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT", "error.field": field}))
     return out
 
 

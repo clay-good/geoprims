@@ -396,6 +396,8 @@ fn run_slope(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CURVATURE: ToolDef = ToolDef {
     id: "survey.reduction.curvature-refraction",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Curvature and refraction correction",
     summary: "How much the earth's curve, less the bending of the line of sight, lowers a level sight over a distance, with the textbook coefficient for the refraction coefficient used.",
     aliases: &[
@@ -452,27 +454,37 @@ pub static CURVATURE: ToolDef = ToolDef {
         ),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "h = (1 − k)·D²/(2R), the curvature D²/(2R) less the refraction k·D²/(2R) (Ghilani & Wolf 2021, ch. 4); R = 6,371,000 m and k = 0.13 by default",
     accuracy: "Exact for the given k and R; k itself varies with the air near the ground, most at low sights and midday",
     when_to_use: "Use this when you level or run trig heights over long sights and need to know how much the earth's curve and the bending of the sight line change the reading. Enter the horizontal sight distance and, if you like, a refraction coefficient and an earth radius. It returns the combined correction, curvature and refraction apart, and the coefficient per square kilometer to use in your notes.",
     limitations: "It uses a sphere of one radius and a single refraction coefficient. Real refraction shifts with heat near the ground, time of day, and how high the sight runs, so long low sights at midday carry the most doubt. Balanced backsights and foresights cancel most of this in leveling, so equal sight lengths are the first defense.",
-    references: &[GHILANI, TRIMBLE_ACCESS],
+    references: &[GHILANI, TRIMBLE_ACCESS, USGS_TRIG_LEVELING],
     examples: &[Example {
         id: "primary",
-        title: "A 1 km sight with k = 0.14",
-        input: r#"{"distance":"1 km","refraction":0.14}"#,
-        source: "add-survey-suite scenario: ≈ 0.0675 m with k = 0.14, ≈ 0.0683 m with k = 0.13",
+        title: "USGS 500 ft curvature and refraction check",
+        input: r#"{"distance":"500 ft","refraction":0.14285714285714285}"#,
+        source: "USGS Techniques and Methods 11-D3 (2020), equation 10 and table 4: 500 ft gives 0.0060 ft curvature, 0.0009 ft refraction, and 0.0051 ft combined",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.reduction.slope",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "survey.reduction.slope",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.reduction.level-run",
+            reason: "next",
+        },
+        Related {
+            id: "survey.reduction.inaccessible-height",
+            reason: "next",
+        },
+    ],
     assumptions: &[
         Assumption {
             name: "Earth radius, GRS 80's mean radius R1 (6,371,008.771 m) rounded to the kilometer",
@@ -504,7 +516,7 @@ fn run_curvature(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let d = ctx.req_quantity("distance")?;
     let m = unit(QT::Length, "m");
     let dm = d.to(m);
-    if dm < 0.0 {
+    if !dm.is_finite() || dm < 0.0 {
         return Err(ToolError::invalid(
             "/distance",
             "The distance cannot be negative.",
@@ -512,7 +524,7 @@ fn run_curvature(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let k = ctx.number("refraction")?.unwrap_or(0.13);
     let r = ctx.quantity("radius")?.map_or(6_371_000.0, |q| q.to(m));
-    if r <= 0.0 {
+    if !r.is_finite() || r <= 0.0 {
         return Err(ToolError::invalid(
             "/radius",
             "The earth radius must be positive.",

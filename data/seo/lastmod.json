@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "fb2906f7c9a9713b",
+    "hash": "96052c2093956a45",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "ba08ab609b3ab30c",
+    "hash": "559c2a7e4d603c7a",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "2b385cf36a3767dd",
+    "hash": "a15db86b84647e8f",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "c968155f86481fc3",
+    "hash": "6c67666d768afce1",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "d5bba8cd0d895f44",
+    "hash": "cf2cd6fe36353ea1",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1624,7 +1624,7 @@
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/curvature-refraction/": {
-    "hash": "ae44cefeeb4d4311",
+    "hash": "3acb0aed1e622b3c",
     "lastmod": "2026-10-13"
   },
   "/survey/reduction/edm-correction/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "c793304a07142dfa",
+    "hash": "b00338c008fa739b",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "127e476fefd02a1c",
+    "hash": "f0e86cab9c7d6ae7",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

@@ -37,6 +37,8 @@ GNSS site localization is stable for 4-parameter similarity and 6-parameter affi
 
 Survey angular closure is stable for interior and reflex-exterior loop angles. It reproduces Walla Walla University's published seven-angle traverse and equal corrections, and 25 vectors plus five invariants cover geometric sums, DMS input, allowable boundaries, equal bias, and invalid rows.
 
+Survey curvature and refraction correction is stable for a horizontal sight, an entered coefficient, and an optional Earth radius. It reproduces the U.S. Geological Survey's published 500 ft correction table, and 25 vectors plus five invariants cover quadratic scaling, separated components, coefficients, radii, units, and invalid inputs.
+
 The RTK and PPK precision budget is stable for manufacturer specifications written as a constant plus a baseline-dependent ppm term. It reproduces Tersus's published 40 km example at 48 mm horizontal and 55 mm vertical, and 25 vectors plus five invariants cover units, confidence scaling, target checks, boundaries, and invalid inputs.
 
 OPUS session planning is stable for the current NGS rapid-static and static duration windows. It generates RINEX 2 short names with the correct UTC start-hour letter, reserves `0` for a 24-hour data set, reproduces NGS's published `g287009q.23o` example, and has 25 live vectors plus five invariants covering boundaries, calendars, units, and incomplete naming inputs.

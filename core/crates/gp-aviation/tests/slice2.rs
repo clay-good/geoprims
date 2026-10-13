@@ -286,6 +286,49 @@ fn climb_gradient_to_fpm() {
 }
 
 #[test]
+fn climb_gradient_invariants() {
+    let run = |climb: &str, groundspeed: &str| {
+        call(
+            "aviation.performance.climb-gradient",
+            &format!(r#"{{{climb},"groundspeed":"{groundspeed}"}}"#),
+        )
+    };
+    let base = run(r#""gradient":"200 ft/NM""#, "120 kt");
+    let faster = run(r#""gradient":"200 ft/NM""#, "240 kt");
+    near(
+        &faster,
+        "result.vertical_speed.value",
+        2.0 * num(&base, "result.vertical_speed.value"),
+        1e-9,
+    );
+
+    let percent = run(r#""gradient":"3.291576673866091 %""#, "120 kt");
+    let angle = run(r#""angle":"1.885253852180525 deg""#, "120 kt");
+    for equivalent in [&percent, &angle] {
+        near(
+            equivalent,
+            "result.vertical_speed.value",
+            num(&base, "result.vertical_speed.value"),
+            1e-9,
+        );
+        near(
+            equivalent,
+            "result.gradient.value",
+            num(&base, "result.gradient.value"),
+            1e-9,
+        );
+    }
+
+    let inverse = run(r#""vertical_speed":"400 fpm""#, "120 kt");
+    near(
+        &inverse,
+        "result.gradient.value",
+        num(&base, "result.gradient.value"),
+        1e-9,
+    );
+}
+
+#[test]
 fn vdp_hat_300() {
     let r = call(
         "aviation.performance.vdp",

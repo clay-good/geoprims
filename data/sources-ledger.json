@@ -900,8 +900,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-09-18",
-      "verificationNote": "Edition taken from the research briefs (docs/research, 2026-09-18); not re-checked at the issuer yet.",
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Rechecked at the FAA on 2026-10-13. FAA-H-8083-16B remains the published edition. Chapter 1, Figure 1-17 gives the highlighted climb example: a 2.8° path at 180 kt requires 892 ft/min and labels the rounded gradient 297 ft/NM.",
       "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_procedures_handbook",
       "matchTerms": [
         "Instrument Procedures Handbook"

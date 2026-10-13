@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.performance.climb-gradient"
+      ],
+      "vectors": [],
+      "summary": "Climb gradient (version 1.1.0) is now stable. Its primary example reproduces the FAA Instrument Procedures Handbook's printed 2.8-degree, 180-knot, 892-fpm example. The tool now has 20 vectors plus scaling, inverse, and equivalent-unit invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.loading.fuel-weight"
       ],
       "vectors": [],

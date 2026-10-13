@@ -26,23 +26,24 @@ None in the conversion. The answer is a steady average and must use groundspeed,
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite flight-performance spec, scenario "Climb gradient to fpm"
-- sourceEdition: openspec/changes/add-aviation-suite/specs/aviation/flight-performance/spec.md
-- sourceLocator: Scenario "Climb gradient to fpm": 200 ft/NM at 120 kt groundspeed requires 400 fpm; worked as 120 × 200 / 60
-- independent: no
-- inputs: gradient 200 ft/NM, groundspeed 120 kt
-- outputs: vertical speed 400 fpm; 3.29%; angle 1.885°
-- tolerance: 1e-9 fpm
-- verifiedBy: golden vector v001 and `climb_gradient_to_fpm` in core/crates/gp-aviation/tests/slice2.rs
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Instrument Procedures Handbook
+- sourceEdition: FAA-H-8083-16B (2017)
+- sourceLocator: Chapter 1, Figure 1-17, highlighted rate-of-climb example
+- independent: yes
+- inputs: path angle 2.8°, groundspeed 180 kt
+- outputs: required climb rate 892 fpm; the table also labels the rounded gradient as 297 ft/NM
+- tolerance: 0.5 fpm, because the source prints whole feet per minute
+- verifiedBy: golden vector v006 and `core/crates/gp-aviation/tests/slice2.rs` `climb_gradient_invariants`
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_aviation.py`: the pilot-unit form fpm = ft/NM × kt / 60 and atan of the gradient, written in Python, at five gradients from 152 to 500 ft/NM and groundspeeds from 75 to 200 kt (within 1e-9)
-- `core/vectors/aviation.performance.climb-gradient.jsonl`: those five vectors, run through the core on every build
+- `tools/vectors/gen_climb_gradient.py`: a separate Python evaluation of the pilot-unit, ratio, angle, and inverse forms across varied gradients and groundspeeds, plus refused ambiguous, zero, and out-of-domain inputs
+- `core/vectors/aviation.performance.climb-gradient.jsonl`: those cases and the printed FAA example, 20 vectors in all, run through the core on every build
 
 ## Invariants
 
 - `core/crates/gp-aviation/tests/slice2.rs` `climb_gradient_to_fpm`: 200 ft/NM at 120 kt gives 400 fpm, and 400 fpm at 120 kt gives back 200 ft/NM, each within 1e-9
+- `core/crates/gp-aviation/tests/slice2.rs` `climb_gradient_invariants`: doubling groundspeed doubles the required vertical speed; equivalent ft/NM, percent, and angle inputs agree; converting the resulting vertical speed back recovers the gradient
 - `core/crates/gp-aviation/tests/slice3.rs` `glidepath_vertical_speed`: a 3° path at 120 kt gives about 637 fpm (within 0.5 fpm)

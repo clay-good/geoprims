@@ -10,7 +10,7 @@ use geographiclib_rs::{DirectGeodesic, Geodesic};
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Slot, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Slot, ToolDef,
 };
 use gp_base::units::Quantity as QT;
 use gp_base::{ErrorCode, display};
@@ -689,8 +689,15 @@ fn run_descent(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- climb gradient
 
+const IPH_CLIMB_GRADIENT: Reference = Reference {
+    locator: "Chapter 1, Figure 1-17 (2.8° at 180 kt requires 892 ft/min)",
+    ..IPH
+};
+
 pub static CLIMB_GRADIENT: ToolDef = ToolDef {
     id: "aviation.performance.climb-gradient",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Climb gradient and vertical speed",
     summary: "Converts a climb or descent gradient (feet per nautical mile, percent, or degrees) to the vertical speed you need at a groundspeed, or the reverse.",
     aliases: &[
@@ -764,28 +771,38 @@ pub static CLIMB_GRADIENT: ToolDef = ToolDef {
         ),
         out("angle", "Angle", "atan(gradient)", QT::Angle, "deg", 2),
     ],
-    errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED"],
     model: "Vertical speed = groundspeed × gradient (rise over horizontal run); 1 ft/NM = 0.3048/1852",
     accuracy: "Exact. Planning aid, not certified for navigation.",
     when_to_use: "Use this when a departure procedure or missed approach lists a required climb gradient in feet per nautical mile and you need the climb rate that meets it. Enter the gradient, a percent, or an angle, and your groundspeed. It returns the vertical speed in feet per minute. Run it the other way to see what gradient your usual climb rate gives at that speed, before you accept the departure.",
     limitations: "It converts units and nothing more. It does not know your aircraft's climb ability, so check the rate against your POH climb data at the real weight, altitude, and temperature. Use groundspeed, not airspeed: a tailwind raises the rate you need. The answer is a steady average and does not cover the turns, level-offs, or obstacles of a real departure.",
-    references: &[IPH],
+    references: &[IPH_CLIMB_GRADIENT],
     examples: &[Example {
         id: "primary",
-        title: "200 ft/NM at 120 kt",
-        input: r#"{"gradient":"200 ft/NM","groundspeed":"120 kt"}"#,
-        source: "add-aviation-suite climb scenario: 400 fpm",
+        title: "2.8° at 180 kt",
+        input: r#"{"angle":"2.8 deg","groundspeed":"180 kt"}"#,
+        source: "FAA-H-8083-16B chapter 1, Figure 1-17: 892 fpm",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "profile-chart",
         map: &[("value", "gradient")],
     }],
-    related: &[Related {
-        id: "aviation.performance.top-of-descent",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.performance.top-of-descent",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.performance.climb-plan",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.altimetry.density-altitude",
+            reason: "next",
+        },
+    ],
     sentence: "At that groundspeed, {gradient} takes {vertical_speed}.",
     limits: &[("batchRows", 10_000)],
     run: run_climb_gradient,

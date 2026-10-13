@@ -565,6 +565,53 @@ fn wind_invariants() {
 }
 
 #[test]
+fn one_in_sixty_invariants() {
+    let near = |result: &Value, path: &str, want: f64| {
+        let got = num(result, path);
+        assert!((got - want).abs() <= 1e-12, "{path}: {got} vs {want}");
+    };
+    let off_course = |flown: &str, off: &str, remaining: &str| {
+        call(
+            "aviation.wind.one-in-sixty",
+            &format!(r#"{{"flown":"{flown}","off_course":"{off}","remaining":"{remaining}"}}"#),
+        )
+    };
+    let base = off_course("30 NM", "2 NM", "90 NM");
+    let scaled = off_course("60 NM", "4 NM", "180 NM");
+    let swapped = off_course("90 NM", "2 NM", "30 NM");
+    let metric = off_course("55.56 km", "3.704 km", "166.68 km");
+    let zero = off_course("30 NM", "0 NM", "90 NM");
+
+    for path in [
+        "result.track_error.value",
+        "result.closing_angle.value",
+        "result.to_destination.value",
+        "result.track_error_rule.value",
+        "result.closing_angle_rule.value",
+        "result.to_destination_rule.value",
+    ] {
+        near(&scaled, path, num(&base, path));
+        near(&metric, path, num(&base, path));
+        near(&zero, path, 0.0);
+    }
+    near(
+        &swapped,
+        "result.track_error.value",
+        num(&base, "result.closing_angle.value"),
+    );
+    near(
+        &swapped,
+        "result.closing_angle.value",
+        num(&base, "result.track_error.value"),
+    );
+    near(
+        &swapped,
+        "result.to_destination.value",
+        num(&base, "result.to_destination.value"),
+    );
+}
+
+#[test]
 fn weight_balance_invariants() {
     // The CG moves with the datum (FAA-H-8083-1B figures 3-5 and 3-9: 32.8 in
     // from the firewall is 114.8 in from a datum 82 in ahead), station order

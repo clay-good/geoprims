@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.wind.one-in-sixty"
+      ],
+      "vectors": [],
+      "summary": "Off-course correction (version 1.1.0) is now stable. Its primary example reproduces the UK Ministry of Defence AP3456 worked result that 2 NM off after 30 NM is a 4-degree track error by the 1-in-60 rule. The tool now has 20 vectors plus scale, symmetry, zero-offset, and unit invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.loading.burn-rate"
       ],
       "vectors": [],

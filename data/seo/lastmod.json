@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "b2ee88dc762d2b5e",
+    "hash": "6341c23e5fdb53bb",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "492413ed0f27f165",
+    "hash": "b69d9ba6413166fc",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -252,7 +252,7 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/one-in-sixty/": {
-    "hash": "2fb212e4b9f8b363",
+    "hash": "197dd72787b682b2",
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/runway-components/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "cd9f207c3529ce8e",
+    "hash": "c01df2182a903ff5",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "400a962c054a5389",
+    "hash": "bfdb584cbdf26e01",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "6c6ea2093e91341c",
+    "hash": "3872d0e380fbfbaf",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "e18b0f4cc5bd5b65",
+    "hash": "7f838c0219e3e56d",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b9b1c63bf6471865",
+    "hash": "40969de1efdd6e98",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

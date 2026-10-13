@@ -3,7 +3,6 @@
 //! off course, the turn to parallel the course, and the turn to reach the
 //! destination, each exactly and by the 1-in-60 rule.
 
-use crate::refs::*;
 use crate::{deg, obj, unit};
 use gp_base::ErrorCode;
 use gp_base::display;
@@ -25,13 +24,19 @@ const fn qty(
     Field::new(name, title, help, Kind::Quantity { q, unit: u })
 }
 
-const PHAK_NAV: Reference = Reference {
-    locator: "Navigation chapter (dead reckoning, off-course correction, and the 1-in-60 rule)",
-    ..PHAK
+const AP3456_NAV: Reference = Reference {
+    title: "AP3456: The Central Flying School Manual of Flying, Volume 9, Navigation",
+    issuer: "UK Ministry of Defence",
+    year: 2011,
+    edition: "Volume 9, revised March 2011",
+    locator: "Chapter 19, paragraphs 2-4 and Figure 3 (2 NM off after 30 NM gives 4°)",
+    url: "https://assets.publishing.service.gov.uk/media/5e18b94740f0b65dcaba9817/Volume_09_Navigation.pdf",
 };
 
 pub static ONE_IN_SIXTY: ToolDef = ToolDef {
     id: "aviation.wind.one-in-sixty",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Off-course correction (1-in-60)",
     summary: "How far you have drifted off track, the turn to parallel your course, and the turn to reach your destination, exactly and by the 1-in-60 rule.",
     aliases: &[
@@ -130,17 +135,17 @@ pub static ONE_IN_SIXTY: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "Track error = atan(off ÷ flown); closing angle = atan(off ÷ remaining); turning by the track error parallels the course, and by the sum reaches the destination. The 1-in-60 rule takes 1 NM off in 60 NM as 1°, so each angle ≈ 60 × off ÷ distance (PHAK, navigation)",
-    accuracy: "The exact angles are flat-plane geometry, fine for legs of a few hundred miles. The rule reads small (tan θ ≈ θ in radians, and 60 ≈ 57.3): about 5% high under 10°, and further off above 20°",
+    warnings: &["UNIT_ASSUMED"],
+    model: "Track error = atan(off ÷ flown); closing angle = atan(off ÷ remaining); turning by the track error parallels the course, and by the sum reaches the destination. The 1-in-60 rule takes 1 NM off in 60 NM as 1°, so each angle ≈ 60 × off ÷ distance (AP3456, chapter 19)",
+    accuracy: "The exact angles are flat-plane geometry, fine for legs of a few hundred miles. The rule uses the small-angle approximation tan θ ≈ θ and 60 in place of 57.3, so it reads about 5% high under 10° and further off above 20°",
     when_to_use: "Use this when a checkpoint shows you are off course on a dead reckoning leg. Enter the distance flown, how far off course you are, and the distance left to go. It gives the turn to parallel the course and the turn to reach the destination, both exactly and by the 1-in-60 rule, so you can see how close the mental math is.",
     limitations: "It uses flat-plane geometry and assumes you flew a straight track from the start. A wind that changed partway will make the new heading wrong again. The rule reads a little high for small angles and worse past 20°. Confirm the correction at the next checkpoint and recheck the wind.",
-    references: &[PHAK_NAV],
+    references: &[AP3456_NAV],
     examples: &[Example {
         id: "primary",
-        title: "4 NM off course after 60 NM, with 60 NM to go",
-        input: r#"{"flown":"60 NM","off_course":"4 NM","remaining":"60 NM"}"#,
-        source: "add-aviation-suite 1-in-60 scenario: track error 3.81° (rule 4°), turn to the destination 7.63° (rule 8°)",
+        title: "2 NM off course after 30 NM, with 30 NM to go",
+        input: r#"{"flown":"30 NM","off_course":"2 NM","remaining":"30 NM"}"#,
+        source: "UK Ministry of Defence AP3456, Volume 9, chapter 19, Figure 3: 2 NM off after 30 NM gives 4° by the rule",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -165,7 +170,7 @@ pub static ONE_IN_SIXTY: ToolDef = ToolDef {
         name: "1-in-60 angular factor",
         value: "60",
         unit: "deg",
-        source: "faa-phak",
+        source: "uk-mod-ap3456",
     }],
     sentence: "Turn {to_destination} back toward the course to reach your destination, or {track_error} to parallel it.",
     limits: &[("batchRows", 10_000)],

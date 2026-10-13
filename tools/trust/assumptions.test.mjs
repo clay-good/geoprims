@@ -406,7 +406,7 @@ test('the time-to-station tool exposes its published 60-times rule', () => {
 test('the off-course tool exposes its published 1-in-60 factor', () => {
   const assumptions = byId('aviation.wind.one-in-sixty')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
-    ['60', 'deg', 'faa-phak'],
+    ['60', 'deg', 'uk-mod-ap3456'],
   ]);
 });
 

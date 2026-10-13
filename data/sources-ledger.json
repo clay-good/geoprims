@@ -2968,6 +2968,26 @@
       "editionCheck": true
     },
     {
+      "id": "uk-mod-ap3456",
+      "name": "AP3456: The Central Flying School Manual of Flying, Volume 9, Navigation",
+      "issuer": "UK Ministry of Defence",
+      "currentEdition": "Volume 9, revised March 2011",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read at GOV.UK on 2026-10-13. Chapter 19, paragraphs 2-4 define the 1-in-60 rule for track error and closing angle; Figure 3 works 2 NM off after 30 NM to a 4-degree track error.",
+      "freeAccessUrl": "https://assets.publishing.service.gov.uk/media/5e18b94740f0b65dcaba9817/Volume_09_Navigation.pdf",
+      "matchTerms": [
+        "AP3456: The Central Flying School Manual of Flying, Volume 9, Navigation"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "us76",
       "name": "U.S. Standard Atmosphere, 1976",
       "issuer": "NOAA, NASA, USAF",

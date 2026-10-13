@@ -41,8 +41,8 @@ const packs = registry.assets
     id: asset.id,
     version: asset.version,
     title: asset.title,
-    bytes: Object.values(asset.files).reduce((sum, file) => sum + file.bytes, 0),
-    files: Object.entries(asset.files).map(([name, file]) => ({
+    bytes: Object.values(asset.files).filter((file) => file.pack !== false).reduce((sum, file) => sum + file.bytes, 0),
+    files: Object.entries(asset.files).filter(([, file]) => file.pack !== false).map(([name, file]) => ({
       path: `/assets/${asset.id}/${asset.version}/${name}`,
       bytes: file.bytes,
       sha256: file.sha256,

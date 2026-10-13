@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "6401e1b8223bf123",
-    "lastmod": "2026-10-12"
+    "hash": "45a989af4e0f059e",
+    "lastmod": "2026-10-13"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -1192,8 +1192,8 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "0077f38309552306",
-    "lastmod": "2026-10-12"
+    "hash": "2bd14b853d8dd467",
+    "lastmod": "2026-10-13"
   },
   "/navigation/": {
     "hash": "3384cfbf14d9fbdc",
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "5829bfce7b083c64",
+    "hash": "97143a596e62b3ab",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1648,12 +1648,12 @@
     "lastmod": "2026-10-13"
   },
   "/time/": {
-    "hash": "f64b582d4b6a53d9",
-    "lastmod": "2026-09-23"
+    "hash": "b7a54c76347933e9",
+    "lastmod": "2026-10-13"
   },
   "/time/scale/": {
-    "hash": "9674186143eff8d8",
-    "lastmod": "2026-09-23"
+    "hash": "5e1f0979d049f533",
+    "lastmod": "2026-10-13"
   },
   "/time/scale/block-time/": {
     "hash": "5d609e4cf46348ed",
@@ -1676,12 +1676,16 @@
     "lastmod": "2026-10-09"
   },
   "/time/scale/utc-offset/": {
-    "hash": "e7b275789ed8b186",
-    "lastmod": "2026-10-09"
+    "hash": "b9ec12a5a372d19f",
+    "lastmod": "2026-10-13"
+  },
+  "/time/scale/zone-from-location/": {
+    "hash": "d39a11d04ba1d472",
+    "lastmod": "2026-10-13"
   },
   "/time/scale/zone-info/": {
-    "hash": "8080e5ba2a54a72d",
-    "lastmod": "2026-10-09"
+    "hash": "8d01c8a7c6e980a6",
+    "lastmod": "2026-10-13"
   },
   "/time/sun/": {
     "hash": "91007c6a740dc7d9",
@@ -1712,8 +1716,8 @@
     "lastmod": "2026-10-09"
   },
   "/tools/": {
-    "hash": "bc2955d4f99ea9c4",
-    "lastmod": "2026-10-12"
+    "hash": "4f0d9794cd748e32",
+    "lastmod": "2026-10-13"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -1976,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "9b0e4bcb1236b840",
+    "hash": "84aa1f09d3174c51",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

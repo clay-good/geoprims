@@ -18,6 +18,22 @@ export function assetMessage(error, registry, online = true) {
       hint: online ? 'Reload the page to fetch a fresh copy.' : 'Reconnect and reload to fetch a fresh copy.',
     };
   }
+  const packBytes = entry?.offlinePack
+    ? Object.values(entry.files ?? {}).filter((file) => file.pack !== false).reduce((sum, file) => sum + file.bytes, 0)
+    : null;
+  const size = packBytes == null ? null : packBytes < 1_000_000
+    ? `${Math.round(packBytes / 1_000)} KB`
+    : `${(packBytes / 1_000_000).toFixed(1)} MB`;
+  if (entry?.id === 'tz-boundaries') {
+    return {
+      message: online
+        ? `This needs the ${name}, which is still downloading or was cleared from this device.`
+        : `This needs the ${name}, which is not available offline on this device.`,
+      hint: `${online ? 'Download' : 'Reconnect to download'} the ${size} optional pack, or enter an IANA zone or UTC offset manually.`,
+      packHref: '/offline/#tz-boundaries',
+      manualHref: '/time/scale/utc-offset/',
+    };
+  }
   return {
     message: online
       ? `This needs the ${name}, which is still downloading or was cleared from this device.`

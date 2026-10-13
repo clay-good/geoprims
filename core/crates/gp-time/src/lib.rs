@@ -3,6 +3,7 @@
 //! host clock or time-zone database. UTC offsets are explicit; the
 //! leap-second table is embedded and echoed in `meta.assets`.
 
+pub mod boundary;
 pub mod civil;
 pub mod currency;
 pub mod solar;
@@ -1410,6 +1411,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &DECIMAL_HOURS,
     &BLOCK_TIME,
     &UTC_OFFSET,
+    &boundary::ZONE_FROM_LOCATION,
     &ZONE_INFO,
     &solar::POSITION,
     &solar::EVENTS,

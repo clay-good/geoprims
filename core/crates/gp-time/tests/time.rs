@@ -34,6 +34,14 @@ fn codes(r: &Value) -> Vec<String> {
 
 #[test]
 fn catalog_examples_vectors() {
+    gp_base::assets::put(
+        "tz-boundaries@2026e/boundaries.bin",
+        &std::fs::read(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../../assets/data/tz-boundaries/2026e/boundaries.bin"),
+        )
+        .expect("read time-zone boundary index"),
+    );
     let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
     let owned: Vec<(String, Vec<String>)> = tax["domains"]
         .as_object()
@@ -85,6 +93,54 @@ fn catalog_examples_vectors() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn zone_from_location_scenarios() {
+    gp_base::assets::clear();
+    let missing = call(
+        "time.scale.zone-from-location",
+        r#"{"lat":39.7392,"lon":-104.9903}"#,
+    );
+    assert_eq!(missing["error"]["code"], "ASSET_UNAVAILABLE");
+    assert_eq!(missing["error"]["asset"]["id"], "tz-boundaries");
+    assert!(
+        missing["error"]["hint"]
+            .as_str()
+            .unwrap()
+            .contains("28.3 MB")
+    );
+    assert!(
+        missing["error"]["hint"]
+            .as_str()
+            .unwrap()
+            .contains("IANA zone or UTC offset")
+    );
+
+    gp_base::assets::put(
+        "tz-boundaries@2026e/boundaries.bin",
+        &std::fs::read(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../../assets/data/tz-boundaries/2026e/boundaries.bin"),
+        )
+        .expect("read time-zone boundary index"),
+    );
+    let denver = call(
+        "time.scale.zone-from-location",
+        r#"{"lat":39.7392,"lon":-104.9903}"#,
+    );
+    assert_eq!(denver["result"]["zone"], "America/Denver");
+    assert_eq!(denver["meta"]["assets"][0]["id"], "tz-boundaries");
+    assert_eq!(denver["meta"]["assets"][0]["version"], "2026e");
+
+    let ocean = call("time.scale.zone-from-location", r#"{"lat":0,"lon":-140}"#);
+    assert_eq!(ocean["error"]["code"], "NO_SOLUTION");
+    assert!(
+        ocean["error"]["hint"]
+            .as_str()
+            .unwrap()
+            .contains("not a time zone")
+    );
 }
 
 #[test]

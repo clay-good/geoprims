@@ -668,6 +668,7 @@
       "definition": "The body that publishes the time zone database of names like America/Denver, which this site embeds.",
       "source": "tzdb",
       "relatedTools": [
+        "time.scale.zone-from-location",
         "time.scale.zone-info"
       ]
     },

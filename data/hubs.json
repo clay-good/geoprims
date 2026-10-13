@@ -2035,6 +2035,7 @@
           "want": "convert local time to UTC, or check a zone's rules",
           "tools": [
             "utc-offset",
+            "zone-from-location",
             "zone-info"
           ]
         },

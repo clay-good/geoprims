@@ -17,7 +17,10 @@ test('pack size comes from the registry and is shown on the manager', () => {
   assert.match(html, /685 KB/);
   assert.match(html, /version 5\.1\.2/);
   assert.match(html, /IANA time zone boundaries/);
-  assert.match(html, /52\.0 MB/);
+  const boundaries = registry.assets.find((item) => item.id === 'tz-boundaries');
+  const boundaryBytes = Object.values(boundaries.files).filter((file) => file.pack !== false).reduce((sum, file) => sum + file.bytes, 0);
+  assert.equal(formatBytes(boundaryBytes), '28.3 MB');
+  assert.match(html, /28\.3 MB/);
   assert.match(html, /version 2026e/);
   assert.match(html, /NGS GNSS antenna calibrations/);
   assert.match(html, /494 KB/);

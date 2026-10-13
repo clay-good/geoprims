@@ -760,6 +760,8 @@
     {#if plain?.hint ?? result.error.hint}<p class="hint">{plain?.hint ?? result.error.hint}</p>{/if}
     <div class="actions">
       {#if badField}<button type="button" class="quiet" onclick={goToField}>Go to {tool.inputs.properties[badField].title.toLowerCase()}</button>{/if}
+      {#if plain?.packHref}<a class="button quiet" href={plain.packHref}>Download optional data</a>{/if}
+      {#if plain?.manualHref}<a class="button quiet" href={plain.manualHref}>Enter a zone or offset</a>{/if}
       <button type="button" class="quiet" onclick={tryExample}>Try the example</button>
     </div>
   {/if}

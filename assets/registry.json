@@ -133,7 +133,12 @@
       "files": {
         "timezones.geojson.zip": {
           "sha256": "a75361c760d6de2fc95c63e97e0b1086d5dfe6fdb2bc6d96efeb3a94673aaa01",
-          "bytes": 51940158
+          "bytes": 51940158,
+          "pack": false
+        },
+        "boundaries.bin": {
+          "sha256": "cdcd2a3e854eaa66e1293259839245f129c2ca7801b3f483518140d0eadcffbf",
+          "bytes": 28228004
         },
         "timezone-names.json": {
           "sha256": "2584551f8c9af23a19bc8b197bf46ad458d9fa8c78d4df056f0408c67fd315ff",

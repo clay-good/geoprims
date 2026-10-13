@@ -7,11 +7,15 @@ The asset registry and the on-demand reference data (platform/data-assets).
 | `registry.json` | Every dataset: id, version, license, attribution, source, and per-file SHA-256 and size. Tools name assets by id and version only |
 | `data/<id>/<version>/<file>` | On-demand files, served at `/assets/<id>/<version>/<file>` on the web and read from disk by the MCP server. A bundled file may instead name its shipped path with `bundledIn` |
 
+A file with `"pack": false` is a pinned build input rather than part of an optional offline download. It remains digest-checked in the registry, but the pack does not download a second copy after the derived runtime file.
+
 How loading works: the core never reads files. A tool that needs data returns `ASSET_UNAVAILABLE` with `{id, version, key}`; the host (`packages/runtime/src/assets.mjs`) finds the file in the registry, checks its SHA-256, supplies it with `gp_asset_put`, and retries. For tiled data, the host verifies the index file's registry digest, Ed25519 signature, pinned key id and public key before trusting the requested tile's digest. A digest, signature, or key mismatch is `ASSET_INTEGRITY` and the bytes are never used.
 
 Bundled datasets (WMM2025, IGRF-14, tzdb, leap seconds) are compiled into their modules and listed with `bundledIn`.
 
 The registry currently contains 11 verified datasets: EGM96-15, WMM2025, WMMHR2025, IGRF-14, NADCON5, the curated CRS registry, the SPCS2022 beta definitions, IERS leap seconds, IANA tzdb, and the Natural Earth 110m and 50m base maps. Each file's recorded byte count and SHA-256 digest is checked against the repository in the runtime test suite. The remaining first-release datasets stay tracked in `openspec/changes/establish-platform-foundation/tasks.md`; they are added only after their real files and build pipelines exist.
+
+`tools/data/tz-boundaries.py` verifies timezone-boundary-builder 2026e's comprehensive GeoJSON ZIP, retains every polygon vertex at microdegree precision, and delta-varint encodes it as the 28.2 MB `boundaries.bin` used by the time-zone lookup. The 51.9 MB source archive stays pinned and digest-checked but is excluded from the 28.3 MB offline pack, so a browser does not download both forms.
 
 `tools/codegen/basemap.py` builds both Natural Earth 5.1.2 map files from five pinned official GeoJSON sources per scale. It delta-encodes coordinates at 0.01° precision. The 76,008-byte 110m map is bundled; the 684,709-byte 50m map is one on-demand file, verified before use and cached after its first request.
 

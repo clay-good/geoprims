@@ -51,4 +51,10 @@ test('a missing data file is named, and the reader is told what to do', async ()
   assert.match(damaged.message, /failed its integrity check/);
   // An unknown asset still reads as words.
   assert.match(assetMessage({ code: 'ASSET_UNAVAILABLE', asset: { id: 'nope' } }, registry).message, /reference data/);
+
+  const boundary = assetMessage({ code: 'ASSET_UNAVAILABLE', asset: { id: 'tz-boundaries' } }, registry, false);
+  assert.match(boundary.hint, /28\.3 MB/);
+  assert.match(boundary.hint, /IANA zone or UTC offset manually/);
+  assert.equal(boundary.packHref, '/offline/#tz-boundaries');
+  assert.equal(boundary.manualHref, '/time/scale/utc-offset/');
 });

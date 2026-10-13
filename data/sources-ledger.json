@@ -2715,7 +2715,7 @@
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-10-12",
-      "verificationNote": "Checked the upstream 2026e release on 2026-10-12 and pinned its comprehensive GeoJSON archive, published SHA-256 digest, and ODbL data license.",
+      "verificationNote": "Checked the upstream 2026e release on 2026-10-12 and pinned its comprehensive GeoJSON archive, published SHA-256 digest, and ODbL data license. The runtime index retains every polygon vertex at microdegree precision and is separately pinned by digest.",
       "freeAccessUrl": "https://github.com/evansiroky/timezone-boundary-builder/releases/tag/2026e",
       "matchTerms": [
         "timezone-boundary-builder",

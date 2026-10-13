@@ -99,6 +99,8 @@ test('every registry entry is complete and every file matches its digest', async
       assert.ok(file && !file.includes('/') && file !== '.' && file !== '..', `${a.id} has unsafe file name ${file}`);
       assert.match(meta.sha256, /^[a-f0-9]{64}$/, `${a.id}/${file} sha256`);
       assert.ok(Number.isSafeInteger(meta.bytes) && meta.bytes > 0, `${a.id}/${file} bytes`);
+      assert.ok(meta.pack === undefined || meta.pack === false, `${a.id}/${file} pack flag`);
+      assert.ok(meta.pack !== false || a.offlinePack, `${a.id}/${file} excluded outside an offline pack`);
       const path = a.bundledIn ? join(root, a.bundledIn) : join(root, 'assets/data', a.id, a.version, file);
       const bytes = readFileSync(path);
       assert.equal(bytes.length, meta.bytes, `${a.id}/${file} size`);

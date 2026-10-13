@@ -52,7 +52,7 @@ function pathRangeSource(path) {
 /** A lazy set of modules: each loads on first use. */
 export function nodeHost(wasmDir, opts = {}) {
   const loaded = new Map();
-  opts = { ...opts, assets: opts.assets === undefined ? fileAssets(wasmDir) : opts.assets };
+  opts = { ...opts, assets: opts.assets === undefined ? fileAssets(wasmDir, opts.assetDir) : opts.assets };
   const get = (name) => {
     if (!loaded.has(name)) loaded.set(name, loadModule(readFileSync(join(wasmDir, `${name}.wasm`)), name, opts));
     return loaded.get(name);

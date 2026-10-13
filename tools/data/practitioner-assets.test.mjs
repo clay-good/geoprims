@@ -21,17 +21,22 @@ function embeddedZoneNames(bytes) {
   return names;
 }
 
-test('the time-zone boundary pack preserves its archive and ODbL license', () => {
+test('the time-zone boundary pack preserves its archive, compact index, and ODbL license', () => {
   const row = asset('tz-boundaries');
   const dir = join(root, 'assets/data/tz-boundaries', row.version);
   const archive = readFileSync(join(dir, 'timezones.geojson.zip'));
+  const index = readFileSync(join(dir, 'boundaries.bin'));
   const license = readFileSync(join(dir, 'DATA_LICENSE'), 'utf8');
 
   assert.deepEqual([...archive.subarray(0, 4)], [0x50, 0x4b, 0x03, 0x04]);
   assert.match(archive.subarray(-256).toString('latin1'), /combined\.json/);
+  assert.equal(index.subarray(0, 4).toString(), 'GPTB');
+  assert.equal(index[4], 1);
+  assert.ok(index.length < archive.length, 'the runtime index should be smaller than its source archive');
   assert.match(license, /Open Database License \(ODbL\) v1\.0/);
   assert.equal(row.license, 'ODbL-1.0');
   assert.match(row.attribution, /OpenStreetMap contributors/);
+  assert.equal(row.files['timezones.geojson.zip'].pack, false, 'the source archive is not downloaded twice');
 });
 
 test('every boundary identifier is understood by the bundled time-zone rules', () => {
@@ -58,6 +63,6 @@ test('both practitioner datasets are explicit whole-file offline packs', () => {
     assert.equal(row.loadPolicy, 'on-demand');
     assert.equal(row.tiling, 'none');
     assert.ok(row.offlinePack);
-    assert.ok(Object.values(row.files).reduce((sum, file) => sum + file.bytes, 0) > 0);
+    assert.ok(Object.values(row.files).filter((file) => file.pack !== false).reduce((sum, file) => sum + file.bytes, 0) > 0);
   }
 });

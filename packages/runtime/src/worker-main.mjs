@@ -2,7 +2,10 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import { nodeHost } from './node.mjs';
 
-const host = nodeHost(workerData.wasmDir, { maxBytes: workerData.maxBytes });
+const host = nodeHost(workerData.wasmDir, {
+  maxBytes: workerData.maxBytes,
+  assetDir: workerData.assetDir,
+});
 
 const methods = {
   invoke: (id, input) => host.invoke(id, input),

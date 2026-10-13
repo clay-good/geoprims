@@ -9,7 +9,7 @@ const workerUrl = new URL('./worker-main.mjs', import.meta.url);
 
 const envelope = (code, message, hint) => JSON.stringify({ ok: false, error: { code, message, ...(hint ? { hint } : {}) } });
 
-export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
+export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes, assetDir } = {}) {
   let worker;
   let seq = 0;
   let pending = null;
@@ -39,7 +39,7 @@ export function workerHost(wasmDir, { timeoutMs = 10_000, maxBytes } = {}) {
     job.resolve(out);
   };
   const start = () => {
-    const current = new Worker(workerUrl, { workerData: { wasmDir, maxBytes } });
+    const current = new Worker(workerUrl, { workerData: { wasmDir, maxBytes, assetDir } });
     worker = current;
     current.unref();
     current.on('message', ({ id, out }) => {

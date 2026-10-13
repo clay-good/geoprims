@@ -180,6 +180,17 @@ def wind_vectors():
             exp["meta.warnings.*.code"] = "WIND_EXCEEDS_RATING" if v * f > rating else "GUST_EXCEEDS_RATING"
         vecs.append({"input": inp, "expect": exp, "source": src, "sourceVersion": ver,
                      "tolerance": tol([k for k, x in exp.items() if isinstance(x, float)], 1e-12, 1e-12)})
+    # NYSERDA prints this worked example to 0.1 mph. Its alpha is calculated
+    # from measured speeds at 100 ft and 120 ft, then printed as 0.230 before
+    # it is used to estimate the speed at 110 ft.
+    mph = 0.44704
+    vecs.append({
+        "input": {"wind_speed": "11.7 mph", "flying_height": "110 ft", "report_height": "100 ft", "exponent": 0.230, "wind_rating": "20 mph"},
+        "expect": {"result.wind_at_height.value": 12.0 * mph, "result.exponent": 0.230, "result.status": "within the limit", "ok": True},
+        "source": "NYSERDA Customer Sited Wind Handbook, Final Report 10-08, section 6.2, page 33: 11.7 mph at 100 ft with alpha 0.230 gives 12.0 mph at 110 ft",
+        "sourceVersion": "Final Report 10-08 (August 2010)",
+        "tolerance": {"result.wind_at_height.value": {"rel": 0, "abs": 0.05 * mph}, "result.exponent": {"rel": 0, "abs": 1e-12}},
+    })
     return vecs
 
 

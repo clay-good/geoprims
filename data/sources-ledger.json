@@ -3086,6 +3086,26 @@
       "editionCheck": true
     },
     {
+      "id": "nyserda-customer-sited-wind",
+      "name": "Customer Sited Wind Handbook",
+      "issuer": "New York State Energy Research and Development Authority",
+      "currentEdition": "Final Report 10-08",
+      "currentReleaseDate": "2010-08-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Read at the issuer on 2026-10-12: section 6.2, page 33, calculates alpha = 0.230 from 11.7 mph at 100 ft and 12.2 mph at 120 ft, then uses the power law to estimate 12.0 mph at 110 ft.",
+      "freeAccessUrl": "https://www.nyserda.ny.gov/-/media/Project/Nyserda/Files/Publications/Research/Biomass-Solar-Wind/customer-sited-wind-handbook.pdf",
+      "matchTerms": [
+        "Customer Sited Wind Handbook"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "pix4d-gcp",
       "name": "Pix4D ground control point guidance",
       "issuer": "Pix4D",

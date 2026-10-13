@@ -1390,6 +1390,14 @@ const NREL_WRAH: Reference = Reference {
     locator: "Section 3.1, page 3-3: the power law, and α = 0.143 (the 1/7th power law) over flat, open terrain",
     url: "https://docs.nlr.gov/docs/legosti/fy97/22223.pdf",
 };
+const NYSERDA_WIND: Reference = Reference {
+    title: "Customer Sited Wind Handbook",
+    issuer: "New York State Energy Research and Development Authority",
+    year: 2010,
+    edition: "Final Report 10-08, August 2010",
+    locator: "Section 6.2, page 33: 11.7 mph at 100 ft and 12.2 mph at 120 ft give α = 0.230 and 12.0 mph at 110 ft",
+    url: "https://www.nyserda.ny.gov/-/media/Project/Nyserda/Files/Publications/Research/Biomass-Solar-Wind/customer-sited-wind-handbook.pdf",
+};
 
 /// Terrain classes and their wind shear exponents: open terrain is the 1/7th
 /// power law (NREL/SR-440-22223); the others are NREL/TP-5000-63696 Table 1,
@@ -1568,12 +1576,12 @@ pub static WIND_LIMIT: ToolDef = ToolDef {
     accuracy: "The power law is a planning estimate for a steady, well-mixed wind over even terrain. Real profiles vary with stability, time of day, and obstacles; light winds often shear more than the exponent says.",
     when_to_use: "Use this before a flight when the wind is reported at a weather station, usually 10 m above the ground, and you will fly higher, where it blows harder. It estimates the wind and gust at your height for your kind of terrain and sets them against your drone’s wind rating, so you can see the margin, and how fast the drone can still make progress into the wind.",
     limitations: "The power law describes a steady wind over even ground. Near buildings, trees, cliffs, and ridges the wind speeds up, slows down, and turns in ways it does not model, and a gust is a moment, not a profile, so scaling it by the same factor is a rough guide. The terrain exponents are textbook values; a measured profile beats them. A drone's wind rating is the maker's test figure, not a guarantee in turbulence or with a payload.",
-    references: &[NREL_SMALL_WIND, NREL_WRAH],
+    references: &[NREL_SMALL_WIND, NREL_WRAH, NYSERDA_WIND],
     examples: &[Example {
         id: "primary",
-        title: "A 15 kt wind gusting 25 kt, flown at 120 m over open ground by a 12 m/s drone",
-        input: r#"{"wind_speed":"15 kt","gust":"25 kt","flying_height":"120 m","wind_rating":"12 m/s","airspeed":"15 m/s"}"#,
-        source: "The NREL power law with α = 1/7: 7.717 m/s × 12^(1/7) = 11.0 m/s sustained and 12.861 m/s × 1.4262 = 18.3 m/s gust, the gust over the 12 m/s rating",
+        title: "NYSERDA's wind estimate at 110 ft",
+        input: r#"{"wind_speed":"11.7 mph","flying_height":"110 ft","report_height":"100 ft","exponent":0.230,"wind_rating":"20 mph"}"#,
+        source: "NYSERDA Customer Sited Wind Handbook, section 6.2, page 33: α = 0.230 gives 12.0 mph at 110 ft from 11.7 mph at 100 ft",
     }],
     primary_example: "primary",
     visualization: &[Layer {

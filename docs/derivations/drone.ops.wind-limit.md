@@ -35,22 +35,20 @@ The power law describes a steady, well-mixed wind over even ground. The guidelin
 
 ## Worked example
 
-- sourcePublisher: National Renewable Energy Laboratory
-- sourceTitle: Small Wind Site Assessment Guidelines (NREL/TP-5000-63696) and Wind Resource Assessment Handbook (NREL/SR-440-22223)
-- sourceEdition: September 2015 and April 1997, read on 2026-09-25 at docs.nlr.gov
-- sourceLocator: section 5.3.2 and Table 1; page 3-3
-- independent: partly. Neither report prints a worked numeric example, so the vectors evaluate the printed law with the printed exponents in Python rather than copying a published answer.
-- inputs: 15 kt gusting 25 kt reported at 10 m, flown at 120 m over open terrain, a 12 m/s rating, 15 m/s maximum airspeed
-- outputs: (120 / 10)^(1/7) = 1.4262; 7.717 m/s × 1.4262 = 11.0 m/s; 12.861 m/s × 1.4262 = 18.3 m/s gust, over the 12 m/s rating (GUST_EXCEEDS_RATING); margin −6.3 m/s; groundspeed into the wind 4.0 m/s
-- tolerance: 1e-12 relative
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-09-25
-
-No free-to-read authoritative source with a numeric power-law example was found (NOAA's low-level jet page, the two NREL reports, and an NREL site report were checked); this is the honest limit of the independent check.
+- sourcePublisher: New York State Energy Research and Development Authority
+- sourceTitle: Customer Sited Wind Handbook
+- sourceEdition: Final Report 10-08, August 2010, read at the issuer on 2026-10-12
+- sourceLocator: section 6.2, page 33, Wind Shear Adjustment example
+- independent: yes
+- inputs: 11.7 mph at 100 ft; α = 0.230, calculated in the source from 11.7 mph at 100 ft and 12.2 mph at 120 ft; estimate at 110 ft
+- outputs: 12.0 mph at 110 ft. The tool gives 11.96 mph (5.346 m/s) before rounding.
+- tolerance: 0.05 mph, half the source's printed 0.1 mph
+- verifiedBy: golden vector v008, run by the core on every build
+- verifiedOn: 2026-10-12
 
 ## Differential tests
 
-- `tools/vectors/gen_mission_planning.py`: the power law in Python at seven cases, one per terrain class, the report height itself, a report height of 30 m, feet and knots, and a limit from an airspeed and a 50% margin (within 1e-12 relative).
+- `tools/vectors/gen_mission_planning.py`: the power law in Python at seven computed cases, one per terrain class, the report height itself, a report height of 30 m, feet and knots, and a limit from an airspeed and a 50% margin (within 1e-12 relative), plus NYSERDA's published 12.0 mph example at its printed precision.
 
 ## Invariants
 

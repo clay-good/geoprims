@@ -221,6 +221,17 @@ fn wind_unchanged_at_report_height() {
 }
 
 #[test]
+fn wind_matches_nyserda_worked_example() {
+    let r = call(
+        "drone.ops.wind-limit",
+        r#"{"wind_speed":"11.7 mph","flying_height":"110 ft","report_height":"100 ft","exponent":0.230,"wind_rating":"20 mph"}"#,
+    );
+    let published = 12.0 * 0.44704;
+    assert!((num(&r, "result.wind_at_height.value") - published).abs() <= 0.05 * 0.44704);
+    assert_eq!(num(&r, "result.exponent"), 0.230);
+}
+
+#[test]
 fn wind_gust_over_rating() {
     let r = call(
         "drone.ops.wind-limit",

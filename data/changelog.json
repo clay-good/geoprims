@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "drone.power.hover-power"
+      ],
+      "vectors": [],
+      "summary": "Multirotor hover power (version 1.1.0) is now stable. Its ideal and figure-of-merit-adjusted power reproduce the 2026 Embry-Riddle aerospace textbook's 45,000 lb tiltrotor example within 0.03%; 20 vectors and new scaling invariants cover density, losses, avionics draw, rotor scale, and coaxial inputs. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "drone.mission.sorties"
       ],
       "vectors": [],

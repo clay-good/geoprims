@@ -2038,6 +2038,26 @@
       "editionCheck": true
     },
     {
+      "id": "leishman-flight-vehicles",
+      "name": "Introduction to Aerospace Flight Vehicles",
+      "issuer": "Leishman, J. G., Embry-Riddle Aeronautical University",
+      "currentEdition": "2026 webbook edition",
+      "currentReleaseDate": "2026-01-01",
+      "cycleMonths": 12,
+      "nextExpected": "2027-01-01",
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Checked the 2026 edition at the issuer on 2026-10-13. Chapter 67's hover-power worked example gives a 45,000 lb tiltrotor with two 38 ft rotors at sea-level density, 2,641 hp (1,970.2 kW) ideal power per rotor, 7,043 hp (5,253.8 kW) total at a figure of merit of 0.75 before transmission losses, and 7,395 hp after a separate 5% transmission loss.",
+      "freeAccessUrl": "https://eaglepubs.erau.edu/introductiontoaerospaceflightvehicles/chapter/helicopters/",
+      "matchTerms": [
+        "Introduction to Aerospace Flight Vehicles"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "leishman",
       "name": "Principles of Helicopter Aerodynamics",
       "issuer": "Cambridge University Press",

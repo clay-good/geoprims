@@ -87,6 +87,25 @@ fn density_altitude_increases_power() {
 }
 
 #[test]
+fn hover_power_scaling_invariants() {
+    let power = |mass: f64, rotors: usize, diameter: f64| {
+        num(
+            &call(
+                "drone.power.hover-power",
+                &format!(
+                    r#"{{"mass":"{mass} kg","rotors":{rotors},"rotor_diameter":"{diameter} m"}}"#
+                ),
+            ),
+            "result.electrical_power.value",
+        )
+    };
+    let base = power(2.0, 4, 0.3);
+    assert!((power(4.0, 4, 0.3) - base * 2.0_f64.powf(1.5)).abs() < 1e-9);
+    assert!((power(2.0, 4, 0.6) - base / 2.0).abs() < 1e-9);
+    assert!((power(2.0, 16, 0.3) - base / 2.0).abs() < 1e-9);
+}
+
+#[test]
 fn endurance_with_reserve() {
     let r = call(
         "drone.power.endurance",

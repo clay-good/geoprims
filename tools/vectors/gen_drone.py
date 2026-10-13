@@ -209,6 +209,57 @@ def hover_vectors():
             inp["altitude"] = f"{alt_ft} ft"
         out.append(fvec(i, inp, {"result.ideal_power.value": ideal, "result.electrical_power.value": ideal / 0.51,
                                   "result.disk_area.value": a}, PW_SRC, PW_VER))
+    coax_src = "Momentum theory with the coaxial induced-power interference factor (Leishman and Syal 2008, 1.2818), evaluated in Python with the ISA sea-level density 101325 / (287.05287 x 288.15)"
+    rho0 = P0 / (R_AIR * T0)
+    for n, fm, eta, kappa in [(8, 0.6, 0.85, 1.2818), (8, 0.6, 0.85, 1.414), (8, 0.6, 0.85, 1.0), (8, 0.6, 0.85, None), (6, 0.5, 0.8, 1.2818)]:
+        d = 12 * 0.0254
+        a = n * math.pi * d * d / 4
+        ideal = (2.5 * G0) ** 1.5 / math.sqrt(2 * rho0 * a)
+        electrical = ideal / (fm * eta) if kappa is None or kappa == 1 else ideal * (kappa + 1 / fm - 1) / eta
+        inp = {"mass": "2.5 kg", "rotors": n, "rotor_diameter": "12 in"}
+        if kappa is not None:
+            inp["coaxial"] = "yes"
+            if kappa != 1.2818:
+                inp["interference"] = kappa
+        if fm != 0.6:
+            inp["figure_of_merit"] = fm
+        if eta != 0.85:
+            inp["efficiency"] = eta
+        source = coax_src
+        if kappa == 1.414:
+            source += "; 1.414 is the coplanar limit"
+        elif kappa == 1.0:
+            source = "A factor of 1 is no interference: the same as separate rotors"
+        elif kappa is None:
+            source += "; not coaxial"
+        out.append(fvec(len(out) + 1, inp, {"result.electrical_power.value": electrical, **({"result.interference_factor": kappa} if kappa == 1.2818 and fm == 0.6 else {})}, source, "2026"))
+    out.append(fvec(len(out) + 1, {"mass": "2.5 kg", "rotors": 7, "rotor_diameter": "12 in", "coaxial": "yes"},
+                    {"ok": False, "error.code": "INVALID_INPUT"}, "add-drone-suite: coaxial rotors come in pairs", "2026"))
+    out.append(fvec(len(out) + 1, {"mass": "2.5 kg", "rotors": 8, "rotor_diameter": "12 in", "interference": 1.3},
+                    {"ok": False, "error.code": "INVALID_INPUT"}, "add-drone-suite: an interference factor without coaxial pairs", "2026"))
+    # Leishman's open textbook works a 45,000 lb tiltrotor with two 38 ft
+    # rotors at sea level: 3,940.4 kW ideal and 5,253.8 kW at FM = 0.75,
+    # before the separate transmission loss. Preserve its printed precision.
+    out.append(fvec(len(out) + 1, {"mass": "45000 lb", "rotors": 2, "rotor_diameter": "38 ft", "figure_of_merit": 0.75, "efficiency": 1},
+                    {"result.ideal_power.value": 3_940_400.0, "result.electrical_power.value": 5_253_800.0},
+                    "Leishman, Introduction to Aerospace Flight Vehicles, chapter 67, hover-power worked example", "2026 webbook"))
+    out[-1]["tolerance"] = {"result.ideal_power.value": {"rel": 0.0005, "abs": 0}, "result.electrical_power.value": {"rel": 0.0005, "abs": 0}}
+    # Broaden the differential matrix across density, losses, avionics, units,
+    # rotor counts, and scale while retaining the same published equations.
+    more = [
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "density_altitude": "8000 ft"}, 1.4, 4, 9.4 * 0.0254, rho_at(8000 * 0.3048), 0.6, 0.85, 0),
+        ({"mass": "3 kg", "rotors": 6, "rotor_diameter": "15 in", "altitude": "5000 ft", "temperature": "30 degC"}, 3, 6, 15 * 0.0254, rho_at(5000 * 0.3048, 303.15), 0.6, 0.85, 0),
+        ({"mass": "2 kg", "rotors": 4, "rotor_diameter": "0.3 m", "avionics_power": "25 W"}, 2, 4, 0.3, rho0, 0.6, 0.85, 25),
+        ({"mass": "4 kg", "rotors": 8, "rotor_diameter": "18 in", "figure_of_merit": 0.4}, 4, 8, 18 * 0.0254, rho0, 0.4, 0.85, 0),
+        ({"mass": "4 kg", "rotors": 8, "rotor_diameter": "18 in", "efficiency": 0.5}, 4, 8, 18 * 0.0254, rho0, 0.6, 0.5, 0),
+        ({"mass": "500 g", "rotors": 4, "rotor_diameter": "5 in"}, 0.5, 4, 5 * 0.0254, rho0, 0.6, 0.85, 0),
+        ({"mass": "50 kg", "rotors": 12, "rotor_diameter": "36 in"}, 50, 12, 36 * 0.0254, rho0, 0.6, 0.85, 0),
+    ]
+    for inp, m, n, d, rho, fm, eta, avionics in more:
+        area = n * math.pi * d * d / 4
+        ideal = (m * G0) ** 1.5 / math.sqrt(2 * rho * area)
+        out.append(fvec(len(out) + 1, inp, {"result.ideal_power.value": ideal, "result.electrical_power.value": ideal / (fm * eta) + avionics,
+                                            "result.disk_area.value": area, "result.air_density.value": rho}, PW_SRC, PW_VER))
     return out
 
 
@@ -743,6 +794,7 @@ def export_vectors():
 
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
+    selected = set(sys.argv[2:])
     files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
              "drone.photogrammetry.motion-blur": blur(), "drone.photogrammetry.asprs-accuracy": asprs(),
              "drone.power.battery-energy": battery_vectors(), "drone.power.hover-power": hover_vectors(), "drone.power.calibrate-hover": calibrate_vectors(),
@@ -758,6 +810,8 @@ def main():
              "drone.mission.geofence": geofence_vectors(),
              "drone.mission.export": export_vectors()}
     for tool, vs in files.items():
+        if selected and tool not in selected:
+            continue
         (out / f"{tool}.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in vs))
 
 

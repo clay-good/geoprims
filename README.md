@@ -35,6 +35,8 @@ GPS satellite visibility and DOP planning is stable for pasted YUMA or SEM alman
 
 Mission sortie planning is stable for ordered waypoint paths. It counts every trip from home and back before choosing battery-swap waypoints, and 22 vectors cover flight-time and battery-energy inputs, reserves, wind, distinct survey and transit speeds, and an unreachable-path refusal.
 
+Multirotor hover power is stable for separate or coaxial rotors, explicit aerodynamic and electrical losses, and site air density. Its momentum-theory result is checked against the 2026 Embry-Riddle aerospace textbook's 45,000 lb tiltrotor example and 19 additional vectors.
+
 The aviation catalog covers all 83 planned operations through 90 tool ids: 83 operation tools and 7 narrower airspeed endpoints. Altimeter inputs accept inHg, hPa, `A` groups, and `Q` groups directly rather than multiplying identical pages by unit.
 
 ## Status

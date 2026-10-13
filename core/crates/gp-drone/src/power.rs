@@ -29,6 +29,14 @@ pub const LEISHMAN_SYAL: Reference = Reference {
     locator: "Momentum theory for a coaxial pair: induced power interference factor 1.2818 for a lower rotor in the fully developed slipstream of the upper rotor",
     url: "https://doi.org/10.4050/JAHS.53.290",
 };
+pub const LEISHMAN_FLIGHT_VEHICLES: Reference = Reference {
+    title: "Introduction to Aerospace Flight Vehicles",
+    issuer: "Leishman, J. G., Embry-Riddle Aeronautical University",
+    year: 2026,
+    edition: "2026 webbook edition",
+    locator: "Chapter 67, hover-power worked example: 45,000 lb, two 38 ft rotors, 3,940.4 kW ideal and 5,253.8 kW at a 0.75 figure of merit",
+    url: "https://eaglepubs.erau.edu/introductiontoaerospaceflightvehicles/chapter/helicopters/",
+};
 pub const ICAO_ATM: Reference = Reference {
     title: "Manual of the ICAO Standard Atmosphere, Doc 7488/3",
     issuer: "International Civil Aviation Organization",
@@ -543,6 +551,7 @@ fn read_hover(ctx: &mut Ctx) -> Result<HoverIn, ToolError> {
 pub static HOVER_POWER: ToolDef = ToolDef {
     id: "drone.power.hover-power",
     version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Multirotor hover power",
     summary: "Electrical hover power for a multirotor from its mass, rotors, and air density, by momentum theory with a figure of merit and motor efficiency, never the ideal power alone.",
     aliases: &[
@@ -649,12 +658,12 @@ pub static HOVER_POWER: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Momentum theory: P_ideal = (m·g0)^1.5 / √(2ρA); electrical P = P_ideal / (FM·η) + avionics; ISA troposphere density. Rotors in coaxial pairs: the induced power is κ times that of the same rotors apart (κ = 1.2818 for a lower rotor in the fully developed slipstream of the upper one, Leishman and Syal 2008) while the profile share the figure of merit carries is unchanged, so P = P_ideal·(κ + 1/FM − 1)/η + avionics",
     accuracy: "A first estimate. Real power depends on rotor design, frame drag, and wind; calibrate FM·η from a test flight when you can.",
     when_to_use: "Use this when you design or load a multirotor and want to know how many watts it needs just to stay in the air. Give the takeoff mass, the number of rotors, and their diameter, with the site altitude and temperature if you fly high or hot, and it gives the electrical hover power, the ideal minimum, the disk loading, and the air density. That power then feeds the flight time tools.",
     limitations: "It is a first estimate from momentum theory, with a figure of merit of 0.6 and an efficiency of 0.85 unless you set them. Real power depends on the rotor design, frame drag, and wind, and forward flight draws a different amount. Rotors count as separate disks, or as stacked pairs if you say so. A test flight run through the calibration tool gives a better figure for your drone.",
-    references: &[LEISHMAN, ICAO_ATM, LEISHMAN_SYAL],
+    references: &[LEISHMAN, LEISHMAN_FLIGHT_VEHICLES, ICAO_ATM, LEISHMAN_SYAL],
     examples: &[Example {
         id: "primary",
         title: "A 1.4 kg quadcopter with 9.4 in rotors at sea level",
@@ -674,6 +683,10 @@ pub static HOVER_POWER: ToolDef = ToolDef {
         Related {
             id: "drone.power.max-payload",
             reason: "next",
+        },
+        Related {
+            id: "drone.power.calibrate-hover",
+            reason: "alternative",
         },
     ],
     assumptions: &[

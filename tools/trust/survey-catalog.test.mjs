@@ -21,6 +21,16 @@ test('the direction parser is an addressable survey operation', () => {
   assert.ok(tool.vectorCount >= 20, `direction parser has only ${tool.vectorCount} vectors`);
 });
 
+test('deflection angle is an addressable survey operation', () => {
+  const tool = byId.get('survey.cogo.deflection-angle');
+  assert.ok(tool, 'survey.cogo.deflection-angle is missing');
+  for (const alias of ['deflection angle calculator', 'left right deflection', 'backsight foresight angle']) {
+    assert.ok(tool.aliases.includes(alias), `deflection-angle is missing alias "${alias}"`);
+  }
+  assert.ok(existsSync(join(root, 'docs/derivations/survey.cogo.deflection-angle.md')));
+  assert.ok(tool.vectorCount >= 20, `deflection-angle has only ${tool.vectorCount} vectors`);
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 45, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 46, `survey operation count regressed to ${survey.length}`);
 });

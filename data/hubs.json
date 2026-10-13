@@ -1753,6 +1753,12 @@
           ]
         },
         {
+          "want": "find the left or right deflection between a backsight and foresight",
+          "tools": [
+            "deflection-angle"
+          ]
+        },
+        {
           "want": "find bearing and distance between two points, or a point from them",
           "tools": [
             "inverse",

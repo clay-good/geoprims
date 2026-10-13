@@ -115,6 +115,159 @@ pub static PARSE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static DEFLECTION: ToolDef = ToolDef {
+    id: "survey.cogo.deflection-angle",
+    title: "Survey deflection angle",
+    summary: "Finds the left or right deflection from a backsight direction and a foresight direction at an occupied point.",
+    aliases: &[
+        "deflection angle calculator",
+        "left right deflection",
+        "backsight foresight angle",
+        "turn angle",
+    ],
+    keywords: &[
+        "COGO",
+        "deflection",
+        "backsight",
+        "foresight",
+        "turn right",
+        "turn left",
+    ],
+    inputs: &[
+        Field::new(
+            "backsight_direction",
+            "Backsight direction",
+            "From the occupied point back to the preceding point, like S 30°00'00\" W",
+            Kind::Text { max_len: 48 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "foresight_direction",
+            "Foresight direction",
+            "From the occupied point to the following point, like N 80°00'00\" E",
+            Kind::Text { max_len: 48 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "turn_convention",
+            "Turn convention",
+            "Shortest turn (default), or force a right or left turn",
+            Kind::Choice(&["shortest", "right", "left"]),
+        )
+        .core(),
+        Field::new(
+            "reference",
+            "Direction reference",
+            "grid, geodetic, or assumed (default)",
+            Kind::Choice(&["grid", "geodetic", "assumed"]),
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "deflection",
+            "Deflection angle",
+            "Magnitude of the selected turn",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(8))
+        .angle_range("[0,360)"),
+        Field::new(
+            "deflection_dms",
+            "Deflection angle (DMS)",
+            "Magnitude in degrees, minutes, and seconds",
+            Kind::Text { max_len: 32 },
+        ),
+        Field::new(
+            "signed_deflection",
+            "Signed deflection",
+            "Right is positive and left is negative",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(8))
+        .angle_range("unbounded"),
+        Field::new(
+            "turn",
+            "Turn",
+            "right, left, straight, or reverse",
+            Kind::Text { max_len: 16 },
+        ),
+        Field::new(
+            "forward_tangent_azimuth",
+            "Forward tangent azimuth",
+            "The backsight direction extended through the occupied point",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(8))
+        .angle_range("[0,360)"),
+        Field::new(
+            "foresight_azimuth",
+            "Foresight azimuth",
+            "The entered foresight as a north azimuth",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(8))
+        .angle_range("[0,360)"),
+        Field::new(
+            "reference",
+            "Direction reference",
+            "The reference supplied with both directions",
+            Kind::Text { max_len: 16 },
+        ),
+        Field::new(
+            "convention",
+            "Convention",
+            "How the backsight and sign are interpreted",
+            Kind::Text { max_len: 200 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    when_to_use: "Use this at a traverse, route, or construction point when field notes give the direction from the occupied point back to the preceding point and the direction ahead to the next point. The result tells you the deflection from the forward extension of the incoming line. Choose the shortest turn for ordinary traverse work, or force right or left when a plan, curve, or field procedure specifies the side of the turn.",
+    limitations: "Both directions must use the same north reference. This tool does not apply grid convergence, magnetic declination, meridian convergence, or a basis-of-bearing rotation. A backsight is the direction looking backward from the occupied point, not the travel direction into it; reversing that meaning changes the answer by 180°. A forced right or left turn may exceed 180°, while the shortest convention never does.",
+    model: "forward tangent = backsight azimuth + 180°; right deflection = foresight azimuth − forward tangent, wrapped to [0°, 360°)",
+    accuracy: "Exact apart from displaying DMS to 0.01 arcsecond and decimal values to eight places",
+    references: &[GHILANI],
+    examples: &[Example {
+        id: "primary",
+        title: "Right deflection at a traverse point",
+        input: r#"{"backsight_direction":"S 30°00'00\" W","foresight_direction":"N 80°00'00\" E","turn_convention":"shortest","reference":"grid"}"#,
+        source: "add-survey-suite deflection-angle operation",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.cogo.direction-parse",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.cogo.forward",
+            reason: "next",
+        },
+    ],
+    sentence: "From the forward tangent, turn {turn} by {deflection_dms} ({deflection}).",
+    run: run_deflection,
+    ..ToolDef::BLANK
+};
+
 fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let text = ctx
         .text("direction")?
@@ -127,6 +280,70 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("bearing", Json::str(bearing(az, 2))),
         ("gons", ctx.emit("gons", deg(az), unit(QT::Angle, "gon"))),
         ("reference", Json::str(reference)),
+    ]))
+}
+
+fn run_deflection(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let backsight = ctx.text("backsight_direction")?.ok_or_else(|| {
+        ToolError::invalid("/backsight_direction", "Backsight direction is required.")
+    })?;
+    let foresight = ctx.text("foresight_direction")?.ok_or_else(|| {
+        ToolError::invalid("/foresight_direction", "Foresight direction is required.")
+    })?;
+    let back_az =
+        parse(&backsight).map_err(|message| ToolError::invalid("/backsight_direction", message))?;
+    let fore_az =
+        parse(&foresight).map_err(|message| ToolError::invalid("/foresight_direction", message))?;
+    let tangent = gp_base::angle::wrap_azimuth(back_az + 180.0);
+    let right = gp_base::angle::wrap_azimuth(fore_az - tangent);
+    let left = gp_base::angle::wrap_azimuth(tangent - fore_az);
+    let requested = ctx.choice("turn_convention")?.unwrap_or("shortest");
+    let (magnitude, signed, selected) = match requested {
+        "right" => (right, right, "right"),
+        "left" => (left, -left, "left"),
+        _ if right <= 180.0 => (right, right, "right"),
+        _ => (left, -left, "left"),
+    };
+    let turn = if magnitude == 0.0 {
+        "straight"
+    } else if magnitude == 180.0 {
+        "reverse"
+    } else {
+        selected
+    };
+    let convention = match requested {
+        "right" => {
+            "The angle is measured clockwise from the forward extension of the backsight; right is positive."
+        }
+        "left" => {
+            "The angle is measured counterclockwise from the forward extension of the backsight; left is negative."
+        }
+        _ => {
+            "The smaller angle is measured from the forward extension of the backsight; right is positive and a 180° tie is reported as reverse."
+        }
+    };
+    let reference = ctx.choice("reference")?.unwrap_or("assumed");
+    Ok(Json::obj([
+        ("deflection", ctx.out("deflection", deg(magnitude))),
+        (
+            "deflection_dms",
+            Json::str(dms::format(magnitude, Axis::Lon, Style::Dms, 2, false)),
+        ),
+        (
+            "signed_deflection",
+            ctx.out("signed_deflection", deg(signed + 0.0)),
+        ),
+        ("turn", Json::str(turn)),
+        (
+            "forward_tangent_azimuth",
+            ctx.out("forward_tangent_azimuth", deg(tangent)),
+        ),
+        (
+            "foresight_azimuth",
+            ctx.out("foresight_azimuth", deg(fore_az)),
+        ),
+        ("reference", Json::str(reference)),
+        ("convention", Json::str(convention)),
     ]))
 }
 

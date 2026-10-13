@@ -2336,6 +2336,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &localize::LOCALIZATION,
     &lsq::LEAST_SQUARES,
     &direction::PARSE,
+    &direction::DEFLECTION,
     &INVERSE,
     &FORWARD,
     &TRAVERSE,

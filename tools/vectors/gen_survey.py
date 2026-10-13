@@ -49,6 +49,29 @@ def bearing(az):
     return f"N {dms(360 - az)} W"
 
 
+def parse_direction(text):
+    value = text.strip().upper()
+    first, last = value[0], value[-1]
+    quadrant = first in "NS" and last in "EW"
+    body = value[1:-1] if quadrant else value
+    scale = 1.0
+    for suffix in ("GON", "GRAD", "G"):
+        if body.endswith(suffix):
+            body = body[:-len(suffix)]
+            scale = 0.9
+            break
+    parts = body.replace("°", " ").replace("'", " ").replace('"', " ").replace("-", " ").split()
+    angle = sum(float(part) / 60 ** i for i, part in enumerate(parts)) * scale
+    if not quadrant:
+        return angle % 360.0
+    return {
+        ("N", "E"): angle,
+        ("S", "E"): 180.0 - angle,
+        ("S", "W"): 180.0 + angle,
+        ("N", "W"): 360.0 - angle,
+    }[(first, last)] % 360.0
+
+
 def direction_parse():
     cases = [
         ("N 0 E", 0.0), ("N 45 E", 45.0), ("N 90 E", 90.0),
@@ -69,6 +92,64 @@ def direction_parse():
         }, src="Ghilani and Wolf, Elementary Surveying, direction notation and azimuth conversion", ver="16th edition (2021)"))
     for text in ("N 95 E", "S W", "401 gon", "361", "not a direction"):
         out.append(vec(len(out) + 1, {"direction": text}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    return out
+
+
+def deflection_angle():
+    cases = [
+        ("S 30 W", "N 80 E", "shortest", 50.0, 50.0, "right"),
+        ("N 10 E", "S 40 E", "shortest", 50.0, -50.0, "left"),
+        ("S 30 W", "N 80 E", "left", 310.0, -310.0, "left"),
+        ("N 10 E", "S 40 E", "right", 310.0, 310.0, "right"),
+        ("S 0 W", "N 0 E", "shortest", 0.0, 0.0, "straight"),
+        ("N 0 E", "N 0 E", "shortest", 180.0, 180.0, "reverse"),
+        ("270", "100 gon", "shortest", 0.0, 0.0, "straight"),
+        ("90", "270", "shortest", 0.0, 0.0, "straight"),
+        ("45", "225", "shortest", 0.0, 0.0, "straight"),
+        ("225", "45", "shortest", 0.0, 0.0, "straight"),
+        ("N 45 W", "S 15 W", "shortest", 60.0, 60.0, "right"),
+        ("N 45 W", "S 75 E", "shortest", 30.0, -30.0, "left"),
+        ("359", "181", "shortest", 2.0, 2.0, "right"),
+        ("1", "179", "shortest", 2.0, -2.0, "left"),
+        ("100 gon", "200 gon", "shortest", 90.0, -90.0, "left"),
+        ("300 gon", "200 gon", "shortest", 90.0, 90.0, "right"),
+        ("S 20°15'30\" E", "N 40°45'30\" E", "shortest", 61.01666666666665, 61.01666666666665, "right"),
+        ("S 20°15'30\" W", "N 40°45'30\" W", "shortest", 61.01666666666665, -61.01666666666665, "left"),
+        ("0", "90", "right", 270.0, 270.0, "right"),
+        ("0", "90", "left", 90.0, -90.0, "left"),
+        ("270", "90", "right", 0.0, 0.0, "straight"),
+        ("270", "90", "left", 0.0, 0.0, "straight"),
+    ]
+    out = []
+    for i, (back, fore, convention, magnitude, signed, turn) in enumerate(cases, 1):
+        back_az = parse_direction(back)
+        tangent = (back_az + 180.0) % 360.0
+        inp = {
+            "backsight_direction": back,
+            "foresight_direction": fore,
+            "turn_convention": convention,
+            "reference": ["grid", "geodetic", "assumed"][i % 3],
+        }
+        out.append(vec(i, inp, {
+            "result.deflection.value": magnitude,
+            "result.signed_deflection.value": signed,
+            "result.turn": turn,
+            "result.forward_tangent_azimuth.value": tangent,
+            "result.foresight_azimuth.value": parse_direction(fore),
+            "result.reference": inp["reference"],
+        }, src="Ghilani and Wolf, Elementary Surveying, deflection-angle convention", ver="16th edition (2021)"))
+    invalid = [
+        ({"foresight_direction": "N 10 E"}, "/backsight_direction"),
+        ({"backsight_direction": "N 10 E"}, "/foresight_direction"),
+        ({"backsight_direction": "N 95 E", "foresight_direction": "N 10 E"}, "/backsight_direction"),
+        ({"backsight_direction": "N 10 E", "foresight_direction": "401 gon"}, "/foresight_direction"),
+    ]
+    for inp, field in invalid:
+        out.append(vec(len(out) + 1, inp, {
+            "ok": False,
+            "error.code": "INVALID_INPUT",
+            "error.field": field,
+        }, SPEC, "2026"))
     return out
 
 
@@ -1715,6 +1796,7 @@ def main():
     selected = set(sys.argv[2:])
     files = {
         "survey.cogo.direction-parse": direction_parse(),
+        "survey.cogo.deflection-angle": deflection_angle(),
         "survey.cogo.inverse": inverse(), "survey.cogo.forward": forward(), "survey.cogo.traverse-closure": traverse(),
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),

@@ -69,7 +69,7 @@ Vertical-curve sight distance is stable for crest and headlight-sag geometry, in
 
 Unequal-tangent vertical curves are stable for two parabolas that meet smoothly under the PVI, including crest, sag, monotone, straight, and tangent-extension cases. The tool reproduces Pearson's published problem 25.15 elevations, and 20 vectors cover metric and US stationing, endpoint turning points, unit guards, and invalid lengths.
 
-The survey catalog currently has 45 independently addressable entries across COGO, reductions, earthwork, curves, GNSS, and land work. The survey-suite contract still targets 57 independently addressable endpoints; direction parsing is now a tool of its own, while the remaining consolidated modes are being separated without duplicating their core math.
+The survey catalog currently has 46 independently addressable entries across COGO, reductions, earthwork, curves, GNSS, and land work. The survey-suite contract still targets 57 independently addressable endpoints; direction parsing and deflection-angle work are now tools of their own, while the remaining consolidated modes are being separated without duplicating their core math.
 
 The aviation catalog covers all 83 planned operations through 90 tool ids: 83 operation tools and 7 narrower airspeed endpoints. Altimeter inputs accept inHg, hPa, `A` groups, and `Q` groups directly rather than multiplying identical pages by unit.
 

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "3f31a6b709e3dd54",
+    "hash": "f2949334497e8467",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "c7ff737d4d1da009",
+    "hash": "9d668a8b76d6d939",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,15 +1440,15 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "49783b5e6a4ba3bd",
+    "hash": "4b3954ac27ca21b8",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
-    "hash": "ed104f69f461d7e9",
+    "hash": "81b48264f31e3373",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/": {
-    "hash": "2a606ee1a44afaee",
+    "hash": "4f6a9e878a35ca17",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/angular-closure/": {
@@ -1456,11 +1456,15 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/area-by-coordinates/": {
-    "hash": "3e98b9a106a9842d",
+    "hash": "42d6273bbaa3b40d",
+    "lastmod": "2026-10-13"
+  },
+  "/survey/cogo/deflection-angle/": {
+    "hash": "f9dc9a887111581d",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/direction-parse/": {
-    "hash": "dc1379827c950fbc",
+    "hash": "7736781fd4bf0741",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/forward/": {
@@ -1720,7 +1724,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "8b65855d528b6830",
+    "hash": "02631b123220cae2",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1984,7 +1988,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "43c3a8722172f5bf",
+    "hash": "cfd7f8481b70681d",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

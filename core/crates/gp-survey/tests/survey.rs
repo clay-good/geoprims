@@ -157,6 +157,42 @@ fn inverse_and_bearings() {
 }
 
 #[test]
+fn deflection_angle_conventions() {
+    let right = call(
+        "survey.cogo.deflection-angle",
+        r#"{"backsight_direction":"S 30 W","foresight_direction":"N 80 E","reference":"grid"}"#,
+    );
+    assert_eq!(num(&right, "result.forward_tangent_azimuth.value"), 30.0);
+    assert_eq!(num(&right, "result.deflection.value"), 50.0);
+    assert_eq!(num(&right, "result.signed_deflection.value"), 50.0);
+    assert_eq!(right["result"]["turn"], "right");
+    assert_eq!(right["result"]["reference"], "grid");
+
+    let left = call(
+        "survey.cogo.deflection-angle",
+        r#"{"backsight_direction":"N 10 E","foresight_direction":"S 40 E"}"#,
+    );
+    assert_eq!(num(&left, "result.deflection.value"), 50.0);
+    assert_eq!(num(&left, "result.signed_deflection.value"), -50.0);
+    assert_eq!(left["result"]["turn"], "left");
+
+    let forced = call(
+        "survey.cogo.deflection-angle",
+        r#"{"backsight_direction":"S 30 W","foresight_direction":"N 80 E","turn_convention":"left"}"#,
+    );
+    assert_eq!(num(&forced, "result.deflection.value"), 310.0);
+    assert_eq!(num(&forced, "result.signed_deflection.value"), -310.0);
+    assert_eq!(forced["result"]["turn"], "left");
+
+    let invalid = call(
+        "survey.cogo.deflection-angle",
+        r#"{"backsight_direction":"N 95 E","foresight_direction":"N 10 E"}"#,
+    );
+    assert_eq!(invalid["error"]["code"], "INVALID_INPUT");
+    assert_eq!(invalid["error"]["field"], "/backsight_direction");
+}
+
+#[test]
 fn mixed_feet_are_refused() {
     let r = call(
         "survey.cogo.forward",

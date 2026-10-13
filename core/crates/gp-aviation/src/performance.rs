@@ -1400,8 +1400,15 @@ fn glide_ring(ctx: &mut Ctx, still: f64, v: f64, hw: f64) -> Result<Json, ToolEr
 
 // ---------------------------------------------------------------- pivotal altitude
 
+const AFH_PIVOTAL_ALTITUDE: Reference = Reference {
+    locator: "Chapter 7, Figure 7-12 (100 kt corresponds to about 885 ft AGL)",
+    ..AFH
+};
+
 pub static PIVOTAL_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.performance.pivotal-altitude",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Pivotal altitude",
     summary: "The pivotal altitude for eights on pylons at your groundspeed, with the knots-squared over 11.3 rule.",
     aliases: &["pivotal altitude calculator", "eights on pylons"],
@@ -1442,27 +1449,38 @@ pub static PIVOTAL_ALTITUDE: ToolDef = ToolDef {
             0,
         ),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED"],
     model: "h = V²/g0 (the line of sight to the pylon is parallel to the lateral axis)",
     accuracy: "Exact for level flight at a steady groundspeed. It changes with groundspeed around the pylon.",
     when_to_use: "Use this when you practice eights on pylons. Enter your groundspeed and it gives the pivotal altitude above the ground, the height where the line of sight to the pylon stays fixed as you turn around it. The knots squared over 11.3 rule is shown beside it, with its error. Add the pylons' ground elevation yourself to get the altitude to read on the altimeter.",
     limitations: "The answer holds for one groundspeed. Around the pylon your groundspeed changes with the wind, so the pivotal altitude rises on the downwind side and drops on the upwind side, and you adjust as you fly. It assumes level flight and does not pick a safe height above obstacles or people. Your instructor and the Airplane Flying Handbook describe how to fly the maneuver.",
-    references: &[AFH],
+    references: &[AFH_PIVOTAL_ALTITUDE],
     examples: &[Example {
         id: "primary",
         title: "100 kt groundspeed",
         input: r#"{"groundspeed":"100 kt"}"#,
-        source: "add-aviation-suite pivotal-altitude scenario: about 885 ft AGL (AFH chapter 6: GS²/11.3)",
+        source: "FAA-H-8083-3C chapter 7, Figure 7-12: about 885 ft AGL",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[("value", "pivotal_altitude")],
     }],
-    related: &[Related {
-        id: "aviation.performance.turn",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "aviation.performance.turn",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.wind.heading-groundspeed",
+            reason: "parent",
+        },
+        Related {
+            id: "aviation.wind.tas-from-groundspeed",
+            reason: "alternative",
+        },
+    ],
     assumptions: &[Assumption {
         name: "Standard gravity g0",
         value: "9.80665",

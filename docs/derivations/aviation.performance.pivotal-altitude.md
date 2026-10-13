@@ -25,22 +25,23 @@ Level flight at a steady groundspeed. Around the pylon the groundspeed changes w
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite, aviation/flight-performance spec, "Pivotal altitude and ground-reference geometry"
-- sourceEdition: 2026
-- sourceLocator: Scenario "Pivotal altitude at 100 kt" (about 885 ft AGL)
-- independent: no
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Airplane Flying Handbook
+- sourceEdition: FAA-H-8083-3C (2021)
+- sourceLocator: Chapter 7, Figure 7-12, Speed versus pivotal altitude
+- independent: yes
 - inputs: groundspeed 100 kt
-- outputs: pivotal altitude about 885 ft AGL (885.4036845041701 computed); rule 10,000 / 11.3 = 884.96 ft
-- tolerance: 0.5 ft against the spec's 885; 1e-6 ft against the computed value
-- verifiedBy: golden vector v001 and `pivotal_altitude_100_kt`
-- verifiedOn: 2026-10-09
+- outputs: approximate pivotal altitude 885 ft AGL
+- tolerance: 0.5 ft, because the source prints whole feet
+- verifiedBy: golden vector v006 and `core/crates/gp-aviation/tests/slice2.rs` `pivotal_altitude_100_kt`
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_aviation.py`: a Python evaluation of h = V²/g0 at five groundspeeds (within 1e-12 relative); it restates the formula, so it checks the core's unit conversions and arithmetic
-- `core/vectors/aviation.performance.pivotal-altitude.jsonl`: those vectors, run through the core on every build
+- `tools/vectors/gen_pivotal_altitude.py`: a separate Python evaluation of h = V²/g0 and the knots-squared-over-11.3 rule from 1 to 250 kt, plus refused zero and negative groundspeeds; it restates the formulas, so it checks the core's unit conversions and arithmetic
+- `core/vectors/aviation.performance.pivotal-altitude.jsonl`: those cases and the printed FAA example, 20 vectors in all, run through the core on every build
 
 ## Invariants
 
 - `core/crates/gp-aviation/tests/slice2.rs` `pivotal_altitude_100_kt`: 100 kt gives 885 ft within 0.5 ft, and the rule of thumb is exactly 10,000 / 11.3 ft within 1e-9
+- `core/crates/gp-aviation/tests/slice2.rs` `pivotal_altitude_invariants`: doubling groundspeed quadruples the exact and rule-of-thumb heights; equivalent knot and meter-per-second inputs agree; the reported rule error equals rule height minus exact height

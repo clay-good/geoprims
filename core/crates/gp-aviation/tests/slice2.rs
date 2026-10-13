@@ -363,6 +363,44 @@ fn pivotal_altitude_100_kt() {
     near(&r, "result.rule_of_thumb.value", 10000.0 / 11.3, 1e-9);
 }
 
+#[test]
+fn pivotal_altitude_invariants() {
+    let run = |groundspeed: &str| {
+        call(
+            "aviation.performance.pivotal-altitude",
+            &format!(r#"{{"groundspeed":"{groundspeed}"}}"#),
+        )
+    };
+    let base = run("100 kt");
+    let doubled = run("200 kt");
+    near(
+        &doubled,
+        "result.pivotal_altitude.value",
+        4.0 * num(&base, "result.pivotal_altitude.value"),
+        1e-9,
+    );
+    near(
+        &doubled,
+        "result.rule_of_thumb.value",
+        4.0 * num(&base, "result.rule_of_thumb.value"),
+        1e-9,
+    );
+
+    let metric = run("51.44444444444444 m/s");
+    near(
+        &metric,
+        "result.pivotal_altitude.value",
+        num(&base, "result.pivotal_altitude.value"),
+        1e-9,
+    );
+    near(
+        &base,
+        "result.rule_error.value",
+        num(&base, "result.rule_of_thumb.value") - num(&base, "result.pivotal_altitude.value"),
+        1e-9,
+    );
+}
+
 // loading
 
 #[test]

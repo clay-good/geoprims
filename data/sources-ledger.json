@@ -1897,6 +1897,26 @@
       "editionCheck": false
     },
     {
+      "id": "lassiter-oblique",
+      "name": "UAS oblique photo simulation",
+      "issuer": "Lassiter, A.",
+      "currentEdition": "commit 6c93edd08609a0a0430d92b744995d074bd6a270",
+      "currentReleaseDate": "2023-02-09",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read the MIT-licensed README and uas_oblique_sim.m at the pinned GitHub commit on 2026-10-13. The program fixes a 24 mm Canon camera with 0.0043 mm pixels and independently computes and prints the minimum, median, and maximum along-view GSD from its row-angle equation.",
+      "freeAccessUrl": "https://github.com/h-anjru/uas-oblique-photo/tree/6c93edd08609a0a0430d92b744995d074bd6a270",
+      "matchTerms": [
+        "UAS oblique photo simulation"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "landgate-edmi-manual",
       "name": "The Survey Instrumentation Calibration Technical User Manual",
       "issuer": "Landgate (Western Australian Land Information Authority) with ICSM",

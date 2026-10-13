@@ -486,6 +486,53 @@ def oblique_vectors():
     out.append(fvec(len(out) + 1, dict(cam_inp(c), height="100 m", pitch="90 deg"), {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
     nop = {k: v for k, v in sq.items() if k != "image_height"}
     out.append(fvec(len(out) + 1, dict(nop, height="100 m", pitch="45 deg"), {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    # Keep the map-placement vector at v015. GeodSolve is independent of the
+    # Rust GeographicLib port used by the core.
+    map_expect = {
+        "ok": True,
+        "result.footprint.0.lat.value": 40.0006368337481,
+        "result.footprint.0.lon.value": -104.99960964823252,
+        "result.footprint.1.lat.value": 39.99936316486702,
+        "result.footprint.1.lon.value": -104.99960965548499,
+        "result.footprint.2.lat.value": 39.99808944312047,
+        "result.footprint.2.lon.value": -104.99648696463524,
+        "result.footprint.3.lat.value": 40.001910449759414,
+        "result.footprint.3.lon.value": -104.99648676881883,
+    }
+    out.append({
+        "id": f"v{len(out) + 1:03d}",
+        "input": {"height": "100 m", "pitch": "45 deg", "sensor_width": "13.2 mm", "focal_length": "8.8 mm", "image_width": 5472,
+                  "image_height": 3648, "lat": 40.0, "lon": -105.0, "heading": "90 deg"},
+        "expect": map_expect,
+        "source": "The 45° scenario's corners (ahead and right on flat ground, as in the earlier vectors) placed from 40° N, 105° W looking east (90° true) by GeodSolve's direct problem on WGS 84: azimuth = heading + atan2(right, ahead), distance = hypot(ahead, right)",
+        "sourceVersion": "GeodSolve: GeographicLib version 2.7",
+        "tolerance": {k: {"abs": 1e-9} for k in map_expect if k != "ok"},
+    })
+
+    # Lassiter's published MATLAB program fixes this Canon camera and prints
+    # 2.1, 3.6, and 7.5 cm for the near, median, and far rows at 100 m and 45°.
+    # Its 14.9 mm height rounds to 3,465 rows at a 0.0043 mm pixel pitch, so
+    # use the represented 14.8995 mm height here to compare the same edges.
+    lassiter = {"height": "100 m", "pitch": "45 deg", "sensor_width": "22.3 mm", "sensor_height": "14.8995 mm",
+                "focal_length": "24 mm", "image_width": 22.3 / 0.0043, "image_height": 3465}
+    out.append(fvec(len(out) + 1, lassiter,
+                    {"result.gsd_near.value": 2.1, "result.gsd_center_along.value": 3.6, "result.gsd_far.value": 7.5},
+                    "Andrew Lassiter, uas-oblique-photo, uas_oblique_sim.m: printed min, median, and max GSD for its fixed Canon camera",
+                    "commit 6c93edd08609a0a0430d92b744995d074bd6a270"))
+    out[-1]["tolerance"] = {k: {"rel": 0, "abs": 0.05} for k in out[-1]["expect"] if k != "ok"}
+
+    # Extend the closed-form sweep without changing any published vector id.
+    for c, h, th in [(CAMS[0], 25, 5), (CAMS[1], 121.92, 55), (CAMS[2], 90, 55), (CAMS[3], 304.8, 20)]:
+        sw, sh, f, iw, ih = c
+        p, t = sw / iw, math.radians(th)
+        ahead = lambda y: h * math.tan(t + math.atan(y / f))
+        right = lambda x, y: h * x / (math.hypot(f, y) * math.cos(t + math.atan(y / f)))
+        e = {"result.gsd_center.value": 100 * (right(p / 2, 0) - right(-p / 2, 0)),
+             "result.gsd_center_along.value": 100 * (ahead(p / 2) - ahead(-p / 2)),
+             "result.gsd_near.value": 100 * (ahead(-sh / 2 + p) - ahead(-sh / 2)),
+             "result.gsd_far.value": 100 * (ahead(sh / 2) - ahead(sh / 2 - p)),
+             "result.near_distance.value": ahead(-sh / 2), "result.far_distance.value": ahead(sh / 2)}
+        out.append(fvec(len(out) + 1, dict(cam_inp(c), height=f"{h} m", pitch=f"{th} deg"), e, OBL_SRC, "4th edition (2014)"))
     return out
 
 

@@ -307,6 +307,44 @@ fn oblique_45_degrees_is_coarser_than_nadir_and_a_trapezoid() {
 }
 
 #[test]
+fn oblique_gsd_invariants() {
+    let run = |height: f64, pitch: f64| {
+        call(
+            "drone.photogrammetry.oblique-gsd",
+            &format!(r#"{{{CAM},"height":"{height} m","pitch":"{pitch} deg"}}"#),
+        )
+    };
+    let value = |r: &Value, name: &str| num(r, &format!("result.{name}.value"));
+
+    let nadir = run(100.0, 0.0);
+    let g = value(&nadir, "gsd_nadir");
+    assert!((value(&nadir, "gsd_center") - g).abs() < 1e-12);
+    assert!((value(&nadir, "gsd_center_along") - g).abs() < 1e-9);
+    assert_eq!(
+        value(&nadir, "near_distance"),
+        -value(&nadir, "far_distance")
+    );
+
+    let mut previous = g;
+    for pitch in [10.0, 30.0, 45.0, 55.0] {
+        let r = run(100.0, pitch);
+        let center = value(&r, "gsd_center_along");
+        assert!(center > previous, "{pitch}°: {r}");
+        assert!(value(&r, "gsd_near") < center, "{pitch}°: {r}");
+        assert!(value(&r, "gsd_far") > center, "{pitch}°: {r}");
+        previous = center;
+
+        let twice = run(200.0, pitch);
+        for name in ["gsd_center", "gsd_center_along", "gsd_near", "gsd_far"] {
+            assert!(
+                (value(&twice, name) - 2.0 * value(&r, name)).abs() < 1e-9,
+                "{pitch}° {name}"
+            );
+        }
+    }
+}
+
+#[test]
 fn hill_reduces_overlap() {
     let r = call(
         "drone.photogrammetry.terrain-overlap",

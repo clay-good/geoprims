@@ -72,6 +72,11 @@
       "reason": "The field is the tool's own measured fence error, ideally 0; the vector holds it within the accuracy the tool states, 0.1% of the distance or 0.5 m."
     },
     {
+      "tool": "drone.photogrammetry.oblique-gsd",
+      "source": "Andrew Lassiter, uas-oblique-photo",
+      "reason": "The source program prints GSD to 0.1 cm, so the tolerance is half of that rounding interval."
+    },
+    {
       "tool": "geodesy.datum.helmert",
       "source": "IOGP Guidance Note 7-2 worked example",
       "reason": "The guidance note prints the example's coordinates to the centimeter, so the tolerance is one centimeter."

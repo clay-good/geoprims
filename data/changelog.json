@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "drone.photogrammetry.oblique-gsd"
+      ],
+      "vectors": [],
+      "summary": "Oblique GSD and footprint (version 1.2.0) is now stable. Its near, center, and far GSD values are checked against Andrew Lassiter's independent oblique-photo simulation at a pinned source revision, with 20 vectors and new scaling, ordering, and nadir invariants. The independent Canon example is now the default; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "drone.ops.wind-limit"
       ],
       "vectors": [],

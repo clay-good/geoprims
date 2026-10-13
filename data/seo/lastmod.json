@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2b4b9f7a13ab5a93",
+    "hash": "9d526c9143fd59d0",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "7ccf3857c011df9c",
+    "hash": "492413ed0f27f165",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "856433f090a744a6",
+    "hash": "db9ba85d83c8921e",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -384,8 +384,8 @@
     "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/oblique-gsd/": {
-    "hash": "e536d85df4145b48",
-    "lastmod": "2026-10-09"
+    "hash": "89557c590e939191",
+    "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/terrain-overlap/": {
     "hash": "438de1a4db88b0fb",
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "455fb10c82e89c45",
+    "hash": "d7e9304177611c74",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "af25d0ea3114044f",
+    "hash": "ccd090594e5c79d6",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "5e2531d4657f2164",
+    "hash": "bb80516e2314881d",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "099ffb8366044e12",
+    "hash": "b6b34070f3e47bb7",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

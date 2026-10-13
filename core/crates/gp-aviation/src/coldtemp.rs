@@ -173,6 +173,8 @@ const OUT_ROW: &[Field] = &[
 
 pub static COLD_TEMPERATURE: ToolDef = ToolDef {
     id: "aviation.altimetry.cold-temperature",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Cold temperature altitude correction",
     summary: "How much to add to each procedure altitude when the airport is colder than standard, by the ICAO equation, with the 4% rule and the ICAO table beside it.",
     aliases: &[
@@ -268,7 +270,7 @@ pub static COLD_TEMPERATURE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "ΔH = (−ΔT_std ÷ L0) · ln(1 + L0·H ÷ (T0 + L0·H_aerodrome)), with L0 = −0.0019812 K/ft, T0 = 288.15 K, ΔT_std the airport temperature minus ISA at its elevation, and H the height above the airport (ICAO Doc 8168 Vol II, 2020; not the 2018 Vol III form). Approximations shown beside it: 4% of H per 10 °C below ISA, and AIM Table 7-3-1 read by bilinear interpolation",
     accuracy: "The equation is the ICAO standard for procedure design corrections. Transport Canada AC 500-020 (Issue 04, 2025) prints the same equation with T0 written as 273 + 15, which moves a correction by about 0.1 ft. The 4% rule and the table (built for a sea-level airport) run higher. Use the correction method your procedure and the FAA Cold Temperature Airports list in AIM 7-3 call for; this is a planning aid",
     when_to_use: "Use this before an instrument approach to a cold airport. Enter the airport elevation, the reported temperature, and each procedure altitude you plan to correct, such as the final approach fix and the MDA. It returns how much to add to each altitude by the ICAO equation, so you keep your terrain clearance when the altimeter reads high. The 4% rule and the AIM table are shown for comparison.",
@@ -276,9 +278,9 @@ pub static COLD_TEMPERATURE: ToolDef = ToolDef {
     references: &[PANS_OPS, AIM_COLD],
     examples: &[Example {
         id: "primary",
-        title: "A 2,000 ft airport at -30 °C, with a 3,500 ft final approach fix",
-        input: r#"{"elevation":"2000 ft","temperature":"-30 degC","altitudes":[{"name":"FAF","altitude":"3500 ft"},{"name":"MDA","altitude":"2500 ft"}]}"#,
-        source: "add-aviation-suite cold-temperature scenario: 1,500 ft above the airport at -30 °C corrects by about +218 ft, the 4% rule by about +246 ft",
+        title: "FAA table example: 1,314 ft above the airport at -12 °C",
+        input: r#"{"elevation":"0 ft","temperature":"-12 degC","altitudes":[{"altitude":"1314 ft"}]}"#,
+        source: "FAA AIM 7-3-1: 1,314 ft at -12 °C is approximately 150 ft by Table 7-3-1; the equation result is shown separately",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -292,6 +294,10 @@ pub static COLD_TEMPERATURE: ToolDef = ToolDef {
         },
         Related {
             id: "aviation.altimetry.pressure-altitude",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.altimetry.true-altitude",
             reason: "alternative",
         },
     ],

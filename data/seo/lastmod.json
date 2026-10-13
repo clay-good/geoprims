@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "fad2c9fed4e32527",
+    "hash": "3ee8ac9b688bd10c",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "a0259e5d6279e35c",
+    "hash": "c81baed230aa0fa3",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -44,8 +44,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/cold-temperature/": {
-    "hash": "73aeccf3c02299ba",
-    "lastmod": "2026-10-12"
+    "hash": "7bd4da19edd97b62",
+    "lastmod": "2026-10-13"
   },
   "/aviation/altimetry/density-altitude/": {
     "hash": "496c05170a605b41",
@@ -116,8 +116,8 @@
     "lastmod": "2026-10-12"
   },
   "/aviation/ifr/hold-speed-limit/": {
-    "hash": "41104434f29e9c3f",
-    "lastmod": "2026-10-12"
+    "hash": "fbbcaf852b9f07f1",
+    "lastmod": "2026-10-13"
   },
   "/aviation/ifr/hold-wind-timing/": {
     "hash": "ea1b18bd35d066c4",
@@ -204,7 +204,7 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/performance/vdp/": {
-    "hash": "0b700032cd3478f6",
+    "hash": "c7c25640675b99e4",
     "lastmod": "2026-10-13"
   },
   "/aviation/weather/": {
@@ -236,7 +236,7 @@
     "lastmod": "2026-10-10"
   },
   "/aviation/wind/course-from-heading/": {
-    "hash": "dfc2001796180ee2",
+    "hash": "1fe6641df7c222d0",
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/find-wind/": {
@@ -248,7 +248,7 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "49500e57a9e2c009",
+    "hash": "a9bb272e21d2b3d7",
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/one-in-sixty/": {
@@ -260,7 +260,7 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/wind/tas-from-groundspeed/": {
-    "hash": "d4e99a07faede1cd",
+    "hash": "fc5b866663c47b1e",
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/uv/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "4abe7e5b14af71f3",
+    "hash": "9a1ace867de0fc25",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "7290616d7983f09c",
+    "hash": "2c1707d86b40b348",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "eabd27c69837334f",
+    "hash": "30b42ff86c58c559",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "7dc0e237141be259",
+    "hash": "a7149b47101789fb",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "45545427ac642a15",
+    "hash": "a62fe893f4ac59b9",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

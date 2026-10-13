@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.altimetry.cold-temperature"
+      ],
+      "vectors": [],
+      "summary": "Cold-temperature altitude correction (version 1.1.0) is now stable. Its primary example reproduces the FAA AIM's approximate 1,314-foot, -12 °C table example at the source's precision. The tool now has 20 vectors plus row-consistency, equivalent-unit, and no-correction invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.wind.heading-chain"
       ],
       "vectors": [],

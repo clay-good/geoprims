@@ -526,6 +526,62 @@ fn heading_chain_invariants() {
     );
 }
 
+#[test]
+fn cold_temperature_matches_aim_table_example() {
+    let r = call(
+        "aviation.altimetry.cold-temperature",
+        r#"{"elevation":"0 ft","temperature":"-12 degC","altitudes":[{"altitude":"1314 ft"}]}"#,
+    );
+    let table = r["result"]["altitudes"][0]["table"]["value"]
+        .as_f64()
+        .expect("table correction");
+    assert!((table - 150.0).abs() <= 10.0, "{table} vs 150 ± 10\n{r}");
+}
+
+#[test]
+fn cold_temperature_invariants() {
+    let input = r#"{"elevation":"2000 ft","temperature":"-30 degC","altitudes":[{"altitude":"3500 ft"},{"altitude":"2500 ft"}]}"#;
+    let r = call("aviation.altimetry.cold-temperature", input);
+    let rows = r["result"]["altitudes"].as_array().expect("altitude rows");
+    for row in rows {
+        let altitude = row["altitude"]["value"].as_f64().unwrap();
+        let correction = row["correction"]["value"].as_f64().unwrap();
+        let corrected = row["corrected"]["value"].as_f64().unwrap();
+        assert!((corrected - altitude - correction).abs() <= 1e-9, "{row}");
+    }
+    near(
+        &r,
+        "result.correction.value",
+        rows[0]["correction"]["value"].as_f64().unwrap(),
+        1e-12,
+    );
+
+    let metric = call(
+        "aviation.altimetry.cold-temperature",
+        r#"{"elevation":"609.6 m","temperature":"-22 degF","altitudes":[{"altitude":"1066.8 m"},{"altitude":"762 m"}]}"#,
+    );
+    for path in [
+        "result.correction.value",
+        "result.corrected.value",
+        "result.isa_deviation.value",
+    ] {
+        near(&metric, path, num(&r, path), 1e-9);
+    }
+
+    let warm = call(
+        "aviation.altimetry.cold-temperature",
+        r#"{"elevation":"0 ft","temperature":"15 degC","altitudes":[{"altitude":"1500 ft"}]}"#,
+    );
+    near(&warm, "result.correction.value", 0.0, 0.0);
+    near(&warm, "result.corrected.value", 1500.0, 0.0);
+    assert!(
+        warm["result"]["note"]
+            .as_str()
+            .unwrap()
+            .contains("no correction")
+    );
+}
+
 // loading
 
 #[test]

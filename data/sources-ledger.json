@@ -54,8 +54,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-10-12",
-      "verificationNote": "Checked at the issuer on 2026-10-12. Holding paragraph 5-3-8j still gives 200 KIAS through 6,000 ft, 230 KIAS from 6,001 through 14,000 ft, and 265 KIAS above, with charted limits overriding the standard bands.",
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Checked at the issuer on 2026-10-12. Holding paragraph 5-3-8j still gives 200 KIAS through 6,000 ft, 230 KIAS from 6,001 through 14,000 ft, and 265 KIAS above, with charted limits overriding the standard bands. Rechecked on 2026-10-13: paragraph 7-3-1 and Table 7-3-1 give the cold-temperature table and the worked statement that 1,314 ft at -12 °C is approximately 150 ft.",
       "freeAccessUrl": "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/",
       "matchTerms": [
         "Aeronautical Information Manual"

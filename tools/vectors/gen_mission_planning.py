@@ -284,6 +284,68 @@ def vlos_vectors():
                  "expect": {"result.beyond_count": 1.0, "result.beyond.0.waypoint": 2.0, "result.waypoints.0.beyond": "no", "ok": True},
                  "source": f"{src}: waypoint 1 put on the 500 m ring and waypoint 2 1 cm past it with GeodSolve's direct problem",
                  "sourceVersion": ver, "tolerance": tol(["result.beyond_count", "result.beyond.0.waypoint"], 0, 1e-12)})
+
+    def mission(p, pts, range_m, range_text, extra=None, source=src, version=ver):
+        d = geod_inverse([(p[0], p[1], a, b) for a, b in pts])
+        far = max(range(len(d)), key=lambda i: d[i])
+        beyond = [i for i, x in enumerate(d) if x > range_m + 1e-6]
+        exp = {"result.farthest_distance.value": d[far], "result.farthest_waypoint": float(far + 1),
+               "result.beyond_count": float(len(beyond)), "result.visual_range_used.value": range_m, "ok": True}
+        for k, i in enumerate(beyond):
+            exp[f"result.beyond.{k}.waypoint"] = float(i + 1)
+        for i, x in enumerate(d):
+            exp[f"result.waypoints.{i}.distance.value"] = x
+        if beyond:
+            exp["meta.warnings.*.code"] = "BEYOND_VISUAL_RANGE"
+        inp = {"lat": p[0], "lon": p[1], "waypoints": wp_json(pts)}
+        if range_text:
+            inp["visual_range"] = range_text
+        if extra:
+            inp.update(extra)
+        vecs.append({"input": inp, "expect": exp, "source": source, "sourceVersion": version,
+                     "tolerance": {**tol([k for k in exp if "distance" in k or "range_used" in k], 1e-9, 1e-6),
+                                   **tol([k for k in exp if isinstance(exp[k], float) and "distance" not in k and "range_used" not in k], 0, 1e-12)}})
+
+    extra_missions = [
+        ((0.0, 0.0), [(0.0, 0.0)], 1.0, "1 m"),
+        ((0.0, 0.0), [(0.0, 0.005), (0.005, 0.0)], 1000.0, "1 km"),
+        ((89.9, 45.0), [(89.901, 45.0), (89.9, 46.0)], 250.0, "250 m"),
+        ((-20.0, 179.999), [(-20.0, -179.999), (-19.995, 179.999)], 1000.0, "1 km"),
+        ((35.0, -100.0), [(35.001, -100.0), (35.002, -100.0)], 304.8, "1000 ft"),
+        ((51.5, -0.12), [(51.51, -0.12), (51.5, -0.10)], 1609.344, "1 mi"),
+        ((-33.9, 151.2), [(-33.9, 151.201), (-33.9, 151.202)], 200.0, "0.2 km"),
+        ((40.0, -105.0), [(40.0001, -105.0), (40.05, -105.0)], 50_000.0, "50 km"),
+        ((10.0, 20.0), [(10.001, 20.001), (9.999, 19.999), (10.002, 20.0)], 500.0, "500 m"),
+    ]
+    for p, pts, range_m, range_text in extra_missions:
+        mission(p, pts, range_m, range_text)
+
+    lba = "Luftfahrt-Bundesamt VLOS guidance section 7.1, composed with GeographicLib GeodSolve mission distances"
+    dimension_cases = [
+        ("1 m", "multirotor", None, 347.0),
+        ("1 m", "fixed-wing", None, 520.0),
+        ("2 m", "multirotor", "1 km", 300.0),
+        ("2 m", "fixed-wing", "5 km", 1010.0),
+    ]
+    pts = [(40.001, -105.0), (40.005, -105.0)]
+    for cd, kind, visibility, range_m in dimension_cases:
+        extra = {"characteristic_dimension": cd, "aircraft_type": kind}
+        if visibility:
+            extra["ground_visibility"] = visibility
+        mission(pilot, pts, range_m, None, extra, lba, "LBA guidance (English), retrieved 2026-09-19")
+
+    failures = [
+        ({"lat": 40.0, "lon": -105.0, "waypoints": [{"lat": 40.001, "lon": -105.0}]}, "INVALID_INPUT", "/visual_range"),
+        ({"lat": 40.0, "lon": -105.0, "waypoints": [{"lat": 40.001, "lon": -105.0}], "visual_range": "500 m", "characteristic_dimension": "1 m"}, "INVALID_INPUT", "/characteristic_dimension"),
+        ({"lat": 91.0, "lon": 0.0, "waypoints": [{"lat": 0.0, "lon": 0.0}], "visual_range": "500 m"}, "OUT_OF_DOMAIN", "/lat"),
+        ({"lat": 0.0, "lon": 0.0, "waypoints": [{"lat": -91.0, "lon": 0.0}], "visual_range": "500 m"}, "OUT_OF_DOMAIN", "/waypoints/0/lat"),
+        ({"lat": 0.0, "lon": 0.0, "waypoints": [{"lat": 0.0, "lon": 0.0}], "visual_range": "0 m"}, "OUT_OF_DOMAIN", "/visual_range"),
+        ({"lat": 0.0, "lon": 0.0, "waypoints": [{"lat": 0.0, "lon": 0.0}], "visual_range": "50001 m"}, "OUT_OF_DOMAIN", "/visual_range"),
+        ({"lat": 0.0, "lon": 0.0, "waypoints": [{"lat": 0.0, "lon": 0.0}], "characteristic_dimension": "0 m"}, "INVALID_INPUT", "/characteristic_dimension"),
+    ]
+    for inp, code, field in failures:
+        vecs.append({"input": inp, "expect": {"ok": False, "error.code": code, "error.field": field},
+                     "source": src, "sourceVersion": ver, "tolerance": {}})
     return vecs
 
 

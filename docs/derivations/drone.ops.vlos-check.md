@@ -31,7 +31,7 @@ Distances are horizontal only; height, terrain between the pilot and the drone, 
 - sourceTitle: Geodesic distances for a four-waypoint grid seen from 40° N, 105° W
 - sourceEdition: GeodSolve installed 2026-09-25
 - sourceLocator: `GeodSolve -i -p 9`
-- independent: yes (a separate implementation from the core's Rust port)
+- independent: yes
 - inputs: pilot at 40° N, 105° W; waypoints at 40.0009° N on 105° W and 104.98592° W, then 40.0027° N on 104.98592° W and 105° W; 500 m range
 - outputs: 99.93, 1,206.48, 1,239.13, and 299.79 m; waypoints 2 and 3 beyond 500 m; the farthest is waypoint 3 at 1,239 m
 - tolerance: 1e-9 relative on distances
@@ -40,9 +40,10 @@ Distances are horizontal only; height, terrain between the pilot and the drone, 
 
 ## Differential tests
 
-- `tools/vectors/gen_mission_planning.py`: GeodSolve distances at four sites (Colorado, London, Sydney, and across the antimeridian), and a waypoint put exactly on a 500 m ring and another 1 cm past it with GeodSolve's direct problem: the first counts as inside, the second beyond.
+- `tools/vectors/gen_mission_planning.py`: 25 vectors cover GeodSolve distances at the equator, near a pole, in Colorado, London, Sydney, and across the antimeridian; metric and US range units; a point on the ring and another 1 cm past it; both EASA aircraft formulas; visibility limiting; and invalid range, coordinate, and input combinations.
 - `core/crates/gp-drone/tests/planning.rs` `vlos_check_ring_and_dimension`: from a characteristic dimension the range equals `drone.sensors.vlos`'s VLOS distance, the ring's first point is that distance away, and the notice says "Not legal advice" and links § 107.31.
 
 ## Invariants
 
 - A waypoint's `beyond` flag, the `beyond` list, and `beyond_count` agree, and the farthest distance is the largest in the distances list (checked in the vectors).
+- `core/crates/gp-drone/tests/planning.rs` `vlos_check_lists_and_farthest_waypoint_are_consistent` checks those list and farthest-point relationships directly.

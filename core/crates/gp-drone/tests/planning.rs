@@ -319,6 +319,29 @@ fn vlos_check_ring_and_dimension() {
     assert!((d - num(&v, "result.vlos.value")).abs() < 1e-6);
 }
 
+#[test]
+fn vlos_check_lists_and_farthest_waypoint_are_consistent() {
+    let r = call(
+        "drone.ops.vlos-check",
+        r#"{"lat":40,"lon":-105,"waypoints":[{"lat":40.001,"lon":-105},{"lat":40.01,"lon":-105},{"lat":40.002,"lon":-105}],"visual_range":"500 m"}"#,
+    );
+    let rows = r["result"]["waypoints"].as_array().unwrap();
+    let beyond = r["result"]["beyond"].as_array().unwrap();
+    assert_eq!(num(&r, "result.beyond_count") as usize, beyond.len());
+    assert_eq!(
+        rows.iter().filter(|row| row["beyond"] == "yes").count(),
+        beyond.len()
+    );
+    let (i, farthest) = rows
+        .iter()
+        .enumerate()
+        .map(|(i, row)| (i, row["distance"]["value"].as_f64().unwrap()))
+        .max_by(|a, b| a.1.total_cmp(&b.1))
+        .unwrap();
+    assert_eq!(num(&r, "result.farthest_waypoint"), (i + 1) as f64);
+    assert!((num(&r, "result.farthest_distance.value") - farthest).abs() < 1e-12);
+}
+
 /// Even-odd ray test in latitude and longitude, written apart from the core's.
 fn in_ring(ring: &[(f64, f64)], p: (f64, f64)) -> bool {
     let mut c = false;

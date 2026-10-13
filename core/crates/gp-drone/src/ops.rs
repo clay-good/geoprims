@@ -1865,6 +1865,8 @@ const RING_ROW: &[Field] = &[DEG, DEG_LON];
 
 pub static VLOS_CHECK: ToolDef = ToolDef {
     id: "drone.ops.vlos-check",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Visual line of sight over a mission",
     summary: "Whether every waypoint of a mission stays within your visual range from where you stand: the farthest waypoint, and which ones lie beyond, for 14 CFR 107.31.",
     aliases: &[
@@ -2018,14 +2020,13 @@ pub static VLOS_CHECK: ToolDef = ToolDef {
         ),
         NOTICE,
     ],
-    errors: &[ErrorCode::OutOfDomain],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     warnings: &[
         "BEYOND_VISUAL_RANGE",
         "VISIBILITY_BELOW_MINIMUM",
         "NOMINAL_VALUE_USED",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Geodesic distance from the pilot to each waypoint (WGS84, Karney 2013); a waypoint is beyond when its distance exceeds the visual range, so one exactly on it counts as inside. The range is entered, or taken from the EASA guidance the VLOS distance tool uses: the smaller of ALOS (327 × CD + 20 m multirotor, 490 × CD + 30 m fixed wing) and DLOS (0.3 × ground visibility, counted to 5 km)",
     accuracy: "Distances are exact geodesics on the ellipsoid, horizontal only. Whether you can see the drone depends on light, background, eyesight, and obstacles, which no distance captures.",

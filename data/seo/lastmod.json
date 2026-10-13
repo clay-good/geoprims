@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ada06343d3312926",
+    "hash": "d1199b384fa1d297",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "863a5b08532973d0",
+    "hash": "95fbe75996adaa5a",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "5e8806254fbc2281",
+    "hash": "3ac7e9a3076a2668",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -348,7 +348,7 @@
     "lastmod": "2026-10-13"
   },
   "/drone/ops/vlos-check/": {
-    "hash": "bdd569dfdb8645c3",
+    "hash": "db7e14e41aeb04ff",
     "lastmod": "2026-10-13"
   },
   "/drone/ops/wind-limit/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "c944853b6d3b0e44",
+    "hash": "d28f5daf0872402b",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "c3faa7ce02737ef6",
+    "hash": "b7f569ea23cd8248",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f79566d88af0e6ee",
+    "hash": "87e18dd7aec2083e",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2012,7 +2012,7 @@
     "lastmod": "2026-10-12"
   },
   "/workflows/inspection/": {
-    "hash": "734dd5a85dd4c2fb",
+    "hash": "a30ee60704435ffe",
     "lastmod": "2026-10-13"
   },
   "/workflows/lidar-bid/": {
@@ -2020,7 +2020,7 @@
     "lastmod": "2026-10-13"
   },
   "/workflows/mapping-flight/": {
-    "hash": "67e6ce8dd956ba52",
+    "hash": "4dc4e7a8c29edf14",
     "lastmod": "2026-10-13"
   },
   "/workflows/preflight-check/": {

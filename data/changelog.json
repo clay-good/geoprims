@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
+        "drone.ops.vlos-check"
+      ],
+      "vectors": [],
+      "summary": "Mission VLOS checking (version 1.1.0) is now stable. Its 25 GeographicLib-backed vectors plus two invariant tests cover entered and EASA-derived ranges, list consistency, exact range boundaries, metric and US units, polar and antimeridian routes, visibility limits, and invalid inputs. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "fixed",
       "tools": [
         "drone.power.rth-budget"

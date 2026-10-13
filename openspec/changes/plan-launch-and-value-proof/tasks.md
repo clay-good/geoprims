@@ -14,7 +14,7 @@
 
 ## 3. Measurement
 
-- [ ] 3.1 Create `docs/value-log.md` with the design L5 signals and targets; verify the first monthly entry after launch
+- [x] 3.1 Create `docs/value-log.md` with the design L5 signals and targets; verify the first monthly entry after launch (`docs/value-log.md` carries every L5 signal, the 90-day and 180-day targets, measurement rules, and the September 23–30 launch baseline. Because no month-end exports were retained, it labels those values unavailable and records the October 12 GitHub snapshot separately instead of backfilling false zeros. `tools/repo/value-log.test.mjs` holds that coverage and honesty contract.)
 - [ ] 3.2 Hold the 90-day review against targets and re-rank Phase 2 by demand; verify the decision record is committed
 
 ## 4. Inventory restatement

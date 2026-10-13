@@ -35,7 +35,7 @@ The aviation catalog covers all 83 planned operations through 90 tool ids: 83 op
 
 ## Status
 
-Live at [geoprims.com](https://geoprims.com) since September 23, 2026, and still growing. Tools that pass full verification are marked stable; the rest are labeled experimental. The plan and specs live in [`openspec/changes/`](openspec/changes/).
+Live at [geoprims.com](https://geoprims.com) since September 23, 2026, and still growing. Tools that pass full verification are marked stable; the rest are labeled experimental. Aggregate, tracking-free adoption and trust signals are recorded in the [value log](docs/value-log.md). The plan and specs live in [`openspec/changes/`](openspec/changes/).
 
 ## Build and run
 

@@ -1122,7 +1122,7 @@
       "validFrom": null,
       "validTo": null,
       "lastVerified": "2026-10-13",
-      "verificationNote": "The repository specification is the authority for the explicitly product-defined 0.5 px default motion-blur limit. It is not an external camera or photogrammetry standard.",
+      "verificationNote": "The repository specification records the product requirement for the 0.5 px default. The published formula, example, and sharp-image criterion are checked separately against the Han and Grenzdörffer papers.",
       "freeAccessUrl": "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/photogrammetry/spec.md",
       "matchTerms": [
         "GeoPrims photogrammetry specification"
@@ -1290,6 +1290,48 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "grenzdoerffer-uav-image-motion-2012",
+      "name": "Development of Four Vision Camera System for a Micro-UAV",
+      "issuer": "International Society for Photogrammetry and Remote Sensing",
+      "currentEdition": "ISPRS Archives, Volume XXXIX-B1",
+      "currentReleaseDate": "2012-08-25",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Checked the official open-access paper on 2026-10-13. Section 3.2.1 says sharp-image motion should remain below 0.5 pixel and discusses the additional blur caused by UAV rotation and stabilization.",
+      "freeAccessUrl": "https://doi.org/10.5194/isprsarchives-XXXIX-B1-369-2012",
+      "matchTerms": [
+        "Development of Four Vision Camera System for a Micro-UAV",
+        "Grenzdörffer"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "han-uav-motion-blur-2024",
+      "name": "Enhancing Direct Georeferencing Using Real-Time Kinematic UAVs and Structure from Motion-Based Photogrammetry for Large-Scale Infrastructure",
+      "issuer": "MDPI, Drones",
+      "currentEdition": "Volume 8, issue 12, article 736",
+      "currentReleaseDate": "2024-12-05",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Checked the publisher's open-access article on 2026-10-13. Section 2.1.1 gives t <= GSD/v × n and the reproducible example: 2.0 cm GSD, 10 m/s, and 1/500 s produce 1 pixel of smear.",
+      "freeAccessUrl": "https://doi.org/10.3390/drones8120736",
+      "matchTerms": [
+        "Enhancing Direct Georeferencing Using Real-Time Kinematic UAVs",
+        "Han and Han"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     },
     {
       "id": "h3",

@@ -48,7 +48,7 @@ Given a terrain profile or a highest-terrain elevation within the area, the tool
 - **THEN** the effective height is 60 m over the hill, the worst-case front overlap is reported, and `OVERLAP_BELOW_TARGET` is raised if it is below 75%
 
 ### Requirement: Motion blur
-The tool SHALL compute motion blur in pixels = groundspeed × exposure time / GSD, and the maximum exposure time for a blur limit (default 0.5 px).
+The tool SHALL compute motion blur in pixels = groundspeed × exposure time / GSD, and the maximum exposure time for a blur limit. The default is 0.5 px, the sharp-image criterion in Grenzdörffer, Niemeyer, and Schmidt (2012), section 3.2.1.
 
 #### Scenario: Blur at 1/1000 s
 - **WHEN** groundspeed = 10 m/s, exposure = 1/1000 s, GSD = 2.741 cm

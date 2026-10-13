@@ -197,6 +197,39 @@ fn blur_at_one_thousandth() {
 }
 
 #[test]
+fn motion_blur_invariants() {
+    let run = |speed: f64, exposure: f64, gsd_cm: f64, limit: f64| {
+        call(
+            "drone.photogrammetry.motion-blur",
+            &format!(
+                r#"{{"groundspeed":"{speed} m/s","exposure":"{exposure} s","gsd":"{gsd_cm} cm","blur_limit":{limit}}}"#
+            ),
+        )
+    };
+    let close = |a: f64, b: f64| (a - b).abs() <= 1e-12 * b.abs().max(1.0);
+    for (speed, exposure, gsd_cm, limit) in [
+        (1.0, 1.0 / 250.0, 5.0, 0.25),
+        (8.0, 1.0 / 800.0, 2.0, 0.5),
+        (15.0, 1.0 / 2_000.0, 1.0, 1.0),
+        (30.0, 1.0 / 4_000.0, 0.5, 2.0),
+    ] {
+        let base = run(speed, exposure, gsd_cm, limit);
+        let fast = run(2.0 * speed, exposure, gsd_cm, limit);
+        let long = run(speed, 2.0 * exposure, gsd_cm, limit);
+        let coarse = run(speed, exposure, 2.0 * gsd_cm, limit);
+        let loose = run(speed, exposure, gsd_cm, 2.0 * limit);
+        let blur = num(&base, "result.blur");
+        let max = num(&base, "result.max_exposure.value");
+        assert!(close(num(&fast, "result.blur"), 2.0 * blur));
+        assert!(close(num(&long, "result.blur"), 2.0 * blur));
+        assert!(close(num(&coarse, "result.blur"), 0.5 * blur));
+        assert!(close(num(&fast, "result.max_exposure.value"), 0.5 * max));
+        assert!(close(num(&coarse, "result.max_exposure.value"), 2.0 * max));
+        assert!(close(num(&loose, "result.max_exposure.value"), 2.0 * max));
+    }
+}
+
+#[test]
 fn asprs_scenarios() {
     let r = call(
         "drone.photogrammetry.asprs-accuracy",

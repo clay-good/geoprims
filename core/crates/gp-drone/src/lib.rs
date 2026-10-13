@@ -43,6 +43,22 @@ const PHOTOGRAMMETRY_SPEC: Reference = Reference {
     locator: "Motion blur requirement",
     url: "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/photogrammetry/spec.md",
 };
+const HAN_MOTION_BLUR: Reference = Reference {
+    title: "Enhancing Direct Georeferencing Using Real-Time Kinematic UAVs and Structure from Motion-Based Photogrammetry for Large-Scale Infrastructure",
+    issuer: "Han, S., and Han, D.; Drones",
+    year: 2024,
+    edition: "Volume 8, issue 12, article 736",
+    locator: "Section 2.1.1, equation (1), and the 2.0 cm GSD, 10 m/s, 1/500 s example",
+    url: "https://doi.org/10.3390/drones8120736",
+};
+const GRENZDOERFFER_IMAGE_MOTION: Reference = Reference {
+    title: "Development of Four Vision Camera System for a Micro-UAV",
+    issuer: "Grenzdörffer, G., Niemeyer, F., and Schmidt, F.; ISPRS Archives",
+    year: 2012,
+    edition: "Volume XXXIX-B1",
+    locator: "Section 3.2.1, p. 372: sharp-image motion under 0.5 pixel",
+    url: "https://doi.org/10.5194/isprsarchives-XXXIX-B1-369-2012",
+};
 pub(crate) const PIX4D: Reference = Reference {
     title: "Selecting the image acquisition plan type (overlap guidance)",
     issuer: "Pix4D support documentation",
@@ -970,6 +986,8 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MOTION_BLUR: ToolDef = ToolDef {
     id: "drone.photogrammetry.motion-blur",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     errors: &[ErrorCode::NoSolution],
     title: "Motion blur and slowest shutter",
     summary: "How many pixels the image smears at your speed and shutter, and the slowest shutter that keeps blur under a limit.",
@@ -1044,33 +1062,48 @@ pub static MOTION_BLUR: ToolDef = ToolDef {
             Kind::Text { max_len: 16 },
         ),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Blur = groundspeed × exposure / GSD",
     accuracy: "Exact for straight, level flight; vibration adds blur",
     when_to_use: "Use this when you set the camera for a mapping flight and want sharp images at the speed you plan to fly. Give the groundspeed, shutter time, and ground sampling distance, and it tells you how many pixels the image smears during each exposure. It also gives the slowest shutter that keeps the smear under your limit, half a pixel unless you set one, as a fraction you can dial in on the camera.",
     limitations: "It counts only the drone's straight, level motion over the ground while the shutter is open. Vibration, gimbal shake, turns, and gusts add blur it does not see. The ground sampling distance is taken as given, so where the terrain rises toward the drone the real smear in pixels is larger. The shutter fraction is rounded, and cameras offer set steps, so pick the next faster one. Your processing software may want a tighter limit.",
-    references: &[WOLF, PHOTOGRAMMETRY_SPEC],
+    references: &[
+        WOLF,
+        HAN_MOTION_BLUR,
+        GRENZDOERFFER_IMAGE_MOTION,
+        PHOTOGRAMMETRY_SPEC,
+    ],
     examples: &[Example {
         id: "primary",
-        title: "10 m/s at 1/1000 s with a 2.741 cm GSD",
-        input: r#"{"groundspeed":"10 m/s","exposure":"0.001 s","gsd":"2.741 cm"}"#,
-        source: "add-drone-suite scenario: 0.365 px; 1/730 s for 0.5 px",
+        title: "10 m/s at 1/500 s with a 2 cm GSD",
+        input: r#"{"groundspeed":"10 m/s","exposure":"0.002 s","gsd":"2 cm"}"#,
+        source: "Han and Han (2024), section 2.1.1: 1 px of smear; 1/1000 s for the 0.5 px limit",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[("value", "blur")],
     }],
-    related: &[Related {
-        id: "drone.photogrammetry.gsd",
-        reason: "parent",
-    }],
+    related: &[
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.photogrammetry.trigger",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.terrain-overlap",
+            reason: "alternative",
+        },
+    ],
     sentence: "The image smears {blur} pixels; keep the shutter at {max_exposure_fraction} or faster.",
     assumptions: &[Assumption {
-        name: "Default motion-blur limit (product choice)",
+        name: "Default sharp-image motion limit",
         value: "0.5",
         unit: "px",
-        source: "geoprims-photogrammetry-spec",
+        source: "grenzdoerffer-uav-image-motion-2012",
     }],
     limits: &[("batchRows", 10_000)],
     run: run_motion_blur,

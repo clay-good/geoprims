@@ -2,6 +2,15 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
+        "drone.photogrammetry.motion-blur"
+      ],
+      "vectors": [],
+      "summary": "Motion blur (version 1.1.0) is now stable. Its formula and primary example are checked against Han and Han (2024), and its default 0.5 px limit is sourced to Grenzdörffer, Niemeyer, and Schmidt (2012). Calculation results are unchanged."
+    },
+    {
       "date": "2026-10-12",
       "kind": "added",
       "tools": [

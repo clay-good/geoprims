@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "45a989af4e0f059e",
+    "hash": "7f3a2825ea52cc35",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "5b7257737e0fe7a2",
+    "hash": "32ae1e04568ecee1",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "13185ad16160a897",
+    "hash": "df2fe75377c10a05",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -380,7 +380,7 @@
     "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/motion-blur/": {
-    "hash": "6cc278cb2eb9b615",
+    "hash": "ddb98d2dc312ebf1",
     "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/oblique-gsd/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "2d7b757e914742bb",
+    "hash": "7cccd8671e4c3455",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "59c52c755f12313e",
+    "hash": "af25d0ea3114044f",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "83657e80d77cc8b4",
+    "hash": "d652b1304f69549f",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ebd8a27449944b01",
+    "hash": "1222a99eec46327d",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2020,7 +2020,7 @@
     "lastmod": "2026-10-13"
   },
   "/workflows/mapping-flight/": {
-    "hash": "6ab04d04fb8d2287",
+    "hash": "13525fdf763396d5",
     "lastmod": "2026-10-13"
   },
   "/workflows/preflight-check/": {

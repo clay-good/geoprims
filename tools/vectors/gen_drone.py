@@ -89,11 +89,46 @@ def trigger():
 
 
 def blur():
-    cases = [(10, 0.001, 2.741), (15, 1 / 2000, 1.0), (5, 1 / 500, 3.0), (20, 1 / 4000, 0.8), (8, 1 / 800, 2.0)]
+    # Keep the five published vector identities stable, then add Han and Han's
+    # printed example and a sweep over the formula's practical input range.
+    old_cases = [
+        (10, 0.001, 2.741, 0.5),
+        (15, 1 / 2000, 1.0, 0.5),
+        (5, 1 / 500, 3.0, 0.5),
+        (20, 1 / 4000, 0.8, 0.5),
+        (8, 1 / 800, 2.0, 0.5),
+    ]
+    cases = [
+        (10, 1 / 500, 2.0, 0.5),
+        (1, 1 / 100, 10.0, 0.25),
+        (2, 1 / 250, 5.0, 0.25),
+        (3, 1 / 320, 4.0, 0.4),
+        (4, 1 / 400, 3.5, 0.4),
+        (6, 1 / 640, 2.5, 0.5),
+        (7.5, 1 / 800, 1.8, 0.5),
+        (9, 1 / 1000, 1.5, 0.75),
+        (10, 1 / 1250, 1.2, 0.75),
+        (12, 1 / 1600, 1.0, 1.0),
+        (14, 1 / 2000, 0.9, 1.0),
+        (16, 1 / 2500, 0.8, 1.25),
+        (18, 1 / 3200, 0.7, 1.25),
+        (20, 1 / 4000, 0.6, 1.5),
+        (22, 1 / 5000, 0.5, 1.5),
+        (25, 1 / 6400, 0.4, 2.0),
+        (30, 1 / 8000, 0.3, 2.0),
+    ]
     out = []
-    for i, (v, t, g) in enumerate(cases, 1):
+    for i, (v, t, g, limit) in enumerate(old_cases, 1):
         out.append(vec(i, {"groundspeed": f"{v} m/s", "exposure": f"{t} s", "gsd": f"{g} cm"},
-                       {"result.blur": v * t / (g / 100), "result.max_exposure.value": 0.5 * (g / 100) / v}))
+                       {"result.blur": v * t / (g / 100), "result.max_exposure.value": limit * (g / 100) / v}))
+    for i, (v, t, g, limit) in enumerate(cases, len(out) + 1):
+        inp = {"groundspeed": f"{v} m/s", "exposure": f"{t} s", "gsd": f"{g} cm"}
+        if limit != 0.5:
+            inp["blur_limit"] = limit
+        source = "Han and Han, Drones 2024 8(12), section 2.1.1, equation (1), evaluated in Python (tools/vectors/gen_drone.py)"
+        out.append(vec(i, inp,
+                       {"result.blur": v * t / (g / 100), "result.max_exposure.value": limit * (g / 100) / v},
+                       source, "Volume 8, issue 12, article 736 (2024)"))
     return out
 
 

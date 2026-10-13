@@ -13,7 +13,7 @@ During an exposure, a camera moving over the ground travels a distance equal to 
 
 ## Symbols and units
 
-v is groundspeed in m/s, t is exposure time in seconds, GSD is ground distance per pixel in meters, and b is blur in pixels. The default blur limit is 0.5 px, an explicit GeoPrims product choice rather than a camera or photogrammetry standard.
+v is groundspeed in m/s, t is exposure time in seconds, GSD is ground distance per pixel in meters, and b is blur in pixels. The default blur limit is 0.5 px. Grenzdörffer, Niemeyer, and Schmidt use the same limit as their criterion for a sharp UAS image.
 
 ## Domain
 
@@ -25,21 +25,21 @@ The equation is exact for straight, level ground motion during the exposure. It 
 
 ## Worked example
 
-- sourcePublisher: GeoPrims
-- sourceTitle: add-drone-suite photogrammetry specification
-- sourceEdition: repository specification, accessed 2026-10-13
-- sourceLocator: motion-blur scenario
-- independent: no; this scenario verifies the product requirement but does not satisfy the independent-example promotion gate
-- inputs: groundspeed 10 m/s, exposure 1/1,000 s, GSD 2.741 cm, default blur limit 0.5 px
-- outputs: 0.3648 px of blur; maximum exposure 0.0013705 s, about 1/730 s
-- tolerance: 0.001 px and 0.000001 s
-- verifiedBy: `core/crates/gp-drone/tests/drone.rs` `blur_at_one_thousandth`
+- sourcePublisher: MDPI, Drones
+- sourceTitle: Enhancing Direct Georeferencing Using Real-Time Kinematic UAVs and Structure from Motion-Based Photogrammetry for Large-Scale Infrastructure
+- sourceEdition: volume 8, issue 12, article 736 (2024)
+- sourceLocator: section 2.1.1, equation (1), and the worked example following it
+- independent: yes
+- inputs: groundspeed 10 m/s, exposure 1/500 s, GSD 2.0 cm
+- outputs: 1 px of blur; applying the separately published 0.5 px limit gives a maximum exposure of 0.001 s, or 1/1,000 s
+- tolerance: exact to 0.000000000001 px and 0.000000000001 s
+- verifiedBy: `core/vectors/drone.photogrammetry.motion-blur.jsonl` `v006`
 - verifiedOn: 2026-10-13
 
 ## Differential tests
 
-None yet. The tool remains experimental until an independent published worked example and the full stable-bar vector count are added.
+- `tools/vectors/gen_drone.py` evaluates Han and Han's equation independently in Python over 22 cases spanning 1–30 m/s, 0.3–10 cm GSD, 1/100–1/8,000 s exposures, and 0.25–2 px limits. `core/vectors/drone.photogrammetry.motion-blur.jsonl` holds the results, including the published example and the GeoPrims scenario.
 
 ## Invariants
 
-The equation is linear in groundspeed and exposure, inverse in GSD, and the maximum exposure is linear in both GSD and the chosen blur limit. These properties are candidates for the promotion test set.
+- `core/crates/gp-drone/tests/drone.rs` `motion_blur_invariants` verifies that blur is linear in groundspeed and exposure and inverse in GSD, while maximum exposure is linear in GSD and the selected limit and inverse in groundspeed.

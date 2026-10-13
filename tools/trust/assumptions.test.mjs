@@ -297,10 +297,10 @@ test('the mission tools expose their product-defined operational defaults', () =
   ]);
 });
 
-test('the photogrammetry tools expose their product-defined planning defaults', () => {
+test('the photogrammetry tools expose their sourced planning defaults', () => {
   const motionBlur = byId('drone.photogrammetry.motion-blur')['x-assumptions'];
   assert.deepEqual(motionBlur.map(({ value, unit, source }) => [value, unit, source]), [
-    ['0.5', 'px', 'geoprims-photogrammetry-spec'],
+    ['0.5', 'px', 'grenzdoerffer-uav-image-motion-2012'],
   ]);
 });
 

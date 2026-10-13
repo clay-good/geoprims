@@ -164,14 +164,18 @@ fn is_maidenhead(s: &str) -> bool {
     if !matches!(b.len(), 4 | 6 | 8 | 10) {
         return false;
     }
-    b.chunks_exact(2).enumerate().all(|(pair, chars)| {
-        chars.iter().all(|c| match pair {
-            0 => (b'A'..=b'R').contains(&c.to_ascii_uppercase()),
-            1 | 3 => c.is_ascii_digit(),
-            2 | 4 => (b'A'..=b'X').contains(&c.to_ascii_uppercase()),
-            _ => false,
+    b.as_chunks::<2>()
+        .0
+        .iter()
+        .enumerate()
+        .all(|(pair, chars)| {
+            chars.iter().all(|c| match pair {
+                0 => (b'A'..=b'R').contains(&c.to_ascii_uppercase()),
+                1 | 3 => c.is_ascii_digit(),
+                2 | 4 => (b'A'..=b'X').contains(&c.to_ascii_uppercase()),
+                _ => false,
+            })
         })
-    })
 }
 
 fn mgrs(v: &str) -> Vec<(&'static str, Json)> {

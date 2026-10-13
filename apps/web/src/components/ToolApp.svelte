@@ -995,7 +995,7 @@
           type="range"
           min="0"
           max={sceneEnd}
-          step={Math.min(sceneEnd / 200, 60)}
+          step="any"
           value={playhead}
           aria-label="Scene time"
           aria-valuetext={`${Math.round(playhead)} seconds of ${Math.round(sceneEnd)}`}
@@ -1023,7 +1023,7 @@
       type="range"
       min="0"
       max={sceneEnd}
-      step={Math.min(sceneEnd / 200, 60)}
+      step="any"
       value={playhead}
       aria-label="Scene time"
       aria-valuetext={`${Math.round(playhead)} seconds of ${Math.round(sceneEnd)}`}

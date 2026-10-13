@@ -5,7 +5,7 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef, Q};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::Quantity as QT;
 use gp_geo::point::plain_angle;
 use libm::{sqrt, tan};
@@ -205,13 +205,13 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let u = common_unit(&qs)?;
     let s = s.to(u);
     let a = ctx.number("grade_change")?.expect("required");
-    if !(s > 0.0) {
+    if s.is_nan() || s <= 0.0 {
         return Err(ToolError::invalid(
             "/sight_distance",
             "The sight distance must be positive.",
         ));
     }
-    if !(a > 0.0) {
+    if a.is_nan() || a <= 0.0 {
         return Err(ToolError::invalid(
             "/grade_change",
             "The grade change must be positive.",
@@ -227,13 +227,13 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ));
         };
         let (h1, h2) = (h1.to(u), h2.to(u));
-        if !(h1 > 0.0) {
+        if h1.is_nan() || h1 <= 0.0 {
             return Err(ToolError::invalid(
                 "/eye_height",
                 "The eye height must be positive.",
             ));
         }
-        if !(h2 >= 0.0) {
+        if h2.is_nan() || h2 < 0.0 {
             return Err(ToolError::invalid(
                 "/object_height",
                 "The object height cannot be negative.",
@@ -255,7 +255,7 @@ fn run_sight(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )
         })?;
         let h = h.to(u);
-        if !(h > 0.0) {
+        if h.is_nan() || h <= 0.0 {
             return Err(ToolError::invalid(
                 "/headlight_height",
                 "The headlight height must be positive.",

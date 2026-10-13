@@ -5,7 +5,7 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef, Q};
+use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 
 use crate::{common_unit, fmt_station, is_metric, len, len_out, station};
 
@@ -199,13 +199,13 @@ fn run_unequal(ctx: &mut Ctx) -> Result<Json, ToolError> {
     );
     let u = common_unit(&[("length1", l1q), ("length2", l2q), ("pvi_elevation", eq)])?;
     let (l1, l2, e) = (l1q.to(u), l2q.to(u), eq.to(u));
-    if !(l1 > 0.0) {
+    if l1.is_nan() || l1 <= 0.0 {
         return Err(ToolError::invalid(
             "/length1",
             "The tangent length before the PVI must be positive.",
         ));
     }
-    if !(l2 > 0.0) {
+    if l2.is_nan() || l2 <= 0.0 {
         return Err(ToolError::invalid(
             "/length2",
             "The tangent length after the PVI must be positive.",

@@ -120,7 +120,7 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/ifr/hold-wind-timing/": {
-    "hash": "8545311513d35643",
+    "hash": "14327c4960d4aeb7",
     "lastmod": "2026-10-13"
   },
   "/aviation/ifr/radial-fix/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-13"
   },
   "/drone/mission/survey-grid/": {
-    "hash": "69ef564bae5d807f",
+    "hash": "348cb0123415e5ad",
     "lastmod": "2026-10-13"
   },
   "/drone/ops/": {
@@ -1296,15 +1296,15 @@
     "lastmod": "2026-10-09"
   },
   "/navigation/route/cpa/": {
-    "hash": "fb37acd069344c1c",
-    "lastmod": "2026-10-09"
+    "hash": "6a339866a8b8a9f7",
+    "lastmod": "2026-10-13"
   },
   "/navigation/route/cross-track/": {
     "hash": "5425d5bc5f4b76b0",
     "lastmod": "2026-10-09"
   },
   "/navigation/route/fly-by/": {
-    "hash": "b1cb4b15b3b60979",
+    "hash": "4d9775e44f1e1b75",
     "lastmod": "2026-10-13"
   },
   "/navigation/route/intercept/": {
@@ -1312,7 +1312,7 @@
     "lastmod": "2026-10-09"
   },
   "/navigation/route/legs/": {
-    "hash": "7112583e79bb1967",
+    "hash": "95bcc2e9a85185bd",
     "lastmod": "2026-10-13"
   },
   "/navigation/route/range-rings/": {
@@ -1460,7 +1460,7 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/azimuth-bearing/": {
-    "hash": "166c6f1bf425f24a",
+    "hash": "c83b8f6efe1c865d",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/bearing-bearing/": {
@@ -1472,11 +1472,11 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/bowditch/": {
-    "hash": "66da0f600be83359",
+    "hash": "cde38509deff16c0",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/crandall/": {
-    "hash": "82c085c5583a462a",
+    "hash": "ab206b1c6643b274",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/deflection-angle/": {
@@ -1512,11 +1512,11 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/perpendicular-foot/": {
-    "hash": "16ae1727ad18b5de",
+    "hash": "e3a3977516237eb0",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/point-from-station-offset/": {
-    "hash": "a3ed290917388525",
+    "hash": "4a300c4f7c1d97c5",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/radial-sideshots/": {
@@ -1760,7 +1760,7 @@
     "lastmod": "2026-10-13"
   },
   "/time/sun/position/": {
-    "hash": "ef448922ad3fa172",
+    "hash": "31842edf228143b5",
     "lastmod": "2026-10-13"
   },
   "/tools/": {
@@ -2028,7 +2028,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c53a19c9e3893561",
+    "hash": "45f731cf245c7211",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

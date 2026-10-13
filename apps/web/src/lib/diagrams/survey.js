@@ -429,6 +429,21 @@ function areaPlan(args, result) {
   return parcelPlan(pts, `${disp(result, 'area')} · ${disp(result, 'acres')} · perimeter ${disp(result, 'perimeter')}`,
     `Parcel of ${pts.length} corners: ${disp(result, 'area')} (${disp(result, 'acres')}), perimeter ${disp(result, 'perimeter')}.`);
 }
+/**
+ * An estimated box for a label, in drawing units: 11px text, the sans weight a
+ * little narrower than the mono advance, with room for the halo. It runs a
+ * touch wide on purpose, so a label the browser would collide with is dropped
+ * here rather than measured as an overlap in diagrams.test.
+ */
+function labelBox(x, y, t, anchor = 'start', mono = true) {
+  const w = String(t).length * (mono ? 6.7 : 6.4) + 3;
+  const left = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
+  return [left - 2, y - 11, left + w + 2, y + 4];
+}
+
+/** Whether two label boxes touch by more than the test's antialiasing slack. */
+const boxesHit = (a, b) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > 1.5 && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > 1.5;
+
 function traverseClosure(args, result) {
   const rows = result.result.adjusted ?? [];
   const pts = rows.map((p) => [val({ result: p }, 'easting'), val({ result: p }, 'northing')]);
@@ -444,27 +459,52 @@ function traverseClosure(args, result) {
   if (pts.length < 3 || !pts.flat().every(Number.isFinite)) return null;
   // Shorter than the area plan's box, so the leg labels clear the caption.
   const box = [220, 128];
+  const caption = `Precision ${disp(result, 'precision')} · misclosure ${disp(result, 'misclosure')} before adjustment`;
   const { factor, end: far, frame, S } = miss ? misclosureFrame(pts, a, [dep, lat], box) : { factor: 1, frame: pts, S: fit(pts, ...box) };
   const extra = (xy) => {
     // Each course's adjusted length, set just outside the figure beside its leg.
     const c = [xy.reduce((t, p) => t + p[0], 0) / xy.length, xy.reduce((t, p) => t + p[1], 0) / xy.length];
-    const legs = rows.length <= 13 ? rows.slice(1).map((r, i) => {
+    // The labels a leg length must give way to: the corner numbers, the
+    // compass, the caption, and the misclosure arrow, which is the point of
+    // the drawing. A course's length is the one label the reader can lose.
+    const taken = [
+      ...xy.map((p, i) => labelBox(p[0] + 7, p[1] - 7, String(i + 1))),
+      labelBox(296, 22, 'N ↑', 'end'),
+      labelBox(160, 226, caption, 'middle', false),
+    ];
+    const [o, end] = miss ? [S(a), S(far)] : [null, null];
+    const missLabel = factor > 1 ? `Misclosure ×${group(factor)}` : 'Misclosure';
+    if (miss) {
+      // Where arrow() puts its label: 12 units off the vector at 0.9 along it.
+      const side = dep >= 0 ? 1 : -1;
+      const len = Math.hypot(end[0] - o[0], end[1] - o[1]) || 1;
+      const nv = [(-(end[1] - o[1]) / len) * side, ((end[0] - o[0]) / len) * side];
+      const lx = o[0] + (end[0] - o[0]) * 0.9 + nv[0] * 12;
+      const ly = o[1] + (end[1] - o[1]) * 0.9 + nv[1] * 12;
+      const anchor = Math.abs(nv[0]) > Math.abs(nv[1]) ? (nv[0] > 0 ? 'start' : 'end') : 'middle';
+      taken.push(labelBox(lx, ly + (nv[1] > 0.5 ? 10 : nv[1] < -0.5 ? -2 : 4), missLabel, anchor, false));
+    }
+    const legs = rows.length <= 13 ? rows.slice(1).flatMap((r, i) => {
       const d = val({ result: r }, 'distance');
       const [p, q] = [xy[i], xy[(i + 1) % xy.length]];
-      if (!Number.isFinite(d) || !p || !q) return '';
+      if (!Number.isFinite(d) || !p || !q) return [];
       const m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
       const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
       let n = [-(q[1] - p[1]) / len, (q[0] - p[0]) / len];
       if (n[0] * (m[0] - c[0]) + n[1] * (m[1] - c[1]) < 0) n = [-n[0], -n[1]];
       const anchor = Math.abs(n[0]) > Math.abs(n[1]) ? (n[0] > 0 ? 'start' : 'end') : 'middle';
-      return text('dg-muted-text', m[0] + n[0] * 8, m[1] + n[1] * 8 + (n[1] > 0.5 ? 9 : Math.abs(n[1]) <= 0.5 ? 4 : 0), String(Number(d.toFixed(2))), anchor);
+      const [tx, ty] = [m[0] + n[0] * 8, m[1] + n[1] * 8 + (n[1] > 0.5 ? 9 : Math.abs(n[1]) <= 0.5 ? 4 : 0)];
+      const label = String(Number(d.toFixed(2)));
+      const b = labelBox(tx, ty, label, anchor);
+      if (taken.some((o2) => boxesHit(o2, b))) return [];
+      taken.push(b);
+      return [text('dg-muted-text', tx, ty, label, anchor)];
     }) : [];
     if (!miss) return legs;
-    const [o, end] = [S(a), S(far)];
-    return [...legs, arrow(o[0], o[1], end[0], end[1], 'dg-muted', factor > 1 ? `Misclosure ×${group(factor)}` : 'Misclosure', 0.9, dep >= 0 ? 1 : -1)];
+    return [...legs, arrow(o[0], o[1], end[0], end[1], 'dg-muted', missLabel, 0.9, dep >= 0 ? 1 : -1)];
   };
   const scale = factor > 1 ? `, drawn ${group(factor)} times its size` : '';
-  return parcelPlan(pts, `Precision ${disp(result, 'precision')} · misclosure ${disp(result, 'misclosure')} before adjustment`,
+  return parcelPlan(pts, caption,
     `Adjusted traverse of ${pts.length} corners. Before adjustment it missed closing by ${disp(result, 'misclosure')} toward ${disp(result, 'misclosure_bearing')}${scale}, a precision of ${disp(result, 'precision')}.`, extra, box, frame);
 }
 

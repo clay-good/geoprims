@@ -18,7 +18,7 @@ The camera's look direction is its heading and pitch. Both directions are turned
 
 ## Symbols and units
 
-`lat`, `lon` and `time` place the sun; `camera_heading` (from true north, default 0°) and `camera_pitch` (negative downwards, −90° is nadir) place the camera; `field_of_view` is the diagonal, default 84°. Out come `hotspot_angle`, `in_frame`, the sun's `elevation` and `azimuth`, and the antisolar pair.
+`lat`, `lon` and `time` place the sun; `camera_heading` (from true north, default 0°) and `camera_pitch` (negative downwards, −90° is nadir) place the camera; `field_of_view` is the diagonal, default 84° to match the DJI Phantom 4 Pro's published camera specification. Out come `hotspot_angle`, `in_frame`, the sun's `elevation` and `azimuth`, and the antisolar pair.
 
 ## Domain
 

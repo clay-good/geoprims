@@ -69,6 +69,7 @@ const MUST_DECLARE = [
   'raster.index.dnbr',
   'geometry.buffer.geodesic',
   'time.sun.mapping-window',
+  'time.sun.hotspot',
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
@@ -193,6 +194,13 @@ test('the mapping window exposes its published minimum sun elevation', () => {
   const assumptions = byId('time.sun.mapping-window')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['30', 'deg', 'geocue-sun-angle'],
+  ]);
+});
+
+test('the hotspot tool names the camera behind its field-of-view default', () => {
+  const assumptions = byId('time.sun.hotspot')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['84', 'deg', 'dji-phantom-4-pro'],
   ]);
 });
 

@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "171abf0b83f2dfe1",
+    "hash": "50a129e47866cecb",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1700,8 +1700,8 @@
     "lastmod": "2026-10-09"
   },
   "/time/sun/hotspot/": {
-    "hash": "97b655d3ea2e783d",
-    "lastmod": "2026-10-09"
+    "hash": "ccb3a5e6fa88451d",
+    "lastmod": "2026-10-13"
   },
   "/time/sun/mapping-window/": {
     "hash": "430ef8416ac3899f",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0f542cfd65119d31",
+    "hash": "ff7cfe6a24f54f38",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

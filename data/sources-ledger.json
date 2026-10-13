@@ -470,6 +470,26 @@
       "editionCheck": true
     },
     {
+      "id": "dji-phantom-4-pro",
+      "name": "DJI Phantom 4 Pro specifications",
+      "issuer": "DJI",
+      "currentEdition": "online product specifications",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked DJI's official support page on 2026-10-12. The camera specification pairs a 1-inch CMOS sensor with a lens FOV of 84 degrees; the Phantom 4 RTK product page states the same camera specification.",
+      "freeAccessUrl": "https://www.dji.com/support/product/phantom-4-pro",
+      "matchTerms": [
+        "Phantom 4 Pro specifications"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "douglas-peucker",
       "name": "Douglas and Peucker (1973) line reduction",
       "issuer": "Cartographica",

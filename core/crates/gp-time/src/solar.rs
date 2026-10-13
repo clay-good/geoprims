@@ -190,6 +190,14 @@ const NREL_SPA: Reference = Reference {
     locator: "Sections 3.1 to 3.15 and Tables A4.2, A4.3; worked example in Table A5.1",
     url: "https://www.osti.gov/biblio/15003974",
 };
+const DJI_PHANTOM_4_PRO: Reference = Reference {
+    title: "Phantom 4 Pro specifications",
+    issuer: "DJI",
+    year: 2026,
+    edition: "online product specifications, accessed 2026-10-12",
+    locator: "Camera: 1-inch CMOS sensor and lens FOV 84°",
+    url: "https://www.dji.com/support/product/phantom-4-pro",
+};
 const ESPENAK_MEEUS: Reference = Reference {
     title: "Polynomial Expressions for Delta T",
     issuer: "Espenak, F., and Meeus, J., NASA Goddard Space Flight Center",
@@ -1732,7 +1740,7 @@ pub static HOTSPOT: ToolDef = ToolDef {
         Field::new(
             "field_of_view",
             "Diagonal field of view",
-            "Like 84 deg (the default, common for 1-inch drone cameras)",
+            "Like 84 deg (the default, matching the DJI Phantom 4 Pro camera)",
             Kind::Quantity {
                 q: QT::Angle,
                 unit: "deg",
@@ -1815,7 +1823,7 @@ pub static HOTSPOT: ToolDef = ToolDef {
     ],
     model: "Sun azimuth and apparent elevation by the NREL SPA (standard atmosphere, sea level); the antisolar point is opposite the sun, at −elevation. The hotspot angle is the angle between the camera's look vector (heading, pitch) and the antisolar direction; it is in frame when within half the diagonal field of view",
     accuracy: "Sun direction to about 0.0003°; the frame test treats the field of view as a cone around the look direction, so a hotspot near a frame corner is borderline",
-    references: &[NREL_SPA],
+    references: &[NREL_SPA, DJI_PHANTOM_4_PRO],
     examples: &[Example {
         id: "primary",
         title: "A nadir camera at noon near the June solstice in Denver",
@@ -1841,6 +1849,12 @@ pub static HOTSPOT: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Default diagonal field of view, matching the DJI Phantom 4 Pro camera",
+        value: "84",
+        unit: "deg",
+        source: "dji-phantom-4-pro",
+    }],
     sentence: "The hotspot is {hotspot_angle} from where the camera points: in frame, {in_frame}.",
     limits: &[("batchRows", 10_000)],
     run: run_hotspot,

@@ -2,6 +2,7 @@
   // The interactive tool: schema-driven form, live answer card, permalinks.
   // Server-rendered with the worked example, so the answer is in the HTML.
   import { onMount } from 'svelte';
+  import DeedConfirm from './DeedConfirm.svelte';
   import { isPinned, numberFormat, PROFILES, profile, recordUse, setProfile, togglePin, toolOptions } from '../lib/prefs.js';
   import MapCanvas from './MapCanvas.svelte';
   import { mapsTool } from '../lib/map/layers.js';
@@ -202,9 +203,15 @@
       ? Object.entries(result.display ?? {}).filter(([k]) => k !== primary && !statusOf(k) && !(fileOut && (k === 'file' || k === 'media_type')))
       : [],
   );
+  let drawnArgs = $state(example);
   // A list of rows is part of the answer, not a footnote: a decoder's groups, a
   // forecast's periods, a lookup's matches. The rule lives in lib/rows.js.
-  const tables = $derived(rowTables(result));
+  const deedConfirmation = $derived(
+    tool.id === 'survey.land.deed-parse' && result?.ok && Array.isArray(result.result.calls)
+      ? { text: drawnArgs.text ?? '', rows: result.result.calls, schema: tool.outputs.properties.calls }
+      : null,
+  );
+  const tables = $derived(rowTables(result).filter((table) => !(deedConfirmation && table.key === 'calls')));
   const columnTitle = (key, column) =>
     tool.outputs.properties[key]?.items?.properties?.[column]?.title ?? column;
   // An input error names its field as a JSON pointer ("/points/2/lat" is the points field): mark it, and let the answer card jump to it.
@@ -225,7 +232,6 @@
 
   // The canvas draws geographic tools: lines, points, polygons, or a lat/lon input.
   const showMap = mapsTool(tool);
-  let drawnArgs = $state(example);
   // A 3D drawing's view: turned about up, and seen from a tilt (90° is straight down).
   let dgView = $state({ turn: 0, tilt: 90 });
   const dg = $derived(result?.ok ? (draw ? draw(drawnArgs, result, '', dgView) : firstDiagram) : null);
@@ -684,6 +690,7 @@
         {/each}
       </ul>
     {/if}
+    {#if deedConfirmation}<DeedConfirm {...deedConfirmation} />{/if}
     {#each tables as t}
       <div class="table-scroll rows">
         <table>

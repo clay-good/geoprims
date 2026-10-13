@@ -272,6 +272,15 @@ label.switch input { inline-size: var(--target); block-size: var(--target); min-
 .answer .rows { margin: 0.75rem 0 0; }
 .answer .rows caption { text-align: start; color: var(--muted); font-size: 0.85rem; padding-block-end: 0.2rem; }
 .answer .rows td { font-variant-numeric: tabular-nums; }
+.deed-confirm { margin-block-start: 1rem; border-block-start: 1px solid var(--line); padding-block-start: 0.75rem; }
+.deed-confirm h2 { margin: 0; font-size: 1rem; }
+.deed-source { margin-block: 0.6rem; padding: 0.65rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); white-space: pre-wrap; line-height: 1.6; }
+.deed-source mark { color: inherit; background: color-mix(in srgb, var(--accent) 18%, transparent); border-block-end: 2px solid var(--accent); cursor: pointer; }
+.deed-source mark.active { outline: 2px solid var(--focus); outline-offset: 2px; }
+.deed-calls th, .deed-calls td { vertical-align: top; }
+.deed-calls tbody tr.selected { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.deed-calls input { min-inline-size: 8rem; inline-size: 100%; }
+.deed-calls td:last-child { white-space: normal; min-inline-size: 12rem; }
 
 /* A decoder's work: the coded group, then what it says. */
 .groups { margin: 0.4rem 0 0; display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.8rem; }

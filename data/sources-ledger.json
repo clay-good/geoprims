@@ -3567,6 +3567,26 @@
       ],
       "editionStatus": "current",
       "editionCheck": false
+    },
+    {
+      "id": "orekit-dop",
+      "name": "Orekit DOPComputer test",
+      "issuer": "Orekit contributors, CS GROUP",
+      "currentEdition": "Orekit 13.1.9",
+      "currentReleaseDate": "2026-10-03",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read in the tagged Orekit 13.1.9 source on 2026-10-13. DOPComputerTest.testBasicCompute uses the bundled 20160331.alm YUMA file at 43.6 N, 1.45 E and 0 m on 2016-03-31 at 02:00 UTC. It says its expected values come from Trimble Planning and publishes 11 satellites, GDOP 1.53, PDOP 1.35, HDOP 0.84, VDOP 1.06, each with 0.01 tolerance.",
+      "freeAccessUrl": "https://github.com/CS-SI/Orekit/blob/13.1.9/src/test/java/org/orekit/gnss/DOPComputerTest.java",
+      "matchTerms": [
+        "Orekit DOPComputer test"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

@@ -22,6 +22,7 @@ from pathlib import Path
 import numpy as np
 
 OUT = Path(__file__).resolve().parents[2] / "core/vectors/survey.gnss.dop.jsonl"
+OREKIT_ALMANAC = Path(__file__).resolve().parents[2] / "core/crates/gp-survey/data/orekit-20160331.alm"
 MU = 3.986005e14
 OMEGA_E = 7.2921151467e-5
 WEEK = 604800.0
@@ -321,6 +322,37 @@ if __name__ == "__main__":
              note="a SEM almanac with five satellites marked unhealthy", fmt="sem"),
         case(full, 39.74, -104.99, "2026-10-13T14:00Z", 4, 60, note="a SEM almanac ten days old: ALMANAC_OLD", fmt="sem"),
     ]
+    # Orekit 13.1.9 publishes this YUMA case and says its expected values come
+    # from Trimble Planning. Keep the source's rounded values and tolerance,
+    # rather than replacing them with this generator's calculations.
+    CASES.append({
+        "input": {
+            "almanac": OREKIT_ALMANAC.read_text(),
+            "lat": 43.6,
+            "lon": 1.45,
+            "start": "2016-03-31T02:00Z",
+            "duration": "0 h",
+            "step": "10 min",
+            "mask": "0 deg",
+        },
+        "expect": {
+            "ok": True,
+            "result.visible": 11.0,
+            "result.gdop": 1.53,
+            "result.pdop": 1.35,
+            "result.hdop": 0.84,
+            "result.vdop": 1.06,
+        },
+        "source": "Orekit 13.1.9 DOPComputerTest.testBasicCompute; expected values from Trimble Planning",
+        "sourceVersion": "Orekit 13.1.9 (2026-10-03)",
+        "tolerance": {
+            "result.visible": {"rel": 0, "abs": 0},
+            "result.gdop": {"rel": 0, "abs": 0.01},
+            "result.pdop": {"rel": 0, "abs": 0.01},
+            "result.hdop": {"rel": 0, "abs": 0.01},
+            "result.vdop": {"rel": 0, "abs": 0.01},
+        },
+    })
     with OUT.open("w") as f:
         for i, row in enumerate(CASES, 1):
             f.write(json.dumps({"id": f"v{i:03d}", **row}) + "\n")

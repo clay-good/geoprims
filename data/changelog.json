@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "survey.gnss.dop"
+      ],
+      "vectors": [],
+      "summary": "GPS satellite visibility and DOP (version 1.1.0) is now stable. A new vector reproduces Orekit 13.1.9's YUMA-almanac comparison with Trimble Planning: 11 satellites and GDOP 1.53, PDOP 1.35, HDOP 0.84, and VDOP 1.06 within the source's 0.01 tolerance. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "raster.terrain.curvature"
       ],
       "vectors": [],

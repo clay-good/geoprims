@@ -51,6 +51,14 @@ const NAVCEN_YUMA: Reference = Reference {
     locator: "The YUMA almanac file and its field definitions",
     url: "https://www.navcen.uscg.gov/gps-nanus-almanacs-opsadvisories-sof",
 };
+const OREKIT_DOP: Reference = Reference {
+    title: "Orekit DOPComputer test",
+    issuer: "Orekit contributors, CS GROUP",
+    year: 2026,
+    edition: "Orekit 13.1.9",
+    locator: "DOPComputerTest.testBasicCompute: 2016-03-31 02:00 UTC at 43.6 N, 1.45 E, checked against Trimble Planning",
+    url: "https://github.com/CS-SI/Orekit/blob/13.1.9/src/test/java/org/orekit/gnss/DOPComputerTest.java",
+};
 
 /// WGS 84 value of the Earth's gravitational constant for GPS, m³/s².
 const MU: f64 = 3.986_005e14;
@@ -402,6 +410,8 @@ const STEP: &[Field] = &[
 
 pub static DOP: ToolDef = ToolDef {
     id: "survey.gnss.dop",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "GPS satellite visibility and DOP",
     summary: "From a pasted GPS almanac, the satellites above your elevation mask at a site and the PDOP, HDOP, VDOP, and GDOP through a time window, with a sky plot.",
     aliases: &[
@@ -565,14 +575,13 @@ pub static DOP: ToolDef = ToolDef {
         "LEAP_SECOND_TABLE_EXPIRED",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
     ],
     assets: &["leap-seconds"],
     model: "IS-GPS-200 almanac orbits (Kepler orbit, node regression, Earth rotation), WGS 84 site, line-of-sight unit vectors in east, north, up, and DOP from the inverse of GᵀG",
     accuracy: "Satellite positions from an almanac a few days old are good to a few kilometers, which moves elevations by hundredths of a degree; DOP to a few hundredths",
     when_to_use: "Use this before a GNSS survey or a drone mapping flight to pick the hours with the most satellites and the best geometry: paste this week’s GPS almanac, give the site and the time window, and it shows how many satellites are above your elevation mask and how PDOP, HDOP, and VDOP move through the window. Enter the skyline where trees, buildings, or a canyon wall block the sky to see what they cost.",
     limitations: "GPS only: Galileo, GLONASS, and BeiDou satellites are not in a GPS almanac, and a multi-constellation receiver sees more than this shows. Terrain and canopy are not modeled unless you enter the skyline. An almanac is a coarse orbit meant for planning, so use one from the last week; it says nothing about outages announced after it, so check the NANUs too. DOP is geometry only: multipath, the ionosphere, and the receiver are not in it.",
-    references: &[IS_GPS_200, SPS_PS, NAVCEN_YUMA],
+    references: &[IS_GPS_200, SPS_PS, NAVCEN_YUMA, OREKIT_DOP],
     examples: &[Example {
         id: "primary",
         title: "Six hours over Denver on an October morning",

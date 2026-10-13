@@ -30,22 +30,22 @@ The almanac orbit leaves out the harmonic corrections and the precise terms of t
 
 ## Worked example
 
-- sourcePublisher: geoprims (computed, not published)
-- sourceTitle: a synthetic 24-satellite constellation written as a YUMA almanac, worked in Python with numpy (tools/vectors/gen_dop.py)
-- sourceEdition: IS-GPS-200N
-- sourceLocator: core/vectors/survey.gnss.dop.jsonl, v001
-- independent: no
-- inputs: the constellation over Denver (39.74 N, 104.99 W) from 2026-10-03T14:00Z for 6 hours every 30 minutes, 10° mask
-- outputs: 7 of 8 satellites in the sky used at the start, PDOP 2.0; worst PDOP 3.2 at 15:00Z
-- tolerance: 1e-7 relative, 1e-6 absolute
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- sourcePublisher: Orekit contributors, CS GROUP
+- sourceTitle: Orekit DOPComputer test
+- sourceEdition: Orekit 13.1.9
+- sourceLocator: DOPComputerTest.testBasicCompute and src/test/resources/gnss/20160331.alm
+- independent: yes
+- inputs: the published YUMA almanac at 43.6 N, 1.45 E and 0 m on 2016-03-31 at 02:00 UTC, with a 0° elevation mask
+- outputs: 11 satellites, GDOP 1.53, PDOP 1.35, HDOP 0.84, VDOP 1.06
+- tolerance: 0.01, as published by the source
+- verifiedBy: golden vector v027, run by the core on every build
+- verifiedOn: 2026-10-13
 
-The vectors are a second transcription of the same standard, not a published example. Against an independent source the core was also checked on 2026-10-09: with the Coast Guard's almanac for week 392, the azimuth and elevation of 34 satellite sightings from Denver, Sydney, and Greenwich were compared with Skyfield's SGP4 propagation of CelesTrak's GPS elements for the same day (tools/vectors/check_dop_skyfield.py). 33 agreed within 0.1° in elevation, most within 0.03°. PRN 13 differed by 2.7°, which neither file explains; a satellite reassigned between PRNs or repositioning between the two sources' epochs would do it, and it was not investigated further.
+Orekit states that these expected values come from Trimble Planning software. Geoprims returns 11 satellites, GDOP 1.5255, PDOP 1.3516, HDOP 0.8398, and VDOP 1.0591, all inside the published tolerance. The almanac fixture is copied from the same Orekit 13.1.9 test resources. A second independent check remains useful context: on 2026-10-09, 34 satellite sightings from a current Coast Guard almanac were compared with Skyfield's SGP4 propagation of CelesTrak GPS elements (tools/vectors/check_dop_skyfield.py). 33 agreed within 0.1° in elevation, most within 0.03°. PRN 13 differed by 2.7°, which neither source explained; that unresolved sighting is not used as promotion evidence.
 
 ## Differential tests
 
-- `tools/vectors/gen_dop.py`: 26 vectors from a numpy transcription of IS-GPS-200 with a different Kepler solver, rotation form, and matrix inverse, at nine sites, masks from 0° to 20°, skylines, an old almanac, unhealthy satellites, and too few satellites, four of them from the constellation written as a SEM almanac
+- `tools/vectors/gen_dop.py`: 27 vectors: 26 from a numpy transcription of IS-GPS-200 with a different Kepler solver, rotation form, and matrix inverse, at nine sites, masks from 0° to 20°, skylines, an old almanac, unhealthy satellites, and too few satellites, four of them from the constellation written as a SEM almanac; the final vector carries Orekit's Trimble-backed case
 - `tools/vectors/check_dop_skyfield.py`: azimuth and elevation against Skyfield's SGP4 on CelesTrak elements (manual; needs the network)
 
 ## Invariants

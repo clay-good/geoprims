@@ -31,6 +31,8 @@ The generated catalog currently exposes 31 navigation operations and 15 geometry
 
 The US 1976 atmosphere is verified through its 86 km ceiling: every kilometer through 81 km is cross-checked against an independent implementation, and every printed 0.5 km row from 82 to 86 km is checked against NOAA-S/T 76-1562 Table I.
 
+GPS satellite visibility and DOP planning is stable for pasted YUMA or SEM almanacs. Its almanac propagation and geometry are covered by 27 golden vectors, including Orekit 13.1.9's published comparison with Trimble Planning.
+
 The aviation catalog covers all 83 planned operations through 90 tool ids: 83 operation tools and 7 narrower airspeed endpoints. Altimeter inputs accept inHg, hPa, `A` groups, and `Q` groups directly rather than multiplying identical pages by unit.
 
 ## Status

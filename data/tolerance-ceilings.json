@@ -232,6 +232,11 @@
       "reason": "The procedures manual prints the slope stake to a tenth of a foot, so the tolerance is half of that."
     },
     {
+      "tool": "survey.gnss.dop",
+      "source": "Orekit 13.1.9 DOPComputerTest.testBasicCompute",
+      "reason": "Orekit publishes the Trimble Planning comparison to two decimal places with an explicit 0.01 tolerance, so the vector preserves the source's precision."
+    },
+    {
       "tool": "survey.land.deed-plot",
       "source": "University of Memphis CIVL 1112",
       "reason": "The course prints the area to the whole square foot, from rounded latitudes and departures, so the tolerance is half a square foot."

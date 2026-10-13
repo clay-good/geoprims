@@ -39,6 +39,8 @@ Survey angular closure is stable for interior and reflex-exterior loop angles. I
 
 Survey curvature and refraction correction is stable for a horizontal sight, an entered coefficient, and an optional Earth radius. It reproduces the U.S. Geological Survey's published 500 ft correction table, and 25 vectors plus five invariants cover quadratic scaling, separated components, coefficients, radii, units, and invalid inputs.
 
+EDM atmospheric and prism correction now accepts direct ppm, a custom IAG 1999 wavelength and reference refractivity, or named Trimble Access formulas for the 5600, 3300/3600, and TTS300/500 families. The presets use Trimble's published J and N constants and refuse mixed formula inputs; the tool remains experimental until an independent published numeric example is verified.
+
 The RTK and PPK precision budget is stable for manufacturer specifications written as a constant plus a baseline-dependent ppm term. It reproduces Tersus's published 40 km example at 48 mm horizontal and 55 mm vertical, and 25 vectors plus five invariants cover units, confidence scaling, target checks, boundaries, and invalid inputs.
 
 OPUS session planning is stable for the current NGS rapid-static and static duration windows. It generates RINEX 2 short names with the correct UTC start-hour letter, reserves `0` for a 24-hour data set, reproduces NGS's published `g287009q.23o` example, and has 25 live vectors plus five invariants covering boundaries, calendars, units, and incomplete naming inputs.

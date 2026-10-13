@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "added",
+      "tools": [
+        "survey.reduction.edm-correction"
+      ],
+      "vectors": [],
+      "summary": "EDM atmospheric and prism correction (version 1.1.0, experimental) now includes named Trimble Access formulas for the 5600, 3300/3600, and TTS300/500 instrument families. Each preset uses the guide's published J and N constants, and mixed direct-ppm, custom-IAG, and preset inputs are refused instead of silently ignored. The vector set grows from 9 to 25 without changing existing vectors."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "changed",
       "tools": [
         "survey.reduction.curvature-refraction"

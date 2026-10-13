@@ -865,6 +865,45 @@ fn curvature_refraction_scenario() {
 }
 
 #[test]
+fn edm_trimble_access_presets_match_the_published_formula_and_constants() {
+    for (preset, j, n) in [
+        ("trimble-access-5600", 274.41, 79.39),
+        ("trimble-access-3300-3600", 278.77, 80.653),
+        ("trimble-access-tts300-500", 270.0, 79.167),
+    ] {
+        let result = call(
+            "survey.reduction.edm-correction",
+            &format!(
+                r#"{{"distance":"1000 m","temperature":"20 degC","pressure":"1013.25 hPa","instrument_formula":"{preset}"}}"#
+            ),
+        );
+        let expected = j - n * 1013.25 / (273.16 + 20.0);
+        assert_eq!(result["ok"], true, "{result}");
+        assert!((num(&result, "result.ppm") - expected).abs() < 1e-12);
+        assert!(
+            (num(&result, "result.atmospheric_correction.value") - expected * 0.001).abs() < 1e-12
+        );
+    }
+}
+
+#[test]
+fn edm_instrument_formula_does_not_silently_mix_with_other_methods() {
+    for input in [
+        r#"{"distance":"1000 m","ppm":5,"instrument_formula":"trimble-access-5600"}"#,
+        r#"{"distance":"1000 m","temperature":"20 degC","pressure":"1000 hPa","humidity":50,"instrument_formula":"trimble-access-5600"}"#,
+        r#"{"distance":"1000 m","temperature":"20 degC","pressure":"1000 hPa","wavelength":0.658,"instrument_formula":"trimble-access-5600"}"#,
+    ] {
+        let result = call("survey.reduction.edm-correction", input);
+        assert_eq!(result["error"]["field"], "/instrument_formula", "{result}");
+    }
+    let direct = call(
+        "survey.reduction.edm-correction",
+        r#"{"distance":"1000 m","ppm":5,"humidity":50}"#,
+    );
+    assert_eq!(direct["error"]["field"], "/ppm", "{direct}");
+}
+
+#[test]
 fn curvature_refraction_matches_the_usgs_table() {
     let result = call(
         "survey.reduction.curvature-refraction",

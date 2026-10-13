@@ -25,6 +25,22 @@ const LANDGATE: Reference = Reference {
     url: "https://medjil0.lb.landgate.wa.gov.au/calibrationguide/read_manual/edmi_calibration_manual.html",
 };
 
+const TRIMBLE_ACCESS_CALCULATIONS: Reference = Reference {
+    title: "Trimble Access Calculations Reference Guide",
+    issuer: "Trimble Inc.",
+    year: 2024,
+    edition: "Revision D, April 2024",
+    locator: "Pages 9–10, PPM correction equation and J/N constants",
+    url: "https://help.fieldsystems.trimble.com/trimble-access/2025.10/en/pdfs/access-calculations-reference.pdf",
+};
+
+const INSTRUMENT_FORMULAS: &[&str] = &[
+    "custom-iag-1999",
+    "trimble-access-5600",
+    "trimble-access-3300-3600",
+    "trimble-access-tts300-500",
+];
+
 const fn num(
     name: &'static str,
     title: &'static str,
@@ -66,8 +82,9 @@ fn saturation(t: f64) -> f64 {
 
 pub static EDM_CORRECTION: ToolDef = ToolDef {
     id: "survey.reduction.edm-correction",
+    version: "1.1.0",
     title: "EDM atmospheric and prism corrections",
-    summary: "Corrects a measured EDM distance for the air it traveled through (in ppm, entered or worked out from temperature, pressure, and humidity) and for the prism constant, each listed.",
+    summary: "Corrects a measured EDM distance for the air it traveled through, using entered ppm, custom instrument constants, or a named Trimble Access formula, and lists the atmospheric and prism corrections separately.",
     aliases: &[
         "EDM ppm correction",
         "atmospheric correction ppm",
@@ -132,6 +149,12 @@ pub static EDM_CORRECTION: ToolDef = ToolDef {
             0.0,
             100.0,
         ),
+        Field::new(
+            "instrument_formula",
+            "Instrument formula",
+            "custom-iag-1999 (default), trimble-access-5600, trimble-access-3300-3600, or trimble-access-tts300-500",
+            Kind::Choice(INSTRUMENT_FORMULAS),
+        ),
         num(
             "wavelength",
             "Carrier wavelength",
@@ -192,11 +215,11 @@ pub static EDM_CORRECTION: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::InvalidInput],
     warnings: &["DRY_AIR_ASSUMED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
-    model: "N_G = 287.6155 + 4.88660 ÷ λ² + 0.06800 ÷ λ⁴ (λ in µm); N_L = (273.15 ÷ 1013.25) · N_G · p ÷ T − 11.27 · e ÷ T, with p and e in hPa and T in kelvins (IAG 1999 Resolution 3); ppm = N_ref − N_L; corrected = D + ppm · 10⁻⁶ · D + prism constant. Vapor pressure from humidity by the Magnus form",
-    accuracy: "The closed formula is within 0.25 ppm of the full Ciddor and Hill procedure for ordinary survey conditions; use the instrument's own N_ref and wavelength. Instruments that apply ppm internally need no second correction",
-    when_to_use: "Use this when you need to correct an EDM distance for the air and the prism, such as when the ppm was not set in the instrument. Enter the measured distance, the prism constant, and either the ppm or the temperature, pressure, and humidity, with the instrument's wavelength and reference refractivity. It returns the corrected distance with each correction listed.",
-    limitations: "If the instrument already applied ppm, do not apply it again. Temperature and pressure are taken at one spot, while the air along the line may differ. The tool does not reduce slope to horizontal or apply elevation or grid scale factors; those come next. The closed formula is within 0.25 ppm of the full method for ordinary conditions.",
-    references: &[LANDGATE],
+    model: "Custom IAG 1999: N_G = 287.6155 + 4.88660 ÷ λ² + 0.06800 ÷ λ⁴; N_L = (273.15 ÷ 1013.25) · N_G · p ÷ T − 11.27 · e ÷ T; ppm = N_ref − N_L. Trimble Access presets: ppm = J − N·p ÷ (273.16 + t), using the guide's J and N for the selected instrument family. Corrected = D + ppm · 10⁻⁶ · D + prism constant",
+    accuracy: "The custom IAG 1999 formula is within 0.25 ppm of the full Ciddor and Hill procedure for ordinary survey conditions. The named presets reproduce Trimble Access's published pressure-and-temperature equation and constants. Instruments that apply ppm internally need no second correction",
+    when_to_use: "Use this when you need to correct an EDM distance for the air and the prism, such as when the ppm was not set in the instrument. Enter the measured distance, the prism constant, and either the ppm or temperature and pressure. For the latter, choose an exact Trimble Access instrument-family preset or give the instrument's wavelength, reference refractivity, and optional humidity. It returns the corrected distance with each correction listed.",
+    limitations: "If the instrument already applied ppm, do not apply it again. Use a named preset only for that exact instrument family; current Trimble VX/S/M instruments supply their own constants and are not preset here. The Trimble Access formula does not use humidity. Temperature and pressure are taken at one spot, while the air along the line may differ. The tool does not reduce slope to horizontal or apply elevation or grid scale factors; those come next.",
+    references: &[LANDGATE, TRIMBLE_ACCESS_CALCULATIONS],
     examples: &[Example {
         id: "primary",
         title: "1,000 m with +12 ppm and a -30 mm prism",
@@ -267,6 +290,42 @@ pub static EDM_CORRECTION: ToolDef = ToolDef {
             unit: "hPa",
             source: "alduchov",
         },
+        Assumption {
+            name: "Trimble Access 5600 J constant",
+            value: "274.41",
+            unit: "1",
+            source: "trimble-access-calculations",
+        },
+        Assumption {
+            name: "Trimble Access 5600 N constant",
+            value: "79.39",
+            unit: "K/hPa",
+            source: "trimble-access-calculations",
+        },
+        Assumption {
+            name: "Trimble Access 3300/3600 J constant",
+            value: "278.77",
+            unit: "1",
+            source: "trimble-access-calculations",
+        },
+        Assumption {
+            name: "Trimble Access 3300/3600 N constant",
+            value: "80.653",
+            unit: "K/hPa",
+            source: "trimble-access-calculations",
+        },
+        Assumption {
+            name: "Trimble Access TTS300/500 J constant",
+            value: "270.0",
+            unit: "1",
+            source: "trimble-access-calculations",
+        },
+        Assumption {
+            name: "Trimble Access TTS300/500 N constant",
+            value: "79.167",
+            unit: "K/hPa",
+            source: "trimble-access-calculations",
+        },
     ],
     sentence: "The corrected distance is {corrected}: {ppm} ppm for the air and {prism_correction} for the prism.",
     limits: &[("batchRows", 10_000)],
@@ -297,8 +356,28 @@ fn run_edm(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let pres = ctx
         .quantity("pressure")?
         .map(|q| q.to(unit(QT::Pressure, "hPa")));
+    let instrument_formula = ctx
+        .choice("instrument_formula")?
+        .unwrap_or("custom-iag-1999");
     let (ppm, n_l) = match (given, temp, pres) {
-        (Some(p), None, None) => (p, None),
+        (Some(p), None, None) => {
+            if ctx.is_set("instrument_formula") {
+                return Err(ToolError::invalid(
+                    "/instrument_formula",
+                    "Do not select an instrument formula when you enter the ppm directly.",
+                ));
+            }
+            if ctx.is_set("wavelength")
+                || ctx.is_set("reference_refractivity")
+                || ctx.is_set("humidity")
+            {
+                return Err(ToolError::invalid(
+                    "/ppm",
+                    "When you enter ppm directly, do not also give atmospheric-formula inputs.",
+                ));
+            }
+            (p, None)
+        }
         (None, Some(t), Some(p)) => {
             if !(-40.0..=60.0).contains(&t) || !(500.0..=1100.0).contains(&p) {
                 return Err(ToolError::invalid(
@@ -306,24 +385,46 @@ fn run_edm(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     "Give survey conditions: -40 to 60 °C and 500 to 1,100 hPa.",
                 ));
             }
-            let lambda = ctx.number("wavelength")?.ok_or_else(|| {
-                ToolError::invalid(
-                    "/wavelength",
-                    "Give the instrument's carrier wavelength from its manual, like 0.658 µm.",
-                )
-            })?;
-            let n_ref = ctx.number("reference_refractivity")?.ok_or_else(|| {
-                ToolError::invalid("/reference_refractivity", "Give the instrument's reference refractivity N_ref from its manual, like 286.34.")
-            })?;
-            let e = match ctx.number("humidity")? {
-                Some(h) => h / 100.0 * saturation(t),
-                None => {
-                    ctx.warnings.push(Warning::new("DRY_AIR_ASSUMED", "No humidity was given, so the air is taken as dry; humidity changes the result by under 1 ppm in most conditions."));
-                    0.0
+            match instrument_formula {
+                "custom-iag-1999" => {
+                    let lambda = ctx.number("wavelength")?.ok_or_else(|| {
+                        ToolError::invalid(
+                            "/wavelength",
+                            "Give the instrument's carrier wavelength from its manual, like 0.658 µm.",
+                        )
+                    })?;
+                    let n_ref = ctx.number("reference_refractivity")?.ok_or_else(|| {
+                        ToolError::invalid("/reference_refractivity", "Give the instrument's reference refractivity N_ref from its manual, like 286.34.")
+                    })?;
+                    let e = match ctx.number("humidity")? {
+                        Some(h) => h / 100.0 * saturation(t),
+                        None => {
+                            ctx.warnings.push(Warning::new("DRY_AIR_ASSUMED", "No humidity was given, so the air is taken as dry; humidity changes the result by under 1 ppm in most conditions."));
+                            0.0
+                        }
+                    };
+                    let nl = ambient_refractivity(group_refractivity(lambda), t, p, e);
+                    (n_ref - nl, Some(nl))
                 }
-            };
-            let nl = ambient_refractivity(group_refractivity(lambda), t, p, e);
-            (n_ref - nl, Some(nl))
+                preset => {
+                    if ctx.is_set("wavelength")
+                        || ctx.is_set("reference_refractivity")
+                        || ctx.is_set("humidity")
+                    {
+                        return Err(ToolError::invalid(
+                            "/instrument_formula",
+                            "The Trimble Access preset supplies its J and N constants and does not use wavelength, reference refractivity, or humidity.",
+                        ));
+                    }
+                    let (j, n) = match preset {
+                        "trimble-access-5600" => (274.41, 79.39),
+                        "trimble-access-3300-3600" => (278.77, 80.653),
+                        "trimble-access-tts300-500" => (270.0, 79.167),
+                        _ => unreachable!("choice validation limits instrument_formula"),
+                    };
+                    (j - n * p / (273.16 + t), None)
+                }
+            }
         }
         (None, None, None) => {
             return Err(ToolError::invalid(

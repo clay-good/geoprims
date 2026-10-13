@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "a15db86b84647e8f",
+    "hash": "2590e22183e40b6f",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "6c67666d768afce1",
+    "hash": "d4c5b820f8589314",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1348,7 +1348,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "77f43946a6d9bd64",
+    "hash": "52e804d8e04e2d11",
     "lastmod": "2026-10-13"
   },
   "/raster/": {
@@ -1440,11 +1440,11 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "cf2cd6fe36353ea1",
+    "hash": "c137caf53645a1b0",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
-    "hash": "89d490a2aa52be25",
+    "hash": "bd829a58b4267f0b",
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/": {
@@ -1616,8 +1616,8 @@
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/": {
-    "hash": "41ac0bdc3e2f4870",
-    "lastmod": "2026-09-25"
+    "hash": "97bbdf948b8493b0",
+    "lastmod": "2026-10-13"
   },
   "/survey/reduction/combined-factor/": {
     "hash": "801b9bf5a86d9b84",
@@ -1628,8 +1628,8 @@
     "lastmod": "2026-10-13"
   },
   "/survey/reduction/edm-correction/": {
-    "hash": "395317f81a0e07f1",
-    "lastmod": "2026-10-09"
+    "hash": "11f70b8ce5462089",
+    "lastmod": "2026-10-13"
   },
   "/survey/reduction/inaccessible-height/": {
     "hash": "b395ababeb40b3bd",
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "b00338c008fa739b",
+    "hash": "55158efdbc543152",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f0e86cab9c7d6ae7",
+    "hash": "93dc040cd04d4869",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

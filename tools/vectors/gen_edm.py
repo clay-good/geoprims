@@ -10,13 +10,14 @@ from pathlib import Path
 
 SRC = "IAG 1999 closed formula worked in Python (tools/vectors/gen_edm.py)"
 SPEC = "add-survey-suite ppm scenario"
+TRIMBLE = "Trimble Access Calculations Reference Guide, revision D, pages 9-10"
 
 
-def vec(i, inp, exp, src=SRC, tol=1e-9):
+def vec(i, inp, exp, src=SRC, tol=1e-9, version="2026"):
     e = dict(exp)
     e.setdefault("ok", True)
     t = {k: {"rel": 0, "abs": tol} for k, v in e.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
-    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": "2026", "tolerance": t}
+    return {"id": f"v{i:03d}", "input": inp, "expect": e, "source": src, "sourceVersion": version, "tolerance": t}
 
 
 def es(t):
@@ -45,6 +46,40 @@ def cases():
     for inp in [{"distance": "1000 m"}, {"distance": "1000 m", "ppm": 5, "temperature": "20 degC", "pressure": "1000 hPa"},
                 {"distance": "1000 m", "temperature": "20 degC", "pressure": "1000 hPa", "wavelength": 0.658}]:
         out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT"}))
+
+    # Trimble Access publishes this formula and these J/N pairs for the three
+    # named Trimble instrument families in its current calculations guide.
+    presets = {
+        "trimble-access-5600": (274.41, 79.39),
+        "trimble-access-3300-3600": (278.77, 80.653),
+        "trimble-access-tts300-500": (270.0, 79.167),
+    }
+    conditions = [(1000, 20, 1013.25, 0), (750, -20, 900, -30), (1500, 35, 850, 17.5), (250, 0, 1100, 0)]
+    for preset, (j, n) in presets.items():
+        for d, t, p, prism in conditions:
+            ppm = j - n * p / (273.16 + t)
+            atm = ppm * 1e-6 * d
+            inp = {"distance": f"{d} m", "temperature": f"{t} degC", "pressure": f"{p} hPa",
+                   "instrument_formula": preset}
+            if prism:
+                inp["prism_constant"] = f"{prism} mm"
+            out.append(vec(len(out) + 1, inp,
+                           {"result.ppm": ppm, "result.atmospheric_correction.value": atm,
+                            "result.prism_correction.value": prism / 1000,
+                            "result.corrected.value": d + atm + prism / 1000},
+                           TRIMBLE, version="Revision D (April 2024)"))
+
+    invalid = [
+        {"distance": "1000 m", "ppm": 5, "instrument_formula": "trimble-access-5600"},
+        {"distance": "1000 m", "temperature": "20 degC", "pressure": "1000 hPa",
+         "humidity": 50, "instrument_formula": "trimble-access-5600"},
+        {"distance": "1000 m", "temperature": "20 degC", "pressure": "1000 hPa",
+         "wavelength": 0.658, "instrument_formula": "trimble-access-5600"},
+        {"distance": "1000 m", "temperature": "20 degC", "instrument_formula": "trimble-access-5600"},
+    ]
+    for inp in invalid:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT"},
+                       TRIMBLE, version="Revision D (April 2024)"))
     return out
 
 

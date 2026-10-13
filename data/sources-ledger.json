@@ -3189,6 +3189,26 @@
       "editionCheck": true
     },
     {
+      "id": "trimble-access-calculations",
+      "name": "Trimble Access Calculations Reference Guide",
+      "issuer": "Trimble Inc.",
+      "currentEdition": "Revision D, April 2024",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read the current guide at the issuer on 2026-10-13. Pages 9–10 publish the pressure-and-temperature PPM equation and its J and N constants, including the Trimble 5600, 3300/3600, and TTS300/500 families used as named presets.",
+      "freeAccessUrl": "https://help.fieldsystems.trimble.com/trimble-access/2025.10/en/pdfs/access-calculations-reference.pdf",
+      "matchTerms": [
+        "Trimble Access Calculations Reference Guide"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "tzdb",
       "name": "IANA Time Zone Database",
       "issuer": "IANA",

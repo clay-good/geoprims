@@ -5,14 +5,14 @@
 
 use crate::obj;
 use crate::refs::*;
-use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
+use gp_base::ErrorCode;
 use serde_json::Value;
 
 const PHAK_PERF: Reference = Reference {
-    locator: "Aircraft Performance chapter (reading performance charts and tables, interpolating between listed values)",
+    locator: "Chapter 11, Figure 11-21 (2,500 ft at 20 °C: average 1,115 ft and 1,230 ft to get 1,173 ft)",
     ..PHAK
 };
 
@@ -87,6 +87,8 @@ const STEP: &[Field] = &[
 
 pub static TABLE: ToolDef = ToolDef {
     id: "aviation.loading.table-interpolate",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Performance table lookup",
     summary: "Reads a POH performance table of one, two, or three variables, like takeoff distance by altitude, temperature, and weight, between its listed values, refuses to guess beyond them, and applies corrections as labeled steps.",
     aliases: &[
@@ -184,7 +186,7 @@ pub static TABLE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Linear interpolation along each variable between the listed values that bracket the query: 2 cells for one variable, 4 (bilinear) for two, 8 (trilinear) for three, each weighted by the product of its distances. No extrapolation. Corrections apply in order: percent (× (1 + p/100)), add, or multiply (PHAK, aircraft performance)",
     accuracy: "Exact interpolation of the table as entered; real performance between table rows is not linear, and the table is only as good as the book it came from",
     when_to_use: "Use this when a POH or AFM table lists performance at set values and your conditions fall between them, such as takeoff distance at 3,000 ft and 25 °C. Enter the table cells, the point to look up, and any corrections the book gives, like a percent off for headwind. It shows the cells it used, their weights, and each correction as a step.",
@@ -192,9 +194,9 @@ pub static TABLE: ToolDef = ToolDef {
     references: &[PHAK_PERF],
     examples: &[Example {
         id: "primary",
-        title: "Takeoff distance at 3,000 ft and 25 °C, less 10% for a headwind",
-        input: r#"{"table":[{"a":0,"b":0,"value":1000},{"a":0,"b":10,"value":1070},{"a":0,"b":20,"value":1145},{"a":0,"b":30,"value":1225},{"a":2000,"b":0,"value":1150},{"a":2000,"b":10,"value":1235},{"a":2000,"b":20,"value":1325},{"a":2000,"b":30,"value":1420},{"a":4000,"b":0,"value":1335},{"a":4000,"b":10,"value":1435},{"a":4000,"b":20,"value":1540},{"a":4000,"b":30,"value":1655}],"at_a":3000,"at_b":25,"corrections":[{"label":"10 kt headwind","kind":"percent","amount":-10}],"names":"pressure altitude, temperature"}"#,
-        source: "add-aviation-suite bilinear scenario: the four cells around 3,000 ft and 25 °C",
+        title: "Takeoff ground roll at 2,500 ft and 20 °C",
+        input: r#"{"table":[{"a":2000,"value":1115},{"a":3000,"value":1230}],"at_a":2500,"names":"pressure altitude"}"#,
+        source: "FAA-H-8083-25C chapter 11, Figure 11-21: average 1,115 ft and 1,230 ft to get 1,173 ft",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -209,6 +211,10 @@ pub static TABLE: ToolDef = ToolDef {
         Related {
             id: "aviation.loading.weight-balance",
             reason: "alternative",
+        },
+        Related {
+            id: "aviation.performance.climb-plan",
+            reason: "next",
         },
     ],
     sentence: "The table gives {table_value}; with the corrections, {value}.",

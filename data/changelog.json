@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.loading.table-interpolate"
+      ],
+      "vectors": [],
+      "summary": "Performance table lookup (version 1.1.0) is now stable. Its primary example matches the FAA Pilot's Handbook's published interpolation at 2,500 ft pressure altitude, and it now has 20 vectors plus affine-grid, weight-sum, translation, refusal, and correction-order invariants. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.ifr.hold-wind-timing"
       ],
       "vectors": [],

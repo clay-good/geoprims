@@ -26,22 +26,22 @@ Straight-line reading between rows. Real performance between table rows is not l
 
 ## Worked example
 
-- sourcePublisher: geoprims (spec scenario, computed)
-- sourceTitle: add-aviation-suite, aviation/fuel-and-loading spec, "POH/AFM table interpolation"
-- sourceEdition: 2026
-- sourceLocator: Scenario "Bilinear interpolation" (table at 0/2,000/4,000 ft and 0/10/20/30 °C, queried at 3,000 ft and 25 °C); the tool's example adds a −10% headwind correction
-- independent: no
-- inputs: the tool's 12-cell table, pressure altitude 3,000, temperature 25, correction 10 kt headwind −10%
-- outputs: cells (2000, 20) 1,325, (2000, 30) 1,420, (4000, 20) 1,540, (4000, 30) 1,655, each weight 0.25; table value 1,485 (computed); with −10%, 1,336.5 (computed)
-- tolerance: 1e-9
-- verifiedBy: golden vector v001 (table value 1,485; the −10% step is checked inside v002's chain of three corrections)
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
+- sourceEdition: FAA-H-8083-25C
+- sourceLocator: Chapter 11, Figure 11-21, "Interpolating charts"
+- independent: yes
+- inputs: takeoff ground roll 1,115 ft at 2,000 ft pressure altitude and 1,230 ft at 3,000 ft, both at 20 °C; look up 2,500 ft
+- outputs: (1,115 + 1,230) / 2 = 1,172.5 ft, published as 1,173 ft
+- tolerance: 0.5 ft, the source's whole-foot rounding
+- verifiedBy: golden vector v014
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_table.py`: a separate Python multilinear interpolation over the bracketing cells at seven two-variable queries, a one-variable and a three-variable table, a chain of percent, multiply, and add corrections, and four refusals (within 1e-9)
+- `tools/vectors/gen_table.py`: a separate Python multilinear interpolation over the bracketing cells at eleven two-variable queries, three one-variable queries, two three-variable queries, a chain of percent, multiply, and add corrections, and four refusals (within 1e-9), plus the FAA worked example at its printed precision
 - `core/vectors/aviation.loading.table-interpolate.jsonl`: those vectors, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `a_table_is_never_extrapolated_and_the_refusal_names_the_axis`: a query beyond the table returns OUT_OF_DOMAIN naming the pressure-altitude axis and its 0 to 4000 range, and a query inside uses four cells whose weights sum to 1 within 1e-12
+- `core/crates/gp-aviation/tests/aviation.rs` `table_interpolation_preserves_affine_grids_and_correction_order`: a query beyond the table returns OUT_OF_DOMAIN naming the pressure-altitude axis and its 0 to 4000 range; a bilinear affine grid is reproduced exactly, its four weights sum to 1, changing every cell by the same amount changes the answer by that amount, and percent, multiply, and add corrections run in the stated order

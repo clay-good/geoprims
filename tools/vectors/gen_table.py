@@ -68,6 +68,18 @@ def main():
     out.append(vec(len(out) + 1, {"table": rows(grid), "at_a": 1000}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/at_b"}))
     # No POH table: refused with the reason, never a generic estimate.
     out.append(vec(len(out) + 1, {"at_a": 3000, "at_b": 25}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/table"}, "add-aviation-suite no-POH scenario"))
+    # FAA-H-8083-25C chapter 11, Figure 11-21: average the 2,000 ft and
+    # 3,000 ft rows at 20 °C for a 2,500 ft lookup. The handbook rounds
+    # 1,172.5 ft to 1,173 ft.
+    faa = {(2000,): 1115, (3000,): 1230}
+    out.append(vec(len(out) + 1, {"table": rows(faa), "at_a": 2500, "names": "pressure altitude"}, {"result.table_value": 1172.5, "result.value": 1172.5}, "FAA-H-8083-25C chapter 11, Figure 11-21 (published as 1,173 ft)", 0.5))
+    # Additional positions and axis shapes keep the promoted set above the
+    # minimum without duplicating the worked example.
+    for q in [(500, 2.5), (1500, 27.5), (2750, 12.5), (3999, 29.9)]:
+        out.append(vec(len(out) + 1, {"table": rows(grid), "at_a": q[0], "at_b": q[1]}, {"result.table_value": interp([alt, tmp], grid, q)}))
+    out.append(vec(len(out) + 1, {"table": rows(one), "at_a": 1950}, {"result.table_value": interp([[1800, 2100, 2400]], one, (1950,))}))
+    q = (1000, 24, 2100)
+    out.append(vec(len(out) + 1, {"table": rows(three), "at_a": q[0], "at_b": q[1], "at_c": q[2]}, {"result.table_value": interp([[0, 4000], [0, 30], [2000, 2400]], three, q)}))
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     (dest / "aviation.loading.table-interpolate.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False, separators=(",", ":")) + "\n" for v in out))
 

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "be9a4fa008ce8240",
+    "hash": "0064b81f686241c0",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -156,7 +156,7 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/loading/table-interpolate/": {
-    "hash": "f05e2d7fd883ab6c",
+    "hash": "1f635b2d32a6de61",
     "lastmod": "2026-10-13"
   },
   "/aviation/loading/weight-balance/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "dbc3d8171feff673",
+    "hash": "4822c7ab8b8f4d10",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "a2ea4849882d7192",
+    "hash": "caa660a22c6746eb",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "f6876f89b7363009",
+    "hash": "2cb87705b8fed437",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "7efa93eff47dc862",
+    "hash": "dde4dc1be6f67bdb",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "db1ec2caabe015c6",
+    "hash": "d7ed0f2665dc44b7",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2028,8 +2028,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/preflight-performance/": {
-    "hash": "7217ff4e03070d44",
-    "lastmod": "2026-10-09"
+    "hash": "88ebe341cb85b8f2",
+    "lastmod": "2026-10-13"
   },
   "/workflows/road-curve/": {
     "hash": "006318e7c2e9dbbc",

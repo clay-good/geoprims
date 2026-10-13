@@ -857,8 +857,10 @@ fn fb_pasted_block_uses_its_header() {
 }
 
 #[test]
-fn a_table_is_never_extrapolated_and_the_refusal_names_the_axis() {
-    let table = r#"[{"a":0,"b":0,"value":1000},{"a":0,"b":30,"value":1225},{"a":4000,"b":0,"value":1335},{"a":4000,"b":30,"value":1655}]"#;
+fn table_interpolation_preserves_affine_grids_and_correction_order() {
+    // value = 1000 + 0.5a + 3b, so multilinear interpolation must recover
+    // the function exactly at every point inside the grid.
+    let table = r#"[{"a":0,"b":0,"value":1000},{"a":0,"b":30,"value":1090},{"a":4000,"b":0,"value":3000},{"a":4000,"b":30,"value":3090}]"#;
     let r = call(
         "aviation.loading.table-interpolate",
         &format!(
@@ -880,6 +882,28 @@ fn a_table_is_never_extrapolated_and_the_refusal_names_the_axis() {
     assert_eq!(cells.len(), 4);
     let w: f64 = cells.iter().map(|c| c["weight"].as_f64().unwrap()).sum();
     assert!((w - 1.0).abs() < 1e-12);
+    assert!((num(&ok, "result.table_value") - 1530.0).abs() < 1e-12);
+
+    // Translation commutes with interpolation: moving every table value by
+    // 7 moves the answer by 7 and leaves the weights unchanged.
+    let shifted = table
+        .replace("1000", "1007")
+        .replace("1090", "1097")
+        .replace("3000", "3007")
+        .replace("3090", "3097");
+    let translated = call(
+        "aviation.loading.table-interpolate",
+        &format!(r#"{{"table":{shifted},"at_a":1000,"at_b":10}}"#),
+    );
+    assert!((num(&translated, "result.table_value") - 1537.0).abs() < 1e-12);
+
+    let corrected = call(
+        "aviation.loading.table-interpolate",
+        &format!(
+            r#"{{"table":{table},"at_a":1000,"at_b":10,"corrections":[{{"label":"margin","kind":"percent","amount":10}},{{"label":"factor","kind":"multiply","amount":2}},{{"label":"allowance","kind":"add","amount":-5}}]}}"#
+        ),
+    );
+    assert!((num(&corrected, "result.value") - 3361.0).abs() < 1e-12);
 }
 
 #[test]

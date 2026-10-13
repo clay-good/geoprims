@@ -103,6 +103,17 @@ for lat in (0.0, 45.0, 60.0):
     CASES.append(case(coeffs, dx, dy, {"cell_degrees": deg, "lat": f"{lat} deg"},
                       f"one arc second at {lat:g}° latitude, cells {dx:.3f} m by {dy:.3f} m"))
 
+# xDEM 0.2.3 publishes this exact 3 x 3 example for its Zevenbergen-Thorne
+# directional profile curvature. Its matching tangential-curvature example
+# uses the same window and gives zero. The equivalent polynomial is
+# z = 0.5 x² + 1.5 x + 2, so total and profile are -100 and plan is zero.
+xdem = case((0, 0, 0, 0.5, 0, 0, 1.5, 0, 2), 1, 1, {"cell_size": "1 m"},
+            "xDEM 0.2.3 directional-curvature example")
+xdem["source"] = ("xDEM 0.2.3 xdem/terrain/terrain.py profile_curvature and "
+                  "tangential_curvature examples")
+xdem["sourceVersion"] = "xDEM 0.2.3 (2026-03-03)"
+CASES.append(xdem)
+
 with OUT.open("w") as f:
     for i, row in enumerate(CASES, 1):
         f.write(json.dumps({"id": f"v{i:03d}", **row}) + "\n")

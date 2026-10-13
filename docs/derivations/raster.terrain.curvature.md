@@ -30,22 +30,22 @@ None in the arithmetic: the result is exact for the partial quartic, and so exac
 
 ## Worked example
 
-- sourcePublisher: geoprims (computed, not published)
-- sourceTitle: a partial quartic sampled on a 10 m window, its curvatures worked from the polynomial's own derivatives (tools/vectors/gen_curvature.py)
-- sourceEdition: 2026
-- sourceLocator: core/vectors/raster.terrain.curvature.jsonl, v001
-- independent: no
-- inputs: z = 103 + 0.02x + 0.25y + 0.003x² − 0.002y² + 0.0005xy sampled at 10 m: rows 105.35, 105.3, 105.85 / 103.1, 103.0, 103.5 / 100.45, 100.3, 100.75
-- outputs: total −0.2, profile 0.3857, plan −0.5857: the slope steepens downhill and the contours curl into a hollow
-- tolerance: 1e-9
-- verifiedBy: golden vector v001, run by the core on every build
-- verifiedOn: 2026-10-09
+- sourcePublisher: xDEM contributors, GlacioHack
+- sourceTitle: xDEM terrain curvature
+- sourceEdition: xDEM 0.2.3
+- sourceLocator: xdem/terrain/terrain.py, profile_curvature and tangential_curvature examples using the ZevenbergenThorne surface fit
+- independent: yes
+- inputs: rows 1, 2, 4 / 1, 2, 4 / 1, 2, 4 at 1 m resolution
+- outputs: total −100, profile −100, plan 0 per 100 m
+- tolerance: 1e-6, tighter than the float32 precision of the published result
+- verifiedBy: golden vector v024, run by the core on every build
+- verifiedOn: 2026-10-13
 
-The expected values come from calculus on the surface the window was sampled from, never from the window, so a wrong index or sign in the core fails them. It is not a published example: Zevenbergen and Thorne print the method without a numeric window, and no published worked case has been found yet.
+xDEM publishes profile curvature of −100 for this window with the Zevenbergen-Thorne surface fit and directional method, and publishes zero for the same window in its tangential-curvature example. Its deprecated total-curvature operation documents the same −2(D + E) × 100 convention, so the total is also −100. In geoprims, the Z&T tangential directional derivative is named plan curvature, matching the terminology in the original method; xDEM distinguishes it from a separately normalized planform curvature.
 
 ## Differential tests
 
-- `tools/vectors/gen_curvature.py`: 23 vectors from the analytic derivatives of sampled surfaces, including quartic terms that change the grid but not the center, random surfaces, and one-arc-second cells at three latitudes
+- `tools/vectors/gen_curvature.py`: 24 vectors from the analytic derivatives of sampled surfaces, including quartic terms that change the grid but not the center, random surfaces, and one-arc-second cells at three latitudes; the final vector carries the independent xDEM example
 
 ## Invariants
 

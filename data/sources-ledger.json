@@ -3509,6 +3509,26 @@
       "editionCheck": false
     },
     {
+      "id": "xdem-curvature",
+      "name": "xDEM terrain curvature",
+      "issuer": "xDEM contributors, GlacioHack",
+      "currentEdition": "xDEM 0.2.3",
+      "currentReleaseDate": "2026-03-03",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read in the tagged xDEM 0.2.3 source on 2026-10-13. The profile_curvature example uses the Zevenbergen-Thorne surface fit and directional method on rows 1,2,4 / 1,2,4 / 1,2,4 at 1 m resolution and publishes -100. The tangential_curvature example publishes zero for the same window. The implementation confirms the same directional formulas and x100 scale as geoprims.",
+      "freeAccessUrl": "https://github.com/GlacioHack/xdem/blob/v0.2.3/xdem/terrain/terrain.py",
+      "matchTerms": [
+        "xDEM terrain curvature"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "gps-sps-ps",
       "name": "Global Positioning System Standard Positioning Service Performance Standard",
       "issuer": "US Department of Defense",

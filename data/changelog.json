@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "raster.terrain.curvature"
+      ],
+      "vectors": [],
+      "summary": "Terrain curvature (version 1.1.0) is now stable. Its primary example reproduces xDEM 0.2.3's published Zevenbergen-Thorne directional profile curvature of -100 per 100 m and zero tangential curvature, and it now has 24 vectors plus rotation, decomposition, tilt, scaling, and flat-cell invariants. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "raster.terrain.line-of-sight"
       ],
       "vectors": [],

@@ -664,6 +664,14 @@ pub const ZEVENBERGEN_THORNE: Reference = Reference {
     locator: "The partial quartic fitted through a 3 x 3 window, and profile and plan curvature from its coefficients",
     url: "https://doi.org/10.1002/esp.3290120107",
 };
+const XDEM_CURVATURE: Reference = Reference {
+    title: "xDEM terrain curvature",
+    issuer: "xDEM contributors, GlacioHack",
+    year: 2026,
+    edition: "xDEM 0.2.3",
+    locator: "profile_curvature example using the Zevenbergen-Thorne surface fit and directional method",
+    url: "https://github.com/GlacioHack/xdem/blob/v0.2.3/xdem/terrain/terrain.py",
+};
 
 /// Curvatures are reported per 100 m, where a value of 1 means the slope
 /// changes by 1% over a meter (a tenth of a degree, roughly, every 10 m).
@@ -671,6 +679,8 @@ const PER_100M: f64 = 100.0;
 
 pub static CURVATURE: ToolDef = ToolDef {
     id: "raster.terrain.curvature",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Terrain curvature",
     summary: "Total, profile, and plan curvature for the center of a 3 x 3 elevation window by Zevenbergen and Thorne’s method, with what each means for water running over the cell.",
     aliases: &[
@@ -745,17 +755,17 @@ pub static CURVATURE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["FLAT_CELL", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["FLAT_CELL", "UNIT_ASSUMED"],
     model: "Zevenbergen and Thorne (1987): D = ((z4 + z6)/2 − z5)/dx², E = ((z2 + z8)/2 − z5)/dy², F = (z3 + z7 − z1 − z9)/(4 dx dy), G = (z6 − z4)/(2 dx), H = (z2 − z8)/(2 dy); total = −2(D + E), profile = −2(DG² + EH² + FGH)/(G² + H²), plan = −2(DH² + EG² − FGH)/(G² + H²), each times 100, positive for convex",
     accuracy: "Exact evaluation of the formulas; exact for any surface that is quadratic across the window.",
     when_to_use: "Use this to see how the ground bends at a cell, which slope alone does not say: whether a slope steepens or flattens downhill, which speeds up or slows down running water, and whether the contours bow out over a spur, where water spreads, or curl into a hollow, where it gathers. These are the measures behind erosion, landslide, and soil-moisture mapping, and checking one cell by hand is how a GIS layer of them is tested.",
     limitations: "Programs disagree on the sign and the scale of these measures: some multiply by 100 as this does, some do not, and some flip the sign of profile curvature so that negative means convex. Here positive is convex in all three, so check the convention before comparing numbers. The values depend strongly on the cell size and on noise in the elevation model, since they are second differences: a small error in one elevation moves them a lot. On flat ground there is no downhill direction, so profile and plan curvature are not given.",
-    references: &[ZEVENBERGEN_THORNE],
+    references: &[ZEVENBERGEN_THORNE, XDEM_CURVATURE],
     examples: &[Example {
         id: "primary",
-        title: "A slope steepening into a hollow, 10 m cells",
-        input: r#"{"elevations":[{"row":"105.35, 105.3, 105.85"},{"row":"103.1, 103.0, 103.5"},{"row":"100.45, 100.3, 100.75"}],"cell_size":"10 m"}"#,
-        source: "Analytic derivatives of the surface the nine elevations were sampled from (tools/vectors/gen_curvature.py, v001)",
+        title: "xDEM directional-curvature example",
+        input: r#"{"elevations":[{"row":"1, 2, 4"},{"row":"1, 2, 4"},{"row":"1, 2, 4"}],"cell_size":"1 m"}"#,
+        source: "xDEM 0.2.3 profile_curvature example: profile curvature -100 per 100 m; its matching tangential-curvature example gives 0",
     }],
     primary_example: "primary",
     visualization: &[Layer {

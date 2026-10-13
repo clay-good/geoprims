@@ -582,6 +582,20 @@ test('the fly-by scene draws the core playhead and only the flown arc', async ()
   assert.deepEqual(flyBy.timeline, { input: 'at_time', end: 'turn_time', key: 'turn_time' });
 });
 
+test('the holding scene draws the core phase, heading, and flown path', async () => {
+  const args = { inbound_course: '360 deg', turns: 'right', tas: '120 kt', wind_direction: '360 deg', wind_speed: '0 kt', at_time: '90 s' };
+  const r = JSON.parse(await host.invoke('aviation.ifr.hold-wind-timing', JSON.stringify(args)));
+  const d = diagram('aviation.ifr.hold-wind-timing', args, r);
+  assert.equal(r.result.scene_phase, 'outbound leg');
+  assert.match(d.markup, /<polygon class="dg-dot-now"/, 'the aircraft is not at the playhead');
+  assert.ok(d.markup.includes(`90 s · outbound leg · heading ${r.display.heading_at}`), d.markup);
+  assert.equal((d.markup.match(/<path class="dg-accent"/g) ?? []).length, 1, 'the outbound turn is flown');
+  assert.equal(lines(d.markup).filter((l) => l.cls === 'dg-accent').length, 1, 'half the outbound leg is flown');
+  assert.match(d.desc, /At 90 s, the aircraft is on the outbound leg at heading 180°\./);
+  const hold = catalog.tools.find((t) => t.id === 'aviation.ifr.hold-wind-timing');
+  assert.deepEqual(hold.timeline, { input: 'at_time', end: 'scene_end', key: 'scene_end' });
+});
+
 test('the height diagram stacks the references in the order they stand', async () => {
   // add-geodesy-suite 6.4 fixture, including the drone scenario.
   const drone = { lat: -33.8688, lon: 151.2093, height: '120 m', terrain: '250 m' };

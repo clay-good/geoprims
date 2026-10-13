@@ -632,6 +632,13 @@ pub static HOLD_WIND: ToolDef = ToolDef {
             QT::Time,
             "min",
         ),
+        qty(
+            "at_time",
+            "Scene time",
+            "This long after crossing the fix, like 90 s; drives the animation",
+            QT::Time,
+            "s",
+        ),
     ],
     outputs: &[
         out(
@@ -693,8 +700,46 @@ pub static HOLD_WIND: ToolDef = ToolDef {
             "s",
             0,
         ),
+        out(
+            "scene_end",
+            "Pattern time",
+            "One circuit, starting and ending at the fix",
+            QT::Time,
+            "s",
+            1,
+        ),
+        out(
+            "scene_time",
+            "Scene time",
+            "At the playhead",
+            QT::Time,
+            "s",
+            1,
+        ),
+        Field::new(
+            "scene_phase",
+            "Pattern phase",
+            "Outbound turn, outbound leg, inbound turn, or inbound leg",
+            Kind::Text { max_len: 20 },
+        ),
+        Field::new(
+            "scene_progress",
+            "Phase completed",
+            "Zero at the start of this phase and one at its end",
+            Kind::Number { min: 0.0, max: 1.0 },
+        )
+        .precision(Precision::Decimals(3)),
+        out(
+            "heading_at",
+            "Heading at scene time",
+            "The aircraft heading at the playhead",
+            QT::Angle,
+            "deg",
+            1,
+        )
+        .angle_range("[0,360)"),
     ],
-    errors: &[ErrorCode::NoSolution],
+    errors: &[ErrorCode::NoSolution, ErrorCode::OutOfDomain],
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "Straight-leg wind triangle on each leg; outbound time = inbound GS × inbound time / outbound GS; the triple-the-drift heading (FAA-H-8083-15B) allows for the turns and is a rule of thumb",
     accuracy: "Exact for straight legs in a steady wind. Wind drift in the turns is not modeled; adjust on the next circuit.",
@@ -729,7 +774,18 @@ pub static HOLD_WIND: ToolDef = ToolDef {
             unit: "1",
             source: "faa-ifh",
         },
+        Assumption {
+            name: "Turn rate in the scene",
+            value: "3",
+            unit: "deg/s",
+            source: "faa-ifh",
+        },
     ],
+    timeline: Some(gp_base::tool::Timeline {
+        input: "at_time",
+        end: "scene_end",
+        key: "scene_end",
+    }),
     sentence: "Fly {inbound_heading} inbound and {outbound_heading} outbound for {outbound_time}.",
     limits: &[("batchRows", 10_000)],
     run: run_hold_wind,
@@ -781,15 +837,74 @@ fn run_hold_wind(ctx: &mut Ctx) -> Result<Json, ToolError> {
         value: v,
         unit: unit(QT::Time, "s"),
     };
+    let inbound_heading = wrap_azimuth(ic + w_in);
+    let outbound_heading = wrap_azimuth(oc - 3.0 * w_in);
+    let outbound_time = gs_in * t_in / gs_out;
+    let left = ctx.choice("turns")? == Some("left");
+    let turn = |from: f64, to: f64| {
+        if left {
+            wrap_azimuth(from - to)
+        } else {
+            wrap_azimuth(to - from)
+        }
+    };
+    let first_turn = turn(inbound_heading, outbound_heading) / 3.0;
+    let second_turn = turn(outbound_heading, inbound_heading) / 3.0;
+    let scene_end = first_turn + outbound_time + second_turn + t_in;
+    let at = ctx
+        .quantity("at_time")?
+        .map(|v| v.base())
+        .unwrap_or(scene_end);
+    if at < 0.0 || at > scene_end {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!("The scene time must be between 0 and {scene_end:.1} s."),
+        )
+        .at("/at_time"));
+    }
+    let (phase, progress, heading) = if at < first_turn {
+        let p = if first_turn == 0.0 {
+            1.0
+        } else {
+            at / first_turn
+        };
+        let signed = if left { -3.0 * at } else { 3.0 * at };
+        ("outbound turn", p, wrap_azimuth(inbound_heading + signed))
+    } else if at < first_turn + outbound_time {
+        (
+            "outbound leg",
+            (at - first_turn) / outbound_time,
+            outbound_heading,
+        )
+    } else if at < first_turn + outbound_time + second_turn {
+        let elapsed = at - first_turn - outbound_time;
+        let p = if second_turn == 0.0 {
+            1.0
+        } else {
+            elapsed / second_turn
+        };
+        let signed = if left { -3.0 * elapsed } else { 3.0 * elapsed };
+        ("inbound turn", p, wrap_azimuth(outbound_heading + signed))
+    } else {
+        (
+            "inbound leg",
+            if t_in == 0.0 {
+                1.0
+            } else {
+                (at - first_turn - outbound_time - second_turn) / t_in
+            },
+            inbound_heading,
+        )
+    };
     Ok(obj(vec![
         (
             "inbound_heading",
-            ctx.out("inbound_heading", deg(wrap_azimuth(ic + w_in))),
+            ctx.out("inbound_heading", deg(inbound_heading)),
         ),
         ("inbound_wca", ctx.out("inbound_wca", deg(w_in))),
         (
             "outbound_heading",
-            ctx.out("outbound_heading", deg(wrap_azimuth(oc - 3.0 * w_in))),
+            ctx.out("outbound_heading", deg(outbound_heading)),
         ),
         (
             "outbound_track_heading",
@@ -803,9 +918,11 @@ fn run_hold_wind(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "outbound_groundspeed",
             ctx.out("outbound_groundspeed", knots(gs_out)),
         ),
-        (
-            "outbound_time",
-            ctx.out("outbound_time", s(gs_in * t_in / gs_out)),
-        ),
+        ("outbound_time", ctx.out("outbound_time", s(outbound_time))),
+        ("scene_end", ctx.out("scene_end", s(scene_end))),
+        ("scene_time", ctx.out("scene_time", s(at))),
+        ("scene_phase", Json::str(phase)),
+        ("scene_progress", Json::Num(progress.clamp(0.0, 1.0))),
+        ("heading_at", ctx.out("heading_at", deg(heading))),
     ]))
 }

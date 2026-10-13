@@ -408,6 +408,58 @@ fn holding_wind_timing() {
 }
 
 #[test]
+fn holding_scene_follows_the_core_timeline() {
+    let at = |time: f64, turns: &str| {
+        call(
+            "aviation.ifr.hold-wind-timing",
+            &format!(
+                r#"{{"inbound_course":"360 deg","turns":"{turns}","tas":"120 kt","wind_direction":"360 deg","wind_speed":"0 kt","at_time":"{time} s"}}"#
+            ),
+        )
+    };
+
+    let end = call(
+        "aviation.ifr.hold-wind-timing",
+        r#"{"inbound_course":"360 deg","tas":"120 kt","wind_direction":"360 deg","wind_speed":"0 kt"}"#,
+    );
+    assert_eq!(num(&end, "result.scene_end.value"), 240.0, "{end}");
+    assert_eq!(num(&end, "result.scene_time.value"), 240.0, "{end}");
+    assert_eq!(end["result"]["scene_phase"], "inbound leg", "{end}");
+    assert_eq!(num(&end, "result.scene_progress"), 1.0, "{end}");
+    assert_eq!(num(&end, "result.heading_at.value"), 0.0, "{end}");
+
+    for (time, phase, progress, heading) in [
+        (30.0, "outbound turn", 0.5, 90.0),
+        (90.0, "outbound leg", 0.5, 180.0),
+        (150.0, "inbound turn", 0.5, 270.0),
+        (210.0, "inbound leg", 0.5, 0.0),
+    ] {
+        let r = at(time, "right");
+        assert_eq!(r["result"]["scene_phase"], phase, "{r}");
+        assert!(
+            (num(&r, "result.scene_progress") - progress).abs() < 1e-12,
+            "{r}"
+        );
+        assert!(
+            (num(&r, "result.heading_at.value") - heading).abs() < 1e-12,
+            "{r}"
+        );
+    }
+
+    let left = at(30.0, "left");
+    assert_eq!(num(&left, "result.heading_at.value"), 270.0, "{left}");
+
+    let late = at(241.0, "right");
+    assert_eq!(late["error"]["code"], "OUT_OF_DOMAIN", "{late}");
+    assert_eq!(late["error"]["field"], "/at_time", "{late}");
+
+    let timeline = gp_aviation::ifr::HOLD_WIND.timeline.expect("timeline");
+    assert_eq!(timeline.input, "at_time");
+    assert_eq!(timeline.end, "scene_end");
+    assert_eq!(timeline.key, "scene_end");
+}
+
+#[test]
 fn vdp_rules() {
     let r = call(
         "aviation.performance.vdp",

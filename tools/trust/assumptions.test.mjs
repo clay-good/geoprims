@@ -361,6 +361,7 @@ test('the holding tools expose their published sectors, limits, and defaults', (
   assert.deepEqual(wind.map(({ value, unit, source }) => [value, unit, source]), [
     ['1', 'min', 'aim'],
     ['3', '1', 'faa-ifh'],
+    ['3', 'deg/s', 'faa-ifh'],
   ]);
 });
 

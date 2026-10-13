@@ -120,8 +120,8 @@
     "lastmod": "2026-10-12"
   },
   "/aviation/ifr/hold-wind-timing/": {
-    "hash": "158d5d1468cab7a5",
-    "lastmod": "2026-10-12"
+    "hash": "ea1b18bd35d066c4",
+    "lastmod": "2026-10-13"
   },
   "/aviation/ifr/radial-fix/": {
     "hash": "9fde3068c52407be",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4c5b5bd4fd2e6c42",
+    "hash": "5ca128f8fb4b35a8",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2004,8 +2004,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/ifr-approach-brief/": {
-    "hash": "f89a36b03ab5758e",
-    "lastmod": "2026-10-12"
+    "hash": "b91a129e44fbe835",
+    "lastmod": "2026-10-13"
   },
   "/workflows/index-to-area/": {
     "hash": "506c59e4a19fa00b",

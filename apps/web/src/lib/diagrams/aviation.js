@@ -477,20 +477,57 @@ function holdTiming(args, result) {
   const C = at(side, 2 * r);
   const D = at(course + 180, L, C);
   const sweep = left ? 0 : 1;
-  const arc = (from, to) => `<path class="dg-muted" d="M${from.map(f1).join(' ')}A${r} ${r} 0 0 ${sweep} ${to.map(f1).join(' ')}"/>`;
+  const arc = (from, to, cls) => `<path class="${cls}" d="M${from.map(f1).join(' ')}A${r} ${r} 0 0 ${sweep} ${to.map(f1).join(' ')}"/>`;
+  const phase = result.result.scene_phase;
+  const progress = val(result, 'scene_progress');
+  const heading = val(result, 'heading_at');
+  let flown = '';
+  let aircraft = '';
+  if (['outbound turn', 'outbound leg', 'inbound turn', 'inbound leg'].includes(phase) && Number.isFinite(progress) && Number.isFinite(heading)) {
+    const p = Math.max(0, Math.min(1, progress));
+    const firstCenter = at(side, r);
+    const secondCenter = at(side + 180, r, D);
+    const turnPoint = (center, startBearing) => {
+      const d = vec(startBearing + (left ? -180 : 180) * p, r);
+      return [center[0] + d[0], center[1] + d[1]];
+    };
+    let now;
+    if (phase === 'outbound turn') {
+      now = turnPoint(firstCenter, side + 180);
+      if (p > 1e-9) flown = arc([fx, fy], now, 'dg-accent');
+    } else if (phase === 'outbound leg') {
+      now = [C[0] + (D[0] - C[0]) * p, C[1] + (D[1] - C[1]) * p];
+      flown = arc([fx, fy], C, 'dg-accent') + (p > 1e-9 ? line('dg-accent', C, now) : '');
+    } else if (phase === 'inbound turn') {
+      now = turnPoint(secondCenter, side);
+      flown = arc([fx, fy], C, 'dg-accent') + line('dg-accent', C, D) + (p > 1e-9 ? arc(D, now, 'dg-accent') : '');
+    } else {
+      now = [A[0] + (fx - A[0]) * p, A[1] + (fy - A[1]) * p];
+      flown = arc([fx, fy], C, 'dg-accent') + line('dg-accent', C, D) + arc(D, A, 'dg-accent') + (p > 1e-9 ? line('dg-accent', A, now) : '');
+    }
+    const nose = vec(heading, 9);
+    const leftWing = vec(heading + 145, 7);
+    const rightWing = vec(heading - 145, 7);
+    const points = [nose, leftWing, rightWing].map(([x, y]) => `${f1(now[0] + x)},${f1(now[1] + y)}`).join(' ');
+    aircraft = `<polygon class="dg-dot-now" points="${points}"/>`;
+  }
   const body = [
     `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,
-    arc([fx, fy], C),
-    arrow(...C, ...D, 'dg-accent', 'Out', 0.5, left ? -1 : 1),
-    arc(D, A),
-    arrow(...A, fx, fy, 'dg-accent', 'In', 0.5, left ? 1 : -1),
+    arc([fx, fy], C, 'dg-muted'),
+    arrow(...C, ...D, 'dg-muted', 'Out', 0.5, left ? -1 : 1),
+    arc(D, A, 'dg-muted'),
+    arrow(...A, fx, fy, 'dg-muted', 'In', 0.5, left ? 1 : -1),
+    flown,
     // The wind blows from its direction: the arrow starts upwind of its tip.
     wd === null ? '' : arrow(...at(wd, 40, [56, 186]), 56, 186, 'dg-muted dg-dash', 'Wind', 0.3),
-    dot(fx, fy, 'dg-dot-now'),
+    dot(fx, fy),
+    aircraft,
+    aircraft ? text('dg-muted-text', 308, 22, `${disp(result, 'scene_time')} · ${phase} · heading ${disp(result, 'heading_at')}`, 'end') : '',
     text('dg-label', 160, 212, `In ${disp(result, 'inbound_heading')} · out ${disp(result, 'outbound_heading')} for ${disp(result, 'outbound_time')}`, 'middle'),
     text('dg-muted-text', 160, 228, `Groundspeed ${disp(result, 'inbound_groundspeed')} in, ${disp(result, 'outbound_groundspeed')} out`, 'middle'),
   ].join('');
-  const title = `Hold on the ${Math.round(course)}° inbound course: fly ${disp(result, 'inbound_heading')} inbound and ${disp(result, 'outbound_heading')} outbound for ${disp(result, 'outbound_time')}.`;
+  const title = `Hold on the ${Math.round(course)}° inbound course: fly ${disp(result, 'inbound_heading')} inbound and ${disp(result, 'outbound_heading')} outbound for ${disp(result, 'outbound_time')}.` +
+    (aircraft ? ` At ${disp(result, 'scene_time')}, the aircraft is on the ${phase} at heading ${disp(result, 'heading_at')}.` : '');
   return { markup: svg(body, title), desc: title };
 }
 

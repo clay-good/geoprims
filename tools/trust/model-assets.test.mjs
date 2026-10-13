@@ -20,6 +20,24 @@ const windowed = registry.assets.filter((a) => a.validTo);
 /** The ledger row that dates a registry asset: its match term appears in the asset's title. */
 const ledgerRowOf = (asset) => ledger.find((r) => r.validTo && r.matchTerms.some((m) => asset.title.includes(m)));
 
+test('the bundled time assets are pinned to current freshness rows', () => {
+  const cases = [
+    ['leap-seconds', 'iers-bulletin-c', 'leap-seconds.list'],
+    ['tzdb', 'tzdb', 'tzdb.bin'],
+  ];
+  for (const [assetId, ledgerId, file] of cases) {
+    const asset = registry.assets.find((a) => a.id === assetId);
+    const row = ledger.find((r) => r.id === ledgerId);
+    assert.ok(asset, `${assetId} is missing from the asset registry`);
+    assert.ok(row, `${ledgerId} is missing from the sources ledger`);
+    assert.equal(asset.loadPolicy, 'bundled', `${assetId} must ship with the deterministic time core`);
+    assert.match(asset.bundledIn, new RegExp(`${file.replace('.', '\\.')}$`));
+    assert.ok(asset.files[file], `${assetId} does not pin ${file}`);
+    assert.ok(asset.version.includes(row.currentEdition), `${assetId} ${asset.version} does not match ${row.currentEdition}`);
+    assert.match(row.lastVerified, /^\d{4}-\d{2}-\d{2}$/);
+  }
+});
+
 test('every dated model has a dated ledger row', () => {
   assert.ok(windowed.length >= 2, 'no dated models in the registry');
   for (const a of windowed) assert.ok(ledgerRowOf(a), `${a.id} has no ledger row with a validTo`);

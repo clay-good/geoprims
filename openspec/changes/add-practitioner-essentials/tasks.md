@@ -1,7 +1,7 @@
 ## 1. Time domain and assets
 
 - [x] 1.1 Add the `time` domain to the catalog taxonomy; verify catalog validation accepts `time.sun.*` and `time.scale.*`
-- [ ] 1.2 Package `leap-seconds` (IERS Bulletin C) and `tzdb` (IANA) as ledger-tracked assets; verify digests and freshness rows (done so far: the leap-second table from IERS Bulletin C 72, embedded in the time module, echoed in `meta.assets`, with an expiry warning after 2027-06-30; also tzdb 2026d, embedded in the time module and echoed in meta.assets, with the table cross-checked against IANA leap-seconds.list; pending: the asset ledger, with on-demand loading)
+- [x] 1.2 Package `leap-seconds` (IERS Bulletin C) and `tzdb` (IANA) as ledger-tracked assets; verify digests and freshness rows (the asset registry pins the IERS Bulletin C 72 `leap-seconds.list` and IANA tzdb 2026d binary by byte count and SHA-256, with their bundled core paths, licenses, attribution, and source URLs. The generic asset test recomputes every digest; `model-assets.test.mjs` binds both asset versions to their current sources-ledger rows and verification dates. They are bundled, as the time-scale requirement specifies, so deterministic conversion never depends on network availability. Results echo the exact version in `meta.assets`; the leap table warns after 2027-06-30.)
 - [ ] 1.3 Package optional `tz-boundaries` (ODbL, with attribution) and `ngs-antinfo`; verify sizes are shown before download
 
 ## 2. Solar and twilight

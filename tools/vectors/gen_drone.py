@@ -545,6 +545,68 @@ def rth_vectors():
         out.append(fvec(i, {"distance": f"{dk} km", "airspeed": f"{v} m/s", "headwind": f"{w} m/s", "power": f"{p} W",
                             "remaining_energy": f"{e} Wh", "reserve_energy": f"{r} Wh"},
                         {"result.return_energy.value": need, "result.margin.value": e - r - need}, PW_SRC, PW_VER))
+
+    def success(inp, distance_m, airspeed_mps, headwind_mps, power_w, energy_wh, reserve_wh=0,
+                source=PW_SRC, version=PW_VER):
+        return_speed = airspeed_mps - headwind_mps
+        return_time = distance_m / return_speed
+        return_wh = power_w * return_time / 3600
+        available_j = max(0, energy_wh - reserve_wh) * 3600
+        round_trip = available_j / (power_w * (1 / (airspeed_mps + headwind_mps) + 1 / return_speed))
+        vector = fvec(len(out) + 1, inp,
+                      {"result.return_groundspeed.value": return_speed, "result.return_time.value": return_time / 60,
+                       "result.return_energy.value": return_wh, "result.margin.value": energy_wh - reserve_wh - return_wh,
+                       "result.max_round_trip_distance.value": round_trip / 1000}, source, version)
+        out.append(vector)
+        return vector
+
+    mph = 0.44704
+    published = success(
+        {"distance": "10 mi", "airspeed": "134.4 mph", "headwind": "30 mph", "power": "200 W",
+         "remaining_energy": "100 Wh", "reserve_energy": "20 Wh"},
+        10 * 1609.344, 134.4 * mph, 30 * mph, 200, 100, 20,
+        "FAA Fostering Aviation Activities, Air Speed Indicator, pp. 23-25: 134.4 mph - 30 mph = 104.4 mph groundspeed",
+        "Junior High Level aviation curriculum guide (1995)")
+    published["tolerance"] = {"result.return_groundspeed.value": {"abs": 0.000001},
+                              "result.return_time.value": {"rel": 1e-9}, "result.return_energy.value": {"rel": 1e-9},
+                              "result.margin.value": {"rel": 1e-9}, "result.max_round_trip_distance.value": {"rel": 1e-9}}
+
+    success({"distance": "1500 m", "airspeed": "54 km/h", "headwind": "36 km/h", "power": "0.18 kW",
+             "remaining_energy": "144 kJ", "reserve_energy": "36 kJ"},
+            1500, 15, 10, 180, 40, 10)
+    success({"distance": "2 km", "airspeed": "12 m/s", "power": "150 W", "remaining_energy": "50 Wh", "reserve_energy": "5 Wh"},
+            2000, 12, 0, 150, 50, 5)
+    success({"distance": "800 m", "airspeed": "18 m/s", "headwind": "-5 m/s", "power": "300 W", "remaining_energy": "30 Wh", "reserve_energy": "10 Wh"},
+            800, 18, -5, 300, 30, 10)
+    success({"distance": "3 km", "airspeed": "20 m/s", "headwind": "19.5 m/s", "power": "250 W", "remaining_energy": "500 Wh", "reserve_energy": "15 Wh"},
+            3000, 20, 19.5, 250, 500, 15)
+    success({"distance": "1 km", "airspeed": "10 m/s", "headwind": "-9.5 m/s", "power": "120 W", "remaining_energy": "25 Wh"},
+            1000, 10, -9.5, 120, 25)
+    success({"distance": "500 m", "airspeed": "15 m/s", "headwind": "3 m/s", "power": "200 W", "remaining_energy": "10 Wh", "reserve_energy": "20 Wh"},
+            500, 15, 3, 200, 10, 20)
+    success({"distance": "1 m", "airspeed": "1 m/s", "headwind": "0 m/s", "power": "1 W", "remaining_energy": "1 Wh"},
+            1, 1, 0, 1, 1)
+    success({"distance": "25 km", "airspeed": "30 m/s", "headwind": "5 m/s", "power": "2 kW", "remaining_energy": "2 kWh", "reserve_energy": "0.5 kWh"},
+            25000, 30, 5, 2000, 2000, 500)
+    success({"distance": "6.2137119224 mi", "airspeed": "44.7387258411 mph", "headwind": "11.1846814603 mph", "power": "500 W",
+             "remaining_energy": "250 Wh", "reserve_energy": "50 Wh"},
+            10000, 20, 5, 500, 250, 50)
+    success({"distance": "100 km", "airspeed": "50 m/s", "headwind": "-10 m/s", "power": "5 kW", "remaining_energy": "5 kWh", "reserve_energy": "1 kWh"},
+            100000, 50, -10, 5000, 5000, 1000)
+
+    failures = [
+        ({"distance": "0 m", "airspeed": "15 m/s", "power": "180 W", "remaining_energy": "40 Wh"}, "INVALID_INPUT"),
+        ({"distance": "1 km", "airspeed": "0 m/s", "power": "180 W", "remaining_energy": "40 Wh"}, "INVALID_INPUT"),
+        ({"distance": "1 km", "airspeed": "15 m/s", "headwind": "15 m/s", "power": "180 W", "remaining_energy": "40 Wh"}, "NO_SOLUTION"),
+        ({"distance": "1 km", "airspeed": "15 m/s", "headwind": "-15 m/s", "power": "180 W", "remaining_energy": "40 Wh"}, "NO_SOLUTION"),
+        ({"distance": "1 km", "airspeed": "15 m/s", "power": "0 W", "remaining_energy": "40 Wh"}, "INVALID_INPUT"),
+        ({"distance": "1 km", "airspeed": "15 m/s", "power": "180 W", "remaining_energy": "0 Wh"}, "INVALID_INPUT"),
+        ({"distance": "1 km", "airspeed": "15 m/s", "power": "180 W", "remaining_energy": "40 Wh", "reserve_energy": "-1 Wh"}, "INVALID_INPUT"),
+        ({"distance": "1 km", "airspeed": "15 m/s", "power": "-1 W", "remaining_energy": "40 Wh"}, "INVALID_INPUT"),
+        ({"distance": "-1 km", "airspeed": "15 m/s", "power": "180 W", "remaining_energy": "40 Wh"}, "INVALID_INPUT"),
+    ]
+    for inp, code in failures:
+        out.append(fvec(len(out) + 1, inp, {"ok": False, "error.code": code}, PW_SRC, PW_VER))
     return out
 
 

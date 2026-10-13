@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "fixed",
       "tools": [
+        "drone.power.rth-budget"
+      ],
+      "vectors": [],
+      "summary": "Return-to-home energy (version 1.1.0) is now stable. It reproduces the FAA's published 134.4 mph minus 30 mph headwind example, and 25 vectors plus five invariant tests cover groundspeed, time, energy, margin, round-trip reach, units, wind boundaries, invalid inputs, and insufficient energy. Valid calculation results are unchanged; negative reserve energy is now refused instead of increasing the available flight energy."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "fixed",
+      "tools": [
         "drone.power.max-payload"
       ],
       "vectors": [],

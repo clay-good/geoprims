@@ -258,6 +258,100 @@ fn headwind_return_and_cannot_return() {
 }
 
 #[test]
+fn rth_budget_matches_the_faa_headwind_example() {
+    let r = call(
+        "drone.power.rth-budget",
+        r#"{"distance":"10 mi","airspeed":"134.4 mph","headwind":"30 mph","power":"200 W","remaining_energy":"100 Wh","reserve_energy":"20 Wh"}"#,
+    );
+    near(
+        &r,
+        "result.return_groundspeed.value",
+        104.4 * 0.44704,
+        1e-12,
+    );
+    let seconds = 10.0 * 1609.344 / (104.4 * 0.44704);
+    near(&r, "result.return_time.value", seconds / 60.0, 1e-12);
+    near(
+        &r,
+        "result.return_energy.value",
+        200.0 * seconds / 3600.0,
+        1e-12,
+    );
+}
+
+#[test]
+fn rth_energy_scales_with_distance_and_power() {
+    let run = |distance: f64, power: f64| {
+        call(
+            "drone.power.rth-budget",
+            &format!(
+                r#"{{"distance":"{distance} km","airspeed":"15 m/s","headwind":"5 m/s","power":"{power} W","remaining_energy":"500 Wh"}}"#
+            ),
+        )
+    };
+    let base = run(1.0, 100.0);
+    let distance = run(2.0, 100.0);
+    let power = run(1.0, 200.0);
+    near(
+        &distance,
+        "result.return_energy.value",
+        2.0 * num(&base, "result.return_energy.value"),
+        1e-12,
+    );
+    near(
+        &power,
+        "result.return_energy.value",
+        2.0 * num(&base, "result.return_energy.value"),
+        1e-12,
+    );
+}
+
+#[test]
+fn rth_round_trip_distance_is_symmetric_when_wind_reverses() {
+    let headwind = call(
+        "drone.power.rth-budget",
+        r#"{"distance":"1 km","airspeed":"20 m/s","headwind":"5 m/s","power":"250 W","remaining_energy":"100 Wh","reserve_energy":"20 Wh"}"#,
+    );
+    let tailwind = call(
+        "drone.power.rth-budget",
+        r#"{"distance":"1 km","airspeed":"20 m/s","headwind":"-5 m/s","power":"250 W","remaining_energy":"100 Wh","reserve_energy":"20 Wh"}"#,
+    );
+    near(
+        &tailwind,
+        "result.max_round_trip_distance.value",
+        num(&headwind, "result.max_round_trip_distance.value"),
+        1e-12,
+    );
+}
+
+#[test]
+fn rth_budget_preserves_equivalent_units_and_refuses_negative_reserve() {
+    let metric = call(
+        "drone.power.rth-budget",
+        r#"{"distance":"1500 m","airspeed":"15 m/s","headwind":"10 m/s","power":"180 W","remaining_energy":"40 Wh","reserve_energy":"10 Wh"}"#,
+    );
+    let equivalent = call(
+        "drone.power.rth-budget",
+        r#"{"distance":"1.5 km","airspeed":"54 km/h","headwind":"36 km/h","power":"0.18 kW","remaining_energy":"144 kJ","reserve_energy":"36 kJ"}"#,
+    );
+    for path in [
+        "result.return_groundspeed.value",
+        "result.return_time.value",
+        "result.return_energy.value",
+        "result.margin.value",
+        "result.max_round_trip_distance.value",
+    ] {
+        near(&equivalent, path, num(&metric, path), 1e-12);
+    }
+    let invalid = call(
+        "drone.power.rth-budget",
+        r#"{"distance":"1 km","airspeed":"15 m/s","power":"180 W","remaining_energy":"40 Wh","reserve_energy":"-1 Wh"}"#,
+    );
+    assert_eq!(invalid["error"]["code"], "INVALID_INPUT", "{invalid}");
+    assert_eq!(invalid["error"]["field"], "/reserve_energy", "{invalid}");
+}
+
+#[test]
 fn near_a_structure() {
     let r = call(
         "drone.ops.part107-altitude",

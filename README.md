@@ -45,6 +45,8 @@ Payload impact is stable for payload mass, payload electrical draw, usable energ
 
 Maximum payload is stable for a target hover time, usable energy, avionics draw, aircraft losses, and site air density. It inverts the same measured payload-hover fit to recover a 50 g load, and 25 vectors plus five invariants cover inverse power, units, scaling, atmosphere, boundaries, and infeasible targets.
 
+Return-to-home energy is stable for an along-track wind, distance home, cruise power, remaining energy, and a landing reserve. It reproduces the FAA's published 134.4 mph minus 30 mph headwind example, and 25 vectors plus five invariants cover return time, energy, margin, round-trip reach, units, wind boundaries, and invalid inputs.
+
 Thermal pixel footprint is stable for direct IFOV or pixel-pitch and focal-length inputs, with an inverse range for a target size. It reproduces FLIR's published E8 example at 10 ft, and 26 vectors plus four invariants cover units, pixel rules, inverse geometry, domain boundaries, and invalid camera inputs.
 
 Side slope and grade conversion is stable across percent, per mille, degrees, decimal grades, and explicitly labeled H:V or V:H ratios. It reconstructs rise, run, or slope length, refuses ambiguous bare ratios, and reproduces FHWA's 20 m over 400 m roadway example across 23 vectors.

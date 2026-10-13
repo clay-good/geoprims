@@ -871,6 +871,26 @@
       "editionCheck": true
     },
     {
+      "id": "faa-fostering-aviation",
+      "name": "Fostering Aviation Activities",
+      "issuer": "Federal Aviation Administration",
+      "currentEdition": "Junior High Level aviation curriculum guide",
+      "currentReleaseDate": "1995-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read in the FAA-hosted PDF on 2026-10-13. Air Speed Indicator, pages 23-25, states that groundspeed is airspeed minus headwind and prints 134.4 mph - 30 mph = 104.4 mph in its worked example.",
+      "freeAccessUrl": "https://www.faa.gov/sites/faa.gov/files/education/educators/curriculum/k12/Middle_Fostering_Aviation_Activities.pdf",
+      "matchTerms": [
+        "Fostering Aviation Activities"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "faa-awh",
       "name": "Aviation Weather Handbook",
       "issuer": "FAA",

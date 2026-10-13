@@ -62,6 +62,14 @@ pub const VAN_MULDERS: Reference = Reference {
     locator: "Section 2.4.1, equation 6 and figure 4a: measured payload-hover fit P = 10.6 W + 12.88(mg)^1.5",
     url: "https://doi.org/10.3390/s23042291",
 };
+pub const FAA_FOSTERING_AVIATION: Reference = Reference {
+    title: "Fostering Aviation Activities",
+    issuer: "Federal Aviation Administration",
+    year: 1995,
+    edition: "Junior High Level aviation curriculum guide",
+    locator: "Air Speed Indicator, pp. 23-25: groundspeed is airspeed minus headwind; worked result 134.4 mph - 30 mph = 104.4 mph",
+    url: "https://www.faa.gov/sites/faa.gov/files/education/educators/curriculum/k12/Middle_Fostering_Aviation_Activities.pdf",
+};
 const GEOPRIMS_ENDURANCE_SPEC: Reference = Reference {
     title: "GeoPrims endurance and power specification",
     issuer: "GeoPrims",
@@ -1967,6 +1975,8 @@ fn run_payload_impact(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static RTH_BUDGET: ToolDef = ToolDef {
     id: "drone.power.rth-budget",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Return-to-home energy budget",
     summary: "Whether the battery can bring the drone home against the wind: return groundspeed, time, energy, the margin left, and the farthest round trip that keeps the reserve.",
     aliases: &[
@@ -2066,32 +2076,46 @@ pub static RTH_BUDGET: ToolDef = ToolDef {
             2,
         ),
     ],
-    errors: &[ErrorCode::NoSolution],
-    warnings: &[
-        "CANNOT_RETURN_INTO_WIND",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::NoSolution],
+    warnings: &["CANNOT_RETURN_INTO_WIND", "UNIT_ASSUMED"],
     model: "Steady wind along the track: return GS = V − w, outbound GS = V + w; energy = power × time; round trip d = E / (P·(1/(V+w) + 1/(V−w)))",
     accuracy: "Exact for a steady along-track wind and constant power. Gusts, climbs, and cold packs need more margin.",
     when_to_use: "Use this while planning, or during a long flight, to check that the battery can bring the drone home against the wind. Give the distance home, airspeed, headwind, cruise power, the energy left, and the reserve you want to land with, and it gives the groundspeed and time home, the energy that takes, and the margin left. It also gives how far out you could fly on the energy left and still return with the reserve.",
     limitations: "It uses one steady wind straight along the track and the same power both ways, so it ignores gusts, crosswind, climbs, the descent, and the landing. The trip home is a straight line at constant airspeed. If the wind is at least as fast as the airspeed, it gives no answer, since the drone could not make headway on one leg. Cold packs, aging cells, and voltage sag can leave less energy than the figure you enter.",
-    references: &[LEISHMAN],
-    examples: &[Example {
-        id: "primary",
-        title: "1.5 km out, 15 m/s airspeed, 10 m/s headwind home",
-        input: r#"{"distance":"1.5 km","airspeed":"15 m/s","headwind":"10 m/s","power":"180 W","remaining_energy":"40 Wh","reserve_energy":"10 Wh"}"#,
-        source: "add-drone-suite return scenario: return groundspeed 5 m/s",
-    }],
+    references: &[FAA_FOSTERING_AVIATION, BAUERSFELD],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "1.5 km out, 15 m/s airspeed, 10 m/s headwind home",
+            input: r#"{"distance":"1.5 km","airspeed":"15 m/s","headwind":"10 m/s","power":"180 W","remaining_energy":"40 Wh","reserve_energy":"10 Wh"}"#,
+            source: "add-drone-suite return scenario: return groundspeed 5 m/s",
+        },
+        Example {
+            id: "faa-headwind",
+            title: "FAA's 134.4 mph airspeed into a 30 mph headwind",
+            input: r#"{"distance":"10 mi","airspeed":"134.4 mph","headwind":"30 mph","power":"200 W","remaining_energy":"100 Wh","reserve_energy":"20 Wh"}"#,
+            source: "FAA Fostering Aviation Activities, Air Speed Indicator: 134.4 mph - 30 mph = 104.4 mph groundspeed",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "vector-diagram",
         map: &[("value", "margin")],
     }],
-    related: &[Related {
-        id: "drone.power.endurance",
-        reason: "alternative",
-    }],
+    related: &[
+        Related {
+            id: "drone.power.endurance",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.mission.sorties",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.payload-impact",
+            reason: "alternative",
+        },
+    ],
     sentence: "Coming home at {return_groundspeed} takes {return_time} and {return_energy}, leaving {margin} of margin.",
     limits: &[("batchRows", 10_000)],
     run: run_rth,
@@ -2114,6 +2138,12 @@ fn run_rth(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let p = positive(ctx, "power", "Cruise power")?;
     let e = positive(ctx, "remaining_energy", "Remaining energy")?;
     let res = ctx.quantity("reserve_energy")?.map_or(0.0, |x| x.base());
+    if res < 0.0 {
+        return Err(ToolError::invalid(
+            "/reserve_energy",
+            "Reserve energy cannot be negative.",
+        ));
+    }
     if w.abs() >= v {
         ctx.warnings.push(Warning::new(
             "CANNOT_RETURN_INTO_WIND",

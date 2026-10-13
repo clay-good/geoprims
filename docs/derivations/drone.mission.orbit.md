@@ -15,7 +15,7 @@ An orbit is a ring of camera positions around a subject, each looking at it. The
 
 ## Symbols and units
 
-Center latitude and longitude in degrees on WGS 84; radius and heights in meters by default; n the number of photos (36 by default). Headings in degrees clockwise from true north.
+Center latitude and longitude in degrees on WGS 84; radius and heights in meters by default; n the number of photos (36 by default, an explicit GeoPrims product choice rather than a safety or photogrammetry standard). Headings in degrees clockwise from true north.
 
 ## Domain
 

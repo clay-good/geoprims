@@ -1112,6 +1112,26 @@
       "editionCheck": false
     },
     {
+      "id": "geoprims-mission-patterns-spec",
+      "name": "GeoPrims mission-patterns specification",
+      "issuer": "GeoPrims",
+      "currentEdition": "repository specification",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "The repository specification is the authority for the explicitly product-defined 36-photo orbit default and 15 m terrain-following export margin. It is not an external safety recommendation.",
+      "freeAccessUrl": "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/mission-patterns/spec.md",
+      "matchTerms": [
+        "GeoPrims mission-patterns specification"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "geohash",
       "name": "Geohash",
       "issuer": "G. Niemeyer",

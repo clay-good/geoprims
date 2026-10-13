@@ -46,6 +46,14 @@ pub(crate) const KARNEY: Reference = Reference {
     locator: "pp. 43-55 (direct and inverse geodesic problems)",
     url: "https://doi.org/10.1007/s00190-012-0578-z",
 };
+const MISSION_PATTERNS_SPEC: Reference = Reference {
+    title: "GeoPrims mission-patterns specification",
+    issuer: "GeoPrims",
+    year: 2026,
+    edition: "repository specification, accessed 2026-10-12",
+    locator: "Orbit and point of interest",
+    url: "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/mission-patterns/spec.md",
+};
 
 /// The local plane: TM centered at (lat0, lon0).
 pub struct Plane {
@@ -2148,7 +2156,7 @@ pub static ORBIT: ToolDef = ToolDef {
     accuracy: "Exact geodesic positions; heights are relative to the center's ground level.",
     when_to_use: "Use this to plan a circle around a tower, chimney, statue, or building for inspection photos or a 3D model. Give the center, the radius, your flight height, and the height you want centered in the frame, and it returns evenly spaced waypoints with the heading toward the center and the gimbal pitch at each one. It also gives the length of the circle and the spacing between photos.",
     limitations: "Every waypoint shares one height and one gimbal pitch, so a tall object may need several orbits at different heights. Heights are above the ground at the center, and ground that slopes under the circle changes your real clearance. Positions are geodesic on the WGS84 ellipsoid, but nothing checks for guy wires, trees, or other obstacles along the path. It plans no speed or flight time.",
-    references: &[KARNEY],
+    references: &[KARNEY, MISSION_PATTERNS_SPEC],
     examples: &[Example {
         id: "primary",
         title: "A 60 m tower, 50 m radius, flying at 80 m",
@@ -2176,6 +2184,12 @@ pub static ORBIT: ToolDef = ToolDef {
     ],
     sentence: "Point the camera {gimbal_pitch} and fly the {circumference} circle.",
     limits: &[("batchRows", 100)],
+    assumptions: &[Assumption {
+        name: "Default orbit waypoint and photo count (product choice)",
+        value: "36",
+        unit: "photos",
+        source: "geoprims-mission-patterns-spec",
+    }],
     run: run_orbit,
     ..ToolDef::BLANK
 };

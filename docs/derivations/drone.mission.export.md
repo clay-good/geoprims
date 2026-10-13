@@ -11,7 +11,7 @@ The tool writes a list of waypoints as a file another program can open: KML for 
 - KML, above sea level (MSL): altitudeMode absolute, height as entered.
 - KML, above takeoff: altitudeMode absolute, height + takeoff elevation.
 - KML, above the ellipsoid (HAE): altitudeMode absolute, height − geoid height N.
-- KML, terrain following: altitudeMode absolute, with the clearance margin (15 m unless set) on every waypoint, and only after the surface-model notice is acknowledged.
+- KML, terrain following: altitudeMode absolute, with the clearance margin (15 m unless set, an explicit GeoPrims product choice rather than an external safety recommendation) on every waypoint, and only after the surface-model notice is acknowledged.
 - GeoJSON: each position is [longitude, latitude, height], the height as entered, with its reference in the feature's properties.
 - CSV: one row per waypoint: latitude, longitude, height, reference, heading, gimbal pitch, action.
 

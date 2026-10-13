@@ -76,6 +76,8 @@ const MUST_DECLARE = [
   'drone.photogrammetry.trigger',
   'drone.photogrammetry.image-count',
   'drone.mission.survey-grid',
+  'drone.mission.orbit',
+  'drone.mission.export',
   'drone.power.endurance',
   'drone.mission.facade',
   'drone.sensors.thermal-footprint',
@@ -279,6 +281,18 @@ test('the endurance tool exposes every product-defined heuristic value', () => {
     ['1', '%/degC', 'geoprims-endurance-spec'],
     ['50', '%', 'geoprims-endurance-spec'],
     ['1', 'h', 'geoprims-endurance-spec'],
+  ]);
+});
+
+test('the mission tools expose their product-defined operational defaults', () => {
+  const orbit = byId('drone.mission.orbit')['x-assumptions'];
+  assert.deepEqual(orbit.map(({ value, unit, source }) => [value, unit, source]), [
+    ['36', 'photos', 'geoprims-mission-patterns-spec'],
+  ]);
+
+  const missionExport = byId('drone.mission.export')['x-assumptions'];
+  assert.deepEqual(missionExport.map(({ value, unit, source }) => [value, unit, source]), [
+    ['15', 'm', 'geoprims-mission-patterns-spec'],
   ]);
 });
 

@@ -5,7 +5,9 @@
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 
 use crate::unit;
@@ -34,6 +36,14 @@ const CSV: Reference = Reference {
     edition: "RFC 4180",
     locator: "Section 2 (quoting fields that hold commas, quotes, or line breaks)",
     url: "https://www.rfc-editor.org/rfc/rfc4180.html",
+};
+const MISSION_PATTERNS_SPEC: Reference = Reference {
+    title: "GeoPrims mission-patterns specification",
+    issuer: "GeoPrims",
+    year: 2026,
+    edition: "repository specification, accessed 2026-10-12",
+    locator: "Export scenario: terrain-following clearance margin",
+    url: "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/mission-patterns/spec.md",
 };
 
 const NOTICE: &str = "Planning aid only, not for navigation. Check every waypoint before flight.";
@@ -127,7 +137,7 @@ pub static EXPORT: ToolDef = ToolDef {
     accuracy: "Coordinates to 7 decimal places (about 1 cm) and heights to 0.01 m; no conversion beyond the stated offsets",
     when_to_use: "Use this when you have a list of waypoints and need a file another program can open: KML for map viewers, GeoJSON for GIS work, or CSV for a spreadsheet. It writes heights in the KML altitude mode that matches the reference you choose, turning takeoff and ellipsoid heights into sea-level heights when you give the offsets. Every file is labeled with its height reference and a not-for-navigation notice.",
     limitations: "It only formats what you give it. It does not look up ground heights, so terrain-following heights must already come from a surface model, and such a model counts trees and buildings unevenly; it adds a clearance margin, 15 m unless you set one. Heading, gimbal pitch, and actions are written as notes or properties that a flight app may ignore. It writes no vendor mission format, so check every waypoint in your flight app before you fly.",
-    references: &[KML, GEOJSON, CSV],
+    references: &[KML, GEOJSON, CSV, MISSION_PATTERNS_SPEC],
     examples: &[Example {
         id: "primary",
         title: "Three waypoints at 80 m AGL, as KML",
@@ -143,6 +153,12 @@ pub static EXPORT: ToolDef = ToolDef {
     ],
     sentence: "The file has {waypoint_count} {plural waypoint_count \"waypoint\" \"waypoints\"}, with heights {heights}.",
     limits: &[("batchRows", 20)],
+    assumptions: &[Assumption {
+        name: "Default terrain-following clearance margin (product choice)",
+        value: "15",
+        unit: "m",
+        source: "geoprims-mission-patterns-spec",
+    }],
     run: run_export,
     ..ToolDef::BLANK
 };

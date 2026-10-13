@@ -56,7 +56,7 @@ export function cellText(x, schema) {
 export function rowTables(result) {
   if (!result?.ok) return [];
   return Object.entries(result.result ?? {})
-    .filter(([, v]) => Array.isArray(v) && v.length > 0 && v.length <= MAX_ROWS && v.every(isRow))
+    .filter(([key, v]) => key !== 'surface_triangles' && Array.isArray(v) && v.length > 0 && v.length <= MAX_ROWS && v.every(isRow))
     .map(([key, rows]) => ({ key, rows, columns: [...new Set(rows.flatMap((r) => Object.keys(r)))] }))
     .filter((t) => t.columns.length <= MAX_COLUMNS);
 }

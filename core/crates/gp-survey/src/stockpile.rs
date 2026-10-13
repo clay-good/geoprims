@@ -28,6 +28,38 @@ const XYZ: &[Field] = &[
     len("elevation", "Elevation", "Like 101.5 ft").required(),
 ];
 
+const TRIANGLE: &[Field] = &[
+    Field::new(
+        "a",
+        "Vertex A",
+        "Zero-based index in the base outline followed by the surface shots",
+        Kind::Number {
+            min: 0.0,
+            max: 30_000.0,
+        },
+    ),
+    Field::new(
+        "b",
+        "Vertex B",
+        "Zero-based index in the base outline followed by the surface shots",
+        Kind::Number {
+            min: 0.0,
+            max: 30_000.0,
+        },
+    ),
+    Field::new(
+        "c",
+        "Vertex C",
+        "Zero-based index in the base outline followed by the surface shots",
+        Kind::Number {
+            min: 0.0,
+            max: 30_000.0,
+        },
+    ),
+];
+
+const PREVIEW_TRIANGLES: usize = 1_500;
+
 type P3 = (f64, f64, f64);
 
 /// Delaunay triangulation by Bowyer–Watson: triangles as index triples.
@@ -210,6 +242,16 @@ pub static STOCKPILE: ToolDef = ToolDef {
             Kind::Number { min: 0.0, max: 1e9 },
         )
         .precision(Precision::Decimals(0)),
+        Field::new(
+            "surface_triangles",
+            "Surface preview triangles",
+            "Vertex indexes for a deterministic preview of the same TIN used for the volume; at most 1,500 triangles",
+            Kind::List {
+                items: TRIANGLE,
+                min: 1,
+                max: PREVIEW_TRIANGLES,
+            },
+        ),
         len_out(
             "max_height",
             "Highest point above the base",
@@ -231,8 +273,8 @@ pub static STOCKPILE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "vector-diagram",
+        map: &[("triangles", "surface_triangles")],
     }],
     related: &[
         Related {
@@ -318,24 +360,38 @@ fn run_stockpile(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let height = |p: &P3| p.2 - (a + b * p.0 + c * p.1);
     let xy: Vec<(f64, f64)> = pts.iter().map(|p| (p.0, p.1)).collect();
-    let (mut vol, mut area, mut count) = (0.0, 0.0, 0.0);
-    for t in delaunay(&xy) {
-        let (p, q, r) = (pts[t[0]], pts[t[1]], pts[t[2]]);
-        let (gx, gy) = ((p.0 + q.0 + r.0) / 3.0, (p.1 + q.1 + r.1) / 3.0);
-        if !inside(&outline, gx, gy) {
-            continue;
-        }
-        let ar = ((q.0 - p.0) * (r.1 - p.1) - (r.0 - p.0) * (q.1 - p.1)).abs() / 2.0;
-        vol += ar * (height(&p) + height(&q) + height(&r)) / 3.0;
-        area += ar;
-        count += 1.0;
-    }
-    if count == 0.0 {
+    let tin: Vec<[usize; 3]> = delaunay(&xy)
+        .into_iter()
+        .filter(|t| {
+            let (p, q, r) = (pts[t[0]], pts[t[1]], pts[t[2]]);
+            inside(&outline, (p.0 + q.0 + r.0) / 3.0, (p.1 + q.1 + r.1) / 3.0)
+        })
+        .collect();
+    if tin.is_empty() {
         return Err(ToolError::invalid(
             "/surface",
             "No part of the surface lies inside the base outline.",
         ));
     }
+    let (mut vol, mut area) = (0.0, 0.0);
+    for t in &tin {
+        let (p, q, r) = (pts[t[0]], pts[t[1]], pts[t[2]]);
+        let ar = ((q.0 - p.0) * (r.1 - p.1) - (r.0 - p.0) * (q.1 - p.1)).abs() / 2.0;
+        vol += ar * (height(&p) + height(&q) + height(&r)) / 3.0;
+        area += ar;
+    }
+    let preview_len = tin.len().min(PREVIEW_TRIANGLES);
+    let preview_step = tin.len() as f64 / preview_len as f64;
+    let preview = (0..preview_len)
+        .map(|i| tin[(i as f64 * preview_step).floor() as usize])
+        .map(|t| {
+            Json::obj(vec![
+                ("a", Json::Num(t[0] as f64)),
+                ("b", Json::Num(t[1] as f64)),
+                ("c", Json::Num(t[2] as f64)),
+            ])
+        })
+        .collect();
     let per_m = Q {
         value: 1.0,
         unit: u,
@@ -358,7 +414,8 @@ fn run_stockpile(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ctx.emit("cubic_yards", v3, unit(QT::Volume, "yd3")),
         ),
         ("base_area", ctx.emit("base_area", a2, unit(QT::Area, asym))),
-        ("triangles", Json::Num(count)),
+        ("triangles", Json::Num(tin.len() as f64)),
+        ("surface_triangles", Json::Arr(preview)),
         (
             "max_height",
             ctx.emit(

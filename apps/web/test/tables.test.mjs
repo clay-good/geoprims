@@ -58,6 +58,7 @@ test('a quantity reads with its unit, and a failed result has no tables', () => 
   assert.deepEqual(rowTables({ ok: true, result: { deep: [{ a: { b: { c: 1 } } }] } }), []);
   assert.deepEqual(rowTables({ ok: false, error: { code: 'X' } }), []);
   assert.deepEqual(rowTables(null), []);
+  assert.deepEqual(rowTables({ ok: true, result: { surface_triangles: [{ a: 0, b: 1, c: 2 }] } }), [], 'visualization geometry is not an answer table');
 });
 
 test('a tool with no list of rows shows no table', () => {

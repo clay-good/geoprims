@@ -809,7 +809,15 @@ fn tin_stockpile_approaches_an_analytic_cone() {
     let poly_area = 0.5 * 24.0 * r * r * (std::f64::consts::TAU / 24.0).sin();
     let cone = poly_area * h / 3.0;
     assert!((v - cone).abs() / cone < 0.01, "TIN {v} vs cone {cone}");
-    assert!(num(&res, "result.triangles") > 900.0);
+    let triangle_count = num(&res, "result.triangles") as usize;
+    assert!(triangle_count > 900);
+    let preview = res["result"]["surface_triangles"].as_array().unwrap();
+    assert_eq!(preview.len(), triangle_count);
+    assert!(preview.iter().all(|t| {
+        ["a", "b", "c"]
+            .iter()
+            .all(|k| t[k].as_u64().is_some_and(|i| i < (base.len() + surf.len()) as u64))
+    }));
 }
 
 #[test]

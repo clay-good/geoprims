@@ -40,6 +40,7 @@ const DIAGRAMS = Object.fromEntries(
     'survey.curves.spiral',
     'raster.terrain.line-of-sight',
     'survey.earthwork.borrow-pit',
+    'survey.earthwork.stockpile',
     'geodesy.height.convert',
     'aviation.ifr.hold-entry',
     'time.sun.mapping-window',

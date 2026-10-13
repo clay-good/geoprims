@@ -233,7 +233,7 @@
   // The canvas draws geographic tools: lines, points, polygons, or a lat/lon input.
   const showMap = mapsTool(tool);
   // A 3D drawing's view: turned about up, and seen from a tilt (90° is straight down).
-  let dgView = $state({ turn: 0, tilt: 90 });
+  let dgView = $state(tool.id === 'survey.earthwork.stockpile' ? { turn: 30, tilt: 35 } : { turn: 0, tilt: 90 });
   const dg = $derived(result?.ok ? (draw ? draw(drawnArgs, result, '', dgView) : firstDiagram) : null);
   // A tool whose meaning is a picture shows a compact one directly under the
   // answer, as well as the full canvas in its place below (contracts/page-chrome,

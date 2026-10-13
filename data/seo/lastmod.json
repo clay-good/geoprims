@@ -352,8 +352,8 @@
     "lastmod": "2026-10-13"
   },
   "/drone/ops/wind-limit/": {
-    "hash": "7576d2baefa12c2c",
-    "lastmod": "2026-10-12"
+    "hash": "53cb495a19a7b9e5",
+    "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/": {
     "hash": "cd78dab3eded4c49",
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "2bd14b853d8dd467",
+    "hash": "51b251b96bd27fb1",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "97143a596e62b3ab",
+    "hash": "9a616144eff013f0",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1560,8 +1560,8 @@
     "lastmod": "2026-10-09"
   },
   "/survey/earthwork/stockpile/": {
-    "hash": "0bdd914b0b3f932c",
-    "lastmod": "2026-10-09"
+    "hash": "9c557b5e60fb5110",
+    "lastmod": "2026-10-13"
   },
   "/survey/gnss/": {
     "hash": "d96028d18906d272",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a4adc69f1c4cc781",
+    "hash": "843945df05d5ed36",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -1992,8 +1992,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/can-i-fly-now/": {
-    "hash": "4780044612528f6d",
-    "lastmod": "2026-10-09"
+    "hash": "d7b28e8b36524b38",
+    "lastmod": "2026-10-13"
   },
   "/workflows/convert-coordinate/": {
     "hash": "b21a801caa50b6f4",

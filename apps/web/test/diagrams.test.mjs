@@ -834,3 +834,20 @@ test('a vector sum with an up component turns and tilts, and the plan view is th
   assert.equal(f.rotatable, false);
   assert.equal(f.markup, diagram('navigation.vector.operations', flatArgs, fr).markup);
 });
+
+test('the stockpile draws the core TIN as a rotatable 3D surface', async () => {
+  const t = catalog.tools.find((x) => x.id === 'survey.earthwork.stockpile');
+  const args = t.examples.find((e) => e.id === t['x-primary-example']).input;
+  const r = JSON.parse(await host.invoke(t.id, JSON.stringify(args)));
+  const d = diagram(t.id, args, r);
+  assert.equal(d.rotatable, true);
+  const drawn = [...d.markup.matchAll(/data-vertices="([\d,]+)"/g)].map((m) => m[1]);
+  const mesh = r.result.surface_triangles.map((triangle) => [triangle.a, triangle.b, triangle.c].join(','));
+  assert.deepEqual(drawn.sort(), mesh.sort(), 'the drawing uses every triangle the core returned');
+  assert.match(d.desc, /three-dimensional TIN surface/);
+  assert.notEqual(
+    diagram(t.id, args, r, '', { turn: 30, tilt: 35 }).markup,
+    diagram(t.id, args, r, '', { turn: 120, tilt: 20 }).markup,
+    'turn and tilt change the view',
+  );
+});

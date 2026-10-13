@@ -224,6 +224,55 @@ function borrowPit(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/**
+ * The exact TIN used for the stockpile volume, projected from easting,
+ * northing, and elevation into a rotatable view. The core supplies the
+ * triangle indexes, so the drawing never triangulates the shots a second way.
+ */
+function stockpileSurface(args, result, view = {}) {
+  const unit = unitOf(result, 'max_height') || 'ft';
+  const rows = [...(Array.isArray(args.base) ? args.base : []), ...(Array.isArray(args.surface) ? args.surface : [])];
+  const points = rows.map((p) => [
+    measure(p.easting, LENGTH, unit),
+    measure(p.northing, LENGTH, unit),
+    measure(p.elevation, LENGTH, unit),
+  ]);
+  const triangles = result.result.surface_triangles ?? [];
+  if (points.length < 4 || !points.flat().every(Number.isFinite) || !triangles.length) return null;
+  const indexes = triangles.map((t) => [t.a, t.b, t.c]);
+  if (!indexes.every((t) => t.every((i) => Number.isInteger(i) && i >= 0 && i < points.length))) return null;
+
+  const turn = view.turn ?? 30;
+  const tilt = view.tilt ?? 35;
+  const [ct, st, sv, cv] = [Math.cos(turn * R), Math.sin(turn * R), Math.sin(tilt * R), Math.cos(tilt * R)];
+  const project = ([e, n, z]) => [e * ct - n * st, (e * st + n * ct) * sv + z * cv];
+  const depth = ([e, n, z]) => (e * st + n * ct) * cv - z * sv;
+  const S = fit(points.map(project), 250, 160);
+  const shown = indexes
+    .map((vertices) => ({ vertices, depth: vertices.reduce((sum, i) => sum + depth(points[i]), 0) / 3 }))
+    .sort((a, b) => b.depth - a.depth);
+  const faces = shown.map(({ vertices }) => {
+    const d = path(vertices.map((i) => S(project(points[i]))), true);
+    return `<path class="dg-fill" data-vertices="${vertices.join(',')}" d="${d}"/><path class="dg-grid" fill="none" d="${d}"/>`;
+  });
+  const dots = points.length <= 200
+    ? points.map((p, i) => {
+        const [x, y] = S(project(p));
+        return `<circle class="${i < (args.base?.length ?? 0) ? 'dg-hollow' : 'dg-dot'}" cx="${f1(x)}" cy="${f1(y)}" r="2.5"/>`;
+      })
+    : [];
+  const total = val(result, 'triangles');
+  const sample = total > shown.length ? ` · showing ${shown.length.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} triangles` : ` · ${total.toLocaleString('en-US')} triangles`;
+  const body = [
+    ...faces,
+    ...dots,
+    text('dg-muted-text', 12, 22, `Turned ${Math.round(turn)}°, seen from ${Math.round(tilt)}° above`),
+    text('dg-label', 160, 226, `${disp(result, 'volume')}${sample}`, 'middle'),
+  ].join('');
+  const title = `Rotatable three-dimensional TIN surface for the stockpile: ${disp(result, 'volume')} from ${total.toLocaleString('en-US')} triangles${total > shown.length ? `; ${shown.length.toLocaleString('en-US')} deterministically sampled triangles shown` : ''}. Hollow points are the base outline and solid points are surface shots.`;
+  return { markup: svg(body, title), desc: title, rotatable: true };
+}
+
 /** Circular curve, plan view: the two tangents meeting at the PI, the arc from PC to PT, and the long chord. */
 function circularCurve(args, result) {
   const [R_, delta, T, L] = ['radius', 'delta', 'tangent', 'length'].map((k) => val(result, k));
@@ -516,6 +565,7 @@ export const DIAGRAMS = {
   'survey.earthwork.profile-grades': profileGrades,
   'survey.curves.spiral': spiralCurve,
   'survey.earthwork.borrow-pit': borrowPit,
+  'survey.earthwork.stockpile': stockpileSurface,
   'survey.curves.circular-curve': circularCurve,
   'survey.earthwork.average-end-area': endAreas,
   'survey.earthwork.prismoidal': endAreas,

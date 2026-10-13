@@ -85,9 +85,15 @@ test('alias slugs redirect to their named parent without becoming tools', () => 
   assert.deepEqual(checkAliases(list, catalog), []);
   assert.deepEqual(aliases.map((entry) => entry.from), [
     '/aviation/crosswind-calculator/',
+    '/aviation/hold-entry/',
+    '/aviation/metar-decoder/',
     '/drone/flight-time-calculator/',
     '/drone/gsd-calculator/',
     '/drone/overlap-calculator/',
+    '/survey/deed-plotter/',
+    '/survey/township-range-section/',
+    '/time/night-currency/',
+    '/time/zulu-time-converter/',
   ]);
   for (const alias of aliases) {
     assert.ok(!catalog.tools.some((tool) => `/${tool.id.split('.').join('/')}/` === alias.from), `${alias.from} became a tool`);

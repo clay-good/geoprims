@@ -6,6 +6,18 @@
     "aliasOf": "aviation.wind.runway-components"
   },
   {
+    "from": "/aviation/hold-entry/",
+    "to": "/aviation/ifr/hold-entry/",
+    "since": "2026-10-12",
+    "aliasOf": "aviation.ifr.hold-entry"
+  },
+  {
+    "from": "/aviation/metar-decoder/",
+    "to": "/aviation/weather/metar-decode/",
+    "since": "2026-10-12",
+    "aliasOf": "aviation.weather.metar-decode"
+  },
+  {
     "from": "/drone/flight-time-calculator/",
     "to": "/drone/power/endurance/",
     "since": "2026-10-12",
@@ -22,6 +34,30 @@
     "to": "/drone/photogrammetry/trigger/",
     "since": "2026-10-12",
     "aliasOf": "drone.photogrammetry.trigger"
+  },
+  {
+    "from": "/survey/deed-plotter/",
+    "to": "/survey/land/deed-plot/",
+    "since": "2026-10-12",
+    "aliasOf": "survey.land.deed-plot"
+  },
+  {
+    "from": "/survey/township-range-section/",
+    "to": "/survey/land/plss-parse/",
+    "since": "2026-10-12",
+    "aliasOf": "survey.land.plss-parse"
+  },
+  {
+    "from": "/time/night-currency/",
+    "to": "/time/sun/night-currency/",
+    "since": "2026-10-12",
+    "aliasOf": "time.sun.night-currency"
+  },
+  {
+    "from": "/time/zulu-time-converter/",
+    "to": "/time/scale/utc-offset/",
+    "since": "2026-10-12",
+    "aliasOf": "time.scale.utc-offset"
   },
   {
     "from": "/journeys/vfr-preflight/",

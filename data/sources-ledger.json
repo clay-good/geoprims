@@ -1032,6 +1032,26 @@
       "editionCheck": false
     },
     {
+      "id": "gdal-hillshade",
+      "name": "GDAL raster hillshade documentation",
+      "issuer": "Open Source Geospatial Foundation",
+      "currentEdition": "GDAL 3.13.3",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-12",
+      "verificationNote": "Checked the official stable GDAL documentation on 2026-10-12. The hillshade command defaults to z-factor 1, azimuth 315 degrees, altitude 45 degrees, the Horn gradient, and regular shading.",
+      "freeAccessUrl": "https://gdal.org/en/stable/programs/gdal_raster_hillshade.html",
+      "matchTerms": [
+        "gdal raster hillshade"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "geographiclib",
       "name": "GeographicLib",
       "issuer": "C. F. F. Karney",

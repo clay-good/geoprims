@@ -25,6 +25,14 @@ pub const HORN: Reference = Reference {
     locator: "The eight-neighbor gradient estimate used for slope, aspect, and hill shading",
     url: "https://doi.org/10.1109/PROC.1981.11918",
 };
+const GDAL_HILLSHADE: Reference = Reference {
+    title: "gdal raster hillshade",
+    issuer: "GDAL/OGR contributors, Open Source Geospatial Foundation",
+    year: 2026,
+    edition: "GDAL 3.13.3 documentation",
+    locator: "Options: z-factor 1, azimuth 315°, altitude 45°, and Horn gradient defaults",
+    url: "https://gdal.org/en/stable/programs/gdal_raster_hillshade.html",
+};
 pub const RILEY: Reference = Reference {
     title: "A terrain ruggedness index that quantifies topographic heterogeneity",
     issuer: "Riley, S. J., DeGloria, S. D., and Elliot, R., Intermountain Journal of Sciences",
@@ -463,7 +471,7 @@ pub static SLOPE: ToolDef = ToolDef {
     accuracy: "Exact evaluation of Horn's formulas. On a degree-based grid the cell sizes come from the WGS 84 meridian and prime-vertical radii at the latitude given.",
     when_to_use: "Use this to see what a DEM says about one cell, and to check a raster pipeline against a hand-worked case: the nine elevations in, the slope, the aspect, and the hillshade out, with the cell sizes actually used. It is also the way to see how much a degree-based grid's latitude correction matters, which is where slope from an unprojected DEM usually goes wrong.",
     limitations: "It works on the nine elevations you give, not on a raster: a whole-DEM version belongs with the GeoTIFF tools. Horn's method smooths, so a slope from a coarse DEM is gentler than the ground; and the answer is only as good as the elevation model, which for a surface model includes buildings and canopy rather than the ground under them.",
-    references: &[HORN],
+    references: &[HORN, GDAL_HILLSHADE],
     examples: &[Example {
         id: "primary",
         title: "A 30 m window falling to the south-east",
@@ -501,6 +509,24 @@ pub static SLOPE: ToolDef = ToolDef {
             value: "298.257223563",
             unit: "1",
             source: "nga-wgs84",
+        },
+        Assumption {
+            name: "Default hillshade vertical exaggeration",
+            value: "1",
+            unit: "1",
+            source: "gdal-hillshade",
+        },
+        Assumption {
+            name: "Default hillshade light azimuth",
+            value: "315",
+            unit: "deg",
+            source: "gdal-hillshade",
+        },
+        Assumption {
+            name: "Default hillshade light altitude",
+            value: "45",
+            unit: "deg",
+            source: "gdal-hillshade",
         },
     ],
     sentence: "The slope is {slope} ({slope_percent}%), facing {aspect_text}.",

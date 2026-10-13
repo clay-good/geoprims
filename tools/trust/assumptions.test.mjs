@@ -311,6 +311,17 @@ test('the sensing tools expose their published LAS and USGS tables', () => {
   ]);
 });
 
+test('the slope and hillshade tool exposes its geodetic and rendering defaults', () => {
+  const assumptions = byId('raster.terrain.slope-aspect')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['6378137', 'm', 'nga-wgs84'],
+    ['298.257223563', '1', 'nga-wgs84'],
+    ['1', '1', 'gdal-hillshade'],
+    ['315', 'deg', 'gdal-hillshade'],
+    ['45', 'deg', 'gdal-hillshade'],
+  ]);
+});
+
 test('the Fresnel tools expose every physical constant and clearance screen in their models', () => {
   const point = byId('navigation.los.fresnel')['x-assumptions'];
   assert.deepEqual(point.map(({ value, unit, source }) => [value, unit, source]), [

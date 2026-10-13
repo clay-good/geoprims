@@ -17,7 +17,7 @@ When the cell size is given in degrees, it is turned into meters with the WGS 84
 
 ## Symbols and units
 
-Inputs: `elevations` (three rows of three heights in meters, north row first), `cell_size` (meters) or `cell_degrees` with `lat`, `z_factor`, `sun_azimuth`, and `sun_altitude`. Outputs: `slope` (degrees), `slope_percent`, `aspect` (degrees clockwise from north, absent when flat), `aspect_text`, `hillshade` (0 to 255), and the cell sizes used.
+Inputs: `elevations` (three rows of three heights in meters, north row first), `cell_size` (meters) or `cell_degrees` with `lat`, `z_factor` (default 1), `sun_azimuth` (default 315°), and `sun_altitude` (default 45°). The 3 defaults match GDAL's regular Horn hillshade. Outputs: `slope` (degrees), `slope_percent`, `aspect` (degrees clockwise from north, absent when flat), `aspect_text`, `hillshade` (0 to 255), and the cell sizes used.
 
 ## Domain
 

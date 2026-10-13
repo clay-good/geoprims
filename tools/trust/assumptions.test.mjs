@@ -72,6 +72,8 @@ const MUST_DECLARE = [
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
+  'drone.photogrammetry.image-count',
+  'drone.mission.survey-grid',
   'drone.mission.facade',
   'drone.sensors.thermal-footprint',
   'drone.sensors.dataset-size',
@@ -234,6 +236,13 @@ test('the photogrammetry defaults name their published values', () => {
     trigger.filter((a) => a.source === 'pix4d-overlap').map((a) => [a.value, a.unit]),
     [['75', '%'], ['60', '%'], ['85', '%'], ['85', '%']],
   );
+
+  for (const id of ['drone.photogrammetry.image-count', 'drone.mission.survey-grid']) {
+    const assumptions = byId(id)['x-assumptions'];
+    assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+      ['2', 'photos per end', 'psu-geog892'],
+    ], id);
+  }
 });
 
 test('the facade and thermal defaults cite the guidance they apply', () => {

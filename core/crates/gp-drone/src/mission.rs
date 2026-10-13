@@ -12,7 +12,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::tm::Tm;
 use libm::{atan, atan2, cos, hypot, sin};
@@ -1161,6 +1163,12 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Default extra photos before and after each flight line",
+        value: "2",
+        unit: "photos per end",
+        source: "psu-geog892",
+    }],
     sentence: "Fly {lines} {plural lines \"line\" \"lines\"} for {path_length} and about {photos} photos.{if flight_time > 0} That takes about {flight_time}.{/if}",
     limits: &[("batchRows", 100)],
     run: run_grid,
@@ -1605,6 +1613,12 @@ pub static IMAGE_COUNT: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[Assumption {
+        name: "Default extra photos before and after each flight line",
+        value: "2",
+        unit: "photos per end",
+        source: "psu-geog892",
+    }],
     sentence: "Plan on about {photos} photos over {lines} {plural lines \"line\" \"lines\"} and {path_length} of flying.",
     limits: &[("batchRows", 1_000)],
     run: run_count,

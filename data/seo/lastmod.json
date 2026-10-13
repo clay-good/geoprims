@@ -316,7 +316,7 @@
     "lastmod": "2026-10-09"
   },
   "/drone/mission/survey-grid/": {
-    "hash": "e58df01069854e47",
+    "hash": "69ef564bae5d807f",
     "lastmod": "2026-10-13"
   },
   "/drone/ops/": {
@@ -376,8 +376,8 @@
     "lastmod": "2026-10-09"
   },
   "/drone/photogrammetry/image-count/": {
-    "hash": "02cbb6dee3dce7ca",
-    "lastmod": "2026-10-09"
+    "hash": "58f1125d27663d8a",
+    "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/motion-blur/": {
     "hash": "d343f82507f339e2",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bbe683126559505e",
+    "hash": "0f542cfd65119d31",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

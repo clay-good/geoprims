@@ -1780,7 +1780,10 @@
         {
           "want": "find where two bearings or distances meet",
           "tools": [
-            "intersection"
+            "intersection",
+            "bearing-bearing",
+            "bearing-distance",
+            "distance-distance"
           ]
         },
         {

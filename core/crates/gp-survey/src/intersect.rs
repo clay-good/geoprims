@@ -31,17 +31,77 @@ const SOLUTION: &[Field] = &[
     len_out("easting", "Easting", "Of the intersection"),
 ];
 
+const NORTHING1: Field = len("northing1", "First point northing", "Like 1000.00 ft")
+    .required()
+    .core();
+const EASTING1: Field = len("easting1", "First point easting", "Like 1000.00 ft")
+    .required()
+    .core();
+const DIRECTION1: Field = Field::new(
+    "direction1",
+    "Direction from the first point",
+    "Bearing or azimuth, like N 45°00'00\" E",
+    Kind::Text { max_len: 32 },
+)
+.core();
+const DISTANCE1: Field = len(
+    "distance1",
+    "Distance from the first point",
+    "Instead of a direction, like 300.00 ft",
+)
+.core();
+const NORTHING2: Field = len("northing2", "Second point northing", "Like 1000.00 ft")
+    .required()
+    .core();
+const EASTING2: Field = len("easting2", "Second point easting", "Like 1400.00 ft")
+    .required()
+    .core();
+const DIRECTION2: Field = Field::new(
+    "direction2",
+    "Direction from the second point",
+    "Bearing or azimuth, like N 30°00'00\" W",
+    Kind::Text { max_len: 32 },
+);
+const DISTANCE2: Field = len(
+    "distance2",
+    "Distance from the second point",
+    "Instead of a direction, like 250.00 ft",
+);
+
+const INTERSECTION_INPUTS: &[Field] = &[
+    NORTHING1, EASTING1, DIRECTION1, DISTANCE1, NORTHING2, EASTING2, DIRECTION2, DISTANCE2,
+];
+const BEARING_BEARING_INPUTS: &[Field] = &[
+    NORTHING1,
+    EASTING1,
+    DIRECTION1.required(),
+    NORTHING2,
+    EASTING2,
+    DIRECTION2.required(),
+];
+const BEARING_DISTANCE_INPUTS: &[Field] = &[
+    NORTHING1,
+    EASTING1,
+    DIRECTION1.required(),
+    NORTHING2,
+    EASTING2,
+    DISTANCE2.required(),
+];
+const DISTANCE_DISTANCE_INPUTS: &[Field] = &[
+    NORTHING1,
+    EASTING1,
+    DISTANCE1.required(),
+    NORTHING2,
+    EASTING2,
+    DISTANCE2.required(),
+];
+
 pub static INTERSECTION: ToolDef = ToolDef {
     id: "survey.cogo.intersection",
     stability: gp_base::tool::Stability::Stable,
     title: "Intersection (bearings and distances)",
     summary: "Where two lines cross, a line meets a circle, or two circles meet: bearing–bearing, bearing–distance, and distance–distance intersections from two known points, every solution returned and labeled.",
-    aliases: &[
-        "COGO intersection",
-        "bearing bearing intersection",
-        "distance distance intersection",
-        "bearing distance intersection",
-    ],
+    aliases: &["COGO intersection", "survey intersection calculator"],
     keywords: &[
         "intersection",
         "bearing",
@@ -50,44 +110,7 @@ pub static INTERSECTION: ToolDef = ToolDef {
         "two solutions",
         "arc",
     ],
-    inputs: &[
-        len("northing1", "First point northing", "Like 1000.00 ft")
-            .required()
-            .core(),
-        len("easting1", "First point easting", "Like 1000.00 ft")
-            .required()
-            .core(),
-        Field::new(
-            "direction1",
-            "Direction from the first point",
-            "Bearing or azimuth, like N 45°00'00\" E",
-            Kind::Text { max_len: 32 },
-        )
-        .core(),
-        len(
-            "distance1",
-            "Distance from the first point",
-            "Instead of a direction, like 300.00 ft",
-        )
-        .core(),
-        len("northing2", "Second point northing", "Like 1000.00 ft")
-            .required()
-            .core(),
-        len("easting2", "Second point easting", "Like 1400.00 ft")
-            .required()
-            .core(),
-        Field::new(
-            "direction2",
-            "Direction from the second point",
-            "Bearing or azimuth, like N 30°00'00\" W",
-            Kind::Text { max_len: 32 },
-        ),
-        len(
-            "distance2",
-            "Distance from the second point",
-            "Instead of a direction, like 250.00 ft",
-        ),
-    ],
+    inputs: INTERSECTION_INPUTS,
     outputs: &[
         Field::new(
             "solutions",
@@ -151,7 +174,175 @@ pub static INTERSECTION: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+macro_rules! intersection_method {
+    ($name:ident, $run:ident, $id:literal, $title:literal, $summary:literal, $aliases:expr,
+     $keywords:expr, $inputs:expr, $model:literal, $when:literal, $limits:literal,
+     $example_title:literal, $example:literal, $source:literal, $sentence:literal,
+     $stability:expr, $warnings:expr, $related:expr) => {
+        pub static $name: ToolDef = ToolDef {
+            id: concat!("survey.cogo.", $id),
+            title: $title,
+            summary: $summary,
+            aliases: $aliases,
+            keywords: $keywords,
+            inputs: $inputs,
+            outputs: INTERSECTION.outputs,
+            errors: INTERSECTION.errors,
+            warnings: $warnings,
+            model: $model,
+            accuracy: INTERSECTION.accuracy,
+            when_to_use: $when,
+            limitations: $limits,
+            references: INTERSECTION.references,
+            examples: &[Example {
+                id: "primary",
+                title: $example_title,
+                input: $example,
+                source: $source,
+            }],
+            primary_example: "primary",
+            visualization: INTERSECTION.visualization,
+            related: $related,
+            stability: $stability,
+            sentence: $sentence,
+            limits: INTERSECTION.limits,
+            run: $run,
+            ..ToolDef::BLANK
+        };
+    };
+}
+
+intersection_method!(
+    BEARING_BEARING,
+    run_bearing_bearing,
+    "bearing-bearing",
+    "Bearing-bearing intersection",
+    "Finds the point where 2 forward bearings or azimuths from known points intersect.",
+    &[
+        "bearing bearing intersection",
+        "direction direction intersection"
+    ],
+    &["intersection", "bearing", "azimuth", "COGO", "line line"],
+    BEARING_BEARING_INPUTS,
+    "Plane line-line intersection from 2 known points and 2 forward directions (Ghilani & Wolf 2021, ch. 11)",
+    "Use this to fix an inaccessible point by observing or specifying a forward bearing from each of 2 known control points. Both directions must point toward the wanted point. The operation returns the single coordinate where those rays meet and refuses parallel rays or a crossing behind either point. Inspect the crossing geometry before accepting the coordinate, especially when the 2 sight lines meet at a narrow angle.",
+    "The coordinates must be on one plane grid or local system, not latitude and longitude. A shallow crossing angle makes the result highly sensitive to small direction errors. This geometric intersection has no redundancy, uncertainty estimate, or blunder detection.",
+    "Michigan DOT line-line intersection",
+    r#"{"northing1":"4080.822 ft","easting1":"5447.330 ft","direction1":"334°48'47\"","northing2":"4377.864 ft","easting2":"5752.796 ft","direction2":"308°39'58\""}"#,
+    "Michigan Department of Transportation survey manual, part III, section 3.6.1 and figure 3.26",
+    "The 2 bearings meet at {count} point.",
+    gp_base::tool::Stability::Stable,
+    &["LEGACY_UNIT", "UNIT_ASSUMED"],
+    &[
+        Related {
+            id: "survey.cogo.intersection",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.bearing-distance",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.distance-distance",
+            reason: "alternative"
+        },
+    ]
+);
+
+intersection_method!(
+    BEARING_DISTANCE,
+    run_bearing_distance,
+    "bearing-distance",
+    "Bearing-distance intersection",
+    "Finds every forward point on a bearing or azimuth that lies at a given distance from a second known point.",
+    &["bearing distance intersection", "line circle intersection"],
+    &[
+        "intersection",
+        "bearing",
+        "distance",
+        "COGO",
+        "line circle",
+        "two solutions"
+    ],
+    BEARING_DISTANCE_INPUTS,
+    "Plane line-circle intersection from a forward direction at the first point and a radius about the second point (Ghilani & Wolf 2021, ch. 11)",
+    "Use this to fix a point that lies on a known forward bearing from one control point and at a measured distance from another. It returns every solution in front of the bearing point, nearest first, so field evidence can identify the intended point.",
+    "The coordinates must be on one plane grid or local system. The geometry can have 0, 1, or 2 solutions; this operation cannot choose between 2 valid field positions. A near-tangent crossing is sensitive to small input errors and no redundant observation is available to detect a blunder. Check the selected point against the site sketch.",
+    "A north line through a 50 m circle",
+    r#"{"northing1":"0 m","easting1":"0 m","direction1":"0","northing2":"40 m","easting2":"30 m","distance2":"50 m"}"#,
+    "add-survey-suite bearing-distance scenario",
+    "The bearing and distance give {count} {plural count \"point\" \"points\"}.",
+    gp_base::tool::Stability::Experimental,
+    &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    &[
+        Related {
+            id: "survey.cogo.intersection",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.bearing-bearing",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.distance-distance",
+            reason: "alternative"
+        },
+    ]
+);
+
+intersection_method!(
+    DISTANCE_DISTANCE,
+    run_distance_distance,
+    "distance-distance",
+    "Distance-distance intersection",
+    "Finds every point at the entered distances from 2 known points and labels each side of their baseline.",
+    &[
+        "distance distance intersection",
+        "circle circle intersection",
+        "two distance fix"
+    ],
+    &[
+        "intersection",
+        "distance",
+        "COGO",
+        "circle circle",
+        "two solutions",
+        "trilateration"
+    ],
+    DISTANCE_DISTANCE_INPUTS,
+    "Plane circle-circle intersection from 2 known centers and their measured radii (Ghilani & Wolf 2021, ch. 11)",
+    "Use this to fix a point from distances measured to 2 known control points. It returns both valid coordinates when they exist and labels them left or right of the directed baseline from the first control point to the second.",
+    "The coordinates and distances must share one plane grid or local system. Two distances normally leave a left-right ambiguity that field evidence must resolve. Near-tangent circles are sensitive to small distance errors, and 2 distances alone provide no redundancy or blunder detection. A result also depends on the stated order of the control points because that order defines the left and right labels. Check both distances and the side against the field notes before using the coordinate.",
+    "Tangent circles on a 100 ft baseline",
+    r#"{"northing1":"0 ft","easting1":"0 ft","distance1":"60 ft","northing2":"0 ft","easting2":"100 ft","distance2":"40 ft"}"#,
+    "add-survey-suite distance-distance geometry",
+    "The 2 distances give {count} {plural count \"point\" \"points\"}.",
+    gp_base::tool::Stability::Experimental,
+    &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    &[
+        Related {
+            id: "survey.cogo.intersection",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.cogo.bearing-bearing",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.bearing-distance",
+            reason: "alternative"
+        },
+    ]
+);
+
 type P = (f64, f64); // (northing, easting)
+
+#[derive(Clone, Copy)]
+enum IntersectionMethod {
+    BearingBearing,
+    BearingDistance,
+    DistanceDistance,
+}
 
 /// Which side of the directed baseline a point lies on, as a label.
 fn side(a: P, b: P, p: P) -> &'static str {
@@ -167,14 +358,39 @@ fn side(a: P, b: P, p: P) -> &'static str {
 }
 
 fn run_intersection(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_intersection_with(ctx, None)
+}
+
+fn run_bearing_bearing(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_intersection_with(ctx, Some(IntersectionMethod::BearingBearing))
+}
+
+fn run_bearing_distance(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_intersection_with(ctx, Some(IntersectionMethod::BearingDistance))
+}
+
+fn run_distance_distance(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_intersection_with(ctx, Some(IntersectionMethod::DistanceDistance))
+}
+
+fn run_intersection_with(
+    ctx: &mut Ctx,
+    fixed_method: Option<IntersectionMethod>,
+) -> Result<Json, ToolError> {
     let (n1, e1, n2, e2) = (
         ctx.req_quantity("northing1")?,
         ctx.req_quantity("easting1")?,
         ctx.req_quantity("northing2")?,
         ctx.req_quantity("easting2")?,
     );
-    let d1 = ctx.quantity("distance1")?;
-    let d2 = ctx.quantity("distance2")?;
+    let (d1, d2) = match fixed_method {
+        Some(IntersectionMethod::BearingBearing) => (None, None),
+        Some(IntersectionMethod::BearingDistance) => (None, ctx.quantity("distance2")?),
+        Some(IntersectionMethod::DistanceDistance) => {
+            (ctx.quantity("distance1")?, ctx.quantity("distance2")?)
+        }
+        None => (ctx.quantity("distance1")?, ctx.quantity("distance2")?),
+    };
     let mut named = vec![
         ("northing1", n1),
         ("easting1", e1),
@@ -193,7 +409,14 @@ fn run_intersection(ctx: &mut Ctx) -> Result<Json, ToolError> {
             })
             .transpose()
     };
-    let (t1, t2) = (dir(ctx, "direction1")?, dir(ctx, "direction2")?);
+    let (t1, t2) = match fixed_method {
+        Some(IntersectionMethod::BearingBearing) => {
+            (dir(ctx, "direction1")?, dir(ctx, "direction2")?)
+        }
+        Some(IntersectionMethod::BearingDistance) => (dir(ctx, "direction1")?, None),
+        Some(IntersectionMethod::DistanceDistance) => (None, None),
+        None => (dir(ctx, "direction1")?, dir(ctx, "direction2")?),
+    };
     let a: P = (n1.to(u), e1.to(u));
     let b: P = (n2.to(u), e2.to(u));
     let (r1, r2) = (d1.map(|q| q.to(u)), d2.map(|q| q.to(u)));

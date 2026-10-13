@@ -1141,6 +1141,140 @@ def intersection():
     return out
 
 
+def named_intersection(kind):
+    rng = random.Random({"bearing-bearing": 32611, "bearing-distance": 32612, "distance-distance": 32613}[kind])
+    out = []
+
+    def line_line(a, az1, b, az2):
+        r1, r2 = math.radians(az1), math.radians(az2)
+        c1, s1, c2, s2 = math.cos(r1), math.sin(r1), math.cos(r2), math.sin(r2)
+        det = c1 * -s2 - s1 * -c2
+        t = ((b[0] - a[0]) * -s2 - (b[1] - a[1]) * -c2) / det
+        w = (c1 * (b[1] - a[1]) - s1 * (b[0] - a[0])) / det
+        return (a[0] + t * c1, a[1] + t * s1), t, w
+
+    def line_circle(a, azimuth, center, radius):
+        r = math.radians(azimuth)
+        c, s = math.cos(r), math.sin(r)
+        dn, de = a[0] - center[0], a[1] - center[1]
+        bq = 2 * (c * dn + s * de)
+        cq = dn * dn + de * de - radius * radius
+        root = math.sqrt(max(0.0, bq * bq - 4 * cq))
+        ts = [t for t in ((-bq - root) / 2, (-bq + root) / 2) if t >= -1e-9]
+        return [(a[0] + t * c, a[1] + t * s) for t in ts]
+
+    def circle_circle(a, r1, b, r2):
+        distance = math.hypot(b[0] - a[0], b[1] - a[1])
+        x = (r1 * r1 - r2 * r2 + distance * distance) / (2 * distance)
+        h = math.sqrt(max(0.0, r1 * r1 - x * x))
+        un, ue = (b[0] - a[0]) / distance, (b[1] - a[1]) / distance
+        return [
+            (a[0] + x * un + h * ue, a[1] + x * ue - h * un),
+            (a[0] + x * un - h * ue, a[1] + x * ue + h * un),
+        ]
+
+    if kind == "bearing-bearing":
+        out.append(vec(1, {"northing1": "4080.822 ft", "easting1": "5447.330 ft", "direction1": "334°48'47\"",
+                           "northing2": "4377.864 ft", "easting2": "5752.796 ft", "direction2": "308°39'58\""},
+                       {"result.count": 1.0, "result.solutions.0.northing.value": 4948.999,
+                        "result.solutions.0.easting.value": 5039.038}, MDOT, MDOT_VER))
+        out[-1]["tolerance"] = {"result.count": {"abs": 0}, "result.solutions.0.northing.value": {"abs": 0.001},
+                                "result.solutions.0.easting.value": {"abs": 0.001}}
+        out.append(vec(2, {"northing1": "0 m", "easting1": "0 m", "direction1": "N 45 E",
+                           "northing2": "0 m", "easting2": "100 m", "direction2": "N 45 W"},
+                       {"result.count": 1.0, "result.solutions.0.northing.value": 50.0,
+                        "result.solutions.0.easting.value": 50.0}))
+        while len(out) < 20:
+            a = (round(rng.uniform(1000, 9000), 3), round(rng.uniform(1000, 9000), 3))
+            b = (round(rng.uniform(1000, 9000), 3), round(rng.uniform(1000, 9000), 3))
+            target = (rng.uniform(1000, 9000), rng.uniform(1000, 9000))
+            az1 = round(math.degrees(math.atan2(target[1] - a[1], target[0] - a[0])) % 360, 9)
+            az2 = round(math.degrees(math.atan2(target[1] - b[1], target[0] - b[0])) % 360, 9)
+            crossing = min(abs(az1 - az2) % 180, 180 - abs(az1 - az2) % 180)
+            if crossing < 10:
+                continue
+            p, t, w = line_line(a, az1, b, az2)
+            if min(t, w) <= 1:
+                continue
+            unit_name = ["ft", "m", "ftUS"][len(out) % 3]
+            out.append(vec(len(out) + 1, {
+                "northing1": f"{a[0]} {unit_name}", "easting1": f"{a[1]} {unit_name}", "direction1": f"{az1}",
+                "northing2": f"{b[0]} {unit_name}", "easting2": f"{b[1]} {unit_name}", "direction2": f"{az2}"},
+                {"result.count": 1.0, "result.solutions.0.northing.value": p[0], "result.solutions.0.easting.value": p[1]}, rel=1e-9))
+        invalid = [
+            ({"northing1": "0 ft", "easting1": "0 ft", "direction1": "N 10 E", "northing2": "0 ft", "easting2": "100 ft", "direction2": "N 10 E"}, "/direction2"),
+            ({"northing1": "0 ft", "easting1": "0 ft", "direction1": "S 45 W", "northing2": "0 ft", "easting2": "100 ft", "direction2": "S 45 E"}, "/direction2"),
+            ({"northing1": "0 ft", "easting1": "0 ft", "direction1": "45", "northing2": "0 ftUS", "easting2": "100 ftUS", "direction2": "315"}, None),
+        ]
+    elif kind == "bearing-distance":
+        out.append(vec(1, {"northing1": "0 m", "easting1": "0 m", "direction1": "0", "northing2": "40 m", "easting2": "30 m", "distance2": "50 m"},
+                       {"result.count": 2.0, "result.solutions.0.northing.value": 0.0,
+                        "result.solutions.1.northing.value": 80.0}, SPEC, "2026"))
+        while len(out) < 20:
+            a = (round(rng.uniform(1000, 9000), 3), round(rng.uniform(1000, 9000), 3))
+            azimuth = round(rng.uniform(0, 360), 9)
+            angle = math.radians(azimuth)
+            midpoint = rng.uniform(300, 1800)
+            half = rng.uniform(60, min(250, midpoint - 10))
+            offset = rng.uniform(-500, 500)
+            center = (round(a[0] + midpoint * math.cos(angle) - offset * math.sin(angle), 3),
+                      round(a[1] + midpoint * math.sin(angle) + offset * math.cos(angle), 3))
+            dn, de = center[0] - a[0], center[1] - a[1]
+            projection = dn * math.cos(angle) + de * math.sin(angle)
+            perpendicular2 = dn * dn + de * de - projection * projection
+            radius = round(math.sqrt(max(0.0, perpendicular2) + half * half), 6)
+            points = line_circle(a, azimuth, center, radius)
+            if len(points) != 2:
+                continue
+            unit_name = ["m", "ft", "ftUS"][len(out) % 3]
+            out.append(vec(len(out) + 1, {
+                "northing1": f"{a[0]} {unit_name}", "easting1": f"{a[1]} {unit_name}", "direction1": f"{azimuth}",
+                "northing2": f"{center[0]} {unit_name}", "easting2": f"{center[1]} {unit_name}", "distance2": f"{radius} {unit_name}"},
+                {"result.count": 2.0, "result.solutions.0.northing.value": points[0][0], "result.solutions.0.easting.value": points[0][1],
+                 "result.solutions.1.northing.value": points[1][0], "result.solutions.1.easting.value": points[1][1]}, rel=1e-9))
+        invalid = [
+            ({"northing1": "0 ft", "easting1": "0 ft", "direction1": "0", "northing2": "0 ft", "easting2": "100 ft", "distance2": "10 ft"}, "/distance2"),
+            ({"northing1": "0 ft", "easting1": "0 ft", "direction1": "180", "northing2": "100 ft", "easting2": "0 ft", "distance2": "10 ft"}, "/direction1"),
+            ({"northing1": "0 ft", "easting1": "0 ft", "direction1": "0", "northing2": "0 ftUS", "easting2": "10 ftUS", "distance2": "5 ftUS"}, None),
+        ]
+    else:
+        a, b, r1, r2 = (0.0, 0.0), (0.0, 100.0), 60.0, 40.0
+        points = circle_circle(a, r1, b, r2)
+        out.append(vec(1, {"northing1": "0 ft", "easting1": "0 ft", "distance1": "60 ft",
+                           "northing2": "0 ft", "easting2": "100 ft", "distance2": "40 ft"},
+                       {"result.count": 1.0, "result.solutions.0.label": "the intersection",
+                        "result.solutions.0.northing.value": points[0][0], "result.solutions.0.easting.value": points[0][1]}, SPEC, "2026"))
+        while len(out) < 20:
+            a = (round(rng.uniform(1000, 9000), 3), round(rng.uniform(1000, 9000), 3))
+            b = (round(rng.uniform(1000, 9000), 3), round(rng.uniform(1000, 9000), 3))
+            baseline = math.hypot(b[0] - a[0], b[1] - a[1])
+            r1 = round(rng.uniform(0.45, 1.1) * baseline, 6)
+            r2 = round(rng.uniform(0.45, 1.1) * baseline, 6)
+            if not (abs(r1 - r2) + 1 < baseline < r1 + r2 - 1):
+                continue
+            points = circle_circle(a, r1, b, r2)
+            unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+            out.append(vec(len(out) + 1, {
+                "northing1": f"{a[0]} {unit_name}", "easting1": f"{a[1]} {unit_name}", "distance1": f"{r1} {unit_name}",
+                "northing2": f"{b[0]} {unit_name}", "easting2": f"{b[1]} {unit_name}", "distance2": f"{r2} {unit_name}"},
+                {"result.count": 2.0, "result.solutions.0.label": "left of the baseline",
+                 "result.solutions.0.northing.value": points[0][0], "result.solutions.0.easting.value": points[0][1],
+                 "result.solutions.1.label": "right of the baseline", "result.solutions.1.northing.value": points[1][0],
+                 "result.solutions.1.easting.value": points[1][1]}, rel=1e-9))
+        invalid = [
+            ({"northing1": "0 ft", "easting1": "0 ft", "distance1": "10 ft", "northing2": "0 ft", "easting2": "100 ft", "distance2": "10 ft"}, "/distance2"),
+            ({"northing1": "0 ft", "easting1": "0 ft", "distance1": "10 ft", "northing2": "0 ft", "easting2": "0 ft", "distance2": "10 ft"}, "/northing2"),
+            ({"northing1": "0 ft", "easting1": "0 ft", "distance1": "10 ft", "northing2": "0 ftUS", "easting2": "10 ftUS", "distance2": "10 ftUS"}, None),
+        ]
+
+    for inp, field in invalid:
+        expected = {"ok": False, "error.code": "UNIT_MISMATCH" if field is None else "INVALID_INPUT"}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
 MDOT = "Michigan Department of Transportation survey manual, part III (Basic Survey Observations), section 3.6.1 and figure 3.26, the line-line intersection example"
 MDOT_VER = "retrieved 2026-09-24"
 
@@ -1948,6 +2082,9 @@ def main():
         "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
         "survey.reduction.level-run": level_run(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
+        "survey.cogo.bearing-bearing": named_intersection("bearing-bearing"),
+        "survey.cogo.bearing-distance": named_intersection("bearing-distance"),
+        "survey.cogo.distance-distance": named_intersection("distance-distance"),
         "survey.cogo.angular-closure": angular_closure(), "survey.cogo.station-offset": station_offset(), "survey.earthwork.slope-stake": slope_stake(),
         "survey.earthwork.section-area": section_area(), "survey.earthwork.borrow-pit": borrow_pit(),
         "survey.curves.curve-layout": curve_layout(), "survey.curves.spiral": spiral(), "survey.curves.unequal-vertical-curve": unequal_vertical(),

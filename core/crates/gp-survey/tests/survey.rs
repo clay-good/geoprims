@@ -1639,6 +1639,51 @@ fn intersection_invariants() {
     }
 }
 
+#[test]
+fn named_intersections_match_the_general_tool() {
+    let cases = [
+        (
+            "survey.cogo.bearing-bearing",
+            serde_json::json!({
+                "northing1": "0 m", "easting1": "0 m", "direction1": "N 45 E",
+                "northing2": "0 m", "easting2": "100 m", "direction2": "N 45 W"
+            }),
+        ),
+        (
+            "survey.cogo.bearing-distance",
+            serde_json::json!({
+                "northing1": "0 m", "easting1": "0 m", "direction1": "0",
+                "northing2": "40 m", "easting2": "30 m", "distance2": "50 m"
+            }),
+        ),
+        (
+            "survey.cogo.distance-distance",
+            serde_json::json!({
+                "northing1": "1000 ft", "easting1": "1000 ft", "distance1": "300 ft",
+                "northing2": "1000 ft", "easting2": "1400 ft", "distance2": "250 ft"
+            }),
+        ),
+    ];
+    for (tool, input) in cases {
+        let named = call(tool, &input.to_string());
+        let general = call("survey.cogo.intersection", &input.to_string());
+        assert_eq!(named["result"], general["result"], "{tool}");
+        assert_eq!(named["display"], general["display"], "{tool}");
+        let named_warnings: Vec<&Value> = named["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|warning| warning["code"] != "EXPERIMENTAL_TOOL")
+            .collect();
+        let general_warnings: Vec<&Value> = general["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .collect();
+        assert_eq!(named_warnings, general_warnings, "{tool}");
+    }
+}
+
 fn sol_count(r: &Value) -> usize {
     r["result"]["count"].as_u64().unwrap() as usize
 }

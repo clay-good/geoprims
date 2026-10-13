@@ -57,6 +57,22 @@ test('each traverse adjustment method is an addressable survey operation', () =>
   assert.equal(byId.get('survey.cogo.bowditch').stability, 'stable');
 });
 
+test('each intersection method is an addressable survey operation', () => {
+  const expected = new Map([
+    ['survey.cogo.bearing-bearing', ['bearing bearing intersection', 'direction direction intersection']],
+    ['survey.cogo.bearing-distance', ['bearing distance intersection', 'line circle intersection']],
+    ['survey.cogo.distance-distance', ['distance distance intersection', 'circle circle intersection']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+  assert.equal(byId.get('survey.cogo.bearing-bearing').stability, 'stable');
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 50, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 53, `survey operation count regressed to ${survey.length}`);
 });

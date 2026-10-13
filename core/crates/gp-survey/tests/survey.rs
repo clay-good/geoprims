@@ -715,6 +715,68 @@ fn slope_reduction_scenarios() {
 }
 
 #[test]
+fn slope_reduction_invariants() {
+    let reduce = |distance: f64, zenith: f64| {
+        call(
+            "survey.reduction.slope",
+            &format!(r#"{{"slope_distance":"{distance} m","zenith":"{zenith} deg"}}"#),
+        )
+    };
+
+    // The horizontal and vertical components reconstruct the measured line,
+    // and scaling the line scales both components.
+    let base = reduce(100.0, 37.0);
+    let (h, v) = (
+        num(&base, "result.horizontal_distance.value"),
+        num(&base, "result.vertical_difference.value"),
+    );
+    assert!((h.hypot(v) - 100.0).abs() < 1e-10);
+    let scaled = reduce(250.0, 37.0);
+    assert!((num(&scaled, "result.horizontal_distance.value") - 2.5 * h).abs() < 1e-10);
+    assert!((num(&scaled, "result.vertical_difference.value") - 2.5 * v).abs() < 1e-10);
+
+    // A vertical angle is the complement of a zenith angle.
+    let vertical = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"100 m","vertical_angle":"53 deg"}"#,
+    );
+    assert_eq!(vertical["result"], base["result"]);
+
+    // Equal face readings cancel the index error; unequal readings expose it
+    // while using their mean for the reduction.
+    let faces = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"100 m","zenith":"80 deg","zenith_face_right":"279 deg"}"#,
+    );
+    assert_eq!(num(&faces, "result.mean_zenith.value"), 80.5);
+    assert_eq!(num(&faces, "result.index_error.value"), -1800.0);
+    let mean = reduce(100.0, 80.5);
+    assert_eq!(
+        num(&faces, "result.horizontal_distance.value"),
+        num(&mean, "result.horizontal_distance.value")
+    );
+
+    // Instrument height adds and target height subtracts one for one.
+    let heights = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"100 m","zenith":"90 deg","instrument_height":"2 m","target_height":"0.5 m"}"#,
+    );
+    assert!((num(&heights, "result.elevation_difference.value") - 1.5).abs() < 1e-12);
+
+    // The optional long-sight correction turns on only beyond its threshold.
+    let at_threshold = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"150 m","zenith":"90 deg","curvature_beyond":"150 m"}"#,
+    );
+    assert!(at_threshold["result"].get("curvature_refraction").is_none());
+    let beyond = call(
+        "survey.reduction.slope",
+        r#"{"slope_distance":"151 m","zenith":"90 deg","curvature_beyond":"150 m"}"#,
+    );
+    assert!(num(&beyond, "result.curvature_refraction.value") > 0.0);
+}
+
+#[test]
 fn curvature_refraction_scenario() {
     // 1 km: 0.0675 m with k = 0.14 and 0.0683 m with k = 0.13, each labeled with its k.
     let a = call(

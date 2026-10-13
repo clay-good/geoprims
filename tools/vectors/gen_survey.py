@@ -11,6 +11,8 @@ from pathlib import Path
 SRC = "Surveying formulas (Ghilani & Wolf 2018) evaluated in Python (tools/vectors/gen_survey.py)"
 VER = "15th edition (2018)"
 SPEC = "add-survey-suite scenarios"
+USGS_TRIG = "USGS Techniques and Methods 11-D3, section 5 example reduction table"
+USGS_TRIG_VER = "2020"
 FT = 0.3048
 YD3_FT3 = 27.0
 
@@ -478,6 +480,46 @@ def slope():
                    {"result.elevation_difference.value": 1.55 + vd - 1.8 + cr, "result.curvature_refraction.value": cr}))
     out.append(vec(9, {"slope_distance": "100 m", "vertical_angle": "5°"}, {"result.vertical_difference.value": 100 * math.cos(math.radians(85))}))
     out.append(vec(10, {"slope_distance": "100 m", "zenith": "274°59'40\""}, {"ok": False, "error.code": "INVALID_INPUT"}, SPEC, "2026"))
+    # USGS TM 11-D3, section 5: the published mean for section 1 to 2 is
+    # 127.531 ft at 90°04'27", with HI 4.850 ft and SH 4.830 ft. Its table
+    # reports the mark-to-mark vertical difference as -0.145 ft.
+    usgs_z = 90 + 4 / 60 + 27 / 3600
+    usgs_hd = 127.531 * math.sin(math.radians(usgs_z))
+    usgs_vd = 127.531 * math.cos(math.radians(usgs_z))
+    out.append(vec(11, {"slope_distance": "127.531 ft", "zenith": "90°04'27\"",
+                        "instrument_height": "4.850 ft", "target_height": "4.830 ft"},
+                   {"result.horizontal_distance.value": usgs_hd, "result.vertical_difference.value": usgs_vd,
+                    "result.elevation_difference.value": 4.850 + usgs_vd - 4.830}, USGS_TRIG, USGS_TRIG_VER))
+    out[-1]["tolerance"]["result.elevation_difference.value"] = {"abs": 0.0005}
+    # Extra differential cases cover both angle conventions, limits, units,
+    # height reduction, curvature, and refusal paths.
+    for sd, z, unit_ in [(100.0, 102.0, "m"), (50.0, 0.0, "m"),
+                         (50.0, 180.0, "m"), (400.0, 60.0, "ft")]:
+        exp = {"result.horizontal_distance.value": sd * math.sin(math.radians(z)),
+               "result.vertical_difference.value": sd * math.cos(math.radians(z))}
+        inp = {"slope_distance": f"{sd} {unit_}", "zenith": f"{z} deg"}
+        if sd == 400.0:
+            inp.update({"instrument_height": "5 ft", "target_height": "6 ft"})
+            exp["result.elevation_difference.value"] = 5 + exp["result.vertical_difference.value"] - 6
+        out.append(vec(len(out) + 1, inp, exp))
+    z = 89.0
+    hd = 2000 * math.sin(math.radians(z))
+    cr = (1 - 0.2) * hd * hd / (2 * R)
+    out.append(vec(len(out) + 1, {"slope_distance": "2 km", "zenith": "89 deg",
+                                  "curvature_beyond": "150 m", "refraction": 0.2},
+                   {"result.curvature_refraction.value": cr / 1000}))
+    v = 100 / math.sqrt(2)
+    out.append(vec(len(out) + 1, {"slope_distance": "100 ftUS", "zenith": "45 deg"},
+                   {"result.horizontal_distance.value": v, "result.horizontal_distance.unit": "ftUS",
+                    "result.vertical_difference.value": v, "result.vertical_difference.unit": "ftUS"}))
+    out.append(vec(len(out) + 1, {"slope_distance": "100 m", "zenith": "80 deg",
+                                  "zenith_face_right": "280 deg"},
+                   {"result.mean_zenith.value": 80.0, "result.index_error.value": 0.0,
+                    "result.horizontal_distance.value": 100 * math.sin(math.radians(80))}))
+    out.append(vec(len(out) + 1, {"slope_distance": "100 m", "zenith": "85 deg", "vertical_angle": "5 deg"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/vertical_angle"}))
+    out.append(vec(len(out) + 1, {"slope_distance": "0 m", "zenith": "90 deg"},
+                   {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/slope_distance"}))
     return out
 
 

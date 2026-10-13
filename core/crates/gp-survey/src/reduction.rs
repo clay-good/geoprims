@@ -44,6 +44,15 @@ const TRIMBLE_ACCESS: Reference = Reference {
     locator: "Curvature and refraction corrections; 0.13 listed as a typical coefficient",
     url: "https://help.fieldsystems.trimble.com/trimble-access/latest/en/Instrument-corrections.htm",
 };
+
+const USGS_TRIG_LEVELING: Reference = Reference {
+    title: "Procedures and Best Practices for Trigonometric Leveling in the U.S. Geological Survey",
+    issuer: "U.S. Geological Survey",
+    year: 2020,
+    edition: "Techniques and Methods 11-D3 (2020)",
+    locator: "Section 5, example reduction table: section 1 to 2 averages 127.531 ft at zenith 90°04′27″ with HI 4.850 ft and SH 4.830 ft, giving mark-to-mark VD −0.145 ft",
+    url: "https://pubs.usgs.gov/tm/11d3/tm11d3.pdf",
+};
 const TERRESTRIAL_REFRACTION: Assumption = Assumption {
     name: "Default terrestrial refraction coefficient k",
     value: "0.13",
@@ -123,6 +132,8 @@ fn zenith(ctx: &mut Ctx) -> Result<(f64, Option<(f64, f64)>), ToolError> {
 
 pub static SLOPE: ToolDef = ToolDef {
     id: "survey.reduction.slope",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Slope distance to horizontal and vertical",
     summary: "Horizontal distance, vertical difference, and elevation difference from a slope distance and zenith angle, with two-face means and the curvature and refraction correction for long sights.",
     aliases: &[
@@ -245,17 +256,17 @@ pub static SLOPE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "HD = SD·sin Z and VD = SD·cos Z (Ghilani & Wolf 2021, ch. 6); two-face mean Z = (FL + 360° − FR)/2 with index error (FL + FR − 360°)/2; curvature and refraction (1 − k)·HD²/(2R) with R = 6,371,000 m",
     accuracy: "Exact for the reduction; the curvature and refraction correction carries the uncertainty of k, which varies with the air near the ground",
     when_to_use: "Use this when a total station gives you a slope distance and a zenith or vertical angle and you need the horizontal distance and the height change. Add the instrument and target heights for the elevation difference. Enter a face-right reading to get the two-face mean zenith and the index error. For long sights, set a distance beyond which curvature and refraction are added.",
     limitations: "The reduction is plane math over one sight. It does not apply the atmospheric ppm, the prism constant, or the grid and elevation factors; those are separate steps. The curvature and refraction term uses one earth radius and a single coefficient, which real air does not hold to. Heights depend on the instrument and target heights being measured right.",
-    references: &[GHILANI, TRIMBLE_ACCESS],
+    references: &[GHILANI, TRIMBLE_ACCESS, USGS_TRIG_LEVELING],
     examples: &[Example {
         id: "primary",
-        title: "500 m at a zenith of 85°",
-        input: r#"{"slope_distance":"500 m","zenith":"85°00'00\""}"#,
-        source: "add-survey-suite scenario: HD ≈ 498.097 m, VD ≈ 43.578 m",
+        title: "USGS section 1 to 2",
+        input: r#"{"slope_distance":"127.531 ft","zenith":"90°04'27\"","instrument_height":"4.850 ft","target_height":"4.830 ft"}"#,
+        source: "USGS Techniques and Methods 11-D3, section 5 example: mark-to-mark vertical difference −0.145 ft",
     }],
     primary_example: "primary",
     visualization: &[Layer {

@@ -3089,6 +3089,26 @@
       "editionCheck": true
     },
     {
+      "id": "usgs-trig-leveling",
+      "name": "Procedures and Best Practices for Trigonometric Leveling in the U.S. Geological Survey",
+      "issuer": "U.S. Geological Survey",
+      "currentEdition": "Techniques and Methods 11-D3 (2020)",
+      "currentReleaseDate": "2020-12-23",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read at the issuer on 2026-10-13. Section 5's example reduction table gives section 1 to 2 as a mean 127.531 ft slope distance at zenith 90°04′27″, with HI 4.850 ft and SH 4.830 ft, and a mark-to-mark vertical difference of −0.145 ft.",
+      "freeAccessUrl": "https://pubs.usgs.gov/tm/11d3/tm11d3.pdf",
+      "matchTerms": [
+        "Procedures and Best Practices for Trigonometric Leveling in the U.S. Geological Survey"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "usno-jd",
       "name": "USNO Julian Date Converter",
       "issuer": "U.S. Naval Observatory",

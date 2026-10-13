@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "survey.reduction.slope"
+      ],
+      "vectors": [],
+      "summary": "Slope distance to horizontal and vertical (version 1.1.0) is now stable. Its primary example matches the U.S. Geological Survey's published 127.531-foot trigonometric-leveling reduction to a -0.145-foot mark-to-mark vertical difference, and it now has 20 vectors plus component, scaling, angle, two-face, height, and correction-threshold invariants. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.ifr.radial-intercept"
       ],
       "vectors": [],

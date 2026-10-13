@@ -35,6 +35,8 @@ GPS satellite visibility and DOP planning is stable for pasted YUMA or SEM alman
 
 GNSS site localization is stable for 4-parameter similarity and 6-parameter affine fits. It recovers IOGP Guidance Note 7-2's published method 9621 scale and rotation, and 24 live vectors plus coefficient and translation invariants cover residuals, mixed units, suspect scale, degenerate control, and compact networks at large coordinate origins.
 
+GNSS slant antenna height is stable for a measured slant, antenna radius, and signed measurement-point-to-ARP offset. It reproduces both worked examples in the iGage iG9 manual, and 26 vectors plus five invariants cover the right-triangle identity, unit conversions, geometric boundaries, and field-specific invalid inputs.
+
 Mission sortie planning is stable for ordered waypoint paths. It counts every trip from home and back before choosing battery-swap waypoints, and 22 vectors cover flight-time and battery-energy inputs, reserves, wind, distinct survey and transit speeds, and an unreachable-path refusal.
 
 Multirotor hover power is stable for separate or coaxial rotors, explicit aerodynamic and electrical losses, and site air density. Its momentum-theory result is checked against the 2026 Embry-Riddle aerospace textbook's 45,000 lb tiltrotor example and 19 additional vectors.

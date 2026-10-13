@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "fixed",
+      "tools": [
+        "survey.gnss.antenna-height"
+      ],
+      "vectors": [],
+      "summary": "GNSS slant antenna height (version 1.1.0) is now stable. It reproduces both worked examples in the iGage iG9 manual, and 26 vectors plus five invariant tests cover the right-triangle identity, signed offsets, metric and US units, boundaries, and invalid inputs. Valid calculation results are unchanged; invalid radii and offsets now identify their own fields instead of the slant field."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "changed",
       "tools": [
         "drone.ops.vlos-check"

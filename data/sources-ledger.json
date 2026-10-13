@@ -1778,6 +1778,26 @@
       "editionCheck": true
     },
     {
+      "id": "igage-iG9-manual",
+      "name": "iGage iG9 User Manual",
+      "issuer": "iGage Mapping Corporation",
+      "currentEdition": "Revision L, May 13, 2021",
+      "currentReleaseDate": "2021-05-13",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read the official iGage PDF on 2026-10-13. Page 83 gives the slant-to-vertical equation, the iG9 radius and SHMP offset, and two numerical examples.",
+      "freeAccessUrl": "https://igage.com/out/iG9/usermanual/latestversion/iG9_UserManual.pdf",
+      "matchTerms": [
+        "iGage iG9 User Manual"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "iogp-g7-2",
       "name": "IOGP Guidance Note 7-2: Coordinate Conversions and Transformations",
       "issuer": "IOGP",

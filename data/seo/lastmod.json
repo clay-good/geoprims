@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "d1199b384fa1d297",
+    "hash": "dff9654bc6b67020",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "95fbe75996adaa5a",
+    "hash": "d3c9a7e02a0b834e",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "3ac7e9a3076a2668",
+    "hash": "a91b2f749f465ed1",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "d28f5daf0872402b",
+    "hash": "9092695a97edea82",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1348,7 +1348,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "21914600450b23c9",
+    "hash": "29ca9fb9f4c93740",
     "lastmod": "2026-10-13"
   },
   "/raster/": {
@@ -1440,12 +1440,12 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "da1a3971dde6d208",
+    "hash": "c2e50d27c41a3008",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
-    "hash": "5129de433b171264",
-    "lastmod": "2026-10-09"
+    "hash": "89d490a2aa52be25",
+    "lastmod": "2026-10-13"
   },
   "/survey/cogo/": {
     "hash": "c4630e7649524703",
@@ -1564,11 +1564,11 @@
     "lastmod": "2026-10-13"
   },
   "/survey/gnss/": {
-    "hash": "d96028d18906d272",
-    "lastmod": "2026-10-09"
+    "hash": "13fe032e1b462b47",
+    "lastmod": "2026-10-13"
   },
   "/survey/gnss/antenna-height/": {
-    "hash": "4a78d80c6dfca34b",
+    "hash": "27b1ea34bd549744",
     "lastmod": "2026-10-13"
   },
   "/survey/gnss/dop/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "b7f569ea23cd8248",
+    "hash": "7da6956a11470b8b",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "87e18dd7aec2083e",
+    "hash": "73bb744cc768909f",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

@@ -56,6 +56,54 @@ def antenna():
         out.append(vec(len(out) + 1, inp, {"result.vertical.value": v, "result.difference.value": s - v}))
     out[0]["source"] = SPEC + " (1.800 m slant, 0.100 m radius: about 1.7972 m)"
     out.append(vec(len(out) + 1, {"slant": "0.1 m", "radius": "0.15 m"}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    manual = "iGage iG9 User Manual, revision L (2021), page 83"
+    for s, published in [(2.123, 2.0474), (1.569, 1.4931)]:
+        out.append(vec(len(out) + 1,
+                       {"slant": f"{s} m", "radius": "0.07505 m", "offset": "-0.0742 m"},
+                       {"result.vertical.value": published}, manual, 1e-4))
+        out[-1]["sourceVersion"] = "Revision L, 2021-05-13"
+
+    cases = [
+        ("2 m", "0 m", "0.1 m"),
+        ("180 cm", "100 mm", "0 mm"),
+        ("6 ft", "4 in", "-1 in"),
+        ("0.1000001 m", "0.1 m", "0 m"),
+        ("100 m", "0.2 m", "1 m"),
+        ("2 m", "0.15 m", "-1 m"),
+        ("1.5 m", "0 m", "-0.5 m"),
+        ("0.5 m", "0.1 m", "0.02 m"),
+        ("10 m", "1 m", "-0.25 m"),
+        ("0.002 km", "75.05 mm", "-74.2 mm"),
+        ("6.965 ft", "75.05 mm", "-74.2 mm"),
+        ("80 in", "3 in", "-2.9 in"),
+        ("2500 mm", "125 mm", "35 mm"),
+        ("3 yd", "0.5 ft", "2 in"),
+    ]
+    units = {"m": 1.0, "cm": 0.01, "mm": 0.001, "km": 1000.0,
+             "in": 0.0254, "ft": 0.3048, "yd": 0.9144}
+
+    def meters(text):
+        value, symbol = text.split()
+        return float(value) * units[symbol]
+
+    for slant, radius, offset in cases:
+        s, r, off = meters(slant), meters(radius), meters(offset)
+        v = math.sqrt(s * s - r * r) + off
+        out.append(vec(len(out) + 1,
+                       {"slant": slant, "radius": radius, "offset": offset},
+                       {"result.vertical.value": v, "result.difference.value": s - v}))
+
+    failures = [
+        ({"slant": "1 m", "radius": "-0.1 m"}, "/radius"),
+        ({"slant": "1 m", "radius": "1 m"}, "/slant"),
+        ({"slant": "0 m", "radius": "0 m"}, "/slant"),
+        ({"slant": "100.001 m", "radius": "0.1 m"}, "/slant"),
+        ({"slant": "2 m", "radius": "0.1 m", "offset": "1.001 m"}, "/offset"),
+    ]
+    for inp, field in failures:
+        out.append(vec(len(out) + 1, inp,
+                       {"ok": False, "error.code": "INVALID_INPUT", "error.field": field}))
+    assert len(out) == 26
     return out
 
 
@@ -75,6 +123,17 @@ def alta():
                     "result.status": "Within your 0.095 ft allowable RPP (ALTA/NSPS 2026)" if e < 0.095 * 0.9 else ("Near your 0.095 ft allowable RPP (ALTA/NSPS 2026)" if e <= 0.095 else "Beyond your 0.095 ft allowable RPP (ALTA/NSPS 2026)")}, tol=1e-9))
     out.append(vec(4, {"distance": "2000 ft", "semi_major": "0.2 ft"}, {"result.allowable.value": 0.17, "result.status": "Beyond your 0.17 ft allowable RPP (ALTA/NSPS 2026)"}, tol=1e-12))
     out.append(vec(5, {"distance": "1000 ft", "misclosure": "0.05 ft"}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/misclosure"}, SPEC + " (a misclosure is refused: RPP comes from the error ellipse)"))
+    source = "ALTA/NSPS Minimum Standard Detail Requirements (2026), Section 3.E.v, read in the official PDF on 2026-10-09: 2 cm (0.07 feet) plus 50 parts per million of the distance"
+    for distance in [0, 100, 250, 660, 1320, 2640, 5280, 10000]:
+        out.append({"id": f"v{len(out) + 1:03d}", "input": {"distance": f"{distance} ft"},
+                    "expect": {"ok": True, "result.allowable.value": 0.07 + 50e-6 * distance},
+                    "source": source, "sourceVersion": "ALTA/NSPS 2026",
+                    "tolerance": {"result.allowable.value": {"abs": 1e-9}}})
+    for distance in [0, 50, 100, 250, 500, 1000, 2000]:
+        out.append({"id": f"v{len(out) + 1:03d}", "input": {"distance": f"{distance} m"},
+                    "expect": {"ok": True, "result.allowable.value": (0.02 + 50e-6 * distance) / 0.3048},
+                    "source": source + " (allowable shown in feet)", "sourceVersion": "ALTA/NSPS 2026",
+                    "tolerance": {"result.allowable.value": {"abs": 1e-9}}})
     return out
 
 

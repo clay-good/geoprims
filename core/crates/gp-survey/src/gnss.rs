@@ -31,6 +31,15 @@ const NGS_ANTENNA: Reference = Reference {
     url: "https://geodesy.noaa.gov/ANTCAL/",
 };
 
+const IGAGE_I9: Reference = Reference {
+    title: "iGage iG9 User Manual",
+    issuer: "iGage Mapping Corporation",
+    year: 2021,
+    edition: "Revision L, May 13, 2021",
+    locator: "Page 83: slant-to-vertical equation, 0.07505 m radius, 0.0742 m SHMP offset, and the 2.123 m and 1.569 m worked examples",
+    url: "https://igage.com/out/iG9/usermanual/latestversion/iG9_UserManual.pdf",
+};
+
 const NGS_RT: Reference = Reference {
     title: "User Guidelines for Single Base Real Time GNSS Positioning",
     issuer: "Henning, W., NOAA National Geodetic Survey",
@@ -468,8 +477,10 @@ fn run_opus(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ANTENNA_HEIGHT: ToolDef = ToolDef {
     id: "survey.gnss.antenna-height",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Antenna height from a slant measurement",
-    summary: "The vertical height to the antenna reference point from a slant height measured to the edge of the antenna, its radius, and the mark-to-ARP offset.",
+    summary: "The vertical height to the antenna reference point from a slant height measured to the edge of the antenna, its radius, and the signed measurement-point-to-ARP offset.",
     aliases: &[
         "slant height to vertical",
         "antenna ARP height",
@@ -532,7 +543,7 @@ pub static ANTENNA_HEIGHT: ToolDef = ToolDef {
         Field::new(
             "difference",
             "Slant minus vertical",
-            "What using the slant as-is would add",
+            "Positive when using the slant as-is would add height",
             Kind::Quantity {
                 q: QT::Length,
                 unit: "m",
@@ -541,27 +552,37 @@ pub static ANTENNA_HEIGHT: ToolDef = ToolDef {
         .precision(Precision::Decimals(4)),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "The slant, the radius, and the vertical make a right triangle: vertical to the measurement point = √(slant² − radius²), plus the vertical offset from that point to the ARP",
     accuracy: "Exact geometry; as good as the tape and the antenna's published radius and offset",
-    when_to_use: "Use this when you measure a GNSS antenna height with a tape on a slant, from the mark to the edge of the antenna, and need the vertical height. Enter the slant, the antenna radius from NGS ANTINFO or the maker's manual, and the offset from that edge point to the antenna reference point. It returns the vertical height to the ARP and how much the raw slant would have added.",
+    when_to_use: "Use this when you measure a GNSS antenna height with a tape on a slant, from the mark to the edge of the antenna, and need the vertical height. Enter the slant, the antenna radius from NGS ANTINFO or the maker's manual, and the offset from that edge point to the antenna reference point. It returns the vertical height to the ARP and the signed difference from the raw slant.",
     limitations: "The math is one right triangle, so it assumes the pole or tripod is set over the mark and that the radius and offset match your exact antenna model. A wrong model, a slant taken to a different notch, or a bad tape read carries straight into every height. Phase center corrections are not added here; your processing software applies those later, starting from the ARP.",
-    references: &[NGS_ANTENNA],
+    references: &[NGS_ANTENNA, IGAGE_I9],
     examples: &[Example {
         id: "primary",
-        title: "1.800 m slant to a 0.100 m radius",
-        input: r#"{"slant":"1.800 m","radius":"0.100 m","offset":"0 m"}"#,
-        source: "add-practitioner-essentials antenna scenario: √(1.8² − 0.1²) ≈ 1.7972 m, with the formula shown",
+        title: "iG9 slant measurement to its antenna reference point",
+        input: r#"{"slant":"2.123 m","radius":"0.07505 m","offset":"-0.0742 m"}"#,
+        source: "iGage iG9 User Manual, revision L (2021), page 83: 2.123 m slant gives 2.0474 m vertical",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.gnss.opus-plan",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "survey.gnss.opus-plan",
+            reason: "next",
+        },
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "next",
+        },
+        Related {
+            id: "survey.gnss.localization",
+            reason: "next",
+        },
+    ],
     sentence: "The antenna reference point is {vertical} above the mark.",
     limits: &[("batchRows", 10_000)],
     run: run_antenna,
@@ -573,10 +594,28 @@ fn run_antenna(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let s = ctx.req_quantity("slant")?.to(m);
     let r = ctx.req_quantity("radius")?.to(m);
     let off = ctx.quantity("offset")?.map_or(0.0, |q| q.to(m));
-    if s.is_nan() || r.is_nan() || r < 0.0 || s <= r || s > 100.0 || off.abs() > 1.0 {
+    if !s.is_finite() || s <= 0.0 || s > 100.0 {
         return Err(ToolError::invalid(
             "/slant",
-            "The slant height must be longer than the antenna radius (and under 100 m), with an offset within ±1 m.",
+            "The slant height must be over 0 and no more than 100 m.",
+        ));
+    }
+    if !r.is_finite() || r < 0.0 {
+        return Err(ToolError::invalid(
+            "/radius",
+            "The antenna radius must be 0 or more.",
+        ));
+    }
+    if s <= r {
+        return Err(ToolError::invalid(
+            "/slant",
+            "The slant height must be longer than the antenna radius.",
+        ));
+    }
+    if !off.is_finite() || off.abs() > 1.0 {
+        return Err(ToolError::invalid(
+            "/offset",
+            "The measurement-point offset must be within ±1 m.",
         ));
     }
     let v = sqrt(s * s - r * r) + off;

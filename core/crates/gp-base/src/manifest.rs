@@ -591,6 +591,7 @@ pub const LAYER_KINDS: &[&str] = &[
     "point",
     "line-geodesic",
     "line-rhumb",
+    "polyline",
     "polygon",
     "bbox",
     "cell-set",

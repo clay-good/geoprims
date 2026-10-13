@@ -61,7 +61,7 @@ fn q(v: f64, qt: QT, s: &str) -> Q {
 }
 
 /// Meters per degree of latitude and of longitude on WGS 84 at `lat`.
-fn degree_lengths(lat: f64) -> (f64, f64) {
+pub(crate) fn degree_lengths(lat: f64) -> (f64, f64) {
     let e2 = WGS84_F * (2.0 - WGS84_F);
     let s = sin(lat.to_radians());
     let w = sqrt(1.0 - e2 * s * s);

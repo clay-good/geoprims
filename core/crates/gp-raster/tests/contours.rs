@@ -25,6 +25,60 @@ fn val(v: &Value) -> f64 {
     v["value"].as_f64().unwrap()
 }
 
+#[test]
+fn geographic_grid_places_contours_on_the_map() {
+    let run_geographic = |lon: f64| -> Value {
+        serde_json::from_str(
+            &REGISTRY.invoke(
+                "raster.terrain.contours",
+                &json!({
+                    "elevations": [{"row":"0, 10"}, {"row":"0, 10"}],
+                    "interval": "5 m",
+                    "cell_degrees": 0.01,
+                    "north_west_lat": 40,
+                    "north_west_lon": lon
+                })
+                .to_string(),
+            ),
+        )
+        .expect("JSON")
+    };
+    let r = run_geographic(-105.0);
+    assert_eq!(r["ok"], true, "{r}");
+
+    let rows: Vec<&Value> = r["result"]["contours"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|row| val(&row["level"]) == 5.0)
+        .collect();
+    assert_eq!(rows.len(), 2, "one north-south contour: {r}");
+    assert_eq!(val(&rows[0]["lat"]), 40.0);
+    assert_eq!(val(&rows[1]["lat"]), 39.99);
+    for row in rows {
+        assert!((val(&row["lon"]) - -104.995).abs() < 1e-12, "{row}");
+    }
+    let length = val(&r["result"]["levels"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| val(&row["level"]) == 5.0)
+        .unwrap()["length"]);
+    assert!(
+        (1_100.0..1_120.0).contains(&length),
+        "latitude-aware length: {length}"
+    );
+
+    let across = run_geographic(179.999);
+    let halfway = across["result"]["contours"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| val(&row["level"]) == 5.0)
+        .unwrap();
+    assert!((val(&halfway["lon"]) - -179.996).abs() < 1e-12, "{across}");
+}
+
 /// A bumpy surface with no grid value on a whole-meter level.
 fn surface(rows: usize, cols: usize, seed: f64) -> Vec<Vec<f64>> {
     (0..rows)

@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "f3c8213bf7a325db",
+    "hash": "763442d3a1102eae",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1416,8 +1416,8 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/contours/": {
-    "hash": "b8ffb0ea90075111",
-    "lastmod": "2026-10-09"
+    "hash": "461b600a2e7a89d3",
+    "lastmod": "2026-10-13"
   },
   "/raster/terrain/curvature/": {
     "hash": "b2914a4c5de9362f",
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "62569d349c6d0cc5",
+    "hash": "a4adc69f1c4cc781",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

@@ -383,6 +383,25 @@ test('a computed polygon draws over its input, grouped by part and ring', async 
   assert.deepEqual(layers.map((l) => [l.kind, l.role, l.rings.length]), [['polygon', 'input', 1], ['polygon', 'result', 3]]);
 });
 
+test('georeferenced contour rows draw as separate polylines', async () => {
+  const { buildLayers, mapsTool } = await import('../src/lib/map/layers.js');
+  const { nodeHost } = await import('../../../packages/runtime/src/node.mjs');
+  const root = join(web, '../..');
+  const tool = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8')).tools.find((entry) => entry.id === 'raster.terrain.contours');
+  const args = {
+    elevations: [{ row: '0, 10' }, { row: '0, 10' }], interval: '5 m',
+    cell_degrees: 0.01, north_west_lat: 40, north_west_lon: -105,
+  };
+  const result = JSON.parse(await nodeHost(join(root, 'dist/wasm')).invoke(tool.id, JSON.stringify(args)));
+  assert.equal(mapsTool(tool), true);
+  const layers = await buildLayers(tool, args, result, async () => null);
+  assert.deepEqual(layers.map((layer) => ({ points: layer.points, level: layer.level })), [
+    { points: [[-105, 40], [-105, 39.99]], level: 0 },
+    { points: [[-104.995, 40], [-104.995, 39.99]], level: 5 },
+  ]);
+  assert.ok(layers.every((layer) => layer.kind === 'line' && layer.role === 'result' && layer.contour && !layer.arrows));
+});
+
 test('a flight path draws from output waypoints, flattening a corridor’s lines', async () => {
   const { buildLayers, outputPath } = await import('../src/lib/map/layers.js');
   const wp = (lat, lon) => ({ lat: { value: lat, unit: 'deg' }, lon: { value: lon, unit: 'deg' } });

@@ -12,7 +12,7 @@ export function numberOf(v) {
 }
 
 /** The layer kinds the map canvas draws. */
-export const GEO_KINDS = new Set(['line-geodesic', 'line-rhumb', 'point', 'polygon', 'bbox', 'cell-set']);
+export const GEO_KINDS = new Set(['line-geodesic', 'line-rhumb', 'polyline', 'point', 'polygon', 'bbox', 'cell-set']);
 
 /**
  * Whether a tool's page carries the map: it declares a geographic layer or
@@ -164,6 +164,22 @@ export function outputParts(result, field) {
   return parts;
 }
 
+/** Geographic rows grouped into independent lines by their `line` value. */
+export function outputLines(result, field) {
+  const rows = result?.result?.[field];
+  if (!Array.isArray(rows)) return [];
+  const lines = new Map();
+  for (const row of rows) {
+    const lat = numberOf(row?.lat?.value ?? row?.lat);
+    const lon = numberOf(row?.lon?.value ?? row?.lon);
+    if (lat === null || lon === null) continue;
+    const key = row.line ?? 0;
+    if (!lines.has(key)) lines.set(key, { points: [], level: numberOf(row?.level?.value ?? row?.level) });
+    lines.get(key).points.push([lon, lat]);
+  }
+  return [...lines.values()].filter((line) => line.points.length >= 2);
+}
+
 /** The most turn points a path marks; longer paths show direction only. */
 export const MAX_STOPS = 400;
 
@@ -246,6 +262,13 @@ export async function buildLayers(tool, args, result, densify, cells, { compare 
   // tool a polygon tool.
   const kinds = new Set((tool.visualization ?? []).filter((v) => !(v.kind === 'polygon' && mapOf(v.map).coverage)).map((v) => v.kind));
   const layers = [];
+  for (const v of tool.visualization ?? []) {
+    if (v.kind !== 'polyline') continue;
+    const field = mapOf(v.map).lines;
+    for (const line of outputLines(result, field)) {
+      layers.push({ kind: 'line', role: 'result', points: line.points, level: line.level, contour: true });
+    }
+  }
   const p1 = [numberOf(args.lon1), numberOf(args.lat1)];
   const p2 = [numberOf(args.lon2), numberOf(args.lat2)];
   const two = p1.every((x) => x !== null) && p2.every((x) => x !== null);

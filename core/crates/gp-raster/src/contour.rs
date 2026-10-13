@@ -12,11 +12,16 @@
 //! into lines without searching.
 
 use gp_base::ErrorCode;
-use gp_base::contour::{join, pieces};
+use gp_base::angle::{accept_lon, check_lat, wrap_lon};
+use gp_base::contour::{join, pieces_rect};
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::{self, Quantity as QT};
+
+use crate::terrain::degree_lengths;
 
 const LORENSEN: Reference = Reference {
     title: "Marching cubes: A high resolution 3D surface construction algorithm",
@@ -75,6 +80,30 @@ const LINE_ROW: &[Field] = &[
         "From the north-west grid point, like 12.25 m",
     )
     .precision(Precision::Decimals(3)),
+    Field::new(
+        "lat",
+        "Latitude",
+        "Present for a geographic grid, north positive",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .optional()
+    .precision(Precision::Decimals(7))
+    .angle_range("[-90,90]"),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Present for a geographic grid, east positive",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .optional()
+    .precision(Precision::Decimals(7))
+    .angle_range("[-180,180)"),
 ];
 const LEVEL_ROW: &[Field] = &[
     meters("level", "Elevation", "The contour's elevation, like 110 m")
@@ -148,8 +177,37 @@ pub static CONTOURS: ToolDef = ToolDef {
             "Cell size",
             "The ground distance between grid points, like 30 m",
         )
-        .required()
         .core(),
+        Field::new(
+            "cell_degrees",
+            "Cell size in degrees",
+            "For a north-up geographic grid, like 0.000277778 (one arc second)",
+            Kind::Number {
+                min: 0.0,
+                max: 10.0,
+            },
+        )
+        .core(),
+        Field::new(
+            "north_west_lat",
+            "North-west latitude",
+            "Latitude of the first grid point, like 40.0",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("[-90,90]"),
+        Field::new(
+            "north_west_lon",
+            "North-west longitude",
+            "Longitude of the first grid point, like -105.0",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .angle_range("[-180,180)"),
         meters(
             "base",
             "Base elevation",
@@ -212,22 +270,30 @@ pub static CONTOURS: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::LimitExceeded],
-    warnings: &[],
-    model: "Marching squares (the two-dimensional case of Lorensen and Cline 1987): in each grid square, a level crosses an edge whose corners lie on either side of it (a corner exactly at the level counts as below, as in contourpy), at the linearly interpolated point; the crossings are paired, and a square crossed on all four edges joins its high corners through the middle when the mean of its corners is above the level. Levels are the base plus whole intervals within the grid's range. Squares with a no-data corner are skipped",
-    accuracy: "Exact for the surface made of linear pieces along the grid lines; a real hillside between grid points is only as well known as the grid",
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
+    model: "Marching squares (the two-dimensional case of Lorensen and Cline 1987): in each grid square, a level crosses an edge whose corners lie on either side of it (a corner exactly at the level counts as below, as in contourpy), at the linearly interpolated point; the crossings are paired, and a square crossed on all four edges joins its high corners through the middle when the mean of its corners is above the level. Levels are the base plus whole intervals within the grid's range. Squares with a no-data corner are skipped. A geographic grid uses WGS 84 east-west and north-south degree lengths at its center latitude, and its vertices retain the grid's affine latitude-longitude placement",
+    accuracy: "Contour placement is exact for the surface made of linear pieces along the grid lines. Geographic lengths use the WGS 84 degree lengths at the grid's center latitude; a real hillside between grid points is only as well known as the grid",
     when_to_use: "Use this to turn a small grid of elevations into contour lines: a survey of spot heights on a regular grid, a DEM clip exported as numbers, or a site model, when you want lines to draw, measure, or hand to CAD rather than a picture. It gives each line's points in order with higher ground on the left, the lines and closed loops per elevation, and their lengths, so a closed loop can be read as a hill or a hollow at a glance.",
-    limitations: "The grid must be regular and square-celled, with elevations in meters and positions given as distances east and south of the north-west grid point rather than as coordinates. Between grid points the ground is assumed to change linearly along each grid line, so a contour cannot show a feature smaller than the grid spacing, and where a square is crossed on all four sides the choice of which way to join is a convention (the mean of the corners, as contourpy and Matplotlib use) rather than something the grid knows. Squares that touch a no-data value are left out, so lines stop at gaps. At most 300 by 300 points, 500 levels, and 100,000 contour vertices.",
+    limitations: "The grid must be regular, north-up, and unrotated, with elevations in meters. A meter grid is square-celled and stays in local east-south coordinates; a geographic grid uses equal latitude and longitude steps, whose ground widths differ by latitude, and also returns map coordinates. Between grid points the ground is assumed to change linearly along each grid line, so a contour cannot show a feature smaller than the grid spacing, and where a square is crossed on all four sides the choice of which way to join is a convention (the mean of the corners, as contourpy and Matplotlib use) rather than something the grid knows. Squares that touch a no-data value are left out, so lines stop at gaps. At most 300 by 300 points, 500 levels, and 100,000 contour vertices.",
     references: &[LORENSEN],
-    examples: &[Example {
-        id: "primary",
-        title: "5 m contours on a small hill",
-        input: r#"{"elevations":[{"row":"100, 102, 104, 102, 100"},{"row":"102, 106, 110, 106, 102"},{"row":"104, 110, 118, 110, 104"},{"row":"102, 106, 110, 106, 102"},{"row":"100, 102, 104, 102, 100"}],"interval":"5 m","cell_size":"10 m"}"#,
-        source: "contourpy 1.3.0 (the contouring engine behind Matplotlib) gives the same three closed loops, at 105, 110, and 115 m, with the same lengths to 1e-9",
-    }],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "5 m contours on a geographic hill",
+            input: r#"{"elevations":[{"row":"100, 102, 104, 102, 100"},{"row":"102, 106, 110, 106, 102"},{"row":"104, 110, 118, 110, 104"},{"row":"102, 106, 110, 106, 102"},{"row":"100, 102, 104, 102, 100"}],"interval":"5 m","cell_degrees":0.0001,"north_west_lat":40,"north_west_lon":-105}"#,
+            source: "contourpy 1.3.0 gives the same three closed loops at 105, 110, and 115 m; the geographic placement follows the grid coordinates and the WGS 84 degree lengths",
+        },
+        Example {
+            id: "local",
+            title: "The same hill on a 10 m local grid",
+            input: r#"{"elevations":[{"row":"100, 102, 104, 102, 100"},{"row":"102, 106, 110, 106, 102"},{"row":"104, 110, 118, 110, 104"},{"row":"102, 106, 110, 106, 102"},{"row":"100, 102, 104, 102, 100"}],"interval":"5 m","cell_size":"10 m"}"#,
+            source: "contourpy 1.3.0 (the contouring engine behind Matplotlib) gives the same three closed loops, at 105, 110, and 115 m, with the same lengths to 1e-9",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "polyline",
+        map: &[("lines", "contours")],
     }],
     related: &[
         Related {
@@ -241,6 +307,20 @@ pub static CONTOURS: ToolDef = ToolDef {
         Related {
             id: "survey.earthwork.profile-grades",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        Assumption {
+            name: "WGS 84 semi-major axis, for geographic grid spacing",
+            value: "6378137",
+            unit: "m",
+            source: "nga-wgs84",
+        },
+        Assumption {
+            name: "WGS 84 inverse flattening, for geographic grid spacing",
+            value: "298.257223563",
+            unit: "1",
+            source: "nga-wgs84",
         },
     ],
     sentence: "{line_count} contour {plural line_count \"line\" \"lines\"} at {level_count} {plural level_count \"level\" \"levels\"}, {length} in all.",
@@ -301,10 +381,10 @@ fn read_grid(ctx: &mut Ctx, no_data: Option<f64>) -> Result<Vec<Vec<f64>>, ToolE
 
 fn run_contours(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let m = units::by_symbol(QT::Length, "m").expect("m");
+    let deg_unit = units::by_symbol(QT::Angle, "deg").expect("deg");
     let no_data = ctx.number("no_data")?;
     let z = read_grid(ctx, no_data)?;
     let interval = ctx.quantity("interval")?.expect("required").to(m);
-    let cell = ctx.quantity("cell_size")?.expect("required").to(m);
     let base = ctx.quantity("base")?.map_or(0.0, |v| v.to(m));
     if interval.is_nan() || interval <= 0.0 {
         return Err(ToolError::invalid(
@@ -312,12 +392,71 @@ fn run_contours(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "The contour interval must be more than zero.",
         ));
     }
-    if cell.is_nan() || cell <= 0.0 {
-        return Err(ToolError::invalid(
-            "/cell_size",
-            "The cell size must be more than zero.",
-        ));
-    }
+    let cell_size = ctx.quantity("cell_size")?.map(|v| v.to(m));
+    let cell_degrees = ctx.number("cell_degrees")?;
+    let north_west_lat = ctx.quantity("north_west_lat")?.map(|v| v.to(deg_unit));
+    let north_west_lon = ctx.quantity("north_west_lon")?.map(|v| v.to(deg_unit));
+    let (dx, dy, georef) = match (cell_size, cell_degrees, north_west_lat, north_west_lon) {
+        (Some(cell), None, None, None) if cell.is_finite() && cell > 0.0 => (cell, cell, None),
+        (Some(_), None, Some(_), _) | (Some(_), None, _, Some(_)) => {
+            return Err(ToolError::invalid(
+                "/north_west_lat",
+                "A meter grid stays in local coordinates. To place contours on the map, give cell_degrees with both north-west coordinates.",
+            ));
+        }
+        (Some(_), Some(_), _, _) => {
+            return Err(ToolError::invalid(
+                "/cell_size",
+                "Give the cell size in meters or in degrees, not both.",
+            ));
+        }
+        (None, Some(step), Some(lat), Some(lon)) if step.is_finite() && step > 0.0 => {
+            let lat = check_lat(lat, "/north_west_lat")?;
+            let south = lat - (z.len() - 1) as f64 * step;
+            check_lat(south, "/cell_degrees").map_err(|_| {
+                ToolError::invalid(
+                    "/cell_degrees",
+                    "The geographic grid extends past 90 degrees south. Use a smaller cell size or a different north-west latitude.",
+                )
+            })?;
+            if (z[0].len() - 1) as f64 * step > 360.0 {
+                return Err(ToolError::invalid(
+                    "/cell_degrees",
+                    "The geographic grid spans more than 360 degrees of longitude.",
+                ));
+            }
+            let (lon, warning) = accept_lon(lon, "/north_west_lon")?;
+            ctx.warnings.extend(warning);
+            let center_lat = (lat + south) / 2.0;
+            let (per_lat, per_lon) = degree_lengths(center_lat);
+            let (dx, dy) = (step * per_lon, step * per_lat);
+            if dx <= 0.0 || dy <= 0.0 {
+                return Err(ToolError::invalid(
+                    "/north_west_lat",
+                    "A geographic grid at a pole has no east-west cell width.",
+                ));
+            }
+            (dx, dy, Some((lat, lon, step)))
+        }
+        (None, Some(_), _, _) => {
+            return Err(ToolError::invalid(
+                "/north_west_lat",
+                "A cell size in degrees needs both north-west latitude and longitude.",
+            ));
+        }
+        (None, None, None, None) => {
+            return Err(ToolError::invalid(
+                "/cell_size",
+                "Give the cell size in meters, or in degrees with both north-west coordinates.",
+            ));
+        }
+        _ => {
+            return Err(ToolError::invalid(
+                "/cell_size",
+                "Give a positive cell size in meters, or a positive cell size in degrees with both north-west coordinates.",
+            ));
+        }
+    };
     let known: Vec<f64> = z
         .iter()
         .flatten()
@@ -353,7 +492,7 @@ fn run_contours(ctx: &mut Ctx) -> Result<Json, ToolError> {
     while k <= k1 {
         let level = base + k * interval;
         k += 1.0;
-        let lines = join(&pieces(&z, cell, level));
+        let lines = join(&pieces_rect(&z, dx, dy, level));
         if lines.is_empty() {
             continue;
         }
@@ -373,12 +512,31 @@ fn run_contours(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 len_level += (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1);
             }
             for p in pts {
-                rows.push(Json::obj([
+                let mut row = vec![
                     ("line", Json::Num(line_count as f64)),
                     ("level", q(level)),
                     ("east", q(p.0)),
                     ("south", q(p.1)),
-                ]));
+                ];
+                if let Some((lat, lon, step)) = georef {
+                    row.push((
+                        "lat",
+                        Q {
+                            value: lat - (p.1 / dy) * step,
+                            unit: deg_unit,
+                        }
+                        .to_json(),
+                    ));
+                    row.push((
+                        "lon",
+                        Q {
+                            value: wrap_lon(lon + (p.0 / dx) * step),
+                            unit: deg_unit,
+                        }
+                        .to_json(),
+                    ));
+                }
+                rows.push(Json::obj(row));
             }
         }
         total += len_level;

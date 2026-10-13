@@ -17,18 +17,20 @@ Each piece is pointed so that higher ground is on its left. Because a crossing i
 - Saddle: when all four sides are crossed, the high corners join through the middle when (z₁ + z₂ + z₃ + z₄) / 4 > L.
 - Direction: each piece p → q has the higher corners on its left.
 - Length: the sum of the straight pieces, in the cell-size unit.
+- Geographic grid spacing: at the grid's center latitude φ on WGS 84, one degree north-south is πM/180 and one degree east-west is πN cos φ/180, where M = a(1 − e²)/(1 − e² sin² φ)³ᐟ² and N = a/√(1 − e² sin² φ). These two lengths scale the rectangular contour plane.
+- Geographic vertex: latitude = north-west latitude − row fraction × cell degrees; longitude = north-west longitude + column fraction × cell degrees, normalized to [−180°, 180°).
 
 ## Symbols and units
 
-`elevations` is rows of numbers in meters, the north row first and each row west to east; `cell_size` is the ground distance between neighbouring grid points; `interval` and `base` set the levels; `no_data` marks a missing elevation. Outputs are in meters: `contours` gives each line's points in order as distances east and south of the north-west grid point, `levels` gives the lines, closed loops, and length at each elevation, and `line_count`, `level_count`, `length`, `lowest`, and `highest` summarize.
+`elevations` is rows of numbers in meters, the north row first and each row west to east. Give either `cell_size`, the square ground distance between points, or `cell_degrees` with `north_west_lat` and `north_west_lon` for a north-up geographic grid. `interval` and `base` set the levels; `no_data` marks a missing elevation. Outputs are in meters: `contours` always gives each line's points in order as distances east and south of the north-west grid point, and a geographic grid also gives latitude and longitude for every vertex. `levels` gives the lines, closed loops, and length at each elevation, and `line_count`, `level_count`, `length`, `lowest`, and `highest` summarize.
 
 ## Domain
 
-A regular grid with square cells, 2 to 300 points a side, every row the same length. Up to 500 levels and 100,000 contour vertices. A square with a no-data corner is skipped, so lines stop at gaps. The grid is not georeferenced: positions are distances from its north-west point.
+A regular, north-up, unrotated grid, 2 to 300 points a side, every row the same length. A meter grid is square-celled and remains local. A geographic grid has equal angular steps in latitude and longitude, is placed from its north-west point, and can cross the antimeridian; it cannot cross a pole or span more than 360° of longitude. Up to 500 levels and 100,000 contour vertices. A square with a no-data corner is skipped, so lines stop at gaps.
 
 ## Approximations
 
-Between grid points the ground is taken to change linearly along each grid line, so the contours are exact for that surface and for no other; a feature smaller than the grid spacing cannot appear. The saddle rule is a convention, since four corners do not decide which way a saddle joins. Exact-level touches are a convention too (the split rule above).
+Between grid points the ground is taken to change linearly along each grid line, so the contours are exact for that surface and for no other; a feature smaller than the grid spacing cannot appear. A geographic grid's physical lengths use the WGS 84 degree lengths at its center latitude, so they do not model the small change in east-west scale from its north edge to its south edge. The map coordinates retain the grid's affine placement exactly. The saddle rule is a convention, since four corners do not decide which way a saddle joins. Exact-level touches are a convention too (the split rule above).
 
 ## Worked example
 
@@ -55,3 +57,4 @@ The fixture was checked for teeth: counting a corner exactly at the level as abo
 ## Invariants
 
 - `core/crates/gp-raster/tests/contours.rs` `contour_invariants`: on four bumpy surfaces, every vertex sits on a grid line where the elevation interpolated along that line equals its level to 1e-9; at both ends of every step the higher grid point of the line it crosses is on its left; raising the ground and the base by the same amount changes nothing; doubling the cell size doubles every length and keeps every line; turning the ground upside down keeps every line and its length; and a single hill gives exactly one closed loop per level, each shorter than the one below it.
+- `core/crates/gp-raster/tests/contours.rs` `geographic_grid_places_contours_on_the_map`: a 0.01° grid at 40° N places a halfway contour at the exact halfway longitude, returns both edge latitudes, and measures its north-south length with the WGS 84 meridian radius. `apps/web/test/map.test.mjs` then groups those georeferenced rows by contour line and draws each as its own map polyline without route arrows.

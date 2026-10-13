@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-12",
+      "kind": "changed",
+      "tools": [
+        "raster.terrain.contours"
+      ],
+      "vectors": [],
+      "summary": "The contour tool now accepts a north-up geographic grid from its north-west coordinate and angular cell size. It uses latitude-aware WGS 84 east-west and north-south dimensions, returns latitude and longitude on every contour vertex, and draws separate contour polylines on the map. Existing meter-grid results and contour topology are unchanged."
+    },
+    {
+      "date": "2026-10-12",
       "kind": "added",
       "tools": [],
       "vectors": [],

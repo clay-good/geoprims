@@ -16,8 +16,14 @@ fn key(p: P) -> (u64, u64) {
 /// The directed pieces of one level: each from one edge crossing to another,
 /// with higher ground on the left.
 pub fn pieces(z: &[Vec<f64>], cell: f64, level: f64) -> Vec<(P, P)> {
+    pieces_rect(z, cell, cell, level)
+}
+
+/// The directed pieces of one level on a rectangular grid. `dx` is the
+/// east-west spacing and `dy` the north-south spacing, in the same unit.
+pub fn pieces_rect(z: &[Vec<f64>], dx: f64, dy: f64, level: f64) -> Vec<(P, P)> {
     let (rows, cols) = (z.len(), z[0].len());
-    let pos = |i: usize, j: usize| (j as f64 * cell, i as f64 * cell);
+    let pos = |i: usize, j: usize| (j as f64 * dx, i as f64 * dy);
     // The crossing on the edge between two grid points, always computed from
     // the first (north or west) end, so the squares on either side get the
     // same bits.

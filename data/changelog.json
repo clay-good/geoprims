@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
+        "survey.cogo.angular-closure"
+      ],
+      "vectors": [],
+      "summary": "Angular closure (version 1.1.0) is now stable. It reproduces Walla Walla University's published seven-angle traverse and equal corrections, and 25 vectors plus five invariant tests cover geometric sums, both angle conventions, DMS input, allowable boundaries, equal bias, and invalid rows. Valid calculation results are unchanged; the exterior option is now explicitly labeled as reflex exterior."
+    },
+    {
+      "date": "2026-10-13",
       "kind": "fixed",
       "tools": [
         "survey.gnss.rtk-budget"

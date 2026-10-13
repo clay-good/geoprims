@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "99899b340cc4fe9f",
+    "hash": "fb2906f7c9a9713b",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "b50f87d720c479b5",
+    "hash": "ba08ab609b3ab30c",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "de440fd934f259ed",
+    "hash": "2b385cf36a3767dd",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "34f6f2f7f45f4227",
+    "hash": "c968155f86481fc3",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "bcacfbd2c009dd65",
+    "hash": "d5bba8cd0d895f44",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1452,8 +1452,8 @@
     "lastmod": "2026-09-23"
   },
   "/survey/cogo/angular-closure/": {
-    "hash": "7a00a091dcb39f5f",
-    "lastmod": "2026-10-09"
+    "hash": "9d76b64c01bfc227",
+    "lastmod": "2026-10-13"
   },
   "/survey/cogo/area-by-coordinates/": {
     "hash": "cac00b1f45e9b94a",
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "12955e9a3bc5fd4d",
+    "hash": "c793304a07142dfa",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "83f765e3a4ad28c6",
+    "hash": "127e476fefd02a1c",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

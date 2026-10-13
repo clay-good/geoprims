@@ -32,6 +32,14 @@ fn codes(r: &Value) -> Vec<String> {
     })
 }
 
+fn angular(input: Value) -> Value {
+    call("survey.cogo.angular-closure", &input.to_string())
+}
+
+fn angle_value(text: &str) -> f64 {
+    gp_geo::dms::parse_plain(text).unwrap_or_else(|e| panic!("parse {text}: {e:?}"))
+}
+
 #[test]
 fn catalog_examples_vectors() {
     let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
@@ -965,9 +973,10 @@ fn tin_stockpile_approaches_an_analytic_cone() {
     let preview = res["result"]["surface_triangles"].as_array().unwrap();
     assert_eq!(preview.len(), triangle_count);
     assert!(preview.iter().all(|t| {
-        ["a", "b", "c"]
-            .iter()
-            .all(|k| t[k].as_u64().is_some_and(|i| i < (base.len() + surf.len()) as u64))
+        ["a", "b", "c"].iter().all(|k| {
+            t[k].as_u64()
+                .is_some_and(|i| i < (base.len() + surf.len()) as u64)
+        })
     }));
 }
 
@@ -1357,4 +1366,95 @@ fn intersection_invariants() {
 
 fn sol_count(r: &Value) -> usize {
     r["result"]["count"].as_u64().unwrap() as usize
+}
+
+#[test]
+fn angular_closure_matches_the_walla_walla_worked_example() {
+    let measured = [128.5, 129.0, 211.0, 70.5, 80.5, 194.0, 89.5];
+    let result = angular(serde_json::json!({
+        "angles": measured.map(|angle| serde_json::json!({"angle": angle.to_string()}))
+    }));
+    assert_eq!(result["ok"], true, "{result}");
+    assert_eq!(num(&result, "result.misclosure.value"), 3.0 * 3600.0);
+    assert!((num(&result, "result.correction.value") + 3.0 * 3600.0 / 7.0).abs() < 1e-9);
+    let adjusted = result["result"]["adjusted"].as_array().unwrap();
+    for (row, published) in adjusted
+        .iter()
+        .zip([128.071, 128.571, 210.571, 70.071, 80.071, 193.571, 89.071])
+    {
+        assert!((angle_value(row["angle"].as_str().unwrap()) - published).abs() <= 0.0005);
+    }
+}
+
+#[test]
+fn angular_closure_adjusted_angles_reach_the_geometric_sum() {
+    for (angles, required) in [
+        (vec![73.2, 94.8, 121.1, 70.95], 360.0),
+        (vec![108.2, 107.9, 109.1, 106.8, 108.3], 540.0),
+    ] {
+        let result = angular(serde_json::json!({
+            "angles": angles.iter().map(|angle| serde_json::json!({"angle": angle.to_string()})).collect::<Vec<_>>()
+        }));
+        let sum: f64 = result["result"]["adjusted"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| angle_value(row["angle"].as_str().unwrap()))
+            .sum();
+        assert!((sum - required).abs() < 0.0002, "{result}");
+    }
+}
+
+#[test]
+fn angular_closure_equal_bias_is_removed_by_the_adjustment() {
+    let base = [72.0, 83.0, 91.0, 114.0];
+    let run = |bias: f64| {
+        angular(serde_json::json!({
+            "angles": base.map(|angle| serde_json::json!({"angle": (angle + bias).to_string()}))
+        }))
+    };
+    assert_eq!(
+        run(0.0)["result"]["adjusted"],
+        run(0.25)["result"]["adjusted"]
+    );
+}
+
+#[test]
+fn angular_closure_reflex_exteriors_complement_interiors() {
+    let interiors = [72.0, 83.0, 91.0, 114.0];
+    let inside = angular(serde_json::json!({
+        "angles": interiors.map(|angle| serde_json::json!({"angle": angle.to_string()}))
+    }));
+    let outside = angular(serde_json::json!({
+        "angles": interiors.map(|angle| serde_json::json!({"angle": (360.0 - angle).to_string()})),
+        "kind": "exterior"
+    }));
+    let a = inside["result"]["adjusted"].as_array().unwrap();
+    let b = outside["result"]["adjusted"].as_array().unwrap();
+    for (interior, exterior) in a.iter().zip(b) {
+        let total = angle_value(interior["angle"].as_str().unwrap())
+            + angle_value(exterior["angle"].as_str().unwrap());
+        assert!((total - 360.0).abs() < 1e-9);
+    }
+}
+
+#[test]
+fn angular_closure_allowable_boundary_and_invalid_row_are_explicit() {
+    let at_limit = angular(serde_json::json!({
+        "angles": [
+            {"angle":"90°00'05\""},
+            {"angle":"90°00'05\""},
+            {"angle":"90°00'05\""},
+            {"angle":"90°00'05\""}
+        ],
+        "allowable_k": 10
+    }));
+    assert_eq!(at_limit["result"]["closure"], "within the allowable");
+    assert!((num(&at_limit, "result.misclosure.value") - 20.0).abs() < 1e-9);
+    assert_eq!(num(&at_limit, "result.allowable.value"), 20.0);
+
+    let invalid = angular(serde_json::json!({
+        "angles": [{"angle":"60"}, {"angle":"bad"}, {"angle":"120"}]
+    }));
+    assert_eq!(invalid["error"]["field"], "/angles/1/angle");
 }

@@ -19,6 +19,8 @@ FHWA_SIGHT = "Federal Highway Administration, FHWA-HRT-04-103, chapter 7, table 
 FHWA_SIGHT_VER = "October 2004"
 GHILANI_UNEQUAL = "Ghilani and Wolf, Elementary Surveying, 15th edition, solution 25.15"
 GHILANI_UNEQUAL_VER = "15th edition (2015)"
+WALLA_TRAVERSE = "Yaw, Surveying - Traverse Closure, Walla Walla University, section 3.1 and table 1"
+WALLA_TRAVERSE_VER = "June 27, 2019"
 FT = 0.3048
 YD3_FT3 = 27.0
 
@@ -906,6 +908,58 @@ def angular_closure():
                                                                                            "result.adjusted.2.angle": "60°00'02.0\""}))
     out.append(vec(5, {"angles": [{"angle": "90"}, {"angle": "90"}, {"angle": "90"}, {"angle": "90"}, {"angle": "180"}]}, {"result.misclosure.value": 0.0}))
     out.append(vec(6, {"angles": [{"angle": "90"}, {"angle": "abc"}, {"angle": "90"}]}, {"ok": False, "error.code": "INVALID_INPUT"}))
+
+    # Published seven-sided example: 903 degrees measured versus 900 degrees required,
+    # with the -3/7 degree correction shown in table 1.
+    walla = [128.5, 129.0, 211.0, 70.5, 80.5, 194.0, 89.5]
+    out.append(vec(7, {"angles": [{"angle": f"{a:g}"} for a in walla]},
+                   {"result.misclosure.value": 10800.0, "result.correction.value": -10800.0 / 7,
+                    "result.sum": "903°00'00.0\"", "result.required_sum": "900°00'00.0\""},
+                   WALLA_TRAVERSE, WALLA_TRAVERSE_VER))
+
+    def angle_rows(values):
+        return [{"angle": value} for value in values]
+
+    cases = [
+        # Exact closures across polygon sizes and both supported angle conventions.
+        (angle_rows(["60.1", "59.9", "60"]), {}, 0.0),
+        (angle_rows(["108"] * 5), {}, 0.0),
+        (angle_rows(["135"] * 8), {}, 0.0),
+        (angle_rows(["300"] * 3), {"kind": "exterior"}, 0.0),
+        (angle_rows(["252"] * 5), {"kind": "exterior"}, 0.0),
+        # DMS text, positive and negative sub-minute misclosures.
+        (angle_rows(["90°00'10\"", "89°59'50\"", "90°00'10\"", "89°59'50\""]), {}, 0.0),
+        (angle_rows(["60°00'00.1\"", "60°00'00\"", "60°00'00\""]), {}, 0.1),
+        (angle_rows(["59°59'59\"", "60°00'00\"", "60°00'00\""]), {}, -1.0),
+    ]
+    for rows, extra, mis in cases:
+        inp = {"angles": rows, **extra}
+        out.append(vec(len(out) + 1, inp,
+                       {"result.misclosure.value": mis,
+                        "result.correction.value": -mis / len(rows)}))
+
+    # Exactly on, just inside, and just outside a 10 sqrt(4) = 20 arcsecond limit.
+    for seconds, closure in [(20, "within the allowable"), (19, "within the allowable"), (21, "beyond the allowable")]:
+        rows = angle_rows([f"90°00'{seconds / 4:g}\"" for _ in range(4)])
+        out.append(vec(len(out) + 1, {"angles": rows, "allowable_k": 10},
+                       {"result.misclosure.value": float(seconds), "result.allowable.value": 20.0,
+                        "result.closure": closure, "result.correction.value": -seconds / 4}))
+
+    # K = 0 still distinguishes an exact closure from any nonzero miss; omitting K omits the judgment.
+    for seconds, closure in [(0, "within the allowable"), (1, "beyond the allowable")]:
+        rows = angle_rows([f"60°00'{seconds:g}\"", "60°00'00\"", "60°00'00\""])
+        out.append(vec(len(out) + 1, {"angles": rows, "allowable_k": 0},
+                       {"result.misclosure.value": float(seconds), "result.allowable.value": 0.0,
+                        "result.closure": closure}))
+    out.append(vec(len(out) + 1, {"angles": angle_rows(["60°00'03\"", "60°00'00\"", "60°00'00\""])},
+                   {"result.misclosure.value": 3.0, "result.correction.value": -1.0}))
+
+    # Domain and list-size failures name invalid input rather than returning partial adjustments.
+    for rows in [angle_rows(["0", "90", "90"]), angle_rows(["360", "90", "90"]), angle_rows(["90", "90"])]:
+        out.append(vec(len(out) + 1, {"angles": rows}, {"ok": False, "error.code": "INVALID_INPUT"}))
+    out.append(vec(len(out) + 1, {"angles": angle_rows(["60", "60", "60"]), "allowable_k": 3600},
+                   {"result.misclosure.value": 0.0, "result.allowable.value": 3600 * math.sqrt(3),
+                    "result.closure": "within the allowable"}))
     return out
 
 

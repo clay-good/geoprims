@@ -20,6 +20,24 @@ const GHILANI: Reference = Reference {
     url: "https://www.pearson.com/en-us/subject-catalog/p/elementary-surveying-an-introduction-to-geomatics/P200000003148",
 };
 
+const WALLA_WALLA_TRAVERSE: Reference = Reference {
+    title: "Surveying - Traverse Closure",
+    issuer: "Yaw, L. L., Walla Walla University",
+    year: 2019,
+    edition: "June 27, 2019",
+    locator: "Section 3.1 and table 1: seven measured interior angles sum to 903 degrees; the 3 degree misclosure is divided equally as a -0.42857 degree correction",
+    url: "https://gab.wallawalla.edu/~louie.yaw/Documents/traverse.pdf",
+};
+
+const WASHINGTON_TRAVERSE_STANDARD: Reference = Reference {
+    title: "WAC 332-130-090: Field traverse standards for land boundary surveys",
+    issuer: "Washington State Legislature",
+    year: 1990,
+    edition: "Effective April 1, 1990; current through 2026",
+    locator: "Subsection (2): maximum angular error is 10 arcseconds times the square root of n for 1:10,000 closure, or 30 arcseconds times the square root of n for 1:5,000 closure",
+    url: "https://app.leg.wa.gov/wac/default.aspx?cite=332-130-090",
+};
+
 const ANGLE: &[Field] = &[Field::new(
     "angle",
     "Angle",
@@ -36,6 +54,8 @@ const ADJUSTED: &[Field] = &[Field::new(
 
 pub static ANGULAR: ToolDef = ToolDef {
     id: "survey.cogo.angular-closure",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Angular closure of a loop traverse",
     summary: "How far a loop traverse's measured angles miss their geometric sum, (n − 2) × 180° for interior angles, against an allowable K√n, with the angles balanced.",
     aliases: &[
@@ -69,7 +89,7 @@ pub static ANGULAR: ToolDef = ToolDef {
         Field::new(
             "kind",
             "Angles",
-            "interior (default) or exterior",
+            "interior (default) or reflex exterior",
             Kind::Choice(&["interior", "exterior"]),
         )
         .core(),
@@ -147,27 +167,37 @@ pub static ANGULAR: ToolDef = ToolDef {
         ),
     ],
     errors: &[],
-    warnings: &["EXPERIMENTAL_TOOL"],
-    model: "Required sum (n − 2)·180° for interior angles and (n + 2)·180° for exterior; misclosure = Σ measured − required; allowable = K·√n; each angle corrected by −misclosure/n (Ghilani & Wolf 2021, ch. 10)",
+    warnings: &[],
+    model: "Required sum (n − 2)·180° for interior angles and (n + 2)·180° for reflex exterior angles; misclosure = Σ measured − required; allowable = K·√n; each angle corrected by −misclosure/n (Ghilani & Wolf 2021, ch. 10)",
     accuracy: "Exact; the allowable depends on the standard, entered as K",
     when_to_use: "Use this when you have turned all the angles of a closed loop traverse and want to check them before you work out any coordinates. Enter the angles in order, say whether they are interior or exterior, and give the K your job standard uses. You get the misclosure, the allowable K√n, and each angle balanced by an equal share. The balanced angles then feed the bearings for the traverse closure.",
     limitations: "The tool splits the misclosure evenly across every angle. That assumes each angle was read with the same care, which may not hold when some sights are short. It cannot find a blunder; a large miss usually means one bad angle or a skipped station. It checks only the angle sum, not distances or the linear closure. The K value comes from the standard your contract or agency names, not from this tool.",
-    references: &[GHILANI],
+    references: &[GHILANI, WALLA_WALLA_TRAVERSE, WASHINGTON_TRAVERSE_STANDARD],
     examples: &[Example {
         id: "primary",
-        title: "Five interior angles summing to 540°00'25\"",
-        input: r#"{"angles":[{"angle":"108°00'05\""},{"angle":"101°59'55\""},{"angle":"115°00'10\""},{"angle":"95°00'00\""},{"angle":"120°00'15\""}],"allowable_k":10}"#,
-        source: "add-survey-suite angular-misclosure scenario: +25\"",
+        title: "Walla Walla University seven-angle traverse",
+        input: r#"{"angles":[{"angle":"128.5"},{"angle":"129"},{"angle":"211"},{"angle":"70.5"},{"angle":"80.5"},{"angle":"194"},{"angle":"89.5"}]}"#,
+        source: "Yaw, Surveying - Traverse Closure (Walla Walla University, 2019), section 3.1 and table 1: 903° measured against 900° required, corrected by -3°/7 per angle",
     }],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
         map: &[],
     }],
-    related: &[Related {
-        id: "survey.cogo.traverse-closure",
-        reason: "next",
-    }],
+    related: &[
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "next",
+        },
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "next",
+        },
+        Related {
+            id: "survey.cogo.area-by-coordinates",
+            reason: "next",
+        },
+    ],
     sentence: "The angles miss their required sum by {misclosure}.{if allowable > 0} The allowable is {allowable}, so the closure is {closure}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_angular,

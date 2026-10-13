@@ -3788,6 +3788,46 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "walla-walla-traverse",
+      "name": "Surveying - Traverse Closure",
+      "issuer": "Yaw, L. L., Walla Walla University",
+      "currentEdition": "June 27, 2019",
+      "currentReleaseDate": "2019-06-27",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read in the university-hosted paper on 2026-10-13. Section 3.1 and table 1 publish seven measured interior angles totaling 903 degrees, the 900 degree geometric sum, the -0.42857 degree equal correction, and every adjusted angle used by the worked-example fixture.",
+      "freeAccessUrl": "https://gab.wallawalla.edu/~louie.yaw/Documents/traverse.pdf",
+      "matchTerms": [
+        "Surveying - Traverse Closure"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "washington-field-traverse-standard",
+      "name": "WAC 332-130-090: Field traverse standards for land boundary surveys",
+      "issuer": "Washington State Legislature",
+      "currentEdition": "Effective April 1, 1990; current through 2026",
+      "currentReleaseDate": "1990-04-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": "1990-04-01",
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "Read in the current Washington Administrative Code on 2026-10-13. Subsection (2) gives maximum angular closure as 10 arcseconds times square root n for a 1:10,000 traverse and 30 arcseconds times square root n for a 1:5,000 traverse.",
+      "freeAccessUrl": "https://app.leg.wa.gov/wac/default.aspx?cite=332-130-090",
+      "matchTerms": [
+        "WAC 332-130-090"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": true
     }
   ]
 }

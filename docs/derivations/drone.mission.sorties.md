@@ -31,7 +31,7 @@ Every leg is flown at constant speed and power with no time for takeoff, climb, 
 - sourceTitle: A four-line survey grid on a 7-minute battery, worked by hand below
 - sourceEdition: distances from GeographicLib GeodSolve, 2026-09-25
 - sourceLocator: this section
-- independent: yes, for the walk (distances from GeodSolve, arithmetic by hand)
+- independent: yes
 - inputs: home 40° N, 105° W; lines at 40.0009°, 40.0027°, 40.0045°, and 40.0063° N from 105° W to 104.98592° W, flown as a serpentine (8 waypoints); 7 min battery, 20% reserve, 10 m/s
 - outputs: 3 batteries, swapping at waypoints 4 and 7, 16.0 min in all
 - tolerance: 1e-9 relative on times
@@ -59,7 +59,7 @@ In all, 300.4 + 329.3 + 329.3 = 959.0 s, 16.0 min, on 3 batteries. Dividing the 
 
 ## Differential tests
 
-- `tools/vectors/gen_mission_planning.py` walks the same rule in Python from GeographicLib GeodSolve distances (a separate implementation from the core's Rust port) for five paths: the worked example, a path one battery covers, a 2 km-long grid with a separate transit speed and a headwind home, a battery energy and power in place of a flight time, and speeds in km/h, plus a waypoint 17 km out that no battery can reach (NO_SOLUTION at `/waypoints/1`).
+- `tools/vectors/gen_mission_planning.py` walks the same rule in Python from GeographicLib GeodSolve distances (a separate implementation from the core's Rust port) for 21 paths plus an unreachable case. The matrix covers 1 to 22 waypoints, 0% to 50% reserves, three energy forms, separate transit speeds, two headwinds, and speeds or times supplied in seconds, hours, m/s, km/h, mph, and knots. A waypoint 17 km out returns `NO_SOLUTION` at `/waypoints/1`.
 - `core/crates/gp-drone/tests/planning.rs` `sorties_compose_endurance_and_rth`: the battery time equals `drone.power.endurance`'s time to the reserve, and every sortie's return time and energy equal `drone.power.rth-budget`'s for the same distance, airspeed, headwind, and power.
 
 ## Invariants

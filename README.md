@@ -33,6 +33,8 @@ The US 1976 atmosphere is verified through its 86 km ceiling: every kilometer th
 
 GPS satellite visibility and DOP planning is stable for pasted YUMA or SEM almanacs. Its almanac propagation and geometry are covered by 27 golden vectors, including Orekit 13.1.9's published comparison with Trimble Planning.
 
+Mission sortie planning is stable for ordered waypoint paths. It counts every trip from home and back before choosing battery-swap waypoints, and 22 vectors cover flight-time and battery-energy inputs, reserves, wind, distinct survey and transit speeds, and an unreachable-path refusal.
+
 The aviation catalog covers all 83 planned operations through 90 tool ids: 83 operation tools and 7 narrower airspeed endpoints. Altimeter inputs accept inHg, hPa, `A` groups, and `Q` groups directly rather than multiplying identical pages by unit.
 
 ## Status

@@ -38,6 +38,8 @@ def fx(x):
 
 def geod_inverse(pairs):
     """Geodesic distances (m) for [(lat1, lon1, lat2, lon2)] via GeodSolve."""
+    if not pairs:
+        return []
     text = "\n".join(" ".join(fx(v) for v in p) for p in pairs) + "\n"
     out = subprocess.run(["GeodSolve", "-i", "-p", "9"], input=text, capture_output=True, text=True, check=True).stdout
     return [float(line.split()[2]) for line in out.strip().splitlines()]
@@ -117,6 +119,38 @@ def sortie_vectors():
          grid(40.0, -105.0, 4, 0.0018, 0.01408), dict(energy="50 Wh", usable=80, power="200 W", groundspeed="10 m/s", reserve=20), (50 * 3600 * 0.8 / 200, 0.2, 10.0, None, 0.0)),
         ("Metric speeds in km/h and a 30% reserve",
          grid(40.0, -105.0, 5, 0.0018, 0.01), dict(flight_time="9 min", groundspeed="36 km/h", reserve=30), (540, 0.3, 10.0, None, 0.0)),
+        ("A single nearby waypoint",
+         [(40.001, -105.0)], dict(flight_time="5 min", groundspeed="8 m/s"), (300, 0, 8.0, None, 0.0)),
+        ("Zero reserve on a six-line grid",
+         grid(40.0, -105.0, 6, 0.0012, 0.008), dict(flight_time="8 min", groundspeed="7 m/s", reserve=0), (480, 0, 7.0, None, 0.0)),
+        ("A 50 percent reserve",
+         grid(40.0, -105.0, 5, 0.001, 0.006), dict(flight_time="15 min", groundspeed="9 m/s", reserve=50), (900, 0.5, 9.0, None, 0.0)),
+        ("Flight time in hours and speed in knots",
+         grid(40.0, -105.0, 4, 0.0015, 0.009), dict(flight_time="0.25 h", groundspeed="20 kt", reserve=15), (900, 0.15, 20 * KT, None, 0.0)),
+        ("Flight time in seconds and speed in kilometers per hour",
+         grid(40.0, -105.0, 7, 0.001, 0.007), dict(flight_time="1200 s", groundspeed="25 km/h", reserve=20), (1200, 0.2, 25 / 3.6, None, 0.0)),
+        ("Battery energy in kilowatt-hours",
+         grid(40.0, -105.0, 4, 0.0013, 0.01), dict(energy="0.1 kWh", usable=70, power="300 W", groundspeed="11 m/s", reserve=10), (0.1 * 3_600_000 * 0.7 / 300, 0.1, 11.0, None, 0.0)),
+        ("Battery energy in kilojoules",
+         grid(40.0, -105.0, 3, 0.0017, 0.011), dict(energy="180 kJ", usable=85, power="250 W", groundspeed="8 m/s", reserve=20), (180_000 * 0.85 / 250, 0.2, 8.0, None, 0.0)),
+        ("A strong but flyable headwind home",
+         grid(40.0, -105.0, 5, 0.0014, 0.012), dict(flight_time="18 min", groundspeed="9 m/s", transit_speed="18 m/s", headwind="9 m/s", reserve=25), (1080, 0.25, 9.0, 18.0, 9.0)),
+        ("Transit and headwind speeds in knots",
+         grid(40.0, -105.0, 5, 0.0011, 0.009), dict(flight_time="14 min", groundspeed="8 m/s", transit_speed="24 kt", headwind="6 kt", reserve=20), (840, 0.2, 8.0, 24 * KT, 6 * KT)),
+        ("A long eleven-line grid",
+         grid(40.0, -105.0, 11, 0.001, 0.015), dict(flight_time="12 min", groundspeed="10 m/s", reserve=20), (720, 0.2, 10.0, None, 0.0)),
+        ("A short route that ends near home",
+         [(40.001, -105.0), (40.001, -104.996), (40.0, -105.0)], dict(flight_time="6 min", groundspeed="6 m/s", reserve=20), (360, 0.2, 6.0, None, 0.0)),
+        ("A north-south out-and-back route",
+         [(40.002, -105.0), (40.006, -105.0), (40.002, -105.0)], dict(flight_time="10 min", groundspeed="7 m/s", reserve=25), (600, 0.25, 7.0, None, 0.0)),
+        ("A separate fast transit speed",
+         grid(40.0, -105.0, 8, 0.001, 0.012), dict(flight_time="10 min", groundspeed="6 m/s", transit_speed="15 m/s", reserve=20), (600, 0.2, 6.0, 15.0, 0.0)),
+        ("No usable-share deduction beyond reserve",
+         grid(40.0, -105.0, 5, 0.0016, 0.008), dict(energy="75 Wh", usable=100, power="225 W", groundspeed="9 m/s", reserve=25), (75 * 3600 / 225, 0.25, 9.0, None, 0.0)),
+        ("A low 5 percent reserve",
+         grid(40.0, -105.0, 9, 0.0009, 0.01), dict(flight_time="11 min", groundspeed="12 m/s", reserve=5), (660, 0.05, 12.0, None, 0.0)),
+        ("Survey and transit speeds in miles per hour",
+         grid(40.0, -105.0, 6, 0.0013, 0.01), dict(flight_time="16 min", groundspeed="18 mph", transit_speed="28 mph", reserve=20), (960, 0.2, 18 * 0.44704, 28 * 0.44704, 0.0)),
     ]
     vecs = []
     for title, pts, extra, (fs, r, vc, vt, w) in cases:

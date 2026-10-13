@@ -94,6 +94,8 @@ const PATH_ROW: &[Field] = &[
 
 pub static SORTIES: ToolDef = ToolDef {
     id: "drone.mission.sorties",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Mission sorties and battery swaps",
     summary: "How many batteries a waypoint mission takes and where each flight ends, with the trip home against the wind counted before every swap, not just the total time divided by battery time.",
     aliases: &[
@@ -258,11 +260,7 @@ pub static SORTIES: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::NoSolution, ErrorCode::OutOfDomain],
-    warnings: &[
-        "CANNOT_RETURN_INTO_WIND",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["CANNOT_RETURN_INTO_WIND", "UNIT_ASSUMED"],
     model: "Flight time to the reserve F = flight time × (1 − reserve), or usable energy × (1 − reserve) / power (the endurance tool). A sortie starting at waypoint s flies home → s at the transit speed, then the path at the survey groundspeed; at each waypoint j the trip home takes d_j / (V − w) (the return-to-home tool), and the sortie ends at the last j where elapsed + trip home ≤ F. The next sortie flies out to that waypoint and carries on. Distances are WGS84 geodesics",
     accuracy: "Exact for straight legs at constant speeds and power, a steady headwind on every trip home, and no time for turns, climbs, or landing. Real batteries also sag in the cold and with age.",
     when_to_use: "Use this when a mapping or inspection path is longer than one battery: it says how many batteries the job takes and where to break it, counting the trip home from each break point, which grows as the path moves away from home. Feed it the survey grid’s waypoints and your battery’s usable flight time.",
@@ -272,7 +270,7 @@ pub static SORTIES: ToolDef = ToolDef {
         id: "primary",
         title: "A 1.2 km, four-line grid on a 7-minute battery with a 20% reserve",
         input: r#"{"lat":40.0,"lon":-105.0,"waypoints":[{"lat":40.0009,"lon":-105.0},{"lat":40.0009,"lon":-104.98592},{"lat":40.0027,"lon":-104.98592},{"lat":40.0027,"lon":-105.0},{"lat":40.0045,"lon":-105.0},{"lat":40.0045,"lon":-104.98592},{"lat":40.0063,"lon":-104.98592},{"lat":40.0063,"lon":-105.0}],"flight_time":"7 min","groundspeed":"10 m/s","reserve":20}"#,
-        source: "Hand-worked in docs/derivations/drone.mission.sorties.md: three sorties, swapping at waypoints 4 and 7",
+        source: "Hand-worked from GeographicLib distances: three sorties, swapping at waypoints 4 and 7",
     }],
     primary_example: "primary",
     visualization: &[

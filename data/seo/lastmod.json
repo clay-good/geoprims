@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "f00f6fd4595aaee6",
+    "hash": "614f8fe21de0f88a",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "0fb83b1737b2b98d",
+    "hash": "ec54ad53ba29d027",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "7f56dfbd8df3b0b2",
+    "hash": "2483d33ee9a76709",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -312,8 +312,8 @@
     "lastmod": "2026-10-13"
   },
   "/drone/mission/sorties/": {
-    "hash": "b85b0d186d779e31",
-    "lastmod": "2026-10-09"
+    "hash": "ec12256b0e8ee7c3",
+    "lastmod": "2026-10-13"
   },
   "/drone/mission/survey-grid/": {
     "hash": "69ef564bae5d807f",
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "fc9728c79512e134",
+    "hash": "0caf2f8873cde971",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "4ac487070bcd9680",
+    "hash": "8f04897245033f41",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "548e30bfcafcbca0",
+    "hash": "0e919c953f2d0aa8",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2020,7 +2020,7 @@
     "lastmod": "2026-10-13"
   },
   "/workflows/mapping-flight/": {
-    "hash": "13525fdf763396d5",
+    "hash": "67e6ce8dd956ba52",
     "lastmod": "2026-10-13"
   },
   "/workflows/preflight-check/": {

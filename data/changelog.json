@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "drone.mission.sorties"
+      ],
+      "vectors": [],
+      "summary": "Mission sorties and battery swaps (version 1.1.0) is now stable. Sixteen new vectors extend coverage to 22 cases across reserves, energy and flight-time inputs, wind, separate transit speeds, unit conversions, route sizes, and an unreachable waypoint. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "survey.gnss.dop"
       ],
       "vectors": [],

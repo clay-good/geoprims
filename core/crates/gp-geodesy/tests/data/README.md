@@ -7,6 +7,7 @@
 - Source: https://sourceforge.net/projects/geographiclib/files/testdata/TMcoords.dat.gz (retrieved 2026-09-19)
 - SHA-256 of the downloaded `.gz`: `91fb3a046625426b77e388a371c0a08ec14e8d98614f13cbd91019dd8baa7721`
 - Regenerate: `gunzip -k TMcoords.dat.gz && awk '$2<=3.5 && $1<=84' TMcoords.dat | awk 'NR%11==1' | head -1000 > TMcoords-sample.dat`
+- Full local gate: decompress the pinned archive, then run `TMCOORDS=/path/TMcoords.dat cargo test -p gp-geodesy --test tmcoords_parity -- --ignored --nocapture`. This checks all 258,000 cases that GeographicLib designates for the standard convention and confirms that the source has all 287,000 rows. The final 29,000 rows use GeographicLib's optional extended domain, which GeoPrims does not expose. The archive stays out of Git.
 
 ## Magnetic model test values
 

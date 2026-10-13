@@ -46,6 +46,7 @@ GeographicLib is the implementation this tool is ported from, but it is compiled
 
 - `tools/vectors/gen_tm_exact_geographiclib.py`: 300 random grids and points anywhere on the globe, on five ellipsoids, from TransverseMercatorProj's exact mode, in `core/crates/gp-geodesy/tests/data/projections_tm_exact.json`, and vectors after the published examples
 - `core/crates/gp-geodesy/tests/projections.rs`: `projections_match_proj` runs all 300 forward and back, the grid within 15 nm, the convergence within 1e-13°, and the scale within 3e-15 of itself
+- `core/crates/gp-geodesy/tests/tmcoords_parity.rs`: all 258,000 standard-convention cases in GeographicLib's published `TMcoords.dat`, generated with 80-digit arithmetic. The opt-in local gate checks forward and inverse ground error plus convergence and scale; the final 29,000 extended-domain cases are outside the product's stated standard domain.
 - `tools/diff/runner.mjs`: `tm-exact-forward`, 10,000 random points on twelve random grids anywhere on the globe against TransverseMercatorProj, within 1 µm
 
 A separate check at 20,000 points over the whole WGS 84 globe, poles, equator, and the branch point included, agreed within 5.6e-8 m, 5e-11° of convergence, and 7e-15 of scale. It also showed that TransverseMercatorProj's `-t` flag selects the extended domain, which folds the far side differently, so the default mode is the reference.

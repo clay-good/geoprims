@@ -575,6 +575,82 @@ fn calibration_round_trips_through_hover_power() {
 }
 
 #[test]
+fn calibration_recovers_hover_parameters_across_aircraft() {
+    for (mass, rotors, diameter, fm, efficiency, avionics, atmosphere) in [
+        ("0.9 kg", 4, "7 in", 0.5, 0.8, 0.0, ""),
+        (
+            "3 kg",
+            6,
+            "15 in",
+            0.7,
+            0.9,
+            12.0,
+            r#","altitude":"5000 ft","temperature":"30 degC""#,
+        ),
+        (
+            "25 kg",
+            8,
+            "30 in",
+            0.6,
+            1.0,
+            30.0,
+            r#","density_altitude":"8000 ft""#,
+        ),
+    ] {
+        let hover = call(
+            "drone.power.hover-power",
+            &format!(
+                r#"{{"mass":"{mass}","rotors":{rotors},"rotor_diameter":"{diameter}","figure_of_merit":{fm},"efficiency":{efficiency},"avionics_power":"{avionics} W"{atmosphere}}}"#
+            ),
+        );
+        let power = num(&hover, "result.electrical_power.value");
+        let calibration = call(
+            "drone.power.calibrate-hover",
+            &format!(
+                r#"{{"mass":"{mass}","rotors":{rotors},"rotor_diameter":"{diameter}","energy_used":"{power} Wh","hover_time":"1 h","avionics_power":"{avionics} W","efficiency":{efficiency}{atmosphere}}}"#
+            ),
+        );
+        near(&calibration, "result.fm_eta", fm * efficiency, 1e-12);
+        near(&calibration, "result.figure_of_merit", fm, 1e-12);
+    }
+}
+
+#[test]
+fn calibration_units_do_not_change_the_result() {
+    let wh = call(
+        "drone.power.calibrate-hover",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","energy_used":"40 Wh","hover_time":"15 min"}"#,
+    );
+    let joules = call(
+        "drone.power.calibrate-hover",
+        r#"{"mass":"1400 g","rotors":4,"rotor_diameter":"23.876 cm","energy_used":"144000 J","hover_time":"900 s"}"#,
+    );
+    for path in [
+        "result.fm_eta",
+        "result.figure_of_merit",
+        "result.measured_power.value",
+        "result.ideal_power.value",
+    ] {
+        near(&joules, path, num(&wh, path), 1e-12);
+    }
+}
+
+#[test]
+fn calibration_subtracts_non_lift_power_before_back_solving() {
+    let base = call(
+        "drone.power.calibrate-hover",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","energy_used":"40 Wh","hover_time":"15 min"}"#,
+    );
+    let avionics = call(
+        "drone.power.calibrate-hover",
+        r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","energy_used":"40 Wh","hover_time":"15 min","avionics_power":"25 W"}"#,
+    );
+    let ideal = num(&base, "result.ideal_power.value");
+    near(&base, "result.fm_eta", ideal / 160.0, 1e-12);
+    near(&avionics, "result.fm_eta", ideal / 135.0, 1e-12);
+}
+
+#[test]
 fn endurance_invariants() {
     // Time is energy over power: linear in energy, inverse in power, and the
     // usable share, derating, and reserve each scale it by their own factor.

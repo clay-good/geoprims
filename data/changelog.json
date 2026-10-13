@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "drone.power.calibrate-hover"
+      ],
+      "vectors": [],
+      "summary": "Test-flight hover calibration (version 1.1.0) is now stable. It reverses Embry-Riddle's published 45,000 lb tiltrotor example, and 25 vectors plus four invariant tests cover energy and time units, aircraft sizes, atmosphere inputs, avionics draw, efficiency, domain boundaries, and invalid measurements. Calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "drone.sensors.thermal-footprint"
       ],
       "vectors": [],

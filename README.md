@@ -39,6 +39,8 @@ Mission sortie planning is stable for ordered waypoint paths. It counts every tr
 
 Multirotor hover power is stable for separate or coaxial rotors, explicit aerodynamic and electrical losses, and site air density. Its momentum-theory result is checked against the 2026 Embry-Riddle aerospace textbook's 45,000 lb tiltrotor example and 19 additional vectors.
 
+Test-flight hover calibration is stable for measured energy and time, avionics draw, assumed electrical efficiency, and site air density. It back-solves the hover model's figure of merit, reverses Embry-Riddle's published tiltrotor example, and has 25 vectors plus four round-trip and unit invariants.
+
 Thermal pixel footprint is stable for direct IFOV or pixel-pitch and focal-length inputs, with an inverse range for a target size. It reproduces FLIR's published E8 example at 10 ft, and 26 vectors plus four invariants cover units, pixel rules, inverse geometry, domain boundaries, and invalid camera inputs.
 
 Side slope and grade conversion is stable across percent, per mille, degrees, decimal grades, and explicitly labeled H:V or V:H ratios. It reconstructs rise, run, or slope length, refuses ambiguous bare ratios, and reproduces FHWA's 20 m over 400 m roadway example across 23 vectors.

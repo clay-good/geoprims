@@ -1467,6 +1467,8 @@ fn run_max_payload(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CALIBRATE_HOVER: ToolDef = ToolDef {
     id: "drone.power.calibrate-hover",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Calibrate hover power from a test flight",
     summary: "Back-solve a multirotor's real figure of merit × efficiency from a measured hover: the energy it drew and for how long, so the hover-power and flight-time tools match your aircraft.",
     aliases: &[
@@ -1557,18 +1559,26 @@ pub static CALIBRATE_HOVER: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Measured power = energy used / hover time; lift power = measured − avionics; FM·η = (m·g0)^1.5 / √(2ρA) / lift power; FM = FM·η / η",
     accuracy: "As good as the measurement: use a steady hover in calm air, and the energy the log or charger reports for that hover alone, not the whole flight.",
     when_to_use: "Use this after a test flight to make the hover power and flight time tools match your own drone. Give its mass, rotors, and rotor size, plus the energy it drew and how long it hovered, and it works back to the combined figure of merit and motor efficiency, and to the figure of merit alone at the efficiency you assume. Enter those in the hover power tool in place of its defaults.",
     limitations: "The answer is only as good as the test. Use a steady hover in calm air, and the energy for that hover alone, not for takeoff, climb, and landing too. The split between figure of merit and efficiency rests on the efficiency you enter, 0.85 unless you set one. It uses momentum theory, so a value found at one mass and air density may not hold exactly at another.",
-    references: &[LEISHMAN],
-    examples: &[Example {
-        id: "primary",
-        title: "The 1.4 kg quad drew 40 Wh in a 15-minute hover",
-        input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","energy_used":"40 Wh","hover_time":"15 min"}"#,
-        source: "Momentum theory (Leishman 2006, chapter 2) solved for the figure of merit",
-    }],
+    references: &[LEISHMAN, LEISHMAN_FLIGHT_VEHICLES, ICAO_ATM],
+    examples: &[
+        Example {
+            id: "primary",
+            title: "The 1.4 kg quad drew 40 Wh in a 15-minute hover",
+            input: r#"{"mass":"1.4 kg","rotors":4,"rotor_diameter":"9.4 in","energy_used":"40 Wh","hover_time":"15 min"}"#,
+            source: "Momentum theory (Leishman 2006, chapter 2) solved for the figure of merit",
+        },
+        Example {
+            id: "embry-riddle",
+            title: "Back-solve Embry-Riddle's 45,000 lb tiltrotor example",
+            input: r#"{"mass":"45000 lb","rotors":2,"rotor_diameter":"38 ft","energy_used":"5253.8 kWh","hover_time":"1 h","efficiency":1}"#,
+            source: "Embry-Riddle Introduction to Aerospace Flight Vehicles (2026), chapter 67: 5,253.8 kW at a figure of merit of 0.75",
+        },
+    ],
     primary_example: "primary",
     visualization: &[Layer {
         kind: "table-only",
@@ -1581,6 +1591,10 @@ pub static CALIBRATE_HOVER: ToolDef = ToolDef {
         },
         Related {
             id: "drone.power.endurance",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.battery-energy",
             reason: "next",
         },
     ],

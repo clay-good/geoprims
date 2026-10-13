@@ -304,6 +304,65 @@ def calibrate_vectors():
     # A hover that would beat an ideal rotor is refused.
     out.append(fvec(len(out) + 1, {"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "10 Wh", "hover_time": "15 min"},
                     {"ok": False, "error.code": "OUT_OF_DOMAIN"}, PW_SRC, PW_VER))
+
+    # Independently published hover-power example, inverted. Embry-Riddle
+    # prints 5,253.8 kW at FM = 0.75 before transmission loss. One hour at
+    # that power is 5,253.8 kWh, so calibration should recover the printed FM.
+    published = fvec(len(out) + 1,
+                     {"mass": "45000 lb", "rotors": 2, "rotor_diameter": "38 ft", "energy_used": "5253.8 kWh", "hover_time": "1 h", "efficiency": 1},
+                     {"result.fm_eta": 0.75, "result.figure_of_merit": 0.75, "result.measured_power.value": 5253800.0},
+                     "Leishman, Introduction to Aerospace Flight Vehicles, chapter 67, hover-power worked example inverted from its printed power",
+                     "2026 webbook")
+    published["tolerance"] = {
+        "result.fm_eta": {"rel": 0.0005},
+        "result.figure_of_merit": {"rel": 0.0005},
+        "result.measured_power.value": {"abs": 1e-6},
+    }
+    out.append(published)
+
+    def success(inp, mass_kg, rotors, diameter_m, energy_wh, time_s, avionics=0, efficiency=0.85, rho=rho0):
+        area = rotors * math.pi * diameter_m ** 2 / 4
+        ideal = (mass_kg * G0) ** 1.5 / math.sqrt(2 * rho * area)
+        measured = energy_wh * 3600 / time_s
+        fm_eta = ideal / (measured - avionics)
+        out.append(fvec(len(out) + 1, inp,
+                        {"result.fm_eta": fm_eta, "result.figure_of_merit": fm_eta / efficiency,
+                         "result.measured_power.value": measured, "result.ideal_power.value": ideal}, PW_SRC, PW_VER))
+
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "144000 J", "hover_time": "900 s"},
+            1.4, 4, 9.4 * 0.0254, 40, 900)
+    success({"mass": "0.9 kg", "rotors": 4, "rotor_diameter": "7 in", "energy_used": "20 Wh", "hover_time": "12 min", "avionics_power": "5 W", "efficiency": 0.5},
+            0.9, 4, 7 * 0.0254, 20, 720, 5, 0.5)
+    success({"mass": "6.5 kg", "rotors": 6, "rotor_diameter": "22 in", "energy_used": "150 Wh", "hover_time": "12 min", "avionics_power": "20 W", "efficiency": 1},
+            6.5, 6, 22 * 0.0254, 150, 720, 20, 1)
+    success({"mass": "2 kg", "rotors": 4, "rotor_diameter": "12 in", "energy_used": "70 Wh", "hover_time": "15 min", "altitude": "-1000 m"},
+            2, 4, 12 * 0.0254, 70, 900, rho=rho_at(-1000))
+    success({"mass": "2 kg", "rotors": 4, "rotor_diameter": "12 in", "energy_used": "70 Wh", "hover_time": "10 min", "altitude": "11000 m"},
+            2, 4, 12 * 0.0254, 70, 600, rho=rho_at(11000))
+    success({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "12 min", "density_altitude": "8000 ft"},
+            1.4, 4, 9.4 * 0.0254, 40, 720, rho=rho_at(8000 * 0.3048))
+    hot_rho = rho_at(5000 * 0.3048, 303.15)
+    success({"mass": "3 kg", "rotors": 6, "rotor_diameter": "15 in", "energy_used": "90 Wh", "hover_time": "12 min", "altitude": "5000 ft", "temperature": "30 degC"},
+            3, 6, 15 * 0.0254, 90, 720, rho=hot_rho)
+    success({"mass": "8 kg", "rotors": 1, "rotor_diameter": "36 in", "energy_used": "250 Wh", "hover_time": "12 min"},
+            8, 1, 36 * 0.0254, 250, 720)
+    success({"mass": "2 kg", "rotors": 32, "rotor_diameter": "5 in", "energy_used": "80 Wh", "hover_time": "20 min"},
+            2, 32, 5 * 0.0254, 80, 1200)
+    success({"mass": "1400 g", "rotors": 4, "rotor_diameter": "23.876 cm", "energy_used": "144 kJ", "hover_time": "900 s", "avionics_power": "25 W"},
+            1.4, 4, 0.23876, 40, 900, 25)
+
+    failures = [
+        ({"mass": "1.4 kg", "rotors": 4.5, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "15 min"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "0 Wh", "hover_time": "15 min"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "0 min"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "15 min", "avionics_power": "-1 W"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "15 min", "avionics_power": "160 W"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "15 min", "altitude": "5000 ft", "density_altitude": "8000 ft"}, "INVALID_INPUT"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "15 min", "altitude": "11001 m"}, "OUT_OF_DOMAIN"),
+        ({"mass": "1.4 kg", "rotors": 4, "rotor_diameter": "9.4 in", "energy_used": "40 Wh", "hover_time": "15 min", "temperature": "-273.15 degC"}, "INVALID_INPUT"),
+    ]
+    for inp, code in failures:
+        out.append(fvec(len(out) + 1, inp, {"ok": False, "error.code": code}, PW_SRC, PW_VER))
     return out
 
 

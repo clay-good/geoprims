@@ -34,7 +34,7 @@ Given the pilot's position, a mission's waypoints, and a visual range (entered, 
 - **THEN** it counts as inside
 
 ### Requirement: Ground control and checkpoints
-Given an area polygon and an accuracy class, the tool SHALL return the checkpoint count from the ASPRS Positional Accuracy Standards, Edition 2, for the product area. It SHALL also return a suggested GCP count and layout as lat/lon rows (the polygon's corners plus interior points at a stated spacing), labeled a rule of thumb and cited. Every suggested point SHALL lie inside the polygon.
+Given an area polygon and an accuracy class, the tool SHALL return the checkpoint count from the ASPRS Positional Accuracy Standards, Edition 2, for the product area. It SHALL also return a suggested GCP count and layout as lat/lon rows (the polygon's corners plus interior points at a stated spacing), labeled a rule of thumb and cited. Every suggested point SHALL lie inside the polygon and use a product-defined 10 m boundary inset unless the caller gives another inset.
 
 #### Scenario: Concave area
 - **WHEN** the area is L-shaped

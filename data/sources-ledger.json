@@ -1112,6 +1112,46 @@
       "editionCheck": false
     },
     {
+      "id": "geoprims-photogrammetry-spec",
+      "name": "GeoPrims photogrammetry specification",
+      "issuer": "GeoPrims",
+      "currentEdition": "repository specification",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "The repository specification is the authority for the explicitly product-defined 0.5 px default motion-blur limit. It is not an external camera or photogrammetry standard.",
+      "freeAccessUrl": "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/photogrammetry/spec.md",
+      "matchTerms": [
+        "GeoPrims photogrammetry specification"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "geoprims-drone-planning-spec",
+      "name": "GeoPrims drone mission-planning specification",
+      "issuer": "GeoPrims",
+      "currentEdition": "repository specification",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-13",
+      "verificationNote": "The repository specification is the authority for the explicitly product-defined 10 m default GCP boundary inset. It is not attributed to ASPRS or Pix4D.",
+      "freeAccessUrl": "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-flight-and-drone-planning-tools/specs/drone/mission-planning/spec.md",
+      "matchTerms": [
+        "GeoPrims drone mission-planning specification"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "geoprims-mission-patterns-spec",
       "name": "GeoPrims mission-patterns specification",
       "issuer": "GeoPrims",

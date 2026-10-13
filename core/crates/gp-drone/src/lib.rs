@@ -35,6 +35,14 @@ const WOLF: Reference = Reference {
     locator: "Chapter 6 (vertical photographs: scale and ground coverage)",
     url: "https://www.accessengineeringlibrary.com/content/book/9780071761123",
 };
+const PHOTOGRAMMETRY_SPEC: Reference = Reference {
+    title: "GeoPrims photogrammetry specification",
+    issuer: "GeoPrims",
+    year: 2026,
+    edition: "repository specification, accessed 2026-10-13",
+    locator: "Motion blur requirement",
+    url: "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-drone-suite/specs/drone/photogrammetry/spec.md",
+};
 pub(crate) const PIX4D: Reference = Reference {
     title: "Selecting the image acquisition plan type (overlap guidance)",
     issuer: "Pix4D support documentation",
@@ -1041,7 +1049,7 @@ pub static MOTION_BLUR: ToolDef = ToolDef {
     accuracy: "Exact for straight, level flight; vibration adds blur",
     when_to_use: "Use this when you set the camera for a mapping flight and want sharp images at the speed you plan to fly. Give the groundspeed, shutter time, and ground sampling distance, and it tells you how many pixels the image smears during each exposure. It also gives the slowest shutter that keeps the smear under your limit, half a pixel unless you set one, as a fraction you can dial in on the camera.",
     limitations: "It counts only the drone's straight, level motion over the ground while the shutter is open. Vibration, gimbal shake, turns, and gusts add blur it does not see. The ground sampling distance is taken as given, so where the terrain rises toward the drone the real smear in pixels is larger. The shutter fraction is rounded, and cameras offer set steps, so pick the next faster one. Your processing software may want a tighter limit.",
-    references: &[WOLF],
+    references: &[WOLF, PHOTOGRAMMETRY_SPEC],
     examples: &[Example {
         id: "primary",
         title: "10 m/s at 1/1000 s with a 2.741 cm GSD",
@@ -1058,6 +1066,12 @@ pub static MOTION_BLUR: ToolDef = ToolDef {
         reason: "parent",
     }],
     sentence: "The image smears {blur} pixels; keep the shutter at {max_exposure_fraction} or faster.",
+    assumptions: &[Assumption {
+        name: "Default motion-blur limit (product choice)",
+        value: "0.5",
+        unit: "px",
+        source: "geoprims-photogrammetry-spec",
+    }],
     limits: &[("batchRows", 10_000)],
     run: run_motion_blur,
     ..ToolDef::BLANK

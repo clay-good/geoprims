@@ -15,7 +15,7 @@ The checkpoint count is the ASPRS Positional Accuracy Standards, Edition 2, Anne
 
 ## Symbols and units
 
-The area as latitude and longitude rows (ring 0 the boundary, rings 1 on holes); v the vegetated share; the accuracy classes as RMSE in cm; the grid spacing and inset in m (inset 10 m by default, a choice of this tool, not of either source). Out come the counts, the area in km², the accuracies in cm, and the points as latitude and longitude rows.
+The area as latitude and longitude rows (ring 0 the boundary, rings 1 on holes); v the vegetated share; the accuracy classes as RMSE in cm; the grid spacing and inset in m. The 10 m default inset is an explicit GeoPrims product choice, not a value from ASPRS or Pix4D. Out come the counts, the area in km², the accuracies in cm, and the points as latitude and longitude rows.
 
 ## Domain
 

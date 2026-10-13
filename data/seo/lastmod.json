@@ -368,8 +368,8 @@
     "lastmod": "2026-10-12"
   },
   "/drone/photogrammetry/gcp-plan/": {
-    "hash": "269978a0b5c004b7",
-    "lastmod": "2026-10-12"
+    "hash": "0c4a632713b377c8",
+    "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/gsd/": {
     "hash": "f50ce94aa7a8eca7",
@@ -380,8 +380,8 @@
     "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/motion-blur/": {
-    "hash": "d343f82507f339e2",
-    "lastmod": "2026-10-09"
+    "hash": "6cc278cb2eb9b615",
+    "lastmod": "2026-10-13"
   },
   "/drone/photogrammetry/oblique-gsd/": {
     "hash": "e536d85df4145b48",
@@ -1440,7 +1440,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "64248685fd318b67",
+    "hash": "59c52c755f12313e",
     "lastmod": "2026-10-13"
   },
   "/survey/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "2837bcd011994a12",
+    "hash": "ebd8a27449944b01",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {
@@ -2020,7 +2020,7 @@
     "lastmod": "2026-10-13"
   },
   "/workflows/mapping-flight/": {
-    "hash": "7d8d217bc479d6e5",
+    "hash": "6ab04d04fb8d2287",
     "lastmod": "2026-10-13"
   },
   "/workflows/preflight-check/": {

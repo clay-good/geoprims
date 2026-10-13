@@ -35,6 +35,14 @@ const PIX4D_GCP: Reference = Reference {
     locator: "Step 1, part 4: at least 3 GCPs, 5 to 10 usually enough; place them evenly, one in the center, and not exactly at the edges",
     url: "https://support.pix4d.com/hc/en-us/articles/202557489",
 };
+const MISSION_PLANNING_SPEC: Reference = Reference {
+    title: "GeoPrims drone mission-planning specification",
+    issuer: "GeoPrims",
+    year: 2026,
+    edition: "repository specification, accessed 2026-10-13",
+    locator: "Ground control and checkpoints",
+    url: "https://github.com/clay-good/geoprims/blob/main/openspec/changes/add-flight-and-drone-planning-tools/specs/drone/mission-planning/spec.md",
+};
 
 /// ASPRS Edition 2, Table C.1: checkpoints for a land-cover area (km²),
 /// counted in whole square kilometers as the table is. None past 2,500 km²,
@@ -269,7 +277,7 @@ pub static GCP_PLAN: ToolDef = ToolDef {
     accuracy: "Counts are the standard's table values. Positions are suggestions: every one is inside the area and at least the inset from its edges, but not checked for ground cover, slope, access, or visibility from the air.",
     when_to_use: "Use this when you plan ground control for a drone mapping job and will report accuracy by ASPRS Edition 2: it says how many checkpoints the area needs, how accurately the control and checkpoints must be surveyed for your accuracy class, and suggests where to put the targets, as coordinates you can load into a data collector.",
     limitations: "The checkpoint count is the standard's recommendation by area; a client can ask for more. The layout is a rule of thumb, not a requirement of the standard, and it cannot see the ground: move points off roofs, slopes over 10%, vegetation, and places a target cannot be seen from the air. It does not say how many GCPs a given accuracy needs; that depends on the camera, the flight, and the software.",
-    references: &[ASPRS, PIX4D_GCP],
+    references: &[ASPRS, PIX4D_GCP, MISSION_PLANNING_SPEC],
     examples: &[Example {
         id: "primary",
         title: "An L-shaped 6 ha site for a 5 cm map and a 10 cm surface",
@@ -354,6 +362,12 @@ pub static GCP_PLAN: ToolDef = ToolDef {
             value: "2",
             unit: "1",
             source: "asprs-pas",
+        },
+        Assumption {
+            name: "Default boundary inset (product choice)",
+            value: "10",
+            unit: "m",
+            source: "geoprims-drone-planning-spec",
         },
     ],
     limits: &[("batchRows", 100)],

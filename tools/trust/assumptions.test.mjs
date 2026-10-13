@@ -74,6 +74,7 @@ const MUST_DECLARE = [
   'drone.photogrammetry.gsd',
   'drone.photogrammetry.altitude-for-gsd',
   'drone.photogrammetry.trigger',
+  'drone.photogrammetry.motion-blur',
   'drone.photogrammetry.image-count',
   'drone.mission.survey-grid',
   'drone.mission.orbit',
@@ -293,6 +294,13 @@ test('the mission tools expose their product-defined operational defaults', () =
   const missionExport = byId('drone.mission.export')['x-assumptions'];
   assert.deepEqual(missionExport.map(({ value, unit, source }) => [value, unit, source]), [
     ['15', 'm', 'geoprims-mission-patterns-spec'],
+  ]);
+});
+
+test('the photogrammetry tools expose their product-defined planning defaults', () => {
+  const motionBlur = byId('drone.photogrammetry.motion-blur')['x-assumptions'];
+  assert.deepEqual(motionBlur.map(({ value, unit, source }) => [value, unit, source]), [
+    ['0.5', 'px', 'geoprims-photogrammetry-spec'],
   ]);
 });
 
@@ -588,7 +596,7 @@ test('the ASPRS accuracy tool exposes every acceptance threshold', () => {
   ]);
 });
 
-test('the GCP planner exposes its complete ASPRS count and accuracy table', () => {
+test('the GCP planner exposes its complete ASPRS table and product default', () => {
   const assumptions = byId('drone.photogrammetry.gcp-plan')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
     ['30', 'checkpoints', 'asprs-pas'],
@@ -599,6 +607,7 @@ test('the GCP planner exposes its complete ASPRS count and accuracy table', () =
     ['2500', 'km2', 'asprs-pas'],
     ['2', '1', 'asprs-pas'],
     ['2', '1', 'asprs-pas'],
+    ['10', 'm', 'geoprims-drone-planning-spec'],
   ]);
 });
 

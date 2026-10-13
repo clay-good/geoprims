@@ -26,22 +26,23 @@ None in the division. The figures are only as good as the fuel flow entered, fro
 
 ## Worked example
 
-- sourcePublisher: geoprims (worked from the definition, computed)
-- sourceTitle: Pilot's Handbook of Aeronautical Knowledge (FAA-H-8083-25C), definition applied by hand
-- sourceEdition: FAA-H-8083-25C
-- sourceLocator: Aircraft Performance chapter, range performance and specific range; the handbook gives the definition, and these numbers are the project's own division, not a handbook example
-- independent: no
-- inputs: TAS 120 kt, fuel flow 8.5 gal/h, groundspeed 105 kt
-- outputs: 14.12 NM/gal through the air, 7.08 gal per 100 NM; 12.35 NM/gal over the ground, 8.10 gal per 100 NM
-- tolerance: 1e-9
-- verifiedBy: golden vector v001
-- verifiedOn: 2026-10-09
+- sourcePublisher: Federal Aviation Administration
+- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
+- sourceEdition: FAA-H-8083-25C (2023)
+- sourceLocator: Chapter 16, Navigation, fuel-consumption example and the following specific-range note
+- independent: yes
+- inputs: 400 NM, 100 kt, 5 gal/h
+- outputs: 4 hours and 20 gal are printed by the source; those independently published values give 20 NM/gal and 5 gal per 100 NM
+- tolerance: 1e-12 for the exact ratios
+- verifiedBy: golden vector v009 and `core/crates/gp-aviation/tests/slice2.rs` `specific_range_matches_phak_example`
+- verifiedOn: 2026-10-13
 
 ## Differential tests
 
-- `tools/vectors/gen_range.py`: the same divisions written in Python, at five cases (one with no groundspeed, one with a liters-per-hour flow) and three refused zero inputs (within 1e-9)
-- `core/vectors/aviation.performance.specific-range.jsonl`: those eight vectors, run through the core on every build
+- `tools/vectors/gen_range.py`: the same divisions written in Python across 13 speed, flow, groundspeed, and unit combinations, plus six zero or negative invalid cases. It checks the code against the definition, not against a separate method
+- `core/vectors/aviation.performance.specific-range.jsonl`: those cases and the independently published FAA example, 20 vectors in all, run through the core on every build
 
 ## Invariants
 
-- `core/crates/gp-aviation/tests/aviation.rs` `golden_vectors`: no invariant test is written for this tool yet. This is the closest test: it lints and runs every aviation tool's golden vectors through the registry, including the eight above, and fails if any tool has fewer than five
+- `core/crates/gp-aviation/tests/slice2.rs` `specific_range_matches_phak_example`: the FAA's 400 NM, 100 kt, 5 gal/h, 20-gallon trip gives 20 NM/gal and 5 gal per 100 NM
+- `core/crates/gp-aviation/tests/slice2.rs` `specific_range_invariants`: doubling speed at fixed flow doubles range and halves fuel per 100 NM; doubling flow does the reverse; changing groundspeed leaves the air results unchanged; equivalent metric inputs reproduce all four outputs

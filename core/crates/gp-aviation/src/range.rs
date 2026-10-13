@@ -28,13 +28,14 @@ const fn per_gal(name: &'static str, title: &'static str, help: &'static str) ->
 }
 
 const PHAK_RANGE: Reference = Reference {
-    locator: "Aircraft Performance chapter (range performance and specific range: distance per unit of fuel)",
+    locator: "Chapter 16, Navigation (400 NM at 100 kt and 5 gal/h uses 20 gal; specific range is useful when wind is a factor)",
     ..PHAK
 };
 
 pub static SPECIFIC_RANGE: ToolDef = ToolDef {
     id: "aviation.performance.specific-range",
-    version: "1.0.1",
+    version: "1.1.0",
+    stability: gp_base::tool::Stability::Stable,
     title: "Specific range",
     summary: "How far each gallon of fuel takes you, through the air and over the ground, and the fuel each 100 NM takes, from your airspeed and fuel flow.",
     aliases: &[
@@ -104,7 +105,7 @@ pub static SPECIFIC_RANGE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Specific range = speed ÷ fuel flow: through the air with TAS, over the ground with groundspeed (PHAK, aircraft performance). Fuel per 100 NM is its reciprocal times 100",
     accuracy: "Exact for the entered speed and flow; as good as the POH or gauge flow you enter. Wind changes the ground figure, not the air one",
     when_to_use: "Use this when you want to compare cruise power settings or altitudes by how far each gallon takes you. Enter your true airspeed and fuel flow from the POH cruise table or the gauge. It returns nautical miles per gallon through the air and the fuel each 100 NM takes. Add your groundspeed to see the same figures over the ground with the wind.",
@@ -112,9 +113,9 @@ pub static SPECIFIC_RANGE: ToolDef = ToolDef {
     references: &[PHAK_RANGE],
     examples: &[Example {
         id: "primary",
-        title: "120 kt true at 8.5 gal/h, 105 kt over the ground",
-        input: r#"{"tas":"120 kt","fuel_flow":"8.5 gph","groundspeed":"105 kt"}"#,
-        source: "Worked from the definition: 120 ÷ 8.5 = 14.12 NM per gallon through the air, 105 ÷ 8.5 = 12.35 over the ground",
+        title: "400 NM at 100 kt and 5 gal/h",
+        input: r#"{"tas":"100 kt","fuel_flow":"5 gph","groundspeed":"100 kt"}"#,
+        source: "FAA-H-8083-25C chapter 16: 400 NM at 100 kt takes 4 hours, and 5 gal/h uses 20 gal",
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -129,6 +130,10 @@ pub static SPECIFIC_RANGE: ToolDef = ToolDef {
         Related {
             id: "aviation.wind.heading-groundspeed",
             reason: "parent",
+        },
+        Related {
+            id: "aviation.loading.burn-rate",
+            reason: "alternative",
         },
     ],
     sentence: "Each US gallon takes you {air_range} NM through the air; 100 NM takes {fuel_per_100nm}.",

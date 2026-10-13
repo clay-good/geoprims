@@ -411,6 +411,72 @@ fn pivotal_altitude_invariants() {
     );
 }
 
+#[test]
+fn specific_range_matches_phak_example() {
+    let r = call(
+        "aviation.performance.specific-range",
+        r#"{"tas":"100 kt","fuel_flow":"5 gph","groundspeed":"100 kt"}"#,
+    );
+    near(&r, "result.air_range", 20.0, 1e-12);
+    near(&r, "result.fuel_per_100nm.value", 5.0, 1e-12);
+    near(&r, "result.ground_range", 20.0, 1e-12);
+    near(&r, "result.ground_fuel_per_100nm.value", 5.0, 1e-12);
+}
+
+#[test]
+fn specific_range_invariants() {
+    let run = |tas: &str, flow: &str, groundspeed: &str| {
+        call(
+            "aviation.performance.specific-range",
+            &format!(r#"{{"tas":"{tas}","fuel_flow":"{flow}","groundspeed":"{groundspeed}"}}"#),
+        )
+    };
+    let base = run("100 kt", "5 gph", "80 kt");
+    let faster = run("200 kt", "5 gph", "80 kt");
+    near(
+        &faster,
+        "result.air_range",
+        2.0 * num(&base, "result.air_range"),
+        1e-12,
+    );
+    near(
+        &faster,
+        "result.fuel_per_100nm.value",
+        0.5 * num(&base, "result.fuel_per_100nm.value"),
+        1e-12,
+    );
+    near(
+        &faster,
+        "result.ground_range",
+        num(&base, "result.ground_range"),
+        1e-12,
+    );
+
+    let more_flow = run("100 kt", "10 gph", "80 kt");
+    near(
+        &more_flow,
+        "result.air_range",
+        0.5 * num(&base, "result.air_range"),
+        1e-12,
+    );
+    near(
+        &more_flow,
+        "result.fuel_per_100nm.value",
+        2.0 * num(&base, "result.fuel_per_100nm.value"),
+        1e-12,
+    );
+
+    let metric = run("185.2 km/h", "18.92705892 L/h", "148.16 km/h");
+    for path in [
+        "result.air_range",
+        "result.fuel_per_100nm.value",
+        "result.ground_range",
+        "result.ground_fuel_per_100nm.value",
+    ] {
+        near(&metric, path, num(&base, path), 1e-9);
+    }
+}
+
 // loading
 
 #[test]

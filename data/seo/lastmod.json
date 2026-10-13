@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "3513def7def55d2e",
+    "hash": "4dd60d51e3046056",
     "lastmod": "2026-10-13"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "baa4c4b1c5a40b3a",
+    "hash": "98809b452a056629",
     "lastmod": "2026-10-13"
   },
   "/aviation/": {
@@ -192,7 +192,7 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/performance/specific-range/": {
-    "hash": "c6b3bcbdcd68166b",
+    "hash": "689668297bf15cdb",
     "lastmod": "2026-10-13"
   },
   "/aviation/performance/top-of-descent/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "d68df52bce97ca3a",
+    "hash": "124532387a7882c8",
     "lastmod": "2026-10-13"
   },
   "/disclaimer/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "d5dd751f307ac88d",
+    "hash": "ad677c8840c59f5d",
     "lastmod": "2026-10-13"
   },
   "/navigation/": {
@@ -1716,7 +1716,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "7bc21c7123d008e4",
+    "hash": "0cc1c2033460a064",
     "lastmod": "2026-10-13"
   },
   "/units/": {
@@ -1980,7 +1980,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "54c78e476e6cb0d9",
+    "hash": "47f77998629b777a",
     "lastmod": "2026-10-13"
   },
   "/workflows/": {

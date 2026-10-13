@@ -5,6 +5,15 @@
       "date": "2026-10-13",
       "kind": "changed",
       "tools": [
+        "aviation.performance.specific-range"
+      ],
+      "vectors": [],
+      "summary": "Specific range (version 1.1.0) is now stable. Its primary example derives exact range and fuel-per-distance values from the FAA Pilot's Handbook's published 400 NM, 100-knot, 5-gal/h trip, and it now has 20 vectors plus scaling, separation, and equivalent-unit invariants; calculation results are unchanged."
+    },
+    {
+      "date": "2026-10-13",
+      "kind": "changed",
+      "tools": [
         "aviation.performance.turn"
       ],
       "vectors": [],

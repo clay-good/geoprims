@@ -3,6 +3,19 @@
   "entries": [
     {
       "date": "2026-10-14",
+      "kind": "changed",
+      "tools": [
+        "raster.terrain.slope",
+        "raster.terrain.aspect",
+        "raster.terrain.hillshade",
+        "raster.terrain.roughness-tri",
+        "raster.terrain.tpi"
+      ],
+      "vectors": [],
+      "summary": "Slope, aspect, hillshade, the terrain ruggedness index, and the topographic position index, each as its own tool, are now stable. Each matches gdaldem 3.13.3 on 24 windows (hillshade exactly; the rest within gdaldem's 32-bit rounding) and its parent tool on 208 fixture windows, with invariant tests for turning, raising, and inverting the ground. Results are unchanged."
+    },
+    {
+      "date": "2026-10-14",
       "kind": "result-change",
       "tools": [
         "raster.terrain.slope-aspect"

@@ -43,6 +43,6 @@ None in the arithmetic. The window is all the operation sees: it describes the D
 
 ## Invariants
 
-- Raising every elevation by the same amount leaves the slope unchanged.
-- Doubling the relief doubles tan(slope); doubling the cell size halves it.
-- Turning the window a quarter turn keeps the slope.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_invariants`: a quarter turn of the window keeps the slope, and raising every elevation by 1,000 m leaves it unchanged.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `terrain_invariants`: doubling the relief doubles tan(slope), and doubling the cell size halves it, on the slope tool this one matches.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_tools_match_their_parents`: the same slope as `raster.terrain.slope-aspect` on 208 gdaldem fixture windows.

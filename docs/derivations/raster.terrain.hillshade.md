@@ -43,6 +43,5 @@ None in the arithmetic. The window is all the operation sees: it describes the D
 
 ## Invariants
 
-- The value always lies between 1 and 255.
-- Raising every elevation by the same amount leaves it unchanged.
-- A flat cell gives 1 + 254 sin(sun altitude), rounded.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_invariants`: the value lies between 1 and 255, raising the ground leaves it unchanged, and a flat cell gives 1 + 254 sin(45°) = 181.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_tools_match_their_parents`: the same value as `raster.terrain.slope-aspect` with the sun at 200°.

@@ -42,6 +42,5 @@ None in the arithmetic. The window is all the operation sees: it describes the D
 
 ## Invariants
 
-- Turning the ground upside down negates it.
-- Raising every elevation by the same amount leaves it unchanged.
-- A plane through the window gives zero.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_invariants`: inverting the ground negates the index, raising it changes nothing, and a plane through the window gives zero.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_tools_match_their_parents`: the same value as `raster.terrain.ruggedness` on 208 gdaldem fixture windows.

@@ -44,6 +44,6 @@ None in the arithmetic. The window is all the operation sees: it describes the D
 
 ## Invariants
 
-- Turning the window a quarter turn clockwise turns the aspect 90°.
-- The vertical exaggeration does not change the aspect.
-- A window gdaldem calls flat is reported as flat.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_invariants`: turning the window a quarter turn clockwise turns the aspect 90°.
+- `core/crates/gp-raster/tests/terrain_gdal.rs` `focused_terrain_tools_match_their_parents`: the same aspect, and the same flat cells, as `raster.terrain.slope-aspect`, whose `terrain_matches_gdaldem` holds every gdaldem flat cell as flat.
+- The tool takes no vertical exaggeration: scaling both gradients does not turn them.

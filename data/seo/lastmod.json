@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "7476c237981db71a",
+    "hash": "e13499ca5c258031",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "f4deac5b178a9422",
+    "hash": "4152d29b9b55a106",
     "lastmod": "2026-10-14"
   },
   "/disclaimer/": {
@@ -296,7 +296,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/mission/crosshatch/": {
-    "hash": "bc7a5816a3e4995c",
+    "hash": "36c9ec7046119c5d",
     "lastmod": "2026-10-14"
   },
   "/drone/mission/export/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "5362faea5e6bcca5",
+    "hash": "9295150968e3d1db",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1640,7 +1640,7 @@
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/aspect/": {
-    "hash": "843dcf77bf192bfa",
+    "hash": "3fe8ba9b8509e551",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/contours/": {
@@ -1668,7 +1668,7 @@
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/hillshade/": {
-    "hash": "f81628ef87fbce5c",
+    "hash": "b7a3af05d0f277b8",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/line-of-sight/": {
@@ -1676,7 +1676,7 @@
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/roughness-tri/": {
-    "hash": "d6e3322e22b54c60",
+    "hash": "dc9b6756c75c99e4",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/ruggedness/": {
@@ -1688,11 +1688,11 @@
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/slope/": {
-    "hash": "549ec8233ff07d2a",
+    "hash": "7c46e7977a69e6b4",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/tpi/": {
-    "hash": "eb2970b29ac40816",
+    "hash": "6b4c5d4ed65f50ff",
     "lastmod": "2026-10-14"
   },
   "/security/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "67f4a10ee4f669e0",
+    "hash": "30716e26af19c5dc",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bfee65b353e8f3d3",
+    "hash": "f3977e2cfb132c39",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

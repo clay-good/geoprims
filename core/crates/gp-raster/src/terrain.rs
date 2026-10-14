@@ -750,6 +750,7 @@ const TABLE: &[Layer] = &[Layer {
 }];
 
 pub static SLOPE_ONLY: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.slope",
     title: "DEM slope by Horn's method",
     summary: "The slope at the center of a 3 x 3 elevation window, in degrees and percent, by Horn's method as gdaldem computes it.",
@@ -771,7 +772,7 @@ pub static SLOPE_ONLY: ToolDef = ToolDef {
     ],
     outputs: &[SLOPE.outputs[0], SLOPE.outputs[1]],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Horn's (1981) eight-neighbor gradients, slope = atan(z x hypot(dz/dx, dz/dy)), as in raster.terrain.slope-aspect",
     accuracy: SLOPE.accuracy,
     when_to_use: "Use this when the slope is all you need from a DEM cell: for a grade limit, a site that has to stay under a slope for a building or a drone landing, or a check of one cell in a slope raster. Enter the nine elevations around the cell and the cell size. The answer is the slope in degrees and in percent.",
@@ -798,6 +799,7 @@ pub static SLOPE_ONLY: ToolDef = ToolDef {
 };
 
 pub static ASPECT: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.aspect",
     title: "DEM aspect, the way the ground faces",
     summary: "The aspect at the center of a 3 x 3 elevation window: the downslope direction clockwise from north, by Horn's method as gdaldem computes it.",
@@ -819,7 +821,7 @@ pub static ASPECT: ToolDef = ToolDef {
     ],
     outputs: &[SLOPE.outputs[3], SLOPE.outputs[2]],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["FLAT_CELL", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["FLAT_CELL", "UNIT_ASSUMED"],
     model: "Horn's (1981) eight-neighbor gradients, aspect = 90 - atan2(dz/dy, -dz/dx) in degrees, clockwise from north and downslope, as in raster.terrain.slope-aspect; none where both gradients are zero",
     accuracy: SLOPE.accuracy,
     when_to_use: "Use this to find which way a piece of ground faces: for sun on a solar site or a garden, snow and ice that lingers on north-facing slopes, or a check of one cell in an aspect raster. Enter the nine elevations around the cell and the cell size. The answer is the compass direction the ground falls toward.",
@@ -846,6 +848,7 @@ pub static ASPECT: ToolDef = ToolDef {
 };
 
 pub static HILLSHADE: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.hillshade",
     title: "Hillshade value for one DEM cell",
     summary: "The hillshade brightness, 1 to 255, at the center of a 3 x 3 elevation window for a sun at a given azimuth and altitude, as gdaldem computes it.",
@@ -870,7 +873,7 @@ pub static HILLSHADE: ToolDef = ToolDef {
     ],
     outputs: &[SLOPE.outputs[4]],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "gdaldem's hillshade: 1 + 254 (cos Z cos S + sin Z sin S cos(A_sun - A)), rounded, and 1 where that cosine is zero or negative, from Horn's slope S and aspect A and the sun's zenith Z",
     accuracy: "Exact evaluation of gdaldem's formula; it matches gdaldem 3.13.3 on all 1,452 windows of the GDAL agreement test",
     when_to_use: "Use this to check one pixel of a shaded-relief map, or to see how the sun's direction changes the shading of a slope: a lower sun or one from another side brings out different ridges. Enter the nine elevations, the cell size, and if you like the sun's azimuth and altitude; the defaults are the cartographic 315° and 45°.",
@@ -897,6 +900,7 @@ pub static HILLSHADE: ToolDef = ToolDef {
 };
 
 pub static ROUGHNESS_TRI: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.roughness-tri",
     title: "Terrain ruggedness index (TRI)",
     summary: "The terrain ruggedness index at the center of a 3 x 3 elevation window, both as Riley's root of summed squares and as the mean absolute difference.",
@@ -917,7 +921,7 @@ pub static ROUGHNESS_TRI: ToolDef = ToolDef {
     ],
     outputs: &[RUGGEDNESS.outputs[0], RUGGEDNESS.outputs[1]],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "TRI as the root of the summed squared differences from the center cell (Riley and others 1999, as corrected) and as the mean absolute difference (Wilson and others 2007), as in raster.terrain.ruggedness",
     accuracy: RUGGEDNESS.accuracy,
     when_to_use: "Use this to put a number on how broken the ground is around a cell: for habitat studies, access planning, or matching a TRI value from a paper or a GIS layer. Enter the nine elevations around the cell. Both forms of the index are given, so you can match whichever one a source used.",
@@ -944,6 +948,7 @@ pub static ROUGHNESS_TRI: ToolDef = ToolDef {
 };
 
 pub static TPI: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.tpi",
     title: "Topographic position index (TPI)",
     summary: "The topographic position index at the center of a 3 x 3 elevation window: the cell less the mean of its eight neighbors, and whether it sits above or below them.",
@@ -964,7 +969,7 @@ pub static TPI: ToolDef = ToolDef {
     ],
     outputs: &[RUGGEDNESS.outputs[2], RUGGEDNESS.outputs[4]],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "TPI as the center elevation less the mean of its eight neighbors (Wilson and others 2007), as in raster.terrain.ruggedness",
     accuracy: RUGGEDNESS.accuracy,
     when_to_use: "Use this to tell whether a cell stands above its surroundings, like a ridge or a summit, or below them, like a valley or a hollow. It is the first step of most landform classifications. Enter the nine elevations around the cell; a positive index is high ground and a negative one is low ground.",

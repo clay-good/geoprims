@@ -246,3 +246,68 @@ fn focused_terrain_tools_match_their_parents() {
         }
     }
 }
+
+/// What each focused terrain operation must do under moves that change the
+/// ground in known ways, as their derivation notes state.
+#[test]
+fn focused_terrain_invariants() {
+    let run = |tool: &str, z: &[f64; 9], cell: f64| -> Value {
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(tool, &window(z, cell))).unwrap();
+        assert_eq!(r["ok"], true, "{tool}: {r}");
+        r["result"].clone()
+    };
+    let num = |r: &Value, k: &str| r[k]["value"].as_f64().or(r[k].as_f64()).unwrap();
+    let windows: [[f64; 9]; 4] = [
+        [101.2, 100.6, 100.2, 100.4, 99.8, 99.2, 99.6, 99.0, 98.4],
+        [
+            250.0, 252.5, 255.1, 248.2, 251.0, 254.9, 246.0, 249.3, 253.3,
+        ],
+        [10.0, 12.0, 11.0, 9.0, 13.0, 14.0, 8.5, 11.5, 12.5],
+        [
+            842.0, 845.5, 841.2, 846.1, 851.3, 847.0, 840.4, 844.8, 839.9,
+        ],
+    ];
+    for z in windows {
+        let turned = [z[6], z[3], z[0], z[7], z[4], z[1], z[8], z[5], z[2]];
+        let up = z.map(|v| v + 1000.0);
+        let down = z.map(|v| -v);
+        // Slope: a quarter turn keeps it; raising the ground keeps it.
+        let s = num(&run("raster.terrain.slope", &z, 10.0), "slope");
+        assert!((num(&run("raster.terrain.slope", &turned, 10.0), "slope") - s).abs() < 1e-9);
+        assert!((num(&run("raster.terrain.slope", &up, 10.0), "slope") - s).abs() < 1e-9);
+        // Aspect: a quarter turn clockwise turns it 90°.
+        let a = num(&run("raster.terrain.aspect", &z, 10.0), "aspect");
+        let a2 = num(&run("raster.terrain.aspect", &turned, 10.0), "aspect");
+        let d = (a2 - a - 90.0).rem_euclid(360.0);
+        assert!(d.min(360.0 - d) < 1e-9, "{z:?}: aspect {a} turned to {a2}");
+        // Hillshade: between 1 and 255, and unchanged by raising the ground.
+        let h = num(&run("raster.terrain.hillshade", &z, 10.0), "hillshade");
+        assert!((1.0..=255.0).contains(&h), "{h}");
+        assert_eq!(
+            num(&run("raster.terrain.hillshade", &up, 10.0), "hillshade"),
+            h
+        );
+        // TRI: never negative, unchanged by raising or inverting the ground.
+        let tri = run("raster.terrain.roughness-tri", &z, 10.0);
+        for k in ["tri", "tri_mean"] {
+            assert!(num(&tri, k) >= 0.0);
+            for moved in [&up, &down] {
+                let m = run("raster.terrain.roughness-tri", moved, 10.0);
+                assert!((num(&m, k) - num(&tri, k)).abs() < 1e-9, "{k}");
+            }
+        }
+        // TPI: inverting the ground negates it; raising it changes nothing.
+        let t = num(&run("raster.terrain.tpi", &z, 10.0), "tpi");
+        assert!((num(&run("raster.terrain.tpi", &down, 10.0), "tpi") + t).abs() < 1e-9);
+        assert!((num(&run("raster.terrain.tpi", &up, 10.0), "tpi") - t).abs() < 1e-9);
+    }
+    // A flat cell's hillshade is 1 + 254 sin(sun altitude), rounded: 181 at 45°.
+    let flat = [75.0; 9];
+    assert_eq!(
+        num(&run("raster.terrain.hillshade", &flat, 30.0), "hillshade"),
+        181.0
+    );
+    // A plane through the window has no position: TPI is zero.
+    let plane = [12.0, 14.0, 16.0, 10.0, 12.0, 14.0, 8.0, 10.0, 12.0];
+    assert_eq!(num(&run("raster.terrain.tpi", &plane, 1.0), "tpi"), 0.0);
+}

@@ -36,6 +36,26 @@ test('each focused H3 operation has its derivation note and vectors', () => {
   }
 });
 
+// The other rows: two operations in each were built under another ID.
+const ROWS = {
+  s2: 'point-to-cell token inspect vertices hierarchy neighbors area cover',
+  tile: 'latlon-to-tile tile-bounds xyz-tms tile-quadkey tile-hierarchy bbox-tiles ground-resolution',
+  geohash: 'encode decode neighbors cover',
+  'plus-code': 'encode decode shorten',
+  a5: 'lon-lat-to-cell cell-boundary hierarchy',
+};
+const ROW_BUILT_AS = new Map([
+  ['s2.point-to-cell', 's2.lat-lng-to-cell'], ['s2.inspect', 's2.cell-info'], ['s2.cover', 's2.covering'],
+  ['tile.latlon-to-tile', 'tile.from-point'], ['tile.tile-bounds', 'tile.bounds'], ['tile.tile-hierarchy', 'tile.family'], ['tile.bbox-tiles', 'tile.cover'],
+]);
+
+test('every operation in the s2, tile, geohash, plus-code, and a5 rows of the inventory is built', () => {
+  const planned = Object.entries(ROWS).flatMap(([group, names]) => names.split(' ').map((name) => `${group}.${name}`));
+  assert.equal(planned.length, 25);
+  const missing = planned.filter((name) => !byId.has(`indexing.${ROW_BUILT_AS.get(name) ?? name}`));
+  assert.deepEqual(missing, []);
+});
+
 test('the indexing catalog does not lose registered operations', () => {
-  assert.ok(indexing.length >= 49, `indexing operation count regressed to ${indexing.length}`);
+  assert.ok(indexing.length >= 55, `indexing operation count regressed to ${indexing.length}`);
 });

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cc66d89c7b592bae",
+    "hash": "7079dc1f2ea2a88f",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -1000,7 +1000,7 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/": {
-    "hash": "8dd44c7a423789bb",
+    "hash": "12d920f1bf9b3285",
     "lastmod": "2026-10-14"
   },
   "/indexing/a5/": {
@@ -1184,28 +1184,44 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/s2/": {
-    "hash": "9e850fc4a371961f",
-    "lastmod": "2026-09-24"
+    "hash": "169ee2ee7b43868d",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/s2/area/": {
+    "hash": "272c1e9aaa2e0b2c",
+    "lastmod": "2026-10-14"
   },
   "/indexing/s2/cell-info/": {
-    "hash": "c43002008caf7892",
-    "lastmod": "2026-10-09"
+    "hash": "8f78cd4733cbe620",
+    "lastmod": "2026-10-14"
   },
   "/indexing/s2/covering/": {
-    "hash": "ebeb83e83ed17462",
-    "lastmod": "2026-10-09"
+    "hash": "b5dd95034d71f03f",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/s2/hierarchy/": {
+    "hash": "504e0eb4c5a2c8e5",
+    "lastmod": "2026-10-14"
   },
   "/indexing/s2/lat-lng-to-cell/": {
-    "hash": "5483b5ea0fd82d63",
-    "lastmod": "2026-10-09"
+    "hash": "fb2f20566885221b",
+    "lastmod": "2026-10-14"
   },
   "/indexing/s2/neighbors/": {
-    "hash": "7413ac4714c45d28",
-    "lastmod": "2026-10-09"
+    "hash": "c5240d18a95e3dba",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/s2/token/": {
+    "hash": "0e43f2ebd1c6e581",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/s2/vertices/": {
+    "hash": "ca71196a4aef7363",
+    "lastmod": "2026-10-14"
   },
   "/indexing/tile/": {
-    "hash": "0c441c1e4718cf76",
-    "lastmod": "2026-09-23"
+    "hash": "07b55f1ea8131174",
+    "lastmod": "2026-10-14"
   },
   "/indexing/tile/bounds/": {
     "hash": "e8897de1f7ee7df8",
@@ -1224,8 +1240,16 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/tile/ground-resolution/": {
-    "hash": "537afbbce70443fb",
-    "lastmod": "2026-10-09"
+    "hash": "55a64bf80b33e399",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/tile/tile-quadkey/": {
+    "hash": "a0ce8262944f7e41",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/tile/xyz-tms/": {
+    "hash": "32ca8a92174d555f",
+    "lastmod": "2026-10-14"
   },
   "/known-issues/": {
     "hash": "ec03a40c42e7b3ab",
@@ -1288,8 +1312,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/map-tiles-and-quadkeys/": {
-    "hash": "5bef66bffb254254",
-    "lastmod": "2026-10-09"
+    "hash": "ced888bfd19ae21f",
+    "lastmod": "2026-10-14"
   },
   "/learn/mgrs-coordinates/": {
     "hash": "38410acd04dd2dc6",
@@ -1368,7 +1392,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "cad7ea0322dd2a08",
+    "hash": "6f4128bd9fd1a0d5",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1616,7 +1640,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "ab2abe624ab38392",
+    "hash": "a289c8e62a81b963",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -2000,7 +2024,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "8d5c836f21648a27",
+    "hash": "087ba24e1ce9fee7",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2264,7 +2288,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f57bc665743cb647",
+    "hash": "96d035178aa91a26",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

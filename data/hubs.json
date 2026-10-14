@@ -1476,7 +1476,11 @@
           "want": "turn a point into an S2 cell, or read a token",
           "tools": [
             "lat-lng-to-cell",
-            "cell-info"
+            "cell-info",
+            "token",
+            "vertices",
+            "hierarchy",
+            "area"
           ]
         },
         {
@@ -1501,7 +1505,9 @@
           "want": "find the tile for a point, or a tile's bounds",
           "tools": [
             "from-point",
-            "bounds"
+            "bounds",
+            "xyz-tms",
+            "tile-quadkey"
           ]
         },
         {

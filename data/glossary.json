@@ -1413,10 +1413,14 @@
       "definition": "A way of indexing the sphere: the Earth is projected onto a cube, each face is traced by a Hilbert curve, and a cell is a position along that curve at a level from 0 to 30.",
       "source": "s2",
       "relatedTools": [
+        "indexing.s2.area",
         "indexing.s2.cell-info",
         "indexing.s2.covering",
+        "indexing.s2.hierarchy",
         "indexing.s2.lat-lng-to-cell",
-        "indexing.s2.neighbors"
+        "indexing.s2.neighbors",
+        "indexing.s2.token",
+        "indexing.s2.vertices"
       ]
     },
     {
@@ -1563,7 +1567,8 @@
       "source": "osm-tiles",
       "relatedTools": [
         "indexing.tile.bounds",
-        "indexing.tile.from-point"
+        "indexing.tile.from-point",
+        "indexing.tile.xyz-tms"
       ]
     },
     {
@@ -1841,7 +1846,9 @@
       "source": "osm-tiles",
       "relatedTools": [
         "indexing.tile.bounds",
-        "indexing.tile.from-point"
+        "indexing.tile.from-point",
+        "indexing.tile.tile-quadkey",
+        "indexing.tile.xyz-tms"
       ]
     },
     {

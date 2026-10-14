@@ -462,6 +462,30 @@
       "expect": "indexing.h3.edge-length"
     },
     {
+      "query": "S2 token to cell id",
+      "expect": "indexing.s2.token"
+    },
+    {
+      "query": "S2 cell corners",
+      "expect": "indexing.s2.vertices"
+    },
+    {
+      "query": "S2 parent cell",
+      "expect": "indexing.s2.hierarchy"
+    },
+    {
+      "query": "S2 cell area calculator",
+      "expect": "indexing.s2.area"
+    },
+    {
+      "query": "XYZ to TMS",
+      "expect": "indexing.tile.xyz-tms"
+    },
+    {
+      "query": "tile to quadkey",
+      "expect": "indexing.tile.tile-quadkey"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },
@@ -547,7 +571,7 @@
     },
     {
       "query": "quadkey",
-      "expect": "indexing.tile.from-point"
+      "expect": "indexing.tile.tile-quadkey"
     },
     {
       "query": "tile bounds",

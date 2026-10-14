@@ -165,6 +165,92 @@ fn focused_h3_operations_match_the_general_tools() {
 }
 
 #[test]
+fn focused_s2_and_tile_operations_match_the_general_tools() {
+    let info = call("indexing.s2.cell-info", r#"{"cell":"89c25a3"}"#);
+    // Token and id, either way round.
+    let by_token = call("indexing.s2.token", r#"{"cell":"89c25a3"}"#);
+    for key in ["cell", "cell_id", "level", "face"] {
+        assert_eq!(by_token["result"][key], info["result"][key], "{key}");
+    }
+    let id = info["result"]["cell_id"].as_str().unwrap();
+    let by_id = call(
+        "indexing.s2.token",
+        &serde_json::json!({"cell": id}).to_string(),
+    );
+    assert_eq!(by_id["result"], by_token["result"]);
+    // Vertices, hierarchy, and area are the inspector's own.
+    let vertices = call("indexing.s2.vertices", r#"{"cell":"89c25a3"}"#);
+    assert_eq!(vertices["result"]["boundary"], info["result"]["boundary"]);
+    let tree = call("indexing.s2.hierarchy", r#"{"cell":"89c25a3","level":6}"#);
+    for key in ["parent", "children"] {
+        assert_eq!(tree["result"][key], info["result"][key], "{key}");
+    }
+    // The ancestor at a level is the same cell however many steps it takes.
+    let mut step = "89c25a3".to_owned();
+    for _ in 0..6 {
+        step = call(
+            "indexing.s2.hierarchy",
+            &serde_json::json!({"cell": step}).to_string(),
+        )["result"]["parent"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+    }
+    assert_eq!(tree["result"]["ancestor"], step.as_str());
+    let area = call("indexing.s2.area", r#"{"cell":"89c25a3"}"#);
+    for key in ["area", "average_area"] {
+        assert_eq!(area["result"][key], info["result"][key], "{key}");
+    }
+    // Four children cover their parent: their areas add up to it.
+    let children: f64 = info["result"]["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| {
+            num(
+                &call(
+                    "indexing.s2.area",
+                    &serde_json::json!({"cell": c["cell"]}).to_string(),
+                ),
+                "result.area.value",
+            )
+        })
+        .sum();
+    assert!((children / num(&area, "result.area.value") - 1.0).abs() < 1e-9);
+    // A level 0 face cell has no parent; a level 30 leaf has no children.
+    let face = call("indexing.s2.hierarchy", r#"{"cell":"1"}"#);
+    assert!(face["result"]["parent"].is_null());
+    assert_eq!(face["result"]["children"].as_array().unwrap().len(), 4);
+
+    // Tiles: XYZ and TMS flip the row and nothing else; the quadkey is the bounds tool's.
+    let xyz = call("indexing.tile.xyz-tms", r#"{"tile":"14/4551/6176"}"#);
+    assert_eq!(xyz["result"]["converted"], "TMS 14/4551/10207");
+    let back = call(
+        "indexing.tile.xyz-tms",
+        r#"{"tile":"14/4551/10207","convention":"tms"}"#,
+    );
+    assert_eq!(back["result"]["converted"], "XYZ 14/4551/6176");
+    assert_eq!(back["result"]["xyz"], xyz["result"]["xyz"]);
+    let bounds = call("indexing.tile.bounds", r#"{"tile":"13/2275/3088"}"#);
+    let key = call("indexing.tile.tile-quadkey", r#"{"tile":"13/2275/3088"}"#);
+    assert_eq!(key["result"]["quadkey"], bounds["result"]["quadkey"]);
+    assert_eq!(num(&key, "result.zoom"), 13.0);
+    // A quadkey reads back to its tile, and a parent's quadkey begins the child's.
+    let from_key = call(
+        "indexing.tile.tile-quadkey",
+        &serde_json::json!({"tile": key["result"]["quadkey"]}).to_string(),
+    );
+    assert_eq!(from_key["result"]["xyz"], "13/2275/3088");
+    let parent = call("indexing.tile.tile-quadkey", r#"{"tile":"12/1137/1544"}"#);
+    assert!(
+        key["result"]["quadkey"]
+            .as_str()
+            .unwrap()
+            .starts_with(parent["result"]["quadkey"].as_str().unwrap())
+    );
+}
+
+#[test]
 fn catalog_examples_vectors() {
     let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
     let owned: Vec<(String, Vec<String>)> = tax["domains"]

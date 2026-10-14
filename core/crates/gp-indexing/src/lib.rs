@@ -14,6 +14,7 @@ pub mod s2;
 pub mod s2cover;
 pub mod s2exact;
 pub mod s2tools;
+pub mod s2views;
 
 use codes::Bounds;
 use gp_base::error::{ToolError, Warning};
@@ -667,7 +668,7 @@ pub static TILE_BOUNDS: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     title: "Map tile bounds",
     summary: "The latitude and longitude bounds of a z/x/y tile or quadkey, with its XYZ, TMS, and quadkey forms; detect mode shows both y conventions.",
-    aliases: &["tile to lat long", "quadkey to bounds", "TMS to XYZ"],
+    aliases: &["tile to lat long", "quadkey to bounds"],
     keywords: &["tile", "bounds", "XYZ", "TMS", "quadkey", "convention"],
     inputs: &[
         Field::new(
@@ -757,7 +758,7 @@ pub static TILE_BOUNDS: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn parse_tile(s: &str) -> Result<(u32, u64, u64, bool), ToolError> {
+pub(crate) fn parse_tile(s: &str) -> Result<(u32, u64, u64, bool), ToolError> {
     let t = s.trim();
     let bad = || {
         ToolError::invalid(
@@ -1384,6 +1385,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &cover::GEOHASH_COVER,
     &TILE_FROM_POINT,
     &TILE_BOUNDS,
+    &s2views::XYZ_TMS,
+    &s2views::TILE_QUADKEY,
     &cover::TILE_FAMILY,
     &cover::TILE_COVER,
     &GROUND_RESOLUTION,
@@ -1424,6 +1427,10 @@ pub static TOOLS: &[&ToolDef] = &[
     &a5tools::HIERARCHY,
     &s2tools::POINT_TO_CELL,
     &s2tools::CELL_INFO,
+    &s2views::S2_TOKEN,
+    &s2views::S2_VERTICES,
+    &s2views::S2_HIERARCHY,
+    &s2views::S2_AREA,
     &s2tools::NEIGHBORS,
     &s2cover::COVERING,
     &cross::CROSS_INDEX,

@@ -21,16 +21,16 @@ pub const S2_DOCS: Reference = Reference {
     url: "https://s2geometry.io/devguide/s2cell_hierarchy",
 };
 
-const EARTH_RADIUS_M: f64 = 6_371_008.8;
+pub(crate) const EARTH_RADIUS_M: f64 = 6_371_008.8;
 
-fn deg(v: f64) -> Q {
+pub(crate) fn deg(v: f64) -> Q {
     Q {
         value: v,
         unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
     }
 }
 
-fn read_level(ctx: &mut Ctx, name: &str) -> Result<u8, ToolError> {
+pub(crate) fn read_level(ctx: &mut Ctx, name: &str) -> Result<u8, ToolError> {
     let level = ctx.number(name)?.expect("required");
     if !(0.0..=30.0).contains(&level) || level.fract() != 0.0 {
         return Err(ToolError::invalid(
@@ -42,7 +42,7 @@ fn read_level(ctx: &mut Ctx, name: &str) -> Result<u8, ToolError> {
 }
 
 /// Reads a cell from a token or a decimal id, which is how S2 ids travel.
-fn read_cell(ctx: &mut Ctx, name: &str) -> Result<CellId, ToolError> {
+pub(crate) fn read_cell(ctx: &mut Ctx, name: &str) -> Result<CellId, ToolError> {
     let text = ctx.text(name)?.expect("required");
     let t = text.trim();
     let cell = if t.chars().all(|c| c.is_ascii_digit()) && t.len() > 16 {
@@ -63,7 +63,7 @@ fn read_cell(ctx: &mut Ctx, name: &str) -> Result<CellId, ToolError> {
     Ok(cell)
 }
 
-fn cell_json(ctx: &mut Ctx, cell: CellId) -> Vec<(&'static str, Json)> {
+pub(crate) fn cell_json(ctx: &mut Ctx, cell: CellId) -> Vec<(&'static str, Json)> {
     let (lat, lon) = cell.center();
     vec![
         ("cell", Json::str(cell.token())),
@@ -171,7 +171,7 @@ fn run_neighbors(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
-const CELL_FIELD: Field = Field::new(
+pub(crate) const CELL_FIELD: Field = Field::new(
     "cell",
     "S2 cell",
     "A token like 8834f3dec, or a 64-bit cell id",
@@ -231,7 +231,7 @@ const NEIGHBOR_ROW: &[Field] = &[
     .precision(Precision::Decimals(7)),
 ];
 
-const CELL_OUT: [Field; 6] = [
+pub(crate) const CELL_OUT: [Field; 6] = [
     Field::new("cell", "S2 cell", "Its token", Kind::Text { max_len: 24 }),
     Field::new(
         "cell_id",

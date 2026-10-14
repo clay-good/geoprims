@@ -93,6 +93,12 @@ impl Coeffs {
 /// Parses and advances a WMM-format coefficient file. WMMHR uses the same
 /// columns as WMM, with four decimal places and degrees through 133.
 pub fn wmm_coeffs_at(text: &str, n_max: usize, t: f64) -> Result<Coeffs, String> {
+    let (epoch, c) = wmm_parse(text, n_max)?;
+    Ok(advance(c, epoch, t))
+}
+
+/// A WMM-format file's epoch and its coefficients at that epoch.
+fn wmm_parse(text: &str, n_max: usize) -> Result<(f64, Coeffs), String> {
     let mut lines = text.lines();
     let epoch: f64 = lines
         .next()
@@ -137,11 +143,24 @@ pub fn wmm_coeffs_at(text: &str, n_max: usize, t: f64) -> Result<Coeffs, String>
             "the file has {rows} coefficient rows; expected {expected}"
         ));
     }
+    Ok((epoch, c))
+}
+
+/// Moves epoch coefficients along their secular variation to `t`.
+fn advance(mut c: Coeffs, epoch: f64, t: f64) -> Coeffs {
     for i in 0..c.g.len() {
         c.g[i] += c.gd[i] * (t - epoch);
         c.h[i] += c.hd[i] * (t - epoch);
     }
-    Ok(c)
+    c
+}
+
+// The embedded tables never change, so each is parsed once per thread rather
+// than on every call; parsing was most of a declination's cost.
+thread_local! {
+    static WMM2025: (f64, Coeffs) =
+        wmm_parse(WMM2025_COF, 12).expect("embedded WMM2025 coefficients");
+    static IGRF14: Igrf = parse_igrf();
 }
 
 /// IGRF-14 table: epochs 1900..2025 by 5 years, then the 2025-30 secular variation.
@@ -202,9 +221,8 @@ fn parse_igrf() -> Igrf {
 /// The coefficients of `model` at decimal year `t`, with their rates of change.
 pub fn coeffs_at(model: Model, t: f64) -> Coeffs {
     match model {
-        Model::Wmm2025 => wmm_coeffs_at(WMM2025_COF, 12, t).expect("embedded WMM2025 coefficients"),
-        Model::Igrf14 => {
-            let igrf = parse_igrf();
+        Model::Wmm2025 => WMM2025.with(|(epoch, c)| advance(c.clone(), *epoch, t)),
+        Model::Igrf14 => IGRF14.with(|igrf| {
             let e = &igrf.epochs;
             let last = e.len() - 1;
             let mut c = Coeffs::zero(13);
@@ -226,7 +244,7 @@ pub fn coeffs_at(model: Model, t: f64) -> Coeffs {
                 }
             }
             c
-        }
+        }),
     }
 }
 

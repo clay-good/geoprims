@@ -469,6 +469,7 @@ pub static INTERCEPT: ToolDef = ToolDef {
             reason: "parent",
         },
     ],
+    assumptions: &crate::WGS84_ASSUMPTIONS,
     sentence: "Steer {course} to meet the target in {time}, after {distance}.",
     limits: &[("batchRows", 10_000)],
     run: run_intercept,

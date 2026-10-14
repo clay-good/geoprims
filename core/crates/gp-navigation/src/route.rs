@@ -2083,6 +2083,7 @@ pub static CLOSEST_POINT: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &crate::WGS84_ASSUMPTIONS,
     sentence: "The closest point is on leg {leg}, {along_route} along the route and {cross_track} off it.",
     limits: &[("batchRows", 1_000)],
     run: run_closest_point,

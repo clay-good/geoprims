@@ -716,6 +716,7 @@ pub static PATTERN_STATS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     sentence: "The path is {path_length} long in {legs} legs, with {turns} turns.",
     limits: &[("batchRows", 100)],
     run: run_pattern_stats,

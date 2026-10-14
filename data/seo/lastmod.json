@@ -20,8 +20,8 @@
     "lastmod": "2026-09-23"
   },
   "/aviation/airspace/tfr-area/": {
-    "hash": "d8007b557cd6a1ff",
-    "lastmod": "2026-10-10"
+    "hash": "536e978ef3f658c9",
+    "lastmod": "2026-10-14"
   },
   "/aviation/airspeed/": {
     "hash": "f23541a29e1d4d32",
@@ -124,8 +124,8 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/ifr/radial-fix/": {
-    "hash": "9fde3068c52407be",
-    "lastmod": "2026-10-10"
+    "hash": "8b9cf10a00adbc2d",
+    "lastmod": "2026-10-14"
   },
   "/aviation/ifr/radial-intercept/": {
     "hash": "96cc902d8179baff",
@@ -320,7 +320,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/mission/pattern-stats/": {
-    "hash": "d47840dbe07ac494",
+    "hash": "0263156988c3c017",
     "lastmod": "2026-10-14"
   },
   "/drone/mission/sorties/": {
@@ -672,12 +672,12 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/grid-ref/usng-forward/": {
-    "hash": "90041c1cbcc99210",
+    "hash": "5e663cba748fa953",
     "lastmod": "2026-10-14"
   },
   "/geodesy/grid-ref/usng-inverse/": {
-    "hash": "4f7fa8f305f53e09",
-    "lastmod": "2026-10-09"
+    "hash": "4484df10adefdbc9",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/height/": {
     "hash": "9935441499ffe55e",
@@ -744,19 +744,19 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/parse/format-dd/": {
-    "hash": "d42a0a8e69063e7d",
+    "hash": "9e5ae44e5499b8f9",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/format-ddm/": {
-    "hash": "cdab6cb9b21aa858",
+    "hash": "64b3908deec174fc",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/format-dms/": {
-    "hash": "d3aa29fd7b55e204",
+    "hash": "790d68cb759b37c4",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/format/": {
-    "hash": "cdcb2aea082c8ecb",
+    "hash": "0b314c7f06d08eed",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/parse-ddm/": {
@@ -992,12 +992,12 @@
     "lastmod": "2026-10-09"
   },
   "/geometry/shape/centroid/": {
-    "hash": "0f807d79162e8c4c",
-    "lastmod": "2026-10-09"
+    "hash": "92e5653953fc98e9",
+    "lastmod": "2026-10-14"
   },
   "/geometry/shape/densify/": {
-    "hash": "3408a70f345b5ecb",
-    "lastmod": "2026-10-09"
+    "hash": "988ef84367308747",
+    "lastmod": "2026-10-14"
   },
   "/geometry/shape/enclosing/": {
     "hash": "46e004267335849e",
@@ -1512,8 +1512,8 @@
     "lastmod": "2026-09-26"
   },
   "/navigation/route/closest-point/": {
-    "hash": "d42a9d225bd6e060",
-    "lastmod": "2026-10-09"
+    "hash": "25ee3fb5ece03494",
+    "lastmod": "2026-10-14"
   },
   "/navigation/route/course-intersection/": {
     "hash": "85a18de1a7d93a94",
@@ -1532,8 +1532,8 @@
     "lastmod": "2026-10-13"
   },
   "/navigation/route/intercept/": {
-    "hash": "39a60ab35aa2cff6",
-    "lastmod": "2026-10-09"
+    "hash": "d3cdbfd08d6d21c5",
+    "lastmod": "2026-10-14"
   },
   "/navigation/route/legs/": {
     "hash": "95bcc2e9a85185bd",
@@ -1552,12 +1552,12 @@
     "lastmod": "2026-09-23"
   },
   "/navigation/vector/distance-3d/": {
-    "hash": "54532f37162cfb77",
-    "lastmod": "2026-10-09"
+    "hash": "8b267af685956310",
+    "lastmod": "2026-10-14"
   },
   "/navigation/vector/look-angles/": {
-    "hash": "407c6725c41af163",
-    "lastmod": "2026-10-09"
+    "hash": "b0aa242f692c680e",
+    "lastmod": "2026-10-14"
   },
   "/navigation/vector/operations/": {
     "hash": "62219e196de28586",
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "af194d1983b76869",
+    "hash": "bfee65b353e8f3d3",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

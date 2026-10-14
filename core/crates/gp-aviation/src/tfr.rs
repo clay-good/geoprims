@@ -344,6 +344,7 @@ pub static TFR_AREA: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     sentence: "The area covers {area}, from {south} to {north} and {west} to {east}.",
     limits: &[("batchRows", 100)],
     run: run_tfr,

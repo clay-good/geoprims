@@ -61,21 +61,7 @@ const IUGG_MEAN_RADIUS: Reference = Reference {
 /// The IUGG mean Earth radius R1 = (2a + b)/3 for WGS 84, meters.
 pub const R1: f64 = 6_371_008.771;
 
-/// WGS 84's defining constants, behind every ellipsoidal answer here.
-pub(crate) const WGS84_ASSUMPTIONS: [Assumption; 2] = [
-    Assumption {
-        name: "WGS 84 semi-major axis",
-        value: "6378137",
-        unit: "m",
-        source: "nga-wgs84",
-    },
-    Assumption {
-        name: "WGS 84 inverse flattening",
-        value: "298.257223563",
-        unit: "1",
-        source: "nga-wgs84",
-    },
-];
+pub(crate) use gp_base::tool::WGS84_ASSUMPTIONS;
 /// The sphere's default radius, beside WGS 84 for the comparison.
 pub(crate) const SPHERE_ASSUMPTIONS: [Assumption; 3] = [
     Assumption {

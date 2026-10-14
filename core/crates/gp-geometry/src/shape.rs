@@ -424,6 +424,7 @@ pub static CENTROID: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     sentence: "The centroid is at {centroid_lat}, {centroid_lon}.{if clearance > 0} A point inside, {clearance} from the nearest edge, is at {interior_lat}, {interior_lon}.{/if}",
     limits: &[("batchRows", 1_000)],
     run: run_centroid,

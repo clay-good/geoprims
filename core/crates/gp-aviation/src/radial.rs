@@ -154,6 +154,7 @@ pub static RADIAL_FIX: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     sentence: "The fix is at {fix_lat}, {fix_lon}, {true_course} true from the station.",
     limits: &[("batchRows", 10_000)],
     run: run_radial,

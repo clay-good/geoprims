@@ -202,6 +202,7 @@ pub static DENSIFY: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     sentence: "The line now has {vertices_out} vertices, none more than {longest_piece} apart.",
     limits: &[("batchRows", 100)],
     run: run_densify,

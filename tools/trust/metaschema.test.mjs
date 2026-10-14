@@ -39,7 +39,7 @@ test('an unknown extension fails, naming the field', () => {
   t['x-color'] = 'orange';
   const name = Object.keys(t.inputs.properties)[0];
   t.inputs.properties[name]['x-shade'] = 'dark';
-  assert.deepEqual(metaschemaProblems({ tools: [t] }), [
+  assert.deepEqual(metaschemaProblems({ tools: [t] }, sourceIds), [
     `${t.id}: unknown extension x-color`,
     `${t.id}: unknown extension x-shade on inputs.${name}`,
   ]);

@@ -238,6 +238,22 @@ pub struct Assumption {
     pub source: &'static str,
 }
 
+/// WGS 84's defining constants, for every tool that computes on its ellipsoid.
+pub const WGS84_ASSUMPTIONS: [Assumption; 2] = [
+    Assumption {
+        name: "WGS 84 semi-major axis",
+        value: "6378137",
+        unit: "m",
+        source: "nga-wgs84",
+    },
+    Assumption {
+        name: "WGS 84 inverse flattening",
+        value: "298.257223563",
+        unit: "1",
+        source: "nga-wgs84",
+    },
+];
+
 /// A cited source: standard, paper, or agency publication.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Reference {

@@ -151,6 +151,21 @@ const MUST_DECLARE = [
   'geodesy.spcs.spcs83-inverse',
   'geodesy.spcs.spcs2022-forward',
   'geodesy.spcs.spcs2022-inverse',
+  'aviation.airspace.tfr-area',
+  'aviation.ifr.radial-fix',
+  'drone.mission.pattern-stats',
+  'navigation.route.closest-point',
+  'navigation.route.intercept',
+  'geometry.shape.densify',
+  'geometry.shape.centroid',
+  'navigation.vector.distance-3d',
+  'navigation.vector.look-angles',
+  'geodesy.parse.format',
+  'geodesy.parse.format-dd',
+  'geodesy.parse.format-ddm',
+  'geodesy.parse.format-dms',
+  'geodesy.grid-ref.usng-forward',
+  'geodesy.grid-ref.usng-inverse',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

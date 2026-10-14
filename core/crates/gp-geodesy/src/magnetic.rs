@@ -617,6 +617,178 @@ fn run_uncertainty_zone(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
+const fn deg_out(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(4))
+}
+
+pub static MODEL_COMPARE: ToolDef = ToolDef {
+    id: "geodesy.magnetic.model-compare",
+    title: "Compare WMM and IGRF declination",
+    summary: "The magnetic declination, inclination, and field strength from WMM2025 and from IGRF-14 at the same place and date, and how far the two models differ.",
+    aliases: &[
+        "WMM vs IGRF",
+        "compare magnetic models",
+        "magnetic model difference",
+    ],
+    keywords: &[
+        "WMM2025",
+        "IGRF-14",
+        "declination",
+        "model difference",
+        "main field",
+        "secular variation",
+        "validation",
+    ],
+    inputs: &[
+        DECLINATION.inputs[0],
+        DECLINATION.inputs[1],
+        DECLINATION.inputs[2],
+        DECLINATION.inputs[3],
+    ],
+    outputs: &[
+        deg_out(
+            "declination_difference",
+            "Declination difference",
+            "WMM less IGRF",
+        ),
+        deg_out("wmm_declination", "WMM declination", "East positive"),
+        deg_out("igrf_declination", "IGRF declination", "East positive"),
+        deg_out(
+            "inclination_difference",
+            "Inclination difference",
+            "WMM less IGRF",
+        ),
+        Field::new(
+            "intensity_difference",
+            "Total intensity difference",
+            "WMM less IGRF, in nanotesla",
+            Kind::Number {
+                min: -1e5,
+                max: 1e5,
+            },
+        )
+        .precision(Precision::Decimals(1)),
+    ],
+    errors: DECLINATION.errors,
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "WMM2025 (degree 12) and IGRF-14 (degree 13) main-field models evaluated at the same geodetic point and decimal year; differences are WMM2025 less IGRF-14",
+    accuracy: "Each model as published; the difference measures how far two fits of the same field disagree, not either one's error",
+    when_to_use: "Use this to see how much the choice of magnetic model matters at a place: for a survey that has to state its declination source, a flight-planning tool that uses one model while a chart used the other, or a check that a value from another program is sensible. Enter the place and date. The tool returns both models' declinations, inclination and intensity differences, and the declination difference.",
+    limitations: "Both models describe only the main field from the Earth's core, so neither includes local crustal anomalies, which often matter more than the difference between them. The dates both cover are 2025 to 2030. A small difference does not mean either model is right at a given spot, and near the magnetic poles declination itself is unreliable.",
+    references: DECLINATION.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Anchorage, Alaska, at the start of 2027",
+        input: r#"{"lat":61.2181,"lon":-149.9003,"date":"2027-01-01"}"#,
+        source: "WMM2025 and IGRF-14 coefficient sets",
+    }],
+    primary_example: "primary",
+    assets: &["wmm2025", "igrf14"],
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.magnetic.declination",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.magnetic.uncertainty-zone",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.magnetic.isogonic",
+            reason: "alternative",
+        },
+    ],
+    sentence: "WMM and IGRF differ by {declination_difference} in declination here.",
+    limits: &[("batchRows", 10_000)],
+    run: run_model_compare,
+    ..ToolDef::BLANK
+};
+
+fn run_model_compare(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let h_km = ctx.quantity("height")?.map_or(0.0, |q| q.base() / 1000.0);
+    if !(-1.0..=850.0).contains(&h_km) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Height must be between -1 km and 850 km above the ellipsoid, the models' stated domain.",
+        )
+        .at("/height"));
+    }
+    let raw = ctx.text("date")?.ok_or_else(|| {
+        ToolError::invalid("/date", "Date is required.").hint("Example: 2027-01-01")
+    })?;
+    let t = parse_date(&raw).map_err(|m| ToolError::invalid("/date", m))?;
+    // The years both models cover.
+    let (lo, hi) = (
+        SelectedModel::Wmm2025
+            .window()
+            .0
+            .max(SelectedModel::Igrf14.window().0),
+        SelectedModel::Wmm2025
+            .window()
+            .1
+            .min(SelectedModel::Igrf14.window().1),
+    );
+    if !(lo..=hi).contains(&t) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!(
+                "Both models cover {} to {}; {} is outside that.",
+                display::number(lo, Precision::Decimals(1), ctx.options.format),
+                display::number(hi, Precision::Decimals(1), ctx.options.format),
+                raw.trim()
+            ),
+        )
+        .at("/date"));
+    }
+    let mut evaluate_model = |model: SelectedModel, which: Model| {
+        ctx.assets.push(AssetRef {
+            id: model.id().into(),
+            version: model.version().into(),
+        });
+        let (b, sv) = mag::field(&mag::coeffs_at(which, t), lat, lon, h_km);
+        mag::elements(b, sv)
+    };
+    let wmm = evaluate_model(SelectedModel::Wmm2025, Model::Wmm2025);
+    let igrf = evaluate_model(SelectedModel::Igrf14, Model::Igrf14);
+    if wmm.h < 1.0 || igrf.h < 1.0 {
+        return Err(ToolError::new(
+            ErrorCode::DegenerateGeometry,
+            "The horizontal field is under 1 nT here, so declination is undefined.",
+        )
+        .at("/lat"));
+    }
+    ctx.model = Some("WMM2025 main field, degree 12, and IGRF-14 main field, degree 13".into());
+    // Declinations differ the short way round.
+    let dd = (wmm.d - igrf.d + 540.0).rem_euclid(360.0) - 180.0;
+    Ok(Json::obj(vec![
+        (
+            "declination_difference",
+            ctx.out("declination_difference", deg(dd)),
+        ),
+        ("wmm_declination", ctx.out("wmm_declination", deg(wmm.d))),
+        ("igrf_declination", ctx.out("igrf_declination", deg(igrf.d))),
+        (
+            "inclination_difference",
+            ctx.out("inclination_difference", deg(wmm.i - igrf.i)),
+        ),
+        ("intensity_difference", Json::Num(wmm.f - igrf.f)),
+    ]))
+}
+
 fn run_declination(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let ev = evaluate(ctx)?;
     let e = ev.e;

@@ -498,6 +498,10 @@
       "expect": "geodesy.magnetic.uncertainty-zone"
     },
     {
+      "query": "WMM vs IGRF",
+      "expect": "geodesy.magnetic.model-compare"
+    },
+    {
       "query": "grid zone designator",
       "expect": "geodesy.grid-ref.grid-zone-lookup"
     },

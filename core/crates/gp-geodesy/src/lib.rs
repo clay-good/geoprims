@@ -3243,6 +3243,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &MGRS_PRECISION,
     &magnetic::DECLINATION,
     &magnetic::UNCERTAINTY_ZONE,
+    &magnetic::MODEL_COMPARE,
     &magnetic::TRUE_TO_MAGNETIC,
     &magnetic::MAGNETIC_TO_TRUE,
     &magnetic::GRIVATION,

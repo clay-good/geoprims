@@ -50,7 +50,7 @@ test('each local-frame and grid-figure step named in the inventory is an address
 });
 
 test('each direction of the height conversion is an addressable geodesy operation', () => {
-  for (const id of ['geodesy.height.ellipsoidal-to-orthometric', 'geodesy.height.orthometric-to-ellipsoidal', 'geodesy.magnetic.uncertainty-zone', 'geodesy.grid-ref.grid-zone-lookup', 'geodesy.grid-ref.mgrs-precision']) {
+  for (const id of ['geodesy.height.ellipsoidal-to-orthometric', 'geodesy.height.orthometric-to-ellipsoidal', 'geodesy.magnetic.uncertainty-zone', 'geodesy.magnetic.model-compare', 'geodesy.grid-ref.grid-zone-lookup', 'geodesy.grid-ref.mgrs-precision']) {
     const tool = byId.get(id);
     assert.ok(tool, `${id} is missing`);
     assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
@@ -59,5 +59,5 @@ test('each direction of the height conversion is an addressable geodesy operatio
 });
 
 test('the geodesy catalog does not lose registered operations', () => {
-  assert.ok(geodesy.length >= 88, `geodesy operation count regressed to ${geodesy.length}`);
+  assert.ok(geodesy.length >= 89, `geodesy operation count regressed to ${geodesy.length}`);
 });

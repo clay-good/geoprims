@@ -526,6 +526,34 @@ fn directional_height_conversions_match_the_general_tool() {
 }
 
 #[test]
+fn model_compare_matches_the_declination_tool() {
+    for place in [
+        r#"{"lat":61.2181,"lon":-149.9003,"date":"2027-01-01"}"#,
+        r#"{"lat":-33.8688,"lon":151.2093,"date":"2025-03-01","height":"400 km"}"#,
+    ] {
+        let both = call("geodesy.magnetic.model-compare", place);
+        assert_eq!(both["ok"], true, "{both}");
+        let with = |model: &str| {
+            let mut input: Value = serde_json::from_str(place).unwrap();
+            input["model"] = model.into();
+            call("geodesy.magnetic.declination", &input.to_string())
+        };
+        let (wmm, igrf) = (with("wmm2025"), with("igrf14"));
+        assert_eq!(
+            both["result"]["wmm_declination"],
+            wmm["result"]["declination"]
+        );
+        assert_eq!(
+            both["result"]["igrf_declination"],
+            igrf["result"]["declination"]
+        );
+        let d = |r: &Value, k: &str| r["result"][k]["value"].as_f64().unwrap();
+        let diff = d(&both, "declination_difference");
+        assert!((diff - (d(&wmm, "declination") - d(&igrf, "declination"))).abs() < 1e-12);
+    }
+}
+
+#[test]
 fn compass_zone_matches_the_declination_tool() {
     for (place, zone) in [
         (

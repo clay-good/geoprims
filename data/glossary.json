@@ -743,6 +743,16 @@
       ]
     },
     {
+      "id": "igrf",
+      "term": "IGRF",
+      "expansion": "International Geomagnetic Reference Field",
+      "definition": "A model of the Earth's main magnetic field kept by an international science body and updated every five years. IGRF-14 covers 1900 to 2030; it is a second source alongside the WMM.",
+      "source": "igrf",
+      "relatedTools": [
+        "geodesy.magnetic.model-compare"
+      ]
+    },
+    {
       "id": "isa",
       "term": "ISA",
       "expansion": "International Standard Atmosphere",
@@ -1820,6 +1830,7 @@
         "geodesy.magnetic.declination",
         "geodesy.magnetic.grivation",
         "geodesy.magnetic.magnetic-to-true",
+        "geodesy.magnetic.model-compare",
         "geodesy.magnetic.true-to-magnetic",
         "geodesy.magnetic.uncertainty-zone"
       ]
@@ -1840,7 +1851,8 @@
       "source": "wmm",
       "relatedTools": [
         "aviation.flight-plan.nav-log",
-        "aviation.ifr.radial-fix"
+        "aviation.ifr.radial-fix",
+        "geodesy.magnetic.model-compare"
       ]
     },
     {

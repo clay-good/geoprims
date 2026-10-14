@@ -952,6 +952,12 @@
           ]
         },
         {
+          "want": "check how much WMM and IGRF disagree at a place",
+          "tools": [
+            "model-compare"
+          ]
+        },
+        {
           "want": "see how variation changes across a region, or where the agonic line runs",
           "tools": [
             "isogonic"

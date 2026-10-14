@@ -384,7 +384,8 @@ fn slope_and_aspect_follow_horn_as_gdaldem_does() {
         (num(&r, "result.aspect.value") - 145.124_671_655_397_55).abs() < 1e-12,
         "{r}"
     );
-    assert!((num(&r, "result.hillshade") - 174.0).abs() < 0.5, "{r}");
+    // gdaldem gives 175: 1 + 254 x 0.68339 = 174.58, rounded.
+    assert_eq!(num(&r, "result.hillshade"), 175.0, "{r}");
     assert_eq!(r["result"]["aspect_text"], "south-east");
 
     // "Geographic cell size": on a degree grid the east-west cell shrinks by

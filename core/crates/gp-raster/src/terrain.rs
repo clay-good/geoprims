@@ -199,7 +199,9 @@ fn run_slope(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "The window has no gradient, so it has no aspect; flat ground faces no direction.",
         ));
     }
-    // Hillshade, as gdaldem computes it, from the sun's position.
+    // Hillshade, as gdaldem computes it, from the sun's position: the cosine
+    // of the angle to the sun scaled to 1 to 255 (0 is gdaldem's no-data),
+    // and 1 where the cell faces away from the sun.
     let az = ctx.quantity("sun_azimuth")?.map_or(315.0, |v| {
         v.to(units::by_symbol(QT::Angle, "deg").expect("deg"))
     });
@@ -210,9 +212,8 @@ fn run_slope(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let slope_rad = atan(rise);
     let aspect_rad = if flat { 0.0 } else { atan2(gy, -gx) };
     let sun = (90.0 - az).to_radians();
-    let shade = 255.0
-        * (cos(zenith) * cos(slope_rad) + sin(zenith) * sin(slope_rad) * cos(sun - aspect_rad));
-    let shade = shade.clamp(0.0, 255.0);
+    let cang = cos(zenith) * cos(slope_rad) + sin(zenith) * sin(slope_rad) * cos(sun - aspect_rad);
+    let shade = if cang <= 0.0 { 1.0 } else { 1.0 + 254.0 * cang };
     let mut out = vec![
         ("slope", ctx.out("slope", q(slope, QT::Angle, "deg"))),
         ("slope_percent", Json::Num(rise * 100.0)),
@@ -348,6 +349,7 @@ const WINDOW_INPUTS: [Field; 4] = [
 
 pub static SLOPE: ToolDef = ToolDef {
     id: "raster.terrain.slope-aspect",
+    version: "1.1.0",
     title: "Slope, aspect, and hillshade",
     summary: "Slope, aspect, and hillshade for the center of a 3 x 3 elevation window by Horn's method, with the cell size corrected for latitude on a degree-based grid.",
     aliases: &[
@@ -436,9 +438,9 @@ pub static SLOPE: ToolDef = ToolDef {
         Field::new(
             "hillshade",
             "Hillshade",
-            "0 to 255, as gdaldem computes it",
+            "1 to 255, as gdaldem computes it",
             Kind::Number {
-                min: 0.0,
+                min: 1.0,
                 max: 255.0,
             },
         )

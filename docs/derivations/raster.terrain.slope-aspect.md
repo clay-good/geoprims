@@ -12,12 +12,12 @@ When the cell size is given in degrees, it is turned into meters with the WGS 84
 - With the window a b c / d e f / g h i (a at the north-west): dz/dx = ((c + 2f + i) − (a + 2d + g)) / (8 Δx); dz/dy = ((g + 2h + i) − (a + 2b + c)) / (8 Δy).
 - Slope = atan(z_factor · √((dz/dx)² + (dz/dy)²)); percent slope = 100 × the rise.
 - Aspect = 90° − atan2(dz/dy, −dz/dx), taken into [0°, 360°); none when the gradient is zero.
-- Hillshade = 255 · (cos Z cos S + sin Z sin S cos(A_sun − A)), clamped to 0 to 255, with Z the sun's zenith angle, S the slope, and A the aspect as angles in GDAL's convention.
+- Hillshade = 1 + 254 · (cos Z cos S + sin Z sin S cos(A_sun − A)), rounded, and 1 where the cosine is zero or negative (gdaldem keeps 0 for no data), with Z the sun's zenith angle, S the slope, and A the aspect as angles in GDAL's convention.
 - Degree cells: Δy = cell · M(φ) and Δx = cell · N(φ) cos φ, per radian of arc, with M and N the WGS 84 meridian and prime-vertical radii of curvature.
 
 ## Symbols and units
 
-Inputs: `elevations` (three rows of three heights in meters, north row first), `cell_size` (meters) or `cell_degrees` with `lat`, `z_factor` (default 1), `sun_azimuth` (default 315°), and `sun_altitude` (default 45°). The 3 defaults match GDAL's regular Horn hillshade. Outputs: `slope` (degrees), `slope_percent`, `aspect` (degrees clockwise from north, absent when flat), `aspect_text`, `hillshade` (0 to 255), and the cell sizes used.
+Inputs: `elevations` (three rows of three heights in meters, north row first), `cell_size` (meters) or `cell_degrees` with `lat`, `z_factor` (default 1), `sun_azimuth` (default 315°), and `sun_altitude` (default 45°). The 3 defaults match GDAL's regular Horn hillshade. Outputs: `slope` (degrees), `slope_percent`, `aspect` (degrees clockwise from north, absent when flat), `aspect_text`, `hillshade` (1 to 255), and the cell sizes used.
 
 ## Domain
 
@@ -36,11 +36,11 @@ None in the arithmetic, which is Horn's method as gdaldem computes it. The metho
 - independent: yes
 - inputs: every interior cell of three 24 x 24 DEMs (5, 10, and 30 m cells; smooth hills with noise, one with a flat patch): 1,452 windows, 16 of them flat
 - outputs: the slope, the aspect (no-data where flat), and the hillshade at each cell
-- tolerance: slope to 0.001°; aspect to the spec's 0.01° from half a degree of slope up; hillshade to one step of 255
+- tolerance: slope to 0.001°; aspect to the spec's 0.01° from half a degree of slope up; hillshade exactly
 - verifiedBy: `core/crates/gp-raster/tests/terrain_gdal.rs` `terrain_matches_gdaldem`; golden vectors v008 to v021
-- verifiedOn: 2026-09-24
+- verifiedOn: 2026-10-14
 
-gdaldem is the reference the spec names. Slope agrees within 0.00025° on every window. Aspect agrees within 0.0095° wherever the slope is at least half a degree. On nearly flat ground aspect is ill-conditioned, and gdaldem holds elevations as 32-bit floats, so its own rounding moves its aspect by up to about 0.02° at a slope of 0.1° on 30 m cells; there the test holds the tool to twice that bound, computed per window, while the tool works in 64-bit arithmetic and matches the formulas transcribed separately in Python on the windows of vectors v001 to v007, one of them to 1e-12 in `slope_and_aspect_follow_horn_as_gdaldem_does`. Every window gdaldem calls flat, the tool calls flat. Hillshade, an integer, differs by at most one step, from rounding.
+gdaldem is the reference the spec names. Slope agrees within 0.00025° on every window. Aspect agrees within 0.0095° wherever the slope is at least half a degree. On nearly flat ground aspect is ill-conditioned, and gdaldem holds elevations as 32-bit floats, so its own rounding moves its aspect by up to about 0.02° at a slope of 0.1° on 30 m cells; there the test holds the tool to twice that bound, computed per window, while the tool works in 64-bit arithmetic and matches the formulas transcribed separately in Python on the windows of vectors v001 to v007, one of them to 1e-12 in `slope_and_aspect_follow_horn_as_gdaldem_does`. Every window gdaldem calls flat, the tool calls flat. Hillshade matches on every window. Before version 1.1.0 the tool scaled by 255 rather than gdaldem's 1 + 254, and the test allowed one step, which hid it; vectors v001, v002, v004, v006, and v007 are superseded by v022 to v026.
 
 ## Differential tests
 

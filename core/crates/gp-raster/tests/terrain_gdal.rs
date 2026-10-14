@@ -94,7 +94,7 @@ fn terrain_matches_gdaldem() {
         worst_len < 1e-3,
         "TRI, TPI, or roughness off by {worst_len} m"
     );
-    assert!(worst_shade <= 1, "hillshade off by {worst_shade}");
+    assert!(worst_shade == 0, "hillshade off by {worst_shade}");
 }
 
 fn window(z: &[f64; 9], cell: f64) -> String {

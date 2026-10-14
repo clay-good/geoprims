@@ -268,8 +268,8 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "2590e22183e40b6f",
-    "lastmod": "2026-10-13"
+    "hash": "f4deac5b178a9422",
+    "lastmod": "2026-10-14"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1572,8 +1572,8 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "52e804d8e04e2d11",
-    "lastmod": "2026-10-13"
+    "hash": "d2fae05b99179f34",
+    "lastmod": "2026-10-14"
   },
   "/raster/": {
     "hash": "29d2a1871b1687a7",
@@ -1656,8 +1656,8 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/slope-aspect/": {
-    "hash": "0050ebcff5402ab7",
-    "lastmod": "2026-10-13"
+    "hash": "bd4dad8a2e2535b5",
+    "lastmod": "2026-10-14"
   },
   "/security/": {
     "hash": "0a13c7160707e976",
@@ -2312,7 +2312,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "92e2460fe0a3e61a",
+    "hash": "187ee74ead0f8ec8",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

@@ -203,8 +203,9 @@ def horn(z, dx, dy, zf=1.0, az=315.0, alt=45.0):
         asp -= 360
     zen, sun = math.radians(90 - alt), math.radians(90 - az)
     sl, ar = math.atan(rise), math.atan2(dzdy, -dzdx)
-    shade = 255 * (math.cos(zen) * math.cos(sl) + math.sin(zen) * math.sin(sl) * math.cos(sun - ar))
-    return slope, (None if rise == 0 else asp), max(0.0, min(255.0, shade))
+    # gdaldem's scaling: 1 + 254 cos, 0 kept for no data, 1 facing away.
+    cang = math.cos(zen) * math.cos(sl) + math.sin(zen) * math.sin(sl) * math.cos(sun - ar)
+    return slope, (None if rise == 0 else asp), 1.0 if cang <= 0 else 1 + 254 * cang
 
 
 rows = []

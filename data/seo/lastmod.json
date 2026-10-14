@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8dcd203dfe2d0e2c",
+    "hash": "025fcf8bd2516565",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -276,7 +276,7 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "dd722f47ae7fc2ad",
+    "hash": "34a9fb6677010bc9",
     "lastmod": "2026-10-14"
   },
   "/drone/links/": {
@@ -288,40 +288,52 @@
     "lastmod": "2026-10-12"
   },
   "/drone/mission/": {
-    "hash": "236cbcec2e906bbf",
-    "lastmod": "2026-09-26"
+    "hash": "9004edf36b8f45f7",
+    "lastmod": "2026-10-14"
   },
   "/drone/mission/corridor/": {
-    "hash": "533e363c8130381c",
-    "lastmod": "2026-10-10"
+    "hash": "29f819a2ae84d169",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/mission/crosshatch/": {
+    "hash": "bc7a5816a3e4995c",
+    "lastmod": "2026-10-14"
   },
   "/drone/mission/export/": {
-    "hash": "384839e5fab7b540",
-    "lastmod": "2026-10-13"
+    "hash": "e10933d3d535cbb3",
+    "lastmod": "2026-10-14"
   },
   "/drone/mission/facade/": {
     "hash": "f254a87440fdf66b",
     "lastmod": "2026-10-10"
   },
+  "/drone/mission/geofence-check/": {
+    "hash": "f60eb92c937e69b0",
+    "lastmod": "2026-10-14"
+  },
   "/drone/mission/geofence/": {
-    "hash": "9ee4ba6bda1d3c51",
-    "lastmod": "2026-10-10"
+    "hash": "43b7e51532cfb2e8",
+    "lastmod": "2026-10-14"
   },
   "/drone/mission/orbit/": {
-    "hash": "7a503e7d164353e5",
-    "lastmod": "2026-10-13"
+    "hash": "99169ff25fb90537",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/mission/pattern-stats/": {
+    "hash": "d47840dbe07ac494",
+    "lastmod": "2026-10-14"
   },
   "/drone/mission/sorties/": {
-    "hash": "ec12256b0e8ee7c3",
-    "lastmod": "2026-10-13"
+    "hash": "fc561df85f8ca195",
+    "lastmod": "2026-10-14"
   },
   "/drone/mission/survey-grid/": {
     "hash": "348cb0123415e5ad",
     "lastmod": "2026-10-13"
   },
   "/drone/ops/": {
-    "hash": "9a2dbceedd1d0a15",
-    "lastmod": "2026-10-12"
+    "hash": "9b24402c38c7dcfb",
+    "lastmod": "2026-10-14"
   },
   "/drone/ops/easa-subcategory/": {
     "hash": "0114dbf57ff87f99",
@@ -344,12 +356,16 @@
     "lastmod": "2026-10-12"
   },
   "/drone/ops/speed-check/": {
-    "hash": "30c90c6f09d80600",
-    "lastmod": "2026-10-13"
+    "hash": "f7ad8629f4b6aebe",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/ops/structure-altitude/": {
+    "hash": "b6a8473d8d2b257e",
+    "lastmod": "2026-10-14"
   },
   "/drone/ops/vlos-check/": {
-    "hash": "db7e14e41aeb04ff",
-    "lastmod": "2026-10-13"
+    "hash": "cfce952e8ffbec07",
+    "lastmod": "2026-10-14"
   },
   "/drone/ops/wind-limit/": {
     "hash": "455a00680e2ed6da",
@@ -1240,7 +1256,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "00633cbd197b55f9",
+    "hash": "ef0e8c4a2a5270e5",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1488,7 +1504,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "497e49a01b55d5ef",
+    "hash": "3ea0513983ea89ec",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -1872,7 +1888,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "0bf015d658efa516",
+    "hash": "0ba582e481af95f6",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2136,7 +2152,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "27a4e8b53ecdafcd",
+    "hash": "344d95e338c66720",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

@@ -1183,7 +1183,78 @@ pub static SURVEY_GRID: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn grid_paths(ctx: &mut Ctx) -> Result<(Plane, Vec<Path>, f64, f64), ToolError> {
+pub static CROSSHATCH: ToolDef = ToolDef {
+    id: "drone.mission.crosshatch",
+    title: "Crosshatch survey grid (double grid)",
+    summary: "A mapping pattern flown twice over an area, the second pass at right angles to the first, with the lines, photos, path length, and waypoints of both passes.",
+    aliases: &[
+        "double grid mission",
+        "crosshatch flight pattern",
+        "cross grid for 3D mapping",
+    ],
+    keywords: &[
+        "crosshatch",
+        "double grid",
+        "cross grid",
+        "3D model",
+        "facades",
+        "perpendicular passes",
+        "mapping",
+    ],
+    inputs: &[
+        SURVEY_GRID.inputs[0],
+        SURVEY_GRID.inputs[1],
+        SURVEY_GRID.inputs[2],
+        SURVEY_GRID.inputs[3],
+        SURVEY_GRID.inputs[4],
+        SURVEY_GRID.inputs[5],
+        SURVEY_GRID.inputs[6],
+        SURVEY_GRID.inputs[8],
+        SURVEY_GRID.inputs[9],
+        SURVEY_GRID.inputs[10],
+        SURVEY_GRID.inputs[11],
+        SURVEY_GRID.inputs[12],
+    ],
+    outputs: SURVEY_GRID.outputs,
+    errors: SURVEY_GRID.errors,
+    warnings: SURVEY_GRID.warnings,
+    model: "Two serpentine passes over the area on a local plane, the second with its lines turned 90° from the first, each with lines at the spacing given and photo points along them; the totals are the sums of the two passes",
+    accuracy: SURVEY_GRID.accuracy,
+    when_to_use: "Use this when one pass of parallel lines will not see enough: buildings, stockpiles, quarry walls, or any site where you want the sides of things in a 3D model. Enter the area, the line spacing, and the photo spacing as for a single grid. The tool lays a second pass at right angles to the first and returns the combined lines, photos, path length, and waypoints, with the flight time when you give a groundspeed.",
+    limitations: "A crosshatch about doubles the flight time and the photo count of a single grid, so check the battery plan. The second pass is exactly perpendicular to the first, over the same boundary and at the same spacing and height. It plans the lines only: gimbal tilt, which a crosshatch for 3D work usually needs, is set on the aircraft. Heights are above the takeoff point unless your flight app follows terrain.",
+    references: SURVEY_GRID.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 200 m by 270 m site at 45 m line spacing",
+        input: r#"{"area":[{"lat":35,"lon":-100},{"lat":35,"lon":-99.99704},{"lat":35.0018,"lon":-99.99704},{"lat":35.0018,"lon":-100}],"line_spacing":"45 m","photo_spacing":"25 m","groundspeed":"9 m/s","height":"100 m"}"#,
+        source: "add-drone-suite mission patterns: a second pass perpendicular to the first",
+    }],
+    primary_example: "primary",
+    visualization: SURVEY_GRID.visualization,
+    related: &[
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.photogrammetry.line-spacing",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.mission.sorties",
+            reason: "next",
+        },
+    ],
+    sentence: SURVEY_GRID.sentence,
+    limits: SURVEY_GRID.limits,
+    run: run_crosshatch,
+    ..ToolDef::BLANK
+};
+
+fn grid_paths(
+    ctx: &mut Ctx,
+    force_crosshatch: bool,
+) -> Result<(Plane, Vec<Path>, f64, f64), ToolError> {
     let (plane, outer, holes) = read_polygon(ctx)?;
     let s = positive(ctx, "line_spacing", "Line spacing")?;
     let p = positive(ctx, "photo_spacing", "Photo spacing")?;
@@ -1240,7 +1311,8 @@ fn grid_paths(ctx: &mut Ctx) -> Result<(Plane, Vec<Path>, f64, f64), ToolError> 
         p,
         end_photos,
     )];
-    if ctx.declares("crosshatch") && ctx.choice("crosshatch")? == Some("yes") {
+    if force_crosshatch || (ctx.declares("crosshatch") && ctx.choice("crosshatch")? == Some("yes"))
+    {
         paths.push(serpentine(
             &sweep(&outer, &holes, angle + core::f64::consts::FRAC_PI_2, s, buf),
             over,
@@ -1257,8 +1329,16 @@ fn grid_paths(ctx: &mut Ctx) -> Result<(Plane, Vec<Path>, f64, f64), ToolError> 
     Ok((plane, paths, az, twice.abs() / 2.0))
 }
 
+fn run_crosshatch(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    grid(ctx, true)
+}
+
 fn run_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let (plane, paths, az, _) = grid_paths(ctx)?;
+    grid(ctx, false)
+}
+
+fn grid(ctx: &mut Ctx, force_crosshatch: bool) -> Result<Json, ToolError> {
+    let (plane, paths, az, _) = grid_paths(ctx, force_crosshatch)?;
     let mut pts: Vec<(P, &'static str)> = Vec::new();
     for p in &paths {
         pts.extend(p.points.iter().copied());
@@ -1634,7 +1714,7 @@ pub static IMAGE_COUNT: ToolDef = ToolDef {
 };
 
 fn run_count(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let (_, paths, _, area_m2) = grid_paths(ctx)?;
+    let (_, paths, _, area_m2) = grid_paths(ctx, false)?;
     let p = &paths[0];
     let len = path_length(&p.points);
     if ctx.explaining() {

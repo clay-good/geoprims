@@ -480,7 +480,9 @@
         {
           "want": "lay out a mapping grid over an area",
           "tools": [
-            "survey-grid"
+            "survey-grid",
+            "crosshatch",
+            "pattern-stats"
           ]
         },
         {
@@ -510,7 +512,8 @@
         {
           "want": "fence a mission and check its waypoints",
           "tools": [
-            "geofence"
+            "geofence",
+            "geofence-check"
           ]
         },
         {
@@ -529,7 +532,8 @@
           "want": "check an altitude or speed limit under Part 107",
           "tools": [
             "part107-altitude",
-            "speed-check"
+            "speed-check",
+            "structure-altitude"
           ]
         },
         {

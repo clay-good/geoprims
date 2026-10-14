@@ -334,6 +334,22 @@
       "expect": "drone.power.temperature-derating"
     },
     {
+      "query": "double grid mission",
+      "expect": "drone.mission.crosshatch"
+    },
+    {
+      "query": "waypoints outside geofence",
+      "expect": "drone.mission.geofence-check"
+    },
+    {
+      "query": "flight path length calculator",
+      "expect": "drone.mission.pattern-stats"
+    },
+    {
+      "query": "tower inspection altitude limit",
+      "expect": "drone.ops.structure-altitude"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

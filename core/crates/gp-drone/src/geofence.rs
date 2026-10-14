@@ -3,7 +3,7 @@
 //! polygon (by the geometry buffers), an optional inner warning fence, the
 //! fence's area and perimeter, and every mission waypoint outside it.
 
-use geographiclib_rs::Geodesic;
+use geographiclib_rs::{Geodesic, InverseGeodesic};
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, ToolDef};
@@ -280,7 +280,93 @@ fn read_points(ctx: &mut Ctx, list: &str) -> Result<Vec<(f64, f64)>, ToolError> 
     Ok(out)
 }
 
+pub static GEOFENCE_CHECK: ToolDef = ToolDef {
+    id: "drone.mission.geofence-check",
+    title: "Check waypoints against a geofence",
+    summary: "Which waypoints of a mission fall outside a geofence drawn a set distance around an area, and by how far, with any that cross an inner warning fence.",
+    aliases: &[
+        "geofence check",
+        "waypoints outside geofence",
+        "mission boundary check",
+    ],
+    keywords: &[
+        "geofence",
+        "waypoints",
+        "outside",
+        "boundary",
+        "keep-in",
+        "warning fence",
+        "preflight check",
+    ],
+    inputs: &[
+        GEOFENCE.inputs[0],
+        GEOFENCE.inputs[1],
+        GEOFENCE.inputs[3].required(),
+        GEOFENCE.inputs[2],
+        GEOFENCE.inputs[4],
+    ],
+    outputs: &[
+        GEOFENCE.outputs[2],
+        Field::new(
+            "waypoints_checked",
+            "Waypoints checked",
+            "How many were tested",
+            Kind::Number { min: 0.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        GEOFENCE.outputs[3],
+        GEOFENCE.outputs[4],
+        GEOFENCE.outputs[5],
+    ],
+    errors: GEOFENCE.errors,
+    warnings: GEOFENCE.warnings,
+    model: GEOFENCE.model,
+    accuracy: GEOFENCE.accuracy,
+    when_to_use: "Use this before uploading a mission to confirm every waypoint is inside the fence you intend to set. Enter the area the fence is drawn around, the fence distance, and the mission's waypoints. The tool lists each waypoint that falls outside and how far beyond the fence it is. Add a warning distance to also list the ones past an inner warning fence.",
+    limitations: "Only the waypoints are tested, not the path between them, so a leg that cuts a corner of the fence between two inside waypoints is not caught; add waypoints along long legs near the boundary. The fence here is the geometric one this tool draws, which your aircraft's own geofence may round or simplify differently. Position error in flight is not allowed for, so leave a margin.",
+    references: GEOFENCE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Four waypoints against a 40 m fence around a field",
+        input: r#"{"area":[{"lat":41,"lon":-96},{"lat":41,"lon":-95.997},{"lat":41.002,"lon":-95.997},{"lat":41.002,"lon":-96}],"distance":"40 m","waypoints":[{"lat":41.001,"lon":-95.9985},{"lat":41.0022,"lon":-95.9985},{"lat":41.0026,"lon":-95.9985},{"lat":41.001,"lon":-96.0008}]}"#,
+        source: "add-drone-suite geofence requirement: waypoints flagged with their distance beyond the fence",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.mission.geofence",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.mission.export",
+            reason: "next",
+        },
+    ],
+    sentence: "{outside_count} of {waypoints_checked} waypoints are outside the geofence.",
+    limits: GEOFENCE.limits,
+    run: run_geofence_check,
+    ..ToolDef::BLANK
+};
+
+fn run_geofence_check(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    geofence(ctx, true)
+}
+
 fn run_geofence(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    geofence(ctx, false)
+}
+
+/// Builds the fence and tests the waypoints. `check_only` needs waypoints
+/// and reports the test without the fence's outline and size.
+fn geofence(ctx: &mut Ctx, check_only: bool) -> Result<Json, ToolError> {
     let m = unit(QT::Length, "m");
     let mut area = read_points(ctx, "area")?;
     area.dedup();
@@ -326,6 +412,12 @@ fn run_geofence(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let wps = read_points(ctx, "waypoints")?;
+    if check_only && wps.is_empty() {
+        return Err(ToolError::invalid(
+            "/waypoints",
+            "Give the waypoints to check against the fence.",
+        ));
+    }
     let g = Geodesic::wgs84();
     let rings = vec![area];
     let round = Style {
@@ -417,6 +509,27 @@ fn run_geofence(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let max_dev = inner.as_ref().map_or(fence.max_deviation, |b| {
         b.max_deviation.max(fence.max_deviation)
     });
+    if check_only {
+        let mut out = vec![
+            ("outside_count", Json::Num(outside.len() as f64)),
+            ("waypoints_checked", Json::Num(wps.len() as f64)),
+        ];
+        if warn.is_some() {
+            out.push(("warning_count", Json::Num(in_zone as f64)));
+        }
+        out.push(("flagged", Json::Arr(flagged)));
+        out.push((
+            "max_deviation",
+            ctx.out(
+                "max_deviation",
+                Q {
+                    value: max_dev,
+                    unit: m,
+                },
+            ),
+        ));
+        return Ok(Json::obj(out));
+    }
     let mut out = vec![
         (
             "area_enclosed",
@@ -459,6 +572,238 @@ fn run_geofence(ctx: &mut Ctx) -> Result<Json, ToolError> {
 }
 
 /// Area (counterclockwise positive) and perimeter of a geodesic ring.
+/// A course change at a waypoint counts as a turn past this many degrees.
+const TURN_THRESHOLD_DEG: f64 = 5.0;
+
+pub static PATTERN_STATS: ToolDef = ToolDef {
+    id: "drone.mission.pattern-stats",
+    title: "Flight path statistics",
+    summary: "The length of a waypoint path, its legs and turns, how far it goes from the first waypoint, and the flight time at a groundspeed.",
+    aliases: &[
+        "flight path length calculator",
+        "waypoint mission distance",
+        "mission statistics",
+    ],
+    keywords: &[
+        "path length",
+        "waypoints",
+        "legs",
+        "turns",
+        "flight time",
+        "farthest point",
+        "mission summary",
+    ],
+    inputs: &[
+        Field::new(
+            "waypoints",
+            "Waypoints",
+            "The path in order, one waypoint per line, like 40.4406, -80.002",
+            Kind::List {
+                items: VERTEX,
+                min: 2,
+                max: 5_000,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "groundspeed",
+            "Groundspeed",
+            "For the flight time, like 10 m/s",
+            Kind::Quantity {
+                q: QT::Speed,
+                unit: "m/s",
+            },
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "path_length",
+            "Path length",
+            "The sum of the legs",
+            Kind::Quantity {
+                q: QT::Distance,
+                unit: "km",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "legs",
+            "Legs",
+            "Waypoints less one",
+            Kind::Number { min: 0.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "turns",
+            "Turns",
+            "Waypoints where the course changes by more than 5°",
+            Kind::Number { min: 0.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "longest_leg",
+            "Longest leg",
+            "Between two consecutive waypoints",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "farthest_from_start",
+            "Farthest from the first waypoint",
+            "Straight-line ground distance to the most distant waypoint",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "total_turning",
+            "Total turning",
+            "The sum of the course changes at the waypoints",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "flight_time",
+            "Flight time",
+            "Path length ÷ groundspeed, without turns or climbs",
+            Kind::Quantity {
+                q: QT::Time,
+                unit: "min",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+    ],
+    errors: &[],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Each leg is the geodesic between consecutive waypoints on WGS 84 (Karney 2013); the course change at a waypoint is the departure azimuth of the next leg less the arrival azimuth of the last, and counts as a turn past 5°",
+    accuracy: "Leg lengths to nanometers on the ellipsoid; the flight time is a planning figure at one steady groundspeed",
+    when_to_use: "Use this to size up a mission you already have as a list of waypoints, from a flight app, a spreadsheet, or one of the pattern tools here. Enter the waypoints in the order flown. The tool returns the total path length, the number of legs and turns, the longest leg, and how far the path gets from its first waypoint, which matters for visual line of sight. Add a groundspeed for the flight time.",
+    limitations: "The path is straight legs over the ground between waypoints, so climbs, descents, curved turns, and hovering to take a photo are not counted, and the flight time comes out short for a pattern with many turns. The first waypoint stands in for where the pilot is, so add the takeoff point first if it is somewhere else. It does not check terrain, airspace, or a geofence.",
+    references: &[KARNEY],
+    examples: &[Example {
+        id: "primary",
+        title: "A four-leg box flown at 8 m/s",
+        input: r#"{"waypoints":[{"lat":44.98,"lon":-93.27},{"lat":44.9818,"lon":-93.27},{"lat":44.9818,"lon":-93.2662},{"lat":44.98,"lon":-93.2662},{"lat":44.98,"lon":-93.27}],"groundspeed":"8 m/s"}"#,
+        source: "Geodesic leg lengths from GeographicLib's GeodSolve",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.mission.sorties",
+            reason: "next",
+        },
+        Related {
+            id: "drone.mission.geofence-check",
+            reason: "next",
+        },
+    ],
+    sentence: "The path is {path_length} long in {legs} legs, with {turns} turns.",
+    limits: &[("batchRows", 100)],
+    run: run_pattern_stats,
+    ..ToolDef::BLANK
+};
+
+fn run_pattern_stats(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let wps = read_points(ctx, "waypoints")?;
+    if let Some(i) = (1..wps.len()).find(|&i| wps[i] == wps[i - 1]) {
+        return Err(ToolError::invalid(
+            &format!("/waypoints/{i}"),
+            "This waypoint repeats the one before it: a leg needs two different points.",
+        ));
+    }
+    let g = Geodesic::wgs84();
+    let (mut total, mut longest, mut farthest) = (0.0f64, 0.0f64, 0.0f64);
+    let (mut turns, mut turning) = (0usize, 0.0f64);
+    let mut arriving: Option<f64> = None;
+    for pair in wps.windows(2) {
+        let (a, b) = (pair[0], pair[1]);
+        let (s, az1, az2, _): (f64, f64, f64, f64) = g.inverse(a.0, a.1, b.0, b.1);
+        total += s;
+        longest = longest.max(s);
+        if let Some(prev) = arriving {
+            // The change of course at the waypoint, the short way round.
+            let change = ((az1 - prev + 540.0).rem_euclid(360.0) - 180.0).abs();
+            turning += change;
+            if change > TURN_THRESHOLD_DEG {
+                turns += 1;
+            }
+        }
+        arriving = Some(az2);
+        let from_start: f64 = g.inverse(wps[0].0, wps[0].1, b.0, b.1);
+        farthest = farthest.max(from_start);
+    }
+    let m = unit(QT::Length, "m");
+    let len = |v: f64| Q { value: v, unit: m };
+    let mut out = vec![
+        (
+            "path_length",
+            ctx.out(
+                "path_length",
+                Q {
+                    value: total,
+                    unit: unit(QT::Distance, "m"),
+                },
+            ),
+        ),
+        ("legs", Json::Num((wps.len() - 1) as f64)),
+        ("turns", Json::Num(turns as f64)),
+        ("longest_leg", ctx.out("longest_leg", len(longest))),
+        (
+            "farthest_from_start",
+            ctx.out("farthest_from_start", len(farthest)),
+        ),
+        (
+            "total_turning",
+            ctx.out(
+                "total_turning",
+                Q {
+                    value: turning,
+                    unit: unit(QT::Angle, "deg"),
+                },
+            ),
+        ),
+    ];
+    if let Some(v) = ctx.quantity("groundspeed")? {
+        let v = v.to(unit(QT::Speed, "m/s"));
+        if v <= 0.0 {
+            return Err(ToolError::invalid(
+                "/groundspeed",
+                "The groundspeed must be positive.",
+            ));
+        }
+        out.push((
+            "flight_time",
+            ctx.out(
+                "flight_time",
+                Q {
+                    value: total / v,
+                    unit: unit(QT::Time, "s"),
+                },
+            ),
+        ));
+    }
+    Ok(Json::obj(out))
+}
+
 fn ring_area(g: &Geodesic, ring: &[(f64, f64)]) -> (f64, f64) {
     let mut p = geographiclib_rs::PolygonArea::new(g, geographiclib_rs::Winding::CounterClockwise);
     for &(lat, lon) in ring {

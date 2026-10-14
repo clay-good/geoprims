@@ -898,6 +898,7 @@
       "source": "aim",
       "relatedTools": [
         "drone.ops.part107-altitude",
+        "drone.ops.structure-altitude",
         "geodesy.height.convert"
       ]
     },

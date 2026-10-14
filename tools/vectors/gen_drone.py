@@ -1437,10 +1437,132 @@ def c_rate_vectors():
     return out
 
 
+CFR_107_51 = "14 CFR 107.51(b), evaluated in Python (tools/vectors/gen_drone.py)"
+CFR_VER = "eCFR, as dated in data/regulations.json"
+
+
+def structure_altitude_vectors():
+    rng = random.Random(55301)
+    out = []
+    to_ft = {"ft": 1.0, "m": 1 / FT_M}
+
+    def case(i, height, distance, unit_name="ft", ground=None):
+        h, d = height * to_ft[unit_name], distance * to_ft[unit_name]
+        limit = max(h + 400, 400) if d <= 400 else 400.0
+        inp = {"structure_height": f"{height} {unit_name}", "structure_distance": f"{distance} {unit_name}"}
+        exp = {"result.max_agl.value": float(limit)}
+        if ground is not None:
+            inp["ground_elevation"] = f"{ground} ft"
+            exp["result.max_msl.value"] = float(ground + limit)
+        v = vec(i, inp, exp, CFR_107_51, CFR_VER)
+        for key in v["tolerance"]:
+            v["tolerance"][key] = {"rel": 1e-11, "abs": 1e-9}
+        return v
+
+    out.append(case(1, 1150, 250))
+    # The rule's edge: exactly 400 ft away is still within the radius; a foot more is not.
+    out.append(case(2, 300, 400))
+    out.append(case(3, 300, 401))
+    # The parent page's example and its MSL form.
+    out.append(case(4, 300, 200, ground=5280))
+    while len(out) < 20:
+        unit_name = ["ft", "m"][len(out) % 2]
+        height = round(rng.uniform(20, 2000) / to_ft[unit_name], 1)
+        distance = round(rng.uniform(0, 900) / to_ft[unit_name], 1)
+        out.append(case(len(out) + 1, height, distance, unit_name, ground=rng.choice([None, 0, 640, 5280, 9100])))
+    out.append(refusal(len(out) + 1, {"structure_height": "-10 ft", "structure_distance": "100 ft"}, "INVALID_INPUT", "/structure_height"))
+    out.append(refusal(len(out) + 1, {"structure_height": "100 ft", "structure_distance": "-1 ft"}, "INVALID_INPUT", "/structure_distance"))
+    return out
+
+
+def rect_sides(la, lo, dla, dlo):
+    """North-south and east-west sides of a small rectangle, in meters."""
+    mid = la + dla / 2
+    a, f = 6378137.0, 1 / 298.257223563
+    e2 = f * (2 - f)
+    n_rad = a / math.sqrt(1 - e2 * math.sin(math.radians(mid)) ** 2)
+    return dla * meters_per_deg_lat(mid), dlo * math.pi / 180 * n_rad * math.cos(math.radians(mid))
+
+
+def crosshatch_vectors():
+    """Line counts of both passes over rectangles: the first across the
+    narrow side, the second across the long one. Each pass centers n lines
+    on its extent so that they span it: (n − 1) × spacing ≥ extent."""
+    out = []
+    cases = [(35.0, -100.0, 0.0018, 0.00296, 45.0), (40.0, -105.0, 0.00135, 0.00705, 52.5), (35.0, -100.0, 0.009, 0.002, 40.0),
+             (51.0, 0.1, 0.004, 0.012, 60.0), (-33.0, 151.0, 0.0022, 0.0031, 25.0), (60.0, 25.0, 0.02, 0.005, 100.0),
+             (10.0, 10.0, 0.003, 0.0052, 35.0), (-45.0, 170.0, 0.0061, 0.0033, 55.0), (48.0, 2.0, 0.0027, 0.0091, 70.0),
+             (25.0, 55.0, 0.0047, 0.0019, 30.0), (0.5, -78.0, 0.0036, 0.0067, 48.0), (64.0, -21.0, 0.0029, 0.0152, 80.0),
+             (-12.0, -77.0, 0.0078, 0.0026, 65.0), (37.5, 127.0, 0.0017, 0.0044, 22.0), (19.0, 72.8, 0.0054, 0.0092, 90.0),
+             (44.0, -93.0, 0.0023, 0.0083, 38.0), (-26.0, 28.0, 0.0066, 0.0041, 75.0), (55.7, 12.5, 0.0019, 0.0077, 28.0),
+             (30.0, 31.2, 0.0083, 0.0034, 58.0), (-1.3, 36.8, 0.0044, 0.0071, 42.0)]
+    for i, (la, lo, dla, dlo, sp) in enumerate(cases, 1):
+        ns, ew = rect_sides(la, lo, dla, dlo)
+        lines = (math.ceil(min(ns, ew) / sp - 1e-6) + 1) + (math.ceil(max(ns, ew) / sp - 1e-6) + 1)
+        out.append(vec(i, {"area": rect(la, lo, dla, dlo), "line_spacing": f"{sp} m", "photo_spacing": "25 m"}, {"result.lines": float(lines)}, MIS_SRC))
+    area = rect(35.0, -100.0, 0.0018, 0.00296)
+    out.append(refusal(len(out) + 1, {"area": area, "line_spacing": "0.1 m", "photo_spacing": "25 m"}, "OUT_OF_DOMAIN", "/line_spacing"))
+    out.append(refusal(len(out) + 1, {"area": area[:2], "line_spacing": "45 m", "photo_spacing": "25 m"}, "INVALID_INPUT"))
+    return out
+
+
+def geofence_check_vectors():
+    """Waypoints a known distance due north of a rectangle's north-west corner,
+    where the nearest point of the area is the corner and the distance to it
+    runs along a meridian. (Off the middle of an edge the geodesic edge bows
+    a few millimeters toward the pole, which a meridian arc does not model.)"""
+    rng = random.Random(55302)
+    out = []
+
+    def case(i, la, lo, dla, dlo, fence, offsets, warning=None):
+        mid_lon = lo + dlo / 2
+        per_deg = meters_per_deg_lat(la + dla)
+        wps, flagged, outside, in_zone = [], [], 0, 0
+        for off in offsets:
+            if off >= 0:
+                wps.append({"lat": la + dla + off / per_deg, "lon": lo})
+            else:
+                wps.append({"lat": la + dla / 2, "lon": mid_lon})
+            if off > fence:
+                outside += 1
+                flagged.append(off - fence)
+            elif warning is not None and off > warning:
+                in_zone += 1
+                flagged.append(off - warning)
+        inp = {"area": rect(la, lo, dla, dlo), "distance": f"{fence} m", "waypoints": wps}
+        exp = {"result.outside_count": float(outside), "result.waypoints_checked": float(len(wps))}
+        if warning is not None:
+            inp["warning_distance"] = f"{warning} m"
+            exp["result.warning_count"] = float(in_zone)
+        for j, beyond in enumerate(flagged):
+            exp[f"result.flagged.{j}.beyond.value"] = beyond
+        v = vec(i, inp, exp, MIS_SRC)
+        for key in v["tolerance"]:
+            # Counts are exact; distances carry the meridian-arc approximation.
+            v["tolerance"][key] = {"abs": 0.001} if key.endswith("beyond.value") else {"abs": 0}
+        return v
+
+    out.append(case(1, 41.0, -96.0, 0.002, 0.003, 40, [-1, 22.2, 66.6, -1]))
+    while len(out) < 20:
+        la, lo = rng.choice([(40.0, -105.0), (51.0, 0.1), (-33.0, 151.0), (60.0, 25.0), (10.0, 10.0), (-45.0, 170.0)])
+        fence = rng.choice([20, 30, 50, 75, 100])
+        warning = rng.choice([None, fence * 0.5, fence * 0.6])
+        offsets = [rng.choice([-1, round(rng.uniform(0, fence * 0.4), 1), round(rng.uniform(fence * 0.7, fence * 0.95), 1),
+                               round(rng.uniform(fence * 1.1, fence * 1.9), 1)]) for _ in range(rng.randrange(1, 7))]
+        out.append(case(len(out) + 1, la, lo, round(rng.uniform(0.001, 0.004), 4), round(rng.uniform(0.002, 0.006), 4), fence, offsets, warning))
+    area = rect(41.0, -96.0, 0.002, 0.003)
+    wp = [{"lat": 41.001, "lon": -95.9985}]
+    out.append(refusal(len(out) + 1, {"area": area, "distance": "0 m", "waypoints": wp}, "INVALID_INPUT", "/distance"))
+    out.append(refusal(len(out) + 1, {"area": area, "distance": "40 m", "warning_distance": "50 m", "waypoints": wp}, "INVALID_INPUT", "/warning_distance"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     selected = set(sys.argv[2:])
-    files = {"drone.power.usable-energy": usable_energy_vectors(), "drone.power.temperature-derating": derating_vectors(),
+    files = {"drone.ops.structure-altitude": structure_altitude_vectors(), "drone.mission.crosshatch": crosshatch_vectors(),
+             "drone.mission.geofence-check": geofence_check_vectors(),
+             "drone.power.usable-energy": usable_energy_vectors(), "drone.power.temperature-derating": derating_vectors(),
              "drone.power.range": range_vectors(), "drone.power.disk-area": disk_area_vectors(), "drone.power.c-rate": c_rate_vectors(),
              "drone.photogrammetry.footprint": footprint_vectors(), "drone.photogrammetry.crop-factor": crop_vectors(),
              "drone.photogrammetry.trigger-distance": spacing_vectors("trigger-distance"),

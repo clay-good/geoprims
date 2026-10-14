@@ -428,7 +428,81 @@ pub static PART107_ALTITUDE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static STRUCTURE_ALTITUDE: ToolDef = ToolDef {
+    id: "drone.ops.structure-altitude",
+    title: "Part 107 altitude near a structure",
+    summary: "The highest a small drone may fly beside a tower, building, or other structure under 14 CFR 107.51(b): 400 ft above its top when within 400 ft of it.",
+    aliases: &[
+        "structure exception altitude",
+        "tower inspection altitude limit",
+        "400 ft above a structure",
+    ],
+    keywords: &[
+        "structure",
+        "tower",
+        "building",
+        "inspection",
+        "400 ft",
+        "Part 107",
+        "107.51",
+        "altitude limit",
+    ],
+    inputs: &[
+        PART107_ALTITUDE.inputs[0].required(),
+        PART107_ALTITUDE.inputs[1].required(),
+        PART107_ALTITUDE.inputs[2],
+        PART107_ALTITUDE.inputs[3],
+    ],
+    outputs: PART107_ALTITUDE.outputs,
+    errors: PART107_ALTITUDE.errors,
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "14 CFR 107.51(b): 400 ft above ground level, or within a 400 ft radius of a structure, 400 ft above the structure's immediate uppermost limit; MSL = ground elevation + the limit above ground",
+    accuracy: "The rule's own numbers, from a dated regulatory reference; the heights are as accurate as the structure height and ground elevation entered",
+    when_to_use: "Use this when planning an inspection or a flight beside a tower, a building, a bridge, or a similar structure. Enter the structure's height above the ground and your horizontal distance from it. The tool returns the highest altitude above ground the rule allows there, and says whether the structure exception applies. Add the ground elevation to get the limit as an altitude above mean sea level.",
+    limitations: "This states the Part 107 altitude rule and nothing else. Controlled airspace, a LAANC ceiling, a temporary flight restriction, or a waiver can set a lower or different limit, and the structure's owner may not allow the flight. The exception follows the structure, so the limit drops back to 400 ft above ground once you are more than 400 ft from it. It is a planning aid, not legal advice.",
+    references: PART107_ALTITUDE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "250 ft from a 1,150 ft tower",
+        input: r#"{"structure_height":"1150 ft","structure_distance":"250 ft"}"#,
+        source: "14 CFR 107.51(b): within 400 ft of the structure, 400 ft above its top is 1,550 ft above ground",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.ops.part107-altitude",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.mission.facade",
+            reason: "next",
+        },
+        Related {
+            id: "drone.mission.orbit",
+            reason: "next",
+        },
+    ],
+    sentence: PART107_ALTITUDE.sentence,
+    limits: &[("batchRows", 10_000)],
+    run: run_structure_altitude,
+    ..ToolDef::BLANK
+};
+
+fn run_structure_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    altitude(ctx)
+}
+
 fn run_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    altitude(ctx)
+}
+
+/// The Part 107 altitude limit. The structure operation declares the same
+/// inputs with the structure's height and distance required.
+fn altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let r = rule("faa-107-altitude");
     let ft = units::by_symbol(QT::Length, "ft").expect("ft");
     let lim = r.value; // ft

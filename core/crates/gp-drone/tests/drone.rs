@@ -396,6 +396,166 @@ fn focused_power_operations_match_their_general_tools() {
 }
 
 #[test]
+fn focused_mission_and_ops_operations_match_their_general_tools() {
+    // Structure altitude: the Part 107 tool's answer, with the structure required.
+    for input in [
+        serde_json::json!({"structure_height": "1150 ft", "structure_distance": "250 ft"}),
+        serde_json::json!({"structure_height": "300 ft", "structure_distance": "401 ft", "ground_elevation": "5280 ft"}),
+        serde_json::json!({"structure_height": "90 m", "structure_distance": "60 m", "ground_elevation": "640 ft", "geoid_height": "-17 m"}),
+    ] {
+        let named = call("drone.ops.structure-altitude", &input.to_string());
+        let general = call("drone.ops.part107-altitude", &input.to_string());
+        assert_eq!(named["ok"], true, "{named}");
+        assert_eq!(named["result"], general["result"], "{input}");
+    }
+    let edge = |d: &str| {
+        num(
+            &call(
+                "drone.ops.structure-altitude",
+                &serde_json::json!({"structure_height": "300 ft", "structure_distance": d})
+                    .to_string(),
+            ),
+            "result.max_agl.value",
+        )
+    };
+    // Exactly 400 ft away is within the radius; a foot more is not.
+    assert_eq!(edge("400 ft"), 700.0);
+    assert_eq!(edge("401 ft"), 400.0);
+    // With no structure there is nothing for this operation to answer.
+    assert_eq!(call("drone.ops.structure-altitude", "{}")["ok"], false);
+    assert_eq!(call("drone.ops.part107-altitude", "{}")["ok"], true);
+
+    // Crosshatch: the survey grid with its crosshatch switch on, and the sum of two single passes.
+    let site = serde_json::json!({
+        "area": [{"lat": 35, "lon": -100}, {"lat": 35, "lon": -99.99704}, {"lat": 35.0018, "lon": -99.99704}, {"lat": 35.0018, "lon": -100}],
+        "line_spacing": "45 m", "photo_spacing": "25 m", "groundspeed": "9 m/s", "height": "100 m"
+    });
+    let with = |extra: Value| {
+        let mut v = site.clone();
+        for (k, x) in extra.as_object().unwrap() {
+            v[k] = x.clone();
+        }
+        v.to_string()
+    };
+    let cross = call("drone.mission.crosshatch", &site.to_string());
+    let switched = call(
+        "drone.mission.survey-grid",
+        &with(serde_json::json!({"crosshatch": "yes"})),
+    );
+    assert_eq!(cross["ok"], true, "{}", cross["error"]);
+    assert_eq!(cross["result"], switched["result"]);
+    let first = call("drone.mission.survey-grid", &site.to_string());
+    let direction = num(&first, "result.direction.value");
+    let second = call(
+        "drone.mission.survey-grid",
+        &with(serde_json::json!({"direction": format!("{} deg", direction + 90.0)})),
+    );
+    for key in ["lines", "photos"] {
+        assert_eq!(
+            num(&cross, &format!("result.{key}")),
+            num(&first, &format!("result.{key}")) + num(&second, &format!("result.{key}")),
+            "{key}"
+        );
+    }
+    let survey = |r: &Value| num(r, "result.survey_length.value");
+    assert!((survey(&cross) - survey(&first) - survey(&second)).abs() < 1e-9);
+    // A crosshatch is not a setting to turn off here.
+    assert_eq!(
+        call(
+            "drone.mission.crosshatch",
+            &with(serde_json::json!({"crosshatch": "no"}))
+        )["ok"],
+        false
+    );
+
+    // Geofence check: the geofence tool's verdict on the same waypoints.
+    let fence = serde_json::json!({
+        "area": [{"lat": 41, "lon": -96}, {"lat": 41, "lon": -95.997}, {"lat": 41.002, "lon": -95.997}, {"lat": 41.002, "lon": -96}],
+        "distance": "40 m", "warning_distance": "25 m",
+        "waypoints": [{"lat": 41.001, "lon": -95.9985}, {"lat": 41.0022, "lon": -95.9985}, {"lat": 41.0026, "lon": -95.9985}, {"lat": 41.00232, "lon": -95.9985}]
+    });
+    let check = call("drone.mission.geofence-check", &fence.to_string());
+    let general = call("drone.mission.geofence", &fence.to_string());
+    assert_eq!(check["ok"], true, "{}", check["error"]);
+    for key in ["outside_count", "warning_count", "flagged", "max_deviation"] {
+        assert_eq!(check["result"][key], general["result"][key], "{key}");
+    }
+    // 22 m north is inside both fences, 36 m is past the warning fence, 67 m is outside.
+    assert_eq!(num(&check, "result.waypoints_checked"), 4.0);
+    assert_eq!(num(&check, "result.outside_count"), 1.0);
+    assert_eq!(num(&check, "result.warning_count"), 1.0);
+    assert!(codes(&check).contains(&"WAYPOINT_OUTSIDE_GEOFENCE".to_owned()));
+    assert!(check["result"]["fence"].is_null());
+    // The check needs something to check.
+    let mut none = fence.clone();
+    none.as_object_mut().unwrap().remove("waypoints");
+    assert_eq!(
+        call("drone.mission.geofence-check", &none.to_string())["ok"],
+        false
+    );
+    assert_eq!(
+        call("drone.mission.geofence", &none.to_string())["ok"],
+        true
+    );
+}
+
+#[test]
+fn pattern_stats_invariants() {
+    let stats = |points: &[(f64, f64)], speed: Option<&str>| {
+        let mut input = serde_json::json!({
+            "waypoints": points.iter().map(|(lat, lon)| serde_json::json!({"lat": lat, "lon": lon})).collect::<Vec<_>>()
+        });
+        if let Some(v) = speed {
+            input["groundspeed"] = serde_json::json!(v);
+        }
+        call("drone.mission.pattern-stats", &input.to_string())
+    };
+    let km = |r: &Value| num(r, "result.path_length.value");
+    let box_path = [
+        (44.98, -93.27),
+        (44.9818, -93.27),
+        (44.9818, -93.2662),
+        (44.98, -93.2662),
+        (44.98, -93.27),
+    ];
+    let r = stats(&box_path, Some("8 m/s"));
+    assert_eq!(r["ok"], true, "{r}");
+    assert_eq!(num(&r, "result.legs"), 4.0);
+    // A closed box turns three times on the way round and about 270° in all.
+    assert_eq!(num(&r, "result.turns"), 3.0);
+    assert!((num(&r, "result.total_turning.value") - 270.0).abs() < 0.01);
+    // Time is length over speed.
+    assert!((num(&r, "result.flight_time.value") * 60.0 * 8.0 / 1000.0 - km(&r)).abs() < 1e-12);
+    // The path flown backwards is as long, with the same turns.
+    let mut reversed = box_path;
+    reversed.reverse();
+    let back = stats(&reversed, None);
+    assert!((km(&back) - km(&r)).abs() < 1e-12);
+    assert_eq!(num(&back, "result.turns"), 3.0);
+    assert!(back["result"]["flight_time"].is_null());
+    // A straight line has no turns, and its far end is the farthest point.
+    let line = stats(&[(0.0, 10.0), (0.0, 10.001), (0.0, 10.002)], None);
+    assert_eq!(num(&line, "result.turns"), 0.0);
+    assert!((num(&line, "result.farthest_from_start.value") / 1000.0 - km(&line)).abs() < 1e-9);
+    // Out and back: twice the leg, one turn of 180°, and the farthest point is the leg.
+    let out_back = stats(&[(51.5, -0.12), (51.501, -0.118), (51.5, -0.12)], None);
+    assert_eq!(num(&out_back, "result.turns"), 1.0);
+    assert!((num(&out_back, "result.total_turning.value") - 180.0).abs() < 1e-6);
+    assert!(
+        (num(&out_back, "result.farthest_from_start.value") * 2.0 / 1000.0 - km(&out_back)).abs()
+            < 1e-9
+    );
+    // Splitting a leg at its midpoint adds a leg, not length.
+    let whole = stats(&[(40.0, -105.0), (40.002, -105.0)], None);
+    let split = stats(&[(40.0, -105.0), (40.001, -105.0), (40.002, -105.0)], None);
+    assert!((km(&whole) - km(&split)).abs() < 1e-9);
+    assert_eq!(num(&split, "result.legs"), 2.0);
+    // A repeated waypoint has no course to turn from.
+    let repeat = stats(&[(40.0, -105.0), (40.0, -105.0), (40.001, -105.0)], None);
+    assert_eq!(repeat["error"]["field"], "/waypoints/1");
+}
+
+#[test]
 fn one_inch_at_100_m() {
     let r = call(
         "drone.photogrammetry.gsd",

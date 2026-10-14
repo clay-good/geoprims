@@ -42,6 +42,4 @@ None for indexes and tokens. Areas are on a sphere of the Earth's mean radius, n
 
 ## Invariants
 
-- Converting twice returns the tile.
-- The column and zoom never change.
-- At zoom 0 both schemes are 0/0/0.
+- `core/crates/gp-indexing/tests/s2_tile_views_invariants.rs` `tile_views_invariants`: converting twice returns the tile, the column and zoom never change, and at zoom 0 both schemes are 0/0/0.

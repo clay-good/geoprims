@@ -44,6 +44,4 @@ None for indexes and tokens. Areas are on a sphere of the Earth's mean radius, n
 
 ## Invariants
 
-- A cell's four children's areas add up to its own.
-- The ratio stays between about 0.5 and 1.5.
-- The areas of all cells at a level add up to the sphere.
+- `core/crates/gp-indexing/tests/s2_tile_views_invariants.rs` `s2_views_invariants`: a cell's children's areas add up to its own to 1 part in 10⁹, the ratio to the level average stays between 0.5 and 1.5, and the six face cells add up to six times the level-0 average, the whole sphere.

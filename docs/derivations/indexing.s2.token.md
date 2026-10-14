@@ -44,6 +44,4 @@ None for indexes and tokens. Areas are on a sphere of the Earth's mean radius, n
 
 ## Invariants
 
-- Token to id and back returns the token.
-- A decimal id of 17 or more digits is read as an id.
-- The level of a cell's parent is one less.
+- `core/crates/gp-indexing/tests/s2_tile_views_invariants.rs` `s2_views_invariants`: a token's decimal id is 17 or more digits, and reading that id back gives the token.

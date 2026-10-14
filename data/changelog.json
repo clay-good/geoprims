@@ -5,6 +5,20 @@
       "date": "2026-10-14",
       "kind": "changed",
       "tools": [
+        "indexing.s2.area",
+        "indexing.s2.hierarchy",
+        "indexing.s2.token",
+        "indexing.s2.vertices",
+        "indexing.tile.xyz-tms",
+        "indexing.tile.tile-quadkey"
+      ],
+      "vectors": [],
+      "summary": "The focused S2 operations (cell area, hierarchy, token, and vertices), held to s2sphere, and the XYZ-TMS and quadkey tile conversions, held to the slippy-map and quadkey definitions, are now stable, with a new invariants test for areas, parents, corners, and round trips. Results are unchanged."
+    },
+    {
+      "date": "2026-10-14",
+      "kind": "changed",
+      "tools": [
         "geodesy.ellipsoid.degree-lengths",
         "geodesy.ellipsoid.meridian-arc",
         "geodesy.grid-ref.grid-zone-lookup",

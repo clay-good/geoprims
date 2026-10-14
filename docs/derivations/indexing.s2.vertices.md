@@ -43,6 +43,4 @@ None for indexes and tokens. Areas are on a sphere of the Earth's mean radius, n
 
 ## Invariants
 
-- Every corner is shared by the cell's neighbors.
-- A cell's corners lie inside or on its parent.
-- The corners are counterclockwise seen from outside the sphere.
+- `core/crates/gp-indexing/tests/s2_tile_views_invariants.rs` `s2_views_invariants`: a cell has four corners, counterclockwise seen from outside the sphere, and each is also a corner of one of its neighbors.

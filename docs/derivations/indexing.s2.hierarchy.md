@@ -43,6 +43,4 @@ None for indexes and tokens. Areas are on a sphere of the Earth's mean radius, n
 
 ## Invariants
 
-- Six parent steps reach the level 6 ancestor.
-- Each child's parent is the cell.
-- Level 0 has no parent and level 30 no children.
+- `core/crates/gp-indexing/tests/s2_tile_views_invariants.rs` `s2_views_invariants`: each child's parent is the cell, one level finer; a parent is one level coarser; stepping up parent by parent reaches the ancestor asked for; level 0 has no parent; and level 30 has no children.

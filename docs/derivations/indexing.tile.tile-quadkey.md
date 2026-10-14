@@ -43,6 +43,4 @@ None for indexes and tokens. Areas are on a sphere of the Earth's mean radius, n
 
 ## Invariants
 
-- A tile's quadkey begins with its parent's.
-- Reading a quadkey back gives the tile.
-- Quadkeys always count rows from the north.
+- `core/crates/gp-indexing/tests/s2_tile_views_invariants.rs` `tile_views_invariants`: a quadkey has one digit per zoom level and begins with its parent tile's, reading it back gives the tile, and a TMS tile gives the same quadkey as its XYZ twin, since quadkeys count rows from the north.

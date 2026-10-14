@@ -3,14 +3,14 @@
 //! a thermal camera's pixel footprint with the smallest target it can
 //! measure reliably.
 
+use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::tool::{
-    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef, Q,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
 };
 use gp_base::units::Quantity as QT;
-use gp_base::ErrorCode;
 
 use crate::unit;
 

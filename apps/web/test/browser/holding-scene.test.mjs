@@ -29,10 +29,15 @@ test('the holding playhead scrubs, persists, and still works with reduced motion
   await page.waitForFunction(() => location.hash.startsWith('#v1:'));
   assert.match(await page.locator('.diagram').textContent(), /heading [\d.]+°/);
   const scrubbed = Number(await range.inputValue());
+  const scrubbedPoints = await aircraft.getAttribute('points');
 
   const permalink = page.url();
   await page.reload();
-  await page.waitForSelector('.diagram polygon.dg-dot-now');
+  // The built page ships the example's own scene, so the aircraft and the
+  // range are in the static HTML at the end of the hold, before any script
+  // runs. Waiting for the dot alone reads that page, not the restored one:
+  // wait for the permalink's frame to be drawn.
+  await page.waitForFunction((points) => document.querySelector('.diagram polygon.dg-dot-now')?.getAttribute('points') === points, scrubbedPoints);
   assert.equal(page.url(), permalink);
   assert.ok(Math.abs(Number(await page.locator('.timeline input[type="range"]').inputValue()) - scrubbed) < 0.11);
   assert.equal(await page.locator('.timeline button').getAttribute('aria-pressed'), 'false');

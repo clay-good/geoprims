@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
-import { cpuRate } from '../../scripts/cpu.mjs';
+import { cpuRate, onTarget } from '../../scripts/cpu.mjs';
 import { web } from './site.mjs';
 
 const root = join(web, '../..');
@@ -84,5 +84,8 @@ test('100,000-vertex scenes pan at p95 within one 60 Hz frame', { timeout: 300_0
   });
   if (result.parts) t.diagnostic(`parts: ${JSON.stringify(result.parts)} globe: ${JSON.stringify(result.globeParts)}`);
   t.diagnostic(`${(await cpuRate(browser, profile)).rate}x CPU (host BenchmarkIndex ${(await cpuRate(browser, profile)).hostIndex}, canvas index ${(await cpuRate(browser, profile)).canvasIndex}, target ${profile.cpu.targetBenchmarkIndex}): map p50 ${result.map.p50.toFixed(1)} ms, p95 ${result.map.p95.toFixed(1)} ms · globe p50 ${result.globe.p50.toFixed(1)} ms, p95 ${result.globe.p95.toFixed(1)} ms`);
-  for (const mode of ['map', 'globe']) assert.ok(result[mode].p95 <= 16.7, `${mode}: p95 ${result[mode].p95.toFixed(1)} ms`);
+  for (const mode of ['map', 'globe']) {
+    const ref = onTarget(result[mode].p95, await cpuRate(browser, profile), profile.cpu.targetBenchmarkIndex);
+    assert.ok(ref <= 16.7, `${mode}: p95 ${result[mode].p95.toFixed(1)} ms, ${ref.toFixed(1)} ms on target`);
+  }
 });

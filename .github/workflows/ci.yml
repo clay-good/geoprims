@@ -80,7 +80,10 @@ jobs:
         run: npm run test:browser --prefix apps/web
       - name: Chromium reference benchmark
         run: npm run bench:browser --prefix apps/web -- --baseline ../../data/performance-baselines/chromium-1.1.0.json --output ../../chromium-benchmark.json > chromium-benchmark.md
+      # The benchmark writes its report before it judges it, so a failing run
+      # still has the table and the JSON a baseline refresh is built from.
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: chromium-benchmark
           path: |

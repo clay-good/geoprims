@@ -1,7 +1,7 @@
 //! Thermal-footprint properties beyond the individual golden cases.
 
 use gp_drone::REGISTRY;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 fn run(input: Value) -> Value {
     let response: Value = serde_json::from_str(

@@ -3,7 +3,7 @@
 // throttle dedicated workers, so timing the site's compute worker would not
 // measure the reference profile (platform/verification).
 import { spawn } from 'node:child_process';
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -48,7 +48,11 @@ async function main() {
   const benchDir = join(web, 'dist', benchPath);
   mkdirSync(benchDir);
   const { workflows } = JSON.parse(readFileSync(join(root, 'data/workflows.json'), 'utf8'));
-  for (const name of ['module.mjs', 'harden.mjs', 'assets.mjs', 'chain.mjs']) {
+  // Every runtime module, not the few the page imports by name: module.mjs
+  // grew an import of files.mjs, which this list did not copy, and the
+  // benchmark died on a dynamic import that resolved to nothing. Copying the
+  // whole source keeps a new sibling from breaking it again.
+  for (const name of readdirSync(join(root, 'packages/runtime/src')).filter((f) => f.endsWith('.mjs') && !f.endsWith('.test.mjs'))) {
     copyFileSync(join(root, 'packages/runtime/src', name), join(benchDir, name));
   }
   writeFileSync(join(benchDir, 'index.html'), '<!doctype html><html lang="en"><title>geoprims benchmark</title></html>');

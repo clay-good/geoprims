@@ -126,14 +126,27 @@ after download. It then runs every workflow's whole chain through the
 shared chain runner, 5 warm-up and 50 timed runs each, and fails when the
 mapping-flight chain's p95 is over 300 ms (add-job-workflows); on 2026-10-07
 it was 65 ms for all nine steps. `--workflows-only` skips the per-tool pass.
-CI compares every tool with the checked-in artifact from successful run
-38069366698 at commit `ddc1bfa8`, and uploads the new table and JSON. A p95
+CI compares every tool with the checked-in artifact from run
+38482406532 at commit `90d3d55e`. That run measured all 390 tools and then
+failed the very comparison this baseline replaces, which is why the table and
+JSON are uploaded on every run, including a failing one. A p95
 increase over 20% and 0.5 ms fails, so timer granularity cannot turn a 0.1 ms
 call into a false regression. The same run enforces `data/performance-budgets.json`:
 2 ms by default for closed-form tools, 10 ms for iterative tools, and an
 explicit ceiling and scaling input for every list or data-proportional tool.
-It also holds cold module instantiation to 150 ms. The 2026-10-10 baseline has
-372 tools; all pass their execution budgets.
+It also holds cold module instantiation to 150 ms. The 2026-10-13 baseline has
+390 tools; all pass their execution budgets.
+
+Refresh the baseline when a tool legitimately starts doing more work, not to
+quiet a regression whose cause is unknown. The 2026-10-10 baseline was replaced
+because four tools had grown past it for reasons their changelog entries state:
+`time.sun.position` computes a day-night boundary on every call since the solar
+terminator landed, `indexing.h3.polygon-to-cells` gained fill modes, and
+`drone.mission.survey-grid` and `time.sun.aviation-nights` followed their own
+feature work. Take the JSON from the run's `chromium-benchmark` artifact, add
+`sourceCommit` and `sourceRun`, and check it in: it has to come from a CI run,
+because a laptop reads these times differently even throttled to the same
+target.
 
 ## Changing the profile
 

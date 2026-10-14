@@ -179,7 +179,7 @@ pub static SIDESHOTS: ToolDef = ToolDef {
     ],
     sentence: "Calculated {count} radial points from northing {station_northing}, easting {station_easting}.",
     limits: &[("batchRows", 1_000)],
-    run: run,
+    run,
     ..ToolDef::BLANK
 };
 

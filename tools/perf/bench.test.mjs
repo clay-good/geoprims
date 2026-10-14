@@ -29,6 +29,30 @@ test('a slowed tool fails the baseline comparison and appears in the output tabl
   assert.equal(newTool.regression, false);
 });
 
+test('a rise the whole run shares is the host, and a tool that rises past it is still a regression', () => {
+  const ids = Array.from({ length: 40 }, (_, i) => `fixture.tool.t${i}`);
+  const shape = { profile: '1.1.0', host: 'chromium', samples: 1000 };
+  const baseline = { ...shape, tools: ids.map((id, i) => ({ id, p95Ms: 0.7 + (i % 5) })) };
+  const shifted = (extra = () => 0) => ({
+    ...shape,
+    tools: baseline.tools.map((t, i) => ({ id: t.id, p50Ms: 0.1, p95Ms: t.p95Ms + 0.4 + (i % 3) * 0.1 + extra(t.id) })),
+  });
+  // Run 38490441839: every tool 0.4 to 0.6 ms later on a faster, harder-throttled runner.
+  const sameBuild = compare(shifted(), baseline);
+  assert.equal(sameBuild[0].hostShiftMs.toFixed(1), '0.5');
+  assert.deepEqual(sameBuild.filter((r) => r.regression), []);
+  // On that same runner, one tool that really slowed down is found.
+  const slowed = compare(shifted((id) => (id === 'fixture.tool.t7' ? 2 : 0)), baseline);
+  assert.deepEqual(slowed.filter((r) => r.regression).map((r) => r.id), ['fixture.tool.t7']);
+  // A faster run is not turned into regressions for the tools that held still.
+  const faster = { ...shape, tools: baseline.tools.map((t, i) => ({ id: t.id, p50Ms: 0.1, p95Ms: i === 3 ? t.p95Ms : t.p95Ms - 0.4 })) };
+  assert.equal(compare(faster, baseline)[0].hostShiftMs, 0);
+  assert.deepEqual(compare(faster, baseline).filter((r) => r.regression), []);
+  // A handful of tools is too few to tell a host from a regression: no shift is assumed.
+  const few = { ...shape, tools: shifted().tools.slice(0, 5) };
+  assert.equal(compare(few, { ...baseline, tools: baseline.tools.slice(0, 5) })[0].hostShiftMs, 0);
+});
+
 test('every list tool declares a data-proportional p95 budget', () => {
   const catalog = {
     tools: [

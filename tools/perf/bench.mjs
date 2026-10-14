@@ -11,6 +11,8 @@ const WARMUP = 50;
 const SAMPLES = 1000;
 const REGRESSION_PERCENT = 20;
 const REGRESSION_FLOOR_MS = 0.5;
+// A run-wide shift is only estimated from a catalog-sized comparison.
+const HOST_SHIFT_MIN_TOOLS = 20;
 const BUDGET_KINDS = new Set(['closed-form', 'iterative', 'data-proportional']);
 
 export function percentile(sorted, percent) {
@@ -40,17 +42,37 @@ export function compare(report, baseline) {
   if (report.cpuTarget !== baseline.cpuTarget) throw new Error('baseline emulates a different CPU target');
   if (report.samples < 1000 || baseline.samples < 1000) throw new Error('both reports need at least 1,000 measured calls per tool');
   const previous = new Map(baseline.tools.map((t) => [t.id, t]));
+  const hostShiftMs = hostShift(report, previous);
   return report.tools.map((row) => {
     const old = previous.get(row.id);
     const change = old?.p95Ms > 0 ? (row.p95Ms / old.p95Ms - 1) * 100 : null;
-    const absoluteChange = old ? row.p95Ms - old.p95Ms : null;
+    // A regression is a tool that rose past what the whole run rose by.
+    const expected = old ? old.p95Ms + hostShiftMs : null;
     return {
       ...row,
       previousP95Ms: old?.p95Ms ?? null,
       changePercent: change,
-      regression: change !== null && change > REGRESSION_PERCENT && absoluteChange > REGRESSION_FLOOR_MS,
+      hostShiftMs,
+      regression: change !== null
+        && row.p95Ms > expected * (1 + REGRESSION_PERCENT / 100)
+        && row.p95Ms - expected > REGRESSION_FLOOR_MS,
     };
   });
+}
+
+// The p95 rise every tool shares on this host: the median change across the
+// catalog, never below zero. Runners differ twofold in speed and the
+// calibrated throttle is not linear, so a run on a fast runner at 6× reads
+// every call about 0.4 ms later than the same build on a slow one at 3.2×
+// (runs 38482406532 and 38490441839, which differ by a README). One tool
+// cannot move the median, so a real regression still stands out from it.
+export function hostShift(report, previous) {
+  const changes = report.tools
+    .filter((row) => previous.get(row.id)?.p95Ms > 0)
+    .map((row) => row.p95Ms - previous.get(row.id).p95Ms)
+    .sort((a, b) => a - b);
+  if (changes.length < HOST_SHIFT_MIN_TOOLS) return 0;
+  return Math.max(0, percentile(changes, 0.5));
 }
 
 function arrayInputs(tool) {
@@ -134,7 +156,7 @@ async function main() {
   if (output) writeFileSync(output, JSON.stringify(report, null, 2) + '\n');
   const regressions = rows.filter((r) => r.regression);
   if (regressions.length > 0) {
-    console.error(`${regressions.length} tool(s) exceed the ${REGRESSION_PERCENT}% p95 regression limit; see the table above`);
+    console.error(`${regressions.length} tool(s) exceed the ${REGRESSION_PERCENT}% p95 regression limit: ${regressions.map((r) => `${r.id} ${r.previousP95Ms.toFixed(1)} to ${r.p95Ms.toFixed(1)} ms`).join('; ')}`);
     process.exitCode = 1;
   }
 }

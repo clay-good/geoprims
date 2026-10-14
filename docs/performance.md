@@ -131,7 +131,16 @@ CI compares every tool with the checked-in artifact from run
 failed the very comparison this baseline replaces, which is why the table and
 JSON are uploaded on every run, including a failing one. A p95
 increase over 20% and 0.5 ms fails, so timer granularity cannot turn a 0.1 ms
-call into a false regression. The same run enforces `data/performance-budgets.json`:
+call into a false regression. Both are measured after taking off the median
+rise across the whole run, never less than zero, when at least 20 tools are
+compared. Runners differ twofold in speed, and the calibrated throttle is not
+linear: run 38490441839, a README-only commit on a runner throttled 5.96×
+against the baseline's 3.24×, read every one of the 390 tools 0.1 to 0.7 ms
+later (median 0.4 ms), and `indexing.s2.cell-info` crossed the 0.5 ms floor by
+a rounding error. A rise every tool shares is the host; one tool cannot move
+the median, so a tool that slows down still stands out from it, and the failing
+line now names it. A slowdown of the whole core would hide in the median, which
+is what the absolute budgets below are for. The same run enforces `data/performance-budgets.json`:
 2 ms by default for closed-form tools, 10 ms for iterative tools, and an
 explicit ceiling and scaling input for every list or data-proportional tool.
 It also holds cold module instantiation to 150 ms. The 2026-10-13 baseline has

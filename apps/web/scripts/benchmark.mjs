@@ -154,6 +154,7 @@ async function main() {
     const budgetPath = option('--budgets') ?? join(root, 'data/performance-budgets.json');
     const rows = applyBudgets({ ...report, tools: compared }, JSON.parse(readFileSync(budgetPath, 'utf8')), catalog);
     console.log(`Chromium benchmark: profile ${profile.version}, ${cpu.rate}× CPU slowdown (host BenchmarkIndex ${cpu.hostIndex}, target ${profile.cpu.targetBenchmarkIndex}), ${WARMUP} warm-up and ${SAMPLES} measured calls per tool`);
+    if (baseline && rows[0]?.hostShiftMs > 0) console.log(`Every tool's p95 is compared after taking off ${rows[0].hostShiftMs.toFixed(3)} ms, the median rise across this run (the host, not a tool).`);
     if (tools.length) console.log(table(rows));
     console.log(`\nWorkflow chains (${CHAIN_WARMUP} warm-up and ${CHAIN_SAMPLES} measured runs each)\n`);
     console.log('| Workflow | Steps | p50 ms | p95 ms | Budget |\n|---|---|---|---|---|');
@@ -172,7 +173,7 @@ async function main() {
     }
     const regressions = rows.filter((r) => r.regression);
     if (regressions.length > 0) {
-      console.error(`${regressions.length} tool(s) exceed the 20% p95 regression limit; see the table above`);
+      console.error(`${regressions.length} tool(s) exceed the 20% p95 regression limit: ${regressions.map((r) => `${r.id} ${r.previousP95Ms.toFixed(1)} to ${r.p95Ms.toFixed(1)} ms`).join('; ')}`);
       process.exitCode = 1;
     }
     const overBudget = rows.filter((r) => r.overBudget);

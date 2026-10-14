@@ -1036,7 +1036,7 @@ fn run_events(ctx: &mut Ctx) -> Result<Json, ToolError> {
         );
         ctx.step(
             "Sunrise altitude",
-            "−0.8333° for the sun's radius and refraction, less the dip from height",
+            "−0.833° for the sun's radius and refraction, less the dip from height",
             format!("{}° − {}° of dip", n(SUNRISE_ALTITUDE, 4), n(dip, 4)),
             format!("{}°", n(SUNRISE_ALTITUDE - dip, 4)),
         );
@@ -1316,7 +1316,7 @@ fn run_nights(ctx: &mut Ctx) -> Result<Json, ToolError> {
         // is which boundary each rule uses, not the solver behind them.
         ctx.step(
             "Sunset and sunrise",
-            "the sun's centre at −0.8333°, its radius and refraction allowed for",
+            "the sun's centre at −0.833°, its radius and refraction allowed for",
             format!("at {}°, {}°", lat, lon),
             window(s, r, off),
         );

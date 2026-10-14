@@ -5,7 +5,7 @@
 
 14 CFR 61.57(b) says a pilot may not carry passengers at night unless, within the preceding 90 days, they have made three takeoffs and three full-stop landings — each in the same category and class — during the period from **one hour after sunset to one hour before sunrise**. Three questions follow, and the tool answers all three: which of your logged events count, whether you are current on a date, and the day currency lapses.
 
-Which events count is a sun question. For each event the tool finds sunset at its place on the evening the event belongs to, and sunrise the next morning, with sunrise and sunset at the sun's centre −0.8333° — 34′ of refraction plus the 16′ semidiameter. An hour is added to the first and subtracted from the second. A time before local noon belongs to the night that began the evening before, which is how a 04:00 landing gets counted against the right sunset.
+Which events count is a sun question. For each event the tool finds sunset at its place on the evening the event belongs to, and sunrise the next morning, with sunrise and sunset at the sun's centre −0.833°, NOAA's rounding of 34′ of refraction plus the 16′ semidiameter. An hour is added to the first and subtracted from the second. A time before local noon belongs to the night that began the evening before, which is how a 04:00 landing gets counted against the right sunset.
 
 The counting is then bookkeeping, and the two parts of it are easy to get wrong in opposite directions. Takeoffs and landings are counted **separately** — three takeoffs and two landings is not currency. And they are counted **per category and class** — a multi-engine night does nothing for single-engine currency.
 
@@ -13,7 +13,7 @@ Currency runs through the 90th day after the older of the third most recent qual
 
 ## Equations
 
-- Night period for an event at place p on the night beginning evening D: [sunset(p, D) + 1 h, sunrise(p, D+1) − 1 h], sun centre at −0.8333°.
+- Night period for an event at place p on the night beginning evening D: [sunset(p, D) + 1 h, sunrise(p, D+1) − 1 h], sun centre at −0.833°.
 - An event before local noon belongs to evening D − 1.
 - Per category and class: t₃ = date of the third most recent qualifying takeoff; l₃ likewise for full-stop landings.
 - through = min(t₃, l₃) + 90 days; current on a date when date ≤ through.

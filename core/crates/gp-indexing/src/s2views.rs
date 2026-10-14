@@ -20,7 +20,7 @@ macro_rules! view {
     ($name:ident, $id:literal, $run:ident, $title:literal, $summary:literal,
      $aliases:expr, $keywords:expr, $inputs:expr, $outputs:expr, $refs:expr,
      $when:literal, $limits:literal, $ex_title:literal, $ex:literal, $related:expr,
-     $sentence:literal) => {
+     $sentence:literal $(, $assumptions:expr)?) => {
         pub static $name: ToolDef = ToolDef {
             id: $id,
             title: $title,
@@ -46,6 +46,7 @@ macro_rules! view {
             visualization: TABLE,
             related: $related,
             sentence: $sentence,
+            $(assumptions: $assumptions,)?
             limits: &[("batchRows", 10_000)],
             run: $run,
             ..ToolDef::BLANK
@@ -246,7 +247,8 @@ view!(
     "A level 15 cell over Sydney",
     r#"{"cell":"6b12ae3fc"}"#,
     rel!("indexing.s2.cell-info" => "parent", "indexing.s2.vertices" => "alternative", "indexing.h3.cell-area" => "alternative"),
-    "The cell covers {area}, {ratio} of its level's average."
+    "The cell covers {area}, {ratio} of its level's average.",
+    crate::s2tools::CELL_INFO.assumptions
 );
 
 fn run_s2_area(ctx: &mut Ctx) -> Result<Json, ToolError> {

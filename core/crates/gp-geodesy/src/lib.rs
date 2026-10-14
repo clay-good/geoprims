@@ -1781,6 +1781,7 @@ pub static SCALE_FACTOR: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[UTM_FORWARD.assumptions[0]],
     sentence: "The grid scale factor here is {scale}, in UTM zone {zone}.",
     limits: UTM_FORWARD.limits,
     run: run_scale_factor,

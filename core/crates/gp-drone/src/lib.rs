@@ -1766,6 +1766,7 @@ pub static MAX_SHUTTER: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: MOTION_BLUR.assumptions,
     sentence: "Use a shutter of {max_exposure_fraction} or faster.",
     limits: &[("batchRows", 10_000)],
     run: run_max_shutter,

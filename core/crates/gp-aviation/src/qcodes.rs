@@ -12,7 +12,9 @@ use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::regulation::rule;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::pow;
 
@@ -160,6 +162,43 @@ pub static Q_CODES: ToolDef = ToolDef {
         Related {
             id: "aviation.altimetry.pressure-per-height",
             reason: "next",
+        },
+    ],
+    assumptions: &[
+        crate::PRESSURE_ALTITUDE.assumptions[0],
+        crate::PRESSURE_ALTITUDE.assumptions[1],
+        crate::PRESSURE_ALTITUDE.assumptions[2],
+        crate::PRESSURE_ALTITUDE.assumptions[3],
+        crate::PRESSURE_ALTITUDE.assumptions[4],
+        Assumption {
+            name: "NWS altimeter formula exponent",
+            value: "0.190284",
+            unit: "1",
+            source: "nws-wxcalc-altimeter",
+        },
+        Assumption {
+            name: "NWS station-pressure offset",
+            value: "0.3",
+            unit: "hPa",
+            source: "nws-wxcalc-altimeter",
+        },
+        Assumption {
+            name: "NWS reference pressure",
+            value: "1013.25",
+            unit: "hPa",
+            source: "nws-wxcalc-altimeter",
+        },
+        Assumption {
+            name: "NWS reference temperature",
+            value: "288",
+            unit: "K",
+            source: "nws-wxcalc-altimeter",
+        },
+        Assumption {
+            name: "NWS lapse rate",
+            value: "0.0065",
+            unit: "K/m",
+            source: "nws-wxcalc-altimeter",
         },
     ],
     sentence: "QFE is {qfe} and QNH is {qnh}; the field's pressure altitude is {qne}.",
@@ -365,6 +404,13 @@ pub static FLIGHT_LEVEL: ToolDef = ToolDef {
             id: "aviation.altimetry.pressure-altitude",
             reason: "parent",
         },
+    ],
+    assumptions: &[
+        crate::PRESSURE_ALTITUDE.assumptions[0],
+        crate::PRESSURE_ALTITUDE.assumptions[1],
+        crate::PRESSURE_ALTITUDE.assumptions[2],
+        crate::PRESSURE_ALTITUDE.assumptions[3],
+        crate::PRESSURE_ALTITUDE.assumptions[4],
     ],
     sentence: "The lowest usable flight level is FL{lowest_usable_fl}.",
     limits: &[("batchRows", 10_000)],

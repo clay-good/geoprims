@@ -52,8 +52,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/flight-level/": {
-    "hash": "339c011c53bc0293",
-    "lastmod": "2026-10-13"
+    "hash": "a8ca856c7eddcfe3",
+    "lastmod": "2026-10-14"
   },
   "/aviation/altimetry/isa-temperature/": {
     "hash": "efa48c4effab2a20",
@@ -68,8 +68,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/altimetry/q-codes/": {
-    "hash": "955c0ea9078cc00a",
-    "lastmod": "2026-10-10"
+    "hash": "62a9469555efcaa2",
+    "lastmod": "2026-10-14"
   },
   "/aviation/altimetry/true-altitude/": {
     "hash": "27c06898907638a3",
@@ -360,7 +360,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/ops/structure-altitude/": {
-    "hash": "b6a8473d8d2b257e",
+    "hash": "394d9dd5a28e3e51",
     "lastmod": "2026-10-14"
   },
   "/drone/ops/vlos-check/": {
@@ -384,7 +384,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/checkpoint-requirements/": {
-    "hash": "92fb5be17acabbe0",
+    "hash": "894ed3487bcc9e2b",
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/crop-factor/": {
@@ -412,7 +412,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/max-shutter/": {
-    "hash": "f8c1ec91c2b0a1ee",
+    "hash": "c1c45d9a19ac502d",
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/motion-blur/": {
@@ -472,11 +472,11 @@
     "lastmod": "2026-10-13"
   },
   "/drone/power/payload-impact/": {
-    "hash": "c3b55c687d3fec0e",
+    "hash": "ed089655eec575d3",
     "lastmod": "2026-10-14"
   },
   "/drone/power/range/": {
-    "hash": "05cd7397c719b103",
+    "hash": "5d7a835296a0a642",
     "lastmod": "2026-10-14"
   },
   "/drone/power/rth-budget/": {
@@ -708,15 +708,15 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/magnetic/isogonic/": {
-    "hash": "9a1733e48d656c81",
+    "hash": "a4470c3ecfddaf03",
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/magnetic-to-true/": {
-    "hash": "b4390f82689d1243",
+    "hash": "7899ffe0820afe86",
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/model-compare/": {
-    "hash": "5dbe8a7c1f7b9db9",
+    "hash": "f7f1b7fc0b65f2e2",
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
@@ -724,7 +724,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/uncertainty-zone/": {
-    "hash": "41c2968458f65672",
+    "hash": "e15dd74f3e301288",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/": {
@@ -844,7 +844,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/scale-factor/": {
-    "hash": "5ac3317f242a6f63",
+    "hash": "ed07f5e5fbf5c05a",
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/tm-exact-forward/": {
@@ -1212,7 +1212,7 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/s2/area/": {
-    "hash": "272c1e9aaa2e0b2c",
+    "hash": "d0f1d92fd452e943",
     "lastmod": "2026-10-14"
   },
   "/indexing/s2/cell-info/": {
@@ -2048,12 +2048,12 @@
     "lastmod": "2026-09-26"
   },
   "/time/sun/aviation-nights/": {
-    "hash": "9f0bb6c68cee9607",
-    "lastmod": "2026-10-13"
+    "hash": "bca6398234be1354",
+    "lastmod": "2026-10-14"
   },
   "/time/sun/events/": {
-    "hash": "dfadb0760f9a983b",
-    "lastmod": "2026-10-09"
+    "hash": "6a569e6622e83bed",
+    "lastmod": "2026-10-14"
   },
   "/time/sun/hotspot/": {
     "hash": "bdd60ab53d159f4b",
@@ -2064,8 +2064,8 @@
     "lastmod": "2026-10-13"
   },
   "/time/sun/night-currency/": {
-    "hash": "56cca9d979aab4f2",
-    "lastmod": "2026-10-13"
+    "hash": "a881c3812cbea35a",
+    "lastmod": "2026-10-14"
   },
   "/time/sun/position/": {
     "hash": "31842edf228143b5",
@@ -2336,7 +2336,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "17d6040e13875181",
+    "hash": "3def2b7a2705cb79",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

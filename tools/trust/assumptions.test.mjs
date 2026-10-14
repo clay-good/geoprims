@@ -118,6 +118,20 @@ const MUST_DECLARE = [
   'drone.links.link-budget',
   'drone.photogrammetry.asprs-accuracy',
   'drone.photogrammetry.gcp-plan',
+  'geodesy.magnetic.isogonic',
+  'geodesy.magnetic.magnetic-to-true',
+  'geodesy.magnetic.model-compare',
+  'geodesy.magnetic.uncertainty-zone',
+  'geodesy.projection.scale-factor',
+  'indexing.s2.area',
+  'drone.ops.structure-altitude',
+  'drone.photogrammetry.checkpoint-requirements',
+  'drone.photogrammetry.max-shutter',
+  'time.sun.night-currency',
+  'aviation.altimetry.flight-level',
+  'aviation.altimetry.q-codes',
+  'drone.power.payload-impact',
+  'drone.power.range',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

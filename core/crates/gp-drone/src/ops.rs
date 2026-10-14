@@ -486,6 +486,7 @@ pub static STRUCTURE_ALTITUDE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: PART107_ALTITUDE.assumptions,
     sentence: PART107_ALTITUDE.sentence,
     limits: &[("batchRows", 10_000)],
     run: run_structure_altitude,

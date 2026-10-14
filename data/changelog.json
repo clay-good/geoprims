@@ -5,6 +5,17 @@
       "date": "2026-10-14",
       "kind": "changed",
       "tools": [
+        "raster.terrain.dem-stats",
+        "raster.terrain.highest-point",
+        "raster.terrain.dem-difference-volume"
+      ],
+      "vectors": [],
+      "summary": "DEM statistics, the highest point of a DEM grid, and the volume change between two DEM grids are now stable. Each is held to NumPy on 24 grids or survey pairs (the statistics also to gdalinfo -stats) and to invariant tests for shifting, swapping, and gapping the grids. Results are unchanged."
+    },
+    {
+      "date": "2026-10-14",
+      "kind": "changed",
+      "tools": [
         "raster.terrain.slope",
         "raster.terrain.aspect",
         "raster.terrain.hillshade",

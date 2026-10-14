@@ -44,6 +44,4 @@ Each point stands for a whole square cell, so edges and coarse grids are approxi
 
 ## Invariants
 
-- Swapping before and after swaps gained and lost and negates the net volume.
-- Net volume = gained − lost.
-- Raising the minimum change never increases the area changed.
+- `core/crates/gp-raster/tests/demgrid.rs` `dem_difference_invariants`: net volume is gained less lost; swapping before and after swaps gained and lost and negates the net; and raising the minimum change never increases the area changed.

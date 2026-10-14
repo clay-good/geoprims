@@ -45,6 +45,4 @@ None: exact arithmetic on the values given. The statistics weight every cell ali
 
 ## Invariants
 
-- Adding a constant to every cell adds it to the mean, median, lowest, and highest, and leaves the relief and standard deviation unchanged.
-- The mean and median lie between the lowest and highest.
-- Cells with the no-data value never change the answer.
+- `core/crates/gp-raster/tests/demgrid.rs` `dem_stats_invariants`: adding a constant to every cell adds it to the mean, median, lowest, and highest and leaves the relief and standard deviation unchanged; the mean and median lie between the lowest and highest; and a row of no-data cells never changes the answer.

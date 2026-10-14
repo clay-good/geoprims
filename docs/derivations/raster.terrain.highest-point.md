@@ -43,6 +43,4 @@ The answer is a grid point; the ground's true high point can lie between points 
 
 ## Invariants
 
-- The highest value is at least every other value in the grid.
-- Raising one cell above all others moves the answer to that cell, with one tie.
-- Cells with the no-data value are never reported.
+- `core/crates/gp-raster/tests/demgrid.rs` `highest_point_invariants`: the highest value is at least every other value; raising one cell above all others moves the answer to that cell with one tie; and a cell set to the no-data value is never reported.

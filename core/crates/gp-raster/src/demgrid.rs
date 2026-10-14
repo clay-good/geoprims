@@ -130,6 +130,7 @@ fn cell_size(ctx: &mut Ctx) -> Result<Option<f64>, ToolError> {
 }
 
 pub static DEM_STATS: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.dem-stats",
     title: "Elevation statistics for a DEM grid",
     summary: "The mean, lowest, highest, relief, standard deviation, and median of a grid of elevations, with how many cells hold data.",
@@ -172,7 +173,7 @@ pub static DEM_STATS: ToolDef = ToolDef {
         count("no_data_cells", "No-data cells", "Left out"),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Over the cells that hold data: mean = Σz / n, population standard deviation = √(Σ(z − mean)² / n), median the middle of the sorted values (the mean of the two middle ones when n is even), relief = highest − lowest",
     accuracy: "Exact arithmetic on the elevations given; the mean and standard deviation match gdalinfo -stats, which uses the same population formula",
     when_to_use: "Use this to summarize a small DEM, a site survey on a grid, or a clip of a larger model: its average and middle elevations, its range, and how much it varies. It is also a quick check of what a GIS reports for the same cells, since the standard deviation here is the population form that gdalinfo uses.",
@@ -236,6 +237,7 @@ fn run_stats(ctx: &mut Ctx) -> Result<Json, ToolError> {
 }
 
 pub static HIGHEST_POINT: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.highest-point",
     title: "Highest point in a DEM grid",
     summary: "The highest elevation in a grid of elevations, the row and column where it first occurs, its distance from the north-west corner, and how many cells tie with it.",
@@ -288,7 +290,7 @@ pub static HIGHEST_POINT: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "The largest elevation among the cells that hold data; where several cells share it, the first in reading order (north row first, west to east) is reported with the count of cells that share it. Distances are (column − 1) and (row − 1) cell sizes from the north-west grid point",
     accuracy: "Exact on the elevations given; the true summit can lie between grid points and be higher than any of them",
     when_to_use: "Use this to find the top of a small DEM, a site survey, or a stockpile model: the elevation, where it is in the grid, and, with a cell size, how far it lies east and south of the first point. Ties are counted, so a flat top shows as many cells rather than one.",
@@ -352,6 +354,7 @@ fn run_highest(ctx: &mut Ctx) -> Result<Json, ToolError> {
 }
 
 pub static DEM_DIFFERENCE_VOLUME: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "raster.terrain.dem-difference-volume",
     title: "Volume change between two DEM grids",
     summary: "The volume gained, lost, and net between a before and an after grid of elevations on the same cells, with an optional minimum change below which a cell counts as unchanged.",
@@ -431,7 +434,7 @@ pub static DEM_DIFFERENCE_VOLUME: ToolDef = ToolDef {
         count("skipped_cells", "Cells skipped", "No data in either grid"),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "The DEM of difference: each grid point stands for a cell of the cell size squared, as in a raster, and its change d = after − before is set to zero when |d| is under the minimum change; net volume = Σd × cell², gained = Σ(d > 0) × cell², lost = Σ(−d for d < 0) × cell²",
     accuracy: "Exact for the cell model on the elevations given; the true volume also depends on each survey's vertical error, which the minimum change is there to screen out",
     when_to_use: "Use this when two surveys of the same ground are on the same grid and you want how much material moved: a stockpile measured twice, a slope after a slide, a river bar after a flood, or cut and fill against an existing surface. Give both grids, the cell size, and, if you know your surveys' vertical error, a minimum change so noise does not count as volume.",

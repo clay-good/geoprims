@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "e13499ca5c258031",
+    "hash": "0a31a7c7b01f81af",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "4152d29b9b55a106",
+    "hash": "da09769e26b55fe4",
     "lastmod": "2026-10-14"
   },
   "/disclaimer/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "9295150968e3d1db",
+    "hash": "f312fd07e85ca32d",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1652,11 +1652,11 @@
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/dem-difference-volume/": {
-    "hash": "a5aeb4aafea6286e",
+    "hash": "e7cff6cf53ccb9ec",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/dem-stats/": {
-    "hash": "4a920fac7fefc68f",
+    "hash": "81505c52c8f9f311",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/fresnel-terrain/": {
@@ -1664,7 +1664,7 @@
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/highest-point/": {
-    "hash": "03137dab84f46fc1",
+    "hash": "fa96e76ea4e2f57a",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/hillshade/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "30716e26af19c5dc",
+    "hash": "07aaa41c4f18120c",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "be8ca40dbf9b217a",
+    "hash": "5aca68fda85f0a5b",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

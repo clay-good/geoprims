@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-10-14",
+      "kind": "changed",
+      "tools": [
+        "drone.photogrammetry.checkpoint-requirements"
+      ],
+      "vectors": [],
+      "summary": "ASPRS checkpoint requirements is now stable, held to the ASPRS Edition 2 Annex C example and a new invariant test across Table C.1's areas and vegetated shares. Results are unchanged."
+    },
+    {
+      "date": "2026-10-14",
       "kind": "fixed",
       "tools": [
         "survey.cogo.azimuth-bearing",

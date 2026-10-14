@@ -49,7 +49,4 @@ The construction is exact plane geometry subject to binary floating-point evalua
 
 ## Invariants
 
-- Subtracting the foot from the point yields the entered signed offset along the right-hand normal.
-- Projecting the computed point back to the line returns the entered station and offset.
-- Replacing a direction with a second point on the same ray does not change the result.
-- The named operation and the general station-offset tool use the same calculation path.
+- `core/crates/gp-survey/tests/cogo_views_invariants.rs` `station_offset_views_invariants`: at five line azimuths and three stations, the point less its foot is the entered signed offset along the right-hand normal; the point projects back to the entered station and offset; and a second point on the ray gives the same point as a direction.

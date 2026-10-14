@@ -50,7 +50,4 @@ This is exact plane geometry subject to binary floating-point evaluation and dis
 
 ## Invariants
 
-- The vector from the reported foot to the point is perpendicular to the line.
-- Projecting the reported point back to the line returns the reported foot and offset.
-- Replacing a direction with a second point on the same ray does not change the result.
-- The named operation and the general station-offset tool use the same calculation path.
+- `core/crates/gp-survey/tests/cogo_views_invariants.rs` `station_offset_views_invariants`: at five line azimuths, the vector from the reported foot to the point is perpendicular to the line; a point built from a station and offset projects back to that station and offset; and a second point on the ray gives the same answer as a direction.

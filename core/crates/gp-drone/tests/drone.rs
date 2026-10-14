@@ -994,3 +994,36 @@ fn terrain_overlap_invariants() {
         }
     }
 }
+
+#[test]
+fn checkpoint_requirements_invariants() {
+    let run = |area: f64, vegetated: f64, h: &str, v: &str| -> Value {
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "drone.photogrammetry.checkpoint-requirements",
+            &serde_json::json!({"area_size": format!("{area} km2"), "vegetated": vegetated, "horizontal_class": h, "vertical_class": v}).to_string(),
+        ))
+        .unwrap();
+        assert_eq!(r["ok"], true, "{r}");
+        r["result"].clone()
+    };
+    for vegetated in [0.0, 25.0, 60.0, 100.0] {
+        let mut last = 0.0;
+        for area in [0.5, 10.0, 499.0, 500.0, 501.0, 750.0, 1200.0, 2500.0] {
+            let r = run(area, vegetated, "5 cm", "10 cm");
+            // The count never falls as the area grows.
+            let n = r["checkpoints"].as_f64().unwrap();
+            assert!(n >= last, "{area} km² at {vegetated}%: {n} after {last}");
+            last = n;
+            // A wholly open project has no vegetated checkpoints.
+            if vegetated == 0.0 {
+                assert!(
+                    r["checkpoints_vegetated"].is_null() || r["checkpoints_vegetated"] == 0.0,
+                    "{r}"
+                );
+            }
+            // Checkpoints at least twice as accurate as the product, at any area.
+            assert_eq!(r["checkpoint_rmse_h"]["value"], 2.5);
+            assert_eq!(r["checkpoint_rmse_v"]["value"], 5.0);
+        }
+    }
+}

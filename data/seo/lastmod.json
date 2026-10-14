@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "062f0e2b5f045b7a",
+    "hash": "17e1f3ac04a23729",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "9df3fe33cb93e307",
+    "hash": "634e1e0a2e439d80",
     "lastmod": "2026-10-14"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "644bc82d541a897d",
+    "hash": "e4e55bc60380d37d",
     "lastmod": "2026-10-14"
   },
   "/disclaimer/": {
@@ -384,7 +384,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/checkpoint-requirements/": {
-    "hash": "894ed3487bcc9e2b",
+    "hash": "b9fecd96e21816e8",
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/crop-factor/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "048ecb614d6117ba",
+    "hash": "9905a71358be27ef",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1572,7 +1572,7 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "d2fae05b99179f34",
+    "hash": "3e91b3dd98418f4e",
     "lastmod": "2026-10-14"
   },
   "/raster/": {
@@ -1720,8 +1720,8 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/azimuth-bearing/": {
-    "hash": "c83b8f6efe1c865d",
-    "lastmod": "2026-10-13"
+    "hash": "77598ff98af1fbbc",
+    "lastmod": "2026-10-14"
   },
   "/survey/cogo/bearing-bearing/": {
     "hash": "726bd84ee87c35b5",
@@ -1752,8 +1752,8 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/forward/": {
-    "hash": "d47106b619cfa6c5",
-    "lastmod": "2026-10-13"
+    "hash": "c466fc364db133ae",
+    "lastmod": "2026-10-14"
   },
   "/survey/cogo/intersection/": {
     "hash": "22a968e92f1505e3",
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "0549972e4a191f8e",
+    "hash": "d3d2cb745ad36ce3",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e0bb6f76f590115b",
+    "hash": "68c82843753efd76",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

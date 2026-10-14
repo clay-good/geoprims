@@ -464,6 +464,7 @@ fn grid(rings: &[Vec<P>], bbox: (f64, f64, f64, f64), origin: P, step: f64, clea
 }
 
 pub static CHECKPOINT_REQUIREMENTS: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "drone.photogrammetry.checkpoint-requirements",
     title: "ASPRS checkpoint requirements",
     summary: "How many checkpoints a mapping project needs for its area under the ASPRS Positional Accuracy Standards, Edition 2, and how accurate those checkpoints must be for the product's accuracy class.",
@@ -506,7 +507,7 @@ pub static CHECKPOINT_REQUIREMENTS: ToolDef = ToolDef {
         GCP_PLAN.outputs[8],
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "ASPRS Edition 2, Table C.1, applied to the open and to the vegetated share of the area, each in whole km²: 30 checkpoints up to 500 km², then 5 more per 250 km², to 70 at 2,500 km². Checkpoints at least twice as accurate as the product: RMSE(checkpoint) ≤ ½ RMSE(product) (7.12)",
     accuracy: "The counts and ratios are the standard's own; a contract may ask for more",
     when_to_use: "Use this when scoping the accuracy assessment of an orthomosaic, a drone survey, or a lidar surface. Enter the project area and, if part of it is vegetated, that share. The tool returns the number of checkpoints for open ground and for vegetation under Table C.1. Add the product's horizontal or vertical accuracy class to get how accurate the checkpoints themselves must be surveyed.",

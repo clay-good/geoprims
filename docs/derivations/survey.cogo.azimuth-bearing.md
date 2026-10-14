@@ -48,7 +48,4 @@ The angular conversion is exact. Displayed DMS values are rounded to 0.01 arcsec
 
 ## Invariants
 
-- Cardinal directions agree at the boundaries of adjacent quadrants.
-- 0 gon and 400 gon both map to north.
-- Changing the reference label does not change the numeric direction.
-- The named operation and the general direction parser use the same calculation path.
+- `core/crates/gp-survey/tests/cogo_views_invariants.rs` `azimuth_bearing_invariants`: quadrant bearings at each boundary (N 0° E and N 0° W, N 90° E and S 90° E, and so on) name the same azimuth; 0 gon and 400 gon are both north; and the grid, geodetic, and assumed labels leave the number unchanged.

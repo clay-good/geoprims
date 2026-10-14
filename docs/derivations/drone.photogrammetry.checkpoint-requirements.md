@@ -45,6 +45,4 @@ None: the counts and the ratio are the standard's. The standard reads the table 
 
 ## Invariants
 
-- The count never falls as the area grows.
-- A wholly open project has no vegetated count.
-- The checkpoint accuracy is half the class, whatever the area.
+- `core/crates/gp-drone/tests/drone.rs` `checkpoint_requirements_invariants`: across ASPRS Table C.1's areas and four vegetated shares, the count never falls as the area grows, a wholly open project has no vegetated count, and the checkpoint accuracy is half the class whatever the area.

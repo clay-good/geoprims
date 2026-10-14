@@ -862,6 +862,12 @@ pub static ARC_TO_CHORD: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &[
+        gp_base::tool::WGS84_ASSUMPTIONS[0],
+        gp_base::tool::WGS84_ASSUMPTIONS[1],
+        GRS80_ASSUMPTIONS[0],
+        GRS80_ASSUMPTIONS[1],
+    ],
     sentence: "The chord is {t_minus_t_from} off the projected geodesic at the From end.",
     limits: &[("batchRows", 10_000)],
     run: run_arc_to_chord,

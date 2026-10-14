@@ -96,8 +96,8 @@
     "lastmod": "2026-09-26"
   },
   "/aviation/flight-plan/nav-log/": {
-    "hash": "2bf86af49d81af73",
-    "lastmod": "2026-10-09"
+    "hash": "b7d541d704b23c0b",
+    "lastmod": "2026-10-14"
   },
   "/aviation/ifr/": {
     "hash": "cd0c7cde212a887c",
@@ -324,7 +324,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/mission/sorties/": {
-    "hash": "fc561df85f8ca195",
+    "hash": "930b3638de043349",
     "lastmod": "2026-10-14"
   },
   "/drone/mission/survey-grid/": {
@@ -564,7 +564,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/auxiliary-latitude/": {
-    "hash": "6c09d32073ee0442",
+    "hash": "4f36dc17acc08216",
     "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/degree-lengths/": {
@@ -780,8 +780,8 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/projection/arc-to-chord/": {
-    "hash": "bb3f9ea987e8f5a8",
-    "lastmod": "2026-10-09"
+    "hash": "b3b1040205a150a1",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/projection/azimuthal-equidistant-forward/": {
     "hash": "eb81ef15619c597d",
@@ -1536,8 +1536,8 @@
     "lastmod": "2026-10-14"
   },
   "/navigation/route/legs/": {
-    "hash": "95bcc2e9a85185bd",
-    "lastmod": "2026-10-13"
+    "hash": "0a84aaf2c2df80f1",
+    "lastmod": "2026-10-14"
   },
   "/navigation/route/range-rings/": {
     "hash": "8a38bd107e2700c0",
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f3977e2cfb132c39",
+    "hash": "be8ca40dbf9b217a",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

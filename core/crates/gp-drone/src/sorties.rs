@@ -301,6 +301,7 @@ pub static SORTIES: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     sentence: "The mission takes {batteries} {plural batteries \"battery\" \"batteries\"} and about {total_time} of flying.",
     limits: &[("batchRows", 100)],
     run: run_sorties,

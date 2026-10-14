@@ -737,6 +737,7 @@ pub static AUXILIARY: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     sentence: "The geocentric latitude is {geocentric} and the geodetic latitude is {geodetic}.",
     limits: &[("batchRows", 10_000)],
     run: run_auxiliary,

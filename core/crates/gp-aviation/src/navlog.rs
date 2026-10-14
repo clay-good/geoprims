@@ -17,7 +17,9 @@ use gp_base::display;
 use gp_base::envelope::AssetRef;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use gp_geo::magnetic::{self as mag, Model};
 use serde_json::{Map, Value};
@@ -434,6 +436,16 @@ pub static NAV_LOG: ToolDef = ToolDef {
         Related {
             id: "navigation.route.legs",
             reason: "alternative",
+        },
+    ],
+    assumptions: &[
+        gp_base::tool::WGS84_ASSUMPTIONS[0],
+        gp_base::tool::WGS84_ASSUMPTIONS[1],
+        Assumption {
+            name: "Geomagnetic reference radius, for the WMM2025 variation",
+            value: "6371.2",
+            unit: "km",
+            source: "wmm",
         },
     ],
     sentence: "The route is {total_distance} in {legs_count} {plural legs_count \"leg\" \"legs\"}{if total_time > 0}, {total_time} in all{/if}{if total_fuel > 0}, burning {total_fuel}{/if}.{warn WIND_EXCEEDS_TAS} One leg cannot be flown in this wind, so there are no totals.{/warn}",

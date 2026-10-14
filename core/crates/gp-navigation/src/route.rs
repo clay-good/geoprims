@@ -1650,6 +1650,16 @@ pub static LEGS: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[
+        gp_base::tool::WGS84_ASSUMPTIONS[0],
+        gp_base::tool::WGS84_ASSUMPTIONS[1],
+        Assumption {
+            name: "Geomagnetic reference radius, for the WMM2025 variation",
+            value: "6371.2",
+            unit: "km",
+            source: "wmm",
+        },
+    ],
     sentence: "The route is {total_distance} in {legs_count} legs.",
     limits: &[("batchRows", 1_000)],
     run: run_legs,

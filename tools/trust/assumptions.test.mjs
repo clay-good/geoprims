@@ -167,6 +167,11 @@ const MUST_DECLARE = [
   'geodesy.grid-ref.usng-forward',
   'geodesy.grid-ref.usng-inverse',
   'drone.mission.crosshatch',
+  'aviation.flight-plan.nav-log',
+  'navigation.route.legs',
+  'geodesy.projection.arc-to-chord',
+  'geodesy.ellipsoid.auxiliary-latitude',
+  'drone.mission.sorties',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {

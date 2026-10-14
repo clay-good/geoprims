@@ -463,6 +463,144 @@ fn grid(rings: &[Vec<P>], bbox: (f64, f64, f64, f64), origin: P, step: f64, clea
     out
 }
 
+pub static CHECKPOINT_REQUIREMENTS: ToolDef = ToolDef {
+    id: "drone.photogrammetry.checkpoint-requirements",
+    title: "ASPRS checkpoint requirements",
+    summary: "How many checkpoints a mapping project needs for its area under the ASPRS Positional Accuracy Standards, Edition 2, and how accurate those checkpoints must be for the product's accuracy class.",
+    aliases: &[
+        "checkpoint requirements",
+        "minimum number of checkpoints",
+        "ASPRS Table C.1 checkpoints",
+    ],
+    keywords: &[
+        "checkpoints",
+        "ASPRS",
+        "Edition 2",
+        "Table C.1",
+        "accuracy assessment",
+        "NVA",
+        "VVA",
+        "vegetated",
+    ],
+    inputs: &[
+        Field::new(
+            "area_size",
+            "Project area",
+            "The product's area, like 120 ha or 3.5 km2",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "km2",
+            },
+        )
+        .required()
+        .core(),
+        GCP_PLAN.inputs[3].core(),
+        GCP_PLAN.inputs[1],
+        GCP_PLAN.inputs[2],
+    ],
+    outputs: &[
+        GCP_PLAN.outputs[0],
+        GCP_PLAN.outputs[1],
+        GCP_PLAN.outputs[2],
+        GCP_PLAN.outputs[7],
+        GCP_PLAN.outputs[8],
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "ASPRS Edition 2, Table C.1, applied to the open and to the vegetated share of the area, each in whole km²: 30 checkpoints up to 500 km², then 5 more per 250 km², to 70 at 2,500 km². Checkpoints at least twice as accurate as the product: RMSE(checkpoint) ≤ ½ RMSE(product) (7.12)",
+    accuracy: "The counts and ratios are the standard's own; a contract may ask for more",
+    when_to_use: "Use this when scoping the accuracy assessment of an orthomosaic, a drone survey, or a lidar surface. Enter the project area and, if part of it is vegetated, that share. The tool returns the number of checkpoints for open ground and for vegetation under Table C.1. Add the product's horizontal or vertical accuracy class to get how accurate the checkpoints themselves must be surveyed.",
+    limitations: "Table C.1 stops at 2,500 km² of each land cover, where the standard leaves added checkpoints to the client. The counts are the standard's recommendation, so a contract or agency specification governs where it differs. It does not place the points; they should be spread across the project and its land cover, which the GCP and checkpoint plan tool lays out from a boundary. Ground control is separate from checkpoints.",
+    references: &[ASPRS],
+    examples: &[Example {
+        id: "primary",
+        title: "A 12 km² project, 25% vegetated, for a 5 cm product",
+        input: r#"{"area_size":"12 km2","vegetated":25,"horizontal_class":"5 cm","vertical_class":"10 cm"}"#,
+        source: "ASPRS Positional Accuracy Standards, Edition 2, Table C.1: 30 checkpoints for each land cover up to 500 km²; section 7.12",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.photogrammetry.gcp-plan",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.photogrammetry.asprs-accuracy",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The project needs {checkpoints} checkpoints, {checkpoints_open} of them on open ground.",
+    limits: &[("batchRows", 10_000)],
+    run: run_checkpoint_requirements,
+    ..ToolDef::BLANK
+};
+
+fn run_checkpoint_requirements(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let area = ctx.req_quantity("area_size")?.base();
+    if area <= 0.0 {
+        return Err(ToolError::invalid(
+            "/area_size",
+            "The project area must be positive.",
+        ));
+    }
+    let veg = ctx.number("vegetated")?.map_or(0.0, |p| p / 100.0);
+    let (open_n, veg_n) = checkpoint_counts(area, veg)?;
+    let mut out = vec![
+        (
+            "checkpoints",
+            Json::Num(f64::from(open_n + veg_n.unwrap_or(0))),
+        ),
+        ("checkpoints_open", Json::Num(f64::from(open_n))),
+    ];
+    if let Some(vn) = veg_n {
+        out.push(("checkpoints_vegetated", Json::Num(f64::from(vn))));
+    }
+    for (class, name) in [
+        ("horizontal_class", "checkpoint_rmse_h"),
+        ("vertical_class", "checkpoint_rmse_v"),
+    ] {
+        if let Some(target) = ctx.quantity(class)? {
+            if target.base() <= 0.0 {
+                return Err(ToolError::invalid(
+                    &format!("/{class}"),
+                    "Distances must be positive.",
+                ));
+            }
+            // Section 7.12: checkpoints twice as accurate as the product.
+            out.push((name, ctx.out(name, q(target.base() / 2.0, QT::Length, "m"))));
+        }
+    }
+    Ok(Json::obj(out))
+}
+
+/// Table C.1 on the open and on the vegetated share of an area in m²: the
+/// open count, and the vegetated count when any of the area is vegetated.
+fn checkpoint_counts(area: f64, vegetated: f64) -> Result<(u32, Option<u32>), ToolError> {
+    let km2 = area / 1e6;
+    let beyond = || {
+        ToolError::new(
+            ErrorCode::OutOfDomain,
+            "ASPRS Table C.1 stops at 2,500 km² of each land cover; past it the standard adds checkpoints by the client's criteria.",
+        )
+        .at("/area")
+    };
+    let open_n = table_c1(km2 * (1.0 - vegetated)).ok_or_else(beyond)?;
+    let veg_n = if vegetated > 0.0 {
+        Some(table_c1(km2 * vegetated).ok_or_else(beyond)?)
+    } else {
+        None
+    };
+    Ok((open_n, veg_n))
+}
+
 fn run_gcp(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (plane, outer, holes) = read_polygon(ctx)?;
     let mut rings = vec![outer];
@@ -487,19 +625,7 @@ fn run_gcp(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let veg = ctx.number("vegetated")?.map_or(0.0, |p| p / 100.0);
     let km2 = area / 1e6;
     let (open_km2, veg_km2) = (km2 * (1.0 - veg), km2 * veg);
-    let beyond = || {
-        ToolError::new(
-            ErrorCode::OutOfDomain,
-            "ASPRS Table C.1 stops at 2,500 km² of each land cover; past it the standard adds checkpoints by the client's criteria.",
-        )
-        .at("/area")
-    };
-    let open_n = table_c1(open_km2).ok_or_else(beyond)?;
-    let veg_n = if veg > 0.0 {
-        Some(table_c1(veg_km2).ok_or_else(beyond)?)
-    } else {
-        None
-    };
+    let (open_n, veg_n) = checkpoint_counts(area, veg)?;
     let total = open_n + veg_n.unwrap_or(0);
     let meters = |name: &str, ctx: &mut Ctx| -> Result<Option<f64>, ToolError> {
         match ctx.quantity(name)? {

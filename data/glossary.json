@@ -114,7 +114,8 @@
       "definition": "The society that publishes the Positional Accuracy Standards for Digital Geospatial Data used to state map accuracy.",
       "source": "asprs-pas",
       "relatedTools": [
-        "drone.photogrammetry.asprs-accuracy"
+        "drone.photogrammetry.asprs-accuracy",
+        "drone.photogrammetry.checkpoint-requirements"
       ]
     },
     {
@@ -585,6 +586,7 @@
         "drone.mission.facade",
         "drone.photogrammetry.altitude-for-gsd",
         "drone.photogrammetry.gsd",
+        "drone.photogrammetry.max-shutter",
         "drone.photogrammetry.motion-blur",
         "drone.photogrammetry.oblique-gsd",
         "drone.photogrammetry.terrain-overlap"

@@ -98,6 +98,176 @@ fn catalog_examples_vectors() {
 }
 
 #[test]
+fn focused_photogrammetry_operations_match_their_general_tools() {
+    let camera = serde_json::json!({
+        "height": "90 m", "sensor_width": "13.2 mm", "sensor_height": "8.8 mm", "focal_length": "8.8 mm"
+    });
+    let with = |extra: Value| {
+        let mut v = camera.clone();
+        for (k, x) in extra.as_object().unwrap() {
+            v[k] = x.clone();
+        }
+        v.to_string()
+    };
+    // The general tools also need the pixel counts the focused ones leave out.
+    let pixels = serde_json::json!({"image_width": 5472, "image_height": 3648});
+    let general = |extra: Value| {
+        let mut v = extra;
+        for (k, x) in pixels.as_object().unwrap() {
+            v[k] = x.clone();
+        }
+        with(v)
+    };
+
+    // Footprint: the GSD tool's footprints, and their product.
+    let fp = call("drone.photogrammetry.footprint", &camera.to_string());
+    let gsd = call("drone.photogrammetry.gsd", &general(serde_json::json!({})));
+    assert_eq!(fp["ok"], true, "{fp}");
+    for key in ["footprint_across", "footprint_along", "focal_length_used"] {
+        assert_eq!(fp["result"][key], gsd["result"][key], "{key}");
+    }
+    assert!((num(&fp, "result.footprint_across.value") - 135.0).abs() < 1e-9);
+    assert!((num(&fp, "result.footprint_along.value") - 90.0).abs() < 1e-9);
+    assert!((num(&fp, "result.footprint_area.value") - 12_150.0).abs() < 1e-6);
+
+    // Spacing: each focused operation is one output of the overlap tool.
+    let overlaps = serde_json::json!({"front_overlap": 80, "side_overlap": 70, "groundspeed": "12 m/s", "min_interval": "2 s"});
+    let parent = call("drone.photogrammetry.trigger", &general(overlaps.clone()));
+    let distance = call(
+        "drone.photogrammetry.trigger-distance",
+        &with(serde_json::json!({"front_overlap": 80})),
+    );
+    let line = call(
+        "drone.photogrammetry.line-spacing",
+        &with(serde_json::json!({"side_overlap": 70})),
+    );
+    let interval = call(
+        "drone.photogrammetry.trigger-interval",
+        &with(
+            serde_json::json!({"front_overlap": 80, "groundspeed": "12 m/s", "min_interval": "2 s"}),
+        ),
+    );
+    assert_eq!(
+        distance["result"]["trigger_distance"],
+        parent["result"]["trigger_distance"]
+    );
+    assert_eq!(
+        distance["result"]["footprint_along"],
+        parent["result"]["footprint_along"]
+    );
+    assert_eq!(
+        line["result"]["line_spacing"],
+        parent["result"]["line_spacing"]
+    );
+    assert_eq!(
+        line["result"]["footprint_across"],
+        parent["result"]["footprint_across"]
+    );
+    for key in ["trigger_interval", "trigger_distance", "max_groundspeed"] {
+        assert_eq!(interval["result"][key], parent["result"][key], "{key}");
+    }
+    assert!((num(&distance, "result.trigger_distance.value") - 18.0).abs() < 1e-9);
+    assert!((num(&line, "result.line_spacing.value") - 40.5).abs() < 1e-9);
+    assert!((num(&interval, "result.trigger_interval.value") - 1.5).abs() < 1e-9);
+    assert!((num(&interval, "result.max_groundspeed.value") - 9.0).abs() < 1e-9);
+    // 1.5 s is faster than a 2 s camera: both tools say so.
+    assert!(codes(&interval).contains(&"TRIGGER_TOO_FAST".to_owned()));
+    assert!(codes(&parent).contains(&"TRIGGER_TOO_FAST".to_owned()));
+    // Left out, the overlaps default to the general 75% and 60%.
+    let d = call("drone.photogrammetry.trigger-distance", &camera.to_string());
+    let l = call("drone.photogrammetry.line-spacing", &camera.to_string());
+    assert!((num(&d, "result.trigger_distance.value") - 22.5).abs() < 1e-9);
+    assert!((num(&l, "result.line_spacing.value") - 54.0).abs() < 1e-9);
+    // Portrait swaps which side of the sensor runs along the line.
+    let p = call(
+        "drone.photogrammetry.trigger-distance",
+        &with(serde_json::json!({"orientation": "portrait"})),
+    );
+    assert!((num(&p, "result.footprint_along.value") - 135.0).abs() < 1e-9);
+
+    // Max shutter: the blur tool's limit, without an exposure to judge.
+    let shutter = call(
+        "drone.photogrammetry.max-shutter",
+        r#"{"groundspeed":"12 m/s","gsd":"2.5 cm"}"#,
+    );
+    let blur = call(
+        "drone.photogrammetry.motion-blur",
+        r#"{"groundspeed":"12 m/s","gsd":"2.5 cm","exposure":"0.001 s"}"#,
+    );
+    for key in ["max_exposure", "max_exposure_fraction"] {
+        assert_eq!(shutter["result"][key], blur["result"][key], "{key}");
+    }
+    assert_eq!(shutter["result"]["max_exposure_fraction"], "1/960 s");
+    assert_eq!(num(&shutter, "result.blur_limit"), 0.5);
+    // Twice the allowed blur doubles the exposure.
+    let loose = call(
+        "drone.photogrammetry.max-shutter",
+        r#"{"groundspeed":"12 m/s","gsd":"2.5 cm","blur_limit":1}"#,
+    );
+    assert!(
+        (num(&loose, "result.max_exposure.value") / num(&shutter, "result.max_exposure.value")
+            - 2.0)
+            .abs()
+            < 1e-12
+    );
+
+    // Crop factor: a full frame is 1, and the two focal lengths invert each other.
+    let full = call(
+        "drone.photogrammetry.crop-factor",
+        r#"{"sensor_width":"36 mm","sensor_height":"24 mm"}"#,
+    );
+    assert!((num(&full, "result.crop_factor") - 1.0).abs() < 1e-15);
+    let one_inch = call(
+        "drone.photogrammetry.crop-factor",
+        r#"{"sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm"}"#,
+    );
+    let equivalent = num(&one_inch, "result.equivalent_focal_length.value");
+    assert!((equivalent - 24.0).abs() < 0.01, "{equivalent}");
+    let back = call(
+        "drone.photogrammetry.crop-factor",
+        &serde_json::json!({"sensor_width": "13.2 mm", "sensor_height": "8.8 mm", "equivalent_focal_length": format!("{equivalent} mm")}).to_string(),
+    );
+    assert!((num(&back, "result.focal_length.value") - 8.8).abs() < 1e-12);
+    // The GSD tool derives the same physical focal length from the equivalent one.
+    let derived = call(
+        "drone.photogrammetry.gsd",
+        &serde_json::json!({
+            "height": "100 m", "sensor_width": "13.2 mm", "sensor_height": "8.8 mm", "image_width": 5472,
+            "focal_length": format!("{equivalent} mm"), "focal_length_type": "equivalent-35mm"
+        })
+        .to_string(),
+    );
+    assert!((num(&derived, "result.focal_length_used.value") - 8.8).abs() < 1e-12);
+
+    // Checkpoint requirements: Table C.1 at its edges, as the plan tool counts them.
+    for (area, want) in [
+        ("12 km2", 30.0),
+        ("500 km2", 30.0),
+        ("501 km2", 35.0),
+        ("2500 km2", 70.0),
+    ] {
+        let r = call(
+            "drone.photogrammetry.checkpoint-requirements",
+            &serde_json::json!({"area_size": area}).to_string(),
+        );
+        assert_eq!(num(&r, "result.checkpoints"), want, "{area}");
+    }
+    let split = call(
+        "drone.photogrammetry.checkpoint-requirements",
+        r#"{"area_size":"12 km2","vegetated":25,"horizontal_class":"5 cm","vertical_class":"10 cm"}"#,
+    );
+    assert_eq!(num(&split, "result.checkpoints"), 60.0);
+    assert_eq!(num(&split, "result.checkpoints_vegetated"), 30.0);
+    assert!((num(&split, "result.checkpoint_rmse_h.value") - 2.5).abs() < 1e-12);
+    assert!((num(&split, "result.checkpoint_rmse_v.value") - 5.0).abs() < 1e-12);
+    let beyond = call(
+        "drone.photogrammetry.checkpoint-requirements",
+        r#"{"area_size":"2600 km2"}"#,
+    );
+    assert_eq!(beyond["error"]["code"], "OUT_OF_DOMAIN");
+}
+
+#[test]
 fn one_inch_at_100_m() {
     let r = call(
         "drone.photogrammetry.gsd",

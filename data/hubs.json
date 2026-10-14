@@ -589,7 +589,9 @@
           "want": "find the GSD for a height, or the height for a GSD",
           "tools": [
             "gsd",
-            "altitude-for-gsd"
+            "altitude-for-gsd",
+            "footprint",
+            "crop-factor"
           ]
         },
         {
@@ -607,7 +609,10 @@
         {
           "want": "set overlap, trigger interval, and line spacing",
           "tools": [
-            "trigger"
+            "trigger",
+            "trigger-distance",
+            "trigger-interval",
+            "line-spacing"
           ]
         },
         {
@@ -619,13 +624,15 @@
         {
           "want": "check for motion blur",
           "tools": [
-            "motion-blur"
+            "motion-blur",
+            "max-shutter"
           ]
         },
         {
           "want": "plan ground control and checkpoints",
           "tools": [
-            "gcp-plan"
+            "gcp-plan",
+            "checkpoint-requirements"
           ]
         },
         {

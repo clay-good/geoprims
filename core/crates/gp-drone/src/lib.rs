@@ -198,14 +198,32 @@ struct Camera {
     ih: Option<f64>,
 }
 
+/// The crop factor of a sensor, from its width and height in meters: the
+/// full-frame diagonal over its own.
+fn crop_factor(sw: f64, sh: f64) -> f64 {
+    FULL_FRAME_DIAGONAL / (hypot(sw, sh) * 1000.0)
+}
+
 impl Camera {
     fn read(ctx: &mut Ctx) -> Result<Camera, ToolError> {
+        Camera::read_with(ctx, true)
+    }
+
+    /// Reads the camera. A footprint needs no pixel counts, so the operations
+    /// that report only footprints and spacings declare none and pass `false`.
+    fn read_with(ctx: &mut Ctx, pixels: bool) -> Result<Camera, ToolError> {
         let meters = unit(QT::Length, "m");
         let sw = ctx.req_quantity("sensor_width")?.to(meters);
         let mut f = ctx.req_quantity("focal_length")?.to(meters);
-        let iw = ctx.number("image_width")?.expect("required");
+        let (iw, ih) = if pixels {
+            (
+                ctx.number("image_width")?.expect("required"),
+                ctx.number("image_height")?,
+            )
+        } else {
+            (f64::NAN, None)
+        };
         let sh = ctx.quantity("sensor_height")?.map(|q| q.to(meters));
-        let ih = ctx.number("image_height")?;
         if sw <= 0.0 || f <= 0.0 || sh.is_some_and(|h| h <= 0.0) {
             return Err(ToolError::invalid(
                 "/sensor_width",
@@ -215,7 +233,7 @@ impl Camera {
         if ctx.choice("focal_length_type")? == Some("equivalent-35mm") {
             let crop = match (ctx.number("crop_factor")?, sh) {
                 (Some(c), _) => c,
-                (None, Some(h)) => FULL_FRAME_DIAGONAL / (hypot(sw, h) * 1000.0),
+                (None, Some(h)) => crop_factor(sw, h),
                 (None, None) => {
                     return Err(ToolError::invalid("/crop_factor", "A 35 mm-equivalent focal length needs a crop factor or the sensor height.")
                         .hint("Find the physical focal length in the camera's specifications, or give the crop factor."));
@@ -452,6 +470,289 @@ fn run_gsd(ctx: &mut Ctx) -> Result<Json, ToolError> {
         out.push(("footprint_along", ctx.out("footprint_along", m(fl))));
     }
     out.push(("focal_length_used", ctx.out("focal_length_used", m(cam.f))));
+    Ok(Json::obj(out))
+}
+
+/// The camera inputs of the operations that need no pixel counts.
+const SENSOR_HEIGHT: Field = mm_field(
+    "sensor_height",
+    "Sensor height",
+    "Physical height, like 8.8 mm for a 1-inch sensor",
+)
+.required()
+.core();
+
+pub static FOOTPRINT: ToolDef = ToolDef {
+    id: "drone.photogrammetry.footprint",
+    title: "Image footprint on the ground",
+    summary: "The ground width, length, and area one nadir photo covers, from the height above ground, the sensor size, and the focal length.",
+    aliases: &[
+        "image footprint calculator",
+        "photo ground coverage",
+        "camera footprint at altitude",
+    ],
+    keywords: &[
+        "footprint",
+        "ground coverage",
+        "swath",
+        "field of view",
+        "nadir",
+        "sensor size",
+        "mapping",
+    ],
+    inputs: &[
+        HEIGHT,
+        CAMERA[0],
+        SENSOR_HEIGHT,
+        CAMERA[1],
+        CAMERA[5],
+        CAMERA[6],
+    ],
+    outputs: &[
+        Field::new(
+            "footprint_across",
+            "Footprint across track",
+            "Ground width of one image",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "footprint_along",
+            "Footprint along track",
+            "Ground length of one image",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "footprint_area",
+            "Footprint area",
+            "Ground area of one image",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "m2",
+            },
+        )
+        .precision(Precision::Significant(4)),
+        GSD.outputs[4],
+    ],
+    errors: GSD.errors,
+    warnings: &["EQUIVALENT_FOCAL_LENGTH", "EXPERIMENTAL_TOOL"],
+    model: "Similar triangles for a nadir frame camera: footprint = sensor dimension × height / focal length, across and along track (Wolf, Dewitt & Wilkinson 2014, ch. 6)",
+    accuracy: "Exact for a nadir pinhole camera over flat ground",
+    when_to_use: "Use this to see how much ground one photo covers before planning lines or picking a height. Enter the height above ground, the sensor's width and height, and the focal length. The tool returns the footprint across and along the flight line and its area. Give a 35 mm-equivalent focal length by setting the focal length type; the crop factor then comes from the sensor size.",
+    limitations: "The camera points straight down over flat ground, so a tilted gimbal or sloping terrain changes the shape and size of the footprint. Lens distortion and a rolling shutter are not modeled. The wider sensor side is taken across the flight line, which is how most mapping drones mount the camera. It reports coverage, not pixel size; the GSD tool gives that.",
+    references: GSD.references,
+    assumptions: FULL_FRAME_ASSUMPTIONS,
+    examples: &[Example {
+        id: "primary",
+        title: "A 1-inch sensor at 80 m",
+        input: r#"{"height":"80 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm"}"#,
+        source: "Similar triangles: 13.2 × 80 / 8.8 is 120 m across and 8.8 × 80 / 8.8 is 80 m along",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.photogrammetry.line-spacing",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.trigger-distance",
+            reason: "next",
+        },
+    ],
+    sentence: "One photo covers {footprint_across} across the flight line and {footprint_along} along it.",
+    limits: &[("batchRows", 10_000)],
+    run: run_footprint,
+    ..ToolDef::BLANK
+};
+
+fn run_footprint(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let h = ctx.req_quantity("height")?.to(unit(QT::Length, "m"));
+    if h <= 0.0 {
+        return Err(ToolError::invalid(
+            "/height",
+            "Height above ground must be positive.",
+        ));
+    }
+    let cam = Camera::read_with(ctx, false)?;
+    let (across, along) = cam.footprint(h);
+    let along = along.expect("sensor height is required");
+    Ok(Json::obj(vec![
+        ("footprint_across", ctx.out("footprint_across", m(across))),
+        ("footprint_along", ctx.out("footprint_along", m(along))),
+        (
+            "footprint_area",
+            ctx.out(
+                "footprint_area",
+                Q {
+                    value: across * along,
+                    unit: unit(QT::Area, "m2"),
+                },
+            ),
+        ),
+        ("focal_length_used", ctx.out("focal_length_used", m(cam.f))),
+    ]))
+}
+
+pub static CROP_FACTOR: ToolDef = ToolDef {
+    id: "drone.photogrammetry.crop-factor",
+    title: "Sensor crop factor",
+    summary: "The crop factor of a camera sensor from its width and height, with its diagonal and the 35 mm-equivalent of a physical focal length.",
+    aliases: &[
+        "crop factor calculator",
+        "35mm equivalent focal length",
+        "sensor diagonal calculator",
+    ],
+    keywords: &[
+        "crop factor",
+        "focal length multiplier",
+        "full frame",
+        "sensor diagonal",
+        "equivalent focal length",
+        "35 mm",
+        "1-inch sensor",
+    ],
+    inputs: &[
+        CAMERA[0],
+        SENSOR_HEIGHT,
+        mm_field(
+            "focal_length",
+            "Physical focal length",
+            "To get its 35 mm equivalent, like 8.8 mm",
+        ),
+        mm_field(
+            "equivalent_focal_length",
+            "35 mm-equivalent focal length",
+            "To get the physical focal length, like 24 mm",
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "crop_factor",
+            "Crop factor",
+            "Full-frame diagonal ÷ sensor diagonal",
+            Kind::Number {
+                min: 0.0,
+                max: 1000.0,
+            },
+        )
+        .precision(Precision::Significant(4)),
+        mm_field("sensor_diagonal", "Sensor diagonal", "√(width² + height²)")
+            .precision(Precision::Significant(4)),
+        mm_field(
+            "equivalent_focal_length",
+            "35 mm-equivalent focal length",
+            "Physical focal length × crop factor",
+        )
+        .precision(Precision::Significant(4))
+        .optional(),
+        mm_field(
+            "focal_length",
+            "Physical focal length",
+            "Equivalent focal length ÷ crop factor",
+        )
+        .precision(Precision::Significant(4))
+        .optional(),
+    ],
+    errors: &[],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Crop factor = 43.267 mm ÷ √(width² + height²), the diagonal of a 36 × 24 mm frame over the sensor's own; 35 mm-equivalent focal length = physical focal length × crop factor",
+    accuracy: "Exact for the stated sensor dimensions; nominal sensor sizes such as 1-inch are names, not measurements",
+    when_to_use: "Use this when a camera's specifications give a 35 mm-equivalent focal length and a mapping calculation needs the physical one, or the other way round. Enter the sensor's width and height in millimeters. Add a physical focal length to get its 35 mm equivalent, or an equivalent focal length to get the physical one. The crop factor and the sensor diagonal are always returned.",
+    limitations: "The factor compares diagonals, so it is exact for field of view only when the sensor has the same 3:2 shape as a 35 mm frame; a 4:3 sensor matches on the diagonal and differs slightly in width and height. Use the true sensor dimensions from the maker's specifications, since a nominal size like 1-inch is larger than the sensor it names.",
+    references: GSD.references,
+    assumptions: FULL_FRAME_ASSUMPTIONS,
+    examples: &[Example {
+        id: "primary",
+        title: "A 1-inch sensor with an 8.8 mm lens",
+        input: r#"{"sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm"}"#,
+        source: "Diagonal arithmetic: 43.267 / 15.864 is 2.727, and 8.8 mm is 24.0 mm equivalent",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.footprint",
+            reason: "next",
+        },
+        Related {
+            id: "drone.photogrammetry.altitude-for-gsd",
+            reason: "next",
+        },
+    ],
+    sentence: "The crop factor is {crop_factor}, for a sensor diagonal of {sensor_diagonal}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_crop_factor,
+    ..ToolDef::BLANK
+};
+
+fn run_crop_factor(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let meters = unit(QT::Length, "m");
+    let sw = ctx.req_quantity("sensor_width")?.to(meters);
+    let sh = ctx.req_quantity("sensor_height")?.to(meters);
+    if sw <= 0.0 || sh <= 0.0 {
+        return Err(ToolError::invalid(
+            "/sensor_width",
+            "The sensor width and height must be positive.",
+        ));
+    }
+    let crop = crop_factor(sw, sh);
+    let physical = ctx.quantity("focal_length")?.map(|q| q.to(meters));
+    let equivalent = ctx
+        .quantity("equivalent_focal_length")?
+        .map(|q| q.to(meters));
+    let (physical, equivalent) = match (physical, equivalent) {
+        (Some(_), Some(_)) => {
+            return Err(ToolError::invalid(
+                "/equivalent_focal_length",
+                "Give the physical focal length or the 35 mm-equivalent one, not both.",
+            ));
+        }
+        (Some(f), None) => (Some(f), Some(f * crop)),
+        (None, Some(e)) => (Some(e / crop), Some(e)),
+        (None, None) => (None, None),
+    };
+    if physical.is_some_and(|f| f <= 0.0) {
+        return Err(ToolError::invalid(
+            "/focal_length",
+            "The focal length must be positive.",
+        ));
+    }
+    let mut out = vec![
+        ("crop_factor", Json::Num(crop)),
+        (
+            "sensor_diagonal",
+            ctx.out("sensor_diagonal", m(hypot(sw, sh))),
+        ),
+    ];
+    if let (Some(f), Some(e)) = (physical, equivalent) {
+        out.push((
+            "equivalent_focal_length",
+            ctx.out("equivalent_focal_length", m(e)),
+        ));
+        out.push(("focal_length", ctx.out("focal_length", m(f))));
+    }
     Ok(Json::obj(out))
 }
 
@@ -874,10 +1175,252 @@ pub static TRIGGER: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+macro_rules! spacing_tool {
+    ($name:ident, $run:ident, $id:literal, $title:literal, $summary:literal,
+     $aliases:expr, $keywords:expr, $inputs:expr, $outputs:expr, $warnings:expr,
+     $model:literal, $when:literal, $limitations:literal, $example_title:literal,
+     $example:literal, $source:literal, $sentence:literal, $related:expr) => {
+        pub static $name: ToolDef = ToolDef {
+            id: concat!("drone.photogrammetry.", $id),
+            title: $title,
+            summary: $summary,
+            aliases: $aliases,
+            keywords: $keywords,
+            inputs: $inputs,
+            outputs: $outputs,
+            errors: TRIGGER.errors,
+            warnings: $warnings,
+            model: $model,
+            accuracy: "Exact for a nadir pinhole camera over flat ground at a steady height",
+            when_to_use: $when,
+            limitations: $limitations,
+            references: TRIGGER.references,
+            assumptions: FULL_FRAME_ASSUMPTIONS,
+            examples: &[Example {
+                id: "primary",
+                title: $example_title,
+                input: $example,
+                source: $source,
+            }],
+            primary_example: "primary",
+            visualization: &[Layer {
+                kind: "table-only",
+                map: &[],
+            }],
+            related: $related,
+            sentence: $sentence,
+            limits: &[("batchRows", 10_000)],
+            run: $run,
+            ..ToolDef::BLANK
+        };
+    };
+}
+
+spacing_tool!(
+    TRIGGER_DISTANCE,
+    run_trigger_distance,
+    "trigger-distance",
+    "Photo spacing for a front overlap",
+    "The ground distance between photo centers along the flight line that gives a chosen front overlap at a height above ground.",
+    &[
+        "trigger distance calculator",
+        "photo spacing for overlap",
+        "distance between photos"
+    ],
+    &[
+        "trigger distance",
+        "photo spacing",
+        "front overlap",
+        "forward overlap",
+        "base",
+        "distance trigger",
+        "mapping"
+    ],
+    &[
+        HEIGHT,
+        TRIGGER.inputs[1],
+        SENSOR_HEIGHT,
+        TRIGGER.inputs[2],
+        TRIGGER.inputs[6].core(),
+        TRIGGER.inputs[9],
+        TRIGGER.inputs[12],
+        TRIGGER.inputs[13],
+    ],
+    &[TRIGGER.outputs[1], TRIGGER.outputs[3]],
+    &["EQUIVALENT_FOCAL_LENGTH", "EXPERIMENTAL_TOOL"],
+    "Photo spacing B = footprint along track × (1 − front overlap), with footprint = sensor height × height / focal length (Wolf, Dewitt & Wilkinson 2014, ch. 6)",
+    "Use this to set a distance-based camera trigger for a mapping flight. Enter the height above ground, the sensor's width and height, the focal length, and the front overlap you want; 75% is used if you leave it out. The tool returns how far apart the photo centers should be on the ground and the length of ground one photo covers along the line.",
+    "The spacing holds over flat ground at the planned height. Where the ground rises the overlap falls, so check high ground with the terrain overlap tool. The camera is taken to point straight down with its long side across the flight line unless you choose portrait. It does not tell you whether the camera can shoot that fast; the trigger interval tool does.",
+    "A 1-inch sensor at 90 m with 80% front overlap",
+    r#"{"height":"90 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","front_overlap":80}"#,
+    "Footprint 90 m along track, so 90 × (1 − 0.80) is 18 m between photos",
+    "Take a photo every {trigger_distance} along the line.",
+    &[
+        Related {
+            id: "drone.photogrammetry.trigger",
+            reason: "parent"
+        },
+        Related {
+            id: "drone.photogrammetry.trigger-interval",
+            reason: "next"
+        },
+        Related {
+            id: "drone.photogrammetry.line-spacing",
+            reason: "alternative"
+        },
+    ]
+);
+
+spacing_tool!(
+    LINE_SPACING,
+    run_line_spacing,
+    "line-spacing",
+    "Flight line spacing for a side overlap",
+    "The distance between adjacent flight lines that gives a chosen side overlap at a height above ground.",
+    &[
+        "flight line spacing calculator",
+        "line spacing for sidelap",
+        "distance between flight lines"
+    ],
+    &[
+        "line spacing",
+        "side overlap",
+        "sidelap",
+        "flight lines",
+        "swath",
+        "lawnmower",
+        "mapping"
+    ],
+    &[
+        HEIGHT,
+        TRIGGER.inputs[1],
+        SENSOR_HEIGHT,
+        TRIGGER.inputs[2],
+        TRIGGER.inputs[7].core(),
+        TRIGGER.inputs[9],
+        TRIGGER.inputs[12],
+        TRIGGER.inputs[13],
+    ],
+    &[TRIGGER.outputs[2], TRIGGER.outputs[4]],
+    &["EQUIVALENT_FOCAL_LENGTH", "EXPERIMENTAL_TOOL"],
+    "Line spacing W = footprint across track × (1 − side overlap), with footprint = sensor width × height / focal length (Wolf, Dewitt & Wilkinson 2014, ch. 6)",
+    "Use this to space the lines of a mapping grid. Enter the height above ground, the sensor's width and height, the focal length, and the side overlap you want; 60% is used if you leave it out. The tool returns the distance between neighboring flight lines and the width of ground one photo covers across the line, ready for the survey grid tool.",
+    "The spacing holds over flat ground at the planned height. Where the ground rises between lines the side overlap falls, so check high ground with the terrain overlap tool. The camera is taken to point straight down with its long side across the flight line unless you choose portrait. Crosswind crab narrows the effective swath a little and is not modeled.",
+    "A 1-inch sensor at 90 m with 70% side overlap",
+    r#"{"height":"90 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","side_overlap":70}"#,
+    "Footprint 135 m across track, so 135 × (1 − 0.70) is 40.5 m between lines",
+    "Space the flight lines {line_spacing} apart.",
+    &[
+        Related {
+            id: "drone.photogrammetry.trigger",
+            reason: "parent"
+        },
+        Related {
+            id: "drone.mission.survey-grid",
+            reason: "next"
+        },
+        Related {
+            id: "drone.photogrammetry.trigger-distance",
+            reason: "alternative"
+        },
+    ]
+);
+
+spacing_tool!(
+    TRIGGER_INTERVAL,
+    run_trigger_interval,
+    "trigger-interval",
+    "Camera trigger interval",
+    "The time between photos that gives a chosen front overlap at a groundspeed and height, checked against how fast the camera can shoot.",
+    &[
+        "trigger interval for overlap",
+        "seconds between photos",
+        "intervalometer setting for mapping"
+    ],
+    &[
+        "trigger interval",
+        "intervalometer",
+        "time lapse",
+        "front overlap",
+        "groundspeed",
+        "camera rate",
+        "mapping"
+    ],
+    &[
+        HEIGHT,
+        TRIGGER.inputs[1],
+        SENSOR_HEIGHT,
+        TRIGGER.inputs[2],
+        TRIGGER.inputs[5],
+        TRIGGER.inputs[6],
+        TRIGGER.inputs[10],
+        TRIGGER.inputs[9],
+        TRIGGER.inputs[12],
+        TRIGGER.inputs[13],
+    ],
+    &[TRIGGER.outputs[0], TRIGGER.outputs[1], TRIGGER.outputs[5]],
+    &[
+        "TRIGGER_TOO_FAST",
+        "EQUIVALENT_FOCAL_LENGTH",
+        "EXPERIMENTAL_TOOL"
+    ],
+    "Interval t = B / v, with photo spacing B = footprint along track × (1 − front overlap) and v the groundspeed (Wolf, Dewitt & Wilkinson 2014, ch. 6)",
+    "Use this to set a time-based camera trigger, or to find how fast you can fly before the camera falls behind. Enter the height above ground, the sensor size, the focal length, the groundspeed, and the front overlap; 75% is used if you leave it out. Add the fastest interval your camera can hold to get the highest groundspeed that still keeps the overlap, with a warning if the plan is too fast.",
+    "A time trigger holds the overlap only at the groundspeed entered, so a tailwind leg stretches the spacing and a headwind leg shortens it; plan for the fastest leg or use a distance trigger. The spacing is for flat ground at the planned height. Camera write speed can fall with a full buffer or a slow card, so test the minimum interval rather than trusting the specification.",
+    "12 m/s at 90 m with 80% front overlap and a 2 s camera",
+    r#"{"height":"90 m","sensor_width":"13.2 mm","sensor_height":"8.8 mm","focal_length":"8.8 mm","groundspeed":"12 m/s","front_overlap":80,"min_interval":"2 s"}"#,
+    "18 m between photos at 12 m/s is 1.5 s, faster than a 2 s camera: fly 9 m/s or less",
+    "Take a photo every {trigger_interval}.{warn TRIGGER_TOO_FAST} The camera cannot shoot that fast at this speed.{/warn}",
+    &[
+        Related {
+            id: "drone.photogrammetry.trigger",
+            reason: "parent"
+        },
+        Related {
+            id: "drone.photogrammetry.trigger-distance",
+            reason: "alternative"
+        },
+        Related {
+            id: "drone.photogrammetry.max-shutter",
+            reason: "next"
+        },
+    ]
+);
+
+/// Which single spacing a focused operation reports.
+#[derive(Clone, Copy, PartialEq)]
+enum SpacingMode {
+    Distance,
+    Line,
+    Interval,
+}
+
+fn run_trigger_distance(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    trigger(ctx, Some(SpacingMode::Distance))
+}
+
+fn run_line_spacing(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    trigger(ctx, Some(SpacingMode::Line))
+}
+
+fn run_trigger_interval(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    trigger(ctx, Some(SpacingMode::Interval))
+}
+
 fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    trigger(ctx, None)
+}
+
+fn trigger(ctx: &mut Ctx, mode: Option<SpacingMode>) -> Result<Json, ToolError> {
     let h = ctx.req_quantity("height")?.to(unit(QT::Length, "m"));
-    let cam = Camera::read(ctx)?;
-    let v = ctx.req_quantity("groundspeed")?.to(unit(QT::Speed, "m/s"));
+    // The focused operations declare no pixel counts, and only the interval a speed.
+    let cam = Camera::read_with(ctx, mode.is_none())?;
+    let timed = matches!(mode, None | Some(SpacingMode::Interval));
+    let v = if timed {
+        ctx.req_quantity("groundspeed")?.to(unit(QT::Speed, "m/s"))
+    } else {
+        1.0
+    };
     if h <= 0.0 {
         return Err(ToolError::invalid(
             "/height",
@@ -890,13 +1433,22 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "The groundspeed must be positive.",
         ));
     }
-    let (pf, ps) = match ctx.choice("preset")? {
-        Some("forest") => (85.0, 85.0),
+    let (pf, ps) = match mode {
         Some(_) => (75.0, 60.0),
-        None => (75.0, 60.0),
+        None => match ctx.choice("preset")? {
+            Some("forest") => (85.0, 85.0),
+            Some(_) => (75.0, 60.0),
+            None => (75.0, 60.0),
+        },
     };
-    let front = ctx.number("front_overlap")?.unwrap_or(pf) / 100.0;
-    let side = ctx.number("side_overlap")?.unwrap_or(ps) / 100.0;
+    let front = match mode {
+        Some(SpacingMode::Line) => pf,
+        _ => ctx.number("front_overlap")?.unwrap_or(pf),
+    } / 100.0;
+    let side = match mode {
+        None | Some(SpacingMode::Line) => ctx.number("side_overlap")?.unwrap_or(ps),
+        _ => ps,
+    } / 100.0;
     let (w, l) = cam.footprint(h);
     let l = l.expect("sensor height is required");
     let (across, along) = if ctx.choice("orientation")? == Some("portrait") {
@@ -906,6 +1458,29 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let dist = along * (1.0 - front);
     let interval = dist / v;
+    if mode == Some(SpacingMode::Line) {
+        let spacing = across * (1.0 - side);
+        if ctx.explaining() {
+            let fmt = ctx.options.format;
+            let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+            ctx.step(
+                "Footprint across the flight line",
+                "what one photo covers side to side",
+                format!("at {} m above the ground", n(h, 1)),
+                format!("{} m", n(across, 2)),
+            );
+            ctx.step(
+                "Distance between lines",
+                "spacing = footprint × (1 − side overlap)",
+                format!("{} m × (1 − {}%)", n(across, 2), n(side * 100.0, 0)),
+                format!("{} m", n(spacing, 2)),
+            );
+        }
+        return Ok(Json::obj(vec![
+            ("line_spacing", ctx.out("line_spacing", m(spacing))),
+            ("footprint_across", ctx.out("footprint_across", m(across))),
+        ]));
+    }
     if ctx.explaining() {
         let fmt = ctx.options.format;
         let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
@@ -921,12 +1496,20 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
             format!("{} m × (1 − {}%)", n(along, 2), n(front * 100.0, 0)),
             format!("{} m", n(dist, 2)),
         );
-        ctx.step(
-            "Trigger interval",
-            "interval = spacing / groundspeed",
-            format!("{} m / {} m/s", n(dist, 2), n(v, 2)),
-            format!("{} s", n(interval, 2)),
-        );
+        if timed {
+            ctx.step(
+                "Trigger interval",
+                "interval = spacing / groundspeed",
+                format!("{} m / {} m/s", n(dist, 2), n(v, 2)),
+                format!("{} s", n(interval, 2)),
+            );
+        }
+    }
+    if mode == Some(SpacingMode::Distance) {
+        return Ok(Json::obj(vec![
+            ("trigger_distance", ctx.out("trigger_distance", m(dist))),
+            ("footprint_along", ctx.out("footprint_along", m(along))),
+        ]));
     }
     let mut out = vec![
         (
@@ -934,13 +1517,17 @@ fn run_trigger(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ctx.out("trigger_interval", secs(interval)),
         ),
         ("trigger_distance", ctx.out("trigger_distance", m(dist))),
-        (
-            "line_spacing",
-            ctx.out("line_spacing", m(across * (1.0 - side))),
-        ),
-        ("footprint_along", ctx.out("footprint_along", m(along))),
-        ("footprint_across", ctx.out("footprint_across", m(across))),
     ];
+    if mode.is_none() {
+        out.extend([
+            (
+                "line_spacing",
+                ctx.out("line_spacing", m(across * (1.0 - side))),
+            ),
+            ("footprint_along", ctx.out("footprint_along", m(along))),
+            ("footprint_across", ctx.out("footprint_across", m(across))),
+        ]);
+    }
     if let Some(min) = ctx.quantity("min_interval")? {
         let min_s = min.to(unit(QT::Time, "s"));
         if min_s <= 0.0 {
@@ -1110,9 +1697,98 @@ pub static MOTION_BLUR: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static MAX_SHUTTER: ToolDef = ToolDef {
+    id: "drone.photogrammetry.max-shutter",
+    title: "Slowest shutter speed for sharp mapping photos",
+    summary: "The longest exposure that keeps motion blur within a chosen share of a pixel, from the groundspeed and the ground sample distance.",
+    aliases: &[
+        "max shutter speed calculator",
+        "slowest shutter for drone mapping",
+        "minimum shutter speed for GSD",
+    ],
+    keywords: &[
+        "shutter speed",
+        "exposure time",
+        "motion blur",
+        "pixel smear",
+        "groundspeed",
+        "GSD",
+        "sharpness",
+    ],
+    inputs: &[
+        MOTION_BLUR.inputs[0],
+        MOTION_BLUR.inputs[2],
+        MOTION_BLUR.inputs[3],
+    ],
+    outputs: &[
+        MOTION_BLUR.outputs[2],
+        MOTION_BLUR.outputs[1],
+        Field::new(
+            "blur_limit",
+            "Blur limit used",
+            "Share of a pixel the image may smear",
+            Kind::Number {
+                min: 0.0,
+                max: 100.0,
+            },
+        )
+        .precision(Precision::Significant(3)),
+    ],
+    errors: MOTION_BLUR.errors,
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Longest exposure t = blur limit × GSD / groundspeed, the time the ground takes to cross that share of a pixel; the default limit is half a pixel",
+    accuracy: "Exact for forward motion alone; vibration and gimbal movement add blur this does not count",
+    when_to_use: "Use this before a mapping flight to choose a shutter speed. Enter the groundspeed and the ground sample distance of the plan. The tool returns the slowest shutter that keeps forward motion blur within half a pixel, as a fraction such as 1/800 s and in seconds. Set a different blur limit if your project allows more or needs less.",
+    limitations: "Only the aircraft's forward motion is counted. Vibration, gimbal movement, gusts, and a rolling shutter all add blur, so treat the answer as the slowest speed to consider, not a guarantee. A tailwind raises the groundspeed above the planned airspeed, so use the fastest leg. In poor light a faster shutter may need a higher ISO or a slower flight.",
+    references: MOTION_BLUR.references,
+    examples: &[Example {
+        id: "primary",
+        title: "12 m/s over a 2.5 cm GSD",
+        input: r#"{"groundspeed":"12 m/s","gsd":"2.5 cm"}"#,
+        source: "Half a pixel is 1.25 cm, crossed at 12 m/s in 1/960 s",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.photogrammetry.motion-blur",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.photogrammetry.gsd",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.photogrammetry.trigger-interval",
+            reason: "next",
+        },
+    ],
+    sentence: "Use a shutter of {max_exposure_fraction} or faster.",
+    limits: &[("batchRows", 10_000)],
+    run: run_max_shutter,
+    ..ToolDef::BLANK
+};
+
+fn run_max_shutter(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    motion_blur(ctx, true)
+}
+
 fn run_motion_blur(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    motion_blur(ctx, false)
+}
+
+/// Motion blur for an exposure, and the longest exposure within the limit.
+/// `limit_only` takes no exposure and reports the limit alone.
+fn motion_blur(ctx: &mut Ctx, limit_only: bool) -> Result<Json, ToolError> {
     let v = ctx.req_quantity("groundspeed")?.to(unit(QT::Speed, "m/s"));
-    let t = ctx.req_quantity("exposure")?.to(unit(QT::Time, "s"));
+    let t = if limit_only {
+        1.0
+    } else {
+        ctx.req_quantity("exposure")?.to(unit(QT::Time, "s"))
+    };
     let g = ctx.req_quantity("gsd")?.to(unit(QT::Length, "m"));
     if v < 0.0 || t <= 0.0 || g <= 0.0 {
         return Err(ToolError::invalid(
@@ -1134,6 +1810,13 @@ fn run_motion_blur(ctx: &mut Ctx) -> Result<Json, ToolError> {
         "1/{} s",
         display::number(1.0 / max_t, Precision::Decimals(0), ctx.options.format)
     );
+    if limit_only {
+        return Ok(Json::obj([
+            ("max_exposure_fraction", Json::str(frac)),
+            ("max_exposure", ctx.out("max_exposure", secs(max_t))),
+            ("blur_limit", Json::Num(limit)),
+        ]));
+    }
     Ok(Json::obj([
         ("blur", Json::Num(blur)),
         ("max_exposure", ctx.out("max_exposure", secs(max_t))),
@@ -1149,8 +1832,14 @@ pub static TOOLS: &[&ToolDef] = &[
     &geofence::GEOFENCE,
     &export::EXPORT,
     &ALTITUDE_FOR_GSD,
+    &FOOTPRINT,
+    &CROP_FACTOR,
     &TRIGGER,
+    &TRIGGER_DISTANCE,
+    &TRIGGER_INTERVAL,
+    &LINE_SPACING,
     &MOTION_BLUR,
+    &MAX_SHUTTER,
     &asprs::ASPRS_ACCURACY,
     &power::BATTERY_ENERGY,
     &power::HOVER_POWER,
@@ -1169,6 +1858,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &ops::WIND_LIMIT,
     &ops::VLOS_CHECK,
     &gcp::GCP_PLAN,
+    &gcp::CHECKPOINT_REQUIREMENTS,
     &sensing::DATASET_SIZE,
     &sensing::THERMAL_FOOTPRINT,
     &sensing::LIDAR_PLAN,

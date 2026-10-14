@@ -286,6 +286,34 @@
       "expect": "survey.curves.vertical-curve-elevations"
     },
     {
+      "query": "image footprint calculator",
+      "expect": "drone.photogrammetry.footprint"
+    },
+    {
+      "query": "crop factor",
+      "expect": "drone.photogrammetry.crop-factor"
+    },
+    {
+      "query": "distance between photos",
+      "expect": "drone.photogrammetry.trigger-distance"
+    },
+    {
+      "query": "distance between flight lines",
+      "expect": "drone.photogrammetry.line-spacing"
+    },
+    {
+      "query": "seconds between photos",
+      "expect": "drone.photogrammetry.trigger-interval"
+    },
+    {
+      "query": "max shutter speed calculator",
+      "expect": "drone.photogrammetry.max-shutter"
+    },
+    {
+      "query": "minimum number of checkpoints",
+      "expect": "drone.photogrammetry.checkpoint-requirements"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

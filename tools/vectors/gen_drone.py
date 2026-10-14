@@ -1043,10 +1043,245 @@ def export_vectors():
     return out
 
 
+FULL_FRAME_DIAGONAL = math.hypot(36.0, 24.0)
+ASPRS_C1 = "ASPRS Positional Accuracy Standards, Edition 2, Annex C Table C.1 rows and section 7.12 (tools/vectors/gen_drone.py)"
+ASPRS_VER = "Edition 2, Version 1.0 (February 2023)"
+SENSORS = [c[:3] for c in CAMS] + [(7.6, 5.7, 6.72), (13.2, 8.8, 10.26), (36.0, 24.0, 21.0), (23.5, 15.6, 25.0), (6.4, 4.8, 4.3), (12.75, 8.5, 10.6)]
+HEIGHTS = [(80, "m"), (90, "m"), (120, "m"), (400, "ft"), (60, "m"), (35, "m"), (250, "ft"), (150, "m"), (30, "m"), (110, "m"), (200, "ft")]
+FT_M = 0.3048
+
+
+def refusal(i, inp, code, field=None):
+    expected = {"ok": False, "error.code": code}
+    if field:
+        expected["error.field"] = field
+    return vec(i, inp, expected, SPEC, "2026")
+
+
+def sensor_inp(sensor, height=None):
+    inp = {"sensor_width": f"{sensor[0]} mm", "sensor_height": f"{sensor[1]} mm", "focal_length": f"{sensor[2]} mm"}
+    if height:
+        inp["height"] = f"{height[0]} {height[1]}"
+    return inp
+
+
+def meters(height):
+    return height[0] * (FT_M if height[1] == "ft" else 1.0)
+
+
+def footprint_vectors():
+    rng = random.Random(55101)
+    out = []
+
+    def case(i, sensor, height, equivalent=False):
+        sw, sh, f = sensor
+        h = meters(height)
+        inp = sensor_inp(sensor, height)
+        if equivalent:
+            crop = FULL_FRAME_DIAGONAL / math.hypot(sw, sh)
+            inp["focal_length"] = f"{f * crop} mm"
+            inp["focal_length_type"] = "equivalent-35mm"
+            f = (f * crop) / crop
+        across, along = sw * h / f, sh * h / f
+        v = vec(i, inp, {"result.footprint_across.value": across, "result.footprint_along.value": along,
+                         "result.footprint_area.value": across * along, "result.focal_length_used.value": float(f)})
+        for key in v["tolerance"]:
+            v["tolerance"][key] = {"rel": 1e-11, "abs": 1e-12}
+        return v
+
+    out.append(case(1, SENSORS[0], (80, "m")))
+    while len(out) < 20:
+        sensor, height = SENSORS[len(out) % len(SENSORS)], rng.choice(HEIGHTS)
+        out.append(case(len(out) + 1, sensor, height, equivalent=len(out) % 5 == 4))
+    base = sensor_inp(SENSORS[0], (80, "m"))
+    out.append(refusal(len(out) + 1, {**base, "height": "0 m"}, "INVALID_INPUT", "/height"))
+    out.append(refusal(len(out) + 1, {**base, "sensor_width": "0 mm"}, "INVALID_INPUT", "/sensor_width"))
+    return out
+
+
+def crop_vectors():
+    out = []
+
+    def case(i, sensor, give):
+        sw, sh, f = sensor
+        diag = math.hypot(sw, sh)
+        crop = FULL_FRAME_DIAGONAL / diag
+        inp = {"sensor_width": f"{sw} mm", "sensor_height": f"{sh} mm"}
+        exp = {"result.crop_factor": crop, "result.sensor_diagonal.value": diag}
+        if give == "physical":
+            inp["focal_length"] = f"{f} mm"
+            exp.update({"result.equivalent_focal_length.value": f * crop, "result.focal_length.value": float(f)})
+        elif give == "equivalent":
+            inp["equivalent_focal_length"] = "24 mm"
+            exp.update({"result.equivalent_focal_length.value": 24.0, "result.focal_length.value": 24 / crop})
+        v = vec(i, inp, exp)
+        for key in v["tolerance"]:
+            v["tolerance"][key] = {"rel": 1e-11, "abs": 1e-12}
+        return v
+
+    out.append(case(1, SENSORS[0], "physical"))
+    # A full frame is its own reference: crop factor 1 exactly.
+    out.append(vec(2, {"sensor_width": "36 mm", "sensor_height": "24 mm", "focal_length": "35 mm"},
+                   {"result.crop_factor": 1.0, "result.equivalent_focal_length.value": 35.0}))
+    more = SENSORS + [(4.8, 3.6, 3.6), (8.8, 6.6, 7.0), (43.8, 32.9, 40.0), (5.6, 4.2, 4.0), (22.3, 14.9, 18.0), (17.3, 13.0, 25.0), (6.3, 4.7, 5.0)]
+    while len(out) < 20:
+        out.append(case(len(out) + 1, more[len(out) % len(more)], ["physical", "equivalent", "none"][len(out) % 3]))
+    out.append(refusal(len(out) + 1, {"sensor_width": "13.2 mm", "sensor_height": "0 mm"}, "INVALID_INPUT", "/sensor_width"))
+    out.append(refusal(len(out) + 1, {"sensor_width": "13.2 mm", "sensor_height": "8.8 mm", "focal_length": "8.8 mm", "equivalent_focal_length": "24 mm"},
+                       "INVALID_INPUT", "/equivalent_focal_length"))
+    return out
+
+
+def spacing_vectors(mode):
+    rng = random.Random({"trigger-distance": 55102, "line-spacing": 55103, "trigger-interval": 55104}[mode])
+    out = []
+
+    def case(i, sensor, height, overlap=None, portrait=False, speed=None, min_interval=None):
+        sw, sh, f = sensor
+        h = meters(height)
+        across, along = sw * h / f, sh * h / f
+        if portrait:
+            across, along = along, across
+        inp = sensor_inp(sensor, height)
+        if portrait:
+            inp["orientation"] = "portrait"
+        if mode == "line-spacing":
+            side = 60 if overlap is None else overlap
+            if overlap is not None:
+                inp["side_overlap"] = overlap
+            exp = {"result.line_spacing.value": across * (1 - side / 100), "result.footprint_across.value": across}
+        else:
+            front = 75 if overlap is None else overlap
+            if overlap is not None:
+                inp["front_overlap"] = overlap
+            dist = along * (1 - front / 100)
+            exp = {"result.trigger_distance.value": dist}
+            if mode == "trigger-distance":
+                exp["result.footprint_along.value"] = along
+            else:
+                inp["groundspeed"] = f"{speed} m/s"
+                exp["result.trigger_interval.value"] = dist / speed
+                if min_interval:
+                    inp["min_interval"] = f"{min_interval} s"
+                    exp["result.max_groundspeed.value"] = dist / min_interval
+        v = vec(i, inp, exp)
+        for key in v["tolerance"]:
+            v["tolerance"][key] = {"rel": 1e-11, "abs": 1e-12}
+        return v
+
+    if mode == "trigger-distance":
+        out.append(case(1, SENSORS[0], (90, "m"), 80))
+    elif mode == "line-spacing":
+        out.append(case(1, SENSORS[0], (90, "m"), 70))
+    else:
+        out.append(case(1, SENSORS[0], (90, "m"), 80, speed=12, min_interval=2))
+    while len(out) < 20:
+        sensor, height = SENSORS[len(out) % len(SENSORS)], rng.choice(HEIGHTS)
+        overlap = None if len(out) % 6 == 5 else rng.choice([50, 60, 65, 70, 75, 80, 85, 90])
+        speed = rng.choice([3, 5, 8, 10, 12, 15, 18, 22])
+        out.append(case(len(out) + 1, sensor, height, overlap, portrait=len(out) % 4 == 3, speed=speed,
+                        min_interval=rng.choice([None, 0.7, 1, 2, 2.5])))
+    base = sensor_inp(SENSORS[0], (90, "m"))
+    if mode == "trigger-interval":
+        base["groundspeed"] = "10 m/s"
+        out.append(refusal(len(out) + 1, {**base, "groundspeed": "0 m/s"}, "INVALID_INPUT", "/groundspeed"))
+        out.append(refusal(len(out) + 1, {**base, "min_interval": "0 s"}, "INVALID_INPUT", "/min_interval"))
+    out.append(refusal(len(out) + 1, {**base, "height": "-5 m"}, "INVALID_INPUT", "/height"))
+    out.append(refusal(len(out) + 1, {**base, "focal_length": "0 mm"}, "INVALID_INPUT", "/sensor_width"))
+    return out
+
+
+def shutter_vectors():
+    rng = random.Random(55105)
+    out = []
+
+    def case(i, speed, gsd_cm, limit=None, speed_unit="m/s"):
+        v_ms = speed * {"m/s": 1.0, "km/h": 1 / 3.6, "mph": 0.44704}[speed_unit]
+        used = 0.5 if limit is None else limit
+        inp = {"groundspeed": f"{speed} {speed_unit}", "gsd": f"{gsd_cm} cm"}
+        if limit is not None:
+            inp["blur_limit"] = limit
+        v = vec(i, inp, {"result.max_exposure.value": used * (gsd_cm / 100) / v_ms, "result.blur_limit": float(used)})
+        for key in v["tolerance"]:
+            v["tolerance"][key] = {"rel": 1e-11, "abs": 1e-15}
+        return v
+
+    out.append(case(1, 12, 2.5))
+    out[0]["expect"]["result.max_exposure_fraction"] = "1/960 s"
+    # Han and Han's case in the parent's vectors: 10 m/s over 2 cm at half a pixel is 1/1,000 s.
+    out.append(case(2, 10, 2.0))
+    while len(out) < 20:
+        out.append(case(len(out) + 1, rng.choice([2, 4, 5, 8, 10, 15, 18, 22, 36, 54]), rng.choice([0.5, 0.8, 1.0, 1.5, 2.0, 2.74, 3.0, 5.0, 10.0]),
+                        rng.choice([None, 0.25, 0.5, 1.0, 1.5]), ["m/s", "km/h", "mph"][len(out) % 3]))
+    out.append(refusal(len(out) + 1, {"groundspeed": "0 m/s", "gsd": "2 cm"}, "NO_SOLUTION", "/groundspeed"))
+    out.append(refusal(len(out) + 1, {"groundspeed": "10 m/s", "gsd": "0 cm"}, "INVALID_INPUT", "/exposure"))
+    return out
+
+
+def checkpoint_vectors():
+    out = []
+
+    def table_c1(km2):
+        # Table C.1 as printed: project area (km²) against total checkpoints.
+        rows = [(500, 30), (750, 35), (1000, 40), (1250, 45), (1500, 50), (1750, 55), (2000, 60), (2250, 65), (2500, 70)]
+        area = math.floor(km2 + 0.5)
+        return next(n for limit, n in rows if area <= limit)
+
+    def case(i, area, unit_name, vegetated=None, h_cm=None, v_cm=None):
+        km2 = area * {"km2": 1.0, "ha": 0.01, "acre": 0.0040468564224, "mi2": 2.589988110336}[unit_name]
+        inp = {"area_size": f"{area} {unit_name}"}
+        share = (vegetated or 0) / 100
+        open_n = table_c1(km2 * (1 - share))
+        exp = {"result.checkpoints_open": float(open_n)}
+        total = open_n
+        if vegetated:
+            inp["vegetated"] = vegetated
+            veg_n = table_c1(km2 * share)
+            exp["result.checkpoints_vegetated"] = float(veg_n)
+            total += veg_n
+        exp["result.checkpoints"] = float(total)
+        if h_cm:
+            inp["horizontal_class"] = f"{h_cm} cm"
+            exp["result.checkpoint_rmse_h.value"] = h_cm / 2
+        if v_cm:
+            inp["vertical_class"] = f"{v_cm} cm"
+            exp["result.checkpoint_rmse_v.value"] = v_cm / 2
+        v = vec(i, inp, exp, ASPRS_C1, ASPRS_VER)
+        for key in v["tolerance"]:
+            v["tolerance"][key] = {"rel": 1e-12, "abs": 1e-9}
+        return v
+
+    out.append(case(1, 12, "km2", 25, 5, 10))
+    # Every row of Table C.1, at its upper edge.
+    for area in [500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500]:
+        out.append(case(len(out) + 1, area, "km2"))
+    # Just past each of the first edges, and small projects in the units a drone job uses.
+    out.append(case(len(out) + 1, 501, "km2"))
+    out.append(case(len(out) + 1, 751, "km2", None, 10))
+    out.append(case(len(out) + 1, 40, "ha", None, 2.5, 5))
+    out.append(case(len(out) + 1, 160, "acre", 50, None, 15))
+    out.append(case(len(out) + 1, 3, "mi2", 10, 7.5))
+    out.append(case(len(out) + 1, 2400, "km2", 50, 30, 30))
+    out.append(case(len(out) + 1, 3000, "km2", 40))
+    out.append(case(len(out) + 1, 1800, "km2", 30, 20, 40))
+    out.append(case(len(out) + 1, 0.5, "km2", 100, 3, 6))
+    out.append(case(len(out) + 1, 900, "km2", 5))
+    out.append(refusal(len(out) + 1, {"area_size": "2600 km2"}, "OUT_OF_DOMAIN", "/area"))
+    out.append(refusal(len(out) + 1, {"area_size": "0 km2"}, "INVALID_INPUT", "/area_size"))
+    out.append(refusal(len(out) + 1, {"area_size": "10 km2", "horizontal_class": "0 cm"}, "INVALID_INPUT", "/horizontal_class"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     selected = set(sys.argv[2:])
-    files = {"drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
+    files = {"drone.photogrammetry.footprint": footprint_vectors(), "drone.photogrammetry.crop-factor": crop_vectors(),
+             "drone.photogrammetry.trigger-distance": spacing_vectors("trigger-distance"),
+             "drone.photogrammetry.line-spacing": spacing_vectors("line-spacing"),
+             "drone.photogrammetry.trigger-interval": spacing_vectors("trigger-interval"),
+             "drone.photogrammetry.max-shutter": shutter_vectors(),
+             "drone.photogrammetry.checkpoint-requirements": checkpoint_vectors(),
+             "drone.photogrammetry.gsd": gsd(), "drone.photogrammetry.altitude-for-gsd": alt(), "drone.photogrammetry.trigger": trigger(),
              "drone.photogrammetry.motion-blur": blur(), "drone.photogrammetry.asprs-accuracy": asprs(),
              "drone.power.battery-energy": battery_vectors(), "drone.power.hover-power": hover_vectors(), "drone.power.calibrate-hover": calibrate_vectors(),
              "drone.power.endurance": endurance_vectors(), "drone.power.max-payload": payload_vectors(), "drone.power.payload-impact": payload_impact_vectors(),

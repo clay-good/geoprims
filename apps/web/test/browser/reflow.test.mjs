@@ -44,12 +44,29 @@ function overflow() {
   return `${d.scrollWidth} > ${d.clientWidth}`;
 }
 
+/**
+ * Loads `url`, once more in a fresh page if WebKit fails the navigation with
+ * its own "internal error". On CI that has struck a different, healthy page
+ * after hundreds of loads in one page; a page that really fails does so twice.
+ */
+async function visit(context, page, url) {
+  try {
+    return [page, await page.goto(url, { waitUntil: 'load' })];
+  } catch (e) {
+    if (!/internal error/i.test(String(e?.message))) throw e;
+    await page.close();
+    const fresh = await context.newPage();
+    return [fresh, await fresh.goto(url, { waitUntil: 'load' })];
+  }
+}
+
 async function sweep(browser, origin, paths, viewport, { zoom = false } = {}) {
   const context = await browser.newContext({ viewport });
-  const page = await context.newPage();
+  let page = await context.newPage();
   const problems = [];
   for (const path of paths) {
-    const res = await page.goto(origin + path, { waitUntil: 'load' });
+    let res;
+    [page, res] = await visit(context, page, origin + path);
     if (!res?.ok()) {
       problems.push(`${path} answered ${res?.status()}`);
       continue;

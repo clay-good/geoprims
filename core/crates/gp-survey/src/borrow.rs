@@ -176,6 +176,76 @@ pub static BORROW_PIT: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static FOUR_POINT_AVERAGE: ToolDef = ToolDef {
+    id: "survey.earthwork.four-point-average",
+    title: "Four-point average cut and fill",
+    summary: "Cut and fill volumes over a grid, cell by cell: each cell's four corner depths averaged over its area, with cells that cross from cut to fill split between the two.",
+    aliases: &[
+        "four point method",
+        "average depth grid volume",
+        "grid cut and fill calculator",
+    ],
+    keywords: &[
+        "four point",
+        "average depth",
+        "grid",
+        "cut",
+        "fill",
+        "volume",
+        "site grading",
+        "earthwork",
+    ],
+    inputs: BORROW_PIT.inputs,
+    outputs: &[
+        BORROW_PIT.outputs[1],
+        BORROW_PIT.outputs[2],
+        BORROW_PIT.outputs[0],
+        BORROW_PIT.outputs[3],
+        BORROW_PIT.outputs[4],
+    ],
+    errors: BORROW_PIT.errors,
+    warnings: BORROW_PIT.warnings,
+    model: "Per cell, volume = cell area × (h₁ + h₂ + h₃ + h₄) / 4 with h the existing less the proposed elevation at each corner; a cell with cut and fill corners is split as cut = A·P² / (4(P + N)) and fill = A·N² / (4(P + N)), P and N the sums of its cut and fill depths (Ghilani & Wolf 2021, ch. 26)",
+    accuracy: "Exact for ground that is straight between grid points; a finer grid follows rough ground more closely",
+    when_to_use: "Use this for a site-grading takeoff where cut and fill both matter, such as a building pad or a parking lot. Enter the existing elevations on a square grid, the cell size, and either one finished grade or a proposed elevation at each grid point. The tool returns the cut and the fill separately, the net of the two, and the points where the balance line between them crosses the grid.",
+    limitations: "The ground is treated as straight between grid points, so ridges, ditches, and breaks inside a cell are missed. Cells must be square and the same size, and every row needs the same number of points. A cell that crosses from cut to fill is split by depth, which is an approximation of where the line runs. Volumes are bank measure before any swell or shrink.",
+    references: BORROW_PIT.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 3 × 4 grid at 10 m graded to a sloping pad",
+        input: r#"{"existing":[{"elevations":"52.4, 52.1, 51.7, 51.2"},{"elevations":"52.0, 51.6, 51.1, 50.7"},{"elevations":"51.5, 51.0, 50.6, 50.1"}],"proposed":[{"elevations":"51.6, 51.5, 51.4, 51.3"},{"elevations":"51.4, 51.3, 51.2, 51.1"},{"elevations":"51.2, 51.1, 51.0, 50.9"}],"cell_size":"10 m"}"#,
+        source: "add-survey-suite grid method requirement, four-point arithmetic",
+    }],
+    primary_example: "primary",
+    visualization: BORROW_PIT.visualization,
+    related: &[
+        Related {
+            id: "survey.earthwork.borrow-pit",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.earthwork.haul-loads",
+            reason: "next",
+        },
+        Related {
+            id: "survey.earthwork.shrink-swell",
+            reason: "next",
+        },
+    ],
+    sentence: "The grid has {cut_volume} of cut and {fill_volume} of fill, a net of {net_volume}.",
+    limits: BORROW_PIT.limits,
+    run: run_four_point,
+    ..ToolDef::BLANK
+};
+
+fn run_four_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    borrow(ctx, true)
+}
+
+fn run_borrow(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    borrow(ctx, false)
+}
+
 fn grid(ctx: &mut Ctx, list: &str) -> Result<Option<Vec<Vec<f64>>>, ToolError> {
     if !ctx.is_set(list) {
         return Ok(None);
@@ -209,7 +279,9 @@ fn grid(ctx: &mut Ctx, list: &str) -> Result<Option<Vec<Vec<f64>>>, ToolError> {
     Ok(Some(out))
 }
 
-fn run_borrow(ctx: &mut Ctx) -> Result<Json, ToolError> {
+/// The grid volume. `four_point` leads the result with the cell-by-cell cut
+/// and fill; otherwise the corner-weights net comes first.
+fn borrow(ctx: &mut Ctx, four_point: bool) -> Result<Json, ToolError> {
     let cell = ctx.req_quantity("cell_size")?;
     let fg = ctx.quantity("finished_grade")?;
     let mut qs = vec![("cell_size", cell)];
@@ -340,10 +412,17 @@ fn run_borrow(ctx: &mut Ctx) -> Result<Json, ToolError> {
         unit: m3,
     };
     let q = |v: f64| Q { value: v, unit: u };
-    Ok(Json::obj(vec![
+    // The four-point net is the cut less the fill; the weights give the same sum.
+    let net = if four_point { cut - fill } else { net };
+    let mut volumes = vec![
         ("net_volume", ctx.emit("net_volume", vol(net), vu)),
         ("cut_volume", ctx.emit("cut_volume", vol(cut), vu)),
         ("fill_volume", ctx.emit("fill_volume", vol(fill), vu)),
+    ];
+    if four_point {
+        volumes.rotate_left(1);
+    }
+    volumes.extend([
         (
             "net_cubic_yards",
             ctx.emit("net_cubic_yards", vol(net), unit(QT::Volume, "yd3")),
@@ -362,5 +441,6 @@ fn run_borrow(ctx: &mut Ctx) -> Result<Json, ToolError> {
                     .collect(),
             ),
         ),
-    ]))
+    ]);
+    Ok(Json::obj(volumes))
 }

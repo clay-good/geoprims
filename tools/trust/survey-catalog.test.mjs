@@ -140,6 +140,21 @@ test('the two-face mean and the level adjustment are addressable survey operatio
   }
 });
 
+test('each earthwork step named in the inventory is an addressable survey operation', () => {
+  const expected = new Map([
+    ['survey.earthwork.rise-run', ['rise over run calculator', 'slope length calculator']],
+    ['survey.earthwork.haul-loads', ['haul loads calculator', 'how many truck loads']],
+    ['survey.earthwork.four-point-average', ['four point method', 'average depth grid volume']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 63, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 66, `survey operation count regressed to ${survey.length}`);
 });

@@ -2267,6 +2267,128 @@ pub static SHRINK_SWELL: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static HAUL_LOADS: ToolDef = ToolDef {
+    id: "survey.earthwork.haul-loads",
+    title: "Truck loads to haul a cut",
+    summary: "The number of truck loads to haul a bank volume, from the swell that loosens it and the truck's capacity, rounded up to whole loads.",
+    aliases: &[
+        "haul loads calculator",
+        "how many truck loads",
+        "dump truck loads",
+    ],
+    keywords: &[
+        "haul",
+        "truck loads",
+        "dump truck",
+        "swell",
+        "loose volume",
+        "bank volume",
+        "export",
+        "trucking",
+    ],
+    inputs: &[
+        SHRINK_SWELL.inputs[0],
+        SHRINK_SWELL.inputs[1],
+        SHRINK_SWELL.inputs[3].required().core(),
+    ],
+    outputs: &[
+        Field::new(
+            "loads",
+            "Truck loads",
+            "Loose volume ÷ truck capacity, rounded up",
+            Kind::Number {
+                min: 0.0,
+                max: 1e12,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        SHRINK_SWELL.outputs[0],
+        Field::new(
+            "last_load",
+            "Last load",
+            "What the final truck carries",
+            Kind::Quantity {
+                q: QT::Volume,
+                unit: "yd3",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+    ],
+    errors: SHRINK_SWELL.errors,
+    warnings: SHRINK_SWELL.warnings,
+    model: "Loose volume = bank volume × (1 + swell); loads = loose volume ÷ truck capacity, rounded up to a whole truck; the last load carries what is left",
+    accuracy: "Exact arithmetic; the count is only as good as the swell factor and how full each truck runs",
+    when_to_use: "Use this to turn an excavation quantity into trucking. Enter the bank volume from the takeoff, the swell percent for the material, and what one truck carries. The tool returns the loose volume that has to move, the number of loads rounded up to a whole truck, and how much the last truck carries, so a nearly empty final load is easy to see.",
+    limitations: "Swell varies with the soil, its moisture, and how it is dug, so use a factor from your soils report or your own records. Truck capacity here is volume, so heavy material may be limited by legal weight before the box is full. It does not schedule cycles, count trucks needed per hour, or price the haul.",
+    references: SHRINK_SWELL.references,
+    examples: &[Example {
+        id: "primary",
+        title: "850 bank yd³ at 30% swell in 16 yd³ trucks",
+        input: r#"{"bank_volume":"850 yd3","swell":30,"truck_capacity":"16 yd3"}"#,
+        source: "Arithmetic: 1,105 loose yd³ is 69.06 loads, so 70",
+    }],
+    primary_example: "primary",
+    visualization: SHRINK_SWELL.visualization,
+    related: &[
+        Related {
+            id: "survey.earthwork.shrink-swell",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.earthwork.average-end-area",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.earthwork.borrow-pit",
+            reason: "alternative",
+        },
+    ],
+    sentence: "Hauling {loose_volume} loose takes {loads} truck loads.",
+    limits: SHRINK_SWELL.limits,
+    run: run_haul_loads,
+    ..ToolDef::BLANK
+};
+
+fn run_haul_loads(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let bank = ctx.req_quantity("bank_volume")?;
+    let cap = ctx.req_quantity("truck_capacity")?;
+    let m3 = unit(QT::Volume, "m3");
+    let (b, c) = (bank.to(m3), cap.to(m3));
+    if b < 0.0 {
+        return Err(ToolError::invalid(
+            "/bank_volume",
+            "The volume cannot be negative.",
+        ));
+    }
+    if c <= 0.0 {
+        return Err(ToolError::invalid(
+            "/truck_capacity",
+            "Truck capacity must be positive.",
+        ));
+    }
+    let swell = ctx.number("swell")?.expect("required") / 100.0;
+    let loose = b * (1.0 + swell);
+    let loads = haul_loads(loose, c);
+    // What is left for the final truck after the full ones.
+    let last = if loads == 0.0 {
+        0.0
+    } else {
+        loose - (loads - 1.0) * c
+    };
+    let q = |value: f64| Q { value, unit: m3 };
+    Ok(Json::obj(vec![
+        ("loads", Json::Num(loads)),
+        ("loose_volume", ctx.out("loose_volume", q(loose))),
+        ("last_load", ctx.emit("last_load", q(last), cap.unit)),
+    ]))
+}
+
+/// Whole truck loads for a loose volume, rounded up, allowing for binary
+/// round-off on exact multiples.
+fn haul_loads(loose: f64, capacity: f64) -> f64 {
+    (loose / capacity * (1.0 - 1e-12)).ceil()
+}
+
 fn run_shrink_swell(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let bank = ctx.req_quantity("bank_volume")?;
     let m3 = unit(QT::Volume, "m3");
@@ -2309,8 +2431,7 @@ fn run_shrink_swell(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 "Truck capacity must be positive.",
             ));
         }
-        // Round up, allowing for binary round-off on exact multiples.
-        let loads = (loose / c * (1.0 - 1e-12)).ceil();
+        let loads = haul_loads(loose, c);
         out.push(("loads", Json::Num(loads)));
     }
     Ok(Json::obj(out))
@@ -2873,10 +2994,13 @@ pub static TOOLS: &[&ToolDef] = &[
     &AVERAGE_END_AREA,
     &PRISMOIDAL,
     &SHRINK_SWELL,
+    &HAUL_LOADS,
     &grade::GRADE,
+    &grade::RISE_RUN,
     &staking::SLOPE_STAKE,
     &section::SECTION_AREA,
     &borrow::BORROW_PIT,
+    &borrow::FOUR_POINT_AVERAGE,
     &stockpile::STOCKPILE,
     &stockpile::SOLID,
     &COMBINED_FACTOR,

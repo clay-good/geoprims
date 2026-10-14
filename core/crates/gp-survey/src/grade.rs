@@ -228,14 +228,97 @@ pub static GRADE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static RISE_RUN: ToolDef = ToolDef {
+    id: "survey.earthwork.rise-run",
+    title: "Rise, run, and slope length",
+    summary: "The third of rise, run, and slope length from any two, with the grade they make as a percent, an angle, and a labeled ratio.",
+    aliases: &[
+        "rise over run calculator",
+        "slope length calculator",
+        "rise run to percent grade",
+    ],
+    keywords: &[
+        "rise",
+        "run",
+        "slope length",
+        "slope distance",
+        "percent grade",
+        "ramp",
+        "embankment",
+        "pythagorean",
+    ],
+    inputs: &[
+        GRADE.inputs[2].core(),
+        GRADE.inputs[3].core(),
+        GRADE.inputs[4].core(),
+    ],
+    outputs: &[
+        GRADE.outputs[0],
+        len_out("slope_length", "Slope length", "√(rise² + run²)"),
+        len_out("rise", "Rise", "Vertical change"),
+        len_out("run", "Run", "Horizontal distance"),
+        GRADE.outputs[1],
+        GRADE.outputs[3],
+        GRADE.outputs[4],
+        GRADE.outputs[2],
+    ],
+    errors: GRADE.errors,
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Grade g = rise / run; slope length = √(rise² + run²); from a slope length, run = √(slope² − rise²) or rise = √(slope² − run²); percent = 100·g, angle = atan g",
+    accuracy: "Exact",
+    when_to_use: "Use this when you have measured two sides of a slope and need the third: the rise and run of a ramp, a taped slope length and a height difference, or a slope length and its horizontal distance. Enter any two of rise, run, and slope length in the same units. The tool returns all three with the grade as a percent, an angle, and a ratio labeled H:V and V:H.",
+    limitations: "This is one straight slope as a right triangle. A rise found from a run and a slope length is reported as positive, since the two lengths cannot say whether the ground climbs or falls. The slope length must be longer than the other side given. It does not reduce a total-station shot with instrument and target heights, and it gives no design advice on what slope will stand.",
+    references: GRADE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 2.5 ft rise over a 30 ft run",
+        input: r#"{"rise":"2.5 ft","run":"30 ft"}"#,
+        source: "Right-triangle arithmetic: 2.5 / 30 is 8.333%, slope length 30.104 ft",
+    }],
+    primary_example: "primary",
+    visualization: GRADE.visualization,
+    related: &[
+        Related {
+            id: "survey.earthwork.grade",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.reduction.slope",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.earthwork.slope-stake",
+            reason: "next",
+        },
+    ],
+    sentence: "A rise of {rise} over a run of {run} is a {percent}% grade, {slope_length} along the slope.",
+    limits: GRADE.limits,
+    run: run_rise_run,
+    ..ToolDef::BLANK
+};
+
 fn fmt_ratio(first: f64, a: char, b: char) -> String {
     let v = (first * 1000.0).round() / 1000.0;
     format!("{v}{a}:1{b}")
 }
 
 fn run_grade(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let conv = ctx.choice("convention")?;
-    let grade = ctx.text("grade")?.map(|g| parse(&g, conv)).transpose()?;
+    grade(ctx, false)
+}
+
+fn run_rise_run(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    grade(ctx, true)
+}
+
+/// The grade tool. With `lengths_only`, the grade comes from two of rise,
+/// run, and slope length, and the lengths lead the result.
+fn grade(ctx: &mut Ctx, lengths_only: bool) -> Result<Json, ToolError> {
+    let grade = if lengths_only {
+        None
+    } else {
+        let conv = ctx.choice("convention")?;
+        ctx.text("grade")?.map(|g| parse(&g, conv)).transpose()?
+    };
     let rise = ctx.quantity("rise")?;
     let run = ctx.quantity("run")?;
     let slope = ctx.quantity("slope_length")?;
@@ -267,6 +350,12 @@ fn run_grade(ctx: &mut Ctx) -> Result<Json, ToolError> {
         (None, Some(r), Some(h), _) if h > 0.0 => r / h,
         (None, Some(r), None, Some(s)) if s > r.abs() => r / sqrt(s * s - r * r),
         (None, None, Some(h), Some(s)) if s > h && h > 0.0 => sqrt(s * s - h * h) / h,
+        _ if lengths_only => {
+            return Err(ToolError::invalid(
+                "/rise",
+                "Give two of rise, run, and slope length (the slope length longer than the other).",
+            ));
+        }
         _ => {
             return Err(ToolError::invalid(
                 "/grade",
@@ -316,6 +405,20 @@ fn run_grade(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "slope_length",
             ctx.emit("slope_length", q(hypot(rr, hh)), u),
         ));
+    }
+    if lengths_only {
+        // The focused operation reports in its own declared order.
+        let order = [
+            "percent",
+            "slope_length",
+            "rise",
+            "run",
+            "degrees",
+            "ratio_hv",
+            "ratio_vh",
+            "per_mille",
+        ];
+        out.sort_by_key(|(name, _)| order.iter().position(|o| o == name));
     }
     Ok(Json::obj(out))
 }

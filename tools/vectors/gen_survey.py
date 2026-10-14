@@ -831,6 +831,146 @@ def level_adjust():
     return out
 
 
+def rise_run():
+    """Two of rise, run, and slope length: the third, and the grade."""
+    rng = random.Random(44208)
+    out = []
+
+    def expect(rise, run):
+        g = rise / run
+        return {"result.percent": 100 * g, "result.slope_length.value": math.hypot(rise, run), "result.rise.value": rise,
+                "result.run.value": run, "result.degrees.value": math.degrees(math.atan(g)), "result.per_mille": 1000 * g}
+
+    out.append(vec(1, {"rise": "2.5 ft", "run": "30 ft"}, expect(2.5, 30.0)))
+    # A 3-4-5 triangle from each pair of sides.
+    out.append(vec(2, {"rise": "3 m", "slope_length": "5 m"}, expect(3.0, 4.0)))
+    out.append(vec(3, {"run": "4 m", "slope_length": "5 m"}, expect(3.0, 4.0)))
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        run = round(rng.uniform(2, 900), 3)
+        rise = round(run * rng.uniform(-0.6, 0.6), 3)
+        which = len(out) % 3
+        if which == 0:
+            inp = {"rise": f"{rise} {unit_name}", "run": f"{run} {unit_name}"}
+            exp = expect(rise, run)
+        elif which == 1:
+            slope = round(math.hypot(rise, run), 4)
+            inp = {"rise": f"{rise} {unit_name}", "slope_length": f"{slope} {unit_name}"}
+            exp = expect(rise, math.sqrt(slope * slope - rise * rise))
+        else:
+            slope = round(math.hypot(rise, run), 4)
+            inp = {"run": f"{run} {unit_name}", "slope_length": f"{slope} {unit_name}"}
+            exp = expect(math.sqrt(slope * slope - run * run), run)
+        out.append(vec(len(out) + 1, inp, exp, rel=1e-9))
+    for inp, code, field in [
+        ({"rise": "5 ft"}, "INVALID_INPUT", "/rise"),
+        ({"rise": "5 ft", "slope_length": "4 ft"}, "INVALID_INPUT", "/rise"),
+        ({"rise": "5 ft", "run": "0 ft"}, "INVALID_INPUT", "/run"),
+        ({"rise": "5 ft", "run": "100 ftUS"}, "UNIT_MISMATCH", None),
+    ]:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
+def haul_loads():
+    """Bank volume to truck loads, in exact fractions so the round-up is not a float's guess."""
+    from fractions import Fraction
+    rng = random.Random(44209)
+    out = []
+    to_m3 = {"yd3": Fraction(9144, 10000) ** 3, "m3": Fraction(1), "ft3": Fraction(3048, 10000) ** 3}
+
+    def case(bank, swell, cap, bank_unit="yd3", cap_unit="yd3"):
+        loose = Fraction(str(bank)) * to_m3[bank_unit] * (1 + Fraction(str(swell)) / 100)
+        capacity = Fraction(str(cap)) * to_m3[cap_unit]
+        loads = math.ceil(loose / capacity)
+        last = loose - (loads - 1) * capacity
+        return ({"bank_volume": f"{bank} {bank_unit}", "swell": swell, "truck_capacity": f"{cap} {cap_unit}"},
+                {"result.loads": float(loads), "result.loose_volume.value": float(loose / to_m3["yd3"]),
+                 "result.last_load.value": float(last / to_m3[cap_unit])})
+
+    out.append(vec(1, *case(850, 30, 16)))
+    # The spec scenario: 1,000 bank yd3 at 25% swell in 12 yd3 trucks is 105 loads.
+    out.append(vec(2, *case(1000, 25, 12), SPEC, "2026"))
+    # Exact multiples take no extra truck: 960 yd3 at 25% is exactly 100 loads of 12.
+    out.append(vec(3, *case(960, 25, 12)))
+    out.append(vec(4, *case(96, 0, 12)))
+    while len(out) < 20:
+        bank_unit, cap_unit = [("yd3", "yd3"), ("m3", "m3"), ("ft3", "yd3"), ("m3", "yd3")][len(out) % 4]
+        bank = round(rng.uniform(20, 60000), 1)
+        swell = rng.choice([0, 10, 12.5, 15, 20, 25, 30, 35, 40, 67])
+        cap = rng.choice([8, 10, 12, 14, 16, 18, 20, 22.5])
+        out.append(vec(len(out) + 1, *case(bank, swell, cap, bank_unit, cap_unit), rel=1e-9))
+    for inp, field in [
+        ({"bank_volume": "-5 yd3", "swell": 25, "truck_capacity": "12 yd3"}, "/bank_volume"),
+        ({"bank_volume": "500 yd3", "swell": 25, "truck_capacity": "0 yd3"}, "/truck_capacity"),
+    ]:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT", "error.field": field}, SPEC, "2026"))
+    return out
+
+
+def four_point_average():
+    """Grid cut and fill cell by cell, with transition cells split by depth."""
+    rng = random.Random(44210)
+    out = []
+    to_m = {"ft": FT, "ftUS": 1200 / 3937, "m": 1.0}
+
+    def solve(existing, proposed, cell, unit_name):
+        area = cell * cell
+        cut = fill = 0.0
+        for i in range(len(existing) - 1):
+            for j in range(len(existing[0]) - 1):
+                depths = [existing[a][b] - proposed[a][b] for a, b in ((i, j), (i, j + 1), (i + 1, j + 1), (i + 1, j))]
+                pos = sum(d for d in depths if d > 0)
+                neg = -sum(d for d in depths if d < 0)
+                if neg == 0:
+                    cut += area * pos / 4
+                elif pos == 0:
+                    fill += area * neg / 4
+                else:
+                    cut += area * pos * pos / (4 * (pos + neg))
+                    fill += area * neg * neg / (4 * (pos + neg))
+        # Feet of either kind report in international cubic feet; meters in cubic meters.
+        scale = to_m[unit_name] ** 3 / (FT ** 3 if unit_name.startswith("ft") else 1.0)
+        return {"result.cut_volume.value": cut * scale, "result.fill_volume.value": fill * scale,
+                "result.net_volume.value": (cut - fill) * scale,
+                "result.net_cubic_yards.value": (cut - fill) * to_m[unit_name] ** 3 / (3 * FT) ** 3}
+
+    def rows(grid):
+        return [{"elevations": ", ".join(f"{v}" for v in row)} for row in grid]
+
+    existing = [[52.4, 52.1, 51.7, 51.2], [52.0, 51.6, 51.1, 50.7], [51.5, 51.0, 50.6, 50.1]]
+    proposed = [[51.6, 51.5, 51.4, 51.3], [51.4, 51.3, 51.2, 51.1], [51.2, 51.1, 51.0, 50.9]]
+    out.append(vec(1, {"existing": rows(existing), "proposed": rows(proposed), "cell_size": "10 m"}, solve(existing, proposed, 10.0, "m"), rel=1e-9))
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        n_rows, n_cols = rng.randrange(2, 7), rng.randrange(2, 8)
+        cell = rng.choice([5.0, 10.0, 20.0, 25.0, 50.0])
+        base = round(rng.uniform(10, 900), 1)
+        existing = [[round(base + rng.uniform(-3, 3), 2) for _ in range(n_cols)] for _ in range(n_rows)]
+        inp = {"existing": rows(existing), "cell_size": f"{cell} {unit_name}"}
+        if len(out) % 2:
+            grade_ = round(base + rng.uniform(-1, 1), 2)
+            inp["finished_grade"] = f"{grade_} {unit_name}"
+            proposed = [[grade_] * n_cols for _ in range(n_rows)]
+        else:
+            proposed = [[round(base + rng.uniform(-2, 2), 2) for _ in range(n_cols)] for _ in range(n_rows)]
+            inp["proposed"] = rows(proposed)
+        out.append(vec(len(out) + 1, inp, solve(existing, proposed, cell, unit_name), rel=1e-9))
+        for key in out[-1]["tolerance"]:
+            out[-1]["tolerance"][key]["abs"] = 1e-6
+    grid_ = rows([[101.0, 100.5], [100.2, 99.8]])
+    for inp, field in [
+        ({"existing": grid_, "cell_size": "25 ft"}, "/finished_grade"),
+        ({"existing": grid_, "cell_size": "0 ft", "finished_grade": "100 ft"}, "/cell_size"),
+        ({"existing": grid_, "proposed": rows([[100.0, 100.0]]), "cell_size": "25 ft"}, "/proposed"),
+    ]:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT", "error.field": field}, SPEC, "2026"))
+    return out
+
+
 NGS5_EXAMPLE = "NOAA Manual NOS NGS 5, State Plane Coordinate System of 1983 (Stem), section 4.4 example, steps 4 and 5"
 NGS5_LINES = [(4805.468, 4805.508), (3963.694, 3963.727), (4966.083, 4966.125), (3501.223, 3501.252), (4466.935, 4466.973)]
 
@@ -2486,6 +2626,9 @@ def main():
         "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
         "survey.reduction.level-run": level_run(),
         "survey.reduction.level-adjust": level_adjust(),
+        "survey.earthwork.rise-run": rise_run(),
+        "survey.earthwork.haul-loads": haul_loads(),
+        "survey.earthwork.four-point-average": four_point_average(),
         "survey.reduction.two-face-mean": two_face_mean(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.cogo.bearing-bearing": named_intersection("bearing-bearing"),

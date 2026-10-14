@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "69ddd9f50dfe9d66",
+    "hash": "edff260bbe8e8d00",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "5bdc5b87319ff82a",
+    "hash": "1f9c99398d69b472",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1440,11 +1440,11 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "16e522a800599383",
+    "hash": "a6033b73682356a0",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
-    "hash": "cdf1861d77051027",
+    "hash": "479aeb959432fbaa",
     "lastmod": "2026-10-14"
   },
   "/survey/cogo/": {
@@ -1568,32 +1568,44 @@
     "lastmod": "2026-10-09"
   },
   "/survey/earthwork/": {
-    "hash": "9c3d5b6d47bf12e7",
-    "lastmod": "2026-09-23"
+    "hash": "bd5ffb1aedbb80f5",
+    "lastmod": "2026-10-14"
   },
   "/survey/earthwork/average-end-area/": {
     "hash": "18e52178ae1863ba",
     "lastmod": "2026-10-09"
   },
   "/survey/earthwork/borrow-pit/": {
-    "hash": "f189e1ceb9b5e229",
-    "lastmod": "2026-10-09"
+    "hash": "adaa295e93053bb5",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/earthwork/four-point-average/": {
+    "hash": "9419d7a91811a539",
+    "lastmod": "2026-10-14"
   },
   "/survey/earthwork/grade/": {
-    "hash": "5a17a9282cbbebd9",
-    "lastmod": "2026-10-13"
+    "hash": "d5262f5f922bb0d2",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/earthwork/haul-loads/": {
+    "hash": "b3cdeb1bd22087cc",
+    "lastmod": "2026-10-14"
   },
   "/survey/earthwork/prismoidal/": {
-    "hash": "65b5daa98365640d",
-    "lastmod": "2026-10-09"
+    "hash": "4776f2bf53ee649f",
+    "lastmod": "2026-10-14"
   },
   "/survey/earthwork/profile-grades/": {
-    "hash": "d4b2de8edd122550",
-    "lastmod": "2026-10-09"
+    "hash": "628901949fbe557f",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/earthwork/rise-run/": {
+    "hash": "d86c5e6baf191c74",
+    "lastmod": "2026-10-14"
   },
   "/survey/earthwork/section-area/": {
-    "hash": "aa984e4af3df99b1",
-    "lastmod": "2026-10-09"
+    "hash": "f788be763e3d92ba",
+    "lastmod": "2026-10-14"
   },
   "/survey/earthwork/shrink-swell/": {
     "hash": "0c745d90b80c395f",
@@ -1792,7 +1804,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "332f798956ad381f",
+    "hash": "463e4d8d54232dca",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2056,7 +2068,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a151fd93cc6b0e4d",
+    "hash": "2021a650c43eb6b5",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

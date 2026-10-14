@@ -414,6 +414,116 @@ fn level_adjustment_matches_the_level_run() {
 }
 
 #[test]
+fn named_earthwork_operations_match_their_general_tools() {
+    // Rise and run: the same grade and lengths as the grade tool, from each pair of sides.
+    for input in [
+        serde_json::json!({"rise": "2.5 ft", "run": "30 ft"}),
+        serde_json::json!({"rise": "3 m", "slope_length": "5 m"}),
+        serde_json::json!({"run": "4 ftUS", "slope_length": "5 ftUS"}),
+    ] {
+        let named = call("survey.earthwork.rise-run", &input.to_string());
+        let general = call("survey.earthwork.grade", &input.to_string());
+        assert_eq!(named["ok"], true, "{named}");
+        for key in [
+            "percent",
+            "degrees",
+            "per_mille",
+            "ratio_hv",
+            "ratio_vh",
+            "rise",
+            "run",
+            "slope_length",
+        ] {
+            assert_eq!(
+                named["result"][key], general["result"][key],
+                "{key} {input}"
+            );
+        }
+    }
+    let r = call(
+        "survey.earthwork.rise-run",
+        r#"{"rise":"3 m","slope_length":"5 m"}"#,
+    );
+    assert!((num(&r, "result.run.value") - 4.0).abs() < 1e-12);
+    assert!((num(&r, "result.percent") - 75.0).abs() < 1e-9);
+    // One length is not a slope, and a written grade belongs to the grade tool.
+    assert_eq!(
+        call("survey.earthwork.rise-run", r#"{"rise":"3 m"}"#)["error"]["field"],
+        "/rise"
+    );
+    assert_eq!(
+        call("survey.earthwork.rise-run", r#"{"grade":"5%","run":"3 m"}"#)["ok"],
+        false
+    );
+
+    // Haul loads: the swell tool's loose volume and load count.
+    let input =
+        serde_json::json!({"bank_volume": "1000 yd3", "swell": 25, "truck_capacity": "12 yd3"});
+    let named = call("survey.earthwork.haul-loads", &input.to_string());
+    let general = call("survey.earthwork.shrink-swell", &input.to_string());
+    assert_eq!(named["result"]["loads"], general["result"]["loads"]);
+    assert_eq!(
+        named["result"]["loose_volume"],
+        general["result"]["loose_volume"]
+    );
+    assert_eq!(num(&named, "result.loads"), 105.0);
+    // 1,250 loose yd³ is 104 full trucks of 12 and one carrying 2.
+    assert!((num(&named, "result.last_load.value") - 2.0).abs() < 1e-9);
+    // An exact multiple takes no extra truck, and its last truck is full.
+    let exact = call(
+        "survey.earthwork.haul-loads",
+        r#"{"bank_volume":"960 yd3","swell":25,"truck_capacity":"12 yd3"}"#,
+    );
+    assert_eq!(num(&exact, "result.loads"), 100.0);
+    assert!((num(&exact, "result.last_load.value") - 12.0).abs() < 1e-6);
+    let none = call(
+        "survey.earthwork.haul-loads",
+        r#"{"bank_volume":"0 yd3","swell":25,"truck_capacity":"12 yd3"}"#,
+    );
+    assert_eq!(num(&none, "result.loads"), 0.0);
+    assert_eq!(num(&none, "result.last_load.value"), 0.0);
+
+    // Four-point average: the grid tool's cut and fill, and a net that is their difference.
+    let input = serde_json::json!({
+        "existing": [{"elevations": "102.0, 101.5, 101.0"}, {"elevations": "101.2, 100.6, 100.2"}, {"elevations": "100.4, 99.8, 99.2"}],
+        "cell_size": "25 ft", "finished_grade": "100 ft"
+    });
+    let named = call("survey.earthwork.four-point-average", &input.to_string());
+    let general = call("survey.earthwork.borrow-pit", &input.to_string());
+    assert_eq!(named["ok"], true, "{named}");
+    for key in ["cut_volume", "fill_volume", "balance_points"] {
+        assert_eq!(named["result"][key], general["result"][key], "{key}");
+    }
+    let (cut, fill, net) = (
+        num(&named, "result.cut_volume.value"),
+        num(&named, "result.fill_volume.value"),
+        num(&named, "result.net_volume.value"),
+    );
+    assert!((cut - fill - net).abs() < 1e-9);
+    // The corner weights reach the same net by a different sum.
+    assert!((net - num(&general, "result.net_volume.value")).abs() < 1e-6);
+    // Swapping existing and proposed swaps cut and fill.
+    let forward = serde_json::json!({
+        "existing": [{"elevations": "10, 11"}, {"elevations": "9, 12"}],
+        "proposed": [{"elevations": "10.5, 10.5"}, {"elevations": "10.5, 10.5"}], "cell_size": "20 m"
+    });
+    let reverse = serde_json::json!({
+        "proposed": [{"elevations": "10, 11"}, {"elevations": "9, 12"}],
+        "existing": [{"elevations": "10.5, 10.5"}, {"elevations": "10.5, 10.5"}], "cell_size": "20 m"
+    });
+    let (f, r) = (
+        call("survey.earthwork.four-point-average", &forward.to_string()),
+        call("survey.earthwork.four-point-average", &reverse.to_string()),
+    );
+    assert!(
+        (num(&f, "result.cut_volume.value") - num(&r, "result.fill_volume.value")).abs() < 1e-9
+    );
+    assert!(
+        (num(&f, "result.fill_volume.value") - num(&r, "result.cut_volume.value")).abs() < 1e-9
+    );
+}
+
+#[test]
 fn named_direction_and_station_modes_match_their_general_tools() {
     let direction_input = serde_json::json!({
         "direction": "N 10°15'30\" W",

@@ -254,6 +254,18 @@
       "expect": "survey.reduction.elevation-factor"
     },
     {
+      "query": "how many truck loads",
+      "expect": "survey.earthwork.haul-loads"
+    },
+    {
+      "query": "rise over run calculator",
+      "expect": "survey.earthwork.rise-run"
+    },
+    {
+      "query": "four point method",
+      "expect": "survey.earthwork.four-point-average"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

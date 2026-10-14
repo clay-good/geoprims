@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- Every cell contains its own center.
-- The center's cell at the cell's resolution is the cell itself.
-- Coarser cells' centers lie near their center children's.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: the center's cell at the cell's resolution is the cell itself, and the resolution reported is the cell's.

@@ -5,6 +5,28 @@
       "date": "2026-10-14",
       "kind": "changed",
       "tools": [
+        "indexing.h3.base-cell",
+        "indexing.h3.cell-area",
+        "indexing.h3.cell-boundary",
+        "indexing.h3.cell-to-latlng",
+        "indexing.h3.center-child",
+        "indexing.h3.child-position",
+        "indexing.h3.directed-edges",
+        "indexing.h3.edge-length",
+        "indexing.h3.grid-distance",
+        "indexing.h3.is-class-iii",
+        "indexing.h3.is-pentagon",
+        "indexing.h3.resolution",
+        "indexing.h3.validate",
+        "indexing.h3.vertexes"
+      ],
+      "vectors": [],
+      "summary": "The fourteen focused H3 operations, from cell-to-latlng through edge-length, are now stable. Each is held to H3 C 4.5.0 through h3-py on 20 or more cases, and a new invariants test checks them together on hexagons and pentagons at five resolutions: centers, edges, vertexes, children, classes, distances, and areas. Results are unchanged."
+    },
+    {
+      "date": "2026-10-14",
+      "kind": "changed",
+      "tools": [
         "survey.reduction.elevation-factor",
         "survey.reduction.grid-to-ground",
         "survey.reduction.ground-to-grid",

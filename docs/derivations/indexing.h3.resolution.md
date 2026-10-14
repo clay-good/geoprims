@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- The average at resolution 0 is 4,357,449.416 km², more than the sphere over 122 cells, since the small pentagons are left out.
-- Each finer resolution's average is about a seventh of the coarser one's.
-- The resolution never changes between a cell and its own center.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: each finer resolution's average area is between a 6.5th and a 7.5th of the coarser one's.

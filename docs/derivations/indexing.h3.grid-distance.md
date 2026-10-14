@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- The distance from a cell to itself is 0.
-- Distance is symmetric.
-- A cell in grid ring k of another is k steps from it.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: the distance from a cell to itself is 0, and from resolution 2 down, where H3's local grid reaches, a cell in grid ring k of another is k steps from it in both directions.

@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- Each resolution has exactly 12 pentagons.
-- A pentagon's center child is a pentagon.
-- A pentagon has 5 directed edges and 5 vertexes.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: exactly 12 resolution-0 cells are pentagons, a pentagon's center child is a pentagon and a hexagon's is not, and a pentagon has 5 directed edges and 5 vertexes.

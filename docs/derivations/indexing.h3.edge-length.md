@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- An edge and its reverse have the same length.
-- Edge lengths shrink by about √7 per resolution.
-- The origin's edges lead to its six neighbors.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: an edge and its reverse have the same length to 1 part in 10⁹, and an edge is between 2 and 3.3 times as long as one of its center child's, about √7.

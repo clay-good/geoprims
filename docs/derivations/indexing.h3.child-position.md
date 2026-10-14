@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- The center child is at position 0.
-- Positions are below the ancestor's child count.
-- childPosToCell of the position returns the cell.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: each child's position is its index in its parent's list of children, so positions are below the child count and the center child is at 0.

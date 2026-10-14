@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- The answer depends only on the resolution.
-- A cell and its children at the next resolution are of different classes.
-- Resolution 0 is Class II.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: odd resolutions are Class III and even ones, resolution 0 among them, are not, and a cell's children at the next resolution are of the other class.

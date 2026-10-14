@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0a31a7c7b01f81af",
+    "hash": "9cb22b9bd3a85f0c",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -8,8 +8,8 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "cddf690c942d5a13",
-    "lastmod": "2026-10-13"
+    "hash": "9cde6c52125f9ee2",
+    "lastmod": "2026-10-14"
   },
   "/aviation/": {
     "hash": "429347ebf243360f",
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "da09769e26b55fe4",
+    "hash": "47a2a7a0ccf45b45",
     "lastmod": "2026-10-14"
   },
   "/disclaimer/": {
@@ -320,7 +320,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/mission/pattern-stats/": {
-    "hash": "0263156988c3c017",
+    "hash": "942701e572b481fb",
     "lastmod": "2026-10-14"
   },
   "/drone/mission/sorties/": {
@@ -1076,15 +1076,15 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/base-cell/": {
-    "hash": "1c2a3d889cecefd6",
+    "hash": "f94ed4290edb71da",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/cell-area/": {
-    "hash": "e6cb6ae55de68ae3",
+    "hash": "0717190940929201",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/cell-boundary/": {
-    "hash": "1099a2592b8e180e",
+    "hash": "e3ec9c0a6396f29a",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/cell-info/": {
@@ -1092,7 +1092,7 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/cell-to-latlng/": {
-    "hash": "6c6a8f4122685d36",
+    "hash": "4fbe56d379fd6126",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/cell-to-local-ij/": {
@@ -1104,11 +1104,11 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/center-child/": {
-    "hash": "8184ffac9cbb0538",
+    "hash": "1b1a2fde836d8a34",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/child-position/": {
-    "hash": "4e74ef8f8db649a2",
+    "hash": "37beda1b6961d53e",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/children/": {
@@ -1120,11 +1120,11 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/directed-edges/": {
-    "hash": "70bb94e0a9f29b3b",
+    "hash": "a6128bc2d41c4783",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/edge-length/": {
-    "hash": "b3c56afbd177a4a4",
+    "hash": "72302e87bf3efd0a",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/edges/": {
@@ -1136,7 +1136,7 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/grid-distance/": {
-    "hash": "69df2e6a47a84c84",
+    "hash": "59d38d4a7705e987",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/grid-path/": {
@@ -1148,11 +1148,11 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/is-class-iii/": {
-    "hash": "835965afa918cf65",
+    "hash": "a4c71564cc2ab02d",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/is-pentagon/": {
-    "hash": "95989125c851e010",
+    "hash": "72b1db52e32e853f",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/lat-lng-to-cell/": {
@@ -1176,7 +1176,7 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/resolution/": {
-    "hash": "cc314a7c0dfef435",
+    "hash": "6e3edbe07d548481",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/uncompact/": {
@@ -1184,11 +1184,11 @@
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/validate/": {
-    "hash": "59cebb06dfee8875",
+    "hash": "97b270c56093bb3f",
     "lastmod": "2026-10-14"
   },
   "/indexing/h3/vertexes/": {
-    "hash": "74aa1a7fd0e27d25",
+    "hash": "0e049ed1cd0555a2",
     "lastmod": "2026-10-14"
   },
   "/indexing/plus-code/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "f312fd07e85ca32d",
+    "hash": "007faaa9dd589c02",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1980,15 +1980,15 @@
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/elevation-factor/": {
-    "hash": "ec7bb32b0624ce9d",
+    "hash": "52e51daa69769cc0",
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/grid-to-ground/": {
-    "hash": "da28ecf369f3252b",
+    "hash": "b2490e9418063bfa",
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/ground-to-grid/": {
-    "hash": "506a1861485d4e85",
+    "hash": "301383357babeed0",
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/inaccessible-height/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "07aaa41c4f18120c",
+    "hash": "ff8863dadd2d393e",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5aca68fda85f0a5b",
+    "hash": "a29166ccf671f4ae",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

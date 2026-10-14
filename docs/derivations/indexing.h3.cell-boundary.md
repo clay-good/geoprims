@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- A hexagon has 6 vertices and a pentagon 5, plus one per face crossing.
-- The boundary is the inspector's own.
-- Every vertex is on the boundary of the cell's neighbors too.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: a hexagon has at least 6 boundary vertices and a pentagon at least 5, more where the boundary crosses an icosahedron face, and the count matches the list.

@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- The center child's parent at the cell's resolution is the cell.
-- A pentagon's center child is a pentagon.
-- At the cell's own resolution the center child is the cell.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: the center child's parent at the cell's resolution is the cell, a pentagon's center child is a pentagon, and at the cell's own resolution the center child is the cell.

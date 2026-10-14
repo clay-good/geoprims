@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- A hexagon has 6 vertexes and a pentagon 5.
-- Neighboring cells share the vertex indexes of their shared corners.
-- Each vertex lies on the cell's boundary.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: a hexagon has 6 vertexes and a pentagon 5, and a cell shares exactly two vertex indexes with each neighbor in grid ring 1.

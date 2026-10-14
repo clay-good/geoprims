@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- Every cell another tool returns is valid here.
-- Directed edge and vertex indexes are not valid cells.
-- An index with more than 16 hexadecimal digits is never valid.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: every cell another tool returns is valid, and a directed-edge index is not a valid cell.

@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- 12 of the 122 base cells are pentagons.
-- A cell and all its descendants share a base cell.
-- The base cell's own base cell is itself.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: the base cell is between 0 and 121, a pentagon sits on a pentagon base cell, a cell and its center child share a base cell, and exactly 12 of the 122 base cells are pentagons.

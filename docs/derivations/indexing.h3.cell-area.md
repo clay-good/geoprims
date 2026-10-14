@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- The areas of a cell's children add up to the cell's area to within the tolerance.
-- The ratio is near 1 away from the pentagons.
-- Areas are positive and below the sphere's.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: areas are positive and below the sphere's, and away from the pentagons the ratio to the level average is between 0.5 and 2.

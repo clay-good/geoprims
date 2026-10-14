@@ -43,6 +43,4 @@ None beyond H3's own model. h3o and H3 C agree within 1e-12° below 88° latitud
 
 ## Invariants
 
-- A hexagon has 6 edges and a pentagon 5.
-- Each edge's destination is a neighbor in grid ring 1.
-- The edge from A to B differs from the edge from B to A.
+- `core/crates/gp-indexing/tests/h3_views_invariants.rs` `h3_views_invariants`, on hexagons at resolutions 0, 3, 5, 9, and 12 and on pentagons: a hexagon has 6 edges and a pentagon 5, each edge's destination is a neighbor in grid ring 1, and the edge back from that neighbor is a different index.

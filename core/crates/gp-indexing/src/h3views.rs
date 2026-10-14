@@ -20,7 +20,7 @@ const TABLE: &[Layer] = &[Layer {
     kind: "table-only",
     map: &[],
 }];
-const WARNINGS: &[&str] = &["PENTAGON_DISTORTION", "EXPERIMENTAL_TOOL"];
+const WARNINGS: &[&str] = &["PENTAGON_DISTORTION"];
 const RESOLUTION_IN: Field = Field::new(
     "resolution",
     "Resolution",
@@ -51,6 +51,7 @@ macro_rules! view {
      $sentence:literal) => {
         pub static $name: ToolDef = ToolDef {
             id: concat!("indexing.h3.", $id),
+            stability: gp_base::tool::Stability::Stable,
             title: $title,
             summary: $summary,
             aliases: $aliases,

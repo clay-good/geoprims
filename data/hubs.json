@@ -844,7 +844,9 @@
         {
           "want": "find the radius of curvature or the length of a degree",
           "tools": [
-            "radii"
+            "radii",
+            "degree-lengths",
+            "meridian-arc"
           ]
         },
         {
@@ -949,7 +951,8 @@
         {
           "want": "convert a bearing between true and magnetic",
           "tools": [
-            "true-to-magnetic"
+            "true-to-magnetic",
+            "magnetic-to-true"
           ]
         },
         {
@@ -967,13 +970,18 @@
         {
           "want": "read a coordinate in any notation",
           "tools": [
-            "coordinates"
+            "coordinates",
+            "parse-dms",
+            "parse-ddm"
           ]
         },
         {
           "want": "write a coordinate in another format",
           "tools": [
-            "format"
+            "format",
+            "format-dd",
+            "format-dms",
+            "format-ddm"
           ]
         },
         {

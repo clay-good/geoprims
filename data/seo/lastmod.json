@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "025fcf8bd2516565",
+    "hash": "82a34ed795b56311",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -512,8 +512,8 @@
     "lastmod": "2026-10-12"
   },
   "/geodesy/": {
-    "hash": "50126421d245c9b0",
-    "lastmod": "2026-10-09"
+    "hash": "1093ce55a874b54f",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/crs/": {
     "hash": "8e9dec7fe4cbd30b",
@@ -560,16 +560,24 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/ellipsoid/": {
-    "hash": "155e9caed2bd7d22",
-    "lastmod": "2026-09-23"
+    "hash": "651cccb9f0ada55c",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/auxiliary-latitude/": {
-    "hash": "4f602af590f271bb",
-    "lastmod": "2026-10-09"
+    "hash": "6c09d32073ee0442",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/ellipsoid/degree-lengths/": {
+    "hash": "c4a68782b3f28427",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/ellipsoid/meridian-arc/": {
+    "hash": "660bced3589e16ab",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/parameters/": {
-    "hash": "1a6b3738f4e0bbb6",
-    "lastmod": "2026-10-09"
+    "hash": "944f4d502117d61e",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/radii/": {
     "hash": "a8fd24e359d8f4b2",
@@ -656,8 +664,8 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/magnetic/": {
-    "hash": "2c3c9299083e65a5",
-    "lastmod": "2026-10-08"
+    "hash": "6d29b8f5e3e7d887",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/declination/": {
     "hash": "8b716d80ab83d876",
@@ -668,16 +676,20 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/magnetic/isogonic/": {
-    "hash": "135a5d3ece3c72bf",
-    "lastmod": "2026-10-10"
+    "hash": "9a1733e48d656c81",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/magnetic/magnetic-to-true/": {
+    "hash": "20d1d11d66bbcbb6",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
-    "hash": "870e8f3378f8c351",
-    "lastmod": "2026-10-09"
+    "hash": "7848f9d9571ffeb0",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/parse/": {
-    "hash": "795c05026ac162e1",
-    "lastmod": "2026-09-25"
+    "hash": "fdb9279148caf61c",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/parse/angle-arithmetic/": {
     "hash": "6d90e27c9fbf5ecb",
@@ -691,9 +703,29 @@
     "hash": "7f6b249d850552dc",
     "lastmod": "2026-10-09"
   },
+  "/geodesy/parse/format-dd/": {
+    "hash": "d42a0a8e69063e7d",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/parse/format-ddm/": {
+    "hash": "cdab6cb9b21aa858",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/parse/format-dms/": {
+    "hash": "d3aa29fd7b55e204",
+    "lastmod": "2026-10-14"
+  },
   "/geodesy/parse/format/": {
-    "hash": "dde760130cfb39cb",
-    "lastmod": "2026-10-09"
+    "hash": "cdcb2aea082c8ecb",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/parse/parse-ddm/": {
+    "hash": "25b43abde72de5fd",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/parse/parse-dms/": {
+    "hash": "580f3741b90dcff2",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/projection/": {
     "hash": "0bbf01fad39ecf9b",
@@ -1224,8 +1256,8 @@
     "lastmod": "2026-10-13"
   },
   "/learn/true-vs-magnetic-north/": {
-    "hash": "ad3b6797b4ed4e86",
-    "lastmod": "2026-10-09"
+    "hash": "c8384685fe728376",
+    "lastmod": "2026-10-14"
   },
   "/learn/utm-coordinates/": {
     "hash": "cd548c30c82f15d3",
@@ -1244,8 +1276,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/winds-aloft-forecast/": {
-    "hash": "3558ce9c64160411",
-    "lastmod": "2026-10-09"
+    "hash": "b262dd9a0bc06cdd",
+    "lastmod": "2026-10-14"
   },
   "/learn/zulu-time/": {
     "hash": "d04ab9ef185ae309",
@@ -1256,7 +1288,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "ef0e8c4a2a5270e5",
+    "hash": "7cba2f1bb90ba4fc",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1504,7 +1536,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "3ea0513983ea89ec",
+    "hash": "82ff853ebf685860",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -1888,7 +1920,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "0ba582e481af95f6",
+    "hash": "8750cb0386366456",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2152,7 +2184,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "344d95e338c66720",
+    "hash": "b3e5802b8e250fa7",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

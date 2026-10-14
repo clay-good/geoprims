@@ -589,7 +589,6 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
     summary: "Converts a true bearing to magnetic or back, with a chart variation like 12°W, the magnetic model at a place and date, or both side by side.",
     aliases: &[
         "true to magnetic",
-        "magnetic to true",
         "true course to magnetic course",
         "apply magnetic variation",
     ],
@@ -777,11 +776,90 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static MAGNETIC_TO_TRUE: ToolDef = ToolDef {
+    id: "geodesy.magnetic.magnetic-to-true",
+    title: "Magnetic bearing to true bearing",
+    summary: "Converts a compass or magnetic bearing to a true bearing by adding the magnetic variation, from a chart value or from the model for a place and date.",
+    aliases: &[
+        "magnetic to true",
+        "compass bearing to true bearing",
+        "magnetic heading to true heading",
+    ],
+    keywords: &[
+        "magnetic",
+        "true",
+        "compass",
+        "variation",
+        "declination",
+        "east is least",
+        "bearing",
+    ],
+    inputs: &[
+        TRUE_TO_MAGNETIC.inputs[0],
+        TRUE_TO_MAGNETIC.inputs[2],
+        TRUE_TO_MAGNETIC.inputs[3],
+        TRUE_TO_MAGNETIC.inputs[4],
+        TRUE_TO_MAGNETIC.inputs[5],
+        TRUE_TO_MAGNETIC.inputs[6],
+        TRUE_TO_MAGNETIC.inputs[7],
+    ],
+    outputs: TRUE_TO_MAGNETIC.outputs,
+    errors: TRUE_TO_MAGNETIC.errors,
+    warnings: TRUE_TO_MAGNETIC.warnings,
+    model: "True = magnetic + variation, with easterly variation positive and westerly negative; the variation is the chart value entered, or the model declination for the place and date",
+    accuracy: TRUE_TO_MAGNETIC.accuracy,
+    when_to_use: "Use this to plot a compass bearing on a map or chart drawn to true north: a bearing taken with a hand compass, a runway or radial given in magnetic, or a heading from a magnetic compass. Enter the magnetic bearing and the variation as printed on the chart, like 12°W. Or give the place and date, and the tool looks up the variation from the magnetic model.",
+    limitations: "This applies variation only. A compass in a vehicle also has deviation from the vehicle's own magnetism, which comes from its deviation card and is not included. A chart's variation is dated and drifts by minutes of arc a year, so an old chart can be off. Near the magnetic poles the horizontal field is weak and a compass is unreliable whatever the arithmetic says.",
+    references: TRUE_TO_MAGNETIC.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A compass bearing of 215° with 9°E variation",
+        input: r#"{"bearing":"215 deg","variation":"9°E"}"#,
+        source: "Add easterly variation: 215° magnetic is 224° true",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.magnetic.true-to-magnetic",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.magnetic.declination",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.magnetic.grivation",
+            reason: "alternative",
+        },
+    ],
+    sentence: TRUE_TO_MAGNETIC.sentence,
+    limits: TRUE_TO_MAGNETIC.limits,
+    run: run_magnetic_to_true,
+    ..ToolDef::BLANK
+};
+
+fn run_magnetic_to_true(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    bearing_conversion(ctx, Some(false))
+}
+
 fn run_true_to_magnetic(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    bearing_conversion(ctx, None)
+}
+
+/// Applies the variation to a bearing. A focused operation fixes the
+/// direction; the general one reads it from its `direction` input.
+fn bearing_conversion(ctx: &mut Ctx, fixed: Option<bool>) -> Result<Json, ToolError> {
     let b = ctx
         .req_quantity("bearing")?
         .to(units::by_symbol(QT::Angle, "deg").expect("deg"));
-    let to_magnetic = ctx.choice("direction")? != Some("magnetic-to-true");
+    let to_magnetic = match fixed {
+        Some(to_magnetic) => to_magnetic,
+        None => ctx.choice("direction")? != Some("magnetic-to-true"),
+    };
     let chart =
         match ctx.text("variation")? {
             Some(s) => Some(dms::parse_angle(&s, Axis::Lon).map_err(|m| {

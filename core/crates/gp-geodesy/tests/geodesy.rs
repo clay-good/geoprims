@@ -201,6 +201,128 @@ fn domain_limits() {
 }
 
 #[test]
+fn focused_parse_format_and_ellipsoid_operations_match_their_general_tools() {
+    // Each formatter is the general one with its notation fixed.
+    let point = serde_json::json!({"lat": -33.856784, "lon": 151.215297, "decimals": 2});
+    for (tool, style) in [
+        ("geodesy.parse.format-dd", "dd"),
+        ("geodesy.parse.format-dms", "dms"),
+        ("geodesy.parse.format-ddm", "ddm"),
+    ] {
+        let mut general_input = point.clone();
+        general_input["style"] = serde_json::json!(style);
+        let named = call(tool, &point.to_string());
+        let general = call("geodesy.parse.format", &general_input.to_string());
+        assert_eq!(named["ok"], true, "{tool}: {named}");
+        assert_eq!(named["result"], general["result"], "{tool}");
+        // The notation is not an input here.
+        assert_eq!(
+            call(tool, &general_input.to_string())["ok"],
+            false,
+            "{tool}"
+        );
+    }
+    // Seconds that round to 60 carry into the minute in the focused tool too.
+    let carry = call(
+        "geodesy.parse.format-dms",
+        r#"{"lat":10.9999999,"lon":0,"decimals":0}"#,
+    );
+    assert_eq!(carry["result"]["formatted"], "11°00'00\"N 0°00'00\"E");
+
+    // Each single-notation reader agrees with the any-notation reader on its own notation,
+    // and refuses the others by name.
+    let dms = r#"{"text":"33°56'46\"S 151°10'38\"E"}"#;
+    let ddm = r#"{"text":"38°41.250'N 9°25.500'W"}"#;
+    for (tool, own, other, wrong) in [
+        ("geodesy.parse.parse-dms", dms, ddm, "DDM"),
+        ("geodesy.parse.parse-ddm", ddm, dms, "DMS"),
+    ] {
+        let named = call(tool, own);
+        let general = call("geodesy.parse.coordinates", own);
+        assert_eq!(named["ok"], true, "{tool}: {named}");
+        assert_eq!(named["result"], general["result"], "{tool}");
+        let refused = call(tool, other);
+        assert_eq!(refused["error"]["field"], "/text", "{tool}");
+        assert!(
+            refused["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains(wrong),
+            "{refused}"
+        );
+        assert_eq!(
+            call(tool, r#"{"text":"40.446111, -79.982222"}"#)["ok"],
+            false,
+            "{tool}"
+        );
+    }
+    let r = call("geodesy.parse.parse-dms", dms);
+    assert!((num(&r, "result.lat.value") + (33.0 + 56.0 / 60.0 + 46.0 / 3600.0)).abs() < 1e-12);
+    // Formatting a position and reading it back returns it, to the resolution written.
+    let back = call(
+        "geodesy.parse.parse-ddm",
+        &serde_json::json!({"text": call("geodesy.parse.format-ddm", &point.to_string())["result"]["formatted"]}).to_string(),
+    );
+    assert!((num(&back, "result.lat.value") + 33.856784).abs() < 0.01 / 60.0);
+
+    // Magnetic to true is the bearing tool with its direction fixed, and undoes true to magnetic.
+    let to_true = call(
+        "geodesy.magnetic.magnetic-to-true",
+        r#"{"bearing":"215 deg","variation":"9°E"}"#,
+    );
+    let general = call(
+        "geodesy.magnetic.true-to-magnetic",
+        r#"{"bearing":"215 deg","variation":"9°E","direction":"magnetic-to-true"}"#,
+    );
+    assert_eq!(to_true["result"], general["result"]);
+    assert!((num(&to_true, "result.result.value") - 224.0).abs() < 1e-12);
+    let back = call(
+        "geodesy.magnetic.true-to-magnetic",
+        r#"{"bearing":"224 deg","variation":"9°E"}"#,
+    );
+    assert!((num(&back, "result.result.value") - 215.0).abs() < 1e-12);
+    // Across north: 355° magnetic with 10°E variation is 5° true.
+    let wrap = call(
+        "geodesy.magnetic.magnetic-to-true",
+        r#"{"bearing":"355 deg","variation":"10°E"}"#,
+    );
+    assert!((num(&wrap, "result.result.value") - 5.0).abs() < 1e-12);
+
+    // Meridian arc and degree lengths are the radii tool's own figures.
+    let radii = call("geodesy.ellipsoid.radii", r#"{"lat":40,"lat2":41}"#);
+    let arc = call("geodesy.ellipsoid.meridian-arc", r#"{"lat":40,"lat2":41}"#);
+    for key in ["meridian_arc", "arc_between", "degree_lat"] {
+        assert_eq!(arc["result"][key], radii["result"][key], "{key}");
+    }
+    // The arc is odd in latitude, and a quadrant on WGS 84 is 10,001,965.729 m.
+    let north = num(
+        &call("geodesy.ellipsoid.meridian-arc", r#"{"lat":90}"#),
+        "result.meridian_arc.value",
+    );
+    let south = num(
+        &call("geodesy.ellipsoid.meridian-arc", r#"{"lat":-90}"#),
+        "result.meridian_arc.value",
+    );
+    assert!((north + south).abs() < 1e-6);
+    assert!((north - 10_001_965.729).abs() < 0.001, "{north}");
+    let degrees = call("geodesy.ellipsoid.degree-lengths", r#"{"lat":60}"#);
+    let radii = call("geodesy.ellipsoid.radii", r#"{"lat":60}"#);
+    for key in ["degree_lat", "degree_lon"] {
+        assert_eq!(degrees["result"][key], radii["result"][key], "{key}");
+    }
+    assert!(
+        (num(&degrees, "result.arcsecond_lon.value") * 3600.0
+            - num(&degrees, "result.degree_lon.value"))
+        .abs()
+            < 1e-9
+    );
+    // A degree of longitude vanishes at the pole; a degree of latitude does not.
+    let pole = call("geodesy.ellipsoid.degree-lengths", r#"{"lat":90}"#);
+    assert_eq!(num(&pole, "result.degree_lon.value"), 0.0);
+    assert!(num(&pole, "result.degree_lat.value") > 111_000.0);
+}
+
+#[test]
 fn bearing_difference_across_north() {
     let r = call(
         "geodesy.parse.bearing-difference",

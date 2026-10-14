@@ -350,6 +350,38 @@
       "expect": "drone.ops.structure-altitude"
     },
     {
+      "query": "DMS to decimal degrees converter",
+      "expect": "geodesy.parse.parse-dms"
+    },
+    {
+      "query": "degrees decimal minutes to decimal",
+      "expect": "geodesy.parse.parse-ddm"
+    },
+    {
+      "query": "decimal degrees to degrees minutes seconds",
+      "expect": "geodesy.parse.format-dms"
+    },
+    {
+      "query": "decimal degrees formatter",
+      "expect": "geodesy.parse.format-dd"
+    },
+    {
+      "query": "GPS degrees and minutes",
+      "expect": "geodesy.parse.format-ddm"
+    },
+    {
+      "query": "magnetic to true",
+      "expect": "geodesy.magnetic.magnetic-to-true"
+    },
+    {
+      "query": "meridian arc length calculator",
+      "expect": "geodesy.ellipsoid.meridian-arc"
+    },
+    {
+      "query": "length of a degree of longitude",
+      "expect": "geodesy.ellipsoid.degree-lengths"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

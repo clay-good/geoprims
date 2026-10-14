@@ -237,7 +237,129 @@ pub static PARSE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static PARSE_DMS: ToolDef = ToolDef {
+    id: "geodesy.parse.parse-dms",
+    title: "Degrees, minutes, and seconds to decimal degrees",
+    summary: "Reads a latitude and longitude written in degrees, minutes, and seconds and returns them as decimal degrees.",
+    aliases: &[
+        "DMS to decimal degrees converter",
+        "degrees minutes seconds to decimal",
+        "convert DMS coordinates",
+    ],
+    keywords: &[
+        "coordinates",
+        "latitude",
+        "longitude",
+        "DMS",
+        "parse",
+        "decimal degrees",
+    ],
+    inputs: PARSE.inputs,
+    outputs: PARSE.outputs,
+    errors: PARSE.errors,
+    warnings: PARSE.warnings,
+    model: PARSE.model,
+    accuracy: PARSE.accuracy,
+    when_to_use: "Use this when a position comes from a chart, a deed, a survey plan, or a photo's metadata in degrees, minutes, and seconds, and the next step needs decimal degrees. Paste the text as written, with symbols, spaces, or dashes between the parts and hemisphere letters or signs. The tool returns the decimal latitude and longitude and the cleaned-up text.",
+    limitations: "Only degrees, minutes, and seconds are accepted here, so a decimal pair, a grid reference, or another notation is refused with a note of what it reads as; the any-notation reader takes those. Text can still be ambiguous about which number is the latitude or which hemisphere an unsigned value means, and the assumption made is stated. No datum is applied: the numbers are whatever datum the text was on.",
+    references: PARSE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Sydney Airport from a chart",
+        input: r#"{"text":"33°56'46\"S 151°10'38\"E"}"#,
+        source: "ISO 6709 notation, read by exact arithmetic",
+    }],
+    primary_example: "primary",
+    visualization: PARSE.visualization,
+    related: &[
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "next",
+        },
+    ],
+    sentence: PARSE.sentence,
+    limits: PARSE.limits,
+    run: run_parse_dms,
+    ..ToolDef::BLANK
+};
+
+pub static PARSE_DDM: ToolDef = ToolDef {
+    id: "geodesy.parse.parse-ddm",
+    title: "Degrees and decimal minutes to decimal degrees",
+    summary: "Reads a latitude and longitude written in degrees and decimal minutes and returns them as decimal degrees.",
+    aliases: &[
+        "DDM to decimal degrees converter",
+        "degrees decimal minutes to decimal",
+        "GPS minutes to decimal degrees",
+    ],
+    keywords: &[
+        "coordinates",
+        "latitude",
+        "longitude",
+        "DDM",
+        "parse",
+        "decimal degrees",
+    ],
+    inputs: PARSE.inputs,
+    outputs: PARSE.outputs,
+    errors: PARSE.errors,
+    warnings: PARSE.warnings,
+    model: PARSE.model,
+    accuracy: PARSE.accuracy,
+    when_to_use: "Use this for a position read off a marine or aviation GPS, a handheld receiver, or a geocache listing, where the notation is degrees and decimal minutes. Paste the text as written, with hemisphere letters or signs. The tool returns the decimal latitude and longitude for a spreadsheet, a GIS, or another calculation, with the position restated in degrees, minutes, and seconds.",
+    limitations: "Only degrees and decimal minutes are accepted here, so a decimal pair, a grid reference, or another notation is refused with a note of what it reads as; the any-notation reader takes those. Text can still be ambiguous about which number is the latitude or which hemisphere an unsigned value means, and the assumption made is stated. No datum is applied: the numbers are whatever datum the text was on.",
+    references: PARSE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A marine GPS fix off Lisbon",
+        input: r#"{"text":"38°41.250'N 9°25.500'W"}"#,
+        source: "ISO 6709 notation, read by exact arithmetic",
+    }],
+    primary_example: "primary",
+    visualization: PARSE.visualization,
+    related: &[
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "next",
+        },
+    ],
+    sentence: PARSE.sentence,
+    limits: PARSE.limits,
+    run: run_parse_ddm,
+    ..ToolDef::BLANK
+};
+
+fn run_parse_dms(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    parse(ctx, Some(("DMS", "degrees, minutes, and seconds")))
+}
+
+fn run_parse_ddm(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    parse(ctx, Some(("DDM", "degrees and decimal minutes")))
+}
+
 fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    parse(ctx, None)
+}
+
+/// Reads a position. A focused operation accepts one notation and refuses
+/// text that reads as another, naming what it reads as.
+fn parse(ctx: &mut Ctx, only: Option<(&str, &str)>) -> Result<Json, ToolError> {
     let text = ctx.text("text")?.expect("required");
     let wgs = ellipsoid::CATALOG[0];
     let compact: String = text.chars().filter(|c| !c.is_whitespace()).collect();
@@ -386,6 +508,14 @@ fn run_parse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         };
         (p.lat, lon, p.notation)
     };
+    if let Some((wanted, words)) = only
+        && notation != wanted
+    {
+        return Err(
+            ToolError::invalid("/text", format!("This reads as {notation}, not {words}."))
+                .hint("The any-notation coordinate reader accepts it."),
+        );
+    }
     let dms_text = format!(
         "{} {}",
         dms::format(lat, Axis::Lat, Style::Dms, 3, true),
@@ -641,12 +771,219 @@ pub static FORMAT: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static FORMAT_DD: ToolDef = ToolDef {
+    id: "geodesy.parse.format-dd",
+    title: "Coordinates in decimal degrees",
+    summary: "Writes a latitude and longitude as decimal degrees, with hemisphere letters or signs and a chosen number of decimal places.",
+    aliases: &[
+        "decimal degrees formatter",
+        "lat long to decimal degrees",
+        "DD coordinates",
+    ],
+    keywords: &[
+        "coordinates",
+        "latitude",
+        "longitude",
+        "decimal degrees",
+        "format",
+        "notation",
+    ],
+    inputs: &[
+        FORMAT.inputs[0],
+        FORMAT.inputs[1],
+        FORMAT.inputs[3],
+        FORMAT.inputs[4],
+    ],
+    outputs: FORMAT.outputs,
+    errors: FORMAT.errors,
+    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: FORMAT.model,
+    accuracy: FORMAT.accuracy,
+    when_to_use: "Use this when a system wants plain decimal degrees: a spreadsheet, a GIS import, a web map link, or an API. Enter the latitude and longitude and choose the decimal places; seven is the default, about a centimeter. Pick signed output for software and hemisphere letters for people. The ground size of the last decimal place comes back with the text.",
+    limitations: "Decimal degrees say nothing about the datum, so the numbers are on whatever datum the input was; nothing is converted. Rounding to the decimal places chosen is the only loss. A decimal place of longitude covers less ground toward the poles than one of latitude, and both sizes are reported. Signed output drops the hemisphere letters, so the reader must know that south and west are negative.",
+    references: FORMAT.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Sydney Opera House to 5 decimal places",
+        input: r#"{"lat":-33.856784,"lon":151.215297,"decimals":5}"#,
+        source: "ISO 6709 decimal-degree notation",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.parse.format",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORMAT.sentence,
+    limits: FORMAT.limits,
+    run: run_format_dd,
+    ..ToolDef::BLANK
+};
+
+pub static FORMAT_DMS: ToolDef = ToolDef {
+    id: "geodesy.parse.format-dms",
+    title: "Coordinates in degrees, minutes, and seconds",
+    summary: "Writes a latitude and longitude as degrees, minutes, and seconds, with hemisphere letters or signs and a chosen number of decimal places on the seconds.",
+    aliases: &[
+        "DMS formatter",
+        "decimal degrees to degrees minutes seconds",
+        "DMS coordinates",
+    ],
+    keywords: &[
+        "coordinates",
+        "latitude",
+        "longitude",
+        "DMS",
+        "format",
+        "notation",
+    ],
+    inputs: &[
+        FORMAT.inputs[0],
+        FORMAT.inputs[1],
+        FORMAT.inputs[3],
+        FORMAT.inputs[4],
+    ],
+    outputs: FORMAT.outputs,
+    errors: FORMAT.errors,
+    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: FORMAT.model,
+    accuracy: FORMAT.accuracy,
+    when_to_use: "Use this when a position has to be read aloud, written on a plan, or matched to a chart or a legal description that uses degrees, minutes, and seconds. Enter the latitude and longitude in decimal degrees and choose the decimal places on the seconds; three is the default, about three centimeters. The ground size of the last digit comes back with the text.",
+    limitations: "The text is rounded once, at the seconds, so a value a hair under a whole minute prints as the next minute rather than as 60 seconds. No datum is applied or converted. Seconds of longitude cover less ground toward the poles than seconds of latitude, and both sizes are reported. Software that expects decimal degrees will not read this notation without parsing it first.",
+    references: FORMAT.references,
+    examples: &[Example {
+        id: "primary",
+        title: "The Eiffel Tower to a tenth of a second",
+        input: r#"{"lat":48.858370,"lon":2.294481,"decimals":1}"#,
+        source: "ISO 6709 sexagesimal notation",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.parse.format",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORMAT.sentence,
+    limits: FORMAT.limits,
+    run: run_format_dms,
+    ..ToolDef::BLANK
+};
+
+pub static FORMAT_DDM: ToolDef = ToolDef {
+    id: "geodesy.parse.format-ddm",
+    title: "Coordinates in degrees and decimal minutes",
+    summary: "Writes a latitude and longitude as degrees and decimal minutes, with hemisphere letters or signs and a chosen number of decimal places on the minutes.",
+    aliases: &[
+        "DDM formatter",
+        "decimal degrees to degrees decimal minutes",
+        "GPS degrees and minutes",
+    ],
+    keywords: &[
+        "coordinates",
+        "latitude",
+        "longitude",
+        "DDM",
+        "format",
+        "notation",
+    ],
+    inputs: &[
+        FORMAT.inputs[0],
+        FORMAT.inputs[1],
+        FORMAT.inputs[3],
+        FORMAT.inputs[4],
+    ],
+    outputs: FORMAT.outputs,
+    errors: FORMAT.errors,
+    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: FORMAT.model,
+    accuracy: FORMAT.accuracy,
+    when_to_use: "Use this for the notation marine and aviation GPS units show, and that geocaching and many handheld receivers default to: degrees and decimal minutes. Enter the latitude and longitude in decimal degrees and choose the decimal places on the minutes; five is the default, under two centimeters. The ground size of the last digit comes back with the text.",
+    limitations: "The text is rounded once, at the minutes, so a value a hair under a whole degree prints as the next degree rather than as 60 minutes. No datum is applied or converted. A decimal place of a minute is 60 times coarser than the same place of a degree, so count the places you need. Minutes of longitude cover less ground toward the poles, and both sizes are reported.",
+    references: FORMAT.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Cape Town harbor to a thousandth of a minute",
+        input: r#"{"lat":-33.906389,"lon":18.420833,"decimals":3}"#,
+        source: "ISO 6709 degrees and decimal minutes notation",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.parse.format",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.parse.coordinates",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: FORMAT.sentence,
+    limits: FORMAT.limits,
+    run: run_format_ddm,
+    ..ToolDef::BLANK
+};
+
+fn run_format_dd(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    format(ctx, Some(Style::Dd))
+}
+
+fn run_format_dms(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    format(ctx, Some(Style::Dms))
+}
+
+fn run_format_ddm(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    format(ctx, Some(Style::Ddm))
+}
+
 fn run_format(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    format(ctx, None)
+}
+
+/// Formats a position. A focused operation fixes the notation; the general
+/// one reads it from its `style` input.
+fn format(ctx: &mut Ctx, fixed: Option<Style>) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
-    let style = match ctx.choice("style")? {
-        Some("dd") => Style::Dd,
-        Some("ddm") => Style::Ddm,
-        _ => Style::Dms,
+    let style = match fixed {
+        Some(style) => style,
+        None => match ctx.choice("style")? {
+            Some("dd") => Style::Dd,
+            Some("ddm") => Style::Ddm,
+            _ => Style::Dms,
+        },
     };
     let default = match style {
         Style::Dd => 7.0,
@@ -2449,7 +2786,12 @@ fn run_mgrs_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static TOOLS: &[&ToolDef] = &[
     &PARSE,
+    &PARSE_DMS,
+    &PARSE_DDM,
     &FORMAT,
+    &FORMAT_DD,
+    &FORMAT_DMS,
+    &FORMAT_DDM,
     &BEARING_DIFFERENCE,
     &ANGLE_ARITHMETIC,
     &UTM_FORWARD,
@@ -2461,6 +2803,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &MGRS_INVERSE,
     &magnetic::DECLINATION,
     &magnetic::TRUE_TO_MAGNETIC,
+    &magnetic::MAGNETIC_TO_TRUE,
     &magnetic::GRIVATION,
     &magnetic::ISOGONIC,
     &spcs::FORWARD,
@@ -2497,6 +2840,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &geoid::HEIGHT_CONVERT,
     &frames::PARAMETERS,
     &frames::RADII,
+    &frames::MERIDIAN_ARC,
+    &frames::DEGREE_LENGTHS,
     &frames::AUXILIARY,
     &frames::TO_ECEF,
     &frames::FROM_ECEF,

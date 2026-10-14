@@ -399,13 +399,188 @@ pub static RADII: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static MERIDIAN_ARC: ToolDef = ToolDef {
+    id: "geodesy.ellipsoid.meridian-arc",
+    title: "Meridian arc length",
+    summary: "The distance along a meridian from the equator to a latitude, or between two latitudes, on WGS 84 or another ellipsoid.",
+    aliases: &[
+        "meridian arc length calculator",
+        "meridian distance",
+        "distance from the equator along a meridian",
+    ],
+    keywords: &[
+        "meridian arc",
+        "meridional distance",
+        "equator",
+        "latitude difference",
+        "ellipsoid",
+        "rectifying",
+    ],
+    inputs: &[
+        RADII.inputs[0],
+        RADII.inputs[2].core(),
+        RADII.inputs[3],
+        RADII.inputs[4],
+        RADII.inputs[5],
+    ],
+    outputs: &[RADII.outputs[6], RADII.outputs[7], RADII.outputs[0]],
+    errors: RADII.errors,
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Meridian arc from the equator M(φ) = a(1 − e²)∫₀^φ (1 − e² sin² t)^(−3/2) dt, evaluated by the ellipsoid's rectifying-latitude series; the arc between two latitudes is M(φ₂) − M(φ₁)",
+    accuracy: "Better than a millimeter over the whole quadrant on Earth-like ellipsoids",
+    when_to_use: "Use this when a distance runs north and south along a meridian: the northing of a transverse Mercator origin, the spacing of latitude lines on a chart, or the ground distance between two parallels. Enter one latitude for its distance from the equator, or two for the distance between them. The result is on the ellipsoid surface, positive toward the north.",
+    limitations: "The arc is along a meridian only, so it is not the distance between two points at different longitudes; the geodesic inverse tool gives that. Lengths are on the ellipsoid at zero height, not at the terrain. The distance from the equator is negative in the southern hemisphere, and the arc between two latitudes is negative when the second is south of the first.",
+    references: RADII.references,
+    examples: &[Example {
+        id: "primary",
+        title: "From 40° to 41° north on WGS 84",
+        input: r#"{"lat":40,"lat2":41}"#,
+        source: "Meridian arc series for WGS 84: one degree of latitude near 40.5° is about 111.04 km",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.ellipsoid.radii",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.ellipsoid.degree-lengths",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.ellipsoid.auxiliary-latitude",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The meridian arc from the equator is {meridian_arc}.{if arc_between > -1e12} Between the two latitudes it is {arc_between}.{/if}",
+    limits: RADII.limits,
+    run: run_meridian_arc,
+    ..ToolDef::BLANK
+};
+
+pub static DEGREE_LENGTHS: ToolDef = ToolDef {
+    id: "geodesy.ellipsoid.degree-lengths",
+    title: "Length of a degree of latitude and longitude",
+    summary: "How long one degree, one arcminute, and one arcsecond of latitude and of longitude are on the ground at a given latitude.",
+    aliases: &[
+        "length of a degree of longitude",
+        "length of a degree of latitude",
+        "meters per arcsecond",
+    ],
+    keywords: &[
+        "degree length",
+        "arcminute",
+        "arcsecond",
+        "meters per degree",
+        "longitude",
+        "latitude",
+        "ellipsoid",
+    ],
+    inputs: &[
+        RADII.inputs[0],
+        RADII.inputs[3],
+        RADII.inputs[4],
+        RADII.inputs[5],
+    ],
+    outputs: &[
+        RADII.outputs[0],
+        RADII.outputs[1],
+        len_out(
+            "arcminute_lat",
+            "One arcminute of latitude",
+            "A sixtieth of the degree of latitude",
+        ),
+        len_out(
+            "arcminute_lon",
+            "One arcminute of longitude",
+            "A sixtieth of the degree of longitude",
+        ),
+        len_out(
+            "arcsecond_lat",
+            "One arcsecond of latitude",
+            "A 3,600th of the degree of latitude",
+        ),
+        len_out(
+            "arcsecond_lon",
+            "One arcsecond of longitude",
+            "A 3,600th of the degree of longitude",
+        ),
+    ],
+    errors: RADII.errors,
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Degree of latitude = the meridian arc across the degree centered on φ; degree of longitude = (π/180) × N(φ) × cos φ with N the prime-vertical radius; arcminutes and arcseconds are 1/60 and 1/3,600 of those",
+    accuracy: "Better than a millimeter per degree on Earth-like ellipsoids",
+    when_to_use: "Use this to turn a coordinate difference into a ground distance, or to judge what a decimal place of a coordinate is worth. Enter the latitude. The tool returns the length of a degree, an arcminute, and an arcsecond along a meridian and along the parallel there. A degree of longitude shrinks toward the poles; a degree of latitude grows slightly.",
+    limitations: "The lengths hold at the latitude given and change as you move, so multiplying by many degrees is only an estimate; use the geodesic tools for a real distance. The degree of longitude is measured along the parallel, which is not the shortest path between two points on it. Lengths are on the ellipsoid at zero height.",
+    references: RADII.references,
+    examples: &[Example {
+        id: "primary",
+        title: "At 60° north on WGS 84",
+        input: r#"{"lat":60}"#,
+        source: "WGS 84 radii: a degree of longitude at 60° is about half its length at the equator",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.ellipsoid.radii",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.ellipsoid.meridian-arc",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.parse.format",
+            reason: "next",
+        },
+    ],
+    sentence: "At this latitude a degree of latitude is {degree_lat} and a degree of longitude is {degree_lon}.",
+    limits: RADII.limits,
+    run: run_degree_lengths,
+    ..ToolDef::BLANK
+};
+
+/// Which part of the radii tool a focused operation reports.
+#[derive(Clone, Copy, PartialEq)]
+enum RadiiMode {
+    MeridianArc,
+    DegreeLengths,
+}
+
+fn run_meridian_arc(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    radii(ctx, Some(RadiiMode::MeridianArc))
+}
+
+fn run_degree_lengths(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    radii(ctx, Some(RadiiMode::DegreeLengths))
+}
+
 fn run_radii(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    radii(ctx, None)
+}
+
+fn radii(ctx: &mut Ctx, mode: Option<RadiiMode>) -> Result<Json, ToolError> {
     let lat = point::plain_angle(ctx, "lat")?.expect("required");
     let lat = gp_base::angle::check_lat(lat, "/lat")?;
-    let az = point::plain_angle(ctx, "azimuth")?;
-    let lat2 = match point::plain_angle(ctx, "lat2")? {
-        Some(x) => Some(gp_base::angle::check_lat(x, "/lat2")?),
-        None => None,
+    // The focused operations declare only the inputs they use.
+    let az = match mode {
+        None => point::plain_angle(ctx, "azimuth")?,
+        Some(_) => None,
+    };
+    let lat2 = match mode {
+        Some(RadiiMode::DegreeLengths) => None,
+        _ => match point::plain_angle(ctx, "lat2")? {
+            Some(x) => Some(gp_base::angle::check_lat(x, "/lat2")?),
+            None => None,
+        },
     };
     let ell = Ellipsoid::from_ctx(ctx)?;
     describe_model(ctx, &ell, "Radii of curvature and meridian arc");
@@ -423,9 +598,47 @@ fn run_radii(ctx: &mut Ctx) -> Result<Json, ToolError> {
         } else {
             lat.to_radians().cos()
         };
+    let degree_lon = degree_lon.max(0.0);
+    match mode {
+        Some(RadiiMode::DegreeLengths) => {
+            return Ok(Json::obj(vec![
+                ("degree_lat", ctx.out("degree_lat", m(degree_lat))),
+                ("degree_lon", ctx.out("degree_lon", m(degree_lon))),
+                (
+                    "arcminute_lat",
+                    ctx.out("arcminute_lat", m(degree_lat / 60.0)),
+                ),
+                (
+                    "arcminute_lon",
+                    ctx.out("arcminute_lon", m(degree_lon / 60.0)),
+                ),
+                (
+                    "arcsecond_lat",
+                    ctx.out("arcsecond_lat", m(degree_lat / 3600.0)),
+                ),
+                (
+                    "arcsecond_lon",
+                    ctx.out("arcsecond_lon", m(degree_lon / 3600.0)),
+                ),
+            ]));
+        }
+        Some(RadiiMode::MeridianArc) => {
+            let arc = ell.meridian_arc(phi);
+            let mut out = vec![("meridian_arc", ctx.out("meridian_arc", m(arc)))];
+            if let Some(l2) = lat2 {
+                out.push((
+                    "arc_between",
+                    ctx.out("arc_between", m(ell.meridian_arc(l2.to_radians()) - arc)),
+                ));
+            }
+            out.push(("degree_lat", ctx.out("degree_lat", m(degree_lat))));
+            return Ok(Json::obj(out));
+        }
+        None => {}
+    }
     let mut out = vec![
         ("degree_lat", ctx.out("degree_lat", m(degree_lat))),
-        ("degree_lon", ctx.out("degree_lon", m(degree_lon.max(0.0)))),
+        ("degree_lon", ctx.out("degree_lon", m(degree_lon))),
         ("meridional", ctx.out("meridional", m(mr))),
         ("prime_vertical", ctx.out("prime_vertical", m(nr))),
         ("gaussian", ctx.out("gaussian", m((mr * nr).sqrt()))),

@@ -275,6 +275,8 @@
       "relatedTools": [
         "geodesy.parse.angle-arithmetic",
         "geodesy.parse.coordinates",
+        "geodesy.parse.parse-ddm",
+        "geodesy.parse.parse-dms",
         "survey.cogo.azimuth-bearing",
         "survey.cogo.deflection-angle",
         "survey.cogo.direction-parse",
@@ -1788,6 +1790,7 @@
         "geodesy.datum.nad83",
         "geodesy.magnetic.declination",
         "geodesy.magnetic.grivation",
+        "geodesy.magnetic.magnetic-to-true",
         "geodesy.magnetic.true-to-magnetic"
       ]
     },

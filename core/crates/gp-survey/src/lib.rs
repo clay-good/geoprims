@@ -31,7 +31,8 @@ use gp_base::display;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Registry, Related, Slot,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use libm::{acos, asin, atan, atan2, cos, hypot, sin, tan};
@@ -3011,6 +3012,12 @@ const EARTH_RADIUS: Field = len(
     "Earth radius",
     "Default 20,906,000 ft (6,372,000 m), as in NOAA Manual NOS NGS 5",
 );
+const EARTH_RADIUS_DEFAULT: &[Assumption] = &[Assumption {
+    name: "Default mean Earth radius for the elevation factor, as in NGS Manual 5",
+    value: "6372000",
+    unit: "m",
+    source: "spcs83",
+}];
 const COMBINED_FACTOR_OUT: Field = Field::new(
     "combined_factor",
     "Combined factor",
@@ -3099,6 +3106,7 @@ pub static COMBINED_FACTOR: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: EARTH_RADIUS_DEFAULT,
     sentence: "The combined factor is {combined_factor}.{if grid_distance > 0} A ground distance of {ground_distance} is {grid_distance} on the grid.{/if}{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_combined,
@@ -3160,6 +3168,7 @@ pub static ELEVATION_FACTOR: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: EARTH_RADIUS_DEFAULT,
     sentence: "The elevation factor is {elevation_factor} at an ellipsoid height of {ellipsoid_height}.{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
     limits: COMBINED_FACTOR.limits,
     run: run_elevation_factor,
@@ -3226,6 +3235,7 @@ pub static GRID_TO_GROUND: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: EARTH_RADIUS_DEFAULT,
     sentence: "A grid distance of {grid_distance} is {ground_distance} on the ground.{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
     limits: COMBINED_FACTOR.limits,
     run: run_grid_to_ground,
@@ -3292,6 +3302,7 @@ pub static GROUND_TO_GRID: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: EARTH_RADIUS_DEFAULT,
     sentence: "A ground distance of {ground_distance} is {grid_distance} on the grid.{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
     limits: COMBINED_FACTOR.limits,
     run: run_ground_to_grid,

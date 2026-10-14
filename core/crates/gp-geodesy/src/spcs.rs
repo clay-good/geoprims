@@ -6,7 +6,8 @@ use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability,
+    ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::point;
@@ -160,6 +161,22 @@ const SPCS_OUTPUTS: &[Field] = &[
 
 // ---------------------------------------------------------------- forward
 
+/// GRS 80, the ellipsoid of every SPCS83 and SPCS2022 zone.
+pub(crate) const GRS80_ASSUMPTIONS: &[Assumption] = &[
+    Assumption {
+        name: "GRS 80 semi-major axis",
+        value: "6378137",
+        unit: "m",
+        source: "grs80",
+    },
+    Assumption {
+        name: "GRS 80 inverse flattening",
+        value: "298.257222101",
+        unit: "1",
+        source: "grs80",
+    },
+];
+
 pub static FORWARD: ToolDef = ToolDef {
     id: "geodesy.spcs.spcs83-forward",
     version: "1.0.2",
@@ -223,6 +240,7 @@ pub static FORWARD: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: GRS80_ASSUMPTIONS,
     sentence: "In {zone_name} ({zone_code}) the point is at easting {easting}, northing {northing}.{warn OUTSIDE_ZONE_EXTENT} It is outside this zone's area.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_forward,
@@ -435,6 +453,7 @@ pub static INVERSE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: GRS80_ASSUMPTIONS,
     sentence: "The point is at {lat}, {lon} (NAD83).",
     limits: &[("batchRows", 10_000)],
     run: run_inverse,

@@ -18,8 +18,8 @@ use gp_base::angle::wrap_azimuth;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{
-    Ctx, Example, Field, Kind, Layer, Limitation, Precision, Q, Reference, Registry, Related,
-    Stability, ToolDef,
+    Assumption, Ctx, Example, Field, Kind, Layer, Limitation, Precision, Q, Reference, Registry,
+    Related, Stability, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
@@ -60,6 +60,33 @@ const IUGG_MEAN_RADIUS: Reference = Reference {
 
 /// The IUGG mean Earth radius R1 = (2a + b)/3 for WGS 84, meters.
 pub const R1: f64 = 6_371_008.771;
+
+/// WGS 84's defining constants, behind every ellipsoidal answer here.
+pub(crate) const WGS84_ASSUMPTIONS: [Assumption; 2] = [
+    Assumption {
+        name: "WGS 84 semi-major axis",
+        value: "6378137",
+        unit: "m",
+        source: "nga-wgs84",
+    },
+    Assumption {
+        name: "WGS 84 inverse flattening",
+        value: "298.257223563",
+        unit: "1",
+        source: "nga-wgs84",
+    },
+];
+/// The sphere's default radius, beside WGS 84 for the comparison.
+pub(crate) const SPHERE_ASSUMPTIONS: [Assumption; 3] = [
+    Assumption {
+        name: "Default sphere radius, GRS 80's mean radius R1",
+        value: "6371008.771",
+        unit: "m",
+        source: "grs80",
+    },
+    WGS84_ASSUMPTIONS[0],
+    WGS84_ASSUMPTIONS[1],
+];
 
 fn unit(q: QT, s: &str) -> &'static Unit {
     units::by_symbol(q, s).expect("registered unit")
@@ -279,6 +306,7 @@ pub static INVERSE: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &WGS84_ASSUMPTIONS,
     sentence: "The shortest distance is {distance}, leaving on a course of {azimuth1} and arriving on {azimuth2}.",
     limits: &[("batchRows", 10_000)],
     run: run_inverse,
@@ -503,6 +531,7 @@ pub static DIRECT: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &WGS84_ASSUMPTIONS,
     sentence: "The destination is {lat2}, {lon2}, arriving on a course of {azimuth2}.",
     limits: &[("batchRows", 10_000)],
     run: run_direct,
@@ -634,6 +663,7 @@ pub static HAVERSINE: ToolDef = ToolDef {
         instead: "Use the geodesic distance for anything you act on: it is exact on WGS 84, and this tool reports how far the sphere puts it wrong for your own two points.",
         governs: "Karney (2013), the geodesic algorithm the geodesic tools use.",
     }),
+    assumptions: &SPHERE_ASSUMPTIONS,
     sentence: "The haversine distance is {distance}, {abs(difference)} ({abs(difference_percent)}%) {if difference > 0}shorter{else}longer{/if} than the ellipsoidal geodesic.",
     limits: &[("batchRows", 10_000)],
     run: run_haversine,
@@ -1026,6 +1056,7 @@ pub static MIDPOINT: ToolDef = ToolDef {
             reason: "parent",
         },
     ],
+    assumptions: &WGS84_ASSUMPTIONS,
     sentence: "The midpoint is {lat}, {lon}, {half_distance} from each end.",
     limits: &[("batchRows", 10_000)],
     run: run_midpoint,

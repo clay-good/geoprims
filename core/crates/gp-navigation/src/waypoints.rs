@@ -208,6 +208,7 @@ pub static WAYPOINTS: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: &crate::WGS84_ASSUMPTIONS,
     sentence: "There are {count} points along the {length} line.",
     limits: &[("maxPoints", MAX_POINTS as u64)],
     run: run_waypoints,

@@ -766,6 +766,7 @@ pub static DISK_AREA: ToolDef = ToolDef {
             reason: "alternative",
         },
     ],
+    assumptions: &[HOVER_POWER.assumptions[2]],
     sentence: "The rotors sweep {disk_area} in all.",
     limits: &[("batchRows", 10_000)],
     run: run_disk_area,

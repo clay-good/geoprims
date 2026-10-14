@@ -456,7 +456,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/power/disk-area/": {
-    "hash": "c9d4395e2c12d76c",
+    "hash": "1c81711dd11a0a53",
     "lastmod": "2026-10-14"
   },
   "/drone/power/endurance/": {
@@ -876,20 +876,20 @@
     "lastmod": "2026-09-28"
   },
   "/geodesy/spcs/spcs2022-forward/": {
-    "hash": "6baaee8082845a8f",
-    "lastmod": "2026-10-09"
+    "hash": "8ff06cee0bae6667",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/spcs/spcs2022-inverse/": {
-    "hash": "4bb5f926a564c9db",
-    "lastmod": "2026-10-09"
+    "hash": "782e5265f121274a",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/spcs/spcs83-forward/": {
-    "hash": "323a6b94d679c707",
-    "lastmod": "2026-10-09"
+    "hash": "a0dfef2a4cb76770",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/spcs/spcs83-inverse/": {
-    "hash": "9291c2c9344a51e2",
-    "lastmod": "2026-10-09"
+    "hash": "7b342cfb65f1e7f0",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/spcs/zone-lookup/": {
     "hash": "06512da45b08eb13",
@@ -1428,36 +1428,36 @@
     "lastmod": "2026-10-12"
   },
   "/navigation/geodesic/direct/": {
-    "hash": "e4f225524cee9d87",
-    "lastmod": "2026-10-09"
+    "hash": "e1aa3cadbd088670",
+    "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/haversine/": {
-    "hash": "5822ae456e8cbc88",
-    "lastmod": "2026-10-09"
+    "hash": "d79e693c27effe16",
+    "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/intermediate-point/": {
-    "hash": "facf07266ca592c0",
-    "lastmod": "2026-10-09"
+    "hash": "83d50d4e68eebf86",
+    "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/intersection/": {
     "hash": "bb770a7799a4f350",
     "lastmod": "2026-10-09"
   },
   "/navigation/geodesic/inverse/": {
-    "hash": "42b5264715563087",
-    "lastmod": "2026-10-09"
+    "hash": "5eee8f85d0b96b3b",
+    "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/midpoint/": {
-    "hash": "af33b01da89fff30",
-    "lastmod": "2026-10-09"
+    "hash": "389c944897be4247",
+    "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/spherical-direct/": {
-    "hash": "3027ee4cbe8950ab",
-    "lastmod": "2026-10-09"
+    "hash": "705ed63c69af5ed7",
+    "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/spherical-inverse/": {
-    "hash": "eaef9be6ab65f7e3",
-    "lastmod": "2026-10-09"
+    "hash": "504190c1be9ad3ec",
+    "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/vertex/": {
     "hash": "c104ee8e764a12eb",
@@ -1472,8 +1472,8 @@
     "lastmod": "2026-10-09"
   },
   "/navigation/geodesic/waypoints/": {
-    "hash": "4e2e09bc1def71ce",
-    "lastmod": "2026-10-09"
+    "hash": "f0204bffef4620d9",
+    "lastmod": "2026-10-14"
   },
   "/navigation/los/": {
     "hash": "18f73030c59d75a0",
@@ -1500,12 +1500,12 @@
     "lastmod": "2026-09-23"
   },
   "/navigation/rhumb/direct/": {
-    "hash": "de5ca1802ae57d1a",
-    "lastmod": "2026-10-09"
+    "hash": "036534b3c8549273",
+    "lastmod": "2026-10-14"
   },
   "/navigation/rhumb/inverse/": {
-    "hash": "06ec526f27e8bbf3",
-    "lastmod": "2026-10-09"
+    "hash": "d50fced3eb2a7250",
+    "lastmod": "2026-10-14"
   },
   "/navigation/route/": {
     "hash": "af77982edff8282a",
@@ -1964,7 +1964,7 @@
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/combined-factor/": {
-    "hash": "9b245fd2ce05ffd1",
+    "hash": "38fdd558944ddca3",
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/curvature-refraction/": {
@@ -1980,15 +1980,15 @@
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/elevation-factor/": {
-    "hash": "efff6398359115c2",
+    "hash": "ec7bb32b0624ce9d",
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/grid-to-ground/": {
-    "hash": "4da35e2093b61279",
+    "hash": "da28ecf369f3252b",
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/ground-to-grid/": {
-    "hash": "4f807b765005ce8f",
+    "hash": "506a1861485d4e85",
     "lastmod": "2026-10-14"
   },
   "/survey/reduction/inaccessible-height/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "99033054778e7fde",
+    "hash": "af194d1983b76869",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

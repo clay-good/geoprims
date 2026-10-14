@@ -28,7 +28,9 @@ export const TOOLSETS = {
   atmosphere: ['aviation.atmosphere.', 'aviation.altimetry.', 'time.sun.'],
   'drone-mapping': ['drone.'],
   'survey-cogo': ['survey.'],
-  indexing: ['indexing.'],
+  // H3 alone passes the cap, so it is its own toolset beside the other indexes.
+  indexing: ['indexing.s2.', 'indexing.tile.', 'indexing.geohash.', 'indexing.plus-code.', 'indexing.a5.', 'indexing.convert.'],
+  h3: ['indexing.h3.'],
 };
 export const MAX_PER_TOOLSET = 40;
 const NAME = /^[a-zA-Z0-9_-]{1,64}$/;

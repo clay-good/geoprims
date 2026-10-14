@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { applyBudgets, compare, measure, percentile, table } from './bench.mjs';
 
@@ -51,6 +52,17 @@ test('a rise the whole run shares is the host, and a tool that rises past it is 
   // A handful of tools is too few to tell a host from a regression: no shift is assumed.
   const few = { ...shape, tools: shifted().tools.slice(0, 5) };
   assert.equal(compare(few, { ...baseline, tools: baseline.tools.slice(0, 5) })[0].hostShiftMs, 0);
+});
+
+// The Chromium benchmark is the only caller of applyBudgets on the real
+// catalog, and it runs last in CI: survey.reduction.level-adjust reached main
+// without a budget for its level book and failed there, 30 minutes in.
+test('the built catalog and the checked-in budgets agree, before the benchmark runs', () => {
+  const read = (path) => JSON.parse(readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8'));
+  const budgets = read('data/performance-budgets.json');
+  // An empty report in the budgets' own profile: only the declarations are checked.
+  const report = { profile: budgets.profile, host: budgets.host, measurement: budgets.measurement, tools: [] };
+  assert.doesNotThrow(() => applyBudgets(report, budgets, read('dist/catalog/v1.json')));
 });
 
 test('every list tool declares a data-proportional p95 budget', () => {

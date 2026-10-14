@@ -119,6 +119,29 @@ async function minimize(t, input, example, what) {
   return cur;
 }
 
+// The fuzzer mutates up to three inputs of each tool from a seed that moves
+// whenever the catalog grows, so whether it ever sets a custom ellipsoid on a
+// given tool is luck: navigation.geodesic.intersection returned UNSUPPORTED
+// undeclared until an unrelated batch of tools re-rolled its cases, and four
+// more tools had the same gap. This asks every such tool directly.
+test('every tool that takes a custom ellipsoid declares what a strongly flattened one returns', { timeout: 120_000 }, async () => {
+  host = workerHost(join(root, 'dist/wasm'), { timeoutMs: 10_000 });
+  const failures = [];
+  try {
+    for (const t of catalog.tools.filter((tool) => tool.inputs.properties.inverse_flattening)) {
+      const example = (t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0]).input;
+      // Past the series method's limit, past the exact method's, and prolate.
+      for (const inverseFlattening of [35, 2.5, -40]) {
+        const what = await problem(t, { ...example, a: '6378137 m', inverse_flattening: inverseFlattening });
+        if (what) failures.push(`${t.id} at 1/f = ${inverseFlattening}: ${what}`);
+      }
+    }
+  } finally {
+    host.close();
+  }
+  assert.deepEqual(failures, []);
+});
+
 test('every tool survives bounds fuzzing', { timeout: Number(process.env.FUZZ_TIMEOUT_MS ?? 600_000) }, async () => {
   host = workerHost(join(root, 'dist/wasm'), { timeoutMs: 10_000 });
   const failures = [];

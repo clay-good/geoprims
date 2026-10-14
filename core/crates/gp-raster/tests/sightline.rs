@@ -155,3 +155,47 @@ fn bad_profiles_are_refused() {
     let r = invoke(input(&ok, 2.0, 2.0, json!({"frequency": "0 GHz"})));
     assert_eq!(r["error"]["field"], "/frequency", "{r}");
 }
+
+/// The Fresnel view gives the line-of-sight tool's answer with radio k.
+#[test]
+fn fresnel_terrain_matches_line_of_sight_at_radio_k() {
+    for (seed, ghz) in [(0.3, 5.8), (1.7, 2.4), (2.9, 11.0), (4.1, 0.9)] {
+        let prof = terrain(41, 20_000.0, seed);
+        let both = input(
+            &prof,
+            30.0,
+            30.0,
+            json!({"frequency": format!("{ghz} GHz")}),
+        );
+        let focused: Value = serde_json::from_str(
+            &REGISTRY.invoke("raster.terrain.fresnel-terrain", &both.to_string()),
+        )
+        .unwrap();
+        assert_eq!(focused["ok"], true, "{focused}");
+        let parent = run(
+            &prof,
+            30.0,
+            30.0,
+            json!({"frequency": format!("{ghz} GHz"), "k": 0.25}),
+        );
+        for k in [
+            "fresnel_clear",
+            "fresnel_worst_percent",
+            "fresnel_worst_at",
+            "fresnel_short",
+            "visible",
+            "clearance",
+            "clearance_at",
+            "profile",
+        ] {
+            assert_eq!(focused["result"][k], parent[k], "{k} at {ghz} GHz");
+        }
+    }
+    // Without a frequency there is nothing to check.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "raster.terrain.fresnel-terrain",
+        &input(&terrain(5, 1_000.0, 1.0), 10.0, 10.0, json!({})).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["error"]["field"], "/frequency", "{r}");
+}

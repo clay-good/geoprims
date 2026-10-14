@@ -11,9 +11,9 @@ const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf
 const byId = new Map(catalog.tools.map((tool) => [tool.id, tool]));
 
 // Built so far. Still to come: elevation, elevation-hae, profile, and
-// sampling (hosted DEM); fresnel-terrain; viewshed (worker); dem-info,
+// sampling (hosted DEM); viewshed (worker); dem-info,
 // dem-stats, dem-difference-volume, and highest-point (a whole raster).
-const TERRAIN_BUILT = 'slope aspect hillshade contours line-of-sight roughness-tri tpi curvature';
+const TERRAIN_BUILT = 'slope aspect hillshade contours line-of-sight fresnel-terrain roughness-tri tpi curvature';
 
 test('the built operations of the terrain row are addressable by their inventory names', () => {
   const missing = TERRAIN_BUILT.split(' ').filter((name) => !byId.has(`raster.terrain.${name}`));
@@ -21,7 +21,7 @@ test('the built operations of the terrain row are addressable by their inventory
 });
 
 test('each focused terrain operation has its derivation note, vectors, and parent', () => {
-  for (const [name, parent] of [['slope', 'slope-aspect'], ['aspect', 'slope-aspect'], ['hillshade', 'slope-aspect'], ['roughness-tri', 'ruggedness'], ['tpi', 'ruggedness']]) {
+  for (const [name, parent] of [['slope', 'slope-aspect'], ['aspect', 'slope-aspect'], ['hillshade', 'slope-aspect'], ['roughness-tri', 'ruggedness'], ['tpi', 'ruggedness'], ['fresnel-terrain', 'line-of-sight']]) {
     const id = `raster.terrain.${name}`;
     const tool = byId.get(id);
     assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);

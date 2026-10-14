@@ -39,6 +39,7 @@ const DIAGRAMS = Object.fromEntries(
     'survey.earthwork.profile-grades',
     'survey.curves.spiral',
     'raster.terrain.line-of-sight',
+    'raster.terrain.fresnel-terrain',
     'survey.earthwork.borrow-pit',
     'survey.earthwork.stockpile',
     'geodesy.height.convert',

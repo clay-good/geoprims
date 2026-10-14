@@ -127,7 +127,6 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
         "path profile",
         "link profile",
         "can the antennas see each other",
-        "Fresnel clearance over terrain",
     ],
     keywords: &[
         "line of sight",
@@ -355,6 +354,84 @@ pub static LINE_OF_SIGHT: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static FRESNEL_TERRAIN: ToolDef = ToolDef {
+    id: "raster.terrain.fresnel-terrain",
+    title: "Radio link Fresnel clearance over terrain",
+    summary: "Whether a radio link's first Fresnel zone clears the ground profile between two antennas by the 60% screen, where it comes closest, and which points fall short, on a curved Earth with radio refraction.",
+    aliases: &[
+        "Fresnel clearance over terrain",
+        "microwave path clearance",
+        "radio link path profile",
+    ],
+    keywords: &[
+        "Fresnel zone",
+        "60% clearance",
+        "radio link",
+        "microwave",
+        "point-to-point",
+        "path profile",
+        "ITU-R P.530",
+        "4/3 Earth",
+    ],
+    inputs: &[
+        LINE_OF_SIGHT.inputs[0],
+        LINE_OF_SIGHT.inputs[1],
+        LINE_OF_SIGHT.inputs[2],
+        LINE_OF_SIGHT.inputs[3].required(),
+        Field::new(
+            "k",
+            "Refraction coefficient k",
+            "0.25 radio (4/3 Earth, default), 0.13 optical, 0 none",
+            Kind::Number {
+                min: -1.0,
+                max: 0.9,
+            },
+        ),
+        LINE_OF_SIGHT.inputs[5],
+    ],
+    outputs: &[
+        LINE_OF_SIGHT.outputs[7],
+        LINE_OF_SIGHT.outputs[8],
+        LINE_OF_SIGHT.outputs[9],
+        LINE_OF_SIGHT.outputs[10],
+        LINE_OF_SIGHT.outputs[0],
+        LINE_OF_SIGHT.outputs[1],
+        LINE_OF_SIGHT.outputs[2],
+        LINE_OF_SIGHT.outputs[4],
+        LINE_OF_SIGHT.outputs[11],
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "The line-of-sight tool's exact chord on a sphere of effective radius R/(1 − k), with k = 0.25 (4/3 Earth) by default, and the first Fresnel radius √(λ d1 d2 / d) at each profile point; a point passes when its clearance is at least 60% of that radius",
+    accuracy: LINE_OF_SIGHT.accuracy,
+    when_to_use: "Use this when planning a point-to-point radio link, such as a wireless ISP hop, a microwave backhaul, or a telemetry link, over ground you have a profile for. Enter the ground profile from one antenna to the other, both antenna heights, and the frequency. It says whether every point clears 60% of the first Fresnel zone, the free-space screen in ITU-R P.530, and where the path comes closest.",
+    limitations: "Only the profile points you give are checked, so sample every rise between the antennas, and add trees and buildings to the ground where they stand. The 60% figure is ITU-R P.530's free-space screen, not its full procedure, which varies the clearance with frequency, climate, path length, and diversity, and checks a lower k for the worst month. Passing the screen says nothing about rain fade, interference, or how much signal an obstruction costs.",
+    references: &[ITU_P530],
+    examples: &[Example {
+        id: "primary",
+        title: "A 5.8 GHz hop over a low hill",
+        input: r#"{"points":[{"distance":"0 km","elevation":"210 m"},{"distance":"3 km","elevation":"188 m"},{"distance":"6 km","elevation":"236 m"},{"distance":"9 km","elevation":"181 m"},{"distance":"12 km","elevation":"205 m"}],"observer_height":"38 m","target_height":"32 m","frequency":"5.8 GHz"}"#,
+        source: "The polar equation of the sight line in Python, independent of the core's Cartesian form (tools/vectors/gen_fresnel_terrain.py)",
+    }],
+    primary_example: "primary",
+    visualization: LINE_OF_SIGHT.visualization,
+    related: &[
+        Related {
+            id: "raster.terrain.line-of-sight",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.los.fresnel",
+            reason: "alternative",
+        },
+    ],
+    assumptions: LINE_OF_SIGHT.assumptions,
+    sentence: "{if fresnel_short == 0}Every point clears 60% of the Fresnel zone; the closest is {fresnel_worst_percent}% at {fresnel_worst_at}.{/if}{if fresnel_short > 0}{fresnel_short} {plural fresnel_short \"point falls\" \"points fall\"} inside 60% of the Fresnel zone; the worst is {fresnel_worst_percent}% at {fresnel_worst_at}.{/if}",
+    limits: &[("batchRows", 1_000)],
+    run: run_fresnel,
+    ..ToolDef::BLANK
+};
+
 fn cross(a: (f64, f64), b: (f64, f64)) -> f64 {
     a.0 * b.1 - a.1 * b.0
 }
@@ -375,6 +452,46 @@ fn line_height(re: f64, p: (f64, f64), q: (f64, f64), s: f64) -> f64 {
 }
 
 fn run_los(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    Ok(Json::obj(los(ctx, 0.13, false)?))
+}
+
+/// The Fresnel view of the same computation: a frequency is required, k
+/// defaults to the radio median 0.25, and the answer leads with the 60% screen.
+fn run_fresnel(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    if ctx.quantity("frequency")?.is_none() {
+        return Err(
+            ToolError::invalid("/frequency", "The link's radio frequency is required.")
+                .hint("Like 5.8 GHz"),
+        );
+    }
+    let mut all = los(ctx, 0.25, true)?;
+    let mut out = Vec::new();
+    for name in [
+        "fresnel_clear",
+        "fresnel_worst_percent",
+        "fresnel_worst_at",
+        "fresnel_short",
+        "visible",
+        "clearance",
+        "clearance_at",
+        "obstruction_height",
+        "profile",
+    ] {
+        // The obstruction is reported only when the view is blocked.
+        if let Some(i) = all.iter().position(|(k, _)| *k == name) {
+            out.push(all.swap_remove(i));
+        }
+    }
+    Ok(Json::obj(out))
+}
+
+/// The shared computation. `fresnel_step` ends the shown work at the Fresnel
+/// screen, for the tool whose answer leads with it.
+fn los(
+    ctx: &mut Ctx,
+    default_k: f64,
+    fresnel_step: bool,
+) -> Result<Vec<(&'static str, Json)>, ToolError> {
     let rows: Vec<Map<String, Value>> = ctx.rows("points")?;
     let mut pts = Vec::with_capacity(rows.len());
     let (mut du, mut eu) = (None, None);
@@ -433,7 +550,7 @@ fn run_los(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/radius"));
     }
-    let k = ctx.number("k")?.unwrap_or(0.13);
+    let k = ctx.number("k")?.unwrap_or(default_k);
     let re = r / (1.0 - k);
     let lambda = match ctx.quantity("frequency")? {
         Some(f) if f.base() > 0.0 => Some(C / f.base()),
@@ -528,6 +645,18 @@ fn run_los(ctx: &mut Ctx) -> Result<Json, ToolError> {
             format!("{} m", nn(least, 2)),
             yes_no_str(visible).to_owned(),
         );
+        if fresnel_step && lambda.is_some() {
+            ctx.step(
+                "Is 60% of the Fresnel zone clear?",
+                "yes when every point's clearance is at least 0.6 × √(λ d1 d2 / d)",
+                format!(
+                    "least {}% at {} km",
+                    nn(worst * 100.0, 1),
+                    nn((pts[worst_i].0 - s0) / 1000.0, 3)
+                ),
+                yes_no_str(short == 0.0).to_owned(),
+            );
+        }
     }
     ctx.model = Some(format!(
         "Spherical Earth, R = {r:.0} m, refraction k = {k} (effective radius {re:.0} m); sight line from {ho} m above the first point to {ht} m above the last"
@@ -566,7 +695,7 @@ fn run_los(ctx: &mut Ctx) -> Result<Json, ToolError> {
         out.push(("fresnel_short", Json::Num(short)));
     }
     out.push(("profile", Json::Arr(rows_out)));
-    Ok(Json::obj(out))
+    Ok(out)
 }
 
 fn yes_no_str(b: bool) -> &'static str {

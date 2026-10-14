@@ -55,4 +55,5 @@ function terrainSightLine(args, result) {
 
 export const DIAGRAMS = {
   'raster.terrain.line-of-sight': terrainSightLine,
+  'raster.terrain.fresnel-terrain': terrainSightLine,
 };

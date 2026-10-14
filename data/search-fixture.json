@@ -498,6 +498,10 @@
       "expect": "geodesy.magnetic.uncertainty-zone"
     },
     {
+      "query": "microwave path clearance",
+      "expect": "raster.terrain.fresnel-terrain"
+    },
+    {
       "query": "hillshade",
       "expect": "raster.terrain.hillshade"
     },

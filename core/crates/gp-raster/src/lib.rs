@@ -40,6 +40,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &terrain::CURVATURE,
     &contour::CONTOURS,
     &sightline::LINE_OF_SIGHT,
+    &sightline::FRESNEL_TERRAIN,
 ];
 
 gp_base::export_module!("raster", REGISTRY);

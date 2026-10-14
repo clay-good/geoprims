@@ -1805,7 +1805,8 @@
         {
           "want": "check whether the ground blocks the view or a radio link between two points",
           "tools": [
-            "line-of-sight"
+            "line-of-sight",
+            "fresnel-terrain"
           ]
         }
       ]

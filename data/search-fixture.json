@@ -502,6 +502,18 @@
       "expect": "raster.terrain.fresnel-terrain"
     },
     {
+      "query": "DEM statistics",
+      "expect": "raster.terrain.dem-stats"
+    },
+    {
+      "query": "highest point in a DEM",
+      "expect": "raster.terrain.highest-point"
+    },
+    {
+      "query": "DEM of difference",
+      "expect": "raster.terrain.dem-difference-volume"
+    },
+    {
       "query": "hillshade",
       "expect": "raster.terrain.hillshade"
     },

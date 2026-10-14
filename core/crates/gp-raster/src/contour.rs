@@ -33,13 +33,13 @@ const LORENSEN: Reference = Reference {
 };
 
 /// Grid size limits, per side.
-const MAX_SIDE: usize = 300;
+pub(crate) const MAX_SIDE: usize = 300;
 /// Levels allowed in one run.
 const MAX_LEVELS: usize = 500;
 /// Contour vertices allowed in the output.
 const MAX_VERTICES: usize = 100_000;
 
-const ROW: &[Field] = &[Field::new(
+pub(crate) const ROW: &[Field] = &[Field::new(
     "row",
     "Elevations",
     "One row of elevations west to east, like 101.2, 100.6, 100.2",
@@ -329,11 +329,17 @@ pub static CONTOURS: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn read_grid(ctx: &mut Ctx, no_data: Option<f64>) -> Result<Vec<Vec<f64>>, ToolError> {
-    let rows = ctx.rows("elevations")?;
+/// A north-up grid of elevations from the list-of-rows field `field`, with
+/// the no-data value read as NaN.
+pub(crate) fn read_grid(
+    ctx: &mut Ctx,
+    field: &str,
+    no_data: Option<f64>,
+) -> Result<Vec<Vec<f64>>, ToolError> {
+    let rows = ctx.rows(field)?;
     let mut grid = Vec::with_capacity(rows.len());
     for (i, r) in rows.iter().enumerate() {
-        let at = format!("/elevations/{i}/row");
+        let at = format!("/{field}/{i}/row");
         let text = r.get("row").and_then(|v| v.as_str()).ok_or_else(|| {
             ToolError::invalid(
                 &at,
@@ -383,7 +389,7 @@ fn run_contours(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let m = units::by_symbol(QT::Length, "m").expect("m");
     let deg_unit = units::by_symbol(QT::Angle, "deg").expect("deg");
     let no_data = ctx.number("no_data")?;
-    let z = read_grid(ctx, no_data)?;
+    let z = read_grid(ctx, "elevations", no_data)?;
     let interval = ctx.quantity("interval")?.expect("required").to(m);
     let base = ctx.quantity("base")?.map_or(0.0, |v| v.to(m));
     if interval.is_nan() || interval <= 0.0 {

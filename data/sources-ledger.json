@@ -1194,6 +1194,26 @@
       "editionCheck": true
     },
     {
+      "id": "gdalinfo",
+      "name": "gdalinfo documentation",
+      "issuer": "Open Source Geospatial Foundation",
+      "currentEdition": "GDAL 3.13.3",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-14",
+      "verificationNote": "Checked the official stable GDAL documentation on 2026-10-14: -stats reads and displays image statistics, computing them if none are stored. Running GDAL 3.13.3 on 24 grids confirmed its standard deviation is the population form (divided by n), matching NumPy's std with ddof 0.",
+      "freeAccessUrl": "https://gdal.org/en/stable/programs/gdalinfo.html",
+      "matchTerms": [
+        "gdalinfo"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
       "id": "geographiclib",
       "name": "GeographicLib",
       "issuer": "C. F. F. Karney",
@@ -3464,6 +3484,26 @@
       "freeAccessUrl": "https://doi.org/10.1080/01490410701295962",
       "matchTerms": [
         "Multiscale terrain analysis"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "wheaton-2010",
+      "name": "Accounting for uncertainty in DEMs from repeat topographic surveys: improved sediment budgets",
+      "issuer": "Wheaton, J. M., Brasington, J., Darby, S. E., and Sear, D. A., Earth Surface Processes and Landforms",
+      "currentEdition": "Volume 35, issue 2, pages 136-156",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-14",
+      "verificationNote": "Verified at the DOI registry (Crossref) on 2026-10-14: title, journal, volume 35, issue 2, pages 136-156, and authors as cited; published online 2009-12-10 in the 2010 volume.",
+      "freeAccessUrl": "https://doi.org/10.1002/esp.1886",
+      "matchTerms": [
+        "Accounting for uncertainty in DEMs"
       ],
       "editionStatus": "current",
       "legalStatus": null,

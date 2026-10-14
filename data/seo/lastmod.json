@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "1d1db985073d36a1",
+    "hash": "7476c237981db71a",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "87c128010964bda9",
+    "hash": "5362faea5e6bcca5",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1576,7 +1576,7 @@
     "lastmod": "2026-10-14"
   },
   "/raster/": {
-    "hash": "97905f2a620b0c93",
+    "hash": "986dc66df9693519",
     "lastmod": "2026-10-14"
   },
   "/raster/index/": {
@@ -1636,7 +1636,7 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/": {
-    "hash": "d9ec5458cec7cfa9",
+    "hash": "3df0f6a34f626e7c",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/aspect/": {
@@ -1648,15 +1648,27 @@
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/curvature/": {
-    "hash": "877f78d6c697f527",
+    "hash": "cb0d16570cd1a40c",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/dem-difference-volume/": {
+    "hash": "a5aeb4aafea6286e",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/dem-stats/": {
+    "hash": "4a920fac7fefc68f",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/fresnel-terrain/": {
-    "hash": "645f0a289fbf2ba0",
+    "hash": "7cfd6270507cc471",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/highest-point/": {
+    "hash": "03137dab84f46fc1",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/hillshade/": {
-    "hash": "e7dc77e3991122ca",
+    "hash": "f81628ef87fbce5c",
     "lastmod": "2026-10-14"
   },
   "/raster/terrain/line-of-sight/": {
@@ -1688,7 +1700,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "e3ed3f4c5e2efb35",
+    "hash": "069e3fa526c4fb55",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -2072,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "3a66bc334ad412a8",
+    "hash": "67f4a10ee4f669e0",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2336,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "3def2b7a2705cb79",
+    "hash": "99033054778e7fde",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

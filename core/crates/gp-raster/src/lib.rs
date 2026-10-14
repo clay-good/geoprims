@@ -2,6 +2,7 @@
 
 pub mod bandmath;
 pub mod contour;
+pub mod demgrid;
 pub mod geotiff;
 pub mod indices;
 pub mod processing;
@@ -39,6 +40,9 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &terrain::TPI,
     &terrain::CURVATURE,
     &contour::CONTOURS,
+    &demgrid::DEM_STATS,
+    &demgrid::HIGHEST_POINT,
+    &demgrid::DEM_DIFFERENCE_VOLUME,
     &sightline::LINE_OF_SIGHT,
     &sightline::FRESNEL_TERRAIN,
 ];

@@ -11,9 +11,9 @@ const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf
 const byId = new Map(catalog.tools.map((tool) => [tool.id, tool]));
 
 // Built so far. Still to come: elevation, elevation-hae, profile, and
-// sampling (hosted DEM); viewshed (worker); dem-info,
-// dem-stats, dem-difference-volume, and highest-point (a whole raster).
-const TERRAIN_BUILT = 'slope aspect hillshade contours line-of-sight fresnel-terrain roughness-tri tpi curvature';
+// sampling (hosted DEM); viewshed (worker); and dem-info, which describes a
+// raster file's metadata.
+const TERRAIN_BUILT = 'slope aspect hillshade contours line-of-sight fresnel-terrain dem-stats roughness-tri tpi curvature dem-difference-volume highest-point';
 
 test('the built operations of the terrain row are addressable by their inventory names', () => {
   const missing = TERRAIN_BUILT.split(' ').filter((name) => !byId.has(`raster.terrain.${name}`));

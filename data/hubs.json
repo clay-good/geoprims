@@ -1797,6 +1797,19 @@
           ]
         },
         {
+          "want": "summarize a grid of elevations, or find its highest point",
+          "tools": [
+            "dem-stats",
+            "highest-point"
+          ]
+        },
+        {
+          "want": "measure the volume that moved between two surveys of the same ground",
+          "tools": [
+            "dem-difference-volume"
+          ]
+        },
+        {
           "want": "draw contour lines from a grid of elevations",
           "tools": [
             "contours"

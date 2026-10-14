@@ -245,6 +245,9 @@
       "source": "copernicus-dem",
       "relatedTools": [
         "raster.terrain.aspect",
+        "raster.terrain.dem-difference-volume",
+        "raster.terrain.dem-stats",
+        "raster.terrain.highest-point",
         "raster.terrain.hillshade",
         "raster.terrain.slope"
       ]

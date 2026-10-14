@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "a10ccbe56e4d8596",
+    "hash": "31f29572cf8cbccd",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "1e46b1c81c0f8c75",
+    "hash": "f5d54170e18e62ad",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1576,8 +1576,8 @@
     "lastmod": "2026-10-14"
   },
   "/raster/": {
-    "hash": "29d2a1871b1687a7",
-    "lastmod": "2026-10-12"
+    "hash": "acb15971ded40abb",
+    "lastmod": "2026-10-14"
   },
   "/raster/index/": {
     "hash": "f9069ec60629cce0",
@@ -1636,27 +1636,47 @@
     "lastmod": "2026-10-09"
   },
   "/raster/terrain/": {
-    "hash": "057a2188d1e9e100",
-    "lastmod": "2026-10-09"
+    "hash": "8d9ed9ff2d242ba6",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/aspect/": {
+    "hash": "843dcf77bf192bfa",
+    "lastmod": "2026-10-14"
   },
   "/raster/terrain/contours/": {
-    "hash": "461b600a2e7a89d3",
-    "lastmod": "2026-10-13"
+    "hash": "23840710cb8ed866",
+    "lastmod": "2026-10-14"
   },
   "/raster/terrain/curvature/": {
-    "hash": "9e0230e00d602fc0",
-    "lastmod": "2026-10-13"
+    "hash": "c2dd765a4fd920f0",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/hillshade/": {
+    "hash": "2f69b2981118dcfb",
+    "lastmod": "2026-10-14"
   },
   "/raster/terrain/line-of-sight/": {
-    "hash": "e77e31929bb367e0",
-    "lastmod": "2026-10-13"
+    "hash": "baf136645c9d11ac",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/roughness-tri/": {
+    "hash": "d6e3322e22b54c60",
+    "lastmod": "2026-10-14"
   },
   "/raster/terrain/ruggedness/": {
-    "hash": "ef29a1d06c1b387a",
-    "lastmod": "2026-10-09"
+    "hash": "bd6aee1badbc6dcc",
+    "lastmod": "2026-10-14"
   },
   "/raster/terrain/slope-aspect/": {
-    "hash": "bd4dad8a2e2535b5",
+    "hash": "a179c2cd816b3069",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/slope/": {
+    "hash": "549ec8233ff07d2a",
+    "lastmod": "2026-10-14"
+  },
+  "/raster/terrain/tpi/": {
+    "hash": "eb2970b29ac40816",
     "lastmod": "2026-10-14"
   },
   "/security/": {
@@ -1664,7 +1684,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "a7c5aa8ca19aeb82",
+    "hash": "cd459bf1cb3bb10d",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -2048,7 +2068,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "84a651f0223ff7e0",
+    "hash": "a32a5f0c241d8eaf",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2312,7 +2332,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "187ee74ead0f8ec8",
+    "hash": "4eff031da437ab89",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

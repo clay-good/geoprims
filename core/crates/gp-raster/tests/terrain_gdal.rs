@@ -194,3 +194,55 @@ fn terrain_invariants() {
         }
     }
 }
+
+/// The focused terrain operations give exactly their parents' answers.
+#[test]
+fn focused_terrain_tools_match_their_parents() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/terrain_gdal.json");
+    let fx: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("JSON");
+    let call = |tool: &str, input: &str| -> Value {
+        serde_json::from_str(&REGISTRY.invoke(tool, input)).unwrap()
+    };
+    for w in fx["windows"].as_array().unwrap().iter().step_by(7) {
+        let rows: Vec<Value> = w["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|r| json!({"row": r}))
+            .collect();
+        let input = json!({"elevations": rows, "cell_size": format!("{} m", w["cell_size"]), "sun_azimuth": "200 deg"}).to_string();
+        let plain =
+            json!({"elevations": rows, "cell_size": format!("{} m", w["cell_size"])}).to_string();
+        let sa = call("raster.terrain.slope-aspect", &input);
+        let rg = call("raster.terrain.ruggedness", &plain);
+        for (tool, parent, inp, keys) in [
+            (
+                "raster.terrain.slope",
+                &sa,
+                &plain,
+                &["slope", "slope_percent"][..],
+            ),
+            (
+                "raster.terrain.aspect",
+                &sa,
+                &plain,
+                &["aspect", "aspect_text"][..],
+            ),
+            ("raster.terrain.hillshade", &sa, &input, &["hillshade"][..]),
+            (
+                "raster.terrain.roughness-tri",
+                &rg,
+                &plain,
+                &["tri", "tri_mean"][..],
+            ),
+            ("raster.terrain.tpi", &rg, &plain, &["tpi", "position"][..]),
+        ] {
+            let got = call(tool, inp);
+            assert_eq!(got["ok"], true, "{tool}: {got}");
+            for k in keys {
+                assert_eq!(got["result"][k], parent["result"][k], "{tool} {k} {inp}");
+            }
+        }
+    }
+}

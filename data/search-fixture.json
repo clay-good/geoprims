@@ -498,6 +498,22 @@
       "expect": "geodesy.magnetic.uncertainty-zone"
     },
     {
+      "query": "hillshade",
+      "expect": "raster.terrain.hillshade"
+    },
+    {
+      "query": "terrain ruggedness index",
+      "expect": "raster.terrain.roughness-tri"
+    },
+    {
+      "query": "topographic position index",
+      "expect": "raster.terrain.tpi"
+    },
+    {
+      "query": "which way a slope faces",
+      "expect": "raster.terrain.aspect"
+    },
+    {
       "query": "WMM vs IGRF",
       "expect": "geodesy.magnetic.model-compare"
     },

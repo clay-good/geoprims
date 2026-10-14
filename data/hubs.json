@@ -1776,13 +1776,18 @@
         {
           "want": "find the slope, aspect, and hillshade of a cell",
           "tools": [
-            "slope-aspect"
+            "slope-aspect",
+            "slope",
+            "aspect",
+            "hillshade"
           ]
         },
         {
           "want": "describe how rugged the ground is, and whether a cell is a ridge or a hollow",
           "tools": [
-            "ruggedness"
+            "ruggedness",
+            "roughness-tri",
+            "tpi"
           ]
         },
         {

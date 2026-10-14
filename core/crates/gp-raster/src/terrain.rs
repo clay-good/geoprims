@@ -171,37 +171,53 @@ fn gradients(w: &Window) -> (f64, f64) {
     (dzdx, dzdy)
 }
 
-fn run_slope(ctx: &mut Ctx) -> Result<Json, ToolError> {
+/// Horn's gradients with the vertical exaggeration applied, and the window.
+fn scaled_gradients(ctx: &mut Ctx) -> Result<(Window, f64, f64), ToolError> {
     let w = read_window(ctx)?;
     let zf = ctx.number("z_factor")?.unwrap_or(1.0);
     let (dzdx, dzdy) = gradients(&w);
-    let (gx, gy) = (zf * dzdx, zf * dzdy);
-    let rise = sqrt(gx * gx + gy * gy);
-    let slope = atan(rise).to_degrees();
-    // Aspect as GDAL reports it: degrees clockwise from north, downslope.
-    let flat = rise == 0.0;
-    let aspect = if flat {
-        -1.0
-    } else {
-        let a = atan2(gy, -gx).to_degrees();
-        let mut a = 90.0 - a;
-        if a < 0.0 {
-            a += 360.0;
-        }
-        if a >= 360.0 {
-            a -= 360.0;
-        }
-        a
-    };
-    if flat {
+    Ok((w, zf * dzdx, zf * dzdy))
+}
+
+/// Aspect as GDAL reports it: degrees clockwise from north, downslope; none
+/// where the window is flat, with a warning, since flat ground faces nowhere.
+fn aspect_of(ctx: &mut Ctx, gx: f64, gy: f64) -> Option<f64> {
+    if gx == 0.0 && gy == 0.0 {
         ctx.warnings.push(Warning::new(
             "FLAT_CELL",
             "The window has no gradient, so it has no aspect; flat ground faces no direction.",
         ));
+        return None;
     }
-    // Hillshade, as gdaldem computes it, from the sun's position: the cosine
-    // of the angle to the sun scaled to 1 to 255 (0 is gdaldem's no-data),
-    // and 1 where the cell faces away from the sun.
+    let a = 90.0 - atan2(gy, -gx).to_degrees();
+    Some(if a < 0.0 {
+        a + 360.0
+    } else if a >= 360.0 {
+        a - 360.0
+    } else {
+        a
+    })
+}
+
+fn facing(aspect: Option<f64>) -> &'static str {
+    aspect.map_or("flat", |a| {
+        [
+            "north",
+            "north-east",
+            "east",
+            "south-east",
+            "south",
+            "south-west",
+            "west",
+            "north-west",
+        ][(((a + 22.5) % 360.0) / 45.0) as usize]
+    })
+}
+
+/// Hillshade, as gdaldem computes it, from the sun's position: the cosine
+/// of the angle to the sun scaled to 1 to 255 (0 is gdaldem's no-data),
+/// and 1 where the cell faces away from the sun. Rounded, as gdaldem's byte.
+fn hillshade(ctx: &mut Ctx, gx: f64, gy: f64) -> Result<f64, ToolError> {
     let az = ctx.quantity("sun_azimuth")?.map_or(315.0, |v| {
         v.to(units::by_symbol(QT::Angle, "deg").expect("deg"))
     });
@@ -209,15 +225,27 @@ fn run_slope(ctx: &mut Ctx) -> Result<Json, ToolError> {
         v.to(units::by_symbol(QT::Angle, "deg").expect("deg"))
     });
     let zenith = (90.0 - alt).to_radians();
-    let slope_rad = atan(rise);
-    let aspect_rad = if flat { 0.0 } else { atan2(gy, -gx) };
+    let slope_rad = atan(sqrt(gx * gx + gy * gy));
+    let aspect_rad = if gx == 0.0 && gy == 0.0 {
+        0.0
+    } else {
+        atan2(gy, -gx)
+    };
     let sun = (90.0 - az).to_radians();
     let cang = cos(zenith) * cos(slope_rad) + sin(zenith) * sin(slope_rad) * cos(sun - aspect_rad);
-    let shade = if cang <= 0.0 { 1.0 } else { 1.0 + 254.0 * cang };
+    Ok(if cang <= 0.0 { 1.0 } else { 1.0 + 254.0 * cang }.round())
+}
+
+fn run_slope(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (w, gx, gy) = scaled_gradients(ctx)?;
+    let rise = sqrt(gx * gx + gy * gy);
+    let slope = atan(rise).to_degrees();
+    let aspect = aspect_of(ctx, gx, gy);
+    let shade = hillshade(ctx, gx, gy)?;
     let mut out = vec![
         ("slope", ctx.out("slope", q(slope, QT::Angle, "deg"))),
         ("slope_percent", Json::Num(rise * 100.0)),
-        ("hillshade", Json::Num(shade.round())),
+        ("hillshade", Json::Num(shade)),
         (
             "cell_size_east",
             ctx.out("cell_size_east", q(w.dx, QT::Length, "m")),
@@ -227,31 +255,22 @@ fn run_slope(ctx: &mut Ctx) -> Result<Json, ToolError> {
             ctx.out("cell_size_north", q(w.dy, QT::Length, "m")),
         ),
     ];
-    if flat {
-        out.push(("aspect_text", Json::str("flat")));
-    } else {
-        out.push(("aspect", ctx.out("aspect", q(aspect, QT::Angle, "deg"))));
-        out.push((
-            "aspect_text",
-            Json::str(
-                [
-                    "north",
-                    "north-east",
-                    "east",
-                    "south-east",
-                    "south",
-                    "south-west",
-                    "west",
-                    "north-west",
-                ][(((aspect + 22.5) % 360.0) / 45.0) as usize],
-            ),
-        ));
+    if let Some(a) = aspect {
+        out.push(("aspect", ctx.out("aspect", q(a, QT::Angle, "deg"))));
     }
+    out.push(("aspect_text", Json::str(facing(aspect))));
     Ok(Json::obj(out))
 }
 
-fn run_ruggedness(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let w = read_window(ctx)?;
+/// TRI both ways, TPI, and roughness for the window's center.
+struct Rugged {
+    tri: f64,
+    tri_mean: f64,
+    tpi: f64,
+    roughness: f64,
+}
+
+fn rugged(w: &Window) -> Rugged {
     let center = w.z[4];
     let neighbors: Vec<f64> = (0..9).filter(|i| *i != 4).map(|i| w.z[i]).collect();
     // Two indices share the name TRI. Riley's own, as the erratum printed with
@@ -259,39 +278,97 @@ fn run_ruggedness(ctx: &mut Ctx) -> Result<Json, ToolError> {
     // the mean absolute difference is the other one in common use, which GDAL
     // offers as its Wilson algorithm. They differ by about a factor of three
     // on the same ground, so both are reported rather than one picked.
-    let tri_riley = sqrt(
+    let tri = sqrt(
         neighbors
             .iter()
             .map(|z| (z - center) * (z - center))
             .sum::<f64>(),
     );
     let tri_mean = neighbors.iter().map(|z| (z - center).abs()).sum::<f64>() / 8.0;
-    let mean = neighbors.iter().sum::<f64>() / 8.0;
-    let tpi = center - mean;
+    let tpi = center - neighbors.iter().sum::<f64>() / 8.0;
     let (lo, hi) =
         w.z.iter()
             .fold((f64::MAX, f64::MIN), |(a, b), z| (a.min(*z), b.max(*z)));
+    Rugged {
+        tri,
+        tri_mean,
+        tpi,
+        roughness: hi - lo,
+    }
+}
+
+fn position(tpi: f64) -> &'static str {
+    if tpi > 0.0 {
+        "above its neighbours: a ridge, a summit, or a spur"
+    } else if tpi < 0.0 {
+        "below its neighbours: a valley, a pit, or a hollow"
+    } else {
+        "level with its neighbours"
+    }
+}
+
+fn run_ruggedness(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let r = rugged(&read_window(ctx)?);
     Ok(Json::obj([
-        ("tri", ctx.out("tri", q(tri_riley, QT::Length, "m"))),
+        ("tri", ctx.out("tri", q(r.tri, QT::Length, "m"))),
         (
             "tri_mean",
-            ctx.out("tri_mean", q(tri_mean, QT::Length, "m")),
+            ctx.out("tri_mean", q(r.tri_mean, QT::Length, "m")),
         ),
-        ("tpi", ctx.out("tpi", q(tpi, QT::Length, "m"))),
+        ("tpi", ctx.out("tpi", q(r.tpi, QT::Length, "m"))),
         (
             "roughness",
-            ctx.out("roughness", q(hi - lo, QT::Length, "m")),
+            ctx.out("roughness", q(r.roughness, QT::Length, "m")),
         ),
+        ("position", Json::str(position(r.tpi))),
+    ]))
+}
+
+fn run_slope_only(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (_, gx, gy) = scaled_gradients(ctx)?;
+    let rise = sqrt(gx * gx + gy * gy);
+    Ok(Json::obj([
         (
-            "position",
-            Json::str(if tpi > 0.0 {
-                "above its neighbours: a ridge, a summit, or a spur"
-            } else if tpi < 0.0 {
-                "below its neighbours: a valley, a pit, or a hollow"
-            } else {
-                "level with its neighbours"
-            }),
+            "slope",
+            ctx.out("slope", q(atan(rise).to_degrees(), QT::Angle, "deg")),
         ),
+        ("slope_percent", Json::Num(rise * 100.0)),
+    ]))
+}
+
+fn run_aspect_only(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    // Aspect does not depend on the vertical exaggeration.
+    let (dzdx, dzdy) = gradients(&read_window(ctx)?);
+    let aspect = aspect_of(ctx, dzdx, dzdy);
+    let mut out = vec![("aspect_text", Json::str(facing(aspect)))];
+    if let Some(a) = aspect {
+        out.push(("aspect", ctx.out("aspect", q(a, QT::Angle, "deg"))));
+    }
+    Ok(Json::obj(out))
+}
+
+fn run_hillshade_only(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (_, gx, gy) = scaled_gradients(ctx)?;
+    let shade = hillshade(ctx, gx, gy)?;
+    Ok(Json::obj([("hillshade", Json::Num(shade))]))
+}
+
+fn run_tri(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let r = rugged(&read_window(ctx)?);
+    Ok(Json::obj([
+        ("tri", ctx.out("tri", q(r.tri, QT::Length, "m"))),
+        (
+            "tri_mean",
+            ctx.out("tri_mean", q(r.tri_mean, QT::Length, "m")),
+        ),
+    ]))
+}
+
+fn run_tpi(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let r = rugged(&read_window(ctx)?);
+    Ok(Json::obj([
+        ("tpi", ctx.out("tpi", q(r.tpi, QT::Length, "m"))),
+        ("position", Json::str(position(r.tpi))),
     ]))
 }
 
@@ -352,12 +429,7 @@ pub static SLOPE: ToolDef = ToolDef {
     version: "1.1.0",
     title: "Slope, aspect, and hillshade",
     summary: "Slope, aspect, and hillshade for the center of a 3 x 3 elevation window by Horn's method, with the cell size corrected for latitude on a degree-based grid.",
-    aliases: &[
-        "slope calculator",
-        "aspect calculator",
-        "hillshade",
-        "terrain slope from DEM",
-    ],
+    aliases: &["terrain slope from DEM", "slope and aspect"],
     keywords: &[
         "slope",
         "aspect",
@@ -541,7 +613,7 @@ pub static RUGGEDNESS: ToolDef = ToolDef {
     id: "raster.terrain.ruggedness",
     title: "Terrain ruggedness and position",
     summary: "The terrain ruggedness index, topographic position index, and roughness for the center of a 3 x 3 elevation window.",
-    aliases: &["TRI calculator", "TPI calculator", "terrain roughness"],
+    aliases: &["terrain roughness", "landform position"],
     keywords: &[
         "TRI",
         "TPI",
@@ -655,6 +727,266 @@ pub static RUGGEDNESS: ToolDef = ToolDef {
     sentence: "Ruggedness is {tri} by Riley, or {tri_mean} as a mean difference, and the cell sits {position}.",
     limits: &[("batchRows", 10_000)],
     run: run_ruggedness,
+    ..ToolDef::BLANK
+};
+
+const fn parent(id: &'static str) -> Related {
+    Related {
+        id,
+        reason: "parent",
+    }
+}
+
+const fn sibling(id: &'static str) -> Related {
+    Related {
+        id,
+        reason: "alternative",
+    }
+}
+
+const TABLE: &[Layer] = &[Layer {
+    kind: "table-only",
+    map: &[],
+}];
+
+pub static SLOPE_ONLY: ToolDef = ToolDef {
+    id: "raster.terrain.slope",
+    title: "DEM slope by Horn's method",
+    summary: "The slope at the center of a 3 x 3 elevation window, in degrees and percent, by Horn's method as gdaldem computes it.",
+    aliases: &["slope calculator", "slope from elevations"],
+    keywords: &[
+        "slope",
+        "gradient",
+        "DEM",
+        "Horn",
+        "gdaldem",
+        "percent grade",
+    ],
+    inputs: &[
+        WINDOW_INPUTS[0],
+        WINDOW_INPUTS[1],
+        WINDOW_INPUTS[2],
+        WINDOW_INPUTS[3],
+        SLOPE.inputs[4],
+    ],
+    outputs: &[SLOPE.outputs[0], SLOPE.outputs[1]],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Horn's (1981) eight-neighbor gradients, slope = atan(z x hypot(dz/dx, dz/dy)), as in raster.terrain.slope-aspect",
+    accuracy: SLOPE.accuracy,
+    when_to_use: "Use this when the slope is all you need from a DEM cell: for a grade limit, a site that has to stay under a slope for a building or a drone landing, or a check of one cell in a slope raster. Enter the nine elevations around the cell and the cell size. The answer is the slope in degrees and in percent.",
+    limitations: "It works on the nine elevations you give, not on a raster. Horn's method smooths, so a slope from a coarse DEM is gentler than the ground, and a surface model includes buildings and canopy rather than the ground under them.",
+    references: &[HORN],
+    examples: &[Example {
+        id: "primary",
+        title: "A 10 m window on a hillside",
+        input: r#"{"elevations":[{"row":"250.0, 252.5, 255.1"},{"row":"248.2, 251.0, 254.9"},{"row":"246.0, 249.3, 253.3"}],"cell_size":"10 m"}"#,
+        source: "Horn's formulas in Python, checked against gdaldem 3.13.3 (tools/vectors/gen_terrain_views.py)",
+    }],
+    primary_example: "primary",
+    visualization: TABLE,
+    related: &[
+        parent("raster.terrain.slope-aspect"),
+        sibling("raster.terrain.aspect"),
+        sibling("survey.earthwork.profile-grades"),
+    ],
+    assumptions: RUGGEDNESS.assumptions,
+    sentence: "The slope is {slope}, or {slope_percent}%.",
+    limits: &[("batchRows", 10_000)],
+    run: run_slope_only,
+    ..ToolDef::BLANK
+};
+
+pub static ASPECT: ToolDef = ToolDef {
+    id: "raster.terrain.aspect",
+    title: "DEM aspect, the way the ground faces",
+    summary: "The aspect at the center of a 3 x 3 elevation window: the downslope direction clockwise from north, by Horn's method as gdaldem computes it.",
+    aliases: &["aspect calculator", "which way a slope faces"],
+    keywords: &[
+        "aspect",
+        "facing",
+        "downslope",
+        "DEM",
+        "Horn",
+        "gdaldem",
+        "north-facing",
+    ],
+    inputs: &[
+        WINDOW_INPUTS[0],
+        WINDOW_INPUTS[1],
+        WINDOW_INPUTS[2],
+        WINDOW_INPUTS[3],
+    ],
+    outputs: &[SLOPE.outputs[3], SLOPE.outputs[2]],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["FLAT_CELL", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Horn's (1981) eight-neighbor gradients, aspect = 90 - atan2(dz/dy, -dz/dx) in degrees, clockwise from north and downslope, as in raster.terrain.slope-aspect; none where both gradients are zero",
+    accuracy: SLOPE.accuracy,
+    when_to_use: "Use this to find which way a piece of ground faces: for sun on a solar site or a garden, snow and ice that lingers on north-facing slopes, or a check of one cell in an aspect raster. Enter the nine elevations around the cell and the cell size. The answer is the compass direction the ground falls toward.",
+    limitations: "It works on the nine elevations you give, not on a raster. On nearly flat ground the aspect swings with small errors in the elevations, so treat it as unreliable under about half a degree of slope; a window with no slope at all has no aspect and is reported as flat.",
+    references: &[HORN],
+    examples: &[Example {
+        id: "primary",
+        title: "A 10 m window falling to the north-east",
+        input: r#"{"elevations":[{"row":"500, 498, 495"},{"row":"503, 500, 497"},{"row":"507, 504, 500"}],"cell_size":"10 m"}"#,
+        source: "Horn's formulas in Python, checked against gdaldem 3.13.3 (tools/vectors/gen_terrain_views.py)",
+    }],
+    primary_example: "primary",
+    visualization: TABLE,
+    related: &[
+        parent("raster.terrain.slope-aspect"),
+        sibling("raster.terrain.slope"),
+        sibling("raster.terrain.hillshade"),
+    ],
+    assumptions: RUGGEDNESS.assumptions,
+    sentence: "The ground falls toward the {aspect_text}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_aspect_only,
+    ..ToolDef::BLANK
+};
+
+pub static HILLSHADE: ToolDef = ToolDef {
+    id: "raster.terrain.hillshade",
+    title: "Hillshade value for one DEM cell",
+    summary: "The hillshade brightness, 1 to 255, at the center of a 3 x 3 elevation window for a sun at a given azimuth and altitude, as gdaldem computes it.",
+    aliases: &["hillshade", "shaded relief value"],
+    keywords: &[
+        "hillshade",
+        "shaded relief",
+        "illumination",
+        "sun azimuth",
+        "sun altitude",
+        "gdaldem",
+        "DEM",
+    ],
+    inputs: &[
+        WINDOW_INPUTS[0],
+        WINDOW_INPUTS[1],
+        WINDOW_INPUTS[2],
+        WINDOW_INPUTS[3],
+        SLOPE.inputs[4],
+        SLOPE.inputs[5],
+        SLOPE.inputs[6],
+    ],
+    outputs: &[SLOPE.outputs[4]],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "gdaldem's hillshade: 1 + 254 (cos Z cos S + sin Z sin S cos(A_sun - A)), rounded, and 1 where that cosine is zero or negative, from Horn's slope S and aspect A and the sun's zenith Z",
+    accuracy: "Exact evaluation of gdaldem's formula; it matches gdaldem 3.13.3 on all 1,452 windows of the GDAL agreement test",
+    when_to_use: "Use this to check one pixel of a shaded-relief map, or to see how the sun's direction changes the shading of a slope: a lower sun or one from another side brings out different ridges. Enter the nine elevations, the cell size, and if you like the sun's azimuth and altitude; the defaults are the cartographic 315° and 45°.",
+    limitations: "It works on the nine elevations you give, not on a raster. The value is a picture brightness, not a measure of real sunlight: it ignores shadows cast by other terrain, the atmosphere, and the time of day.",
+    references: &[HORN, GDAL_HILLSHADE],
+    examples: &[Example {
+        id: "primary",
+        title: "A 5 m window lit from the west at 30°",
+        input: r#"{"elevations":[{"row":"10, 12, 11"},{"row":"9, 13, 14"},{"row":"8.5, 11.5, 12.5"}],"cell_size":"5 m","sun_azimuth":"270 deg","sun_altitude":"30 deg"}"#,
+        source: "gdaldem 3.13.3 hillshade, matched by Horn's formulas in Python (tools/vectors/gen_terrain_views.py)",
+    }],
+    primary_example: "primary",
+    visualization: TABLE,
+    related: &[
+        parent("raster.terrain.slope-aspect"),
+        sibling("raster.terrain.aspect"),
+        sibling("raster.terrain.contours"),
+    ],
+    assumptions: SLOPE.assumptions,
+    sentence: "The hillshade value is {hillshade} on a scale of 1 to 255.",
+    limits: &[("batchRows", 10_000)],
+    run: run_hillshade_only,
+    ..ToolDef::BLANK
+};
+
+pub static ROUGHNESS_TRI: ToolDef = ToolDef {
+    id: "raster.terrain.roughness-tri",
+    title: "Terrain ruggedness index (TRI)",
+    summary: "The terrain ruggedness index at the center of a 3 x 3 elevation window, both as Riley's root of summed squares and as the mean absolute difference.",
+    aliases: &["TRI calculator", "terrain ruggedness index"],
+    keywords: &[
+        "TRI",
+        "ruggedness",
+        "Riley",
+        "Wilson",
+        "roughness",
+        "gdaldem",
+    ],
+    inputs: &[
+        WINDOW_INPUTS[0],
+        WINDOW_INPUTS[1],
+        WINDOW_INPUTS[2],
+        WINDOW_INPUTS[3],
+    ],
+    outputs: &[RUGGEDNESS.outputs[0], RUGGEDNESS.outputs[1]],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "TRI as the root of the summed squared differences from the center cell (Riley and others 1999, as corrected) and as the mean absolute difference (Wilson and others 2007), as in raster.terrain.ruggedness",
+    accuracy: RUGGEDNESS.accuracy,
+    when_to_use: "Use this to put a number on how broken the ground is around a cell: for habitat studies, access planning, or matching a TRI value from a paper or a GIS layer. Enter the nine elevations around the cell. Both forms of the index are given, so you can match whichever one a source used.",
+    limitations: "Two different indices are called TRI, and they differ by about a factor of three on the same ground; check which one a value you compare against used. Both depend on the cell size, so values are comparable only within one resolution.",
+    references: &[RILEY, WILSON],
+    examples: &[Example {
+        id: "primary",
+        title: "Broken ground on a 30 m grid",
+        input: r#"{"elevations":[{"row":"1210.4, 1225.9, 1218.2"},{"row":"1204.7, 1220.0, 1231.6"},{"row":"1199.3, 1212.8, 1226.1"}],"cell_size":"30 m"}"#,
+        source: "The definitions in Python, checked against gdaldem 3.13.3 TRI (tools/vectors/gen_terrain_views.py)",
+    }],
+    primary_example: "primary",
+    visualization: TABLE,
+    related: &[
+        parent("raster.terrain.ruggedness"),
+        sibling("raster.terrain.tpi"),
+        sibling("raster.terrain.slope"),
+    ],
+    assumptions: RUGGEDNESS.assumptions,
+    sentence: "Ruggedness is {tri} by Riley, or {tri_mean} as a mean difference.",
+    limits: &[("batchRows", 10_000)],
+    run: run_tri,
+    ..ToolDef::BLANK
+};
+
+pub static TPI: ToolDef = ToolDef {
+    id: "raster.terrain.tpi",
+    title: "Topographic position index (TPI)",
+    summary: "The topographic position index at the center of a 3 x 3 elevation window: the cell less the mean of its eight neighbors, and whether it sits above or below them.",
+    aliases: &["TPI calculator", "topographic position index"],
+    keywords: &[
+        "TPI",
+        "topographic position",
+        "ridge",
+        "valley",
+        "landform",
+        "gdaldem",
+    ],
+    inputs: &[
+        WINDOW_INPUTS[0],
+        WINDOW_INPUTS[1],
+        WINDOW_INPUTS[2],
+        WINDOW_INPUTS[3],
+    ],
+    outputs: &[RUGGEDNESS.outputs[2], RUGGEDNESS.outputs[4]],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "TPI as the center elevation less the mean of its eight neighbors (Wilson and others 2007), as in raster.terrain.ruggedness",
+    accuracy: RUGGEDNESS.accuracy,
+    when_to_use: "Use this to tell whether a cell stands above its surroundings, like a ridge or a summit, or below them, like a valley or a hollow. It is the first step of most landform classifications. Enter the nine elevations around the cell; a positive index is high ground and a negative one is low ground.",
+    limitations: "It looks only at the eight cells around the center, so it sees small landforms: a cell can sit above its neighbors and still lie in a broad valley. Values depend on the cell size and are comparable only within one resolution.",
+    references: &[WILSON],
+    examples: &[Example {
+        id: "primary",
+        title: "A ridge crest on a 30 m grid",
+        input: r#"{"elevations":[{"row":"842.0, 845.5, 841.2"},{"row":"846.1, 851.3, 847.0"},{"row":"840.4, 844.8, 839.9"}],"cell_size":"30 m"}"#,
+        source: "The definition in Python, checked against gdaldem 3.13.3 TPI (tools/vectors/gen_terrain_views.py)",
+    }],
+    primary_example: "primary",
+    visualization: TABLE,
+    related: &[
+        parent("raster.terrain.ruggedness"),
+        sibling("raster.terrain.roughness-tri"),
+        sibling("raster.terrain.curvature"),
+    ],
+    assumptions: RUGGEDNESS.assumptions,
+    sentence: "The position index is {tpi}, so the cell sits {position}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_tpi,
     ..ToolDef::BLANK
 };
 

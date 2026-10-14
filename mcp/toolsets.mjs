@@ -16,10 +16,11 @@ export const TOOLSETS = {
     'geodesy.datum.',
     'geodesy.ellipsoid.',
     'geodesy.frame.',
-    'geodesy.geoid.',
-    'geodesy.height.',
-    'geodesy.magnetic.',
   ],
+  // Heights and magnetic models are their own toolsets, since with them the
+  // core passes the 40-tool cap.
+  heights: ['geodesy.geoid.', 'geodesy.height.'],
+  magnetic: ['geodesy.magnetic.'],
   projections: ['geodesy.projection.', 'geodesy.utm.', 'geodesy.ups.', 'geodesy.spcs.'],
   // Navigation and geometry together pass the cap, so each is its own toolset.
   navigation: ['navigation.'],

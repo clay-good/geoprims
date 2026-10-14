@@ -375,11 +375,200 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
+    id: "geodesy.height.ellipsoidal-to-orthometric",
+    title: "Ellipsoidal height to orthometric height",
+    summary: "Converts a GPS height above the WGS 84 ellipsoid (h) to a height above the EGM96 geoid, close to mean sea level (H = h − N).",
+    aliases: &[
+        "h to H",
+        "HAE to MSL calculator",
+        "GPS height to orthometric height",
+    ],
+    keywords: &[
+        "ellipsoidal height",
+        "HAE",
+        "orthometric",
+        "MSL",
+        "geoid",
+        "EGM96",
+        "GNSS",
+    ],
+    inputs: &[
+        HEIGHT_CONVERT.inputs[0],
+        HEIGHT_CONVERT.inputs[1],
+        Field::new(
+            "height",
+            "Ellipsoidal height h",
+            "Height above the WGS 84 ellipsoid, like 312.6 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        HEIGHT_CONVERT.inputs[5],
+        HEIGHT_CONVERT.inputs[6],
+    ],
+    outputs: &[
+        HEIGHT_CONVERT.outputs[2],
+        HEIGHT_CONVERT.outputs[3],
+        HEIGHT_CONVERT.outputs[1],
+    ],
+    errors: HEIGHT_CONVERT.errors,
+    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL", "EXPERIMENTAL_TOOL"],
+    model: "H = h − N, with N the EGM96 geoid height at the point, interpolated from the 15-minute grid",
+    accuracy: HEIGHT_CONVERT.accuracy,
+    when_to_use: "Use this when a GNSS receiver, a drone log, or a lidar point cloud gives height above the ellipsoid and you need it against sea level, a map, or an airfield elevation. Enter the latitude, longitude, and ellipsoidal height. The tool returns the orthometric height above the EGM96 geoid and the geoid height N it subtracted.",
+    limitations: "A GNSS height is ellipsoidal unless the receiver says otherwise, and some apps already show MSL, so check before converting twice. EGM96 is a global geoid model good to about half a meter to a meter against leveled benchmarks, worse in mountains, and it is not a national vertical datum: in the United States, NAVD 88 heights need GEOID18 and NAD 83 ellipsoid heights, which differ by up to a couple of meters.",
+    references: HEIGHT_CONVERT.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A drone over Lake Geneva",
+        input: r#"{"lat":46.452,"lon":6.583,"height":"448.2 m"}"#,
+        source: "EGM96 15-minute grid, interpolated as GeographicLib does",
+    }],
+    primary_example: "primary",
+    assets: HEIGHT_CONVERT.assets,
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.height.convert",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.height.orthometric-to-ellipsoidal",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.geoid.geoid-height",
+            reason: "parent",
+        },
+    ],
+    sentence: "The height above the geoid is {orthometric}. The geoid is {abs(geoid_height)} {if geoid_height < 0}below{else}above{/if} the ellipsoid here.",
+    limits: HEIGHT_CONVERT.limits,
+    run: run_ellipsoidal_to_orthometric,
+    ..ToolDef::BLANK
+};
+
+pub static ORTHOMETRIC_TO_ELLIPSOIDAL: ToolDef = ToolDef {
+    id: "geodesy.height.orthometric-to-ellipsoidal",
+    title: "Orthometric height to ellipsoidal height",
+    summary: "Converts a height above the EGM96 geoid, close to mean sea level (H), to a height above the WGS 84 ellipsoid (h = H + N).",
+    aliases: &[
+        "H to h",
+        "MSL to HAE calculator",
+        "orthometric to ellipsoidal height",
+    ],
+    keywords: &[
+        "orthometric",
+        "MSL",
+        "ellipsoidal height",
+        "HAE",
+        "geoid",
+        "EGM96",
+        "waypoint",
+    ],
+    inputs: &[
+        HEIGHT_CONVERT.inputs[0],
+        HEIGHT_CONVERT.inputs[1],
+        Field::new(
+            "height",
+            "Orthometric height H",
+            "Height above mean sea level (EGM96), like 1,655 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        HEIGHT_CONVERT.inputs[5],
+        HEIGHT_CONVERT.inputs[6],
+    ],
+    outputs: &[
+        HEIGHT_CONVERT.outputs[1],
+        HEIGHT_CONVERT.outputs[3],
+        HEIGHT_CONVERT.outputs[2],
+    ],
+    errors: HEIGHT_CONVERT.errors,
+    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL", "EXPERIMENTAL_TOOL"],
+    model: "h = H + N, with N the EGM96 geoid height at the point, interpolated from the 15-minute grid",
+    accuracy: HEIGHT_CONVERT.accuracy,
+    when_to_use: "Use this to give a GNSS system a height it understands: a waypoint altitude for a drone that flies in ellipsoidal height, a control point from a map elevation, or a terrain height for a ground-clearance check against GNSS. Enter the latitude, longitude, and height above sea level. The tool returns the ellipsoidal height and the geoid height N it added.",
+    limitations: "A map or chart elevation is usually on a national vertical datum, not EGM96, so the result can be off by the difference between the two. EGM96 is a global geoid model good to about half a meter to a meter against leveled benchmarks, worse in mountains, and it is not a national vertical datum: in the United States, NAVD 88 heights need GEOID18 and NAD 83 ellipsoid heights, which differ by up to a couple of meters.",
+    references: HEIGHT_CONVERT.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A summit elevation near Boulder, Colorado",
+        input: r#"{"lat":40.015,"lon":-105.2705,"height":"1655 m"}"#,
+        source: "EGM96 15-minute grid, interpolated as GeographicLib does",
+    }],
+    primary_example: "primary",
+    assets: HEIGHT_CONVERT.assets,
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.height.convert",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.height.ellipsoidal-to-orthometric",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.geoid.geoid-height",
+            reason: "parent",
+        },
+    ],
+    sentence: "The ellipsoidal height is {ellipsoidal}. The geoid is {abs(geoid_height)} {if geoid_height < 0}below{else}above{/if} the ellipsoid here.",
+    limits: HEIGHT_CONVERT.limits,
+    run: run_orthometric_to_ellipsoidal,
+    ..ToolDef::BLANK
+};
+
+fn run_ellipsoidal_to_orthometric(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    convert(ctx, Some(false))
+}
+
+fn run_orthometric_to_ellipsoidal(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    convert(ctx, Some(true))
+}
+
 fn run_convert(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    convert(ctx, None)
+}
+
+/// Converts between ellipsoidal and orthometric heights. A focused operation
+/// fixes the direction (`Some(true)` for orthometric input) and declares no
+/// `from` or `terrain`; the general one reads them.
+fn convert(ctx: &mut Ctx, orthometric_in: Option<bool>) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let h = ctx.req_quantity("height")?;
     let (n, _) = geoid_height(ctx, lat, lon)?;
     msl_note(ctx);
+    if let Some(orthometric) = orthometric_in {
+        let (ell, orth) = if orthometric {
+            (h.base() + n, h.base())
+        } else {
+            (h.base(), h.base() - n)
+        };
+        let unit = h.unit;
+        let geoid = ("geoid_height", ctx.out("geoid_height", m(n)));
+        let ell = ("ellipsoidal", ctx.emit("ellipsoidal", m(ell), unit));
+        let orth = ("orthometric", ctx.emit("orthometric", m(orth), unit));
+        return Ok(Json::obj(if orthometric {
+            vec![ell, geoid, orth]
+        } else {
+            vec![orth, geoid, ell]
+        }));
+    }
     let from = ctx.choice("from")?;
     let terrain = ctx.quantity("terrain")?.map(|t| t.base());
     // A height above ground says nothing without the ground it is above.

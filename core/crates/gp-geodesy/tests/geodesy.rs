@@ -483,6 +483,49 @@ fn focused_frame_and_grid_operations_match_their_general_tools() {
 }
 
 #[test]
+fn directional_height_conversions_match_the_general_tool() {
+    // The host supplies the EGM96 grid; the test plays the host.
+    gp_base::assets::put(
+        "egm96-15@2009-08-29/egm96-15.pgm",
+        include_bytes!("../../../../assets/data/egm96-15/2009-08-29/egm96-15.pgm"),
+    );
+    let up = r#"{"lat":46.452,"lon":6.583,"height":"448.2 m"}"#;
+    let to_h = call("geodesy.height.ellipsoidal-to-orthometric", up);
+    let general = call("geodesy.height.convert", up);
+    assert_eq!(to_h["ok"], true, "{to_h}");
+    for key in ["ellipsoidal", "orthometric", "geoid_height"] {
+        assert_eq!(to_h["result"][key], general["result"][key], "{key}");
+    }
+    // And back: the orthometric height converts to the ellipsoidal height it came from.
+    let back = call(
+        "geodesy.height.orthometric-to-ellipsoidal",
+        &serde_json::json!({"lat": 46.452, "lon": 6.583, "height": format!("{} m", num(&to_h, "result.orthometric.value"))}).to_string(),
+    );
+    assert!((num(&back, "result.ellipsoidal.value") - 448.2).abs() < 1e-9);
+    let general = call(
+        "geodesy.height.convert",
+        r#"{"lat":40.015,"lon":-105.2705,"height":"1655 m","from":"orthometric"}"#,
+    );
+    let to_ell = call(
+        "geodesy.height.orthometric-to-ellipsoidal",
+        r#"{"lat":40.015,"lon":-105.2705,"height":"1655 m"}"#,
+    );
+    for key in ["ellipsoidal", "orthometric", "geoid_height"] {
+        assert_eq!(to_ell["result"][key], general["result"][key], "{key}");
+    }
+    // Over Colorado the geoid is below the ellipsoid, so h is less than H.
+    assert!(num(&to_ell, "result.geoid_height.value") < 0.0);
+    assert!(num(&to_ell, "result.ellipsoidal.value") < 1655.0);
+    // The height keeps the unit it was entered in.
+    let feet = call(
+        "geodesy.height.ellipsoidal-to-orthometric",
+        r#"{"lat":40.015,"lon":-105.2705,"height":"5000 ft"}"#,
+    );
+    assert_eq!(feet["result"]["orthometric"]["unit"], "ft");
+    assert!(codes(&feet).contains(&"ORTHOMETRIC_AS_ELLIPSOIDAL".to_owned()));
+}
+
+#[test]
 fn bearing_difference_across_north() {
     let r = call(
         "geodesy.parse.bearing-difference",

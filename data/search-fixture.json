@@ -486,6 +486,14 @@
       "expect": "indexing.tile.tile-quadkey"
     },
     {
+      "query": "HAE to MSL calculator",
+      "expect": "geodesy.height.ellipsoidal-to-orthometric"
+    },
+    {
+      "query": "MSL to HAE calculator",
+      "expect": "geodesy.height.orthometric-to-ellipsoidal"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

@@ -3015,6 +3015,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::TM_EXACT_INVERSE,
     &geoid::GEOID_HEIGHT,
     &geoid::HEIGHT_CONVERT,
+    &geoid::ELLIPSOIDAL_TO_ORTHOMETRIC,
+    &geoid::ORTHOMETRIC_TO_ELLIPSOIDAL,
     &frames::PARAMETERS,
     &frames::RADII,
     &frames::MERIDIAN_ARC,

@@ -931,7 +931,9 @@
         {
           "want": "turn a GPS height into a height above sea level, or back",
           "tools": [
-            "convert"
+            "convert",
+            "ellipsoidal-to-orthometric",
+            "orthometric-to-ellipsoidal"
           ]
         }
       ]

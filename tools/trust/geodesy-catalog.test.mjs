@@ -49,6 +49,15 @@ test('each local-frame and grid-figure step named in the inventory is an address
   }
 });
 
+test('each direction of the height conversion is an addressable geodesy operation', () => {
+  for (const id of ['geodesy.height.ellipsoidal-to-orthometric', 'geodesy.height.orthometric-to-ellipsoidal']) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
 test('the geodesy catalog does not lose registered operations', () => {
-  assert.ok(geodesy.length >= 83, `geodesy operation count regressed to ${geodesy.length}`);
+  assert.ok(geodesy.length >= 85, `geodesy operation count regressed to ${geodesy.length}`);
 });

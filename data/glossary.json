@@ -376,7 +376,8 @@
       "definition": "A global gravity model whose geoid converts GPS ellipsoid heights to heights above mean sea level, to within about a meter.",
       "source": "egm96",
       "relatedTools": [
-        "geodesy.geoid.geoid-height"
+        "geodesy.geoid.geoid-height",
+        "geodesy.height.orthometric-to-ellipsoidal"
       ]
     },
     {
@@ -1813,6 +1814,7 @@
         "geodesy.datum.itrf",
         "geodesy.datum.legacy",
         "geodesy.datum.nad83",
+        "geodesy.height.ellipsoidal-to-orthometric",
         "geodesy.magnetic.declination",
         "geodesy.magnetic.grivation",
         "geodesy.magnetic.magnetic-to-true",

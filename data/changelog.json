@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-10-14",
+      "kind": "fixed",
+      "tools": [
+        "survey.cogo.azimuth-bearing",
+        "survey.cogo.forward"
+      ],
+      "vectors": [],
+      "summary": "Survey tools that read a bearing or azimuth now accept a degree unit written out, like 123.456 deg or 90 degrees. Before, the G at the end of deg was taken for the gon suffix, and the direction was refused as an unreadable number of gons. Directions that were already accepted give the same results."
+    },
+    {
+      "date": "2026-10-14",
       "kind": "changed",
       "tools": [
         "indexing.s2.area",

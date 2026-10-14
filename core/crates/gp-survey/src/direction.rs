@@ -415,6 +415,19 @@ pub fn parse(s: &str) -> Result<f64, String> {
         };
         return Ok(gp_base::angle::wrap_azimuth(az));
     }
+    // A degree unit written out is degrees; without this, the bare G gon
+    // suffix below would read "123.4 deg" as gons.
+    if let Some(num) = ["DEGREES", "DEGREE", "DEG"]
+        .iter()
+        .find_map(|u| t.strip_suffix(u))
+    {
+        let angle = dms::parse_plain(&num.trim().replace('-', " "))
+            .map_err(|_| format!("\"{s}\" has an unreadable number of degrees"))?;
+        if !(0.0..=360.0).contains(&angle) {
+            return Err(format!("\"{s}\": an azimuth must be between 0° and 360°"));
+        }
+        return Ok(gp_base::angle::wrap_azimuth(angle));
+    }
     // Gons (grads): 400 to the circle, so one gon is 0.9°.
     if let Some(num) = ["GON", "GRAD", "G"].iter().find_map(|u| t.strip_suffix(u)) {
         let g: f64 = num
@@ -468,6 +481,21 @@ pub fn azimuth(az: f64, decimals: u32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_written_degree_unit_is_degrees_not_gons() {
+        // "deg" ends in G, which once read as the gon suffix.
+        assert_eq!(parse("123.456 deg").unwrap(), 123.456);
+        assert_eq!(parse("90 degrees").unwrap(), 90.0);
+        assert_eq!(parse("45-30-00 DEG").unwrap(), 45.5);
+        assert!(
+            parse("400 deg")
+                .unwrap_err()
+                .contains("between 0° and 360°")
+        );
+        assert!(parse("abc deg").unwrap_err().contains("degrees"));
+        assert_eq!(parse("100 g").unwrap(), 90.0);
+    }
 
     #[test]
     fn gons() {

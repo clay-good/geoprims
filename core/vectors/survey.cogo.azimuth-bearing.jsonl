@@ -24,3 +24,4 @@
 {"id":"v024","input":{"direction":"401 gon"},"expect":{"ok":false,"error.code":"INVALID_INPUT"},"source":"add-survey-suite scenarios","sourceVersion":"2026","tolerance":{}}
 {"id":"v025","input":{"direction":"361"},"expect":{"ok":false,"error.code":"INVALID_INPUT"},"source":"add-survey-suite scenarios","sourceVersion":"2026","tolerance":{}}
 {"id":"v026","input":{"direction":"not a direction"},"expect":{"ok":false,"error.code":"INVALID_INPUT"},"source":"add-survey-suite scenarios","sourceVersion":"2026","tolerance":{}}
+{"id":"v027","input":{"direction":"123.456 deg"},"expect":{"ok":true,"result.azimuth.value":123.456,"result.bearing":"S 56\u00b032'38.40\" E"},"source":"Regression for a reported defect (2026-10-14): an azimuth written with a degree unit is read as degrees (was refused as an unreadable number of gons, the G of deg taken for the gon suffix).","sourceVersion":"2026-10-14","tolerance":{"result.azimuth.value":{"abs":1e-09}}}

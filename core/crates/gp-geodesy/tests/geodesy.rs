@@ -583,6 +583,77 @@ fn compass_zone_matches_the_declination_tool() {
 }
 
 #[test]
+fn mgrs_zone_and_precision_match_the_mgrs_tools() {
+    // The grid zone and square begin the MGRS reference the forward tool writes.
+    for place in [
+        r#"{"lat":40.446111,"lon":-79.982222}"#,
+        r#"{"lat":78.2232,"lon":15.6267}"#,
+        r#"{"lat":-89.5,"lon":10}"#,
+    ] {
+        let zone = call("geodesy.grid-ref.grid-zone-lookup", place);
+        let full = call("geodesy.grid-ref.mgrs-forward", place);
+        assert_eq!(zone["ok"], true, "{zone}");
+        let square = zone["result"]["square_100km"].as_str().unwrap();
+        assert!(
+            full["result"]["mgrs"].as_str().unwrap().starts_with(square),
+            "{place}"
+        );
+        assert_eq!(
+            format!(
+                "{}{}",
+                zone["result"]["grid_zone"].as_str().unwrap(),
+                zone["result"]["square_id"].as_str().unwrap()
+            ),
+            square
+        );
+    }
+    // Svalbard's zone exception: 33X, not 32X or 34X.
+    let svalbard = call(
+        "geodesy.grid-ref.grid-zone-lookup",
+        r#"{"lat":78.2232,"lon":15.6267}"#,
+    );
+    assert_eq!(svalbard["result"]["grid_zone"], "33X");
+
+    // Precision: ten digits name a 1 m square, and each coarser form is a truncation
+    // that the inverse tool reads as a square containing the original.
+    let p = call(
+        "geodesy.grid-ref.mgrs-precision",
+        r#"{"mgrs":"17T NE 86309 77770"}"#,
+    );
+    assert_eq!(p["result"]["precision"], "1 m");
+    assert_eq!(num(&p, "result.digits"), 5.0);
+    let inverse = call(
+        "geodesy.grid-ref.mgrs-inverse",
+        r#"{"mgrs":"17TNE8630977770"}"#,
+    );
+    assert_eq!(p["result"]["square_size"], inverse["result"]["square_size"]);
+    let coarser = p["result"]["coarser"].as_array().unwrap();
+    assert_eq!(coarser.len(), 5);
+    assert_eq!(coarser[0]["reference"], "17TNE86307777");
+    assert_eq!(coarser[4]["reference"], "17TNE");
+    // Containment: the original square's center, written at each coarser precision,
+    // is that coarser reference. (A grid square's corner is not south-west in
+    // longitude once the grid converges, so compare references, not corners.)
+    let center = (
+        num(&inverse, "result.lat.value"),
+        num(&inverse, "result.lon.value"),
+    );
+    for row in coarser {
+        // The square's size in words, like "1 km", is the forward tool's precision name.
+        let size = row["square"].as_str().unwrap().replace(' ', "");
+        let r = call(
+            "geodesy.grid-ref.mgrs-forward",
+            &serde_json::json!({"lat": center.0, "lon": center.1, "precision": size}).to_string(),
+        );
+        assert_eq!(r["result"]["mgrs"], row["reference"], "{size}");
+    }
+    // A 100 km square has no coarser form.
+    let top = call("geodesy.grid-ref.mgrs-precision", r#"{"mgrs":"17TNE"}"#);
+    assert_eq!(top["result"]["precision"], "100 km");
+    assert!(top["result"]["coarser"].as_array().unwrap().is_empty());
+}
+
+#[test]
 fn bearing_difference_across_north() {
     let r = call(
         "geodesy.parse.bearing-difference",

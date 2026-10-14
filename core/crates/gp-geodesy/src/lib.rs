@@ -2898,6 +2898,267 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static GRID_ZONE_LOOKUP: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.grid-zone-lookup",
+    title: "Grid zone and 100 km square in MGRS",
+    summary: "The MGRS grid zone designator and 100 km square identifier for a latitude and longitude, the first five characters of any MGRS reference there.",
+    aliases: &[
+        "grid zone designator",
+        "MGRS 100 km square ID",
+        "which MGRS square am I in",
+    ],
+    keywords: &[
+        "MGRS",
+        "grid zone designator",
+        "GZD",
+        "100 km square",
+        "USNG",
+        "square identifier",
+        "map sheet",
+    ],
+    inputs: &[LAT, LON, E[0], E[1], E[2]],
+    outputs: &[
+        Field::new(
+            "square_100km",
+            "Grid zone and 100 km square",
+            "Like 17TNE: the start of every MGRS reference in the square",
+            Kind::Text { max_len: 8 },
+        ),
+        Field::new(
+            "grid_zone",
+            "Grid zone designator",
+            "UTM zone and latitude band, like 17T, or a UPS letter",
+            Kind::Text { max_len: 4 },
+        ),
+        Field::new(
+            "square_id",
+            "100 km square identifier",
+            "Two letters, column then row",
+            Kind::Text { max_len: 2 },
+        ),
+    ],
+    errors: MGRS_FORWARD.errors,
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: MGRS_FORWARD.model,
+    accuracy: "Exact: the zone, band, and square follow from the point's UTM or UPS coordinates",
+    when_to_use: "Use this to find which MGRS or USNG map square a place falls in: to label a map sheet, set up a GPS receiver's grid, or check that a reference someone gave is in the right area. Enter the latitude and longitude. The tool returns the grid zone designator, such as 17T, the 100 km square letters, such as NE, and the two together, which begin every reference in that square.",
+    limitations: "Squares are cut on UTM or UPS grid lines, so a place near a zone or band edge can be in a different square than a nearby one, and Norway and Svalbard use the zone exceptions. Near the poles the designator is a single UPS letter. The lettering follows the datum: Clarke 1866 and Bessel 1841 use the older AL scheme. It gives the square, not a position within it.",
+    references: MGRS_FORWARD.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Longyearbyen, Svalbard",
+        input: r#"{"lat":78.2232,"lon":15.6267}"#,
+        source: "NGA MGRS grid zones, including the Svalbard exception",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.utm.zone",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-precision",
+            reason: "next",
+        },
+    ],
+    sentence: "The point is in grid zone {grid_zone}, 100 km square {square_id}: references there begin {square_100km}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_grid_zone_lookup,
+    ..ToolDef::BLANK
+};
+
+fn run_grid_zone_lookup(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let (ell, lettering) = mgrs_ellipsoid(ctx)?;
+    let g = utmups::forward_auto(ell.a, ell.f, lat, lon);
+    let encode = |p: i32| {
+        mgrs::encode_with(&g, lat, p, lettering).map_err(|e| {
+            ToolError::new(
+                ErrorCode::OutOfDomain,
+                format!("This point cannot be encoded: {e}."),
+            )
+            .at("/lat")
+        })
+    };
+    let (gzd, square) = (encode(-1)?, encode(0)?);
+    let id = square[gzd.len()..].to_owned();
+    Ok(Json::obj([
+        ("square_100km", Json::str(&square)),
+        ("grid_zone", Json::str(gzd)),
+        ("square_id", Json::str(id)),
+    ]))
+}
+
+const PRECISION_ROW: &[Field] = &[
+    Field::new(
+        "reference",
+        "Reference",
+        "The same square, at this precision",
+        Kind::Text { max_len: 32 },
+    ),
+    Field::new("square", "Square", "Its size", Kind::Text { max_len: 16 }),
+];
+
+pub static MGRS_PRECISION: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.mgrs-precision",
+    title: "Precision of an MGRS reference",
+    summary: "How precise an MGRS or USNG reference is: the size of the square its digits name, and the same reference at every coarser precision.",
+    aliases: &[
+        "MGRS precision",
+        "how precise is this grid reference",
+        "MGRS digits to meters",
+    ],
+    keywords: &[
+        "MGRS",
+        "USNG",
+        "precision",
+        "digits",
+        "square size",
+        "truncate",
+        "grid reference",
+    ],
+    inputs: &[MGRS_INVERSE.inputs[0], E[0], E[1], E[2]],
+    outputs: &[
+        Field::new(
+            "precision",
+            "Precision",
+            "The size of the square the reference names",
+            Kind::Text { max_len: 16 },
+        ),
+        Field::new(
+            "digits",
+            "Digits per coordinate",
+            "0 (100 km square) to 5 (1 m), or more",
+            Kind::Number {
+                min: 0.0,
+                max: 10.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        MGRS_INVERSE.outputs[4],
+        Field::new(
+            "coarser",
+            "Coarser references",
+            "The same place at each coarser precision, truncated as MGRS requires",
+            Kind::List {
+                items: PRECISION_ROW,
+                min: 0,
+                max: 12,
+            },
+        ),
+    ],
+    errors: MGRS_INVERSE.errors,
+    warnings: &["BAND_ADJUSTED", "EXPERIMENTAL_TOOL"],
+    model: "An MGRS reference names a square: with n digits per coordinate it is 10^(5 − n) m across; a coarser reference keeps the first digits of each coordinate, never rounds (NGA MGRS)",
+    accuracy: "Exact: precision is set by the count of digits",
+    when_to_use: "Use this when a grid reference arrives and you need to know how much ground it pins down, or to shorten it for a radio call or a map label without moving it. Paste the reference with or without spaces. The tool returns the size of the square it names, such as 10 m for four digits a side, and the same reference cut to every coarser precision down to the 100 km square.",
+    limitations: "MGRS references are truncated, never rounded, so a coarser reference names the square that contains the finer one, and its south-west corner is not the nearest point. The precision is what the digits claim, not how accurately the position was measured. References with more than five digits a side name squares smaller than a meter, which the standard allows but few receivers mean.",
+    references: MGRS_INVERSE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 10-digit reference in Pittsburgh",
+        input: r#"{"mgrs":"17T NE 86309 77770"}"#,
+        source: "NGA MGRS: five digits a side name a 1 m square",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.mgrs-inverse",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.grid-ref.grid-zone-lookup",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.usng-inverse",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The reference names a {precision} square, {digits} digits a side.",
+    limits: &[("batchRows", 10_000)],
+    run: run_mgrs_precision,
+    ..ToolDef::BLANK
+};
+
+/// A square size in words: 100 km, 10 m, 1 cm.
+fn square_words(size_m: f64) -> String {
+    if size_m >= 1000.0 {
+        format!("{} km", size_m / 1000.0)
+    } else if size_m >= 1.0 {
+        format!("{size_m} m")
+    } else if size_m >= 0.01 {
+        format!(
+            "{} cm",
+            gp_base::num::format_f64(size_m * 100.0).unwrap_or_default()
+        )
+    } else {
+        format!(
+            "{} mm",
+            gp_base::num::format_f64(size_m * 1000.0).unwrap_or_default()
+        )
+    }
+}
+
+fn run_mgrs_precision(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let s = ctx.text("mgrs")?.expect("required");
+    let (wgs, lettering) = mgrs_ellipsoid(ctx)?;
+    // Decoding validates the reference; the rest is the text itself.
+    let d = mgrs::decode_with(&s, wgs.a, wgs.f, lettering)
+        .map_err(|e| ToolError::invalid("/mgrs", format!("This reference is not valid: {e}.")))?;
+    if d.band_adjusted {
+        ctx.warnings.push(Warning::new(
+            "BAND_ADJUSTED",
+            format!(
+                "The latitude band {} was adjusted: the square lies on a band boundary.",
+                d.band
+            ),
+        ));
+    }
+    let compact: String = s
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect::<String>()
+        .to_ascii_uppercase();
+    // The coordinates are the digits after the last letter (the 100 km square's row).
+    let digits_at = compact
+        .rfind(|c: char| c.is_ascii_alphabetic())
+        .map_or(0, |i| i + 1);
+    let (head, tail) = compact.split_at(digits_at);
+    let n = tail.len() / 2;
+    let (east, north) = tail.split_at(n);
+    let coarser: Vec<Json> = (0..n)
+        .rev()
+        .map(|k| {
+            Json::obj([
+                (
+                    "reference",
+                    Json::str(format!("{head}{}{}", &east[..k], &north[..k])),
+                ),
+                ("square", Json::str(square_words(10f64.powi(5 - k as i32)))),
+            ])
+        })
+        .collect();
+    Ok(Json::obj([
+        ("precision", Json::str(square_words(d.size))),
+        ("digits", Json::Num(n as f64)),
+        ("square_size", ctx.out("square_size", meters(d.size))),
+        ("coarser", Json::Arr(coarser)),
+    ]))
+}
+
 fn run_mgrs_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let s = ctx.text("mgrs")?.expect("required");
     let (wgs, lettering) = mgrs_ellipsoid(ctx)?;
@@ -2978,6 +3239,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &UPS_INVERSE,
     &MGRS_FORWARD,
     &MGRS_INVERSE,
+    &GRID_ZONE_LOOKUP,
+    &MGRS_PRECISION,
     &magnetic::DECLINATION,
     &magnetic::UNCERTAINTY_ZONE,
     &magnetic::TRUE_TO_MAGNETIC,

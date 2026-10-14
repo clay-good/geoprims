@@ -885,8 +885,10 @@
       "definition": "UTM and UPS coordinates written as a zone, a latitude band, a two-letter 100 km square, and digits, like 17T NE 86309 77770.",
       "source": "nga-mgrs",
       "relatedTools": [
+        "geodesy.grid-ref.grid-zone-lookup",
         "geodesy.grid-ref.mgrs-forward",
         "geodesy.grid-ref.mgrs-inverse",
+        "geodesy.grid-ref.mgrs-precision",
         "geodesy.grid-ref.usng-forward"
       ]
     },

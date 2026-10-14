@@ -903,7 +903,9 @@
             "mgrs-forward",
             "mgrs-inverse",
             "usng-forward",
-            "usng-inverse"
+            "usng-inverse",
+            "grid-zone-lookup",
+            "mgrs-precision"
           ]
         },
         {

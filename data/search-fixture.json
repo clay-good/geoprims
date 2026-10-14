@@ -498,6 +498,14 @@
       "expect": "geodesy.magnetic.uncertainty-zone"
     },
     {
+      "query": "grid zone designator",
+      "expect": "geodesy.grid-ref.grid-zone-lookup"
+    },
+    {
+      "query": "how precise is this grid reference",
+      "expect": "geodesy.grid-ref.mgrs-precision"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

@@ -30,6 +30,23 @@ test('each photogrammetry step named in the inventory is an addressable drone op
   }
 });
 
+test('each power step named in the inventory is an addressable drone operation', () => {
+  const expected = new Map([
+    ['drone.power.usable-energy', ['usable battery energy', 'battery reserve calculator']],
+    ['drone.power.c-rate', ['C-rate calculator', 'battery discharge rate']],
+    ['drone.power.disk-area', ['rotor disk area calculator', 'disk loading calculator']],
+    ['drone.power.range', ['drone range calculator', 'how far can a drone fly']],
+    ['drone.power.temperature-derating', ['cold battery derating', 'battery capacity in cold weather']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
 test('the drone catalog does not lose registered operations', () => {
-  assert.ok(drone.length >= 43, `drone operation count regressed to ${drone.length}`);
+  assert.ok(drone.length >= 48, `drone operation count regressed to ${drone.length}`);
 });

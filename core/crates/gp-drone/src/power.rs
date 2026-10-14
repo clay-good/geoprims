@@ -364,7 +364,98 @@ pub static BATTERY_ENERGY: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static C_RATE: ToolDef = ToolDef {
+    id: "drone.power.c-rate",
+    title: "Battery C-rate for a power draw",
+    summary: "The current a power draw pulls from a battery and the C-rate that is for the pack's capacity, checked against the pack's continuous rating.",
+    aliases: &[
+        "C-rate calculator",
+        "battery discharge rate",
+        "amps from watts and volts",
+    ],
+    keywords: &[
+        "C-rate",
+        "discharge rate",
+        "current",
+        "amps",
+        "continuous rating",
+        "LiPo",
+        "burst",
+    ],
+    inputs: &[
+        BATTERY_ENERGY.inputs[0],
+        BATTERY_ENERGY.inputs[6].required().core(),
+        BATTERY_ENERGY.inputs[1],
+        BATTERY_ENERGY.inputs[2],
+        BATTERY_ENERGY.inputs[3],
+        BATTERY_ENERGY.inputs[7],
+    ],
+    outputs: &[
+        Field::new(
+            "c_rate",
+            "C-rate",
+            "Current ÷ capacity in amp-hours",
+            Kind::Number { min: 0.0, max: 1e6 },
+        )
+        .precision(Precision::Significant(3)),
+        Field::new(
+            "current",
+            "Current",
+            "Power ÷ voltage, in amps",
+            Kind::Number { min: 0.0, max: 1e9 },
+        )
+        .precision(Precision::Significant(3)),
+        BATTERY_ENERGY.outputs[2],
+    ],
+    errors: &[],
+    warnings: &["NOMINAL_VALUE_USED", "C_RATE_EXCEEDED", "EXPERIMENTAL_TOOL"],
+    model: "Current I = P / V; C-rate = I ÷ capacity in amp-hours, so 1 C empties the pack in an hour",
+    accuracy: "Exact at the nominal voltage; under load the voltage sags and the current for the same power rises",
+    when_to_use: "Use this to check that a battery can deliver what an aircraft draws. Enter the pack's capacity, its nominal voltage or cell count, and the power draw, such as hover power or the peak in a climb. The tool returns the current and the C-rate. Add the pack's continuous C rating to be warned when the draw is over it.",
+    limitations: "The current is worked at the nominal voltage, so near the end of a flight, in the cold, or under a heavy load the real current is higher. A pack's printed C rating is the maker's claim and is often optimistic, and burst ratings hold only for seconds. This checks one steady draw, not the peaks of aggressive flying, and it says nothing about connector or wire limits.",
+    references: BATTERY_ENERGY.references,
+    examples: &[Example {
+        id: "primary",
+        title: "480 W from a 6S 10,000 mAh pack rated 10 C",
+        input: r#"{"capacity":"10000 mAh","cells":6,"power":"480 W","max_c_rate":10}"#,
+        source: "Arithmetic: 480 W at 22.2 V is 21.6 A, which is 2.16 C of 10 Ah",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.power.battery-energy",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.power.hover-power",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.power.endurance",
+            reason: "next",
+        },
+    ],
+    sentence: "The draw is {c_rate} C, a current of {current} A.{warn C_RATE_EXCEEDED} That is over the pack's continuous rating.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_c_rate,
+    ..ToolDef::BLANK
+};
+
+fn run_c_rate(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    battery(ctx, true)
+}
+
 fn run_battery(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    battery(ctx, false)
+}
+
+/// The battery tool. `rate_only` takes a required power draw and reports the
+/// C-rate and current without the energy budget.
+fn battery(ctx: &mut Ctx, rate_only: bool) -> Result<Json, ToolError> {
     let cap_c = positive(ctx, "capacity", "Capacity")?;
     let v = match (ctx.quantity("voltage")?, ctx.number("cells")?) {
         (Some(v), None) => v.base(),
@@ -402,6 +493,20 @@ fn run_battery(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     if v <= 0.0 {
         return Err(ToolError::invalid("/voltage", "Voltage must be positive."));
+    }
+    if rate_only {
+        let p = positive(ctx, "power", "Power")?;
+        let i = p / v;
+        let c = i / (cap_c / 3600.0);
+        c_rate_check(ctx, c)?;
+        return Ok(Json::obj(vec![
+            ("c_rate", Json::Num(c)),
+            ("current", Json::Num(i)),
+            (
+                "voltage",
+                ctx.out("voltage", q(v, QT::ElectricPotential, "V")),
+            ),
+        ]));
     }
     let dod = pct(ctx, "depth_of_discharge", 1.0)?;
     let reserve = pct(ctx, "reserve", 0.0)?;
@@ -454,24 +559,30 @@ fn run_battery(ctx: &mut Ctx) -> Result<Json, ToolError> {
         let c = i / (cap_c / 3600.0);
         o.push(("current", Json::Num(i)));
         o.push(("c_rate", Json::Num(c)));
-        if let Some(max) = ctx.number("max_c_rate")?
-            && c > max
-        {
-            ctx.warnings.push(
-                Warning::new(
-                    "C_RATE_EXCEEDED",
-                    format!(
-                        "The draw is {} C, {} times the pack's {} C continuous rating.",
-                        display::number(c, Precision::Decimals(1), ctx.options.format),
-                        display::number(c / max, Precision::Decimals(2), ctx.options.format),
-                        display::number(max, Precision::Significant(3), ctx.options.format)
-                    ),
-                )
-                .at("/power"),
-            );
-        }
+        c_rate_check(ctx, c)?;
     }
     Ok(Json::obj(o))
+}
+
+/// Warns when a C-rate is over the pack's continuous rating, if one was given.
+fn c_rate_check(ctx: &mut Ctx, c: f64) -> Result<(), ToolError> {
+    if let Some(max) = ctx.number("max_c_rate")?
+        && c > max
+    {
+        ctx.warnings.push(
+            Warning::new(
+                "C_RATE_EXCEEDED",
+                format!(
+                    "The draw is {} C, {} times the pack's {} C continuous rating.",
+                    display::number(c, Precision::Decimals(1), ctx.options.format),
+                    display::number(c / max, Precision::Decimals(2), ctx.options.format),
+                    display::number(max, Precision::Significant(3), ctx.options.format)
+                ),
+            )
+            .at("/power"),
+        );
+    }
+    Ok(())
 }
 
 // ---------------------------------------------------------------- hover power
@@ -521,8 +632,13 @@ struct Hover {
     electrical: f64,
 }
 
+/// Total rotor disk area (m²) of `n` rotors of diameter `d` (m).
+fn disk_area(n: f64, d: f64) -> f64 {
+    n * core::f64::consts::PI * d * d / 4.0
+}
+
 fn hover(m: f64, n: f64, d: f64, rho: f64, fm: f64, eta: f64) -> Hover {
-    let area = n * core::f64::consts::PI * d * d / 4.0;
+    let area = disk_area(n, d);
     let t = m * G0;
     let ideal = pow(t, 1.5) / sqrt(2.0 * rho * area);
     Hover {
@@ -562,6 +678,123 @@ fn read_hover(ctx: &mut Ctx) -> Result<HoverIn, ToolError> {
         fm,
         eta,
     })
+}
+
+pub static DISK_AREA: ToolDef = ToolDef {
+    id: "drone.power.disk-area",
+    title: "Rotor disk area and disk loading",
+    summary: "The total area swept by a multirotor's propellers, the area of one, and the disk loading when the takeoff mass is given.",
+    aliases: &[
+        "rotor disk area calculator",
+        "disk loading calculator",
+        "propeller swept area",
+    ],
+    keywords: &[
+        "disk area",
+        "disk loading",
+        "rotor",
+        "propeller",
+        "swept area",
+        "multirotor",
+        "momentum theory",
+    ],
+    inputs: &[
+        HOVER_INPUTS[1],
+        HOVER_INPUTS[2],
+        qty(
+            "mass",
+            "Takeoff mass",
+            "For the disk loading, like 1.4 kg",
+            QT::Mass,
+            "kg",
+        )
+        .core(),
+    ],
+    outputs: &[
+        HOVER_POWER.outputs[2],
+        Field::new(
+            "area_per_rotor",
+            "Area of one rotor",
+            "π × diameter² / 4",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "m2",
+            },
+        )
+        .precision(Precision::Significant(4)),
+        Field::new(
+            "disk_loading",
+            "Disk loading",
+            "Weight ÷ total disk area",
+            Kind::Quantity {
+                q: QT::Pressure,
+                unit: "Pa",
+            },
+        )
+        .precision(Precision::Significant(4))
+        .optional(),
+    ],
+    errors: &[],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Disk area A = N × π × D² / 4 for N rotors of diameter D; disk loading = m × g₀ / A, with g₀ = 9.80665 m/s² (Leishman 2006, momentum theory)",
+    accuracy: "Exact for the geometry; overlapping or ducted rotors are not allowed for",
+    when_to_use: "Use this when sizing propellers or comparing airframes. Enter the number of rotors and the propeller diameter to get the total swept area that momentum theory uses for hover power. Add the takeoff mass to get the disk loading, the weight carried by each square meter of disk, which sets how hard the rotors must work and how strong the downwash is.",
+    limitations: "The area is that of separate, unobstructed disks. Rotors that overlap, sit in ducts, or are stacked as coaxial pairs do not act on the full area counted here, so use the hover power tool's coaxial setting for those. The diameter is the propeller's own, tip to tip. Disk loading says nothing about blade design or efficiency by itself.",
+    references: HOVER_POWER.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Six 15 in rotors carrying 6.2 kg",
+        input: r#"{"rotors":6,"rotor_diameter":"15 in","mass":"6.2 kg"}"#,
+        source: "Geometry: six 0.381 m disks are 0.684 m², carrying 60.8 N at 88.9 Pa",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.power.hover-power",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.max-payload",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.calibrate-hover",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The rotors sweep {disk_area} in all.",
+    limits: &[("batchRows", 10_000)],
+    run: run_disk_area,
+    ..ToolDef::BLANK
+};
+
+fn run_disk_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let n = ctx.number("rotors")?.expect("required");
+    if n.fract() != 0.0 {
+        return Err(ToolError::invalid(
+            "/rotors",
+            "Rotors must be a whole number.",
+        ));
+    }
+    let d = positive(ctx, "rotor_diameter", "Rotor diameter")?;
+    let area = disk_area(n, d);
+    let m2 = |v: f64| q(v, QT::Area, "m2");
+    let mut out = vec![
+        ("disk_area", ctx.out("disk_area", m2(area))),
+        ("area_per_rotor", ctx.out("area_per_rotor", m2(area / n))),
+    ];
+    if ctx.is_set("mass") {
+        let m = positive(ctx, "mass", "Mass")?;
+        out.push((
+            "disk_loading",
+            ctx.out("disk_loading", q(m * G0 / area, QT::Pressure, "Pa")),
+        ));
+    }
+    Ok(Json::obj(out))
 }
 
 pub static HOVER_POWER: ToolDef = ToolDef {
@@ -1132,35 +1365,393 @@ fn wind_groundspeed(ctx: &mut Ctx, v: f64) -> Result<f64, ToolError> {
     }
 }
 
+/// The derating fraction: the one entered, or the cold rule of thumb from the
+/// battery temperature (with its warning), or none.
+fn read_derating(ctx: &mut Ctx) -> Result<f64, ToolError> {
+    Ok(
+        match (
+            ctx.number("derating")?,
+            ctx.quantity("battery_temperature")?,
+        ) {
+            (Some(d), _) => d / 100.0,
+            (None, Some(t)) => cold_derating_warned(ctx, t.base() - 273.15),
+            (None, None) => 0.0,
+        },
+    )
+}
+
+/// The cold rule of thumb at `t_c` °C, warning that it is one when it applies.
+fn cold_derating_warned(ctx: &mut Ctx, t_c: f64) -> f64 {
+    let d = cold_derating(t_c);
+    if d > 0.0 {
+        ctx.warnings.push(
+            Warning::new(
+                "HEURISTIC_DERATING",
+                format!(
+                    "Cold battery: usable energy reduced by {}% (a rule of thumb: 0% at 20 °C, 20% at 0 °C). Enter your own derating if you have test data.",
+                    display::number(d * 100.0, Precision::Decimals(0), ctx.options.format)
+                ),
+            )
+            .at("/battery_temperature"),
+        );
+    }
+    d
+}
+
+const WH: Kind = Kind::Quantity {
+    q: QT::Energy,
+    unit: "Wh",
+};
+
+pub static USABLE_ENERGY: ToolDef = ToolDef {
+    id: "drone.power.usable-energy",
+    title: "Usable battery energy",
+    summary: "The battery energy left to fly on after a usable share, a cold derating, and a landing reserve are taken off the pack's rated energy.",
+    aliases: &[
+        "usable battery energy",
+        "battery reserve calculator",
+        "flyable watt hours",
+    ],
+    keywords: &[
+        "usable energy",
+        "reserve",
+        "depth of discharge",
+        "watt hours",
+        "cold battery",
+        "derating",
+        "landing reserve",
+    ],
+    inputs: &[
+        ENDURANCE.inputs[0],
+        ENDURANCE.inputs[1].core(),
+        ENDURANCE.inputs[4].core(),
+        ENDURANCE.inputs[5],
+        ENDURANCE.inputs[6],
+    ],
+    outputs: &[
+        Field::new(
+            "flyable_energy",
+            "Energy to fly on",
+            "Usable energy less the reserve",
+            WH,
+        )
+        .precision(Precision::Decimals(1)),
+        ENDURANCE.outputs[5],
+        ENDURANCE.outputs[6],
+        ENDURANCE.outputs[7],
+    ],
+    errors: &[],
+    warnings: &["HEURISTIC_DERATING", "EXPERIMENTAL_TOOL"],
+    model: "Usable = rated energy × usable share × (1 − derating); energy to fly on = usable × (1 − reserve). Cold derating, when a battery temperature is given instead of a figure: 0% at or above 20 °C, 20% at 0 °C, linear, capped at 50%",
+    accuracy: "Exact arithmetic on the shares entered; the cold derating is a rule of thumb, flagged when used",
+    when_to_use: "Use this to budget a battery before working out a flight time. Enter the pack's rated energy in watt-hours, the share you are willing to discharge, and the reserve you want left when you land. Add the battery temperature for a cold day, or your own derating if you have test data. The tool returns the energy you can plan to fly on, the usable energy before the reserve, and the reserve itself.",
+    limitations: "The shares are your policy, not a property of the pack, so use the maker's discharge limit and your own landing rule. The cold derating is a rule of thumb that real packs depart from, and a pack that is aged, puffed, or drawn hard gives less than its label. It does not model voltage sag, which can end a flight before the energy is gone.",
+    references: ENDURANCE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 99 Wh pack, 85% usable, 25% reserve",
+        input: r#"{"energy":"99 Wh","usable":85,"reserve":25}"#,
+        source: "Arithmetic: 99 × 0.85 is 84.15 Wh usable, of which 21.04 Wh is held back, leaving 63.11 Wh",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.power.endurance",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.battery-energy",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.power.temperature-derating",
+            reason: "alternative",
+        },
+    ],
+    sentence: "You can plan to fly on {flyable_energy}, with {reserve_energy} held in reserve.",
+    limits: &[("batchRows", 10_000)],
+    run: run_usable_energy,
+    ..ToolDef::BLANK
+};
+
+fn run_usable_energy(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let e = positive(ctx, "energy", "Battery energy")?;
+    let usable = pct(ctx, "usable", 1.0)?;
+    let reserve = pct(ctx, "reserve", 0.0)?;
+    let derate = read_derating(ctx)?;
+    let (avail, flyable) = usable_energy(e, usable, derate, reserve);
+    let wh = |v: f64| q(v, QT::Energy, "J");
+    Ok(Json::obj(vec![
+        ("flyable_energy", ctx.out("flyable_energy", wh(flyable))),
+        ("usable_energy", ctx.out("usable_energy", wh(avail))),
+        (
+            "reserve_energy",
+            ctx.out("reserve_energy", wh(avail * reserve)),
+        ),
+        ("derating_applied", Json::Num(derate * 100.0)),
+    ]))
+}
+
+pub static TEMPERATURE_DERATING: ToolDef = ToolDef {
+    id: "drone.power.temperature-derating",
+    title: "Cold battery derating",
+    summary: "A rule-of-thumb reduction in usable battery energy for a cold pack, from the battery temperature, with the share and the energy that remain.",
+    aliases: &[
+        "cold battery derating",
+        "battery capacity in cold weather",
+        "winter drone battery",
+    ],
+    keywords: &[
+        "cold",
+        "temperature",
+        "derating",
+        "winter",
+        "battery capacity",
+        "lithium",
+        "rule of thumb",
+    ],
+    inputs: &[
+        ENDURANCE.inputs[5].required().core(),
+        Field::new(
+            "energy",
+            "Battery energy",
+            "To get what is left of it, like 99 Wh",
+            WH,
+        ),
+    ],
+    outputs: &[
+        ENDURANCE.outputs[7],
+        Field::new(
+            "share_remaining",
+            "Share remaining",
+            "100% less the derating",
+            Kind::Number {
+                min: 0.0,
+                max: 100.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "energy_remaining",
+            "Energy remaining",
+            "The pack's energy after the derating",
+            WH,
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+    ],
+    errors: &[],
+    warnings: &["HEURISTIC_DERATING", "EXPERIMENTAL_TOOL"],
+    model: "A rule of thumb, not a battery model: derating = 0% at or above 20 °C, rising 1 point per degree below it to 20% at 0 °C, capped at 50%",
+    accuracy: "A planning heuristic; real packs vary with chemistry, age, load, and how warm they were at takeoff",
+    when_to_use: "Use this for a first allowance when flying in the cold and you have no test data for your packs. Enter the battery's own temperature, not the air's, since a pack kept warm until takeoff behaves better than the weather suggests. Add the pack's energy to see what is left. The result is the reduction to plan for, and it carries a warning that it is a rule of thumb.",
+    limitations: "This is a straight-line rule of thumb, not a measurement or a model of any pack. Lithium packs lose capacity and sag in voltage in the cold by amounts that depend on chemistry, age, discharge rate, and self-heating in flight, and some aircraft refuse to take off below a set temperature. Use your maker's guidance or your own logged flights when you have them.",
+    references: ENDURANCE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 99 Wh pack at 5 °C",
+        input: r#"{"battery_temperature":"5 degC","energy":"99 Wh"}"#,
+        source: "The rule of thumb: 15 degrees under 20 °C is 15%, leaving 84.15 Wh",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.power.endurance",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.usable-energy",
+            reason: "next",
+        },
+        Related {
+            id: "drone.power.battery-energy",
+            reason: "parent",
+        },
+    ],
+    sentence: "Plan for {derating_applied}% less battery energy.",
+    limits: &[("batchRows", 10_000)],
+    run: run_temperature_derating,
+    ..ToolDef::BLANK
+};
+
+fn run_temperature_derating(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let t_c = ctx.req_quantity("battery_temperature")?.base() - 273.15;
+    let d = cold_derating_warned(ctx, t_c);
+    let mut out = vec![
+        ("derating_applied", Json::Num(d * 100.0)),
+        ("share_remaining", Json::Num((1.0 - d) * 100.0)),
+    ];
+    if ctx.is_set("energy") {
+        let e = positive(ctx, "energy", "Battery energy")?;
+        out.push((
+            "energy_remaining",
+            ctx.out("energy_remaining", q(e * (1.0 - d), QT::Energy, "J")),
+        ));
+    }
+    Ok(Json::obj(out))
+}
+
+pub static RANGE: ToolDef = ToolDef {
+    id: "drone.power.range",
+    title: "Drone range",
+    summary: "How far a drone can fly on a battery: the flight time at its power draw times the groundspeed, with usable share, reserve, cold derating, and wind along the course.",
+    aliases: &[
+        "drone range calculator",
+        "how far can a drone fly",
+        "flight distance on a battery",
+    ],
+    keywords: &[
+        "range",
+        "distance",
+        "battery",
+        "groundspeed",
+        "headwind",
+        "cruise power",
+        "reserve",
+    ],
+    inputs: &[
+        ENDURANCE.inputs[0],
+        Field::new(
+            "power",
+            "Power in forward flight",
+            "Average electrical draw at the planned speed, like 180 W",
+            Kind::Quantity {
+                q: QT::Power,
+                unit: "W",
+            },
+        )
+        .required()
+        .core(),
+        ENDURANCE.inputs[7].core(),
+        ENDURANCE.inputs[1],
+        ENDURANCE.inputs[4],
+        ENDURANCE.inputs[8],
+        ENDURANCE.inputs[9],
+        ENDURANCE.inputs[10],
+        ENDURANCE.inputs[11],
+        ENDURANCE.inputs[5],
+        ENDURANCE.inputs[6],
+    ],
+    outputs: &[
+        ENDURANCE.outputs[4],
+        Field::new(
+            "flight_time",
+            "Flight time",
+            "Energy to fly on ÷ power",
+            Kind::Quantity {
+                q: QT::Time,
+                unit: "min",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "groundspeed_used",
+            "Groundspeed",
+            "As entered, or from the airspeed and wind",
+            Kind::Quantity {
+                q: QT::Speed,
+                unit: "m/s",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        ENDURANCE.outputs[5],
+    ],
+    errors: &[ErrorCode::NoSolution],
+    warnings: &["HEURISTIC_DERATING", "EXPERIMENTAL_TOOL"],
+    model: "Range = flight time × groundspeed, with flight time = rated energy × usable share × (1 − derating) × (1 − reserve) ÷ power; groundspeed from the airspeed and wind by the wind triangle when not entered",
+    accuracy: "As good as the power figure; the arithmetic is exact",
+    when_to_use: "Use this to check whether a battery covers a one-way distance, such as a transit to a site or a linear inspection. Enter the pack's energy, the average power in forward flight from a logged flight or the maker's figures, and the groundspeed. Or give the airspeed, the course, and the wind, and the tool finds the groundspeed. Set a usable share and a reserve so the answer leaves the margin you plan to land with.",
+    limitations: "This is distance flown in one direction at a steady speed and power. An out-and-back flight in wind does not simply halve it, since the upwind leg takes longer; the return-to-home budget tool handles that. Power in forward flight differs from hover power and changes with speed, payload, and air density. Climb, descent, and hovering on task are not included.",
+    references: ENDURANCE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 99 Wh pack at 180 W and 14 m/s, 85% usable, 25% reserve",
+        input: r#"{"energy":"99 Wh","power":"180 W","groundspeed":"14 m/s","usable":85,"reserve":25}"#,
+        source: "Arithmetic: 63.11 Wh at 180 W is 21.04 min, and 17.67 km at 14 m/s",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "drone.power.endurance",
+            reason: "parent",
+        },
+        Related {
+            id: "drone.power.rth-budget",
+            reason: "alternative",
+        },
+        Related {
+            id: "drone.power.usable-energy",
+            reason: "parent",
+        },
+    ],
+    sentence: "The drone can fly about {range} in {flight_time}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_range,
+    ..ToolDef::BLANK
+};
+
+fn run_range(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let e = positive(ctx, "energy", "Battery energy")?;
+    let p = positive(ctx, "power", "Power")?;
+    let usable = pct(ctx, "usable", 1.0)?;
+    let reserve = pct(ctx, "reserve", 0.0)?;
+    let derate = read_derating(ctx)?;
+    let (avail, flyable) = usable_energy(e, usable, derate, reserve);
+    let gs = match (ctx.quantity("groundspeed")?, ctx.quantity("airspeed")?) {
+        (Some(_), Some(_)) => {
+            return Err(ToolError::invalid(
+                "/airspeed",
+                "Give a groundspeed, or an airspeed with the wind, not both.",
+            ));
+        }
+        (Some(g), None) if g.base() <= 0.0 => {
+            return Err(ToolError::invalid(
+                "/groundspeed",
+                "The groundspeed must be positive.",
+            ));
+        }
+        (Some(g), None) => g.base(),
+        (None, Some(v)) => wind_groundspeed(ctx, v.base())?,
+        (None, None) => {
+            return Err(ToolError::invalid(
+                "/groundspeed",
+                "Give the groundspeed, or the airspeed with the wind.",
+            ));
+        }
+    };
+    let t = flyable / p;
+    Ok(Json::obj(vec![
+        ("range", ctx.out("range", q(t * gs, QT::Distance, "m"))),
+        ("flight_time", ctx.out("flight_time", q(t, QT::Time, "s"))),
+        (
+            "groundspeed_used",
+            ctx.out("groundspeed_used", q(gs, QT::Speed, "m/s")),
+        ),
+        (
+            "usable_energy",
+            ctx.out("usable_energy", q(avail, QT::Energy, "J")),
+        ),
+    ]))
+}
+
 fn run_endurance(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let e = positive(ctx, "energy", "Battery energy")?;
     let usable = pct(ctx, "usable", 1.0)?;
     let p = positive(ctx, "power", "Hover power")?;
     let reserve = pct(ctx, "reserve", 0.0)?;
-    let derate = match (
-        ctx.number("derating")?,
-        ctx.quantity("battery_temperature")?,
-    ) {
-        (Some(d), _) => d / 100.0,
-        (None, Some(t)) => {
-            let t_c = t.base() - 273.15;
-            let d = cold_derating(t_c);
-            if d > 0.0 {
-                ctx.warnings.push(
-                    Warning::new(
-                        "HEURISTIC_DERATING",
-                        format!(
-                            "Cold battery: usable energy reduced by {}% (a rule of thumb: 0% at 20 °C, 20% at 0 °C). Enter your own derating if you have test data.",
-                            display::number(d * 100.0, Precision::Decimals(0), ctx.options.format)
-                        ),
-                    )
-                    .at("/battery_temperature"),
-                );
-            }
-            d
-        }
-        (None, None) => 0.0,
-    };
+    let derate = read_derating(ctx)?;
     let (avail, flyable) = usable_energy(e, usable, derate, reserve);
     let k = ctx.number("peukert")?;
     let rated_time = match ctx.quantity("rated_time")? {

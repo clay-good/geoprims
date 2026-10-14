@@ -268,6 +268,134 @@ fn focused_photogrammetry_operations_match_their_general_tools() {
 }
 
 #[test]
+fn focused_power_operations_match_their_general_tools() {
+    // Usable energy: the endurance tool's energy budget, without a power draw.
+    let budget = serde_json::json!({"energy": "99 Wh", "usable": 85, "reserve": 25, "battery_temperature": "5 degC"});
+    let mut with_power = budget.clone();
+    with_power["power"] = serde_json::json!("180 W");
+    let usable = call("drone.power.usable-energy", &budget.to_string());
+    let endurance = call("drone.power.endurance", &with_power.to_string());
+    assert_eq!(usable["ok"], true, "{usable}");
+    for key in ["usable_energy", "reserve_energy", "derating_applied"] {
+        assert_eq!(usable["result"][key], endurance["result"][key], "{key}");
+    }
+    // 99 Wh × 85% × (1 − 15%) × (1 − 25%).
+    let flyable = num(&usable, "result.flyable_energy.value");
+    assert!((flyable - 99.0 * 0.85 * 0.85 * 0.75).abs() < 1e-9);
+    assert!(codes(&usable).contains(&"HEURISTIC_DERATING".to_owned()));
+    // Energy to fly on at the hover power is the endurance tool's hover time.
+    assert!((flyable / 180.0 * 60.0 - num(&endurance, "result.hover_time.value")).abs() < 1e-9);
+
+    // Cold derating: the rule of thumb's fixed points, and the same figure the budget used.
+    for (temp, want) in [
+        ("20 degC", 0.0),
+        ("0 degC", 20.0),
+        ("5 degC", 15.0),
+        ("-40 degC", 50.0),
+        ("32 degF", 20.0),
+    ] {
+        let r = call(
+            "drone.power.temperature-derating",
+            &serde_json::json!({"battery_temperature": temp}).to_string(),
+        );
+        assert!(
+            (num(&r, "result.derating_applied") - want).abs() < 1e-9,
+            "{temp}"
+        );
+        assert!(
+            (num(&r, "result.share_remaining") - (100.0 - want)).abs() < 1e-9,
+            "{temp}"
+        );
+        // It is a rule of thumb whenever it takes anything off, and says so.
+        assert_eq!(
+            codes(&r).contains(&"HEURISTIC_DERATING".to_owned()),
+            want > 0.0,
+            "{temp}"
+        );
+    }
+
+    // Range: the endurance tool's range at the same power and groundspeed.
+    let mut flight = budget.clone();
+    flight["power"] = serde_json::json!("180 W");
+    flight["groundspeed"] = serde_json::json!("14 m/s");
+    let range = call("drone.power.range", &flight.to_string());
+    let endurance = call("drone.power.endurance", &flight.to_string());
+    assert_eq!(range["result"]["range"], endurance["result"]["range"]);
+    assert_eq!(
+        range["result"]["usable_energy"],
+        endurance["result"]["usable_energy"]
+    );
+    // Range is flight time times groundspeed.
+    assert!(
+        (num(&range, "result.flight_time.value") * 60.0 * 14.0 / 1000.0
+            - num(&range, "result.range.value"))
+        .abs()
+            < 1e-9
+    );
+    // A headwind shortens it by the same share it takes off the groundspeed.
+    let mut headwind = budget.clone();
+    for (k, v) in [
+        ("power", "180 W"),
+        ("airspeed", "14 m/s"),
+        ("course", "90 deg"),
+        ("wind_direction", "90 deg"),
+        ("wind_speed", "4 m/s"),
+    ] {
+        headwind[k] = serde_json::json!(v);
+    }
+    let into_wind = call("drone.power.range", &headwind.to_string());
+    assert!((num(&into_wind, "result.groundspeed_used.value") - 10.0).abs() < 1e-9);
+    assert!(
+        (num(&into_wind, "result.range.value") / num(&range, "result.range.value") - 10.0 / 14.0)
+            .abs()
+            < 1e-9
+    );
+
+    // Disk area: the hover tool's area and loading from the same airframe.
+    let frame = serde_json::json!({"rotors": 6, "rotor_diameter": "15 in", "mass": "6.2 kg"});
+    let disk = call("drone.power.disk-area", &frame.to_string());
+    let hover = call("drone.power.hover-power", &frame.to_string());
+    for key in ["disk_area", "disk_loading"] {
+        assert_eq!(disk["result"][key], hover["result"][key], "{key}");
+    }
+    assert!(
+        (num(&disk, "result.area_per_rotor.value") * 6.0 - num(&disk, "result.disk_area.value"))
+            .abs()
+            < 1e-12
+    );
+    // Without a mass there is an area and no loading.
+    let bare = call(
+        "drone.power.disk-area",
+        r#"{"rotors":4,"rotor_diameter":"10 in"}"#,
+    );
+    assert_eq!(bare["ok"], true);
+    assert!(bare["result"]["disk_loading"].is_null());
+
+    // C-rate: the battery tool's current and C-rate for the same draw.
+    let pack =
+        serde_json::json!({"capacity": "10000 mAh", "cells": 6, "power": "480 W", "max_c_rate": 2});
+    let rate = call("drone.power.c-rate", &pack.to_string());
+    let battery = call("drone.power.battery-energy", &pack.to_string());
+    for key in ["c_rate", "current", "voltage"] {
+        assert_eq!(rate["result"][key], battery["result"][key], "{key}");
+    }
+    assert!((num(&rate, "result.c_rate") - 480.0 / 22.2 / 10.0).abs() < 1e-12);
+    // 2.16 C is over a 2 C rating: both tools say so, and both name the nominal voltage.
+    for r in [&rate, &battery] {
+        assert!(codes(r).contains(&"C_RATE_EXCEEDED".to_owned()));
+        assert!(codes(r).contains(&"NOMINAL_VALUE_USED".to_owned()));
+    }
+    // A draw is required: there is no rate without one.
+    assert_eq!(
+        call(
+            "drone.power.c-rate",
+            r#"{"capacity":"5000 mAh","voltage":"14.8 V"}"#
+        )["ok"],
+        false
+    );
+}
+
+#[test]
 fn one_inch_at_100_m() {
     let r = call(
         "drone.photogrammetry.gsd",

@@ -1272,10 +1272,177 @@ def checkpoint_vectors():
     return out
 
 
+POWER_SPEC = "add-drone-suite power requirements, evaluated in Python (tools/vectors/gen_drone.py)"
+
+
+def pvec(i, inp, exp, rel=1e-11):
+    v = vec(i, inp, exp, POWER_SPEC, "2026")
+    for key in v["tolerance"]:
+        v["tolerance"][key] = {"rel": rel, "abs": 1e-12}
+    return v
+
+
+def cold(t_c):
+    """The labeled rule of thumb: 0% at 20 °C, 20% at 0 °C, capped at 50%."""
+    return 0.0 if t_c >= 20 else min((20 - t_c) * 0.01, 0.5)
+
+
+def usable_energy_vectors():
+    rng = random.Random(55201)
+    out = []
+
+    def case(i, wh, usable=None, reserve=None, derating=None, temp_c=None):
+        inp = {"energy": f"{wh} Wh"}
+        d = 0.0
+        if usable is not None:
+            inp["usable"] = usable
+        if reserve is not None:
+            inp["reserve"] = reserve
+        if derating is not None:
+            inp["derating"] = derating
+            d = derating / 100
+        elif temp_c is not None:
+            inp["battery_temperature"] = f"{temp_c} degC"
+            d = cold(temp_c)
+        avail = wh * (100 if usable is None else usable) / 100 * (1 - d)
+        r = (reserve or 0) / 100
+        return pvec(i, inp, {"result.flyable_energy.value": avail * (1 - r), "result.usable_energy.value": avail,
+                             "result.reserve_energy.value": avail * r, "result.derating_applied": d * 100})
+
+    out.append(case(1, 99, 85, 25))
+    out.append(case(2, 90.4))
+    while len(out) < 20:
+        wh = rng.choice([43.6, 77, 90.4, 99, 129.96, 263.2, 274, 588, 1000])
+        usable = rng.choice([None, 80, 85, 90, 95, 100])
+        reserve = rng.choice([None, 10, 15, 20, 25, 30])
+        which = len(out) % 3
+        out.append(case(len(out) + 1, wh, usable, reserve, derating=rng.choice([5, 10, 12.5, 30]) if which == 1 else None,
+                        temp_c=rng.choice([-25, -10, -5, 0, 5, 10, 15, 20, 30]) if which == 2 else None))
+    out.append(refusal(len(out) + 1, {"energy": "0 Wh"}, "INVALID_INPUT", "/energy"))
+    out.append(refusal(len(out) + 1, {"energy": "-5 Wh", "usable": 80}, "INVALID_INPUT", "/energy"))
+    return out
+
+
+def derating_vectors():
+    out = []
+    temps = [(5, "degC"), (20, "degC"), (0, "degC"), (-10, "degC"), (-30, "degC"), (-45, "degC"), (35, "degC"), (19, "degC"),
+             (12.5, "degC"), (-0.5, "degC"), (32, "degF"), (68, "degF"), (50, "degF"), (14, "degF"), (-4, "degF"),
+             (273.15, "K"), (283.15, "K"), (263.15, "K"), (293.15, "K"), (300, "K")]
+    for i, (t, u) in enumerate(temps, 1):
+        t_c = t if u == "degC" else (t - 32) / 1.8 if u == "degF" else t - 273.15
+        d = cold(t_c)
+        inp = {"battery_temperature": f"{t} {u}"}
+        exp = {"result.derating_applied": d * 100, "result.share_remaining": (1 - d) * 100}
+        if i % 2:
+            inp["energy"] = "99 Wh"
+            exp["result.energy_remaining.value"] = 99 * (1 - d)
+        v = pvec(i, inp, exp, rel=1e-9)
+        for key in v["tolerance"]:
+            v["tolerance"][key]["abs"] = 1e-9
+        out.append(v)
+    out.append(refusal(len(out) + 1, {"battery_temperature": "5 degC", "energy": "0 Wh"}, "INVALID_INPUT", "/energy"))
+    return out
+
+
+def range_vectors():
+    rng = random.Random(55202)
+    out = []
+
+    def case(i, wh, power, speed, usable=None, reserve=None, derating=None, wind=None):
+        inp = {"energy": f"{wh} Wh", "power": f"{power} W"}
+        gs = float(speed)
+        if wind is None:
+            inp["groundspeed"] = f"{speed} m/s"
+        else:
+            course, wind_from, wind_speed = wind
+            inp.update({"airspeed": f"{speed} m/s", "course": f"{course} deg", "wind_direction": f"{wind_from} deg", "wind_speed": f"{wind_speed} m/s"})
+            # The wind triangle: crab into the wind to hold the course.
+            angle = math.radians(wind_from - course)
+            cross, head = wind_speed * math.sin(angle), wind_speed * math.cos(angle)
+            gs = math.sqrt(speed * speed - cross * cross) - head
+        if usable is not None:
+            inp["usable"] = usable
+        if reserve is not None:
+            inp["reserve"] = reserve
+        if derating is not None:
+            inp["derating"] = derating
+        avail = wh * (100 if usable is None else usable) / 100 * (1 - (derating or 0) / 100)
+        hours = avail * (1 - (reserve or 0) / 100) / power
+        return pvec(i, inp, {"result.range.value": hours * gs * 3.6, "result.flight_time.value": hours * 60,
+                             "result.groundspeed_used.value": gs, "result.usable_energy.value": avail}, rel=1e-9)
+
+    out.append(case(1, 99, 180, 14, 85, 25))
+    # A direct headwind and a direct tailwind change the groundspeed by the wind speed.
+    out.append(case(2, 99, 180, 14, 85, 25, wind=(90, 90, 4)))
+    out.append(case(3, 99, 180, 14, 85, 25, wind=(90, 270, 4)))
+    while len(out) < 20:
+        wh = rng.choice([43.6, 77, 99, 129.96, 274, 588])
+        power = rng.choice([90, 150, 180, 240, 420, 900])
+        speed = rng.choice([8, 10, 12, 15, 18, 22])
+        wind = (rng.randrange(0, 360), rng.randrange(0, 360), rng.choice([2, 3, 5, 6])) if len(out) % 2 else None
+        out.append(case(len(out) + 1, wh, power, speed, rng.choice([None, 80, 90]), rng.choice([None, 15, 20, 30]),
+                        rng.choice([None, 10]), wind))
+    base = {"energy": "99 Wh", "power": "180 W"}
+    out.append(refusal(len(out) + 1, base, "INVALID_INPUT", "/groundspeed"))
+    out.append(refusal(len(out) + 1, {**base, "groundspeed": "0 m/s"}, "INVALID_INPUT", "/groundspeed"))
+    out.append(refusal(len(out) + 1, {**base, "airspeed": "10 m/s", "course": "0 deg", "wind_direction": "0 deg", "wind_speed": "12 m/s"}, "NO_SOLUTION", "/wind_speed"))
+    out.append(refusal(len(out) + 1, {**base, "groundspeed": "10 m/s", "power": "0 W"}, "INVALID_INPUT", "/power"))
+    return out
+
+
+def disk_area_vectors():
+    out = []
+    to_m = {"in": 0.0254, "cm": 0.01, "m": 1.0, "mm": 0.001}
+    cases = [(6, 15, "in", 6.2), (4, 9.4, "in", 1.4), (4, 5, "in", 0.249), (8, 28, "in", 25), (6, 21, "in", None), (4, 13, "in", 3.6),
+             (1, 2.4, "m", 9.5), (2, 1.2, "m", None), (3, 30, "cm", 2.2), (4, 38.1, "cm", 4.0), (6, 533, "mm", 12.5), (8, 18, "in", 9.0),
+             (12, 30, "in", 60), (4, 7, "in", None), (4, 10, "in", 1.9), (2, 60, "cm", 5.5), (16, 40, "cm", 80), (6, 17, "in", 8.4),
+             (4, 24, "in", 14), (8, 15, "in", None)]
+    for i, (n, d, u, mass) in enumerate(cases, 1):
+        dm = d * to_m[u]
+        area = n * math.pi * dm * dm / 4
+        inp = {"rotors": n, "rotor_diameter": f"{d} {u}"}
+        exp = {"result.disk_area.value": area, "result.area_per_rotor.value": area / n}
+        if mass is not None:
+            inp["mass"] = f"{mass} kg"
+            exp["result.disk_loading.value"] = mass * 9.80665 / area
+        out.append(pvec(i, inp, exp))
+    out.append(refusal(len(out) + 1, {"rotors": 4, "rotor_diameter": "0 in"}, "INVALID_INPUT", "/rotor_diameter"))
+    out.append(refusal(len(out) + 1, {"rotors": 4.5, "rotor_diameter": "10 in"}, "INVALID_INPUT", "/rotors"))
+    out.append(refusal(len(out) + 1, {"rotors": 4, "rotor_diameter": "10 in", "mass": "0 kg"}, "INVALID_INPUT", "/mass"))
+    return out
+
+
+def c_rate_vectors():
+    out = []
+    cases = [(10000, None, 6, "lipo", 480), (5870, 15.4, None, None, 150.6), (5000, 14.8, None, None, 300), (2200, 11.1, None, None, 180),
+             (1500, None, 4, "lipo", 600), (22000, 44.4, None, None, 2400), (16000, None, 12, "lipo", 3200), (3000, None, 6, "li-ion", 90),
+             (850, None, 4, "lipo", 420), (4500, 22.2, None, None, 250), (7000, 44.4, None, None, 1000), (1300, 14.8, None, None, 700),
+             (3850, 15.4, None, None, 95), (12000, 22.8, None, None, 520), (6000, None, 4, "li-ion", 60), (30000, 51.8, None, None, 1800),
+             (2500, 7.4, None, None, 40), (5200, None, 3, "lipo", 130), (8000, 14.8, None, None, 450), (17500, None, 14, "li-ion", 2100)]
+    for i, (mah, volts, cells, chem, power) in enumerate(cases, 1):
+        inp = {"capacity": f"{mah} mAh", "power": f"{power} W"}
+        if volts is None:
+            inp["cells"] = cells
+            if chem != "lipo":
+                inp["chemistry"] = chem
+            volts = cells * (3.6 if chem == "li-ion" else 3.7)
+        else:
+            inp["voltage"] = f"{volts} V"
+        current = power / volts
+        out.append(pvec(i, inp, {"result.c_rate": current / (mah / 1000), "result.current": current, "result.voltage.value": float(volts)}))
+    base = {"capacity": "5000 mAh", "voltage": "14.8 V"}
+    out.append(refusal(len(out) + 1, {**base, "power": "0 W"}, "INVALID_INPUT", "/power"))
+    out.append(refusal(len(out) + 1, {"capacity": "5000 mAh", "power": "100 W"}, "INVALID_INPUT", "/voltage"))
+    out.append(refusal(len(out) + 1, {**base, "cells": 4, "power": "100 W"}, "INVALID_INPUT", "/cells"))
+    return out
+
+
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "core/vectors")
     selected = set(sys.argv[2:])
-    files = {"drone.photogrammetry.footprint": footprint_vectors(), "drone.photogrammetry.crop-factor": crop_vectors(),
+    files = {"drone.power.usable-energy": usable_energy_vectors(), "drone.power.temperature-derating": derating_vectors(),
+             "drone.power.range": range_vectors(), "drone.power.disk-area": disk_area_vectors(), "drone.power.c-rate": c_rate_vectors(),
+             "drone.photogrammetry.footprint": footprint_vectors(), "drone.photogrammetry.crop-factor": crop_vectors(),
              "drone.photogrammetry.trigger-distance": spacing_vectors("trigger-distance"),
              "drone.photogrammetry.line-spacing": spacing_vectors("line-spacing"),
              "drone.photogrammetry.trigger-interval": spacing_vectors("trigger-interval"),

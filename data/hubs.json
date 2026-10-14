@@ -675,14 +675,19 @@
         {
           "want": "turn a battery's mAh and voltage into watt-hours",
           "tools": [
-            "battery-energy"
+            "battery-energy",
+            "usable-energy",
+            "c-rate",
+            "temperature-derating"
           ]
         },
         {
           "want": "estimate flight time",
           "tools": [
             "endurance",
-            "hover-power"
+            "hover-power",
+            "range",
+            "disk-area"
           ]
         },
         {

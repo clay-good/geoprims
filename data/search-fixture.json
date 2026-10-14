@@ -314,6 +314,26 @@
       "expect": "drone.photogrammetry.checkpoint-requirements"
     },
     {
+      "query": "usable battery energy",
+      "expect": "drone.power.usable-energy"
+    },
+    {
+      "query": "C-rate calculator",
+      "expect": "drone.power.c-rate"
+    },
+    {
+      "query": "disk loading calculator",
+      "expect": "drone.power.disk-area"
+    },
+    {
+      "query": "how far can a drone fly",
+      "expect": "drone.power.range"
+    },
+    {
+      "query": "cold battery derating",
+      "expect": "drone.power.temperature-derating"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

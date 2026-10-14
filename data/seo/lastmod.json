@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "d85e8b7eb93bb25e",
+    "hash": "8dcd203dfe2d0e2c",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -276,7 +276,7 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "ae25f430f7ca2935",
+    "hash": "dd722f47ae7fc2ad",
     "lastmod": "2026-10-14"
   },
   "/drone/links/": {
@@ -424,20 +424,28 @@
     "lastmod": "2026-10-14"
   },
   "/drone/power/": {
-    "hash": "c803bb6f7bf4c5cb",
-    "lastmod": "2026-09-25"
+    "hash": "d5f114be5857c1dc",
+    "lastmod": "2026-10-14"
   },
   "/drone/power/battery-energy/": {
-    "hash": "ea7d698937809eae",
-    "lastmod": "2026-10-09"
+    "hash": "7480506576cb2b3f",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/power/c-rate/": {
+    "hash": "2ef74ff6afb6e01b",
+    "lastmod": "2026-10-14"
   },
   "/drone/power/calibrate-hover/": {
-    "hash": "0530e9a2df000ca6",
-    "lastmod": "2026-10-13"
+    "hash": "86748c40e743b0b7",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/power/disk-area/": {
+    "hash": "c9d4395e2c12d76c",
+    "lastmod": "2026-10-14"
   },
   "/drone/power/endurance/": {
-    "hash": "580620527ba612a4",
-    "lastmod": "2026-10-13"
+    "hash": "07a49b9c221abcff",
+    "lastmod": "2026-10-14"
   },
   "/drone/power/hover-power/": {
     "hash": "c2c2409417cd6db1",
@@ -448,12 +456,24 @@
     "lastmod": "2026-10-13"
   },
   "/drone/power/payload-impact/": {
-    "hash": "5e1bcd09df39772b",
-    "lastmod": "2026-10-13"
+    "hash": "c3b55c687d3fec0e",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/power/range/": {
+    "hash": "05cd7397c719b103",
+    "lastmod": "2026-10-14"
   },
   "/drone/power/rth-budget/": {
-    "hash": "c75ee632c77e0359",
-    "lastmod": "2026-10-13"
+    "hash": "491fb59ed08fc878",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/power/temperature-derating/": {
+    "hash": "0e9965bf29a94290",
+    "lastmod": "2026-10-14"
+  },
+  "/drone/power/usable-energy/": {
+    "hash": "812163a352e34b70",
+    "lastmod": "2026-10-14"
   },
   "/drone/sensors/": {
     "hash": "44fef6d3f679b713",
@@ -1220,7 +1240,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "772d08f32158ed99",
+    "hash": "00633cbd197b55f9",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1468,7 +1488,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "4302a7cc4dc9606c",
+    "hash": "497e49a01b55d5ef",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -1852,7 +1872,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "6893af5a5c6fe2a9",
+    "hash": "0bf015d658efa516",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2116,7 +2136,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b5e27bc320b0ec17",
+    "hash": "27a4e8b53ecdafcd",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

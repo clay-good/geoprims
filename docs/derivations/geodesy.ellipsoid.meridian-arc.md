@@ -44,6 +44,4 @@ The series is accurate to well under a millimeter on Earth-like ellipsoids.
 
 ## Invariants
 
-- M(−φ) = −M(φ).
-- The arc between two latitudes is the difference of their arcs from the equator.
-- The arc grows with latitude.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `ellipsoid_views_invariants`: M(−φ) = −M(φ), the arc grows with latitude, and the arc between two latitudes is the difference of their arcs from the equator.

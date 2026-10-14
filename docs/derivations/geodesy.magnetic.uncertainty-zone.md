@@ -44,6 +44,4 @@ The model's main field only: crustal anomalies, disturbances from magnetic storm
 
 ## Invariants
 
-- The uncertainty never falls below 0.26°.
-- A weaker horizontal field never gives a smaller uncertainty.
-- The zone follows H alone.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `magnetic_views_invariants`: the uncertainty never falls below 0.26°, the zone follows the horizontal intensity alone, and across five places a weaker horizontal field never gives a smaller uncertainty.

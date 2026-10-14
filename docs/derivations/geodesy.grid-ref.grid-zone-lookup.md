@@ -43,6 +43,4 @@ None: the zone, band, and square follow exactly from the grid coordinates.
 
 ## Invariants
 
-- The designator and square together begin every reference to points in the square.
-- Points in one 100 km square share the answer.
-- Above 84° N the designator is Y or Z; below 80° S, A or B.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `mgrs_views_invariants`: the designator and square begin every MGRS reference at the point, at 1, 3, and 5 digits; a point a meter away in the same square gets the same answer; and above 84° N the designator is Y or Z, below 80° S A or B.

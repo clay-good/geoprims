@@ -44,6 +44,4 @@ Both models describe only the main field from the core. Crustal anomalies, magne
 
 ## Invariants
 
-- Each declination equals the declination tool's answer for that model.
-- The declination difference lies between −180° and 180°.
-- Swapping the models would change only the signs of the differences.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `magnetic_views_invariants`: each declination equals the declination tool's answer for that model, and the difference is WMM less IGRF, brought within ±180°, at five places from the equator to the poles.

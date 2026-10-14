@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "9cb22b9bd3a85f0c",
+    "hash": "6dc5c5d79a850358",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "9cde6c52125f9ee2",
+    "hash": "0024f916ee14b2cc",
     "lastmod": "2026-10-14"
   },
   "/aviation/": {
@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "47a2a7a0ccf45b45",
+    "hash": "b5ee688dc6c8e24d",
     "lastmod": "2026-10-14"
   },
   "/disclaimer/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-10-12"
   },
   "/geodesy/": {
-    "hash": "3f193ac066e1f2f4",
+    "hash": "0767af7cddbf87b0",
     "lastmod": "2026-10-14"
   },
   "/geodesy/crs/": {
@@ -568,11 +568,11 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/degree-lengths/": {
-    "hash": "c4a68782b3f28427",
+    "hash": "8bfa0935614787c3",
     "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/meridian-arc/": {
-    "hash": "660bced3589e16ab",
+    "hash": "469d607915e4d6fa",
     "lastmod": "2026-10-14"
   },
   "/geodesy/ellipsoid/parameters/": {
@@ -628,7 +628,7 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/grid-ref/": {
-    "hash": "b70562d661d38596",
+    "hash": "8d151e5b291c9e93",
     "lastmod": "2026-10-14"
   },
   "/geodesy/grid-ref/gars-forward/": {
@@ -648,7 +648,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/grid-ref/grid-zone-lookup/": {
-    "hash": "49d8c4a6c7716db8",
+    "hash": "7d1715568c58dda4",
     "lastmod": "2026-10-14"
   },
   "/geodesy/grid-ref/maidenhead-forward/": {
@@ -668,7 +668,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/grid-ref/mgrs-precision/": {
-    "hash": "d71eda15d31e5ce9",
+    "hash": "4b83bc98ba5127b1",
     "lastmod": "2026-10-14"
   },
   "/geodesy/grid-ref/usng-forward/": {
@@ -688,11 +688,11 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/height/ellipsoidal-to-orthometric/": {
-    "hash": "1e5c4604fc6eb5bf",
+    "hash": "c89e0c4ddc4c109d",
     "lastmod": "2026-10-14"
   },
   "/geodesy/height/orthometric-to-ellipsoidal/": {
-    "hash": "fc92f645a924fd67",
+    "hash": "8e630ed405ec3547",
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/": {
@@ -716,7 +716,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/model-compare/": {
-    "hash": "f7f1b7fc0b65f2e2",
+    "hash": "0cbfa0545d56b066",
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
@@ -724,7 +724,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/uncertainty-zone/": {
-    "hash": "e15dd74f3e301288",
+    "hash": "9f1bf5c7ceddd209",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/": {
@@ -792,7 +792,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/convergence/": {
-    "hash": "c204749ac9b471ca",
+    "hash": "31f2ff6e0c4ec6cc",
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/equidistant-cylindrical-forward/": {
@@ -844,7 +844,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/scale-factor/": {
-    "hash": "ed07f5e5fbf5c05a",
+    "hash": "3a1bed096a9ea5a9",
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/tm-exact-forward/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "007faaa9dd589c02",
+    "hash": "fc8a03163c812ba4",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "ff8863dadd2d393e",
+    "hash": "7960bf4e451da004",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a29166ccf671f4ae",
+    "hash": "a6111e8a4e28c2f7",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

@@ -44,6 +44,4 @@ The sixth-order Krüger series, which agrees with the exact projection to well u
 
 ## Invariants
 
-- On the central meridian the convergence is 0 and the scale is 0.9996.
-- The convergence changes sign across the central meridian and across the equator.
-- The scale is the same at equal distances either side of the central meridian.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `projection_views_invariants`: on the central meridian the scale is 0.9996 and the convergence 0; off it the scale is larger, and the same at equal distances either side; the convergence changes sign across the central meridian and the equator.

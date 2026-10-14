@@ -376,6 +376,7 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
 };
 
 pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.height.ellipsoidal-to-orthometric",
     title: "Ellipsoidal height to orthometric height",
     summary: "Converts a GPS height above the WGS 84 ellipsoid (h) to a height above the EGM96 geoid, close to mean sea level (H = h − N).",
@@ -416,7 +417,7 @@ pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
         HEIGHT_CONVERT.outputs[1],
     ],
     errors: HEIGHT_CONVERT.errors,
-    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL", "EXPERIMENTAL_TOOL"],
+    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL"],
     model: "H = h − N, with N the EGM96 geoid height at the point, interpolated from the 15-minute grid",
     accuracy: HEIGHT_CONVERT.accuracy,
     when_to_use: "Use this when a GNSS receiver, a drone log, or a lidar point cloud gives height above the ellipsoid and you need it against sea level, a map, or an airfield elevation. Enter the latitude, longitude, and ellipsoidal height. The tool returns the orthometric height above the EGM96 geoid and the geoid height N it subtracted.",
@@ -455,6 +456,7 @@ pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
 };
 
 pub static ORTHOMETRIC_TO_ELLIPSOIDAL: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.height.orthometric-to-ellipsoidal",
     title: "Orthometric height to ellipsoidal height",
     summary: "Converts a height above the EGM96 geoid, close to mean sea level (H), to a height above the WGS 84 ellipsoid (h = H + N).",
@@ -495,7 +497,7 @@ pub static ORTHOMETRIC_TO_ELLIPSOIDAL: ToolDef = ToolDef {
         HEIGHT_CONVERT.outputs[2],
     ],
     errors: HEIGHT_CONVERT.errors,
-    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL", "EXPERIMENTAL_TOOL"],
+    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL"],
     model: "h = H + N, with N the EGM96 geoid height at the point, interpolated from the 15-minute grid",
     accuracy: HEIGHT_CONVERT.accuracy,
     when_to_use: "Use this to give a GNSS system a height it understands: a waypoint altitude for a drone that flies in ellipsoidal height, a control point from a map elevation, or a terrain height for a ground-clearance check against GNSS. Enter the latitude, longitude, and height above sea level. The tool returns the ellipsoidal height and the geoid height N it added.",

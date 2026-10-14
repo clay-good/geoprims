@@ -400,6 +400,7 @@ pub static RADII: ToolDef = ToolDef {
 };
 
 pub static MERIDIAN_ARC: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.ellipsoid.meridian-arc",
     title: "Meridian arc length",
     summary: "The distance along a meridian from the equator to a latitude, or between two latitudes, on WGS 84 or another ellipsoid.",
@@ -425,7 +426,7 @@ pub static MERIDIAN_ARC: ToolDef = ToolDef {
     ],
     outputs: &[RADII.outputs[6], RADII.outputs[7], RADII.outputs[0]],
     errors: RADII.errors,
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Meridian arc from the equator M(φ) = a(1 − e²)∫₀^φ (1 − e² sin² t)^(−3/2) dt, evaluated by the ellipsoid's rectifying-latitude series; the arc between two latitudes is M(φ₂) − M(φ₁)",
     accuracy: "Better than a millimeter over the whole quadrant on Earth-like ellipsoids",
     when_to_use: "Use this when a distance runs north and south along a meridian: the northing of a transverse Mercator origin, the spacing of latitude lines on a chart, or the ground distance between two parallels. Enter one latitude for its distance from the equator, or two for the distance between them. The result is on the ellipsoid surface, positive toward the north.",
@@ -463,6 +464,7 @@ pub static MERIDIAN_ARC: ToolDef = ToolDef {
 };
 
 pub static DEGREE_LENGTHS: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.ellipsoid.degree-lengths",
     title: "Length of a degree of latitude and longitude",
     summary: "How long one degree, one arcminute, and one arcsecond of latitude and of longitude are on the ground at a given latitude.",
@@ -511,7 +513,7 @@ pub static DEGREE_LENGTHS: ToolDef = ToolDef {
         ),
     ],
     errors: RADII.errors,
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "Degree of latitude = the meridian arc across the degree centered on φ; degree of longitude = (π/180) × N(φ) × cos φ with N the prime-vertical radius; arcminutes and arcseconds are 1/60 and 1/3,600 of those",
     accuracy: "Better than a millimeter per degree on Earth-like ellipsoids",
     when_to_use: "Use this to turn a coordinate difference into a ground distance, or to judge what a decimal place of a coordinate is worth. Enter the latitude. The tool returns the length of a degree, an arcminute, and an arcsecond along a meridian and along the parallel there. A degree of longitude shrinks toward the poles; a degree of latitude grows slightly.",

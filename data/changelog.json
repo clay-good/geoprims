@@ -5,6 +5,24 @@
       "date": "2026-10-14",
       "kind": "changed",
       "tools": [
+        "geodesy.ellipsoid.degree-lengths",
+        "geodesy.ellipsoid.meridian-arc",
+        "geodesy.grid-ref.grid-zone-lookup",
+        "geodesy.grid-ref.mgrs-precision",
+        "geodesy.height.ellipsoidal-to-orthometric",
+        "geodesy.height.orthometric-to-ellipsoidal",
+        "geodesy.magnetic.model-compare",
+        "geodesy.magnetic.uncertainty-zone",
+        "geodesy.projection.convergence",
+        "geodesy.projection.scale-factor"
+      ],
+      "vectors": [],
+      "summary": "Ten focused geodesy operations are now stable: degree lengths and meridian arcs (held to GeographicLib), the MGRS grid-zone lookup and reference precision (NGA's GeoTrans), both directions of the height conversion (GeographicLib's GeoidEval), the WMM and IGRF comparison and the compass reliability zone (pygeomag and ppigrf), and UTM convergence and scale factor (GeographicLib's exact transverse Mercator). A new invariants test checks each note's stated properties. Results are unchanged."
+    },
+    {
+      "date": "2026-10-14",
+      "kind": "changed",
+      "tools": [
         "indexing.h3.base-cell",
         "indexing.h3.cell-area",
         "indexing.h3.cell-boundary",

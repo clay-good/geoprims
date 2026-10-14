@@ -44,6 +44,4 @@ The lengths are for the degree centered on the latitude and change along it.
 
 ## Invariants
 
-- The degree of longitude is zero at the poles and largest at the equator.
-- The degree of latitude is smallest at the equator.
-- 3,600 arcseconds make the degree.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `ellipsoid_views_invariants`: the degree of longitude is zero at the pole and shrinks from the equator toward it, the degree of latitude grows from the equator toward the pole, and 60 arcminutes and 3,600 arcseconds make each degree.

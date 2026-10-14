@@ -1666,6 +1666,7 @@ const CENTRAL_MERIDIAN_OUT: Field = Field::new(
 .precision(Precision::Decimals(0));
 
 pub static CONVERGENCE: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.projection.convergence",
     title: "Grid convergence in UTM",
     summary: "The angle between true north and UTM grid north at a point, positive when grid north lies east of true north, with the point scale factor there.",
@@ -1691,7 +1692,7 @@ pub static CONVERGENCE: ToolDef = ToolDef {
         CENTRAL_MERIDIAN_OUT,
     ],
     errors: UTM_FORWARD.errors,
-    warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED"],
     model: "Transverse Mercator convergence from the Krüger series (Karney 2011): close to (λ − λ₀)·sin φ for small longitude differences; true azimuth = grid azimuth + convergence",
     accuracy: UTM_FORWARD.accuracy,
     when_to_use: "Use this to turn a grid bearing measured on a UTM map or computed from UTM coordinates into a true bearing, or the other way round. Enter the latitude and longitude. The tool returns the convergence in the point's standard zone, or in a zone you force. Add it to a grid azimuth to get the true azimuth; subtract it to go from true to grid.",
@@ -1729,6 +1730,7 @@ pub static CONVERGENCE: ToolDef = ToolDef {
 };
 
 pub static SCALE_FACTOR: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.projection.scale-factor",
     title: "Point scale factor in UTM",
     summary: "The UTM grid scale factor at a point: how much a short distance is stretched or shrunk on the grid there, with the grid convergence.",
@@ -1754,7 +1756,7 @@ pub static SCALE_FACTOR: ToolDef = ToolDef {
         CENTRAL_MERIDIAN_OUT,
     ],
     errors: UTM_FORWARD.errors,
-    warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED"],
     model: "Transverse Mercator point scale from the Krüger series (Karney 2011), with k₀ = 0.9996 on the central meridian: grid distance = ellipsoid distance × scale factor",
     accuracy: UTM_FORWARD.accuracy,
     when_to_use: "Use this before comparing a distance from UTM coordinates with one measured on the ground. Enter the latitude and longitude. The tool returns the point scale factor in the standard zone, or a zone you force: 0.9996 on the central meridian, 1 about 180 km either side, and above 1 beyond that. Multiply an ellipsoid distance by it to get the grid distance.",
@@ -2904,16 +2906,16 @@ pub static MGRS_INVERSE: ToolDef = ToolDef {
 };
 
 pub static GRID_ZONE_LOOKUP: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.grid-ref.grid-zone-lookup",
     title: "Grid zone and 100 km square in MGRS",
     summary: "The MGRS grid zone designator and 100 km square identifier for a latitude and longitude, the first five characters of any MGRS reference there.",
     aliases: &[
         "grid zone designator",
-        "MGRS 100 km square ID",
+        "100 km square ID in MGRS",
         "which MGRS square am I in",
     ],
     keywords: &[
-        "MGRS",
         "grid zone designator",
         "GZD",
         "100 km square",
@@ -2943,7 +2945,7 @@ pub static GRID_ZONE_LOOKUP: ToolDef = ToolDef {
         ),
     ],
     errors: MGRS_FORWARD.errors,
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: MGRS_FORWARD.model,
     accuracy: "Exact: the zone, band, and square follow from the point's UTM or UPS coordinates",
     when_to_use: "Use this to find which MGRS or USNG map square a place falls in: to label a map sheet, set up a GPS receiver's grid, or check that a reference someone gave is in the right area. Enter the latitude and longitude. The tool returns the grid zone designator, such as 17T, the 100 km square letters, such as NE, and the two together, which begin every reference in that square.",
@@ -3013,16 +3015,16 @@ const PRECISION_ROW: &[Field] = &[
 ];
 
 pub static MGRS_PRECISION: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.grid-ref.mgrs-precision",
     title: "Precision of an MGRS reference",
     summary: "How precise an MGRS or USNG reference is: the size of the square its digits name, and the same reference at every coarser precision.",
     aliases: &[
-        "MGRS precision",
+        "precision of an MGRS reference",
         "how precise is this grid reference",
-        "MGRS digits to meters",
+        "digits of an MGRS reference in meters",
     ],
     keywords: &[
-        "MGRS",
         "USNG",
         "precision",
         "digits",
@@ -3061,7 +3063,7 @@ pub static MGRS_PRECISION: ToolDef = ToolDef {
         ),
     ],
     errors: MGRS_INVERSE.errors,
-    warnings: &["BAND_ADJUSTED", "EXPERIMENTAL_TOOL"],
+    warnings: &["BAND_ADJUSTED"],
     model: "An MGRS reference names a square: with n digits per coordinate it is 10^(5 − n) m across; a coarser reference keeps the first digits of each coordinate, never rounds (NGA MGRS)",
     accuracy: "Exact: precision is set by the count of digits",
     when_to_use: "Use this when a grid reference arrives and you need to know how much ground it pins down, or to shorten it for a radio call or a map label without moving it. Paste the reference with or without spaces. The tool returns the size of the square it names, such as 10 m for four digits a side, and the same reference cut to every coarser precision down to the 100 km square.",

@@ -519,6 +519,7 @@ pub static DECLINATION: ToolDef = ToolDef {
 };
 
 pub static UNCERTAINTY_ZONE: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.magnetic.uncertainty-zone",
     title: "Compass reliability zone",
     summary: "Whether a magnetic compass is reliable at a place and date, from the strength of the horizontal field, with the World Magnetic Model's declination uncertainty there.",
@@ -553,7 +554,6 @@ pub static UNCERTAINTY_ZONE: ToolDef = ToolDef {
         "COMPASS_BLACKOUT_ZONE",
         "COMPASS_CAUTION_ZONE",
         "DECLINATION_POLE_CONVENTION",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "WMM2025 main field; blackout where the horizontal intensity H is under 2,000 nT and caution under 6,000 nT, as the WMM2025 report defines them; declination uncertainty √(0.26² + (5,417 / H)²) degrees from its error model",
     accuracy: "The zones follow the field model; local magnetic anomalies the model does not resolve can make a compass worse anywhere",
@@ -660,6 +660,7 @@ const fn deg_out(name: &'static str, title: &'static str, help: &'static str) ->
 }
 
 pub static MODEL_COMPARE: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "geodesy.magnetic.model-compare",
     title: "Compare WMM and IGRF declination",
     summary: "The magnetic declination, inclination, and field strength from WMM2025 and from IGRF-14 at the same place and date, and how far the two models differ.",
@@ -708,7 +709,7 @@ pub static MODEL_COMPARE: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: DECLINATION.errors,
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "WMM2025 (degree 12) and IGRF-14 (degree 13) main-field models evaluated at the same geodetic point and decimal year; differences are WMM2025 less IGRF-14",
     accuracy: "Each model as published; the difference measures how far two fits of the same field disagree, not either one's error",
     when_to_use: "Use this to see how much the choice of magnetic model matters at a place: for a survey that has to state its declination source, a flight-planning tool that uses one model while a chart used the other, or a check that a value from another program is sensible. Enter the place and date. The tool returns both models' declinations, inclination and intensity differences, and the declination difference.",

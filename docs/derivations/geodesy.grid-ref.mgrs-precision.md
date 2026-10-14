@@ -43,6 +43,4 @@ None: precision is a property of the digits.
 
 ## Invariants
 
-- Each coarser square contains the finer one.
-- The square size is ten times larger per digit dropped.
-- A 100 km reference has no coarser form.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `mgrs_views_invariants`: each coarser reference is the finer one's easting and northing cut to fewer digits, so its square contains the finer one; the square is ten times larger per digit dropped; and a 100 km reference has no coarser form.

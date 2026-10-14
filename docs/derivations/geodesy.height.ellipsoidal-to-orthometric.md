@@ -43,6 +43,4 @@ EGM96 approximates global mean sea level to about half a meter to a meter and is
 
 ## Invariants
 
-- Converting one way and back returns the height.
-- h − H = N at every point.
-- The height keeps the unit it was entered in.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `height_views_invariants`: h − H = N at four places, in meters and in feet; the height keeps the unit it was entered in; and converting back with `geodesy.height.orthometric-to-ellipsoidal` returns it.

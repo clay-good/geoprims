@@ -524,6 +524,169 @@ fn named_earthwork_operations_match_their_general_tools() {
 }
 
 #[test]
+fn named_curve_operations_match_their_general_tools() {
+    // Degree of curve: each form returns the other two, and the circular curve agrees.
+    let from_degree = call("survey.curves.degree-of-curve", r#"{"degree":"4"}"#);
+    let radius = num(&from_degree, "result.radius.value");
+    assert!((radius - 18_000.0 / std::f64::consts::PI / 4.0).abs() < 1e-9);
+    let from_radius = call(
+        "survey.curves.degree-of-curve",
+        &serde_json::json!({"radius": format!("{radius} ft")}).to_string(),
+    );
+    assert!((num(&from_radius, "result.degree_arc.value") - 4.0).abs() < 1e-12);
+    let chord = num(&from_radius, "result.degree_chord.value");
+    let from_chord = call(
+        "survey.curves.degree-of-curve",
+        &serde_json::json!({"degree_chord": format!("{chord}")}).to_string(),
+    );
+    assert!((num(&from_chord, "result.radius.value") - radius).abs() < 1e-7);
+    let general = call(
+        "survey.curves.circular-curve",
+        &serde_json::json!({"radius": format!("{radius} ft"), "delta": "24 deg"}).to_string(),
+    );
+    for key in ["degree_arc", "degree_chord"] {
+        assert_eq!(from_radius["result"][key], general["result"][key], "{key}");
+    }
+    // The chord definition stops at a 50 ft radius; the arc definition does not.
+    let tight = call("survey.curves.degree-of-curve", r#"{"radius":"40 ft"}"#);
+    assert_eq!(tight["ok"], true);
+    assert!(tight["result"]["degree_chord"].is_null());
+    // A metric radius is still a degree per 100 ft.
+    let metric = call("survey.curves.degree-of-curve", r#"{"radius":"304.8 m"}"#);
+    assert!((num(&metric, "result.degree_arc.value") - 5.729_577_951_308_232).abs() < 1e-12);
+    assert_eq!(metric["result"]["radius"]["unit"], "m");
+
+    // Curve stationing: the circular curve's own PC and PT, from each pair of elements.
+    for input in [
+        serde_json::json!({"pi_station": "62+17.08", "radius": "1432.4 ft", "delta": "24 deg"}),
+        serde_json::json!({"pi_station": "1+234.567", "radius": "300 m", "tangent": "80 m"}),
+        serde_json::json!({"pi_station": "12+34.56", "degree": "4", "length": "600 ftUS"}),
+    ] {
+        let named = call("survey.curves.curve-stationing", &input.to_string());
+        let general = call("survey.curves.circular-curve", &input.to_string());
+        assert_eq!(named["ok"], true, "{named}");
+        for key in [
+            "pc_station",
+            "pt_station",
+            "tangent",
+            "length",
+            "radius",
+            "delta",
+        ] {
+            assert_eq!(
+                named["result"][key], general["result"][key],
+                "{key} {input}"
+            );
+        }
+    }
+    let r = call(
+        "survey.curves.curve-stationing",
+        r#"{"pi_station":"62+17.08","radius":"1432.4 ft","delta":"24 deg"}"#,
+    );
+    assert_eq!(r["result"]["pc_station"], "59+12.61");
+    assert_eq!(r["result"]["pt_station"], "65+12.62");
+    // Without a PI there is nothing to station.
+    assert_eq!(
+        call(
+            "survey.curves.curve-stationing",
+            r#"{"radius":"500 ft","delta":"30 deg"}"#
+        )["ok"],
+        false
+    );
+
+    // Spiral-curve-spiral: the spiral tool's stations, and lengths that add up.
+    let input = serde_json::json!({"spiral_length": "200 ft", "radius": "1000 ft", "delta": "40°00'00\"", "pi_station": "50+00"});
+    let named = call("survey.curves.spiral-curve-spiral", &input.to_string());
+    let general = call("survey.curves.spiral", &input.to_string());
+    assert_eq!(named["ok"], true, "{named}");
+    for key in [
+        "ts_station",
+        "sc_station",
+        "cs_station",
+        "st_station",
+        "total_tangent",
+        "arc_length",
+        "spiral_angle",
+    ] {
+        assert_eq!(named["result"][key], general["result"][key], "{key}");
+    }
+    // The spec scenario: the arc is (Δ − 2θs) × R with θs = Ls / 2R.
+    let arc = 1000.0 * (40f64.to_radians() - 0.2);
+    assert!((num(&named, "result.arc_length.value") - arc).abs() < 1e-9);
+    assert!((num(&named, "result.total_length.value") - (400.0 + arc)).abs() < 1e-9);
+    assert!(named["result"]["layout"].is_null() && named["result"]["rows"].is_null());
+
+    // Vertical curve turning point: the spec scenario, and the vertical curve's own answer.
+    let input = serde_json::json!({"g1": 2, "g2": -3, "length": "600 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft"});
+    let named = call(
+        "survey.curves.vertical-curve-turning-point",
+        &input.to_string(),
+    );
+    let general = call("survey.curves.vertical-curve", &input.to_string());
+    for key in ["turning_station", "turning_elevation", "curve_type", "k"] {
+        assert_eq!(named["result"][key], general["result"][key], "{key}");
+    }
+    assert_eq!(named["result"]["turning_station"], "9+40.00");
+    assert!((num(&named, "result.turning_elevation.value") - 96.4).abs() < 1e-9);
+    assert!((num(&named, "result.distance_from_pvc.value") - 240.0).abs() < 1e-9);
+    // Same-sign grades: the vertical curve explains, the focused operation refuses.
+    let mut same = input.clone();
+    same["g2"] = serde_json::json!(4);
+    assert_eq!(
+        call("survey.curves.vertical-curve", &same.to_string())["ok"],
+        true
+    );
+    let refused = call(
+        "survey.curves.vertical-curve-turning-point",
+        &same.to_string(),
+    );
+    assert_eq!(refused["error"]["code"], "OUT_OF_DOMAIN");
+
+    // Vertical curve elevations: ends on the PVC and PVT, passes through the high point.
+    let table = call(
+        "survey.curves.vertical-curve-elevations",
+        &input.to_string(),
+    );
+    assert_eq!(table["ok"], true, "{table}");
+    let rows = table["result"]["rows"].as_array().unwrap();
+    assert_eq!(rows.len(), 7); // 7+00 to 13+00 at full stations
+    assert_eq!(rows[0]["station"], general["result"]["pvc_station"]);
+    assert_eq!(rows[0]["elevation"], general["result"]["pvc_elevation"]);
+    assert_eq!(rows[6]["station"], general["result"]["pvt_station"]);
+    assert!(
+        (rows[6]["elevation"]["value"].as_f64().unwrap()
+            - num(&general, "result.pvt_elevation.value"))
+        .abs()
+            < 1e-9
+    );
+    assert_eq!(rows[0]["grade"], 2.0);
+    assert!((rows[6]["grade"].as_f64().unwrap() + 3.0).abs() < 1e-12);
+    // The PVI station lies below the PVI by L × |A| / 800.
+    assert!(
+        (rows[3]["elevation"]["value"].as_f64().unwrap() - (100.0 - 600.0 * 5.0 / 800.0)).abs()
+            < 1e-9
+    );
+    let mut one = input.clone();
+    one["station"] = serde_json::json!("9+40");
+    let at = call("survey.curves.vertical-curve-elevations", &one.to_string());
+    let row = &at["result"]["rows"][0];
+    assert!((row["elevation"]["value"].as_f64().unwrap() - 96.4).abs() < 1e-9);
+    assert!(row["grade"].as_f64().unwrap().abs() < 1e-12);
+    // An odd interval still starts on the PVC, lands on even stations, and ends on the PVT.
+    let mut odd = input.clone();
+    odd["pvi_station"] = serde_json::json!("10+12.50");
+    odd["interval"] = serde_json::json!("50 ft");
+    let rows = call("survey.curves.vertical-curve-elevations", &odd.to_string())["result"]["rows"]
+        .as_array()
+        .unwrap()
+        .clone();
+    assert_eq!(rows[0]["station"], "7+12.50");
+    assert_eq!(rows[1]["station"], "7+50.00");
+    assert_eq!(rows.last().unwrap()["station"], "13+12.50");
+    assert_eq!(rows.len(), 14);
+}
+
+#[test]
 fn named_direction_and_station_modes_match_their_general_tools() {
     let direction_input = serde_json::json!({
         "direction": "N 10°15'30\" W",

@@ -1832,13 +1832,16 @@
         {
           "want": "lay out a horizontal curve",
           "tools": [
-            "circular-curve"
+            "circular-curve",
+            "curve-stationing",
+            "degree-of-curve"
           ]
         },
         {
           "want": "lay out a spiral transition",
           "tools": [
-            "spiral"
+            "spiral",
+            "spiral-curve-spiral"
           ]
         },
         {
@@ -1851,7 +1854,9 @@
           "want": "design a vertical curve",
           "tools": [
             "vertical-curve",
-            "unequal-vertical-curve"
+            "unequal-vertical-curve",
+            "vertical-curve-elevations",
+            "vertical-curve-turning-point"
           ]
         },
         {

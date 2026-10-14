@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "edff260bbe8e8d00",
+    "hash": "f74cd047ba7a3275",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -1100,8 +1100,8 @@
     "lastmod": "2026-10-13"
   },
   "/learn/horizontal-curves/": {
-    "hash": "a89255105d1b276b",
-    "lastmod": "2026-10-13"
+    "hash": "a95f3b73c7b8c6ce",
+    "lastmod": "2026-10-14"
   },
   "/learn/how-to-read-a-metar/": {
     "hash": "0999f5c427712dff",
@@ -1192,7 +1192,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "1f9c99398d69b472",
+    "hash": "0b953e2265ae706d",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1440,11 +1440,11 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "a6033b73682356a0",
+    "hash": "e953a8457741791a",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
-    "hash": "479aeb959432fbaa",
+    "hash": "34db288babd6e4c1",
     "lastmod": "2026-10-14"
   },
   "/survey/cogo/": {
@@ -1540,32 +1540,52 @@
     "lastmod": "2026-10-13"
   },
   "/survey/curves/": {
-    "hash": "5d7ac442a355f6f4",
-    "lastmod": "2026-10-09"
+    "hash": "e744106795d15b44",
+    "lastmod": "2026-10-14"
   },
   "/survey/curves/circular-curve/": {
     "hash": "1f6d474d119f0a34",
     "lastmod": "2026-10-09"
   },
   "/survey/curves/curve-layout/": {
-    "hash": "96119149fea16c4d",
-    "lastmod": "2026-10-09"
+    "hash": "4b0e12161190adc8",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/curves/curve-stationing/": {
+    "hash": "d8410a840c2d4329",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/curves/degree-of-curve/": {
+    "hash": "fa2ed1be80a0ac32",
+    "lastmod": "2026-10-14"
   },
   "/survey/curves/sight-distance/": {
-    "hash": "17a7a47f1c7699f3",
-    "lastmod": "2026-10-13"
+    "hash": "9f82586ce6686371",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/curves/spiral-curve-spiral/": {
+    "hash": "1f578d79ddd097b0",
+    "lastmod": "2026-10-14"
   },
   "/survey/curves/spiral/": {
-    "hash": "ba924d6b3caaf2f6",
-    "lastmod": "2026-10-09"
+    "hash": "8043e026c615ac29",
+    "lastmod": "2026-10-14"
   },
   "/survey/curves/unequal-vertical-curve/": {
-    "hash": "8d729ea81f384cfd",
-    "lastmod": "2026-10-13"
+    "hash": "2c8171ac3d41c8b1",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/curves/vertical-curve-elevations/": {
+    "hash": "ce59a18050a412e0",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/curves/vertical-curve-turning-point/": {
+    "hash": "c4ee58719094703a",
+    "lastmod": "2026-10-14"
   },
   "/survey/curves/vertical-curve/": {
-    "hash": "cfa40dac7a53c10f",
-    "lastmod": "2026-10-09"
+    "hash": "58d3ab07868a5c1c",
+    "lastmod": "2026-10-14"
   },
   "/survey/earthwork/": {
     "hash": "bd5ffb1aedbb80f5",
@@ -1804,7 +1824,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "463e4d8d54232dca",
+    "hash": "789da25f1816209d",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2068,7 +2088,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "2021a650c43eb6b5",
+    "hash": "cc81593d54c7bb8d",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

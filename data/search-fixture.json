@@ -266,6 +266,26 @@
       "expect": "survey.earthwork.four-point-average"
     },
     {
+      "query": "degree of curve to radius",
+      "expect": "survey.curves.degree-of-curve"
+    },
+    {
+      "query": "PC and PT stations",
+      "expect": "survey.curves.curve-stationing"
+    },
+    {
+      "query": "spiral curve spiral",
+      "expect": "survey.curves.spiral-curve-spiral"
+    },
+    {
+      "query": "low point of a sag curve",
+      "expect": "survey.curves.vertical-curve-turning-point"
+    },
+    {
+      "query": "vertical curve elevations",
+      "expect": "survey.curves.vertical-curve-elevations"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

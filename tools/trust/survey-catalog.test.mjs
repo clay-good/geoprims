@@ -155,6 +155,50 @@ test('each earthwork step named in the inventory is an addressable survey operat
   }
 });
 
+test('each curve operation named in the inventory is an addressable survey operation', () => {
+  const expected = new Map([
+    ['survey.curves.degree-of-curve', ['degree of curve calculator', 'arc definition degree of curve']],
+    ['survey.curves.curve-stationing', ['curve stationing calculator', 'PC and PT stations']],
+    ['survey.curves.spiral-curve-spiral', ['spiral curve spiral', 'TS SC CS ST stations']],
+    ['survey.curves.vertical-curve-turning-point', ['vertical curve turning point', 'low point of a sag curve']],
+    ['survey.curves.vertical-curve-elevations', ['vertical curve elevations', 'vertical curve grade sheet']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
+// The 57-operation design inventory of add-survey-suite. Eight operations
+// were built under a shorter ID than the inventory's name; the pairs are
+// listed so the count stays honest until the spec or the IDs are reconciled.
+const BUILT_AS = new Map([
+  ['reduction.slope-reduction', 'reduction.slope'],
+  ['reduction.edm-atmospheric', 'reduction.edm-correction'],
+  ['earthwork.grade-convert', 'earthwork.grade'],
+  ['earthwork.slope-staking', 'earthwork.slope-stake'],
+  ['earthwork.stockpile-tin', 'earthwork.stockpile'],
+  ['earthwork.solid-volumes', 'earthwork.solid-volume'],
+  ['earthwork.profile-slope', 'earthwork.profile-grades'],
+  ['curves.sight-distance-length', 'curves.sight-distance'],
+]);
+const INVENTORY = {
+  cogo: 'direction-parse inverse forward radial-sideshots traverse-closure angular-closure bowditch transit crandall least-squares-2d area-by-coordinates bearing-bearing bearing-distance distance-distance resection station-offset point-from-station-offset perpendicular-foot azimuth-bearing deflection-angle',
+  reduction: 'slope-reduction two-face-mean curvature-refraction edm-atmospheric elevation-factor combined-factor grid-to-ground ground-to-grid level-run level-adjust stadia inaccessible-height distance-offset angle-offset',
+  earthwork: 'average-end-area prismoidal section-area borrow-pit four-point-average shrink-swell haul-loads grade-convert rise-run slope-staking stockpile-tin solid-volumes profile-slope',
+  curves: 'circular-curve degree-of-curve curve-stationing curve-layout spiral spiral-curve-spiral vertical-curve vertical-curve-turning-point vertical-curve-elevations sight-distance-length',
+};
+
+test('every operation in the 57-item design inventory is built', () => {
+  const planned = Object.entries(INVENTORY).flatMap(([group, names]) => names.split(' ').map((name) => `${group}.${name}`));
+  assert.equal(planned.length, 57);
+  const missing = planned.filter((name) => !byId.has(`survey.${BUILT_AS.get(name) ?? name}`));
+  assert.deepEqual(missing, []);
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 66, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 71, `survey operation count regressed to ${survey.length}`);
 });

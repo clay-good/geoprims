@@ -1234,11 +1234,7 @@ pub static CIRCULAR_CURVE: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     title: "Horizontal circular curve",
     summary: "All elements of a simple circular curve (radius, deflection, tangent, length, chord, external, middle ordinate, degree of curve) from any two, with PC and PT stations.",
-    aliases: &[
-        "horizontal curve calculator",
-        "curve table",
-        "degree of curve",
-    ],
+    aliases: &["horizontal curve calculator", "curve table"],
     keywords: &[
         "horizontal curve",
         "radius",
@@ -1432,7 +1428,249 @@ fn element(name: &str, th: f64) -> f64 {
     }
 }
 
+/// The radius in feet of a curve whose 100 ft arc turns `d` degrees.
+fn radius_from_arc_degree(d: f64) -> f64 {
+    (18_000.0 / core::f64::consts::PI) / d
+}
+
+/// The radius in feet of a curve whose 100 ft chord turns `d` degrees.
+fn radius_from_chord_degree(d: f64) -> f64 {
+    50.0 / sin(d.to_radians() / 2.0)
+}
+
+/// Degree of curve by the arc definition, for a radius in feet.
+fn arc_degree(r_ft: f64) -> f64 {
+    18_000.0 / core::f64::consts::PI / r_ft
+}
+
+/// Degree of curve by the chord definition, for a radius of 50 ft or more.
+fn chord_degree(r_ft: f64) -> f64 {
+    2.0 * asin(50.0 / r_ft).to_degrees()
+}
+
+pub static DEGREE_OF_CURVE: ToolDef = ToolDef {
+    id: "survey.curves.degree-of-curve",
+    title: "Degree of curve converter",
+    summary: "Converts between a radius and the degree of curve by the arc and chord definitions, in either direction.",
+    aliases: &[
+        "degree of curve calculator",
+        "arc definition degree of curve",
+        "chord definition degree of curve",
+    ],
+    keywords: &[
+        "degree of curve",
+        "arc definition",
+        "chord definition",
+        "highway curve",
+        "railroad curve",
+        "5729.58",
+    ],
+    inputs: &[
+        CIRCULAR_CURVE.inputs[0],
+        CIRCULAR_CURVE.inputs[7].core(),
+        CIRCULAR_CURVE.inputs[8].core(),
+    ],
+    outputs: &[
+        CIRCULAR_CURVE.outputs[7],
+        CIRCULAR_CURVE.outputs[8],
+        CIRCULAR_CURVE.outputs[0],
+    ],
+    errors: &[],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Arc definition: D = 18,000 / (π·R), about 5,729.578 / R, the angle a 100 ft arc turns. Chord definition: sin(D/2) = 50 / R, the angle a 100 ft chord turns. R in feet (Ghilani & Wolf 2021, ch. 24)",
+    accuracy: "Exact for each definition",
+    when_to_use: "Use this when old plans, railroad work, or a highway standard give a curve by its degree and you need the radius, or the other way round. Enter the radius, or the degree of curve by the arc definition used on highways, or by the chord definition used on railroads. The tool returns the radius and both degrees, so you can see how far the two definitions differ for that curve.",
+    limitations: "Both definitions are tied to a 100 ft arc or chord, so a metric radius is converted to feet first and the degree is still per 100 ft. The chord definition has no value for a radius under 50 ft. The two definitions agree closely on flat curves and drift apart on sharp ones, so know which one your plans use. It does not compute tangents, lengths, or stations.",
+    references: CIRCULAR_CURVE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A 4° curve by the arc definition",
+        input: r#"{"degree":"4"}"#,
+        source: "add-survey-suite circular-curve requirement: D = 5,729.578 / R",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.curves.circular-curve",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.curves.curve-stationing",
+            reason: "next",
+        },
+        Related {
+            id: "survey.curves.curve-layout",
+            reason: "next",
+        },
+    ],
+    sentence: "A radius of {radius} is a {degree_arc} curve by the arc definition.",
+    limits: &[("batchRows", 10_000)],
+    run: run_degree_of_curve,
+    ..ToolDef::BLANK
+};
+
+fn run_degree_of_curve(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let radius = ctx.quantity("radius")?;
+    let arc = gp_geo::point::plain_angle(ctx, "degree")?;
+    let chord = gp_geo::point::plain_angle(ctx, "degree_chord")?;
+    let ft = unit(QT::Length, "ft");
+    let u = radius.map_or(ft, |q| q.unit);
+    let in_range = |d: f64, field: &str| {
+        if d <= 0.0 || d >= 180.0 {
+            return Err(ToolError::invalid(
+                field,
+                "The degree of curve must be between 0° and 180°.",
+            ));
+        }
+        Ok(d)
+    };
+    let r_ft = match (radius, arc, chord) {
+        (Some(r), None, None) => {
+            if r.value <= 0.0 {
+                return Err(ToolError::invalid(
+                    "/radius",
+                    "The radius must be positive.",
+                ));
+            }
+            r.to(ft)
+        }
+        (None, Some(d), None) => radius_from_arc_degree(in_range(d, "/degree")?),
+        (None, None, Some(d)) => radius_from_chord_degree(in_range(d, "/degree_chord")?),
+        _ => {
+            return Err(ToolError::invalid(
+                "/radius",
+                "Give the radius, or one degree of curve, and nothing else.",
+            ));
+        }
+    };
+    let mut out = vec![("degree_arc", ctx.out("degree_arc", deg(arc_degree(r_ft))))];
+    if r_ft >= 50.0 {
+        out.push((
+            "degree_chord",
+            ctx.out("degree_chord", deg(chord_degree(r_ft))),
+        ));
+    }
+    out.push((
+        "radius",
+        ctx.emit(
+            "radius",
+            Q {
+                value: r_ft,
+                unit: ft,
+            },
+            u,
+        ),
+    ));
+    Ok(Json::obj(out))
+}
+
+pub static CURVE_STATIONING: ToolDef = ToolDef {
+    id: "survey.curves.curve-stationing",
+    title: "Curve stationing (PC and PT)",
+    summary: "The PC and PT stations of a circular curve from the PI station and any two curve elements, with the tangent and curve length that set them.",
+    aliases: &[
+        "curve stationing calculator",
+        "PC and PT stations",
+        "station of PC from PI",
+    ],
+    keywords: &[
+        "stationing",
+        "PC",
+        "PT",
+        "PI",
+        "point of curvature",
+        "point of tangency",
+        "tangent",
+        "curve length",
+    ],
+    inputs: &[
+        CIRCULAR_CURVE.inputs[9].required().core(),
+        CIRCULAR_CURVE.inputs[0],
+        CIRCULAR_CURVE.inputs[1],
+        CIRCULAR_CURVE.inputs[2],
+        CIRCULAR_CURVE.inputs[3],
+        CIRCULAR_CURVE.inputs[4],
+        CIRCULAR_CURVE.inputs[5],
+        CIRCULAR_CURVE.inputs[6],
+        CIRCULAR_CURVE.inputs[7],
+        CIRCULAR_CURVE.inputs[8],
+    ],
+    outputs: &[
+        Field::new(
+            "pc_station",
+            "PC station",
+            "PI station − tangent",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "pt_station",
+            "PT station",
+            "PC station + curve length",
+            Kind::Text { max_len: 24 },
+        ),
+        CIRCULAR_CURVE.outputs[2],
+        CIRCULAR_CURVE.outputs[3],
+        CIRCULAR_CURVE.outputs[0],
+        CIRCULAR_CURVE.outputs[1],
+    ],
+    errors: CIRCULAR_CURVE.errors,
+    warnings: &[
+        "AMBIGUOUS_INPUT",
+        "LEGACY_UNIT",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "PC station = PI station − T and PT station = PC station + L, with T = R·tan(Δ/2) and L = R·Δ in radians (Ghilani & Wolf 2021, ch. 24)",
+    accuracy: "Exact for the geometry; stations are rounded to 0.01 ft or 0.001 m",
+    when_to_use: "Use this to station a horizontal curve once the PI is fixed on the alignment. Enter the PI station and any two curve elements, most often the radius and the deflection angle. The tool returns the station where the curve begins and where it ends, with the tangent and curve length it used, ready for stakeout notes or for stationing the next tangent.",
+    limitations: "Stationing runs along the arc, so the PT station is not the PI station plus the tangent; the difference is the usual station equation at the PI. The curve is one simple circular arc, without spirals or compounding. Stations before 0+00 are written with a minus sign. It does not list stations along the curve; the curve layout tool does that.",
+    references: CIRCULAR_CURVE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "R 1,432.40 ft, Δ 24°, PI at 62+17.08",
+        input: r#"{"pi_station":"62+17.08","radius":"1432.4 ft","delta":"24 deg"}"#,
+        source: "Arithmetic on the circular-curve relations: T 304.47 ft, L 600.00 ft",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.curves.circular-curve",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.curves.curve-layout",
+            reason: "next",
+        },
+        Related {
+            id: "survey.curves.degree-of-curve",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The curve begins at PC {pc_station} and ends at PT {pt_station}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_curve_stationing,
+    ..ToolDef::BLANK
+};
+
+fn run_curve_stationing(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    circular(ctx, true)
+}
+
 fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    circular(ctx, false)
+}
+
+/// Solves a circular curve from two elements. With `stationing`, the PI
+/// station is required and the result leads with the PC and PT stations.
+fn circular(ctx: &mut Ctx, stationing: bool) -> Result<Json, ToolError> {
     let given: Vec<&str> = CURVE_ELEMENTS
         .iter()
         .copied()
@@ -1476,7 +1714,7 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 "The degree of curve must be between 0° and 180°.",
             ));
         }
-        r = Some((18_000.0 / core::f64::consts::PI) / d / to_ft);
+        r = Some(radius_from_arc_degree(d) / to_ft);
     }
     if let Some(d) = gp_geo::point::plain_angle(ctx, "degree_chord")? {
         if d <= 0.0 || d >= 180.0 {
@@ -1485,7 +1723,7 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 "The degree of curve must be between 0° and 180°.",
             ));
         }
-        r = Some(50.0 / sin(d.to_radians() / 2.0) / to_ft);
+        r = Some(radius_from_chord_degree(d) / to_ft);
     }
     let delta = gp_geo::point::plain_angle(ctx, "delta")?.map(f64::to_radians);
     if let Some(d) = delta
@@ -1585,6 +1823,22 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let q = |v: f64| Q { value: v, unit: u };
     let r_ft = r * to_ft;
+    if stationing {
+        let pi = station(ctx, "pi_station")?.expect("required");
+        let metric = is_metric(u);
+        let pc = pi - r * tan(th);
+        return Ok(Json::obj(vec![
+            ("pc_station", Json::str(fmt_station(pc, metric))),
+            (
+                "pt_station",
+                Json::str(fmt_station(pc + 2.0 * r * th, metric)),
+            ),
+            ("tangent", ctx.emit("tangent", q(r * tan(th)), u)),
+            ("length", ctx.emit("length", q(2.0 * r * th), u)),
+            ("radius", ctx.emit("radius", q(r), u)),
+            ("delta", ctx.out("delta", deg((2.0 * th).to_degrees()))),
+        ]));
+    }
     if ctx.explaining() {
         let fmt = ctx.options.format;
         let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
@@ -1622,15 +1876,12 @@ fn run_circular(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "middle_ordinate",
             ctx.emit("middle_ordinate", q(r * (1.0 - cos(th))), u),
         ),
-        (
-            "degree_arc",
-            ctx.out("degree_arc", deg(18_000.0 / core::f64::consts::PI / r_ft)),
-        ),
+        ("degree_arc", ctx.out("degree_arc", deg(arc_degree(r_ft)))),
     ];
     if r_ft >= 50.0 {
         out.push((
             "degree_chord",
-            ctx.out("degree_chord", deg(2.0 * asin(50.0 / r_ft).to_degrees())),
+            ctx.out("degree_chord", deg(chord_degree(r_ft))),
         ));
     }
     if let Some(pi) = station(ctx, "pi_station")? {
@@ -1821,7 +2072,214 @@ pub static VERTICAL_CURVE: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+const VC_ROW: &[Field] = &[
+    Field::new(
+        "station",
+        "Station",
+        "Along the curve",
+        Kind::Text { max_len: 24 },
+    ),
+    len_out("elevation", "Elevation", "On the curve at that station"),
+    Field::new(
+        "grade",
+        "Grade",
+        "Slope of the curve there, in percent",
+        Kind::Number {
+            min: -100.0,
+            max: 100.0,
+        },
+    )
+    .precision(Precision::Decimals(3)),
+];
+
+pub static VC_TURNING_POINT: ToolDef = ToolDef {
+    id: "survey.curves.vertical-curve-turning-point",
+    title: "Vertical curve high or low point",
+    summary: "The station and elevation of the high point of a crest curve or the low point of a sag curve, and how far it is past the PVC.",
+    aliases: &[
+        "vertical curve turning point",
+        "low point of a sag curve",
+        "high point of a crest curve",
+    ],
+    keywords: &[
+        "vertical curve",
+        "high point",
+        "low point",
+        "turning point",
+        "sag",
+        "crest",
+        "drainage inlet",
+        "PVC",
+    ],
+    inputs: VERTICAL_CURVE.inputs,
+    outputs: &[
+        Field::new(
+            "turning_station",
+            "High or low point station",
+            "Where the grade is zero",
+            Kind::Text { max_len: 24 },
+        ),
+        len_out(
+            "turning_elevation",
+            "High or low point elevation",
+            "Elevation there",
+        ),
+        len_out(
+            "distance_from_pvc",
+            "Distance past the PVC",
+            "x = −g1 × L / (g2 − g1)",
+        ),
+        VERTICAL_CURVE.outputs[7],
+        VERTICAL_CURVE.outputs[6],
+    ],
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::UnitMismatch],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "x = −g1·L / (g2 − g1) from the PVC, where the grade g1 + (g2 − g1)·x / L is zero; elevation = PVC elevation + g1·x + (g2 − g1)·x² / (2L), grades as ratios (Ghilani & Wolf 2021, ch. 25)",
+    accuracy: "Exact for a symmetrical parabolic curve",
+    when_to_use: "Use this to find where water collects on a sag curve or where a crest curve tops out, to place a drainage inlet or check clearance. Enter the incoming and outgoing grades in percent, the curve length or its K value, and the PVI station and elevation. The tool returns the station and elevation of the high or low point and its distance past the start of the curve.",
+    limitations: "A curve has a high or low point inside it only when its two grades have opposite signs; otherwise the highest and lowest points are its ends, and the tool says so instead of returning a point. The curve is an equal-tangent parabola, so use the unequal vertical curve tool for an unsymmetrical one. Elevations are along the design profile, not the ground.",
+    references: VERTICAL_CURVE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A sag from −3.5% to +1.5% over 400 ft",
+        input: r#"{"g1":-3.5,"g2":1.5,"length":"400 ft","pvi_station":"24+50","pvi_elevation":"612.40 ft"}"#,
+        source: "Arithmetic on the parabola: low point 280 ft past the PVC, at 25+30, elevation 614.50 ft",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.curves.vertical-curve",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.curves.vertical-curve-elevations",
+            reason: "next",
+        },
+        Related {
+            id: "survey.curves.unequal-vertical-curve",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The {curve_type} point is at {turning_station}, elevation {turning_elevation}, {distance_from_pvc} past the PVC.",
+    limits: &[("batchRows", 10_000)],
+    run: run_vc_turning_point,
+    ..ToolDef::BLANK
+};
+
+pub static VC_ELEVATIONS: ToolDef = ToolDef {
+    id: "survey.curves.vertical-curve-elevations",
+    title: "Vertical curve elevations by station",
+    summary: "The elevation and grade at each station along a vertical curve, at an interval you choose or at one station, from the PVC to the PVT.",
+    aliases: &[
+        "vertical curve elevations",
+        "vertical curve station elevations",
+        "vertical curve grade sheet",
+    ],
+    keywords: &[
+        "vertical curve",
+        "elevations",
+        "stations",
+        "grade sheet",
+        "profile grade",
+        "tangent offset",
+        "PVC",
+        "PVT",
+    ],
+    inputs: &[
+        VERTICAL_CURVE.inputs[0],
+        VERTICAL_CURVE.inputs[1],
+        VERTICAL_CURVE.inputs[2],
+        VERTICAL_CURVE.inputs[3],
+        VERTICAL_CURVE.inputs[4],
+        VERTICAL_CURVE.inputs[5],
+        len(
+            "interval",
+            "Station interval",
+            "Like 50 ft; default is every full station (100 ft or 20 m)",
+        ),
+        Field::new(
+            "station",
+            "One station",
+            "Instead of a table, the elevation at this station, like 9+25",
+            Kind::Text { max_len: 16 },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "rows",
+            "Elevations",
+            "The PVC, each station at the interval, and the PVT",
+            Kind::List {
+                items: VC_ROW,
+                min: 1,
+                max: 10_002,
+            },
+        ),
+        VERTICAL_CURVE.outputs[2],
+        VERTICAL_CURVE.outputs[4],
+    ],
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::UnitMismatch],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Elevation at x past the PVC = PVC elevation + g1·x + (g2 − g1)·x² / (2L); grade there = g1 + (g2 − g1)·x / L, grades as ratios (Ghilani & Wolf 2021, ch. 25)",
+    accuracy: "Exact for a symmetrical parabolic curve",
+    when_to_use: "Use this to build the grade sheet for a vertical curve: the design elevation at every station to be staked. Enter the incoming and outgoing grades in percent, the curve length or its K value, and the PVI station and elevation. Set an interval such as 25 or 50 ft, or leave it for every full station, or give one station to get its elevation alone. Each row carries the grade at that station as well.",
+    limitations: "Rows fall on even multiples of the interval, plus the PVC and PVT, so odd stations need the single-station form. A station outside the curve is refused, because it lies on a tangent grade, not on the curve. The curve is an equal-tangent parabola; use the unequal vertical curve tool for an unsymmetrical one. Elevations are design profile grade, not subgrade or ground.",
+    references: VERTICAL_CURVE.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A crest from +1.2% to −2.4% over 300 ft, every 50 ft",
+        input: r#"{"g1":1.2,"g2":-2.4,"length":"300 ft","pvi_station":"31+00","pvi_elevation":"248.60 ft","interval":"50 ft"}"#,
+        source: "Arithmetic on the parabola: PVC 29+50 at 246.80 ft, PVT 32+50 at 245.00 ft",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.curves.vertical-curve",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.curves.vertical-curve-turning-point",
+            reason: "next",
+        },
+        Related {
+            id: "survey.earthwork.profile-grades",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The curve runs from {pvc_station} to {pvt_station}; each row gives the elevation and grade at its station.",
+    limits: &[("batchRows", 1_000)],
+    run: run_vc_elevations,
+    ..ToolDef::BLANK
+};
+
+/// Which part of the vertical curve a focused operation reports.
+#[derive(Clone, Copy, PartialEq)]
+enum VerticalMode {
+    TurningPoint,
+    Elevations,
+}
+
+fn run_vc_turning_point(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    vertical(ctx, Some(VerticalMode::TurningPoint))
+}
+
+fn run_vc_elevations(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    vertical(ctx, Some(VerticalMode::Elevations))
+}
+
 fn run_vertical(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    vertical(ctx, None)
+}
+
+fn vertical(ctx: &mut Ctx, mode: Option<VerticalMode>) -> Result<Json, ToolError> {
     let g1 = ctx.number("g1")?.expect("required");
     let g2 = ctx.number("g2")?.expect("required");
     let pvi_e = ctx.req_quantity("pvi_elevation")?;
@@ -1855,8 +2313,80 @@ fn run_vertical(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let crest = a2 < a1;
     let mut out: Vec<(&str, Json)> = Vec::new();
     let x = -a1 * l / (a2 - a1);
-    let turning =
-        (x > 0.0 && x < l).then(|| (pvc_s + x, y_pvc + a1 * x + (a2 - a1) * x * x / (2.0 * l)));
+    // The parabola: elevation at a distance past the PVC.
+    let elevation_at = |d: f64| y_pvc + a1 * d + (a2 - a1) * d * d / (2.0 * l);
+    let turning = (x > 0.0 && x < l).then(|| (pvc_s + x, elevation_at(x)));
+    if mode == Some(VerticalMode::TurningPoint) && turning.is_none() {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Both grades run the same way, so this curve has no high or low point inside it: its highest and lowest points are its ends.",
+        )
+        .at("/g2"));
+    }
+    if mode == Some(VerticalMode::Elevations) {
+        let row = |ctx: &mut Ctx, d: f64| {
+            Json::obj(vec![
+                ("station", Json::str(fmt_station(pvc_s + d, metric))),
+                ("elevation", ctx.emit("elevation", q(elevation_at(d)), u)),
+                ("grade", Json::Num(g1 + (g2 - g1) * d / l)),
+            ])
+        };
+        let rows = match station(ctx, "station")? {
+            Some(s) => {
+                if ctx.is_set("interval") {
+                    return Err(ToolError::invalid(
+                        "/station",
+                        "Give one station or an interval, not both.",
+                    ));
+                }
+                let d = s - pvc_s;
+                if !(0.0..=l).contains(&d) {
+                    return Err(ToolError::new(
+                        ErrorCode::OutOfDomain,
+                        format!(
+                            "That station is outside the curve, which runs from {} to {}.",
+                            fmt_station(pvc_s, metric),
+                            fmt_station(pvc_s + l, metric)
+                        ),
+                    )
+                    .at("/station"));
+                }
+                vec![row(ctx, d)]
+            }
+            None => {
+                let step = match ctx.quantity("interval")? {
+                    Some(step) => {
+                        common_unit(&[("/pvi_elevation", pvi_e), ("/interval", step)])?;
+                        step.to(u)
+                    }
+                    None if metric => 20.0,
+                    None => 100.0,
+                };
+                if step.is_nan() || step <= 0.0 || l / step > 10_000.0 {
+                    return Err(ToolError::invalid(
+                        "/interval",
+                        "The interval must be positive and give at most 10,000 rows.",
+                    ));
+                }
+                // The PVC, each even multiple of the interval inside the curve, and the PVT.
+                let mut at = vec![0.0];
+                let mut d = ((pvc_s / step).floor() + 1.0) * step - pvc_s;
+                while d < l - 1e-9 * step {
+                    if d > 1e-9 * step {
+                        at.push(d);
+                    }
+                    d += step;
+                }
+                at.push(l);
+                at.into_iter().map(|d| row(ctx, d)).collect()
+            }
+        };
+        return Ok(Json::obj(vec![
+            ("rows", Json::Arr(rows)),
+            ("pvc_station", Json::str(fmt_station(pvc_s, metric))),
+            ("pvt_station", Json::str(fmt_station(pvc_s + l, metric))),
+        ]));
+    }
     if ctx.explaining() {
         let fmt = ctx.options.format;
         let n = move |v: f64, d: u8| display::number(v, Precision::Decimals(d), fmt);
@@ -1898,6 +2428,12 @@ fn run_vertical(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if let Some((s, y)) = turning {
         out.push(("turning_station", Json::str(fmt_station(s, metric))));
         out.push(("turning_elevation", ctx.emit("turning_elevation", q(y), u)));
+    }
+    if mode == Some(VerticalMode::TurningPoint) {
+        out.push(("distance_from_pvc", ctx.emit("distance_from_pvc", q(x), u)));
+        out.push(("curve_type", Json::str(if crest { "high" } else { "low" })));
+        out.push(("k", Json::Num(l / (g2 - g1).abs())));
+        return Ok(Json::obj(out));
     }
     out.push(("pvc_station", Json::str(fmt_station(pvc_s, metric))));
     out.push(("pvc_elevation", ctx.emit("pvc_elevation", q(y_pvc), u)));
@@ -2985,10 +3521,15 @@ pub static TOOLS: &[&ToolDef] = &[
     &CRANDALL,
     &AREA,
     &CIRCULAR_CURVE,
+    &DEGREE_OF_CURVE,
+    &CURVE_STATIONING,
     &VERTICAL_CURVE,
+    &VC_TURNING_POINT,
+    &VC_ELEVATIONS,
     &layout::CURVE_LAYOUT,
     &vcurve::UNEQUAL,
     &spiral::SPIRAL,
+    &spiral::SPIRAL_CURVE_SPIRAL,
     &sight::SIGHT_DISTANCE,
     &profile::PROFILE_GRADES,
     &AVERAGE_END_AREA,

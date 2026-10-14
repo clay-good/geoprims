@@ -64,12 +64,7 @@ pub static SPIRAL: ToolDef = ToolDef {
     id: "survey.curves.spiral",
     title: "Spiral-curve-spiral transition",
     summary: "The elements of a clothoid spiral-curve-spiral (spiral angle, X, Y, p, k, long and short tangents, total tangent), its TS, SC, CS, and ST stations, and deflections along the spiral.",
-    aliases: &[
-        "spiral curve",
-        "clothoid",
-        "spiral transition",
-        "spiral curve spiral",
-    ],
+    aliases: &["spiral curve", "clothoid", "spiral transition"],
     keywords: &[
         "spiral",
         "clothoid",
@@ -211,10 +206,126 @@ pub static SPIRAL: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static SPIRAL_CURVE_SPIRAL: ToolDef = ToolDef {
+    id: "survey.curves.spiral-curve-spiral",
+    title: "Spiral-curve-spiral stations",
+    summary: "The TS, SC, CS, and ST stations of a circular curve with equal spirals at each end, with the total tangent, the circular arc left between the spirals, and the whole length.",
+    aliases: &[
+        "spiral curve spiral",
+        "TS SC CS ST stations",
+        "spiraled curve stationing",
+    ],
+    keywords: &[
+        "spiral",
+        "transition curve",
+        "TS",
+        "SC",
+        "CS",
+        "ST",
+        "total tangent",
+        "stationing",
+    ],
+    inputs: &[
+        SPIRAL.inputs[0],
+        SPIRAL.inputs[1],
+        SPIRAL.inputs[2],
+        SPIRAL.inputs[3],
+    ],
+    outputs: &[
+        Field::new(
+            "ts_station",
+            "TS station",
+            "Tangent to spiral: PI station − total tangent",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "sc_station",
+            "SC station",
+            "Spiral to curve: TS + spiral length",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "cs_station",
+            "CS station",
+            "Curve to spiral: SC + circular arc",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "st_station",
+            "ST station",
+            "Spiral to tangent: CS + spiral length",
+            Kind::Text { max_len: 24 },
+        ),
+        len_out("total_tangent", "Total tangent Ts", "(R + p)·tan(Δ/2) + k"),
+        len_out("arc_length", "Circular arc", "R × (Δ − 2θs) in radians"),
+        len_out(
+            "total_length",
+            "Total length",
+            "Both spirals and the arc, TS to ST",
+        ),
+        Field::new(
+            "spiral_angle",
+            "Spiral angle θs",
+            "Ls / (2R)",
+            Kind::Text { max_len: 24 },
+        ),
+    ],
+    errors: SPIRAL.errors,
+    warnings: SPIRAL.warnings,
+    model: "θs = Ls / (2R); Ts = (R + p)·tan(Δ/2) + k with p and k from the spiral's series coordinates; TS = PI − Ts, SC = TS + Ls, CS = SC + R·(Δ − 2θs), ST = CS + Ls (Ghilani & Wolf 2021, spiral curves)",
+    accuracy: "The clothoid series is carried to where its terms fall below 0.001 of the unit for spiral angles up to 30°",
+    when_to_use: "Use this to station a highway or railroad curve that has an equal spiral easing into and out of the circular arc. Enter the spiral length, the radius of the circular curve, the total deflection at the PI, and the PI station. The tool returns the four control stations in order, the total tangent from the PI back to the TS, the length of circular arc left between the spirals, and the whole length from TS to ST.",
+    limitations: "Both spirals are the same length; an unequal pair needs each half worked on its own. The total deflection must be more than twice the spiral angle, or the spirals meet and leave no circular arc, and the spiral angle is held to 30° where the series stays accurate. It gives control stations only; use the spiral tool for the deflection table and the plan.",
+    references: SPIRAL.references,
+    examples: &[Example {
+        id: "primary",
+        title: "150 ft spirals on an 800 ft radius, Δ 32°, PI at 118+42.50",
+        input: r#"{"spiral_length":"150 ft","radius":"800 ft","delta":"32°00'00\"","pi_station":"118+42.50"}"#,
+        source: "add-survey-suite spiral requirement, evaluated by numerical integration of the clothoid",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.curves.spiral",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.curves.curve-stationing",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.curves.circular-curve",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The spiral runs TS {ts_station} to SC {sc_station}, the arc to CS {cs_station}, and the spiral out to ST {st_station}.",
+    limits: SPIRAL.limits,
+    run: run_spiral_curve_spiral,
+    ..ToolDef::BLANK
+};
+
+fn run_spiral_curve_spiral(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    spiral(ctx, true)
+}
+
 fn run_spiral(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    spiral(ctx, false)
+}
+
+/// The spiral-curve-spiral solution. `stations_only` reports the control
+/// stations and lengths without the deflection table or the plan.
+fn spiral(ctx: &mut Ctx, stations_only: bool) -> Result<Json, ToolError> {
     let ls = ctx.req_quantity("spiral_length")?;
     let r = ctx.req_quantity("radius")?;
-    let step = ctx.quantity("interval")?;
+    let step = if stations_only {
+        None
+    } else {
+        ctx.quantity("interval")?
+    };
     let mut qs = vec![("spiral_length", ls), ("radius", r)];
     qs.extend(step.map(|q| ("interval", q)));
     let u = common_unit(&qs)?;
@@ -253,6 +364,21 @@ fn run_spiral(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let metric = is_metric(u);
     let q = |v: f64| Q { value: v, unit: u };
     let fmt_angle = |rad: f64| dms::format(rad.to_degrees(), Axis::Lon, Style::Dms, 1, false);
+    if stations_only {
+        return Ok(Json::obj(vec![
+            ("ts_station", Json::Str(fmt_station(s_ts, metric))),
+            ("sc_station", Json::Str(fmt_station(s_sc, metric))),
+            ("cs_station", Json::Str(fmt_station(s_cs, metric))),
+            ("st_station", Json::Str(fmt_station(s_st, metric))),
+            ("total_tangent", ctx.emit("total_tangent", q(ts), u)),
+            ("arc_length", ctx.emit("arc_length", q(arc), u)),
+            (
+                "total_length",
+                ctx.emit("total_length", q(2.0 * ls + arc), u),
+            ),
+            ("spiral_angle", Json::Str(fmt_angle(ths))),
+        ]));
+    }
     let mut out = vec![
         ("spiral_angle", Json::Str(fmt_angle(ths))),
         ("x", ctx.emit("x", q(x), u)),

@@ -971,6 +971,254 @@ def four_point_average():
     return out
 
 
+FTUS = 1200 / 3937
+
+
+def station_text(value, metric=False):
+    """A station as the core writes it: 12+34.56 in feet, 1+234.567 in meters."""
+    per, decimals = (1000, 3) if metric else (100, 2)
+    scale = 10 ** decimals
+    total = round(abs(value) * scale)
+    whole = total // (per * scale)
+    rest = (total - whole * per * scale) / scale
+    return f"{'-' if value < 0 else ''}{whole}+{rest:0{7 if metric else 5}.{decimals}f}"
+
+
+def degree_of_curve():
+    """Radius and degree of curve by the arc and chord definitions."""
+    rng = random.Random(44211)
+    out = []
+    to_ft = {"ft": 1.0, "ftUS": FTUS / FT, "m": 1 / FT}
+
+    def expect(r_ft, unit_name="ft"):
+        e = {"result.degree_arc.value": 18000 / math.pi / r_ft, "result.radius.value": r_ft / to_ft[unit_name]}
+        if r_ft >= 50:
+            e["result.degree_chord.value"] = 2 * math.degrees(math.asin(50 / r_ft))
+        return e
+
+    out.append(vec(1, {"degree": "4"}, expect(18000 / math.pi / 4)))
+    # The constant every route-surveying text prints: a 1° curve has a 5,729.578 ft radius.
+    out.append(vec(2, {"radius": "5729.578 ft"}, {"result.degree_arc.value": 1.0}, SPEC, "2026"))
+    out[-1]["tolerance"] = {"result.degree_arc.value": {"abs": 1e-7}}
+    out.append(vec(3, {"degree_chord": "60"}, expect(100.0)))
+    while len(out) < 20:
+        which = len(out) % 3
+        if which == 0:
+            unit_name = ["ft", "ftUS", "m"][len(out) // 3 % 3]
+            radius = round(rng.uniform(60, 12000) / to_ft[unit_name], 3)
+            out.append(vec(len(out) + 1, {"radius": f"{radius} {unit_name}"}, expect(radius * to_ft[unit_name], unit_name), rel=1e-11))
+        elif which == 1:
+            d = round(rng.uniform(0.25, 40), 4)
+            out.append(vec(len(out) + 1, {"degree": f"{d}"}, expect(18000 / math.pi / d), rel=1e-11))
+        else:
+            d = round(rng.uniform(0.25, 40), 4)
+            out.append(vec(len(out) + 1, {"degree_chord": f"{d}"}, expect(50 / math.sin(math.radians(d) / 2)), rel=1e-11))
+    for inp, field in [
+        ({}, "/radius"),
+        ({"radius": "500 ft", "degree": "4"}, "/radius"),
+        ({"degree": "0"}, "/degree"),
+        ({"degree_chord": "180"}, "/degree_chord"),
+        ({"radius": "-5 ft"}, "/radius"),
+    ]:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT", "error.field": field}, SPEC, "2026"))
+    return out
+
+
+def curve_stationing():
+    """PC and PT stations from the PI station, the radius, and the deflection."""
+    rng = random.Random(44212)
+    out = []
+
+    def case(i, pi, radius, delta, unit_name="ft", by="delta"):
+        metric = unit_name == "m"
+        half = math.radians(delta) / 2
+        tangent, length = radius * math.tan(half), radius * 2 * half
+        inp = {"pi_station": station_text(pi, metric), "radius": f"{radius} {unit_name}"}
+        if by == "delta":
+            inp["delta"] = f"{delta} deg"
+        elif by == "tangent":
+            inp["tangent"] = f"{tangent} {unit_name}"
+        else:
+            inp["length"] = f"{length} {unit_name}"
+        return vec(i, inp, {"result.pc_station": station_text(pi - tangent, metric), "result.pt_station": station_text(pi - tangent + length, metric),
+                            "result.tangent.value": tangent, "result.length.value": length, "result.radius.value": float(radius),
+                            "result.delta.value": float(delta)}, rel=1e-9)
+
+    out.append(case(1, 6217.08, 1432.4, 24))
+    # The circular-curve page's example: R 500 ft, 30°, PI 12+34.56.
+    out.append(case(2, 1234.56, 500, 30))
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        metric = unit_name == "m"
+        radius = round(rng.uniform(80, 6000), 2)
+        delta = round(rng.uniform(4, 110), 4)
+        pi = round(rng.uniform(1500, 90000), 3 if metric else 2)
+        out.append(case(len(out) + 1, pi, radius, delta, unit_name, ["delta", "tangent", "length"][len(out) % 3]))
+    for inp, code, field in [
+        ({"pi_station": "10+00", "radius": "500 ft"}, "INVALID_INPUT", "/radius"),
+        ({"pi_station": "ten", "radius": "500 ft", "delta": "30 deg"}, "INVALID_INPUT", "/pi_station"),
+        ({"pi_station": "10+00", "radius": "500 ft", "tangent": "100 ftUS"}, "UNIT_MISMATCH", None),
+    ]:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
+def spiral_curve_spiral():
+    """Control stations of a spiraled curve, with the clothoid integrated
+    numerically (Simpson's rule) rather than by the core's series."""
+    rng = random.Random(44213)
+    out = []
+
+    def clothoid(ls, radius, n=2000):
+        f = lambda s: s * s / (2 * radius * ls)
+        h = ls / n
+        x = y = 0.0
+        for i in range(n + 1):
+            w = 1 if i in (0, n) else 4 if i % 2 else 2
+            x += w * math.cos(f(i * h))
+            y += w * math.sin(f(i * h))
+        return x * h / 3, y * h / 3
+
+    def case(i, ls, radius, delta, pi, unit_name="ft", src=SRC, ver=VER):
+        metric = unit_name == "m"
+        ths = ls / (2 * radius)
+        x, y = clothoid(ls, radius)
+        p, k = y - radius * (1 - math.cos(ths)), x - radius * math.sin(ths)
+        d = math.radians(delta)
+        ts = (radius + p) * math.tan(d / 2) + k
+        arc = radius * (d - 2 * ths)
+        s_ts = pi - ts
+        v = vec(i, {"spiral_length": f"{ls} {unit_name}", "radius": f"{radius} {unit_name}", "delta": f"{delta}", "pi_station": station_text(pi, metric)},
+                {"result.ts_station": station_text(s_ts, metric), "result.sc_station": station_text(s_ts + ls, metric),
+                 "result.cs_station": station_text(s_ts + ls + arc, metric), "result.st_station": station_text(s_ts + 2 * ls + arc, metric),
+                 "result.total_tangent.value": ts, "result.arc_length.value": arc, "result.total_length.value": 2 * ls + arc}, src, ver)
+        for key in v["tolerance"]:
+            v["tolerance"][key] = {"abs": 1e-6}
+        return v
+
+    out.append(case(1, 150, 800, 32, 11842.50))
+    # The spec scenario: Ls 200 ft, R 1,000 ft, 40°; the arc is (Δ − 2θs) × R.
+    out.append(case(2, 200, 1000, 40, 5000.0, src=SPEC, ver="2026"))
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        metric = unit_name == "m"
+        radius = round(rng.uniform(150, 4000), 1)
+        ls = round(radius * rng.uniform(0.05, 0.6), 1)
+        delta = round(math.degrees(ls / radius) + rng.uniform(3, 60), 3)
+        pi = round(rng.uniform(2500, 60000), 3 if metric else 2)
+        out.append(case(len(out) + 1, ls, radius, delta, pi, unit_name))
+    for inp, code, field in [
+        ({"spiral_length": "200 ft", "radius": "1000 ft", "delta": "10", "pi_station": "50+00"}, "INVALID_INPUT", "/delta"),
+        ({"spiral_length": "0 ft", "radius": "1000 ft", "delta": "40", "pi_station": "50+00"}, "INVALID_INPUT", "/spiral_length"),
+        ({"spiral_length": "200 ft", "radius": "1000 ftUS", "delta": "40", "pi_station": "50+00"}, "UNIT_MISMATCH", None),
+    ]:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
+def vertical_curve_parts(mode):
+    """The focused vertical-curve operations, from the parabola in exact fractions."""
+    from fractions import Fraction as F
+    rng = random.Random({"turning-point": 44214, "elevations": 44215}[mode])
+    out = []
+
+    def curve(g1, g2, length, pvi, pvi_e):
+        a1, a2, l = F(str(g1)) / 100, F(str(g2)) / 100, F(str(length))
+        pvc = F(str(pvi)) - l / 2
+        y_pvc = F(str(pvi_e)) - a1 * l / 2
+        return a1, a2, l, pvc, (lambda d: y_pvc + a1 * d + (a2 - a1) * d * d / (2 * l))
+
+    def base(g1, g2, length, pvi, pvi_e, unit_name):
+        metric = unit_name == "m"
+        return {"g1": g1, "g2": g2, "length": f"{length} {unit_name}", "pvi_station": station_text(pvi, metric), "pvi_elevation": f"{pvi_e} {unit_name}"}
+
+    def turning(i, g1, g2, length, pvi, pvi_e, unit_name="ft", src=SRC, ver=VER):
+        a1, a2, l, pvc, y = curve(g1, g2, length, pvi, pvi_e)
+        x = -a1 * l / (a2 - a1)
+        return vec(i, base(g1, g2, length, pvi, pvi_e, unit_name),
+                   {"result.turning_station": station_text(float(pvc + x), unit_name == "m"), "result.turning_elevation.value": float(y(x)),
+                    "result.distance_from_pvc.value": float(x), "result.curve_type": "high" if a2 < a1 else "low",
+                    "result.k": float(l / abs(F(str(g2)) - F(str(g1))))}, src, ver, rel=1e-10)
+
+    def table(i, g1, g2, length, pvi, pvi_e, step, unit_name="ft", one=None):
+        a1, a2, l, pvc, y = curve(g1, g2, length, pvi, pvi_e)
+        metric = unit_name == "m"
+        inp = base(g1, g2, length, pvi, pvi_e, unit_name)
+        if one is not None:
+            inp["station"] = station_text(one, metric)
+            at = [F(str(one)) - pvc]
+        else:
+            if step is not None:
+                inp["interval"] = f"{step} {unit_name}"
+            s = F(str(step if step is not None else (20 if metric else 100)))
+            at, d = [F(0)], (pvc // s + 1) * s - pvc
+            while d < l:
+                at.append(d)
+                d += s
+            at.append(l)
+        exp = {"result.pvc_station": station_text(float(pvc), metric), "result.pvt_station": station_text(float(pvc + l), metric)}
+        for row in sorted({0, len(at) // 2, len(at) - 1}):
+            exp[f"result.rows.{row}.station"] = station_text(float(pvc + at[row]), metric)
+            exp[f"result.rows.{row}.elevation.value"] = float(y(at[row]))
+            exp[f"result.rows.{row}.grade"] = float((a1 + (a2 - a1) * at[row] / l) * 100)
+        return vec(i, inp, exp, rel=1e-10)
+
+    if mode == "turning-point":
+        out.append(turning(1, -3.5, 1.5, 400, 2450, "612.40"))
+        # The spec scenario: +2% to −3% over 600 ft, PVI 10+00 at 100.00: high point 9+40 at 96.40.
+        out.append(turning(2, 2, -3, 600, 1000, "100.00", src=SPEC, ver="2026"))
+    else:
+        out.append(table(1, 1.2, -2.4, 300, 3100, "248.60", 50))
+        out.append(table(2, 2, -3, 600, 1000, "100.00", None))
+        out.append(table(3, 2, -3, 600, 1000, "100.00", None, one=940))
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        metric = unit_name == "m"
+        g1 = round(rng.uniform(0.3, 6), 2) * rng.choice([1, -1])
+        length = rng.choice([80, 120, 200, 300, 400, 600, 800, 1200])
+        pvi = round(rng.uniform(800, 50000), 3 if metric else 2)
+        pvi_e = f"{rng.uniform(5, 2500):.2f}"
+        if mode == "turning-point":
+            g2 = -math.copysign(round(rng.uniform(0.3, 6), 2), g1)
+            out.append(turning(len(out) + 1, g1, g2, length, pvi, pvi_e, unit_name))
+        else:
+            g2 = round(rng.uniform(-6, 6), 2)
+            if g2 == g1:
+                g2 += 0.5
+            step = rng.choice([10, 20, 25, 50, 100, None])
+            if len(out) % 4 == 0:
+                one = round(pvi + rng.uniform(-0.45, 0.45) * length, 3 if metric else 2)
+                out.append(table(len(out) + 1, g1, g2, length, pvi, pvi_e, None, unit_name, one=one))
+            else:
+                out.append(table(len(out) + 1, g1, g2, length, pvi, pvi_e, step, unit_name))
+    common = {"g1": 2, "g2": -3, "length": "600 ft", "pvi_station": "10+00", "pvi_elevation": "100 ft"}
+    if mode == "turning-point":
+        invalid = [
+            ({**common, "g2": 4}, "OUT_OF_DOMAIN", "/g2"),
+            ({**common, "g1": -1, "g2": -3}, "OUT_OF_DOMAIN", "/g2"),
+            ({**common, "length": "0 ft"}, "INVALID_INPUT", "/length"),
+        ]
+    else:
+        invalid = [
+            ({**common, "station": "20+00"}, "OUT_OF_DOMAIN", "/station"),
+            ({**common, "station": "9+00", "interval": "50 ft"}, "INVALID_INPUT", "/station"),
+            ({**common, "interval": "0 ft"}, "INVALID_INPUT", "/interval"),
+            ({**common, "interval": "50 ftUS"}, "UNIT_MISMATCH", None),
+        ]
+    for inp, code, field in invalid:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
 NGS5_EXAMPLE = "NOAA Manual NOS NGS 5, State Plane Coordinate System of 1983 (Stem), section 4.4 example, steps 4 and 5"
 NGS5_LINES = [(4805.468, 4805.508), (3963.694, 3963.727), (4966.083, 4966.125), (3501.223, 3501.252), (4466.935, 4466.973)]
 
@@ -2627,6 +2875,11 @@ def main():
         "survey.reduction.level-run": level_run(),
         "survey.reduction.level-adjust": level_adjust(),
         "survey.earthwork.rise-run": rise_run(),
+        "survey.curves.degree-of-curve": degree_of_curve(),
+        "survey.curves.curve-stationing": curve_stationing(),
+        "survey.curves.spiral-curve-spiral": spiral_curve_spiral(),
+        "survey.curves.vertical-curve-turning-point": vertical_curve_parts("turning-point"),
+        "survey.curves.vertical-curve-elevations": vertical_curve_parts("elevations"),
         "survey.earthwork.haul-loads": haul_loads(),
         "survey.earthwork.four-point-average": four_point_average(),
         "survey.reduction.two-face-mean": two_face_mean(),

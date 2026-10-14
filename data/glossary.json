@@ -212,7 +212,8 @@
       "definition": "The station where the circular curve ends and the exit spiral begins.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.curves.spiral"
+        "survey.curves.spiral",
+        "survey.curves.spiral-curve-spiral"
       ]
     },
     {
@@ -1155,7 +1156,8 @@
       "source": "ghilani",
       "relatedTools": [
         "survey.curves.circular-curve",
-        "survey.curves.curve-layout"
+        "survey.curves.curve-layout",
+        "survey.curves.curve-stationing"
       ]
     },
     {
@@ -1187,7 +1189,9 @@
       "relatedTools": [
         "survey.curves.circular-curve",
         "survey.curves.curve-layout",
-        "survey.curves.spiral"
+        "survey.curves.curve-stationing",
+        "survey.curves.spiral",
+        "survey.curves.spiral-curve-spiral"
       ]
     },
     {
@@ -1252,7 +1256,8 @@
       "source": "ghilani",
       "relatedTools": [
         "survey.curves.circular-curve",
-        "survey.curves.curve-layout"
+        "survey.curves.curve-layout",
+        "survey.curves.curve-stationing"
       ]
     },
     {
@@ -1263,7 +1268,9 @@
       "source": "ghilani",
       "relatedTools": [
         "survey.curves.unequal-vertical-curve",
-        "survey.curves.vertical-curve"
+        "survey.curves.vertical-curve",
+        "survey.curves.vertical-curve-elevations",
+        "survey.curves.vertical-curve-turning-point"
       ]
     },
     {
@@ -1274,7 +1281,9 @@
       "source": "ghilani",
       "relatedTools": [
         "survey.curves.unequal-vertical-curve",
-        "survey.curves.vertical-curve"
+        "survey.curves.vertical-curve",
+        "survey.curves.vertical-curve-elevations",
+        "survey.curves.vertical-curve-turning-point"
       ]
     },
     {
@@ -1285,7 +1294,8 @@
       "source": "ghilani",
       "relatedTools": [
         "survey.curves.unequal-vertical-curve",
-        "survey.curves.vertical-curve"
+        "survey.curves.vertical-curve",
+        "survey.curves.vertical-curve-elevations"
       ]
     },
     {
@@ -1413,7 +1423,8 @@
       "definition": "The station where the entry spiral ends and the circular curve begins, at the curve's full radius.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.curves.spiral"
+        "survey.curves.spiral",
+        "survey.curves.spiral-curve-spiral"
       ]
     },
     {
@@ -1455,7 +1466,8 @@
       "definition": "The station where the exit spiral ends and the alignment is straight again.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.curves.spiral"
+        "survey.curves.spiral",
+        "survey.curves.spiral-curve-spiral"
       ]
     },
     {
@@ -1562,7 +1574,8 @@
       "definition": "The station where the straight tangent ends and a spiral transition begins, curving gradually from straight toward the circular curve.",
       "source": "ghilani",
       "relatedTools": [
-        "survey.curves.spiral"
+        "survey.curves.spiral",
+        "survey.curves.spiral-curve-spiral"
       ]
     },
     {

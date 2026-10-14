@@ -708,6 +708,278 @@ def combined():
     return out
 
 
+def two_face_mean():
+    """Face-left and face-right zeniths: the mean and the index error, by
+    integer arcsecond arithmetic rather than the core's degrees."""
+    rng = random.Random(44206)
+    out = []
+
+    def text(seconds):
+        return f"{seconds // 3600}°{seconds % 3600 // 60:02d}'{seconds % 60:02d}\""
+
+    def case(fl_s, fr_s):
+        # Twice the mean and twice the index error are whole arcseconds.
+        mean2, index2 = fl_s + 1296000 - fr_s, fl_s + fr_s - 1296000
+        return ({"zenith": text(fl_s), "zenith_face_right": text(fr_s)},
+                {"result.mean_zenith.value": mean2 / 7200, "result.index_error.value": index2 / 2,
+                 "result.vertical_angle.value": 90 - mean2 / 7200})
+
+    # The spec scenario: 85°00'10" and 274°59'40" give 85°00'15" and -5".
+    inp, exp = case(85 * 3600 + 10, 274 * 3600 + 59 * 60 + 40)
+    exp["result.mean_zenith_dms"] = "85°00'15.0\""
+    out.append(vec(1, inp, exp, SPEC, "2026"))
+    while len(out) < 20:
+        zenith = rng.randrange(35 * 3600, 145 * 3600)
+        index = rng.randrange(-90, 91)
+        pointing = rng.randrange(-4, 5)
+        inp, exp = case(zenith + index, 1296000 - zenith + index + pointing)
+        out.append(vec(len(out) + 1, inp, exp, rel=1e-12))
+    for inp, field in [
+        ({"zenith": "274°59'40\"", "zenith_face_right": "85°00'10\""}, "/zenith"),
+        ({"zenith": "85°00'10\"", "zenith_face_right": "94°59'50\""}, "/zenith_face_right"),
+        ({"zenith": "85°00'10\"", "zenith_face_right": "361"}, "/zenith_face_right"),
+    ]:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": "INVALID_INPUT", "error.field": field}, SPEC, "2026"))
+    return out
+
+
+def level_adjust():
+    """Level runs that close: the misclosure and its distribution in
+    proportion to cumulative distance, or by setups without distances."""
+    rng = random.Random(44207)
+    out = []
+
+    def build(start, rises, unit_name, distances, loop, error):
+        """A book whose true rises are `rises`, with `error` added to the last foresight."""
+        book, elev = [{"station": "BM 1"}], start
+        observed = [start]
+        for i, rise in enumerate(rises):
+            bs = round(rng.uniform(0.3, 3.8), 3)
+            fs = round(bs - rise + (error if i == len(rises) - 1 else 0.0), 3)
+            book[-1]["backsight"] = f"{bs} {unit_name}"
+            last = i == len(rises) - 1
+            row = {"station": ("BM 1" if loop else "BM 2") if last else f"TP {i + 1}", "foresight": f"{fs} {unit_name}"}
+            if distances:
+                row["distance"] = f"{distances[i]} {unit_name}"
+            book.append(row)
+            elev = elev + bs - fs
+            observed.append(elev)
+        return book, observed
+
+    def expect(observed, known, distances):
+        mis = observed[-1] - known
+        steps = distances or [1.0] * (len(observed) - 1)
+        total, run = sum(steps), 0.0
+        e = {"result.misclosure.value": mis}
+        for i, step in enumerate(steps, 1):
+            run += step
+            e[f"result.stations.{i}.elevation.value"] = observed[i]
+            e[f"result.stations.{i}.adjusted.value"] = observed[i] - mis * run / total
+        return e
+
+    # The primary example: the loop of the level-run page, 0.02 ft low on return.
+    loop = [("BM 1", 4.52, None, None), ("TP 1", 6.13, 3.97, 300), ("TP 2", 2.84, 5.26, 280), ("BM 1", None, 4.28, 310)]
+    book, elev, observed = [], 100.0, []
+    hi = None
+    for st, bs, fs, d in loop:
+        row = {"station": st}
+        if fs is not None:
+            elev = hi - fs
+            row["foresight"] = f"{fs} ft"
+        if bs is not None:
+            hi = elev + bs
+            row["backsight"] = f"{bs} ft"
+        if d is not None:
+            row["distance"] = f"{d} ft"
+        book.append(row)
+        observed.append(elev)
+    # The primary example: BM A at 250.000 m to BM B at 247.975 m, closing 44 mm high.
+    run = [("BM A", 1.234, None, None), ("TP 1", 2.110, 0.987, 120), ("TP 2", 0.542, 3.004, 95), ("BM B", None, 1.876, 150)]
+    run_book = [{"station": st, **({"foresight": f"{fs:.3f} m"} if fs is not None else {}), **({"backsight": f"{bs:.3f} m"} if bs is not None else {}),
+                 **({"distance": f"{d} m"} if d is not None else {})} for st, bs, fs, d in run]
+    run_observed = [250.0, 250.0 + 1.234 - 0.987, 250.0 + 1.234 - 0.987 + 2.110 - 3.004, 250.0 + 1.234 - 0.987 + 2.110 - 3.004 + 0.542 - 1.876]
+    out.append(vec(1, {"start_elevation": "250 m", "end_elevation": "247.975 m", "shots": run_book}, expect(run_observed, 247.975, [120, 95, 150])))
+    out.append(vec(2, {"start_elevation": "100.00 ft", "shots": book}, expect(observed, 100.0, [300, 280, 310])))
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        legs = rng.randrange(2, 9)
+        loop_run = len(out) % 2 == 0
+        with_distances = len(out) % 4 != 3
+        start = round(rng.uniform(5, 2500), 3)
+        rises = [round(rng.uniform(-2.5, 2.5), 3) for _ in range(legs)]
+        if loop_run:
+            rises[-1] = round(-sum(rises[:-1]), 3)
+        distances = [round(rng.uniform(40, 400), 1) for _ in range(legs)] if with_distances else None
+        error = round(rng.uniform(-0.03, 0.03), 3)
+        book, observed = build(start, rises, unit_name, distances, loop_run, error)
+        known = start if loop_run else round(start + sum(rises), 3)
+        inp = {"start_elevation": f"{start} {unit_name}", "shots": book}
+        if not loop_run:
+            inp["end_elevation"] = f"{known} {unit_name}"
+        out.append(vec(len(out) + 1, inp, expect(observed, known, distances), rel=1e-9))
+    open_run = {"start_elevation": "250 m", "shots": [{"station": "BM A", "backsight": "1.234 m"}, {"station": "TP 1", "foresight": "0.987 m"}]}
+    for inp, code, field in [
+        (open_run, "INVALID_INPUT", "/end_elevation"),
+        ({**open_run, "end_elevation": "250.2 ft", "start_elevation": "250 ftUS"}, "UNIT_MISMATCH", None),
+        ({"start_elevation": "100 ft", "end_elevation": "99 ft", "shots": [{"station": "BM 1", "foresight": "1 ft"}, {"station": "TP 1", "foresight": "2 ft"}]},
+         "INVALID_INPUT", "/shots/0/backsight"),
+    ]:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
+NGS5_EXAMPLE = "NOAA Manual NOS NGS 5, State Plane Coordinate System of 1983 (Stem), section 4.4 example, steps 4 and 5"
+NGS5_LINES = [(4805.468, 4805.508), (3963.694, 3963.727), (4966.083, 4966.125), (3501.223, 3501.252), (4466.935, 4466.973)]
+
+
+def named_factor(mode):
+    """The focused combined-factor operations: the elevation factor alone and
+    each direction of the grid and ground conversion."""
+    rng = random.Random({"elevation-factor": 44201, "grid-to-ground": 44202, "ground-to-grid": 44203}[mode])
+    r = 6_372_000.0
+    to_m = {"ft": FT, "ftUS": 1200 / 3937, "m": 1.0}
+    src = "NOAA Manual NOS NGS 5 (Stem 1990), section 4, evaluated in Python"
+    given, found = ("grid_distance", "ground_distance") if mode == "grid-to-ground" else ("ground_distance", "grid_distance")
+    out = []
+
+    def case(k, heights, dist=None, radius_m=r, unit_name="ft"):
+        h_m = sum(value * to_m[u] for value, u in heights.values())
+        ef = radius_m / (radius_m + h_m)
+        inp = {name: f"{value} {u}" for name, (value, u) in heights.items()}
+        if mode == "elevation-factor":
+            first_unit = next(iter(heights.values()))[1]
+            return inp, {"result.elevation_factor": ef, "result.ellipsoid_height.value": h_m / to_m[first_unit]}
+        cf = k * ef
+        inp = {given: f"{dist} {unit_name}", "grid_scale": k, **inp}
+        converted = dist / cf if mode == "grid-to-ground" else dist * cf
+        return inp, {f"result.{found}.value": converted, f"result.{given}.value": float(dist),
+                     "result.combined_factor": cf, "result.elevation_factor": ef}
+
+    # The primary example on the page.
+    inp, exp = case(0.99991, {"ellipsoid_height": (1500, "ft")}, 1000)
+    out.append(vec(1, inp, exp, src, "1990"))
+    # The published NGS Manual 5 example: H 865 ft, N -100 ft, R 20,906,000 ft.
+    ngs_heights = {"elevation": "865 ft", "geoid_height": "-100 ft", "radius": "20906000 ft"}
+    if mode == "elevation-factor":
+        out.append(vec(2, ngs_heights, {"result.elevation_factor": 0.9999634, "result.ellipsoid_height.value": 765.0}, NGS5_EXAMPLE, "1990"))
+        out[-1]["tolerance"] = {"result.elevation_factor": {"abs": 5e-8}, "result.ellipsoid_height.value": {"abs": 1e-9}}
+    else:
+        for ground, grid in NGS5_LINES:
+            dist, answer = (grid, ground) if mode == "grid-to-ground" else (ground, grid)
+            out.append(vec(len(out) + 1, {given: f"{dist} ft", "grid_scale": 1.0000450, **ngs_heights},
+                           {f"result.{found}.value": answer, "result.elevation_factor": 0.9999634, "result.combined_factor": 1.0000084},
+                           NGS5_EXAMPLE, "1990"))
+            # The manual prints 7 decimals on the factors and 0.001 ft on the lengths.
+            out[-1]["tolerance"] = {f"result.{found}.value": {"abs": 0.0006}, "result.elevation_factor": {"abs": 5e-8},
+                                    "result.combined_factor": {"abs": 5e-8}}
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        k = round(rng.uniform(0.9996, 1.0004), 8)
+        dist = round(rng.uniform(5, 20000), 3)
+        height = round(rng.uniform(-300, 14000) * (FT if unit_name == "m" else 1), 3)
+        if len(out) % 4 == 3:
+            geoid = round(rng.uniform(-40, 40) * (FT if unit_name == "m" else 1), 3)
+            heights = {"elevation": (height, unit_name), "geoid_height": (geoid, unit_name)}
+        else:
+            heights = {"ellipsoid_height": (height, unit_name)}
+        radius_m = r
+        if len(out) % 5 == 4:
+            radius_m = round(rng.uniform(6_335_000, 6_400_000), 0)
+        inp, exp = case(k, heights, dist, radius_m, unit_name)
+        if radius_m != r:
+            inp["radius"] = f"{radius_m} m"
+        out.append(vec(len(out) + 1, inp, exp, src, "1990", rel=1e-11))
+    base = {} if mode == "elevation-factor" else {given: "1000 ft", "grid_scale": 0.99991}
+    invalid = [
+        ({**base}, "INVALID_INPUT", "/ellipsoid_height"),
+        ({**base, "ellipsoid_height": "1500 ft", "elevation": "1530 ft"}, "INVALID_INPUT", "/ellipsoid_height"),
+        ({**base, "ellipsoid_height": "1500 ft", "radius": "500 km"}, "OUT_OF_DOMAIN", "/radius"),
+    ]
+    for inp, code, field in invalid:
+        out.append(vec(len(out) + 1, inp, {"ok": False, "error.code": code, "error.field": field}, SPEC, "2026"))
+    return out
+
+
+def named_offset(mode):
+    """The focused offset-shot operations: taped distance offsets, and the
+    angle offset to the center of a round object."""
+    rng = random.Random({"distance-offset": 44204, "angle-offset": 44205}[mode])
+
+    def solve(n, e, az, along, across):
+        t = math.radians(az)
+        # Along the line of sight, then a quarter turn clockwise for "right".
+        dn = along * math.cos(t) - across * math.sin(t)
+        de = along * math.sin(t) + across * math.cos(t)
+        return {"result.northing.value": n + dn, "result.easting.value": e + de,
+                "result.distance.value": math.hypot(dn, de), "result.azimuth.value": math.degrees(math.atan2(de, dn)) % 360}
+
+    out = []
+    if mode == "distance-offset":
+        out.append(vec(1, {"northing": "5000 ft", "easting": "5000 ft", "direction": "N 30°00'00\" E", "distance": "150 ft",
+                           "offset_right": "2.5 ft", "offset_out": "1 ft"}, solve(5000, 5000, 30, 151, 2.5), SPEC, "2026"))
+    else:
+        out.append(vec(1, {"northing": "2000 m", "easting": "3000 m", "direction": "S 45°10'00\" E", "distance": "62.4 m",
+                           "center_direction": "S 45°00'00\" E", "radius": "0.15 m"}, solve(2000, 3000, 135, 62.55, 0), SPEC, "2026"))
+        # The tree-center scenario of the general offset-shot tool.
+        out.append(vec(2, {"northing": "5000 ft", "easting": "5000 ft", "direction": "N 30°00'00\" E", "distance": "150 ft",
+                           "center_direction": "N 30°17'00\" E", "radius": "0.75 ft"}, solve(5000, 5000, 30 + 17 / 60, 150.75, 0), SPEC, "2026"))
+    while len(out) < 20:
+        unit_name = ["ft", "ftUS", "m"][len(out) % 3]
+        n, e = round(rng.uniform(-5000, 9000), 3), round(rng.uniform(-5000, 9000), 3)
+        az = round(rng.uniform(0, 360), 6)
+        dist = round(rng.uniform(5, 900), 3)
+        # Alternate decimal azimuths with quadrant bearings to the second.
+        text = f"{az}" if len(out) % 2 else bearing(az)
+        az_used = parse_direction(text)
+        inp = {"northing": f"{n} {unit_name}", "easting": f"{e} {unit_name}", "direction": text, "distance": f"{dist} {unit_name}"}
+        if mode == "distance-offset":
+            right = round(rng.uniform(-12, 12), 3)
+            out_ = round(rng.uniform(-4, 6), 3)
+            which = len(out) % 3
+            if which != 1:
+                inp["offset_right"] = f"{right} {unit_name}"
+            else:
+                right = 0.0
+            if which != 2:
+                inp["offset_out"] = f"{out_} {unit_name}"
+            else:
+                out_ = 0.0
+            expected = solve(n, e, az_used, dist + out_, right)
+        else:
+            turn = round(rng.uniform(-2, 2), 6)
+            center = (az_used + turn) % 360
+            center_text = f"{center:.6f}" if len(out) % 2 else bearing(center)
+            radius = round(rng.uniform(0.05, 3), 3)
+            inp["center_direction"] = center_text
+            inp["radius"] = f"{radius} {unit_name}"
+            expected = solve(n, e, parse_direction(center_text), dist + radius, 0)
+        out.append(vec(len(out) + 1, inp, expected, rel=1e-9))
+    base = {"northing": "0 ft", "easting": "0 ft", "direction": "N 10 E", "distance": "10 ft"}
+    if mode == "distance-offset":
+        invalid = [
+            ({**base}, "INVALID_INPUT", "/offset_right"),
+            ({**base, "direction": "bad", "offset_right": "1 ft"}, "INVALID_INPUT", "/direction"),
+            ({**base, "distance": "0 ft", "offset_right": "1 ft"}, "INVALID_INPUT", "/distance"),
+            ({**base, "offset_right": "1 ftUS"}, "UNIT_MISMATCH", None),
+        ]
+    else:
+        invalid = [
+            ({**base, "center_direction": "N 11 E", "radius": "-1 ft"}, "INVALID_INPUT", "/radius"),
+            ({**base, "center_direction": "bad", "radius": "1 ft"}, "INVALID_INPUT", "/center_direction"),
+            ({**base, "distance": "0 ft", "center_direction": "N 11 E", "radius": "1 ft"}, "INVALID_INPUT", "/distance"),
+            ({**base, "center_direction": "N 11 E", "radius": "1 ftUS"}, "UNIT_MISMATCH", None),
+        ]
+    for inp, code, field in invalid:
+        expected = {"ok": False, "error.code": code}
+        if field:
+            expected["error.field"] = field
+        out.append(vec(len(out) + 1, inp, expected, SPEC, "2026"))
+    return out
+
+
 # ---------------------------------------------------------------- land descriptions
 
 LAND_SRC = "Independent Python arithmetic on the BLM Manual unit definitions and latitudes and departures (tools/vectors/gen_survey.py)"
@@ -2204,10 +2476,17 @@ def main():
         "survey.cogo.area-by-coordinates": area(), "survey.curves.circular-curve": circular(), "survey.curves.vertical-curve": vertical(),
         "survey.earthwork.average-end-area": aea(), "survey.earthwork.prismoidal": prismoidal(), "survey.earthwork.shrink-swell": swell(),
         "survey.reduction.combined-factor": combined(),
+        "survey.reduction.elevation-factor": named_factor("elevation-factor"),
+        "survey.reduction.grid-to-ground": named_factor("grid-to-ground"),
+        "survey.reduction.ground-to-grid": named_factor("ground-to-grid"),
+        "survey.reduction.distance-offset": named_offset("distance-offset"),
+        "survey.reduction.angle-offset": named_offset("angle-offset"),
         "survey.reduction.slope": slope(), "survey.reduction.curvature-refraction": curvature(),
         "survey.reduction.stadia": stadia(), "survey.reduction.inaccessible-height": inaccessible(),
         "survey.cogo.offset-shot": offset_shot(), "survey.earthwork.grade": grade(),
         "survey.reduction.level-run": level_run(),
+        "survey.reduction.level-adjust": level_adjust(),
+        "survey.reduction.two-face-mean": two_face_mean(),
         "survey.cogo.intersection": intersection(), "survey.cogo.resection": resection(),
         "survey.cogo.bearing-bearing": named_intersection("bearing-bearing"),
         "survey.cogo.bearing-distance": named_intersection("bearing-distance"),

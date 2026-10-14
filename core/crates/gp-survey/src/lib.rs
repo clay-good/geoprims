@@ -2318,16 +2318,70 @@ fn run_shrink_swell(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- reductions
 
+const GRID_SCALE: Field = Field::new(
+    "grid_scale",
+    "Grid scale factor",
+    "Point scale factor from the projection, like 0.99991",
+    Kind::Number { min: 0.9, max: 1.1 },
+)
+.required()
+.core();
+const ELLIPSOID_HEIGHT: Field = len(
+    "ellipsoid_height",
+    "Ellipsoid height",
+    "Height above the ellipsoid, like 1,500 ft (or give elevation and geoid height)",
+)
+.core();
+const ELEVATION: Field = len("elevation", "Orthometric elevation", "Like 1,530 ft");
+const GEOID_HEIGHT: Field = len(
+    "geoid_height",
+    "Geoid height N",
+    "Like -30 ft (negative in the conterminous US)",
+);
+const GROUND_DISTANCE: Field = len(
+    "ground_distance",
+    "Ground distance",
+    "To convert to grid, like 1000 ft",
+)
+.core();
+const GRID_DISTANCE: Field = len(
+    "grid_distance",
+    "Grid distance",
+    "To convert to ground, like 1000 ft",
+);
+const EARTH_RADIUS: Field = len(
+    "radius",
+    "Earth radius",
+    "Default 20,906,000 ft (6,372,000 m), as in NOAA Manual NOS NGS 5",
+);
+const COMBINED_FACTOR_OUT: Field = Field::new(
+    "combined_factor",
+    "Combined factor",
+    "Grid factor × elevation factor",
+    Kind::Number { min: 0.0, max: 2.0 },
+)
+.precision(Precision::Decimals(8));
+const ELEVATION_FACTOR_OUT: Field = Field::new(
+    "elevation_factor",
+    "Elevation factor",
+    "R / (R + h)",
+    Kind::Number { min: 0.0, max: 2.0 },
+)
+.precision(Precision::Decimals(8));
+const GRID_DISTANCE_OUT: Field =
+    len_out("grid_distance", "Grid distance", "Ground × combined factor");
+const GROUND_DISTANCE_OUT: Field = len_out(
+    "ground_distance",
+    "Ground distance",
+    "Grid ÷ combined factor",
+);
+
 pub static COMBINED_FACTOR: ToolDef = ToolDef {
     id: "survey.reduction.combined-factor",
     stability: gp_base::tool::Stability::Stable,
     title: "Combined scale factor (grid and ground)",
     summary: "The elevation factor and combined factor from a grid scale factor and height, and conversion of a distance between grid and ground.",
-    aliases: &[
-        "grid to ground",
-        "ground to grid",
-        "combined factor calculator",
-    ],
+    aliases: &["combined factor calculator", "combined scale factor"],
     keywords: &[
         "combined factor",
         "grid factor",
@@ -2337,65 +2391,19 @@ pub static COMBINED_FACTOR: ToolDef = ToolDef {
         "scale factor",
     ],
     inputs: &[
-        Field::new(
-            "grid_scale",
-            "Grid scale factor",
-            "Point scale factor from the projection, like 0.99991",
-            Kind::Number { min: 0.9, max: 1.1 },
-        )
-        .required()
-        .core(),
-        len(
-            "ellipsoid_height",
-            "Ellipsoid height",
-            "Height above the ellipsoid, like 1,500 ft (or give elevation and geoid height)",
-        )
-        .core(),
-        len("elevation", "Orthometric elevation", "Like 1,530 ft"),
-        len(
-            "geoid_height",
-            "Geoid height N",
-            "Like -30 ft (negative in the conterminous US)",
-        ),
-        len(
-            "ground_distance",
-            "Ground distance",
-            "To convert to grid, like 1000 ft",
-        )
-        .core(),
-        len(
-            "grid_distance",
-            "Grid distance",
-            "To convert to ground, like 1000 ft",
-        ),
-        len(
-            "radius",
-            "Earth radius",
-            "Default 20,906,000 ft (6,372,000 m), as in NOAA Manual NOS NGS 5",
-        ),
+        GRID_SCALE,
+        ELLIPSOID_HEIGHT,
+        ELEVATION,
+        GEOID_HEIGHT,
+        GROUND_DISTANCE,
+        GRID_DISTANCE,
+        EARTH_RADIUS,
     ],
     outputs: &[
-        Field::new(
-            "combined_factor",
-            "Combined factor",
-            "Grid factor × elevation factor",
-            Kind::Number { min: 0.0, max: 2.0 },
-        )
-        .precision(Precision::Decimals(8)),
-        Field::new(
-            "elevation_factor",
-            "Elevation factor",
-            "R / (R + h)",
-            Kind::Number { min: 0.0, max: 2.0 },
-        )
-        .precision(Precision::Decimals(8)),
-        len_out("grid_distance", "Grid distance", "Ground × combined factor").optional(),
-        len_out(
-            "ground_distance",
-            "Ground distance",
-            "Grid ÷ combined factor",
-        )
-        .optional(),
+        COMBINED_FACTOR_OUT,
+        ELEVATION_FACTOR_OUT,
+        GRID_DISTANCE_OUT.optional(),
+        GROUND_DISTANCE_OUT.optional(),
     ],
     errors: &[ErrorCode::UnitMismatch],
     warnings: &[
@@ -2440,8 +2448,229 @@ pub static COMBINED_FACTOR: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static ELEVATION_FACTOR: ToolDef = ToolDef {
+    id: "survey.reduction.elevation-factor",
+    title: "Elevation factor",
+    summary: "The elevation (sea-level) factor that scales a ground distance down to the ellipsoid, from the ellipsoid height or from an elevation and geoid height.",
+    aliases: &[
+        "elevation factor calculator",
+        "sea level factor",
+        "ellipsoid reduction factor",
+    ],
+    keywords: &[
+        "elevation factor",
+        "sea level factor",
+        "ellipsoid height",
+        "geoid height",
+        "state plane",
+        "reduction to the ellipsoid",
+    ],
+    inputs: &[ELLIPSOID_HEIGHT, ELEVATION, GEOID_HEIGHT, EARTH_RADIUS],
+    outputs: &[
+        ELEVATION_FACTOR_OUT,
+        len_out(
+            "ellipsoid_height",
+            "Ellipsoid height used",
+            "As entered, or elevation + geoid height",
+        ),
+    ],
+    errors: COMBINED_FACTOR.errors,
+    warnings: COMBINED_FACTOR.warnings,
+    model: "Elevation factor = R/(R + h) with h the ellipsoid height, h = H + N from an orthometric elevation H and geoid height N (Stem 1990)",
+    accuracy: "About 1 ppm with the mean radius; better with a local radius of curvature",
+    when_to_use: "Use this to reduce a horizontal ground distance to the ellipsoid, the first half of a grid reduction on State Plane or UTM coordinates. Enter the ellipsoid height of the line, or its elevation with the geoid height, and the tool returns the elevation factor and the height it used. Multiply a ground distance by the factor to get the ellipsoid distance, then by the grid scale factor to reach the grid.",
+    limitations: "The factor uses the mean radius unless you give a local radius of curvature, which is about a part per million either way. Heights must be above the ellipsoid rather than above sea level, so an elevation without a geoid height is flagged. Use the mean height of the line, since one factor for a line with a large height change is an approximation. It does not include the grid scale factor.",
+    references: COMBINED_FACTOR.references,
+    examples: &[Example {
+        id: "primary",
+        title: "1,500 ft above the ellipsoid",
+        input: r#"{"ellipsoid_height":"1500 ft"}"#,
+        source: "NOAA Manual NOS NGS 5 formula with R = 20,906,000 ft",
+    }],
+    primary_example: "primary",
+    visualization: COMBINED_FACTOR.visualization,
+    related: &[
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.reduction.ground-to-grid",
+            reason: "next",
+        },
+        Related {
+            id: "survey.reduction.grid-to-ground",
+            reason: "next",
+        },
+    ],
+    sentence: "The elevation factor is {elevation_factor} at an ellipsoid height of {ellipsoid_height}.{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
+    limits: COMBINED_FACTOR.limits,
+    run: run_elevation_factor,
+    ..ToolDef::BLANK
+};
+
+pub static GRID_TO_GROUND: ToolDef = ToolDef {
+    id: "survey.reduction.grid-to-ground",
+    title: "Grid distance to ground distance",
+    summary: "Converts a grid distance to the horizontal ground distance by dividing by the combined factor from the grid scale factor and height.",
+    aliases: &[
+        "grid to ground",
+        "grid to ground distance",
+        "grid to ground calculator",
+    ],
+    keywords: &[
+        "grid to ground",
+        "ground distance",
+        "combined factor",
+        "state plane",
+        "stakeout",
+        "scale factor",
+    ],
+    inputs: &[
+        GRID_DISTANCE.required().core(),
+        GRID_SCALE,
+        ELLIPSOID_HEIGHT,
+        ELEVATION,
+        GEOID_HEIGHT,
+        EARTH_RADIUS,
+    ],
+    outputs: &[
+        GROUND_DISTANCE_OUT,
+        GRID_DISTANCE_OUT,
+        COMBINED_FACTOR_OUT,
+        ELEVATION_FACTOR_OUT,
+    ],
+    errors: COMBINED_FACTOR.errors,
+    warnings: COMBINED_FACTOR.warnings,
+    model: "Ground distance = grid distance ÷ combined factor, with combined factor = grid scale factor × R/(R + h) and h the ellipsoid height (Stem 1990)",
+    accuracy: COMBINED_FACTOR.accuracy,
+    when_to_use: "Use this when a distance computed from State Plane or UTM coordinates has to be laid out or checked with a tape or total station on the ground. Enter the grid distance, the grid scale factor at the line, and the ellipsoid height, or the elevation with the geoid height. The tool returns the horizontal ground distance along with the combined and elevation factors it used.",
+    limitations: "The result is a horizontal distance at the height given, not a slope distance. The grid scale factor belongs to the point or line being reduced, and one factor across a long project is where the error usually comes from. The elevation factor uses the mean radius unless you give a local one, about a part per million either way. Heights must be above the ellipsoid.",
+    references: COMBINED_FACTOR.references,
+    examples: &[Example {
+        id: "primary",
+        title: "1,000 ft on the grid, factor 0.99991 at 1,500 ft",
+        input: r#"{"grid_distance":"1000 ft","grid_scale":0.99991,"ellipsoid_height":"1500 ft"}"#,
+        source: "NOAA Manual NOS NGS 5 formula with R = 20,906,000 ft",
+    }],
+    primary_example: "primary",
+    visualization: COMBINED_FACTOR.visualization,
+    related: &[
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.reduction.ground-to-grid",
+            reason: "inverse",
+        },
+        Related {
+            id: "survey.cogo.forward",
+            reason: "next",
+        },
+    ],
+    sentence: "A grid distance of {grid_distance} is {ground_distance} on the ground.{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
+    limits: COMBINED_FACTOR.limits,
+    run: run_grid_to_ground,
+    ..ToolDef::BLANK
+};
+
+pub static GROUND_TO_GRID: ToolDef = ToolDef {
+    id: "survey.reduction.ground-to-grid",
+    title: "Ground distance to grid distance",
+    summary: "Converts a horizontal ground distance to the grid distance by multiplying by the combined factor from the grid scale factor and height.",
+    aliases: &[
+        "ground to grid",
+        "ground to grid distance",
+        "ground to grid calculator",
+    ],
+    keywords: &[
+        "ground to grid",
+        "grid distance",
+        "combined factor",
+        "state plane",
+        "traverse reduction",
+        "scale factor",
+    ],
+    inputs: &[
+        GROUND_DISTANCE.required(),
+        GRID_SCALE,
+        ELLIPSOID_HEIGHT,
+        ELEVATION,
+        GEOID_HEIGHT,
+        EARTH_RADIUS,
+    ],
+    outputs: &[
+        GRID_DISTANCE_OUT,
+        GROUND_DISTANCE_OUT,
+        COMBINED_FACTOR_OUT,
+        ELEVATION_FACTOR_OUT,
+    ],
+    errors: COMBINED_FACTOR.errors,
+    warnings: COMBINED_FACTOR.warnings,
+    model: "Grid distance = ground distance × combined factor, with combined factor = grid scale factor × R/(R + h) and h the ellipsoid height (Stem 1990)",
+    accuracy: COMBINED_FACTOR.accuracy,
+    when_to_use: "Use this to reduce a measured horizontal distance to the grid before computing State Plane or UTM coordinates from it. Enter the ground distance, the grid scale factor at the line, and the ellipsoid height, or the elevation with the geoid height. The tool returns the grid distance along with the combined and elevation factors it used, ready for a traverse or an inverse check.",
+    limitations: "The ground distance must already be horizontal, so reduce a slope distance first. The grid scale factor belongs to the point or line being reduced, and one factor across a long project is where the error usually comes from. The elevation factor uses the mean radius unless you give a local one, about a part per million either way. Heights must be above the ellipsoid.",
+    references: COMBINED_FACTOR.references,
+    examples: &[Example {
+        id: "primary",
+        title: "1,000 ft on the ground, factor 0.99991 at 1,500 ft",
+        input: r#"{"ground_distance":"1000 ft","grid_scale":0.99991,"ellipsoid_height":"1500 ft"}"#,
+        source: "NOAA Manual NOS NGS 5 formula with R = 20,906,000 ft",
+    }],
+    primary_example: "primary",
+    visualization: COMBINED_FACTOR.visualization,
+    related: &[
+        Related {
+            id: "survey.reduction.combined-factor",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.reduction.grid-to-ground",
+            reason: "inverse",
+        },
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "next",
+        },
+    ],
+    sentence: "A ground distance of {ground_distance} is {grid_distance} on the grid.{warn ORTHOMETRIC_AS_ELLIPSOIDAL} The elevation was used as the ellipsoid height.{/warn}",
+    limits: COMBINED_FACTOR.limits,
+    run: run_ground_to_grid,
+    ..ToolDef::BLANK
+};
+
+/// Which part of the combined-factor reduction a focused operation reports.
+#[derive(Clone, Copy, PartialEq)]
+enum FactorMode {
+    ElevationFactor,
+    GridToGround,
+    GroundToGrid,
+}
+
+fn run_elevation_factor(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    combined(ctx, Some(FactorMode::ElevationFactor))
+}
+
+fn run_grid_to_ground(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    combined(ctx, Some(FactorMode::GridToGround))
+}
+
+fn run_ground_to_grid(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    combined(ctx, Some(FactorMode::GroundToGrid))
+}
+
 fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
-    let k = ctx.number("grid_scale")?.expect("required");
+    combined(ctx, None)
+}
+
+fn combined(ctx: &mut Ctx, mode: Option<FactorMode>) -> Result<Json, ToolError> {
+    // The elevation factor alone has no grid scale factor to read.
+    let k = match mode {
+        Some(FactorMode::ElevationFactor) => 1.0,
+        _ => ctx.number("grid_scale")?.expect("required"),
+    };
     let m = unit(QT::Length, "m");
     let r = ctx.quantity("radius")?.map_or(6_372_000.0, |q| q.to(m));
     if !(1_000_000.0..=10_000_000.0).contains(&r) {
@@ -2451,11 +2680,13 @@ fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/radius"));
     }
-    let h = match (
+    let heights = (
         ctx.quantity("ellipsoid_height")?,
         ctx.quantity("elevation")?,
         ctx.quantity("geoid_height")?,
-    ) {
+    );
+    let height_unit = heights.0.or(heights.1).map(|q| q.unit);
+    let h = match heights {
         (Some(h), None, None) => h.to(m),
         (None, Some(e), Some(n)) => e.to(m) + n.to(m),
         (None, Some(e), None) => {
@@ -2474,9 +2705,38 @@ fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let ef = r / (r + h);
     let cf = k * ef;
+    let fmt = ctx.options.format;
+    let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
+    if mode == Some(FactorMode::ElevationFactor) {
+        let u = height_unit.expect("a height was given");
+        if ctx.explaining() {
+            ctx.step(
+                "Ellipsoid height",
+                "h = H + N, or the ellipsoid height as entered",
+                match heights {
+                    (None, Some(e), Some(g)) => {
+                        format!("{} m + {} m", n(e.to(m), 3), n(g.to(m), 3))
+                    }
+                    _ => format!("{} m", n(h, 3)),
+                },
+                format!("{} m", n(h, 3)),
+            );
+            ctx.step(
+                "Elevation factor",
+                "EF = R / (R + h)",
+                format!("{} m / ({} m + {} m)", n(r, 0), n(r, 0), n(h, 3)),
+                n(ef, 8),
+            );
+        }
+        return Ok(Json::obj(vec![
+            ("elevation_factor", Json::Num(ef)),
+            (
+                "ellipsoid_height",
+                ctx.emit("ellipsoid_height", Q { value: h, unit: m }, u),
+            ),
+        ]));
+    }
     if ctx.explaining() {
-        let fmt = ctx.options.format;
-        let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
         ctx.step(
             "Elevation factor",
             "EF = R / (R + h)",
@@ -2489,6 +2749,52 @@ fn run_combined(ctx: &mut Ctx) -> Result<Json, ToolError> {
             format!("{} × {}", n(k, 8), n(ef, 8)),
             n(cf, 8),
         );
+    }
+    if let Some(mode) = mode {
+        let to_ground = mode == FactorMode::GridToGround;
+        let (given, found) = if to_ground {
+            ("grid_distance", "ground_distance")
+        } else {
+            ("ground_distance", "grid_distance")
+        };
+        let g = ctx.req_quantity(given)?;
+        let converted = Q {
+            value: if to_ground {
+                g.value / cf
+            } else {
+                g.value * cf
+            },
+            unit: g.unit,
+        };
+        if ctx.explaining() {
+            let shown =
+                |x: f64| gp_base::display::quantity(x, g.unit.symbol, Precision::Decimals(3), fmt);
+            ctx.step(
+                if to_ground {
+                    "Ground distance"
+                } else {
+                    "Grid distance"
+                },
+                if to_ground {
+                    "ground = grid ÷ CF"
+                } else {
+                    "grid = ground × CF"
+                },
+                format!(
+                    "{} {} {}",
+                    shown(g.value),
+                    if to_ground { "÷" } else { "×" },
+                    n(cf, 8)
+                ),
+                shown(converted.value),
+            );
+        }
+        return Ok(Json::obj(vec![
+            (found, ctx.emit(found, converted, g.unit)),
+            (given, ctx.emit(given, g, g.unit)),
+            ("combined_factor", Json::Num(cf)),
+            ("elevation_factor", Json::Num(ef)),
+        ]));
     }
     let mut out = vec![
         ("combined_factor", Json::Num(cf)),
@@ -2574,11 +2880,17 @@ pub static TOOLS: &[&ToolDef] = &[
     &stockpile::STOCKPILE,
     &stockpile::SOLID,
     &COMBINED_FACTOR,
+    &ELEVATION_FACTOR,
+    &GRID_TO_GROUND,
+    &GROUND_TO_GRID,
     &reduction::SLOPE,
+    &reduction::TWO_FACE_MEAN,
     &reduction::CURVATURE,
     &reduction::STADIA,
     &reduction::INACCESSIBLE,
     &reduction::OFFSET,
+    &reduction::DISTANCE_OFFSET,
+    &reduction::ANGLE_OFFSET,
     &intersect::INTERSECTION,
     &intersect::BEARING_BEARING,
     &intersect::BEARING_DISTANCE,
@@ -2589,6 +2901,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &stationing::PERPENDICULAR_FOOT,
     &stationing::POINT_FROM_STATION_OFFSET,
     &leveling::LEVEL_RUN,
+    &leveling::LEVEL_ADJUST,
     &land::LEGACY_UNITS,
     &land::DEED_PARSE,
     &land::DEED_PLOT,

@@ -97,6 +97,49 @@ test('each station-offset direction is an addressable survey operation', () => {
   }
 });
 
+test('each combined-factor step and direction is an addressable survey operation', () => {
+  const expected = new Map([
+    ['survey.reduction.elevation-factor', ['elevation factor calculator', 'sea level factor']],
+    ['survey.reduction.grid-to-ground', ['grid to ground', 'grid to ground distance']],
+    ['survey.reduction.ground-to-grid', ['ground to grid', 'ground to grid distance']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
+test('each offset-shot method is an addressable survey operation', () => {
+  const expected = new Map([
+    ['survey.reduction.distance-offset', ['distance offset', 'taped offset shot']],
+    ['survey.reduction.angle-offset', ['angle offset', 'tree center shot']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
+test('the two-face mean and the level adjustment are addressable survey operations', () => {
+  const expected = new Map([
+    ['survey.reduction.two-face-mean', ['two face mean', 'vertical index error']],
+    ['survey.reduction.level-adjust', ['level adjustment', 'level loop adjustment']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
 test('the survey catalog does not lose registered operations', () => {
-  assert.ok(survey.length >= 56, `survey operation count regressed to ${survey.length}`);
+  assert.ok(survey.length >= 63, `survey operation count regressed to ${survey.length}`);
 });

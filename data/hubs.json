@@ -2046,7 +2046,29 @@
         {
           "want": "scale distances between grid and ground",
           "tools": [
-            "combined-factor"
+            "combined-factor",
+            "grid-to-ground",
+            "ground-to-grid",
+            "elevation-factor"
+          ]
+        },
+        {
+          "want": "adjust a level loop or a run between two benchmarks",
+          "tools": [
+            "level-adjust"
+          ]
+        },
+        {
+          "want": "mean face-left and face-right zenith readings",
+          "tools": [
+            "two-face-mean"
+          ]
+        },
+        {
+          "want": "tie in a corner or a tree center with an offset shot",
+          "tools": [
+            "distance-offset",
+            "angle-offset"
           ]
         }
       ]

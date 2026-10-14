@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "c484bf91a0521135",
-    "lastmod": "2026-10-13"
+    "hash": "69ddd9f50dfe9d66",
+    "lastmod": "2026-10-14"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -1084,8 +1084,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/grid-vs-ground/": {
-    "hash": "4b8601d59e603dd5",
-    "lastmod": "2026-10-09"
+    "hash": "ce82bc6c4273d00d",
+    "lastmod": "2026-10-14"
   },
   "/learn/ground-sample-distance/": {
     "hash": "1fe474845c644ce4",
@@ -1192,8 +1192,8 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "4c11a0a1cb85c3d7",
-    "lastmod": "2026-10-13"
+    "hash": "5bdc5b87319ff82a",
+    "lastmod": "2026-10-14"
   },
   "/navigation/": {
     "hash": "43588b842e94b597",
@@ -1440,16 +1440,16 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "cae14b2bcce045af",
-    "lastmod": "2026-10-13"
+    "hash": "16e522a800599383",
+    "lastmod": "2026-10-14"
   },
   "/survey/": {
-    "hash": "4452e83a3c139d81",
-    "lastmod": "2026-10-13"
+    "hash": "cdf1861d77051027",
+    "lastmod": "2026-10-14"
   },
   "/survey/cogo/": {
-    "hash": "25fb8d79e6694610",
-    "lastmod": "2026-10-13"
+    "hash": "67fdd210a664d284",
+    "lastmod": "2026-10-14"
   },
   "/survey/cogo/angular-closure/": {
     "hash": "9d76b64c01bfc227",
@@ -1664,36 +1664,64 @@
     "lastmod": "2026-10-09"
   },
   "/survey/reduction/": {
-    "hash": "97bbdf948b8493b0",
-    "lastmod": "2026-10-13"
+    "hash": "265236b95876c3e8",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/reduction/angle-offset/": {
+    "hash": "1bd811f190854540",
+    "lastmod": "2026-10-14"
   },
   "/survey/reduction/combined-factor/": {
-    "hash": "801b9bf5a86d9b84",
-    "lastmod": "2026-10-09"
+    "hash": "9b245fd2ce05ffd1",
+    "lastmod": "2026-10-14"
   },
   "/survey/reduction/curvature-refraction/": {
-    "hash": "3acb0aed1e622b3c",
-    "lastmod": "2026-10-13"
+    "hash": "52a5b20b9e4d948b",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/reduction/distance-offset/": {
+    "hash": "ad0a9a061fcdf053",
+    "lastmod": "2026-10-14"
   },
   "/survey/reduction/edm-correction/": {
-    "hash": "11f70b8ce5462089",
-    "lastmod": "2026-10-13"
+    "hash": "8d8a55d82965dcf1",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/reduction/elevation-factor/": {
+    "hash": "efff6398359115c2",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/reduction/grid-to-ground/": {
+    "hash": "4da35e2093b61279",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/reduction/ground-to-grid/": {
+    "hash": "4f807b765005ce8f",
+    "lastmod": "2026-10-14"
   },
   "/survey/reduction/inaccessible-height/": {
-    "hash": "b395ababeb40b3bd",
-    "lastmod": "2026-10-13"
+    "hash": "3078b88655d10963",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/reduction/level-adjust/": {
+    "hash": "5f6b296ad4f14928",
+    "lastmod": "2026-10-14"
   },
   "/survey/reduction/level-run/": {
-    "hash": "271e1bfd75729ed8",
-    "lastmod": "2026-10-09"
+    "hash": "417bbe60101eb525",
+    "lastmod": "2026-10-14"
   },
   "/survey/reduction/slope/": {
     "hash": "a0a297a0f966c1ce",
     "lastmod": "2026-10-13"
   },
   "/survey/reduction/stadia/": {
-    "hash": "0ce983f8f041b3f4",
-    "lastmod": "2026-10-13"
+    "hash": "5fb81e4d6cbb0a2a",
+    "lastmod": "2026-10-14"
+  },
+  "/survey/reduction/two-face-mean/": {
+    "hash": "d575e22b7f61aaa4",
+    "lastmod": "2026-10-14"
   },
   "/time/": {
     "hash": "b7a54c76347933e9",
@@ -1764,8 +1792,8 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "905904f8d8ea1a57",
-    "lastmod": "2026-10-13"
+    "hash": "332f798956ad381f",
+    "lastmod": "2026-10-14"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2028,8 +2056,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "45f731cf245c7211",
-    "lastmod": "2026-10-13"
+    "hash": "a151fd93cc6b0e4d",
+    "lastmod": "2026-10-14"
   },
   "/workflows/": {
     "hash": "ae01dae8923fdd1d",

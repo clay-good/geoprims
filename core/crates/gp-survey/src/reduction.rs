@@ -118,6 +118,13 @@ fn zenith(ctx: &mut Ctx) -> Result<(f64, Option<(f64, f64)>), ToolError> {
             "A face-right reading pairs with a face-left zenith, not a vertical angle.",
         ));
     }
+    let (mean, index) = two_face(fl, fr)?;
+    Ok((mean, Some((mean, index))))
+}
+
+/// The two-face mean zenith and the index error, in degrees, from a face-left
+/// reading already known to be between 0° and 180°.
+fn two_face(fl: f64, fr: f64) -> Result<(f64, f64), ToolError> {
     if !(180.0..=360.0).contains(&fr) {
         return Err(ToolError::invalid(
             "/zenith_face_right",
@@ -125,9 +132,184 @@ fn zenith(ctx: &mut Ctx) -> Result<(f64, Option<(f64, f64)>), ToolError> {
         ));
     }
     // Face right reads 360° − Z plus twice the index error: the mean cancels it.
-    let mean = (fl + (360.0 - fr)) / 2.0;
-    let index = (fl + fr - 360.0) / 2.0;
-    Ok((mean, Some((mean, index))))
+    Ok(((fl + (360.0 - fr)) / 2.0, (fl + fr - 360.0) / 2.0))
+}
+
+pub static TWO_FACE_MEAN: ToolDef = ToolDef {
+    id: "survey.reduction.two-face-mean",
+    title: "Two-face zenith mean and index error",
+    summary: "The mean zenith angle from face-left and face-right readings to the same target, and the vertical index error the mean cancels.",
+    aliases: &[
+        "two face mean",
+        "face left face right mean",
+        "vertical index error",
+    ],
+    keywords: &[
+        "two face",
+        "face left",
+        "face right",
+        "direct and reverse",
+        "zenith",
+        "index error",
+        "vertical circle",
+        "total station",
+    ],
+    inputs: &[
+        angle(
+            "zenith",
+            "Face-left zenith",
+            "From straight up, like 85°00'10\"",
+        )
+        .required()
+        .core(),
+        angle(
+            "zenith_face_right",
+            "Face-right zenith",
+            "The same target read face right, like 274°59'40\"",
+        )
+        .required()
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "mean_zenith_dms",
+            "Mean zenith",
+            "The two-face mean in degrees, minutes, and seconds",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "mean_zenith",
+            "Mean zenith (decimal)",
+            "(FL + 360° − FR) / 2",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(6)),
+        Field::new(
+            "index_error",
+            "Index error",
+            "(FL + FR − 360°) / 2, positive when the circle reads high",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "arcsec",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "vertical_angle",
+            "Vertical angle",
+            "90° less the mean zenith, up positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(6)),
+    ],
+    errors: &[],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Mean zenith = (FL + 360° − FR) / 2 and index error = (FL + FR − 360°) / 2, positive when the circle reads high (Ghilani & Wolf 2021, two-face zenith observations)",
+    accuracy: "Exact arithmetic on the two readings; the mean is only as good as the pointing and the compensator",
+    when_to_use: "Use this when a zenith angle has been read in both faces of a total station or theodolite, direct and reverse, to the same target. Enter the face-left and face-right readings. The tool returns the mean zenith, which is free of the vertical index error, the index error itself so you can watch it across a set, and the vertical angle from the horizon.",
+    limitations: "The mean removes the index error only when both readings are to the same point with the instrument level. It does not remove pointing error, refraction, or a compensator out of range. A large or changing index error across a set means the instrument needs adjusting. Horizontal circle readings in two faces are a different reduction.",
+    references: &[GHILANI],
+    examples: &[Example {
+        id: "primary",
+        title: "Face left 85°00'10\", face right 274°59'40\"",
+        input: r#"{"zenith":"85°00'10\"","zenith_face_right":"274°59'40\""}"#,
+        source: "add-survey-suite two-face observation scenario",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "survey.reduction.slope",
+            reason: "next",
+        },
+        Related {
+            id: "survey.reduction.inaccessible-height",
+            reason: "next",
+        },
+        Related {
+            id: "survey.reduction.curvature-refraction",
+            reason: "next",
+        },
+    ],
+    sentence: "The mean zenith is {mean_zenith_dms}, with an index error of {index_error}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_two_face,
+    ..ToolDef::BLANK
+};
+
+fn run_two_face(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let fl = plain_angle(ctx, "zenith")?
+        .ok_or_else(|| ToolError::invalid("/zenith", "Give the face-left zenith."))?;
+    let fr = plain_angle(ctx, "zenith_face_right")?
+        .ok_or_else(|| ToolError::invalid("/zenith_face_right", "Give the face-right zenith."))?;
+    if !(0.0..=180.0).contains(&fl) {
+        return Err(ToolError::invalid(
+            "/zenith",
+            "A face-left zenith is between 0° and 180°. A reading over 180° is face right.",
+        ));
+    }
+    let (mean, index) = two_face(fl, fr)?;
+    let text = dms::format(mean, Axis::Lon, Style::Dms, 1, false);
+    let d = unit(QT::Angle, "deg");
+    let s = unit(QT::Angle, "arcsec");
+    if ctx.explaining() {
+        let fmt = ctx.options.format;
+        let shown = |x: f64| dms::format(x, Axis::Lon, Style::Dms, 1, false);
+        ctx.step(
+            "Index error",
+            "i = (FL + FR − 360°) / 2",
+            format!("({} + {} − 360°) / 2", shown(fl), shown(fr)),
+            gp_base::display::quantity(index * 3600.0, "arcsec", Precision::Decimals(1), fmt),
+        );
+        ctx.step(
+            "Mean zenith",
+            "Z = (FL + 360° − FR) / 2",
+            format!("({} + 360° − {}) / 2", shown(fl), shown(fr)),
+            text.clone(),
+        );
+    }
+    Ok(Json::obj(vec![
+        ("mean_zenith_dms", Json::Str(text)),
+        (
+            "mean_zenith",
+            ctx.out(
+                "mean_zenith",
+                Q {
+                    value: mean,
+                    unit: d,
+                },
+            ),
+        ),
+        (
+            "index_error",
+            ctx.out(
+                "index_error",
+                Q {
+                    value: index * 3600.0,
+                    unit: s,
+                },
+            ),
+        ),
+        (
+            "vertical_angle",
+            ctx.out(
+                "vertical_angle",
+                Q {
+                    value: 90.0 - mean,
+                    unit: d,
+                },
+            ),
+        ),
+    ]))
 }
 
 pub static SLOPE: ToolDef = ToolDef {
@@ -140,7 +322,6 @@ pub static SLOPE: ToolDef = ToolDef {
         "slope reduction",
         "slope distance to horizontal",
         "trig leveling",
-        "two face mean",
     ],
     keywords: &[
         "slope distance",
@@ -965,16 +1146,59 @@ fn run_inaccessible(ctx: &mut Ctx) -> Result<Json, ToolError> {
     Ok(Json::obj(out))
 }
 
+const OFFSET_NORTHING: Field = len(
+    "northing",
+    "Station northing",
+    "The occupied point, like 5000.000 ft",
+)
+.required()
+.core();
+const OFFSET_EASTING: Field = len("easting", "Station easting", "Like 5000.000 ft")
+    .required()
+    .core();
+const OFFSET_DIRECTION: Field = Field::new(
+    "direction",
+    "Direction to the prism",
+    "Bearing or azimuth, like N 30°00'00\" E or 30",
+    Kind::Text { max_len: 32 },
+)
+.required()
+.core();
+const OFFSET_DISTANCE: Field = len(
+    "distance",
+    "Horizontal distance",
+    "Station to the prism, like 150.00 ft",
+)
+.required()
+.core();
+const OFFSET_RIGHT: Field = len(
+    "offset_right",
+    "Offset right",
+    "Right of the line of sight, negative for left, like 2.5 ft",
+)
+.core();
+const OFFSET_OUT: Field = len(
+    "offset_out",
+    "Offset out",
+    "Beyond the prism along the line, negative for in, like 1.0 ft",
+);
+const CENTER_DIRECTION: Field = Field::new(
+    "center_direction",
+    "Direction to the center",
+    "Angle offset: the direction turned to the center, like N 31°00'00\" E",
+    Kind::Text { max_len: 32 },
+);
+const OFFSET_RADIUS: Field = len(
+    "radius",
+    "Radius",
+    "Angle offset: the tree or pole's radius, like 0.75 ft",
+);
+
 pub static OFFSET: ToolDef = ToolDef {
     id: "survey.cogo.offset-shot",
     title: "Total-station offset shot",
     summary: "The coordinates of a point the prism cannot sit on: from a shot beside it with left, right, in, or out offsets, or from an angle offset to the center of a tree or pole.",
-    aliases: &[
-        "offset shot",
-        "angle offset",
-        "distance offset",
-        "tree center",
-    ],
+    aliases: &["offset shot", "tree center"],
     keywords: &[
         "offset",
         "angle offset",
@@ -989,53 +1213,14 @@ pub static OFFSET: ToolDef = ToolDef {
         "prism",
     ],
     inputs: &[
-        len(
-            "northing",
-            "Station northing",
-            "The occupied point, like 5000.000 ft",
-        )
-        .required()
-        .core(),
-        len("easting", "Station easting", "Like 5000.000 ft")
-            .required()
-            .core(),
-        Field::new(
-            "direction",
-            "Direction to the prism",
-            "Bearing or azimuth, like N 30°00'00\" E or 30",
-            Kind::Text { max_len: 32 },
-        )
-        .required()
-        .core(),
-        len(
-            "distance",
-            "Horizontal distance",
-            "Station to the prism, like 150.00 ft",
-        )
-        .required()
-        .core(),
-        len(
-            "offset_right",
-            "Offset right",
-            "Right of the line of sight, negative for left, like 2.5 ft",
-        )
-        .core(),
-        len(
-            "offset_out",
-            "Offset out",
-            "Beyond the prism along the line, negative for in, like 1.0 ft",
-        ),
-        Field::new(
-            "center_direction",
-            "Direction to the center",
-            "Angle offset: the direction turned to the center, like N 31°00'00\" E",
-            Kind::Text { max_len: 32 },
-        ),
-        len(
-            "radius",
-            "Radius",
-            "Angle offset: the tree or pole's radius, like 0.75 ft",
-        ),
+        OFFSET_NORTHING,
+        OFFSET_EASTING,
+        OFFSET_DIRECTION,
+        OFFSET_DISTANCE,
+        OFFSET_RIGHT,
+        OFFSET_OUT,
+        CENTER_DIRECTION,
+        OFFSET_RADIUS,
     ],
     outputs: &[
         len_out("northing", "Northing", "Of the offset point"),
@@ -1096,13 +1281,182 @@ pub static OFFSET: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+/// Which of the offset shot's two methods a focused operation runs.
+#[derive(Clone, Copy, PartialEq)]
+enum OffsetMode {
+    Distance,
+    Angle,
+}
+
+macro_rules! offset_method {
+    ($name:ident, $run:ident, $id:literal, $title:literal, $summary:literal,
+     $aliases:expr, $keywords:expr, $inputs:expr, $model:literal, $accuracy:literal,
+     $when:literal, $limitations:literal, $example_title:literal, $example:literal,
+     $source:literal, $related:expr) => {
+        pub static $name: ToolDef = ToolDef {
+            id: concat!("survey.reduction.", $id),
+            title: $title,
+            summary: $summary,
+            aliases: $aliases,
+            keywords: $keywords,
+            inputs: $inputs,
+            outputs: OFFSET.outputs,
+            errors: OFFSET.errors,
+            warnings: OFFSET.warnings,
+            model: $model,
+            accuracy: $accuracy,
+            when_to_use: $when,
+            limitations: $limitations,
+            references: OFFSET.references,
+            examples: &[Example {
+                id: "primary",
+                title: $example_title,
+                input: $example,
+                source: $source,
+            }],
+            primary_example: "primary",
+            visualization: OFFSET.visualization,
+            related: $related,
+            sentence: OFFSET.sentence,
+            limits: OFFSET.limits,
+            run: $run,
+            ..ToolDef::BLANK
+        };
+    };
+}
+
+offset_method!(
+    DISTANCE_OFFSET,
+    run_distance_offset,
+    "distance-offset",
+    "Distance offset shot",
+    "The coordinates of a point beside or beyond the prism, from a total-station shot and taped offsets right, left, in, or out.",
+    &[
+        "distance offset",
+        "taped offset shot",
+        "left right in out offset"
+    ],
+    &[
+        "distance offset",
+        "offset",
+        "left",
+        "right",
+        "in",
+        "out",
+        "prism",
+        "building corner",
+        "total station"
+    ],
+    &[
+        OFFSET_NORTHING,
+        OFFSET_EASTING,
+        OFFSET_DIRECTION,
+        OFFSET_DISTANCE,
+        OFFSET_RIGHT,
+        OFFSET_OUT,
+    ],
+    "Out moves along the line of sight and right at 90° to it: N = N₀ + (d + out)·cos α − right·sin α, E = E₀ + (d + out)·sin α + right·cos α (Ghilani & Wolf 2021, total-station field practice)",
+    "Exact for the geometry; the point is only as good as the taped offsets and how square they were held",
+    "Use this when the prism cannot sit on the point, such as a building corner, a fence post, or a point behind an obstruction. Shoot the prism beside it, tape the offset, and enter the station coordinates, the direction and horizontal distance to the prism, and the offset right or left of the line of sight, beyond the prism, or short of it. It returns the point's northing and easting and its bearing and distance from the station.",
+    "The math is plane geometry on a grid, so the distance must already be horizontal. Right and left offsets are taken square to the line of sight as seen from the instrument, and in and out offsets along it, so a tape held at a skew gives a wrong point. At least one offset is needed. A round object such as a tree is better taken as an angle offset.",
+    "A corner 2.50 ft right of the prism and 1.00 ft beyond it",
+    r#"{"northing":"5000 ft","easting":"5000 ft","direction":"N 30°00'00\" E","distance":"150 ft","offset_right":"2.5 ft","offset_out":"1 ft"}"#,
+    "add-survey-suite offset-shot geometry",
+    &[
+        Related {
+            id: "survey.cogo.offset-shot",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.reduction.angle-offset",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "next"
+        },
+    ]
+);
+
+offset_method!(
+    ANGLE_OFFSET,
+    run_angle_offset,
+    "angle-offset",
+    "Angle offset shot",
+    "The center of a tree, pole, or column from a distance shot to its side or face and the direction turned to its center.",
+    &["angle offset", "tree center shot", "pole center offset"],
+    &[
+        "angle offset",
+        "offset",
+        "tree",
+        "pole",
+        "column",
+        "center",
+        "radius",
+        "total station"
+    ],
+    &[
+        OFFSET_NORTHING,
+        OFFSET_EASTING,
+        OFFSET_DIRECTION,
+        OFFSET_DISTANCE,
+        CENTER_DIRECTION.required().core(),
+        OFFSET_RADIUS.required().core(),
+    ],
+    "The center lies at the measured distance plus the radius, along the direction turned to the center: N = N₀ + (d + r)·cos α꜀, E = E₀ + (d + r)·sin α꜀ (Ghilani & Wolf 2021, total-station field practice)",
+    "Exact for the geometry; assumes a round object and a distance shot taken at the same distance as its face",
+    "Use this to locate the center of a tree, a utility pole, or a round column, where the prism cannot sit. Hold the prism beside the object at the distance of its face, measure the distance, then turn the instrument to the center and read the direction. Enter the station coordinates, the distance, the direction turned to the center, and the object's radius. It returns the center's northing and easting and its bearing and distance from the station.",
+    "The math is plane geometry on a grid, so the distance must already be horizontal. The object is treated as round, and the shot is assumed to be at the same distance as its near face, so a prism held in front of or behind the face moves the center by that amount. The direction to the prism is recorded but does not move the result. Odd shapes need taped distance offsets instead.",
+    "The center of a utility pole: 62.40 m to its side, 0.15 m radius",
+    r#"{"northing":"2000 m","easting":"3000 m","direction":"S 45°10'00\" E","distance":"62.4 m","center_direction":"S 45°00'00\" E","radius":"0.15 m"}"#,
+    "add-survey-suite angle-offset geometry",
+    &[
+        Related {
+            id: "survey.cogo.offset-shot",
+            reason: "parent"
+        },
+        Related {
+            id: "survey.reduction.distance-offset",
+            reason: "alternative"
+        },
+        Related {
+            id: "survey.cogo.inverse",
+            reason: "next"
+        },
+    ]
+);
+
+fn run_distance_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    offset_shot(ctx, Some(OffsetMode::Distance))
+}
+
+fn run_angle_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    offset_shot(ctx, Some(OffsetMode::Angle))
+}
+
 fn run_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    offset_shot(ctx, None)
+}
+
+fn offset_shot(ctx: &mut Ctx, mode: Option<OffsetMode>) -> Result<Json, ToolError> {
     let n = ctx.req_quantity("northing")?;
     let e = ctx.req_quantity("easting")?;
     let d = ctx.req_quantity("distance")?;
-    let right = ctx.quantity("offset_right")?;
-    let out_ = ctx.quantity("offset_out")?;
-    let radius = ctx.quantity("radius")?;
+    // A focused operation declares only its own method's inputs.
+    let (right, out_) = match mode {
+        Some(OffsetMode::Angle) => (None, None),
+        _ => (ctx.quantity("offset_right")?, ctx.quantity("offset_out")?),
+    };
+    let radius = match mode {
+        Some(OffsetMode::Distance) => None,
+        _ => ctx.quantity("radius")?,
+    };
+    if mode == Some(OffsetMode::Distance) && right.is_none() && out_.is_none() {
+        return Err(ToolError::invalid(
+            "/offset_right",
+            "Give an offset right or an offset out.",
+        ));
+    }
     let named: Vec<(&str, Q)> = [
         ("northing", Some(n)),
         ("easting", Some(e)),
@@ -1123,7 +1477,10 @@ fn run_offset(ctx: &mut Ctx) -> Result<Json, ToolError> {
             .transpose()
     };
     let az = dir(ctx, "direction")?.expect("required");
-    let center = dir(ctx, "center_direction")?;
+    let center = match mode {
+        Some(OffsetMode::Distance) => None,
+        _ => dir(ctx, "center_direction")?,
+    };
     let dist = d.to(u);
     if dist <= 0.0 {
         return Err(ToolError::invalid(

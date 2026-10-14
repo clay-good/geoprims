@@ -239,7 +239,35 @@
     },
     {
       "query": "grid to ground",
+      "expect": "survey.reduction.grid-to-ground"
+    },
+    {
+      "query": "ground to grid",
+      "expect": "survey.reduction.ground-to-grid"
+    },
+    {
+      "query": "combined scale factor",
       "expect": "survey.reduction.combined-factor"
+    },
+    {
+      "query": "elevation factor",
+      "expect": "survey.reduction.elevation-factor"
+    },
+    {
+      "query": "two face mean",
+      "expect": "survey.reduction.two-face-mean"
+    },
+    {
+      "query": "level loop adjustment",
+      "expect": "survey.reduction.level-adjust"
+    },
+    {
+      "query": "angle offset",
+      "expect": "survey.reduction.angle-offset"
+    },
+    {
+      "query": "distance offset",
+      "expect": "survey.reduction.distance-offset"
     },
     {
       "query": "gps week",

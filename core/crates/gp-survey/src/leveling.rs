@@ -110,6 +110,94 @@ pub static LEVEL_RUN: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+pub static LEVEL_ADJUST: ToolDef = ToolDef {
+    id: "survey.reduction.level-adjust",
+    title: "Level run adjustment",
+    summary: "The misclosure of a level loop or a run between two benchmarks, and each turning point's adjusted elevation with the misclosure spread by distance or by setups.",
+    aliases: &[
+        "level adjustment",
+        "level loop adjustment",
+        "adjust level notes",
+    ],
+    keywords: &[
+        "leveling",
+        "level adjustment",
+        "misclosure",
+        "adjusted elevation",
+        "benchmark",
+        "turning point",
+        "loop closure",
+        "allowable",
+    ],
+    inputs: LEVEL_RUN.inputs,
+    outputs: &[
+        len_out(
+            "misclosure",
+            "Misclosure",
+            "Observed closing elevation minus the known one",
+        ),
+        Field::new(
+            "stations",
+            "Stations",
+            "Each station with its observed and adjusted elevation",
+            Kind::List {
+                items: ROW,
+                min: 1,
+                max: 2000,
+            },
+        ),
+        len_out("sum_backsights", "Sum of backsights", "ΣBS"),
+        len_out("sum_foresights", "Sum of foresights", "ΣFS"),
+        Field::new(
+            "check",
+            "Arithmetic check",
+            "ΣBS − ΣFS against the last elevation less the first",
+            Kind::Text { max_len: 120 },
+        ),
+        len_out("allowable", "Allowable closure", "C × √K").optional(),
+        Field::new(
+            "closure",
+            "Closure",
+            "Within or beyond the allowable",
+            Kind::Text { max_len: 60 },
+        )
+        .optional(),
+    ],
+    errors: LEVEL_RUN.errors,
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    when_to_use: "Use this to adjust a level run that closes on a known elevation: a loop back to its starting benchmark, or a run from one benchmark to another. Enter the level book in order, with the distance of each leg if you have it, and the closing benchmark's elevation unless the run returns to its start. The tool returns the misclosure and the adjusted elevation of every turning point, and checks the misclosure against your allowable when you give one.",
+    limitations: "The misclosure is spread in proportion to distance, or evenly by setups when no distances are given, which assumes the error grew steadily along the run. It does not find a blunder, and a misclosure far beyond the allowable means rerunning the levels, not adjusting them. Side shots are not adjusted. A level network with more than one loop needs a least-squares adjustment.",
+    model: "Misclosure = observed − known closing elevation; adjusted elevation = observed − misclosure × (cumulative distance ÷ total distance), or by count of setups when no distances are given; allowable = C·√K (Ghilani & Wolf 2021, ch. 5)",
+    accuracy: "Exact arithmetic; the allowable closure is the standard you choose, entered as C",
+    references: &[GHILANI],
+    examples: &[Example {
+        id: "primary",
+        title: "From BM A at 250.000 m to BM B at 247.975 m",
+        input: r#"{"start_elevation":"250 m","end_elevation":"247.975 m","shots":[{"station":"BM A","backsight":"1.234 m"},{"station":"TP 1","foresight":"0.987 m","backsight":"2.110 m","distance":"120 m"},{"station":"TP 2","foresight":"3.004 m","backsight":"0.542 m","distance":"95 m"},{"station":"BM B","foresight":"1.876 m","distance":"150 m"}]}"#,
+        source: "A benchmark-to-benchmark run in the textbook's note form",
+    }],
+    primary_example: "primary",
+    visualization: LEVEL_RUN.visualization,
+    related: &[
+        Related {
+            id: "survey.reduction.level-run",
+            reason: "parent",
+        },
+        Related {
+            id: "survey.cogo.least-squares-2d",
+            reason: "alternative",
+        },
+        Related {
+            id: "survey.earthwork.profile-grades",
+            reason: "next",
+        },
+    ],
+    sentence: "The run misses closing by {misclosure}. Each adjusted elevation takes its share of that.",
+    limits: LEVEL_RUN.limits,
+    run: run_level_adjust,
+    ..ToolDef::BLANK
+};
+
 struct Shot {
     station: String,
     bs: Option<f64>,
@@ -119,6 +207,16 @@ struct Shot {
 }
 
 fn run_level(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    level(ctx, false)
+}
+
+fn run_level_adjust(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    level(ctx, true)
+}
+
+/// Reduces a level book. With `must_close`, a run that neither names a closing
+/// elevation nor returns to its start is refused: it has nothing to adjust.
+fn level(ctx: &mut Ctx, must_close: bool) -> Result<Json, ToolError> {
     let start = ctx.req_quantity("start_elevation")?;
     let end = ctx.quantity("end_elevation")?;
     let allow_c = ctx.quantity("allowable_constant")?;
@@ -275,10 +373,18 @@ fn run_level(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let known = end.map(|e| e.to(u)).or_else(|| {
         (shots[last].station.eq_ignore_ascii_case(&shots[0].station) && last > 0).then_some(first_e)
     });
+    if must_close && known.is_none() {
+        return Err(ToolError::invalid(
+            "/end_elevation",
+            "Give the closing benchmark's elevation, or end the run on its starting station, so there is a misclosure to adjust.",
+        ));
+    }
     let mut adjust: Option<Vec<f64>> = None;
     if let Some(known) = known {
         let mis = last_e - known;
-        out.push(("misclosure", ctx.emit("misclosure", q(mis), u)));
+        // The adjustment leads with the misclosure; the reduction lists it after the check.
+        let at = if must_close { 0 } else { out.len() };
+        out.insert(at, ("misclosure", ctx.emit("misclosure", q(mis), u)));
         // Cumulative distance to each carried station, or the count of setups.
         let have_dist = carried.iter().skip(1).all(|&i| shots[i].dist.is_some());
         let mut cum = vec![0.0; shots.len()];
@@ -332,6 +438,6 @@ fn run_level(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         table.push(Json::obj(row));
     }
-    out.insert(0, ("stations", Json::Arr(table)));
+    out.insert(usize::from(must_close), ("stations", Json::Arr(table)));
     Ok(Json::obj(out))
 }

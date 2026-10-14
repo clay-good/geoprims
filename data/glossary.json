@@ -1004,7 +1004,10 @@
         "geodesy.spcs.spcs83-forward",
         "geodesy.spcs.spcs83-inverse",
         "survey.gnss.opus-plan",
-        "survey.reduction.combined-factor"
+        "survey.reduction.combined-factor",
+        "survey.reduction.elevation-factor",
+        "survey.reduction.grid-to-ground",
+        "survey.reduction.ground-to-grid"
       ]
     },
     {
@@ -1035,6 +1038,9 @@
       "source": "noaa-solar",
       "relatedTools": [
         "survey.reduction.combined-factor",
+        "survey.reduction.elevation-factor",
+        "survey.reduction.grid-to-ground",
+        "survey.reduction.ground-to-grid",
         "time.sun.position"
       ]
     },
@@ -1055,7 +1061,10 @@
       "definition": "The part of NOAA that includes the National Geodetic Survey.",
       "source": "spcs83",
       "relatedTools": [
-        "survey.reduction.combined-factor"
+        "survey.reduction.combined-factor",
+        "survey.reduction.elevation-factor",
+        "survey.reduction.grid-to-ground",
+        "survey.reduction.ground-to-grid"
       ]
     },
     {

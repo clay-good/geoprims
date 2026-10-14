@@ -157,6 +157,263 @@ fn inverse_and_bearings() {
 }
 
 #[test]
+fn named_offset_shots_match_the_general_tool() {
+    let cases = [
+        (
+            "survey.reduction.distance-offset",
+            serde_json::json!({
+                "northing": "5000 ft", "easting": "5000 ft", "direction": "N 30°00'00\" E",
+                "distance": "150 ft", "offset_right": "2.5 ft", "offset_out": "1 ft"
+            }),
+        ),
+        (
+            "survey.reduction.distance-offset",
+            serde_json::json!({
+                "northing": "1000 m", "easting": "2000 m", "direction": "315",
+                "distance": "200 m", "offset_right": "-3 m"
+            }),
+        ),
+        (
+            "survey.reduction.angle-offset",
+            serde_json::json!({
+                "northing": "5000 ftUS", "easting": "5000 ftUS", "direction": "N 30°00'00\" E",
+                "distance": "150 ftUS", "center_direction": "N 30°17'00\" E", "radius": "0.75 ftUS"
+            }),
+        ),
+    ];
+    for (tool, input) in cases {
+        let named = call(tool, &input.to_string());
+        let general = call("survey.cogo.offset-shot", &input.to_string());
+        assert_eq!(named["ok"], true, "{tool}: {named}");
+        assert_eq!(named["result"], general["result"], "{tool}");
+        assert_eq!(named["display"], general["display"], "{tool}");
+        assert_eq!(
+            named["meta"]["warnings"], general["meta"]["warnings"],
+            "{tool}"
+        );
+    }
+    // Right is a quarter turn clockwise from the line of sight: looking north, east.
+    let r = call(
+        "survey.reduction.distance-offset",
+        r#"{"northing":"0 m","easting":"0 m","direction":"0","distance":"100 m","offset_right":"3 m","offset_out":"-2 m"}"#,
+    );
+    assert!((num(&r, "result.northing.value") - 98.0).abs() < 1e-9);
+    assert!((num(&r, "result.easting.value") - 3.0).abs() < 1e-9);
+    // An angle offset puts the center a radius beyond the face, on the turned direction.
+    let r = call(
+        "survey.reduction.angle-offset",
+        r#"{"northing":"0 m","easting":"0 m","direction":"88","distance":"40 m","center_direction":"90","radius":"0.5 m"}"#,
+    );
+    assert!(num(&r, "result.northing.value").abs() < 1e-9);
+    assert!((num(&r, "result.easting.value") - 40.5).abs() < 1e-9);
+    // Each focused operation refuses the other method's inputs rather than ignoring them.
+    for (tool, input) in [
+        (
+            "survey.reduction.distance-offset",
+            r#"{"northing":"0 m","easting":"0 m","direction":"0","distance":"10 m","offset_right":"1 m","radius":"1 m"}"#,
+        ),
+        (
+            "survey.reduction.angle-offset",
+            r#"{"northing":"0 m","easting":"0 m","direction":"0","distance":"10 m","center_direction":"1","radius":"1 m","offset_right":"1 m"}"#,
+        ),
+    ] {
+        assert_eq!(call(tool, input)["ok"], false, "{tool}");
+    }
+}
+
+#[test]
+fn named_factor_operations_match_the_combined_factor() {
+    let heights = [
+        serde_json::json!({"ellipsoid_height": "1500 ft"}),
+        serde_json::json!({"elevation": "865 ft", "geoid_height": "-100 ft", "radius": "20906000 ft"}),
+        serde_json::json!({"elevation": "410.2 m"}),
+    ];
+    for height in heights {
+        let mut general_input = height.clone();
+        general_input["grid_scale"] = serde_json::json!(1.000045);
+        let alone = call("survey.reduction.elevation-factor", &height.to_string());
+        let mut to_grid_input = general_input.clone();
+        to_grid_input["ground_distance"] = serde_json::json!("4805.468 ft");
+        let general = call(
+            "survey.reduction.combined-factor",
+            &to_grid_input.to_string(),
+        );
+        let to_grid = call(
+            "survey.reduction.ground-to-grid",
+            &to_grid_input.to_string(),
+        );
+        assert_eq!(alone["ok"], true, "{alone}");
+        assert_eq!(to_grid["ok"], true, "{to_grid}");
+        assert_eq!(
+            alone["result"]["elevation_factor"], general["result"]["elevation_factor"],
+            "{height}"
+        );
+        for key in [
+            "grid_distance",
+            "ground_distance",
+            "combined_factor",
+            "elevation_factor",
+        ] {
+            assert_eq!(
+                to_grid["result"][key], general["result"][key],
+                "{key} {height}"
+            );
+            assert_eq!(
+                to_grid["display"][key], general["display"][key],
+                "{key} {height}"
+            );
+        }
+        // The focused operations are experimental; the engine's own warnings must match.
+        let own = |r: &Value| -> Vec<String> {
+            codes(r)
+                .into_iter()
+                .filter(|c| c != "EXPERIMENTAL_TOOL")
+                .collect()
+        };
+        assert_eq!(own(&alone), own(&general), "{height}");
+        assert_eq!(own(&to_grid), own(&general), "{height}");
+
+        // Back to the ground: the same engine in the other direction, and the round trip.
+        let mut to_ground_input = general_input.clone();
+        to_ground_input["grid_distance"] = to_grid["result"]["grid_distance"]["value"]
+            .as_f64()
+            .map(|v| serde_json::json!(format!("{v} ft")))
+            .unwrap();
+        let general = call(
+            "survey.reduction.combined-factor",
+            &to_ground_input.to_string(),
+        );
+        let to_ground = call(
+            "survey.reduction.grid-to-ground",
+            &to_ground_input.to_string(),
+        );
+        for key in [
+            "grid_distance",
+            "ground_distance",
+            "combined_factor",
+            "elevation_factor",
+        ] {
+            assert_eq!(
+                to_ground["result"][key], general["result"][key],
+                "{key} {height}"
+            );
+        }
+        assert!((num(&to_ground, "result.ground_distance.value") - 4805.468).abs() < 1e-9);
+    }
+    // The elevation factor falls below 1 above the ellipsoid and rises above it below.
+    let above = call(
+        "survey.reduction.elevation-factor",
+        r#"{"ellipsoid_height":"1000 m"}"#,
+    );
+    let below = call(
+        "survey.reduction.elevation-factor",
+        r#"{"ellipsoid_height":"-100 m"}"#,
+    );
+    assert!(num(&above, "result.elevation_factor") < 1.0);
+    assert!(num(&below, "result.elevation_factor") > 1.0);
+    assert_eq!(num(&above, "result.ellipsoid_height.value"), 1000.0);
+    // The first output leads each focused result.
+    let r = call(
+        "survey.reduction.grid-to-ground",
+        r#"{"grid_distance":"1000 ft","grid_scale":0.99991,"ellipsoid_height":"1500 ft"}"#,
+    );
+    assert!(num(&r, "result.ground_distance.value") > 1000.0);
+}
+
+#[test]
+fn two_face_mean_matches_the_slope_reduction() {
+    // The spec scenario: FL 85°00'10", FR 274°59'40" give 85°00'15" and −5".
+    let input = serde_json::json!({"zenith": "85°00'10\"", "zenith_face_right": "274°59'40\""});
+    let r = call("survey.reduction.two-face-mean", &input.to_string());
+    assert_eq!(r["ok"], true, "{r}");
+    assert_eq!(r["result"]["mean_zenith_dms"], "85°00'15.0\"");
+    assert!((num(&r, "result.index_error.value") + 5.0).abs() < 1e-9);
+    assert!((num(&r, "result.mean_zenith.value") - (85.0 + 15.0 / 3600.0)).abs() < 1e-12);
+    assert!((num(&r, "result.vertical_angle.value") - (5.0 - 15.0 / 3600.0)).abs() < 1e-12);
+    // The slope reduction reports the same mean and index error from the same readings.
+    let mut with_distance = input.clone();
+    with_distance["slope_distance"] = serde_json::json!("500 m");
+    let slope = call("survey.reduction.slope", &with_distance.to_string());
+    for key in ["mean_zenith", "mean_zenith_dms", "index_error"] {
+        assert_eq!(r["result"][key], slope["result"][key], "{key}");
+    }
+    // A perfect instrument has no index error, and the mean is the face-left reading.
+    let r = call(
+        "survey.reduction.two-face-mean",
+        r#"{"zenith":"92.5","zenith_face_right":"267.5"}"#,
+    );
+    assert_eq!(num(&r, "result.index_error.value"), 0.0);
+    assert_eq!(num(&r, "result.mean_zenith.value"), 92.5);
+    // An index error shifts both faces the same way and leaves the mean alone.
+    let r = call(
+        "survey.reduction.two-face-mean",
+        r#"{"zenith":"92.51","zenith_face_right":"267.51"}"#,
+    );
+    assert!((num(&r, "result.mean_zenith.value") - 92.5).abs() < 1e-12);
+    assert!((num(&r, "result.index_error.value") - 36.0).abs() < 1e-7);
+    // Swapped faces are refused, not silently reordered.
+    let r = call(
+        "survey.reduction.two-face-mean",
+        r#"{"zenith":"274°59'40\"","zenith_face_right":"85°00'10\""}"#,
+    );
+    assert_eq!(r["ok"], false);
+    assert_eq!(r["error"]["field"], "/zenith");
+}
+
+#[test]
+fn level_adjustment_matches_the_level_run() {
+    let input = serde_json::json!({
+        "start_elevation": "250 m", "end_elevation": "247.975 m",
+        "shots": [
+            {"station": "BM A", "backsight": "1.234 m"},
+            {"station": "TP 1", "foresight": "0.987 m", "backsight": "2.110 m", "distance": "120 m"},
+            {"station": "TP 2", "foresight": "3.004 m", "backsight": "0.542 m", "distance": "95 m"},
+            {"station": "BM B", "foresight": "1.876 m", "distance": "150 m"}
+        ]
+    });
+    let adjust = call("survey.reduction.level-adjust", &input.to_string());
+    let run = call("survey.reduction.level-run", &input.to_string());
+    assert_eq!(adjust["ok"], true, "{adjust}");
+    for key in [
+        "misclosure",
+        "stations",
+        "sum_backsights",
+        "sum_foresights",
+        "check",
+    ] {
+        assert_eq!(adjust["result"][key], run["result"][key], "{key}");
+    }
+    let mis = num(&adjust, "result.misclosure.value");
+    assert!((mis - 0.044).abs() < 1e-9);
+    // The closing benchmark lands on its known elevation and the start does not move.
+    let station = |i: usize, key: &str| {
+        adjust["result"]["stations"][i][key]["value"]
+            .as_f64()
+            .unwrap()
+    };
+    assert!((station(3, "adjusted") - 247.975).abs() < 1e-9);
+    assert!((station(0, "adjusted") - 250.0).abs() < 1e-9);
+    // Corrections grow with distance: 120, 215, and 365 m of 365 m.
+    for (i, cum) in [(1, 120.0), (2, 215.0)] {
+        let (observed, adjusted) = (station(i, "elevation"), station(i, "adjusted"));
+        assert!(
+            (observed - adjusted - mis * cum / 365.0).abs() < 1e-9,
+            "station {i}"
+        );
+    }
+    // An open run has nothing to adjust: the reduction accepts it, the adjustment says why not.
+    let mut open = input.clone();
+    open.as_object_mut().unwrap().remove("end_elevation");
+    assert_eq!(
+        call("survey.reduction.level-run", &open.to_string())["ok"],
+        true
+    );
+    let refused = call("survey.reduction.level-adjust", &open.to_string());
+    assert_eq!(refused["ok"], false);
+    assert_eq!(refused["error"]["field"], "/end_elevation");
+}
+
+#[test]
 fn named_direction_and_station_modes_match_their_general_tools() {
     let direction_input = serde_json::json!({
         "direction": "N 10°15'30\" W",

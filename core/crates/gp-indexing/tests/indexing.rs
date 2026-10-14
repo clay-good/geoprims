@@ -34,6 +34,137 @@ fn codes(r: &Value) -> Vec<String> {
 }
 
 #[test]
+fn focused_h3_operations_match_the_general_tools() {
+    let c = r#"{"cell":"8a2a1072b59ffff"}"#;
+    let info = call("indexing.h3.cell-info", c);
+    // The inspector's answers, one question at a time.
+    let latlng = call("indexing.h3.cell-to-latlng", c);
+    for key in ["lat", "lon", "resolution"] {
+        assert_eq!(latlng["result"][key], info["result"][key], "{key}");
+    }
+    let boundary = call("indexing.h3.cell-boundary", c);
+    assert_eq!(boundary["result"]["boundary"], info["result"]["boundary"]);
+    assert_eq!(num(&boundary, "result.vertex_count"), 6.0);
+    assert_eq!(
+        call("indexing.h3.resolution", c)["result"]["resolution"],
+        info["result"]["resolution"]
+    );
+    assert_eq!(
+        call("indexing.h3.base-cell", c)["result"]["base_cell"],
+        info["result"]["base_cell"]
+    );
+    assert_eq!(
+        call("indexing.h3.is-pentagon", c)["result"]["pentagon"],
+        info["result"]["pentagon"]
+    );
+    assert_eq!(
+        call("indexing.h3.is-class-iii", c)["result"]["class3"],
+        info["result"]["class3"]
+    );
+    let area = call("indexing.h3.cell-area", c);
+    assert_eq!(area["result"]["area"], info["result"]["area"]);
+    // The average is H3's hexagon average, 4,357,449.416 km² at resolution 0 in its own table,
+    // larger than the sphere over 122 cells because the 12 small pentagons are left out.
+    let r0 = call("indexing.h3.resolution", r#"{"cell":"8001fffffffffff"}"#);
+    let average = num(&r0, "result.average_area.value");
+    assert!(
+        (average / 4_357_449.416_078_383 - 1.0).abs() < 1e-9,
+        "{average}"
+    );
+    let sphere = 4.0 * std::f64::consts::PI * 6_371.007_180_918_475_f64.powi(2);
+    assert!(average * 122.0 > sphere);
+
+    // Pentagons: five neighbors, five edges, five vertexes.
+    let p = r#"{"cell":"830800fffffffff"}"#;
+    let pent = call("indexing.h3.is-pentagon", p);
+    assert_eq!(pent["result"]["pentagon"], "yes");
+    assert_eq!(num(&pent, "result.neighbors"), 5.0);
+    assert!(codes(&pent).contains(&"PENTAGON_DISTORTION".to_owned()));
+    assert_eq!(
+        num(&call("indexing.h3.directed-edges", p), "result.edge_count"),
+        5.0
+    );
+    assert_eq!(
+        num(&call("indexing.h3.vertexes", p), "result.vertex_count"),
+        5.0
+    );
+
+    // Validation answers instead of failing.
+    let ok = call("indexing.h3.validate", r#"{"cell":"892a8471487ffff"}"#);
+    assert_eq!(ok["result"]["valid"], "yes");
+    for bad in ["8f2a1072b59a5f7", "1192a8471487ffff", "not a cell"] {
+        let r = call(
+            "indexing.h3.validate",
+            &serde_json::json!({"cell": bad}).to_string(),
+        );
+        assert_eq!(r["ok"], true, "{bad}");
+        assert_eq!(r["result"]["valid"], "no", "{bad}");
+        assert!(!r["result"]["reason"].as_str().unwrap().is_empty());
+    }
+
+    // Grid distance is the path tool's distance; the center child is the children tool's.
+    let pair = r#"{"from":"892a8471487ffff","to":"892a84710cbffff"}"#;
+    assert_eq!(
+        call("indexing.h3.grid-distance", pair)["result"]["distance"],
+        call("indexing.h3.grid-path", pair)["result"]["distance"]
+    );
+    let down = r#"{"cell":"872a10729ffffff","resolution":11}"#;
+    assert_eq!(
+        call("indexing.h3.center-child", down)["result"]["center_child"],
+        call("indexing.h3.children", down)["result"]["center_child"]
+    );
+    // A cell's position under its parent, and the parent's center child is position 0.
+    let pos = call(
+        "indexing.h3.child-position",
+        r#"{"cell":"8a2a1072b59ffff","resolution":7}"#,
+    );
+    let parent = pos["result"]["parent"].as_str().unwrap().to_owned();
+    let siblings = num(&pos, "result.siblings");
+    assert_eq!(siblings, 343.0);
+    assert!(num(&pos, "result.position") < siblings);
+    let center = call(
+        "indexing.h3.center-child",
+        &serde_json::json!({"cell": parent, "resolution": 10}).to_string(),
+    );
+    let first = call(
+        "indexing.h3.child-position",
+        &serde_json::json!({"cell": center["result"]["center_child"], "resolution": 7}).to_string(),
+    );
+    assert_eq!(num(&first, "result.position"), 0.0);
+
+    // Edges and vertexes: the edges tool's sets, and every edge's length is its own.
+    let edges = call("indexing.h3.edges", c);
+    let directed = call("indexing.h3.directed-edges", c);
+    let set = |v: &Value, key: &str| -> std::collections::BTreeSet<String> {
+        v.as_array()
+            .unwrap()
+            .iter()
+            .map(|e| e[key].as_str().unwrap().to_owned())
+            .collect()
+    };
+    assert_eq!(
+        set(&directed["result"]["edges"], "edge"),
+        set(&edges["result"]["edges"], "edge")
+    );
+    assert_eq!(
+        set(
+            &call("indexing.h3.vertexes", c)["result"]["vertexes"],
+            "vertex"
+        ),
+        set(&edges["result"]["vertexes"], "vertex")
+    );
+    for e in edges["result"]["edges"].as_array().unwrap() {
+        let r = call(
+            "indexing.h3.edge-length",
+            &serde_json::json!({"edge": e["edge"]}).to_string(),
+        );
+        assert_eq!(r["result"]["length"]["value"], e["length"]["value"]);
+        assert_eq!(r["result"]["origin"], "8a2a1072b59ffff");
+        assert_eq!(r["result"]["destination"], e["to"]);
+    }
+}
+
+#[test]
 fn catalog_examples_vectors() {
     let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
     let owned: Vec<(String, Vec<String>)> = tax["domains"]

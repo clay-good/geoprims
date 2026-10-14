@@ -1388,7 +1388,18 @@
           "tools": [
             "lat-lng-to-cell",
             "cell-info",
-            "edges"
+            "edges",
+            "cell-to-latlng",
+            "cell-boundary",
+            "resolution",
+            "base-cell",
+            "is-pentagon",
+            "is-class-iii",
+            "validate",
+            "cell-area",
+            "directed-edges",
+            "vertexes",
+            "edge-length"
           ]
         },
         {
@@ -1403,7 +1414,9 @@
             "parent",
             "children",
             "compact",
-            "uncompact"
+            "uncompact",
+            "center-child",
+            "child-position"
           ]
         },
         {
@@ -1411,7 +1424,8 @@
           "tools": [
             "grid-disk",
             "grid-ring",
-            "grid-path"
+            "grid-path",
+            "grid-distance"
           ]
         },
         {

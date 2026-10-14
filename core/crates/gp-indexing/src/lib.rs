@@ -9,6 +9,7 @@ pub mod cross;
 pub mod h3;
 pub mod h3fill;
 pub mod h3outline;
+pub mod h3views;
 pub mod s2;
 pub mod s2cover;
 pub mod s2exact;
@@ -1391,6 +1392,20 @@ pub static TOOLS: &[&ToolDef] = &[
     &OLC_SHORTEN,
     &h3::LAT_LNG_TO_CELL,
     &h3::CELL_INFO,
+    &h3views::CELL_TO_LATLNG,
+    &h3views::CELL_BOUNDARY,
+    &h3views::GET_RESOLUTION,
+    &h3views::BASE_CELL,
+    &h3views::IS_PENTAGON,
+    &h3views::IS_CLASS_III,
+    &h3views::VALIDATE,
+    &h3views::CELL_AREA,
+    &h3views::GRID_DISTANCE,
+    &h3views::CENTER_CHILD,
+    &h3views::CHILD_POSITION,
+    &h3views::DIRECTED_EDGES,
+    &h3views::VERTEXES,
+    &h3views::EDGE_LENGTH,
     &h3::GRID_DISK,
     &h3::GRID_RING,
     &h3::GRID_PATH,

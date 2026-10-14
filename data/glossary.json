@@ -604,21 +604,35 @@
       "definition": "A global grid of hexagons (and 12 pentagons) at 16 resolutions, each cell about one-seventh the area of its parent, named by a 15-character index.",
       "source": "h3",
       "relatedTools": [
+        "indexing.h3.base-cell",
+        "indexing.h3.cell-area",
+        "indexing.h3.cell-boundary",
         "indexing.h3.cell-info",
+        "indexing.h3.cell-to-latlng",
         "indexing.h3.cell-to-local-ij",
         "indexing.h3.cells-to-polygon",
+        "indexing.h3.center-child",
+        "indexing.h3.child-position",
         "indexing.h3.children",
         "indexing.h3.compact",
+        "indexing.h3.directed-edges",
+        "indexing.h3.edge-length",
         "indexing.h3.edges",
         "indexing.h3.grid-disk",
+        "indexing.h3.grid-distance",
         "indexing.h3.grid-path",
         "indexing.h3.grid-ring",
+        "indexing.h3.is-class-iii",
+        "indexing.h3.is-pentagon",
         "indexing.h3.lat-lng-to-cell",
         "indexing.h3.local-ij-to-cell",
         "indexing.h3.parent",
         "indexing.h3.polygon-to-cells",
+        "indexing.h3.resolution",
         "indexing.h3.resolution-chooser",
-        "indexing.h3.uncompact"
+        "indexing.h3.uncompact",
+        "indexing.h3.validate",
+        "indexing.h3.vertexes"
       ]
     },
     {
@@ -1853,7 +1867,8 @@
     {
       "token": "III",
       "tools": [
-        "indexing.h3.cell-info"
+        "indexing.h3.cell-info",
+        "indexing.h3.is-class-iii"
       ],
       "reason": "Roman numeral in H3's Class III resolutions"
     },

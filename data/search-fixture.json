@@ -406,6 +406,62 @@
       "expect": "geodesy.projection.scale-factor"
     },
     {
+      "query": "cellToLatLng",
+      "expect": "indexing.h3.cell-to-latlng"
+    },
+    {
+      "query": "H3 hexagon outline",
+      "expect": "indexing.h3.cell-boundary"
+    },
+    {
+      "query": "what resolution is this H3 cell",
+      "expect": "indexing.h3.resolution"
+    },
+    {
+      "query": "H3 base cell number",
+      "expect": "indexing.h3.base-cell"
+    },
+    {
+      "query": "H3 pentagon check",
+      "expect": "indexing.h3.is-pentagon"
+    },
+    {
+      "query": "H3 Class III check",
+      "expect": "indexing.h3.is-class-iii"
+    },
+    {
+      "query": "H3 index validator",
+      "expect": "indexing.h3.validate"
+    },
+    {
+      "query": "H3 cell area calculator",
+      "expect": "indexing.h3.cell-area"
+    },
+    {
+      "query": "H3 hops between cells",
+      "expect": "indexing.h3.grid-distance"
+    },
+    {
+      "query": "H3 center child cell",
+      "expect": "indexing.h3.center-child"
+    },
+    {
+      "query": "H3 child position",
+      "expect": "indexing.h3.child-position"
+    },
+    {
+      "query": "H3 outgoing edges",
+      "expect": "indexing.h3.directed-edges"
+    },
+    {
+      "query": "H3 vertex indexes",
+      "expect": "indexing.h3.vertexes"
+    },
+    {
+      "query": "H3 edge length calculator",
+      "expect": "indexing.h3.edge-length"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

@@ -21,7 +21,7 @@ pub const H3_DOCS: Reference = Reference {
     locator: "Indexing, inspection, traversal, hierarchy, directed edges, vertexes, and resolution tables",
     url: "https://h3geo.org/docs/api/indexing",
 };
-const H3O: Reference = Reference {
+pub(crate) const H3O: Reference = Reference {
     title: "h3o: a Rust implementation of H3",
     issuer: "Hydronium Labs",
     year: 2025,
@@ -31,16 +31,16 @@ const H3O: Reference = Reference {
 };
 
 /// Most cells one call lists; larger answers give only a count.
-const LIST_LIMIT: usize = 10_000;
+pub(crate) const LIST_LIMIT: usize = 10_000;
 
-fn deg(v: f64) -> Q {
+pub(crate) fn deg(v: f64) -> Q {
     Q {
         value: v,
         unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
     }
 }
 
-const fn cell_in(name: &'static str, title: &'static str) -> Field {
+pub(crate) const fn cell_in(name: &'static str, title: &'static str) -> Field {
     Field::new(
         name,
         title,
@@ -50,10 +50,10 @@ const fn cell_in(name: &'static str, title: &'static str) -> Field {
     .required()
     .core()
 }
-const fn text(name: &'static str, title: &'static str, help: &'static str) -> Field {
+pub(crate) const fn text(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(name, title, help, Kind::Text { max_len: 40 })
 }
-const fn count(name: &'static str, title: &'static str, help: &'static str) -> Field {
+pub(crate) const fn count(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
         title,
@@ -65,7 +65,7 @@ const fn count(name: &'static str, title: &'static str, help: &'static str) -> F
     )
     .precision(Precision::Decimals(0))
 }
-const fn angle(name: &'static str, title: &'static str, range: &'static str) -> Field {
+pub(crate) const fn angle(name: &'static str, title: &'static str, range: &'static str) -> Field {
     Field::new(
         name,
         title,
@@ -91,7 +91,11 @@ const RES_IN: Field = Field::new(
 .core();
 
 const CELL_ITEM: &[Field] = &[text("cell", "Cell", "H3 index (hex)")];
-const fn cell_list(name: &'static str, title: &'static str, help: &'static str) -> Field {
+pub(crate) const fn cell_list(
+    name: &'static str,
+    title: &'static str,
+    help: &'static str,
+) -> Field {
     Field::new(
         name,
         title,
@@ -105,7 +109,7 @@ const fn cell_list(name: &'static str, title: &'static str, help: &'static str) 
 }
 
 /// Parses an H3 cell from a hex or decimal string.
-fn parse_cell(v: Option<&Value>, at: &str) -> Result<CellIndex, ToolError> {
+pub(crate) fn parse_cell(v: Option<&Value>, at: &str) -> Result<CellIndex, ToolError> {
     let s = match v {
         Some(Value::String(s)) => s.trim(),
         Some(Value::Number(_)) => {
@@ -127,11 +131,11 @@ fn parse_cell(v: Option<&Value>, at: &str) -> Result<CellIndex, ToolError> {
     CellIndex::try_from(raw).map_err(|_| bad())
 }
 
-fn cell(ctx: &Ctx, name: &str) -> Result<CellIndex, ToolError> {
+pub(crate) fn cell(ctx: &Ctx, name: &str) -> Result<CellIndex, ToolError> {
     parse_cell(ctx.raw(name), &format!("/{name}"))
 }
 
-fn resolution(ctx: &Ctx) -> Result<Resolution, ToolError> {
+pub(crate) fn resolution(ctx: &Ctx) -> Result<Resolution, ToolError> {
     let r = ctx.number("resolution")?.expect("required");
     if r.fract() != 0.0 {
         return Err(ToolError::invalid(
@@ -143,11 +147,11 @@ fn resolution(ctx: &Ctx) -> Result<Resolution, ToolError> {
         .map_err(|_| ToolError::invalid("/resolution", "The resolution is 0 to 15."))
 }
 
-fn hex(c: CellIndex) -> String {
+pub(crate) fn hex(c: CellIndex) -> String {
     c.to_string()
 }
 
-fn list(cells: impl IntoIterator<Item = CellIndex>) -> Json {
+pub(crate) fn list(cells: impl IntoIterator<Item = CellIndex>) -> Json {
     Json::Arr(
         cells
             .into_iter()
@@ -156,11 +160,11 @@ fn list(cells: impl IntoIterator<Item = CellIndex>) -> Json {
     )
 }
 
-fn pentagon_note(ctx: &mut Ctx, what: &str) {
+pub(crate) fn pentagon_note(ctx: &mut Ctx, what: &str) {
     ctx.warnings.push(Warning::new("PENTAGON_DISTORTION", format!("{what} involves one of the 12 pentagons at this resolution, where cells have five neighbors and distortion is higher.")));
 }
 
-fn local_ij_error(e: h3o::error::LocalIjError) -> ToolError {
+pub(crate) fn local_ij_error(e: h3o::error::LocalIjError) -> ToolError {
     use h3o::error::LocalIjError as E;
     let why = match e {
         E::ResolutionMismatch => "the two cells have different resolutions",
@@ -312,7 +316,7 @@ fn run_to_cell(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
-const VERTEX_ITEM: &[Field] = &[
+pub(crate) const VERTEX_ITEM: &[Field] = &[
     angle("lat", "Latitude", "[-90,90]"),
     angle("lon", "Longitude", "[-180,180]"),
 ];
@@ -322,12 +326,7 @@ pub static CELL_INFO: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     title: "H3 cell inspector",
     summary: "Everything about an H3 cell: center (cellToLatLng), boundary (cellToBoundary), resolution, base cell, pentagon and Class III checks, area, and decimal form.",
-    aliases: &[
-        "cellToLatLng",
-        "cellToBoundary",
-        "H3 to lat long",
-        "decode H3",
-    ],
+    aliases: &["H3 to lat long", "decode H3"],
     keywords: &[
         "H3",
         "cell",
@@ -598,7 +597,7 @@ pub static GRID_PATH: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     title: "H3 grid path and distance",
     summary: "The grid distance between two H3 cells (gridDistance) and the line of cells joining them (gridPathCells).",
-    aliases: &["gridPathCells", "gridDistance", "H3 line"],
+    aliases: &["gridPathCells", "H3 line"],
     keywords: &[
         "H3",
         "gridPathCells",
@@ -762,7 +761,7 @@ pub static CHILDREN: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     title: "H3 children cells",
     summary: "The finer H3 cells inside a cell (cellToChildren), their count, and the center child.",
-    aliases: &["cellToChildren", "cellToCenterChild", "H3 children"],
+    aliases: &["cellToChildren", "H3 children"],
     keywords: &["H3", "children", "hierarchy", "center child"],
     inputs: &[cell_in("cell", "Cell"), RES_IN],
     outputs: &[
@@ -1057,7 +1056,7 @@ pub static EDGES: ToolDef = ToolDef {
     stability: gp_base::tool::Stability::Stable,
     title: "H3 edges and vertexes",
     summary: "The directed edges (with lengths and neighbors) and vertexes of an H3 cell (originToDirectedEdges, cellToVertexes).",
-    aliases: &["originToDirectedEdges", "cellToVertexes", "H3 edge length"],
+    aliases: &["H3 edge length"],
     keywords: &["H3", "directed edge", "vertex", "edge length", "neighbors"],
     inputs: &[cell_in("cell", "Cell")],
     outputs: &[

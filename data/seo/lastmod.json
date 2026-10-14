@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2d4aaa5b0c5fd7a4",
+    "hash": "cc66d89c7b592bae",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -1000,8 +1000,8 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/": {
-    "hash": "d3a823cd230f8127",
-    "lastmod": "2026-10-12"
+    "hash": "8dd44c7a423789bb",
+    "lastmod": "2026-10-14"
   },
   "/indexing/a5/": {
     "hash": "485835a9ea583266",
@@ -1048,48 +1048,92 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/h3/": {
-    "hash": "53a927719721a547",
-    "lastmod": "2026-10-12"
+    "hash": "5fac0df31b54927f",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/base-cell/": {
+    "hash": "1c2a3d889cecefd6",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/cell-area/": {
+    "hash": "e6cb6ae55de68ae3",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/cell-boundary/": {
+    "hash": "1099a2592b8e180e",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/cell-info/": {
-    "hash": "85d9afbc00e5b4ff",
-    "lastmod": "2026-10-09"
+    "hash": "12160a51f5b8f071",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/cell-to-latlng/": {
+    "hash": "6c6a8f4122685d36",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/cell-to-local-ij/": {
-    "hash": "e792fbe12a76cb00",
-    "lastmod": "2026-10-09"
+    "hash": "81abbafca38beca1",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/cells-to-polygon/": {
-    "hash": "e2e374a4950b5702",
-    "lastmod": "2026-10-09"
+    "hash": "021a85642dc6cf4d",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/center-child/": {
+    "hash": "8184ffac9cbb0538",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/child-position/": {
+    "hash": "4e74ef8f8db649a2",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/children/": {
-    "hash": "cb4a25547c4dbb1d",
-    "lastmod": "2026-10-09"
+    "hash": "c9aca1d52b38e677",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/compact/": {
-    "hash": "cddd5f6b1370fecc",
-    "lastmod": "2026-10-09"
+    "hash": "12b602bd47192dbe",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/directed-edges/": {
+    "hash": "70bb94e0a9f29b3b",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/edge-length/": {
+    "hash": "b3c56afbd177a4a4",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/edges/": {
-    "hash": "e730dfc2f0380919",
-    "lastmod": "2026-10-09"
+    "hash": "075d3b7f0e2497cf",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/grid-disk/": {
-    "hash": "ea9b82499ecaa380",
-    "lastmod": "2026-10-09"
+    "hash": "0b12f9bd0fba19f8",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/grid-distance/": {
+    "hash": "69df2e6a47a84c84",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/grid-path/": {
-    "hash": "594a154aaab007e5",
-    "lastmod": "2026-10-09"
+    "hash": "12e09872714ce50a",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/grid-ring/": {
-    "hash": "2540809db3e3b536",
-    "lastmod": "2026-10-09"
+    "hash": "64b43eb37004e18a",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/is-class-iii/": {
+    "hash": "835965afa918cf65",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/is-pentagon/": {
+    "hash": "95989125c851e010",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/lat-lng-to-cell/": {
-    "hash": "fe72329248721565",
-    "lastmod": "2026-10-09"
+    "hash": "86322be953955b48",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/local-ij-to-cell/": {
     "hash": "43bbb07a308530d6",
@@ -1100,16 +1144,28 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/h3/polygon-to-cells/": {
-    "hash": "06050c8893168162",
-    "lastmod": "2026-10-12"
+    "hash": "4b55148aa87a369d",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/resolution-chooser/": {
-    "hash": "bf91f0e34e7b157f",
-    "lastmod": "2026-10-09"
+    "hash": "1e279feb0be2a93f",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/resolution/": {
+    "hash": "cc314a7c0dfef435",
+    "lastmod": "2026-10-14"
   },
   "/indexing/h3/uncompact/": {
-    "hash": "bcebb1c57a1c2e6f",
-    "lastmod": "2026-10-09"
+    "hash": "311846deb8c6dcf0",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/validate/": {
+    "hash": "59cebb06dfee8875",
+    "lastmod": "2026-10-14"
+  },
+  "/indexing/h3/vertexes/": {
+    "hash": "74aa1a7fd0e27d25",
+    "lastmod": "2026-10-14"
   },
   "/indexing/plus-code/": {
     "hash": "33fb8efd7d6efd57",
@@ -1212,8 +1268,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/h3-resolution/": {
-    "hash": "a29f041aff6334c2",
-    "lastmod": "2026-10-09"
+    "hash": "54a35508a255e2e9",
+    "lastmod": "2026-10-14"
   },
   "/learn/holding-pattern-entries/": {
     "hash": "b22d136396e2569e",
@@ -1312,7 +1368,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "10442317b62ea566",
+    "hash": "cad7ea0322dd2a08",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1560,7 +1616,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "d5c0523cc32e6eee",
+    "hash": "ab2abe624ab38392",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -1944,7 +2000,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "5958623bba8262a9",
+    "hash": "8d5c836f21648a27",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2208,7 +2264,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "7b09499230985b95",
+    "hash": "f57bc665743cb647",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

@@ -945,7 +945,8 @@
         {
           "want": "find the magnetic declination",
           "tools": [
-            "declination"
+            "declination",
+            "uncertainty-zone"
           ]
         },
         {

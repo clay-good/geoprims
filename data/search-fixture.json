@@ -494,6 +494,10 @@
       "expect": "geodesy.height.orthometric-to-ellipsoidal"
     },
     {
+      "query": "compass blackout zone",
+      "expect": "geodesy.magnetic.uncertainty-zone"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

@@ -172,7 +172,14 @@ fn evaluate(ctx: &mut Ctx) -> Result<Eval, ToolError> {
     if !(-1.0..=850.0).contains(&h_km) {
         return Err(ToolError::new(ErrorCode::OutOfDomain, "Height must be between -1 km and 850 km above the ellipsoid, the models' stated domain.").at("/height"));
     }
-    let model = match ctx.choice("model")? {
+    // A focused operation that declares no model uses WMM2025, whose error
+    // model it reports.
+    let model = match ctx
+        .declares("model")
+        .then(|| ctx.choice("model"))
+        .transpose()?
+        .flatten()
+    {
         Some("igrf14") => SelectedModel::Igrf14,
         Some("wmmhr2025") => SelectedModel::Wmmhr2025,
         _ => SelectedModel::Wmm2025,
@@ -510,6 +517,105 @@ pub static DECLINATION: ToolDef = ToolDef {
     run: run_declination,
     ..ToolDef::BLANK
 };
+
+pub static UNCERTAINTY_ZONE: ToolDef = ToolDef {
+    id: "geodesy.magnetic.uncertainty-zone",
+    title: "Compass reliability zone",
+    summary: "Whether a magnetic compass is reliable at a place and date, from the strength of the horizontal field, with the World Magnetic Model's declination uncertainty there.",
+    aliases: &[
+        "compass blackout zone",
+        "WMM blackout zone check",
+        "declination uncertainty",
+    ],
+    keywords: &[
+        "blackout zone",
+        "caution zone",
+        "compass",
+        "horizontal intensity",
+        "WMM",
+        "uncertainty",
+        "polar",
+    ],
+    inputs: &[
+        DECLINATION.inputs[0],
+        DECLINATION.inputs[1],
+        DECLINATION.inputs[2],
+        DECLINATION.inputs[3],
+    ],
+    outputs: &[
+        DECLINATION.outputs[17],
+        DECLINATION.outputs[5],
+        DECLINATION.outputs[2].required(),
+        DECLINATION.outputs[0],
+    ],
+    errors: DECLINATION.errors,
+    warnings: &[
+        "COMPASS_BLACKOUT_ZONE",
+        "COMPASS_CAUTION_ZONE",
+        "DECLINATION_POLE_CONVENTION",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "WMM2025 main field; blackout where the horizontal intensity H is under 2,000 nT and caution under 6,000 nT, as the WMM2025 report defines them; declination uncertainty √(0.26² + (5,417 / H)²) degrees from its error model",
+    accuracy: "The zones follow the field model; local magnetic anomalies the model does not resolve can make a compass worse anywhere",
+    when_to_use: "Use this before relying on a magnetic compass near the poles, on a high-latitude flight, or for polar fieldwork. Enter the place and date. The tool says whether the place is normal, in the caution zone, or in the blackout zone the World Magnetic Model defines, with the horizontal field strength that decides it and how uncertain the model's declination is there.",
+    limitations: "The zones and the uncertainty describe the model's main field. Local anomalies from rocks, buildings, vehicles, or power lines can deflect a compass anywhere and are not included, nor are magnetic storms. The uncertainty is the model's one-sigma estimate, not a guarantee. The date must fall within WMM2025, 2025 to 2030.",
+    references: DECLINATION.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Resolute Bay, Nunavut, in mid-2026",
+        input: r#"{"lat":74.697,"lon":-94.83,"date":"2026-07-01"}"#,
+        source: "WMM2025 and the blackout and caution zones of its report",
+    }],
+    primary_example: "primary",
+    assets: &["wmm2025"],
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.magnetic.declination",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.magnetic.grivation",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.magnetic.magnetic-to-true",
+            reason: "next",
+        },
+    ],
+    sentence: "This is the {compass_zone} zone: the horizontal field is {horizontal_intensity} nT and the declination is good to about {declination_uncertainty}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_uncertainty_zone,
+    ..ToolDef::BLANK
+};
+
+fn run_uncertainty_zone(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let e = evaluate(ctx)?.e;
+    Ok(Json::obj(vec![
+        (
+            "compass_zone",
+            Json::str(if e.h < 2000.0 {
+                "blackout"
+            } else if e.h < 6000.0 {
+                "caution"
+            } else {
+                "normal"
+            }),
+        ),
+        ("horizontal_intensity", Json::Num(e.h)),
+        (
+            "declination_uncertainty",
+            ctx.out(
+                "declination_uncertainty",
+                deg(mag::wmm_declination_uncertainty(e.h)),
+            ),
+        ),
+        ("declination", ctx.out("declination", deg(e.d))),
+    ]))
+}
 
 fn run_declination(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let ev = evaluate(ctx)?;

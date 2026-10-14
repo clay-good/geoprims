@@ -1818,7 +1818,8 @@
         "geodesy.magnetic.declination",
         "geodesy.magnetic.grivation",
         "geodesy.magnetic.magnetic-to-true",
-        "geodesy.magnetic.true-to-magnetic"
+        "geodesy.magnetic.true-to-magnetic",
+        "geodesy.magnetic.uncertainty-zone"
       ]
     },
     {

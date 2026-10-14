@@ -2979,6 +2979,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &MGRS_FORWARD,
     &MGRS_INVERSE,
     &magnetic::DECLINATION,
+    &magnetic::UNCERTAINTY_ZONE,
     &magnetic::TRUE_TO_MAGNETIC,
     &magnetic::MAGNETIC_TO_TRUE,
     &magnetic::GRIVATION,

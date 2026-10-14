@@ -526,6 +526,63 @@ fn directional_height_conversions_match_the_general_tool() {
 }
 
 #[test]
+fn compass_zone_matches_the_declination_tool() {
+    for (place, zone) in [
+        (
+            r#"{"lat":40.015,"lon":-105.2705,"date":"2026-09-18"}"#,
+            "normal",
+        ),
+        (
+            r#"{"lat":74.697,"lon":-94.83,"date":"2026-07-01"}"#,
+            "caution",
+        ),
+        (r#"{"lat":86.5,"lon":140,"date":"2029-12-31"}"#, "blackout"),
+    ] {
+        let named = call("geodesy.magnetic.uncertainty-zone", place);
+        let general = call("geodesy.magnetic.declination", place);
+        assert_eq!(named["ok"], true, "{named}");
+        for key in [
+            "compass_zone",
+            "horizontal_intensity",
+            "declination_uncertainty",
+            "declination",
+        ] {
+            assert_eq!(
+                named["result"][key], general["result"][key],
+                "{key} {place}"
+            );
+        }
+        assert_eq!(named["result"]["compass_zone"], zone, "{place}");
+        // The focused tool is experimental; the field warnings must match.
+        let own = |r: &Value| -> Vec<String> {
+            codes(r)
+                .into_iter()
+                .filter(|c| c != "EXPERIMENTAL_TOOL")
+                .collect()
+        };
+        assert_eq!(own(&named), own(&general), "{place}");
+    }
+    // Weaker horizontal field, larger declination uncertainty.
+    let strong = call(
+        "geodesy.magnetic.uncertainty-zone",
+        r#"{"lat":0,"lon":0,"date":"2026-01-01"}"#,
+    );
+    let weak = call(
+        "geodesy.magnetic.uncertainty-zone",
+        r#"{"lat":80,"lon":-72,"date":"2026-01-01"}"#,
+    );
+    assert!(
+        num(&weak, "result.horizontal_intensity") < num(&strong, "result.horizontal_intensity")
+    );
+    assert!(
+        num(&weak, "result.declination_uncertainty.value")
+            > num(&strong, "result.declination_uncertainty.value")
+    );
+    // The floor of the error model, 0.26°, holds wherever the field is strong.
+    assert!(num(&strong, "result.declination_uncertainty.value") >= 0.26);
+}
+
+#[test]
 fn bearing_difference_across_north() {
     let r = call(
         "geodesy.parse.bearing-difference",

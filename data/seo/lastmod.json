@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cdb1c4b49d4d35b1",
+    "hash": "dca2182cf5f8c833",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-10-12"
   },
   "/geodesy/": {
-    "hash": "6cff0e82c31380fd",
+    "hash": "b38d0bd63fbe26d9",
     "lastmod": "2026-10-14"
   },
   "/geodesy/crs/": {
@@ -688,7 +688,7 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/": {
-    "hash": "6d29b8f5e3e7d887",
+    "hash": "aff852a30c050fd7",
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/declination/": {
@@ -708,7 +708,11 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/true-to-magnetic/": {
-    "hash": "7848f9d9571ffeb0",
+    "hash": "c7064e0a8cd902e4",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/magnetic/uncertainty-zone/": {
+    "hash": "41c2968458f65672",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/": {
@@ -1400,7 +1404,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "176a459715aa5703",
+    "hash": "2cc05830f68f1460",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1648,7 +1652,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "d9c96ad1c3cfd4e5",
+    "hash": "463341d5af88e507",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -2032,7 +2036,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "e0624dbec0059714",
+    "hash": "4565710b06a98fa8",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2296,7 +2300,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "13b280c922424c66",
+    "hash": "03312c6c0cc5e347",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

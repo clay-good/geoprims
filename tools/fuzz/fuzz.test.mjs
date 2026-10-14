@@ -191,6 +191,8 @@ const REGRESSIONS = [
   ['drone.mission.corridor', { centerline: [{ lat: 40, lon: -105 }, { lat: 40.02, lon: -104.98 }], line_spacing: '52.5 m', width: 1e9 }, 'LIMIT_EXCEEDED'],
   ['geodesy.utm.inverse', { easting: '586309.953 m', hemisphere: 'N', northing: '4477770.428 m', zone: 17, inverse_flattening: 180, a: '180 m' }, 'OUT_OF_DOMAIN'],
   ['time.sun.position', { lat: 39.7392, lon: -104.9903, time: '2026-06-21T12:00-06:00', delta_t: '-1e+300 s' }, 'OUT_OF_DOMAIN'],
+  // Enough 1e300° terms summed to infinity and came back INTERNAL.
+  ['geodesy.parse.angle-arithmetic', { terms: [{ angle: '45-30-15' }, ...Array.from({ length: 12 }, () => ({ angle: -1e300, operation: 'subtract' }))] }, 'OUT_OF_DOMAIN'],
   ['survey.reduction.combined-factor', { ellipsoid_height: '90 ft', grid_scale: 0.99991, radius: -90 }, 'OUT_OF_DOMAIN'],
   ['survey.curves.circular-curve', { delta: '30 deg', tangent: '5e-324 ft' }, 'OUT_OF_DOMAIN'],
   ['geometry.overlay.boolean', { polygon_a: [{ lat: 40, lon: -105 }, { lat: 40, lon: -104.99 }, { lat: 40.008, lon: -104.99 }, { lat: 40.008, lon: -105 }], polygon_b: [{ lat: 40.004, lon: '-1000000000 deg' }, { lat: 40.004, lon: -104.985 }, { lat: 40.012, lon: -104.985 }, { lat: 40.012, lon: -104.995 }], edges: 'planar' }, 'OUT_OF_DOMAIN'],

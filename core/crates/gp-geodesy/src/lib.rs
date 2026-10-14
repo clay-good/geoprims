@@ -858,7 +858,7 @@ pub static ANGLE_ARITHMETIC: ToolDef = ToolDef {
         .precision(Precision::Decimals(4))
         .angle_range("unbounded"),
     ],
-    errors: &[ErrorCode::InvalidInput],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
     stability: Stability::Stable,
     when_to_use: "Use this to add and subtract angles written in degrees, minutes and seconds without doing the sexagesimal carries by hand: summing the interior angles of a traverse, applying a correction to a bearing, or closing a set of observations. Decimal degrees mix freely with DMS in the same sum.",
     limitations: "The carry is exact and the printed seconds are rounded once at the end, so a sum a hair under a whole degree prints as that degree rather than as fifty-nine minutes sixty seconds -- but two sums each rounded to a hundredth of a second and then added by hand can still differ from the same terms summed here. Without a normalization the total is not wrapped, which is what a traverse needs; choose one if you want a bearing back. This is arithmetic on angles, not on directions: it does not know that a bearing and its reverse describe one line.",
@@ -915,6 +915,15 @@ fn run_angle_arithmetic(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )
         })?;
         let v = if neg { -v } else { v };
+        // Past this the sum loses its hundredths of a second, and enough such
+        // terms overflow to infinity.
+        if !v.is_finite() || v.abs() > 1e9 {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "An angle term must be within a billion degrees either way.",
+            )
+            .at(&format!("/terms/{i}/angle")));
+        }
         let sub = r.get("operation").and_then(|x| x.as_str()) == Some("subtract");
         if let Some(op) = r.get("operation").and_then(|x| x.as_str())
             && op != "add"

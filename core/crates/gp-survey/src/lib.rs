@@ -3114,6 +3114,7 @@ pub static COMBINED_FACTOR: ToolDef = ToolDef {
 };
 
 pub static ELEVATION_FACTOR: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "survey.reduction.elevation-factor",
     title: "Elevation factor",
     summary: "The elevation (sea-level) factor that scales a ground distance down to the ellipsoid, from the ellipsoid height or from an elevation and geoid height.",
@@ -3176,6 +3177,7 @@ pub static ELEVATION_FACTOR: ToolDef = ToolDef {
 };
 
 pub static GRID_TO_GROUND: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "survey.reduction.grid-to-ground",
     title: "Grid distance to ground distance",
     summary: "Converts a grid distance to the horizontal ground distance by dividing by the combined factor from the grid scale factor and height.",
@@ -3243,6 +3245,7 @@ pub static GRID_TO_GROUND: ToolDef = ToolDef {
 };
 
 pub static GROUND_TO_GRID: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "survey.reduction.ground-to-grid",
     title: "Ground distance to grid distance",
     summary: "Converts a horizontal ground distance to the grid distance by multiplying by the combined factor from the grid scale factor and height.",

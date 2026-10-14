@@ -5,6 +5,18 @@
       "date": "2026-10-14",
       "kind": "changed",
       "tools": [
+        "survey.reduction.elevation-factor",
+        "survey.reduction.grid-to-ground",
+        "survey.reduction.ground-to-grid",
+        "drone.mission.pattern-stats"
+      ],
+      "vectors": [],
+      "summary": "The elevation factor, grid-to-ground, and ground-to-grid conversions, each reproducing NGS Manual 5's Section 4.4 example, and mission pattern statistics, held to GeographicLib's GeodSolve, are now stable. Each has 23 vectors and named invariant tests. Results are unchanged."
+    },
+    {
+      "date": "2026-10-14",
+      "kind": "changed",
+      "tools": [
         "raster.terrain.dem-stats",
         "raster.terrain.highest-point",
         "raster.terrain.dem-difference-volume"

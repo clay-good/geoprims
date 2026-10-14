@@ -576,6 +576,7 @@ fn geofence(ctx: &mut Ctx, check_only: bool) -> Result<Json, ToolError> {
 const TURN_THRESHOLD_DEG: f64 = 5.0;
 
 pub static PATTERN_STATS: ToolDef = ToolDef {
+    stability: gp_base::tool::Stability::Stable,
     id: "drone.mission.pattern-stats",
     title: "Flight path statistics",
     summary: "The length of a waypoint path, its legs and turns, how far it goes from the first waypoint, and the flight time at a groundspeed.",
@@ -685,7 +686,7 @@ pub static PATTERN_STATS: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Each leg is the geodesic between consecutive waypoints on WGS 84 (Karney 2013); the course change at a waypoint is the departure azimuth of the next leg less the arrival azimuth of the last, and counts as a turn past 5°",
     accuracy: "Leg lengths to nanometers on the ellipsoid; the flight time is a planning figure at one steady groundspeed",
     when_to_use: "Use this to size up a mission you already have as a list of waypoints, from a flight app, a spreadsheet, or one of the pattern tools here. Enter the waypoints in the order flown. The tool returns the total path length, the number of legs and turns, the longest leg, and how far the path gets from its first waypoint, which matters for visual line of sight. Add a groundspeed for the flight time.",

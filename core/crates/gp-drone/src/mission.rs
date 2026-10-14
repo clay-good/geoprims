@@ -1245,6 +1245,7 @@ pub static CROSSHATCH: ToolDef = ToolDef {
             reason: "next",
         },
     ],
+    assumptions: SURVEY_GRID.assumptions,
     sentence: SURVEY_GRID.sentence,
     limits: SURVEY_GRID.limits,
     run: run_crosshatch,

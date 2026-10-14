@@ -1650,7 +1650,163 @@ fn utm_json(ctx: &mut Ctx, g: &utmups::Grid) -> Vec<(&'static str, Json)> {
     ]
 }
 
+const CENTRAL_MERIDIAN_OUT: Field = Field::new(
+    "central_meridian",
+    "Central meridian",
+    "Of the UTM zone used",
+    Kind::Quantity {
+        q: QT::Angle,
+        unit: "deg",
+    },
+)
+.precision(Precision::Decimals(0));
+
+pub static CONVERGENCE: ToolDef = ToolDef {
+    id: "geodesy.projection.convergence",
+    title: "Grid convergence in UTM",
+    summary: "The angle between true north and UTM grid north at a point, positive when grid north lies east of true north, with the point scale factor there.",
+    aliases: &[
+        "grid convergence calculator",
+        "meridian convergence angle",
+        "grid north to true north",
+    ],
+    keywords: &[
+        "convergence",
+        "grid north",
+        "true north",
+        "UTM",
+        "transverse Mercator",
+        "meridian convergence",
+        "azimuth",
+    ],
+    inputs: UTM_FORWARD.inputs,
+    outputs: &[
+        UTM_FORWARD.outputs[4],
+        UTM_FORWARD.outputs[5],
+        UTM_FORWARD.outputs[0],
+        CENTRAL_MERIDIAN_OUT,
+    ],
+    errors: UTM_FORWARD.errors,
+    warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: "Transverse Mercator convergence from the Krüger series (Karney 2011): close to (λ − λ₀)·sin φ for small longitude differences; true azimuth = grid azimuth + convergence",
+    accuracy: UTM_FORWARD.accuracy,
+    when_to_use: "Use this to turn a grid bearing measured on a UTM map or computed from UTM coordinates into a true bearing, or the other way round. Enter the latitude and longitude. The tool returns the convergence in the point's standard zone, or in a zone you force. Add it to a grid azimuth to get the true azimuth; subtract it to go from true to grid.",
+    limitations: "The convergence is for UTM, a transverse Mercator projection with six-degree zones, and differs in a State Plane zone or any other projection. It is zero on the zone's central meridian and grows toward the zone edges and the poles. It is the angle at a point, so a long line also needs the arc-to-chord correction. Magnetic north is a separate correction.",
+    references: UTM_FORWARD.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Longyearbyen, far from its central meridian",
+        input: r#"{"lat":78.2232,"lon":15.6267}"#,
+        source: "Krüger-series transverse Mercator on WGS 84, zone 33",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.projection.arc-to-chord",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.magnetic.grivation",
+            reason: "next",
+        },
+    ],
+    sentence: "Grid north is {convergence} from true north here, in UTM zone {zone}.",
+    limits: UTM_FORWARD.limits,
+    run: run_convergence,
+    ..ToolDef::BLANK
+};
+
+pub static SCALE_FACTOR: ToolDef = ToolDef {
+    id: "geodesy.projection.scale-factor",
+    title: "Point scale factor in UTM",
+    summary: "The UTM grid scale factor at a point: how much a short distance is stretched or shrunk on the grid there, with the grid convergence.",
+    aliases: &[
+        "grid scale factor calculator",
+        "point scale factor",
+        "grid scale factor at a point",
+    ],
+    keywords: &[
+        "scale factor",
+        "grid scale",
+        "UTM",
+        "k0",
+        "transverse Mercator",
+        "distortion",
+        "grid distance",
+    ],
+    inputs: UTM_FORWARD.inputs,
+    outputs: &[
+        UTM_FORWARD.outputs[5],
+        UTM_FORWARD.outputs[4],
+        UTM_FORWARD.outputs[0],
+        CENTRAL_MERIDIAN_OUT,
+    ],
+    errors: UTM_FORWARD.errors,
+    warnings: &["NONSTANDARD_ZONE", "INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: "Transverse Mercator point scale from the Krüger series (Karney 2011), with k₀ = 0.9996 on the central meridian: grid distance = ellipsoid distance × scale factor",
+    accuracy: UTM_FORWARD.accuracy,
+    when_to_use: "Use this before comparing a distance from UTM coordinates with one measured on the ground. Enter the latitude and longitude. The tool returns the point scale factor in the standard zone, or a zone you force: 0.9996 on the central meridian, 1 about 180 km either side, and above 1 beyond that. Multiply an ellipsoid distance by it to get the grid distance.",
+    limitations: "The factor holds at a point; over a long line use the mean of the ends and middle. It covers the projection only, so ground distances also need the elevation factor, and the two together make the combined factor. It is for UTM and differs in a State Plane zone or any other projection. Outside the standard zone the distortion grows quickly.",
+    references: UTM_FORWARD.references,
+    examples: &[Example {
+        id: "primary",
+        title: "Bergen, near the western edge of zone 32",
+        input: r#"{"lat":60.3913,"lon":5.3221}"#,
+        source: "Krüger-series transverse Mercator on WGS 84, zone 32",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.projection.arc-to-chord",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.magnetic.grivation",
+            reason: "next",
+        },
+    ],
+    sentence: "The grid scale factor here is {scale}, in UTM zone {zone}.",
+    limits: UTM_FORWARD.limits,
+    run: run_scale_factor,
+    ..ToolDef::BLANK
+};
+
+/// Which single figure of the UTM projection a focused operation leads with.
+#[derive(Clone, Copy, PartialEq)]
+enum GridFigure {
+    Convergence,
+    Scale,
+}
+
+fn run_convergence(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    utm_forward(ctx, Some(GridFigure::Convergence))
+}
+
+fn run_scale_factor(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    utm_forward(ctx, Some(GridFigure::Scale))
+}
+
 fn run_utm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    utm_forward(ctx, None)
+}
+
+fn utm_forward(ctx: &mut Ctx, figure: Option<GridFigure>) -> Result<Json, ToolError> {
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
     let e = Ellipsoid::from_ctx(ctx)?;
     e.geodesic()?; // rejects |f| beyond the series method
@@ -1687,6 +1843,25 @@ fn run_utm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
         None => standard,
     };
     let g = utmups::utm_forward(e.a, e.f, lat, lon, zone);
+    if let Some(figure) = figure {
+        ctx.model = Some(format!(
+            "Transverse Mercator, 6th-order Krüger series (Karney 2011), k0 = 0.9996, on {}",
+            e.describe()
+        ));
+        let convergence = ("convergence", ctx.out("convergence", deg(g.convergence)));
+        let scale = ("scale", Json::Num(g.scale));
+        let mut out = if figure == GridFigure::Convergence {
+            vec![convergence, scale]
+        } else {
+            vec![scale, convergence]
+        };
+        out.push(("zone", Json::Num(f64::from(zone))));
+        out.push((
+            "central_meridian",
+            ctx.out("central_meridian", deg(6.0 * f64::from(zone) - 183.0)),
+        ));
+        return Ok(Json::obj(out));
+    }
     if ctx.explaining() {
         let fmt = ctx.options.format;
         let n = move |x: f64, d: u8| gp_base::display::number(x, Precision::Decimals(d), fmt);
@@ -2795,6 +2970,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &BEARING_DIFFERENCE,
     &ANGLE_ARITHMETIC,
     &UTM_FORWARD,
+    &CONVERGENCE,
+    &SCALE_FACTOR,
     &UTM_INVERSE,
     &UTM_ZONE,
     &UPS_FORWARD,
@@ -2846,6 +3023,10 @@ pub static TOOLS: &[&ToolDef] = &[
     &frames::TO_ECEF,
     &frames::FROM_ECEF,
     &frames::TO_LOCAL,
+    &frames::ENU_TO_AER,
+    &frames::AER_TO_ENU,
+    &frames::ENU_NED,
+    &frames::ROTATION_MATRIX,
     &frames::FROM_LOCAL,
     &gridref::USNG_FORWARD,
     &gridref::USNG_INVERSE,

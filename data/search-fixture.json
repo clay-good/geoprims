@@ -382,6 +382,30 @@
       "expect": "geodesy.ellipsoid.degree-lengths"
     },
     {
+      "query": "AER to ENU",
+      "expect": "geodesy.frame.aer-to-enu"
+    },
+    {
+      "query": "ENU to AER",
+      "expect": "geodesy.frame.enu-to-aer"
+    },
+    {
+      "query": "ENU to NED",
+      "expect": "geodesy.frame.enu-ned"
+    },
+    {
+      "query": "ECEF to ENU rotation matrix",
+      "expect": "geodesy.frame.local-rotation-matrix"
+    },
+    {
+      "query": "grid convergence calculator",
+      "expect": "geodesy.projection.convergence"
+    },
+    {
+      "query": "point scale factor",
+      "expect": "geodesy.projection.scale-factor"
+    },
+    {
       "query": "two face mean",
       "expect": "survey.reduction.two-face-mean"
     },

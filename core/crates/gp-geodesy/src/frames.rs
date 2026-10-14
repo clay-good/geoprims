@@ -1199,6 +1199,432 @@ fn origin(ctx: &mut Ctx, ell: &Ellipsoid) -> Result<Origin, ToolError> {
     Ok((fr::to_ecef(ell, phi0, lam0, h0), phi0, lam0))
 }
 
+pub static AER_TO_ENU: ToolDef = ToolDef {
+    id: "geodesy.frame.aer-to-enu",
+    title: "Azimuth, elevation, and range to east, north, up",
+    summary: "Converts a look direction and slant range (azimuth, elevation, range) into east, north, and up offsets in the local tangent frame.",
+    aliases: &[
+        "AER to ENU",
+        "azimuth elevation range to east north up",
+        "look angle to offsets",
+    ],
+    keywords: &[
+        "AER",
+        "ENU",
+        "azimuth",
+        "elevation",
+        "slant range",
+        "local tangent plane",
+        "radar",
+    ],
+    inputs: &[
+        FROM_LOCAL.inputs[8].required().core(),
+        FROM_LOCAL.inputs[9].required().core(),
+        FROM_LOCAL.inputs[10].required().core(),
+    ],
+    outputs: &[
+        TO_LOCAL.outputs[3],
+        TO_LOCAL.outputs[4],
+        TO_LOCAL.outputs[5],
+        TO_LOCAL.outputs[6],
+        TO_LOCAL.outputs[7],
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "East = r·cos(el)·sin(az), north = r·cos(el)·cos(az), up = r·sin(el), with azimuth clockwise from north and elevation up from the horizontal",
+    accuracy: "Exact trigonometry in the local frame",
+    when_to_use: "Use this when a radar, a total station, a tracking antenna, or a rangefinder gives a direction and a distance, and you need the offsets from where you stand. Enter the azimuth from north, the elevation above the horizontal, and the slant range. The tool returns how far east, north, and up the target is, the down value for a north-east-down frame, and the horizontal distance.",
+    limitations: "The frame is a flat tangent plane at the observer, so the offsets are straight-line components, not distances along the curved Earth; over long ranges the up value is not a height difference. Azimuth is from true north unless you have already applied another reference. To get the target's latitude and longitude, use the local-frame-to-point tool with the observer's position.",
+    references: TO_LOCAL.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A target at azimuth 135°, elevation 10°, 2,500 m away",
+        input: r#"{"azimuth":135,"elevation":10,"range":"2500 m"}"#,
+        source: "Spherical-to-Cartesian trigonometry in the local frame",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.frame.enu-to-aer",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.frame.from-local",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.frame.enu-ned",
+            reason: "next",
+        },
+    ],
+    sentence: "The target is {east} east, {north} north, and {up} up.",
+    limits: &[("batchRows", 10_000)],
+    run: run_aer_to_enu,
+    ..ToolDef::BLANK
+};
+
+fn run_aer_to_enu(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let az = point::plain_angle(ctx, "azimuth")?.expect("required");
+    let el = point::plain_angle(ctx, "elevation")?.expect("required");
+    if !(-90.0..=90.0).contains(&el) {
+        return Err(
+            ToolError::new(ErrorCode::OutOfDomain, "Elevation is −90° to 90°.").at("/elevation"),
+        );
+    }
+    let range = length(ctx, "range")?.expect("required");
+    if !(0.0..=1e8).contains(&range) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Slant range is from 0 to 100,000 km.",
+        )
+        .at("/range"));
+    }
+    let enu = fr::aer_to_enu(az.to_radians(), el.to_radians(), range);
+    Ok(Json::obj([
+        ("east", ctx.out("east", m(enu[0] + 0.0))),
+        ("north", ctx.out("north", m(enu[1] + 0.0))),
+        ("up", ctx.out("up", m(enu[2] + 0.0))),
+        ("down", ctx.out("down", m(-enu[2] + 0.0))),
+        ("horizontal", ctx.out("horizontal", m(enu[0].hypot(enu[1])))),
+    ]))
+}
+
+pub static ENU_TO_AER: ToolDef = ToolDef {
+    id: "geodesy.frame.enu-to-aer",
+    title: "East, north, up to azimuth, elevation, and range",
+    summary: "Converts east, north, and up offsets in the local tangent frame into the azimuth, elevation, and slant range of the target.",
+    aliases: &[
+        "ENU to AER",
+        "east north up to azimuth elevation",
+        "offsets to look angle",
+    ],
+    keywords: &[
+        "ENU",
+        "AER",
+        "azimuth",
+        "elevation",
+        "slant range",
+        "pointing",
+        "antenna",
+    ],
+    inputs: &[
+        FROM_LOCAL.inputs[4].required().core(),
+        FROM_LOCAL.inputs[5].required().core(),
+        FROM_LOCAL.inputs[6].required().core(),
+    ],
+    outputs: &[
+        TO_LOCAL.outputs[0],
+        TO_LOCAL.outputs[1],
+        TO_LOCAL.outputs[2],
+        TO_LOCAL.outputs[7],
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["AZIMUTH_UNDEFINED", "EXPERIMENTAL_TOOL"],
+    model: "Range r = √(e² + n² + u²), azimuth = atan2(e, n) clockwise from north, elevation = atan2(u, √(e² + n²))",
+    accuracy: "Exact trigonometry in the local frame",
+    when_to_use: "Use this to point something at a target whose offsets you know: an antenna, a camera gimbal, a spotlight, or a survey instrument. Enter how far east, north, and up the target is from you. The tool returns the azimuth to turn to from north, the elevation to tilt to, the straight-line slant range, and the horizontal distance.",
+    limitations: "The frame is a flat tangent plane at the observer, so this is geometry on straight lines and takes no account of the Earth's curvature or of refraction bending a line of sight. A target straight above or below has no azimuth, and 0 is returned with a warning. Offsets in a north-east-down frame need the down value negated to give up first.",
+    references: TO_LOCAL.references,
+    examples: &[Example {
+        id: "primary",
+        title: "A target 1,200 m east, 900 m south, and 150 m up",
+        input: r#"{"east":"1200 m","north":"-900 m","up":"150 m"}"#,
+        source: "Cartesian-to-spherical trigonometry in the local frame",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.frame.aer-to-enu",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.frame.to-local",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.frame.enu-ned",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The target is at azimuth {azimuth}, elevation {elevation}, {range} away.",
+    limits: &[("batchRows", 10_000)],
+    run: run_enu_to_aer,
+    ..ToolDef::BLANK
+};
+
+fn run_enu_to_aer(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let mut enu = [0.0; 3];
+    for (i, k) in ["east", "north", "up"].into_iter().enumerate() {
+        let v = length(ctx, k)?.expect("required");
+        if v.abs() > 1e8 {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "Local offsets beyond 100,000 km are outside this tool's range.",
+            )
+            .at(&format!("/{k}")));
+        }
+        enu[i] = v;
+    }
+    let (az, el, range) = fr::enu_to_aer(enu);
+    let horizontal = enu[0].hypot(enu[1]);
+    // Straight up or down (or no offset at all): no direction in the plane.
+    let straight = horizontal <= 1e-9 * range.max(1.0);
+    let (az, el) = if straight {
+        ctx.warnings.push(Warning::new("AZIMUTH_UNDEFINED", "The target is straight above or below the origin, so azimuth is undefined; 0 is returned."));
+        (0.0, if enu[2] >= 0.0 { 90.0 } else { -90.0 })
+    } else {
+        (
+            gp_base::angle::wrap_azimuth(az.to_degrees()),
+            el.to_degrees(),
+        )
+    };
+    Ok(Json::obj([
+        ("azimuth", ctx.out("azimuth", deg(az))),
+        ("elevation", ctx.out("elevation", deg(el))),
+        ("range", ctx.out("range", m(range))),
+        ("horizontal", ctx.out("horizontal", m(horizontal))),
+    ]))
+}
+
+pub static ENU_NED: ToolDef = ToolDef {
+    id: "geodesy.frame.enu-ned",
+    title: "ENU and NED frame converter",
+    summary: "Converts local offsets between the east-north-up convention of mapping and surveying and the north-east-down convention of aircraft and drones.",
+    aliases: &[
+        "ENU to NED",
+        "NED to ENU",
+        "east north up to north east down",
+    ],
+    keywords: &[
+        "ENU",
+        "NED",
+        "north east down",
+        "east north up",
+        "body frame",
+        "autopilot",
+        "axes",
+    ],
+    inputs: &[
+        Field::new(
+            "frame",
+            "Frame of the input",
+            "enu (east, north, up; the default) or ned (north, east, down)",
+            Kind::Choice(&["enu", "ned"]),
+        )
+        .core(),
+        FROM_LOCAL.inputs[4].required().core(),
+        FROM_LOCAL.inputs[5].required().core(),
+        FROM_LOCAL.inputs[6].core(),
+        FROM_LOCAL.inputs[7].core(),
+    ],
+    outputs: &[
+        TO_LOCAL.outputs[4],
+        TO_LOCAL.outputs[3],
+        TO_LOCAL.outputs[6],
+        TO_LOCAL.outputs[5],
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "The two frames share an origin and a tangent plane: the first two axes swap, and down = −up",
+    accuracy: "Exact",
+    when_to_use: "Use this when numbers cross between a mapping system and a flight system. Surveying, GIS, and most geodesy libraries order local offsets east, north, up; autopilots, aircraft dynamics, and many drone logs order them north, east, down. Enter the offsets and say which frame they are in. The tool returns all four values, so both orderings can be read off without a sign slip.",
+    limitations: "Only the axis order and the vertical sign change; the origin and the tangent plane are the same in both frames. This is not a rotation into an aircraft's body axes, which also needs its heading, pitch, and roll. An east-north-up input needs the up value and a north-east-down input needs the down value; giving the other one as well is refused when the two disagree.",
+    references: TO_LOCAL.references,
+    examples: &[Example {
+        id: "primary",
+        title: "An autopilot offset of 300 m north, 120 m west, 45 m above",
+        input: r#"{"frame":"ned","north":"300 m","east":"-120 m","down":"-45 m"}"#,
+        source: "Axis convention: down is the negative of up",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.frame.to-local",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.frame.enu-to-aer",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.frame.from-local",
+            reason: "next",
+        },
+    ],
+    sentence: "North {north}, east {east}, down {down}; up {up}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_enu_ned,
+    ..ToolDef::BLANK
+};
+
+fn run_enu_ned(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let ned = ctx.choice("frame")? == Some("ned");
+    let east = length(ctx, "east")?.expect("required");
+    let north = length(ctx, "north")?.expect("required");
+    let (up, down) = (length(ctx, "up")?, length(ctx, "down")?);
+    let (name, other) = if ned { ("down", "up") } else { ("up", "down") };
+    let (own, cross) = if ned { (down, up) } else { (up, down) };
+    let own = own.ok_or_else(|| {
+        ToolError::invalid(
+            &format!("/{name}"),
+            format!(
+                "The {} frame needs {name}.",
+                if ned { "ned" } else { "enu" }
+            ),
+        )
+    })?;
+    if let Some(c) = cross
+        && c != -own
+    {
+        return Err(ToolError::invalid(
+            &format!("/{other}"),
+            format!("{other} must be the negative of {name}; leave it out to have it worked out."),
+        ));
+    }
+    let up = if ned { -own } else { own };
+    if [east, north, up].iter().any(|v| v.abs() > 1e8) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "Local offsets beyond 100,000 km are outside this tool's range.",
+        )
+        .at("/east"));
+    }
+    Ok(Json::obj([
+        ("north", ctx.out("north", m(north))),
+        ("east", ctx.out("east", m(east))),
+        ("down", ctx.out("down", m(-up + 0.0))),
+        ("up", ctx.out("up", m(up + 0.0))),
+    ]))
+}
+
+pub static ROTATION_MATRIX: ToolDef = ToolDef {
+    id: "geodesy.frame.local-rotation-matrix",
+    title: "ECEF to local frame rotation matrix",
+    summary: "The 3 × 3 rotation matrix that turns Earth-centered (ECEF) vector components into east-north-up or north-east-down components at a latitude and longitude.",
+    aliases: &[
+        "ECEF to ENU rotation matrix",
+        "ECEF to NED rotation matrix",
+        "local tangent plane rotation",
+    ],
+    keywords: &[
+        "rotation matrix",
+        "ECEF",
+        "ENU",
+        "NED",
+        "direction cosine matrix",
+        "velocity",
+        "baseline",
+    ],
+    inputs: &[
+        ORIGIN[0],
+        ORIGIN[1],
+        Field::new(
+            "frame",
+            "Local frame",
+            "enu (east, north, up; the default) or ned (north, east, down)",
+            Kind::Choice(&["enu", "ned"]),
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "matrix",
+            "Rotation matrix",
+            "The three rows, to six decimal places",
+            Kind::Text { max_len: 200 },
+        ),
+        TO_LOCAL.outputs[8].required(),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    model: "Rows of the ECEF-to-ENU matrix at latitude φ and longitude λ: east (−sin λ, cos λ, 0), north (−sin φ cos λ, −sin φ sin λ, cos φ), up (cos φ cos λ, cos φ sin λ, sin φ); NED takes the rows north, east, and minus up",
+    accuracy: "Exact trigonometry; the matrix is orthonormal to rounding",
+    when_to_use: "Use this to rotate a vector, not a position, from Earth-centered axes into local ones: a GNSS velocity, a baseline between two receivers, a covariance, or a line-of-sight unit vector. Enter the latitude and longitude where the local frame sits and choose east-north-up or north-east-down. Multiply the matrix by the ECEF vector to get its local components; its transpose rotates back.",
+    limitations: "A rotation acts on differences and directions. To convert a position, subtract the origin's ECEF coordinates first, or use the point-to-local-frame tool, which does both steps. The latitude is geodetic, so the up row is the ellipsoid's normal, not the direction from the Earth's center. At the poles east and north depend on the longitude entered.",
+    references: TO_LOCAL.references,
+    examples: &[Example {
+        id: "primary",
+        title: "The north-east-down frame at 35° N, 139° E",
+        input: r#"{"lat0":35,"lon0":139,"frame":"ned"}"#,
+        source: "Direction cosines of the local axes in ECEF",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.frame.to-local",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.frame.geodetic-to-ecef",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.frame.enu-ned",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The matrix is {matrix}. Each row is one local axis in X, Y, and Z.",
+    limits: &[("batchRows", 1_000)],
+    run: run_rotation_matrix,
+    ..ToolDef::BLANK
+};
+
+fn run_rotation_matrix(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat0, lon0) = point::read(ctx, "lat0", "lon0")?;
+    let enu = fr::enu_rotation(lat0.to_radians(), lon0.to_radians());
+    let rows = if ctx.choice("frame")? == Some("ned") {
+        [enu[1], enu[0], enu[2].map(|v| -v)]
+    } else {
+        enu
+    };
+    // Written out for reading; the rows carry the full precision.
+    let fmt = ctx.options.format;
+    let text = rows
+        .iter()
+        .map(|row| {
+            let cells: Vec<String> = row
+                .iter()
+                .map(|v| gp_base::display::number(v + 0.0, Precision::Decimals(6), fmt))
+                .collect();
+            format!("({})", cells.join(", "))
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+    Ok(Json::obj([
+        ("matrix", Json::str(text)),
+        (
+            "rotation",
+            Json::Arr(
+                rows.iter()
+                    .map(|row| {
+                        Json::obj([
+                            ("x", Json::Num(row[0] + 0.0)),
+                            ("y", Json::Num(row[1] + 0.0)),
+                            ("z", Json::Num(row[2] + 0.0)),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ),
+    ]))
+}
+
 fn run_to_local(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let ell = Ellipsoid::from_ctx(ctx)?;
     let (o, phi0, lam0) = origin(ctx, &ell)?;

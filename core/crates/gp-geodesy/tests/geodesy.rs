@@ -323,6 +323,166 @@ fn focused_parse_format_and_ellipsoid_operations_match_their_general_tools() {
 }
 
 #[test]
+fn focused_frame_and_grid_operations_match_their_general_tools() {
+    // Look angles and offsets from the point-to-local-frame tool are the same numbers.
+    let general = call(
+        "geodesy.frame.to-local",
+        r#"{"lat0":40.446111,"lon0":-79.982222,"h0":300,"lat":40.47,"lon":-79.95,"height":1300,"matrix":"yes"}"#,
+    );
+    let offsets = serde_json::json!({
+        "east": format!("{} m", num(&general, "result.east.value")),
+        "north": format!("{} m", num(&general, "result.north.value")),
+        "up": format!("{} m", num(&general, "result.up.value")),
+    });
+    let aer = call("geodesy.frame.enu-to-aer", &offsets.to_string());
+    for key in ["azimuth", "elevation", "range", "horizontal"] {
+        let (a, b) = (
+            num(&aer, &format!("result.{key}.value")),
+            num(&general, &format!("result.{key}.value")),
+        );
+        assert!((a - b).abs() < 1e-9, "{key}: {a} against {b}");
+    }
+    // And back again.
+    let back = call(
+        "geodesy.frame.aer-to-enu",
+        &serde_json::json!({
+            "azimuth": num(&aer, "result.azimuth.value"),
+            "elevation": num(&aer, "result.elevation.value"),
+            "range": format!("{} m", num(&aer, "result.range.value")),
+        })
+        .to_string(),
+    );
+    for key in ["east", "north", "up"] {
+        let (a, b) = (
+            num(&back, &format!("result.{key}.value")),
+            num(&general, &format!("result.{key}.value")),
+        );
+        assert!((a - b).abs() < 1e-6, "{key}: {a} against {b}");
+    }
+    // Due north on the level: all of the range is north.
+    let north = call(
+        "geodesy.frame.aer-to-enu",
+        r#"{"azimuth":0,"elevation":0,"range":"1000 m"}"#,
+    );
+    assert!((num(&north, "result.north.value") - 1000.0).abs() < 1e-9);
+    assert!(num(&north, "result.east.value").abs() < 1e-9);
+    // Straight up has no azimuth, and says so.
+    let up = call(
+        "geodesy.frame.enu-to-aer",
+        r#"{"east":"0 m","north":"0 m","up":"50 m"}"#,
+    );
+    assert_eq!(num(&up, "result.elevation.value"), 90.0);
+    assert!(codes(&up).contains(&"AZIMUTH_UNDEFINED".to_owned()));
+
+    // ENU and NED: the same offsets in the other order, and down is minus up.
+    let ned = call(
+        "geodesy.frame.enu-ned",
+        r#"{"frame":"ned","north":"300 m","east":"-120 m","down":"-45 m"}"#,
+    );
+    let enu = call(
+        "geodesy.frame.enu-ned",
+        r#"{"east":"-120 m","north":"300 m","up":"45 m"}"#,
+    );
+    assert_eq!(ned["result"], enu["result"]);
+    assert_eq!(num(&ned, "result.up.value"), 45.0);
+    assert_eq!(num(&ned, "result.down.value"), -45.0);
+    // A down that contradicts the up is refused, not averaged.
+    assert_eq!(
+        call(
+            "geodesy.frame.enu-ned",
+            r#"{"east":"1 m","north":"2 m","up":"3 m","down":"3 m"}"#
+        )["error"]["field"],
+        "/down"
+    );
+
+    // The rotation matrix is the one the point-to-local tool reports, and is orthonormal.
+    let matrix = call(
+        "geodesy.frame.local-rotation-matrix",
+        r#"{"lat0":40.446111,"lon0":-79.982222}"#,
+    );
+    assert_eq!(matrix["result"]["rotation"], general["result"]["rotation"]);
+    let rows = |r: &Value| -> Vec<[f64; 3]> {
+        r["result"]["rotation"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| ["x", "y", "z"].map(|k| row[k].as_f64().unwrap()))
+            .collect()
+    };
+    let ned_rows = rows(&call(
+        "geodesy.frame.local-rotation-matrix",
+        r#"{"lat0":40.446111,"lon0":-79.982222,"frame":"ned"}"#,
+    ));
+    let enu_rows = rows(&matrix);
+    for (i, a) in ned_rows.iter().enumerate() {
+        for (j, b) in ned_rows.iter().enumerate() {
+            let dot: f64 = (0..3).map(|k| a[k] * b[k]).sum();
+            assert!(
+                (dot - f64::from(u8::from(i == j))).abs() < 1e-14,
+                "rows {i} and {j}"
+            );
+        }
+    }
+    // NED is ENU with its first two rows swapped and its third negated.
+    assert_eq!(ned_rows[0], enu_rows[1]);
+    assert_eq!(ned_rows[1], enu_rows[0]);
+    assert_eq!(ned_rows[2], enu_rows[2].map(|v| -v));
+    // At latitude 0, longitude 0: east is +Y, north is +Z, up is +X.
+    let origin = rows(&call(
+        "geodesy.frame.local-rotation-matrix",
+        r#"{"lat0":0,"lon0":0}"#,
+    ));
+    assert_eq!(
+        origin,
+        vec![[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]]
+    );
+
+    // Convergence and scale are the UTM tool's own, in the standard zone or a forced one.
+    for input in [
+        r#"{"lat":78.2232,"lon":15.6267}"#,
+        r#"{"lat":40.446111,"lon":-79.982222}"#,
+        r#"{"lat":51.4778,"lon":-0.0015,"zone":31}"#,
+    ] {
+        let utm = call("geodesy.utm.forward", input);
+        for tool in [
+            "geodesy.projection.convergence",
+            "geodesy.projection.scale-factor",
+        ] {
+            let r = call(tool, input);
+            assert_eq!(r["ok"], true, "{tool}: {r}");
+            for key in ["convergence", "scale", "zone"] {
+                assert_eq!(r["result"][key], utm["result"][key], "{tool} {key} {input}");
+            }
+        }
+    }
+    // On a central meridian grid north is true north and the scale is k0.
+    let cm = call("geodesy.projection.convergence", r#"{"lat":45,"lon":9}"#);
+    assert!(num(&cm, "result.convergence.value").abs() < 1e-12);
+    assert!((num(&cm, "result.scale") - 0.9996).abs() < 1e-12);
+    assert_eq!(num(&cm, "result.central_meridian.value"), 9.0);
+    // East of it in the northern hemisphere grid north lies east of true north; west, west.
+    let east = num(
+        &call("geodesy.projection.convergence", r#"{"lat":45,"lon":11}"#),
+        "result.convergence.value",
+    );
+    let west = num(
+        &call("geodesy.projection.convergence", r#"{"lat":45,"lon":7}"#),
+        "result.convergence.value",
+    );
+    assert!(east > 0.0 && (east + west).abs() < 1e-12);
+    // The scale passes 1 about 180 km from the central meridian.
+    let near = num(
+        &call("geodesy.projection.scale-factor", r#"{"lat":0,"lon":10.5}"#),
+        "result.scale",
+    );
+    let far = num(
+        &call("geodesy.projection.scale-factor", r#"{"lat":0,"lon":11.0}"#),
+        "result.scale",
+    );
+    assert!(near < 1.0 && far > 1.0, "{near} {far}");
+}
+
+#[test]
 fn bearing_difference_across_north() {
     let r = call(
         "geodesy.parse.bearing-difference",

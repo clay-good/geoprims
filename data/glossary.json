@@ -345,6 +345,7 @@
         "geodesy.frame.ecef-to-geodetic",
         "geodesy.frame.from-local",
         "geodesy.frame.geodetic-to-ecef",
+        "geodesy.frame.local-rotation-matrix",
         "geodesy.frame.to-local"
       ]
     },
@@ -395,7 +396,9 @@
       "definition": "Local Cartesian coordinates centered on a chosen point, with axes toward east, north, and up.",
       "source": "geographiclib",
       "relatedTools": [
+        "geodesy.frame.enu-ned",
         "geodesy.frame.from-local",
+        "geodesy.frame.local-rotation-matrix",
         "geodesy.frame.to-local"
       ]
     },
@@ -994,6 +997,7 @@
       "definition": "Local Cartesian axes toward north, east, and down, as aircraft navigation uses them.",
       "source": "geographiclib",
       "relatedTools": [
+        "geodesy.frame.enu-ned",
         "geodesy.frame.from-local",
         "geodesy.frame.to-local"
       ]
@@ -1667,6 +1671,8 @@
       "source": "nga-utmups",
       "relatedTools": [
         "geodesy.magnetic.grivation",
+        "geodesy.projection.convergence",
+        "geodesy.projection.scale-factor",
         "geodesy.ups.forward",
         "geodesy.utm.forward",
         "geodesy.utm.inverse",

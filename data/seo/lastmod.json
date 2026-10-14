@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "82a34ed795b56311",
+    "hash": "2d4aaa5b0c5fd7a4",
     "lastmod": "2026-10-14"
   },
   "/accuracy/": {
@@ -512,7 +512,7 @@
     "lastmod": "2026-10-12"
   },
   "/geodesy/": {
-    "hash": "1093ce55a874b54f",
+    "hash": "889d26325d0a969f",
     "lastmod": "2026-10-14"
   },
   "/geodesy/crs/": {
@@ -584,24 +584,40 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/frame/": {
-    "hash": "39fbeafda9b3eddf",
-    "lastmod": "2026-09-23"
+    "hash": "26e76cda77155724",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/frame/aer-to-enu/": {
+    "hash": "0f42a46b89581b42",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/frame/ecef-to-geodetic/": {
-    "hash": "abedf9a19871ca07",
-    "lastmod": "2026-10-09"
+    "hash": "99f0c996251281ca",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/frame/enu-ned/": {
+    "hash": "8fe2585b78e21f31",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/frame/enu-to-aer/": {
+    "hash": "bfc2a01d5bba9412",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/frame/from-local/": {
-    "hash": "b99b0c110644df9b",
-    "lastmod": "2026-10-09"
+    "hash": "d9b618e1a4e059fd",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/frame/geodetic-to-ecef/": {
-    "hash": "9dc40a4b5a1a438d",
-    "lastmod": "2026-10-09"
+    "hash": "72a5c1b626e05d0f",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/frame/local-rotation-matrix/": {
+    "hash": "f8e80118b0ccb9fb",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/frame/to-local/": {
-    "hash": "a04005760a19838b",
-    "lastmod": "2026-10-09"
+    "hash": "a0c4a61f04fa1d90",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/geoid/": {
     "hash": "8ec5ca350127b6a6",
@@ -728,8 +744,8 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/": {
-    "hash": "0bbf01fad39ecf9b",
-    "lastmod": "2026-09-24"
+    "hash": "b0b2907aee690cc1",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/projection/albers-forward/": {
     "hash": "5fce9f4219875f5c",
@@ -748,12 +764,16 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/projection/azimuthal-equidistant-inverse/": {
-    "hash": "e80835a51055b0a4",
-    "lastmod": "2026-10-09"
+    "hash": "8a39f562657bed0e",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/projection/convergence/": {
+    "hash": "c204749ac9b471ca",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/projection/equidistant-cylindrical-forward/": {
-    "hash": "0906258ad053805c",
-    "lastmod": "2026-10-09"
+    "hash": "af55e68618cca957",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/projection/equidistant-cylindrical-inverse/": {
     "hash": "39466c5ede4f1932",
@@ -796,12 +816,16 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/projection/polar-stereographic-inverse/": {
-    "hash": "88726527d36330f6",
-    "lastmod": "2026-10-09"
+    "hash": "7334ae53277ec072",
+    "lastmod": "2026-10-14"
+  },
+  "/geodesy/projection/scale-factor/": {
+    "hash": "5ac3317f242a6f63",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/projection/tm-exact-forward/": {
-    "hash": "75b36140fc810e2e",
-    "lastmod": "2026-10-09"
+    "hash": "2aedce41d253020d",
+    "lastmod": "2026-10-14"
   },
   "/geodesy/projection/tm-exact-inverse/": {
     "hash": "8a18c7787a7ceec0",
@@ -1288,7 +1312,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "7cba2f1bb90ba4fc",
+    "hash": "10442317b62ea566",
     "lastmod": "2026-10-14"
   },
   "/navigation/": {
@@ -1536,7 +1560,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "82ff853ebf685860",
+    "hash": "d5c0523cc32e6eee",
     "lastmod": "2026-10-14"
   },
   "/survey/": {
@@ -1920,7 +1944,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "8750cb0386366456",
+    "hash": "5958623bba8262a9",
     "lastmod": "2026-10-14"
   },
   "/units/": {
@@ -2184,7 +2208,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b3e5802b8e250fa7",
+    "hash": "7b09499230985b95",
     "lastmod": "2026-10-14"
   },
   "/workflows/": {

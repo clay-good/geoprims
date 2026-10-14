@@ -31,6 +31,24 @@ test('each parse, format, ellipsoid, and magnetic step named in the inventory is
   }
 });
 
+test('each local-frame and grid-figure step named in the inventory is an addressable geodesy operation', () => {
+  const expected = new Map([
+    ['geodesy.frame.aer-to-enu', ['AER to ENU', 'look angle to offsets']],
+    ['geodesy.frame.enu-to-aer', ['ENU to AER', 'offsets to look angle']],
+    ['geodesy.frame.enu-ned', ['ENU to NED', 'NED to ENU']],
+    ['geodesy.frame.local-rotation-matrix', ['ECEF to ENU rotation matrix', 'ECEF to NED rotation matrix']],
+    ['geodesy.projection.convergence', ['grid convergence calculator', 'meridian convergence angle']],
+    ['geodesy.projection.scale-factor', ['grid scale factor calculator', 'point scale factor']],
+  ]);
+  for (const [id, aliases] of expected) {
+    const tool = byId.get(id);
+    assert.ok(tool, `${id} is missing`);
+    for (const alias of aliases) assert.ok(tool.aliases.includes(alias), `${id} is missing alias "${alias}"`);
+    assert.ok(existsSync(join(root, `docs/derivations/${id}.md`)), `${id} needs a derivation note`);
+    assert.ok(tool.vectorCount >= 20, `${id} has only ${tool.vectorCount} vectors`);
+  }
+});
+
 test('the geodesy catalog does not lose registered operations', () => {
-  assert.ok(geodesy.length >= 77, `geodesy operation count regressed to ${geodesy.length}`);
+  assert.ok(geodesy.length >= 83, `geodesy operation count regressed to ${geodesy.length}`);
 });

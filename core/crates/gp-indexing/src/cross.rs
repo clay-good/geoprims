@@ -14,7 +14,7 @@ use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Related, Stability, ToolDef};
 use gp_base::units::{self, Quantity as QT};
 use gp_geo::{ellipsoid, gridref, mgrs, point, utmups};
-use h3o::{LatLng, Resolution};
+use h3o::{CellIndex, LatLng, Resolution};
 use libm::{cos, log, sqrt};
 
 use crate::codes;
@@ -375,5 +375,281 @@ pub static CROSS_INDEX: ToolDef = ToolDef {
     sentence: "At about {target_size}, the closest match is {closest_match}.",
     limits: &[("batchRows", 10_000)],
     run: run_cross,
+    ..ToolDef::BLANK
+};
+
+// ---------------------------------------------------------------- to-index
+
+/// The ground size of a cell spanning `south..north` by `west..east` degrees,
+/// as the side of a square of the same area at its own center.
+fn span_size(s: f64, w: f64, n: f64, e: f64) -> (f64, f64, f64) {
+    let (lat, lon) = ((s + n) / 2.0, (w + e) / 2.0);
+    let (per_lat, per_lon) = degree_lengths(lat);
+    (lat, lon, mean_size((e - w) * per_lon, (n - s) * per_lat))
+}
+
+/// Decodes a reference in `from` to its center point and the ground size of
+/// its own cell, so the target can be chosen at a matched size.
+fn decode_center_size(from: &str, reference: &str) -> Result<(f64, f64, f64), ToolError> {
+    let r = reference.trim();
+    let bad = |m: &str| ToolError::invalid("/reference", m.to_owned());
+    match from {
+        "geohash" => {
+            let (s, w, n, e) = codes::geohash_decode(r)
+                .map_err(|c| bad(&format!("'{c}' is not a geohash digit.")))?;
+            Ok(span_size(s, w, n, e))
+        }
+        "pluscode" => {
+            codes::olc_check(r).map_err(|m| bad(&m))?;
+            if !codes::olc_is_full(r) {
+                return Err(bad(
+                    "Give a full Plus Code, like 87G7PX7V+, not a short one.",
+                ));
+            }
+            let ((s, w, n, e), _len) = codes::olc_decode(r);
+            Ok(span_size(s, w, n, e))
+        }
+        "tile" => {
+            let (z, x, y, _is_quadkey) = crate::parse_tile(r)?;
+            let (s, w, n, e) = codes::tile_bounds(z, x, y);
+            let (lat, lon, _) = span_size(s, w, n, e);
+            Ok((lat, lon, codes::ground_resolution(lat, z, 256.0) * 256.0))
+        }
+        "h3" => {
+            let raw = u64::from_str_radix(r.trim_start_matches("0x"), 16)
+                .map_err(|_| bad("An H3 index is a hexadecimal number."))?;
+            let cell = CellIndex::try_from(raw).map_err(|_| bad("Not a valid H3 cell index."))?;
+            let c = LatLng::from(cell);
+            Ok((c.lat(), c.lng(), sqrt(cell.area_km2() * 1e6)))
+        }
+        "s2" => {
+            let cell = crate::s2::CellId::from_token(r).map_err(|e| bad(&format!("{e}.")))?;
+            let (lat, lon) = cell.center();
+            let size =
+                sqrt(crate::s2::average_area_steradians(cell.level()) * 6_371_008.8 * 6_371_008.8);
+            Ok((lat, lon, size))
+        }
+        _ => Err(ToolError::invalid(
+            "/from",
+            "Unknown source index system.".to_owned(),
+        )),
+    }
+}
+
+/// Encodes a point in `to` at the resolution whose cell size is closest to
+/// `size`, returning the reference, the resolution's own label, and its size.
+fn encode_at_size(
+    to: &str,
+    lat: f64,
+    lon: f64,
+    size: f64,
+) -> Result<(String, String, f64), ToolError> {
+    let (per_lat, per_lon) = degree_lengths(lat);
+    match to {
+        "h3" => {
+            let options: Vec<(u8, f64)> = (0..=15u8)
+                .map(|r| {
+                    let res = Resolution::try_from(r).expect("0-15");
+                    (r, sqrt(res.area_km2() * 1e6))
+                })
+                .collect();
+            let (res, sz) = closest(&options, size);
+            let cell = LatLng::new(lat, lon)
+                .map_err(|e| ToolError::invalid("/reference", format!("{e}.")))?
+                .to_cell(Resolution::try_from(res).expect("0-15"));
+            Ok((cell.to_string(), format!("resolution {res}"), sz))
+        }
+        "geohash" => {
+            let options: Vec<(usize, f64)> = (1..=12)
+                .map(|p| {
+                    let (dlat, dlon) = geohash_span(p);
+                    (p, mean_size(dlon * per_lon, dlat * per_lat))
+                })
+                .collect();
+            let (p, sz) = closest(&options, size);
+            Ok((
+                codes::geohash_encode(lat, lon, p),
+                format!("precision {p}"),
+                sz,
+            ))
+        }
+        "pluscode" => {
+            let options: Vec<(usize, f64)> = [2usize, 4, 6, 8, 10, 11]
+                .iter()
+                .map(|&len| {
+                    let (dlat, dlon) = olc_span(len);
+                    (len, mean_size(dlon * per_lon, dlat * per_lat))
+                })
+                .collect();
+            let (len, sz) = closest(&options, size);
+            Ok((
+                codes::olc_encode(lat, lon, len),
+                format!("{len} characters"),
+                sz,
+            ))
+        }
+        "tile" => {
+            let options: Vec<(u32, f64)> = (0..=22u32)
+                .map(|z| (z, codes::ground_resolution(lat, z, 256.0) * 256.0))
+                .collect();
+            let (z, sz) = closest(&options, size);
+            let (tx, ty) = codes::tile(lat, lon, z);
+            Ok((
+                format!("{z}/{tx}/{ty} (quadkey {})", codes::quadkey(z, tx, ty)),
+                format!("zoom {z}"),
+                sz,
+            ))
+        }
+        "s2" => {
+            let options: Vec<(u8, f64)> = (0..=30u8)
+                .map(|l| {
+                    (
+                        l,
+                        sqrt(crate::s2::average_area_steradians(l) * 6_371_008.8 * 6_371_008.8),
+                    )
+                })
+                .collect();
+            let (level, sz) = closest(&options, size);
+            Ok((
+                crate::s2::CellId::from_lat_lon(lat, lon, level).token(),
+                format!("level {level}"),
+                sz,
+            ))
+        }
+        _ => Err(ToolError::invalid(
+            "/to",
+            "Unknown target index system.".to_owned(),
+        )),
+    }
+}
+
+fn run_to_index(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let reference = ctx.text("reference")?.expect("required");
+    let from = ctx.choice("from")?.expect("required");
+    let to = ctx.choice("to")?.expect("required");
+    let (lat, lon, source_size) = decode_center_size(from, &reference)?;
+    let (target_ref, resolution, target_size) = encode_at_size(to, lat, lon, source_size)?;
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    Ok(Json::obj([
+        ("reference", Json::str(target_ref)),
+        ("resolution", Json::str(resolution)),
+        (
+            "cell_size",
+            Q {
+                value: target_size,
+                unit: m,
+            }
+            .to_json(),
+        ),
+        (
+            "source_cell_size",
+            Q {
+                value: source_size,
+                unit: m,
+            }
+            .to_json(),
+        ),
+    ]))
+}
+
+const INDEX_SYSTEMS: &[&str] = &["geohash", "h3", "s2", "pluscode", "tile"];
+
+pub static TO_INDEX: ToolDef = ToolDef {
+    id: "indexing.convert.to-index",
+    title: "Convert a cell from one index system to another",
+    summary: "Reads a geohash, H3, S2, Plus Code, or map-tile reference and re-expresses that place in another of those systems, at the resolution whose cell size is closest to the source cell's.",
+    aliases: &[
+        "reindex a cell",
+        "h3 to geohash",
+        "s2 to map tile",
+        "plus code to geohash",
+    ],
+    keywords: &[
+        "convert",
+        "cross index",
+        "geohash",
+        "H3",
+        "S2",
+        "Plus Code",
+        "map tile",
+        "reproject index",
+    ],
+    inputs: &[
+        Field::new(
+            "reference",
+            "Source reference",
+            "The cell in the source system, like u4pruyd for a geohash or 8a2a1072b59ffff for an H3 cell",
+            Kind::Text { max_len: 64 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "from",
+            "Source system",
+            "Which system the reference is in, like geohash",
+            Kind::Choice(INDEX_SYSTEMS),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "to",
+            "Target system",
+            "Which system to convert it to, like h3",
+            Kind::Choice(INDEX_SYSTEMS),
+        )
+        .required()
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "reference",
+            "Target reference",
+            "The same place in the target system",
+            Kind::Text { max_len: 64 },
+        ),
+        Field::new(
+            "resolution",
+            "Target resolution",
+            "The resolution chosen, in the target system's own terms",
+            Kind::Text { max_len: 64 },
+        ),
+        Field::new(
+            "cell_size",
+            "Target cell size",
+            "The target cell's ground size here, as the side of a square of the same area",
+            Kind::Quantity { q: QT::Length, unit: "m" },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "source_cell_size",
+            "Source cell size",
+            "The source cell's ground size here, which the target was matched to",
+            Kind::Quantity { q: QT::Length, unit: "m" },
+        )
+        .precision(Precision::Decimals(1)),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[],
+    model: "Decode the source reference to its cell center and cell size, then encode that center in the target system at the resolution whose cell size is closest to the source's by ratio (log distance); cell size is the side of a square of the same area at this latitude",
+    accuracy: "Exact encodings. The conversion routes through the source cell's center, so it is exact for the center and nearest-resolution for the size, never an exact tiling between systems.",
+    when_to_use: "Use this to join data keyed by one spatial index to data keyed by another: a geohash to the H3 cell that covers the same place, an S2 token to a map tile, a Plus Code to a geohash. Give the source reference, say which system it is in, and choose the target system; the result is the target cell nearest the source cell's size.",
+    limitations: "No two of these systems tile the ground the same way, so the result is the nearest resolution, not an equivalent, and the two cell sizes can differ by tens of percent. The conversion uses the source cell's center, so a target cell may not fully contain the source cell near a boundary. Reversing the conversion need not return the original reference.",
+    references: &[crate::h3::H3_DOCS, crate::GEOHASH_REF, crate::OLC_SPEC, crate::OSM_TILES],
+    examples: &[Example {
+        id: "primary",
+        title: "A geohash to its H3 cell",
+        input: r#"{"reference":"dr5regw","from":"geohash","to":"h3"}"#,
+        source: "add-spatial-indexing-and-raster hierarchical-cells: decode then encode at matched size",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer { kind: "table-only", map: &[] }],
+    related: &[
+        Related { id: "indexing.convert.cross-index", reason: "parent" },
+        Related { id: "indexing.h3.lat-lng-to-cell", reason: "next" },
+        Related { id: "indexing.geohash.encode", reason: "next" },
+    ],
+    sentence: "That place is {reference} in the target system ({resolution}).",
+    limits: &[("batchRows", 10_000)],
+    run: run_to_index,
     ..ToolDef::BLANK
 };

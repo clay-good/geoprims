@@ -1434,6 +1434,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &s2tools::NEIGHBORS,
     &s2cover::COVERING,
     &cross::CROSS_INDEX,
+    &cross::TO_INDEX,
 ];
 
 pub static REGISTRY: Registry = Registry {

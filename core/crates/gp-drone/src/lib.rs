@@ -715,7 +715,7 @@ pub static CROP_FACTOR: ToolDef = ToolDef {
         Slot::new("focal_length", &["lens", "focal", "fl"]).range(1.0, 2000.0),
         Slot::new(
             "equivalent_focal_length",
-            &["equivalent", "35mm", "full-frame"],
+            &["equivalent", "35mm", "fullframe"],
         )
         .range(1.0, 2000.0),
     ],

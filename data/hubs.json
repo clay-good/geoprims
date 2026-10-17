@@ -1362,6 +1362,12 @@
           "tools": [
             "cross-index"
           ]
+        },
+        {
+          "want": "convert a cell from one indexing system to another",
+          "tools": [
+            "to-index"
+          ]
         }
       ]
     },

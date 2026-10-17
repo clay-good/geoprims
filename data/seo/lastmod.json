@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "6b1a7247a0463ef0",
+    "hash": "a529f46481d69ebd",
     "lastmod": "2026-10-17"
   },
   "/accuracy/": {
@@ -1024,8 +1024,8 @@
     "lastmod": "2026-10-09"
   },
   "/indexing/": {
-    "hash": "12d920f1bf9b3285",
-    "lastmod": "2026-10-14"
+    "hash": "3223ac3079d27a7c",
+    "lastmod": "2026-10-17"
   },
   "/indexing/a5/": {
     "hash": "485835a9ea583266",
@@ -1048,8 +1048,12 @@
     "lastmod": "2026-09-25"
   },
   "/indexing/convert/cross-index/": {
-    "hash": "f707894706d3a25c",
-    "lastmod": "2026-10-09"
+    "hash": "69e2013d8009bfd7",
+    "lastmod": "2026-10-17"
+  },
+  "/indexing/convert/to-index/": {
+    "hash": "4d6d2ae9ac6ee275",
+    "lastmod": "2026-10-17"
   },
   "/indexing/geohash/": {
     "hash": "75b8ddd00e63ef47",
@@ -1416,7 +1420,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "7c8aedf3092613b8",
+    "hash": "e0d1fa1624856497",
     "lastmod": "2026-10-17"
   },
   "/navigation/": {
@@ -1700,8 +1704,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "069e3fa526c4fb55",
-    "lastmod": "2026-10-14"
+    "hash": "2d565b158c9d8d70",
+    "lastmod": "2026-10-17"
   },
   "/survey/": {
     "hash": "34db288babd6e4c1",
@@ -2084,7 +2088,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "e7dcbd45e168ce99",
+    "hash": "97c12d86d0014dc3",
     "lastmod": "2026-10-17"
   },
   "/units/": {
@@ -2348,7 +2352,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "40278f3bf02699e3",
+    "hash": "eeeb4bc2bca576e8",
     "lastmod": "2026-10-17"
   },
   "/workflows/": {

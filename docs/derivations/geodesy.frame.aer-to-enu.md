@@ -26,16 +26,16 @@ A flat tangent frame: no Earth curvature or refraction.
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-geodesy-suite specification
-- sourceEdition: 2026
-- sourceLocator: geodesy/local-frames, requirement "Local tangent frames"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: azimuth 0°, elevation 0°, range 1,000 m
-- outputs: east 0, north 1,000 m, up 0
-- tolerance: 1e-9 m
-- verifiedBy: golden vector v002 and the `focused_frame_and_grid_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: The MathWorks
+- sourceTitle: Mapping Toolbox documentation, aer2enu
+- sourceEdition: retrieved 2026-10-17
+- sourceLocator: worked example, a sensor's line of sight at azimuth 34.1160°, elevation 4.1931°, slant range 15.1070 m
+- independent: yes
+- inputs: azimuth 34.1160°, elevation 4.1931°, range 15.1070 m
+- outputs: east 8.4504 m, north 12.4737 m, up 1.1046 m
+- tolerance: the documented four decimals (5e-5 m)
+- verifiedBy: the `focused_frame_and_grid_operations_match_their_general_tools` integration test, which requires parity with the stable `geodesy.frame.to-local` on these offsets and a clean AER round trip
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -45,6 +45,6 @@ A flat tangent frame: no Earth curvature or refraction.
 
 ## Invariants
 
+- `core/crates/gp-geodesy/tests/geodesy.rs` `focused_frame_and_grid_operations_match_their_general_tools`: the offsets match the stable `geodesy.frame.to-local` on the same line of sight, a round trip through `enu-to-aer` returns the inputs, and due north on the level puts all of the range in north.
 - east² + north² + up² = range².
-- Converting the result with `geodesy.frame.enu-to-aer` returns the inputs.
 - An elevation of 90° puts all of the range in up.

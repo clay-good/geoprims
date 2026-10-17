@@ -25,16 +25,16 @@ A flat tangent frame: no Earth curvature or refraction.
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-geodesy-suite specification
-- sourceEdition: 2026
-- sourceLocator: geodesy/local-frames, requirement "Local tangent frames"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: east 3 m, north 4 m, up 12 m
-- outputs: horizontal 5 m, range 13 m, azimuth 36.8699°, elevation 67.3801°
-- tolerance: 1e-7
-- verifiedBy: golden vector v005 and the `focused_frame_and_grid_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: The MathWorks
+- sourceTitle: Mapping Toolbox documentation, enu2aer
+- sourceEdition: retrieved 2026-10-17
+- sourceLocator: worked example, a ground vehicle at east 8.4504 m, north 12.4737 m, up 1.1046 m
+- independent: yes
+- inputs: east 8.4504 m, north 12.4737 m, up 1.1046 m
+- outputs: azimuth 34.1160°, elevation 4.1931°, range 15.1070 m
+- tolerance: the documented four decimals (5e-5° on the angles, 5e-5 m on the range)
+- verifiedBy: the `focused_frame_and_grid_operations_match_their_general_tools` integration test, which requires parity with the stable `geodesy.frame.to-local` and a clean ENU round trip
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -44,6 +44,6 @@ A flat tangent frame: no Earth curvature or refraction.
 
 ## Invariants
 
+- `core/crates/gp-geodesy/tests/geodesy.rs` `focused_frame_and_grid_operations_match_their_general_tools`: the look angles match the stable `geodesy.frame.to-local` on the same offsets, a round trip through `aer-to-enu` returns them, and a straight-up offset reports a 90° elevation and AZIMUTH_UNDEFINED.
 - The range is never less than the horizontal distance.
 - Negating all three offsets turns the azimuth by 180° and negates the elevation.
-- Converting the result with `geodesy.frame.aer-to-enu` returns the offsets.

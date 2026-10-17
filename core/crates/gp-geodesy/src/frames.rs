@@ -1204,6 +1204,7 @@ fn origin(ctx: &mut Ctx, ell: &Ellipsoid) -> Result<Origin, ToolError> {
 
 pub static AER_TO_ENU: ToolDef = ToolDef {
     id: "geodesy.frame.aer-to-enu",
+    stability: gp_base::tool::Stability::Stable,
     title: "Azimuth, elevation, and range to east, north, up",
     summary: "Converts a look direction and slant range (azimuth, elevation, range) into east, north, and up offsets in the local tangent frame.",
     aliases: &[
@@ -1298,6 +1299,7 @@ fn run_aer_to_enu(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ENU_TO_AER: ToolDef = ToolDef {
     id: "geodesy.frame.enu-to-aer",
+    stability: gp_base::tool::Stability::Stable,
     title: "East, north, up to azimuth, elevation, and range",
     summary: "Converts east, north, and up offsets in the local tangent frame into the azimuth, elevation, and slant range of the target.",
     aliases: &[

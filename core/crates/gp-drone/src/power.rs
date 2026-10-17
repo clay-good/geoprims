@@ -1604,6 +1604,7 @@ fn run_temperature_derating(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static RANGE: ToolDef = ToolDef {
     id: "drone.power.range",
+    stability: gp_base::tool::Stability::Stable,
     title: "Drone range",
     summary: "How far a drone can fly on a battery: the flight time at its power draw times the groundspeed, with usable share, reserve, cold derating, and wind along the course.",
     aliases: &[

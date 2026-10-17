@@ -26,16 +26,16 @@ Steady power and speed in one direction. Climb, hover on task, and the return le
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/power, requirement "Endurance" (range from cruise time and groundspeed); checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: 99 Wh, 85% usable, 25% reserve, 180 W, 14 m/s
-- outputs: 63.11 Wh to fly on, 21.04 min, 17.67 km
-- tolerance: 1e-9
-- verifiedBy: golden vector v001 and the `focused_power_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: IEEE Robotics and Automation Letters (L. Bauersfeld and D. Scaramuzza)
+- sourceTitle: Range, Endurance, and Optimal Speed Estimates for Multicopters
+- sourceEdition: Vol. 7, No. 2 (2022), DOI 10.1109/LRA.2022.3145063; free copy arXiv:2109.04741
+- sourceLocator: Sec. VII-E max-range case (DJI Mavic 3): 72.224 Wh at 107.0 W gives t_r = 2,429 s (40.48 min), and t_r × v_r at 13.12 m/s is 31.9 km
+- independent: yes
+- inputs: 72.224 Wh, 100% usable, 0% reserve, 107.0 W, 13.12 m/s
+- outputs: 40.50 min of flight and 31.88 km of range (the paper's t_r × v_r is 31.9 km; the spread is the capacity's three-figure rounding)
+- tolerance: 0.1 km (the capacity rounding, as the endurance tool's note explains)
+- verifiedBy: the `focused_power_operations_match_their_general_tools` integration test, which requires the range and usable energy to equal the stable `drone.power.endurance` tool's at the same power and groundspeed
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -45,6 +45,6 @@ Steady power and speed in one direction. Climb, hover on task, and the return le
 
 ## Invariants
 
+- `core/crates/gp-drone/tests/drone.rs` `focused_power_operations_match_their_general_tools`: the range and usable energy equal the stable `drone.power.endurance` tool's at the same power and groundspeed, and a headwind reduces the range by the share it takes off the groundspeed.
 - Range = flight time × groundspeed.
 - Doubling the power halves the range.
-- A direct headwind of W reduces the groundspeed by W; a direct tailwind adds it.

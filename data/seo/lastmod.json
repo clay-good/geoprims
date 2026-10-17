@@ -1,15 +1,15 @@
 {
   "/": {
-    "hash": "17e1f3ac04a23729",
-    "lastmod": "2026-10-14"
+    "hash": "29a19d078f2c81b2",
+    "lastmod": "2026-10-17"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "634e1e0a2e439d80",
-    "lastmod": "2026-10-14"
+    "hash": "16a3bfccb54d4f4c",
+    "lastmod": "2026-10-17"
   },
   "/aviation/": {
     "hash": "429347ebf243360f",
@@ -1416,8 +1416,8 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "9905a71358be27ef",
-    "lastmod": "2026-10-14"
+    "hash": "c3bd14c8810d66ff",
+    "lastmod": "2026-10-17"
   },
   "/navigation/": {
     "hash": "43588b842e94b597",
@@ -1720,8 +1720,8 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/azimuth-bearing/": {
-    "hash": "77598ff98af1fbbc",
-    "lastmod": "2026-10-14"
+    "hash": "eb88c2b471155146",
+    "lastmod": "2026-10-17"
   },
   "/survey/cogo/bearing-bearing/": {
     "hash": "726bd84ee87c35b5",
@@ -1744,8 +1744,8 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/direction-parse/": {
-    "hash": "c9267548a91563a2",
-    "lastmod": "2026-10-13"
+    "hash": "92121ffa8ac22d20",
+    "lastmod": "2026-10-17"
   },
   "/survey/cogo/distance-distance/": {
     "hash": "f891e8c7a837355e",
@@ -2084,8 +2084,8 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "d3d2cb745ad36ce3",
-    "lastmod": "2026-10-14"
+    "hash": "2f66e95a7b5e17df",
+    "lastmod": "2026-10-17"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2348,8 +2348,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "68c82843753efd76",
-    "lastmod": "2026-10-14"
+    "hash": "dcc0da27f31fed42",
+    "lastmod": "2026-10-17"
   },
   "/workflows/": {
     "hash": "ae01dae8923fdd1d",

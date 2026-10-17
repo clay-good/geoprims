@@ -14,6 +14,7 @@ use crate::{GHILANI, deg, unit};
 
 pub static PARSE: ToolDef = ToolDef {
     id: "survey.cogo.direction-parse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Survey bearing and azimuth converter",
     summary: "Reads a quadrant bearing, north azimuth, or gon value and writes the same direction as an azimuth, bearing, and gons.",
     aliases: &[
@@ -83,7 +84,7 @@ pub static PARSE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     when_to_use: "Use this before entering a record bearing in software that expects a north azimuth, or when field notes and a data collector use different direction notation. It accepts quadrant bearings, decimal or DMS north azimuths, and gons, then shows all three forms without changing the stated direction reference. It is also useful for checking a hand conversion before a traverse, forward calculation, stakeout, or plan annotation. State the same reference that the source document or job grid uses.",
     limitations: "This changes notation only. It does not rotate between grid, geodetic, assumed, or magnetic north, and it does not determine which reference a record intended. Supply the reference from the survey record, coordinate system, or instrument setup. A direction labeled with the wrong reference can still be formatted correctly but point the wrong way. Use convergence, declination, or basis-rotation tools before this one when the north reference itself must change.",
     model: "Quadrant bearings map their acute angle into the matching north-azimuth quadrant; 400 gon = 360°",
@@ -102,6 +103,10 @@ pub static PARSE: ToolDef = ToolDef {
     }],
     related: &[
         Related {
+            id: "survey.cogo.azimuth-bearing",
+            reason: "alternative",
+        },
+        Related {
             id: "survey.cogo.forward",
             reason: "next",
         },
@@ -117,6 +122,7 @@ pub static PARSE: ToolDef = ToolDef {
 
 pub static AZIMUTH_BEARING: ToolDef = ToolDef {
     id: "survey.cogo.azimuth-bearing",
+    stability: gp_base::tool::Stability::Stable,
     title: "Azimuth and bearing converter",
     summary: "Converts a north azimuth, quadrant bearing, or gon value into equivalent azimuth, DMS, bearing, and gon notation.",
     aliases: &[

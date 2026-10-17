@@ -47,7 +47,4 @@ The conversion itself is exact. The DMS strings are displayed to 0.01 arcsecond 
 
 ## Invariants
 
-- Cardinal directions land at 0°, 90°, 180°, and 270° from either neighboring quadrant.
-- 0 gon and 400 gon both wrap to north; 100, 200, and 300 gon are east, south, and west.
-- Converting a valid quadrant bearing to azimuth and formatting it back preserves the direction to the displayed 0.01 arcsecond.
-- The reference label passes through unchanged because this operation does not rotate the direction.
+- `core/crates/gp-survey/tests/cogo_views_invariants.rs` `direction_parse_invariants`: cardinal directions land at 0°, 90°, 180°, and 270° from either neighboring quadrant; 0 gon and 400 gon both wrap to north while 100, 200, and 300 gon are east, south, and west; a valid quadrant bearing converted to an azimuth and read back from the reported bearing preserves the direction to the displayed 0.01 arcsecond; and the reference label passes through unchanged because this operation does not rotate the direction.

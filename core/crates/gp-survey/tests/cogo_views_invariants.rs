@@ -51,6 +51,70 @@ fn azimuth_bearing_invariants() {
     }
 }
 
+fn direction_parse(direction: &str, reference: &str) -> Value {
+    call(
+        "survey.cogo.direction-parse",
+        json!({"direction": direction, "reference": reference}),
+    )
+}
+
+#[test]
+fn direction_parse_invariants() {
+    // A cardinal direction lands on its axis from either neighboring quadrant.
+    for (a, b, want) in [
+        ("N 0°00'00\" E", "N 0°00'00\" W", 0.0),
+        ("N 90°00'00\" E", "S 90°00'00\" E", 90.0),
+        ("S 0°00'00\" E", "S 0°00'00\" W", 180.0),
+        ("S 90°00'00\" W", "N 90°00'00\" W", 270.0),
+    ] {
+        assert!(
+            (num(&direction_parse(a, "assumed"), "azimuth") - want).abs() < 1e-9,
+            "{a}"
+        );
+        assert!(
+            (num(&direction_parse(b, "assumed"), "azimuth") - want).abs() < 1e-9,
+            "{b}"
+        );
+    }
+    // 0 gon and 400 gon both wrap to north; 100, 200, 300 gon are east, south, west.
+    for (g, want) in [
+        ("0 gon", 0.0),
+        ("400 gon", 0.0),
+        ("100 gon", 90.0),
+        ("200 gon", 180.0),
+        ("300 gon", 270.0),
+    ] {
+        assert!(
+            (num(&direction_parse(g, "assumed"), "azimuth") - want).abs() < 1e-9,
+            "{g}"
+        );
+    }
+    // A valid quadrant bearing, converted to an azimuth and read back from the
+    // reported bearing string, preserves the azimuth to the displayed 0.01
+    // arcsecond (0.01" is about 2.8e-6 degrees).
+    for d in [
+        "N 10°15'30\" W",
+        "S 44°30'00\" W",
+        "N 72°08'45\" E",
+        "S 5°00'01\" E",
+    ] {
+        let first = direction_parse(d, "assumed");
+        let az = num(&first, "azimuth");
+        let back = direction_parse(first["bearing"].as_str().unwrap(), "assumed");
+        assert!((num(&back, "azimuth") - az).abs() < 3e-6, "{d} round trip");
+    }
+    // The reference is a label: it passes through unchanged and never moves the
+    // number.
+    for d in ["N 10°15'30\" W", "S 45°00'00\" E", "123.456 deg"] {
+        let base = num(&direction_parse(d, "assumed"), "azimuth");
+        for r in ["grid", "geodetic", "assumed"] {
+            let out = direction_parse(d, r);
+            assert_eq!(out["reference"].as_str().unwrap(), r, "{d} {r}");
+            assert_eq!(num(&out, "azimuth"), base, "{d} {r}");
+        }
+    }
+}
+
 /// A line from (5000, 5000) at each azimuth, as a direction or a second point.
 fn lines() -> Vec<(f64, Value, Value)> {
     [0.0, 37.5, 90.0, 200.0, 315.25]

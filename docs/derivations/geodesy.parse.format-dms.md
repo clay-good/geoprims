@@ -25,16 +25,16 @@ Rounding to the places written is the only loss. No datum is applied.
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-geodesy-suite specification
-- sourceEdition: 2026
-- sourceLocator: geodesy/coordinate-parsing, requirement "Formatting"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: 48.858370, 2.294481 to 1 place
-- outputs: 48°51'30.1"N 2°17'40.1"E
+- sourcePublisher: Wikipedia contributors
+- sourceTitle: Decimal degrees (worked example)
+- sourceEdition: retrieved 2026-10-17
+- sourceLocator: The US Capitol, 38.8897°, −77.0089°, is 38°53′23″N 77°00′32″W
+- independent: yes
+- inputs: 38.8897222, −77.0088889 to 0 places
+- outputs: 38°53'23"N 77°00'32"W
 - tolerance: exact text
-- verifiedBy: golden vector v001 and the `focused_parse_format_and_ellipsoid_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- verifiedBy: the `focused_parse_format_and_ellipsoid_operations_match_their_general_tools` integration test, which requires byte-for-byte parity with the stable `geodesy.parse.format` for the dms notation
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -44,6 +44,6 @@ Rounding to the places written is the only loss. No datum is applied.
 
 ## Invariants
 
-- Reading the text back returns the position to within the ground size reported.
+- `core/crates/gp-geodesy/tests/geodesy.rs` `focused_parse_format_and_ellipsoid_operations_match_their_general_tools`: the formatter equals the general `geodesy.parse.format` with its notation fixed, rejects a notation input, carries a part that rounds to 60 into the next place (10.9999999° to 0 places gives 11°00'00"), and reads back to the resolution written.
 - A part never prints as 60.
 - More decimal places never move the position by more than half the last place of the shorter form.

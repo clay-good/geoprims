@@ -8,8 +8,9 @@ import { createHash } from 'node:crypto';
 export const TOOLSETS = {
   // Everyday geodesy; the projections with user-set parameters, and State
   // Plane, are their own toolset, since together the two pass the 40-tool cap.
+  // Coordinate-notation parsing and formatting is its own toolset too, since
+  // with it the core passes the cap.
   'geodesy-core': [
-    'geodesy.parse.',
     'geodesy.grid-ref.',
     'geodesy.utm.',
     'geodesy.ups.',
@@ -17,6 +18,7 @@ export const TOOLSETS = {
     'geodesy.ellipsoid.',
     'geodesy.frame.',
   ],
+  'coordinate-notation': ['geodesy.parse.'],
   // Heights and magnetic models are their own toolsets, since with them the
   // core passes the 40-tool cap.
   heights: ['geodesy.geoid.', 'geodesy.height.'],

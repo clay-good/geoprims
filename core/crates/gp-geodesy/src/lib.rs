@@ -239,6 +239,7 @@ pub static PARSE: ToolDef = ToolDef {
 
 pub static PARSE_DMS: ToolDef = ToolDef {
     id: "geodesy.parse.parse-dms",
+    stability: gp_base::tool::Stability::Stable,
     title: "Degrees, minutes, and seconds to decimal degrees",
     summary: "Reads a latitude and longitude written in degrees, minutes, and seconds and returns them as decimal degrees.",
     aliases: &[
@@ -293,6 +294,7 @@ pub static PARSE_DMS: ToolDef = ToolDef {
 
 pub static PARSE_DDM: ToolDef = ToolDef {
     id: "geodesy.parse.parse-ddm",
+    stability: gp_base::tool::Stability::Stable,
     title: "Degrees and decimal minutes to decimal degrees",
     summary: "Reads a latitude and longitude written in degrees and decimal minutes and returns them as decimal degrees.",
     aliases: &[
@@ -774,6 +776,7 @@ pub static FORMAT: ToolDef = ToolDef {
 
 pub static FORMAT_DD: ToolDef = ToolDef {
     id: "geodesy.parse.format-dd",
+    stability: gp_base::tool::Stability::Stable,
     title: "Coordinates in decimal degrees",
     summary: "Writes a latitude and longitude as decimal degrees, with hemisphere letters or signs and a chosen number of decimal places.",
     aliases: &[
@@ -837,6 +840,7 @@ pub static FORMAT_DD: ToolDef = ToolDef {
 
 pub static FORMAT_DMS: ToolDef = ToolDef {
     id: "geodesy.parse.format-dms",
+    stability: gp_base::tool::Stability::Stable,
     title: "Coordinates in degrees, minutes, and seconds",
     summary: "Writes a latitude and longitude as degrees, minutes, and seconds, with hemisphere letters or signs and a chosen number of decimal places on the seconds.",
     aliases: &[
@@ -900,6 +904,7 @@ pub static FORMAT_DMS: ToolDef = ToolDef {
 
 pub static FORMAT_DDM: ToolDef = ToolDef {
     id: "geodesy.parse.format-ddm",
+    stability: gp_base::tool::Stability::Stable,
     title: "Coordinates in degrees and decimal minutes",
     summary: "Writes a latitude and longitude as degrees and decimal minutes, with hemisphere letters or signs and a chosen number of decimal places on the minutes.",
     aliases: &[

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cfa78fac410d2baa",
+    "hash": "d0449d5bb6512f63",
     "lastmod": "2026-10-17"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "f0a98b64acab9cbb",
+    "hash": "8c842a063027c496",
     "lastmod": "2026-10-17"
   },
   "/aviation/": {
@@ -744,28 +744,28 @@
     "lastmod": "2026-10-09"
   },
   "/geodesy/parse/format-dd/": {
-    "hash": "9e5ae44e5499b8f9",
-    "lastmod": "2026-10-14"
+    "hash": "85f3c8fba4bbca97",
+    "lastmod": "2026-10-17"
   },
   "/geodesy/parse/format-ddm/": {
-    "hash": "64b3908deec174fc",
-    "lastmod": "2026-10-14"
+    "hash": "806d177813753d38",
+    "lastmod": "2026-10-17"
   },
   "/geodesy/parse/format-dms/": {
-    "hash": "790d68cb759b37c4",
-    "lastmod": "2026-10-14"
+    "hash": "9ac5f5840812f4bc",
+    "lastmod": "2026-10-17"
   },
   "/geodesy/parse/format/": {
     "hash": "0b314c7f06d08eed",
     "lastmod": "2026-10-14"
   },
   "/geodesy/parse/parse-ddm/": {
-    "hash": "25b43abde72de5fd",
-    "lastmod": "2026-10-14"
+    "hash": "eff8e1c7b93501fb",
+    "lastmod": "2026-10-17"
   },
   "/geodesy/parse/parse-dms/": {
-    "hash": "580f3741b90dcff2",
-    "lastmod": "2026-10-14"
+    "hash": "f3ee125ddba76517",
+    "lastmod": "2026-10-17"
   },
   "/geodesy/projection/": {
     "hash": "b0b2907aee690cc1",
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "47f66c8891985bca",
+    "hash": "dc1a7e40cfe006be",
     "lastmod": "2026-10-17"
   },
   "/navigation/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "502004ef0d15cf36",
+    "hash": "291d6c9b3a0fa014",
     "lastmod": "2026-10-17"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f91833e9b14e45f7",
+    "hash": "f6164af25820c735",
     "lastmod": "2026-10-17"
   },
   "/workflows/": {

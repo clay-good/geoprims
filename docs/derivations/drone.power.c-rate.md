@@ -25,16 +25,16 @@ Nominal voltage is used. Under load, in the cold, or late in a flight the voltag
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/power, requirement "Battery energy" (current and C-rate for a draw); checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: 10,000 mAh, 6 cells LiPo, 480 W
-- outputs: 22.2 V nominal, 21.62 A, 2.16 C
-- tolerance: 1e-12
-- verifiedBy: golden vector v001 and the `focused_power_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: Cadex Electronics (Battery University)
+- sourceTitle: BU-402: What Is C-rate?
+- sourceEdition: retrieved 2026-10-17
+- sourceLocator: a 1 Ah battery discharging at 2C delivers 2 A (current = C-rate × capacity)
+- independent: yes
+- inputs: capacity 1 Ah, voltage 3.7 V, power 7.4 W
+- outputs: current 2 A, C-rate 2 C
+- tolerance: exact
+- verifiedBy: the `focused_power_operations_match_their_general_tools` integration test, which requires the current and C-rate to equal the stable `drone.power.battery-energy` tool's for the same draw
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -44,6 +44,6 @@ Nominal voltage is used. Under load, in the cold, or late in a flight the voltag
 
 ## Invariants
 
-- The C-rate is proportional to the power and inversely proportional to the capacity and the voltage.
+- `core/crates/gp-drone/tests/drone.rs` `focused_power_operations_match_their_general_tools`: the current, C-rate, and nominal voltage equal the stable `drone.power.battery-energy` tool's for the same draw, and both flag a C-rate over the pack's rating.
 - Current × voltage = power.
 - Doubling the capacity halves the C-rate.

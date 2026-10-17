@@ -366,6 +366,7 @@ pub static BATTERY_ENERGY: ToolDef = ToolDef {
 
 pub static C_RATE: ToolDef = ToolDef {
     id: "drone.power.c-rate",
+    stability: gp_base::tool::Stability::Stable,
     title: "Battery C-rate for a power draw",
     summary: "The current a power draw pulls from a battery and the C-rate that is for the pack's capacity, checked against the pack's continuous rating.",
     aliases: &[

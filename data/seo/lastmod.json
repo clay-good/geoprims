@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "11ccb2776ef47c72",
+    "hash": "3f8ea30d82229811",
     "lastmod": "2026-10-17"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "4262e2e734bb568c",
+    "hash": "fc50efc9ba21674c",
     "lastmod": "2026-10-17"
   },
   "/aviation/": {
@@ -712,8 +712,8 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/magnetic/magnetic-to-true/": {
-    "hash": "7899ffe0820afe86",
-    "lastmod": "2026-10-14"
+    "hash": "9bb343871ab7daec",
+    "lastmod": "2026-10-17"
   },
   "/geodesy/magnetic/model-compare/": {
     "hash": "0cbfa0545d56b066",
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "3e311c818898e971",
+    "hash": "4bd326ba0180c91b",
     "lastmod": "2026-10-17"
   },
   "/navigation/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "79701e6c6cca1411",
+    "hash": "40ff6190fd6dcfc7",
     "lastmod": "2026-10-17"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "04a85cd69ce355cc",
+    "hash": "002805fb1a5295d7",
     "lastmod": "2026-10-17"
   },
   "/workflows/": {

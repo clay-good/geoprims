@@ -24,16 +24,16 @@ Deviation of the compass in its vehicle is not included.
 
 ## Worked example
 
-- sourcePublisher: Federal Aviation Administration
-- sourceTitle: Pilot's Handbook of Aeronautical Knowledge
-- sourceEdition: FAA-H-8083-25C (2023)
-- sourceLocator: Chapter 16, variation: "east is least, west is best"; the numbers below are this note's arithmetic on that rule, not a printed example
-- independent: no
-- inputs: 215° magnetic, variation 9°E
-- outputs: 224° true
-- tolerance: 1e-9°
-- verifiedBy: golden vector v001 and the `focused_parse_format_and_ellipsoid_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: NOAA National Centers for Environmental Information
+- sourceTitle: WMM2025 test values (WMM2025_TestValues.txt)
+- sourceEdition: WMM2025, released 2024-11-13
+- sourceLocator: Row 2 (2025.0, 48 km, 80° N, 96° W), D = −29.91°; applied to a 100° magnetic bearing
+- independent: yes
+- inputs: 100° magnetic at 80° N, 96° W, 48 km, 2025.0
+- outputs: variation 29.91° W (−29.91°), 70.09° true
+- tolerance: 0.005° on the variation (the test file prints D to 0.01°)
+- verifiedBy: the `magnetic_to_true_invariants` test in `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs`, which requires the variation to equal the WMM2025 declination tool's at this point
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -43,6 +43,4 @@ Deviation of the compass in its vehicle is not included.
 
 ## Invariants
 
-- Converting the result back with `geodesy.magnetic.true-to-magnetic` returns the bearing.
-- Zero variation leaves the bearing unchanged.
-- The result is always from 0° up to 360°.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `magnetic_to_true_invariants`: in model mode the variation applied equals the WMM2025 declination tool's at the same point, the true bearing is the magnetic bearing plus the east-positive variation wrapped to [0°, 360°), `true-to-magnetic` reads it back, and zero variation leaves the bearing unchanged.

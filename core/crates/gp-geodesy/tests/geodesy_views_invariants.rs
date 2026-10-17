@@ -258,6 +258,64 @@ fn magnetic_views_invariants() {
 }
 
 #[test]
+fn magnetic_to_true_invariants() {
+    for (lat, lon, date) in [
+        (80.0, -96.0, "2025.0"),
+        (45.0, -100.0, "2027.5"),
+        (-33.0, 151.0, "2026.0"),
+    ] {
+        // Model mode: the variation applied is the declination tool's WMM2025 value.
+        let decl = num(
+            &call(
+                "geodesy.magnetic.declination",
+                json!({"lat": lat, "lon": lon, "date": date, "model": "wmm2025"}),
+            ),
+            "declination",
+        );
+        let out = call(
+            "geodesy.magnetic.magnetic-to-true",
+            json!({"bearing": "100 deg", "lat": lat, "lon": lon, "date": date}),
+        );
+        assert!(
+            (num(&out, "variation_used") - decl).abs() < 1e-9,
+            "{lat},{lon}"
+        );
+        // True = magnetic + variation (east positive), wrapped to [0, 360).
+        let want = (100.0 + decl).rem_euclid(360.0);
+        assert!((num(&out, "result") - want).abs() < 1e-9, "{lat},{lon}");
+        assert!((0.0..360.0).contains(&num(&out, "result")));
+        // Reading it back with true-to-magnetic returns the bearing.
+        let back = call(
+            "geodesy.magnetic.true-to-magnetic",
+            json!({"bearing": format!("{} deg", num(&out, "result")), "lat": lat, "lon": lon, "date": date}),
+        );
+        assert!((num(&back, "result") - 100.0).abs() < 1e-6, "{lat},{lon}");
+    }
+    // Zero variation leaves the bearing unchanged.
+    assert_eq!(
+        num(
+            &call(
+                "geodesy.magnetic.magnetic-to-true",
+                json!({"bearing": "215 deg", "variation": "0"})
+            ),
+            "result",
+        ),
+        215.0,
+    );
+    // East is least, west is best: 215° magnetic with 9° E variation is 224° true.
+    assert_eq!(
+        num(
+            &call(
+                "geodesy.magnetic.magnetic-to-true",
+                json!({"bearing": "215 deg", "variation": "9°E"})
+            ),
+            "result",
+        ),
+        224.0,
+    );
+}
+
+#[test]
 fn projection_views_invariants() {
     for tool in [
         "geodesy.projection.convergence",

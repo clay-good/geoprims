@@ -1087,6 +1087,7 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
 
 pub static MAGNETIC_TO_TRUE: ToolDef = ToolDef {
     id: "geodesy.magnetic.magnetic-to-true",
+    stability: gp_base::tool::Stability::Stable,
     title: "Magnetic bearing to true bearing",
     summary: "Converts a compass or magnetic bearing to a true bearing by adding the magnetic variation, from a chart value or from the model for a place and date.",
     aliases: &[

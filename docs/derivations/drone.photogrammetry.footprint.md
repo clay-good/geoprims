@@ -26,16 +26,16 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/photogrammetry, requirement "GSD and footprint"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: h 90 m, sensor 13.2 × 8.8 mm, f 8.8 mm
-- outputs: 135 m across, 90 m along, 12,150 m²
-- tolerance: 1e-9 m
-- verifiedBy: golden vectors and the `focused_photogrammetry_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: Alshaibani, Helvaci, Shayea, Saad, Azizan, and Yakub
+- sourceTitle: Airplane Type Identification Based on Mask RCNN and Drone Images (arXiv:2108.12811)
+- sourceEdition: arXiv v1, 2021
+- sourceLocator: Equation 1 and figure 5 (1-inch sensor 12.75 × 8.5 mm, 10.6 mm lens, 120 m), 3.13 cm/px over the 4,608 × 3,072 px frame
+- independent: yes
+- inputs: height 120 m, sensor 12.75 × 8.5 mm, focal length 10.6 mm
+- outputs: 144.34 m across, 96.23 m along, 13,889 m² (the published 3.13 cm/px over 4,608 × 3,072 px)
+- tolerance: 0.2 m (the footprint implied by the paper's printed GSD and pixel counts)
+- verifiedBy: the `focused_photogrammetry_operations_match_their_general_tools` integration test, which requires these footprints to equal the stable `drone.photogrammetry.gsd` tool's
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -45,6 +45,6 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Invariants
 
-- Both sides scale linearly with height.
+- `core/crates/gp-drone/tests/drone.rs` `focused_photogrammetry_operations_match_their_general_tools`: the across- and along-track footprints and their product equal the stable `drone.photogrammetry.gsd` tool's for the same camera.
 - Across ÷ along equals the sensor's width ÷ height.
 - A 35 mm-equivalent focal length gives the same footprint as its physical value.

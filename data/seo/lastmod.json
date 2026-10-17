@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8350d66d5927b98a",
+    "hash": "893ece27d7edde06",
     "lastmod": "2026-10-17"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "c89e9978076b3577",
+    "hash": "e5c1d9b311af1822",
     "lastmod": "2026-10-17"
   },
   "/aviation/": {
@@ -389,11 +389,11 @@
   },
   "/drone/photogrammetry/crop-factor/": {
     "hash": "5ce96143a95f6fcf",
-    "lastmod": "2026-10-14"
+    "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/footprint/": {
-    "hash": "b69685c11593054d",
-    "lastmod": "2026-10-14"
+    "hash": "2e40c0185a15aded",
+    "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/gcp-plan/": {
     "hash": "277a8825f35a8c8d",
@@ -412,8 +412,8 @@
     "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/max-shutter/": {
-    "hash": "c1c45d9a19ac502d",
-    "lastmod": "2026-10-14"
+    "hash": "3f41f371da1a10b7",
+    "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/motion-blur/": {
     "hash": "d7b0ca241bcdbd1d",
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "788a7498f957ab28",
+    "hash": "d532cd2cc035b4e5",
     "lastmod": "2026-10-17"
   },
   "/navigation/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "e59d2b51b68e9eb3",
+    "hash": "16a08caafb20a94b",
     "lastmod": "2026-10-17"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "5a72b586b4385e1e",
+    "hash": "dd36416690135cc7",
     "lastmod": "2026-10-17"
   },
   "/workflows/": {

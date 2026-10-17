@@ -29,7 +29,10 @@ export const TOOLSETS = {
   geometry: ['geometry.'],
   e6b: ['aviation.airspeed.', 'aviation.altimetry.', 'aviation.wind.', 'aviation.performance.'],
   atmosphere: ['aviation.atmosphere.', 'aviation.altimetry.', 'time.sun.'],
-  'drone-mapping': ['drone.'],
+  // Mapping flight planning; power, ops, sensors, and links are their own
+  // toolset, since together with photogrammetry and mission they pass the cap.
+  'drone-mapping': ['drone.photogrammetry.', 'drone.mission.'],
+  'drone-ops': ['drone.power.', 'drone.ops.', 'drone.sensors.', 'drone.links.'],
   'survey-cogo': ['survey.'],
   // H3 alone passes the cap, so it is its own toolset beside the other indexes.
   indexing: ['indexing.s2.', 'indexing.tile.', 'indexing.geohash.', 'indexing.plus-code.', 'indexing.a5.', 'indexing.convert.'],

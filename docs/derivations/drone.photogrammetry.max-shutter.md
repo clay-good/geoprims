@@ -24,16 +24,16 @@ Forward motion only. Vibration, gimbal motion, and rolling-shutter skew are not 
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/photogrammetry, requirement "Motion blur"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: 12 m/s, GSD 2.5 cm, limit 0.5 px
-- outputs: 1.25 cm of travel, 1/960 s
-- tolerance: 1e-12 s
-- verifiedBy: golden vector v001 and the `focused_photogrammetry_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: MDPI, Drones
+- sourceTitle: Enhancing Direct Georeferencing Using Real-Time Kinematic UAVs and Structure from Motion-Based Photogrammetry for Large-Scale Infrastructure
+- sourceEdition: volume 8, issue 12, article 736 (2024)
+- sourceLocator: section 2.1.1, equation (1) and the worked example (groundspeed 10 m/s, GSD 2.0 cm); applying the 0.5 px limit gives a maximum exposure of 0.001 s, or 1/1,000 s
+- independent: yes
+- inputs: groundspeed 10 m/s, GSD 2.0 cm, blur limit 0.5 px
+- outputs: maximum exposure 0.001 s (1/1,000 s)
+- tolerance: exact
+- verifiedBy: the `focused_photogrammetry_operations_match_their_general_tools` integration test, which requires the exposure to equal the stable `drone.photogrammetry.motion-blur` tool's limit for the same speed and GSD
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -43,5 +43,5 @@ Forward motion only. Vibration, gimbal motion, and rolling-shutter skew are not 
 
 ## Invariants
 
+- `core/crates/gp-drone/tests/drone.rs` `focused_photogrammetry_operations_match_their_general_tools`: the maximum exposure equals the stable `drone.photogrammetry.motion-blur` tool's for the same groundspeed, GSD, and blur limit.
 - The exposure is proportional to the GSD and the blur limit, and inversely to the groundspeed.
-- At the reported exposure the blur equals the limit.

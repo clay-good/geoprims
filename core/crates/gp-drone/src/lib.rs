@@ -484,6 +484,7 @@ const SENSOR_HEIGHT: Field = mm_field(
 
 pub static FOOTPRINT: ToolDef = ToolDef {
     id: "drone.photogrammetry.footprint",
+    stability: gp_base::tool::Stability::Stable,
     title: "Image footprint on the ground",
     summary: "The ground width, length, and area one nadir photo covers, from the height above ground, the sensor size, and the focal length.",
     aliases: &[
@@ -1700,6 +1701,7 @@ pub static MOTION_BLUR: ToolDef = ToolDef {
 
 pub static MAX_SHUTTER: ToolDef = ToolDef {
     id: "drone.photogrammetry.max-shutter",
+    stability: gp_base::tool::Stability::Stable,
     title: "Slowest shutter speed for sharp mapping photos",
     summary: "The longest exposure that keeps motion blur within a chosen share of a pixel, from the groundspeed and the ground sample distance.",
     aliases: &[

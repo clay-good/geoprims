@@ -25,16 +25,16 @@ Separate, unobstructed disks. Overlapping, ducted, or coaxial rotors do not act 
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/power, requirement "Hover power" (disk area and disk loading); checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: 6 rotors of 15 in, 6.2 kg
-- outputs: 0.1140 m² each, 0.6841 m² in all, 88.9 Pa
-- tolerance: 1e-9
-- verifiedBy: golden vector v001 and the `focused_power_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: Embry-Riddle Aeronautical University
+- sourceTitle: Introduction to Aerospace Flight Vehicles
+- sourceEdition: 2026 webbook edition
+- sourceLocator: Chapter 67 hover-power example, a 45,000 lb aircraft on two 38 ft rotors (each a π·(19 ft)² disk)
+- independent: yes
+- inputs: 2 rotors of 38 ft, 45,000 lb
+- outputs: 105.36 m² per rotor, 210.73 m² total, disk loading 949.9 Pa (19.84 lb/ft²)
+- tolerance: 0.1 m² on the disk area (geometry from the published 38 ft diameter)
+- verifiedBy: the `focused_power_operations_match_their_general_tools` integration test, which requires the disk area and loading to equal the stable `drone.power.hover-power` tool's for the same frame
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -44,6 +44,6 @@ Separate, unobstructed disks. Overlapping, ducted, or coaxial rotors do not act 
 
 ## Invariants
 
+- `core/crates/gp-drone/tests/drone.rs` `focused_power_operations_match_their_general_tools`: the disk area and disk loading equal the stable `drone.power.hover-power` tool's for the same frame.
 - The area scales with the square of the diameter and linearly with the rotor count.
-- Area of one rotor × N = disk area.
 - Disk loading × disk area = weight.

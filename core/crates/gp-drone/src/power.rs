@@ -682,6 +682,7 @@ fn read_hover(ctx: &mut Ctx) -> Result<HoverIn, ToolError> {
 
 pub static DISK_AREA: ToolDef = ToolDef {
     id: "drone.power.disk-area",
+    stability: gp_base::tool::Stability::Stable,
     title: "Rotor disk area and disk loading",
     summary: "The total area swept by a multirotor's propellers, the area of one, and the disk loading when the takeoff mass is given.",
     aliases: &[

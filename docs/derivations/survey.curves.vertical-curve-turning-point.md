@@ -29,16 +29,16 @@ None for a parabolic curve. Unequal-tangent curves are a different operation.
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-survey-suite specification
-- sourceEdition: 2026
-- sourceLocator: survey/alignment-curves, scenario "Crest curve high point"; the arithmetic is checked by hand, not taken from a published table
-- independent: no
-- inputs: g1 +2%, g2 −3%, L 600 ft, PVI 10+00 at 100.00 ft
-- outputs: high point 240 ft past the PVC, station 9+40, elevation 96.40 ft, K 120
-- tolerance: 1e-9 ft
-- verifiedBy: golden vector v002 and the `named_curve_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: Engineering LibreTexts (David Levinson et al., CC BY-SA 4.0)
+- sourceTitle: Fundamentals of Transportation, 7.5 Vertical Curves, Example 1 (sag low point)
+- sourceEdition: CC BY-SA 4.0
+- sourceLocator: G1 −4%, G2 +2%, L 500 m, PVC 100+00 at 1000 m (PVI 102+50 at 990 m)
+- independent: yes
+- inputs: g1 −4%, g2 +2%, L 500 m, PVI 102+50 at 990 m
+- outputs: low point 333.33 m past the PVC, elevation 993.33 m (the core renders the station in km-chunks as 10+333.333, where the source adds 333.33 m to 100+00 for 103+33.33)
+- tolerance: the source's printed 0.01 m
+- verifiedBy: golden vector v024 and the `named_curve_operations_match_their_general_tools` integration test
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -48,6 +48,4 @@ None for a parabolic curve. Unequal-tangent curves are a different operation.
 
 ## Invariants
 
-- The distance past the PVC is between 0 and L.
-- A crest's high point is above both ends; a sag's low point is below both.
-- Reversing the curve (swapping and negating the grades) mirrors the point about the PVI.
+- `core/crates/gp-survey/tests/survey.rs` `vertical_curve_turning_point_invariants`: the grade is zero at the turning point (g1 + (g2 − g1)·x/L = 0), its distance past the PVC is K·|g1| and lies between 0 and L, and a rise-then-fall grade reports a crest (high) while a fall-then-rise reports a sag (low).

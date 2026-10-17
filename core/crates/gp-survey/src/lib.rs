@@ -2092,6 +2092,7 @@ const VC_ROW: &[Field] = &[
 
 pub static VC_TURNING_POINT: ToolDef = ToolDef {
     id: "survey.curves.vertical-curve-turning-point",
+    stability: gp_base::tool::Stability::Stable,
     title: "Vertical curve high or low point",
     summary: "The station and elevation of the high point of a crest curve or the low point of a sag curve, and how far it is past the PVC.",
     aliases: &[
@@ -2131,7 +2132,7 @@ pub static VC_TURNING_POINT: ToolDef = ToolDef {
         VERTICAL_CURVE.outputs[6],
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "x = −g1·L / (g2 − g1) from the PVC, where the grade g1 + (g2 − g1)·x / L is zero; elevation = PVC elevation + g1·x + (g2 − g1)·x² / (2L), grades as ratios (Ghilani & Wolf 2021, ch. 25)",
     accuracy: "Exact for a symmetrical parabolic curve",
     when_to_use: "Use this to find where water collects on a sag curve or where a crest curve tops out, to place a drainage inlet or check clearance. Enter the incoming and outgoing grades in percent, the curve length or its K value, and the PVI station and elevation. The tool returns the station and elevation of the high or low point and its distance past the start of the curve.",

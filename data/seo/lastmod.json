@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "0230088d0363bd09",
+    "hash": "cfa78fac410d2baa",
     "lastmod": "2026-10-17"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "b3751f9c4a77189f",
+    "hash": "f0a98b64acab9cbb",
     "lastmod": "2026-10-17"
   },
   "/aviation/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "4606fdde26f23cc6",
+    "hash": "47f66c8891985bca",
     "lastmod": "2026-10-17"
   },
   "/navigation/": {
@@ -1840,8 +1840,8 @@
     "lastmod": "2026-10-14"
   },
   "/survey/curves/vertical-curve-turning-point/": {
-    "hash": "c4ee58719094703a",
-    "lastmod": "2026-10-14"
+    "hash": "93101f3e9601ba4b",
+    "lastmod": "2026-10-17"
   },
   "/survey/curves/vertical-curve/": {
     "hash": "58d3ab07868a5c1c",
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "5e241780782020ac",
+    "hash": "502004ef0d15cf36",
     "lastmod": "2026-10-17"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c4f2c2b923ecc88e",
+    "hash": "f91833e9b14e45f7",
     "lastmod": "2026-10-17"
   },
   "/workflows/": {

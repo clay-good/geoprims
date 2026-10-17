@@ -1399,6 +1399,46 @@ fn curve_stationing_invariants() {
 }
 
 #[test]
+fn vertical_curve_turning_point_invariants() {
+    let tp = |g1: f64, g2: f64, l: f64| {
+        call(
+            "survey.curves.vertical-curve-turning-point",
+            &serde_json::json!({"g1": g1, "g2": g2, "length": format!("{l} ft"),
+                                "pvi_station": "50+00", "pvi_elevation": "500 ft"})
+            .to_string(),
+        )
+    };
+    for (g1, g2, l) in [
+        (-4.0, 2.0, 500.0),
+        (2.0, -3.0, 600.0),
+        (-1.5, 1.5, 400.0),
+        (3.0, -1.0, 800.0),
+    ] {
+        let r = tp(g1, g2, l);
+        let x = num(&r, "result.distance_from_pvc.value");
+        let k = num(&r, "result.k");
+        // The grade is zero at the turning point: g1 + (g2 − g1)·x/L = 0.
+        assert!(
+            (g1 + (g2 - g1) * x / l).abs() < 1e-9,
+            "grade not zero at the turning point for {g1}/{g2}"
+        );
+        // Its distance from the PVC is K·|g1| and lies on the curve.
+        assert!((x - k * g1.abs()).abs() < 1e-6, "x != K*|g1| for {g1}/{g2}");
+        assert!(
+            (0.0..=l).contains(&x),
+            "turning point off the curve for {g1}/{g2}"
+        );
+        // A rise-then-fall grade is a crest (high); a fall-then-rise is a sag (low).
+        let want = if g1 > 0.0 { "high" } else { "low" };
+        assert_eq!(
+            r["result"]["curve_type"].as_str().unwrap(),
+            want,
+            "{g1}/{g2}"
+        );
+    }
+}
+
+#[test]
 fn vertical_curve_invariants() {
     // The PVC and PVT lie on the tangents, K = L/|g2 − g1|, and the turning
     // point is the extreme: the curve is no lower (sag) or higher (crest) at

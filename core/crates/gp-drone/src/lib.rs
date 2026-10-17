@@ -611,6 +611,7 @@ fn run_footprint(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CROP_FACTOR: ToolDef = ToolDef {
     id: "drone.photogrammetry.crop-factor",
+    stability: gp_base::tool::Stability::Stable,
     title: "Sensor crop factor",
     summary: "The crop factor of a camera sensor from its width and height, with its diagonal and the 35 mm-equivalent of a physical focal length.",
     aliases: &[
@@ -704,6 +705,20 @@ pub static CROP_FACTOR: ToolDef = ToolDef {
     ],
     sentence: "The crop factor is {crop_factor}, for a sensor diagonal of {sensor_diagonal}.",
     limits: &[("batchRows", 10_000)],
+    // Bound the prefill slots so a plausibility check keeps, e.g., a 100 m
+    // value out of the focal-length input: without these a query like
+    // "gsd ... lens 100 m 5472 px" mis-fills this tool and ties with the GSD
+    // tool, which the typed "gsd" and pixel count clearly intend.
+    slots: &[
+        Slot::new("sensor_width", &["sensor", "width"]).range(1.0, 100.0),
+        Slot::new("sensor_height", &["sensor", "height"]).range(1.0, 100.0),
+        Slot::new("focal_length", &["lens", "focal", "fl"]).range(1.0, 2000.0),
+        Slot::new(
+            "equivalent_focal_length",
+            &["equivalent", "35mm", "full-frame"],
+        )
+        .range(1.0, 2000.0),
+    ],
     run: run_crop_factor,
     ..ToolDef::BLANK
 };

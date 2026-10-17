@@ -25,16 +25,16 @@ The comparison is by diagonal, so the equivalent focal length matches the diagon
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/photogrammetry, requirement "GSD and footprint" (35 mm-equivalent focal lengths); checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: sensor 13.2 × 8.8 mm, f 8.8 mm
+- sourcePublisher: DJI
+- sourceTitle: Phantom 4 Pro specifications
+- sourceEdition: retrieved 2026-10-17
+- sourceLocator: camera, 1-inch sensor, 8.8 mm lens published as a 24 mm (35 mm format) equivalent
+- independent: yes
+- inputs: sensor 13.2 × 8.8 mm, focal length 8.8 mm
 - outputs: diagonal 15.864 mm, crop factor 2.727, 24.0 mm equivalent
-- tolerance: 0.01 mm
-- verifiedBy: golden vector v001 and the `focused_photogrammetry_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- tolerance: 0.1 mm on the equivalent focal length (DJI publishes 24 mm)
+- verifiedBy: the `focused_photogrammetry_operations_match_their_general_tools` integration test, which checks the crop factor of a 36 × 24 mm frame is 1, a 1-inch sensor's equivalent focal length, and the physical-to-equivalent round trip
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -44,6 +44,5 @@ The comparison is by diagonal, so the equivalent focal length matches the diagon
 
 ## Invariants
 
-- A 36 × 24 mm sensor has a crop factor of exactly 1.
-- Physical to equivalent and back returns the focal length.
+- `core/crates/gp-drone/tests/drone.rs` `focused_photogrammetry_operations_match_their_general_tools`: a 36 × 24 mm frame has a crop factor of exactly 1, and converting a focal length to its equivalent and back returns it.
 - A smaller sensor has a larger crop factor.

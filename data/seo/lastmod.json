@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "3f8ea30d82229811",
+    "hash": "6b1a7247a0463ef0",
     "lastmod": "2026-10-17"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "fc50efc9ba21674c",
+    "hash": "8c0d12b045c610d0",
     "lastmod": "2026-10-17"
   },
   "/aviation/": {
@@ -388,7 +388,7 @@
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/crop-factor/": {
-    "hash": "5ce96143a95f6fcf",
+    "hash": "c6236207096ac2a6",
     "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/footprint/": {
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "4bd326ba0180c91b",
+    "hash": "7c8aedf3092613b8",
     "lastmod": "2026-10-17"
   },
   "/navigation/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "40ff6190fd6dcfc7",
+    "hash": "e7dcbd45e168ce99",
     "lastmod": "2026-10-17"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "002805fb1a5295d7",
+    "hash": "40278f3bf02699e3",
     "lastmod": "2026-10-17"
   },
   "/workflows/": {

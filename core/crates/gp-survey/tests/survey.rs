@@ -524,6 +524,41 @@ fn named_earthwork_operations_match_their_general_tools() {
 }
 
 #[test]
+fn rise_run_invariants() {
+    let rr = |body: &str| call("survey.earthwork.rise-run", body);
+    for (rise, run) in [(2.5, 30.0), (3.0, 4.0), (1.0, 12.0), (165.288, 282.834)] {
+        let from_sides = rr(&format!(r#"{{"rise":"{rise} ft","run":"{run} ft"}}"#));
+        let slope = num(&from_sides, "result.slope_length.value");
+        // The three sides make a right triangle.
+        assert!(
+            (slope * slope - (rise * rise + run * run)).abs() < 1e-6,
+            "pythagorean at {rise}/{run}"
+        );
+        // Each remaining pair of sides returns the same third side.
+        let from_slope_run = rr(&format!(
+            r#"{{"run":"{run} ft","slope_length":"{slope} ft"}}"#
+        ));
+        assert!(
+            (num(&from_slope_run, "result.rise.value") - rise).abs() < 1e-6,
+            "rise from run+slope at {rise}/{run}"
+        );
+        let from_slope_rise = rr(&format!(
+            r#"{{"rise":"{rise} ft","slope_length":"{slope} ft"}}"#
+        ));
+        assert!(
+            (num(&from_slope_rise, "result.run.value") - run).abs() < 1e-6,
+            "run from rise+slope at {rise}/{run}"
+        );
+        // The grade is the same whatever shared unit the two sides use.
+        let in_meters = rr(&format!(r#"{{"rise":"{rise} m","run":"{run} m"}}"#));
+        assert!(
+            (num(&in_meters, "result.percent") - num(&from_sides, "result.percent")).abs() < 1e-9,
+            "grade unit-independent at {rise}/{run}"
+        );
+    }
+}
+
+#[test]
 fn named_curve_operations_match_their_general_tools() {
     // Degree of curve: each form returns the other two, and the circular curve agrees.
     let from_degree = call("survey.curves.degree-of-curve", r#"{"degree":"4"}"#);

@@ -27,16 +27,16 @@ None in the arithmetic. A rise computed from a run and a slope length is reporte
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-survey-suite specification
-- sourceEdition: 2026
-- sourceLocator: survey/earthwork-and-grade, requirement "Grade and slope expressions" (rise, run, or slope length from any two); the 3-4-5 triangle is checked by hand, not taken from a published table
-- independent: no
-- inputs: rise 3 m, slope length 5 m
-- outputs: run 4 m, grade 75%, angle 36.8699°
-- tolerance: 1e-12
-- verifiedBy: golden vectors v002 and v003 and the `named_earthwork_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: United States Access Board
+- sourceTitle: 2010 ADA Standards for Accessible Design
+- sourceEdition: 2010
+- sourceLocator: Section 405.2, ramp running slope maximum 1:12 (8.33%)
+- independent: yes
+- inputs: rise 2.5 ft (30 in), run 30 ft
+- outputs: grade 8.333%, ratio 12H:1V, angle 4.7636°, slope length 30.104 ft
+- tolerance: the standard's 1:12 and 8.33% match exactly; the core reports 8.3333% and 12H:1V
+- verifiedBy: golden vector v001 and the `named_earthwork_operations_match_their_general_tools` integration test
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -46,6 +46,4 @@ None in the arithmetic. A rise computed from a run and a slope length is reporte
 
 ## Invariants
 
-- rise² + run² = slope length².
-- The grade from a rise and a run does not depend on the unit they share.
-- Each pair of sides of the same triangle returns the same third side.
+- `core/crates/gp-survey/tests/survey.rs` `rise_run_invariants`: rise² + run² = slope length², each pair of sides of the same triangle returns the same third side, and the grade from a rise and a run does not depend on the unit they share.

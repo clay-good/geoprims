@@ -230,6 +230,7 @@ pub static GRADE: ToolDef = ToolDef {
 
 pub static RISE_RUN: ToolDef = ToolDef {
     id: "survey.earthwork.rise-run",
+    stability: gp_base::tool::Stability::Stable,
     title: "Rise, run, and slope length",
     summary: "The third of rise, run, and slope length from any two, with the grade they make as a percent, an angle, and a labeled ratio.",
     aliases: &[
@@ -263,7 +264,7 @@ pub static RISE_RUN: ToolDef = ToolDef {
         GRADE.outputs[2],
     ],
     errors: GRADE.errors,
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "Grade g = rise / run; slope length = √(rise² + run²); from a slope length, run = √(slope² − rise²) or rise = √(slope² − run²); percent = 100·g, angle = atan g",
     accuracy: "Exact",
     when_to_use: "Use this when you have measured two sides of a slope and need the third: the rise and run of a ramp, a taped slope length and a height difference, or a slope length and its horizontal distance. Enter any two of rise, run, and slope length in the same units. The tool returns all three with the grade as a percent, an angle, and a ratio labeled H:V and V:H.",
@@ -273,7 +274,7 @@ pub static RISE_RUN: ToolDef = ToolDef {
         id: "primary",
         title: "A 2.5 ft rise over a 30 ft run",
         input: r#"{"rise":"2.5 ft","run":"30 ft"}"#,
-        source: "Right-triangle arithmetic: 2.5 / 30 is 8.333%, slope length 30.104 ft",
+        source: "2010 ADA Standards sec. 405.2: a 1:12 ramp (8.333%), here a 30 in rise over a 30 ft run",
     }],
     primary_example: "primary",
     visualization: GRADE.visualization,

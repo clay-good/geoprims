@@ -25,16 +25,16 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/photogrammetry, scenario "Camera too slow"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: h 90 m, sensor 13.2 × 8.8 mm, f 8.8 mm, 12 m/s, front overlap 80%, camera 2 s
-- outputs: spacing 18 m, interval 1.5 s, TRIGGER_TOO_FAST, top speed 9 m/s
-- tolerance: 1e-9
-- verifiedBy: golden vector v001 and the `focused_photogrammetry_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: Penn State College of Earth and Mineral Sciences (Q. Abdullah)
+- sourceTitle: GEOG 892: Geospatial Applications of Unmanned Aerial Systems, "Designing a Flight Route"
+- sourceEdition: online course text, CC BY-NC-SA 4.0, retrieved 2026-10-17
+- sourceLocator: Aircraft Speed and Image Collection (120 × 70 mm array, f 100 mm, 1 ft GSD at 10,000 ft, 60% end lap, 150 knots), ~11.07 s between exposures
+- independent: yes
+- inputs: height 3,048 m (10,000 ft), sensor 120 × 70 mm, f 100 mm, front overlap 60%, groundspeed 150 kt, landscape
+- outputs: trigger distance 853.44 m (2,800 ft), interval 11.060 s (the course prints 11.067 s, differing only by its 1.15 mph-per-knot rounding where the core uses the exact 1,852 m per nautical mile)
+- tolerance: 0.01 s against the exact-conversion value
+- verifiedBy: the `focused_photogrammetry_operations_match_their_general_tools` integration test, which requires this interval to equal the stable `drone.photogrammetry.trigger` tool's
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -44,6 +44,6 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Invariants
 
+- `core/crates/gp-drone/tests/drone.rs` `focused_photogrammetry_operations_match_their_general_tools`: the interval equals the stable `drone.photogrammetry.trigger` tool's for the same camera, overlap, and groundspeed.
 - Interval × groundspeed = photo spacing.
 - Doubling the groundspeed halves the interval.
-- At the reported top speed the interval equals the camera's minimum.

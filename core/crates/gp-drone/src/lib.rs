@@ -1182,6 +1182,7 @@ macro_rules! spacing_tool {
      $example:literal, $source:literal, $sentence:literal, $related:expr) => {
         pub static $name: ToolDef = ToolDef {
             id: concat!("drone.photogrammetry.", $id),
+            stability: gp_base::tool::Stability::Stable,
             title: $title,
             summary: $summary,
             aliases: $aliases,

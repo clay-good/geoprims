@@ -24,16 +24,16 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/photogrammetry, requirement "Overlap, trigger, and line spacing"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: h 90 m, sensor 13.2 × 8.8 mm, f 8.8 mm, front overlap 80%
-- outputs: footprint 90 m along track, spacing 18 m
-- tolerance: 1e-9 m
-- verifiedBy: golden vector v001 and the `focused_photogrammetry_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: Penn State College of Earth and Mineral Sciences (Q. Abdullah)
+- sourceTitle: GEOG 892: Geospatial Applications of Unmanned Aerial Systems, "Designing a Flight Route"
+- sourceEdition: online course text, CC BY-NC-SA 4.0, retrieved 2026-10-17
+- sourceLocator: Aircraft Speed and Image Collection (120 × 70 mm array, f 100 mm, 1 ft GSD at 10,000 ft, 60% end lap), air base 2,800 ft
+- independent: yes
+- inputs: height 3,048 m (10,000 ft), sensor 120 × 70 mm, f 100 mm, front overlap 60%, landscape
+- outputs: along-track footprint 2,133.6 m (7,000 ft), trigger distance 853.44 m (2,800 ft)
+- tolerance: 0.01 m
+- verifiedBy: the `focused_photogrammetry_operations_match_their_general_tools` integration test, which requires this spacing to equal the stable `drone.photogrammetry.trigger` tool's air base
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -43,6 +43,6 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Invariants
 
+- `core/crates/gp-drone/tests/drone.rs` `focused_photogrammetry_operations_match_their_general_tools`: the along-track footprint and trigger distance equal the stable `drone.photogrammetry.trigger` tool's for the same camera and front overlap.
 - Spacing scales linearly with height.
 - More front overlap means a shorter spacing, reaching the whole footprint at 0%.
-- Portrait swaps the sensor side used.

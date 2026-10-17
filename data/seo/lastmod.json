@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "1ceabb0e70307d4e",
+    "hash": "8350d66d5927b98a",
     "lastmod": "2026-10-17"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "cc3e8bcfd9cbfd82",
+    "hash": "c89e9978076b3577",
     "lastmod": "2026-10-17"
   },
   "/aviation/": {
@@ -408,8 +408,8 @@
     "lastmod": "2026-10-14"
   },
   "/drone/photogrammetry/line-spacing/": {
-    "hash": "428c902e8fd8fe48",
-    "lastmod": "2026-10-14"
+    "hash": "fde762764666b204",
+    "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/max-shutter/": {
     "hash": "c1c45d9a19ac502d",
@@ -428,12 +428,12 @@
     "lastmod": "2026-10-09"
   },
   "/drone/photogrammetry/trigger-distance/": {
-    "hash": "13134cf93b2daf00",
-    "lastmod": "2026-10-14"
+    "hash": "22b982fdf06779dc",
+    "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/trigger-interval/": {
-    "hash": "731c2f6893b3b419",
-    "lastmod": "2026-10-14"
+    "hash": "c4982c500b1a69c8",
+    "lastmod": "2026-10-17"
   },
   "/drone/photogrammetry/trigger/": {
     "hash": "0622a71e2a81eb6c",
@@ -1416,7 +1416,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "af356383f6ea3648",
+    "hash": "788a7498f957ab28",
     "lastmod": "2026-10-17"
   },
   "/navigation/": {
@@ -2084,7 +2084,7 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "bd477ef300b7cf2f",
+    "hash": "e59d2b51b68e9eb3",
     "lastmod": "2026-10-17"
   },
   "/units/": {
@@ -2348,7 +2348,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e7877003529b593b",
+    "hash": "5a72b586b4385e1e",
     "lastmod": "2026-10-17"
   },
   "/workflows/": {

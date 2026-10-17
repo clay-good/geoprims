@@ -24,16 +24,16 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-drone-suite specification
-- sourceEdition: 2026
-- sourceLocator: drone/photogrammetry, requirement "Overlap, trigger, and line spacing"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: h 90 m, sensor 13.2 × 8.8 mm, f 8.8 mm, side overlap 70%
-- outputs: footprint 135 m across track, spacing 40.5 m
-- tolerance: 1e-9 m
-- verifiedBy: golden vector v001 and the `focused_photogrammetry_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: Penn State College of Earth and Mineral Sciences (Q. Abdullah)
+- sourceTitle: GEOG 892: Geospatial Applications of Unmanned Aerial Systems, "Designing a Flight Route"
+- sourceEdition: online course text, CC BY-NC-SA 4.0, retrieved 2026-10-17
+- sourceLocator: Flight Lines Computations (120 × 70 mm array, f 100 mm, 1 ft GSD at 10,000 ft, 30% side lap), line spacing 8,400 ft
+- independent: yes
+- inputs: height 3,048 m (10,000 ft), sensor 120 × 70 mm, f 100 mm, side overlap 30%, landscape
+- outputs: across-track footprint 3,657.6 m (12,000 ft), line spacing 2,560.32 m (8,400 ft)
+- tolerance: 0.01 m
+- verifiedBy: the `focused_photogrammetry_operations_match_their_general_tools` integration test, which requires this spacing to equal the stable `drone.photogrammetry.trigger` tool's line spacing
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -43,6 +43,6 @@ A nadir pinhole camera over flat ground. Lens distortion, tilt, terrain relief, 
 
 ## Invariants
 
+- `core/crates/gp-drone/tests/drone.rs` `focused_photogrammetry_operations_match_their_general_tools`: the across-track footprint and line spacing equal the stable `drone.photogrammetry.trigger` tool's for the same camera and side overlap.
 - Spacing scales linearly with height.
 - More side overlap means closer lines.
-- Portrait swaps the sensor side used.

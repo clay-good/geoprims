@@ -24,16 +24,16 @@ None in the arithmetic. The two definitions are different curves for the same nu
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-survey-suite specification
-- sourceEdition: 2026
-- sourceLocator: survey/alignment-curves, requirement "Circular curves" (D = 5,729.578 / R for a 100 ft arc); the constant is the one route-surveying texts print, checked here by arithmetic rather than against a published table
-- independent: no
-- inputs: radius 5,729.578 ft
-- outputs: degree of curve 1.0000000° by the arc definition
-- tolerance: 1e-7°
-- verifiedBy: golden vector v002 and the `named_curve_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: OpenExamPrep
+- sourceTitle: FE Civil Guide 2026, "6.1 Transportation: Geometric Design"
+- sourceEdition: last updated June 2026
+- sourceLocator: Horizontal Curves section, arc-definition degree of curve R = 5,729.58 / D, worked for D = 4°
+- independent: yes
+- inputs: arc-definition degree of curve 4°
+- outputs: radius 1,432 ft (the guide prints the whole foot; 5,729.578 / 4 = 1,432.3944878 ft)
+- tolerance: the guide's radius is given to the whole foot and the core's 1,432.39 ft matches that rounding; reading the radius back returns 4.0000000° to 1e-7°
+- verifiedBy: golden vector v001 and the `named_curve_operations_match_their_general_tools` integration test
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -43,6 +43,4 @@ None in the arithmetic. The two definitions are different curves for the same nu
 
 ## Invariants
 
-- Radius to arc degree and back returns the radius.
-- Radius to chord degree and back returns the radius.
-- The chord-definition degree is larger than the arc-definition degree for the same radius.
+- `core/crates/gp-survey/tests/survey.rs` `degree_of_curve_invariants`: a radius gives both degrees of curve, each degree alone returns the radius it came from, and for the same radius the chord-definition degree is larger than the arc-definition degree.

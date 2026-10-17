@@ -1298,6 +1298,38 @@ fn circular_curve_invariants() {
 }
 
 #[test]
+fn degree_of_curve_invariants() {
+    let doc = |body: &str| call("survey.curves.degree-of-curve", body);
+    for r in [
+        50.0001,
+        100.0,
+        850.0,
+        1432.3944878270581,
+        5729.578,
+        9397.478,
+    ] {
+        // A radius gives both degrees of curve, and each degree alone returns
+        // the radius it came from.
+        let from_r = doc(&format!(r#"{{"radius":"{r} ft"}}"#));
+        let da = num(&from_r, "result.degree_arc.value");
+        let dc = num(&from_r, "result.degree_chord.value");
+        let back_a = doc(&format!(r#"{{"degree":"{da} deg"}}"#));
+        let back_c = doc(&format!(r#"{{"degree_chord":"{dc} deg"}}"#));
+        assert!(
+            (num(&back_a, "result.radius.value") - r).abs() < 1e-6,
+            "arc round trip at R={r}"
+        );
+        assert!(
+            (num(&back_c, "result.radius.value") - r).abs() < 1e-6,
+            "chord round trip at R={r}"
+        );
+        // For the same radius the chord definition names a larger degree than
+        // the arc definition (the chord is shorter than the arc it subtends).
+        assert!(dc > da, "chord degree not larger than arc degree at R={r}");
+    }
+}
+
+#[test]
 fn vertical_curve_invariants() {
     // The PVC and PVT lie on the tangents, K = L/|g2 − g1|, and the turning
     // point is the extreme: the curve is no lower (sag) or higher (crest) at

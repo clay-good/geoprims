@@ -1451,6 +1451,7 @@ fn chord_degree(r_ft: f64) -> f64 {
 
 pub static DEGREE_OF_CURVE: ToolDef = ToolDef {
     id: "survey.curves.degree-of-curve",
+    stability: gp_base::tool::Stability::Stable,
     title: "Degree of curve converter",
     summary: "Converts between a radius and the degree of curve by the arc and chord definitions, in either direction.",
     aliases: &[
@@ -1477,7 +1478,7 @@ pub static DEGREE_OF_CURVE: ToolDef = ToolDef {
         CIRCULAR_CURVE.outputs[0],
     ],
     errors: &[],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "Arc definition: D = 18,000 / (π·R), about 5,729.578 / R, the angle a 100 ft arc turns. Chord definition: sin(D/2) = 50 / R, the angle a 100 ft chord turns. R in feet (Ghilani & Wolf 2021, ch. 24)",
     accuracy: "Exact for each definition",
     when_to_use: "Use this when old plans, railroad work, or a highway standard give a curve by its degree and you need the radius, or the other way round. Enter the radius, or the degree of curve by the arc definition used on highways, or by the chord definition used on railroads. The tool returns the radius and both degrees, so you can see how far the two definitions differ for that curve.",
@@ -1487,7 +1488,7 @@ pub static DEGREE_OF_CURVE: ToolDef = ToolDef {
         id: "primary",
         title: "A 4° curve by the arc definition",
         input: r#"{"degree":"4"}"#,
-        source: "add-survey-suite circular-curve requirement: D = 5,729.578 / R",
+        source: "OpenExamPrep FE Civil Guide 2026, Horizontal Curves: R = 5,729.58 / D",
     }],
     primary_example: "primary",
     visualization: &[Layer {

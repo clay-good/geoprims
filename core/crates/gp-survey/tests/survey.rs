@@ -1365,6 +1365,40 @@ fn degree_of_curve_invariants() {
 }
 
 #[test]
+fn curve_stationing_invariants() {
+    let st = |body: &str| call("survey.curves.curve-stationing", body);
+    // A station string like "62+17.08" as a single number of feet or metres.
+    let value = |s: &str| -> f64 {
+        let s = s.replace('+', "");
+        s.parse::<f64>().unwrap()
+    };
+    for (pi, extra) in [
+        ("62+17.08", r#""radius":"1432.4 ft","delta":"24 deg""#),
+        ("10+120", r#""radius":"300 m","delta":"40 deg""#),
+        ("5+00", r#""radius":"500 ft","tangent":"150 ft""#),
+    ] {
+        let r = st(&format!(r#"{{"pi_station":"{pi}",{extra}}}"#));
+        let pc = value(r["result"]["pc_station"].as_str().unwrap());
+        let pt = value(r["result"]["pt_station"].as_str().unwrap());
+        let t = num(&r, "result.tangent.value");
+        let l = num(&r, "result.length.value");
+        // Stationing runs along the arc: PT − PC = L, and PI − PC = T, each
+        // within the 0.01 ft the station strings are rounded to.
+        assert!((pt - pc - l).abs() < 0.02, "PT-PC=L at {pi}");
+        assert!((value(pi) - pc - t).abs() < 0.02, "PI-PC=T at {pi}");
+    }
+    // The same curve entered by a different pair of elements has the same PC
+    // and PT (radius+delta vs radius+tangent for Δ = 24°, R = 1432.4 ft).
+    let a = st(r#"{"pi_station":"62+17.08","radius":"1432.4 ft","delta":"24 deg"}"#);
+    let t = num(&a, "result.tangent.value");
+    let b = st(&format!(
+        r#"{{"pi_station":"62+17.08","radius":"1432.4 ft","tangent":"{t} ft"}}"#
+    ));
+    assert_eq!(a["result"]["pc_station"], b["result"]["pc_station"]);
+    assert_eq!(a["result"]["pt_station"], b["result"]["pt_station"]);
+}
+
+#[test]
 fn vertical_curve_invariants() {
     // The PVC and PVT lie on the tangents, K = L/|g2 − g1|, and the turning
     // point is the extreme: the curve is no lower (sag) or higher (crest) at

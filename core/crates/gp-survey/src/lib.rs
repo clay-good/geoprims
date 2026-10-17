@@ -1572,6 +1572,7 @@ fn run_degree_of_curve(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CURVE_STATIONING: ToolDef = ToolDef {
     id: "survey.curves.curve-stationing",
+    stability: gp_base::tool::Stability::Stable,
     title: "Curve stationing (PC and PT)",
     summary: "The PC and PT stations of a circular curve from the PI station and any two curve elements, with the tangent and curve length that set them.",
     aliases: &[
@@ -1620,12 +1621,7 @@ pub static CURVE_STATIONING: ToolDef = ToolDef {
         CIRCULAR_CURVE.outputs[1],
     ],
     errors: CIRCULAR_CURVE.errors,
-    warnings: &[
-        "AMBIGUOUS_INPUT",
-        "LEGACY_UNIT",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["AMBIGUOUS_INPUT", "LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "PC station = PI station − T and PT station = PC station + L, with T = R·tan(Δ/2) and L = R·Δ in radians (Ghilani & Wolf 2021, ch. 24)",
     accuracy: "Exact for the geometry; stations are rounded to 0.01 ft or 0.001 m",
     when_to_use: "Use this to station a horizontal curve once the PI is fixed on the alignment. Enter the PI station and any two curve elements, most often the radius and the deflection angle. The tool returns the station where the curve begins and where it ends, with the tangent and curve length it used, ready for stakeout notes or for stationing the next tangent.",

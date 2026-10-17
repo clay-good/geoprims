@@ -25,16 +25,16 @@ None beyond rounding stations to 0.01 ft or 0.001 m.
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-survey-suite specification
+- sourcePublisher: Super Tutor
+- sourceTitle: CELE Surveying (Geomatics) — Horizontal Curves (Simple, Compound, Reverse), Detailed Explanation
 - sourceEdition: 2026
-- sourceLocator: survey/alignment-curves, requirement "Circular curves" (PC and PT stations from the PI station); checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: PI 62+17.08, R 1,432.40 ft, Δ 24°
-- outputs: T 304.47 ft, L 600.00 ft, PC 59+12.61, PT 65+12.62
-- tolerance: 0.01 ft
-- verifiedBy: golden vector v001 and the `named_curve_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourceLocator: Simple Circular Curve worked example, R = 300 m, I = 40°, PI at 10+120
+- independent: yes
+- inputs: PI 10+120, R 300 m, Δ 40°
+- outputs: T 109.19 m, L 209.44 m, PC 10+010.81, PT 10+220.25 (the core carries a third decimal: PC 10+010.809, PT 10+220.248)
+- tolerance: the source's metres (0.01 m on T and L, 0.01 m on the stations)
+- verifiedBy: golden vector v024 and the `named_curve_operations_match_their_general_tools` integration test
+- verifiedOn: 2026-10-17
 
 ## Differential tests
 
@@ -44,6 +44,4 @@ None beyond rounding stations to 0.01 ft or 0.001 m.
 
 ## Invariants
 
-- PT station − PC station = curve length.
-- PI station − PC station = tangent.
-- The same curve entered by different pairs of elements has the same stations.
+- `core/crates/gp-survey/tests/survey.rs` `curve_stationing_invariants`: PT station − PC station = curve length, PI station − PC station = tangent, and the same curve entered by a different pair of elements has the same PC and PT stations.

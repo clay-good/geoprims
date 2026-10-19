@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { buildPayload, buildSitePayload, openState, reportText, sendState, tokenIsFresh, TOKEN_MAX_AGE_MS } from '../src/lib/report.js';
 import { KEYS, validate } from '../../../worker/src/report.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
+import { blank, saveTool, valuesFor } from '../src/lib/profiles.mjs';
 
 const root = new URL('../../..', import.meta.url).pathname;
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
@@ -90,5 +91,19 @@ test('a page report from any page is one the Worker accepts, and names no GitHub
     assert.ok(validate(p, new Map()), `${pagePath} rejected by the Worker`);
   }
   assert.doesNotMatch(reportText(buildSitePayload({ site, note: '', kind: 'other', display, pagePath: '/' })), /github/i);
+});
+
+// Equipment profiles (web/equipment-profiles, "Local storage only"): a tool
+// filled from a profile reports the values it ran with, never the name.
+test('a report from a profile-filled tool carries the values, not the profile name', async () => {
+  const t = catalog.tools.find((x) => x.id === 'drone.photogrammetry.gsd');
+  const ex = (t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0]).input;
+  const profile = saveTool(blank('camera', 'ZZQQPROFILE9187', '2026-10-19'), t.id, { ...ex, focal_length: '24 mm' });
+  const args = { ...ex, ...valuesFor(profile, t.id) };
+  const result = JSON.parse(await host.invoke(t.id, JSON.stringify(args)));
+  const p = await payloadFor(t, { args, result });
+  const text = JSON.stringify(p);
+  assert.ok(text.includes('24 mm'), 'the profile-filled value is missing from the report');
+  assert.ok(!text.includes('ZZQQPROFILE9187'), 'the profile name reached the report');
 });
 

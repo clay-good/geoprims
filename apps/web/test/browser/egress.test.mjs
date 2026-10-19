@@ -70,3 +70,55 @@ test('sentinel inputs from every tool stay out of browser requests', { timeout: 
   assert.deepEqual(violations, [], 'a tool page violated the production CSP');
   t.diagnostic(`${tools.length} tool pages checked with unique sentinel inputs`);
 });
+
+// Equipment profiles (web/equipment-profiles, scenario "Egress test"): a
+// profile of every kind, named with a sentinel, is loaded on every tool that
+// takes one, and the name reaches no request.
+test('a sentinel profile name loaded on every profile-taking tool stays out of requests', { timeout: 300_000 }, async (t) => {
+  const profiles = JSON.parse(readFileSync(join(root, 'data/profiles.json'), 'utf8'));
+  const byId = new Map(tools.map((x) => [x.id, x]));
+  const name = 'ZZQQPROFILE9187';
+  const store = {};
+  for (const [kind, def] of Object.entries(profiles.kinds)) {
+    const saved = {};
+    for (const [id, fields] of Object.entries(def.tools)) {
+      const tool = byId.get(id);
+      const ex = (tool.examples.find((e) => e.id === tool['x-primary-example']) ?? tool.examples[0]).input;
+      saved[id] = Object.fromEntries(fields.filter((f) => ex[f] !== undefined).map((f) => [f, ex[f]]));
+    }
+    store[kind] = { [name]: { format: profiles.format, version: profiles.version, kind, name, savedOn: '2026-10-19', tools: saved } };
+  }
+  const origin = await serveBuiltSite(t);
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  await context.addInitScript((s) => localStorage.setItem('gp-profiles', s), JSON.stringify(store));
+  const leaks = [];
+  await context.route('**/*', async (route) => {
+    const request = route.request();
+    const text = [request.url(), JSON.stringify(request.headers()), request.postDataBuffer()?.toString('utf8') ?? ''].join('\n');
+    if (text.includes(name)) leaks.push(request.url());
+    await route.continue();
+  });
+  const page = await context.newPage();
+  let loaded = 0;
+  for (const [kind, def] of Object.entries(profiles.kinds)) {
+    for (const id of Object.keys(def.tools)) {
+      await page.goto(`${origin}/${id.split('.').join('/')}/`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => [...document.querySelectorAll('astro-island')]
+        .some((island) => island.getAttribute('component-url')?.includes('ToolApp') && !island.hasAttribute('ssr')));
+      await page.locator('summary', { hasText: `${def.title} profiles` }).click();
+      await page.getByRole('button', { name: 'Load', exact: true }).click();
+      // A tool whose worked example sets none of the kept fields has nothing to load.
+      const status = await page.locator('.profiles [role="status"]').textContent();
+      if (/nothing saved/.test(status)) continue;
+      await page.locator('.profile-chip').waitFor({ timeout: 5_000 }).catch(() => assert.fail(`${id}: no profile chip after Load (${status})`));
+      await page.waitForTimeout(200); // past the form's recompute debounce
+      loaded++;
+    }
+  }
+  assert.ok(loaded >= 20, `only ${loaded} profile loads`);
+  assert.deepEqual(leaks, [], 'a profile name reached a request');
+  t.diagnostic(`${loaded} profile loads checked`);
+});
+

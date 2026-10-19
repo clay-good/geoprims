@@ -16,7 +16,8 @@
         "aviation.loading.fuel-plan": ["category", "usable_fuel", "taxi", "climb", "cruise_burn"],
         "aviation.loading.table-interpolate": ["table", "names", "corrections"],
         "aviation.airspeed.cas-to-tas": ["calibration", "vs0", "vs1", "vfe", "vno", "vne"],
-        "aviation.airspeed.tas-to-cas": ["vs0", "vs1", "vfe", "vno", "vne"]
+        "aviation.airspeed.tas-to-cas": ["vs0", "vs1", "vfe", "vno", "vne"],
+        "aviation.wind.runway-components": ["max_crosswind", "max_tailwind"]
       }
     },
     "drone": {
@@ -27,9 +28,10 @@
         "drone.ops.wind-limit": ["wind_rating", "airspeed"],
         "drone.power.endurance": ["energy", "usable", "power", "cruise_power"],
         "drone.power.rth-budget": ["airspeed", "power"],
-        "drone.mission.sorties": ["flight_time", "energy", "usable", "power", "groundspeed", "transit_speed"],
+        "drone.mission.sorties": ["flight_time", "energy", "usable", "power", "groundspeed", "transit_speed", "reserve"],
         "drone.ops.kinetic-energy": ["mass"],
-        "drone.ops.speed-check": ["airspeed"]
+        "drone.ops.speed-check": ["airspeed"],
+        "drone.power.battery-energy": ["capacity", "voltage", "cells", "chemistry", "max_c_rate"]
       }
     },
     "camera": {

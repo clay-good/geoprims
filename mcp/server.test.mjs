@@ -195,6 +195,15 @@ test('a profile of another kind fills nothing; a malformed one runs nothing', as
   }
 });
 
+test('a workflow fills its declared camera inputs from a profile, and explicit args still win', async () => {
+  const r = await c.call('geoprims_run', { id: 'workflow.mapping-flight', args: { focal_length: '24 mm' }, profile: P1 });
+  assert.equal(r.structuredContent.ok, true, JSON.stringify(r.structuredContent.error));
+  assert.deepEqual(r.structuredContent.meta.profileFilled, ['sensor_width', 'image_width', 'sensor_height', 'image_height']);
+  const step = r.structuredContent.result.steps.find((s) => s.tool === 'drone.photogrammetry.altitude-for-gsd');
+  assert.equal(step.input.sensor_width, '35.9 mm');
+  assert.equal(step.input.focal_length, '24 mm');
+});
+
 // Example parity, the MCP half (contracts/manifest-extensions, "The primary
 // worked example"): the default run is the primary example, for every tool,
 // so an agent and a reader are looking at the same numbers.

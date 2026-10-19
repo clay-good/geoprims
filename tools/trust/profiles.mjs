@@ -10,8 +10,8 @@ const JOB = /^(lat|lon|latitude|longitude|.*_lat|.*_lon|waypoints|position|date|
 /** Why `field` is a job value, or null when it may belong to equipment. */
 export function jobValue(field) {
   if (JOB.test(field)) return 'it describes the job (a place, a time, or a load)';
-  // Wind is the day's; a wind rating is the airframe's.
-  if (/wind/.test(field) && !/rating/.test(field)) return 'wind is a condition of the day, not of the equipment';
+  // Wind is the day's; a wind rating or a maximum crosswind is the airframe's.
+  if (/wind/.test(field) && !/rating/.test(field) && !/^max_/.test(field)) return 'wind is a condition of the day, not of the equipment';
   return null;
 }
 
@@ -41,6 +41,25 @@ export function profileProblems(profiles, catalog) {
           problems.push(`${kind}: ${id} ${f} is ${p.type === 'array' ? 'a table but not listed in tables' : 'listed in tables but not an array'}`);
         }
       }
+    }
+  }
+  return problems;
+}
+
+/**
+ * Problems with workflow inputs that declare `profile: {kind, field}`
+ * (web/workflows, "Workflow inputs filled from profiles"): the kind exists,
+ * and its map keeps that field for the input's own tool.
+ */
+export function workflowProfileProblems(workflows, profiles) {
+  const problems = [];
+  for (const w of workflows) {
+    for (const i of w.inputs) {
+      if (i.profile === undefined) continue;
+      const { kind, field } = i.profile ?? {};
+      const def = profiles.kinds?.[kind];
+      if (!def) problems.push(`${w.slug}: input ${i.name} names no profile kind "${kind}"`);
+      else if (!(def.tools[i.tool] ?? []).includes(field)) problems.push(`${w.slug}: input ${i.name} declares kind ${kind}, whose map keeps no ${field} for ${i.tool}`);
     }
   }
   return problems;

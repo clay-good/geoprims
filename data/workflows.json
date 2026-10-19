@@ -37,7 +37,11 @@
           "name": "max_crosswind",
           "tool": "aviation.wind.runway-components",
           "field": "max_crosswind",
-          "example": "15 kt"
+          "example": "15 kt",
+          "profile": {
+            "kind": "aircraft",
+            "field": "max_crosswind"
+          }
         }
       ],
       "steps": [
@@ -737,7 +741,11 @@
           "name": "flight_time",
           "tool": "drone.mission.sorties",
           "field": "flight_time",
-          "example": "22 min"
+          "example": "22 min",
+          "profile": {
+            "kind": "drone",
+            "field": "flight_time"
+          }
         },
         {
           "name": "groundspeed",
@@ -776,42 +784,66 @@
           "tool": "drone.mission.sorties",
           "field": "reserve",
           "example": 25,
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "drone",
+            "field": "reserve"
+          }
         },
         {
           "name": "sensor_width",
           "tool": "drone.photogrammetry.altitude-for-gsd",
           "field": "sensor_width",
           "example": "13.2 mm",
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "sensor_width"
+          }
         },
         {
           "name": "focal_length",
           "tool": "drone.photogrammetry.altitude-for-gsd",
           "field": "focal_length",
           "example": "8.8 mm",
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "focal_length"
+          }
         },
         {
           "name": "image_width",
           "tool": "drone.photogrammetry.altitude-for-gsd",
           "field": "image_width",
           "example": 5472,
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "image_width"
+          }
         },
         {
           "name": "sensor_height",
           "tool": "drone.photogrammetry.altitude-for-gsd",
           "field": "sensor_height",
           "example": "8.8 mm",
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "sensor_height"
+          }
         },
         {
           "name": "image_height",
           "tool": "drone.photogrammetry.altitude-for-gsd",
           "field": "image_height",
           "example": 3648,
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "image_height"
+          }
         },
         {
           "name": "exposure",
@@ -1358,19 +1390,31 @@
           "name": "capacity",
           "tool": "drone.power.battery-energy",
           "field": "capacity",
-          "example": "5935 mAh"
+          "example": "5935 mAh",
+          "profile": {
+            "kind": "drone",
+            "field": "capacity"
+          }
         },
         {
           "name": "voltage",
           "tool": "drone.power.battery-energy",
           "field": "voltage",
-          "example": "52.8 V"
+          "example": "52.8 V",
+          "profile": {
+            "kind": "drone",
+            "field": "voltage"
+          }
         },
         {
           "name": "power",
           "tool": "drone.power.endurance",
           "field": "power",
-          "example": "900 W"
+          "example": "900 W",
+          "profile": {
+            "kind": "drone",
+            "field": "power"
+          }
         },
         {
           "name": "checkpoint_rmse",
@@ -1390,7 +1434,11 @@
           "tool": "drone.power.endurance",
           "field": "usable",
           "example": 80,
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "drone",
+            "field": "usable"
+          }
         },
         {
           "name": "checkpoints",
@@ -1643,7 +1691,11 @@
           "name": "wind_rating",
           "tool": "drone.ops.wind-limit",
           "field": "wind_rating",
-          "example": "12 m/s"
+          "example": "12 m/s",
+          "profile": {
+            "kind": "drone",
+            "field": "wind_rating"
+          }
         },
         {
           "name": "lat",
@@ -1824,21 +1876,33 @@
           "tool": "drone.photogrammetry.gsd",
           "field": "sensor_width",
           "example": "13.2 mm",
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "sensor_width"
+          }
         },
         {
           "name": "focal_length",
           "tool": "drone.photogrammetry.gsd",
           "field": "focal_length",
           "example": "8.8 mm",
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "focal_length"
+          }
         },
         {
           "name": "image_width",
           "tool": "drone.photogrammetry.gsd",
           "field": "image_width",
           "example": 5472,
-          "advanced": true
+          "advanced": true,
+          "profile": {
+            "kind": "camera",
+            "field": "image_width"
+          }
         }
       ],
       "steps": [

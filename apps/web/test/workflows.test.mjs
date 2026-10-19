@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { asInput, assumptions, examples, runChain } from '../../../packages/runtime/src/chain.mjs';
 import { catalog, JOURNEYS, WORKFLOWS, workflowGuides } from '../src/lib/catalog.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
+import { workflowProfileProblems } from '../../../tools/trust/profiles.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const root = join(web, '../..');
@@ -196,3 +197,20 @@ test('each workflow export writes the prefill\'s file, byte for byte', async () 
   const m = WORKFLOWS.find((w) => w.slug === 'mapping-flight');
   assert.equal(workflowExport(m, m.steps.map(() => ({ status: 'waiting' })), {}), null);
 });
+
+// Equipment profiles (web/workflows, "Workflow inputs filled from profiles",
+// scenario "Profile field must exist").
+test('every input a workflow fills from a profile is a field its kind keeps for that tool', () => {
+  const profiles = JSON.parse(readFileSync(join(root, 'data/profiles.json'), 'utf8'));
+  assert.deepEqual(workflowProfileProblems(WORKFLOWS, profiles), []);
+  const mapping = WORKFLOWS.find((w) => w.slug === 'mapping-flight');
+  const kinds = new Set(mapping.inputs.filter((i) => i.profile).map((i) => i.profile.kind));
+  assert.deepEqual([...kinds].sort(), ['camera', 'drone']);
+  // The lint names the workflow, the input, and the kind.
+  const broken = structuredClone(WORKFLOWS);
+  broken.find((w) => w.slug === 'mapping-flight').inputs.find((i) => i.name === 'reserve').profile = { kind: 'camera', field: 'reserve' };
+  assert.deepEqual(workflowProfileProblems(broken, profiles), [
+    'mapping-flight: input reserve declares kind camera, whose map keeps no reserve for drone.mission.sorties',
+  ]);
+});
+

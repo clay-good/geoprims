@@ -256,8 +256,8 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/wind/runway-components/": {
-    "hash": "5ae8099a114c9821",
-    "lastmod": "2026-10-09"
+    "hash": "8c262d41c1ca0c77",
+    "lastmod": "2026-10-19"
   },
   "/aviation/wind/tas-from-groundspeed/": {
     "hash": "fc5b866663c47b1e",
@@ -2364,8 +2364,8 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/can-i-fly-now/": {
-    "hash": "78353a882af927a1",
-    "lastmod": "2026-10-13"
+    "hash": "936c4cf681c045de",
+    "lastmod": "2026-10-19"
   },
   "/workflows/convert-coordinate/": {
     "hash": "b21a801caa50b6f4",
@@ -2384,20 +2384,20 @@
     "lastmod": "2026-10-12"
   },
   "/workflows/inspection/": {
-    "hash": "a30ee60704435ffe",
-    "lastmod": "2026-10-13"
+    "hash": "296c3f86d930547f",
+    "lastmod": "2026-10-19"
   },
   "/workflows/lidar-bid/": {
-    "hash": "3c1cd45e390c8e83",
-    "lastmod": "2026-10-13"
+    "hash": "33060a05de05ef21",
+    "lastmod": "2026-10-19"
   },
   "/workflows/mapping-flight/": {
-    "hash": "4dc4e7a8c29edf14",
-    "lastmod": "2026-10-13"
+    "hash": "b44af715f94fbc9a",
+    "lastmod": "2026-10-19"
   },
   "/workflows/preflight-check/": {
-    "hash": "f4d8e5fed7a60131",
-    "lastmod": "2026-10-09"
+    "hash": "a1c486b0a6f45d19",
+    "lastmod": "2026-10-19"
   },
   "/workflows/preflight-performance/": {
     "hash": "88ebe341cb85b8f2",

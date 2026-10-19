@@ -163,6 +163,7 @@ pub static TRACKS: ToolDef = ToolDef {
     sentence: "The tracks are {frechet} apart by Fréchet distance, tightest at points {frechet_a} and {frechet_b}, and {hausdorff} by Hausdorff distance.",
     limits: &[("batchRows", 100)],
     run: run_tracks,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 

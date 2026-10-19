@@ -316,6 +316,7 @@ pub static COURSE_INTERSECTION: ToolDef = ToolDef {
     sentence: "The courses cross {distance1} along the first and {distance2} along the second.",
     limits: &[("batchRows", 10_000)],
     run: run_intersection,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -703,6 +704,7 @@ pub static SEGMENT_INTERSECTION: ToolDef = ToolDef {
     sentence: "The geodesics cross at {lat}, {lon}: {position}.",
     limits: &[("batchRows", 10_000)],
     run: run_segments,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -918,6 +920,7 @@ pub static VERTEX: ToolDef = ToolDef {
     sentence: "The geodesic peaks at {vertex_lat}, {vertex_lon}.",
     limits: &[("batchRows", 10_000)],
     run: run_vertex,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 

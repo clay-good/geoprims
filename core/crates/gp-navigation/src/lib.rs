@@ -796,6 +796,7 @@ pub static VINCENTY_INVERSE: ToolDef = ToolDef {
     sentence: "Vincenty gives {distance}, {abs(karney_difference)} from the Karney geodesic.",
     limits: &[("batchRows", 10_000)],
     run: run_vincenty_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -918,6 +919,7 @@ pub static VINCENTY_DIRECT: ToolDef = ToolDef {
     sentence: "Vincenty lands at {lat2}, {lon2}, {karney_difference} from the Karney destination.",
     limits: &[("batchRows", 10_000)],
     run: run_vincenty_direct,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 

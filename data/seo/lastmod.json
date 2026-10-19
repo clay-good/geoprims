@@ -948,8 +948,8 @@
     "lastmod": "2026-09-23"
   },
   "/geometry/distance/tracks/": {
-    "hash": "14b5b5213a6e67e6",
-    "lastmod": "2026-10-09"
+    "hash": "61d0d41ef06f1c21",
+    "lastmod": "2026-10-19"
   },
   "/geometry/mesh/": {
     "hash": "ea7b4bb3d6b6ab0b",
@@ -1444,8 +1444,8 @@
     "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/intersection/": {
-    "hash": "bb770a7799a4f350",
-    "lastmod": "2026-10-09"
+    "hash": "57dc2c189f9e281c",
+    "lastmod": "2026-10-19"
   },
   "/navigation/geodesic/inverse/": {
     "hash": "5eee8f85d0b96b3b",
@@ -1464,16 +1464,16 @@
     "lastmod": "2026-10-14"
   },
   "/navigation/geodesic/vertex/": {
-    "hash": "c104ee8e764a12eb",
-    "lastmod": "2026-10-09"
+    "hash": "ea183ed74aee1e5a",
+    "lastmod": "2026-10-19"
   },
   "/navigation/geodesic/vincenty-direct/": {
-    "hash": "534d17c0331cc25a",
-    "lastmod": "2026-10-09"
+    "hash": "906cdd0ae3f6ab20",
+    "lastmod": "2026-10-19"
   },
   "/navigation/geodesic/vincenty-inverse/": {
-    "hash": "97f0075d4c51e6d8",
-    "lastmod": "2026-10-09"
+    "hash": "7666d8baaff36a6a",
+    "lastmod": "2026-10-19"
   },
   "/navigation/geodesic/waypoints/": {
     "hash": "f0204bffef4620d9",
@@ -1520,8 +1520,8 @@
     "lastmod": "2026-10-14"
   },
   "/navigation/route/course-intersection/": {
-    "hash": "85a18de1a7d93a94",
-    "lastmod": "2026-10-09"
+    "hash": "07e406cd28255fa9",
+    "lastmod": "2026-10-19"
   },
   "/navigation/route/cpa/": {
     "hash": "6a339866a8b8a9f7",
@@ -1544,8 +1544,8 @@
     "lastmod": "2026-10-14"
   },
   "/navigation/route/range-rings/": {
-    "hash": "8a38bd107e2700c0",
-    "lastmod": "2026-10-09"
+    "hash": "22dd00a161903509",
+    "lastmod": "2026-10-19"
   },
   "/navigation/route/time-speed-distance/": {
     "hash": "e619e8759fcbb8b8",
@@ -2352,7 +2352,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4ab3b914975dd959",
+    "hash": "ffdd85d63309f074",
     "lastmod": "2026-10-19"
   },
   "/workflows/": {

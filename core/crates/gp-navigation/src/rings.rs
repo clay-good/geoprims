@@ -249,6 +249,7 @@ pub static RANGE_RINGS: ToolDef = ToolDef {
     sentence: "Drew {ring_count} {plural ring_count \"ring\" \"rings\"} around the point, each true on the ellipsoid.",
     limits: &[("batchRows", 100)],
     run: run_rings,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 

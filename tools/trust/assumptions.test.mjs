@@ -172,6 +172,34 @@ const MUST_DECLARE = [
   'geodesy.projection.arc-to-chord',
   'geodesy.ellipsoid.auxiliary-latitude',
   'drone.mission.sorties',
+  'aviation.airspeed.eas-to-mach',
+  'aviation.airspeed.eas-to-tas',
+  'aviation.airspeed.ias-to-eas',
+  'aviation.airspeed.ias-to-mach',
+  'aviation.airspeed.ias-to-tas',
+  'aviation.airspeed.mach-to-eas',
+  'aviation.airspeed.tas-to-eas',
+  'aviation.altimetry.pressure-per-height',
+  'drone.photogrammetry.crop-factor',
+  'drone.photogrammetry.footprint',
+  'drone.photogrammetry.line-spacing',
+  'drone.photogrammetry.trigger-distance',
+  'drone.photogrammetry.trigger-interval',
+  'raster.terrain.aspect',
+  'raster.terrain.contours',
+  'raster.terrain.fresnel-terrain',
+  'raster.terrain.hillshade',
+  'raster.terrain.roughness-tri',
+  'raster.terrain.slope',
+  'raster.terrain.tpi',
+  'time.sun.aviation-nights',
+  'navigation.geodesic.intersection',
+  'navigation.geodesic.vertex',
+  'navigation.geodesic.vincenty-direct',
+  'navigation.geodesic.vincenty-inverse',
+  'navigation.route.course-intersection',
+  'navigation.route.range-rings',
+  'geometry.distance.tracks',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -663,6 +691,24 @@ test('the GCP planner exposes its complete ASPRS table and product default', () 
     ['2', '1', 'asprs-pas'],
     ['10', 'm', 'geoprims-drone-planning-spec'],
   ]);
+});
+
+test('the ellipsoidal navigation tools name the WGS 84 ellipsoid they default to', () => {
+  for (const id of [
+    'navigation.geodesic.intersection',
+    'navigation.geodesic.vertex',
+    'navigation.geodesic.vincenty-direct',
+    'navigation.geodesic.vincenty-inverse',
+    'navigation.route.course-intersection',
+    'navigation.route.range-rings',
+    'geometry.distance.tracks',
+  ]) {
+    const assumptions = byId(id)['x-assumptions'];
+    assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+      ['6378137', 'm', 'nga-wgs84'],
+      ['298.257223563', '1', 'nga-wgs84'],
+    ], id);
+  }
 });
 
 test('every tool that rests on constants declares them', () => {

@@ -146,6 +146,55 @@ test('run with no args runs the worked example; units selects a profile', async 
   assert.equal(si.structuredContent.result.mass.unit, 'kg');
 });
 
+// Inline equipment profiles (agent/mcp-server, "Inline profiles in run calls",
+// "Profiles are validated and stateless").
+const P1 = {
+  format: 'geoprims-profile',
+  version: 1,
+  kind: 'camera',
+  name: 'Zenmuse P1',
+  savedOn: '2026-10-19',
+  tools: {
+    'drone.photogrammetry.gsd': { sensor_width: '35.9 mm', sensor_height: '24 mm', image_width: 8192, image_height: 5460, focal_length: '35 mm', wind_rating: '12 m/s' },
+  },
+};
+
+test('a camera profile fills the GSD tool, and the answer is the page\'s for the same values', async () => {
+  const r = await c.call('geoprims_run', { id: 'drone.photogrammetry.gsd', args: { height: '100 m' }, profile: P1 });
+  const meta = r.structuredContent.meta;
+  assert.deepEqual(meta.profileFilled, ['sensor_width', 'sensor_height', 'image_width', 'image_height', 'focal_length']);
+  const input = { height: '100 m', sensor_width: '35.9 mm', sensor_height: '24 mm', image_width: 8192, image_height: 5460, focal_length: '35 mm' };
+  const direct = JSON.parse(await nodeHost(join(root, 'dist/wasm')).invoke('drone.photogrammetry.gsd', JSON.stringify(input)));
+  assert.equal(JSON.stringify(r.structuredContent.result), JSON.stringify(direct.result));
+  const { profileFilled, ...rest } = meta;
+  assert.deepEqual(rest, direct.meta);
+  assert.equal(profileFilled.includes('wind_rating'), false);
+});
+
+test('an explicit argument wins over the profile', async () => {
+  const r = await c.call('geoprims_run', { id: 'drone.photogrammetry.gsd', args: { height: '100 m', focal_length: '24 mm' }, profile: P1 });
+  assert.equal(r.structuredContent.meta.profileFilled.includes('focal_length'), false);
+  const direct = JSON.parse(
+    await nodeHost(join(root, 'dist/wasm')).invoke(
+      'drone.photogrammetry.gsd',
+      JSON.stringify({ height: '100 m', focal_length: '24 mm', sensor_width: '35.9 mm', sensor_height: '24 mm', image_width: 8192, image_height: 5460 }),
+    ),
+  );
+  assert.equal(JSON.stringify(r.structuredContent.result), JSON.stringify(direct.result));
+});
+
+test('a profile of another kind fills nothing; a malformed one runs nothing', async () => {
+  const gnss = { ...P1, kind: 'gnss-receiver', tools: { 'drone.photogrammetry.gsd': P1.tools['drone.photogrammetry.gsd'] } };
+  const r = await c.call('geoprims_run', { id: 'drone.photogrammetry.gsd', args: { height: '100 m' }, profile: gnss });
+  assert.deepEqual(r.structuredContent.meta?.profileFilled ?? [], []);
+  for (const bad of [{ ...P1, format: undefined }, { ...P1, kind: undefined }, { ...P1, kind: 'boat' }, 'P1']) {
+    const e = await c.call('geoprims_run', { id: 'drone.photogrammetry.gsd', args: { height: '100 m' }, profile: bad });
+    assert.equal(e.structuredContent.ok, false);
+    assert.equal(e.structuredContent.error.code, 'INVALID_INPUT');
+    assert.equal(e.structuredContent.error.field, '/profile');
+  }
+});
+
 // Example parity, the MCP half (contracts/manifest-extensions, "The primary
 // worked example"): the default run is the primary example, for every tool,
 // so an agent and a reader are looking at the same numbers.

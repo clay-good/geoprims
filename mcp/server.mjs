@@ -80,7 +80,8 @@ export async function createServer(opts = {}) {
   const modules = JSON.parse(readFileSync(join(dist, 'wasm', 'modules.json'), 'utf8')).modules;
   const limits = JSON.parse(readFileSync(findData(dist, 'report-limits.json'), 'utf8'));
   const workflows = JSON.parse(readFileSync(findData(dist, 'workflows.json'), 'utf8')).workflows;
-  const handlers = metaHandlers({ host, catalog, modules, limits, workflows, runChain, assumptions });
+  const profiles = JSON.parse(readFileSync(findData(dist, 'profiles.json'), 'utf8'));
+  const handlers = metaHandlers({ host, catalog, modules, limits, workflows, runChain, assumptions, profiles });
   const direct = opts.toolsets ? directTools(catalog, opts.toolsets, ANNOTATIONS) : [];
   if (opts.toolsets && !direct.length) log(opts, `toolsets ${opts.toolsets.join(', ')} have no stable tools yet`);
   const listed = [...(opts.noMeta ? [] : TOOLS), ...direct.map(({ id, ...t }) => t)];

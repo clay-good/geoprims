@@ -102,7 +102,7 @@
     {
       "name": "geoprims_run",
       "title": "Run a geoprims tool",
-      "description": "Run one tool or workflow by id. For a workflow (workflow.<slug>), args are the workflow's inputs (omit any to use its example) and the result lists every step's tool, input, and result, stopping at a failed step. For a tool, args follow the tool's input schema (see geoprims_describe); numbers may carry units as strings, like \"145 kts\". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call's values in it, and each intermediate result, exactly as the website shows it. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.",
+      "description": "Run one tool or workflow by id. For a workflow (workflow.<slug>), args are the workflow's inputs (omit any to use its example) and the result lists every step's tool, input, and result, stopping at a failed step. For a tool, args follow the tool's input schema (see geoprims_describe); numbers may carry units as strings, like \"145 kts\". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call's values in it, and each intermediate result, exactly as the website shows it. profile takes an equipment profile in the geoprims-profile file format the website exports (kind aircraft, drone, camera, lidar, gnss-receiver, or radio): it fills the equipment inputs args leave unset, and meta.profileFilled names them; nothing is stored between calls. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -126,6 +126,10 @@
           "explain": {
             "type": "boolean",
             "default": false
+          },
+          "profile": {
+            "type": "object",
+            "description": "An equipment profile: {format: \"geoprims-profile\", version: 1, kind, name, tools: {<toolId>: {<input>: value}}}"
           },
           "output": {
             "type": "object",

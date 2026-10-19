@@ -48,7 +48,7 @@ export const TOOLS = [
     name: 'geoprims_run',
     title: 'Run a geoprims tool',
     description:
-      'Run one tool or workflow by id. For a workflow (workflow.<slug>), args are the workflow\'s inputs (omit any to use its example) and the result lists every step\'s tool, input, and result, stopping at a failed step. For a tool, args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call\'s values in it, and each intermediate result, exactly as the website shows it. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
+      'Run one tool or workflow by id. For a workflow (workflow.<slug>), args are the workflow\'s inputs (omit any to use its example) and the result lists every step\'s tool, input, and result, stopping at a failed step. For a tool, args follow the tool\'s input schema (see geoprims_describe); numbers may carry units as strings, like "145 kts". Omit args to run the worked example. units picks an output unit profile: si, aviation, aviation-hpa, us-customary, survey-metric, or survey-us. explain: true adds a trace showing the formula, the same formula with this call\'s values in it, and each intermediate result, exactly as the website shows it. profile takes an equipment profile in the geoprims-profile file format the website exports (kind aircraft, drone, camera, lidar, gnss-receiver, or radio): it fills the equipment inputs args leave unset, and meta.profileFilled names them; nothing is stored between calls. Lists longer than output.maxItems (default 1,000) come back one page at a time; page gives the total, offset, and truncated flag of each list. Results are planning aids, not certified for navigation; relay meta.warnings to the user.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -56,6 +56,7 @@ export const TOOLS = [
         args: { type: 'object' },
         units: { type: 'string', enum: ['si', 'aviation', 'aviation-hpa', 'us-customary', 'survey-metric', 'survey-us'] },
         explain: { type: 'boolean', default: false },
+        profile: { type: 'object', description: 'An equipment profile: {format: "geoprims-profile", version: 1, kind, name, tools: {<toolId>: {<input>: value}}}' },
         output: {
           type: 'object',
           properties: { maxItems: { type: 'integer', minimum: 1, maximum: 10000, default: 1000 }, offset: { type: 'integer', minimum: 0, default: 0 } },
@@ -144,6 +145,23 @@ const cut = (s, n) => {
 
 const fail = (code, message, extra = {}) => ({ ok: false, error: { code, message, ...extra } });
 
+const plainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * An equipment profile's problem as an error, or null when it is well formed
+ * (web/equipment-profiles file format). Fields its kind does not keep are not
+ * a problem: they are ignored.
+ */
+function profileError(profile, kinds) {
+  const bad = (why) => fail('INVALID_INPUT', `profile ${why}`, { field: '/profile', hint: 'Pass a profile as the website exports it: {format: "geoprims-profile", version: 1, kind, name, tools}.' });
+  if (!plainObject(profile)) return bad('must be an object.');
+  if (profile.format !== 'geoprims-profile') return bad('needs format "geoprims-profile".');
+  if (profile.version !== 1) return bad('needs version 1.');
+  if (typeof profile.kind !== 'string' || !Object.hasOwn(kinds, profile.kind)) return bad(`needs a kind: one of ${Object.keys(kinds).join(', ')}.`);
+  if (profile.tools !== undefined && !plainObject(profile.tools)) return bad('tools must be an object keyed by tool id.');
+  return null;
+}
+
 function schemaCheck(tool, args) {
   const s = tool.inputSchema;
   if (args === null || typeof args !== 'object' || Array.isArray(args)) return 'arguments must be an object';
@@ -183,7 +201,7 @@ function bounds(list) {
 const bindValue = (v) =>
   v && typeof v === 'object' && typeof v.value === 'number' && typeof v.unit === 'string' ? `${v.value} ${v.unit}` : v;
 
-export function metaHandlers({ host, catalog, modules = [], limits, workflows = [], runChain = null, assumptions = () => [] }) {
+export function metaHandlers({ host, catalog, modules = [], limits, workflows = [], runChain = null, assumptions = () => [], profiles = { kinds: {} } }) {
   const byId = new Map(catalog.tools.map((t) => [t.id, t]));
   // Workflows (add-job-workflows): a job as one call, run by the website's chain runner.
   const flows = new Map(workflows.map((w) => [`workflow.${w.slug}`, w]));
@@ -300,9 +318,26 @@ export function metaHandlers({ host, catalog, modules = [], limits, workflows = 
       return { ok: true, result: { tools } };
     },
 
-    geoprims_run: async ({ id, args, units, output, explain }, context) => {
+    geoprims_run: async ({ id, args, units, output, explain, profile }, context) => {
+      if (profile !== undefined) {
+        const e = profileError(profile, profiles.kinds);
+        if (e) return e;
+      }
+      // What a profile fills: the kept inputs the caller did not set.
+      const kept = (toolId) => profiles.kinds[profile.kind]?.tools[toolId] ?? [];
+      const fromProfile = (fields, values, explicit) =>
+        fields.filter((f) => values?.[f] !== undefined && !Object.hasOwn(explicit ?? {}, f));
       if (flows.has(id) && runChain) {
         const w = flows.get(id);
+        // A workflow input declares the kind and field it takes; the value is
+        // that field as saved for any tool of the profile.
+        let filled = null;
+        if (profile !== undefined) {
+          const valueOf = (field) => Object.values(profile.tools ?? {}).find((t) => plainObject(t) && t[field] !== undefined)?.[field];
+          filled = w.inputs.filter((i) => i.profile?.kind === profile.kind && !Object.hasOwn(args ?? {}, i.name) && valueOf(i.profile.field) !== undefined);
+          if (filled.length) args = { ...(args ?? {}), ...Object.fromEntries(filled.map((i) => [i.name, valueOf(i.profile.field)])) };
+        }
+        const withFilled = (out) => (filled ? { ...out, meta: { ...(out.meta ?? {}), profileFilled: filled.map((i) => i.name) } } : out);
         const known = new Set(w.inputs.map((i) => i.name));
         const unknown = Object.keys(args ?? {}).filter((k) => !known.has(k));
         if (unknown.length) return fail('INVALID_INPUT', `${id} takes no input "${unknown[0]}". Its inputs are ${[...known].join(', ')}.`, { field: `/args/${unknown[0]}` });
@@ -314,14 +349,14 @@ export function metaHandlers({ host, catalog, modules = [], limits, workflows = 
         }
         const steps = chain.steps.map((s) => ({ tool: s.tool, status: s.status, input: s.input, result: s.result, ...(s.status === 'waiting' ? { waitingOn: s.waitingOn } : {}) }));
         const said = chain.steps.filter((s) => s.status === 'ok').map((s) => s.result.summary);
-        return chain.ok
+        return withFilled(chain.ok
           ? { ok: true, result: { workflow: id, steps }, summary: said.join(' ') }
           : (() => {
               // The failed step's own error (its code and field), naming the step.
               const f = chain.steps[chain.failed];
               const e = f.result?.error ?? { code: 'INTERNAL', message: 'no result' };
               return { ok: false, error: { ...e, message: `Step ${chain.failed + 1} (${f.tool}): ${e.message}`, step: chain.failed }, result: { workflow: id, steps } };
-            })();
+            })());
       }
       const m = byId.get(id);
       if (!m) {
@@ -336,13 +371,22 @@ export function metaHandlers({ host, catalog, modules = [], limits, workflows = 
         const ex = m.examples.find((e) => e.id === m['x-primary-example']) ?? m.examples[0];
         input = structuredClone(ex.input);
       }
+      let profileFilled;
+      if (profile !== undefined) {
+        const values = plainObject(profile.tools?.[id]) ? profile.tools[id] : {};
+        profileFilled = fromProfile(kept(id), values, args);
+        input = { ...input, ...Object.fromEntries(profileFilled.map((f) => [f, values[f]])) };
+      }
       if (units) input = { ...input, options: { ...(input.options ?? {}), profile: units } };
       if (explain) input = { ...input, options: { ...(input.options ?? {}), explain: true } };
       const maxItems = output?.maxItems ?? 1000;
       const offset = output?.offset ?? 0;
       if (!Number.isInteger(maxItems) || maxItems < 1 || maxItems > 10000) return fail('INVALID_INPUT', 'output.maxItems is a whole number from 1 to 10,000.', { field: '/output/maxItems' });
       if (!Number.isInteger(offset) || offset < 0) return fail('INVALID_INPUT', 'output.offset is a whole number, 0 or more.', { field: '/output/offset' });
-      return paged(m, input, maxItems, offset, context);
+      const out = await paged(m, input, maxItems, offset, context);
+      if (out && profileFilled && out.meta) out.meta = { ...out.meta, profileFilled };
+      else if (out && profileFilled) out.meta = { profileFilled };
+      return out;
     },
 
     geoprims_pipeline: async ({ steps }, context) => {

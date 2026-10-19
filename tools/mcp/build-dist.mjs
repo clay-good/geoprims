@@ -40,4 +40,5 @@ for (const asset of registry.assets.filter((a) => a.loadPolicy === 'bundled' && 
 }
 cpSync(join(root, 'data/report-limits.json'), join(dist, 'data/report-limits.json'));
 cpSync(join(root, 'data/workflows.json'), join(dist, 'data/workflows.json'));
+cpSync(join(root, 'data/profiles.json'), join(dist, 'data/profiles.json'));
 console.log(`wrote ${dist}`);

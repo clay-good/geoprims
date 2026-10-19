@@ -1082,6 +1082,10 @@ pub static TRUE_TO_MAGNETIC: ToolDef = ToolDef {
     sentence: "The converted bearing is {result}, using {variation_text} of variation.{if difference > -1000} The model value differs from the chart by {abs(difference)}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_true_to_magnetic,
+    slots: &[gp_base::tool::Slot::new(
+        "variation",
+        &["variation", "declination", "var"],
+    )],
     ..ToolDef::BLANK
 };
 
@@ -1150,6 +1154,10 @@ pub static MAGNETIC_TO_TRUE: ToolDef = ToolDef {
     sentence: TRUE_TO_MAGNETIC.sentence,
     limits: TRUE_TO_MAGNETIC.limits,
     run: run_magnetic_to_true,
+    slots: &[gp_base::tool::Slot::new(
+        "variation",
+        &["variation", "declination", "var"],
+    )],
     ..ToolDef::BLANK
 };
 

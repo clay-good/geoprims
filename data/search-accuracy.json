@@ -1,18 +1,20 @@
 {
-  "queries": 1391,
-  "top1": 97.6,
+  "queries": 1642,
+  "top1": 99,
   "top3": 99.9,
-  "prefillPrecision": 96.6,
-  "prefillRecall": 31.6,
+  "prefillPrecision": 97,
+  "prefillRecall": 32.3,
   "misses": [
-    "100 mph drone with 90 mph 15 mph",
-    "3D distance calculator with 40 -105 250 m 40.018012369978514 -105 370 m"
+    "100 mph drone with 90 mph 15 mph"
   ],
   "wrongFills": [
+    "35mm equivalent focal length with 13.2 mm 8.8 mm 8.8 mm: equivalent_focal_length = \"35 mm\"",
     "Thermal pixel footprint with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",
     "thermal spot size with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",
     "IFOV calculator with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",
     "thermal camera resolution at distance with 1.3 mrad 30 m: pixel_pitch = \"30 m\"",
+    "Grid zone and 100 km square in MGRS with 78.2232 15.6267: a = \"100 km\"",
+    "100 km square ID in MGRS with 78.2232 15.6267: a = \"100 km\"",
     "Latitude and longitude to Albers Equal Area with 35 -75 29.5 45.5 23 -96: lat = \"29.5 deg\"",
     "Latitude and longitude to Albers Equal Area with 35 -75 29.5 45.5 23 -96: lon = \"45.5 deg\"",
     "Albers equal area calculator with 35 -75 29.5 45.5 23 -96: lat = \"29.5 deg\"",

@@ -87,6 +87,101 @@ fn unit_word(w: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
+/// Rewrites each degrees-minutes-seconds angle as signed decimal degrees, so
+/// it reaches an input whole: `70°00'00"` is 70 deg, `9°32'48.15"` is
+/// 9.5467… deg, and a hemisphere letter signs it (`12°W` and `33°52'S` are
+/// negative). Left alone: temperatures (`15°C`), plain `40°` (already a value),
+/// quadrant bearings (`N 60°00'00" E`), whose letters mean something else, and
+/// an east or west angle that does not follow a north or south one: `9°E` alone
+/// is as likely a magnetic variation as a longitude, and `parse` keeps it as text.
+fn decimal_angles(q: &str) -> String {
+    let cs: Vec<char> = q.chars().collect();
+    let mut out = String::with_capacity(q.len());
+    let mut i = 0;
+    // Where the output stood after the last north or south angle.
+    let mut after_ns: Option<usize> = None;
+    // A number: digits with at most one decimal point, from `at`.
+    let number = |at: usize| -> Option<(f64, usize)> {
+        let mut j = at;
+        while j < cs.len() && (cs[j].is_ascii_digit() || (cs[j] == '.' && j > at)) {
+            j += 1;
+        }
+        let t: String = cs[at..j].iter().collect();
+        (j > at).then_some(())?;
+        Some((t.parse().ok()?, j))
+    };
+    while i < cs.len() {
+        let starts = cs[i].is_ascii_digit()
+            && (i == 0 || !(cs[i - 1].is_alphanumeric() || cs[i - 1] == '.'));
+        let neg_at = (i > 0 && matches!(cs[i - 1], '-' | '−')).then(|| i - 1);
+        if starts
+            && let Some((deg, j)) = number(i)
+            && cs.get(j) == Some(&'°')
+        {
+            let mut k = j + 1;
+            let mut value = deg;
+            let mut parts = 0;
+            if let Some((m, e)) = number(k)
+                && matches!(cs.get(e), Some('\'' | '′'))
+            {
+                value += m / 60.0;
+                k = e + 1;
+                parts += 1;
+                if let Some((sec, e)) = number(k)
+                    && matches!(cs.get(e), Some('"' | '″'))
+                {
+                    value += sec / 3600.0;
+                    k = e + 1;
+                    parts += 1;
+                }
+            }
+            // A hemisphere letter, touching or after one space, that ends a word.
+            let gap = usize::from(cs.get(k) == Some(&' '));
+            let hemi = cs
+                .get(k + gap)
+                .map(|c| c.to_ascii_uppercase())
+                .filter(|c| matches!(c, 'N' | 'S' | 'E' | 'W'))
+                .filter(|_| !cs.get(k + gap + 1).is_some_and(|c| c.is_alphanumeric()));
+            // "N 60°00'00" E" is a quadrant bearing: its letters are not signs.
+            // The N stands alone, so the N that ends "40°26'46"N 79°…" is not one.
+            let mut b = neg_at.unwrap_or(i);
+            while b > 0 && cs[b - 1] == ' ' {
+                b -= 1;
+            }
+            let quadrant = b > 0
+                && matches!(cs[b - 1], 'N' | 'S' | 'n' | 's')
+                && (b == 1 || cs[b - 2].is_whitespace());
+            let paired =
+                after_ns.is_some_and(|p| out[p..].chars().all(|c| c.is_whitespace() || c == ','));
+            let lone_east_west = matches!(hemi, Some('E' | 'W')) && !paired;
+            if (parts > 0 || hemi.is_some()) && !quadrant && !lone_east_west && value.is_finite() {
+                // A hemisphere letter decides the sign; without one, a typed
+                // minus stays where it is.
+                let v = match hemi {
+                    Some(h) => {
+                        if neg_at.is_some() {
+                            out.pop();
+                        }
+                        if matches!(h, 'S' | 'W') {
+                            -value
+                        } else {
+                            value
+                        }
+                    }
+                    None => value,
+                };
+                out.push_str(&format!("{v} deg"));
+                after_ns = matches!(hemi, Some('N' | 'S')).then_some(out.len());
+                i = if hemi.is_some() { k + gap + 1 } else { k };
+                continue;
+            }
+        }
+        out.push(cs[i]);
+        i += 1;
+    }
+    out
+}
+
 fn scan(q: &str) -> Vec<Tok> {
     let cs: Vec<char> = q.chars().collect();
     let mut out = Vec::new();
@@ -193,7 +288,27 @@ fn numv(num: f64, text: &str, decimal: bool, unit: Option<&str>) -> Kind {
 
 /// Splits a question into values and ranking words.
 pub fn parse(q: &str) -> Parsed {
-    let mut toks = scan(q);
+    let mut toks = scan(&decimal_angles(q));
+    // A dimension, "3D" or "2D", is a word to rank on, not three days.
+    let mut i = 0;
+    while i + 1 < toks.len() {
+        if let (
+            Some(Tok::Num {
+                text,
+                decimal: false,
+                glued: true,
+                ..
+            }),
+            Some(Tok::Word(w)),
+        ) = (toks.get(i), toks.get(i + 1))
+            && matches!(text.as_str(), "2" | "3" | "4")
+            && w.eq_ignore_ascii_case("d")
+        {
+            toks[i] = Tok::Word(format!("{text}D"));
+            toks.remove(i + 1);
+        }
+        i += 1;
+    }
     // A ratio, "1 in 60" (not 1 inch): its numbers are words to rank on.
     for i in 0..toks.len().saturating_sub(2) {
         if let (
@@ -276,6 +391,29 @@ pub fn parse(q: &str) -> Parsed {
                     continue;
                 }
             }
+        }
+        // An east or west angle on its own, "9°E" or "12°30'W": kept as typed
+        // for an input that reads it, such as a magnetic variation.
+        if let Some(Tok::Num {
+            text, glued: true, ..
+        }) = toks.get(i)
+            && let Some(w) = word(toks.get(i + 1))
+            && let Some(rest) = w.strip_prefix('°')
+            && rest.ends_with(['E', 'e', 'W', 'w'])
+            && rest[..rest.len() - 1]
+                .chars()
+                .all(|c| c.is_ascii_digit() || matches!(c, '.' | '\'' | '′' | '"' | '″'))
+        {
+            values.push((
+                Kind::Text(format!("{text}{w}")),
+                i,
+                i + 1,
+                Some("variation"),
+            ));
+            used[i] = true;
+            used[i + 1] = true;
+            i += 2;
+            continue;
         }
         if let Some((n, text, dec)) = num(toks.get(i)) {
             // Wind: 300@15, 300/15, 300 at 15 (three-digit direction), and METAR 30015KT.
@@ -910,6 +1048,44 @@ mod tests {
         assert_eq!(shown("40, -105").0, vec!["40 deg [lat]", "-105 deg [lon]"]);
         // Whole numbers without a comma are not a coordinate.
         assert_eq!(shown("40 105").0, vec!["40", "105"]);
+    }
+
+    #[test]
+    fn angles_in_degrees_minutes_seconds_arrive_whole() {
+        // Each angle is one value; its pieces never rank as words ("00" once
+        // matched a keyword of the reflectance tool).
+        assert_eq!(
+            shown("tower height 70°00'00\" 92°30'00\""),
+            (
+                vec!["70 deg [height]".into(), "92.5 deg".into()],
+                vec!["tower".into(), "height".into()]
+            )
+        );
+        assert_eq!(shown("9°32'48.15\"").0, vec!["9.546708333333333 deg"]);
+        // A hemisphere letter signs it, touching or after a space.
+        // An east or west angle alone stays as typed, for a variation input.
+        assert_eq!(shown("12°W").0, vec!["12°W [variation]"]);
+        assert_eq!(
+            shown("40°26'46\"N 79°58'56\" W").0,
+            vec!["40.44611111111111 deg", "-79.98222222222222 deg"]
+        );
+        assert_eq!(shown("-105°30'").0, vec!["-105.5 deg"]);
+        // Not angles to rewrite: a temperature, and a quadrant bearing whose
+        // letters name its quadrant.
+        assert_eq!(shown("15°C").0, vec!["15 degC"]);
+        assert_eq!(shown("N 60°00'00\" E").1, vec!["N", "°00'00\"", "E"]);
+    }
+
+    #[test]
+    fn a_dimension_is_a_word() {
+        assert_eq!(
+            shown("3D distance 250 m"),
+            (
+                vec!["250 m [distance]".into()],
+                vec!["3D".into(), "distance".into()]
+            )
+        );
+        assert_eq!(shown("3 d").0, vec!["3 d"]);
     }
 
     #[test]

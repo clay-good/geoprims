@@ -34,8 +34,29 @@ export function generate(tools) {
   return out;
 }
 
-/** "29.80 inHg" and 29.8 compare equal when the unit is the field's own. */
+/**
+ * An angle in degrees, minutes, and seconds as decimal degrees, signed by its
+ * hemisphere: 9°32'48.15" and 24°22'54.433"N, or null when `v` is not one.
+ */
+function dms(v) {
+  const m = /^([-+]?)(\d+(?:\.\d+)?)°(?:(\d+(?:\.\d+)?)['′])?(?:(\d+(?:\.\d+)?)["″])?\s*([NSEW])?$/i.exec(String(v).trim());
+  if (!m || (!m[3] && !m[5])) return null;
+  const value = Number(m[2]) + Number(m[3] ?? 0) / 60 + Number(m[4] ?? 0) / 3600;
+  const negative = m[5] ? /[SW]/i.test(m[5]) : m[1] === '-';
+  return negative ? -value : value;
+}
+
+/**
+ * "29.80 inHg" and 29.8 compare equal when the unit is the field's own, and
+ * 30°00'00" equals 30 deg.
+ */
 function same(got, want, unit) {
+  if (String(got).trim() === String(want).trim()) return true;
+  const angle = dms(want);
+  if (angle !== null) {
+    const m = /^([-+]?[\d.]+)\s*deg$/.exec(String(got).trim());
+    return Boolean(m) && Math.abs(Number(m[1]) - angle) < 1e-9;
+  }
   const parse = (v) => {
     const m = /^([-+]?[\d.]+)\s*(.*)$/.exec(String(v).trim());
     return m ? [Number(m[1]), m[2] || unit || ''] : [NaN, String(v)];

@@ -1,0 +1,9 @@
+# Tasks
+
+- [ ] 1 Add sources and regulations: NASA TN D-2056, AC 61-107B Chg 1, Order 8260.3F, FAA-H-8083-16B, EASA AMC & GM to Part-CAT (check for amendments after Issue 2 Amendment 21), Chevron FTR (vendor), Measurement Canada VCF; `data/regulations.json` entries for 91.211, 135.89, 121.329, 91.175(h)(2), 97.3, and Table 2-7-1, each read at eCFR or the order → verify: ledger and regulations gates pass with sections named
+- [ ] 2 `aviation.performance.va-for-weight`, `hydroplaning-speed`, `climb-requirement` and `aviation.altimetry.cabin-altitude` → verify: the design A7 vectors; `OUT_OF_DOMAIN` and `CLIMB_GRADIENT_SHORT` cases; cabin altitude uses the shared ISA engine bit for bit
+- [ ] 3 `aviation.ifr.rvr-visibility`, `approach-category`, `circling-radius` (formulas 2-7-1 and 2-7-2) → verify: every regulation row exactly; category boundaries; the 1.30 NM minimum
+- [ ] 4 `aviation.physiology.oxygen-requirement` and `time-of-useful-consciousness` with the caution and no interpolation → verify: the threshold and table scenarios; a chrome-copy test that the caution is present
+- [ ] 5 `aviation.loading.fuel-density-temperature` and the send-to chain into fuel-weight and weight-balance → verify: the Chevron and Measurement Canada vectors; `chain.test.mjs`
+- [ ] 6 Register `CLIMB_GRADIENT_SHORT` (caution); add `physiology` to the taxonomy; diagrams (climb gradient required vs available; cabin pressure stack), explainers, hubs, glossary, derivation notes, search questions → verify: the full gate sequence passes and each tool's questions rank it first
+- [ ] 7 Read the TPP legend's circling table at the source, record the assumptions that reproduce it from the formulas, and only then add it beside the computed radius → verify: a vector per band and category, with the derivation note explaining any residual difference

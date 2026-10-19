@@ -1,0 +1,10 @@
+# Tasks
+
+- [ ] 1 Add the sources to `data/sources-ledger.json` (Meeus 2nd ed.; VSOP87 and ELP-2000/82 at VizieR; IERS Conventions 2010; Capitaine, Wallace & Chapront 2005; ERFA; FK5; Bennett 1982; USNO definitions and API; the Nautical Almanac as conventions only; Bowditch ch. 15 and 19; POSIX.1-2024; ISO 8601-1:2019) → verify: the ledger gate passes with sections named
+- [ ] 2 `gp-astro` crate: VSOP87 abridged (sun, four planets), ELP-2000/82 abridged, IAU 2006 precession, 2000B nutation (measure 2000A against ERFA and record), aberration, topocentric reduction, FK5 star table → verify: ERFA parity for precession-nutation to 1e-9 rad; USNO parity for 200 instants within the per-body tolerances; module budgets
+- [ ] 3 `navigation.celestial.almanac`, `sight-reduction`, `altitude-correction`, `polaris-latitude`, `sun-azimuth-check` → verify: Bowditch §1906–1908 and §1912 to 0.1'; the geographic-position invariant; the Bennett table check; the gyro-error sign
+- [ ] 4 `time.moon.position`, `rise-set` (USNO definition, `POLAR_MOON`, double and missing events), `phase` → verify: USNO parity for 500 rise/set pairs within 1 minute and phases within 2 minutes; the no-moonset scenario
+- [ ] 5 `time.scale.sidereal`, `unix-time`, `iso-week` → verify: the J2000.0 vector; ERFA and USNO parity; POSIX round trips 1970–2100; the leap-second refusal; the ISO week anchors
+- [ ] 6 `survey.astro.solar-azimuth` and `polaris-azimuth` (hour-angle method, limb correction, Laplace input, set statistics, notice) → verify: the Bowditch Polaris vector; USNO Zn of the sun's center for 50 observations; the blunder scenario
+- [ ] 7 Register `BODY_BELOW_HORIZON`, `POLAR_MOON` (info), `ASTRONOMIC_AZIMUTH` (accuracy) in `data/codes.json`; add the `celestial`, `moon`, and `astro` groups to the taxonomy → verify: codes and taxonomy gates
+- [ ] 8 Diagrams (line of position on the map, altitude-correction stack, moon on the sky plot), explainers (sight reduction, moon illumination for night work), hubs, glossary, derivation notes, search questions → verify: `visual-purpose.test.mjs` reaches each tool; the full gate sequence passes and each tool's questions rank it first

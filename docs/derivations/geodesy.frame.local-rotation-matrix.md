@@ -28,25 +28,23 @@ None. The up row is the ellipsoid normal at the geodetic latitude, not the geoce
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-geodesy-suite specification
-- sourceEdition: 2026
-- sourceLocator: geodesy/local-frames, requirement "Local tangent frames" (rotation matrix); checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: latitude 0°, longitude 0°, ENU
-- outputs: rows (0, 1, 0), (0, 0, 1), (1, 0, 0): east is +Y, north is +Z, up is +X
-- tolerance: exact
-- verifiedBy: golden vector v002 and the `focused_frame_and_grid_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: MathWorks
+- sourceTitle: Mapping Toolbox documentation, ecef2enu and ecef2ned
+- sourceEdition: R2024b online documentation
+- sourceLocator: mathworks.com/help/map/ref/ecef2enu.html and mathworks.com/help/map/ref/ecef2ned.html, the numeric examples
+- independent: yes
+- inputs: ENU at latitude 45.9132°, longitude 36.7484°, applied to the ECEF offset of the ecef2enu example (point 5,507.5289, 4,556.2241, 6,012.8208 km; origin at height 1,877.7532 km on WGS 84); NED at latitude 44.532°, longitude −72.782°, applied to the ecef2ned example (point 1,345.660, −4,350.891, 4,452.314 km; origin height 1.699 km)
+- outputs: east 355.6013, north −923.0832, up 1,041.0 km; and north 1.3343, east −2.5444, down 0.3600 km, matching every digit the pages print
+- tolerance: the pages' printed precision (1e-4 km) for the products; 1e-12 for the matrix entries against the closed-form rows in Python
+- verifiedBy: golden vectors v022 and v023; the ECEF origin was computed separately from the WGS 84 closed form
+- verifiedOn: 2026-10-19
 
 ## Differential tests
 
 - `tools/vectors/gen_geodesy_focused.py` `rotation_vectors`: 14 random places and six axis cases in both frames, by the closed-form rows in Python, to 1e-14.
-- `core/vectors/geodesy.frame.local-rotation-matrix.jsonl`: those vectors and one refusal case.
+- `core/vectors/geodesy.frame.local-rotation-matrix.jsonl`: those vectors, one refusal case, and the two MathWorks origins (v022, v023).
 - The integration suite requires the matrix `geodesy.frame.to-local` reports and checks orthonormality.
 
 ## Invariants
 
-- The rows are unit vectors at right angles to one another.
-- The NED matrix is the ENU matrix with its first two rows swapped and its third negated.
-- The transpose is the inverse.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `local_frame_views_invariants`: at six places, including near a pole and on the antimeridian, the rows are orthonormal, east × north = up, up is the ellipsoid normal, and the NED matrix is the ENU matrix with its first two rows swapped and its third negated (so the transpose is the inverse).

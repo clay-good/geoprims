@@ -5,6 +5,16 @@
       "date": "2026-10-19",
       "kind": "changed",
       "tools": [
+        "geodesy.frame.enu-ned",
+        "geodesy.frame.local-rotation-matrix"
+      ],
+      "vectors": [],
+      "summary": "The ENU and NED frame converter and the ECEF-to-local rotation matrix are now stable, held to MathWorks' published ecef2enu and ecef2ned examples, with four new vectors and a new invariant test. Results are unchanged."
+    },
+    {
+      "date": "2026-10-19",
+      "kind": "changed",
+      "tools": [
         "survey.cogo.station-offset",
         "survey.cogo.perpendicular-foot",
         "survey.cogo.point-from-station-offset"

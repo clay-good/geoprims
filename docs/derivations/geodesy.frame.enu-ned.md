@@ -24,25 +24,23 @@ None: the conversion is exact.
 
 ## Worked example
 
-- sourcePublisher: geoprims
-- sourceTitle: add-geodesy-suite specification
-- sourceEdition: 2026
-- sourceLocator: geodesy/local-frames, requirement "Local tangent frames"; checked by hand arithmetic, not taken from a published table
-- independent: no
-- inputs: NED: north 300 m, east −120 m, down −45 m
-- outputs: ENU: east −120 m, north 300 m, up 45 m
-- tolerance: exact
-- verifiedBy: golden vector v001 and the `focused_frame_and_grid_operations_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- sourcePublisher: MathWorks
+- sourceTitle: Mapping Toolbox documentation, ecef2ned and ecef2enu
+- sourceEdition: R2024b online documentation
+- sourceLocator: mathworks.com/help/map/ref/ecef2ned.html and mathworks.com/help/map/ref/ecef2enu.html, the numeric examples
+- independent: yes
+- inputs: the ecef2ned example's printed result, NED north 1.3343 km, east −2.5444 km, down 0.3600 km; and the ecef2enu example's printed result, ENU east 355.6013 km, north −923.0832 km, up 1,041.0 km
+- outputs: north 1,334.3 m, east −2,544.4 m, up −360 m; and north −923,083.2 m, east 355,601.3 m, down −1,041,000 m. The ENU form of the first agrees with the ENU rotation of the same ECEF offset (see `geodesy.frame.local-rotation-matrix`)
+- tolerance: 1e-9 m and 1e-6 m in the golden vectors
+- verifiedBy: golden vectors v024 and v025
+- verifiedOn: 2026-10-19
 
 ## Differential tests
 
 - `tools/vectors/gen_geodesy_focused.py` `enu_ned_vectors`: 19 random offsets entered alternately in each frame.
-- `core/vectors/geodesy.frame.enu-ned.jsonl`: those vectors, the page's example, and three refusal cases.
+- `core/vectors/geodesy.frame.enu-ned.jsonl`: those vectors, the page's example, three refusal cases, and the two MathWorks results (v024, v025).
 - The integration suite requires the same result whichever frame the offsets are entered in.
 
 ## Invariants
 
-- Entering the same offsets in either frame gives the same result.
-- up + down = 0.
-- North and east are never changed.
+- `core/crates/gp-geodesy/tests/geodesy_views_invariants.rs` `local_frame_views_invariants`: the same offsets entered in either frame give the same four values, north and east pass through unchanged, and up + down = 0.

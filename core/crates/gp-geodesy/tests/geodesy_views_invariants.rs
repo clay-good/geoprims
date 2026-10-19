@@ -337,3 +337,80 @@ fn projection_views_invariants() {
         assert!(num(&east, "scale") > 0.9996);
     }
 }
+
+#[test]
+fn local_frame_views_invariants() {
+    let matrix = |lat: f64, lon: f64, frame: &str| -> [[f64; 3]; 3] {
+        let r = call(
+            "geodesy.frame.local-rotation-matrix",
+            json!({"lat0": lat, "lon0": lon, "frame": frame}),
+        );
+        let row = |i: usize| {
+            let v = &r["rotation"][i];
+            [
+                v["x"].as_f64().unwrap(),
+                v["y"].as_f64().unwrap(),
+                v["z"].as_f64().unwrap(),
+            ]
+        };
+        [row(0), row(1), row(2)]
+    };
+    let dot = |a: [f64; 3], b: [f64; 3]| a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    for (lat, lon) in [
+        (0.0, 0.0),
+        (45.9132, 36.7484),
+        (44.532, -72.782),
+        (-33.9, 151.2),
+        (89.5, -179.0),
+        (-60.0, 180.0),
+    ] {
+        let (enu, ned) = (matrix(lat, lon, "enu"), matrix(lat, lon, "ned"));
+        // Orthonormal rows, and a right-handed frame (east × north = up).
+        for i in 0..3 {
+            for j in 0..3 {
+                let want = if i == j { 1.0 } else { 0.0 };
+                assert!((dot(enu[i], enu[j]) - want).abs() < 1e-12, "{lat} {lon}");
+                assert!((dot(ned[i], ned[j]) - want).abs() < 1e-12, "{lat} {lon}");
+            }
+        }
+        let [e, n, u] = enu;
+        let cross = [
+            e[1] * n[2] - e[2] * n[1],
+            e[2] * n[0] - e[0] * n[2],
+            e[0] * n[1] - e[1] * n[0],
+        ];
+        assert!((dot(cross, u) - 1.0).abs() < 1e-12, "{lat} {lon}");
+        // Up is the ellipsoid normal at the origin.
+        let (p, l) = (lat.to_radians(), lon.to_radians());
+        let normal = [p.cos() * l.cos(), p.cos() * l.sin(), p.sin()];
+        assert!((dot(u, normal) - 1.0).abs() < 1e-12, "{lat} {lon}");
+        // NED is ENU relabeled: north, east, and down = −up.
+        for k in 0..3 {
+            assert!((ned[0][k] - n[k]).abs() < 1e-15);
+            assert!((ned[1][k] - e[k]).abs() < 1e-15);
+            assert!((ned[2][k] + u[k]).abs() < 1e-15);
+        }
+    }
+
+    for (n, e, u) in [
+        (300.0, -120.0, 45.0),
+        (-1.5, 0.0, -2200.25),
+        (0.0, 0.0, 0.0),
+    ] {
+        let a = call(
+            "geodesy.frame.enu-ned",
+            json!({"frame": "enu", "east": format!("{e} m"), "north": format!("{n} m"), "up": format!("{u} m")}),
+        );
+        let b = call(
+            "geodesy.frame.enu-ned",
+            json!({"frame": "ned", "north": format!("{n} m"), "east": format!("{e} m"), "down": format!("{} m", -u)}),
+        );
+        // Either frame gives the same four numbers; north and east pass
+        // through, and up + down = 0.
+        for k in ["north", "east", "up", "down"] {
+            assert!((num(&a, k) - num(&b, k)).abs() < 1e-12, "{k}");
+        }
+        assert_eq!((num(&a, "north"), num(&a, "east")), (n, e));
+        assert!((num(&a, "up") + num(&a, "down")).abs() < 1e-12);
+    }
+}

@@ -1401,6 +1401,7 @@ fn run_enu_to_aer(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ENU_NED: ToolDef = ToolDef {
     id: "geodesy.frame.enu-ned",
+    stability: gp_base::tool::Stability::Stable,
     title: "ENU and NED frame converter",
     summary: "Converts local offsets between the east-north-up convention of mapping and surveying and the north-east-down convention of aircraft and drones.",
     aliases: &[
@@ -1437,7 +1438,7 @@ pub static ENU_NED: ToolDef = ToolDef {
         TO_LOCAL.outputs[5],
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "The two frames share an origin and a tangent plane: the first two axes swap, and down = −up",
     accuracy: "Exact",
     when_to_use: "Use this when numbers cross between a mapping system and a flight system. Surveying, GIS, and most geodesy libraries order local offsets east, north, up; autopilots, aircraft dynamics, and many drone logs order them north, east, down. Enter the offsets and say which frame they are in. The tool returns all four values, so both orderings can be read off without a sign slip.",
@@ -1516,6 +1517,7 @@ fn run_enu_ned(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ROTATION_MATRIX: ToolDef = ToolDef {
     id: "geodesy.frame.local-rotation-matrix",
+    stability: gp_base::tool::Stability::Stable,
     title: "ECEF to local frame rotation matrix",
     summary: "The 3 × 3 rotation matrix that turns Earth-centered (ECEF) vector components into east-north-up or north-east-down components at a latitude and longitude.",
     aliases: &[
@@ -1553,7 +1555,7 @@ pub static ROTATION_MATRIX: ToolDef = ToolDef {
         TO_LOCAL.outputs[8].required(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED"],
     model: "Rows of the ECEF-to-ENU matrix at latitude φ and longitude λ: east (−sin λ, cos λ, 0), north (−sin φ cos λ, −sin φ sin λ, cos φ), up (cos φ cos λ, cos φ sin λ, sin φ); NED takes the rows north, east, and minus up",
     accuracy: "Exact trigonometry; the matrix is orthonormal to rounding",
     when_to_use: "Use this to rotate a vector, not a position, from Earth-centered axes into local ones: a GNSS velocity, a baseline between two receivers, a covariance, or a line-of-sight unit vector. Enter the latitude and longitude where the local frame sits and choose east-north-up or north-east-down. Multiply the matrix by the ECEF vector to get its local components; its transpose rotates back.",

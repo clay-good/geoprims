@@ -7,7 +7,9 @@ use gp_base::ErrorCode;
 use gp_base::display;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
-use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
+use gp_base::tool::{
+    Assumption, Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef,
+};
 use gp_base::units::Quantity as QT;
 use libm::sqrt;
 
@@ -49,6 +51,15 @@ const IGAGE_I9: Reference = Reference {
     url: "https://igage.com/out/iG9/usermanual/latestversion/iG9_UserManual.pdf",
 };
 
+const NSSDA: Reference = Reference {
+    title: "Geospatial Positioning Accuracy Standards, Part 3: National Standard for Spatial Data Accuracy",
+    issuer: "Federal Geographic Data Committee",
+    year: 1998,
+    edition: "FGDC-STD-007.3-1998",
+    locator: "Appendix 3-A, pages 3-10 and 3-11 (2.4477 horizontal and 1.9600 vertical 95% factors)",
+    url: "https://www.fgdc.gov/standards/projects/accuracy/part3/chapter3",
+};
+
 const NGS_RT: Reference = Reference {
     title: "User Guidelines for Single Base Real Time GNSS Positioning",
     issuer: "Henning, W., NOAA National Geodetic Survey",
@@ -83,7 +94,7 @@ const fn mm(name: &'static str, title: &'static str, help: &'static str) -> Fiel
 
 pub static RTK_BUDGET: ToolDef = ToolDef {
     id: "survey.gnss.rtk-budget",
-    version: "1.1.0",
+    version: "1.2.0",
     stability: gp_base::tool::Stability::Stable,
     title: "RTK and PPK precision budget",
     summary: "The precision a receiver's a mm + b ppm specification promises over your baseline, horizontal and vertical, scaled to a confidence level and compared with your target.",
@@ -137,7 +148,7 @@ pub static RTK_BUDGET: ToolDef = ToolDef {
         Field::new(
             "confidence",
             "Confidence",
-            "1sigma (the default, as specifications state), 95 (2.448σ horizontal, 1.96σ vertical)",
+            "1sigma (the default, as specifications state), 95 (2.4477σ horizontal, 1.96σ vertical)",
             Kind::Choice(&["1sigma", "95"]),
         )
         .core(),
@@ -177,11 +188,25 @@ pub static RTK_BUDGET: ToolDef = ToolDef {
     ],
     errors: &[ErrorCode::InvalidInput],
     warnings: &["UNIT_ASSUMED"],
-    model: "Precision = a + b × 10⁻⁶ × baseline, the way receiver specifications state it (1σ, ideal conditions); at 95% the horizontal value is multiplied by 2.448 (the two-dimensional factor) and the vertical by 1.96",
+    model: "Precision = a + b × 10⁻⁶ × baseline, the way receiver specifications state it (1σ, ideal conditions); at 95% the horizontal value is multiplied by 2.4477 (the two-dimensional factor) and the vertical by 1.96 (FGDC-STD-007.3-1998, Appendix 3-A)",
     accuracy: "Manufacturer specifications assume open sky, good geometry, and no multipath; field results are often worse. A root-sum-square of the two terms would read lower",
     when_to_use: "Use this when you need to know if an RTK or PPK setup can meet a job's tolerance before you go to the field. Enter the receiver's a mm plus b ppm spec, the baseline to the base or network, and your target. It returns horizontal and, if given, vertical precision as stated or scaled from one sigma to 95%, and says whether you are within, near, or beyond the target.",
     limitations: "The answer is what the maker's spec promises under open sky with good satellite geometry and no multipath. Real work under trees, near buildings, or with poor geometry is often worse. The two terms are added straight, as specs state them. The 95% option assumes the entered terms are one-sigma values; do not apply it to a specification already stated as RMS, 95%, or another confidence basis. The tool does not model antenna height errors, setup errors, or the accuracy of the base coordinates.",
-    references: &[NGS_RT, TERSUS_LONG_RTK],
+    references: &[NGS_RT, TERSUS_LONG_RTK, NSSDA],
+    assumptions: &[
+        Assumption {
+            name: "Two-dimensional 95% factor",
+            value: "2.4477",
+            unit: "1",
+            source: "fgdc-nssda",
+        },
+        Assumption {
+            name: "One-dimensional 95% factor",
+            value: "1.9600",
+            unit: "1",
+            source: "fgdc-nssda",
+        },
+    ],
     examples: &[Example {
         id: "primary",
         title: "Tersus Oscar over a 40 km baseline",
@@ -231,11 +256,7 @@ fn run_rtk(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ));
     }
     let ninety_five = ctx.choice("confidence")? == Some("95");
-    let (kh, kv) = if ninety_five {
-        (2.448, 1.96)
-    } else {
-        (1.0, 1.0)
-    };
+    let (kh, kv) = if ninety_five { (K95, 1.96) } else { (1.0, 1.0) };
     let h = (a + b * 1e-6 * d) * kh;
     let q = |v: f64| Q { value: v, unit: m };
     let mut out = vec![("horizontal", ctx.out("horizontal", q(h)))];
@@ -862,7 +883,7 @@ pub static ALTA_RPP: ToolDef = ToolDef {
         Field::new(
             "semi_major_95",
             "Your 95% semi-major axis",
-            "Given, or 2.448 × the largest σ of the covariance",
+            "Given, or 2.4477 × the largest σ of the covariance",
             Kind::Quantity {
                 q: QT::Length,
                 unit: "ft",

@@ -170,7 +170,10 @@ fn rtk_budget_applies_the_documented_confidence_factors() {
         r#"{"h_constant":"8 mm","h_ppm":1,"baseline":"40 km","v_constant":"15 mm","v_ppm":1,"confidence":"95"}"#,
     );
     assert!(
-        (num(&ninety_five, "horizontal") / num(&one_sigma, "horizontal") - 2.448).abs() < 1e-12
+        (num(&ninety_five, "horizontal") / num(&one_sigma, "horizontal")
+            - (-2.0 * 0.05_f64.ln()).sqrt())
+        .abs()
+            < 1e-12
     );
     assert!((num(&ninety_five, "vertical") / num(&one_sigma, "vertical") - 1.96).abs() < 1e-12);
 }

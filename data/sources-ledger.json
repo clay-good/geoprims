@@ -1073,6 +1073,27 @@
       ]
     },
     {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "fgdc-nssda",
+      "name": "National Standard for Spatial Data Accuracy",
+      "issuer": "FGDC",
+      "currentEdition": "FGDC-STD-007.3-1998",
+      "lastVerified": "2026-10-19",
+      "verificationNote": "Read at the issuer on 2026-10-19: fgdc.gov serves FGDC-STD-007.3-1998 (PDF); Appendix 3-A gives Accuracy_r = 2.4477 × RMSE_x and Accuracy_z = 1.9600 × RMSE_z (pages 3-10 and 3-11).",
+      "freeAccessUrl": "https://www.fgdc.gov/standards/projects/accuracy/part3/chapter3",
+      "matchTerms": [
+        "FGDC-STD-007.3-1998",
+        "National Standard for Spatial Data Accuracy"
+      ]
+    },
+    {
       "id": "fhwa-noise-terminology",
       "name": "Noise Barrier Design: Terminology",
       "issuer": "Federal Highway Administration",

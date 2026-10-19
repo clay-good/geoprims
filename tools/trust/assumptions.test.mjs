@@ -225,6 +225,7 @@ const MUST_DECLARE = [
   'aviation.loading.fuel-weight',
   'units.fuel.convert',
   'survey.land.plss-parse',
+  'survey.gnss.rtk-budget',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -771,6 +772,16 @@ test('both fuel converters name the nominal densities they fall back on', () => 
 test('the PLSS reader names the standard section behind its nominal acres', () => {
   const assumptions = byId('survey.land.plss-parse')['x-assumptions'];
   assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [['640', 'acre', 'blm-manual']]);
+});
+
+test('the RTK budget names the NSSDA factors behind its 95% option', () => {
+  const assumptions = byId('survey.gnss.rtk-budget')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+    ['2.4477', '1', 'fgdc-nssda'],
+    ['1.9600', '1', 'fgdc-nssda'],
+  ]);
+  const row = ledger.find((x) => x.id === 'fgdc-nssda');
+  assert.equal(row.currentEdition, 'FGDC-STD-007.3-1998');
 });
 
 test('every tool that rests on constants declares them', () => {

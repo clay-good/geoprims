@@ -9,7 +9,7 @@ Receiver makers commonly state relative-positioning precision as a constant term
 
 - One-sigma horizontal precision: `H₁ = aₕ + bₕ × 10⁻⁶ × d`
 - One-sigma vertical precision: `V₁ = aᵥ + bᵥ × 10⁻⁶ × d`
-- 95% horizontal precision: `H₉₅ = 2.448 × H₁`
+- 95% horizontal precision: `H₉₅ = 2.4477 × H₁`, with 2.4477 = √χ²₂,₀.₉₅ = √(−2 ln 0.05) (FGDC-STD-007.3-1998, Appendix 3-A)
 - 95% vertical precision: `V₉₅ = 1.96 × V₁`
 
 The horizontal factor is the rounded 95% radial factor for an isotropic two-dimensional normal distribution. The vertical factor is the two-sided 95% factor for a one-dimensional normal distribution. The two manufacturer terms are added, not combined by root sum square, because the published specification is written as `a + b ppm`.
@@ -24,7 +24,7 @@ The horizontal constant and ppm coefficient are required and nonnegative. The ba
 
 ## Approximations
 
-The `2.448` and `1.96` confidence factors are rounded constants. The budget itself is a receiver specification, not a field uncertainty model. It does not add base-coordinate uncertainty, antenna setup error, multipath, obstructions, poor satellite geometry, atmospheric decorrelation, initialization failure, or datum and geoid errors. Product distance limits and confidence labels still govern; a specification stated as RMS, 95%, or another basis must not be scaled as though it were one sigma.
+The confidence factors are the NSSDA's: 2.4477, carried at full precision as √(−2 ln 0.05), for a circular error with equal one-sigma components, and 1.9600 for a single axis (FGDC-STD-007.3-1998, Appendix 3-A). Until version 1.2.0 the horizontal factor was rounded to 2.448. The budget itself is a receiver specification, not a field uncertainty model. It does not add base-coordinate uncertainty, antenna setup error, multipath, obstructions, poor satellite geometry, atmospheric decorrelation, initialization failure, or datum and geoid errors. Product distance limits and confidence labels still govern; a specification stated as RMS, 95%, or another basis must not be scaled as though it were one sigma.
 
 ## Worked example
 
@@ -49,6 +49,6 @@ Tersus prints the arithmetic explicitly as `8 + 1 × 40 = 48 mm` horizontally an
 
 - `core/crates/gp-survey/tests/gnss.rs` `rtk_budget_matches_the_tersus_worked_example`: reproduces both values in the manufacturer's published 40 km example
 - `core/crates/gp-survey/tests/gnss.rs` `rtk_budget_one_ppm_is_one_millimeter_per_kilometer`: verifies the defining ppm relationship at 0 km, 1 km, and 40 km
-- `core/crates/gp-survey/tests/gnss.rs` `rtk_budget_applies_the_documented_confidence_factors`: 95% results are exactly 2.448 and 1.96 times their one-sigma values
+- `core/crates/gp-survey/tests/gnss.rs` `rtk_budget_applies_the_documented_confidence_factors`: 95% results are exactly √(−2 ln 0.05) ≈ 2.4477 and 1.96 times their one-sigma values
 - `core/crates/gp-survey/tests/gnss.rs` `rtk_budget_is_unit_invariant`: equivalent centimeters, millimeters, meters, and kilometers give the same results
 - `core/crates/gp-survey/tests/gnss.rs` `rtk_budget_invalid_inputs_name_the_field`: negative and incomplete terms identify the input that needs correction

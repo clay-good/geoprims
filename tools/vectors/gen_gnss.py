@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Golden vectors for the GNSS field tools, worked by hand: precision = (a +
-b 1e-6 d) x the confidence factor (1, or 2.448 horizontal and 1.96 vertical
+b 1e-6 d) x the confidence factor (1, or 2.4477 = sqrt(-2 ln 0.05) horizontal and 1.96 vertical
 at 95%); OPUS rapid-static below 2 hours and static from 2 to 48 hours with
 the RINEX 2 name ssssdddh.yyo; antenna height sqrt(s^2 - r^2) + offset."""
 import datetime as dt
@@ -11,6 +11,7 @@ from pathlib import Path
 
 SRC = "Worked by hand in Python (tools/vectors/gen_gnss.py)"
 SPEC = "add-practitioner-essentials GNSS scenarios"
+K95 = math.sqrt(-2 * math.log(0.05))  # FGDC-STD-007.3-1998 Appendix 3-A: 2.4477
 
 
 def vec(i, inp, exp, src=SRC, tol=1e-9):
@@ -23,11 +24,11 @@ def vec(i, inp, exp, src=SRC, tol=1e-9):
 def rtk():
     out = [vec(1, {"h_constant": "8 mm", "h_ppm": 1, "baseline": "15 km"}, {"result.horizontal.value": 23.0}, SPEC + " (8 mm + 1 ppm at 15 km: 23 mm)")]
     out.append(vec(2, {"h_constant": "10 mm", "h_ppm": 1, "baseline": "8 km", "v_constant": "20 mm", "v_ppm": 1, "confidence": "95"},
-                   {"result.horizontal.value": 18 * 2.448, "result.vertical.value": 28 * 1.96}))
+                   {"result.horizontal.value": 18 * K95, "result.vertical.value": 28 * 1.96}))
     out.append(vec(3, {"h_constant": "8 mm", "h_ppm": 0.5, "baseline": "30 km", "target": "20 mm"},
                    {"result.horizontal.value": 23.0, "result.target_status": "Beyond your 20 mm target"}))
     out.append(vec(4, {"h_constant": "5 mm", "h_ppm": 0.5, "baseline": "2 km", "target": "10 mm", "confidence": "95"},
-                   {"result.horizontal.value": 6 * 2.448, "result.target_status": "Beyond your 10 mm target"}))
+                   {"result.horizontal.value": 6 * K95, "result.target_status": "Beyond your 10 mm target"}))
     out.append(vec(5, {"h_constant": "8 mm", "h_ppm": 1, "baseline": "15 km", "v_constant": "15 mm"}, {"ok": False, "error.code": "INVALID_INPUT"}))
     tersus = "Tersus GNSS, How does Tersus handle long-range single baseline RTK positioning?, 2023-04-06"
     out.append(vec(6, {"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "v_constant": "15 mm", "v_ppm": 1},
@@ -45,7 +46,7 @@ def rtk():
         ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "target": "40 mm"}, {"result.horizontal.value": 48.0, "result.target_status": "Beyond your 40 mm target"}),
         ({"h_constant": "0.8 cm", "h_ppm": 1, "baseline": "40000 m", "v_constant": "1.5 cm", "v_ppm": 1}, {"result.horizontal.value": 48.0, "result.vertical.value": 55.0}),
         ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 mi"}, {"result.horizontal.value": 9.609344}),
-        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "v_constant": "15 mm", "v_ppm": 1, "confidence": "95"}, {"result.horizontal.value": 117.504, "result.vertical.value": 107.8}),
+        ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "v_constant": "15 mm", "v_ppm": 1, "confidence": "95"}, {"result.horizontal.value": 48 * K95, "result.vertical.value": 107.8}),
         ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "40 km", "v_constant": "15 mm", "v_ppm": 1, "confidence": "1sigma"}, {"result.horizontal.value": 48.0, "result.vertical.value": 55.0}),
         ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 km", "v_ppm": 1}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/v_constant"}),
         ({"h_constant": "8 mm", "h_ppm": 1, "baseline": "1 km", "v_constant": "-1 mm", "v_ppm": 1}, {"ok": False, "error.code": "INVALID_INPUT", "error.field": "/v_constant"}),

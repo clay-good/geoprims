@@ -268,7 +268,7 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "a9a670e199b41326",
+    "hash": "4e0d0448a81d2197",
     "lastmod": "2026-10-19"
   },
   "/disclaimer/": {
@@ -1576,8 +1576,8 @@
     "lastmod": "2026-10-12"
   },
   "/quality/": {
-    "hash": "3e91b3dd98418f4e",
-    "lastmod": "2026-10-14"
+    "hash": "7666270d9c7fb2a2",
+    "lastmod": "2026-10-19"
   },
   "/raster/": {
     "hash": "986dc66df9693519",
@@ -1704,8 +1704,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "2d565b158c9d8d70",
-    "lastmod": "2026-10-17"
+    "hash": "5b8f47d03dcf87fb",
+    "lastmod": "2026-10-19"
   },
   "/survey/": {
     "hash": "34db288babd6e4c1",
@@ -1928,16 +1928,16 @@
     "lastmod": "2026-10-13"
   },
   "/survey/gnss/rtk-budget/": {
-    "hash": "7613f93d439863da",
-    "lastmod": "2026-10-13"
+    "hash": "29fd23879e5a5384",
+    "lastmod": "2026-10-19"
   },
   "/survey/land/": {
     "hash": "ef236e1d9a75f4f2",
     "lastmod": "2026-09-25"
   },
   "/survey/land/alta-rpp/": {
-    "hash": "8774b2f77852239e",
-    "lastmod": "2026-10-10"
+    "hash": "d55e26553370e6e3",
+    "lastmod": "2026-10-19"
   },
   "/survey/land/basis-rotation/": {
     "hash": "bc8abd22868b009f",
@@ -2352,7 +2352,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "69516f3c8172b9d4",
+    "hash": "a2a4ffc35fd23ff8",
     "lastmod": "2026-10-19"
   },
   "/workflows/": {

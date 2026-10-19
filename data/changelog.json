@@ -3,6 +3,19 @@
   "entries": [
     {
       "date": "2026-10-19",
+      "kind": "result-change",
+      "tools": [
+        "survey.gnss.rtk-budget"
+      ],
+      "vectors": [
+        "survey.gnss.rtk-budget v002",
+        "survey.gnss.rtk-budget v004",
+        "survey.gnss.rtk-budget v018"
+      ],
+      "summary": "The RTK accuracy calculator's 95% horizontal factor is now the NSSDA's 2.4477 (√χ²₂,0.95, FGDC-STD-007.3-1998) instead of a rounded 2.448, matching the ALTA RPP tool. 95% horizontal results drop by about 0.01% (for example 44.064 mm to 44.059 mm); one-sigma and vertical results are unchanged. The tool is now version 1.2.0 and declares both 95% factors."
+    },
+    {
+      "date": "2026-10-19",
       "kind": "changed",
       "tools": [
         "geodesy.frame.enu-ned",
